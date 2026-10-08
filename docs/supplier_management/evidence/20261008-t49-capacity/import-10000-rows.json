@@ -1,11 +1,11 @@
 {
-  "run": "462051",
+  "run": "7F4816",
   "rows": 10000,
   "crash": false,
   "rootOnly": false,
   "distinctNames": false,
   "command": "/Users/sam/Documents/workspace/erp-supplier-t49/server/scripts/benchmarkSupplierImport.js --rows=10000 --output /private/tmp/claude-501/-Users-sam-Documents-workspace-erp-app/486c4c60-92de-4122-b0e0-a68866140aa1/scratchpad/bench49-10k.json",
-  "startedAt": "2026-10-08T01:36:06.496Z",
+  "startedAt": "2026-10-08T02:47:35.429Z",
   "environment": {
     "os": "Darwin 27.0.0 arm64",
     "cpu": "Apple M5 Pro",
@@ -13,45 +13,50 @@
     "totalMemoryGiB": 24,
     "node": "v26.6.0",
     "mysql": "26.7.0",
+    "durability": {
+      "innodbFlushLogAtTrxCommit": 1,
+      "syncBinlog": 1,
+      "logBin": 1
+    },
     "worker": "node src/index.js, development config, scheduler defaults (precheck/execute every 5 s, lease 11 min)"
   },
   "fileBytes": 2649279,
-  "uploadMs": 11,
+  "uploadMs": 13,
   "precheck": {
-    "ms": 5835,
+    "ms": 5837,
     "status": "ready",
     "total": 10000,
     "valid": 10000
   },
   "execute": {
-    "ms": 51116,
+    "ms": 54642,
     "status": "completed",
     "applied": 10000,
     "failed": 0,
     "skipped": 0
   },
   "nfr004": {
-    "precheckPlusExecuteMs": 56951,
+    "precheckPlusExecuteMs": 60479,
     "limitMs": 600000,
     "pass": true,
     "note": ""
   },
-  "workerPeakRssMiB": 225,
+  "workerPeakRssMiB": 233,
   "dbConnectionsPeak": {
     "userConnections": 4,
     "note": "all connections of DB_USER, including this process's own pool"
   },
   "msPerRowByThousand": [
-    2.8,
-    3,
-    4,
-    4.4,
-    4.7,
-    4.9,
-    5.2,
+    3.3,
+    3.4,
+    3.9,
+    4.6,
+    5.1,
     5.5,
-    5.7,
-    5.9
+    5.8,
+    5.8,
+    6.2,
+    6.6
   ],
   "verification": {
     "suppliersCreated": 10000,
@@ -62,18 +67,24 @@
     "countsConsistent": true
   },
   "resultDownload": {
-    "ms": 32,
+    "ms": 50,
     "bytes": 478995,
-    "heapDeltaMiB": 17,
-    "rssDeltaMiB": -12
+    "heapDeltaMiB": 18,
+    "rssDeltaMiB": -13
   },
   "export": {
-    "ms": 48,
+    "ms": 57,
     "rows": 10000,
     "bytes": 1510385,
-    "heapDeltaMiB": -8,
+    "heapDeltaMiB": -9,
     "rssDeltaMiB": 4
   },
   "ok": true,
-  "finishedAt": "2026-10-08T01:37:06.471Z"
+  "cleanup": {
+    "suppliers": 10000,
+    "job": 140,
+    "user": 575,
+    "role": 387
+  },
+  "finishedAt": "2026-10-08T02:48:39.547Z"
 }

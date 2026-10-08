@@ -63,13 +63,13 @@ Measured on 2026-10-08:
 
 | Run | Precheck | Execution | Total (NFR-004 ≤ 10 min) | Worker peak RSS | Result |
 | --- | --- | --- | --- | --- | --- |
-| 10,000 rows | 5.8 s | 51.1 s | 57 s | 225 MiB | 10,000 applied, each exactly once |
-| 10,000 rows, worker SIGKILLed after 5,003 rows | 5.6 s | 58.5 s | 64 s | 226 MiB | a second worker took over; 10,000 applied, no duplicates |
+| 10,000 rows | 5.8 s | 54.6 s | 60 s | 233 MiB | 10,000 applied, each exactly once |
+| 10,000 rows, worker SIGKILLed after 5,004 rows | 6.1 s | 57.1 s | 63 s | 227 MiB | a second worker took over; 10,000 applied, no duplicates |
 
-- **Per row:** about 3–6 ms. It rises slowly with the row number, because finding the next row gets slightly slower
+- **Per row:** about 3–7 ms. It rises slowly with the row number, because finding the next row gets slightly slower
   as rows are applied.
 - **Crash run:** the 11-minute lease of a killed worker was simulated as expired, so it measures the work and not the wait.
-- **Downloads:** the 10,000-row result download took 32 ms (479 KB), and a 10,000-row export 48 ms (1.5 MB).
+- **Downloads:** the 10,000-row result download took 50 ms (479 KB), and a 10,000-row export 57 ms (1.5 MB).
 - **Export memory:** an export of 10,000 Suppliers with every field at its maximum length is about 69 MB and briefly needs
   about 530 MB of memory (REV-075 L-4). For that reason at most two exports run at once per process; a third answers
   429 `SUPPLIER_EXPORT_BUSY`. The limit covers building the file. Sending it to the client happens after the slot is freed:

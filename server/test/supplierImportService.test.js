@@ -188,3 +188,12 @@ test("the import applier never runs the similar-name search, on create or update
     normalized_payload: { root: { notes: "x" } } } });
   assert.deepEqual(calls, [["create", false], ["update", false]]);
 });
+
+test("the capacity benchmark refuses to run without an explicit throwaway database (REV-078 M-1)", async () => {
+  const { spawnSync } = await import("node:child_process");
+  const env = { ...process.env, DB_HOST: "127.0.0.1", DB_PORT: "1", DB_USER: "u", DB_PASSWORD: "p" };
+  delete env.DB_NAME;
+  const run = spawnSync(process.execPath, ["scripts/benchmarkSupplierImport.js", "--rows=2", "--output", "/dev/null"], { env, encoding: "utf8" });
+  assert.notEqual(run.status, 0);
+  assert.match(run.stderr, /set DB_NAME explicitly to a throwaway database/u);
+});
