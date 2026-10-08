@@ -45,7 +45,7 @@ environments sharing a root, or an app pointed at the wrong schema, would delete
 | Job | Interval | Scope | What it does |
 | --- | --- | --- | --- |
 | `supplier.import.precheck` | 5 s | instance | Claims an uploaded job and checks every row. The lease is 3 minutes, and a job whose precheck fails three times is abandoned. |
-| `supplier.import.execute` | 5 s | instance | Claims a confirmed job and writes rows one at a time, each in its own transaction. The lease is 11 minutes, renewed on every row. A run stops after 10 minutes and releases its lease, so the next poll continues straight away. |
+| `supplier.import.execute` | 5 s | instance | Claims a confirmed job and writes rows one at a time, each in its own transaction. The lease is 11 minutes, renewed on every row. A run stops after 10 minutes and releases its lease, so the next poll continues straight away; it releases the lease whenever it stops, including on an error. |
 | `supplier.import.purge` | daily | cluster | Applies retention: the files of executed jobs past `FILE_RETENTION_DAYS`, jobs never confirmed past `UNCONFIRMED_RETENTION_DAYS`, and unreferenced files older than a day. |
 
 Each job can be switched off or retuned in `server/config/scheduler.js` under `jobs`. With the precheck switched off,
@@ -72,7 +72,18 @@ Measured on 2026-10-08:
 - **Downloads:** the 10,000-row result download took 32 ms (479 KB), and a 10,000-row export 48 ms (1.5 MB).
 - **Export memory:** an export of 10,000 Suppliers with every field at its maximum length is about 69 MB and briefly needs
   about 530 MB of memory (REV-075 L-4). For that reason at most two exports run at once per process; a third answers
-  429 `SUPPLIER_EXPORT_BUSY`.
+  429 `SUPPLIER_EXPORT_BUSY`. The limit covers building the file. Sending it to the client happens after the slot is freed:
+  the file and a copy of it (about 140 MB in the worst case) stay in memory until a slow client has read them, bounded only
+  by the request limiter (REV-078 L-3).
+- **What the benchmark numbers mean (REV-078 I-4):**
+  - "Precheck" includes the worker's start-up and its first 5-second poll, so it is an upper bound.
+  - The DB connection figure counts every connection of the database user on the server.
+  - The download and export memory figures are before/after differences, not peaks.
+  - "Rows applied at kill" is a lower bound.
+  - The durability settings (`innodb_flush_log_at_trx_commit`, `sync_binlog`, `log_bin`) are recorded in each report.
+- **Running the benchmark safely:** set all five `DB_*` variables to a throwaway database. The script refuses to run
+  without them, and refuses if any other import job is pending, because its worker is a real worker. It removes what it
+  created, also when it fails.
 - **Fixed during T49** (HD-075):
   - The import no longer runs the similar-name search on every row. HD-052 limits the import to identical-name warnings,
     and the search's cost grew with the number of Suppliers.
@@ -84,9 +95,10 @@ Measured on 2026-10-08:
 
 - **Job health:** `fr_job_stats` and the `scheduler.job.failed` log.
   - `supplier.import.purge` reports a failure, with the message `SUPPLIER_IMPORT_PURGE_INCOMPLETE: N file(s) left
-    behind`, whenever any file could not be deleted.
-  - A run cut off by its timeout is recorded as timed out.
-  - Alert on its `consecutiveFailures`.
+    behind`, whenever any file could not be deleted. A purge run cut off by its timeout is recorded as timed out. Alert
+    on its `consecutiveFailures`.
+  - `supplier.import.execute` stops cooperatively at its 10-minute limit, and the scheduler records such a run as
+    succeeded. Watch the `supplier.import.paused` log instead: its `reason` is `timeout` or `shutdown`.
 - **Log events:**
   - `supplier.import.purge_failed`: a file the purge refused or could not delete. The entry carries IDs and an errno only.
   - `supplier.import.source_cleanup_failed`: a source that could not be deleted at cancel or after a failed precheck. The
@@ -101,7 +113,8 @@ Measured on 2026-10-08:
 - **A worker process dies mid-job.** Rows already written stay written. Another instance, or the restarted process,
   continues from the next row once the 11-minute lease expires. Nothing is applied twice; the T45 tests and the T49
   SIGKILL run check this.
-- **A worker stops cleanly** (shutdown or timeout). It releases the lease, and the job continues at the next poll.
+- **A worker stops** (shutdown, timeout, or an error such as a lock-wait timeout). It releases the lease, and the job
+  continues at the next poll. Only a process that dies without running its cleanup leaves the lease to expire.
 - **A job failed.** Its summary, rows and result stay readable. Fix the cause and upload the rows again. Rows marked
   "可重新匯入" (busy) can simply be imported again.
 - **Files left after a failed delete.** Fix the permissions. The next daily purge removes them, and its job stats return

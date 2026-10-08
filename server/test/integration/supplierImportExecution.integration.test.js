@@ -523,4 +523,12 @@ integrationTest("TASK-049 (HD-075): a worker that stops between rows releases it
   assert.equal(calls, 2);
   assert.deepEqual([(await service().finalizeExecution({ jobId, leaseOwner: "worker-b" })).applied], [3]);
   assert.equal(await first.releaseExecutionLease({ jobId, leaseOwner: "worker-b" }), false, "a finished job has no lease to release");
+
+  // 只放 running 嘅 job：一個 queued 但留低 lease 欄位嘅 job 唔郁（REV-078 I-1）。
+  const queued = await seedJob({ status: "queued", leaseOwner: "worker-q", leaseUntil: clock + 60_000 });
+  assert.equal(await service().releaseExecutionLease({ jobId: queued, leaseOwner: "worker-q" }), false);
+  const [[still]] = await h.db.query("SELECT lease_until FROM supplier_import_jobs WHERE id = ?", [queued]);
+  assert.equal(Number(still.lease_until), clock + 60_000);
+  await assert.rejects(() => service().releaseExecutionLease({ jobId: 0, leaseOwner: "worker-q" }), TypeError);
+  await assert.rejects(() => service().releaseExecutionLease({ jobId: queued, leaseOwner: " " }), TypeError);
 });

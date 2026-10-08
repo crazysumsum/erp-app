@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 293,
+  "revision": 294,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -1863,6 +1863,18 @@
       "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
       "source_ref": "docs/supplier_management/implementation/80_rev_077_independent_review.md",
       "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-078",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-049)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 48c2fd0e19b54f6f7854448d31ec2189114ce992 (PR #192)",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/81_rev_078_independent_review.md",
+      "status": "CHANGES_REQUESTED",
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
@@ -4671,6 +4683,19 @@
         "TASK-045",
         "HD-052",
         "NFR-004"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-08: '全部按建議'."
+    },
+    {
+      "id": "HD-076",
+      "impact": "MAJOR",
+      "question": "REV-078 (TASK-049, changes requested): M-1 the benchmark has no throwaway-DB guard and its real worker processes other jobs (falls back to erp_dev): require all DB_* explicitly, refuse when other import jobs are pending, pass DB_* to the child; L-1 cleanup only on success: move to finally; L-2 docs claim the execute timeout is recorded as timed out and that only a dead process waits for the lease: correct both, release the lease in finally, log supplier.import.paused with the reason; L-3 the export gate frees its slot before the response is sent: document; L-4 AC 1 wording; I-1 test the running condition of the release; I-2 misplaced doc comment; I-3 release input checks; I-4 record durability settings, explain the metrics, regenerate evidence.",
+      "affected_ids": [
+        "TASK-049",
+        "REV-078",
+        "HD-074",
+        "HD-075"
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-08: '全部按建議'."

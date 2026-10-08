@@ -99,4 +99,17 @@ used.
 - The M-1 mechanism holds: the benchmark worker is a full app process with the default scheduler.
 - The reviewer reported being denied permission to read the main repository's `server/.env`. The author did not read it on
   the reviewer's behalf. The fix passes `DB_*` to the child explicitly, which makes that question moot.
-- The findings were taken to the Product Owner (HD-076).
+- The findings were taken to the Product Owner (HD-076), whose answer was '全部按建議'.
+
+| Finding | Follow-up |
+| --- | --- |
+| M-1 | **Fixed.** The benchmark refuses to run unless all five `DB_*` variables are set, and refuses if any other import job is pending in the database. It passes `DB_*` to its worker explicitly, so `.env` cannot fill them in. Negative controls: a run without `DB_NAME` is refused; a run with a foreign `uploaded` job is refused and that job is untouched. |
+| L-1 | **Fixed.** Cleanup moved to `finally`, scoped to what the run created (prefix, job, user, role), and runs after the workers stop. Negative control: a forced precheck failure left no user, role, job or Supplier. |
+| L-2 | **Fixed.** The worker releases its lease in `finally` on any stop, including an error, and logs `supplier.import.paused` with `reason: timeout` or `shutdown`. The operator guide now says the execute job's timeout is recorded as succeeded and points to that log. Unit tests cover the release on error and the pause reasons. |
+| L-3 | **Documented** in `bulk_operations.md`: the gate bounds the build peak; the response copy lives until the client has read it. |
+| L-4 | **Reworded** in the carry-forward: AC 1 is met across the import integration tests (T45 for draft and approval off). |
+| I-1 | **Tested.** A `queued` job with a leftover lease is not released. |
+| I-2 | **Fixed.** The doc comment is back on `finalizeExecution`. |
+| I-3 | **Fixed.** `releaseExecutionLease` validates its input like its siblings. |
+| I-4 | **Fixed.** Reports record the MySQL durability settings, the guide explains what each number means, and the 10,000-row evidence was regenerated. |
+| I-5, I-6, I-7 | No change. |

@@ -3,7 +3,9 @@
  *
  *   node scripts/benchmarkSupplierImport.js --rows=10000 --output <report.json> [--crash]
  *
- * 用 DB_* 環境變數指去一個**用完即棄**嘅資料庫（會寫入再刪走 `BM49-<run>-` 開頭嘅 Supplier）。
+ * 用 DB_* 環境變數指去一個**用完即棄**嘅資料庫（會寫入再刪走 `BM49-<run>-` 開頭嘅 Supplier）。五個 DB_* 都一定要明確
+ * 設定（唔會退返去 `erp_dev` 或者 `.env`），資料庫入面有其他未完成嘅匯入 job 就拒絕執行：benchmark 嘅 worker
+ * 係真 worker，會處理佢見到嘅所有 job（REV-078 M-1）。
  *
  * - 呢個 process 負責上載、確認、量度同核對；預檢同執行由一個真 API process（`node src/index.js`，
  *   正式 scheduler 設定：每 5 秒領 job、真 lease）做，等同 production 嘅 worker。
@@ -53,6 +55,11 @@ const distinctName = (index) => {
 if (!Number.isSafeInteger(ROWS) || ROWS < 2 || ROWS > 10_000 || typeof OUTPUT !== "string") {
   throw new Error("usage: node scripts/benchmarkSupplierImport.js --rows=<2..10000> --output <report.json> [--crash]");
 }
+const DB_KEYS = ["DB_HOST", "DB_PORT", "DB_USER", "DB_PASSWORD", "DB_NAME"];
+const missing = DB_KEYS.filter((key) => !process.env[key]);
+if (missing.length > 0) {
+  throw new Error(`set ${missing.join(", ")} explicitly to a throwaway database: the benchmark writes and deletes Suppliers and runs a real import worker against it`);
+}
 
 const RUN = randomBytes(3).toString("hex").toUpperCase();
 const PREFIX = `BM49-${RUN}-`;
@@ -62,10 +69,10 @@ const report = { run: RUN, rows: ROWS, crash: CRASH, rootOnly: ROOT_ONLY, distin
 const sleep = (ms) => new Promise((resolve) => { setTimeout(resolve, ms); });
 const now = () => Date.now();
 
-function environment(mysqlVersion) {
+function environment(mysqlVersion, durability) {
   return {
     os: `${os.type()} ${os.release()} ${os.arch()}`, cpu: os.cpus()[0]?.model, cpus: os.cpus().length,
-    totalMemoryGiB: Math.round(os.totalmem() / 2 ** 30), node: process.version, mysql: mysqlVersion,
+    totalMemoryGiB: Math.round(os.totalmem() / 2 ** 30), node: process.version, mysql: mysqlVersion, durability,
     worker: "node src/index.js, development config, scheduler defaults (precheck/execute every 5 s, lease 11 min)"
   };
 }
@@ -91,7 +98,9 @@ function startWorker(label) {
     cwd: SERVER_DIR, stdio: ["ignore", log, log],
     env: { ...process.env, NODE_ENV: "development", APP_HOST: "127.0.0.1", APP_PORT: String(3490 + (label === "worker-b" ? 1 : 0)),
       JWT_SECRET: randomBytes(32).toString("hex"), SUPPLIER_IMPORT_ROOT: root, LOG_DIRECTORY: path.join(work, `${label}-logs`),
-      ITEM_MEDIA_DIRECTORY: path.join(work, "items"), DB_INTEGRATION_TESTS: "" }
+      ITEM_MEDIA_DIRECTORY: path.join(work, "items"), DB_INTEGRATION_TESTS: "",
+      // 明確傳畀 child：佢經 dotenv 讀 `.env`，唔可以由嗰度補到另一個資料庫（REV-078 M-1）。
+      ...Object.fromEntries(DB_KEYS.map((key) => [key, process.env[key]])) }
   });
   return child;
 }
@@ -107,6 +116,35 @@ function rssMiB(pid) {
 let application;
 let db;
 const children = [];
+// 建立咗乜就記低，`finally` 照住清（REV-078 L-1）：成功同失敗都清。
+const created = { roleId: null, userId: null, jobId: null };
+
+async function cleanup() {
+  const ids = (await db.query("SELECT id FROM suppliers WHERE supplier_code_key LIKE ?", [`${PREFIX.toLowerCase()}%`]))[0].map((row) => row.id);
+  for (let start = 0; start < ids.length; start += 500) {
+    const chunk = ids.slice(start, start + 500);
+    for (const table of ["supplier_address_purposes", "supplier_addresses", "supplier_contact_purposes", "supplier_contacts",
+      "supplier_identifiers", "supplier_name_grams", "supplier_activation_requests", "supplier_audit_logs"]) {
+      await db.query(`DELETE FROM ${table} WHERE supplier_id IN (?)`, [chunk]);
+    }
+    await db.query("DELETE FROM suppliers WHERE id IN (?)", [chunk]);
+  }
+  if (created.jobId !== null) {
+    await db.execute("DELETE FROM supplier_import_rows WHERE job_id = ?", [created.jobId]);
+    await db.execute("DELETE FROM supplier_audit_logs WHERE target_type = 'import' AND target_id = ?", [created.jobId]);
+    await db.execute("DELETE FROM supplier_import_jobs WHERE id = ?", [created.jobId]);
+  }
+  if (created.userId !== null) {
+    await db.execute("DELETE FROM supplier_audit_logs WHERE target_type IN ('import', 'export') AND actor_user_id = ?", [created.userId]);
+    await db.execute("DELETE FROM user_roles WHERE user_id = ?", [created.userId]);
+    await db.execute("DELETE FROM users WHERE id = ?", [created.userId]);
+  }
+  if (created.roleId !== null) {
+    await db.execute("DELETE FROM role_permissions WHERE role_id = ?", [created.roleId]);
+    await db.execute("DELETE FROM roles WHERE id = ?", [created.roleId]);
+  }
+  return { suppliers: ids.length, job: created.jobId, user: created.userId, role: created.roleId };
+}
 try {
   const source = defaultConfigurationSource();
   application = await createApplication({
@@ -121,16 +159,25 @@ try {
   db = application.services.require("mysqldatabase");
   const preparedRoot = application.services.require("job.supplierImportWorker").preparedRoot;
   const [[{ version: mysqlVersion }]] = await db.query("SELECT VERSION() AS version");
-  report.environment = environment(mysqlVersion);
+  const [[durability]] = await db.query(
+    "SELECT @@innodb_flush_log_at_trx_commit AS innodbFlushLogAtTrxCommit, @@sync_binlog AS syncBinlog, @@log_bin AS logBin");
+  report.environment = environment(mysqlVersion, durability);
+  const [[{ pending }]] = await db.query(
+    "SELECT COUNT(*) AS pending FROM supplier_import_jobs WHERE status IN ('uploaded', 'validating', 'ready', 'ready_with_errors', 'queued', 'running')");
+  if (Number(pending) > 0) {
+    throw new Error(`refusing to run: ${pending} other import job(s) are pending in ${process.env.DB_NAME}, and the benchmark's worker would process them`);
+  }
   const time = { nowMs: now };
   const imports = new SupplierImportService({ database: db, time });
 
   const [role] = await db.execute("INSERT INTO roles (name, created_at) VALUES (?, ?)", [`bm49-${RUN}`, now()]);
+  created.roleId = Number(role.insertId);
   const [[permission]] = await db.query("SELECT id FROM permissions WHERE name = 'supplier.mgmt'");
   await db.execute("INSERT INTO role_permissions (role_id, permission_id) VALUES (?, ?)", [role.insertId, permission.id]);
   const [user] = await db.execute(
     "INSERT INTO users (username, password_hash, display_name, created_at, updated_at) VALUES (?, 'x', 'Benchmark', ?, ?)",
     [`bm49-${RUN}`, now(), now()]);
+  created.userId = Number(user.insertId);
   await db.execute("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)", [user.insertId, role.insertId]);
   const actor = { actorId: Number(user.insertId), claimedRoles: [`bm49-${RUN}`], claimedPermissions: ["supplier.mgmt"] };
 
@@ -138,6 +185,7 @@ try {
   report.fileBytes = content.length;
   const uploadStarted = now();
   const job = await imports.createFromUpload({ ...actor, root: preparedRoot, mode: "create_only", content, maxFileBytes: 10_485_760 });
+  created.jobId = Number(job.id);
   report.uploadMs = now() - uploadStarted;
 
   const samples = { rssMiB: [], dbConnections: [] };
@@ -245,24 +293,6 @@ try {
   report.ok = report.verification.exactlyOnce && report.verification.countsConsistent && report.nfr004.pass &&
     (!CRASH || report.crash.midRun);
 
-  // 清走：Supplier 連子資料、job、user。
-  const ids = (await db.query("SELECT id FROM suppliers WHERE supplier_code_key LIKE ?", [`${PREFIX.toLowerCase()}%`]))[0].map((row) => row.id);
-  for (let start = 0; start < ids.length; start += 500) {
-    const chunk = ids.slice(start, start + 500);
-    for (const table of ["supplier_address_purposes", "supplier_addresses", "supplier_contact_purposes", "supplier_contacts",
-      "supplier_identifiers", "supplier_name_grams", "supplier_activation_requests", "supplier_audit_logs"]) {
-      await db.query(`DELETE FROM ${table} WHERE supplier_id IN (?)`, [chunk]);
-    }
-    await db.query("DELETE FROM suppliers WHERE id IN (?)", [chunk]);
-  }
-  await db.execute("DELETE FROM supplier_import_rows WHERE job_id = ?", [job.id]);
-  await db.execute("DELETE FROM supplier_audit_logs WHERE target_type IN ('import', 'export') AND actor_user_id = ?", [actor.actorId]);
-  await db.execute("DELETE FROM supplier_audit_logs WHERE target_type = 'import' AND target_id = ?", [job.id]);
-  await db.execute("DELETE FROM supplier_import_jobs WHERE id = ?", [job.id]);
-  await db.execute("DELETE FROM user_roles WHERE user_id = ?", [actor.actorId]);
-  await db.execute("DELETE FROM users WHERE id = ?", [actor.actorId]);
-  await db.execute("DELETE FROM role_permissions WHERE role_id = ?", [role.insertId]);
-  await db.execute("DELETE FROM roles WHERE id = ?", [role.insertId]);
 } catch (error) {
   report.ok = false;
   report.error = error.message;
@@ -272,6 +302,16 @@ try {
   const running = children.filter((child) => child.exitCode === null && child.signalCode === null);
   for (const child of running) child.kill("SIGTERM");
   await Promise.all(running.map((child) => new Promise((resolve) => { child.once("exit", resolve); })));
+  // Worker 停晒先清，唔會一邊清一邊有人寫。
+  if (db) {
+    try {
+      report.cleanup = await cleanup();
+    } catch (error) {
+      report.ok = false;
+      report.cleanupError = error.message;
+      process.exitCode = 1;
+    }
+  }
   report.finishedAt = new Date().toISOString();
   fs.writeFileSync(OUTPUT, `${JSON.stringify(report, null, 2)}\n`);
   if (application) await application.shutdown("benchmark");

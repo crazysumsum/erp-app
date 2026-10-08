@@ -84,7 +84,7 @@ test("T45: a job whose confirmer lost access stops at once and reports failed", 
     return { rowNumber: null, status: "revoked", appliedSupplierId: null };
   };
   const result = await instance.runExecution(new AbortController().signal);
-  assert.deepEqual(instance.importService.calls, ["claim", "row"], "no finalize: the job is already failed");
+  assert.deepEqual(instance.importService.calls, ["claim", "row", "release"], "no finalize: the job is already failed (the release is a no-op)");
   assert.deepEqual(result, { claimed: true, jobId: 7, applied: 0, failed: 0, status: "failed" });
 });
 
@@ -92,7 +92,7 @@ test("the worker processes rows in order until none are left, then finalizes", a
   const { instance } = worker();
   instance.importService = scripted(2);
   const result = await instance.runExecution(new AbortController().signal);
-  assert.deepEqual(instance.importService.calls, ["claim", "row", "row", "row", "finalize"]);
+  assert.deepEqual(instance.importService.calls, ["claim", "row", "row", "row", "finalize", "release"]);
   assert.deepEqual(result, { claimed: true, jobId: 7, applied: 2, failed: 0, status: "completed" });
 });
 
@@ -375,4 +375,26 @@ test("precheck claims nothing without a root, after shutdown or when aborted", a
   await instance.shutdown();
   assert.deepEqual(await instance.runPrecheck(new AbortController().signal), { claimed: false });
   assert.deepEqual(none.instance.importService.calls.concat(instance.importService.calls), []);
+});
+
+test("a row that throws still releases the lease, and the error is not swallowed (REV-078 L-2)", async () => {
+  const { instance } = worker();
+  const service = scripted(5);
+  service.processNextRow = async () => { service.calls.push("row"); throw Object.assign(new Error("lock wait"), { code: "DATABASE_QUERY_TIMEOUT" }); };
+  instance.importService = service;
+  await assert.rejects(instance.runExecution(new AbortController().signal), /lock wait/u);
+  assert.deepEqual(service.calls, ["claim", "row", "release"]);
+});
+
+test("a run cut off by its timeout logs why it paused, since the scheduler records it as a success (REV-078 L-2)", async () => {
+  const events = [];
+  const logger = { info() {}, warn: (event, _message, data) => events.push([event, data.reason]) };
+  const aborting = new AbortController();
+  const timedOut = worker({ logger });
+  timedOut.instance.importService = scripted(5, { onRow: () => aborting.abort() });
+  await timedOut.instance.runExecution(aborting.signal);
+  const stopping = worker({ logger });
+  stopping.instance.importService = scripted(5, { onRow: () => { void stopping.instance.shutdown(); } });
+  await stopping.instance.runExecution(new AbortController().signal);
+  assert.deepEqual(events, [["supplier.import.paused", "timeout"], ["supplier.import.paused", "shutdown"]]);
 });
