@@ -39,13 +39,13 @@ async function* utf8(source,signal) {
   try {yield decoder.decode();}catch {throw salesError("SALES_IMPORT_FILE_INVALID",{field:"encoding"});}
 }
 
-const freeText=value=>/^\s*[=+\-@]/u.test(value)?"'"+value:sanitizeCsvCell(value);
+export const safeSalesCsvCell=value=>/^\s*[=+\-@]/u.test(value)?"'"+value:sanitizeCsvCell(value);
 function normalizeRow(row,rowNo) {
   const errors=[];
   const checked=(field,fn)=>{try{return fn(row[field]);}catch(error){errors.push({rowNo,field,code:error.code??"SALES_IMPORT_ORDER_INVALID"});return "";}};
   const text=(field,max,required=false,neutralize=false)=>checked(field,value=>{
     if(typeof value!=="string"||required&&!value.trim()||[...value].length>max||/[\p{Cc}\p{Cf}]/u.test(value.replace(/[\t\n\r]/gu,"")))throw salesError("SALES_IMPORT_ORDER_INVALID",{field});
-    const safe=neutralize?freeText(value):value;
+    const safe=neutralize?safeSalesCsvCell(value):value;
     if([...safe].length>max)throw salesError("SALES_IMPORT_ORDER_INVALID",{field});
     return safe;
   });
