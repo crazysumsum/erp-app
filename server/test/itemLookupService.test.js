@@ -598,3 +598,15 @@ test("Inventory transaction methods reject a missing executor", async () => {
   await assert.rejects(() => service.getInventoryProfileInTransaction(null, 10), TypeError);
   await assert.rejects(() => service.resolveUomInTransaction({}, 10, 5), TypeError);
 });
+
+
+test("TC-035 Item code/UOM precheck batch preserves per-member missing/inactive and one bounded caller query",async()=>{
+ const rows=[{...saleSku(),request_index:0,mapping_id:91,mapping_version:5,uom_id:5,uom_code:"EA",uom_name:"Each",uom_status:"active",uom_version:4,to_base_factor:1,is_base:1,is_default_sale:1},
+ {...saleSku(),request_index:1,sku_status:"discontinued",mapping_id:null}];
+ const tx=fakeDatabase([rows]),{service}=createService({database:{query(){throw new Error("Pool forbidden");}}});
+ const result=await service.resolveSaleCodesInTransaction(tx,[{skuCode:"sku-1",salesUomCode:"ea"},{skuCode:"SKU-1",salesUomCode:"MISSING"},{skuCode:"MISSING",salesUomCode:"EA"}],{atMs:NOW_MS});
+ assert.equal(tx.calls.length,1);assert.equal(result.length,3);assert.equal(result[0].sku.skuId,10);assert.equal(result[0].salesUom.skuUomId,91);assert.equal(result[0].skuCode,"sku-1");assert.equal(result[1].sku.usable,false);assert.equal(result[1].salesUom,null);assert.equal(result[2].sku,null);
+ assert.deepEqual(await service.resolveSaleCodesInTransaction(tx,[]),[]);assert.equal(tx.calls.length,1);
+ for(const requests of [[{skuCode:"",salesUomCode:"EA"}],Array.from({length:101},(_,i)=>({skuCode:"SKU"+i,salesUomCode:"EA"}))])await assert.rejects(()=>service.resolveSaleCodesInTransaction(tx,requests),TypeError);
+ assert.equal(tx.calls.length,1);
+});

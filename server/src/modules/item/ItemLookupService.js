@@ -183,6 +183,43 @@ export class ItemLookupService {
     return sku.uoms.find(uom => uom.skuUomId === skuUomId && uom.status === "active") ?? null;
   }
 
+  async resolveSaleCodesInTransaction(transaction, requests, { atMs } = {}) {
+    this.#assertExecutor(transaction);
+    const nowMs = this.#saleTime(atMs);
+    if (!Array.isArray(requests)) throw new TypeError("Sale code requests must be an array");
+    const unique = new Map();
+    for (const request of requests) {
+      for (const [field, max] of [["skuCode", 190], ["salesUomCode", 100]]) {
+        const value = request?.[field];
+        if (typeof value !== "string" || !value.trim() || [...value].length > max || /[\p{Cc}\p{Cf}]/u.test(value)) throw new TypeError("Invalid Sale code request");
+      }
+      unique.set(JSON.stringify([request.skuCode, request.salesUomCode]), { skuCode: request.skuCode, salesUomCode: request.salesUomCode });
+      if (unique.size > 100) throw new TypeError("Sale code lookup supports at most100 unique pairs");
+    }
+    const wanted = [...unique.values()];
+    if (!wanted.length) return Object.freeze([]);
+    // Resolve request identity with the owner columns' actual collation, never JavaScript case folding.
+    const select = SALES_SKU_SELECT.replace("SELECT s.version", `SELECT ? AS request_index,su.id AS mapping_id,su.version AS mapping_version,
+      su.uom_id,u.code AS uom_code,u.name AS uom_name,u.status AS uom_status,u.version AS uom_version,
+      su.to_base_factor,su.is_base,su.is_default_purchase,su.is_default_sale,s.version`);
+    const statement = select + ` LEFT JOIN item_sku_uoms su ON su.sku_id=s.id AND su.uom_id=(SELECT id FROM item_uoms WHERE code=?)
+      LEFT JOIN item_uoms u ON u.id=su.uom_id WHERE s.sku_code=?`;
+    const [rows] = await transaction.query(wanted.map(() => statement).join(" UNION ALL "), wanted.flatMap((request, index) => [index, request.salesUomCode, request.skuCode]));
+    const byIndex = new Map(rows.map(row => [Number(row.request_index), row]));
+    return Object.freeze(wanted.map((request, index) => {
+      const row = byIndex.get(index);
+      if (!row) return Object.freeze({ ...request, sku: null, salesUom: null });
+      const mapping = row.mapping_id === null ? [] : [{ ...row, id: row.mapping_id, version: row.mapping_version }];
+      try {
+        const sku = this.#saleProjection(row, mapping, nowMs);
+        return Object.freeze({ ...request, sku, salesUom: sku.uoms[0] ?? null });
+      } catch (error) {
+        if (error.code !== "UOM_CONVERSION_INVALID") throw error;
+        return Object.freeze({ ...request, sku: null, salesUom: null, errorCode: "SKU_UOM_INVALID" });
+      }
+    }));
+  }
+
   async getSalesSnapshotsInTransaction(transaction, requests, { atMs } = {}) {
     this.#assertExecutor(transaction);
     const nowMs = this.#saleTime(atMs);
