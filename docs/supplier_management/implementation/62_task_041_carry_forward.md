@@ -819,3 +819,6 @@ After REV-079 the T49 list is 18 mutants, all killed. One pattern was updated, a
 - the pending-job guard removed (M-1; killed by the new integration test).
 
 The full server suite, run the CI way, passes: 2,822, 0 failed, coverage floors met.
+
+After REV-080 the T49 list is 19 mutants, all killed. The new mutant is the pending guard ignoring `uploaded` (REV-080 m11).
+The full server suite, run the CI way, passes: 2,822, 0 failed, coverage floors met.
