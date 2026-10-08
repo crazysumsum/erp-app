@@ -41,11 +41,12 @@ export class SalesJobRuntimeService extends BaseService {
     const signal=scheduler.running.get(job.name)?.controller.signal;
     return signal?.aborted===false?{leaseOwner:scheduler.owner,signal}:null;
   }
-  async precheckImports(signal) {
+  async processImports(signal) {
     const principal=this.importPrincipal();if(!principal||signal!==principal.signal)throw new Error("Sales Import worker unavailable");
-    let result;try{result=await this.importer.runPrecheckBatch({signal});}catch{throw new Error("Sales Import precheck failed");}
+    let result,intake;try{result=await this.importer.runPrecheckBatch({signal});intake=await this.importer.runProcessingBatch({signal});}catch{throw new Error("Sales Import processing failed");}
     if(result.processed)await this.logger.info("sales.import_precheck_completed","Import precheck batch completed",result);
-    return result;
+    if(intake.processed)await this.logger.info("sales.intake_processing_completed","Intake processing batch completed",intake);
+    return {...result,intake};
   }
   bindBackorderScheduler(scheduler) {
     const job=scheduler.jobs.get("sales.backorderAllocate");

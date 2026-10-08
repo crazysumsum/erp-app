@@ -1,4 +1,5 @@
 import path from "node:path";
+import {SalesIntakeWorker} from "./SalesIntakeWorker.js";
 import {SalesImportPrecheckWorker} from "./SalesImportPrecheckWorker.js";
 import {constants,createReadStream} from "node:fs";
 import {lstat,readFile,open,mkdir,rename,rmdir} from "node:fs/promises";
@@ -51,6 +52,10 @@ export class SalesImportService {
  runPrecheckBatch(request){
   this.precheck??=new SalesImportPrecheckWorker({...this.workerOptions,database:this.database,time:this.time,root:this.root,checkFile});
   return this.precheck.runBatch(request);
+ }
+ runProcessingBatch(request){
+  this.processing??=new SalesIntakeWorker({...this.workerOptions,database:this.database,time:this.time,root:this.root});
+  return this.processing.runBatch(request);
  }
  authorizeUpload(claims){return this.database.withTransaction(tx=>actorInTransaction(tx,claims)).then(()=>true);}
  confirm(request){return this.#control(request,"QUEUED","CONFIRM_IMPORT");}
