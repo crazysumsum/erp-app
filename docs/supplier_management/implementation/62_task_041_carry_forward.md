@@ -810,3 +810,12 @@ and four mutants were added:
 - the benchmark's `DB_*` guard removed (M-1).
 
 The full server suite, run the CI way, passes: 2,819, 0 failed, coverage floors met.
+
+After REV-079 the T49 list is 18 mutants, all killed. One pattern was updated, and four mutants were added:
+
+- shutdown read from the signal again (L-A);
+- a failing release replacing the run's outcome (I-B);
+- the benchmark's `--database` check removed (L-B);
+- the pending-job guard removed (M-1; killed by the new integration test).
+
+The full server suite, run the CI way, passes: 2,822, 0 failed, coverage floors met.
