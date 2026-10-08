@@ -77,7 +77,10 @@ test("at most two exports run at once per process; a third is a 429, and a slot 
   const first = service.exportCsv({ ...actor });
   const second = service.exportCsv({ ...actor });
   await new Promise(setImmediate);
-  await assert.rejects(service.exportCsv({ ...actor }), (error) => error.code === "SUPPLIER_EXPORT_BUSY" && error.statusCode === 429);
+  // 第三個如果被放行就會等住條 query；限時一秒，令測試直接失敗而唔係卡住。
+  const third = Promise.race([service.exportCsv({ ...actor }),
+    new Promise((_, reject) => { setTimeout(() => reject(new Error("a third export was let through")), 1000).unref(); })]);
+  await assert.rejects(third, (error) => error.code === "SUPPLIER_EXPORT_BUSY" && error.statusCode === 429);
   assert.equal(gate.active, 2);
   releases.splice(0).forEach((release) => release());
   await Promise.all([first, second]);
