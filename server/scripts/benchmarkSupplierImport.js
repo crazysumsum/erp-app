@@ -176,8 +176,13 @@ try {
   await imports.confirm({ ...actor, id: job.id, version: Number(ready.version), activationMode: "draft" });
   if (CRASH) {
     const half = Math.floor(ROWS / 2);
-    await waitFor((current) => current.applied_count >= half || current.status === "completed", 600_000);
-    const [[{ applied }]] = await db.query("SELECT COUNT(*) AS applied FROM supplier_import_rows WHERE job_id = ? AND status = 'applied'", [job.id]);
+    // Job 嘅 applied_count 要 finalize 先寫，所以數 rows。
+    const appliedRows = async () => Number((await db.query(
+      "SELECT COUNT(*) AS n FROM supplier_import_rows WHERE job_id = ? AND status = 'applied'", [job.id]))[0][0].n);
+    for (const deadline = now() + 600_000; await appliedRows() < half; await sleep(50)) {
+      if (now() > deadline) throw new Error("timed out waiting for half of the rows");
+    }
+    const applied = await appliedRows();
     children[0].kill("SIGKILL");
     await new Promise((resolve) => { children[0].once("exit", resolve); });
     const killedAt = now();
