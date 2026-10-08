@@ -536,15 +536,20 @@ integrationTest("TASK-049 (HD-075): a worker that stops between rows releases it
 integrationTest("TASK-049 (REV-078 M-1, REV-079 I-B): the capacity benchmark refuses to start while another import job is pending", async () => {
   const { spawnSync } = await import("node:child_process");
   clock += 1_000_000;
-  const pending = await seedJob({ status: "queued", rows: ["valid"] });
-  const output = path.join(os.tmpdir(), `bench-guard-${process.pid}.json`);
-  const run = spawnSync(process.execPath, ["scripts/benchmarkSupplierImport.js", `--database=${process.env.DB_NAME}`, "--rows=2",
-    "--output", output], { env: { ...process.env, DB_INTEGRATION_TESTS: "" }, encoding: "utf8" });
-  const report = JSON.parse(fs.readFileSync(output, "utf8"));
-  fs.rmSync(output, { force: true });
-  assert.equal(run.status, 1);
-  assert.match(report.error, /refusing to run: \d+ other import job\(s\) are pending/u);
-  assert.deepEqual(report.cleanup, { suppliers: 0, job: null, user: null, role: null }, "nothing was created");
-  const [[row]] = await h.db.query("SELECT status, version FROM supplier_import_jobs WHERE id = ?", [pending]);
-  assert.deepEqual([row.status, Number(row.version)], ["queued", 1], "the pending job is untouched");
+  await quiesce();
+  // 每種未完成狀態都要擋：uploaded 等預檢，queued 等執行（REV-080 m11）。
+  for (const status of ["uploaded", "queued"]) {
+    const pending = await seedJob({ status, rows: ["valid"] });
+    const output = path.join(os.tmpdir(), `bench-guard-${process.pid}-${status}.json`);
+    const run = spawnSync(process.execPath, ["scripts/benchmarkSupplierImport.js", `--database=${process.env.DB_NAME}`, "--rows=2",
+      "--output", output], { env: { ...process.env, DB_INTEGRATION_TESTS: "" }, encoding: "utf8" });
+    const report = JSON.parse(fs.readFileSync(output, "utf8"));
+    fs.rmSync(output, { force: true });
+    assert.equal(run.status, 1, status);
+    assert.match(report.error, /refusing to run: \d+ other import job\(s\) are pending/u, status);
+    assert.deepEqual(report.cleanup, { suppliers: 0, job: null, user: null, role: null }, "nothing was created");
+    const [[row]] = await h.db.query("SELECT status, version FROM supplier_import_jobs WHERE id = ?", [pending]);
+    assert.deepEqual([row.status, Number(row.version)], [status, 1], "the pending job is untouched");
+    await h.db.execute("UPDATE supplier_import_jobs SET status = 'cancelled' WHERE id = ?", [pending]);
+  }
 });

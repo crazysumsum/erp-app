@@ -57,19 +57,19 @@ Measured on 2026-10-08:
 
 - **Environment:** an Apple M5 Pro (15 cores, 24 GiB) running Node v26.6.0 and MySQL 26.7.0, with
   `innodb_flush_log_at_trx_commit=1` and `sync_binlog=1`.
-- **Worker:** the real API process (`node src/index.js`) with the default scheduler.
+- **Worker:** a separate process built with the same `createApplication`, with the real scheduler and import worker. Only `supplier.import.precheck` and `supplier.import.execute` are enabled (plus `tokenRevocation.refresh`, which configuration requires); no other module's background jobs run.
 - **Data:** each row is a Supplier with one Address, one Contact and one Identifier.
 - **Evidence:** `evidence/20261008-t49-capacity/`.
 
 | Run | Precheck | Execution | Total (NFR-004 ≤ 10 min) | Worker peak RSS | Result |
 | --- | --- | --- | --- | --- | --- |
-| 10,000 rows | 5.8 s | 54.6 s | 60 s | 233 MiB | 10,000 applied, each exactly once |
-| 10,000 rows, worker SIGKILLed after 5,004 rows | 6.1 s | 57.1 s | 63 s | 227 MiB | a second worker took over; 10,000 applied, no duplicates |
+| 10,000 rows | 5.8 s | 54.5 s | 60 s | 223 MiB | 10,000 applied, each exactly once |
+| 10,000 rows, worker SIGKILLed after 5,007 rows | 5.8 s | 60.0 s | 66 s | 224 MiB | a second worker took over; 10,000 applied, no duplicates |
 
 - **Per row:** about 3–7 ms. It rises slowly with the row number, because finding the next row gets slightly slower
   as rows are applied.
 - **Crash run:** the 11-minute lease of a killed worker was simulated as expired, so it measures the work and not the wait.
-- **Downloads:** the 10,000-row result download took 50 ms (479 KB), and a 10,000-row export 57 ms (1.5 MB).
+- **Downloads:** the 10,000-row result download took 52 ms (479 KB), and a 10,000-row export 58 ms (1.5 MB).
 - **Export memory:** an export of 10,000 Suppliers with every field at its maximum length is about 69 MB and briefly needs
   about 530 MB of memory (REV-075 L-4). For that reason at most two exports run at once per process; a third answers
   429 `SUPPLIER_EXPORT_BUSY`. The limit covers building the file. Sending it to the client happens after the slot is freed:
@@ -86,11 +86,13 @@ Measured on 2026-10-08:
   - It refuses unless `DB_HOST`, `DB_PORT`, `DB_USER` and `DB_NAME` are set (`DB_PASSWORD` may be empty) and
     `--database` repeats `DB_NAME`. It also refuses if any other import job is pending, because its worker is a real
     worker that would process it.
-  - After the run it reports `ok: false` and lists any other job changed while it ran. The start-up check cannot see a
-    job that someone uploads during the run.
-  - It removes the Suppliers, job, user and role it created, also when it fails.
-  - Its worker writes system and request logs to `server/logs/` of the checkout that runs it. The log directory is
-    resolved against the server root, and no setting redirects it (REV-079 I-A).
+  - After the run it reports `ok: false` and lists any other Supplier import job changed while it ran. The start-up
+    check cannot see a job that someone uploads during the run. Its worker runs only the Supplier import jobs, so other
+    modules' jobs are never touched (REV-080 L-C).
+  - It removes the Suppliers, job, user and role it created, also when it fails or is interrupted with Ctrl-C or
+    SIGTERM. An interrupted run stops its worker, cleans up, and writes a report marked `interrupted`. Only SIGKILL of
+    the benchmark itself leaves things behind (REV-080 L-D).
+  - Its own logs and its worker's go to its temporary directory, which is removed at the end.
 - **Fixed during T49** (HD-075):
   - The import no longer runs the similar-name search on every row. HD-052 limits the import to identical-name warnings,
     and the search's cost grew with the number of Suppliers.
@@ -122,7 +124,9 @@ Measured on 2026-10-08:
   continues from the next row once the 11-minute lease expires. Nothing is applied twice; the T45 tests and the T49
   SIGKILL run check this.
 - **A worker stops** (shutdown, timeout, or an error such as a lock-wait timeout). It releases the lease, and the job
-  continues at the next poll. Only a process that dies without running its cleanup leaves the lease to expire.
+  continues at the next poll. A process that dies without running its cleanup leaves the lease to expire. So does a
+  shutdown whose draining overruns `shutdownTimeoutMs`, because the database may close before the release runs
+  (REV-080 I-I).
 - **The same error keeps recurring before a row is picked.** Execution has no attempt cap: the job is retried every
   5 seconds (REV-079 I-D). The run is recorded as failed each time, so `consecutiveFailures` on `supplier.import.execute`
   shows it.

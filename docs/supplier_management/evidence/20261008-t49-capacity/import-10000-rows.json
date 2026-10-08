@@ -1,11 +1,11 @@
 {
-  "run": "7F4816",
+  "run": "613C3D",
   "rows": 10000,
   "crash": false,
   "rootOnly": false,
   "distinctNames": false,
-  "command": "/Users/sam/Documents/workspace/erp-supplier-t49/server/scripts/benchmarkSupplierImport.js --rows=10000 --output /private/tmp/claude-501/-Users-sam-Documents-workspace-erp-app/486c4c60-92de-4122-b0e0-a68866140aa1/scratchpad/bench49-10k.json",
-  "startedAt": "2026-10-08T02:47:35.429Z",
+  "command": "/Users/sam/Documents/workspace/erp-supplier-t49/server/scripts/benchmarkSupplierImport.js --database=erp_dev --rows=10000 --output /private/tmp/claude-501/-Users-sam-Documents-workspace-erp-app/486c4c60-92de-4122-b0e0-a68866140aa1/scratchpad/bench49-10k.json",
+  "startedAt": "2026-10-08T07:16:48.284Z",
   "environment": {
     "os": "Darwin 27.0.0 arm64",
     "cpu": "Apple M5 Pro",
@@ -18,45 +18,45 @@
       "syncBinlog": 1,
       "logBin": 1
     },
-    "worker": "node src/index.js, development config, scheduler defaults (precheck/execute every 5 s, lease 11 min)"
+    "worker": "a separate process with createApplication and the real scheduler; only supplier.import.precheck and supplier.import.execute enabled (every 5 s, lease 11 min)"
   },
   "fileBytes": 2649279,
-  "uploadMs": 13,
+  "uploadMs": 20,
   "precheck": {
-    "ms": 5837,
+    "ms": 5835,
     "status": "ready",
     "total": 10000,
     "valid": 10000
   },
   "execute": {
-    "ms": 54642,
+    "ms": 54537,
     "status": "completed",
     "applied": 10000,
     "failed": 0,
     "skipped": 0
   },
   "nfr004": {
-    "precheckPlusExecuteMs": 60479,
+    "precheckPlusExecuteMs": 60372,
     "limitMs": 600000,
     "pass": true,
     "note": ""
   },
-  "workerPeakRssMiB": 233,
+  "workerPeakRssMiB": 223,
   "dbConnectionsPeak": {
     "userConnections": 4,
     "note": "all connections of DB_USER, including this process's own pool"
   },
   "msPerRowByThousand": [
+    3.2,
     3.3,
-    3.4,
-    3.9,
-    4.6,
-    5.1,
-    5.5,
-    5.8,
-    5.8,
-    6.2,
-    6.6
+    4.1,
+    4.8,
+    5,
+    5.4,
+    5.7,
+    6,
+    6.3,
+    6.5
   ],
   "verification": {
     "suppliersCreated": 10000,
@@ -67,24 +67,24 @@
     "countsConsistent": true
   },
   "resultDownload": {
-    "ms": 50,
-    "bytes": 478995,
-    "heapDeltaMiB": 18,
-    "rssDeltaMiB": -13
+    "ms": 52,
+    "bytes": 479409,
+    "heapDeltaMiB": 17,
+    "rssDeltaMiB": -12
   },
   "export": {
-    "ms": 57,
+    "ms": 58,
     "rows": 10000,
-    "bytes": 1510385,
+    "bytes": 1510799,
     "heapDeltaMiB": -9,
     "rssDeltaMiB": 4
   },
   "ok": true,
   "cleanup": {
     "suppliers": 10000,
-    "job": 140,
-    "user": 575,
-    "role": 387
+    "job": 376,
+    "user": 1700,
+    "role": 1135
   },
-  "finishedAt": "2026-10-08T02:48:39.547Z"
+  "finishedAt": "2026-10-08T07:17:51.812Z"
 }

@@ -8,8 +8,10 @@
  * job 就拒絕執行：benchmark 嘅 worker 係真 worker，會處理佢見到嘅所有 job（REV-078 M-1）。跑嘅期間有其他 job 被郁過，
  * 報告就係 `ok: false` 並列出佢哋（REV-079 L-B）。**只可以對用完即棄嘅資料庫跑。**
  *
- * - 呢個 process 負責上載、確認、量度同核對；預檢同執行由一個真 API process（`node src/index.js`，
- *   正式 scheduler 設定：每 5 秒領 job、真 lease）做，等同 production 嘅 worker。
+ * - 呢個 process 負責上載、確認、量度同核對；預檢同執行由另一個 process（同一個 script 加 `--worker`）做：佢用同一個
+ *   `createApplication`、真 scheduler（每 5 秒領 job、真 lease）同真 SupplierImportWorkerService，但只開 Supplier
+ *   嘅預檢同執行兩件工作，其他模組嘅背景工作全部關閉，唔會郁到其他資料（REV-080 L-C）；log 寫入臨時目錄。
+ * - 收到 SIGINT／SIGTERM 會停 worker、清理、寫報告（`interrupted`）先退出（REV-080 L-D）。
  * - `--crash`：執行到一半 SIGKILL 個 worker，再開第二個接手。Lease 係 11 分鐘；kill 之後將 `lease_until`
  *   改做而家，代替等 lease 過期（報告會寫明），驗證接手後啱啱好寫入一次、冇重複 Supplier。
  * - 跟住量 10,000 列結果下載（T46）同匯出（T47；REV-075 L-4）嘅時間同記憶體。
@@ -24,6 +26,7 @@ import { stringify } from "csv-stringify/sync";
 
 import { createApplication } from "../src/framework/application/createApplication.js";
 import { defaultConfigurationSource } from "../src/framework/configuration/applicationConfiguration.js";
+import { discoverServiceDefinitions } from "../src/framework/services/serviceDiscovery.js";
 import { BusinessMasterProvider } from "../src/modules/businessMaster/BusinessMasterProvider.js";
 import { BusinessMasterRepository } from "../src/modules/businessMaster/BusinessMasterRepository.js";
 import { SUPPLIER_CSV_STRINGIFY_OPTIONS, SUPPLIER_IMPORT_COLUMN_NAMES } from "../src/modules/supplier/import/supplierCsvSchema.js";
@@ -53,7 +56,8 @@ const distinctName = (index) => {
   const pick = (n) => WORDS[n % WORDS.length];
   return `${pick(index * 7)} ${pick(index * 13 + 3)} ${pick(Math.floor(index / 26) * 5 + 1)} ${randomBytes(3).toString("hex")} Trading`;
 };
-if (!Number.isSafeInteger(ROWS) || ROWS < 2 || ROWS > 10_000 || typeof OUTPUT !== "string") {
+const WORKER = arg("worker", false) === true;
+if (!WORKER && (!Number.isSafeInteger(ROWS) || ROWS < 2 || ROWS > 10_000 || typeof OUTPUT !== "string")) {
   throw new Error("usage: node scripts/benchmarkSupplierImport.js --database=<DB_NAME> --rows=<2..10000> --output <report.json> [--crash]");
 }
 const DB_KEYS = ["DB_HOST", "DB_PORT", "DB_USER", "DB_PASSWORD", "DB_NAME"];
@@ -64,6 +68,34 @@ if (missing.length > 0) {
 }
 if (arg("database", null) !== process.env.DB_NAME) {
   throw new Error(`--database must repeat DB_NAME (${process.env.DB_NAME}) to confirm it is a throwaway database`);
+}
+
+/** 只開 Supplier 預檢同執行嘅 app；其餘背景工作（Item、Customer、Sales……）全部關閉（REV-080 L-C）。 */
+async function supplierOnlyApplication({ work: directory, root: importRoot, keep }) {
+  const source = defaultConfigurationSource();
+  const names = (await discoverServiceDefinitions()).flatMap((definition) => (definition.ServiceClass?.jobs ?? []).map((job) => job.name));
+  // tokenRevocation.refresh 一定要開（設定驗證要求），佢只係讀撤銷名單，唔郁業務資料。
+  const always = ["tokenRevocation.refresh"];
+  const jobs = Object.fromEntries(names.map((name) => [name,
+    { ...(source.scheduler.jobs?.[name] ?? {}), enabled: keep.includes(name) || always.includes(name) }]));
+  return createApplication({
+    configurationSource: { ...source, application: { ...source.application, port: 0 },
+      scheduler: { ...source.scheduler, jobs },
+      supplier: { ...source.supplier, import: { ...source.supplier.import, root: importRoot } },
+      logging: { loggers: {
+        request: { ...source.logging.loggers.request, directory: path.join(directory, "requests") },
+        system: { ...source.logging.loggers.system, directory: path.join(directory, "system") } } } }
+  });
+}
+
+if (WORKER) {
+  // Child：等 SIGTERM（或者被 SIGKILL）。
+  const app = await supplierOnlyApplication({ work: process.env.BENCH_WORKER_DIR, root: process.env.BENCH_IMPORT_ROOT,
+    keep: [SUPPLIER_IMPORT_JOB_NAMES.precheck, SUPPLIER_IMPORT_JOB_NAMES.worker] });
+  await app.start();
+  await new Promise((resolve) => { process.once("SIGTERM", resolve); });
+  await app.shutdown("benchmark-worker");
+  process.exit(0);
 }
 
 const RUN = randomBytes(3).toString("hex").toUpperCase();
@@ -79,7 +111,7 @@ function environment(mysqlVersion, durability) {
   return {
     os: `${os.type()} ${os.release()} ${os.arch()}`, cpu: os.cpus()[0]?.model, cpus: os.cpus().length,
     totalMemoryGiB: Math.round(os.totalmem() / 2 ** 30), node: process.version, mysql: mysqlVersion, durability,
-    worker: "node src/index.js, development config, scheduler defaults (precheck/execute every 5 s, lease 11 min)"
+    worker: "a separate process with createApplication and the real scheduler; only supplier.import.precheck and supplier.import.execute enabled (every 5 s, lease 11 min)"
   };
 }
 
@@ -100,15 +132,11 @@ function csv() {
 
 function startWorker(label) {
   const log = fs.openSync(path.join(work, `${label}.log`), "a");
-  // DB_* 已經喺 process.env（上面驗過），dotenv 唔會蓋過已經設咗嘅值。Worker 嘅 system／request log 一定寫入
-  // 呢個 checkout 嘅 server/logs：log 目錄按 server root 計，冇環境變數改得到（REV-079 I-A），所以喺臨時 worktree 跑。
-  const child = spawn(process.execPath, ["src/index.js"], {
+  // 同一個 script 嘅 `--worker` mode；log 落臨時目錄（REV-079 I-A 對 benchmark 嚟講解決咗）。
+  return spawn(process.execPath, [fileURLToPath(import.meta.url), "--worker", `--database=${process.env.DB_NAME}`], {
     cwd: SERVER_DIR, stdio: ["ignore", log, log],
-    env: { ...process.env, NODE_ENV: "development", APP_HOST: "127.0.0.1", APP_PORT: String(3490 + (label === "worker-b" ? 1 : 0)),
-      JWT_SECRET: randomBytes(32).toString("hex"), SUPPLIER_IMPORT_ROOT: root,
-      ITEM_MEDIA_DIRECTORY: path.join(work, "items"), DB_INTEGRATION_TESTS: "" }
+    env: { ...process.env, BENCH_WORKER_DIR: path.join(work, label), BENCH_IMPORT_ROOT: root, DB_INTEGRATION_TESTS: "" }
   });
-  return child;
 }
 
 function rssMiB(pid) {
@@ -151,17 +179,56 @@ async function cleanup() {
   }
   return { suppliers: ids.length, job: created.jobId, user: created.userId, role: created.roleId };
 }
-try {
-  const source = defaultConfigurationSource();
-  application = await createApplication({
-    configurationSource: { ...source, application: { ...source.application, port: 0 },
-      scheduler: { ...source.scheduler, jobs: { ...source.scheduler.jobs, [SUPPLIER_IMPORT_JOB_NAMES.precheck]: { enabled: false },
-        [SUPPLIER_IMPORT_JOB_NAMES.worker]: { enabled: false }, [SUPPLIER_IMPORT_JOB_NAMES.purge]: { enabled: false } } },
-      supplier: { ...source.supplier, import: { ...source.supplier.import, root } },
-      logging: { loggers: {
-        request: { ...source.logging.loggers.request, directory: path.join(work, "parent-requests") },
-        system: { ...source.logging.loggers.system, directory: path.join(work, "parent-system") } } } }
+let finished = null;
+/** 停 worker、睇有冇其他 job 被郁過、清理、寫報告；正常完結同收到訊號都行呢度，只行一次。 */
+function finish() {
+  finished ??= (async () => {
+    // 被 SIGKILL 嘅 child exitCode 仍然係 null（記喺 signalCode），所以兩樣都要睇。
+    const running = children.filter((child) => child.exitCode === null && child.signalCode === null);
+    for (const child of running) child.kill("SIGTERM");
+    await Promise.all(running.map((child) => new Promise((resolve) => { child.once("exit", resolve); })));
+    if (db) {
+      // 分開兩個 try：檢查出錯都要清理（REV-080 I-G）。
+      try {
+        const [touched] = await db.query("SELECT id, status FROM supplier_import_jobs WHERE id <> ? AND updated_at >= ?",
+          [created.jobId ?? 0, RUN_STARTED]);
+        if (touched.length > 0) {
+          report.ok = false;
+          report.foreignJobsTouched = touched.map((row) => ({ id: Number(row.id), status: row.status }));
+          process.exitCode = 1;
+        }
+      } catch (error) {
+        report.ok = false;
+        report.checkError = error.message;
+        process.exitCode = 1;
+      }
+      try {
+        report.cleanup = await cleanup();
+      } catch (error) {
+        report.ok = false;
+        report.cleanupError = error.message;
+        process.exitCode = 1;
+      }
+    }
+    report.finishedAt = new Date().toISOString();
+    fs.writeFileSync(OUTPUT, `${JSON.stringify(report, null, 2)}\n`);
+    if (application) await application.shutdown("benchmark");
+    fs.rmSync(work, { recursive: true, force: true });
+    console.log(JSON.stringify(report, null, 2));
+  })();
+  return finished;
+}
+for (const signal of ["SIGINT", "SIGTERM"]) {
+  process.once(signal, () => {
+    report.ok = false;
+    report.interrupted = signal;
+    void finish().finally(() => process.exit(signal === "SIGINT" ? 130 : 143));
   });
+}
+
+try {
+  // 呢個 process 自己唔跑任何背景工作。
+  application = await supplierOnlyApplication({ work: path.join(work, "parent"), root, keep: [] });
   db = application.services.require("mysqldatabase");
   const preparedRoot = application.services.require("job.supplierImportWorker").preparedRoot;
   const [[{ version: mysqlVersion }]] = await db.query("SELECT VERSION() AS version");
@@ -300,34 +367,11 @@ try {
     (!CRASH || report.crash.midRun);
 
 } catch (error) {
-  report.ok = false;
-  report.error = error.message;
-  process.exitCode = 1;
-} finally {
-  // 被 SIGKILL 嘅 child exitCode 仍然係 null（記喺 signalCode），所以兩樣都要睇。
-  const running = children.filter((child) => child.exitCode === null && child.signalCode === null);
-  for (const child of running) child.kill("SIGTERM");
-  await Promise.all(running.map((child) => new Promise((resolve) => { child.once("exit", resolve); })));
-  // Worker 停晒先清，唔會一邊清一邊有人寫。清之前睇吓期間有冇其他 job 被郁過（REV-079 L-B）。
-  if (db) {
-    try {
-      const [touched] = await db.query("SELECT id, status FROM supplier_import_jobs WHERE id <> ? AND updated_at >= ?",
-        [created.jobId ?? 0, RUN_STARTED]);
-      if (touched.length > 0) {
-        report.ok = false;
-        report.foreignJobsTouched = touched.map((row) => ({ id: Number(row.id), status: row.status }));
-        process.exitCode = 1;
-      }
-      report.cleanup = await cleanup();
-    } catch (error) {
-      report.ok = false;
-      report.cleanupError = error.message;
-      process.exitCode = 1;
-    }
+  if (!report.interrupted) {
+    report.ok = false;
+    report.error = error.message;
+    process.exitCode = 1;
   }
-  report.finishedAt = new Date().toISOString();
-  fs.writeFileSync(OUTPUT, `${JSON.stringify(report, null, 2)}\n`);
-  if (application) await application.shutdown("benchmark");
-  fs.rmSync(work, { recursive: true, force: true });
-  console.log(JSON.stringify(report, null, 2));
+} finally {
+  await finish();
 }

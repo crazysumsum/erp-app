@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 295,
+  "revision": 296,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -1886,6 +1886,18 @@
       "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 07bc3cc0d6f4f7335f0f521ce85b939d7380caf6 (PR #192)",
       "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
       "source_ref": "docs/supplier_management/implementation/82_rev_079_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-080",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-049 REV-079 remediation)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 2afba993edb5f00c419fdd1d4307b951c974f600 (PR #192)",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/83_rev_080_independent_review.md",
       "status": "CHANGES_REQUESTED",
       "open_critical": 0,
       "open_high": 0,
@@ -4723,6 +4735,18 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-08: '全部按建議'. I-A could not be done as suggested: the log directory resolves against the server root and only server/config/logging.js (approval-required) could redirect it; documented and raised."
+    },
+    {
+      "id": "HD-078",
+      "impact": "MINOR",
+      "question": "REV-080 (TASK-049, product code approvable; benchmark only): L-C the benchmark worker is a full node src/index.js and runs every module's jobs (a foreign Item import job was touched with ok:true): run the worker as the same script with --worker through createApplication with only the Supplier import jobs enabled; L-D interrupting the benchmark orphans the worker and skips cleanup: handle SIGINT/SIGTERM through the same finish path; I-G separate try for check and cleanup; I-B test uploaded too; I-H regenerate evidence with --database; I-I document the shutdown-timeout lease case.",
+      "affected_ids": [
+        "TASK-049",
+        "REV-080",
+        "HD-077"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-08: '全部按建議'."
     }
   ],
   "external_actions": [
@@ -5799,5 +5823,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-049: HD-077 follow-ups done (I-A documented, config change raised). CI-style suite and mutants, push PR #192, re-review if the Product Owner wants it. Merge only on the Product Owner's word."
+  "next_safe_action": "TASK-049: HD-078 follow-ups done (supplier-only benchmark worker, signal-safe cleanup, evidence regenerated). CI-style suite and mutants, push PR #192, re-review if the Product Owner wants it. Merge only on the Product Owner's word."
 }

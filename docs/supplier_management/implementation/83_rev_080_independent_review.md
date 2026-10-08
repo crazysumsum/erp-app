@@ -84,4 +84,14 @@ Environment:
   `config/scheduler.js` reads no environment variable that could switch them.
 - The scheduler does accept per-name `enabled: false` overrides through `createApplication`, which is how the integration
   tests already run it.
-- The findings were taken to the Product Owner (HD-078).
+- The findings were taken to the Product Owner (HD-078), whose answer was '全部按建議'.
+
+| Finding | Follow-up |
+| --- | --- |
+| L-C | **Fixed at the root.** The worker is now this same script with `--worker`. It builds `createApplication` with every discovered scheduler job disabled except `supplier.import.precheck`, `supplier.import.execute` and `tokenRevocation.refresh`, which configuration validation requires. Reproduced: a foreign `item_import_jobs` row in `uploaded` stayed untouched (`updated_at` unchanged) through a 2,000-row run. |
+| L-D | **Fixed.** SIGINT and SIGTERM run the same `finish()`: stop the worker, check, clean up, write the report with `interrupted`, then exit 130 or 143. Reproduced: a SIGTERM to the benchmark mid-run cleaned up 334 Suppliers and the job, user and role, left no worker running and no temp directory, and wrote `ok: false, interrupted: SIGTERM`. |
+| I-A (REV-079) | **Resolved for the benchmark.** The worker runs through `createApplication`, so its logs go to the temp directory, and no `server/logs` is written. |
+| I-G | **Fixed.** The check and the cleanup have separate `try` blocks. |
+| I-B | **Tested.** The pending-guard integration test covers both `uploaded` and `queued`. The after-run check and the cleanup remain covered by the manual controls above. |
+| I-H | **Fixed.** Both 10,000-row reports were regenerated with the final script (the command includes `--database`). Normal run 60 s; SIGKILL run 66 s, exactly once. |
+| I-I | **Documented** in `bulk_operations.md`. |
