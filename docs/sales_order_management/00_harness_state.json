@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 252,
+  "revision": 253,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-004",
-  "current_task": "TASK-045",
+  "current_task": "TASK-046",
   "baseline": {
     "design": "20b065e88164b06e91c89116f211e2e44d143e2948d18c0578281e3338925a33",
     "plan": "c11e2acd3288a4b2a807e894cbf09edc9900daa34042b643d3994617e6a0605d",
-    "code_commit": "2759fd1604fc5b37f128a11c505c24c9a553ceb0",
-    "source_fingerprint": "62fcf673e6a767a17bea0d233c83cfd49a53a50da0065446c88c31b6444c2d07",
+    "code_commit": "3767434f27bf792b407551e4f2240b84e0d898c0",
+    "source_fingerprint": "653d43884e669dcb06e2200219b93d3b66706f6fb81d6323e7b3c602d6a572ca",
     "worktree": "/private/tmp/erp-sales-p3",
     "default_commit": "2afef5cdb271dbfa3ccefd913f7042c52c7be92b",
     "mode_entry_commit": "6936736ba1fb98f4fcb8365377f59f0a0f7a4897"
@@ -72,8 +72,8 @@
     "TASK-042": "DONE",
     "TASK-043": "DONE",
     "TASK-044": "DONE",
-    "TASK-045": "IN_PROGRESS",
-    "TASK-046": "PENDING",
+    "TASK-045": "DONE",
+    "TASK-046": "IN_PROGRESS",
     "TASK-047": "PENDING",
     "TASK-048": "PENDING",
     "TASK-049": "PENDING"
@@ -4540,6 +4540,54 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-T045-WORKER-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "c11e2acd3288a4b2a807e894cbf09edc9900daa34042b643d3994617e6a0605d",
+      "source_ref": "/private/tmp/sales-p3-private/task045-worker-r1-reviewer-proof.json; exact scoped fileSHA/observations retained. Historical R1 findings preserved, resolved by corresponding R2 actual probes; no wholePhase/formal/CI/merge approval.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-T045-WORKER-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "c11e2acd3288a4b2a807e894cbf09edc9900daa34042b643d3994617e6a0605d",
+      "source_ref": "/private/tmp/sales-p3-private/task045-worker-r2-reviewer-proof.json; exact scoped fileSHA/observations retained. Historical R1 findings preserved, resolved by corresponding R2 actual probes; no wholePhase/formal/CI/merge approval.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-T045-RUNTIME-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "c11e2acd3288a4b2a807e894cbf09edc9900daa34042b643d3994617e6a0605d",
+      "source_ref": "/private/tmp/sales-p3-private/task045-runtime-r1-reviewer-proof.json; exact scoped fileSHA/observations retained. Historical R1 findings preserved, resolved by corresponding R2 actual probes; no wholePhase/formal/CI/merge approval.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-T045-NATIVE-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "c11e2acd3288a4b2a807e894cbf09edc9900daa34042b643d3994617e6a0605d",
+      "source_ref": "/private/tmp/sales-p3-private/task045-native-r1-reviewer-proof.json; exact scoped fileSHA/observations retained. Historical R1 findings preserved, resolved by corresponding R2 actual probes; no wholePhase/formal/CI/merge approval.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -6357,6 +6405,17 @@
       "source_ref": "Actual final148unit0fail/skip; final Import+Inventory native26JUnit records/Node27reported0fail/skip incl50MiB100krows; earlier affected P2+Import regression70Node reported/63leaf0fail/skip. Final full lint0/boundaryLOCAL_CHECKS_PASS/traceabilitySTRUCTURE_PASS. Separate InventoryR2/coreR1/IntakeR2 approved exact slices; final reviewer6unit10native4probes/lint0. All R1/RED/fixture/cleanup diagnostic failures retained privately; diagnostic force-exit was not PASS evidence. No Phase/CI/formal/production claim.",
       "actor": "Codex /root",
       "observed_at": "2026-10-08T03:26:20.068971+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK045 registered processing/recovery developer DoD",
+      "code_commit": "3767434f27bf792b407551e4f2240b84e0d898c0",
+      "spec_baseline": "c11e2acd3288a4b2a807e894cbf09edc9900daa34042b643d3994617e6a0605d",
+      "source_fingerprint": "653d43884e669dcb06e2200219b93d3b66706f6fb81d6323e7b3c602d6a572ca",
+      "status": "PASS",
+      "source_ref": "Author final152 SalesP1-P3unit records PASS0skip and44 fullImport native leaf/JUnitrecords PASS0skip with clean exit including unchanged50MiB100krow cases. Full lint0/boundaryLOCAL_CHECKS_PASS/traceSTRUCTURE_PASS. Separateworker5fileR2 pure54+7actualFSprobes/lint; runtime4fileR1 pure3+5runtimeprobes/lint; native2fileR1 actual10nativeleaf/lint approve exactSHA. Actual owned child SIGKILL at post-sourceCOMMIT and midresultwrite, then explicit synthetic fixedruntime/Job lease expiry; same events/SO/updates preserved, private temp reclaimed, auditonce. Permission revoke/shutdown/technicaldeferral/unknownCOMMIT and failed requiredcompletionaudit after atomic rename recover without false FAILED or repeated effects. Historical R1 directorymode bug/RED/cleanuphook/counterfixture/controlfixture failures retained. No Phase/CI/formal/production claim.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-08T04:05:28.634900+00:00"
     }
   ],
   "pending_decisions": [
@@ -7752,8 +7811,9 @@
     "implementation/69_task038_intake_persistence.md",
     "implementation/70_task039_csv_template.md",
     "implementation/71_phase3_upload_activation_decision.md",
-    "implementation/75_phase3_atomic_intake_checkpoint.md"
+    "implementation/75_phase3_atomic_intake_checkpoint.md",
+    "implementation/76_task045_registered_worker_checkpoint.md"
   ],
   "defects": [],
-  "next_safe_action": "TASK045 bounded registered Intake worker, Job UUID claims/heartbeat/takeover, same-event recovery and owner-safe terminal result publication; then046–049, full33developer contracts/exactcandidate5CI/separatefullPhase review/freshmain/authorizedPRmerge. Clear only owned stale synthetic Jobs/artifacts from failed native fixture teardown before processing-worker native checks; preserve immutable Inventory audit/operations. No formal acceptance/production/realChannel."
+  "next_safe_action": "TASK046 canonical Channel V1 server-wired trusted context/schema/union outcomes and synthetic persistence; then TASK047048 actualUI Playwright and049 retention/capacity/full33 developer contracts/exactcandidate5CI/separatefullPhase review/freshmain/authorizedPRmerge. No public/realChannel adapter, formal acceptance, production or release."
 }
