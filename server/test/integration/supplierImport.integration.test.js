@@ -1586,6 +1586,9 @@ integrationTest("TASK-049 (TC-086, SUP-CAP-05): one mixed file end to end — co
   const [audits] = await h.db.query("SELECT detail, reason, target_label FROM supplier_audit_logs WHERE target_type = 'import' AND target_id IN (?, ?)",
     [id, other.id]);
   const scanned = { logs: allLogText(), audit: JSON.stringify(audits), result: result.bytes.toString("utf8") };
+  // 個掃描要有嘢掃先算數：log 唔係空，marker 亦真係入咗系統（喺 Supplier 備註）。
+  assert.ok(scanned.logs.includes(`"jobId":${id}`), "the logs that are scanned mention this job");
+  assert.equal((await supplierByCode(`E1-${tag}`)).notes, marker, "the marker reached the Supplier, so its absence elsewhere means something");
   for (const [where, text] of Object.entries(scanned)) {
     for (const secret of [marker, h.worker.preparedRoot, BANK_VALUE]) assert.ok(!text.includes(secret), `${where} must not contain ${secret}`);
   }
