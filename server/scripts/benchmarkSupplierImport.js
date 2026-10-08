@@ -131,9 +131,9 @@ try {
   report.uploadMs = now() - uploadStarted;
 
   const samples = { rssMiB: [], dbConnections: [] };
-  let sampling = true;
+  const sampling = { on: true };
   const sampler = (async () => {
-    while (sampling) {
+    while (sampling.on) {
       for (const child of children.filter((candidate) => candidate.exitCode === null && candidate.signalCode === null)) {
         const rss = rssMiB(child.pid);
         if (rss !== null) samples.rssMiB.push(rss);
@@ -183,7 +183,7 @@ try {
   report.nfr004 = { precheckPlusExecuteMs: report.precheck.ms + report.execute.ms, limitMs: 600_000,
     pass: report.precheck.ms + report.execute.ms <= 600_000,
     note: CRASH ? "includes the crash, the restart of a second worker and its first poll; the 11-minute lease wait is simulated" : "" };
-  sampling = false;
+  sampling.on = false;
   await sampler;
   report.workerPeakRssMiB = Math.max(...samples.rssMiB);
   report.dbConnectionsPeak = { userConnections: Math.max(...samples.dbConnections),
