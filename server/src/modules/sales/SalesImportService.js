@@ -1,4 +1,5 @@
 import path from "node:path";
+import {SalesImportPrecheckWorker} from "./SalesImportPrecheckWorker.js";
 import {constants,createReadStream} from "node:fs";
 import {lstat,readFile,open,mkdir,rename,rmdir} from "node:fs/promises";
 import {createHash} from "node:crypto";
@@ -37,9 +38,13 @@ function summary(row,warnings=[]) {
 }
 
 export class SalesImportService {
- constructor({database,time,root="storage/sales-imports",tempRoot="storage/uploads/tmp"}={}) {
-  this.database=database;this.time=time;this.root=prepareDiskTempDirectory(root,"Sales import");
+ constructor({database,time,root="storage/sales-imports",tempRoot="storage/uploads/tmp",...options}={}) {
+  this.workerOptions=options;this.database=database;this.time=time;this.root=prepareDiskTempDirectory(root,"Sales import");
   this.tempRoot=prepareDiskTempDirectory(tempRoot,"Sales import temp");this.operations=new SalesOperationService();this.sequence=new SalesSequenceService({time});
+ }
+ runPrecheckBatch(request){
+  this.precheck??=new SalesImportPrecheckWorker({...this.workerOptions,database:this.database,time:this.time,root:this.root,checkFile});
+  return this.precheck.runBatch(request);
  }
  authorizeUpload(claims){return this.database.withTransaction(tx=>actorInTransaction(tx,claims)).then(()=>true);}
  async createFromUpload({claims,eventId,file,abortSignal,trace={}}) {
