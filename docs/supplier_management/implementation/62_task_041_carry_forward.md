@@ -761,3 +761,42 @@ After REV-077 the list is 31, all killed. Four mutants were added:
 - the code missing from the message (I-a);
 - a cancel keeping the CSV content (HD-073);
 - expiry clearing rows before the status guard (REV-077's M7).
+
+## Status after TASK-049
+
+T49 is the SUP-CAP-05 acceptance: the 10,000-row capacity run, crash recovery at scale, an end-to-end mixed run, and a
+leak scan. The open points were decided in HD-074 (1A, 2B, 3A). Capacity work exposed two T45 defects, fixed under HD-075.
+The operator guide is `docs/supplier_management/bulk_operations.md`.
+
+| Point | Status |
+| --- | --- |
+| NFR-004: 10,000 rows within 10 minutes | **Pass.** Precheck 5.8 s plus execution 51.1 s gives 57 s. The run used the real API as worker with the default scheduler, on MySQL with `fsync` on every commit. Evidence: `evidence/20261008-t49-capacity/import-10000-rows.json`. |
+| HD-074 3A: crash at scale | **Pass.** The worker was SIGKILLed after 5,003 of 10,000 rows and a second worker took over, giving exactly 10,000 Suppliers, 10,000 applied rows and 10,000 distinct applied IDs, with consistent counts, in 64 s. The 11-minute lease of the killed worker was simulated as expired (stated in the evidence). Evidence: `import-10000-rows-sigkill.json`. |
+| HD-074 1A: benchmark entry point | `node scripts/benchmarkSupplierImport.js --rows=10000 --output <file> [--crash]`, with `DB_*` and `JWT_SECRET` set. It writes `BM49-<run>-` Suppliers to a throwaway database and removes them afterwards. `server/package.json` is unchanged. |
+| HD-074 2B: export memory | At most two exports per process, otherwise 429 `SUPPLIER_EXPORT_BUSY`. A refused caller never takes a slot, and a slot is freed on success or failure. |
+| HD-075 cause 1: similar-name search during execution | **Fixed.** The import applier passes `findDuplicates: false`; UI create and update still search. The search ran on every row, its result was discarded, and its cost grew with the Supplier count: 784 of about 820 s of SQL time. Before the fix, 10,000 rows did not finish in 20 minutes. |
+| HD-075 cause 2: an 11-minute stall after every 10-minute run | **Fixed.** A worker that stops between rows (timeout or shutdown) calls `releaseExecutionLease`, so the next poll resumes. Only a dead process now waits for the lease to expire. |
+| T46: result download at 10,000 rows | 32 ms, 479 KB. |
+| REV-075 L-4: export at 10,000 rows | 48 ms, 1.5 MB with realistic values. The maximum-length case is covered by the gate (2B). |
+| AC 1: mixed end-to-end run | **Pass.** One integration test runs create, identical-name warning, invalid, update and formula-name rows with approval on and activation, checks row outcomes against the job counts and the result CSV, exports, cancels another job, purges, and gets 410. |
+| AC 3: no leak | **Pass.** The same test finds none of a CSV-only marker, the import root path or a Bank value in the logs, the jobs' audit or the result file. It first checks that the logs mention the job and that the marker reached the Supplier, so the scan cannot pass vacuously. Formula cells are guarded in the export. |
+| Real browser | The real API and worker with Vite: template (30 columns), mixed upload, precheck 2 valid and 1 invalid, password confirm, 2 written and 1 skipped, the result under the server's file name, and the export with `'=HYPERLINK…` and `'+852…` guarded. The only 403 was the first-login device check. |
+
+Notes:
+
+- **Per-row time** rises slowly with the row number, from about 3 ms to 6 ms by row 10,000, because finding the next row
+  gets slightly slower as rows are applied. That is well inside NFR-004 at the 10,000-row cap.
+- **Out of T49's scope (HD-075):** UI create and update still run the similar-name search. Its cost grows with the
+  Supplier count (about 87,000 rows examined per call at about 20,000 similar names), so it is worth a separate task before
+  the Supplier master gets large.
+
+## Mutation record for TASK-049
+
+10 mutants, all killed:
+
+- **Export gate:** no gate; three allowed; a slot never freed; the gate taken before authorization.
+- **Similar-name search:** the import create or update runs it; UI create skips it.
+- **Lease:** the worker keeps its lease when stopping; release ignores the owner; release does not free the lease.
+
+The first two gate mutants made the unit test hang rather than fail; they were counted as killed after a 120 s watchdog
+stopped them. The test now races the third export against a one-second timer, so they fail fast, and they were re-run.

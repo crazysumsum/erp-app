@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 292,
+  "revision": 293,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -5750,5 +5750,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-049 in progress on claude/supplier-task-049 per HD-074 (1A node benchmark, 2B export concurrency gate of 2, 3A SIGKILL at 10,000 rows). Merge only on the Product Owner's word."
+  "next_safe_action": "TASK-049 on claude/supplier-task-049 per HD-074/HD-075: capacity passes (57 s; SIGKILL run 64 s, exactly once), end-to-end and leak tests pass, 10/10 mutants; PR, CI and independent review next. Merge only on the Product Owner's word."
 }
