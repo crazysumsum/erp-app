@@ -8,12 +8,13 @@ import {loadPermissionNamesForUser} from "../authorization/directoryLookups.js";
 import {parseSalesCsv} from "./salesCsv.js";
 import {precheckSalesOrders,sourceOrderPayloadHash,salesSourceHash} from "./salesImportPrecheck.js";
 import {salesError} from "./salesErrors.js";
+import {SalesAuditService} from "./SalesAuditService.js";
 import defaults from "../../../config/sales.js";
 
 const name="sales.importWorker",json=value=>typeof value==="string"?JSON.parse(value):value;
 export class SalesImportPrecheckWorker {
- constructor({database,time,logger,config=defaults,root,authorizeSalesImport,customerProvider,itemProvider,checkFile}={}) {
-  this.database=database;this.config=config;this.root=root;this.authorize=authorizeSalesImport;this.checkFile=checkFile;
+ constructor({database,time,logger,config=defaults,root,authorizeSalesImport,customerProvider,itemProvider,checkFile,audit}={}) {
+  this.database=database;this.config=config;this.root=root;this.authorize=authorizeSalesImport;this.checkFile=checkFile;this.audit=audit??new SalesAuditService();
   this.customers=customerProvider??new CustomerLookupService({database});this.items=itemProvider??new ItemLookupService({database,time,logger});
  }
  async #lease(tx,signal) {
@@ -28,6 +29,7 @@ export class SalesImportPrecheckWorker {
  async #actor(tx,userId) {
   const [[user]]=await tx.query("SELECT username FROM users WHERE id=? AND status='active'",[Number(userId)]),permissions=await loadPermissionNamesForUser(tx,Number(userId));
   if(!user||!["sales.view","sales.import"].every(permission=>permissions.includes(permission)))throw salesError("SALES_DEPENDENCY_UNAVAILABLE");
+  return {id:Number(userId),username:user.username};
  }
  async #transaction(claim,signal,work) {
   return this.database.withTransaction(async tx=>{
@@ -81,7 +83,10 @@ export class SalesImportPrecheckWorker {
     }
     const [[counts]]=await tx.query(`SELECT COALESCE(SUM(status='VALID'),0) AS valid_count,COALESCE(SUM(status='INVALID'),0) AS invalid_count,COALESCE(SUM(status='DUPLICATE'),0) AS duplicate_count,
      COALESCE(SUM(status='RECEIVED'),0) AS pending,COALESCE(SUM(JSON_LENGTH(safe_payload,'$.warnings')>0),0) AS warning_count FROM sales_intake_orders WHERE import_job_id=?`,[job.id]);
-    await tx.execute("UPDATE sales_import_jobs SET valid_count=?,invalid_count=?,duplicate_count=?,warning_count=?,status=?,version=version+1,updated_at=? WHERE id=?",[Number(counts.valid_count),Number(counts.invalid_count),Number(counts.duplicate_count),Number(counts.warning_count),Number(counts.pending)?"VALIDATING":"READY",nowMs,job.id]);return results.length;
+    await tx.execute("UPDATE sales_import_jobs SET valid_count=?,invalid_count=?,duplicate_count=?,warning_count=?,status=?,version=version+1,updated_at=? WHERE id=?",[Number(counts.valid_count),Number(counts.invalid_count),Number(counts.duplicate_count),Number(counts.warning_count),Number(counts.pending)?"VALIDATING":"READY",nowMs,job.id]);
+    if(!Number(counts.pending))await this.audit.record(tx,{actor:await this.#actor(tx,job.created_by),action:"sales_import.prechecked",targetId:Number(job.id),targetNumber:job.batch_number,eventId:randomUUID(),nowMs,
+     details:{version:Number(job.version)+1,rowCount:Number(job.total_row_count),sourceOrderCount:Number(job.source_order_count),validCount:Number(counts.valid_count),invalidCount:Number(counts.invalid_count),duplicateCount:Number(counts.duplicate_count)}});
+    return results.length;
    });
    return {processed:1,classified};
   }catch(error){

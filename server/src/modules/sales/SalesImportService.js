@@ -8,11 +8,17 @@ import {prepareDiskTempDirectory} from "../../framework/upload/normalizeUploadCo
 import {requireSalesActor} from "./salesAuthorization.js";
 import {SalesOperationService} from "./SalesOperationService.js";
 import {SalesSequenceService} from "./SalesSequenceService.js";
+import {SalesAuditService} from "./SalesAuditService.js";
+import {transitionImportJob} from "./SalesIntakeStateMachine.js";
 import {salesPayloadHash} from "./salesCanonicalHash.js";
 import {salesEventId} from "./salesValidation.js";
 import {salesError} from "./salesErrors.js";
 
 const invalid=()=>salesError("SALES_IMPORT_FILE_INVALID");
+export function validateSalesImportCommand(input){
+ if(!input||Array.isArray(input)||Object.keys(input).sort().join(",")!=="eventId,version"||!Number.isInteger(input.version)||input.version<1||input.version>=4294967295)throw salesError("SALES_INPUT_INVALID");
+ salesEventId(input.eventId);return {eventId:input.eventId,version:input.version};
+}
 function privateEntry(stat,directory=false) {
  return !stat.isSymbolicLink()&&(directory?stat.isDirectory():stat.isFile())&&(stat.mode&0o777)===(directory?0o700:0o600)&&(!process.getuid||stat.uid===process.getuid());
 }
@@ -40,13 +46,55 @@ function summary(row,warnings=[]) {
 export class SalesImportService {
  constructor({database,time,root="storage/sales-imports",tempRoot="storage/uploads/tmp",...options}={}) {
   this.workerOptions=options;this.database=database;this.time=time;this.root=prepareDiskTempDirectory(root,"Sales import");
-  this.tempRoot=prepareDiskTempDirectory(tempRoot,"Sales import temp");this.operations=new SalesOperationService();this.sequence=new SalesSequenceService({time});
+  this.tempRoot=prepareDiskTempDirectory(tempRoot,"Sales import temp");this.operations=new SalesOperationService();this.sequence=new SalesSequenceService({time});this.audit=options.audit??new SalesAuditService();
  }
  runPrecheckBatch(request){
   this.precheck??=new SalesImportPrecheckWorker({...this.workerOptions,database:this.database,time:this.time,root:this.root,checkFile});
   return this.precheck.runBatch(request);
  }
  authorizeUpload(claims){return this.database.withTransaction(tx=>actorInTransaction(tx,claims)).then(()=>true);}
+ confirm(request){return this.#control(request,"QUEUED","CONFIRM_IMPORT");}
+ cancel(request){return this.#control(request,"CANCELLED","CANCEL_IMPORT");}
+ async #control({claims,id,input,abortSignal,trace={}},status,commandType){
+  if(!Number.isSafeInteger(id)||id<1)throw salesError("SALES_INPUT_INVALID");
+  const {eventId,version}=validateSalesImportCommand(input);abortSignal?.throwIfAborted();
+  return this.operations.run(this.database,async tx=>{
+   const actor=await actorInTransaction(tx,claims),nowMs=this.time.nowMs();
+   const claim=await this.operations.claim(tx,{eventId,commandType,targetId:id,payload:{version},actor,nowMs,...trace});
+   const [[job]]=await tx.query("SELECT id,batch_number,status,version,source_file_path,files_purged_at FROM sales_import_jobs WHERE id=? FOR UPDATE",[id]);
+   if(!job||!job.source_file_path&&job.files_purged_at===null)throw salesError("SALES_IMPORT_NOT_FOUND");
+   if(claim.replay)return {importJob:{id:claim.replay.id,batchNumber:claim.replay.number,status:claim.replay.status,version:claim.replay.version},warnings:[]};
+   if(Number(job.version)!==version)throw salesError("VERSION_CONFLICT",{currentVersion:Number(job.version)});
+   transitionImportJob(job.status,status);abortSignal?.throwIfAborted();
+   const [written]=await tx.execute(`UPDATE sales_import_jobs SET status=?,version=version+1,updated_at=?,
+    ${status==="QUEUED"?"confirmed_by=?,confirmed_at=?":"completed_at=?"} WHERE id=? AND version=? AND status=?`,
+    status==="QUEUED"?[status,nowMs,actor.id,nowMs,id,version,job.status]:[status,nowMs,nowMs,id,version,job.status]);
+   if(Number(written.affectedRows)!==1)throw salesError("CONCURRENT_OPERATION");
+   if(status==="QUEUED")await tx.execute("UPDATE sales_intake_orders SET status='QUEUED',updated_at=? WHERE import_job_id=? AND status='VALID'",[nowMs,id]);
+   await this.audit.record(tx,{actor,action:status==="QUEUED"?"sales_import.confirmed":"sales_import.cancelled",targetId:id,targetNumber:job.batch_number,eventId,nowMs,...trace,details:{fromStatus:job.status,toStatus:status,version:version+1}});
+   const result={id,number:job.batch_number,status,version:version+1};await this.operations.succeed(tx,{operationId:claim.operationId,result,nowMs});
+   abortSignal?.throwIfAborted();return {importJob:{id,batchNumber:job.batch_number,status,version:version+1},warnings:[]};
+  },{signal:abortSignal});
+ }
+ async resolveResultDownload({claims,id,abortSignal}){
+  if(!Number.isSafeInteger(id)||id<1)throw salesError("SALES_INPUT_INVALID");
+  const job=await this.database.withTransaction(async tx=>{
+   await requireSalesActor(tx,claims,"sales.view");const [[row]]=await tx.query("SELECT id,batch_number,status,result_file_path,completed_at,files_purged_at FROM sales_import_jobs WHERE id=? AND (source_file_path<>'' OR files_purged_at IS NOT NULL)",[id]);
+   if(!row)throw salesError("SALES_IMPORT_NOT_FOUND");
+   if(row.files_purged_at!==null)throw salesError("SALES_IMPORT_RESULT_EXPIRED");
+   if(!["COMPLETED","PARTIAL_SUCCESS","FAILED"].includes(row.status))throw salesError("SALES_STATE_CONFLICT");
+   if(row.completed_at===null||this.time.nowMs()>=Number(row.completed_at)+90*86400000)throw salesError("SALES_IMPORT_RESULT_EXPIRED");
+   return row;
+  },{signal:abortSignal});
+  let handle;
+  try{
+   if(!/^SI-\d{6}-\d{6}$/u.test(job.batch_number)||job.result_file_path!==`${job.batch_number}/result.csv`)throw salesError("SALES_IMPORT_RESULT_EXPIRED");
+   if(!privateEntry(await lstat(this.root),true)||!privateEntry(await lstat(path.join(this.root,job.batch_number)),true)||!privateEntry(await lstat(path.join(this.root,job.result_file_path))))throw salesError("SALES_IMPORT_RESULT_EXPIRED");
+   abortSignal?.throwIfAborted();handle=await open(path.join(this.root,job.result_file_path),constants.O_RDONLY|constants.O_NOFOLLOW);
+   if(!privateEntry(await handle.stat()))throw salesError("SALES_IMPORT_RESULT_EXPIRED");
+   return {stream:handle.createReadStream({autoClose:true,signal:abortSignal}),fileName:`${job.batch_number}-result.csv`};
+  }catch(error){await handle?.close();if(["ENOENT","ELOOP"].includes(error.code))throw salesError("SALES_IMPORT_RESULT_EXPIRED");throw error;}
+ }
  async createFromUpload({claims,eventId,file,abortSignal,trace={}}) {
   abortSignal?.throwIfAborted();salesEventId(eventId);
   if(!file||file.field!=="file"||!["text/csv","application/csv"].includes(file.mimeType)||!Number.isSafeInteger(file.size)||file.size<1||file.size>52428800||
@@ -85,7 +133,7 @@ export class SalesImportService {
   const directory=path.join(this.root,stage.job.batch_number),relative=`${stage.job.batch_number}/source.csv`,destination=path.join(this.root,relative);
   try {
    return await this.operations.run(this.database,async tx=>{
-    await actorInTransaction(tx,claims);
+    const actor=await actorInTransaction(tx,claims);
     const [[operation]]=await tx.query("SELECT status,target_id,request_hash,actor_user_id,result_summary FROM sales_operation_requests WHERE id=? FOR UPDATE",[stage.operationId]);
     if(!operation||operation.request_hash!==hash||Number(operation.target_id)!==Number(stage.job.id))throw salesError("SALES_EVENT_CONFLICT");
     const [[job]]=await tx.query("SELECT id,batch_number,status,version,source_file_path FROM sales_import_jobs WHERE id=? FOR UPDATE",[stage.job.id]);
@@ -103,6 +151,7 @@ export class SalesImportService {
     const warnings=duplicate?[{code:"SAME_FILE_PREVIOUSLY_UPLOADED"}]:[];
     await tx.execute("UPDATE sales_import_jobs SET source_file_path=?,updated_at=? WHERE id=? AND source_file_path=''",[relative,this.time.nowMs(),job.id]);
     const result=summary(job,warnings);
+    await this.audit.record(tx,{actor,action:"sales_import.uploaded",targetId:Number(job.id),targetNumber:job.batch_number,eventId,nowMs:this.time.nowMs(),...trace,details:{version:Number(job.version)}});
     await tx.execute("UPDATE sales_operation_requests SET status='SUCCEEDED',result_type='IMPORT_JOB',result_id=?,result_summary=?,completed_at=?,updated_at=? WHERE id=? AND status='IN_PROGRESS'",[job.id,JSON.stringify(result),this.time.nowMs(),this.time.nowMs(),stage.operationId]);
     return result;
    },{signal:abortSignal});
