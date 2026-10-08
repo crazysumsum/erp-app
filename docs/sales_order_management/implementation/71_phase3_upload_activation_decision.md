@@ -15,3 +15,7 @@ Proposed DESIGN `728edbc6d4146e0d373b7f07b97a0df1820c95493554608755541647f39c98b
 Exact patch SHA256 `df3fbbfec005b6cc1dca94aacc0013221e0dc273a402ed709db559fbcefee9c4`, privately retained at `/private/tmp/sales-p3-private/dec026-activation.patch`; proposal file hashes at `/private/tmp/sales-p3-private/dec026-proposal.json`. History is preserved; a new binding is required rather than rewriting DEC-025 approvals.
 
 Actual independent `/root/sales_readiness_review` R2 APPROVE verifies all six patch hashes, corrected source pin, unchanged acceptance authorities and patch applicability. Its own normal JSON/slow-body/slot-release three checks pass; R1 JSON408 and the old proposal remain historical. Final private proof is `dec026-reviewer-r2-proof.json`. Proposal/candidate checks do not declare current live source, whole TASK-040/P3, CI, formal acceptance or merge PASS. On adoption: apply exact reviewed patch, rerun actual unmodified-source checks, record new D/P decision and only then complete upload activation.
+
+## Actual adoption
+
+Sam「請繼續」adopts the preceding DEC-026 next-step/scope decision. Exact private patch verified and applied; new baseline bindings append to history. Runtime/source verification is pending; candidate-only proofs are not rewritten as actual-source PASS.
