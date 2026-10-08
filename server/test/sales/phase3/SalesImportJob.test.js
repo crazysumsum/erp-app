@@ -1,0 +1,10 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import {SalesImportJob} from "../../../src/services/salesJobs/jobs/SalesImportJob.js";
+import {SalesJobRuntimeService} from "../../../src/services/salesJobs/SalesJobRuntimeService.js";
+test("TC-035 registered Import job exposes only its active running signal and fixed cluster principal",async()=>{
+ const controller=new AbortController(),job={name:"sales.importWorker",serviceName:"job.salesImport",method:"run",scope:"cluster",enabled:true},scheduler={jobs:new Map(),running:new Map(),owner:"test-owner",started:true,stopped:false,schedulerConfig:{enabled:true},register(instance){assert.ok(instance instanceof SalesImportJob);this.jobs.set(job.name,job);}},sources={mysqldatabase:{query(){throw Error("Unexpected SQL");},withTransaction(){throw Error("Unexpected transaction");}},time:{nowMs:()=>100},logging:{logger:{info:async()=>{},error:async()=>{}}}},services={require:key=>sources[key]},runtime=new SalesJobRuntimeService({services});sources.scheduler=scheduler;sources.salesJobs=runtime;
+ const service=new SalesImportJob({services});await service.initialize();assert.equal(runtime.importPrincipal(),null);scheduler.running.set(job.name,{controller});assert.deepEqual(runtime.importPrincipal(),{leaseOwner:scheduler.owner,signal:controller.signal});
+ for(const change of [()=>job.enabled=false,()=>scheduler.started=false,()=>scheduler.stopped=true,()=>scheduler.schedulerConfig.enabled=false,()=>scheduler.jobs.delete(job.name)]){change();assert.equal(runtime.importPrincipal(),null);job.enabled=true;scheduler.started=true;scheduler.stopped=false;scheduler.schedulerConfig.enabled=true;scheduler.jobs.set(job.name,job);}
+ let received;runtime.importer.runPrecheckBatch=async request=>{received=request;return {processed:1,classified:2};};assert.equal((await service.run(controller.signal)).classified,2);assert.equal(received.signal,controller.signal);await assert.rejects(()=>service.run(new AbortController().signal));controller.abort();assert.equal(runtime.importPrincipal(),null);await assert.rejects(()=>service.run(controller.signal));
+});
