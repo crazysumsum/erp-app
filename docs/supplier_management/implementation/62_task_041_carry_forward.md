@@ -800,3 +800,13 @@ Notes:
 
 The first two gate mutants made the unit test hang rather than fail; they were counted as killed after a 120 s watchdog
 stopped them. The test now races the third export against a one-second timer, so they fail fast, and they were re-run.
+
+After REV-078 the T49 list is 14 mutants, all killed. One pattern was updated, because the release moved into `finally`,
+and four mutants were added:
+
+- the pause reason not told apart (L-2);
+- the release accepting any input (I-3);
+- the release ignoring the job's status (I-1);
+- the benchmark's `DB_*` guard removed (M-1).
+
+The full server suite, run the CI way, passes: 2,819, 0 failed, coverage floors met.
