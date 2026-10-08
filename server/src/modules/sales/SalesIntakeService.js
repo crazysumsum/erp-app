@@ -1,7 +1,7 @@
 import {SalesOrderService} from "./SalesOrderService.js";
 import {SalesOrderConfirmationService} from "./SalesOrderConfirmationService.js";
 import {SalesOperationService} from "./SalesOperationService.js";
-import {requireSalesImportActorById} from "./salesAuthorization.js";
+import {requireSalesImportActorById,requireSalesImportWorker} from "./salesAuthorization.js";
 import {salesError} from "./salesErrors.js";
 import {salesEventId} from "./salesValidation.js";
 import {salesSourceHash} from "./salesImportPrecheck.js";
@@ -14,12 +14,7 @@ export class SalesIntakeService {
   this.database=database;this.time=time;this.logger=logger;this.config=config;this.authorize=authorizeSalesImport;this.channelVerifier=channelVerifier;this.operations=new SalesOperationService();
   this.orders=orderService??new SalesOrderService({database,time,logger});this.confirmation=confirmationService??new SalesOrderConfirmationService({database,time,logger,config,authorizeSalesIntake:authorizeSalesImport});
  }
- async #fence(tx,signal,previous){
-  const principal=await this.authorize?.();if(!principal||principal.signal!==signal||signal?.aborted!==false||typeof principal.leaseOwner!=="string"||!principal.leaseOwner||previous&&principal.leaseOwner!==previous.leaseOwner)throw salesError("SALES_DEPENDENCY_UNAVAILABLE");
-  const [[lease]]=await tx.query("SELECT owner,expires_at FROM fr_job_leases WHERE job_name='sales.importWorker' FOR UPDATE"),[[clock]]=await tx.query("SELECT UNIX_TIMESTAMP() AS now,CAST(UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3))*1000 AS UNSIGNED) AS now_ms"),fresh=await this.authorize?.();
-  if(!lease||lease.owner!==principal.leaseOwner||![Number(lease.expires_at),Number(clock.now),Number(clock.now_ms)].every(Number.isSafeInteger)||Number(lease.expires_at)<=Number(clock.now)||fresh?.leaseOwner!==principal.leaseOwner||fresh.signal!==signal||signal.aborted)throw salesError("SALES_DEPENDENCY_UNAVAILABLE");
-  return {...principal,nowMs:Number(clock.now_ms)};
- }
+ #fence(tx,signal,previous){return requireSalesImportWorker(tx,this.authorize,signal,previous);}
  async #actor(tx,intake){
   if(intake.source_type==="CSV"){
    const [[job]]=await tx.query("SELECT confirmed_by FROM sales_import_jobs WHERE id=?",[intake.import_job_id]);if(!job)throw salesError("SALES_IMPORT_NOT_FOUND");return requireSalesImportActorById(tx,Number(job.confirmed_by));

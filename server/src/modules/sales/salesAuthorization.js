@@ -1,3 +1,4 @@
+import {salesError} from "./salesErrors.js";
 import { ApplicationError } from "../../framework/errors/ApplicationError.js";
 import { assertActorFresh, loadRoleNamesForUser, loadPermissionNamesForUser } from "../authorization/directoryLookups.js";
 import { SALES_PERMISSIONS } from "./salesConstants.js";
@@ -34,3 +35,10 @@ async function requireOriginalSalesActor(connection, actorId, permission) {
     throw new ApplicationError("Original Sales actor no longer has permission", { code: "FORBIDDEN", statusCode: 403 });
   return { id: actorId, username: user.username, roles, permissions };
 }
+
+export async function requireSalesImportWorker(tx,authorize,signal,previous){
+  const principal=await authorize?.();if(!principal||principal.signal!==signal||signal?.aborted!==false||typeof principal.leaseOwner!=="string"||!principal.leaseOwner||previous&&principal.leaseOwner!==previous.leaseOwner)throw salesError("SALES_DEPENDENCY_UNAVAILABLE");
+  const [[lease]]=await tx.query("SELECT owner,expires_at FROM fr_job_leases WHERE job_name='sales.importWorker' FOR UPDATE"),[[clock]]=await tx.query("SELECT UNIX_TIMESTAMP() AS now,CAST(UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3))*1000 AS UNSIGNED) AS now_ms"),fresh=await authorize?.();
+  if(!lease||lease.owner!==principal.leaseOwner||![Number(lease.expires_at),Number(clock.now),Number(clock.now_ms)].every(Number.isSafeInteger)||Number(lease.expires_at)<=Number(clock.now)||fresh?.leaseOwner!==principal.leaseOwner||fresh.signal!==signal||signal.aborted)throw salesError("SALES_DEPENDENCY_UNAVAILABLE");
+  return {...principal,nowMs:Number(clock.now_ms)};
+ }

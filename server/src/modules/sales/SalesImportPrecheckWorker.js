@@ -1,3 +1,4 @@
+import {requireSalesImportWorker} from "./salesAuthorization.js";
 import {constants} from "node:fs";
 import {randomUUID,createHash} from "node:crypto";
 import path from "node:path";
@@ -11,21 +12,13 @@ import {salesError} from "./salesErrors.js";
 import {SalesAuditService} from "./SalesAuditService.js";
 import defaults from "../../../config/sales.js";
 
-const name="sales.importWorker",json=value=>typeof value==="string"?JSON.parse(value):value;
+const json=value=>typeof value==="string"?JSON.parse(value):value;
 export class SalesImportPrecheckWorker {
  constructor({database,time,logger,config=defaults,root,authorizeSalesImport,customerProvider,itemProvider,checkFile,audit}={}) {
   this.database=database;this.config=config;this.root=root;this.authorize=authorizeSalesImport;this.checkFile=checkFile;this.audit=audit??new SalesAuditService();
   this.customers=customerProvider??new CustomerLookupService({database});this.items=itemProvider??new ItemLookupService({database,time,logger});
  }
- async #lease(tx,signal) {
-  const principal=await this.authorize?.();
-  if(typeof principal?.leaseOwner!=="string"||!principal.leaseOwner||principal.signal!==signal||signal?.aborted!==false)throw salesError("SALES_DEPENDENCY_UNAVAILABLE");
-  const [[lease]]=await tx.query("SELECT owner,expires_at FROM fr_job_leases WHERE job_name=? FOR UPDATE",[name]);
-  const [[clock]]=await tx.query("SELECT UNIX_TIMESTAMP() AS now,CAST(UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3))*1000 AS UNSIGNED) AS now_ms");
-  const fresh=await this.authorize?.();
-  if(!lease||lease.owner!==principal.leaseOwner||![Number(lease.expires_at),Number(clock.now),Number(clock.now_ms)].every(Number.isSafeInteger)||Number(lease.expires_at)<=Number(clock.now)||fresh?.leaseOwner!==principal.leaseOwner||fresh.signal!==signal||signal.aborted)throw salesError("SALES_DEPENDENCY_UNAVAILABLE");
-  return {nowMs:Number(clock.now_ms),leaseOwner:principal.leaseOwner};
- }
+ #lease(tx,signal){return requireSalesImportWorker(tx,this.authorize,signal);}
  async #actor(tx,userId) {
   const [[user]]=await tx.query("SELECT username FROM users WHERE id=? AND status='active'",[Number(userId)]),permissions=await loadPermissionNamesForUser(tx,Number(userId));
   if(!user||!["sales.view","sales.import"].every(permission=>permissions.includes(permission)))throw salesError("SALES_DEPENDENCY_UNAVAILABLE");
