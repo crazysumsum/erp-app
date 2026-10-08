@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 294,
+  "revision": 295,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -1874,6 +1874,18 @@
       "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 48c2fd0e19b54f6f7854448d31ec2189114ce992 (PR #192)",
       "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
       "source_ref": "docs/supplier_management/implementation/81_rev_078_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-079",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-049 REV-078 remediation)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 07bc3cc0d6f4f7335f0f521ce85b939d7380caf6 (PR #192)",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/82_rev_079_independent_review.md",
       "status": "CHANGES_REQUESTED",
       "open_critical": 0,
       "open_high": 0,
@@ -4699,6 +4711,18 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-08: '全部按建議'."
+    },
+    {
+      "id": "HD-077",
+      "impact": "MINOR",
+      "question": "REV-079 (TASK-049, small changes requested): L-A a graceful shutdown is logged as reason timeout (the scheduler aborts before the worker's shutdown): use scheduler.stopped or stopping; L-B the benchmark guard only checks at start: require --database=<DB_NAME>, report ok:false with any other job changed during the run, document throwaway-only; I-A put the worker's logs in the temp dir; I-B tests for the pending-job guard and the release catch; I-C comment; I-E allow an empty DB_PASSWORD; I-D document; I-F CI flake re-run.",
+      "affected_ids": [
+        "TASK-049",
+        "REV-079",
+        "HD-076"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-08: '全部按建議'. I-A could not be done as suggested: the log directory resolves against the server root and only server/config/logging.js (approval-required) could redirect it; documented and raised."
     }
   ],
   "external_actions": [
@@ -5775,5 +5799,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-049 on claude/supplier-task-049 per HD-074/HD-075: capacity passes (57 s; SIGKILL run 64 s, exactly once), end-to-end and leak tests pass, 10/10 mutants; PR, CI and independent review next. Merge only on the Product Owner's word."
+  "next_safe_action": "TASK-049: HD-077 follow-ups done (I-A documented, config change raised). CI-style suite and mutants, push PR #192, re-review if the Product Owner wants it. Merge only on the Product Owner's word."
 }

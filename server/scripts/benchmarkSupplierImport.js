@@ -1,11 +1,12 @@
 /**
  * Supplier import 容量同 crash 恢復驗收（TASK-049；NFR-004；HD-074 1A／3A）。
  *
- *   node scripts/benchmarkSupplierImport.js --rows=10000 --output <report.json> [--crash]
+ *   node scripts/benchmarkSupplierImport.js --database=<DB_NAME> --rows=10000 --output <report.json> [--crash]
  *
  * 用 DB_* 環境變數指去一個**用完即棄**嘅資料庫（會寫入再刪走 `BM49-<run>-` 開頭嘅 Supplier）。五個 DB_* 都一定要明確
- * 設定（唔會退返去 `erp_dev` 或者 `.env`），資料庫入面有其他未完成嘅匯入 job 就拒絕執行：benchmark 嘅 worker
- * 係真 worker，會處理佢見到嘅所有 job（REV-078 M-1）。
+ * 設定（唔會退返去 `erp_dev`），`--database` 要同 `DB_NAME` 一樣（親手確認目標），資料庫入面有其他未完成嘅匯入
+ * job 就拒絕執行：benchmark 嘅 worker 係真 worker，會處理佢見到嘅所有 job（REV-078 M-1）。跑嘅期間有其他 job 被郁過，
+ * 報告就係 `ok: false` 並列出佢哋（REV-079 L-B）。**只可以對用完即棄嘅資料庫跑。**
  *
  * - 呢個 process 負責上載、確認、量度同核對；預檢同執行由一個真 API process（`node src/index.js`，
  *   正式 scheduler 設定：每 5 秒領 job、真 lease）做，等同 production 嘅 worker。
@@ -53,12 +54,16 @@ const distinctName = (index) => {
   return `${pick(index * 7)} ${pick(index * 13 + 3)} ${pick(Math.floor(index / 26) * 5 + 1)} ${randomBytes(3).toString("hex")} Trading`;
 };
 if (!Number.isSafeInteger(ROWS) || ROWS < 2 || ROWS > 10_000 || typeof OUTPUT !== "string") {
-  throw new Error("usage: node scripts/benchmarkSupplierImport.js --rows=<2..10000> --output <report.json> [--crash]");
+  throw new Error("usage: node scripts/benchmarkSupplierImport.js --database=<DB_NAME> --rows=<2..10000> --output <report.json> [--crash]");
 }
 const DB_KEYS = ["DB_HOST", "DB_PORT", "DB_USER", "DB_PASSWORD", "DB_NAME"];
-const missing = DB_KEYS.filter((key) => !process.env[key]);
+// 密碼可以係空（冇密碼嘅臨時 user）；其餘一定要有值（REV-079 I-E）。
+const missing = DB_KEYS.filter((key) => (key === "DB_PASSWORD" ? process.env[key] === undefined : !process.env[key]));
 if (missing.length > 0) {
   throw new Error(`set ${missing.join(", ")} explicitly to a throwaway database: the benchmark writes and deletes Suppliers and runs a real import worker against it`);
+}
+if (arg("database", null) !== process.env.DB_NAME) {
+  throw new Error(`--database must repeat DB_NAME (${process.env.DB_NAME}) to confirm it is a throwaway database`);
 }
 
 const RUN = randomBytes(3).toString("hex").toUpperCase();
@@ -67,6 +72,7 @@ const work = fs.mkdtempSync(path.join(os.tmpdir(), "supplier-bench-"));
 const root = path.join(work, "imports");
 const report = { run: RUN, rows: ROWS, crash: CRASH, rootOnly: ROOT_ONLY, distinctNames: DISTINCT_NAMES, command: process.argv.slice(1).join(" "), startedAt: new Date().toISOString() };
 const sleep = (ms) => new Promise((resolve) => { setTimeout(resolve, ms); });
+const RUN_STARTED = Date.now();
 const now = () => Date.now();
 
 function environment(mysqlVersion, durability) {
@@ -94,13 +100,13 @@ function csv() {
 
 function startWorker(label) {
   const log = fs.openSync(path.join(work, `${label}.log`), "a");
+  // DB_* 已經喺 process.env（上面驗過），dotenv 唔會蓋過已經設咗嘅值。Worker 嘅 system／request log 一定寫入
+  // 呢個 checkout 嘅 server/logs：log 目錄按 server root 計，冇環境變數改得到（REV-079 I-A），所以喺臨時 worktree 跑。
   const child = spawn(process.execPath, ["src/index.js"], {
     cwd: SERVER_DIR, stdio: ["ignore", log, log],
     env: { ...process.env, NODE_ENV: "development", APP_HOST: "127.0.0.1", APP_PORT: String(3490 + (label === "worker-b" ? 1 : 0)),
-      JWT_SECRET: randomBytes(32).toString("hex"), SUPPLIER_IMPORT_ROOT: root, LOG_DIRECTORY: path.join(work, `${label}-logs`),
-      ITEM_MEDIA_DIRECTORY: path.join(work, "items"), DB_INTEGRATION_TESTS: "",
-      // 明確傳畀 child：佢經 dotenv 讀 `.env`，唔可以由嗰度補到另一個資料庫（REV-078 M-1）。
-      ...Object.fromEntries(DB_KEYS.map((key) => [key, process.env[key]])) }
+      JWT_SECRET: randomBytes(32).toString("hex"), SUPPLIER_IMPORT_ROOT: root,
+      ITEM_MEDIA_DIRECTORY: path.join(work, "items"), DB_INTEGRATION_TESTS: "" }
   });
   return child;
 }
@@ -302,9 +308,16 @@ try {
   const running = children.filter((child) => child.exitCode === null && child.signalCode === null);
   for (const child of running) child.kill("SIGTERM");
   await Promise.all(running.map((child) => new Promise((resolve) => { child.once("exit", resolve); })));
-  // Worker 停晒先清，唔會一邊清一邊有人寫。
+  // Worker 停晒先清，唔會一邊清一邊有人寫。清之前睇吓期間有冇其他 job 被郁過（REV-079 L-B）。
   if (db) {
     try {
+      const [touched] = await db.query("SELECT id, status FROM supplier_import_jobs WHERE id <> ? AND updated_at >= ?",
+        [created.jobId ?? 0, RUN_STARTED]);
+      if (touched.length > 0) {
+        report.ok = false;
+        report.foreignJobsTouched = touched.map((row) => ({ id: Number(row.id), status: row.status }));
+        process.exitCode = 1;
+      }
       report.cleanup = await cleanup();
     } catch (error) {
       report.ok = false;

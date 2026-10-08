@@ -196,4 +196,10 @@ test("the capacity benchmark refuses to run without an explicit throwaway databa
   const run = spawnSync(process.execPath, ["scripts/benchmarkSupplierImport.js", "--rows=2", "--output", "/dev/null"], { env, encoding: "utf8" });
   assert.notEqual(run.status, 0);
   assert.match(run.stderr, /set DB_NAME explicitly to a throwaway database/u);
+
+  // `--database` 要重覆 DB_NAME，親手確認目標（REV-079 L-B）。
+  const confirm = spawnSync(process.execPath, ["scripts/benchmarkSupplierImport.js", "--database=other", "--rows=2", "--output", "/dev/null"],
+    { env: { ...env, DB_NAME: "throwaway_db" }, encoding: "utf8" });
+  assert.notEqual(confirm.status, 0);
+  assert.match(confirm.stderr, /--database must repeat DB_NAME \(throwaway_db\)/u);
 });

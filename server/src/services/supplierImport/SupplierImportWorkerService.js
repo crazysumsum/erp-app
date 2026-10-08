@@ -197,9 +197,12 @@ export class SupplierImportWorkerService extends BaseService {
         if (row.status === "applied") applied += 1;
         else if (row.status === "failed") failed += 1;
       }
-      // 喺兩列之間停低。Scheduler 會將呢輪記成功（佢冇拋錯），所以逾時要自己記一條（REV-078 L-2）。
+      // 喺兩列之間停低。Scheduler 會將呢輪記成功（佢冇拋錯），所以逾時要自己記一條（REV-078 L-2）。關機時 scheduler
+      // 先設 `stopped` 再 abort 所有工作，之後先輪到呢個 service 嘅 shutdown()，所以 signal 一定已經 abort：
+      // 要睇 scheduler.stopped 先分得到（REV-079 L-A）。
+      const shuttingDown = this.scheduler?.stopped === true || this.stopping;
       void this.logger?.warn?.("supplier.import.paused", "Supplier import execution stopped between rows and will resume",
-        { jobId: job.id, reason: signal?.aborted ? "timeout" : "shutdown", applied, failed });
+        { jobId: job.id, reason: shuttingDown ? "shutdown" : "timeout", applied, failed });
       return { claimed: true, jobId: job.id, applied, failed, status: "running" };
     } finally {
       // 點樣停都放返 lease（HD-075；REV-078 L-2），下一輪或者另一個實例即刻續做。完成咗、失敗咗或者 lease

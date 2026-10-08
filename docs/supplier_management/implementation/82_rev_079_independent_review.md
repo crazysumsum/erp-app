@@ -92,4 +92,15 @@ Environment:
 - The L-A mechanism was checked: `SchedulerService.stop()` sets `stopped` and then aborts in-flight jobs before services
   shut down.
 - The CI failure was confirmed as Sales TC-032.
-- The findings were taken to the Product Owner (HD-077).
+- The findings were taken to the Product Owner (HD-077), whose answer was '全部按建議'.
+
+| Finding | Follow-up |
+| --- | --- |
+| L-A | **Fixed.** The reason is `shutdown` when `scheduler.stopped` or the worker's own `stopping` flag is set, and `timeout` otherwise. A unit test uses the real order (scheduler stopped, then the signal aborted). |
+| L-B | **Fixed.** `--database` must repeat `DB_NAME`. After the run, any other job changed since the start is listed as `foreignJobsTouched`, and the run reports `ok: false`. Reproduced: a foreign job inserted mid-run was failed by the worker, and the report said `ok: false` and listed it. The guide says to run only against a throwaway database, from a throwaway checkout. |
+| I-A | **Not as suggested.** The log directory is resolved against the server root (`normalizeLoggingConfig.js`), not the working directory, and nothing reads `LOG_DIRECTORY`. Running the worker in a temp directory was tried and made no difference, so it was reverted. Redirecting the logs would need a change to `server/config/logging.js`, an approval-required path. Documented instead, and raised with the Product Owner. |
+| I-B | **Tested.** An integration test checks that the benchmark refuses while another job is pending and leaves that job untouched; a unit test checks the `--database` mismatch; unit tests check that a failing release neither replaces the original error nor fails a completed run. The cleanup is still covered only by the manual negative control (it needs a real worker). |
+| I-C | **Fixed.** The comment no longer claims the explicit `DB_*` is needed; the explicit copy was removed. |
+| I-D | **Documented** in `bulk_operations.md`. |
+| I-E | **Fixed.** An empty `DB_PASSWORD` is accepted. |
+| I-F | CI re-runs on the new head. |

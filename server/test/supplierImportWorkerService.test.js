@@ -398,3 +398,34 @@ test("a run cut off by its timeout logs why it paused, since the scheduler recor
   await stopping.instance.runExecution(new AbortController().signal);
   assert.deepEqual(events, [["supplier.import.paused", "timeout"], ["supplier.import.paused", "shutdown"]]);
 });
+
+test("a real shutdown (scheduler stopped, then the signal aborted) is logged as shutdown, not timeout (REV-079 L-A)", async () => {
+  const events = [];
+  const logger = { info() {}, warn: (event, _message, data) => events.push(data.reason) };
+  const aborting = new AbortController();
+  const { instance } = worker({ logger });
+  // SchedulerService.stop()：先設 stopped，再 abort 所有工作；worker 嘅 shutdown() 要之後先叫。
+  instance.importService = scripted(5, { onRow: () => { instance.scheduler.stopped = true; aborting.abort(); } });
+  await instance.runExecution(aborting.signal);
+  assert.deepEqual(events, ["shutdown"]);
+});
+
+test("a failing lease release is logged and never replaces the run's own outcome (REV-079 I-B)", async () => {
+  const errors = [];
+  const logger = { info() {}, warn() {}, error: (event, _message, data) => errors.push([event, data.code]) };
+  const failingRelease = async function release() { this.calls.push("release"); throw Object.assign(new Error("db down"), { code: "DB_DOWN" }); };
+
+  const thrown = worker({ logger });
+  const throwing = scripted(5);
+  throwing.processNextRow = async () => { throw Object.assign(new Error("lock wait"), { code: "DATABASE_QUERY_TIMEOUT" }); };
+  throwing.releaseExecutionLease = failingRelease;
+  thrown.instance.importService = throwing;
+  await assert.rejects(thrown.instance.runExecution(new AbortController().signal), /lock wait/u, "the original error survives");
+
+  const finished = worker({ logger });
+  const completing = scripted(1);
+  completing.releaseExecutionLease = failingRelease;
+  finished.instance.importService = completing;
+  assert.equal((await finished.instance.runExecution(new AbortController().signal)).status, "completed", "a completed run stays completed");
+  assert.deepEqual(errors, [["supplier.import.lease_release_failed", "DB_DOWN"], ["supplier.import.lease_release_failed", "DB_DOWN"]]);
+});

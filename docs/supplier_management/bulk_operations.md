@@ -81,9 +81,16 @@ Measured on 2026-10-08:
   - The download and export memory figures are before/after differences, not peaks.
   - "Rows applied at kill" is a lower bound.
   - The durability settings (`innodb_flush_log_at_trx_commit`, `sync_binlog`, `log_bin`) are recorded in each report.
-- **Running the benchmark safely:** set all five `DB_*` variables to a throwaway database. The script refuses to run
-  without them, and refuses if any other import job is pending, because its worker is a real worker. It removes what it
-  created, also when it fails.
+- **Running the benchmark safely:** run it only against a throwaway database, from a throwaway checkout or worktree.
+  - Command: `node scripts/benchmarkSupplierImport.js --database=<DB_NAME> --rows=10000 --output <file> [--crash]`.
+  - It refuses unless `DB_HOST`, `DB_PORT`, `DB_USER` and `DB_NAME` are set (`DB_PASSWORD` may be empty) and
+    `--database` repeats `DB_NAME`. It also refuses if any other import job is pending, because its worker is a real
+    worker that would process it.
+  - After the run it reports `ok: false` and lists any other job changed while it ran. The start-up check cannot see a
+    job that someone uploads during the run.
+  - It removes the Suppliers, job, user and role it created, also when it fails.
+  - Its worker writes system and request logs to `server/logs/` of the checkout that runs it. The log directory is
+    resolved against the server root, and no setting redirects it (REV-079 I-A).
 - **Fixed during T49** (HD-075):
   - The import no longer runs the similar-name search on every row. HD-052 limits the import to identical-name warnings,
     and the search's cost grew with the number of Suppliers.
@@ -98,7 +105,8 @@ Measured on 2026-10-08:
     behind`, whenever any file could not be deleted. A purge run cut off by its timeout is recorded as timed out. Alert
     on its `consecutiveFailures`.
   - `supplier.import.execute` stops cooperatively at its 10-minute limit, and the scheduler records such a run as
-    succeeded. Watch the `supplier.import.paused` log instead: its `reason` is `timeout` or `shutdown`.
+    succeeded. Watch the `supplier.import.paused` log instead. Its `reason` is `timeout` for the 10-minute limit and
+    `shutdown` when the process is stopping, for example during a deploy.
 - **Log events:**
   - `supplier.import.purge_failed`: a file the purge refused or could not delete. The entry carries IDs and an errno only.
   - `supplier.import.source_cleanup_failed`: a source that could not be deleted at cancel or after a failed precheck. The
@@ -115,6 +123,9 @@ Measured on 2026-10-08:
   SIGKILL run check this.
 - **A worker stops** (shutdown, timeout, or an error such as a lock-wait timeout). It releases the lease, and the job
   continues at the next poll. Only a process that dies without running its cleanup leaves the lease to expire.
+- **The same error keeps recurring before a row is picked.** Execution has no attempt cap: the job is retried every
+  5 seconds (REV-079 I-D). The run is recorded as failed each time, so `consecutiveFailures` on `supplier.import.execute`
+  shows it.
 - **A job failed.** Its summary, rows and result stay readable. Fix the cause and upload the rows again. Rows marked
   "可重新匯入" (busy) can simply be imported again.
 - **Files left after a failed delete.** Fix the permissions. The next daily purge removes them, and its job stats return
