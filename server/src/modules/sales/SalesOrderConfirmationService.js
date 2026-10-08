@@ -21,7 +21,7 @@ export function validateConfirmationInventoryResult(result, payload, backorder =
   const mismatch = () => { throw salesError("INVENTORY_CONTRACT_MISMATCH"); };
   if (!result || !Number.isSafeInteger(result.operationId) || result.operationId < 1 ||
       result.lineCount !== payload.lines.length || !Array.isArray(result.lines) || result.lines.length !== payload.lines.length) mismatch();
-  const rootHash = inventoryOperationHash({ commandType: backorder ? "SALES_BACKORDER_BATCH_RESERVE" : "SALES_BATCH_RESERVE", payload });
+  const rootHash = inventoryOperationHash({ commandType: backorder === "intake" ? "SALES_INTAKE_BATCH_RESERVE" : backorder ? "SALES_BACKORDER_BATCH_RESERVE" : "SALES_BATCH_RESERVE", payload });
   const digest = createHash("sha256"), seen = new Set();
   for (const line of result.lines) {
     const expected = payload.lines.find(row => row.sourceLineId === line?.sourceLineId);
@@ -33,7 +33,7 @@ export function validateConfirmationInventoryResult(result, payload, backorder =
     seen.add(line.sourceLineId);
   }
   for (const expected of payload.lines)
-    digest.update(`${expected.sourceLineId}:${inventoryOperationHash({ commandType: backorder ? "SALES_BACKORDER_LINE_RESERVE" : "SALES_LINE_RESERVE", payload: { rootOperationId: result.operationId,rootRequestHash: rootHash,...expected } })}\n`);
+    digest.update(`${expected.sourceLineId}:${inventoryOperationHash({ commandType: backorder === "intake" ? "SALES_INTAKE_LINE_RESERVE" : backorder ? "SALES_BACKORDER_LINE_RESERVE" : "SALES_LINE_RESERVE", payload: { rootOperationId: result.operationId,rootRequestHash: rootHash,...expected } })}\n`);
   if (result.membershipDigest !== digest.digest("hex")) mismatch();
 }
 
@@ -45,13 +45,14 @@ function masterProjection(order) {
 }
 
 export class SalesOrderConfirmationService {
-  constructor({ database, time, logger, config = defaults, audit, customerProvider, itemProvider, businessMaster, inventory } = {}) {
+  constructor({ database, time, logger, config = defaults, audit, customerProvider, itemProvider, businessMaster, inventory, authorizeSalesIntake } = {}) {
     this.database = database; this.time = time; this.config = config;
     this.operations = new SalesOperationService(); this.audit = audit ?? new SalesAuditService();
     this.logger = logger;
     this.customers = customerProvider; this.items = itemProvider; this.businessMaster = businessMaster;
     // Phase A needs no master or Inventory service; resolve them when executing Phase B.
     this.inventory = inventory;
+    this.authorizeSalesIntake = authorizeSalesIntake;
   }
 
   async confirm(request) {
@@ -173,6 +174,12 @@ export class SalesOrderConfirmationService {
   }
 
   async confirmDraftInTransaction(tx, { order,actor,eventId,nowMs }) {
+    return this.#confirmDraft(tx,{order,actor,eventId,nowMs},false);
+  }
+  async confirmIntakeDraftInTransaction(tx, { order,actor,eventId,nowMs }) {
+    return this.#confirmDraft(tx,{order,actor,eventId,nowMs},true);
+  }
+  async #confirmDraft(tx, { order,actor,eventId,nowMs }, intake) {
     this.customers ??= new CustomerLookupService({ database: this.database });
     this.items ??= new ItemLookupService({ database: this.database,time: this.time,logger: this.logger });
     this.businessMaster ??= new BusinessMasterProvider({ database: this.database,repository: new BusinessMasterRepository() });
@@ -186,10 +193,10 @@ export class SalesOrderConfirmationService {
       lines: prepared.lines.map((line,index) => ({ sourceLineId: order.lines[index].id,skuId: line.sku_id,
         orderedBaseQuantity: line.base_quantity,minimumRemainingDays: prepared.snapshots.find(s => s.skuId === line.sku_id && s.salesUom.skuUomId === line.sku_uom_id).minimumSaleLifeDays ?? 0 }))
         .sort((a,b) => a.skuId - b.skuId || a.sourceLineId - b.sourceLineId) };
-    this.inventory ??= new InventoryReservationService({ database: this.database,time: this.time,logger: this.logger,itemLookup: this.items });
-    const reserved = await this.inventory.reserveAvailableForSalesBatchInTransaction(tx, { actor: { userId: actor.id,serviceName: "",claimedRoles: actor.roles,claimedPermissions: actor.permissions },
+    this.inventory ??= new InventoryReservationService({ database: this.database,time: this.time,logger: this.logger,itemLookup: this.items,authorizeSalesIntake:this.authorizeSalesIntake });
+    const reserved = await this.inventory[intake?"reserveAvailableForSalesIntakeInTransaction":"reserveAvailableForSalesBatchInTransaction"](tx, { actor: intake?{userId:null,serviceName:"sales.importWorker",claimedRoles:[],claimedPermissions:["sales.importWorker"]}:{ userId: actor.id,serviceName: "",claimedRoles: actor.roles,claimedPermissions: actor.permissions },
       source: { documentId: String(order.id),eventId },correlationId: eventId,payload });
-    try { validateConfirmationInventoryResult(reserved, payload); }
+    try { validateConfirmationInventoryResult(reserved, payload, intake?"intake":false); }
     catch (error) {
       await this.logger?.error("sales.inventory_contract_mismatch", "Critical Sales confirmation Inventory contract mismatch", { salesOrderId: order.id,eventId,severity: "critical" });
       throw error;
