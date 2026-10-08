@@ -537,6 +537,9 @@ integrationTest("TASK-049 (REV-078 M-1, REV-079 I-B): the capacity benchmark ref
   const { spawnSync } = await import("node:child_process");
   clock += 1_000_000;
   await quiesce();
+  // 其他測試留低嘅未完成 job（例如 ready）都收埋，咁擋住 benchmark 嘅就只會係下面嗰一個（REV-081 N-2）。
+  await h.db.execute(`UPDATE supplier_import_jobs SET status = 'cancelled'
+    WHERE status IN ('uploaded', 'validating', 'ready', 'ready_with_errors')`);
   // 每種未完成狀態都要擋：uploaded 等預檢，queued 等執行（REV-080 m11）。
   for (const status of ["uploaded", "queued"]) {
     const pending = await seedJob({ status, rows: ["valid"] });
@@ -546,7 +549,7 @@ integrationTest("TASK-049 (REV-078 M-1, REV-079 I-B): the capacity benchmark ref
     const report = JSON.parse(fs.readFileSync(output, "utf8"));
     fs.rmSync(output, { force: true });
     assert.equal(run.status, 1, status);
-    assert.match(report.error, /refusing to run: \d+ other import job\(s\) are pending/u, status);
+    assert.match(report.error, /refusing to run: 1 other import job\(s\) are pending/u, status);
     assert.deepEqual(report.cleanup, { suppliers: 0, job: null, user: null, role: null }, "nothing was created");
     const [[row]] = await h.db.query("SELECT status, version FROM supplier_import_jobs WHERE id = ?", [pending]);
     assert.deepEqual([row.status, Number(row.version)], [status, 1], "the pending job is untouched");

@@ -95,4 +95,11 @@ test("at most two exports run at once per process; a third is a 429, and a slot 
   await assert.rejects(new SupplierExportService({ database, time: { nowMs: () => 0 }, gate,
     authorize: async () => { throw new Error("stale"); }, businessMaster: {} }).exportCsv({ ...actor }), /stale/u);
   assert.equal(gate.active, 0, "a refused caller never takes a slot");
+
+  // 權限先於上限：上限滿咗，冇權限嘅人都係收到權限錯誤，唔係 429（REV-081 I-6）。
+  const full = { active: 2 };
+  await assert.rejects(new SupplierExportService({ database, time: { nowMs: () => 0 }, gate: full,
+    authorize: async () => { throw Object.assign(new Error("forbidden"), { statusCode: 403 }); }, businessMaster: {} })
+    .exportCsv({ ...actor }), (error) => error.statusCode === 403);
+  assert.equal(full.active, 2);
 });

@@ -11,7 +11,9 @@
  * - 呢個 process 負責上載、確認、量度同核對；預檢同執行由另一個 process（同一個 script 加 `--worker`）做：佢用同一個
  *   `createApplication`、真 scheduler（每 5 秒領 job、真 lease）同真 SupplierImportWorkerService，但只開 Supplier
  *   嘅預檢同執行兩件工作，其他模組嘅背景工作全部關閉，唔會郁到其他資料（REV-080 L-C）；log 寫入臨時目錄。
- * - 收到 SIGINT／SIGTERM 會停 worker、清理、寫報告（`interrupted`）先退出（REV-080 L-D）。
+ * - 收到 SIGINT／SIGTERM 會停 worker、清理、寫報告（`interrupted`）先退出（REV-080 L-D）；之後再收到嘅訊號唔理
+ *   （REV-081 I-1）。Worker 經 IPC 連住呢個 process，呢個 process 點死都好（包括 SIGKILL），worker 都會自己收工
+ *   （REV-081 I-2）。
  * - `--crash`：執行到一半 SIGKILL 個 worker，再開第二個接手。Lease 係 11 分鐘；kill 之後將 `lease_until`
  *   改做而家，代替等 lease 過期（報告會寫明），驗證接手後啱啱好寫入一次、冇重複 Supplier。
  * - 跟住量 10,000 列結果下載（T46）同匯出（T47；REV-075 L-4）嘅時間同記憶體。
@@ -69,6 +71,8 @@ if (missing.length > 0) {
 if (arg("database", null) !== process.env.DB_NAME) {
   throw new Error(`--database must repeat DB_NAME (${process.env.DB_NAME}) to confirm it is a throwaway database`);
 }
+// 一開始就試寫：寫唔到報告就唔好跑（REV-081 I-5）。唔清走原有內容，之後成個覆寫。
+if (!WORKER) fs.appendFileSync(OUTPUT, "");
 
 /** 只開 Supplier 預檢同執行嘅 app；其餘背景工作（Item、Customer、Sales……）全部關閉（REV-080 L-C）。 */
 async function supplierOnlyApplication({ work: directory, root: importRoot, keep }) {
@@ -89,11 +93,13 @@ async function supplierOnlyApplication({ work: directory, root: importRoot, keep
 }
 
 if (WORKER) {
-  // Child：等 SIGTERM（或者被 SIGKILL）。
+  // Child：等 SIGTERM，或者父 process 消失（IPC 斷線，REV-081 I-2）；或者被 SIGKILL。
+  const stopped = new Promise((resolve) => { process.once("SIGTERM", resolve); process.once("disconnect", resolve); });
   const app = await supplierOnlyApplication({ work: process.env.BENCH_WORKER_DIR, root: process.env.BENCH_IMPORT_ROOT,
     keep: [SUPPLIER_IMPORT_JOB_NAMES.precheck, SUPPLIER_IMPORT_JOB_NAMES.worker] });
+  if (!process.connected) process.exit(0);
   await app.start();
-  await new Promise((resolve) => { process.once("SIGTERM", resolve); });
+  await stopped;
   await app.shutdown("benchmark-worker");
   process.exit(0);
 }
@@ -111,7 +117,10 @@ function environment(mysqlVersion, durability) {
   return {
     os: `${os.type()} ${os.release()} ${os.arch()}`, cpu: os.cpus()[0]?.model, cpus: os.cpus().length,
     totalMemoryGiB: Math.round(os.totalmem() / 2 ** 30), node: process.version, mysql: mysqlVersion, durability,
-    worker: "a separate process with createApplication and the real scheduler; only supplier.import.precheck and supplier.import.execute enabled (every 5 s, lease 11 min)"
+    // 有 DB_SOCKET_PATH 就用 socket，host 同 port 唔會用到（REV-081 I-4、I-7）。
+    database: { name: process.env.DB_NAME, host: process.env.DB_HOST, port: Number(process.env.DB_PORT),
+      socketPath: process.env.DB_SOCKET_PATH || null },
+    worker: "a separate process with createApplication and the real scheduler; only supplier.import.precheck and supplier.import.execute enabled (every 5 s, lease 11 min), plus tokenRevocation.refresh, which configuration requires"
   };
 }
 
@@ -130,11 +139,17 @@ function csv() {
   return Buffer.from(stringify([SUPPLIER_IMPORT_COLUMN_NAMES, ...records], SUPPLIER_CSV_STRINGIFY_OPTIONS));
 }
 
+/** 收到訊號之後，主流程喺下一個檢查點停，唔再開 worker、唔再核對（REV-081 N-1）。 */
+function throwIfInterrupted() {
+  if (report.interrupted) throw new Error(`interrupted by ${report.interrupted}`);
+}
+
 function startWorker(label) {
+  throwIfInterrupted();
   const log = fs.openSync(path.join(work, `${label}.log`), "a");
   // 同一個 script 嘅 `--worker` mode；log 落臨時目錄（REV-079 I-A 對 benchmark 嚟講解決咗）。
   return spawn(process.execPath, [fileURLToPath(import.meta.url), "--worker", `--database=${process.env.DB_NAME}`], {
-    cwd: SERVER_DIR, stdio: ["ignore", log, log],
+    cwd: SERVER_DIR, stdio: ["ignore", log, log, "ipc"],
     env: { ...process.env, BENCH_WORKER_DIR: path.join(work, label), BENCH_IMPORT_ROOT: root, DB_INTEGRATION_TESTS: "" }
   });
 }
@@ -219,7 +234,8 @@ function finish() {
   return finished;
 }
 for (const signal of ["SIGINT", "SIGTERM"]) {
-  process.once(signal, () => {
+  process.on(signal, () => {
+    if (report.interrupted) return;
     report.ok = false;
     report.interrupted = signal;
     void finish().finally(() => process.exit(signal === "SIGINT" ? 130 : 143));
@@ -280,6 +296,7 @@ try {
   const waitFor = async (predicate, limitMs) => {
     const deadline = now() + limitMs;
     for (;;) {
+      throwIfInterrupted();
       const current = await status();
       if (predicate(current)) return current;
       if (now() > deadline) throw new Error(`timed out waiting; job is ${JSON.stringify(current)}`);
@@ -301,6 +318,7 @@ try {
     const appliedRows = async () => Number((await db.query(
       "SELECT COUNT(*) AS n FROM supplier_import_rows WHERE job_id = ? AND status = 'applied'", [job.id]))[0][0].n);
     for (const deadline = now() + 600_000; await appliedRows() < half; await sleep(50)) {
+      throwIfInterrupted();
       if (now() > deadline) throw new Error("timed out waiting for half of the rows");
     }
     const applied = await appliedRows();
@@ -340,6 +358,8 @@ try {
        FROM supplier_import_rows WHERE job_id = ?`, [job.id]);
   const [[audits]] = await db.query(
     "SELECT COUNT(*) AS n FROM supplier_audit_logs WHERE action = 'supplier.create' AND target_label LIKE ?", [`${PREFIX}%`]);
+  // 清理緊嘅資料唔算數：中斷咗就唔寫核對結果（REV-081 N-1）。
+  throwIfInterrupted();
   report.verification = {
     suppliersCreated: Number(suppliers.n), rowsApplied: Number(rowStats.applied), distinctAppliedSuppliers: Number(rowStats.distinctSuppliers),
     createAudits: Number(audits.n),
@@ -363,6 +383,7 @@ try {
   report.export = { ms: now() - started, rows: exported.rowCount, bytes: Buffer.byteLength(exported.content),
     heapDeltaMiB: Math.round((process.memoryUsage().heapUsed - before.heapUsed) / 2 ** 20),
     rssDeltaMiB: Math.round((process.memoryUsage().rss - before.rss) / 2 ** 20) };
+  throwIfInterrupted();
   report.ok = report.verification.exactlyOnce && report.verification.countsConsistent && report.nfr004.pass &&
     (!CRASH || report.crash.midRun);
 

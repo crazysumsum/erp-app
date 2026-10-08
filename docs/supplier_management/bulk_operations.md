@@ -90,8 +90,11 @@ Measured on 2026-10-08:
     check cannot see a job that someone uploads during the run. Its worker runs only the Supplier import jobs, so other
     modules' jobs are never touched (REV-080 L-C).
   - It removes the Suppliers, job, user and role it created, also when it fails or is interrupted with Ctrl-C or
-    SIGTERM. An interrupted run stops its worker, cleans up, and writes a report marked `interrupted`. Only SIGKILL of
-    the benchmark itself leaves things behind (REV-080 L-D).
+    SIGTERM. An interrupted run stops its worker, cleans up, and writes a report marked `interrupted`; a second Ctrl-C
+    is ignored while it does so (REV-080 L-D, REV-081 I-1). SIGKILL of the benchmark itself leaves its data and
+    temporary directory behind, but its worker notices the lost parent and shuts down (REV-081 I-2).
+  - The report records the database name, host, port and socket. With `DB_SOCKET_PATH` set, the host and port are
+    not used. It refuses to start if `--output` cannot be written.
   - Its own logs and its worker's go to its temporary directory, which is removed at the end.
 - **Fixed during T49** (HD-075):
   - The import no longer runs the similar-name search on every row. HD-052 limits the import to identical-name warnings,
