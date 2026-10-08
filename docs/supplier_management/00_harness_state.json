@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 291,
+  "revision": 292,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -4661,6 +4661,19 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-08: '全部按建議' - 1A, 2B, 3A."
+    },
+    {
+      "id": "HD-075",
+      "impact": "MAJOR",
+      "question": "TASK-049 capacity found NFR-004 failing (10,000 rows: 8,727 applied in exactly 600 s, then stalled). Cause 1: execution calls createSupplierInTransaction/updateSupplierInTransaction, which run the similar-name gram search (duplicates.find) on every row and the import discards the result, contrary to HD-052; its cost grows with the Supplier count (784 of ~820 s of SQL time, ~87,000 rows examined per call). Trial without it: 4,000 similar-name rows 140 s -> 19 s, 3-4 ms per row and flat. Fix: a findDuplicates option, false on the import path; UI unchanged. Cause 2: the execution run times out at 600 s (LEASE_MS - 60 s) but its lease is 660 s, so even the same worker cannot reclaim the job until the lease expires: an 11-minute stall after every 10 minutes. Fix: release the lease (lease_until NULL) when the worker stops between rows (timeout or shutdown). Noted, out of scope: UI create/update runs the same search, whose cost grows with Supplier count.",
+      "affected_ids": [
+        "TASK-049",
+        "TASK-045",
+        "HD-052",
+        "NFR-004"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-08: '全部按建議'."
     }
   ],
   "external_actions": [

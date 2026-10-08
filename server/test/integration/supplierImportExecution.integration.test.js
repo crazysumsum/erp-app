@@ -500,3 +500,27 @@ integrationTest("TASK-045 (HD-060 4A): a deadlock, lock-wait or transaction time
     ["SUPPLIER_IMPORT_ROW_BUSY", "SUPPLIER_IMPORT_ROW_BUSY", "SUPPLIER_IMPORT_ROW_BUSY", "SUPPLIER_IMPORT_ROW_FAILED"],
     "only lock and timeout failures are marked retryable");
 });
+
+integrationTest("TASK-049 (HD-075): a worker that stops between rows releases its lease, so the job resumes at once without redoing a row", async () => {
+  clock += 1_000_000;
+  await quiesce();
+  const jobId = await seedJob({ rows: ["valid", "valid", "valid"] });
+  const first = service();
+  await first.claimForExecution({ leaseOwner: "worker-a", leaseDurationMs: 660_000 });
+  await first.processNextRow({ jobId, leaseOwner: "worker-a", leaseDurationMs: 660_000, applyRow: writeSupplier() });
+  // 逾時或者關機：喺兩列之間停低，放返 lease。
+  assert.equal(await first.releaseExecutionLease({ jobId, leaseOwner: "worker-a" }), true);
+  assert.equal(await service().releaseExecutionLease({ jobId, leaseOwner: "worker-x" }), false, "only the owner can release");
+
+  // 冇等 11 分鐘：同一刻另一個 worker（或者同一個嘅下一輪）就領到。
+  assert.deepEqual(await service().claimForExecution({ leaseOwner: "worker-b", leaseDurationMs: 660_000 }), { id: jobId, resumed: true });
+  let calls = 0;
+  const counting = async (connection, context) => { calls += 1; return writeSupplier()(connection, context); };
+  const next = await service().processNextRow({ jobId, leaseOwner: "worker-b", leaseDurationMs: 660_000, applyRow: counting });
+  assert.equal(next.rowNumber, 2, "row 1 is not redone");
+  await service().processNextRow({ jobId, leaseOwner: "worker-b", leaseDurationMs: 660_000, applyRow: counting });
+  assert.equal(await service().processNextRow({ jobId, leaseOwner: "worker-b", leaseDurationMs: 660_000, applyRow: counting }), null);
+  assert.equal(calls, 2);
+  assert.deepEqual([(await service().finalizeExecution({ jobId, leaseOwner: "worker-b" })).applied], [3]);
+  assert.equal(await first.releaseExecutionLease({ jobId, leaseOwner: "worker-b" }), false, "a finished job has no lease to release");
+});

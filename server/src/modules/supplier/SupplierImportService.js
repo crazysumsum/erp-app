@@ -751,6 +751,17 @@ export class SupplierImportService {
   }
 
   /** 所有列都 terminal 之後，由 rows 重建統計，收尾做 completed 或 completed_with_errors。 */
+  /**
+   * Worker 喺兩列之間停低（逾時或者關機）時即刻放返 lease（HD-075）：之前要等 11 分鐘 lease 過期，連同一個 worker
+   * 都領唔返，大檔每做 10 分鐘就停 11 分鐘。停低嘅位一定喺兩列之間，job 狀態係一致嘅，下一個 worker 可以即刻續做。
+   */
+  async releaseExecutionLease({ jobId, leaseOwner }) {
+    const [released] = await this.database.execute(
+      "UPDATE supplier_import_jobs SET lease_until = NULL, updated_at = ? WHERE id = ? AND status = 'running' AND lease_owner = ?",
+      [this.time.nowMs(), jobId, leaseOwner]);
+    return released.affectedRows === 1;
+  }
+
   async finalizeExecution({ jobId, leaseOwner }) {
     if (!positiveInteger(jobId) || !String(leaseOwner ?? "").trim()) {
       throw new TypeError("Supplier import finalization input is invalid");

@@ -30,8 +30,8 @@ const SOURCE_ERRORS = Object.freeze({
  * 將 scheduler 接到 Supplier import 執行（T42；設計 §2 「Worker adapter：不放業務規則」）。
  *
  * - 只領取 `queued` 或 lease 過期嘅 job，按 row_number 逐列做（規則喺 SupplierImportService）。
- * - 收到 abort 或者 service 開始 shutdown，就喺兩列之間停低，唔再領新 job。停低嘅 job 保留
- *   lease，過期之後由下一個 worker 接手續做（resume）。
+ * - 收到 abort 或者 service 開始 shutdown，就喺兩列之間停低，唔再領新 job，並即刻放返 lease（HD-075），
+ *   下一輪或者另一個 worker 即刻續做（resume）。Process 死咗（冇機會放）先要等 lease 過期。
  * - Precheck（T43）：領取 `uploaded` 或 lease 過期嘅 `validating` job，讀來源檔、逐列預檢、寫 rows。
  * - 未設定 import root 就乜都唔做，開機寫一條 warning：import 未部署，upload 回 503（HD-050）。
  * - 執行（T45）：`applyRow` 用 `createSupplierImportApplier`，經 UI／API 共用嘅 connection-taking helper
@@ -196,6 +196,8 @@ export class SupplierImportWorkerService extends BaseService {
       if (row.status === "applied") applied += 1;
       else if (row.status === "failed") failed += 1;
     }
+    // 喺兩列之間停低：放返 lease，下一輪（或者另一個實例）即刻續做（HD-075）。
+    await this.importService.releaseExecutionLease({ jobId: job.id, leaseOwner: this.leaseOwner });
     return { claimed: true, jobId: job.id, applied, failed, status: "running" };
   }
 }

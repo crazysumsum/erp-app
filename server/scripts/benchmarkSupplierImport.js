@@ -40,6 +40,16 @@ const arg = (name, fallback) => {
 const ROWS = Number(arg("rows", 10_000));
 const OUTPUT = arg("output", null);
 const CRASH = arg("crash", false) === true;
+// 診斷用：每列只填主檔欄位，唔建地址、聯絡人、識別號。
+const ROOT_ONLY = arg("root-only", false) === true;
+// 診斷用：名稱互不相似（隨機字），對比「Benchmark Supplier <n>」呢種全部相似嘅最壞情況。
+const DISTINCT_NAMES = arg("distinct-names", false) === true;
+const WORDS = ["Amber", "Basalt", "Cedar", "Delta", "Ember", "Fjord", "Garnet", "Harbor", "Indigo", "Juniper", "Kestrel", "Lumen",
+  "Maple", "Nimbus", "Onyx", "Pioneer", "Quarry", "Raven", "Summit", "Tundra", "Umber", "Vertex", "Willow", "Xenon", "Yarrow", "Zephyr"];
+const distinctName = (index) => {
+  const pick = (n) => WORDS[n % WORDS.length];
+  return `${pick(index * 7)} ${pick(index * 13 + 3)} ${pick(Math.floor(index / 26) * 5 + 1)} ${randomBytes(3).toString("hex")} Trading`;
+};
 if (!Number.isSafeInteger(ROWS) || ROWS < 2 || ROWS > 10_000 || typeof OUTPUT !== "string") {
   throw new Error("usage: node scripts/benchmarkSupplierImport.js --rows=<2..10000> --output <report.json> [--crash]");
 }
@@ -48,7 +58,7 @@ const RUN = randomBytes(3).toString("hex").toUpperCase();
 const PREFIX = `BM49-${RUN}-`;
 const work = fs.mkdtempSync(path.join(os.tmpdir(), "supplier-bench-"));
 const root = path.join(work, "imports");
-const report = { run: RUN, rows: ROWS, crash: CRASH, command: process.argv.slice(1).join(" "), startedAt: new Date().toISOString() };
+const report = { run: RUN, rows: ROWS, crash: CRASH, rootOnly: ROOT_ONLY, distinctNames: DISTINCT_NAMES, command: process.argv.slice(1).join(" "), startedAt: new Date().toISOString() };
 const sleep = (ms) => new Promise((resolve) => { setTimeout(resolve, ms); });
 const now = () => Date.now();
 
@@ -65,12 +75,12 @@ function csv() {
   for (let index = 1; index <= ROWS; index += 1) {
     const n = String(index).padStart(5, "0");
     records.push(SUPPLIER_IMPORT_COLUMN_NAMES.map((name) => ({
-      supplierCode: `${PREFIX}${n}`, supplierName: `Benchmark Supplier ${RUN} ${n}`, displayName: `Bench ${n}`,
+      supplierCode: `${PREFIX}${n}`, supplierName: DISTINCT_NAMES ? distinctName(index) : `Benchmark Supplier ${RUN} ${n}`, displayName: `Bench ${n}`,
       defaultCurrencyCode: "HKD", generalPhone: "+852 2123 4567", generalEmail: `bench${n}@example.com`,
       notes: "T49 capacity run", addressLabel: "Head office", addressPurpose: "office", addressLine1: `${index} Benchmark Road`,
       city: "Hong Kong", countryCode: "HK", contactName: `Contact ${n}`, contactPurpose: "orders", contactEmail: `c${n}@example.com`,
       identifierType: "business_registration", issuerCountryCode: "HK", identifierValue: `BM${RUN}${n}`
-    })[name] ?? ""));
+    })[name] ?? "").map((value, column) => (ROOT_ONLY && column >= SUPPLIER_IMPORT_COLUMN_NAMES.indexOf("addressLabel") ? "" : value)));
   }
   return Buffer.from(stringify([SUPPLIER_IMPORT_COLUMN_NAMES, ...records], SUPPLIER_CSV_STRINGIFY_OPTIONS));
 }
@@ -188,6 +198,14 @@ try {
   report.workerPeakRssMiB = Math.max(...samples.rssMiB);
   report.dbConnectionsPeak = { userConnections: Math.max(...samples.dbConnections),
     note: "all connections of DB_USER, including this process's own pool" };
+
+  // 每 1,000 列平均每列幾耐（由上一列完成到呢列完成），睇成本會唔會隨數量上升。
+  const [buckets] = await db.query(
+    `SELECT FLOOR((\`row_number\` - 1) / 1000) AS bucket, ROUND(AVG(gap), 1) AS msPerRow FROM (
+       SELECT \`row_number\`, completed_at - LAG(completed_at) OVER (ORDER BY \`row_number\`) AS gap
+         FROM supplier_import_rows WHERE job_id = ? AND status = 'applied') timed
+      WHERE gap IS NOT NULL GROUP BY bucket ORDER BY bucket`, [job.id]);
+  report.msPerRowByThousand = buckets.map((row) => Number(row.msPerRow));
 
   // 核對：每列啱啱好寫一次。
   const [[suppliers]] = await db.query("SELECT COUNT(*) AS n FROM suppliers WHERE supplier_code_key LIKE ?", [`${PREFIX.toLowerCase()}%`]);

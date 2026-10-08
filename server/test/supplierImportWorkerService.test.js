@@ -44,7 +44,8 @@ function scripted(rowsLeft, { onRow = () => {} } = {}) {
       rowsLeft -= 1;
       return { status: "applied" };
     },
-    async finalizeExecution() { calls.push("finalize"); return { status: "completed", applied: 2, failed: 0, skipped: 0 }; }
+    async finalizeExecution() { calls.push("finalize"); return { status: "completed", applied: 2, failed: 0, skipped: 0 }; },
+    async releaseExecutionLease() { calls.push("release"); return true; }
   };
 }
 
@@ -100,13 +101,14 @@ test("abort or shutdown stops the worker between rows and it claims nothing new"
   const { instance } = worker();
   instance.importService = scripted(5, { onRow: () => aborting.abort() });
   const stopped = await instance.runExecution(aborting.signal);
-  assert.deepEqual(instance.importService.calls, ["claim", "row"], "one row, then it stops; the lease lets another worker resume");
+  assert.deepEqual(instance.importService.calls, ["claim", "row", "release"],
+    "one row, then it stops and releases its lease, so the next run or another worker resumes at once (HD-075)");
   assert.equal(stopped.status, "running");
 
   const second = worker();
   second.instance.importService = scripted(5, { onRow: () => { void second.instance.shutdown(); } });
   await second.instance.runExecution(new AbortController().signal);
-  assert.deepEqual(second.instance.importService.calls, ["claim", "row"]);
+  assert.deepEqual(second.instance.importService.calls, ["claim", "row", "release"]);
   assert.deepEqual(await second.instance.runExecution(new AbortController().signal), { claimed: false }, "no new claim after shutdown");
 });
 

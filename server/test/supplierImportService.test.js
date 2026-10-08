@@ -170,3 +170,21 @@ test("the upload check and precheck read the same header from the same bytes (RE
     if (label.includes("Bank")) assert.deepEqual([atUpload, atPrecheck], Array(2).fill("SUPPLIER_IMPORT_BANK_COLUMN_FORBIDDEN"), label);
   }
 });
+
+test("the import applier never runs the similar-name search, on create or update (HD-052, HD-075)", async () => {
+  const { createSupplierImportApplier } = await import("../src/modules/supplier/import/applySupplierImportRow.js");
+  const calls = [];
+  const suppliers = {
+    async createSupplierInTransaction(_connection, options) { calls.push(["create", options.findDuplicates]); return { id: 41 }; },
+    async updateSupplierInTransaction(_connection, options) { calls.push(["update", options.findDuplicates]); return {}; }
+  };
+  const apply = createSupplierImportApplier({ suppliers, addresses: {}, contacts: {}, identifiers: {} });
+  const connection = { async query() { return [[{ id: 9, supplier_name: "Old", display_name: "", default_currency_code: "HKD",
+    default_payment_term_id: null, website: "", general_phone: "", general_email: "", notes: "" }]]; } };
+  const job = { id: 3, activation_mode: "draft", approval_setting_value: 0, approver_user_id: null };
+  const actor = { id: 1, username: "u" };
+  await apply(connection, { job, actor, row: { operation: "create", normalized_payload: { root: { supplierCode: "S-1", supplierName: "New" } } } });
+  await apply(connection, { job, actor, row: { operation: "update", match_supplier_id: 9, expected_supplier_version: 2,
+    normalized_payload: { root: { notes: "x" } } } });
+  assert.deepEqual(calls, [["create", false], ["update", false]]);
+});
