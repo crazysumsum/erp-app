@@ -19,12 +19,18 @@ export async function requireSalesWriteActor(connection, claims) {
 }
 
 export async function requireSalesRecoveryActor(connection, actorId) {
+  return requireOriginalSalesActor(connection,actorId,"sales.mgmt");
+}
+export async function requireSalesImportActorById(connection, actorId) {
+  return requireOriginalSalesActor(connection,actorId,"sales.import");
+}
+async function requireOriginalSalesActor(connection, actorId, permission) {
   if (!Number.isSafeInteger(actorId) || actorId < 1) throw new TypeError("Invalid recovery actor");
   const [[user]] = await connection.query("SELECT username FROM users WHERE id = ? AND status = 'active'", [actorId]);
   if (!user?.username) throw new ApplicationError("Original Sales actor is inactive", { code: "FORBIDDEN", statusCode: 403 });
   const roles = await loadRoleNamesForUser(connection, actorId);
   const permissions = await loadPermissionNamesForUser(connection, actorId);
-  if (!["sales.view", "sales.mgmt"].every(name => permissions.includes(name)))
+  if (!["sales.view", permission].every(name => permissions.includes(name)))
     throw new ApplicationError("Original Sales actor no longer has permission", { code: "FORBIDDEN", statusCode: 403 });
   return { id: actorId, username: user.username, roles, permissions };
 }
