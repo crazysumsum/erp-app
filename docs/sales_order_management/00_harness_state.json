@@ -1,29 +1,29 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 237,
+  "revision": 244,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
-  "status": "IMPLEMENTING",
-  "resume_status": null,
+  "status": "BLOCKED",
+  "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-004",
-  "current_task": "TASK-038",
+  "current_task": "TASK-040",
   "baseline": {
     "design": "e9995444bf53fe06b2a9fd106631343ac95bfb4d81ed5c8e448f1bb3349ab629",
     "plan": "0a77edbc9764415f4bd8d96046e47d3f24832700eff0e9dc62a06caba8cc53fe",
-    "code_commit": "4fb62b001d331f719ac9aa1e7aefbdebbdd298f3",
-    "source_fingerprint": "68b8adc3abe418898ef510c85d665b136ed9e7c64582e989d178c275593a8d31",
+    "code_commit": "94707b2a12d71d1c7977a5b6a6fe1286358b8bab",
+    "source_fingerprint": "2a5e57ac5c358843f800888d0a043b717f74fe232ec85ef697ad2f1c4fff6484",
     "worktree": "/private/tmp/erp-sales-p3",
-    "default_commit": "4fb62b001d331f719ac9aa1e7aefbdebbdd298f3",
+    "default_commit": "2afef5cdb271dbfa3ccefd913f7042c52c7be92b",
     "mode_entry_commit": "6936736ba1fb98f4fcb8365377f59f0a0f7a4897"
   },
   "runtime": {
-    "instance_id": "sales-p3-readiness-20261007",
+    "instance_id": "sales-p3-01314bd194db",
     "owner": "Codex /root",
     "resources": {
       "workspace": "/private/tmp/erp-sales-p3",
       "temp-directory": "/private/tmp/sales-p3-private",
-      "mysql-instance": "NOT_STARTED; P2 owned instances observed stopped, no reuse"
+      "mysql-instance": "Actual ownedPID92528/UID501 /private/tmp/sales-p3-private/sales-p3-01314bd194db/mysql.sock schema erp_sales_p3_01314bd194db; localhostTCP 53695; runtime.json exactargv, appDML/SUPER=N, fixtureexact-schema/SUPER=N, admintriggerDDL"
     },
     "lease_ref": null
   },
@@ -65,9 +65,9 @@
     "TASK-035": "DONE",
     "TASK-036": "DONE",
     "TASK-037": "DONE",
-    "TASK-038": "IN_PROGRESS",
-    "TASK-039": "PENDING",
-    "TASK-040": "PENDING",
+    "TASK-038": "DONE",
+    "TASK-039": "DONE",
+    "TASK-040": "IN_PROGRESS",
     "TASK-041": "PENDING",
     "TASK-042": "PENDING",
     "TASK-043": "PENDING",
@@ -3866,6 +3866,138 @@
       "open_critical": 0,
       "open_high": 1,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-T038-TABLES-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "0a77edbc9764415f4bd8d96046e47d3f24832700eff0e9dc62a06caba8cc53fe",
+      "source_ref": "Actual collaborator review; private task038-tables-r1-reviewer-proof.json. R1 timing correction /tablesR4 correction retained; superseded scopes are history, final tablesR4/forwardR2 cover current file hashes.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 2,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-T038-TABLES-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "0a77edbc9764415f4bd8d96046e47d3f24832700eff0e9dc62a06caba8cc53fe",
+      "source_ref": "Actual collaborator review; private task038-tables-r2-reviewer-proof.json. R1 timing correction /tablesR4 correction retained; superseded scopes are history, final tablesR4/forwardR2 cover current file hashes.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-T038-FORWARD-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "0a77edbc9764415f4bd8d96046e47d3f24832700eff0e9dc62a06caba8cc53fe",
+      "source_ref": "Actual collaborator review; private task038-forward-r1-reviewer-proof.json. R1 timing correction /tablesR4 correction retained; superseded scopes are history, final tablesR4/forwardR2 cover current file hashes.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-T038-FORWARD-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "0a77edbc9764415f4bd8d96046e47d3f24832700eff0e9dc62a06caba8cc53fe",
+      "source_ref": "Actual collaborator review; private task038-forward-r2-reviewer-proof.json. R1 timing correction /tablesR4 correction retained; superseded scopes are history, final tablesR4/forwardR2 cover current file hashes.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-T038-TABLES-R3",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "0a77edbc9764415f4bd8d96046e47d3f24832700eff0e9dc62a06caba8cc53fe",
+      "source_ref": "Actual collaborator review; private task038-tables-r3-reviewer-proof.json. R1 timing correction /tablesR4 correction retained; superseded scopes are history, final tablesR4/forwardR2 cover current file hashes.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-T038-TABLES-R4",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "0a77edbc9764415f4bd8d96046e47d3f24832700eff0e9dc62a06caba8cc53fe",
+      "source_ref": "Actual collaborator review; private task038-tables-r4-reviewer-proof.json. R1 timing correction /tablesR4 correction retained; superseded scopes are history, final tablesR4/forwardR2 cover current file hashes.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-T039-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "0a77edbc9764415f4bd8d96046e47d3f24832700eff0e9dc62a06caba8cc53fe",
+      "source_ref": "Actual collaborator FINAL; private task039-r1-reviewer-proof.json. R1 four P2 findings reproduced RED; R2 independently21PASS/lint and probes APPROVE exact four file hashes. Atomic ada5c7b parser and05b19a1 template retain reviewed bytes. No wholePhase/CI/merge claim.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-T039-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "0a77edbc9764415f4bd8d96046e47d3f24832700eff0e9dc62a06caba8cc53fe",
+      "source_ref": "Actual collaborator FINAL; private task039-r2-reviewer-proof.json. R1 four P2 findings reproduced RED; R2 independently21PASS/lint and probes APPROVE exact four file hashes. Atomic ada5c7b parser and05b19a1 template retain reviewed bytes. No wholePhase/CI/merge claim.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-T040-CORE-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "0a77edbc9764415f4bd8d96046e47d3f24832700eff0e9dc62a06caba8cc53fe",
+      "source_ref": "Actual collaborator FINAL; private task040-r1-reviewer-proof.json. R1 compensation race independently found then actual native RED; R2 sixunitPASS/lint/independent raceprobe APPROVE scopedsevenfiles. Shared default activation DEC026 remains OPEN; approvedcore commits88e6d2b/09646d4/native94707b2 retain reviewed ending bytes.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-T040-CORE-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "0a77edbc9764415f4bd8d96046e47d3f24832700eff0e9dc62a06caba8cc53fe",
+      "source_ref": "Actual collaborator FINAL; private task040-r2-reviewer-proof.json. R1 compensation race independently found then actual native RED; R2 sixunitPASS/lint/independent raceprobe APPROVE scopedsevenfiles. Shared default activation DEC026 remains OPEN; approvedcore commits88e6d2b/09646d4/native94707b2 retain reviewed ending bytes.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-DEC026-R2-PROPOSAL",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "c29fa71caed564d3fc0dc4b4d609a0b3e9a73a0af34b47bd29875f45fcea4b50",
+      "source_ref": "Actual collaborator FINAL proposal-onlyAPPROVE; private dec026-reviewer-r2-proof.json. Independently exactsixpatchSHA/sourcepin/UATNArefs/unchangedrequirementsformalUATprofile and applicability; ownJSON/slowbody/slot3PASS; independently readnative8/shared140PASS0skip. Originalproposal genuineJSON408/R1proof retained. Patchdf3fbbfe not applied; humanchoice pending.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -5573,6 +5705,50 @@
       "source_ref": "Actual git fetch origin --prune, origin/main=primary clean main4fb62b0; isolated codex/sales-order-phase-3-intake created4fb62b0. Immutable P2 archive240 and actual completion-pr190 receipt; all existing canonical/report bytes identical before rehydrate; preserve all approvals/failures/runs; P2 cleanup action confirmed by actual receipt, no external action replay. Actual Sam latest chat「批准下一階段」authorizes PHASE004 implementation under existing scope; no formal/UAT/release.",
       "actor": "Codex /root",
       "observed_at": "2026-10-07T08:25:34.680696+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK038 developer persistence DoD",
+      "code_commit": "06643eb0022a867bdca0f79ec7cf67261129bd54",
+      "spec_baseline": "0a77edbc9764415f4bd8d96046e47d3f24832700eff0e9dc62a06caba8cc53fe",
+      "source_fingerprint": "5bb0cefe9ebca22a9d8997e7a88ec1f469f1ab5904952ec6a107e8e5ba66fa88",
+      "status": "PASS",
+      "source_ref": "Actual private task038-native-final4.xml16PASS0skip; task038-regression.xml20PASS0skip; task038-sales-regression.xml119PASS0skip; lint-final4 exit0; current-schema-final4 exit0; independenttablesR4/forwardR2 current scopedAPPROVE; actual atomiccommit06643eb. Report implementation/69_task038_intake_persistence.md. Not formal/Phase/CI/merge proof.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-07T09:29:01.363175+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK038 unpublished commit separation correction",
+      "code_commit": "6e3d81da48c2535aeb445542c354c207f3952b52",
+      "spec_baseline": "0a77edbc9764415f4bd8d96046e47d3f24832700eff0e9dc62a06caba8cc53fe",
+      "source_fingerprint": "89b87b9f9ddedc9a3d35f76189e11fb2ebf0a0812f6eef193a84b35c816337e9",
+      "status": "PASS",
+      "source_ref": "Actual e9552ba tables4mainfiles independently native10PASS0skip, 6e3d81d forward+extendednative+report slice. gitdiff06643eb..6e3d81d empty: full committed tree identical; prior exact-file reviews/native16PASS proof preserved. Own unpublished066 commit patch privately retained; reset--soft preserved all files/CSV work, no remote/main changes. Earlier066 observation remains historical, no rewritten proof hashes. Current fingerprint includes in-progress Task039 and is not wholePhase verification.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-07T09:38:53.763382+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK039 developer CSV/template DoD",
+      "code_commit": "05b19a1811fa98913951db4a08a139df68b1e7a5",
+      "spec_baseline": "0a77edbc9764415f4bd8d96046e47d3f24832700eff0e9dc62a06caba8cc53fe",
+      "source_fingerprint": "6a1235b57ca71648637b41147c1da82710d0cb973fd9ef5c150f2b500afe5e8f",
+      "status": "PASS",
+      "source_ref": "Actual focused21PASS0skip, affected regression136PASS0skip, correctedlint exit0; moduleboundaryPASS. Actual reviewerR2APPROVE. Private task039-focused-final.xml/task039-regression.xml; safe report70. No browser/formal/CI/merge claim.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-07T09:53:26.386391+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK040 scoped core and private DEC026 candidate checks",
+      "code_commit": "94707b2a12d71d1c7977a5b6a6fe1286358b8bab",
+      "spec_baseline": "0a77edbc9764415f4bd8d96046e47d3f24832700eff0e9dc62a06caba8cc53fe",
+      "source_fingerprint": "2a5e57ac5c358843f800888d0a043b717f74fe232ec85ef697ad2f1c4fff6484",
+      "status": "PASS",
+      "source_ref": "Scopedfunctionalcore independentR2APPROVE; unit6PASS/lint and pathboundaryPASS. Native race actualRED thenGREEN. Exact private proposed shared overlay current task040-native-candidate-r2.xml8PASS0skip andtask040-shared-candidate-r2.xml140PASS0skip; candidate-only, not currentdefault activation/wholeTask/P3. Currentlive defaultstartup/HTTP failures preserved; TASK040 remainsIN_PROGRESS. Report71.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-07T10:10:55.668324+00:00"
     }
   ],
   "pending_decisions": [
@@ -5904,6 +6080,19 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Actual latest Codex chat Sam「批准」directly answers DEC025 full Decision Required question and packet68: adopts exactpatch936420c6/D e9995444/P0a77edbc, full original scope plus precise shared/schema/job/template paths, fixed lease-fenced import reserve-only principal/CSV originalactor fresh view+import/controlledempty-defaultcodecatalogue/boundedCustomerItembatch providers/failclosedcontract-onlyChannel; four forward migrations incl0078projectionpair extension/sourceIntake uniqueFK;33developer/fiveCI/formal60/UAT/floors preserved, new-owned-runtime scoped fixture restore rights and unchangedNFR014015UATNA plus narrow purely mechanical bindings. All prior approvals/failures/reviews retained; previouscommitPRmainmerge/ownedSQL/browser/crash/loadcleanup authority persists. No production/shared DB/platform/acceptance/release/latermaterialexception."
+    },
+    {
+      "id": "DEC-026",
+      "impact": "MAJOR",
+      "question": "Adopt exact private patchdf3fbbfec005b6cc1dca94aacc0013221e0dc273a402ed709db559fbcefee9c4, proposed DESIGN728edbc6d4146e0d373b7f07b97a0df1820c95493554608755541647f39c98b2 PLANc29fa71caed564d3fc0dc4b4d609a0b3e9a73a0af34b47bd29875f45fcea4b50: scoped server/config/api.js defaultdiskbudget+524288 and bodyReceiveTimeout postJSON/skipped-body pause rootcorrection; alllimits/security/timeouts/33gate/UATNAunchanged, preserveDEC025history. Reviewpacket71 and independentproposalreview required before human question/application.",
+      "affected_ids": [
+        "PHASE-004",
+        "TASK-040",
+        "TASK-041",
+        "DES-010"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
     }
   ],
   "external_actions": [
@@ -6714,6 +6903,30 @@
       "idempotency_key": "sales-p2-git-cleanup-pr190-20261007-01",
       "status": "CONFIRMED",
       "source_ref": "ActualPR190MERGED/sourcecandidatewholeGittreeequalsmain/normalmerge ancestry; ghopenPRbasefeature[]; primarycleanobserved. Preserve fullfinalmodule/state/report/raw842files SHAverifiedprivate snapshot before restoringonlyownstatebookkeeping and movingrawuntrackedout; worktreeremove noforce/localbranch-d/remotedelete onlymergedbranch. Otherworktrees/processes unchanged. Actualgitworktreeremove(no force)/localbranch-d/remotepush--delete all exit0; ownedfeaturepath/localref absent, remotelsremote empty; primarymain4fb62b0 clean, no openPRdependency, otherworktrees unchanged. Complete925fileprivatearchive/exactSHA verified; archivedstate240 is immutableprecleanup checkpoint, this actualreceipt closes its plannedaction."
+    },
+    {
+      "id": "ACT-P3-OWNED-MYSQL-INIT-DEC025",
+      "kind": "MIGRATION",
+      "target": "New owned /private/tmp/sales-p3-private/sales-p3-01314bd194db MySQL26.7.0 synthetic erp_sales_p3_01314bd194db; root init/migration admin/fixture isolated schema/app DML-only, binlog1/trust0",
+      "idempotency_key": "sales-p3-01314bd194db-init",
+      "status": "CONFIRMED",
+      "source_ref": "Sam DEC025 approved new-owned isolated SQL/runtime; no production/shared schema, no previous runtime reuse. Reviewed setup_runtime.py: exclusive fresh mkdir, PID/UID/argv/socket recorded before startup, localhost only, verify exact datadir/version, no restore rights yet; private credentials never printed. Actual setup script exit0, ownedPID92528 UID501/private datadir/socket and MySQL26.7.0/binlog1/trust0 verified; accounts separateappDML/fixtureexact-schemaSUPER=N/admintriggerDDL. env/accounts private0600; no restore grants yet."
+    },
+    {
+      "id": "ACT-P3-BASE-MIGRATION-20261007",
+      "kind": "MIGRATION",
+      "target": "erp_sales_p3_01314bd194db only; existingmigrations0001–0082 / fresh ownedempty schema; no main existing migration bytes changed",
+      "idempotency_key": "sales-p3-01314bd194db-base-migration",
+      "status": "CONFIRMED",
+      "source_ref": "SamDEC025 permits ownedmigration; reviewed npmrunmigrate loads repositoryJS/frameworkSQL, explicitprivateenv/admin database target/socket, no .env inworktree, newsource tables/constraints perapprovedTask038. Actualtask038RED ERR_MODULE_NOT_FOUND recorded privately before three migration files. Actual first attempt0081 CHECK canonical mismatch, corrected unreleased migration; retry0001–0082 succeeded. Forward0083 attempt failed metadata aliases after partial DDL; raw logs preserved. Later reviewer error-bound findings reproduced and fixed in uncommitted0082; old applied-schema ledger is not evidence for changed bytes."
+    },
+    {
+      "id": "ACT-P3-FRESH-TASK038-SCHEMA",
+      "kind": "MIGRATION",
+      "target": "Fresh erp_sales_p3_01314bd194db_t038 on owned PID92528 only, no drop/reset; account privileges exact new schema, synthetic migrate0001–0083 and rerun",
+      "idempotency_key": "sales-p3-01314bd194db-task038-fresh",
+      "status": "CONFIRMED",
+      "source_ref": "Sam DEC025 isolated SQL authority. Fresh schema verifies corrected unreleased migration bytes; old failures/schema retained. Private credentials unchanged and never emitted; root local owned socket creates exact identifier only, app DML, fixture/admin exact schema. Actual fresh schema created without drop/reset; full0001–0083 migration exit0, direct four current migrations and existing External Key inspector rerun exit0. Original schema retained."
     }
   ],
   "evidence_files": [
@@ -6927,8 +7140,11 @@
     "evidence/20261007T074628-9045fa659c28/run.json",
     "evidence/20261007T074657-873ed5eccff3/run.json",
     "evidence/20261007T074659-61844831d1e1/run.json",
-    "evidence/20261007T074728-897f7b84f305/run.json"
+    "evidence/20261007T074728-897f7b84f305/run.json",
+    "implementation/69_task038_intake_persistence.md",
+    "implementation/70_task039_csv_template.md",
+    "implementation/71_phase3_upload_activation_decision.md"
   ],
   "defects": [],
-  "next_safe_action": "Implement approved PHASE004 TASK038–049 in isolatedworktree; reserve current migrationsequence by actualowner check, ownedsyntheticruntime. Run focused failingtests then minimalcode, native/HTTP/browser/security/crash/capacity; whole33developer/fiveCI/separatereview/freshmain before authorizedPRmerge. Retain history and sourcepins mechanically under narrowDEC025 authority."
+  "next_safe_action": "Await human adoption of independently reviewed exactDEC026 patchdf3fbbfe/D728edbc6/Pc29fa71c; sharedtwofiles remainunapplied. On adoption applyexactpatch, preserveoldapprovals and addnewbaselinebindings, rerun actualunmodifiedsource native8/shared140+lint/boundary beforeDONE040 and continueTASK041. ExistingcommitPRmainmergeauthority remainsvalid."
 }
