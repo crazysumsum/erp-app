@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 251,
+  "revision": 252,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-004",
-  "current_task": "TASK-044",
+  "current_task": "TASK-045",
   "baseline": {
     "design": "20b065e88164b06e91c89116f211e2e44d143e2948d18c0578281e3338925a33",
     "plan": "c11e2acd3288a4b2a807e894cbf09edc9900daa34042b643d3994617e6a0605d",
-    "code_commit": "950e0ab6831f4aa57650b66ae7c496fcd5b4a83a",
-    "source_fingerprint": "148f5d6eac234ff87516eeb5d30a90fe14883be2c66a3e1ca5d9c147ef7ea8ab",
+    "code_commit": "2759fd1604fc5b37f128a11c505c24c9a553ceb0",
+    "source_fingerprint": "62fcf673e6a767a17bea0d233c83cfd49a53a50da0065446c88c31b6444c2d07",
     "worktree": "/private/tmp/erp-sales-p3",
     "default_commit": "2afef5cdb271dbfa3ccefd913f7042c52c7be92b",
     "mode_entry_commit": "6936736ba1fb98f4fcb8365377f59f0a0f7a4897"
@@ -71,8 +71,8 @@
     "TASK-041": "DONE",
     "TASK-042": "DONE",
     "TASK-043": "DONE",
-    "TASK-044": "IN_PROGRESS",
-    "TASK-045": "PENDING",
+    "TASK-044": "DONE",
+    "TASK-045": "IN_PROGRESS",
     "TASK-046": "PENDING",
     "TASK-047": "PENDING",
     "TASK-048": "PENDING",
@@ -4480,6 +4480,66 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-T044-INVENTORY-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "c11e2acd3288a4b2a807e894cbf09edc9900daa34042b643d3994617e6a0605d",
+      "source_ref": "/private/tmp/sales-p3-private/task044-inventory-r1-reviewer-proof.json; exact scoped fileSHA/observations retained. Historical R1 findings preserved, resolved by corresponding R2 actual probes; no wholePhase/formal/CI/merge approval.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-T044-INVENTORY-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "c11e2acd3288a4b2a807e894cbf09edc9900daa34042b643d3994617e6a0605d",
+      "source_ref": "/private/tmp/sales-p3-private/task044-inventory-r2-reviewer-proof.json; exact scoped fileSHA/observations retained. Historical R1 findings preserved, resolved by corresponding R2 actual probes; no wholePhase/formal/CI/merge approval.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-T044-CORE-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "c11e2acd3288a4b2a807e894cbf09edc9900daa34042b643d3994617e6a0605d",
+      "source_ref": "/private/tmp/sales-p3-private/task044-sales-core-r1-reviewer-proof.json; exact scoped fileSHA/observations retained. Historical R1 findings preserved, resolved by corresponding R2 actual probes; no wholePhase/formal/CI/merge approval.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-T044-INTAKE-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "c11e2acd3288a4b2a807e894cbf09edc9900daa34042b643d3994617e6a0605d",
+      "source_ref": "/private/tmp/sales-p3-private/task044-intake-service-r1-reviewer-proof.json; exact scoped fileSHA/observations retained. Historical R1 findings preserved, resolved by corresponding R2 actual probes; no wholePhase/formal/CI/merge approval.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-T044-INTAKE-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "c11e2acd3288a4b2a807e894cbf09edc9900daa34042b643d3994617e6a0605d",
+      "source_ref": "/private/tmp/sales-p3-private/task044-intake-service-r2-reviewer-proof.json; exact scoped fileSHA/observations retained. Historical R1 findings preserved, resolved by corresponding R2 actual probes; no wholePhase/formal/CI/merge approval.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -6286,6 +6346,17 @@
       "source_ref": "Actual229affectedunit0failure/skip,4nativecommand/download/lostACK/auditrollback cases0skip; fullupload/precheck native23reported testcases incl2containers(21leaf)0failure/skip incl50MiB100krows; full-lint-r2exit0 and boundaryLOCAL_CHECKS_PASS. SeparateprimitivesR2/controlsR1APPROVE. InitialRED/registryconfiguration/fixturewrapper/lint failures retained privately. Mandatory audit upload/precheck/control one-TX, exacteventreplay after unknownCOMMIT, freshpre-cacheauth, privatefile/terminalsafeCSV verified; no resultpublication worker/fullPhase/CI/formal claim.",
       "actor": "Codex /root",
       "observed_at": "2026-10-08T02:29:37.568880+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK044 atomic Intake developer DoD",
+      "code_commit": "2759fd1604fc5b37f128a11c505c24c9a553ceb0",
+      "spec_baseline": "c11e2acd3288a4b2a807e894cbf09edc9900daa34042b643d3994617e6a0605d",
+      "source_fingerprint": "62fcf673e6a767a17bea0d233c83cfd49a53a50da0065446c88c31b6444c2d07",
+      "status": "PASS",
+      "source_ref": "Actual final148unit0fail/skip; final Import+Inventory native26JUnit records/Node27reported0fail/skip incl50MiB100krows; earlier affected P2+Import regression70Node reported/63leaf0fail/skip. Final full lint0/boundaryLOCAL_CHECKS_PASS/traceabilitySTRUCTURE_PASS. Separate InventoryR2/coreR1/IntakeR2 approved exact slices; final reviewer6unit10native4probes/lint0. All R1/RED/fixture/cleanup diagnostic failures retained privately; diagnostic force-exit was not PASS evidence. No Phase/CI/formal/production claim.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-08T03:26:20.068971+00:00"
     }
   ],
   "pending_decisions": [
@@ -7680,8 +7751,9 @@
     "evidence/20261007T074728-897f7b84f305/run.json",
     "implementation/69_task038_intake_persistence.md",
     "implementation/70_task039_csv_template.md",
-    "implementation/71_phase3_upload_activation_decision.md"
+    "implementation/71_phase3_upload_activation_decision.md",
+    "implementation/75_phase3_atomic_intake_checkpoint.md"
   ],
   "defects": [],
-  "next_safe_action": "TASK044 Inventory reserve-only sibling owner contract first, then atomic Sales intake using shared confirmation; TASK045–049 and full33/5CI/separatephase/freshmain/authorizedPRmerge remain. No formal/production/realChannel."
+  "next_safe_action": "TASK045 bounded registered Intake worker, Job UUID claims/heartbeat/takeover, same-event recovery and owner-safe terminal result publication; then046–049, full33developer contracts/exactcandidate5CI/separatefullPhase review/freshmain/authorizedPRmerge. Clear only owned stale synthetic Jobs/artifacts from failed native fixture teardown before processing-worker native checks; preserve immutable Inventory audit/operations. No formal acceptance/production/realChannel."
 }
