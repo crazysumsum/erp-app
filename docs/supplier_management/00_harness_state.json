@@ -1,20 +1,20 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 290,
+  "revision": 291,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-004",
-  "current_task": "TASK-048",
+  "current_task": "TASK-049",
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
     "code_commit": "5b8aa9bbcf5217ab3a30f722ff241d167fa402f6",
     "source_fingerprint": "cd70f899bfaca539353988b320210dd24b2c3b8958b249224ad8dd55f701dc97",
-    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/t48-close",
-    "default_commit": "2afef5cdb271dbfa3ccefd913f7042c52c7be92b",
+    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t49",
+    "default_commit": "525785807a474d1fe6b286ac81ded6203c209d6e",
     "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
   },
   "runtime": {
@@ -76,7 +76,7 @@
     "TASK-046": "DONE",
     "TASK-047": "DONE",
     "TASK-048": "DONE",
-    "TASK-049": "PENDING",
+    "TASK-049": "IN_PROGRESS",
     "TASK-050": "PENDING",
     "TASK-051": "PENDING"
   },
@@ -4648,6 +4648,19 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-07: '全部按建議'."
+    },
+    {
+      "id": "HD-074",
+      "impact": "MAJOR",
+      "question": "TASK-049 acceptance and capacity. (1) Benchmark entry point: (A) node scripts/benchmarkSupplierImport.js --rows=10000 --output … like runBusinessMasterPerformanceAcceptance.js, no server/package.json change, the evidence records the exact command; (B) add npm script perf:supplier-import (approval-required path). (2) Export memory (REV-075 L-4: ~530 MB RSS for one 69 MB maximum-length export, 1.35 GB for six concurrent): (A) accept and measure realistic data; (B) at most 2 concurrent exports per process, otherwise 429 SUPPLIER_EXPORT_BUSY; (C) stream the CSV. (3) Crash at scale: (A) SIGKILL the worker once mid-way through the 10,000-row run and require exactly 10,000 applied and no duplicate Suppliers after takeover; (B) rely on T45's small-scale crash test. Defaults: design environment = this Mac with a throwaway MySQL and the production worker configuration, machine and versions recorded; measure precheck+execution time (NFR-004 10 min), RSS and DB pool peak, the 10,000-row result download and export; one end-to-end mixed integration test; leak scan; a real-browser smoke; docs/supplier_management/bulk_operations.md.",
+      "affected_ids": [
+        "TASK-049",
+        "TASK-047",
+        "TASK-046",
+        "REV-075"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-08: '全部按建議' - 1A, 2B, 3A."
     }
   ],
   "external_actions": [
@@ -5724,5 +5737,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-048 is DONE (PR #189 merged at 2afef5c). HD-043 and HD-044 closed. PHASE-004 continues; re-derive the next ready task from 08_traceability.json against this ledger before starting (TASK-049 should now be ready: TASK-045..048 are DONE; TASK-038 waits on the Item owner's approval of the supplier_sku_refs rename). Open carry-forward: HD-057 (T51) and the T49 obligations in implementation/62_task_041_carry_forward.md (result download and export at 10,000 rows, REV-075 L-4)."
+  "next_safe_action": "TASK-049 in progress on claude/supplier-task-049 per HD-074 (1A node benchmark, 2B export concurrency gate of 2, 3A SIGKILL at 10,000 rows). Merge only on the Product Owner's word."
 }

@@ -62,3 +62,34 @@ test("the audit names the actor, the filters and the count, and a failed audit m
   assert.equal(result.fileName, "suppliers-20261006T070809Z.csv");
   await assert.rejects(fakes({ rows: [supplier(1)], auditFails: true }).service.exportCsv({ ...actor }), /audit down/u);
 });
+
+test("at most two exports run at once per process; a third is a 429, and a slot frees even after a failure (HD-074 2B)", async () => {
+  const gate = { active: 0 };
+  const releases = [];
+  const database = {
+    query: () => new Promise((resolve) => { releases.push(() => resolve([[supplier(1)]])); }),
+    async withTransaction(work) { return work({ execute() {} }); }
+  };
+  const service = new SupplierExportService({
+    database, time: { nowMs: () => 0 }, gate, authorize: async () => ({ username: "exporter" }),
+    businessMaster: { async getPaymentTermHistory() { return null; } }, audit: { async record() {} }
+  });
+  const first = service.exportCsv({ ...actor });
+  const second = service.exportCsv({ ...actor });
+  await new Promise(setImmediate);
+  await assert.rejects(service.exportCsv({ ...actor }), (error) => error.code === "SUPPLIER_EXPORT_BUSY" && error.statusCode === 429);
+  assert.equal(gate.active, 2);
+  releases.splice(0).forEach((release) => release());
+  await Promise.all([first, second]);
+  assert.equal(gate.active, 0);
+
+  const failing = new SupplierExportService({
+    database: { async query() { throw new Error("db down"); } }, time: { nowMs: () => 0 }, gate,
+    authorize: async () => ({ username: "exporter" }), businessMaster: {}, audit: { async record() {} }
+  });
+  await assert.rejects(failing.exportCsv({ ...actor }), /db down/u);
+  assert.equal(gate.active, 0, "a failed export frees its slot");
+  await assert.rejects(new SupplierExportService({ database, time: { nowMs: () => 0 }, gate,
+    authorize: async () => { throw new Error("stale"); }, businessMaster: {} }).exportCsv({ ...actor }), /stale/u);
+  assert.equal(gate.active, 0, "a refused caller never takes a slot");
+});
