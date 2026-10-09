@@ -47,3 +47,7 @@ test("TC-035 database JSON byte cap is checked on final saved payload",async()=>
  const f=fixture(),g=group(),query=f.tx.query;f.tx.query=async(sql,params)=>sql.includes("AS bytes")?[[{request_index:0,bytes:131073}]]:query(sql,params);
  const [result]=await precheckSalesOrders({...f,groups:[g]});assert.equal(result.status,"INVALID");assert.equal(result.payload,null);assert.equal(result.errors[0].field,"payload");
 });
+test("TC-035 archived duplicate preserves a null Active SO identity",async()=>{
+ const f=fixture(),g=group(),query=f.tx.query;f.tx.query=async(sql,params)=>sql.includes("sales_external_order_keys")?[[{id:7,channel_code:g.channelCode,identity_hash:salesSourceHash(g.externalOrderId).toString("hex"),external_order_id:g.externalOrderId,payload_hash:sourceOrderPayloadHash(g),status:"SUCCEEDED",sales_order_id:null,sales_order_number:"SO26000001",is_order_archived:1}]]:query(sql,params);
+ const [result]=await precheckSalesOrders({...f,groups:[g]});assert.deepEqual(result.duplicate,{externalOrderKeyId:7,salesOrderId:null,salesOrderNumber:"SO26000001",isArchived:true});
+});

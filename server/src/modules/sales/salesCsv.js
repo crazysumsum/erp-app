@@ -69,7 +69,7 @@ function appendErrors(group,errors,rowNo) {
 const safePayload=group=>({...group.payload,lines:group.payload.lines.map(({formulaPrefixed: _formulaPrefixed,...line})=>line)});
 
 // A group file holds at most100 rows/128KiB; there is no file-wide in-memory order map.
-export async function parseSalesCsv(source,{spoolRoot,abortSignal,onOrder,onFileValidated}={}) {
+export async function parseSalesCsv(source,{spoolRoot,abortSignal,onOrder,onFileValidated,maxRows=IMPORT_MAX_ROWS,maxOrders=IMPORT_MAX_ORDERS}={}) {
   if(!path.isAbsolute(spoolRoot)||typeof onOrder!=="function")throw new TypeError("Sales CSV requires a managed spool root and bounded order consumer");
   abortSignal?.throwIfAborted();const directory=await mkdtemp(path.join(spoolRoot,"sales-csv-"));
   let rowCount=0,orderCount=0;
@@ -86,7 +86,7 @@ export async function parseSalesCsv(source,{spoolRoot,abortSignal,onOrder,onFile
           headers=values;continue;
         }
         if(values.every((value,index)=>value===headers[index]))throw salesError("SALES_IMPORT_FILE_INVALID",{field:"header"});
-        if(++rowCount>IMPORT_MAX_ROWS)throw salesError("SALES_IMPORT_FILE_INVALID",{field:"rows"});
+        if(++rowCount>IMPORT_MAX_ROWS||rowCount>maxRows)throw salesError("SALES_IMPORT_FILE_INVALID",{field:"rows"});
         const row=Object.fromEntries(headers.map((name,index)=>[name,values[index]])),rowNo=rowCount+1;
         if(row.templateVersion!=="1.0")throw salesError("SALES_IMPORT_VERSION_UNSUPPORTED");
         if(!row.sourceOrderKey.trim()||[...row.sourceOrderKey].length>190||/[\p{Cc}\p{Cf}]/u.test(row.sourceOrderKey))throw salesError("SALES_IMPORT_FILE_INVALID",{field:"sourceOrderKey"});
@@ -95,7 +95,7 @@ export async function parseSalesCsv(source,{spoolRoot,abortSignal,onOrder,onFile
         try {group=JSON.parse(await readFile(file,"utf8"));}catch(error){if(error.code!=="ENOENT")throw error;}
         const normalized=normalizeRow(row,rowNo);
         if(!group) {
-          if(++orderCount>IMPORT_MAX_ORDERS)throw salesError("SALES_IMPORT_FILE_INVALID",{field:"orders"});
+          if(++orderCount>IMPORT_MAX_ORDERS||orderCount>maxOrders)throw salesError("SALES_IMPORT_FILE_INVALID",{field:"orders"});
           group={sourceOrderKey:row.sourceOrderKey,externalOrderId:normalized.externalOrderId,channelCode:normalized.payload.channelCode,header:headerFields.map(name=>[...row[name]].length>(name==="orderNotes"?2000:190)?null:row[name]),payload:{...normalized.payload,lines:[]},errors:[],firstRowNo:rowNo,lastRowNo:rowNo,rowCount:0,limited:false};
         }
         if(group.sourceOrderKey!==row.sourceOrderKey)throw salesError("SALES_SOURCE_HASH_COLLISION");

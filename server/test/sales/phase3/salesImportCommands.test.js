@@ -21,7 +21,7 @@ test("TC-037 confirmation queues only valid children and records actual confirme
  const children=f.calls.find(c=>c.sql?.startsWith("UPDATE sales_intake_orders"));assert.match(children.sql,/status='VALID'/u);assert.match(children.sql,/import_job_id=\?/u);
  const header=f.calls.find(c=>c.sql?.startsWith("UPDATE sales_import_jobs"));assert.match(header.sql,/confirmed_by/u);assert.match(header.sql,/version=\?/u);assert.ok(header.params.includes(actor.id));assert.equal(f.calls.find(c=>c.audit).audit.action,"sales_import.confirmed");assert.equal(f.calls.filter(c=>c.succeeded).length,1);
 });
-test("TC-037 replay returns original summary after worker progress and reauthorizes before replay",async()=>{
+test("TC-039 replay returns original summary after worker progress and reauthorizes before replay",async()=>{
  const replay={id:2,number:"SI-261008-000001",status:"QUEUED",version:2},f=fixture({status:"COMPLETED",version:5,replay});assert.equal((await f.service.confirm({claims,id:2,input:{eventId:randomUUID(),version:1}})).importJob.status,"QUEUED");assert.equal(f.calls.filter(c=>c.audit||c.sql?.startsWith("UPDATE")).length,0);
  const forbidden=fixture({replay,permissions:["sales.view"]});await assert.rejects(()=>forbidden.service.confirm({claims:{...claims,claimedPermissions:["sales.view"]},id:2,input:{eventId:randomUUID(),version:1}}),{code:"FORBIDDEN"});
 });

@@ -27,7 +27,7 @@ export async function precheckSalesOrders({tx,groups,customers,items,config,nowM
   if(key.status!=="SUCCEEDED")throw salesError("SALES_DEPENDENCY_UNAVAILABLE");
   const payloadHash=sourceOrderPayloadHash(group),warnings=key.payload_hash===payloadHash?[]:[{code:"EXTERNAL_ORDER_PAYLOAD_CONFLICT"}];
   completed.set(group,{status:"DUPLICATE",errors:[],warnings,payload:{channelCode:group.channelCode,externalOrderId:group.externalOrderId,warnings},payloadHash,
-   duplicate:{externalOrderKeyId:Number(key.id),salesOrderId:Number(key.sales_order_id),salesOrderNumber:key.sales_order_number,isArchived:Boolean(key.is_order_archived)}});
+   duplicate:{externalOrderKeyId:Number(key.id),salesOrderId:key.sales_order_id===null?null:Number(key.sales_order_id),salesOrderNumber:key.sales_order_number,isArchived:Boolean(key.is_order_archived)}});
  }
  const candidates=groups.filter(group=>!group.errors.length&&!completed.has(group)),pairs=new Map(),customerIds=new Set();
  for(const group of candidates){customerIds.add(group.payload.customerId);for(const line of group.payload.lines)pairs.set(pairKey(line),{skuCode:line.skuCode,salesUomCode:line.salesUomCode});}

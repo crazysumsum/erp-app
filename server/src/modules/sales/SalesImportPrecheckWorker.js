@@ -56,7 +56,7 @@ export class SalesImportPrecheckWorker {
     const flush=async()=>{if(batch.length){const current=batch;batch=[];await this.#persist(claim,signal,current);}};
     const digest=createHash("sha256"),stream=createReadStream(source,{signal,flags:constants.O_RDONLY|constants.O_NOFOLLOW});
     async function* verifiedBytes(){for await(const chunk of stream){digest.update(chunk);yield chunk;}}
-    await parseSalesCsv(verifiedBytes(),{spoolRoot:this.root,abortSignal:signal,
+    await parseSalesCsv(verifiedBytes(),{spoolRoot:this.root,abortSignal:signal,maxRows:this.config.importMaxRows,maxOrders:this.config.importMaxOrders,
      onFileValidated:counts=>{if(digest.digest("hex")!==Buffer.from(job.file_sha256).toString("hex"))throw salesError("SALES_IMPORT_FILE_INVALID");return this.#transaction(claim,signal,(tx,_job,nowMs)=>tx.execute("UPDATE sales_import_jobs SET total_row_count=?,source_order_count=?,updated_at=? WHERE id=?",[counts.rowCount,counts.orderCount,nowMs,claim.id]));},
      onOrder:async group=>{batch.push(group);if(batch.length===this.config.importWorkerBatchSize)await flush();}});
     await flush();
@@ -83,7 +83,7 @@ export class SalesImportPrecheckWorker {
    });
    return {processed:1,classified};
   }catch(error){
-   if(["SALES_IMPORT_FILE_INVALID","SALES_IMPORT_VERSION_UNSUPPORTED"].includes(error.code))await this.#transaction(claim,signal,(tx,_job,nowMs)=>tx.execute("UPDATE sales_import_jobs SET status='FAILED',version=version+1,updated_at=? WHERE id=?",[nowMs,claim.id]));
+   if(["SALES_IMPORT_FILE_INVALID","SALES_IMPORT_VERSION_UNSUPPORTED"].includes(error.code))await this.#transaction(claim,signal,(tx,_job,nowMs)=>tx.execute("UPDATE sales_import_jobs SET status='FAILED',completed_at=?,version=version+1,updated_at=? WHERE id=?",[nowMs,nowMs,claim.id]));
    throw error;
   }finally{
    // A stopped/lost principal cannot change ownership; its durable claim expires for the next registered worker.

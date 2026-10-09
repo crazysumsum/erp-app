@@ -133,3 +133,7 @@ test("TC-035 precheck structural counts precede order persistence only after the
  assert.deepEqual(events,[{rowCount:2,orderCount:2},"order","order"]);
  events.length=0;await assert.rejects(()=>parseSalesCsv(Buffer.concat([csv([row]),Buffer.from(names.join(",")+"\n")]),{spoolRoot,onFileValidated:counts=>events.push(counts),onOrder:()=>events.push("order")}),{code:"SALES_IMPORT_FILE_INVALID"});assert.deepEqual(events,[]);assert.deepEqual(await readdir(spoolRoot),[]);
 });
+
+test("TC-034 lower approved deployment row/order caps fail before admitting sources",async t=>{
+ for(const limits of [{maxRows:1},{maxOrders:1}]){const spoolRoot=await fixture(t);let admitted=0;await assert.rejects(()=>parseSalesCsv(csv([row,{...row,sourceOrderKey:"Other"}]),{spoolRoot,onOrder:()=>admitted++,...limits}),{code:"SALES_IMPORT_FILE_INVALID"});assert.equal(admitted,0);assert.deepEqual(await readdir(spoolRoot),[]);}
+});
