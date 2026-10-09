@@ -1,5 +1,37 @@
 # Item Management Implementation Readiness
 
+## TASK-043 increment B — 2026-10-09
+
+Readiness: `CONDITIONAL` for installed Inventory/Sales only. Sam's active-task instruction
+「好，請繼續開發TASK-043」 authorizes the scheduled implementation under DESIGN
+`59ee6cb3664ae1742e41b218ffd3bf223e396eb44a4aa24d82028ebb9cf7c16d` and PLAN
+`9084e8e3435a3759f1e0445ee005ae41c3403fc7338242572fe8de1be39eff50`.
+Fresh main baseline: `0feb9d712072048adb20afc470eb87abc8911475`; isolated branch
+`codex/item-task-043-reference-guards`, worktree `/private/tmp/erp-item-task-043-reference-guards`.
+
+Scope reaches ItemAdminService (single/bulk deletion, UOM changes and archive),
+ItemLookupService (current transaction-scoped Inventory snapshots), existing public
+error factories and developer tests. No downstream source/schema writes, new API,
+authorization change or formal acceptance is authorized. Real FK metadata supplies
+reference types; guards never take downstream locks after the Item aggregate.
+
+Independent design review by `/root/item_supplier_handoff_review` on baseline
+`0feb9d7` identified T043-R01 (unlocked/stale Inventory projection) and T043-R02
+(downstream/parent-child lock ordering). Both require implementation and deterministic
+MySQL coverage before merge. Existing updateSku already uses READ COMMITTED.
+
+The installed MySQL service is stopped and needs a macOS administrator password;
+developer checks use the same installed MySQL binary in a disposable private-socket
+instance `/private/tmp/erp-item-task043-mysql.fnO6t8`, schema
+`erp_item_task043_20261009`, with TCP disabled. Existing migrations applied successfully;
+shared databases and credentials were not changed. This is not staging-like UAT evidence.
+
+Supplier TASK-038 and Inventory transfer/in-transit tables are not installed at this
+baseline. Their actual consumer integration remains outstanding; no fake table grants
+PASS. Current TC-004/005 and UAT-005/013 acceptance remains a later stage.
+
+The following sections retain historical implementation evidence, not current TASK-043 readiness.
+
 ## Scope
 
 `IMPLEMENT` is authorized by `ERP Product Owner (Sam)` in the active Codex task. This branch carries the aligned Item Management implementation through the current `TASK-044` developer candidate; it does not authorize release, formal Technical Acceptance, business UAT, deployment, or a CI/merge waiver.

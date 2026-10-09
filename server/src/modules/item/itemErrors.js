@@ -293,7 +293,7 @@ export function barcodeNotFound(id) {
 export function itemReferenced(referenceTypes) {
   return conflict(`Item is referenced by: ${referenceTypes.join(", ")}`, {
     code: "ITEM_REFERENCED",
-    publicMessage: "這個商品已被其他資料引用，無法刪除",
+    publicMessage: "這個商品仍有相依資料，無法刪除或封存",
     details: { referenceTypes }
   });
 }
@@ -301,7 +301,7 @@ export function itemReferenced(referenceTypes) {
 export function skuReferenced(referenceTypes) {
   return conflict(`SKU is referenced by: ${referenceTypes.join(", ")}`, {
     code: "SKU_REFERENCED",
-    publicMessage: "這個 SKU 已被其他資料引用，無法刪除",
+    publicMessage: "這個 SKU 仍有相依資料，無法刪除或封存",
     details: { referenceTypes }
   });
 }
@@ -417,10 +417,11 @@ export function categoryParentNotActive() {
   });
 }
 
-export function uomChangeBlocked() {
+export function uomChangeBlocked(referenceTypes = []) {
   return conflict("Base UOM or its conversion cannot change after transactions exist", {
     code: "UOM_CHANGE_BLOCKED",
-    publicMessage: "已有庫存或交易記錄，無法直接修改單位"
+    publicMessage: "單位換算仍被其他資料使用，無法修改或移除",
+    details: { referenceTypes }
   });
 }
 
