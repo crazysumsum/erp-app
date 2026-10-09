@@ -120,6 +120,9 @@ jobs:
       DB_USER: erp_user
       DB_PASSWORD: erp_password
       DB_NAME: erp_dev
+      # Only fixture trigger DDL and isolated recovery setup use this ephemeral admin.
+      DB_ADMIN_USER: root
+      DB_ADMIN_PASSWORD: root
       # 打開 test/integration/authFlow.integration.test.js 那組真連線測試。
       # 本機沒設這個變數時它們會 skip 而不是失敗，讓沒裝 MySQL 的環境仍然可以
       # 跑 npm test；CI 這裡確定有一個剛 migrate 過的 MySQL，設了就要求它真的

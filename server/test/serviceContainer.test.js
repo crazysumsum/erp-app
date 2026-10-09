@@ -299,6 +299,26 @@ test("service discovery finds the built-in public services", async () => {
       dependencies: ["scheduler", "requestLimiter"]
     },
     {
+      name: "salesJobs",
+      lifecycle: "singleton",
+      dependencies: ["mysqldatabase", "time", "logging"]
+    },
+    {
+      name: "job.salesBackorderAllocation",
+      lifecycle: "singleton",
+      dependencies: ["scheduler", "salesJobs"]
+    },
+    {
+      name: "job.salesConfirmationRecovery",
+      lifecycle: "singleton",
+      dependencies: ["scheduler", "salesJobs"]
+    },
+    {
+      name: "job.salesQuotationExpiry",
+      lifecycle: "singleton",
+      dependencies: ["scheduler", "salesJobs"]
+    },
+    {
       name: "scheduler",
       lifecycle: "singleton",
       dependencies: ["logging", "time", "mysqldatabase"]
@@ -319,6 +339,13 @@ test("service discovery finds the built-in public services", async () => {
       name: "job.supplierImportWorker",
       lifecycle: "singleton",
       dependencies: ["scheduler", "mysqldatabase", "logging", "time"]
+    },
+    {
+      // Supplier import 檔案保留期（T48）。cluster scope：所有實例共用同一個 import root；
+      // 用 worker 開機驗過嘅 root。
+      name: "job.supplierImportFilePurge",
+      lifecycle: "singleton",
+      dependencies: ["scheduler", "mysqldatabase", "logging", "time", "job.supplierImportWorker"]
     },
     {
       name: "time",

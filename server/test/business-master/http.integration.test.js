@@ -100,7 +100,7 @@ integrationTest("TC-012 real HTTP authentication and authorized admin flow", asy
       { checkerId: "ar", status: "NOT_INSTALLED", activeDefaultCount: 0, openUseCount: 0, historicalCount: 0 },
       { checkerId: "customer", status: "READY", activeDefaultCount: 0, openUseCount: 0, historicalCount: 0 },
       { checkerId: "purchasing", status: "NOT_INSTALLED", activeDefaultCount: 0, openUseCount: 0, historicalCount: 0 },
-      { checkerId: "sales", status: "NOT_INSTALLED", activeDefaultCount: 0, openUseCount: 0, historicalCount: 0 },
+      { checkerId: "sales", status: "READY", activeDefaultCount: 0, openUseCount: 0, historicalCount: 0 },
       { checkerId: "supplier", status: "READY", activeDefaultCount: 0, openUseCount: 0, historicalCount: 0 }
     ]
   );

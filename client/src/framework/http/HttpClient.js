@@ -177,15 +177,29 @@ export class HttpClient {
    * 唔可以直接指向下載端點嘅 URL——一定要用 fetch 先攞到 blob，先再用
    * `URL.createObjectURL()` 俾 `<img>` 顯示或者觸發下載。
    */
-  async getBlob(path, { signal, sessionToken, range } = {}) {
-    const url = buildUrl(this.baseUrl, path);
+  getBlob(path, { signal, sessionToken, range } = {}) {
     const headers = {};
+    if (sessionToken) headers["X-Customer-Attachment-Session"] = sessionToken;
+    if (range) headers.Range = range;
+    return this.#fetchBlob("GET", path, { headers, signal });
+  }
+
+  /**
+   * 同 getBlob 一樣，不過係 POST 一個 JSON body，例如要密碼確認（jwt-password，密碼喺 body）嘅匯出：
+   * 瀏覽器嘅 GET 帶唔到 body。
+   */
+  postBlob(path, { body, signal } = {}) {
+    return this.#fetchBlob("POST", path, {
+      headers: { "Content-Type": "application/json" }, body: JSON.stringify(body ?? {}), signal
+    });
+  }
+
+  async #fetchBlob(method, path, { headers, body, signal }) {
+    const url = buildUrl(this.baseUrl, path);
     const token = this.getToken();
     if (token) {
       headers[this.authHeaderName] = `${this.authScheme} ${token}`;
     }
-    if (sessionToken) headers["X-Customer-Attachment-Session"] = sessionToken;
-    if (range) headers.Range = range;
 
     const timeoutController = new AbortController();
     const timeoutId = setTimeout(() => timeoutController.abort(), this.timeoutMs);
@@ -195,7 +209,7 @@ export class HttpClient {
 
     let response;
     try {
-      response = await this.fetchImpl(url, { method: "GET", headers, signal: requestSignal });
+      response = await this.fetchImpl(url, { method, headers, body, signal: requestSignal });
     } catch (error) {
       if (timeoutController.signal.aborted) {
         throw new ApiError({ code: "TIMEOUT", message: "請求逾時，請稍後再試", cause: error });
@@ -229,9 +243,27 @@ export class HttpClient {
 
     return {
       blob: await response.blob(),
-      contentType: response.headers.get("content-type") || "application/octet-stream"
+      contentType: response.headers.get("content-type") || "application/octet-stream",
+      fileName: parseContentDispositionFileName(response.headers.get("content-disposition"))
     };
   }
+}
+
+/**
+ * 伺服器喺 Content-Disposition 定嘅檔名（後端 fileResponse.js 寫 `filename` 同 RFC 5987 `filename*`），
+ * 優先用 `filename*`（中文檔名）。讀唔到（冇 header、CORS 冇開放）就 null，由呼叫方用自己嘅預設名。
+ */
+export function parseContentDispositionFileName(header) {
+  if (!header) return null;
+  const extended = /filename\*=UTF-8''([^;]+)/iu.exec(header);
+  if (extended) {
+    try {
+      return decodeURIComponent(extended[1].trim());
+    } catch {
+      // 編碼壞咗就退返去普通 filename。
+    }
+  }
+  return /filename="([^"]*)"/iu.exec(header)?.[1] || null;
 }
 
 function buildUrl(baseUrl, path, params) {

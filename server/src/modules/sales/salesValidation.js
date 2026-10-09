@@ -22,6 +22,11 @@ export function salesReason(value) {
   return reason;
 }
 
+export function salesEventId(value) {
+  if (typeof value !== "string" || value.length !== 36 || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu.test(value)) throw salesError("SALES_INPUT_INVALID", { field: "eventId" });
+  return value;
+}
+
 export function salesDate(value, field = "date") {
   const milliseconds = typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/u.test(value) ? Date.parse(`${value}T00:00:00.000Z`) : NaN;
   if (!Number.isFinite(milliseconds) || new Date(milliseconds).toISOString().slice(0, 10) !== value) throw salesError("SALES_DATE_INVALID", { field });
@@ -58,7 +63,7 @@ export function validateSalesDocument(input, { kind = "order", update = false } 
   const quotation = kind === "quotation";
   fields(input, ["eventId", "customerId", "currencyCode", "paymentTermId", "notes", "lines", ...(update ? ["version"] : []),
     ...(quotation ? ["quotationDate", "validUntil", "externalReference"] : ["fulfillmentWarehouseId", "orderDate", "requestedDeliveryDate", "customerPoReference"])]);
-  if (typeof input.eventId !== "string" || input.eventId.length !== 36 || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu.test(input.eventId)) throw salesError("SALES_INPUT_INVALID", { field: "eventId" });
+  salesEventId(input.eventId);
   id(input.customerId, "customerId");
   if (update) id(input.version, "version");
   if (input.paymentTermId !== undefined && input.paymentTermId !== null) id(input.paymentTermId, "paymentTermId");

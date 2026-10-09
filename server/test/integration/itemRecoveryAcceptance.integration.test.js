@@ -54,7 +54,7 @@ test("TC-016 adapter verifies a separately restored schema through a read-only t
     await admin.query(`CREATE TABLE \`${recoverySchema}\`.\`${table}\` LIKE \`${sourceSchema}\`.\`${table}\``);
   }
   await admin.query(`CREATE USER '${recoveryReader}'@'%' IDENTIFIED BY '${recoveryPassword}'`);
-  await admin.query(`GRANT SELECT ON \`${recoverySchema}\`.* TO '${recoveryReader}'@'%'`);
+  await admin.query(`GRANT SELECT ON \`${recoverySchema.replaceAll("_", "\\_")}\`.* TO '${recoveryReader}'@'%'`);
 
   const now = Date.now();
   await admin.query(

@@ -17,6 +17,8 @@ import DataTable from "@/framework/ui/DataTable.vue";
 import EllipsisCell from "@/framework/ui/EllipsisCell.vue";
 import SupplierStatusActions from "@/components/suppliers/SupplierStatusActions.vue";
 import { can } from "@/framework/authorization/can.js";
+import { promptPassword } from "@/framework/ui/confirm.js";
+import { notifyError } from "@/framework/ui/notify.js";
 import { useSessionStore } from "@/stores/session.js";
 import supplierService from "@/services/supplier.js";
 
@@ -48,6 +50,7 @@ const initialPagination = {
 };
 const currentRequest = ref({ page: initialPagination.page, sortBy: initialPagination.sortBy, descending: initialPagination.descending });
 const table = ref(null);
+const exporting = ref(false);
 
 const columns = [
   { name: "supplierCode", label: "Supplier Code", field: "supplierCode", align: "left", sortable: true },
@@ -82,12 +85,44 @@ watch(statusFilter, () => table.value?.reload());
 function formatDate(value) {
   return new Date(value).toLocaleString("zh-HK", { timeZone: "Asia/Hong_Kong" });
 }
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+/** 一般匯出（T47；HD-067）：用目前嘅搜尋、狀態同排序，密碼確認後下載 CSV。 */
+async function exportSuppliers() {
+  const password = await promptPassword({
+    title: "匯出供應商",
+    message: "按目前的搜尋、狀態及排序匯出供應商一般資料（匯入範本格式，不含銀行資料），最多 10,000 筆。",
+    okLabel: "匯出"
+  });
+  if (password === null) return;
+  exporting.value = true;
+  try {
+    const { blob, fileName } = await supplierService.exportCsv({
+      filter: searchText.value, status: statusFilter.value,
+      sortBy: currentRequest.value.sortBy, descending: currentRequest.value.descending, password
+    });
+    downloadBlob(blob, fileName ?? "suppliers.csv");
+  } catch (error) {
+    notifyError(error.message || "匯出失敗");
+  } finally {
+    exporting.value = false;
+  }
+}
 </script>
 
 <template>
   <div>
     <PageHeader>
       <template #actions>
+        <q-btn v-if="canManage" flat icon="download" label="匯出 CSV" :loading="exporting" @click="exportSuppliers" />
         <q-btn v-if="canManage" color="primary" unelevated icon="add" label="新增供應商" to="/suppliers/new" />
       </template>
     </PageHeader>

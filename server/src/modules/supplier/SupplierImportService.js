@@ -3,7 +3,7 @@ import { removeSupplierImportFile, writeSupplierImportSource } from "../../servi
 import { SupplierApprovalService } from "./SupplierApprovalService.js";
 import { SupplierAuditLogService } from "./SupplierAuditLogService.js";
 import { invalidSupplierInput, supplierConflict, supplierImportError } from "./supplierErrors.js";
-import { SUPPLIER_IMPORT_TEMPLATE_VERSION } from "./import/supplierCsvSchema.js";
+import { buildSupplierImportResult, SUPPLIER_IMPORT_TEMPLATE_VERSION } from "./import/supplierCsvSchema.js";
 import { uploadHeaderError } from "./import/SupplierImportProcessor.js";
 
 /**
@@ -105,6 +105,9 @@ export const IMPORT_ROW_STATUSES = Object.freeze(["valid", "warning", "invalid",
 // 取消只限未開始預檢或執行嘅 job（HD-058 2A）：validating 要等預檢做完，running 之後已經寫緊 Supplier。
 export const CANCELLABLE_JOB_STATUSES = Object.freeze(["uploaded", "ready", "ready_with_errors", "queued"]);
 const CONFIRMABLE_JOB_STATUSES = Object.freeze(["ready", "ready_with_errors"]);
+// 有結果可以下載嘅 job（HD-063 2A）：做完嘅，加上已經開始執行但收尾失敗嘅（確認人失權、統計對唔上）——
+// 佢哋已經寫咗部分 Supplier，用家要知寫咗邊啲。
+const RESULT_JOB_STATUSES = new Set(["completed", "completed_with_errors"]);
 const ACTIVATION_MODES = Object.freeze(["draft", "activate"]);
 // 預檢未完成就冇列俾人睇：validating 嘅列可能係做到一半、之後會被刪嘅批次（REV-068 I-2）。
 const ROWS_HIDDEN_STATUSES = new Set(["uploaded", "validating"]);
@@ -279,10 +282,11 @@ export class SupplierImportService {
   }
 
   /** Job 摘要加逐列結果（按行號分頁）。預檢未完成嘅 job 唔回任何列。 */
-  async get({ actorId, claimedRoles, claimedPermissions, id, page = 1, pageSize = 20, rowStatus }) {
+  async get({ actorId, claimedRoles, claimedPermissions, id, page = 1, pageSize = 20, rowStatus, rowNumber }) {
     if (!positiveInteger(id)) throw new TypeError("Supplier import job ID is invalid");
     const paged = paging(page, pageSize);
     if (rowStatus !== undefined && !IMPORT_ROW_STATUSES.includes(rowStatus)) throw new TypeError("Supplier import row status is invalid");
+    if (rowNumber !== undefined && !positiveInteger(rowNumber)) throw new TypeError("Supplier import row number is invalid");
     await this.authorize(this.database, { actorId, claimedRoles, claimedPermissions });
     const [[job]] = await this.database.query(
       `SELECT ${SUMMARY_COLUMNS} FROM supplier_import_jobs WHERE id = ? AND created_by = ?`, [id, actorId]);
@@ -290,8 +294,10 @@ export class SupplierImportService {
     const result = { job: importJobSummary(job), rows: [], total: 0, page: paged.page, pageSize: paged.pageSize };
     // ready 之後列唔會再被重寫（只有 uploaded → validating 會），所以讀完 job 再讀列唔會撈到半套。
     if (ROWS_HIDDEN_STATUSES.has(job.status)) return result;
-    const where = rowStatus === undefined ? "job_id = ?" : "job_id = ? AND status = ?";
-    const params = rowStatus === undefined ? [id] : [id, rowStatus];
+    // 狀態同行號（T46：UI 按行號跳去嗰列）可以疊埋用。
+    const filters = [["status = ?", rowStatus], ["`row_number` = ?", rowNumber]].filter(([, value]) => value !== undefined);
+    const where = ["job_id = ?", ...filters.map(([clause]) => clause)].join(" AND ");
+    const params = [id, ...filters.map(([, value]) => value)];
     const [[[count]], [rows]] = await Promise.all([
       this.database.query(`SELECT COUNT(*) AS total FROM supplier_import_rows WHERE ${where}`, params),
       this.database.query(
@@ -335,6 +341,8 @@ export class SupplierImportService {
       if (cancelled.affectedRows !== 1) {
         throw supplierConflict("SUPPLIER_IMPORT_NOT_CANCELLABLE", "匯入工作正在預檢、執行或已結束，不可取消");
       }
+      // 取消咗嘅 job 從未寫入任何 Supplier：CSV 內容唔再保留，行號、狀態同錯誤碼照留（HD-073，同逾期一樣）。
+      await connection.execute("UPDATE supplier_import_rows SET normalized_payload = JSON_OBJECT() WHERE job_id = ?", [id]);
       await this.audit.record(connection, {
         actorUserId: actorId, actorUsername: actor.username, action: "import.cancel", targetType: "import",
         targetId: id, targetLabel: `import-${id}`, detail: { before: { status: job.status }, after: { status: "cancelled" } },
@@ -351,6 +359,42 @@ export class SupplierImportService {
         { jobId: id, storedName: sourceStoredName, code: cleanupError?.code ?? null });
     }
     return summary;
+  }
+
+  /**
+   * 逐列結果 CSV（T46；HD-063 1B）：唔存實體檔，每次由 rows 即時生成，所以統計一定同 rows 一致（HD-049）。
+   * 只限上載者（HD-058 1A）。未執行完 → 409；保留期過咗（T48 寫 `files_purged_at`）→ 410，摘要同逐列結果照查到。
+   * 列數有上限（`import.maxRows`），所以一次過喺記憶體砌。
+   */
+  async resultCsv({ actorId, claimedRoles, claimedPermissions, id }) {
+    if (!positiveInteger(id)) throw new TypeError("Supplier import job ID is invalid");
+    await this.authorize(this.database, { actorId, claimedRoles, claimedPermissions });
+    const [[job]] = await this.database.query(
+      "SELECT id, status, confirmed_at, files_purged_at FROM supplier_import_jobs WHERE id = ? AND created_by = ?", [id, actorId]);
+    if (!job) throw importJobNotFound();
+    if (!RESULT_JOB_STATUSES.has(job.status) && !(job.status === "failed" && job.confirmed_at !== null)) {
+      throw supplierImportError("SUPPLIER_IMPORT_RESULT_NOT_READY", 409, "匯入尚未執行完成，沒有結果可下載");
+    }
+    if (job.files_purged_at !== null) {
+      throw supplierImportError("IMPORT_FILE_EXPIRED", 410, "匯入結果已過保留期限；工作摘要及逐列結果仍可查閱");
+    }
+    // Code：已寫入嘅列用 Supplier 儲存嘅 Code（CSV 可能係細楷，REV-074 I-1）；其餘用家喺 CSV 寫嘅 Code 優先（佢認得返嗰列；
+    // ID 搵唔到或者 ID 同 Code 對唔上嗰陣都係，REV-073 I-3）；CSV 冇寫 Code（只用 supplierId）先用 Supplier 而家嘅 Code。
+    const [rows] = await this.database.query(
+      `SELECT r.\`row_number\`, r.operation, r.status, r.applied_supplier_id, r.errors, r.warnings,
+              COALESCE(CASE WHEN r.applied_supplier_id IS NOT NULL THEN s.supplier_code END,
+                       JSON_UNQUOTE(JSON_EXTRACT(r.normalized_payload, '$.root.supplierCode')),
+                       JSON_UNQUOTE(JSON_EXTRACT(r.normalized_payload, '$.identity.supplierCode')), s.supplier_code) AS supplier_code
+         FROM supplier_import_rows r
+         LEFT JOIN suppliers s ON s.id = COALESCE(r.applied_supplier_id, r.match_supplier_id)
+        WHERE r.job_id = ? ORDER BY r.\`row_number\``, [id]);
+    return {
+      fileName: `supplier-import-${id}-result.csv`,
+      content: buildSupplierImportResult(rows.map((row) => ({
+        rowNumber: Number(row.row_number), operation: row.operation, status: row.status, supplierCode: row.supplier_code ?? "",
+        appliedSupplierId: nullableNumber(row.applied_supplier_id), errors: row.errors, warnings: row.warnings
+      })))
+    };
   }
 
   /**
@@ -706,6 +750,21 @@ export class SupplierImportService {
       { jobId, applied: counts.applied, failed: counts.failed });
   }
 
+  /**
+   * Worker 停低（逾時、關機，或者出錯）時即刻放返 lease（HD-075；REV-078 L-2）：之前要等 11 分鐘 lease 過期，連同一個
+   * worker 都領唔返，大檔每做 10 分鐘就停 11 分鐘。只放自己仲揸住、仲係 running 嘅 job；每一列都喺 job row lock 之下
+   * 驗 lease（assertLease），所以就算喺一列做到一半時放咗，都唔會兩個 worker 寫同一列（REV-078 驗證過）。
+   */
+  async releaseExecutionLease({ jobId, leaseOwner }) {
+    if (!positiveInteger(jobId) || !String(leaseOwner ?? "").trim()) {
+      throw new TypeError("Supplier import lease release input is invalid");
+    }
+    const [released] = await this.database.execute(
+      "UPDATE supplier_import_jobs SET lease_until = NULL, updated_at = ? WHERE id = ? AND status = 'running' AND lease_owner = ?",
+      [this.time.nowMs(), jobId, leaseOwner]);
+    return released.affectedRows === 1;
+  }
+
   /** 所有列都 terminal 之後，由 rows 重建統計，收尾做 completed 或 completed_with_errors。 */
   async finalizeExecution({ jobId, leaseOwner }) {
     if (!positiveInteger(jobId) || !String(leaseOwner ?? "").trim()) {
@@ -747,4 +806,87 @@ export class SupplierImportService {
       return { id: jobId, status, ...counts };
     });
   }
+
+  /**
+   * T48 保留期（設計 §12.5；HD-071 B）：仲未清檔、而且到期嘅 job。
+   * - 已執行或者失敗咗（completed、completed_with_errors、failed）：完成日 ≤ `executedBefore`。失敗咗嘅預檢一早清咗檔；
+   *   未確認就被執行標為失敗嘅 job 都要計（REV-076 I-3），所以 failed 唔再要求 `confirmed_at`。
+   * - 從未確認（uploaded、ready、ready_with_errors）：上載日 ≤ `unconfirmedBefore`。
+   * 失敗嘅預檢同取消咗嘅 job 一早已經清咗檔，唔會出現。
+   */
+  async purgeCandidates({ executedBefore, unconfirmedBefore, limit = 200 }) {
+    const [rows] = await this.database.query(
+      `SELECT id, status FROM supplier_import_jobs
+        WHERE files_purged_at IS NULL
+          AND ((status IN (?) AND COALESCE(completed_at, updated_at) <= ?)
+            OR (status IN (?) AND created_at <= ?))
+        ORDER BY id LIMIT ?`,
+      [ENDED_JOB_STATUSES, executedBefore, UNCONFIRMED_JOB_STATUSES, unconfirmedBefore, limit]
+    );
+    return rows.map((row) => ({ id: Number(row.id), status: row.status }));
+  }
+
+  /**
+   * 已執行嘅 job 到期：先記 `files_purged_at`（之後下載結果回 410），再由呼叫方刪檔。刪唔到嘅檔冇 job 指住，
+   * 下一輪當冇人用嘅檔再刪（HD-053）。回要刪嘅檔名；另一個實例搶先咗就回 null。
+   */
+  async markExecutedFilesPurged({ id, nowMs }) {
+    return this.database.withTransaction(async (connection) => {
+      const [[job]] = await connection.query(
+        "SELECT source_stored_name, result_stored_name FROM supplier_import_jobs WHERE id = ? AND files_purged_at IS NULL FOR UPDATE", [id]);
+      if (!job) return null;
+      const [marked] = await connection.execute(
+        `UPDATE supplier_import_jobs SET files_purged_at = ?, updated_at = ?, version = version + 1
+          WHERE id = ? AND files_purged_at IS NULL AND status IN ('completed', 'completed_with_errors', 'failed')`,
+        [nowMs, nowMs, id]
+      );
+      return marked.affectedRows === 1 ? storedNames(job) : null;
+    });
+  }
+
+  /**
+   * 從未確認、逾期嘅 job（HD-071 B）：同一個 transaction 改做 cancelled、記 `files_purged_at` 同系統稽核，
+   * 清走逐列嘅 `normalized_payload`（CSV 內容；行號、狀態同錯誤碼保留；HD-072 I-5 A），再由呼叫方刪來源檔。
+   * 期間被預檢領咗或者被人確認／取消，就回 null、唔郁佢。
+   */
+  async expireUnconfirmed({ id, nowMs }) {
+    return this.database.withTransaction(async (connection) => {
+      const [[job]] = await connection.query(
+        "SELECT id, status, source_stored_name, result_stored_name FROM supplier_import_jobs WHERE id = ? AND files_purged_at IS NULL FOR UPDATE",
+        [id]);
+      if (!job || !UNCONFIRMED_JOB_STATUSES.includes(job.status)) return null;
+      assertJobTransition(job.status, "cancelled");
+      const [expired] = await connection.execute(
+        `UPDATE supplier_import_jobs SET status = 'cancelled', last_error_code = 'SUPPLIER_IMPORT_EXPIRED',
+                error_summary = '匯入工作逾期未確認，已自動取消並刪除來源檔', lease_owner = '', lease_until = NULL,
+                files_purged_at = ?, completed_at = ?, updated_at = ?, version = version + 1
+          WHERE id = ? AND status = ? AND files_purged_at IS NULL`,
+        [nowMs, nowMs, nowMs, id, job.status]
+      );
+      if (expired.affectedRows !== 1) return null;
+      await connection.execute("UPDATE supplier_import_rows SET normalized_payload = JSON_OBJECT() WHERE job_id = ?", [id]);
+      await this.audit.record(connection, {
+        actorUserId: null, actorUsername: "system", action: "import.expire", targetType: "import", targetId: Number(job.id),
+        targetLabel: `import-${job.id}`, detail: { before: { status: job.status }, after: { status: "cancelled" }, outcome: "SUPPLIER_IMPORT_EXPIRED" }
+      });
+      return storedNames(job);
+    });
+  }
+
+  /** 仲有 job 指住（`files_purged_at` 未記）嘅檔名；其餘嘅檔冇人用（HD-044／HD-053）。 */
+  async referencedStoredNames() {
+    // ponytail: 一次過讀晒；job 數以千計都只係幾百 KB，大到唔掂先改做逐批比對。
+    const [rows] = await this.database.query(
+      "SELECT source_stored_name, result_stored_name FROM supplier_import_jobs WHERE files_purged_at IS NULL");
+    return new Set(rows.flatMap((row) => storedNames(row).map(({ storedName }) => storedName)));
+  }
+}
+
+const UNCONFIRMED_JOB_STATUSES = Object.freeze(["uploaded", "ready", "ready_with_errors"]);
+const ENDED_JOB_STATUSES = Object.freeze(["completed", "completed_with_errors", "failed"]);
+
+function storedNames(job) {
+  return [["source", job.source_stored_name], ["result", job.result_stored_name]]
+    .filter(([, storedName]) => storedName)
+    .map(([kind, storedName]) => ({ kind, storedName }));
 }

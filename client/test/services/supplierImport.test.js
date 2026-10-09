@@ -1,13 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/framework/http/HttpClient.js", () => ({
-  httpClient: { get: vi.fn(), post: vi.fn() }
+  httpClient: { get: vi.fn(), post: vi.fn(), getBlob: vi.fn() }
 }));
 
 import { httpClient } from "@/framework/http/HttpClient.js";
 import supplierImportService from "@/services/supplierImport.js";
 
-describe("supplier import service (T44)", () => {
+describe("supplier import service (T44–T46)", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("maps the job list to the DataTable shape and drops an empty status filter", async () => {
@@ -23,7 +23,7 @@ describe("supplier import service (T44)", () => {
     await expect(supplierImportService.getJob(7, { page: 1, rowsPerPage: 50, rowStatus: "invalid" }))
       .resolves.toEqual({ job: { id: 7, status: "ready" }, rows: [{ rowNumber: 1 }], rowsNumber: 9 });
     expect(httpClient.get).toHaveBeenCalledWith("/api/v1/supplier-imports/7",
-      { params: { page: 1, pageSize: 50, rowStatus: "invalid" }, signal: undefined });
+      { params: { page: 1, pageSize: 50, rowStatus: "invalid", rowNumber: undefined }, signal: undefined });
   });
 
   it("confirms with the mode, the approver or null, the password and an idempotency key", async () => {
@@ -35,5 +35,24 @@ describe("supplier import service (T44)", () => {
   it("cancels with the job version and an idempotency key", async () => {
     await supplierImportService.cancelJob(7, 4);
     expect(httpClient.post).toHaveBeenCalledWith("/api/v1/supplier-imports/7/cancel", { body: { version: 4 }, idempotent: true });
+  });
+
+  it("T46: jumps to a row number", async () => {
+    httpClient.get.mockResolvedValue({ job: { id: 7 }, rows: [], total: 0 });
+    await supplierImportService.getJob(7, { page: 1, rowsPerPage: 20, rowNumber: 42 });
+    expect(httpClient.get).toHaveBeenCalledWith("/api/v1/supplier-imports/7",
+      { params: { page: 1, pageSize: 20, rowStatus: undefined, rowNumber: 42 }, signal: undefined });
+  });
+
+  it("T46: uploads multipart with the mode and an idempotency key, and downloads template and result as blobs", async () => {
+    const file = new File(["x"], "suppliers.csv", { type: "text/csv" });
+    await supplierImportService.uploadJob({ file, mode: "upsert" });
+    const [path, options] = httpClient.post.mock.calls[0];
+    expect([path, options.idempotent, options.body.get("mode"), options.body.get("file").name]).toEqual(
+      ["/api/v1/supplier-imports/upload", true, "upsert", "suppliers.csv"]);
+    await supplierImportService.downloadTemplate();
+    await supplierImportService.downloadResult(7);
+    expect(httpClient.getBlob.mock.calls.map(([url]) => url)).toEqual(
+      ["/api/v1/supplier-imports/template", "/api/v1/supplier-imports/7/result"]);
   });
 });

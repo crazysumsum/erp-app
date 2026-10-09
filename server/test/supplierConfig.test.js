@@ -17,7 +17,8 @@ test("Supplier config supplies bounded Phase 1 defaults without requiring Bank k
     root: null,
     maxFileBytes: 10_485_760,
     maxRows: 10_000,
-    fileRetentionDays: 365
+    fileRetentionDays: 365,
+    unconfirmedRetentionDays: 30
   });
   assert.equal(Object.isFrozen(config), true);
   assert.equal(Object.isFrozen(config.import), true);
@@ -74,7 +75,9 @@ test("Supplier config rejects unbounded duplicate and import values", () => {
     ["maxRows", -1],
     ["maxRows", 50_001],
     ["fileRetentionDays", 0],
-    ["fileRetentionDays", 3651]
+    ["fileRetentionDays", 3651],
+    ["unconfirmedRetentionDays", 0],
+    ["unconfirmedRetentionDays", 3651]
   ]) {
     assert.throws(() => normalizeSupplierConfig({ import: { [field]: value } }), new RegExp(field));
   }

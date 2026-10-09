@@ -1,0 +1,19 @@
+# P1 latest-main integration checkpoint
+
+Authoritative main advanced from `e3bfb02a3e48aac121386f6c5c9693487d17f346` to `7717702acf7c40bad188ba61fb48c8e90b309be1` (Supplier046 and security/test maintenance). Reviewed P1 source was saved as separate commits, then main merged cleanly into the isolated branch as `8f6dd4761f88d845c953be84a3b5487957e0aa07`. Other-module changes were imported unchanged. Main merge was not attempted.
+
+Approved DESIGN `d4d43f935cda896d10cc47aa651645d76db0a105ae1f6de41249158892e9993b` and PLAN `af42d241f6c75f6e3114e8737dc835f974daa893f1e2fdb86b2ea1e6fe035c71` remain unchanged. Initial integrated source was `9858638e0e3907f3bc17e53ad7ace8b6f07ba62b1c3f56bb20a8e4bc3b30e317`: PLAN_READY local consistency and path boundary against fetched main passed then. Locked dependencies were installed with `npm ci --ignore-scripts`; no dependency choice changed. The worktree's own verified symlink was unlinked without changing the primary cache.
+
+## Developer diagnostics and retained failures
+
+The original typed runner detected ambiguous multiple TC IDs in three test titles. Only those titles were corrected; assertions, case requirements and the parser were retained. Corrected source `24f31c942eda490e0ee1ce0b08cd85bab509c3e988ff7a5030d203335b81bc23` was checked at HEAD `8f6dd476`, then saved as commit `9c94039` without changing its source fingerprint. Original profile commands and report parsing produced **47 P1 unit, 58 P1 client, 46 P1 native PASS**, with zero failures/skips and all required identities present. These are developer diagnostic observations; the open major decision prevents typed Phase gate use.
+
+All **10 original Inventory native suites passed** (15 reported cases, zero skips). Seven used fresh per-suite schemas on an owned secondary MySQL26.7.0; TASK021/022/025 used actual separate exact socket roots. Initial schema/socket guard failures are preserved. TASK025 first failed because its empty schema lacked `fr_token_versions` at application startup; the retry first ran the existing migrator on a new owned schema, then the unchanged native command passed. No product/test/guard change was needed. Four dedicated servers and the verified secondary server were shut down after execution; private data/logs remain recoverable.
+
+The integrated independent reviewer observed **13 actual Playwright PASS**, zero skips and no relevant unexpected console/network errors. A 25-line quotation PDF was rendered as two A4 pages and both pages visually inspected: repeated headers, all lines, total166.6650 and no clipping. Source was unchanged throughout; scoped85-file digest `927e5483a98bedbbf7d47b7163c0c46d1fbd81c47e86ca1e8a10a771ab916565`. Browser runtime and synthetic fixtures were cleaned. The earlier integrated reviewer also ran111backend/763client tests, lint and build successfully at the initial integrated source; those results retain their original baseline.
+
+Private originals are under `/private/tmp/sales-p1-private`: identity/native summaries; inventory original/dedicated/migrated summaries; integrated reviewer browser/print logs and PDF. Failed runs and review findings remain in history. Raw evidence, synthetic data, credentials and runtime configuration are not published.
+
+## Remaining gates
+
+Overall independent review remains **CHANGES_REQUESTED**: approved Design promises MySQL5.7 while Sales migrations require modern enforced CHECK metadata. DEC019 packet41 proposes an explicit Sales26.7.0 support choice and incorporates pending DEC018 registry scope correction. Neither pending patch has been applied or treated as approved. Current typed23-suite developer gate, actual candidate CI, final review and fresh-main verification must pass after the decision. TASK021/023/024/025/026/027 remain IN_PROGRESS, Phase is BLOCKED with resume IMPLEMENTING. No Phase completion, formal technical acceptance, business/UAT/release sign-off or merge readiness is claimed.

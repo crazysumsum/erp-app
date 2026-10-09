@@ -96,6 +96,65 @@ function supplierSortColumn(sortBy) {
   return SUPPLIER_SORT_COLUMNS[sortBy] ?? SUPPLIER_SORT_COLUMNS.updatedAt;
 }
 
+/**
+ * 供應商列表嘅篩選同排序（alias `s`）。一般匯出（T47，FR-IMPORT-009）用同一個函式，保證匯出嘅就係列表見到嘅。
+ */
+export function supplierListQuery({
+  q = "", status, currencyCode, paymentTermId, updatedFrom, updatedTo, includeArchived = false, sortBy = "updatedAt", descending = true
+} = {}) {
+  const conditions = [];
+  const params = [];
+  if (status) {
+    conditions.push("s.status = ?");
+    params.push(status);
+  } else if (!includeArchived) {
+    conditions.push("s.status != 'archived'");
+  }
+  if (currencyCode) {
+    conditions.push("s.default_currency_code = ?");
+    params.push(currencyCode);
+  }
+  if (paymentTermId !== undefined) {
+    if (paymentTermId === null) conditions.push("s.default_payment_term_id IS NULL");
+    else {
+      conditions.push("s.default_payment_term_id = ?");
+      params.push(paymentTermId);
+    }
+  }
+  if (updatedFrom !== undefined) {
+    conditions.push("s.updated_at >= ?");
+    params.push(updatedFrom);
+  }
+  if (updatedTo !== undefined) {
+    conditions.push("s.updated_at <= ?");
+    params.push(updatedTo);
+  }
+
+  const search = String(q ?? "").normalize("NFKC").trim();
+  let exactCodeKey = null;
+  if (search) {
+    const escaped = escapeLikeTerm(search);
+    exactCodeKey = search.toLowerCase();
+    conditions.push(`(
+      s.supplier_code_key LIKE ? ESCAPE '\\\\'
+      OR s.supplier_name LIKE ? ESCAPE '\\\\'
+      OR s.display_name LIKE ? ESCAPE '\\\\'
+      OR s.general_phone LIKE ? ESCAPE '\\\\'
+      OR s.general_email LIKE ? ESCAPE '\\\\'
+    )`);
+    params.push(`${escaped.toLowerCase()}%`, `%${escaped}%`, `%${escaped}%`, `%${escaped}%`, `%${escaped}%`);
+  }
+
+  const direction = descending ? "DESC" : "ASC";
+  const exactOrder = exactCodeKey ? "CASE WHEN s.supplier_code_key = ? THEN 0 ELSE 1 END, " : "";
+  return {
+    where: conditions.length ? `WHERE ${conditions.join(" AND ")}` : "",
+    params,
+    orderBy: `${exactOrder}${supplierSortColumn(sortBy)} ${direction}, s.id ${direction}`,
+    orderParams: exactCodeKey ? [exactCodeKey] : []
+  };
+}
+
 function requireReason(value, message = "這項修改必須填寫原因") {
   const reason = String(value ?? "").trim();
   if (reason.length < 5 || reason.length > 500) {
@@ -208,7 +267,8 @@ export class SupplierAdminService {
    *
    * 回 `{ id, duplicateCandidates }`。
    */
-  async createSupplierInTransaction(connection, { actor, input, approvalRequired = this.approvalRequired, addChildren = null }) {
+  async createSupplierInTransaction(connection, { actor, input, approvalRequired = this.approvalRequired, addChildren = null,
+    findDuplicates = true }) {
     const { code, name, displayName, website, email, generalPhone, notes } = createFields(input);
     // 設計 2.6 嘅鎖序由 settings 行先。Business Master 會攞 currencies 嘅 X 鎖，
     // 所以政策讀取（settings 嘅 S 鎖）一定要喺佢之前 —— 否則 createSupplier 係
@@ -230,7 +290,8 @@ export class SupplierAdminService {
     if (existing) {
       throw supplierConflict("SUPPLIER_CODE_TAKEN", "這個 Supplier Code 已被使用", { supplierCode: code.value });
     }
-    const duplicateCandidates = await this.duplicates.find(connection, { nameKey: name.key });
+    // 匯入唔用相似名稱（HD-052：只警告完全相同；HD-075）：佢嘅成本隨 Supplier 數目上升，一個 10,000 列嘅檔做唔完。
+    const duplicateCandidates = findDuplicates ? await this.duplicates.find(connection, { nameKey: name.key }) : [];
     // 設計 4.4：設定開啟時 draft -> pending_approval，關閉時 draft -> active。
     // 政策喺提交嗰一刻讀一次並且 snapshot 落 request，所以之後改設定唔追溯。
     if (!needsApproval && input.approverUserId !== undefined && input.approverUserId !== null) {
@@ -333,7 +394,7 @@ export class SupplierAdminService {
    * 更新嘅核心，喺 caller 嘅 transaction 入面做（HD-060 2A）。`input` 要帶齊所有一般欄位同
    * `version`；回 `{ duplicateCandidates, approvalInvalidated }`。
    */
-  async updateSupplierInTransaction(connection, { actor, input }) {
+  async updateSupplierInTransaction(connection, { actor, input, findDuplicates = true }) {
     const { name, displayName, website, email, generalPhone, notes } = updateFields(input);
     let approvalInvalidated = false;
     const [[current]] = await connection.query("SELECT * FROM suppliers WHERE id = ? FOR UPDATE", [input.id]);
@@ -352,8 +413,9 @@ export class SupplierAdminService {
     });
     const currencyChanged = current.default_currency_code !== defaults.currency.code;
     const reason = currencyChanged ? requireReason(input.reason, "修改預設幣別必須填寫原因") : String(input.reason ?? "").trim();
-    const duplicateCandidates = (await this.duplicates.find(connection, { nameKey: name.key }))
-      .filter((candidate) => Number(candidate.supplierId) !== Number(input.id));
+    const duplicateCandidates = findDuplicates
+      ? (await this.duplicates.find(connection, { nameKey: name.key })).filter((candidate) => Number(candidate.supplierId) !== Number(input.id))
+      : [];
     const nowMs = this.time.nowMs();
     const next = {
       supplierName: name.value,
@@ -713,56 +775,12 @@ export class SupplierAdminService {
     descending = true
   }) {
     await this.authorize(this.database, { actorId, claimedRoles, claimedPermissions });
-    const conditions = [];
-    const params = [];
-    if (status) {
-      conditions.push("s.status = ?");
-      params.push(status);
-    } else if (!includeArchived) {
-      conditions.push("s.status != 'archived'");
-    }
-    if (currencyCode) {
-      conditions.push("s.default_currency_code = ?");
-      params.push(currencyCode);
-    }
-    if (paymentTermId !== undefined) {
-      if (paymentTermId === null) conditions.push("s.default_payment_term_id IS NULL");
-      else {
-        conditions.push("s.default_payment_term_id = ?");
-        params.push(paymentTermId);
-      }
-    }
-    if (updatedFrom !== undefined) {
-      conditions.push("s.updated_at >= ?");
-      params.push(updatedFrom);
-    }
-    if (updatedTo !== undefined) {
-      conditions.push("s.updated_at <= ?");
-      params.push(updatedTo);
-    }
-
-    const search = String(q ?? "").normalize("NFKC").trim();
-    let exactCodeKey = null;
-    if (search) {
-      const escaped = escapeLikeTerm(search);
-      exactCodeKey = search.toLowerCase();
-      conditions.push(`(
-        s.supplier_code_key LIKE ? ESCAPE '\\\\'
-        OR s.supplier_name LIKE ? ESCAPE '\\\\'
-        OR s.display_name LIKE ? ESCAPE '\\\\'
-        OR s.general_phone LIKE ? ESCAPE '\\\\'
-        OR s.general_email LIKE ? ESCAPE '\\\\'
-      )`);
-      params.push(`${escaped.toLowerCase()}%`, `%${escaped}%`, `%${escaped}%`, `%${escaped}%`, `%${escaped}%`);
-    }
-
-    const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
-    const direction = descending ? "DESC" : "ASC";
-    const stableSort = `${supplierSortColumn(sortBy)} ${direction}, s.id ${direction}`;
-    const exactOrder = exactCodeKey ? "CASE WHEN s.supplier_code_key = ? THEN 0 ELSE 1 END, " : "";
+    const { where, params, orderBy, orderParams } = supplierListQuery({
+      q, status, currencyCode, paymentTermId, updatedFrom, updatedTo, includeArchived, sortBy, descending
+    });
     const offset = (page - 1) * pageSize;
     const [countRows] = await this.database.query(`SELECT COUNT(*) AS total FROM suppliers s ${where}`, params);
-    const listParams = exactCodeKey ? [...params, exactCodeKey, pageSize, offset] : [...params, pageSize, offset];
+    const listParams = [...params, ...orderParams, pageSize, offset];
     const [rows] = await this.database.query(
       `SELECT s.id, s.supplier_code, s.supplier_name, s.display_name,
               s.default_currency_code, s.default_payment_term_id, s.status, s.version, s.updated_at,
@@ -773,7 +791,7 @@ export class SupplierAdminService {
                   AND c.status = 'active'
                 LIMIT 1) AS primary_contact_name
          FROM suppliers s ${where}
-        ORDER BY ${exactOrder}${stableSort}
+        ORDER BY ${orderBy}
         LIMIT ? OFFSET ?`,
       listParams
     );

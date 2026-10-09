@@ -37,6 +37,14 @@ export default {
     }).then(({ items, total }) => ({ rows: items, rowsNumber: total }));
   },
 
+  /** 一般匯出（T47；HD-067）：同列表一樣嘅篩選同排序，要密碼確認；回 `{ blob, fileName }`。 */
+  exportCsv({ filter, status, sortBy, descending, password, signal }) {
+    return httpClient.postBlob("/api/v1/supplier-exports", {
+      body: { password, filters: { q: filter || undefined, status: status || undefined, sortBy: sortBy || undefined, descending } },
+      signal
+    });
+  },
+
   getById(id) {
     return httpClient.get(`/api/v1/suppliers/${id}`);
   },

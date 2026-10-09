@@ -11,7 +11,7 @@
 | 建立日期 | 2026-09-08 |
 | 依據 | `docs/sales_order_management/01_requirement_spec.md` |
 | UI／UX 基準 | `docs/frontend-design.md` |
-| 目標技術棧 | Node.js 26、Express 5、MySQL 5.7+、Vue 3、Quasar 2 |
+| 目標技術棧 | Node.js 26、Express 5、MySQL 26.7.0、Vue 3、Quasar 2 |
 
 ### 0.1 文件目的
 
@@ -102,13 +102,13 @@
 
 - 後端使用原生 ESM JavaScript、Express 5、AJV、mysql2；不引入 ORM、queue broker 或 TypeScript。
 - `server/src/framework/` 是 framework，業務功能放 `server/src/modules/sales/`。
-- 一支 API 一個 Handler，按 URL prefix 放 `server/src/handlers/sales/`、`sales-imports/` 等目錄。
+- 一支 API 一個 Handler，按 URL prefix 放 `server/src/handlers/sales-orders/`、`sales-lookups/`、`sales-imports/` 等目錄；共用 schema 可留在 `handlers/sales/`，不得在該共用目錄 export URL prefix 不符的 Handler。
 - 業務 Service 不進 framework service discovery；Handler 直接建立並注入 Database、Logging、Time、Scheduler 等依賴。
 - 寫入使用 `MySqlDatabaseService.withTransaction()`；金額及 quantity 不使用 JavaScript 浮點數運算。
 - API 成功信封為 `{ success, data, meta }`，錯誤為 `{ success:false, error, meta }`。
 - 前端使用 Vue 3 Composition API、Quasar、auto-discovered pages、`HttpClient`、`DataTable`、`FormPanel`、`PageHeader` 及 `notify`。
-- MySQL 最低 5.7；不能依賴 MySQL 8 專有功能、partial indexes 或 enforced CHECK constraints。
-- 現有 Upload Framework 是完整檔案記憶體緩衝後再落盤，預設單檔 10 MB；這不能滿足本模組 50 MB 且 memory-bounded 的要求。唯一必要的 framework 變更是 §9.1 的 opt-in disk-stream mode，既有 routes 繼續使用 `memory` mode且行為不變。
+- Sales 支援及驗證基準為 MySQL 26.7.0，與專案 CI 固定版本一致；不承諾 MySQL 5.7 相容性。可使用 enforced CHECK 作為資料庫第二層保護，但所有 Service 仍須驗證輸入及業務不變量；不使用 partial indexes。
+- 現有 Upload Framework 是完整檔案記憶體緩衝後再落盤，預設單檔 10 MB；這不能滿足本模組 50 MB 且 memory-bounded 的要求。必要的 framework 變更是 §9.1 的 opt-in disk-stream mode 及 Sales replay fresh-authorization preflight，既有 routes 繼續使用 `memory` mode且行為不變。
 - 現有已落地 Migration 最後序號可能在開發前改變；Sales Migration 實作時按目標分支下一個連續可用序號命名，本文件不用固定號碼搶佔序號。
 
 ### 1.4 開發與驗證命令
@@ -302,6 +302,14 @@ CustomerLookupService.getSalesSnapshotInTransaction(transaction, customerId, { a
 
 確認點用 caller-owned transaction，依 Customer → credit FOR UPDATE 取得一致快照；不得 pool read 或自行 commit。回 customerId／customerCode／legalName／defaultCurrencyCode／defaultPaymentTermId／status／customerVersion 及 credit configured／creditLimit decimal string or null／currencyCode／status／policyVersion，無 Bank、Address、Contact、notes。Customer status `active`；credit 實際字面值 `normal`／`on_hold`／`not_configured` 由 Sales 明確映射；Customer 非 active 或 credit on_hold 阻止確認。零／未設定 credit 不混淆，limit 僅 advisory，不以 credit currency new_assignment 查詢阻擋。Document Currency／Payment Term 使用既有 BusinessMasterProvider transaction asserts。
 
+#### Sales consumer impact checker（DEC-020）
+
+Business Master 使用既有 consumer checker contract；Sales 自有 `SalesBusinessMasterImpactChecker`，由既有 `businessMasterFactory` 接線，不新增 public service／API。只讀 Sales Quotation／Order 的 document `currency_code`、`payment_term_id`；`activeDefaultCount=0`。`openUseCount` 為 persisted Quotation `DRAFT/ISSUED` 及 Order `DRAFT/CONFIRMING/CONFIRMED/PARTIALLY_FULFILLED`；`historicalCount` 為 Quotation `EXPIRED/CONVERTED/CANCELLED` 及 Order `COMPLETED/CLOSED/CANCELLED`。尚未由 expiry job 固化的 ISSUED 保守計入 open use，並不改變既有 effective expiry／轉單規則。Snapshot credit currency 不作 document Currency reference；既有 Customer／credit consumer 責任不移入 Sales。
+
+單一 parameterized UNION ALL statement 統計兩種 document 的 status/count/version sum/max updated time/max ID，同一 statement snapshot；watermark 為此聚合投影的 deterministic SHA-256，preview token 沿用既有 actor/version/change/expiry/recompute 規則。只回 counts/watermark，無 customer name、notes、bank/address/contact；unknown status、SQL failure、不安全整數、部分安裝及已安裝 archive table 一律 fail closed；兩張 active table 全未安裝才可 NOT_INSTALLED。P1 不實作 Archive，Phase 4 安裝 `sales_orders_archive` 前必須擴充此 checker；不得在 installed archive 時回零或只計 active。
+
+管理者仍依 Business Master 既有 impact confirmation policy 操作；此補正不新增「引用大於零即禁止停用」規則，不降低 UNKNOWN/error 阻擋。
+
 #### Item provider
 
 新增具名 consumer contract，不讓 Sales 直接讀 Item tables：
@@ -423,6 +431,18 @@ SalesBackorderAllocationJob / manual trigger
 - FIFO tie-breaker 固定為 `confirmed_at, sales_order_id, line_no`，不接受 client priority。
 - 新入庫不需要可靠 message broker 才會觸發；Inventory 可作 best-effort scheduler wake-up，但 polling 是可靠底線。
 - 技術失敗採 exponential backoff；業務上仍無 ATP 不是 error，不快速重試。
+
+### 2.6.1 P2 activation boundary — DEC-021 proposal
+
+Recovery retains the persisted initiating human user and original event. Before any new effect it reloads that user's actual active status, roles and sales.view/sales.mgmt permissions; it does not impersonate a service or invent token claims. Revocation prevents new effects; completed replay checks fresh access and immutable identity, not mutable masters. Recovery reuses the existing manual Inventory batch contract.
+
+Autonomous Backorder uses a fixed server-registered principal `sales.backorderAllocate`, userId NULL and an Inventory-owned sibling `reserveAvailableForSalesBackorderInTransaction()`. It has reserve capability only, never generic release, manual Sales impersonation, P3 intake or arbitrary permission/source selection. The trusted Sales job runtime supplies the fixed identity; request bodies cannot provide actor/service/permission/lease credentials. Inventory requires the registered principal's live authorization callback and matching, unexpired cluster lease owner on the fixed `sales.backorderAllocate` job, checked using the database clock in the caller transaction. The coordinator locks that lease row before Sales rows; its row lock fences takeover through commit. Disabled/stopped/aborted/unregistered principal, missing/expired/wrong-owner lease or malformed source fails closed, even on replay. The principal is explicitly system authority adopted by the owner, not a fabricated human permission claim. No role grants, new Inventory tables or generic auth framework are introduced. New worker root/child command types `SALES_BACKORDER_BATCH_RESERVE` / `SALES_BACKORDER_LINE_RESERVE` and purpose are distinct from manual ones, bind the actual Sales order, persistent allocation event and line, and retain root/children membership digest, single transaction and bounded replay. Existing manual hashes and authorization are unchanged.
+
+The global scheduler lease serves scheduled runs and manual wake; a Sales runtime wake adapter selects the fixed truly registered `sales.backorderAllocate` job from Scheduler.jobs, verifies schedulerConfig.enabled, job.enabled, started and not stopped, then calls the existing `execute(job)` execution path, sharing overlap and cluster lease with scheduled runs and no second allocator. Each allocation transaction handles one FIFO entry (or a same-order group only if its FIFO order is proved), locks lease/domain operation -> Sales order/lines/mapping/queue -> Inventory operation root/children -> Warehouse/controls/stock. It never batches multiple SO owners or claims another batch after taking stock locks. FIFO selection revalidates the earliest eligible `(priority_at,sales_order_id,line_no)` under the same lease; no priority input or queue lock before its Sales owner. Initial manual confirmation retains its existing ATP-at-submit contract; FIFO is guaranteed within the Backorder queue, and concurrent confirmation may not reorder allocator effects. Zero ATP stops the scope. Any requirement to prioritize old Backorder over a new manual confirmation is a separate business decision, not silently inferred.
+
+Before confirmed withdraw/cancel/close, a Sales-owned thin lifecycle guard uses the real versioned Fulfillment provider when registered, including failure/UNKNOWN without fallback. A deliberately approved `UNINSTALLED_FULFILLMENT_V1 / NO_PROVIDER_REQUIRED` deployment contract may instead return distinct NOT_REQUIRED only if no active runtime provider is registered and the same locked Sales transaction proves zero Fulfillment/Shipment owned tables and zero applied Fulfillment/Shipment migration history. Exact roots and literal prefixes include fulfillments/fulfillment_* and shipments/shipment_* plus their archive variants; use exact prefix operations, not wildcard underscores or a negative cache. Missing migration history, SQL failure, any partial/archive table or prior installation requires the real provider and otherwise returns UNKNOWN/503. This is a named deployment exception, never a synthetic CLOSED or production fake; Inventory's active allocation and conservation guards still run.
+
+Metadata does not serialize cluster rollout or concurrent DDL. Fulfillment activation must quiesce Sales lifecycle releases, apply migrations before provider enablement, remove the no-provider-required deployment contract, enable and verify the real provider on all nodes, prove Sales -> Fulfillment -> Inventory writer/guard locking, then restore releases. Dropping tables/history is not an authorized way to reactivate the exception. Archive always retains the original required Fulfillment participant; this P2 policy does not authorize Archive, Shipment or Fulfillment business implementation.
 
 ### 2.7 Source dedupe 與 Intake
 
@@ -584,7 +604,7 @@ Provider unavailable 回 `UNKNOWN`，不得當作 `CLOSED`。Fulfillment 是 req
 - Primary key：`BIGINT UNSIGNED AUTO_INCREMENT`；API 只接受 positive safe integer。
 - Timestamp：`BIGINT UNSIGNED` epoch milliseconds；Business Date：`DATE`。
 - Money：`DECIMAL(19,4)`；輸入 quantity：`DECIMAL(20,6)`；Inventory Base Quantity：`BIGINT UNSIGNED`。
-- Boolean：`TINYINT(1)`，由 Service 限定 0／1。MySQL 5.7 CHECK 不視作唯一保護。
+- Boolean：`TINYINT(1)`，由 Service 限定 0／1。Enforced CHECK 不視作唯一保護。
 - 可變 row 有 `version INT UNSIGNED NOT NULL DEFAULT 1`，更新使用 `WHERE id=? AND version=?` 並 `version=version+1`。
 - Snapshot 文字 `NOT NULL`，沒有值用空字串；正式 snapshot 不以 `NULL` 表示「之後再取主檔」。
 - Active tables 對 Customer、Item、Warehouse 等使用 FK `ON DELETE RESTRICT`；Archive Tables 不依賴會變動的 master FK，只保存原 ID 及 snapshot。
@@ -1073,7 +1093,7 @@ sales_orders_archive 1 ── * archive child tables
 
 Archive Tables 使用 Active 表的原始 ID 作 PK，另加 `archive_batch_id`、`archived_at` 及 `row_hash`。不 `AUTO_INCREMENT`、不對 active master 建 FK、所有 enum／decimal／snapshot 欄位型別與 Active 相同。
 
-第一階段不使用 table partitioning：MySQL 5.7 對 partitioned InnoDB及foreign key有實質限制，而本設計要保留 Archive Aggregate的FK完整性。以Active／Archive物理分表、bounded date filters及covering indexes達標；只有production-like explain／load test證明不達門檻時才另開schema review，不預先移除FK或加第二套storage。Archive Job也不自動執行 `OPTIMIZE TABLE`，避免長時間metadata lock。
+第一階段不使用 table partitioning：本設計要保留 Archive Aggregate的FK完整性。以Active／Archive物理分表、bounded date filters及covering indexes達標；只有production-like explain／load test證明不達門檻時才另開schema review，不預先移除FK或加第二套storage。Archive Job也不自動執行 `OPTIMIZE TABLE`，避免長時間metadata lock。
 
 #### 4.20.1 `sales_orders_archive`
 
@@ -1658,7 +1678,7 @@ return results in sourceLineId order
 
 ### 7.7 `SalesBackorderService`
 
-- `runBatch({scope,maxEntries,abortSignal})` 先取得 Scheduler global cluster lease `sales.backorder.allocate`，手動觸發只 wake／縮短 next run，不另開並行 allocator。
+- `runBatch({scope,maxEntries,abortSignal})` 先取得 Scheduler global cluster lease `sales.backorderAllocate`，手動觸發只 wake／縮短 next run，不另開並行 allocator。
 - 找出最早 `OPEN` scope，對每個 Warehouse＋SKU 最多取設定數量並在 transaction 重讀／鎖 FIFO rows。
 - 跳過非 `CONFIRMED／PARTIALLY_FULFILLED`、已取消或 outstanding 已 0 的 stale entry，修正為 terminal並 warning Audit。
 - 使用新的 system eventId，並在同一 allocation transaction 寫入 `last_allocation_event_id`；COMMIT未知後若 row已保存便查原 event結果，若整個 transaction rollback才可產生新 event。
@@ -1780,6 +1800,7 @@ Channel `submit()` 先做 boundary schema／identity validation，durably insert
 | `server/config/api.js` | 新增 global disk-upload concurrency／temporary-directory budget；既有 memory upload預設及10 MB限制不變。 |
 | `server/config/scheduler.js` | 加具名 Sales Job overrides示例；實際 Job仍由 Service static jobs註冊。 |
 | `server/scripts/checkCoverageFloors.js` | 把確認、生命週期、Backorder、Intake及Archive高風險 Services加入 per-file門檻。 |
+| `server/src/framework/middleware/apiDispatcher.js` | 在既有 JWT／route policies 之後、upload／validation／framework idempotency replay 之前 await optional `handler.authorizeRequest(req)`。Hook 只讀已認證 claims、不依赖 body／不改 request；未宣告則略過，宣告必為 function 且 fulfilled result 必為 true，否則 fail closed；启动拒絕錯誤型別。Sales write handlers 使用既有 directory guard 重驗當前 actor／view＋mgmt；business transaction 內仍再驗。沿用 request cancellation signal，hook 後再次檢查 abort。未宣告 hook 的既有 handler 行為不變。 |
 | `server/src/framework/upload/normalizeUploadConfig.js` | 加 `storageMode:"memory"\|"disk"`，預設 `memory`；分開驗證 memory及disk budgets，disk route仍強制單檔／總檔案／request byte limits。 |
 | `server/src/framework/upload/uploadMiddleware.js` | 保留現有 memory path；disk mode把 Busboy file stream直接 pipe到 request-scoped隨機 temp file（directory `0700`、file `0600`），同時累計 SHA-256、size及bounded prefix，不使用 client filename作路徑。 |
 | `server/src/framework/upload/uploadConcurrencyGate.js` | 分開但同樣強制 memory／disk slots；disk滿載回503＋`Retry-After`，不得繞過全域 upload gate。 |
@@ -1790,7 +1811,7 @@ Channel `submit()` 先做 boundary schema／identity validation，durably insert
 | Inventory module files（落地時） | 新增 §2.4 Sales batch reservation／release contract及consumer tests。 |
 | Customer module files（落地時） | 確保 new_sale及credit provider contract符合已核准Customer設計。 |
 
-除上述已確認的 Upload 缺口外，不修改 `BaseRequestHandler`、Handler Discovery、`HttpClient` envelope、`DataTable` 或 `FormPanel`。Disk mode必須是獨立 Phase 0提交及framework tests；若實作發現還要改其他 framework能力，先更新設計並取得確認。
+除上述已確認的 Upload 缺口及 Sales replay fresh-authorization preflight 外，不修改 `BaseRequestHandler`、Handler Discovery、`HttpClient` envelope、`DataTable` 或 `FormPanel`。Disk mode必須是獨立 Phase 0提交及framework tests；若實作發現還要改其他 framework能力，先更新設計並取得確認。
 
 ### 9.2 新增 Backend config／domain files
 
@@ -1848,15 +1869,25 @@ Runtime只負責 service discovery、dependency injection、Scheduler registrati
 ```text
 server/src/handlers/sales/
   salesSchemas.js
+
+server/src/handlers/sales-lookups/
+  salesLookupHandlers.js
+
+server/src/handlers/sales-orders/
   listSalesOrdersHandler.js
   getSalesOrderHandler.js
   createSalesOrderHandler.js
   updateSalesOrderHandler.js
   confirmSalesOrderHandler.js
   salesOrderLifecycleHandlers.js
-  salesLookupHandlers.js
+
+server/src/handlers/sales-backorders/
   runSalesBackorderAllocationHandler.js
+
+server/src/handlers/sales-operations/
   salesOperationLookupHandler.js
+
+server/src/handlers/sales-audit-logs/
   salesAuditHandler.js
 
 server/src/handlers/outstanding-sales-orders/
@@ -2777,3 +2808,8 @@ Active+Archive+keys+operations backup, isolated restore, reconciliation, RTO <=4
 ### Failure behavior
 
 本決定所述的邊界、交易、契約或不變量被違反時一律 fail closed，回穩定且可行動的業務錯誤，不得產生部分提交或以過時資料假裝成功；§11.8 enhanced by this review 所列的失敗處理與補償路徑為準，相關 Gate 在證據不足時記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。
+
+
+### DEC-022 — Confirmation 202 replay header
+
+TASK031 actual HTTP regression proves the framework cache replays status/body but drops the original Retry-After. The confirm route declares optional idempotency.retryAfterSeconds=2. IdempotencyService validates a positive safe integer at startup and emits Retry-After only for replayed202 of a declaring route; absent declarations and200 responses retain original behavior. No response-header copying, schema/store changes, additional side effects, bypass of fresh actor authorization or change to command event identity. This is a reviewed supplemental shared-file scope correction, pending direct human adoption; complete P2 gates/thresholds and historical decisions remain unchanged.

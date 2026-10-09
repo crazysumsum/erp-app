@@ -28,7 +28,10 @@ export const SUPPLIER_IMPORT_LIST_QUERY_SCHEMA = Object.freeze({
 export const SUPPLIER_IMPORT_GET_QUERY_SCHEMA = Object.freeze({
   type: "object",
   additionalProperties: false,
-  properties: { page: PAGE, pageSize: PAGE_SIZE, rowStatus: { type: "string", enum: [...IMPORT_ROW_STATUSES] } }
+  properties: {
+    page: PAGE, pageSize: PAGE_SIZE, rowStatus: { type: "string", enum: [...IMPORT_ROW_STATUSES] },
+    rowNumber: { type: "integer", minimum: 1, maximum: 1_000_000 }
+  }
 });
 
 export const SUPPLIER_IMPORT_CANCEL_BODY_SCHEMA = Object.freeze({

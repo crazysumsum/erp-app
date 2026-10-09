@@ -497,3 +497,353 @@ The mutation list is now 38 (the 34 above, three patterns updated for the moved 
 REV-072 (`75_rev_072_independent_review.md`) approved 7608699 with two Low and one Info finding, all test or wording only, and
 all three are closed above: the cleanup now forces `PRIMARY` and pins the plan (L-1), the 4A wording gives the measured
 boundary (L-2), and test currencies can no longer collide with real ISO codes (I-1).
+
+## Status after TASK-046
+
+T46 adds `GET /api/v1/supplier-imports/:id/result` (`handlers/supplier-imports/importResultHandlers.js`,
+`SupplierImportService.resultCsv`), a `rowNumber` filter on `GET /:id`, the client service, and the page
+`client/src/pages/suppliers/SupplierImportsPage.vue` at `/suppliers/imports`. The open points were decided in HD-063 (1B 2A 3A).
+
+| Obligation | Status |
+| --- | --- |
+| HD-063 1B: result file | **No stored file.** The CSV is built from `supplier_import_rows` on each download; `result_stored_name` / `result_sha256` stay unused. The row count is bounded by `import.maxRows`, so it is built in memory. |
+| HD-043, T46 part: stored name from the job row, `nlink`, SHA when serving | **Not applicable (HD-063 1B).** No import file is served. HD-043 can close when T48, which only deletes files, is done with its own HD-044 rules. |
+| HD-049, T46 part: the result file's counts | **Holds by construction.** The file and the summary counts both come from the rows; a test compares them. |
+| T43: the result CSV uses `SUPPLIER_CSV_STRINGIFY_OPTIONS`, formula-risk cells guarded | **Done.** `buildSupplierImportResult` in `supplierCsvSchema.js` (all CSV writes stay there); cells starting with `=`, `+`, `-`, `@`, Tab, CR or LF are prefixed with `'`. BOM and CRLF as in the template. |
+| T44: 410 for a purged file; result route order | **Done.** 410 `IMPORT_FILE_EXPIRED` once `files_purged_at` is set on an executed job (summary and rows still readable); 409 `SUPPLIER_IMPORT_RESULT_NOT_READY` for jobs that never ran (including cancelled and precheck-failed ones, which also have `files_purged_at`). `/:id/result` has two segments, so it cannot collide with `GET /template`. |
+| T45: confirm UI — password, eligible approver, no resend on refresh | **Done.** The approver list excludes the user; refresh reopens the job from `?job=` and sends nothing. |
+| T45: `SUPPLIER_IMPORT_ROW_BUSY` retryable, `SUPPLIER_IMPORT_AUTHORIZATION_REVOKED` a job-level stop | **Done.** A "可重新匯入" badge on busy rows; a banner for a revoked job. |
+| REV-071 I-3: say that the approval setting is read at confirm | **Done** in the confirm step. |
+
+Notes:
+
+- **Download file name.** The browser saves the result as `supplier-import-<id>-result.csv`, the same fixed name the server
+  sends in `Content-Disposition`. `HttpClient.getBlob` (client framework, outside this module's write paths) does not expose
+  that header, so the client uses the server's pattern rather than reading it; no user input reaches the name.
+- **Quasar dismisses a dialog on route change.** Opening a job writes `?job=` to the URL, so the details dialog uses
+  `no-route-dismiss`. Unit tests could not see this; the browser spec caught it, and a mutant that removes the prop is killed.
+
+**Real-browser validation (CLAUDE.md §9).** The mocked spec `client/e2e/supplier-management/supplier-imports.spec.js` runs in
+CI. In addition the real app was driven with Playwright, using the real API on port 3000 against the T46 MySQL, the real
+scheduler and worker, and Vite on 5203. Results:
+
+- **Template:** downloaded with a BOM.
+- **Upload and precheck:** an upload with one valid and one invalid row was prechecked by the worker, giving `ready_with_errors`.
+- **Wrong password:** HTTP 403 `PASSWORD_INVALID`, a "請確認你目前的密碼" notification, and the job stayed ready.
+- **Reload:** reloading reopened the job without resending confirm.
+- **Confirm and run:** confirming as draft ran on the worker, giving `completed`; the Supplier was written as draft by the confirmer.
+- **Filter:** filtering by "略過" showed row 2.
+- **Result CSV:** contained exactly the two outcome rows.
+- **Cancel:** a cancelled job offers no download.
+- **Approval on:** the approver list held only the other user, and the Supplier became `pending_approval` assigned to them.
+- **Retention:** after `files_purged_at` was set, the download explained the 410 and a reload showed the summary with the expiry badge.
+- **Errors:** console and network showed only the expected 403 (device check at first login, wrong password) and 410.
+- **Fix from screenshots:** the screenshots showed long row messages cut off; they now wrap.
+
+New obligations T46 creates:
+
+| Task | Obligation |
+| --- | --- |
+| T48 | At retention, set `files_purged_at` on executed jobs too (that is what turns the result download into 410) and delete their source; jobs that never ran already have it. |
+| T49 | Measure the result download at 10,000 rows (built in memory from rows). |
+
+## Mutation record for TASK-046
+
+24 mutants, all killed (server unit and integration on real MySQL, client vitest, and the mocked Playwright spec; each mutant
+applied to a committed tree and restored from the saved bytes):
+
+- **Server (14):**
+  - access: a result for anyone's job; the fresh-actor check dropped;
+  - availability: a result before execution; none for a job that failed while running; a result for a failed precheck; no 410 after retention;
+  - row lookup: the Code from the CSV only; the row-number filter ignored or missing from the schema;
+  - CSV safety: no formula guard; the guard missing `-`; no BOM or quoting options; no error messages; a cacheable response.
+- **Client (10):**
+  - the dialog closing on the `?job=` route change; refresh losing the job;
+  - approvals: an approver never required; the user offered as approver; an approver sent when approval is off;
+  - results: no result for a job that failed while running; a download offered after retention;
+  - status display: the revoked stop or the busy badge not shown;
+  - the service dropping the row number.
+
+One first survived: the fresh-actor check on the download. The revoked test now asserts 403 `PERMISSION_STALE` while the
+permission is withdrawn.
+
+## REV-073 remediation (HD-064)
+
+REV-073 (`76_rev_073_independent_review.md`) approved 5ab6ab1 with four Low and three Info findings. The Product Owner asked
+for all of them to be fixed (HD-064). Every fix's test was checked to fail with the fix removed.
+
+- **L-1:** the formula guard also covers the full-width `＝＋－＠`.
+- **L-2:** the latest row request wins over a late older answer (typing or polling), and the row-number input is debounced
+  (300 ms). A browser test delays `rowNumber=1` while "12" is typed.
+- **L-3:** only a positive-integer `?job=` opens a job; anything else is removed from the URL.
+- **L-4:** a unit test covers that a failed precheck offers no download.
+- **I-1:** `Cache-Control` belongs to the framework's file response (`private, no-store`); the handler adds only `Pragma`, and
+  the integration test pins both exact values.
+- **I-3:** update rows keep the CSV's Supplier Code in `normalizedPayload.identity`. `root` still never carries a Code (T43's
+  invariant: an update cannot change it), and T45's writer does not read `identity`. The result prefers the CSV's Code, so a
+  row with an unknown ID or an ID/Code conflict shows what the user typed.
+- **I-2 (file name from `Content-Disposition`)** needs changes outside the module: `server/config/security.js` (approval
+  required) to expose the header, and the shared client `HttpClient.getBlob` (Customer and Item use it) to return it.
+  **Kept as a known limitation (HD-065 B):** the client saves the result under the server's fixed name
+  `supplier-import-<id>-result.csv`; no user input reaches it. A framework change can take it up later.
+
+The mutation list for T46 is now 30 (three patterns updated for the changed code, plus six for the REV-073 fixes); all 30 are
+killed.
+
+**Incident during REV-073.** The reviewer stopped its server with `pkill -f "node src/index.js" -U $(id -u)`. macOS `pkill`
+treats `-U` and `501` as further patterns after the first one, so every process of the user with "501" in its command line
+was killed — including the throw-away MySQL and anything under `/private/tmp/claude-501/`. MySQL was restarted on the same
+data; the Product Owner was told at once. Review prompts now say to stop servers by PID.
+
+## REV-074 remediation (HD-066)
+
+REV-074 (`77_rev_074_independent_review.md`) approved 4a1f488 with five Low and three Info findings; the Product Owner chose
+the recommendations (HD-066).
+
+- **L-1 / I-2, fixed.** A late *failure* of an older row request now also resolves to the latest request, so it neither
+  blanks the newer rows nor shows a stale error; a 404 is notified once, by the latest request.
+- **L-3, fixed.** `?job=` must also be a safe integer (`9007199254740992` and up are dropped from the URL).
+- **L-4, fixed.** The row-number filter sends only integers 1–1,000,000; anything else is not requested and the field says why.
+- **L-5, tested.** The T46 result test has an ID/Code conflict row (the CSV's Code is shown) and a lower-case Code.
+- **I-1, fixed.** Applied rows show the stored Supplier Code; unapplied rows keep the CSV's Code first.
+- **L-2, known limitation.** When an older request answers late, `client/src/framework/ui/DataTable.vue` keeps that request's
+  page number in the pager (rows are right; the footer can read e.g. "21–9 of 9"). The cause is in the shared DataTable,
+  outside this module's write paths; a request sequence in `DataTable.onRequest` would fix it for every page.
+- **I-3** (the debounce flushes once on close) needs nothing.
+
+The T46 mutation list is now 35 (five more for HD-066, and patterns updated for the changed code); all 35 are killed.
+
+## Status after TASK-047
+
+T47 adds the general Supplier export: `POST /api/v1/supplier-exports` (`handlers/supplier-exports/supplierExportHandler.js`,
+`modules/supplier/SupplierExportService.js`) and an "匯出 CSV" button on `client/src/pages/suppliers/SuppliersPage.vue`.
+The open points were decided in HD-067 (1A, 2A, a 10,000-row cap, the button) and HD-068 (A).
+
+| Point | Status |
+| --- | --- |
+| HD-067 1A: method | **POST, not the design's GET.** `jwt-password` reads the password from the body, which a browser GET cannot send. The response is the CSV itself: no job table, no stored file, nothing for T48 to purge. No `Idempotency-Key`, because an export changes nothing. |
+| HD-067 2A: columns | **Exactly the import template v1 header.** `supplierId`, `supplierCode` and the root fields are filled; the address, contact and identifier groups stay empty, so the file re-imports as upsert without touching children. An inactive payment term still exports its code (looked up by ID through the Business Master provider). |
+| FR-IMPORT-009: filters, permission | **Shared with the list.** `supplierListQuery` was moved out of `listSuppliers`, so the list and the export run the same WHERE and ORDER BY; an integration test compares them for seven filter sets. `supplier.mgmt` plus the fresh-actor check. |
+| Cap | At most 10,000 rows: the query asks for one more, and finding it is a 422 `SUPPLIER_EXPORT_TOO_LARGE` with no audit and no file. |
+| BR-028, SEC-012: no Bank data, no live formula | **Done.** The query reads `suppliers` only. An integration test seeds a real encrypted bank account and finds none of its values in the file or the audit. Cells go through `guardSpreadsheetCell` and `SUPPLIER_CSV_STRINGIFY_OPTIONS` (BOM, CRLF, quoting). |
+| FR-AUDIT: one audit per export | `supplier.export`, target type `export`, with the effective filters (schema defaults included) and the count; a failed audit means no file. |
+| HD-068 A: round trip | The formula guard put `'` before an exported `+852 …` phone or `=…` name, and the import kept it, so re-importing the export changed data. The import now strips exactly the apostrophe the guard adds (`unguardSpreadsheetCell`, applied to every cell). An integration test exports, re-imports as upsert, executes, and finds every field unchanged. After REV-075 L-1 the two functions are exact inverses, so a value stored as `'=…` also survives. A hand-written CSV cell `'=x` is read as `=x`, as accepted in HD-068. One exception, by requirement: a Supplier whose default currency or payment term is inactive cannot be changed at all (requirement §14, §6.6), so its exported row is refused at precheck. |
+| T46 I-2: file name | **Closed.** `server/config/security.js` exposes `Content-Disposition`, `HttpClient.getBlob` returns `fileName`, and the new `HttpClient.postBlob` does the same; the export and both import downloads use the server's name and fall back to the old fixed one. Both shared files were approved for this task (APPROVAL-HD-067-SCOPE). |
+
+**Real-browser validation (CLAUDE.md §9).** The mocked spec `client/e2e/supplier-management/supplier-export.spec.js` runs in CI.
+The real app was also driven with Playwright: the real API on port 3000 against the T47 MySQL, Vite on 5203, and real logins.
+
+- **List:** `?q=T47` listed three Suppliers; the archived one was left out, as in the export.
+- **Wrong password:** "請確認你目前的密碼"; the session stayed.
+- **Export:** saved under the server's `suppliers-<UTC stamp>.csv`, with a BOM, CRLF and the 30 template columns; `'+852 …` and
+  `'=Beta …` guarded; a note with a newline, quotes and a comma quoted correctly; no Bank-like text.
+- **Status filter:** "草稿" exported only the draft Supplier.
+- **Audit:** three `supplier.export` rows with the filters and counts.
+- **CORS:** the response's `Access-Control-Expose-Headers` included `Content-Disposition`.
+- **Round trip:** uploading the export as upsert gave three valid update rows. This run was before HD-068, and is where the
+  apostrophe problem was found; the job was cancelled without confirming. The fixed behaviour is pinned by the integration
+  test.
+- **Viewer:** a `supplier.view` user has no export button.
+- **Errors:** console and network showed only the expected 403s (device check at first login, the wrong password).
+
+New obligations T47 creates:
+
+| Task | Obligation |
+| --- | --- |
+| T49 | Measure the export at 10,000 rows (built in memory, one query plus one Business Master lookup per distinct payment term). REV-075 L-4 measured on the real API with 10,000 maximum-length Suppliers: a 69 MB file in about 394 ms, RSS from 146 MB to 678 MB; six concurrent exports by one user peaked at 1.35 GB RSS, with no concurrency limit. T49 decides whether to add a per-process concurrency gate or stream the CSV (`csv-stringify` stream into the response). |
+
+## Mutation record for TASK-047
+
+25 mutants, all killed. Each was applied to a committed tree and restored from the saved bytes. They ran against server unit
+tests, integration tests on real MySQL, client vitest and the mocked Playwright spec.
+
+- **Server (16):**
+  - **row cap:** no cap; the query not asking for one row over the cap;
+  - **audit:** no audit; a wrong count;
+  - **content:** the filters ignored; no formula guard; the payment-term code dropped; no BOM or CRLF options;
+  - **access:** the fresh-actor check skipped; no password (`jwt` instead of `jwt-password`); no permission policy; paging
+    accepted as a filter;
+  - **headers:** no `Pragma`; `Content-Disposition` not exposed;
+  - **import:** the guard apostrophe kept; every leading apostrophe stripped.
+- **Client (9):**
+  - **file name:** not read; `filename*` ignored; the server's name ignored by the export, and by the template download;
+  - **request:** `postBlob` sending GET; the sort or the status not sent;
+  - **button:** offered to viewers; a cancelled prompt still exporting.
+
+The fresh-actor mutant survived the first run. A test was then added for a manager whose permission is withdrawn after the
+token was issued (403 `PERMISSION_STALE`, no audit), and it kills the mutant.
+
+After HD-069 the T47 list is 30 mutants, all killed. One pattern was updated for the changed guard, and five mutants were
+added:
+
+- the guard ignoring existing apostrophes, and the unguard handling only one (REV-075 L-1);
+- a retired currency, or a retired payment term, passing precheck (HD-069 L-2);
+- no guard on the payment-term code (the reviewer's M12; REV-075 L-3).
+
+The full server suite, run the CI way, passes: 2,567, 0 failed, coverage floors met.
+
+## Status after TASK-048
+
+T48 adds the retention job `server/src/services/supplierImport/jobs/SupplierImportFilePurgeJob.js`. It runs daily as
+`SUPPLIER_IMPORT_JOB_NAMES.purge`, with cluster scope because every instance shares the root. It is backed by
+`SupplierImportService.purgeCandidates`, `markExecutedFilesPurged`, `expireUnconfirmed` and `referencedStoredNames`, and by
+`supplierImportDirectory` / `removeVerifiedSupplierImportFile` in `supplierImportFiles.js`. There is no schema change. The
+open point was decided in HD-071 B: a 30-day period, confirmed by the Product Owner.
+
+| Obligation | Status |
+| --- | --- |
+| Design §12.5: executed jobs' files 365 days after completion | **Done.** `completed`, `completed_with_errors` and `failed` are due `fileRetentionDays` after `completed_at`. That includes a job failed as `SUPPLIER_IMPORT_NOT_CONFIRMED` (REV-076 I-3); a failed precheck already has `files_purged_at`. `files_purged_at` is set first, so the result download answers 410 (T46), then the source is deleted. The job, its rows and audit are kept, and a file purge writes no audit. |
+| HD-071 B: jobs never confirmed | **Done.** Jobs in `uploaded`, `ready` or `ready_with_errors` for `unconfirmedRetentionDays` (default 30, env `SUPPLIER_IMPORT_UNCONFIRMED_RETENTION_DAYS`) since upload are handled in one transaction: the job is cancelled with `SUPPLIER_IMPORT_EXPIRED` and its error summary, `files_purged_at` is set, and a system `import.expire` audit is written. The source is deleted afterwards. A job that is being prechecked or was confirmed meanwhile is left alone. The job's rows keep their row numbers, outcomes and error codes, but `normalized_payload` (the CSV content) is cleared to `{}` (HD-072 I-5 A, a deliberate departure from §12.5's seven-year rows for jobs that never wrote anything). A job the user cancels now has its rows' payload cleared in the same way, in the cancel transaction (HD-073). This also covers HD-058 1A's jobs whose uploader was deleted. |
+| T48 (REV-059 M-1): the purge declares `SUPPLIER_IMPORT_JOB_NAMES.purge` | **Done.** |
+| T48 (REV-059 L-6): checks immediately before each `unlink` | **Done.** The kind directory is `lstat`ed and must keep the `dev`+`ino` recorded at the start of the run. The file must be `isFile()`, on the same `dev`, with `nlink === 1`. The bare stored name is unlinked from that verified directory. A failure is logged as `supplier.import.purge_failed` with IDs and an errno code only, and retried next run. |
+| HD-044 / HD-050 / HD-053: unreferenced files | **Done.** A file is unreferenced unless a job names it and that job's `files_purged_at` is NULL. Such files older than a day are deleted, which covers an upload that crashed before inserting its job, failed-precheck and cancel deletes that failed, and this job's own failed deletes. A newer file is kept for an upload still inserting its job. |
+| T46: files_purged_at on executed jobs | **Done** (row 1). |
+| T44: 410 for a purged file | Unchanged from T46: the integration test checks the result download answers 410 after the purge. |
+| Metrics (design §12.4 "file purge failures") | The summary `{ expired, retained, raced, filesDeleted, orphansDeleted, failed }` is logged as `supplier.import.purged`. The scheduler does not keep a job's return value (REV-076 M-1), so a run that leaves any file behind then throws an error whose message is `SUPPLIER_IMPORT_PURGE_INCOMPLETE: N file(s) left behind`. The scheduler keeps only the message, so the code goes there (REV-077 I-a). A run aborted by the 600 s timeout also throws, after the summary, so it is recorded as timed out rather than succeeded (REV-077 L-1). Either way the scheduler records a failure and `consecutiveFailures` grows, which is what an alert can watch. |
+
+Notes:
+
+- **Bounded runs.** Each run handles at most 50 batches of 200 jobs and stops between items when aborted. A larger backlog
+  finishes over several days.
+- **Manual filesystem check.** The integration test `supplierImportRetention.integration.test.js` runs against the real
+  filesystem. It covers expired and not-yet-due jobs, a missing file, a symlink to a file outside the root, a hard-linked
+  file, and a permission-denied directory, plus the retry once permission is back. Separate unit tests cover a directory
+  swapped for a symlink, another filesystem, and a non-regular file.
+- **Residual TOCTOU (REV-076 I-1).** Node has no `unlinkat`. Someone who can swap `<root>/<kind>` for a symlink between
+  the last check and the `unlink` could make the job delete a same-named 64-hex file elsewhere. Only the service user can
+  write the 0700 root and its ancestors (`prepareSupplierImportRoot`), so that person already owns the files. This is the
+  design limit of REV-059 L-6.
+- **Whole-run failures (REV-076 I-2).** If the root itself cannot be read (for example mode 000), the run fails with
+  Node's message, which includes the configured root path. The path reaches the system log and `fr_job_stats.last_error`.
+  It is configuration, not data.
+- **For operators (REV-076 I-4).** The orphan sweep trusts the database: a file that no unpurged job of this database
+  names is deleted after a day. Each environment must have its own `SUPPLIER_IMPORT_ROOT`. Never point two environments,
+  or an app connected to the wrong or an empty schema, at the same root.
+- **HD-043** can close: no import file is served (HD-063 1B), and the only code that deletes files now applies the REV-059
+  L-6 rules.
+
+## Mutation record for TASK-048
+
+19 mutants, all killed. Each was applied to a committed tree and restored from the saved bytes. They ran against the
+purge unit tests, the config tests, and the retention integration test on real MySQL and the real filesystem.
+
+- **File checks:** the directory identity not re-checked; a second hard link, a non-regular file or another filesystem
+  allowed; the file age ignored.
+- **Job:**
+  - both retention periods ignored;
+  - referenced files swept;
+  - the orphan age not passed;
+  - one batch only;
+  - the abort ignored between batches;
+  - running without a root;
+  - a failed delete not logged.
+- **Service:**
+  - `completed_with_errors` or failed-while-running never due;
+  - the expiry ignoring the current status or not audited;
+  - marking ignoring the status.
+- **Config:** the 30-day default changed.
+
+"Referenced files swept" survived the first run, because every referenced file in the tests was newer than a day. A test now
+keeps an old file that a live job still names.
+
+After REV-076 the list is 27, all killed. Three patterns were updated, and these mutants were added:
+
+- the run reported as success when files were left behind (M-1);
+- the kind directory's errors swallowed, and its filesystem unchecked (L-1 O, A);
+- the abort ignored between jobs, and the orphan sweep run after an abort (L-1 Q, B);
+- expiry refusing only `queued` (L-1 R);
+- failed jobs never due, or still requiring `confirmed_at` (I-3);
+- expired rows keeping their CSV content (I-5).
+
+After REV-077 the list is 31, all killed. Four mutants were added:
+
+- a timed-out run reported as success (L-1);
+- the code missing from the message (I-a);
+- a cancel keeping the CSV content (HD-073);
+- expiry clearing rows before the status guard (REV-077's M7).
+
+## Status after TASK-049
+
+T49 is the SUP-CAP-05 acceptance: the 10,000-row capacity run, crash recovery at scale, an end-to-end mixed run, and a
+leak scan. The open points were decided in HD-074 (1A, 2B, 3A). Capacity work exposed two T45 defects, fixed under HD-075.
+The operator guide is `docs/supplier_management/bulk_operations.md`.
+
+| Point | Status |
+| --- | --- |
+| NFR-004: 10,000 rows within 10 minutes | **Pass.** Precheck 5.6 s plus execution 52.4 s gives 58 s. Regenerated after REV-081 with the final script: the worker runs only the Supplier import jobs, the command includes `--database`, and the durability settings are recorded (`innodb_flush_log_at_trx_commit=1`, `sync_binlog=1`, binlog on), with the database name, host and port. The worker was a separate process built with the same `createApplication` and the real scheduler, with only the two Supplier import jobs (plus `tokenRevocation.refresh`) enabled, on MySQL with `fsync` on every commit. Evidence: `evidence/20261008-t49-capacity/import-10000-rows.json`. |
+| HD-074 3A: crash at scale | **Pass.** The worker was SIGKILLed after 5,001 of 10,000 rows and a second worker took over, giving exactly 10,000 Suppliers, 10,000 applied rows and 10,000 distinct applied IDs, with consistent counts, in 68 s. The 11-minute lease of the killed worker was simulated as expired (stated in the evidence). Evidence: `import-10000-rows-sigkill.json`. |
+| HD-074 1A: benchmark entry point | `node scripts/benchmarkSupplierImport.js --database=<DB_NAME> --rows=10000 --output <file> [--crash]`, with `DB_*` and `JWT_SECRET` set. After REV-078 and REV-079 it refuses to run without explicit `DB_*`, without a matching `--database`, or while another import job is pending. It reports `ok: false` if another Supplier import job changed during the run. Its worker is the same script with `--worker`: `createApplication` with only the Supplier import jobs enabled. An interrupted run cleans up and ignores repeat signals (REV-080, REV-081 I-1); its worker shuts down when the benchmark dies, even by SIGKILL (REV-081 I-2). It refuses to start when `--output` cannot be written (I-5), and records the database name, host, port and socket (I-4, I-7). It writes `BM49-<run>-` Suppliers to a throwaway database and removes them afterwards. `server/package.json` is unchanged. |
+| HD-074 2B: export memory | At most two exports per process, otherwise 429 `SUPPLIER_EXPORT_BUSY`. A refused caller never takes a slot, and a slot is freed on success or failure. |
+| HD-075 cause 1: similar-name search during execution | **Fixed.** The import applier passes `findDuplicates: false`; UI create and update still search. The search ran on every row, its result was discarded, and its cost grew with the Supplier count: 784 of about 820 s of SQL time. Before the fix, 10,000 rows did not finish in 20 minutes. |
+| HD-075 cause 2: an 11-minute stall after every 10-minute run | **Fixed.** The worker calls `releaseExecutionLease` in `finally` whenever it stops, including on an error (REV-078 L-2), so the next poll resumes. Only a process that dies without running `finally` leaves the lease to expire. A run stopped by the timeout logs `supplier.import.paused` with `reason: timeout`, because the scheduler records it as succeeded. |
+| T46: result download at 10,000 rows | 45 ms, 489 KB. |
+| REV-075 L-4: export at 10,000 rows | 60 ms, 1.5 MB with realistic values. The maximum-length case is covered by the gate (2B). |
+| AC 1: mixed end-to-end run | **Met across the import integration tests.** The T49 test runs create, identical-name warning, invalid, update and formula-name rows with approval on and activation, checks row outcomes against the job counts and the result CSV, exports, cancels another job, purges, and gets 410. Draft mode and approval off are covered by the T45 tests in the same file, which confirm as draft over HTTP with the real (off) setting (REV-078 L-4). |
+| AC 3: no leak | **Pass.** The same test finds none of a CSV-only marker, the import root path or a Bank value in the logs, the jobs' audit or the result file. It first checks that the logs mention the job and that the marker reached the Supplier, so the scan cannot pass vacuously. Formula cells are guarded in the export. |
+| Real browser | The real API and worker with Vite: template (30 columns), mixed upload, precheck 2 valid and 1 invalid, password confirm, 2 written and 1 skipped, the result under the server's file name, and the export with `'=HYPERLINK…` and `'+852…` guarded. The only 403 was the first-login device check. |
+
+Notes:
+
+- **Per-row time** rises slowly with the row number, from about 3 ms to 7 ms by row 10,000, because finding the next row
+  gets slightly slower as rows are applied. That is well inside NFR-004 at the 10,000-row cap.
+- **Out of T49's scope (HD-075):** UI create and update still run the similar-name search. Its cost grows with the
+  Supplier count (about 87,000 rows examined per call at about 20,000 similar names), so it is worth a separate task before
+  the Supplier master gets large.
+
+## Mutation record for TASK-049
+
+10 mutants, all killed:
+
+- **Export gate:** no gate; three allowed; a slot never freed; the gate taken before authorization.
+- **Similar-name search:** the import create or update runs it; UI create skips it.
+- **Lease:** the worker keeps its lease when stopping; release ignores the owner; release does not free the lease.
+
+The first two gate mutants made the unit test hang rather than fail; they were counted as killed after a 120 s watchdog
+stopped them. The test now races the third export against a one-second timer, so they fail fast, and they were re-run.
+
+After REV-078 the T49 list is 14 mutants, all killed. One pattern was updated, because the release moved into `finally`,
+and four mutants were added:
+
+- the pause reason not told apart (L-2);
+- the release accepting any input (I-3);
+- the release ignoring the job's status (I-1);
+- the benchmark's `DB_*` guard removed (M-1).
+
+The full server suite, run the CI way, passes: 2,819, 0 failed, coverage floors met.
+
+After REV-079 the T49 list is 18 mutants, all killed. One pattern was updated, and four mutants were added:
+
+- shutdown read from the signal again (L-A);
+- a failing release replacing the run's outcome (I-B);
+- the benchmark's `--database` check removed (L-B);
+- the pending-job guard removed (M-1; killed by the new integration test).
+
+The full server suite, run the CI way, passes: 2,822, 0 failed, coverage floors met.
+
+After REV-080 the T49 list is 19 mutants, all killed. The new mutant is the pending guard ignoring `uploaded` (REV-080 m11).
+The full server suite, run the CI way, passes: 2,822, 0 failed, coverage floors met.
+
+**Correction (REV-081 N-2).** The runs above passed the integration files through `--test-name-pattern='HD-075|TASK-049'`.
+In a full-file run, as CI runs it, a `ready` job left by a TASK-042 test made the pending guard refuse on its own, so the
+guard mutants survived. The "all killed" counts after REV-078, REV-079 and REV-080 held only for that narrower run.
+
+After REV-081 the harness runs every file in full. The T49 list is 22 mutants, all killed. Three mutants were added:
+
+- the export gate checked before authorization (I-6; a refused caller would get 429 instead of 403);
+- the pending guard ignoring `queued`;
+- the pending guard tolerating one pending job.
+
+The benchmark's signal, IPC and output-path handling was checked by hand against the real script, each with a negative
+control that reverts the fix:
+
+| Control | Fixed script | Negative control |
+| --- | --- | --- |
+| SIGKILL of the benchmark during execution | its worker shut down within seconds | without IPC, the worker lived on and applied all 2,000 rows |
+| two SIGINTs 10 ms apart | one report marked `interrupted`; everything cleaned up | with `process.once`, no report, and 1,650 Suppliers, the job, user, role and temporary directory were left |
+| SIGTERM the moment worker-a died in `--crash` | no worker left; `ok: false`, `interrupted`, no verification; cleaned up | — (the SIGKILL control covers the orphan) |
+| unwritable `--output` | refused at once, nothing created | — |
+
+The after-run check, the cleanup, the supplier-only job set and the split `try` are still checked only by hand (REV-081).
+The full server suite, run the CI way, had one failure in an unchanged file (`TASK-044: a manager whose permission was
+withdrawn…`: its upload did not return a job, and the test took 1,030 ms instead of about 26 ms). The file passed in a
+rerun on its own, and CI on PR #192 passed the full suite. The cause is not known.

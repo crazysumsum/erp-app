@@ -1,0 +1,15 @@
+# DEC-023 — Temporary isolated restore fixture rights
+
+Decision Required; human answer pending. This operation has NOT executed. P2 is NOT_READY_TO_MERGE while original mandatory restore cases/complete28developer and current CI gates remain unverified.
+
+Full native coverage R1 exposes two existing regression failures: Item read-only recovery and Supplier Bank restore create random separate schemas using DB_ADMIN_USER. The synthetic Sales admin currently owns only the Sales schema and SUPER for immutable fixture trigger DDL; ordinary application DML remains a separate account. Existing isolated test authority does not override an automatic approval rejection.
+
+Automatic approval review rejected the proposed grant: “The script persistently grants global CREATE USER and GRANT OPTION privileges on the test MySQL instance; isolated testing was authorized, but this exact security weakening and privilege scope were not explicitly approved.” No alternative execution or privilege workaround is used. Other authorized source/test/review/integration work continues.
+
+Recommendation: temporarily grant CREATE USER on this fully owned isolated instance, plus ALL PRIVILEGES WITH GRANT OPTION only on `item_recovery_it_*` and `erp_restore_*` synthetic schema prefixes to `sales_p2_admin`@`localhost`. The Item test creates a SELECT-only reader; both tests create/drop their own random restored schemas. Application privileges, schemas and production/shared hosts are untouched. Refusal keeps both tests red and blocks completePhase Gate/merge; no test is skipped or weakened.
+
+Concrete private script: `/private/tmp/sales-p2-private/prepare_restore_access.py`, SHA256 `e49c2b390d16d4d71a114aba05edf9faa5117707af6b61fa276d9697e68a78ec`. It verifies fixed owned PID36251, UID501, exact argv and socket under the private runtime; fixed synthetic admin only. A read-only original-grants snapshot proves the exact requested rights are absent; snapshot SHA256 `a1e22c02e646712060cdee26a95b59346f8251a76e9754df5f20c28580041a06`. Before granting, current grants must exactly match that captured original. The matching `--revoke` action removes only these proven-new rights and verifies the exact original grants are restored. Independent reviewer `/root/sales_p1_review` checked these guards and restoration proof; that review does not authorize the grant.
+
+The risk is temporary user creation and delegation capability for the isolated synthetic admin. Default recommendation is approve with immediate revocation after regression, before runtime cleanup. Existing commit/PR/mainmerge authority remains; this is solely the new privilege operation. No production access, deployment, DB reset, baseline exception or acceptance relaxation is requested.
+
+Latest main831bbe6 was integrated conflict-free into the isolatedfeature at `f09680b8a59568b70f3d160ee1c8c61a06d7e03e`; server/test/lock scoped review approved e10c261; final integrated UI checks and static review are executing. Approved Design d7576e… and Plan f419777… remain unchanged. The wholePhasePR/currentCI/mainmerge follows only after complete mandatory gates PASS. Formal acceptance and UAT remain separate.

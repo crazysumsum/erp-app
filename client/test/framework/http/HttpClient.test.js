@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/framework/http/ApiError.js";
-import { HttpClient } from "@/framework/http/HttpClient.js";
+import { HttpClient, parseContentDispositionFileName } from "@/framework/http/HttpClient.js";
 
 function jsonResponse(body, { status = 200, headers = {} } = {}) {
   return {
@@ -301,6 +301,51 @@ describe("HttpClient", () => {
 
       await expect(client.getBlob("/api/v1/item-media/1/download")).rejects.toThrow(ApiError);
       expect(onUnauthorized).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe("postBlob() 同 Content-Disposition 檔名", () => {
+    it("POST JSON body（例如 jwt-password 嘅密碼）並回伺服器定嘅檔名", async () => {
+      const fakeBlob = new Blob(["a,b\r\n"], { type: "text/csv" });
+      fetchImpl.mockResolvedValue(blobResponse(fakeBlob, { headers: {
+        "content-type": "text/csv; charset=utf-8",
+        "content-disposition": "attachment; filename=\"_____.csv\"; filename*=UTF-8''%E4%BE%9B%E6%87%89%E5%95%86.csv"
+      } }));
+      const client = new HttpClient({ fetchImpl, getToken: () => "tok" });
+
+      const result = await client.postBlob("/api/v1/supplier-exports", { body: { password: "pw", filters: { q: "x" } } });
+
+      expect(result).toEqual({ blob: fakeBlob, contentType: "text/csv; charset=utf-8", fileName: "供應商.csv" });
+      const [, init] = fetchImpl.mock.calls[0];
+      expect(init.method).toBe("POST");
+      expect(init.headers.Authorization).toBe("Bearer tok");
+      expect(init.headers["Content-Type"]).toBe("application/json");
+      expect(init.body).toBe(JSON.stringify({ password: "pw", filters: { q: "x" } }));
+    });
+
+    it("密碼錯（403）拋 ApiError，唔當成 session 失效", async () => {
+      fetchImpl.mockResolvedValue(
+        jsonResponse({ success: false, error: { code: "PASSWORD_INVALID", message: "x" }, meta: {} }, { status: 403 })
+      );
+      const onUnauthorized = vi.fn();
+      const client = new HttpClient({ fetchImpl, getToken: () => "tok", onUnauthorized });
+
+      await expect(client.postBlob("/api/v1/supplier-exports", { body: {} })).rejects.toMatchObject({ status: 403, code: "PASSWORD_INVALID" });
+      expect(onUnauthorized).not.toHaveBeenCalled();
+    });
+
+    it("檔名：filename* 優先，壞咗退返 filename，冇 header 就 null", () => {
+      expect(parseContentDispositionFileName('attachment; filename="a.csv"; filename*=UTF-8\'\'b%20c.csv')).toBe("b c.csv");
+      expect(parseContentDispositionFileName('attachment; filename="a.csv"; filename*=UTF-8\'\'%E4%ZZ')).toBe("a.csv");
+      expect(parseContentDispositionFileName('attachment; filename="a.csv"')).toBe("a.csv");
+      expect(parseContentDispositionFileName("attachment")).toBeNull();
+      expect(parseContentDispositionFileName(null)).toBeNull();
+    });
+
+    it("getBlob 都回檔名；CORS 冇開放 header 時係 null", async () => {
+      fetchImpl.mockResolvedValue(blobResponse(new Blob(["x"]), { headers: { "content-type": "text/csv" } }));
+      const client = new HttpClient({ fetchImpl, getToken: () => null });
+      expect((await client.getBlob("/api/v1/supplier-imports/template")).fileName).toBeNull();
     });
   });
 

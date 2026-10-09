@@ -73,3 +73,40 @@ export function buildSupplierImportTemplate() {
  * 拆開。所以兩者都強制加引號。T46 嘅結果檔都要用呢組 option。
  */
 export const SUPPLIER_CSV_STRINGIFY_OPTIONS = Object.freeze({ bom: true, record_delimiter: "windows", quoted_match: /[\r\n]/u });
+
+/** 結果 CSV（T46；HD-063 3A）：只講每列發生咗乜事，唔重覆 payload。 */
+export const SUPPLIER_IMPORT_RESULT_COLUMNS = Object.freeze([
+  "rowNumber", "operation", "outcome", "supplierCode", "appliedSupplierId", "errorCodes", "errorMessages", "warningCodes"
+]);
+
+/**
+ * 試算表公式注入（設計 §6.9）：以 `=`、`+`、`-`、`@`、Tab 或換行開頭嘅 cell 會被試算表當公式，
+ * 前面加 `'` 令佢變返文字。全形嘅 `＝＋－＠` 都計（OWASP CSV Injection；REV-073 L-1）。
+ */
+// Guard 會喺「零個或以上 `'`，跟住公式字元」前面加一個 `'`；unguard 只會喺「一個或以上 `'`，跟住公式字元」拎走一個。
+// 咁兩者就係真正嘅反函數：本身已經係 `'=…` 嘅值會變 `''=…`，匯返入又變返 `'=…`（REV-075 L-1）。
+const FORMULA_LEAD = /^'*[=+\-@\t\r\n＝＋－＠]/u;
+const GUARDED_FORMULA_LEAD = /^'+[=+\-@\t\r\n＝＋－＠]/u;
+
+export function guardSpreadsheetCell(value) {
+  const text = value === null || value === undefined ? "" : String(value);
+  return FORMULA_LEAD.test(text) ? `'${text}` : text;
+}
+
+/**
+ * `guardSpreadsheetCell` 嘅相反，匯入時用（HD-068 A）：`'` 後面係會觸發公式嘅字元先拎走，所以匯出（T47）嘅檔
+ * 可以原封不動匯返入，`+852 …` 電話唔會變成 `'+852 …`。其他以 `'` 開頭嘅值照原樣保留。
+ */
+export function unguardSpreadsheetCell(text) {
+  return GUARDED_FORMULA_LEAD.test(text) ? text.slice(1) : text;
+}
+
+/** `rows`：`{ rowNumber, operation, status, supplierCode, appliedSupplierId, errors, warnings }`，已按行號排好。 */
+export function buildSupplierImportResult(rows) {
+  const join = (issues, key) => (issues ?? []).map((issue) => issue[key]).join(" | ");
+  const records = rows.map((row) => [
+    row.rowNumber, row.operation, row.status, row.supplierCode, row.appliedSupplierId ?? "",
+    join(row.errors, "code"), join(row.errors, "message"), join(row.warnings, "code")
+  ].map(guardSpreadsheetCell));
+  return stringify([SUPPLIER_IMPORT_RESULT_COLUMNS, ...records], SUPPLIER_CSV_STRINGIFY_OPTIONS);
+}

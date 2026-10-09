@@ -44,7 +44,8 @@ function scripted(rowsLeft, { onRow = () => {} } = {}) {
       rowsLeft -= 1;
       return { status: "applied" };
     },
-    async finalizeExecution() { calls.push("finalize"); return { status: "completed", applied: 2, failed: 0, skipped: 0 }; }
+    async finalizeExecution() { calls.push("finalize"); return { status: "completed", applied: 2, failed: 0, skipped: 0 }; },
+    async releaseExecutionLease() { calls.push("release"); return true; }
   };
 }
 
@@ -83,7 +84,7 @@ test("T45: a job whose confirmer lost access stops at once and reports failed", 
     return { rowNumber: null, status: "revoked", appliedSupplierId: null };
   };
   const result = await instance.runExecution(new AbortController().signal);
-  assert.deepEqual(instance.importService.calls, ["claim", "row"], "no finalize: the job is already failed");
+  assert.deepEqual(instance.importService.calls, ["claim", "row", "release"], "no finalize: the job is already failed (the release is a no-op)");
   assert.deepEqual(result, { claimed: true, jobId: 7, applied: 0, failed: 0, status: "failed" });
 });
 
@@ -91,7 +92,7 @@ test("the worker processes rows in order until none are left, then finalizes", a
   const { instance } = worker();
   instance.importService = scripted(2);
   const result = await instance.runExecution(new AbortController().signal);
-  assert.deepEqual(instance.importService.calls, ["claim", "row", "row", "row", "finalize"]);
+  assert.deepEqual(instance.importService.calls, ["claim", "row", "row", "row", "finalize", "release"]);
   assert.deepEqual(result, { claimed: true, jobId: 7, applied: 2, failed: 0, status: "completed" });
 });
 
@@ -100,13 +101,14 @@ test("abort or shutdown stops the worker between rows and it claims nothing new"
   const { instance } = worker();
   instance.importService = scripted(5, { onRow: () => aborting.abort() });
   const stopped = await instance.runExecution(aborting.signal);
-  assert.deepEqual(instance.importService.calls, ["claim", "row"], "one row, then it stops; the lease lets another worker resume");
+  assert.deepEqual(instance.importService.calls, ["claim", "row", "release"],
+    "one row, then it stops and releases its lease, so the next run or another worker resumes at once (HD-075)");
   assert.equal(stopped.status, "running");
 
   const second = worker();
   second.instance.importService = scripted(5, { onRow: () => { void second.instance.shutdown(); } });
   await second.instance.runExecution(new AbortController().signal);
-  assert.deepEqual(second.instance.importService.calls, ["claim", "row"]);
+  assert.deepEqual(second.instance.importService.calls, ["claim", "row", "release"]);
   assert.deepEqual(await second.instance.runExecution(new AbortController().signal), { claimed: false }, "no new claim after shutdown");
 });
 
@@ -373,4 +375,57 @@ test("precheck claims nothing without a root, after shutdown or when aborted", a
   await instance.shutdown();
   assert.deepEqual(await instance.runPrecheck(new AbortController().signal), { claimed: false });
   assert.deepEqual(none.instance.importService.calls.concat(instance.importService.calls), []);
+});
+
+test("a row that throws still releases the lease, and the error is not swallowed (REV-078 L-2)", async () => {
+  const { instance } = worker();
+  const service = scripted(5);
+  service.processNextRow = async () => { service.calls.push("row"); throw Object.assign(new Error("lock wait"), { code: "DATABASE_QUERY_TIMEOUT" }); };
+  instance.importService = service;
+  await assert.rejects(instance.runExecution(new AbortController().signal), /lock wait/u);
+  assert.deepEqual(service.calls, ["claim", "row", "release"]);
+});
+
+test("a run cut off by its timeout logs why it paused, since the scheduler records it as a success (REV-078 L-2)", async () => {
+  const events = [];
+  const logger = { info() {}, warn: (event, _message, data) => events.push([event, data.reason]) };
+  const aborting = new AbortController();
+  const timedOut = worker({ logger });
+  timedOut.instance.importService = scripted(5, { onRow: () => aborting.abort() });
+  await timedOut.instance.runExecution(aborting.signal);
+  const stopping = worker({ logger });
+  stopping.instance.importService = scripted(5, { onRow: () => { void stopping.instance.shutdown(); } });
+  await stopping.instance.runExecution(new AbortController().signal);
+  assert.deepEqual(events, [["supplier.import.paused", "timeout"], ["supplier.import.paused", "shutdown"]]);
+});
+
+test("a real shutdown (scheduler stopped, then the signal aborted) is logged as shutdown, not timeout (REV-079 L-A)", async () => {
+  const events = [];
+  const logger = { info() {}, warn: (event, _message, data) => events.push(data.reason) };
+  const aborting = new AbortController();
+  const { instance } = worker({ logger });
+  // SchedulerService.stop()：先設 stopped，再 abort 所有工作；worker 嘅 shutdown() 要之後先叫。
+  instance.importService = scripted(5, { onRow: () => { instance.scheduler.stopped = true; aborting.abort(); } });
+  await instance.runExecution(aborting.signal);
+  assert.deepEqual(events, ["shutdown"]);
+});
+
+test("a failing lease release is logged and never replaces the run's own outcome (REV-079 I-B)", async () => {
+  const errors = [];
+  const logger = { info() {}, warn() {}, error: (event, _message, data) => errors.push([event, data.code]) };
+  const failingRelease = async function release() { this.calls.push("release"); throw Object.assign(new Error("db down"), { code: "DB_DOWN" }); };
+
+  const thrown = worker({ logger });
+  const throwing = scripted(5);
+  throwing.processNextRow = async () => { throw Object.assign(new Error("lock wait"), { code: "DATABASE_QUERY_TIMEOUT" }); };
+  throwing.releaseExecutionLease = failingRelease;
+  thrown.instance.importService = throwing;
+  await assert.rejects(thrown.instance.runExecution(new AbortController().signal), /lock wait/u, "the original error survives");
+
+  const finished = worker({ logger });
+  const completing = scripted(1);
+  completing.releaseExecutionLease = failingRelease;
+  finished.instance.importService = completing;
+  assert.equal((await finished.instance.runExecution(new AbortController().signal)).status, "completed", "a completed run stays completed");
+  assert.deepEqual(errors, [["supplier.import.lease_release_failed", "DB_DOWN"], ["supplier.import.lease_release_failed", "DB_DOWN"]]);
 });

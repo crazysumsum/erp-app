@@ -717,6 +717,8 @@ test("a custom type registered in the service is accepted end to end", async (t)
 
 // Server and client are separate processes so generated client chunks do not affect server measurements.
 // Sam approved per-request sampled 50 MiB increases: heap 16 MiB, external 32 MiB, RSS 64 MiB.
+// Each sample forces a GC first, so the peaks are retained memory; without it they measured how late V8
+// collected the 64 KiB socket-read buffers already written to disk, which reached 39 MiB on CI runners.
 test("TC-004 bounds warmed 50 MiB disk HTTP upload memory and records the 5 MiB baseline", { timeout: 30000 }, async (t) => {
   await mkdir(fileURLToPath(new URL("../storage/", import.meta.url)), { recursive: true });
   const root = await mkdtemp(fileURLToPath(new URL("../storage/disk-memory-", import.meta.url)));
@@ -750,7 +752,7 @@ test("TC-004 bounds warmed 50 MiB disk HTTP upload memory and records the 5 MiB 
       requestLogger:(req,res,next)=>{
         global.gc();
         req.memoryBaseline=process.memoryUsage(); req.memoryPeak={...req.memoryBaseline};
-        req.sampleMemory=()=>{const usage=process.memoryUsage();for(const key of Object.keys(usage))req.memoryPeak[key]=Math.max(req.memoryPeak[key],usage[key]);};
+        req.sampleMemory=()=>{global.gc();const usage=process.memoryUsage();for(const key of Object.keys(usage))req.memoryPeak[key]=Math.max(req.memoryPeak[key],usage[key]);};
         const timer=setInterval(req.sampleMemory,1);
         res.once("finish",()=>clearInterval(timer));res.once("close",()=>clearInterval(timer));next();
       },serviceOptions:{mysqldatabase:fakeDatabaseOptions()}});

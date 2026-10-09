@@ -79,6 +79,23 @@ function uomRow(overrides = {}) {
 const saleSku = () => skuRow({ sku_version: 3, item_version: 2, suggested_price_amount: "12.3400" });
 const saleUom = (overrides = {}) => uomRow({ id: 91, uom_name: "Each", uom_status: "active", uom_version: 4, version: 5, ...overrides });
 
+test("Sales search owns bounded count/page qualification and exact price projection with a constant query budget", async () => {
+  const database = fakeDatabase([[{ total: 5 }], [saleSku()], [saleUom()]]), { service } = createService({ database });
+  const result = await service.searchForSale({ q: "SKU_%", barcode: "1234-56 78", page: 2, pageSize: 1, atMs: NOW_MS });
+  assert.equal(result.total, 5);assert.equal(result.page, 2);assert.equal(result.pageSize, 1);
+  assert.equal(result.items[0].suggestedPrice.amount, "12.3400");assert.equal(result.items[0].uoms[0].skuUomId, 91);
+  assert.equal(database.calls.length, 3);
+  assert.deepEqual(database.calls[0].params, [NOW_MS, NOW_MS, "SKU!_!%%", "SKU!_!%%", "SKU!_!%%", "12345678"]);
+});
+test("Sales search rejects unsafe query bounds before SQL and fails closed on unusable provider rows", async () => {
+  const empty = fakeDatabase([]), { service } = createService({ database: empty });
+  for (const input of [{ page: 0 }, { pageSize: 101 }, { q: "\n" }, { barcode: [] }, { page: Number.MAX_SAFE_INTEGER, pageSize: 100 }])
+    await assert.rejects(() => service.searchForSale(input), TypeError);
+  assert.equal(empty.calls.length, 0);
+  const invalid = createService({ database: fakeDatabase([[{ total: 1 }], [skuRow({ sku_status: "inactive" })], [saleUom()]]) }).service;
+  await assert.rejects(() => invalid.searchForSale({}), error => error.code === "SKU_NOT_USABLE" && error.details.purpose === "new_sale" && error.details.reasons.includes("STATUS_NOT_ACTIVE"));
+});
+
 test("Sales named lookup includes mapping identity, versions and exact stored price with a constant query budget", async () => {
   const database = fakeDatabase([[saleSku()], [saleUom()]]);
   const { service } = createService({ database });
