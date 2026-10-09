@@ -18,7 +18,7 @@ The existing catalogue already contains detailed P0/P1 cases with preconditions,
 | TC-001 | Migration/DB / P0 | NFR-007, NFR-008, NFR-009, NFR-010; SEC-002, SEC-008; DES-007, DES-019 | TASK-001, TASK-002, TASK-004, TASK-008, TASK-009, TASK-027, TASK-044 | Fresh and upgrade MySQL; execute legacy MIG-001–MIG-008 | Ordered/idempotent migrations, constraints and permission seeds are correct; upgrade rerun is safe | disposable DB, schema/ledger/log evidence | YES | PLANNED |
 | TC-002 | API/DB/UI / P1 | FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013, FR-014, FR-015; NFR-002, NFR-003, NFR-004; DES-012, DES-014, DES-015 | TASK-012, TASK-013, TASK-017, TASK-037, TASK-039 | 100k-SKU fixture and authorized/unauthorized actors; legacy LIST-001–LIST-010 | Stable search/filter/page/detail/audit behavior; full projections; correct empty/error/403 states | fixture teardown; response, SQL, screenshot, console/network evidence | PARTIAL | PLANNED |
 | TC-003 | API/transaction / P0 | FR-016, FR-017, FR-018, FR-019, FR-020, FR-021, FR-022, FR-023, FR-024; SEC-001, SEC-006, SEC-008; NFR-006; DES-003, DES-004, DES-008 | TASK-014, TASK-015, TASK-023, TASK-024, TASK-037, TASK-038 | Standard/Variant fixtures; duplicate/race/failure injection; legacy CREATE-001–CREATE-014 | Atomic, idempotent, authorized creation with valid variants and no orphan/audit gap | transaction/DB/audit diff and UI evidence; remove fixtures | PARTIAL | PLANNED |
-| TC-004 | API/concurrency / P0 | FR-025, FR-026, FR-027, FR-028, FR-029, FR-030, FR-031; SEC-001, SEC-006, SEC-008; NFR-006; DES-003, DES-008, DES-020 | TASK-016, TASK-017, TASK-043 | stale versions, cross-owned children, referenced/unreferenced SKU; legacy EDIT-001–EDIT-009 | Optimistic locking, strong auth, full validation, reference guards and audit atomicity hold | DB/audit snapshots and race logs; reset fixtures | PARTIAL | PLANNED |
+| TC-004 | API/concurrency / P0 | FR-025, FR-026, FR-027, FR-028, FR-029, FR-030, FR-031, FR-043; SEC-001, SEC-006, SEC-008; NFR-006; DES-003, DES-008, DES-020 | TASK-016, TASK-017, TASK-043 | stale versions, cross-owned children, referenced/unreferenced SKU; legacy EDIT-001–EDIT-009 and UOM-008 | Optimistic locking, strong auth, full validation, reference guards with actual dependency types and audit atomicity hold | DB/audit snapshots and race logs; reset fixtures | PARTIAL | PLANNED |
 | TC-005 | Lifecycle/DB / P0 | FR-032, FR-033, FR-034, FR-035, FR-036, FR-037, FR-038; SEC-001, SEC-006, SEC-008; DES-003, DES-009, DES-020 | TASK-018, TASK-019, TASK-020, TASK-040, TASK-043 | all statuses, child mixes, references and races; legacy LIFE-001–LIFE-013 | Legal transitions are atomic; destructive actions preserve references/history and stable public errors | DB/audit/reference evidence and cleanup | PARTIAL | PLANNED |
 | TC-006 | Validation/DB/integration / P0 | FR-039, FR-040, FR-041, FR-042, FR-043; SEC-008; DES-005, DES-010 | TASK-009, TASK-010, TASK-021 | UOM/barcode boundaries, duplicate and concurrency fixtures; legacy UOM-001–UOM-012 | Integer conversion, ownership, primary/default rules, GTIN normalization and lookup are correct | SQL/API/lookup evidence; remove fixtures | YES | PLANNED |
 | TC-007 | Domain/API / P0 | FR-044, FR-045, FR-046, FR-047, FR-048, FR-049; SEC-007, SEC-008; DES-004, DES-006, DES-009 | TASK-005, TASK-006, TASK-010, TASK-023, TASK-024 | price/tracking/catalog/attribute boundaries; legacy PRICE/TRACK/CAT cases | HKD precision, tracking invariants, typed attributes and Catalog guards behave consistently | request/DB/audit evidence; reset Catalog fixtures | YES | PLANNED |
@@ -420,7 +420,7 @@ These mapping and runner changes alter the PLAN baseline. Their local developer 
 | OPEN-003 | 業務資料 | 初始Category、UOM、Attribute及Internal Barcode規則樣本尚待業務提供 | 可用QA fixture測技術規則，但正式UAT與catalog smoke要待核准樣本。 |
 | OPEN-004 | 合規 | 7年主資料/audit與1年import file期限仍需上線前合規核對 | 未核對前可測現行規則，不可作正式retention sign-off；若改期須更新需求、cleanup及案例。 |
 | OPEN-005 | 下游依賴 | Inventory、Purchasing、Sales、Pricing、Receiving可能尚未實作 | 先執行ItemLookup contract tests；真正交易snapshot、提交時重驗及效期override在相應模組可用後完成，未執行狀態為BLOCKED而非PASS。 |
-| OPEN-006 | Supplier關係 | item_supplier_refs明確延後，現階段不得保存無FK supplier_id | FR-UOM-005涉及supplier relation的分支只能在正式Supplier FK設計上線後執行；目前先驗Barcode/transaction引用及schema absence。 |
+| OPEN-006 | Supplier關係 | 由 Supplier-owned `supplier_sku_refs` 提供對照；Item 不建 `item_supplier_refs`，不得保存無 FK supplier_id | FR-UOM-005（canonical FR-043）的 Supplier 分支在 Supplier TASK-038 merge 並套用核准 migration 後執行：UOM-008／TC-004 驗證移除引用換算回 409 與 `referenceTypes`、rollback／無成功 audit；LIFE-007～LIFE-009／TC-005 驗證 referenced Draft delete 公開錯誤；EDIT-006 驗證歷史交易的 critical-change guard；再驗 mapping ID 穩定、composite ownership 與併發建立對照／移除換算。已完成 GR 首次延遲 projection 在 SKU 停用／有效期結束後仍記錄歷史、重送冪等且不授予新採購資格；手動新建／改綁仍拒絕該 SKU。未具備真表前維持 BLOCKED。 |
 | OPEN-007 | 非功能門檻 | 除明確p95與10分鐘外，允許error rate、資源上限、RPO/RTO沿用ERP政策但數值未在本文件給出 | Release test開始前記錄組織級門檻；不得由測試人員臨場自訂PASS線。 |
 
 ## 10. 需求覆蓋檢查
@@ -548,13 +548,13 @@ transaction/DB/audit diff and UI evidence; remove fixtures
 ## TC-004 — API/concurrency / P0
 
 ### Preconditions and data
-stale versions, cross-owned children, referenced/unreferenced SKU; legacy EDIT-001–EDIT-009
+stale versions, cross-owned children, referenced/unreferenced SKU; legacy EDIT-001–EDIT-009 and UOM-008. Supplier cases use real Supplier TASK-038 tables after migration; the current Inventory/Sales consumers are independently executable.
 
 ### Steps
 Execute the detailed source cases referenced by the `TC-004` row using the declared suite and controlled failure/negative paths; record request, persisted state, audit and browser evidence where applicable.
 
 ### Expected result
-Optimistic locking, strong auth, full validation, reference guards and audit atomicity hold
+Optimistic locking, strong auth, full validation, reference guards with actual dependency types and audit atomicity hold. UOM removal returns public 409, preserves mappings/barcodes/version/audit on failure and cannot bypass a concurrent reference; retained mappings preserve identity.
 
 ### Acceptance criteria
 Every required source case passes with the expected observable and persisted result; missing tools, skipped mandatory cases, stale reports or baseline drift block acceptance.
