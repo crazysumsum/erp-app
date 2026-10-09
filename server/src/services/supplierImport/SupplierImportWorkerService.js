@@ -30,8 +30,8 @@ const SOURCE_ERRORS = Object.freeze({
  * 將 scheduler 接到 Supplier import 執行（T42；設計 §2 「Worker adapter：不放業務規則」）。
  *
  * - 只領取 `queued` 或 lease 過期嘅 job，按 row_number 逐列做（規則喺 SupplierImportService）。
- * - 收到 abort 或者 service 開始 shutdown，就喺兩列之間停低，唔再領新 job。停低嘅 job 保留
- *   lease，過期之後由下一個 worker 接手續做（resume）。
+ * - 收到 abort 或者 service 開始 shutdown，就喺兩列之間停低，唔再領新 job，並即刻放返 lease（HD-075），
+ *   下一輪或者另一個 worker 即刻續做（resume）。Process 死咗（冇機會放）先要等 lease 過期。
  * - Precheck（T43）：領取 `uploaded` 或 lease 過期嘅 `validating` job，讀來源檔、逐列預檢、寫 rows。
  * - 未設定 import root 就乜都唔做，開機寫一條 warning：import 未部署，upload 回 503（HD-050）。
  * - 執行（T45）：`applyRow` 用 `createSupplierImportApplier`，經 UI／API 共用嘅 connection-taking helper
@@ -180,22 +180,37 @@ export class SupplierImportWorkerService extends BaseService {
       { jobId: job.id, resumed: job.resumed });
     let applied = 0;
     let failed = 0;
-    while (this.#mayWork(signal)) {
-      const row = await this.importService.processNextRow({
-        jobId: job.id, leaseOwner: this.leaseOwner, leaseDurationMs: LEASE_MS, applyRow: this.applyRow
+    try {
+      while (this.#mayWork(signal)) {
+        const row = await this.importService.processNextRow({
+          jobId: job.id, leaseOwner: this.leaseOwner, leaseDurationMs: LEASE_MS, applyRow: this.applyRow
+        });
+        if (!row) {
+          const result = await this.importService.finalizeExecution({ jobId: job.id, leaseOwner: this.leaseOwner });
+          void this.logger?.info?.("supplier.import.completed", "Supplier import completed",
+            { jobId: job.id, status: result.status, applied: result.applied, failed: result.failed, skipped: result.skipped });
+          return { claimed: true, jobId: job.id, applied, failed, status: result.status };
+        }
+        if (row.status === "revoked") {
+          return { claimed: true, jobId: job.id, applied, failed, status: "failed" };
+        }
+        if (row.status === "applied") applied += 1;
+        else if (row.status === "failed") failed += 1;
+      }
+      // 喺兩列之間停低。Scheduler 會將呢輪記成功（佢冇拋錯），所以逾時要自己記一條（REV-078 L-2）。關機時 scheduler
+      // 先設 `stopped` 再 abort 所有工作，之後先輪到呢個 service 嘅 shutdown()，所以 signal 一定已經 abort：
+      // 要睇 scheduler.stopped 先分得到（REV-079 L-A）。
+      const shuttingDown = this.scheduler?.stopped === true || this.stopping;
+      void this.logger?.warn?.("supplier.import.paused", "Supplier import execution stopped between rows and will resume",
+        { jobId: job.id, reason: shuttingDown ? "shutdown" : "timeout", applied, failed });
+      return { claimed: true, jobId: job.id, applied, failed, status: "running" };
+    } finally {
+      // 點樣停都放返 lease（HD-075；REV-078 L-2），下一輪或者另一個實例即刻續做。完成咗、失敗咗或者 lease
+      // 已經唔係自己嘅 job 唔會受影響（SQL 只放自己揸住、仲 running 嘅）。
+      await this.importService.releaseExecutionLease({ jobId: job.id, leaseOwner: this.leaseOwner }).catch((error) => {
+        void this.logger?.error?.("supplier.import.lease_release_failed", "Supplier import lease could not be released",
+          { jobId: job.id, code: error?.code ?? null });
       });
-      if (!row) {
-        const result = await this.importService.finalizeExecution({ jobId: job.id, leaseOwner: this.leaseOwner });
-        void this.logger?.info?.("supplier.import.completed", "Supplier import completed",
-          { jobId: job.id, status: result.status, applied: result.applied, failed: result.failed, skipped: result.skipped });
-        return { claimed: true, jobId: job.id, applied, failed, status: result.status };
-      }
-      if (row.status === "revoked") {
-        return { claimed: true, jobId: job.id, applied, failed, status: "failed" };
-      }
-      if (row.status === "applied") applied += 1;
-      else if (row.status === "failed") failed += 1;
     }
-    return { claimed: true, jobId: job.id, applied, failed, status: "running" };
   }
 }

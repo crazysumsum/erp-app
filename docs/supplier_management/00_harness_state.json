@@ -1,20 +1,20 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 290,
+  "revision": 299,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-004",
-  "current_task": "TASK-048",
+  "current_task": "TASK-049",
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
     "code_commit": "5b8aa9bbcf5217ab3a30f722ff241d167fa402f6",
     "source_fingerprint": "cd70f899bfaca539353988b320210dd24b2c3b8958b249224ad8dd55f701dc97",
-    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/t48-close",
-    "default_commit": "2afef5cdb271dbfa3ccefd913f7042c52c7be92b",
+    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t49",
+    "default_commit": "525785807a474d1fe6b286ac81ded6203c209d6e",
     "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
   },
   "runtime": {
@@ -76,7 +76,7 @@
     "TASK-046": "DONE",
     "TASK-047": "DONE",
     "TASK-048": "DONE",
-    "TASK-049": "PENDING",
+    "TASK-049": "IN_PROGRESS",
     "TASK-050": "PENDING",
     "TASK-051": "PENDING"
   },
@@ -1862,6 +1862,66 @@
       "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 1e1ad49e8b9e050e3c38c5256458cb4e50f5d36c (PR #189)",
       "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
       "source_ref": "docs/supplier_management/implementation/80_rev_077_independent_review.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-078",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-049)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 48c2fd0e19b54f6f7854448d31ec2189114ce992 (PR #192)",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/81_rev_078_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-079",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-049 REV-078 remediation)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 07bc3cc0d6f4f7335f0f521ce85b939d7380caf6 (PR #192)",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/82_rev_079_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-080",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-049 REV-079 remediation)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 2afba993edb5f00c419fdd1d4307b951c974f600 (PR #192)",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/83_rev_080_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-081",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-049 REV-080 remediation)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 3b0ea454d57aa7dc4870c74477f02e14062fdbd4 (PR #192)",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/84_rev_081_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-082",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-049 REV-081 remediation)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing a8f2390889014243d2368a1e1bde88b16ada1d60 (PR #192), scope 3b0ea45..a8f2390 (HD-079 a)",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/85_rev_082_independent_review.md",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -4648,6 +4708,92 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-07: '全部按建議'."
+    },
+    {
+      "id": "HD-074",
+      "impact": "MAJOR",
+      "question": "TASK-049 acceptance and capacity. (1) Benchmark entry point: (A) node scripts/benchmarkSupplierImport.js --rows=10000 --output … like runBusinessMasterPerformanceAcceptance.js, no server/package.json change, the evidence records the exact command; (B) add npm script perf:supplier-import (approval-required path). (2) Export memory (REV-075 L-4: ~530 MB RSS for one 69 MB maximum-length export, 1.35 GB for six concurrent): (A) accept and measure realistic data; (B) at most 2 concurrent exports per process, otherwise 429 SUPPLIER_EXPORT_BUSY; (C) stream the CSV. (3) Crash at scale: (A) SIGKILL the worker once mid-way through the 10,000-row run and require exactly 10,000 applied and no duplicate Suppliers after takeover; (B) rely on T45's small-scale crash test. Defaults: design environment = this Mac with a throwaway MySQL and the production worker configuration, machine and versions recorded; measure precheck+execution time (NFR-004 10 min), RSS and DB pool peak, the 10,000-row result download and export; one end-to-end mixed integration test; leak scan; a real-browser smoke; docs/supplier_management/bulk_operations.md.",
+      "affected_ids": [
+        "TASK-049",
+        "TASK-047",
+        "TASK-046",
+        "REV-075"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-08: '全部按建議' - 1A, 2B, 3A."
+    },
+    {
+      "id": "HD-075",
+      "impact": "MAJOR",
+      "question": "TASK-049 capacity found NFR-004 failing (10,000 rows: 8,727 applied in exactly 600 s, then stalled). Cause 1: execution calls createSupplierInTransaction/updateSupplierInTransaction, which run the similar-name gram search (duplicates.find) on every row and the import discards the result, contrary to HD-052; its cost grows with the Supplier count (784 of ~820 s of SQL time, ~87,000 rows examined per call). Trial without it: 4,000 similar-name rows 140 s -> 19 s, 3-4 ms per row and flat. Fix: a findDuplicates option, false on the import path; UI unchanged. Cause 2: the execution run times out at 600 s (LEASE_MS - 60 s) but its lease is 660 s, so even the same worker cannot reclaim the job until the lease expires: an 11-minute stall after every 10 minutes. Fix: release the lease (lease_until NULL) when the worker stops between rows (timeout or shutdown). Noted, out of scope: UI create/update runs the same search, whose cost grows with Supplier count.",
+      "affected_ids": [
+        "TASK-049",
+        "TASK-045",
+        "HD-052",
+        "NFR-004"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-08: '全部按建議'."
+    },
+    {
+      "id": "HD-076",
+      "impact": "MAJOR",
+      "question": "REV-078 (TASK-049, changes requested): M-1 the benchmark has no throwaway-DB guard and its real worker processes other jobs (falls back to erp_dev): require all DB_* explicitly, refuse when other import jobs are pending, pass DB_* to the child; L-1 cleanup only on success: move to finally; L-2 docs claim the execute timeout is recorded as timed out and that only a dead process waits for the lease: correct both, release the lease in finally, log supplier.import.paused with the reason; L-3 the export gate frees its slot before the response is sent: document; L-4 AC 1 wording; I-1 test the running condition of the release; I-2 misplaced doc comment; I-3 release input checks; I-4 record durability settings, explain the metrics, regenerate evidence.",
+      "affected_ids": [
+        "TASK-049",
+        "REV-078",
+        "HD-074",
+        "HD-075"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-08: '全部按建議'."
+    },
+    {
+      "id": "HD-077",
+      "impact": "MINOR",
+      "question": "REV-079 (TASK-049, small changes requested): L-A a graceful shutdown is logged as reason timeout (the scheduler aborts before the worker's shutdown): use scheduler.stopped or stopping; L-B the benchmark guard only checks at start: require --database=<DB_NAME>, report ok:false with any other job changed during the run, document throwaway-only; I-A put the worker's logs in the temp dir; I-B tests for the pending-job guard and the release catch; I-C comment; I-E allow an empty DB_PASSWORD; I-D document; I-F CI flake re-run.",
+      "affected_ids": [
+        "TASK-049",
+        "REV-079",
+        "HD-076"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-08: '全部按建議'. I-A could not be done as suggested: the log directory resolves against the server root and only server/config/logging.js (approval-required) could redirect it; documented and raised."
+    },
+    {
+      "id": "HD-078",
+      "impact": "MINOR",
+      "question": "REV-080 (TASK-049, product code approvable; benchmark only): L-C the benchmark worker is a full node src/index.js and runs every module's jobs (a foreign Item import job was touched with ok:true): run the worker as the same script with --worker through createApplication with only the Supplier import jobs enabled; L-D interrupting the benchmark orphans the worker and skips cleanup: handle SIGINT/SIGTERM through the same finish path; I-G separate try for check and cleanup; I-B test uploaded too; I-H regenerate evidence with --database; I-I document the shutdown-timeout lease case.",
+      "affected_ids": [
+        "TASK-049",
+        "REV-080",
+        "HD-077"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-08: '全部按建議'."
+    },
+    {
+      "id": "HD-079",
+      "impact": "MINOR",
+      "question": "REV-081 (TASK-049, product code approvable; benchmark tooling and tests only): N-1 after a signal the main flow keeps running beside finish() (orphan worker-b, ok:true with interrupted, verification against data being cleaned up); I-2 SIGKILL of the benchmark orphans its worker: tie the worker to the parent over IPC; I-1 repeat signals: process.on and ignore repeats; N-2 the pending-guard test passes with the guard broken in a full-file run: clear leftovers, expect exactly one, run mutants on full files; I-3 docs and worker string; I-4/I-7 record host, port and socket; I-5 check --output at start; I-6 pin authorization before the export gate. Then (a) one last review limited to this round's changes, or (b) self-verify and wait for the merge word.",
+      "affected_ids": [
+        "TASK-049",
+        "REV-081",
+        "HD-078"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-08: '全部按建議, a'."
+    },
+    {
+      "id": "HD-080",
+      "impact": "MINOR",
+      "question": "REV-082 APPROVED TASK-049 with one Low (the TASK-044 'withdrawn permission' test flakes when the 20-per-second request limiter answers its upload with 429; httpUpload does not retry) and Info notes (follow-up wording, a SIGKILLed run's job blocks the next run, the guard test comment, the quiesce comment). (A) fix these in tests and docs before the merge without another review, then merge when CI passes; (B) merge as is.",
+      "affected_ids": [
+        "TASK-049",
+        "REV-082"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-09: 'A，CI過就merge'."
     }
   ],
   "external_actions": [
@@ -5724,5 +5870,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-048 is DONE (PR #189 merged at 2afef5c). HD-043 and HD-044 closed. PHASE-004 continues; re-derive the next ready task from 08_traceability.json against this ledger before starting (TASK-049 should now be ready: TASK-045..048 are DONE; TASK-038 waits on the Item owner's approval of the supplier_sku_refs rename). Open carry-forward: HD-057 (T51) and the T49 obligations in implementation/62_task_041_carry_forward.md (result download and export at 10,000 rows, REV-075 L-4)."
+  "next_safe_action": "TASK-049: HD-080 fixes pushed (httpUpload retries on 429; docs and comments). Merge PR #192 once CI is green on the head and main is unchanged (HD-080: 'A，CI過就merge'), then clean up and close TASK-049 in a ledger PR."
 }

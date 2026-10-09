@@ -62,3 +62,44 @@ test("the audit names the actor, the filters and the count, and a failed audit m
   assert.equal(result.fileName, "suppliers-20261006T070809Z.csv");
   await assert.rejects(fakes({ rows: [supplier(1)], auditFails: true }).service.exportCsv({ ...actor }), /audit down/u);
 });
+
+test("at most two exports run at once per process; a third is a 429, and a slot frees even after a failure (HD-074 2B)", async () => {
+  const gate = { active: 0 };
+  const releases = [];
+  const database = {
+    query: () => new Promise((resolve) => { releases.push(() => resolve([[supplier(1)]])); }),
+    async withTransaction(work) { return work({ execute() {} }); }
+  };
+  const service = new SupplierExportService({
+    database, time: { nowMs: () => 0 }, gate, authorize: async () => ({ username: "exporter" }),
+    businessMaster: { async getPaymentTermHistory() { return null; } }, audit: { async record() {} }
+  });
+  const first = service.exportCsv({ ...actor });
+  const second = service.exportCsv({ ...actor });
+  await new Promise(setImmediate);
+  // 第三個如果被放行就會等住條 query；限時一秒，令測試直接失敗而唔係卡住。
+  const third = Promise.race([service.exportCsv({ ...actor }),
+    new Promise((_, reject) => { setTimeout(() => reject(new Error("a third export was let through")), 1000).unref(); })]);
+  await assert.rejects(third, (error) => error.code === "SUPPLIER_EXPORT_BUSY" && error.statusCode === 429);
+  assert.equal(gate.active, 2);
+  releases.splice(0).forEach((release) => release());
+  await Promise.all([first, second]);
+  assert.equal(gate.active, 0);
+
+  const failing = new SupplierExportService({
+    database: { async query() { throw new Error("db down"); } }, time: { nowMs: () => 0 }, gate,
+    authorize: async () => ({ username: "exporter" }), businessMaster: {}, audit: { async record() {} }
+  });
+  await assert.rejects(failing.exportCsv({ ...actor }), /db down/u);
+  assert.equal(gate.active, 0, "a failed export frees its slot");
+  await assert.rejects(new SupplierExportService({ database, time: { nowMs: () => 0 }, gate,
+    authorize: async () => { throw new Error("stale"); }, businessMaster: {} }).exportCsv({ ...actor }), /stale/u);
+  assert.equal(gate.active, 0, "a refused caller never takes a slot");
+
+  // 權限先於上限：上限滿咗，冇權限嘅人都係收到權限錯誤，唔係 429（REV-081 I-6）。
+  const full = { active: 2 };
+  await assert.rejects(new SupplierExportService({ database, time: { nowMs: () => 0 }, gate: full,
+    authorize: async () => { throw Object.assign(new Error("forbidden"), { statusCode: 403 }); }, businessMaster: {} })
+    .exportCsv({ ...actor }), (error) => error.statusCode === 403);
+  assert.equal(full.active, 2);
+});

@@ -87,7 +87,8 @@ async function seedJob({ status = "queued", rows = ["valid", "valid"], leaseOwne
 
 /**
  * 領取係全域嘅：開始之前收埋其他測試留低未完成嘅 job（queued → cancelled、running → failed，
- * 都係狀態機容許嘅）。只有呢個檔案用呢兩張表 —— 唔好喺有人做緊人手驗證嘅 schema 上面跑。
+ * 都係狀態機容許嘅）。佢郁成個 schema 嘅 job：supplierImport 同 retention 測試都用呢兩張表，所以只可以逐個檔案
+ * 跑（CI 用 `--test-concurrency=1`；REV-082），亦唔好喺有人做緊人手驗證嘅 schema 上面跑。
  */
 async function quiesce() {
   await h.db.execute("UPDATE supplier_import_jobs SET status = 'cancelled' WHERE status = 'queued'");
@@ -499,4 +500,60 @@ integrationTest("TASK-045 (HD-060 4A): a deadlock, lock-wait or transaction time
   assert.deepEqual((await rows(jobId)).map((row) => row.errors[0].code),
     ["SUPPLIER_IMPORT_ROW_BUSY", "SUPPLIER_IMPORT_ROW_BUSY", "SUPPLIER_IMPORT_ROW_BUSY", "SUPPLIER_IMPORT_ROW_FAILED"],
     "only lock and timeout failures are marked retryable");
+});
+
+integrationTest("TASK-049 (HD-075): a worker that stops between rows releases its lease, so the job resumes at once without redoing a row", async () => {
+  clock += 1_000_000;
+  await quiesce();
+  const jobId = await seedJob({ rows: ["valid", "valid", "valid"] });
+  const first = service();
+  await first.claimForExecution({ leaseOwner: "worker-a", leaseDurationMs: 660_000 });
+  await first.processNextRow({ jobId, leaseOwner: "worker-a", leaseDurationMs: 660_000, applyRow: writeSupplier() });
+  // 逾時或者關機：喺兩列之間停低，放返 lease。
+  assert.equal(await first.releaseExecutionLease({ jobId, leaseOwner: "worker-a" }), true);
+  assert.equal(await service().releaseExecutionLease({ jobId, leaseOwner: "worker-x" }), false, "only the owner can release");
+
+  // 冇等 11 分鐘：同一刻另一個 worker（或者同一個嘅下一輪）就領到。
+  assert.deepEqual(await service().claimForExecution({ leaseOwner: "worker-b", leaseDurationMs: 660_000 }), { id: jobId, resumed: true });
+  let calls = 0;
+  const counting = async (connection, context) => { calls += 1; return writeSupplier()(connection, context); };
+  const next = await service().processNextRow({ jobId, leaseOwner: "worker-b", leaseDurationMs: 660_000, applyRow: counting });
+  assert.equal(next.rowNumber, 2, "row 1 is not redone");
+  await service().processNextRow({ jobId, leaseOwner: "worker-b", leaseDurationMs: 660_000, applyRow: counting });
+  assert.equal(await service().processNextRow({ jobId, leaseOwner: "worker-b", leaseDurationMs: 660_000, applyRow: counting }), null);
+  assert.equal(calls, 2);
+  assert.deepEqual([(await service().finalizeExecution({ jobId, leaseOwner: "worker-b" })).applied], [3]);
+  assert.equal(await first.releaseExecutionLease({ jobId, leaseOwner: "worker-b" }), false, "a finished job has no lease to release");
+
+  // 只放 running 嘅 job：一個 queued 但留低 lease 欄位嘅 job 唔郁（REV-078 I-1）。
+  const queued = await seedJob({ status: "queued", leaseOwner: "worker-q", leaseUntil: clock + 60_000 });
+  assert.equal(await service().releaseExecutionLease({ jobId: queued, leaseOwner: "worker-q" }), false);
+  const [[still]] = await h.db.query("SELECT lease_until FROM supplier_import_jobs WHERE id = ?", [queued]);
+  assert.equal(Number(still.lease_until), clock + 60_000);
+  await assert.rejects(() => service().releaseExecutionLease({ jobId: 0, leaseOwner: "worker-q" }), TypeError);
+  await assert.rejects(() => service().releaseExecutionLease({ jobId: queued, leaseOwner: " " }), TypeError);
+});
+
+integrationTest("TASK-049 (REV-078 M-1, REV-079 I-B): the capacity benchmark refuses to start while another import job is pending", async () => {
+  const { spawnSync } = await import("node:child_process");
+  clock += 1_000_000;
+  await quiesce();
+  // 其他測試留低嘅未完成 job（例如 ready）都收埋，咁擋住 benchmark 嘅就只會係下面嗰一個（REV-081 N-2）。
+  await h.db.execute(`UPDATE supplier_import_jobs SET status = 'cancelled'
+    WHERE status IN ('uploaded', 'validating', 'ready', 'ready_with_errors')`);
+  // 測兩種未完成狀態：uploaded 等預檢，queued 等執行（REV-080 m11）。其餘狀態只靠 guard 嘅狀態清單（REV-082）。
+  for (const status of ["uploaded", "queued"]) {
+    const pending = await seedJob({ status, rows: ["valid"] });
+    const output = path.join(os.tmpdir(), `bench-guard-${process.pid}-${status}.json`);
+    const run = spawnSync(process.execPath, ["scripts/benchmarkSupplierImport.js", `--database=${process.env.DB_NAME}`, "--rows=2",
+      "--output", output], { env: { ...process.env, DB_INTEGRATION_TESTS: "" }, encoding: "utf8" });
+    const report = JSON.parse(fs.readFileSync(output, "utf8"));
+    fs.rmSync(output, { force: true });
+    assert.equal(run.status, 1, status);
+    assert.match(report.error, /refusing to run: 1 other import job\(s\) are pending/u, status);
+    assert.deepEqual(report.cleanup, { suppliers: 0, job: null, user: null, role: null }, "nothing was created");
+    const [[row]] = await h.db.query("SELECT status, version FROM supplier_import_jobs WHERE id = ?", [pending]);
+    assert.deepEqual([row.status, Number(row.version)], [status, 1], "the pending job is untouched");
+    await h.db.execute("UPDATE supplier_import_jobs SET status = 'cancelled' WHERE id = ?", [pending]);
+  }
 });

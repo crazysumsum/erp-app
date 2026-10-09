@@ -267,7 +267,8 @@ export class SupplierAdminService {
    *
    * 回 `{ id, duplicateCandidates }`。
    */
-  async createSupplierInTransaction(connection, { actor, input, approvalRequired = this.approvalRequired, addChildren = null }) {
+  async createSupplierInTransaction(connection, { actor, input, approvalRequired = this.approvalRequired, addChildren = null,
+    findDuplicates = true }) {
     const { code, name, displayName, website, email, generalPhone, notes } = createFields(input);
     // 設計 2.6 嘅鎖序由 settings 行先。Business Master 會攞 currencies 嘅 X 鎖，
     // 所以政策讀取（settings 嘅 S 鎖）一定要喺佢之前 —— 否則 createSupplier 係
@@ -289,7 +290,8 @@ export class SupplierAdminService {
     if (existing) {
       throw supplierConflict("SUPPLIER_CODE_TAKEN", "這個 Supplier Code 已被使用", { supplierCode: code.value });
     }
-    const duplicateCandidates = await this.duplicates.find(connection, { nameKey: name.key });
+    // 匯入唔用相似名稱（HD-052：只警告完全相同；HD-075）：佢嘅成本隨 Supplier 數目上升，一個 10,000 列嘅檔做唔完。
+    const duplicateCandidates = findDuplicates ? await this.duplicates.find(connection, { nameKey: name.key }) : [];
     // 設計 4.4：設定開啟時 draft -> pending_approval，關閉時 draft -> active。
     // 政策喺提交嗰一刻讀一次並且 snapshot 落 request，所以之後改設定唔追溯。
     if (!needsApproval && input.approverUserId !== undefined && input.approverUserId !== null) {
@@ -392,7 +394,7 @@ export class SupplierAdminService {
    * 更新嘅核心，喺 caller 嘅 transaction 入面做（HD-060 2A）。`input` 要帶齊所有一般欄位同
    * `version`；回 `{ duplicateCandidates, approvalInvalidated }`。
    */
-  async updateSupplierInTransaction(connection, { actor, input }) {
+  async updateSupplierInTransaction(connection, { actor, input, findDuplicates = true }) {
     const { name, displayName, website, email, generalPhone, notes } = updateFields(input);
     let approvalInvalidated = false;
     const [[current]] = await connection.query("SELECT * FROM suppliers WHERE id = ? FOR UPDATE", [input.id]);
@@ -411,8 +413,9 @@ export class SupplierAdminService {
     });
     const currencyChanged = current.default_currency_code !== defaults.currency.code;
     const reason = currencyChanged ? requireReason(input.reason, "修改預設幣別必須填寫原因") : String(input.reason ?? "").trim();
-    const duplicateCandidates = (await this.duplicates.find(connection, { nameKey: name.key }))
-      .filter((candidate) => Number(candidate.supplierId) !== Number(input.id));
+    const duplicateCandidates = findDuplicates
+      ? (await this.duplicates.find(connection, { nameKey: name.key })).filter((candidate) => Number(candidate.supplierId) !== Number(input.id))
+      : [];
     const nowMs = this.time.nowMs();
     const next = {
       supplierName: name.value,

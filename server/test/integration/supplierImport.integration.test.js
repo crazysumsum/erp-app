@@ -5,6 +5,7 @@ import fs from "node:fs";
 import { readdir, readFile, stat } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { parse } from "csv-parse/sync";
 import { stringify } from "csv-stringify/sync";
 
 import { SUPPLIER_CSV_STRINGIFY_OPTIONS, SUPPLIER_IMPORT_COLUMN_NAMES } from "../../src/modules/supplier/import/supplierCsvSchema.js";
@@ -379,9 +380,16 @@ async function httpUpload(user, content, { key = randomUUID(), mode = "create_on
   const form = new FormData();
   form.append("mode", mode);
   form.append("file", new Blob([content], { type }), "suppliers.csv");
-  const response = await fetch(`${h.url}/api/v1/supplier-imports/upload`, {
-    method: "POST", body: form, headers: { authorization: `Bearer ${user.token}`, "idempotency-key": key }
-  });
+  // 同 api() 一樣：每個 IP 每秒 20 個請求，429 就照 Retry-After 等（REV-082）。
+  let response;
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    response = await fetch(`${h.url}/api/v1/supplier-imports/upload`, {
+      method: "POST", body: form, headers: { authorization: `Bearer ${user.token}`, "idempotency-key": key }
+    });
+    if (response.status !== 429) break;
+    await response.arrayBuffer();
+    await new Promise((resolve) => { setTimeout(resolve, 1000 * Number(response.headers.get("retry-after") ?? 1)); });
+  }
   const body = await response.json().catch(() => null);
   if (response.status === 201) h.jobIds.push(body.data?.id ?? body.id);
   return { status: response.status, body, job: body?.data ?? body };
@@ -1495,4 +1503,103 @@ integrationTest("TASK-047 (HD-069 L-2 A): exporting a Supplier whose currency wa
   const [[row]] = await h.db.query("SELECT operation, status, errors FROM supplier_import_rows WHERE job_id = ?", [created.job.id]);
   assert.deepEqual([row.operation, row.status, row.errors.map((error) => error.code)], ["update", "invalid", ["CURRENCY_NOT_ACTIVE"]]);
   assert.equal(Number((await supplierByCode(`RI-${tag}`)).version), Number(before.version), "nothing was written");
+});
+
+/* ---------------------------------------------------------------- TASK-049 ---------------------------------------------------------------- */
+
+/** 讀晒 log root 入面嘅檔（system 同 request log）。 */
+function allLogText() {
+  const texts = [];
+  const walk = (directory) => {
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      const full = path.join(directory, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else texts.push(fs.readFileSync(full, "utf8"));
+    }
+  };
+  walk(h.logRoot);
+  return texts.join("\n");
+}
+
+integrationTest("TASK-049 (TC-086, SUP-CAP-05): one mixed file end to end — counts agree everywhere, and nothing leaks", async () => {
+  const owner = await makeUser("e49", ["supplier.mgmt"], { withPassword: true });
+  const approver = await makeUser("a49", ["supplier.view", "supplier.approval"]);
+  const tag = randomUUID().slice(0, 6).toUpperCase();
+  const marker = `RAW-${randomUUID()}`;
+  const existing = await seedSupplier({ code: `EU-${tag}`, name: `Existing ${tag}` });
+  const before = await supplierByCode(`EU-${tag}`);
+
+  // 新增、相同名稱（警告）、缺幣別（無效）、更新、公式名稱；marker 只喺 CSV 入面。
+  const { id, version } = await readyJob(owner, [
+    { supplierCode: `E1-${tag}`, supplierName: `Mixed One ${tag}`, defaultCurrencyCode: "HKD", notes: marker },
+    { supplierCode: `E2-${tag}`, supplierName: `Existing ${tag}`, defaultCurrencyCode: "HKD" },
+    { supplierCode: `E3-${tag}`, supplierName: `Mixed Three ${tag}` },
+    { supplierCode: `EU-${tag}`, notes: "updated by T49" },
+    { supplierCode: `E5-${tag}`, supplierName: `=HYPERLINK("http://evil.example") ${tag}`, defaultCurrencyCode: "HKD" }
+  ], { mode: "upsert" });
+  const prechecked = await job(id);
+  assert.deepEqual([prechecked.status, prechecked.total_count, prechecked.valid_count, prechecked.warning_count, prechecked.invalid_count].map(String),
+    ["ready_with_errors", "5", "3", "1", "1"]);
+
+  // 審批開：啟用要交所選審批人，新增嘅列變 pending_approval（HD-063／T45）。
+  const confirmed = await confirmWithApprovalOn(owner, id, { version, activationMode: "activate", approverUserId: approver.userId });
+  assert.ok(confirmed.value, JSON.stringify(confirmed));
+  await execute(id);
+  assert.deepEqual(await rowOutcomes(id), [[1, "applied", null], [2, "applied", null], [3, "skipped", "SUPPLIER_IMPORT_REQUIRED_FIELD"],
+    [4, "applied", null], [5, "applied", null]]);
+  const finished = await job(id);
+  assert.deepEqual([finished.status, finished.applied_count, finished.failed_count, finished.skipped_count].map(String),
+    ["completed", "4", "0", "1"]);
+  assert.equal(Number(finished.applied_count) + Number(finished.failed_count) + Number(finished.skipped_count), Number(finished.total_count));
+  for (const code of [`E1-${tag}`, `E2-${tag}`, `E5-${tag}`]) {
+    const created = await supplierByCode(code);
+    assert.equal(created.status, "pending_approval", code);
+    const [[request]] = await h.db.query("SELECT assigned_approver_id FROM supplier_activation_requests WHERE supplier_id = ?", [created.id]);
+    assert.equal(Number(request.assigned_approver_id), approver.userId);
+  }
+  const updated = await supplierByCode(`EU-${tag}`);
+  assert.deepEqual([updated.notes, updated.status, updated.supplier_name], ["updated by T49", before.status, before.supplier_name]);
+  assert.equal(Number(existing), Number(updated.id));
+
+  // 結果 CSV 同逐列結果、job 統計一致（HD-049）。
+  const result = await downloadResult(owner, id);
+  assert.equal(result.status, 200);
+  const resultRows = parse(result.bytes, { bom: true });
+  assert.equal(resultRows.length, 1 + Number(finished.total_count));
+  assert.deepEqual(resultRows.slice(1).map((row) => row[2]), ["applied", "applied", "skipped", "applied", "applied"]);
+
+  // 匯出：見到新供應商，公式名稱加咗 `'`。
+  const exporter = new SupplierExportService({ database: h.db, time,
+    businessMaster: new BusinessMasterProvider({ database: h.db, repository: new BusinessMasterRepository() }) });
+  const exported = await exporter.exportCsv({ actorId: owner.userId, claimedRoles: [owner.roleName], claimedPermissions: owner.permissions,
+    filters: { q: tag } });
+  const exportRows = parse(exported.content, { bom: true });
+  const nameColumn = SUPPLIER_IMPORT_COLUMN_NAMES.indexOf("supplierName");
+  assert.ok(exportRows.some((row) => row[nameColumn] === `'=HYPERLINK("http://evil.example") ${tag}`), "the formula name is exported guarded");
+
+  // 取消另一個 job：立即刪來源檔、逐列 CSV 內容清走（HD-073）。
+  const other = await readyJob(owner, [{ supplierCode: `EC-${tag}`, supplierName: `Cancelled ${tag}`, defaultCurrencyCode: "HKD", notes: marker }]);
+  const cancelled = await api(owner, "POST", `/api/v1/supplier-imports/${other.id}/cancel`, { body: { version: other.version }, key: randomUUID() });
+  assert.deepEqual([cancelled.status, cancelled.data.status, cancelled.data.filesPurged], [200, "cancelled", true]);
+
+  // 保留期到：清檔，下載結果變 410；job、列同稽核照留（T48）。
+  await h.db.execute("UPDATE supplier_import_jobs SET completed_at = ? WHERE id = ?", [Date.now() - 366 * 86_400_000, id]);
+  const purge = h.application.services.require("job.supplierImportFilePurge");
+  await purge.purge(new AbortController().signal);
+  assert.equal((await downloadResult(owner, id)).status, 410);
+  assert.equal(Number((await job(id)).total_count), 5, "the job summary stays");
+
+  // 洩漏檢查：CSV 嘅 marker、import root 路徑同 Bank 值都唔可以喺 log、job 稽核或者結果檔出現。
+  const [audits] = await h.db.query("SELECT detail, reason, target_label FROM supplier_audit_logs WHERE target_type = 'import' AND target_id IN (?, ?)",
+    [id, other.id]);
+  const scanned = { logs: allLogText(), audit: JSON.stringify(audits), result: result.bytes.toString("utf8") };
+  // 個掃描要有嘢掃先算數：log 唔係空，marker 亦真係入咗系統（喺 Supplier 備註）。
+  assert.ok(scanned.logs.includes(`"jobId":${id}`), "the logs that are scanned mention this job");
+  assert.equal((await supplierByCode(`E1-${tag}`)).notes, marker, "the marker reached the Supplier, so its absence elsewhere means something");
+  for (const [where, text] of Object.entries(scanned)) {
+    for (const secret of [marker, h.worker.preparedRoot, BANK_VALUE]) assert.ok(!text.includes(secret), `${where} must not contain ${secret}`);
+  }
+  const [[rowWithMarker]] = await h.db.query("SELECT COUNT(*) AS n FROM supplier_import_rows WHERE job_id = ? AND JSON_SEARCH(normalized_payload, 'one', ?) IS NOT NULL",
+    [other.id, marker]);
+  assert.equal(Number(rowWithMarker.n), 0, "a cancelled job keeps no CSV content");
 });
