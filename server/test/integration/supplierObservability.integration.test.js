@@ -36,10 +36,10 @@ integrationTest("TASK-050 (HD-083): the metrics read pending approvals, waiting 
 
   const after = await collectSupplierMetrics(connection, now);
   assert.equal(after.approvals.pending - before.approvals.pending, 1);
-  assert.ok(after.approvals.oldestAgeMs >= 30 * 60 * MINUTE);
+  // 表入面可能有其他測試留低嘅舊資料：最舊嘅就係舊有最舊同我哋嗰個之間較大嗰個，同一個 now 計。
+  assert.equal(after.approvals.oldestAgeMs, Math.max(before.approvals.oldestAgeMs ?? 0, 30 * 60 * MINUTE));
   assert.deepEqual(["uploaded", "validating", "queued", "running"].map((status) => after.imports[status] - before.imports[status]), [1, 1, 1, 2]);
   assert.equal(after.imports.stalled - before.imports.stalled, 2, "the expired running lease and the released validating job");
   // 等得最耐嘅係 queued 由確認計（40 分鐘），唔係由上載計（90 分鐘）。
-  assert.ok(after.imports.oldestWaitingMs >= 40 * MINUTE);
-  if (before.imports.oldestWaitingMs === null) assert.equal(after.imports.oldestWaitingMs, 40 * MINUTE);
+  assert.equal(after.imports.oldestWaitingMs, Math.max(before.imports.oldestWaitingMs ?? 0, 40 * MINUTE));
 });
