@@ -1,27 +1,27 @@
 {
   "schema_version": "2.0",
   "module_id": "item-management",
-  "revision": 80,
-  "mode": "TEST_AND_VERIFY",
-  "active_mode": "TEST_AND_VERIFY",
+  "revision": 82,
+  "mode": "REVIEW_AND_ALIGN",
+  "active_mode": "REVIEW_AND_ALIGN",
   "status": "BLOCKED",
   "resume_status": "READY_FOR_TESTING",
   "current_phase": "PHASE-006",
   "current_task": "TASK-043",
   "baseline": {
-    "design": "97e16e92ba15700bc2ced6338d3adb0437dde0e92fe3a77d9ec2439ea176368a",
-    "plan": "ad2dc754c4b25f7f0acf12ad21354ec3a03d1bd6a8879176917c3f1998416b92",
-    "code_commit": "bbb4066a2e492fb718c4154c36e2b065fc653da7",
-    "source_fingerprint": "ffbda80ecae8cd5d9d18be7423b49750cc2d38e6aeadf5014145784a262b58bd",
-    "worktree": "/private/tmp/erp-item-management-uat-closeout",
-    "default_commit": "71616ec040a7558856083035801554dda940ab5e",
-    "mode_entry_commit": "71616ec040a7558856083035801554dda940ab5e"
+    "design": "59ee6cb3664ae1742e41b218ffd3bf223e396eb44a4aa24d82028ebb9cf7c16d",
+    "plan": "9084e8e3435a3759f1e0445ee005ae41c3403fc7338242572fe8de1be39eff50",
+    "code_commit": "394fc3fb11b6dce0bf4c41288904a8fac6d3fa49",
+    "source_fingerprint": "665fba6b82e8e23f4fdc03355edd346555339194e699556490f00da8268a5dc6",
+    "worktree": "/private/tmp/erp-item-supplier-reference-alignment",
+    "default_commit": "394fc3fb11b6dce0bf4c41288904a8fac6d3fa49",
+    "mode_entry_commit": "394fc3fb11b6dce0bf4c41288904a8fac6d3fa49"
   },
   "runtime": {
-    "instance_id": "ITEM-UAT-ACCEPTANCE-20260922",
-    "owner": "Primary TEST_AND_VERIFY agent; approved UAT-014/UAT-015/UAT-016 acceptance execution",
+    "instance_id": "ITEM-SUPPLIER-HANDOFF-20261009",
+    "owner": "Primary Item Management agent; documentation alignment and TASK-043 scheduling",
     "resources": {
-      "workspace": "/private/tmp/erp-item-management-uat-closeout",
+      "workspace": "/private/tmp/erp-item-supplier-reference-alignment",
       "mysql-schema": "acceptance schema erp_item_uat_acceptance_20260922 removed after evidence capture; erp_dev had zero acceptance markers",
       "media-root": "acceptance media root removed after evidence capture",
       "import-root": "acceptance import root removed after evidence capture",
@@ -72,7 +72,7 @@
     "TASK-040": "DONE",
     "TASK-041": "DONE",
     "TASK-042": "DONE",
-    "TASK-043": "BLOCKED",
+    "TASK-043": "PENDING",
     "TASK-044": "DONE"
   },
   "approvals": [
@@ -953,6 +953,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": "APR-033"
+    },
+    {
+      "id": "REV-018",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/item_supplier_handoff_review",
+      "reviewed_baseline": "59ee6cb3664ae1742e41b218ffd3bf223e396eb44a4aa24d82028ebb9cf7c16d",
+      "source_ref": "Active Codex task 2026-10-09: separate reviewer approved corrected DESIGN 59ee6cb and PLAN 9084e8e after ISR-001 remediation; docs/items_management/04_design_review.md#rev-018--supplier-handoff-documentation-review-2026-10-09. Documentation only; no implementation or acceptance approval.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [],
@@ -1099,6 +1111,20 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "docs/items_management/05_development_tasks.md#phase-c零售消耗品擴充"
+    },
+    {
+      "id": "HD-005",
+      "impact": "MAJOR",
+      "question": "Confirm Supplier ownership of SKU relations, manual Active/purchasable sourcing eligibility and retention after deactivation/archive.",
+      "affected_ids": [
+        "DES-020",
+        "TASK-043",
+        "FR-043",
+        "TC-004",
+        "TC-005"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "docs/items_management/09_final_alignment_review.md#hd-005--supplier-reference-ownership-and-sourcing-eligibility"
     }
   ],
   "external_actions": [
@@ -1451,16 +1477,56 @@
       "kind": "PR_MERGE",
       "target": "Item Management UAT closeout PR -> main",
       "idempotency_key": "item-uat-closeout-merge-20260922",
-      "status": "PLANNED",
-      "source_ref": "Merge only after the actual GitHub candidate satisfies required checks and review policy."
+      "status": "CONFIRMED",
+      "source_ref": "GitHub PR #126 was observed MERGED on 2026-09-22 at bd8cc2170689ea05480d1439ad3b02cda6135a80 after all four CI checks passed; this record reconciles the previously unfinished local ledger entry."
     },
     {
       "id": "BRANCH-CLEANUP-92",
       "kind": "GIT_CLEANUP",
       "target": "Item Management UAT worktree and local/remote topic branches",
       "idempotency_key": "item-uat-closeout-git-cleanup-20260922",
+      "status": "CONFIRMED",
+      "source_ref": "Observed on 2026-09-22: the Item UAT worktree and local/remote branch were removed. Latest worktree/ref inventory on 2026-10-09 contains none of these old Item resources."
+    },
+    {
+      "id": "MODE-CHANGE-81",
+      "kind": "MODE_CHANGE",
+      "target": "REVIEW_AND_ALIGN",
+      "idempotency_key": "mode-change-81",
+      "status": "CONFIRMED",
+      "source_ref": "Active Codex task 2026-10-09: Sam requested latest-main Supplier handoff inspection, then said 好，請推進工作 after the concrete Item documentation alignment and TASK-043 recommendation."
+    },
+    {
+      "id": "ITEM-HANDOFF-PUSH-93",
+      "kind": "GIT_PUSH",
+      "target": "origin/codex/item-supplier-reference-alignment",
+      "idempotency_key": "item-supplier-handoff-push-20261009",
       "status": "PLANNED",
-      "source_ref": "Cleanup is authorized after the PR is observed merged and the worktree is confirmed clean."
+      "source_ref": "Sam authorized continued Item work; REV-018 approved the documentation-only handoff. Push reviewed committed slice, no force push."
+    },
+    {
+      "id": "ITEM-HANDOFF-PR-94",
+      "kind": "PR_CREATE",
+      "target": "crazysumsum/erp-app: codex/item-supplier-reference-alignment -> main",
+      "idempotency_key": "item-supplier-handoff-pr-20261009",
+      "status": "PLANNED",
+      "source_ref": "Observed gh pr list on 2026-10-09: no existing PR for this branch. Create after push, and attach actual PR."
+    },
+    {
+      "id": "ITEM-HANDOFF-MERGE-95",
+      "kind": "PR_MERGE",
+      "target": "Item Supplier documentation handoff PR -> main",
+      "idempotency_key": "item-supplier-handoff-merge-20261009",
+      "status": "PLANNED",
+      "source_ref": "Existing user instruction to integrate Item work and current direction to advance the Supplier handoff. Observe fresh main, independent review and repository-required CI for actual candidate before merge; no CI waiver."
+    },
+    {
+      "id": "ITEM-HANDOFF-CLEANUP-96",
+      "kind": "BRANCH_CLEANUP",
+      "target": "/private/tmp/erp-item-supplier-reference-alignment and codex/item-supplier-reference-alignment local/remote branch",
+      "idempotency_key": "item-supplier-handoff-cleanup-20261009",
+      "status": "PLANNED",
+      "source_ref": "Cleanup only after observed PR merge, clean/preserved commits and no open dependent PR; leave Sales/Inventory worktrees untouched."
     }
   ],
   "evidence_files": [
@@ -1621,5 +1687,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Push the reviewed Item UAT evidence branch, create its PR, require the actual candidate checks before merge, then remove only the merged Item worktree and branches. TASK-043 remains dependency-blocked."
+  "next_safe_action": "REV-018 approved this documentation slice. Inspect the topic branch/PR before replaying planned external actions, integrate the Item-owned handoff after current repository gates, then safely clean its worktree/branches. Supplier refreshes its consumed pin and obtains schema approval for TASK-038. Implement TASK-043 against installed Inventory/Sales next; its Supplier branch awaits TASK-038. Current technical/UAT evidence remains outstanding; September acceptance and recovery owner waiver are historical."
 }
