@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 302,
+  "revision": 303,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -4821,6 +4821,28 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-09: '先做A的工作'. TASK-050 runs now without the for-SKU part (NFR-005, the for-SKU p95 and its metrics); its dependency on TASK-040 applies to that part and to the final rerun only."
+    },
+    {
+      "id": "HD-083",
+      "impact": "MINOR",
+      "question": "TASK-050 observability: (1) metrics mechanism: (A) a supplier.metrics job writing low-cardinality log lines plus alert events, as Sales does, or (B) a Prometheus endpoint (new dependency); (2) alert thresholds (approval pending 24 h warn, import waiting 15 min error, purge failure error) as code constants (A) or in server/config/supplier.js (B); (3) dataset: design §11.5 averages plus 1% at the NFR-003 upper bound.",
+      "affected_ids": [
+        "TASK-050"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-09: '全部按建議'."
+    },
+    {
+      "id": "HD-084",
+      "impact": "MAJOR",
+      "question": "TASK-050 at 100k Suppliers and 50 users failed NFR-001 everywhere (p95 3-12 s): the similar-name search read about 2.25M gram rows inside the create/update transaction while Business Master's assertCurrencyUsableInTransaction held the currency row's X lock, so writes queued and held pool connections. (A) run the search on the pool before the transaction and bound it (rarest grams, at most 3,000 candidates; recall 98.9% vs the old 99.1% against brute force); (B) only move it out of the lock (update p95 2.75 s, a known limitation); (C) an exact fast search through a schema change (FULLTEXT ngram).",
+      "affected_ids": [
+        "TASK-050",
+        "NFR-001",
+        "NFR-003"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-09: 'A'."
     }
   ],
   "external_actions": [
@@ -5897,5 +5919,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-050 (HD-082 A), without the for-SKU part: seed a 100k dataset on a throwaway MySQL, benchmark list/search/detail and 50-user CRUD over HTTP, EXPLAIN, observability, capacity report. TASK-038 still waits on the Item owner (HD-081 B)."
+  "next_safe_action": "TASK-050 (HD-082 A) without the for-SKU part: HD-084 fix, supplier.metrics job and performance_report.md done; all p95 under 2 s at 100k Suppliers and 50 users. Next: CI-style suite, PR, review. Open: the for-SKU part and a final rerun after TASK-040; the manual SRE review; whether the list and text search should use an index (schema); the perf:supplier npm script (server/package.json)."
 }

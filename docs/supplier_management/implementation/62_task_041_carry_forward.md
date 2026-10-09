@@ -789,6 +789,9 @@ Notes:
 - **Out of T49's scope (HD-075):** UI create and update still run the similar-name search. Its cost grows with the
   Supplier count (about 87,000 rows examined per call at about 20,000 similar names), so it is worth a separate task before
   the Supplier master gets large.
+  **Done in T50 (HD-084 A):** at 100,000 Suppliers the search read about 2.25 million rows per call inside the write
+  transaction, under the currency row's X lock, and every operation failed NFR-001. It now runs before the transaction
+  and through the rarest grams, with at most 3,000 candidates; see `performance_report.md`.
 
 ## Mutation record for TASK-049
 
