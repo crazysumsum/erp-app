@@ -60,7 +60,7 @@ function harness({ approvalRequired = false, duplicateRows = [], approverEligibl
         return { currency: { code: input.currencyCode, status: "ACTIVE" }, paymentTerm: null };
       }
     },
-    duplicates: { async find() { events.push(["duplicates"]); return duplicateRows; } },
+    duplicates: { async find(connection) { events.push(["duplicates", connection === database ? "pool" : "transaction"]); return duplicateRows; } },
     replaceNameGrams: async () => events.push(["grams"]),
     audit: { async record() { events.push(["audit"]); } },
     approvalRequired: async () => approvalRequired
@@ -79,8 +79,10 @@ test("create Supplier revalidates actor and Business Master inside one transacti
   const result = await service.createSupplier(input);
   assert.equal(result.status, "active");
   assert.deepEqual(events.filter(([name]) => ["authorize", "business-master", "duplicates", "grams", "audit"].includes(name)).map(([name]) => name), [
-    "authorize", "business-master", "duplicates", "grams", "audit"
+    "duplicates", "authorize", "business-master", "grams", "audit"
   ]);
+  // 相似名稱喺 transaction 之外、用 pool 查，唔會揸住 currencies 嘅鎖（T50，HD-084）。
+  assert.deepEqual(events.filter(([name]) => name === "duplicates"), [["duplicates", "pool"]]);
   assert.equal(events.at(-1)[1], "commit");
 });
 
@@ -154,7 +156,7 @@ function updateHarness({ version = 2, references = 0, duplicateError = false, st
         };
       }
     },
-    duplicates: { async find() { events.push(["duplicates"]); return []; } },
+    duplicates: { async find(connection) { events.push(["duplicates", connection === database ? "pool" : "transaction"]); return []; } },
     replaceNameGrams: async () => events.push(["grams"]),
     audit: { async record(_connection, value) { events.push(["audit", value]); } },
     references: { async describeReferences() { events.push(["references"]); return { references: { purchaseOrders: references }, total: references }; } }
@@ -175,8 +177,9 @@ test("update Supplier locks and revalidates actor/catalog, replaces name grams a
   assert.equal(result.supplierName, "New Name");
   assert.equal(result.version, 3);
   assert.deepEqual(events.filter(([name]) => ["authorize", "business-master", "duplicates", "grams", "audit"].includes(name)).map(([name]) => name), [
-    "authorize", "business-master", "duplicates", "grams", "audit", "authorize"
+    "duplicates", "authorize", "business-master", "grams", "audit", "authorize"
   ]);
+  assert.deepEqual(events.filter(([name]) => name === "duplicates"), [["duplicates", "pool"]]);
   assert.match(events.find(([name, sql]) => name === "execute" && sql.includes("UPDATE suppliers"))[1], /version = version \+ 1/u);
 });
 
