@@ -32,5 +32,14 @@ export default {
   cancelOrder(id,payload,{signal}={}) { return write(`/api/v1/sales-orders/${id}/cancel`,payload,{signal}); },
   closeRemainingOrder(id,payload,{signal}={}) { return write(`/api/v1/sales-orders/${id}/close-remaining`,payload,{signal}); },
   runBackorderAllocation(scope,{idempotencyKey,signal}={}) { return write("/api/v1/sales-backorders/allocations/run",{...scope,idempotencyKey},{signal}); },
+  downloadImportTemplate({signal}={}) { return httpClient.getBlob("/api/v1/sales-import-templates/current",{signal}); },
+  uploadImport({file,eventId,signal}) { const body=new FormData();body.append("eventId",eventId);body.append("file",file);return httpClient.post("/api/v1/sales-imports/upload",{body,idempotent:true,idempotencyKey:eventId,signal}); },
+  listImports({rowsPerPage,filter: _filter,signal,...query}={}) { const params=Object.fromEntries(Object.entries({...query,pageSize:rowsPerPage??query.pageSize}).filter(([,v])=>v!==undefined&&v!==null&&v!==""));return httpClient.get("/api/v1/sales-imports",{params,signal}).then(({items,total})=>({rows:items,rowsNumber:total})); },
+  getImport(id,{signal}={}) { return httpClient.get(`/api/v1/sales-imports/${id}`,{signal}); },
+  listImportOrders(id,{rowsPerPage,filter:_filter,signal,...query}={}) {const params=Object.fromEntries(Object.entries({...query,pageSize:rowsPerPage??query.pageSize}).filter(([,v])=>v!==undefined&&v!==null&&v!==""));return httpClient.get(`/api/v1/sales-imports/${id}/orders`,{params,signal}).then(({items,total})=>({rows:items,rowsNumber:total}));},
+  listImportErrors(id,orderId,{page,rowsPerPage,pageSize,signal}={}) {return httpClient.get(`/api/v1/sales-imports/${id}/orders/${orderId}/errors`,{params:{page,pageSize:rowsPerPage??pageSize},signal}).then(({items,total})=>({rows:items,rowsNumber:total}));},
+  confirmImport(id,payload,{signal}={}) {return write(`/api/v1/sales-imports/${id}/confirm`,payload,{signal});},
+  cancelImport(id,payload,{signal}={}) {return write(`/api/v1/sales-imports/${id}/cancel`,payload,{signal});},
+  downloadImportResult(id,{signal}={}) {return httpClient.getBlob(`/api/v1/sales-imports/${id}/result`,{signal});},
   getOperation(eventId,{signal}={}) { return httpClient.get(`/api/v1/sales-operations/by-event/${eventId}`,{signal}); }
 };
