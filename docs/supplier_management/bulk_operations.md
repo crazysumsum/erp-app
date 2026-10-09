@@ -92,7 +92,8 @@ Measured on 2026-10-09 (regenerated after REV-081):
   - It removes the Suppliers, job, user and role it created, also when it fails or is interrupted with Ctrl-C or
     SIGTERM. An interrupted run stops its worker, cleans up, and writes a report marked `interrupted`; a second Ctrl-C
     is ignored while it does so (REV-080 L-D, REV-081 I-1). SIGKILL of the benchmark itself leaves its data and
-    temporary directory behind, but its worker notices the lost parent and shuts down (REV-081 I-2).
+    temporary directory behind, but its worker notices the lost parent and shuts down (REV-081 I-2). The job it leaves
+    is still pending, so the next run refuses until that job is removed by hand (REV-082).
   - The report records the database name, host, port and socket. With `DB_SOCKET_PATH` set, the host and port are
     not used. It refuses to start if `--output` cannot be written.
   - Its own logs and its worker's go to its temporary directory, which is removed at the end.

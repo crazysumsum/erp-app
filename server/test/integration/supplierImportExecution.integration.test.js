@@ -87,7 +87,8 @@ async function seedJob({ status = "queued", rows = ["valid", "valid"], leaseOwne
 
 /**
  * 領取係全域嘅：開始之前收埋其他測試留低未完成嘅 job（queued → cancelled、running → failed，
- * 都係狀態機容許嘅）。只有呢個檔案用呢兩張表 —— 唔好喺有人做緊人手驗證嘅 schema 上面跑。
+ * 都係狀態機容許嘅）。佢郁成個 schema 嘅 job：supplierImport 同 retention 測試都用呢兩張表，所以只可以逐個檔案
+ * 跑（CI 用 `--test-concurrency=1`；REV-082），亦唔好喺有人做緊人手驗證嘅 schema 上面跑。
  */
 async function quiesce() {
   await h.db.execute("UPDATE supplier_import_jobs SET status = 'cancelled' WHERE status = 'queued'");
@@ -540,7 +541,7 @@ integrationTest("TASK-049 (REV-078 M-1, REV-079 I-B): the capacity benchmark ref
   // 其他測試留低嘅未完成 job（例如 ready）都收埋，咁擋住 benchmark 嘅就只會係下面嗰一個（REV-081 N-2）。
   await h.db.execute(`UPDATE supplier_import_jobs SET status = 'cancelled'
     WHERE status IN ('uploaded', 'validating', 'ready', 'ready_with_errors')`);
-  // 每種未完成狀態都要擋：uploaded 等預檢，queued 等執行（REV-080 m11）。
+  // 測兩種未完成狀態：uploaded 等預檢，queued 等執行（REV-080 m11）。其餘狀態只靠 guard 嘅狀態清單（REV-082）。
   for (const status of ["uploaded", "queued"]) {
     const pending = await seedJob({ status, rows: ["valid"] });
     const output = path.join(os.tmpdir(), `bench-guard-${process.pid}-${status}.json`);

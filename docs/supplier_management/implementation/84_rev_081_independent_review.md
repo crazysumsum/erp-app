@@ -90,8 +90,8 @@ Environment:
   changes (HD-079).
 - **N-1, I-2:** the worker is spawned with an IPC channel and shuts down on `disconnect`, so it ends with its parent
   however the parent dies. `startWorker` refuses once the run is interrupted. `waitFor`, the crash loop, the
-  verification and the final `ok` stop at an interruption, so an interrupted run never reports `ok: true` or a
-  verification.
+  verification and the final `ok` stop at an interruption, so an interrupted run never reports `ok: true`. It reports a
+  verification only when the signal came after the verification was complete (REV-082 Info 2).
 - **I-1:** `process.on`, ignoring repeat signals.
 - **N-2:** the test moves other tests' pending jobs to `cancelled` and expects exactly `1 other import job`. The harness
   now runs full files. The corrected record is in `62_task_041_carry_forward.md`.

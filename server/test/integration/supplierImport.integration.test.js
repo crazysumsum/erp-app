@@ -380,9 +380,16 @@ async function httpUpload(user, content, { key = randomUUID(), mode = "create_on
   const form = new FormData();
   form.append("mode", mode);
   form.append("file", new Blob([content], { type }), "suppliers.csv");
-  const response = await fetch(`${h.url}/api/v1/supplier-imports/upload`, {
-    method: "POST", body: form, headers: { authorization: `Bearer ${user.token}`, "idempotency-key": key }
-  });
+  // 同 api() 一樣：每個 IP 每秒 20 個請求，429 就照 Retry-After 等（REV-082）。
+  let response;
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    response = await fetch(`${h.url}/api/v1/supplier-imports/upload`, {
+      method: "POST", body: form, headers: { authorization: `Bearer ${user.token}`, "idempotency-key": key }
+    });
+    if (response.status !== 429) break;
+    await response.arrayBuffer();
+    await new Promise((resolve) => { setTimeout(resolve, 1000 * Number(response.headers.get("retry-after") ?? 1)); });
+  }
   const body = await response.json().catch(() => null);
   if (response.status === 201) h.jobIds.push(body.data?.id ?? body.id);
   return { status: response.status, body, job: body?.data ?? body };

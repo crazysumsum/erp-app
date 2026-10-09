@@ -62,4 +62,10 @@ the new fields, so it came from the fixed script.
 
 - The flake mechanism was checked in the code: the limiter allows 20 per second, `api()` retries on 429, and
   `httpUpload()` does not.
-- The findings were taken to the Product Owner (HD-080).
+- The findings were taken to the Product Owner, who chose to fix them before the merge, without another review (HD-080 A).
+- **Low:** `httpUpload` now waits and retries on a 429, as `api()` does.
+- **Info 2:** the REV-081 follow-up's wording is corrected.
+- **Info 4:** the operator guide says a job left by a SIGKILLed run blocks the next run.
+- **Info 5:** the test comment now says which states the test checks.
+- **Info 7:** the `quiesce()` comment now says the file must run on its own.
+- Info 1, 3 and 6 are left as recorded.

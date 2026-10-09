@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 298,
+  "revision": 299,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -4783,6 +4783,17 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-08: '全部按建議, a'."
+    },
+    {
+      "id": "HD-080",
+      "impact": "MINOR",
+      "question": "REV-082 APPROVED TASK-049 with one Low (the TASK-044 'withdrawn permission' test flakes when the 20-per-second request limiter answers its upload with 429; httpUpload does not retry) and Info notes (follow-up wording, a SIGKILLed run's job blocks the next run, the guard test comment, the quiesce comment). (A) fix these in tests and docs before the merge without another review, then merge when CI passes; (B) merge as is.",
+      "affected_ids": [
+        "TASK-049",
+        "REV-082"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-09: 'A，CI過就merge'."
     }
   ],
   "external_actions": [
@@ -5859,5 +5870,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-049: REV-082 APPROVED (one Low: TASK-044 test flake from the request limiter). Ask the Product Owner (HD-080) whether to fix the flake and doc wording before merging. Merge only on the Product Owner's word."
+  "next_safe_action": "TASK-049: HD-080 fixes pushed (httpUpload retries on 429; docs and comments). Merge PR #192 once CI is green on the head and main is unchanged (HD-080: 'A，CI過就merge'), then clean up and close TASK-049 in a ledger PR."
 }
