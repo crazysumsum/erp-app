@@ -10,7 +10,7 @@ import { formatDateForFile } from "../../../server/src/services/time/timeFormat.
 let app,vite,f,origin,operatorToken,viewerToken,customerCode,skuCode,warehouseCode;
 const callbacks=[];
 test.beforeAll(async()=>{
- if(process.env.DB_INTEGRATION_TESTS!=="1"||!/^erp_sales_phase1_/u.test(process.env.DB_NAME??""))throw new Error("Sales browser tests require the approved isolated synthetic Phase1 database");
+ if(process.env.DB_INTEGRATION_TESTS!=="1"||!/^(?:erp_sales_phase1_|erp_sales_p3_01314bd194db_t038$)/u.test(process.env.DB_NAME??""))throw new Error("Sales browser tests require the approved isolated synthetic Phase1 database");
  f=await migrationFixture({after(fn){callbacks.push(fn);}},[]);
  const source=defaultConfigurationSource(),port=randomInt(32000,59000);origin=`http://127.0.0.1:${port}`;
  app=await createApplication({configurationSource:{...source,application:{...source.application,port:0},security:{...source.security,cors:{...source.security.cors,allowedOrigins:origin}}}});
