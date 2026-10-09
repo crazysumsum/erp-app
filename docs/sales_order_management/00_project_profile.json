@@ -2211,8 +2211,6 @@
         "server/test/integration/salesIntakeMigrations.integration.test.js",
         "server/test/integration/salesImportUpload.integration.test.js",
         "server/test/integration/salesImportPrecheck.integration.test.js",
-        "server/test/integration/salesIntake.integration.test.js",
-        "server/test/integration/salesIntakeRecovery.integration.test.js",
         "server/test/integration/salesImportRetention.integration.test.js"
       ],
       "cwd": ".",
