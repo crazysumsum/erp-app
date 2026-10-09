@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 1690,
+  "revision": 1691,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,7 +11,7 @@
   "baseline": {
     "design": "8c24fa028e39dcb578a5312de15293d61cad9b128bdc22c7cb5148986e211781",
     "plan": "4892535733987bd298004fff812c3ee0e8d217a51c01ef90dbf871c4d4b7f483",
-    "code_commit": "869ac07abdd3879254c351d857be911d71e68b6b",
+    "code_commit": "f701b3f700c056307e7f4a277c0f951f2332f4d4",
     "source_fingerprint": "86cd244096eb8277a8f55b49cad793a11b74010f70e4e7df49d3770e8545f556",
     "worktree": "/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app",
     "default_commit": "4f09b491d8c7d5393c7e36beb707bc7bb4ad039e",
@@ -12668,6 +12668,14 @@
       "idempotency_key": "erp_inventory_def005_0e72634a8cda-EXT-587",
       "status": "CONFIRMED",
       "source_ref": "Observed complete native command exit0, timeout=False; unchanged package floor marker=True from same LCOV SHAc3d90b94df6036269f29dc9034a982a3a0db1ef67ebbe0ed2898a599c1f5f7ba. Native log/LCOV retained at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/task034-full-native-20261009T013318-bf52bf9d; not formal acceptance/gate waiver. Analyze every failure/skip before next proposal."
+    },
+    {
+      "id": "EXT-588",
+      "kind": "LOCAL_MAIN_INTEGRATION",
+      "target": "9e9b0ff9ad87846a32036fc86138a834bdb5c82a",
+      "idempotency_key": "p3-hd137-f701b3f700c056307e7f4a277c0f951f2332f4d4",
+      "status": "PLANNED",
+      "source_ref": "Actual Sam HD137 A; local integration only, exact approved resolutions; final remote merge approval not granted."
     }
   ],
   "evidence_files": [
