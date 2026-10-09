@@ -101,7 +101,8 @@ test("creating with activate under approval ON lands in pending_approval, not ac
   assert.ok(insert[2].includes("pending_approval"), "approval ON must not create an active Supplier");
 });
 
-function updateHarness({ version = 2, references = 0, duplicateError = false, status = "draft", openRequest = { id: 11, supplier_id: 7 } } = {}) {
+function updateHarness({ version = 2, references = 0, duplicateError = false, status = "draft", openRequest = { id: 11, supplier_id: 7 },
+  duplicateRows = [] } = {}) {
   const events = [];
   const current = {
     id: 7, supplier_code: "SUP-7", supplier_code_key: "sup-7", supplier_name: "Old Name",
@@ -156,7 +157,7 @@ function updateHarness({ version = 2, references = 0, duplicateError = false, st
         };
       }
     },
-    duplicates: { async find(connection) { events.push(["duplicates", connection === database ? "pool" : "transaction"]); return []; } },
+    duplicates: { async find(connection) { events.push(["duplicates", connection === database ? "pool" : "transaction"]); return duplicateRows; } },
     replaceNameGrams: async () => events.push(["grams"]),
     audit: { async record(_connection, value) { events.push(["audit", value]); } },
     references: { async describeReferences() { events.push(["references"]); return { references: { purchaseOrders: references }, total: references }; } }
@@ -181,6 +182,13 @@ test("update Supplier locks and revalidates actor/catalog, replaces name grams a
   ]);
   assert.deepEqual(events.filter(([name]) => name === "duplicates"), [["duplicates", "pool"]]);
   assert.match(events.find(([name, sql]) => name === "execute" && sql.includes("UPDATE suppliers"))[1], /version = version \+ 1/u);
+});
+
+test("TASK-050 (HD-084): update returns the similar names found before the transaction, without the Supplier itself", async () => {
+  const self = { supplierId: 7, supplierName: "New Name", score: 1, exact: true, warningOnly: true };
+  const other = { supplierId: 9, supplierName: "New Names", score: 0.9, exact: false, warningOnly: true };
+  const { service } = updateHarness({ duplicateRows: [self, other] });
+  assert.deepEqual((await service.updateSupplier(updateInput)).duplicateCandidates, [other]);
 });
 
 test("update Supplier rejects stale version before catalog, data or audit writes", async () => {

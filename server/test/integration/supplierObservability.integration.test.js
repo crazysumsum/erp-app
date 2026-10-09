@@ -23,6 +23,9 @@ integrationTest("TASK-050 (HD-083): the metrics read pending approvals, waiting 
     [`MET-${now}`, `met-${now}`, now, now]);
   await connection.execute(`INSERT INTO supplier_activation_requests (supplier_id, supplier_version, summary, status, requested_at)
     VALUES (?, 1, JSON_OBJECT(), 'pending', ?)`, [supplier.insertId, now - 30 * 60 * MINUTE]);
+  // 已決定嘅申請唔計（就算佢更舊）。
+  await connection.execute(`INSERT INTO supplier_activation_requests (supplier_id, supplier_version, summary, status, requested_at, decided_at)
+    VALUES (?, 1, JSON_OBJECT(), 'approved', ?, ?)`, [supplier.insertId, now - 90 * 60 * MINUTE, now - 80 * 60 * MINUTE]);
   const job = (status, { createdAt = now, confirmedAt = null, leaseUntil = null, updatedAt = now } = {}) => connection.execute(
     `INSERT INTO supplier_import_jobs (template_version, source_stored_name, source_sha256, mode, activation_mode, status, total_count,
        lease_owner, lease_until, created_at, updated_at, confirmed_at) VALUES ('v1', ?, ?, 'create_only', 'draft', ?, 1, '', ?, ?, ?, ?)`,
