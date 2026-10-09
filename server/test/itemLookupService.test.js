@@ -534,18 +534,25 @@ test("冇帶 purpose：淨係睇未封存", async () => {
 
 // --- Inventory transaction contract -----------------------------------------
 
+function inventoryTransaction(sku = skuRow(), uom = uomRow()) {
+  return fakeDatabase([
+    [{ sku_id: sku.id, item_id: sku.item_id, id: 91, uom_id: uom.uom_id }],
+    [{ id: uom.uom_id, code: uom.uom_code, name: "Each", status: "active", version: 1 }],
+    [{ id: sku.item_id, name: sku.item_name, product_type: sku.product_type, status: sku.item_status, version: 1 }],
+    [sku], [{ ...uom, id: 91, version: 1 }]
+  ]);
+}
+
 test("Inventory profile uses only the caller transaction and returns a narrow projection", async () => {
   const database = fakeDatabase([]);
-  const transaction = fakeDatabase([
-    [skuRow({ tracking_policy: "serial", shelf_life_days: 90, min_receipt_life_days: 30 })],
-    [uomRow()]
-  ]);
+  const transaction = inventoryTransaction(skuRow({ tracking_policy: "serial", shelf_life_days: 90, min_receipt_life_days: 30 }));
   const { service } = createService({ database });
 
   const result = await service.getInventoryProfileInTransaction(transaction, 10);
 
   assert.equal(database.calls.length, 0);
-  assert.equal(transaction.calls.length, 2);
+  assert.equal(transaction.calls.length, 5);
+  for (const call of transaction.calls.slice(1)) assert.match(call.sql, /FOR SHARE/u);
   assert.deepEqual(Object.keys(result).sort(), [
     "baseUom", "inventoryTracked", "itemStatus", "minimumReceiptLifeDays",
     "minimumSaleLifeDays", "reasons", "shelfLifeDays", "skuCode", "skuId",
@@ -562,7 +569,7 @@ test("Inventory profile preserves Item lifecycle eligibility", async () => {
     ["discontinued", "NOT_ACTIVE"],
     ["archived", "ARCHIVED"]
   ]) {
-    const transaction = fakeDatabase([[skuRow({ sku_status: status })], [uomRow()]]);
+    const transaction = inventoryTransaction(skuRow({ sku_status: status }));
     const { service } = createService({ database: fakeDatabase([]) });
     const result = await service.getInventoryProfileInTransaction(transaction, 10);
     assert.equal(result.usable, false);
@@ -572,7 +579,7 @@ test("Inventory profile preserves Item lifecycle eligibility", async () => {
 
 test("Inventory UOM resolution uses the caller transaction and validates integer factors", async () => {
   const database = fakeDatabase([]);
-  const transaction = fakeDatabase([[uomRow({ to_base_factor: 12, is_base: 0 })]]);
+  const transaction = inventoryTransaction(skuRow(), uomRow({ to_base_factor: 12, is_base: 0 }));
   const { service } = createService({ database });
 
   assert.deepEqual(await service.resolveUomInTransaction(transaction, 10, 5), {
@@ -585,7 +592,7 @@ test("Inventory UOM resolution uses the caller transaction and validates integer
   assert.equal(database.calls.length, 0);
 
   for (const factor of [0, 1.5, 1_000_001]) {
-    const invalidTransaction = fakeDatabase([[uomRow({ to_base_factor: factor })]]);
+    const invalidTransaction = inventoryTransaction(skuRow(), uomRow({ to_base_factor: factor }));
     await assert.rejects(
       () => service.resolveUomInTransaction(invalidTransaction, 10, 5),
       { code: "UOM_CONVERSION_INVALID" }
@@ -597,4 +604,11 @@ test("Inventory transaction methods reject a missing executor", async () => {
   const { service } = createService({ database: fakeDatabase([]) });
   await assert.rejects(() => service.getInventoryProfileInTransaction(null, 10), TypeError);
   await assert.rejects(() => service.resolveUomInTransaction({}, 10, 5), TypeError);
+});
+
+test("Inventory transaction methods preserve null for a missing SKU or UOM", async () => {
+  const { service } = createService({ database: fakeDatabase([]) });
+  assert.equal(await service.getInventoryProfileInTransaction(fakeDatabase([[]]), 10), null);
+  assert.equal(await service.resolveUomInTransaction(fakeDatabase([[]]), 10, 5), null);
+  assert.equal(await service.resolveUomInTransaction(inventoryTransaction(), 10, 999), null);
 });

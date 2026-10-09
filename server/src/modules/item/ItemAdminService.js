@@ -32,12 +32,14 @@ import {
   itemActivationRequiresSku,
   itemDeleteRequiresDraft,
   itemNotFound,
+  itemReferenced,
   lastActiveSku,
   lastSkuInItem,
   skuChildMismatch,
   skuCodeTaken,
   skuDeleteRequiresDraft,
   skuNotFound,
+  skuReferenced,
   standardItemSkuLimit,
   standardSkuHasVariantValues,
   statusTransitionInvalid,
@@ -574,14 +576,19 @@ export class ItemAdminService {
 
       const nextByUom = new Map(uoms.map(row => [row.uomId, row]));
       const removedMappingIds = currentUomRows.filter(row => !nextByUom.has(Number(row.uom_id))).map(row => Number(row.id));
-      if (removedMappingIds.length && await this.#hasSkuTransactionReferences(connection, id, removedMappingIds)) throw uomChangeBlocked();
+      if (removedMappingIds.length) {
+        const references = await this.#referenceTypes(connection, "item_sku_uoms", removedMappingIds, true);
+        if (references.length) throw uomChangeBlocked(references);
+      }
       const conversionChanged = currentUomRows.some(row => {
         const next = nextByUom.get(Number(row.uom_id));
         return next ? Number(row.to_base_factor) !== next.toBaseFactor || Boolean(row.is_base) !== Boolean(next.isBase) : Boolean(row.is_base);
       }) || uoms.some(row => row.isBase && !currentUomRows.some(current => Number(current.uom_id) === row.uomId && current.is_base));
-      if ((conversionChanged || current.tracking_policy !== trackingPolicy) && await this.#hasSkuTransactionReferences(connection, id)) {
+      const references = conversionChanged || current.tracking_policy !== trackingPolicy
+        ? await this.#skuReferenceTypes(connection, [id]) : [];
+      if (references.length) {
         if (current.tracking_policy !== trackingPolicy) throw trackingPolicyChangeBlocked();
-        throw uomChangeBlocked();
+        throw uomChangeBlocked(references);
       }
 
       const nowMs = this.time.nowMs();
@@ -628,7 +635,10 @@ export class ItemAdminService {
           try {
             await connection.execute("DELETE FROM item_sku_uoms WHERE sku_id = ? AND id = ?", [id, row.id]);
           } catch (error) {
-            if ((error?.cause?.code ?? error?.code) === "ER_ROW_IS_REFERENCED_2") throw uomChangeBlocked();
+            if ((error?.cause?.code ?? error?.code) === "ER_ROW_IS_REFERENCED_2") {
+              const references = await this.#referenceTypes(connection, "item_sku_uoms", [Number(row.id)], true);
+              throw uomChangeBlocked(references.length ? references : ["unknown"]);
+            }
             throw error;
           }
         }
@@ -986,7 +996,7 @@ export class ItemAdminService {
       });
 
       return id;
-    });
+    }, { isolationLevel: "READ COMMITTED" });
 
     return this.getItem({ actorId, claimedRoles, claimedPermissions, id: itemId });
   }
@@ -1040,20 +1050,36 @@ export class ItemAdminService {
 
       const [skuRows] = await connection.query("SELECT id FROM item_skus WHERE item_id = ? ORDER BY id FOR UPDATE", [id]);
       const skuIds = skuRows.map((row) => row.id);
-      if (skuIds.length > 0) {
-        const placeholders = skuIds.map(() => "?").join(",");
-        await connection.execute(`DELETE FROM item_sku_barcodes WHERE sku_id IN (${placeholders})`, skuIds);
-        await connection.execute(`DELETE FROM item_sku_uoms WHERE sku_id IN (${placeholders})`, skuIds);
-        await connection.execute(`DELETE FROM item_skus WHERE id IN (${placeholders})`, skuIds);
-      }
-
-      const [result] = await connection.execute("DELETE FROM items WHERE id = ? AND version = ?", [id, version]);
-      if (result.affectedRows === 0) {
-        const [[stillExists]] = await connection.query("SELECT version FROM items WHERE id = ?", [id]);
-        if (!stillExists) {
-          throw itemNotFound(id);
+      const references = [...new Set([
+        ...await this.#referenceTypes(connection, "items", [id]),
+        ...await this.#skuReferenceTypes(connection, skuIds)
+      ])].sort();
+      if (references.length) throw itemReferenced(references);
+      try {
+        if (skuIds.length > 0) {
+          const placeholders = skuIds.map(() => "?").join(",");
+          await connection.execute(`DELETE FROM item_sku_barcodes WHERE sku_id IN (${placeholders})`, skuIds);
+          await connection.execute(`DELETE FROM item_sku_uoms WHERE sku_id IN (${placeholders})`, skuIds);
+          await connection.execute(`DELETE FROM item_skus WHERE id IN (${placeholders})`, skuIds);
         }
-        throw versionConflict();
+
+        const [result] = await connection.execute("DELETE FROM items WHERE id = ? AND version = ?", [id, version]);
+        if (result.affectedRows === 0) {
+          const [[stillExists]] = await connection.query("SELECT version FROM items WHERE id = ?", [id]);
+          if (!stillExists) {
+            throw itemNotFound(id);
+          }
+          throw versionConflict();
+        }
+      } catch (error) {
+        if ((error?.cause?.code ?? error?.code) === "ER_ROW_IS_REFERENCED_2") {
+          const references = [...new Set([
+            ...await this.#referenceTypes(connection, "items", [id]),
+            ...await this.#skuReferenceTypes(connection, skuIds)
+          ])].sort();
+          throw itemReferenced(references.length ? references : ["unknown"]);
+        }
+        throw error;
       }
 
       await this.auditLog.record(connection, {
@@ -1068,7 +1094,7 @@ export class ItemAdminService {
         requestId,
         ip
       });
-    });
+    }, { isolationLevel: "READ COMMITTED" });
   }
 
   /** 複製成一個新嘅 Draft Item；唔複製 Barcode，每個來源 SKU 都要呼叫端
@@ -1399,7 +1425,7 @@ export class ItemAdminService {
       });
 
       return id;
-    });
+    }, { isolationLevel: "READ COMMITTED" });
 
     return this.getSku({ actorId, claimedRoles, claimedPermissions, id: skuId });
   }
@@ -1460,16 +1486,27 @@ export class ItemAdminService {
         throw lastSkuInItem();
       }
 
-      await connection.execute("DELETE FROM item_sku_barcodes WHERE sku_id = ?", [id]);
-      await connection.execute("DELETE FROM item_sku_uoms WHERE sku_id = ?", [id]);
+      const references = await this.#skuReferenceTypes(connection, [id]);
+      if (references.length) throw skuReferenced(references);
 
-      const [result] = await connection.execute("DELETE FROM item_skus WHERE id = ? AND version = ?", [id, version]);
-      if (result.affectedRows === 0) {
-        const [[stillExists]] = await connection.query("SELECT version FROM item_skus WHERE id = ?", [id]);
-        if (!stillExists) {
-          throw skuNotFound(id);
+      try {
+        await connection.execute("DELETE FROM item_sku_barcodes WHERE sku_id = ?", [id]);
+        await connection.execute("DELETE FROM item_sku_uoms WHERE sku_id = ?", [id]);
+
+        const [result] = await connection.execute("DELETE FROM item_skus WHERE id = ? AND version = ?", [id, version]);
+        if (result.affectedRows === 0) {
+          const [[stillExists]] = await connection.query("SELECT version FROM item_skus WHERE id = ?", [id]);
+          if (!stillExists) {
+            throw skuNotFound(id);
+          }
+          throw versionConflict();
         }
-        throw versionConflict();
+      } catch (error) {
+        if ((error?.cause?.code ?? error?.code) === "ER_ROW_IS_REFERENCED_2") {
+          const references = await this.#skuReferenceTypes(connection, [id]);
+          throw skuReferenced(references.length ? references : ["unknown"]);
+        }
+        throw error;
       }
 
       await this.auditLog.record(connection, {
@@ -1483,7 +1520,7 @@ export class ItemAdminService {
         requestId,
         ip
       });
-    });
+    }, { isolationLevel: "READ COMMITTED" });
   }
 
   /** SKU Code 特批修改：全域唯一（不分大小寫，同建立時共用一個 unique
@@ -1605,9 +1642,16 @@ export class ItemAdminService {
     connection,
     { id, version, fromStatuses, toStatus, action, actorId, actor, reason, requestId, ip, nowMs }
   ) {
-    const [[current]] = await connection.query("SELECT name, status FROM items WHERE id = ?", [id]);
+    const [[current]] = await connection.query(`SELECT name, status, version FROM items WHERE id = ?${toStatus === "archived" ? " FOR UPDATE" : ""}`, [id]);
     if (!current) {
       throw itemNotFound(id);
+    }
+    if (toStatus === "archived") {
+      if (Number(current.version) !== Number(version)) throw versionConflict();
+      if (!fromStatuses.includes(current.status)) throw statusTransitionInvalid(current.status, toStatus);
+      const [skus] = await connection.query("SELECT id FROM item_skus WHERE item_id = ? ORDER BY id FOR UPDATE", [id]);
+      const references = await this.#archiveReferenceTypes(connection, skus.map(row => Number(row.id)));
+      if (references.length) throw itemReferenced(references);
     }
 
     const placeholders = fromStatuses.map(() => "?").join(",");
@@ -1649,9 +1693,20 @@ export class ItemAdminService {
     connection,
     { id, version, fromStatuses, toStatus, forcePurchasableFalse, action, actorId, actor, reason, requestId, ip, nowMs }
   ) {
-    const [[current]] = await connection.query("SELECT sku_code, status FROM item_skus WHERE id = ?", [id]);
+    if (toStatus === "archived") {
+      const [[parent]] = await connection.query("SELECT item_id FROM item_skus WHERE id = ?", [id]);
+      if (!parent) throw skuNotFound(id);
+      await connection.query("SELECT id FROM items WHERE id = ? FOR SHARE", [parent.item_id]);
+    }
+    const [[current]] = await connection.query(`SELECT sku_code, status, version FROM item_skus WHERE id = ?${toStatus === "archived" ? " FOR UPDATE" : ""}`, [id]);
     if (!current) {
       throw skuNotFound(id);
+    }
+    if (toStatus === "archived") {
+      if (Number(current.version) !== Number(version)) throw versionConflict();
+      if (!fromStatuses.includes(current.status)) throw statusTransitionInvalid(current.status, toStatus);
+      const references = await this.#archiveReferenceTypes(connection, [id]);
+      if (references.length) throw skuReferenced(references);
     }
 
     const placeholders = fromStatuses.map(() => "?").join(",");
@@ -1788,32 +1843,65 @@ export class ItemAdminService {
     return currentSet.some((value, index) => value !== nextSet[index]);
   }
 
-  async #hasSkuTransactionReferences(connection, skuId, mappingIds = null) {
+  async #referenceTypes(connection, targetTable, ids, includeBarcodes = false) {
+    if (!ids.length) return [];
     // Native FK metadata identifies installed Inventory/Sales consumers, including new line tables.
     // These are nonlocking READ COMMITTED probes: never take a downstream aggregate lock after Item.
     const [references] = await connection.query(
       `SELECT DISTINCT table_name AS tableName, column_name AS columnName FROM information_schema.key_column_usage
         WHERE table_schema = DATABASE() AND referenced_table_schema = DATABASE()
           AND referenced_table_name = ? AND referenced_column_name = 'id'
-          AND (LEFT(table_name, 6) = 'sales_' OR LEFT(table_name, 10) = 'inventory_')`,
-      [mappingIds ? "item_sku_uoms" : "item_skus"]
+          AND (LEFT(table_name, 5) <> 'item_' OR (? = 1 AND table_name = 'item_sku_barcodes'))`,
+      [targetTable, includeBarcodes ? 1 : 0]
     );
+    const types = new Set();
     for (const row of references) {
       const table = String(row.tableName).replaceAll("`", "``");
       const column = String(row.columnName).replaceAll("`", "``");
-      const ids = mappingIds ?? [skuId];
       const [found] = await connection.query(`SELECT 1 AS found FROM \`${table}\` WHERE \`${column}\` IN (${ids.map(() => "?").join(",")}) LIMIT 1`, ids);
-      if (found.length) return true;
+      if (found.length) types.add(String(row.tableName));
     }
     const [installed] = await connection.query("SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'sales_order_lines_archive'");
-    if (installed.length) {
+    if (installed.length && ["item_skus", "item_sku_uoms"].includes(targetTable)) {
       const [rows] = await connection.query(
-        `SELECT 1 AS found FROM sales_order_lines_archive WHERE sku_id = ?${mappingIds ? ` AND sku_uom_id IN (${mappingIds.map(() => "?").join(",")})` : ""} LIMIT 1`,
-        [skuId, ...(mappingIds ?? [])]
+        `SELECT 1 AS found FROM sales_order_lines_archive WHERE ${targetTable === "item_skus" ? "sku_id" : "sku_uom_id"} IN (${ids.map(() => "?").join(",")}) LIMIT 1`, ids
       );
-      if (rows.length) return true;
+      if (rows.length) types.add("sales_order_lines_archive");
     }
-    return false;
+    return [...types].sort();
+  }
+
+  async #skuReferenceTypes(connection, skuIds) {
+    if (!skuIds.length) return [];
+    const [mappings] = await connection.query(`SELECT id FROM item_sku_uoms WHERE sku_id IN (${skuIds.map(() => "?").join(",")})`, skuIds);
+    return [...new Set([
+      ...await this.#referenceTypes(connection, "item_skus", skuIds),
+      ...await this.#referenceTypes(connection, "item_sku_uoms", mappings.map(row => Number(row.id)))
+    ])].sort();
+  }
+
+  async #archiveReferenceTypes(connection, skuIds) {
+    if (!skuIds.length) return [];
+    const placeholders = skuIds.map(() => "?").join(",");
+    // Only live obligations block archival; retained FK history still blocks deletion.
+    const probes = [
+      ["inventory_stock_balances", `SELECT 1 FROM inventory_stock_balances WHERE sku_id IN (${placeholders}) AND (on_hand_quantity > 0 OR allocated_quantity > 0) LIMIT 1`],
+      ["inventory_stock_controls", `SELECT 1 FROM inventory_stock_controls WHERE sku_id IN (${placeholders}) AND reserved_quantity > 0 LIMIT 1`],
+      ["inventory_reservations", `SELECT 1 FROM inventory_reservations WHERE sku_id IN (${placeholders}) AND outstanding_quantity > 0 LIMIT 1`],
+      ["inventory_allocations", `SELECT 1 FROM inventory_allocations a JOIN inventory_reservations r ON r.id = a.reservation_id WHERE r.sku_id IN (${placeholders}) AND a.outstanding_quantity > 0 LIMIT 1`],
+      ["sales_quotation_lines", `SELECT 1 FROM sales_quotation_lines l JOIN sales_quotations q ON q.id = l.quotation_id WHERE l.sku_id IN (${placeholders}) AND q.status IN ('DRAFT', 'ISSUED') LIMIT 1`],
+      ["sales_order_lines", `SELECT 1 FROM sales_order_lines l JOIN sales_orders o ON o.id = l.sales_order_id WHERE l.sku_id IN (${placeholders}) AND (o.status NOT IN ('COMPLETED', 'CANCELLED', 'CLOSED') OR l.reserved_outstanding_base_quantity > 0 OR l.backordered_base_quantity > 0) LIMIT 1`],
+      ["sales_backorder_entries", `SELECT 1 FROM sales_backorder_entries WHERE sku_id IN (${placeholders}) AND outstanding_base_quantity > 0 LIMIT 1`]
+    ];
+    const [tables] = await connection.query(`SELECT table_name AS name FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN (${probes.map(() => "?").join(",")})`, probes.map(([table]) => table));
+    const installed = new Set(tables.map(row => row.name));
+    const types = [];
+    for (const [table, sql] of probes) {
+      if (!installed.has(table)) continue;
+      const [rows] = await connection.query(sql, skuIds);
+      if (rows.length) types.push(table);
+    }
+    return types.sort();
   }
 
   async #assertCategoryExists(connection, categoryId) {
@@ -2401,6 +2489,11 @@ export class ItemAdminService {
       const table = targetType === "item" ? "items" : "item_skus";
       const ids = sortedTargets.map((target) => target.id);
       const placeholders = ids.map(() => "?").join(",");
+      if (targetType === "sku" && action === "archive") {
+        const [parents] = await connection.query(`SELECT DISTINCT item_id FROM item_skus WHERE id IN (${placeholders}) ORDER BY item_id`, ids);
+        const itemIds = parents.map(row => Number(row.item_id));
+        if (itemIds.length) await connection.query(`SELECT id FROM items WHERE id IN (${itemIds.map(() => "?").join(",")}) ORDER BY id FOR SHARE`, itemIds);
+      }
       // 淨係鎖 row，唔用呢句嘅結果做任何驗證——存唔存在、狀態啱唔啱由下面
       // 逐個 target 嗰句沿用單筆邏輯嘅 UPDATE／SELECT 自己判斷，呢度純粹
       // 確保鎖嘅順序係排咗序嘅 id，避免同另一個 bulk 請求 deadlock。
@@ -2436,7 +2529,7 @@ export class ItemAdminService {
       }
 
       return results;
-    });
+    }, { isolationLevel: action === "archive" ? "READ COMMITTED" : "REPEATABLE READ" });
   }
 
   /** `bulkChangeStatus()` 逐個 target 嘅 dispatch：對應返單筆 `activateItem()`
