@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 289,
+  "revision": 290,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -13,8 +13,8 @@
     "plan": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
     "code_commit": "5b8aa9bbcf5217ab3a30f722ff241d167fa402f6",
     "source_fingerprint": "cd70f899bfaca539353988b320210dd24b2c3b8958b249224ad8dd55f701dc97",
-    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t48",
-    "default_commit": "8ac45e94e25962da0988e297ae0a93cfb65191e8",
+    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/t48-close",
+    "default_commit": "2afef5cdb271dbfa3ccefd913f7042c52c7be92b",
     "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
   },
   "runtime": {
@@ -75,7 +75,7 @@
     "TASK-045": "DONE",
     "TASK-046": "DONE",
     "TASK-047": "DONE",
-    "TASK-048": "IN_PROGRESS",
+    "TASK-048": "DONE",
     "TASK-049": "PENDING",
     "TASK-050": "PENDING",
     "TASK-051": "PENDING"
@@ -4265,8 +4265,8 @@
         "TASK-046",
         "TASK-048"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Closed with TASK-048 (PR #189, merged at 2afef5c). No import file is ever served (HD-063 1B: the result CSV is built from rows), and the only code that deletes import files, the T48 purge, applies the REV-059 L-6 checks (HD-044). T44 and T45 parts were not applicable (revisions 267, 272)."
     },
     {
       "id": "HD-044",
@@ -4276,8 +4276,8 @@
         "TASK-048",
         "TASK-041"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Discharged by TASK-048 (PR #189, merged at 2afef5c; PR CI green on head 99d6307): the purge job declares SUPPLIER_IMPORT_JOB_NAMES.purge; before each unlink it re-checks the kind directory's dev+ino and the file's isFile, dev and nlink === 1 and unlinks the stored name in that verified directory; failed deletes are logged (errno only), the run is recorded as failed (SUPPLIER_IMPORT_PURGE_INCOMPLETE) and retried next run; unreferenced files older than a day are removed (HD-050/HD-053). Recorded in implementation/62_task_041_carry_forward.md 'Status after TASK-048'. Reviewed by REV-076 (changes requested) and REV-077 (approved)."
     },
     {
       "id": "HD-045",
@@ -5724,5 +5724,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-048: REV-077 APPROVED 1e1ad49; HD-073 follow-ups done (abort throws, code in message, cancel clears payload, M7 test). Rerun the CI-style suite and mutants, push PR #189, wait for CI and the Product Owner's word. Merge only on the Product Owner's word."
+  "next_safe_action": "TASK-048 is DONE (PR #189 merged at 2afef5c). HD-043 and HD-044 closed. PHASE-004 continues; re-derive the next ready task from 08_traceability.json against this ledger before starting (TASK-049 should now be ready: TASK-045..048 are DONE; TASK-038 waits on the Item owner's approval of the supplier_sku_refs rename). Open carry-forward: HD-057 (T51) and the T49 obligations in implementation/62_task_041_carry_forward.md (result download and export at 10,000 rows, REV-075 L-4)."
 }
