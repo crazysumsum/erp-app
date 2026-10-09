@@ -185,13 +185,14 @@ The legacy body remains the authoritative development-progress record. On 2026-0
 ### TASK-043 — Integrate first real downstream reference guard
 
 - Parent Phase: PHASE-006.
-- Goal: when Purchasing/Inventory/Sales introduces a real SKU reference, add FK/provider guards for destructive and critical lifecycle changes.
-- Requirement/design: FR-030, FR-031, FR-034, FR-037, FR-038; SEC-008; DES-003, DES-020.
-- Components: owning downstream module contract, ItemReferenceService only when the variation exists, transaction/contract tests.
-- Acceptance: referenced data cannot be deleted/archived or incompatibly changed; historical snapshots remain readable; no speculative registry.
+- Goal: complete guards against installed Inventory/Sales references and the Supplier-owned references defined in Item §5.14; the first-real-consumer prerequisite is satisfied on 2026-10-09.
+- Requirement/design: FR-030, FR-031, FR-034, FR-037, FR-038, FR-043 (FR-UOM-005); SEC-008; DES-003, DES-020.
+- Components: existing Item transaction/FK checks, actual consumer contracts and true-MySQL tests; preserve UOM mapping IDs and established lock ordering.
+- Acceptance: permanent deletion rejects references with public 409 and actual reference types; incompatible Base/factor/tracking/removal is blocked; archive rejects current stock/reservation/in-transit/open operations while preserving historical snapshots and soft Supplier relations; single and bulk operations roll back state/version/audit together.
 - Verification: true-DB integration/concurrency tests and downstream regression/CI.
-- Dependencies: first production downstream reference. Risk: high once dependency exists. Rollback: forward-compatible provider/FK correction.
-- Definition of Done/status: `DEFERRED_PLANNED`.
+- Execution order: (A) merge this Item documentation handoff; (B) implement Inventory/Sales guards and public FK-error mapping against their installed tables, then current-candidate CI/review; (C) after Supplier TASK-038 merges, integrate and test `supplier_sku_refs`／`supplier_supply_events`, UOM-008 and Draft deletion races; include the first completed-GR history projection after SKU deactivation/expiry, which must record history without granting purchase eligibility; (D) execute TC-004／TC-005, UAT-005／UAT-013 and record authorized acceptance. Each implementation increment uses a fresh main-based worktree/PR; no fake Supplier table gives formal PASS credit.
+- Dependencies: Inventory/Sales branch `READY_FOR_IMPLEMENTATION`; Supplier-specific branch `BLOCKED` until Supplier TASK-038 schema/implementation merges. Risk: high reference/locking correctness. Rollback: forward-compatible guard correction; Item writes no Supplier schema/data.
+- Definition of Done/status: `PLANNED_INCREMENTS`; TASK-043 overall is not DONE until all applicable reference and acceptance branches complete.
 
 ### TASK-044 — Complete independent acceptance and DR/sign-off evidence
 
@@ -2482,13 +2483,13 @@ Scoped changes, review, developer tests, required CI, traceability and safe clea
 ## TASK-043 — Integrate first real downstream reference guard
 
 ### Goal
-Complete integrate first real downstream reference guard as defined by the `alignment remediation section` narrative and linked requirement/design scope.
+Complete the Inventory/Sales and Supplier reference-guard increments scheduled in the TASK-043 narrative above, preserving history and stable UOM identities.
 
 ### Approach
 Follow the components, dependencies, implementation notes and preserved decisions in `alignment remediation section`; typed membership and test links are in `08_traceability.json`.
 
 ### Acceptance criteria
-The task-specific checklist above is satisfied and linked cases TC-004, TC-005 provide current-candidate evidence without skipped mandatory behavior.
+The task-specific checklist above is satisfied and linked cases TC-004, TC-005 provide current-candidate evidence without skipped mandatory behavior, including FR-043/UOM-008 dependency types, public Draft-delete conflicts and real-consumer archive/critical-change guards.
 
 ### Definition of Done
 Scoped changes, review, developer tests, required CI, traceability and safe cleanup are complete. Historical recorded completion is not upgraded to formal acceptance without a current observed run.

@@ -1,5 +1,9 @@
 # Item Management Existing Artifact Inventory
 
+## Supplier handoff alignment — 2026-10-09
+
+Recovery point: clean `origin/main` at `394fc3fb11b6dce0bf4c41288904a8fac6d3fa49`. The Supplier handoff is read-only input; Item design §5.14, reference guard §8.4, OPEN-006, TASK-043 and typed traceability are updated in place. Historical requirement/task/test records are retained; no file, migration or execution evidence is removed. `supplier_sku_refs` and `supplier_supply_events` remain Supplier-owned. Existing runtime SKU/UOM lookup signatures are unchanged; the narrative contract hash changes and Supplier must refresh its consumed pin after this Item PR lands.
+
 ## Review context
 
 | Item | Value |

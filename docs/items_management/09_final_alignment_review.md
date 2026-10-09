@@ -1,5 +1,27 @@
 # Item Management Final Alignment Review
 
+## Current Supplier handoff — 2026-10-09
+
+Scope: `REVIEW_AND_ALIGN`, Item documents only, fresh main `394fc3fb11b6dce0bf4c41288904a8fac6d3fa49`; authorization: Sam's active-task “好，請推進工作”, following the concrete Supplier handoff assessment and SKU eligibility recommendation.
+
+- Item §5.14 now delegates the one relation table to Supplier (`supplier_sku_refs`); Item accepts no Supplier payload and builds no duplicate table. Supplier owns its migration/schema approval and refreshes its own contract pin after this PR merges.
+- Manual new/rebound sourcing relations require Active Item/SKU, purchasable and effective dates; retained relations show current status and cannot authorize new purchasing. Completed-GR history projection/replay follows Supplier §6.8 even after deactivation/expiry, with source/identity/UOM validation and no status/preferred/purchase eligibility changes. Draft purchase targets are refused; Item still maps restrictive FK errors defensively. The Product Owner's instruction adopts the prior recommendation; no new runtime eligibility implementation is claimed here.
+- OPEN-006 names the real Supplier dependency and test cases. FR-043/UOM-008 is linked to TASK-043, DES-020 and TC-004 in the typed ledger and generated matrix.
+- TASK-043 is scheduled now for existing Inventory/Sales consumers; the Supplier branch runs after Supplier TASK-038. Archive tests must distinguish current/open operations from completed history or a pure Supplier relation. Single/bulk rollback and concurrent reference creation remain required.
+- Old design/plan/source approvals and test evidence remain historical. They cannot authorize or prove the newly integrated main; current-candidate technical/UAT acceptance is still required. Recovery's existing owner waiver remains in its historical scope.
+
+Validation: traceability with approval consistency passes; deterministic matrix regenerated; module boundary and diff whitespace pass. Separate reviewer `/root/item_supplier_handoff_review` approved the corrected slice as REV-018, with 0 open CRITICAL/HIGH findings. This slice contains no product code, schema execution or formal test run.
+
+### HD-005 — Supplier reference ownership and sourcing eligibility
+
+Sam's active-task “好，請推進工作” accepts the preceding recommendation: Supplier owns `supplier_sku_refs`; Item exposes its existing read contract, preserves stable UOM mappings and schedules reference protection under TASK-043. Manual create/rebind targets must be Active, purchasable and effective; retained relations survive deactivation/archive without granting new purchasing eligibility. Completed-GR historical projection follows the already authoritative Supplier §6.8, not a new purchase authorization. This decision is bound to DESIGN `59ee6cb3664ae1742e41b218ffd3bf223e396eb44a4aa24d82028ebb9cf7c16d` at base `394fc3fb11b6dce0bf4c41288904a8fac6d3fa49`, for this documentation handoff only; it is not formal test/business acceptance or Supplier schema approval.
+
+### Integration observation
+
+Documentation PR [#196](https://github.com/crazysumsum/erp-app/pull/196) was created and attached using the authenticated GitHub CLI after the GitHub connector returned a create-permission 403. At recording time it is OPEN with CI running; merge/cleanup are planned, not yet claimed. The actual final candidate and merge result must be observed in GitHub before continuing. Supplier's replacement Item provider pin is `5a44ef30d5b3fab23d5f780005a0fd90ff70d4be56a31a48e69a5bf028a011a9`.
+
+The earlier sections below record historical alignment states and are not current execution evidence.
+
 ## Outcome
 
 **STRUCTURALLY PREPARED; BLOCKED, NOT APPROVED.** The v2 canonical set exists in place, the standalone SKU scope decision is resolved and the accountable owner is confirmed. Actual independent review remains outstanding. Product implementation and formal acceptance are outside this run.

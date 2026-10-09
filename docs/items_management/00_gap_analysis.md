@@ -12,7 +12,7 @@
 | GAP-IMP-003 | HIGH | IMPLEMENTATION_GAP | RESOLVED by TASK-039 |
 | GAP-IMP-004 | HIGH | LIKELY_DEFECT | RESOLVED by TASK-040 |
 | GAP-IMP-005 | HIGH | IMPLEMENTATION_GAP | RESOLVED by TASK-041 |
-| GAP-INT-001 | MEDIUM until dependency exists | DEFERRED_DEPENDENCY | OPEN: downstream reference guard / TASK-043 |
+| GAP-INT-001 | HIGH | IMPLEMENTATION_GAP | OPEN: TASK-043 ready for Inventory/Sales; Supplier branch awaits Supplier TASK-038 |
 | GAP-TASK-001 | HIGH | STATUS_AMBIGUITY | RESOLVED: maintainer-approved T23 index correction |
 | GAP-TASK-002 | HIGH | ACCEPTANCE_GAP | OPEN: staging and human sign-offs |
 | GAP-TC-001 | MEDIUM | EVIDENCE_CLASSIFICATION | RESOLVED in docs: developer versus independent evidence |
@@ -53,9 +53,9 @@ Current Item/SKU tables reference Brand/UOM. `deleteBrand()` and `deleteUom()` s
 
 The execution worker performs direct Item/SKU/UOM SQL. Confirmation writes one job-level `item.import` audit in an earlier transaction, but imported Item creates/updates do not receive the same per-aggregate audit semantics as interactive changes, and the confirm audit is not atomic with later execution. This conflicts with FR-AUDIT-001/004, BR-021 and canonical NFR-006. Remediation: TASK-041 / TC-015.
 
-### GAP-INT-001 — Downstream reference guard remains deferred
+### GAP-INT-001 — Complete real-consumer reference guards
 
-No current production Purchasing/Inventory/Sales table has a true SKU FK; existing SKU references are Item-internal children. The design deliberately avoids a speculative provider. Add the contract/FK checks with the first real consumer under TASK-043; do not mark affected downstream acceptance criteria PASS today.
+As of main `394fc3f` on 2026-10-09, Inventory migrations 0059/0060/0063 and Sales migrations already introduce real SKU references. Item updateSku has partial Inventory/Sales checks, but archive has no current-stock/open-operation guard, Draft delete lacks public FK-error mapping, and reference descriptions omit Supplier. TASK-043 is ready for installed consumers, with its Supplier branch scheduled after Supplier TASK-038. This supersedes the historical no-consumer blocker without upgrading old test evidence. Supplier handoff HD-081 is resolved by aligning Item §5.14/OPEN-006 and scheduling these increments; Supplier owns its schema and refreshes its own pin afterward.
 
 ### GAP-TASK-001 — T23 progress conflict
 

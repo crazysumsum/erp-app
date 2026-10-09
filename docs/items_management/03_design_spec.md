@@ -36,7 +36,7 @@ The complete legacy design is retained below. Canonical `DES-*` items provide st
 | DES-017 | Configuration, logs, metrics and alerts | §12.1–12.3 | SEC-007, SEC-009; NFR-001, NFR-002, NFR-003, NFR-004, NFR-005, NFR-013 | IMPLEMENTED with developer evidence |
 | DES-018 | Retention, backup, restore and DR objectives | §12.4, §14 | FR-063; SEC-008, SEC-009; NFR-010, NFR-011, NFR-014, NFR-015 | DESIGN ENHANCED; RTO/RPO verification pending |
 | DES-019 | Delivery phases, deployment and forward-only rollback | §13, §14 | NFR-007, NFR-008, NFR-009, NFR-010, NFR-014, NFR-015 | PARTIAL; staging exercise pending |
-| DES-020 | Cross-module reference integration and transaction snapshot boundary | §1.2, §8.3–8.4 | FR-014, FR-030, FR-031, FR-034, FR-037, FR-038; SEC-008 | DEFERRED until first real Purchasing/Inventory/Sales FK |
+| DES-020 | Cross-module reference integration and transaction snapshot boundary | §1.2, §5.14, §8.3–8.4 | FR-014, FR-030, FR-031, FR-034, FR-037, FR-038, FR-043; SEC-008 | TASK-043 ready for installed Inventory/Sales consumers; Supplier branch awaits TASK-038 |
 
 ## Full canonical requirement set
 
@@ -52,7 +52,7 @@ Non-functional and security: NFR-001, NFR-002, NFR-003, NFR-004, NFR-005, NFR-00
 - The `GET /api/v1/item-audit/logs` query is presented by `ItemAuditPage.vue` at `/items/audit`, with date, actor, target, action and target-type filters plus before/after/reason context (`TASK-039`).
 - Brand and UOM permanent deletion maps current MySQL FK-reference failures to the documented `CATALOG_IN_USE` public error. `referenceTypes` is stable and actionable: Brand reports `items`; UOM reports the actual ordered subset of `sku_uoms`, `sku_measurements` and `attributes` (or `unknown` if a raced dependency disappears before description). Focused service tests cover direct and wrapped driver errors; TC-014 has current local-MySQL evidence for rollback and no audit on failure (`TASK-040`).
 - Import execution now routes each row through `ItemImportAggregateService` inside one caller-owned transaction. It re-authorizes the confirming actor, applies shared SKU validation, writes per-aggregate Item/SKU audit with the confirmed reason, commits successful job/row state atomically with the aggregate, and fences recovered leases so a stale worker cannot overwrite a newer owner. Failure injection, owner revocation, lease recovery/fencing and the 10,000-row bound have current developer evidence under `TASK-041`; CI and formal acceptance remain pending.
-- No production downstream Purchasing/Inventory/Sales FK currently exists; the future reference-guard integration remains a declared dependency, not an implementation failure against an available provider.
+- Inventory/Sales SKU FK migrations now exist on main. TASK-043 must complete their destructive/lifecycle reference guards; Supplier-specific verification awaits Supplier TASK-038. Historical Item test evidence does not establish acceptance of these later integrations.
 
 ## HD-003 — Attribute and Variant detail projection contract
 
@@ -647,9 +647,17 @@ Primary key `(job_id,row_number)`，另有 `(job_id,status)`。
 
 預檢只寫 Job／Row 結果，不動商品表。Create row 的 `match_sku_id` 為 NULL；upsert update 必須以不可重用的 SKU ID 配對並帶 expected version，SKU Code 只作顯示／交叉檢查，不允許藉匯入繞過 code-change 特批。確認後 worker 鎖 Job，重新讀取所引用 catalog 的狀態、unique keys 及 SKU version，再以單一商品交易套用全部 valid rows；任何 row 執行失敗整批 rollback。Worker 捕捉失敗後，另開短交易把 Job 記為 failed，確保狀態更新不會跟商品交易一起 rollback。
 
-### 5.14 Supplier reference（延後建立）
+### 5.14 Supplier reference（Supplier 擁有）
 
-目前 repo 沒有 Supplier master，不能安全建立無外鍵的 `supplier_id`。待 Supplier 模組確定後新增 `item_supplier_refs`：`sku_id`、`supplier_id`、`supplier_item_code`、`supplier_item_name`、`purchase_uom_id`、`minimum_order_qty`、`is_preferred`、version／audit；unique `(supplier_id,supplier_item_code)`，兩端均有 FK。此前 Item API 不接受 supplier payload。
+Supplier–SKU 軟性對照由 Supplier 模組擁有；唯一正式表名為 `supplier_sku_refs`，schema／CRUD／migration 以 [Supplier 設計 §5.11](../supplier_management/03_design_spec.md#511-supplier_sku_refsitem-tables-存在後) 為準。Item 不建立原先暫名 `item_supplier_refs`，Item API 繼續不接受 supplier payload。對照不構成採購資格白名單。
+
+Item 提供唯讀 SKU／UOM identity。Supplier 使用 `ItemLookupService`，不直接寫 Item tables；`supplier_sku_refs.sku_id` 以 `ON DELETE RESTRICT` 引用 `item_skus.id`，`(purchase_sku_uom_id, sku_id)` 以 composite RESTRICT FK 引用 `item_sku_uoms(id, sku_id)`。`purchase_sku_uom_id` 可為 NULL。Supplier-owned append-only `supplier_supply_events.sku_id` 同樣以 RESTRICT FK 引用 `item_skus.id`；兩張表由 Supplier 在 schema 核准後建立。
+
+2026-10-09 Sam 接受交接建議後，手動新增／改綁採購對照須驗證 Item 與 SKU 都為 Active、SKU 可採購且在有效日期內；Draft、Inactive、Discontinued、Archived 均不可作新的採購目標。既有對照於 SKU 停用／停產／封存後保留並顯示狀態，不可藉對照繞過新採購資格。純對照本身不等同庫存或未完成交易，不能單憑其存在禁止封存；未完成採購、庫存、預留或在途仍依 §8.4 阻擋。Supplier 負責手動建立／改綁時的資格檢查，Item 仍須提供刪除的公開引用錯誤作第二道防線。
+
+已提交 Confirmed GR 的 `recordSupply`／reconciliation 依 [Supplier §6.8](../supplier_management/03_design_spec.md#68-supplier－sku-relation-與-lookup-apis) 作歷史 projection，不套用目前的新採購資格 gate。首次補寫即使在 SKU 停用／停產／封存或有效期結束後執行，仍須驗證權威已完成來源、未物理刪除的 SKU identity 及 UOM ownership，並遵守事件冪等性；不得改回 Active、改成 preferred，或授予新採購資格。這不是一般 relation create API 的資格繞過。
+
+Item 編輯 SKU 必須原地更新保留的 UOM association，保留 mapping `id` 與 `UNIQUE(id, sku_id)`；Supplier 不得依賴會被每次編輯重建的 association。移除被對照引用的 UOM 或永久刪除被引用的 Draft Item／SKU，由 TASK-043 處理拒絕、依賴類型、完整 rollback 與無成功 audit。
 
 ### 5.15 Migration 拆分
 
@@ -1072,13 +1080,15 @@ Lookup projection 須回傳 `shelfLifeDays`、`minimumReceiptLifeDays` 及 `mini
 
 ### 8.4 Reference guard
 
-Phase 1 尚無庫存、採購或銷售表，永久刪除 Draft 只需檢查 Item aggregate 自身。每增加一個下游表，必須：
+Phase 1 僅檢查 Item aggregate 自身的決定保留為歷史。2026-10-09 main 已有 Inventory／Sales 真實 SKU FK，TASK-043 的首次下游依賴已滿足；Supplier 對照分支另待 Supplier TASK-038 merge。每增加一個下游表，必須：
 
 1. 對 `item_skus.id` 建 `ON DELETE RESTRICT` FK。
 2. 在首次出現真引用時建立 `ItemReferenceService.describeSkuReferences()`，加入實際 EXISTS／count 查詢。
 3. 增加真 MySQL 整合測試，證明 delete／archive 的公開錯誤包含引用類型。
 
-現在不為尚不存在的模組建立 plugin registry 或空 interface；待第一個真引用出現再抽取。
+重用已存在的 FK metadata 查詢與 transaction／lock 順序，按真實消費者補足引用描述，不建立 speculative registry。永久刪除須拒絕任何下游引用並回 `ITEM_REFERENCED`／`SKU_REFERENCED` 與 `details.referenceTypes`；UOM association 移除拒絕 Barcode／Supplier／交易引用並回 `UOM_CHANGE_BLOCKED` 與實際依賴類型，訊息不能把供應商對照誤稱為庫存交易。FK race 同樣須轉為公開 409，無法再次描述時只回 `unknown`，不洩漏 SQL／constraint names。
+
+封存 guard 判斷現存量、預留量、在途量及未完成交易，而非單純歷史 FK 是否存在。歷史交易／Supplier 對照保留且可讀；歷史引用仍可阻止破壞性刪除及不相容的 Base UOM／factor／tracking 變更。單筆及批次 Item／SKU 操作共用這些規則，任一 child 被阻擋時 status、version、UOM、Barcode 及 audit 全部 rollback。實作／consumer regression 及 UAT-005／UAT-013 的當前證據尚待 TASK-043，不因本次文件對齊取得 PASS。
 
 ### 8.5 `ItemMediaService`
 
@@ -1805,10 +1815,10 @@ Boundary validation, authorization, optimistic concurrency, transaction/audit co
 ## DES-020 — Cross-module reference integration and transaction snapshot boundary
 
 ### Decision
-Apply the detailed design in preserved sections `§1.2, §8.3–8.4` for cross-module reference integration and transaction snapshot boundary. Current alignment classification: `DEFERRED until first real Purchasing/Inventory/Sales FK`.
+Apply the detailed design in sections `§1.2, §5.14, §8.3–8.4` for cross-module reference integration and transaction snapshot boundary. Current classification: `TASK-043 ready for installed Inventory/Sales consumers; Supplier branch awaits Supplier TASK-038`.
 
 ### Rationale
-This design is required by FR-014, FR-030, FR-031, FR-034, FR-037, FR-038, SEC-008; exact typed relationships are maintained in `08_traceability.json`.
+This design is required by FR-014, FR-030, FR-031, FR-034, FR-037, FR-038, FR-043, SEC-008; exact typed relationships are maintained in `08_traceability.json`.
 
 ### Failure behavior
 Boundary validation, authorization, optimistic concurrency, transaction/audit coupling and dependency readiness fail closed as applicable. Partial or unknown outcomes remain explicit and block acceptance until reconciled.

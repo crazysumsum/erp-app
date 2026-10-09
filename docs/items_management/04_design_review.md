@@ -1,5 +1,13 @@
 # Item Management Design Review
 
+## REV-018 — Supplier handoff documentation review, 2026-10-09
+
+- Method: `SEPARATE_AGENT`; author `/root`, reviewer `/root/item_supplier_handoff_review`, separate read-only context.
+- Scope: Item §5.14/§8.4, Supplier handoff, OPEN-006, TASK-043 scheduling, provider pin and traceability. Base main `394fc3fb11b6dce0bf4c41288904a8fac6d3fa49`; DESIGN `59ee6cb3664ae1742e41b218ffd3bf223e396eb44a4aa24d82028ebb9cf7c16d`; PLAN `9084e8e3435a3759f1e0445ee005ae41c3403fc7338242572fe8de1be39eff50`.
+- ISR-001 (`HIGH`, now `RESOLVED`): the initial universal Active/purchasable gate conflicted with Supplier §6.8's retryable completed-GR history projection. The corrected text gates manual sourcing create/rebind only; historical projection validates authoritative completed source, SKU identity and UOM ownership, preserves current status and grants no new purchasing eligibility. TASK-043/OPEN-006 include delayed first projection after deactivation/expiry and idempotent replay.
+- Actual follow-up verdict: `APPROVED`, 0 open CRITICAL/HIGH findings for this documentation slice. Traceability, generated matrix, module boundary and diff whitespace checks passed. No product, migration, runtime or formal acceptance execution was reviewed or performed.
+- Approval does not close TASK-043, refresh Supplier's consumer pin, or rebind historical technical/UAT PASS to current main. Older review sections below are historical.
+
 ## Gate
 
 **CHANGES_REQUESTED — 0 open CRITICAL, 5 product/design HIGH, 4 MEDIUM, plus v2 governance/execution gaps.** The core architecture is coherent and substantially implemented, but the documented design and current main are not fully aligned. This is a documentation/static-code review; no acceptance tests were executed.
