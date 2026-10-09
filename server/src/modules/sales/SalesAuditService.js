@@ -9,8 +9,12 @@ const BUILDERS = Object.freeze({ "sales_quotation.created": DOCUMENT, "sales_quo
   "sales_quotation.expired": TRANSITION, "sales_quotation.cancelled": TRANSITION, "sales_quotation.converted": CONVERSION,
   "sales_order.withdrawn": [...TRANSITION,"commitmentHash"], "sales_order.cancelled": [...TRANSITION,"commitmentHash"], "sales_order.remaining_closed": [...TRANSITION,"commitmentHash"],
   "sales_order.backorder_allocated": [...TRANSITION,"commitmentHash"], "sales_order.backorder_deferred": [...TRANSITION,"commitmentHash"], "sales_order.backorder_stale": [...TRANSITION,"commitmentHash"],
-  "sales_order.confirm_started": TRANSITION, "sales_order.confirmed": TRANSITION, "sales_order.confirm_failed": TRANSITION });
+  "sales_order.confirm_started": TRANSITION, "sales_order.confirmed": TRANSITION, "sales_order.confirm_failed": TRANSITION,
+  "sales_import.uploaded": ["version"], "sales_import.confirmed": TRANSITION, "sales_import.cancelled": TRANSITION,
+  "sales_import.prechecked": ["version","rowCount","sourceOrderCount","validCount","invalidCount","duplicateCount"],
+  "sales_import.completed": ["version","sourceOrderCount","successCount","failedCount","invalidCount","duplicateCount"] });
 const STATUSES = ["DRAFT", "ISSUED", "EXPIRED", "CANCELLED", "CONVERTED", "CONFIRMING", "CONFIRMED", "PARTIALLY_FULFILLED", "COMPLETED", "CLOSED"];
+const IMPORT_STATUSES=["UPLOADED","VALIDATING","READY","QUEUED","PROCESSING","COMPLETED","PARTIAL_SUCCESS","FAILED","CANCELLED"];
 function bounded(value, maximum, { ascii = false, empty = false } = {}) {
   if (typeof value !== "string" || !empty && !value || [...value].length > maximum ||
       (ascii ? /[^\x20-\x7e]/u.test(value) : [...value].some(character => character.codePointAt(0) < 32 || character.codePointAt(0) === 127))) throw new TypeError("Invalid Sales audit label");
@@ -27,8 +31,8 @@ function detailsFor(action, details) {
     if (key === "totalAmount") { if (typeof value !== "string" || normalizeMoney(value) !== value) throw new TypeError("Invalid Sales audit amount"); }
     else if (key === "currencyCode") { if (typeof value !== "string" || !/^[A-Z]{3}$/u.test(value)) throw new TypeError("Invalid Sales audit currency"); }
     else if (key === "differenceHash" || key === "commitmentHash") { if (typeof value !== "string" || !/^[a-f0-9]{64}$/u.test(value)) throw new TypeError("Invalid Sales audit hash"); }
-    else if (key === "fromStatus" || key === "toStatus") { if (!STATUSES.includes(value)) throw new TypeError("Invalid Sales audit status"); }
-    else if (key.endsWith("Count")) { if (!Number.isSafeInteger(value) || value < (key === "lineCount" ? 1 : 0) || value > 100) throw new TypeError("Invalid Sales audit count"); }
+    else if (key === "fromStatus" || key === "toStatus") { if (!(action.startsWith("sales_import.")?IMPORT_STATUSES:STATUSES).includes(value)) throw new TypeError("Invalid Sales audit status"); }
+    else if (key.endsWith("Count")) { if (!Number.isSafeInteger(value) || value < (key === "lineCount" ? 1 : 0) || value > (action.startsWith("sales_import.")?(key==="rowCount"?100000:10000):100)) throw new TypeError("Invalid Sales audit count"); }
     else positive(value);
   }
   return JSON.stringify(Object.fromEntries(fields.map(field => [field, details[field]])));
@@ -41,7 +45,7 @@ export class SalesAuditService {
     await connection.execute(`INSERT INTO sales_audit_logs
       (occurred_at, actor_user_id, actor_label, action, target_type, target_id, target_number, outcome, reason, details,
         event_id, request_id, correlation_id, ip_address) VALUES (?, ?, ?, ?, ?, ?, ?, 'SUCCESS', ?, ?, ?, ?, ?, ?)`,
-    [nowMs, actor.id === null ? null : positive(actor.id), bounded(actor.username, 190), action, action.startsWith("sales_quotation.") ? "QUOTATION" : "ORDER",
+    [nowMs, actor.id === null ? null : positive(actor.id), bounded(actor.username, 190), action, action.startsWith("sales_quotation.") ? "QUOTATION" : action.startsWith("sales_import.") ? "IMPORT_JOB" : "ORDER",
       positive(targetId), bounded(targetNumber, 30, { ascii: true }), reason === "" ? "" : salesReason(reason), summary, salesEventId(eventId),
       bounded(requestId, 64, { ascii: true, empty: true }), bounded(correlationId, 64, { ascii: true, empty: true }), bounded(ipAddress, 45, { ascii: true, empty: true })]);
   }

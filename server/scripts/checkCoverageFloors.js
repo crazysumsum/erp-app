@@ -14,6 +14,7 @@ import { fileURLToPath } from "node:url";
  * 「壞掉會很貴而且不容易在開發時發現」的才需要。
  */
 const FLOORS = {
+  "src/modules/sales/SalesIntakeService.js": { lines: 95, branches: 90, functions: 90 },
   "src/modules/sales/SalesOrderConfirmationService.js": { lines: 95, branches: 90, functions: 90 },
   "src/modules/sales/SalesOrderLifecycleService.js": { lines: 95, branches: 90, functions: 90 },
   "src/modules/sales/SalesBackorderService.js": { lines: 95, branches: 90, functions: 90 },

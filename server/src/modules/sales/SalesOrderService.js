@@ -61,7 +61,21 @@ export class SalesOrderService {
       const {eventId,...payload}=document;
       const claim=await this.operations.claim(tx,{eventId,commandType:update?"UPDATE_ORDER":"CREATE_ORDER",targetId:update?id:null,payload,actor,nowMs,...trace});
       if(claim.replay)return {salesOrder:await readSalesOrderDetail(tx,claim.replay.id,{lock:true}),operation:claim.replay,warnings:[]};
-      let number,version;
+      const result=await this.#writeDraft(tx,{document,warnings,id,input,actor,eventId,nowMs,update,trace});
+      await this.operations.succeed(tx,{operationId:claim.operationId,result:result.operation,nowMs});
+      return result;
+    });
+  }
+  createIntakeDraftInTransaction(tx,{document,actor,eventId,nowMs,number,source}) {
+    if(!tx||typeof tx.query!=="function"||typeof tx.execute!=="function"||!source||Object.keys(source).sort().join(",")!=="channelCode,externalOrderId,externalOrderKeyId,intakeOrderId,type"||
+      !["CSV","CHANNEL"].includes(source.type)||![source.intakeOrderId,source.externalOrderKeyId].every(id=>Number.isSafeInteger(id)&&id>0)||
+      typeof source.channelCode!=="string"||!/^[A-Z][A-Z0-9_]{0,49}$/u.test(source.channelCode)||typeof source.externalOrderId!=="string"||!source.externalOrderId.trim()||[...source.externalOrderId].length>190||/[\p{Cc}\p{Cf}]/u.test(source.externalOrderId)||
+      typeof number!=="string"||!/^SO-\d{6}-\d{6}$/u.test(number)||!Number.isSafeInteger(nowMs)||nowMs<0||document?.eventId!==eventId)throw salesError("SALES_INPUT_INVALID");
+    const validated=validateSalesDocument(document);
+    return this.#writeDraft(tx,{document:validated.document,warnings:validated.warnings,actor,eventId,nowMs,allocatedNumber:number,source,update:false});
+  }
+  async #writeDraft(tx,{document,warnings,id,input,actor,eventId,nowMs,update,allocatedNumber,source,trace={}}) {
+      let number=allocatedNumber,version;
       if(update){
         const [[before]]=await tx.query("SELECT id,sales_order_number,status,version FROM sales_orders WHERE id=? FOR UPDATE",[id]);
         if(!before)throw salesError("SALES_ORDER_NOT_FOUND");if(before.status!=="DRAFT")throw salesError("SALES_STATE_CONFLICT");
@@ -69,7 +83,7 @@ export class SalesOrderService {
         const [existing]=await tx.query("SELECT id,sku_id,sku_uom_id FROM sales_order_lines WHERE sales_order_id=? ORDER BY id FOR UPDATE",[id]);
         for(const line of input.lines)if(line.id!==undefined && !existing.some(row=>Number(row.id)===line.id && Number(row.sku_id)===line.skuId && Number(row.sku_uom_id)===line.skuUomId))throw salesError("SALES_INPUT_INVALID",{field:"lines"});
         number=before.sales_order_number;version=document.version+1;
-      }else{number=await this.sequence.nextNumberInTransaction(tx,{documentType:"SALES_ORDER",nowMs});version=1;}
+      }else{number??=await this.sequence.nextNumberInTransaction(tx,{documentType:"SALES_ORDER",nowMs});version=1;}
       const prepared=await prepareSalesDocument(tx,document,nowMs,this);
       const [[warehouse]]=await tx.query("SELECT id,warehouse_code,warehouse_name,status FROM inventory_warehouses WHERE id=? LOCK IN SHARE MODE",[document.fulfillmentWarehouseId]);
       if(!warehouse || warehouse.status!=="ACTIVE")throw salesError("WAREHOUSE_INVALID");
@@ -83,7 +97,7 @@ export class SalesOrderService {
         if(written.affectedRows!==1)throw salesError("VERSION_CONFLICT",{currentVersion:document.version});
         await tx.execute("DELETE FROM sales_order_lines WHERE sales_order_id=?",[id]);
       }else{
-        const row={sales_order_number:number,status:"DRAFT",source_type:"MANUAL",...header,created_at:nowMs,created_by:actor.id};
+        const row={sales_order_number:number,status:"DRAFT",source_type:source?.type??"MANUAL",...(source?{source_intake_order_id:source.intakeOrderId,external_order_key_id:source.externalOrderKeyId,channel_code_snapshot:source.channelCode,external_order_id_snapshot:source.externalOrderId,confirmation_event_id:eventId}:{}),...header,created_at:nowMs,created_by:actor.id};
         const [inserted]=await tx.execute(`INSERT INTO sales_orders (${Object.keys(row).join(",")}) VALUES (${Object.keys(row).map(()=>"?").join(",")})`,Object.values(row));id=Number(inserted.insertId);
       }
       for(const [index,source] of prepared.lines.entries()){
@@ -96,9 +110,9 @@ export class SalesOrderService {
         VALUES (?,1,NULL,'DRAFT','created',1,?,?,?,?)`,[id,eventId,actor.id,actor.username,nowMs]);
       await this.audit.record(tx,{actor,action:update?"sales_order.updated":"sales_order.created",targetId:id,targetNumber:number,eventId,nowMs,...trace,
         details:{version,lineCount:header.line_count,totalAmount:header.total_amount,currencyCode:document.currencyCode}});
-      const result={id,number,status:"DRAFT",version};await this.operations.succeed(tx,{operationId:claim.operationId,result,nowMs});
+      const result={id,number,status:"DRAFT",version};
       if(document.currencyCode!==prepared.customer.defaultCurrencyCode)warnings.push({code:"CUSTOMER_CURRENCY_DIFFERENT",field:"currencyCode"});
       return {salesOrder:await readSalesOrderDetail(tx,id,{lock:true}),operation:result,warnings};
-    });
   }
+
 }

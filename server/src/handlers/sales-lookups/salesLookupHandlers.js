@@ -11,7 +11,7 @@ function lookupHandler(kind, name) {
       requestSchema: { params: EMPTY, query: {}, body: EMPTY }, responseSchema: { 200: SALES_LOOKUP_RESPONSE[kind] } };
     constructor(services = {}) {
       super(services);
-      this.lookup = new SalesLookupService({ database: services.require("mysqldatabase"), time: services.require("time"), logger: this.logger });
+      this.lookup = new SalesLookupService({ database: services.require("mysqldatabase"), time: services.require("time"), logger: this.logger, config: services.config?.sales });
     }
     async execute(req) { return this.response(await this.lookup.list({ claims: salesActorClaims(req), kind, input: salesLookupQuery(req, kind) })); }
   };

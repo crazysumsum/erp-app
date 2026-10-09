@@ -6,7 +6,12 @@ export function normalizeSalesConfig(source, { requestTimeoutMs } = {}) {
   if (!Number.isSafeInteger(requestTimeoutMs) || requestTimeoutMs <= 0) throw new TypeError("Sales config requires the actual HTTP timeout");
   if (Object.keys(source).some((key) => !Object.hasOwn(defaults, key))) throw new Error("Unknown Sales deployment setting");
   const config = { ...defaults, ...source };
+  if (!Array.isArray(config.importChannelCodes) || config.importChannelCodes.length > 100 ||
+      new Set(config.importChannelCodes).size !== config.importChannelCodes.length || [...config.importChannelCodes].some(code =>
+        typeof code !== "string" || code.length > 50 || !/^[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)*$/u.test(code))) throw new Error("Sales import channel catalogue is invalid");
+  config.importChannelCodes = Object.freeze([...config.importChannelCodes]);
   for (const [key, value] of Object.entries(config)) {
+    if (key === "importChannelCodes") continue;
     if (!Number.isSafeInteger(value) || value < (key === "archiveHourHkt" ? 0 : 1)) throw new Error(`Sales config ${key} must be a valid integer`);
     if (key.endsWith("Ms") && value > 2147483647) throw new Error(`Sales config ${key} exceeds the Node timer limit`);
   }

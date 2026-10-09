@@ -132,5 +132,7 @@ export function createBodyReceiveTimeoutMiddleware({
  */
 export function bodyParsingComplete(req, _res, next) {
   req[DISARM]?.();
+  // JSON is already consumed; retain unparsed multipart bytes through asynchronous authorization.
+  if (!req.readableEnded) req.pause();
   next();
 }
