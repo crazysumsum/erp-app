@@ -80,11 +80,13 @@ export class SalesOrderService {
         const [[before]]=await tx.query("SELECT id,sales_order_number,status,version FROM sales_orders WHERE id=? FOR UPDATE",[id]);
         if(!before)throw salesError("SALES_ORDER_NOT_FOUND");if(before.status!=="DRAFT")throw salesError("SALES_STATE_CONFLICT");
         if(Number(before.version)!==document.version)throw salesError("VERSION_CONFLICT",{currentVersion:Number(before.version)});
-        const [existing]=await tx.query("SELECT id,sku_id,sku_uom_id FROM sales_order_lines WHERE sales_order_id=? ORDER BY id FOR UPDATE",[id]);
-        for(const line of input.lines)if(line.id!==undefined && !existing.some(row=>Number(row.id)===line.id && Number(row.sku_id)===line.skuId && Number(row.sku_uom_id)===line.skuUomId))throw salesError("SALES_INPUT_INVALID",{field:"lines"});
         number=before.sales_order_number;version=document.version+1;
       }else{number??=await this.sequence.nextNumberInTransaction(tx,{documentType:"SALES_ORDER",nowMs});version=1;}
       const prepared=await prepareSalesDocument(tx,document,nowMs,this);
+      if(update){
+        const [existing]=await tx.query("SELECT id,sku_id,sku_uom_id FROM sales_order_lines WHERE sales_order_id=? ORDER BY id FOR UPDATE",[id]);
+        for(const line of input.lines)if(line.id!==undefined && !existing.some(row=>Number(row.id)===line.id && Number(row.sku_id)===line.skuId && Number(row.sku_uom_id)===line.skuUomId))throw salesError("SALES_INPUT_INVALID",{field:"lines"});
+      }
       const [[warehouse]]=await tx.query("SELECT id,warehouse_code,warehouse_name,status FROM inventory_warehouses WHERE id=? LOCK IN SHARE MODE",[document.fulfillmentWarehouseId]);
       if(!warehouse || warehouse.status!=="ACTIVE")throw salesError("WAREHOUSE_INVALID");
       const header={customer_id:document.customerId,customer_code_snapshot:prepared.customer.customerCode,customer_name_snapshot:prepared.customer.legalName,

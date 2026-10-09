@@ -137,3 +137,13 @@ test("TC-035 precheck structural counts precede order persistence only after the
 test("TC-034 lower approved deployment row/order caps fail before admitting sources",async t=>{
  for(const limits of [{maxRows:1},{maxOrders:1}]){const spoolRoot=await fixture(t);let admitted=0;await assert.rejects(()=>parseSalesCsv(csv([row,{...row,sourceOrderKey:"Other"}]),{spoolRoot,onOrder:()=>admitted++,...limits}),{code:"SALES_IMPORT_FILE_INVALID"});assert.equal(admitted,0);assert.deepEqual(await readdir(spoolRoot),[]);}
 });
+
+
+test("TC-034 consecutive groups flush before noncontiguous returns without losing quantities or peer errors",async t=>{
+ for(const conflict of [false,true]) {
+  const {counts,orders}=await read(t,csv([{...row,quantity:"0.1"},{...row,quantity:"0.2"},{...row,sourceOrderKey:"Peer",externalOrderId:"Peer"},{...row,quantity:"0.3",...(conflict?{currencyCode:"USD"}:{})}]));
+  assert.deepEqual(counts,{rowCount:4,orderCount:2});const source=orders.find(order=>order.sourceOrderKey===row.sourceOrderKey),peer=orders.find(order=>order.sourceOrderKey==="Peer");assert.equal(peer.errors.length,0);assert.equal(peer.payload.lines[0].quantity,"1.000000");
+  if(conflict)assert.ok(source.errors.some(error=>error.field==="header"));
+  else {assert.equal(source.errors.length,0);assert.equal(source.payload.lines[0].quantity,"0.600000");assert.deepEqual(source.payload.lines[0].rowNumbers,[2,3,5]);}
+ }
+});

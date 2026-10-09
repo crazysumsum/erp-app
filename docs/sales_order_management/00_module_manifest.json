@@ -86,7 +86,8 @@
       "client/test/composables/sales/**",
       "server/test/idempotencyService.test.js",
       "server/test/integration/itemRecoveryAcceptance.integration.test.js",
-      "server/test/sales/phase3/**"
+      "server/test/sales/phase3/**",
+      "server/test-support/salesProcessingCrashChild.js"
     ],
     "allowed_write_paths": [
       "docs/sales_order_management/**",
@@ -169,7 +170,8 @@
       "docs/customer_management/03_design_spec.md",
       "docs/items_management/03_design_spec.md",
       "server/config/api.js",
-      "server/src/framework/middleware/bodyReceiveTimeout.js"
+      "server/src/framework/middleware/bodyReceiveTimeout.js",
+      "server/test-support/salesProcessingCrashChild.js"
     ],
     "approval_required_paths": [
       "server/database/migrations/**",

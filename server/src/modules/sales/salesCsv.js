@@ -72,7 +72,7 @@ const safePayload=group=>({...group.payload,lines:group.payload.lines.map(({form
 export async function parseSalesCsv(source,{spoolRoot,abortSignal,onOrder,onFileValidated,maxRows=IMPORT_MAX_ROWS,maxOrders=IMPORT_MAX_ORDERS}={}) {
   if(!path.isAbsolute(spoolRoot)||typeof onOrder!=="function")throw new TypeError("Sales CSV requires a managed spool root and bounded order consumer");
   abortSignal?.throwIfAborted();const directory=await mkdtemp(path.join(spoolRoot,"sales-csv-"));
-  let rowCount=0,orderCount=0;
+  let rowCount=0,orderCount=0,currentFile,currentGroup;
   try {
     await chmod(directory,0o700);
     const parser=parse({bom:true,record_delimiter:["\r\n","\n"],skip_empty_lines:true,relax_column_count:false,max_record_size:65536});
@@ -91,8 +91,11 @@ export async function parseSalesCsv(source,{spoolRoot,abortSignal,onOrder,onFile
         if(row.templateVersion!=="1.0")throw salesError("SALES_IMPORT_VERSION_UNSUPPORTED");
         if(!row.sourceOrderKey.trim()||[...row.sourceOrderKey].length>190||/[\p{Cc}\p{Cf}]/u.test(row.sourceOrderKey))throw salesError("SALES_IMPORT_FILE_INVALID",{field:"sourceOrderKey"});
         const hash=createHash("sha256").update(row.sourceOrderKey,"utf8").digest("hex"),file=path.join(directory,hash);
-        let group;
-        try {group=JSON.parse(await readFile(file,"utf8"));}catch(error){if(error.code!=="ENOENT")throw error;}
+        let group=currentFile===file?currentGroup:undefined;
+        if(currentFile!==file) {
+          if(currentFile)await writeFile(currentFile,JSON.stringify(currentGroup),{mode:0o600});
+          try {group=JSON.parse(await readFile(file,"utf8"));}catch(error){if(error.code!=="ENOENT")throw error;}
+        }
         const normalized=normalizeRow(row,rowNo);
         if(!group) {
           if(++orderCount>IMPORT_MAX_ORDERS||orderCount>maxOrders)throw salesError("SALES_IMPORT_FILE_INVALID",{field:"orders"});
@@ -111,9 +114,10 @@ export async function parseSalesCsv(source,{spoolRoot,abortSignal,onOrder,onFile
         }
         appendErrors(group,normalized.errors,rowNo);
         if(Buffer.byteLength(JSON.stringify(safePayload(group)))>131072){group.limited=true;group.payload.lines=[];appendErrors(group,[{rowNo,field:"payload",code:"SALES_IMPORT_ORDER_INVALID"}],rowNo);}
-        await writeFile(file,JSON.stringify(group),{mode:0o600});
+        currentFile=file;currentGroup=group;
       }
       await completed;
+      if(currentFile)await writeFile(currentFile,JSON.stringify(currentGroup),{mode:0o600});
       if(!headers||!rowCount)throw salesError("SALES_IMPORT_FILE_INVALID",{field:"file"});
     } catch(error) {
       parser.destroy();

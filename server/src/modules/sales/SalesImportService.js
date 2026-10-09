@@ -10,7 +10,7 @@ import {requireSalesActor} from "./salesAuthorization.js";
 import {SalesOperationService} from "./SalesOperationService.js";
 import {SalesSequenceService} from "./SalesSequenceService.js";
 import {SalesAuditService} from "./SalesAuditService.js";
-import {transitionImportJob} from "./SalesIntakeStateMachine.js";
+import {transitionImportJob} from "./salesIntakeStateMachine.js";
 import {salesPayloadHash} from "./salesCanonicalHash.js";
 import {salesEventId} from "./salesValidation.js";
 import {salesError} from "./salesErrors.js";

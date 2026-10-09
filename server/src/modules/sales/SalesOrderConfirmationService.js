@@ -151,7 +151,6 @@ export class SalesOrderConfirmationService {
           salesPayloadHash(payload) !== operation.request_hash) throw salesError("SALES_EVENT_CONFLICT");
       const [[locked]] = await tx.query("SELECT status,version,confirmation_event_id FROM sales_orders WHERE id=? FOR UPDATE", [Number(operation.target_id)]);
       if (!locked || locked.status !== "CONFIRMING" || locked.confirmation_event_id !== eventId || Number(locked.version) !== payload.version + 1) throw salesError("SALES_EVENT_CONFLICT");
-      await tx.query("SELECT id FROM sales_order_lines WHERE sales_order_id=? ORDER BY id FOR UPDATE", [Number(operation.target_id)]);
       const order = await readSalesOrderDetail(tx, Number(operation.target_id)), nowMs = this.time.nowMs();
       await tx.query("SAVEPOINT sales_confirmation_business");
       try {
@@ -185,6 +184,7 @@ export class SalesOrderConfirmationService {
     this.businessMaster ??= new BusinessMasterProvider({ database: this.database,repository: new BusinessMasterRepository() });
     const document = { ...order,lines: order.lines.map(line => ({ ...line,lineNote: line.lineNote ?? "" })) };
     const prepared = await prepareSalesDocument(tx, document, nowMs, this);
+    await tx.query("SELECT id FROM sales_order_lines WHERE sales_order_id=? ORDER BY id FOR UPDATE", [order.id]);
     if (!prepared.customer.credit || !["not_configured","normal","on_hold"].includes(prepared.customer.credit.status)) throw salesError("SALES_DEPENDENCY_UNAVAILABLE");
     if (prepared.customer.credit.status === "on_hold") throw salesError("CUSTOMER_CREDIT_ON_HOLD");
     for (const snapshot of prepared.snapshots)
