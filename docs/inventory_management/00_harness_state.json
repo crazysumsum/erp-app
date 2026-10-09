@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 1724,
+  "revision": 1777,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -9,17 +9,17 @@
   "current_phase": "PHASE-004",
   "current_task": "TASK-034",
   "baseline": {
-    "design": "8c24fa028e39dcb578a5312de15293d61cad9b128bdc22c7cb5148986e211781",
-    "plan": "18bd2eb83087bc9a8499f3ed04de3495746d8529c8a8c6f2001822c18587ca66",
-    "code_commit": "b99ea42bb90e0323c0f6251d8dcf0d265c878c5b",
-    "source_fingerprint": "178713b75b9ecbac45a8c19bf10374740aef2589f59ff9c6ceab798b25d2defd",
+    "design": "b4720b69f67be272b7f605fa8bd83401792629ebd7ae16d1014aac2efcbf58ee",
+    "plan": "151cf5757a465b4df8a64f34e1f876ca6759a3bcc438ec721fb22bf7ab965a44",
+    "code_commit": "209ac8d2cc329b2ba5e4146a202948758b0fe823",
+    "source_fingerprint": "7b6e006e9fee91a2163c12f14d8deba4f041f0c5e5ceb5e0b270334a4a00b8d5",
     "worktree": "/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app",
-    "default_commit": "9e9b0ff9ad87846a32036fc86138a834bdb5c82a",
+    "default_commit": "394fc3fb11b6dce0bf4c41288904a8fac6d3fa49",
     "mode_entry_commit": "5402118617442d4d0651a3245a7b57bf1e30cc43"
   },
   "runtime": {
-    "instance_id": "erp-inventory-p3-integration-hcdj9aq3",
-    "owner": "Codex /root HD137",
+    "instance_id": "erp-inventory-p3-integration-8rpdkwr_",
+    "owner": "Codex /root HD137+HD138",
     "resources": {
       "workspace": "/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app"
     },
@@ -4026,6 +4026,120 @@
         "server/database/migrations/0064_create_inventory_transfers.js"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-190",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam",
+      "decision": "APPROVED",
+      "source_ref": "Actual latest Sam user reply A in this thread answers the immediately preceding HD139 exact two-file candidate/options. Approve patch 800a6102648b628a9acceb839d833302e0a526e962096611d3d31cdbb2063459 / DESIGN b4720b69f67be272b7f605fa8bd83401792629ebd7ae16d1014aac2efcbf58ee / PLAN 151cf5757a465b4df8a64f34e1f876ca6759a3bcc438ec721fb22bf7ab965a44. Only Supplier malformed-row fixture copied authTag XOR1 plus added difference assertion, and one Inventory manifest approval-required path. Production crypto/randomness/existing assertions/counts/skips/commands/coverage/security unchanged. Rebind HD138 exact shared scope byte-identical/no-write, except this precise approved fixture. Integrate observed main 0feb9d712072048adb20afc470eb87abc8911475 Item documentation handoff only; no Item TASK043 implementation. Rerun all mandatory developer/native/Sales/capacity/real Playwright gates and exact owned cleanup. HD137 conditional commit/push/open one P3 PR remains only after mandatory developer PASS and evidence classification. Final exact-head Sam source/merge review, five current CI, MERGE_READY and fresh main remain separate. All396 historical report refs/failures retained unchanged; no final source/head approval, P4/formal acceptance/UAT/deployment or waiver inferred.",
+      "recorded_at": "2026-10-09T09:13:07.639255+00:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "b4720b69f67be272b7f605fa8bd83401792629ebd7ae16d1014aac2efcbf58ee",
+      "code_commit": null,
+      "scope": [
+        "inventory-management",
+        "docs/inventory_management/**",
+        "docs/inventory_management/00_module_manifest.json",
+        "docs/inventory_management/00_project_profile.json",
+        "docs/inventory_management/03_design_spec.md",
+        "docs/inventory_management/05_development_tasks.md",
+        "docs/inventory_management/06_technical_test_cases.md",
+        "docs/inventory_management/08_traceability.json",
+        "docs/inventory_management/08_traceability_matrix.md",
+        "package-lock.json",
+        "server/src/framework/middleware/apiDispatcher.js",
+        "server/src/modules/inventory/InventoryReservationService.js",
+        "server/src/modules/inventory/inventoryConstants.js",
+        "server/src/modules/item/ItemLookupService.js",
+        "server/src/services/idempotency/IdempotencyService.js",
+        "server/test/apiDispatcher.test.js",
+        "server/test/idempotencyService.test.js",
+        "server/src/framework/api/apiDefinitionResolver.js",
+        "server/test/apiDefinitionResolver.test.js",
+        "server/src/framework/validation/requestValidator.js",
+        "server/test/requestValidator.test.js",
+        "server/database/migrations/0064_create_inventory_transfers.js",
+        "server/test/supplierBankCrypto.test.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-191",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam",
+      "decision": "APPROVED",
+      "source_ref": "Actual latest Sam user reply A in this thread answers the immediately preceding HD139 exact two-file candidate/options. Approve patch 800a6102648b628a9acceb839d833302e0a526e962096611d3d31cdbb2063459 / DESIGN b4720b69f67be272b7f605fa8bd83401792629ebd7ae16d1014aac2efcbf58ee / PLAN 151cf5757a465b4df8a64f34e1f876ca6759a3bcc438ec721fb22bf7ab965a44. Only Supplier malformed-row fixture copied authTag XOR1 plus added difference assertion, and one Inventory manifest approval-required path. Production crypto/randomness/existing assertions/counts/skips/commands/coverage/security unchanged. Rebind HD138 exact shared scope byte-identical/no-write, except this precise approved fixture. Integrate observed main 0feb9d712072048adb20afc470eb87abc8911475 Item documentation handoff only; no Item TASK043 implementation. Rerun all mandatory developer/native/Sales/capacity/real Playwright gates and exact owned cleanup. HD137 conditional commit/push/open one P3 PR remains only after mandatory developer PASS and evidence classification. Final exact-head Sam source/merge review, five current CI, MERGE_READY and fresh main remain separate. All396 historical report refs/failures retained unchanged; no final source/head approval, P4/formal acceptance/UAT/deployment or waiver inferred.",
+      "recorded_at": "2026-10-09T09:13:07.639271+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "151cf5757a465b4df8a64f34e1f876ca6759a3bcc438ec721fb22bf7ab965a44",
+      "code_commit": null,
+      "scope": [
+        "inventory-management",
+        "docs/inventory_management/**",
+        "docs/inventory_management/00_module_manifest.json",
+        "docs/inventory_management/00_project_profile.json",
+        "docs/inventory_management/03_design_spec.md",
+        "docs/inventory_management/05_development_tasks.md",
+        "docs/inventory_management/06_technical_test_cases.md",
+        "docs/inventory_management/08_traceability.json",
+        "docs/inventory_management/08_traceability_matrix.md",
+        "package-lock.json",
+        "server/src/framework/middleware/apiDispatcher.js",
+        "server/src/modules/inventory/InventoryReservationService.js",
+        "server/src/modules/inventory/inventoryConstants.js",
+        "server/src/modules/item/ItemLookupService.js",
+        "server/src/services/idempotency/IdempotencyService.js",
+        "server/test/apiDispatcher.test.js",
+        "server/test/idempotencyService.test.js",
+        "server/src/framework/api/apiDefinitionResolver.js",
+        "server/test/apiDefinitionResolver.test.js",
+        "server/src/framework/validation/requestValidator.js",
+        "server/test/requestValidator.test.js",
+        "server/database/migrations/0064_create_inventory_transfers.js",
+        "server/test/supplierBankCrypto.test.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-192",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam",
+      "decision": "APPROVED",
+      "source_ref": "Actual latest Sam user reply A in this thread answers the immediately preceding HD139 exact two-file candidate/options. Approve patch 800a6102648b628a9acceb839d833302e0a526e962096611d3d31cdbb2063459 / DESIGN b4720b69f67be272b7f605fa8bd83401792629ebd7ae16d1014aac2efcbf58ee / PLAN 151cf5757a465b4df8a64f34e1f876ca6759a3bcc438ec721fb22bf7ab965a44. Only Supplier malformed-row fixture copied authTag XOR1 plus added difference assertion, and one Inventory manifest approval-required path. Production crypto/randomness/existing assertions/counts/skips/commands/coverage/security unchanged. Rebind HD138 exact shared scope byte-identical/no-write, except this precise approved fixture. Integrate observed main 0feb9d712072048adb20afc470eb87abc8911475 Item documentation handoff only; no Item TASK043 implementation. Rerun all mandatory developer/native/Sales/capacity/real Playwright gates and exact owned cleanup. HD137 conditional commit/push/open one P3 PR remains only after mandatory developer PASS and evidence classification. Final exact-head Sam source/merge review, five current CI, MERGE_READY and fresh main remain separate. All396 historical report refs/failures retained unchanged; no final source/head approval, P4/formal acceptance/UAT/deployment or waiver inferred.",
+      "recorded_at": "2026-10-09T09:13:07.639273+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "151cf5757a465b4df8a64f34e1f876ca6759a3bcc438ec721fb22bf7ab965a44",
+      "code_commit": null,
+      "scope": [
+        "inventory-management",
+        "docs/inventory_management/**",
+        "docs/inventory_management/00_module_manifest.json",
+        "docs/inventory_management/00_project_profile.json",
+        "docs/inventory_management/03_design_spec.md",
+        "docs/inventory_management/05_development_tasks.md",
+        "docs/inventory_management/06_technical_test_cases.md",
+        "docs/inventory_management/08_traceability.json",
+        "docs/inventory_management/08_traceability_matrix.md",
+        "package-lock.json",
+        "server/src/framework/middleware/apiDispatcher.js",
+        "server/src/modules/inventory/InventoryReservationService.js",
+        "server/src/modules/inventory/inventoryConstants.js",
+        "server/src/modules/item/ItemLookupService.js",
+        "server/src/services/idempotency/IdempotencyService.js",
+        "server/test/apiDispatcher.test.js",
+        "server/test/idempotencyService.test.js",
+        "server/src/framework/api/apiDefinitionResolver.js",
+        "server/test/apiDefinitionResolver.test.js",
+        "server/src/framework/validation/requestValidator.js",
+        "server/test/requestValidator.test.js",
+        "server/database/migrations/0064_create_inventory_transfers.js",
+        "server/test/supplierBankCrypto.test.js"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -5224,6 +5338,18 @@
       "reviewer": "Sam",
       "reviewed_baseline": "8c24fa028e39dcb578a5312de15293d61cad9b128bdc22c7cb5148986e211781",
       "source_ref": "Actual latest Sam A answers HD137 exact candidate adoption options in this thread. Human Sam, author Codex /root. Approve exact patch 000687a2fbc2393ca2c78e66854834bd619834f3fe1e572b35fb62b1a7e74914 / DESIGN 8c24fa028e39dcb578a5312de15293d61cad9b128bdc22c7cb5148986e211781 / PLAN 4892535733987bd298004fff812c3ee0e8d217a51c01ef90dbf871c4d4b7f483. Authorize bounded local savepoint, fresh-main integration 9e9b0ff9ad87846a32036fc86138a834bdb5c82a, exact reviewed postimages and byte-identical original P3 scope rebinding, existing synthetic owned MySQL26.7 migrations, full developer/Sales/capacity/real Playwright checks and exact owned cleanup. Commit/push/open one P3 PR only after mandatory developer PASS and evidence classification. This is candidate design/plan review and scoped implementation/publication authority, not final source/head merge approval. Final exact-head Sam review, five current CI, generic MERGE_READY and fresh main remain separate mandatory gates. No new DDL, fixture/assertion changes, broader defects, worker activation, P4, formal acceptance, deployment or waiver. Author bookkeeping correction: bind the exact HD137 candidate design review to its approved DESIGN hash, not PLAN. No implemented-source/final-head approval is inferred.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-106",
+      "method": "HUMAN",
+      "author": "Codex /root",
+      "reviewer": "Sam",
+      "reviewed_baseline": "b4720b69f67be272b7f605fa8bd83401792629ebd7ae16d1014aac2efcbf58ee",
+      "source_ref": "Actual latest Sam user reply A in this thread answers the immediately preceding HD139 exact two-file candidate/options. Approve patch 800a6102648b628a9acceb839d833302e0a526e962096611d3d31cdbb2063459 / DESIGN b4720b69f67be272b7f605fa8bd83401792629ebd7ae16d1014aac2efcbf58ee / PLAN 151cf5757a465b4df8a64f34e1f876ca6759a3bcc438ec721fb22bf7ab965a44. Only Supplier malformed-row fixture copied authTag XOR1 plus added difference assertion, and one Inventory manifest approval-required path. Production crypto/randomness/existing assertions/counts/skips/commands/coverage/security unchanged. Rebind HD138 exact shared scope byte-identical/no-write, except this precise approved fixture. Integrate observed main 0feb9d712072048adb20afc470eb87abc8911475 Item documentation handoff only; no Item TASK043 implementation. Rerun all mandatory developer/native/Sales/capacity/real Playwright gates and exact owned cleanup. HD137 conditional commit/push/open one P3 PR remains only after mandatory developer PASS and evidence classification. Final exact-head Sam source/merge review, five current CI, MERGE_READY and fresh main remain separate. All396 historical report refs/failures retained unchanged; no final source/head approval, P4/formal acceptance/UAT/deployment or waiver inferred. Candidate design/scope review only; no detailed findings supplied and no final implemented-source approval inferred.",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -8197,6 +8323,20 @@
         "TC-007"
       ],
       "question": "HD138 DECISION_REQUIRED: generic runner forwards only declared suite env_keys. Real inventory-p3-browser beforeAll requires DB_NAME/DB_SOCKET_PATH/schema-only DB_USER/DB_PASSWORD plus synthetic Customer/Supplier Bank configuration; current profile forwards only three browser-origin/enable keys. An ambient DB setting is stripped, so the real fixture cannot start through the approved generic runner; this is a statically verified execution-contract blocker, not an executed browser failure or product defect. A recommended: approve exact one-file profile amendment adding12 env names and5 redaction names, patch 2ffa78ef2422b677fe1e0806f328d1d2e4a4eb523183bec1c0d72a9895f0eab1 / new PLAN 18bd2eb83087bc9a8499f3ed04de3495746d8529c8a8c6f2001822c18587ca66; DESIGN/source remain 178713b75b9ecbac45a8c19bf10374740aef2589f59ff9c6ceab798b25d2defd unchanged. No literal credentials, no commands/cwd/timeout/min16/zero-skip/tools/assertions/permissions/threshold changes. Rebind existing exact shared-source scope no-write only to amended PLAN, re-execute affected mandatory current-plan checks without relabelling old reports; full-native Sales DB coverage then exact unchanged floors. Owned MySQL26.7 local resources/existing migrations/actual Playwright and existing conditional publication authority remain HD137; final exact-head Sam review/fiveCI/genericMERGE_READY/freshmain remain separate. B hold current profile and publication; cannot substitute mocked18 or raw runner/env bypass for real16. Default hold until Sam approval. Current Sales31/Customer10k/Core100kSKU500kBucket2M/9native check groups PASS; root2237PASS but per-file floorFAIL on3SalesDB paths, full-native floor reconciliation not yet run. Browser/fullremainingchecks/PR/CI NOT_RUN; P4/formal acceptance not authorized."
+    },
+    {
+      "id": "HD-139",
+      "impact": "MAJOR",
+      "status": "ANSWERED",
+      "answer_ref": "Actual latest Sam user reply A in this thread answers the immediately preceding HD139 exact two-file candidate/options. Approve patch 800a6102648b628a9acceb839d833302e0a526e962096611d3d31cdbb2063459 / DESIGN b4720b69f67be272b7f605fa8bd83401792629ebd7ae16d1014aac2efcbf58ee / PLAN 151cf5757a465b4df8a64f34e1f876ca6759a3bcc438ec721fb22bf7ab965a44. Only Supplier malformed-row fixture copied authTag XOR1 plus added difference assertion, and one Inventory manifest approval-required path. Production crypto/randomness/existing assertions/counts/skips/commands/coverage/security unchanged. Rebind HD138 exact shared scope byte-identical/no-write, except this precise approved fixture. Integrate observed main 0feb9d712072048adb20afc470eb87abc8911475 Item documentation handoff only; no Item TASK043 implementation. Rerun all mandatory developer/native/Sales/capacity/real Playwright gates and exact owned cleanup. HD137 conditional commit/push/open one P3 PR remains only after mandatory developer PASS and evidence classification. Final exact-head Sam source/merge review, five current CI, MERGE_READY and fresh main remain separate. All396 historical report refs/failures retained unchanged; no final source/head approval, P4/formal acceptance/UAT/deployment or waiver inferred.; APR190–192 / REV106",
+      "affected_ids": [
+        "PHASE-004",
+        "TASK-029",
+        "TASK-031",
+        "TASK-033",
+        "TASK-034"
+      ],
+      "question": "HD139 DECISION_REQUIRED: actual latest generic root coverage has2236PASS/1FAIL/0SKIP; unchanged Supplier test a malformed row fails with the same message as a real authentication failure fills authTag[0] with0. When original byte already0, fixture does not tamper and correct decryption succeeds. Minimal real-product reproduction found zero after1000 encryptions, confirmed equality and successful unchanged decrypt, then XOR1 was rejected. Exact same Supplier file on freshmain0feb9d712072048adb20afc470eb87abc8911475. No product security failure inferred. A recommended: Sam review/approve exact patch 800a6102648b628a9acceb839d833302e0a526e962096611d3d31cdbb2063459 and proposed DESIGN b4720b69f67be272b7f605fa8bd83401792629ebd7ae16d1014aac2efcbf58ee / PLAN 151cf5757a465b4df8a64f34e1f876ca6759a3bcc438ec721fb22bf7ab965a44. Change only Supplier test fixture to copied tag with first byte XOR1 and an added difference assertion, plus one approval-required scope entry in Inventory manifest. This extends the previous no-Supplier-fixture scope by exactly this file; production crypto/randomness/assertions/counts/skips/commands/timeouts/coverage/security unchanged. Rebind existing exact shared-source scopes byte-identical/no-write, integrate latest main Item documentation handoff (no Item TASK043 implementation/source change; ItemLookup pin unchanged), rerun all mandatory developer/native/Sales/capacity/real Playwright checks and exact owned cleanup. HD137 conditional commit/push/onePR authority remains only after mandatory PASS and evidence classification. Final exacthead Sam approval/fiveCI/generic MERGE_READY/freshmain separate. B hold P3 publication and wait for Supplier owner to fix the existing fixture onmain; do not rerun until green as waiver. Default hold until actual Sam approval. All396 historical refs/failures retained, current resources cleaned. P4/formal/UAT/deployment not authorized."
     }
   ],
   "external_actions": [
@@ -12823,6 +12963,62 @@
       "idempotency_key": "erp-inventory-p3-integration-hcdj9aq3-migrations",
       "status": "CONFIRMED",
       "source_ref": "Actual existing migration exit0; exact native ledger 80 rows matches repository filenames; no fixed historical count."
+    },
+    {
+      "id": "EXT-596",
+      "kind": "LOCAL_NONMATERIAL_MAIN_REFRESH",
+      "target": "394fc3fb11b6dce0bf4c41288904a8fac6d3fa49",
+      "idempotency_key": "p3-hd138-394fc3fb11b6dce0bf4c41288904a8fac6d3fa49",
+      "status": "CONFIRMED",
+      "source_ref": "Observed local merge 209ac8d2cc329b2ba5e4146a202948758b0fe823; only Supplier state/owner-handoff documents advance, no Item/Inventory source/contract/schema change. HD137 permits mechanical nonmaterial Supplier bookkeeping reconciliation; handoff proposals are not instructions or adopted Item requirements. No remote merge/publication."
+    },
+    {
+      "id": "EXT-597",
+      "kind": "HD137_OWNED_LOCAL_MYSQL",
+      "target": "/private/tmp/erp-inventory-p3-integration-fjquvag_",
+      "idempotency_key": "erp-inventory-p3-integration-fjquvag_",
+      "status": "CONFIRMED",
+      "source_ref": "Observed new owned26.7.0/loopback-onlyTCP/PID 93908/exactdatadir /private/tmp/erp-inventory-p3-integration-fjquvag_/data; synthetic schema erp_inventory_p3_integration_12de93dc76e9 and schema-only account reserved. Web5205 exclusively reserved, opening root owned."
+    },
+    {
+      "id": "EXT-598",
+      "kind": "HD137_EXISTING_SYNTHETIC_MIGRATIONS",
+      "target": "erp_inventory_p3_integration_12de93dc76e9",
+      "idempotency_key": "erp-inventory-p3-integration-fjquvag_-migrations",
+      "status": "CONFIRMED",
+      "source_ref": "Actual existing migration exit0; exact native ledger 80 rows matches repository filenames; no fixed historical count."
+    },
+    {
+      "id": "EXT-599",
+      "kind": "HD138_FULL_NATIVE_DIAGNOSTIC",
+      "target": "erp_inventory_p3_integration_12de93dc76e9",
+      "idempotency_key": "erp-inventory-p3-integration-fjquvag_-full-native",
+      "status": "FAILED",
+      "source_ref": "Actual full native diagnostic did not PASS; retained diagnostic /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/p3-hd138-full-native-ab899e29a984"
+    },
+    {
+      "id": "EXT-600",
+      "kind": "HD137_OWNED_LOCAL_MYSQL",
+      "target": "/private/tmp/erp-inventory-p3-integration-qyif7y04",
+      "idempotency_key": "erp-inventory-p3-integration-qyif7y04",
+      "status": "CONFIRMED",
+      "source_ref": "Observed new owned26.7.0/loopback-onlyTCP/PID 96070/exactdatadir /private/tmp/erp-inventory-p3-integration-qyif7y04/data; synthetic schema erp_inventory_p3_integration_40b5015da7e1 and schema-only account reserved. Web5205 exclusively reserved, opening root owned."
+    },
+    {
+      "id": "EXT-601",
+      "kind": "HD137_EXISTING_SYNTHETIC_MIGRATIONS",
+      "target": "erp_inventory_p3_integration_40b5015da7e1",
+      "idempotency_key": "erp-inventory-p3-integration-qyif7y04-migrations",
+      "status": "CONFIRMED",
+      "source_ref": "Actual existing migration exit0; exact native ledger 80 rows matches repository filenames; no fixed historical count."
+    },
+    {
+      "id": "EXT-602",
+      "kind": "HD137_OWNED_LOCAL_MYSQL",
+      "target": "/private/tmp/erp-inventory-p3-integration-8rpdkwr_",
+      "idempotency_key": "erp-inventory-p3-integration-8rpdkwr_",
+      "status": "CONFIRMED",
+      "source_ref": "Observed new owned26.7.0/loopback-onlyTCP/PID 97165/exactdatadir /private/tmp/erp-inventory-p3-integration-8rpdkwr_/data; synthetic schema erp_inventory_p3_integration_3e9fb6897d54 and schema-only account reserved. Web5205 exclusively reserved, opening root owned."
     }
   ],
   "evidence_files": [
@@ -13186,7 +13382,42 @@
     "evidence/20261009T061102-bdaf1d731d32/run.json",
     "evidence/20261009T061426-34d6bcbd5f6c/run.json",
     "evidence/20261009T061443-0fe0ad9431ee/run.json",
-    "evidence/20261009T061513-6ec86909b6f6/run.json"
+    "evidence/20261009T061513-6ec86909b6f6/run.json",
+    "evidence/20261009T063327-f521cd9617e3/run.json",
+    "evidence/20261009T063328-5efee213a833/run.json",
+    "evidence/20261009T063330-246d5033adb6/run.json",
+    "evidence/20261009T063331-519162b1dd76/run.json",
+    "evidence/20261009T063333-5b6a18a45d7a/run.json",
+    "evidence/20261009T063334-45a9fb44d36a/run.json",
+    "evidence/20261009T063339-bf0da394e79f/run.json",
+    "evidence/20261009T063341-7c66e7645b15/run.json",
+    "evidence/20261009T063344-96a9d31410dd/run.json",
+    "evidence/20261009T063443-e2efff36cee5/run.json",
+    "evidence/20261009T063449-3624327608b1/run.json",
+    "evidence/20261009T063500-0917cb830b77/run.json",
+    "evidence/20261009T063503-751e2075da34/run.json",
+    "evidence/20261009T064410-655366c8dd6a/run.json",
+    "evidence/20261009T064411-e30cc55097f2/run.json",
+    "evidence/20261009T064413-6b95a7a1145d/run.json",
+    "evidence/20261009T064415-f5a8ccea595d/run.json",
+    "evidence/20261009T064416-0cf4400cdb61/run.json",
+    "evidence/20261009T064418-aa7c4c1f9a3b/run.json",
+    "evidence/20261009T064421-dbbe77305924/run.json",
+    "evidence/20261009T064423-2d5e4d6dd792/run.json",
+    "evidence/20261009T064426-be05375eb930/run.json",
+    "evidence/20261009T064524-c9cbbe661e1a/run.json",
+    "evidence/20261009T064529-bde7ed5682f8/run.json",
+    "evidence/20261009T064540-78cb86590f8d/run.json",
+    "evidence/20261009T064542-80438abd3b7d/run.json",
+    "evidence/20261009T064943-73fce6c7b6b4/run.json",
+    "evidence/20261009T064945-5368e17399a8/run.json",
+    "evidence/20261009T064946-f5fb5b6e6ae2/run.json",
+    "evidence/20261009T064947-e39a504ff137/run.json",
+    "evidence/20261009T064949-8912de037575/run.json",
+    "evidence/20261009T064950-c64f59fe3bea/run.json",
+    "evidence/20261009T064953-af3ae7340c33/run.json",
+    "evidence/20261009T064955-b2279ebb7acc/run.json",
+    "evidence/20261009T064958-fff06640186c/run.json"
   ],
   "defects": [
     {
@@ -13355,5 +13586,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Actual Sam HD138 A / APR188–189 exact browser env/redaction candidate adopted. Execute fresh new-PLAN native checks, full DB coverage/floors and actual Playwright via unchanged generic runner; preserve361 historical refs. HD137 conditional PR publication only after mandatory PASS/classification; final exact-head Sam/CI/gate/main approvals remain separate."
+  "next_safe_action": "HD139 actual Sam A exact candidate adopted. Save bounded local repair checkpoint; integrate approved Item documentation main0feb, then full fresh unchanged developer/native/capacity/real Playwright gates. Preserve396 refs. Conditional onePR publication after PASS/classification only; final exacthead review/CI/MERGE_READY separate."
 }

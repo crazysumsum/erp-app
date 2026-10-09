@@ -68,7 +68,8 @@
       "server/test/integration/migrations.integration.test.js",
       "server/test/integration/passwordChange.integration.test.js",
       "server/test/integration/roleManagement.integration.test.js",
-      "server/test/integration/userManagement.integration.test.js"
+      "server/test/integration/userManagement.integration.test.js",
+      "server/test/supplierBankCrypto.test.js"
     ],
     "forbidden_paths": [
       ".env",
