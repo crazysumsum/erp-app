@@ -13,13 +13,19 @@ const ROOT_COLUMNS = Object.freeze({
   generalEmail: "general_email", notes: "notes"
 });
 
+// 成個 process 共用（HD-074 2B）：一次 10,000 列、欄位最長嘅匯出要大約 530 MB（REV-075 L-4），同時太多會撐爆記憶體。
+const PROCESS_GATE = { active: 0 };
+
 /**
  * 一般供應商匯出（T47；設計 §6.9；HD-067）。用列表嘅篩選同排序，直接回 CSV：唔開 job、唔存檔。
  * 只讀 `suppliers`，永遠唔讀 Bank 表（BR-028）；每次匯出記一條 `supplier.export` 稽核，只有篩選同列數。
+ * 每個 process 最多同時 `maxConcurrent`（2）個匯出，再多就 429 `SUPPLIER_EXPORT_BUSY`（HD-074 2B）。
  */
 export class SupplierExportService {
-  constructor({ database, time, logger = null, businessMaster, authorize = assertActorFresh, audit, maxRows = 10_000 }) {
-    if (!database || !time || !businessMaster || !Number.isSafeInteger(maxRows) || maxRows < 1) {
+  constructor({ database, time, logger = null, businessMaster, authorize = assertActorFresh, audit, maxRows = 10_000,
+    maxConcurrent = 2, gate = PROCESS_GATE }) {
+    if (!database || !time || !businessMaster || !Number.isSafeInteger(maxRows) || maxRows < 1 ||
+        !Number.isSafeInteger(maxConcurrent) || maxConcurrent < 1) {
       throw new TypeError("SupplierExportService requires database, time, businessMaster and maxRows");
     }
     this.database = database;
@@ -28,10 +34,25 @@ export class SupplierExportService {
     this.authorize = authorize;
     this.audit = audit ?? new SupplierAuditLogService({ database, logger: logger ?? {}, time });
     this.maxRows = maxRows;
+    this.maxConcurrent = maxConcurrent;
+    this.gate = gate;
   }
 
-  async exportCsv({ actorId, claimedRoles, claimedPermissions, filters = {}, requestId = "", ip = "" }) {
-    const actor = await this.authorize(this.database, { actorId, claimedRoles, claimedPermissions });
+  async exportCsv(input) {
+    const actor = await this.authorize(this.database, {
+      actorId: input.actorId, claimedRoles: input.claimedRoles, claimedPermissions: input.claimedPermissions });
+    if (this.gate.active >= this.maxConcurrent) {
+      throw supplierImportError("SUPPLIER_EXPORT_BUSY", 429, "目前同時進行的匯出太多，請稍後再試");
+    }
+    this.gate.active += 1;
+    try {
+      return await this.#export(actor, input);
+    } finally {
+      this.gate.active -= 1;
+    }
+  }
+
+  async #export(actor, { actorId, filters = {}, requestId = "", ip = "" }) {
     const { where, params, orderBy, orderParams } = supplierListQuery(filters);
     // 多攞一列就知超咗上限，唔使另外 COUNT。
     const [rows] = await this.database.query(

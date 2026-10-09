@@ -26,7 +26,9 @@ export function createSupplierImportApplier({ suppliers, addresses, contacts, id
       if (activate && approvalRequired && job.approver_user_id === null) {
         throw invalidSupplierInput("APPROVER_NOT_ELIGIBLE", "指定的審批人不是有效使用者", { field: "approverUserId" });
       }
+      // 匯入唔做相似名稱搜尋（HD-052；HD-075）：預檢已經警告完全相同嘅名稱，相似搜尋嘅結果冇人用，而且成本隨 Supplier 數目上升。
       const { id } = await suppliers.createSupplierInTransaction(connection, {
+        findDuplicates: false,
         actor,
         input: {
           ...base, ...root, activate,
@@ -52,7 +54,7 @@ export function createSupplierImportApplier({ suppliers, addresses, contacts, id
       const [[current]] = await connection.query("SELECT * FROM suppliers WHERE id = ? FOR UPDATE", [id]);
       if (!current) throw supplierNotFound(id);
       const keep = (field, column) => (Object.hasOwn(root, field) ? root[field] : current[column]);
-      await suppliers.updateSupplierInTransaction(connection, { actor, input: {
+      await suppliers.updateSupplierInTransaction(connection, { actor, findDuplicates: false, input: {
         ...base, id, version: Number(row.expected_supplier_version), reason: note,
         supplierName: keep("supplierName", "supplier_name"),
         displayName: keep("displayName", "display_name"),

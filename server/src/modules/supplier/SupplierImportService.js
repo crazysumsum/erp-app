@@ -750,6 +750,21 @@ export class SupplierImportService {
       { jobId, applied: counts.applied, failed: counts.failed });
   }
 
+  /**
+   * Worker 停低（逾時、關機，或者出錯）時即刻放返 lease（HD-075；REV-078 L-2）：之前要等 11 分鐘 lease 過期，連同一個
+   * worker 都領唔返，大檔每做 10 分鐘就停 11 分鐘。只放自己仲揸住、仲係 running 嘅 job；每一列都喺 job row lock 之下
+   * 驗 lease（assertLease），所以就算喺一列做到一半時放咗，都唔會兩個 worker 寫同一列（REV-078 驗證過）。
+   */
+  async releaseExecutionLease({ jobId, leaseOwner }) {
+    if (!positiveInteger(jobId) || !String(leaseOwner ?? "").trim()) {
+      throw new TypeError("Supplier import lease release input is invalid");
+    }
+    const [released] = await this.database.execute(
+      "UPDATE supplier_import_jobs SET lease_until = NULL, updated_at = ? WHERE id = ? AND status = 'running' AND lease_owner = ?",
+      [this.time.nowMs(), jobId, leaseOwner]);
+    return released.affectedRows === 1;
+  }
+
   /** 所有列都 terminal 之後，由 rows 重建統計，收尾做 completed 或 completed_with_errors。 */
   async finalizeExecution({ jobId, leaseOwner }) {
     if (!positiveInteger(jobId) || !String(leaseOwner ?? "").trim()) {
