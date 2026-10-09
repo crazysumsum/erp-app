@@ -86,4 +86,18 @@ Environment:
 - **N-2 also corrects an earlier claim.** The author's mutation harness ran the integration files with
   `--test-name-pattern='HD-075|TASK-049'`, which leaves out the TASK-042 test that leaves a `ready` job behind. So the
   recorded "m11 killed" and "19 mutants, all killed" held only for that narrower run, not for the full file as CI runs it.
-- The findings were taken to the Product Owner (HD-079).
+- The findings were taken to the Product Owner, who answered '全部按建議' and chose a last review limited to this round's
+  changes (HD-079).
+- **N-1, I-2:** the worker is spawned with an IPC channel and shuts down on `disconnect`, so it ends with its parent
+  however the parent dies. `startWorker` refuses once the run is interrupted. `waitFor`, the crash loop, the
+  verification and the final `ok` stop at an interruption, so an interrupted run never reports `ok: true` or a
+  verification.
+- **I-1:** `process.on`, ignoring repeat signals.
+- **N-2:** the test moves other tests' pending jobs to `cancelled` and expects exactly `1 other import job`. The harness
+  now runs full files. The corrected record is in `62_task_041_carry_forward.md`.
+- **I-3:** the carry-forward cell and the worker string are corrected, and the evidence is regenerated.
+- **I-4, I-7:** the report records the database name, host, port and socket. The operator guide says the host and port
+  are unused when `DB_SOCKET_PATH` is set.
+- **I-5:** the script opens `--output` for appending before it does anything else.
+- **I-6:** a unit test refuses a caller with a full gate and expects 403.
+- The manual controls and the 22 mutants are in `62_task_041_carry_forward.md`. All of them were run against full files.

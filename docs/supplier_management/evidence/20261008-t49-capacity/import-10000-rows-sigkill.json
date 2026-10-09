@@ -1,17 +1,17 @@
 {
-  "run": "6B8C26",
+  "run": "FE32D1",
   "rows": 10000,
   "crash": {
-    "appliedRowsAtKill": 5007,
+    "appliedRowsAtKill": 5001,
     "midRun": true,
     "leaseExpirySimulated": true,
     "realLeaseMs": 660000,
-    "killedAtMs": 24959
+    "killedAtMs": 24039
   },
   "rootOnly": false,
   "distinctNames": false,
-  "command": "/Users/sam/Documents/workspace/erp-supplier-t49/server/scripts/benchmarkSupplierImport.js --database=erp_dev --rows=10000 --crash --output /private/tmp/claude-501/-Users-sam-Documents-workspace-erp-app/486c4c60-92de-4122-b0e0-a68866140aa1/scratchpad/bench49-10k-crash.json",
-  "startedAt": "2026-10-08T07:17:51.986Z",
+  "command": "/Users/sam/Documents/workspace/erp-supplier-t49/server/scripts/benchmarkSupplierImport.js --database=erp_dev --rows=10000 --crash --output /private/tmp/claude-501/-Users-sam-Documents-workspace-erp-app/486c4c60-92de-4122-b0e0-a68866140aa1/scratchpad/bench81-10k-crash.json",
+  "startedAt": "2026-10-09T01:11:03.947Z",
   "environment": {
     "os": "Darwin 27.0.0 arm64",
     "cpu": "Apple M5 Pro",
@@ -24,45 +24,51 @@
       "syncBinlog": 1,
       "logBin": 1
     },
-    "worker": "a separate process with createApplication and the real scheduler; only supplier.import.precheck and supplier.import.execute enabled (every 5 s, lease 11 min)"
+    "database": {
+      "name": "erp_dev",
+      "host": "127.0.0.1",
+      "port": 3449,
+      "socketPath": null
+    },
+    "worker": "a separate process with createApplication and the real scheduler; only supplier.import.precheck and supplier.import.execute enabled (every 5 s, lease 11 min), plus tokenRevocation.refresh, which configuration requires"
   },
   "fileBytes": 2649279,
-  "uploadMs": 13,
+  "uploadMs": 18,
   "precheck": {
-    "ms": 5842,
+    "ms": 6873,
     "status": "ready",
     "total": 10000,
     "valid": 10000
   },
   "execute": {
-    "ms": 59990,
+    "ms": 61003,
     "status": "completed",
     "applied": 10000,
     "failed": 0,
     "skipped": 0
   },
   "nfr004": {
-    "precheckPlusExecuteMs": 65832,
+    "precheckPlusExecuteMs": 67876,
     "limitMs": 600000,
     "pass": true,
     "note": "includes the crash, the restart of a second worker and its first poll; the 11-minute lease wait is simulated"
   },
-  "workerPeakRssMiB": 224,
+  "workerPeakRssMiB": 250,
   "dbConnectionsPeak": {
     "userConnections": 4,
     "note": "all connections of DB_USER, including this process's own pool"
   },
   "msPerRowByThousand": [
-    3.2,
+    3.4,
     3.3,
-    4.3,
+    3.6,
+    4.6,
     4.7,
-    5,
-    11,
-    5.7,
-    5.8,
-    6.1,
-    6.3
+    10.5,
+    5.4,
+    7.6,
+    6.8,
+    6.7
   ],
   "verification": {
     "suppliersCreated": 10000,
@@ -73,24 +79,24 @@
     "countsConsistent": true
   },
   "resultDownload": {
-    "ms": 37,
+    "ms": 47,
     "bytes": 488995,
     "heapDeltaMiB": 14,
-    "rssDeltaMiB": 17
+    "rssDeltaMiB": 16
   },
   "export": {
-    "ms": 61,
+    "ms": 59,
     "rows": 10000,
     "bytes": 1520385,
-    "heapDeltaMiB": 18,
-    "rssDeltaMiB": 50
+    "heapDeltaMiB": 26,
+    "rssDeltaMiB": 38
   },
   "ok": true,
   "cleanup": {
     "suppliers": 10000,
-    "job": 377,
-    "user": 1701,
-    "role": 1136
+    "job": 1310,
+    "user": 3347,
+    "role": 2389
   },
-  "finishedAt": "2026-10-08T07:19:01.610Z"
+  "finishedAt": "2026-10-09T01:12:16.758Z"
 }

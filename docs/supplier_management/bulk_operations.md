@@ -53,7 +53,7 @@ uploads stay `uploaded` until it is switched back on.
 
 ## Capacity (TASK-049)
 
-Measured on 2026-10-08:
+Measured on 2026-10-09 (regenerated after REV-081):
 
 - **Environment:** an Apple M5 Pro (15 cores, 24 GiB) running Node v26.6.0 and MySQL 26.7.0, with
   `innodb_flush_log_at_trx_commit=1` and `sync_binlog=1`.
@@ -63,13 +63,13 @@ Measured on 2026-10-08:
 
 | Run | Precheck | Execution | Total (NFR-004 ≤ 10 min) | Worker peak RSS | Result |
 | --- | --- | --- | --- | --- | --- |
-| 10,000 rows | 5.8 s | 54.5 s | 60 s | 223 MiB | 10,000 applied, each exactly once |
-| 10,000 rows, worker SIGKILLed after 5,007 rows | 5.8 s | 60.0 s | 66 s | 224 MiB | a second worker took over; 10,000 applied, no duplicates |
+| 10,000 rows | 5.6 s | 52.4 s | 58 s | 226 MiB | 10,000 applied, each exactly once |
+| 10,000 rows, worker SIGKILLed after 5,001 rows | 6.9 s | 61.0 s | 68 s | 250 MiB | a second worker took over; 10,000 applied, no duplicates |
 
 - **Per row:** about 3–7 ms. It rises slowly with the row number, because finding the next row gets slightly slower
   as rows are applied.
 - **Crash run:** the 11-minute lease of a killed worker was simulated as expired, so it measures the work and not the wait.
-- **Downloads:** the 10,000-row result download took 52 ms (479 KB), and a 10,000-row export 58 ms (1.5 MB).
+- **Downloads:** the 10,000-row result download took 45 ms (489 KB), and a 10,000-row export 60 ms (1.5 MB).
 - **Export memory:** an export of 10,000 Suppliers with every field at its maximum length is about 69 MB and briefly needs
   about 530 MB of memory (REV-075 L-4). For that reason at most two exports run at once per process; a third answers
   429 `SUPPLIER_EXPORT_BUSY`. The limit covers building the file. Sending it to the client happens after the slot is freed:

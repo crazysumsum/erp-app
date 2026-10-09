@@ -770,14 +770,14 @@ The operator guide is `docs/supplier_management/bulk_operations.md`.
 
 | Point | Status |
 | --- | --- |
-| NFR-004: 10,000 rows within 10 minutes | **Pass.** Precheck 5.8 s plus execution 54.5 s gives 60 s. Regenerated after REV-080 with the final script: the worker runs only the Supplier import jobs, the command includes `--database`, and the durability settings are recorded (`innodb_flush_log_at_trx_commit=1`, `sync_binlog=1`, binlog on). The worker was a separate process built with the same `createApplication` and the real scheduler, with only the two Supplier import jobs (plus `tokenRevocation.refresh`) enabled, on MySQL with `fsync` on every commit. Evidence: `evidence/20261008-t49-capacity/import-10000-rows.json`. |
-| HD-074 3A: crash at scale | **Pass.** The worker was SIGKILLed after 5,007 of 10,000 rows and a second worker took over, giving exactly 10,000 Suppliers, 10,000 applied rows and 10,000 distinct applied IDs, with consistent counts, in 66 s. The 11-minute lease of the killed worker was simulated as expired (stated in the evidence). Evidence: `import-10000-rows-sigkill.json`. |
-| HD-074 1A: benchmark entry point | `node scripts/benchmarkSupplierImport.js --database=<DB_NAME> --rows=10000 --output <file> [--crash]`, with `DB_*` and `JWT_SECRET` set. After REV-078 and REV-079 it refuses to run without explicit `DB_*`, without a matching `--database`, or while another import job is pending. It reports `ok: false` if another Supplier import job changed during the run. Its worker is the same script with `--worker`: `createApplication` with only the Supplier import jobs enabled. An interrupted run cleans up (REV-080). It writes `BM49-<run>-` Suppliers to a throwaway database and removes them afterwards. `server/package.json` is unchanged. |
+| NFR-004: 10,000 rows within 10 minutes | **Pass.** Precheck 5.6 s plus execution 52.4 s gives 58 s. Regenerated after REV-081 with the final script: the worker runs only the Supplier import jobs, the command includes `--database`, and the durability settings are recorded (`innodb_flush_log_at_trx_commit=1`, `sync_binlog=1`, binlog on), with the database name, host and port. The worker was a separate process built with the same `createApplication` and the real scheduler, with only the two Supplier import jobs (plus `tokenRevocation.refresh`) enabled, on MySQL with `fsync` on every commit. Evidence: `evidence/20261008-t49-capacity/import-10000-rows.json`. |
+| HD-074 3A: crash at scale | **Pass.** The worker was SIGKILLed after 5,001 of 10,000 rows and a second worker took over, giving exactly 10,000 Suppliers, 10,000 applied rows and 10,000 distinct applied IDs, with consistent counts, in 68 s. The 11-minute lease of the killed worker was simulated as expired (stated in the evidence). Evidence: `import-10000-rows-sigkill.json`. |
+| HD-074 1A: benchmark entry point | `node scripts/benchmarkSupplierImport.js --database=<DB_NAME> --rows=10000 --output <file> [--crash]`, with `DB_*` and `JWT_SECRET` set. After REV-078 and REV-079 it refuses to run without explicit `DB_*`, without a matching `--database`, or while another import job is pending. It reports `ok: false` if another Supplier import job changed during the run. Its worker is the same script with `--worker`: `createApplication` with only the Supplier import jobs enabled. An interrupted run cleans up and ignores repeat signals (REV-080, REV-081 I-1); its worker shuts down when the benchmark dies, even by SIGKILL (REV-081 I-2). It refuses to start when `--output` cannot be written (I-5), and records the database name, host, port and socket (I-4, I-7). It writes `BM49-<run>-` Suppliers to a throwaway database and removes them afterwards. `server/package.json` is unchanged. |
 | HD-074 2B: export memory | At most two exports per process, otherwise 429 `SUPPLIER_EXPORT_BUSY`. A refused caller never takes a slot, and a slot is freed on success or failure. |
 | HD-075 cause 1: similar-name search during execution | **Fixed.** The import applier passes `findDuplicates: false`; UI create and update still search. The search ran on every row, its result was discarded, and its cost grew with the Supplier count: 784 of about 820 s of SQL time. Before the fix, 10,000 rows did not finish in 20 minutes. |
 | HD-075 cause 2: an 11-minute stall after every 10-minute run | **Fixed.** The worker calls `releaseExecutionLease` in `finally` whenever it stops, including on an error (REV-078 L-2), so the next poll resumes. Only a process that dies without running `finally` leaves the lease to expire. A run stopped by the timeout logs `supplier.import.paused` with `reason: timeout`, because the scheduler records it as succeeded. |
-| T46: result download at 10,000 rows | 52 ms, 479 KB. |
-| REV-075 L-4: export at 10,000 rows | 58 ms, 1.5 MB with realistic values. The maximum-length case is covered by the gate (2B). |
+| T46: result download at 10,000 rows | 45 ms, 489 KB. |
+| REV-075 L-4: export at 10,000 rows | 60 ms, 1.5 MB with realistic values. The maximum-length case is covered by the gate (2B). |
 | AC 1: mixed end-to-end run | **Met across the import integration tests.** The T49 test runs create, identical-name warning, invalid, update and formula-name rows with approval on and activation, checks row outcomes against the job counts and the result CSV, exports, cancels another job, purges, and gets 410. Draft mode and approval off are covered by the T45 tests in the same file, which confirm as draft over HTTP with the real (off) setting (REV-078 L-4). |
 | AC 3: no leak | **Pass.** The same test finds none of a CSV-only marker, the import root path or a Bank value in the logs, the jobs' audit or the result file. It first checks that the logs mention the job and that the marker reached the Supplier, so the scan cannot pass vacuously. Formula cells are guarded in the export. |
 | Real browser | The real API and worker with Vite: template (30 columns), mixed upload, precheck 2 valid and 1 invalid, password confirm, 2 written and 1 skipped, the result under the server's file name, and the export with `'=HYPERLINK…` and `'+852…` guarded. The only 403 was the first-login device check. |
@@ -822,3 +822,28 @@ The full server suite, run the CI way, passes: 2,822, 0 failed, coverage floors 
 
 After REV-080 the T49 list is 19 mutants, all killed. The new mutant is the pending guard ignoring `uploaded` (REV-080 m11).
 The full server suite, run the CI way, passes: 2,822, 0 failed, coverage floors met.
+
+**Correction (REV-081 N-2).** The runs above passed the integration files through `--test-name-pattern='HD-075|TASK-049'`.
+In a full-file run, as CI runs it, a `ready` job left by a TASK-042 test made the pending guard refuse on its own, so the
+guard mutants survived. The "all killed" counts after REV-078, REV-079 and REV-080 held only for that narrower run.
+
+After REV-081 the harness runs every file in full. The T49 list is 22 mutants, all killed. Three mutants were added:
+
+- the export gate checked before authorization (I-6; a refused caller would get 429 instead of 403);
+- the pending guard ignoring `queued`;
+- the pending guard tolerating one pending job.
+
+The benchmark's signal, IPC and output-path handling was checked by hand against the real script, each with a negative
+control that reverts the fix:
+
+| Control | Fixed script | Negative control |
+| --- | --- | --- |
+| SIGKILL of the benchmark during execution | its worker shut down within seconds | without IPC, the worker lived on and applied all 2,000 rows |
+| two SIGINTs 10 ms apart | one report marked `interrupted`; everything cleaned up | with `process.once`, no report, and 1,650 Suppliers, the job, user, role and temporary directory were left |
+| SIGTERM the moment worker-a died in `--crash` | no worker left; `ok: false`, `interrupted`, no verification; cleaned up | — (the SIGKILL control covers the orphan) |
+| unwritable `--output` | refused at once, nothing created | — |
+
+The after-run check, the cleanup, the supplier-only job set and the split `try` are still checked only by hand (REV-081).
+The full server suite, run the CI way, had one failure in an unchanged file (`TASK-044: a manager whose permission was
+withdrawn…`: its upload did not return a job, and the test took 1,030 ms instead of about 26 ms). The file passed in a
+rerun on its own, and CI on PR #192 passed the full suite. The cause is not known.

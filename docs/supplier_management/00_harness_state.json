@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 296,
+  "revision": 297,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -1898,6 +1898,18 @@
       "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 2afba993edb5f00c419fdd1d4307b951c974f600 (PR #192)",
       "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
       "source_ref": "docs/supplier_management/implementation/83_rev_080_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-081",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-049 REV-080 remediation)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 3b0ea454d57aa7dc4870c74477f02e14062fdbd4 (PR #192)",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/84_rev_081_independent_review.md",
       "status": "CHANGES_REQUESTED",
       "open_critical": 0,
       "open_high": 0,
@@ -4747,6 +4759,18 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-08: '全部按建議'."
+    },
+    {
+      "id": "HD-079",
+      "impact": "MINOR",
+      "question": "REV-081 (TASK-049, product code approvable; benchmark tooling and tests only): N-1 after a signal the main flow keeps running beside finish() (orphan worker-b, ok:true with interrupted, verification against data being cleaned up); I-2 SIGKILL of the benchmark orphans its worker: tie the worker to the parent over IPC; I-1 repeat signals: process.on and ignore repeats; N-2 the pending-guard test passes with the guard broken in a full-file run: clear leftovers, expect exactly one, run mutants on full files; I-3 docs and worker string; I-4/I-7 record host, port and socket; I-5 check --output at start; I-6 pin authorization before the export gate. Then (a) one last review limited to this round's changes, or (b) self-verify and wait for the merge word.",
+      "affected_ids": [
+        "TASK-049",
+        "REV-081",
+        "HD-078"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-08: '全部按建議, a'."
     }
   ],
   "external_actions": [
@@ -5823,5 +5847,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-049: HD-078 follow-ups done (supplier-only benchmark worker, signal-safe cleanup, evidence regenerated). CI-style suite and mutants, push PR #192, re-review if the Product Owner wants it. Merge only on the Product Owner's word."
+  "next_safe_action": "TASK-049: HD-079 follow-ups done (IPC-tied benchmark worker, interrupt-safe main flow, full-file mutants 22/22, evidence regenerated). Run REV-082, a last independent review limited to the HD-079 changes (HD-079 a). Merge only on the Product Owner's word."
 }
