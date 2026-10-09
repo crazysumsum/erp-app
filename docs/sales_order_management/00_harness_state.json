@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 268,
+  "revision": 288,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "bc2d73be8a6643c16fb2023fc52b82f81df53ba0c07531a24b2309eaf75c1ae7",
     "plan": "0d501e0624078b2c2c477dd1ac721456acd21115bbb11967262e993119166989",
-    "code_commit": "200e57de228ec5dcd439e800aa4a63fe5616ca6b",
-    "source_fingerprint": "11d126908e13fb8de1d6f87f1a5a752c4fd106d15d82b526dd9897dc9990d04f",
+    "code_commit": "8a7a45e810dfed817821d6a2d704cea9629714c3",
+    "source_fingerprint": "b767d41de766b9b9b0f08d2e781b6404bdc6e877c43d800de1e29e4af3fc12de",
     "worktree": "/private/tmp/erp-sales-p3",
-    "default_commit": "9e9b0ff9ad87846a32036fc86138a834bdb5c82a",
+    "default_commit": "394fc3fb11b6dce0bf4c41288904a8fac6d3fa49",
     "mode_entry_commit": "6936736ba1fb98f4fcb8365377f59f0a0f7a4897"
   },
   "runtime": {
@@ -24,7 +24,8 @@
       "workspace": "/private/tmp/erp-sales-p3",
       "temp-directory": "/private/tmp/sales-p3-private",
       "mysql-instance": "Observed ownedPID92528/UID501 /private/tmp/sales-p3-private/sales-p3-01314bd194db/mysql.sock; exact test schema erp_sales_p3_01314bd194db_t038; TCP53695; actual private runtime/env/account files. AppDML/SUPER=N; fixture/admin exact schemas; temporary restore rights only under adopted DEC025 narrow ownership authority.",
-      "inventory-native-runtimes": "Actual /private/tmp/sales-p3-private/inventory-bindings.json0600: ten owned fresh schemas; existingPID92528 and socket-only newPIDs81791/81801/81808, UID501; distinctguarded021/022/025paths. Cleanup only observed ownedresources after checks."
+      "inventory-native-runtimes": "Actual /private/tmp/sales-p3-private/inventory-bindings.json0600: ten owned fresh schemas; existingPID92528 and socket-only newPIDs81791/81801/81808, UID501; distinctguarded021/022/025paths. Cleanup only observed ownedresources after checks.",
+      "process-awake-assertion": "Process-only caffeinate -is wraps the owned original33-contract runner after observed documentation-only mainintegration; no permanentpower/display settings. Priorrunner and awake assertion completed normally; new asserted process observed separately."
     },
     "lease_ref": null
   },
@@ -5226,6 +5227,90 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-R7-APPLIED-REPAIRS",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p3_whole_phase_review",
+      "reviewed_baseline": "bc2d73be8a6643c16fb2023fc52b82f81df53ba0c07531a24b2309eaf75c1ae7",
+      "source_ref": "/private/tmp/sales-p3-private/p3-whole-phase-r7-applied-repairs-reviewer-proof.json SHA256 d5bf40c84266d84e1b850318d6fcafcd2f291d73b4fe68f4b978003e9eab3528; authentic separate scoped static/evidence reconciliation only, not final wholePhase developer/CI/merge approval. Exact file/source/candidate and limitations recorded in proof; original historical approvals/failures retained.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-R8-WHOLE-STATIC",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p3_whole_phase_review",
+      "reviewed_baseline": "bc2d73be8a6643c16fb2023fc52b82f81df53ba0c07531a24b2309eaf75c1ae7",
+      "source_ref": "/private/tmp/sales-p3-private/p3-whole-phase-r8-final-source-static-reviewer-proof.json SHA256 12905396cff8b8728b9ee75562136ef28f751fe1c2283b738b8a700a37445ec8; authentic separate scoped static/evidence reconciliation only, not final wholePhase developer/CI/merge approval. Exact file/source/candidate and limitations recorded in proof; original historical approvals/failures retained.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-R9-COVERAGE-RECONCILIATION",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p3_whole_phase_review",
+      "reviewed_baseline": "bc2d73be8a6643c16fb2023fc52b82f81df53ba0c07531a24b2309eaf75c1ae7",
+      "source_ref": "/private/tmp/sales-p3-private/p3-whole-phase-r9-coverage-reconciliation-reviewer-proof.json SHA256 bf229be61315ba2ed0692d1e8e37145cd5ec297e902dc0ce0f268c0860d6224b; authentic separate scoped static/evidence reconciliation only, not final wholePhase developer/CI/merge approval. Exact file/source/candidate and limitations recorded in proof; original historical approvals/failures retained.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-UI-POSTMAIN-STATIC",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p3_ui_review",
+      "reviewed_baseline": "bc2d73be8a6643c16fb2023fc52b82f81df53ba0c07531a24b2309eaf75c1ae7",
+      "source_ref": "/private/tmp/sales-p3-private/task047048-ui-postmain-static-reviewer-proof.json SHA256 1beb5107210833e84f750755f87674dba8301a3e2c1fc704f670fb0a52575b3d; authentic separate scoped static/evidence reconciliation only, not final wholePhase developer/CI/merge approval. Exact file/source/candidate and limitations recorded in proof; original historical approvals/failures retained.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-UI-FINAL-EVIDENCE",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p3_ui_review",
+      "reviewed_baseline": "bc2d73be8a6643c16fb2023fc52b82f81df53ba0c07531a24b2309eaf75c1ae7",
+      "source_ref": "/private/tmp/sales-p3-private/task047048-ui-final-reviewer-proof.json SHA256 2829cf3716014289df98ce304e3d64c7f7981c398f64ebe3767faf5926287f66; authentic final scoped evidence review at d3877c6/source95643b93/current DESIGN/PLAN; actual runs/artifact hashes and explicit limitations independently inspected. APPROVED scoped UI or retention/security/recovery only, not final wholePhase/CI/merge approval.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-RETENTION-FINAL-EVIDENCE",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p3_retention_review",
+      "reviewed_baseline": "bc2d73be8a6643c16fb2023fc52b82f81df53ba0c07531a24b2309eaf75c1ae7",
+      "source_ref": "/private/tmp/sales-p3-private/task049-final-retention-reviewer-proof.json SHA256 a5e37da261c28cc81a8792a133055f60d2cd3d21ec32c698559282ff03ee6fcc; authentic final scoped evidence review at d3877c6/source95643b93/current DESIGN/PLAN; actual runs/artifact hashes and explicit limitations independently inspected. APPROVED scoped UI or retention/security/recovery only, not final wholePhase/CI/merge approval.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-R10-NATIVE-HISTORY-ISOLATION",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p3_whole_phase_review",
+      "reviewed_baseline": "bc2d73be8a6643c16fb2023fc52b82f81df53ba0c07531a24b2309eaf75c1ae7",
+      "source_ref": "/private/tmp/sales-p3-private/p3-whole-phase-r10-native-history-isolation-reviewer-proof.json SHA256 4247fd768ce9600a75d92d50db4a49bd97fa25a3c4a007699cf80f87915ca47c; authentic approval of exactone-line original-event rollbackfixture correction only. Original RED8/7PASS/1FAIL0skip evidence20261009T064259-1e7a6d9330bf; samecollidingdata actualGREEN8PASS0skip evidence20261009T064845-7baf4fe193b2 at sourceb767d41; retained6oldrows unchanged afterGREEN. No product/spec/commands/floors/permissions/testcount changed; all33/current5CI/finalPhaseapproval pending.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -7175,6 +7260,17 @@
       "source_ref": "Actual private p3-update-currency-lock-red.xml FAIL CONCURRENT_OPERATION and green.xml PASS1/0skip; p3-capacity-lock-order-green.xml PASS2/0skip 10k/50k808066ms50actors4005samplesP95103.24ms zeroerrors/mismatches memory8.865s. Results pre-main-integration are focused evidence only, not reused as final33 gate; independent actual reviewer proof p3-whole-phase-r7-applied-repairs-reviewer-proof.json. Focused final guard cases PASS10/0skip; whole Intakefloor pending.",
       "actor": "Codex /root",
       "observed_at": "2026-10-09T04:02:52.321404+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Owned fullcoverage environmental timing triage; no fullPASS",
+      "code_commit": "d3877c6048e6d8af6646fdd6bd3e6ccf551e1157",
+      "spec_baseline": "0d501e0624078b2c2c477dd1ac721456acd21115bbb11967262e993119166989",
+      "source_fingerprint": "95643b931fcaae57bbe54dfd03bb0c926f1e011d502f5c18bf4837e8bdd84b55",
+      "status": "FAIL",
+      "source_ref": "Actual20261009T041737-ac2599344097 fullcoverage3002tests/2986PASS/2FAIL/14known optin/deferredSKIP, source/specunchanged. Global94.09/85.83/92.86 and actual38floorsPASS; Intake98.4/91.49/100. Actualpmset900sMaintenanceSleep12:39:22→12:54:22 supports899sauthfailure; Supplier1026mseventloop cause not individuallyproven. Sameunchanged2focusedtestsunderprocess-onlyawakePASS, no substitute for fullPASS; whole rerunpending. R9 reviewer confirms10native separately15leafPASS0skip and4originalnamedperformance deferrals, no waiver/new omission.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-09T06:05:41.837007+00:00"
     }
   ],
   "pending_decisions": [
@@ -8401,6 +8497,30 @@
       "idempotency_key": "p3-inventory-bindings-original33",
       "status": "CONFIRMED",
       "source_ref": "Sam adopted DEC025 packet68§6 preserves existing owned synthetic MySQL/socket/TCP/migration/cleanup authority. Exact private prepare_inventory_bindings.py adapted from approved P2 only namespace/worktree; independent review pending before execute. Original task007 BLOCKED skipped result retained; no skips or commands/threshold exceptions. All original33 remain. Actual independently reviewed private setup exit0; inventory-bindings.json0600 has10 fresh schemas, owned existingPID92528 and new821/022/025 PIDs81791/81801/81808; all newMySQL26.7.0 datadir/socket/skipnetworking1 verified and025fullmigrationexit0. No sharedschema/reset; preserve exactcleanup."
+    },
+    {
+      "id": "ACT-P3-INVENTORY-FINAL-FRESH-SCHEMAS",
+      "kind": "OWNED_FIXTURE_SCHEMA",
+      "target": "Same ten verified owned Inventory fixture bindings, new final-run schema names only; migrate fresh025; retain original schemas",
+      "idempotency_key": "p3-inventory-final-fresh-schemas",
+      "status": "CONFIRMED",
+      "source_ref": "DEC025 original authority; previous native10 actuallypassed but pre-commit index-deletion representation changes fingerprint, so final33 rerun required. Exact previously reviewed P2 refresh adapted namespaces only, browser refresh omitted because already approved current P3 schema guard. No drop/reset/reinitialize or shareddata. Actual separatelyreviewed refresh scriptba6f8661 exit0, all10newschemas recordedprivate bindings andpriorbackup retained; same4PIDs UID501, exact025 migrationPASS. No source/specchange."
+    },
+    {
+      "id": "ACT-P3-MAIN394fc3f-INTEGRATE",
+      "kind": "INTEGRATE_TARGET",
+      "target": "origin/main394fc3fb11b6dce0bf4c41288904a8fac6d3fa49, actual Supplier documentation-only PR195, into owned P3 branch",
+      "idempotency_key": "p3-main394fc3f-integrate",
+      "status": "CONFIRMED",
+      "source_ref": "Existing Sam fresh-target integration and merge authority. Actual fetch/diff shows only docs/supplier_management/00_harness_state.json and item_handoff_supplier_sku_refs.md; no source/test/config change. All33 actually PASS at d3877c6/source95643b93 before integration, typed evidence retained and pre-doc-main-33-contracts.json hashed artifacts verified. Current suite runner has ended exit0; no HEAD edits during execution. Generic fingerprint includes non-Sales documentation, so complete original33 will be rerun after integration, no waiver or relabeling. Actual git merge exit0/no conflicts HEAD8a7a45e8; exact two Supplier documents only."
+    },
+    {
+      "id": "ACT-P3-INVENTORY-DOCMAIN-FRESH-SCHEMAS",
+      "kind": "OWNED_FIXTURE_SCHEMA",
+      "target": "Same ten independently verified owned Inventory bindings; fresh schema names on same4instances, migrate025; retain prior names",
+      "idempotency_key": "p3-inventory-docmain-fresh-schemas",
+      "status": "CONFIRMED",
+      "source_ref": "Sam DEC025 original owned fixture authority. Same separately reviewed refresh_inventory_bindings.py SHAba6f8661, supported round3 input, namespaces only; no drop/reset/newserver or command/threshold change. Last suite ended normalexit0. Backup priorbindings before each observed creation; no uncertain retry. Actual same reviewed script round3 exit0, tenfreshschemas and025migrationPASS; same4ownedinstances andpriorbindingbackup preserved."
     }
   ],
   "evidence_files": [
@@ -8637,8 +8757,50 @@
     "evidence/20261009T040922-ef3de6f66fc7/run.json",
     "evidence/20261009T040924-67bfbc8bb01c/run.json",
     "evidence/20261009T040944-86f5221894e3/run.json",
-    "evidence/20261009T040948-c5cfa8945a12/run.json"
+    "evidence/20261009T040948-c5cfa8945a12/run.json",
+    "evidence/20261009T041014-d11e94320180/run.json",
+    "evidence/20261009T041513-be596f493ca7/run.json",
+    "evidence/20261009T041518-8b5a3a880c3b/run.json",
+    "evidence/20261009T041520-5663f8f62cd8/run.json",
+    "evidence/20261009T041523-1995238659d8/run.json",
+    "evidence/20261009T041533-bee9a169864b/run.json",
+    "evidence/20261009T041535-c6ca5e29f4bd/run.json",
+    "evidence/20261009T041544-03c8126ee1e2/run.json",
+    "evidence/20261009T041641-26011ee59024/run.json",
+    "evidence/20261009T041643-292b5f9d1560/run.json",
+    "evidence/20261009T041644-9d5619b187b5/run.json",
+    "evidence/20261009T041645-61087147c8ca/run.json",
+    "evidence/20261009T041646-a22478b777a9/run.json",
+    "evidence/20261009T041647-e15b6592f36b/run.json",
+    "evidence/20261009T041649-09683da88a1d/run.json",
+    "evidence/20261009T041650-1d5b8b818e4b/run.json",
+    "evidence/20261009T041651-7681ef77b385/run.json",
+    "evidence/20261009T041652-a46aad8b5964/run.json",
+    "evidence/20261009T041653-5af9becdedc2/run.json",
+    "evidence/20261009T041655-643abd6932a3/run.json",
+    "evidence/20261009T041710-110ac899063d/run.json",
+    "evidence/20261009T041713-12f191a7d5da/run.json",
+    "evidence/20261009T041737-ac2599344097/run.json",
+    "evidence/20261009T060018-459bdf9846a1/run.json",
+    "evidence/20261009T062235-3c9b960ff56a/run.json",
+    "evidence/20261009T062244-5d36f1c3d4c3/run.json",
+    "evidence/20261009T062246-88b9b94bcdf3/run.json",
+    "evidence/20261009T062316-e48eff5cb773/run.json",
+    "evidence/20261009T062319-ce37da436aff/run.json",
+    "evidence/20261009T062349-b4d0ceb4cde0/run.json",
+    "evidence/20261009T062358-8de092fdff24/run.json",
+    "evidence/20261009T062404-a5cc81827077/run.json",
+    "evidence/20261009T062445-e3ca3bcba674/run.json",
+    "evidence/20261009T062447-99b93c3af3ae/run.json",
+    "evidence/20261009T062518-849625b0cf97/run.json",
+    "evidence/20261009T064232-f6c997bea9f7/run.json",
+    "evidence/20261009T064238-c6946022b4b5/run.json",
+    "evidence/20261009T064240-3e251191a497/run.json",
+    "evidence/20261009T064244-0384e0211321/run.json",
+    "evidence/20261009T064257-ac8676a012b1/run.json",
+    "evidence/20261009T064259-1e7a6d9330bf/run.json",
+    "evidence/20261009T064845-7baf4fe193b2/run.json"
   ],
   "defects": [],
-  "next_safe_action": "Review then create observed owned Inventory-only runtime bindings; rerun blocked007 and remaining exact33 contracts on unchanged frozen source. Preserve everyfailed/skippedrun. All other Phase004 gates remain pending."
+  "next_safe_action": "Focused correction GREEN actuallycomplete, sourceb767d41 andcurrentplan unchanged. Commit exactapprovedsinglefixtureline plus bookkeeping while nochildactive; observecommitbaseline then original33 frozen runs underprocess-onlyawake, currentcandidate fiveCI and finalindependentPhase review, freshmain andMERGE_READY before authorizedmerge."
 }
