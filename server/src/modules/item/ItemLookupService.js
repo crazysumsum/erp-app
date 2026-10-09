@@ -137,6 +137,35 @@ export class ItemLookupService {
     return result;
   }
 
+  async searchForSale({ q = "", barcode, page = 1, pageSize = 20, atMs } = {}) {
+    const nowMs = this.#saleTime(atMs);
+    if (typeof q !== "string" || [...q].length > 190 || /[\p{Cc}]/u.test(q) ||
+        (barcode !== undefined && (typeof barcode !== "string" || [...barcode].length > 190 || /[\p{Cc}]/u.test(barcode))) ||
+        !Number.isSafeInteger(page) || page < 1 || !Number.isSafeInteger(pageSize) || pageSize < 1 || pageSize > 100 ||
+        !Number.isSafeInteger((page - 1) * pageSize)) throw new TypeError("Sales search query is invalid");
+    const params = [nowMs, nowMs];
+    const conditions = ["i.status='active'", "s.status='active'", "s.sellable=1", "s.tracking_policy <> 'serial'",
+      "(s.effective_from IS NULL OR s.effective_from<=?)", "(s.effective_to IS NULL OR s.effective_to>=?)",
+      "EXISTS (SELECT 1 FROM item_sku_uoms su JOIN item_uoms u ON u.id=su.uom_id WHERE su.sku_id=s.id AND u.status='active')"];
+    if (q.trim()) {
+      const prefix = `${q.trim().replace(/[!%_]/gu, match => `!${match}`)}%`;
+      conditions.push("(s.sku_code LIKE ? ESCAPE '!' OR s.sku_name LIKE ? ESCAPE '!' OR i.name LIKE ? ESCAPE '!')"); params.push(prefix, prefix, prefix);
+    }
+    if (barcode !== undefined) {
+      conditions.push("EXISTS (SELECT 1 FROM item_sku_barcodes b WHERE b.sku_id=s.id AND b.normalized_barcode=?)"); params.push(looseNormalizeBarcode(barcode));
+    }
+    const where = `WHERE ${conditions.join(" AND ")}`;
+    const [[count]] = await this.database.query(`SELECT COUNT(*) AS total FROM item_skus s JOIN items i ON i.id=s.item_id ${where}`, params);
+    const [rows] = await this.database.query(`${SALES_SKU_SELECT} ${where} ORDER BY s.sku_code,s.id LIMIT ? OFFSET ?`, [...params, pageSize, (page - 1) * pageSize]);
+    const uoms = await this.#loadUomRows(rows.map(row => Number(row.id)));
+    const items = rows.map(row => {
+      const sku = this.#saleProjection(row, uoms.get(Number(row.id)) ?? [], nowMs);
+      if (!sku.usable) throw skuNotUsable(sku.skuId, "new_sale", sku.reasons);
+      return sku;
+    });
+    return { items, total: Number(count.total), page, pageSize };
+  }
+
   async findManyForSale(skuIds, { atMs, purpose = "new_sale" } = {}) {
     if (purpose !== "new_sale") throw new TypeError("Sales lookup purpose must be new_sale");
     const nowMs = this.#saleTime(atMs);

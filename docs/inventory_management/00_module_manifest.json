@@ -40,6 +40,12 @@
     "approval_required_paths": [
       "server/database/migrations/**",
       "server/src/framework/configuration/applicationConfiguration.js",
+      "server/src/framework/api/apiDefinitionResolver.js",
+      "server/src/framework/middleware/apiDispatcher.js",
+      "server/src/framework/validation/requestValidator.js",
+      "server/test/apiDefinitionResolver.test.js",
+      "server/test/apiDispatcher.test.js",
+      "server/test/requestValidator.test.js",
       "server/src/modules/authorization/permissionCatalogue.js",
       "server/src/services/idempotency/**",
       "server/src/modules/item/ItemLookupService.js",
@@ -84,9 +90,9 @@
     "provided": [
       {
         "id": "inventory-domain-contract",
-        "version": "planning-v8; TASK009-010 source pins reconciled, Sales additions CI pending",
+        "version": "planning-v16; P3 fresh-main reserve-only fenced Sales Backorder owner contract; manual and P3 semantics preserved",
         "source": "docs/inventory_management/03_design_spec.md",
-        "sha256": "4a3834d65bdde92ac0f532ace7fe3fdaab05bc076b61da98977802b5474c6b29",
+        "sha256": "2fb61cce8ee4ff9f32cd9c6d0e2a9fc8f87c08d34823be7fb622908610b1ac53",
         "consumers": [
           "purchasing-receiving",
           "sales-order",
@@ -99,9 +105,9 @@
       {
         "module_id": "item-management",
         "id": "item-lookup-service",
-        "version": "transaction-v1; TASK009-010 source pins reconciled, Sales additions CI pending",
+        "version": "transaction-v1; fresh-main additive searchForSale consumed-source pin; existing Inventory methods unchanged",
         "source": "server/src/modules/item/ItemLookupService.js",
-        "sha256": "558139b78cd6dabcd6edd6a7bca93e12b6724c9519eb1e87900b43ce21c76662",
+        "sha256": "30d6807978b27252fde194cc821c8fef5de000f27fa7eed404ed204abab2764a",
         "regression_suites": [
           "inventory-technical"
         ]
@@ -126,7 +132,8 @@
       "read_only": [
         "Item/SKU eligibility and tracking policy",
         "User/role authorization state",
-        "Purchasing/Receiving, Sales/Fulfillment and Returns source documents"
+        "Purchasing/Receiving, Sales/Fulfillment and Returns source documents",
+        "Trusted Sales Backorder registration and fixed-job lease state"
       ],
       "forbidden_direct_writes": [
         "Item/SKU master data",

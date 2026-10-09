@@ -664,7 +664,7 @@
       "timeout_seconds": 1800,
       "result_adapter": "JUNIT",
       "result_path": "inventory-p3-movements-client.xml",
-      "min_tests": 4,
+      "min_tests": 6,
       "max_skipped": 0,
       "stages": [
         "DEVELOPER"
@@ -702,7 +702,7 @@
       "timeout_seconds": 1800,
       "result_adapter": "JUNIT",
       "result_path": "inventory-p3-adjustments-client.xml",
-      "min_tests": 4,
+      "min_tests": 12,
       "max_skipped": 0,
       "stages": [
         "DEVELOPER"
@@ -891,13 +891,14 @@
         "test",
         "--config",
         "client/e2e/inventory-management/playwright.config.js",
-        "inventory-warehouse-operations.spec.js"
+        "inventory-warehouse-operations.spec.js",
+        "inventory-high-risk.spec.js"
       ],
       "cwd": ".",
       "timeout_seconds": 1800,
       "result_adapter": "JUNIT",
       "result_path": "inventory-p3-browser.xml",
-      "min_tests": 8,
+      "min_tests": 16,
       "max_skipped": 0,
       "stages": [
         "DEVELOPER"
@@ -1013,6 +1014,198 @@
       "side_effects": ["FILES"],
       "env_keys": [],
       "redaction_env_keys": []
+    },
+    {
+      "id": "inventory-p3-sales-compatibility",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-p3-sales-compatibility.xml",
+        "server/test/inventorySalesWorkerContracts.test.js",
+        "server/test/integration/salesConfirmation.integration.test.js",
+        "server/test/integration/salesBackorder.integration.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-p3-sales-compatibility.xml",
+      "min_tests": 31,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        },
+        {
+          "argv": [
+            "mysql",
+            "--version"
+          ],
+          "version_pattern": "(?i)(mysql.*26\\.7\\.0|26\\.7\\.0.*mysql)"
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_HOST",
+        "DB_PORT",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_NAME",
+        "DB_INTEGRATION_TESTS",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
+      ]
+    },
+    {
+      "id": "inventory-p3-customer-capacity",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-p3-customer-capacity.xml",
+        "server/test/performance/customerImport.performance.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1200,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-p3-customer-capacity.xml",
+      "min_tests": 1,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        },
+        {
+          "argv": [
+            "mysql",
+            "--version"
+          ],
+          "version_pattern": "(?i)(mysql.*26\\.7\\.0|26\\.7\\.0.*mysql)"
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_HOST",
+        "DB_PORT",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_NAME",
+        "DB_INTEGRATION_TESTS",
+        "CUSTOMER_IMPORT_PERFORMANCE_TESTS",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
+      ]
+    },
+    {
+      "id": "inventory-p3-core-capacity",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-p3-core-capacity.xml",
+        "server/test/performance/inventoryCore.performance.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 3000,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-p3-core-capacity.xml",
+      "min_tests": 1,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        },
+        {
+          "argv": [
+            "mysql",
+            "--version"
+          ],
+          "version_pattern": "(?i)(mysql.*26\\.7\\.0|26\\.7\\.0.*mysql)"
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_HOST",
+        "DB_PORT",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_NAME",
+        "INVENTORY_CORE_TESTS"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD"
+      ]
     }
   ],
   "ci": {

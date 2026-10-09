@@ -1,0 +1,5 @@
+{
+  "status": "LOCAL_CHECKS_PASS",
+  "issues": [],
+  "scope": "Path consistency only; not process/data/API isolation or authenticated approval."
+}

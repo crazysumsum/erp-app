@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
 import { ApplicationError } from "../../framework/errors/ApplicationError.js";
+import { cloneData, plainObject } from "../../framework/api/normalizeApiDefaultsConfig.js";
 import {
   IdempotencyStore,
   MemoryIdempotencyStore
@@ -146,10 +147,32 @@ export class IdempotencyService {
       throw new Error(`Idempotency ttlMs must be a positive integer for ${routeKey}`);
     }
 
-    return Object.freeze({ enabled, ttlMs });
+    const retryAfterSeconds = routeConfig.retryAfterSeconds;
+    if (retryAfterSeconds !== undefined && (!Number.isSafeInteger(retryAfterSeconds) || retryAfterSeconds <= 0)) {
+      throw new Error(`Idempotency retryAfterSeconds must be a positive integer for ${routeKey}`);
+    }
+    return Object.freeze({ enabled, ttlMs, ...(retryAfterSeconds === undefined ? {} : { retryAfterSeconds }) });
   }
 
-  async execute(req, res, routeOptions, work) {
+  async execute(req, res, routeOptions, work, prepared) {
+    const preparationRequired = arguments.length >= 5;
+    let input = req.input;
+    let replay;
+    if (preparationRequired) {
+      plainObject(prepared, "Idempotency preparation");
+      plainObject(prepared.input, "Prepared input");
+      if (!routeOptions.enabled || typeof prepared.replay !== "function" || !Object.isFrozen(prepared.input) ||
+        Object.keys(prepared.input).sort().join(",") !== "body,params,query") {
+        throw new TypeError("Invalid idempotency preparation");
+      }
+      for (const location of ["params", "query", "body"]) {
+        plainObject(prepared.input[location], "Prepared input location");
+        if (!Object.isFrozen(prepared.input[location])) throw new TypeError("Prepared input must be frozen");
+      }
+      // Own the snapshot before the store can wait; never fall back to credentials.
+      input = cloneData(prepared.input, "Prepared input");
+      replay = prepared.replay;
+    }
     if (!routeOptions.enabled) {
       return work();
     }
@@ -181,7 +204,7 @@ export class IdempotencyService {
         canonicalValue({
           method: req.method,
           path: route.path,
-          input: req.input,
+          input,
           // 上傳的檔案不在 req.input 裡。少了這一段，同一個 key 配上同樣的
           // 文字欄位但換一個檔案會被當成重播：新檔案靜默丟棄，客戶端拿回上
           // 一次的成功回應，而它以為第二份檔案已經存下來了。
@@ -270,18 +293,20 @@ export class IdempotencyService {
     }
 
     if (begin.state === "replay") {
-      // dispatcher 靠這個旗標知道 handler 沒有跑過，得清掉這次上傳的檔案。
-      req.idempotentReplay = true;
-      res.setHeader("Idempotency-Replayed", "true");
-      void this.logger?.info?.("idempotency.response.replayed", "Idempotent response replayed", {
-        requestId:
-          req.requestId ||
-          this.context.get()?.requestId ||
-          null,
-        method: req.method,
-        path: route.path
-      });
-      return res.status(begin.response.statusCode).json(begin.response.body);
+      if (preparationRequired) {
+        let active = true, calls = 0;
+        try {
+          const result = await replay(() => {
+            if (!active || ++calls !== 1) throw new TypeError("Invalid idempotency replay callback");
+            return this.sendReplay(req, res, begin.response, routeOptions);
+          });
+          if (calls !== 1) throw new TypeError("Idempotency replay callback must be called exactly once");
+          return result;
+        } finally {
+          active = false;
+        }
+      }
+      return this.sendReplay(req, res, begin.response, routeOptions);
     }
 
     if (begin.state !== "started") {
@@ -291,7 +316,6 @@ export class IdempotencyService {
         503
       );
     }
-
     const originalJson = res.json;
     let responseBody;
     res.json = function captureIdempotentResponse(body) {
@@ -392,6 +416,21 @@ export class IdempotencyService {
         }
       );
     }
+  }
+
+  sendReplay(req, res, response, routeOptions) {
+    // Only mark/log/send inside the caller's current-security guarded scope.
+    req.idempotentReplay = true;
+    res.setHeader("Idempotency-Replayed", "true");
+    if (response.statusCode === 202 && routeOptions.retryAfterSeconds !== undefined) {
+      res.setHeader("Retry-After", String(routeOptions.retryAfterSeconds));
+    }
+    void this.logger?.info?.("idempotency.response.replayed", "Idempotent response replayed", {
+      requestId: req.requestId || this.context.get()?.requestId || null,
+      method: req.method,
+      path: req.apiRoute.path
+    });
+    return res.status(response.statusCode).json(response.body);
   }
 
   /**

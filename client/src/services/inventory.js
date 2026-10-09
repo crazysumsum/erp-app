@@ -17,6 +17,14 @@ function list(path, { page, rowsPerPage, filter, status, lockStatus, sortBy, des
 }
 
 export default {
+  lookupSku(code, { signal } = {}) { return httpClient.get("/api/v1/inventory/sku-lookup", { params: { code }, signal }); },
+  listTransfers({ filter, ...options } = {}) { return list("/api/v1/inventory/transfers", { ...options, number: filter || undefined }); },
+  getTransfer(id, { signal } = {}) { return httpClient.get(`/api/v1/inventory/transfers/${id}`, { signal }); },
+  createTransfer(payload) { return write("/api/v1/inventory/transfers/create", payload); },
+  updateTransfer(id, payload) { return write(`/api/v1/inventory/transfers/${id}/update`, payload); },
+  cancelTransfer(id, payload) { return write(`/api/v1/inventory/transfers/${id}/cancel`, payload); },
+  dispatchTransfer(id, payload) { return write(`/api/v1/inventory/transfers/${id}/dispatch`, payload); },
+  receiveTransfer(id, payload) { return write(`/api/v1/inventory/transfers/${id}/receive`, payload); },
   listWarehouses(options) { return list("/api/v1/inventory/warehouses", options); },
   getWarehouse(id, { signal } = {}) { return httpClient.get(`/api/v1/inventory/warehouses/${id}`, { signal }); },
   createWarehouse(payload) { return write("/api/v1/inventory/warehouses/create", payload); },
@@ -39,6 +47,15 @@ export default {
   listExpiry(options) { return list("/api/v1/inventory/expiry", options); },
   listMovements(options) { return list("/api/v1/inventory/movements", options); },
   getMovement(id, { signal } = {}) { return httpClient.get(`/api/v1/inventory/movements/${id}`, { signal }); },
+  findOperationBySource(source, { signal } = {}) {
+    return httpClient.get("/api/v1/inventory/operations/by-source", {
+      params: { sourceModule: source.module, sourceDocumentType: source.documentType,
+        sourceDocumentId: source.documentId, sourceLineId: source.lineId, sourceEventId: source.eventId }, signal
+    });
+  },
+  postAdjustment(payload, { signal } = {}) { return write("/api/v1/inventory/adjustments", payload, { signed: true, ...(signal ? { signal } : {}) }); },
+  postStatusTransfer(payload, { signal } = {}) { return write("/api/v1/inventory/status-transfers", payload, { signed: true, ...(signal ? { signal } : {}) }); },
+  reverseMovement(id, payload, { signal } = {}) { return write(`/api/v1/inventory/movements/${id}/reverse`, payload, { signed: true, ...(signal ? { signal } : {}) }); },
   postIssue(payload) { return write("/api/v1/inventory/issues", payload); },
   listReservations(options) { return list("/api/v1/inventory/reservations", options); },
   getReservation(id, { signal } = {}) { return httpClient.get(`/api/v1/inventory/reservations/${id}`, { signal }); },

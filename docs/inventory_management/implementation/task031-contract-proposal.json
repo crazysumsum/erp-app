@@ -1,0 +1,124 @@
+{
+  "status": "PROPOSED_NOT_APPLIED",
+  "decision": "HD-121",
+  "selected_option": "HD120 A",
+  "authority": "Actual latest Sam A selects the minimal opt-in two-route boundary preparation, APR159. Independent unseen candidate approval remains pending.",
+  "code_commit": "869ac07abdd3879254c351d857be911d71e68b6b",
+  "source_fingerprint": "fe3130fef55c9ec8cc71b2edf872a8a2076b5332581749ee281b211de38f2bc2",
+  "active_baselines": {
+    "design": "46841dae185fab06e626fca722d1576726702a3d7183fdbb2f23e3459de7f663",
+    "plan": "8ab85d87051f437b74c6cfb4efc39ba93c8c2dd9e56ca7ea210d7bc5bc705dc8"
+  },
+  "proposed_baselines": {
+    "design": "c99381982a7b07b8b310dbd0cabe2a40bd9118f6ce107c77ea211966c72ff265",
+    "plan": "66647031a7b6db326ca1d51e745289616daba67e5c98a02939dc3eda2367c31e"
+  },
+  "patch": "task031-contract-proposal.patch",
+  "patch_sha256": "235425b04f5dba0f743d75e03799f5b722980e408d1ea3d8e10e3cd06b897ec7",
+  "files": [
+    {
+      "path": "docs/inventory_management/00_module_manifest.json",
+      "before_sha256": "19f95b0b8c290c311197e0350f6bcaf47db131d04406742d226debb96f69763e",
+      "after_sha256": "db9c12e2e738d9df8abccdb54d7d3a7fc8750a7420143b9bb0376f11a115c85a"
+    },
+    {
+      "path": "docs/inventory_management/03_design_spec.md",
+      "before_sha256": "acbdec75c9a357c5e02390d4bce8f8e9273064f6020c4d445edabb1f1ad5ae2d",
+      "after_sha256": "3574166ca581250f8ab2d110dbcbac7f4bf7245a0213ed6435bf33e6e0f6f096"
+    },
+    {
+      "path": "docs/inventory_management/05_development_tasks.md",
+      "before_sha256": "dfaab87a27aa203d5735160f661e0f351c8aa5679a36c3fbfb51bb98939b2d2a",
+      "after_sha256": "408fc18002f60e544048bfcb990688f7bb41377771338d1aa99fd9d6dbadd440"
+    },
+    {
+      "path": "docs/inventory_management/06_technical_test_cases.md",
+      "before_sha256": "33da8bbbb89ee5d3d6ab2fb966e96b42db8405f7b0d2dddc70a691be54db351b",
+      "after_sha256": "62853f86b9e8bd9d6138dccfca8f24a708ab3c30627a0ad4a4ab279c64a52f4a"
+    }
+  ],
+  "new_shared_scope_paths": [
+    "server/src/framework/api/apiDefinitionResolver.js",
+    "server/src/framework/middleware/apiDispatcher.js",
+    "server/src/services/idempotency/IdempotencyService.js",
+    "server/test/apiDefinitionResolver.test.js",
+    "server/test/apiDispatcher.test.js",
+    "server/test/idempotencyService.test.js"
+  ],
+  "shared_scope_rebind_paths": [
+    "server/src/framework/api/apiDefinitionResolver.js",
+    "server/src/framework/middleware/apiDispatcher.js",
+    "server/src/services/idempotency/IdempotencyService.js",
+    "server/test/apiDefinitionResolver.test.js",
+    "server/test/apiDispatcher.test.js",
+    "server/test/idempotencyService.test.js",
+    "server/src/framework/validation/requestValidator.js",
+    "server/test/requestValidator.test.js"
+  ],
+  "unchanged_shared_no_write": [
+    "server/src/framework/validation/requestValidator.js",
+    "server/test/requestValidator.test.js"
+  ],
+  "owned_source_test_paths": [
+    "server/src/modules/inventory/InventoryPostingService.js",
+    "server/src/modules/inventory/inventoryHighRiskContext.js",
+    "server/src/modules/inventory/inventoryAdjustmentPosting.js",
+    "server/src/modules/inventory/InventoryAuditService.js",
+    "server/src/handlers/inventory/postingHandlers.js",
+    "server/src/handlers/inventory/inventorySchemas.js",
+    "server/test/inventoryPostingService.test.js",
+    "server/test/inventoryPostingHandlers.test.js",
+    "server/test/inventoryAuditService.test.js",
+    "server/test/inventoryEndpointSecurity.test.js",
+    "server/test-support/fakeInventoryDatabase.js",
+    "server/test/integration/inventoryMovement.integration.test.js",
+    "server/test/integration/inventoryWarehouseOperationsApi.integration.test.js"
+  ],
+  "unchanged": {
+    "01_requirement_spec.md": "5a8c7575722c09972bae1642d6d1bb185ece5505b5d534509010313b99a630b8",
+    "00_project_profile.json": "7e99eb6e8ba556e4a545770ba1c5bfd91c7ff15ee86b0388211974750fe4e8d6",
+    "07_uat_test_cases.md": "9f3c2aa2e3347089168c45c81350354b936bd15ecd639937b3fdb1a6a04737a4",
+    "08_traceability.json": "ac82a88c498b6de6f99ad14ca5adccfd7867be5ce2c2f06b26209f7f0e1de222",
+    "08_traceability_matrix.md": "e856d9e8ee4445b77ec18a852c8a2cee2f65f2932fbd3ab6c710356abf87f4f5"
+  },
+  "unchanged_existing_0064": {
+    "path": "server/database/migrations/0064_create_inventory_transfers.js",
+    "sha256": "07653bb700a40b026e8bb46b538e0e31b112d6c20010af45b4cc71a6ff7ac143",
+    "requested_scope": "Rebind byte-identical existing0064 scope and existing approved owned synthetic migration use to the proposed PLAN; no new migration or DDL alteration."
+  },
+  "validation": {
+    "traceability": "STRUCTURE_PASS",
+    "issues": [],
+    "matrix": "BYTE_IDENTICAL",
+    "provided_contract_pin": "MATCHES_DESIGN",
+    "consumed_item_contract": "UNCHANGED",
+    "fresh_copy_patch_replay": "PASS_EXACT_4_FILE_SHA256",
+    "profile_commands_parsers_floors": "BYTE_IDENTICAL",
+    "named_scenario_rows": 16,
+    "scenario_execution": "PLANNED_NOT_RUN"
+  },
+  "review": {
+    "method": "SELF_REVIEW",
+    "author": "Codex /root",
+    "reviewer": "Codex /root",
+    "independent": false,
+    "scope": "Docs-only candidate: API/input/result/hash, callback-held current cache security checks, initial/final RR reads/revocation order, strong-auth context/time, immutable Lot, free/Reserved invariants, atomic rollback, exact shared scope and old route regression. No blocking document finding; no source/runtime verification or actual Sam review."
+  },
+  "native_evidence_refs_retained": 160,
+  "execution": "Only temporary docs-copy validation and exact replay; no canonical adoption, source/test edits, test cases/runtime/DB/UI/CI/publication execution. Existing160 native evidence references are retained on original baselines, not promoted.",
+  "next_safe_action": "Actual independent Sam HD121 review of proposed DESIGN/PLAN/four-file patch, exact six new shared paths/two unchanged prior paths and0064 rebind. Then reconcile approval gates before TASK031-only local implementation and fresh native developer verification; separate Sam implementation review remains mandatory.",
+  "exclusions": [
+    "shared auth/policy/bootstrap/Item changes",
+    "global request/idempotency/isolation config",
+    "new DDL/permissions/dependencies",
+    "client/frontend/TASK033",
+    "stage/commit/push/PR/remoteCI/merge/main adoption",
+    "TASK032+ execution",
+    "formal TC/UAT/business/release acceptance",
+    "capacity/check/floor waiver"
+  ],
+  "temporary_validation_roots": [
+    "/private/tmp/inventory-task031-candidate-uwo7g5lh",
+    "/private/tmp/inventory-task031-replay-jylqj94z"
+  ]
+}

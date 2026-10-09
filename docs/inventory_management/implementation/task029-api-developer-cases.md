@@ -1,0 +1,24 @@
+# TASK-029 Transfer HTTP developer cases
+
+Defined before API automation or execution. Authority: Sam「同意繼續」after HD101 A; existing DESIGN c8dc42b3 / PLAN 11b81565, TASK029 only. Developer cases are not formal TC/UAT results or complete P3 acceptance.
+
+Shared preconditions: fresh owned socket-only MySQL26.7.0 (`skip_networking=1`), unique `erp_inventory_p3_*` schema; actual existing migration ledger checked against discovered files; real application listening only127.0.0.1/port0 with production auth/validation/idempotency/transaction services. Synthetic manager with view+operation, view-only user, independently mutable role; no real secrets. Two Active Warehouses with identically named but distinct-ID Bins, Active plain SKU/Base UOM, 100 synthetic Available units. Per-case new source events/Transfer records; original assertions/thresholds unchanged. Exact owned runtime/schema/user cleanup required.
+
+For every case: priority P1; required evidence is original native JUnit, command/source/PLAN hashes, actual HTTP assertions and persisted Inventory/Audit/Movement assertions. Error cases compare ordered snapshots of all Inventory Transfer/Line/Balance/Control/Operation/Movement/Audit tables; HTTP framework request bookkeeping is not an Inventory business effect. Initial status below remains NOT RUN until separate execution evidence is recorded.
+
+| Test ID | Requirement / risk | Synthetic data / steps | Expected result | Initial status |
+| --- | --- | --- | --- | --- |
+| DEV-029-API-01 | FR-TRANSFER-001–004 / Draft full replacement and cancellation | Create two-line Draft, query/filter detail, replace retained-version line set, cancel with nonblank reason | Header/line versions and actors persisted; removed line gone; cancellation retains remaining line; no stock/Movement effects | NOT RUN |
+| DEV-029-API-02 | FR-TRANSFER-005–009 / whole-document conservation | Create two-line Draft, Dispatch then Receive every line to destination Bin | Source OnHand decreases by full quantity, InTransit equals quantity then zero, destination increases equally; exact four legs per line plus Audit and final versions | NOT RUN |
+| DEV-029-API-03 | FR-TRANSFER-008–009 / partial or duplicated Receive | Dispatch two lines; submit missing, duplicated-with-different-fields, extra and partial-quantity line sets | Every request rejects; all business tables byte-equivalent, no partial balance/Operation/Audit effects | NOT RUN |
+| DEV-029-API-04 | FR-TRANSFER-003–009 / ownership, version and terminal states | Supply other Transfer's line, stale header version, source Bin as destination; attempt update/cancel after Dispatch | Reject without effects; same-name destination never accepts source ID; dispatched Transfer immutable | NOT RUN |
+| DEV-029-API-05 | FR-TRANSFER-010 / Quarantined reason and status boundary | Dispatch Available; Receive Quarantined without reason; Receive Damaged; then valid Quarantined with reason | Invalid status/reason rollback; valid quarantine persisted with original SKU/Lot, full quantity and reason | NOT RUN |
+| DEV-029-API-06 | §5.6 / anonymous, view-only and revoked-operation access | Read/write unauthenticated; view-only reads then writes; revoke manager operation and replay with stale JWT | Authentication/permission denials, no writes; view-only read succeeds; fresh DB permission check rejects even replay | NOT RUN |
+| DEV-029-API-07 | §3.4 / HTTP and domain replay/source conflict | Same HTTP key/body retry; fresh HTTP key same source retry after later state; same source altered quantity or command | Original operation receipt replayed; no duplicate effects; changed payload/command rejects and retains later state | NOT RUN |
+| DEV-029-API-08 | §3.5 / late Audit failure atomicity | Fresh Draft; test-owned trigger rejects Audit insert during Dispatch, remove trigger and retry identical intent | Failure opaque and all business tables unchanged; retry succeeds with exactly one complete posting and Audit | NOT RUN |
+
+Known untested scope: TASK029 UI/live Playwright not implemented in this API slice; future Movement/Adjustment/Status/Reversal API paths belong to later Tasks. Four capacity cases remain NOT_EXECUTED mandatory full-P3/release gates. No CI/publication or formal acceptance authority.
+
+## Separate execution result
+
+All eight cases passed on current source `caf576fa738762dabb7faafe471c1ea95370138f21913ad5cf885084258c96f6`: [native8/0/0 report](../evidence/task029-inventory-p3-api-33c42273ca/run.json). Initial NOT RUN definitions above are preserved as pre-execution history. See [increment report](task029-api-increment-report.md) for retained failures, regression results and exact cleanup. Requests respect the real configured limiter; only fault-fixture CREATE/DROP trigger uses the guarded private administrative connection, never a global grant to the HTTP application user.

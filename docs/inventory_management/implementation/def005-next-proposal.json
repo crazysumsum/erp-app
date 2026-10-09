@@ -1,0 +1,13 @@
+{
+  "kind": "UNAPPLIED_EXACT_HD088_PROPOSAL",
+  "current_design": "53fe56c4bc2f45fb053036de71801ed6d0e8507887cd95b35e4645b9e87adfce",
+  "current_plan": "0cc924725bf59d8773b1d8df6d3e018ac2886ba0fd0998a2622c2119dde3cf29",
+  "proposed_plan": "22064427195aa17bc01ae3abd171220feb1b743af23bc7ffbccf6b9c313358ab",
+  "inventory_head": "3b272ac94840bc77be19d253cc6e7c489695b449",
+  "fix_parent": "77ffa708581df8b55d87e20e9e624c543c8b65de",
+  "patches": {
+    "def005-coverage-contract-proposal.patch": "912f39feb5b843edb73d1c2dac2ed702d796eaf22e37ff21498de0dee5f1fc77",
+    "def003-integration-label-proposal.patch": "0ffa5480d1bbb7156829ad8052843c5b291efd51f4bc2f9ce87c61579747237f"
+  },
+  "scope": "Two canonical Inventory docs only plus separate one-line Customer integration label; source/test bodies/parser/floors/npm full coverage thresholds unchanged. No application or test execution."
+}

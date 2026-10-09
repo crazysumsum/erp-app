@@ -20,9 +20,11 @@ const ALLOWED_API_FIELDS = new Set([
   "authorizationPolicies",
   "deprecation",
   "idempotency",
+  "idempotencyPreparation",
   "logging",
   "upload",
   "download",
+  "inputCoercion",
   "timeoutMs"
 ]);
 
@@ -76,6 +78,12 @@ export function resolveApiDefinitions(handlers, defaults) {
     }
 
     const override = cloneData(source, `${handler.constructor.name}.static api`);
+    if (Object.hasOwn(source, "idempotencyPreparation") && source.idempotencyPreparation !== true) {
+      throw new TypeError(`${handler.constructor.name}.static api.idempotencyPreparation must be true or omitted`);
+    }
+    if (Object.hasOwn(source, "inputCoercion") && source.inputCoercion !== false) {
+      throw new TypeError(`${handler.constructor.name}.static api.inputCoercion must be false or omitted`);
+    }
     const route = {
       ...cloneData(normalizedDefaults, "API defaults"),
       ...override,

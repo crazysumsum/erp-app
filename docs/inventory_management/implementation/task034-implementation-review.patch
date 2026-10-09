@@ -1,0 +1,201 @@
+--- a/server/test/integration/inventoryTransfer.integration.test.js
++++ b/server/test/integration/inventoryTransfer.integration.test.js
+@@ -117,7 +117,8 @@
+ async function snapshot() {
+   const result = {};
+   for (const table of ["inventory_transfers", "inventory_transfer_lines", "inventory_operation_requests",
+-    "inventory_audit_logs", "inventory_stock_balances", "inventory_stock_controls", "inventory_movements"]) {
++    "inventory_audit_logs", "inventory_stock_balances", "inventory_stock_controls", "inventory_movements",
++    "inventory_reservations", "inventory_allocations"]) {
+     result[table] = (await pool.query(`SELECT * FROM ${table} ORDER BY id`))[0];
+   }
+   return result;
+@@ -528,6 +529,71 @@
+   assert.equal((await postingRows(f.draft.id)).length, 8);
+ });
+ 
++integrationTest("INT034-ISSUE-DISPATCH valid Issue7 and Dispatch7 on OnHand10 have one effect in both lock orders", async () => {
++  for (const first of ["issue", "dispatch"]) {
++    const f = await postingFixture({ onHand: 10, quantity: 7 });
++    const reservations = new InventoryReservationService({ database, logger, time });
++    const reserve = command("create", { skuId: f.skuId, warehouseId: 1, quantity: 7, purpose: "SALE", minimumRemainingDays: 0 });
++    reserve.authorization.purpose = "reservation.create";
++    const reserved = await reservations.create(reserve);
++    const allocate = command("allocate", { reservationId: reserved.id, expectedVersion: reserved.version,
++      allocations: [{ balanceId: f.balanceId, expectedVersion: 1, quantity: 7 }] });
++    allocate.authorization.purpose = "allocation.create";
++    const allocated = await reservations.allocate(allocate), allocation = allocated.allocations[0];
++    const issue = command("issue", { reservationId: reserved.id, expectedVersion: allocated.version,
++      lines: [{ allocationId: allocation.id, expectedVersion: allocation.version, balanceId: f.balanceId,
++        expectedBalanceVersion: allocation.balanceVersion, quantity: 7 }] });
++    issue.authorization.purpose = "issue.post";
++    let locked, claimed, release;
++    const firstLocked = new Promise(resolve => { locked = resolve; });
++    const secondClaimed = new Promise(resolve => { claimed = resolve; });
++    const resume = new Promise(resolve => { release = resolve; });
++    const realLocks = new InventoryLockService(), realOperations = new InventoryOperationService();
++    const firstOptions = { database, logger, time, locks: { lockForCommand: async (...args) => {
++      const result = await realLocks.lockForCommand(...args); locked(); await resume; return result;
++    } } };
++    const secondOptions = { database, logger, time, operations: {
++      claim: async (...args) => { const result = await realOperations.claim(...args); claimed(); return result; },
++      complete: (...args) => realOperations.complete(...args)
++    } };
++    const posting = new InventoryPostingService(first === "issue" ? firstOptions : secondOptions);
++    const transfer = new InventoryTransferService(first === "dispatch" ? firstOptions : secondOptions);
++    const before = await snapshot();
++    const attempts = { issue: () => posting.postIssue(issue), dispatch: () => transfer.dispatch(f.dispatch) };
++    const pendingFirst = attempts[first]();
++    const settledFirst = Promise.allSettled([pendingFirst]);
++    await firstLocked;
++    const pendingSecond = attempts[first === "issue" ? "dispatch" : "issue"]();
++    const settledSecond = Promise.allSettled([pendingSecond]);
++    try { await secondClaimed; } finally { release(); }
++    const results = [...await settledFirst, ...await settledSecond];
++    assert.equal(results.filter(result => result.status === "fulfilled").length, 1);
++    const loser = results.find(result => result.status === "rejected");
++    assert.ok(["INSUFFICIENT_STOCK", "INSUFFICIENT_ATP"].includes(loser.reason.code));
++    const after = await snapshot();
++    assert.deepEqual(after.inventory_transfers, before.inventory_transfers);
++    assert.deepEqual(after.inventory_transfer_lines, before.inventory_transfer_lines);
++    assert.deepEqual(after.inventory_movements.slice(0, before.inventory_movements.length), before.inventory_movements);
++    const legs = after.inventory_movements.slice(before.inventory_movements.length);
++    assert.deepEqual(legs.map(row => [row.movement_type, row.direction, Number(row.quantity)]), [["ISSUE", "OUT", 7]]);
++    assert.equal((await postingRows(f.draft.id)).length, 0);
++    const [[balance]] = await pool.query("SELECT on_hand_quantity, allocated_quantity FROM inventory_stock_balances WHERE id = ?", [f.balanceId]);
++    assert.deepEqual([Number(balance.on_hand_quantity), Number(balance.allocated_quantity)], [3, 0]);
++    for (const table of ["inventory_reservations", "inventory_allocations"]) {
++      const row = after[table].find(row => Number(row.id) === (table === "inventory_reservations" ? reserved.id : allocation.id));
++      assert.deepEqual([row.status, Number(row.consumed_quantity), Number(row.outstanding_quantity)], ["CONSUMED", 7, 0]);
++    }
++    const control = after.inventory_stock_controls.find(row => Number(row.sku_id) === f.skuId);
++    assert.equal(Number(control.reserved_quantity), 0);
++    const added = after.inventory_operation_requests.slice(before.inventory_operation_requests.length);
++    assert.equal(added.length, 1); assert.equal(added[0].source_event_id, issue.source.eventId);
++    assert.ok(added[0].completed_at);
++    const audits = after.inventory_audit_logs.slice(before.inventory_audit_logs.length);
++    assert.equal(audits.length, 1); assert.equal(audits[0].action, "issue.post");
++    assert.equal(audits[0].outcome, "SUCCEEDED");
++  }
++});
++
+ integrationTest("TASK-028 failure between paired legs or after an earlier line has no partial effects", async () => {
+   const f = await postingFixture({ copies: 2 });
+   for (const point of ["INSERT INTO inventory_movements", "UPDATE inventory_transfer_lines"]) {
+--- a/server/test/integration/inventoryMovement.integration.test.js
++++ b/server/test/integration/inventoryMovement.integration.test.js
+@@ -268,6 +268,59 @@
+   await rejectsUnchanged(() => submitAdjustment(increase(f, { quantity: Number.MAX_SAFE_INTEGER })), "INVENTORY_QUANTITY_INVALID");
+ });
+ 
++integrationTest("INT034-ADJUST-VERSION existing OnHand10 same-version OUT4 requests have one complete winner", async () => {
++  const f = await fixture();
++  const barrier = createInventoryBarrier(), real = new InventoryOperationService();
++  const posting = new InventoryPostingService({ database, logger, time, operations: {
++    claim: async (...args) => { const result = await real.claim(...args); await barrier.wait(); return result; },
++    complete: (...args) => real.complete(...args)
++  } });
++  const inputs = [0, 1].map(() => adjustment({ direction: "OUT", balanceId: f.balanceId, quantity: 4,
++    expectedBalanceVersion: 1, reasonCategory: "DAMAGE" }));
++  const before = await snapshot();
++  const results = await Promise.allSettled(inputs.map(input => submitAdjustment(input, posting)));
++  assert.equal(results.filter(result => result.status === "fulfilled").length, 1);
++  assert.equal(results.find(result => result.status === "rejected").reason.code, "VERSION_CONFLICT");
++  const winner = results.find(result => result.status === "fulfilled").value;
++  const after = await snapshot(), rows = await balances(f.skuId);
++  assert.deepEqual(rows.map(row => [Number(row.on_hand_quantity), Number(row.allocated_quantity), Number(row.version)]), [[6, 0, 2]]);
++  assert.deepEqual(after.inventory_movements.slice(0, before.inventory_movements.length), before.inventory_movements);
++  assert.equal(after.inventory_movements.length - before.inventory_movements.length, 1);
++  const added = after.inventory_operation_requests.slice(before.inventory_operation_requests.length);
++  assert.equal(added.length, 1); assert.equal(Number(added[0].id), winner.operationId); assert.ok(added[0].completed_at);
++  const audits = after.inventory_audit_logs.slice(before.inventory_audit_logs.length);
++  assert.equal(audits.length, 1); assert.equal(audits[0].action, "adjustment.post"); assert.equal(audits[0].outcome, "SUCCEEDED");
++  for (const table of ["inventory_lots", "inventory_reservations", "inventory_allocations", "inventory_transfers", "inventory_transfer_lines"])
++    assert.deepEqual(after[table], before[table]);
++});
++
++integrationTest("INT034-IMMUTABLE actual Movement and Audit UPDATE DELETE triggers preserve complete history", async () => {
++  const f = await fixture(), result = await service.postBinMove(move([f.line]));
++  const before = await snapshot();
++  for (const table of ["inventory_movements", "inventory_audit_logs"]) {
++    const row = before[table].find(row => Number(row.operation_request_id) === result.operationId);
++    assert.ok(row);
++    for (const sql of [`UPDATE ${table} SET id = id WHERE id = ?`, `DELETE FROM ${table} WHERE id = ?`]) {
++      await assert.rejects(() => pool.execute(sql, [row.id]),
++        { code: "ER_SIGNAL_EXCEPTION", sqlState: "45000", sqlMessage: `${table} is immutable` });
++      assert.deepEqual(await snapshot(), before);
++    }
++  }
++});
++
++integrationTest("INT034-RESERVED-MOVE eligible unallocated Reservation keeps its accounting during same-Warehouse Move", async () => {
++  const f = await fixture(), reservations = new InventoryReservationService({ database, logger, time });
++  await reservations.create(inventoryCommandFixture({ actor: { claimedPermissions: ["inventory.operation"] },
++    authorization: { purpose: "reservation.create", requiredCallerPermission: "inventory.operation" },
++    source: { eventId: randomUUID() }, payload: { skuId: f.skuId, warehouseId: 1, quantity: 4, purpose: "SALE", minimumRemainingDays: 0 } }));
++  const before = await snapshot();
++  await service.postBinMove(move([{ ...f.line, quantity: 7 }]));
++  const after = await snapshot();
++  for (const table of ["inventory_stock_controls", "inventory_reservations", "inventory_allocations"]) assert.deepEqual(after[table], before[table]);
++  assert.deepEqual((await balances(f.skuId)).map(row => [Number(row.on_hand_quantity), Number(row.allocated_quantity)]), [[3, 0], [7, 0]]);
++  assert.deepEqual(after.inventory_movements.slice(0, before.inventory_movements.length), before.inventory_movements);
++});
++
+ integrationTest("ADJ031-ROLLBACK native failure after first Status leg and new Lot creation leaves no business artifacts", async () => {
+   await pool.query("CREATE TRIGGER task031_reject_audit BEFORE INSERT ON inventory_audit_logs FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'synthetic task031 audit failure'");
+   try {
+@@ -525,7 +578,8 @@
+   const [audits] = await pool.query('SELECT * FROM inventory_audit_logs WHERE operation_request_id = ? ORDER BY id', [result.operationId]);
+   assert.equal(audits.length, 4);
+   assert.ok(audits.every(r => r.action === 'bin_move.post' && r.outcome === 'SUCCEEDED'));
+-  await assert.rejects(() => pool.execute('UPDATE inventory_movements SET quantity = 1 WHERE id = ?', [rows[0].id]));
++  await assert.rejects(() => pool.execute('UPDATE inventory_movements SET quantity = 1 WHERE id = ?', [rows[0].id]),
++    { code: 'ER_SIGNAL_EXCEPTION', sqlState: '45000', sqlMessage: 'inventory_movements is immutable' });
+   assert.deepEqual(await movementRows(result.movementGroupId), rows);
+ });
+ 
+@@ -832,6 +886,44 @@
+   assert.deepEqual([Number((await balances(f.skuId))[0].on_hand_quantity), Number((await balances(f.skuId))[0].allocated_quantity)], [10,0]);
+   const [leg] = await movementRows(result.movementGroupId);
+   assert.equal(leg.reservation_id, null); assert.equal(leg.allocation_id, null); assert.equal(Number(leg.quantity), 4);
++});
++
++integrationTest("INT034-RECONCILE chained paired Adjustment Status and Reversal groups match every Bucket delta", async () => {
++  const f = await fixture();
++  const key = row => [row.warehouse_id, row.bin_id, row.sku_id, row.lot_id, row.stock_status].join(":");
++  async function checked(work) {
++    const before = await snapshot(), result = await work(), after = await snapshot();
++    const legs = await movementRows(result.movementGroupId), changes = new Map();
++    assert.ok(legs.length);
++    assert.ok(legs.every(row => Number(row.operation_request_id) === result.operationId));
++    for (const row of legs) changes.set(key(row), (changes.get(key(row)) ?? 0) + (row.direction === "IN" ? 1 : -1) * Number(row.quantity));
++    const previous = new Map(before.inventory_stock_balances.map(row => [key(row), Number(row.on_hand_quantity)]));
++    for (const row of after.inventory_stock_balances) {
++      assert.equal(Number(row.on_hand_quantity) - (previous.get(key(row)) ?? 0), changes.get(key(row)) ?? 0);
++      previous.delete(key(row)); changes.delete(key(row));
++    }
++    assert.ok([...previous.values()].every(quantity => quantity === 0)); assert.equal(changes.size, 0);
++    assert.deepEqual(after.inventory_movements.slice(0, before.inventory_movements.length), before.inventory_movements);
++    const operation = after.inventory_operation_requests.find(row => Number(row.id) === result.operationId);
++    assert.ok(operation.completed_at);
++    const summary = typeof operation.result_summary === "string" ? JSON.parse(operation.result_summary) : operation.result_summary;
++    assert.equal(summary.movementGroupId, result.movementGroupId);
++    const audits = after.inventory_audit_logs.filter(row => Number(row.operation_request_id) === result.operationId);
++    assert.equal(audits.length, legs.length); assert.ok(audits.every(row => row.outcome === "SUCCEEDED"));
++    return result;
++  }
++  const moved = await checked(() => service.postBinMove(move([f.line, f.line])));
++  const adjusted = await checked(() => submitAdjustment(increase(f, { expectedBalanceVersion: 3 })));
++  const destination = (await balances(f.skuId)).find(row => Number(row.bin_id) === 4);
++  const status = await checked(() => submitAdjustment(adjustment({ sourceBalanceId: Number(destination.id),
++    destinationStatus: "DAMAGED", expectedSourceVersion: Number(destination.version), expectedDestinationVersion: null }, "status_transfer.post")));
++  for (const original of [status, adjusted, moved]) {
++    const history = await movementRows(original.movementGroupId);
++    const reversed = await checked(async () => submitAdjustment(await reversal(original)));
++    assert.deepEqual((await movementRows(reversed.movementGroupId)).map(row => Number(row.reversal_of_movement_id)),
++      history.map(row => Number(row.id)).reverse());
++  }
++  assert.equal(Number((await balances(f.skuId)).find(row => Number(row.id) === f.balanceId).on_hand_quantity), 10);
+ });
+ 
+ integrationTest("REV032-VERSIONS native complete guards reject absent/missing/extra buckets and never create historical placeholders", async () => {

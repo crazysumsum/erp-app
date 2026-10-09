@@ -49,9 +49,12 @@ before(async () => {
       sku_name VARCHAR(190), status VARCHAR(20), purchasable BOOLEAN DEFAULT 1, sellable BOOLEAN DEFAULT 1,
       inventory_tracked BOOLEAN DEFAULT 1, tracking_policy VARCHAR(20), shelf_life_days INT,
       min_receipt_life_days INT, min_sale_life_days INT, effective_from DATE, effective_to DATE) ENGINE=InnoDB`,
-    "CREATE TABLE item_uoms (id BIGINT UNSIGNED PRIMARY KEY, code VARCHAR(20)) ENGINE=InnoDB",
-    `CREATE TABLE item_sku_uoms (sku_id BIGINT UNSIGNED, uom_id BIGINT UNSIGNED, to_base_factor DECIMAL(18,6),
-      is_base BOOLEAN, is_default_purchase BOOLEAN, is_default_sale BOOLEAN) ENGINE=InnoDB`
+    `CREATE TABLE item_uoms (id BIGINT UNSIGNED PRIMARY KEY, code VARCHAR(20), name VARCHAR(100) NOT NULL,
+      status VARCHAR(20) NOT NULL DEFAULT 'active', version INT UNSIGNED NOT NULL DEFAULT 1) ENGINE=InnoDB`,
+    `CREATE TABLE item_sku_uoms (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+      sku_id BIGINT UNSIGNED, uom_id BIGINT UNSIGNED, to_base_factor DECIMAL(18,6),
+      is_base BOOLEAN, is_default_purchase BOOLEAN, is_default_sale BOOLEAN,
+      version INT UNSIGNED NOT NULL DEFAULT 1) ENGINE=InnoDB`
   ]) await pool.query(ddl);
   for (const migrate of [permissions, operations, audit, master, stock, movements, reservations, transfers]) await migrate(pool);
   await pool.query("INSERT INTO users VALUES (7, 'synthetic-operator', 'active')");
@@ -63,8 +66,9 @@ before(async () => {
     VALUES (12, 1, 'SKU-12', 'Synthetic plain', 'active', 'none'),
            (13, 1, 'SKU-13', 'Synthetic expiry', 'active', 'batch_expiry'),
            (14, 1, 'SKU-14', 'Synthetic serial', 'active', 'serial')`);
-  await pool.query("INSERT INTO item_uoms VALUES (1, 'EA')");
-  await pool.query("INSERT INTO item_sku_uoms VALUES (12,1,1,1,1,1), (13,1,1,1,1,1), (14,1,1,1,1,1)");
+  await pool.query("INSERT INTO item_uoms (id, code, name) VALUES (1, 'EA', 'Each')");
+  await pool.query(`INSERT INTO item_sku_uoms (sku_id,uom_id,to_base_factor,is_base,is_default_purchase,is_default_sale)
+    VALUES (12,1,1,1,1,1), (13,1,1,1,1,1), (14,1,1,1,1,1)`);
   for (const warehouseId of [1, 2, 3]) {
     await pool.execute(`INSERT INTO inventory_warehouses
       (id, warehouse_code, normalized_code, warehouse_name, created_at, updated_at) VALUES (?, ?, ?, ?, 1, 1)`,
@@ -113,7 +117,8 @@ function retained(row, overrides = {}) {
 async function snapshot() {
   const result = {};
   for (const table of ["inventory_transfers", "inventory_transfer_lines", "inventory_operation_requests",
-    "inventory_audit_logs", "inventory_stock_balances", "inventory_stock_controls", "inventory_movements"]) {
+    "inventory_audit_logs", "inventory_stock_balances", "inventory_stock_controls", "inventory_movements",
+    "inventory_reservations", "inventory_allocations"]) {
     result[table] = (await pool.query(`SELECT * FROM ${table} ORDER BY id`))[0];
   }
   return result;
@@ -311,7 +316,8 @@ async function postingFixture({ quantity = 5, onHand = 20, tracking = "none", st
   const skuId = postingSku++;
   await pool.execute(`INSERT INTO item_skus (id,item_id,sku_code,sku_name,status,tracking_policy)
     VALUES (?,1,?,?,'active',?)`, [skuId, `SKU-${skuId}`, `Synthetic ${skuId}`, tracking]);
-  await pool.execute("INSERT INTO item_sku_uoms VALUES (?,1,1,1,1,1)", [skuId]);
+  await pool.execute(`INSERT INTO item_sku_uoms (sku_id,uom_id,to_base_factor,is_base,is_default_purchase,is_default_sale)
+    VALUES (?,1,1,1,1,1)`, [skuId]);
   let lotId = null;
   if (tracking !== "none") {
     const [lot] = await pool.execute(`INSERT INTO inventory_lots
@@ -521,6 +527,71 @@ integrationTest("TASK-028 same-version competing Dispatch and Receive each have 
   const [[destination]] = await pool.query("SELECT on_hand_quantity AS quantity FROM inventory_stock_balances WHERE warehouse_id = 2 AND sku_id = ?", [f.skuId]);
   assert.equal(Number(destination.quantity), 10);
   assert.equal((await postingRows(f.draft.id)).length, 8);
+});
+
+integrationTest("INT034-ISSUE-DISPATCH valid Issue7 and Dispatch7 on OnHand10 have one effect in both lock orders", async () => {
+  for (const first of ["issue", "dispatch"]) {
+    const f = await postingFixture({ onHand: 10, quantity: 7 });
+    const reservations = new InventoryReservationService({ database, logger, time });
+    const reserve = command("create", { skuId: f.skuId, warehouseId: 1, quantity: 7, purpose: "SALE", minimumRemainingDays: 0 });
+    reserve.authorization.purpose = "reservation.create";
+    const reserved = await reservations.create(reserve);
+    const allocate = command("allocate", { reservationId: reserved.id, expectedVersion: reserved.version,
+      allocations: [{ balanceId: f.balanceId, expectedVersion: 1, quantity: 7 }] });
+    allocate.authorization.purpose = "allocation.create";
+    const allocated = await reservations.allocate(allocate), allocation = allocated.allocations[0];
+    const issue = command("issue", { reservationId: reserved.id, expectedVersion: allocated.version,
+      lines: [{ allocationId: allocation.id, expectedVersion: allocation.version, balanceId: f.balanceId,
+        expectedBalanceVersion: allocation.balanceVersion, quantity: 7 }] });
+    issue.authorization.purpose = "issue.post";
+    let locked, claimed, release;
+    const firstLocked = new Promise(resolve => { locked = resolve; });
+    const secondClaimed = new Promise(resolve => { claimed = resolve; });
+    const resume = new Promise(resolve => { release = resolve; });
+    const realLocks = new InventoryLockService(), realOperations = new InventoryOperationService();
+    const firstOptions = { database, logger, time, locks: { lockForCommand: async (...args) => {
+      const result = await realLocks.lockForCommand(...args); locked(); await resume; return result;
+    } } };
+    const secondOptions = { database, logger, time, operations: {
+      claim: async (...args) => { const result = await realOperations.claim(...args); claimed(); return result; },
+      complete: (...args) => realOperations.complete(...args)
+    } };
+    const posting = new InventoryPostingService(first === "issue" ? firstOptions : secondOptions);
+    const transfer = new InventoryTransferService(first === "dispatch" ? firstOptions : secondOptions);
+    const before = await snapshot();
+    const attempts = { issue: () => posting.postIssue(issue), dispatch: () => transfer.dispatch(f.dispatch) };
+    const pendingFirst = attempts[first]();
+    const settledFirst = Promise.allSettled([pendingFirst]);
+    await firstLocked;
+    const pendingSecond = attempts[first === "issue" ? "dispatch" : "issue"]();
+    const settledSecond = Promise.allSettled([pendingSecond]);
+    try { await secondClaimed; } finally { release(); }
+    const results = [...await settledFirst, ...await settledSecond];
+    assert.equal(results.filter(result => result.status === "fulfilled").length, 1);
+    const loser = results.find(result => result.status === "rejected");
+    assert.ok(["INSUFFICIENT_STOCK", "INSUFFICIENT_ATP"].includes(loser.reason.code));
+    const after = await snapshot();
+    assert.deepEqual(after.inventory_transfers, before.inventory_transfers);
+    assert.deepEqual(after.inventory_transfer_lines, before.inventory_transfer_lines);
+    assert.deepEqual(after.inventory_movements.slice(0, before.inventory_movements.length), before.inventory_movements);
+    const legs = after.inventory_movements.slice(before.inventory_movements.length);
+    assert.deepEqual(legs.map(row => [row.movement_type, row.direction, Number(row.quantity)]), [["ISSUE", "OUT", 7]]);
+    assert.equal((await postingRows(f.draft.id)).length, 0);
+    const [[balance]] = await pool.query("SELECT on_hand_quantity, allocated_quantity FROM inventory_stock_balances WHERE id = ?", [f.balanceId]);
+    assert.deepEqual([Number(balance.on_hand_quantity), Number(balance.allocated_quantity)], [3, 0]);
+    for (const table of ["inventory_reservations", "inventory_allocations"]) {
+      const row = after[table].find(row => Number(row.id) === (table === "inventory_reservations" ? reserved.id : allocation.id));
+      assert.deepEqual([row.status, Number(row.consumed_quantity), Number(row.outstanding_quantity)], ["CONSUMED", 7, 0]);
+    }
+    const control = after.inventory_stock_controls.find(row => Number(row.sku_id) === f.skuId);
+    assert.equal(Number(control.reserved_quantity), 0);
+    const added = after.inventory_operation_requests.slice(before.inventory_operation_requests.length);
+    assert.equal(added.length, 1); assert.equal(added[0].source_event_id, issue.source.eventId);
+    assert.ok(added[0].completed_at);
+    const audits = after.inventory_audit_logs.slice(before.inventory_audit_logs.length);
+    assert.equal(audits.length, 1); assert.equal(audits[0].action, "issue.post");
+    assert.equal(audits[0].outcome, "SUCCEEDED");
+  }
 });
 
 integrationTest("TASK-028 failure between paired legs or after an earlier line has no partial effects", async () => {

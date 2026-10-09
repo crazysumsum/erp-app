@@ -1,0 +1,93 @@
+{
+  "status": "PROPOSED_NOT_APPLIED",
+  "decision": "HD-110",
+  "selected_option": "HD109 A",
+  "authority": "Actual Sam latest active reply A selects minimal route-only no-coercion support and preparation; not independent approval of unseen candidate hashes.",
+  "code_commit": "869ac07abdd3879254c351d857be911d71e68b6b",
+  "source_fingerprint": "b87a2df4c0fa3583f20d8d79067600dda0d7c62fd8bde8310dbe25a2a8027c72",
+  "active_baselines": {
+    "design": "3df1df58f07bf46a6cbf0ef5135941cb70293822f8043fdca496d9fc1a36cf2c",
+    "plan": "64ce9971e8f4e9a6170f1c792be23ce7836e3719717985cbd282c335c6bd38f8"
+  },
+  "proposed_baselines": {
+    "design": "46841dae185fab06e626fca722d1576726702a3d7183fdbb2f23e3459de7f663",
+    "plan": "8ab85d87051f437b74c6cfb4efc39ba93c8c2dd9e56ca7ea210d7bc5bc705dc8"
+  },
+  "patch": "task030-input-coercion-proposal.patch",
+  "patch_sha256": "df0c1687b723a53cf642304b641a55d170818d3c18663825646e2c2c1f7b9470",
+  "files": [
+    {
+      "path": "docs/inventory_management/00_module_manifest.json",
+      "before_sha256": "66227aa62bfb55da1fa46464f5867b582f135adcdd09445368e8175f21bb0a78",
+      "after_sha256": "19f95b0b8c290c311197e0350f6bcaf47db131d04406742d226debb96f69763e"
+    },
+    {
+      "path": "docs/inventory_management/03_design_spec.md",
+      "before_sha256": "0ff888aad84fcd9c99bcd90620ad3a7348f092ce91622525f37dfc6f2ee0784e",
+      "after_sha256": "acbdec75c9a357c5e02390d4bce8f8e9273064f6020c4d445edabb1f1ad5ae2d"
+    },
+    {
+      "path": "docs/inventory_management/05_development_tasks.md",
+      "before_sha256": "599c9015725c636b7daa787601a93ec6b4fd24cad7e8751fa147d6f1358a0763",
+      "after_sha256": "dfaab87a27aa203d5735160f661e0f351c8aa5679a36c3fbfb51bb98939b2d2a"
+    },
+    {
+      "path": "docs/inventory_management/06_technical_test_cases.md",
+      "before_sha256": "58170537dddbe06f360bef7c6d14eddba2470f6dfe25efbab879afbe41b7a56f",
+      "after_sha256": "33da8bbbb89ee5d3d6ab2fb966e96b42db8405f7b0d2dddc70a691be54db351b"
+    }
+  ],
+  "shared_scope_paths": [
+    "server/src/framework/api/apiDefinitionResolver.js",
+    "server/src/framework/middleware/apiDispatcher.js",
+    "server/src/framework/validation/requestValidator.js",
+    "server/test/apiDefinitionResolver.test.js",
+    "server/test/apiDispatcher.test.js",
+    "server/test/requestValidator.test.js"
+  ],
+  "unchanged": {
+    "01_requirement_spec.md": "5a8c7575722c09972bae1642d6d1bb185ece5505b5d534509010313b99a630b8",
+    "00_project_profile.json": "7e99eb6e8ba556e4a545770ba1c5bfd91c7ff15ee86b0388211974750fe4e8d6",
+    "07_uat_test_cases.md": "9f3c2aa2e3347089168c45c81350354b936bd15ecd639937b3fdb1a6a04737a4",
+    "08_traceability.json": "ac82a88c498b6de6f99ad14ca5adccfd7867be5ce2c2f06b26209f7f0e1de222",
+    "08_traceability_matrix.md": "e856d9e8ee4445b77ec18a852c8a2cee2f65f2932fbd3ab6c710356abf87f4f5"
+  },
+  "unchanged_existing_0064": {
+    "path": "server/database/migrations/0064_create_inventory_transfers.js",
+    "sha256": "07653bb700a40b026e8bb46b538e0e31b112d6c20010af45b4cc71a6ff7ac143",
+    "requested_scope": "Rebind byte-identical existing0064 scope and already approved isolated synthetic migration use to the new PLAN; no DDL changes."
+  },
+  "validation": {
+    "traceability": "STRUCTURE_PASS",
+    "issues": [],
+    "matrix": "BYTE_IDENTICAL",
+    "provided_contract_pin": "MATCHES_DESIGN",
+    "consumed_item_contract": "UNCHANGED",
+    "fresh_copy_patch_replay": "PASS_EXACT_4_FILE_SHA256",
+    "profile_commands_parsers_floors": "BYTE_IDENTICAL"
+  },
+  "review": {
+    "method": "SELF_REVIEW",
+    "author": "Codex /root",
+    "reviewer": "Codex /root",
+    "independent": false,
+    "scope": "Document candidate only: strict schema before cache/handler; optional literal-false policy, legacy compatibility, startup-only validator, fixed validation.enabled, exact six paths, unchanged security/dependencies/DDL and NOT_RUN. No blocking proposal finding; not Sam review or product verification."
+  },
+  "native_evidence_refs_retained": 143,
+  "execution": "No canonical application, product/test source edits, new tests, API/DB/UI/CI execution; 143 native evidence references retained on original baselines, not promoted to candidate PASS.",
+  "next_safe_action": "Actual independent Sam review/approval of candidate DESIGN/PLAN and six exact framework/test paths plus unchanged0064 scope rebind; then apply four canonical files, reconcile approval/gates, implement only TASK030 and rerun current-source/PLAN developer validation.",
+  "exclusions": [
+    "global request configuration",
+    "shared auth/Idempotency/Item changes",
+    "new DDL/permissions/dependencies",
+    "frontend/TASK033 expansion",
+    "commit/stage/push/PR/remoteCI/merge/new-main adoption",
+    "TASK031+ execution",
+    "formalTC/UAT/business/release acceptance",
+    "capacity/check/floor waiver"
+  ],
+  "temporary_validation_roots": [
+    "/private/tmp/inventory-hd110-candidate.mx1dJk",
+    "/private/tmp/inventory-hd110-replay-4evion8a"
+  ]
+}

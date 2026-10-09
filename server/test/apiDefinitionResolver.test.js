@@ -7,6 +7,22 @@ import { normalizeApiConfig } from "../src/framework/api/normalizeApiConfig.js";
 
 const apiDefaults = normalizeApiConfig(apiConfig).defaults;
 
+test("ADJ031-HTTP-BOUNDARY preparation metadata is opt-in and literal true only", () => {
+  class PreparedHandler extends BaseRequestHandler {
+    static handlerName = "prepared";
+    static api = { method: "POST", path: "/api/v1/prepared", description: "Prepared input.",
+      requestSchema: {}, responseSchema: { 200: {} }, idempotencyPreparation: true };
+  }
+  const resolve = () => resolveApiDefinitions({ prepared: new PreparedHandler({}) }, apiDefaults)[0];
+  assert.equal(resolve().idempotencyPreparation, true);
+  for (const invalid of [false, null, "true", 1, {}, [], undefined]) {
+    PreparedHandler.api.idempotencyPreparation = invalid;
+    assert.throws(resolve, /idempotencyPreparation/);
+  }
+  delete PreparedHandler.api.idempotencyPreparation;
+  assert.equal(Object.hasOwn(resolve(), "idempotencyPreparation"), false);
+});
+
 const requestSchema = {
   params: {
     type: "object",
@@ -23,6 +39,24 @@ const responseSchema = {
     properties: { id: { type: "integer" } }
   }
 };
+
+test("API inputCoercion allows only omission or literal false", () => {
+  class StrictHandler extends BaseRequestHandler {
+    static handlerName = "strict";
+    static api = {
+      method: "POST", path: "/api/v1/strict", description: "Strict input.",
+      requestSchema, responseSchema, inputCoercion: false
+    };
+  }
+  const resolve = () => resolveApiDefinitions({ strict: new StrictHandler({}) }, apiDefaults)[0];
+  assert.equal(resolve().inputCoercion, false);
+  for (const invalid of [true, null, "false", 0, {}, [], undefined]) {
+    StrictHandler.api.inputCoercion = invalid;
+    assert.throws(resolve, /inputCoercion/);
+  }
+  delete StrictHandler.api.inputCoercion;
+  assert.equal(Object.hasOwn(resolve(), "inputCoercion"), false);
+});
 
 test("API definitions inherit secure defaults from configuration", () => {
   class GetUserHandler extends BaseRequestHandler {

@@ -1,0 +1,672 @@
+{
+  "kind": "TASK031_CURRENT_SOURCE_DEVELOPER_REVIEW_HANDOFF_NOT_FORMAL_OR_MERGE_READY",
+  "observed_at": "2026-10-08T01:07:57.497965+00:00",
+  "head": "869ac07abdd3879254c351d857be911d71e68b6b",
+  "source": "894fb4eea4259c375705fdaea945a2a2fadc64736a9bbc335f47e35b5789e42e",
+  "design": "ccd54a79438c2bb7e1cfcc58c9b8878b47120f0a3f91110a13d7d28202e05853",
+  "plan": "4c074a4e344599e912aab7e351e93abfc5f447085657f59625f7c7a95c69440a",
+  "human_review": "HD126_PENDING_SAM",
+  "task": "TASK031_IN_PROGRESS",
+  "patch": "task031-implementation-review.patch",
+  "patch_sha256": "0b8d0c0d7c205c79eaee47520820651508dc5496148c5fc4636d709ab31dd694",
+  "patch_scope": "Task031-approved owned/shared paths plus lock; diff from HEAD includes already-reviewed P3 context, not a claim of Task031-only historical lines",
+  "file_pins": {
+    "server/src/modules/inventory/InventoryPostingService.js": "36a91c70b0ec7f6e8b3468a5e6bdada94024fd056a016662d79b4144ebd0851f",
+    "server/src/modules/inventory/inventoryHighRiskContext.js": "ae19869d779a775d42c0a302d9d07bfb0233e335df9abaf940bd3c59dcaa5c24",
+    "server/src/modules/inventory/inventoryAdjustmentPosting.js": "f302f008269c391efa3f02203ac164d6a735e7dce10cf7c5f7f4a3ed08c6e868",
+    "server/src/modules/inventory/InventoryAuditService.js": "4743053e7b5700e6fd025a191d317c4e2ab59a9f717970e8a0e686c99ff6e256",
+    "server/src/handlers/inventory/postingHandlers.js": "b257b670f399b650496c639e1b8e3146de6b7b751fd35006ec9b8590e021ec3e",
+    "server/src/handlers/inventory/inventorySchemas.js": "0ff488c33b9ac94cfb11bc7b2b83943502f4ee479ae9ce739e7282d5e904fbbe",
+    "server/test/inventoryPostingService.test.js": "027eab6d0f78b31c1f50d74932f5cb1478f64b7f7566c28ae5d0fea2efe878e5",
+    "server/test/inventoryPostingHandlers.test.js": "d63d4bf64f933090f34b8baf351ac0d2e711b2ca7d8dd4ba10726f060b891295",
+    "server/test/inventoryAuditService.test.js": "6251170b424668875a78cc688f905a2ce3eead4d67be62e1bd2cbfe107ea45fb",
+    "server/test/inventoryEndpointSecurity.test.js": "71d9b1040696077397c22de59de2de9cfdf437f5d2fb880c57868a2f45212d44",
+    "server/test-support/fakeInventoryDatabase.js": "c2cc8ef9a118f5e3cf7fbe5f525fc72e6fe60dfdaa97a47cf73ed540c9daf4e4",
+    "server/test/integration/inventoryMovement.integration.test.js": "0610e61630ad1fc5f9dacb69915ee7af6fd01f831265e79b27872af30d234781",
+    "server/test/integration/inventoryWarehouseOperationsApi.integration.test.js": "5e9d201a438c51a092fb66d62fd51a89d54a4ecf3be0189dbbd43a183088b57a",
+    "server/src/framework/api/apiDefinitionResolver.js": "b525db9717bbde5f9d6df0dd79d080e93cf1bbb7a2afeffd86bd615dcf9cdd39",
+    "server/src/framework/middleware/apiDispatcher.js": "7cf9879996dd7b092c5fa2aa50c4569415ca9b7d42674ee4430e34b2fb3b71b7",
+    "server/src/services/idempotency/IdempotencyService.js": "33abf93472c2d7a4687c1f4d323cd97f0e7d5f4c7875cb7161cfa06b1b0999aa",
+    "server/test/apiDefinitionResolver.test.js": "19cd265670940a5d3b5bfd42ae6062570f48ba3ba4be006d6322428682b84af6",
+    "server/test/apiDispatcher.test.js": "ee0c4580fb0d86625d815bf8916c45c276b7bc2004ddd47f932ea6ec3c49c7fa",
+    "server/test/idempotencyService.test.js": "f1a526a94cbe906349cc692cb321285fca99f3babc10c1ae7875791efb7a7ec9",
+    "server/src/framework/validation/requestValidator.js": "bb91d71879e4e75761f5a0c87e1608e0ee31488ea442878b87f10f331a007189",
+    "server/test/requestValidator.test.js": "47431b8f7e9052acfd2beeba1a78f969b1b0e35f22f390cb063d6d9d880fe80e",
+    "package-lock.json": "0e7cfc03260694b17565e28374ff85ed894b79082286025395779c6f436ecb49"
+  },
+  "registered_current_runs": {
+    "client-build": {
+      "path": "evidence/task031-hd125-nondb-bec97dc83a/client-build/run.json",
+      "counts": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "result": "PASS"
+    },
+    "inventory-developer": {
+      "path": "evidence/task031-hd125-nondb-bec97dc83a/inventory-developer/run.json",
+      "counts": {
+        "total": 190,
+        "passed": 190,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "result": "PASS"
+    },
+    "inventory-p2-api": {
+      "path": "evidence/task031-hd125-functional-025-api-inventory-p2-api-92c65bec47/run.json",
+      "counts": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "result": "PASS"
+    },
+    "inventory-p2-database": {
+      "path": "evidence/task031-hd125-functional-025-inventory-p2-database-37241107d1/run.json",
+      "counts": {
+        "total": 7,
+        "passed": 7,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "result": "PASS"
+    },
+    "inventory-p3-api": {
+      "path": "evidence/task031-hd125-db-inventory-p3-api-c4c316b320/run.json",
+      "counts": {
+        "total": 25,
+        "passed": 25,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "result": "PASS"
+    },
+    "inventory-p3-browser": {
+      "path": "evidence/task031-hd125-browser-inventory-p3-browser-2bb9cedd45/run.json",
+      "counts": {
+        "total": 8,
+        "passed": 8,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "result": "PASS"
+    },
+    "inventory-p3-client-coverage": {
+      "path": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-client-coverage/run.json",
+      "counts": {
+        "total": 706,
+        "passed": 706,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "result": "PASS"
+    },
+    "inventory-p3-coverage-floors": {
+      "path": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-coverage-floors/run.json",
+      "counts": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "result": "PASS"
+    },
+    "inventory-p3-dependency-audit": {
+      "path": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-dependency-audit/run.json",
+      "counts": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "result": "PASS"
+    },
+    "inventory-p3-movement-database": {
+      "path": "evidence/task031-hd125-db-inventory-p3-movement-database-f721a25813/run.json",
+      "counts": {
+        "total": 30,
+        "passed": 30,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "result": "PASS"
+    },
+    "inventory-p3-server-coverage": {
+      "path": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/run.json",
+      "counts": {
+        "total": 2178,
+        "passed": 2178,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "result": "PASS"
+    },
+    "inventory-p3-transfer-database": {
+      "path": "evidence/task031-hd125-db-inventory-p3-transfer-database-297d943e45/run.json",
+      "counts": {
+        "total": 31,
+        "passed": 31,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "result": "PASS"
+    },
+    "inventory-p3-transfers-client": {
+      "path": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-transfers-client/run.json",
+      "counts": {
+        "total": 13,
+        "passed": 13,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "result": "PASS"
+    },
+    "inventory-p3-unit": {
+      "path": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-unit/run.json",
+      "counts": {
+        "total": 27,
+        "passed": 27,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "result": "PASS"
+    },
+    "inventory-task026-database": {
+      "path": "evidence/task031-hd125-db-inventory-task026-database-6ac1e3145b/run.json",
+      "counts": {
+        "total": 7,
+        "passed": 7,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "result": "PASS"
+    },
+    "inventory-task026-unit": {
+      "path": "evidence/task031-hd125-nondb-bec97dc83a/inventory-task026-unit/run.json",
+      "counts": {
+        "total": 15,
+        "passed": 15,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "result": "PASS"
+    },
+    "inventory-task027-unit": {
+      "path": "evidence/task031-hd125-nondb-bec97dc83a/inventory-task027-unit/run.json",
+      "counts": {
+        "total": 32,
+        "passed": 32,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "result": "PASS"
+    },
+    "inventory-task028-unit": {
+      "path": "evidence/task031-hd125-nondb-bec97dc83a/inventory-task028-unit/run.json",
+      "counts": {
+        "total": 13,
+        "passed": 13,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "result": "PASS"
+    },
+    "lint": {
+      "path": "evidence/task031-hd125-nondb-bec97dc83a/lint/run.json",
+      "counts": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "result": "PASS"
+    }
+  },
+  "named_developer_cases": {
+    "ACTOR-BIND": {
+      "developer_result": "PASS",
+      "evidence": [
+        {
+          "run": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/run.json",
+          "report": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/inventory-p3-server-coverage.xml",
+          "name": "ADJ031-ACTOR-BIND new Operation and owned new Lot bind only after the final guard and replay stays immutable",
+          "status": "PASS"
+        },
+        {
+          "run": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/run.json",
+          "report": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/inventory-p3-server-coverage.xml",
+          "name": "ADJ031-ACTOR-BIND zero/error/deadline/abort during either binding rolls back every artifact",
+          "status": "PASS"
+        },
+        {
+          "run": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/run.json",
+          "report": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/inventory-p3-server-coverage.xml",
+          "name": "ADJ031-ACTOR-BIND existing NULL Lot creator is never backfilled and an actual new-Lot insert race rolls back",
+          "status": "PASS"
+        },
+        {
+          "run": "evidence/task031-hd125-db-inventory-p3-movement-database-f721a25813/run.json",
+          "report": "evidence/task031-hd125-db-inventory-p3-movement-database-f721a25813/inventory-p3-movement-database.xml",
+          "name": "ADJ031-ACTOR-BIND native exact successful attribution and replay do not backfill existing NULL Lot creators",
+          "status": "PASS"
+        },
+        {
+          "run": "evidence/task031-hd125-db-inventory-p3-movement-database-f721a25813/run.json",
+          "report": "evidence/task031-hd125-db-inventory-p3-movement-database-f721a25813/inventory-p3-movement-database.xml",
+          "name": "ADJ031-ACTOR-BIND native binding zero/DB error/deadline/abort reaches the intended stage and rolls back",
+          "status": "PASS"
+        }
+      ]
+    },
+    "CACHE-WAIT": {
+      "developer_result": "PASS",
+      "evidence": [
+        {
+          "run": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/run.json",
+          "report": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/inventory-p3-server-coverage.xml",
+          "name": "ADJ031-CACHE-WAIT guard runs after store wait and holds its scope through synchronous send",
+          "status": "PASS"
+        },
+        {
+          "run": "evidence/task031-hd125-db-inventory-p3-api-c4c316b320/run.json",
+          "report": "evidence/task031-hd125-db-inventory-p3-api-c4c316b320/inventory-p3-api.xml",
+          "name": "ADJ031-CACHE-WAIT committed revocations and original proof deadline reject after real cache wait",
+          "status": "PASS"
+        }
+      ]
+    },
+    "COMPATIBILITY": {
+      "developer_result": "PASS",
+      "evidence": [
+        {
+          "run": "evidence/task031-hd125-db-inventory-p3-movement-database-f721a25813/run.json",
+          "report": "evidence/task031-hd125-db-inventory-p3-movement-database-f721a25813/inventory-p3-movement-database.xml",
+          "name": "ADJ031-COMPATIBILITY native Receipt retains actor attribution and immutable DATE semantics for new and existing Lots",
+          "status": "PASS"
+        }
+      ]
+    },
+    "DOMAIN-REPLAY": {
+      "developer_result": "PASS",
+      "evidence": [
+        {
+          "run": "evidence/task031-hd125-db-inventory-p3-movement-database-f721a25813/run.json",
+          "report": "evidence/task031-hd125-db-inventory-p3-movement-database-f721a25813/inventory-p3-movement-database.xml",
+          "name": "ADJ031-DOMAIN-REPLAY real unique claim wait retains original result without recomputing changed stock or Item",
+          "status": "PASS"
+        }
+      ]
+    },
+    "HTTP-BOUNDARY": {
+      "developer_result": "PASS",
+      "evidence": [
+        {
+          "run": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/run.json",
+          "report": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/inventory-p3-server-coverage.xml",
+          "name": "ADJ031-HTTP-BOUNDARY preparation metadata is opt-in and literal true only",
+          "status": "PASS"
+        },
+        {
+          "run": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/run.json",
+          "report": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/inventory-p3-server-coverage.xml",
+          "name": "ADJ031-HTTP-BOUNDARY preparation requires enabled idempotency and a handler hook",
+          "status": "PASS"
+        },
+        {
+          "run": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/run.json",
+          "report": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/inventory-p3-server-coverage.xml",
+          "name": "ADJ031-HTTP-BOUNDARY auth and strict schema precede preparation and cached replay",
+          "status": "PASS"
+        },
+        {
+          "run": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/run.json",
+          "report": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/inventory-p3-server-coverage.xml",
+          "name": "ADJ031-HTTP-BOUNDARY missing preparation never falls back to raw input or runs work",
+          "status": "PASS"
+        },
+        {
+          "run": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/run.json",
+          "report": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/inventory-p3-server-coverage.xml",
+          "name": "ADJ031-HTTP-BOUNDARY both fixed high-risk routes strictly validate single-op inputs and original versions",
+          "status": "PASS"
+        },
+        {
+          "run": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/run.json",
+          "report": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/inventory-p3-server-coverage.xml",
+          "name": "ADJ031-HTTP-BOUNDARY own normalization still rejects invalid business input without framework validation",
+          "status": "PASS"
+        }
+      ]
+    },
+    "HTTP-REPLAY": {
+      "developer_result": "PASS",
+      "evidence": [
+        {
+          "run": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/run.json",
+          "report": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/inventory-p3-server-coverage.xml",
+          "name": "ADJ031-HTTP-REPLAY prepared fingerprints ignore credentials but retain business input and files",
+          "status": "PASS"
+        },
+        {
+          "run": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/run.json",
+          "report": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/inventory-p3-server-coverage.xml",
+          "name": "ADJ031-HTTP-REPLAY malformed preparation fails before any store claim",
+          "status": "PASS"
+        },
+        {
+          "run": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/run.json",
+          "report": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/inventory-p3-server-coverage.xml",
+          "name": "ADJ031-HTTP-REPLAY denied and missing replay callbacks preserve completed keys without sending",
+          "status": "PASS"
+        },
+        {
+          "run": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/run.json",
+          "report": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/inventory-p3-server-coverage.xml",
+          "name": "ADJ031-HTTP-REPLAY duplicate or late callbacks cannot send a second cached response",
+          "status": "PASS"
+        },
+        {
+          "run": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/run.json",
+          "report": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/inventory-p3-server-coverage.xml",
+          "name": "ADJ031-HTTP-REPLAY preparation owns credential-free immutable input and sends only inside current security locks",
+          "status": "PASS"
+        },
+        {
+          "run": "evidence/task031-hd125-db-inventory-p3-api-c4c316b320/run.json",
+          "report": "evidence/task031-hd125-db-inventory-p3-api-c4c316b320/inventory-p3-api.xml",
+          "name": "ADJ031-HTTP-REPLAY fresh credential/signature preserve immutable domain result and credential-free cache",
+          "status": "PASS"
+        }
+      ]
+    },
+    "IN-LOT": {
+      "developer_result": "PASS",
+      "evidence": [
+        {
+          "run": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/run.json",
+          "report": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/inventory-p3-server-coverage.xml",
+          "name": "ADJ031-IN-LOT new Lot reuses exact Receipt resolution and all checkpoints roll back",
+          "status": "PASS"
+        },
+        {
+          "run": "evidence/task031-hd125-db-inventory-p3-movement-database-f721a25813/run.json",
+          "report": "evidence/task031-hd125-db-inventory-p3-movement-database-f721a25813/inventory-p3-movement-database.xml",
+          "name": "ADJ031-IN-LOT native creation/exact NULL dates and receipt minimum-life remain all-or-none",
+          "status": "PASS"
+        }
+      ]
+    },
+    "INPUT": {
+      "developer_result": "PASS",
+      "evidence": [
+        {
+          "run": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/run.json",
+          "report": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/inventory-p3-server-coverage.xml",
+          "name": "ADJ031-INPUT strict single-op normalization requires UOM, original versions and unmixed targets",
+          "status": "PASS"
+        },
+        {
+          "run": "evidence/task031-hd125-db-inventory-p3-api-c4c316b320/run.json",
+          "report": "evidence/task031-hd125-db-inventory-p3-api-c4c316b320/inventory-p3-api.xml",
+          "name": "ADJ031-INPUT real strong-auth HTTP rejects forged, mixed and coerced fields before claims",
+          "status": "PASS"
+        }
+      ]
+    },
+    "LIFE-FIFO": {
+      "developer_result": "PASS",
+      "evidence": [
+        {
+          "run": "evidence/task031-hd125-db-inventory-p3-movement-database-f721a25813/run.json",
+          "report": "evidence/task031-hd125-db-inventory-p3-movement-database-f721a25813/inventory-p3-movement-database.xml",
+          "name": "ADJ031-LIFE-FIFO native DATE edges, minimum life, midnight wait and zero/positive anchors",
+          "status": "PASS"
+        }
+      ]
+    },
+    "LOCKS-VERSION": {
+      "developer_result": "PASS",
+      "evidence": [
+        {
+          "run": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/run.json",
+          "report": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/inventory-p3-server-coverage.xml",
+          "name": "ADJ031-LOCKS-VERSION absent/present expectations and missing proof leave zero effects",
+          "status": "PASS"
+        },
+        {
+          "run": "evidence/task031-hd125-db-inventory-p3-movement-database-f721a25813/run.json",
+          "report": "evidence/task031-hd125-db-inventory-p3-movement-database-f721a25813/inventory-p3-movement-database.xml",
+          "name": "ADJ031-LOCKS-VERSION native competing expected-absent requests produce one post and one complete rollback",
+          "status": "PASS"
+        }
+      ]
+    },
+    "OUT-RESERVED": {
+      "developer_result": "PASS",
+      "evidence": [
+        {
+          "run": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/run.json",
+          "report": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/inventory-p3-server-coverage.xml",
+          "name": "ADJ031-OUT-RESERVED negative Adjustment cannot spend allocated or increase uncovered Reserved",
+          "status": "PASS"
+        },
+        {
+          "run": "evidence/task031-hd125-db-inventory-p3-movement-database-f721a25813/run.json",
+          "report": "evidence/task031-hd125-db-inventory-p3-movement-database-f721a25813/inventory-p3-movement-database.xml",
+          "name": "ADJ031-OUT-RESERVED native negative protects free stock/current eligible coverage but permits expired uncovered reduction",
+          "status": "PASS"
+        }
+      ]
+    },
+    "PROOF": {
+      "developer_result": "PASS",
+      "evidence": [
+        {
+          "run": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/run.json",
+          "report": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/inventory-p3-server-coverage.xml",
+          "name": "ADJ031-PROOF success audit allows only safe device/time identifiers, not trusted context",
+          "status": "PASS"
+        },
+        {
+          "run": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/run.json",
+          "report": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/inventory-p3-server-coverage.xml",
+          "name": "ADJ031-PROOF execute consumes only the privately prepared command/context",
+          "status": "PASS"
+        },
+        {
+          "run": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/run.json",
+          "report": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/inventory-p3-server-coverage.xml",
+          "name": "ADJ031-PROOF opaque context rejects JSON/copies, changed intent, action and repeated submission",
+          "status": "PASS"
+        },
+        {
+          "run": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/run.json",
+          "report": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/inventory-p3-server-coverage.xml",
+          "name": "ADJ031-PROOF current guard uses declared read-lock order and preserves native revocation rejection",
+          "status": "PASS"
+        },
+        {
+          "run": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/run.json",
+          "report": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/inventory-p3-server-coverage.xml",
+          "name": "ADJ031-PROOF original signed time is not renewed by waits and abort/expiry remain fail-closed",
+          "status": "PASS"
+        },
+        {
+          "run": "evidence/task031-hd125-db-inventory-p3-api-c4c316b320/run.json",
+          "report": "evidence/task031-hd125-db-inventory-p3-api-c4c316b320/inventory-p3-api.xml",
+          "name": "ADJ031-PROOF actual JWT, P-256 device and scrypt password are all mandatory",
+          "status": "PASS"
+        },
+        {
+          "run": "evidence/task031-hd125-db-inventory-p3-movement-database-f721a25813/run.json",
+          "report": "evidence/task031-hd125-db-inventory-p3-movement-database-f721a25813/inventory-p3-movement-database.xml",
+          "name": "ADJ031-PROOF native signed-time expiry after stock locks rolls back Operation and zero destination",
+          "status": "PASS"
+        }
+      ]
+    },
+    "REASON": {
+      "developer_result": "PASS",
+      "evidence": [
+        {
+          "run": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/run.json",
+          "report": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/inventory-p3-server-coverage.xml",
+          "name": "ADJ031-REASON normalized reasons obey UTF-8 bytes, control rejection and OTHER code-point floor",
+          "status": "PASS"
+        },
+        {
+          "run": "evidence/task031-hd125-db-inventory-p3-api-c4c316b320/run.json",
+          "report": "evidence/task031-hd125-db-inventory-p3-api-c4c316b320/inventory-p3-api.xml",
+          "name": "ADJ031-REASON exact categories, Unicode byte limit and OTHER detail survive real Audit",
+          "status": "PASS"
+        }
+      ]
+    },
+    "REVOKE-ORDER": {
+      "developer_result": "PASS",
+      "evidence": [
+        {
+          "run": "evidence/task031-hd125-db-inventory-p3-api-c4c316b320/run.json",
+          "report": "evidence/task031-hd125-db-inventory-p3-api-c4c316b320/inventory-p3-api.xml",
+          "name": "ADJ031-REVOKE-ORDER real UserAdminService token-first disable commits before Warehouse wait release",
+          "status": "PASS"
+        },
+        {
+          "run": "evidence/task031-hd125-db-inventory-p3-movement-database-f721a25813/run.json",
+          "report": "evidence/task031-hd125-db-inventory-p3-movement-database-f721a25813/inventory-p3-movement-database.xml",
+          "name": "ADJ031-REVOKE-ORDER native revocation committed during stock wait defeats stale RR snapshot and rolls back",
+          "status": "PASS"
+        },
+        {
+          "run": "evidence/task031-hd125-db-inventory-p3-movement-database-f721a25813/run.json",
+          "report": "evidence/task031-hd125-db-inventory-p3-movement-database-f721a25813/inventory-p3-movement-database.xml",
+          "name": "ADJ031-REVOKE-ORDER native final security locks serialize later revocation until posting completes",
+          "status": "PASS"
+        }
+      ]
+    },
+    "ROLLBACK": {
+      "developer_result": "PASS",
+      "evidence": [
+        {
+          "run": "evidence/task031-hd125-db-inventory-p3-movement-database-f721a25813/run.json",
+          "report": "evidence/task031-hd125-db-inventory-p3-movement-database-f721a25813/inventory-p3-movement-database.xml",
+          "name": "ADJ031-ROLLBACK native failure after first Status leg and new Lot creation leaves no business artifacts",
+          "status": "PASS"
+        },
+        {
+          "run": "evidence/task031-hd125-db-inventory-p3-movement-database-f721a25813/run.json",
+          "report": "evidence/task031-hd125-db-inventory-p3-movement-database-f721a25813/inventory-p3-movement-database.xml",
+          "name": "ADJ031-ROLLBACK every intended native write checkpoint rolls back new Lot, zero destination and both Status legs",
+          "status": "PASS"
+        }
+      ]
+    },
+    "STATUS": {
+      "developer_result": "PASS",
+      "evidence": [
+        {
+          "run": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/run.json",
+          "report": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/inventory-p3-server-coverage.xml",
+          "name": "ADJ031-STATUS all six directions conserve stock with paired legs and free quantity protection",
+          "status": "PASS"
+        },
+        {
+          "run": "evidence/task031-hd125-db-inventory-p3-api-c4c316b320/run.json",
+          "report": "evidence/task031-hd125-db-inventory-p3-api-c4c316b320/inventory-p3-api.xml",
+          "name": "ADJ031-STATUS strong-auth HTTP posts all six pairs with exact actor, conservation and immutable replay",
+          "status": "PASS"
+        },
+        {
+          "run": "evidence/task031-hd125-db-inventory-p3-movement-database-f721a25813/run.json",
+          "report": "evidence/task031-hd125-db-inventory-p3-movement-database-f721a25813/inventory-p3-movement-database.xml",
+          "name": "ADJ031-STATUS native six different directions conserve On Hand, Allocation and Reserved",
+          "status": "PASS"
+        }
+      ]
+    },
+    "UOM": {
+      "developer_result": "PASS",
+      "evidence": [
+        {
+          "run": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/run.json",
+          "report": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-server-coverage/inventory-p3-server-coverage.xml",
+          "name": "ADJ031-UOM positive Adjustment posts immutable converted result and original source replay",
+          "status": "PASS"
+        },
+        {
+          "run": "evidence/task031-hd125-db-inventory-p3-movement-database-f721a25813/run.json",
+          "report": "evidence/task031-hd125-db-inventory-p3-movement-database-f721a25813/inventory-p3-movement-database.xml",
+          "name": "ADJ031-UOM native Pack conversion, credential-free intent and original replay survive changed current factor",
+          "status": "PASS"
+        }
+      ]
+    }
+  },
+  "historical_refs_preserved": 186,
+  "active_evidence_refs": 205,
+  "functional": {
+    "path": "evidence/task031-hd125-functional-functional-3fb9db72bea8/results.json",
+    "files": 10,
+    "strict_leaves": 18,
+    "supporting8": "SIDECAR_DIAGNOSTICS_NOT_PROFILE_CONTRACTS"
+  },
+  "full_native": {
+    "path": "evidence/task031-hd125-full-native-20261008T005648-00790d15/diagnostic.json",
+    "counts": {
+      "tests": 2741,
+      "pass": 2634,
+      "fail": 0,
+      "skipped": 107
+    },
+    "coverage_lines_branches_functions": [
+      93.58,
+      84.35,
+      91.91
+    ],
+    "thresholds": [
+      92,
+      83,
+      90
+    ],
+    "file_floors": 34,
+    "skip_disposition": "103 guarded cases have separate new-source strict runs; capacity4 NOT_EXECUTED, no skip waiver"
+  },
+  "dependency": {
+    "version": "1.11.0",
+    "audit": "ORIGINAL_CONTRACT_PASS_EXIT0",
+    "signature_diagnostic": "evidence/task031-hd125-dependency-smoke-c4937c7509/diagnostic.json",
+    "registry_verified_installed_packages": 427,
+    "attestations_verified": 109,
+    "benign_concurrently_smoke": "PASS",
+    "install_scripts": "DISABLED",
+    "exact_lock_sha256": "0e7cfc03260694b17565e28374ff85ed894b79082286025395779c6f436ecb49"
+  },
+  "controller_failure_disposition": "Original post-install assertion/FAILED action retained; native gate correctly reported own STARTED action before confirmation; read-only reproduction and separate observation, no install replay",
+  "formal_tc007": "NOT_RUN",
+  "capacity4": "NOT_EXECUTED",
+  "publication_next_task": "NOT_AUTHORIZED"
+}

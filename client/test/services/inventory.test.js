@@ -9,7 +9,88 @@ import { ERROR_CODE_MESSAGES } from "@/framework/http/errorMessages.js";
 import inventoryService, { service } from "@/services/inventory.js";
 
 describe("inventory service", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => vi.resetAllMocks());
+
+  it("UI033-SIGNED-INTENT signs all three high-risk routes with explicit keys and strict business bodies", async () => {
+    const source = { module: "INVENTORY", documentType: "ADJUSTMENT", documentId: "doc", lineId: "", eventId: "event" };
+    const payload = { source, quantity: 3, reasonText: "盤點差異", password: "one-use", idempotencyKey: "fixed-key" };
+    await inventoryService.postAdjustment(payload);
+    await inventoryService.postStatusTransfer(payload);
+    await inventoryService.reverseMovement(7, payload);
+    expect(httpClient.post.mock.calls).toEqual([
+      ["/api/v1/inventory/adjustments", { idempotent: true, idempotencyKey: "fixed-key", signed: true, body: { source, quantity: 3, reasonText: "盤點差異", password: "one-use" } }],
+      ["/api/v1/inventory/status-transfers", { idempotent: true, idempotencyKey: "fixed-key", signed: true, body: { source, quantity: 3, reasonText: "盤點差異", password: "one-use" } }],
+      ["/api/v1/inventory/movements/7/reverse", { idempotent: true, idempotencyKey: "fixed-key", signed: true, body: { source, quantity: 3, reasonText: "盤點差異", password: "one-use" } }]
+    ]);
+    expect(payload.idempotencyKey).toBe("fixed-key");
+  });
+
+  it("UI033-UNKNOWN-QUERY reads the full exact source and preserves null as unresolved", async () => {
+    const source = { module: "INVENTORY", documentType: "REVERSAL", documentId: "doc", lineId: "", eventId: "event" };
+    httpClient.get.mockResolvedValue(null);
+    await expect(inventoryService.findOperationBySource(source, { signal: "query-signal" })).resolves.toBeNull();
+    expect(httpClient.get).toHaveBeenCalledWith("/api/v1/inventory/operations/by-source", {
+      params: { sourceModule: source.module, sourceDocumentType: source.documentType,
+        sourceDocumentId: source.documentId, sourceLineId: source.lineId, sourceEventId: source.eventId }, signal: "query-signal"
+    });
+    expect(httpClient.post).not.toHaveBeenCalled();
+  });
+
+  it("UI033-AUTH forwards cancellation for all high-risk attempts without changing signed bodies", async () => {
+    const signal = new AbortController().signal;
+    const payload = { quantity: 1, password: "transient", idempotencyKey: "original" };
+    await inventoryService.postAdjustment(payload, { signal });
+    await inventoryService.postStatusTransfer(payload, { signal });
+    await inventoryService.reverseMovement(7, payload, { signal });
+    for (const [, options] of httpClient.post.mock.calls) {
+      expect(options.signal).toBe(signal);
+      expect(options.signed).toBe(true);
+      expect(options.idempotencyKey).toBe("original");
+      expect(options.body).toEqual({ quantity: 1, password: "transient" });
+    }
+  });
+
+  it("UI033-RETRY only sends caller-explicit attempts without changing original guards, source or key", async () => {
+    const conflict = Object.assign(new Error("stale"), { code: "VERSION_CONFLICT" });
+    const source = { module: "INVENTORY", documentType: "REVERSAL", documentId: "doc", lineId: "", eventId: "event" };
+    const payload = { source, expectedBalances: [{ balanceId: 2, expectedVersion: 4 }], reasonText: "錯誤沖銷", idempotencyKey: "fixed" };
+    httpClient.post.mockRejectedValueOnce(conflict).mockResolvedValueOnce({ operationId: 10 });
+    await expect(inventoryService.reverseMovement(7, { ...payload, password: "first-entry" })).rejects.toBe(conflict);
+    expect(httpClient.post).toHaveBeenCalledTimes(1);
+    await inventoryService.reverseMovement(7, { ...payload, password: "fresh-entry" });
+    expect(httpClient.post.mock.calls.map(([, options]) => options.idempotencyKey)).toEqual(["fixed", "fixed"]);
+    expect(httpClient.post.mock.calls.map(([, options]) => options.body.expectedBalances)).toEqual([payload.expectedBalances, payload.expectedBalances]);
+    expect(payload).not.toHaveProperty("password");
+  });
+
+  it("UI033-RECONCILE returns original flattened operation results without guessing POST result shape", async () => {
+    const original = { operationId: 10, resultType: "MOVEMENT_GROUP", resultId: "group-21", resultSummary: { quantity: 3, baseUomId: 1, lineCount: 2 }, completedAt: 10 };
+    httpClient.get.mockResolvedValue(original);
+    await expect(inventoryService.findOperationBySource({ module: "INVENTORY", documentType: "STATUS_TRANSFER", documentId: "doc", lineId: "", eventId: "event" })).resolves.toBe(original);
+    expect(httpClient.post).not.toHaveBeenCalled();
+  });
+
+  it("reads exact Code and Transfer filters without sending an unsupported q parameter", async () => {
+    httpClient.get.mockResolvedValueOnce({ skuId: 12 }).mockResolvedValueOnce({ items: [{ id: 7 }], total: 1 }).mockResolvedValueOnce({ id: 7 });
+    await inventoryService.lookupSku(" SKU-%_ ", { signal: "lookup-signal" });
+    await expect(inventoryService.listTransfers({ page: 2, rowsPerPage: 20, filter: "TR-7", status: "DRAFT", signal: "list-signal" })).resolves.toEqual({ rows: [{ id: 7 }], rowsNumber: 1 });
+    await inventoryService.getTransfer(7, { signal: "detail-signal" });
+    expect(httpClient.get.mock.calls).toEqual([
+      ["/api/v1/inventory/sku-lookup", { params: { code: " SKU-%_ " }, signal: "lookup-signal" }],
+      ["/api/v1/inventory/transfers", { params: { page: 2, pageSize: 20, number: "TR-7", status: "DRAFT" }, signal: "list-signal" }],
+      ["/api/v1/inventory/transfers/7", { signal: "detail-signal" }]
+    ]);
+  });
+  it("forwards all five Transfer writes with strict bodies, versions and intent keys", async () => {
+    const body = { source: { eventId: "event" }, version: 2, lines: [{ id: 4, quantity: 3, destinationBinId: 9 }], idempotencyKey: "intent" };
+    for (const action of ["create", "update", "cancel", "dispatch", "receive"]) {
+      if (action === "create") await inventoryService.createTransfer(body);
+      else await inventoryService[`${action}Transfer`](7, body);
+      expect(httpClient.post.mock.calls.at(-1)).toEqual([`/api/v1/inventory/transfers/${action === "create" ? "create" : `7/${action}`}`, {
+        idempotent: true, idempotencyKey: "intent", body: { source: body.source, version: 2, lines: body.lines }
+      }]);
+    }
+  });
 
   it("declares its registry name and maps master lists to DataTable shape", async () => {
     expect(service.name).toBe("inventory");

@@ -16,6 +16,7 @@ import {
   validateApiConfig
 } from "../src/framework/middleware/apiDispatcher.js";
 import { createErrorHandler } from "../src/framework/middleware/errorHandler.js";
+import { ApplicationError } from "../src/framework/errors/ApplicationError.js";
 import { skuCodeTaken } from "../src/modules/item/itemErrors.js";
 import { IdempotencyService } from "../src/services/idempotency/IdempotencyService.js";
 import { MemoryIdempotencyStore } from "../src/services/idempotency/IdempotencyStore.js";
@@ -129,6 +130,80 @@ function createApiDispatcher(options = {}) {
     ...options
   });
 }
+
+test("ADJ031-HTTP-BOUNDARY preparation requires enabled idempotency and a handler hook", () => {
+  const handler = new TestHandler("prepared", () => ({}));
+  const route = { ...apiRouteDefaults, method: "POST", path: "/api/v1/prepared", description: "Prepared input.",
+    authType: "public", handler: "prepared", requestSchema: {}, responseSchema: anySuccessResponseSchema,
+    idempotency: { enabled: true }, idempotencyPreparation: true };
+  const build = (candidate) => createApiDispatcher({ routes: [candidate], handlers: { prepared: handler }, logger: silentLogger });
+  assert.throws(() => build(route), /prepareIdempotency/);
+  handler.prepareIdempotency = async () => ({});
+  for (const invalid of [false, null, "true", 1, {}, [], undefined]) {
+    assert.throws(() => build({ ...route, idempotencyPreparation: invalid }), /idempotencyPreparation/);
+  }
+  assert.throws(() => build({ ...route, idempotency: { enabled: false } }), /idempotencyPreparation/);
+  assert.doesNotThrow(() => build(route));
+});
+
+test("ADJ031-HTTP-BOUNDARY auth and strict schema precede preparation and cached replay", async (t) => {
+  const events = [];
+  let calls = 0, allowed = true;
+  const strategies = new AuthStrategyRegistry().register("preparedAuth", async () => {
+    events.push("auth");
+    if (!allowed) throw new AuthenticationError("DENIED", "Denied");
+    return { type: "preparedAuth", claims: { sub: "prepared-user" } };
+  });
+  const handler = new TestHandler("prepared", () => { calls += 1; return { calls }; });
+  handler.prepareIdempotency = async (req) => {
+    events.push("prepare");
+    const input = Object.freeze({ params: Object.freeze({}), query: Object.freeze({}),
+      body: Object.freeze({ quantity: req.input.body.quantity }) });
+    return { input, replay: async (send) => { events.push("guard"); return send(); } };
+  };
+  const route = { ...apiRouteDefaults, method: "POST", path: "/api/v1/prepared", description: "Prepared input.",
+    authType: "preparedAuth", handler: "prepared", idempotencyPreparation: true, inputCoercion: false,
+    idempotency: { enabled: true, ttlMs: 604800000 }, responseSchema: anySuccessResponseSchema,
+    requestSchema: { body: { type: "object", required: ["quantity", "password"], additionalProperties: false,
+      properties: { quantity: { type: "integer", minimum: 1 }, password: { type: "string", minLength: 1 } } } } };
+  const url = await startTestServer(t, createApiDispatcher({ routes: [route], handlers: { prepared: handler }, strategies, logger: silentLogger }));
+  const post = (quantity, password) => fetch(url + route.path, { method: "POST",
+    headers: { "content-type": "application/json", "idempotency-key": "prepared" }, body: JSON.stringify({ quantity, password }) });
+  const first = await post(1, "synthetic-one");
+  assert.equal(first.status, 200);
+  const original = await first.json();
+  const replay = await post(1, "synthetic-two");
+  assert.equal(replay.status, 200);
+  assert.equal(replay.headers.get("idempotency-replayed"), "true");
+  assert.deepEqual(await replay.json(), original);
+  assert.deepEqual(events, ["auth", "prepare", "auth", "prepare", "guard"]);
+  events.length = 0;
+  assert.equal((await post("1", "synthetic-two")).status, 400);
+  assert.deepEqual(events, ["auth"]);
+  events.length = 0;
+  allowed = false;
+  assert.equal((await post(1, "synthetic-two")).status, 401);
+  assert.deepEqual(events, ["auth"]);
+  assert.equal(calls, 1);
+});
+
+test("ADJ031-HTTP-BOUNDARY missing preparation never falls back to raw input or runs work", async (t) => {
+  let calls = 0, begins = 0;
+  const handler = new TestHandler("prepared", () => { calls += 1; return {}; });
+  handler.prepareIdempotency = async () => undefined;
+  const idempotency = memoryIdempotency();
+  const begin = idempotency.store.begin.bind(idempotency.store);
+  idempotency.store.begin = (...args) => { begins += 1; return begin(...args); };
+  const route = { ...apiRouteDefaults, method: "POST", path: "/api/v1/missing-preparation", description: "Missing preparation.",
+    authType: "public", handler: "prepared", requestSchema: {}, responseSchema: anySuccessResponseSchema,
+    idempotency: { enabled: true }, idempotencyPreparation: true };
+  const url = await startTestServer(t, createApiDispatcher({ routes: [route], handlers: { prepared: handler }, idempotency, logger: silentLogger }));
+  const response = await fetch(url + route.path, { method: "POST", headers: { "idempotency-key": "missing" } });
+  assert.equal(response.status, 500);
+  assert.equal((await response.json()).error.code, "INTERNAL_SERVER_ERROR");
+  assert.equal(calls, 0);
+  assert.equal(begins, 0);
+});
 
 class TestHandler extends BaseRequestHandler {
   constructor(name, callback, logger = silentLogger) {
@@ -258,6 +333,38 @@ test("dispatcher invokes a configured public API", async (t) => {
       responseStatusCodes: ["200"]
     }
   ]);
+});
+
+test("route-only strict validation runs before idempotency and preserves legacy coercion", async (t) => {
+  let calls = 0;
+  const handler = new TestHandler("strict", (req) => { calls += 1; return req.input.body; });
+  const route = {
+    ...apiRouteDefaults, method: "POST", path: "/api/v1/strict", description: "Strict input.",
+    authType: "public", handler: "strict", inputCoercion: false,
+    idempotency: { enabled: true }, responseSchema: anySuccessResponseSchema,
+    requestSchema: { body: { type: "object", required: ["quantity"], additionalProperties: false,
+      properties: { quantity: { type: "integer", minimum: 1 } } } }
+  };
+  const legacy = { ...route, path: "/api/v1/legacy" };
+  delete legacy.inputCoercion;
+  for (const invalid of [true, null, "false", 0, {}, [], undefined]) {
+    assert.throws(() => createApiDispatcher({ routes: [{ ...route, inputCoercion: invalid }], handlers: { strict: handler }, logger: silentLogger }), /inputCoercion/);
+  }
+  const url = await startTestServer(t, createApiDispatcher({ routes: [route, legacy], handlers: { strict: handler }, logger: silentLogger }));
+  const post = (path, quantity, key) => fetch(url + path, { method: "POST", headers: { "content-type": "application/json", "idempotency-key": key }, body: JSON.stringify({ quantity }) });
+  assert.equal((await post(route.path, 1, "strict-key")).status, 200);
+  const replay = await post(route.path, 1, "strict-key");
+  assert.equal(replay.headers.get("idempotency-replayed"), "true");
+  for (const invalid of ["1", true]) {
+    const rejected = await post(route.path, invalid, "strict-key");
+    assert.equal(rejected.status, 400);
+    assert.equal((await rejected.json()).error.code, "REQUEST_VALIDATION_FAILED");
+  }
+  assert.equal(calls, 1);
+  const inherited = await post(legacy.path, "2", "legacy-key");
+  assert.equal(inherited.status, 200);
+  assert.equal((await inherited.json()).data.quantity, 2);
+  assert.equal(calls, 2);
 });
 
 test("dispatcher validates request schemas before invoking the handler", async (t) => {
@@ -1064,4 +1171,71 @@ test("an ApplicationError's publicDetails, not just details, reaches the HTTP re
   assert.equal(response.status, 409);
   assert.equal(body.error.code, "SKU_CODE_TAKEN");
   assert.deepEqual(body.error.details, { skuCode: "VC-001" });
+});
+
+
+test("handler authorization preflight is awaited before initial execution and cached replay", async t => {
+  let revoked = false, preflights = 0, executions = 0;
+  const handler = new TestHandler("guardedCommand", function () {
+    executions++;
+    assert.equal(preflights, 1);
+    return this.response({ id: 1 });
+  });
+  handler.authorizeRequest = async () => {
+    await Promise.resolve();
+    preflights++;
+    if (revoked) throw new ApplicationError("Permission revoked", { code: "PERMISSION_STALE", statusCode: 403 });
+    return true;
+  };
+  const dispatcher = createApiDispatcher({ routes: [{ ...apiRouteDefaults, method: "POST", path: "/api/v1/guarded-command",
+    description: "Guard cached command responses", authType: "jwt", idempotency: { enabled: true },
+    requestSchema: emptyRequestSchema, responseSchema: anySuccessResponseSchema, handler: "guardedCommand" }],
+  handlers: { guardedCommand: handler }, logger: silentLogger });
+  const url = await startTestServer(t, dispatcher), token = await issueAccessToken({}, { subject: "7" });
+  const send = () => fetch(`${url}/api/v1/guarded-command`, { method: "POST", headers: { Authorization: `Bearer ${token}`, "Idempotency-Key": "guarded-1" } });
+  assert.equal((await send()).status, 200);
+  const replay = await send();
+  assert.equal(replay.status, 200);
+  assert.equal(replay.headers.get("idempotency-replayed"), "true");
+  revoked = true;
+  const denied = await send();
+  assert.equal(denied.status, 403);
+  assert.equal((await denied.json()).error.code, "PERMISSION_STALE");
+  assert.equal(preflights, 3);
+  assert.equal(executions, 1);
+});
+
+test("authorization preflight denies false/failure and rejects malformed declarations", async t => {
+  for (const mode of ["false", "failure"]) {
+    let executions = 0;
+    const handler = new TestHandler(`preflight_${mode}`, () => { executions++; return {}; });
+    handler.authorizeRequest = async () => {
+      if (mode === "failure") throw new ApplicationError("Database unavailable", { code: "SALES_DEPENDENCY_UNAVAILABLE", statusCode: 503 });
+      return false;
+    };
+    const route = { ...apiRouteDefaults, method: "POST", path: `/api/v1/preflight-${mode}`, description: "Fail closed",
+      authType: "public", requestSchema: emptyRequestSchema, responseSchema: anySuccessResponseSchema, handler: handler.handlerName };
+    const dispatcher = createApiDispatcher({ routes: [route], handlers: { [handler.handlerName]: handler }, logger: silentLogger });
+    const url = await startTestServer(t, dispatcher);
+    assert.equal((await fetch(`${url}${route.path}`, { method: "POST" })).status, mode === "false" ? 403 : 503);
+    assert.equal(executions, 0);
+    handler.authorizeRequest = true;
+    assert.throws(() => createApiDispatcher({ routes: [route], handlers: { [handler.handlerName]: handler }, logger: silentLogger }), /Invalid authorization preflight/u);
+  }
+});
+
+test("request timeout cancels an authorization preflight before command execution", async t => {
+  let executions = 0, aborted = false;
+  const handler = new TestHandler("timedPreflight", () => { executions++; return {}; });
+  handler.authorizeRequest = req => new Promise(resolve => {
+    req.requestTimeout.signal.addEventListener("abort", () => { aborted = true; resolve(true); }, { once: true });
+  });
+  const route = { ...apiRouteDefaults, method: "POST", path: "/api/v1/timed-preflight", description: "Cancel pending preflight",
+    timeoutMs: 30, authType: "public", requestSchema: emptyRequestSchema, responseSchema: anySuccessResponseSchema, handler: "timedPreflight" };
+  const dispatcher = createApiDispatcher({ routes: [route], handlers: { timedPreflight: handler }, logger: silentLogger });
+  const url = await startTestServer(t, dispatcher);
+  const response = await fetch(`${url}${route.path}`, { method: "POST" });
+  assert.equal(response.status, 504);
+  assert.equal(aborted, true);
+  assert.equal(executions, 0);
 });
