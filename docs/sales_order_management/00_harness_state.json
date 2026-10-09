@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 254,
+  "revision": 255,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-004",
-  "current_task": "TASK-047",
+  "current_task": "TASK-049",
   "baseline": {
     "design": "20b065e88164b06e91c89116f211e2e44d143e2948d18c0578281e3338925a33",
     "plan": "c11e2acd3288a4b2a807e894cbf09edc9900daa34042b643d3994617e6a0605d",
-    "code_commit": "f480bc0e104b54ef82179c8a7865c426b87768f2",
-    "source_fingerprint": "322646a7c98db35bd19b7889e717bcf29d2e2940183ba75bd23d07a16ce961c3",
+    "code_commit": "dbbdd37e8bfd3aad6df2779a9764b8b8b3cc6ab8",
+    "source_fingerprint": "3aee8a9e47920bfe2ad81afcacad184306f654f90b3ae647ee04f2caff147563",
     "worktree": "/private/tmp/erp-sales-p3",
     "default_commit": "2afef5cdb271dbfa3ccefd913f7042c52c7be92b",
     "mode_entry_commit": "6936736ba1fb98f4fcb8365377f59f0a0f7a4897"
@@ -74,9 +74,9 @@
     "TASK-044": "DONE",
     "TASK-045": "DONE",
     "TASK-046": "DONE",
-    "TASK-047": "IN_PROGRESS",
-    "TASK-048": "PENDING",
-    "TASK-049": "PENDING"
+    "TASK-047": "DONE",
+    "TASK-048": "DONE",
+    "TASK-049": "IN_PROGRESS"
   },
   "approvals": [
     {
@@ -4612,6 +4612,30 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-T047048-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p3_ui_review",
+      "reviewed_baseline": "c11e2acd3288a4b2a807e894cbf09edc9900daa34042b643d3994617e6a0605d",
+      "source_ref": "/private/tmp/sales-p3-private/task047048-ui-r1-reviewer-proof.json; approval binds exact15 files; broader TASK049 dirty source explicitly outside scope.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-T047048-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p3_ui_review",
+      "reviewed_baseline": "c11e2acd3288a4b2a807e894cbf09edc9900daa34042b643d3994617e6a0605d",
+      "source_ref": "/private/tmp/sales-p3-private/task047048-ui-r2-reviewer-proof.json; approval binds exact15 files; broader TASK049 dirty source explicitly outside scope.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -6451,6 +6475,17 @@
       "source_ref": "157 author Sales unit and50 fullImport native leaf/JUnit records PASS0skip, normal exit. Independent18unit/3mock probes/6native/lint PASS and five exact SHA unchanged. R1 context-purpose/conflict-last-fence/fullstoredsize/rawcap findings resolved R2; normalizedline_count RED resolved. Stored overflow native uses real query plus injected131073, not natural oversize proof. No public transport/status routes, realregistry, production, formal acceptance or PhaseCI claim.",
       "actor": "Codex /root",
       "observed_at": "2026-10-09T00:53:46.494845+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK047048 Import UI developer DoD",
+      "code_commit": "dbbdd37e8bfd3aad6df2779a9764b8b8b3cc6ab8",
+      "spec_baseline": "c11e2acd3288a4b2a807e894cbf09edc9900daa34042b643d3994617e6a0605d",
+      "source_fingerprint": "3aee8a9e47920bfe2ad81afcacad184306f654f90b3ae647ee04f2caff147563",
+      "status": "PASS",
+      "source_ref": "Independent815client/5queryunit/10actualPlaywright PASS0skip,15filelint0/build0. R1 missingprocessing60s backoff andstatus/errorCode/externalID resolved; RED/GREEN and independent60001mutation actualRED retained. Real owned HTTP+DB template/upload/precheck/partialworker/result/exception/SO, unknownofflineoriginalevent+refresh retry/CAS/cancel, viewonly,375/768/1024/1440 keyboard/empty/safe errors/filters. Existing frameworkstreamclose11listeners andbuildchunk warning retained; no newbrowserconsole/network failures. No PhaseCI/formalclaim. TASK049 dirty files outside reviewed15SHA scope.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-09T01:15:15.855264+00:00"
     }
   ],
   "pending_decisions": [
@@ -7848,8 +7883,9 @@
     "implementation/71_phase3_upload_activation_decision.md",
     "implementation/75_phase3_atomic_intake_checkpoint.md",
     "implementation/76_task045_registered_worker_checkpoint.md",
-    "implementation/77_task046_channel_checkpoint.md"
+    "implementation/77_task046_channel_checkpoint.md",
+    "implementation/78_task047048_import_ui_checkpoint.md"
   ],
   "defects": [],
-  "next_safe_action": "TASK047–048 import UI and actual Playwright; TASK049 retention/capacity/all33 developer contracts, exactcandidate5CI, separate wholePhase review, freshmain authorized PR/merge and cleanup."
+  "next_safe_action": "TASK049 retention independentreview,10000/50000 capacity with50 foreground users,full33developercontracts/exactcandidate5CI/separatewholePhase review/freshmain/authorizedPRmerge andcleanup."
 }
