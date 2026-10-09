@@ -1,20 +1,20 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 301,
+  "revision": 303,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-004",
-  "current_task": "TASK-049",
+  "current_task": "TASK-050",
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
     "code_commit": "5b8aa9bbcf5217ab3a30f722ff241d167fa402f6",
     "source_fingerprint": "cd70f899bfaca539353988b320210dd24b2c3b8958b249224ad8dd55f701dc97",
-    "worktree": "/Users/sam/Documents/workspace/erp-supplier-hd081",
-    "default_commit": "9e9b0ff9ad87846a32036fc86138a834bdb5c82a",
+    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t50",
+    "default_commit": "394fc3fb11b6dce0bf4c41288904a8fac6d3fa49",
     "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
   },
   "runtime": {
@@ -77,7 +77,7 @@
     "TASK-047": "DONE",
     "TASK-048": "DONE",
     "TASK-049": "DONE",
-    "TASK-050": "PENDING",
+    "TASK-050": "IN_PROGRESS",
     "TASK-051": "PENDING"
   },
   "approvals": [
@@ -4808,6 +4808,41 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-09: 'B，充分描述一下要item management 模塊負責人做咩'. Handoff written in docs/supplier_management/item_handoff_supplier_sku_refs.md."
+    },
+    {
+      "id": "HD-082",
+      "impact": "MAJOR",
+      "question": "While Supplier waits on the Item owner (HD-081 B), may work start out of plan order? (A) run TASK-050 now without its for-SKU part (100k dataset, list/search/detail p95, 50-user CRUD, EXPLAIN, metrics/logs/alerts, capacity report), adding the for-SKU part and a final rerun after TASK-040; (B) HD-057's similar-name exception list for legacy data; not now: the Item pin refresh (do it once after the Item change), TASK-038 code, the T51 release work.",
+      "affected_ids": [
+        "TASK-050",
+        "TASK-040",
+        "TASK-051",
+        "HD-057"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-09: '先做A的工作'. TASK-050 runs now without the for-SKU part (NFR-005, the for-SKU p95 and its metrics); its dependency on TASK-040 applies to that part and to the final rerun only."
+    },
+    {
+      "id": "HD-083",
+      "impact": "MINOR",
+      "question": "TASK-050 observability: (1) metrics mechanism: (A) a supplier.metrics job writing low-cardinality log lines plus alert events, as Sales does, or (B) a Prometheus endpoint (new dependency); (2) alert thresholds (approval pending 24 h warn, import waiting 15 min error, purge failure error) as code constants (A) or in server/config/supplier.js (B); (3) dataset: design §11.5 averages plus 1% at the NFR-003 upper bound.",
+      "affected_ids": [
+        "TASK-050"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-09: '全部按建議'."
+    },
+    {
+      "id": "HD-084",
+      "impact": "MAJOR",
+      "question": "TASK-050 at 100k Suppliers and 50 users failed NFR-001 everywhere (p95 3-12 s): the similar-name search read about 2.25M gram rows inside the create/update transaction while Business Master's assertCurrencyUsableInTransaction held the currency row's X lock, so writes queued and held pool connections. (A) run the search on the pool before the transaction and bound it (rarest grams, at most 3,000 candidates; recall 98.9% vs the old 99.1% against brute force); (B) only move it out of the lock (update p95 2.75 s, a known limitation); (C) an exact fast search through a schema change (FULLTEXT ngram).",
+      "affected_ids": [
+        "TASK-050",
+        "NFR-001",
+        "NFR-003"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-09: 'A'."
     }
   ],
   "external_actions": [
@@ -5884,5 +5919,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Waiting on the Item module owner (HD-081 B): see docs/supplier_management/item_handoff_supplier_sku_refs.md. TASK-038 stays blocked until Item design §5.14 is aligned to supplier_sku_refs and merged; TASK-039, TASK-040, TASK-050 and TASK-051 wait on it. When it lands: refresh the Supplier pin on item-sku-uom-provider (already stale: pinned 5c193e20, Item now a058ede4; needs Product Owner approval), then explain the supplier_sku_refs and supplier_supply_events schema in chat and wait for sign-off before writing migrations. Open carry-forward: HD-057 (T51)."
+  "next_safe_action": "TASK-050 (HD-082 A) without the for-SKU part: HD-084 fix, supplier.metrics job and performance_report.md done; all p95 under 2 s at 100k Suppliers and 50 users. Next: CI-style suite, PR, review. Open: the for-SKU part and a final rerun after TASK-040; the manual SRE review; whether the list and text search should use an index (schema); the perf:supplier npm script (server/package.json)."
 }

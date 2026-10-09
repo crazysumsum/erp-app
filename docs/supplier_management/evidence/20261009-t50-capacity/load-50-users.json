@@ -1,0 +1,1818 @@
+{
+  "run": "1E9D41",
+  "command": "/Users/sam/Documents/workspace/erp-supplier-t50/server/scripts/benchmarkSupplierManagement.js --database=erp_dev --output /private/tmp/claude-501/-Users-sam-Documents-workspace-erp-app/486c4c60-92de-4122-b0e0-a68866140aa1/scratchpad/perf50-final1.json --users=50 --seconds=120 --warmup-seconds=20 --think-ms=1000",
+  "startedAt": "2026-10-09T09:20:51.773Z",
+  "load": {
+    "users": 50,
+    "seconds": 120,
+    "warmupSeconds": 20,
+    "thinkMs": "uniform 0..1000",
+    "mix": {
+      "list.default": 20,
+      "list.codeExact": 15,
+      "list.nameSearch": 12,
+      "list.statusFilter": 8,
+      "list.currencyFilter": 5,
+      "list.sortByName": 5,
+      "detail": 15,
+      "detail.heavy": 3,
+      "bank.list": 5,
+      "duplicates.check": 4,
+      "create": 4,
+      "update": 4
+    }
+  },
+  "data": {
+    "suppliers": 100000,
+    "active": 79977,
+    "addresses": 515180,
+    "contacts": 1040480,
+    "identifiers": 200000,
+    "bankAccounts": 208096,
+    "nameGrams": 2390701
+  },
+  "environment": {
+    "os": "Darwin 27.0.0 arm64",
+    "cpu": "Apple M5 Pro",
+    "cpus": 15,
+    "totalMemoryGiB": 24,
+    "node": "v26.6.0",
+    "mysql": {
+      "version": "26.7.0",
+      "bufferPoolBytes": 4429185024,
+      "innodbFlushLogAtTrxCommit": 1,
+      "syncBinlog": 1,
+      "maxConnections": 151
+    },
+    "database": {
+      "name": "erp_dev",
+      "host": "127.0.0.1",
+      "port": 3450,
+      "socketPath": null
+    },
+    "appPoolConnectionLimit": 10,
+    "note": "the load generator and the app share one Node process"
+  },
+  "operations": {
+    "list.default": {
+      "count": 2236,
+      "p50": 38.7,
+      "p95": 49.8,
+      "p99": 61.4,
+      "max": 78,
+      "errorRate": 0,
+      "statuses": {
+        "200": 2236
+      }
+    },
+    "list.codeExact": {
+      "count": 1685,
+      "p50": 115.3,
+      "p95": 127.2,
+      "p99": 136,
+      "max": 146.2,
+      "errorRate": 0,
+      "statuses": {
+        "200": 1685
+      }
+    },
+    "list.nameSearch": {
+      "count": 1274,
+      "p50": 105.7,
+      "p95": 120.1,
+      "p99": 130.2,
+      "max": 146.7,
+      "errorRate": 0,
+      "statuses": {
+        "200": 1274
+      }
+    },
+    "list.statusFilter": {
+      "count": 872,
+      "p50": 7.5,
+      "p95": 20.2,
+      "p99": 29,
+      "max": 39.5,
+      "errorRate": 0,
+      "statuses": {
+        "200": 872
+      }
+    },
+    "list.currencyFilter": {
+      "count": 530,
+      "p50": 26.5,
+      "p95": 43.6,
+      "p99": 56.1,
+      "max": 73.1,
+      "errorRate": 0,
+      "statuses": {
+        "200": 530
+      }
+    },
+    "list.sortByName": {
+      "count": 570,
+      "p50": 44,
+      "p95": 57.9,
+      "p99": 66.8,
+      "max": 76.3,
+      "errorRate": 0,
+      "statuses": {
+        "200": 570
+      }
+    },
+    "detail": {
+      "count": 1609,
+      "p50": 5.5,
+      "p95": 17.5,
+      "p99": 26.6,
+      "max": 61.5,
+      "errorRate": 0,
+      "statuses": {
+        "200": 1609
+      }
+    },
+    "detail.heavy": {
+      "count": 330,
+      "p50": 5.9,
+      "p95": 18.1,
+      "p99": 29.3,
+      "max": 50.6,
+      "errorRate": 0,
+      "statuses": {
+        "200": 330
+      }
+    },
+    "bank.list": {
+      "count": 535,
+      "p50": 4.4,
+      "p95": 17.5,
+      "p99": 26.7,
+      "max": 62.4,
+      "errorRate": 0,
+      "statuses": {
+        "200": 535
+      }
+    },
+    "duplicates.check": {
+      "count": 412,
+      "p50": 78.8,
+      "p95": 96.1,
+      "p99": 105.7,
+      "max": 133.5,
+      "errorRate": 0,
+      "statuses": {
+        "200": 412
+      }
+    },
+    "create": {
+      "count": 400,
+      "p50": 30.8,
+      "p95": 78.8,
+      "p99": 85.2,
+      "max": 92.5,
+      "errorRate": 0,
+      "statuses": {
+        "201": 400
+      }
+    },
+    "update": {
+      "count": 440,
+      "p50": 100.1,
+      "p95": 127.2,
+      "p99": 143.3,
+      "max": 165.1,
+      "errorRate": 0,
+      "statuses": {
+        "200": 440
+      }
+    }
+  },
+  "overall": {
+    "count": 10893,
+    "p50": 39.2,
+    "p95": 119.5,
+    "p99": 127.8,
+    "max": 165.1,
+    "errorRate": 0,
+    "throughputPerSecond": 91
+  },
+  "resources": {
+    "processCpuPercent": {
+      "avg": 27,
+      "max": 37
+    },
+    "rssMiB": {
+      "avg": 264,
+      "max": 275
+    },
+    "dbThreadsConnected": {
+      "avg": 11,
+      "max": 11
+    }
+  },
+  "topStatements": [
+    {
+      "digest": "SELECT `s` . `id` , `s` . `supplier_code` , `s` . `supplier_name` , `s` . `display_name` , `s` . `default_currency_code` , `s` . `default_payment_term_id` , `s` . `status` , `s` . `version` , `s` . `updated_at` , ( SELECT `c` . `name` FROM `supplier_contact_purposes` `cp` JOIN `supplier_contacts` `c` ON `c` . `id` = `cp` . `contact_id` AND `c` . `supplier_id` = `cp` . `supplier_id` WHERE `cp` . `s",
+      "count": 3448,
+      "totalMs": 193749.1,
+      "avgMs": 56.19,
+      "maxMs": 72.7,
+      "rowsExaminedPerCall": 100274,
+      "rowsSentPerCall": 9,
+      "noIndexUsed": 3448,
+      "plan": [
+        {
+          "table": "s",
+          "type": "ALL",
+          "key": null,
+          "rows": 99122,
+          "filtered": 37.02,
+          "extra": "Using where; Using filesort"
+        },
+        {
+          "table": "cp",
+          "type": "eq_ref",
+          "key": "uq_supplier_contact_primary",
+          "rows": 1,
+          "filtered": 100,
+          "extra": "Using index"
+        },
+        {
+          "table": "c",
+          "type": "eq_ref",
+          "key": "PRIMARY",
+          "rows": 1,
+          "filtered": 5,
+          "extra": "Using where"
+        }
+      ]
+    },
+    {
+      "digest": "SELECT COUNT ( * ) AS `total` FROM `suppliers` `s` WHERE `s` . `status` != ? AND ( `s` . `supplier_code_key` LIKE ? ESCAPE ? OR `s` . `supplier_name` LIKE ? ESCAPE ? OR `s` . `display_name` LIKE ? ESCAPE ? OR `s` . `general_phone` LIKE ? ESCAPE ? OR `s` . `general_email` LIKE ? ESCAPE ? )",
+      "count": 3447,
+      "totalMs": 170944.5,
+      "avgMs": 49.59,
+      "maxMs": 66.2,
+      "rowsExaminedPerCall": 100279,
+      "rowsSentPerCall": 1,
+      "noIndexUsed": 3448,
+      "plan": [
+        {
+          "table": "s",
+          "type": "ALL",
+          "key": null,
+          "rows": 99122,
+          "filtered": 37.02,
+          "extra": "Using where"
+        }
+      ]
+    },
+    {
+      "digest": "SELECT `s` . `id` , `s` . `supplier_code` , `s` . `supplier_name` , `s` . `supplier_name_key` , COUNT ( * ) AS `common_grams` FROM ( SELECT `supplier_id` FROM `supplier_name_grams` WHERE `gram_hash` IN (...) GROUP BY `supplier_id` ORDER BY COUNT ( * ) DESC , `supplier_id` ASC LIMIT ? ) `c` JOIN `supplier_name_grams` `g` ON `g` . `supplier_id` = `c` . `supplier_id` AND `g` . `gram_hash` IN (...) JO",
+      "count": 1482,
+      "totalMs": 80115,
+      "avgMs": 54.06,
+      "maxMs": 122.6,
+      "rowsExaminedPerCall": 73010,
+      "rowsSentPerCall": 48,
+      "noIndexUsed": 1482,
+      "plan": [
+        {
+          "table": "<derived2>",
+          "type": "ALL",
+          "key": null,
+          "rows": 3000,
+          "filtered": 100,
+          "extra": "Using temporary; Using filesort"
+        },
+        {
+          "table": "s",
+          "type": "eq_ref",
+          "key": "PRIMARY",
+          "rows": 1,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "g",
+          "type": "ref",
+          "key": "PRIMARY",
+          "rows": 16,
+          "filtered": 66.74,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "range",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 458934,
+          "filtered": 100,
+          "extra": "Using where; Using index; Using temporary; Using filesort"
+        }
+      ]
+    },
+    {
+      "digest": "SELECT `s` . `id` , `s` . `supplier_code` , `s` . `supplier_name` , `s` . `display_name` , `s` . `default_currency_code` , `s` . `default_payment_term_id` , `s` . `status` , `s` . `version` , `s` . `updated_at` , ( SELECT `c` . `name` FROM `supplier_contact_purposes` `cp` JOIN `supplier_contacts` `c` ON `c` . `id` = `cp` . `contact_id` AND `c` . `supplier_id` = `cp` . `supplier_id` WHERE `cp` . `s",
+      "count": 2606,
+      "totalMs": 67083.6,
+      "avgMs": 25.74,
+      "maxMs": 33.5,
+      "rowsExaminedPerCall": 100334,
+      "rowsSentPerCall": 20,
+      "noIndexUsed": 2607,
+      "plan": [
+        {
+          "table": "s",
+          "type": "ALL",
+          "key": null,
+          "rows": 99122,
+          "filtered": 83.19,
+          "extra": "Using where; Using filesort"
+        },
+        {
+          "table": "cp",
+          "type": "eq_ref",
+          "key": "uq_supplier_contact_primary",
+          "rows": 1,
+          "filtered": 100,
+          "extra": "Using index"
+        },
+        {
+          "table": "c",
+          "type": "eq_ref",
+          "key": "PRIMARY",
+          "rows": 1,
+          "filtered": 5,
+          "extra": "Using where"
+        }
+      ]
+    },
+    {
+      "digest": "SELECT COUNT ( * ) AS `total` FROM `suppliers` `s` WHERE `s` . `status` != ?",
+      "count": 3281,
+      "totalMs": 26303.1,
+      "avgMs": 8.02,
+      "maxMs": 22.5,
+      "rowsExaminedPerCall": 97350,
+      "rowsSentPerCall": 1,
+      "noIndexUsed": 0,
+      "plan": [
+        {
+          "table": "s",
+          "type": "range",
+          "key": "idx_suppliers_status_updated_id",
+          "rows": 82461,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        }
+      ]
+    },
+    {
+      "digest": "SELECT `s` . `id` , `s` . `supplier_code` , `s` . `supplier_name` , `s` . `display_name` , `s` . `default_currency_code` , `s` . `default_payment_term_id` , `s` . `status` , `s` . `version` , `s` . `updated_at` , ( SELECT `c` . `name` FROM `supplier_contact_purposes` `cp` JOIN `supplier_contacts` `c` ON `c` . `id` = `cp` . `contact_id` AND `c` . `supplier_id` = `cp` . `supplier_id` WHERE `cp` . `s",
+      "count": 676,
+      "totalMs": 20683.5,
+      "avgMs": 30.6,
+      "maxMs": 42.7,
+      "rowsExaminedPerCall": 100345,
+      "rowsSentPerCall": 20,
+      "noIndexUsed": 676,
+      "plan": [
+        {
+          "table": "s",
+          "type": "ALL",
+          "key": null,
+          "rows": 99122,
+          "filtered": 83.19,
+          "extra": "Using where; Using filesort"
+        },
+        {
+          "table": "cp",
+          "type": "eq_ref",
+          "key": "uq_supplier_contact_primary",
+          "rows": 1,
+          "filtered": 100,
+          "extra": "Using index"
+        },
+        {
+          "table": "c",
+          "type": "eq_ref",
+          "key": "PRIMARY",
+          "rows": 1,
+          "filtered": 5,
+          "extra": "Using where"
+        }
+      ]
+    },
+    {
+      "digest": "SELECT `s` . `id` , `s` . `supplier_code` , `s` . `supplier_name` , `s` . `display_name` , `s` . `default_currency_code` , `s` . `default_payment_term_id` , `s` . `status` , `s` . `version` , `s` . `updated_at` , ( SELECT `c` . `name` FROM `supplier_contact_purposes` `cp` JOIN `supplier_contacts` `c` ON `c` . `id` = `cp` . `contact_id` AND `c` . `supplier_id` = `cp` . `supplier_id` WHERE `cp` . `s",
+      "count": 613,
+      "totalMs": 9951,
+      "avgMs": 16.23,
+      "maxMs": 32.4,
+      "rowsExaminedPerCall": 53970,
+      "rowsSentPerCall": 50,
+      "noIndexUsed": 307,
+      "plan": [
+        {
+          "table": "s",
+          "type": "ALL",
+          "key": null,
+          "rows": 99122,
+          "filtered": 27.6,
+          "extra": "Using where; Using filesort"
+        },
+        {
+          "table": "cp",
+          "type": "eq_ref",
+          "key": "uq_supplier_contact_primary",
+          "rows": 1,
+          "filtered": 100,
+          "extra": "Using index"
+        },
+        {
+          "table": "c",
+          "type": "eq_ref",
+          "key": "PRIMARY",
+          "rows": 1,
+          "filtered": 5,
+          "extra": "Using where"
+        }
+      ]
+    },
+    {
+      "digest": "SELECT COUNT ( * ) AS `total` FROM `suppliers` `s` WHERE `s` . `status` = ?",
+      "count": 1023,
+      "totalMs": 2306.8,
+      "avgMs": 2.25,
+      "maxMs": 8.5,
+      "rowsExaminedPerCall": 28441,
+      "rowsSentPerCall": 1,
+      "noIndexUsed": 0,
+      "plan": [
+        {
+          "table": "s",
+          "type": "ref",
+          "key": "idx_suppliers_status_updated_id",
+          "rows": 49561,
+          "filtered": 100,
+          "extra": "Using index"
+        }
+      ]
+    },
+    {
+      "digest": "SELECT ? AS `i` , COUNT ( * ) AS `n` FROM ( SELECT ? FROM `supplier_name_grams` WHERE `gram_hash` = ? LIMIT ? ) `x` UNION ALL SELECT ? AS `i` , COUNT ( * ) AS `n` FROM ( SELECT ? FROM `supplier_name_grams` WHERE `gram_hash` = ? LIMIT ? ) `x` UNION ALL SELECT ? AS `i` , COUNT ( * ) AS `n` FROM ( SELECT ? FROM `supplier_name_grams` WHERE `gram_hash` = ? LIMIT ? ) `x` UNION ALL SELECT ? AS `i` , COUN",
+      "count": 239,
+      "totalMs": 1678.9,
+      "avgMs": 7.02,
+      "maxMs": 9.9,
+      "rowsExaminedPerCall": 60453,
+      "rowsSentPerCall": 40,
+      "noIndexUsed": 239,
+      "plan": [
+        {
+          "table": "<derived2>",
+          "type": "ALL",
+          "key": null,
+          "rows": 478,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 478,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived4>",
+          "type": "ALL",
+          "key": null,
+          "rows": 90,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 90,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived6>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 138332,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived8>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 30132,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived10>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 27240,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived12>",
+          "type": "ALL",
+          "key": null,
+          "rows": 478,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 478,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived14>",
+          "type": "ALL",
+          "key": null,
+          "rows": 478,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 478,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived16>",
+          "type": "ALL",
+          "key": null,
+          "rows": 478,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 478,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived18>",
+          "type": "ALL",
+          "key": null,
+          "rows": 14,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 14,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived20>",
+          "type": "ALL",
+          "key": null,
+          "rows": 48,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 48,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived22>",
+          "type": "ALL",
+          "key": null,
+          "rows": 5,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 5,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived24>",
+          "type": "ALL",
+          "key": null,
+          "rows": 478,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 478,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived26>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 17294,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived28>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 12012,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived30>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 7322,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived32>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 7232,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived34>",
+          "type": "ALL",
+          "key": null,
+          "rows": 478,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 478,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived36>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 13926,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived38>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 24728,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived40>",
+          "type": "ALL",
+          "key": null,
+          "rows": 478,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 478,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived42>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 67814,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived44>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 35760,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived46>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 7156,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived48>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 66366,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived50>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 13412,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived52>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 39064,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived54>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 7300,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived56>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 75178,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived58>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 67788,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived60>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 75476,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived62>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 22704,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived64>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 71048,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived66>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 68688,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived68>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 48296,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived70>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 78806,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived72>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 27472,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived74>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 31612,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived76>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 16648,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived78>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 105206,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived80>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 16110,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        }
+      ]
+    },
+    {
+      "digest": "SELECT COUNT ( * ) AS `total` FROM `suppliers` `s` WHERE `s` . `status` != ? AND `s` . `default_currency_code` = ?",
+      "count": 613,
+      "totalMs": 1650.1,
+      "avgMs": 2.69,
+      "maxMs": 8.9,
+      "rowsExaminedPerCall": 23899,
+      "rowsSentPerCall": 1,
+      "noIndexUsed": 0,
+      "plan": [
+        {
+          "table": "s",
+          "type": "range",
+          "key": "idx_suppliers_currency_status",
+          "rows": 69777,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        }
+      ]
+    },
+    {
+      "digest": "SELECT ? AS `i` , COUNT ( * ) AS `n` FROM ( SELECT ? FROM `supplier_name_grams` WHERE `gram_hash` = ? LIMIT ? ) `x` UNION ALL SELECT ? AS `i` , COUNT ( * ) AS `n` FROM ( SELECT ? FROM `supplier_name_grams` WHERE `gram_hash` = ? LIMIT ? ) `x` UNION ALL SELECT ? AS `i` , COUNT ( * ) AS `n` FROM ( SELECT ? FROM `supplier_name_grams` WHERE `gram_hash` = ? LIMIT ? ) `x` UNION ALL SELECT ? AS `i` , COUN",
+      "count": 201,
+      "totalMs": 1418.9,
+      "avgMs": 7.06,
+      "maxMs": 9.6,
+      "rowsExaminedPerCall": 59379,
+      "rowsSentPerCall": 39,
+      "noIndexUsed": 201,
+      "plan": [
+        {
+          "table": "<derived2>",
+          "type": "ALL",
+          "key": null,
+          "rows": 478,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 478,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived4>",
+          "type": "ALL",
+          "key": null,
+          "rows": 90,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 90,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived6>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 138332,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived8>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 30132,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived10>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 27240,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived12>",
+          "type": "ALL",
+          "key": null,
+          "rows": 478,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 478,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived14>",
+          "type": "ALL",
+          "key": null,
+          "rows": 15,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 15,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived16>",
+          "type": "ALL",
+          "key": null,
+          "rows": 478,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 478,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived18>",
+          "type": "ALL",
+          "key": null,
+          "rows": 478,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 478,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived20>",
+          "type": "ALL",
+          "key": null,
+          "rows": 48,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 48,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived22>",
+          "type": "ALL",
+          "key": null,
+          "rows": 478,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 478,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived24>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 17294,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived26>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 12012,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived28>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 7322,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived30>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 7232,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived32>",
+          "type": "ALL",
+          "key": null,
+          "rows": 478,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 478,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived34>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 13926,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived36>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 24728,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived38>",
+          "type": "ALL",
+          "key": null,
+          "rows": 478,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 478,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived40>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 67814,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived42>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 35760,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived44>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 7156,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived46>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 66366,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived48>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 13412,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived50>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 39064,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived52>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 7300,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived54>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 75178,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived56>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 67788,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived58>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 75476,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived60>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 22704,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived62>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 71048,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived64>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 68688,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived66>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 48296,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived68>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 78806,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived70>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 27472,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived72>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 31612,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived74>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 16648,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived76>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 105206,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        },
+        {
+          "table": "<derived78>",
+          "type": "ALL",
+          "key": null,
+          "rows": 2000,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "supplier_name_grams",
+          "type": "ref",
+          "key": "idx_supplier_name_grams_lookup",
+          "rows": 16110,
+          "filtered": 100,
+          "extra": "Using where; Using index"
+        }
+      ]
+    },
+    {
+      "digest": "SELECT DISTINCTROW `p` . `name` FROM `permissions` `p` JOIN `role_permissions` `rp` ON `rp` . `permission_id` = `p` . `id` JOIN `user_roles` `ur` ON `ur` . `role_id` = `rp` . `role_id` WHERE `ur` . `user_id` = ? ORDER BY `p` . `name`",
+      "count": 13770,
+      "totalMs": 1037.6,
+      "avgMs": 0.08,
+      "maxMs": 0.4,
+      "rowsExaminedPerCall": 10,
+      "rowsSentPerCall": 3,
+      "noIndexUsed": 0,
+      "plan": [
+        {
+          "table": "ur",
+          "type": "ref",
+          "key": "PRIMARY",
+          "rows": 1,
+          "filtered": 100,
+          "extra": "Using index; Using temporary; Using filesort"
+        },
+        {
+          "table": "rp",
+          "type": "ref",
+          "key": "PRIMARY",
+          "rows": 20,
+          "filtered": 100,
+          "extra": "Using index"
+        },
+        {
+          "table": "p",
+          "type": "eq_ref",
+          "key": "PRIMARY",
+          "rows": 1,
+          "filtered": 100,
+          "extra": null
+        }
+      ]
+    }
+  ],
+  "nfr001": {
+    "limitP95Ms": 2000,
+    "maxErrorRate": 0.01,
+    "failing": [],
+    "pass": true
+  },
+  "ok": true,
+  "cleanup": {
+    "createdSuppliers": 478
+  },
+  "finishedAt": "2026-10-09T09:23:13.738Z"
+}

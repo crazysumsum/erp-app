@@ -789,6 +789,9 @@ Notes:
 - **Out of T49's scope (HD-075):** UI create and update still run the similar-name search. Its cost grows with the
   Supplier count (about 87,000 rows examined per call at about 20,000 similar names), so it is worth a separate task before
   the Supplier master gets large.
+  **Done in T50 (HD-084 A):** at 100,000 Suppliers the search read about 2.25 million rows per call inside the write
+  transaction, under the currency row's X lock, and every operation failed NFR-001. It now runs before the transaction
+  and through the rarest grams, with at most 3,000 candidates; see `performance_report.md`.
 
 ## Mutation record for TASK-049
 
@@ -847,3 +850,16 @@ The after-run check, the cleanup, the supplier-only job set and the split `try` 
 The full server suite, run the CI way, had one failure in an unchanged file (`TASK-044: a manager whose permission was
 withdrawn…`: its upload did not return a job, and the test took 1,030 ms instead of about 26 ms). The file passed in a
 rerun on its own, and CI on PR #192 passed the full suite. The cause is not known.
+
+## Mutation record for TASK-050
+
+The harness runs every test file in full, as CI does. There are 20 mutants of the HD-084 search and the HD-083 metrics.
+After three tests were added (the update's candidates without itself, and approved requests not counted), 18 are killed.
+
+| Not killed | Why |
+| --- | --- |
+| The rarest-gram ordering reversed | Any choice of grams gives the same result; only the cost changes. The 50-user benchmark measures the cost (`performance_report.md`). |
+| The gram query's `excludeSupplierId` exclusion ignored | No caller has passed `excludeSupplierId` since HD-052. The parameter is older than T50 and was left as it is. |
+
+The full server suite, run the CI way on a freshly migrated database, passed after the service-discovery list gained
+`job.supplierMetrics`: 2,840 tests, coverage floors met.
