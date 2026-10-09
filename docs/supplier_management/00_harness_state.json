@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 297,
+  "revision": 298,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -1911,6 +1911,18 @@
       "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
       "source_ref": "docs/supplier_management/implementation/84_rev_081_independent_review.md",
       "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-082",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-049 REV-081 remediation)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing a8f2390889014243d2368a1e1bde88b16ada1d60 (PR #192), scope 3b0ea45..a8f2390 (HD-079 a)",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/85_rev_082_independent_review.md",
+      "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
@@ -5847,5 +5859,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-049: HD-079 follow-ups done (IPC-tied benchmark worker, interrupt-safe main flow, full-file mutants 22/22, evidence regenerated). Run REV-082, a last independent review limited to the HD-079 changes (HD-079 a). Merge only on the Product Owner's word."
+  "next_safe_action": "TASK-049: REV-082 APPROVED (one Low: TASK-044 test flake from the request limiter). Ask the Product Owner (HD-080) whether to fix the flake and doc wording before merging. Merge only on the Product Owner's word."
 }
