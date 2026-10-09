@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "item-management",
-  "revision": 82,
+  "revision": 83,
   "mode": "REVIEW_AND_ALIGN",
   "active_mode": "REVIEW_AND_ALIGN",
   "status": "BLOCKED",
@@ -11,7 +11,7 @@
   "baseline": {
     "design": "59ee6cb3664ae1742e41b218ffd3bf223e396eb44a4aa24d82028ebb9cf7c16d",
     "plan": "9084e8e3435a3759f1e0445ee005ae41c3403fc7338242572fe8de1be39eff50",
-    "code_commit": "394fc3fb11b6dce0bf4c41288904a8fac6d3fa49",
+    "code_commit": "7f2485c2b81facfa794143f140c52c34dec35b8b",
     "source_fingerprint": "665fba6b82e8e23f4fdc03355edd346555339194e699556490f00da8268a5dc6",
     "worktree": "/private/tmp/erp-item-supplier-reference-alignment",
     "default_commit": "394fc3fb11b6dce0bf4c41288904a8fac6d3fa49",
@@ -1501,16 +1501,16 @@
       "kind": "GIT_PUSH",
       "target": "origin/codex/item-supplier-reference-alignment",
       "idempotency_key": "item-supplier-handoff-push-20261009",
-      "status": "PLANNED",
-      "source_ref": "Sam authorized continued Item work; REV-018 approved the documentation-only handoff. Push reviewed committed slice, no force push."
+      "status": "CONFIRMED",
+      "source_ref": "Observed git push 2026-10-09: origin/codex/item-supplier-reference-alignment created at 7f2485c2b81facfa794143f140c52c34dec35b8b; no force push. Final metadata candidate is observed through PR #196."
     },
     {
       "id": "ITEM-HANDOFF-PR-94",
       "kind": "PR_CREATE",
       "target": "crazysumsum/erp-app: codex/item-supplier-reference-alignment -> main",
       "idempotency_key": "item-supplier-handoff-pr-20261009",
-      "status": "PLANNED",
-      "source_ref": "Observed gh pr list on 2026-10-09: no existing PR for this branch. Create after push, and attach actual PR."
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/196 created and attached 2026-10-09. GitHub connector create returned 403 without creating a PR; gh CLI rechecked absence then created it. PR OPEN, base 394fc3f, head 7f2485c; CI running, no PASS or merge claimed."
     },
     {
       "id": "ITEM-HANDOFF-MERGE-95",
@@ -1687,5 +1687,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "REV-018 approved this documentation slice. Inspect the topic branch/PR before replaying planned external actions, integrate the Item-owned handoff after current repository gates, then safely clean its worktree/branches. Supplier refreshes its consumed pin and obtains schema approval for TASK-038. Implement TASK-043 against installed Inventory/Sales next; its Supplier branch awaits TASK-038. Current technical/UAT evidence remains outstanding; September acceptance and recovery owner waiver are historical."
+  "next_safe_action": "Inspect PR #196 actual head/checks/merge state before replaying planned actions; merge the approved documentation slice after repository gates and safely clean the worktree/branches after observed merge. Supplier refreshes its consumed pin to 5a44ef30d5b3fab23d5f780005a0fd90ff70d4be56a31a48e69a5bf028a011a9 and obtains schema approval for TASK-038. Implement TASK-043 against installed Inventory/Sales next; Supplier branch awaits TASK-038. Current technical/UAT acceptance remains outstanding; historical September evidence is not rebound."
 }

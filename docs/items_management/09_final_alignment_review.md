@@ -16,6 +16,10 @@ Validation: traceability with approval consistency passes; deterministic matrix 
 
 Sam's active-task “好，請推進工作” accepts the preceding recommendation: Supplier owns `supplier_sku_refs`; Item exposes its existing read contract, preserves stable UOM mappings and schedules reference protection under TASK-043. Manual create/rebind targets must be Active, purchasable and effective; retained relations survive deactivation/archive without granting new purchasing eligibility. Completed-GR historical projection follows the already authoritative Supplier §6.8, not a new purchase authorization. This decision is bound to DESIGN `59ee6cb3664ae1742e41b218ffd3bf223e396eb44a4aa24d82028ebb9cf7c16d` at base `394fc3fb11b6dce0bf4c41288904a8fac6d3fa49`, for this documentation handoff only; it is not formal test/business acceptance or Supplier schema approval.
 
+### Integration observation
+
+Documentation PR [#196](https://github.com/crazysumsum/erp-app/pull/196) was created and attached using the authenticated GitHub CLI after the GitHub connector returned a create-permission 403. At recording time it is OPEN with CI running; merge/cleanup are planned, not yet claimed. The actual final candidate and merge result must be observed in GitHub before continuing. Supplier's replacement Item provider pin is `5a44ef30d5b3fab23d5f780005a0fd90ff70d4be56a31a48e69a5bf028a011a9`.
+
 The earlier sections below record historical alignment states and are not current execution evidence.
 
 ## Outcome
