@@ -1,20 +1,20 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 301,
+  "revision": 302,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-004",
-  "current_task": "TASK-049",
+  "current_task": "TASK-050",
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
     "code_commit": "5b8aa9bbcf5217ab3a30f722ff241d167fa402f6",
     "source_fingerprint": "cd70f899bfaca539353988b320210dd24b2c3b8958b249224ad8dd55f701dc97",
-    "worktree": "/Users/sam/Documents/workspace/erp-supplier-hd081",
-    "default_commit": "9e9b0ff9ad87846a32036fc86138a834bdb5c82a",
+    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t50",
+    "default_commit": "394fc3fb11b6dce0bf4c41288904a8fac6d3fa49",
     "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
   },
   "runtime": {
@@ -77,7 +77,7 @@
     "TASK-047": "DONE",
     "TASK-048": "DONE",
     "TASK-049": "DONE",
-    "TASK-050": "PENDING",
+    "TASK-050": "IN_PROGRESS",
     "TASK-051": "PENDING"
   },
   "approvals": [
@@ -4808,6 +4808,19 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-09: 'B，充分描述一下要item management 模塊負責人做咩'. Handoff written in docs/supplier_management/item_handoff_supplier_sku_refs.md."
+    },
+    {
+      "id": "HD-082",
+      "impact": "MAJOR",
+      "question": "While Supplier waits on the Item owner (HD-081 B), may work start out of plan order? (A) run TASK-050 now without its for-SKU part (100k dataset, list/search/detail p95, 50-user CRUD, EXPLAIN, metrics/logs/alerts, capacity report), adding the for-SKU part and a final rerun after TASK-040; (B) HD-057's similar-name exception list for legacy data; not now: the Item pin refresh (do it once after the Item change), TASK-038 code, the T51 release work.",
+      "affected_ids": [
+        "TASK-050",
+        "TASK-040",
+        "TASK-051",
+        "HD-057"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-09: '先做A的工作'. TASK-050 runs now without the for-SKU part (NFR-005, the for-SKU p95 and its metrics); its dependency on TASK-040 applies to that part and to the final rerun only."
     }
   ],
   "external_actions": [
@@ -5884,5 +5897,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Waiting on the Item module owner (HD-081 B): see docs/supplier_management/item_handoff_supplier_sku_refs.md. TASK-038 stays blocked until Item design §5.14 is aligned to supplier_sku_refs and merged; TASK-039, TASK-040, TASK-050 and TASK-051 wait on it. When it lands: refresh the Supplier pin on item-sku-uom-provider (already stale: pinned 5c193e20, Item now a058ede4; needs Product Owner approval), then explain the supplier_sku_refs and supplier_supply_events schema in chat and wait for sign-off before writing migrations. Open carry-forward: HD-057 (T51)."
+  "next_safe_action": "TASK-050 (HD-082 A), without the for-SKU part: seed a 100k dataset on a throwaway MySQL, benchmark list/search/detail and 50-user CRUD over HTTP, EXPLAIN, observability, capacity report. TASK-038 still waits on the Item owner (HD-081 B)."
 }
