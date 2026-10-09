@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 300,
+  "revision": 301,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -13,8 +13,8 @@
     "plan": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
     "code_commit": "5b8aa9bbcf5217ab3a30f722ff241d167fa402f6",
     "source_fingerprint": "cd70f899bfaca539353988b320210dd24b2c3b8958b249224ad8dd55f701dc97",
-    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t49-close",
-    "default_commit": "3b493095b9a979c3157c1f4fedf5b37944cdfcfb",
+    "worktree": "/Users/sam/Documents/workspace/erp-supplier-hd081",
+    "default_commit": "9e9b0ff9ad87846a32036fc86138a834bdb5c82a",
     "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
   },
   "runtime": {
@@ -4794,6 +4794,20 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-09: 'A，CI過就merge'."
+    },
+    {
+      "id": "HD-081",
+      "impact": "MAJOR",
+      "question": "After TASK-049 no Supplier task is ready: T50 needs T40, T40 and T39 need T38, and T38 is blocked until Item design §5.14's provisional item_supplier_refs is aligned to the Supplier-owned supplier_sku_refs through an approved cross-module documentation change (Supplier design §5.11). Item SKU/UOM tables and ItemLookupService already exist. (A) the Supplier agent opens that cross-module doc PR; (B) wait for the Item module owner to make it; (C) reorder and run T50 without the for-SKU part.",
+      "affected_ids": [
+        "TASK-038",
+        "TASK-039",
+        "TASK-040",
+        "TASK-050",
+        "TASK-051"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-09: 'B，充分描述一下要item management 模塊負責人做咩'. Handoff written in docs/supplier_management/item_handoff_supplier_sku_refs.md."
     }
   ],
   "external_actions": [
@@ -5870,5 +5884,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-049 is DONE (PR #192 merged at 3b49309 on the Product Owner's word (HD-080), after CI was green on head 7e218e5 and main was unchanged). NFR-004 passes at 10,000 rows (58 s; 68 s with a mid-run SIGKILL), with evidence in evidence/20261008-t49-capacity/. Reviews: REV-078 to REV-081 CHANGES_REQUESTED, REV-082 APPROVED. PHASE-004 continues; re-derive the next ready task (TASK-050 or TASK-051) from 08_traceability.json against this ledger before starting. Open carry-forward: HD-057 (T51). Optional follow-up noted during T49: the UI similar-name search cost grows with the Supplier count."
+  "next_safe_action": "Waiting on the Item module owner (HD-081 B): see docs/supplier_management/item_handoff_supplier_sku_refs.md. TASK-038 stays blocked until Item design §5.14 is aligned to supplier_sku_refs and merged; TASK-039, TASK-040, TASK-050 and TASK-051 wait on it. When it lands: refresh the Supplier pin on item-sku-uom-provider (already stale: pinned 5c193e20, Item now a058ede4; needs Product Owner approval), then explain the supplier_sku_refs and supplier_supply_events schema in chat and wait for sign-off before writing migrations. Open carry-forward: HD-057 (T51)."
 }
