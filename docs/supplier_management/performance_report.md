@@ -15,7 +15,7 @@ Evidence: `evidence/20261009-t50-capacity/`.
 | NFR-003: 100,000 Suppliers | **Pass** at 100,000 Suppliers with 1% at the per-Supplier upper bound. |
 | NFR-004 with online load (design §11.5) | **Pass.** A 10,000-row import took 69 s, entirely inside a 120 s measured window with 50 users; the slowest online p95 was 136 ms. |
 | NFR-005: for-SKU lookup | **Not run** (waits on TASK-040). |
-| EXPLAIN shows the designed indexes (T50 AC 1) | **Met for every sort and filter after HD-088,** and for detail, children, counts and the similar-name search. **Not met for the text search,** by decision: a full-text index was measured slower and changes results (see "List and search indexes"). |
+| EXPLAIN shows the designed indexes (T50 AC 1) | **Met for the default list, every filter and the name and Code sorts after HD-088,** and for detail, children, counts and the similar-name search. Sort by status is not indexed (about 20 ms). **Not met for the text search,** by decision: a full-text index was measured slower and changes results (see "List and search indexes"). |
 | Metrics, logs and alerts (T50 AC 2, design §12.4) | **Done** for approvals and imports; the other signals already have log events (see "Observability"). |
 | Manual SRE review | **Open.** Operations needs to review the alerts, the query plans and this report. |
 
@@ -92,7 +92,7 @@ node scripts/measureSupplierDuplicateRecall.js --database=<DB_NAME> --output <re
 
 - **Throughput:** 92 requests a second, with no errors.
 - **Resources:** Node CPU 28% on average and 35% at peak, RSS 252 to 266 MiB, 11 DB connections.
-- **The same run before the list indexes** (`load-50-users-before-list-indexes.json`): default list 48 ms, sort by name 53 ms and currency filter 41 ms at p95. Overall p95 was 115 ms; the overall figure is dominated by the text searches, which the indexes do not change.
+- **The same run before the list indexes** (`load-50-users-before-list-indexes.json`): default list 48 ms, sort by name 53 ms and currency filter 41 ms at p95. Overall p95 was 115 ms. The overall figure is dominated by the text searches, which stay within run-to-run noise: REV-084 ran four alternating benchmarks and saw overall p95 range from 124 to 272 ms, while the list gains repeated every time.
 - **During an import (`load-50-users-during-import.json`, `import-10000-rows-during-load.json`):**
   - Same settings (120 s measured after 20 s of warm-up), before the HD-088 list indexes. The import started 1 s into the measured window and finished 74 s into it.
   - Overall p95 was 127 ms; the slowest operation was the exact Code search at 136 ms.
@@ -119,9 +119,10 @@ node scripts/measureSupplierDuplicateRecall.js --database=<DB_NAME> --output <re
     | Search | Recall | Missed | p50 ms | p95 ms |
     | --- | --- | --- | --- | --- |
     | With the 3,000 cap (the product) | 97.74% | 24 | 69 | 86 |
-    | Without the cap (the same results as the old search) | 98.40% | 17 | 773 | 889 |
+    | Without the cap (the same results as the old search with M-1 fixed) | 98.40% | 17 | 773 | 889 |
 
-  - **The gap is not noise.** It is 0.66 points, and it is deterministic: names whose rare grams are all common, where more than 3,000 Suppliers match more of them than a true match does.
+  - **The gap is not noise.** On this seed it is 0.66 points, and it is deterministic: names whose rare grams are all common, where more than 3,000 Suppliers match more of them than a true match does.
+  - **It depends on the data:** across three 100k seeds (REV-083's, this one, REV-084's) the gap was 0.64 to 1.12 points. HD-087 kept the cap on the 0.66 figure; REV-084 showed it can be about twice that.
   - Without the cap the search misses some names too, through its top-50 limit, as the old search did. REV-083 measured 98.31% against 98.95% on its own seed. HD-084 was decided on "within noise", and HD-087 confirmed the cap with these figures.
   - Similar names are warnings only and never block a save.
 - **Tests:**
@@ -150,7 +151,7 @@ Counts cover the measured window only (digests read at its start and end). The t
 
 ## List and search indexes (HD-088)
 
-Measured on the 100k data, one query at a time (`EXPLAIN ANALYZE`):
+Measured on the 100k data, one query at a time (`EXPLAIN ANALYZE`). These are ad-hoc measurements, not committed scripts; REV-084 reproduced the same order of magnitude with the app's own `supplierListQuery`.
 
 | Query | Before | After |
 | --- | --- | --- |
@@ -160,14 +161,20 @@ Measured on the 100k data, one query at a time (`EXPLAIN ANALYZE`):
 | Default list, page 101 (offset 2,000) | sorts the whole table | 2.1 ms |
 | Sort by Code | already `uq_suppliers_code_key` | unchanged |
 
-- **Migration `0080_add_supplier_list_indexes.js`:** adds `idx_suppliers_updated_id (updated_at, id)` and `idx_suppliers_name_id (supplier_name, id)` online (`ALGORITHM=INPLACE, LOCK=NONE`). A rerun keeps them, and a same-named index on other columns is refused (integration test).
+- **Migration `0080_add_supplier_list_indexes.js`:** adds `idx_suppliers_updated_id (updated_at, id)` and `idx_suppliers_name_id (supplier_name, id)` with `ALGORITHM=INPLACE, LOCK=NONE`.
+  - On 100k rows REV-084 measured 217 ms for both, with concurrent writes unaffected.
+  - The build itself needs no lock, but its start and end need the table's metadata lock. An unfinished transaction on `suppliers` makes the ALTER wait, and every Supplier query then queues behind it (REV-084 L-3).
+  - So the migration waits at most 10 s (`lock_wait_timeout`), then fails with a message to finish the long transaction and rerun.
+  - A rerun keeps the indexes, and a same-named index on other columns is refused. The check compares column names only, so a UNIQUE, prefix, DESC or INVISIBLE index of the same name would be accepted.
+  - All of this is covered by integration tests.
 - **Sort by status:** not indexed (about 20 ms). It would need `(status, id)`, or a change to the order within a status. It is rarely used, so it was left as it is.
-- **Text search stays a scan, by decision (HD-088).** A `FULLTEXT ... WITH PARSER ngram` index (stopwords off) was built and compared with today's `LIKE '%term%'` on 18 terms:
+- **Text search stays a scan, by decision (HD-088).** A `FULLTEXT ... WITH PARSER ngram` index (stopwords off) was built and compared with today's `LIKE '%term%'` on 18 terms. This was an ad-hoc run, not a committed script; REV-084 reproduced the conclusions with somewhat different numbers:
   - It was faster only for selective terms (`Pacific` 17 ms against 56 ms) and slower for common ones (`有限公司` 70 to 97 ms against 43 ms). Wrapped with the Code prefix search (`IN … UNION`), it took 180 to 460 ms.
   - It changes results: no match for one character, phone numbers or e-mail addresses, and `co.,` matched 96,980 rows instead of 8,529.
   - Keeping `LIKE` for phone and e-mail makes the query `FULLTEXT OR LIKE`, which scans the table anyway.
   - Text search p95 is 129 to 138 ms, more than 14 times under 2 s.
 - **No regression:** with the two new indexes present, a search page still uses the table scan (the `CASE` in its `ORDER BY` keeps the optimizer off them), at the same 48 to 61 ms.
+- **A plan flip, seen once by REV-084:** a rare payment-term filter whose rows were all old was planned as a reverse scan of `idx_suppliers_updated_id`, reading 99,990 rows (82.6 ms) instead of 30. It did not recur, and at 100k rows it is bounded at about 80 ms.
 
 ## Observability (design §12.4; HD-083 A)
 

@@ -148,15 +148,24 @@ integrationTest("TASK-050 (REV-083 M-1, D11): a name exactly at the threshold is
   assert.ok(!short.includes(superset), "sharing every gram is not enough when the other name is much longer");
 });
 
-integrationTest("TASK-050 (REV-083 L-1): when the candidate cap bites, the name matching the most rare grams is kept", async (t) => {
+integrationTest("TASK-050 (REV-083 L-1, REV-084 L-1): the cap keeps the name matching the most rare grams and drops the rest", async (t) => {
   const connection = await mysql.createConnection(config());
   const query = "kqxzvjwp";
   const grams = Array.from({ length: query.length - 1 }, (_, index) => query.slice(index, index + 2));
-  // 目標包含查詢全部 7 個 gram（Dice 14/15）；每個 gram 另有 3 個名稱各只含佢一個，令所有 gram 都唔再罕見。
+  // 每個 gram 另有 3 個名稱各只含佢一個，令所有 gram 都唔再罕見。
   const noise = grams.flatMap((gram) => [1, 2, 3].map((n) => `${gram}-${n}${n}`));
-  const [target] = await seedNames(connection, t, [`${query}m`, ...noise]);
+  // 兩個都夠分：`aqxzvjwp` 缺咗 kq（Dice 12/14），`kqxzvjwpm` 七個都有（Dice 14/15）。kq 最罕見，所以兩個最罕見嘅 gram
+  // 係 kq 同 qx：完整嗰個命中 2 個，另一個命中 1 個，同雜訊一樣。完整嗰個最後先插入（id 最大），所以只係靠 id
+  // 排序一定揀錯。
+  const ids = await seedNames(connection, t, [...noise, "aqxzvjwp", `${query}m`]);
+  const [partial, full] = ids.slice(-2);
   t.after(() => connection.end()); // 喺清理之後先關（after hook 按登記次序行）
-  const capped = new SupplierDuplicateCandidates({ candidateCap: 5 });
-  assert.ok((await capped.find(connection, { nameKey: query })).some((row) => row.supplierId === target));
+  const found = async (candidateCap) => (await new SupplierDuplicateCandidates({ candidateCap }).find(connection, { nameKey: query }))
+    .map((row) => row.supplierId);
+  assert.ok((await found(5)).includes(full), "a cap of 5 keeps the name with the most rare-gram hits");
+  const one = await found(1);
+  assert.ok(one.includes(full) && !one.includes(partial), "a cap of 1 drops the other qualifying name: the cap really applies");
+  const uncapped = await found(3_000);
+  assert.ok(uncapped.includes(full) && uncapped.includes(partial), "control: without the cap biting both are found");
   assert.throws(() => new SupplierDuplicateCandidates({ candidateCap: 0 }), TypeError);
 });

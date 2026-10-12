@@ -165,6 +165,8 @@ try {
   const measureFrom = startedAt + WARMUP_SECONDS * 1000;
   const endAt = measureFrom + SECONDS * 1000;
   const digestsAtStart = sleep(WARMUP_SECONDS * 1000).then(readDigests);
+  // 等到量度完先 await：先掛個 handler，讀唔到都唔好令 process 即刻死、跳過清理（REV-084 L-2）。下面 await 時照樣拋。
+  digestsAtStart.catch(() => {});
   const resources = { cpuPercent: [], rssMiB: [], dbThreadsConnected: [] };
   let lastCpu = process.cpuUsage();
   let lastAt = performance.now();
@@ -218,7 +220,7 @@ try {
   const stats = (values) => ({ avg: values.length ? Math.round(values.reduce((a, b) => a + b, 0) / values.length) : null, max: values.length ? Math.max(...values) : null });
   report.resources = { processCpuPercent: stats(resources.cpuPercent), rssMiB: stats(resources.rssMiB), dbThreadsConnected: stats(resources.dbThreadsConnected) };
 
-  // 量度期間最多時間嘅 SQL（只計呢個 schema），連 EXPLAIN。maxMs 係累計最大值，可能包括暖身。
+  // 量度期間最多時間嘅 SQL（只計呢個 schema），連 EXPLAIN。maxMs 係 server 上次清空 digest 以嚟嘅最大值，可能包括之前嘅 run。
   const before = await digestsAtStart;
   const digests = [...(await readDigests()).values()].map((row) => {
     const start = before.get(row.id);

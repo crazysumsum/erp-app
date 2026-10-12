@@ -866,6 +866,13 @@ The full server suite, run the CI way on a freshly migrated database, passed aft
 
 After REV-083 (HD-087) the list is 24 mutants, and 23 are killed. Five were added: the epsilon removed (M-1), candidates
 ranked by the fewest rare grams, the Dice filter removed, `uploaded` dropped from the waiting jobs, and `stalledMs`
-ignored. The cap became a constructor option, so "cap tiny" is now tested through the ranking test. The survivor is the
+ignored. The cap became a constructor option. The line first written here, that "cap tiny" was now tested through the ranking
+test, was wrong (REV-084 L-1): the target was seeded first, so ranking by id alone passed, and the cap never cut anything.
+The test now seeds the target last, checks that `candidateCap: 1` drops a second qualifying name, and kills both
+"rank by id" and "constant cap". The survivor is the
 reversed rarest-gram order, which changes only the cost. The `excludeSupplierId` mutant was dropped: that parameter has no
 caller.
+
+After REV-084 (HD-089): the list-index and lock-wait tests close their connections in `finally`, so a failing migration
+fails the test instead of hanging it. Killed: "no skip when the index exists" (it used to hang) and "lock wait not set"
+(fails after 10 s).

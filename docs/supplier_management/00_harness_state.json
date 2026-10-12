@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 307,
+  "revision": 308,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -4891,6 +4891,19 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-12: '批准'."
+    },
+    {
+      "id": "HD-089",
+      "impact": "MINOR",
+      "question": "REV-084 APPROVED PR #197 with five Low findings: L-1 the cap-ranking test proves neither cap nor ranking; L-2 a failed digest read crashes the benchmark before cleanup; L-3 migration 0080 waits on the suppliers metadata lock for the server's lock_wait_timeout (one year) behind an open transaction; L-4 the list-index test hangs when the migration throws; L-5 the cap's recall cost is 0.64-1.12 points across seeds, not 0.66. (A) fix all five in #197; (B) fix L-2, L-3, L-4 only. Then re-review or merge when CI passes.",
+      "affected_ids": [
+        "TASK-050",
+        "REV-084",
+        "HD-087",
+        "HD-088"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-12: 'A，唔使再 review，CI 過就 merge'."
     }
   ],
   "external_actions": [
@@ -5967,5 +5980,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-050: REV-084 APPROVED with five Low findings (cap test, benchmark unhandled rejection, migration lock wait, list-index test hang, recall range). Ask the Product Owner (HD-089). CI on 1a9b1e3 pending."
+  "next_safe_action": "TASK-050 (without for-SKU): HD-089 fixes pushed to PR #197. Merge when CI is green on the head and main is unchanged (HD-089: no further review). Then: pin refresh PR (HD-085), TASK-038 PR (migration 0081, HD-086)."
 }

@@ -101,4 +101,15 @@
 - **After this review:** CI on `de030eb` failed in `supplierCoreMigrations.integration.test.js`, which asserts the full index list of `suppliers`.
   - The test was updated for the two 0080 indexes in `1a9b1e3`.
   - The author's own CI-style full run had been done before HD-088 and was not repeated after it.
-- **The findings** were taken to the Product Owner as HD-089.
+- **The findings** were taken to the Product Owner as HD-089. The answer: 'A，唔使再 review，CI 過就 merge'.
+- **Fixes:**
+  - **L-1:** the target is seeded last, and `candidateCap: 1` must drop a second qualifying name. "Rank by id" and "constant cap" are now killed.
+  - **L-2:** the start-of-window digest read gets a handler at once, so a failure reaches the `catch` and the cleanup still runs.
+  - **L-3:** the migration sets `lock_wait_timeout` (10 s by default), restores the previous value, and turns a timeout into a message telling the operator to finish the long transaction and rerun.
+    - A test holds an open transaction, and checks that the migration gives up after 1 s and that a rerun then succeeds.
+    - The mutant without the lock wait fails in 10 s.
+  - **L-4:** the connections are closed in `finally`. The "no skip" mutant fails instead of hanging.
+  - **L-5 and Info:** the report gives the 0.64 to 1.12-point range and says "within run-to-run noise". It also notes the sort-by-status exception, "the old search with M-1 fixed", the ad-hoc status of the FULLTEXT and EXPLAIN measurements, the plan flip, and that the migration's check compares names only.
+- **Not changed:**
+  - `threshold` validation: no caller passes a threshold.
+  - The `performance_schema` digest-table capacity: none are lost today.
