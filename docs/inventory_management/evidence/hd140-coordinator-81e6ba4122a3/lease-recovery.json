@@ -1,0 +1,17 @@
+{
+  "kind": "COORDINATOR_RECOVERY_NOT_PRODUCT_TEST",
+  "actual_browser_report": "evidence/20261012T005454-002d28c13da3/run.json",
+  "actual_browser_result": "PASS_16_ZERO_SKIP",
+  "controller_error": "OSError: [Errno 48] Address already in use",
+  "source": "3cdc51c462840f24f5a221218a928e795600de865f35042f2a087622cee9679e",
+  "plan": "c145c025eae94a1570d1bd05a872da53335b931f9ea0f695595d02ddef258908",
+  "runtime": "erp-inventory-p3-hd140-q3ss_zm7",
+  "resources": "Original owned instances verified removed; retired ID stays retired.",
+  "self_check": {
+    "ephemeral_port": 51618,
+    "default_bind_reproduces_EADDRINUSE": true,
+    "SO_REUSEADDR_bind_after_TIME_WAIT": true,
+    "active_listener_sharing_still_refused": true
+  },
+  "correction": "Only temporary lease helper SO_REUSEADDR, never SO_REUSEPORT; register actual suite result before reacquiring lease. No product/profile/argv/assertion/timeout/gate change. Fresh runtime checks required; no old report/runtime relabelling."
+}

@@ -1,0 +1,69 @@
+{
+  "schema_version": "2.0",
+  "module_id": "inventory-management",
+  "run_id": "task029-inventory-p3-browser-487a570703",
+  "suite_id": "inventory-p3-browser",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "41949846cafde277c6887a7b572e0b3f945425d9a16f1b96517d99ca1674617c",
+  "source_fingerprint": "bb1b93d6ada72a42874eacc36b258f6c8d6042c34d955f9ff9f96cccdc8a0215",
+  "code_commit": "869ac07abdd3879254c351d857be911d71e68b6b",
+  "started_at": "2026-10-07T00:53:07.168917+00:00",
+  "ended_at": "2026-10-07T00:53:28.444180+00:00",
+  "environment_id": "inventory-isolated-test",
+  "runtime_instance_id": "erp_inventory_p3_32d8fadf409c",
+  "data_reference": "Synthetic Inventory fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "npx",
+    "--no-install",
+    "playwright",
+    "test",
+    "--config",
+    "client/e2e/inventory-management/playwright.config.js",
+    "inventory-warehouse-operations.spec.js"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "f246e001ebb8bc5193c8866662eab10aa3d84af4ee52a10ff77545a4c5b4f51a",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 8,
+    "passed": 8,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/task029-inventory-p3-browser-487a570703/stdout.log",
+      "sha256": "03ab778dba377ffa2020afb7d40324a7ae7413bd366fe33d0278c4febca10b5d",
+      "bytes": 1547
+    },
+    {
+      "path": "evidence/task029-inventory-p3-browser-487a570703/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/task029-inventory-p3-browser-487a570703/inventory-p3-browser.xml",
+      "sha256": "331c7ac436629f92c2d80cc6b11976163f845b1956f293d56b5f13cf95fd41e2",
+      "bytes": 1721
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "DEVELOPER TASK029 real-API Playwright only; not full-P3, independent review, formal acceptance or CI. Capacity4 remains NOT_EXECUTED."
+  ]
+}

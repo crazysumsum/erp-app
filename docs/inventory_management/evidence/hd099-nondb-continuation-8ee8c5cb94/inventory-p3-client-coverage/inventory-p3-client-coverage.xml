@@ -1,0 +1,2055 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="691" failures="0" errors="0" time="13.121176458">
+    <testsuite name="test/appShellSmoke.test.js" timestamp="2026-10-06T05:56:22.753Z" hostname="samMacBook-Pro.local" tests="1" failures="0" errors="0" skipped="0" time="0.038624583">
+        <testcase classname="test/appShellSmoke.test.js" name="client toolchain &gt; mounts the app with vue-router registered and renders the routed component" time="0.033922792">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/business-master/pages.test.js" timestamp="2026-10-06T05:56:22.753Z" hostname="samMacBook-Pro.local" tests="7" failures="0" errors="0" skipped="0" time="0.151954291">
+        <testcase classname="test/business-master/pages.test.js" name="TC-016 Business Master pages &gt; 兩頁掛在 system menu，查閱與管理權限分離" time="0.002297375">
+        </testcase>
+        <testcase classname="test/business-master/pages.test.js" name="TC-016 Business Master pages &gt; Currency server table 顯示 code、精度及文字狀態，view-only 不顯示管理動作" time="0.053612417">
+        </testcase>
+        <testcase classname="test/business-master/pages.test.js" name="TC-016 Business Master pages &gt; Payment Term 顯示規則；due date preview 不受本機時區影響" time="0.021983208">
+        </testcase>
+        <testcase classname="test/business-master/pages.test.js" name="TC-016 Business Master pages &gt; 高影響對話框顯示每個 consumer 計數，unknown 時禁止確認" time="0.026178333">
+        </testcase>
+        <testcase classname="test/business-master/pages.test.js" name="TC-016 Business Master pages &gt; 高影響摘要缺少 required consumer 時 fail closed" time="0.017226625">
+        </testcase>
+        <testcase classname="test/business-master/pages.test.js" name="TC-016 Business Master pages &gt; 模組稽核頁不出現在 menu，並沿用 URL entity filter" time="0.015395667">
+            <system-err>
+[VUE_ROUTER_R0004] No match found for location with path &quot;/system/business-master/currencies&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+[VUE_ROUTER_R0004] No match found for location with path &quot;/system/business-master/payment-terms&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/system/business-master/currencies&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+[VUE_ROUTER_R0004] No match found for location with path &quot;/system/business-master/payment-terms&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/business-master/pages.test.js" name="TC-016 Business Master pages &gt; 稽核頁忽略無效日期 query，不因 URL 被竄改而崩潰" time="0.013855666">
+            <system-err>
+[VUE_ROUTER_R0004] No match found for location with path &quot;/system/business-master/currencies&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+[VUE_ROUTER_R0004] No match found for location with path &quot;/system/business-master/payment-terms&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/system/business-master/currencies&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+[VUE_ROUTER_R0004] No match found for location with path &quot;/system/business-master/payment-terms&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+            </system-err>
+        </testcase>
+    </testsuite>
+    <testsuite name="test/business-master/service.test.js" timestamp="2026-10-06T05:56:22.754Z" hostname="samMacBook-Pro.local" tests="9" failures="0" errors="0" skipped="0" time="0.005288833">
+        <testcase classname="test/business-master/service.test.js" name="TC-016 Business Master frontend service &gt; 宣告 registry name，並把 Currency 清單映射為 DataTable 形狀" time="0.002610875">
+        </testcase>
+        <testcase classname="test/business-master/service.test.js" name="TC-016 Business Master frontend service &gt; Currency create/update 只傳契約允許欄位，寫入一律啟用 idempotency" time="0.000408958">
+        </testcase>
+        <testcase classname="test/business-master/service.test.js" name="TC-016 Business Master frontend service &gt; Currency 高影響操作先 preview，再以 token、reason、version 執行" time="0.000202834">
+        </testcase>
+        <testcase classname="test/business-master/service.test.js" name="TC-016 Business Master frontend service &gt; 高影響命令可沿用 caller-supplied idempotency key 查回未知結果" time="0.000126875">
+        </testcase>
+        <testcase classname="test/business-master/service.test.js" name="TC-016 Business Master frontend service &gt; Payment Term 清單映射為 DataTable 形狀" time="0.000147291">
+        </testcase>
+        <testcase classname="test/business-master/service.test.js" name="TC-016 Business Master frontend service &gt; Payment Term create/update 與規則變更符合契約" time="0.000198291">
+        </testcase>
+        <testcase classname="test/business-master/service.test.js" name="TC-016 Business Master frontend service &gt; Payment Term due date preview 傳 baseDate 與 expectedVersion" time="0.000099667">
+        </testcase>
+        <testcase classname="test/business-master/service.test.js" name="TC-016 Business Master frontend service &gt; activate/deactivate 與 audit filter 使用明確端點" time="0.000216208">
+        </testcase>
+        <testcase classname="test/business-master/service.test.js" name="TC-016 Business Master frontend service &gt; Business Master 的穩定錯誤碼都有中文訊息" time="0.000207708">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/inventory/foundation.test.js" timestamp="2026-10-06T05:56:22.754Z" hostname="samMacBook-Pro.local" tests="1" failures="0" errors="0" skipped="0" time="0.001786208">
+        <testcase classname="test/inventory/foundation.test.js" name="Inventory foundation &gt; maps every stable Inventory error code to Traditional Chinese" time="0.001113708">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/changePassword.test.js" timestamp="2026-10-06T05:56:22.755Z" hostname="samMacBook-Pro.local" tests="5" failures="0" errors="0" skipped="0" time="0.104877333">
+        <testcase classname="test/pages/changePassword.test.js" name="pages/ChangePasswordPage.vue &gt; 成功改密碼之後清 session、導去登入頁，並顯示提示" time="0.058475084">
+        </testcase>
+        <testcase classname="test/pages/changePassword.test.js" name="pages/ChangePasswordPage.vue &gt; 新密碼同確認新密碼唔一致就唔會提交" time="0.0114195">
+        </testcase>
+        <testcase classname="test/pages/changePassword.test.js" name="pages/ChangePasswordPage.vue &gt; 後端拒絕（例如 PASSWORD_TOO_WEAK）會顯示錯誤訊息，唔會導頁" time="0.019258459">
+        </testcase>
+        <testcase classname="test/pages/changePassword.test.js" name="pages/ChangePasswordPage.vue &gt; 強制模式（mustChangePassword）換文案，冇取消按鈕" time="0.008215459">
+        </testcase>
+        <testcase classname="test/pages/changePassword.test.js" name="pages/ChangePasswordPage.vue &gt; 非強制模式有取消按鈕" time="0.006316333">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/home.test.js" timestamp="2026-10-06T05:56:22.755Z" hostname="samMacBook-Pro.local" tests="3" failures="0" errors="0" skipped="0" time="0.072717875">
+        <testcase classname="test/pages/home.test.js" name="pages/HomePage.vue &gt; mounts with Quasar registered" time="0.028526375">
+        </testcase>
+        <testcase classname="test/pages/home.test.js" name="pages/HomePage.vue &gt; reads the API base URL from the shared config" time="0.037393042">
+        </testcase>
+        <testcase classname="test/pages/home.test.js" name="pages/HomePage.vue &gt; PageHeader 由當前路由 meta.title 出返標題" time="0.005804292">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/login.test.js" timestamp="2026-10-06T05:56:22.755Z" hostname="samMacBook-Pro.local" tests="3" failures="0" errors="0" skipped="0" time="0.090688834">
+        <testcase classname="test/pages/login.test.js" name="pages/LoginPage.vue &gt; 成功登入之後跳去 redirect 指定嘅路徑" time="0.05006325">
+        </testcase>
+        <testcase classname="test/pages/login.test.js" name="pages/LoginPage.vue &gt; 冇 redirect 就跳去 homePath" time="0.016990333">
+        </testcase>
+        <testcase classname="test/pages/login.test.js" name="pages/LoginPage.vue &gt; 登入失敗顯示錯誤訊息，唔會導頁" time="0.022817584">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/profile.test.js" timestamp="2026-10-06T05:56:22.755Z" hostname="samMacBook-Pro.local" tests="5" failures="0" errors="0" skipped="0" time="0.151809542">
+        <testcase classname="test/pages/profile.test.js" name="pages/ProfilePage.vue &gt; 表單預先填入 session 現有嘅 displayName 同 email，帳號欄唯讀" time="0.061215667">
+        </testcase>
+        <testcase classname="test/pages/profile.test.js" name="pages/ProfilePage.vue &gt; 提交會打 updateOwnProfile()，成功之後更新 session.user 並提示" time="0.030950291">
+        </testcase>
+        <testcase classname="test/pages/profile.test.js" name="pages/ProfilePage.vue &gt; 顯示 session.user.roles 嘅角色清單" time="0.027954958">
+        </testcase>
+        <testcase classname="test/pages/profile.test.js" name="pages/ProfilePage.vue &gt; 冇任何角色就顯示「沒有任何角色」" time="0.011358417">
+        </testcase>
+        <testcase classname="test/pages/profile.test.js" name="pages/ProfilePage.vue &gt; 我的設備表格叫 deviceService.listMine() 並顯示裝置" time="0.019308458">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/stores/session.test.js" timestamp="2026-10-06T05:56:22.755Z" hostname="samMacBook-Pro.local" tests="11" failures="0" errors="0" skipped="0" time="0.011641833">
+        <testcase classname="test/stores/session.test.js" name="session store &gt; login 成功會存 token、記低 user，仲會回傳 user" time="0.004649583">
+        </testcase>
+        <testcase classname="test/stores/session.test.js" name="session store &gt; 設備被擋唔算登入失敗，會記低係邊一種" time="0.002907625">
+        </testcase>
+        <testcase classname="test/stores/session.test.js" name="session store &gt; refresh 會換新 token、順手更新 user，而且唔帶公鑰" time="0.000396042">
+        </testcase>
+        <testcase classname="test/stores/session.test.js" name="session store &gt; login 失敗會拋出，唔會存到 token 或改到 user" time="0.000286875">
+        </testcase>
+        <testcase classname="test/stores/session.test.js" name="session store &gt; logout 會叫後端撤銷，然後清 user 同 token" time="0.000242084">
+        </testcase>
+        <testcase classname="test/stores/session.test.js" name="session store &gt; logout 就算後端請求失敗，都要清返本地 session（用戶已經主動要求登出）" time="0.000371041">
+        </testcase>
+        <testcase classname="test/stores/session.test.js" name="session store &gt; restore：冇 token 就直接當未登入，唔會叫 /me" time="0.000322125">
+        </testcase>
+        <testcase classname="test/stores/session.test.js" name="session store &gt; restore：有 token 就叫 /me 攞返 user" time="0.000616708">
+        </testcase>
+        <testcase classname="test/stores/session.test.js" name="session store &gt; restore：/me 確認 401（token 本身無效）先至清返 storage 當未登入" time="0.000374416">
+        </testcase>
+        <testcase classname="test/stores/session.test.js" name="session store &gt; restore：網路錯誤（冇 status）當呢次未登入，但唔清 token——留返下次重試" time="0.000194834">
+        </testcase>
+        <testcase classname="test/stores/session.test.js" name="session store &gt; restore：503（例如撤銷快照未 ready）當呢次未登入，但唔清 token——留返下次重試" time="0.000122583">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/services/audit.test.js" timestamp="2026-10-06T05:56:22.756Z" hostname="samMacBook-Pro.local" tests="3" failures="0" errors="0" skipped="0" time="0.003340292">
+        <testcase classname="test/services/audit.test.js" name="audit service &gt; 宣告咗 service registry 需要嘅 name" time="0.001228208">
+        </testcase>
+        <testcase classname="test/services/audit.test.js" name="audit service &gt; list() 將 DataTable 嘅參數形狀加埋篩選欄位翻做後端 query，回應翻做 { rows, rowsNumber }" time="0.001140792">
+        </testcase>
+        <testcase classname="test/services/audit.test.js" name="audit service &gt; list() 冇任何篩選就唔帶嗰幾個 query key（等後端用返自己嘅預設值）" time="0.0001845">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/services/customer.test.js" timestamp="2026-10-06T05:56:22.756Z" hostname="samMacBook-Pro.local" tests="9" failures="0" errors="0" skipped="0" time="0.010076292">
+        <testcase classname="test/services/customer.test.js" name="customer service &gt; declares the discovery name" time="0.001203875">
+        </testcase>
+        <testcase classname="test/services/customer.test.js" name="customer service &gt; maps a cancellable Customer list to DataTable shape" time="0.003188708">
+        </testcase>
+        <testcase classname="test/services/customer.test.js" name="customer service &gt; uses idempotency for root and party writes, signing only device-password routes" time="0.000314666">
+        </testcase>
+        <testcase classname="test/services/customer.test.js" name="customer service &gt; moves a caller-supplied retry key to the idempotency header without adding it to the strict body" time="0.000194458">
+        </testcase>
+        <testcase classname="test/services/customer.test.js" name="customer service &gt; preserves versioned child and credit-policy routes" time="0.000193917">
+        </testcase>
+        <testcase classname="test/services/customer.test.js" name="customer service &gt; passes child-list pagination and cancellation through unchanged" time="0.000195042">
+        </testcase>
+        <testcase classname="test/services/customer.test.js" name="customer service &gt; reads authoritative Customer completeness" time="0.00013775">
+        </testcase>
+        <testcase classname="test/services/customer.test.js" name="customer service &gt; uses exact bank routes and signs only device-password writes" time="0.00022375">
+        </testcase>
+        <testcase classname="test/services/customer.test.js" name="customer service &gt; reauthenticates a sensitive upload, then keeps password out of multipart content" time="0.003413875">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/services/customerApproval.test.js" timestamp="2026-10-06T05:56:22.756Z" hostname="samMacBook-Pro.local" tests="3" failures="0" errors="0" skipped="0" time="0.005063625">
+        <testcase classname="test/services/customerApproval.test.js" name="customer approval service &gt; declares the discovery name and maps a cancellable queue" time="0.003776792">
+        </testcase>
+        <testcase classname="test/services/customerApproval.test.js" name="customer approval service &gt; uses idempotent password decisions without a device signature" time="0.000270958">
+        </testcase>
+        <testcase classname="test/services/customerApproval.test.js" name="customer approval service &gt; keeps an approval retry key out of the strict decision body" time="0.000150792">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/services/customerImport.test.js" timestamp="2026-10-06T05:56:22.757Z" hostname="samMacBook-Pro.local" tests="2" failures="0" errors="0" skipped="0" time="0.014330083">
+        <testcase classname="test/services/customerImport.test.js" name="customer import/export service &gt; declares the discovery name and uses idempotent high-risk writes" time="0.004473708">
+        </testcase>
+        <testcase classname="test/services/customerImport.test.js" name="customer import/export service &gt; sends multipart upload and owner-scoped result downloads" time="0.001246333">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/services/customerSettings.test.js" timestamp="2026-10-06T05:56:22.757Z" hostname="samMacBook-Pro.local" tests="1" failures="0" errors="0" skipped="0" time="0.002982541">
+        <testcase classname="test/services/customerSettings.test.js" name="customer settings and catalog services &gt; declares discoverable services and signs only settings/catalog writes" time="0.002123542">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/services/device.test.js" timestamp="2026-10-06T05:56:22.757Z" hostname="samMacBook-Pro.local" tests="5" failures="0" errors="0" skipped="0" time="0.004648667">
+        <testcase classname="test/services/device.test.js" name="device service &gt; 宣告咗 service registry 需要嘅 name" time="0.001379166">
+        </testcase>
+        <testcase classname="test/services/device.test.js" name="device service &gt; 清單只攞信封入面嘅 items" time="0.001080959">
+        </testcase>
+        <testcase classname="test/services/device.test.js" name="device service &gt; 三個審批動作各自打各自嘅路徑，帶埋密碼" time="0.000215792">
+        </testcase>
+        <testcase classname="test/services/device.test.js" name="device pages &gt; 真正嘅頁面 metadata 過得到開機驗證" time="0.000765042">
+        </testcase>
+        <testcase classname="test/services/device.test.js" name="device pages &gt; 審批頁要求 device.mgmt" time="0.000162042">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/services/inventory.test.js" timestamp="2026-10-06T05:56:22.757Z" hostname="samMacBook-Pro.local" tests="12" failures="0" errors="0" skipped="0" time="0.005918833">
+        <testcase classname="test/services/inventory.test.js" name="inventory service &gt; declares its registry name and maps master lists to DataTable shape" time="0.002922542">
+        </testcase>
+        <testcase classname="test/services/inventory.test.js" name="inventory service &gt; passes Warehouse ownership, lock filters and cancellation on Bin reads" time="0.000259708">
+        </testcase>
+        <testcase classname="test/services/inventory.test.js" name="inventory service &gt; passes inquiry filters and cancellation without leaking empty query values" time="0.000245084">
+        </testcase>
+        <testcase classname="test/services/inventory.test.js" name="inventory service &gt; makes every write idempotent, strips a caller key from strict bodies and signs deletes only" time="0.000186875">
+        </testcase>
+        <testcase classname="test/services/inventory.test.js" name="inventory service &gt; sends Reservation create with the same intent key and without client-side ATP calculation" time="0.0001335">
+        </testcase>
+        <testcase classname="test/services/inventory.test.js" name="inventory service &gt; sends Reservation release and cancel with path ownership and an intent key" time="0.000113">
+        </testcase>
+        <testcase classname="test/services/inventory.test.js" name="inventory service &gt; forwards allocation candidate quantity and cancellation without calculating a rank" time="0.000160333">
+        </testcase>
+        <testcase classname="test/services/inventory.test.js" name="inventory service &gt; forwards Allocation create, release and reallocate intents without changing selected buckets" time="0.00014675">
+        </testcase>
+        <testcase classname="test/services/inventory.test.js" name="inventory service &gt; maps Reservation list filters and reads detail without changing server quantities" time="0.000224875">
+        </testcase>
+        <testcase classname="test/services/inventory.test.js" name="inventory service &gt; sends direct Inventory Issue with its source event and exact Allocation versions" time="0.0000925">
+        </testcase>
+        <testcase classname="test/services/inventory.test.js" name="inventory service &gt; does not retry a version conflict" time="0.000319083">
+        </testcase>
+        <testcase classname="test/services/inventory.test.js" name="inventory service &gt; has Traditional Chinese messages for every Warehouse and Bin public error" time="0.000182334">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/services/item.test.js" timestamp="2026-10-06T05:56:22.757Z" hostname="samMacBook-Pro.local" tests="10" failures="0" errors="0" skipped="0" time="0.004352666">
+        <testcase classname="test/services/item.test.js" name="item service &gt; 宣告咗 service registry 需要嘅 name" time="0.001206042">
+        </testcase>
+        <testcase classname="test/services/item.test.js" name="item service &gt; listItems() 轉做 DataTable 需要嘅 { rows, rowsNumber } 形狀" time="0.001185959">
+        </testcase>
+        <testcase classname="test/services/item.test.js" name="item service &gt; listItems() 帶埋 filter／categoryId／brandId／status／sortBy／descending" time="0.00019325">
+        </testcase>
+        <testcase classname="test/services/item.test.js" name="item service &gt; getItem(id) 直接打 GET /api/v1/items/:id" time="0.000114417">
+        </testcase>
+        <testcase classname="test/services/item.test.js" name="item service &gt; listSkus() 轉做 DataTable 需要嘅形狀，帶埋全部篩選欄位" time="0.000187167">
+        </testcase>
+        <testcase classname="test/services/item.test.js" name="item service &gt; listSkus() 冇帶 purchasable／sellable 就唔篩呢兩個欄位（送 undefined，唔係 false）" time="0.000105667">
+        </testcase>
+        <testcase classname="test/services/item.test.js" name="item service &gt; getSku(id) 直接打 GET /api/v1/skus/:id" time="0.000085">
+        </testcase>
+        <testcase classname="test/services/item.test.js" name="item service &gt; createSku() 打新增 SKU route，並開啟 idempotency" time="0.000103541">
+        </testcase>
+        <testcase classname="test/services/item.test.js" name="item service &gt; checkDuplicates() 打 POST /items/duplicates/check，唔帶 idempotent（純警告冇副作用）" time="0.000148292">
+        </testcase>
+        <testcase classname="test/services/item.test.js" name="item service &gt; bulkChangeStatus() 打 POST /item-bulk/status/change，帶 targetType／action／targets／reason／password" time="0.000110042">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/services/itemAudit.test.js" timestamp="2026-10-06T05:56:22.758Z" hostname="samMacBook-Pro.local" tests="3" failures="0" errors="0" skipped="0" time="0.003424625">
+        <testcase classname="test/services/itemAudit.test.js" name="item audit service &gt; list() 將 DataTable 參數及 Item audit 篩選轉成 API query" time="0.002314875">
+        </testcase>
+        <testcase classname="test/services/itemAudit.test.js" name="item audit service &gt; list() 省略空白篩選，讓後端使用預設值" time="0.000208125">
+        </testcase>
+        <testcase classname="test/services/itemAudit.test.js" name="item audit service &gt; exports the service discovery metadata" time="0.000091125">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/services/itemCatalog.test.js" timestamp="2026-10-06T05:56:22.758Z" hostname="samMacBook-Pro.local" tests="14" failures="0" errors="0" skipped="0" time="0.005233542">
+        <testcase classname="test/services/itemCatalog.test.js" name="itemCatalog service &gt; 宣告咗 service registry 需要嘅 name" time="0.001092917">
+        </testcase>
+        <testcase classname="test/services/itemCatalog.test.js" name="itemCatalog service &gt; categoryTree() 預設唔帶 includeArchived" time="0.001183291">
+        </testcase>
+        <testcase classname="test/services/itemCatalog.test.js" name="itemCatalog service &gt; categoryTree({ includeArchived: true }) 帶字串 &apos;true&apos;" time="0.000189583">
+        </testcase>
+        <testcase classname="test/services/itemCatalog.test.js" name="itemCatalog service &gt; createCategory() 冇帶 parentId 就送 null，唔簽章唔帶密碼" time="0.000253792">
+        </testcase>
+        <testcase classname="test/services/itemCatalog.test.js" name="itemCatalog service &gt; createCategory() 帶 parentId／sortOrder" time="0.000144416">
+        </testcase>
+        <testcase classname="test/services/itemCatalog.test.js" name="itemCatalog service &gt; updateCategory() 整組覆蓋，parentId 可以係 null（移到根層級）" time="0.000107083">
+        </testcase>
+        <testcase classname="test/services/itemCatalog.test.js" name="itemCatalog service &gt; activateCategory()／deactivateCategory() 帶 reason 同 version，唔帶 password" time="0.000294083">
+        </testcase>
+        <testcase classname="test/services/itemCatalog.test.js" name="itemCatalog service &gt; archiveCategory()／restoreCategory()／deleteCategory() 帶 reason／version／password，唔簽章" time="0.000213958">
+        </testcase>
+        <testcase classname="test/services/itemCatalog.test.js" name="itemCatalog service &gt; brandList() 映射做 DataTable 嘅 { rows, rowsNumber } 形狀，同 services/user.js 一樣" time="0.000149041">
+        </testcase>
+        <testcase classname="test/services/itemCatalog.test.js" name="itemCatalog service &gt; createBrand()／updateBrand() 帶完整可編輯欄位" time="0.000125">
+        </testcase>
+        <testcase classname="test/services/itemCatalog.test.js" name="itemCatalog service &gt; brand 狀態動作：activate／deactivate 唔帶密碼，archive／restore／delete 要密碼" time="0.000167167">
+        </testcase>
+        <testcase classname="test/services/itemCatalog.test.js" name="itemCatalog service &gt; uomList() 唔分頁，預設同帶 includeArchived 兩種情況" time="0.000136084">
+        </testcase>
+        <testcase classname="test/services/itemCatalog.test.js" name="itemCatalog service &gt; createUom() 帶 code／name／symbol；updateUom() 唔接受 code" time="0.000149708">
+        </testcase>
+        <testcase classname="test/services/itemCatalog.test.js" name="itemCatalog service &gt; uom 狀態動作：activate／deactivate 唔帶密碼，archive／restore／delete 要密碼" time="0.000145458">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/services/itemImport.test.js" timestamp="2026-10-06T05:56:22.758Z" hostname="samMacBook-Pro.local" tests="10" failures="0" errors="0" skipped="0" time="0.005918041">
+        <testcase classname="test/services/itemImport.test.js" name="itemImport service &gt; 宣告咗 service registry 需要嘅 name" time="0.001139917">
+        </testcase>
+        <testcase classname="test/services/itemImport.test.js" name="itemImport service &gt; downloadTemplate() 打 GET template 用 getBlob()" time="0.001103959">
+        </testcase>
+        <testcase classname="test/services/itemImport.test.js" name="itemImport service &gt; uploadJob() 帶 FormData 同 idempotent:true（route 有 idempotency: enabled）" time="0.001400583">
+        </testcase>
+        <testcase classname="test/services/itemImport.test.js" name="itemImport service &gt; listJobs() 帶 page／pageSize／status query" time="0.000253875">
+        </testcase>
+        <testcase classname="test/services/itemImport.test.js" name="itemImport service &gt; getJob() 打 GET :id，帶分頁及 rowStatus query" time="0.000137083">
+        </testcase>
+        <testcase classname="test/services/itemImport.test.js" name="itemImport service &gt; confirmJob() 帶 reason／version／password" time="0.000154042">
+        </testcase>
+        <testcase classname="test/services/itemImport.test.js" name="itemImport service &gt; cancelJob() 帶空 body" time="0.000097917">
+        </testcase>
+        <testcase classname="test/services/itemImport.test.js" name="itemImport service &gt; downloadResult() 打 GET :id/result 用 getBlob()" time="0.000160125">
+        </testcase>
+        <testcase classname="test/services/itemImport.test.js" name="itemImport service &gt; exportSkus() 淨係送有提供嘅篩選欄位做 query string" time="0.000442292">
+        </testcase>
+        <testcase classname="test/services/itemImport.test.js" name="itemImport service &gt; exportSkus() 冇任何篩選就打冇 query string 嘅路徑" time="0.000135542">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/services/itemMedia.test.js" timestamp="2026-10-06T05:56:22.759Z" hostname="samMacBook-Pro.local" tests="8" failures="0" errors="0" skipped="0" time="0.005598125">
+        <testcase classname="test/services/itemMedia.test.js" name="itemMedia service &gt; 宣告咗 service registry 需要嘅 name" time="0.00120925">
+        </testcase>
+        <testcase classname="test/services/itemMedia.test.js" name="itemMedia service &gt; uploadItemMedia() 打 items/:id/media/upload，帶 FormData 唔係 JSON body" time="0.002105833">
+        </testcase>
+        <testcase classname="test/services/itemMedia.test.js" name="itemMedia service &gt; uploadItemMedia() 冇提供 isPrimary／sortOrder 就唔送呢兩個欄位（唔係送空字串或者 undefined 字面值）" time="0.000264917">
+        </testcase>
+        <testcase classname="test/services/itemMedia.test.js" name="itemMedia service &gt; isPrimary 一定序列化做完全等於 &quot;true&quot; 或 &quot;false&quot; 嘅字串，唔會出現任意 truthy 字串" time="0.000139708">
+        </testcase>
+        <testcase classname="test/services/itemMedia.test.js" name="itemMedia service &gt; uploadSkuMedia() 打 skus/:id/media/upload" time="0.000214292">
+        </testcase>
+        <testcase classname="test/services/itemMedia.test.js" name="itemMedia service &gt; downloadMedia() 打 GET item-media/:id/download 用 getBlob()，唔套用 JSON envelope" time="0.000342083">
+        </testcase>
+        <testcase classname="test/services/itemMedia.test.js" name="itemMedia service &gt; updateMedia() 淨係送有提供嘅欄位" time="0.000179708">
+        </testcase>
+        <testcase classname="test/services/itemMedia.test.js" name="itemMedia service &gt; deleteMedia() 帶 reason／password" time="0.00012125">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/services/role.test.js" timestamp="2026-10-06T05:56:22.759Z" hostname="samMacBook-Pro.local" tests="7" failures="0" errors="0" skipped="0" time="0.004759875">
+        <testcase classname="test/services/role.test.js" name="role service &gt; 宣告咗 service registry 需要嘅 name" time="0.001332583">
+        </testcase>
+        <testcase classname="test/services/role.test.js" name="role service &gt; list() 淨係攞信封入面嘅 items，唔分頁" time="0.001194459">
+        </testcase>
+        <testcase classname="test/services/role.test.js" name="role service &gt; create() 打新增角色嘅路徑，唔簽章" time="0.000408083">
+        </testcase>
+        <testcase classname="test/services/role.test.js" name="role service &gt; update() 改名稱／描述" time="0.000141333">
+        </testcase>
+        <testcase classname="test/services/role.test.js" name="role service &gt; delete() 帶 reason 同 password" time="0.000119583">
+        </testcase>
+        <testcase classname="test/services/role.test.js" name="role service &gt; assignPermissions() 帶 expectedPermissionIds 做 compare-and-set，簽章" time="0.000170416">
+        </testcase>
+        <testcase classname="test/services/role.test.js" name="role service &gt; listPermissions() 淨係攞信封入面嘅 items" time="0.000116041">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/services/supplier.test.js" timestamp="2026-10-06T05:56:22.760Z" hostname="samMacBook-Pro.local" tests="10" failures="0" errors="0" skipped="0" time="0.005437208">
+        <testcase classname="test/services/supplier.test.js" name="supplier service &gt; declares its discovery name" time="0.001377584">
+        </testcase>
+        <testcase classname="test/services/supplier.test.js" name="supplier service &gt; creates a supplier with framework idempotency" time="0.001078291">
+        </testcase>
+        <testcase classname="test/services/supplier.test.js" name="supplier service &gt; checks duplicate candidates without marking a read as idempotent" time="0.000186833">
+        </testcase>
+        <testcase classname="test/services/supplier.test.js" name="supplier service &gt; maps paged Supplier results to DataTable shape" time="0.000887792">
+        </testcase>
+        <testcase classname="test/services/supplier.test.js" name="supplier service &gt; loads detail and completeness by Supplier id" time="0.000215458">
+        </testcase>
+        <testcase classname="test/services/supplier.test.js" name="supplier service &gt; uses ownership-scoped versioned Address routes" time="0.000144875">
+        </testcase>
+        <testcase classname="test/services/supplier.test.js" name="supplier service &gt; uses ownership-scoped versioned Contact routes" time="0.000116333">
+        </testcase>
+        <testcase classname="test/services/supplier.test.js" name="supplier service &gt; uses ownership-scoped reasoned Identifier routes" time="0.000137375">
+        </testcase>
+        <testcase classname="test/services/supplier.test.js" name="supplier service &gt; uses normal Supplier update and a signed controlled Code correction" time="0.000170125">
+        </testcase>
+        <testcase classname="test/services/supplier.test.js" name="supplier service &gt; maps lifecycle commands to their required password and device-signature levels" time="0.000178333">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/services/supplierBank.test.js" timestamp="2026-10-06T05:56:22.760Z" hostname="samMacBook-Pro.local" tests="3" failures="0" errors="0" skipped="0" time="0.003588208">
+        <testcase classname="test/services/supplierBank.test.js" name="supplierBank service &gt; reads the masked list without asking for plaintext" time="0.001973709">
+        </testcase>
+        <testcase classname="test/services/supplierBank.test.js" name="supplierBank service &gt; signs the four writes with the device and does not sign reveal" time="0.000547125">
+        </testcase>
+        <testcase classname="test/services/supplierBank.test.js" name="supplierBank service &gt; puts the account number in the body, never in the path or a query string" time="0.000214166">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/services/supplierImport.test.js" timestamp="2026-10-06T05:56:22.760Z" hostname="samMacBook-Pro.local" tests="4" failures="0" errors="0" skipped="0" time="0.004313792">
+        <testcase classname="test/services/supplierImport.test.js" name="supplier import service (T44) &gt; maps the job list to the DataTable shape and drops an empty status filter" time="0.002324833">
+        </testcase>
+        <testcase classname="test/services/supplierImport.test.js" name="supplier import service (T44) &gt; keeps the job summary beside the paged rows" time="0.000359125">
+        </testcase>
+        <testcase classname="test/services/supplierImport.test.js" name="supplier import service (T44) &gt; confirms with the mode, the approver or null, the password and an idempotency key" time="0.000183">
+        </testcase>
+        <testcase classname="test/services/supplierImport.test.js" name="supplier import service (T44) &gt; cancels with the job version and an idempotency key" time="0.000123583">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/services/supplierSettings.test.js" timestamp="2026-10-06T05:56:22.760Z" hostname="samMacBook-Pro.local" tests="3" failures="0" errors="0" skipped="0" time="0.003835917">
+        <testcase classname="test/services/supplierSettings.test.js" name="supplier settings service &gt; reads the settings singleton without a password" time="0.002270583">
+        </testcase>
+        <testcase classname="test/services/supplierSettings.test.js" name="supplier settings service &gt; signs the update, because the backend demands an approved device and a password" time="0.000511333">
+        </testcase>
+        <testcase classname="test/services/supplierSettings.test.js" name="supplier settings service &gt; reads Business Master readiness through the Supplier lookup, never the owner&apos;s endpoint" time="0.000254458">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/services/user.test.js" timestamp="2026-10-06T05:56:22.760Z" hostname="samMacBook-Pro.local" tests="11" failures="0" errors="0" skipped="0" time="0.004795791">
+        <testcase classname="test/services/user.test.js" name="user service &gt; 宣告咗 service registry 需要嘅 name" time="0.001226958">
+        </testcase>
+        <testcase classname="test/services/user.test.js" name="user service &gt; list() 將 DataTable 嘅參數形狀翻做後端 query，回應翻做 { rows, rowsNumber }" time="0.001156458">
+        </testcase>
+        <testcase classname="test/services/user.test.js" name="user service &gt; list() 冇 filter／status／sortBy 就唔帶呢幾個 query key（等後端用返自己嘅預設值）" time="0.00035025">
+        </testcase>
+        <testcase classname="test/services/user.test.js" name="user service &gt; get() 打單一用戶嘅路徑" time="0.000254917">
+        </testcase>
+        <testcase classname="test/services/user.test.js" name="user service &gt; create() 帶埋 signed: true，body 含新用戶密碼同操作者自己嘅密碼" time="0.000210542">
+        </testcase>
+        <testcase classname="test/services/user.test.js" name="user service &gt; update() 淨係帶 displayName，username 唔可以喺呢度改" time="0.000137833">
+        </testcase>
+        <testcase classname="test/services/user.test.js" name="user service &gt; disable()／enable() 帶 reason 同 password，唔簽章" time="0.000151625">
+        </testcase>
+        <testcase classname="test/services/user.test.js" name="user service &gt; assignRoles() 帶 expectedRoleIds 做 compare-and-set，簽章" time="0.000117875">
+        </testcase>
+        <testcase classname="test/services/user.test.js" name="user service &gt; resetPassword() 簽章，body 帶新密碼、原因、操作者密碼" time="0.000103834">
+        </testcase>
+        <testcase classname="test/services/user.test.js" name="user service &gt; changeOwnPassword() 唔簽章，body 係 { password, newPassword }" time="0.000076583">
+        </testcase>
+        <testcase classname="test/services/user.test.js" name="user service &gt; updateOwnProfile() 唔簽章、唔帶密碼，body 係 { displayName, email }" time="0.000077083">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/components/customers/attachment-panel.test.js" timestamp="2026-10-06T05:56:22.761Z" hostname="samMacBook-Pro.local" tests="5" failures="0" errors="0" skipped="0" time="0.130590208">
+        <testcase classname="test/components/customers/attachment-panel.test.js" name="CustomerAttachmentPanel &gt; shows only server-authorized metadata and a restricted count" time="0.026817334">
+        </testcase>
+        <testcase classname="test/components/customers/attachment-panel.test.js" name="CustomerAttachmentPanel &gt; reauthenticates sensitive preview without putting the token in URL or storage" time="0.061924458">
+        </testcase>
+        <testcase classname="test/components/customers/attachment-panel.test.js" name="CustomerAttachmentPanel &gt; does not reopen an in-flight sensitive preview after the route changes customer" time="0.013612292">
+        </testcase>
+        <testcase classname="test/components/customers/attachment-panel.test.js" name="CustomerAttachmentPanel &gt; does not authorize an old attachment after the customer changes while reauthentication is open" time="0.013472">
+        </testcase>
+        <testcase classname="test/components/customers/attachment-panel.test.js" name="CustomerAttachmentPanel &gt; does not mutate an old attachment after the customer changes while confirmation is open" time="0.013834958">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/components/customers/bank-panel.test.js" timestamp="2026-10-06T05:56:22.761Z" hostname="samMacBook-Pro.local" tests="5" failures="0" errors="0" skipped="0" time="0.115222709">
+        <testcase classname="test/components/customers/bank-panel.test.js" name="CustomerBankPanel &gt; loads only the masked list and hides sensitive controls without exact permission" time="0.021195375">
+        </testcase>
+        <testcase classname="test/components/customers/bank-panel.test.js" name="CustomerBankPanel &gt; keeps revealed plaintext component-local and clears it after 30 seconds" time="0.02674925">
+        </testcase>
+        <testcase classname="test/components/customers/bank-panel.test.js" name="CustomerBankPanel &gt; clears revealed plaintext immediately when reveal permission is removed" time="0.016378209">
+        </testcase>
+        <testcase classname="test/components/customers/bank-panel.test.js" name="CustomerBankPanel &gt; clears revealed plaintext and reloads when the customer changes" time="0.011952542">
+        </testcase>
+        <testcase classname="test/components/customers/bank-panel.test.js" name="CustomerBankPanel &gt; clears an unsaved account number before the page enters browser history cache" time="0.038084167">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/components/customers/catalog-panel.test.js" timestamp="2026-10-06T05:56:22.761Z" hostname="samMacBook-Pro.local" tests="1" failures="0" errors="0" skipped="0" time="0.06452925">
+        <testcase classname="test/components/customers/catalog-panel.test.js" name="CustomerCatalogPanel &gt; creates a typed catalog item with device re-auth fields" time="0.063738458">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/components/customers/panels.test.js" timestamp="2026-10-06T05:56:22.761Z" hostname="samMacBook-Pro.local" tests="8" failures="0" errors="0" skipped="0" time="0.205894">
+        <testcase classname="test/components/customers/panels.test.js" name="Customer TASK-017 panels &gt; creates an address with multiple purpose/default selections" time="0.069392542">
+        </testcase>
+        <testcase classname="test/components/customers/panels.test.js" name="Customer TASK-017 panels &gt; creates a contact with the selected default purpose" time="0.035009041">
+        </testcase>
+        <testcase classname="test/components/customers/panels.test.js" name="Customer TASK-017 panels &gt; creates an identifier with UTC date values" time="0.027115209">
+        </testcase>
+        <testcase classname="test/components/customers/panels.test.js" name="Customer TASK-017 panels &gt; moves focus to an API error without clearing address input" time="0.02319">
+        </testcase>
+        <testcase classname="test/components/customers/panels.test.js" name="Customer TASK-017 panels &gt; shows purpose defaults and offers an explicit conflict reload" time="0.029079041">
+        </testcase>
+        <testcase classname="test/components/customers/panels.test.js" name="Customer TASK-017 panels &gt; preserves zero as a configured credit limit" time="0.012243458">
+        </testcase>
+        <testcase classname="test/components/customers/panels.test.js" name="Customer TASK-017 panels &gt; requires a password when clearing a configured credit policy" time="0.00766975">
+        </testcase>
+        <testcase classname="test/components/customers/panels.test.js" name="Customer TASK-017 panels &gt; shows completeness issues without treating credit null as zero" time="0.00106475">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/components/customers/status-actions.test.js" timestamp="2026-10-06T05:56:22.762Z" hostname="samMacBook-Pro.local" tests="4" failures="0" errors="0" skipped="0" time="0.156311541">
+        <testcase classname="test/components/customers/status-actions.test.js" name="CustomerStatusActions &gt; shows only legal actions for the actor and state" time="0.016134334">
+        </testcase>
+        <testcase classname="test/components/customers/status-actions.test.js" name="CustomerStatusActions &gt; keeps a conflict actionable and clears the password" time="0.04723975">
+        </testcase>
+        <testcase classname="test/components/customers/status-actions.test.js" name="CustomerStatusActions &gt; asks for another approver when activation policy requires one" time="0.063439292">
+        </testcase>
+        <testcase classname="test/components/customers/status-actions.test.js" name="CustomerStatusActions &gt; shows named downstream reference blockers" time="0.028555959">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/framework/auth/deviceKey.test.js" timestamp="2026-10-06T05:56:22.762Z" hostname="samMacBook-Pro.local" tests="9" failures="0" errors="0" skipped="0" time="0.005576625">
+        <testcase classname="test/framework/auth/deviceKey.test.js" name="deviceKey &gt; 待簽字串嘅格式同鍵順序係固定嘅" time="0.001083834">
+        </testcase>
+        <testcase classname="test/framework/auth/deviceKey.test.js" name="deviceKey &gt; 鍵順序唔會跟住傳入嘅次序走" time="0.000108209">
+        </testcase>
+        <testcase classname="test/framework/auth/deviceKey.test.js" name="deviceKey &gt; method 一律轉大寫，同後端一致" time="0.000114042">
+        </testcase>
+        <testcase classname="test/framework/auth/deviceKey.test.js" name="deviceKey &gt; device id 係公鑰 SPKI 嘅 SHA-256 hex" time="0.001732791">
+        </testcase>
+        <testcase classname="test/framework/auth/deviceKey.test.js" name="ensurePersistentStorage &gt; 已經 persisted 就唔會再問一次" time="0.00098875">
+        </testcase>
+        <testcase classname="test/framework/auth/deviceKey.test.js" name="ensurePersistentStorage &gt; 未 persisted 就請求一次" time="0.0002545">
+        </testcase>
+        <testcase classname="test/framework/auth/deviceKey.test.js" name="ensurePersistentStorage &gt; 俾人拒絕就回 false，唔會掉錯" time="0.00008975">
+        </testcase>
+        <testcase classname="test/framework/auth/deviceKey.test.js" name="ensurePersistentStorage &gt; 瀏覽器唔支援就當做冇呢件事" time="0.000060917">
+        </testcase>
+        <testcase classname="test/framework/auth/deviceKey.test.js" name="ensurePersistentStorage &gt; storage API 自己掉錯都吞得住" time="0.000148625">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/framework/auth/routeGuard.test.js" timestamp="2026-10-06T05:56:22.762Z" hostname="samMacBook-Pro.local" tests="9" failures="0" errors="0" skipped="0" time="0.004200458">
+        <testcase classname="test/framework/auth/routeGuard.test.js" name="resolveNavigation &gt; public 路由永遠放行，唔理有冇登入" time="0.00203625">
+        </testcase>
+        <testcase classname="test/framework/auth/routeGuard.test.js" name="resolveNavigation &gt; 未登入打 protected 路由會轉去登入頁，帶埋原本路徑等登入後跳返去" time="0.000397042">
+        </testcase>
+        <testcase classname="test/framework/auth/routeGuard.test.js" name="resolveNavigation &gt; 已登入但權限唔夠會轉去 403，而唔係登入頁" time="0.000428125">
+        </testcase>
+        <testcase classname="test/framework/auth/routeGuard.test.js" name="resolveNavigation &gt; 已登入而且權限夠就放行" time="0.000102292">
+        </testcase>
+        <testcase classname="test/framework/auth/routeGuard.test.js" name="resolveNavigation &gt; 已登入而且冇 requires 就放行" time="0.000056166">
+        </testcase>
+        <testcase classname="test/framework/auth/routeGuard.test.js" name="resolveNavigation &gt; mustChangePassword 嘅使用者打任何頁都會轉去改密碼頁，即使權限本身夠" time="0.000053833">
+        </testcase>
+        <testcase classname="test/framework/auth/routeGuard.test.js" name="resolveNavigation &gt; mustChangePassword 唔會擋改密碼頁本身，否則使用者永遠去唔到" time="0.000046667">
+        </testcase>
+        <testcase classname="test/framework/auth/routeGuard.test.js" name="resolveNavigation &gt; mustChangePassword 排喺權限檢查之前：權限唔夠都係轉去改密碼頁，唔係 403" time="0.000048208">
+        </testcase>
+        <testcase classname="test/framework/auth/routeGuard.test.js" name="createAuthGuard &gt; 包住 resolveNavigation：放行回 true，唔放行回 redirect location" time="0.0001255">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/framework/auth/sessionWatchdog.test.js" timestamp="2026-10-06T05:56:22.762Z" hostname="samMacBook-Pro.local" tests="23" failures="0" errors="0" skipped="0" time="0.006507625">
+        <testcase classname="test/framework/auth/sessionWatchdog.test.js" name="session watchdog &gt; 到期就強制登出，一個請求都唔會發" time="0.00177825">
+        </testcase>
+        <testcase classname="test/framework/auth/sessionWatchdog.test.js" name="session watchdog &gt; 絕對上限夠鐘就登出，就算 token 仲有一大段命" time="0.000224833">
+        </testcase>
+        <testcase classname="test/framework/auth/sessionWatchdog.test.js" name="session watchdog &gt; 絕對上限快到就提醒一次，唔會每個 tick 都嘈" time="0.000715">
+        </testcase>
+        <testcase classname="test/framework/auth/sessionWatchdog.test.js" name="session watchdog &gt; 仲未到閾值就唔提醒" time="0.000135958">
+        </testcase>
+        <testcase classname="test/framework/auth/sessionWatchdog.test.js" name="session watchdog &gt; 續期救唔到絕對上限：續完之後照樣提醒" time="0.000461833">
+        </testcase>
+        <testcase classname="test/framework/auth/sessionWatchdog.test.js" name="session watchdog &gt; 重新登入之後會再武裝，第二條 session 一樣提醒得到" time="0.00015275">
+        </testcase>
+        <testcase classname="test/framework/auth/sessionWatchdog.test.js" name="session watchdog &gt; 閒置都照提醒：夠鐘一樣會被登出，返嚟見到好過乜都冇見過" time="0.000081958">
+        </testcase>
+        <testcase classname="test/framework/auth/sessionWatchdog.test.js" name="session watchdog &gt; 剩得少過閾值就續期" time="0.000099667">
+        </testcase>
+        <testcase classname="test/framework/auth/sessionWatchdog.test.js" name="session watchdog &gt; 仲有好多時間就唔續" time="0.000116208">
+        </testcase>
+        <testcase classname="test/framework/auth/sessionWatchdog.test.js" name="session watchdog &gt; 閒置就唔續期，等佢自然過期" time="0.000077292">
+        </testcase>
+        <testcase classname="test/framework/auth/sessionWatchdog.test.js" name="session watchdog &gt; 有操作就會重新計閒置" time="0.000092708">
+        </testcase>
+        <testcase classname="test/framework/auth/sessionWatchdog.test.js" name="session watchdog &gt; 網路錯誤唔會登出，留返畀下一個 tick 再試" time="0.000213833">
+        </testcase>
+        <testcase classname="test/framework/auth/sessionWatchdog.test.js" name="session watchdog &gt; 503 唔會登出" time="0.000112209">
+        </testcase>
+        <testcase classname="test/framework/auth/sessionWatchdog.test.js" name="session watchdog &gt; 401 同 403 先至登出" time="0.000135792">
+        </testcase>
+        <testcase classname="test/framework/auth/sessionWatchdog.test.js" name="session watchdog &gt; 攞到鎖之後會再檢查一次，唔會重複換" time="0.00011775">
+        </testcase>
+        <testcase classname="test/framework/auth/sessionWatchdog.test.js" name="session watchdog &gt; 有 Web Locks 就用佢serialise，冇就用 process 內旗標" time="0.000200166">
+        </testcase>
+        <testcase classname="test/framework/auth/sessionWatchdog.test.js" name="session watchdog &gt; 續期一直失敗又快到期就提醒一次，唔會每個 tick 嘈一次" time="0.000126375">
+        </testcase>
+        <testcase classname="test/framework/auth/sessionWatchdog.test.js" name="session watchdog &gt; 閒置嗰陣唔會彈提醒" time="0.000080958">
+        </testcase>
+        <testcase classname="test/framework/auth/sessionWatchdog.test.js" name="attachSessionWatchdog &gt; 返到前景嘅三個訊號都會即刻檢查" time="0.00028975">
+        </testcase>
+        <testcase classname="test/framework/auth/sessionWatchdog.test.js" name="attachSessionWatchdog &gt; 分頁去咗背景唔會觸發檢查" time="0.000087125">
+        </testcase>
+        <testcase classname="test/framework/auth/sessionWatchdog.test.js" name="attachSessionWatchdog &gt; 唔係由 bfcache 還原嘅 pageshow 唔算" time="0.000102667">
+        </testcase>
+        <testcase classname="test/framework/auth/sessionWatchdog.test.js" name="attachSessionWatchdog &gt; 真人操作先算活動，mousemove 唔算" time="0.000099709">
+        </testcase>
+        <testcase classname="test/framework/auth/sessionWatchdog.test.js" name="attachSessionWatchdog &gt; 拆除會解走所有 listener 同停 timer" time="0.000105333">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/framework/auth/tokenStorage.test.js" timestamp="2026-10-06T05:56:22.763Z" hostname="samMacBook-Pro.local" tests="3" failures="0" errors="0" skipped="0" time="0.002553541">
+        <testcase classname="test/framework/auth/tokenStorage.test.js" name="tokenStorage &gt; set/get/clear 都用 config 指定嘅 key" time="0.00144775">
+        </testcase>
+        <testcase classname="test/framework/auth/tokenStorage.test.js" name="tokenStorage &gt; token 同 session 兩個到期時刻分開記，唔會互相蓋" time="0.000191875">
+        </testcase>
+        <testcase classname="test/framework/auth/tokenStorage.test.js" name="tokenStorage &gt; clear 連 session 到期時刻一齊清" time="0.000083167">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/framework/authorization/can.test.js" timestamp="2026-10-06T05:56:22.763Z" hostname="samMacBook-Pro.local" tests="5" failures="0" errors="0" skipped="0" time="0.002431125">
+        <testcase classname="test/framework/authorization/can.test.js" name="can &gt; 未登入永遠 false，唔理 requires 係咩" time="0.001093959">
+        </testcase>
+        <testcase classname="test/framework/authorization/can.test.js" name="can &gt; 冇 requires 就已登入即通過" time="0.000101083">
+        </testcase>
+        <testcase classname="test/framework/authorization/can.test.js" name="can &gt; 預設 match all：要求全部符合先算過" time="0.000081958">
+        </testcase>
+        <testcase classname="test/framework/authorization/can.test.js" name="can &gt; match any：中一個就算過" time="0.000141708">
+        </testcase>
+        <testcase classname="test/framework/authorization/can.test.js" name="can &gt; roles 同 permissions 兩組要求之間係 AND" time="0.000088791">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/framework/authorization/permissionConventions.test.js" timestamp="2026-10-06T05:56:22.764Z" hostname="samMacBook-Pro.local" tests="2" failures="0" errors="0" skipped="0" time="0.004771458">
+        <testcase classname="test/framework/authorization/permissionConventions.test.js" name="頁面權限 metadata &gt; 每一頁 requires.permissions 都要喺權限目錄搵得到" time="0.003320459">
+        </testcase>
+        <testcase classname="test/framework/authorization/permissionConventions.test.js" name="頁面權限 metadata &gt; 冇任何一頁用角色名做授權判準" time="0.00041725">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/framework/authorization/vCan.test.js" timestamp="2026-10-06T05:56:22.764Z" hostname="samMacBook-Pro.local" tests="4" failures="0" errors="0" skipped="0" time="0.039586291">
+        <testcase classname="test/framework/authorization/vCan.test.js" name="v-can &gt; 權限唔夠就隱藏元素" time="0.033341042">
+        </testcase>
+        <testcase classname="test/framework/authorization/vCan.test.js" name="v-can &gt; 權限夠就顯示元素" time="0.002704">
+        </testcase>
+        <testcase classname="test/framework/authorization/vCan.test.js" name="v-can &gt; 冇 requires 就當已登入即顯示" time="0.000921375">
+        </testcase>
+        <testcase classname="test/framework/authorization/vCan.test.js" name="v-can &gt; 續期撤走權限之後，已經 mount 咗嘅元素會自己收埋" time="0.001351333">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/framework/discovery/buildMenu.test.js" timestamp="2026-10-06T05:56:22.764Z" hostname="samMacBook-Pro.local" tests="5" failures="0" errors="0" skipped="0" time="0.005711334">
+        <testcase classname="test/framework/discovery/buildMenu.test.js" name="buildMenu &gt; 冇 menu 欄位嘅頁面唔會出現喺菜單" time="0.003677083">
+        </testcase>
+        <testcase classname="test/framework/discovery/buildMenu.test.js" name="buildMenu &gt; group 入面嘅項目跟 menu.order 排" time="0.000444333">
+        </testcase>
+        <testcase classname="test/framework/discovery/buildMenu.test.js" name="buildMenu &gt; permissions 唔夠會被自動過濾，唔會出現喺菜單" time="0.000200042">
+        </testcase>
+        <testcase classname="test/framework/discovery/buildMenu.test.js" name="buildMenu &gt; 冇項目嘅 group 唔會出現喺結果入面" time="0.000069833">
+        </testcase>
+        <testcase classname="test/framework/discovery/buildMenu.test.js" name="buildMenu &gt; 有項目嘅 group 保留晒 config 入面嘅 label／icon／order" time="0.000347042">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/framework/discovery/pages.test.js" timestamp="2026-10-06T05:56:22.764Z" hostname="samMacBook-Pro.local" tests="2" failures="0" errors="0" skipped="0" time="0.002130459">
+        <testcase classname="test/framework/discovery/pages.test.js" name="discoverPages &gt; 將 glob 結果轉做 { filePath, page, component } 陣列" time="0.001029084">
+        </testcase>
+        <testcase classname="test/framework/discovery/pages.test.js" name="discoverPages &gt; 唔傳 globModules 就用真正 pages 目錄嘅結果，搵到 login 同 home" time="0.000509125">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/framework/discovery/services.test.js" timestamp="2026-10-06T05:56:22.764Z" hostname="samMacBook-Pro.local" tests="4" failures="0" errors="0" skipped="0" time="0.003143">
+        <testcase classname="test/framework/discovery/services.test.js" name="buildServiceRegistry &gt; 用 service.name 做 key，default export 做拎到嗰個 service" time="0.00125025">
+        </testcase>
+        <testcase classname="test/framework/discovery/services.test.js" name="buildServiceRegistry &gt; 檔案冇 export const service 會拋錯，指名邊個檔案" time="0.000492084">
+        </testcase>
+        <testcase classname="test/framework/discovery/services.test.js" name="buildServiceRegistry &gt; 兩個檔案撞 service name 會拋錯" time="0.000218708">
+        </testcase>
+        <testcase classname="test/framework/discovery/services.test.js" name="useService &gt; 未註冊嘅 service 會即刻拋錯，指名個名" time="0.00017175">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/framework/discovery/validatePages.test.js" timestamp="2026-10-06T05:56:22.764Z" hostname="samMacBook-Pro.local" tests="26" failures="0" errors="0" skipped="0" time="0.005900958">
+        <testcase classname="test/framework/discovery/validatePages.test.js" name="validatePages &gt; 合法 metadata 唔會有錯誤" time="0.002260208">
+        </testcase>
+        <testcase classname="test/framework/discovery/validatePages.test.js" name="validatePages &gt; 冇 export const page 會報錯，唔會繼續檢查其他規則" time="0.000147333">
+        </testcase>
+        <testcase classname="test/framework/discovery/validatePages.test.js" name="validatePages &gt; 冇 export default（component）會報錯" time="0.000070291">
+        </testcase>
+        <testcase classname="test/framework/discovery/validatePages.test.js" name="validatePages &gt; 缺 page.name 會報錯" time="0.000094458">
+        </testcase>
+        <testcase classname="test/framework/discovery/validatePages.test.js" name="validatePages &gt; 缺 page.path 會報錯" time="0.00005075">
+        </testcase>
+        <testcase classname="test/framework/discovery/validatePages.test.js" name="validatePages &gt; 缺 page.title 會報錯" time="0.000043958">
+        </testcase>
+        <testcase classname="test/framework/discovery/validatePages.test.js" name="validatePages &gt; page.path 冇以「/」開頭會報錯" time="0.0000515">
+        </testcase>
+        <testcase classname="test/framework/discovery/validatePages.test.js" name="validatePages &gt; 兩個頁面撞 name 會報錯，並且指名邊個檔案" time="0.000061917">
+        </testcase>
+        <testcase classname="test/framework/discovery/validatePages.test.js" name="validatePages &gt; 兩個頁面撞 path 會報錯，並且指名邊個檔案" time="0.000066125">
+        </testcase>
+        <testcase classname="test/framework/discovery/validatePages.test.js" name="validatePages &gt; path 淨係大小寫唔同都算撞（vue-router 預設 sensitive:false）" time="0.000054667">
+        </testcase>
+        <testcase classname="test/framework/discovery/validatePages.test.js" name="validatePages &gt; path 有冇尾隨「/」都算撞（vue-router 預設 strict:false）" time="0.0000545">
+        </testcase>
+        <testcase classname="test/framework/discovery/validatePages.test.js" name="validatePages &gt; page.path 用 /403 會報錯（框架保留路由）" time="0.0000485">
+        </testcase>
+        <testcase classname="test/framework/discovery/validatePages.test.js" name="validatePages &gt; page.name 用 forbidden 會報錯（框架保留路由名）" time="0.000048375">
+        </testcase>
+        <testcase classname="test/framework/discovery/validatePages.test.js" name="validatePages &gt; page.name 用 not-found 會報錯（框架保留路由名）" time="0.000038416">
+        </testcase>
+        <testcase classname="test/framework/discovery/validatePages.test.js" name="validatePages &gt; page.public 唔係 boolean 會報錯" time="0.000050541">
+        </testcase>
+        <testcase classname="test/framework/discovery/validatePages.test.js" name="validatePages &gt; page.menu.group 冇喺 config/menu.js 定義會報錯" time="0.000103792">
+        </testcase>
+        <testcase classname="test/framework/discovery/validatePages.test.js" name="validatePages &gt; page.menu.order 唔係數字會報錯" time="0.000049584">
+        </testcase>
+        <testcase classname="test/framework/discovery/validatePages.test.js" name="validatePages &gt; page.menu.icon 唔係非空字串會報錯" time="0.000046875">
+        </testcase>
+        <testcase classname="test/framework/discovery/validatePages.test.js" name="validatePages &gt; page.requires.permissions 唔係字串陣列會報錯" time="0.000139792">
+        </testcase>
+        <testcase classname="test/framework/discovery/validatePages.test.js" name="validatePages &gt; page.requires.match 唔係 all/any 會報錯" time="0.000075416">
+        </testcase>
+        <testcase classname="test/framework/discovery/validatePages.test.js" name="validatePages &gt; 合法 requires 唔會報錯" time="0.000051334">
+        </testcase>
+        <testcase classname="test/framework/discovery/validatePages.test.js" name="validatePages &gt; page.requires 冇 roles 亦冇 permissions 會報錯（唔可以 fail-open）" time="0.000056792">
+        </testcase>
+        <testcase classname="test/framework/discovery/validatePages.test.js" name="validatePages &gt; page.requires.roles 係空陣列會報錯（唔可以 fail-open）" time="0.0000505">
+        </testcase>
+        <testcase classname="test/framework/discovery/validatePages.test.js" name="validatePages &gt; page.requires.permissions 係空陣列會報錯（唔可以 fail-open）" time="0.000037375">
+        </testcase>
+        <testcase classname="test/framework/discovery/validatePages.test.js" name="validatePages &gt; page.requires 有未知欄位（例如拼錯 permission）會報錯" time="0.000041375">
+        </testcase>
+        <testcase classname="test/framework/discovery/validatePages.test.js" name="validatePages &gt; page.public 同 page.requires 同時設定會報錯" time="0.000042042">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/framework/errors/ErrorBoundary.test.js" timestamp="2026-10-06T05:56:22.766Z" hostname="samMacBook-Pro.local" tests="3" failures="0" errors="0" skipped="0" time="0.0378315">
+        <testcase classname="test/framework/errors/ErrorBoundary.test.js" name="ErrorBoundary &gt; 子元件正常就直接渲染" time="0.019571375">
+        </testcase>
+        <testcase classname="test/framework/errors/ErrorBoundary.test.js" name="ErrorBoundary &gt; 子元件拋錯會顯示錯誤區塊，唔係白畫面" time="0.004300041">
+        </testcase>
+        <testcase classname="test/framework/errors/ErrorBoundary.test.js" name="ErrorBoundary &gt; 轉去第二頁會清返 error，唔會繼續顯示舊嗰個錯誤畫面" time="0.01291975">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/framework/errors/renderFatalBootError.test.js" timestamp="2026-10-06T05:56:22.766Z" hostname="samMacBook-Pro.local" tests="2" failures="0" errors="0" skipped="0" time="0.048214459">
+        <testcase classname="test/framework/errors/renderFatalBootError.test.js" name="renderFatalBootError &gt; 將每個錯誤列出，帶埋檔案路徑同訊息" time="0.043511375">
+        </testcase>
+        <testcase classname="test/framework/errors/renderFatalBootError.test.js" name="renderFatalBootError &gt; HTML 特殊字元會被跳脫，唔會當做 markup 插入" time="0.003722875">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/framework/http/HttpClient.test.js" timestamp="2026-10-06T05:56:22.766Z" hostname="samMacBook-Pro.local" tests="26" failures="0" errors="0" skipped="0" time="0.020792042">
+        <testcase classname="test/framework/http/HttpClient.test.js" name="HttpClient &gt; 回傳信封入面嘅 data，唔攞成個信封" time="0.00295675">
+        </testcase>
+        <testcase classname="test/framework/http/HttpClient.test.js" name="HttpClient &gt; 有 token 就帶 Authorization header" time="0.000280375">
+        </testcase>
+        <testcase classname="test/framework/http/HttpClient.test.js" name="HttpClient &gt; 冇 token 就唔帶 Authorization header" time="0.0001365">
+        </testcase>
+        <testcase classname="test/framework/http/HttpClient.test.js" name="HttpClient &gt; idempotent: true 帶 Idempotency-Key header" time="0.000379792">
+        </testcase>
+        <testcase classname="test/framework/http/HttpClient.test.js" name="HttpClient &gt; 冇指定 idempotencyKey 時，每次呼叫都係新 key" time="0.000231583">
+        </testcase>
+        <testcase classname="test/framework/http/HttpClient.test.js" name="HttpClient &gt; 指定 idempotencyKey 時，重試會重用同一個 key" time="0.00013975">
+        </testcase>
+        <testcase classname="test/framework/http/HttpClient.test.js" name="HttpClient &gt; query params 會被序列化到 URL" time="0.000394792">
+        </testcase>
+        <testcase classname="test/framework/http/HttpClient.test.js" name="HttpClient &gt; array query params keep repeated values instead of becoming a comma-delimited scalar" time="0.000129625">
+        </testcase>
+        <testcase classname="test/framework/http/HttpClient.test.js" name="HttpClient &gt; 後端回 success:false 就拋 ApiError，帶埋 code/message/details/requestId" time="0.000725958">
+        </testcase>
+        <testcase classname="test/framework/http/HttpClient.test.js" name="HttpClient &gt; 401 會叫 onUnauthorized" time="0.001352333">
+        </testcase>
+        <testcase classname="test/framework/http/HttpClient.test.js" name="HttpClient &gt; 429 會讀 Retry-After header" time="0.000250833">
+        </testcase>
+        <testcase classname="test/framework/http/HttpClient.test.js" name="HttpClient &gt; 5xx 冇合法 JSON body 都攞到 requestId（由 header 取）" time="0.000456416">
+        </testcase>
+        <testcase classname="test/framework/http/HttpClient.test.js" name="HttpClient &gt; 逾時會拋 ApiError code TIMEOUT" time="0.007887792">
+        </testcase>
+        <testcase classname="test/framework/http/HttpClient.test.js" name="HttpClient &gt; 外部 signal 取消時原樣拋出 AbortError，唔包做 ApiError" time="0.000709583">
+        </testcase>
+        <testcase classname="test/framework/http/HttpClient.test.js" name="HttpClient &gt; fetch 本身失敗（網路錯誤）拋 ApiError code NETWORK_ERROR" time="0.000219">
+        </testcase>
+        <testcase classname="test/framework/http/HttpClient.test.js" name="HttpClient &gt; FormData（multipart 上傳） &gt; body 係 FormData 就原樣傳俾 fetch，唔會 JSON.stringify 或者手動設 Content-Type" time="0.000369625">
+        </testcase>
+        <testcase classname="test/framework/http/HttpClient.test.js" name="HttpClient &gt; FormData（multipart 上傳） &gt; 普通物件 body 一樣照舊 JSON.stringify＋設 Content-Type（FormData 支援唔影響現有行為）" time="0.000117541">
+        </testcase>
+        <testcase classname="test/framework/http/HttpClient.test.js" name="HttpClient &gt; getBlob()（二進位下載） &gt; 成功回應回 { blob, contentType }，唔套用 JSON envelope 解析" time="0.000452">
+        </testcase>
+        <testcase classname="test/framework/http/HttpClient.test.js" name="HttpClient &gt; getBlob()（二進位下載） &gt; 附件短期 session 與 range 只放在 request headers，不放入 URL" time="0.000227083">
+        </testcase>
+        <testcase classname="test/framework/http/HttpClient.test.js" name="HttpClient &gt; getBlob()（二進位下載） &gt; 失敗回應解返 JSON envelope 嘅 code／message，拋 ApiError" time="0.000146625">
+        </testcase>
+        <testcase classname="test/framework/http/HttpClient.test.js" name="HttpClient &gt; getBlob()（二進位下載） &gt; 401 會叫 onUnauthorized" time="0.000151083">
+        </testcase>
+        <testcase classname="test/framework/http/HttpClient.test.js" name="HttpClient &gt; 設備簽章 &gt; signed 嘅請求會簽 pathname 同真正送出嗰個 body 字串" time="0.00031375">
+        </testcase>
+        <testcase classname="test/framework/http/HttpClient.test.js" name="HttpClient &gt; 設備簽章 &gt; 冇 body 嗰陣簽 undefined，同後端對空 body 嘅處理一致" time="0.0001185">
+        </testcase>
+        <testcase classname="test/framework/http/HttpClient.test.js" name="HttpClient &gt; 設備簽章 &gt; 冇設定簽名器就即刻炸，唔會靜靜哋send一個冇簽章嘅請求" time="0.000492583">
+        </testcase>
+        <testcase classname="test/framework/http/HttpClient.test.js" name="HttpClient &gt; 設備簽章 &gt; 冇 signed 嘅請求唔會叫簽名器" time="0.000120458">
+        </testcase>
+        <testcase classname="test/framework/http/HttpClient.test.js" name="HttpClient 預設值 &gt; 預設 getToken 由 localStorage 讀 config 指定嘅 key" time="0.000267458">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/framework/http/useRequestAbort.test.js" timestamp="2026-10-06T05:56:22.767Z" hostname="samMacBook-Pro.local" tests="1" failures="0" errors="0" skipped="0" time="0.014688167">
+        <testcase classname="test/framework/http/useRequestAbort.test.js" name="useRequestAbort &gt; 元件卸載時會 abort signal" time="0.013937167">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/framework/layout/AppShell.test.js" timestamp="2026-10-06T05:56:22.767Z" hostname="samMacBook-Pro.local" tests="3" failures="0" errors="0" skipped="0" time="0.088517292">
+        <testcase classname="test/framework/layout/AppShell.test.js" name="AppShell &gt; 渲染子路由嘅元件" time="0.047140375">
+        </testcase>
+        <testcase classname="test/framework/layout/AppShell.test.js" name="AppShell &gt; Sidebar 顯示由 pages prop 算出嚟嘅菜單項目" time="0.016736458">
+        </testcase>
+        <testcase classname="test/framework/layout/AppShell.test.js" name="AppShell &gt; 撳 Topbar 嘅選單按鈕會切換 drawer 開關" time="0.023701333">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/framework/layout/AppSidebar.test.js" timestamp="2026-10-06T05:56:22.767Z" hostname="samMacBook-Pro.local" tests="2" failures="0" errors="0" skipped="0" time="0.0300205">
+        <testcase classname="test/framework/layout/AppSidebar.test.js" name="AppSidebar &gt; 列出每個 group 嘅項目" time="0.024394333">
+        </testcase>
+        <testcase classname="test/framework/layout/AppSidebar.test.js" name="AppSidebar &gt; 當前路由對應嘅項目會 highlight" time="0.00480175">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/framework/layout/AppTopbar.test.js" timestamp="2026-10-06T05:56:22.767Z" hostname="samMacBook-Pro.local" tests="6" failures="0" errors="0" skipped="0" time="0.094786334">
+        <testcase classname="test/framework/layout/AppTopbar.test.js" name="AppTopbar &gt; 左上角有公司「M」徽章同 appConfig.title，唔會再顯示舊嘅「ERP System」" time="0.02605325">
+        </testcase>
+        <testcase classname="test/framework/layout/AppTopbar.test.js" name="AppTopbar &gt; 下拉選單嘅標籤係當前登入用戶嘅 displayName" time="0.003896875">
+        </testcase>
+        <testcase classname="test/framework/layout/AppTopbar.test.js" name="AppTopbar &gt; 撳選單按鈕會 emit toggle-drawer" time="0.005832959">
+        </testcase>
+        <testcase classname="test/framework/layout/AppTopbar.test.js" name="AppTopbar &gt; 落拉選單揀「修改密碼」會轉去 change-password 頁" time="0.017410459">
+        </testcase>
+        <testcase classname="test/framework/layout/AppTopbar.test.js" name="AppTopbar &gt; 落拉選單揀「登出」會叫 session.logout() 再轉去登入頁" time="0.025406459">
+        </testcase>
+        <testcase classname="test/framework/layout/AppTopbar.test.js" name="AppTopbar &gt; 後端登出請求失敗都照樣轉去登入頁（本地 session 已經清咗）" time="0.013137708">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/framework/layout/PageHeader.test.js" timestamp="2026-10-06T05:56:22.767Z" hostname="samMacBook-Pro.local" tests="4" failures="0" errors="0" skipped="0" time="0.030056042">
+        <testcase classname="test/framework/layout/PageHeader.test.js" name="PageHeader &gt; 由當前路由 meta.title 出標題" time="0.015505584">
+        </testcase>
+        <testcase classname="test/framework/layout/PageHeader.test.js" name="PageHeader &gt; meta.menuGroup 對得上 config 入面嘅 group 就顯示麵包屑" time="0.0008955">
+        </testcase>
+        <testcase classname="test/framework/layout/PageHeader.test.js" name="PageHeader &gt; 冇 menuGroup 就唔顯示麵包屑" time="0.00064975">
+        </testcase>
+        <testcase classname="test/framework/layout/PageHeader.test.js" name="PageHeader &gt; actions slot 俾頁面放操作按鈕" time="0.012328333">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/framework/routing/authorizationRefresh.test.js" timestamp="2026-10-06T05:56:22.768Z" hostname="samMacBook-Pro.local" tests="7" failures="0" errors="0" skipped="0" time="0.189697834">
+        <testcase classname="test/framework/routing/authorizationRefresh.test.js" name="續期之後重新評估授權 &gt; 撤走頁面要求嘅權限，人會即刻由嗰頁被導去 403，唔使等佢自己導航" time="0.009484875">
+        </testcase>
+        <testcase classname="test/framework/routing/authorizationRefresh.test.js" name="續期之後重新評估授權 &gt; 續期回一組一樣嘅權限唔會郁到人——續期每 15 分鐘一次，唔可以次次踢走佢" time="0.002524792">
+        </testcase>
+        <testcase classname="test/framework/routing/authorizationRefresh.test.js" name="續期之後重新評估授權 &gt; 續期加咗權限唔會郁到人" time="0.002468917">
+        </testcase>
+        <testcase classname="test/framework/routing/authorizationRefresh.test.js" name="續期之後重新評估授權 &gt; 撤走一個同當前頁無關嘅權限唔會郁到人" time="0.001047166">
+        </testcase>
+        <testcase classname="test/framework/routing/authorizationRefresh.test.js" name="續期之後重新評估授權 &gt; 清 session（登出／401）唔會由呢個機制帶走，留返畀原本嗰兩條登出路徑" time="0.002293542">
+        </testcase>
+        <testcase classname="test/framework/routing/authorizationRefresh.test.js" name="同 SupplierBankPanel 夾埋 &gt; 撤走頁內權限（supplier.bank.view）：守衛唔郁人，但明文要冇咗" time="0.108481666">
+        </testcase>
+        <testcase classname="test/framework/routing/authorizationRefresh.test.js" name="同 SupplierBankPanel 夾埋 &gt; 撤走頁面權限（supplier.view）：守衛踢去 403，unmount 順手清走明文" time="0.059157334">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/framework/routing/buildRoutes.test.js" timestamp="2026-10-06T05:56:22.768Z" hostname="samMacBook-Pro.local" tests="4" failures="0" errors="0" skipped="0" time="0.002413042">
+        <testcase classname="test/framework/routing/buildRoutes.test.js" name="buildRoutes &gt; public 頁面留喺頂層，帶埋 meta.public" time="0.001273">
+        </testcase>
+        <testcase classname="test/framework/routing/buildRoutes.test.js" name="buildRoutes &gt; 非 public 頁面包做 AppShell 呢個父路由嘅 children，path 斬走開頭嘅「/」" time="0.000261708">
+        </testcase>
+        <testcase classname="test/framework/routing/buildRoutes.test.js" name="buildRoutes &gt; 非 public 頁面嘅 meta.requires 會原樣傳落 route.meta" time="0.000105958">
+        </testcase>
+        <testcase classname="test/framework/routing/buildRoutes.test.js" name="buildRoutes &gt; 唔理有冇 discovered pages，403 同 404 都一定喺度" time="0.000091209">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/framework/routing/router.test.js" timestamp="2026-10-06T05:56:22.768Z" hostname="samMacBook-Pro.local" tests="7" failures="0" errors="0" skipped="0" time="0.013786292">
+        <testcase classname="test/framework/routing/router.test.js" name="createAppRouter &gt; 未登入打 protected 路由會被導去登入頁，帶埋原本路徑" time="0.007449208">
+        </testcase>
+        <testcase classname="test/framework/routing/router.test.js" name="createAppRouter &gt; 已登入就可以直接去 protected 路由" time="0.001302167">
+        </testcase>
+        <testcase classname="test/framework/routing/router.test.js" name="createAppRouter &gt; public 路由（login）唔使登入都去得" time="0.000787959">
+        </testcase>
+        <testcase classname="test/framework/routing/router.test.js" name="createAppRouter &gt; 有 item.mgmt 先入得 /items/categories，冇就導去 /403" time="0.001714125">
+        </testcase>
+        <testcase classname="test/framework/routing/router.test.js" name="createAppRouter &gt; 只有 item.mgmt 亦可進入 Item 列表、詳情與變更紀錄" time="0.000765041">
+        </testcase>
+        <testcase classname="test/framework/routing/router.test.js" name="createAppRouter &gt; /items/categories、/items/brands、/items/uoms 都係各自獨立嘅 static route，唔會撞名" time="0.000559291">
+        </testcase>
+        <testcase classname="test/framework/routing/router.test.js" name="createAppRouter &gt; 即使 discovery 順序將 dynamic /items/:id 排喺 static /items/categories 前面，都唔會誤接" time="0.000345">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/framework/ui/DataTable.test.js" timestamp="2026-10-06T05:56:22.768Z" hostname="samMacBook-Pro.local" tests="15" failures="0" errors="0" skipped="0" time="0.1336115">
+        <testcase classname="test/framework/ui/DataTable.test.js" name="DataTable &gt; mount 之後會自動叫一次 fetch，攞返資料填落 QTable" time="0.033689833">
+        </testcase>
+        <testcase classname="test/framework/ui/DataTable.test.js" name="DataTable &gt; fetch 拋錯會顯示錯誤 banner，唔會當正常結果咁渲染" time="0.006632083">
+        </testcase>
+        <testcase classname="test/framework/ui/DataTable.test.js" name="DataTable &gt; 撳重試會再叫一次 fetch" time="0.010120959">
+        </testcase>
+        <testcase classname="test/framework/ui/DataTable.test.js" name="DataTable &gt; QTable 嘅 @request（例如揭第二頁、排序）會帶埋新參數再叫 fetch" time="0.015565834">
+        </testcase>
+        <testcase classname="test/framework/ui/DataTable.test.js" name="DataTable &gt; expose 咗 reload()，等頁面喺 CRUD 操作之後可以手動叫" time="0.005081542">
+        </testcase>
+        <testcase classname="test/framework/ui/DataTable.test.js" name="DataTable &gt; 將頁面傳落嚟嘅 slot（例如 body-cell-actions）原樣轉發俾內部嘅 QTable" time="0.023468708">
+        </testcase>
+        <testcase classname="test/framework/ui/DataTable.test.js" name="DataTable &gt; 頁面冇傳 #no-data 就用返 DataTable 自己嘅預設空狀態文案" time="0.003471917">
+        </testcase>
+        <testcase classname="test/framework/ui/DataTable.test.js" name="DataTable &gt; 頁面有傳 #no-data 就用返頁面自己嘅版本，唔會兩個一齊出" time="0.003164042">
+        </testcase>
+        <testcase classname="test/framework/ui/DataTable.test.js" name="DataTable &gt; 有將 appConfig 嘅 pageSizeOptions 傳落 QTable（唔可以用返 Quasar 預設嗰套，會有「全部」）" time="0.00617975">
+        </testcase>
+        <testcase classname="test/framework/ui/DataTable.test.js" name="DataTable &gt; 有傳 initialPagination 就用嚟做第一次 fetch 嘅參數，等頁面可以由 URL query 還原返之前揭緊嗰頁" time="0.005154625">
+        </testcase>
+        <testcase classname="test/framework/ui/DataTable.test.js" name="DataTable &gt; 冇傳 initialPagination 就同之前一樣用預設值，唔影響現有頁面" time="0.00280875">
+        </testcase>
+        <testcase classname="test/framework/ui/DataTable.test.js" name="DataTable &gt; 客戶端模式（冇傳 fetch，改傳現成嘅 rows） &gt; 直接用傳落嚟嘅 rows 渲染，唔會叫 fetch" time="0.006917833">
+        </testcase>
+        <testcase classname="test/framework/ui/DataTable.test.js" name="DataTable &gt; 客戶端模式（冇傳 fetch，改傳現成嘅 rows） &gt; 轉發 loading prop 俾 QTable（伺服器模式先用自己個 fetchLoading）" time="0.001952833">
+        </testcase>
+        <testcase classname="test/framework/ui/DataTable.test.js" name="DataTable &gt; 客戶端模式（冇傳 fetch，改傳現成嘅 rows） &gt; rows prop 改咗，畫面會跟住反映（Vue reactivity，唔使 reload()）" time="0.0037035">
+        </testcase>
+        <testcase classname="test/framework/ui/DataTable.test.js" name="DataTable &gt; 客戶端模式（冇傳 fetch，改傳現成嘅 rows） &gt; reload() 喺客戶端模式係安全嘅 no-op，唔會拋錯" time="0.003405375">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/framework/ui/FormPanel.test.js" timestamp="2026-10-06T05:56:22.769Z" hostname="samMacBook-Pro.local" tests="8" failures="0" errors="0" skipped="0" time="0.085657333">
+        <testcase classname="test/framework/ui/FormPanel.test.js" name="FormPanel &gt; submit 成功會 emit success，帶埋 onSubmit 嘅回傳值" time="0.03116575">
+        </testcase>
+        <testcase classname="test/framework/ui/FormPanel.test.js" name="FormPanel &gt; submit 期間 submitting 係 true，完成之後返回 false" time="0.0057575">
+        </testcase>
+        <testcase classname="test/framework/ui/FormPanel.test.js" name="FormPanel &gt; submit 未完成之前再 submit 一次，唔會再次呼叫 onSubmit（防止雙擊／重複提交）" time="0.024132791">
+        </testcase>
+        <testcase classname="test/framework/ui/FormPanel.test.js" name="FormPanel &gt; onSubmit 拋出帶 body location details 嘅錯誤，會經 fieldError 顯示喺對應欄位，同埋喺總覽 banner 度列多次" time="0.009907792">
+        </testcase>
+        <testcase classname="test/framework/ui/FormPanel.test.js" name="FormPanel &gt; 提交失敗之後，焦點會移去 error summary（role=alert），screen reader 用戶先會知道出咗事" time="0.005904792">
+        </testcase>
+        <testcase classname="test/framework/ui/FormPanel.test.js" name="FormPanel &gt; 巢狀 path（/address/city）會轉做 dot notation 嘅 field key" time="0.002972084">
+        </testcase>
+        <testcase classname="test/framework/ui/FormPanel.test.js" name="FormPanel &gt; 錯誤冇 details 就顯示總體錯誤訊息，唔會靜靜哋吞咗" time="0.002598625">
+        </testcase>
+        <testcase classname="test/framework/ui/FormPanel.test.js" name="FormPanel &gt; details 全部都唔係 body location（例如 query），都會顯示總體錯誤訊息" time="0.002302334">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/framework/ui/PasswordReasonDialog.test.js" timestamp="2026-10-06T05:56:22.769Z" hostname="samMacBook-Pro.local" tests="5" failures="0" errors="0" skipped="0" time="0.112301708">
+        <testcase classname="test/framework/ui/PasswordReasonDialog.test.js" name="PasswordReasonDialog &gt; 撳確認前兩欄都合格，emit ok 帶埋 { reason, password }" time="0.045291292">
+        </testcase>
+        <testcase classname="test/framework/ui/PasswordReasonDialog.test.js" name="PasswordReasonDialog &gt; 原因少於 5 字元唔會 emit ok" time="0.017122541">
+        </testcase>
+        <testcase classname="test/framework/ui/PasswordReasonDialog.test.js" name="PasswordReasonDialog &gt; 密碼留空唔會 emit ok" time="0.011157458">
+        </testcase>
+        <testcase classname="test/framework/ui/PasswordReasonDialog.test.js" name="PasswordReasonDialog &gt; 撳取消 emit hide，唔 emit ok" time="0.016076042">
+        </testcase>
+        <testcase classname="test/framework/ui/PasswordReasonDialog.test.js" name="PasswordReasonDialog &gt; 顯示傳入嘅 title／message／okLabel" time="0.021724875">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/framework/ui/confirm.test.js" timestamp="2026-10-06T05:56:22.769Z" hostname="samMacBook-Pro.local" tests="15" failures="0" errors="0" skipped="0" time="0.006834875">
+        <testcase classname="test/framework/ui/confirm.test.js" name="confirm &gt; 撳確認會 resolve true" time="0.001839583">
+        </testcase>
+        <testcase classname="test/framework/ui/confirm.test.js" name="confirm &gt; 撳取消會 resolve false" time="0.000186791">
+        </testcase>
+        <testcase classname="test/framework/ui/confirm.test.js" name="confirm &gt; persistent: true，唔可以撳背景／ESC 關閉" time="0.001279">
+        </testcase>
+        <testcase classname="test/framework/ui/confirm.test.js" name="confirmDelete &gt; 用統一嘅刪除確認文案，帶埋主體名" time="0.000335958">
+        </testcase>
+        <testcase classname="test/framework/ui/confirm.test.js" name="promptPassword &gt; 撳確認會 resolve 輸入咗嘅密碼" time="0.000396542">
+        </testcase>
+        <testcase classname="test/framework/ui/confirm.test.js" name="promptPassword &gt; 撳取消會 resolve null，唔係 false——同 confirm() 分得出嚟" time="0.00011525">
+        </testcase>
+        <testcase classname="test/framework/ui/confirm.test.js" name="promptPassword &gt; prompt 型別係 password，唔係普通 text" time="0.0001235">
+        </testcase>
+        <testcase classname="test/framework/ui/confirm.test.js" name="promptPassword &gt; 空密碼過唔到 isValid" time="0.000071417">
+        </testcase>
+        <testcase classname="test/framework/ui/confirm.test.js" name="promptPassword &gt; requireReason: true &gt; 用 PasswordReasonDialog 呢個 component，唔係內建嘅 prompt" time="0.000527834">
+        </testcase>
+        <testcase classname="test/framework/ui/confirm.test.js" name="promptPassword &gt; requireReason: true &gt; 撳確認會 resolve { reason, password }，唔再係得返一個 string" time="0.000168125">
+        </testcase>
+        <testcase classname="test/framework/ui/confirm.test.js" name="promptPassword &gt; requireReason: true &gt; 撳取消一樣 resolve null" time="0.000096417">
+        </testcase>
+        <testcase classname="test/framework/ui/confirm.test.js" name="promptReason &gt; 撳確認會 resolve 輸入咗嘅原因" time="0.000129417">
+        </testcase>
+        <testcase classname="test/framework/ui/confirm.test.js" name="promptReason &gt; 撳取消會 resolve null" time="0.000063167">
+        </testcase>
+        <testcase classname="test/framework/ui/confirm.test.js" name="promptReason &gt; prompt 型別係 textarea，冇 password 呢個 type" time="0.000136458">
+        </testcase>
+        <testcase classname="test/framework/ui/confirm.test.js" name="promptReason &gt; 原因少於 5 字或者多過 190 字過唔到 isValid" time="0.00027575">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/framework/ui/notify.test.js" timestamp="2026-10-06T05:56:22.770Z" hostname="samMacBook-Pro.local" tests="3" failures="0" errors="0" skipped="0" time="0.003164667">
+        <testcase classname="test/framework/ui/notify.test.js" name="notify &gt; notifySuccess 用 positive type，浮喺頂部" time="0.001993833">
+        </testcase>
+        <testcase classname="test/framework/ui/notify.test.js" name="notify &gt; notifyError 用 negative type" time="0.000204583">
+        </testcase>
+        <testcase classname="test/framework/ui/notify.test.js" name="notify &gt; 冇傳訊息就用預設文案" time="0.000264875">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/framework/ui/useCrud.test.js" timestamp="2026-10-06T05:56:22.770Z" hostname="samMacBook-Pro.local" tests="7" failures="0" errors="0" skipped="0" time="0.016454417">
+        <testcase classname="test/framework/ui/useCrud.test.js" name="useCrud &gt; list 直接轉俾 resourceApi.list，原樣回傳結果" time="0.002257291">
+        </testcase>
+        <testcase classname="test/framework/ui/useCrud.test.js" name="useCrud &gt; create 成功會 notify 並且 reload dataTable" time="0.007231292">
+        </testcase>
+        <testcase classname="test/framework/ui/useCrud.test.js" name="useCrud &gt; create 失敗會原樣拋出，唔會喺呢度截住（等 FormPanel 拆 field errors）" time="0.003988416">
+        </testcase>
+        <testcase classname="test/framework/ui/useCrud.test.js" name="useCrud &gt; update 成功會 notify 並且 reload dataTable" time="0.000257833">
+        </testcase>
+        <testcase classname="test/framework/ui/useCrud.test.js" name="useCrud &gt; remove：用戶喺確認對話框撳取消，唔會真係刪除" time="0.000150416">
+        </testcase>
+        <testcase classname="test/framework/ui/useCrud.test.js" name="useCrud &gt; remove：確認之後成功刪除，notify 並且 reload" time="0.000143209">
+        </testcase>
+        <testcase classname="test/framework/ui/useCrud.test.js" name="useCrud &gt; remove：刪除失敗會 notifyError，唔會拋出" time="0.000097458">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/customers/create.test.js" timestamp="2026-10-06T05:56:22.770Z" hostname="samMacBook-Pro.local" tests="2" failures="0" errors="0" skipped="0" time="0.157915333">
+        <testcase classname="test/pages/customers/create.test.js" name="pages/customers/CustomerCreatePage.vue &gt; requires customer.mgmt and saves a minimal Draft" time="0.101502125">
+        </testcase>
+        <testcase classname="test/pages/customers/create.test.js" name="pages/customers/CustomerCreatePage.vue &gt; asks for an approver only after the server requires activation approval" time="0.055628583">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/customers/detail.test.js" timestamp="2026-10-06T05:56:22.771Z" hostname="samMacBook-Pro.local" tests="4" failures="0" errors="0" skipped="0" time="0.169926625">
+        <testcase classname="test/pages/customers/detail.test.js" name="pages/customers/CustomerDetailPage.vue &gt; renders root detail, Draft status and accessible basic edit" time="0.078185209">
+        </testcase>
+        <testcase classname="test/pages/customers/detail.test.js" name="pages/customers/CustomerDetailPage.vue &gt; keeps the edit visible when the server reports a version conflict" time="0.034980125">
+        </testcase>
+        <testcase classname="test/pages/customers/detail.test.js" name="pages/customers/CustomerDetailPage.vue &gt; uses the customer in the successful command response" time="0.041990375">
+        </testcase>
+        <testcase classname="test/pages/customers/detail.test.js" name="pages/customers/CustomerDetailPage.vue &gt; reloads the reused page when the customer route id changes" time="0.013908292">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/customers/imports.test.js" timestamp="2026-10-06T05:56:22.771Z" hostname="samMacBook-Pro.local" tests="2" failures="0" errors="0" skipped="0" time="0.105436584">
+        <testcase classname="test/pages/customers/imports.test.js" name="customer import page &gt; is permission-gated and exposes the four-step template/upload/precheck/confirm workflow" time="0.055538167">
+        </testcase>
+        <testcase classname="test/pages/customers/imports.test.js" name="customer import page &gt; shows skipped results and structured row diagnostics" time="0.048844667">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/customers/list.test.js" timestamp="2026-10-06T05:56:22.771Z" hostname="samMacBook-Pro.local" tests="3" failures="0" errors="0" skipped="0" time="0.13221">
+        <testcase classname="test/pages/customers/list.test.js" name="pages/customers/CustomersPage.vue &gt; is a customer.view menu page with explicit status and detail route" time="0.065394375">
+        </testcase>
+        <testcase classname="test/pages/customers/list.test.js" name="pages/customers/CustomersPage.vue &gt; keeps exact/prefix search, status and sorting in shareable URL state" time="0.036554292">
+        </testcase>
+        <testcase classname="test/pages/customers/list.test.js" name="pages/customers/CustomersPage.vue &gt; exports exactly the visible search, status and sort without sensitive detail fields" time="0.028626458">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/customers/task018.test.js" timestamp="2026-10-06T05:56:22.771Z" hostname="samMacBook-Pro.local" tests="5" failures="0" errors="0" skipped="0" time="0.147441">
+        <testcase classname="test/pages/customers/task018.test.js" name="Customer TASK-018 pages &gt; uses the approved routes and permission gates" time="0.003945583">
+        </testcase>
+        <testcase classname="test/pages/customers/task018.test.js" name="Customer TASK-018 pages &gt; shows a stale diff, blocks approve and still allows reject" time="0.06417225">
+        </testcase>
+        <testcase classname="test/pages/customers/task018.test.js" name="Customer TASK-018 pages &gt; shows withdraw only when the requester still has customer.mgmt" time="0.043080375">
+        </testcase>
+        <testcase classname="test/pages/customers/task018.test.js" name="Customer TASK-018 pages &gt; keeps the detail usable when eligible approvers cannot be loaded" time="0.014659417">
+        </testcase>
+        <testcase classname="test/pages/customers/task018.test.js" name="Customer TASK-018 pages &gt; settings states prospective scope and sends reason, password and version" time="0.020814875">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/inventory/inventoryInquiries.test.js" timestamp="2026-10-06T05:56:22.771Z" hostname="samMacBook-Pro.local" tests="5" failures="0" errors="0" skipped="0" time="0.234686667">
+        <testcase classname="test/pages/inventory/inventoryInquiries.test.js" name="TASK-017 Stock / Lot / Movement UI &gt; registers all inquiry pages under inventory.view" time="0.003429583">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryInquiries.test.js" name="TASK-017 Stock / Lot / Movement UI &gt; restores Stock URL filters and drills from a complete SKU aggregate into buckets" time="0.127703875">
+            <system-err>
+[VUE_ROUTER_R0004] No match found for location with path &quot;/inventory/lots&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+[VUE_ROUTER_R0004] No match found for location with path &quot;/inventory/movements&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/inventory/lots&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+[VUE_ROUTER_R0004] No match found for location with path &quot;/inventory/movements&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/inventory/lots&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+[VUE_ROUTER_R0004] No match found for location with path &quot;/inventory/movements&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryInquiries.test.js" name="TASK-017 Stock / Lot / Movement UI &gt; aborts a stale Stock aggregate request when filters change" time="0.026467459">
+            <system-err>
+[VUE_ROUTER_R0004] No match found for location with path &quot;/inventory/lots&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+[VUE_ROUTER_R0004] No match found for location with path &quot;/inventory/movements&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/inventory/lots&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+[VUE_ROUTER_R0004] No match found for location with path &quot;/inventory/movements&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/inventory/lots&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+[VUE_ROUTER_R0004] No match found for location with path &quot;/inventory/movements&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryInquiries.test.js" name="TASK-017 Stock / Lot / Movement UI &gt; shows Lot expiry state with icon text and keeps distinct quantities" time="0.024070209">
+            <system-err>
+[VUE_ROUTER_R0004] No match found for location with path &quot;/inventory/stocks&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+[VUE_ROUTER_R0004] No match found for location with path &quot;/inventory/movements&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/inventory/stocks&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+[VUE_ROUTER_R0004] No match found for location with path &quot;/inventory/movements&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryInquiries.test.js" name="TASK-017 Stock / Lot / Movement UI &gt; opens Movement source, group legs and reversal links from restorable URL state" time="0.052137792">
+            <system-err>
+[VUE_ROUTER_R0004] No match found for location with path &quot;/inventory/stocks&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+[VUE_ROUTER_R0004] No match found for location with path &quot;/inventory/lots&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/inventory/stocks&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+[VUE_ROUTER_R0004] No match found for location with path &quot;/inventory/lots&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+            </system-err>
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/inventory/inventoryWarehouses.test.js" timestamp="2026-10-06T05:56:22.772Z" hostname="samMacBook-Pro.local" tests="4" failures="0" errors="0" skipped="0" time="0.151148792">
+        <testcase classname="test/pages/inventory/inventoryWarehouses.test.js" name="TASK-011 Warehouse / Bin 管理頁 &gt; 掛在獨立 Inventory menu 並以 view permission 保護" time="0.003616833">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryWarehouses.test.js" name="TASK-011 Warehouse / Bin 管理頁 &gt; view-only 可選 Warehouse、查看 Bin 與 owner-safe blocker，但沒有管理動作" time="0.062117792">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryWarehouses.test.js" name="TASK-011 Warehouse / Bin 管理頁 &gt; 409 保留編輯內容並提示重新核對" time="0.068187042">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryWarehouses.test.js" name="TASK-011 Warehouse / Bin 管理頁 &gt; 停用前顯示 blocker 摘要並以 password + reason + version 提交" time="0.016297125">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/items/catalogPages.test.js" timestamp="2026-10-06T05:56:22.772Z" hostname="samMacBook-Pro.local" tests="37" failures="0" errors="0" skipped="0" time="1.071973959">
+        <testcase classname="test/pages/items/catalogPages.test.js" name="pages/items/CategoriesPage.vue &gt; 開機載入分類樹，預設帶 includeArchived: false（篩選由後端負責，見 FR-DELETE-005）" time="0.042040541">
+        </testcase>
+        <testcase classname="test/pages/items/catalogPages.test.js" name="pages/items/CategoriesPage.vue &gt; 撳「顯示已封存」會帶 includeArchived: true 重新載入" time="0.040783375">
+        </testcase>
+        <testcase classname="test/pages/items/catalogPages.test.js" name="pages/items/CategoriesPage.vue &gt; 開機讀取失敗（例如權限被收咗）：顯示錯誤提示，唔會靜靜哋當做冇資料" time="0.011838709">
+        </testcase>
+        <testcase classname="test/pages/items/catalogPages.test.js" name="pages/items/CategoriesPage.vue &gt; 只有 item.view 冇 item.mgmt：睇得到樹，但冇「新增分類」按鈕同節點操作選單" time="0.009249">
+        </testcase>
+        <testcase classname="test/pages/items/catalogPages.test.js" name="pages/items/CategoriesPage.vue &gt; 新增分類：提交後重新載入樹並提示成功" time="0.059854042">
+        </testcase>
+        <testcase classname="test/pages/items/catalogPages.test.js" name="pages/items/CategoriesPage.vue &gt; 編輯／移動：帶目前版本號整組送出" time="0.047437834">
+        </testcase>
+        <testcase classname="test/pages/items/catalogPages.test.js" name="pages/items/CategoriesPage.vue &gt; 編輯移動父層選單會排除自己同自己嘅子孫" time="0.034582208">
+        </testcase>
+        <testcase classname="test/pages/items/catalogPages.test.js" name="pages/items/CategoriesPage.vue &gt; VERSION_CONFLICT：重新載入樹並顯示提示，唔會直接覆蓋" time="0.03933775">
+        </testcase>
+        <testcase classname="test/pages/items/catalogPages.test.js" name="pages/items/CategoriesPage.vue &gt; 停用：用 promptReason（唔使密碼），帶 reason 同 version" time="0.018415709">
+        </testcase>
+        <testcase classname="test/pages/items/catalogPages.test.js" name="pages/items/CategoriesPage.vue &gt; 啟用：Inactive 節點先顯示「啟用」選項" time="0.019484708">
+        </testcase>
+        <testcase classname="test/pages/items/catalogPages.test.js" name="pages/items/CategoriesPage.vue &gt; 取消 promptReason 唔會呼叫任何 API" time="0.014935">
+        </testcase>
+        <testcase classname="test/pages/items/catalogPages.test.js" name="pages/items/CategoriesPage.vue &gt; 封存：用 promptPassword({ requireReason: true })" time="0.018608667">
+        </testcase>
+        <testcase classname="test/pages/items/catalogPages.test.js" name="pages/items/CategoriesPage.vue &gt; 刪除：帶埋 version（跟 archive／restore 同一組值），唔係淨係 reason／password" time="0.018723125">
+        </testcase>
+        <testcase classname="test/pages/items/catalogPages.test.js" name="pages/items/CategoriesPage.vue &gt; 刪除失敗（例如仍有子分類）：顯示後端嘅中文訊息，唔會靜靜哋失敗" time="0.01608975">
+        </testcase>
+        <testcase classname="test/pages/items/catalogPages.test.js" name="pages/items/CategoriesPage.vue &gt; 從封存恢復：只有 Archived 節點顯示「從封存恢復」，成功後恢復為 Inactive" time="0.029060542">
+        </testcase>
+        <testcase classname="test/pages/items/catalogPages.test.js" name="pages/items/CategoriesPage.vue &gt; 屬性規則：打開時讀返現有指派，勾走一個、揀多一個，帶埋 expectedAttributeIds 一次過覆蓋" time="0.035414917">
+        </testcase>
+        <testcase classname="test/pages/items/catalogPages.test.js" name="pages/items/CategoriesPage.vue &gt; 屬性規則 CATEGORY_ATTRIBUTES_STALE：重新載入現況並顯示提示，唔會直接覆蓋" time="0.028954542">
+        </testcase>
+        <testcase classname="test/pages/items/catalogPages.test.js" name="pages/items/BrandsPage.vue &gt; 開機以分頁 fetch 載入品牌，顯示喺表入面" time="0.034660875">
+        </testcase>
+        <testcase classname="test/pages/items/catalogPages.test.js" name="pages/items/BrandsPage.vue &gt; 只有 item.view：睇得到列表，但冇「新增品牌」按鈕同操作選單" time="0.035437042">
+        </testcase>
+        <testcase classname="test/pages/items/catalogPages.test.js" name="pages/items/BrandsPage.vue &gt; 新增品牌：提交後重新整理表格並提示成功" time="0.040744875">
+        </testcase>
+        <testcase classname="test/pages/items/catalogPages.test.js" name="pages/items/BrandsPage.vue &gt; 停用：promptReason 唔使密碼；封存／刪除：promptPassword 要密碼" time="0.036703458">
+        </testcase>
+        <testcase classname="test/pages/items/catalogPages.test.js" name="pages/items/BrandsPage.vue &gt; 刪除失敗時顯示後端訊息，唔會靜靜哋失敗" time="0.029499958">
+        </testcase>
+        <testcase classname="test/pages/items/catalogPages.test.js" name="pages/items/BrandsPage.vue &gt; 刪除：帶埋 version（跟 archive／restore 同一組值），唔係淨係 reason／password" time="0.028695167">
+        </testcase>
+        <testcase classname="test/pages/items/catalogPages.test.js" name="pages/items/UomsPage.vue &gt; 開機載入不分頁嘅單位小目錄，預設帶 includeArchived: false" time="0.01231725">
+        </testcase>
+        <testcase classname="test/pages/items/catalogPages.test.js" name="pages/items/UomsPage.vue &gt; 撳「顯示已封存」會帶 includeArchived: true" time="0.013945042">
+        </testcase>
+        <testcase classname="test/pages/items/catalogPages.test.js" name="pages/items/UomsPage.vue &gt; 新增單位：提交 code／name／symbol" time="0.026075708">
+        </testcase>
+        <testcase classname="test/pages/items/catalogPages.test.js" name="pages/items/UomsPage.vue &gt; 編輯單位：code 欄位 readonly，唔會送去後端" time="0.053652">
+        </testcase>
+        <testcase classname="test/pages/items/catalogPages.test.js" name="pages/items/UomsPage.vue &gt; 開機讀取失敗（例如權限被收咗）：顯示錯誤提示，唔會靜靜哋當做冇資料" time="0.013762167">
+        </testcase>
+        <testcase classname="test/pages/items/catalogPages.test.js" name="pages/items/UomsPage.vue &gt; 只有 item.view：冇「新增單位」按鈕同操作選單" time="0.010746792">
+        </testcase>
+        <testcase classname="test/pages/items/catalogPages.test.js" name="pages/items/UomsPage.vue &gt; 刪除：帶埋 version（跟 update／archive 同一組值），唔係淨係 reason／password" time="0.022363208">
+        </testcase>
+        <testcase classname="test/pages/items/catalogPages.test.js" name="pages/items/UomsPage.vue &gt; 刪除失敗時顯示後端訊息，唔會靜靜哋失敗" time="0.013822042">
+        </testcase>
+        <testcase classname="test/pages/items/catalogPages.test.js" name="pages/items/AttributesPage.vue &gt; 開機以分頁 fetch 載入屬性，顯示喺表入面" time="0.0129325">
+        </testcase>
+        <testcase classname="test/pages/items/catalogPages.test.js" name="pages/items/AttributesPage.vue &gt; 只有 item.view：睇得到列表，但冇「新增屬性」按鈕同操作選單" time="0.011566541">
+        </testcase>
+        <testcase classname="test/pages/items/catalogPages.test.js" name="pages/items/AttributesPage.vue &gt; 新增 single_option 屬性：加兩個選項一齊提交，code／dataType 一開始就傳埋" time="0.085524125">
+        </testcase>
+        <testcase classname="test/pages/items/catalogPages.test.js" name="pages/items/AttributesPage.vue &gt; 停用：promptReason 唔使密碼；封存：promptPassword 要密碼" time="0.05151075">
+        </testcase>
+        <testcase classname="test/pages/items/catalogPages.test.js" name="pages/items/AttributesPage.vue &gt; 刪除失敗（已被使用）時顯示後端訊息，唔會靜靜哋失敗" time="0.022819167">
+        </testcase>
+        <testcase classname="test/pages/items/catalogPages.test.js" name="pages/items/AttributesPage.vue &gt; 刪除：帶埋 version（跟 archive／restore 同一組值），唔係淨係 reason／password" time="0.027199833">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/items/itemAudit.test.js" timestamp="2026-10-06T05:56:22.773Z" hostname="samMacBook-Pro.local" tests="6" failures="0" errors="0" skipped="0" time="0.222103709">
+        <testcase classname="test/pages/items/itemAudit.test.js" name="pages/items/ItemAuditPage.vue &gt; 初次載入 Item audit，並顯示完整對象、原因與前後變更" time="0.0615165">
+        </testcase>
+        <testcase classname="test/pages/items/itemAudit.test.js" name="pages/items/ItemAuditPage.vue &gt; 設定日期範圍時以當日首尾 epoch 重新查詢" time="0.029001541">
+        </testcase>
+        <testcase classname="test/pages/items/itemAudit.test.js" name="pages/items/ItemAuditPage.vue &gt; 選擇對象類型時把篩選帶到 API" time="0.029656">
+        </testcase>
+        <testcase classname="test/pages/items/itemAudit.test.js" name="pages/items/ItemAuditPage.vue &gt; 陣列前後值會完整列出新增與移除項目" time="0.025827708">
+        </testcase>
+        <testcase classname="test/pages/items/itemAudit.test.js" name="pages/items/ItemAuditPage.vue &gt; 分類屬性指派按 added、removed、updated 語意顯示完整變更" time="0.026404875">
+        </testcase>
+        <testcase classname="test/pages/items/itemAudit.test.js" name="pages/items/ItemAuditPage.vue &gt; 舊版分類屬性 audit payload 的 ID 陣列不會令頁面失敗" time="0.0483505">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/items/itemCreate.test.js" timestamp="2026-10-06T05:56:22.773Z" hostname="samMacBook-Pro.local" tests="14" failures="0" errors="0" skipped="0" time="0.643779333">
+        <testcase classname="test/pages/items/itemCreate.test.js" name="pages/items/ItemCreatePage.vue &gt; 撳「儲存草稿」：帶 activate:false，最少要 item.name／skuCode／skuName" time="0.110137875">
+        </testcase>
+        <testcase classname="test/pages/items/itemCreate.test.js" name="pages/items/ItemCreatePage.vue &gt; 撳「儲存並啟用」但冇填啟用原因：唔會叫 API，摘要顯示要求" time="0.063271542">
+        </testcase>
+        <testcase classname="test/pages/items/itemCreate.test.js" name="pages/items/ItemCreatePage.vue &gt; 撳「儲存並啟用」連同啟用原因：帶 activate:true 同 activationReason" time="0.058726541">
+        </testcase>
+        <testcase classname="test/pages/items/itemCreate.test.js" name="pages/items/ItemCreatePage.vue &gt; 成功之後導返 /items" time="0.048614208">
+        </testcase>
+        <testcase classname="test/pages/items/itemCreate.test.js" name="pages/items/ItemCreatePage.vue &gt; 疑似重複：打完名之後 debounce 300ms 先查，搵到就顯示 banner" time="0.036689709">
+        </testcase>
+        <testcase classname="test/pages/items/itemCreate.test.js" name="pages/items/ItemCreatePage.vue &gt; 疑似重複：撳「知道喇」清走 banner；提交按鈕全程冇因為有候選而變唔撳得" time="0.042940417">
+        </testcase>
+        <testcase classname="test/pages/items/itemCreate.test.js" name="pages/items/ItemCreatePage.vue &gt; 疑似重複：查詢失敗唔會打斷表單，靜靜哋當冇搵到" time="0.036063417">
+        </testcase>
+        <testcase classname="test/pages/items/itemCreate.test.js" name="pages/items/ItemCreatePage.vue &gt; 後端回 request schema 錯誤（陣列形狀）：對應返欄位顯示，唔淨係彈 toast" time="0.036131917">
+        </testcase>
+        <testcase classname="test/pages/items/itemCreate.test.js" name="pages/items/ItemCreatePage.vue &gt; 後端回 ITEM_NOT_ACTIVATABLE（issues 形狀）：對應唔到已知欄位嘅 issue 出現喺摘要" time="0.037894208">
+        </testcase>
+        <testcase classname="test/pages/items/itemCreate.test.js" name="pages/items/ItemCreatePage.vue &gt; TC-011 提交失敗之後，錯誤摘要拎到 focus（screen reader 使用者即時知道錯咗）" time="0.026661917">
+        </testcase>
+        <testcase classname="test/pages/items/itemCreate.test.js" name="pages/items/ItemCreatePage.vue &gt; TC-011 表單有改動（dirty）就離開頁面：跳去 window.confirm 確認" time="0.028443334">
+        </testcase>
+        <testcase classname="test/pages/items/itemCreate.test.js" name="pages/items/ItemCreatePage.vue &gt; 表單冇改動就離開：唔會彈 window.confirm" time="0.020218417">
+        </testcase>
+        <testcase classname="test/pages/items/itemCreate.test.js" name="pages/items/ItemCreatePage.vue &gt; TC-011 切去 Variant：揀屬性同選項、產生組合、提交時帶 skus[] 而唔係單一 sku" time="0.060853417">
+        </testcase>
+        <testcase classname="test/pages/items/itemCreate.test.js" name="pages/items/ItemCreatePage.vue &gt; Variant 模式冇產生任何組合就提交：唔會叫 API，摘要顯示要求" time="0.036148208">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/items/itemDetail.test.js" timestamp="2026-10-06T05:56:22.774Z" hostname="samMacBook-Pro.local" tests="16" failures="0" errors="0" skipped="0" time="0.881714791">
+        <testcase classname="test/pages/items/itemDetail.test.js" name="pages/items/ItemDetailPage.vue &gt; item.view-only：睇得到詳情，但冇「編輯」按鈕" time="0.064556709">
+        </testcase>
+        <testcase classname="test/pages/items/itemDetail.test.js" name="pages/items/ItemDetailPage.vue &gt; 顯示已保存的商品屬性值" time="0.0666265">
+        </testcase>
+        <testcase classname="test/pages/items/itemDetail.test.js" name="pages/items/ItemDetailPage.vue &gt; item.mgmt：撳「編輯」先可以改欄位；儲存成功帶返 version" time="0.105375667">
+        </testcase>
+        <testcase classname="test/pages/items/itemDetail.test.js" name="pages/items/ItemDetailPage.vue &gt; TC-011 VERSION_CONFLICT：唔會自動覆蓋用戶輸入，顯示提示，撳「重新載入」先攞新資料" time="0.059157167">
+        </testcase>
+        <testcase classname="test/pages/items/itemDetail.test.js" name="pages/items/ItemDetailPage.vue &gt; 撳 SKU 列表其中一行會導去 SkuDetailPage" time="0.025974291">
+        </testcase>
+        <testcase classname="test/pages/items/itemDetail.test.js" name="pages/items/ItemDetailPage.vue &gt; Variant Item 的 manager 可以進入新增 SKU 流程；Standard 與 view-only 不顯示" time="0.074975166">
+        </testcase>
+        <testcase classname="test/pages/items/itemDetail.test.js" name="pages/items/ItemDetailPage.vue &gt; Active Item：顯示「停用」，唔顯示「啟用」／「封存」／「從封存恢復」" time="0.018795709">
+        </testcase>
+        <testcase classname="test/pages/items/itemDetail.test.js" name="pages/items/ItemDetailPage.vue &gt; 停用商品：promptReason 文案帶啟用中 SKU 數，成功後徽章更新" time="0.038796917">
+        </testcase>
+        <testcase classname="test/pages/items/itemDetail.test.js" name="pages/items/ItemDetailPage.vue &gt; Draft Item：顯示「啟用」，撳咗開 dialog，預先勾晒所有可啟用 SKU" time="0.078875125">
+        </testcase>
+        <testcase classname="test/pages/items/itemDetail.test.js" name="pages/items/ItemDetailPage.vue &gt; 停產商品：用 promptPassword({ requireReason: true })" time="0.0227145">
+        </testcase>
+        <testcase classname="test/pages/items/itemDetail.test.js" name="pages/items/ItemDetailPage.vue &gt; 封存、恢復：完整走一次" time="0.054600459">
+        </testcase>
+        <testcase classname="test/pages/items/itemDetail.test.js" name="pages/items/ItemDetailPage.vue &gt; 生命週期動作撞 VERSION_CONFLICT：重新載入最新資料" time="0.061945542">
+        </testcase>
+        <testcase classname="test/pages/items/itemDetail.test.js" name="pages/items/ItemDetailPage.vue &gt; SKU 列表 row menu：Active SKU 顯示「停用」，撳咗叫 activateSku／deactivateSku" time="0.072464708">
+        </testcase>
+        <testcase classname="test/pages/items/itemDetail.test.js" name="pages/items/ItemDetailPage.vue &gt; Draft Item：顯示「刪除」；Active Item：唔顯示" time="0.055015375">
+        </testcase>
+        <testcase classname="test/pages/items/itemDetail.test.js" name="pages/items/ItemDetailPage.vue &gt; 刪除商品：promptPassword({ requireReason: true })，成功後導去 /items" time="0.035678584">
+        </testcase>
+        <testcase classname="test/pages/items/itemDetail.test.js" name="pages/items/ItemDetailPage.vue &gt; 複製商品：撳「複製」開 dialog，每個 SKU 一個新 Code 輸入，成功後導去新商品" time="0.044371459">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/items/itemImports.test.js" timestamp="2026-10-06T05:56:22.774Z" hostname="samMacBook-Pro.local" tests="16" failures="0" errors="0" skipped="0" time="0.536426833">
+        <testcase classname="test/pages/items/itemImports.test.js" name="pages/items/ItemImportsPage.vue &gt; 開機以分頁 fetch 載入匯入工作，顯示喺表入面" time="0.059901625">
+        </testcase>
+        <testcase classname="test/pages/items/itemImports.test.js" name="pages/items/ItemImportsPage.vue &gt; 冇 item.mgmt：睇唔到「上傳 CSV」按鈕" time="0.012076708">
+        </testcase>
+        <testcase classname="test/pages/items/itemImports.test.js" name="pages/items/ItemImportsPage.vue &gt; 下載範本：打 downloadTemplate() 並觸發 blob 下載" time="0.030775792">
+        </testcase>
+        <testcase classname="test/pages/items/itemImports.test.js" name="pages/items/ItemImportsPage.vue &gt; 匯出：打 exportSkus() 帶目前嘅 q／status，觸發 blob 下載" time="0.023011292">
+        </testcase>
+        <testcase classname="test/pages/items/itemImports.test.js" name="pages/items/ItemImportsPage.vue &gt; 匯出失敗顯示後端訊息" time="0.013137417">
+        </testcase>
+        <testcase classname="test/pages/items/itemImports.test.js" name="pages/items/ItemImportsPage.vue &gt; 冇 item.mgmt：睇唔到「匯出商品 SKU」區塊" time="0.011533375">
+        </testcase>
+        <testcase classname="test/pages/items/itemImports.test.js" name="pages/items/ItemImportsPage.vue &gt; 上傳：未揀檔案就提交唔會打 API，會顯示錯誤" time="0.03425175">
+        </testcase>
+        <testcase classname="test/pages/items/itemImports.test.js" name="pages/items/ItemImportsPage.vue &gt; 上傳：揀咗檔案就打 uploadJob()，成功後重新整理表格並關閉 dialog" time="0.06248475">
+            <system-err>
+[Vue warn]: Component emitted event &quot;update:model-value&quot; but it is neither declared in the emits option nor as an &quot;onUpdate:modelValue&quot; prop.
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/pages/items/itemImports.test.js" name="pages/items/ItemImportsPage.vue &gt; TC-011 上傳失敗顯示後端訊息，唔會靜靜哋失敗" time="0.035378958">
+            <system-err>
+[Vue warn]: Component emitted event &quot;update:model-value&quot; but it is neither declared in the emits option nor as an &quot;onUpdate:modelValue&quot; prop.
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/pages/items/itemImports.test.js" name="pages/items/ItemImportsPage.vue &gt; 詳情：打 getJob()，顯示 job 摘要同逐列錯誤／警告" time="0.028511084">
+        </testcase>
+        <testcase classname="test/pages/items/itemImports.test.js" name="pages/items/ItemImportsPage.vue &gt; 詳情：開完一個 job 嘅詳情、閂咗，再開第二個唔同嘅 job，要重新 fetch 返新嗰個嘅資料，唔會停喺舊資料或者 loading 狀態" time="0.048247417">
+        </testcase>
+        <testcase classname="test/pages/items/itemImports.test.js" name="pages/items/ItemImportsPage.vue &gt; 確認：ready 狀態先顯示確認按鈕，promptPassword 帶 reason／password，打 confirmJob() 連埋目前 version" time="0.039848084">
+        </testcase>
+        <testcase classname="test/pages/items/itemImports.test.js" name="pages/items/ItemImportsPage.vue &gt; 取消：唔使密碼，confirm() 話 true 先打 cancelJob()" time="0.02673575">
+        </testcase>
+        <testcase classname="test/pages/items/itemImports.test.js" name="pages/items/ItemImportsPage.vue &gt; 結果已過期（filesPurgedAt 有值）：顯示唔可以下載嘅徽章，冇下載按鈕" time="0.021771542">
+        </testcase>
+        <testcase classname="test/pages/items/itemImports.test.js" name="pages/items/ItemImportsPage.vue &gt; 下載結果：resultStoredName 有值且未過期，打 downloadResult()" time="0.023784125">
+        </testcase>
+        <testcase classname="test/pages/items/itemImports.test.js" name="pages/items/ItemImportsPage.vue &gt; Poll：狀態係 validating 期間會定期重新打 getJob()，轉做 ready 之後停止" time="0.063942875">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/items/itemMedia.test.js" timestamp="2026-10-06T05:56:22.775Z" hostname="samMacBook-Pro.local" tests="13" failures="0" errors="0" skipped="0" time="0.188264833">
+        <testcase classname="test/pages/items/itemMedia.test.js" name="ItemMediaPanel.vue &gt; 冇任何 media 顯示「未有上傳任何檔案」" time="0.054475458">
+        </testcase>
+        <testcase classname="test/pages/items/itemMedia.test.js" name="ItemMediaPanel.vue &gt; canManage=false 唔顯示上傳、primary、刪除控制項，但仍然顯示 PDF 下載" time="0.008235291">
+        </testcase>
+        <testcase classname="test/pages/items/itemMedia.test.js" name="ItemMediaPanel.vue &gt; 圖片 media 會經 downloadMedia() 攞 blob 再用 createObjectURL 顯示，唔會直接用下載端點嘅 URL" time="0.012579167">
+        </testcase>
+        <testcase classname="test/pages/items/itemMedia.test.js" name="ItemMediaPanel.vue &gt; 上傳圖片：揀檔之後打 uploadItemMedia()，sortOrder 用現有 media 數量，version 用目前 prop" time="0.018583166">
+            <system-err>
+[Vue warn]: Component emitted event &quot;update:model-value&quot; but it is neither declared in the emits option nor as an &quot;onUpdate:modelValue&quot; prop.
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/pages/items/itemMedia.test.js" name="ItemMediaPanel.vue &gt; 上傳失敗（例如 kind mismatch）顯示錯誤訊息，唔會 emit refresh" time="0.006750584">
+            <system-err>
+[Vue warn]: Component emitted event &quot;update:model-value&quot; but it is neither declared in the emits option nor as an &quot;onUpdate:modelValue&quot; prop.
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/pages/items/itemMedia.test.js" name="ItemMediaPanel.vue &gt; SKU 層級面板上傳時打 uploadSkuMedia()，唔係 uploadItemMedia()" time="0.008374791">
+            <system-err>
+[Vue warn]: Component emitted event &quot;update:model-value&quot; but it is neither declared in the emits option nor as an &quot;onUpdate:modelValue&quot; prop.
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/pages/items/itemMedia.test.js" name="ItemMediaPanel.vue &gt; 設為主要：打 updateMedia({isPrimary:true}) 並 emit refresh" time="0.010104417">
+        </testcase>
+        <testcase classname="test/pages/items/itemMedia.test.js" name="ItemMediaPanel.vue &gt; 已經係 primary 嘅圖片唔顯示「設為主要」，改顯示「主要圖片」badge" time="0.0041225">
+        </testcase>
+        <testcase classname="test/pages/items/itemMedia.test.js" name="ItemMediaPanel.vue &gt; 刪除：撳刪除掣叫 promptPassword，取消就唔會打 deleteMedia" time="0.006509041">
+        </testcase>
+        <testcase classname="test/pages/items/itemMedia.test.js" name="ItemMediaPanel.vue &gt; 刪除：確認之後帶 reason／password 打 deleteMedia，成功就 emit refresh" time="0.009817958">
+        </testcase>
+        <testcase classname="test/pages/items/itemMedia.test.js" name="ItemMediaPanel.vue &gt; TC-011 delete unlink 失敗（後端仍然 200，但屬於已知失敗場景）一樣顯示可理解錯誤" time="0.009583125">
+        </testcase>
+        <testcase classname="test/pages/items/itemMedia.test.js" name="ItemMediaPanel.vue &gt; 排序：確認掣打 updateMedia({sortOrder})，數值冇變就唔打" time="0.020369834">
+        </testcase>
+        <testcase classname="test/pages/items/itemMedia.test.js" name="ItemMediaPanel.vue &gt; 下載附件：打 downloadMedia() 攞 blob，用暫時嘅 &lt;a download&gt; 觸發儲存" time="0.015278375">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/items/items.test.js" timestamp="2026-10-06T05:56:22.776Z" hostname="samMacBook-Pro.local" tests="19" failures="0" errors="0" skipped="0" time="0.922674625">
+        <testcase classname="test/pages/items/items.test.js" name="pages/items/ItemsPage.vue &gt; 預設顯示 SKU 平鋪視圖，開機以分頁 fetch 載入" time="0.064861208">
+            <system-err>
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/new&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/1/skus/10&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/new&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/1/skus/10&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/pages/items/items.test.js" name="pages/items/ItemsPage.vue &gt; 撳「商品」切換做 Item 視圖，改用 listItems 載入" time="0.042250208">
+            <system-err>
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/new&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/1/skus/10&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/new&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/1/skus/10&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/1&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/new&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/1&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/pages/items/items.test.js" name="pages/items/ItemsPage.vue &gt; Archived 預設隱藏（status 冇傳），明確揀 status=archived 先睇得到" time="0.048976709">
+            <system-err>
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/new&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/1/skus/10&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/new&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/1/skus/10&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/new&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/1/skus/10&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/pages/items/items.test.js" name="pages/items/ItemsPage.vue &gt; 搜尋輸入 300ms debounce 之後先觸發重新查詢" time="0.387969125">
+            <system-err>
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/new&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/1/skus/10&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/new&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/1/skus/10&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/new&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/1/skus/10&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/pages/items/items.test.js" name="pages/items/ItemsPage.vue &gt; 只有 item.view：睇得到列表，但冇「新增商品」按鈕" time="0.017015">
+            <system-err>
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/1/skus/10&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/1/skus/10&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/pages/items/items.test.js" name="pages/items/ItemsPage.vue &gt; 有 item.mgmt：顯示「新增商品」按鈕" time="0.01504525">
+            <system-err>
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/new&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/1/skus/10&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/new&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/1/skus/10&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/pages/items/items.test.js" name="pages/items/ItemsPage.vue &gt; TC-011 page／sort／view／q／status 可從 URL 還原" time="0.020024">
+            <system-err>
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/new&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/1&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/pages/items/items.test.js" name="pages/items/ItemsPage.vue &gt; 揭頁之後 URL query 會反映最新嘅 page／view" time="0.019009958">
+            <system-err>
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/new&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/1/skus/10&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/new&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/1/skus/10&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/new&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/1/skus/10&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/pages/items/items.test.js" name="pages/items/ItemsPage.vue &gt; 每個 Item row 有「查看詳情」連去 ItemDetailPage" time="0.020548375">
+            <system-err>
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/new&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/1/skus/10&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/new&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/1/skus/10&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/1&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/new&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/1&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/pages/items/items.test.js" name="pages/items/ItemsPage.vue &gt; 每個 SKU row 有「查看詳情」連去 SkuDetailPage" time="0.017297791">
+            <system-err>
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/new&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/1/skus/10&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/new&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/1/skus/10&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/pages/items/items.test.js" name="pages/items/ItemsPage.vue &gt; SKU row menu：Active 只顯示「停用」「停產」，唔顯示「啟用」" time="0.017453791">
+            <system-err>
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/new&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/1/skus/10&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/new&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/1/skus/10&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/pages/items/items.test.js" name="pages/items/ItemsPage.vue &gt; SKU row menu：停用會帶 promptReason 嘅 reason／version 叫 deactivateSku，並重新整理列表" time="0.024464375">
+            <system-err>
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/new&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/1/skus/10&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/new&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/1/skus/10&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/pages/items/items.test.js" name="pages/items/ItemsPage.vue &gt; 只有 item.view：SKU row 冇操作選單" time="0.015441667">
+            <system-err>
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/1/skus/10&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/1/skus/10&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/pages/items/items.test.js" name="pages/items/ItemsPage.vue &gt; 勾選 SKU row：顯示「已選取 N 筆」toolbar；清除選取會清空返" time="0.024328625">
+            <system-err>
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/new&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/1/skus/10&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/new&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/1/skus/10&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/pages/items/items.test.js" name="pages/items/ItemsPage.vue &gt; 批量操作 dialog：所選 SKU 狀態一致（全部 active），顯示 deactivate／discontinue 呢兩個合法操作" time="0.046426375">
+            <system-err>
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/new&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/1/skus/10&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/new&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/1/skus/10&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/pages/items/items.test.js" name="pages/items/ItemsPage.vue &gt; 批量操作 dialog：所選 row 狀態不一致，冇任何操作可以套用，顯示警告，冇確認按鈕" time="0.029675583">
+            <system-err>
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/new&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/1/skus/10&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/1/skus/11&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/new&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/1/skus/10&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/1/skus/11&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/pages/items/items.test.js" name="pages/items/ItemsPage.vue &gt; 批量操作：確認執行打 bulkChangeStatus() 帶正確 targetType／targets／reason／password，成功後清空選取並重新整理" time="0.067732417">
+            <system-err>
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/new&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/1/skus/10&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/new&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/1/skus/10&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/pages/items/items.test.js" name="pages/items/ItemsPage.vue &gt; 批量操作失敗：error.details.issues 有值就逐筆顯示原因，唔會靜靜哋失敗" time="0.027043792">
+            <system-err>
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/new&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/1/skus/10&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/new&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/1/skus/10&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/pages/items/items.test.js" name="pages/items/ItemsPage.vue &gt; 只有 item.view：睇唔到 checkbox 選取欄（冇 item.mgmt 就冇批量操作）" time="0.015426667">
+            <system-err>
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/1/skus/10&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/items/1/skus/10&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+            </system-err>
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/items/skuCreate.test.js" timestamp="2026-10-06T05:56:22.777Z" hostname="samMacBook-Pro.local" tests="2" failures="0" errors="0" skipped="0" time="0.064667292">
+        <testcase classname="test/pages/items/skuCreate.test.js" name="pages/items/SkuCreatePage.vue &gt; 建立一個 Variant SKU 後前往新 SKU 詳情" time="0.055525833">
+        </testcase>
+        <testcase classname="test/pages/items/skuCreate.test.js" name="pages/items/SkuCreatePage.vue &gt; Standard Item 不顯示提交表單" time="0.008386708">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/items/skuDetail.test.js" timestamp="2026-10-06T05:56:22.777Z" hostname="samMacBook-Pro.local" tests="18" failures="0" errors="0" skipped="0" time="0.739257292">
+        <testcase classname="test/pages/items/skuDetail.test.js" name="pages/items/SkuDetailPage.vue &gt; item.view-only：睇得到詳情，冇「編輯」按鈕" time="0.0711585">
+        </testcase>
+        <testcase classname="test/pages/items/skuDetail.test.js" name="pages/items/SkuDetailPage.vue &gt; 顯示已保存的 SKU 變體值" time="0.034648958">
+        </testcase>
+        <testcase classname="test/pages/items/skuDetail.test.js" name="pages/items/SkuDetailPage.vue &gt; SKU Code 就算撳咗「編輯」都仲係 readonly" time="0.046963292">
+        </testcase>
+        <testcase classname="test/pages/items/skuDetail.test.js" name="pages/items/SkuDetailPage.vue &gt; 改非關鍵欄位（SKU 名稱）唔使填原因，儲存成功" time="0.070315">
+        </testcase>
+        <testcase classname="test/pages/items/skuDetail.test.js" name="pages/items/SkuDetailPage.vue &gt; 關鍵變更冇填原因：後端 CRITICAL_CHANGE_REASON_REQUIRED 原樣顯示" time="0.039842667">
+        </testcase>
+        <testcase classname="test/pages/items/skuDetail.test.js" name="pages/items/SkuDetailPage.vue &gt; VERSION_CONFLICT：唔會自動覆蓋用戶輸入" time="0.043584208">
+        </testcase>
+        <testcase classname="test/pages/items/skuDetail.test.js" name="pages/items/SkuDetailPage.vue &gt; Active SKU：只顯示「停用」「停產」，撳「停用」用 promptReason 帶 reason／version" time="0.02405925">
+        </testcase>
+        <testcase classname="test/pages/items/skuDetail.test.js" name="pages/items/SkuDetailPage.vue &gt; 取消 promptReason 唔會呼叫任何 API" time="0.0264795">
+        </testcase>
+        <testcase classname="test/pages/items/skuDetail.test.js" name="pages/items/SkuDetailPage.vue &gt; 父 Item Active＋SKU Inactive：顯示「啟用」，撳咗會叫 activateSku" time="0.022574125">
+        </testcase>
+        <testcase classname="test/pages/items/skuDetail.test.js" name="pages/items/SkuDetailPage.vue &gt; 父 Item 未 Active：唔顯示「啟用」（就算 SKU 本身係 Inactive）" time="0.022046166">
+        </testcase>
+        <testcase classname="test/pages/items/skuDetail.test.js" name="pages/items/SkuDetailPage.vue &gt; 停產：用 promptPassword({ requireReason: true })" time="0.021105167">
+        </testcase>
+        <testcase classname="test/pages/items/skuDetail.test.js" name="pages/items/SkuDetailPage.vue &gt; 封存、恢復：完整走一次" time="0.028140458">
+        </testcase>
+        <testcase classname="test/pages/items/skuDetail.test.js" name="pages/items/SkuDetailPage.vue &gt; 生命週期動作撞 VERSION_CONFLICT：重新載入最新資料再顯示錯誤" time="0.063373125">
+        </testcase>
+        <testcase classname="test/pages/items/skuDetail.test.js" name="pages/items/SkuDetailPage.vue &gt; Draft SKU：顯示「刪除」；Active SKU：唔顯示" time="0.050203">
+        </testcase>
+        <testcase classname="test/pages/items/skuDetail.test.js" name="pages/items/SkuDetailPage.vue &gt; 刪除 SKU：promptPassword({ requireReason: true })，成功後導返商品詳情" time="0.055084833">
+        </testcase>
+        <testcase classname="test/pages/items/skuDetail.test.js" name="pages/items/SkuDetailPage.vue &gt; 特批修改 SKU Code：填新 Code／原因／密碼，成功後畫面更新新 Code" time="0.053882458">
+        </testcase>
+        <testcase classname="test/pages/items/skuDetail.test.js" name="pages/items/SkuDetailPage.vue &gt; 條碼釋放：睇緊模式先顯示「釋放」掣，撳咗要求密碼確認先叫 releaseBarcode" time="0.029683083">
+        </testcase>
+        <testcase classname="test/pages/items/skuDetail.test.js" name="pages/items/SkuDetailPage.vue &gt; 編輯模式：條碼列表冇「釋放」掣（釋放同編輯係兩個獨立流程）" time="0.03109325">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/address.test.js" timestamp="2026-10-06T05:56:22.778Z" hostname="samMacBook-Pro.local" tests="4" failures="0" errors="0" skipped="0" time="0.143401916">
+        <testcase classname="test/pages/suppliers/address.test.js" name="SupplierAddressPanel &gt; shows purpose/primary text and hides all writes from view-only users" time="0.036983042">
+        </testcase>
+        <testcase classname="test/pages/suppliers/address.test.js" name="SupplierAddressPanel &gt; creates an Address and emits refresh with a Supplier-identifying success message" time="0.053237">
+        </testcase>
+        <testcase classname="test/pages/suppliers/address.test.js" name="SupplierAddressPanel &gt; keeps the edit dialog and draft open on VERSION_CONFLICT" time="0.044842167">
+        </testcase>
+        <testcase classname="test/pages/suppliers/address.test.js" name="SupplierAddressPanel &gt; deactivates only after confirmation and inactive rows expose no write actions" time="0.0075385">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/approvals.test.js" timestamp="2026-10-06T05:56:22.778Z" hostname="samMacBook-Pro.local" tests="15" failures="0" errors="0" skipped="0" time="0.405222542">
+        <testcase classname="test/pages/suppliers/approvals.test.js" name="pages/suppliers/SupplierApprovalsPage.vue &gt; guards on the same pair of permissions the API demands" time="0.002144292">
+        </testcase>
+        <testcase classname="test/pages/suppliers/approvals.test.js" name="pages/suppliers/SupplierApprovalsPage.vue &gt; opens on the actor&apos;s own pending queue" time="0.047229709">
+        </testcase>
+        <testcase classname="test/pages/suppliers/approvals.test.js" name="pages/suppliers/SupplierApprovalsPage.vue &gt; switches between mine, all and unassigned" time="0.024621333">
+        </testcase>
+        <testcase classname="test/pages/suppliers/approvals.test.js" name="pages/suppliers/SupplierApprovalsPage.vue &gt; shows the submitted snapshot beside the current Supplier and marks what changed" time="0.030490666">
+        </testcase>
+        <testcase classname="test/pages/suppliers/approvals.test.js" name="pages/suppliers/SupplierApprovalsPage.vue &gt; refuses to approve a stale request, which is the same rule the service enforces" time="0.015838542">
+        </testcase>
+        <testcase classname="test/pages/suppliers/approvals.test.js" name="pages/suppliers/SupplierApprovalsPage.vue &gt; only the assigned approver may decide" time="0.017019541">
+        </testcase>
+        <testcase classname="test/pages/suppliers/approvals.test.js" name="pages/suppliers/SupplierApprovalsPage.vue &gt; approving asks for the password and sends the request version" time="0.046999416">
+        </testcase>
+        <testcase classname="test/pages/suppliers/approvals.test.js" name="pages/suppliers/SupplierApprovalsPage.vue &gt; rejecting demands a reason as well as the password" time="0.038329333">
+        </testcase>
+        <testcase classname="test/pages/suppliers/approvals.test.js" name="pages/suppliers/SupplierApprovalsPage.vue &gt; cancelling a decision sends nothing" time="0.01667525">
+        </testcase>
+        <testcase classname="test/pages/suppliers/approvals.test.js" name="pages/suppliers/SupplierApprovalsPage.vue &gt; the requester sees withdraw, and the approver does not" time="0.053981542">
+        </testcase>
+        <testcase classname="test/pages/suppliers/approvals.test.js" name="pages/suppliers/SupplierApprovalsPage.vue &gt; a version conflict reloads instead of retrying" time="0.030156375">
+        </testcase>
+        <testcase classname="test/pages/suppliers/approvals.test.js" name="pages/suppliers/SupplierApprovalsPage.vue &gt; reassigning excludes the requester and demands a reason" time="0.033249083">
+        </testcase>
+        <testcase classname="test/pages/suppliers/approvals.test.js" name="pages/suppliers/SupplierApprovalsPage.vue &gt; reassigning without a target sends nothing" time="0.017609958">
+        </testcase>
+        <testcase classname="test/pages/suppliers/approvals.test.js" name="pages/suppliers/SupplierApprovalsPage.vue &gt; a failed detail read reports the failure instead of showing a half-open detail" time="0.013403375">
+        </testcase>
+        <testcase classname="test/pages/suppliers/approvals.test.js" name="pages/suppliers/SupplierApprovalsPage.vue &gt; a failed approver lookup leaves the reassign list empty rather than stale" time="0.01599925">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/bank.test.js" timestamp="2026-10-06T05:56:22.779Z" hostname="samMacBook-Pro.local" tests="26" failures="0" errors="0" skipped="0" time="0.793082084">
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; TC-075 (BANK-014): renders masked rows on load and never calls reveal by itself" time="0.026087875">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; offers no reveal without bank.view and no write controls without bank.mgmt" time="0.030347125">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; TC-075 (BANK-014): reveals one row for thirty seconds with a countdown, then clears it from the DOM" time="0.053887834">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; clears on elapsed time even if the tab was throttled to one tick" time="0.033010834">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; is not extended by the system clock jumping backwards" time="0.039298166">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; TC-075 (BANK-014): keeps the plaintext out of Pinia, storage, the URL and notifications" time="0.015269625">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; TC-075 (BANK-014): clears the plaintext when the row is closed by hand" time="0.015184375">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; clears the plaintext when only the :id changes and the panel is reused" time="0.01946975">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; does not re-hold the account if reveal resolves after the panel is gone" time="0.0179075">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; drops a reveal that lands after the Supplier has changed" time="0.01771425">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; wipes a half-typed write dialog on a Supplier change and on session expiry" time="0.05163225">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; forgets the plaintext when a session refresh revokes the entitlement" time="0.025564583">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; forgets both step-up passwords from component state, not just from the DOM" time="0.028596916">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; replaces the first row&apos;s countdown when a second row is revealed" time="0.033774334">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; wipes the confirm dialog&apos;s password on a Supplier change and on session expiry" time="0.024250208">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; issues one reveal for a double-clicked confirm, because each one writes an audit row" time="0.020313167">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; says so when a reveal is discarded, because the server already audited it" time="0.030159292">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; TC-075 (BANK-014): clears the plaintext when the user navigates away" time="0.01692125">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; TC-075 (BANK-014): clears the plaintext on unmount and on session expiry" time="0.04165725">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; clears the account number and password fields after a successful create" time="0.040212083">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; marks the account and password inputs so browsers do not autofill or store them" time="0.030992042">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; TC-070 (BANK-009): blocks a same-Supplier duplicate and makes a cross-Supplier duplicate an explicit confirmation" time="0.069952666">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; says the previous default will be cancelled before switching" time="0.032631042">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; wipes the confirm password even when the dialog stays open on an error" time="0.015282542">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; deactivates with a version and a reason" time="0.044806625">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; surfaces a wrong password as a password problem, not a permission one" time="0.016995625">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/contact.test.js" timestamp="2026-10-06T05:56:22.780Z" hostname="samMacBook-Pro.local" tests="4" failures="0" errors="0" skipped="0" time="0.116584292">
+        <testcase classname="test/pages/suppliers/contact.test.js" name="SupplierContactPanel &gt; shows purpose/primary and contact details while hiding writes from view-only users" time="0.018510375">
+        </testcase>
+        <testcase classname="test/pages/suppliers/contact.test.js" name="SupplierContactPanel &gt; creates a Contact and emits refresh with a Supplier-identifying success message" time="0.040910166">
+        </testcase>
+        <testcase classname="test/pages/suppliers/contact.test.js" name="SupplierContactPanel &gt; keeps the edit dialog and draft open on VERSION_CONFLICT" time="0.030246625">
+        </testcase>
+        <testcase classname="test/pages/suppliers/contact.test.js" name="SupplierContactPanel &gt; surfaces server validation accessibly and deactivates only after confirmation" time="0.026040125">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/coreFlow.test.js" timestamp="2026-10-06T05:56:22.780Z" hostname="samMacBook-Pro.local" tests="1" failures="0" errors="0" skipped="0" time="0.111193958">
+        <testcase classname="test/pages/suppliers/coreFlow.test.js" name="Supplier Core client smoke flow &gt; lets a view-only user move from the bounded list projection to detail without exposing write actions" time="0.110357167">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/create.test.js" timestamp="2026-10-06T05:56:22.780Z" hostname="samMacBook-Pro.local" tests="9" failures="0" errors="0" skipped="0" time="0.335582125">
+        <testcase classname="test/pages/suppliers/create.test.js" name="pages/suppliers/SupplierCreatePage.vue &gt; requires supplier.mgmt even when opened by direct URL" time="0.002971541">
+        </testcase>
+        <testcase classname="test/pages/suppliers/create.test.js" name="pages/suppliers/SupplierCreatePage.vue &gt; saves a draft with only Code, Name and an active Currency" time="0.077504917">
+        </testcase>
+        <testcase classname="test/pages/suppliers/create.test.js" name="pages/suppliers/SupplierCreatePage.vue &gt; requires explicit confirmation before creating a possible duplicate" time="0.041105875">
+        </testcase>
+        <testcase classname="test/pages/suppliers/create.test.js" name="pages/suppliers/SupplierCreatePage.vue &gt; prompts before leaving a dirty form" time="0.034038583">
+        </testcase>
+        <testcase classname="test/pages/suppliers/create.test.js" name="pages/suppliers/SupplierCreatePage.vue &gt; does not offer an approver, or send one, when the policy is off" time="0.030063292">
+        </testcase>
+        <testcase classname="test/pages/suppliers/create.test.js" name="pages/suppliers/SupplierCreatePage.vue &gt; offers an approver selector that excludes the actor when the policy is on" time="0.046704333">
+        </testcase>
+        <testcase classname="test/pages/suppliers/create.test.js" name="pages/suppliers/SupplierCreatePage.vue &gt; sends the chosen approver, and refuses to submit without one" time="0.04795125">
+        </testcase>
+        <testcase classname="test/pages/suppliers/create.test.js" name="pages/suppliers/SupplierCreatePage.vue &gt; an unreadable policy hides the selector and never assumes no approval is needed" time="0.033972417">
+        </testcase>
+        <testcase classname="test/pages/suppliers/create.test.js" name="pages/suppliers/SupplierCreatePage.vue &gt; a failed approver lookup tells the user instead of offering an empty list silently" time="0.019832333">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/detail.test.js" timestamp="2026-10-06T05:56:22.780Z" hostname="samMacBook-Pro.local" tests="8" failures="0" errors="0" skipped="0" time="0.272030542">
+        <testcase classname="test/pages/suppliers/detail.test.js" name="pages/suppliers/SupplierDetailPage.vue &gt; requires supplier.view and shows status, completeness and masked bank data" time="0.052801875">
+        </testcase>
+        <testcase classname="test/pages/suppliers/detail.test.js" name="pages/suppliers/SupplierDetailPage.vue &gt; shows the new Supplier&apos;s bank rows after the route id changes" time="0.042170167">
+        </testcase>
+        <testcase classname="test/pages/suppliers/detail.test.js" name="pages/suppliers/SupplierDetailPage.vue &gt; distinguishes not-found and generic loading failures" time="0.004939917">
+            <system-err>
+[VUE_ROUTER_R0004] No match found for location with path &quot;/suppliers&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/pages/suppliers/detail.test.js" name="pages/suppliers/SupplierDetailPage.vue &gt; shows a not-found error instead of an endless skeleton for a non-numeric id" time="0.004693792">
+            <system-err>
+[VUE_ROUTER_R0004] No match found for location with path &quot;/suppliers&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/pages/suppliers/detail.test.js" name="pages/suppliers/SupplierDetailPage.vue &gt; refetches and renders the new supplier when the route id changes on a reused instance" time="0.021648083">
+        </testcase>
+        <testcase classname="test/pages/suppliers/detail.test.js" name="pages/suppliers/SupplierDetailPage.vue &gt; drops a half-edited form instead of carrying it onto the next supplier" time="0.061298709">
+        </testcase>
+        <testcase classname="test/pages/suppliers/detail.test.js" name="pages/suppliers/SupplierDetailPage.vue &gt; keeps the user on the current supplier when they refuse to discard the draft" time="0.05969875">
+        </testcase>
+        <testcase classname="test/pages/suppliers/detail.test.js" name="pages/suppliers/SupplierDetailPage.vue &gt; ignores a load response that a newer navigation has superseded" time="0.023775333">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/editor.test.js" timestamp="2026-10-06T05:56:22.781Z" hostname="samMacBook-Pro.local" tests="4" failures="0" errors="0" skipped="0" time="0.231327083">
+        <testcase classname="test/pages/suppliers/editor.test.js" name="Supplier general editor &gt; updates editable root fields while keeping Supplier Code outside the normal payload" time="0.112424334">
+        </testcase>
+        <testcase classname="test/pages/suppliers/editor.test.js" name="Supplier general editor &gt; keeps the user&apos;s draft visible when a stale update reloads the latest Supplier" time="0.043209292">
+        </testcase>
+        <testcase classname="test/pages/suppliers/editor.test.js" name="Supplier general editor &gt; uses a separate password-and-reason flow for controlled Supplier Code correction" time="0.041802375">
+        </testcase>
+        <testcase classname="test/pages/suppliers/editor.test.js" name="Supplier general editor &gt; prompts before leaving a dirty general editor" time="0.032843625">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/identifier.test.js" timestamp="2026-10-06T05:56:22.781Z" hostname="samMacBook-Pro.local" tests="4" failures="0" errors="0" skipped="0" time="0.15082625">
+        <testcase classname="test/pages/suppliers/identifier.test.js" name="SupplierIdentifierPanel &gt; renders type/country/value, hides writes from viewers and hides delete for referenced rows" time="0.042964458">
+        </testcase>
+        <testcase classname="test/pages/suppliers/identifier.test.js" name="SupplierIdentifierPanel &gt; creates an Identifier and emits refresh with a Supplier-identifying success message" time="0.056124709">
+        </testcase>
+        <testcase classname="test/pages/suppliers/identifier.test.js" name="SupplierIdentifierPanel &gt; requires a reason for updates and preserves the draft on unique/version conflicts" time="0.0278745">
+        </testcase>
+        <testcase classname="test/pages/suppliers/identifier.test.js" name="SupplierIdentifierPanel &gt; collects a reason before confirmed deletion" time="0.022283917">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/lifecycle.test.js" timestamp="2026-10-06T05:56:22.781Z" hostname="samMacBook-Pro.local" tests="4" failures="0" errors="0" skipped="0" time="0.109342625">
+        <testcase classname="test/pages/suppliers/lifecycle.test.js" name="Supplier lifecycle actions &gt; shows only state-valid actions allowed by management and approval permissions" time="0.036705667">
+        </testcase>
+        <testcase classname="test/pages/suppliers/lifecycle.test.js" name="Supplier lifecycle actions &gt; requires reason and password for Block and explains the approved-device requirement" time="0.043816166">
+        </testcase>
+        <testcase classname="test/pages/suppliers/lifecycle.test.js" name="Supplier lifecycle actions &gt; keeps a lifecycle dialog open and requests refresh after VERSION_CONFLICT" time="0.019727333">
+        </testcase>
+        <testcase classname="test/pages/suppliers/lifecycle.test.js" name="Supplier lifecycle actions &gt; Draft activation needs confirmation but no password and controlled delete does" time="0.008079041">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/list.test.js" timestamp="2026-10-06T05:56:22.781Z" hostname="samMacBook-Pro.local" tests="3" failures="0" errors="0" skipped="0" time="0.123763625">
+        <testcase classname="test/pages/suppliers/list.test.js" name="pages/suppliers/SuppliersPage.vue &gt; is the permission-filtered Supplier menu entry and renders explicit status text" time="0.06242325">
+        </testcase>
+        <testcase classname="test/pages/suppliers/list.test.js" name="pages/suppliers/SuppliersPage.vue &gt; shows create only to supplier.mgmt users" time="0.034841833">
+        </testcase>
+        <testcase classname="test/pages/suppliers/list.test.js" name="pages/suppliers/SuppliersPage.vue &gt; restores filters and paging from URL and keeps the query shareable" time="0.025502875">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/settings.test.js" timestamp="2026-10-06T05:56:22.781Z" hostname="samMacBook-Pro.local" tests="11" failures="0" errors="0" skipped="0" time="0.157170083">
+        <testcase classname="test/pages/suppliers/settings.test.js" name="pages/suppliers/SupplierSettingsPage.vue &gt; is gated on supplier.settings alone and sits in the supplier menu" time="0.00240475">
+        </testcase>
+        <testcase classname="test/pages/suppliers/settings.test.js" name="pages/suppliers/SupplierSettingsPage.vue &gt; shows the stored value, the default and the non-retroactive wording" time="0.025940459">
+        </testcase>
+        <testcase classname="test/pages/suppliers/settings.test.js" name="pages/suppliers/SupplierSettingsPage.vue &gt; saving the toggle demands a reason and a password, and sends the loaded version" time="0.019063417">
+        </testcase>
+        <testcase classname="test/pages/suppliers/settings.test.js" name="pages/suppliers/SupplierSettingsPage.vue &gt; cancelling the confirmation writes nothing" time="0.007719667">
+        </testcase>
+        <testcase classname="test/pages/suppliers/settings.test.js" name="pages/suppliers/SupplierSettingsPage.vue &gt; a version conflict shows the server&apos;s value, not the one the user just clicked" time="0.024562834">
+        </testcase>
+        <testcase classname="test/pages/suppliers/settings.test.js" name="pages/suppliers/SupplierSettingsPage.vue &gt; a failed settings read renders an error and a retry, not a crash" time="0.026816">
+        </testcase>
+        <testcase classname="test/pages/suppliers/settings.test.js" name="pages/suppliers/SupplierSettingsPage.vue &gt; shows Business Master readiness read-only, with no catalog write control" time="0.007189792">
+        </testcase>
+        <testcase classname="test/pages/suppliers/settings.test.js" name="pages/suppliers/SupplierSettingsPage.vue &gt; names what is missing when the provider is not ready" time="0.007077291">
+        </testcase>
+        <testcase classname="test/pages/suppliers/settings.test.js" name="pages/suppliers/SupplierSettingsPage.vue &gt; links to Business Master only when the actor may open it" time="0.018063292">
+        </testcase>
+        <testcase classname="test/pages/suppliers/settings.test.js" name="pages/suppliers/SupplierSettingsPage.vue &gt; a readiness failure does not take the toggle down with it" time="0.010011083">
+        </testcase>
+        <testcase classname="test/pages/suppliers/settings.test.js" name="pages/suppliers/SupplierSettingsPage.vue &gt; a failed reload after a version conflict still tells the user, instead of losing the page" time="0.007156209">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/system/audit.test.js" timestamp="2026-10-06T05:56:22.782Z" hostname="samMacBook-Pro.local" tests="9" failures="0" errors="0" skipped="0" time="0.237393042">
+        <testcase classname="test/pages/system/audit.test.js" name="pages/system/AuditLogsPage.vue &gt; 開機攞第一頁稽核記錄，冇任何篩選" time="0.0567395">
+        </testcase>
+        <testcase classname="test/pages/system/audit.test.js" name="pages/system/AuditLogsPage.vue &gt; 動作字串翻做中文標籤，冇對應嘅就照原字串顯示" time="0.02784075">
+        </testcase>
+        <testcase classname="test/pages/system/audit.test.js" name="pages/system/AuditLogsPage.vue &gt; 對象欄顯示 targetType/targetLabel" time="0.018823458">
+        </testcase>
+        <testcase classname="test/pages/system/audit.test.js" name="pages/system/AuditLogsPage.vue &gt; cli: 開頭嘅操作者顯示做一個 badge，一眼分得出唔係介面操作" time="0.019012625">
+        </testcase>
+        <testcase classname="test/pages/system/audit.test.js" name="pages/system/AuditLogsPage.vue &gt; detail 嘅陣列 before/after 渲染做 +新增／−移除" time="0.017688958">
+        </testcase>
+        <testcase classname="test/pages/system/audit.test.js" name="pages/system/AuditLogsPage.vue &gt; detail 嘅純量 before/after 渲染做「欄位：舊 → 新」" time="0.016943625">
+        </testcase>
+        <testcase classname="test/pages/system/audit.test.js" name="pages/system/AuditLogsPage.vue &gt; detail 係 null（停用／啟用呢類）就顯示破折號" time="0.021307458">
+        </testcase>
+        <testcase classname="test/pages/system/audit.test.js" name="pages/system/AuditLogsPage.vue &gt; reason 空白就顯示破折號" time="0.017973458">
+        </testcase>
+        <testcase classname="test/pages/system/audit.test.js" name="pages/system/AuditLogsPage.vue &gt; 「從」「到」設定日期範圍就重新 fetch，帶埋嗰一日嘅起訖 epoch" time="0.03999925">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/system/pages.test.js" timestamp="2026-10-06T05:56:22.782Z" hostname="samMacBook-Pro.local" tests="5" failures="0" errors="0" skipped="0" time="0.002828666">
+        <testcase classname="test/pages/system/pages.test.js" name="Phase 5 頁面 metadata &gt; 真正嘅頁面 metadata 過得到開機驗證" time="0.0016515">
+        </testcase>
+        <testcase classname="test/pages/system/pages.test.js" name="Phase 5 頁面 metadata &gt; 用戶管理要 user.mgmt，角色管理要 role.mgmt，修改密碼頁已登入即可" time="0.00021325">
+        </testcase>
+        <testcase classname="test/pages/system/pages.test.js" name="Phase 5 頁面 metadata &gt; system 呢個 menu group 入面每一頁嘅 order 都唔可以撞" time="0.00011">
+        </testcase>
+        <testcase classname="test/pages/system/pages.test.js" name="Phase 5 頁面 metadata &gt; items 呢個 menu group 入面每一頁嘅 order 都唔可以撞" time="0.000065709">
+        </testcase>
+        <testcase classname="test/pages/system/pages.test.js" name="Phase 5 頁面 metadata &gt; Category／Brand／UOM 呢三頁純管理，要 item.mgmt——冇 read-only 用途，item.view 唔應該見到呢幾頁" time="0.000094292">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/system/roles.test.js" timestamp="2026-10-06T05:56:22.782Z" hostname="samMacBook-Pro.local" tests="10" failures="0" errors="0" skipped="0" time="0.346895958">
+        <testcase classname="test/pages/system/roles.test.js" name="pages/system/RolesPage.vue &gt; 開機攞角色同權限目錄，顯示喺表入面（含用戶數同權限摘要）" time="0.043750834">
+        </testcase>
+        <testcase classname="test/pages/system/roles.test.js" name="pages/system/RolesPage.vue &gt; system-admin 嗰一列淨係得一個鎖圖示，冇 ⋮ 選單" time="0.013473958">
+        </testcase>
+        <testcase classname="test/pages/system/roles.test.js" name="pages/system/RolesPage.vue &gt; 新增角色 &gt; 提交會打 create()，唔使密碼／原因" time="0.050116958">
+        </testcase>
+        <testcase classname="test/pages/system/roles.test.js" name="pages/system/RolesPage.vue &gt; 編輯 &gt; 提交會打 update()" time="0.038397542">
+        </testcase>
+        <testcase classname="test/pages/system/roles.test.js" name="pages/system/RolesPage.vue &gt; 配置權限 &gt; 開對話框：已有嘅權限預先勾好，做 expectedPermissionIds；提交帶埋佢做 compare-and-set" time="0.0688295">
+        </testcase>
+        <testcase classname="test/pages/system/roles.test.js" name="pages/system/RolesPage.vue &gt; 配置權限 &gt; 操作者自己冇嘅權限：checkbox 停用，附一句「你自己冇呢個權限」" time="0.03016775">
+        </testcase>
+        <testcase classname="test/pages/system/roles.test.js" name="pages/system/RolesPage.vue &gt; 配置權限 &gt; ASSIGNMENT_STALE：重載角色清單，畫面顯示提示" time="0.036197959">
+        </testcase>
+        <testcase classname="test/pages/system/roles.test.js" name="pages/system/RolesPage.vue &gt; 刪除角色 &gt; 帶用戶數落訊息，promptPassword 回原因密碼就打 delete()" time="0.02504825">
+        </testcase>
+        <testcase classname="test/pages/system/roles.test.js" name="pages/system/RolesPage.vue &gt; 刪除角色 &gt; 撳取消唔會打 delete()" time="0.018107375">
+        </testcase>
+        <testcase classname="test/pages/system/roles.test.js" name="pages/system/RolesPage.vue &gt; 刪除角色 &gt; 刪除失敗會 notifyError" time="0.0216835">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/system/users.test.js" timestamp="2026-10-06T05:56:22.783Z" hostname="samMacBook-Pro.local" tests="12" failures="0" errors="0" skipped="0" time="0.804007958">
+        <testcase classname="test/pages/system/users.test.js" name="pages/system/UsersPage.vue &gt; 開機攞用戶清單同角色目錄，將用戶顯示喺表入面" time="0.058508958">
+        </testcase>
+        <testcase classname="test/pages/system/users.test.js" name="pages/system/UsersPage.vue &gt; 搜尋框改變會帶埋新嘅 filter 再打一次 list()" time="0.389584166">
+        </testcase>
+        <testcase classname="test/pages/system/users.test.js" name="pages/system/UsersPage.vue &gt; 新增用戶 &gt; 提交新增表單會打 create()，成功之後顯示可複製嘅初始密碼" time="0.059027458">
+        </testcase>
+        <testcase classname="test/pages/system/users.test.js" name="pages/system/UsersPage.vue &gt; 新增用戶 &gt; 授唔出自己冇嘅角色：淨係得 user.mgmt 嘅人打開新增對話框，system-admin 個 checkbox 係停用嘅" time="0.02489625">
+        </testcase>
+        <testcase classname="test/pages/system/users.test.js" name="pages/system/UsersPage.vue &gt; 停用／啟用 &gt; 停用會帶埋 promptPassword 攞返嚟嘅 reason／password 打 disable()" time="0.035954875">
+        </testcase>
+        <testcase classname="test/pages/system/users.test.js" name="pages/system/UsersPage.vue &gt; 停用／啟用 &gt; 停用自己：訊息講明會即刻登出" time="0.02458875">
+        </testcase>
+        <testcase classname="test/pages/system/users.test.js" name="pages/system/UsersPage.vue &gt; 停用／啟用 &gt; 撳取消（promptPassword resolve null）唔會打任何 API" time="0.021883834">
+        </testcase>
+        <testcase classname="test/pages/system/users.test.js" name="pages/system/UsersPage.vue &gt; 停用／啟用 &gt; LAST_ADMIN_PROTECTED 顯示自訂訊息，唔係籠統嘅衝突文案" time="0.033394791">
+        </testcase>
+        <testcase classname="test/pages/system/users.test.js" name="pages/system/UsersPage.vue &gt; 配置角色 &gt; 開對話框先攞返呢個用戶而家嘅角色做 expectedRoleIds，提交會帶埋佢做 compare-and-set" time="0.042504583">
+        </testcase>
+        <testcase classname="test/pages/system/users.test.js" name="pages/system/UsersPage.vue &gt; 配置角色 &gt; ASSIGNMENT_STALE：重載呢個用戶最新嘅角色，畫面顯示提示，唔會靜靜哋失敗" time="0.037432125">
+        </testcase>
+        <testcase classname="test/pages/system/users.test.js" name="pages/system/UsersPage.vue &gt; 重設密碼 &gt; 提交會帶埋新密碼、原因、操作者密碼打 resetPassword()" time="0.0374865">
+        </testcase>
+        <testcase classname="test/pages/system/users.test.js" name="pages/system/UsersPage.vue &gt; 編輯 &gt; 提交會打 update()，淨係帶 displayName" time="0.037446">
+        </testcase>
+    </testsuite>
+</testsuites>

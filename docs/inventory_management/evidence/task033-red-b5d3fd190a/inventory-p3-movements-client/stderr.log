@@ -1,0 +1,9 @@
+(node:73883) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+npm error Lifecycle script `test` failed with error:
+npm error code 1
+npm error path /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client
+npm error workspace @erp/client@0.1.0
+npm error location /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client
+npm error command failed
+npm error command sh -c vitest run test/pages/inventory/inventoryMovements.test.js --reporter=junit --outputFile=/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/task033-red-b5d3fd190a/inventory-p3-movements-client/inventory-p3-movements-client.xml

@@ -818,26 +818,33 @@ Phase P0 開始前：
 ### P3-T04：完成 Transfer API 與 UI
 
 **Description：** 建立 Transfer handlers/client及 Draft editor、Dispatch確認、In Transit read-only、逐行 Receive Bin/Status畫面。
+包含Design §5.6.1 Inventory-owned精確SKU Code lookup及Draft selector；重用Item lookup／transactional inventory profile，不修改Item code、permission seeds、migration或共用框架。
 
 **Traceability：** Design §§5.6、7.1、7.5；FR-TRANSFER-001～012、AC-030～034。
 
 **Acceptance criteria：**
 
 - [ ] API route/auth/permission/idempotency/version與 design一致；Receive schema拒絕少行、重複行、多行或部分 quantity。
+- [ ] 精確SKU查找僅需inventory.view，200 strict whitelist／輸入／錯誤／同一read snapshot符合§5.6.1；無Balance SKU仍可選及建立Draft，不授予Item permission或以現有stock替代選料。
+- [ ] Code變更清除該行SKU/Lot，過期response不覆蓋新輸入；查找、資格、撤權及錯誤狀態可用keyboard操作，其他Draft輸入保留；写入端仍重驗資格及stock。
 - [ ] UI在 Dispatch後不顯示可編輯／取消；清楚分開來源、目的及 In Transit。
 - [ ] Quarantined收貨強制原因；同名 Bin不會誤用來源 ID；responsive/keyboard/conflict states通過。
 
 **Verification（納入 P3-GATE）：** handler/client tests、`inventoryTransfers.test.js`、production build及 manual完整 Transfer flow。
+新增TC-006 lookup子案例於既有`inventory-p3-unit`、`inventory-p3-api` suites；client/component及真API Playwright加入Inventory-only actor／無Balance Draft／stale lookup及錯誤流程。最低discovery、zero-skip、34 file floors、capacity與CI／獨立review／merge gates不變；新baseline重跑適用developer checks，不把舊PLAN evidence改標新PASS。正式TC／UAT保持NOT_RUN直到相應階段實際執行。
 
 **Dependencies：** P3-T02～T03。
 
 **Files likely touched：** `transferHandlers.js`、`TransfersPage.vue`、`TransferEditor.vue`、client service及 tests。
+Lookup新增Inventory handler/schema及最小read orchestration，測試重用`inventoryTransferHandlers.test.js`、`inventoryWarehouseOperationsApi.integration.test.js`，不新增套件或測試框架。
 
 **Estimated scope：** M。
 
 ### P3-T05：完成 Bin Move 原子過帳
 
 **Description：** 實作同 Warehouse兩 Active Bins之間指定 SKU/Lot/Status的原子 Move，產生成對 OUT/IN legs且不改總 On Hand。
+依Design §5.4.1／HD107 A實作1～100行whole-document service＋HTTP handler；版本涵蓋來源及目的Bucket（explicit null僅指預期不存在），共用Bucket按整份操作snapshot及gross OUT驗證。SKU／Lot／Status／Base UOM由source派生，不新增schema／權限／依賴或TASK033 UI。
+依HD109 A追加僅Bin Move選用的inputCoercion=false，沿用resolver／dispatcher／RequestValidator compile；省略維持global既有行為，非法metadata啟動拒絕。只擴充manifest列出的三個framework source及三個回歸test路徑，不改全域設定或其他route政策；先取得精確新DESIGN／PLAN及shared-path scope批准，才實作和執行新source驗證。
 
 **Traceability：** Design §§3.3、3.8、5.4；FR-MOVE-001～007、BR-023、AC-028～029。
 
@@ -848,6 +855,8 @@ Phase P0 開始前：
 - [ ] paired legs共用 group，任何失敗零 Balance/Movement/Audit半套；version/source重送語意正確。
 
 **Verification（納入 P3-GATE）：** Bin Move service/handler/integration、reserved protection及 concurrency tests。
+沿用已配置Posting service/handler與Inventory developer回歸、real API及`inventoryMovement.integration.test.js`；最低discovery／zero-skip／coverage floors／CI政策不變。TASK030 developer結果只證明Bin Move增量，不宣告尚未實作的Adjustment／Status／Reversal或full-P3完成；formal TC／UAT維持NOT_RUN直到獨立執行。
+既有完整server root suite包含新增的apiDefinitionResolver／apiDispatcher／requestValidator相容性回歸；configured P3 real API suite新增Bin Move成功、非法型別／source／versions、HTTP cache前拒絕、domain replay、權限／零DB效果案例。沿用原argv／parser／min_tests／zero-skip／34 floors與full-P3 gate；新source／PLAN令既有證據變成歷史，必須重跑適用developer suites，不重綁舊PASS。
 
 **Dependencies：** P2-GATE、P0-T07。
 
@@ -869,6 +878,16 @@ Phase P0 開始前：
 
 **Verification（納入 P3-GATE）：** Adjustment/Status unit+integration、version race、auth strength、Audit failure及 reason allowlist tests。
 
+TASK031依§5.4.2及HD112–120 A，以三個薄增量交付：(1) 六個新shared boundary source/test路徑的選用capability與原route相容性；(2) owned trusted context＋單次Adjustment／Status domain及unit/failure regression；(3) strict HTTP handlers／real API＋MySQL race/replay/revocation/rollback驗證。每段先red case再最小實作，未有全部DoD證據不宣告DONE。無新auth策略／policy/bootstrap、全域config／isolation、schema／permission／dependency、client或其他TASK。
+
+HD122 A remediation只在既有owned Posting／Adjustment helper及其測試內延後Operation actor binding；positive Adjustment新Lot的created_by使用相同temporary-NULL／final-guard後綁定，須有實際INSERT ownership，不改寫existing Lot或Receipt。Final guard→exact-row actor binding（每row=1）→proof/abort recheck→stock／Movement／Audit／Operation complete全部同一transaction；任一失敗整組回滾，不允許成功提交時缺actor／new-Lot creator。No newOperation service／generic binder／DDL／auth policy；原shared framework paths保持本候選的現有bytes，只重新綁定新PLAN scope。DEF009先寫red回歸，再修最小owned source；DEF010沿用owned SQL DATE_FORMAT並實測，不以fixture設定或放寬contract替代。
+
+精確新shared路徑：`server/src/framework/api/apiDefinitionResolver.js`、`server/src/framework/middleware/apiDispatcher.js`、`server/src/services/idempotency/IdempotencyService.js`、`server/test/apiDefinitionResolver.test.js`、`server/test/apiDispatcher.test.js`、`server/test/idempotencyService.test.js`。只有新兩條route選用idempotencyPreparation:true／7-day TTL及已有inputCoercion:false；global default／原route契約不變。既有TASK030 RequestValidator source/test保持byte-identical，連同原六個shared paths及0064既有isolated migration使用需要綁新PLAN重新確認，不擴大寫入。
+
+Owned source範圍：InventoryPostingService.js、inventoryHighRiskContext.js（新）、inventoryAdjustmentPosting.js（新）、InventoryAuditService.js、postingHandlers.js、inventorySchemas.js；測試沿用inventoryPostingService／inventoryPostingHandlers／inventoryAuditService／inventoryEndpointSecurity、fakeInventoryDatabase.js、inventoryMovement.integration.test.js及inventoryWarehouseOperationsApi.integration.test.js。只把Receipt既有Lot resolution移為同Posting owner的內部可重用helper，Receipt行為及已有proof回歸不變；不增加另一writer或任意movement engine。
+
+Mandatory developer contract為TC007下TASK031 named scenarios全部實際執行且zero-skip；沿用profile native runner、Inventory unit、full server/client regression、P3 movement DB、P3 real API、lint/build、既有coverage34 floors，不降低min_tests／改parser／用已通過TASK030結果代替新case。DB沿用owned synthetic socket-only26.7.0及精確清理；缺新增case或工具為BLOCKED。需要完整原schema/fencing/ordinary-route/Receipt/BinMove regression；不新增frontend，既有Transfer browser coverage仍納入P3回歸而非TASK031 UI完成證據。FormalTC/UAT仍NOT_RUN。
+
 **Dependencies：** P3-T05；Adjustment reason固定使用已批准的七項allowlist，任何新增／改名須先走需求變更。
 
 **Files likely touched：** `InventoryPostingService.js`、`postingHandlers.js`、posting tests、`client/src/framework/http/errorMessages.js`。
@@ -889,9 +908,17 @@ Phase P0 開始前：
 
 **Verification（納入 P3-GATE）：** allowlist、完整 group、already reversed、concurrent reversal及 current-rule failure tests。
 
+**TASK032 exact approach：** 採§5.4.3 current-version完整expectedBalances、固定movement.reverse強認證context、immutable原group/current locking once-only、TASK031 final guard及NULL-actor exact binding。只新增Inventory-owned第三consumer與Reversal helper；不接受partial/retarget、不修改workflow、不計算新UOM。效期回原Bucket但不增加Sale eligibility的條款須另獲Sam精確審閱；HD127 A只批准版本方向及candidate準備。
+
+**Minimum increments：** (1) strict route/schema/normalizer/proof及credential-free HTTP/domain replay red→green；(2) 同Posting owner的full-group locks/current-version/invariants/atomic inverse legs與Audit；(3) TC007全部16 REV032 named scenarios及TC004並發、fresh native DB/API和既有P3/security/Receipt/Issue/BinMove/Transfer/Adjustment/Status regression。每增量只做批准路徑，不預建TASK033 UI或generic movement engine。
+
+**Scope／unchanged rebind：** owned source僅InventoryPostingService.js、inventoryHighRiskContext.js、inventoryReversalPosting.js（新）、postingHandlers.js、inventorySchemas.js；tests僅inventoryPostingService／inventoryPostingHandlers／inventoryEndpointSecurity、fakeInventoryDatabase.js、inventoryMovement.integration.test.js、inventoryWarehouseOperationsApi.integration.test.js。既有八shared framework/test paths、root package-lock.json及0064 synthetic migration-use在新PLAN下僅rebind且byte-identical/no-write；不新增DDL、permissions、dependencies、profile/parser/command或floor更動。
+
+**Developer gate：** 必須有全部16 REV032 scenarios的current-source/PLAN實際named runner evidence，strict zero-skip；既有17 ADJ031/security/ordinary/Receipt/Issue/BinMove/Transfer契約及full server/Inventory/client/lint/build/global92/83/90＋全部34 per-file floors均維持。MySQL26.7.0 owned synthetic migrations、Movement及real API concurrent barriers／zero-effects snapshots與精確清理必做；既有real Transfer Playwright僅P3 regression，不是TASK033 UI完成。舊205 refs／TASK03119 PASS不可挪用為新Reversal證據。最後實作必須有實際Sam獨立source review；formalTC/UAT NOT_RUN、capacity4 NOT_EXECUTED不獲豁免。
+
 **Dependencies：** P3-T05～T06。
 
-**Files likely touched：** `InventoryPostingService.js`、`movementHandlers.js`、posting service/integration tests。
+**Files likely touched：** `InventoryPostingService.js`、`inventoryReversalPosting.js`、`inventoryHighRiskContext.js`、`postingHandlers.js`、`inventorySchemas.js`及上述owned posting/security/integration tests。
 
 **Estimated scope：** M。
 
@@ -1397,15 +1424,43 @@ DB整合命令各自需要其測試guard規定的獨立、另行批准的MySQL 2
 
 ### 5.4 P3 Warehouse Operations test cycle
 
-```bash
-npm run lint
-npm test --workspace server -- test/inventoryTransferService.test.js test/inventoryPostingService.test.js test/inventoryStateMachines.test.js
-DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/inventoryMovement.integration.test.js test/integration/inventoryTransfer.integration.test.js test/integration/inventoryPosting.integration.test.js test/integration/inventoryReservation.integration.test.js
-npm test --workspace client -- test/services/inventory.test.js test/pages/inventory/inventoryTransfers.test.js test/pages/inventory/inventoryMovements.test.js test/pages/inventory/inventoryAdjustments.test.js
-npm run test:coverage
-npm run build --workspace client
-npm run security:audit
-```
+本節只固定 `IMPLEMENT` 的 P3 developer commands。正式 `inventory-technical` 套件的 argv、stages、TC-001～010、`max_skipped=0` 與全部正式 technical／regression／UAT mappings 原封保留；只解除 PHASE-004 對其 DEVELOPER 使用。TASK-026 局部結果不等於完整 P3-GATE，也不等於正式 Technical Acceptance。
+
+PHASE-004 完整 developer gate 必須執行 ledger 的全部 `developer_suites`：既有 `lint`、`client-build`、`inventory-developer`（108 leaf floor）、`inventory-p2-database`（7）、`inventory-p2-api`（1，包含其全部現有 assertions），以及以下套件。精確 argv、cwd、timeout、env allowlist 與 adapter 以 `00_project_profile.json` 為準。下表的最低數是 planned execution floors，不是已發現／已通過的測試數；必測 case 不能以湊數、少檔、跳過或改斷言代替。
+
+| Suite | 必須覆蓋的範圍 | 最低 executed leaves | 首次適用 |
+| --- | --- | ---: | --- |
+| `inventory-task026-unit` | Transfer migration 靜態合約＋合法狀態／整張操作拒絕規則 | 12 | TASK-026 |
+| `inventory-task026-database` | 真 MySQL DDL、重跑保留資料、索引、ownership FK、值／operation constraints | 6 | TASK-026 |
+| `inventory-task027-unit` | TASK-027 Draft create／full replace／cancel／query 與版本、ownership、Audit rollback；只供本 Task 中間驗證，不替代任何完整 PHASE-004 developer suite、server coverage／floors 或正式 TC／UAT。既有全 server JUnit 多 TC ID 解析阻擋仍須在完整 P3 gate 前修復。 | 12 | TASK-027 |
+| `inventory-task028-unit` | TASK-028 整張 Dispatch／Receive、current actor／version／ownership、庫存及 Reservation 保護、全行集合、Quarantined reason、Audit rollback 與 replay；只供本 Task 中間驗證，搭配既有真 MySQL Transfer suite，不替代完整 PHASE-004 suites、coverage／floors、CI 或正式 TC／UAT。DEF-003 仍須在完整 P3 completion／merge gate 前修復。 | 12 | TASK-028 |
+| `inventory-p3-unit` | Draft domain、Dispatch／Receive 與 handler 權限／payload／version | 12 | TASK-027～029 |
+| `inventory-p3-transfer-database` | 完整 Dispatch／Receive、partial rejection、multi-line rollback、replay、Issue race、In Transit 對賬 | 12 | TASK-027～028、034 |
+| `inventory-p3-movement-database` | Bin Move、Adjustment、Status Transfer、Reversal、Reserved／Allocation 保護、same-version races／failure rollback | 12 | TASK-030～032、034 |
+| `inventory-p3-api` | 真 HTTP 正向過帳、cross-owner、ordinary JWT high-risk、撤權、source tampering、Audit rollback | 8 | TASK-029～034 |
+| `inventory-p3-transfers-client` | Draft／In Transit／Receive、quantity／line-set／Bin 驗證與 conflict states | 4 | TASK-029 |
+| `inventory-p3-movements-client` | 完整 group／reversal 雙向追溯、eligible action 與錯誤 states | 4 | TASK-033 |
+| `inventory-p3-adjustments-client` | 高風險 reason／reauth／timeout、permission 與敏感 state 不保存 | 4 | TASK-033 |
+| `inventory-p3-server-coverage` | 全 server root unit regression、strict JUnit 與原始 LCOV；全部既有 assertions、108 leaf floor、zero-skip 與每檔高風險 floors 保留；全域 92／83／90 改由下述完整 server coverage 判定，不再要求 root-only LCOV 獨立達標 | 108 | 完整 Phase |
+| `inventory-p3-coverage-floors` | 既有全部高風險 per-file coverage floors，消費當輪已核對 hash 的 LCOV | 0 | 完整 Phase |
+| `inventory-p3-client-coverage` | 全 client regression／coverage；保留 Vitest 設定；baseline 687 leaves 下限 | 687 | 完整 Phase |
+| `inventory-p3-dependency-audit` | 既有 npm audit --audit-level=high；非測試的靜態相依檢查 | 0 | 完整 Phase |
+| `inventory-p3-browser` | 真瀏覽器＋真本機 API：Transfer、Move、Adjustment、Status、Reversal、錯誤／權限、keyboard、refresh；禁止 route.fulfill 代替 | 8 | TASK-029、033～034 |
+| `inventory-p3-browser-regression` | 既有 Warehouse／Inquiry／Reservation Playwright regression；模擬 UI 不能替代上列 live P3 | 18 | 完整 Phase |
+
+所有新增測試 suite 只允許 DEVELOPER、JUnit、非零最低測試數、`max_skipped=0`；不偽裝成 TC/UAT 結果。Coverage-floors／dependency-audit 與既有 lint/build 是非測試品質檢查，EXIT_CODE 不代表測試執行。新套件的檔案按其 Task 到期實作；缺檔／工具／環境／證據或不足最低數均保持 NOT_READY，不建立 placeholder tests。完整 Phase 前不得把尚缺的套件移出必測清單。
+
+TASK-026 先執行其兩個 focused suites、既有 Inventory unit regression 及適用 lint/build。純規則與 DDL／FK／indexes 採 red→green；migration 0064 只在新鮮 allocation 檢查與精確 shared-path scope 批准後才寫入。真 DB 用 task-owned 一次性 `erp_inventory_task026_*` schema、socket-only MySQL 26.7.0、合成 fixtures；依 Sam APR-071 使用本機資源並精確清理，不接觸共用／正式資料庫。
+
+到完整 P3 cycle 時，P2 的 `erp_inventory_task025_*` regression、TASK-026 migration 與每項 P3 DB/API fixture 各有自己的合成 schema；保持既有 guard，不把不同 test-owned namespace 強行共用。P3 DB/API suite 必須檢查實際 server version 26.7.0、socket／schema ownership 與 `skip_networking=1`，使用新 `erp_inventory_p3_*` schemas；API test 必須驗證真成功效果與拒絕後零差異，不能只有負向驗證。新增 migration 後，P2 API 的既有 migration-history assertion 須按真實最新 migration 列表更新並重跑；不沿用舊 66-row 結果作新 baseline 證據。
+
+Server root unit 執行全部 `server/test/*.test.js`，保留 strict JUnit、非零 discovery、全部 assertions、`max_skipped=0`、原始 LCOV 及全部高風險 per-file floors；允許傳入新鮮合成 Customer／Supplier Bank rings 並 redaction，無 DB enable flags 或真實 keys。全域 92% lines／83% branches／90% functions 固定由既有完整 `npm run test:coverage --workspace server`（含適用 DB integration）判定；取消 root-only LCOV 也須獨立達到相同全域百分比的重複條件，這是經 Sam 精確 PLAN 批准後才可生效的驗證準則變更，不是格式修正。不得加 coverage-exclude、降低任何完整 server／client 或 per-file 數字、改斷言或用 skip 取得通過。Guarded DB integration 的 test-owned namespaces／guards 不改；完整命令的任何 guard skip 必須逐一分類並指向同 source／PLAN、本輪獨立非 skip 的適用 DB／capacity／release evidence，缺少任何必測 evidence 就不通過。完整 `npm run test:coverage`（含 client）仍是 Phase 必測命令；native SPEC exit0 不是 strict JUnit／formal acceptance 證據，Customer mixed-ID 與任何其他 parser 阻擋須另行修復／實測。現有 14 項 skip、舊 fix-worktree coverage、舊 PLAN 或其他模組 TC 不可充作本輪 Inventory PASS。額外影響到的 Item／Auth／shared migration consumer regression 仍按設計及實際 diff 執行。
+
+Coverage-floors 在本輪 server coverage 成功後執行：先將新 evidence run 內原始 `server-coverage.lcov` 按位元複製到 ignored `server/coverage/lcov.info`，核對 SHA-256 相等、source／PLAN baseline 相同、該 worktree 沒有競爭 writer，再執行既有 `checkCoverageFloors.js`。保存原始 LCOV 到 producer evidence，記錄 producer→consumer/hash 關係；舊報告或未知 producer 不算 PASS。Client coverage 執行全部 client tests，不刪除原有 tests、不改 coverage include 或設定。
+
+P3 live Playwright 透過 `VITE_API_BASE_URL`／`INVENTORY_P3_API_ORIGIN` 指向 task-owned 本機真 API，僅使用合成資料及本次 process 的 credentials；不得持久化 session 或密碼。現有 5205 web port 必須確認僅屬本次 worktree，不能 reuse 別人的 server；無法隔離便 BLOCKED。實際 browser 必須檢查主要成功流程、validation／error／empty／loading、navigation／refresh、keyboard 與相關 console/network，模擬 regression 不證明交易／授權／DB 正確性。
+
+五項既有 mandatory CI、獨立 Sam review、單一完整 P3 PR／merge group `inventory-p3`、fresh main 與清理規則不變。TASK-027～034、CI、push／PR／merge、正式驗收及 deployment 均不由配置批准自動授權；本次產品啟動仍只限 TASK-026。
 
 ### 5.5 P4 Stocktake test cycle
 
@@ -2116,9 +2171,12 @@ The task diff is scoped, reviewed and covered by its mandatory technical cases; 
 
 ### Approach
 Implement only the scope and dependencies of legacy task `P3-T04` inside `PHASE-004` using the design decisions mapped in `08_traceability.json`.
+Include §5.6.1 exact SKU Code lookup and Draft selection using the existing Item-owned read contract; no Item source, permission seed, migration, dependency or shared-framework changes. Reuse configured unit/API suites and add affected client/component/live-API Playwright cases. New baseline requires applicable developer rechecks; preserve earlier evidence as history, not current-PLAN PASS.
 
 ### Acceptance criteria
 - API route/auth/permission/idempotency/version與 design一致；Receive schema拒絕少行、重複行、多行或部分 quantity。
+- Minimal lookup obeys §5.6.1 whitelist, bounded input/errors, inventory.view-only access and same read snapshot; no-Balance SKU remains selectable and Draft creation does not post stock.
+- Changed Code clears selected SKU/Lot; stale responses cannot replace newer input. Keyboard, loading/empty/error/revocation states pass, other Draft input is retained and write-time eligibility/stock validation is unchanged.
 - UI在 Dispatch後不顯示可編輯／取消；清楚分開來源、目的及 In Transit。
 - Quarantined收貨強制原因；同名 Bin不會誤用來源 ID；responsive/keyboard/conflict states通過。
 
@@ -2132,11 +2190,14 @@ The task diff is scoped, reviewed and covered by its mandatory technical cases; 
 
 ### Approach
 Implement only the scope and dependencies of legacy task `P3-T05` inside `PHASE-004` using the design decisions mapped in `08_traceability.json`.
+Implement §5.4.1 whole-document Bin Move using existing Posting/Operation/Lock ownership, handler/schema conventions and configured developer checks. HD109 A additionally permits only the narrowly scoped route-level inputCoercion=false extension and six exact shared source/test paths after current DESIGN/PLAN and scope approval; other routes/global request configuration remain unchanged. No migration, permission, dependency, generic framework or frontend expansion. Preserve mandatory future P3 checks and historical source-bound evidence.
 
 ### Acceptance criteria
 - 來源/目的不同且同 Warehouse；SKU/Lot/Status保持不變；quantity使用 Base UOM正整數。
 - 不可移走 allocated quantity或令 eligible stock低於 Reserved；任一 Bin locked時拒絕。
 - paired legs共用 group，任何失敗零 Balance/Movement/Audit半套；version/source重送語意正確。
+- 1～100 lines全部成功或回滾；來源及目的expected versions按locked起始snapshot驗證，null只代表目的不存在；shared Bucket gross OUT／overflow／一致版本、並發建立目的及撤權重送均有實際developer證據。
+- Bin Move的HTTP schema在冪等claim／cached replay及handler前拒絕numeric strings／booleans；其他route的既有轉型及validation政策不變，非法inputCoercion metadata啟動拒絕。Framework regression＋real HTTP／MySQL須同source／PLAN通過。
 
 ### Definition of Done
 The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
@@ -2147,7 +2208,8 @@ The task diff is scoped, reviewed and covered by its mandatory technical cases; 
 實作只有 inventory.adjust＋device/password reauth可執行的正／負 Adjustment及三種人工 Status間的原子轉換，強制 reason category/text及當下規則
 
 ### Approach
-Implement only the scope and dependencies of legacy task `P3-T06` inside `PHASE-004` using the design decisions mapped in `08_traceability.json`.
+Implement only legacy `P3-T06` inside `PHASE-004`, using §5.4.2 / HD112–120 A and the three increments/exact scope under P3-T06. The opt-in HTTP preparation/replay hooks precede two consumers; trusted context is separate from serializable command. Current locking reads after waits, scalar original result, 500-byte reasons/OTHER detail, Lot creation/date/life and required versions are mandatory, not optional fallback.
+HD122 A adds transaction-local NULL actor staging for the new Operation and only an actually inserted new Lot, exact-row binding after the final current security guard, original-proof/abort recheck and atomic rollback. Existing rows/Receipt/shared auth remain unchanged. All17 TASK031 named scenarios, including early-FK regressions and owned DATE normalization, require fresh current-source/PLAN evidence; known DEF009/010 and final Sam source review block DONE.
 
 ### Acceptance criteria
 - 負 Adjustment只可扣 free quantity且不破壞 Reserved/Allocation；正 Adjustment遵守 Tracking/Lot/Bin/Expiry。
@@ -2155,7 +2217,7 @@ Implement only the scope and dependencies of legacy task `P3-T06` inside `PHASE-
 - High-risk route不能用普通 JWT；permission、reauth actor/device/action/time及原因在提交點重驗並 Audit。
 
 ### Definition of Done
-The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+The exact reviewed TASK031 scope and every named TC007 TASK031 developer scenario have current-source/PLAN observed evidence, zero skip, mandatory native regression/floors and actual Sam implementation review. TASK032 reversal cases remain NOT_RUN, no blanket TC007 or full-P3/formal acceptance claim. No publication before its separate actual CI/review/merge authority.
 
 ## TASK-032 — 完成 Movement Reversal (legacy P3-T07)
 
@@ -2163,7 +2225,7 @@ The task diff is scoped, reviewed and covered by its mandatory technical cases; 
 實作完整 Movement group反向，僅允許 Receipt、Issue、Bin Move、Status Transfer及 Adjustment；Transfer、Stocktake、Opening、In Transit與 Reversal本身走關聯 Adjustment/Status流程
 
 ### Approach
-Implement only the scope and dependencies of legacy task `P3-T07` inside `PHASE-004` using the design decisions mapped in `08_traceability.json`.
+Implement only legacy `P3-T07` inside `PHASE-004` using §5.4.3 / HD127 A plus Sam's exact candidate approval. Use the three increments and precise source/test/no-write rebind scope above; current-version guards, full-group undo, current strong-auth/replay/final guard, atomic once-only and current invariants are mandatory. The proposed historical-Lot restoration policy needs explicit approval; direction A alone is not authority to adopt or implement it.
 
 ### Acceptance criteria
 - 一個原 group只能完整 reverse一次，每個 leg以 unique `reversal_of_movement_id`連結，原 row不修改。
@@ -2171,7 +2233,7 @@ Implement only the scope and dependencies of legacy task `P3-T07` inside `PHASE-
 - 不支援 group回固定 `MOVEMENT_TYPE_NOT_REVERSIBLE`；任何當下 invariant失敗整組零效果。
 
 ### Definition of Done
-The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+Every16 REV032 named developer scenarios has current-source/approved-PLAN observed evidence with zero skip, required native regression/floors/real MySQL/API checks and actual independent Sam implementation review. TASK033/034, blanket formal TC007/UAT, capacity and full-P3 completion remain unclaimed. CI/PR/main integration requires separate publication authority and refreshed target/head gates.
 
 ## TASK-033 — 完成 Adjustments／Movements 操作 UI (legacy P3-T08)
 
@@ -2189,6 +2251,22 @@ Implement only the scope and dependencies of legacy task `P3-T08` inside `PHASE-
 ### Definition of Done
 The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
 
+### TASK033 exact local increment and developer checkpoints（candidate）
+
+Implement §7.8.1 only after actual Sam exact candidate approval. HD130 A selects recovery direction, not these unseen source/spec/profile changes. Keep canonical task/Phase/merge relationships and all prior invariants; do not introduce a second task ledger or rename this Task.
+
+1. Add signed Inventory service methods and credential-free intent/result recovery; add native service/Adjustment tests before behavior. Verify fixed routes, stable explicit key, current-source lookup and no credential persistence or automatic retry.
+2. Build Adjustment IN/OUT and Status selection/review over existing reads, with native uncontrolled confirmation and exact current guards. Verify numeric/reason/Lot/permission/error/UNKNOWN/refresh cases with at least12 native Adjustment cases.
+3. Add Movement-to-Reversal entry/full-group review and safe bidirectional navigation. Verify allowlist, incomplete guard rejection, current versus historical version, wrong/stale detail response and read-only actor with at least6 native Movement cases.
+4. Execute eight actual high-risk browser/MySQL cases and unchanged Transfer8, ordinary browser18, all current applicable developer/native functional/server/client/lint/build/audit/coverage-floor checks. Review sanitized screenshots320/768/1024/1440 and keyboard/console/network results. Final exact-source actual Sam review remains required before local TASK033 DONE.
+
+Proposed owned paths only: `client/src/services/inventory.js`, `client/src/pages/inventory/AdjustmentsPage.vue`, `client/src/pages/inventory/MovementsPage.vue`, `client/src/components/inventory/AdjustmentForm.vue`, `client/src/components/inventory/InventoryHighRiskDialog.vue`, `client/test/services/inventory.test.js`, `client/test/pages/inventory/inventoryAdjustments.test.js`, `client/test/pages/inventory/inventoryMovements.test.js`, `client/test/pages/inventory/inventoryInquiries.test.js` (existing page mounting/session compatibility only), `client/e2e/inventory-management/inventory-high-risk.spec.js`. No generic auth engine, store, shared confirmation or backend writer changes. Split actual form/confirmation responsibilities only, no speculative factory/helper library.
+
+Reviewed existing suite contracts gain stronger discovery floors: inventory-p3-adjustments-client4→12, inventory-p3-movements-client4→6; inventory-p3-browser retains existing warehouse-operations8 and adds high-risk8 with min8→16. Existing argv/result adapter/skip/timeout contracts otherwise unchanged; the new spec's bounded test watchdog fits the1800-second suite contract and has credential-sensitive capture disabled. Ordinary browser-regression18 is required here too; no missing or guarded-disabled browser run is PASS. Existing mandatory suite/profile/traceability relationships are retained.
+
+New PLAN must explicitly rebind the already-approved, byte-identical shared framework/test8, existing0064 and root lockfile scope only because existing dirty P3 changes remain in this worktree. Rebind is no-write adoption of verified pins, not permission for new shared/auth/DDL/dependency changes. Local owned synthetic MySQL/API/browser setup and precise cleanup reuse existing approved methods; no shared/production resource, CI/publication/main integration/formal/capacity waiver. Historical source/PLAN reports remain historical and cannot prove the new UI candidate.
+
+
 ## TASK-034 — 完成倉務操作整合、並發及安全驗收 (legacy P3-T09)
 
 ### Goal
@@ -2204,6 +2282,42 @@ Implement only the scope and dependencies of legacy task `P3-T09` inside `PHASE-
 
 ### Definition of Done
 The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+#### TASK034 coverage reconciliation and local increments (HD133 A; exact candidate pending)
+
+Use the existing full P3-T09 acceptance, not the old FR063-only typed mapping. TASK034 links FR034, FR037–041, FR063–091 and SEC001–013 through DES003/005/006/010 and TC001/004/006/007; each TC inverse link includes TASK034. Add the five previously missing Issue/source requirements to PHASE004, preserve all existing Phase membership, and explicitly depend on TASK026–033. Requirements/design/UAT definitions and business rules do not change. The ledger and regenerated matrix remain the only typed relationship authority.
+
+Three sequential increments, each followed by current-source evidence verification:
+
+1. Exact quantity/version concurrency and invariants: add Issue7 versus Dispatch7 on OnHand10 and an existing-Bucket same-version Adjustment race; verify all-or-none effects, Control/Reservation/Allocation and immutable original rows. Reuse existing deterministic barrier/fixture patterns, no sleeps or weakened guards.
+2. Reconciliation/security gap closure: map the12 INT034 developer rows to exact native names/assertions; add or strengthen only missing tests in the three owned integration files. Preserve all existing tests/names/assertions. Verify complete rollback, required Audit, paired/inverse effects, source conflict/replay, ownership, ordinary-JWT rejection and current revocation. Movement/Audit UPDATE and DELETE must fail for the actual immutable trigger, not an unrelated SQL error.
+3. Integration evidence and writer handoff: fresh applicable native developer suites, full functional compatibility, unchanged Transfer/high-risk Playwright and ordinary browser regression, lint/build/audit/global/per-file floors; record the current Bin OnHand entry inventory with file pins for P4. Independent Sam source review is required before local TASK034 DONE; complete P3 integration/CI/PR/main/formal gates are separate.
+
+Owned test writes are limited to `server/test/integration/inventoryTransfer.integration.test.js`, `server/test/integration/inventoryMovement.integration.test.js` and `server/test/integration/inventoryWarehouseOperationsApi.integration.test.js`, plus this module's documentation/evidence. No product/UI/shared/auth/provider/DDL/dependency/config/parser writes are included. If a test exposes a product defect, retain the failure and request scoped remediation rather than fixing outside this candidate.
+
+Exact Issue7 case: establish valid Reservation7 and Allocation7 using the existing Issue contract; do not invent an unallocated Issue or let Dispatch consume reserved/allocated stock to create artificial competing winners. Exercise deterministic arrival/lock ordering and require at most one committed operation, valid Issue consumption, rejected Dispatch zero-effects, final OnHand3/Allocated0/Reserved0, Draft Transfer/no transit. Existing Issue4/Dispatch7 remains a separate regression. The version race uses two distinct source events, existing Bucket OnHand10/versionV and two OUT4 Adjustments; sufficient quantity for both ensures the loser is rejected for stale version rather than aggregate shortage.
+
+All existing project-profile argv, tool versions, suite floors, stages, parser, timeout, required IDs and zero-skip rules are byte-identical; no new suite or count-only substitution. INT034 rows require their exact new or verified existing native names and assertions on the new approved PLAN/current source. The original22 registered contracts, supporting functional commands and full-native skip classification remain required where applicable; old reports retain original baselines. Global92/83/90 and34 file floors are unchanged. Full-command guarded skips need their separate applicable non-skip evidence; capacity4 remains NOT_EXECUTED and is not deferred/waived. Local Task closure is not full-P3 completion or MERGE_READY.
+
+The new PLAN explicitly rebinds the prior byte-identical eight shared framework/test paths, root lockfile and existing0064 only for boundary consistency of accumulated dirty P3 work. Their verified pins permit no new writes. Standing local-resource authority supports owned synthetic MySQL26.7.0/API/browser setup, existing migrations and precise cleanup after exact candidate approval; no shared/production resource or credential export.
+
+#### Current Bin OnHand entry inventory for P4 (source discovery, not executed P4 proof)
+
+| Operation | HTTP / internal entry | Writer implementation | Relevant Bin scope |
+| --- | --- | --- | --- |
+| Receipt | `POST /api/v1/inventory/receipts`; `postReceipt[InTransaction]`, `postReceivingReceiptInTransaction`, `postCustomerReturnReceiptInTransaction` | `InventoryPostingService.js` Receipt core | Receipt destination; downstream providers retain fixed existing permissions/purpose |
+| Issue | `POST /api/v1/inventory/issues`; `postIssue[InTransaction]`, `postFulfillmentIssueInTransaction` | `InventoryPostingService.js` Issue core | Every allocated source Bin; HTTP and internal permissions stay distinct |
+| Bin Move | `POST /api/v1/inventory/bin-moves`; `postBinMove[InTransaction]` | `inventoryBinMovePosting.js` | All source/destination Bins, including shared Buckets |
+| Dispatch | `POST /api/v1/inventory/transfers/:id/dispatch`; `dispatch[InTransaction]` | `InventoryTransferService.js` | Every source Bin; destination InTransit is not a Bin |
+| Receive | `POST /api/v1/inventory/transfers/:id/receive`; `receive[InTransaction]` | `InventoryTransferService.js` | Every receiving destination Bin |
+| Adjustment IN/OUT | `POST /api/v1/inventory/adjustments`; `postAdjustment[InTransaction]` with trusted context | `inventoryAdjustmentPosting.js` | Selected existing/new Bucket Bin; new Lot/balance also rolls back |
+| Status Transfer | `POST /api/v1/inventory/status-transfers`; `postStatusTransfer[InTransaction]` with trusted context | `inventoryAdjustmentPosting.js` | Both status Buckets in the same Bin |
+| Whole-group Reversal | `POST /api/v1/inventory/movements/:id/reverse`; `reverseMovement[InTransaction]` with trusted context | `inventoryReversalPosting.js` | Every server-derived original group Bin, current full guards |
+
+All paths above are relative to `server/src/modules/inventory/`; HTTP definitions are in `server/src/handlers/inventory/postingHandlers.js` and `transferHandlers.js`. `InventoryLockService.js` also materializes zero Buckets inside owned transactions; it is a shared preparation primitive, not an independent posting route, and rollback/lock evidence must include it. Reservation/Allocation only change Reserved/Allocated, not OnHand, and remain explicitly classified rather than accidentally omitted or presented as OnHand writers. Draft create/update/cancel and inquiries are non-OnHand routes.
+
+This inventory reflects current source; later execution must mechanically reconcile current handlers/internal aliases and the actual OnHand write sites, with no unexplained writer omission. P4 persistent Stocktake and later Opening writers are not implemented here. Existing injected Counting-signal tests and confirmed no-P4-table behavior do not prove persistent Stocktake workflow or restart recovery. P4 must extend this inventory when those real writers/locks exist; no claim that future lock coverage is already complete.
+
 
 ## TASK-035 — 建立 Stocktake、scope、line 與 persistent Bin lock persistence (legacy P4-T01)
 
@@ -2476,3 +2590,29 @@ Implement only the scope and dependencies of legacy task `P5-T10` inside `PHASE-
 
 ### Definition of Done
 The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## P3 fresh-main integration contract — owner adoption candidate
+
+This integration preserves the single `inventory-p3` merge group and TASK026–034 scope. Main target is `9e9b0ff9ad87846a32036fc86138a834bdb5c82a`; current P3 source is `0cbbea162a3e377df50214fd63b2484b0585d68a2be8dc52ee1615d8b013178c`. These are candidate inputs, not a declaration that integration or approval occurred. A changed target requires a new bounded diff and affected-scope reapproval; a Supplier-only bookkeeping advance may be mechanically reconciled without expanding product authority.
+
+Adopt only Inventory design §5.7.2's reserve-only Backorder sibling, with two worker command types, server-injected registration callback, NULL user, fixed job identity, current DB-clock fenced lease and original root/child replay membership. Manual `sales.mgmt` reserve/release contracts and their operation hashes remain unchanged. No new HTTP Inventory endpoint, human role grant, Inventory DDL, worker release or scheduler activation is authorized by this specification.
+
+Preserve P3 strict input coercion, idempotency preparation and credential-free guarded replay together with main's authorization preflight and optional 202 `Retry-After`. The replay header belongs inside `sendReplay`, reached only after the preparation callback authorizes sending; pass the route options through both callers. A denied callback sends no replay body, flags, header or success log. Ordinary routes remain unchanged apart from main's already-declared optional header behavior. Use main's exact lockfile (`shell-quote` 1.12.0); no forced upgrade, new dependency or regenerated lockfile.
+
+### Developer execution and evidence
+
+Main also adds only `ItemLookupService.searchForSale` relative to this worktree. Import its exact main bytes and rebind the consumed-source hash; existing Inventory transaction lookup methods remain unchanged. Full root Item/Sales lookup tests, native Item compatibility and the new Sales suite must verify this consumed baseline. No authored Item implementation or caller behavior change is included.
+
+All existing phase suites, commands, discovery floors, zero-skip rules, global 92/83/90 and all 34 per-file floors remain unchanged. Add three DEVELOPER-only JUnit suites to PHASE-004: `inventory-p3-sales-compatibility`, `inventory-p3-customer-capacity` and `inventory-p3-core-capacity`. The profile contains their exact argv, tools, env allowlist, result paths and timeouts. These strengthen, never replace, the original 20 suites. The existing task-local suites, full functional compatibility, full native server/client coverage, guarded-skip reconciliation and real16 plus ordinary18 Playwright remain required. Consumer TC names are not Inventory formal acceptance IDs.
+
+Sales compatibility executes main's exact worker unit contracts and complete native Confirmation/Backorder integration files against an owned fully migrated synthetic schema. Check fixed registration, lease expiry/takeover/abort/stop, partial/zero ATP, replay membership and caller rollback; preserve manual reserve/release and current revocation. Do not rewrite Sales source or assertions. Core capacity uses a separate empty `erp_inventory_task018_*` schema with unchanged 100k SKU/500k Bucket/2M Movement, concurrency20/rounds5, indexed EXPLAIN, p95<2 seconds and two-connection rollback. Customer capacity uses a separate fully migrated synthetic schema, unchanged10k import, total<10 minutes, API p95<2 seconds, zero errors/lock waits and heap growth<256MiB. These two native wrappers discharge the four previously unexecuted capacity obligations only after their complete assertions actually pass; no reduced fixture or waiver.
+
+The capacity/consumer fixtures use loopback TCP configuration. A coordinator must positively verify a new owned MySQL26.7.0 instance, exact schemas, loopback-only binding and port ownership before enabling the flags; refuse `erp_dev`, shared/prod schemas, default credentials fallback or external hosts. P3's existing socket-only fixtures retain their original isolation checks. Serial execution avoids competing writers; synthetic Customer/Supplier rings remain process-only and redacted. Existing migration files alone may be executed in the owned schemas; observe the exact current ledger and reconcile migration-count assertions with that list, not historical70/66-row values. Any new DDL, fixture/assertion change or product defect outside the reviewed patch requires scoped remediation approval.
+
+New runs use the generic runner's actual private `evidence/<run-id>` paths, native reports/argv and one actually owned coordinator runtime. Preserve all348 historical references and report bytes under their original source/PLAN/runtime IDs; do not move, relabel or import them as current-main passes. No generic Harness change or evidence adapter bypass is proposed. Standard new reports avoid the old nested-path convention. The generic MERGE_READY gate is evaluated while the recorded runtime resources are actually reserved and owned; retired resources cannot be described as live. Missing report, tool, scope permission, runtime, mandatory assertion, capacity evidence or current-baseline check blocks publication/merge.
+
+### Publication and final review
+
+Only after actual human adoption and scoped implementation authority: preserve the dirty P3 work in a local savepoint, integrate freshly checked main in the dedicated worktree, apply only the reviewed resolutions/rebinding, run the new-baseline developer cycle, then commit/push and open the single P3 PR under publication authority. A preparatory savepoint is not a verified publication candidate. Classify exportable evidence and exclude secrets/raw credential captures before staging.
+
+The exact final candidate needs all five mandatory CI checks and independent Sam source review, plus generic MERGE_READY and an unchanged/reconciled main target. Candidate or target changes invalidate dependent evidence/review; do not infer final-head approval from adoption of this proposal. Final merge requires separate exact-head Sam approval. Clean the owned runtime, merged branch and worktree only after observable successful merge and dependency checks. No P4 implementation, formal Technical/UAT/business acceptance or deployment is included.

@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="21" failures="1" errors="0" time="0.351022791">
+    <testsuite name="test/pages/inventory/inventoryAdjustments.test.js" timestamp="2026-10-08T07:23:58.723Z" hostname="samMacBook-Pro.local" tests="21" failures="1" errors="0" skipped="0" time="0.351022791">
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-SELECTORS supports exact-Code usable no-Balance SKU with explicit Base UOM and confirmed absence" time="0.071370042">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-SELECTORS discards late SKU response after Code changed" time="0.01183475">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-VALIDATION rejects nonpositive, fractional and unsafe Base quantities before review" time="0.022925375">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-VALIDATION applies trim, Unicode OTHER minimum, control rejection and UTF-8 byte limit" time="0.023796167">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-VALIDATION rejects invalid calendar dates for a new expiring Lot" time="0.015789958">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-IN-LOT preserves existing immutable Lot dates and current Balance version" time="0.013762333">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-CURRENT-GUARDS reads all target pages and distinguishes null Lot from a tracked Lot" time="0.010147">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-CURRENT-GUARDS refuses failed, partial and duplicate target reads rather than inferring absence" time="0.013445209">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-CURRENT-GUARDS binds OUT to freshly read source identity/version, not its list snapshot" time="0.012305042">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-IN-LOT prepares paired Status effects using current source and confirmed absent destination" time="0.012516792">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-RECONCILE derives complete unique current Reversal guards instead of historical versions" time="0.00224875">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-CONFIRM-SECRETS clears native password immediately, never emits it, and clears cancel/hide/disable" time="0.014270375">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-AUTH requires view+adjust on the page and hides its form for read-only actors" time="0.029115167">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-SIGNED-INTENT freezes original input and persists only actor source identity before POST" time="0.014033708">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-UNKNOWN-QUERY keeps null unresolved and never automatically creates or resends another intent" time="0.011590542">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-RETRY requires explicit retry and fresh entry with unchanged original business/source/key" time="0.016071083">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-REFRESH restores only query recovery, with no rebuilt payload or retry/new operation" time="0.001996291">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-REFRESH isolates actors and clears pending confirmation without deleting another actor&apos;s reference" time="0.014647375">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-REFRESH blocks POST when minimal recovery identity cannot be saved" time="0.011336042">
+            <failure message="expected &quot;vi.fn()&quot; to not be called at all, but actually been called 1 times[90m
+
+Received:
+
+[1m  1st vi.fn() call:
+
+[22m    Array [
+      Object {
+        &quot;binId&quot;: 2,
+        &quot;direction&quot;: &quot;IN&quot;,
+        &quot;expectedBalanceVersion&quot;: 6,
+        &quot;idempotencyKey&quot;: &quot;21885f92-cf49-40e3-b014-32e1f8328b9d&quot;,
+        &quot;password&quot;: &quot;unit-entry&quot;,
+        &quot;quantity&quot;: 3,
+        &quot;reasonCategory&quot;: &quot;DATA_CORRECTION&quot;,
+        &quot;reasonText&quot;: &quot;庫存資料校正&quot;,
+        &quot;skuId&quot;: 3,
+        &quot;source&quot;: Object {
+          &quot;documentId&quot;: &quot;99095f4b-da3f-4f6e-877c-5e8d820a04fc&quot;,
+          &quot;documentType&quot;: &quot;ADJUSTMENT&quot;,
+          &quot;eventId&quot;: &quot;404b718c-2ca0-4349-b90a-e596008edf7a&quot;,
+          &quot;lineId&quot;: &quot;&quot;,
+          &quot;module&quot;: &quot;INVENTORY&quot;,
+        },
+        &quot;stockStatus&quot;: &quot;AVAILABLE&quot;,
+        &quot;uomId&quot;: 5,
+        &quot;warehouseId&quot;: 1,
+      },
+      Object {
+        &quot;signal&quot;: AbortSignal {
+          Symbol(kEvents): undefined,
+          Symbol(events.maxEventTargetListeners): 0,
+          Symbol(events.maxEventTargetListenersWarned): false,
+          Symbol(kHandlers): undefined,
+          Symbol(kAborted): false,
+          Symbol(kReason): undefined,
+          Symbol(kComposite): false,
+        },
+      },
+    ]
+[39m[90m
+
+Number of calls: [1m1[22m
+[39m" type="AssertionError">
+AssertionError: expected &quot;vi.fn()&quot; to not be called at all, but actually been called 1 times
+
+Received:
+
+  1st vi.fn() call:
+
+    Array [
+      Object {
+        &quot;binId&quot;: 2,
+        &quot;direction&quot;: &quot;IN&quot;,
+        &quot;expectedBalanceVersion&quot;: 6,
+        &quot;idempotencyKey&quot;: &quot;21885f92-cf49-40e3-b014-32e1f8328b9d&quot;,
+        &quot;password&quot;: &quot;unit-entry&quot;,
+        &quot;quantity&quot;: 3,
+        &quot;reasonCategory&quot;: &quot;DATA_CORRECTION&quot;,
+        &quot;reasonText&quot;: &quot;庫存資料校正&quot;,
+        &quot;skuId&quot;: 3,
+        &quot;source&quot;: Object {
+          &quot;documentId&quot;: &quot;99095f4b-da3f-4f6e-877c-5e8d820a04fc&quot;,
+          &quot;documentType&quot;: &quot;ADJUSTMENT&quot;,
+          &quot;eventId&quot;: &quot;404b718c-2ca0-4349-b90a-e596008edf7a&quot;,
+          &quot;lineId&quot;: &quot;&quot;,
+          &quot;module&quot;: &quot;INVENTORY&quot;,
+        },
+        &quot;stockStatus&quot;: &quot;AVAILABLE&quot;,
+        &quot;uomId&quot;: 5,
+        &quot;warehouseId&quot;: 1,
+      },
+      Object {
+        &quot;signal&quot;: AbortSignal {
+          Symbol(kEvents): undefined,
+          Symbol(events.maxEventTargetListeners): 0,
+          Symbol(events.maxEventTargetListenersWarned): false,
+          Symbol(kHandlers): undefined,
+          Symbol(kAborted): false,
+          Symbol(kReason): undefined,
+          Symbol(kComposite): false,
+        },
+      },
+    ]
+
+
+Number of calls: 1
+
+ ❯ test/pages/inventory/inventoryAdjustments.test.js:224:42
+            </failure>
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-RETRY preserves earlier UNKNOWN even when a later retry is definitively rejected" time="0.01440775">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-RECONCILE resolves only exact source/operation/group and reloads actual facts" time="0.012759208">
+        </testcase>
+    </testsuite>
+</testsuites>

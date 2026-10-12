@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="TASK-016 Stock inquiry uses bounded filters, exact search priority and explicit projections" time="0.001989" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryInquiryService.test.js"/>
+	<testcase name="TASK-023 Reservation list filters uncovered scope and returns an allowlisted quantity breakdown" time="0.000232" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryInquiryService.test.js"/>
+	<testcase name="TASK-023 Reservation detail scopes Allocation children and rejects unknown IDs" time="0.000258" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryInquiryService.test.js"/>
+	<testcase name="TASK-016 Stock inquiry rejects non-allowlisted sorting before querying" time="0.000096" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryInquiryService.test.js"/>
+	<testcase name="TASK-016 Stock filters bound lot, expiry and zero-ATP results without raw SQL input" time="0.000139" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryInquiryService.test.js"/>
+	<testcase name="TASK-016 Stock expiry and no-stock states generate distinct bounded predicates" time="0.000099" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryInquiryService.test.js"/>
+	<testcase name="TASK-016 rejects malformed inquiry filters before issuing a query" time="0.000372" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryInquiryService.test.js"/>
+	<testcase name="TASK-016 pagination rejects an offset that cannot be represented safely" time="0.000053" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryInquiryService.test.js"/>
+	<testcase name="TASK-016 Stock summary keeps ATP and status quantities separate" time="0.000142" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryInquiryService.test.js"/>
+	<testcase name="TASK-017 Stock aggregate list paginates complete SKU totals before bucket drill-down" time="0.000139" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryInquiryService.test.js"/>
+	<testcase name="TASK-016 Stock detail returns one bucket and recent source-linked movements" time="0.000440" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryInquiryService.test.js"/>
+	<testcase name="TASK-016 Lot inquiry applies expiry filters and reports current Base UOM totals" time="0.000119" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryInquiryService.test.js"/>
+	<testcase name="TASK-016 Movement inquiry keeps fixed history order and source snapshots" time="0.000092" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryInquiryService.test.js"/>
+	<testcase name="TASK-018 Movement count skips the operation join when no source filter needs it" time="0.000046" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryInquiryService.test.js"/>
+	<testcase name="TASK-016 Movement detail returns group legs and both reversal links" time="0.000082" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryInquiryService.test.js"/>
+	<testcase name="TASK-016 exact operation source lookup delegates without enumeration" time="0.000046" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryInquiryService.test.js"/>
+	<testcase name="TASK-027 creates a complete Draft and audit without quantity or movement writes" time="0.001731" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryTransferService.test.js"/>
+	<testcase name="TASK-027 rejects stale permission and caller-selected permission contracts before writes" time="0.000665" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryTransferService.test.js"/>
+	<testcase name="TASK-027 Draft creation rolls back if required audit fails" time="0.000198" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryTransferService.test.js"/>
+	<testcase name="TASK-027 rejects invalid Draft quantities, same warehouse, empty lines and caller snapshots" time="0.000477" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryTransferService.test.js"/>
+	<!-- tests 20 -->
+	<!-- suites 0 -->
+	<!-- pass 20 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 133.874708 -->
+</testsuites>

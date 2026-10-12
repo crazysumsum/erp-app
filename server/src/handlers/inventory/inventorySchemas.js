@@ -1,8 +1,10 @@
 import {
-  INVENTORY_ALLOCATION_STATUSES,
+ INVENTORY_ALLOCATION_STATUSES,
+  INVENTORY_ADJUSTMENT_REASON_CATEGORIES,
   INVENTORY_MASTER_STATUSES,
   INVENTORY_RESERVATION_STATUSES,
-  INVENTORY_STOCK_STATUSES
+  INVENTORY_STOCK_STATUSES,
+  INVENTORY_TRANSFER_STATUSES
 } from "../../modules/inventory/inventoryConstants.js";
 
 export const EMPTY = Object.freeze({ type: "object", properties: {}, additionalProperties: false });
@@ -18,6 +20,9 @@ export const OPERATION_POLICY = Object.freeze([Object.freeze({
   name: "hasPermission",
   options: Object.freeze({ permissions: Object.freeze(["inventory.view", "inventory.operation"]) })
 })]);
+export const ADJUST_POLICY = Object.freeze([Object.freeze({
+  name: "hasPermission", options: Object.freeze({ permissions: Object.freeze(["inventory.view", "inventory.adjust"]) })
+})]);
 
 const ID = Object.freeze({ type: "integer", minimum: 1, maximum: Number.MAX_SAFE_INTEGER });
 const NON_NEGATIVE_QUANTITY = Object.freeze({ type: "integer", minimum: 0, maximum: Number.MAX_SAFE_INTEGER });
@@ -30,6 +35,21 @@ const PASSWORD = Object.freeze({ type: "string", minLength: 1, maxLength: 1024 }
 const CODE = Object.freeze({ type: "string", trim: true, minLength: 1, maxLength: 50 });
 const NAME = Object.freeze({ type: "string", trim: true, minLength: 1, maxLength: 190 });
 const OPTIONAL_NAME = Object.freeze({ type: ["string", "null"], trim: true, maxLength: 190 });
+
+export const SKU_LOOKUP_QUERY = Object.freeze({
+  type: "object", additionalProperties: false, required: ["code"],
+  properties: { code: { type: "string", minLength: 1, maxLength: 190, pattern: "^[^\\u0000-\\u001f\\u007f]*$" } }
+});
+export const SKU_LOOKUP_RESPONSE = Object.freeze({
+  type: "object", additionalProperties: false,
+  required: ["skuId", "skuCode", "skuName", "trackingPolicy", "baseUom"],
+  properties: {
+    skuId: ID, skuCode: { type: "string" }, skuName: { type: "string" },
+    trackingPolicy: { type: "string", enum: ["none", "batch", "batch_expiry"] },
+    baseUom: { type: "object", additionalProperties: false, required: ["uomId", "uomCode"],
+      properties: { uomId: ID, uomCode: { type: "string" } } }
+  }
+});
 const DESCRIPTION = Object.freeze({ type: "string", trim: true, maxLength: 500 });
 const ADDRESS = Object.freeze({ type: ["string", "null"], trim: true, maxLength: 500 });
 
@@ -179,6 +199,49 @@ const SOURCE = Object.freeze({
   }
 });
 const DATE_ONLY = Object.freeze({ type: ["string", "null"], pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" });
+// The preparation normalizer supplies lineId; defaults inside oneOf are rejected by strict Ajv.
+const HIGH_RISK_SOURCE = Object.freeze({ ...SOURCE,
+  properties: { ...SOURCE.properties, lineId: { type: "string", maxLength: 100 } } });
+const HIGH_RISK_COMMON = Object.freeze({ source: HIGH_RISK_SOURCE, password: PASSWORD, quantity: ID, uomId: ID,
+  reasonText: { type: "string", minLength: 1, maxLength: 500, pattern: "^[^\\u0000-\\u001f\\u007f-\\u009f]+$" } });
+const HIGH_RISK_REQUIRED = ["source", "password", "quantity", "uomId", "reasonText"];
+const EXPECTED_ABSENT = Object.freeze({ type: ["integer", "null"], minimum: 1, maximum: 4_294_967_295 });
+const ADJUSTMENT_REASON = Object.freeze({ type: "string", enum: [...INVENTORY_ADJUSTMENT_REASON_CATEGORIES] });
+const ADJUSTMENT_IN_PROPERTIES = Object.freeze({ ...HIGH_RISK_COMMON, direction: { const: "IN" }, warehouseId: ID, binId: ID,
+  skuId: ID, stockStatus: { type: "string", enum: [...INVENTORY_STOCK_STATUSES] }, expectedBalanceVersion: EXPECTED_ABSENT,
+  reasonCategory: ADJUSTMENT_REASON, lotNumber: { type: "string", minLength: 1, maxLength: 100 },
+  expiryDate: { ...DATE_ONLY, type: "string" }, manufactureDate: { ...DATE_ONLY, type: "string" } });
+const ADJUSTMENT_OUT_PROPERTIES = Object.freeze({ ...HIGH_RISK_COMMON, direction: { const: "OUT" }, balanceId: ID,
+  expectedBalanceVersion: VERSION, reasonCategory: ADJUSTMENT_REASON });
+export const ADJUSTMENT_CREATE = Object.freeze({
+  type: "object", additionalProperties: false, required: HIGH_RISK_REQUIRED,
+  properties: { ...ADJUSTMENT_IN_PROPERTIES, ...ADJUSTMENT_OUT_PROPERTIES, direction: { type: "string", enum: ["IN", "OUT"] },
+    expectedBalanceVersion: EXPECTED_ABSENT },
+  oneOf: [
+    { type: "object", additionalProperties: false, properties: ADJUSTMENT_IN_PROPERTIES,
+      required: [...HIGH_RISK_REQUIRED, "direction", "warehouseId", "binId", "skuId", "stockStatus", "expectedBalanceVersion", "reasonCategory"] },
+    { type: "object", additionalProperties: false, properties: ADJUSTMENT_OUT_PROPERTIES,
+      required: [...HIGH_RISK_REQUIRED, "direction", "balanceId", "expectedBalanceVersion", "reasonCategory"] }
+  ]
+});
+export const STATUS_TRANSFER_CREATE = Object.freeze({
+  type: "object", additionalProperties: false,
+  required: [...HIGH_RISK_REQUIRED, "sourceBalanceId", "destinationStatus", "expectedSourceVersion", "expectedDestinationVersion"],
+  properties: { ...HIGH_RISK_COMMON, sourceBalanceId: ID, destinationStatus: { type: "string", enum: [...INVENTORY_STOCK_STATUSES] },
+    expectedSourceVersion: VERSION, expectedDestinationVersion: EXPECTED_ABSENT }
+});
+export const REVERSAL_ID_PARAMS = Object.freeze({
+  type: "object", additionalProperties: false, required: ["id"],
+  properties: { id: { type: "string", pattern: "^[1-9][0-9]*$" } }
+});
+export const REVERSAL_CREATE = Object.freeze({
+  type: "object", additionalProperties: false, required: ["source", "password", "reasonText", "expectedBalances"],
+  properties: { source: HIGH_RISK_SOURCE, password: PASSWORD, reasonText: HIGH_RISK_COMMON.reasonText,
+    expectedBalances: { type: "array", minItems: 1, maxItems: 200, items: {
+      type: "object", additionalProperties: false, required: ["balanceId", "expectedVersion"],
+      properties: { balanceId: ID, expectedVersion: VERSION }
+    } } }
+});
 const MINIMUM_LIFE_OVERRIDE = Object.freeze({
   type: "object", additionalProperties: false,
   required: [
@@ -212,6 +275,32 @@ export const RECEIPT_CREATE = Object.freeze({
     stockStatus: { type: "string", enum: [...INVENTORY_STOCK_STATUSES] },
     minimumLifeOverride: MINIMUM_LIFE_OVERRIDE
   }
+});
+
+export const BIN_MOVE_CREATE = Object.freeze({
+  type: "object", additionalProperties: false, required: ["source", "warehouseId", "lines"],
+  properties: {
+    source: SOURCE, warehouseId: ID,
+    reason: { type: "string", trim: true, maxLength: 500, pattern: "^[^\\u0000-\\u001f\\u007f]*$" },
+    lines: { type: "array", minItems: 1, maxItems: 100, items: {
+      type: "object", additionalProperties: false,
+      required: ["sourceBalanceId", "destinationBinId", "quantity", "expectedSourceVersion", "expectedDestinationVersion"],
+      properties: {
+        sourceBalanceId: ID, destinationBinId: ID, quantity: ID,
+        expectedSourceVersion: VERSION,
+        expectedDestinationVersion: { type: ["integer", "null"], minimum: 1, maximum: 4_294_967_295 }
+      }
+    } }
+  }
+});
+export const BIN_MOVE_RESPONSE = Object.freeze({
+  type: "object", additionalProperties: false, required: ["status", "operationId", "movementGroupId", "lineCount"],
+  properties: { status: { const: "POSTED" }, operationId: ID,
+    movementGroupId: { type: "string", minLength: 1, maxLength: 100 },
+    lineCount: { type: "integer", minimum: 1, maximum: 100 } }
+});
+export const REVERSAL_RESPONSE = Object.freeze({ ...BIN_MOVE_RESPONSE,
+  properties: { ...BIN_MOVE_RESPONSE.properties, lineCount: { type: "integer", minimum: 1, maximum: 200 } }
 });
 
 export const ISSUE_CREATE = Object.freeze({
@@ -433,6 +522,12 @@ export const RESERVATION_DETAIL_RESPONSE = Object.freeze({
 const UOM_RESULT = Object.freeze({
   type: "object", additionalProperties: false, required: ["id", "code"],
   properties: { id: ID, code: { type: "string" } }
+});
+export const ADJUSTMENT_RESPONSE = Object.freeze({
+  type: "object", additionalProperties: false,
+  required: ["status", "operationId", "movementGroupId", "lineCount", "inputQuantity", "inputUom", "baseQuantity", "baseUom"],
+  properties: { status: { const: "POSTED" }, operationId: ID, movementGroupId: { type: "string", minLength: 1, maxLength: 100 },
+    lineCount: { type: "integer", minimum: 1, maximum: 2 }, inputQuantity: ID, inputUom: UOM_RESULT, baseQuantity: ID, baseUom: UOM_RESULT }
 });
 const BALANCE_RESULT = Object.freeze({
   type: "object", additionalProperties: false,
@@ -732,4 +827,87 @@ export const OPERATION_SOURCE_RESPONSE = Object.freeze({
     operationId: ID, resultType: { type: "string" }, resultId: { type: "string" },
     resultSummary: { type: ["object", "null"] }, completedAt: TIMESTAMP
   }
+});
+
+const TRANSFER_STATUS = Object.freeze({ type: "string", enum: [...INVENTORY_TRANSFER_STATUSES] });
+const TRANSFER_REASON = Object.freeze({ type: "string", trim: true, maxLength: 500 });
+export const TRANSFER_ID_PARAMS = MOVEMENT_ID_PARAMS;
+export const TRANSFER_LIST_QUERY = Object.freeze({
+  type: "object", additionalProperties: false,
+  properties: {
+    ...LIST_PAGE, number: { type: "string", maxLength: 100 },
+    sourceWarehouseId: ID, destinationWarehouseId: ID,
+    status: { type: "string", enum: ["ALL", ...INVENTORY_TRANSFER_STATUSES], default: "ALL" },
+    createdFrom: TIMESTAMP, createdTo: TIMESTAMP,
+    sortBy: { type: "string", enum: ["updatedAt", "createdAt", "number", "status"], default: "updatedAt" },
+    descending: { type: "boolean", default: true }
+  }
+});
+const TRANSFER_DRAFT_LINE = Object.freeze({
+  type: "object", additionalProperties: false, required: ["skuId", "sourceBinId", "stockStatus", "quantity"],
+  properties: { skuId: ID, lotId: NULLABLE_ID, sourceBinId: ID,
+    stockStatus: { type: "string", enum: [...INVENTORY_STOCK_STATUSES] }, quantity: ID }
+});
+export const TRANSFER_CREATE = Object.freeze({
+  type: "object", additionalProperties: false, required: ["source", "sourceWarehouseId", "destinationWarehouseId", "lines"],
+  properties: { source: SOURCE, sourceWarehouseId: ID, destinationWarehouseId: ID, reason: TRANSFER_REASON,
+    lines: { type: "array", minItems: 1, maxItems: 100, items: TRANSFER_DRAFT_LINE } }
+});
+export const TRANSFER_UPDATE = Object.freeze({
+  ...TRANSFER_CREATE, required: [...TRANSFER_CREATE.required, "version"],
+  properties: { ...TRANSFER_CREATE.properties, version: VERSION,
+    lines: { ...TRANSFER_CREATE.properties.lines, items: {
+      ...TRANSFER_DRAFT_LINE, dependencies: { id: ["expectedVersion"], expectedVersion: ["id"] },
+      properties: { ...TRANSFER_DRAFT_LINE.properties, id: ID, expectedVersion: VERSION }
+    } }
+  }
+});
+export const TRANSFER_DISPATCH = Object.freeze({
+  type: "object", additionalProperties: false, required: ["source", "version"],
+  properties: { source: SOURCE, version: VERSION }
+});
+export const TRANSFER_CANCEL = Object.freeze({
+  ...TRANSFER_DISPATCH, required: [...TRANSFER_DISPATCH.required, "reason"],
+  properties: { ...TRANSFER_DISPATCH.properties, reason: { ...TRANSFER_REASON, minLength: 1 } }
+});
+export const TRANSFER_RECEIVE = Object.freeze({
+  ...TRANSFER_DISPATCH, required: [...TRANSFER_DISPATCH.required, "lines"],
+  properties: { ...TRANSFER_DISPATCH.properties, reason: TRANSFER_REASON,
+    lines: { type: "array", minItems: 1, maxItems: 100, items: {
+      type: "object", additionalProperties: false, required: ["id", "quantity", "destinationBinId"],
+      properties: { id: ID, quantity: ID, destinationBinId: ID,
+        stockStatus: { type: "string", enum: [...INVENTORY_STOCK_STATUSES] } }
+    } }
+  }
+});
+export const TRANSFER_COMMAND_RESPONSE = Object.freeze({
+  type: "object", additionalProperties: false, required: ["id", "operationId", "status", "version", "rowCount"],
+  properties: { id: ID, operationId: ID, status: TRANSFER_STATUS, version: VERSION,
+    rowCount: { type: "integer", minimum: 1, maximum: 100 } }
+});
+const TRANSFER = Object.freeze({
+  type: "object", additionalProperties: false,
+  required: ["id", "number", "sourceWarehouseId", "destinationWarehouseId", "status", "version", "reason", "inTransitQuantity",
+    "createdAt", "updatedAt", "createdBy", "updatedBy", "dispatchedBy", "receivedBy", "cancelledBy", "dispatchedAt", "receivedAt", "cancelledAt"],
+  properties: { id: ID, number: { type: "string" }, sourceWarehouseId: ID, destinationWarehouseId: ID,
+    status: TRANSFER_STATUS, version: VERSION, reason: { type: "string" }, inTransitQuantity: NONNEGATIVE,
+    createdAt: TIMESTAMP, updatedAt: TIMESTAMP,
+    ...Object.fromEntries(["createdBy", "updatedBy", "dispatchedBy", "receivedBy", "cancelledBy"].map(field => [field, NULLABLE_ID])),
+    ...Object.fromEntries(["dispatchedAt", "receivedAt", "cancelledAt"].map(field => [field, { type: ["integer", "null"], minimum: 0, maximum: Number.MAX_SAFE_INTEGER }])) }
+});
+export const TRANSFER_LIST_RESPONSE = listResponse(TRANSFER);
+const TRANSFER_LINE = Object.freeze({
+  type: "object", additionalProperties: false,
+  required: ["id", "lineNumber", "skuId", "lotId", "sourceBinId", "destinationBinId", "dispatchStockStatus", "receiveStockStatus",
+    "quantity", "inTransitQuantity", "skuCode", "lotNumber", "expiryDate", "dispatchMovementGroupId", "receiveMovementGroupId", "version"],
+  properties: { id: ID, lineNumber: ID, skuId: ID, lotId: NULLABLE_ID, sourceBinId: ID, destinationBinId: NULLABLE_ID,
+    dispatchStockStatus: { type: "string", enum: [...INVENTORY_STOCK_STATUSES] },
+    receiveStockStatus: { type: ["string", "null"], enum: [...INVENTORY_STOCK_STATUSES, null] },
+    quantity: ID, inTransitQuantity: NONNEGATIVE, skuCode: { type: "string" }, lotNumber: { type: "string" }, expiryDate: DATE_ONLY,
+    dispatchMovementGroupId: { type: ["string", "null"] }, receiveMovementGroupId: { type: ["string", "null"] }, version: VERSION }
+});
+export const TRANSFER_DETAIL_RESPONSE = Object.freeze({
+  ...TRANSFER, required: [...TRANSFER.required, "lines", "movements"],
+  properties: { ...TRANSFER.properties, lines: { type: "array", minItems: 1, maxItems: 100, items: TRANSFER_LINE },
+    movements: { type: "array", items: MOVEMENT } }
 });

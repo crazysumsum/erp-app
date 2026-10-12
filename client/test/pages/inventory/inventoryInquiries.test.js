@@ -1,4 +1,5 @@
 import { DOMWrapper, flushPromises, mount } from "@vue/test-utils";
+import { createPinia } from "pinia";
 import { Quasar } from "quasar";
 import { createMemoryHistory, createRouter } from "vue-router";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -51,7 +52,7 @@ async function mountPage(component, definition, query = "") {
   });
   await router.push(`${definition.path}${query}`);
   await router.isReady();
-  const wrapper = mount(component, { global: { plugins: [Quasar, router] }, attachTo: document.body });
+  const wrapper = mount(component, { global: { plugins: [Quasar, router, createPinia()] }, attachTo: document.body });
   await flushPromises();
   return { wrapper, router, body: new DOMWrapper(document.body) };
 }

@@ -16,7 +16,7 @@ const SUMMARY_FIELDS = new Set([
   "consumedQuantity", "releasedQuantity", "lotNumber", "expiryDate", "minimumLifeDaysApplied",
   "actualRemainingLifeDays", "overrideActorId", "receiptId", "requestId",
   "selectionStrategy", "isSequenceOverride", "recommendedBalanceId", "selectedBalanceId",
-  "recommendedExpiryDate", "selectedExpiryDate"
+  "recommendedExpiryDate", "selectedExpiryDate", "deviceId", "signedRequestAt"
 ]);
 
 function boundedString(value, field, max, { empty = false, ascii = false } = {}) {

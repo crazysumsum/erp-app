@@ -1,0 +1,78 @@
+{
+  "schema_version": "2.0",
+  "module_id": "inventory-management",
+  "run_id": "task031-movement-inventory-p3-movement-database-c14be4f826",
+  "suite_id": "inventory-p3-movement-database",
+  "stage": "DEVELOPER",
+  "result": "FAIL",
+  "spec_baseline": "66647031a7b6db326ca1d51e745289616daba67e5c98a02939dc3eda2367c31e",
+  "source_fingerprint": "20ec89c06143f630bd00a5c4307d3ceb94936601b587fb610f8c5d74196aa00b",
+  "code_commit": "869ac07abdd3879254c351d857be911d71e68b6b",
+  "started_at": "2026-10-07T08:10:58.470855+00:00",
+  "ended_at": "2026-10-07T08:11:50.301450+00:00",
+  "environment_id": "inventory-isolated-test",
+  "runtime_instance_id": "erp_inventory_p3_e97c542279df",
+  "data_reference": "Synthetic Inventory fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "node",
+    "--test",
+    "--test-concurrency=1",
+    "--import",
+    "./server/test-support/testEnv.js",
+    "--test-reporter=junit",
+    "--test-reporter-destination=/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/task031-movement-inventory-p3-movement-database-c14be4f826/inventory-p3-movement-database.xml",
+    "server/test/integration/inventoryMovement.integration.test.js"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "e8764d522a1389ca1dece0166e17e7963857fda7ed370b091ef6b48d5d8a9fea",
+  "exit_code": 1,
+  "timed_out": false,
+  "counts": {
+    "total": 24,
+    "passed": 21,
+    "failed": 3,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/task031-movement-inventory-p3-movement-database-c14be4f826/stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/task031-movement-inventory-p3-movement-database-c14be4f826/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/task031-movement-inventory-p3-movement-database-c14be4f826/inventory-p3-movement-database.xml",
+      "sha256": "fd8d48d06267740bdaf89b805209e25743787a2ec9ed02050b32d850a70817f1",
+      "bytes": 13318
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    },
+    {
+      "argv": [
+        "mysql",
+        "--version"
+      ],
+      "output": "mysql  Ver 26.7.0 for macos15 on arm64 (MySQL Community Server - GPL)\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "DEVELOPER native TASK031 stock/security current-read plus TASK030 compatibility. Trusted auth fixture is not real HTTP signature/password proof; real API and browser/full-task review remain pending; no formal acceptance/current CI/full-P3 capacity claim."
+  ]
+}

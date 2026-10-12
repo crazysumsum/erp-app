@@ -1,0 +1,78 @@
+{
+  "schema_version": "2.0",
+  "module_id": "inventory-management",
+  "run_id": "task032-db-inventory-p3-transfer-database-a50fb2b2be",
+  "suite_id": "inventory-p3-transfer-database",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "237d98e617f0a0f4612934118be2d589652b4eb70968291ad511fec6bb758658",
+  "source_fingerprint": "ea5fed017f5eba2fcdfe2adf9bd74521deb6e95d863797892e5a0a9c15c03e43",
+  "code_commit": "869ac07abdd3879254c351d857be911d71e68b6b",
+  "started_at": "2026-10-08T02:46:19.674512+00:00",
+  "ended_at": "2026-10-08T02:46:20.380588+00:00",
+  "environment_id": "inventory-isolated-test",
+  "runtime_instance_id": "erp_inventory_p3_ac5f9a813308",
+  "data_reference": "Synthetic Inventory fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "node",
+    "--test",
+    "--test-concurrency=1",
+    "--import",
+    "./server/test-support/testEnv.js",
+    "--test-reporter=junit",
+    "--test-reporter-destination=/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/task032-db-inventory-p3-transfer-database-a50fb2b2be/inventory-p3-transfer-database.xml",
+    "server/test/integration/inventoryTransfer.integration.test.js"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "f720085118d02b29eee210ff8bddd457c95a063eed49815b1be356ea255a6eea",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 31,
+    "passed": 31,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/task032-db-inventory-p3-transfer-database-a50fb2b2be/stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/task032-db-inventory-p3-transfer-database-a50fb2b2be/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/task032-db-inventory-p3-transfer-database-a50fb2b2be/inventory-p3-transfer-database.xml",
+      "sha256": "bbebccd92b21b9262c76734c906f1712b097bee78787afe11745152468841312",
+      "bytes": 8612
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    },
+    {
+      "argv": [
+        "mysql",
+        "--version"
+      ],
+      "output": "mysql  Ver 26.7.0 for macos15 on arm64 (MySQL Community Server - GPL)\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "DEVELOPER TASK032 native MySQL/current reads plus original TASK030/031 compatibility. Auth fixture is not real HTTP signature/password proof; API/browser/full-source gates remain pending; no formal/current CI/capacity claim."
+  ]
+}

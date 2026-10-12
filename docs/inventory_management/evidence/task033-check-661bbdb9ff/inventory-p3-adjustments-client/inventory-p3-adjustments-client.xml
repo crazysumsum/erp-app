@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="12" failures="0" errors="0" time="0.254942958">
+    <testsuite name="test/pages/inventory/inventoryAdjustments.test.js" timestamp="2026-10-08T06:13:38.088Z" hostname="samMacBook-Pro.local" tests="12" failures="0" errors="0" skipped="0" time="0.254942958">
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-SELECTORS supports exact-Code usable no-Balance SKU with explicit Base UOM and confirmed absence" time="0.085186292">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-SELECTORS discards late SKU response after Code changed" time="0.012673334">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-VALIDATION rejects nonpositive, fractional and unsafe Base quantities before review" time="0.024447125">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-VALIDATION applies trim, Unicode OTHER minimum, control rejection and UTF-8 byte limit" time="0.026678666">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-VALIDATION rejects invalid calendar dates for a new expiring Lot" time="0.017568417">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-IN-LOT preserves existing immutable Lot dates and current Balance version" time="0.01432325">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-CURRENT-GUARDS reads all target pages and distinguishes null Lot from a tracked Lot" time="0.010660083">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-CURRENT-GUARDS refuses failed, partial and duplicate target reads rather than inferring absence" time="0.014989167">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-CURRENT-GUARDS binds OUT to freshly read source identity/version, not its list snapshot" time="0.0143425">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-IN-LOT prepares paired Status effects using current source and confirmed absent destination" time="0.013494208">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-RECONCILE derives complete unique current Reversal guards instead of historical versions" time="0.002471084">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-CONFIRM-SECRETS clears native password immediately, never emits it, and clears cancel/hide/disable" time="0.017519">
+        </testcase>
+    </testsuite>
+</testsuites>

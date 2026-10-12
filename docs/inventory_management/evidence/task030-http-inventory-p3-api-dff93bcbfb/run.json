@@ -1,0 +1,78 @@
+{
+  "schema_version": "2.0",
+  "module_id": "inventory-management",
+  "run_id": "task030-http-inventory-p3-api-dff93bcbfb",
+  "suite_id": "inventory-p3-api",
+  "stage": "DEVELOPER",
+  "result": "FAIL",
+  "spec_baseline": "8ab85d87051f437b74c6cfb4efc39ba93c8c2dd9e56ca7ea210d7bc5bc705dc8",
+  "source_fingerprint": "2aaffe04a85c0425832e123fc5fad1f845ef90641cd7f69c6ce992b5608db13f",
+  "code_commit": "869ac07abdd3879254c351d857be911d71e68b6b",
+  "started_at": "2026-10-07T03:18:10.371844+00:00",
+  "ended_at": "2026-10-07T03:18:27.103912+00:00",
+  "environment_id": "inventory-isolated-test",
+  "runtime_instance_id": "erp_inventory_p3_f878f5825905",
+  "data_reference": "Synthetic Inventory fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "node",
+    "--test",
+    "--test-concurrency=1",
+    "--import",
+    "./server/test-support/testEnv.js",
+    "--test-reporter=junit",
+    "--test-reporter-destination=/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/task030-http-inventory-p3-api-dff93bcbfb/inventory-p3-api.xml",
+    "server/test/integration/inventoryWarehouseOperationsApi.integration.test.js"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "896aadb85a338a357c5fd053b009b6b95502bb9c83d91a2ae4f5ae863e84892c",
+  "exit_code": 1,
+  "timed_out": false,
+  "counts": {
+    "total": 18,
+    "passed": 17,
+    "failed": 1,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/task030-http-inventory-p3-api-dff93bcbfb/stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/task030-http-inventory-p3-api-dff93bcbfb/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/task030-http-inventory-p3-api-dff93bcbfb/inventory-p3-api.xml",
+      "sha256": "b6454376a04cbbdc7841b45b083cb534ef77299abe47235e787399556084e099",
+      "bytes": 6442
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    },
+    {
+      "argv": [
+        "mysql",
+        "--version"
+      ],
+      "output": "mysql  Ver 26.7.0 for macos15 on arm64 (MySQL Community Server - GPL)\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "DEVELOPER TASK030 HTTP/domain plus Transfer compatibility only; not full-P3/formal acceptance/CI. Capacity4 remains NOT_EXECUTED."
+  ]
+}

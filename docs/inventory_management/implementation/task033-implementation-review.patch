@@ -1,0 +1,1479 @@
+--- /dev/null
++++ b/client/e2e/inventory-management/inventory-high-risk.spec.js
+@@ -0,0 +1,295 @@
++import { expect, test } from "@playwright/test";
++import { Buffer } from "node:buffer";
++import { randomBytes, randomUUID } from "node:crypto";
++import process from "node:process";
++import { setTimeout } from "node:timers/promises";
++import { createApplication } from "../../../server/src/framework/application/createApplication.js";
++import { defaultConfigurationSource } from "../../../server/src/framework/configuration/applicationConfiguration.js";
++import { hashPassword } from "../../../server/src/modules/user/passwordHash.js";
++
++const enabled = process.env.INVENTORY_P3_BROWSER_TESTS === "1";
++test.skip(!enabled, "Requires the approved owned MySQL/API browser runtime");
++test.use({ trace: "off", video: "off", screenshot: "off" });
++let app, db, origin, fixture, password, interval, nextRequestAt = 0;
++let failures, expectedFailures, errors, networkFailures, expectedNetworkFailures, attempts;
++async function pace() {
++  const wait = nextRequestAt - performance.now(); nextRequestAt = Math.max(nextRequestAt, performance.now()) + interval;
++  if (wait > 0) await setTimeout(wait);
++}
++async function token(actor) {
++  return app.services.require("jwt").issue({ roles: [actor.role], permissions: actor.permissions, ...(actor.did ? { did: actor.did } : {}) }, {
++    subject: String(actor.id), version: await app.services.require("tokenRevocation").currentVersion(String(actor.id)), authTime: Math.floor(Date.now() / 1000) });
++}
++test.beforeAll(async () => {
++  if (!enabled) return;
++  expect(process.env.DB_NAME).toMatch(/^erp_inventory_p3_[a-z0-9]+$/u);
++  expect(process.env.DB_SOCKET_PATH).toMatch(/^\/private\/tmp\/erp-inventory-p3-mysql-2670\.[A-Za-z0-9]+\/mysql\.sock$/u);
++  origin = process.env.INVENTORY_P3_API_ORIGIN; expect(origin).toMatch(/^http:\/\/127\.0\.0\.1:\d+$/u);
++  const config = defaultConfigurationSource(); interval = Math.ceil(config.requestLimiter.ipWindowMs / config.requestLimiter.maxRequestsPerIpPerWindow) + 1;
++  app = await createApplication({ configurationSource: { ...config, application: { ...config.application, host: "127.0.0.1", port: Number(new URL(origin).port) },
++    jwt: { ...config.jwt, secret: randomBytes(32).toString("hex") } }, handlerRegistryOptions: { moduleUrls: [
++      ...["warehouseHandlers", "binHandlers", "inquiryHandlers", "postingHandlers", "skuLookupHandlers"].map(name => new URL(`../../../server/src/handlers/inventory/${name}.js`, import.meta.url).href),
++      new URL("../../../server/src/handlers/user/meHandler.js", import.meta.url).href
++    ] } });
++  db = app.services.require("mysqldatabase");
++  const [[observed]] = await db.query("SELECT VERSION() AS version, @@skip_networking AS isolated, DATABASE() AS schema_name");
++  expect(observed).toEqual({ version: "26.7.0", isolated: 1, schema_name: process.env.DB_NAME });
++  expect((await app.start()).url).toBe(origin);
++});
++test.afterAll(async () => { if (app) await app.shutdown("task033_live_browser_complete"); });
++test.beforeEach(async ({ page }) => {
++  failures = []; expectedFailures = []; errors = []; networkFailures = []; expectedNetworkFailures = []; attempts = [];
++  const now = Date.now(), suffix = randomUUID().slice(0, 8);
++  password = randomBytes(32).toString("hex");
++  async function actor(permissions, strong = false) {
++    const name = `ui033-${randomUUID()}`;
++    const [role] = await db.execute("INSERT INTO roles(name,created_at) VALUES (?,?)", [name, now]);
++    for (const permission of permissions) await db.execute("INSERT INTO role_permissions(role_id,permission_id) SELECT ?,id FROM permissions WHERE name=?", [role.insertId, permission]);
++    const [user] = await db.execute("INSERT INTO users(username,password_hash,display_name,created_at,updated_at) VALUES (?,?,?,?,?)", [name, strong ? await hashPassword(password) : "synthetic-disabled-login", "High-risk browser", now, now]);
++    await db.execute("INSERT INTO user_roles(user_id,role_id) VALUES (?,?)", [user.insertId, role.insertId]);
++    return { id: user.insertId, role: name, roleId: role.insertId, permissions };
++  }
++  const adjuster = await actor(["inventory.view", "inventory.adjust"], true), viewer = await actor(["inventory.view"]), operator = await actor(["inventory.view", "inventory.operation", "inventory.fefo.override"]);
++  const code = `UI033-WH-${suffix}`;
++  const [warehouse] = await db.execute("INSERT INTO inventory_warehouses(warehouse_code,normalized_code,warehouse_name,created_at,updated_at) VALUES (?,?,?,?,?)", [code, code.toLowerCase(), code, now, now]);
++  const [bin] = await db.execute("INSERT INTO inventory_bins(warehouse_id,bin_code,normalized_code,created_at,updated_at) VALUES (?,'SAME','same',?,?)", [warehouse.insertId, now, now]);
++  const [uom] = await db.execute("INSERT INTO item_uoms(code,name,status,created_at,updated_at) VALUES (?,'Each','active',?,?)", [`HR${suffix}`, now, now]);
++  async function sku(kind, policy = "none", stocked = true) {
++    const skuCode = `UI033-${kind}-${suffix}`;
++    const [item] = await db.execute("INSERT INTO items(name,product_type,status,created_at,updated_at) VALUES ('High-risk item','standard','active',?,?)", [now, now]);
++    const [row] = await db.execute("INSERT INTO item_skus(item_id,sku_code,sku_name,tracking_policy,purchasable,sellable,inventory_tracked,status,created_at,updated_at) VALUES (?,?,?, ?,1,1,1,'active',?,?)", [item.insertId, skuCode, "Widget <img src=x onerror=alert(1)>", policy, now, now]);
++    await db.execute("INSERT INTO item_sku_uoms(sku_id,uom_id,to_base_factor,is_base,created_at,updated_at) VALUES (?,?,1,1,?,?)", [row.insertId, uom.insertId, now, now]);
++    let lotId = null;
++    if (policy !== "none") {
++      const [lot] = await db.execute("INSERT INTO inventory_lots(sku_id,lot_number,normalized_lot_number,expiry_date,first_receipt_date,sku_code_snapshot,created_at) VALUES (?,'HR-LOT','HR-LOT','2030-12-31','2026-10-06',?,?)", [row.insertId, skuCode, now]); lotId = lot.insertId;
++    }
++    let balanceId = null;
++    if (stocked) {
++      const [stock] = await db.execute("INSERT INTO inventory_stock_balances(warehouse_id,bin_id,sku_id,lot_id,stock_status,on_hand_quantity,fifo_anchor_date,created_at,updated_at) VALUES (?,?,?,?,'AVAILABLE',100,'2026-10-06',?,?)", [warehouse.insertId, bin.insertId, row.insertId, lotId, now, now]); balanceId = stock.insertId;
++    }
++    return { id: row.insertId, code: skuCode, lotId, balanceId };
++  }
++  fixture = { adjuster, viewer, operator, warehouse: { id: warehouse.insertId, code, binId: bin.insertId }, uomId: uom.insertId,
++    plain: await sku("PLAIN"), batch: await sku("BATCH", "batch_expiry"), empty: await sku("EMPTY", "none", false) };
++  page.on("pageerror", error => errors.push(error.message));
++  page.on("console", message => { if (["warning", "error"].includes(message.type())) errors.push(message.text()); });
++  page.on("requestfailed", request => { if (request.url().startsWith(origin)) networkFailures.push(new URL(request.url()).pathname); });
++  page.on("response", response => { if (response.url().startsWith(origin) && response.status() >= 400) failures.push({ path: new URL(response.url()).pathname, status: response.status() }); });
++  await page.route(`${origin}/api/**`, async route => { await pace(); await route.continue(); });
++  await page.goto("/login");
++  const device = await page.evaluate(async () => {
++    const { ensureDeviceKey, exportPublicKey, deviceIdFor } = await import("/src/framework/auth/deviceKey.js");
++    const pair = await ensureDeviceKey(), publicKey = await exportPublicKey(pair);
++    return { publicKey: [...publicKey], did: await deviceIdFor(publicKey), privateExtractable: pair.privateKey.extractable };
++  });
++  expect(device.privateExtractable).toBe(false);
++  fixture.adjuster.did = device.did;
++  await db.execute("INSERT INTO user_devices(user_id,device_id,public_key,status,requested_at) VALUES (?,?,?,'approved',?)", [adjuster.id, device.did, Buffer.from(device.publicKey), now]);
++  await switchActor(page, adjuster);
++  page.on("request", request => {
++    if (request.url().startsWith(origin) && request.method() === "POST" && /\/(adjustments|status-transfers|reverse)$/u.test(new URL(request.url()).pathname)) {
++      const body = request.postDataJSON(), headers = request.headers(); delete body.password;
++      attempts.push({ body, key: headers["idempotency-key"], nonce: headers["x-device-nonce"], signature: headers["x-device-signature"] });
++    }
++  });
++});
++test.afterEach(async ({ page }) => {
++  // Clear even on failure before Playwright collects any error-context snapshot.
++  await page.evaluate(() => document.querySelectorAll('input[type="password"]').forEach(input => { input.value = ""; })).catch(() => {});
++  password = null;
++  expect(failures).toEqual(expectedFailures); expect(networkFailures).toEqual(expectedNetworkFailures);
++  expect(errors.filter(error => !/^Failed to load resource: (the server responded with a status of (400|401|403|404|409|500) \(|net::ERR_FAILED)/u.test(error))).toEqual([]);
++  expect(errors.filter(error => /^Failed to load resource:/u.test(error))).toHaveLength(expectedFailures.length + expectedNetworkFailures.length);
++});
++async function switchActor(page, actor) {
++  await page.evaluate(value => {
++    localStorage.setItem("erp.token", value); localStorage.setItem("erp.token.deadline", String(Date.now() + 3_600_000));
++    localStorage.setItem("erp.session.deadline", String(Date.now() + 7_200_000));
++  }, await token(actor));
++}
++async function pick(page, label, option) {
++  const field = page.getByLabel(label, { exact: true }); await field.click(); await expect(field).toHaveAttribute("aria-expanded", "true");
++  const listbox = page.locator(`[id="${await field.getAttribute('aria-controls')}"]`);
++  await listbox.getByRole("option", { name: option, exact: true }).click(); await expect(listbox).toBeHidden();
++}
++async function form(page, action = "IN", sku = fixture.plain, quantity = "3") {
++  await page.goto(`/inventory/adjustments?action=${action}`);
++  if (page.viewportSize().width <= 1023) {
++    await expect.poll(() => page.locator(".q-page-container").evaluate(element => Math.round(element.getBoundingClientRect().left))).toBe(0);
++    const drawer = page.locator(".q-drawer");
++    if ((await drawer.boundingBox()).x >= 0) await page.keyboard.press("Escape");
++    await expect.poll(() => drawer.evaluate(element => element.getBoundingClientRect().right)).toBeLessThanOrEqual(0);
++  }
++  await page.getByLabel("SKU Code", { exact: true }).fill(sku.code); await page.getByRole("button", { name: "查找 SKU", exact: true }).click();
++  await expect(page.getByText(`${sku.code} · Widget`, { exact: false })).toBeVisible();
++  await pick(page, "倉庫", fixture.warehouse.code); await pick(page, "庫位", "SAME");
++  if (action !== "IN") {
++    await page.getByRole("button", { name: "載入來源庫存", exact: true }).click();
++    await pick(page, "來源庫存 bucket", `${fixture.warehouse.code}/SAME · ${sku.lotId ? "HR-LOT" : "無批次"} · AVAILABLE · On Hand 100 · v1`);
++  } else if (sku.lotId) await pick(page, "既有批次", "HR-LOT · 2030-12-31");
++  await page.getByLabel("數量（Base UOM）", { exact: true }).fill(quantity);
++  await page.getByLabel("原因說明", { exact: true }).fill("瀏覽器合成庫存資料校正");
++}
++async function review(page) {
++  await page.getByRole("button", { name: "準備確認", exact: true }).click(); await expect(page.getByRole("dialog")).toBeVisible();
++  await expect(page.getByLabel("目前密碼（必填）", { exact: true })).toBeFocused();
++}
++async function confirm(page, value = password) {
++  await page.getByLabel("目前密碼（必填）", { exact: true }).fill(value);
++  await page.getByRole("button", { name: "確認過帳", exact: true }).click();
++  await expect(page.getByRole("dialog")).toBeHidden();
++  expect(await page.locator('input[type="password"]').evaluateAll(inputs => inputs.every(input => input.value === ""))).toBe(true);
++}
++async function resolved(page) {
++  await expect(page.getByRole("heading", { name: /已確認過帳/u })).toBeVisible();
++  await expect(page.getByRole("link", { name: /查看已過帳 Movement/u }).first()).toBeVisible();
++  await expect(page.getByRole("button", { name: "重載已確認結果", exact: true })).toHaveCount(0);
++}
++async function stock(sku = fixture.plain) {
++  const [rows] = await db.query("SELECT id,stock_status,on_hand_quantity,version FROM inventory_stock_balances WHERE sku_id=? ORDER BY id", [sku.id]); return rows;
++}
++async function operationCount() {
++  const [[row]] = await db.query("SELECT COUNT(*) AS count FROM inventory_operation_requests WHERE actor_user_id=? AND result_id IS NOT NULL", [fixture.adjuster.id]); return Number(row.count);
++}
++const recordKey = () => `inventory-high-risk:v1:${fixture.adjuster.id}`;
++async function recovery(page) { return page.evaluate(key => JSON.parse(sessionStorage.getItem(key)), recordKey()); }
++test("TASK-033 @technical Base-only IN, three statuses and immutable/new Lot validate real facts", async ({ page }) => {
++  await form(page, "IN", fixture.empty, "0"); await page.getByRole("button", { name: "準備確認", exact: true }).click();
++  await expect(page.getByRole("form", { name: "高風險庫存操作表單" }).getByRole("alert").first()).toContainText("安全正整數"); await expect(page.getByRole("dialog")).toHaveCount(0);
++  await page.getByLabel("數量（Base UOM）", { exact: true }).fill("3"); await pick(page, "原因分類", "OTHER");
++  await page.getByLabel("原因說明", { exact: true }).fill("短原因"); await page.getByRole("button", { name: "準備確認", exact: true }).click();
++  await expect(page.getByRole("form", { name: "高風險庫存操作表單" }).getByRole("alert").first()).toContainText("OTHER"); await page.getByLabel("原因說明", { exact: true }).fill("一二三四五六七八九十");
++  for (const status of ["AVAILABLE", "QUARANTINED", "DAMAGED"]) {
++    if (status !== "AVAILABLE") { await page.getByRole("button", { name: "開始新操作", exact: true }).click(); await form(page, "IN", fixture.empty); }
++    await pick(page, "庫存狀態", status); await review(page); await expect(page.getByRole("dialog")).toContainText("目前 v不存在");
++    await confirm(page); await resolved(page);
++  }
++  expect((await stock(fixture.empty)).map(row => Number(row.on_hand_quantity))).toEqual([3, 3, 3]);
++  await page.getByRole("button", { name: "開始新操作", exact: true }).click(); await form(page, "IN", fixture.batch);
++  await expect(page.getByText(/既有日期不可修改/u)).toContainText("2030-12-31"); await review(page); await confirm(page); await resolved(page);
++  const [[lot]] = await db.query("SELECT DATE_FORMAT(expiry_date,'%Y-%m-%d') AS expiry, manufacture_date FROM inventory_lots WHERE id=?", [fixture.batch.lotId]);
++  expect(lot).toEqual({ expiry: "2030-12-31", manufacture_date: null });
++  expect((await stock(fixture.batch)).map(row => Number(row.on_hand_quantity))).toEqual([103]);
++  expect((await db.query("SELECT id FROM inventory_lots WHERE sku_id=?", [fixture.batch.id]))[0]).toHaveLength(1);
++  await page.getByRole("button", { name: "開始新操作", exact: true }).click(); await form(page, "IN", fixture.batch);
++  await pick(page, "批次模式", "新批次"); await page.getByLabel("批次編號", { exact: true }).fill("NEW-LOT");
++  await page.getByRole("button", { name: "準備確認", exact: true }).click(); await expect(page.getByRole("form", { name: "高風險庫存操作表單" }).getByRole("alert").first()).toContainText("效期日期");
++  await page.getByLabel("效期", { exact: true }).fill("2031-01-01"); await review(page); await confirm(page); await resolved(page);
++  expect(await operationCount()).toBe(5);
++});
++test("TASK-033 @technical OUT reads current guards and retains safe input after a real version rejection", async ({ page }) => {
++  await form(page, "OUT"); await review(page);
++  await db.execute("UPDATE inventory_stock_balances SET on_hand_quantity=99,version=version+1 WHERE id=?", [fixture.plain.balanceId]);
++  expectedFailures.push({ path: "/api/v1/inventory/adjustments", status: 409 }); await confirm(page);
++  await expect(page.getByRole("heading", { name: "本次過帳遭拒", exact: true })).toBeVisible();
++  await expect(page.getByLabel("數量（Base UOM）", { exact: true })).toHaveValue("3"); expect(await operationCount()).toBe(0);
++  await page.getByRole("button", { name: "核對結果並重新準備", exact: true }).click(); await review(page);
++  await expect(page.getByRole("dialog")).toContainText("目前 v2"); await confirm(page); await resolved(page);
++  expect(Number((await stock())[0].on_hand_quantity)).toBe(96); expect(await operationCount()).toBe(1);
++});
++test("TASK-033 @technical Status paired effects and whole-group Reversal preserve actual history and stock", async ({ page }) => {
++  await form(page, "STATUS_TRANSFER", fixture.batch); await review(page);
++  await expect(page.getByRole("dialog")).toContainText("QUARANTINED"); await expect(page.getByRole("dialog")).toContainText("銷售資格");
++  await confirm(page); await resolved(page);
++  const movementLink = page.getByRole("link", { name: /查看已過帳 Movement/u }).first();
++  const selected = Number(new URL(await movementLink.getAttribute("href"), page.url()).searchParams.get("movementId"));
++  expect((await stock(fixture.batch)).map(row => Number(row.on_hand_quantity))).toEqual([97, 3]);
++  await movementLink.click(); await page.getByRole("link", { name: `整組沖銷 Movement ${selected}`, exact: true }).click();
++  await page.getByLabel("原因說明", { exact: true }).fill("合成資料整組沖銷確認"); await review(page);
++  await expect(page.getByRole("dialog").locator("li")).toHaveCount(2); await confirm(page); await resolved(page);
++  expect((await stock(fixture.batch)).map(row => Number(row.on_hand_quantity))).toEqual([100, 0]);
++  await page.getByRole("link", { name: /查看已過帳 Movement/u }).first().click();
++  await expect(page.getByRole("button", { name: /原 Movement/u })).toBeVisible();
++  await page.getByRole("button", { name: /原 Movement/u }).click(); await expect(page.getByRole("button", { name: /沖銷 Movement/u })).toBeVisible();
++  await expect(page.getByRole("link", { name: /整組沖銷 Movement/u })).toHaveCount(0);
++  expect(await operationCount()).toBe(2);
++});
++test("TASK-033 @technical actual permission, password and device gates cannot be replaced by operation or FEFO", async ({ page }) => {
++  for (const actor of [fixture.viewer, fixture.operator]) {
++    await switchActor(page, actor); await page.goto("/inventory/movements");
++    await expect(page.getByRole("link", { name: "庫存調整", exact: true })).toHaveCount(0);
++    await page.goto("/inventory/adjustments"); await expect(page.getByRole("form", { name: "高風險庫存操作表單" })).toHaveCount(0);
++  }
++  await switchActor(page, fixture.adjuster); await form(page); await review(page);
++  expectedFailures.push({ path: "/api/v1/inventory/adjustments", status: 403 });
++  await confirm(page, "invalid-synthetic-entry"); await expect(page.getByRole("heading", { name: "本次過帳遭拒", exact: true })).toBeVisible(); expect(await operationCount()).toBe(0);
++  await page.getByRole("button", { name: "核對結果並重新準備", exact: true }).click(); await review(page);
++  await db.execute("UPDATE user_devices SET status='revoked' WHERE user_id=? AND device_id=?", [fixture.adjuster.id, fixture.adjuster.did]);
++  expectedFailures.push({ path: "/api/v1/inventory/adjustments", status: 403 }); await confirm(page);
++  await expect(page.getByRole("heading", { name: "本次過帳遭拒", exact: true })).toBeVisible(); expect(await operationCount()).toBe(0);
++  await db.execute("UPDATE user_devices SET status='approved' WHERE user_id=? AND device_id=?", [fixture.adjuster.id, fixture.adjuster.did]);
++  await page.getByRole("button", { name: "核對結果並重新準備", exact: true }).click(); await review(page);
++  await db.execute("DELETE rp FROM role_permissions rp JOIN permissions p ON p.id=rp.permission_id WHERE rp.role_id=? AND p.name='inventory.adjust'", [fixture.adjuster.roleId]);
++  expectedFailures.push({ path: "/api/v1/inventory/adjustments", status: 403 }); await confirm(page); expect(await operationCount()).toBe(0);
++  await page.reload(); await expect(page.getByRole("form", { name: "高風險庫存操作表單" })).toHaveCount(0);
++  expect(attempts).toHaveLength(3);
++});
++test("TASK-033 @technical pre-forward abort retries only original intent with fresh password/signature and one effect", async ({ page }) => {
++  let abort = true;
++  await page.route(`${origin}/api/v1/inventory/adjustments`, async route => { if (abort && route.request().method() === "POST") { abort = false; await route.abort("failed"); } else { await pace(); await route.continue(); } });
++  await form(page); await review(page); expectedNetworkFailures.push("/api/v1/inventory/adjustments"); await confirm(page);
++  await expect(page.getByRole("heading", { name: "結果未知／等待核對", exact: true })).toBeVisible(); expect(await operationCount()).toBe(0);
++  const saved = await recovery(page); expect(Object.keys(saved).sort()).toEqual(["action", "source"]);
++  expect(Object.keys(saved.source).sort()).toEqual(["documentId", "documentType", "eventId", "lineId", "module"]);
++  await page.getByRole("button", { name: "查詢原結果", exact: true }).click(); expect(attempts).toHaveLength(1);
++  await page.getByRole("button", { name: "重試原意圖", exact: true }).click(); await expect(page.getByLabel("目前密碼（必填）", { exact: true })).toHaveValue("");
++  await confirm(page); await resolved(page); expect(attempts).toHaveLength(2);
++  expect(attempts[0].body).toEqual(attempts[1].body); expect(attempts[0].key === attempts[1].key).toBe(true);
++  expect(!!attempts[0].nonce && attempts[0].nonce !== attempts[1].nonce).toBe(true);
++  expect(!!attempts[0].signature && attempts[0].signature !== attempts[1].signature).toBe(true);
++  expect(Number((await stock())[0].on_hand_quantity)).toBe(103); expect(await operationCount()).toBe(1);
++});
++test("TASK-033 @technical real committed-response loss resolves original source without a second POST", async ({ page }) => {
++  await page.route(`${origin}/api/v1/inventory/adjustments`, async route => {
++    await pace(); const response = await route.fetch(); expect(response.status()).toBe(200); await route.abort("failed");
++  });
++  await form(page); await review(page); expectedNetworkFailures.push("/api/v1/inventory/adjustments"); await confirm(page); await resolved(page);
++  expect(attempts).toHaveLength(1); expect(await operationCount()).toBe(1); expect(Number((await stock())[0].on_hand_quantity)).toBe(103);
++  expect(await recovery(page)).toBeNull();
++  await expect(page.getByText("結果未可確定；保留原意圖", { exact: false })).toHaveCount(0);
++  const [[audit]] = await db.query("SELECT COUNT(*) AS count FROM inventory_audit_logs WHERE actor_user_id=?", [fixture.adjuster.id]); expect(Number(audit.count)).toBe(1);
++  await page.screenshot({ path: `${process.env.HARNESS_RUN_DIR}/high-risk-resolved-cleared.png`, fullPage: true });
++});
++test("TASK-033 @technical refresh/navigation is query-only, actor-isolated and storage corruption blocks new effects", async ({ page }) => {
++  await page.route(`${origin}/api/v1/inventory/adjustments`, route => route.abort("failed"));
++  await form(page); await review(page); expectedNetworkFailures.push("/api/v1/inventory/adjustments"); await confirm(page);
++  await expect(page.getByRole("heading", { name: "結果未知／等待核對", exact: true })).toBeVisible(); const saved = await recovery(page);
++  await page.reload(); await expect(page.getByText("重新載入後只可查詢", { exact: false })).toBeVisible();
++  for (const name of ["重試原意圖", "準備確認", "開始新操作"]) await expect(page.getByRole("button", { name, exact: true })).toHaveCount(0);
++  await page.getByRole("button", { name: "查詢原結果", exact: true }).click(); expect(attempts).toHaveLength(1);
++  await page.goto("/inventory/movements"); await page.goto("/inventory/adjustments"); await expect(page.getByText("重新載入後只可查詢", { exact: false })).toBeVisible();
++  await switchActor(page, fixture.operator); await page.goto("/inventory/movements"); await expect(page.getByText(saved.source.documentId, { exact: false })).toHaveCount(0);
++  await switchActor(page, fixture.adjuster); await page.goto("/inventory/adjustments"); expect((await recovery(page)).source).toEqual(saved.source);
++  // Corrupt only this synthetic tab's reference to verify the trust boundary; never a product abandonment action.
++  await page.evaluate(key => sessionStorage.setItem(key, JSON.stringify({ action: "REVERSAL", source: {} })), recordKey()); await page.reload();
++  await expect(page.getByRole("main").getByRole("alert")).toContainText("復原識別格式無效"); await expect(page.getByRole("button", { name: "準備確認", exact: true })).toBeDisabled();
++  expect(attempts).toHaveLength(1); expect(await operationCount()).toBe(0);
++});
++test("TASK-033 @technical keyboard, cleared cancellation, XSS escaping, responsive and delayed real SKU lookup", async ({ page }) => {
++  await form(page); await review(page); await page.getByLabel("目前密碼（必填）", { exact: true }).fill(password);
++  await page.getByRole("button", { name: "取消", exact: true }).click(); await expect(page.getByRole("dialog")).toBeHidden(); expect(attempts).toHaveLength(0);
++  await review(page); await expect(page.getByLabel("目前密碼（必填）", { exact: true })).toHaveValue("");
++  for (const width of [320, 768, 1024, 1440]) {
++    await page.getByRole("button", { name: "取消", exact: true }).click(); await expect(page.getByRole("dialog")).toBeHidden();
++    await page.setViewportSize({ width, height: 850 }); await form(page); await review(page);
++    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
++    const dialogCard = page.getByRole("dialog").locator(".q-card");
++    await expect.poll(async () => (await dialogCard.boundingBox()).width).toBeGreaterThanOrEqual(Math.min(400, width - 48));
++    const card = await dialogCard.boundingBox();
++    expect(card.x).toBeGreaterThanOrEqual(0); expect(card.x + card.width).toBeLessThanOrEqual(width);
++    expect(await dialogCard.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
++    await page.screenshot({ path: `${process.env.HARNESS_RUN_DIR}/high-risk-cleared-${width}.png`, fullPage: true });
++  }
++  expect(await page.getByRole("dialog").locator("img").count()).toBe(0);
++  await page.getByLabel("目前密碼（必填）", { exact: true }).focus(); await page.keyboard.press("Tab"); await expect(page.getByRole("button", { name: "取消", exact: true })).toBeFocused();
++  await page.keyboard.press("Enter"); await expect(page.getByRole("dialog")).toBeHidden(); await expect(page.getByRole("button", { name: "準備確認", exact: true })).toBeFocused();
++  let release, entered; const gate = new Promise(resolve => { release = resolve; }), started = new Promise(resolve => { entered = resolve; });
++  await page.route(url => url.origin === origin && url.pathname.endsWith("/sku-lookup") && url.searchParams.get("code") === fixture.plain.code,
++    async route => { entered(); await gate; await pace(); await route.continue(); });
++  await page.getByLabel("SKU Code", { exact: true }).focus(); await page.keyboard.press("Enter"); await started;
++  await page.getByLabel("SKU Code", { exact: true }).fill(fixture.empty.code); await page.getByRole("button", { name: "查找 SKU", exact: true }).click();
++  await expect(page.getByText(`${fixture.empty.code} · Widget`, { exact: false })).toBeVisible();
++  const old = page.waitForResponse(response => new URL(response.url()).searchParams.get("code") === fixture.plain.code); release(); await old;
++  await expect(page.getByText(`${fixture.plain.code} · Widget`, { exact: false })).toHaveCount(0);
++  expect(await operationCount()).toBe(0);
++});
+--- /dev/null
++++ b/client/src/components/inventory/AdjustmentForm.vue
+@@ -0,0 +1,250 @@
++<script setup>
++import { nextTick, onMounted, onUnmounted, ref, watch } from "vue";
++import inventory from "@/services/inventory.js";
++const props = defineProps({ action: { type: String, default: "IN" }, movementId: { type: Number, default: null }, disabled: Boolean });
++const emit = defineEmits(["review"]);
++const statuses = ["AVAILABLE", "QUARANTINED", "DAMAGED"];
++const categories = ["COUNT_GAIN", "COUNT_LOSS", "DAMAGE", "EXPIRY", "DATA_CORRECTION", "TRANSFER_VARIANCE", "OTHER"];
++const code = ref(""), sku = ref(null), warehouses = ref([]), bins = ref([]), lots = ref([]), buckets = ref([]);
++const warehouseId = ref(null), binId = ref(null), stockStatus = ref("AVAILABLE"), sourceBalanceId = ref(null);
++const lotMode = ref("EXISTING"), lotId = ref(null), lotNumber = ref(""), expiryDate = ref(""), manufactureDate = ref("");
++const destinationStatus = ref("QUARANTINED"), quantity = ref(""), reasonCategory = ref("DATA_CORRECTION"), reasonText = ref("");
++const error = ref(""), errorField = ref(""), errorSummary = ref(null), loading = ref(false), lookupLoading = ref(false), selectorLoading = ref(false);
++let generation = 0, lookupGeneration = 0, live = true;
++const positive = value => Number.isSafeInteger(value) && value > 0;
++const currentVersion = value => positive(value) && value <= 4_294_967_295;
++const invalid = (message, field = "") => { errorField.value = field; throw new Error(message); };
++const identity = row => [row.warehouse?.warehouseId, row.bin?.binId, row.sku?.skuId, row.lot?.lotId ?? null, row.stockStatus];
++const same = (a, b) => JSON.stringify(identity(a)) === JSON.stringify(identity(b));
++const location = row => `${row.warehouse.code}/${row.bin.code}`;
++const validDate = value => /^\d{4}-\d{2}-\d{2}$/u.test(value) && Number.isFinite(Date.parse(`${value}T00:00:00Z`)) && new Date(`${value}T00:00:00Z`).toISOString().slice(0, 10) === value;
++async function collect(read, filters, key) {
++  const result = [], ids = new Set(); let total;
++  for (let page = 1; ; page++) {
++    const response = await read({ ...filters, page, rowsPerPage: 100 });
++    if (!Array.isArray(response?.rows) || !Number.isSafeInteger(response.rowsNumber) || response.rowsNumber < 0 ||
++      (total !== undefined && total !== response.rowsNumber)) invalid("載入資料不完整或已變更，請重新查詢。");
++    total = response.rowsNumber;
++    for (const row of response.rows) {
++      if (!positive(row[key]) || ids.has(row[key])) invalid("查詢資料重複或識別無效，不能確認過帳。");
++      ids.add(row[key]); result.push(row);
++    }
++    if (result.length === total) return result;
++    if (!response.rows.length || result.length > total) invalid("載入資料不完整，不能把未讀資料視為不存在。");
++  }
++}
++async function showError(cause) { error.value = cause.message || "無法準備操作，請重新查詢。"; await nextTick(); errorSummary.value?.focus(); }
++async function loadWarehouses() {
++  selectorLoading.value = true;
++  try { const rows = await collect(inventory.listWarehouses, { status: "ACTIVE" }, "id"); if (live) warehouses.value = rows.filter(row => row.status === "ACTIVE"); }
++  catch (cause) { if (live) await showError(cause); }
++  finally { if (live) selectorLoading.value = false; }
++}
++async function loadBins() {
++  const parent = warehouseId.value; bins.value = []; binId.value = null; buckets.value = []; sourceBalanceId.value = null;
++  if (!positive(parent)) return;
++  try { const rows = await collect(options => inventory.listBins(parent, options), { status: "ACTIVE" }, "id");
++    if (live && warehouseId.value === parent) bins.value = rows.filter(row => row.status === "ACTIVE" && row.warehouseId === parent); }
++  catch (cause) { if (live && warehouseId.value === parent) await showError(cause); }
++}
++async function lookup() {
++  if (props.disabled || loading.value || lookupLoading.value) return;
++  const value = code.value.trim(), token = ++lookupGeneration;
++  sku.value = null; lots.value = []; buckets.value = []; lotId.value = null; sourceBalanceId.value = null; error.value = "";
++  if (!value || [...value].length > 190 || /[\p{Cc}]/u.test(value)) return showError(new Error("請輸入有效 SKU Code（最多 190 字元）。"));
++  lookupLoading.value = true;
++  try {
++    const found = await inventory.lookupSku(value, {});
++    if (!live || token !== lookupGeneration) return;
++    if (!positive(found?.skuId) || !positive(found.baseUom?.uomId) || !["none", "batch", "batch_expiry"].includes(found.trackingPolicy)) invalid("SKU 資料不完整或不支援此追蹤方式。");
++    sku.value = found;
++    if (found.trackingPolicy !== "none") {
++      const rows = await collect(inventory.listLots, { skuId: found.skuId }, "lotId");
++      if (rows.some(row => row.sku?.skuId !== found.skuId)) invalid("批次與 SKU 不一致，請重新查詢。");
++      if (live && token === lookupGeneration) lots.value = rows;
++    }
++  } catch (cause) { if (live && token === lookupGeneration) { sku.value = null; await showError(cause); } }
++  finally { if (live && token === lookupGeneration) lookupLoading.value = false; }
++}
++function assertSelection() {
++  if (!sku.value || !warehouses.value.some(row => row.id === warehouseId.value) || !bins.value.some(row => row.id === binId.value)) invalid("請查找 SKU 並選擇有效倉庫及庫位。");
++}
++async function loadStocks() {
++  if (props.disabled || loading.value) return;
++  error.value = ""; sourceBalanceId.value = null; buckets.value = [];
++  try {
++    assertSelection(); const selection = [sku.value.skuId, warehouseId.value, binId.value];
++    const rows = await collect(inventory.listStocks, { skuId: selection[0], warehouseId: selection[1], binId: selection[2] }, "balanceId");
++    if (live && JSON.stringify(selection) === JSON.stringify([sku.value?.skuId, warehouseId.value, binId.value])) buckets.value = rows;
++  } catch (cause) { if (live) await showError(cause); }
++}
++function validateBucket(row) {
++  if (!positive(row?.balanceId) || !currentVersion(row.version) || !positive(row.baseUom?.uomId) ||
++    !identity(row).slice(0, 3).every(positive) || !statuses.includes(row.stockStatus) ||
++    ![row.onHand, row.allocated, row.bucketFree].every(value => Number.isSafeInteger(value) && value >= 0)) invalid("目前庫存資料不完整，請重新查詢。");
++  return row;
++}
++async function targetBucket(target, newLot = false) {
++  const rows = await collect(inventory.listStocks, { warehouseId: target.warehouse.warehouseId, binId: target.bin.binId,
++    skuId: target.sku.skuId, status: target.stockStatus, ...(target.lot?.number ? { lot: target.lot.number } : {}) }, "balanceId");
++  if (newLot) {
++    if (rows.some(row => row.lot?.number === target.lot.number)) invalid("新批次已出現在庫存，請重新查找並選擇既有批次。");
++    return null;
++  }
++  const matches = rows.filter(row => same(row, target));
++  if (matches.length > 1) invalid("目標庫存識別不唯一，不能確認過帳。");
++  return matches.length ? validateBucket(matches[0]) : null;
++}
++async function summaries(legs) {
++  const pairs = new Map(legs.map(leg => [`${leg.bucket.warehouse.warehouseId}:${leg.bucket.sku.skuId}`, leg.bucket]));
++  return Promise.all([...pairs.values()].map(async row => {
++    const summary = await inventory.getStockSummary({ warehouseId: row.warehouse.warehouseId, skuId: row.sku.skuId });
++    if (![summary?.reserved, summary?.uncoveredReserved, summary?.eligibleOnHand].every(value => Number.isSafeInteger(value) && value >= 0) ||
++      !Number.isSafeInteger(summary?.atp)) invalid("目前 Reservation 保障摘要不完整，請重新查詢。");
++    return { warehouse: row.warehouse.code, sku: row.sku.code, ...summary };
++  }));
++}
++async function prepare() {
++  if (props.disabled || loading.value || lookupLoading.value) return;
++  const own = ++generation; loading.value = true; error.value = ""; errorField.value = "";
++  try {
++    const reason = reasonText.value.trim();
++    if (!reason || new TextEncoder().encode(reason).length > 500 || /[\p{Cc}]/u.test(reason) ||
++      (["IN", "OUT"].includes(props.action) && reasonCategory.value === "OTHER" && [...reason].filter(char => !/\s/u.test(char)).length < 10)) invalid("原因必填、不可有控制字元、最多 500 UTF-8 bytes；OTHER 至少 10 個非空白字元。", "reason");
++    let body, legs;
++    if (props.action === "REVERSAL") {
++      if (!positive(props.movementId)) invalid("請從異動詳情選擇完整沖銷組。");
++      const detail = await inventory.getMovement(props.movementId);
++      if (detail?.movement.movementId !== props.movementId || detail.reversal.reversalOfMovementId || detail.reversal.reversedByMovementId ||
++        !Array.isArray(detail.groupLegs) || !detail.groupLegs.length || detail.groupLegs.length > 200 ||
++        !detail.groupLegs.every(row => row.groupId === detail.movement.groupId && row.locationKind === "BIN" && ["RECEIPT", "ISSUE", "BIN_MOVE", "STATUS_TRANSFER", "ADJUSTMENT"].includes(row.movementType))) invalid("此異動組不支援完整沖銷或已有沖銷關聯。");
++      if (!detail.groupLegs.every(row => positive(row.movementId)) || new Set(detail.groupLegs.map(row => row.movementId)).size !== detail.groupLegs.length ||
++        !detail.groupLegs.some(row => row.movementId === props.movementId)) invalid("異動組不完整或識別重複，不能確認整組沖銷。");
++      const current = new Map(); legs = [];
++      for (const original of detail.groupLegs) {
++        const key = JSON.stringify(identity(original));
++        if (!current.has(key)) {
++          const bucket = await targetBucket(original); if (!bucket) invalid("原庫存 bucket 不存在，不能重建或部分沖銷。");
++          current.set(key, bucket);
++        }
++        const bucket = current.get(key);
++        if (!positive(original.quantity) || !["IN", "OUT"].includes(original.direction)) invalid("原異動資料不完整。");
++        legs.push({ movementId: original.movementId, bucket, direction: original.direction === "IN" ? "OUT" : "IN", quantity: original.quantity });
++      }
++      const guards = [...current.values()].map(row => ({ balanceId: row.balanceId, expectedVersion: row.version })).sort((a, b) => a.balanceId - b.balanceId);
++      if (new Set(guards.map(row => row.balanceId)).size !== guards.length) invalid("沖銷庫存識別重複，請重新查詢。");
++      body = { expectedBalances: guards, reasonText: reason };
++    } else {
++      assertSelection(); const amount = Number(quantity.value);
++      if (!positive(amount)) invalid("數量必須是 Base UOM 的安全正整數。", "quantity");
++      const common = { quantity: amount, uomId: sku.value.baseUom.uomId, reasonText: reason };
++      if (["IN", "OUT"].includes(props.action) && !categories.includes(reasonCategory.value)) invalid("請選擇有效原因分類。");
++      if (props.action === "IN") {
++        if (!statuses.includes(stockStatus.value)) invalid("請選擇有效庫存狀態。");
++        const lotFields = {}; let chosenLot = null, newLot = false;
++        if (sku.value.trackingPolicy !== "none") {
++          const rows = await collect(inventory.listLots, { skuId: sku.value.skuId }, "lotId");
++          if (rows.some(row => row.sku?.skuId !== sku.value.skuId)) invalid("批次與 SKU 不一致，請重新查詢。");
++          if (lotMode.value === "EXISTING") {
++            chosenLot = rows.find(row => row.lotId === lotId.value); if (!chosenLot) invalid("請選擇既有批次，或明確選擇新批次。");
++            lotFields.lotNumber = chosenLot.lotNumber;
++            for (const field of ["expiryDate", "manufactureDate"]) if (chosenLot[field] !== null && chosenLot[field] !== undefined) {
++              if (!validDate(chosenLot[field])) invalid("既有批次日期無效，不能修改或猜測。"); lotFields[field] = chosenLot[field];
++            }
++          } else if (lotMode.value === "NEW") {
++            const number = lotNumber.value.trim();
++            if (!number || [...number].length > 100 || /[\p{Cc}]/u.test(number) || rows.some(row => row.lotNumber === number)) invalid("新批次編號無效或已存在，請選擇既有批次。");
++            if (sku.value.trackingPolicy === "batch_expiry" && !expiryDate.value) invalid("新效期批次必須輸入效期日期。", "expiry");
++            lotFields.lotNumber = number; newLot = true;
++            for (const [field, value] of [["expiryDate", expiryDate.value], ["manufactureDate", manufactureDate.value]]) if (value) {
++              if (!validDate(value)) invalid("請輸入有效曆日日期。", field === "expiryDate" ? "expiry" : "manufacture"); lotFields[field] = value;
++            }
++            chosenLot = { lotId: null, number, ...lotFields };
++          } else invalid("請選擇有效批次模式。");
++        }
++        const target = { warehouse: { warehouseId: warehouseId.value, code: warehouses.value.find(row => row.id === warehouseId.value).code },
++          bin: { binId: binId.value, code: bins.value.find(row => row.id === binId.value).code }, sku: { skuId: sku.value.skuId, code: sku.value.skuCode, name: sku.value.skuName },
++          lot: chosenLot ? { ...chosenLot, number: lotFields.lotNumber } : null, stockStatus: stockStatus.value, baseUom: sku.value.baseUom };
++        const current = await targetBucket(target, newLot);
++        body = { ...common, direction: "IN", warehouseId: warehouseId.value, binId: binId.value, skuId: sku.value.skuId,
++          stockStatus: stockStatus.value, expectedBalanceVersion: current?.version ?? null, reasonCategory: reasonCategory.value, ...lotFields };
++        legs = [{ bucket: current ?? { ...target, onHand: 0, allocated: 0, bucketFree: 0, version: null }, direction: "IN", quantity: amount }];
++      } else if (["OUT", "STATUS_TRANSFER"].includes(props.action)) {
++        const selected = buckets.value.find(row => row.balanceId === sourceBalanceId.value); if (!selected) invalid("請載入並選擇來源庫存 bucket。");
++        const source = validateBucket(await inventory.getStock(selected.balanceId));
++        if (!same(source, selected) || source.baseUom.uomId !== common.uomId) invalid("來源庫存與選取資料不一致，請重新查詢。");
++        legs = [{ bucket: source, direction: "OUT", quantity: amount }];
++        if (props.action === "OUT") body = { ...common, direction: "OUT", balanceId: source.balanceId, expectedBalanceVersion: source.version, reasonCategory: reasonCategory.value };
++        else {
++          if (!statuses.includes(destinationStatus.value) || destinationStatus.value === source.stockStatus) invalid("目標狀態必須有效且與來源不同。");
++          const target = { ...source, stockStatus: destinationStatus.value };
++          const destination = await targetBucket(target);
++          body = { ...common, sourceBalanceId: source.balanceId, destinationStatus: destinationStatus.value, expectedSourceVersion: source.version, expectedDestinationVersion: destination?.version ?? null };
++          legs.push({ bucket: destination ?? { ...target, onHand: 0, allocated: 0, bucketFree: 0, version: null }, direction: "IN", quantity: amount });
++        }
++      } else invalid("操作類型無效。");
++    }
++    for (const leg of legs) {
++      const delta = legs.filter(other => same(other.bucket, leg.bucket)).reduce((sum, other) => sum + (other.direction === "IN" ? other.quantity : -other.quantity), 0);
++      leg.projected = leg.bucket.onHand + delta;
++      if (!Number.isSafeInteger(leg.projected)) invalid("預覽數量超出安全整數，不能確認。");
++    }
++    const reserved = await summaries(legs);
++    if (live && own === generation && !props.disabled) emit("review", { action: props.action, movementId: props.action === "REVERSAL" ? props.movementId : undefined,
++      body, preview: { legs, summaries: reserved, reasonText: reason, reasonCategory: body.reasonCategory } });
++  } catch (cause) { if (live && own === generation) await showError(cause); }
++  finally { if (live) loading.value = false; }
++}
++watch(code, () => { lookupGeneration++; lookupLoading.value = false; sku.value = null; lots.value = []; lotId.value = null; buckets.value = []; sourceBalanceId.value = null; });
++watch(warehouseId, loadBins);
++watch([sku, binId], () => { buckets.value = []; sourceBalanceId.value = null; });
++watch([code, sku, warehouseId, binId, stockStatus, lotMode, lotId, lotNumber, expiryDate, manufactureDate, sourceBalanceId,
++  destinationStatus, quantity, reasonText, reasonCategory, () => props.action, () => props.movementId, () => props.disabled], () => { generation++; }, { flush: "sync" });
++onMounted(() => { if (props.action !== "REVERSAL") loadWarehouses(); });
++onUnmounted(() => { live = false; generation++; lookupGeneration++; });
++</script>
++<template>
++  <form aria-label="高風險庫存操作表單" @submit.prevent="prepare">
++    <div v-if="error" ref="errorSummary" role="alert" tabindex="-1" class="bg-negative text-white q-pa-md q-mb-md">
++      <a v-if="errorField" class="text-white" :href="`#inventory-adjustment-${errorField}`" @click.prevent="errorSummary.ownerDocument.getElementById(`inventory-adjustment-${errorField}`)?.focus()">{{ error }}</a><template v-else>{{ error }}</template>
++    </div>
++    <div v-if="loading || lookupLoading || selectorLoading" role="status" class="q-mb-sm">正在載入目前資料…</div>
++    <fieldset :disabled="disabled || loading" class="operation-fields">
++      <div v-if="action !== 'REVERSAL'" class="row q-col-gutter-sm">
++        <q-input class="col-12 col-sm-8" v-model="code" outlined dense label="SKU Code" :disable="disabled || loading" @keydown.enter.prevent="lookup" />
++        <div class="col-12 col-sm-4"><q-btn outline label="查找 SKU" :loading="lookupLoading" :disable="disabled || loading || lookupLoading" @click="lookup" /></div>
++        <p v-if="sku" class="col-12" role="status">{{ sku.skuCode }} · {{ sku.skuName }} · Base UOM {{ sku.baseUom.uomCode }} · {{ sku.trackingPolicy }}</p>
++        <q-select class="col-12 col-sm-6" v-model="warehouseId" :options="warehouses" option-value="id" option-label="code" emit-value map-options outlined dense label="倉庫" :disable="disabled || loading" />
++        <q-select class="col-12 col-sm-6" v-model="binId" :options="bins" option-value="id" option-label="code" emit-value map-options outlined dense label="庫位" :disable="disabled || loading" />
++        <template v-if="action === 'IN'">
++          <q-select class="col-12 col-sm-6" v-model="stockStatus" :options="statuses" outlined dense label="庫存狀態" :disable="disabled || loading" />
++          <template v-if="sku && sku.trackingPolicy !== 'none'">
++            <q-select class="col-12 col-sm-6" v-model="lotMode" :options="[{ label: '既有批次', value: 'EXISTING' }, { label: '新批次', value: 'NEW' }]" emit-value map-options outlined dense label="批次模式" :disable="disabled || loading" />
++            <q-select v-if="lotMode === 'EXISTING'" class="col-12" v-model="lotId" :options="lots" option-value="lotId" :option-label="lot => `${lot.lotNumber} · ${lot.expiryDate || '無效期'}`" emit-value map-options outlined dense label="既有批次" :disable="disabled || loading" />
++            <p v-if="lotMode === 'EXISTING' && lotId" class="col-12">既有日期不可修改：效期 {{ lots.find(row => row.lotId === lotId)?.expiryDate || '無' }} · 製造日期 {{ lots.find(row => row.lotId === lotId)?.manufactureDate || '無' }} · 首次收貨 {{ lots.find(row => row.lotId === lotId)?.firstReceiptDate || '無' }}</p>
++            <template v-if="lotMode === 'NEW'">
++              <q-input class="col-12" v-model="lotNumber" outlined dense label="批次編號" :disable="disabled || loading" />
++              <q-input id="inventory-adjustment-expiry" class="col-12 col-sm-6" v-model="expiryDate" outlined dense type="date" label="效期" :disable="disabled || loading" :error="errorField === 'expiry' && !!error" :error-message="error" />
++              <q-input id="inventory-adjustment-manufacture" class="col-12 col-sm-6" v-model="manufactureDate" outlined dense type="date" label="製造日期" :disable="disabled || loading" :error="errorField === 'manufacture' && !!error" :error-message="error" />
++            </template>
++          </template>
++        </template>
++        <template v-else>
++          <div class="col-12"><q-btn outline label="載入來源庫存" :disable="disabled || loading || !sku || !binId" @click="loadStocks" /></div>
++          <q-select class="col-12" v-model="sourceBalanceId" :options="buckets" option-value="balanceId" :option-label="row => `${location(row)} · ${row.lot?.number || '無批次'} · ${row.stockStatus} · On Hand ${row.onHand} · v${row.version}`" emit-value map-options outlined dense label="來源庫存 bucket" :disable="disabled || loading" />
++          <div v-if="!buckets.length" class="col-12" role="status">尚未載入或沒有來源庫存；不能確認。</div>
++          <q-select v-if="action === 'STATUS_TRANSFER'" class="col-12" v-model="destinationStatus" :options="statuses" outlined dense label="目標狀態" :disable="disabled || loading" />
++        </template>
++        <q-input id="inventory-adjustment-quantity" class="col-12" v-model="quantity" outlined dense inputmode="numeric" label="數量（Base UOM）" :disable="disabled || loading" :error="errorField === 'quantity' && !!error" :error-message="error" hint="只接受安全正整數；本期 UI 不做 Pack 換算。" />
++      </div>
++      <p v-else>整組沖銷 Movement {{ movementId }}：準備確認時重新讀取原組及所有目前 bucket；不使用歷史版本、不重建 bucket。</p>
++      <q-select v-if="action === 'IN' || action === 'OUT'" class="q-mt-md" v-model="reasonCategory" :options="categories" outlined dense label="原因分類" :disable="disabled || loading" />
++      <q-input id="inventory-adjustment-reason" class="q-mt-md" v-model="reasonText" type="textarea" outlined label="原因說明" :disable="disabled || loading" :error="errorField === 'reason' && !!error" :error-message="error" hint="必填，最多 500 UTF-8 bytes；OTHER 至少 10 個非空白字元。" />
++      <q-btn id="inventory-adjustment-review" class="q-mt-md" color="primary" type="submit" label="準備確認" :disable="disabled || loading || lookupLoading" :loading="loading" />
++      <q-btn v-if="error && action !== 'REVERSAL'" class="q-mt-md" flat label="重載倉庫選擇器" :disable="disabled || loading" @click="loadWarehouses" />
++    </fieldset>
++  </form>
++</template>
++<style scoped>
++.operation-fields { padding: 0; margin: 0; border: 0; min-width: 0; }
++</style>
+--- /dev/null
++++ b/client/src/components/inventory/InventoryHighRiskDialog.vue
+@@ -0,0 +1,45 @@
++<script setup>
++import { nextTick, onUnmounted, ref, watch } from "vue";
++const props = defineProps({ modelValue: Boolean, disabled: Boolean, busy: Boolean,
++  title: { type: String, default: "確認高風險庫存操作" }, execute: { type: Function, required: true } });
++const emit = defineEmits(["update:modelValue", "hidden"]);
++const passwordInput = ref(null), error = ref(""), submitting = ref(false);
++function clear() { if (passwordInput.value) passwordInput.value.value = ""; }
++function cancel() { if (props.busy || submitting.value) return; clear(); emit("update:modelValue", false); }
++async function confirm() {
++  if (props.disabled || props.busy || submitting.value) return;
++  let value = passwordInput.value?.value;
++  clear(); error.value = "";
++  if (!value || value.length > 1024) { error.value = "請輸入目前密碼（最多 1024 字元）。"; passwordInput.value?.focus(); return; }
++  submitting.value = true;
++  try { await props.execute(value); }
++  finally { value = null; clear(); submitting.value = false; }
++}
++watch(() => [props.modelValue, props.disabled], () => { clear(); error.value = ""; });
++onUnmounted(clear);
++</script>
++<template>
++  <q-dialog :model-value="modelValue" persistent @update:model-value="cancel" @hide="clear(); emit('hidden')" @show="nextTick(() => passwordInput?.focus())">
++    <q-card class="high-risk-dialog">
++      <q-card-section>
++        <h2 id="inventory-confirm-title" class="text-h6 q-mt-none">{{ title }}</h2>
++        <slot />
++        <form aria-labelledby="inventory-confirm-title" @submit.prevent="confirm">
++          <label class="block q-mb-xs" for="inventory-confirm-password">目前密碼（必填）</label>
++          <input id="inventory-confirm-password" ref="passwordInput" class="password-input" type="password" autocomplete="current-password"
++            :disabled="disabled || busy || submitting" aria-describedby="inventory-confirm-help" />
++          <p id="inventory-confirm-help" class="text-caption">每次嘗試必須重新輸入。提交後立即清除輸入，不會儲存密碼。</p>
++          <div v-if="error" role="alert" class="text-negative q-mb-md">{{ error }}</div>
++          <div class="row justify-end q-gutter-sm">
++            <q-btn flat label="取消" :disable="busy || submitting" @click="cancel" />
++            <q-btn color="negative" type="submit" label="確認過帳" :disable="disabled || busy || submitting" :loading="busy || submitting" />
++          </div>
++        </form>
++      </q-card-section>
++    </q-card>
++  </q-dialog>
++</template>
++<style scoped>
++.high-risk-dialog { width: 760px; max-width: 100%; }
++.password-input { width: 100%; min-height: 44px; padding: 8px; font: inherit; color: inherit; background: transparent; border: 1px solid var(--app-border); border-radius: 4px; }
++</style>
+--- /dev/null
++++ b/client/src/pages/inventory/AdjustmentsPage.vue
+@@ -0,0 +1,256 @@
++<script>
++export const page = { name: "inventory-adjustments", path: "/inventory/adjustments", title: "高風險庫存操作",
++  requires: { permissions: ["inventory.view", "inventory.adjust"] }, menu: { group: "inventory", icon: "edit_note", order: 60 } };
++</script>
++<script setup>
++import { computed, onUnmounted, ref, shallowRef, watch } from "vue";
++import { useRoute } from "vue-router";
++import { can } from "@/framework/authorization/can.js";
++import { useSessionStore } from "@/stores/session.js";
++import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
++import PageHeader from "@/framework/layout/PageHeader.vue";
++import AdjustmentForm from "@/components/inventory/AdjustmentForm.vue";
++import InventoryHighRiskDialog from "@/components/inventory/InventoryHighRiskDialog.vue";
++import inventory from "@/services/inventory.js";
++const route = useRoute(), session = useSessionStore();
++const actions = ["IN", "OUT", "STATUS_TRANSFER", "REVERSAL"];
++const types = { IN: "ADJUSTMENT", OUT: "ADJUSTMENT", STATUS_TRANSFER: "STATUS_TRANSFER", REVERSAL: "REVERSAL" };
++const labels = { IN: "調整入庫", OUT: "調整出庫", STATUS_TRANSFER: "狀態轉換", REVERSAL: "整組沖銷" };
++const positive = value => Number.isSafeInteger(value) && value > 0;
++const uuid = value => typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u.test(value);
++const actorId = computed(() => positive(session.user?.id) ? session.user.id : null);
++const canView = computed(() => can(session, { permissions: ["inventory.view"] }));
++const canAdjust = computed(() => !!actorId.value && can(session, { permissions: ["inventory.view", "inventory.adjust"] }));
++const action = ref("IN"), movementId = ref(null), status = ref("IDLE"), busy = ref(false), modal = ref(false);
++const recovery = shallowRef(null), preview = shallowRef(null), result = shallowRef(null), resolvedSource = shallowRef(null);
++const movements = ref([]), stockFacts = ref([]), error = ref(""), storageError = ref(""), factsError = ref(""), routeError = ref("");
++let intent = null, generation = 0, live = true, controller, confirmationTrigger = "inventory-adjustment-review";
++const key = id => `inventory-high-risk:v1:${id}`;
++const sameSource = (a, b) => a && b && ["module", "documentType", "documentId", "lineId", "eventId"].every(field => a[field] === b[field]);
++const freeze = value => { if (value && typeof value === "object") { Object.values(value).forEach(freeze); Object.freeze(value); } return value; };
++function parseRecord(raw) {
++  const value = JSON.parse(raw);
++  if (!value || typeof value !== "object" || Array.isArray(value) || !Object.keys(value).every(field => ["source", "action", "movementId"].includes(field)) ||
++    !actions.includes(value.action) || !value.source || typeof value.source !== "object" || Array.isArray(value.source) ||
++    Object.keys(value.source).sort().join() !== ["documentId", "documentType", "eventId", "lineId", "module"].sort().join() ||
++    value.source.module !== "INVENTORY" || value.source.documentType !== types[value.action] || value.source.lineId !== "" ||
++    !uuid(value.source.documentId) || !uuid(value.source.eventId) || value.source.documentId === value.source.eventId ||
++    (value.action === "REVERSAL" ? !positive(value.movementId) : Object.hasOwn(value, "movementId"))) throw new Error("復原識別格式無效；不可猜測或重新過帳，請人工核對。");
++  return freeze(value);
++}
++function stored(id) { const raw = sessionStorage.getItem(key(id)); return raw === null ? null : parseRecord(raw); }
++function failStorage(message) { storageError.value = message; notifyError(message); }
++function saveRecord(owned) {
++  try {
++    const previous = stored(owned.actorId);
++    if (previous && (!sameSource(previous.source, owned.record.source) || previous.action !== owned.record.action || previous.movementId !== owned.record.movementId)) throw new Error("既有未解決復原識別不能覆寫。");
++    sessionStorage.setItem(key(owned.actorId), JSON.stringify(owned.record));
++    recovery.value = owned.record; return true;
++  } catch { failStorage("無法保存復原識別；已阻擋過帳。請核對儲存空間及既有未解決操作。"); return false; }
++}
++function removeRecord(record, id) {
++  try {
++    const current = stored(id);
++    if (current && (!sameSource(current.source, record.source) || current.action !== record.action || current.movementId !== record.movementId)) throw new Error("識別已變更");
++    if (current) sessionStorage.removeItem(key(id)); recovery.value = null; return true;
++  } catch { failStorage("結果已確認，但無法清除原復原識別；請重試讀取，勿另行重送。"); return false; }
++}
++function active(own) { return live && own === generation; }
++function resetActor() {
++  generation++; controller?.abort(); intent = null; modal.value = false; preview.value = null; result.value = null; resolvedSource.value = null;
++  movements.value = []; stockFacts.value = []; recovery.value = null; status.value = "IDLE"; busy.value = false; error.value = ""; storageError.value = ""; factsError.value = "";
++  if (!actorId.value) return;
++  try {
++    recovery.value = stored(actorId.value);
++    if (recovery.value) { status.value = "QUERY_ONLY"; if (canView.value) queryOriginal(); }
++  } catch (cause) { failStorage(cause.message || "無法讀取復原識別，不能開始新過帳。"); }
++}
++function readRoute() {
++  const query = route.query, id = typeof query.movementId === "string" && /^[1-9][0-9]*$/u.test(query.movementId) ? Number(query.movementId) : null;
++  const selected = query.action ?? "IN";
++  routeError.value = !Object.keys(query).every(field => ["action", "movementId"].includes(field)) || !actions.includes(selected) ||
++    (selected === "REVERSAL" ? !positive(id) : query.movementId !== undefined) ? "操作連結無效；請從庫存異動頁或操作選擇器重新進入。" : "";
++  if (!routeError.value) { action.value = selected; movementId.value = id; }
++}
++function review(value) {
++  if (!canAdjust.value || busy.value || intent || recovery.value || storageError.value || routeError.value || value.action !== action.value ||
++    (value.action === "REVERSAL" && value.movementId !== movementId.value)) return;
++  const source = { module: "INVENTORY", documentType: types[value.action], documentId: crypto.randomUUID(), lineId: "", eventId: crypto.randomUUID() };
++  const record = { source, action: value.action, ...(value.action === "REVERSAL" ? { movementId: value.movementId } : {}) };
++  intent = { actorId: actorId.value, record: freeze(record), body: freeze(JSON.parse(JSON.stringify(value.body))), key: crypto.randomUUID(), unknown: false };
++  preview.value = freeze(JSON.parse(JSON.stringify(value.preview))); status.value = "CONFIRM"; confirmationTrigger = "inventory-adjustment-review"; modal.value = true; error.value = "";
++}
++function closeConfirmation(value) {
++  modal.value = value;
++  if (!value && !busy.value && intent && !intent.unknown && !recovery.value) { intent = null; preview.value = null; status.value = "IDLE"; }
++}
++async function collect(read, filters, idField, signal) {
++  const rows = [], ids = new Set(); let total;
++  for (let page = 1; ; page++) {
++    const response = await read({ ...filters, page, rowsPerPage: 100, signal });
++    if (!Array.isArray(response?.rows) || !Number.isSafeInteger(response.rowsNumber) || response.rowsNumber < 0 || (total !== undefined && total !== response.rowsNumber)) throw new Error("異動清單不完整，請重新核對。");
++    total = response.rowsNumber;
++    for (const row of response.rows) { if (!positive(row[idField]) || ids.has(row[idField])) throw new Error("讀取識別重複或無效。"); ids.add(row[idField]); rows.push(row); }
++    if (rows.length === total) return rows;
++    if (!response.rows.length || rows.length > total) throw new Error("異動清單未完整讀取。");
++  }
++}
++async function reloadFacts(operation, source, own, signal) {
++  try {
++    const rows = await collect(inventory.listMovements, { sourceModule: source.module, sourceDocumentType: source.documentType, sourceDocumentId: source.documentId }, "movementId", signal);
++    const exact = row => row.operationId === operation.operationId && row.groupId === operation.resultId && sameSource(row.source, source);
++    const selected = rows.filter(exact)[0]; if (!selected) throw new Error("已完成操作的精確異動尚未讀取，請重載結果。");
++    const detail = await inventory.getMovement(selected.movementId, { signal });
++    if (detail?.movement.movementId !== selected.movementId || !detail.groupLegs?.length || !detail.groupLegs.every(exact)) throw new Error("異動組與原操作不一致，不能使用其他組的結果。");
++    const facts = [], identities = new Set();
++    for (const leg of detail.groupLegs) {
++      const identity = [leg.warehouse.warehouseId, leg.bin?.binId, leg.sku.skuId, leg.lot?.lotId ?? null, leg.stockStatus];
++      const encoded = JSON.stringify(identity); if (identities.has(encoded)) continue; identities.add(encoded);
++      const stocks = await collect(inventory.listStocks, { warehouseId: identity[0], binId: identity[1], skuId: identity[2], status: identity[4],
++        ...(leg.lot?.number ? { lot: leg.lot.number } : {}) }, "balanceId", signal);
++      const matches = row => JSON.stringify([row.warehouse.warehouseId, row.bin.binId, row.sku.skuId, row.lot?.lotId ?? null, row.stockStatus]) === encoded;
++      const found = stocks.find(matches);
++      if (!found) throw new Error("過帳已確認，但目前庫存尚未核對；請重載結果。");
++      const fact = await inventory.getStock(found.balanceId, { signal });
++      if (fact?.balanceId !== found.balanceId || !matches(fact)) throw new Error("目前庫存識別不一致，不能套用其他 Bucket 的事實。");
++      facts.push(fact);
++    }
++    if (active(own)) { movements.value = detail.groupLegs; stockFacts.value = facts; factsError.value = ""; }
++  } catch (cause) { if (active(own)) factsError.value = cause.message || "已確認過帳，但目前事實未完成重載。"; }
++}
++async function lookupResult(record, own, signal) {
++  const operation = await inventory.findOperationBySource(record.source, { signal });
++  if (!active(own)) return null;
++  if (operation === null) return null;
++  if (!positive(operation?.operationId) || operation.resultType !== "MOVEMENT_GROUP" || typeof operation.resultId !== "string" || !operation.resultId ||
++    !Number.isSafeInteger(operation.completedAt) || operation.completedAt < 0) throw new Error("結果尚未可確定，保留原識別等待核對。");
++  result.value = operation; resolvedSource.value = record.source; status.value = "RESOLVED"; modal.value = false; error.value = "";
++  removeRecord(record, actorId.value); intent = null; preview.value = null; notifySuccess("已確認原操作過帳，正在重載目前事實。");
++  await reloadFacts(operation, record.source, own, signal); return operation;
++}
++async function queryOriginal() {
++  if (busy.value || !canView.value) return;
++  const record = recovery.value; if (!record) return;
++  const own = generation; busy.value = true; controller = new AbortController(); error.value = "";
++  try { await lookupResult(record, own, controller.signal); }
++  catch { if (active(own)) error.value = "原結果查詢未完成；保留識別，不代表失敗或回滾，請稍後再查詢。"; }
++  finally { if (active(own)) busy.value = false; }
++}
++async function retryOriginal() {
++  if (busy.value || !canAdjust.value || !intent?.unknown || intent.actorId !== actorId.value || storageError.value) return;
++  const own = generation; busy.value = true; controller = new AbortController(); error.value = "";
++  try { const found = await lookupResult(intent.record, own, controller.signal); if (active(own) && !found && intent) { confirmationTrigger = "inventory-retry-intent"; modal.value = true; } }
++  catch { if (active(own)) error.value = "查詢失敗，這次不重送；請先完成原結果查詢。"; }
++  finally { if (active(own)) busy.value = false; }
++}
++async function submit(password) {
++  const owned = intent, own = generation;
++  if (!owned || !canAdjust.value || owned.actorId !== actorId.value || busy.value || storageError.value) return;
++  busy.value = true; modal.value = false; controller = new AbortController(); error.value = ""; let sent = false, posted = false;
++  try {
++    if (owned.unknown && await lookupResult(owned.record, own, controller.signal)) return;
++    if (!active(own) || !canAdjust.value || actorId.value !== owned.actorId || !saveRecord(owned)) return;
++    sent = true; status.value = "SUBMITTING";
++    const payload = { ...owned.body, source: owned.record.source, idempotencyKey: owned.key, password };
++    if (owned.record.action === "REVERSAL") await inventory.reverseMovement(owned.record.movementId, payload, { signal: controller.signal });
++    else if (owned.record.action === "STATUS_TRANSFER") await inventory.postStatusTransfer(payload, { signal: controller.signal });
++    else await inventory.postAdjustment(payload, { signal: controller.signal });
++    if (!active(own)) return;
++    posted = true; owned.unknown = true; status.value = "UNKNOWN";
++    await lookupResult(owned.record, own, controller.signal);
++  } catch (cause) {
++    if (!active(own)) return;
++    const definitive = sent && cause.status >= 400 && cause.status < 500 && !/IN_PROGRESS/u.test(cause.code || "");
++    if (definitive && !owned.unknown) { status.value = "REJECTED"; error.value = `${cause.message || '過帳遭拒'}。未自動重送；請核對原結果再重新準備。`; }
++    else { if (sent) owned.unknown = true; status.value = owned.unknown ? "UNKNOWN" : "CONFIRM"; error.value = "結果未可確定；保留原意圖，請查詢原結果。未自動重送或建立新事件。"; }
++    if (owned.unknown && sent && !posted) {
++      try { await lookupResult(owned.record, own, controller.signal); }
++      catch { if (active(own)) error.value = "原結果查詢未完成；保留原識別，不代表失敗或回滾。"; }
++    }
++    if (active(own) && error.value && status.value !== "RESOLVED") notifyError(error.value);
++  } finally { password = null; if (active(own)) busy.value = false; }
++}
++async function prepareFresh() {
++  if (busy.value || status.value !== "REJECTED" || !intent || intent.unknown || !canAdjust.value) return;
++  const owned = intent, own = generation; busy.value = true; controller = new AbortController();
++  try {
++    if (await lookupResult(owned.record, own, controller.signal)) return;
++    if (active(own) && removeRecord(owned.record, owned.actorId)) { intent = null; preview.value = null; status.value = "IDLE"; error.value = "請重新準備確認，以載入目前版本與效果；未自動過帳。"; }
++  } catch { if (active(own)) error.value = "原結果查詢未完成，不能建立新的過帳意圖。"; }
++  finally { if (active(own)) busy.value = false; }
++}
++function newOperation() { if (!busy.value && !recovery.value && !storageError.value && status.value === "RESOLVED") { status.value = "IDLE"; result.value = null; resolvedSource.value = null; movements.value = []; stockFacts.value = []; factsError.value = ""; } }
++async function reloadResolved() {
++  if (busy.value || !canView.value || !result.value) return;
++  const own = generation; busy.value = true; controller = new AbortController();
++  try { await reloadFacts(result.value, resolvedSource.value, own, controller.signal); }
++  finally { if (active(own)) busy.value = false; }
++}
++async function copyReference() {
++  try { await navigator.clipboard.writeText(JSON.stringify(recovery.value?.source ?? resolvedSource.value)); notifySuccess("已複製原操作來源識別。"); }
++  catch { notifyError("無法自動複製；請選取畫面上的來源識別保存。"); }
++}
++function restoreFocus() { document.getElementById(result.value ? "posted-heading" : confirmationTrigger)?.focus(); }
++watch(actorId, resetActor, { immediate: true });
++watch(canAdjust, (allowed, previous) => { if (previous && !allowed) resetActor(); });
++watch(() => route.query, () => { if (intent || recovery.value || busy.value) return; readRoute(); }, { immediate: true });
++onUnmounted(() => { live = false; generation++; controller?.abort(); intent = null; modal.value = false; preview.value = null; });
++</script>
++<template>
++  <div>
++    <PageHeader subtitle="Base UOM 單次調整、狀態轉換及整組沖銷；每次嘗試需要目前密碼與設備簽章。">
++      <template #actions><q-btn flat icon="history" label="異動追溯" to="/inventory/movements" /></template>
++    </PageHeader>
++    <div class="q-px-md q-pb-md">
++      <q-banner v-if="!canAdjust" role="alert" class="bg-warning q-mb-md">需要 inventory.view 及 inventory.adjust；不能以 operation／FEFO 權限代替。</q-banner>
++      <q-banner v-if="routeError || storageError || error" role="alert" class="bg-negative text-white q-mb-md">{{ routeError || storageError || error }}</q-banner>
++      <q-btn v-if="storageError" flat label="重試讀取復原狀態" :disable="busy" @click="resetActor" />
++      <div v-if="busy" role="status" aria-live="polite" class="q-mb-md">正在送出或查詢原操作…請勿另開新意圖。</div>
++      <section v-if="recovery" aria-labelledby="recovery-heading" class="q-mb-md">
++        <h2 id="recovery-heading" class="text-h6">{{ result ? '已確認結果；復原識別尚待清除' : status === 'REJECTED' ? '本次過帳遭拒' : '結果未知／等待核對' }}</h2>
++        <p v-if="status === 'QUERY_ONLY'">重新載入後只可查詢；原 payload／key 已不在記憶體，不能重建重試。</p>
++        <p>查詢不到不是失敗或回滾。保留原識別；未解決前不能另建事件。關閉分頁或清除儲存可能遺失識別，請複製保存並請管理人員人工核對。</p>
++        <pre class="safe-reference">{{ JSON.stringify(recovery.source) }}</pre>
++        <div class="row q-gutter-sm">
++          <q-btn outline label="複製原來源識別" @click="copyReference" />
++          <q-btn outline label="查詢原結果" :disable="busy || !canView" @click="queryOriginal" />
++          <q-btn id="inventory-retry-intent" v-if="intent?.unknown && canAdjust" outline color="negative" label="重試原意圖" :disable="busy || !!storageError" @click="retryOriginal" />
++          <q-btn v-if="status === 'REJECTED' && canAdjust" outline label="核對結果並重新準備" :disable="busy" @click="prepareFresh" />
++        </div>
++      </section>
++      <section v-if="result" aria-labelledby="posted-heading">
++        <h2 id="posted-heading" class="text-h6" tabindex="-1" aria-live="polite">已確認過帳 · Operation {{ result.operationId }}</h2>
++        <p>原 Group {{ result.resultId }} · Base 數量 {{ result.resultSummary?.baseQuantity ?? '—' }} · legs {{ result.resultSummary?.lineCount ?? '—' }}</p>
++        <pre class="safe-reference">{{ JSON.stringify(resolvedSource) }}</pre>
++        <q-banner v-if="factsError" role="alert" class="bg-warning q-mb-md">{{ factsError }}</q-banner>
++        <q-btn v-if="factsError" outline label="重載已確認結果" :disable="busy || !canView" @click="reloadResolved" />
++        <div class="row q-gutter-sm q-mb-md"><q-btn v-for="movement in movements" :key="movement.movementId" outline
++          :aria-label="`查看已過帳 Movement ${movement.movementId}`" :label="`Movement ${movement.movementId}`" :to="{ path: '/inventory/movements', query: { movementId: movement.movementId } }" /></div>
++        <p v-for="row in stockFacts" :key="row.balanceId">目前 {{ row.sku.code }} · {{ row.warehouse.code }}/{{ row.bin.code }} · {{ row.lot?.number || '無批次' }} · {{ row.stockStatus }} · On Hand {{ row.onHand }} · Allocated {{ row.allocated }} · Free {{ row.bucketFree }} · v{{ row.version }}</p>
++        <q-btn v-if="canAdjust" color="primary" label="開始新操作" :disable="busy || !!recovery || !!storageError" @click="newOperation" />
++      </section>
++      <template v-if="canAdjust && status !== 'QUERY_ONLY' && !result && !routeError">
++        <q-select class="q-mb-md" v-model="action" :options="actions.map(value => ({ value, label: labels[value] }))" emit-value map-options outlined label="操作"
++          :disable="busy || !!intent || !!recovery || !!storageError" />
++        <AdjustmentForm :key="actorId" :action="action" :movement-id="movementId" :disabled="busy || !!intent || !!recovery || !!storageError" @review="review" />
++        <q-btn v-if="status === 'CONFIRM' && !modal && !recovery" outline label="返回表單" :disable="busy" @click="closeConfirmation(false)" />
++      </template>
++    </div>
++    <InventoryHighRiskDialog :model-value="modal" :execute="submit" :busy="busy" :disabled="!canAdjust || !!storageError" :title="`${labels[action]}：確認目前事實及整組效果`" @update:model-value="closeConfirmation" @hidden="restoreFocus">
++      <template v-if="preview">
++        <p>原因：{{ preview.reasonCategory || '—' }} · {{ preview.reasonText }}</p>
++        <ul class="review-legs"><li v-for="(leg, index) in preview.legs" :key="index">
++          {{ leg.bucket.sku.code }} · {{ leg.bucket.sku.name }} · {{ leg.bucket.warehouse.code }}/{{ leg.bucket.bin.code }} · {{ leg.bucket.lot?.number || '無批次' }} · {{ leg.bucket.lot?.expiryDate || '無效期' }} · {{ leg.bucket.stockStatus }}
++          <br>{{ leg.direction }} {{ leg.quantity }} {{ leg.bucket.baseUom.uomCode }} · On Hand {{ leg.bucket.onHand }} → 預計 {{ leg.projected }} · Allocated {{ leg.bucket.allocated }} · Free {{ leg.bucket.bucketFree }} · 目前 v{{ leg.bucket.version ?? '不存在' }}
++        </li></ul>
++        <p v-for="row in preview.summaries" :key="`${row.warehouse}:${row.sku}`">{{ row.warehouse }}/{{ row.sku }} · Reserved {{ row.reserved }} · 未覆蓋 {{ row.uncoveredReserved }} · Eligible {{ row.eligibleOnHand }} · ATP {{ row.atp }}</p>
++        <p>預覽不保證過帳；後端重查版本、鎖定、保障及效期。過期狀態轉換／沖銷不會授予銷售資格。</p>
++      </template>
++    </InventoryHighRiskDialog>
++  </div>
++</template>
++<style scoped>
++.safe-reference { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; }
++.review-legs { padding-inline-start: 24px; }
++.review-legs li { margin-block: 8px; overflow-wrap: anywhere; }
++</style>
+--- a/client/src/pages/inventory/MovementsPage.vue
++++ b/client/src/pages/inventory/MovementsPage.vue
+@@ -9,16 +9,20 @@
+ </script>
+ 
+ <script setup>
+-import { onMounted, onUnmounted, ref, watch } from "vue";
++import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+ import { useRoute, useRouter } from "vue-router";
+ import appConfig from "@config/app.js";
+ import PageHeader from "@/framework/layout/PageHeader.vue";
+ import DataTable from "@/framework/ui/DataTable.vue";
+ import EllipsisCell from "@/framework/ui/EllipsisCell.vue";
+ import inventoryService from "@/services/inventory.js";
++import { can } from "@/framework/authorization/can.js";
++import { useSessionStore } from "@/stores/session.js";
+ 
+ const route = useRoute();
+ const router = useRouter();
++const session = useSessionStore();
++const canAdjust = computed(() => can(session, { permissions: ["inventory.view", "inventory.adjust"] }));
+ const initial = route.query;
+ const positive = (value) => Number.isSafeInteger(Number(value)) && Number(value) > 0 ? Number(value) : null;
+ const text = (value) => typeof value === "string" ? value : "";
+@@ -45,6 +49,14 @@
+ const initialPagination = { page: currentPage.value, rowsPerPage: appConfig.defaultPageSize, rowsNumber: 0, sortBy: null, descending: true };
+ let listController;
+ let detailController;
++let detailGeneration = 0;
++const reversibleTypes = ["RECEIPT", "ISSUE", "BIN_MOVE", "STATUS_TRANSFER", "ADJUSTMENT"];
++const canReverse = computed(() => canAdjust.value && !detailLoading.value && !detailError.value &&
++  detail.value?.movement.movementId === selectedId.value &&
++  !detail.value.reversal.reversalOfMovementId && !detail.value.reversal.reversedByMovementId &&
++  detail.value.groupLegs.length > 0 && detail.value.groupLegs.length <= 200 &&
++  detail.value.groupLegs.every(leg => leg.locationKind === "BIN" && reversibleTypes.includes(leg.movementType) &&
++    leg.groupId === detail.value.movement.groupId && positive(leg.bin?.binId)));
+ 
+ const columns = [
+   { name: "postedAt", label: "時間", field: "postedAt", align: "left" },
+@@ -59,10 +71,13 @@
+ ];
+ const detailColumns = [
+   { name: "movementId", label: "Movement", field: "movementId", align: "left" },
++  { name: "sku", label: "SKU", field: (row) => row.sku.code, align: "left" },
++  { name: "lot", label: "批次", field: (row) => row.lot?.number ?? "無批次", align: "left" },
+   { name: "direction", label: "方向", field: "direction", align: "left" },
+   { name: "quantity", label: "數量", field: "quantity", align: "right" },
+   { name: "location", label: "位置", field: (row) => row.bin ? `${row.warehouse.code}/${row.bin.code}` : `${row.warehouse.code}/在途`, align: "left" },
+-  { name: "status", label: "狀態", field: "stockStatus", align: "left" }
++  { name: "status", label: "狀態", field: "stockStatus", align: "left" },
++  { name: "actions", label: "查看", field: "movementId", align: "right" }
+ ];
+ function filters() {
+   return {
+@@ -93,33 +108,39 @@
+   return inventoryService.listMovements({ ...request, sortBy: undefined, descending: undefined, ...filters(), signal: listController.signal });
+ }
+ async function openDetail(rowOrId) {
+-  const id = typeof rowOrId === "object" ? rowOrId.movementId : rowOrId;
++  const id = positive(typeof rowOrId === "object" ? rowOrId.movementId : rowOrId);
++  if (!id) return;
++  const generation = ++detailGeneration;
+   selectedId.value = id;
++  detail.value = null;
+   detailController?.abort();
+   detailController = new AbortController();
+   detailLoading.value = true;
+   detailError.value = "";
+   syncUrl();
+   try {
+-    detail.value = await inventoryService.getMovement(id, { signal: detailController.signal });
++    const found = await inventoryService.getMovement(id, { signal: detailController.signal });
++    if (generation !== detailGeneration) return;
++    if (found?.movement.movementId !== id) throw new Error("異動詳情與選取項目不一致，請重新載入。");
++    detail.value = found;
+   } catch (error) {
+-    if (error.name !== "AbortError") detailError.value = error.message || "無法載入異動詳情";
++    if (generation === detailGeneration && error.name !== "AbortError") detailError.value = error.message || "無法載入異動詳情";
+   } finally {
+-    detailLoading.value = false;
++    if (generation === detailGeneration) detailLoading.value = false;
+   }
+ }
+-function closeDetail() { detailController?.abort(); selectedId.value = null; detail.value = null; detailError.value = ""; syncUrl(); }
++function closeDetail() { detailGeneration++; detailController?.abort(); selectedId.value = null; detail.value = null; detailLoading.value = false; detailError.value = ""; syncUrl(); }
+ function sourceText(source) { return `${source.module} / ${source.documentType} / ${source.documentId}${source.lineId ? ` / 行 ${source.lineId}` : ""} / 事件 ${source.eventId}`; }
+ function formatTime(value) { return new Date(value).toLocaleString("zh-HK"); }
+ watch([postedFrom, postedTo, movementType, sourceModule, sourceDocumentType, sourceDocumentId, skuId, warehouseId, binId, lotId, actorId], () => table.value?.reload({ resetPage: true }));
+ onMounted(() => { if (selectedId.value) openDetail(selectedId.value); });
+-onUnmounted(() => { listController?.abort(); detailController?.abort(); });
++onUnmounted(() => { detailGeneration++; listController?.abort(); detailController?.abort(); });
+ </script>
+ 
+ <template>
+   <div>
+     <PageHeader subtitle="依固定時間順序追溯不可變 Movement、來源、同組 legs 與沖銷關聯。">
+-      <template #actions><q-btn flat icon="inventory" label="庫存總覽" to="/inventory/stocks" /><q-btn flat icon="event" label="批次與效期" to="/inventory/lots" /></template>
++      <template #actions><q-btn v-if="canAdjust" flat icon="edit_note" label="庫存調整" aria-label="庫存調整" :to="{ path: '/inventory/adjustments', query: { action: 'IN' } }" /><q-btn flat icon="inventory" label="庫存總覽" to="/inventory/stocks" /><q-btn flat icon="event" label="批次與效期" to="/inventory/lots" /></template>
+     </PageHeader>
+     <div class="q-px-md q-pb-md row q-col-gutter-sm items-start">
+       <q-input class="col-6 col-sm-3 col-md-2" v-model="postedFrom" dense outlined type="date" label="異動日期從" />
+@@ -149,6 +170,7 @@
+       <q-card flat bordered>
+         <q-card-section>
+           <div class="row items-center q-gutter-sm"><h2 id="movement-detail-heading" class="text-h6 q-ma-none">Movement {{ selectedId }} 詳情</h2><q-space /><q-btn flat round dense icon="close" aria-label="關閉 Movement 詳情" @click="closeDetail" /></div>
++          <div v-if="detailLoading" role="status" class="q-mt-md">正在載入異動詳情…</div>
+           <q-banner v-if="detailError" role="alert" class="bg-negative text-white q-mt-md">{{ detailError }}<template #action><q-btn flat label="重試" @click="openDetail(selectedId)" /></template></q-banner>
+           <template v-if="detail">
+             <dl class="movement-meta q-my-md">
+@@ -162,7 +184,12 @@
+               <span v-if="!detail.reversal.reversalOfMovementId && !detail.reversal.reversedByMovementId" class="text-grey-8"><q-icon name="link_off" /> 沒有沖銷關聯</span>
+             </div>
+             <h3 class="text-subtitle1">同組 Movement legs</h3>
+-            <DataTable :rows="detail.groupLegs" :columns="detailColumns" row-key="movementId" />
++            <q-btn v-if="canReverse" outline color="negative" label="整組沖銷" :aria-label="`整組沖銷 Movement ${selectedId}`" class="q-mb-md"
++              :to="{ path: '/inventory/adjustments', query: { action: 'REVERSAL', movementId: selectedId } }" />
++            <p v-else-if="canAdjust" role="status">此異動組不提供沖銷入口；請查看類型、位置及沖銷關聯。</p>
++            <DataTable :rows="detail.groupLegs" :columns="detailColumns" row-key="movementId" sticky-actions>
++              <template #body-cell-actions="{ row }"><q-td><q-btn flat round icon="open_in_new" :aria-label="`查看同組 Movement ${row.movementId}`" @click="openDetail(row)" /></q-td></template>
++            </DataTable>
+           </template>
+         </q-card-section>
+       </q-card>
+--- a/client/src/services/inventory.js
++++ b/client/src/services/inventory.js
+@@ -47,6 +47,15 @@
+   listExpiry(options) { return list("/api/v1/inventory/expiry", options); },
+   listMovements(options) { return list("/api/v1/inventory/movements", options); },
+   getMovement(id, { signal } = {}) { return httpClient.get(`/api/v1/inventory/movements/${id}`, { signal }); },
++  findOperationBySource(source, { signal } = {}) {
++    return httpClient.get("/api/v1/inventory/operations/by-source", {
++      params: { sourceModule: source.module, sourceDocumentType: source.documentType,
++        sourceDocumentId: source.documentId, sourceLineId: source.lineId, sourceEventId: source.eventId }, signal
++    });
++  },
++  postAdjustment(payload, { signal } = {}) { return write("/api/v1/inventory/adjustments", payload, { signed: true, ...(signal ? { signal } : {}) }); },
++  postStatusTransfer(payload, { signal } = {}) { return write("/api/v1/inventory/status-transfers", payload, { signed: true, ...(signal ? { signal } : {}) }); },
++  reverseMovement(id, payload, { signal } = {}) { return write(`/api/v1/inventory/movements/${id}/reverse`, payload, { signed: true, ...(signal ? { signal } : {}) }); },
+   postIssue(payload) { return write("/api/v1/inventory/issues", payload); },
+   listReservations(options) { return list("/api/v1/inventory/reservations", options); },
+   getReservation(id, { signal } = {}) { return httpClient.get(`/api/v1/inventory/reservations/${id}`, { signal }); },
+--- /dev/null
++++ b/client/test/pages/inventory/inventoryAdjustments.test.js
+@@ -0,0 +1,280 @@
++import { DOMWrapper, flushPromises, mount } from "@vue/test-utils";
++import { QInput, QSelect, Quasar } from "quasar";
++import { createPinia } from "pinia";
++import { createMemoryHistory, createRouter } from "vue-router";
++import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
++vi.mock("@/services/inventory.js", () => ({ default: {
++  lookupSku: vi.fn(), listWarehouses: vi.fn(), listBins: vi.fn(), listStocks: vi.fn(), getStock: vi.fn(),
++  listLots: vi.fn(), getStockSummary: vi.fn(), getMovement: vi.fn(), findOperationBySource: vi.fn(),
++  postAdjustment: vi.fn(), postStatusTransfer: vi.fn(), reverseMovement: vi.fn(), listMovements: vi.fn()
++} }));
++vi.mock("@/framework/ui/notify.js", () => ({ notifySuccess: vi.fn(), notifyError: vi.fn() }));
++import inventory from "@/services/inventory.js";
++import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
++import { useSessionStore } from "@/stores/session.js";
++const SKU = { skuId: 3, skuCode: "SKU-3", skuName: "Widget", trackingPolicy: "none", baseUom: { uomId: 5, uomCode: "EA" } };
++const BUCKET = { balanceId: 12, warehouse: { warehouseId: 1, code: "WH-A" }, bin: { binId: 2, code: "A-01" },
++  sku: { skuId: 3, code: "SKU-3", name: "Widget" }, lot: null, stockStatus: "AVAILABLE", onHand: 10, allocated: 2,
++  bucketFree: 8, baseUom: SKU.baseUom, version: 6 };
++const LOT = { lotId: 4, sku: BUCKET.sku, lotNumber: "LOT-4", expiryDate: "2027-09-27", manufactureDate: null, firstReceiptDate: "2026-01-01" };
++const wrappers = [];
++const component = name => import(`../../../src/components/inventory/${name}.vue`);
++const pageComponent = name => import(`../../../src/pages/inventory/${name}.vue`);
++const recordKey = "inventory-high-risk:v1:7";
++const recovery = { action: "IN", source: { module: "INVENTORY", documentType: "ADJUSTMENT", documentId: "11111111-1111-4111-8111-111111111111", lineId: "", eventId: "22222222-2222-4222-8222-222222222222" } };
++const draft = () => ({ action: "IN", body: { direction: "IN", warehouseId: 1, binId: 2, skuId: 3, stockStatus: "AVAILABLE", expectedBalanceVersion: 6,
++  quantity: 3, uomId: 5, reasonCategory: "DATA_CORRECTION", reasonText: "庫存資料校正" }, preview: { legs: [{ bucket: BUCKET, direction: "IN", quantity: 3, projected: 13 }], summaries: [], reasonText: "庫存資料校正" } });
++async function openPage(permissions = ["inventory.view", "inventory.adjust"]) {
++  const { default: Page, page } = await pageComponent("AdjustmentsPage");
++  const pinia = createPinia(), session = useSessionStore(pinia); session.user = { id: 7, roles: [], permissions };
++  const router = createRouter({ history: createMemoryHistory(), routes: [
++    { path: page.path, component: Page, meta: { title: page.title } }, { path: "/inventory/movements", component: { template: "<div />" } }
++  ] });
++  await router.push(page.path); await router.isReady();
++  const wrapper = mount(Page, { global: { plugins: [Quasar, router, pinia] }, attachTo: document.body });
++  wrappers.push(wrapper); await flushPromises();
++  return { wrapper, body: new DOMWrapper(document.body), session, router, page };
++}
++async function review(wrapper, value = draft()) {
++  const { default: Form } = await component("AdjustmentForm"); wrapper.findComponent(Form).vm.$emit("review", value); await flushPromises();
++}
++async function confirm(body, value = "unit-entry") {
++  await body.find('input[type="password"]').setValue(value);
++  await body.find('form[aria-labelledby="inventory-confirm-title"]').trigger("submit"); await flushPromises();
++}
++const input = (wrapper, label) => wrapper.findAllComponents(QInput).find(field => field.props("label") === label);
++const select = async (wrapper, label, value) => {
++  const field = wrapper.findAllComponents(QSelect).find(item => item.props("label") === label);
++  field.vm.$emit("update:modelValue", value); await flushPromises();
++};
++const button = (wrapper, label) => wrapper.findAll("button").find(item => item.text().includes(label));
++const prepare = async wrapper => { await wrapper.find("form").trigger("submit"); await flushPromises(); };
++async function form(action = "IN", movementId = null) {
++  const { default: Form } = await component("AdjustmentForm");
++  const wrapper = mount(Form, { props: { action, movementId }, global: { plugins: [Quasar] }, attachTo: document.body });
++  wrappers.push(wrapper); await flushPromises(); return wrapper;
++}
++async function choose(wrapper) {
++  await input(wrapper, "SKU Code").find("input").setValue("SKU-3");
++  await button(wrapper, "查找 SKU").trigger("click"); await flushPromises();
++  await select(wrapper, "倉庫", 1); await select(wrapper, "庫位", 2);
++  await input(wrapper, "數量（Base UOM）").find("input").setValue("3");
++  await input(wrapper, "原因說明").find("textarea").setValue("庫存資料校正");
++}
++describe("TASK033 high-risk form and confirmation", () => {
++  beforeEach(() => {
++    vi.resetAllMocks();
++    sessionStorage.clear();
++    inventory.findOperationBySource.mockResolvedValue(null);
++    inventory.postAdjustment.mockRejectedValue(Object.assign(new Error("未收到結果"), { code: "TIMEOUT" }));
++    inventory.lookupSku.mockResolvedValue(SKU);
++    inventory.listWarehouses.mockResolvedValue({ rows: [{ id: 1, code: "WH-A", status: "ACTIVE" }], rowsNumber: 1 });
++    inventory.listBins.mockResolvedValue({ rows: [{ id: 2, warehouseId: 1, code: "A-01", status: "ACTIVE" }], rowsNumber: 1 });
++    inventory.listLots.mockResolvedValue({ rows: [], rowsNumber: 0 });
++    inventory.listStocks.mockResolvedValue({ rows: [BUCKET], rowsNumber: 1 });
++    inventory.getStock.mockResolvedValue(BUCKET);
++    inventory.getStockSummary.mockResolvedValue({ reserved: 4, uncoveredReserved: 0, eligibleOnHand: 10, atp: 6 });
++  });
++  afterEach(() => { wrappers.splice(0).forEach(wrapper => wrapper.unmount()); document.body.innerHTML = ""; vi.restoreAllMocks(); });
++  it("UI033-SELECTORS supports exact-Code usable no-Balance SKU with explicit Base UOM and confirmed absence", async () => {
++    inventory.listStocks.mockResolvedValue({ rows: [], rowsNumber: 0 });
++    const wrapper = await form(); await choose(wrapper); await prepare(wrapper);
++    expect(inventory.lookupSku).toHaveBeenCalledWith("SKU-3", expect.any(Object));
++    expect(wrapper.text()).toContain("EA");
++    expect(wrapper.emitted("review")[0][0].body).toEqual({ direction: "IN", warehouseId: 1, binId: 2, skuId: 3,
++      stockStatus: "AVAILABLE", expectedBalanceVersion: null, quantity: 3, uomId: 5, reasonCategory: "DATA_CORRECTION", reasonText: "庫存資料校正" });
++  });
++  it("UI033-SELECTORS discards late SKU response after Code changed", async () => {
++    let finish; inventory.lookupSku.mockImplementation(() => new Promise(resolve => { finish = resolve; }));
++    const wrapper = await form(); await input(wrapper, "SKU Code").find("input").setValue("SKU-3");
++    await button(wrapper, "查找 SKU").trigger("click"); await flushPromises();
++    await input(wrapper, "SKU Code").find("input").setValue("OTHER"); finish(SKU); await flushPromises();
++    expect(wrapper.text()).not.toContain("Widget"); await prepare(wrapper); expect(wrapper.emitted("review")).toBeUndefined();
++  });
++  it("UI033-VALIDATION rejects nonpositive, fractional and unsafe Base quantities before review", async () => {
++    const wrapper = await form(); await choose(wrapper);
++    for (const value of ["0", "-1", "1.5", "9007199254740992"]) {
++      await input(wrapper, "數量（Base UOM）").find("input").setValue(value); await prepare(wrapper);
++      expect(wrapper.emitted("review")).toBeUndefined(); expect(wrapper.text()).toContain("安全正整數");
++      expect(input(wrapper, "數量（Base UOM）").props("error")).toBe(true);
++    }
++  });
++  it("UI033-VALIDATION applies trim, Unicode OTHER minimum, control rejection and UTF-8 byte limit", async () => {
++    const wrapper = await form(); await choose(wrapper); await select(wrapper, "原因分類", "OTHER");
++    for (const value of ["  ", "不足十字", "有控制\u0085字元原因文字", "字".repeat(167)]) {
++      await input(wrapper, "原因說明").find("textarea").setValue(value); await prepare(wrapper); expect(wrapper.emitted("review")).toBeUndefined();
++    }
++    await input(wrapper, "原因說明").find("textarea").setValue("  一二三四五六七八九十  "); await prepare(wrapper);
++    expect(wrapper.emitted("review")[0][0].body.reasonText).toBe("一二三四五六七八九十");
++  });
++  it("UI033-CURRENT-GUARDS refuses incomplete Reservation summary instead of showing guessed safeguards", async () => {
++    inventory.getStockSummary.mockResolvedValue({ reserved: 4 });
++    const wrapper = await form(); await choose(wrapper); await prepare(wrapper);
++    expect(wrapper.emitted("review")).toBeUndefined(); expect(wrapper.text()).toContain("保障摘要不完整");
++  });
++  it("UI033-VALIDATION rejects invalid calendar dates for a new expiring Lot", async () => {
++    inventory.lookupSku.mockResolvedValue({ ...SKU, trackingPolicy: "batch_expiry" });
++    const wrapper = await form(); await choose(wrapper); await select(wrapper, "批次模式", "NEW");
++    await input(wrapper, "批次編號").find("input").setValue("NEW-LOT");
++    await input(wrapper, "效期").find("input").setValue("2027-02-30"); await prepare(wrapper);
++    expect(wrapper.emitted("review")).toBeUndefined(); expect(wrapper.text()).toContain("日期");
++  });
++  it("UI033-IN-LOT preserves existing immutable Lot dates and current Balance version", async () => {
++    inventory.lookupSku.mockResolvedValue({ ...SKU, trackingPolicy: "batch_expiry" });
++    inventory.listLots.mockResolvedValue({ rows: [LOT], rowsNumber: 1 });
++    inventory.listStocks.mockResolvedValue({ rows: [{ ...BUCKET, lot: { lotId: 4, number: "LOT-4" } }], rowsNumber: 1 });
++    const wrapper = await form(); await choose(wrapper); await select(wrapper, "既有批次", 4); await prepare(wrapper);
++    expect(wrapper.text()).toContain("2026-01-01");
++    expect(wrapper.emitted("review")[0][0].body).toMatchObject({ lotNumber: "LOT-4", expiryDate: "2027-09-27", expectedBalanceVersion: 6 });
++    expect(wrapper.emitted("review")[0][0].body).not.toHaveProperty("manufactureDate");
++  });
++  it("UI033-CURRENT-GUARDS reads all target pages and distinguishes null Lot from a tracked Lot", async () => {
++    inventory.listStocks.mockResolvedValueOnce({ rows: [{ ...BUCKET, balanceId: 13, lot: { lotId: 4, number: "LOT-4" } }], rowsNumber: 2 })
++      .mockResolvedValueOnce({ rows: [BUCKET], rowsNumber: 2 });
++    const wrapper = await form(); await choose(wrapper); await prepare(wrapper);
++    expect(inventory.listStocks.mock.calls.map(([request]) => request.page)).toEqual([1, 2]);
++    expect(wrapper.emitted("review")[0][0].body.expectedBalanceVersion).toBe(6);
++  });
++  it("UI033-CURRENT-GUARDS refuses failed, partial and duplicate target reads rather than inferring absence", async () => {
++    const wrapper = await form(); await choose(wrapper);
++    inventory.listStocks.mockRejectedValueOnce(new Error("查詢中斷")); await prepare(wrapper);
++    expect(wrapper.emitted("review")).toBeUndefined();
++    inventory.listStocks.mockResolvedValueOnce({ rows: [], rowsNumber: 1 }); await prepare(wrapper);
++    expect(wrapper.emitted("review")).toBeUndefined();
++    inventory.listStocks.mockResolvedValueOnce({ rows: [BUCKET, BUCKET], rowsNumber: 2 }); await prepare(wrapper);
++    expect(wrapper.emitted("review")).toBeUndefined();
++  });
++  it("UI033-CURRENT-GUARDS binds OUT to freshly read source identity/version, not its list snapshot", async () => {
++    const wrapper = await form("OUT"); await choose(wrapper); await button(wrapper, "載入來源庫存").trigger("click"); await flushPromises();
++    await select(wrapper, "來源庫存 bucket", 12); inventory.getStock.mockResolvedValue({ ...BUCKET, version: 9 }); await prepare(wrapper);
++    expect(wrapper.emitted("review")[0][0].body).toEqual({ direction: "OUT", balanceId: 12, expectedBalanceVersion: 9,
++      quantity: 3, uomId: 5, reasonCategory: "DATA_CORRECTION", reasonText: "庫存資料校正" });
++  });
++  it("UI033-IN-LOT prepares paired Status effects using current source and confirmed absent destination", async () => {
++    const wrapper = await form("STATUS_TRANSFER"); await choose(wrapper); await button(wrapper, "載入來源庫存").trigger("click"); await flushPromises();
++    await select(wrapper, "來源庫存 bucket", 12); await select(wrapper, "目標狀態", "QUARANTINED");
++    inventory.listStocks.mockResolvedValue({ rows: [], rowsNumber: 0 }); await prepare(wrapper);
++    expect(wrapper.emitted("review")[0][0].body).toEqual({ sourceBalanceId: 12, destinationStatus: "QUARANTINED",
++      expectedSourceVersion: 6, expectedDestinationVersion: null, quantity: 3, uomId: 5, reasonText: "庫存資料校正" });
++    expect(wrapper.emitted("review")[0][0].preview.legs).toHaveLength(2);
++  });
++  it("UI033-RECONCILE derives complete unique current Reversal guards instead of historical versions", async () => {
++    const leg = { movementId: 21, groupId: "group", operationId: 31, movementType: "RECEIPT", locationKind: "BIN", ...BUCKET,
++      quantity: 2, direction: "IN", balanceVersionAfter: 2 };
++    inventory.getMovement.mockResolvedValue({ movement: leg, groupLegs: [leg], reversal: { reversalOfMovementId: null, reversedByMovementId: null } });
++    const wrapper = await form("REVERSAL", 21);
++    await input(wrapper, "原因說明").find("textarea").setValue("錯誤入庫沖銷"); await prepare(wrapper);
++    expect(wrapper.emitted("review")[0][0].body).toEqual({ expectedBalances: [{ balanceId: 12, expectedVersion: 6 }], reasonText: "錯誤入庫沖銷" });
++    expect(wrapper.emitted("review")[0][0].preview.legs[0].direction).toBe("OUT");
++  });
++  it("UI033-CURRENT-GUARDS rejects a Lot response owned by another SKU", async () => {
++    inventory.lookupSku.mockResolvedValue({ ...SKU, trackingPolicy: "batch_expiry" });
++    inventory.listLots.mockResolvedValue({ rows: [LOT], rowsNumber: 1 });
++    const wrapper = await form(); await choose(wrapper); await select(wrapper, "既有批次", 4);
++    inventory.listLots.mockResolvedValue({ rows: [{ ...LOT, sku: { ...BUCKET.sku, skuId: 99 } }], rowsNumber: 1 }); await prepare(wrapper);
++    expect(wrapper.emitted("review")).toBeUndefined(); expect(wrapper.text()).toContain("批次與 SKU 不一致");
++  });
++  it("UI033-RECONCILE rejects duplicate original Movement legs instead of previewing duplicated effects", async () => {
++    const leg = { movementId: 21, groupId: "group", operationId: 31, movementType: "RECEIPT", locationKind: "BIN", ...BUCKET, quantity: 2, direction: "IN" };
++    inventory.getMovement.mockResolvedValue({ movement: leg, groupLegs: [leg, leg], reversal: {} });
++    const wrapper = await form("REVERSAL", 21); await input(wrapper, "原因說明").find("textarea").setValue("整組資料核對沖銷"); await prepare(wrapper);
++    expect(wrapper.emitted("review")).toBeUndefined(); expect(wrapper.text()).toContain("異動組不完整");
++  });
++  it("UI033-CONFIRM-SECRETS clears native password immediately, never emits it, and clears cancel/hide/disable", async () => {
++    const { default: Dialog } = await component("InventoryHighRiskDialog");
++    const execute = vi.fn().mockResolvedValue(undefined);
++    const wrapper = mount(Dialog, { props: { modelValue: true, execute }, global: { plugins: [Quasar] }, attachTo: document.body });
++    wrappers.push(wrapper); await flushPromises(); const body = new DOMWrapper(document.body);
++    const password = body.find('input[type="password"]'); await password.setValue("one-use-entry");
++    await body.find("form").trigger("submit"); await flushPromises();
++    expect(execute).toHaveBeenCalledWith("one-use-entry"); expect(password.element.value).toBe("");
++    expect(wrapper.vm.password).toBeUndefined(); expect(JSON.stringify(wrapper.emitted())).not.toContain("one-use-entry");
++    await password.setValue("cancel-entry"); await button(body, "取消").trigger("click"); expect(password.element.value).toBe("");
++    await password.setValue("disabled-entry"); await wrapper.setProps({ disabled: true }); expect(password.element.value).toBe("");
++  });
++  it("UI033-AUTH requires view+adjust on the page and hides its form for read-only actors", async () => {
++    const { wrapper, page } = await openPage(["inventory.view", "inventory.operation", "inventory.fefo.override"]);
++    expect(page.requires.permissions).toEqual(["inventory.view", "inventory.adjust"]);
++    expect(wrapper.find('form[aria-label="高風險庫存操作表單"]').exists()).toBe(false);
++    expect(wrapper.text()).toContain("需要 inventory.view 及 inventory.adjust");
++  });
++  it("UI033-SIGNED-INTENT freezes original input and persists only actor source identity before POST", async () => {
++    const { wrapper, body } = await openPage(); const value = draft(); await review(wrapper, value); value.body.quantity = 99;
++    await confirm(body);
++    const payload = inventory.postAdjustment.mock.calls[0][0], stored = JSON.parse(sessionStorage.getItem(recordKey));
++    expect(payload.quantity).toBe(3); expect(payload.idempotencyKey).toMatch(/^[0-9a-f-]{36}$/u);
++    expect(payload.source.documentId).not.toBe(payload.source.eventId);
++    expect(Object.keys(stored).sort()).toEqual(["action", "source"]);
++    for (const field of ["password", "idempotencyKey", "quantity", "reasonText", "expectedBalanceVersion"]) expect(stored).not.toHaveProperty(field);
++    expect(inventory.postAdjustment).toHaveBeenCalledTimes(1); expect(wrapper.text()).toContain("結果未知");
++    expect(body.find('input[type="password"]').exists()).toBe(false);
++  });
++  it("UI033-UNKNOWN-QUERY keeps null unresolved and never automatically creates or resends another intent", async () => {
++    const { wrapper, body } = await openPage(); await review(wrapper); await confirm(body);
++    const first = JSON.parse(sessionStorage.getItem(recordKey));
++    await button(wrapper, "查詢原結果").trigger("click"); await flushPromises();
++    expect(wrapper.text()).toContain("結果未知"); expect(inventory.postAdjustment).toHaveBeenCalledTimes(1);
++    expect(inventory.findOperationBySource).toHaveBeenLastCalledWith(first.source, expect.any(Object));
++    expect(JSON.parse(sessionStorage.getItem(recordKey))).toEqual(first);
++  });
++  it("UI033-RETRY requires explicit retry and fresh entry with unchanged original business/source/key", async () => {
++    const { wrapper, body } = await openPage(); await review(wrapper); await confirm(body, "first-entry");
++    await button(wrapper, "重試原意圖").trigger("click"); await flushPromises(); expect(inventory.postAdjustment).toHaveBeenCalledTimes(1);
++    await confirm(body, "fresh-entry");
++    const [first, second] = inventory.postAdjustment.mock.calls.map(([payload]) => payload);
++    expect(second).toEqual({ ...first, password: "fresh-entry" }); expect(first.password).toBe("first-entry");
++    expect(inventory.findOperationBySource.mock.calls.length).toBeGreaterThanOrEqual(3);
++  });
++  it("UI033-REFRESH restores only query recovery, with no rebuilt payload or retry/new operation", async () => {
++    sessionStorage.setItem(recordKey, JSON.stringify(recovery)); const { wrapper } = await openPage();
++    expect(wrapper.text()).toContain("重新載入後只可查詢");
++    expect(button(wrapper, "重試原意圖")).toBeUndefined();
++    expect(wrapper.find('form[aria-label="高風險庫存操作表單"]').exists()).toBe(false);
++    expect(inventory.postAdjustment).not.toHaveBeenCalled(); expect(inventory.findOperationBySource).toHaveBeenCalledWith(recovery.source, expect.any(Object));
++  });
++  it("UI033-REFRESH isolates actors and clears pending confirmation without deleting another actor's reference", async () => {
++    const { wrapper, body, session } = await openPage(); await review(wrapper); await confirm(body);
++    const stored = sessionStorage.getItem(recordKey); session.user = { id: 8, roles: [], permissions: ["inventory.view", "inventory.adjust"] }; await flushPromises();
++    expect(wrapper.text()).not.toContain(JSON.parse(stored).source.documentId);
++    expect(sessionStorage.getItem(recordKey)).toBe(stored); expect(body.find('input[type="password"]').exists()).toBe(false);
++  });
++  it("UI033-REFRESH blocks POST when minimal recovery identity cannot be saved", async () => {
++    const { wrapper, body } = await openPage(); await review(wrapper);
++    const blocked = vi.spyOn(Object.getPrototypeOf(sessionStorage), "setItem").mockImplementation(() => { throw new Error("quota"); }); await confirm(body);
++    expect(blocked).toHaveBeenCalledOnce();
++    expect(inventory.postAdjustment).not.toHaveBeenCalled(); expect(wrapper.text()).toContain("無法保存復原識別");
++  });
++  it("UI033-RETRY preserves earlier UNKNOWN even when a later retry is definitively rejected", async () => {
++    const { wrapper, body } = await openPage(); await review(wrapper); await confirm(body);
++    inventory.postAdjustment.mockRejectedValue(Object.assign(new Error("版本已變更"), { code: "VERSION_CONFLICT", status: 409 }));
++    await button(wrapper, "重試原意圖").trigger("click"); await flushPromises(); await confirm(body, "fresh-entry");
++    expect(wrapper.text()).toContain("結果未知"); expect(sessionStorage.getItem(recordKey)).not.toBeNull();
++    expect(button(wrapper, "核對結果並重新準備")).toBeUndefined();
++  });
++  it("UI033-RECONCILE resolves only exact source/operation/group and reloads actual facts", async () => {
++    const { wrapper, body } = await openPage(); await review(wrapper); await confirm(body);
++    const stored = JSON.parse(sessionStorage.getItem(recordKey));
++    inventory.findOperationBySource.mockResolvedValue({ operationId: 31, resultType: "MOVEMENT_GROUP", resultId: "posted-group", resultSummary: { status: "POSTED", baseQuantity: 3, lineCount: 1 }, completedAt: 10 });
++    const matched = { movementId: 22, operationId: 31, groupId: "posted-group", source: stored.source, ...BUCKET };
++    inventory.listMovements.mockResolvedValue({ rows: [{ ...matched, movementId: 21, source: { ...stored.source, eventId: "other" } }, matched], rowsNumber: 2 });
++    inventory.getMovement.mockResolvedValue({ movement: matched, groupLegs: [matched], reversal: {} });
++    await button(wrapper, "查詢原結果").trigger("click"); await flushPromises();
++    expect(wrapper.text()).toContain("已確認過帳"); expect(wrapper.find('[aria-label="查看已過帳 Movement 22"]').exists()).toBe(true);
++    expect(wrapper.find('[aria-label="查看已過帳 Movement 21"]').exists()).toBe(false);
++    expect(inventory.listStocks).toHaveBeenCalled(); expect(sessionStorage.getItem(recordKey)).toBeNull();
++    expect(inventory.postAdjustment).toHaveBeenCalledTimes(1);
++  });
++  it("UI033-UNKNOWN-QUERY reports only resolved truth when a lost response is immediately reconciled", async () => {
++    const { wrapper, body } = await openPage(); await review(wrapper);
++    inventory.findOperationBySource.mockImplementation(async source => {
++      const matched = { ...BUCKET, movementId: 22, operationId: 31, groupId: "posted-group", source };
++      inventory.listMovements.mockResolvedValue({ rows: [matched], rowsNumber: 1 });
++      inventory.getMovement.mockResolvedValue({ movement: matched, groupLegs: [matched], reversal: {} });
++      return { operationId: 31, resultType: "MOVEMENT_GROUP", resultId: "posted-group", resultSummary: {}, completedAt: 10 };
++    });
++    await confirm(body);
++    expect(wrapper.text()).toContain("已確認過帳"); expect(sessionStorage.getItem(recordKey)).toBeNull();
++    expect(inventory.postAdjustment).toHaveBeenCalledTimes(1);
++    expect(notifySuccess).toHaveBeenCalledTimes(1); expect(notifyError).not.toHaveBeenCalled();
++  });
++});
+--- a/client/test/pages/inventory/inventoryInquiries.test.js
++++ b/client/test/pages/inventory/inventoryInquiries.test.js
+@@ -1,4 +1,5 @@
+ import { DOMWrapper, flushPromises, mount } from "@vue/test-utils";
++import { createPinia } from "pinia";
+ import { Quasar } from "quasar";
+ import { createMemoryHistory, createRouter } from "vue-router";
+ import { beforeEach, describe, expect, it, vi } from "vitest";
+@@ -51,7 +52,7 @@
+   });
+   await router.push(`${definition.path}${query}`);
+   await router.isReady();
+-  const wrapper = mount(component, { global: { plugins: [Quasar, router] }, attachTo: document.body });
++  const wrapper = mount(component, { global: { plugins: [Quasar, router, createPinia()] }, attachTo: document.body });
+   await flushPromises();
+   return { wrapper, router, body: new DOMWrapper(document.body) };
+ }
+--- /dev/null
++++ b/client/test/pages/inventory/inventoryMovements.test.js
+@@ -0,0 +1,107 @@
++import { DOMWrapper, flushPromises, mount } from "@vue/test-utils";
++import { createPinia } from "pinia";
++import { Quasar } from "quasar";
++import { createMemoryHistory, createRouter } from "vue-router";
++import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
++vi.mock("@/services/inventory.js", () => ({ default: { listMovements: vi.fn(), getMovement: vi.fn() } }));
++import inventory from "@/services/inventory.js";
++import MovementsPage, { page } from "@/pages/inventory/MovementsPage.vue";
++import { useSessionStore } from "@/stores/session.js";
++const movement = (id = 21, type = "RECEIPT") => ({
++  movementId: id, groupId: "group-1", operationId: 31, movementType: type, locationKind: "BIN",
++  warehouse: { warehouseId: 1, code: "WH-A" }, bin: { binId: 2, code: "A-01" },
++  sku: { skuId: 3, code: "SKU-3", name: "Widget" }, lot: null, stockStatus: "AVAILABLE",
++  direction: "IN", quantity: 8, balanceBefore: 2, balanceAfter: 10, balanceVersionAfter: 5,
++  postedAt: 1_700_000_000_000, postedBy: { userId: 7, label: "Sam" },
++  source: { module: "RECEIVING", documentType: "GOODS_RECEIPT", documentId: `GR-${id}`, lineId: "1", eventId: "posted-1" }
++});
++const detail = (id = 21, type = "RECEIPT", reversal = {}) => ({ movement: movement(id, type),
++  groupLegs: [movement(21, type), { ...movement(22, type), direction: "OUT" }],
++  reversal: { reversalOfMovementId: null, reversedByMovementId: null, ...reversal } });
++const wrappers = [];
++async function open(permissions = ["inventory.view", "inventory.adjust"], query = "") {
++  const pinia = createPinia(), session = useSessionStore(pinia);
++  session.user = { id: 7, permissions, roles: [] };
++  const router = createRouter({ history: createMemoryHistory(), routes: [
++    { path: page.path, component: MovementsPage, meta: { title: page.title } },
++    ...["stocks", "lots", "adjustments"].map(name => ({ path: `/inventory/${name}`, component: { template: "<div />" } }))
++  ] });
++  await router.push(page.path + query); await router.isReady();
++  const wrapper = mount(MovementsPage, { global: { plugins: [Quasar, router, pinia] }, attachTo: document.body });
++  wrappers.push(wrapper); await flushPromises();
++  return { wrapper, body: new DOMWrapper(document.body), session, router };
++}
++const click = async (body, id = 21) => { await body.find(`button[aria-label="查看 Movement ${id}"]`).trigger("click"); await flushPromises(); };
++describe("TASK033 Movement high-risk entry", () => {
++  beforeEach(() => {
++    vi.resetAllMocks();
++    inventory.listMovements.mockResolvedValue({ rows: [movement(21), movement(22)], rowsNumber: 2 });
++    inventory.getMovement.mockImplementation(async id => detail(id));
++  });
++  afterEach(() => { wrappers.splice(0).forEach(wrapper => wrapper.unmount()); document.body.innerHTML = ""; });
++  it("UI033-AUTH keeps history view-only and hides write actions for read-only and operation/FEFO actors", async () => {
++    expect(page.requires).toEqual({ permissions: ["inventory.view"] });
++    const { wrapper, body } = await open(["inventory.view", "inventory.operation", "inventory.fefo.override"]);
++    await click(body);
++    expect(wrapper.text()).toContain("GR-21");
++    expect(wrapper.find('[aria-label="整組沖銷 Movement 21"]').exists()).toBe(false);
++    expect(wrapper.find('[aria-label="庫存調整"]').exists()).toBe(false);
++  });
++  it("UI033-AUTH exposes exact local entry only with view+adjust and removes it on permission loss", async () => {
++    const { wrapper, body, session } = await open(); await click(body);
++    expect(wrapper.find('[aria-label="庫存調整"]').attributes("href")).toBe("/inventory/adjustments?action=IN");
++    expect(wrapper.find('[aria-label="整組沖銷 Movement 21"]').attributes("href")).toBe("/inventory/adjustments?action=REVERSAL&movementId=21");
++    session.user.permissions = ["inventory.adjust"]; await flushPromises();
++    expect(wrapper.find('[aria-label="整組沖銷 Movement 21"]').exists()).toBe(false);
++  });
++  it("UI033-RECONCILE shows the full original group and bidirectional reversal links without write entry on reversed legs", async () => {
++    inventory.getMovement.mockResolvedValue(detail(21, "RECEIPT", { reversedByMovementId: 25 }));
++    const { wrapper, body } = await open(); await click(body);
++    expect(wrapper.text()).toContain("沖銷 Movement 25");
++    expect(wrapper.text()).toContain("同組 Movement legs");
++    expect(wrapper.find('[aria-label="整組沖銷 Movement 21"]').exists()).toBe(false);
++    expect(wrapper.find('[aria-label="查看同組 Movement 22"]').exists()).toBe(true);
++  });
++  it("UI033-RECONCILE allows only whole BIN groups of the five reversible types", async () => {
++    const { wrapper, body } = await open();
++    for (const type of ["RECEIPT", "ISSUE", "BIN_MOVE", "STATUS_TRANSFER", "ADJUSTMENT"]) {
++      inventory.getMovement.mockResolvedValue(detail(21, type)); await click(body);
++      expect(wrapper.find('[aria-label="整組沖銷 Movement 21"]').exists()).toBe(true);
++    }
++    for (const type of ["TRANSFER_DISPATCH", "TRANSFER_RECEIVE", "STOCKTAKE", "OPENING", "REVERSAL"]) {
++      inventory.getMovement.mockResolvedValue(detail(21, type)); await click(body);
++      expect(wrapper.find('[aria-label="整組沖銷 Movement 21"]').exists()).toBe(false);
++      expect(wrapper.text()).toContain("此異動組不提供沖銷入口");
++    }
++    const mixed = detail(); mixed.groupLegs[1].locationKind = "IN_TRANSIT";
++    inventory.getMovement.mockResolvedValue(mixed); await click(body);
++    expect(wrapper.find('[aria-label="整組沖銷 Movement 21"]').exists()).toBe(false);
++  });
++  it("UI033-UI-REGRESSION ignores late detail success after a newer selection", async () => {
++    let finish;
++    inventory.getMovement.mockImplementationOnce(() => new Promise(resolve => { finish = resolve; })).mockResolvedValueOnce(detail(22));
++    const { wrapper, body } = await open(); await click(body, 21); await click(body, 22);
++    finish(detail(21)); await flushPromises();
++    const selected = wrapper.find('section[aria-labelledby="movement-detail-heading"]');
++    expect(selected.text()).toContain("GR-22"); expect(selected.text()).not.toContain("GR-21 / 行");
++    expect(wrapper.find('[aria-label="整組沖銷 Movement 22"]').exists()).toBe(true);
++  });
++  it("UI033-UI-REGRESSION ignores late detail failure after newer success and rejects wrong server identity", async () => {
++    let reject;
++    inventory.getMovement.mockImplementationOnce(() => new Promise((resolve, fail) => { reject = fail; })).mockResolvedValueOnce(detail(22));
++    const { wrapper, body } = await open(); await click(body, 21); await click(body, 22);
++    reject(new Error("old response")); await flushPromises();
++    expect(wrapper.text()).not.toContain("old response");
++    inventory.getMovement.mockResolvedValue(detail(22)); await click(body, 21);
++    expect(wrapper.text()).toContain("異動詳情與選取項目不一致");
++    expect(wrapper.find('[aria-label="整組沖銷 Movement 21"]').exists()).toBe(false);
++  });
++  it("UI033-UI-REGRESSION closes a pending detail without letting it reopen or show stale errors", async () => {
++    let finish;
++    inventory.getMovement.mockImplementation(() => new Promise(resolve => { finish = resolve; }));
++    const { wrapper, body } = await open(); await click(body);
++    await body.find('button[aria-label="關閉 Movement 詳情"]').trigger("click");
++    finish(detail()); await flushPromises();
++    expect(wrapper.find("#movement-detail-heading").exists()).toBe(false);
++  });
++});
+--- a/client/test/services/inventory.test.js
++++ b/client/test/services/inventory.test.js
+@@ -9,7 +9,66 @@
+ import inventoryService, { service } from "@/services/inventory.js";
+ 
+ describe("inventory service", () => {
+-  beforeEach(() => vi.clearAllMocks());
++  beforeEach(() => vi.resetAllMocks());
++
++  it("UI033-SIGNED-INTENT signs all three high-risk routes with explicit keys and strict business bodies", async () => {
++    const source = { module: "INVENTORY", documentType: "ADJUSTMENT", documentId: "doc", lineId: "", eventId: "event" };
++    const payload = { source, quantity: 3, reasonText: "盤點差異", password: "one-use", idempotencyKey: "fixed-key" };
++    await inventoryService.postAdjustment(payload);
++    await inventoryService.postStatusTransfer(payload);
++    await inventoryService.reverseMovement(7, payload);
++    expect(httpClient.post.mock.calls).toEqual([
++      ["/api/v1/inventory/adjustments", { idempotent: true, idempotencyKey: "fixed-key", signed: true, body: { source, quantity: 3, reasonText: "盤點差異", password: "one-use" } }],
++      ["/api/v1/inventory/status-transfers", { idempotent: true, idempotencyKey: "fixed-key", signed: true, body: { source, quantity: 3, reasonText: "盤點差異", password: "one-use" } }],
++      ["/api/v1/inventory/movements/7/reverse", { idempotent: true, idempotencyKey: "fixed-key", signed: true, body: { source, quantity: 3, reasonText: "盤點差異", password: "one-use" } }]
++    ]);
++    expect(payload.idempotencyKey).toBe("fixed-key");
++  });
++
++  it("UI033-UNKNOWN-QUERY reads the full exact source and preserves null as unresolved", async () => {
++    const source = { module: "INVENTORY", documentType: "REVERSAL", documentId: "doc", lineId: "", eventId: "event" };
++    httpClient.get.mockResolvedValue(null);
++    await expect(inventoryService.findOperationBySource(source, { signal: "query-signal" })).resolves.toBeNull();
++    expect(httpClient.get).toHaveBeenCalledWith("/api/v1/inventory/operations/by-source", {
++      params: { sourceModule: source.module, sourceDocumentType: source.documentType,
++        sourceDocumentId: source.documentId, sourceLineId: source.lineId, sourceEventId: source.eventId }, signal: "query-signal"
++    });
++    expect(httpClient.post).not.toHaveBeenCalled();
++  });
++
++  it("UI033-AUTH forwards cancellation for all high-risk attempts without changing signed bodies", async () => {
++    const signal = new AbortController().signal;
++    const payload = { quantity: 1, password: "transient", idempotencyKey: "original" };
++    await inventoryService.postAdjustment(payload, { signal });
++    await inventoryService.postStatusTransfer(payload, { signal });
++    await inventoryService.reverseMovement(7, payload, { signal });
++    for (const [, options] of httpClient.post.mock.calls) {
++      expect(options.signal).toBe(signal);
++      expect(options.signed).toBe(true);
++      expect(options.idempotencyKey).toBe("original");
++      expect(options.body).toEqual({ quantity: 1, password: "transient" });
++    }
++  });
++
++  it("UI033-RETRY only sends caller-explicit attempts without changing original guards, source or key", async () => {
++    const conflict = Object.assign(new Error("stale"), { code: "VERSION_CONFLICT" });
++    const source = { module: "INVENTORY", documentType: "REVERSAL", documentId: "doc", lineId: "", eventId: "event" };
++    const payload = { source, expectedBalances: [{ balanceId: 2, expectedVersion: 4 }], reasonText: "錯誤沖銷", idempotencyKey: "fixed" };
++    httpClient.post.mockRejectedValueOnce(conflict).mockResolvedValueOnce({ operationId: 10 });
++    await expect(inventoryService.reverseMovement(7, { ...payload, password: "first-entry" })).rejects.toBe(conflict);
++    expect(httpClient.post).toHaveBeenCalledTimes(1);
++    await inventoryService.reverseMovement(7, { ...payload, password: "fresh-entry" });
++    expect(httpClient.post.mock.calls.map(([, options]) => options.idempotencyKey)).toEqual(["fixed", "fixed"]);
++    expect(httpClient.post.mock.calls.map(([, options]) => options.body.expectedBalances)).toEqual([payload.expectedBalances, payload.expectedBalances]);
++    expect(payload).not.toHaveProperty("password");
++  });
++
++  it("UI033-RECONCILE returns original flattened operation results without guessing POST result shape", async () => {
++    const original = { operationId: 10, resultType: "MOVEMENT_GROUP", resultId: "group-21", resultSummary: { quantity: 3, baseUomId: 1, lineCount: 2 }, completedAt: 10 };
++    httpClient.get.mockResolvedValue(original);
++    await expect(inventoryService.findOperationBySource({ module: "INVENTORY", documentType: "STATUS_TRANSFER", documentId: "doc", lineId: "", eventId: "event" })).resolves.toBe(original);
++    expect(httpClient.post).not.toHaveBeenCalled();
++  });
+ 
+   it("reads exact Code and Transfer filters without sending an unsupported q parameter", async () => {
+     httpClient.get.mockResolvedValueOnce({ skuId: 12 }).mockResolvedValueOnce({ items: [{ id: 7 }], total: 1 }).mockResolvedValueOnce({ id: 7 });

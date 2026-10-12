@@ -1,0 +1,70 @@
+{
+  "schema_version": "2.0",
+  "module_id": "inventory-management",
+  "run_id": "20261012T005454-002d28c13da3",
+  "suite_id": "inventory-p3-browser",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "c145c025eae94a1570d1bd05a872da53335b931f9ea0f695595d02ddef258908",
+  "source_fingerprint": "3cdc51c462840f24f5a221218a928e795600de865f35042f2a087622cee9679e",
+  "code_commit": "f51175e7b62623e50429232cf0aaf580a49461d9",
+  "started_at": "2026-10-12T00:54:55.196999Z",
+  "ended_at": "2026-10-12T00:56:17.502965Z",
+  "environment_id": "inventory-isolated-test",
+  "runtime_instance_id": "erp-inventory-p3-hd140-q3ss_zm7",
+  "data_reference": "Synthetic Inventory fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "npx",
+    "--no-install",
+    "playwright",
+    "test",
+    "--config",
+    "client/e2e/inventory-management/playwright.config.js",
+    "inventory-warehouse-operations.spec.js",
+    "inventory-high-risk.spec.js"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "66e4f615e4482daf0cf352df2c00248d01ee7d85e2147a8cc2729f84eea9d1f0",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 16,
+    "passed": 16,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/20261012T005454-002d28c13da3/stdout.log",
+      "sha256": "bf42bdabaafa90b2aae14cf636c4febd59b6b9a4b62673be297308e1b73a004d",
+      "bytes": 3127
+    },
+    {
+      "path": "evidence/20261012T005454-002d28c13da3/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/20261012T005454-002d28c13da3/inventory-p3-browser.xml",
+      "sha256": "8f8da07d2472c6f0bd538856f30cb3d15f1cb8465c64f56a698860603a7f26da",
+      "bytes": 3378
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "Local observation only; external services/config/data and secret redaction completeness require review."
+  ]
+}

@@ -1,0 +1,12 @@
+--- a/docs/inventory_management/00_project_profile.json
++++ b/docs/inventory_management/00_project_profile.json
+@@ -931,7 +931,8 @@
+         "SUPPLIER_BANK_ACTIVE_KEY_ID",
+         "SUPPLIER_BANK_ENCRYPTION_KEYS",
+         "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+-        "SUPPLIER_BANK_LOOKUP_KEYS"
++        "SUPPLIER_BANK_LOOKUP_KEYS",
++        "CLIENT_URL"
+       ],
+       "redaction_env_keys": [
+         "DB_PASSWORD",

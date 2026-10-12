@@ -1,0 +1,69 @@
+{
+  "schema_version": "2.0",
+  "module_id": "inventory-management",
+  "run_id": "task032-functional-functional-regression-025-api-inventory-p2-api-abc23a097e",
+  "suite_id": "inventory-p2-api",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "237d98e617f0a0f4612934118be2d589652b4eb70968291ad511fec6bb758658",
+  "source_fingerprint": "ea5fed017f5eba2fcdfe2adf9bd74521deb6e95d863797892e5a0a9c15c03e43",
+  "code_commit": "869ac07abdd3879254c351d857be911d71e68b6b",
+  "started_at": "2026-10-08T02:48:35.320334+00:00",
+  "ended_at": "2026-10-08T02:48:35.823291+00:00",
+  "environment_id": "inventory-isolated-test",
+  "runtime_instance_id": "erp_inventory_task025_cea9fc8ed0a1",
+  "data_reference": "Synthetic Inventory fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "node",
+    "--test",
+    "--import",
+    "./server/test-support/testEnv.js",
+    "--test-reporter=junit",
+    "--test-reporter-destination=/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/task032-functional-functional-regression-025-api-inventory-p2-api-abc23a097e/inventory-p2-api.xml",
+    "server/test/integration/inventoryTask025Api.integration.test.js"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "c020a0c94e7b989652c2dab1bbfe7cfec433cbfcf8a59306bfdea139a1e58841",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 1,
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/task032-functional-functional-regression-025-api-inventory-p2-api-abc23a097e/stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/task032-functional-functional-regression-025-api-inventory-p2-api-abc23a097e/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/task032-functional-functional-regression-025-api-inventory-p2-api-abc23a097e/inventory-p2-api.xml",
+      "sha256": "17eb917321877891e16cf285e10d2c35cdc97f70223567c685dbba6d779da236",
+      "bytes": 725
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "mysql",
+        "--version"
+      ],
+      "output": "mysql  Ver 26.7.0 for macos15 on arm64 (MySQL Community Server - GPL)\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "DEVELOPER existing TASK032_FUNCTIONAL functional guard only; not full Phase/formal acceptance/CI. Supporting8 command snapshots are diagnostics only, not profile contracts."
+  ]
+}

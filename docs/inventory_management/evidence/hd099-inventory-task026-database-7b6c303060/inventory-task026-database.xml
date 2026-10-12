@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="Transfer migration creates complete typed schema, indexes and enforced constraints" time="0.176632" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransferMigrations.integration.test.js"/>
+	<testcase name="Transfer migration rerun preserves header, lines and schema" time="0.011271" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransferMigrations.integration.test.js"/>
+	<testcase name="Transfer header rejects same warehouse, invalid state/version, missing/duplicate operations" time="0.008911" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransferMigrations.integration.test.js"/>
+	<testcase name="Transfer lines enforce parent, bins and composite SKU/Lot ownership" time="0.002112" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransferMigrations.integration.test.js"/>
+	<testcase name="Transfer line quantity, whole in-transit amount, statuses and line uniqueness are constrained" time="0.002178" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransferMigrations.integration.test.js"/>
+	<testcase name="Transfer movement references are optional, restrictive and retry-safe after interrupted FK attachment" time="0.041600" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransferMigrations.integration.test.js"/>
+	<testcase name="Transfer migration fails closed on incompatible existing index, check and FK without further DDL" time="0.139387" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransferMigrations.integration.test.js"/>
+	<!-- tests 7 -->
+	<!-- suites 0 -->
+	<!-- pass 7 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 493.921084 -->
+</testsuites>

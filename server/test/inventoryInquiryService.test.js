@@ -17,6 +17,56 @@ function databaseWith(...results) {
 
 const time = { fileDate: () => "2026-09-28" };
 
+function transferRow(overrides = {}) {
+  return { id: "41", transfer_number: "TR-21", source_warehouse_id: "1", destination_warehouse_id: "2",
+    status: "DRAFT", version: "1", reason: "", created_at: "100", updated_at: "100", created_by: "7",
+    updated_by: "7", in_transit_quantity: "0", request_hash: "private", ...overrides };
+}
+
+test("TASK-027 Transfer list bounds filters/paging and excludes private columns", async () => {
+  const database = databaseWith([[{ total: "1" }]], [[transferRow()]]);
+  const result = await new InventoryInquiryService({ database, time }).listTransfers({
+    number: "TR_21%", sourceWarehouseId: 1, destinationWarehouseId: 2, status: "DRAFT",
+    createdFrom: 1790812800000, createdTo: 1790899200000, descending: true
+  });
+  assert.equal(result.items[0].number, "TR-21");
+  assert.equal(result.items[0].version, 1);
+  assert.equal(result.items[0].inTransitQuantity, 0);
+  assert.equal(Object.hasOwn(result.items[0], "request_hash"), false);
+  assert.ok(database.calls[0].params.includes("%TR!_21!%%"));
+  assert.match(database.calls[1].sql, /ORDER BY t\.updated_at DESC, t\.id DESC/u);
+  assert.deepEqual(database.calls[1].params.slice(-2), [20, 0]);
+});
+
+test("TASK-027 Transfer detail reads one transaction and scopes all children", async () => {
+  const database = databaseWith([[transferRow()]], [[{
+    id: "51", line_number: "1", sku_id: "12", lot_id: null, source_bin_id: "1", destination_bin_id: null,
+    dispatch_stock_status: "AVAILABLE", receive_stock_status: null, quantity: "5", in_transit_quantity: "0",
+    sku_code_snapshot: "SKU-12", lot_number_snapshot: "", expiry_date_snapshot: null, version: "1",
+    internal_cost: "private"
+  }]], [[]]);
+  let transactions = 0;
+  database.withTransaction = async (work) => { transactions += 1; return work(database); };
+  const result = await new InventoryInquiryService({ database, time }).getTransfer(41);
+  assert.equal(transactions, 1);
+  assert.equal(result.lines[0].quantity, 5);
+  assert.equal(result.lines[0].version, 1);
+  assert.equal(Object.hasOwn(result.lines[0], "internal_cost"), false);
+  assert.ok(database.calls.every((call) => call.params[0] === 41));
+  assert.match(database.calls[1].sql, /WHERE transfer_id = \?/u);
+  assert.match(database.calls[2].sql, /m\.transfer_id = \?/u);
+});
+
+test("TASK-027 Transfer query rejects unsafe filters, IDs, date ranges and sort injection", async () => {
+  const service = new InventoryInquiryService({ database: databaseWith(), time });
+  for (const input of [{ pageSize: 101 }, { page: 0 }, { status: "PARTIAL" }, { number: "x\ny" },
+    { sourceWarehouseId: -1 }, { createdFrom: -1 }, { createdFrom: 200, createdTo: 100 },
+    { sortBy: "id;DROP TABLE users" }, { descending: "true" }]) {
+    await assert.rejects(service.listTransfers(input), { code: "INVENTORY_INPUT_INVALID" });
+  }
+  await assert.rejects(service.getTransfer(-1), { code: "INVENTORY_INPUT_INVALID" });
+});
+
 function stockRow(overrides = {}) {
   return {
     id: "12", warehouse_id: "1", warehouse_code: "WH-A", warehouse_name: "Main",

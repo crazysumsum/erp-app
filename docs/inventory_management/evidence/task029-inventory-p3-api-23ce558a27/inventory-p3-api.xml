@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="DEV-029-API-01 Draft full replacement, filters and cancellation leave stock untouched" time="0.164309" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js"/>
+	<testcase name="DEV-029-API-02 whole Dispatch and Receive conserve stock with paired immutable legs" time="0.025497" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js"/>
+	<testcase name="DEV-029-API-03 missing, repeated, extra and partial Receive lines have zero business effects" time="0.035930" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js"/>
+	<testcase name="DEV-029-API-04 path-owned children, versions, same-name Bin ownership and InTransit immutability" time="0.009873" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js" failure="{&amp;quot;success&amp;quot;:false,&amp;quot;error&amp;quot;:{&amp;quot;code&amp;quot;:&amp;quot;Too Many Requests&amp;quot;,&amp;quot;message&amp;quot;:&amp;quot;Too Many Requests&amp;quot;},&amp;quot;meta&amp;quot;:{&amp;quot;requestId&amp;quot;:&amp;quot;ca19e972-915b-44f1-bdd9-4581dbce1f87&amp;quot;,&amp;quot;timestamp&amp;quot;:&amp;quot;2026-10-06T15:24:57.574+08:00&amp;quot;}}&#10;&#10;429 !== 404&#10;">
+		<failure type="testCodeFailure" message="{&amp;quot;success&amp;quot;:false,&amp;quot;error&amp;quot;:{&amp;quot;code&amp;quot;:&amp;quot;Too Many Requests&amp;quot;,&amp;quot;message&amp;quot;:&amp;quot;Too Many Requests&amp;quot;},&amp;quot;meta&amp;quot;:{&amp;quot;requestId&amp;quot;:&amp;quot;ca19e972-915b-44f1-bdd9-4581dbce1f87&amp;quot;,&amp;quot;timestamp&amp;quot;:&amp;quot;2026-10-06T15:24:57.574+08:00&amp;quot;}}&#10;&#10;429 !== 404">
+[Error [ERR_TEST_FAILURE]: {"success":false,"error":{"code":"Too Many Requests","message":"Too Many Requests"},"meta":{"requestId":"ca19e972-915b-44f1-bdd9-4581dbce1f87","timestamp":"2026-10-06T15:24:57.574+08:00"}}
+
+429 !== 404
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: {"success":false,"error":{"code":"Too Many Requests","message":"Too Many Requests"},"meta":{"requestId":"ca19e972-915b-44f1-bdd9-4581dbce1f87","timestamp":"2026-10-06T15:24:57.574+08:00"}}
+  
+  429 !== 404
+  
+      at rejected (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js:90:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js:147:3)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 429,
+    expected: 404,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="DEV-029-API-05 Quarantined receipt requires reason and preserves exact dimensions" time="0.000978" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js" failure="{&amp;quot;success&amp;quot;:false,&amp;quot;error&amp;quot;:{&amp;quot;code&amp;quot;:&amp;quot;Too Many Requests&amp;quot;,&amp;quot;message&amp;quot;:&amp;quot;Too Many Requests&amp;quot;},&amp;quot;meta&amp;quot;:{&amp;quot;requestId&amp;quot;:&amp;quot;df244161-2d06-46bb-9396-aa43936b05d3&amp;quot;,&amp;quot;timestamp&amp;quot;:&amp;quot;2026-10-06T15:24:57.576+08:00&amp;quot;}}&#10;&#10;429 !== 200&#10;">
+		<failure type="testCodeFailure" message="{&amp;quot;success&amp;quot;:false,&amp;quot;error&amp;quot;:{&amp;quot;code&amp;quot;:&amp;quot;Too Many Requests&amp;quot;,&amp;quot;message&amp;quot;:&amp;quot;Too Many Requests&amp;quot;},&amp;quot;meta&amp;quot;:{&amp;quot;requestId&amp;quot;:&amp;quot;df244161-2d06-46bb-9396-aa43936b05d3&amp;quot;,&amp;quot;timestamp&amp;quot;:&amp;quot;2026-10-06T15:24:57.576+08:00&amp;quot;}}&#10;&#10;429 !== 200">
+[Error [ERR_TEST_FAILURE]: {"success":false,"error":{"code":"Too Many Requests","message":"Too Many Requests"},"meta":{"requestId":"df244161-2d06-46bb-9396-aa43936b05d3","timestamp":"2026-10-06T15:24:57.576+08:00"}}
+
+429 !== 200
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: {"success":false,"error":{"code":"Too Many Requests","message":"Too Many Requests"},"meta":{"requestId":"df244161-2d06-46bb-9396-aa43936b05d3","timestamp":"2026-10-06T15:24:57.576+08:00"}}
+  
+  429 !== 200
+  
+      at success (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js:77:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js:158:19)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 429,
+    expected: 200,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="DEV-029-API-06 anonymous, read-only and freshly revoked JWT permissions cannot write or replay" time="0.000638" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js" failure="{&amp;quot;success&amp;quot;:false,&amp;quot;error&amp;quot;:{&amp;quot;code&amp;quot;:&amp;quot;Too Many Requests&amp;quot;,&amp;quot;message&amp;quot;:&amp;quot;Too Many Requests&amp;quot;},&amp;quot;meta&amp;quot;:{&amp;quot;requestId&amp;quot;:&amp;quot;13829de9-7e65-4747-ae2b-0ab7d73570af&amp;quot;,&amp;quot;timestamp&amp;quot;:&amp;quot;2026-10-06T15:24:57.577+08:00&amp;quot;}}&#10;&#10;429 !== 200&#10;">
+		<failure type="testCodeFailure" message="{&amp;quot;success&amp;quot;:false,&amp;quot;error&amp;quot;:{&amp;quot;code&amp;quot;:&amp;quot;Too Many Requests&amp;quot;,&amp;quot;message&amp;quot;:&amp;quot;Too Many Requests&amp;quot;},&amp;quot;meta&amp;quot;:{&amp;quot;requestId&amp;quot;:&amp;quot;13829de9-7e65-4747-ae2b-0ab7d73570af&amp;quot;,&amp;quot;timestamp&amp;quot;:&amp;quot;2026-10-06T15:24:57.577+08:00&amp;quot;}}&#10;&#10;429 !== 200">
+[Error [ERR_TEST_FAILURE]: {"success":false,"error":{"code":"Too Many Requests","message":"Too Many Requests"},"meta":{"requestId":"13829de9-7e65-4747-ae2b-0ab7d73570af","timestamp":"2026-10-06T15:24:57.577+08:00"}}
+
+429 !== 200
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: {"success":false,"error":{"code":"Too Many Requests","message":"Too Many Requests"},"meta":{"requestId":"13829de9-7e65-4747-ae2b-0ab7d73570af","timestamp":"2026-10-06T15:24:57.577+08:00"}}
+  
+  429 !== 200
+  
+      at success (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js:77:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js:170:39)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 429,
+    expected: 200,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="DEV-029-API-07 HTTP key and domain event replay retain original receipts after later state" time="0.000624" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js" failure="{&amp;quot;success&amp;quot;:false,&amp;quot;error&amp;quot;:{&amp;quot;code&amp;quot;:&amp;quot;Too Many Requests&amp;quot;,&amp;quot;message&amp;quot;:&amp;quot;Too Many Requests&amp;quot;},&amp;quot;meta&amp;quot;:{&amp;quot;requestId&amp;quot;:&amp;quot;38f13592-46fc-4d3b-a9a8-2fa82922ab3d&amp;quot;,&amp;quot;timestamp&amp;quot;:&amp;quot;2026-10-06T15:24:57.577+08:00&amp;quot;}}&#10;&#10;429 !== 200&#10;">
+		<failure type="testCodeFailure" message="{&amp;quot;success&amp;quot;:false,&amp;quot;error&amp;quot;:{&amp;quot;code&amp;quot;:&amp;quot;Too Many Requests&amp;quot;,&amp;quot;message&amp;quot;:&amp;quot;Too Many Requests&amp;quot;},&amp;quot;meta&amp;quot;:{&amp;quot;requestId&amp;quot;:&amp;quot;38f13592-46fc-4d3b-a9a8-2fa82922ab3d&amp;quot;,&amp;quot;timestamp&amp;quot;:&amp;quot;2026-10-06T15:24:57.577+08:00&amp;quot;}}&#10;&#10;429 !== 200">
+[Error [ERR_TEST_FAILURE]: {"success":false,"error":{"code":"Too Many Requests","message":"Too Many Requests"},"meta":{"requestId":"38f13592-46fc-4d3b-a9a8-2fa82922ab3d","timestamp":"2026-10-06T15:24:57.577+08:00"}}
+
+429 !== 200
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: {"success":false,"error":{"code":"Too Many Requests","message":"Too Many Requests"},"meta":{"requestId":"38f13592-46fc-4d3b-a9a8-2fa82922ab3d","timestamp":"2026-10-06T15:24:57.577+08:00"}}
+  
+  429 !== 200
+  
+      at TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js:183:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 429,
+    expected: 200,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="DEV-029-API-08 Audit failure rolls back Dispatch and same-intent retry posts once" time="0.001305" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js" failure="{&amp;quot;success&amp;quot;:false,&amp;quot;error&amp;quot;:{&amp;quot;code&amp;quot;:&amp;quot;Too Many Requests&amp;quot;,&amp;quot;message&amp;quot;:&amp;quot;Too Many Requests&amp;quot;},&amp;quot;meta&amp;quot;:{&amp;quot;requestId&amp;quot;:&amp;quot;79b3f999-1da8-47d2-ad04-25cbc9529a7b&amp;quot;,&amp;quot;timestamp&amp;quot;:&amp;quot;2026-10-06T15:24:57.578+08:00&amp;quot;}}&#10;&#10;429 !== 200&#10;">
+		<failure type="testCodeFailure" message="{&amp;quot;success&amp;quot;:false,&amp;quot;error&amp;quot;:{&amp;quot;code&amp;quot;:&amp;quot;Too Many Requests&amp;quot;,&amp;quot;message&amp;quot;:&amp;quot;Too Many Requests&amp;quot;},&amp;quot;meta&amp;quot;:{&amp;quot;requestId&amp;quot;:&amp;quot;79b3f999-1da8-47d2-ad04-25cbc9529a7b&amp;quot;,&amp;quot;timestamp&amp;quot;:&amp;quot;2026-10-06T15:24:57.578+08:00&amp;quot;}}&#10;&#10;429 !== 200">
+[Error [ERR_TEST_FAILURE]: {"success":false,"error":{"code":"Too Many Requests","message":"Too Many Requests"},"meta":{"requestId":"79b3f999-1da8-47d2-ad04-25cbc9529a7b","timestamp":"2026-10-06T15:24:57.578+08:00"}}
+
+429 !== 200
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: {"success":false,"error":{"code":"Too Many Requests","message":"Too Many Requests"},"meta":{"requestId":"79b3f999-1da8-47d2-ad04-25cbc9529a7b","timestamp":"2026-10-06T15:24:57.578+08:00"}}
+  
+  429 !== 200
+  
+      at success (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js:77:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js:195:19)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 429,
+    expected: 200,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 8 -->
+	<!-- suites 0 -->
+	<!-- pass 3 -->
+	<!-- fail 5 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 399.999667 -->
+</testsuites>

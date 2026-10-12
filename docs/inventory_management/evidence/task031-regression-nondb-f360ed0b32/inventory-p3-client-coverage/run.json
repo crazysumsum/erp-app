@@ -1,0 +1,87 @@
+{
+  "schema_version": "2.0",
+  "module_id": "inventory-management",
+  "run_id": "task031-regression-nondb-f360ed0b32-inventory-p3-client-coverage",
+  "suite_id": "inventory-p3-client-coverage",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "4c074a4e344599e912aab7e351e93abfc5f447085657f59625f7c7a95c69440a",
+  "source_fingerprint": "7bc0fbfed8fb1f626b4c008f28310c2b1b8233622668b933d8f90b69780853df",
+  "code_commit": "869ac07abdd3879254c351d857be911d71e68b6b",
+  "started_at": "2026-10-07T08:54:37.322169+00:00",
+  "ended_at": "2026-10-07T08:54:44.189815+00:00",
+  "environment_id": "inventory-isolated-test",
+  "runtime_instance_id": "erp-inventory-task031-regression-nondb.41vwnubj",
+  "data_reference": "Synthetic Inventory fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "npm",
+    "run",
+    "test:coverage",
+    "--workspace",
+    "client",
+    "--",
+    "--reporter=junit",
+    "--outputFile=/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/task031-regression-nondb-f360ed0b32/inventory-p3-client-coverage/inventory-p3-client-coverage.xml"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "e22db846f42b44773957383bc79c36efcad805a780815679b0de73c084573b3d",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 706,
+    "passed": 706,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [
+    {
+      "id": "TC-011",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-016",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-070",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-075",
+      "status": "PASS"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "evidence/task031-regression-nondb-f360ed0b32/inventory-p3-client-coverage/inventory-p3-client-coverage.xml",
+      "sha256": "7d4df3dc4a911b22753c675960e5722f4791c6ffe1821b322ffa33c566978fca",
+      "bytes": 201097
+    },
+    {
+      "path": "evidence/task031-regression-nondb-f360ed0b32/inventory-p3-client-coverage/stderr.log",
+      "sha256": "3ad67fd4439e74b9cd9a1def9fb59d50ca87a9de96952f642f6b805779d0d213",
+      "bytes": 12772
+    },
+    {
+      "path": "evidence/task031-regression-nondb-f360ed0b32/inventory-p3-client-coverage/stdout.log",
+      "sha256": "1756a09f6ae5a4825ca009e9bad108262eceaad1279b4056be2631bf31f4c180",
+      "bytes": 13597
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "Approved HD123 TASK031 current-source whole-branch DEVELOPER regression only; real API/browser evidence separate, not full-P3/formal acceptance/current CI."
+  ]
+}

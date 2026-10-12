@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="TASK-029 Transfer exposes exactly seven approved JWT routes and permissions" time="0.057482" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryTransferHandlers.test.js"/>
+	<testcase name="TASK-029 Transfer list validates paging, filters and epoch time bounds" time="0.010428" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryTransferHandlers.test.js"/>
+	<testcase name="TASK-029 Transfer Draft schema rejects bad quantities and injected actor/source fields" time="0.027167" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryTransferHandlers.test.js"/>
+	<testcase name="TASK-029 Transfer replacement requires header and retained-line versions" time="0.021087" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryTransferHandlers.test.js"/>
+	<testcase name="TASK-029 Dispatch and Cancel reject partial selection and missing reason" time="0.014327" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryTransferHandlers.test.js"/>
+	<testcase name="TASK-029 Receive accepts only bounded lines, versions and destination fields" time="0.025840" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryTransferHandlers.test.js"/>
+	<testcase name="TASK-029 Transfer writes bind trusted actor, fixed permission and path ownership" time="0.000862" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryTransferHandlers.test.js"/>
+	<testcase name="TASK-029 Transfer reads forward only validated filters and detail ID" time="0.000172" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryTransferHandlers.test.js"/>
+	<testcase name="TASK-029 Transfer does not swallow transactional conflicts or manufacture success" time="0.000203" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryTransferHandlers.test.js"/>
+	<testcase name="TASK-029 lookup uses Inventory view only and strict request/response contracts" time="0.031906" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryTransferHandlers.test.js"/>
+	<testcase name="TASK-029 lookup trims Code, keeps literal wildcards and confines Item reads to one executor" time="0.002625" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryTransferHandlers.test.js"/>
+	<testcase name="TASK-029 lookup preserves Item inventory eligibility, including discontinued Item" time="0.011818" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryTransferHandlers.test.js"/>
+	<testcase name="TASK-029 lookup rejects unknown SKU and invalid Base UOM without manufacturing a result" time="0.006240" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryTransferHandlers.test.js"/>
+	<testcase name="TASK-029 lookup rejects blank and non-string raw input before any Item query" time="0.008445" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryTransferHandlers.test.js"/>
+	<testcase name="TASK-027 creates a complete Draft and audit without quantity or movement writes" time="0.002414" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryTransferService.test.js"/>
+	<testcase name="TASK-027 rejects stale permission and caller-selected permission contracts before writes" time="0.000364" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryTransferService.test.js"/>
+	<testcase name="TASK-027 Draft creation rolls back if required audit fails" time="0.000181" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryTransferService.test.js"/>
+	<testcase name="TASK-027 rejects invalid Draft quantities, same warehouse, empty lines and caller snapshots" time="0.000508" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryTransferService.test.js"/>
+	<testcase name="TASK-027 replacement rejects duplicate IDs, absent/stale-shaped versions and caller posting fields" time="0.000414" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryTransferService.test.js"/>
+	<testcase name="TASK-027 cancellation requires a bounded nonblank reason and integer header version" time="0.000427" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryTransferService.test.js"/>
+	<testcase name="TASK-028 Dispatch rejects caller quantities, lines, status and unsafe identity/version" time="0.000345" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryTransferService.test.js"/>
+	<testcase name="TASK-028 Receive requires a bounded nonempty whole-line array" time="0.000261" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryTransferService.test.js"/>
+	<testcase name="TASK-028 Receive rejects caller SKU/Lot/Expiry snapshots and malformed line identities" time="0.000244" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryTransferService.test.js"/>
+	<testcase name="TASK-028 Receive rejects nonpositive, fractional or unsafe quantities" time="0.000235" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryTransferService.test.js"/>
+	<testcase name="TASK-028 posting revalidates current permission and rejects caller-selected contracts" time="0.000292" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryTransferService.test.js"/>
+	<testcase name="TASK-028 dispatch replays the original receipt without reloading or mutating a later state" time="0.000198" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryTransferService.test.js"/>
+	<testcase name="TASK-028 receive replays the original receipt without reloading or mutating a later state" time="0.000102" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryTransferService.test.js"/>
+	<!-- tests 27 -->
+	<!-- suites 0 -->
+	<!-- pass 27 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 415.185584 -->
+</testsuites>

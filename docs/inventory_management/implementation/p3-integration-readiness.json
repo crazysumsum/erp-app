@@ -1,0 +1,1216 @@
+{
+  "kind": "P3_INTEGRATION_DISCOVERY_NOT_MERGE_AUTHORIZATION",
+  "observed_at": "2026-10-09T03:35:49.793930+00:00",
+  "worktree": "/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app",
+  "branch": "codex/inventory-p3-operations",
+  "head": "869ac07abdd3879254c351d857be911d71e68b6b",
+  "source": "0cbbea162a3e377df50214fd63b2484b0585d68a2be8dc52ee1615d8b013178c",
+  "baselines": {
+    "design": "b1f4b54a95945c84d55e7828620b538830820dd140be2d15ef38b2695fb4abb4",
+    "plan": "6e27b339efb827ff8a2bb0c8ce82242f86c577f29bb4510b20884e854f456aac"
+  },
+  "main": "3b493095b9a979c3157c1f4fedf5b37944cdfcfb",
+  "merge_base": "4f09b491d8c7d5393c7e36beb707bc7bb4ad039e",
+  "branch_only_commits": 10,
+  "main_only_commits": 141,
+  "latest_main_pr": {
+    "number": 192,
+    "url": "https://github.com/crazysumsum/erp-app/pull/192",
+    "merge_commit": "3b493095b9a979c3157c1f4fedf5b37944cdfcfb"
+  },
+  "open_or_merged_pr_for_p3_branch": [],
+  "main_changed_paths": [
+    ".github/workflows/ci.yml",
+    "README.md",
+    "client/config/menu.js",
+    "client/e2e/sales-order-management/playwright.config.js",
+    "client/e2e/sales-order-management/playwright.phase2.config.js",
+    "client/e2e/sales-order-management/sales-phase1.spec.js",
+    "client/e2e/sales-order-management/sales-phase2.spec.js",
+    "client/e2e/supplier-management/supplier-export.spec.js",
+    "client/e2e/supplier-management/supplier-imports.spec.js",
+    "client/src/components/sales/BackorderAllocationDialog.vue",
+    "client/src/components/sales/QuotationDifferencePanel.vue",
+    "client/src/components/sales/SalesOrderForm.vue",
+    "client/src/components/sales/SalesOrderLineEditor.vue",
+    "client/src/components/sales/SalesOrderQuantitySummary.vue",
+    "client/src/components/sales/SalesQuotationForm.vue",
+    "client/src/components/sales/salesEditorMath.js",
+    "client/src/components/sales/salesOrderPresentation.js",
+    "client/src/composables/sales/useSalesCommandEvent.js",
+    "client/src/framework/http/HttpClient.js",
+    "client/src/pages/sales/SalesOrderCreatePage.vue",
+    "client/src/pages/sales/SalesOrderDetailPage.vue",
+    "client/src/pages/sales/SalesOrderEditPage.vue",
+    "client/src/pages/sales/SalesOrdersPage.vue",
+    "client/src/pages/sales/SalesQuotationCreatePage.vue",
+    "client/src/pages/sales/SalesQuotationDetailPage.vue",
+    "client/src/pages/sales/SalesQuotationEditPage.vue",
+    "client/src/pages/sales/SalesQuotationPrintPage.vue",
+    "client/src/pages/sales/SalesQuotationsPage.vue",
+    "client/src/pages/suppliers/SupplierImportsPage.vue",
+    "client/src/pages/suppliers/SuppliersPage.vue",
+    "client/src/services/sales.js",
+    "client/src/services/supplier.js",
+    "client/src/services/supplierImport.js",
+    "client/test/components/sales/salesBackorderDialog.test.js",
+    "client/test/components/sales/salesOrderForm.test.js",
+    "client/test/components/sales/salesOrderLineEditor.test.js",
+    "client/test/composables/sales/salesCommandEvent.test.js",
+    "client/test/framework/http/HttpClient.test.js",
+    "client/test/pages/sales/quotationEditor.test.js",
+    "client/test/pages/sales/quotationPrint.test.js",
+    "client/test/pages/sales/quotationRead.test.js",
+    "client/test/pages/sales/salesOrderConfirmation.test.js",
+    "client/test/pages/sales/salesOrderEditor.test.js",
+    "client/test/pages/sales/salesOrderLifecycle.test.js",
+    "client/test/pages/sales/salesOrderRead.test.js",
+    "client/test/pages/suppliers/import.test.js",
+    "client/test/pages/suppliers/list.test.js",
+    "client/test/services/sales.test.js",
+    "client/test/services/supplier.test.js",
+    "client/test/services/supplierImport.test.js",
+    "docs/fulfillment_shipping_management/03_design_spec.md",
+    "docs/inventory_management/03_design_spec.md",
+    "docs/sales_order_management/00_harness_state.json",
+    "docs/sales_order_management/00_module_manifest.json",
+    "docs/sales_order_management/00_project_profile.json",
+    "docs/sales_order_management/03_design_spec.md",
+    "docs/sales_order_management/05_development_tasks.md",
+    "docs/sales_order_management/08_traceability.json",
+    "docs/sales_order_management/08_traceability_matrix.md",
+    "docs/sales_order_management/implementation/20_phase1_activation_decision.md",
+    "docs/sales_order_management/implementation/21_task012_developer_report.md",
+    "docs/sales_order_management/implementation/22_task013_developer_report.md",
+    "docs/sales_order_management/implementation/23_task014_developer_report.md",
+    "docs/sales_order_management/implementation/24_diagnostic_reference_recovery.md",
+    "docs/sales_order_management/implementation/25_task015_developer_report.md",
+    "docs/sales_order_management/implementation/26_phase1_replay_authorization_decision.md",
+    "docs/sales_order_management/implementation/27_task016_developer_report.md",
+    "docs/sales_order_management/implementation/28_task017_developer_report.md",
+    "docs/sales_order_management/implementation/29_task018_developer_report.md",
+    "docs/sales_order_management/implementation/30_phase1_handler_provider_decision.md",
+    "docs/sales_order_management/implementation/31_task022_lookup_report.md",
+    "docs/sales_order_management/implementation/32_task019_editor_report.md",
+    "docs/sales_order_management/implementation/33_task020_inquiry_print_report.md",
+    "docs/sales_order_management/implementation/34_phase1_runtime_registry_decision.md",
+    "docs/sales_order_management/implementation/35_task021_expiry_report.md",
+    "docs/sales_order_management/implementation/36_task023_manual_draft_report.md",
+    "docs/sales_order_management/implementation/37_task024_025_manual_editor_report.md",
+    "docs/sales_order_management/implementation/38_task026_active_query_report.md",
+    "docs/sales_order_management/implementation/39_task027_active_inquiry_report.md",
+    "docs/sales_order_management/implementation/40_phase1_latest_main_checkpoint.md",
+    "docs/sales_order_management/implementation/41_phase1_mysql_compatibility_decision.md",
+    "docs/sales_order_management/implementation/42_phase1_business_master_fixture_decision.md",
+    "docs/sales_order_management/implementation/43_phase1_final_verification.md",
+    "docs/sales_order_management/implementation/44_phase2_activation_decision.md",
+    "docs/sales_order_management/implementation/45_task028_commitment_persistence.md",
+    "docs/sales_order_management/implementation/46_task029_durable_intent.md",
+    "docs/sales_order_management/implementation/47_task030_confirmation_primitives.md",
+    "docs/sales_order_management/implementation/48_task030_atomic_confirmation.md",
+    "docs/sales_order_management/implementation/49_task031_bounded_flow.md",
+    "docs/sales_order_management/implementation/50_task031_polling_lock_fix.md",
+    "docs/sales_order_management/implementation/51_phase2_retry_header_decision.md",
+    "docs/sales_order_management/implementation/52_task031_stable_client_intent.md",
+    "docs/sales_order_management/implementation/53_task031_real_browser_race_fix.md",
+    "docs/sales_order_management/implementation/54_task032_recovery_review.md",
+    "docs/sales_order_management/implementation/55_dec022_adoption_verification.md",
+    "docs/sales_order_management/implementation/56_task033_lifecycle_developer_report.md",
+    "docs/sales_order_management/implementation/57_task034_lifecycle_ui_developer_report.md",
+    "docs/sales_order_management/implementation/58_task035_inventory_worker_checkpoint.md",
+    "docs/sales_order_management/implementation/59_task035_fifo_scheduler_checkpoint.md",
+    "docs/sales_order_management/implementation/60_task036_backorder_ui_review.md",
+    "docs/sales_order_management/implementation/61_task037_commitment_developer_checkpoint.md",
+    "docs/sales_order_management/implementation/62_phase2_restore_permission_decision.md",
+    "docs/sales_order_management/implementation/63_phase2_integrated_candidate_checkpoint.md",
+    "docs/sales_order_management/implementation/64_item_restore_exact_schema_decision.md",
+    "docs/sales_order_management/implementation/65_phase2_dec024_adoption_native_contract.md",
+    "docs/sales_order_management/implementation/66_phase2_final_developer_verification.md",
+    "docs/supplier_management/00_harness_state.json",
+    "docs/supplier_management/bulk_operations.md",
+    "docs/supplier_management/evidence/20261008-t49-capacity/import-10000-rows-sigkill.json",
+    "docs/supplier_management/evidence/20261008-t49-capacity/import-10000-rows.json",
+    "docs/supplier_management/implementation/62_task_041_carry_forward.md",
+    "docs/supplier_management/implementation/76_rev_073_independent_review.md",
+    "docs/supplier_management/implementation/77_rev_074_independent_review.md",
+    "docs/supplier_management/implementation/78_rev_075_independent_review.md",
+    "docs/supplier_management/implementation/79_rev_076_independent_review.md",
+    "docs/supplier_management/implementation/80_rev_077_independent_review.md",
+    "docs/supplier_management/implementation/81_rev_078_independent_review.md",
+    "docs/supplier_management/implementation/82_rev_079_independent_review.md",
+    "docs/supplier_management/implementation/83_rev_080_independent_review.md",
+    "docs/supplier_management/implementation/84_rev_081_independent_review.md",
+    "docs/supplier_management/implementation/85_rev_082_independent_review.md",
+    "package-lock.json",
+    "server/.env.example",
+    "server/config/security.js",
+    "server/config/supplier.js",
+    "server/database/migrations/0070_create_sales_quotations.js",
+    "server/database/migrations/0071_create_sales_quotation_lines.js",
+    "server/database/migrations/0072_create_sales_external_order_keys.js",
+    "server/database/migrations/0073_create_sales_orders.js",
+    "server/database/migrations/0074_create_sales_order_lines.js",
+    "server/database/migrations/0075_create_sales_order_status_history.js",
+    "server/database/migrations/0076_create_sales_audit_logs.js",
+    "server/database/migrations/0077_create_sales_quotation_conversions.js",
+    "server/database/migrations/0078_create_sales_order_line_reservations.js",
+    "server/database/migrations/0079_create_sales_backorder_entries.js",
+    "server/scripts/benchmarkSupplierImport.js",
+    "server/scripts/checkCoverageFloors.js",
+    "server/src/framework/middleware/apiDispatcher.js",
+    "server/src/handlers/sales-backorders/runSalesBackorderAllocationHandler.js",
+    "server/src/handlers/sales-lookups/salesLookupHandlers.js",
+    "server/src/handlers/sales-operations/salesOperationLookupHandler.js",
+    "server/src/handlers/sales-orders/confirmSalesOrderHandler.js",
+    "server/src/handlers/sales-orders/createSalesOrderHandler.js",
+    "server/src/handlers/sales-orders/getSalesOrderHandler.js",
+    "server/src/handlers/sales-orders/listSalesOrdersHandler.js",
+    "server/src/handlers/sales-orders/salesOrderLifecycleHandlers.js",
+    "server/src/handlers/sales-orders/updateSalesOrderHandler.js",
+    "server/src/handlers/sales-quotations/cancelSalesQuotationHandler.js",
+    "server/src/handlers/sales-quotations/convertSalesQuotationHandler.js",
+    "server/src/handlers/sales-quotations/createSalesQuotationHandler.js",
+    "server/src/handlers/sales-quotations/getSalesQuotationHandler.js",
+    "server/src/handlers/sales-quotations/issueSalesQuotationHandler.js",
+    "server/src/handlers/sales-quotations/listSalesQuotationsHandler.js",
+    "server/src/handlers/sales-quotations/salesQuotationSchemas.js",
+    "server/src/handlers/sales-quotations/updateSalesQuotationHandler.js",
+    "server/src/handlers/sales/salesSchemas.js",
+    "server/src/handlers/supplier-exports/supplierExportHandler.js",
+    "server/src/handlers/supplier-imports/importResultHandlers.js",
+    "server/src/handlers/supplier-imports/importSchemas.js",
+    "server/src/modules/businessMaster/businessMasterFactory.js",
+    "server/src/modules/inventory/InventoryReservationService.js",
+    "server/src/modules/inventory/inventoryConstants.js",
+    "server/src/modules/item/ItemLookupService.js",
+    "server/src/modules/sales/SalesAuditService.js",
+    "server/src/modules/sales/SalesBackorderService.js",
+    "server/src/modules/sales/SalesBusinessMasterImpactChecker.js",
+    "server/src/modules/sales/SalesFulfillmentGuardService.js",
+    "server/src/modules/sales/SalesInquiryService.js",
+    "server/src/modules/sales/SalesLookupService.js",
+    "server/src/modules/sales/SalesOperationService.js",
+    "server/src/modules/sales/SalesOrderConfirmationService.js",
+    "server/src/modules/sales/SalesOrderLifecycleService.js",
+    "server/src/modules/sales/SalesOrderService.js",
+    "server/src/modules/sales/SalesQuotationService.js",
+    "server/src/modules/sales/SalesSequenceService.js",
+    "server/src/modules/sales/prepareSalesDocument.js",
+    "server/src/modules/sales/salesAuthorization.js",
+    "server/src/modules/sales/salesErrors.js",
+    "server/src/modules/sales/salesValidation.js",
+    "server/src/modules/supplier/SupplierAdminService.js",
+    "server/src/modules/supplier/SupplierExportService.js",
+    "server/src/modules/supplier/SupplierImportService.js",
+    "server/src/modules/supplier/import/SupplierImportProcessor.js",
+    "server/src/modules/supplier/import/applySupplierImportRow.js",
+    "server/src/modules/supplier/import/supplierCsvSchema.js",
+    "server/src/modules/supplier/normalizeSupplierConfig.js",
+    "server/src/services/idempotency/IdempotencyService.js",
+    "server/src/services/salesJobs/SalesJobRuntimeService.js",
+    "server/src/services/salesJobs/jobs/SalesBackorderAllocationJob.js",
+    "server/src/services/salesJobs/jobs/SalesConfirmationRecoveryJob.js",
+    "server/src/services/salesJobs/jobs/SalesQuotationExpiryJob.js",
+    "server/src/services/supplierImport/SupplierImportWorkerService.js",
+    "server/src/services/supplierImport/jobs/SupplierImportFilePurgeJob.js",
+    "server/src/services/supplierImport/supplierImportFiles.js",
+    "server/test/apiDispatcher.test.js",
+    "server/test/business-master/http.integration.test.js",
+    "server/test/fileTransfer.test.js",
+    "server/test/idempotencyService.test.js",
+    "server/test/integration/itemRecoveryAcceptance.integration.test.js",
+    "server/test/integration/salesAuditConversionMigrations.integration.test.js",
+    "server/test/integration/salesBackorder.integration.test.js",
+    "server/test/integration/salesBusinessMasterImpact.integration.test.js",
+    "server/test/integration/salesCapacity.integration.test.js",
+    "server/test/integration/salesCommitmentMigrations.integration.test.js",
+    "server/test/integration/salesConcurrency.integration.test.js",
+    "server/test/integration/salesConfirmation.integration.test.js",
+    "server/test/integration/salesLifecycle.integration.test.js",
+    "server/test/integration/salesOrderMigrations.integration.test.js",
+    "server/test/integration/salesOrderRead.integration.test.js",
+    "server/test/integration/salesPhase1.integration.test.js",
+    "server/test/integration/salesQuotationExpiry.integration.test.js",
+    "server/test/integration/salesQuotationMigrations.integration.test.js",
+    "server/test/integration/salesRecovery.integration.test.js",
+    "server/test/integration/salesSequenceOperation.integration.test.js",
+    "server/test/integration/supplierExport.integration.test.js",
+    "server/test/integration/supplierImport.integration.test.js",
+    "server/test/integration/supplierImportExecution.integration.test.js",
+    "server/test/integration/supplierImportRetention.integration.test.js",
+    "server/test/inventorySalesWorkerContracts.test.js",
+    "server/test/itemLookupService.test.js",
+    "server/test/migrate.test.js",
+    "server/test/sales/phase1/SalesBusinessMasterImpactChecker.test.js",
+    "server/test/sales/phase1/SalesLookupHandlers.test.js",
+    "server/test/sales/phase1/SalesOperationAuditServices.test.js",
+    "server/test/sales/phase1/SalesOrderQueryHandlers.test.js",
+    "server/test/sales/phase1/SalesOrderService.test.js",
+    "server/test/sales/phase1/SalesQuotationConversion.test.js",
+    "server/test/sales/phase1/SalesQuotationExpiryJob.test.js",
+    "server/test/sales/phase1/SalesQuotationQuery.test.js",
+    "server/test/sales/phase1/SalesQuotationService.test.js",
+    "server/test/sales/phase1/SalesSequenceService.test.js",
+    "server/test/sales/phase1/fixtures.js",
+    "server/test/sales/phase2/SalesBackorderJob.test.js",
+    "server/test/sales/phase2/SalesBackorderService.test.js",
+    "server/test/sales/phase2/SalesConfirmationRecoveryJob.test.js",
+    "server/test/sales/phase2/SalesOrderConfirmationService.test.js",
+    "server/test/sales/phase2/SalesOrderLifecycleService.test.js",
+    "server/test/sales/phase2/commitmentReconciliation.js",
+    "server/test/sales/phase2/confirmationCrashWorker.js",
+    "server/test/sales/phase2/fixtures.js",
+    "server/test/sales/phase2/salesConfirmationFlow.test.js",
+    "server/test/sales/phase2/salesConfirmationHandlers.test.js",
+    "server/test/sales/phase2/salesConfirmationPrimitives.test.js",
+    "server/test/sales/phase2/salesInventoryConfirmationResult.test.js",
+    "server/test/sales/salesConfig.test.js",
+    "server/test/serviceContainer.test.js",
+    "server/test/supplierConfig.test.js",
+    "server/test/supplierExportHandlers.test.js",
+    "server/test/supplierExportService.test.js",
+    "server/test/supplierImportPrecheck.test.js",
+    "server/test/supplierImportPurgeService.test.js",
+    "server/test/supplierImportResultHandlers.test.js",
+    "server/test/supplierImportService.test.js",
+    "server/test/supplierImportWorkerService.test.js"
+  ],
+  "integration_sensitive_pins": {
+    "docs/inventory_management/03_design_spec.md": {
+      "current_worktree_sha256": "02e3274725c599635e9aa77baeb60b590ac61e2df641010ae04e37f7d5eaaf27",
+      "origin_main_sha256": "d24d46d353a62db558901dd87b44b77e75cf97ff8b5a23fc6922657ab95eddaa"
+    },
+    "server/src/modules/inventory/InventoryReservationService.js": {
+      "current_worktree_sha256": "5aca9161da7c67772977af27933ba192fb5a33a1cc0ef17448ee8162118686ac",
+      "origin_main_sha256": "621cbcdae1f331cd4a52c3e6e31b43838fe42b2d86e59eb3ddddc699c6f73f31"
+    },
+    "server/src/modules/inventory/inventoryConstants.js": {
+      "current_worktree_sha256": "eb2c93bcb994977856a306791b3ea724d46255d8e34d1b0569a6fd33012f0340",
+      "origin_main_sha256": "910124cfa89920864f37fe889c1b417a63d8a58c093d5bc467c0a152a50c893b"
+    },
+    "server/src/framework/middleware/apiDispatcher.js": {
+      "current_worktree_sha256": "7cf9879996dd7b092c5fa2aa50c4569415ca9b7d42674ee4430e34b2fb3b71b7",
+      "origin_main_sha256": "8b07c965fd91cdcaebd99ccfdc0e008e280c6c48d3ba7e2f1e1c39cf4c6f2127"
+    },
+    "server/src/services/idempotency/IdempotencyService.js": {
+      "current_worktree_sha256": "33abf93472c2d7a4687c1f4d323cd97f0e7d5f4c7875cb7161cfa06b1b0999aa",
+      "origin_main_sha256": "b4a33f4abb73e16ec74d5f50c5ae25da308ac06049c8f8f4d1e20f8bf0412a28"
+    },
+    "package-lock.json": {
+      "current_worktree_sha256": "0e7cfc03260694b17565e28374ff85ed894b79082286025395779c6f436ecb49",
+      "origin_main_sha256": "9237de58eb27e9ba26a3c42ede6baf2e72f532fa5afc9bc8ba08a4fed55b2855"
+    },
+    ".github/workflows/ci.yml": {
+      "current_worktree_sha256": "b6dce486f7db8e5a1272c0db8efd60b7f7661c7c0b7234f783f78269932d287d",
+      "origin_main_sha256": "cbc46ecd1b3ed80ded37351c807677fc130c89ca22a6fa12ace864b9ebac6949"
+    }
+  },
+  "p3_task_local_DoD": "TASK026–034_DONE_HUMAN_ACCEPTED_OLD_SOURCE",
+  "p3_developer_suites": [
+    "lint",
+    "client-build",
+    "inventory-developer",
+    "inventory-p2-database",
+    "inventory-p2-api",
+    "inventory-task026-unit",
+    "inventory-task026-database",
+    "inventory-p3-unit",
+    "inventory-p3-transfer-database",
+    "inventory-p3-movement-database",
+    "inventory-p3-api",
+    "inventory-p3-transfers-client",
+    "inventory-p3-movements-client",
+    "inventory-p3-adjustments-client",
+    "inventory-p3-server-coverage",
+    "inventory-p3-coverage-floors",
+    "inventory-p3-client-coverage",
+    "inventory-p3-dependency-audit",
+    "inventory-p3-browser",
+    "inventory-p3-browser-regression"
+  ],
+  "current_source_registered_pass": 22,
+  "history_refs": 348,
+  "full_native_guarded_skips": 132,
+  "capacity4": "NOT_EXECUTED_UNWAIVED",
+  "capacity_notes": "Capacity is not a separately registered P3 developer suite, but full native plan requires explicit disposition/evidence for guarded required checks. No missing capacity proof is silently accepted.",
+  "generic_merge_gate": {
+    "schema_version": "2.0",
+    "module_id": "inventory-management",
+    "gate": "MERGE_READY",
+    "status": "BLOCKED",
+    "issues": [
+      {
+        "code": "RUNTIME_RESOURCE",
+        "path": "state/runtime/resources/mysql-schema",
+        "message": "isolated namespace/port/test account or serialized lease required"
+      },
+      {
+        "code": "RUNTIME_RESOURCE",
+        "path": "state/runtime/resources/web-port",
+        "message": "isolated namespace/port/test account or serialized lease required"
+      },
+      {
+        "code": "RUNTIME_RESOURCE",
+        "path": "state/runtime/resources/opening-file-root",
+        "message": "isolated namespace/port/test account or serialized lease required"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/client/e2e/inventory-management/inventory-high-risk.spec.js",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/client/e2e/inventory-management/inventory-warehouse-operations.spec.js",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/client/src/components/inventory/AdjustmentForm.vue",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/client/src/components/inventory/InventoryHighRiskDialog.vue",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/client/src/components/inventory/TransferEditor.vue",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/client/src/components/inventory/TransferReceive.vue",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/client/src/components/inventory/TransferSkuField.vue",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/client/src/pages/inventory/AdjustmentsPage.vue",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/client/src/pages/inventory/MovementsPage.vue",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/client/src/pages/inventory/TransfersPage.vue",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/client/src/services/inventory.js",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/client/test/pages/inventory/inventoryAdjustments.test.js",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/client/test/pages/inventory/inventoryInquiries.test.js",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/client/test/pages/inventory/inventoryMovements.test.js",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/client/test/pages/inventory/inventoryTransfers.test.js",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/client/test/services/inventory.test.js",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/docs/inventory_management/00_module_manifest.json",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/docs/inventory_management/00_project_profile.json",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/docs/inventory_management/03_design_spec.md",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/docs/inventory_management/05_development_tasks.md",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/docs/inventory_management/06_technical_test_cases.md",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/docs/inventory_management/07_uat_test_cases.md",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/docs/inventory_management/08_traceability.json",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/docs/inventory_management/08_traceability_matrix.md",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/package-lock.json",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/server/src/framework/api/apiDefinitionResolver.js",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/server/src/framework/middleware/apiDispatcher.js",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/server/src/framework/validation/requestValidator.js",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/server/src/handlers/inventory/inventorySchemas.js",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/server/src/handlers/inventory/postingHandlers.js",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/server/src/handlers/inventory/skuLookupHandlers.js",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/server/src/handlers/inventory/transferHandlers.js",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/server/src/modules/inventory/InventoryAuditService.js",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/server/src/modules/inventory/InventoryMasterService.js",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/server/src/modules/inventory/InventoryPostingService.js",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/server/src/modules/inventory/inventoryAdjustmentPosting.js",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/server/src/modules/inventory/inventoryBinMovePosting.js",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/server/src/modules/inventory/inventoryHighRiskContext.js",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/server/src/modules/inventory/inventoryReversalPosting.js",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/server/src/services/idempotency/IdempotencyService.js",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/server/test/apiDefinitionResolver.test.js",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/server/test/apiDispatcher.test.js",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/server/test/idempotencyService.test.js",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/server/test/integration/inventoryMovement.integration.test.js",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/server/test/integration/inventoryTransfer.integration.test.js",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/server/test/inventoryAuditService.test.js",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/server/test/inventoryEndpointSecurity.test.js",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/server/test/inventoryMasterService.test.js",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/server/test/inventoryPostingHandlers.test.js",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/server/test/inventoryPostingService.test.js",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/server/test/inventoryTransferHandlers.test.js",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "CANDIDATE_DIRTY",
+        "path": "changes/server/test/requestValidator.test.js",
+        "message": "commit the exact candidate; bookkeeping exceptions do not include specs/config"
+      },
+      {
+        "code": "EVIDENCE_RUNTIME",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-client-build",
+        "message": "runtime changed; explicitly rerun or use an externally attested adapter"
+      },
+      {
+        "code": "REQUIRED_ARTIFACT",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-client-build",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4-client-build/stdout.log"
+      },
+      {
+        "code": "REQUIRED_ARTIFACT",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-client-build",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4-client-build/stderr.log"
+      },
+      {
+        "code": "ARTIFACT_RUN_SCOPE",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-client-build",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4/client-build/stderr.log"
+      },
+      {
+        "code": "ARTIFACT_RUN_SCOPE",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-client-build",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4/client-build/stdout.log"
+      },
+      {
+        "code": "EVIDENCE_RUNTIME",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-developer",
+        "message": "runtime changed; explicitly rerun or use an externally attested adapter"
+      },
+      {
+        "code": "EVIDENCE_COMMAND_ACTUAL",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-developer",
+        "message": "recorded argv/cwd differ from reviewed execution contract"
+      },
+      {
+        "code": "REQUIRED_ARTIFACT",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-developer",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-developer/stdout.log"
+      },
+      {
+        "code": "REQUIRED_ARTIFACT",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-developer",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-developer/stderr.log"
+      },
+      {
+        "code": "REQUIRED_ARTIFACT",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-developer",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-developer/inventory-developer.xml"
+      },
+      {
+        "code": "ARTIFACT_RUN_SCOPE",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-developer",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4/inventory-developer/inventory-developer.xml"
+      },
+      {
+        "code": "ARTIFACT_RUN_SCOPE",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-developer",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4/inventory-developer/stderr.log"
+      },
+      {
+        "code": "ARTIFACT_RUN_SCOPE",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-developer",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4/inventory-developer/stdout.log"
+      },
+      {
+        "code": "REPORT_VERIFICATION_BLOCKED",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-developer",
+        "message": "required file missing: /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/task034-nondb-nondb-b4bf60c0e4-inventory-developer/inventory-developer.xml"
+      },
+      {
+        "code": "EVIDENCE_RUNTIME",
+        "path": "evidence/task034-functional-functional-regression-025-api-inventory-p2-api-994c8ee694",
+        "message": "runtime changed; explicitly rerun or use an externally attested adapter"
+      },
+      {
+        "code": "EVIDENCE_RUNTIME",
+        "path": "evidence/task034-functional-functional-regression-025-inventory-p2-database-6746fc3ac3",
+        "message": "runtime changed; explicitly rerun or use an externally attested adapter"
+      },
+      {
+        "code": "EVIDENCE_RUNTIME",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-adjustments-client",
+        "message": "runtime changed; explicitly rerun or use an externally attested adapter"
+      },
+      {
+        "code": "EVIDENCE_COMMAND_ACTUAL",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-adjustments-client",
+        "message": "recorded argv/cwd differ from reviewed execution contract"
+      },
+      {
+        "code": "REQUIRED_ARTIFACT",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-adjustments-client",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-adjustments-client/stdout.log"
+      },
+      {
+        "code": "REQUIRED_ARTIFACT",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-adjustments-client",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-adjustments-client/stderr.log"
+      },
+      {
+        "code": "REQUIRED_ARTIFACT",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-adjustments-client",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-adjustments-client/inventory-p3-adjustments-client.xml"
+      },
+      {
+        "code": "ARTIFACT_RUN_SCOPE",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-adjustments-client",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4/inventory-p3-adjustments-client/inventory-p3-adjustments-client.xml"
+      },
+      {
+        "code": "ARTIFACT_RUN_SCOPE",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-adjustments-client",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4/inventory-p3-adjustments-client/stderr.log"
+      },
+      {
+        "code": "ARTIFACT_RUN_SCOPE",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-adjustments-client",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4/inventory-p3-adjustments-client/stdout.log"
+      },
+      {
+        "code": "REPORT_VERIFICATION_BLOCKED",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-adjustments-client",
+        "message": "required file missing: /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-adjustments-client/inventory-p3-adjustments-client.xml"
+      },
+      {
+        "code": "EVIDENCE_RUNTIME",
+        "path": "evidence/task034-db-inventory-p3-api-3a8b2d7998",
+        "message": "runtime changed; explicitly rerun or use an externally attested adapter"
+      },
+      {
+        "code": "EVIDENCE_RUNTIME",
+        "path": "evidence/task034-db-inventory-p3-browser-ec47e0d7e8",
+        "message": "runtime changed; explicitly rerun or use an externally attested adapter"
+      },
+      {
+        "code": "EVIDENCE_RUNTIME",
+        "path": "evidence/task034-check-6299b2cd11-inventory-p3-browser-regression",
+        "message": "runtime changed; explicitly rerun or use an externally attested adapter"
+      },
+      {
+        "code": "REQUIRED_ARTIFACT",
+        "path": "evidence/task034-check-6299b2cd11-inventory-p3-browser-regression",
+        "message": "evidence/task034-check-6299b2cd11-inventory-p3-browser-regression/stdout.log"
+      },
+      {
+        "code": "REQUIRED_ARTIFACT",
+        "path": "evidence/task034-check-6299b2cd11-inventory-p3-browser-regression",
+        "message": "evidence/task034-check-6299b2cd11-inventory-p3-browser-regression/stderr.log"
+      },
+      {
+        "code": "REQUIRED_ARTIFACT",
+        "path": "evidence/task034-check-6299b2cd11-inventory-p3-browser-regression",
+        "message": "evidence/task034-check-6299b2cd11-inventory-p3-browser-regression/inventory-p3-browser-regression.xml"
+      },
+      {
+        "code": "ARTIFACT_RUN_SCOPE",
+        "path": "evidence/task034-check-6299b2cd11-inventory-p3-browser-regression",
+        "message": "evidence/task034-check-6299b2cd11/inventory-p3-browser-regression/inventory-p3-browser-regression.xml"
+      },
+      {
+        "code": "ARTIFACT_RUN_SCOPE",
+        "path": "evidence/task034-check-6299b2cd11-inventory-p3-browser-regression",
+        "message": "evidence/task034-check-6299b2cd11/inventory-p3-browser-regression/playwright-artifacts/.last-run.json"
+      },
+      {
+        "code": "ARTIFACT_RUN_SCOPE",
+        "path": "evidence/task034-check-6299b2cd11-inventory-p3-browser-regression",
+        "message": "evidence/task034-check-6299b2cd11/inventory-p3-browser-regression/stderr.log"
+      },
+      {
+        "code": "ARTIFACT_RUN_SCOPE",
+        "path": "evidence/task034-check-6299b2cd11-inventory-p3-browser-regression",
+        "message": "evidence/task034-check-6299b2cd11/inventory-p3-browser-regression/stdout.log"
+      },
+      {
+        "code": "REPORT_VERIFICATION_BLOCKED",
+        "path": "evidence/task034-check-6299b2cd11-inventory-p3-browser-regression",
+        "message": "required file missing: /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/task034-check-6299b2cd11-inventory-p3-browser-regression/inventory-p3-browser-regression.xml"
+      },
+      {
+        "code": "EVIDENCE_RUNTIME",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-client-coverage",
+        "message": "runtime changed; explicitly rerun or use an externally attested adapter"
+      },
+      {
+        "code": "EVIDENCE_COMMAND_ACTUAL",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-client-coverage",
+        "message": "recorded argv/cwd differ from reviewed execution contract"
+      },
+      {
+        "code": "REQUIRED_ARTIFACT",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-client-coverage",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-client-coverage/stdout.log"
+      },
+      {
+        "code": "REQUIRED_ARTIFACT",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-client-coverage",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-client-coverage/stderr.log"
+      },
+      {
+        "code": "REQUIRED_ARTIFACT",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-client-coverage",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-client-coverage/inventory-p3-client-coverage.xml"
+      },
+      {
+        "code": "ARTIFACT_RUN_SCOPE",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-client-coverage",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4/inventory-p3-client-coverage/inventory-p3-client-coverage.xml"
+      },
+      {
+        "code": "ARTIFACT_RUN_SCOPE",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-client-coverage",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4/inventory-p3-client-coverage/stderr.log"
+      },
+      {
+        "code": "ARTIFACT_RUN_SCOPE",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-client-coverage",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4/inventory-p3-client-coverage/stdout.log"
+      },
+      {
+        "code": "REPORT_VERIFICATION_BLOCKED",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-client-coverage",
+        "message": "required file missing: /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-client-coverage/inventory-p3-client-coverage.xml"
+      },
+      {
+        "code": "EVIDENCE_RUNTIME",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-coverage-floors",
+        "message": "runtime changed; explicitly rerun or use an externally attested adapter"
+      },
+      {
+        "code": "REQUIRED_ARTIFACT",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-coverage-floors",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-coverage-floors/stdout.log"
+      },
+      {
+        "code": "REQUIRED_ARTIFACT",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-coverage-floors",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-coverage-floors/stderr.log"
+      },
+      {
+        "code": "ARTIFACT_RUN_SCOPE",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-coverage-floors",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4/inventory-p3-coverage-floors/stderr.log"
+      },
+      {
+        "code": "ARTIFACT_RUN_SCOPE",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-coverage-floors",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4/inventory-p3-coverage-floors/stdout.log"
+      },
+      {
+        "code": "EVIDENCE_RUNTIME",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-dependency-audit",
+        "message": "runtime changed; explicitly rerun or use an externally attested adapter"
+      },
+      {
+        "code": "REQUIRED_ARTIFACT",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-dependency-audit",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-dependency-audit/stdout.log"
+      },
+      {
+        "code": "REQUIRED_ARTIFACT",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-dependency-audit",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-dependency-audit/stderr.log"
+      },
+      {
+        "code": "ARTIFACT_RUN_SCOPE",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-dependency-audit",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4/inventory-p3-dependency-audit/stderr.log"
+      },
+      {
+        "code": "ARTIFACT_RUN_SCOPE",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-dependency-audit",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4/inventory-p3-dependency-audit/stdout.log"
+      },
+      {
+        "code": "EVIDENCE_RUNTIME",
+        "path": "evidence/task034-db-inventory-p3-movement-database-64c3261fea",
+        "message": "runtime changed; explicitly rerun or use an externally attested adapter"
+      },
+      {
+        "code": "EVIDENCE_RUNTIME",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-movements-client",
+        "message": "runtime changed; explicitly rerun or use an externally attested adapter"
+      },
+      {
+        "code": "EVIDENCE_COMMAND_ACTUAL",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-movements-client",
+        "message": "recorded argv/cwd differ from reviewed execution contract"
+      },
+      {
+        "code": "REQUIRED_ARTIFACT",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-movements-client",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-movements-client/stdout.log"
+      },
+      {
+        "code": "REQUIRED_ARTIFACT",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-movements-client",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-movements-client/stderr.log"
+      },
+      {
+        "code": "REQUIRED_ARTIFACT",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-movements-client",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-movements-client/inventory-p3-movements-client.xml"
+      },
+      {
+        "code": "ARTIFACT_RUN_SCOPE",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-movements-client",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4/inventory-p3-movements-client/inventory-p3-movements-client.xml"
+      },
+      {
+        "code": "ARTIFACT_RUN_SCOPE",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-movements-client",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4/inventory-p3-movements-client/stderr.log"
+      },
+      {
+        "code": "ARTIFACT_RUN_SCOPE",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-movements-client",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4/inventory-p3-movements-client/stdout.log"
+      },
+      {
+        "code": "REPORT_VERIFICATION_BLOCKED",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-movements-client",
+        "message": "required file missing: /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-movements-client/inventory-p3-movements-client.xml"
+      },
+      {
+        "code": "EVIDENCE_RUNTIME",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-server-coverage",
+        "message": "runtime changed; explicitly rerun or use an externally attested adapter"
+      },
+      {
+        "code": "EVIDENCE_COMMAND_ACTUAL",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-server-coverage",
+        "message": "recorded argv/cwd differ from reviewed execution contract"
+      },
+      {
+        "code": "REQUIRED_ARTIFACT",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-server-coverage",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-server-coverage/stdout.log"
+      },
+      {
+        "code": "REQUIRED_ARTIFACT",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-server-coverage",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-server-coverage/stderr.log"
+      },
+      {
+        "code": "REQUIRED_ARTIFACT",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-server-coverage",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-server-coverage/inventory-p3-server-coverage.xml"
+      },
+      {
+        "code": "ARTIFACT_RUN_SCOPE",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-server-coverage",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4/inventory-p3-server-coverage/inventory-p3-server-coverage.xml"
+      },
+      {
+        "code": "ARTIFACT_RUN_SCOPE",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-server-coverage",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4/inventory-p3-server-coverage/server-coverage.lcov"
+      },
+      {
+        "code": "ARTIFACT_RUN_SCOPE",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-server-coverage",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4/inventory-p3-server-coverage/stderr.log"
+      },
+      {
+        "code": "ARTIFACT_RUN_SCOPE",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-server-coverage",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4/inventory-p3-server-coverage/stdout.log"
+      },
+      {
+        "code": "REPORT_VERIFICATION_BLOCKED",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-server-coverage",
+        "message": "required file missing: /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-server-coverage/inventory-p3-server-coverage.xml"
+      },
+      {
+        "code": "EVIDENCE_RUNTIME",
+        "path": "evidence/task034-db-inventory-p3-transfer-database-f9d438906d",
+        "message": "runtime changed; explicitly rerun or use an externally attested adapter"
+      },
+      {
+        "code": "EVIDENCE_RUNTIME",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-transfers-client",
+        "message": "runtime changed; explicitly rerun or use an externally attested adapter"
+      },
+      {
+        "code": "EVIDENCE_COMMAND_ACTUAL",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-transfers-client",
+        "message": "recorded argv/cwd differ from reviewed execution contract"
+      },
+      {
+        "code": "REQUIRED_ARTIFACT",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-transfers-client",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-transfers-client/stdout.log"
+      },
+      {
+        "code": "REQUIRED_ARTIFACT",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-transfers-client",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-transfers-client/stderr.log"
+      },
+      {
+        "code": "REQUIRED_ARTIFACT",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-transfers-client",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-transfers-client/inventory-p3-transfers-client.xml"
+      },
+      {
+        "code": "ARTIFACT_RUN_SCOPE",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-transfers-client",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4/inventory-p3-transfers-client/inventory-p3-transfers-client.xml"
+      },
+      {
+        "code": "ARTIFACT_RUN_SCOPE",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-transfers-client",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4/inventory-p3-transfers-client/stderr.log"
+      },
+      {
+        "code": "ARTIFACT_RUN_SCOPE",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-transfers-client",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4/inventory-p3-transfers-client/stdout.log"
+      },
+      {
+        "code": "REPORT_VERIFICATION_BLOCKED",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-transfers-client",
+        "message": "required file missing: /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-transfers-client/inventory-p3-transfers-client.xml"
+      },
+      {
+        "code": "EVIDENCE_RUNTIME",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-unit",
+        "message": "runtime changed; explicitly rerun or use an externally attested adapter"
+      },
+      {
+        "code": "EVIDENCE_COMMAND_ACTUAL",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-unit",
+        "message": "recorded argv/cwd differ from reviewed execution contract"
+      },
+      {
+        "code": "REQUIRED_ARTIFACT",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-unit",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-unit/stdout.log"
+      },
+      {
+        "code": "REQUIRED_ARTIFACT",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-unit",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-unit/stderr.log"
+      },
+      {
+        "code": "REQUIRED_ARTIFACT",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-unit",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-unit/inventory-p3-unit.xml"
+      },
+      {
+        "code": "ARTIFACT_RUN_SCOPE",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-unit",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4/inventory-p3-unit/inventory-p3-unit.xml"
+      },
+      {
+        "code": "ARTIFACT_RUN_SCOPE",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-unit",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4/inventory-p3-unit/stderr.log"
+      },
+      {
+        "code": "ARTIFACT_RUN_SCOPE",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-unit",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4/inventory-p3-unit/stdout.log"
+      },
+      {
+        "code": "REPORT_VERIFICATION_BLOCKED",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-unit",
+        "message": "required file missing: /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/task034-nondb-nondb-b4bf60c0e4-inventory-p3-unit/inventory-p3-unit.xml"
+      },
+      {
+        "code": "EVIDENCE_RUNTIME",
+        "path": "evidence/task034-db-inventory-task026-database-c7ca489995",
+        "message": "runtime changed; explicitly rerun or use an externally attested adapter"
+      },
+      {
+        "code": "EVIDENCE_RUNTIME",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-task026-unit",
+        "message": "runtime changed; explicitly rerun or use an externally attested adapter"
+      },
+      {
+        "code": "EVIDENCE_COMMAND_ACTUAL",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-task026-unit",
+        "message": "recorded argv/cwd differ from reviewed execution contract"
+      },
+      {
+        "code": "REQUIRED_ARTIFACT",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-task026-unit",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-task026-unit/stdout.log"
+      },
+      {
+        "code": "REQUIRED_ARTIFACT",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-task026-unit",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-task026-unit/stderr.log"
+      },
+      {
+        "code": "REQUIRED_ARTIFACT",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-task026-unit",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-task026-unit/inventory-task026-unit.xml"
+      },
+      {
+        "code": "ARTIFACT_RUN_SCOPE",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-task026-unit",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4/inventory-task026-unit/inventory-task026-unit.xml"
+      },
+      {
+        "code": "ARTIFACT_RUN_SCOPE",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-task026-unit",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4/inventory-task026-unit/stderr.log"
+      },
+      {
+        "code": "ARTIFACT_RUN_SCOPE",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-task026-unit",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4/inventory-task026-unit/stdout.log"
+      },
+      {
+        "code": "REPORT_VERIFICATION_BLOCKED",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-inventory-task026-unit",
+        "message": "required file missing: /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/task034-nondb-nondb-b4bf60c0e4-inventory-task026-unit/inventory-task026-unit.xml"
+      },
+      {
+        "code": "EVIDENCE_RUNTIME",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-lint",
+        "message": "runtime changed; explicitly rerun or use an externally attested adapter"
+      },
+      {
+        "code": "REQUIRED_ARTIFACT",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-lint",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4-lint/stdout.log"
+      },
+      {
+        "code": "REQUIRED_ARTIFACT",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-lint",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4-lint/stderr.log"
+      },
+      {
+        "code": "ARTIFACT_RUN_SCOPE",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-lint",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4/lint/stderr.log"
+      },
+      {
+        "code": "ARTIFACT_RUN_SCOPE",
+        "path": "evidence/task034-nondb-nondb-b4bf60c0e4-lint",
+        "message": "evidence/task034-nondb-nondb-b4bf60c0e4/lint/stdout.log"
+      },
+      {
+        "code": "CI_MISSING_OR_STALE",
+        "path": "gate/ci",
+        "message": "Dependency audit: exact current candidate required"
+      },
+      {
+        "code": "CI_MISSING_OR_STALE",
+        "path": "gate/ci",
+        "message": "Lint: exact current candidate required"
+      },
+      {
+        "code": "CI_MISSING_OR_STALE",
+        "path": "gate/ci",
+        "message": "Browser tests (Playwright): exact current candidate required"
+      },
+      {
+        "code": "CI_MISSING_OR_STALE",
+        "path": "gate/ci",
+        "message": "Test (server + client, MySQL integration): exact current candidate required"
+      },
+      {
+        "code": "CI_MISSING_OR_STALE",
+        "path": "gate/ci",
+        "message": "Build frontend: exact current candidate required"
+      },
+      {
+        "code": "PR_REVIEW_MISSING",
+        "path": "gate/pr",
+        "message": "required review observation missing for candidate"
+      }
+    ],
+    "scope": "Local structural/evidence consistency only. External approval identity, CI authenticity, runtime leases and repository permissions MUST be verified separately. This command never authorizes, merges or deploys."
+  },
+  "issue_counts": {
+    "RUNTIME_RESOURCE": 3,
+    "CANDIDATE_DIRTY": 53,
+    "EVIDENCE_RUNTIME": 20,
+    "REQUIRED_ARTIFACT": 35,
+    "ARTIFACT_RUN_SCOPE": 37,
+    "EVIDENCE_COMMAND_ACTUAL": 8,
+    "REPORT_VERIFICATION_BLOCKED": 9,
+    "CI_MISSING_OR_STALE": 5,
+    "PR_REVIEW_MISSING": 1
+  },
+  "evidence_adapter_note": "Original verified nested reports and retired runtimes remain unchanged; generic gate rejects these conventions. No runtime/path/argv/report relabelling, fake live resource or harness bypass performed.",
+  "decision": "HD136_REQUIRED_BEFORE_ADOPTING_CHANGED_OWNER_API_SECURITY_BASELINE_OR_PUBLICATION",
+  "actions_performed": "Fetch origin refs and read-only Git/GitHub/gate inspection only; no merge/rebase/stage/commit/push/PR/CI/source/schema/runtime changes.",
+  "formal_TC_UAT": "NOT_RUN",
+  "main_freshness_scope": "origin/main freshly fetched at observation; future publication must fetch and revalidate again."
+}

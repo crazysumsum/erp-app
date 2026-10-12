@@ -1,0 +1,95 @@
+{
+  "schema_version": "2.0",
+  "module_id": "inventory-management",
+  "run_id": "task030-nondb-7e2c66977d-inventory-developer",
+  "suite_id": "inventory-developer",
+  "stage": "DEVELOPER",
+  "result": "FAIL",
+  "spec_baseline": "8ab85d87051f437b74c6cfb4efc39ba93c8c2dd9e56ca7ea210d7bc5bc705dc8",
+  "source_fingerprint": "cf8b982d065e7e6b02d16f85d61a6626638e32753ab8bcb44830c1a01e57ea69",
+  "code_commit": "869ac07abdd3879254c351d857be911d71e68b6b",
+  "started_at": "2026-10-07T03:20:42.564151+00:00",
+  "ended_at": "2026-10-07T03:20:42.994076+00:00",
+  "environment_id": "inventory-isolated-test",
+  "runtime_instance_id": "erp-inventory-task030-nondb.tryba2om",
+  "data_reference": "Synthetic Inventory fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "node",
+    "--test",
+    "--import",
+    "./server/test-support/testEnv.js",
+    "--test-reporter=junit",
+    "--test-reporter-destination=/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/task030-nondb-7e2c66977d/inventory-developer/inventory-developer.xml",
+    "server/test/inventoryAllocationHandlers.test.js",
+    "server/test/inventoryAllocationTransitions.test.js",
+    "server/test/inventoryAuditService.test.js",
+    "server/test/inventoryConfig.test.js",
+    "server/test/inventoryEndpointSecurity.test.js",
+    "server/test/inventoryExpiry.test.js",
+    "server/test/inventoryFoundation.test.js",
+    "server/test/inventoryInquiryHandlers.test.js",
+    "server/test/inventoryInquiryService.test.js",
+    "server/test/inventoryIssueService.test.js",
+    "server/test/inventoryLockService.test.js",
+    "server/test/inventoryMasterHandlers.test.js",
+    "server/test/inventoryMasterMigration.test.js",
+    "server/test/inventoryMasterService.test.js",
+    "server/test/inventoryOperationHash.test.js",
+    "server/test/inventoryOperationService.test.js",
+    "server/test/inventoryPickSequence.test.js",
+    "server/test/inventoryPostingHandlers.test.js",
+    "server/test/inventoryPostingService.test.js",
+    "server/test/inventoryProjections.test.js",
+    "server/test/inventoryProviderContracts.test.js",
+    "server/test/inventoryQuantity.test.js",
+    "server/test/inventoryReservationHandlers.test.js",
+    "server/test/inventoryReservationInquiryHandlers.test.js",
+    "server/test/inventoryReservationService.test.js",
+    "server/test/inventoryTestSupport.test.js",
+    "server/test/inventoryValidation.test.js"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "686dc74b83313908108e7b5824dcc5c0c791c764e714f2d0f3c84c7f12541664",
+  "exit_code": 1,
+  "timed_out": false,
+  "counts": {
+    "total": 172,
+    "passed": 171,
+    "failed": 1,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/task030-nondb-7e2c66977d/inventory-developer/inventory-developer.xml",
+      "sha256": "c51bb415a05712a5e8e1743cc5aac49cf5e0e9f06b0d472ac4203979de947844",
+      "bytes": 42714
+    },
+    {
+      "path": "evidence/task030-nondb-7e2c66977d/inventory-developer/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/task030-nondb-7e2c66977d/inventory-developer/stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "Approved HD110 TASK030 current-source whole-branch DEVELOPER regression only; real API/browser evidence separate, not full-P3/formal acceptance/current CI."
+  ]
+}

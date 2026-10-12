@@ -1,0 +1,1472 @@
+--- a/server/src/handlers/inventory/inventorySchemas.js
++++ b/server/src/handlers/inventory/inventorySchemas.js
+@@ -230,6 +230,18 @@
+   properties: { ...HIGH_RISK_COMMON, sourceBalanceId: ID, destinationStatus: { type: "string", enum: [...INVENTORY_STOCK_STATUSES] },
+     expectedSourceVersion: VERSION, expectedDestinationVersion: EXPECTED_ABSENT }
+ });
++export const REVERSAL_ID_PARAMS = Object.freeze({
++  type: "object", additionalProperties: false, required: ["id"],
++  properties: { id: { type: "string", pattern: "^[1-9][0-9]*$" } }
++});
++export const REVERSAL_CREATE = Object.freeze({
++  type: "object", additionalProperties: false, required: ["source", "password", "reasonText", "expectedBalances"],
++  properties: { source: HIGH_RISK_SOURCE, password: PASSWORD, reasonText: HIGH_RISK_COMMON.reasonText,
++    expectedBalances: { type: "array", minItems: 1, maxItems: 200, items: {
++      type: "object", additionalProperties: false, required: ["balanceId", "expectedVersion"],
++      properties: { balanceId: ID, expectedVersion: VERSION }
++    } } }
++});
+ const MINIMUM_LIFE_OVERRIDE = Object.freeze({
+   type: "object", additionalProperties: false,
+   required: [
+@@ -286,6 +298,9 @@
+   properties: { status: { const: "POSTED" }, operationId: ID,
+     movementGroupId: { type: "string", minLength: 1, maxLength: 100 },
+     lineCount: { type: "integer", minimum: 1, maximum: 100 } }
++});
++export const REVERSAL_RESPONSE = Object.freeze({ ...BIN_MOVE_RESPONSE,
++  properties: { ...BIN_MOVE_RESPONSE.properties, lineCount: { type: "integer", minimum: 1, maximum: 200 } }
+ });
+ 
+ export const ISSUE_CREATE = Object.freeze({
+--- a/server/src/handlers/inventory/postingHandlers.js
++++ b/server/src/handlers/inventory/postingHandlers.js
+@@ -2,6 +2,7 @@
+ import { deepFreeze, plainObject } from "../../framework/api/normalizeApiDefaultsConfig.js";
+ import { permissionStaleError } from "../../modules/authorization/adminGuard.js";
+ import { normalizeAdjustmentCommand } from "../../modules/inventory/inventoryAdjustmentPosting.js";
++import { normalizeReversalCommand } from "../../modules/inventory/inventoryReversalPosting.js";
+ import { inventoryError } from "../../modules/inventory/inventoryErrors.js";
+ import { checkInventoryHighRiskContext, consumeInventoryHighRiskContext, issueInventoryHighRiskContext } from "../../modules/inventory/inventoryHighRiskContext.js";
+ import { InventoryPostingService } from "../../modules/inventory/InventoryPostingService.js";
+@@ -17,6 +18,9 @@
+   OPERATION_POLICY,
+   RECEIPT_CREATE,
+   RECEIPT_RESPONSE,
++  REVERSAL_CREATE,
++  REVERSAL_ID_PARAMS,
++  REVERSAL_RESPONSE,
+   STATUS_TRANSFER_CREATE
+ } from "./inventorySchemas.js";
+ 
+@@ -35,20 +39,27 @@
+   async prepareIdempotency(req) {
+     try {
+       let command;
++      const reversal = this.constructor.action === "movement.reverse";
+       try {
+-        for (const location of ["params", "query"]) {
++        for (const location of reversal ? ["query"] : ["params", "query"]) {
+           if (Object.keys(plainObject(req.input[location], location)).length) throw inventoryError("INVENTORY_INPUT_INVALID", { field: location });
+         }
++        const params = plainObject(req.input.params, "params");
++        if (reversal && (Object.keys(params).length !== 1 || typeof params.id !== "string" || !/^[1-9][0-9]*$/u.test(params.id) ||
++            !Number.isSafeInteger(Number(params.id)) || Number(params.id) <= 0)) throw inventoryError("INVENTORY_INPUT_INVALID", { field: "id" });
+         const { password, source, ...payload } = plainObject(req.input.body, "body");
++        if (reversal && Object.hasOwn(payload, "movementId")) throw inventoryError("INVENTORY_INPUT_INVALID", { field: "movementId" });
+         if (typeof password !== "string" || [...password].length < 1 || [...password].length > 1024) {
+           throw inventoryError("INVENTORY_INPUT_INVALID", { field: "password" });
+         }
+-        command = deepFreeze(normalizeAdjustmentCommand({ query() {}, execute() {} }, {
++        const input = {
+           actor: { userId: Number(req.auth.claims.sub), serviceName: "", claimedRoles: req.auth.claims.roles,
+             claimedPermissions: req.auth.claims.permissions },
+           authorization: { purpose: this.constructor.action, requiredCallerPermission: "inventory.adjust" },
+-          source, correlationId: req.requestId ?? "", payload
+-        }, this.constructor.action));
++          source, correlationId: req.requestId ?? "", payload: reversal ? { ...payload, movementId: Number(params.id) } : payload
++        };
++        const tx = { query() {}, execute() {} };
++        command = deepFreeze(reversal ? normalizeReversalCommand(tx, input) : normalizeAdjustmentCommand(tx, input, this.constructor.action));
+       } catch (error) {
+         if (error instanceof TypeError) throw inventoryError("INVENTORY_INPUT_INVALID");
+         throw error;
+@@ -56,7 +67,9 @@
+       const context = issueInventoryHighRiskContext(req, command, this.highRiskOptions);
+       await this.inventory.database.withTransaction(tx => checkInventoryHighRiskContext(tx, context, command));
+       this.#prepared.set(req, { command, context });
+-      return { input: deepFreeze({ params: {}, query: {}, body: { source: command.source, ...command.payload } }),
++      const { movementId, ...reversalPayload } = command.payload;
++      return { input: deepFreeze({ params: reversal ? { id: String(movementId) } : {}, query: {},
++        body: { source: command.source, ...(reversal ? reversalPayload : command.payload) } }),
+         replay: async sendCachedResponse => {
+           try {
+             const record = this.#take(req);
+@@ -80,6 +93,7 @@
+   async execute(req) {
+     try {
+       const { command, context } = this.#take(req);
++      if (this.constructor.action === "movement.reverse") return this.response(await this.inventory.reverseMovement(command, context));
+       return this.response(await (this.constructor.action === "adjustment.post"
+         ? this.inventory.postAdjustment(command, context) : this.inventory.postStatusTransfer(command, context)));
+     } catch (error) { await this.#failure(req, error); throw error; }
+@@ -112,6 +126,15 @@
+     authType: "jwt-device-password", authorizationPolicies: ADJUST_POLICY, inputCoercion: false, idempotencyPreparation: true,
+     idempotency: Object.freeze({ enabled: true, ttlMs: 604800000 }),
+     requestSchema: { params: EMPTY, query: EMPTY, body: STATUS_TRANSFER_CREATE }, responseSchema: { 200: ADJUSTMENT_RESPONSE } };
++}
++
++export class ReverseInventoryMovementHandler extends HighRiskPostingHandler {
++  static handlerName = "reverseInventoryMovement";
++  static action = "movement.reverse";
++  static api = { method: "POST", path: "/api/v1/inventory/movements/:id/reverse", description: "強認證完整沖銷原庫存異動組。",
++    authType: "jwt-device-password", authorizationPolicies: ADJUST_POLICY, inputCoercion: false, idempotencyPreparation: true,
++    idempotency: Object.freeze({ enabled: true, ttlMs: 604800000 }),
++    requestSchema: { params: REVERSAL_ID_PARAMS, query: EMPTY, body: REVERSAL_CREATE }, responseSchema: { 200: REVERSAL_RESPONSE } };
+ }
+ 
+ export class PostInventoryReceiptHandler extends BaseRequestHandler {
+--- a/server/src/modules/inventory/InventoryPostingService.js
++++ b/server/src/modules/inventory/InventoryPostingService.js
+@@ -8,6 +8,7 @@
+ import { inventoryError } from "./inventoryErrors.js";
+ import { postBinMoveInTransaction } from "./inventoryBinMovePosting.js";
+ import { postAdjustmentInTransaction } from "./inventoryAdjustmentPosting.js";
++import { reverseMovementInTransaction } from "./inventoryReversalPosting.js";
+ import {
+   assertInventoryLotConsistency,
+   inventoryPositiveInteger,
+@@ -311,6 +312,14 @@
+ 
+   postBinMove(command) {
+     return this.database.withTransaction((transaction) => this.postBinMoveInTransaction(transaction, command));
++  }
++
++  reverseMovement(command, context) {
++    return this.database.withTransaction(tx => this.reverseMovementInTransaction(tx, command, context));
++  }
++
++  reverseMovementInTransaction(tx, command, context) {
++    return reverseMovementInTransaction(this, tx, command, context);
+   }
+ 
+   postBinMoveInTransaction(transaction, command) {
+--- a/server/src/modules/inventory/inventoryHighRiskContext.js
++++ b/server/src/modules/inventory/inventoryHighRiskContext.js
+@@ -11,7 +11,8 @@
+ const issuedRequests = new WeakSet();
+ const ROUTES = Object.freeze({
+   "adjustment.post": "/api/v1/inventory/adjustments",
+-  "status_transfer.post": "/api/v1/inventory/status-transfers"
++  "status_transfer.post": "/api/v1/inventory/status-transfers",
++  "movement.reverse": "/api/v1/inventory/movements/:id/reverse"
+ });
+ 
+ function intent(command) {
+@@ -19,7 +20,9 @@
+   if (!ROUTES[action] || command.authorization.requiredCallerPermission !== "inventory.adjust") {
+     throw permissionStaleError();
+   }
+-  return inventoryOperationHash({ commandType: action === "adjustment.post" ? "ADJUSTMENT_POST" : "STATUS_TRANSFER_POST",
++  const commandType = action === "adjustment.post" ? "ADJUSTMENT_POST"
++    : action === "status_transfer.post" ? "STATUS_TRANSFER_POST" : "MOVEMENT_REVERSE";
++  return inventoryOperationHash({ commandType,
+     payload: { action, actor: command.actor, source: command.source, payload: command.payload, correlationId: command.correlationId } });
+ }
+ 
+@@ -99,6 +102,13 @@
+       req.apiRoute?.authType !== "jwt-device-password" || !ROUTES[action] || req.apiRoute.path !== ROUTES[action] ||
+       !Number.isSafeInteger(actorId) || actorId <= 0 || actorId !== command.actor.userId ||
+       !Array.isArray(auth.claims.roles) || !Array.isArray(auth.claims.permissions)) throw permissionStaleError();
++  if (action === "movement.reverse") {
++    const params = req.input?.params;
++    if (!params || typeof params !== "object" || Array.isArray(params) || Object.keys(params).length !== 1 ||
++        typeof params.id !== "string" || !/^[1-9][0-9]*$/u.test(params.id) ||
++        !Number.isSafeInteger(command.payload.movementId) || command.payload.movementId <= 0 ||
++        params.id !== String(command.payload.movementId)) throw permissionStaleError();
++  }
+   assertPermissionsCurrent({ claimedRoles: command.actor.claimedRoles, claimedPermissions: command.actor.claimedPermissions,
+     currentRoles: auth.claims.roles, currentPermissions: auth.claims.permissions });
+   const binding = auth.deviceBinding;
+--- /dev/null
++++ b/server/src/modules/inventory/inventoryReversalPosting.js
+@@ -0,0 +1,291 @@
++import { inventoryError } from "./inventoryErrors.js";
++import { consumeInventoryHighRiskContext } from "./inventoryHighRiskContext.js";
++import { calculateInventoryAvailability, meetsMinimumRemainingLife, validateInventoryCommandContext,
++  validateInventoryLotInput } from "./inventoryValidation.js";
++
++const PAYLOAD_FIELDS = new Set(["movementId", "reasonText", "expectedBalances"]);
++const BALANCE_FIELDS = new Set(["balanceId", "expectedVersion"]);
++
++function id(value, field) {
++  if (!Number.isSafeInteger(value) || value <= 0) throw inventoryError("INVENTORY_INPUT_INVALID", { field });
++  return value;
++}
++
++export function normalizeReversalCommand(tx, command) {
++  const context = validateInventoryCommandContext(tx, command, { purpose: "movement.reverse", requiredCallerPermission: "inventory.adjust" });
++  if (context.actor.userId === null) throw inventoryError("PERMISSION_STALE");
++  const source = context.payload;
++  if (Object.keys(source).some(field => !PAYLOAD_FIELDS.has(field))) throw inventoryError("INVENTORY_INPUT_INVALID", { field: "payload" });
++  const reasonText = typeof source.reasonText === "string" ? source.reasonText.trim() : "";
++  if (!reasonText || Buffer.byteLength(reasonText, "utf8") > 500 || /[\p{Cc}]/u.test(reasonText)) {
++    throw inventoryError("INVENTORY_INPUT_INVALID", { field: "reasonText" });
++  }
++  if (!Array.isArray(source.expectedBalances) || source.expectedBalances.length < 1 || source.expectedBalances.length > 200) {
++    throw inventoryError("INVENTORY_INPUT_INVALID", { field: "expectedBalances" });
++  }
++  const seen = new Set();
++  const expectedBalances = source.expectedBalances.map(row => {
++    if (!row || typeof row !== "object" || Array.isArray(row) || Object.keys(row).some(field => !BALANCE_FIELDS.has(field))) {
++      throw inventoryError("INVENTORY_INPUT_INVALID", { field: "expectedBalances" });
++    }
++    const balanceId = id(row.balanceId, "balanceId"), expectedVersion = id(row.expectedVersion, "expectedVersion");
++    if (expectedVersion > 4_294_967_295 || seen.has(balanceId)) throw inventoryError("INVENTORY_INPUT_INVALID", { field: "expectedBalances" });
++    seen.add(balanceId);
++    return { balanceId, expectedVersion };
++  }).sort((a, b) => a.balanceId - b.balanceId);
++  return { ...context, payload: { movementId: id(source.movementId, "movementId"), reasonText, expectedBalances } };
++}
++
++const ORIGINAL_COMMANDS = Object.freeze({ RECEIPT: "RECEIPT_POST", ISSUE: "ISSUE_POST", BIN_MOVE: "BIN_MOVE_POST",
++  STATUS_TRANSFER: "STATUS_TRANSFER_POST", ADJUSTMENT: "ADJUSTMENT_POST" });
++const GROUP_SELECT = `SELECT m.*, DATE_FORMAT(m.expiry_date_snapshot, '%Y-%m-%d') AS expiry_date_snapshot
++  FROM inventory_movements m WHERE movement_group_id = ? ORDER BY id LIMIT 201`;
++
++function denied() { return inventoryError("REVERSAL_NOT_ALLOWED"); }
++function quantity(value) {
++  const result = Number(value);
++  if (value === null || !Number.isSafeInteger(result) || result < 0) throw denied();
++  return result;
++}
++function dimension(row) {
++  return { warehouseId: Number(row.warehouse_id), skuId: Number(row.sku_id), binId: Number(row.bin_id),
++    lotId: row.lot_id === null ? null : Number(row.lot_id), stockStatus: row.stock_status };
++}
++function key(row) {
++  return `${row.warehouse_id}:${row.sku_id}:${row.bin_id}:${row.lot_id ?? 0}:${row.stock_status}`;
++}
++function assertOriginal(rows, groupId, selectedId) {
++  if (rows.length < 1 || rows.length > 200 || !rows.some(row => Number(row.id) === selectedId)) throw denied();
++  const first = rows[0];
++  if (!Object.hasOwn(ORIGINAL_COMMANDS, first.movement_type)) throw inventoryError("MOVEMENT_TYPE_NOT_REVERSIBLE");
++  for (const row of rows) {
++    if (row.location_kind !== "BIN") throw inventoryError("MOVEMENT_TYPE_NOT_REVERSIBLE");
++    if (row.movement_group_id !== groupId || row.movement_type !== first.movement_type ||
++        Number(row.operation_request_id) !== Number(first.operation_request_id) || row.reversal_of_movement_id !== null ||
++        [row.transfer_id, row.transfer_line_id, row.stocktake_id, row.stocktake_line_id].some(value => value !== null) ||
++        !["IN", "OUT"].includes(row.direction) || !["AVAILABLE", "QUARANTINED", "DAMAGED"].includes(row.stock_status)) throw denied();
++    for (const value of [row.id, row.operation_request_id, row.warehouse_id, row.sku_id, row.bin_id,
++      ...(row.lot_id === null ? [] : [row.lot_id]), row.balance_version_after]) {
++      if (!Number.isSafeInteger(Number(value)) || Number(value) <= 0) throw denied();
++    }
++    const amount = quantity(row.quantity), before = quantity(row.balance_before), after = quantity(row.balance_after);
++    if (amount === 0 || after !== before + (row.direction === "IN" ? amount : -amount) ||
++        Number(row.balance_version_after) > 4_294_967_295) throw denied();
++  }
++}
++function assertCompletedGroup(operation, rows) {
++  const first = rows[0];
++  if (!operation || Number(operation.id) !== Number(first.operation_request_id) || operation.completed_at === null ||
++      operation.completed_at === undefined || operation.result_type !== "MOVEMENT_GROUP" ||
++      operation.result_id !== first.movement_group_id || operation.command_type !== ORIGINAL_COMMANDS[first.movement_type]) throw denied();
++  let summary;
++  try { summary = typeof operation.result_summary === "string" ? JSON.parse(operation.result_summary) : operation.result_summary; }
++  catch { throw denied(); }
++  if (!summary || summary.status !== "POSTED" || Number(summary.operationId) !== Number(operation.id) ||
++      summary.movementGroupId !== first.movement_group_id) throw denied();
++  const type = first.movement_type;
++  const count = type === "RECEIPT" ? 1 : type === "ISSUE" ? Number(summary.rowCount)
++    : Number(summary.lineCount) * (type === "BIN_MOVE" ? 2 : 1);
++  if (!Number.isSafeInteger(count) || count !== rows.length ||
++      (type === "RECEIPT" && (Number(summary.movementId) !== Number(first.id) || first.direction !== "IN")) ||
++      (type === "ADJUSTMENT" && count !== 1) || (type === "STATUS_TRANSFER" && count !== 2) ||
++      (type === "ISSUE" && rows.some(row => row.direction !== "OUT"))) throw denied();
++  if (!["BIN_MOVE", "STATUS_TRANSFER"].includes(type)) return;
++  for (let index = 0; index < rows.length; index += 2) {
++    const out = rows[index], incoming = rows[index + 1];
++    if (!incoming || out.direction !== "OUT" || incoming.direction !== "IN" ||
++        ["warehouse_id", "sku_id", "lot_id", "quantity"].some(field => out[field] !== incoming[field]) ||
++        (type === "BIN_MOVE" ? out.stock_status !== incoming.stock_status || out.bin_id === incoming.bin_id
++          : out.bin_id !== incoming.bin_id || out.stock_status === incoming.stock_status)) throw denied();
++  }
++}
++function groupIdentity(rows) {
++  return JSON.stringify(rows.map(row => [row.id, row.operation_request_id, row.movement_group_id, row.movement_type,
++    row.location_kind, key(row), row.direction, row.quantity, row.balance_before, row.balance_after, row.balance_version_after,
++    row.reversal_of_movement_id, row.expiry_date_snapshot, row.transfer_id, row.transfer_line_id, row.stocktake_id, row.stocktake_line_id]));
++}
++function replayResult(summary) {
++  return { status: summary.status, operationId: Number(summary.operationId), movementGroupId: summary.movementGroupId,
++    lineCount: Number(summary.lineCount) };
++}
++
++// The Posting owner supplies the sole transaction; no workflow state or original ledger is rewritten.
++export async function reverseMovementInTransaction(service, tx, command, context) {
++  const normalized = normalizeReversalCommand(tx, command);
++  const guard = consumeInventoryHighRiskContext(context, normalized);
++  try { return await post(service, tx, normalized, guard); }
++  catch (error) {
++    if (["ER_LOCK_DEADLOCK", "ER_LOCK_WAIT_TIMEOUT"].includes(error?.cause?.code ?? error?.code)) throw inventoryError("CONCURRENT_OPERATION");
++    throw error;
++  }
++}
++
++async function post(service, tx, command, guard) {
++  const { payload, actor: requestedActor, source, correlationId } = command;
++  let actor = await guard.check(tx);
++  const startedAt = service.time.nowMs();
++  const claim = await service.operations.claim(tx, { commandType: "MOVEMENT_REVERSE", source, payload, actorUserId: null,
++    actorLabel: actor.username || `user:${requestedActor.userId}`, requestId: correlationId, correlationId, createdAt: startedAt });
++  tx.checkpoint?.("operation");
++  if (claim.replay) {
++    await guard.check(tx, { locking: true });
++    return replayResult(claim.replay.resultSummary);
++  }
++  const [[anchor]] = await tx.query("SELECT movement_group_id FROM inventory_movements WHERE id = ?", [payload.movementId]);
++  if (!anchor) throw inventoryError("INVENTORY_RESOURCE_NOT_FOUND");
++  const groupId = anchor.movement_group_id;
++  const [discovered] = await tx.query(GROUP_SELECT, [groupId]);
++  assertOriginal(discovered, groupId, payload.movementId);
++  const buckets = [...new Map(discovered.map(row => [key(row), dimension(row)])).values()]
++    .sort((a, b) => a.warehouseId - b.warehouseId || a.skuId - b.skuId || a.binId - b.binId ||
++      (a.lotId ?? 0) - (b.lotId ?? 0) || (a.stockStatus < b.stockStatus ? -1 : a.stockStatus > b.stockStatus ? 1 : 0));
++  const controls = [...new Map(buckets.map(row => [`${row.warehouseId}:${row.skuId}`, { warehouseId: row.warehouseId, skuId: row.skuId }])).values()];
++  const lotIds = [...new Set(buckets.flatMap(row => row.lotId === null ? [] : [row.lotId]))];
++  const [discoveredLots] = lotIds.length ? await tx.query(`SELECT id, sku_id, normalized_lot_number FROM inventory_lots
++    WHERE id IN (${lotIds.map(() => "?").join(", ")})`, lotIds) : [[]];
++  if (discoveredLots.length !== lotIds.length) throw denied();
++  const locked = await service.locks.lockForCommand(tx, { warehouseIds: buckets.map(row => row.warehouseId), stockControls: controls,
++    binIds: buckets.map(row => row.binId), lots: discoveredLots.map(row => ({ skuId: Number(row.sku_id), normalizedLotNumber: row.normalized_lot_number })), now: startedAt });
++  if (locked.binLocks.length) throw denied();
++  for (const bucket of buckets) {
++    const warehouse = locked.warehouses.find(row => Number(row.id) === bucket.warehouseId);
++    const bin = locked.bins.find(row => Number(row.id) === bucket.binId);
++    if (warehouse?.status !== "ACTIVE" || bin?.status !== "ACTIVE" || Number(bin.warehouse_id) !== bucket.warehouseId ||
++        !locked.stockControls.some(row => Number(row.warehouse_id) === bucket.warehouseId && Number(row.sku_id) === bucket.skuId)) throw denied();
++  }
++  const [lots] = lotIds.length ? await tx.query(`SELECT id, sku_id, lot_number, normalized_lot_number,
++    DATE_FORMAT(expiry_date, '%Y-%m-%d') AS expiry_date, DATE_FORMAT(manufacture_date, '%Y-%m-%d') AS manufacture_date,
++    DATE_FORMAT(first_receipt_date, '%Y-%m-%d') AS first_receipt_date FROM inventory_lots
++    WHERE id IN (${lotIds.map(() => "?").join(", ")}) ORDER BY sku_id, normalized_lot_number FOR UPDATE`, lotIds) : [[]];
++  if (lots.length !== lotIds.length || lots.some(row => !discoveredLots.some(original => Number(original.id) === Number(row.id) &&
++      Number(original.sku_id) === Number(row.sku_id) && original.normalized_lot_number === row.normalized_lot_number))) throw denied();
++  // Do not call lockBalancesAfterLot: absent historical buckets must fail, never be recreated.
++  const [balances] = await tx.query(`SELECT id, warehouse_id, bin_id, sku_id, lot_id, stock_status,
++    on_hand_quantity, allocated_quantity, version, DATE_FORMAT(fifo_anchor_date, '%Y-%m-%d') AS fifo_anchor_date
++    FROM inventory_stock_balances WHERE ${buckets.map(() =>
++    "(warehouse_id = ? AND sku_id = ? AND bin_id = ? AND lot_scope = ? AND stock_status = ?)").join(" OR ")}
++    ORDER BY warehouse_id, sku_id, bin_id, lot_scope, stock_status FOR UPDATE`,
++  buckets.flatMap(row => [row.warehouseId, row.skuId, row.binId, row.lotId ?? 0, row.stockStatus]));
++  if (balances.length !== buckets.length) throw denied();
++  const expected = new Map(payload.expectedBalances.map(row => [row.balanceId, row.expectedVersion]));
++  if (expected.size !== balances.length || balances.some(row => !expected.has(Number(row.id)))) throw denied();
++  // Current reads, only after stock locks. Never decide once-only from the discovery RR snapshot.
++  // Source: https://dev.mysql.com/doc/refman/26.7/en/innodb-locking-reads.html
++  const [[operation]] = await tx.query(`SELECT id, command_type, result_type, result_id, result_summary, completed_at
++    FROM inventory_operation_requests WHERE id = ? FOR UPDATE`, [Number(discovered[0].operation_request_id)]);
++  const [originals] = await tx.query(GROUP_SELECT + " FOR UPDATE", [groupId]);
++  assertOriginal(originals, groupId, payload.movementId);
++  if (groupIdentity(originals) !== groupIdentity(discovered)) throw denied();
++  assertCompletedGroup(operation, originals);
++  const [reversals] = await tx.query(`SELECT id FROM inventory_movements
++    WHERE reversal_of_movement_id IN (${originals.map(() => "?").join(", ")}) ORDER BY reversal_of_movement_id FOR UPDATE`,
++  originals.map(row => Number(row.id)));
++  if (reversals.length) throw inventoryError("MOVEMENT_ALREADY_REVERSED");
++  for (const row of balances) if (expected.get(Number(row.id)) !== Number(row.version)) throw inventoryError("VERSION_CONFLICT");
++  const profiles = new Map();
++  const currentItem = { query: (sql, params) => tx.query(sql + " FOR SHARE", params) };
++  for (const skuId of [...new Set(buckets.map(row => row.skuId))].sort((a, b) => a - b)) {
++    const profile = await service.itemLookup.getInventoryProfileInTransaction(currentItem, skuId);
++    if (!profile || Number(profile.skuId) !== skuId || !profile.inventoryTracked || !profile.usable ||
++        !["none", "batch", "batch_expiry"].includes(profile.trackingPolicy)) throw denied();
++    profiles.set(skuId, profile);
++  }
++  const byLot = new Map(lots.map(row => [Number(row.id), row]));
++  const working = new Map(balances.map(row => [key(row), { ...row }]));
++  for (const row of originals) {
++    const lot = byLot.get(Number(row.lot_id)), profile = profiles.get(Number(row.sku_id));
++    if (row.lot_id !== null && (!lot || Number(lot.sku_id) !== Number(row.sku_id) || lot.expiry_date !== row.expiry_date_snapshot)) throw denied();
++    try { validateInventoryLotInput({ trackingPolicy: profile.trackingPolicy, lotNumber: lot?.lot_number,
++      expiryDate: lot?.expiry_date, manufactureDate: lot?.manufacture_date }); }
++    catch { throw denied(); }
++    if (!working.has(key(row))) throw denied();
++  }
++  const outgoing = new Map();
++  for (const row of originals) if (row.direction === "IN") outgoing.set(key(row), quantity((outgoing.get(key(row)) ?? 0) + quantity(row.quantity)));
++  for (const row of balances) {
++    const onHand = quantity(row.on_hand_quantity), allocated = quantity(row.allocated_quantity);
++    if (allocated > onHand || (outgoing.get(key(row)) ?? 0) > onHand - allocated) throw denied();
++  }
++  const date = service.time.fileDate();
++  const legs = [];
++  for (const original of [...originals].reverse()) {
++    const row = working.get(key(original)), before = quantity(row.on_hand_quantity), version = Number(row.version);
++    const direction = original.direction === "IN" ? "OUT" : "IN", amount = quantity(original.quantity);
++    const after = quantity(before + (direction === "IN" ? amount : -amount));
++    if (after < quantity(row.allocated_quantity) || !Number.isSafeInteger(version) || version < 1 || version >= 4_294_967_295) throw denied();
++    const fifoAnchor = after === 0 ? null : before === 0 ? date : row.fifo_anchor_date;
++    legs.push({ original, row, direction, amount, before, after, version, fifoAnchor });
++    row.on_hand_quantity = after; row.version = version + 1; row.fifo_anchor_date = fifoAnchor;
++  }
++  for (const scope of controls) {
++    const profile = profiles.get(scope.skuId);
++    const [available] = await tx.query(`SELECT b.id, b.on_hand_quantity, DATE_FORMAT(l.expiry_date, '%Y-%m-%d') AS expiry_date
++      FROM inventory_stock_balances b LEFT JOIN inventory_lots l ON l.id = b.lot_id
++      WHERE b.warehouse_id = ? AND b.sku_id = ? AND b.stock_status = 'AVAILABLE'
++      ORDER BY b.warehouse_id, b.sku_id, b.bin_id, b.lot_scope, b.stock_status FOR SHARE`, [scope.warehouseId, scope.skuId]);
++    let before = 0, after = 0;
++    for (const row of available) {
++      if (!meetsMinimumRemainingLife(row.expiry_date ?? null, date, profile.minimumSaleLifeDays ?? 0)) continue;
++      before = quantity(before + quantity(row.on_hand_quantity));
++      const changed = [...working.values()].find(value => Number(value.id) === Number(row.id));
++      after = quantity(after + quantity(changed ? changed.on_hand_quantity : row.on_hand_quantity));
++    }
++    const control = locked.stockControls.find(row => Number(row.warehouse_id) === scope.warehouseId && Number(row.sku_id) === scope.skuId);
++    const reserved = quantity(control.reserved_quantity);
++    if (calculateInventoryAvailability({ eligibleOnHand: after, reserved }).uncoveredReserved >
++        calculateInventoryAvailability({ eligibleOnHand: before, reserved }).uncoveredReserved) throw denied();
++  }
++  actor = await guard.check(tx, { locking: true });
++  if (date !== service.time.fileDate()) throw inventoryError("CONCURRENT_OPERATION");
++  const [bound] = await tx.execute(`UPDATE inventory_operation_requests SET actor_user_id = ?
++    WHERE id = ? AND command_type = ? AND actor_user_id IS NULL AND completed_at IS NULL`, [actor.id, claim.operationId, "MOVEMENT_REVERSE"]);
++  if (Number(bound.affectedRows) !== 1) throw inventoryError("CONCURRENT_OPERATION");
++  guard.assertTime();
++  const actorLabel = actor.username || `user:${requestedActor.userId}`, postedAt = service.time.nowMs(), movementGroupId = service.createMovementGroupId();
++  for (const { original, row, direction, amount, before, after, version, fifoAnchor } of legs) {
++    const [updated] = await tx.execute(`UPDATE inventory_stock_balances
++      SET on_hand_quantity = ?, fifo_anchor_date = ?, version = version + 1, updated_at = ?
++      WHERE id = ? AND version = ?`, [after, fifoAnchor, postedAt, Number(row.id), version]);
++    if (Number(updated.affectedRows) !== 1) throw inventoryError("CONCURRENT_OPERATION");
++    tx.checkpoint?.("current_state");
++    const warehouse = locked.warehouses.find(value => Number(value.id) === Number(row.warehouse_id));
++    const bin = locked.bins.find(value => Number(value.id) === Number(row.bin_id));
++    const profile = profiles.get(Number(row.sku_id)), lot = byLot.get(Number(row.lot_id));
++    let movement;
++    try {
++      [movement] = await tx.execute(`INSERT INTO inventory_movements
++        (movement_group_id, operation_request_id, movement_type, location_kind, warehouse_id, bin_id, sku_id, lot_id,
++         stock_status, direction, quantity, balance_before, balance_after, balance_version_after, reservation_id, allocation_id,
++         transfer_id, transfer_line_id, stocktake_id, stocktake_line_id, reversal_of_movement_id, reason_category, reason_text,
++         sku_code_snapshot, sku_name_snapshot, warehouse_code_snapshot, bin_code_snapshot, lot_number_snapshot,
++         expiry_date_snapshot, posted_at, posted_by, posted_by_label)
++        VALUES (?, ?, 'REVERSAL', 'BIN', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, NULL, NULL, NULL, NULL, ?, '', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
++      [movementGroupId, claim.operationId, Number(row.warehouse_id), Number(row.bin_id), Number(row.sku_id), row.lot_id === null ? null : Number(row.lot_id),
++        row.stock_status, direction, amount, before, after, version + 1, Number(original.id), payload.reasonText,
++        profile.skuCode, profile.skuName, warehouse.warehouse_code, bin.bin_code, lot?.lot_number ?? "", lot?.expiry_date ?? null, postedAt, actor.id, actorLabel]);
++    } catch (error) {
++      const native = error?.cause ?? error;
++      if (native.code === "ER_DUP_ENTRY" && /for key ['`](?:inventory_movements\.)?uq_inventory_movement_reversal['`]/u.test(native.sqlMessage ?? "")) {
++        throw inventoryError("MOVEMENT_ALREADY_REVERSED");
++      }
++      throw error;
++    }
++    tx.checkpoint?.("movement");
++    await service.audit.recordSucceeded(tx, { actorUserId: actor.id, actorLabel, action: "movement.reverse",
++      targetType: "movement_group", targetId: Number(movement.insertId), targetLabel: movementGroupId, reasonText: payload.reasonText,
++      beforeSummary: { balanceId: Number(row.id), onHandQuantity: before, version, movementId: Number(original.id),
++        operationId: Number(operation.id), movementGroupId: groupId },
++      afterSummary: { balanceId: Number(row.id), onHandQuantity: after, allocatedQuantity: quantity(row.allocated_quantity), version: version + 1,
++        movementId: Number(movement.insertId), operationId: claim.operationId, movementGroupId, skuId: Number(row.sku_id),
++        lotId: row.lot_id === null ? null : Number(row.lot_id), stockStatus: row.stock_status, baseQuantity: amount,
++        baseUomId: profile.baseUom.uomId, ...guard.audit },
++      operationRequestId: claim.operationId, requestId: correlationId, correlationId, ip: "" });
++    tx.checkpoint?.("audit");
++  }
++  const result = { status: "POSTED", operationId: claim.operationId, movementGroupId, lineCount: legs.length };
++  guard.assertTime();
++  await service.operations.complete(tx, { operationId: claim.operationId, resultType: "MOVEMENT_GROUP",
++    resultId: movementGroupId, resultSummary: result, completedAt: service.time.nowMs() });
++  guard.assertTime();
++  return result;
++}
+--- a/server/test/integration/inventoryMovement.integration.test.js
++++ b/server/test/integration/inventoryMovement.integration.test.js
+@@ -16,6 +16,7 @@
+ import { InventoryPostingService } from "../../src/modules/inventory/InventoryPostingService.js";
+ import { InventoryLockService } from "../../src/modules/inventory/InventoryLockService.js";
+ import { normalizeAdjustmentCommand } from "../../src/modules/inventory/inventoryAdjustmentPosting.js";
++import { normalizeReversalCommand } from "../../src/modules/inventory/inventoryReversalPosting.js";
+ import { issueInventoryHighRiskContext } from "../../src/modules/inventory/inventoryHighRiskContext.js";
+ import { inventoryCommandFixture } from "../../test-support/inventoryFixtures.js";
+ import { createInventoryBarrier } from "../../test-support/fakeInventoryDatabase.js";
+@@ -160,9 +161,12 @@
+     payload: { quantity: 2, uomId: 1, reasonText: "Synthetic physical inspection", ...payload } });
+ }
+ function prepareAdjustment(command, clock = time, signal = new AbortController().signal) {
+-  const normalized = normalizeAdjustmentCommand({ query() {}, execute() {} }, command, command.authorization.purpose);
++  const reverse = command.authorization.purpose === "movement.reverse";
++  const normalized = reverse ? normalizeReversalCommand({ query() {}, execute() {} }, command)
++    : normalizeAdjustmentCommand({ query() {}, execute() {} }, command, command.authorization.purpose);
+   const now = clock.nowMs(), deviceId = "a".repeat(64);
+-  const req = { method: "POST", apiRoute: { authType: "jwt-device-password", path: command.authorization.purpose === "adjustment.post"
++  const req = { method: "POST", ...(reverse ? { input: { params: { id: String(normalized.payload.movementId) } } } : {}),
++    apiRoute: { authType: "jwt-device-password", path: reverse ? "/api/v1/inventory/movements/:id/reverse" : command.authorization.purpose === "adjustment.post"
+     ? "/api/v1/inventory/adjustments" : "/api/v1/inventory/status-transfers" },
+     auth: { type: "jwt-device-password", claims: { sub: "8", roles: normalized.actor.claimedRoles,
+       permissions: normalized.actor.claimedPermissions, did: deviceId, exp: Math.floor(now / 1000) + 900,
+@@ -174,7 +178,8 @@
+ }
+ function submitAdjustment(command, posting = service, clock = time, signal) {
+   const prepared = prepareAdjustment(command, clock, signal);
+-  return command.authorization.purpose === "adjustment.post" ? posting.postAdjustment(prepared.command, prepared.context)
++  return command.authorization.purpose === "movement.reverse" ? posting.reverseMovement(prepared.command, prepared.context)
++    : command.authorization.purpose === "adjustment.post" ? posting.postAdjustment(prepared.command, prepared.context)
+     : posting.postStatusTransfer(prepared.command, prepared.context);
+ }
+ function increase(f, extra = {}) {
+@@ -738,3 +743,357 @@
+   assert.deepEqual((await balances(plain.skuId)).map(r => Number(r.on_hand_quantity)), [8,2]);
+   assert.deepEqual((await balances(batch.skuId)).map(r => Number(r.on_hand_quantity)), [8,9]);
+ });
++
++async function reversal(original, extra = {}, eventId = randomUUID(), anchor) {
++  const rows = await movementRows(original.movementGroupId);
++  const [guards] = await pool.query(`SELECT DISTINCT b.id AS balanceId, b.version AS expectedVersion
++    FROM inventory_stock_balances b JOIN inventory_movements m ON m.warehouse_id=b.warehouse_id
++      AND m.bin_id=b.bin_id AND m.sku_id=b.sku_id AND COALESCE(m.lot_id,0)=b.lot_scope AND m.stock_status=b.stock_status
++    WHERE m.movement_group_id=? ORDER BY b.id`, [original.movementGroupId]);
++  const command = adjustment({}, "movement.reverse", eventId);
++  command.source.documentType = "REVERSAL";
++  command.payload = { movementId: anchor ?? Number(rows[0].id), reasonText: "Synthetic full group compensation",
++    expectedBalances: guards.map(row => ({ balanceId: Number(row.balanceId), expectedVersion: Number(row.expectedVersion) })), ...extra };
++  return command;
++}
++function receipt(f, quantity = 2) {
++  return service.postReceipt(inventoryCommandFixture({ actor: { claimedPermissions: ["inventory.operation"] },
++    authorization: { purpose: "receipt.post", requiredCallerPermission: "inventory.operation" },
++    source: { module: "INVENTORY", documentType: "RECEIPT", documentId: "synthetic-task032", eventId: randomUUID() },
++    payload: { warehouseId: 1, binId: 1, skuId: f.skuId, uomId: 1, quantity, stockStatus: "AVAILABLE",
++      ...(f.lotId ? { lotNumber: `LOT-${f.skuId}`, expiryDate: "2026-12-31" } : {}) } }));
++}
++
++integrationTest("REV032-RECEIPT native historical version5 uses current9 after legitimate later events and retains immutable original", async () => {
++  const f = await fixture();
++  await pool.execute("UPDATE inventory_stock_balances SET version=4 WHERE id=?", [f.balanceId]);
++  const original = await receipt(f), history = await movementRows(original.movementGroupId);
++  assert.equal(Number(history[0].balance_version_after), 5);
++  for (const version of [5,6,7,8]) await submitAdjustment(increase(f, { quantity: 1, expectedBalanceVersion: version }));
++  const input = await reversal(original);
++  assert.equal(input.payload.expectedBalances[0].expectedVersion, 9);
++  await rejectsUnchanged(() => submitAdjustment({ ...input, payload: { ...input.payload,
++    expectedBalances: [{ balanceId: f.balanceId, expectedVersion: 5 }] } }), "VERSION_CONFLICT");
++  const result = await submitAdjustment(input), [row] = await balances(f.skuId);
++  assert.deepEqual([Number(row.on_hand_quantity), Number(row.version)], [14,10]);
++  assert.deepEqual(await movementRows(original.movementGroupId), history);
++  const [leg] = await movementRows(result.movementGroupId);
++  assert.deepEqual([leg.movement_type, leg.direction, Number(leg.quantity), Number(leg.reversal_of_movement_id), Number(leg.posted_by)],
++    ["REVERSAL","OUT",2,Number(history[0].id),8]);
++  const [[operation]] = await pool.execute("SELECT actor_user_id,result_summary FROM inventory_operation_requests WHERE id=?", [result.operationId]);
++  assert.equal(Number(operation.actor_user_id), 8); assert.deepEqual(operation.result_summary, result);
++});
++
++integrationTest("REV032-ADJUSTMENT native both directions at all three statuses undo Base quantity without historical updates", async () => {
++  for (const status of ["AVAILABLE","QUARANTINED","DAMAGED"]) for (const direction of ["IN","OUT"]) {
++    const f = await fixture({ status });
++    const original = await submitAdjustment(direction === "IN" ? increase(f, { stockStatus: status })
++      : adjustment({ direction, balanceId: f.balanceId, expectedBalanceVersion: 1, reasonCategory: "DAMAGE" }));
++    const history = await movementRows(original.movementGroupId), result = await submitAdjustment(await reversal(original));
++    assert.equal(Number((await balances(f.skuId))[0].on_hand_quantity), 10);
++    assert.deepEqual(await movementRows(original.movementGroupId), history);
++    assert.equal((await movementRows(result.movementGroupId))[0].direction, direction === "IN" ? "OUT" : "IN");
++  }
++});
++
++integrationTest("REV032-PAIRS native shared-bucket BinMove and six Status pairs reverse descending IDs with chained versions", async () => {
++  const f = await fixture();
++  const original = await service.postBinMove(move([f.line, f.line])), history = await movementRows(original.movementGroupId);
++  const result = await submitAdjustment(await reversal(original)), legs = await movementRows(result.movementGroupId);
++  assert.deepEqual(legs.map(row => Number(row.reversal_of_movement_id)), history.map(row => Number(row.id)).reverse());
++  assert.deepEqual(legs.map(row => Number(row.balance_version_after)), [4,4,5,5]);
++  assert.deepEqual((await balances(f.skuId)).map(row => Number(row.on_hand_quantity)), [10,0]);
++  for (const from of ["AVAILABLE","QUARANTINED","DAMAGED"]) for (const to of ["AVAILABLE","QUARANTINED","DAMAGED"]) {
++    if (from === to) continue;
++    const item = await fixture({ status: from });
++    const posted = await submitAdjustment(adjustment({ sourceBalanceId: item.balanceId, destinationStatus: to,
++      expectedSourceVersion: 1, expectedDestinationVersion: null }, "status_transfer.post"));
++    const reversed = await submitAdjustment(await reversal(posted));
++    assert.equal(reversed.lineCount, 2);
++    const rows = await balances(item.skuId);
++    assert.equal(Number(rows.find(row => row.stock_status === from).on_hand_quantity), 10);
++    assert.equal(Number(rows.find(row => row.stock_status === to).on_hand_quantity), 0);
++  }
++});
++
++integrationTest("REV032-ISSUE native full consumed Issue restores stock but never revives Reservation or Allocation", async () => {
++  const f = await fixture(), reservationService = new InventoryReservationService({ database, logger, time });
++  const command = (purpose, payload) => inventoryCommandFixture({ actor: { claimedPermissions: ["inventory.operation"] },
++    authorization: { purpose, requiredCallerPermission: "inventory.operation" }, source: { eventId: randomUUID() }, payload });
++  const reserved = await reservationService.create(command("reservation.create", { skuId: f.skuId, warehouseId: 1, quantity: 4, purpose: "SALE", minimumRemainingDays: 0 }));
++  const allocated = await reservationService.allocate(command("allocation.create", { reservationId: reserved.id, expectedVersion: reserved.version,
++    allocations: [{ balanceId: f.balanceId, expectedVersion: 1, quantity: 4 }] }));
++  const allocation = allocated.allocations[0];
++  const original = await service.postIssue(command("issue.post", { reservationId: reserved.id, expectedVersion: allocated.version,
++    lines: [{ allocationId: allocation.id, expectedVersion: allocation.version, balanceId: f.balanceId,
++      expectedBalanceVersion: allocation.balanceVersion, quantity: 4 }] }));
++  const before = await snapshot(), result = await submitAdjustment(await reversal(original)), after = await snapshot();
++  for (const table of ["inventory_reservations","inventory_allocations","inventory_stock_controls"]) assert.deepEqual(after[table], before[table]);
++  assert.deepEqual([Number((await balances(f.skuId))[0].on_hand_quantity), Number((await balances(f.skuId))[0].allocated_quantity)], [10,0]);
++  const [leg] = await movementRows(result.movementGroupId);
++  assert.equal(leg.reservation_id, null); assert.equal(leg.allocation_id, null); assert.equal(Number(leg.quantity), 4);
++});
++
++integrationTest("REV032-VERSIONS native complete guards reject absent/missing/extra buckets and never create historical placeholders", async () => {
++  const f = await fixture(), original = await service.postBinMove(move([f.line])), input = await reversal(original);
++  for (const expectedBalances of [input.payload.expectedBalances.slice(0,1),
++    [...input.payload.expectedBalances, { balanceId: 999999, expectedVersion: 1 }]]) {
++    await rejectsUnchanged(() => submitAdjustment({ ...input, payload: { ...input.payload, expectedBalances } }), "REVERSAL_NOT_ALLOWED");
++  }
++  const [rows] = await balances(f.skuId);
++  await pool.execute("DELETE FROM inventory_stock_balances WHERE id=?", [rows.id]);
++  await rejectsUnchanged(() => submitAdjustment(input), "REVERSAL_NOT_ALLOWED");
++});
++
++integrationTest("REV032-RESERVED native Control coverage and gross OUT refuse Allocated or future inverse IN funding", async () => {
++  const f = await fixture(), original = await receipt(f);
++  await pool.execute("UPDATE inventory_stock_balances SET allocated_quantity=11 WHERE id=?", [f.balanceId]);
++  await rejectsUnchanged(() => reversal(original).then(submitAdjustment), "REVERSAL_NOT_ALLOWED");
++  await pool.execute("UPDATE inventory_stock_balances SET allocated_quantity=0 WHERE id=?", [f.balanceId]);
++  await pool.execute("UPDATE inventory_stock_controls SET reserved_quantity=11 WHERE sku_id=?", [f.skuId]);
++  await rejectsUnchanged(() => reversal(original).then(submitAdjustment), "REVERSAL_NOT_ALLOWED");
++  const pair = await fixture(), posted = await service.postBinMove(move([pair.line, { ...pair.line, sourceBalanceId: pair.balanceId,
++    destinationBinId: 4 }]));
++  const rows = await balances(pair.skuId);
++  await pool.execute("UPDATE inventory_stock_balances SET allocated_quantity=1 WHERE id=?", [rows.find(row => Number(row.bin_id) === 4).id]);
++  await rejectsUnchanged(() => reversal(posted).then(submitAdjustment), "REVERSAL_NOT_ALLOWED");
++});
++
++integrationTest("REV032-LOT-LIFE-FIFO native expired original IN compensation preserves Lot dates/creator and never funds uncovered Sale Reserved", async () => {
++  const f = await fixture({ onHand: 2, expiry: "2026-10-01" });
++  const original = await submitAdjustment(adjustment({ direction: "OUT", balanceId: f.balanceId, expectedBalanceVersion: 1,
++    quantity: 2, reasonCategory: "EXPIRY" }));
++  await pool.execute("UPDATE item_skus SET min_receipt_life_days=90,min_sale_life_days=90 WHERE id=?", [f.skuId]);
++  await pool.execute("UPDATE inventory_stock_controls SET reserved_quantity=3 WHERE sku_id=?", [f.skuId]);
++  const before = await snapshot(), result = await submitAdjustment(await reversal(original));
++  assert.deepEqual((await snapshot()).inventory_lots, before.inventory_lots);
++  assert.deepEqual((await snapshot()).inventory_stock_controls, before.inventory_stock_controls);
++  const [[row]] = await pool.execute("SELECT on_hand_quantity,DATE_FORMAT(fifo_anchor_date,'%Y-%m-%d') AS anchor FROM inventory_stock_balances WHERE id=?", [f.balanceId]);
++  assert.deepEqual([Number(row.on_hand_quantity),row.anchor], [2,time.fileDate()]);
++  const [[leg]] = await pool.execute("SELECT DATE_FORMAT(expiry_date_snapshot,'%Y-%m-%d') AS expiry FROM inventory_movements WHERE movement_group_id=?", [result.movementGroupId]);
++  assert.equal(leg.expiry, "2026-10-01");
++});
++
++integrationTest("REV032-ONCE native different sources discover old RR snapshot but only one complete group wins", async () => {
++  const f = await fixture(), original = await service.postBinMove(move([f.line])), history = await movementRows(original.movementGroupId);
++  const inputs = [await reversal(original), await reversal(original, {}, randomUUID(), Number(history[1].id))];
++  let arrived, release;
++  const reached = new Promise(resolve => { arrived = resolve; }), proceed = new Promise(resolve => { release = resolve; });
++  let discoveries = 0;
++  const wrapped = { withTransaction: work => database.withTransaction(tx => work({
++    execute: (...args) => tx.execute(...args), query: async (sql, params) => {
++      const result = await tx.query(sql, params);
++      if (sql.includes("FROM inventory_movements m") && !sql.includes("FOR UPDATE") && ++discoveries <= 2) {
++        if (discoveries === 2) arrived(); await proceed;
++      }
++      return result;
++    }
++  })) };
++  const posting = new InventoryPostingService({ database: wrapped, logger, time });
++  const pending = inputs.map(input => submitAdjustment(input, posting).then(result => ({ result }), error => ({ error })));
++  try { await reached; release(); const results = await Promise.all(pending);
++    assert.equal(results.filter(row => row.result).length, 1);
++    assert.equal(results.find(row => row.error).error.code, "MOVEMENT_ALREADY_REVERSED");
++    const winner = results.find(row => row.result).result;
++    assert.equal((await movementRows(winner.movementGroupId)).length, history.length);
++    const [links] = await pool.query("SELECT reversal_of_movement_id FROM inventory_movements WHERE reversal_of_movement_id IN (?,?)", history.map(row => row.id));
++    assert.equal(links.length, 2);
++    // Fault only the redundant link read: the actual native unique constraint is the last defence.
++    const backup = await fixture(), onceOriginal = await receipt(backup);
++    await submitAdjustment(await reversal(onceOriginal));
++    let nativeDuplicate = false;
++    const omittedRead = { withTransaction: work => database.withTransaction(tx => work({
++      query: (sql,params) => sql.includes("WHERE reversal_of_movement_id IN") ? Promise.resolve([[]]) : tx.query(sql,params),
++      execute: async (sql,params) => {
++        try { return await tx.execute(sql,params); }
++        catch (error) {
++          if (sql.startsWith("INSERT INTO inventory_movements")) {
++            assert.equal(error.code,"ER_DUP_ENTRY"); assert.match(error.sqlMessage,/uq_inventory_movement_reversal/u);
++            nativeDuplicate = true;
++          }
++          throw error;
++        }
++      }
++    })) };
++    const lastDefence = new InventoryPostingService({ database:omittedRead,logger,time });
++    await rejectsUnchanged(() => reversal(onceOriginal).then(command => submitAdjustment(command,lastDefence)),"MOVEMENT_ALREADY_REVERSED");
++    assert.equal(nativeDuplicate,true);
++  } finally { release(); await Promise.all(pending); }
++});
++
++integrationTest("REV032-DOMAIN-REPLAY native source claim wait retains original four scalars despite changed stock and Item", async () => {
++  const f = await fixture(), original = await receipt(f), input = await reversal(original);
++  let arrived, release, attempted;
++  const reached = new Promise(resolve => { arrived = resolve; }), proceed = new Promise(resolve => { release = resolve; });
++  const secondClaim = new Promise(resolve => { attempted = resolve; });
++  const posting = new InventoryPostingService({ database, logger, time }), claim = posting.operations.claim.bind(posting.operations);
++  let calls = 0;
++  posting.operations.claim = async (...args) => {
++    const call = ++calls; if (call === 2) attempted();
++    const result = await claim(...args); if (call === 1) { arrived(); await proceed; } return result;
++  };
++  const first = submitAdjustment(input, posting).then(result => ({ result }), error => ({ error }));
++  let second;
++  try {
++    await reached; second = submitAdjustment(input, posting).then(result => ({ result }), error => ({ error }));
++    await secondClaim; release(); const results = await Promise.all([first,second]);
++    for (const result of results) assert.ifError(result.error);
++    assert.deepEqual(results[0].result, results[1].result);
++    await pool.execute("UPDATE item_skus SET status='inactive' WHERE id=?", [f.skuId]);
++    await pool.execute("UPDATE inventory_stock_balances SET on_hand_quantity=0,fifo_anchor_date=NULL,version=version+1 WHERE id=?", [f.balanceId]);
++    const before = await snapshot(); assert.deepEqual(await submitAdjustment(input), results[0].result);
++    assert.deepEqual(await snapshot(), before);
++    await rejectsUnchanged(() => submitAdjustment({ ...input, payload: { ...input.payload, reasonText: "Changed intent" } }), "INVENTORY_SOURCE_CONFLICT");
++  } finally { release(); await first; if (second) await second; }
++});
++
++integrationTest("REV032-REVOKE-ORDER native Warehouse/Lot/Bucket waits accept committed revocation then reject stale proof atomically", async () => {
++  for (const phase of ["warehouse","lot","balance"]) for (const kind of ["permission","role","user","device","token"]) {
++    const f = await fixture({ expiry: "2026-12-31" }), original = await receipt(f), input = await reversal(original);
++    const before = await snapshot(), blocker = await pool.getConnection(), writer = await pool.getConnection();
++    let arrived;
++    const reached = new Promise(resolve => { arrived = resolve; });
++    const wrapped = { withTransaction: work => database.withTransaction(tx => work({
++      execute: (...args) => tx.execute(...args), query: (sql, params) => {
++        if (sql.includes("FOR UPDATE") && sql.includes(phase === "warehouse" ? "FROM inventory_warehouses"
++          : phase === "lot" ? "FROM inventory_lots" : "FROM inventory_stock_balances")) arrived();
++        return tx.query(sql, params);
++      }
++    })) };
++    const posting = new InventoryPostingService({ database: wrapped, logger, time });
++    let pending;
++    try {
++      await blocker.beginTransaction();
++      await blocker.query(phase === "warehouse" ? "SELECT id FROM inventory_warehouses WHERE id=1 FOR UPDATE"
++        : phase === "lot" ? "SELECT id FROM inventory_lots WHERE id=? FOR UPDATE"
++          : "SELECT id FROM inventory_stock_balances WHERE id=? FOR UPDATE", phase === "warehouse" ? [] : [phase === "lot" ? f.lotId : f.balanceId]);
++      pending = submitAdjustment(input, posting).then(result => ({ result }), error => ({ error }));
++      await reached; await writer.query("SET SESSION innodb_lock_wait_timeout=2");
++      if (kind === "permission") await writer.query("DELETE rp FROM role_permissions rp JOIN permissions p ON p.id=rp.permission_id WHERE rp.role_id=2 AND p.name='inventory.adjust'");
++      if (kind === "role") await writer.query("DELETE FROM user_roles WHERE user_id=8");
++      if (kind === "user") await writer.query("UPDATE users SET status='inactive' WHERE id=8");
++      if (kind === "device") await writer.query("UPDATE user_devices SET status='revoked' WHERE id=1");
++      if (kind === "token") await writer.query("INSERT INTO fr_token_versions VALUES ('8',1)");
++      await blocker.commit(); const outcome = await pending;
++      assert.equal(outcome.error?.code, kind === "device" ? "DEVICE_REVOKED" : kind === "token" ? "JWT_INVALID" : "PERMISSION_STALE");
++      assert.deepEqual(await snapshot(), before);
++    } finally {
++      await blocker.rollback(); blocker.release(); if (pending) await pending;
++      if (kind === "permission") await writer.query("INSERT INTO role_permissions SELECT 2,id FROM permissions WHERE name='inventory.adjust'");
++      if (kind === "role") await writer.query("INSERT INTO user_roles VALUES (8,2)");
++      if (kind === "user") await writer.query("UPDATE users SET status='active' WHERE id=8");
++      if (kind === "device") await writer.query("UPDATE user_devices SET status='approved' WHERE id=1");
++      if (kind === "token") await writer.query("DELETE FROM fr_token_versions WHERE subject='8'");
++      writer.release();
++    }
++  }
++});
++
++integrationTest("REV032-ROLLBACK native each leg/Audit/completion/precommit and actor-bind failures leave zero effects", async () => {
++  const f = await fixture(), original = await service.postBinMove(move([f.line])), input = await reversal(original);
++  for (const [target, occurrence] of [["operation",1],["current_state",1],["current_state",2],["movement",1],["movement",2],
++    ["audit",1],["audit",2],["complete",1],["PRE_COMMIT",1],["bind-zero",1],["bind-error",1]]) {
++    const before = await snapshot(); let count = 0, reached = false;
++    const fault = () => { reached = true; throw Object.assign(new Error("Synthetic reversal fault"), { faultPoint: target }); };
++    const wrapped = { withTransaction: work => database.withTransaction(async tx => {
++      const result = await work({ query: (...args) => tx.query(...args),
++        checkpoint: point => { if (point === target && ++count === occurrence) fault(); },
++        execute: async (sql, params) => {
++          if (sql.startsWith("UPDATE inventory_operation_requests SET actor_user_id")) {
++            if (target === "bind-error") fault();
++            if (target === "bind-zero") { reached = true; return tx.execute(sql.replace("WHERE id = ?", "WHERE id = ? AND 1=0"), params); }
++          }
++          const value = await tx.execute(sql, params);
++          if (target === "complete" && sql.includes("SET result_type = ?")) fault();
++          return value;
++        } });
++      if (target === "PRE_COMMIT") fault(); return result;
++    }) };
++    const posting = new InventoryPostingService({ database: wrapped, logger, time });
++    await assert.rejects(() => submitAdjustment(input, posting), target === "bind-zero" ? { code: "CONCURRENT_OPERATION" } : { faultPoint: target });
++    assert.equal(reached, true, target); assert.deepEqual(await snapshot(), before);
++  }
++});
++
++integrationTest("REV032-GROUP native incomplete completed summary, forbidden Transfer and Reversal groups fail closed", async () => {
++  const f = await fixture(), operations = new InventoryOperationService(), complete = operations.complete.bind(operations);
++  operations.complete = (tx, value) => complete(tx, { ...value, resultSummary: { ...value.resultSummary, lineCount: 2 } });
++  const posting = new InventoryPostingService({ database,logger,time,operations });
++  const incomplete = await posting.postBinMove(move([f.line]));
++  await rejectsUnchanged(() => reversal(incomplete).then(submitAdjustment), "REVERSAL_NOT_ALLOWED");
++  const item = await fixture(), original = await receipt(item), reversed = await submitAdjustment(await reversal(original));
++  await rejectsUnchanged(() => reversal(reversed).then(submitAdjustment), "MOVEMENT_TYPE_NOT_REVERSIBLE");
++  const transfer = new InventoryTransferService({ database,logger,time });
++  const command = (action,payload) => inventoryCommandFixture({ actor:{ claimedPermissions:["inventory.operation"] },
++    authorization:{ purpose:`transfer.${action}`,requiredCallerPermission:"inventory.operation" },source:{ eventId:randomUUID() },payload });
++  const draft = await transfer.create(command("create",{ sourceWarehouseId:1,destinationWarehouseId:2,
++    lines:[{ skuId:item.skuId,lotId:null,sourceBinId:1,stockStatus:"AVAILABLE",quantity:1 }] }));
++  const dispatched = await transfer.dispatch(command("dispatch",{ transferId:draft.id,expectedVersion:1 }));
++  const [[leg]] = await pool.execute("SELECT movement_group_id FROM inventory_movements WHERE operation_request_id=? ORDER BY id LIMIT 1",[dispatched.operationId]);
++  await rejectsUnchanged(() => reversal({ movementGroupId:leg.movement_group_id }).then(submitAdjustment), "MOVEMENT_TYPE_NOT_REVERSIBLE");
++});
++
++integrationTest("REV032-RESERVED native competing Reserve and reversal serialize the same Control with one invariant-safe winner", async () => {
++  const f = await fixture({ onHand:1 }), original = await receipt(f,4), input = await reversal(original);
++  const operations = competingOperations(), posting = new InventoryPostingService({ database,logger,time,operations });
++  const reservations = new InventoryReservationService({ database,logger,time,operations });
++  const command = inventoryCommandFixture({ actor:{ claimedPermissions:["inventory.operation"] },
++    authorization:{ purpose:"reservation.create",requiredCallerPermission:"inventory.operation" },source:{ eventId:randomUUID() },
++    payload:{ warehouseId:1,skuId:f.skuId,quantity:4,purpose:"SALE",minimumRemainingDays:0 } });
++  const results = await Promise.allSettled([submitAdjustment(input,posting),reservations.create(command)]);
++  assert.equal(results.filter(row => row.status==="fulfilled").length,1);
++  assert.ok(["REVERSAL_NOT_ALLOWED","INSUFFICIENT_ATP"].includes(results.find(row => row.status==="rejected").reason.code));
++  const [[control]] = await pool.execute("SELECT reserved_quantity FROM inventory_stock_controls WHERE warehouse_id=1 AND sku_id=?",[f.skuId]);
++  assert.ok(Number(control.reserved_quantity) <= Number((await balances(f.skuId))[0].on_hand_quantity));
++});
++
++integrationTest("REV032-REVOKE-ORDER native final security locks block revocation and preserve original proof deadlines after bind", async () => {
++  const f = await fixture(), original = await receipt(f), input = await reversal(original), writer = await pool.getConnection();
++  let reached,release;
++  const guarded = new Promise(resolve => { reached=resolve; }), resume = new Promise(resolve => { release=resolve; });
++  const wrapped = { withTransaction:work => database.withTransaction(tx => work({
++    execute:(...args) => tx.execute(...args),query:async (sql,params) => {
++      const result = await tx.query(sql,params);
++      if (sql.includes("FROM fr_token_versions") && sql.includes("FOR SHARE")) { reached(); await resume; }
++      return result;
++    }
++  })) };
++  const posting = new InventoryPostingService({ database:wrapped,logger,time });
++  const pending = submitAdjustment(input,posting).then(result => ({ result }),error => ({ error }));
++  try {
++    await guarded; await writer.query("SET SESSION innodb_lock_wait_timeout=1");
++    await assert.rejects(() => writer.query("UPDATE user_devices SET status='revoked' WHERE id=1"),{ code:"ER_LOCK_WAIT_TIMEOUT" });
++    release(); const result = await pending; assert.ifError(result.error);
++    await writer.query("UPDATE user_devices SET status='revoked' WHERE id=1");
++    await rejectsUnchanged(() => submitAdjustment(input),"DEVICE_REVOKED");
++  } finally { release(); await pending; await writer.query("UPDATE user_devices SET status='approved' WHERE id=1"); writer.release(); }
++  const next = await fixture(), posted = await receipt(next), command = await reversal(posted);
++  for (const kind of ["deadline","abort","midnight","cas","lock-timeout"]) {
++    let now=time.nowMs(),date=time.fileDate(),entered=false;
++    const abort = new AbortController(),clock={ nowMs:()=>now,fileDate:()=>date };
++    const failed = { withTransaction:work => database.withTransaction(tx => work({
++      query:async (sql,params) => {
++        const result = await tx.query(sql,params);
++        if (kind==="midnight" && sql.includes("FROM fr_token_versions") && sql.includes("FOR SHARE")) { entered=true; date="2026-10-03"; }
++        return result;
++      },execute:async (sql,params) => {
++        if (kind==="lock-timeout" && sql.startsWith("UPDATE inventory_stock_balances")) {
++          entered=true; return tx.query("SIGNAL SQLSTATE 'HY000' SET MYSQL_ERRNO=1205,MESSAGE_TEXT='Synthetic lock wait timeout'");
++        }
++        if (kind==="cas" && sql.startsWith("UPDATE inventory_stock_balances")) {
++          entered=true; return tx.execute(sql.replace("WHERE id = ?","WHERE id = ? AND 1=0"),params);
++        }
++        const result = await tx.execute(sql,params);
++        if (sql.startsWith("UPDATE inventory_operation_requests SET actor_user_id")) {
++          if (kind==="deadline") { entered=true; now+=60001; }
++          if (kind==="abort") { entered=true; abort.abort(Object.assign(new Error("Synthetic timeout"),{ code:"REQUEST_TIMEOUT" })); }
++        }
++        return result;
++      }
++    })) };
++    const failing = new InventoryPostingService({ database:failed,logger,time:clock });
++    await rejectsUnchanged(() => submitAdjustment(command,failing,clock,abort.signal),
++      kind==="deadline" ? "DEVICE_SIGNATURE_STALE" : kind==="abort" ? "REQUEST_TIMEOUT" : "CONCURRENT_OPERATION");
++    assert.equal(entered,true,kind);
++  }
++});
+--- a/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js
++++ b/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js
+@@ -642,3 +642,151 @@
+     await db.execute("UPDATE users SET status='active' WHERE id=?", [adjuster.id]); adjustToken = await token(adjuster);
+   }
+ });
++
++async function reversalBody() {
++  const sku = await lookupSku(), now = Date.now();
++  const [balance] = await db.execute(`INSERT INTO inventory_stock_balances
++    (warehouse_id,bin_id,sku_id,stock_status,on_hand_quantity,fifo_anchor_date,created_at,updated_at)
++    VALUES (?,?,?,'AVAILABLE',10,'2026-01-01',?,?)`, [sourceWarehouseId,sourceBinId,sku.id,now,now]);
++  const posted = await highRisk({ source: { ...source(), documentType: "STATUS_TRANSFER" }, password,
++    sourceBalanceId: balance.insertId, destinationStatus: "DAMAGED", expectedSourceVersion: 1,
++    expectedDestinationVersion: null, quantity: 2, uomId: lookupUomId, reasonText: "Synthetic original status" },
++  "/api/v1/inventory/status-transfers");
++  assert.equal(posted.status, 200, JSON.stringify(posted.body));
++  const [legs] = await db.query("SELECT * FROM inventory_movements WHERE operation_request_id=? ORDER BY id", [posted.body.data.operationId]);
++  const [guards] = await db.query("SELECT id,version FROM inventory_stock_balances WHERE sku_id=? ORDER BY id", [sku.id]);
++  return { sku, legs, path: `/api/v1/inventory/movements/${legs[0].id}/reverse`, body: {
++    source: { ...source(), documentType: "REVERSAL" }, password, reasonText: "Synthetic full group correction",
++    expectedBalances: guards.map(row => ({ balanceId: Number(row.id), expectedVersion: Number(row.version) })) } };
++}
++
++integrationTest("REV032-INPUT real HTTP keeps canonical path and complete numeric guards strict before cache claims", async () => {
++  const f = await reversalBody(), [[before]] = await db.query("SELECT COUNT(*) AS n FROM fr_idempotency_keys");
++  for (const changes of [{ quantity: 2 }, { uomId: lookupUomId }, { movementId: f.legs[0].id }, { context: {} },
++    { expectedBalances: [{ balanceId: String(f.body.expectedBalances[0].balanceId), expectedVersion: 2 }] },
++    { expectedBalances: [{ balanceId: f.body.expectedBalances[0].balanceId, expectedVersion: "2" }] },
++    { expectedBalances: [{ balanceId: f.body.expectedBalances[0].balanceId, expectedVersion: null }] },
++    { expectedBalances: [f.body.expectedBalances[0],f.body.expectedBalances[0]] },
++    { reasonText: "中".repeat(167) }, { reasonText: "control\u007f" }]) {
++    await rejectedHighRisk({ ...f.body, ...changes }, 400, undefined, { path: f.path });
++  }
++  await rejectedHighRisk(f.body, 400, undefined, { path: `/api/v1/inventory/movements/0${f.legs[0].id}/reverse` });
++  assert.equal(Number((await db.query("SELECT COUNT(*) AS n FROM fr_idempotency_keys"))[0][0].n), Number(before.n));
++  await rejectedHighRisk({ ...f.body, expectedBalances: f.body.expectedBalances.slice(0,1) }, 409, "REVERSAL_NOT_ALLOWED", { path: f.path });
++});
++
++integrationTest("REV032-HTTP-BOUNDARY real third route requires current JWT-device-password and fixed inventory view plus adjust", async () => {
++  const f = await reversalBody();
++  await rejectedHighRisk(f.body, 400, "DEVICE_SIGNATURE_REQUIRED", { path: f.path, headers: {} });
++  await rejectedHighRisk(f.body, 403, "DEVICE_MISMATCH", { path: f.path, token: managerToken });
++  await rejectedHighRisk({ ...f.body, password: "wrong synthetic password" }, 403, "PASSWORD_INVALID", { path: f.path });
++  await rejectedHighRisk({ ...f.body, password: undefined }, 400, "PASSWORD_REQUIRED", { path: f.path });
++  const headers = signedHeaders(f.body,f.path);
++  headers["X-Device-Signature"] = randomBytes(64).toString("base64url");
++  await rejectedHighRisk(f.body, 400, "DEVICE_SIGNATURE_INVALID", { path: f.path, headers });
++});
++
++integrationTest("REV032-HTTP-REPLAY real permuted guards and fresh password replay the exact four scalars without credentials or second effects", async () => {
++  const f = await reversalBody(), key = randomUUID(), first = await highRisk(f.body,f.path,key);
++  assert.equal(first.status, 200, JSON.stringify(first.body)); assert.equal(first.body.data.lineCount, 2);
++  assert.deepEqual(Object.keys(first.body.data).sort(), ["lineCount","movementGroupId","operationId","status"]);
++  const [legs] = await db.query("SELECT * FROM inventory_movements WHERE operation_request_id=? ORDER BY id", [first.body.data.operationId]);
++  assert.deepEqual(legs.map(row => Number(row.reversal_of_movement_id)), f.legs.map(row => Number(row.id)).reverse());
++  assert.ok(legs.every(row => Number(row.posted_by) === adjuster.id && row.reservation_id === null && row.allocation_id === null));
++  const before = await businessSnapshot(), replacement = randomBytes(32).toString("hex");
++  await db.execute("UPDATE users SET password_hash=? WHERE id=?", [await hashPassword(replacement),adjuster.id]);
++  try {
++    const body = { ...f.body, password: replacement, expectedBalances: [...f.body.expectedBalances].reverse() };
++    const replay = await highRisk(body,f.path,key);
++    assert.equal(replay.status, 200, JSON.stringify(replay.body)); assert.equal(replay.replayed,"true");
++    assert.deepEqual(replay.body.data,first.body.data); assert.equal(await businessSnapshot(),before);
++    const domain = await highRisk(body,f.path);
++    assert.equal(domain.status,200,JSON.stringify(domain.body)); assert.deepEqual(domain.body.data,first.body.data);
++    assert.equal(await businessSnapshot(),before);
++    await rejectedHighRisk({ ...body, expectedBalances: body.expectedBalances.map(row => ({ ...row, expectedVersion: row.expectedVersion + 1 })) },
++      409,"IDEMPOTENCY_CONFLICT",{ path:f.path,key });
++    await rejectedHighRisk(body,409,"INVENTORY_SOURCE_CONFLICT",{ path:`/api/v1/inventory/movements/${f.legs[1].id}/reverse` });
++    await rejectedHighRisk({ ...body, source: { ...source(), documentType:"REVERSAL" } },409,"MOVEMENT_ALREADY_REVERSED",{ path:f.path });
++    const cache = JSON.stringify((await db.query("SELECT * FROM fr_idempotency_keys"))[0]);
++    assert.ok(!cache.includes(password) && !cache.includes(replacement));
++    assert.ok(!JSON.stringify(JSON.parse(await snapshot()).inventory_audit_logs).includes(replacement));
++    const signed = signedHeaders(body,f.path);
++    assert.equal((await highRisk(body,f.path,key,undefined,signed)).status,200);
++    await rejectedHighRisk(body,400,"DEVICE_SIGNATURE_INVALID",{ path:f.path,key,headers:signed });
++  } finally { await db.execute("UPDATE users SET password_hash=? WHERE id=?", [await hashPassword(password),adjuster.id]); }
++});
++
++integrationTest("REV032-HTTP-REPLAY real cache waits recheck all committed revocations and the original deadline without replacing keys", async () => {
++  const store = app.services.require("idempotency").store, time = app.services.require("time");
++  for (const kind of ["permission","role","user","device","token","deadline"]) {
++    const f = await reversalBody(), key = randomUUID(), first = await highRisk(f.body,f.path,key);
++    assert.equal(first.status,200,JSON.stringify(first.body));
++    const before = await businessSnapshot(), keys = JSON.stringify((await db.query("SELECT * FROM fr_idempotency_keys ORDER BY store_key"))[0]);
++    const originalBegin = store.begin, originalNow = time.nowMs;
++    let entered, release;
++    const reached = new Promise(resolve => { entered = resolve; }), proceed = new Promise(resolve => { release = resolve; });
++    store.begin = async function (...args) { const result = await originalBegin.apply(this,args); entered(); await proceed; return result; };
++    let pending;
++    try {
++      pending = highRisk(f.body,f.path,key).then(result => ({ result }),error => ({ error })); await reached;
++      if (kind === "permission") await db.execute("DELETE rp FROM role_permissions rp JOIN permissions p ON p.id=rp.permission_id WHERE rp.role_id=? AND p.name='inventory.adjust'",[adjuster.roleId]);
++      if (kind === "role") await db.execute("DELETE FROM user_roles WHERE user_id=?",[adjuster.id]);
++      if (kind === "user") await db.execute("UPDATE users SET status='inactive' WHERE id=?",[adjuster.id]);
++      if (kind === "device") await db.execute("UPDATE user_devices SET status='revoked' WHERE user_id=? AND device_id=?",[adjuster.id,deviceId]);
++      if (kind === "token") await app.services.require("tokenRevocation").revoke(String(adjuster.id),{ reason:"Synthetic reversal replay revocation" });
++      if (kind === "deadline") time.nowMs = () => originalNow.call(time) + 60001;
++      release(); const settled = await pending; assert.ifError(settled.error);
++      assert.equal(settled.result.status,kind === "token" ? 401 : kind === "deadline" ? 400 : 403,JSON.stringify(settled.result.body));
++      assert.equal(settled.result.replayed,null); assert.equal(await businessSnapshot(),before);
++      assert.equal(JSON.stringify((await db.query("SELECT * FROM fr_idempotency_keys ORDER BY store_key"))[0]),keys);
++    } finally {
++      release(); store.begin = originalBegin; time.nowMs = originalNow; if (pending) await pending;
++      if (kind === "permission") await db.execute("INSERT INTO role_permissions (role_id,permission_id) SELECT ?,id FROM permissions WHERE name='inventory.adjust'",[adjuster.roleId]);
++      if (kind === "role") await db.execute("INSERT INTO user_roles (user_id,role_id) VALUES (?,?)",[adjuster.id,adjuster.roleId]);
++      if (kind === "user") await db.execute("UPDATE users SET status='active' WHERE id=?",[adjuster.id]);
++      if (kind === "device") await db.execute("UPDATE user_devices SET status='approved' WHERE user_id=? AND device_id=?",[adjuster.id,deviceId]);
++      if (kind === "token") adjustToken = await token(adjuster);
++    }
++  }
++});
++
++integrationTest("REV032-REVOKE-ORDER real token-first UserAdmin disable commits before reversal Warehouse wait release", async () => {
++  const f = await reversalBody(), before = await businessSnapshot();
++  const blocker = await createConnection({ socketPath:process.env.DB_SOCKET_PATH,user:"root",database:process.env.DB_NAME });
++  const original = db.withTransaction;
++  let entered, pending;
++  const reached = new Promise(resolve => { entered = resolve; });
++  db.withTransaction = function (work,options) { return original.call(this,tx => work({
++    execute:(...args) => tx.execute(...args),query:(sql,params) => {
++      if (sql.includes("FROM inventory_warehouses") && sql.includes("FOR UPDATE")) entered();
++      return tx.query(sql,params);
++    }
++  }),options); };
++  try {
++    await blocker.beginTransaction(); await blocker.query("SELECT id FROM inventory_warehouses WHERE id=? FOR UPDATE",[sourceWarehouseId]);
++    pending = highRisk(f.body,f.path).then(result => ({ result }),error => ({ error })); await reached;
++    const administration = new UserAdminService({ database:db,logger:app.services.require("logging").logger,
++      time:app.services.require("time"),tokenRevocation:app.services.require("tokenRevocation") });
++    await administration.disable({ actorId:adminActor.id,claimedRoles:[adminActor.role],claimedPermissions:adminActor.permissions,
++      id:adjuster.id,reason:"Synthetic reversal stock wait",requestId:randomUUID(),ip:"127.0.0.1" });
++    assert.equal((await db.query("SELECT status FROM users WHERE id=?",[adjuster.id]))[0][0].status,"disabled");
++    assert.ok(await app.services.require("tokenRevocation").currentVersion(String(adjuster.id)) > 0);
++    await blocker.commit(); const settled = await pending; assert.ifError(settled.error);
++    assert.equal(settled.result.status,403,JSON.stringify(settled.result.body)); assert.equal(settled.result.body.error.code,"PERMISSION_STALE");
++    assert.equal(await businessSnapshot(),before);
++  } finally {
++    await blocker.rollback(); await blocker.end(); db.withTransaction = original; if (pending) await pending;
++    await db.execute("UPDATE users SET status='active' WHERE id=?",[adjuster.id]); adjustToken = await token(adjuster);
++  }
++});
++
++integrationTest("REV032-ROLLBACK real required Audit failure leaves no inverse leg/link and same intent retry posts once", async () => {
++  const f = await reversalBody(), fixtureDb = await createConnection({ socketPath:process.env.DB_SOCKET_PATH,user:"root",database:process.env.DB_NAME });
++  try {
++    await fixtureDb.query("CREATE TRIGGER task032_reject_audit BEFORE INSERT ON inventory_audit_logs FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='synthetic reversal audit failure'");
++    await rejectedHighRisk(f.body,500,undefined,{ path:f.path });
++  } finally { try { await fixtureDb.query("DROP TRIGGER IF EXISTS task032_reject_audit"); } finally { await fixtureDb.end(); } }
++  const result = await highRisk(f.body,f.path); assert.equal(result.status,200,JSON.stringify(result.body)); assert.equal(result.body.data.lineCount,2);
++  const [[audit]] = await db.query("SELECT COUNT(*) AS n FROM inventory_audit_logs WHERE operation_request_id=? AND outcome='SUCCEEDED'",[result.body.data.operationId]);
++  assert.equal(Number(audit.n),2);
++});
+--- a/server/test/inventoryEndpointSecurity.test.js
++++ b/server/test/inventoryEndpointSecurity.test.js
+@@ -40,7 +40,8 @@
+ }
+ 
+ test("TASK-018 every Core endpoint fails closed for missing, unauthorized and stale actors", async () => {
+-  assert.equal(handlers.length, 28);
++  assert.equal(handlers.length, 29);
++  assert.ok(handlers.includes(postingHandlers.ReverseInventoryMovementHandler));
+   assert.ok(handlers.includes(postingHandlers.PostInventoryAdjustmentHandler));
+   assert.ok(handlers.includes(postingHandlers.PostInventoryStatusTransferHandler));
+   assert.ok(handlers.includes(postingHandlers.PostInventoryBinMoveHandler));
+--- a/server/test/inventoryPostingHandlers.test.js
++++ b/server/test/inventoryPostingHandlers.test.js
+@@ -8,6 +8,74 @@
+ import { InventoryPostingService } from "../src/modules/inventory/InventoryPostingService.js";
+ 
+ const SIGNED_AT = Date.parse("2026-10-07T04:00:00.000Z");
++function reversalCommand(payload = {}) {
++  return { actor: { userId: 7, serviceName: "", claimedRoles: ["operator"],
++    claimedPermissions: ["inventory.view", "inventory.adjust"] },
++  authorization: { purpose: "movement.reverse", requiredCallerPermission: "inventory.adjust" },
++  source: { module: "INVENTORY", documentType: "REVERSAL", documentId: "R-1", eventId: "post-1" },
++  correlationId: "request-1", payload: { movementId: 41, reasonText: "  Undo duplicate posting  ",
++    expectedBalances: [{ balanceId: 502, expectedVersion: 7 }, { balanceId: 501, expectedVersion: 3 }], ...payload } };
++}
++
++test("REV032-INPUT canonical intent rejects coercion, missing/extra fields, unsafe IDs and duplicate versions", async () => {
++  const { normalizeReversalCommand } = await import("../src/modules/inventory/inventoryReversalPosting.js");
++  const tx = { query() {}, execute() {} };
++  const normalized = normalizeReversalCommand(tx, reversalCommand());
++  assert.equal(normalized.payload.reasonText, "Undo duplicate posting");
++  assert.deepEqual(normalized.payload.expectedBalances, [{ balanceId: 501, expectedVersion: 3 }, { balanceId: 502, expectedVersion: 7 }]);
++  assert.deepEqual(normalizeReversalCommand(tx, reversalCommand({ expectedBalances: normalized.payload.expectedBalances })), normalized);
++  const invalid = [{ movementId: "41" }, { movementId: true }, { movementId: Number.MAX_SAFE_INTEGER + 1 },
++    { reasonText: " " }, { reasonText: "x\u007fy" }, { reasonText: "中".repeat(167) }, { quantity: 1 },
++    { expectedBalances: [] }, { expectedBalances: null },
++    { expectedBalances: Array.from({ length: 201 }, (_, i) => ({ balanceId: i + 1, expectedVersion: 1 })) }];
++  for (const field of ["balanceId", "expectedVersion"]) for (const value of ["1", true, null, 0, -1, 1.5, Number.MAX_SAFE_INTEGER + 1]) {
++    invalid.push({ expectedBalances: [{ balanceId: 1, expectedVersion: 1, [field]: value }] });
++  }
++  invalid.push({ expectedBalances: [{ balanceId: 1, expectedVersion: 4_294_967_296 }] },
++    { expectedBalances: [{ balanceId: 1, expectedVersion: 1, unknown: 1 }] },
++    { expectedBalances: [{ balanceId: 1, expectedVersion: 1 }, { balanceId: 1, expectedVersion: 2 }] });
++  for (const change of invalid) assert.throws(() => normalizeReversalCommand(tx, reversalCommand(change)), { code: "INVENTORY_INPUT_INVALID" });
++  for (const field of ["movementId", "reasonText", "expectedBalances"]) {
++    const input = reversalCommand(); delete input.payload[field];
++    assert.throws(() => normalizeReversalCommand(tx, input), { code: "INVENTORY_INPUT_INVALID" });
++  }
++  assert.equal(normalizeReversalCommand(tx, reversalCommand({ expectedBalances: [{ balanceId: Number.MAX_SAFE_INTEGER, expectedVersion: 4_294_967_295 }] }))
++    .payload.expectedBalances[0].expectedVersion, 4_294_967_295);
++});
++
++test("REV032-HTTP-BOUNDARY third fixed proof binds canonical original path, actor/device and exact reversal intent", async () => {
++  const proof = await import("../src/modules/inventory/inventoryHighRiskContext.js");
++  const fixture = highRiskHandler(postingHandlers.PostInventoryAdjustmentHandler);
++  const command = reversalCommand({ reasonText: "Undo duplicate posting" });
++  const request = () => { const req = fixture.request();
++    req.apiRoute = { path: "/api/v1/inventory/movements/:id/reverse", authType: "jwt-device-password" };
++    req.input.params = { id: "41" }; return req; };
++  const issue = req => proof.issueInventoryHighRiskContext(req, command, fixture.handler.highRiskOptions);
++  for (const params of [{}, { id: 41 }, { id: "041" }, { id: "42" }, { id: "41", extra: "x" }]) {
++    const req = request(); req.input.params = params;
++    assert.throws(() => issue(req), { code: "PERMISSION_STALE" });
++  }
++  const plain = request(); plain.auth.type = "jwt";
++  assert.throws(() => issue(plain), { code: "PERMISSION_STALE" });
++  const req = request(), context = issue(req);
++  assert.equal(JSON.stringify(context), "{}");
++  for (const forged of [{}, { ...context }, JSON.parse(JSON.stringify(context))]) {
++    assert.throws(() => proof.consumeInventoryHighRiskContext(forged, command), { code: "PERMISSION_STALE" });
++  }
++  for (const changed of [reversalCommand({ ...command.payload, movementId: 42 }),
++    { ...command, actor: { ...command.actor, userId: 8 } },
++    { ...command, authorization: { ...command.authorization, purpose: "adjustment.post" } }]) {
++    assert.throws(() => proof.consumeInventoryHighRiskContext(context, changed), { code: "PERMISSION_STALE" });
++  }
++  req.input.params.id = "42";
++  const guard = proof.consumeInventoryHighRiskContext(context, command);
++  await fixture.handler.inventory.database.withTransaction(tx => guard.check(tx, { locking: true }));
++  assert.deepEqual(fixture.calls.map(call => /FROM (\w+)/u.exec(call.sql)[1]),
++    ["users", "user_roles", "role_permissions", "user_devices", "fr_token_versions"]);
++  assert.ok(fixture.calls.every(call => call.sql.includes("FOR SHARE")));
++  assert.throws(() => proof.consumeInventoryHighRiskContext(context, command), { code: "PERMISSION_STALE" });
++  assert.throws(() => issue(req), { code: "PERMISSION_STALE" });
++});
+ function highRiskHandler(Handler) {
+   let held = false, revoked = false;
+   const deviceId = "a".repeat(64), permissions = ["inventory.view", "inventory.adjust"];
+@@ -43,6 +111,61 @@
+   return { handler, request, body, calls, isHeld: () => held, revoke() { revoked = true; } };
+ }
+ 
++test("REV032-HTTP-BOUNDARY fixed route validates raw canonical path, empty query and only complete current guards", () => {
++  assert.equal(typeof postingHandlers.ReverseInventoryMovementHandler, "function");
++  const api = postingHandlers.ReverseInventoryMovementHandler.api;
++  assert.equal(api.path, "/api/v1/inventory/movements/:id/reverse");
++  assert.equal(api.authType, "jwt-device-password");
++  assert.deepEqual(api.authorizationPolicies[0].options.permissions, ["inventory.view", "inventory.adjust"]);
++  assert.equal(api.inputCoercion, false); assert.equal(api.idempotencyPreparation, true);
++  assert.deepEqual(api.idempotency, { enabled: true, ttlMs: 604800000 });
++  const command = reversalCommand(); const { movementId, ...payload } = command.payload;
++  const input = { params: { id: String(movementId) }, query: {}, body: { source: command.source, password: "synthetic", ...payload } };
++  const validate = new RequestValidator().compile(api.requestSchema, api.path, { coerceTypes: false });
++  validate(structuredClone(input));
++  for (const id of [41, "041", "0", "-1", "1.0", " 41", "1e2"]) {
++    assert.throws(() => validate({ ...input, params: { id } }), { code: "REQUEST_VALIDATION_FAILED" });
++  }
++  for (const change of [{ movementId: 41 }, { quantity: 2 }, { uomId: 1 }, { direction: "OUT" }, { proof: {} },
++    { expectedBalances: [{ balanceId: "501", expectedVersion: 3 }] }, { expectedBalances: [{ balanceId: 501, expectedVersion: null }] }]) {
++    assert.throws(() => validate({ ...input, body: { ...input.body, ...change } }), { code: "REQUEST_VALIDATION_FAILED" });
++  }
++  const response = new ResponseValidator({ environment: "production" }).compile(api.responseSchema, api.path);
++  response(200, { status: "POSTED", operationId: 91, movementGroupId: "group", lineCount: 200 });
++});
++
++test("REV032-HTTP-REPLAY privately frozen credential-free path/intent preserves fresh locked replay and one-shot execution", async () => {
++  assert.equal(typeof postingHandlers.ReverseInventoryMovementHandler, "function");
++  const fixture = highRiskHandler(postingHandlers.ReverseInventoryMovementHandler);
++  const command = reversalCommand(); const { movementId, ...payload } = command.payload;
++  const request = (extra = {}) => { const req = fixture.request({ source: command.source, password: "synthetic", ...payload, ...extra });
++    req.input.params = { id: String(movementId) }; return req; };
++  for (const id of [41, "041", "9007199254740992", "0"]) {
++    const req = request(); req.input.params.id = id;
++    await assert.rejects(() => fixture.handler.prepareIdempotency(req), { code: "INVENTORY_INPUT_INVALID" });
++  }
++  await assert.rejects(() => fixture.handler.prepareIdempotency(request({ movementId: 42 })), { code: "INVENTORY_INPUT_INVALID" });
++  const req = request(), prepared = await fixture.handler.prepareIdempotency(req);
++  assert.equal(prepared.input.params.id, "41"); assert.ok(Object.isFrozen(prepared.input.body.expectedBalances[0]));
++  assert.doesNotMatch(JSON.stringify(prepared.input), /password|signature|token|context|movementId/u);
++  const equivalent = await fixture.handler.prepareIdempotency(request({ password: "changed password", expectedBalances: [...payload.expectedBalances].reverse() }));
++  assert.deepEqual(equivalent.input, prepared.input);
++  let sends = 0;
++  await prepared.replay(() => { assert.equal(fixture.isHeld(), true); sends++; });
++  assert.equal(sends, 1);
++  fixture.revoke(); await assert.rejects(() => equivalent.replay(() => sends++), { code: "DEVICE_REVOKED" });
++  assert.equal(sends, 1);
++  const nextFixture = highRiskHandler(postingHandlers.ReverseInventoryMovementHandler);
++  const next = nextFixture.request({ source: command.source, password: "synthetic", ...payload }); next.input.params = { id: "41" };
++  await nextFixture.handler.prepareIdempotency(next); let captured;
++  nextFixture.handler.inventory.reverseMovement = async (input, proof) => { captured = { input, proof }; return { status: "POSTED" }; };
++  next.input.params.id = "42"; next.input.body.reasonText = "changed";
++  await nextFixture.handler.execute(next);
++  assert.equal(captured.input.payload.movementId, 41); assert.equal(captured.input.payload.reasonText, "Undo duplicate posting");
++  assert.equal(JSON.stringify(captured.proof), "{}");
++  await assert.rejects(() => nextFixture.handler.execute(next), { code: "PERMISSION_STALE" });
++});
++
+ test("ADJ031-HTTP-BOUNDARY both fixed high-risk routes strictly validate single-op inputs and original versions", () => {
+   for (const [Handler, path] of [[postingHandlers.PostInventoryAdjustmentHandler, "/api/v1/inventory/adjustments"],
+     [postingHandlers.PostInventoryStatusTransferHandler, "/api/v1/inventory/status-transfers"]]) {
+--- a/server/test/inventoryPostingService.test.js
++++ b/server/test/inventoryPostingService.test.js
+@@ -10,6 +10,7 @@
+ async function highRiskSetup(overrides = {}) {
+   const proof = await import("../src/modules/inventory/inventoryHighRiskContext.js");
+   const { normalizeAdjustmentCommand } = await import("../src/modules/inventory/inventoryAdjustmentPosting.js");
++  const { normalizeReversalCommand } = await import("../src/modules/inventory/inventoryReversalPosting.js");
+   let now = NOW;
+   const deviceId = "a".repeat(64);
+   const binding = { id: 5, user_id: 7, device_id: deviceId, public_key: Buffer.from("synthetic-public-key"), status: "approved" };
+@@ -17,12 +18,16 @@
+   const permissions = ["inventory.view", "inventory.adjust"];
+   const command = overrides.command ?? adjustmentCommand();
+   command.actor.claimedRoles = roles;
+-  const normalized = normalizeAdjustmentCommand({ query() {}, execute() {} }, command, command.authorization.purpose);
++  const reversal = command.authorization.purpose === "movement.reverse";
++  const normalized = reversal ? normalizeReversalCommand({ query() {}, execute() {} }, command)
++    : normalizeAdjustmentCommand({ query() {}, execute() {} }, command, command.authorization.purpose);
+   const abort = new AbortController();
+   const req = { auth: { type: "jwt-device-password", claims: { sub: "7", did: deviceId, roles, permissions,
+     exp: Math.floor(NOW / 1000) + 900, auth_time: Math.floor(NOW / 1000), ver: 0 }, deviceBinding: binding },
+     method: "POST", apiRoute: { path: command.authorization.purpose === "adjustment.post"
+-      ? "/api/v1/inventory/adjustments" : "/api/v1/inventory/status-transfers", authType: "jwt-device-password" },
++      ? "/api/v1/inventory/adjustments" : reversal ? "/api/v1/inventory/movements/:id/reverse"
++        : "/api/v1/inventory/status-transfers", authType: "jwt-device-password" },
++    input: { params: reversal ? { id: String(command.payload.movementId) } : {} },
+     requestTimeout: { signal: abort.signal }, get: () => String(NOW) };
+   const options = { time: { nowMs: () => now }, signatureMaxSkewSeconds: 60, sessionMaxAgeSeconds: 28800, clockToleranceSeconds: 5 };
+   const calls = [];
+@@ -115,6 +120,270 @@
+     payload: { quantity: 2, uomId: 8, reasonText: "Physical count corrected", reasonCategory: "COUNT_GAIN",
+       direction: "IN", warehouseId: 2, binId: 35, skuId: 12, stockStatus: "AVAILABLE", expectedBalanceVersion: null, ...payload } });
+ }
++
++function reversalCommand(payload = {}, source = {}) {
++  return inventoryCommandFixture({ actor: { claimedPermissions: ["inventory.view", "inventory.adjust"] },
++    authorization: { purpose: "movement.reverse", requiredCallerPermission: "inventory.adjust" },
++    source: { module: "INVENTORY", documentType: "REVERSAL", documentId: "reverse-1", eventId: "post-1", ...source },
++    payload: { movementId: 101, reasonText: "Undo original posting", expectedBalances: [{ balanceId: 501, expectedVersion: 3 }], ...payload } });
++}
++function originalMovement(overrides = {}) {
++  return { id: 101, movement_group_id: "original-group", operation_request_id: 81, movement_type: "RECEIPT",
++    location_kind: "BIN", warehouse_id: 2, bin_id: 35, sku_id: 12, lot_id: null, stock_status: "AVAILABLE",
++    direction: "IN", quantity: 2, balance_before: 3, balance_after: 5, balance_version_after: 2,
++    reservation_id: null, allocation_id: null, transfer_id: null, transfer_line_id: null, stocktake_id: null,
++    stocktake_line_id: null, reversal_of_movement_id: null, expiry_date_snapshot: null, ...overrides };
++}
++async function reversalSetup(options = {}) {
++  const { service, database: receiptDb } = setup(options);
++  const initial = receiptDb.state;
++  initial.balances = options.balances ?? [{ ...initial.balance, fifo_anchor_date: "2026-01-01" }];
++  initial.originals = options.originals ?? [originalMovement()];
++  initial.originalOperation = { id: 81, command_type: "RECEIPT_POST", result_type: "MOVEMENT_GROUP",
++    result_id: "original-group", result_summary: { status: "POSTED", operationId: 81, movementGroupId: "original-group", movementId: 101 },
++    completed_at: NOW - 1000, ...options.originalOperation };
++  initial.bins = options.bins ?? [initial.bin, { ...initial.bin, id: 36, bin_code: "A-02" }];
++  initial.workflows = { reservation: { status: "Consumed", outstanding: 0 }, allocation: { status: "Consumed", quantity: 2 } };
++  const security = await highRiskSetup({ command: reversalCommand(), ...options.security });
++  let currentProof;
++  const database = createFakeInventoryDatabase({ initialState: initial, failAt: options.failAt,
++    async query({ sql, params, state }) {
++      assert.equal((sql.match(/\?/gu) ?? []).length, params.length, sql);
++      if (sql.includes("FROM inventory_movements")) {
++        if (sql.includes("reversal_of_movement_id IN")) {
++          assert.ok(sql.includes("FOR UPDATE")); return [options.alreadyReversed ? [{ id: 999 }] : []];
++        }
++        return [state.originals.filter(row => sql.includes("WHERE id = ?") ? row.id === params[0] : row.movement_group_id === params[0])];
++      }
++      if (sql.includes("FROM inventory_operation_requests")) {
++        assert.ok(sql.includes("FOR UPDATE")); return [[state.originalOperation]];
++      }
++      if (sql.includes("FROM inventory_lots")) return [state.lots.filter(row => params.includes(row.id))];
++      if (sql.includes("FROM inventory_stock_balances")) {
++        assert.ok(sql.includes("FOR UPDATE") || sql.includes("FOR SHARE"));
++        if (sql.includes("b.stock_status = 'AVAILABLE'")) return [state.balances.filter(row => row.stock_status === "AVAILABLE")
++          .map(row => ({ ...row, expiry_date: state.lots.find(lot => lot.id === row.lot_id)?.expiry_date ?? null }))];
++        options.beforeBalances?.(state, currentProof);
++        return [state.balances];
++      }
++      return security.tx.query(sql, params);
++    },
++    async execute({ sql, params, state }) {
++      assert.equal((sql.match(/\?/gu) ?? []).length, params.length, sql);
++      if (sql.includes("UPDATE inventory_operation_requests")) {
++        assert.ok(database.calls.some(call => call.sql.includes("FROM fr_token_versions") && call.sql.includes("FOR SHARE")));
++        assert.equal(state.operation.actorUserId, null);
++        assert.deepEqual(params, [7, 91, "MOVEMENT_REVERSE"]);
++        options.beforeBind?.(currentProof);
++        if (options.bindZero) return [{ affectedRows: 0 }];
++        state.operation.actorUserId = params[0];
++      } else if (sql.includes("UPDATE inventory_stock_balances")) {
++        const row = state.balances.find(row => row.id === params[3] && row.version === params[4]);
++        if (!row || options.updateConflict) return [{ affectedRows: 0 }];
++        row.on_hand_quantity = params[0]; row.fifo_anchor_date = params[1]; row.version++;
++      } else if (sql.includes("INSERT INTO inventory_movements")) {
++        if (options.duplicate) throw Object.assign(new Error(options.duplicate), { code: "ER_DUP_ENTRY", sqlMessage: options.duplicate });
++        const id = 701 + state.movements.length; state.movements.push({ id, params });
++        return [{ insertId: id, affectedRows: 1 }];
++      } else assert.fail(sql);
++      return [{ affectedRows: 1 }];
++    } });
++  service.database = database;
++  service.locks = { async lockForCommand(tx, input) {
++    assert.equal(input.balances, undefined, "historical bucket must never be upserted");
++    assert.equal(tx.state.operation.actorUserId, null);
++    assert.ok(!database.calls.some(call => call.sql.includes("FOR SHARE")), "no security lock before business waits");
++    options.afterStockWait?.(security, currentProof);
++    return { warehouses: [tx.state.warehouse], bins: tx.state.bins, binLocks: tx.state.binLocks,
++      stockControls: [{ warehouse_id: 2, sku_id: 12, reserved_quantity: options.reserved ?? 0 }], lots: tx.state.lots };
++  }, lockBalancesAfterLot() { assert.fail("no balance insertion during Reversal"); } };
++  service.itemLookup.resolveUomInTransaction = () => assert.fail("original Base quantity must not be reconverted");
++  return { service, database, security, async submit(input = reversalCommand()) {
++    currentProof = await highRiskSetup({ command: input, ...options.security });
++    return service.reverseMovement(currentProof.command, currentProof.issue());
++  } };
++}
++
++test("REV032-RECEIPT reverses original Base quantity using current version and append-only attribution", async () => {
++  const fixture = await reversalSetup(); const before = fixture.database.state;
++  const result = await fixture.submit(); const state = fixture.database.state;
++  assert.deepEqual(result, { status: "POSTED", operationId: 91, movementGroupId: "11111111-1111-4111-8111-111111111111", lineCount: 1 });
++  assert.deepEqual(state.originals, before.originals); assert.deepEqual(state.originalOperation, before.originalOperation);
++  assert.deepEqual(state.workflows, before.workflows);
++  assert.deepEqual([state.balances[0].on_hand_quantity, state.balances[0].version, state.balances[0].fifo_anchor_date], [3, 4, "2026-01-01"]);
++  assert.equal(state.operation.actorUserId, 7); assert.equal(state.movements.length, 1); assert.equal(state.audits.length, 1);
++  assert.equal(state.audits[0].action, "movement.reverse"); assert.equal(state.audits[0].afterSummary.signedRequestAt, NOW);
++  const balanceRead = fixture.database.calls.findIndex(call => call.sql.includes("FROM inventory_stock_balances") && call.sql.includes("FOR UPDATE"));
++  const groupRead = fixture.database.calls.findIndex(call => call.sql.includes("FROM inventory_movements") && call.sql.includes("FOR UPDATE"));
++  assert.ok(groupRead > balanceRead);
++});
++
++test("REV032-VERSIONS exact full current guard set rejects stale/missing/extra and absent historical buckets", async () => {
++  for (const expectedBalances of [[{ balanceId: 501, expectedVersion: 2 }], [{ balanceId: 502, expectedVersion: 3 }],
++    [{ balanceId: 501, expectedVersion: 3 }, { balanceId: 502, expectedVersion: 3 }]]) {
++    const fixture = await reversalSetup(), before = fixture.database.state;
++    await assert.rejects(() => fixture.submit(reversalCommand({ expectedBalances })), error => ["VERSION_CONFLICT", "REVERSAL_NOT_ALLOWED"].includes(error.code));
++    assert.deepEqual(fixture.database.state, before);
++  }
++  const fixture = await reversalSetup({ balances: [] }), before = fixture.database.state;
++  await assert.rejects(() => fixture.submit(), { code: "REVERSAL_NOT_ALLOWED" });
++  assert.deepEqual(fixture.database.state, before);
++});
++
++test("REV032-GROUP refuses forbidden, incomplete, mixed and malformed original groups", async () => {
++  for (const type of ["TRANSFER", "STOCKTAKE", "OPENING", "REVERSAL", "UNKNOWN"]) {
++    const fixture = await reversalSetup({ originals: [originalMovement({ movement_type: type })] }), before = fixture.database.state;
++    await assert.rejects(() => fixture.submit(), { code: "MOVEMENT_TYPE_NOT_REVERSIBLE" }); assert.deepEqual(fixture.database.state, before);
++  }
++  for (const options of [{ originals: [originalMovement({ location_kind: "IN_TRANSIT", bin_id: null })] },
++    { originals: [] }, { originalOperation: { completed_at: null } }, { originalOperation: { result_id: "other-group" } },
++    { originals: [originalMovement(), originalMovement({ id: 102, operation_request_id: 82 })] },
++    { originals: [originalMovement({ balance_after: 99 })] }]) {
++    const fixture = await reversalSetup(options), before = fixture.database.state;
++    await assert.rejects(() => fixture.submit(), error => ["MOVEMENT_TYPE_NOT_REVERSIBLE", "REVERSAL_NOT_ALLOWED", "INVENTORY_RESOURCE_NOT_FOUND"].includes(error.code));
++    assert.deepEqual(fixture.database.state, before);
++  }
++});
++
++test("REV032-ONCE current link and exact native unique constraint reject whole group without swallowing unrelated duplicate", async () => {
++  for (const options of [{ alreadyReversed: true }, { alreadyReversed: true, beforeBalances: state => { state.balances[0].version++; } },
++    { duplicate: "Duplicate entry for key 'inventory_movements.uq_inventory_movement_reversal'" }]) {
++    const fixture = await reversalSetup(options), before = fixture.database.state;
++    await assert.rejects(() => fixture.submit(), { code: "MOVEMENT_ALREADY_REVERSED" }); assert.deepEqual(fixture.database.state, before);
++  }
++  const fixture = await reversalSetup({ duplicate: "Duplicate entry for key 'unrelated_index'" }), before = fixture.database.state;
++  await assert.rejects(() => fixture.submit(), { code: "ER_DUP_ENTRY" }); assert.deepEqual(fixture.database.state, before);
++});
++
++test("REV032-ROLLBACK every native checkpoint, actor-bind failure, CAS conflict and expired proof has zero effects", async () => {
++  for (const failAt of INVENTORY_FAILURE_POINTS) {
++    const fixture = await reversalSetup({ failAt }), before = fixture.database.state;
++    await assert.rejects(() => fixture.submit(), { faultPoint: failAt }); assert.deepEqual(fixture.database.state, before);
++  }
++  for (const options of [{ bindZero: true }, { updateConflict: true }, { beforeBind: proof => proof.advance(60_001) },
++    { beforeBind: proof => proof.abort.abort(Object.assign(new Error("timeout"), { code: "REQUEST_TIMEOUT" })) }]) {
++    const fixture = await reversalSetup(options), before = fixture.database.state;
++    await assert.rejects(() => fixture.submit(), error => ["CONCURRENT_OPERATION", "DEVICE_SIGNATURE_STALE", "REQUEST_TIMEOUT"].includes(error.code));
++    assert.deepEqual(fixture.database.state, before);
++  }
++});
++
++test("REV032-DOMAIN-REPLAY completed original result bypasses changed stock/Item but rechecks current security", async () => {
++  const fixture = await reversalSetup(), input = reversalCommand();
++  const first = await fixture.submit(input), before = fixture.database.state;
++  fixture.service.itemLookup.getInventoryProfileInTransaction = () => assert.fail("completed replay cannot read Item");
++  const last = fixture.database.calls.length;
++  assert.deepEqual(await fixture.submit(input), first); assert.deepEqual(fixture.database.state, before);
++  assert.ok(!fixture.database.calls.slice(last).some(call => /FROM inventory_(stock_balances|movements|lots)/u.test(call.sql)));
++  await assert.rejects(() => fixture.submit(reversalCommand({ reasonText: "Other intent" })), { code: "INVENTORY_SOURCE_CONFLICT" });
++  const originalQuery = fixture.security.tx.query;
++  fixture.security.tx.query = (sql, params) => sql.includes("FROM user_devices")
++    ? [[{ id: 5, user_id: 7, device_id: "a".repeat(64), status: "revoked", public_key: Buffer.from("synthetic-public-key") }]] : originalQuery(sql, params);
++  await assert.rejects(() => fixture.submit(input), { code: "DEVICE_REVOKED" }); assert.deepEqual(fixture.database.state, before);
++});
++
++test("REV032-RESERVED gross OUT cannot spend allocated stock or increase uncovered Reserved", async () => {
++  for (const options of [{ reserved: 4 }, { balances: [{ id: 501, warehouse_id: 2, bin_id: 35, sku_id: 12, lot_id: null,
++    stock_status: "AVAILABLE", on_hand_quantity: 5, allocated_quantity: 4, version: 3, fifo_anchor_date: "2026-01-01" }] }]) {
++    const fixture = await reversalSetup(options), before = fixture.database.state;
++    await assert.rejects(() => fixture.submit(), { code: "REVERSAL_NOT_ALLOWED" }); assert.deepEqual(fixture.database.state, before);
++  }
++  const fixture = await reversalSetup({ reserved: 10, originals: [originalMovement({ movement_type: "ADJUSTMENT", direction: "OUT", balance_before: 7, balance_after: 5 })],
++    originalOperation: { command_type: "ADJUSTMENT_POST", result_summary: { status: "POSTED", operationId: 81, movementGroupId: "original-group", lineCount: 1 } } });
++  await fixture.submit(); assert.equal(fixture.database.state.balances[0].on_hand_quantity, 7);
++});
++
++test("REV032-ISSUE original outgoing stock restores without reviving consumed workflow or allocations", async () => {
++  const fixture = await reversalSetup({ originals: [originalMovement({ movement_type: "ISSUE", direction: "OUT",
++    reservation_id: 21, allocation_id: 31, balance_before: 7, balance_after: 5 })],
++  originalOperation: { command_type: "ISSUE_POST", result_summary: { status: "POSTED", operationId: 81,
++    movementGroupId: "original-group", reservationId: 21, rowCount: 1, allocationSnapshot: "[101]" } } });
++  const before = fixture.database.state; await fixture.submit();
++  assert.equal(fixture.database.state.balances[0].on_hand_quantity, 7);
++  assert.deepEqual(fixture.database.state.workflows, before.workflows);
++  assert.equal(fixture.database.state.balances[0].allocated_quantity, 0);
++});
++
++test("REV032-ADJUSTMENT both original directions undo only original Base quantity", async () => {
++  for (const direction of ["IN", "OUT"]) {
++    const fixture = await reversalSetup({ originals: [originalMovement({ movement_type: "ADJUSTMENT", direction,
++      balance_before: direction === "IN" ? 3 : 7 })], originalOperation: { command_type: "ADJUSTMENT_POST",
++    result_summary: { status: "POSTED", operationId: 81, movementGroupId: "original-group", lineCount: 1 } } });
++    await fixture.submit(); assert.equal(fixture.database.state.balances[0].on_hand_quantity, direction === "IN" ? 3 : 7);
++  }
++});
++
++test("REV032-PAIRS Bin Move and Status undo in descending original ID with per-bucket chained versions", async () => {
++  for (const type of ["BIN_MOVE", "STATUS_TRANSFER"]) {
++    const out = originalMovement({ movement_type: type, direction: "OUT", balance_before: 5, balance_after: 3 });
++    const incoming = originalMovement({ id: 102, movement_type: type, direction: "IN", balance_before: 3, balance_after: 5,
++      bin_id: type === "BIN_MOVE" ? 36 : 35, stock_status: type === "BIN_MOVE" ? "AVAILABLE" : "DAMAGED" });
++    const balances = [out, incoming].map((row, i) => ({ id: 501 + i, warehouse_id: row.warehouse_id, sku_id: row.sku_id,
++      bin_id: row.bin_id, lot_id: null, stock_status: row.stock_status, on_hand_quantity: row.balance_after,
++      allocated_quantity: 0, version: 3 + i, fifo_anchor_date: "2026-01-01" }));
++    const options = { originals: [out, incoming], balances, originalOperation: { command_type: type === "BIN_MOVE" ? "BIN_MOVE_POST" : "STATUS_TRANSFER_POST",
++      result_summary: { status: "POSTED", operationId: 81, movementGroupId: "original-group", lineCount: type === "BIN_MOVE" ? 1 : 2 } } };
++    const fixture = await reversalSetup(options);
++    const input = reversalCommand({ expectedBalances: [{ balanceId: 501, expectedVersion: 3 }, { balanceId: 502, expectedVersion: 4 }] });
++    const result = await fixture.submit(input); assert.equal(result.lineCount, 2);
++    assert.deepEqual(fixture.database.state.balances.map(row => [row.on_hand_quantity, row.version]), [[5,4],[3,5]]);
++    assert.deepEqual(fixture.database.state.movements.map(row => [row.params[7], row.params[12]]), [["OUT",102],["IN",101]]);
++    const invalid = await reversalSetup({ ...options, originals: [out, { ...incoming, quantity: 1, balance_after: 4 }] });
++    const before = invalid.database.state;
++    await assert.rejects(() => invalid.submit(input), { code: "REVERSAL_NOT_ALLOWED" }); assert.deepEqual(invalid.database.state, before);
++  }
++});
++
++test("REV032-LOT-LIFE-FIFO expired original Lot returns unchanged, never covers Sale Reserved, and per-leg anchors remain exact", async () => {
++  const lot = { id: 601, sku_id: 12, lot_number: "OLD", normalized_lot_number: "OLD", expiry_date: "2026-01-01",
++    manufacture_date: null, first_receipt_date: "2025-01-01", created_by: null };
++  const fixture = await reversalSetup({ initialState: { lots: [lot] }, reserved: 10,
++    profile: { trackingPolicy: "batch_expiry", minimumReceiptLifeDays: 60, minimumSaleLifeDays: 0 },
++    originals: [originalMovement({ movement_type: "ADJUSTMENT", direction: "OUT", lot_id: 601,
++      expiry_date_snapshot: lot.expiry_date, balance_before: 7, balance_after: 5 })],
++    balances: [{ id: 501, warehouse_id: 2, sku_id: 12, bin_id: 35, lot_id: 601, stock_status: "AVAILABLE",
++      on_hand_quantity: 0, allocated_quantity: 0, version: 3, fifo_anchor_date: null }],
++    originalOperation: { command_type: "ADJUSTMENT_POST", result_summary: { status: "POSTED", operationId: 81, movementGroupId: "original-group", lineCount: 1 } } });
++  await fixture.submit(); assert.deepEqual(fixture.database.state.lots, [lot]);
++  assert.deepEqual([fixture.database.state.balances[0].on_hand_quantity, fixture.database.state.balances[0].fifo_anchor_date], [2, "2026-09-28"]);
++  const empty = await reversalSetup({ originals: [originalMovement({ quantity: 5, balance_before: 0 })] });
++  await empty.submit(); assert.equal(empty.database.state.balances[0].fifo_anchor_date, null);
++});
++
++test("REV032-REVOKE-ORDER fresh final guard rejects committed security change after business wait without early locks", async () => {
++  for (const kind of ["permission", "device", "deadline", "abort"]) {
++    let reached = false;
++    const fixture = await reversalSetup({ afterStockWait(security, proof) {
++      reached = true;
++      if (kind === "deadline") proof.advance(60_001);
++      if (kind === "abort") proof.abort.abort(Object.assign(new Error("timeout"), { code: "REQUEST_TIMEOUT" }));
++      const original = security.tx.query;
++      if (kind === "permission") security.tx.query = (sql, params) => sql.includes("FROM role_permissions") ? [[{ name: "inventory.view" }]] : original(sql, params);
++      if (kind === "device") security.tx.query = (sql, params) => sql.includes("FROM user_devices") ? [[{ status: "revoked" }]] : original(sql, params);
++    } });
++    const before = fixture.database.state;
++    await assert.rejects(() => fixture.submit(), { code: kind === "permission" ? "PERMISSION_STALE" : kind === "device" ? "DEVICE_REVOKED"
++      : kind === "deadline" ? "DEVICE_SIGNATURE_STALE" : "REQUEST_TIMEOUT" });
++    assert.equal(reached, true); assert.deepEqual(fixture.database.state, before);
++  }
++});
++
++test("REV032-COMPATIBILITY current unusable/serial/tracking/location/counting/overflow rules fail closed and forged proof cannot write", async () => {
++  for (const options of [{ profile: { inventoryTracked: false } }, { profile: { usable: false } }, { profile: { trackingPolicy: "serial" } },
++    { profile: { trackingPolicy: "batch_expiry" } }, { initialState: { warehouse: { id: 2, status: "INACTIVE" } } },
++    { bins: [{ id: 35, warehouse_id: 3, status: "ACTIVE" }] }, { initialState: { binLocks: [{ bin_id: 35 }] } },
++    { balances: [{ id: 501, warehouse_id: 2, sku_id: 12, bin_id: 35, lot_id: null, stock_status: "AVAILABLE",
++      on_hand_quantity: 5, allocated_quantity: 0, version: 3, fifo_anchor_date: null }],
++      beforeBalances: state => { state.balances[0].on_hand_quantity = Number.MAX_SAFE_INTEGER; },
++      originals: [originalMovement({ movement_type: "ADJUSTMENT", direction: "OUT", balance_before: 7 })],
++      originalOperation: { command_type: "ADJUSTMENT_POST", result_summary: { status: "POSTED", operationId: 81, movementGroupId: "original-group", lineCount: 1 } } }]) {
++    const fixture = await reversalSetup(options), before = fixture.database.state;
++    await assert.rejects(() => fixture.submit(), { code: "REVERSAL_NOT_ALLOWED" }); assert.deepEqual(fixture.database.state, before);
++  }
++  const fixture = await reversalSetup();
++  await assert.rejects(() => fixture.service.reverseMovement(reversalCommand(), {}), { code: "PERMISSION_STALE" });
++  assert.deepEqual(fixture.database.calls, []);
++});
+ 
+ async function adjustmentSetup(options = {}) {
+   const security = await highRiskSetup(options.security);

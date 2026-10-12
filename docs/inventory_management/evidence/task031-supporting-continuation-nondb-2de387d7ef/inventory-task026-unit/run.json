@@ -1,0 +1,71 @@
+{
+  "schema_version": "2.0",
+  "module_id": "inventory-management",
+  "run_id": "task031-supporting-continuation-nondb-2de387d7ef-inventory-task026-unit",
+  "suite_id": "inventory-task026-unit",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "4c074a4e344599e912aab7e351e93abfc5f447085657f59625f7c7a95c69440a",
+  "source_fingerprint": "7bc0fbfed8fb1f626b4c008f28310c2b1b8233622668b933d8f90b69780853df",
+  "code_commit": "869ac07abdd3879254c351d857be911d71e68b6b",
+  "started_at": "2026-10-07T09:05:50.456180+00:00",
+  "ended_at": "2026-10-07T09:05:50.640329+00:00",
+  "environment_id": "inventory-isolated-test",
+  "runtime_instance_id": "erp-inventory-task031-supporting-continuation-nondb.ctxnvl4z",
+  "data_reference": "Synthetic Inventory fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "node",
+    "--test",
+    "--test-concurrency=1",
+    "--import",
+    "./server/test-support/testEnv.js",
+    "--test-reporter=junit",
+    "--test-reporter-destination=/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/task031-supporting-continuation-nondb-2de387d7ef/inventory-task026-unit/inventory-task026-unit.xml",
+    "server/test/inventoryTransferMigration.test.js",
+    "server/test/inventoryStateMachines.test.js"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "29f01a92c681625de6ec00779469293fe4990c3f516c45afc8b29de14813b817",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 15,
+    "passed": 15,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/task031-supporting-continuation-nondb-2de387d7ef/inventory-task026-unit/inventory-task026-unit.xml",
+      "sha256": "7d1cf370347b139636a2cbb0d681b87f6443a5c4c01124615a7e32ef9bfedbf3",
+      "bytes": 3470
+    },
+    {
+      "path": "evidence/task031-supporting-continuation-nondb-2de387d7ef/inventory-task026-unit/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/task031-supporting-continuation-nondb-2de387d7ef/inventory-task026-unit/stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "Approved HD123 TASK031 current-source whole-branch DEVELOPER regression only; real API/browser evidence separate, not full-P3/formal acceptance/current CI."
+  ]
+}

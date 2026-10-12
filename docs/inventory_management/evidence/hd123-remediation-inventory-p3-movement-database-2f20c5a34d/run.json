@@ -1,0 +1,78 @@
+{
+  "schema_version": "2.0",
+  "module_id": "inventory-management",
+  "run_id": "hd123-remediation-inventory-p3-movement-database-2f20c5a34d",
+  "suite_id": "inventory-p3-movement-database",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "4c074a4e344599e912aab7e351e93abfc5f447085657f59625f7c7a95c69440a",
+  "source_fingerprint": "a1da94ef111b77c31f7dadf5d6dbcce915d98ce647c2e1b5a44c203e765bac76",
+  "code_commit": "869ac07abdd3879254c351d857be911d71e68b6b",
+  "started_at": "2026-10-07T08:44:57.899784+00:00",
+  "ended_at": "2026-10-07T08:44:59.692471+00:00",
+  "environment_id": "inventory-isolated-test",
+  "runtime_instance_id": "erp_inventory_p3_5fb90c2d0239",
+  "data_reference": "Synthetic Inventory fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "node",
+    "--test",
+    "--test-concurrency=1",
+    "--import",
+    "./server/test-support/testEnv.js",
+    "--test-reporter=junit",
+    "--test-reporter-destination=/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/hd123-remediation-inventory-p3-movement-database-2f20c5a34d/inventory-p3-movement-database.xml",
+    "server/test/integration/inventoryMovement.integration.test.js"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "e8764d522a1389ca1dece0166e17e7963857fda7ed370b091ef6b48d5d8a9fea",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 27,
+    "passed": 27,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/hd123-remediation-inventory-p3-movement-database-2f20c5a34d/stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/hd123-remediation-inventory-p3-movement-database-2f20c5a34d/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/hd123-remediation-inventory-p3-movement-database-2f20c5a34d/inventory-p3-movement-database.xml",
+      "sha256": "e21ce5ccbec21a319763895f057b6ac60e175fb050f6a04dd551fdfa2e27a52b",
+      "bytes": 7875
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    },
+    {
+      "argv": [
+        "mysql",
+        "--version"
+      ],
+      "output": "mysql  Ver 26.7.0 for macos15 on arm64 (MySQL Community Server - GPL)\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "DEVELOPER native approved TASK031 actor/date remediation and TASK030/Receipt/Transfer impact regression only. Known normal PLAN_READY remains BLOCKED pending defect closure, not waived. Auth fixture is not real HTTP signature/password proof; full-task/nativeAPI/browser/final actual Sam source review pending; no formal/currentCI/full-P3 capacity claim."
+  ]
+}

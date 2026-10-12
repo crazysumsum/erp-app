@@ -1,0 +1,318 @@
+--- a/docs/inventory_management/05_development_tasks.md
++++ b/docs/inventory_management/05_development_tasks.md
+@@ -2283,6 +2283,42 @@
+ ### Definition of Done
+ The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+ 
++#### TASK034 coverage reconciliation and local increments (HD133 A; exact candidate pending)
++
++Use the existing full P3-T09 acceptance, not the old FR063-only typed mapping. TASK034 links FR034, FR037–041, FR063–091 and SEC001–013 through DES003/005/006/010 and TC001/004/006/007; each TC inverse link includes TASK034. Add the five previously missing Issue/source requirements to PHASE004, preserve all existing Phase membership, and explicitly depend on TASK026–033. Requirements/design/UAT definitions and business rules do not change. The ledger and regenerated matrix remain the only typed relationship authority.
++
++Three sequential increments, each followed by current-source evidence verification:
++
++1. Exact quantity/version concurrency and invariants: add Issue7 versus Dispatch7 on OnHand10 and an existing-Bucket same-version Adjustment race; verify all-or-none effects, Control/Reservation/Allocation and immutable original rows. Reuse existing deterministic barrier/fixture patterns, no sleeps or weakened guards.
++2. Reconciliation/security gap closure: map the12 INT034 developer rows to exact native names/assertions; add or strengthen only missing tests in the three owned integration files. Preserve all existing tests/names/assertions. Verify complete rollback, required Audit, paired/inverse effects, source conflict/replay, ownership, ordinary-JWT rejection and current revocation. Movement/Audit UPDATE and DELETE must fail for the actual immutable trigger, not an unrelated SQL error.
++3. Integration evidence and writer handoff: fresh applicable native developer suites, full functional compatibility, unchanged Transfer/high-risk Playwright and ordinary browser regression, lint/build/audit/global/per-file floors; record the current Bin OnHand entry inventory with file pins for P4. Independent Sam source review is required before local TASK034 DONE; complete P3 integration/CI/PR/main/formal gates are separate.
++
++Owned test writes are limited to `server/test/integration/inventoryTransfer.integration.test.js`, `server/test/integration/inventoryMovement.integration.test.js` and `server/test/integration/inventoryWarehouseOperationsApi.integration.test.js`, plus this module's documentation/evidence. No product/UI/shared/auth/provider/DDL/dependency/config/parser writes are included. If a test exposes a product defect, retain the failure and request scoped remediation rather than fixing outside this candidate.
++
++Exact Issue7 case: establish valid Reservation7 and Allocation7 using the existing Issue contract; do not invent an unallocated Issue or let Dispatch consume reserved/allocated stock to create artificial competing winners. Exercise deterministic arrival/lock ordering and require at most one committed operation, valid Issue consumption, rejected Dispatch zero-effects, final OnHand3/Allocated0/Reserved0, Draft Transfer/no transit. Existing Issue4/Dispatch7 remains a separate regression. The version race uses two distinct source events, existing Bucket OnHand10/versionV and two OUT4 Adjustments; sufficient quantity for both ensures the loser is rejected for stale version rather than aggregate shortage.
++
++All existing project-profile argv, tool versions, suite floors, stages, parser, timeout, required IDs and zero-skip rules are byte-identical; no new suite or count-only substitution. INT034 rows require their exact new or verified existing native names and assertions on the new approved PLAN/current source. The original22 registered contracts, supporting functional commands and full-native skip classification remain required where applicable; old reports retain original baselines. Global92/83/90 and34 file floors are unchanged. Full-command guarded skips need their separate applicable non-skip evidence; capacity4 remains NOT_EXECUTED and is not deferred/waived. Local Task closure is not full-P3 completion or MERGE_READY.
++
++The new PLAN explicitly rebinds the prior byte-identical eight shared framework/test paths, root lockfile and existing0064 only for boundary consistency of accumulated dirty P3 work. Their verified pins permit no new writes. Standing local-resource authority supports owned synthetic MySQL26.7.0/API/browser setup, existing migrations and precise cleanup after exact candidate approval; no shared/production resource or credential export.
++
++#### Current Bin OnHand entry inventory for P4 (source discovery, not executed P4 proof)
++
++| Operation | HTTP / internal entry | Writer implementation | Relevant Bin scope |
++| --- | --- | --- | --- |
++| Receipt | `POST /api/v1/inventory/receipts`; `postReceipt[InTransaction]`, `postReceivingReceiptInTransaction`, `postCustomerReturnReceiptInTransaction` | `InventoryPostingService.js` Receipt core | Receipt destination; downstream providers retain fixed existing permissions/purpose |
++| Issue | `POST /api/v1/inventory/issues`; `postIssue[InTransaction]`, `postFulfillmentIssueInTransaction` | `InventoryPostingService.js` Issue core | Every allocated source Bin; HTTP and internal permissions stay distinct |
++| Bin Move | `POST /api/v1/inventory/bin-moves`; `postBinMove[InTransaction]` | `inventoryBinMovePosting.js` | All source/destination Bins, including shared Buckets |
++| Dispatch | `POST /api/v1/inventory/transfers/:id/dispatch`; `dispatch[InTransaction]` | `InventoryTransferService.js` | Every source Bin; destination InTransit is not a Bin |
++| Receive | `POST /api/v1/inventory/transfers/:id/receive`; `receive[InTransaction]` | `InventoryTransferService.js` | Every receiving destination Bin |
++| Adjustment IN/OUT | `POST /api/v1/inventory/adjustments`; `postAdjustment[InTransaction]` with trusted context | `inventoryAdjustmentPosting.js` | Selected existing/new Bucket Bin; new Lot/balance also rolls back |
++| Status Transfer | `POST /api/v1/inventory/status-transfers`; `postStatusTransfer[InTransaction]` with trusted context | `inventoryAdjustmentPosting.js` | Both status Buckets in the same Bin |
++| Whole-group Reversal | `POST /api/v1/inventory/movements/:id/reverse`; `reverseMovement[InTransaction]` with trusted context | `inventoryReversalPosting.js` | Every server-derived original group Bin, current full guards |
++
++All paths above are relative to `server/src/modules/inventory/`; HTTP definitions are in `server/src/handlers/inventory/postingHandlers.js` and `transferHandlers.js`. `InventoryLockService.js` also materializes zero Buckets inside owned transactions; it is a shared preparation primitive, not an independent posting route, and rollback/lock evidence must include it. Reservation/Allocation only change Reserved/Allocated, not OnHand, and remain explicitly classified rather than accidentally omitted or presented as OnHand writers. Draft create/update/cancel and inquiries are non-OnHand routes.
++
++This inventory reflects current source; later execution must mechanically reconcile current handlers/internal aliases and the actual OnHand write sites, with no unexplained writer omission. P4 persistent Stocktake and later Opening writers are not implemented here. Existing injected Counting-signal tests and confirmed no-P4-table behavior do not prove persistent Stocktake workflow or restart recovery. P4 must extend this inventory when those real writers/locks exist; no claim that future lock coverage is already complete.
++
++
+ ## TASK-035 — 建立 Stocktake、scope、line 與 persistent Bin lock persistence (legacy P4-T01)
+ 
+ ### Goal
+--- a/docs/inventory_management/06_technical_test_cases.md
++++ b/docs/inventory_management/06_technical_test_cases.md
+@@ -224,6 +224,29 @@
+ The eight new real browser cases cover: (1) minimal permissions/fresh revocation; (2) IN/new Lot/no-Balance SKU and OUT; (3) Status paired effects/current-rule errors; (4) whole-group Reversal/unsupported eligibility/links; (5) committed response loss queried without duplicate; (6) unchanged explicit same-page retry after unknown transport outcome; (7) refresh/account/storage/query-only recovery; (8) responsive keyboard/secret-lifecycle/error states. Retain real framework JWT/device/password/idempotency/limiter and MySQL26.7.0 transactional facts. Use no mocked successful API responses; only intentional transport loss for unknown-outcome scenarios. Disable high-risk trace/video/automatic screenshots; safe cleared-screen capture and boolean/allowlisted diagnostics only. Failure reports must be reviewed for credentials before retention/export, never saved session-state or raw request bodies. No formal acceptance or capacity waiver follows from developer checks.
+ 
+ 
++#### TASK034 integrated developer cases (HD133 A; exact candidate pending)
++
++These12 scenario labels supplement TC001/004/006/007 without creating formal IDs or changing their mandatory/blocking/applicability/suite contracts. All rows are NOT_RUN on the candidate. P0 inventory/security risks have impact5 and likelihood3 (risk15); P1 UI recovery risk has impact4 and likelihood3 (risk12). Native name mapping and original assertions must be inspected before reuse; aggregate counts, mocked outcomes, generic rejected SQL or a structural graph are not execution proof.
++
++`T` = existing `inventory-p3-transfer-database`; `M` = `inventory-p3-movement-database`; `A` = `inventory-p3-api`; `B` = existing real `inventory-p3-browser` plus ordinary `inventory-p3-browser-regression`. Existing names below are literal source prefixes; execution reports must contain the actual full native names/leaf results and the stated assertions. Only missing coverage is added in the three owned server integration files. New native cases use the indicated INT034 prefix; existing tests are neither renamed nor replaced merely to fit labels.
++
++| Case | Priority / trace | Preconditions / synthetic data | Steps / input | Expected observable result | Required native evidence / reuse target | Status |
++| --- | --- | --- | --- | --- | --- | --- |
++| INT034-ISSUE-DISPATCH | P0; FR034/040/072/073 → TC004/006 | OnHand10 Available, legitimate Reservation7/Allocation7; Draft Dispatch7; distinct formal source events; two DB connections | Deterministic arrival/lock barrier races Issue7 and Dispatch7; repeat opposing arrival order without removing Reservation/Allocation guards | At most one committed effect; valid Issue7 consumed once; Dispatch rejects without legs/transit; final OnHand3/Allocated0/Reserved0, original Transfer Draft; no negative stock or extra Operation/successAudit | New `INT034-ISSUE-DISPATCH` in T; explicit outcomes/counters/ledger/Control snapshots; retain existing `TASK-028 concurrent Issue cannot let Dispatch consume allocated or reserved stock`4/7 regression | NOT_RUN |
++| INT034-ADJUST-VERSION | P0; FR039/083/084/090 → TC004/007 | Existing Bucket OnHand10/versionV, two OUT4 intents, current fresh trusted credentials; enough stock for both | Barrier starts both same-version Adjustments with distinct events | Exactly one success; other VERSION_CONFLICT, no loser effects; OnHand6/versionV+1; one Adjustment group/Operation/successAudit; no overwritten version | New `INT034-ADJUST-VERSION` in M; retain `ADJ031-LOCKS-VERSION` expected-absent case and its actual guards | NOT_RUN |
++| INT034-RESERVED-MOVE | P0; FR063/065/067/069 → TC006; AC022 | Same Warehouse two Active Bins, Reservation4 without Allocation, coherent current Buckets; expired-uncovered and allocated boundary fixtures separately | Move valid eligible quantity between Bins; attempt allocated/gross-OUT/ownership-invalid variants | Conserving Move leaves Reserved/eligible totals/workflow unchanged; valid unallocated reservation does not forbid move; invalid variant has zero-effects; no blanket new coverage rule | M exact existing `TASK-030 natural expiry/uncovered Reservation does not block a conserving Move or change Control`, `TASK-030 gross OUT cannot use incoming quantities or consume allocated stock` and missing unallocated Reservation fixture added only if absent | NOT_RUN |
++| INT034-RECONCILE | P0; FR065/073/077/086/089 → TC006/007 | Real multi-line BinMove, Dispatch/Receive, six Status pairs and all reversible original types with chained versions/current guards | Query original/completed Operation, immutable legs, group links, Audit and final Buckets/InTransit; reverse eligible full groups | Per Bucket signed leg sums equal exact stock delta; same dimension conservation where required, Transfer custody correct; complete links/actor/version chain; no partial or ambiguous duplicate group | T `TASK-028` whole-document paired assertions; M `TASK-030 native multi-line document`, `REV032-PAIRS`, `ADJ031-STATUS`; exact names plus new combined check only for a demonstrated gap, safe before/after snapshots | NOT_RUN |
++| INT034-ROLLBACK | P0; FR034/065/073/077/086/089, SEC012 → TC004/006/007/001 | Multi-line/paired/inverse operations; new destination/newLot/Operation placeholders; actual write/Audit/completion checkpoints | Inject reached fault between legs/after an earlier line, required Audit/completion/bind/precommit; retry same event after rollback | Business differences zero inclnew placeholders/legs/links, successful Audit absent; intended injector reached; safe independent rejection Audit allowed; retry exactly once | T `TASK-028 failure between paired legs or after an earlier line`; M `TASK-030 injected mid-leg`, `ADJ031-ROLLBACK`, `REV032-ROLLBACK`; A real Audit-failure cases; missing command/checkpoint coverage requires owned new `INT034-ROLLBACK` assertions | NOT_RUN |
++| INT034-OWNERSHIP | P0; FR039/064/076, SEC008/009 → TC001/006/007 | Valid and foreign WH/Bin/SKU/Lot/Movement/group IDs; one invalid line after valid line; real route actor | Replace one identity/current guard or malformed source/action through actual HTTP and service paths | Stable specific rejection; no cross-owner effect or partial state; source/key do not authorize wrong target; no SQL/stack/request secret leak | A existing `DEV-029`/BinMove/`REV032` ownership tests, M `TASK-030 strict body, source/destination ownership`; add owned `INT034-OWNERSHIP` only for uncovered resource path | NOT_RUN |
++| INT034-STRONG-AUTH | P0; FR082, SEC001–007/010/011 → TC001/007 | Anonymous/view-only/operation-only/mgmt/FEFO-only actors, ordinary JWT, valid strong actor/device; synthetic fresh passwords/signatures | Attempt Adjustment/Status/Reversal and ordinary Transfer/BinMove; copied-purpose/actor proofs, wrong password/device/signature | High-risk requires view+adjust and valid current trusted context; ordinary JWT rejected; operation/mgmt/FEFO do not replace adjust; ordinary/internal contracts unchanged; no effects or credential export | A `ADJ031-PROOF`/`REV032-HTTP-BOUNDARY` actual error assertions; existing security/handler/functional regressions and real browser permissions; new `INT034-STRONG-AUTH` only for coverage gap | NOT_RUN |
++| INT034-REVOKE | P0; FR039, SEC010/013 → TC001/004/007 | Actual actor/role/device/token revocation writers; RR snapshot and stock/cache/source wait; unexpired then elapsed proof | Deterministic wait, commit revocation before releasing blocker; guard-first writer-waits contrast; repeat cached/domain replay | Current guard rejects revoke-before; entire business rollback; guard-first serialization holds; expired proof never renewed; cached success cannot bypass current permission/device/token | M `ADJ031-REVOKE-ORDER`, `REV032-REVOKE-ORDER`; A real cache/domain wait variants incladmin-token-first, specific error and committed writer evidence | NOT_RUN |
++| INT034-REPLAY | P0; FR037/038/080/090, SEC008/010 → TC004/006/007/001 | Completed source/HTTP key; later legitimate stock/source state; same and changed body/path/event; lost committed response | Fresh signed same-intent replay/domain new-key retry; change quantity/source target/versions; query exact source after loss | Original immutable result once; no recomputation/extra effects; changed business intent conflicts; no actor attribution overwrite; null query stays unknown, no automatic new event | T source replay, A `DEV-029-API-07`, `ADJ031-HTTP-REPLAY`/`REV032-HTTP-REPLAY`/domain cases, B `TASK-033 @technical pre-forward abort`, `TASK-033 @technical real committed-response loss` and refresh/navigation cases; current reports and Operation hash/DB snapshots | NOT_RUN |
++| INT034-IMMUTABLE | P0; FR041/089, SEC008/012 → TC004/007/001; AC018 | Existing real Movement/successAudit rows and trigger-bearing migrated owned schema; preserve original rows | Direct UPDATE and DELETE on both history tables via fixture connection; query afterward; unsupported edit/delete HTTP attempts where actual route exists | Actual `ER_SIGNAL_EXCEPTION`/SQLSTATE45000 with correct table immutable-trigger cause; exact rows unchanged; no arbitrary DB failure accepted; no edit/delete business endpoint becomes available | New/strengthened `INT034-IMMUTABLE` in M; exact0057/0060 trigger contract; existing weak generic UPDATE reject assertion retained/strengthened, never counted alone | NOT_RUN |
++| INT034-ISSUE-REVERSAL | P0; FR034/041/089, SEC005 → TC004/007/001; AC018 | Original valid Issue consumed Reservation/Allocation and immutable rows; current free/Lot/status/version rules | Deny historical mutation; perform authorized whole-group reversal using current guards; replay/concurrent reversal | New linked compensating legs only; original consumed workflow never resurrected or edited; exactly-once compensation, current quantity/security invariants remain | M `REV032-ISSUE`, `REV032-ONCE` and A actual reversal routes, workflow/Movement/Operation/Audit snapshots | NOT_RUN |
++| INT034-BROWSER | P1; FR038/041/090, SEC009/011/013 → TC001/004/007 | Existing actual Transfer/high-risk UI, synthetic real API/MySQL/device credentials; saved hostile text, transport loss, refresh/current actor | Run existing real16 and ordinary18 Playwright; inspect actual cleared responsive screens, keyboard/password lifecycle, visible source/result/links, errors/console/network | Literal escaped text/no script; same-intent retry and query-only refresh; no silent duplicates; no credential capture; no unexpected console/network failures; stable usable responsive actions | B exact current native full case names plus UI033 mapping and cleared screenshot hashes/visual review; mocked18 explicitly separate, not API/DB proof; no UI source/spec modification or new formal UAT claim | NOT_RUN |
++
++Reused native names are only planning targets, not current-candidate PASS. Any missing assertion or required name stays NOT_RUN/BLOCKED until a real non-skip execution establishes it. Cross-case evidence must retain exact suite, native leaf, source/PLAN/HEAD, command contract, safe artifact hash and required invariant assertions; name-only aliases without behavior do not count. The writer inventory in TASK034's plan is validated by current source/handler/internal-alias pins and actual write-site discovery, not by a fabricated executable case or future P4 proof. Cleanup uses only owned synthetic instances/schema/accounts/cache/ports/roots.
++
+ ## TC-008 — Stocktake locking, counting and variance posting
+ 
+ ### Preconditions and data
+--- a/docs/inventory_management/08_traceability.json
++++ b/docs/inventory_management/08_traceability.json
+@@ -1786,7 +1786,12 @@
+         "SEC-005",
+         "SEC-010",
+         "SEC-011",
+-        "SEC-012"
++        "SEC-012",
++        "FR-034",
++        "FR-037",
++        "FR-038",
++        "FR-039",
++        "FR-040"
+       ],
+       "design_ids": [
+         "DES-005",
+@@ -3036,16 +3041,76 @@
+       "id": "TASK-034",
+       "phase_id": "PHASE-004",
+       "requirement_ids": [
+-        "FR-063"
+-      ],
+-      "design_ids": [
+-        "DES-005"
++        "FR-034",
++        "FR-037",
++        "FR-038",
++        "FR-039",
++        "FR-040",
++        "FR-041",
++        "FR-063",
++        "FR-064",
++        "FR-065",
++        "FR-066",
++        "FR-067",
++        "FR-068",
++        "FR-069",
++        "FR-070",
++        "FR-071",
++        "FR-072",
++        "FR-073",
++        "FR-074",
++        "FR-075",
++        "FR-076",
++        "FR-077",
++        "FR-078",
++        "FR-079",
++        "FR-080",
++        "FR-081",
++        "FR-082",
++        "FR-083",
++        "FR-084",
++        "FR-085",
++        "FR-086",
++        "FR-087",
++        "FR-088",
++        "FR-089",
++        "FR-090",
++        "FR-091",
++        "SEC-001",
++        "SEC-002",
++        "SEC-003",
++        "SEC-004",
++        "SEC-005",
++        "SEC-006",
++        "SEC-007",
++        "SEC-008",
++        "SEC-009",
++        "SEC-010",
++        "SEC-011",
++        "SEC-012",
++        "SEC-013"
++      ],
++      "design_ids": [
++        "DES-003",
++        "DES-005",
++        "DES-006",
++        "DES-010"
+       ],
+       "depends_on": [
++        "TASK-026",
++        "TASK-027",
++        "TASK-028",
++        "TASK-029",
++        "TASK-030",
++        "TASK-031",
++        "TASK-032",
+         "TASK-033"
+       ],
+       "technical_test_ids": [
+-        "TC-006"
++        "TC-001",
++        "TC-004",
++        "TC-006",
++        "TC-007"
+       ]
+     },
+     {
+@@ -3726,6 +3791,7 @@
+         "TASK-023",
+         "TASK-026",
+         "TASK-033",
++        "TASK-034",
+         "TASK-035",
+         "TASK-043",
+         "TASK-044",
+@@ -3860,6 +3926,7 @@
+         "TASK-019",
+         "TASK-022",
+         "TASK-032",
++        "TASK-034",
+         "TASK-048",
+         "TASK-049",
+         "TASK-051"
+@@ -3983,6 +4050,7 @@
+         "TASK-031",
+         "TASK-032",
+         "TASK-033",
++        "TASK-034",
+         "TASK-038",
+         "TASK-051"
+       ],
+--- a/docs/inventory_management/08_traceability_matrix.md
++++ b/docs/inventory_management/08_traceability_matrix.md
+@@ -39,14 +39,14 @@
+ | FR-031 | DES-003 | PHASE-001, PHASE-002, PHASE-003, PHASE-006 | TASK-001, TASK-014, TASK-015, TASK-019, TASK-048, TASK-051 | TC-004 | UAT-031 | APPLICABLE |
+ | FR-032 | DES-003 | PHASE-001, PHASE-002, PHASE-003, PHASE-006 | TASK-001, TASK-014, TASK-015, TASK-019, TASK-048, TASK-051 | TC-004 | UAT-031, UAT-034 | APPLICABLE |
+ | FR-033 | DES-003 | PHASE-001, PHASE-002, PHASE-003, PHASE-006 | TASK-006, TASK-012, TASK-014, TASK-015, TASK-019, TASK-048, TASK-051 | TC-004 | UAT-031 | APPLICABLE |
+-| FR-034 | DES-003 | PHASE-001, PHASE-002, PHASE-003, PHASE-006 | TASK-006, TASK-012, TASK-014, TASK-015, TASK-022, TASK-048, TASK-051 | TC-004 | UAT-031, UAT-040, UAT-041 | APPLICABLE |
++| FR-034 | DES-003 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-006 | TASK-006, TASK-012, TASK-014, TASK-015, TASK-022, TASK-034, TASK-048, TASK-051 | TC-004 | UAT-031, UAT-040, UAT-041 | APPLICABLE |
+ | FR-035 | DES-003 | PHASE-001, PHASE-002, PHASE-003, PHASE-006 | TASK-006, TASK-012, TASK-014, TASK-015, TASK-019, TASK-048, TASK-051 | TC-004 | UAT-031, UAT-036 | APPLICABLE |
+ | FR-036 | DES-003 | PHASE-001, PHASE-002, PHASE-003, PHASE-006 | TASK-006, TASK-012, TASK-014, TASK-015, TASK-019, TASK-048, TASK-051 | TC-004 | UAT-031 | APPLICABLE |
+-| FR-037 | DES-003 | PHASE-001, PHASE-002, PHASE-003, PHASE-006 | TASK-002, TASK-006, TASK-012, TASK-014, TASK-015, TASK-019, TASK-048, TASK-051 | TC-004 | UAT-031, UAT-038 | APPLICABLE |
+-| FR-038 | DES-003 | PHASE-001, PHASE-002, PHASE-003, PHASE-006 | TASK-002, TASK-006, TASK-012, TASK-014, TASK-015, TASK-019, TASK-048, TASK-051 | TC-004 | UAT-031, UAT-039 | APPLICABLE |
+-| FR-039 | DES-003 | PHASE-001, PHASE-002, PHASE-003, PHASE-006 | TASK-006, TASK-012, TASK-014, TASK-015, TASK-019, TASK-048, TASK-051 | TC-004 | UAT-031, UAT-037 | APPLICABLE |
+-| FR-040 | DES-003 | PHASE-001, PHASE-002, PHASE-003, PHASE-006 | TASK-001, TASK-012, TASK-014, TASK-019, TASK-048, TASK-051 | TC-004 | UAT-031 | APPLICABLE |
+-| FR-041 | DES-003 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-006 | TASK-001, TASK-012, TASK-019, TASK-032, TASK-048, TASK-051 | TC-004 | UAT-031 | APPLICABLE |
++| FR-037 | DES-003 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-006 | TASK-002, TASK-006, TASK-012, TASK-014, TASK-015, TASK-019, TASK-034, TASK-048, TASK-051 | TC-004 | UAT-031, UAT-038 | APPLICABLE |
++| FR-038 | DES-003 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-006 | TASK-002, TASK-006, TASK-012, TASK-014, TASK-015, TASK-019, TASK-034, TASK-048, TASK-051 | TC-004 | UAT-031, UAT-039 | APPLICABLE |
++| FR-039 | DES-003 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-006 | TASK-006, TASK-012, TASK-014, TASK-015, TASK-019, TASK-034, TASK-048, TASK-051 | TC-004 | UAT-031, UAT-037 | APPLICABLE |
++| FR-040 | DES-003 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-006 | TASK-001, TASK-012, TASK-014, TASK-019, TASK-034, TASK-048, TASK-051 | TC-004 | UAT-031 | APPLICABLE |
++| FR-041 | DES-003 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-006 | TASK-001, TASK-012, TASK-019, TASK-032, TASK-034, TASK-048, TASK-051 | TC-004 | UAT-031 | APPLICABLE |
+ | FR-042 | DES-003 | PHASE-001, PHASE-002, PHASE-003, PHASE-006 | TASK-001, TASK-008, TASK-019, TASK-048, TASK-051 | TC-004 | UAT-031 | APPLICABLE |
+ | FR-043 | DES-004 | PHASE-003, PHASE-006 | TASK-019, TASK-020, TASK-025, TASK-051 | TC-005 | UAT-044 | APPLICABLE |
+ | FR-044 | DES-004 | PHASE-003, PHASE-006 | TASK-019, TASK-020, TASK-051 | TC-005 | UAT-044, UAT-045 | APPLICABLE |
+@@ -69,34 +69,34 @@
+ | FR-061 | DES-004 | PHASE-003, PHASE-006 | TASK-019, TASK-022, TASK-024, TASK-051 | TC-005 | UAT-044 | APPLICABLE |
+ | FR-062 | DES-004 | PHASE-003, PHASE-006 | TASK-019, TASK-024, TASK-051 | TC-005 | UAT-044 | APPLICABLE |
+ | FR-063 | DES-005 | PHASE-004, PHASE-006 | TASK-030, TASK-034, TASK-051 | TC-006 | UAT-057 | APPLICABLE |
+-| FR-064 | DES-005 | PHASE-004, PHASE-006 | TASK-030, TASK-051 | TC-006 | UAT-057, UAT-058 | APPLICABLE |
+-| FR-065 | DES-005 | PHASE-004, PHASE-006 | TASK-030, TASK-051 | TC-006 | UAT-057 | APPLICABLE |
+-| FR-066 | DES-005 | PHASE-004, PHASE-006 | TASK-030, TASK-051 | TC-006 | UAT-057 | APPLICABLE |
+-| FR-067 | DES-005 | PHASE-004, PHASE-006 | TASK-030, TASK-051 | TC-006 | UAT-057, UAT-059 | APPLICABLE |
+-| FR-068 | DES-005 | PHASE-004, PHASE-006 | TASK-030, TASK-051 | TC-006 | UAT-057, UAT-059 | APPLICABLE |
+-| FR-069 | DES-005 | PHASE-004, PHASE-006 | TASK-030, TASK-051 | TC-006 | UAT-057, UAT-059 | APPLICABLE |
+-| FR-070 | DES-005 | PHASE-004, PHASE-006 | TASK-026, TASK-027, TASK-029, TASK-051 | TC-006 | UAT-057, UAT-060 | APPLICABLE |
+-| FR-071 | DES-005 | PHASE-004, PHASE-006 | TASK-026, TASK-027, TASK-029, TASK-051 | TC-006 | UAT-057 | APPLICABLE |
+-| FR-072 | DES-005 | PHASE-004, PHASE-006 | TASK-026, TASK-027, TASK-028, TASK-029, TASK-051 | TC-006 | UAT-057, UAT-061 | APPLICABLE |
+-| FR-073 | DES-005 | PHASE-004, PHASE-006 | TASK-026, TASK-028, TASK-029, TASK-051 | TC-006 | UAT-057, UAT-061, UAT-062 | APPLICABLE |
+-| FR-074 | DES-005 | PHASE-004, PHASE-006 | TASK-026, TASK-028, TASK-029, TASK-051 | TC-006 | UAT-057, UAT-061 | APPLICABLE |
+-| FR-075 | DES-005 | PHASE-004, PHASE-006 | TASK-026, TASK-028, TASK-029, TASK-051 | TC-006 | UAT-057, UAT-063 | APPLICABLE |
+-| FR-076 | DES-005 | PHASE-004, PHASE-006 | TASK-026, TASK-028, TASK-029, TASK-051 | TC-006 | UAT-057, UAT-064, UAT-065 | APPLICABLE |
+-| FR-077 | DES-005 | PHASE-004, PHASE-006 | TASK-026, TASK-028, TASK-029, TASK-051 | TC-006 | UAT-057, UAT-066 | APPLICABLE |
+-| FR-078 | DES-005 | PHASE-004, PHASE-006 | TASK-026, TASK-028, TASK-029, TASK-051 | TC-006 | UAT-057, UAT-067 | APPLICABLE |
+-| FR-079 | DES-005 | PHASE-004, PHASE-006 | TASK-026, TASK-028, TASK-029, TASK-051 | TC-006 | UAT-057, UAT-068 | APPLICABLE |
+-| FR-080 | DES-005 | PHASE-004, PHASE-006 | TASK-026, TASK-028, TASK-029, TASK-051 | TC-006 | UAT-057, UAT-069 | APPLICABLE |
+-| FR-081 | DES-005 | PHASE-004, PHASE-006 | TASK-026, TASK-029, TASK-051 | TC-006 | UAT-057 | APPLICABLE |
+-| FR-082 | DES-006 | PHASE-004, PHASE-005, PHASE-006 | TASK-031, TASK-033, TASK-038, TASK-051 | TC-007 | UAT-070, UAT-078 | APPLICABLE |
+-| FR-083 | DES-006 | PHASE-004, PHASE-006 | TASK-031, TASK-033, TASK-051 | TC-007 | UAT-070, UAT-071 | APPLICABLE |
+-| FR-084 | DES-006 | PHASE-004, PHASE-006 | TASK-031, TASK-033, TASK-051 | TC-007 | UAT-070, UAT-072 | APPLICABLE |
+-| FR-085 | DES-006 | PHASE-004, PHASE-006 | TASK-031, TASK-033, TASK-051 | TC-007 | UAT-070 | APPLICABLE |
+-| FR-086 | DES-006 | PHASE-004, PHASE-006 | TASK-031, TASK-033, TASK-051 | TC-007 | UAT-070, UAT-073 | APPLICABLE |
+-| FR-087 | DES-006 | PHASE-004, PHASE-006 | TASK-031, TASK-033, TASK-051 | TC-007 | UAT-070, UAT-074 | APPLICABLE |
+-| FR-088 | DES-006 | PHASE-004, PHASE-006 | TASK-031, TASK-033, TASK-051 | TC-007 | UAT-070, UAT-075 | APPLICABLE |
+-| FR-089 | DES-006 | PHASE-004, PHASE-006 | TASK-032, TASK-033, TASK-051 | TC-007 | UAT-070, UAT-076, UAT-077 | APPLICABLE |
+-| FR-090 | DES-006 | PHASE-004, PHASE-006 | TASK-032, TASK-033, TASK-051 | TC-007 | UAT-070 | APPLICABLE |
+-| FR-091 | DES-006 | PHASE-004, PHASE-006 | TASK-033, TASK-051 | TC-007 | UAT-070 | APPLICABLE |
++| FR-064 | DES-005 | PHASE-004, PHASE-006 | TASK-030, TASK-034, TASK-051 | TC-006 | UAT-057, UAT-058 | APPLICABLE |
++| FR-065 | DES-005 | PHASE-004, PHASE-006 | TASK-030, TASK-034, TASK-051 | TC-006 | UAT-057 | APPLICABLE |
++| FR-066 | DES-005 | PHASE-004, PHASE-006 | TASK-030, TASK-034, TASK-051 | TC-006 | UAT-057 | APPLICABLE |
++| FR-067 | DES-005 | PHASE-004, PHASE-006 | TASK-030, TASK-034, TASK-051 | TC-006 | UAT-057, UAT-059 | APPLICABLE |
++| FR-068 | DES-005 | PHASE-004, PHASE-006 | TASK-030, TASK-034, TASK-051 | TC-006 | UAT-057, UAT-059 | APPLICABLE |
++| FR-069 | DES-005 | PHASE-004, PHASE-006 | TASK-030, TASK-034, TASK-051 | TC-006 | UAT-057, UAT-059 | APPLICABLE |
++| FR-070 | DES-005 | PHASE-004, PHASE-006 | TASK-026, TASK-027, TASK-029, TASK-034, TASK-051 | TC-006 | UAT-057, UAT-060 | APPLICABLE |
++| FR-071 | DES-005 | PHASE-004, PHASE-006 | TASK-026, TASK-027, TASK-029, TASK-034, TASK-051 | TC-006 | UAT-057 | APPLICABLE |
++| FR-072 | DES-005 | PHASE-004, PHASE-006 | TASK-026, TASK-027, TASK-028, TASK-029, TASK-034, TASK-051 | TC-006 | UAT-057, UAT-061 | APPLICABLE |
++| FR-073 | DES-005 | PHASE-004, PHASE-006 | TASK-026, TASK-028, TASK-029, TASK-034, TASK-051 | TC-006 | UAT-057, UAT-061, UAT-062 | APPLICABLE |
++| FR-074 | DES-005 | PHASE-004, PHASE-006 | TASK-026, TASK-028, TASK-029, TASK-034, TASK-051 | TC-006 | UAT-057, UAT-061 | APPLICABLE |
++| FR-075 | DES-005 | PHASE-004, PHASE-006 | TASK-026, TASK-028, TASK-029, TASK-034, TASK-051 | TC-006 | UAT-057, UAT-063 | APPLICABLE |
++| FR-076 | DES-005 | PHASE-004, PHASE-006 | TASK-026, TASK-028, TASK-029, TASK-034, TASK-051 | TC-006 | UAT-057, UAT-064, UAT-065 | APPLICABLE |
++| FR-077 | DES-005 | PHASE-004, PHASE-006 | TASK-026, TASK-028, TASK-029, TASK-034, TASK-051 | TC-006 | UAT-057, UAT-066 | APPLICABLE |
++| FR-078 | DES-005 | PHASE-004, PHASE-006 | TASK-026, TASK-028, TASK-029, TASK-034, TASK-051 | TC-006 | UAT-057, UAT-067 | APPLICABLE |
++| FR-079 | DES-005 | PHASE-004, PHASE-006 | TASK-026, TASK-028, TASK-029, TASK-034, TASK-051 | TC-006 | UAT-057, UAT-068 | APPLICABLE |
++| FR-080 | DES-005 | PHASE-004, PHASE-006 | TASK-026, TASK-028, TASK-029, TASK-034, TASK-051 | TC-006 | UAT-057, UAT-069 | APPLICABLE |
++| FR-081 | DES-005 | PHASE-004, PHASE-006 | TASK-026, TASK-029, TASK-034, TASK-051 | TC-006 | UAT-057 | APPLICABLE |
++| FR-082 | DES-006 | PHASE-004, PHASE-005, PHASE-006 | TASK-031, TASK-033, TASK-034, TASK-038, TASK-051 | TC-007 | UAT-070, UAT-078 | APPLICABLE |
++| FR-083 | DES-006 | PHASE-004, PHASE-006 | TASK-031, TASK-033, TASK-034, TASK-051 | TC-007 | UAT-070, UAT-071 | APPLICABLE |
++| FR-084 | DES-006 | PHASE-004, PHASE-006 | TASK-031, TASK-033, TASK-034, TASK-051 | TC-007 | UAT-070, UAT-072 | APPLICABLE |
++| FR-085 | DES-006 | PHASE-004, PHASE-006 | TASK-031, TASK-033, TASK-034, TASK-051 | TC-007 | UAT-070 | APPLICABLE |
++| FR-086 | DES-006 | PHASE-004, PHASE-006 | TASK-031, TASK-033, TASK-034, TASK-051 | TC-007 | UAT-070, UAT-073 | APPLICABLE |
++| FR-087 | DES-006 | PHASE-004, PHASE-006 | TASK-031, TASK-033, TASK-034, TASK-051 | TC-007 | UAT-070, UAT-074 | APPLICABLE |
++| FR-088 | DES-006 | PHASE-004, PHASE-006 | TASK-031, TASK-033, TASK-034, TASK-051 | TC-007 | UAT-070, UAT-075 | APPLICABLE |
++| FR-089 | DES-006 | PHASE-004, PHASE-006 | TASK-032, TASK-033, TASK-034, TASK-051 | TC-007 | UAT-070, UAT-076, UAT-077 | APPLICABLE |
++| FR-090 | DES-006 | PHASE-004, PHASE-006 | TASK-032, TASK-033, TASK-034, TASK-051 | TC-007 | UAT-070 | APPLICABLE |
++| FR-091 | DES-006 | PHASE-004, PHASE-006 | TASK-033, TASK-034, TASK-051 | TC-007 | UAT-070 | APPLICABLE |
+ | FR-092 | DES-007 | PHASE-005, PHASE-006 | TASK-035, TASK-036, TASK-039, TASK-040, TASK-051 | TC-008 | UAT-079, UAT-080 | APPLICABLE |
+ | FR-093 | DES-007 | PHASE-005, PHASE-006 | TASK-035, TASK-036, TASK-039, TASK-040, TASK-041, TASK-051 | TC-008 | UAT-079, UAT-081 | APPLICABLE |
+ | FR-094 | DES-007 | PHASE-005, PHASE-006 | TASK-035, TASK-036, TASK-039, TASK-040, TASK-041, TASK-051 | TC-008 | UAT-079, UAT-082 | APPLICABLE |
+@@ -145,19 +145,19 @@
+ | NFR-012 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-005, TASK-008, TASK-019, TASK-026, TASK-035, TASK-050, TASK-051 | TC-001 | UAT-001, UAT-109 | APPLICABLE |
+ | NFR-013 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-001, TASK-008, TASK-019, TASK-026, TASK-035, TASK-050, TASK-051 | TC-001 | UAT-001 | APPLICABLE |
+ | NFR-014 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-001, TASK-008, TASK-019, TASK-026, TASK-035, TASK-050, TASK-051 | TC-001 | UAT-001 | APPLICABLE |
+-| SEC-001 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-003, TASK-010, TASK-019, TASK-026, TASK-035, TASK-050, TASK-051 | TC-001 | UAT-001 | APPLICABLE |
+-| SEC-002 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-003, TASK-010, TASK-019, TASK-026, TASK-035, TASK-050, TASK-051 | TC-001 | UAT-001, UAT-002, UAT-003 | APPLICABLE |
+-| SEC-003 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-003, TASK-010, TASK-023, TASK-026, TASK-035, TASK-050, TASK-051 | TC-001 | UAT-001, UAT-002, UAT-004 | APPLICABLE |
+-| SEC-004 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-003, TASK-010, TASK-019, TASK-026, TASK-035, TASK-045, TASK-050, TASK-051 | TC-001 | UAT-001, UAT-002, UAT-004, UAT-097 | APPLICABLE |
+-| SEC-005 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-003, TASK-010, TASK-019, TASK-033, TASK-035, TASK-045, TASK-050, TASK-051 | TC-001 | UAT-001, UAT-002, UAT-004, UAT-007 | APPLICABLE |
+-| SEC-006 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-003, TASK-008, TASK-023, TASK-026, TASK-035, TASK-050, TASK-051 | TC-001 | UAT-001, UAT-002, UAT-004, UAT-054 | APPLICABLE |
+-| SEC-007 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-001, TASK-008, TASK-023, TASK-026, TASK-035, TASK-048, TASK-050, TASK-051 | TC-001 | UAT-001, UAT-005 | APPLICABLE |
+-| SEC-008 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-001, TASK-010, TASK-023, TASK-026, TASK-035, TASK-050, TASK-051 | TC-001 | UAT-001, UAT-008 | APPLICABLE |
+-| SEC-009 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-003, TASK-010, TASK-019, TASK-026, TASK-035, TASK-043, TASK-047, TASK-050, TASK-051 | TC-001 | UAT-001, UAT-008, UAT-106 | APPLICABLE |
+-| SEC-010 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-002, TASK-003, TASK-010, TASK-019, TASK-033, TASK-035, TASK-050, TASK-051 | TC-001 | UAT-001, UAT-008 | APPLICABLE |
+-| SEC-011 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-003, TASK-008, TASK-019, TASK-033, TASK-035, TASK-043, TASK-047, TASK-050, TASK-051 | TC-001 | UAT-001, UAT-008 | APPLICABLE |
+-| SEC-012 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-003, TASK-008, TASK-019, TASK-033, TASK-035, TASK-047, TASK-050, TASK-051 | TC-001 | UAT-001 | APPLICABLE |
+-| SEC-013 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-003, TASK-008, TASK-019, TASK-026, TASK-035, TASK-050, TASK-051 | TC-001 | UAT-001, UAT-006 | APPLICABLE |
++| SEC-001 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-003, TASK-010, TASK-019, TASK-026, TASK-034, TASK-035, TASK-050, TASK-051 | TC-001 | UAT-001 | APPLICABLE |
++| SEC-002 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-003, TASK-010, TASK-019, TASK-026, TASK-034, TASK-035, TASK-050, TASK-051 | TC-001 | UAT-001, UAT-002, UAT-003 | APPLICABLE |
++| SEC-003 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-003, TASK-010, TASK-023, TASK-026, TASK-034, TASK-035, TASK-050, TASK-051 | TC-001 | UAT-001, UAT-002, UAT-004 | APPLICABLE |
++| SEC-004 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-003, TASK-010, TASK-019, TASK-026, TASK-034, TASK-035, TASK-045, TASK-050, TASK-051 | TC-001 | UAT-001, UAT-002, UAT-004, UAT-097 | APPLICABLE |
++| SEC-005 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-003, TASK-010, TASK-019, TASK-033, TASK-034, TASK-035, TASK-045, TASK-050, TASK-051 | TC-001 | UAT-001, UAT-002, UAT-004, UAT-007 | APPLICABLE |
++| SEC-006 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-003, TASK-008, TASK-023, TASK-026, TASK-034, TASK-035, TASK-050, TASK-051 | TC-001 | UAT-001, UAT-002, UAT-004, UAT-054 | APPLICABLE |
++| SEC-007 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-001, TASK-008, TASK-023, TASK-026, TASK-034, TASK-035, TASK-048, TASK-050, TASK-051 | TC-001 | UAT-001, UAT-005 | APPLICABLE |
++| SEC-008 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-001, TASK-010, TASK-023, TASK-026, TASK-034, TASK-035, TASK-050, TASK-051 | TC-001 | UAT-001, UAT-008 | APPLICABLE |
++| SEC-009 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-003, TASK-010, TASK-019, TASK-026, TASK-034, TASK-035, TASK-043, TASK-047, TASK-050, TASK-051 | TC-001 | UAT-001, UAT-008, UAT-106 | APPLICABLE |
++| SEC-010 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-002, TASK-003, TASK-010, TASK-019, TASK-033, TASK-034, TASK-035, TASK-050, TASK-051 | TC-001 | UAT-001, UAT-008 | APPLICABLE |
++| SEC-011 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-003, TASK-008, TASK-019, TASK-033, TASK-034, TASK-035, TASK-043, TASK-047, TASK-050, TASK-051 | TC-001 | UAT-001, UAT-008 | APPLICABLE |
++| SEC-012 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-003, TASK-008, TASK-019, TASK-033, TASK-034, TASK-035, TASK-047, TASK-050, TASK-051 | TC-001 | UAT-001 | APPLICABLE |
++| SEC-013 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-003, TASK-008, TASK-019, TASK-026, TASK-034, TASK-035, TASK-050, TASK-051 | TC-001 | UAT-001, UAT-006 | APPLICABLE |
+ | SEC-014 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-001, TASK-008, TASK-019, TASK-026, TASK-035, TASK-050, TASK-051 | TC-001 | UAT-001 | APPLICABLE |
+ 
+ ## Case execution contracts

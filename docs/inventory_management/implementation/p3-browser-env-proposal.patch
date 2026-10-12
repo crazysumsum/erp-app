@@ -1,0 +1,33 @@
+--- a/docs/inventory_management/00_project_profile.json
++++ b/docs/inventory_management/00_project_profile.json
+@@ -919,9 +919,27 @@
+       "env_keys": [
+         "VITE_API_BASE_URL",
+         "INVENTORY_P3_API_ORIGIN",
+-        "INVENTORY_P3_BROWSER_TESTS"
+-      ],
+-      "redaction_env_keys": []
++        "INVENTORY_P3_BROWSER_TESTS",
++        "DB_NAME",
++        "DB_SOCKET_PATH",
++        "DB_USER",
++        "DB_PASSWORD",
++        "CUSTOMER_BANK_ACTIVE_KEY_ID",
++        "CUSTOMER_BANK_ENCRYPTION_KEYS",
++        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
++        "CUSTOMER_BANK_LOOKUP_KEYS",
++        "SUPPLIER_BANK_ACTIVE_KEY_ID",
++        "SUPPLIER_BANK_ENCRYPTION_KEYS",
++        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
++        "SUPPLIER_BANK_LOOKUP_KEYS"
++      ],
++      "redaction_env_keys": [
++        "DB_PASSWORD",
++        "CUSTOMER_BANK_ENCRYPTION_KEYS",
++        "CUSTOMER_BANK_LOOKUP_KEYS",
++        "SUPPLIER_BANK_ENCRYPTION_KEYS",
++        "SUPPLIER_BANK_LOOKUP_KEYS"
++      ]
+     },
+     {
+       "id": "inventory-p3-browser-regression",
