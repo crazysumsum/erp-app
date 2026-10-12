@@ -17,10 +17,10 @@ function controlCharacters(value) {
   });
 }
 
-function optionalText(value, field, maxLength) {
+function optionalText(value, field, maxLength, code = "SUPPLIER_SKU_RELATION_INVALID") {
   const text = String(value ?? "").trim();
   if (Array.from(text).length > maxLength || controlCharacters(text)) {
-    throw invalidSupplierInput("SUPPLIER_SKU_RELATION_INVALID", "供應商商品資料不正確", { field });
+    throw invalidSupplierInput(code, "供應商商品資料不正確", { field });
   }
   return text;
 }
@@ -33,9 +33,9 @@ function optionalInteger(value, field, minimum, maximum) {
   return value;
 }
 
-function positiveId(value, field) {
+function positiveId(value, field, code = "SUPPLIER_SKU_RELATION_INVALID") {
   if (!Number.isSafeInteger(value) || value < 1) {
-    throw invalidSupplierInput("SUPPLIER_SKU_RELATION_INVALID", "供應商商品資料不正確", { field });
+    throw invalidSupplierInput(code, "供應商商品資料不正確", { field });
   }
   return value;
 }
@@ -47,10 +47,14 @@ function relationFields(input) {
   if (!SUPPLIER_SKU_RELATIONSHIP_STATUSES.includes(status)) {
     throw invalidSupplierInput("SUPPLIER_SKU_RELATION_INVALID", "供應關係狀態不正確", { field: "relationshipStatus" });
   }
+  const supplierItemCodeKey = itemCodeKey(supplierItemCode);
+  // NFKC 可以令代碼變長（「ﷺ」一個字變 18 個）：放唔入欄位就係輸入錯，唔係 500（REV-085 L1）。
+  if (supplierItemCodeKey !== null && Array.from(supplierItemCodeKey).length > 190) {
+    throw invalidSupplierInput("SUPPLIER_SKU_RELATION_INVALID", "供應商商品代碼正規化後過長", { field: "supplierItemCode" });
+  }
   return {
     supplierItemCode,
-    // 同 Supplier Code 一樣嘅正規化；冇代碼就 NULL，唯一約束唔管（設計 §5.11）。
-    supplierItemCodeKey: supplierItemCode ? supplierItemCode.normalize("NFKC").toLowerCase() : null,
+    supplierItemCodeKey,
     supplierItemName: optionalText(input.supplierItemName, "supplierItemName", 190),
     purchaseSkuUomId: input.purchaseSkuUomId === null || input.purchaseSkuUomId === undefined
       ? null : positiveId(input.purchaseSkuUomId, "purchaseSkuUomId"),
@@ -58,6 +62,18 @@ function relationFields(input) {
     standardLeadTimeDays: optionalInteger(input.standardLeadTimeDays, "standardLeadTimeDays", 0, MAX_LEAD_TIME_DAYS),
     relationshipStatus: status
   };
+}
+
+/** 同 Supplier Code 一樣嘅正規化；冇代碼就 NULL，唯一約束唔管（設計 §5.11）。 */
+function itemCodeKey(code) {
+  return code ? code.normalize("NFKC").toLowerCase() : null;
+}
+
+/** Transaction 之前讀嘅 SKU（purpose purchase），喺授權之後先據此報錯（REV-085 H1、L3）。 */
+function requirePurchasable(sku) {
+  if (!sku) throw invalidSupplierInput("SUPPLIER_SKU_NOT_FOUND", "找不到這個 SKU", { field: "skuId" });
+  if (!sku.usable) throw supplierConflict("SUPPLIER_SKU_NOT_PURCHASABLE", "這個 SKU 目前不可作為新的採購對象", { reasons: [...sku.reasons] });
+  return sku;
 }
 
 const driverCode = (error) => error?.cause?.code ?? error?.code;
@@ -127,11 +143,14 @@ async function sourceVerifierUnavailable() {
  * - 採購單位屬唔屬呢個 SKU 由 composite FK 保證，撞到就回 `SUPPLIER_SKU_UOM_INVALID`。
  * - `recordSupply` 係 Purchasing 完成 GR 之後嘅歷史投影：event_id 做 durable fence，重送回原結果，唔套用新採購
  *   資格，唔會自動改成 preferred（設計 §6.8）。
+ * - Item 嘅資料一律喺 transaction 之前讀：ItemLookupService 用 pool，喺 transaction 入面叫佢會令一個請求同時佔兩條
+ *   連線，十個並發請求就可以塞死成個 pool（REV-085 H1）。
  */
 export class SupplierRelationService {
   constructor({ database, logger, time, items, authorize = assertActorFresh, audit, verifySource = sourceVerifierUnavailable } = {}) {
     if (!database || !logger || !time || !items) throw new TypeError("SupplierRelationService requires database, logger, time and items");
     this.database = database;
+    this.logger = logger;
     this.time = time;
     this.items = items;
     this.authorize = authorize;
@@ -139,13 +158,8 @@ export class SupplierRelationService {
     this.verifySource = verifySource;
   }
 
-  async #assertPurchasable(skuId) {
-    const sku = await this.items.findById(skuId, { purpose: "purchase", atMs: this.time.nowMs() });
-    if (!sku) throw invalidSupplierInput("SUPPLIER_SKU_NOT_FOUND", "找不到這個 SKU", { field: "skuId" });
-    if (!sku.usable) {
-      throw supplierConflict("SUPPLIER_SKU_NOT_PURCHASABLE", "這個 SKU 目前不可作為新的採購對象", { reasons: [...sku.reasons] });
-    }
-    return sku;
+  #purchaseView(skuId) {
+    return this.items.findById(skuId, { purpose: "purchase", atMs: this.time.nowMs() });
   }
 
   async #supplierForUpdate(connection, supplierId) {
@@ -183,10 +197,13 @@ export class SupplierRelationService {
   async create(input) {
     const fields = relationFields(input);
     const skuId = positiveId(input.skuId, "skuId");
-    const sku = await this.#assertPurchasable(skuId);
+    // ponytail: 檢查同寫入之間 SKU 可以啱啱被停用（REV-085 L2）。關係只係參考，Purchasing 落單時會再驗 SKU；
+    // 要收緊就要 Item 提供 in-transaction 嘅讀取。
+    const view = await this.#purchaseView(skuId);
     try {
       return await this.database.withTransaction(async (connection) => {
         const actor = await this.authorize(connection, input);
+        const sku = requirePurchasable(view);
         const supplier = await this.#supplierForUpdate(connection, input.supplierId);
         if (supplier.status === "archived") {
           throw supplierConflict("SUPPLIER_SKU_RELATION_NOT_ALLOWED", "已封存供應商不可新增供貨關係", { status: supplier.status });
@@ -216,6 +233,10 @@ export class SupplierRelationService {
 
   async update(input) {
     const fields = relationFields(input);
+    // sku_id 建立之後唔會變，所以可以喺 transaction 之前讀關係同 SKU；transaction 入面再鎖住同驗版本。
+    const [[ref]] = await this.database.query("SELECT sku_id FROM supplier_sku_refs WHERE id = ? AND supplier_id = ?",
+      [input.relationId, input.supplierId]);
+    const view = ref ? await this.#purchaseView(Number(ref.sku_id)) : null;
     try {
       return await this.database.withTransaction(async (connection) => {
         const actor = await this.authorize(connection, input);
@@ -225,14 +246,14 @@ export class SupplierRelationService {
         }
         const [[current]] = await connection.query(
           "SELECT * FROM supplier_sku_refs WHERE id = ? AND supplier_id = ? FOR UPDATE", [input.relationId, input.supplierId]);
-        if (!current) throw supplierChildNotFound("skuRelation");
+        if (!current) throw supplierChildNotFound("sku_relation");
         if (Number(current.version) !== input.version) throw supplierConflict("VERSION_CONFLICT", "供貨關係已被其他人修改，請重新載入");
         const before = rowFields(current);
-        // 改採購單位或者由 stopped 重新啟用，等於一個新嘅採購對照：SKU 要可以採購（Item §5.14）。
+        // 改綁採購單位或者由 stopped 重新啟用，等於一個新嘅採購對照：SKU 要可以採購（Item §5.14）。清空採購單位唔係
+        // 改綁（REV-085 L6）。
         const reactivated = before.relationshipStatus === "stopped" && fields.relationshipStatus !== "stopped";
-        const sku = before.purchaseSkuUomId !== fields.purchaseSkuUomId || reactivated
-          ? await this.#assertPurchasable(Number(current.sku_id))
-          : await this.items.findById(Number(current.sku_id));
+        const rebound = fields.purchaseSkuUomId !== null && fields.purchaseSkuUomId !== before.purchaseSkuUomId;
+        const sku = rebound || reactivated ? requirePurchasable(view) : view;
         const nowMs = this.time.nowMs();
         await connection.execute(
           `UPDATE supplier_sku_refs
@@ -264,19 +285,33 @@ export class SupplierRelationService {
   async recordSupply(command) {
     const normalized = supplyCommand(command);
     const payloadHash = createHash("sha256").update(JSON.stringify(normalized)).digest("hex");
-    for (let attempt = 0; attempt < 2; attempt += 1) {
+    // SKU 只用嚟做稽核標籤同確認未刪除：transaction 之前讀（REV-085 H1）；寫入時存唔存在由 FK 保證。
+    const sku = await this.items.findById(normalized.skuId);
+    for (let attempt = 0; ; attempt += 1) {
       try {
-        return await this.database.withTransaction((connection) => this.#recordSupply(connection, normalized, payloadHash));
+        return await this.database.withTransaction((connection) => this.#recordSupply(connection, normalized, payloadHash, sku));
       } catch (error) {
-        // 兩個 transaction 同時寫同一個 event：輸咗嗰個 rollback 之後再讀一次，就會見到贏咗嗰個嘅結果。
-        if (attempt === 0 && ["ER_DUP_ENTRY", "ER_LOCK_DEADLOCK"].includes(driverCode(error)) && constraintIn(error, "supplier_supply_events")) continue;
-        throw translateWriteError(error);
+        // 兩個 transaction 同時寫同一個 event：輸咗嗰個 rollback 之後再讀，就會見到贏咗嗰個嘅結果。Deadlock 嘅訊息唔會
+        // 寫表名，所以唔睇訊息（REV-085 H2）。
+        const code = driverCode(error);
+        if (attempt < 2 && (code === "ER_LOCK_DEADLOCK" || (code === "ER_DUP_ENTRY" && constraintIn(error, "supplier_supply_events")))) continue;
+        const translated = translateWriteError(error);
+        // 投影失敗唔會回滾 Purchasing 已提交嘅 GR：要告警，等 reconciliation 按來源補回（設計 §6.8）。只記 ID 同代碼。
+        void this.logger?.error?.("supplier.sku.supply_failed", "Supplier supply projection failed", {
+          eventId: normalized.eventId, sourceType: normalized.sourceType, sourceId: normalized.sourceId,
+          sourceLineId: normalized.sourceLineId, supplierId: normalized.supplierId, skuId: normalized.skuId,
+          code: translated?.publicCode ?? translated?.code ?? code ?? "unknown"
+        });
+        throw translated;
       }
     }
-    throw new Error("unreachable");
   }
 
-  async #recordSupply(connection, command, payloadHash) {
+  async #recordSupply(connection, command, payloadHash, sku) {
+    // 先鎖 Supplier（create、update 都係咁），之後全部用普通讀取：read view 喺攞鎖之後先開，睇得到之前揸鎖嗰啲寫入，
+    // 而且唔使對未存在嘅行攞 gap lock，兩個投影就唔會互相 deadlock（REV-085 H2）。
+    // 歷史投影：任何未刪除嘅 Supplier 都得；SKU 只要求未被物理刪除（Item §5.14），唔套用新採購資格。
+    await this.#supplierForUpdate(connection, command.supplierId);
     const [[existing]] = await connection.query(
       `SELECT event_id, relation_id, payload_hash FROM supplier_supply_events
         WHERE event_id = ? OR (source_type = ? AND source_id = ? AND source_line_id = ?) LIMIT 1`,
@@ -289,13 +324,10 @@ export class SupplierRelationService {
       return { eventId: command.eventId, relationId: Number(existing.relation_id), replayed: true };
     }
     await this.verifySource(connection, command);
-    // 歷史投影：任何未刪除嘅 Supplier 都得；SKU 只要求未被物理刪除（Item §5.14），唔套用新採購資格。
-    await this.#supplierForUpdate(connection, command.supplierId);
-    const sku = await this.items.findById(command.skuId);
     if (!sku) throw invalidSupplierInput("SUPPLIER_SKU_NOT_FOUND", "找不到這個 SKU", { field: "skuId" });
     const nowMs = this.time.nowMs();
     let [[relation]] = await connection.query(
-      "SELECT id FROM supplier_sku_refs WHERE supplier_id = ? AND sku_id = ? FOR UPDATE", [command.supplierId, command.skuId]);
+      "SELECT id FROM supplier_sku_refs WHERE supplier_id = ? AND sku_id = ?", [command.supplierId, command.skuId]);
     let created = false;
     if (relation) {
       await connection.execute(
@@ -306,16 +338,20 @@ export class SupplierRelationService {
         [command.suppliedAt, command.suppliedAt, command.suppliedAt, command.suppliedAt, nowMs, relation.id]
       );
     } else {
-      // 新對照：來源 purchasing、狀態 alternative。供應商代碼已經用咗就唔填，唔好令投影失敗。
-      const codeKey = command.supplierItemCode ? command.supplierItemCode.normalize("NFKC").toLowerCase() : null;
+      // 新對照：來源 purchasing、狀態 alternative。供應商代碼已經用咗、或者正規化後放唔入欄位，就唔填，唔好令投影
+      // 失敗（REV-085 L1）。採購單位唔由投影設定（HD-090 L5 A）：Item 未提供對應行 ID，驗唔到屬唔屬呢個 SKU，
+      // 由用戶喺關係度手動揀。
+      const candidateKey = itemCodeKey(command.supplierItemCode);
+      const codeKey = candidateKey !== null && Array.from(candidateKey).length <= 190 ? candidateKey : null;
       const [[codeTaken]] = codeKey === null ? [[null]] : await connection.query(
-        "SELECT id FROM supplier_sku_refs WHERE supplier_id = ? AND supplier_item_code_key = ? FOR UPDATE", [command.supplierId, codeKey]);
+        "SELECT id FROM supplier_sku_refs WHERE supplier_id = ? AND supplier_item_code_key = ?", [command.supplierId, codeKey]);
+      const keepCode = codeKey !== null && !codeTaken;
       const [result] = await connection.execute(
         `INSERT INTO supplier_sku_refs
-           (supplier_id, sku_id, supplier_item_code, supplier_item_code_key, purchase_sku_uom_id, relationship_status, source,
+           (supplier_id, sku_id, supplier_item_code, supplier_item_code_key, relationship_status, source,
             first_supplied_at, last_supplied_at, version, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, 'alternative', 'purchasing', ?, ?, 1, ?, ?)`,
-        [command.supplierId, command.skuId, codeTaken ? "" : command.supplierItemCode, codeTaken ? null : codeKey, command.purchaseSkuUomId,
+         VALUES (?, ?, ?, ?, 'alternative', 'purchasing', ?, ?, 1, ?, ?)`,
+        [command.supplierId, command.skuId, keepCode ? command.supplierItemCode : "", keepCode ? codeKey : null,
           command.suppliedAt, command.suppliedAt, nowMs, nowMs]
       );
       relation = { id: Number(result.insertId) };
@@ -332,15 +368,18 @@ export class SupplierRelationService {
       actorUserId: null, actorUsername: "system", action: "supplier_sku.supply", targetType: "supplier_sku",
       targetId: Number(relation.id), supplierId: command.supplierId, targetLabel: sku.skuCode,
       detail: { after: { sourceType: command.sourceType, sourceId: command.sourceId, sourceLineId: command.sourceLineId,
-        suppliedAt: command.suppliedAt, relationCreated: created } }
+        suppliedAt: command.suppliedAt, relationCreated: created, reportedPurchaseSkuUomId: command.purchaseSkuUomId } }
     });
     return { eventId: command.eventId, relationId: Number(relation.id), replayed: false };
   }
 }
 
+const SUPPLY_INVALID = "SUPPLIER_SUPPLY_INVALID";
+
 function supplyCommand(command) {
   const eventId = String(command?.eventId ?? "").trim();
-  if (!eventId || eventId.length > 64 || controlCharacters(eventId)) {
+  // event_id 係機器鍵，欄位係 ascii_bin（大小寫有分，HD-090 L4）：只收可見 ASCII。
+  if (!/^[\x21-\x7e]{1,64}$/u.test(eventId)) {
     throw invalidSupplierInput("SUPPLIER_SUPPLY_INVALID", "供貨記錄不正確", { field: "eventId" });
   }
   if (command.sourceType !== "goods_receipt") {
@@ -353,10 +392,10 @@ function supplyCommand(command) {
   // 固定次序：payload hash 由呢個 object 計，所以同一個 command 一定計出同一個 hash。
   return {
     eventId, sourceType: command.sourceType,
-    sourceId: positiveId(command.sourceId, "sourceId"), sourceLineId: positiveId(command.sourceLineId, "sourceLineId"),
-    supplierId: positiveId(command.supplierId, "supplierId"), skuId: positiveId(command.skuId, "skuId"),
-    purchaseSkuUomId: command.purchaseSkuUomId === null || command.purchaseSkuUomId === undefined ? null : positiveId(command.purchaseSkuUomId, "purchaseSkuUomId"),
-    supplierItemCode: optionalText(command.supplierItemCode, "supplierItemCode", 190),
+    sourceId: positiveId(command.sourceId, "sourceId", SUPPLY_INVALID), sourceLineId: positiveId(command.sourceLineId, "sourceLineId", SUPPLY_INVALID),
+    supplierId: positiveId(command.supplierId, "supplierId", SUPPLY_INVALID), skuId: positiveId(command.skuId, "skuId", SUPPLY_INVALID),
+    purchaseSkuUomId: command.purchaseSkuUomId === null || command.purchaseSkuUomId === undefined ? null : positiveId(command.purchaseSkuUomId, "purchaseSkuUomId", SUPPLY_INVALID),
+    supplierItemCode: optionalText(command.supplierItemCode, "supplierItemCode", 190, SUPPLY_INVALID),
     suppliedAt
   };
 }

@@ -21,6 +21,7 @@ const TABLES = Object.freeze({
       "uq_supplier_sku_refs_item_code:0:supplier_id,supplier_item_code_key",
       "idx_supplier_sku_refs_sku_status_supplied:1:sku_id,relationship_status,last_supplied_at"
     ],
+    collations: { supplier_item_code_key: "utf8mb4_bin", relationship_status: "ascii_bin", source: "ascii_bin" },
     foreignKeys: [
       "supplier_id>suppliers(id):RESTRICT", "sku_id>item_skus(id):RESTRICT",
       "purchase_sku_uom_id,sku_id>item_sku_uoms(id,sku_id):RESTRICT",
@@ -40,6 +41,8 @@ const TABLES = Object.freeze({
       "uq_supplier_supply_events_source:0:source_type,source_id,source_line_id",
       "idx_supplier_supply_events_relation:1:relation_id,supplied_at"
     ],
+    // event_id 係 Purchasing 產生嘅機器鍵：大小寫有分（HD-090 L4）。
+    collations: { event_id: "ascii_bin", source_type: "ascii_bin", payload_hash: "ascii_bin" },
     foreignKeys: ["supplier_id>suppliers(id):RESTRICT", "sku_id>item_skus(id):RESTRICT", "relation_id>supplier_sku_refs(id):RESTRICT"]
   }
 });
@@ -57,7 +60,7 @@ async function tableExists(connection, table) {
 export async function inspectSupplierSkuRelationSchema(connection, table, { as = table } = {}) {
   const spec = TABLES[table];
   const [rows] = await connection.query(
-    `SELECT column_name AS column_name, column_type AS column_type, is_nullable AS is_nullable
+    `SELECT column_name AS column_name, column_type AS column_type, is_nullable AS is_nullable, collation_name AS collation_name
        FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = ?`, [as]);
   if (rows.length === 0) return false;
   const found = new Map(rows.map((row) => [row.column_name, row]));
@@ -67,6 +70,9 @@ export async function inspectSupplierSkuRelationSchema(connection, table, { as =
     if (!row || String(row.column_type).toLowerCase() !== type || row.is_nullable !== nullable) {
       throw new Error(`Incompatible existing Supplier schema: ${table}.${name}`);
     }
+  }
+  for (const [name, collation] of Object.entries(spec.collations)) {
+    if (found.get(name).collation_name !== collation) throw new Error(`Incompatible existing Supplier schema collation: ${table}.${name}`);
   }
   const [indexRows] = await connection.query(
     `SELECT index_name AS index_name, non_unique AS non_unique, column_name AS column_name
@@ -162,7 +168,7 @@ export async function up(connection) {
     await connection.query(`
       CREATE TABLE supplier_supply_events (
         id             BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-        event_id       VARCHAR(64) NOT NULL,
+        event_id       VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
         source_type    VARCHAR(30) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
         source_id      BIGINT UNSIGNED NOT NULL,
         source_line_id BIGINT UNSIGNED NOT NULL,

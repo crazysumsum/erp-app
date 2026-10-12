@@ -11,17 +11,26 @@ import { ItemLookupService } from "../../src/modules/item/ItemLookupService.js";
 import { SupplierRelationService } from "../../src/modules/supplier/SupplierRelationService.js";
 
 const integrationTest = process.env.DB_INTEGRATION_TESTS === "1" ? test : test.skip;
-const h = { cleanup: [], userId: null, supplierIds: [], skuIds: [] };
+const h = { cleanup: [], userId: null, supplierIds: [], skuIds: [], httpUsers: [] };
 
 before(async () => {
   if (process.env.DB_INTEGRATION_TESTS !== "1") return;
   h.logRoot = fs.mkdtempSync(path.join(os.tmpdir(), "supplier-sku-logs-"));
   const { createApplication } = await import("../../src/framework/application/createApplication.js");
   const { defaultConfigurationSource } = await import("../../src/framework/configuration/applicationConfiguration.js");
+  const { discoverServiceDefinitions } = await import("../../src/framework/services/serviceDiscovery.js");
   const source = defaultConfigurationSource();
-  h.application = await createApplication({ configurationSource: { ...source, logging: { loggers: {
-    request: { ...source.logging.loggers.request, directory: path.join(h.logRoot, "requests") },
-    system: { ...source.logging.loggers.system, directory: path.join(h.logRoot, "system") } } } } });
+  // 真 HTTP（認證、權限、request validation）：背景工作全部關閉，唔好郁其他測試嘅資料。
+  const jobs = (await discoverServiceDefinitions()).flatMap((definition) => (definition.ServiceClass?.jobs ?? []).map((job) => job.name));
+  h.application = await createApplication({ configurationSource: { ...source,
+    application: { ...source.application, port: 0 },
+    requestLimiter: { ...source.requestLimiter, maxRequestsPerIpPerWindow: 10_000 },
+    scheduler: { ...source.scheduler, jobs: Object.fromEntries(jobs.map((name) => [name,
+      { ...(source.scheduler.jobs?.[name] ?? {}), enabled: name === "tokenRevocation.refresh" }])) },
+    logging: { loggers: {
+      request: { ...source.logging.loggers.request, directory: path.join(h.logRoot, "requests") },
+      system: { ...source.logging.loggers.system, directory: path.join(h.logRoot, "system") } } } } });
+  h.url = (await h.application.start()).url;
   h.db = h.application.services.require("mysqldatabase");
   const [user] = await h.db.execute(
     "INSERT INTO users (username, password_hash, display_name, created_at, updated_at) VALUES (?, 'x', 'SKU relations', ?, ?)",
@@ -41,6 +50,13 @@ after(async () => {
       await h.db.query("DELETE FROM suppliers WHERE id IN (?)", [h.supplierIds]);
     }
     for (const [sql, params] of h.cleanup.reverse()) await h.db.execute(sql, params);
+    for (const { userId, roleId } of h.httpUsers) {
+      await h.db.execute("DELETE FROM user_roles WHERE user_id = ?", [userId]);
+      await h.db.execute("DELETE FROM role_permissions WHERE role_id = ?", [roleId]);
+      await h.db.execute("DELETE FROM roles WHERE id = ?", [roleId]);
+      await h.db.execute("DELETE FROM fr_token_versions WHERE subject = ?", [String(userId)]).catch(() => {});
+      await h.db.execute("DELETE FROM users WHERE id = ?", [userId]);
+    }
     await h.db.execute("DELETE FROM users WHERE id = ?", [h.userId]);
   } finally {
     await h.application.shutdown("test");
@@ -240,4 +256,181 @@ integrationTest("TASK-038: a rerun accepts the real tables but refuses a hand-ma
   await h.db.query(`ALTER TABLE \`${probe}\` ADD CONSTRAINT fk_${probe}_s FOREIGN KEY (supplier_id) REFERENCES suppliers (id) ON DELETE CASCADE`);
   await assert.rejects(() => inspectSupplierSkuRelationSchema(h.db, "supplier_sku_refs", { as: probe }),
     /foreign key: supplier_sku_refs\.supplier_id>suppliers\(id\):RESTRICT/u, "a CASCADE would delete relations with their Supplier");
+});
+
+/** 一個有真權限嘅用戶同 token；`claims` 可以同 DB 唔一致，用嚟測 PERMISSION_STALE。 */
+async function httpUser(permissions, { claims = permissions } = {}) {
+  const name = `skrh-${randomUUID().slice(0, 8)}`;
+  const now = Date.now();
+  const [role] = await h.db.execute("INSERT INTO roles (name, created_at) VALUES (?, ?)", [name, now]);
+  if (permissions.length) {
+    await h.db.query("INSERT INTO role_permissions (role_id, permission_id) SELECT ?, id FROM permissions WHERE name IN (?)", [role.insertId, permissions]);
+  }
+  const [user] = await h.db.execute("INSERT INTO users (username, password_hash, display_name, created_at, updated_at) VALUES (?, 'x', ?, ?, ?)",
+    [name, name, now, now]);
+  await h.db.execute("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)", [user.insertId, role.insertId]);
+  h.httpUsers.push({ userId: Number(user.insertId), roleId: Number(role.insertId) });
+  const version = await h.application.services.require("tokenRevocation").currentVersion(String(user.insertId));
+  const token = await h.application.services.require("jwt").issue({ roles: [name], permissions: claims },
+    { subject: String(user.insertId), version, authTime: Math.floor(now / 1000) });
+  return { token };
+}
+
+async function api(user, method, url, body) {
+  const response = await fetch(`${h.url}${url}`, { method, headers: { authorization: `Bearer ${user.token}`, "content-type": "application/json" },
+    body: body === undefined ? undefined : JSON.stringify(body) });
+  const json = await response.json().catch(() => null);
+  return { status: response.status, data: json?.data ?? json, code: json?.error?.code ?? json?.code };
+}
+
+const fullUpdate = (row, changes = {}) => ({ supplierItemCode: row.supplierItemCode, supplierItemName: row.supplierItemName,
+  purchaseSkuUomId: row.purchaseSkuUomId, minimumOrderQty: row.minimumOrderQty, standardLeadTimeDays: row.standardLeadTimeDays,
+  relationshipStatus: row.relationshipStatus, version: row.version, ...changes });
+
+integrationTest("TASK-038 (REV-085 M1, M2): over HTTP, authorization, the owner check, list search and a partial update are enforced", async () => {
+  const [manager, viewer] = [await httpUser(["supplier.mgmt", "supplier.view"]), await httpUser(["supplier.view"])];
+  const stale = await httpUser(["supplier.view"], { claims: ["supplier.view", "supplier.mgmt"] });
+  const [supplierA, supplierB] = [await supplier(), await supplier()];
+  const [widget, gadget, third] = [await sku(), await sku(), await sku()];
+  const created = await api(manager, "POST", `/api/v1/suppliers/${supplierA}/sku-relations/create`,
+    { skuId: widget.id, supplierItemCode: "50%_off\\x", supplierItemName: "Widget", minimumOrderQty: 5 });
+  assert.equal(created.status, 201);
+  await api(manager, "POST", `/api/v1/suppliers/${supplierA}/sku-relations/create`, { skuId: gadget.id, supplierItemCode: "50-off", relationshipStatus: "preferred" });
+  await api(manager, "POST", `/api/v1/suppliers/${supplierB}/sku-relations/create`, { skuId: third.id, supplierItemCode: "50%_off-b" });
+
+  assert.equal((await api(viewer, "POST", `/api/v1/suppliers/${supplierA}/sku-relations/create`, { skuId: third.id })).status, 403);
+  assert.equal((await api(stale, "POST", `/api/v1/suppliers/${supplierA}/sku-relations/create`, { skuId: third.id })).code, "PERMISSION_STALE");
+  assert.equal((await api(manager, "POST", `/api/v1/suppliers/${supplierA}/sku-relations/create`, { skuId: third.id, price: 1 })).status, 400);
+
+  // List：只列呢個 Supplier；preferred 排先；% 同 _ 係字面；SKU Code 精確搵到；分頁。
+  const all = await api(viewer, "GET", `/api/v1/suppliers/${supplierA}/sku-relations`);
+  assert.deepEqual([all.status, all.data.total, all.data.items.map((row) => row.skuId)], [200, 2, [gadget.id, widget.id]]);
+  const literal = await api(viewer, "GET", `/api/v1/suppliers/${supplierA}/sku-relations?q=${encodeURIComponent("50%_")}`);
+  assert.deepEqual(literal.data.items.map((row) => row.skuId), [widget.id], "% and _ match themselves, not anything");
+  const byCode = await api(viewer, "GET", `/api/v1/suppliers/${supplierA}/sku-relations?q=${encodeURIComponent(gadget.code)}`);
+  assert.deepEqual(byCode.data.items.map((row) => row.skuId), [gadget.id]);
+  const page2 = await api(viewer, "GET", `/api/v1/suppliers/${supplierA}/sku-relations?pageSize=1&page=2`);
+  assert.deepEqual([page2.data.total, page2.data.items.map((row) => row.skuId)], [2, [widget.id]]);
+  assert.equal((await api(viewer, "GET", `/api/v1/suppliers/${supplierA}/sku-relations?pageSize=101`)).status, 400);
+
+  // 另一個 Supplier 嘅路徑改唔到呢條關係（IDOR），而且唔透露佢存在。
+  const relation = created.data;
+  const foreign = await api(manager, "POST", `/api/v1/suppliers/${supplierB}/sku-relations/${relation.id}/update`, fullUpdate(relation));
+  assert.deepEqual([foreign.status, foreign.code], [404, "SUPPLIER_SKU_RELATION_NOT_FOUND"]);
+  // 漏帶欄位係 400，唔係靜靜雞清空（M1）。
+  const partial = await api(manager, "POST", `/api/v1/suppliers/${supplierA}/sku-relations/${relation.id}/update`,
+    { relationshipStatus: "stopped", version: relation.version });
+  assert.equal(partial.status, 400);
+  const [[stored]] = await h.db.query("SELECT supplier_item_code, minimum_order_qty, version FROM supplier_sku_refs WHERE id = ?", [relation.id]);
+  assert.deepEqual([stored.supplier_item_code, Number(stored.minimum_order_qty), Number(stored.version)], ["50%_off\\x", 5, 1]);
+
+  await h.db.execute("UPDATE suppliers SET status = 'archived' WHERE id = ?", [supplierA]);
+  const archived = await api(manager, "POST", `/api/v1/suppliers/${supplierA}/sku-relations/${relation.id}/update`,
+    fullUpdate(relation, { relationshipStatus: "stopped" }));
+  assert.deepEqual([archived.status, archived.code], [409, "SUPPLIER_SKU_RELATION_NOT_ALLOWED"]);
+});
+
+integrationTest("TASK-038 (REV-085 H1): more concurrent rebinds than the pool has connections all succeed", async () => {
+  const pool = h.application.configuration.database.connectionLimit;
+  const work = [];
+  for (let index = 0; index < pool + 2; index += 1) {
+    const [supplierId, item] = [await supplier(), await sku({ uoms: 2 })];
+    const relation = await service().create({ ...actor(), supplierId, skuId: item.id });
+    work.push(() => service().update({ ...actor(), supplierId, relationId: relation.id, ...fullUpdate(relation, { purchaseSkuUomId: item.uoms[1] }) }));
+  }
+  const results = await Promise.allSettled(work.map((run) => run()));
+  assert.deepEqual(results.filter((result) => result.status === "rejected").map((result) => result.reason?.message), []);
+});
+
+integrationTest("TASK-038 (REV-085 H2): concurrent first projections do not deadlock, and identical events write once", async () => {
+  const projector = service({ verifySource: async () => {} });
+  for (let round = 0; round < 5; round += 1) {
+    const commands = [];
+    for (let index = 0; index < 4; index += 1) {
+      const [supplierId, item] = [await supplier(), await sku()];
+      commands.push({ eventId: `gr-${randomUUID()}`, sourceType: "goods_receipt", sourceId: 700 + round, sourceLineId: index + 1,
+        supplierId, skuId: item.id, purchaseSkuUomId: null, supplierItemCode: "", suppliedAt: 1_000 });
+    }
+    const results = await Promise.allSettled(commands.map((command) => projector.recordSupply(command)));
+    assert.deepEqual(results.filter((result) => result.status === "rejected").map((result) => result.reason?.cause?.code ?? result.reason?.message), [], `round ${round}`);
+  }
+  const [supplierId, item] = [await supplier(), await sku()];
+  const same = { eventId: `gr-${randomUUID()}`, sourceType: "goods_receipt", sourceId: 800, sourceLineId: 1, supplierId, skuId: item.id,
+    purchaseSkuUomId: null, supplierItemCode: "", suppliedAt: 2_000 };
+  const outcomes = await Promise.all(Array.from({ length: 5 }, () => projector.recordSupply(same)));
+  assert.equal(outcomes.filter((outcome) => !outcome.replayed).length, 1);
+  assert.equal(new Set(outcomes.map((outcome) => outcome.relationId)).size, 1);
+  const [[{ n }]] = await h.db.query("SELECT COUNT(*) AS n FROM supplier_supply_events WHERE event_id = ?", [same.eventId]);
+  assert.equal(Number(n), 1);
+});
+
+integrationTest("TASK-038 (REV-085 L1, L4, L5, L6 and M2): command checks, case-sensitive events, long codes, no projected UOM, clearing a UOM", async () => {
+  const projector = service({ verifySource: async () => {} });
+  const [supplierId, item] = [await supplier(), await sku({ uoms: 2 })];
+  const base = { eventId: "GR-x", sourceType: "goods_receipt", sourceId: 900, sourceLineId: 1, supplierId, skuId: item.id,
+    purchaseSkuUomId: item.uoms[1], supplierItemCode: "ﷺ".repeat(11), suppliedAt: 3_000 };
+  for (const [field, value] of [["eventId", "gr x"], ["eventId", "貨-1"], ["sourceType", "invoice"], ["suppliedAt", -1], ["sourceId", 0]]) {
+    await assert.rejects(() => projector.recordSupply({ ...base, [field]: value }), conflict("SUPPLIER_SUPPLY_INVALID"), `${field}=${value}`);
+  }
+  await assert.rejects(() => projector.recordSupply({ ...base, supplierId: 2_000_000_000 }), (error) => error.statusCode === 404);
+  await assert.rejects(() => projector.recordSupply({ ...base, eventId: "GR-nosku", skuId: 2_000_000_000 }), conflict("SUPPLIER_SKU_NOT_FOUND"));
+
+  // 「ﷺ」×11 正規化後係 198 個字元：投影照樣建關係，只係唔帶代碼；採購單位唔由投影設定，只記喺稽核。
+  const first = await projector.recordSupply(base);
+  const [[relation]] = await h.db.query("SELECT supplier_item_code, supplier_item_code_key, purchase_sku_uom_id FROM supplier_sku_refs WHERE id = ?",
+    [first.relationId]);
+  assert.deepEqual([relation.supplier_item_code, relation.supplier_item_code_key, relation.purchase_sku_uom_id], ["", null, null]);
+  const [[audit]] = await h.db.query("SELECT detail FROM supplier_audit_logs WHERE supplier_id = ? AND action = 'supplier_sku.supply'", [supplierId]);
+  assert.equal((typeof audit.detail === "string" ? JSON.parse(audit.detail) : audit.detail).after.reportedPurchaseSkuUomId, item.uoms[1]);
+  // event_id 大小寫有分：「gr-x」係另一個 event（另一張來源單據行）。
+  const lower = await projector.recordSupply({ ...base, eventId: "gr-x", sourceLineId: 2 });
+  assert.equal(lower.replayed, false);
+  // 手動新增時，同一個超長代碼係輸入錯，唔係 500。
+  const longCodeSku = await sku();
+  await assert.rejects(() => service().create({ ...actor(), supplierId, skuId: longCodeSku.id, supplierItemCode: "ﷺ".repeat(11) }),
+    conflict("SUPPLIER_SKU_RELATION_INVALID"));
+
+  // SKU 停用之後，清空採購單位唔算改綁（L6）；改綁就要可以採購。
+  const manual = await service().create({ ...actor(), supplierId, skuId: (await sku({ uoms: 2 })).id });
+  const [[ownedUom]] = await h.db.query("SELECT id FROM item_sku_uoms WHERE sku_id = ? ORDER BY id DESC LIMIT 1", [manual.skuId]);
+  const bound = await service().update({ ...actor(), supplierId, relationId: manual.id, ...fullUpdate(manual, { purchaseSkuUomId: Number(ownedUom.id) }) });
+  await h.db.execute("UPDATE item_skus SET status = 'inactive' WHERE id = ?", [manual.skuId]);
+  const cleared = await service().update({ ...actor(), supplierId, relationId: manual.id, ...fullUpdate(bound, { purchaseSkuUomId: null }) });
+  assert.equal(cleared.purchaseSkuUomId, null);
+});
+
+integrationTest("TASK-038 (REV-085 M2, HD-090 L4): a rerun refuses a missing column, a missing index or a case-insensitive event_id", async (t) => {
+  const probes = [];
+  t.after(async () => { for (const probe of probes) await h.db.query(`DROP TABLE IF EXISTS \`${probe}\``); });
+  const like = async (table) => {
+    const probe = `skr_probe_${randomUUID().slice(0, 8)}`;
+    probes.push(probe);
+    await h.db.query(`CREATE TABLE \`${probe}\` LIKE ${table}`);
+    return probe;
+  };
+  const events = await like("supplier_supply_events");
+  await h.db.query(`ALTER TABLE \`${events}\` MODIFY event_id VARCHAR(64) NOT NULL`);
+  await assert.rejects(() => inspectSupplierSkuRelationSchema(h.db, "supplier_supply_events", { as: events }), /collation: supplier_supply_events\.event_id/u);
+  const missingIndex = await like("supplier_sku_refs");
+  await h.db.query(`ALTER TABLE \`${missingIndex}\` DROP INDEX idx_supplier_sku_refs_sku_status_supplied`);
+  await assert.rejects(() => inspectSupplierSkuRelationSchema(h.db, "supplier_sku_refs", { as: missingIndex }), /index: supplier_sku_refs/u);
+  const missingColumn = await like("supplier_sku_refs");
+  await h.db.query(`ALTER TABLE \`${missingColumn}\` DROP COLUMN source`);
+  await assert.rejects(() => inspectSupplierSkuRelationSchema(h.db, "supplier_sku_refs", { as: missingColumn }), /Incompatible existing Supplier schema: supplier_sku_refs/u);
+});
+
+integrationTest("TASK-038 (REV-085 M2): without UNIQUE(id, sku_id) on item_sku_uoms the migration refuses", async (t) => {
+  const githubActions = process.env.GITHUB_ACTIONS === "true";
+  const admin = await mysql.createConnection({ host: process.env.DB_HOST, port: Number(process.env.DB_PORT),
+    user: process.env.DB_ADMIN_USER ?? (githubActions ? "root" : undefined),
+    password: process.env.DB_ADMIN_PASSWORD ?? (githubActions ? "root" : undefined) });
+  const scratch = `skr_${randomUUID().slice(0, 8)}`;
+  t.after(async () => { await admin.query(`DROP DATABASE IF EXISTS \`${scratch}\``); await admin.end(); });
+  await admin.query(`CREATE DATABASE \`${scratch}\``);
+  await admin.query(`USE \`${scratch}\``);
+  await admin.query("CREATE TABLE item_skus (id BIGINT UNSIGNED NOT NULL PRIMARY KEY)");
+  await admin.query("CREATE TABLE item_sku_uoms (id BIGINT UNSIGNED NOT NULL PRIMARY KEY, sku_id BIGINT UNSIGNED NOT NULL)");
+  await assert.rejects(() => migrateSupplierSkuRefs(admin), /need UNIQUE\(id, sku_id\) on item_sku_uoms/u);
+  const [tables] = await admin.query("SELECT table_name FROM information_schema.tables WHERE table_schema = ? AND table_name LIKE 'supplier%'", [scratch]);
+  assert.deepEqual(tables, []);
 });

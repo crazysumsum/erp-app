@@ -29,10 +29,12 @@ const CREATE_BODY = Object.freeze({
   type: "object", required: ["skuId"], additionalProperties: false,
   properties: { skuId: { type: "integer", minimum: 1 }, ...FIELDS }
 });
+// 修改要帶齊所有欄位：唔可以有 default，否則 validator 會先填 default，漏帶嘅欄位會被靜靜雞清空（REV-085 M1）。
+const NO_DEFAULTS = Object.fromEntries(Object.entries(FIELDS).map(([name, { default: _ignored, ...schema }]) => [name, schema]));
 const UPDATE_BODY = Object.freeze({
   type: "object", additionalProperties: false,
   required: ["supplierItemCode", "supplierItemName", "purchaseSkuUomId", "minimumOrderQty", "standardLeadTimeDays", "relationshipStatus", "version"],
-  properties: { ...FIELDS, version: { type: "integer", minimum: 1 } }
+  properties: { ...NO_DEFAULTS, version: { type: "integer", minimum: 1 } }
 });
 const nullableInteger = Object.freeze({ type: ["integer", "null"] });
 const nullableString = Object.freeze({ type: ["string", "null"] });
