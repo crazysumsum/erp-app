@@ -863,3 +863,9 @@ After three tests were added (the update's candidates without itself, and approv
 
 The full server suite, run the CI way on a freshly migrated database, passed after the service-discovery list gained
 `job.supplierMetrics`: 2,840 tests, coverage floors met.
+
+After REV-083 (HD-087) the list is 24 mutants, and 23 are killed. Five were added: the epsilon removed (M-1), candidates
+ranked by the fewest rare grams, the Dice filter removed, `uploaded` dropped from the waiting jobs, and `stalledMs`
+ignored. The cap became a constructor option, so "cap tiny" is now tested through the ranking test. The survivor is the
+reversed rarest-gram order, which changes only the cost. The `excludeSupplierId` mutant was dropped: that parameter has no
+caller.
