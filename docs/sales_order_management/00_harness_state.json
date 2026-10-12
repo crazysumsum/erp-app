@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 448,
+  "revision": 491,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "9fcb51b2e67379dce1e8011524f767a085d28a3282474705bb730ba99a5ccdbd",
     "plan": "f0a8eca401f2c10e8d4473341466a3bb99c0013fe6fdb867913cc9095e15a2f6",
-    "code_commit": "236ed77d14fcb33a26c6447d7af35dfa75cf8864",
-    "source_fingerprint": "1d628a6286bee54c69ba077256cfea67a566bd0c769c32eeb47de68b5b2a448c",
+    "code_commit": "8af2fb8eed6a1d02295b554a9f14133d2b643cbd",
+    "source_fingerprint": "e487bf3d66408b9b79394aebc158b99c3db18db98cb1651d883549128089fc4e",
     "worktree": "/Users/sam/.codex/worktrees/sales-p3-recovery/erp-app",
-    "default_commit": "a2715077871ffa8289193d6482df6add6b363bd7",
+    "default_commit": "9fbbc1f0ad0aff7d782c3b6dd1c8d935295d338b",
     "mode_entry_commit": "6936736ba1fb98f4fcb8365377f59f0a0f7a4897"
   },
   "runtime": {
@@ -23,8 +23,8 @@
     "resources": {
       "workspace": "/Users/sam/.codex/worktrees/sales-p3-recovery/erp-app",
       "temp-directory": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private",
-      "mysql-instance": "Actual owned mainPID14927 UID501 persistentdatadir /Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/mysql-main/data /socket /private/tmp/sales-p3-recovery-726a0baa1fa1/mysql.sock /TCP56780 MySQL26.7 logbin1/trust0, appfixtureSUPER=N originaladmintriggerSUPER; core/coverageadminmigrations PASS, reversibletemporaryrestoregrants actualsnapshotprivate0600.",
-      "inventory-native-runtimes": "Actual inventory-bindings.json tenfreshschemas, sameownermain +aux PIDs15000/15012/15019 skipnetworking, ephemeralguardedsockets/persistentdata/meta,025fullmigration PASS; no oldPID/datadir reuse."
+      "mysql-instance": "Actual owned mainPID14927 UID501 persistentdatadir /Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/mysql-main/data /socket /private/tmp/sales-p3-recovery-726a0baa1fa1/mysql.sock /TCP56780 MySQL26.7 logbin1/trust0, appfixtureSUPER=N originaladmintriggerSUPER; core/coverageadminmigrations PASS, reversibletemporaryrestoregrants actualsnapshotprivate0600. SOURCE52 currentfreshcoverage erp_sales_p3_726a0baa1fa152_t038 adminfullmigrationPASS/oldcoverage retained; exact3temporarynewcoverage grants withactualbaselineSHA andguardedrestore-newcoverage-grants, no additionalglobalprivilege.",
+      "inventory-native-runtimes": "Actual inventory-bindings.json tenfreshschemas, sameownermain +aux PIDs15000/15012/15019 skipnetworking, ephemeralguardedsockets/persistentdata/meta,025fullmigration PASS; no oldPID/datadir reuse. SOURCE52 now10fresh _ret52 schemas/025fullmigrationPASS, alloldbindings+schemas retained."
     },
     "lease_ref": null
   },
@@ -5920,6 +5920,102 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-RETENTION-ROOT-ACTUAL-CLOSURE-R3",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p3_whole_phase_review",
+      "reviewed_baseline": "9fcb51b2e67379dce1e8011524f767a085d28a3282474705bb730ba99a5ccdbd",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/p3-retention-root-closure-r3-reviewer-proof.json SHA256 2f44f63a28eede9f37b5ce9ad936197e09e44996d19e1053f987ed8b9e272851 Actualsource1d nativeRED->GREEN5/fullunit123/Playwright10/realownedcleanup authenticated; Supplier9f2docs only andnew8af/source52 boundseparately unchangedD9Pf0. ScopedHIGH/MEDIUMclosed, 2Nodewarnings retained. Originalnew33/35/5CI/finalPhase stillpending.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-UNIT-MUTATION-PIN-R6",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p3_whole_phase_review",
+      "reviewed_baseline": "9fcb51b2e67379dce1e8011524f767a085d28a3282474705bb730ba99a5ccdbd",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/p3-unit-transition-mutation-pin-r6-reviewer-proof.json SHA256 2a37a59ebf003a80e5f283803fbd21af4b1a744e893a72a88cf9552ada5ac4d0 Privatehelper522/plan023f exact8af/source52 mechanicalpins; unchangedunitcontract/target/guards; actualnew33+idle prerequisite, notexecuted.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-RETENTION52-RUNTIME-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p3_retention_review",
+      "reviewed_baseline": "9fcb51b2e67379dce1e8011524f767a085d28a3282474705bb730ba99a5ccdbd",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/retention52-runtime-preparation-r1-reviewer-proof.json SHA256 c93412b2a5456638f41cae35f3aaa7cdbe1060cd3bf09811278d1114b51c0791 Actualpre-effectMEDIUMpartialgrant/restorationrecoverability issue, noSQL/effects. Originalsourceb9/plan248 preserved, amendedhelper63f/plan d01awaitrealR2.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-RETENTION52-RUNTIME-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p3_retention_review",
+      "reviewed_baseline": "9fcb51b2e67379dce1e8011524f767a085d28a3282474705bb730ba99a5ccdbd",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/retention52-runtime-preparation-r2-reviewer-proof.json SHA256 3d3a56d733f9b17fac1932a1fb73842870a3adfa262cfa3ce5e3f15826da0eae Actualknownmysqlbatchdoubleescaping makeslegitimatefreshgrant comparefail; CHANGES_REQUESTED on63f/d01, noSQL/effects. R1guardedpartialresume fixed. OldR2source+plan retained; amendedd34/7fde actualcapturedtemplate3guards PASS awaitingR3.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-RETENTION52-RUNTIME-R3",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p3_retention_review",
+      "reviewed_baseline": "9fcb51b2e67379dce1e8011524f767a085d28a3282474705bb730ba99a5ccdbd",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/retention52-runtime-preparation-r3-reviewer-proof.json SHA256 59d4a1718e5d1495ddb240bd1ef08999feb3a4df1e589cf0873326c8172e60b3 Genuineexactd34/7fde/8af52D9Pf0review; resolvedR1partialresume andR2batchformat with actualtemplateproof/idle4PIDs/emptyroot. Exactapplyonce approved, no actualSQL/migration/33/CI/finalGate claim.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-UI-ACTUAL-SOURCE52",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p3_ui_review",
+      "reviewed_baseline": "9fcb51b2e67379dce1e8011524f767a085d28a3282474705bb730ba99a5ccdbd",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/ui-independent-source52-reviewer-proof.json SHA256 15c9f9e8b1a56722dc8297f7ddfb9e92cea8a4a6f7540119af031bc09501c5bd Actual35/source52allartifactSHA/real320pxscreens/contractcases/codespec unchanged; productUIunchanged/strictownedcleanup. Known2Nodewarnings retained; no finalCI/PhaseGate.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-RETENTION-TEMP-PORTABILITY-TRIAGE-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p3_whole_phase_review",
+      "reviewed_baseline": "9fcb51b2e67379dce1e8011524f767a085d28a3282474705bb730ba99a5ccdbd",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/p3-retention-temp-portability-triage-r1-reviewer-proof.json SHA256 6488db3c0554dc37570d0937cd8f391aa4fe21a85b31459df91d3ce374a03cf5 UnsupportedDarwin-parent dependency Ubuntuworkflow/testEnv providesnocreationguarantee. OldCI actualwrongcase moduleload precedesmkdtemp; noLinuxENOENT/PASS manufactured. Two-lineexistingtmpdir direction withinapprovedscope, no new decision.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-RETENTION-TEMP-PORTABILITY-EXACT-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p3_whole_phase_review",
+      "reviewed_baseline": "9fcb51b2e67379dce1e8011524f767a085d28a3282474705bb730ba99a5ccdbd",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/p3-retention-temp-portability-exact-r2-reviewer-proof.json SHA256 e8ea1d47e4afb7b9fade6e19721f9fc3058a5dd170b2bd09719e310ac58f1108 Exactprivateproposal55b674 vsactuald64f onlytmpdirimport+injectedparent; all5bodies/defaultroot/SQL/guards/permissions/cleanup unchanged. Applyatidle/newnative/new33/35/currentLinuxCI required.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -9364,6 +9460,30 @@
       "idempotency_key": "sales-p3-726a0baa1fa1-renumber81-original33",
       "status": "FAILED",
       "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/renumber81-review-high-stop.json Guardqualified owned62617 npmgroup SIGTERM after genuineHIGHfinding; foreignwork untouched, runnerexit1. Actual21PASS then coverageFAIL(-15,0parsed), allrawrefs retained. Interruptedattempt not full33/currentqualification."
+    },
+    {
+      "id": "ACT-P3-RETENTION52-RUNTIME-PREPARATION",
+      "kind": "TEST_RUNTIME",
+      "target": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/retention52-runtime-preparation.json",
+      "idempotency_key": "sales-p3-726a0baa1fa1-retention52",
+      "status": "CONFIRMED",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/retention52-runtime-preparation-plan-r1.json originalR1SHA248637d0 preserved/CHANGES_REQUESTED(noSQL); amendedproposal /Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/retention52-runtime-preparation-plan.json SHA256 d01a23dce6c4bf0c5bf02f0228730efa05a39c806118506f49c0c18190314a7d helper63f completebaselineSHA/STARTEDresume/idledriftguard, awaitingactualR2approval; unchangedscope/noeffects.; R2draft /Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/retention52-runtime-preparation-plan-r2.json SHAd01a23 retained/authchangesrequested3d3a56; amendedR3 /Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/retention52-runtime-preparation-plan.json SHA256 7fdbf2603500dbba97bbf151c1de1cac2fb44eebac241a0157e6246f7ef0471e helperd34 truebatchformat+3actualcapturedguards; noeffects, R3pending.; actualR3APPROVED /Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/retention52-runtime-preparation-r3-reviewer-proof.json SHA256 59d4a1718e5d1495ddb240bd1ef08999feb3a4df1e589cf0873326c8172e60b3 exactd34/7fdb/8af52; applyonce guards first.; actualCONFIRMED /Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/retention52-runtime-preparation.json SHA256 ffc5e4ca43ebac33289201212f06e2d7dc70da2ce575240c4b50209752efa01c freshcoveragefull/10native/025fullPASS, preservedemptyroot/oldschemas/data/3grantbaselines, exacttemporarycoverageonly. Recovery3accountnewcoverage revoke mustprecede baseadminrestore afterclientsidle."
+    },
+    {
+      "id": "ACT-P3-RETENTION52-ORIGINAL33",
+      "kind": "TEST_RUNTIME",
+      "target": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/retention52-original33.log",
+      "idempotency_key": "sales-p3-726a0baa1fa1-retention52-original33",
+      "status": "CONFIRMED",
+      "source_ref": "Original reviewedrun_phase_checks.py83d9e73, unchanged33contracts/35browser/caps/skips, frozen8af/source52/D9Pf0/main9f; actualdefects01/02CLOSED; approvedDEC027transientviewkeeps276canonicalrefs.; actualall33PASS at8af/source52/runnerexit0 /Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/retention52-original33.log SHA256 859d083afd038398779f88450d9627cbe8b585148c9c48e956f06c337d243096 Actual35Playwright0skip/fullserver3239/3107PASS0FAIL132reconciledskip/global93.81/85.89/92.54/floors38. Portabilitypendingnotmerge-ready; no Linuxpass claimed."
+    },
+    {
+      "id": "ACT-P3-SOURCE52-UNIT-MUTATION",
+      "kind": "TEST_RUNTIME",
+      "target": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/unit-transition-mutation-supplemental/receipt.json",
+      "idempotency_key": "sales-p3-726a0baa1fa1-source52-unitmutation",
+      "status": "CONFIRMED",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/unit-transition-mutation-review-plan-v5.json SHA023f8d871d8eaa67e8d641bfca5041d86c6fb6b43079fd650f4659108087242f /actualR6proof2a37 /helper522301 current8af52 all33PASS/idle mandatory; actualTC037expectedRED/exactrestore/standardunitGREEN thenqualifysource52history. No newsource/unitcodeclaim.; actual MUTANT_KILLED receipt SHA256 9e5ae0fb4db3da0da42c45ab377a6cc47a8b80951d82fd9c8070a475da9e4a28 123 total/121PASS/2TC037FAIL/0skip, exact target/mode/HEAD/D/P/fullFP restored; subsequent original standard unit evidence/20261012T071357-2b655ddadd07/run.json actual123PASS0fail0skip. Supplemental mutant failure does not replace original33."
     }
   ],
   "evidence_files": [
@@ -9774,7 +9894,41 @@
     "evidence/20261012T055233-62f6596d114d/run.json",
     "evidence/20261012T055251-aebf360e69d9/run.json",
     "evidence/20261012T055255-d6170aeb4ed9/run.json",
-    "evidence/20261012T055321-fa018847f8e1/run.json"
+    "evidence/20261012T055321-fa018847f8e1/run.json",
+    "evidence/20261012T062936-16b905093909/run.json",
+    "evidence/20261012T062943-c3d592aa8b79/run.json",
+    "evidence/20261012T062946-f94d6e0c664b/run.json",
+    "evidence/20261012T062950-d3ea12befb67/run.json",
+    "evidence/20261012T063004-9fa7f6a03bd9/run.json",
+    "evidence/20261012T063006-59acad83a1c5/run.json",
+    "evidence/20261012T063018-820bf310717e/run.json",
+    "evidence/20261012T063040-eb8a3d64d939/run.json",
+    "evidence/20261012T063043-c50cf7688495/run.json",
+    "evidence/20261012T063044-dd6126f0da20/run.json",
+    "evidence/20261012T063046-2746291465ae/run.json",
+    "evidence/20261012T063048-0a82716edc41/run.json",
+    "evidence/20261012T063049-a7a013402fa0/run.json",
+    "evidence/20261012T063051-21a4ad112264/run.json",
+    "evidence/20261012T063053-bbefcd80dca1/run.json",
+    "evidence/20261012T063055-dd5d94ba416b/run.json",
+    "evidence/20261012T063057-fbf73f825aa5/run.json",
+    "evidence/20261012T063059-8f4a333a6110/run.json",
+    "evidence/20261012T063102-cf5a21d63892/run.json",
+    "evidence/20261012T063121-f11947e72bd6/run.json",
+    "evidence/20261012T063125-074c88756f02/run.json",
+    "evidence/20261012T063151-3a8b6cc8e344/run.json",
+    "evidence/20261012T065442-7bca0176cd17/run.json",
+    "evidence/20261012T065453-34d8d6c724dc/run.json",
+    "evidence/20261012T065456-3a3faf6f4e9c/run.json",
+    "evidence/20261012T065531-18ee869ec784/run.json",
+    "evidence/20261012T065534-6120412b3a1d/run.json",
+    "evidence/20261012T065604-fd045bdfbdb3/run.json",
+    "evidence/20261012T065614-de72bf7bbd81/run.json",
+    "evidence/20261012T065621-a39b5ee4f653/run.json",
+    "evidence/20261012T065706-cc6d2788f522/run.json",
+    "evidence/20261012T065709-0659b8a674ec/run.json",
+    "evidence/20261012T065740-cea87f548bea/run.json",
+    "evidence/20261012T071357-2b655ddadd07/run.json"
   ],
   "defects": [
     {
@@ -9796,9 +9950,26 @@
     {
       "id": "DEF-002",
       "severity": "HIGH",
-      "status": "RETEST",
+      "status": "CLOSED",
       "source_ids": [
         "TASK-046",
+        "TASK-049",
+        "TC-041"
+      ],
+      "closure_evidence": [
+        "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/retention-default-root-native-red/result.json SHA256 21090ae3a93fcb3bb556398d15111e8ce86e8694bb1fa154b046af8d2bd6b87e",
+        "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/retention-default-root-native-green/result.json SHA256 63bdae665c9a51c51538349777f2420709bfca5d8a39a7b24bcc4fcaaca85763",
+        "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/retention-default-root-fullunit-green/result.json SHA256 3f7d3faaef3a62c2184df525f1d4920d069a7f6de96b6cf106daf11d8d0261c1",
+        "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/retention-browser-cleanup-fullplaywright-green/result.json SHA256 a948b05dcdfa203856d2cd570088bb9ad7c67396c9185aca9a816e688d635100",
+        "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/p3-retention-root-closure-r3-reviewer-proof.json SHA256 2f44f63a28eede9f37b5ce9ad936197e09e44996d19e1053f987ed8b9e272851"
+      ],
+      "risk_approval_id": null
+    },
+    {
+      "id": "DEF-003",
+      "severity": "MEDIUM",
+      "status": "RETEST",
+      "source_ids": [
         "TASK-049",
         "TC-041"
       ],
@@ -9806,5 +9977,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Commit exactreviewedretention threefiles/state/report87. Integratefreshmain9fbbc2Supplierdocs only, computeD/P/source. Independent actualclosureaddendum thenfreshcoverage/nativeownedfixtures andalloriginal33/currentCI/finalPhase/retirement/Gate."
+  "next_safe_action": "Apply reviewed exact two-line native temp portability correction at idle, preserve source52 qualified33/mutation as history, commit own correction then integrate fetched main a0d0527; refresh only ten native schemas using reviewed guarded helper and rerun unchanged33/35/exact5CI/final review before approved276 retirement and canonical merge Gate."
 }
