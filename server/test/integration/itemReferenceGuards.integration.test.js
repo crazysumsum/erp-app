@@ -67,8 +67,10 @@ async function fixture(t, { status = "draft" } = {}) {
       price_source, line_amount, created_at, updated_at) VALUES (?, 1, ?, 'Reference', 'Reference', 'Reference SKU', ?, 'BOX', 'Box', 24, 'none', 1, 24, 1, 'MANUAL', 1, ?, ?)`, [id, skuIds[0], mappingIds[1], now, now]);
     return id;
   };
+  const cleanup = [];
   t.after(async () => {
     try {
+      for (const remove of cleanup) await remove();
       await db.execute("DELETE FROM sales_orders WHERE sales_order_number = ?", [`REF-${suffix}`]);
       await db.execute("DELETE FROM sales_quotations WHERE quotation_number = ?", [`REF-${suffix}`]);
       await db.execute("DELETE FROM customers WHERE customer_code = ?", [`REF-${suffix}`]);
@@ -88,7 +90,7 @@ async function fixture(t, { status = "draft" } = {}) {
       await db.execute("DELETE FROM users WHERE id = ?", [actorId]);
     } finally { await app.shutdown("item_reference_test_complete"); }
   });
-  return { app, db, insert, now, suffix, itemId, skuIds, mappingIds, uomIds, warehouseId, binId, service, lookup, command, snapshot, stock, update, salesLine };
+  return { app, db, insert, now, suffix, itemId, skuIds, mappingIds, uomIds, warehouseId, binId, service, lookup, command, snapshot, stock, update, salesLine, cleanup };
 }
 
 function referenced(code, types) {
@@ -266,6 +268,43 @@ integrationTest("TASK-043: reserved quantity blocks archive but zero balance/con
   assert.ok((await f.snapshot()).skus.every(row => row.status === "archived"));
   const [[history]] = await f.db.query("SELECT COUNT(*) AS count FROM inventory_lots WHERE sku_id = ?", [f.skuIds[0]]);
   assert.equal(Number(history.count), 1);
+});
+
+integrationTest("TASK-043: real Draft/in-transit Transfer obligations block archive but completed history remains readable", async t => {
+  const f = await fixture(t, { status: "inactive" });
+  const destinationId = await f.insert("INSERT INTO inventory_warehouses (warehouse_code, normalized_code, warehouse_name, created_at, updated_at) VALUES (?, ?, 'Transfer destination', ?, ?)", [`DEST-${f.suffix}`, `dest-${f.suffix}`, f.now, f.now]);
+  const operationId = await f.insert(`INSERT INTO inventory_operation_requests (command_type, source_module, source_document_type,
+    source_document_id, source_event_id, request_hash, actor_label, created_at) VALUES ('TRANSFER_CREATE', 'inventory', 'transfer', ?, ?, ?, 'Reference test', ?)`,
+  [f.suffix, f.suffix, "a".repeat(64), f.now]);
+  const transferId = await f.insert(`INSERT INTO inventory_transfers (transfer_number, source_warehouse_id, destination_warehouse_id,
+    status, create_operation_id, created_at, updated_at) VALUES (?, ?, ?, 'DRAFT', ?, ?, ?)`, [f.suffix, f.warehouseId, destinationId, operationId, f.now, f.now]);
+  f.cleanup.push(async () => {
+    await f.db.execute("DELETE FROM inventory_transfer_lines WHERE transfer_id = ?", [transferId]);
+    await f.db.execute("DELETE FROM inventory_transfers WHERE id = ?", [transferId]);
+    await f.db.execute("DELETE FROM inventory_operation_requests WHERE id = ?", [operationId]);
+    await f.db.execute("DELETE FROM inventory_warehouses WHERE id = ?", [destinationId]);
+  });
+  await f.insert(`INSERT INTO inventory_transfer_lines (transfer_id, line_number, sku_id, source_bin_id, dispatch_stock_status,
+    quantity, in_transit_quantity, sku_code_snapshot) VALUES (?, 1, ?, ?, 'AVAILABLE', 24, 0, 'Reference SKU')`, [transferId, f.skuIds[0], f.binId]);
+  await assert.rejects(f.service.archiveSku({ ...f.command, id: f.skuIds[0] }), referenced("SKU_REFERENCED", ["inventory_transfer_lines"]));
+  await f.db.execute("UPDATE inventory_transfer_lines SET in_transit_quantity = quantity WHERE transfer_id = ?", [transferId]);
+  await f.db.execute("UPDATE inventory_transfers SET status = 'IN_TRANSIT' WHERE id = ?", [transferId]);
+  const before = await f.snapshot();
+  await assert.rejects(f.service.archiveItem({ ...f.command, id: f.itemId }), referenced("ITEM_REFERENCED", ["inventory_transfer_lines"]));
+  await assert.rejects(f.service.archiveSku({ ...f.command, id: f.skuIds[0] }), referenced("SKU_REFERENCED", ["inventory_transfer_lines"]));
+  await assert.rejects(f.service.bulkChangeStatus({ ...f.command, targetType: "sku", action: "archive", targets: f.skuIds.map(id => ({ id, version: 1 })) }), error => {
+    assert.equal(error.publicCode, "BULK_STATUS_CHANGE_REJECTED");
+    assert.equal(error.publicDetails.issues[0].code, "SKU_REFERENCED");
+    return true;
+  });
+  assert.deepEqual(await f.snapshot(), before);
+  await f.db.execute("UPDATE inventory_transfer_lines SET in_transit_quantity = 0 WHERE transfer_id = ?", [transferId]);
+  await f.db.execute("UPDATE inventory_transfers SET status = 'RECEIVED' WHERE id = ?", [transferId]);
+  await f.service.archiveItem({ ...f.command, id: f.itemId });
+  assert.ok((await f.snapshot()).skus.every(row => row.status === "archived"));
+  const [[history]] = await f.db.query("SELECT quantity, sku_code_snapshot FROM inventory_transfer_lines WHERE transfer_id = ?", [transferId]);
+  assert.equal(Number(history.quantity), 24);
+  assert.equal(history.sku_code_snapshot, "Reference SKU");
 });
 
 integrationTest("TASK-043: Inventory profile and UOM resolution read current locked values after an earlier RR snapshot", async t => {

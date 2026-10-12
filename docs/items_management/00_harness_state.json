@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "item-management",
-  "revision": 91,
+  "revision": 97,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "59ee6cb3664ae1742e41b218ffd3bf223e396eb44a4aa24d82028ebb9cf7c16d",
     "plan": "01e51df95e1e8742e765c18ec3dcf8205d8b30dd97a9a2feb7b9b7221adef66a",
-    "code_commit": "2e0427e3abcc897992ed89bf04b6d69df35210e2",
-    "source_fingerprint": "d2b9e7c67cd0a54a47746c09fc9282f7bf65f4703d73bcdc40dc448dcb6f986e",
+    "code_commit": "a93d6defec75b252b5744abed024a3606da72f5e",
+    "source_fingerprint": "3da037cd9926466f4d8753d353b9b648ffd4e41c94d998cc93058b29e7822dae",
     "worktree": "/private/tmp/erp-item-task-043-reference-guards",
-    "default_commit": "0feb9d712072048adb20afc470eb87abc8911475",
+    "default_commit": "f7ddcfd57c1a6ecd3b57585719f92fd4d3dbdfcc",
     "mode_entry_commit": "0feb9d712072048adb20afc470eb87abc8911475"
   },
   "runtime": {
@@ -25,9 +25,9 @@
       "mysql-schema": "erp_item_task043_20261012 on private socket /private/tmp/erp-item-task043-mysql.XDoqyf/mysql.sock; TCP/MySQLX disabled",
       "media-root": "isolated Item worktree server/storage/media and test-owned temporary roots",
       "import-root": "isolated Item worktree server/storage/imports and test-owned temporary roots",
-      "web-port": "No application listener reserved for this metadata correction; browser behavior unchanged, prior actual Playwright evidence retained"
+      "web-port": "Observed ports3000/4173 free on2026-10-12; task-owned existing Item Playwright webServer will reserve/start/stop them for developer regression only."
     },
-    "lease_ref": "Task-owned mysqld session14325 stopped via exactprivate mysqladminsocket afterallruns; datadir XDoqyf and synthetic schema retained, no active listener/shared service changed. Restart requires observed taskownedprivate-runtime lease."
+    "lease_ref": "Task-owned private mysqld exec session90963, socket-only; real0064 existing migration applied to isolated schema on2026-10-12; sharedservice untouched."
   },
   "tasks": {
     "TASK-001": "DONE",
@@ -1109,6 +1109,42 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-023",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/item_supplier_handoff_review",
+      "reviewed_baseline": "d2b9e7c67cd0a54a47746c09fc9282f7bf65f4703d73bcdc40dc448dcb6f986e",
+      "source_ref": "Actual separate-agent finalAPPROVED candidate71cfd18 on2026-10-12, no actionablefindings; https://github.com/crazysumsum/erp-app/pull/198#issuecomment-6115984771 author-recordedprovenance(notGitHubhumanreview).",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-024",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/item_supplier_handoff_review",
+      "reviewed_baseline": "6008fc287f88515a54aa4e3dbce9c1599731493344733053feaaf229f6363e53",
+      "source_ref": "Actual separate-agent review2026-10-12 requestedchanges R03 cleanuporder, R04 Draft obligations, R05 incomingfixtureversions. Historical findings all resolved inREV025; sourceapprovalnotoriginalcandidateCI.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-025",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/item_supplier_handoff_review",
+      "reviewed_baseline": "3da037cd9926466f4d8753d353b9b648ffd4e41c94d998cc93058b29e7822dae",
+      "source_ref": "Actual separate-agent finalAPPROVED2026-10-12 source3da037cd, allR03-R05resolved; implementation/03_task043_latest_main_integration.md. No reviewerDBexecutionclaimed.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -1122,6 +1158,39 @@
       "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/37914121452/job/113766047583; GitHub job log observed2026-10-12, one stale ItemUOM compatibility SQL-shape assertion.",
       "actor": "GitHub Actions, author observed trusted connector response",
       "observed_at": "2026-10-12T00:50:47Z"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "PR198-independent-final-review",
+      "code_commit": "71cfd18c72af762ac25353c9bef3e4f02e197f79",
+      "spec_baseline": "01e51df95e1e8742e765c18ec3dcf8205d8b30dd97a9a2feb7b9b7221adef66a",
+      "source_fingerprint": "d2b9e7c67cd0a54a47746c09fc9282f7bf65f4703d73bcdc40dc448dcb6f986e",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/198#issuecomment-6115984771; actualSEPARATE_AGENTreviewfinalresponseconfirms71cfd18/code/evidence/metadata. NotimpersonatedGitHubhumanapproval.",
+      "actor": "/root/item_supplier_handoff_review",
+      "observed_at": "2026-10-12T01:12:09Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "Test (server + client, MySQL integration)",
+      "code_commit": "71cfd18c72af762ac25353c9bef3e4f02e197f79",
+      "spec_baseline": "01e51df95e1e8742e765c18ec3dcf8205d8b30dd97a9a2feb7b9b7221adef66a",
+      "source_fingerprint": "d2b9e7c67cd0a54a47746c09fc9282f7bf65f4703d73bcdc40dc448dcb6f986e",
+      "status": "FAIL",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/38190756584/job/114622817235; attempt1 failed2 untouched timing-sensitive Framework/Supplier tests. Globalcoverage93.98/85.36/92.50 above thresholds; Item scoped500 developerPASS retained.",
+      "actor": "GitHubActions, actualjoblog observed byauthor",
+      "observed_at": "2026-10-12T01:29:21Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "Test (server + client, MySQL integration)",
+      "code_commit": "71cfd18c72af762ac25353c9bef3e4f02e197f79",
+      "spec_baseline": "01e51df95e1e8742e765c18ec3dcf8205d8b30dd97a9a2feb7b9b7221adef66a",
+      "source_fingerprint": "d2b9e7c67cd0a54a47746c09fc9282f7bf65f4703d73bcdc40dc448dcb6f986e",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/38190756584/job/114626894547; boundedfailedjobretry attempt2SUCCESS observed2026-10-12T01:52:10Z, all5checksSUCCESS. OldSHAonly, supersededbymainadvancef7ddcfd.",
+      "actor": "GitHub Actions, actual gh run/check observation",
+      "observed_at": "2026-10-12T01:52:10Z"
     }
   ],
   "pending_decisions": [
@@ -1755,8 +1824,56 @@
       "kind": "PUSH",
       "target": "origin/codex/item-task-043-reference-guards for PR198",
       "idempotency_key": "item-task043-approved-synthetic-evidence-finalpush-20261012",
+      "status": "CONFIRMED",
+      "source_ref": "Actualgitpushcompleted2635404..71cfd18; trustedGitHub/gh PR198head71cfd18, ReadyForReview; CIrun38190756584 belongs exactcandidate."
+    },
+    {
+      "id": "ITEM-T043-MERGE-101",
+      "kind": "MERGE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/198 expectedhead71cfd18",
+      "idempotency_key": "item-task043-pr198-merge-71cfd18-20261012",
       "status": "PLANNED",
-      "source_ref": "APR-045; candidate freeze follows same source d2b9e7c and PLAN01e51df with4passing configured DEVELOPER runs. Observe exact pushedSHA/currentCI beforemerge."
+      "source_ref": "ActualSam APR045 request to merge after exactcandidateCI+review pass; choose merge commit to preserve reviewedhistory and safe nonforcebranch cleanup; mainprotectionread BranchNotProtected, all5CIchecks stillrequiredbyownerworkflow. Not executed: target main advanced to f7ddcfd; old head intent superseded, new candidate must pass fresh CI/review."
+    },
+    {
+      "id": "ITEM-T043-CLEANUP-102",
+      "kind": "CLEANUP",
+      "target": "Only codex/item-task-043-reference-guards remote/local branch and /private/tmp/erp-item-task-043-reference-guards worktree",
+      "idempotency_key": "item-task043-pr198-itemonlycleanup-20261012",
+      "status": "PLANNED",
+      "source_ref": "ExplicitSamcleanuprequest; observednoopenPRbasedonItembranch/nootherlocalbranchcontainscandidate, primarymainclean; observeactualmerge andpreservecloseoutjournalbeforecleanup."
+    },
+    {
+      "id": "ITEM-T043-CI-RETRY-103",
+      "kind": "CI_RETRY",
+      "target": "GitHubActions run38190756584 failedjobonly, unchangedcandidate71cfd18, maximum1 retry",
+      "idempotency_key": "item-task043-71cfd18-ci38190756584-bounded-retry1",
+      "status": "CONFIRMED",
+      "source_ref": "Independentdiagnosis confirmsno directItemcoupling/frameworkSupplierunchanged; replaycleanup afterresponse concrete race, SupplierSKIPLOCKED reclaimed beforeoldserverlockrelease hypothesis. Focusedreplay1+5repetitionsPASS; SupplieractualMySQLtimeoutcase1PASS14.7s. No tests/timeouts/thresholds changed. Repeatedfailure stopsworkflow pendingotherscoperemediation. Actual gh retry attempt2 job114626894547 PASS; workflow38190756584 SUCCESS exact71cfd18. Historical, not current-candidate CI after latest-main integration."
+    },
+    {
+      "id": "ITEM-T043-INTEGRATE-104",
+      "kind": "GIT_MERGE",
+      "target": "origin/main f7ddcfd into existing Item branch",
+      "idempotency_key": "item-task043-main-f7ddcfd-integration",
+      "status": "CONFIRMED",
+      "source_ref": "Observed git merge without conflicts at a93d6defec75b252b5744abed024a3606da72f5e; preexisting state93 preserved. No direct edits to other modules."
+    },
+    {
+      "id": "ITEM-T043-TRANSFER-MIGRATION-105",
+      "kind": "MIGRATION",
+      "target": "Existing0064 migration to private erp_item_task043_20261012",
+      "idempotency_key": "item-task043-XDoqyf-0064",
+      "status": "CONFIRMED",
+      "source_ref": "Actual migrate command applied0064 only; all other migrations skipped; task-owned synthetic socket schema under existing isolation authorization."
+    },
+    {
+      "id": "ITEM-T043-PUSH-106",
+      "kind": "PUSH",
+      "target": "origin/codex/item-task-043-reference-guards updatedmain-integrated candidate forPR198",
+      "idempotency_key": "item-task043-main-f7-integrated-push-20261012",
+      "status": "PLANNED",
+      "source_ref": "ActualSam latestrequest approvesnewcandidatepush/CI+review gatedmerge. Current source3da037cd selfchecks501server860client+lintbuild+actualbrowser12pass2existingformalSkips; commitSHAobservedaftercommit."
     }
   ],
   "evidence_files": [
@@ -1918,5 +2035,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "APR045 explicitly permits4auditedsyntheticpackages torepository and CI/review-gatedPR198merge/Itemcleanup. Freeze/push candidate on unchanged source d2b9e7c/PLAN01e51df, get exactcandidate independentreview/currentCI, complete scopedTASK045 andPHASE007MERGE_READY beforemerge. TASK043 overall remainsIN_PROGRESS; do notpromote DEVELOPER evidence toformalacceptance."
+  "next_safe_action": "Commit only reviewed Item changes/incomingItemfixturecolumns/checkpoint/report; originalAPR045-approved4packagesalreadytracked. Additional rawreruns retainedlocal, do notexport them. Pushnewmain-integratedcandidate, exactcandidate independentreview andall5mandatoryCI required beforeTASK045DONE/phase007merge; old71successnotsufficient. TASK043overallIN_PROGRESS."
 }

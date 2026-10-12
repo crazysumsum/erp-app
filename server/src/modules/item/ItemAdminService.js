@@ -1887,6 +1887,7 @@ export class ItemAdminService {
     const probes = [
       ["inventory_stock_balances", `SELECT 1 FROM inventory_stock_balances WHERE sku_id IN (${placeholders}) AND (on_hand_quantity > 0 OR allocated_quantity > 0) LIMIT 1`],
       ["inventory_stock_controls", `SELECT 1 FROM inventory_stock_controls WHERE sku_id IN (${placeholders}) AND reserved_quantity > 0 LIMIT 1`],
+      ["inventory_transfer_lines", `SELECT 1 FROM inventory_transfer_lines l JOIN inventory_transfers t ON t.id = l.transfer_id WHERE l.sku_id IN (${placeholders}) AND (l.in_transit_quantity > 0 OR t.status IN ('DRAFT', 'IN_TRANSIT')) LIMIT 1`],
       ["inventory_reservations", `SELECT 1 FROM inventory_reservations WHERE sku_id IN (${placeholders}) AND outstanding_quantity > 0 LIMIT 1`],
       ["inventory_allocations", `SELECT 1 FROM inventory_allocations a JOIN inventory_reservations r ON r.id = a.reservation_id WHERE r.sku_id IN (${placeholders}) AND a.outstanding_quantity > 0 LIMIT 1`],
       ["sales_quotation_lines", `SELECT 1 FROM sales_quotation_lines l JOIN sales_quotations q ON q.id = l.quotation_id WHERE l.sku_id IN (${placeholders}) AND q.status IN ('DRAFT', 'ISSUED') LIMIT 1`],
