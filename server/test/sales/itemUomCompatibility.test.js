@@ -105,8 +105,8 @@ test("SKU archived non-FK mapping references protect removal while ordinary pric
   f.command.uoms = [f.command.uoms[0]]; f.command.reason = "Remove old packaging";
   await assert.rejects(() => f.service.updateSku(f.command), { code: "UOM_CHANGE_BLOCKED" });
   const probe = f.calls.find(call => call.sql?.includes("FROM sales_order_lines_archive"));
-  assert.match(probe.sql, /sku_id = \? AND sku_uom_id IN \(\?\)/);
-  assert.deepEqual(probe.params, [10, 92]);
+  assert.match(probe.sql, /WHERE sku_uom_id IN \(\?\) LIMIT 1/);
+  assert.deepEqual(probe.params, [92]);
   assert.deepEqual(f.state.mappings.map(row => row.id), [91, 92]);
   const price = fixture({ archiveReferenced: true });
   await price.service.updateSku(price.command);

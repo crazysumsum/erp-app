@@ -1,33 +1,33 @@
 {
   "schema_version": "2.0",
   "module_id": "item-management",
-  "revision": 85,
+  "revision": 86,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
   "resume_status": "READY_FOR_TESTING",
-  "current_phase": "PHASE-006",
-  "current_task": "TASK-043",
+  "current_phase": "PHASE-007",
+  "current_task": "TASK-045",
   "baseline": {
     "design": "59ee6cb3664ae1742e41b218ffd3bf223e396eb44a4aa24d82028ebb9cf7c16d",
-    "plan": "9084e8e3435a3759f1e0445ee005ae41c3403fc7338242572fe8de1be39eff50",
-    "code_commit": "0feb9d712072048adb20afc470eb87abc8911475",
-    "source_fingerprint": "5c581c92d43c9edfbe7cf1c98949d843e145d2b1b500e18e46f4e39e2817a855",
+    "plan": "01e51df95e1e8742e765c18ec3dcf8205d8b30dd97a9a2feb7b9b7221adef66a",
+    "code_commit": "26354042c21a3f6ba453c7b416bfb32299697334",
+    "source_fingerprint": "d2b9e7c67cd0a54a47746c09fc9282f7bf65f4703d73bcdc40dc448dcb6f986e",
     "worktree": "/private/tmp/erp-item-task-043-reference-guards",
     "default_commit": "0feb9d712072048adb20afc470eb87abc8911475",
     "mode_entry_commit": "0feb9d712072048adb20afc470eb87abc8911475"
   },
   "runtime": {
-    "instance_id": "ITEM-TASK043-DEVELOPER-20261009",
-    "owner": "Primary Item Management agent; isolated developer runtime, no acceptance sign-off",
+    "instance_id": "ITEM-TASK043-DEVELOPER-20261012",
+    "owner": "Primary Item Management agent; task-owned isolated developer runtime",
     "resources": {
       "workspace": "/private/tmp/erp-item-task-043-reference-guards",
-      "mysql-schema": "erp_item_task043_20261009 on disposable /private/tmp/erp-item-task043-mysql.fnO6t8/mysql.sock, no network listener",
-      "media-root": "isolated worktree server/storage/media and test-owned temporary roots; no shared root",
-      "import-root": "isolated worktree server/storage/imports and test-owned temporary roots; no shared root",
-      "web-port": "Playwright-owned server3000/client4173 stopped after run; no reused server"
+      "mysql-schema": "erp_item_task043_20261012 on private socket /private/tmp/erp-item-task043-mysql.XDoqyf/mysql.sock; TCP/MySQLX disabled",
+      "media-root": "isolated Item worktree server/storage/media and test-owned temporary roots",
+      "import-root": "isolated Item worktree server/storage/imports and test-owned temporary roots",
+      "web-port": "No application listener reserved for this metadata correction; browser behavior unchanged, prior actual Playwright evidence retained"
     },
-    "lease_ref": "Unique private MySQL data directory/socket created by this task; mysqld running as current user via task-owned session15503 with TCP/MySQLX disabled. Shared Oracle launch service is stopped and was not changed."
+    "lease_ref": "Task created private directory XDoqyf and owns mysqld exec session14325; no shared MySQL service or schema changed."
   },
   "tasks": {
     "TASK-001": "DONE",
@@ -73,7 +73,8 @@
     "TASK-041": "DONE",
     "TASK-042": "DONE",
     "TASK-043": "IN_PROGRESS",
-    "TASK-044": "DONE"
+    "TASK-044": "DONE",
+    "TASK-045": "IN_PROGRESS"
   },
   "approvals": [
     {
@@ -807,6 +808,26 @@
         "installed-Inventory-Sales-increment-B"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-043",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task, Sam on2026-10-12: 批准, responding to the proposed narrow increment-B gate and isolated-test environment correction; scope and checks unchanged. See implementation/02_task043_increment_b_gate.md.",
+      "recorded_at": "2026-10-12T00:50:47Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "01e51df95e1e8742e765c18ec3dcf8205d8b30dd97a9a2feb7b9b7221adef66a",
+      "code_commit": "26354042c21a3f6ba453c7b416bfb32299697334",
+      "scope": [
+        "item-management",
+        "TASK-043",
+        "TASK-045",
+        "PHASE-007",
+        "increment-B-execution-record"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -1013,9 +1034,33 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-020",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/item_supplier_handoff_review",
+      "reviewed_baseline": "01e51df95e1e8742e765c18ec3dcf8205d8b30dd97a9a2feb7b9b7221adef66a",
+      "source_ref": "Active reviewer final response2026-10-12; implementation/02_task043_increment_b_gate.md#rev-020--independent-execution-contract-review; independently96/96 tests passed, no actionable findings.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
-  "observations": [],
+  "observations": [
+    {
+      "kind": "CI",
+      "subject": "Test (server + client, MySQL integration)",
+      "code_commit": "26354042c21a3f6ba453c7b416bfb32299697334",
+      "spec_baseline": "9084e8e3435a3759f1e0445ee005ae41c3403fc7338242572fe8de1be39eff50",
+      "source_fingerprint": "5c581c92d43c9edfbe7cf1c98949d843e145d2b1b500e18e46f4e39e2817a855",
+      "status": "FAIL",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/37914121452/job/113766047583; GitHub job log observed2026-10-12, one stale ItemUOM compatibility SQL-shape assertion.",
+      "actor": "GitHub Actions, author observed trusted connector response",
+      "observed_at": "2026-10-12T00:50:47Z"
+    }
+  ],
   "pending_decisions": [
     {
       "id": "HD-001",
@@ -1173,6 +1218,18 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "docs/items_management/09_final_alignment_review.md#hd-005--supplier-reference-ownership-and-sourcing-eligibility"
+    },
+    {
+      "id": "HD-006",
+      "impact": "MAJOR",
+      "question": "Approve narrow Harness increment-B execution unit and isolated-test allowlist correction, preserving business scope and all gates?",
+      "affected_ids": [
+        "TASK-043",
+        "TASK-045",
+        "PHASE-007"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Sam active task2026-10-12: 批准; implementation/02_task043_increment_b_gate.md"
     }
   ],
   "external_actions": [
@@ -1583,6 +1640,22 @@
       "idempotency_key": "mode-change-84",
       "status": "CONFIRMED",
       "source_ref": "Active Codex task 2026-10-09: Sam said 好，請繼續開發TASK-043, approving implementation of the explained Inventory/Sales increment under DESIGN59ee6cb PLAN9084e8e"
+    },
+    {
+      "id": "ITEM-T043-PR-97",
+      "kind": "PR",
+      "target": "https://github.com/crazysumsum/erp-app/pull/198",
+      "idempotency_key": "item-task043-pr198-original",
+      "status": "CONFIRMED",
+      "source_ref": "GitHub get_pr_info2026-10-12 observes OPEN DRAFT head26354042c21a3f6ba453c7b416bfb32299697334; prior creation2026-10-09."
+    },
+    {
+      "id": "ITEM-T043-RUNTIME-98",
+      "kind": "MIGRATION",
+      "target": "erp_item_task043_20261012 on /private/tmp/erp-item-task043-mysql.XDoqyf/mysql.sock",
+      "idempotency_key": "item-task043-isolated-runtime20261012-XDoqyf",
+      "status": "CONFIRMED",
+      "source_ref": "Author exec2026-10-12: existing migrations through0079 applied successfully on uniquely task-owned private schema; MySQL26.7.0, no shared database change."
     }
   ],
   "evidence_files": [
@@ -1743,5 +1816,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-043 increment B product/test code is independently approved and developer-verified; see implementation/01_task043_reference_guards.md. Prepare draft PR/current CI; keep MERGE_READY BLOCKED until typed increment-B scope and isolated-test env allowlist/redaction are reconciled, reviewed and the resulting PLAN has authentic owner authorization. No fake DONE or generic gate bypass. Supplier C and formal D remain outstanding; retain active Item worktree/branch until PR resolution."
+  "next_safe_action": "Execute all four configured DEVELOPER suites under corrected PLAN01e51df and isolated runtime, preserving old failures/evidence. Commit/push exact candidate to existing draftPR198, obtain current-candidate CI and independent review, then verify PHASE007 MERGE_READY before authorized merge/Item-only cleanup. TASK043 remains IN_PROGRESS; no formal acceptance or absent-consumer PASS."
 }

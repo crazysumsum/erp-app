@@ -157,7 +157,9 @@
         "test/integration/itemMigrationIdempotency.integration.test.js",
         "test/integration/itemMedia.integration.test.js",
         "test/integration/itemRead.integration.test.js",
-        "test/integration/itemUpdate.integration.test.js"
+        "test/integration/itemUpdate.integration.test.js",
+        "test/integration/itemReferenceGuards.integration.test.js",
+        "test/sales/itemUomCompatibility.test.js"
       ],
       "cwd": "server",
       "timeout_seconds": 3600,
@@ -211,10 +213,23 @@
         "DB_USER",
         "DB_PASSWORD",
         "DB_NAME",
-        "DB_INTEGRATION_TESTS"
+        "DB_INTEGRATION_TESTS",
+        "DB_SOCKET_PATH",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
       ],
       "redaction_env_keys": [
-        "DB_PASSWORD"
+        "DB_PASSWORD",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
       ]
     },
     {
