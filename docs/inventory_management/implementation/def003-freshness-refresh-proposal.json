@@ -1,0 +1,29 @@
+{
+  "kind": "UNEXECUTED_EXACT_MAIN_PRECONDITION_REPLACEMENT",
+  "decision": "HD-093",
+  "replaces_only": {
+    "HD-092_exact_upstream": "e3bfb02a3e48aac121386f6c5c9693487d17f346",
+    "proposed_exact_upstream": "f81feb8ee37871fe600352d6cc3ae92147ec4323"
+  },
+  "current_fix": "fa4317cefb80c78e914b3158b2bf7b543d6035ff",
+  "current_source": "9bba52c4136d01a942c88ecfb6f0703c86f3af1da5dac279a119e960d92b3dc7",
+  "inventory_baseline": {
+    "design": "53fe56c4bc2f45fb053036de71801ed6d0e8507887cd95b35e4645b9e87adfce",
+    "plan": "22064427195aa17bc01ae3abd171220feb1b743af23bc7ffbccf6b9c313358ab",
+    "code_commit": "169659ba229e0ad49920e9f8916eb3c9a2ba03bb",
+    "source_fingerprint": "5a514df1ffec98155e7f2ebdf0dcc4b5e2ecf8f6dcc51cb05f3915e2626395b6",
+    "worktree": "/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app",
+    "default_commit": "29893c304eac11716b1758d9b5e25bd8f0080a7e",
+    "mode_entry_commit": "5402118617442d4d0651a3245a7b57bf1e30cc43"
+  },
+  "upstream_changed_paths": [
+    "docs/supplier_management/00_harness_state.json"
+  ],
+  "upstream_delta_sha256": "1f0276009a99d6ae561e4801a4d3aab81bb1aa81762d9ca983858a656df41505",
+  "trusted_source": "https://github.com/crazysumsum/erp-app/pull/178; actual gh pr view MERGED,mergeCommitf81feb8,mergedAt2026-10-06T00:53:32Z; fresh gitfetch confirmed",
+  "unchanged_scope_source": "implementation/def003-current-publication-proposal.json",
+  "unchanged_scope_sha256": "0772ccb3c85b8d32f985b2e979f7816a1f4f25f273372b650bfde324143f7ef8",
+  "approved_ten_test_delta_sha256": "ee7aa97cc3a512bd004c2fead9728adbacb3be0a267b1357823d68b96ff18ebc",
+  "guard_result": "Exact-main precondition failed before effects; rootcontroller was never started. No merge/test/runtime/commit/push/PR/CI performed. Existingunmergedwork retained.",
+  "human_decision_text": "HD-093 Decision Required: HD092 actual A approved exact e3bfb02 refresh/checks/conditionalpushPRCI; execution explicitly stops for advancedmain. Before any merge/test/allocation/commit/push, guard observed and trustedfetch/GitHubPR178 confirmed main f81feb8ee37871fe600352d6cc3ae92147ec4323. Delta frome3 is ONLY docs/supplier_management/00_harness_state.json (+40/-8); no server/client/migration/lock/CIcommand change. Currentfixfa4317 remains clean/source9bba52 unchanged; no new PR/remote branch or tests this turn. A(recommended): replace ONLY HD092 exact upstream precondition e3 with f81feb8ee37871fe600352d6cc3ae92147ec4323; all other scope/stop conditions unchanged. Locally merge this exactmain into existingfa, preserve identical10test-file57+/15- delta and approved4fixcommits/15titles/2Auth/2Salescases; bounded fresh native focused/rootstrictJUnit/LCOV/all34floors/lint and privateMySQL26.7.0 same69migration/focusedCustomer/fullserver92-83-90/all34floors with corrected complete metadata and exactownedcleanup; syntheticdata/faultinjection only, otherguardcapacityflagsabsent/skipsNOT_EXECUTED. Existingignoreddeps reused without sharedtarget mutation, CI lockednpmci. If checks pass, localsavepoint then explicitlypushsameisolatedbranch/open narrowtestmaintenancePR and allow existingfiveCIjobs; no accumulatedaudit/evidence/secret export. New actualhead still needs Sam independent PRreview/currentCI/latermainmerge authorization. Stop ifmain movesagain/unreviewedconflict/failure, no automatic repair/Inventoryscopeexpansion. B: holdfa/evidence, do not refresh/retest/publish. RecommendA because onlyforeignmoduleauditstate changed and no executioncontract changed; extra work is no broader than alreadyapprovedHD092, but exact code identity must remain truthful. DefaultholdpendingSam. Neither grants Inventory source/spec/manifest/profile/PLAN adoption,0064/newguardcapacity,Task029resume,mainmerge/formalacceptance/UAT/deployment. Existing native2544PASS/14SKIP and incompleteHD091metadata remain historicfa results, not currentmain proof."
+}

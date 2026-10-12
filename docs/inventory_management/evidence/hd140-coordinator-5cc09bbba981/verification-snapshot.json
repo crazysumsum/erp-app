@@ -1,0 +1,451 @@
+{
+  "head": "f51175e7b62623e50429232cf0aaf580a49461d9",
+  "source": "3cdc51c462840f24f5a221218a928e795600de865f35042f2a087622cee9679e",
+  "baselines": {
+    "design": "b4720b69f67be272b7f605fa8bd83401792629ebd7ae16d1014aac2efcbf58ee",
+    "plan": "c145c025eae94a1570d1bd05a872da53335b931f9ea0f695595d02ddef258908"
+  },
+  "root": "/private/tmp/erp-inventory-p3-hd140-rd02hhpl",
+  "runtime_instance_id": "erp-inventory-p3-hd140-rd02hhpl",
+  "owner": "Codex /root HD137–HD140",
+  "checks": [
+    {
+      "suite": "inventory-p3-browser",
+      "status": "RECORDED",
+      "run_result": "PASS",
+      "evidence_file": "evidence/20261012T005918-2359468c5051/run.json",
+      "issues": [],
+      "scope": "Run evidence written. Register evidence_file with state_tool checkpoint; no state/approval was silently changed."
+    },
+    {
+      "suite": "inventory-p3-browser-regression",
+      "status": "RECORDED",
+      "run_result": "PASS",
+      "evidence_file": "evidence/20261012T010042-461760c4107b/run.json",
+      "issues": [],
+      "scope": "Run evidence written. Register evidence_file with state_tool checkpoint; no state/approval was silently changed."
+    },
+    {
+      "suite": "inventory-task026-unit",
+      "status": "RECORDED",
+      "run_result": "PASS",
+      "evidence_file": "evidence/20261012T010103-a3a3e97fba6c/run.json",
+      "issues": [],
+      "scope": "Run evidence written. Register evidence_file with state_tool checkpoint; no state/approval was silently changed."
+    },
+    {
+      "suite": "inventory-task027-unit",
+      "status": "RECORDED",
+      "run_result": "PASS",
+      "evidence_file": "evidence/20261012T010104-ff4f524a596f/run.json",
+      "issues": [],
+      "scope": "Run evidence written. Register evidence_file with state_tool checkpoint; no state/approval was silently changed."
+    },
+    {
+      "suite": "inventory-task028-unit",
+      "status": "RECORDED",
+      "run_result": "PASS",
+      "evidence_file": "evidence/20261012T010106-af1387542608/run.json",
+      "issues": [],
+      "scope": "Run evidence written. Register evidence_file with state_tool checkpoint; no state/approval was silently changed."
+    },
+    {
+      "suite": "inventory-p3-unit",
+      "status": "RECORDED",
+      "run_result": "PASS",
+      "evidence_file": "evidence/20261012T010107-a9eabe8baa4d/run.json",
+      "issues": [],
+      "scope": "Run evidence written. Register evidence_file with state_tool checkpoint; no state/approval was silently changed."
+    },
+    {
+      "suite": "inventory-developer",
+      "status": "RECORDED",
+      "run_result": "PASS",
+      "evidence_file": "evidence/20261012T010109-3ef134e17ebb/run.json",
+      "issues": [],
+      "scope": "Run evidence written. Register evidence_file with state_tool checkpoint; no state/approval was silently changed."
+    },
+    {
+      "suite": "inventory-p3-transfers-client",
+      "status": "RECORDED",
+      "run_result": "PASS",
+      "evidence_file": "evidence/20261012T010110-6bd44082f0a6/run.json",
+      "issues": [],
+      "scope": "Run evidence written. Register evidence_file with state_tool checkpoint; no state/approval was silently changed."
+    },
+    {
+      "suite": "inventory-p3-movements-client",
+      "status": "RECORDED",
+      "run_result": "PASS",
+      "evidence_file": "evidence/20261012T010113-73096c934a80/run.json",
+      "issues": [],
+      "scope": "Run evidence written. Register evidence_file with state_tool checkpoint; no state/approval was silently changed."
+    },
+    {
+      "suite": "inventory-p3-adjustments-client",
+      "status": "RECORDED",
+      "run_result": "PASS",
+      "evidence_file": "evidence/20261012T010115-2e9cbf49438e/run.json",
+      "issues": [],
+      "scope": "Run evidence written. Register evidence_file with state_tool checkpoint; no state/approval was silently changed."
+    },
+    {
+      "suite": "inventory-p3-server-coverage",
+      "status": "RECORDED",
+      "run_result": "PASS",
+      "evidence_file": "evidence/20261012T010118-e30d74653e77/run.json",
+      "issues": [],
+      "scope": "Run evidence written. Register evidence_file with state_tool checkpoint; no state/approval was silently changed."
+    },
+    {
+      "suite": "lint",
+      "status": "RECORDED",
+      "run_result": "PASS",
+      "evidence_file": "evidence/20261012T010218-2633d292b195/run.json",
+      "issues": [],
+      "scope": "Run evidence written. Register evidence_file with state_tool checkpoint; no state/approval was silently changed."
+    },
+    {
+      "suite": "inventory-p3-client-coverage",
+      "status": "RECORDED",
+      "run_result": "PASS",
+      "evidence_file": "evidence/20261012T010223-49077d774ce2/run.json",
+      "issues": [],
+      "scope": "Run evidence written. Register evidence_file with state_tool checkpoint; no state/approval was silently changed."
+    },
+    {
+      "suite": "client-build",
+      "status": "RECORDED",
+      "run_result": "PASS",
+      "evidence_file": "evidence/20261012T010234-dee2d536237b/run.json",
+      "issues": [],
+      "scope": "Run evidence written. Register evidence_file with state_tool checkpoint; no state/approval was silently changed."
+    },
+    {
+      "suite": "inventory-p3-dependency-audit",
+      "status": "RECORDED",
+      "run_result": "PASS",
+      "evidence_file": "evidence/20261012T010235-7aca1c9e5f8b/run.json",
+      "issues": [],
+      "scope": "Run evidence written. Register evidence_file with state_tool checkpoint; no state/approval was silently changed."
+    },
+    {
+      "suite": "inventory-p3-coverage-floors",
+      "status": "RECORDED",
+      "run_result": "PASS",
+      "evidence_file": "evidence/20261012T010916-e83b36460f76/run.json",
+      "issues": [],
+      "scope": "Run evidence written. Register evidence_file with state_tool checkpoint; no state/approval was silently changed."
+    },
+    {
+      "suite": "inventory-p3-sales-compatibility",
+      "status": "RECORDED",
+      "run_result": "PASS",
+      "evidence_file": "evidence/20261012T010917-f1c41186a794/run.json",
+      "issues": [],
+      "scope": "Run evidence written. Register evidence_file with state_tool checkpoint; no state/approval was silently changed."
+    },
+    {
+      "suite": "inventory-p3-customer-capacity",
+      "status": "RECORDED",
+      "run_result": "PASS",
+      "evidence_file": "evidence/20261012T010934-41296317b100/run.json",
+      "issues": [],
+      "scope": "Run evidence written. Register evidence_file with state_tool checkpoint; no state/approval was silently changed."
+    },
+    {
+      "suite": "inventory-p3-core-capacity",
+      "status": "RECORDED",
+      "run_result": "PASS",
+      "evidence_file": "evidence/20261012T011003-debaf105bebd/run.json",
+      "issues": [],
+      "scope": "Run evidence written. Register evidence_file with state_tool checkpoint; no state/approval was silently changed."
+    },
+    {
+      "suite": "inventory-task026-database",
+      "status": "RECORDED",
+      "run_result": "PASS",
+      "evidence_file": "evidence/20261012T011109-1926992519ad/run.json",
+      "issues": [],
+      "scope": "Run evidence written. Register evidence_file with state_tool checkpoint; no state/approval was silently changed."
+    },
+    {
+      "suite": "inventory-p2-database",
+      "status": "RECORDED",
+      "run_result": "PASS",
+      "evidence_file": "evidence/20261012T011113-c47ede05add9/run.json",
+      "issues": [],
+      "scope": "Run evidence written. Register evidence_file with state_tool checkpoint; no state/approval was silently changed."
+    },
+    {
+      "suite": "inventory-p2-api",
+      "status": "RECORDED",
+      "run_result": "PASS",
+      "evidence_file": "evidence/20261012T011116-63e252264837/run.json",
+      "issues": [],
+      "scope": "Run evidence written. Register evidence_file with state_tool checkpoint; no state/approval was silently changed."
+    },
+    {
+      "suite": "inventory-p3-transfer-database",
+      "status": "RECORDED",
+      "run_result": "PASS",
+      "evidence_file": "evidence/20261012T011118-e9d9d2fd0e91/run.json",
+      "issues": [],
+      "scope": "Run evidence written. Register evidence_file with state_tool checkpoint; no state/approval was silently changed."
+    },
+    {
+      "suite": "inventory-p3-movement-database",
+      "status": "RECORDED",
+      "run_result": "PASS",
+      "evidence_file": "evidence/20261012T011120-a437acc8f799/run.json",
+      "issues": [],
+      "scope": "Run evidence written. Register evidence_file with state_tool checkpoint; no state/approval was silently changed."
+    },
+    {
+      "suite": "inventory-p3-api",
+      "status": "RECORDED",
+      "run_result": "PASS",
+      "evidence_file": "evidence/20261012T011127-1c37f44ac082/run.json",
+      "issues": [],
+      "scope": "Run evidence written. Register evidence_file with state_tool checkpoint; no state/approval was silently changed."
+    }
+  ],
+  "supporting_checks": [
+    {
+      "label": "recovery-environment-confirmation",
+      "directory": "/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/hd140-coordinator-5cc09bbba981/recovery-environment-confirmation",
+      "result": "PASS",
+      "counts": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      }
+    },
+    {
+      "label": "full-native",
+      "directory": "/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/hd140-coordinator-5cc09bbba981/full-native",
+      "result": "PASS",
+      "counts": {
+        "tests": 3063,
+        "pass": 2931,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 132,
+        "todo": 0
+      }
+    },
+    {
+      "label": "functional-007",
+      "directory": "/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/hd140-coordinator-5cc09bbba981/functional-007",
+      "result": "PASS",
+      "counts": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      }
+    },
+    {
+      "label": "functional-008",
+      "directory": "/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/hd140-coordinator-5cc09bbba981/functional-008",
+      "result": "PASS",
+      "counts": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      }
+    },
+    {
+      "label": "functional-009",
+      "directory": "/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/hd140-coordinator-5cc09bbba981/functional-009",
+      "result": "PASS",
+      "counts": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      }
+    },
+    {
+      "label": "functional-012",
+      "directory": "/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/hd140-coordinator-5cc09bbba981/functional-012",
+      "result": "PASS",
+      "counts": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      }
+    },
+    {
+      "label": "functional-014",
+      "directory": "/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/hd140-coordinator-5cc09bbba981/functional-014",
+      "result": "PASS",
+      "counts": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      }
+    },
+    {
+      "label": "functional-020",
+      "directory": "/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/hd140-coordinator-5cc09bbba981/functional-020",
+      "result": "PASS",
+      "counts": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      }
+    },
+    {
+      "label": "functional-019",
+      "directory": "/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/hd140-coordinator-5cc09bbba981/functional-019",
+      "result": "PASS",
+      "counts": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      }
+    },
+    {
+      "label": "functional-021",
+      "directory": "/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/hd140-coordinator-5cc09bbba981/functional-021",
+      "result": "PASS",
+      "counts": {
+        "total": 3,
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      }
+    }
+  ],
+  "mysql_instances": [
+    {
+      "root": "/private/tmp/erp-inventory-p3-hd140-rd02hhpl/tcp",
+      "socket": "/private/tmp/erp-inventory-p3-hd140-rd02hhpl/tcp/mysql.sock",
+      "tcp_port": 51758,
+      "schemas": [
+        "erp_inventory_p3_integration_62f8aad44166",
+        "erp_inventory_task018_d48e8cef916a",
+        "erp_inventory_task007_b8ba702438c2",
+        "erp_inventory_task008_7b767adc6f36",
+        "erp_inventory_task009_9b7b7ffa415a",
+        "erp_inventory_task012_9e901ed50e23",
+        "erp_inventory_task014_06df4374f610",
+        "erp_inventory_task020_0c4cd38e90b0"
+      ],
+      "cleanup": "NOT_STARTED",
+      "pid": 9254
+    },
+    {
+      "root": "/private/tmp/erp-inventory-p3-mysql-2670.837f28b65c57",
+      "socket": "/private/tmp/erp-inventory-p3-mysql-2670.837f28b65c57/mysql.sock",
+      "tcp_port": 0,
+      "schemas": [
+        "erp_inventory_p3_2d86b3799a89",
+        "erp_inventory_p3_8ff51fc1c24d",
+        "erp_inventory_p3_32cbcb81d9fc",
+        "erp_inventory_p3_1fbc191bd424"
+      ],
+      "cleanup": "NOT_STARTED",
+      "pid": 9387
+    },
+    {
+      "root": "/private/tmp/erp-inventory-task023-mysql-2670.ab726bd76751",
+      "socket": "/private/tmp/erp-inventory-task023-mysql-2670.ab726bd76751/mysql.sock",
+      "tcp_port": 0,
+      "schemas": [
+        "erp_inventory_task019_799b35fcc945"
+      ],
+      "cleanup": "NOT_STARTED",
+      "pid": 13550
+    },
+    {
+      "root": "/private/tmp/erp-inventory-task021-mysql-2670.08a3ecdfa99b",
+      "socket": "/private/tmp/erp-inventory-task021-mysql-2670.08a3ecdfa99b/mysql.sock",
+      "tcp_port": 0,
+      "schemas": [
+        "erp_inventory_task021_6e3de4c4386a"
+      ],
+      "cleanup": "NOT_STARTED",
+      "pid": 13578
+    },
+    {
+      "root": "/private/tmp/erp-inventory-task026-mysql-2670.245fb560ac63",
+      "socket": "/private/tmp/erp-inventory-task026-mysql-2670.245fb560ac63/mysql.sock",
+      "tcp_port": 0,
+      "schemas": [
+        "erp_inventory_task026_7211d0d51611"
+      ],
+      "cleanup": "NOT_STARTED",
+      "pid": 13596
+    },
+    {
+      "root": "/private/tmp/erp-inventory-task025-mysql-2670.3e33e5739110",
+      "socket": "/private/tmp/erp-inventory-task025-mysql-2670.3e33e5739110/mysql.sock",
+      "tcp_port": 0,
+      "schemas": [
+        "erp_inventory_task025_8b556421a9a0",
+        "erp_inventory_task025_47b2bc5065f1"
+      ],
+      "cleanup": "NOT_STARTED",
+      "pid": 13628
+    }
+  ],
+  "cleanup": "NOT_STARTED",
+  "passed": true,
+  "lease_status": "ACTIVE_AWAITING_PUBLICATION_AND_FINAL_REVIEW",
+  "merge_ready_observation": {
+    "schema_version": "2.0",
+    "module_id": "inventory-management",
+    "gate": "MERGE_READY",
+    "status": "BLOCKED",
+    "issues": [
+      {
+        "code": "CI_MISSING_OR_STALE",
+        "path": "gate/ci",
+        "message": "Dependency audit: exact current candidate required"
+      },
+      {
+        "code": "CI_MISSING_OR_STALE",
+        "path": "gate/ci",
+        "message": "Lint: exact current candidate required"
+      },
+      {
+        "code": "CI_MISSING_OR_STALE",
+        "path": "gate/ci",
+        "message": "Browser tests (Playwright): exact current candidate required"
+      },
+      {
+        "code": "CI_MISSING_OR_STALE",
+        "path": "gate/ci",
+        "message": "Test (server + client, MySQL integration): exact current candidate required"
+      },
+      {
+        "code": "CI_MISSING_OR_STALE",
+        "path": "gate/ci",
+        "message": "Build frontend: exact current candidate required"
+      },
+      {
+        "code": "PR_REVIEW_MISSING",
+        "path": "gate/pr",
+        "message": "required review observation missing for candidate"
+      }
+    ],
+    "scope": "Local structural/evidence consistency only. External approval identity, CI authenticity, runtime leases and repository permissions MUST be verified separately. This command never authorizes, merges or deploys."
+  }
+}

@@ -9,16 +9,20 @@ export const page = {
 </script>
 
 <script setup>
-import { onMounted, onUnmounted, ref, watch } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import appConfig from "@config/app.js";
 import PageHeader from "@/framework/layout/PageHeader.vue";
 import DataTable from "@/framework/ui/DataTable.vue";
 import EllipsisCell from "@/framework/ui/EllipsisCell.vue";
 import inventoryService from "@/services/inventory.js";
+import { can } from "@/framework/authorization/can.js";
+import { useSessionStore } from "@/stores/session.js";
 
 const route = useRoute();
 const router = useRouter();
+const session = useSessionStore();
+const canAdjust = computed(() => can(session, { permissions: ["inventory.view", "inventory.adjust"] }));
 const initial = route.query;
 const positive = (value) => Number.isSafeInteger(Number(value)) && Number(value) > 0 ? Number(value) : null;
 const text = (value) => typeof value === "string" ? value : "";
@@ -45,6 +49,14 @@ const currentPage = ref(positive(initial.page) ?? 1);
 const initialPagination = { page: currentPage.value, rowsPerPage: appConfig.defaultPageSize, rowsNumber: 0, sortBy: null, descending: true };
 let listController;
 let detailController;
+let detailGeneration = 0;
+const reversibleTypes = ["RECEIPT", "ISSUE", "BIN_MOVE", "STATUS_TRANSFER", "ADJUSTMENT"];
+const canReverse = computed(() => canAdjust.value && !detailLoading.value && !detailError.value &&
+  detail.value?.movement.movementId === selectedId.value &&
+  !detail.value.reversal.reversalOfMovementId && !detail.value.reversal.reversedByMovementId &&
+  detail.value.groupLegs.length > 0 && detail.value.groupLegs.length <= 200 &&
+  detail.value.groupLegs.every(leg => leg.locationKind === "BIN" && reversibleTypes.includes(leg.movementType) &&
+    leg.groupId === detail.value.movement.groupId && positive(leg.bin?.binId)));
 
 const columns = [
   { name: "postedAt", label: "時間", field: "postedAt", align: "left" },
@@ -59,10 +71,13 @@ const columns = [
 ];
 const detailColumns = [
   { name: "movementId", label: "Movement", field: "movementId", align: "left" },
+  { name: "sku", label: "SKU", field: (row) => row.sku.code, align: "left" },
+  { name: "lot", label: "批次", field: (row) => row.lot?.number ?? "無批次", align: "left" },
   { name: "direction", label: "方向", field: "direction", align: "left" },
   { name: "quantity", label: "數量", field: "quantity", align: "right" },
   { name: "location", label: "位置", field: (row) => row.bin ? `${row.warehouse.code}/${row.bin.code}` : `${row.warehouse.code}/在途`, align: "left" },
-  { name: "status", label: "狀態", field: "stockStatus", align: "left" }
+  { name: "status", label: "狀態", field: "stockStatus", align: "left" },
+  { name: "actions", label: "查看", field: "movementId", align: "right" }
 ];
 function filters() {
   return {
@@ -93,33 +108,39 @@ function fetchMovements(request) {
   return inventoryService.listMovements({ ...request, sortBy: undefined, descending: undefined, ...filters(), signal: listController.signal });
 }
 async function openDetail(rowOrId) {
-  const id = typeof rowOrId === "object" ? rowOrId.movementId : rowOrId;
+  const id = positive(typeof rowOrId === "object" ? rowOrId.movementId : rowOrId);
+  if (!id) return;
+  const generation = ++detailGeneration;
   selectedId.value = id;
+  detail.value = null;
   detailController?.abort();
   detailController = new AbortController();
   detailLoading.value = true;
   detailError.value = "";
   syncUrl();
   try {
-    detail.value = await inventoryService.getMovement(id, { signal: detailController.signal });
+    const found = await inventoryService.getMovement(id, { signal: detailController.signal });
+    if (generation !== detailGeneration) return;
+    if (found?.movement.movementId !== id) throw new Error("異動詳情與選取項目不一致，請重新載入。");
+    detail.value = found;
   } catch (error) {
-    if (error.name !== "AbortError") detailError.value = error.message || "無法載入異動詳情";
+    if (generation === detailGeneration && error.name !== "AbortError") detailError.value = error.message || "無法載入異動詳情";
   } finally {
-    detailLoading.value = false;
+    if (generation === detailGeneration) detailLoading.value = false;
   }
 }
-function closeDetail() { detailController?.abort(); selectedId.value = null; detail.value = null; detailError.value = ""; syncUrl(); }
+function closeDetail() { detailGeneration++; detailController?.abort(); selectedId.value = null; detail.value = null; detailLoading.value = false; detailError.value = ""; syncUrl(); }
 function sourceText(source) { return `${source.module} / ${source.documentType} / ${source.documentId}${source.lineId ? ` / 行 ${source.lineId}` : ""} / 事件 ${source.eventId}`; }
 function formatTime(value) { return new Date(value).toLocaleString("zh-HK"); }
 watch([postedFrom, postedTo, movementType, sourceModule, sourceDocumentType, sourceDocumentId, skuId, warehouseId, binId, lotId, actorId], () => table.value?.reload({ resetPage: true }));
 onMounted(() => { if (selectedId.value) openDetail(selectedId.value); });
-onUnmounted(() => { listController?.abort(); detailController?.abort(); });
+onUnmounted(() => { detailGeneration++; listController?.abort(); detailController?.abort(); });
 </script>
 
 <template>
   <div>
     <PageHeader subtitle="依固定時間順序追溯不可變 Movement、來源、同組 legs 與沖銷關聯。">
-      <template #actions><q-btn flat icon="inventory" label="庫存總覽" to="/inventory/stocks" /><q-btn flat icon="event" label="批次與效期" to="/inventory/lots" /></template>
+      <template #actions><q-btn v-if="canAdjust" flat icon="edit_note" label="庫存調整" aria-label="庫存調整" :to="{ path: '/inventory/adjustments', query: { action: 'IN' } }" /><q-btn flat icon="inventory" label="庫存總覽" to="/inventory/stocks" /><q-btn flat icon="event" label="批次與效期" to="/inventory/lots" /></template>
     </PageHeader>
     <div class="q-px-md q-pb-md row q-col-gutter-sm items-start">
       <q-input class="col-6 col-sm-3 col-md-2" v-model="postedFrom" dense outlined type="date" label="異動日期從" />
@@ -149,6 +170,7 @@ onUnmounted(() => { listController?.abort(); detailController?.abort(); });
       <q-card flat bordered>
         <q-card-section>
           <div class="row items-center q-gutter-sm"><h2 id="movement-detail-heading" class="text-h6 q-ma-none">Movement {{ selectedId }} 詳情</h2><q-space /><q-btn flat round dense icon="close" aria-label="關閉 Movement 詳情" @click="closeDetail" /></div>
+          <div v-if="detailLoading" role="status" class="q-mt-md">正在載入異動詳情…</div>
           <q-banner v-if="detailError" role="alert" class="bg-negative text-white q-mt-md">{{ detailError }}<template #action><q-btn flat label="重試" @click="openDetail(selectedId)" /></template></q-banner>
           <template v-if="detail">
             <dl class="movement-meta q-my-md">
@@ -162,7 +184,12 @@ onUnmounted(() => { listController?.abort(); detailController?.abort(); });
               <span v-if="!detail.reversal.reversalOfMovementId && !detail.reversal.reversedByMovementId" class="text-grey-8"><q-icon name="link_off" /> 沒有沖銷關聯</span>
             </div>
             <h3 class="text-subtitle1">同組 Movement legs</h3>
-            <DataTable :rows="detail.groupLegs" :columns="detailColumns" row-key="movementId" />
+            <q-btn v-if="canReverse" outline color="negative" label="整組沖銷" :aria-label="`整組沖銷 Movement ${selectedId}`" class="q-mb-md"
+              :to="{ path: '/inventory/adjustments', query: { action: 'REVERSAL', movementId: selectedId } }" />
+            <p v-else-if="canAdjust" role="status">此異動組不提供沖銷入口；請查看類型、位置及沖銷關聯。</p>
+            <DataTable :rows="detail.groupLegs" :columns="detailColumns" row-key="movementId" sticky-actions>
+              <template #body-cell-actions="{ row }"><q-td><q-btn flat round icon="open_in_new" :aria-label="`查看同組 Movement ${row.movementId}`" @click="openDetail(row)" /></q-td></template>
+            </DataTable>
           </template>
         </q-card-section>
       </q-card>

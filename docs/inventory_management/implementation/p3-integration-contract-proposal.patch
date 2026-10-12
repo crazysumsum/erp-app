@@ -1,0 +1,722 @@
+--- a/docs/inventory_management/00_module_manifest.json
++++ b/docs/inventory_management/00_module_manifest.json
+@@ -90,9 +90,9 @@
+     "provided": [
+       {
+         "id": "inventory-domain-contract",
+-        "version": "planning-v15; TASK033 Base-UOM high-risk UI/HD130 same-intent recovery; all existing API/writer semantics unchanged",
++        "version": "planning-v16; P3 fresh-main reserve-only fenced Sales Backorder owner contract; manual and P3 semantics preserved",
+         "source": "docs/inventory_management/03_design_spec.md",
+-        "sha256": "02e3274725c599635e9aa77baeb60b590ac61e2df641010ae04e37f7d5eaaf27",
++        "sha256": "2fb61cce8ee4ff9f32cd9c6d0e2a9fc8f87c08d34823be7fb622908610b1ac53",
+         "consumers": [
+           "purchasing-receiving",
+           "sales-order",
+@@ -105,9 +105,9 @@
+       {
+         "module_id": "item-management",
+         "id": "item-lookup-service",
+-        "version": "transaction-v1; TASK009-010 source pins reconciled, Sales additions CI pending",
++        "version": "transaction-v1; fresh-main additive searchForSale consumed-source pin; existing Inventory methods unchanged",
+         "source": "server/src/modules/item/ItemLookupService.js",
+-        "sha256": "558139b78cd6dabcd6edd6a7bca93e12b6724c9519eb1e87900b43ce21c76662",
++        "sha256": "30d6807978b27252fde194cc821c8fef5de000f27fa7eed404ed204abab2764a",
+         "regression_suites": [
+           "inventory-technical"
+         ]
+@@ -132,7 +132,8 @@
+       "read_only": [
+         "Item/SKU eligibility and tracking policy",
+         "User/role authorization state",
+-        "Purchasing/Receiving, Sales/Fulfillment and Returns source documents"
++        "Purchasing/Receiving, Sales/Fulfillment and Returns source documents",
++        "Trusted Sales Backorder registration and fixed-job lease state"
+       ],
+       "forbidden_direct_writes": [
+         "Item/SKU master data",
+--- a/docs/inventory_management/00_project_profile.json
++++ b/docs/inventory_management/00_project_profile.json
+@@ -1014,6 +1014,198 @@
+       "side_effects": ["FILES"],
+       "env_keys": [],
+       "redaction_env_keys": []
++    },
++    {
++      "id": "inventory-p3-sales-compatibility",
++      "kind": "INTEGRATION",
++      "argv": [
++        "node",
++        "--test",
++        "--test-concurrency=1",
++        "--import",
++        "./server/test-support/testEnv.js",
++        "--test-reporter=junit",
++        "--test-reporter-destination={run_dir}/inventory-p3-sales-compatibility.xml",
++        "server/test/inventorySalesWorkerContracts.test.js",
++        "server/test/integration/salesConfirmation.integration.test.js",
++        "server/test/integration/salesBackorder.integration.test.js"
++      ],
++      "cwd": ".",
++      "timeout_seconds": 1800,
++      "result_adapter": "JUNIT",
++      "result_path": "inventory-p3-sales-compatibility.xml",
++      "min_tests": 31,
++      "max_skipped": 0,
++      "stages": [
++        "DEVELOPER"
++      ],
++      "required_case_ids": [],
++      "tool_probes": [
++        {
++          "argv": [
++            "node",
++            "--version"
++          ],
++          "version_pattern": "^v26\\."
++        },
++        {
++          "argv": [
++            "mysql",
++            "--version"
++          ],
++          "version_pattern": "(?i)(mysql.*26\\.7\\.0|26\\.7\\.0.*mysql)"
++        }
++      ],
++      "side_effects": [
++        "FILES",
++        "ISOLATED_DATA"
++      ],
++      "env_keys": [
++        "DB_HOST",
++        "DB_PORT",
++        "DB_USER",
++        "DB_PASSWORD",
++        "DB_NAME",
++        "DB_INTEGRATION_TESTS",
++        "SUPPLIER_BANK_ACTIVE_KEY_ID",
++        "SUPPLIER_BANK_ENCRYPTION_KEYS",
++        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
++        "SUPPLIER_BANK_LOOKUP_KEYS",
++        "CUSTOMER_BANK_ACTIVE_KEY_ID",
++        "CUSTOMER_BANK_ENCRYPTION_KEYS",
++        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
++        "CUSTOMER_BANK_LOOKUP_KEYS"
++      ],
++      "redaction_env_keys": [
++        "DB_PASSWORD",
++        "SUPPLIER_BANK_ENCRYPTION_KEYS",
++        "SUPPLIER_BANK_LOOKUP_KEYS",
++        "CUSTOMER_BANK_ENCRYPTION_KEYS",
++        "CUSTOMER_BANK_LOOKUP_KEYS"
++      ]
++    },
++    {
++      "id": "inventory-p3-customer-capacity",
++      "kind": "INTEGRATION",
++      "argv": [
++        "node",
++        "--test",
++        "--test-concurrency=1",
++        "--import",
++        "./server/test-support/testEnv.js",
++        "--test-reporter=junit",
++        "--test-reporter-destination={run_dir}/inventory-p3-customer-capacity.xml",
++        "server/test/performance/customerImport.performance.test.js"
++      ],
++      "cwd": ".",
++      "timeout_seconds": 1200,
++      "result_adapter": "JUNIT",
++      "result_path": "inventory-p3-customer-capacity.xml",
++      "min_tests": 1,
++      "max_skipped": 0,
++      "stages": [
++        "DEVELOPER"
++      ],
++      "required_case_ids": [],
++      "tool_probes": [
++        {
++          "argv": [
++            "node",
++            "--version"
++          ],
++          "version_pattern": "^v26\\."
++        },
++        {
++          "argv": [
++            "mysql",
++            "--version"
++          ],
++          "version_pattern": "(?i)(mysql.*26\\.7\\.0|26\\.7\\.0.*mysql)"
++        }
++      ],
++      "side_effects": [
++        "FILES",
++        "ISOLATED_DATA"
++      ],
++      "env_keys": [
++        "DB_HOST",
++        "DB_PORT",
++        "DB_USER",
++        "DB_PASSWORD",
++        "DB_NAME",
++        "DB_INTEGRATION_TESTS",
++        "CUSTOMER_IMPORT_PERFORMANCE_TESTS",
++        "SUPPLIER_BANK_ACTIVE_KEY_ID",
++        "SUPPLIER_BANK_ENCRYPTION_KEYS",
++        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
++        "SUPPLIER_BANK_LOOKUP_KEYS",
++        "CUSTOMER_BANK_ACTIVE_KEY_ID",
++        "CUSTOMER_BANK_ENCRYPTION_KEYS",
++        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
++        "CUSTOMER_BANK_LOOKUP_KEYS"
++      ],
++      "redaction_env_keys": [
++        "DB_PASSWORD",
++        "SUPPLIER_BANK_ENCRYPTION_KEYS",
++        "SUPPLIER_BANK_LOOKUP_KEYS",
++        "CUSTOMER_BANK_ENCRYPTION_KEYS",
++        "CUSTOMER_BANK_LOOKUP_KEYS"
++      ]
++    },
++    {
++      "id": "inventory-p3-core-capacity",
++      "kind": "INTEGRATION",
++      "argv": [
++        "node",
++        "--test",
++        "--test-concurrency=1",
++        "--import",
++        "./server/test-support/testEnv.js",
++        "--test-reporter=junit",
++        "--test-reporter-destination={run_dir}/inventory-p3-core-capacity.xml",
++        "server/test/performance/inventoryCore.performance.test.js"
++      ],
++      "cwd": ".",
++      "timeout_seconds": 3000,
++      "result_adapter": "JUNIT",
++      "result_path": "inventory-p3-core-capacity.xml",
++      "min_tests": 1,
++      "max_skipped": 0,
++      "stages": [
++        "DEVELOPER"
++      ],
++      "required_case_ids": [],
++      "tool_probes": [
++        {
++          "argv": [
++            "node",
++            "--version"
++          ],
++          "version_pattern": "^v26\\."
++        },
++        {
++          "argv": [
++            "mysql",
++            "--version"
++          ],
++          "version_pattern": "(?i)(mysql.*26\\.7\\.0|26\\.7\\.0.*mysql)"
++        }
++      ],
++      "side_effects": [
++        "FILES",
++        "ISOLATED_DATA"
++      ],
++      "env_keys": [
++        "DB_HOST",
++        "DB_PORT",
++        "DB_USER",
++        "DB_PASSWORD",
++        "DB_NAME",
++        "INVENTORY_CORE_TESTS"
++      ],
++      "redaction_env_keys": [
++        "DB_PASSWORD"
++      ]
+     }
+   ],
+   "ci": {
+--- a/docs/inventory_management/03_design_spec.md
++++ b/docs/inventory_management/03_design_spec.md
+@@ -1229,6 +1229,10 @@
+ 
+ 1/100 demand的Item snapshot與ATP聚合查詢數為常數；child claims/completions及Reservation/audit writes按line數增加，release及lot/result traversal每頁100僅保證returned memory pages；完整control scope仍按unique SKUs，既有indexes的scan/lock footprint需CI EXPLAIN及實際並發/300 mappings計時，不聲稱LIMIT100等於bounded DB work。所有新MySQL回歸只在CI執行，本地SQL未授權；Fulfillment全域互鎖/worker delegation/後續formal acceptance仍pending。
+ 
++### 5.7.2 P2 Backorder worker sibling — Inventory owner contract
++
++Only `reserveAvailableForSalesBackorderInTransaction(transaction,command)` is added. Trusted server registration binds `sales.backorderAllocate` / NULL user to reserve-only system authority, a fresh authorization callback and current fixed-job lease owner; arbitrary caller serviceName/permissions are not authority. Scheduler stopped/disabled, aborted signal, missing registration or expired/wrong lease fails before any effect and on replay. The lease row is locked before Sales owners and uses DB-clock expiry; the same row lock fences takeover until caller commit. Manual entry and hashes remain unchanged; P3 intake and worker release are not enabled. Add only `SALES_BACKORDER_BATCH_RESERVE` / `SALES_BACKORDER_LINE_RESERVE` to inventoryConstants.INVENTORY_COMMAND_TYPES; preserve every existing manual member and hash. Worker operation types/purpose bind service, actual SALES/SALES_ORDER owner, persistent event/line and original root/child membership. No Inventory schema or role grants are added. Reuse the established sorted claims, ATP locking, exact partial/zero results and replay validation. One FIFO entry per transaction respects the single-SO batch boundary; never claim later Inventory operations after stock locks. Inventory owns this provided reserve-only contract and its operation, Reservation and Audit writes; Sales owns its order, queue and scheduler registration. Inventory does not write Sales records or the lease row. Specification adoption is not evidence of execution, scheduler activation, formal acceptance or release authorization.
++
+ ---
+ 
+ ## 6. 權限、安全與威脅模型
+--- a/docs/inventory_management/05_development_tasks.md
++++ b/docs/inventory_management/05_development_tasks.md
+@@ -2590,3 +2590,29 @@
+ 
+ ### Definition of Done
+ The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
++
++## P3 fresh-main integration contract — owner adoption candidate
++
++This integration preserves the single `inventory-p3` merge group and TASK026–034 scope. Main target is `9e9b0ff9ad87846a32036fc86138a834bdb5c82a`; current P3 source is `0cbbea162a3e377df50214fd63b2484b0585d68a2be8dc52ee1615d8b013178c`. These are candidate inputs, not a declaration that integration or approval occurred. A changed target requires a new bounded diff and affected-scope reapproval; a Supplier-only bookkeeping advance may be mechanically reconciled without expanding product authority.
++
++Adopt only Inventory design §5.7.2's reserve-only Backorder sibling, with two worker command types, server-injected registration callback, NULL user, fixed job identity, current DB-clock fenced lease and original root/child replay membership. Manual `sales.mgmt` reserve/release contracts and their operation hashes remain unchanged. No new HTTP Inventory endpoint, human role grant, Inventory DDL, worker release or scheduler activation is authorized by this specification.
++
++Preserve P3 strict input coercion, idempotency preparation and credential-free guarded replay together with main's authorization preflight and optional 202 `Retry-After`. The replay header belongs inside `sendReplay`, reached only after the preparation callback authorizes sending; pass the route options through both callers. A denied callback sends no replay body, flags, header or success log. Ordinary routes remain unchanged apart from main's already-declared optional header behavior. Use main's exact lockfile (`shell-quote` 1.12.0); no forced upgrade, new dependency or regenerated lockfile.
++
++### Developer execution and evidence
++
++Main also adds only `ItemLookupService.searchForSale` relative to this worktree. Import its exact main bytes and rebind the consumed-source hash; existing Inventory transaction lookup methods remain unchanged. Full root Item/Sales lookup tests, native Item compatibility and the new Sales suite must verify this consumed baseline. No authored Item implementation or caller behavior change is included.
++
++All existing phase suites, commands, discovery floors, zero-skip rules, global 92/83/90 and all 34 per-file floors remain unchanged. Add three DEVELOPER-only JUnit suites to PHASE-004: `inventory-p3-sales-compatibility`, `inventory-p3-customer-capacity` and `inventory-p3-core-capacity`. The profile contains their exact argv, tools, env allowlist, result paths and timeouts. These strengthen, never replace, the original 20 suites. The existing task-local suites, full functional compatibility, full native server/client coverage, guarded-skip reconciliation and real16 plus ordinary18 Playwright remain required. Consumer TC names are not Inventory formal acceptance IDs.
++
++Sales compatibility executes main's exact worker unit contracts and complete native Confirmation/Backorder integration files against an owned fully migrated synthetic schema. Check fixed registration, lease expiry/takeover/abort/stop, partial/zero ATP, replay membership and caller rollback; preserve manual reserve/release and current revocation. Do not rewrite Sales source or assertions. Core capacity uses a separate empty `erp_inventory_task018_*` schema with unchanged 100k SKU/500k Bucket/2M Movement, concurrency20/rounds5, indexed EXPLAIN, p95<2 seconds and two-connection rollback. Customer capacity uses a separate fully migrated synthetic schema, unchanged10k import, total<10 minutes, API p95<2 seconds, zero errors/lock waits and heap growth<256MiB. These two native wrappers discharge the four previously unexecuted capacity obligations only after their complete assertions actually pass; no reduced fixture or waiver.
++
++The capacity/consumer fixtures use loopback TCP configuration. A coordinator must positively verify a new owned MySQL26.7.0 instance, exact schemas, loopback-only binding and port ownership before enabling the flags; refuse `erp_dev`, shared/prod schemas, default credentials fallback or external hosts. P3's existing socket-only fixtures retain their original isolation checks. Serial execution avoids competing writers; synthetic Customer/Supplier rings remain process-only and redacted. Existing migration files alone may be executed in the owned schemas; observe the exact current ledger and reconcile migration-count assertions with that list, not historical70/66-row values. Any new DDL, fixture/assertion change or product defect outside the reviewed patch requires scoped remediation approval.
++
++New runs use the generic runner's actual private `evidence/<run-id>` paths, native reports/argv and one actually owned coordinator runtime. Preserve all348 historical references and report bytes under their original source/PLAN/runtime IDs; do not move, relabel or import them as current-main passes. No generic Harness change or evidence adapter bypass is proposed. Standard new reports avoid the old nested-path convention. The generic MERGE_READY gate is evaluated while the recorded runtime resources are actually reserved and owned; retired resources cannot be described as live. Missing report, tool, scope permission, runtime, mandatory assertion, capacity evidence or current-baseline check blocks publication/merge.
++
++### Publication and final review
++
++Only after actual human adoption and scoped implementation authority: preserve the dirty P3 work in a local savepoint, integrate freshly checked main in the dedicated worktree, apply only the reviewed resolutions/rebinding, run the new-baseline developer cycle, then commit/push and open the single P3 PR under publication authority. A preparatory savepoint is not a verified publication candidate. Classify exportable evidence and exclude secrets/raw credential captures before staging.
++
++The exact final candidate needs all five mandatory CI checks and independent Sam source review, plus generic MERGE_READY and an unchanged/reconciled main target. Candidate or target changes invalidate dependent evidence/review; do not infer final-head approval from adoption of this proposal. Final merge requires separate exact-head Sam approval. Clean the owned runtime, merged branch and worktree only after observable successful merge and dependency checks. No P4 implementation, formal Technical/UAT/business acceptance or deployment is included.
+--- a/docs/inventory_management/06_technical_test_cases.md
++++ b/docs/inventory_management/06_technical_test_cases.md
+@@ -297,3 +297,19 @@
+ 
+ ### Cleanup
+ Remove only owned synthetic records and runtime resources from the isolated test instance; preserve redacted reports and do not touch shared or production data.
++
++## P3 integrated-baseline developer compatibility cases
++
++Supplement the existing TC-001/004/007 design/security coverage without renumbering cases, changing formal stages or declaring formal PASS. Execute these only as DEVELOPER on the adopted new source/PLAN; old task approvals remain historical local DoD.
++
++| Coverage | Required observable behavior |
++| --- | --- |
++| Fixed worker authority | Missing registration, human/arbitrary service identity, extra permission/role, expired/wrong lease, abort/stop/disable reject before Inventory claim/effect, including completed replay. |
++| Worker replay and transaction | Distinct worker root/child command hashes, exact original membership, partial/zero results and NULL-user fixed-label audit; lock the lease before Sales/Inventory owners; caller rollback removes all business effects. |
++| Manual compatibility | Existing manual Sales reserve/release types, hashes, user authority, source guards, revocation and result membership remain unchanged; no worker release or new Inventory HTTP role grant. |
++| Shared authorization order | Existing authentication/policy checks, optional handler preflight, upload/schema handling and P3 preparation remain in that order; preflight denial/abort never reads upload or claims idempotency work. |
++| Combined replay | Authorized prepared202 replay emits only declared Retry-After after its guard, once; rejected guard emits no replay body/flags/headers/log;200 or missing retry setting has no new header. Preserve ordinary202 test, secret-free stored response and all P3 credential-free/preparation assertions. Add these cross-behavior regressions in the existing idempotency test file before considering the conflict resolved. |
++| Integration regressions | Every original P3 suite/case, full native/functional consumer regression, real browser16/ordinary18, current ledger migration checks, global and34 file floors pass without forbidden skip. |
++| Capacity | Complete existing Customer10k and Core100k/500k/2M wrapper assertions with exact budgets, concurrency/EXPLAIN/rollback and native measured output; no shortened fixture. |
++
++Native worker/Confirmation/Backorder tests are supporting consumer evidence, not definitions of Inventory TC-022/031 or business acceptance. All current-source guarded skips require matching independently executed non-skip evidence. Schema, runtime or parsing problems stay BLOCKED; they are not converted to PASS by this appendix.
+--- a/docs/inventory_management/08_traceability.json
++++ b/docs/inventory_management/08_traceability.json
+@@ -1837,7 +1837,10 @@
+         "inventory-p3-client-coverage",
+         "inventory-p3-dependency-audit",
+         "inventory-p3-browser",
+-        "inventory-p3-browser-regression"
++        "inventory-p3-browser-regression",
++        "inventory-p3-sales-compatibility",
++        "inventory-p3-customer-capacity",
++        "inventory-p3-core-capacity"
+       ]
+     },
+     {
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -4816,9 +4816,9 @@
+       }
+     },
+     "node_modules/shell-quote": {
+-      "version": "1.11.0",
+-      "resolved": "https://registry.npmjs.org/shell-quote/-/shell-quote-1.11.0.tgz",
+-      "integrity": "sha512-JdxDPD0DBTyu08pq0kPC0xSNet/qsU07qT6IsX1AS8oO2ICNRY4ldNa8OAI6PuwAH8tG3lxEhbqmyp4Dw4036g==",
++      "version": "1.12.0",
++      "resolved": "https://registry.npmjs.org/shell-quote/-/shell-quote-1.12.0.tgz",
++      "integrity": "sha512-PcByqNyT/38F2kDNi006HAMRJaULuBzq/FOsw3qdZvX/GA9W/jamDaRskgHjubHiftXK5sIFxLNkvrXUwcof6Q==",
+       "dev": true,
+       "license": "MIT",
+       "engines": {
+--- a/server/src/framework/middleware/apiDispatcher.js
++++ b/server/src/framework/middleware/apiDispatcher.js
+@@ -2,7 +2,7 @@
+ import apiConfig from "../../../config/api.js";
+ import applicationConfig from "../../../config/application.js";
+ import { BaseRequestHandler } from "../api/BaseRequestHandler.js";
+-import { createAuthorizationPolicyRegistry } from "../authorization/authorizationPolicyRegistry.js";
++import { AuthorizationError, createAuthorizationPolicyRegistry } from "../authorization/authorizationPolicyRegistry.js";
+ import { sendError } from "../http/apiResponse.js";
+ import {
+   markRequestProcessingCompleted,
+@@ -159,6 +159,10 @@
+       if (typeof handlers[route.handler].prepareIdempotency !== "function") {
+         throw new TypeError(`prepareIdempotency hook is required for ${routeKey}`);
+       }
++    }
++
++    if (handlers[route.handler].authorizeRequest !== undefined && typeof handlers[route.handler].authorizeRequest !== "function") {
++      throw new TypeError(`Invalid authorization preflight for ${routeKey}`);
+     }
+ 
+     const timeoutMs = Number(route.timeoutMs ?? defaultRequestTimeoutMs);
+@@ -383,6 +387,10 @@
+             registeredApi
+           );
+           context.update({ authorizationPolicies: policies });
++          if (handler.authorizeRequest) {
++            if (await handler.authorizeRequest(req) !== true) throw new AuthorizationError();
++            req.requestTimeout?.signal.throwIfAborted();
++          }
+ 
+           // 上傳解析刻意排在認證與授權之後：先驗證身分，未通過的請求連
+           // multipart body 都不會被讀取，避免匿名流量佔用解析與磁碟資源。
+--- a/server/src/modules/inventory/InventoryReservationService.js
++++ b/server/src/modules/inventory/InventoryReservationService.js
+@@ -183,7 +183,7 @@
+ }
+ 
+ export class InventoryReservationService {
+-  constructor({ database, logger, time, itemLookup, authorize = assertActorFresh, audit, operations, locks } = {}) {
++  constructor({ database, logger, time, itemLookup, authorize = assertActorFresh, authorizeSalesBackorder, audit, operations, locks } = {}) {
+     if (!database || typeof database.withTransaction !== "function" || !time ||
+         typeof time.nowMs !== "function" || typeof time.fileDate !== "function" ||
+         typeof authorize !== "function") {
+@@ -193,12 +193,13 @@
+     this.time = time;
+     this.itemLookup = itemLookup ?? new ItemLookupService({ database, logger, time });
+     this.authorize = authorize;
++    this.authorizeSalesBackorder = authorizeSalesBackorder;
+     this.audit = audit ?? new InventoryAuditService({ database, logger, time });
+     this.operations = operations ?? new InventoryOperationService();
+     this.locks = locks ?? new InventoryLockService();
+   }
+ 
+-  async #salesBatchContext(transaction, command, action) {
++  async #salesBatchContext(transaction, command, action, worker = false) {
+     const raw = command?.payload;
+     if (!raw || typeof raw !== "object" || Array.isArray(raw)) throw inventoryError("INVENTORY_INPUT_INVALID", { field: "payload" });
+     exactFields(raw, new Set(action === "reserve" ? ["warehouseId", "expectedOrderVersion", "lines"] :
+@@ -225,13 +226,26 @@
+     // Fixed scalars and 100 demand lines bound serialization before the generic JSON copier/hash.
+     if (Buffer.byteLength(JSON.stringify(payload)) > 65_536) throw inventoryError("INVENTORY_INPUT_INVALID", { field: "payload" });
+     const contract = { module: "SALES", documentType: "SALES_ORDER",
+-      authorization: { purpose: `sales.batch.${action}`, requiredCallerPermission: "sales.mgmt" } };
++      authorization: { purpose: worker ? "sales.backorder.reserve" : `sales.batch.${action}`, requiredCallerPermission: worker ? "sales.backorderAllocate" : "sales.mgmt" } };
+     const context = validateInventoryCommandContext(transaction,
+       providerInventoryCommand(transaction, { ...command, payload }, contract), contract.authorization);
+-    if (context.actor.userId === null || context.actor.serviceName !== "" || context.source.lineId !== "" ||
++    if (context.source.lineId !== "" ||
+         !/^[1-9][0-9]*$/u.test(context.source.documentId) || !Number.isSafeInteger(Number(context.source.documentId))) {
+       throw inventoryError("INVENTORY_INPUT_INVALID", { field: "source/actor" });
+     }
++    if (worker) {
++      if (context.actor.userId !== null || context.actor.serviceName !== "sales.backorderAllocate" || context.actor.claimedRoles.length ||
++          context.actor.claimedPermissions.length !== 1 || context.actor.claimedPermissions[0] !== "sales.backorderAllocate") throw inventoryError("INVENTORY_INPUT_INVALID", { field: "actor" });
++      const principal = await this.authorizeSalesBackorder?.();
++      if (!principal || typeof principal.leaseOwner !== "string" || !principal.leaseOwner || principal.leaseOwner.length > 190 || principal.signal?.aborted !== false) throw inventoryError("PERMISSION_STALE");
++      const [[lease]] = await transaction.query("SELECT owner,expires_at FROM fr_job_leases WHERE job_name='sales.backorderAllocate' FOR UPDATE");
++      const [[clock]] = await transaction.query("SELECT UNIX_TIMESTAMP() AS now");
++      const fresh = await this.authorizeSalesBackorder?.();
++      if (!lease || lease.owner !== principal.leaseOwner || !Number.isSafeInteger(Number(lease.expires_at)) || !Number.isSafeInteger(Number(clock.now)) || Number(lease.expires_at) <= Number(clock.now) ||
++          fresh?.leaseOwner !== principal.leaseOwner || fresh.signal?.aborted !== false) throw inventoryError("PERMISSION_STALE");
++      return { ...context,actorLabel: "sales.backorderAllocate",timestamp: this.time.nowMs() };
++    }
++    if (context.actor.userId === null || context.actor.serviceName !== "") throw inventoryError("INVENTORY_INPUT_INVALID", { field: "actor" });
+     const actor = await this.authorize(transaction, { actorId: context.actor.userId,
+       claimedRoles: context.actor.claimedRoles, claimedPermissions: context.actor.claimedPermissions });
+     if (!actor?.permissions?.includes("sales.mgmt")) throw inventoryError("PERMISSION_STALE");
+@@ -264,7 +278,8 @@
+ 
+   async #verifySalesMembers(transaction, context, root, rootHash, type, expectedLines = null) {
+     const summary = root.replay.resultSummary;
+-    if (!summary || root.replay.resultType !== (type === "SALES_LINE_RESERVE" ? "SALES_RESERVATION_BATCH" : "SALES_RELEASE_BATCH") ||
++    const reserve = type === "SALES_LINE_RESERVE" || type === "SALES_BACKORDER_LINE_RESERVE";
++    if (!summary || root.replay.resultType !== (reserve ? "SALES_RESERVATION_BATCH" : "SALES_RELEASE_BATCH") ||
+         root.replay.resultId !== context.source.documentId || summary.operationId !== root.operationId || summary.warehouseId !== context.payload.warehouseId ||
+         summary.expectedOrderVersion !== context.payload.expectedOrderVersion || !Number.isSafeInteger(summary.lineCount) || summary.lineCount < 0) {
+       throw inventoryError("INVENTORY_SOURCE_CONFLICT");
+@@ -279,10 +294,10 @@
+         const s = member.resultSummary;
+         if (member.operationId <= afterId || member.commandType !== type || member.completedAt === null || member.completedAt === undefined ||
+             !s || s.rootOperationId !== root.operationId || s.rootRequestHash !== rootHash) throw inventoryError("INVENTORY_SOURCE_CONFLICT");
+-        const input = type === "SALES_LINE_RESERVE" ? expectedLines?.[count] : {
++        const input = reserve ? expectedLines?.[count] : {
+           reservationId: s.reservationId, sourceLineId: s.sourceLineId, skuId: s.skuId,
+           expectedVersion: s.expectedVersion, releaseQuantity: s.releaseQuantity };
+-        if (!input || member.sourceLineId !== (type === "SALES_LINE_RESERVE" ? String(input.sourceLineId) : `reservation:${input.reservationId}`) ||
++        if (!input || member.sourceLineId !== (reserve ? String(input.sourceLineId) : `reservation:${input.reservationId}`) ||
+             member.requestHash !== inventoryOperationHash({ commandType: type, payload: { rootOperationId: root.operationId, rootRequestHash: rootHash, ...input } })) {
+           throw inventoryError("INVENTORY_SOURCE_CONFLICT");
+         }
+@@ -305,14 +320,23 @@
+ 
+   async reserveAvailableForSalesBatchInTransaction(transaction, command) {
+     const context = await this.#salesBatchContext(transaction, command, "reserve");
+-    const rootInput = this.#salesClaimInput(context, "SALES_BATCH_RESERVE", context.payload);
++    return this.#reserveSalesBatch(transaction, context, "SALES_BATCH_RESERVE", "SALES_LINE_RESERVE");
++  }
++
++  async reserveAvailableForSalesBackorderInTransaction(transaction, command) {
++    const context = await this.#salesBatchContext(transaction, command, "reserve", true);
++    return this.#reserveSalesBatch(transaction, context, "SALES_BACKORDER_BATCH_RESERVE", "SALES_BACKORDER_LINE_RESERVE");
++  }
++
++  async #reserveSalesBatch(transaction, context, rootType, childType) {
++    const rootInput = this.#salesClaimInput(context, rootType, context.payload);
+     const rootHash = inventoryOperationHash(rootInput);
+     const root = await this.operations.claim(transaction, rootInput);
+-    if (root.replay) return this.#verifySalesMembers(transaction, context, root, rootHash, "SALES_LINE_RESERVE", context.payload.lines);
++    if (root.replay) return this.#verifySalesMembers(transaction, context, root, rootHash, childType, context.payload.lines);
+     const digest = createHash("sha256");
+     const members = [];
+     for (const line of context.payload.lines) {
+-      const input = this.#salesClaimInput(context, "SALES_LINE_RESERVE", { rootOperationId: root.operationId, rootRequestHash: rootHash, ...line }, String(line.sourceLineId));
++      const input = this.#salesClaimInput(context, childType, { rootOperationId: root.operationId, rootRequestHash: rootHash, ...line }, String(line.sourceLineId));
+       const child = await this.operations.claim(transaction, input);
+       if (child.replay) throw inventoryError("INVENTORY_SOURCE_CONFLICT");
+       digest.update(`${input.source.lineId}:${inventoryOperationHash(input)}\n`);
+--- a/server/src/modules/inventory/inventoryConstants.js
++++ b/server/src/modules/inventory/inventoryConstants.js
+@@ -27,5 +27,6 @@
+ 
+ export const INVENTORY_COMMAND_TYPES = Object.freeze(
+   [...INVENTORY_AUDIT_ACTIONS.map((action) => action.replaceAll(".", "_").toUpperCase()),
+-    "SALES_BATCH_RESERVE", "SALES_LINE_RESERVE", "SALES_BATCH_RELEASE", "SALES_LINE_RELEASE"]
++    "SALES_BATCH_RESERVE", "SALES_LINE_RESERVE", "SALES_BATCH_RELEASE", "SALES_LINE_RELEASE",
++    "SALES_BACKORDER_BATCH_RESERVE", "SALES_BACKORDER_LINE_RESERVE"]
+ );
+--- a/server/src/modules/item/ItemLookupService.js
++++ b/server/src/modules/item/ItemLookupService.js
+@@ -135,6 +135,35 @@
+       result.set(Number(row.id), this.#toProjection(row, uomRowsBySkuId.get(Number(row.id)) ?? [], options));
+     }
+     return result;
++  }
++
++  async searchForSale({ q = "", barcode, page = 1, pageSize = 20, atMs } = {}) {
++    const nowMs = this.#saleTime(atMs);
++    if (typeof q !== "string" || [...q].length > 190 || /[\p{Cc}]/u.test(q) ||
++        (barcode !== undefined && (typeof barcode !== "string" || [...barcode].length > 190 || /[\p{Cc}]/u.test(barcode))) ||
++        !Number.isSafeInteger(page) || page < 1 || !Number.isSafeInteger(pageSize) || pageSize < 1 || pageSize > 100 ||
++        !Number.isSafeInteger((page - 1) * pageSize)) throw new TypeError("Sales search query is invalid");
++    const params = [nowMs, nowMs];
++    const conditions = ["i.status='active'", "s.status='active'", "s.sellable=1", "s.tracking_policy <> 'serial'",
++      "(s.effective_from IS NULL OR s.effective_from<=?)", "(s.effective_to IS NULL OR s.effective_to>=?)",
++      "EXISTS (SELECT 1 FROM item_sku_uoms su JOIN item_uoms u ON u.id=su.uom_id WHERE su.sku_id=s.id AND u.status='active')"];
++    if (q.trim()) {
++      const prefix = `${q.trim().replace(/[!%_]/gu, match => `!${match}`)}%`;
++      conditions.push("(s.sku_code LIKE ? ESCAPE '!' OR s.sku_name LIKE ? ESCAPE '!' OR i.name LIKE ? ESCAPE '!')"); params.push(prefix, prefix, prefix);
++    }
++    if (barcode !== undefined) {
++      conditions.push("EXISTS (SELECT 1 FROM item_sku_barcodes b WHERE b.sku_id=s.id AND b.normalized_barcode=?)"); params.push(looseNormalizeBarcode(barcode));
++    }
++    const where = `WHERE ${conditions.join(" AND ")}`;
++    const [[count]] = await this.database.query(`SELECT COUNT(*) AS total FROM item_skus s JOIN items i ON i.id=s.item_id ${where}`, params);
++    const [rows] = await this.database.query(`${SALES_SKU_SELECT} ${where} ORDER BY s.sku_code,s.id LIMIT ? OFFSET ?`, [...params, pageSize, (page - 1) * pageSize]);
++    const uoms = await this.#loadUomRows(rows.map(row => Number(row.id)));
++    const items = rows.map(row => {
++      const sku = this.#saleProjection(row, uoms.get(Number(row.id)) ?? [], nowMs);
++      if (!sku.usable) throw skuNotUsable(sku.skuId, "new_sale", sku.reasons);
++      return sku;
++    });
++    return { items, total: Number(count.total), page, pageSize };
+   }
+ 
+   async findManyForSale(skuIds, { atMs, purpose = "new_sale" } = {}) {
+--- a/server/src/services/idempotency/IdempotencyService.js
++++ b/server/src/services/idempotency/IdempotencyService.js
+@@ -147,7 +147,11 @@
+       throw new Error(`Idempotency ttlMs must be a positive integer for ${routeKey}`);
+     }
+ 
+-    return Object.freeze({ enabled, ttlMs });
++    const retryAfterSeconds = routeConfig.retryAfterSeconds;
++    if (retryAfterSeconds !== undefined && (!Number.isSafeInteger(retryAfterSeconds) || retryAfterSeconds <= 0)) {
++      throw new Error(`Idempotency retryAfterSeconds must be a positive integer for ${routeKey}`);
++    }
++    return Object.freeze({ enabled, ttlMs, ...(retryAfterSeconds === undefined ? {} : { retryAfterSeconds }) });
+   }
+ 
+   async execute(req, res, routeOptions, work, prepared) {
+@@ -294,7 +298,7 @@
+         try {
+           const result = await replay(() => {
+             if (!active || ++calls !== 1) throw new TypeError("Invalid idempotency replay callback");
+-            return this.sendReplay(req, res, begin.response);
++            return this.sendReplay(req, res, begin.response, routeOptions);
+           });
+           if (calls !== 1) throw new TypeError("Idempotency replay callback must be called exactly once");
+           return result;
+@@ -302,7 +306,7 @@
+           active = false;
+         }
+       }
+-      return this.sendReplay(req, res, begin.response);
++      return this.sendReplay(req, res, begin.response, routeOptions);
+     }
+ 
+     if (begin.state !== "started") {
+@@ -414,10 +418,13 @@
+     }
+   }
+ 
+-  sendReplay(req, res, response) {
++  sendReplay(req, res, response, routeOptions) {
+     // Only mark/log/send inside the caller's current-security guarded scope.
+     req.idempotentReplay = true;
+     res.setHeader("Idempotency-Replayed", "true");
++    if (response.statusCode === 202 && routeOptions.retryAfterSeconds !== undefined) {
++      res.setHeader("Retry-After", String(routeOptions.retryAfterSeconds));
++    }
+     void this.logger?.info?.("idempotency.response.replayed", "Idempotent response replayed", {
+       requestId: req.requestId || this.context.get()?.requestId || null,
+       method: req.method,
+--- a/server/test/apiDispatcher.test.js
++++ b/server/test/apiDispatcher.test.js
+@@ -16,6 +16,7 @@
+   validateApiConfig
+ } from "../src/framework/middleware/apiDispatcher.js";
+ import { createErrorHandler } from "../src/framework/middleware/errorHandler.js";
++import { ApplicationError } from "../src/framework/errors/ApplicationError.js";
+ import { skuCodeTaken } from "../src/modules/item/itemErrors.js";
+ import { IdempotencyService } from "../src/services/idempotency/IdempotencyService.js";
+ import { MemoryIdempotencyStore } from "../src/services/idempotency/IdempotencyStore.js";
+@@ -1171,3 +1172,70 @@
+   assert.equal(body.error.code, "SKU_CODE_TAKEN");
+   assert.deepEqual(body.error.details, { skuCode: "VC-001" });
+ });
++
++
++test("handler authorization preflight is awaited before initial execution and cached replay", async t => {
++  let revoked = false, preflights = 0, executions = 0;
++  const handler = new TestHandler("guardedCommand", function () {
++    executions++;
++    assert.equal(preflights, 1);
++    return this.response({ id: 1 });
++  });
++  handler.authorizeRequest = async () => {
++    await Promise.resolve();
++    preflights++;
++    if (revoked) throw new ApplicationError("Permission revoked", { code: "PERMISSION_STALE", statusCode: 403 });
++    return true;
++  };
++  const dispatcher = createApiDispatcher({ routes: [{ ...apiRouteDefaults, method: "POST", path: "/api/v1/guarded-command",
++    description: "Guard cached command responses", authType: "jwt", idempotency: { enabled: true },
++    requestSchema: emptyRequestSchema, responseSchema: anySuccessResponseSchema, handler: "guardedCommand" }],
++  handlers: { guardedCommand: handler }, logger: silentLogger });
++  const url = await startTestServer(t, dispatcher), token = await issueAccessToken({}, { subject: "7" });
++  const send = () => fetch(`${url}/api/v1/guarded-command`, { method: "POST", headers: { Authorization: `Bearer ${token}`, "Idempotency-Key": "guarded-1" } });
++  assert.equal((await send()).status, 200);
++  const replay = await send();
++  assert.equal(replay.status, 200);
++  assert.equal(replay.headers.get("idempotency-replayed"), "true");
++  revoked = true;
++  const denied = await send();
++  assert.equal(denied.status, 403);
++  assert.equal((await denied.json()).error.code, "PERMISSION_STALE");
++  assert.equal(preflights, 3);
++  assert.equal(executions, 1);
++});
++
++test("authorization preflight denies false/failure and rejects malformed declarations", async t => {
++  for (const mode of ["false", "failure"]) {
++    let executions = 0;
++    const handler = new TestHandler(`preflight_${mode}`, () => { executions++; return {}; });
++    handler.authorizeRequest = async () => {
++      if (mode === "failure") throw new ApplicationError("Database unavailable", { code: "SALES_DEPENDENCY_UNAVAILABLE", statusCode: 503 });
++      return false;
++    };
++    const route = { ...apiRouteDefaults, method: "POST", path: `/api/v1/preflight-${mode}`, description: "Fail closed",
++      authType: "public", requestSchema: emptyRequestSchema, responseSchema: anySuccessResponseSchema, handler: handler.handlerName };
++    const dispatcher = createApiDispatcher({ routes: [route], handlers: { [handler.handlerName]: handler }, logger: silentLogger });
++    const url = await startTestServer(t, dispatcher);
++    assert.equal((await fetch(`${url}${route.path}`, { method: "POST" })).status, mode === "false" ? 403 : 503);
++    assert.equal(executions, 0);
++    handler.authorizeRequest = true;
++    assert.throws(() => createApiDispatcher({ routes: [route], handlers: { [handler.handlerName]: handler }, logger: silentLogger }), /Invalid authorization preflight/u);
++  }
++});
++
++test("request timeout cancels an authorization preflight before command execution", async t => {
++  let executions = 0, aborted = false;
++  const handler = new TestHandler("timedPreflight", () => { executions++; return {}; });
++  handler.authorizeRequest = req => new Promise(resolve => {
++    req.requestTimeout.signal.addEventListener("abort", () => { aborted = true; resolve(true); }, { once: true });
++  });
++  const route = { ...apiRouteDefaults, method: "POST", path: "/api/v1/timed-preflight", description: "Cancel pending preflight",
++    timeoutMs: 30, authType: "public", requestSchema: emptyRequestSchema, responseSchema: anySuccessResponseSchema, handler: "timedPreflight" };
++  const dispatcher = createApiDispatcher({ routes: [route], handlers: { timedPreflight: handler }, logger: silentLogger });
++  const url = await startTestServer(t, dispatcher);
++  const response = await fetch(`${url}${route.path}`, { method: "POST" });
++  assert.equal(response.status, 504);
++  assert.equal(aborted, true);
++  assert.equal(executions, 0);
++});
+--- a/server/test/idempotencyService.test.js
++++ b/server/test/idempotencyService.test.js
+@@ -751,3 +751,71 @@
+   await (manager.shutdown || manager.close).call(manager);
+   assert.equal(closed, 1);
+ });
++
++
++test("declared 202 retry delay survives replay without copying response secrets or changing 200 routes", async () => {
++  for (const statusCode of [200,202]) {
++    const store = new MemoryIdempotencyStore({ maxEntries: 10 });
++    const { manager } = createManager(store,{ config: { cacheableStatusCodes: [200,202] } });
++    const options = manager.routeOptions({ enabled:true,retryAfterSeconds:2 },"post /api/v1/orders");
++    const first = createResponse();
++    await manager.execute(createRequest(),first,options,()=>{first.setHeader("Set-Cookie","private");first.status(statusCode).json({ ok:true });});
++    const replay = createResponse();
++    await manager.execute(createRequest(),replay,options,()=>assert.fail("replay must not execute effects"));
++    assert.equal(replay.headers["retry-after"],statusCode===202?"2":undefined);
++    assert.equal(replay.headers["set-cookie"],undefined);
++    assert.equal(replay.headers["idempotency-replayed"],"true");
++  }
++  const { manager } = createManager(recordingStore());
++  for (const retryAfterSeconds of [0,-1,1.5,"2",null,Number.MAX_SAFE_INTEGER+1]) {
++    assert.throws(()=>manager.routeOptions({ enabled:true,retryAfterSeconds },"post /api/v1/orders"),/positive integer/);
++  }
++  assert.deepEqual(manager.routeOptions({ enabled:true },"post /api/v1/orders"),routeOptions);
++});
++
++test("P3 integration prepared 202 retry header is sent only inside the authorized replay callback", async () => {
++  const store = recordingStore({ begin: async () => ({ state: "replay", response: { statusCode: 202, body: { accepted: true } } }) });
++  const { manager, logger } = createManager(store);
++  const req = createRequest(), res = createResponse();
++  const options = manager.routeOptions({ enabled: true, retryAfterSeconds: 2 }, "post /api/v1/orders");
++  let guards = 0;
++  await manager.execute(req, res, options, () => assert.fail("replay must not execute work"), preparedInput(1, (send) => {
++    guards += 1;
++    assert.deepEqual(res.headers, {});
++    assert.equal(req.idempotentReplay, undefined);
++    assert.equal(logger.entries.some(entry => entry.event === "idempotency.response.replayed"), false);
++    return send();
++  }));
++  assert.equal(guards, 1);
++  assert.equal(res.statusCode, 202);
++  assert.deepEqual(res.body, { accepted: true });
++  assert.deepEqual(res.headers, { "idempotency-replayed": "true", "retry-after": "2" });
++  assert.equal(logger.entries.filter(entry => entry.event === "idempotency.response.replayed").length, 1);
++});
++
++test("P3 integration rejected prepared 202 replay emits no retry header, body, replay flag or success log", async () => {
++  const store = recordingStore({ begin: async () => ({ state: "replay", response: { statusCode: 202, body: { accepted: true } } }) });
++  const { manager, logger } = createManager(store);
++  const req = createRequest(), res = createResponse();
++  const options = manager.routeOptions({ enabled: true, retryAfterSeconds: 2 }, "post /api/v1/orders");
++  const denied = Object.assign(new Error("Synthetic current permission denied"), { code: "PERMISSION_STALE" });
++  await assert.rejects(() => manager.execute(req, res, options, () => assert.fail("replay must not execute work"),
++    preparedInput(1, () => { throw denied; })), error => error === denied);
++  assert.deepEqual(res.headers, {});
++  assert.equal(res.body, undefined);
++  assert.equal(req.idempotentReplay, undefined);
++  assert.equal(logger.entries.some(entry => entry.event === "idempotency.response.replayed"), false);
++});
++
++test("P3 integration prepared 200 or undeclared 202 replay does not invent a retry header", async () => {
++  for (const [statusCode, retry] of [[200, 2], [202, undefined]]) {
++    const store = recordingStore({ begin: async () => ({ state: "replay", response: { statusCode, body: { accepted: true } } }) });
++    const { manager } = createManager(store);
++    const options = manager.routeOptions({ enabled: true, ...(retry === undefined ? {} : { retryAfterSeconds: retry }) }, "post /api/v1/orders");
++    const res = createResponse();
++    await manager.execute(createRequest(), res, options, () => assert.fail("replay must not execute work"), preparedInput());
++    assert.equal(res.statusCode, statusCode);
++    assert.equal(res.headers["retry-after"], undefined);
++    assert.equal(res.headers["idempotency-replayed"], "true");
++  }
++});

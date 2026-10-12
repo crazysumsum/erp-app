@@ -1,0 +1,10 @@
+
+> erp-app@0.1.0 lint
+> eslint .
+
+
+/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-high-risk.spec.js
+  86:152  error  'Buffer' is not defined  no-undef
+
+✖ 1 problem (1 error, 0 warnings)
+

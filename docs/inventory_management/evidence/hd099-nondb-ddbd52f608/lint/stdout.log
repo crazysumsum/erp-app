@@ -1,0 +1,16 @@
+
+> erp-app@0.1.0 lint
+> eslint .
+
+
+/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/hd099-fixture-repair-e9002ccfa2/original-test.js
+  22:17  error  'process' is not defined  no-undef
+  22:61  error  'process' is not defined  no-undef
+  30:16  error  'process' is not defined  no-undef
+  31:16  error  'process' is not defined  no-undef
+  32:53  error  'process' is not defined  no-undef
+  33:17  error  'process' is not defined  no-undef
+  36:32  error  'process' is not defined  no-undef
+
+✖ 7 problems (7 errors, 0 warnings)
+

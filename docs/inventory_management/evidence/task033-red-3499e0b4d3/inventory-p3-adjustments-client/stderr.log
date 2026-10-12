@@ -1,0 +1,10 @@
+(node:76453) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Not implemented: Window's scrollTo() method
+npm error Lifecycle script `test` failed with error:
+npm error code 1
+npm error path /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client
+npm error workspace @erp/client@0.1.0
+npm error location /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client
+npm error command failed
+npm error command sh -c vitest run test/pages/inventory/inventoryAdjustments.test.js --reporter=junit --outputFile=/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/task033-red-3499e0b4d3/inventory-p3-adjustments-client/inventory-p3-adjustments-client.xml

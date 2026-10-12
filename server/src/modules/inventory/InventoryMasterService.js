@@ -229,16 +229,29 @@ export class InventoryMasterService {
       where.push("(b.bin_code LIKE ? OR b.bin_name LIKE ?)");
       params.push(`%${search}%`, `%${search}%`);
     }
-    const activeLock = "EXISTS (SELECT 1 FROM inventory_bin_locks l WHERE l.bin_id = b.id AND l.released_at IS NULL)";
-    if (lockStatus !== "ALL") where.push(`${lockStatus === "LOCKED" ? "" : "NOT "}${activeLock}`);
-    const clause = ` WHERE ${where.join(" AND ")}`;
-    const [[count]] = await this.database.query(`SELECT COUNT(*) AS total FROM inventory_bins b${clause}`, params);
-    const [rows] = await this.database.query(
-      `SELECT b.*, ${activeLock} AS locked FROM inventory_bins b${clause}
-        ORDER BY ${sortColumn} ${direction}, b.id ${direction} LIMIT ? OFFSET ?`,
-      [...params, pageSize, (page - 1) * pageSize]
-    );
-    return { items: rows.map((row) => binProjection(row, { locked: Boolean(row.locked) })), total: Number(count.total), page, pageSize };
+    const read = async (activeLock) => {
+      const predicates = [...where];
+      if (lockStatus !== "ALL") predicates.push(`${lockStatus === "LOCKED" ? "" : "NOT "}${activeLock}`);
+      const clause = ` WHERE ${predicates.join(" AND ")}`;
+      const [[count]] = await this.database.query(`SELECT COUNT(*) AS total FROM inventory_bins b${clause}`, params);
+      const [rows] = await this.database.query(
+        `SELECT b.*, ${activeLock} AS locked FROM inventory_bins b${clause}
+          ORDER BY ${sortColumn} ${direction}, b.id ${direction} LIMIT ? OFFSET ?`,
+        [...params, pageSize, (page - 1) * pageSize]
+      );
+      return { items: rows.map((row) => binProjection(row, { locked: Boolean(row.locked) })), total: Number(count.total), page, pageSize };
+    };
+    try {
+      return await read("EXISTS (SELECT 1 FROM inventory_bin_locks l WHERE l.bin_id = b.id AND l.released_at IS NULL)");
+    } catch (error) {
+      if ((error?.cause?.code ?? error?.code) !== "ER_NO_SUCH_TABLE") throw error;
+      const [tables] = await this.database.query(
+        `SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE()
+           AND table_name IN ('inventory_stocktakes', 'inventory_bin_locks')`
+      );
+      if (tables.length !== 0) throw error;
+      return read("FALSE");
+    }
   }
 
   async getBin(warehouseId, binId) {

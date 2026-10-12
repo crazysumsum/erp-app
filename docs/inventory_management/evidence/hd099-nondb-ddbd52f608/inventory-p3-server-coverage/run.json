@@ -1,0 +1,211 @@
+{
+  "schema_version": "2.0",
+  "module_id": "inventory-management",
+  "run_id": "hd099-nondb-ddbd52f608-inventory-p3-server-coverage",
+  "suite_id": "inventory-p3-server-coverage",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "11b815650cfb7851c5c096fe14fb7a2cff84ef3d28cd6d8afb1ae99d3ef8ad9a",
+  "source_fingerprint": "44ef6225ab74831ae34a2d93f40a421ed6a049f8032333d4af8da5cb544b702d",
+  "code_commit": "869ac07abdd3879254c351d857be911d71e68b6b",
+  "started_at": "2026-10-06T05:53:46.759556+00:00",
+  "ended_at": "2026-10-06T05:54:34.679386+00:00",
+  "environment_id": "inventory-isolated-test",
+  "runtime_instance_id": "erp-inventory-hd099-nondb.25gyboun",
+  "data_reference": "Synthetic Inventory fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "node",
+    "--test",
+    "--test-concurrency=1",
+    "--import",
+    "./test-support/testEnv.js",
+    "--experimental-test-coverage",
+    "--test-reporter=junit",
+    "--test-reporter-destination=/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/hd099-nondb-ddbd52f608/inventory-p3-server-coverage/inventory-p3-server-coverage.xml",
+    "--test-reporter=lcov",
+    "--test-reporter-destination=/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/hd099-nondb-ddbd52f608/inventory-p3-server-coverage/server-coverage.lcov",
+    "test/*.test.js"
+  ],
+  "cwd": "server",
+  "command_contract_sha256": "18b44ef38ceaee6ea85e2c3fd34fb22ab3710cf96ddc10b9964b86fae80e8b4e",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 2120,
+    "passed": 2120,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [
+    {
+      "id": "TC-003",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-004",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-005",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-006",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-007",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-009",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-010",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-011",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-012",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-013",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-014",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-016",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-018",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-019",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-020",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-021",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-022",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-023",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-024",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-026",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-027",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-028",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-032",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-034",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-036",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-037",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-038",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-055",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-056",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-060",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-067",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-068",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-070",
+      "status": "PASS"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "evidence/hd099-nondb-ddbd52f608/inventory-p3-server-coverage/inventory-p3-server-coverage.xml",
+      "sha256": "94a214e88f4be2b9541c19e812f146398b85f514a63f1b06ca1f25d0173dab32",
+      "bytes": 487608
+    },
+    {
+      "path": "evidence/hd099-nondb-ddbd52f608/inventory-p3-server-coverage/server-coverage.lcov",
+      "sha256": "4dde91589b48151f8908d6877e9029bddbe60d31636decc8804a4eccc7c90e00",
+      "bytes": 1020944
+    },
+    {
+      "path": "evidence/hd099-nondb-ddbd52f608/inventory-p3-server-coverage/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/hd099-nondb-ddbd52f608/inventory-p3-server-coverage/stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "Approved HD099 developer remediation diagnostic while defect gate remains blocked; not formal acceptance, UI or current CI."
+  ]
+}

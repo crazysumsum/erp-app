@@ -89,6 +89,100 @@ function createResponse() {
 
 const routeOptions = { enabled: true, ttlMs: 60000 };
 
+function preparedInput(quantity = 1, replay = (send) => send()) {
+  return { input: Object.freeze({ params: Object.freeze({}), query: Object.freeze({}), body: Object.freeze({ quantity }) }), replay };
+}
+
+test("ADJ031-HTTP-REPLAY prepared fingerprints ignore credentials but retain business input and files", async () => {
+  const store = new MemoryIdempotencyStore();
+  const { manager } = createManager(store);
+  let calls = 0, guards = 0;
+  const run = async (password, quantity = 1, files = []) => {
+    const req = createRequest({ auth: { type: "jwt-device-password", claims: { sub: "user-1" } }, input: { body: { password, quantity } } });
+    req.files = files;
+    const res = createResponse();
+    await manager.execute(req, res, routeOptions, () => { calls += 1; return res.json({ original: calls }); },
+      preparedInput(quantity, (send) => { guards += 1; return send(); }));
+    return { req, res };
+  };
+  const first = await run("synthetic-one");
+  const replay = await run("synthetic-two");
+  assert.deepEqual(replay.res.body, first.res.body);
+  assert.equal(replay.req.idempotentReplay, true);
+  assert.equal(calls, 1);
+  assert.equal(guards, 1);
+  await assert.rejects(() => run("synthetic-two", 2), { code: "IDEMPOTENCY_CONFLICT" });
+  await assert.rejects(() => run("synthetic-two", 1, [{ field: "file", mimeType: "text/csv", size: 1, contentHash: "different" }]), { code: "IDEMPOTENCY_CONFLICT" });
+  assert.equal(calls, 1);
+});
+
+test("ADJ031-HTTP-REPLAY malformed preparation fails before any store claim", async () => {
+  const store = recordingStore();
+  const { manager } = createManager(store);
+  for (const invalid of [undefined, null, {}, { input: {}, replay: () => {} },
+    { input: preparedInput().input }, { ...preparedInput(), input: { params: {}, query: {}, body: {} } },
+    { ...preparedInput(), input: Object.freeze({ params: {}, query: {}, body: "invalid" }) }]) {
+    await assert.rejects(() => manager.execute(createRequest(), createResponse(), routeOptions,
+      () => assert.fail("work must not run"), invalid), TypeError);
+  }
+  assert.deepEqual(store.seen, []);
+});
+
+test("ADJ031-CACHE-WAIT guard runs after store wait and holds its scope through synchronous send", async () => {
+  let release;
+  const waiting = new Promise((resolve) => { release = resolve; });
+  const events = [];
+  const store = recordingStore({ begin: async () => { events.push("store"); await waiting; return { state: "replay", response: { statusCode: 200, body: { original: true } } }; } });
+  const { manager } = createManager(store);
+  const res = createResponse();
+  const originalJson = res.json;
+  let held = false;
+  res.json = function (body) { assert.equal(held, true); events.push("send"); return originalJson.call(this, body); };
+  const run = manager.execute(createRequest(), res, routeOptions, () => assert.fail("replay must not run work"), preparedInput(1, (send) => {
+    events.push("guard"); held = true;
+    try { return send(); } finally { held = false; events.push("unlock"); }
+  }));
+  assert.deepEqual(events, ["store"]);
+  release();
+  await run;
+  assert.deepEqual(events, ["store", "guard", "send", "unlock"]);
+});
+
+test("ADJ031-HTTP-REPLAY denied and missing replay callbacks preserve completed keys without sending", async () => {
+  const store = new MemoryIdempotencyStore();
+  const { manager, logger } = createManager(store);
+  const cached = () => createRequest({ key: "cached" });
+  const first = createResponse();
+  await manager.execute(cached(), first, routeOptions, () => first.json({ original: true }), preparedInput());
+  const denial = Object.assign(new Error("stale"), { code: "PERMISSION_STALE" });
+  for (const [hook, expected] of [[() => { throw denial; }, { code: "PERMISSION_STALE" }], [() => {}, TypeError]]) {
+    const req = cached(), res = createResponse();
+    await assert.rejects(() => manager.execute(req, res, routeOptions, () => assert.fail("no work"), preparedInput(1, hook)), expected);
+    assert.equal(res.body, undefined);
+    assert.equal(req.idempotentReplay, undefined);
+    assert.equal(res.headers["idempotency-replayed"], undefined);
+  }
+  assert.equal(logger.entries.filter((e) => e.event === "idempotency.response.replayed").length, 0);
+  const res = createResponse();
+  await manager.execute(cached(), res, routeOptions, () => assert.fail("key must remain completed"), preparedInput());
+  assert.deepEqual(res.body, { original: true });
+});
+
+test("ADJ031-HTTP-REPLAY duplicate or late callbacks cannot send a second cached response", async () => {
+  const store = recordingStore({ begin: () => ({ state: "replay", response: { statusCode: 200, body: {} } }) });
+  const { manager } = createManager(store);
+  const res = createResponse();
+  let sent = 0, late;
+  res.json = () => { sent += 1; };
+  await assert.rejects(() => manager.execute(createRequest(), res, routeOptions, () => assert.fail("no work"),
+    preparedInput(1, (send) => { send(); send(); })), TypeError);
+  assert.equal(sent, 1);
+  await assert.rejects(() => manager.execute(createRequest(), createResponse(), routeOptions, () => assert.fail("no work"),
+    preparedInput(1, (send) => { late = send; })), TypeError);
+  assert.throws(() => late(), TypeError);
+  assert.equal(sent, 1);
+});
+
 // --- 第一層：key 對應到誰 -----------------------------------------------------
 
 test("the identity scope falls back from sub to jti to a claims hash", async () => {
@@ -677,4 +771,51 @@ test("declared 202 retry delay survives replay without copying response secrets 
     assert.throws(()=>manager.routeOptions({ enabled:true,retryAfterSeconds },"post /api/v1/orders"),/positive integer/);
   }
   assert.deepEqual(manager.routeOptions({ enabled:true },"post /api/v1/orders"),routeOptions);
+});
+
+test("P3 integration prepared 202 retry header is sent only inside the authorized replay callback", async () => {
+  const store = recordingStore({ begin: async () => ({ state: "replay", response: { statusCode: 202, body: { accepted: true } } }) });
+  const { manager, logger } = createManager(store);
+  const req = createRequest(), res = createResponse();
+  const options = manager.routeOptions({ enabled: true, retryAfterSeconds: 2 }, "post /api/v1/orders");
+  let guards = 0;
+  await manager.execute(req, res, options, () => assert.fail("replay must not execute work"), preparedInput(1, (send) => {
+    guards += 1;
+    assert.deepEqual(res.headers, {});
+    assert.equal(req.idempotentReplay, undefined);
+    assert.equal(logger.entries.some(entry => entry.event === "idempotency.response.replayed"), false);
+    return send();
+  }));
+  assert.equal(guards, 1);
+  assert.equal(res.statusCode, 202);
+  assert.deepEqual(res.body, { accepted: true });
+  assert.deepEqual(res.headers, { "idempotency-replayed": "true", "retry-after": "2" });
+  assert.equal(logger.entries.filter(entry => entry.event === "idempotency.response.replayed").length, 1);
+});
+
+test("P3 integration rejected prepared 202 replay emits no retry header, body, replay flag or success log", async () => {
+  const store = recordingStore({ begin: async () => ({ state: "replay", response: { statusCode: 202, body: { accepted: true } } }) });
+  const { manager, logger } = createManager(store);
+  const req = createRequest(), res = createResponse();
+  const options = manager.routeOptions({ enabled: true, retryAfterSeconds: 2 }, "post /api/v1/orders");
+  const denied = Object.assign(new Error("Synthetic current permission denied"), { code: "PERMISSION_STALE" });
+  await assert.rejects(() => manager.execute(req, res, options, () => assert.fail("replay must not execute work"),
+    preparedInput(1, () => { throw denied; })), error => error === denied);
+  assert.deepEqual(res.headers, {});
+  assert.equal(res.body, undefined);
+  assert.equal(req.idempotentReplay, undefined);
+  assert.equal(logger.entries.some(entry => entry.event === "idempotency.response.replayed"), false);
+});
+
+test("P3 integration prepared 200 or undeclared 202 replay does not invent a retry header", async () => {
+  for (const [statusCode, retry] of [[200, 2], [202, undefined]]) {
+    const store = recordingStore({ begin: async () => ({ state: "replay", response: { statusCode, body: { accepted: true } } }) });
+    const { manager } = createManager(store);
+    const options = manager.routeOptions({ enabled: true, ...(retry === undefined ? {} : { retryAfterSeconds: retry }) }, "post /api/v1/orders");
+    const res = createResponse();
+    await manager.execute(createRequest(), res, options, () => assert.fail("replay must not execute work"), preparedInput());
+    assert.equal(res.statusCode, statusCode);
+    assert.equal(res.headers["retry-after"], undefined);
+    assert.equal(res.headers["idempotency-replayed"], "true");
+  }
 });

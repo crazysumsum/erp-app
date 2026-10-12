@@ -1,0 +1,143 @@
+*** Begin Patch
+*** Update File: /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/00_module_manifest.json
+@@
+     "provided": [
+       {
+         "id": "inventory-domain-contract",
+-        "version": "planning-v8; TASK009-010 source pins reconciled, Sales additions CI pending",
++        "version": "planning-v9; TASK029 exact-Code Inventory SKU lookup proposal; existing write contracts unchanged",
+         "source": "docs/inventory_management/03_design_spec.md",
+-        "sha256": "4a3834d65bdde92ac0f532ace7fe3fdaab05bc076b61da98977802b5474c6b29",
++        "sha256": "298e6a40760b7e1f93161da0c17afaa50fceda7aeb7b0aaae540eb02384e6f3c",
+         "consumers": [
+           "purchasing-receiving",
+           "sales-order",
+*** Update File: /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/03_design_spec.md
+@@
+ 
+ Receive body line ID集合必須與Transfer全部lines完全相等，不可缺漏、重複或多出；每行quantity固定等於dispatched quantity，client不可提交部分數量。
+ 
++#### 5.6.1 Draft SKU精確查找（HD-102 A）
++
++`GET /api/v1/inventory/sku-lookup?code=...` 是Inventory-owned唯讀入口，固定jwt＋`inventory.view`；不要求或授予`item.view`／`item.mgmt`，不接受caller自報權限。沿用框架當下JWT／撤權檢查及既有限流，不新增permission、migration或Item管理入口。目的只為支援既有Draft選料，不建立商品目錄。
++
++- Params為空；query只允許必填單一string `code`（1～190 Unicode code points，拒絕ASCII control／DEL）。未知query、重複code解析為array、非string、超界均400 `REQUEST_VALIDATION_FAILED`。通過schema後重用Item的`normalizeAndValidateSkuCode` trim及驗證，純空白回400 `SKU_CODE_INVALID`。保留大小寫及內部字元；使用Item `findByCode` 的參數化等值查詢與既有DB collation，不另設case-sensitive／uppercase規則。`%`／`_`是literal，不作LIKE；無barcode、模糊、分頁或batch查找。
++- 一次`withTransaction`（既有REPEATABLE READ）內，將同一executor交給ItemLookupService作`findByCode(code, {purpose: "inventory"})`及`getInventoryProfileInTransaction(tx, skuId)`；沿用Item-owned profile／Base UOM／可用性，不複製SQL或qualification規則，不修改Item code。兩次查找及UOM讀取必須在同一snapshot，不可把code查找留在交易外。無Balance row仍可查到SKU，不讀庫存作SKU資格門檻。
++- 200的既有success envelope中，`data`只含下列required whitelist；`data`及`baseUom`均`additionalProperties: false`。ID為positive safe integer；code/name/UOM code為既有Item string。200表示本次snapshot可供Transfer選料，不是庫存、Reservation或過帳保證，不另回`usable`／raw reasons／Item狀態／價格／media／行政欄位。
++
++```json
++{"skuId": 101, "skuCode": "SKU-001", "skuName": "示例商品", "trackingPolicy": "batch", "baseUom": {"uomId": 1, "uomCode": "EA"}}
++```
++
++`trackingPolicy`只允許`none`／`batch`／`batch_expiry`。未找到回404 `INVENTORY_RESOURCE_NOT_FOUND`；profile非inventoryTracked回400 `SKU_NOT_INVENTORY_TRACKED`，否則不可用回400 `INVENTORY_INPUT_INVALID`（safe field `skuId`），否則serial回400 `SERIAL_TRACKING_UNSUPPORTED`，與Transfer reference validation相同。不另要求Item active：SKU active且Item discontinued如既有inventory profile允許，仍可選。Base UOM缺失／factor不是1沿用400 `UOM_CONVERSION_INVALID`。認證／權限失敗沿用框架401／403及`PERMISSION_STALE`；未預期失敗沿用框架500 safe error，不回SQL、raw profile或內部錯誤細節。
++
++此GET不建立／修改Item、Lot、Balance、Transfer、Operation、Movement、Idempotency或業務Audit；只保留既有框架request logging。不持久cache查找資格，不新增retry、stock鎖或permission cache。create/update/dispatch仍在自己的交易重驗SKU／Lot／Bin／version及過帳規則；舊查找結果或client傳入skuId不能豁免驗證。Lookup成功後改碼／撤權／停用，不自動以其他SKU替換；失敗保留其他Draft輸入並要求重新查找／選料。
++
+ ### 5.7 Stocktake APIs
+ 
+ | Method／Path | Auth／Permission | 行為 |
+@@
+ ### 7.5 Transfer
+ 
+ - Draft editor一次維護完整lines；每line選SKU／Lot／source Bin／quantity。離開前提示未保存變更。
++- SKU以§5.6.1精確Code查找後顯示名稱、Base UOM及tracking；不call Item管理list，不限已存在Balance的SKU。輸入Code改變即清除該行已選SKU及Lot，未完成查找不可保存該行；僅使用者明確選擇成功結果才綁定skuId。舊／較慢查找response不得覆蓋最新輸入；載入、未找到、資格／撤權／伺服器錯誤清楚顯示，不用numeric-ID輸入或stock-only picker降級。非交易寫入失敗不清除其他未保存lines；儲存失敗／409保留输入並提示重載／重新查找，不自動替換SKU或重送過帳。
+ - Dispatch確認頁顯示來源總數、Reservation保障及「整張過帳，不支援部分」警告。
+ - Receive要求每line選目的Bin；可選保持原Status或Quarantined，後者必填reason。
+ - In Transit detail清楚顯示來源已扣、目的未入及每line in-transit數量；不顯示可修改／取消按鈕。
+@@
+ 
+ ### Decision
+ Same-Warehouse moves are atomic paired movements; cross-Warehouse transfers use whole-document Draft, Dispatch/In-Transit and Receive states.
++Draft selection uses the minimal Inventory-permission exact-Code read contract in §5.6.1, reusing Item-owned qualification and allowing SKUs without Balance rows.
+ 
+ ### Rationale
+ This matches the stated no-partial-transfer policy and provides explicit custody and reconciliation.
++The lookup preserves existing Draft semantics and least privilege without a new catalogue, Item administrative access or duplicated Item rules.
+ 
+ ### Failure behavior
+ Any invalid line, lock, quantity or destination rejects the whole transition with no partial movement.
++Lookup failure selects nothing; stale selection never bypasses transaction-time validation or silently substitutes a different SKU.
+ 
+ ## DES-006 — Adjustment, status transfer and reversal
+ 
+*** Update File: /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/05_development_tasks.md
+@@
+ ### P3-T04：完成 Transfer API 與 UI
+ 
+ **Description：** 建立 Transfer handlers/client及 Draft editor、Dispatch確認、In Transit read-only、逐行 Receive Bin/Status畫面。
++包含Design §5.6.1 Inventory-owned精確SKU Code lookup及Draft selector；重用Item lookup／transactional inventory profile，不修改Item code、permission seeds、migration或共用框架。
+ 
+ **Traceability：** Design §§5.6、7.1、7.5；FR-TRANSFER-001～012、AC-030～034。
+ 
+ **Acceptance criteria：**
+ 
+ - [ ] API route/auth/permission/idempotency/version與 design一致；Receive schema拒絕少行、重複行、多行或部分 quantity。
++- [ ] 精確SKU查找僅需inventory.view，200 strict whitelist／輸入／錯誤／同一read snapshot符合§5.6.1；無Balance SKU仍可選及建立Draft，不授予Item permission或以現有stock替代選料。
++- [ ] Code變更清除該行SKU/Lot，過期response不覆蓋新輸入；查找、資格、撤權及錯誤狀態可用keyboard操作，其他Draft輸入保留；写入端仍重驗資格及stock。
+ - [ ] UI在 Dispatch後不顯示可編輯／取消；清楚分開來源、目的及 In Transit。
+ - [ ] Quarantined收貨強制原因；同名 Bin不會誤用來源 ID；responsive/keyboard/conflict states通過。
+ 
+ **Verification（納入 P3-GATE）：** handler/client tests、`inventoryTransfers.test.js`、production build及 manual完整 Transfer flow。
++新增TC-006 lookup子案例於既有`inventory-p3-unit`、`inventory-p3-api` suites；client/component及真API Playwright加入Inventory-only actor／無Balance Draft／stale lookup及錯誤流程。最低discovery、zero-skip、34 file floors、capacity與CI／獨立review／merge gates不變；新baseline重跑適用developer checks，不把舊PLAN evidence改標新PASS。正式TC／UAT保持NOT_RUN直到相應階段實際執行。
+ 
+ **Dependencies：** P3-T02～T03。
+ 
+ **Files likely touched：** `transferHandlers.js`、`TransfersPage.vue`、`TransferEditor.vue`、client service及 tests。
++Lookup新增Inventory handler/schema及最小read orchestration，測試重用`inventoryTransferHandlers.test.js`、`inventoryWarehouseOperationsApi.integration.test.js`，不新增套件或測試框架。
+ 
+ **Estimated scope：** M。
+ 
+@@
+ 
+ ### Approach
+ Implement only the scope and dependencies of legacy task `P3-T04` inside `PHASE-004` using the design decisions mapped in `08_traceability.json`.
++Include §5.6.1 exact SKU Code lookup and Draft selection using the existing Item-owned read contract; no Item source, permission seed, migration, dependency or shared-framework changes. Reuse configured unit/API suites and add affected client/component/live-API Playwright cases. New baseline requires applicable developer rechecks; preserve earlier evidence as history, not current-PLAN PASS.
+ 
+ ### Acceptance criteria
+ - API route/auth/permission/idempotency/version與 design一致；Receive schema拒絕少行、重複行、多行或部分 quantity。
++- Minimal lookup obeys §5.6.1 whitelist, bounded input/errors, inventory.view-only access and same read snapshot; no-Balance SKU remains selectable and Draft creation does not post stock.
++- Changed Code clears selected SKU/Lot; stale responses cannot replace newer input. Keyboard, loading/empty/error/revocation states pass, other Draft input is retained and write-time eligibility/stock validation is unchanged.
+ - UI在 Dispatch後不顯示可編輯／取消；清楚分開來源、目的及 In Transit。
+ - Quarantined收貨強制原因；同名 Bin不會誤用來源 ID；responsive/keyboard/conflict states通過。
+ 
+*** Update File: /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/06_technical_test_cases.md
+@@
+ ### Expected result
+ Paired movements and In-Transit totals reconcile; partial dispatch/receive never occurs and retries do not duplicate effects.
+ 
++#### TASK-029 SKU lookup subcases（§5.6.1；developer及後續正式驗證）
++
++Trace: FR-070／071 → DES-005 → PHASE-004 → TASK-029 → TC-006；權限風險沿用SEC-001／TC-001的共同auth基線。下列是TC-006內的scenario labels，不另建formal IDs或改typed graph。全部初始NOT_RUN，計畫不是執行證据；單元mock不替代real API／MySQL／Playwright。
++
++| Scenario／priority | Preconditions／synthetic data | Steps／input | Expected result | Required evidence | Status |
++| --- | --- | --- | --- | --- | --- |
++| Lookup-auth P0 | Inventory-view-only JWT（無Item grants）、Item-only JWT、missing/expired JWT、撤權actor；同一SKU | GET code；撤權後以舊token重查 | Inventory-only200；Item-only403；missing/expired401；撤權依框架403/PERMISSION_STALE，拒絕時不呼叫Item；不擴大grant | Real HTTP／safe logs、claims與grant fixture、拒絕呼叫assertion | NOT_RUN |
++| Lookup-shape P1 | Eligible tracked none/batch/batch_expiry SKU、Base UOM factor1；一SKU完全無Balance；另一Item discontinued/SKU active | Code查找；讀取keys；無Balance SKU建立／修改Draft，再Dispatch | 200 data精確whitelist且不含行政／價格資料；無Balance也可選，Draft不動stock；Dispatch按既有stock規則失敗且Draft／ledger不變；discontinued Item依profile允許 | API JSON／schema、前後DB ledger/stock、unit/client、實際Playwright流程 | NOT_RUN |
++| Lookup-input P1 | 1／190／191 code-point code（含non-BMP）、空白、control／DEL、mixed-case、literal%/_、unknown code | 缺code、extra query、code重複、非string、越界及合法trim／等值查找 | Schema拒絕400 REQUEST_VALIDATION_FAILED；trim空白400 SKU_CODE_INVALID；unknown404；大小寫沿用DB collation；%/_不是wildcard；無SQL拼接或barcode／模糊結果 | Unit schema + real API request/response、DB fixture | NOT_RUN |
++| Lookup-eligibility P1 | 非tracked、inactive/archived SKU、archived Item、serial；缺Base UOM／factor不為1 | 各code查找後嘗試以舊skuId提交Draft | Lookup使用既有profile及Transfer錯誤400 SKU_NOT_INVENTORY_TRACKED／INVENTORY_INPUT_INVALID／SERIAL_TRACKING_UNSUPPORTED／UOM_CONVERSION_INVALID；不能選，直接寫入同樣重驗；零stock／ledger寫入 | API／service assertions、before/after DB；故障資料只在owned schema | NOT_RUN |
++| Lookup-snapshot P1 | 有效SKU；第二連線在code lookup與profile read之間改碼／停用；之後重新查找 | barrier控制並發，檢查executor／snapshot；提交舊選料；撤權重送 | 同一REPEATABLE READ snapshot，不混入另一SKU或不同時點profile；後續request看到新狀態；舊選料不能免除write-time驗證，改碼不自動換SKU；GET零業務寫入 | Deterministic unit + real two-connection MySQL/API、query/DB evidence；非固定sleep | NOT_RUN |
++| Lookup-UI/error P1 | Inventory-only actor、兩個查找response順序反轉、404／400／403／500／network failure | keyboard查找／選料；Code改變／clear；較早response最後返回；保存失敗、refresh及unsaved離開 | Code變動清除該行SKU/Lot；舊response不覆蓋新輸入；loading/empty/errors明確、無未選SKU保存；其他Draft輸入保留、不auto-resubmit或替換；refresh依既有Draft／unsaved規則；console/network無未預期錯誤 | Client/component、production build、真API Playwright happy/error流；可控response競態另用component，mock不冒充real E2E | NOT_RUN |
++
++回歸沿用Transfer權限／whole-document／idempotency／Audit rollback、Item lookup與既有profile suites；保留既有限流／SQL safe error／timeout與不公開內部資料。新PLAN的正式TC-006及business UAT-060須重新取得實際證據，不由舊API8或文檔結構PASS推定完成。
++
+ ### Acceptance criteria
+ Mandatory: `true`; blocking: `true`; applicability: `APPLICABLE`; suite: `inventory-technical`. Every mapped case ID must be observed as PASS on the current approved baseline; zero discovery, skips or stale evidence block the gate.
+ 
+*** Update File: /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/07_uat_test_cases.md
+@@
+ 
+ ### Preconditions and data
+ Preconditions: W-A、W-B Active Test data: 多行SKU／Lot／source Bin／qty
++補充：U-OP具inventory.view＋inventory.operation、無item.view／item.mgmt；合成SKU包含無任何Balance row且具合法Base UOM的可用SKU、不可用SKU及unknown Code。依TC-006 lookup子案例技術就緒後才執行，初始NOT_RUN。
+ 
+ ### Steps
+ 建立Draft、修改完整lines、取消另一Draft
++以精確SKU Code查找並明確選料，核對名稱、Base UOM／tracking；修改Code確認清除該行SKU/Lot；查找不存在／不可用SKU，確認可理解的錯誤及其他lines保留。用無Balance SKU建／修改Draft，再嘗試Dispatch；refresh已保存Draft並驗證未保存離開提示。
+ 
+ ### Expected business result
+ Draft建立／修改／取消均不改On Hand、Reserved或In Transit；取消狀態與原因清楚
++Inventory-only actor可選無Balance SKU並保存Draft，不需Item管理權限；查找不公開價格或Item行政資料。不可用／未找到SKU不能選，Code改變不能保留舊skuId。無stock時Dispatch按既有規則拒絕，Draft及庫存不變；沒有自動替換／重送。Required evidence另含實際畫面、safe lookup request/response及無Balance／Dispatch失敗前後DB；仍NOT_RUN，需業務人員實際驗證及baseline-bound acceptance。
+ 
+ ### Acceptance criteria
+ Required evidence: Draft歷程及前後Stock Status remains `NOT_RUN`; mandatory and blocking. A baseline-bound business decision is required, and automation PASS never substitutes for human acceptance.
+*** End Patch

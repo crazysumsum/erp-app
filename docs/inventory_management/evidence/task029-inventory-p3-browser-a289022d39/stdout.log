@@ -1,0 +1,408 @@
+
+Running 8 tests using 1 worker
+
+[1/8] [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:123:1 › TASK-029 @technical Inventory-only two-line Draft Dispatch Receive conserves real stock
+  1) [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:123:1 › TASK-029 @technical Inventory-only two-line Draft Dispatch Receive conserves real stock 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 6
+
+    - Array []
+    + Array [
+    +   Object {
+    +     "path": "/api/v1/inventory/warehouses/1/bins",
+    +     "status": 500,
+    +   },
+    + ]
+
+      80 | });
+      81 | test.afterEach(async () => {
+    > 82 |   expect(failures).toEqual(expectedFailures);
+         |                    ^
+      83 |   // Every expected console HTTP error must correspond to an asserted real API rejection.
+      84 |   expect(errors.filter(error => !/^Failed to load resource: the server responded with a status of (400|403|404|409|500) \(/u.test(error))).toEqual([]);
+      85 |   expect(errors.filter(error => /^Failed to load resource:/u.test(error))).toHaveLength(expectedFailures.length);
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:82:20
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for getByRole('option', { name: 'SAME', exact: true })
+
+
+      87 | async function pick(page, label, option) {
+      88 |   await page.getByLabel(label, { exact: true }).click();
+    > 89 |   await page.getByRole("option", { name: option, exact: true }).click();
+         |                                                                 ^
+      90 | }
+      91 | async function chooseSku(page, index, sku) {
+      92 |   const line = page.getByTestId(`transfer-line-${index}`);
+        at pick (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:89:65)
+        at newDraft (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:102:34)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:124:3
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/task029-inventory-p3-browser-a289022d39/playwright-artifacts/inventory-warehouse-operat-58310-eceive-conserves-real-stock-technical/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: docs/inventory_management/evidence/task029-inventory-p3-browser-a289022d39/playwright-artifacts/inventory-warehouse-operat-58310-eceive-conserves-real-stock-technical/error-context.md
+
+    Error Context: docs/inventory_management/evidence/task029-inventory-p3-browser-a289022d39/playwright-artifacts/inventory-warehouse-operat-58310-eceive-conserves-real-stock-technical/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/task029-inventory-p3-browser-a289022d39/playwright-artifacts/inventory-warehouse-operat-58310-eceive-conserves-real-stock-technical/trace.zip
+    Usage:
+
+        npx playwright show-trace docs/inventory_management/evidence/task029-inventory-p3-browser-a289022d39/playwright-artifacts/inventory-warehouse-operat-58310-eceive-conserves-real-stock-technical/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[2/8] [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:138:1 › TASK-029 @technical view-only actor sees real In Transit but no write controls
+  2) [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:138:1 › TASK-029 @technical view-only actor sees real In Transit but no write controls 
+
+    TypeError: response.status is not a function
+
+      114 |   await pace(); const response = await fetch(`${origin}/api/v1/inventory/transfers${path}`, { method: body ? "POST" : "GET",
+      115 |     headers: { Authorization: `Bearer ${managerToken}`, "Content-Type": "application/json", "Idempotency-Key": randomUUID() }, ...(body ? { body: JSON.stringify(body) } : {}) });
+    > 116 |   expect(response.status()).toBe(200); return (await response.json()).data;
+          |                   ^
+      117 | }
+      118 | const source = () => ({ module: "INVENTORY", documentType: "TRANSFER", documentId: randomUUID(), lineId: "", eventId: randomUUID() });
+      119 | async function seededDraft() {
+        at api (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:116:19)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:139:17
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/task029-inventory-p3-browser-a289022d39/playwright-artifacts/inventory-warehouse-operat-1e0a4-ansit-but-no-write-controls-technical/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: docs/inventory_management/evidence/task029-inventory-p3-browser-a289022d39/playwright-artifacts/inventory-warehouse-operat-1e0a4-ansit-but-no-write-controls-technical/error-context.md
+
+    Error Context: docs/inventory_management/evidence/task029-inventory-p3-browser-a289022d39/playwright-artifacts/inventory-warehouse-operat-1e0a4-ansit-but-no-write-controls-technical/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/task029-inventory-p3-browser-a289022d39/playwright-artifacts/inventory-warehouse-operat-1e0a4-ansit-but-no-write-controls-technical/trace.zip
+    Usage:
+
+        npx playwright show-trace docs/inventory_management/evidence/task029-inventory-p3-browser-a289022d39/playwright-artifacts/inventory-warehouse-operat-1e0a4-ansit-but-no-write-controls-technical/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[3/8] [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:145:1 › TASK-029 @technical no-Balance SKU remains selectable and insufficient Dispatch keeps Draft
+  3) [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:145:1 › TASK-029 @technical no-Balance SKU remains selectable and insufficient Dispatch keeps Draft 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 6
+
+    - Array []
+    + Array [
+    +   Object {
+    +     "path": "/api/v1/inventory/warehouses/5/bins",
+    +     "status": 500,
+    +   },
+    + ]
+
+      80 | });
+      81 | test.afterEach(async () => {
+    > 82 |   expect(failures).toEqual(expectedFailures);
+         |                    ^
+      83 |   // Every expected console HTTP error must correspond to an asserted real API rejection.
+      84 |   expect(errors.filter(error => !/^Failed to load resource: the server responded with a status of (400|403|404|409|500) \(/u.test(error))).toEqual([]);
+      85 |   expect(errors.filter(error => /^Failed to load resource:/u.test(error))).toHaveLength(expectedFailures.length);
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:82:20
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for getByRole('option', { name: 'SAME', exact: true })
+
+
+      87 | async function pick(page, label, option) {
+      88 |   await page.getByLabel(label, { exact: true }).click();
+    > 89 |   await page.getByRole("option", { name: option, exact: true }).click();
+         |                                                                 ^
+      90 | }
+      91 | async function chooseSku(page, index, sku) {
+      92 |   const line = page.getByTestId(`transfer-line-${index}`);
+        at pick (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:89:65)
+        at newDraft (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:102:34)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:146:3
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/task029-inventory-p3-browser-a289022d39/playwright-artifacts/inventory-warehouse-operat-a4d93-icient-Dispatch-keeps-Draft-technical/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: docs/inventory_management/evidence/task029-inventory-p3-browser-a289022d39/playwright-artifacts/inventory-warehouse-operat-a4d93-icient-Dispatch-keeps-Draft-technical/error-context.md
+
+    Error Context: docs/inventory_management/evidence/task029-inventory-p3-browser-a289022d39/playwright-artifacts/inventory-warehouse-operat-a4d93-icient-Dispatch-keeps-Draft-technical/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/task029-inventory-p3-browser-a289022d39/playwright-artifacts/inventory-warehouse-operat-a4d93-icient-Dispatch-keeps-Draft-technical/trace.zip
+    Usage:
+
+        npx playwright show-trace docs/inventory_management/evidence/task029-inventory-p3-browser-a289022d39/playwright-artifacts/inventory-warehouse-operat-a4d93-icient-Dispatch-keeps-Draft-technical/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[4/8] [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:154:1 › TASK-029 @technical unknown SKU and invalid quantity preserve other Draft input
+  4) [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:154:1 › TASK-029 @technical unknown SKU and invalid quantity preserve other Draft input 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 6
+
+    - Array []
+    + Array [
+    +   Object {
+    +     "path": "/api/v1/inventory/warehouses/7/bins",
+    +     "status": 500,
+    +   },
+    + ]
+
+      80 | });
+      81 | test.afterEach(async () => {
+    > 82 |   expect(failures).toEqual(expectedFailures);
+         |                    ^
+      83 |   // Every expected console HTTP error must correspond to an asserted real API rejection.
+      84 |   expect(errors.filter(error => !/^Failed to load resource: the server responded with a status of (400|403|404|409|500) \(/u.test(error))).toEqual([]);
+      85 |   expect(errors.filter(error => /^Failed to load resource:/u.test(error))).toHaveLength(expectedFailures.length);
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:82:20
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for getByRole('option', { name: 'SAME', exact: true })
+
+
+      87 | async function pick(page, label, option) {
+      88 |   await page.getByLabel(label, { exact: true }).click();
+    > 89 |   await page.getByRole("option", { name: option, exact: true }).click();
+         |                                                                 ^
+      90 | }
+      91 | async function chooseSku(page, index, sku) {
+      92 |   const line = page.getByTestId(`transfer-line-${index}`);
+        at pick (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:89:65)
+        at newDraft (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:102:34)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:155:3
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/task029-inventory-p3-browser-a289022d39/playwright-artifacts/inventory-warehouse-operat-46e17--preserve-other-Draft-input-technical/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: docs/inventory_management/evidence/task029-inventory-p3-browser-a289022d39/playwright-artifacts/inventory-warehouse-operat-46e17--preserve-other-Draft-input-technical/error-context.md
+
+    Error Context: docs/inventory_management/evidence/task029-inventory-p3-browser-a289022d39/playwright-artifacts/inventory-warehouse-operat-46e17--preserve-other-Draft-input-technical/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/task029-inventory-p3-browser-a289022d39/playwright-artifacts/inventory-warehouse-operat-46e17--preserve-other-Draft-input-technical/trace.zip
+    Usage:
+
+        npx playwright show-trace docs/inventory_management/evidence/task029-inventory-p3-browser-a289022d39/playwright-artifacts/inventory-warehouse-operat-46e17--preserve-other-Draft-input-technical/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[5/8] [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:163:1 › TASK-029 @technical delayed real lookup cannot replace a newer explicitly chosen SKU
+  5) [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:163:1 › TASK-029 @technical delayed real lookup cannot replace a newer explicitly chosen SKU 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 6
+
+    - Array []
+    + Array [
+    +   Object {
+    +     "path": "/api/v1/inventory/warehouses/9/bins",
+    +     "status": 500,
+    +   },
+    + ]
+
+      80 | });
+      81 | test.afterEach(async () => {
+    > 82 |   expect(failures).toEqual(expectedFailures);
+         |                    ^
+      83 |   // Every expected console HTTP error must correspond to an asserted real API rejection.
+      84 |   expect(errors.filter(error => !/^Failed to load resource: the server responded with a status of (400|403|404|409|500) \(/u.test(error))).toEqual([]);
+      85 |   expect(errors.filter(error => /^Failed to load resource:/u.test(error))).toHaveLength(expectedFailures.length);
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:82:20
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for getByRole('option', { name: 'SAME', exact: true })
+
+
+      87 | async function pick(page, label, option) {
+      88 |   await page.getByLabel(label, { exact: true }).click();
+    > 89 |   await page.getByRole("option", { name: option, exact: true }).click();
+         |                                                                 ^
+      90 | }
+      91 | async function chooseSku(page, index, sku) {
+      92 |   const line = page.getByTestId(`transfer-line-${index}`);
+        at pick (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:89:65)
+        at newDraft (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:102:34)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:164:3
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/task029-inventory-p3-browser-a289022d39/playwright-artifacts/inventory-warehouse-operat-77106-newer-explicitly-chosen-SKU-technical/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: docs/inventory_management/evidence/task029-inventory-p3-browser-a289022d39/playwright-artifacts/inventory-warehouse-operat-77106-newer-explicitly-chosen-SKU-technical/error-context.md
+
+    Error Context: docs/inventory_management/evidence/task029-inventory-p3-browser-a289022d39/playwright-artifacts/inventory-warehouse-operat-77106-newer-explicitly-chosen-SKU-technical/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/task029-inventory-p3-browser-a289022d39/playwright-artifacts/inventory-warehouse-operat-77106-newer-explicitly-chosen-SKU-technical/trace.zip
+    Usage:
+
+        npx playwright show-trace docs/inventory_management/evidence/task029-inventory-p3-browser-a289022d39/playwright-artifacts/inventory-warehouse-operat-77106-newer-explicitly-chosen-SKU-technical/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[6/8] [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:176:1 › TASK-029 @technical stale Draft version returns 409 and retains unsaved quantity
+  6) [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:176:1 › TASK-029 @technical stale Draft version returns 409 and retains unsaved quantity 
+
+    TypeError: response.status is not a function
+
+      114 |   await pace(); const response = await fetch(`${origin}/api/v1/inventory/transfers${path}`, { method: body ? "POST" : "GET",
+      115 |     headers: { Authorization: `Bearer ${managerToken}`, "Content-Type": "application/json", "Idempotency-Key": randomUUID() }, ...(body ? { body: JSON.stringify(body) } : {}) });
+    > 116 |   expect(response.status()).toBe(200); return (await response.json()).data;
+          |                   ^
+      117 | }
+      118 | const source = () => ({ module: "INVENTORY", documentType: "TRANSFER", documentId: randomUUID(), lineId: "", eventId: randomUUID() });
+      119 | async function seededDraft() {
+        at api (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:116:19)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:177:17
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/task029-inventory-p3-browser-a289022d39/playwright-artifacts/inventory-warehouse-operat-2af70-nd-retains-unsaved-quantity-technical/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: docs/inventory_management/evidence/task029-inventory-p3-browser-a289022d39/playwright-artifacts/inventory-warehouse-operat-2af70-nd-retains-unsaved-quantity-technical/error-context.md
+
+    Error Context: docs/inventory_management/evidence/task029-inventory-p3-browser-a289022d39/playwright-artifacts/inventory-warehouse-operat-2af70-nd-retains-unsaved-quantity-technical/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/task029-inventory-p3-browser-a289022d39/playwright-artifacts/inventory-warehouse-operat-2af70-nd-retains-unsaved-quantity-technical/trace.zip
+    Usage:
+
+        npx playwright show-trace docs/inventory_management/evidence/task029-inventory-p3-browser-a289022d39/playwright-artifacts/inventory-warehouse-operat-2af70-nd-retains-unsaved-quantity-technical/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[7/8] [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:187:1 › TASK-029 @technical Quarantined full receipt requires reason and destination ownership
+  7) [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:187:1 › TASK-029 @technical Quarantined full receipt requires reason and destination ownership 
+
+    TypeError: response.status is not a function
+
+      114 |   await pace(); const response = await fetch(`${origin}/api/v1/inventory/transfers${path}`, { method: body ? "POST" : "GET",
+      115 |     headers: { Authorization: `Bearer ${managerToken}`, "Content-Type": "application/json", "Idempotency-Key": randomUUID() }, ...(body ? { body: JSON.stringify(body) } : {}) });
+    > 116 |   expect(response.status()).toBe(200); return (await response.json()).data;
+          |                   ^
+      117 | }
+      118 | const source = () => ({ module: "INVENTORY", documentType: "TRANSFER", documentId: randomUUID(), lineId: "", eventId: randomUUID() });
+      119 | async function seededDraft() {
+        at api (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:116:19)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:188:17
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/task029-inventory-p3-browser-a289022d39/playwright-artifacts/inventory-warehouse-operat-87860-n-and-destination-ownership-technical/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: docs/inventory_management/evidence/task029-inventory-p3-browser-a289022d39/playwright-artifacts/inventory-warehouse-operat-87860-n-and-destination-ownership-technical/error-context.md
+
+    Error Context: docs/inventory_management/evidence/task029-inventory-p3-browser-a289022d39/playwright-artifacts/inventory-warehouse-operat-87860-n-and-destination-ownership-technical/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/task029-inventory-p3-browser-a289022d39/playwright-artifacts/inventory-warehouse-operat-87860-n-and-destination-ownership-technical/trace.zip
+    Usage:
+
+        npx playwright show-trace docs/inventory_management/evidence/task029-inventory-p3-browser-a289022d39/playwright-artifacts/inventory-warehouse-operat-87860-n-and-destination-ownership-technical/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[8/8] [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:197:1 › TASK-029 @technical keyboard lookup, unsaved close, responsive and URL refresh
+  8) [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:197:1 › TASK-029 @technical keyboard lookup, unsaved close, responsive and URL refresh 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 6
+
+    - Array []
+    + Array [
+    +   Object {
+    +     "path": "/api/v1/inventory/warehouses/15/bins",
+    +     "status": 500,
+    +   },
+    + ]
+
+      80 | });
+      81 | test.afterEach(async () => {
+    > 82 |   expect(failures).toEqual(expectedFailures);
+         |                    ^
+      83 |   // Every expected console HTTP error must correspond to an asserted real API rejection.
+      84 |   expect(errors.filter(error => !/^Failed to load resource: the server responded with a status of (400|403|404|409|500) \(/u.test(error))).toEqual([]);
+      85 |   expect(errors.filter(error => /^Failed to load resource:/u.test(error))).toHaveLength(expectedFailures.length);
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:82:20
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for getByRole('option', { name: 'SAME', exact: true })
+
+
+      87 | async function pick(page, label, option) {
+      88 |   await page.getByLabel(label, { exact: true }).click();
+    > 89 |   await page.getByRole("option", { name: option, exact: true }).click();
+         |                                                                 ^
+      90 | }
+      91 | async function chooseSku(page, index, sku) {
+      92 |   const line = page.getByTestId(`transfer-line-${index}`);
+        at pick (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:89:65)
+        at newDraft (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:102:34)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:198:60
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/task029-inventory-p3-browser-a289022d39/playwright-artifacts/inventory-warehouse-operat-242a3--responsive-and-URL-refresh-technical/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: docs/inventory_management/evidence/task029-inventory-p3-browser-a289022d39/playwright-artifacts/inventory-warehouse-operat-242a3--responsive-and-URL-refresh-technical/error-context.md
+
+    Error Context: docs/inventory_management/evidence/task029-inventory-p3-browser-a289022d39/playwright-artifacts/inventory-warehouse-operat-242a3--responsive-and-URL-refresh-technical/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/task029-inventory-p3-browser-a289022d39/playwright-artifacts/inventory-warehouse-operat-242a3--responsive-and-URL-refresh-technical/trace.zip
+    Usage:
+
+        npx playwright show-trace docs/inventory_management/evidence/task029-inventory-p3-browser-a289022d39/playwright-artifacts/inventory-warehouse-operat-242a3--responsive-and-URL-refresh-technical/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+  8 failed
+    [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:123:1 › TASK-029 @technical Inventory-only two-line Draft Dispatch Receive conserves real stock 
+    [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:138:1 › TASK-029 @technical view-only actor sees real In Transit but no write controls 
+    [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:145:1 › TASK-029 @technical no-Balance SKU remains selectable and insufficient Dispatch keeps Draft 
+    [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:154:1 › TASK-029 @technical unknown SKU and invalid quantity preserve other Draft input 
+    [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:163:1 › TASK-029 @technical delayed real lookup cannot replace a newer explicitly chosen SKU 
+    [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:176:1 › TASK-029 @technical stale Draft version returns 409 and retains unsaved quantity 
+    [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:187:1 › TASK-029 @technical Quarantined full receipt requires reason and destination ownership 
+    [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:197:1 › TASK-029 @technical keyboard lookup, unsaved close, responsive and URL refresh 

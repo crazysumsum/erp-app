@@ -1,0 +1,109 @@
+<testsuites id="" name="" tests="16" failures="1" skipped="0" errors="1" time="74.607383">
+<testsuite name="inventory-high-risk.spec.js" timestamp="2026-10-08T07:35:17.704Z" hostname="technical" tests="8" failures="1" skipped="0" time="45.033" errors="1">
+<testcase name="TASK-033 @technical Base-only IN, three statuses and immutable/new Lot validate real facts" classname="inventory-high-risk.spec.js" time="12.223">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|playwright-artifacts/inventory-high-risk-TASK-0-551ab-new-Lot-validate-real-facts-technical/error-context.md]]
+
+[[ATTACHMENT|playwright-artifacts/inventory-high-risk-TASK-0-551ab-new-Lot-validate-real-facts-technical/error-context.md]]
+]]>
+</system-out>
+<error message="locator.click: Error: strict mode violation: locator(&apos;[id=&quot;f_163550d7-3781-4748-b3b9-87b561623ea9_lb&quot;]&apos;).getByRole(&apos;option&apos;, { name: &apos;HR-LOT · 2030-12-31&apos;, exact: true }) resolved to 2 elements:" type="Error">
+<![CDATA[  [technical] › inventory-high-risk.spec.js:147:1 › TASK-033 @technical Base-only IN, three statuses and immutable/new Lot validate real facts 
+
+    Error: locator.click: Error: strict mode violation: locator('[id="f_163550d7-3781-4748-b3b9-87b561623ea9_lb"]').getByRole('option', { name: 'HR-LOT · 2030-12-31', exact: true }) resolved to 2 elements:
+        1) <div role="option" tabindex="-1" aria-setsize="2" aria-posinset="1" aria-selected="false" id="f_163550d7-3781-4748-b3b9-87b561623ea9_0" class="q-item q-item-type row no-wrap q-item--clickable q-link cursor-pointer q-manual-focusable">…</div> aka getByRole('option', { name: 'HR-LOT · 2030-12-' }).first()
+        2) <div role="option" tabindex="-1" aria-setsize="2" aria-posinset="2" aria-selected="false" id="f_163550d7-3781-4748-b3b9-87b561623ea9_1" class="q-item q-item-type row no-wrap q-item--clickable q-link cursor-pointer q-manual-focusable">…</div> aka getByRole('option', { name: 'HR-LOT · 2030-12-' }).nth(1)
+
+    Call log:
+      - waiting for locator('[id="f_163550d7-3781-4748-b3b9-87b561623ea9_lb"]').getByRole('option', { name: 'HR-LOT · 2030-12-31', exact: true })
+
+
+      111 |   const field = page.getByLabel(label, { exact: true }); await field.click(); await expect(field).toHaveAttribute("aria-expanded", "true");
+      112 |   const listbox = page.locator(`[id="${await field.getAttribute('aria-controls')}"]`);
+    > 113 |   await listbox.getByRole("option", { name: option, exact: true }).click(); await expect(listbox).toBeHidden();
+          |                                                                    ^
+      114 | }
+      115 | async function form(page, action = "IN", sku = fixture.plain, quantity = "3") {
+      116 |   await page.goto(`/inventory/adjustments?action=${action}`);
+        at pick (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-high-risk.spec.js:113:68)
+        at form (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-high-risk.spec.js:123:25)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-high-risk.spec.js:163:75
+
+    Error Context: ../../../docs/inventory_management/evidence/task033-db-inventory-p3-browser-cad51c9740/playwright-artifacts/inventory-high-risk-TASK-0-551ab-new-Lot-validate-real-facts-technical/error-context.md
+
+    Error Context: ../../../docs/inventory_management/evidence/task033-db-inventory-p3-browser-cad51c9740/playwright-artifacts/inventory-high-risk-TASK-0-551ab-new-Lot-validate-real-facts-technical/error-context.md
+]]>
+</error>
+</testcase>
+<testcase name="TASK-033 @technical OUT reads current guards and retains safe input after a real version rejection" classname="inventory-high-risk.spec.js" time="4.578">
+</testcase>
+<testcase name="TASK-033 @technical Status paired effects and whole-group Reversal preserve actual history and stock" classname="inventory-high-risk.spec.js" time="8.243">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|playwright-artifacts/inventory-high-risk-TASK-0-84a75-ve-actual-history-and-stock-technical/error-context.md]]
+
+[[ATTACHMENT|playwright-artifacts/inventory-high-risk-TASK-0-84a75-ve-actual-history-and-stock-technical/error-context.md]]
+]]>
+</system-out>
+<failure message="expect(locator).toBeVisible() failed" type="expect.toBeVisible">
+<![CDATA[  [technical] › inventory-high-risk.spec.js:179:1 › TASK-033 @technical Status paired effects and whole-group Reversal preserve actual history and stock 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('link', { name: /查看已過帳 Movement/u }).first()
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByRole('link', { name: /查看已過帳 Movement/u }).first() with timeout 5000ms
+      - waiting for getByRole('link', { name: /查看已過帳 Movement/u }).first()
+
+
+      134 | async function resolved(page) {
+      135 |   await expect(page.getByRole("heading", { name: /已確認過帳/u })).toBeVisible();
+    > 136 |   await expect(page.getByRole("link", { name: /查看已過帳 Movement/u }).first()).toBeVisible();
+          |                                                                             ^
+      137 |   await expect(page.getByRole("button", { name: "重載已確認結果", exact: true })).toHaveCount(0);
+      138 | }
+      139 | async function stock(sku = fixture.plain) {
+        at resolved (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-high-risk.spec.js:136:77)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-high-risk.spec.js:182:24
+
+    Error Context: ../../../docs/inventory_management/evidence/task033-db-inventory-p3-browser-cad51c9740/playwright-artifacts/inventory-high-risk-TASK-0-84a75-ve-actual-history-and-stock-technical/error-context.md
+
+    Error Context: ../../../docs/inventory_management/evidence/task033-db-inventory-p3-browser-cad51c9740/playwright-artifacts/inventory-high-risk-TASK-0-84a75-ve-actual-history-and-stock-technical/error-context.md
+]]>
+</failure>
+</testcase>
+<testcase name="TASK-033 @technical actual permission, password and device gates cannot be replaced by operation or FEFO" classname="inventory-high-risk.spec.js" time="6.064">
+</testcase>
+<testcase name="TASK-033 @technical pre-forward abort retries only original intent with fresh password/signature and one effect" classname="inventory-high-risk.spec.js" time="4.085">
+</testcase>
+<testcase name="TASK-033 @technical real committed-response loss resolves original source without a second POST" classname="inventory-high-risk.spec.js" time="2.652">
+</testcase>
+<testcase name="TASK-033 @technical refresh/navigation is query-only, actor-isolated and storage corruption blocks new effects" classname="inventory-high-risk.spec.js" time="3.403">
+</testcase>
+<testcase name="TASK-033 @technical keyboard, cleared cancellation, XSS escaping, responsive and delayed real SKU lookup" classname="inventory-high-risk.spec.js" time="3.785">
+</testcase>
+</testsuite>
+<testsuite name="inventory-warehouse-operations.spec.js" timestamp="2026-10-08T07:35:17.704Z" hostname="technical" tests="8" failures="0" skipped="0" time="25.569" errors="0">
+<testcase name="TASK-029 @technical Inventory-only two-line Draft Dispatch Receive conserves real stock" classname="inventory-warehouse-operations.spec.js" time="8.965">
+</testcase>
+<testcase name="TASK-029 @technical view-only actor sees real In Transit but no write controls" classname="inventory-warehouse-operations.spec.js" time="0.779">
+</testcase>
+<testcase name="TASK-029 @technical no-Balance SKU remains selectable and insufficient Dispatch keeps Draft" classname="inventory-warehouse-operations.spec.js" time="3.475">
+</testcase>
+<testcase name="TASK-029 @technical unknown SKU, invalid quantity and revoked token fail safely" classname="inventory-warehouse-operations.spec.js" time="2.354">
+</testcase>
+<testcase name="TASK-029 @technical delayed real lookup cannot replace a newer explicitly chosen SKU" classname="inventory-warehouse-operations.spec.js" time="2.306">
+</testcase>
+<testcase name="TASK-029 @technical stale Draft version returns 409 and retains unsaved quantity" classname="inventory-warehouse-operations.spec.js" time="1.364">
+</testcase>
+<testcase name="TASK-029 @technical Quarantined full receipt requires reason and destination ownership" classname="inventory-warehouse-operations.spec.js" time="2.629">
+</testcase>
+<testcase name="TASK-029 @technical keyboard lookup, unsaved close, responsive and URL refresh" classname="inventory-warehouse-operations.spec.js" time="3.697">
+</testcase>
+</testsuite>
+</testsuites>

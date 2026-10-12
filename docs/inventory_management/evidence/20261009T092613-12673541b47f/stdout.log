@@ -1,0 +1,842 @@
+
+Running 16 tests using 1 worker
+
+[1/16] [technical] › client/e2e/inventory-management/inventory-high-risk.spec.js:156:1 › TASK-033 @technical Base-only IN, three statuses and immutable/new Lot validate real facts
+  1) [technical] › client/e2e/inventory-management/inventory-high-risk.spec.js:156:1 › TASK-033 @technical Base-only IN, three statuses and immutable/new Lot validate real facts 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 3
+
+    - Array []
+    + Array [
+    +   "/api/v1/user/me",
+    + ]
+
+       98 |   await page.evaluate(() => document.querySelectorAll('input[type="password"]').forEach(input => { input.value = ""; })).catch(() => {});
+       99 |   password = [REDACTED]
+    > 100 |   expect(failures).toEqual(expectedFailures); expect(networkFailures).toEqual(expectedNetworkFailures);
+          |                                                                       ^
+      101 |   expect(errors.filter(error => !/^Failed to load resource: (the server responded with a status of (400|401|403|404|409|500) \(|net::ERR_FAILED)/u.test(error))).toEqual([]);
+      102 |   expect(errors.filter(error => /^Failed to load resource:/u.test(error))).toHaveLength(expectedFailures.length + expectedNetworkFailures.length);
+      103 | });
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-high-risk.spec.js:100:71
+
+    Error: locator.fill: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for getByLabel('SKU Code', { exact: true })
+
+
+      121 |     await expect.poll(() => drawer.evaluate(element => element.getBoundingClientRect().right)).toBeLessThanOrEqual(0);
+      122 |   }
+    > 123 |   await page.getByLabel("SKU Code", { exact: true }).fill(sku.code); await page.getByRole("button", { name: "查找 SKU", exact: true }).click();
+          |                                                      ^
+      124 |   await expect(page.getByText(`${sku.code} · Widget`, { exact: false })).toBeVisible();
+      125 |   await pick(page, "倉庫", fixture.warehouse.code); await pick(page, "庫位", "SAME");
+      126 |   if (action !== "IN") {
+        at form (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-high-risk.spec.js:123:54)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-high-risk.spec.js:157:3
+
+    Error Context: docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-high-risk-TASK-0-551ab-new-Lot-validate-real-facts-technical/error-context.md
+
+    Error Context: docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-high-risk-TASK-0-551ab-new-Lot-validate-real-facts-technical/error-context.md
+
+
+[2/16] [technical] › client/e2e/inventory-management/inventory-high-risk.spec.js:180:1 › TASK-033 @technical OUT reads current guards and retains safe input after a real version rejection
+  2) [technical] › client/e2e/inventory-management/inventory-high-risk.spec.js:180:1 › TASK-033 @technical OUT reads current guards and retains safe input after a real version rejection 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 3
+
+    - Array []
+    + Array [
+    +   "/api/v1/user/me",
+    + ]
+
+       98 |   await page.evaluate(() => document.querySelectorAll('input[type="password"]').forEach(input => { input.value = ""; })).catch(() => {});
+       99 |   password = [REDACTED]
+    > 100 |   expect(failures).toEqual(expectedFailures); expect(networkFailures).toEqual(expectedNetworkFailures);
+          |                                                                       ^
+      101 |   expect(errors.filter(error => !/^Failed to load resource: (the server responded with a status of (400|401|403|404|409|500) \(|net::ERR_FAILED)/u.test(error))).toEqual([]);
+      102 |   expect(errors.filter(error => /^Failed to load resource:/u.test(error))).toHaveLength(expectedFailures.length + expectedNetworkFailures.length);
+      103 | });
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-high-risk.spec.js:100:71
+
+    Error: locator.fill: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for getByLabel('SKU Code', { exact: true })
+
+
+      121 |     await expect.poll(() => drawer.evaluate(element => element.getBoundingClientRect().right)).toBeLessThanOrEqual(0);
+      122 |   }
+    > 123 |   await page.getByLabel("SKU Code", { exact: true }).fill(sku.code); await page.getByRole("button", { name: "查找 SKU", exact: true }).click();
+          |                                                      ^
+      124 |   await expect(page.getByText(`${sku.code} · Widget`, { exact: false })).toBeVisible();
+      125 |   await pick(page, "倉庫", fixture.warehouse.code); await pick(page, "庫位", "SAME");
+      126 |   if (action !== "IN") {
+        at form (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-high-risk.spec.js:123:54)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-high-risk.spec.js:181:3
+
+    Error Context: docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-high-risk-TASK-0-a6c97-er-a-real-version-rejection-technical/error-context.md
+
+    Error Context: docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-high-risk-TASK-0-a6c97-er-a-real-version-rejection-technical/error-context.md
+
+
+[3/16] [technical] › client/e2e/inventory-management/inventory-high-risk.spec.js:190:1 › TASK-033 @technical Status paired effects and whole-group Reversal preserve actual history and stock
+  3) [technical] › client/e2e/inventory-management/inventory-high-risk.spec.js:190:1 › TASK-033 @technical Status paired effects and whole-group Reversal preserve actual history and stock 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 3
+
+    - Array []
+    + Array [
+    +   "/api/v1/user/me",
+    + ]
+
+       98 |   await page.evaluate(() => document.querySelectorAll('input[type="password"]').forEach(input => { input.value = ""; })).catch(() => {});
+       99 |   password = [REDACTED]
+    > 100 |   expect(failures).toEqual(expectedFailures); expect(networkFailures).toEqual(expectedNetworkFailures);
+          |                                                                       ^
+      101 |   expect(errors.filter(error => !/^Failed to load resource: (the server responded with a status of (400|401|403|404|409|500) \(|net::ERR_FAILED)/u.test(error))).toEqual([]);
+      102 |   expect(errors.filter(error => /^Failed to load resource:/u.test(error))).toHaveLength(expectedFailures.length + expectedNetworkFailures.length);
+      103 | });
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-high-risk.spec.js:100:71
+
+    Error: locator.fill: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for getByLabel('SKU Code', { exact: true })
+
+
+      121 |     await expect.poll(() => drawer.evaluate(element => element.getBoundingClientRect().right)).toBeLessThanOrEqual(0);
+      122 |   }
+    > 123 |   await page.getByLabel("SKU Code", { exact: true }).fill(sku.code); await page.getByRole("button", { name: "查找 SKU", exact: true }).click();
+          |                                                      ^
+      124 |   await expect(page.getByText(`${sku.code} · Widget`, { exact: false })).toBeVisible();
+      125 |   await pick(page, "倉庫", fixture.warehouse.code); await pick(page, "庫位", "SAME");
+      126 |   if (action !== "IN") {
+        at form (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-high-risk.spec.js:123:54)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-high-risk.spec.js:191:3
+
+    Error Context: docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-high-risk-TASK-0-84a75-ve-actual-history-and-stock-technical/error-context.md
+
+    Error Context: docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-high-risk-TASK-0-84a75-ve-actual-history-and-stock-technical/error-context.md
+
+
+[4/16] [technical] › client/e2e/inventory-management/inventory-high-risk.spec.js:207:1 › TASK-033 @technical actual permission, password and device gates cannot be replaced by operation or FEFO
+  4) [technical] › client/e2e/inventory-management/inventory-high-risk.spec.js:207:1 › TASK-033 @technical actual permission, password and device gates cannot be replaced by operation or FEFO 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 7
+
+    - Array []
+    + Array [
+    +   "/api/v1/user/me",
+    +   "/api/v1/user/me",
+    +   "/api/v1/user/me",
+    +   "/api/v1/user/me",
+    +   "/api/v1/user/me",
+    + ]
+
+       98 |   await page.evaluate(() => document.querySelectorAll('input[type="password"]').forEach(input => { input.value = ""; })).catch(() => {});
+       99 |   password = [REDACTED]
+    > 100 |   expect(failures).toEqual(expectedFailures); expect(networkFailures).toEqual(expectedNetworkFailures);
+          |                                                                       ^
+      101 |   expect(errors.filter(error => !/^Failed to load resource: (the server responded with a status of (400|401|403|404|409|500) \(|net::ERR_FAILED)/u.test(error))).toEqual([]);
+      102 |   expect(errors.filter(error => /^Failed to load resource:/u.test(error))).toHaveLength(expectedFailures.length + expectedNetworkFailures.length);
+      103 | });
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-high-risk.spec.js:100:71
+
+    Error: locator.fill: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for getByLabel('SKU Code', { exact: true })
+
+
+      121 |     await expect.poll(() => drawer.evaluate(element => element.getBoundingClientRect().right)).toBeLessThanOrEqual(0);
+      122 |   }
+    > 123 |   await page.getByLabel("SKU Code", { exact: true }).fill(sku.code); await page.getByRole("button", { name: "查找 SKU", exact: true }).click();
+          |                                                      ^
+      124 |   await expect(page.getByText(`${sku.code} · Widget`, { exact: false })).toBeVisible();
+      125 |   await pick(page, "倉庫", fixture.warehouse.code); await pick(page, "庫位", "SAME");
+      126 |   if (action !== "IN") {
+        at form (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-high-risk.spec.js:123:54)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-high-risk.spec.js:213:46
+
+    Error Context: docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-high-risk-TASK-0-5009f-placed-by-operation-or-FEFO-technical/error-context.md
+
+    Error Context: docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-high-risk-TASK-0-5009f-placed-by-operation-or-FEFO-technical/error-context.md
+
+
+[5/16] [technical] › client/e2e/inventory-management/inventory-high-risk.spec.js:227:1 › TASK-033 @technical pre-forward abort retries only original intent with fresh password/signature and one effect
+  5) [technical] › client/e2e/inventory-management/inventory-high-risk.spec.js:227:1 › TASK-033 @technical pre-forward abort retries only original intent with fresh password/signature and one effect 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 3
+
+    - Array []
+    + Array [
+    +   "/api/v1/user/me",
+    + ]
+
+       98 |   await page.evaluate(() => document.querySelectorAll('input[type="password"]').forEach(input => { input.value = ""; })).catch(() => {});
+       99 |   password = [REDACTED]
+    > 100 |   expect(failures).toEqual(expectedFailures); expect(networkFailures).toEqual(expectedNetworkFailures);
+          |                                                                       ^
+      101 |   expect(errors.filter(error => !/^Failed to load resource: (the server responded with a status of (400|401|403|404|409|500) \(|net::ERR_FAILED)/u.test(error))).toEqual([]);
+      102 |   expect(errors.filter(error => /^Failed to load resource:/u.test(error))).toHaveLength(expectedFailures.length + expectedNetworkFailures.length);
+      103 | });
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-high-risk.spec.js:100:71
+
+    Error: locator.fill: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for getByLabel('SKU Code', { exact: true })
+
+
+      121 |     await expect.poll(() => drawer.evaluate(element => element.getBoundingClientRect().right)).toBeLessThanOrEqual(0);
+      122 |   }
+    > 123 |   await page.getByLabel("SKU Code", { exact: true }).fill(sku.code); await page.getByRole("button", { name: "查找 SKU", exact: true }).click();
+          |                                                      ^
+      124 |   await expect(page.getByText(`${sku.code} · Widget`, { exact: false })).toBeVisible();
+      125 |   await pick(page, "倉庫", fixture.warehouse.code); await pick(page, "庫位", "SAME");
+      126 |   if (action !== "IN") {
+        at form (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-high-risk.spec.js:123:54)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-high-risk.spec.js:230:3
+
+    Error Context: docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-high-risk-TASK-0-8f9b7-rd-signature-and-one-effect-technical/error-context.md
+
+    Error Context: docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-high-risk-TASK-0-8f9b7-rd-signature-and-one-effect-technical/error-context.md
+
+
+[6/16] [technical] › client/e2e/inventory-management/inventory-high-risk.spec.js:242:1 › TASK-033 @technical real committed-response loss resolves original source without a second POST
+  6) [technical] › client/e2e/inventory-management/inventory-high-risk.spec.js:242:1 › TASK-033 @technical real committed-response loss resolves original source without a second POST 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 3
+
+    - Array []
+    + Array [
+    +   "/api/v1/user/me",
+    + ]
+
+       98 |   await page.evaluate(() => document.querySelectorAll('input[type="password"]').forEach(input => { input.value = ""; })).catch(() => {});
+       99 |   password = [REDACTED]
+    > 100 |   expect(failures).toEqual(expectedFailures); expect(networkFailures).toEqual(expectedNetworkFailures);
+          |                                                                       ^
+      101 |   expect(errors.filter(error => !/^Failed to load resource: (the server responded with a status of (400|401|403|404|409|500) \(|net::ERR_FAILED)/u.test(error))).toEqual([]);
+      102 |   expect(errors.filter(error => /^Failed to load resource:/u.test(error))).toHaveLength(expectedFailures.length + expectedNetworkFailures.length);
+      103 | });
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-high-risk.spec.js:100:71
+
+    Error: locator.fill: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for getByLabel('SKU Code', { exact: true })
+
+
+      121 |     await expect.poll(() => drawer.evaluate(element => element.getBoundingClientRect().right)).toBeLessThanOrEqual(0);
+      122 |   }
+    > 123 |   await page.getByLabel("SKU Code", { exact: true }).fill(sku.code); await page.getByRole("button", { name: "查找 SKU", exact: true }).click();
+          |                                                      ^
+      124 |   await expect(page.getByText(`${sku.code} · Widget`, { exact: false })).toBeVisible();
+      125 |   await pick(page, "倉庫", fixture.warehouse.code); await pick(page, "庫位", "SAME");
+      126 |   if (action !== "IN") {
+        at form (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-high-risk.spec.js:123:54)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-high-risk.spec.js:246:3
+
+    Error Context: docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-high-risk-TASK-0-cbd42-ource-without-a-second-POST-technical/error-context.md
+
+    Error Context: docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-high-risk-TASK-0-cbd42-ource-without-a-second-POST-technical/error-context.md
+
+
+[7/16] [technical] › client/e2e/inventory-management/inventory-high-risk.spec.js:253:1 › TASK-033 @technical refresh/navigation is query-only, actor-isolated and storage corruption blocks new effects
+  7) [technical] › client/e2e/inventory-management/inventory-high-risk.spec.js:253:1 › TASK-033 @technical refresh/navigation is query-only, actor-isolated and storage corruption blocks new effects 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 3
+
+    - Array []
+    + Array [
+    +   "/api/v1/user/me",
+    + ]
+
+       98 |   await page.evaluate(() => document.querySelectorAll('input[type="password"]').forEach(input => { input.value = ""; })).catch(() => {});
+       99 |   password = [REDACTED]
+    > 100 |   expect(failures).toEqual(expectedFailures); expect(networkFailures).toEqual(expectedNetworkFailures);
+          |                                                                       ^
+      101 |   expect(errors.filter(error => !/^Failed to load resource: (the server responded with a status of (400|401|403|404|409|500) \(|net::ERR_FAILED)/u.test(error))).toEqual([]);
+      102 |   expect(errors.filter(error => /^Failed to load resource:/u.test(error))).toHaveLength(expectedFailures.length + expectedNetworkFailures.length);
+      103 | });
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-high-risk.spec.js:100:71
+
+    Error: locator.fill: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for getByLabel('SKU Code', { exact: true })
+
+
+      121 |     await expect.poll(() => drawer.evaluate(element => element.getBoundingClientRect().right)).toBeLessThanOrEqual(0);
+      122 |   }
+    > 123 |   await page.getByLabel("SKU Code", { exact: true }).fill(sku.code); await page.getByRole("button", { name: "查找 SKU", exact: true }).click();
+          |                                                      ^
+      124 |   await expect(page.getByText(`${sku.code} · Widget`, { exact: false })).toBeVisible();
+      125 |   await pick(page, "倉庫", fixture.warehouse.code); await pick(page, "庫位", "SAME");
+      126 |   if (action !== "IN") {
+        at form (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-high-risk.spec.js:123:54)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-high-risk.spec.js:255:3
+
+    Error Context: docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-high-risk-TASK-0-601d9-rruption-blocks-new-effects-technical/error-context.md
+
+    Error Context: docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-high-risk-TASK-0-601d9-rruption-blocks-new-effects-technical/error-context.md
+
+
+[8/16] [technical] › client/e2e/inventory-management/inventory-high-risk.spec.js:268:1 › TASK-033 @technical keyboard, cleared cancellation, XSS escaping, responsive and delayed real SKU lookup
+  8) [technical] › client/e2e/inventory-management/inventory-high-risk.spec.js:268:1 › TASK-033 @technical keyboard, cleared cancellation, XSS escaping, responsive and delayed real SKU lookup 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 3
+
+    - Array []
+    + Array [
+    +   "/api/v1/user/me",
+    + ]
+
+       98 |   await page.evaluate(() => document.querySelectorAll('input[type="password"]').forEach(input => { input.value = ""; })).catch(() => {});
+       99 |   password = [REDACTED]
+    > 100 |   expect(failures).toEqual(expectedFailures); expect(networkFailures).toEqual(expectedNetworkFailures);
+          |                                                                       ^
+      101 |   expect(errors.filter(error => !/^Failed to load resource: (the server responded with a status of (400|401|403|404|409|500) \(|net::ERR_FAILED)/u.test(error))).toEqual([]);
+      102 |   expect(errors.filter(error => /^Failed to load resource:/u.test(error))).toHaveLength(expectedFailures.length + expectedNetworkFailures.length);
+      103 | });
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-high-risk.spec.js:100:71
+
+    Error: locator.fill: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for getByLabel('SKU Code', { exact: true })
+
+
+      121 |     await expect.poll(() => drawer.evaluate(element => element.getBoundingClientRect().right)).toBeLessThanOrEqual(0);
+      122 |   }
+    > 123 |   await page.getByLabel("SKU Code", { exact: true }).fill(sku.code); await page.getByRole("button", { name: "查找 SKU", exact: true }).click();
+          |                                                      ^
+      124 |   await expect(page.getByText(`${sku.code} · Widget`, { exact: false })).toBeVisible();
+      125 |   await pick(page, "倉庫", fixture.warehouse.code); await pick(page, "庫位", "SAME");
+      126 |   if (action !== "IN") {
+        at form (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-high-risk.spec.js:123:54)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-high-risk.spec.js:269:3
+
+    Error Context: docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-high-risk-TASK-0-53e4f-and-delayed-real-SKU-lookup-technical/error-context.md
+
+    Error Context: docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-high-risk-TASK-0-53e4f-and-delayed-real-SKU-lookup-technical/error-context.md
+
+
+[9/16] [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:129:1 › TASK-029 @technical Inventory-only two-line Draft Dispatch Receive conserves real stock
+  9) [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:129:1 › TASK-029 @technical Inventory-only two-line Draft Dispatch Receive conserves real stock 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 5
+
+    - Array []
+    + Array [
+    +   "Access to fetch at 'http://127.0.0.1:63975/api/v1/user/me' from origin 'http://127.0.0.1:5205' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+    +   "Unexpected API network failure: /api/v1/user/me net::ERR_FAILED",
+    +   "Failed to load resource: net::ERR_FAILED",
+    + ]
+
+      83 |   expect(failures).toEqual(expectedFailures);
+      84 |   // Every expected console HTTP error must correspond to an asserted real API rejection.
+    > 85 |   expect(errors.filter(error => !/^Failed to load resource: the server responded with a status of (400|401|403|404|409|500) \(/u.test(error))).toEqual([]);
+         |                                                                                                                                                ^
+      86 |   expect(errors.filter(error => /^Failed to load resource:/u.test(error))).toHaveLength(expectedFailures.length);
+      87 | });
+      88 | async function pick(page, label, option) {
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:85:144
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for getByRole('button', { name: '新增調撥', exact: true })
+
+
+      103 | }
+      104 | async function newDraft(page, sku = fixture.plain, two = false) {
+    > 105 |   await page.goto("/inventory/transfers"); await page.getByRole("button", { name: "新增調撥", exact: true }).click();
+          |                                                                                                          ^
+      106 |   await pick(page, "來源倉庫", `${fixture.source.code} — ${fixture.source.code}`);
+      107 |   await pick(page, "目的倉庫", `${fixture.destination.code} — ${fixture.destination.code}`);
+      108 |   await chooseSku(page, 1, sku); await pick(page, "第 1 行來源庫位", "SAME");
+        at newDraft (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:105:106)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:130:3
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-warehouse-operat-58310-eceive-conserves-real-stock-technical/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-warehouse-operat-58310-eceive-conserves-real-stock-technical/error-context.md
+
+    Error Context: docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-warehouse-operat-58310-eceive-conserves-real-stock-technical/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-warehouse-operat-58310-eceive-conserves-real-stock-technical/trace.zip
+    Usage:
+
+        npx playwright show-trace docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-warehouse-operat-58310-eceive-conserves-real-stock-technical/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[10/16] [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:149:1 › TASK-029 @technical view-only actor sees real In Transit but no write controls
+  10) [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:149:1 › TASK-029 @technical view-only actor sees real In Transit but no write controls 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText('來源已扣、目的未入；在途不可修改／取消。')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByText('來源已扣、目的未入；在途不可修改／取消。') with timeout 5000ms
+      - waiting for getByText('來源已扣、目的未入；在途不可修改／取消。')
+
+
+      151 |   await page.addInitScript(value => localStorage.setItem("erp.token", value), viewerToken);
+      152 |   await page.goto(`/inventory/transfers?id=${draft.id}`);
+    > 153 |   await expect(page.getByText("來源已扣、目的未入；在途不可修改／取消。")).toBeVisible();
+          |                                                        ^
+      154 |   for (const label of ["新增調撥", "編輯草稿", "取消草稿", "準備整張收貨"]) await expect(page.getByRole("button", { name: label, exact: true })).toHaveCount(0);
+      155 | });
+      156 | test("TASK-029 @technical no-Balance SKU remains selectable and insufficient Dispatch keeps Draft", async ({ page }) => {
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:153:56
+
+    Error: expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 5
+
+    - Array []
+    + Array [
+    +   "Access to fetch at 'http://127.0.0.1:63975/api/v1/user/me' from origin 'http://127.0.0.1:5205' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+    +   "Unexpected API network failure: /api/v1/user/me net::ERR_FAILED",
+    +   "Failed to load resource: net::ERR_FAILED",
+    + ]
+
+      83 |   expect(failures).toEqual(expectedFailures);
+      84 |   // Every expected console HTTP error must correspond to an asserted real API rejection.
+    > 85 |   expect(errors.filter(error => !/^Failed to load resource: the server responded with a status of (400|401|403|404|409|500) \(/u.test(error))).toEqual([]);
+         |                                                                                                                                                ^
+      86 |   expect(errors.filter(error => /^Failed to load resource:/u.test(error))).toHaveLength(expectedFailures.length);
+      87 | });
+      88 | async function pick(page, label, option) {
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:85:144
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-warehouse-operat-1e0a4-ansit-but-no-write-controls-technical/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-warehouse-operat-1e0a4-ansit-but-no-write-controls-technical/error-context.md
+
+    Error Context: docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-warehouse-operat-1e0a4-ansit-but-no-write-controls-technical/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-warehouse-operat-1e0a4-ansit-but-no-write-controls-technical/trace.zip
+    Usage:
+
+        npx playwright show-trace docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-warehouse-operat-1e0a4-ansit-but-no-write-controls-technical/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[11/16] [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:156:1 › TASK-029 @technical no-Balance SKU remains selectable and insufficient Dispatch keeps Draft
+  11) [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:156:1 › TASK-029 @technical no-Balance SKU remains selectable and insufficient Dispatch keeps Draft 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 5
+
+    - Array []
+    + Array [
+    +   "Access to fetch at 'http://127.0.0.1:63975/api/v1/user/me' from origin 'http://127.0.0.1:5205' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+    +   "Unexpected API network failure: /api/v1/user/me net::ERR_FAILED",
+    +   "Failed to load resource: net::ERR_FAILED",
+    + ]
+
+      83 |   expect(failures).toEqual(expectedFailures);
+      84 |   // Every expected console HTTP error must correspond to an asserted real API rejection.
+    > 85 |   expect(errors.filter(error => !/^Failed to load resource: the server responded with a status of (400|401|403|404|409|500) \(/u.test(error))).toEqual([]);
+         |                                                                                                                                                ^
+      86 |   expect(errors.filter(error => /^Failed to load resource:/u.test(error))).toHaveLength(expectedFailures.length);
+      87 | });
+      88 | async function pick(page, label, option) {
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:85:144
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for getByRole('button', { name: '新增調撥', exact: true })
+
+
+      103 | }
+      104 | async function newDraft(page, sku = fixture.plain, two = false) {
+    > 105 |   await page.goto("/inventory/transfers"); await page.getByRole("button", { name: "新增調撥", exact: true }).click();
+          |                                                                                                          ^
+      106 |   await pick(page, "來源倉庫", `${fixture.source.code} — ${fixture.source.code}`);
+      107 |   await pick(page, "目的倉庫", `${fixture.destination.code} — ${fixture.destination.code}`);
+      108 |   await chooseSku(page, 1, sku); await pick(page, "第 1 行來源庫位", "SAME");
+        at newDraft (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:105:106)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:157:3
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-warehouse-operat-a4d93-icient-Dispatch-keeps-Draft-technical/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-warehouse-operat-a4d93-icient-Dispatch-keeps-Draft-technical/error-context.md
+
+    Error Context: docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-warehouse-operat-a4d93-icient-Dispatch-keeps-Draft-technical/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-warehouse-operat-a4d93-icient-Dispatch-keeps-Draft-technical/trace.zip
+    Usage:
+
+        npx playwright show-trace docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-warehouse-operat-a4d93-icient-Dispatch-keeps-Draft-technical/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[12/16] [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:165:1 › TASK-029 @technical unknown SKU, invalid quantity and revoked token fail safely
+  12) [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:165:1 › TASK-029 @technical unknown SKU, invalid quantity and revoked token fail safely 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 5
+
+    - Array []
+    + Array [
+    +   "Access to fetch at 'http://127.0.0.1:63975/api/v1/user/me' from origin 'http://127.0.0.1:5205' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+    +   "Unexpected API network failure: /api/v1/user/me net::ERR_FAILED",
+    +   "Failed to load resource: net::ERR_FAILED",
+    + ]
+
+      83 |   expect(failures).toEqual(expectedFailures);
+      84 |   // Every expected console HTTP error must correspond to an asserted real API rejection.
+    > 85 |   expect(errors.filter(error => !/^Failed to load resource: the server responded with a status of (400|401|403|404|409|500) \(/u.test(error))).toEqual([]);
+         |                                                                                                                                                ^
+      86 |   expect(errors.filter(error => /^Failed to load resource:/u.test(error))).toHaveLength(expectedFailures.length);
+      87 | });
+      88 | async function pick(page, label, option) {
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:85:144
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for getByRole('button', { name: '新增調撥', exact: true })
+
+
+      103 | }
+      104 | async function newDraft(page, sku = fixture.plain, two = false) {
+    > 105 |   await page.goto("/inventory/transfers"); await page.getByRole("button", { name: "新增調撥", exact: true }).click();
+          |                                                                                                          ^
+      106 |   await pick(page, "來源倉庫", `${fixture.source.code} — ${fixture.source.code}`);
+      107 |   await pick(page, "目的倉庫", `${fixture.destination.code} — ${fixture.destination.code}`);
+      108 |   await chooseSku(page, 1, sku); await pick(page, "第 1 行來源庫位", "SAME");
+        at newDraft (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:105:106)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:166:3
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-warehouse-operat-e5cdf-d-revoked-token-fail-safely-technical/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-warehouse-operat-e5cdf-d-revoked-token-fail-safely-technical/error-context.md
+
+    Error Context: docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-warehouse-operat-e5cdf-d-revoked-token-fail-safely-technical/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-warehouse-operat-e5cdf-d-revoked-token-fail-safely-technical/trace.zip
+    Usage:
+
+        npx playwright show-trace docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-warehouse-operat-e5cdf-d-revoked-token-fail-safely-technical/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[13/16] [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:181:1 › TASK-029 @technical delayed real lookup cannot replace a newer explicitly chosen SKU
+  13) [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:181:1 › TASK-029 @technical delayed real lookup cannot replace a newer explicitly chosen SKU 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 5
+
+    - Array []
+    + Array [
+    +   "Access to fetch at 'http://127.0.0.1:63975/api/v1/user/me' from origin 'http://127.0.0.1:5205' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+    +   "Unexpected API network failure: /api/v1/user/me net::ERR_FAILED",
+    +   "Failed to load resource: net::ERR_FAILED",
+    + ]
+
+      83 |   expect(failures).toEqual(expectedFailures);
+      84 |   // Every expected console HTTP error must correspond to an asserted real API rejection.
+    > 85 |   expect(errors.filter(error => !/^Failed to load resource: the server responded with a status of (400|401|403|404|409|500) \(/u.test(error))).toEqual([]);
+         |                                                                                                                                                ^
+      86 |   expect(errors.filter(error => /^Failed to load resource:/u.test(error))).toHaveLength(expectedFailures.length);
+      87 | });
+      88 | async function pick(page, label, option) {
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:85:144
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for getByRole('button', { name: '新增調撥', exact: true })
+
+
+      103 | }
+      104 | async function newDraft(page, sku = fixture.plain, two = false) {
+    > 105 |   await page.goto("/inventory/transfers"); await page.getByRole("button", { name: "新增調撥", exact: true }).click();
+          |                                                                                                          ^
+      106 |   await pick(page, "來源倉庫", `${fixture.source.code} — ${fixture.source.code}`);
+      107 |   await pick(page, "目的倉庫", `${fixture.destination.code} — ${fixture.destination.code}`);
+      108 |   await chooseSku(page, 1, sku); await pick(page, "第 1 行來源庫位", "SAME");
+        at newDraft (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:105:106)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:182:3
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-warehouse-operat-77106-newer-explicitly-chosen-SKU-technical/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-warehouse-operat-77106-newer-explicitly-chosen-SKU-technical/error-context.md
+
+    Error Context: docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-warehouse-operat-77106-newer-explicitly-chosen-SKU-technical/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-warehouse-operat-77106-newer-explicitly-chosen-SKU-technical/trace.zip
+    Usage:
+
+        npx playwright show-trace docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-warehouse-operat-77106-newer-explicitly-chosen-SKU-technical/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[14/16] [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:195:1 › TASK-029 @technical stale Draft version returns 409 and retains unsaved quantity
+  14) [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:195:1 › TASK-029 @technical stale Draft version returns 409 and retains unsaved quantity 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 5
+
+    - Array []
+    + Array [
+    +   "Access to fetch at 'http://127.0.0.1:63975/api/v1/user/me' from origin 'http://127.0.0.1:5205' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+    +   "Unexpected API network failure: /api/v1/user/me net::ERR_FAILED",
+    +   "Failed to load resource: net::ERR_FAILED",
+    + ]
+
+      83 |   expect(failures).toEqual(expectedFailures);
+      84 |   // Every expected console HTTP error must correspond to an asserted real API rejection.
+    > 85 |   expect(errors.filter(error => !/^Failed to load resource: the server responded with a status of (400|401|403|404|409|500) \(/u.test(error))).toEqual([]);
+         |                                                                                                                                                ^
+      86 |   expect(errors.filter(error => /^Failed to load resource:/u.test(error))).toHaveLength(expectedFailures.length);
+      87 | });
+      88 | async function pick(page, label, option) {
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:85:144
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for getByRole('button', { name: '編輯草稿', exact: true })
+
+
+      195 | test("TASK-029 @technical stale Draft version returns 409 and retains unsaved quantity", async ({ page }) => {
+      196 |   const draft = await seededDraft(); await page.goto(`/inventory/transfers?id=${draft.id}`);
+    > 197 |   await page.getByRole("button", { name: "編輯草稿", exact: true }).click(); await chooseSku(page, 1, fixture.plain);
+          |                                                                 ^
+      198 |   await page.getByLabel("第 1 行數量", { exact: true }).fill("7");
+      199 |   const current = await api(`/${draft.id}`);
+      200 |   await api(`/${draft.id}/update`, { source: source(), version: current.version, sourceWarehouseId: fixture.source.id, destinationWarehouseId: fixture.destination.id,
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:197:65
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-warehouse-operat-2af70-nd-retains-unsaved-quantity-technical/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-warehouse-operat-2af70-nd-retains-unsaved-quantity-technical/error-context.md
+
+    Error Context: docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-warehouse-operat-2af70-nd-retains-unsaved-quantity-technical/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-warehouse-operat-2af70-nd-retains-unsaved-quantity-technical/trace.zip
+    Usage:
+
+        npx playwright show-trace docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-warehouse-operat-2af70-nd-retains-unsaved-quantity-technical/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[15/16] [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:206:1 › TASK-029 @technical Quarantined full receipt requires reason and destination ownership
+  15) [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:206:1 › TASK-029 @technical Quarantined full receipt requires reason and destination ownership 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 5
+
+    - Array []
+    + Array [
+    +   "Access to fetch at 'http://127.0.0.1:63975/api/v1/user/me' from origin 'http://127.0.0.1:5205' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+    +   "Unexpected API network failure: /api/v1/user/me net::ERR_FAILED",
+    +   "Failed to load resource: net::ERR_FAILED",
+    + ]
+
+      83 |   expect(failures).toEqual(expectedFailures);
+      84 |   // Every expected console HTTP error must correspond to an asserted real API rejection.
+    > 85 |   expect(errors.filter(error => !/^Failed to load resource: the server responded with a status of (400|401|403|404|409|500) \(/u.test(error))).toEqual([]);
+         |                                                                                                                                                ^
+      86 |   expect(errors.filter(error => /^Failed to load resource:/u.test(error))).toHaveLength(expectedFailures.length);
+      87 | });
+      88 | async function pick(page, label, option) {
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:85:144
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for getByRole('button', { name: '準備整張收貨', exact: true })
+
+
+      206 | test("TASK-029 @technical Quarantined full receipt requires reason and destination ownership", async ({ page }) => {
+      207 |   const draft = await seededDraft(); await api(`/${draft.id}/dispatch`, { source: source(), version: draft.version });
+    > 208 |   await page.goto(`/inventory/transfers?id=${draft.id}`); await page.getByRole("button", { name: "準備整張收貨", exact: true }).click();
+          |                                                                                                                           ^
+      209 |   await pick(page, "第 1 行收貨狀態", "QUARANTINED");
+      210 |   page.once("dialog", dialog => dialog.dismiss()); await page.getByRole("button", { name: "取消收貨", exact: true }).click();
+      211 |   await expect(page.getByRole("dialog")).toBeVisible();
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:208:123
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-warehouse-operat-87860-n-and-destination-ownership-technical/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-warehouse-operat-87860-n-and-destination-ownership-technical/error-context.md
+
+    Error Context: docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-warehouse-operat-87860-n-and-destination-ownership-technical/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-warehouse-operat-87860-n-and-destination-ownership-technical/trace.zip
+    Usage:
+
+        npx playwright show-trace docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-warehouse-operat-87860-n-and-destination-ownership-technical/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[16/16] [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:224:1 › TASK-029 @technical keyboard lookup, unsaved close, responsive and URL refresh
+  16) [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:224:1 › TASK-029 @technical keyboard lookup, unsaved close, responsive and URL refresh 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 5
+
+    - Array []
+    + Array [
+    +   "Access to fetch at 'http://127.0.0.1:63975/api/v1/user/me' from origin 'http://127.0.0.1:5205' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+    +   "Unexpected API network failure: /api/v1/user/me net::ERR_FAILED",
+    +   "Failed to load resource: net::ERR_FAILED",
+    + ]
+
+      83 |   expect(failures).toEqual(expectedFailures);
+      84 |   // Every expected console HTTP error must correspond to an asserted real API rejection.
+    > 85 |   expect(errors.filter(error => !/^Failed to load resource: the server responded with a status of (400|401|403|404|409|500) \(/u.test(error))).toEqual([]);
+         |                                                                                                                                                ^
+      86 |   expect(errors.filter(error => /^Failed to load resource:/u.test(error))).toHaveLength(expectedFailures.length);
+      87 | });
+      88 | async function pick(page, label, option) {
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:85:144
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for getByRole('button', { name: '新增調撥', exact: true })
+
+
+      103 | }
+      104 | async function newDraft(page, sku = fixture.plain, two = false) {
+    > 105 |   await page.goto("/inventory/transfers"); await page.getByRole("button", { name: "新增調撥", exact: true }).click();
+          |                                                                                                          ^
+      106 |   await pick(page, "來源倉庫", `${fixture.source.code} — ${fixture.source.code}`);
+      107 |   await pick(page, "目的倉庫", `${fixture.destination.code} — ${fixture.destination.code}`);
+      108 |   await chooseSku(page, 1, sku); await pick(page, "第 1 行來源庫位", "SAME");
+        at newDraft (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:105:106)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:225:60
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-warehouse-operat-242a3--responsive-and-URL-refresh-technical/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-warehouse-operat-242a3--responsive-and-URL-refresh-technical/error-context.md
+
+    Error Context: docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-warehouse-operat-242a3--responsive-and-URL-refresh-technical/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-warehouse-operat-242a3--responsive-and-URL-refresh-technical/trace.zip
+    Usage:
+
+        npx playwright show-trace docs/inventory_management/evidence/20261009T092613-12673541b47f/playwright-artifacts/inventory-warehouse-operat-242a3--responsive-and-URL-refresh-technical/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+  16 failed
+    [technical] › client/e2e/inventory-management/inventory-high-risk.spec.js:156:1 › TASK-033 @technical Base-only IN, three statuses and immutable/new Lot validate real facts 
+    [technical] › client/e2e/inventory-management/inventory-high-risk.spec.js:180:1 › TASK-033 @technical OUT reads current guards and retains safe input after a real version rejection 
+    [technical] › client/e2e/inventory-management/inventory-high-risk.spec.js:190:1 › TASK-033 @technical Status paired effects and whole-group Reversal preserve actual history and stock 
+    [technical] › client/e2e/inventory-management/inventory-high-risk.spec.js:207:1 › TASK-033 @technical actual permission, password and device gates cannot be replaced by operation or FEFO 
+    [technical] › client/e2e/inventory-management/inventory-high-risk.spec.js:227:1 › TASK-033 @technical pre-forward abort retries only original intent with fresh password/signature and one effect 
+    [technical] › client/e2e/inventory-management/inventory-high-risk.spec.js:242:1 › TASK-033 @technical real committed-response loss resolves original source without a second POST 
+    [technical] › client/e2e/inventory-management/inventory-high-risk.spec.js:253:1 › TASK-033 @technical refresh/navigation is query-only, actor-isolated and storage corruption blocks new effects 
+    [technical] › client/e2e/inventory-management/inventory-high-risk.spec.js:268:1 › TASK-033 @technical keyboard, cleared cancellation, XSS escaping, responsive and delayed real SKU lookup 
+    [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:129:1 › TASK-029 @technical Inventory-only two-line Draft Dispatch Receive conserves real stock 
+    [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:149:1 › TASK-029 @technical view-only actor sees real In Transit but no write controls 
+    [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:156:1 › TASK-029 @technical no-Balance SKU remains selectable and insufficient Dispatch keeps Draft 
+    [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:165:1 › TASK-029 @technical unknown SKU, invalid quantity and revoked token fail safely 
+    [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:181:1 › TASK-029 @technical delayed real lookup cannot replace a newer explicitly chosen SKU 
+    [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:195:1 › TASK-029 @technical stale Draft version returns 409 and retains unsaved quantity 
+    [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:206:1 › TASK-029 @technical Quarantined full receipt requires reason and destination ownership 
+    [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:224:1 › TASK-029 @technical keyboard lookup, unsaved close, responsive and URL refresh 

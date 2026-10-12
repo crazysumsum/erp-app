@@ -1,0 +1,1686 @@
+--- a/server/src/framework/api/apiDefinitionResolver.js
++++ b/server/src/framework/api/apiDefinitionResolver.js
+@@ -23,6 +23,7 @@
+   "logging",
+   "upload",
+   "download",
++  "inputCoercion",
+   "timeoutMs"
+ ]);
+ 
+@@ -76,6 +77,9 @@
+     }
+ 
+     const override = cloneData(source, `${handler.constructor.name}.static api`);
++    if (Object.hasOwn(source, "inputCoercion") && source.inputCoercion !== false) {
++      throw new TypeError(`${handler.constructor.name}.static api.inputCoercion must be false or omitted`);
++    }
+     const route = {
+       ...cloneData(normalizedDefaults, "API defaults"),
+       ...override,
+--- a/server/src/framework/middleware/apiDispatcher.js
++++ b/server/src/framework/middleware/apiDispatcher.js
+@@ -116,6 +116,9 @@
+     }
+ 
+     authorizationPolicies.normalize(route.authorizationPolicies, routeKey);
++    if (Object.hasOwn(route, "inputCoercion") && route.inputCoercion !== false) {
++      throw new TypeError(`inputCoercion must be false or omitted for ${routeKey}`);
++    }
+ 
+     if (
+       route.deprecation === null ||
+@@ -299,7 +302,10 @@
+           gate: upload.storageMode === "disk" ? diskUploadGate : uploadGate
+         })
+       : null;
+-    const validateRequest = activeValidator.compile(route.requestSchema, routeKey);
++    const validateRequest = activeValidator.compile(
++      route.requestSchema, routeKey,
++      route.inputCoercion === false ? { coerceTypes: false } : undefined
++    );
+     const validateResponse = activeResponseValidator.compile(
+       route.responseSchema,
+       routeKey
+--- a/server/src/framework/validation/requestValidator.js
++++ b/server/src/framework/validation/requestValidator.js
+@@ -50,7 +50,17 @@
+     this.ajv.addKeyword("trim");
+   }
+ 
+-  compile(requestSchema, routeKey) {
++  compile(requestSchema, routeKey, options) {
++    if (options !== undefined) {
++      if (
++        options === null || typeof options !== "object" || Array.isArray(options) ||
++        options.coerceTypes !== false || Object.keys(options).length !== 1
++      ) {
++        throw new TypeError(`compile options must contain only coerceTypes:false for ${routeKey}`);
++      }
++      return new RequestValidator({ config: { ...this.config, coerceTypes: false } })
++        .compile(requestSchema, routeKey);
++    }
+     if (
+       requestSchema === null ||
+       typeof requestSchema !== "object" ||
+--- a/server/src/handlers/inventory/postingHandlers.js
++++ b/server/src/handlers/inventory/postingHandlers.js
+@@ -1,6 +1,8 @@
+ import { BaseRequestHandler } from "../../framework/api/BaseRequestHandler.js";
+ import { InventoryPostingService } from "../../modules/inventory/InventoryPostingService.js";
+ import {
++  BIN_MOVE_CREATE,
++  BIN_MOVE_RESPONSE,
+   EMPTY,
+   ISSUE_CREATE,
+   ISSUE_RESPONSE,
+@@ -47,6 +49,37 @@
+   }
+ }
+ 
++export class PostInventoryBinMoveHandler extends BaseRequestHandler {
++  static handlerName = "postInventoryBinMove";
++  static api = {
++    method: "POST", path: "/api/v1/inventory/bin-moves",
++    description: "原子過帳同倉多行 Bin Move。",
++    authType: "jwt", authorizationPolicies: OPERATION_POLICY,
++    idempotency: Object.freeze({ enabled: true }), inputCoercion: false,
++    requestSchema: { params: EMPTY, query: EMPTY, body: BIN_MOVE_CREATE },
++    responseSchema: { 200: BIN_MOVE_RESPONSE }
++  };
++
++  constructor(services = {}) {
++    super(services);
++    this.inventory = new InventoryPostingService({
++      database: services.require("mysqldatabase"),
++      logger: services.require("logging").logger,
++      time: services.require("time")
++    });
++  }
++
++  async execute(req) {
++    const { source, ...payload } = req.input.body;
++    return this.response(await this.inventory.postBinMove({
++      actor: { userId: Number(req.auth.claims.sub), serviceName: "",
++        claimedRoles: req.auth.claims.roles, claimedPermissions: req.auth.claims.permissions },
++      authorization: { purpose: "bin_move.post", requiredCallerPermission: "inventory.operation" },
++      source, correlationId: req.requestId ?? "", payload
++    }));
++  }
++}
++
+ export class PostInventoryIssueHandler extends BaseRequestHandler {
+   static handlerName = "postInventoryIssue";
+   static api = {
+--- a/server/src/handlers/inventory/inventorySchemas.js
++++ b/server/src/handlers/inventory/inventorySchemas.js
+@@ -2,7 +2,8 @@
+   INVENTORY_ALLOCATION_STATUSES,
+   INVENTORY_MASTER_STATUSES,
+   INVENTORY_RESERVATION_STATUSES,
+-  INVENTORY_STOCK_STATUSES
++  INVENTORY_STOCK_STATUSES,
++  INVENTORY_TRANSFER_STATUSES
+ } from "../../modules/inventory/inventoryConstants.js";
+ 
+ export const EMPTY = Object.freeze({ type: "object", properties: {}, additionalProperties: false });
+@@ -30,6 +31,21 @@
+ const CODE = Object.freeze({ type: "string", trim: true, minLength: 1, maxLength: 50 });
+ const NAME = Object.freeze({ type: "string", trim: true, minLength: 1, maxLength: 190 });
+ const OPTIONAL_NAME = Object.freeze({ type: ["string", "null"], trim: true, maxLength: 190 });
++
++export const SKU_LOOKUP_QUERY = Object.freeze({
++  type: "object", additionalProperties: false, required: ["code"],
++  properties: { code: { type: "string", minLength: 1, maxLength: 190, pattern: "^[^\\u0000-\\u001f\\u007f]*$" } }
++});
++export const SKU_LOOKUP_RESPONSE = Object.freeze({
++  type: "object", additionalProperties: false,
++  required: ["skuId", "skuCode", "skuName", "trackingPolicy", "baseUom"],
++  properties: {
++    skuId: ID, skuCode: { type: "string" }, skuName: { type: "string" },
++    trackingPolicy: { type: "string", enum: ["none", "batch", "batch_expiry"] },
++    baseUom: { type: "object", additionalProperties: false, required: ["uomId", "uomCode"],
++      properties: { uomId: ID, uomCode: { type: "string" } } }
++  }
++});
+ const DESCRIPTION = Object.freeze({ type: "string", trim: true, maxLength: 500 });
+ const ADDRESS = Object.freeze({ type: ["string", "null"], trim: true, maxLength: 500 });
+ 
+@@ -212,6 +228,29 @@
+     stockStatus: { type: "string", enum: [...INVENTORY_STOCK_STATUSES] },
+     minimumLifeOverride: MINIMUM_LIFE_OVERRIDE
+   }
++});
++
++export const BIN_MOVE_CREATE = Object.freeze({
++  type: "object", additionalProperties: false, required: ["source", "warehouseId", "lines"],
++  properties: {
++    source: SOURCE, warehouseId: ID,
++    reason: { type: "string", trim: true, maxLength: 500, pattern: "^[^\\u0000-\\u001f\\u007f]*$" },
++    lines: { type: "array", minItems: 1, maxItems: 100, items: {
++      type: "object", additionalProperties: false,
++      required: ["sourceBalanceId", "destinationBinId", "quantity", "expectedSourceVersion", "expectedDestinationVersion"],
++      properties: {
++        sourceBalanceId: ID, destinationBinId: ID, quantity: ID,
++        expectedSourceVersion: VERSION,
++        expectedDestinationVersion: { type: ["integer", "null"], minimum: 1, maximum: 4_294_967_295 }
++      }
++    } }
++  }
++});
++export const BIN_MOVE_RESPONSE = Object.freeze({
++  type: "object", additionalProperties: false, required: ["status", "operationId", "movementGroupId", "lineCount"],
++  properties: { status: { const: "POSTED" }, operationId: ID,
++    movementGroupId: { type: "string", minLength: 1, maxLength: 100 },
++    lineCount: { type: "integer", minimum: 1, maximum: 100 } }
+ });
+ 
+ export const ISSUE_CREATE = Object.freeze({
+@@ -733,3 +772,86 @@
+     resultSummary: { type: ["object", "null"] }, completedAt: TIMESTAMP
+   }
+ });
++
++const TRANSFER_STATUS = Object.freeze({ type: "string", enum: [...INVENTORY_TRANSFER_STATUSES] });
++const TRANSFER_REASON = Object.freeze({ type: "string", trim: true, maxLength: 500 });
++export const TRANSFER_ID_PARAMS = MOVEMENT_ID_PARAMS;
++export const TRANSFER_LIST_QUERY = Object.freeze({
++  type: "object", additionalProperties: false,
++  properties: {
++    ...LIST_PAGE, number: { type: "string", maxLength: 100 },
++    sourceWarehouseId: ID, destinationWarehouseId: ID,
++    status: { type: "string", enum: ["ALL", ...INVENTORY_TRANSFER_STATUSES], default: "ALL" },
++    createdFrom: TIMESTAMP, createdTo: TIMESTAMP,
++    sortBy: { type: "string", enum: ["updatedAt", "createdAt", "number", "status"], default: "updatedAt" },
++    descending: { type: "boolean", default: true }
++  }
++});
++const TRANSFER_DRAFT_LINE = Object.freeze({
++  type: "object", additionalProperties: false, required: ["skuId", "sourceBinId", "stockStatus", "quantity"],
++  properties: { skuId: ID, lotId: NULLABLE_ID, sourceBinId: ID,
++    stockStatus: { type: "string", enum: [...INVENTORY_STOCK_STATUSES] }, quantity: ID }
++});
++export const TRANSFER_CREATE = Object.freeze({
++  type: "object", additionalProperties: false, required: ["source", "sourceWarehouseId", "destinationWarehouseId", "lines"],
++  properties: { source: SOURCE, sourceWarehouseId: ID, destinationWarehouseId: ID, reason: TRANSFER_REASON,
++    lines: { type: "array", minItems: 1, maxItems: 100, items: TRANSFER_DRAFT_LINE } }
++});
++export const TRANSFER_UPDATE = Object.freeze({
++  ...TRANSFER_CREATE, required: [...TRANSFER_CREATE.required, "version"],
++  properties: { ...TRANSFER_CREATE.properties, version: VERSION,
++    lines: { ...TRANSFER_CREATE.properties.lines, items: {
++      ...TRANSFER_DRAFT_LINE, dependencies: { id: ["expectedVersion"], expectedVersion: ["id"] },
++      properties: { ...TRANSFER_DRAFT_LINE.properties, id: ID, expectedVersion: VERSION }
++    } }
++  }
++});
++export const TRANSFER_DISPATCH = Object.freeze({
++  type: "object", additionalProperties: false, required: ["source", "version"],
++  properties: { source: SOURCE, version: VERSION }
++});
++export const TRANSFER_CANCEL = Object.freeze({
++  ...TRANSFER_DISPATCH, required: [...TRANSFER_DISPATCH.required, "reason"],
++  properties: { ...TRANSFER_DISPATCH.properties, reason: { ...TRANSFER_REASON, minLength: 1 } }
++});
++export const TRANSFER_RECEIVE = Object.freeze({
++  ...TRANSFER_DISPATCH, required: [...TRANSFER_DISPATCH.required, "lines"],
++  properties: { ...TRANSFER_DISPATCH.properties, reason: TRANSFER_REASON,
++    lines: { type: "array", minItems: 1, maxItems: 100, items: {
++      type: "object", additionalProperties: false, required: ["id", "quantity", "destinationBinId"],
++      properties: { id: ID, quantity: ID, destinationBinId: ID,
++        stockStatus: { type: "string", enum: [...INVENTORY_STOCK_STATUSES] } }
++    } }
++  }
++});
++export const TRANSFER_COMMAND_RESPONSE = Object.freeze({
++  type: "object", additionalProperties: false, required: ["id", "operationId", "status", "version", "rowCount"],
++  properties: { id: ID, operationId: ID, status: TRANSFER_STATUS, version: VERSION,
++    rowCount: { type: "integer", minimum: 1, maximum: 100 } }
++});
++const TRANSFER = Object.freeze({
++  type: "object", additionalProperties: false,
++  required: ["id", "number", "sourceWarehouseId", "destinationWarehouseId", "status", "version", "reason", "inTransitQuantity",
++    "createdAt", "updatedAt", "createdBy", "updatedBy", "dispatchedBy", "receivedBy", "cancelledBy", "dispatchedAt", "receivedAt", "cancelledAt"],
++  properties: { id: ID, number: { type: "string" }, sourceWarehouseId: ID, destinationWarehouseId: ID,
++    status: TRANSFER_STATUS, version: VERSION, reason: { type: "string" }, inTransitQuantity: NONNEGATIVE,
++    createdAt: TIMESTAMP, updatedAt: TIMESTAMP,
++    ...Object.fromEntries(["createdBy", "updatedBy", "dispatchedBy", "receivedBy", "cancelledBy"].map(field => [field, NULLABLE_ID])),
++    ...Object.fromEntries(["dispatchedAt", "receivedAt", "cancelledAt"].map(field => [field, { type: ["integer", "null"], minimum: 0, maximum: Number.MAX_SAFE_INTEGER }])) }
++});
++export const TRANSFER_LIST_RESPONSE = listResponse(TRANSFER);
++const TRANSFER_LINE = Object.freeze({
++  type: "object", additionalProperties: false,
++  required: ["id", "lineNumber", "skuId", "lotId", "sourceBinId", "destinationBinId", "dispatchStockStatus", "receiveStockStatus",
++    "quantity", "inTransitQuantity", "skuCode", "lotNumber", "expiryDate", "dispatchMovementGroupId", "receiveMovementGroupId", "version"],
++  properties: { id: ID, lineNumber: ID, skuId: ID, lotId: NULLABLE_ID, sourceBinId: ID, destinationBinId: NULLABLE_ID,
++    dispatchStockStatus: { type: "string", enum: [...INVENTORY_STOCK_STATUSES] },
++    receiveStockStatus: { type: ["string", "null"], enum: [...INVENTORY_STOCK_STATUSES, null] },
++    quantity: ID, inTransitQuantity: NONNEGATIVE, skuCode: { type: "string" }, lotNumber: { type: "string" }, expiryDate: DATE_ONLY,
++    dispatchMovementGroupId: { type: ["string", "null"] }, receiveMovementGroupId: { type: ["string", "null"] }, version: VERSION }
++});
++export const TRANSFER_DETAIL_RESPONSE = Object.freeze({
++  ...TRANSFER, required: [...TRANSFER.required, "lines", "movements"],
++  properties: { ...TRANSFER.properties, lines: { type: "array", minItems: 1, maxItems: 100, items: TRANSFER_LINE },
++    movements: { type: "array", items: MOVEMENT } }
++});
+--- a/server/src/modules/inventory/InventoryPostingService.js
++++ b/server/src/modules/inventory/InventoryPostingService.js
+@@ -6,6 +6,7 @@
+ import { InventoryLockService } from "./InventoryLockService.js";
+ import { InventoryOperationService } from "./InventoryOperationService.js";
+ import { inventoryError } from "./inventoryErrors.js";
++import { postBinMoveInTransaction } from "./inventoryBinMovePosting.js";
+ import {
+   assertInventoryLotConsistency,
+   inventoryPositiveInteger,
+@@ -289,6 +290,14 @@
+ 
+   postReceipt(command) {
+     return this.database.withTransaction((transaction) => this.postReceiptInTransaction(transaction, command));
++  }
++
++  postBinMove(command) {
++    return this.database.withTransaction((transaction) => this.postBinMoveInTransaction(transaction, command));
++  }
++
++  postBinMoveInTransaction(transaction, command) {
++    return postBinMoveInTransaction(this, transaction, command);
+   }
+ 
+   postReceiptInTransaction(transaction, command) {
+--- /dev/null
++++ b/server/src/modules/inventory/inventoryBinMovePosting.js
+@@ -0,0 +1,207 @@
++import { inventoryError } from "./inventoryErrors.js";
++import { inventoryPositiveInteger, validateInventoryCommandContext } from "./inventoryValidation.js";
++
++const AUTHORIZATION = Object.freeze({ purpose: "bin_move.post", requiredCallerPermission: "inventory.operation" });
++const PAYLOAD_FIELDS = new Set(["warehouseId", "reason", "lines"]);
++const LINE_FIELDS = new Set(["sourceBalanceId", "destinationBinId", "quantity", "expectedSourceVersion", "expectedDestinationVersion"]);
++
++function exactFields(value, fields, field) {
++  if (!value || typeof value !== "object" || Array.isArray(value) ||
++      ![Object.prototype, null].includes(Object.getPrototypeOf(value)) ||
++      Object.keys(value).some(key => !fields.has(key))) {
++    throw inventoryError("INVENTORY_INPUT_INVALID", { field });
++  }
++}
++function id(value, field) {
++  if (!Number.isSafeInteger(value) || value <= 0) throw inventoryError("INVENTORY_INPUT_INVALID", { field });
++  return value;
++}
++function normalize(payload) {
++  exactFields(payload, PAYLOAD_FIELDS, "payload");
++  const warehouseId = id(payload.warehouseId, "warehouseId");
++  if (!Array.isArray(payload.lines) || payload.lines.length < 1 || payload.lines.length > 100) {
++    throw inventoryError("INVENTORY_INPUT_INVALID", { field: "lines" });
++  }
++  const reason = payload.reason === undefined ? "" : payload.reason;
++  if (typeof reason !== "string" || /[\p{Cc}]/u.test(reason) || Buffer.byteLength(reason.trim(), "utf8") > 500) {
++    throw inventoryError("INVENTORY_INPUT_INVALID", { field: "reason" });
++  }
++  const lines = payload.lines.map(line => {
++    exactFields(line, LINE_FIELDS, "lines");
++    return { sourceBalanceId: id(line.sourceBalanceId, "sourceBalanceId"),
++      destinationBinId: id(line.destinationBinId, "destinationBinId"),
++      quantity: inventoryPositiveInteger(line.quantity),
++      expectedSourceVersion: id(line.expectedSourceVersion, "expectedSourceVersion"),
++      expectedDestinationVersion: line.expectedDestinationVersion === null
++        ? null : id(line.expectedDestinationVersion, "expectedDestinationVersion") };
++  });
++  return { warehouseId, reason: reason.trim(), lines };
++}
++function dimensions(row, binId = Number(row.bin_id)) {
++  return { warehouseId: Number(row.warehouse_id), skuId: Number(row.sku_id), binId,
++    lotId: row.lot_id === null ? null : Number(row.lot_id), stockStatus: row.stock_status };
++}
++function key(value) {
++  return `${value.warehouseId}:${value.skuId}:${value.binId}:${value.lotId ?? 0}:${value.stockStatus}`;
++}
++function quantity(value) {
++  const result = Number(value);
++  if (!Number.isSafeInteger(result) || result < 0) throw inventoryError("INVENTORY_QUANTITY_INVALID");
++  return result;
++}
++function checkpoint(tx, point) { tx.checkpoint?.(point); }
++
++// Internal implementation owned by InventoryPostingService; no alternate writer or transaction boundary.
++export async function postBinMoveInTransaction(service, tx, command) {
++  const context = validateInventoryCommandContext(tx, command, AUTHORIZATION);
++  if (context.actor.userId === null) throw new TypeError("Bin Move requires a user actor");
++  const payload = normalize(context.payload);
++  const actor = await service.authorize(tx, { actorId: context.actor.userId,
++    claimedRoles: context.actor.claimedRoles, claimedPermissions: context.actor.claimedPermissions });
++  if (!actor?.permissions?.includes(AUTHORIZATION.requiredCallerPermission)) throw inventoryError("PERMISSION_STALE");
++  const postedAt = service.time.nowMs();
++  const actorLabel = actor.username || `user:${context.actor.userId}`;
++  const claim = await service.operations.claim(tx, { commandType: "BIN_MOVE_POST", source: context.source,
++    payload, actorUserId: context.actor.userId, actorLabel, requestId: context.correlationId,
++    correlationId: context.correlationId, createdAt: postedAt });
++  checkpoint(tx, "operation");
++  if (claim.replay) return { status: claim.replay.resultSummary.status,
++    operationId: Number(claim.replay.resultSummary.operationId),
++    movementGroupId: claim.replay.resultSummary.movementGroupId,
++    lineCount: Number(claim.replay.resultSummary.lineCount) };
++
++  const sourceIds = [...new Set(payload.lines.map(line => line.sourceBalanceId))].sort((a, b) => a - b);
++  // Discovery only: never lock a Balance before its Warehouse/Control/Bins/Lot.
++  const [staged] = await tx.query(
++    `SELECT b.*, l.normalized_lot_number FROM inventory_stock_balances b
++      LEFT JOIN inventory_lots l ON l.id = b.lot_id
++      WHERE b.id IN (${sourceIds.map(() => "?").join(", ")}) ORDER BY b.id`, sourceIds);
++  const sources = new Map(staged.map(row => [Number(row.id), row]));
++  const buckets = new Map();
++  const expected = new Map();
++  const outgoing = new Map();
++  const incoming = new Map();
++  const legs = new Map();
++  const addBucket = (dimension, version) => {
++    const bucketKey = key(dimension);
++    if (expected.has(bucketKey) && expected.get(bucketKey) !== version) throw inventoryError("VERSION_CONFLICT");
++    expected.set(bucketKey, version);
++    buckets.set(bucketKey, dimension);
++    legs.set(bucketKey, (legs.get(bucketKey) ?? 0) + 1);
++    return bucketKey;
++  };
++  for (const line of payload.lines) {
++    const source = sources.get(line.sourceBalanceId);
++    if (!source) throw inventoryError("INVENTORY_RESOURCE_NOT_FOUND");
++    if (Number(source.warehouse_id) !== payload.warehouseId) throw inventoryError("BIN_WAREHOUSE_MISMATCH");
++    if (Number(source.bin_id) === line.destinationBinId) throw inventoryError("INVENTORY_INPUT_INVALID", { field: "destinationBinId" });
++    const sourceKey = addBucket(dimensions(source), line.expectedSourceVersion);
++    const destinationKey = addBucket(dimensions(source, line.destinationBinId), line.expectedDestinationVersion);
++    outgoing.set(sourceKey, quantity((outgoing.get(sourceKey) ?? 0) + line.quantity));
++    incoming.set(destinationKey, quantity((incoming.get(destinationKey) ?? 0) + line.quantity));
++  }
++  const locked = await service.locks.lockForCommand(tx, {
++    warehouseIds: [payload.warehouseId],
++    stockControls: [...new Set(staged.map(row => Number(row.sku_id)))].map(skuId => ({ warehouseId: payload.warehouseId, skuId })),
++    binIds: [...buckets.values()].map(value => value.binId),
++    lots: staged.filter(row => row.lot_id !== null).map(row => ({ skuId: Number(row.sku_id), normalizedLotNumber: row.normalized_lot_number })),
++    now: postedAt
++  });
++  const warehouse = locked.warehouses.find(row => Number(row.id) === payload.warehouseId);
++  if (!warehouse || warehouse.status !== "ACTIVE") throw inventoryError("WAREHOUSE_INVALID");
++  for (const bucket of buckets.values()) {
++    const bin = locked.bins.find(row => Number(row.id) === bucket.binId);
++    if (!bin || Number(bin.warehouse_id) !== payload.warehouseId) throw inventoryError("BIN_WAREHOUSE_MISMATCH");
++    if (bin.status !== "ACTIVE") throw inventoryError("BIN_INVALID");
++    if (!locked.stockControls.some(row => Number(row.warehouse_id) === payload.warehouseId && Number(row.sku_id) === bucket.skuId)) {
++      throw inventoryError("INVENTORY_DEPENDENCY_UNAVAILABLE");
++    }
++    if (bucket.lotId !== null && !locked.lots.some(row => Number(row.id) === bucket.lotId && Number(row.sku_id) === bucket.skuId)) {
++      throw inventoryError("LOT_DATA_CONFLICT");
++    }
++  }
++  if (locked.binLocks.length) throw inventoryError("BIN_LOCKED_BY_STOCKTAKE");
++  const profiles = new Map();
++  for (const skuId of [...new Set(staged.map(row => Number(row.sku_id)))].sort((a, b) => a - b)) {
++    const profile = await service.itemLookup.getInventoryProfileInTransaction(tx, skuId);
++    if (!profile) throw inventoryError("INVENTORY_RESOURCE_NOT_FOUND");
++    if (!profile.inventoryTracked) throw inventoryError("SKU_NOT_INVENTORY_TRACKED");
++    if (profile.trackingPolicy === "serial") throw inventoryError("SERIAL_TRACKING_UNSUPPORTED");
++    if (!profile.usable) throw inventoryError("INVENTORY_INPUT_INVALID", { field: "skuId" });
++    profiles.set(skuId, profile);
++  }
++  const ordered = [...buckets.values()].sort((a, b) => a.warehouseId - b.warehouseId || a.skuId - b.skuId ||
++    a.binId - b.binId || (a.lotId ?? 0) - (b.lotId ?? 0) || (a.stockStatus < b.stockStatus ? -1 : a.stockStatus > b.stockStatus ? 1 : 0));
++  // Current locking read under Control distinguishes absent destinations from upserted zero rows.
++  const [existing] = await tx.query(
++    `SELECT * FROM inventory_stock_balances WHERE ${ordered.map(() =>
++      "(warehouse_id = ? AND sku_id = ? AND bin_id = ? AND lot_scope = ? AND stock_status = ?)").join(" OR ")}
++      ORDER BY warehouse_id, sku_id, bin_id, lot_scope, stock_status FOR UPDATE`,
++    ordered.flatMap(row => [row.warehouseId, row.skuId, row.binId, row.lotId ?? 0, row.stockStatus]));
++  const original = new Map(existing.map(row => [key(dimensions(row)), row]));
++  for (const stagedSource of staged) {
++    const current = original.get(key(dimensions(stagedSource)));
++    if (!current || Number(current.id) !== Number(stagedSource.id)) throw inventoryError("VERSION_CONFLICT");
++  }
++  for (const [bucketKey, version] of expected) {
++    const row = original.get(bucketKey);
++    if (version === null ? Boolean(row) : !row || Number(row.version) !== version) throw inventoryError("VERSION_CONFLICT");
++    const onHand = quantity(row?.on_hand_quantity ?? 0);
++    const allocated = quantity(row?.allocated_quantity ?? 0);
++    if ((outgoing.get(bucketKey) ?? 0) > onHand - allocated) throw inventoryError("INSUFFICIENT_STOCK");
++    quantity(onHand + (incoming.get(bucketKey) ?? 0));
++    if (Number(row?.version ?? 1) + legs.get(bucketKey) > 4_294_967_295) throw inventoryError("CONCURRENT_OPERATION");
++  }
++  const balances = await service.locks.lockBalancesAfterLot(tx, { balances: ordered, now: postedAt });
++  const current = new Map(balances.map(row => [key(dimensions(row)), { ...row }]));
++  const movementGroupId = service.createMovementGroupId();
++  for (const line of payload.lines) {
++    const source = sources.get(line.sourceBalanceId);
++    const profile = profiles.get(Number(source.sku_id));
++    const lot = locked.lots.find(row => Number(row.id) === Number(source.lot_id));
++    for (const [dimension, direction] of [[dimensions(source), "OUT"], [dimensions(source, line.destinationBinId), "IN"]]) {
++      const row = current.get(key(dimension));
++      if (!row) throw inventoryError("INVENTORY_DEPENDENCY_UNAVAILABLE");
++      const before = quantity(row.on_hand_quantity);
++      const after = quantity(before + (direction === "IN" ? line.quantity : -line.quantity));
++      const version = Number(row.version);
++      const fifoAnchor = after === 0 ? null : before === 0 ? service.time.fileDate() : row.fifo_anchor_date;
++      const [updated] = await tx.execute(`UPDATE inventory_stock_balances
++        SET on_hand_quantity = ?, fifo_anchor_date = ?, version = version + 1, updated_at = ?
++        WHERE id = ? AND version = ?`, [after, fifoAnchor, postedAt, Number(row.id), version]);
++      if (Number(updated.affectedRows) !== 1) throw inventoryError("CONCURRENT_OPERATION");
++      checkpoint(tx, "current_state");
++      const bin = locked.bins.find(value => Number(value.id) === dimension.binId);
++      const [movement] = await tx.execute(`INSERT INTO inventory_movements
++        (movement_group_id, operation_request_id, movement_type, location_kind,
++         warehouse_id, bin_id, sku_id, lot_id, stock_status, direction, quantity,
++         balance_before, balance_after, balance_version_after, reservation_id, allocation_id,
++         transfer_id, transfer_line_id, stocktake_id, stocktake_line_id, reversal_of_movement_id,
++         reason_category, reason_text, sku_code_snapshot, sku_name_snapshot, warehouse_code_snapshot,
++         bin_code_snapshot, lot_number_snapshot, expiry_date_snapshot, posted_at, posted_by, posted_by_label)
++        VALUES (?, ?, 'BIN_MOVE', 'BIN', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
++                NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
++      [movementGroupId, claim.operationId, dimension.warehouseId, dimension.binId, dimension.skuId,
++        dimension.lotId, dimension.stockStatus, direction, line.quantity, before, after, version + 1,
++        payload.reason, profile.skuCode, profile.skuName, warehouse.warehouse_code, bin.bin_code,
++        lot?.lot_number ?? "", lot?.expiry_date ?? null, postedAt, context.actor.userId, actorLabel]);
++      checkpoint(tx, "movement");
++      await service.audit.recordSucceeded(tx, { actorUserId: context.actor.userId, actorLabel,
++        action: "bin_move.post", targetType: "movement_group", targetId: Number(movement.insertId), targetLabel: movementGroupId,
++        reasonText: payload.reason, beforeSummary: { balanceId: Number(row.id), onHandQuantity: before, version },
++        afterSummary: { balanceId: Number(row.id), onHandQuantity: after, version: version + 1,
++          allocatedQuantity: quantity(row.allocated_quantity), baseQuantity: line.quantity, baseUomId: profile.baseUom.uomId,
++          movementId: Number(movement.insertId), operationId: claim.operationId, movementGroupId,
++          skuId: dimension.skuId, lotId: dimension.lotId, stockStatus: dimension.stockStatus },
++        operationRequestId: claim.operationId, requestId: context.correlationId, correlationId: context.correlationId, ip: "" });
++      checkpoint(tx, "audit");
++      row.on_hand_quantity = after;
++      row.version = version + 1;
++      row.fifo_anchor_date = fifoAnchor;
++    }
++  }
++  const result = { status: "POSTED", operationId: claim.operationId, movementGroupId, lineCount: payload.lines.length };
++  await service.operations.complete(tx, { operationId: claim.operationId, resultType: "MOVEMENT_GROUP",
++    resultId: movementGroupId, resultSummary: result, completedAt: postedAt });
++  return result;
++}
+--- a/server/test/apiDefinitionResolver.test.js
++++ b/server/test/apiDefinitionResolver.test.js
+@@ -23,6 +23,24 @@
+     properties: { id: { type: "integer" } }
+   }
+ };
++
++test("API inputCoercion allows only omission or literal false", () => {
++  class StrictHandler extends BaseRequestHandler {
++    static handlerName = "strict";
++    static api = {
++      method: "POST", path: "/api/v1/strict", description: "Strict input.",
++      requestSchema, responseSchema, inputCoercion: false
++    };
++  }
++  const resolve = () => resolveApiDefinitions({ strict: new StrictHandler({}) }, apiDefaults)[0];
++  assert.equal(resolve().inputCoercion, false);
++  for (const invalid of [true, null, "false", 0, {}, [], undefined]) {
++    StrictHandler.api.inputCoercion = invalid;
++    assert.throws(resolve, /inputCoercion/);
++  }
++  delete StrictHandler.api.inputCoercion;
++  assert.equal(Object.hasOwn(resolve(), "inputCoercion"), false);
++});
+ 
+ test("API definitions inherit secure defaults from configuration", () => {
+   class GetUserHandler extends BaseRequestHandler {
+--- a/server/test/apiDispatcher.test.js
++++ b/server/test/apiDispatcher.test.js
+@@ -258,6 +258,38 @@
+       responseStatusCodes: ["200"]
+     }
+   ]);
++});
++
++test("route-only strict validation runs before idempotency and preserves legacy coercion", async (t) => {
++  let calls = 0;
++  const handler = new TestHandler("strict", (req) => { calls += 1; return req.input.body; });
++  const route = {
++    ...apiRouteDefaults, method: "POST", path: "/api/v1/strict", description: "Strict input.",
++    authType: "public", handler: "strict", inputCoercion: false,
++    idempotency: { enabled: true }, responseSchema: anySuccessResponseSchema,
++    requestSchema: { body: { type: "object", required: ["quantity"], additionalProperties: false,
++      properties: { quantity: { type: "integer", minimum: 1 } } } }
++  };
++  const legacy = { ...route, path: "/api/v1/legacy" };
++  delete legacy.inputCoercion;
++  for (const invalid of [true, null, "false", 0, {}, [], undefined]) {
++    assert.throws(() => createApiDispatcher({ routes: [{ ...route, inputCoercion: invalid }], handlers: { strict: handler }, logger: silentLogger }), /inputCoercion/);
++  }
++  const url = await startTestServer(t, createApiDispatcher({ routes: [route, legacy], handlers: { strict: handler }, logger: silentLogger }));
++  const post = (path, quantity, key) => fetch(url + path, { method: "POST", headers: { "content-type": "application/json", "idempotency-key": key }, body: JSON.stringify({ quantity }) });
++  assert.equal((await post(route.path, 1, "strict-key")).status, 200);
++  const replay = await post(route.path, 1, "strict-key");
++  assert.equal(replay.headers.get("idempotency-replayed"), "true");
++  for (const invalid of ["1", true]) {
++    const rejected = await post(route.path, invalid, "strict-key");
++    assert.equal(rejected.status, 400);
++    assert.equal((await rejected.json()).error.code, "REQUEST_VALIDATION_FAILED");
++  }
++  assert.equal(calls, 1);
++  const inherited = await post(legacy.path, "2", "legacy-key");
++  assert.equal(inherited.status, 200);
++  assert.equal((await inherited.json()).data.quantity, 2);
++  assert.equal(calls, 2);
+ });
+ 
+ test("dispatcher validates request schemas before invoking the handler", async (t) => {
+--- a/server/test/requestValidator.test.js
++++ b/server/test/requestValidator.test.js
+@@ -30,6 +30,53 @@
+     properties: { name: { type: "string" } }
+   }
+ };
++
++test("route compile opt-out rejects coerced types without changing the shared validator", () => {
++  const schema = { body: {
++    type: "object", additionalProperties: false, required: ["quantity", "name"],
++    properties: {
++      quantity: { type: "integer", minimum: 1 },
++      name: { type: "string", trim: true, pattern: "^ok$" },
++      page: { type: "integer", default: 1 }
++    }
++  } };
++  const validator = new RequestValidator();
++  const strict = validator.compile(schema, "strict", { coerceTypes: false });
++  const legacy = validator.compile(schema, "legacy");
++  const request = (quantity, extra = {}) => ({ body: { quantity, name: " ok ", ...extra } });
++  for (const quantity of ["1", true, false]) {
++    assert.throws(() => strict(request(quantity)), RequestValidationError);
++  }
++  const valid = request(2);
++  strict(valid);
++  assert.deepEqual(valid.input.body, { quantity: 2, name: "ok", page: 1 });
++  for (const validate of [strict, legacy]) {
++    assert.throws(() => validate(request(2, { unknown: 1 })), RequestValidationError);
++  }
++  const coerced = request("2");
++  legacy(coerced);
++  assert.equal(coerced.input.body.quantity, 2);
++  assert.equal(validator.config.coerceTypes, true);
++  for (const options of [null, true, [], {}, { coerceTypes: true }, { coerceTypes: "false" }, { coerceTypes: false, enabled: true }]) {
++    assert.throws(() => validator.compile(schema, "invalid", options), /coerceTypes/);
++  }
++});
++
++test("route compile opt-out preserves global validation and error policies", () => {
++  const schema = { body: { type: "object", required: ["a", "b"], additionalProperties: false,
++    properties: { a: { type: "integer" }, b: { type: "integer" } } } };
++  const validator = new RequestValidator({ config: { ...requestConfig.validation.input, maxErrors: 1, includeErrorDetailsInResponse: false } });
++  const strict = validator.compile(schema, "strict", { coerceTypes: false });
++  assert.throws(() => strict({ body: { a: "1", b: true } }), (error) => {
++    assert.equal(error.details.length, 1);
++    assert.equal(error.publicDetails, undefined);
++    return error instanceof RequestValidationError;
++  });
++  const disabled = new RequestValidator({ config: { ...validator.config, enabled: false } });
++  const req = { body: { a: "1" } };
++  disabled.compile(schema, "disabled", { coerceTypes: false })(req);
++  assert.deepEqual(req.input.body, { a: "1" });
++});
+ 
+ async function startServer(t, app) {
+   const server = createServer(app);
+--- a/server/test/inventoryPostingHandlers.test.js
++++ b/server/test/inventoryPostingHandlers.test.js
+@@ -6,6 +6,53 @@
+ import { PostInventoryIssueHandler, PostInventoryReceiptHandler } from "../src/handlers/inventory/postingHandlers.js";
+ import * as postingHandlers from "../src/handlers/inventory/postingHandlers.js";
+ import { InventoryPostingService } from "../src/modules/inventory/InventoryPostingService.js";
++
++test("TASK-030 Bin Move route requires both permissions, JWT, idempotency and explicit destination version", () => {
++  const api = postingHandlers.PostInventoryBinMoveHandler.api;
++  assert.equal(api.method, "POST");
++  assert.equal(api.path, "/api/v1/inventory/bin-moves");
++  assert.equal(api.authType, "jwt");
++  assert.deepEqual(api.authorizationPolicies, PostInventoryReceiptHandler.api.authorizationPolicies);
++  assert.deepEqual(api.idempotency, { enabled: true });
++  assert.equal(api.inputCoercion, false);
++  const validate = new RequestValidator().compile(api.requestSchema, api.path, { coerceTypes: false });
++  const body = { source: { module: "INVENTORY", documentType: "BIN_MOVE", documentId: "move-1", eventId: "post-1" },
++    warehouseId: 2, lines: [{ sourceBalanceId: 501, destinationBinId: 36, quantity: 2,
++      expectedSourceVersion: 3, expectedDestinationVersion: null }] };
++  validate({ params: {}, query: {}, body: structuredClone(body) });
++  for (const overrides of [{ expectedSourceVersion: null }, { quantity: 0 }, { skuId: 12 },
++    { sourceBalanceId: "501" }, { destinationBinId: true }, { quantity: "2" },
++    { expectedSourceVersion: true }, { expectedDestinationVersion: "3" }]) {
++    const invalid = structuredClone(body);
++    Object.assign(invalid.lines[0], overrides);
++    assert.throws(() => validate({ params: {}, query: {}, body: invalid }), { code: "REQUEST_VALIDATION_FAILED" });
++  }
++  const invalid = structuredClone(body);
++  delete invalid.lines[0].expectedDestinationVersion;
++  assert.throws(() => validate({ params: {}, query: {}, body: invalid }), { code: "REQUEST_VALIDATION_FAILED" });
++  new ResponseValidator({ environment: "production" }).compile(api.responseSchema, api.path);
++});
++
++test("TASK-030 Bin Move handler maps only trusted claims, fixed authorization and complete payload", async () => {
++  const handler = new postingHandlers.PostInventoryBinMoveHandler({ require(name) {
++    if (name === "mysqldatabase") return { withTransaction() {} };
++    if (name === "logging") return { logger: { error() {} } };
++    if (name === "time") return { nowMs: () => 1, fileDate: () => "2026-10-07" };
++    throw new Error(name);
++  } });
++  let received;
++  const result = { status: "POSTED", operationId: 4, movementGroupId: "move-group", lineCount: 1 };
++  handler.inventory = { async postBinMove(command) { received = command; return result; } };
++  const source = { module: "INVENTORY", documentType: "BIN_MOVE", documentId: "BM-1", eventId: "post" };
++  const lines = [{ sourceBalanceId: 3, destinationBinId: 4, quantity: 2, expectedSourceVersion: 1, expectedDestinationVersion: null }];
++  const response = await handler.execute({ auth: { claims: { sub: "9", roles: ["operator"], permissions: ["inventory.view", "inventory.operation"] } },
++    input: { body: { source, warehouseId: 2, reason: "Move", lines } }, requestId: "request-1" });
++  assert.deepEqual(received, { actor: { userId: 9, serviceName: "", claimedRoles: ["operator"], claimedPermissions: ["inventory.view", "inventory.operation"] },
++    authorization: { purpose: "bin_move.post", requiredCallerPermission: "inventory.operation" },
++    source, correlationId: "request-1", payload: { warehouseId: 2, reason: "Move", lines } });
++  assert.deepEqual(response.data, result);
++  new ResponseValidator({ environment: "production" }).compile(postingHandlers.PostInventoryBinMoveHandler.api.responseSchema, "bin-move")(200, result);
++});
+ 
+ test("TASK-014 Receipt route exposes the strict operation contract", () => {
+   const api = PostInventoryReceiptHandler.api;
+--- a/server/test/inventoryPostingService.test.js
++++ b/server/test/inventoryPostingService.test.js
+@@ -6,6 +6,22 @@
+ import { inventoryCommandFixture } from "../test-support/inventoryFixtures.js";
+ 
+ const NOW = Date.parse("2026-09-28T04:00:00.000Z");
++
++test("TASK-030 Bin Move validates the whole document before authorizing or writing", async () => {
++  const { service, database } = setup();
++  const before = database.state;
++  for (const lines of [[], [{ sourceBalanceId: 501, destinationBinId: 36, quantity: 1,
++    expectedSourceVersion: 3 }], [{ sourceBalanceId: "501", destinationBinId: 36,
++    quantity: 1, expectedSourceVersion: 3, expectedDestinationVersion: null }]]) {
++    await assert.rejects(() => service.postBinMove(inventoryCommandFixture({
++      actor: { claimedPermissions: ["inventory.operation"] },
++      authorization: { purpose: "bin_move.post", requiredCallerPermission: "inventory.operation" },
++      payload: { warehouseId: 2, lines }
++    })), { code: "INVENTORY_INPUT_INVALID" });
++  }
++  assert.deepEqual(database.state, before);
++  assert.deepEqual(database.calls, []);
++});
+ 
+ function command(payload = {}, overrides = {}) {
+   return inventoryCommandFixture({
+@@ -166,6 +182,147 @@
+   };
+ }
+ 
++function binMoveCommand(lines = [binMoveLine()], payload = {}, source = {}) {
++  return inventoryCommandFixture({ actor: { claimedPermissions: ["inventory.operation"] },
++    authorization: { purpose: "bin_move.post", requiredCallerPermission: "inventory.operation" },
++    source: { module: "INVENTORY", documentType: "BIN_MOVE", eventId: "bin-move-1", ...source },
++    payload: { warehouseId: 2, lines, ...payload } });
++}
++function binMoveLine(overrides = {}) {
++  return { sourceBalanceId: 501, destinationBinId: 36, quantity: 2,
++    expectedSourceVersion: 3, expectedDestinationVersion: null, ...overrides };
++}
++function binMoveSetup(options = {}) {
++  const { service, database: receiptDb } = setup(options);
++  const state = receiptDb.state;
++  state.balances = [state.balance, ...(options.destination ? [{ ...state.balance,
++    id: 502, bin_id: 36, on_hand_quantity: 4, version: 5 }] : [])];
++  state.balances[0].fifo_anchor_date = "2026-01-01";
++  state.bins = [state.bin, { ...state.bin, id: 36, bin_code: "A-02" }];
++  const database = createFakeInventoryDatabase({ initialState: state, failAt: options.failAt,
++    query: async ({ sql, params, state: draft }) => {
++      assert.equal((sql.match(/\?/gu) ?? []).length, params.length, sql);
++      if (sql.includes("FOR UPDATE")) return [draft.balances];
++      return [draft.balances.filter(row => params.includes(row.id))];
++    },
++    execute: async ({ sql, params, state: draft }) => {
++      assert.equal((sql.match(/\?/gu) ?? []).length, params.length, sql);
++      if (sql.includes("UPDATE inventory_stock_balances")) {
++        const row = draft.balances.find(row => row.id === params[3] && row.version === params[4]);
++        if (!row || options.updateConflict) return [{ affectedRows: 0 }];
++        row.on_hand_quantity = params[0]; row.fifo_anchor_date = params[1]; row.version++;
++      }
++      if (sql.includes("INSERT INTO inventory_movements")) {
++        const id = draft.movements.length + 701;
++        draft.movements.push({ id, params });
++        return [{ insertId: id, affectedRows: 1 }];
++      }
++      return [{ affectedRows: 1 }];
++    }
++  });
++  service.database = database;
++  service.locks = {
++    async lockForCommand(tx, input) {
++      assert.equal(input.balances, undefined, "do not create destination before absence/version checks");
++      return { warehouses: [tx.state.warehouse].filter(Boolean), bins: tx.state.bins,
++        stockControls: [{ warehouse_id: 2, sku_id: 12 }], binLocks: tx.state.binLocks, lots: tx.state.lots };
++    },
++    async lockBalancesAfterLot(tx, { balances }) {
++      for (const dimension of balances) {
++        if (!tx.state.balances.some(row => row.bin_id === dimension.binId)) {
++          tx.state.balances.push({ ...state.balance, id: 502, bin_id: dimension.binId,
++            on_hand_quantity: 0, allocated_quantity: 0, fifo_anchor_date: null, version: 1 });
++        }
++      }
++      return tx.state.balances;
++    }
++  };
++  return { service, database };
++}
++
++test("TASK-030 multi-line Move creates one Operation/group with paired snapshot/version chains", async () => {
++  const { service, database } = binMoveSetup();
++  const result = await service.postBinMove(binMoveCommand([binMoveLine(), binMoveLine()]));
++  assert.deepEqual(result, { status: "POSTED", operationId: 91,
++    movementGroupId: "11111111-1111-4111-8111-111111111111", lineCount: 2 });
++  assert.equal(database.state.operation.commandType, "BIN_MOVE_POST");
++  assert.deepEqual(database.state.balances.map(row => [row.on_hand_quantity, row.allocated_quantity, row.version]), [[1,0,5],[4,0,3]]);
++  assert.deepEqual(database.state.movements.map(row => row.params.slice(7,12)),
++    [["OUT",2,5,3,4],["IN",2,0,2,2],["OUT",2,3,1,5],["IN",2,2,4,3]]);
++  assert.equal(database.state.balances[0].fifo_anchor_date, "2026-01-01");
++  assert.equal(database.state.balances[1].fifo_anchor_date, "2026-09-28");
++  assert.equal(database.state.audits.length, 4);
++  assert.deepEqual(database.state.completed, result);
++});
++
++test("TASK-030 normalized source replay is immutable but reauthorizes and conflicts on line order", async () => {
++  const { service, database } = binMoveSetup();
++  const input = binMoveCommand([binMoveLine({ quantity: 1 }), binMoveLine({ quantity: 2 })], { reason: "  shelf move  " });
++  const first = await service.postBinMove(input);
++  const before = database.state;
++  assert.deepEqual(await service.postBinMove({ ...input, payload: { ...input.payload, reason: "shelf move" } }), first);
++  assert.deepEqual(database.state, before);
++  await assert.rejects(() => service.postBinMove({ ...input, payload: { ...input.payload, lines: [...input.payload.lines].reverse() } }),
++    { code: "INVENTORY_SOURCE_CONFLICT" });
++  service.authorize = async () => ({ permissions: [] });
++  await assert.rejects(() => service.postBinMove(input), { code: "PERMISSION_STALE" });
++  assert.deepEqual(database.state, before);
++});
++
++test("TASK-030 source/destination starting versions and absence expectations fail with zero effects", async () => {
++  for (const [destination, lines] of [[false, [binMoveLine({ expectedSourceVersion: 2 })]],
++    [true, [binMoveLine()]], [false, [binMoveLine({ expectedDestinationVersion: 5 })]],
++    [true, [binMoveLine({ expectedDestinationVersion: 4 })]],
++    [false, [binMoveLine(), binMoveLine({ expectedSourceVersion: 4 })]],
++    [false, [binMoveLine(), binMoveLine({ expectedDestinationVersion: 2 })]]]) {
++    const { service, database } = binMoveSetup({ destination });
++    const before = database.state;
++    await assert.rejects(() => service.postBinMove(binMoveCommand(lines)), { code: "VERSION_CONFLICT" });
++    assert.deepEqual(database.state, before);
++  }
++});
++
++test("TASK-030 gross OUT cannot spend allocated stock or incoming stock", async () => {
++  const { service, database } = binMoveSetup({ destination: true, initialState: { balance: {
++    id: 501, warehouse_id: 2, bin_id: 35, sku_id: 12, lot_id: null, stock_status: "AVAILABLE",
++    on_hand_quantity: 5, allocated_quantity: 2, version: 3 } } });
++  const before = database.state;
++  for (const lines of [[binMoveLine({ quantity: 4, expectedDestinationVersion: 5 })],
++    [binMoveLine({ sourceBalanceId: 502, destinationBinId: 35, quantity: 1,
++      expectedSourceVersion: 5, expectedDestinationVersion: 3 }),
++    binMoveLine({ quantity: 4, expectedDestinationVersion: 5 })]]) {
++    await assert.rejects(() => service.postBinMove(binMoveCommand(lines)), { code: "INSUFFICIENT_STOCK" });
++    assert.deepEqual(database.state, before);
++  }
++});
++
++test("TASK-030 every transaction checkpoint rolls back zero-row creation and all earlier legs", async () => {
++  for (const failAt of INVENTORY_FAILURE_POINTS) {
++    const { service, database } = binMoveSetup({ failAt });
++    const before = database.state;
++    await assert.rejects(() => service.postBinMove(binMoveCommand()), error => error.faultPoint === failAt);
++    assert.deepEqual(database.state, before);
++  }
++});
++
++test("TASK-030 rejects unsafe arithmetic, version exhaustion, update races and unavailable profile", async () => {
++  for (const [options, code] of [[{ destination: true, initialState: { balance: {
++    id: 501, warehouse_id: 2, bin_id: 35, sku_id: 12, lot_id: null, stock_status: "AVAILABLE",
++    on_hand_quantity: Number.MAX_SAFE_INTEGER, allocated_quantity: 0, version: 3 } } }, "INVENTORY_QUANTITY_INVALID"],
++    [{ initialState: { balance: { id: 501, warehouse_id: 2, bin_id: 35, sku_id: 12,
++      lot_id: null, stock_status: "AVAILABLE", on_hand_quantity: 5, allocated_quantity: 0,
++      version: 4_294_967_295 } } }, "CONCURRENT_OPERATION"],
++    [{ updateConflict: true }, "CONCURRENT_OPERATION"], [{ profile: { usable: false } }, "INVENTORY_INPUT_INVALID"]]) {
++    const { service, database } = binMoveSetup(options);
++    const before = database.state;
++    const lines = options.destination ? [binMoveLine({ sourceBalanceId: 502, destinationBinId: 35,
++      expectedSourceVersion: 5, expectedDestinationVersion: 3 })]
++      : [binMoveLine({ expectedSourceVersion: options.initialState?.balance?.version ?? 3 })];
++    await assert.rejects(() => service.postBinMove(binMoveCommand(lines)), { code });
++    assert.deepEqual(database.state, before);
++  }
++});
++
+ test("TASK-014 Receipt converts Pack UOM and atomically updates Balance, Movement, Audit and operation", async () => {
+   const { service, database } = setup();
+ 
+--- a/server/test/inventoryEndpointSecurity.test.js
++++ b/server/test/inventoryEndpointSecurity.test.js
+@@ -40,7 +40,8 @@
+ }
+ 
+ test("TASK-018 every Core endpoint fails closed for missing, unauthorized and stale actors", async () => {
+-  assert.equal(handlers.length, 25);
++  assert.equal(handlers.length, 26);
++  assert.ok(handlers.includes(postingHandlers.PostInventoryBinMoveHandler));
+   const authentication = strategies();
+   const authorization = createAuthorizationPolicyRegistry();
+ 
+--- /dev/null
++++ b/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js
+@@ -0,0 +1,436 @@
++import assert from "node:assert/strict";
++import { randomBytes, randomUUID } from "node:crypto";
++import { readdir } from "node:fs/promises";
++import { setTimeout } from "node:timers/promises";
++import { createConnection } from "mysql2/promise";
++import test, { before, after } from "node:test";
++import { createApplication } from "../../src/framework/application/createApplication.js";
++import { defaultConfigurationSource } from "../../src/framework/configuration/applicationConfiguration.js";
++
++const enabled = process.env.DB_INTEGRATION_TESTS === "1" && process.env.INVENTORY_WAREHOUSE_OPERATIONS_API_TESTS === "1";
++const integrationTest = enabled ? test : test.skip;
++let app, db, origin, manager, viewer, managerToken, viewerToken, skuId, sourceWarehouseId, destinationWarehouseId, sourceBinId, destinationBinId;
++let requestIntervalMs, nextRequestAt = 0;
++let itemOnlyToken, lookupUomId;
++async function token(actor) {
++  const version = await app.services.require("tokenRevocation").currentVersion(String(actor.id));
++  return app.services.require("jwt").issue({ roles: [actor.role], permissions: actor.permissions },
++    { subject: String(actor.id), version, authTime: Math.floor(Date.now() / 1000) });
++}
++before(async () => {
++  if (!enabled) return;
++  assert.match(process.env.DB_NAME ?? "", /^erp_inventory_p3_[a-z0-9_]+$/u);
++  assert.match(process.env.DB_SOCKET_PATH ?? "", /^\/private\/tmp\/erp-inventory-p3-mysql-2670\.[a-zA-Z0-9]+\/mysql\.sock$/u);
++  const config = defaultConfigurationSource();
++  // Keep the real limiter enabled; schedule requests within its configured steady rate.
++  requestIntervalMs = Math.ceil(config.requestLimiter.ipWindowMs / config.requestLimiter.maxRequestsPerIpPerWindow) + 1;
++  app = await createApplication({ configurationSource: { ...config,
++    application: { ...config.application, host: "127.0.0.1", port: 0 },
++    jwt: { ...config.jwt, secret: randomBytes(32).toString("hex") } },
++  handlerRegistryOptions: { moduleUrls: ["transferHandlers.js", "skuLookupHandlers.js", "postingHandlers.js"].map(name => new URL(`../../src/handlers/inventory/${name}`, import.meta.url).href) } });
++  db = app.services.require("mysqldatabase");
++  const [[server]] = await db.query("SELECT VERSION() AS version, @@skip_networking AS skip_networking, DATABASE() AS db_name");
++  assert.deepEqual([server.version, Number(server.skip_networking), server.db_name], ["26.7.0", 1, process.env.DB_NAME]);
++  const migrations = (await readdir(new URL("../../database/migrations/", import.meta.url)))
++    .filter(name => /\.(?:js|sql)$/u.test(name)).map(name => `migrations/${name}`);
++  const [applied] = await db.query("SELECT name FROM fr_schema_migrations ORDER BY name");
++  assert.deepEqual(applied.map(row => row.name), [...migrations, "framework/idempotency.sql", "framework/jwt.sql", "framework/scheduler.sql"].sort());
++  const now = Date.now(), suffix = randomUUID().slice(0, 8);
++  async function actor(permissions) {
++    const name = `transfer-${randomUUID()}`;
++    const [role] = await db.execute("INSERT INTO roles (name, created_at) VALUES (?, ?)", [name, now]);
++    for (const permission of permissions) await db.execute("INSERT INTO role_permissions (role_id, permission_id) SELECT ?, id FROM permissions WHERE name = ?", [role.insertId, permission]);
++    const [user] = await db.execute("INSERT INTO users (username, password_hash, display_name, created_at, updated_at) VALUES (?, 'synthetic-disabled-login', 'Transfer test', ?, ?)", [name, now, now]);
++    await db.execute("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)", [user.insertId, role.insertId]);
++    return { id: user.insertId, roleId: role.insertId, role: name, permissions };
++  }
++  manager = await actor(["inventory.view", "inventory.operation"]); viewer = await actor(["inventory.view"]);
++  managerToken = await token(manager); viewerToken = await token(viewer);
++  itemOnlyToken = await token(await actor(["item.view"]));
++  const [uom] = await db.execute("INSERT INTO item_uoms (code,name,status,created_at,updated_at) VALUES (?, 'Each','active',?,?)", [`EA${suffix}`, now, now]);
++  lookupUomId = uom.insertId;
++  const [item] = await db.execute("INSERT INTO items (name,product_type,status,created_at,updated_at) VALUES ('Transfer item','standard','active',?,?)", [now, now]);
++  const [sku] = await db.execute(`INSERT INTO item_skus (item_id,sku_code,sku_name,tracking_policy,purchasable,sellable,inventory_tracked,status,created_at,updated_at)
++    VALUES (?,?,'Transfer SKU','none',1,1,1,'active',?,?)`, [item.insertId, `TR-${suffix}`, now, now]);
++  skuId = sku.insertId;
++  await db.execute("INSERT INTO item_sku_uoms (sku_id,uom_id,to_base_factor,is_base,created_at,updated_at) VALUES (?,?,1,1,?,?)", [skuId, uom.insertId, now, now]);
++  const ids = [];
++  for (const code of ["SOURCE", "DESTINATION"]) {
++    const [warehouse] = await db.execute("INSERT INTO inventory_warehouses (warehouse_code,normalized_code,warehouse_name,created_at,updated_at) VALUES (?,?,?,?,?)", [code, code.toLowerCase(), code, now, now]);
++    const [bin] = await db.execute("INSERT INTO inventory_bins (warehouse_id,bin_code,normalized_code,created_at,updated_at) VALUES (?,'SAME','same',?,?)", [warehouse.insertId, now, now]);
++    ids.push([warehouse.insertId, bin.insertId]);
++  }
++  [[sourceWarehouseId, sourceBinId], [destinationWarehouseId, destinationBinId]] = ids;
++  await db.execute(`INSERT INTO inventory_stock_balances (warehouse_id,bin_id,sku_id,stock_status,on_hand_quantity,fifo_anchor_date,created_at,updated_at)
++    VALUES (?,?,?,'AVAILABLE',100,'2026-10-06',?,?)`, [sourceWarehouseId, sourceBinId, skuId, now, now]);
++  origin = (await app.start()).url;
++});
++after(async () => { if (app) await app.shutdown("task029_api_test_complete"); });
++
++const source = () => ({ module: "INVENTORY", documentType: "TRANSFER", documentId: randomUUID(), lineId: "", eventId: randomUUID() });
++function draftBody(twoLines = false) {
++  const line = { skuId, sourceBinId, lotId: null, stockStatus: "AVAILABLE", quantity: 3 };
++  return { source: source(), sourceWarehouseId, destinationWarehouseId, lines: twoLines ? [line, { ...line, quantity: 2 }] : [line] };
++}
++async function request(path, body, token = managerToken, key = randomUUID(), base = "/api/v1/inventory/transfers") {
++  const waitMs = nextRequestAt - performance.now();
++  if (waitMs > 0) await setTimeout(waitMs);
++  nextRequestAt = performance.now() + requestIntervalMs;
++  const response = await fetch(`${origin}${base}${path}`, {
++    method: body === undefined ? "GET" : "POST",
++    headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}), "Content-Type": "application/json", "Idempotency-Key": key },
++    ...(body === undefined ? {} : { body: JSON.stringify(body) })
++  });
++  return { status: response.status, body: await response.json() };
++}
++async function success(path, body) {
++  const response = await request(path, body);
++  assert.equal(response.status, 200, JSON.stringify(response.body));
++  return response.body.data;
++}
++async function create(twoLines = false) { return success("/create", draftBody(twoLines)); }
++async function snapshot() {
++  const result = {};
++  for (const table of ["inventory_transfers", "inventory_transfer_lines", "inventory_stock_balances", "inventory_stock_controls", "inventory_operation_requests", "inventory_movements", "inventory_audit_logs", "inventory_reservations", "inventory_allocations", "inventory_lots"]) {
++    result[table] = (await db.query(`SELECT * FROM ${table} ORDER BY id`))[0];
++  }
++  return JSON.stringify(result);
++}
++async function rejected(path, body, status, code, token = managerToken) {
++  const before = await snapshot(), response = await request(path, body, token);
++  assert.equal(response.status, status, JSON.stringify(response.body));
++  if (code) assert.equal(response.body.error.code, code);
++  assert.doesNotMatch(JSON.stringify(response.body), /SELECT |INSERT |inventory_stock|stack|synthetic-disabled-login/iu);
++  assert.equal(await snapshot(), before);
++}
++const receiveBody = detail => ({ source: source(), version: detail.version,
++  lines: detail.lines.map(line => ({ id: line.id, quantity: line.quantity, destinationBinId })) });
++
++integrationTest("DEV-029-API-01 Draft full replacement, filters and cancellation leave stock untouched", async () => {
++  const before = JSON.stringify((await db.query("SELECT * FROM inventory_stock_balances ORDER BY id"))[0]);
++  const created = await create(true), detail = await success(`/${created.id}`);
++  assert.equal(detail.lines.length, 2); assert.equal(detail.createdBy, manager.id);
++  const list = await success(`?number=${detail.number}&status=DRAFT&pageSize=1`);
++  assert.equal(list.total, 1); assert.equal(list.items[0].id, created.id);
++  const line = detail.lines[0];
++  const updated = await success(`/${created.id}/update`, { source: source(), version: detail.version,
++    sourceWarehouseId, destinationWarehouseId, lines: [{ id: line.id, expectedVersion: line.version,
++      skuId, sourceBinId, lotId: null, stockStatus: "AVAILABLE", quantity: 4 }] });
++  const replaced = await success(`/${created.id}`);
++  assert.equal(updated.version, 2); assert.equal(replaced.lines.length, 1); assert.equal(replaced.lines[0].version, 2);
++  const cancelled = await success(`/${created.id}/cancel`, { source: source(), version: updated.version, reason: "Operator cancelled" });
++  assert.equal(cancelled.status, "CANCELLED"); assert.equal(cancelled.version, 3);
++  const final = await success(`/${created.id}`);
++  assert.equal(final.cancelledBy, manager.id); assert.equal(final.lines.length, 1); assert.equal(final.movements.length, 0);
++  assert.equal(JSON.stringify((await db.query("SELECT * FROM inventory_stock_balances ORDER BY id"))[0]), before);
++});
++
++integrationTest("DEV-029-API-02 whole Dispatch and Receive conserve stock with paired immutable legs", async () => {
++  const [[before]] = await db.query("SELECT on_hand_quantity FROM inventory_stock_balances WHERE bin_id = ? AND stock_status='AVAILABLE'", [sourceBinId]);
++  const created = await create(true);
++  const dispatched = await success(`/${created.id}/dispatch`, { source: source(), version: created.version });
++  const transit = await success(`/${created.id}`);
++  assert.equal(dispatched.status, "IN_TRANSIT"); assert.equal(transit.inTransitQuantity, 5); assert.equal(transit.movements.length, 4);
++  assert.equal(transit.dispatchedBy, manager.id); assert.ok(transit.dispatchedAt);
++  const [[remaining]] = await db.query("SELECT on_hand_quantity FROM inventory_stock_balances WHERE bin_id = ? AND stock_status='AVAILABLE'", [sourceBinId]);
++  assert.equal(Number(remaining.on_hand_quantity), Number(before.on_hand_quantity) - 5);
++  const received = await success(`/${created.id}/receive`, receiveBody(transit));
++  const final = await success(`/${created.id}`);
++  assert.equal(received.status, "RECEIVED"); assert.equal(final.inTransitQuantity, 0); assert.equal(final.movements.length, 8);
++  assert.equal(final.receivedBy, manager.id); assert.ok(final.lines.every(line => line.destinationBinId === destinationBinId && line.inTransitQuantity === 0));
++  const [[quantity]] = await db.query("SELECT SUM(on_hand_quantity) AS quantity FROM inventory_stock_balances WHERE sku_id = ?", [skuId]);
++  assert.equal(Number(quantity.quantity), 100);
++  const [[audit]] = await db.query("SELECT COUNT(*) AS count FROM inventory_audit_logs WHERE operation_request_id IN (?,?)", [dispatched.operationId, received.operationId]);
++  assert.equal(Number(audit.count), 2);
++});
++
++integrationTest("DEV-029-API-03 missing, repeated, extra and partial Receive lines have zero business effects", async () => {
++  const created = await create(true);
++  await success(`/${created.id}/dispatch`, { source: source(), version: created.version });
++  const detail = await success(`/${created.id}`), body = receiveBody(detail), [first, second] = body.lines;
++  for (const lines of [[first], [first, { ...first, stockStatus: "QUARANTINED" }], [first, second, { ...first, id: 999999 }], [first, { ...second, quantity: second.quantity - 1 }]]) {
++    await rejected(`/${created.id}/receive`, { ...body, source: source(), lines }, 409, "TRANSFER_PARTIAL_NOT_SUPPORTED");
++  }
++});
++
++integrationTest("DEV-029-API-04 path-owned children, versions, same-name Bin ownership and InTransit immutability", async () => {
++  const created = await create(), other = await create(), detail = await success(`/${other.id}`);
++  await rejected(`/${created.id}/update`, { ...draftBody(), version: 1,
++    lines: [{ skuId, sourceBinId, stockStatus: "AVAILABLE", quantity: 3, id: detail.lines[0].id, expectedVersion: 1 }] }, 404, "INVENTORY_RESOURCE_NOT_FOUND");
++  await rejected(`/${created.id}/dispatch`, { source: source(), version: 2 }, 409, "VERSION_CONFLICT");
++  await success(`/${created.id}/dispatch`, { source: source(), version: 1 });
++  const transit = await success(`/${created.id}`);
++  await rejected(`/${created.id}/receive`, { ...receiveBody(transit), lines: [{ id: transit.lines[0].id, quantity: 3, destinationBinId: sourceBinId }] }, 400, "BIN_WAREHOUSE_MISMATCH");
++  await rejected(`/${created.id}/update`, { ...draftBody(), version: transit.version }, 409, "TRANSFER_STATE_CONFLICT");
++  await rejected(`/${created.id}/cancel`, { source: source(), version: transit.version, reason: "Not allowed in transit" }, 409, "TRANSFER_STATE_CONFLICT");
++});
++
++integrationTest("DEV-029-API-05 Quarantined receipt requires reason and preserves exact dimensions", async () => {
++  const created = await create();
++  await success(`/${created.id}/dispatch`, { source: source(), version: 1 });
++  const transit = await success(`/${created.id}`), body = receiveBody(transit);
++  await rejected(`/${created.id}/receive`, { ...body, lines: [{ ...body.lines[0], stockStatus: "QUARANTINED" }] }, 400, "INVENTORY_INPUT_INVALID");
++  await rejected(`/${created.id}/receive`, { ...body, source: source(), lines: [{ ...body.lines[0], stockStatus: "DAMAGED" }] }, 409, "STOCK_STATUS_INELIGIBLE");
++  await success(`/${created.id}/receive`, { ...body, source: source(), reason: "Inspection required", lines: [{ ...body.lines[0], stockStatus: "QUARANTINED" }] });
++  const final = await success(`/${created.id}`);
++  assert.equal(final.reason, "Inspection required"); assert.equal(final.lines[0].receiveStockStatus, "QUARANTINED");
++  assert.deepEqual([final.lines[0].skuId, final.lines[0].lotId, final.lines[0].quantity], [skuId, null, 3]);
++});
++
++integrationTest("DEV-029-API-06 anonymous, read-only and freshly revoked JWT permissions cannot write or replay", async () => {
++  const body = draftBody(), created = await success("/create", body);
++  await rejected("", undefined, 401, undefined, null);
++  await rejected("/create", draftBody(), 401, undefined, null);
++  assert.equal((await request(`/${created.id}`, undefined, viewerToken)).status, 200);
++  await rejected("/create", draftBody(), 403, undefined, viewerToken);
++  await db.execute("DELETE rp FROM role_permissions rp JOIN permissions p ON p.id = rp.permission_id WHERE rp.role_id = ? AND p.name = 'inventory.operation'", [manager.roleId]);
++  try { await rejected("/create", body, 403); }
++  finally { await db.execute("INSERT INTO role_permissions (role_id,permission_id) SELECT ?, id FROM permissions WHERE name='inventory.operation'", [manager.roleId]); }
++});
++
++integrationTest("DEV-029-API-07 HTTP key and domain event replay retain original receipts after later state", async () => {
++  const body = draftBody(), key = randomUUID();
++  const first = await request("/create", body, managerToken, key);
++  assert.equal(first.status, 200, JSON.stringify(first.body));
++  const before = await snapshot(), repeat = await request("/create", body, managerToken, key);
++  assert.deepEqual(repeat.body.data, first.body.data); assert.equal(await snapshot(), before);
++  const created = first.body.data;
++  await success(`/${created.id}/dispatch`, { source: source(), version: created.version });
++  const dispatchedState = await snapshot(), replay = await request("/create", body);
++  assert.equal(replay.status, 200); assert.deepEqual(replay.body.data, created); assert.equal(await snapshot(), dispatchedState);
++  await rejected("/create", { ...body, lines: [{ ...body.lines[0], quantity: 4 }] }, 409, "INVENTORY_SOURCE_CONFLICT");
++  await rejected(`/${created.id}/cancel`, { source: body.source, version: 2, reason: "Conflicting event" }, 409, "INVENTORY_SOURCE_CONFLICT");
++});
++
++integrationTest("DEV-029-API-08 Audit failure rolls back Dispatch and same-intent retry posts once", async () => {
++  const created = await create(), body = { source: source(), version: 1 };
++  // Fixture DDL uses only the already-guarded owned instance's admin, never the HTTP app user.
++  const fixtureDb = await createConnection({ socketPath: process.env.DB_SOCKET_PATH, user: "root", database: process.env.DB_NAME });
++  try {
++    await fixtureDb.query("CREATE TRIGGER task029_reject_audit BEFORE INSERT ON inventory_audit_logs FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='synthetic audit failure'");
++    await rejected(`/${created.id}/dispatch`, body, 500);
++  } finally {
++    try { await fixtureDb.query("DROP TRIGGER IF EXISTS task029_reject_audit"); }
++    finally { await fixtureDb.end(); }
++  }
++  const posted = await success(`/${created.id}/dispatch`, body), detail = await success(`/${created.id}`);
++  assert.equal(posted.status, "IN_TRANSIT"); assert.equal(detail.movements.length, 2);
++  const [[audit]] = await db.query("SELECT COUNT(*) AS count FROM inventory_audit_logs WHERE operation_request_id = ?", [posted.operationId]);
++  assert.equal(Number(audit.count), 1);
++});
++
++const lookupQuery = (query, token = viewerToken) => request(`?${query}`, undefined, token, randomUUID(), "/api/v1/inventory/sku-lookup");
++const lookupCode = (code, token = viewerToken) => lookupQuery(new URLSearchParams({ code }), token);
++async function lookupSku({ code = `LK-%_${randomUUID()}`, itemStatus = "active", status = "active", tracked = 1, policy = "none", base = true, factor = 1 } = {}) {
++  const now = Date.now();
++  const [item] = await db.execute("INSERT INTO items (name,product_type,status,created_at,updated_at) VALUES ('Private lookup item','standard',?,?,?)", [itemStatus, now, now]);
++  const [sku] = await db.execute(`INSERT INTO item_skus (item_id,sku_code,sku_name,tracking_policy,purchasable,sellable,inventory_tracked,status,created_at,updated_at)
++    VALUES (?,?,'Lookup SKU',?,1,1,?,?,?,?)`, [item.insertId, code, policy, tracked, status, now, now]);
++  if (base) await db.execute("INSERT INTO item_sku_uoms (sku_id,uom_id,to_base_factor,is_base,created_at,updated_at) VALUES (?,?,?,1,?,?)", [sku.insertId, lookupUomId, factor, now, now]);
++  return { id: sku.insertId, code };
++}
++async function rejectedLookup(query, status, code, token = viewerToken) {
++  const before = await snapshot(), response = await lookupQuery(query, token);
++  assert.equal(response.status, status, JSON.stringify(response.body));
++  if (code) assert.equal(response.body.error.code, code);
++  assert.doesNotMatch(JSON.stringify(response.body), /SELECT |INSERT |stack|password_hash|Private lookup item/iu);
++  assert.equal(await snapshot(), before);
++}
++
++integrationTest("DEV-029-LOOKUP-01 Inventory-only lookup enforces framework JWT revocation without Item grants", async () => {
++  const sku = await lookupSku();
++  assert.equal((await lookupCode(sku.code)).status, 200);
++  const query = new URLSearchParams({ code: sku.code });
++  await rejectedLookup(query, 401, undefined, null);
++  await rejectedLookup(query, 403, undefined, itemOnlyToken);
++  await db.execute("DELETE rp FROM role_permissions rp JOIN permissions p ON p.id=rp.permission_id WHERE rp.role_id=? AND p.name='inventory.view'", [viewer.roleId]);
++  try {
++    // Read routes inherit JWT claims and version revocation, not the write-side freshness guard.
++    await app.services.require("tokenRevocation").revoke(String(viewer.id), { reason: "synthetic lookup revocation" });
++    await rejectedLookup(query, 401, "Unauthorized Access");
++    await rejectedLookup(query, 403, undefined, await token({ ...viewer, permissions: [] }));
++  } finally {
++    await db.execute("INSERT INTO role_permissions (role_id,permission_id) SELECT ?,id FROM permissions WHERE name='inventory.view'", [viewer.roleId]);
++    viewerToken = await token(viewer);
++  }
++});
++
++integrationTest("DEV-029-LOOKUP-02 strict whitelist and no-Balance SKU support Draft but never authorize Dispatch", async () => {
++  const sku = await lookupSku({ itemStatus: "discontinued" });
++  const before = await snapshot(), result = await lookupCode(` ${sku.code} `);
++  assert.equal(result.status, 200, JSON.stringify(result.body)); assert.equal(await snapshot(), before);
++  assert.deepEqual(Object.keys(result.body.data).sort(), ["skuId", "skuCode", "skuName", "trackingPolicy", "baseUom"].sort());
++  assert.deepEqual(Object.keys(result.body.data.baseUom).sort(), ["uomCode", "uomId"]);
++  assert.equal(result.body.data.skuId, sku.id); assert.equal(result.body.data.skuCode, sku.code);
++  assert.equal((await db.query("SELECT id FROM inventory_stock_balances WHERE sku_id=?", [sku.id]))[0].length, 0);
++  const stocks = JSON.stringify((await db.query("SELECT * FROM inventory_stock_balances ORDER BY id"))[0]);
++  const body = draftBody(); body.lines[0].skuId = sku.id;
++  const created = await success("/create", body);
++  assert.equal(JSON.stringify((await db.query("SELECT * FROM inventory_stock_balances ORDER BY id"))[0]), stocks);
++  const response = await request(`/${created.id}/dispatch`, { source: source(), version: 1 });
++  assert.equal(response.status, 409, JSON.stringify(response.body)); assert.equal(response.body.error.code, "INSUFFICIENT_STOCK");
++  assert.equal(JSON.stringify((await db.query("SELECT * FROM inventory_stock_balances ORDER BY id"))[0]), stocks);
++  const detail = await success(`/${created.id}`); assert.equal(detail.status, "DRAFT"); assert.equal(detail.movements.length, 0);
++});
++
++integrationTest("DEV-029-LOOKUP-03 bounded Code, literal wildcards and collation never become catalogue search", async () => {
++  const code = `Case-%_${randomUUID()}`, sku = await lookupSku({ code });
++  assert.equal((await lookupCode(code.toLowerCase())).body.data.skuId, sku.id);
++  await rejectedLookup(new URLSearchParams({ code: "Case-%_" }), 404, "INVENTORY_RESOURCE_NOT_FOUND");
++  for (const query of ["", "code=a&code=b", "code=a&permission=item.view", new URLSearchParams({ code: "\u0000bad" }),
++    new URLSearchParams({ code: "bad\u007f" }), new URLSearchParams({ code: "😀".repeat(191) })]) {
++    await rejectedLookup(query, 400, "REQUEST_VALIDATION_FAILED");
++  }
++  await rejectedLookup("code=%20%20", 400, "SKU_CODE_INVALID");
++  const boundary = await lookupSku({ code: "😀".repeat(190) });
++  assert.equal((await lookupCode(boundary.code)).body.data.skuId, boundary.id);
++});
++
++integrationTest("DEV-029-LOOKUP-04 Item profile rejects invalid tracking/status/Base UOM and stale Draft input", async () => {
++  for (const [options, error] of [[{ tracked: 0 }, "SKU_NOT_INVENTORY_TRACKED"], [{ status: "inactive" }, "INVENTORY_INPUT_INVALID"],
++    [{ status: "archived" }, "INVENTORY_INPUT_INVALID"], [{ itemStatus: "archived" }, "INVENTORY_INPUT_INVALID"],
++    [{ policy: "serial" }, "SERIAL_TRACKING_UNSUPPORTED"], [{ base: false }, "UOM_CONVERSION_INVALID"], [{ factor: 2 }, "UOM_CONVERSION_INVALID"]]) {
++    const sku = await lookupSku(options);
++    await rejectedLookup(new URLSearchParams({ code: sku.code }), 400, error);
++    const body = draftBody(); body.lines[0].skuId = sku.id;
++    await rejected("/create", body, 400, error);
++  }
++});
++
++integrationTest("DEV-029-LOOKUP-05 two-connection rename/inactivation cannot mix read snapshots or exempt later writes", async () => {
++  const sku = await lookupSku(), renamed = `CHANGED-${randomUUID()}`;
++  const original = db.withTransaction;
++  let entered, release;
++  const readReached = new Promise(resolve => { entered = resolve; });
++  const continueRead = new Promise(resolve => { release = resolve; });
++  db.withTransaction = function (work, options) {
++    return original.call(this, tx => work({ async query(sql, params) {
++      const rows = await tx.query(sql, params);
++      if (sql.includes("s.sku_code = ?")) { entered(); await continueRead; }
++      return rows;
++    } }), options);
++  };
++  const writer = await createConnection({ socketPath: process.env.DB_SOCKET_PATH, user: "root", database: process.env.DB_NAME });
++  let pending;
++  try {
++    pending = lookupCode(sku.code);
++    await readReached;
++    await writer.execute("UPDATE item_skus SET sku_code=?,status='inactive' WHERE id=?", [renamed, sku.id]);
++    release();
++    const result = await pending;
++    assert.equal(result.status, 200, JSON.stringify(result.body)); assert.equal(result.body.data.skuCode, sku.code);
++  } finally { release(); db.withTransaction = original; await writer.end(); if (pending) await pending; }
++  await rejectedLookup(new URLSearchParams({ code: sku.code }), 404, "INVENTORY_RESOURCE_NOT_FOUND");
++  await rejectedLookup(new URLSearchParams({ code: renamed }), 400, "INVENTORY_INPUT_INVALID");
++  const body = draftBody(); body.lines[0].skuId = sku.id;
++  await rejected("/create", body, 400, "INVENTORY_INPUT_INVALID");
++});
++
++const binMove = (body, actorToken = managerToken, key = randomUUID()) => request("", body, actorToken, key, "/api/v1/inventory/bin-moves");
++async function moveBody() {
++  const [[balance]] = await db.query("SELECT id,version FROM inventory_stock_balances WHERE bin_id=? AND sku_id=? AND stock_status='AVAILABLE'", [sourceBinId, skuId]);
++  const now = Date.now(), code = `MOVE-${randomUUID().slice(0, 8)}`;
++  const [bin] = await db.execute("INSERT INTO inventory_bins (warehouse_id,bin_code,normalized_code,created_at,updated_at) VALUES (?,?,?,?,?)", [sourceWarehouseId, code, code.toLowerCase(), now, now]);
++  return { source: { ...source(), documentType: "BIN_MOVE" }, warehouseId: sourceWarehouseId, reason: "Move bins",
++    lines: [{ sourceBalanceId: Number(balance.id), destinationBinId: bin.insertId, quantity: 1, expectedSourceVersion: Number(balance.version), expectedDestinationVersion: null }] };
++}
++async function rejectedMove(body, status, code, actorToken = managerToken, key = randomUUID()) {
++  const before = await snapshot(), response = await binMove(body, actorToken, key);
++  assert.equal(response.status, status, JSON.stringify(response.body));
++  if (code) assert.equal(response.body.error.code, code);
++  assert.doesNotMatch(JSON.stringify(response.body), /SELECT |INSERT |inventory_stock|stack|synthetic-disabled-login/iu);
++  assert.equal(await snapshot(), before);
++}
++
++integrationTest("DEV-030-API-01 whole Bin Move posts paired legs and immutable HTTP/domain replay", async () => {
++  const body = await moveBody(), key = randomUUID();
++  body.lines.push({ ...body.lines[0], quantity: 2 });
++  const [[beforeTotals]] = await db.query("SELECT SUM(on_hand_quantity) AS quantity FROM inventory_stock_balances WHERE sku_id=?", [skuId]);
++  const first = await binMove(body, managerToken, key);
++  assert.equal(first.status, 200, JSON.stringify(first.body));
++  const result = first.body.data;
++  assert.deepEqual(Object.keys(result).sort(), ["status", "operationId", "movementGroupId", "lineCount"].sort());
++  assert.equal(result.status, "POSTED"); assert.equal(result.lineCount, 2);
++  const [legs] = await db.query("SELECT * FROM inventory_movements WHERE operation_request_id=? ORDER BY id", [result.operationId]);
++  assert.deepEqual(legs.map(row => [row.direction, Number(row.quantity)]), [["OUT", 1], ["IN", 1], ["OUT", 2], ["IN", 2]]);
++  assert.ok(legs.every(row => row.movement_group_id === result.movementGroupId && row.posted_by === manager.id && row.movement_type === "BIN_MOVE"));
++  const [[totals]] = await db.query("SELECT SUM(on_hand_quantity) AS quantity FROM inventory_stock_balances WHERE sku_id=?", [skuId]);
++  assert.equal(Number(totals.quantity), Number(beforeTotals.quantity));
++  const [[audit]] = await db.query("SELECT COUNT(*) AS count FROM inventory_audit_logs WHERE operation_request_id=?", [result.operationId]);
++  assert.equal(Number(audit.count), 4);
++  const before = await snapshot();
++  assert.deepEqual((await binMove(body, managerToken, key)).body.data, result);
++  assert.deepEqual((await binMove(body)).body.data, result);
++  assert.equal(await snapshot(), before);
++  await rejectedMove({ ...body, lines: [...body.lines].reverse() }, 409, "INVENTORY_SOURCE_CONFLICT");
++  for (const quantity of ["1", true]) {
++    const invalid = structuredClone(body); invalid.lines[0].quantity = quantity;
++    await rejectedMove(invalid, 400, "REQUEST_VALIDATION_FAILED", managerToken, key);
++  }
++});
++
++integrationTest("DEV-030-API-02 numeric-only bounded schema rejects all coerced IDs/versions and forged fields before claims", async () => {
++  const body = await moveBody();
++  const beforeCache = (await db.query("SELECT COUNT(*) AS count FROM fr_idempotency_keys"))[0][0].count;
++  for (const field of ["sourceBalanceId", "destinationBinId", "quantity", "expectedSourceVersion", "expectedDestinationVersion"]) {
++    for (const value of ["1", true]) {
++      const invalid = structuredClone(body); invalid.lines[0][field] = value;
++      await rejectedMove(invalid, 400, "REQUEST_VALIDATION_FAILED");
++    }
++  }
++  for (const invalid of [{ ...body, warehouseId: "1" }, { ...body, warehouseId: true }, { ...body, actor: { userId: manager.id } },
++    { ...body, permission: "inventory.operation" }, { ...body, lines: [] }, { ...body, lines: Array.from({ length: 101 }, () => body.lines[0]) },
++    { ...body, lines: [{ ...body.lines[0], skuId }] }, { ...body, reason: "bad\u0000reason" }]) {
++    await rejectedMove(invalid, 400, "REQUEST_VALIDATION_FAILED");
++  }
++  const omitted = structuredClone(body); delete omitted.lines[0].expectedDestinationVersion;
++  await rejectedMove(omitted, 400, "REQUEST_VALIDATION_FAILED");
++  assert.equal((await db.query("SELECT COUNT(*) AS count FROM fr_idempotency_keys"))[0][0].count, beforeCache);
++});
++
++integrationTest("DEV-030-API-03 stale versions, absent/present destinations, ownership and free stock reject whole document", async () => {
++  const body = await moveBody(), line = body.lines[0];
++  for (const [change, status, code] of [
++    [{ expectedSourceVersion: line.expectedSourceVersion + 1 }, 409, "VERSION_CONFLICT"],
++    [{ expectedDestinationVersion: 1 }, 409, "VERSION_CONFLICT"],
++    [{ destinationBinId: sourceBinId }, 400, "INVENTORY_INPUT_INVALID"],
++    [{ destinationBinId }, 400, "BIN_WAREHOUSE_MISMATCH"],
++    [{ quantity: 100000 }, 409, "INSUFFICIENT_STOCK"]
++  ]) await rejectedMove({ ...body, source: source(), lines: [line, { ...line, ...change }] }, status, code);
++  await db.execute("UPDATE inventory_bins SET status='INACTIVE' WHERE id=?", [line.destinationBinId]);
++  try { await rejectedMove(body, 400, "BIN_INVALID"); }
++  finally { await db.execute("UPDATE inventory_bins SET status='ACTIVE' WHERE id=?", [line.destinationBinId]); }
++  const posted = await binMove(body); assert.equal(posted.status, 200, JSON.stringify(posted.body));
++  const [[current]] = await db.query("SELECT version FROM inventory_stock_balances WHERE id=?", [line.sourceBalanceId]);
++  await rejectedMove({ ...body, source: source(), lines: [{ ...line, expectedSourceVersion: Number(current.version) }] }, 409, "VERSION_CONFLICT");
++});
++
++integrationTest("DEV-030-API-04 both permissions, fresh domain reauthorization and revoked JWT protect writes/replays", async () => {
++  const body = await moveBody(), key = randomUUID();
++  const posted = await binMove(body, managerToken, key); assert.equal(posted.status, 200, JSON.stringify(posted.body));
++  await rejectedMove(body, 401, undefined, null);
++  await rejectedMove(body, 403, undefined, viewerToken);
++  await rejectedMove(body, 403, undefined, itemOnlyToken);
++  await rejectedMove(body, 403, undefined, await token({ ...manager, permissions: ["inventory.operation"] }));
++  await db.execute("DELETE rp FROM role_permissions rp JOIN permissions p ON p.id=rp.permission_id WHERE rp.role_id=? AND p.name='inventory.operation'", [manager.roleId]);
++  try { await rejectedMove(body, 403, "PERMISSION_STALE"); }
++  finally { await db.execute("INSERT INTO role_permissions (role_id,permission_id) SELECT ?,id FROM permissions WHERE name='inventory.operation'", [manager.roleId]); }
++  await app.services.require("tokenRevocation").revoke(String(manager.id), { reason: "synthetic Bin Move revocation" });
++  try { await rejectedMove(body, 401, "Unauthorized Access", managerToken, key); }
++  finally { managerToken = await token(manager); }
++});
++
++integrationTest("DEV-030-API-05 real Audit failure rolls back whole Move and same-intent retry posts once", async () => {
++  const body = await moveBody(); body.lines.push({ ...body.lines[0] });
++  const fixtureDb = await createConnection({ socketPath: process.env.DB_SOCKET_PATH, user: "root", database: process.env.DB_NAME });
++  try {
++    await fixtureDb.query("CREATE TRIGGER task030_reject_move_audit BEFORE INSERT ON inventory_audit_logs FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='synthetic move audit failure'");
++    await rejectedMove(body, 500);
++  } finally {
++    try { await fixtureDb.query("DROP TRIGGER IF EXISTS task030_reject_move_audit"); }
++    finally { await fixtureDb.end(); }
++  }
++  const posted = await binMove(body); assert.equal(posted.status, 200, JSON.stringify(posted.body));
++  const [[counts]] = await db.query("SELECT COUNT(*) AS count FROM inventory_movements WHERE operation_request_id=?", [posted.body.data.operationId]);
++  assert.equal(Number(counts.count), 4);
++});
+--- /dev/null
++++ b/server/test/integration/inventoryMovement.integration.test.js
+@@ -0,0 +1,379 @@
++import assert from "node:assert/strict";
++import { randomUUID } from "node:crypto";
++import test, { before, after } from "node:test";
++import mysql from "mysql2/promise";
++import { up as permissions } from "../../database/migrations/0055_seed_inventory_permissions.js";
++import { up as operations } from "../../database/migrations/0056_create_inventory_operations.js";
++import { up as audit } from "../../database/migrations/0057_create_inventory_audit.js";
++import { up as master } from "../../database/migrations/0058_create_inventory_master.js";
++import { up as stock } from "../../database/migrations/0059_create_inventory_stock.js";
++import { up as movements } from "../../database/migrations/0060_create_inventory_movements.js";
++import { up as reservations } from "../../database/migrations/0063_create_inventory_reservations.js";
++import { up as transfers } from "../../database/migrations/0064_create_inventory_transfers.js";
++import { InventoryTransferService } from "../../src/modules/inventory/InventoryTransferService.js";
++import { InventoryOperationService } from "../../src/modules/inventory/InventoryOperationService.js";
++import { InventoryReservationService } from "../../src/modules/inventory/InventoryReservationService.js";
++import { InventoryPostingService } from "../../src/modules/inventory/InventoryPostingService.js";
++import { InventoryLockService } from "../../src/modules/inventory/InventoryLockService.js";
++import { inventoryCommandFixture } from "../../test-support/inventoryFixtures.js";
++import { createInventoryBarrier } from "../../test-support/fakeInventoryDatabase.js";
++
++const enabled = process.env.DB_INTEGRATION_TESTS === "1" && process.env.INVENTORY_MOVEMENT_TESTS === "1";
++const integrationTest = enabled ? test : test.skip;
++const time = { nowMs: () => 1790899200000, fileDate: () => "2026-10-02" };
++const logger = { error() {} };
++let pool, database, service;
++
++before(async () => {
++  if (!enabled) return;
++  assert.match(process.env.DB_NAME ?? "", /^erp_inventory_p3_[a-z0-9_]+$/u);
++  assert.match(process.env.DB_SOCKET ?? "", /^\/private\/tmp\/erp-inventory-p3-mysql-2670\.[A-Za-z0-9_]+\/mysql\.sock$/u);
++  pool = mysql.createPool({ user: "root", database: process.env.DB_NAME,
++    socketPath: process.env.DB_SOCKET, connectionLimit: 4 });
++  const [[environment]] = await pool.query("SELECT VERSION() AS version, DATABASE() AS db, @@skip_networking AS isolated");
++  assert.match(environment.version, /^26\.7\.0(?:$|-)/u);
++  assert.equal(environment.db, process.env.DB_NAME);
++  assert.equal(Number(environment.isolated), 1);
++  assert.equal((await pool.query("SHOW TABLES"))[0].length, 0, "requires fresh task-owned synthetic schema");
++  // Minimal synthetic parents, but real Inventory migrations, auth, Item lookup and transactions.
++  for (const ddl of [
++    "CREATE TABLE users (id BIGINT UNSIGNED PRIMARY KEY, username VARCHAR(190), status VARCHAR(20)) ENGINE=InnoDB",
++    "CREATE TABLE roles (id BIGINT UNSIGNED PRIMARY KEY, name VARCHAR(190)) ENGINE=InnoDB",
++    "CREATE TABLE user_roles (user_id BIGINT UNSIGNED, role_id BIGINT UNSIGNED) ENGINE=InnoDB",
++    "CREATE TABLE role_permissions (role_id BIGINT UNSIGNED, permission_id BIGINT UNSIGNED) ENGINE=InnoDB",
++    `CREATE TABLE permissions (id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, name VARCHAR(190) UNIQUE,
++      description VARCHAR(255) DEFAULT '', created_at BIGINT UNSIGNED) ENGINE=InnoDB`,
++    "CREATE TABLE items (id BIGINT UNSIGNED PRIMARY KEY, name VARCHAR(190), product_type VARCHAR(20), status VARCHAR(20)) ENGINE=InnoDB",
++    `CREATE TABLE item_skus (id BIGINT UNSIGNED PRIMARY KEY, item_id BIGINT UNSIGNED, sku_code VARCHAR(190),
++      sku_name VARCHAR(190), status VARCHAR(20), purchasable BOOLEAN DEFAULT 1, sellable BOOLEAN DEFAULT 1,
++      inventory_tracked BOOLEAN DEFAULT 1, tracking_policy VARCHAR(20), shelf_life_days INT,
++      min_receipt_life_days INT, min_sale_life_days INT, effective_from DATE, effective_to DATE) ENGINE=InnoDB`,
++    `CREATE TABLE item_uoms (id BIGINT UNSIGNED PRIMARY KEY, code VARCHAR(20), name VARCHAR(100) NOT NULL,
++      status VARCHAR(20) NOT NULL DEFAULT 'active', version INT UNSIGNED NOT NULL DEFAULT 1) ENGINE=InnoDB`,
++    `CREATE TABLE item_sku_uoms (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
++      sku_id BIGINT UNSIGNED, uom_id BIGINT UNSIGNED, to_base_factor DECIMAL(18,6),
++      is_base BOOLEAN, is_default_purchase BOOLEAN, is_default_sale BOOLEAN,
++      version INT UNSIGNED NOT NULL DEFAULT 1) ENGINE=InnoDB`
++  ]) await pool.query(ddl);
++  for (const migrate of [permissions, operations, audit, master, stock, movements, reservations, transfers]) await migrate(pool);
++  await pool.query("INSERT INTO users VALUES (7, 'synthetic-operator', 'active')");
++  await pool.query("INSERT INTO roles VALUES (1, 'warehouse-operator')");
++  await pool.query("INSERT INTO user_roles VALUES (7, 1)");
++  await pool.query("INSERT INTO role_permissions SELECT 1, id FROM permissions WHERE name = 'inventory.operation'");
++  await pool.query("INSERT INTO items VALUES (1, 'Synthetic', 'physical', 'active')");
++  await pool.query(`INSERT INTO item_skus (id, item_id, sku_code, sku_name, status, tracking_policy)
++    VALUES (12, 1, 'SKU-12', 'Synthetic plain', 'active', 'none'),
++           (13, 1, 'SKU-13', 'Synthetic expiry', 'active', 'batch_expiry'),
++           (14, 1, 'SKU-14', 'Synthetic serial', 'active', 'serial')`);
++  await pool.query("INSERT INTO item_uoms (id, code, name) VALUES (1, 'EA', 'Each')");
++  await pool.query(`INSERT INTO item_sku_uoms (sku_id,uom_id,to_base_factor,is_base,is_default_purchase,is_default_sale)
++    VALUES (12,1,1,1,1,1), (13,1,1,1,1,1), (14,1,1,1,1,1)`);
++  for (const warehouseId of [1, 2, 3]) {
++    await pool.execute(`INSERT INTO inventory_warehouses
++      (id, warehouse_code, normalized_code, warehouse_name, created_at, updated_at) VALUES (?, ?, ?, ?, 1, 1)`,
++    [warehouseId, `WH-${warehouseId}`, `WH-${warehouseId}`, `Synthetic ${warehouseId}`]);
++    await pool.execute(`INSERT INTO inventory_bins
++      (id, warehouse_id, bin_code, normalized_code, created_at, updated_at) VALUES (?, ?, ?, ?, 1, 1)`,
++    [warehouseId, warehouseId, `BIN-${warehouseId}`, `BIN-${warehouseId}`]);
++  }
++  await pool.query(`INSERT INTO inventory_lots
++    (id, sku_id, lot_number, normalized_lot_number, expiry_date, manufacture_date,
++     first_receipt_date, sku_code_snapshot, created_at)
++    VALUES (1,13,'LOT-13','LOT-13','2026-12-31','2026-01-01','2026-01-02','SKU-13',1)`);
++  database = { query: (sql, params) => pool.query(sql, params), async withTransaction(work) {
++    const tx = await pool.getConnection();
++    try { await tx.beginTransaction(); const result = await work(tx); await tx.commit(); return result; }
++    catch (error) { await tx.rollback(); throw error; }
++    finally { tx.release(); }
++  } };
++  service = new InventoryPostingService({ database, logger, time });
++  for (const binId of [4,5]) await pool.execute(`INSERT INTO inventory_bins
++    (id,warehouse_id,bin_code,normalized_code,created_at,updated_at) VALUES (?,1,?,?,1,1)`,
++    [binId, `BIN-${binId}`, `BIN-${binId}`]);
++});
++after(async () => { if (pool) await pool.end(); });
++
++let nextSku = 100;
++async function fixture({ onHand = 10, allocated = 0, status = 'AVAILABLE', expiry = null, destination = null } = {}) {
++  const skuId = nextSku++;
++  await pool.execute(`INSERT INTO item_skus (id,item_id,sku_code,sku_name,status,tracking_policy)
++    VALUES (?,1,?,?,'active',?)`, [skuId, `SKU-${skuId}`, `Synthetic ${skuId}`, expiry ? 'batch_expiry' : 'none']);
++  await pool.execute(`INSERT INTO item_sku_uoms (sku_id,uom_id,to_base_factor,is_base,is_default_purchase,is_default_sale)
++    VALUES (?,1,1,1,1,1)`, [skuId]);
++  let lotId = null;
++  if (expiry) {
++    const [lot] = await pool.execute(`INSERT INTO inventory_lots
++      (sku_id,lot_number,normalized_lot_number,expiry_date,first_receipt_date,sku_code_snapshot,created_at)
++      VALUES (?,?,?,?,'2026-01-01',?,1)`, [skuId, `LOT-${skuId}`, `LOT-${skuId}`, expiry, `SKU-${skuId}`]);
++    lotId = Number(lot.insertId);
++  }
++  const [balance] = await pool.execute(`INSERT INTO inventory_stock_balances
++    (warehouse_id,bin_id,sku_id,lot_id,stock_status,on_hand_quantity,allocated_quantity,fifo_anchor_date,version,created_at,updated_at)
++    VALUES (1,1,?,?,?, ?,?,'2026-01-01',1,1,1)`, [skuId, lotId, status, onHand, allocated]);
++  let destinationId = null;
++  if (destination !== null) {
++    const [row] = await pool.execute(`INSERT INTO inventory_stock_balances
++      (warehouse_id,bin_id,sku_id,lot_id,stock_status,on_hand_quantity,allocated_quantity,fifo_anchor_date,version,created_at,updated_at)
++      VALUES (1,4,?,?,?, ?,0,'2026-02-01',3,1,1)`, [skuId, lotId, status, destination]);
++    destinationId = Number(row.insertId);
++  }
++  return { skuId, lotId, balanceId: Number(balance.insertId), destinationId,
++    line: { sourceBalanceId: Number(balance.insertId), destinationBinId: 4, quantity: 2,
++      expectedSourceVersion: 1, expectedDestinationVersion: destination === null ? null : 3 } };
++}
++function move(lines, extra = {}, eventId = randomUUID()) {
++  return inventoryCommandFixture({ actor: { claimedPermissions: ['inventory.operation'] },
++    authorization: { purpose: 'bin_move.post', requiredCallerPermission: 'inventory.operation' },
++    source: { module: 'INVENTORY', documentType: 'BIN_MOVE', documentId: 'synthetic-task030', eventId },
++    correlationId: eventId, payload: { warehouseId: 1, lines, ...extra } });
++}
++async function snapshot() {
++  const result = {};
++  for (const table of ['inventory_stock_balances', 'inventory_stock_controls', 'inventory_operation_requests',
++    'inventory_movements', 'inventory_audit_logs', 'inventory_reservations', 'inventory_allocations',
++    'inventory_transfers', 'inventory_transfer_lines']) result[table] = (await pool.query(`SELECT * FROM ${table} ORDER BY id`))[0];
++  return result;
++}
++async function rejectsUnchanged(work, code) {
++  const before = await snapshot();
++  await assert.rejects(work, { code });
++  assert.deepEqual(await snapshot(), before);
++}
++async function balances(skuId) { return (await pool.query('SELECT * FROM inventory_stock_balances WHERE sku_id = ? ORDER BY bin_id', [skuId]))[0]; }
++async function movementRows(group) { return (await pool.query('SELECT * FROM inventory_movements WHERE movement_group_id = ? ORDER BY id', [group]))[0]; }
++
++integrationTest('TASK-030 native multi-line document preserves Lot/status/BaseUOM and stores chained immutable paired legs', async () => {
++  const f = await fixture({ expiry: '2026-12-31', status: 'QUARANTINED' });
++  const result = await service.postBinMove(move([f.line, { ...f.line, quantity: 3 }], { reason: '  same warehouse  ' }));
++  assert.deepEqual(Object.keys(result).sort(), ['lineCount', 'movementGroupId', 'operationId', 'status']);
++  assert.equal(result.lineCount, 2);
++  const rows = await movementRows(result.movementGroupId);
++  assert.deepEqual(rows.map(r => [r.direction, Number(r.quantity), Number(r.balance_before), Number(r.balance_after), Number(r.balance_version_after)]),
++    [['OUT',2,10,8,2],['IN',2,0,2,2],['OUT',3,8,5,3],['IN',3,2,5,3]]);
++  assert.ok(rows.every(r => r.movement_type === 'BIN_MOVE' && r.location_kind === 'BIN' && Number(r.lot_id) === f.lotId &&
++    r.stock_status === 'QUARANTINED' && r.reason_text === 'same warehouse' && Number(r.posted_by) === 7));
++  assert.deepEqual((await balances(f.skuId)).map(r => [Number(r.on_hand_quantity),Number(r.allocated_quantity),Number(r.version)]), [[5,0,3],[5,0,3]]);
++  const [[operation]] = await pool.query('SELECT * FROM inventory_operation_requests WHERE id = ?', [result.operationId]);
++  assert.equal(operation.command_type, 'BIN_MOVE_POST');
++  assert.deepEqual(typeof operation.result_summary === 'string' ? JSON.parse(operation.result_summary) : operation.result_summary, result);
++  const [audits] = await pool.query('SELECT * FROM inventory_audit_logs WHERE operation_request_id = ? ORDER BY id', [result.operationId]);
++  assert.equal(audits.length, 4);
++  assert.ok(audits.every(r => r.action === 'bin_move.post' && r.outcome === 'SUCCEEDED'));
++  await assert.rejects(() => pool.execute('UPDATE inventory_movements SET quantity = 1 WHERE id = ?', [rows[0].id]));
++  assert.deepEqual(await movementRows(result.movementGroupId), rows);
++});
++
++integrationTest('TASK-030 destination presence, source version and shared starting-version conflicts leave zero effects', async () => {
++  for (const destination of [null, 4]) {
++    const f = await fixture({ destination });
++    for (const lines of [[{ ...f.line, expectedSourceVersion: 9 }],
++      [{ ...f.line, expectedDestinationVersion: destination === null ? 1 : null }],
++      [f.line, { ...f.line, expectedSourceVersion: 2 }]]) {
++      await rejectsUnchanged(() => service.postBinMove(move(lines)), 'VERSION_CONFLICT');
++    }
++  }
++});
++
++integrationTest('TASK-030 gross OUT cannot use incoming quantities or consume allocated stock', async () => {
++  const f = await fixture({ onHand: 5, allocated: 2, destination: 5 });
++  await rejectsUnchanged(() => service.postBinMove(move([{ ...f.line, quantity: 4 }])), 'INSUFFICIENT_STOCK');
++  const incoming = { sourceBalanceId: f.destinationId, destinationBinId: 1, quantity: 2, expectedSourceVersion: 3, expectedDestinationVersion: 1 };
++  await rejectsUnchanged(() => service.postBinMove(move([incoming, { ...f.line, quantity: 4 }])), 'INSUFFICIENT_STOCK');
++  await service.postBinMove(move([{ ...f.line, quantity: 3 }]));
++  assert.deepEqual((await balances(f.skuId)).map(r => Number(r.allocated_quantity)), [2,0]);
++});
++
++integrationTest('TASK-030 natural expiry/uncovered Reservation does not block a conserving Move or change Control', async () => {
++  const f = await fixture({ expiry: '2026-01-01' });
++  // Real Reservation before natural expiry; posting uses the later fixed clock above.
++  const reservations = new InventoryReservationService({ database, logger,
++    time: { nowMs: () => Date.parse('2025-12-31T00:00:00Z'), fileDate: () => '2025-12-31' } });
++  await reservations.create(inventoryCommandFixture({ actor: { claimedPermissions: ['inventory.operation'] },
++    authorization: { purpose: 'reservation.create', requiredCallerPermission: 'inventory.operation' },
++    source: { eventId: randomUUID() }, payload: { skuId: f.skuId, warehouseId: 1, quantity: 10, purpose: 'SALE', minimumRemainingDays: 0 } }));
++  const before = (await pool.query('SELECT * FROM inventory_stock_controls WHERE sku_id = ?', [f.skuId]))[0];
++  const beforeReservation = (await pool.query('SELECT * FROM inventory_reservations WHERE sku_id = ?', [f.skuId]))[0];
++  await service.postBinMove(move([f.line]));
++  assert.deepEqual((await pool.query('SELECT * FROM inventory_stock_controls WHERE sku_id = ?', [f.skuId]))[0], before);
++  assert.deepEqual((await pool.query('SELECT * FROM inventory_reservations WHERE sku_id = ?', [f.skuId]))[0], beforeReservation);
++  assert.equal((await balances(f.skuId)).reduce((sum,r) => sum + Number(r.on_hand_quantity), 0), 10);
++});
++
++integrationTest('TASK-030 FIFO clears exhausted source, initializes absent destination, retains positive destination anchor', async () => {
++  for (const destination of [null, 4]) {
++    const f = await fixture({ onHand: 2, destination });
++    await service.postBinMove(move([f.line]));
++    const actual = await balances(f.skuId);
++    assert.equal(actual[0].fifo_anchor_date, null);
++    const [[row]] = await pool.query("SELECT DATE_FORMAT(fifo_anchor_date,'%Y-%m-%d') AS anchor FROM inventory_stock_balances WHERE id = ?", [actual[1].id]);
++    assert.equal(row.anchor, destination === null ? time.fileDate() : '2026-02-01');
++  }
++});
++
++integrationTest('TASK-030 source replay returns original scalar receipt and reauthorizes without re-reading changed stock', async () => {
++  const f = await fixture();
++  const input = move([f.line, { ...f.line, quantity: 1 }], { reason: '  move  ' });
++  const first = await service.postBinMove(input);
++  const before = await snapshot();
++  assert.deepEqual(await service.postBinMove({ ...input, payload: { ...input.payload, reason: 'move' } }), first);
++  assert.deepEqual(await snapshot(), before);
++  await rejectsUnchanged(() => service.postBinMove({ ...input, payload: { ...input.payload, lines: [...input.payload.lines].reverse() } }), 'INVENTORY_SOURCE_CONFLICT');
++  await pool.query('DELETE FROM role_permissions WHERE role_id = 1');
++  try { await assert.rejects(() => service.postBinMove(input), { code: 'PERMISSION_STALE' }); }
++  finally { await pool.query("INSERT INTO role_permissions SELECT 1,id FROM permissions WHERE name = 'inventory.operation'"); }
++  assert.deepEqual(await snapshot(), before);
++});
++
++integrationTest('TASK-030 strict body, source/destination ownership and inactive Bin reject without state changes', async () => {
++  const f = await fixture();
++  const missingVersion = { ...f.line };
++  delete missingVersion.expectedDestinationVersion;
++  for (const [input, code] of [[move([{ ...f.line, destinationBinId: 2 }]), 'BIN_WAREHOUSE_MISMATCH'],
++    [move([{ ...f.line, destinationBinId: 1 }]), 'INVENTORY_INPUT_INVALID'],
++    [move([{ ...f.line, quantity: '2' }]), 'INVENTORY_QUANTITY_INVALID'],
++    [move([{ ...f.line, skuId: f.skuId }]), 'INVENTORY_INPUT_INVALID'],
++    [move([missingVersion]), 'INVENTORY_INPUT_INVALID'],
++    [move([f.line], { reason: 'a\u007fb' }), 'INVENTORY_INPUT_INVALID']]) await rejectsUnchanged(() => service.postBinMove(input), code);
++  await pool.query("UPDATE inventory_bins SET status = 'INACTIVE' WHERE id = 4");
++  try { await rejectsUnchanged(() => service.postBinMove(move([f.line])), 'BIN_INVALID'); }
++  finally { await pool.query("UPDATE inventory_bins SET status = 'ACTIVE' WHERE id = 4"); }
++});
++
++integrationTest('TASK-030 injected P4 Counting signal rejects source or destination; no real Stocktake workflow claimed', async () => {
++  const f = await fixture();
++  for (const binId of [1,4]) {
++    const real = new InventoryLockService();
++    const blocked = new InventoryPostingService({ database, logger, time, locks: {
++      lockForCommand: async (...args) => ({ ...await real.lockForCommand(...args), binLocks: [{ bin_id: binId, released_at: null }] }),
++      lockBalancesAfterLot: (...args) => real.lockBalancesAfterLot(...args)
++    } });
++    await rejectsUnchanged(() => blocked.postBinMove(move([f.line])), 'BIN_LOCKED_BY_STOCKTAKE');
++  }
++});
++
++function competingOperations() {
++  const barrier = createInventoryBarrier();
++  const real = new InventoryOperationService();
++  return { claim: async (...args) => { const result = await real.claim(...args); await barrier.wait(); return result; },
++    complete: (...args) => real.complete(...args) };
++}
++integrationTest('TASK-030 deterministic same-version Move race has one whole-document winner', async () => {
++  const f = await fixture();
++  const competing = new InventoryPostingService({ database, logger, time, operations: competingOperations() });
++  const results = await Promise.allSettled([competing.postBinMove(move([f.line,f.line])), competing.postBinMove(move([f.line,f.line]))]);
++  assert.equal(results.filter(r => r.status === 'fulfilled').length, 1);
++  assert.equal(results.find(r => r.status === 'rejected').reason.code, 'VERSION_CONFLICT');
++  assert.deepEqual((await balances(f.skuId)).map(r => Number(r.on_hand_quantity)), [6,4]);
++  assert.equal((await movementRows(results.find(r => r.status === 'fulfilled').value.movementGroupId)).length, 4);
++});
++
++integrationTest('TASK-030 current read detects destination created after source discovery despite repeatable-read snapshot', async () => {
++  const f = await fixture();
++  let discovered;
++  const reached = new Promise(resolve => { discovered = resolve; });
++  let release;
++  const resume = new Promise(resolve => { release = resolve; });
++  const gatedDb = { withTransaction: work => database.withTransaction(tx => work({
++    execute: tx.execute.bind(tx), query: async (sql, params) => {
++      const result = await tx.query(sql, params);
++      if (sql.includes('LEFT JOIN inventory_lots')) { discovered(); await resume; }
++      return result;
++    }
++  })) };
++  const gated = new InventoryPostingService({ database: gatedDb, logger, time });
++  const pending = gated.postBinMove(move([f.line]));
++  const rejection = assert.rejects(() => pending, { code: 'VERSION_CONFLICT' });
++  await reached;
++  try {
++    const receipt = inventoryCommandFixture({ actor: { claimedPermissions: ['inventory.operation'] },
++      authorization: { purpose: 'receipt.post', requiredCallerPermission: 'inventory.operation' },
++      source: { eventId: randomUUID() }, payload: { skuId: f.skuId, warehouseId: 1, binId: 4, quantity: 1, uomId: 1, stockStatus: 'AVAILABLE' } });
++    await service.postReceipt(receipt);
++  } finally { release(); }
++  const afterReceipt = await snapshot();
++  await rejection;
++  assert.deepEqual(await snapshot(), afterReceipt);
++  assert.deepEqual((await balances(f.skuId)).map(r => Number(r.on_hand_quantity)), [10,1]);
++});
++
++integrationTest('TASK-030 injected mid-leg, Audit, Operation completion and pre-commit failures roll back entire real transaction', async () => {
++  const f = await fixture();
++  for (const [needle, nth] of [['UPDATE inventory_stock_balances',2], ['INSERT INTO inventory_movements',3],
++    ['INSERT INTO inventory_audit_logs',3], ['UPDATE inventory_operation_requests',1], ['PRE_COMMIT',1]]) {
++    let writes = 0;
++    const failingDb = { withTransaction: work => database.withTransaction(async tx => {
++      const result = await work({ query: tx.query.bind(tx), execute: async (sql, params) => {
++        if (sql.includes(needle) && ++writes === nth) throw new Error('synthetic task030 failure');
++        return tx.execute(sql, params);
++      } });
++      if (needle === 'PRE_COMMIT') throw new Error('synthetic task030 failure');
++      return result;
++    }) };
++    const failing = new InventoryPostingService({ database: failingDb, logger, time });
++    const before = await snapshot();
++    await assert.rejects(() => failing.postBinMove(move([f.line,f.line])), /synthetic task030 failure/u);
++    assert.deepEqual(await snapshot(), before);
++  }
++});
++
++integrationTest('TASK-030 Move vs Dispatch serializes Control and has no overspend or partial loser', async () => {
++  const f = await fixture({ onHand: 5 });
++  const transfer = new InventoryTransferService({ database, logger, time });
++  const transferCommand = (action, payload) => inventoryCommandFixture({ actor: { claimedPermissions: ['inventory.operation'] },
++    authorization: { purpose: `transfer.${action}`, requiredCallerPermission: 'inventory.operation' }, source: { eventId: randomUUID() }, payload });
++  const draft = await transfer.create(transferCommand('create', { sourceWarehouseId: 1, destinationWarehouseId: 2,
++    lines: [{ skuId: f.skuId, lotId: null, sourceBinId: 1, stockStatus: 'AVAILABLE', quantity: 4 }] }));
++  const operations = competingOperations();
++  const posting = new InventoryPostingService({ database, logger, time, operations });
++  const dispatch = new InventoryTransferService({ database, logger, time, operations });
++  const results = await Promise.allSettled([posting.postBinMove(move([{ ...f.line, quantity: 4 }])),
++    dispatch.dispatch(transferCommand('dispatch', { transferId: draft.id, expectedVersion: 1 }))]);
++  assert.equal(results.filter(r => r.status === 'fulfilled').length, 1);
++  assert.ok(['VERSION_CONFLICT','INSUFFICIENT_STOCK','INSUFFICIENT_ATP'].includes(results.find(r => r.status === 'rejected').reason.code));
++  assert.equal(Number((await balances(f.skuId))[0].on_hand_quantity), 1);
++  const [[legs]] = await pool.query('SELECT COUNT(*) AS n FROM inventory_movements WHERE sku_id = ?', [f.skuId]);
++  assert.equal(Number(legs.n), 2);
++});
++
++integrationTest('TASK-030 Move vs Issue preserves allocated stock and Reservation accounting under deterministic race', async () => {
++  const f = await fixture({ onHand: 10 });
++  const reservations = new InventoryReservationService({ database, logger, time });
++  const reserveCommand = (purpose, payload) => inventoryCommandFixture({ actor: { claimedPermissions: ['inventory.operation'] },
++    authorization: { purpose, requiredCallerPermission: 'inventory.operation' }, source: { eventId: randomUUID() }, payload });
++  const reserved = await reservations.create(reserveCommand('reservation.create', { skuId: f.skuId, warehouseId: 1, quantity: 4, purpose: 'SALE', minimumRemainingDays: 0 }));
++  const allocated = await reservations.allocate(reserveCommand('allocation.create', { reservationId: reserved.id, expectedVersion: reserved.version,
++    allocations: [{ balanceId: f.balanceId, expectedVersion: 1, quantity: 4 }] }));
++  const allocation = allocated.allocations[0];
++  const posting = new InventoryPostingService({ database, logger, time, operations: competingOperations() });
++  const issue = reserveCommand('issue.post', { reservationId: reserved.id, expectedVersion: allocated.version,
++    lines: [{ allocationId: allocation.id, expectedVersion: allocation.version, balanceId: f.balanceId,
++      expectedBalanceVersion: allocation.balanceVersion, quantity: 4 }] });
++  const results = await Promise.allSettled([posting.postBinMove(move([{ ...f.line, quantity: 7, expectedSourceVersion: allocation.balanceVersion }])), posting.postIssue(issue)]);
++  assert.equal(results[0].status, 'rejected');
++  assert.ok(['VERSION_CONFLICT','INSUFFICIENT_STOCK'].includes(results[0].reason.code));
++  assert.equal(results[1].status, 'fulfilled');
++  assert.deepEqual((await balances(f.skuId)).map(r => [Number(r.on_hand_quantity),Number(r.allocated_quantity)]), [[6,0]]);
++  const [[control]] = await pool.query('SELECT reserved_quantity FROM inventory_stock_controls WHERE sku_id = ?', [f.skuId]);
++  assert.equal(Number(control.reserved_quantity), 0);
++});
++
++integrationTest('TASK-030 unsafe aggregate arithmetic and exhausted Balance version reject before any writes', async () => {
++  const f = await fixture({ onHand: 5, destination: Number.MAX_SAFE_INTEGER });
++  await rejectsUnchanged(() => service.postBinMove(move([f.line])), 'INVENTORY_QUANTITY_INVALID');
++  const second = await fixture();
++  await pool.execute('UPDATE inventory_stock_balances SET version = 4294967295 WHERE id = ?', [second.balanceId]);
++  await rejectsUnchanged(() => service.postBinMove(move([{ ...second.line, expectedSourceVersion: 4294967295 }])), 'CONCURRENT_OPERATION');
++});
++
++integrationTest('TASK-030 mixed SKU/Lot/status documents conserve each scope and reject a late invalid destination atomically', async () => {
++  const plain = await fixture();
++  const batch = await fixture({ expiry: '2026-12-31', status: 'DAMAGED', destination: 7 });
++  await rejectsUnchanged(() => service.postBinMove(move([plain.line, { ...batch.line, destinationBinId: 2 }])), 'BIN_WAREHOUSE_MISMATCH');
++  const result = await service.postBinMove(move([plain.line, batch.line]));
++  assert.equal(result.lineCount, 2);
++  const legs = await movementRows(result.movementGroupId);
++  assert.deepEqual(legs.map(r => [Number(r.sku_id),r.stock_status, r.lot_id === null ? null : Number(r.lot_id)]),
++    [[plain.skuId,'AVAILABLE',null],[plain.skuId,'AVAILABLE',null],[batch.skuId,'DAMAGED',batch.lotId],[batch.skuId,'DAMAGED',batch.lotId]]);
++  assert.deepEqual((await balances(plain.skuId)).map(r => Number(r.on_hand_quantity)), [8,2]);
++  assert.deepEqual((await balances(batch.skuId)).map(r => Number(r.on_hand_quantity)), [8,9]);
++});

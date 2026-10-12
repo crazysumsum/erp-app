@@ -1,0 +1,71 @@
+<testsuites id="" name="" tests="8" failures="0" skipped="0" errors="1" time="51.231292">
+<testsuite name="inventory-warehouse-operations.spec.js" timestamp="2026-10-07T00:56:44.674Z" hostname="technical" tests="8" failures="0" skipped="0" time="48.648" errors="1">
+<testcase name="TASK-029 @technical Inventory-only two-line Draft Dispatch Receive conserves real stock" classname="inventory-warehouse-operations.spec.js" time="7.491">
+</testcase>
+<testcase name="TASK-029 @technical view-only actor sees real In Transit but no write controls" classname="inventory-warehouse-operations.spec.js" time="0.666">
+</testcase>
+<testcase name="TASK-029 @technical no-Balance SKU remains selectable and insufficient Dispatch keeps Draft" classname="inventory-warehouse-operations.spec.js" time="2.773">
+</testcase>
+<testcase name="TASK-029 @technical unknown SKU and invalid quantity preserve other Draft input" classname="inventory-warehouse-operations.spec.js" time="1.641">
+</testcase>
+<testcase name="TASK-029 @technical delayed real lookup cannot replace a newer explicitly chosen SKU" classname="inventory-warehouse-operations.spec.js" time="1.642">
+</testcase>
+<testcase name="TASK-029 @technical stale Draft version returns 409 and retains unsaved quantity" classname="inventory-warehouse-operations.spec.js" time="1.209">
+</testcase>
+<testcase name="TASK-029 @technical Quarantined full receipt requires reason and destination ownership" classname="inventory-warehouse-operations.spec.js" time="30.096">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|playwright-artifacts/inventory-warehouse-operat-87860-n-and-destination-ownership-technical/test-failed-1.png]]
+
+[[ATTACHMENT|playwright-artifacts/inventory-warehouse-operat-87860-n-and-destination-ownership-technical/error-context.md]]
+
+[[ATTACHMENT|playwright-artifacts/inventory-warehouse-operat-87860-n-and-destination-ownership-technical/error-context.md]]
+
+[[ATTACHMENT|playwright-artifacts/inventory-warehouse-operat-87860-n-and-destination-ownership-technical/trace.zip]]
+]]>
+</system-out>
+<error message="Test timeout of 30000ms exceeded." type="Error">
+<![CDATA[  [technical] › inventory-warehouse-operations.spec.js:196:1 › TASK-029 @technical Quarantined full receipt requires reason and destination ownership 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: expect(received).toMatch(expected)
+
+    Expected pattern: /ERR_ABORTED|beforeunload/u
+    Received string:  "page.reload: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for navigation until \"load\"
+    "
+
+      202 |   const prompt = page.waitForEvent("dialog"), reload = page.reload();
+      203 |   const dialog = await prompt; expect(dialog.type()).toBe("beforeunload"); await dialog.dismiss();
+    > 204 |   await reload.catch(error => expect(error.message).toMatch(/ERR_ABORTED|beforeunload/u));
+          |                                                     ^
+      205 |   await expect(page.getByRole("dialog")).toBeVisible();
+      206 |   await expect(page.getByLabel("第 1 行收貨狀態", { exact: true })).toHaveValue("QUARANTINED");
+      207 |   await pick(page, "第 1 行目的庫位", "SAME");
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:204:53
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:204:3
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../../docs/inventory_management/evidence/task029-inventory-p3-browser-36c6d7bebc/playwright-artifacts/inventory-warehouse-operat-87860-n-and-destination-ownership-technical/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../docs/inventory_management/evidence/task029-inventory-p3-browser-36c6d7bebc/playwright-artifacts/inventory-warehouse-operat-87860-n-and-destination-ownership-technical/error-context.md
+
+    Error Context: ../../../docs/inventory_management/evidence/task029-inventory-p3-browser-36c6d7bebc/playwright-artifacts/inventory-warehouse-operat-87860-n-and-destination-ownership-technical/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../docs/inventory_management/evidence/task029-inventory-p3-browser-36c6d7bebc/playwright-artifacts/inventory-warehouse-operat-87860-n-and-destination-ownership-technical/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../../docs/inventory_management/evidence/task029-inventory-p3-browser-36c6d7bebc/playwright-artifacts/inventory-warehouse-operat-87860-n-and-destination-ownership-technical/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</error>
+</testcase>
+<testcase name="TASK-029 @technical keyboard lookup, unsaved close, responsive and URL refresh" classname="inventory-warehouse-operations.spec.js" time="3.13">
+</testcase>
+</testsuite>
+</testsuites>

@@ -1,0 +1,1562 @@
+{
+  "kind": "TASK032_CURRENT_SOURCE_DEVELOPER_REVIEW_HANDOFF_NOT_FORMAL_OR_MERGE_READY",
+  "observed_at": "2026-10-08T03:02:45.739508+00:00",
+  "head": "869ac07abdd3879254c351d857be911d71e68b6b",
+  "source": "ea5fed017f5eba2fcdfe2adf9bd74521deb6e95d863797892e5a0a9c15c03e43",
+  "design": "6db8d2b49512bda19f6b2b17c54e9882be75795c3c610ca92ca143860edd127d",
+  "plan": "237d98e617f0a0f4612934118be2d589652b4eb70968291ad511fec6bb758658",
+  "human_review": "HD129_PENDING_ACTUAL_SAM",
+  "task": "TASK032_IN_PROGRESS",
+  "patch": "task032-implementation-review.patch",
+  "delta_provenance": {
+    "before_verified_against_approved_pins": true,
+    "baseline": "894fb4eea4259c375705fdaea945a2a2fadc64736a9bbc335f47e35b5789e42e",
+    "changed": [
+      {
+        "path": "server/src/handlers/inventory/inventorySchemas.js",
+        "before_sha256": "0ff488c33b9ac94cfb11bc7b2b83943502f4ee479ae9ce739e7282d5e904fbbe",
+        "after_sha256": "a1121327bfa685e2fd84ed03695d9345f97563e299102bf2239744f3cb860518"
+      },
+      {
+        "path": "server/src/handlers/inventory/postingHandlers.js",
+        "before_sha256": "b257b670f399b650496c639e1b8e3146de6b7b751fd35006ec9b8590e021ec3e",
+        "after_sha256": "02386dd03a146f2f1646cbf523e794f2cb53cf96d4604acb38de89210c5486c9"
+      },
+      {
+        "path": "server/src/modules/inventory/InventoryPostingService.js",
+        "before_sha256": "36a91c70b0ec7f6e8b3468a5e6bdada94024fd056a016662d79b4144ebd0851f",
+        "after_sha256": "31fa4789bc0479185f3090c893f0b435c49406a74439359b0c890299ac380355"
+      },
+      {
+        "path": "server/src/modules/inventory/inventoryHighRiskContext.js",
+        "before_sha256": "ae19869d779a775d42c0a302d9d07bfb0233e335df9abaf940bd3c59dcaa5c24",
+        "after_sha256": "c59efae6df360d947af687bd403b8f6084ffcea787ab1d3fb95cc51d66c8061a"
+      },
+      {
+        "path": "server/src/modules/inventory/inventoryReversalPosting.js",
+        "before_sha256": null,
+        "after_sha256": "10917bb09b29a8327b549ed035adc21bf5a9ec4aa0170a72357823fb425ed329"
+      },
+      {
+        "path": "server/test/integration/inventoryMovement.integration.test.js",
+        "before_sha256": "0610e61630ad1fc5f9dacb69915ee7af6fd01f831265e79b27872af30d234781",
+        "after_sha256": "9c6c6604bf5118824d21b2ba9b9cd778bce63f75068e88fd85e7d8c9309af331"
+      },
+      {
+        "path": "server/test/integration/inventoryWarehouseOperationsApi.integration.test.js",
+        "before_sha256": "5e9d201a438c51a092fb66d62fd51a89d54a4ecf3be0189dbbd43a183088b57a",
+        "after_sha256": "1ba46683ae84ef16ae154f95ba99fc11c5bb472414f5e279cfc6b5e69049b458"
+      },
+      {
+        "path": "server/test/inventoryEndpointSecurity.test.js",
+        "before_sha256": "71d9b1040696077397c22de59de2de9cfdf437f5d2fb880c57868a2f45212d44",
+        "after_sha256": "0cf3ec4079b6811de380e29e0dba97e49fdd571a0253c78ceda81d05ff845a14"
+      },
+      {
+        "path": "server/test/inventoryPostingHandlers.test.js",
+        "before_sha256": "d63d4bf64f933090f34b8baf351ac0d2e711b2ca7d8dd4ba10726f060b891295",
+        "after_sha256": "680cdd89566f3d3a48648fe88570b7775445bf979261dbf1180c8ca54be213c0"
+      },
+      {
+        "path": "server/test/inventoryPostingService.test.js",
+        "before_sha256": "027eab6d0f78b31c1f50d74932f5cb1478f64b7f7566c28ae5d0fea2efe878e5",
+        "after_sha256": "c8b30ac67b22744ddaeb9f4ba6ccdb853d9decb53550866d20022b3da8f77316"
+      }
+    ],
+    "patch_sha256": "0f66a086279906e54ada939b458e783d69ec8e18ee025fb47676343ca4aa3afe",
+    "patch_lines": 1472,
+    "patch_history": [
+      {
+        "name": "boundary-red",
+        "sha256": "ca112c8575ff84019bc15e4fe55feed6a84c0dd0ecd049c38aa740ad7f6ff9cf"
+      },
+      {
+        "name": "boundary-green",
+        "sha256": "cab699a0014541ceeb16c4fe43c3bdcf5273a19addcaf9019b6e94649e0f3e17"
+      },
+      {
+        "name": "domain-red",
+        "sha256": "b03066dace1f6ce9982328742c11f42abb4f66b8f959bb6c75855d13a62dd940"
+      },
+      {
+        "name": "domain-green",
+        "sha256": "67fae65ec7d84efd84cd6c209e0947d65360dc2b625de2d03b7f06a5c49ce5cf"
+      },
+      {
+        "name": "http-red",
+        "sha256": "aa428b2915edda88aa89635c77f7835196fa79a1337c225ec481afbf4ff0217f"
+      },
+      {
+        "name": "http-green",
+        "sha256": "29e2a72b6074edd3a0c21c63ccf8f7643c81a06a451cf17c4fdd444fb872e987"
+      },
+      {
+        "name": "domain-cases",
+        "sha256": "d8e68c6ed5209efbc94afb0e9c27cc7cd063908919d4dbd83920dda77f2628fc"
+      },
+      {
+        "name": "once-green",
+        "sha256": "06d699801c9d34efe14e12e905b2b0a6ddb39930e1b2df32d76c8c7e66320b3d"
+      },
+      {
+        "name": "native-cases",
+        "sha256": "4848232f1fde19a05806d12f239d8136ba2153a8a7a12521b4da01b2228ae924"
+      },
+      {
+        "name": "native-fixture-fix",
+        "sha256": "8e0a6e43d5d3d646df9dd8bd8ca6f12cec6c03b62661d6c963f779a8cced1b8d"
+      },
+      {
+        "name": "native-json-fix",
+        "sha256": "4323d7ed1b41c08e4c4f378a1de04b8ffada93a63f8bfe0bc227419955f370b9"
+      },
+      {
+        "name": "api-cases",
+        "sha256": "6c7fe25490a707f1f981f4fc8dbf57e079e65fff946d05eea2693c552799321a"
+      },
+      {
+        "name": "native-edges",
+        "sha256": "1f3a58265479177821afa318c1c8d0c36d0fee233455cd5a13515b482958c580"
+      },
+      {
+        "name": "native-unique",
+        "sha256": "f8b1a17acd123c73c9a84f18a81afab695bed3e578f6346b15773a9ffa57de67"
+      },
+      {
+        "name": "native-unique-fixture",
+        "sha256": "8cc2bb75b42be1b44ce9c1d84f5ff58c93a2ed66760de5ecb4c16682cc0e5296"
+      },
+      {
+        "name": "api-path-fixture",
+        "sha256": "f1c6315bed10e094e82a0fa09573fe28a9976b66f41a5edbd0baabc2ae06419f"
+      }
+    ]
+  },
+  "patch_scope": "TASK032-only delta against independently approved/pinned TASK031 source894fb4ee; not the entire dirty P3 HEAD diff",
+  "owned_file_pins": {
+    "server/src/modules/inventory/InventoryPostingService.js": "31fa4789bc0479185f3090c893f0b435c49406a74439359b0c890299ac380355",
+    "server/src/modules/inventory/inventoryHighRiskContext.js": "c59efae6df360d947af687bd403b8f6084ffcea787ab1d3fb95cc51d66c8061a",
+    "server/src/modules/inventory/inventoryReversalPosting.js": "10917bb09b29a8327b549ed035adc21bf5a9ec4aa0170a72357823fb425ed329",
+    "server/src/handlers/inventory/postingHandlers.js": "02386dd03a146f2f1646cbf523e794f2cb53cf96d4604acb38de89210c5486c9",
+    "server/src/handlers/inventory/inventorySchemas.js": "a1121327bfa685e2fd84ed03695d9345f97563e299102bf2239744f3cb860518",
+    "server/test/inventoryPostingService.test.js": "c8b30ac67b22744ddaeb9f4ba6ccdb853d9decb53550866d20022b3da8f77316",
+    "server/test/inventoryPostingHandlers.test.js": "680cdd89566f3d3a48648fe88570b7775445bf979261dbf1180c8ca54be213c0",
+    "server/test/inventoryEndpointSecurity.test.js": "0cf3ec4079b6811de380e29e0dba97e49fdd571a0253c78ceda81d05ff845a14",
+    "server/test-support/fakeInventoryDatabase.js": "c2cc8ef9a118f5e3cf7fbe5f525fc72e6fe60dfdaa97a47cf73ed540c9daf4e4",
+    "server/test/integration/inventoryMovement.integration.test.js": "9c6c6604bf5118824d21b2ba9b9cd778bce63f75068e88fd85e7d8c9309af331",
+    "server/test/integration/inventoryWarehouseOperationsApi.integration.test.js": "1ba46683ae84ef16ae154f95ba99fc11c5bb472414f5e279cfc6b5e69049b458"
+  },
+  "unchanged_source_pins": {
+    "server/src/framework/api/apiDefinitionResolver.js": "b525db9717bbde5f9d6df0dd79d080e93cf1bbb7a2afeffd86bd615dcf9cdd39",
+    "server/src/framework/middleware/apiDispatcher.js": "7cf9879996dd7b092c5fa2aa50c4569415ca9b7d42674ee4430e34b2fb3b71b7",
+    "server/src/services/idempotency/IdempotencyService.js": "33abf93472c2d7a4687c1f4d323cd97f0e7d5f4c7875cb7161cfa06b1b0999aa",
+    "server/test/apiDefinitionResolver.test.js": "19cd265670940a5d3b5bfd42ae6062570f48ba3ba4be006d6322428682b84af6",
+    "server/test/apiDispatcher.test.js": "ee0c4580fb0d86625d815bf8916c45c276b7bc2004ddd47f932ea6ec3c49c7fa",
+    "server/test/idempotencyService.test.js": "f1a526a94cbe906349cc692cb321285fca99f3babc10c1ae7875791efb7a7ec9",
+    "server/src/framework/validation/requestValidator.js": "bb91d71879e4e75761f5a0c87e1608e0ee31488ea442878b87f10f331a007189",
+    "server/test/requestValidator.test.js": "47431b8f7e9052acfd2beeba1a78f969b1b0e35f22f390cb063d6d9d880fe80e",
+    "package-lock.json": "0e7cfc03260694b17565e28374ff85ed894b79082286025395779c6f436ecb49",
+    "server/database/migrations/0064_create_inventory_transfers.js": "07653bb700a40b026e8bb46b538e0e31b112d6c20010af45b4cc71a6ff7ac143",
+    "server/src/modules/inventory/InventoryOperationService.js": "0d370d6693c0a28077ef48fe95939b46788e19f97d8672b5aa815fdf6c382d31",
+    "server/src/modules/inventory/InventoryAuditService.js": "4743053e7b5700e6fd025a191d317c4e2ab59a9f717970e8a0e686c99ff6e256",
+    "server/src/modules/inventory/inventoryAdjustmentPosting.js": "f302f008269c391efa3f02203ac164d6a735e7dce10cf7c5f7f4a3ed08c6e868",
+    "server/src/modules/inventory/inventoryBinMovePosting.js": "864deffa9aedbbb0f2e4597898dc77789ce7186afa413f1cde34618216bb6fb2",
+    "server/src/modules/inventory/inventoryConstants.js": "eb2c93bcb994977856a306791b3ea724d46255d8e34d1b0569a6fd33012f0340",
+    "server/database/migrations/0056_create_inventory_operations.js": "a765aaa91084632362c37a21b98890093f98c760c9fbda7a5da499995263b570",
+    "server/database/migrations/0059_create_inventory_stock.js": "5360d2f514f61331c97382b4d1b308a6d9009790e1a15a136047ba8211e66617",
+    "server/database/migrations/0060_create_inventory_movements.js": "413de9364390d225d4eea6c03df71e6559f8e97db032af9d629ef00bd37eaeb2",
+    "server/scripts/checkCoverageFloors.js": "705960bfe8af7e72edd3dc93712d2f1b0ed9bc021bb9855c7898c8ca610976d6",
+    "server/src/modules/item/ItemLookupService.js": "558139b78cd6dabcd6edd6a7bca93e12b6724c9519eb1e87900b43ce21c76662",
+    "server/test-support/fakeInventoryDatabase.js": "c2cc8ef9a118f5e3cf7fbe5f525fc72e6fe60dfdaa97a47cf73ed540c9daf4e4"
+  },
+  "unchanged_doc_pins": {
+    "01_requirement_spec.md": "5a8c7575722c09972bae1642d6d1bb185ece5505b5d534509010313b99a630b8",
+    "00_project_profile.json": "7e99eb6e8ba556e4a545770ba1c5bfd91c7ff15ee86b0388211974750fe4e8d6",
+    "07_uat_test_cases.md": "9f3c2aa2e3347089168c45c81350354b936bd15ecd639937b3fdb1a6a04737a4",
+    "08_traceability.json": "ac82a88c498b6de6f99ad14ca5adccfd7867be5ce2c2f06b26209f7f0e1de222",
+    "08_traceability_matrix.md": "e856d9e8ee4445b77ec18a852c8a2cee2f65f2932fbd3ab6c710356abf87f4f5"
+  },
+  "approved_canonical_pins": [
+    {
+      "path": "docs/inventory_management/00_module_manifest.json",
+      "before_sha256": "f1cb65608a2e26fa500991b04a7aff250e11188e6c72b94c87d0dccb5b873143",
+      "after_sha256": "89ce000da9c6a80471c8cb1a35c2dab00f0ebf6a82442cb9a8243c705caa6648"
+    },
+    {
+      "path": "docs/inventory_management/03_design_spec.md",
+      "before_sha256": "6760eb6d7975b15c90b9abc653414d51020c529ef2984b32158dc598456bbdd5",
+      "after_sha256": "0c27331617a676d861dae3a0678f9e317e22a563855bc35e63ce3a81fc7a3ffc"
+    },
+    {
+      "path": "docs/inventory_management/05_development_tasks.md",
+      "before_sha256": "cc927d62de793ace73c90a921c0cd724601546740b081d9770e56d2be26898af",
+      "after_sha256": "136d6448e4c6a25b4b3d55d2ab47e6c87111c6803d0614ce9cfe1c73f75f33df"
+    },
+    {
+      "path": "docs/inventory_management/06_technical_test_cases.md",
+      "before_sha256": "570ab7b31e95ef29f5dee61f0b7a5a7d988372a4111069c2c3133b1f6b79e782",
+      "after_sha256": "443534ebc2601abfec8ed2a7feeeed3b7a5a923ef84735a3829d1e099b31dc3f"
+    }
+  ],
+  "historical_native_reports_unchanged": 205,
+  "indexed_native_history_refs_retained": 253,
+  "registered_current_runs": {
+    "inventory-p3-api": {
+      "path": "evidence/task032-db-inventory-p3-api-80c278166c/run.json",
+      "sha256": "3f4552ff8ef0a43c1a2ea1e77fcb74ca9f193ea7a388d89e0364850827c44954",
+      "counts": {
+        "total": 31,
+        "passed": 31,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "result": "PASS",
+      "retired_runtime_id": "erp_inventory_p3_127399c3d89e"
+    },
+    "inventory-p3-dependency-audit": {
+      "path": "evidence/task032-nondb-nondb-9899ecf835/inventory-p3-dependency-audit/run.json",
+      "sha256": "c4c74a5107f016655c58b164496f928da725769cd23ec081e151a5bf0d8fc026",
+      "counts": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "result": "PASS",
+      "retired_runtime_id": "erp-inventory-task032-nondb-nondb.obdj9vvp"
+    },
+    "inventory-task026-unit": {
+      "path": "evidence/task032-nondb-nondb-9899ecf835/inventory-task026-unit/run.json",
+      "sha256": "835c7a0bfb1cafc7ea22580936f53923bc2c1ce6fcaa7ce4521874e363d3e951",
+      "counts": {
+        "total": 15,
+        "passed": 15,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "result": "PASS",
+      "retired_runtime_id": "erp-inventory-task032-nondb-nondb.obdj9vvp"
+    },
+    "inventory-task027-unit": {
+      "path": "evidence/task032-nondb-nondb-9899ecf835/inventory-task027-unit/run.json",
+      "sha256": "761bd5dd79e75fabc8ae75b619147c24434e4b658f90d9c1ecf3d112ffee82ba",
+      "counts": {
+        "total": 32,
+        "passed": 32,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "result": "PASS",
+      "retired_runtime_id": "erp-inventory-task032-nondb-nondb.obdj9vvp"
+    },
+    "inventory-task028-unit": {
+      "path": "evidence/task032-nondb-nondb-9899ecf835/inventory-task028-unit/run.json",
+      "sha256": "1dab0ed508374abeef0150499e7a94dcb1dbaac323a6d56d9c7f585e76413487",
+      "counts": {
+        "total": 13,
+        "passed": 13,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "result": "PASS",
+      "retired_runtime_id": "erp-inventory-task032-nondb-nondb.obdj9vvp"
+    },
+    "inventory-p3-unit": {
+      "path": "evidence/task032-nondb-nondb-9899ecf835/inventory-p3-unit/run.json",
+      "sha256": "3791ce117bd82d071559d3f35cd143f41c622d170d65cda74f3587b5d24483f7",
+      "counts": {
+        "total": 27,
+        "passed": 27,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "result": "PASS",
+      "retired_runtime_id": "erp-inventory-task032-nondb-nondb.obdj9vvp"
+    },
+    "inventory-developer": {
+      "path": "evidence/task032-nondb-nondb-9899ecf835/inventory-developer/run.json",
+      "sha256": "9de6f1324d489f5718f2d8a60af5eed2911b06379bbacc4b473961ae415a244f",
+      "counts": {
+        "total": 207,
+        "passed": 207,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "result": "PASS",
+      "retired_runtime_id": "erp-inventory-task032-nondb-nondb.obdj9vvp"
+    },
+    "inventory-p3-transfers-client": {
+      "path": "evidence/task032-nondb-nondb-9899ecf835/inventory-p3-transfers-client/run.json",
+      "sha256": "3f357f19b9bca5bc7bb9eda9e3e06757e54bf52f933327c613a2ae0bea3876ab",
+      "counts": {
+        "total": 13,
+        "passed": 13,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "result": "PASS",
+      "retired_runtime_id": "erp-inventory-task032-nondb-nondb.obdj9vvp"
+    },
+    "inventory-p3-server-coverage": {
+      "path": "evidence/task032-nondb-nondb-9899ecf835/inventory-p3-server-coverage/run.json",
+      "sha256": "9a76264c9eb70d9ebe80ddfc63b355dd1ad9ec79e24420f78fb6438e57517178",
+      "counts": {
+        "total": 2195,
+        "passed": 2195,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "result": "PASS",
+      "retired_runtime_id": "erp-inventory-task032-nondb-nondb.obdj9vvp"
+    },
+    "inventory-p3-coverage-floors": {
+      "path": "evidence/task032-nondb-nondb-9899ecf835/inventory-p3-coverage-floors/run.json",
+      "sha256": "f5dc2312259895be8b3e29ecaf3e2496a5116d4f73f6164d4d79394b73e7dbf8",
+      "counts": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "result": "PASS",
+      "retired_runtime_id": "erp-inventory-task032-nondb-nondb.obdj9vvp"
+    },
+    "lint": {
+      "path": "evidence/task032-nondb-nondb-9899ecf835/lint/run.json",
+      "sha256": "b9a6d5f30535935bde2ff1ff7137fdf6b077dd460c634e0ed3b88ad8b6c61b63",
+      "counts": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "result": "PASS",
+      "retired_runtime_id": "erp-inventory-task032-nondb-nondb.obdj9vvp"
+    },
+    "inventory-p3-client-coverage": {
+      "path": "evidence/task032-nondb-nondb-9899ecf835/inventory-p3-client-coverage/run.json",
+      "sha256": "b4dc615f8120b94080d6c0c577367a7b29480685472482b71a0785f11730f080",
+      "counts": {
+        "total": 706,
+        "passed": 706,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "result": "PASS",
+      "retired_runtime_id": "erp-inventory-task032-nondb-nondb.obdj9vvp"
+    },
+    "client-build": {
+      "path": "evidence/task032-nondb-nondb-9899ecf835/client-build/run.json",
+      "sha256": "67ec55de0a878965574c8701f5a748b4d7b193e769555a0541fe01b1982c9695",
+      "counts": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "result": "PASS",
+      "retired_runtime_id": "erp-inventory-task032-nondb-nondb.obdj9vvp"
+    },
+    "inventory-p3-movement-database": {
+      "path": "evidence/task032-db-inventory-p3-movement-database-d28fd97218/run.json",
+      "sha256": "f211e4ca983876941ff2f9655033a53d7b3288fbee1ef4384662accc1d6fa4ff",
+      "counts": {
+        "total": 44,
+        "passed": 44,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "result": "PASS",
+      "retired_runtime_id": "erp_inventory_p3_befc4638f423"
+    },
+    "inventory-task026-database": {
+      "path": "evidence/task032-db-inventory-task026-database-bf48f5ee75/run.json",
+      "sha256": "0ba30e0d34bbcf3fad893184ef1aecaf21350730cf04a92db795721fde99ce4c",
+      "counts": {
+        "total": 7,
+        "passed": 7,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "result": "PASS",
+      "retired_runtime_id": "erp_inventory_task026_ddabb71c19b9"
+    },
+    "inventory-p3-transfer-database": {
+      "path": "evidence/task032-db-inventory-p3-transfer-database-a50fb2b2be/run.json",
+      "sha256": "11d38437e70320f1f0dd7d652dce03a32b955e2d6f3d9cecfd87e1bce7a13fde",
+      "counts": {
+        "total": 31,
+        "passed": 31,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "result": "PASS",
+      "retired_runtime_id": "erp_inventory_p3_ac5f9a813308"
+    },
+    "inventory-p2-database": {
+      "path": "evidence/task032-functional-functional-regression-025-inventory-p2-database-d722e6448e/run.json",
+      "sha256": "3dee5e4e95bb58f959418a7909f8e46d4eef3934db2229d4e996dd37fe5a2c0e",
+      "counts": {
+        "total": 7,
+        "passed": 7,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "result": "PASS",
+      "retired_runtime_id": "erp_inventory_task025_acd002bfc410"
+    },
+    "inventory-p2-api": {
+      "path": "evidence/task032-functional-functional-regression-025-api-inventory-p2-api-abc23a097e/run.json",
+      "sha256": "e59e5d622461c17dca11a95cd0d6a6f07f11f343c2111ed8521c5fde88130ec3",
+      "counts": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "result": "PASS",
+      "retired_runtime_id": "erp_inventory_task025_cea9fc8ed0a1"
+    },
+    "inventory-p3-browser": {
+      "path": "evidence/task032-db-inventory-p3-browser-4637946965/run.json",
+      "sha256": "6253937fc232b0f620e63e820dc28c7950f17320c4a2e5faffea39321af00013",
+      "counts": {
+        "total": 8,
+        "passed": 8,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "result": "PASS",
+      "retired_runtime_id": "erp_inventory_p3_00756cc7ecbb"
+    }
+  },
+  "named_developer_scenarios": {
+    "REV032-INPUT": [
+      {
+        "name": "REV032-INPUT real HTTP keeps canonical path and complete numeric guards strict before cache claims",
+        "suite": "inventory-p3-api",
+        "report": "evidence/task032-db-inventory-p3-api-80c278166c/run.json"
+      },
+      {
+        "name": "REV032-INPUT canonical intent rejects coercion, missing/extra fields, unsafe IDs and duplicate versions",
+        "suite": "inventory-developer",
+        "report": "evidence/task032-nondb-nondb-9899ecf835/inventory-developer/run.json"
+      },
+      {
+        "name": "REV032-INPUT canonical intent rejects coercion, missing/extra fields, unsafe IDs and duplicate versions",
+        "suite": "inventory-p3-server-coverage",
+        "report": "evidence/task032-nondb-nondb-9899ecf835/inventory-p3-server-coverage/run.json"
+      }
+    ],
+    "REV032-HTTP-BOUNDARY": [
+      {
+        "name": "REV032-HTTP-BOUNDARY real third route requires current JWT-device-password and fixed inventory view plus adjust",
+        "suite": "inventory-p3-api",
+        "report": "evidence/task032-db-inventory-p3-api-80c278166c/run.json"
+      },
+      {
+        "name": "REV032-HTTP-BOUNDARY third fixed proof binds canonical original path, actor/device and exact reversal intent",
+        "suite": "inventory-developer",
+        "report": "evidence/task032-nondb-nondb-9899ecf835/inventory-developer/run.json"
+      },
+      {
+        "name": "REV032-HTTP-BOUNDARY fixed route validates raw canonical path, empty query and only complete current guards",
+        "suite": "inventory-developer",
+        "report": "evidence/task032-nondb-nondb-9899ecf835/inventory-developer/run.json"
+      },
+      {
+        "name": "REV032-HTTP-BOUNDARY third fixed proof binds canonical original path, actor/device and exact reversal intent",
+        "suite": "inventory-p3-server-coverage",
+        "report": "evidence/task032-nondb-nondb-9899ecf835/inventory-p3-server-coverage/run.json"
+      },
+      {
+        "name": "REV032-HTTP-BOUNDARY fixed route validates raw canonical path, empty query and only complete current guards",
+        "suite": "inventory-p3-server-coverage",
+        "report": "evidence/task032-nondb-nondb-9899ecf835/inventory-p3-server-coverage/run.json"
+      }
+    ],
+    "REV032-HTTP-REPLAY": [
+      {
+        "name": "REV032-HTTP-REPLAY real permuted guards and fresh password replay the exact four scalars without credentials or second effects",
+        "suite": "inventory-p3-api",
+        "report": "evidence/task032-db-inventory-p3-api-80c278166c/run.json"
+      },
+      {
+        "name": "REV032-HTTP-REPLAY real cache waits recheck all committed revocations and the original deadline without replacing keys",
+        "suite": "inventory-p3-api",
+        "report": "evidence/task032-db-inventory-p3-api-80c278166c/run.json"
+      },
+      {
+        "name": "REV032-HTTP-REPLAY privately frozen credential-free path/intent preserves fresh locked replay and one-shot execution",
+        "suite": "inventory-developer",
+        "report": "evidence/task032-nondb-nondb-9899ecf835/inventory-developer/run.json"
+      },
+      {
+        "name": "REV032-HTTP-REPLAY privately frozen credential-free path/intent preserves fresh locked replay and one-shot execution",
+        "suite": "inventory-p3-server-coverage",
+        "report": "evidence/task032-nondb-nondb-9899ecf835/inventory-p3-server-coverage/run.json"
+      }
+    ],
+    "REV032-REVOKE-ORDER": [
+      {
+        "name": "REV032-REVOKE-ORDER real token-first UserAdmin disable commits before reversal Warehouse wait release",
+        "suite": "inventory-p3-api",
+        "report": "evidence/task032-db-inventory-p3-api-80c278166c/run.json"
+      },
+      {
+        "name": "REV032-REVOKE-ORDER fresh final guard rejects committed security change after business wait without early locks",
+        "suite": "inventory-developer",
+        "report": "evidence/task032-nondb-nondb-9899ecf835/inventory-developer/run.json"
+      },
+      {
+        "name": "REV032-REVOKE-ORDER fresh final guard rejects committed security change after business wait without early locks",
+        "suite": "inventory-p3-server-coverage",
+        "report": "evidence/task032-nondb-nondb-9899ecf835/inventory-p3-server-coverage/run.json"
+      },
+      {
+        "name": "REV032-REVOKE-ORDER native Warehouse/Lot/Bucket waits accept committed revocation then reject stale proof atomically",
+        "suite": "inventory-p3-movement-database",
+        "report": "evidence/task032-db-inventory-p3-movement-database-d28fd97218/run.json"
+      },
+      {
+        "name": "REV032-REVOKE-ORDER native final security locks block revocation and preserve original proof deadlines after bind",
+        "suite": "inventory-p3-movement-database",
+        "report": "evidence/task032-db-inventory-p3-movement-database-d28fd97218/run.json"
+      }
+    ],
+    "REV032-ROLLBACK": [
+      {
+        "name": "REV032-ROLLBACK real required Audit failure leaves no inverse leg/link and same intent retry posts once",
+        "suite": "inventory-p3-api",
+        "report": "evidence/task032-db-inventory-p3-api-80c278166c/run.json"
+      },
+      {
+        "name": "REV032-ROLLBACK every native checkpoint, actor-bind failure, CAS conflict and expired proof has zero effects",
+        "suite": "inventory-developer",
+        "report": "evidence/task032-nondb-nondb-9899ecf835/inventory-developer/run.json"
+      },
+      {
+        "name": "REV032-ROLLBACK every native checkpoint, actor-bind failure, CAS conflict and expired proof has zero effects",
+        "suite": "inventory-p3-server-coverage",
+        "report": "evidence/task032-nondb-nondb-9899ecf835/inventory-p3-server-coverage/run.json"
+      },
+      {
+        "name": "REV032-ROLLBACK native each leg/Audit/completion/precommit and actor-bind failures leave zero effects",
+        "suite": "inventory-p3-movement-database",
+        "report": "evidence/task032-db-inventory-p3-movement-database-d28fd97218/run.json"
+      }
+    ],
+    "REV032-RECEIPT": [
+      {
+        "name": "REV032-RECEIPT reverses original Base quantity using current version and append-only attribution",
+        "suite": "inventory-developer",
+        "report": "evidence/task032-nondb-nondb-9899ecf835/inventory-developer/run.json"
+      },
+      {
+        "name": "REV032-RECEIPT reverses original Base quantity using current version and append-only attribution",
+        "suite": "inventory-p3-server-coverage",
+        "report": "evidence/task032-nondb-nondb-9899ecf835/inventory-p3-server-coverage/run.json"
+      },
+      {
+        "name": "REV032-RECEIPT native historical version5 uses current9 after legitimate later events and retains immutable original",
+        "suite": "inventory-p3-movement-database",
+        "report": "evidence/task032-db-inventory-p3-movement-database-d28fd97218/run.json"
+      }
+    ],
+    "REV032-VERSIONS": [
+      {
+        "name": "REV032-VERSIONS exact full current guard set rejects stale/missing/extra and absent historical buckets",
+        "suite": "inventory-developer",
+        "report": "evidence/task032-nondb-nondb-9899ecf835/inventory-developer/run.json"
+      },
+      {
+        "name": "REV032-VERSIONS exact full current guard set rejects stale/missing/extra and absent historical buckets",
+        "suite": "inventory-p3-server-coverage",
+        "report": "evidence/task032-nondb-nondb-9899ecf835/inventory-p3-server-coverage/run.json"
+      },
+      {
+        "name": "REV032-VERSIONS native complete guards reject absent/missing/extra buckets and never create historical placeholders",
+        "suite": "inventory-p3-movement-database",
+        "report": "evidence/task032-db-inventory-p3-movement-database-d28fd97218/run.json"
+      }
+    ],
+    "REV032-GROUP": [
+      {
+        "name": "REV032-GROUP refuses forbidden, incomplete, mixed and malformed original groups",
+        "suite": "inventory-developer",
+        "report": "evidence/task032-nondb-nondb-9899ecf835/inventory-developer/run.json"
+      },
+      {
+        "name": "REV032-GROUP refuses forbidden, incomplete, mixed and malformed original groups",
+        "suite": "inventory-p3-server-coverage",
+        "report": "evidence/task032-nondb-nondb-9899ecf835/inventory-p3-server-coverage/run.json"
+      },
+      {
+        "name": "REV032-GROUP native incomplete completed summary, forbidden Transfer and Reversal groups fail closed",
+        "suite": "inventory-p3-movement-database",
+        "report": "evidence/task032-db-inventory-p3-movement-database-d28fd97218/run.json"
+      }
+    ],
+    "REV032-ONCE": [
+      {
+        "name": "REV032-ONCE current link and exact native unique constraint reject whole group without swallowing unrelated duplicate",
+        "suite": "inventory-developer",
+        "report": "evidence/task032-nondb-nondb-9899ecf835/inventory-developer/run.json"
+      },
+      {
+        "name": "REV032-ONCE current link and exact native unique constraint reject whole group without swallowing unrelated duplicate",
+        "suite": "inventory-p3-server-coverage",
+        "report": "evidence/task032-nondb-nondb-9899ecf835/inventory-p3-server-coverage/run.json"
+      },
+      {
+        "name": "REV032-ONCE native different sources discover old RR snapshot but only one complete group wins",
+        "suite": "inventory-p3-movement-database",
+        "report": "evidence/task032-db-inventory-p3-movement-database-d28fd97218/run.json"
+      }
+    ],
+    "REV032-DOMAIN-REPLAY": [
+      {
+        "name": "REV032-DOMAIN-REPLAY completed original result bypasses changed stock/Item but rechecks current security",
+        "suite": "inventory-developer",
+        "report": "evidence/task032-nondb-nondb-9899ecf835/inventory-developer/run.json"
+      },
+      {
+        "name": "REV032-DOMAIN-REPLAY completed original result bypasses changed stock/Item but rechecks current security",
+        "suite": "inventory-p3-server-coverage",
+        "report": "evidence/task032-nondb-nondb-9899ecf835/inventory-p3-server-coverage/run.json"
+      },
+      {
+        "name": "REV032-DOMAIN-REPLAY native source claim wait retains original four scalars despite changed stock and Item",
+        "suite": "inventory-p3-movement-database",
+        "report": "evidence/task032-db-inventory-p3-movement-database-d28fd97218/run.json"
+      }
+    ],
+    "REV032-RESERVED": [
+      {
+        "name": "REV032-RESERVED gross OUT cannot spend allocated stock or increase uncovered Reserved",
+        "suite": "inventory-developer",
+        "report": "evidence/task032-nondb-nondb-9899ecf835/inventory-developer/run.json"
+      },
+      {
+        "name": "REV032-RESERVED gross OUT cannot spend allocated stock or increase uncovered Reserved",
+        "suite": "inventory-p3-server-coverage",
+        "report": "evidence/task032-nondb-nondb-9899ecf835/inventory-p3-server-coverage/run.json"
+      },
+      {
+        "name": "REV032-RESERVED native Control coverage and gross OUT refuse Allocated or future inverse IN funding",
+        "suite": "inventory-p3-movement-database",
+        "report": "evidence/task032-db-inventory-p3-movement-database-d28fd97218/run.json"
+      },
+      {
+        "name": "REV032-RESERVED native competing Reserve and reversal serialize the same Control with one invariant-safe winner",
+        "suite": "inventory-p3-movement-database",
+        "report": "evidence/task032-db-inventory-p3-movement-database-d28fd97218/run.json"
+      }
+    ],
+    "REV032-ISSUE": [
+      {
+        "name": "REV032-ISSUE original outgoing stock restores without reviving consumed workflow or allocations",
+        "suite": "inventory-developer",
+        "report": "evidence/task032-nondb-nondb-9899ecf835/inventory-developer/run.json"
+      },
+      {
+        "name": "REV032-ISSUE original outgoing stock restores without reviving consumed workflow or allocations",
+        "suite": "inventory-p3-server-coverage",
+        "report": "evidence/task032-nondb-nondb-9899ecf835/inventory-p3-server-coverage/run.json"
+      },
+      {
+        "name": "REV032-ISSUE native full consumed Issue restores stock but never revives Reservation or Allocation",
+        "suite": "inventory-p3-movement-database",
+        "report": "evidence/task032-db-inventory-p3-movement-database-d28fd97218/run.json"
+      }
+    ],
+    "REV032-ADJUSTMENT": [
+      {
+        "name": "REV032-ADJUSTMENT both original directions undo only original Base quantity",
+        "suite": "inventory-developer",
+        "report": "evidence/task032-nondb-nondb-9899ecf835/inventory-developer/run.json"
+      },
+      {
+        "name": "REV032-ADJUSTMENT both original directions undo only original Base quantity",
+        "suite": "inventory-p3-server-coverage",
+        "report": "evidence/task032-nondb-nondb-9899ecf835/inventory-p3-server-coverage/run.json"
+      },
+      {
+        "name": "REV032-ADJUSTMENT native both directions at all three statuses undo Base quantity without historical updates",
+        "suite": "inventory-p3-movement-database",
+        "report": "evidence/task032-db-inventory-p3-movement-database-d28fd97218/run.json"
+      }
+    ],
+    "REV032-PAIRS": [
+      {
+        "name": "REV032-PAIRS Bin Move and Status undo in descending original ID with per-bucket chained versions",
+        "suite": "inventory-developer",
+        "report": "evidence/task032-nondb-nondb-9899ecf835/inventory-developer/run.json"
+      },
+      {
+        "name": "REV032-PAIRS Bin Move and Status undo in descending original ID with per-bucket chained versions",
+        "suite": "inventory-p3-server-coverage",
+        "report": "evidence/task032-nondb-nondb-9899ecf835/inventory-p3-server-coverage/run.json"
+      },
+      {
+        "name": "REV032-PAIRS native shared-bucket BinMove and six Status pairs reverse descending IDs with chained versions",
+        "suite": "inventory-p3-movement-database",
+        "report": "evidence/task032-db-inventory-p3-movement-database-d28fd97218/run.json"
+      }
+    ],
+    "REV032-LOT-LIFE-FIFO": [
+      {
+        "name": "REV032-LOT-LIFE-FIFO expired original Lot returns unchanged, never covers Sale Reserved, and per-leg anchors remain exact",
+        "suite": "inventory-developer",
+        "report": "evidence/task032-nondb-nondb-9899ecf835/inventory-developer/run.json"
+      },
+      {
+        "name": "REV032-LOT-LIFE-FIFO expired original Lot returns unchanged, never covers Sale Reserved, and per-leg anchors remain exact",
+        "suite": "inventory-p3-server-coverage",
+        "report": "evidence/task032-nondb-nondb-9899ecf835/inventory-p3-server-coverage/run.json"
+      },
+      {
+        "name": "REV032-LOT-LIFE-FIFO native expired original IN compensation preserves Lot dates/creator and never funds uncovered Sale Reserved",
+        "suite": "inventory-p3-movement-database",
+        "report": "evidence/task032-db-inventory-p3-movement-database-d28fd97218/run.json"
+      }
+    ],
+    "REV032-COMPATIBILITY": [
+      {
+        "name": "REV032-COMPATIBILITY current unusable/serial/tracking/location/counting/overflow rules fail closed and forged proof cannot write",
+        "suite": "inventory-developer",
+        "report": "evidence/task032-nondb-nondb-9899ecf835/inventory-developer/run.json"
+      },
+      {
+        "name": "REV032-COMPATIBILITY current unusable/serial/tracking/location/counting/overflow rules fail closed and forged proof cannot write",
+        "suite": "inventory-p3-server-coverage",
+        "report": "evidence/task032-nondb-nondb-9899ecf835/inventory-p3-server-coverage/run.json"
+      }
+    ]
+  },
+  "supporting_eight_sidecars": [
+    {
+      "path": "evidence/task032-functional-functional-regression-007-task032-functional-functional-regression-supporting-task007-5a6b521cc8/run.json",
+      "sha256": "78caac3b7066818f61a198c02ed0f4d2ac766ee0e2b58239b97cd648af8bdc45",
+      "counts": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "profile_registered": false,
+      "cleanup": "EXACT_SCHEMA_ABSENT_OWNED_DAEMON_EXIT0_SOCKET_ABSENT_EXACT_ROOT_REMOVED_PORT_LEASE_RELEASED_CAFFEINATE_RELEASED"
+    },
+    {
+      "path": "evidence/task032-functional-functional-regression-008-task032-functional-functional-regression-supporting-task008-89d36e3b7b/run.json",
+      "sha256": "7c18f3ca74ff1e935acb2cae9a6330f0cde499288696ce0146d487c99f790090",
+      "counts": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "profile_registered": false,
+      "cleanup": "EXACT_SCHEMA_ABSENT_OWNED_DAEMON_EXIT0_SOCKET_ABSENT_EXACT_ROOT_REMOVED_PORT_LEASE_RELEASED_CAFFEINATE_RELEASED"
+    },
+    {
+      "path": "evidence/task032-functional-functional-regression-009-task032-functional-functional-regression-supporting-task009-082b805fd2/run.json",
+      "sha256": "7a6d69b1bc357d62301183ec0866c6ce9ce6a16ac0664adb34f9f9f15b46dace",
+      "counts": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "profile_registered": false,
+      "cleanup": "EXACT_SCHEMA_ABSENT_OWNED_DAEMON_EXIT0_SOCKET_ABSENT_EXACT_ROOT_REMOVED_PORT_LEASE_RELEASED_CAFFEINATE_RELEASED"
+    },
+    {
+      "path": "evidence/task032-functional-functional-regression-012-task032-functional-functional-regression-supporting-task012-1d302b0e20/run.json",
+      "sha256": "bce6abb34bc4334024d58e17f9262597c4a4ffc8df727494608e13891ffdbf04",
+      "counts": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "profile_registered": false,
+      "cleanup": "EXACT_SCHEMA_ABSENT_OWNED_DAEMON_EXIT0_SOCKET_ABSENT_EXACT_ROOT_REMOVED_PORT_LEASE_RELEASED_CAFFEINATE_RELEASED"
+    },
+    {
+      "path": "evidence/task032-functional-functional-regression-014-task032-functional-functional-regression-supporting-task014-4d11ca8e55/run.json",
+      "sha256": "42ae5d115923c8c9e4eb9f46b27d4179f121be438620404219f98ddbb4d4557e",
+      "counts": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "profile_registered": false,
+      "cleanup": "EXACT_SCHEMA_ABSENT_OWNED_DAEMON_EXIT0_SOCKET_ABSENT_EXACT_ROOT_REMOVED_PORT_LEASE_RELEASED_CAFFEINATE_RELEASED"
+    },
+    {
+      "path": "evidence/task032-functional-functional-regression-019-task032-functional-functional-regression-supporting-task019-afc1697632/run.json",
+      "sha256": "1c44ab054dc9066b116e05ea19605e4b4ef9d42f6d27ce7d7d979aa765e7c86c",
+      "counts": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "profile_registered": false,
+      "cleanup": "EXACT_SCHEMA_ABSENT_OWNED_DAEMON_EXIT0_SOCKET_ABSENT_EXACT_ROOT_REMOVED_PORT_LEASE_RELEASED_CAFFEINATE_RELEASED"
+    },
+    {
+      "path": "evidence/task032-functional-functional-regression-020-task032-functional-functional-regression-supporting-task020-685d343370/run.json",
+      "sha256": "2595d721f94bef14c7aacc0e84791a02a732a5a9243f2e6c72d63209b34aea1c",
+      "counts": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "profile_registered": false,
+      "cleanup": "EXACT_SCHEMA_ABSENT_OWNED_DAEMON_EXIT0_SOCKET_ABSENT_EXACT_ROOT_REMOVED_PORT_LEASE_RELEASED_CAFFEINATE_RELEASED"
+    },
+    {
+      "path": "evidence/task032-functional-functional-regression-021-task032-functional-functional-regression-supporting-task021-15633bac62/run.json",
+      "sha256": "47c5df14f177b59e736749cf23fab807d701be586c092e757a8ccc932a9f8ef9",
+      "counts": {
+        "total": 3,
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "profile_registered": false,
+      "cleanup": "EXACT_SCHEMA_ABSENT_OWNED_DAEMON_EXIT0_SOCKET_ABSENT_EXACT_ROOT_REMOVED_PORT_LEASE_RELEASED_CAFFEINATE_RELEASED"
+    }
+  ],
+  "functional_summary": {
+    "path": "evidence/task032-functional-functional-regression-functional-e5e374d165a7/results.json",
+    "sha256": "07bf7858e1b8a57ea70609e176303a12c6f6692b2ca5bd7ce6f4ae0c300d65cd",
+    "files": 10,
+    "strict_passed_leaves": 18
+  },
+  "full_native_diagnostic": {
+    "path": "evidence/task032-full-native-20261008T025322-954c50f7/diagnostic.json",
+    "sha256": "f162b8854fe8f851cef0596755def1b1da63ff01249a4d3a3662eb3d1381f4d5",
+    "counts": {
+      "tests": 2778,
+      "pass": 2651,
+      "fail": 0,
+      "skipped": 127
+    },
+    "lines_branches_functions_percent": [
+      93.61,
+      84.47,
+      91.96
+    ],
+    "original_global_thresholds": [
+      92,
+      83,
+      90
+    ],
+    "same_lcov_sha256": "35fe4cd1c59e1c51b8ba54d165aee6755e430b66c7954f98926a14b028d0936e",
+    "high_risk_file_floors": 34,
+    "guarded_skip_disposition": [
+      {
+        "name": "TASK-021 real MySQL Allocation integrity, contention and rollback",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-007 maps contention between two real MySQL connections",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-009 enforces master lifecycle and both Warehouse lock race orderings",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-008 creates rerunnable Warehouse and Bin persistence constraints",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "ADJ031-UOM native Pack conversion, credential-free intent and original replay survive changed current factor",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "ADJ031-STATUS native six different directions conserve On Hand, Allocation and Reserved",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "ADJ031-IN-LOT native creation/exact NULL dates and receipt minimum-life remain all-or-none",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "ADJ031-OUT-RESERVED native negative protects free stock/current eligible coverage but permits expired uncovered reduction",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "ADJ031-LOCKS-VERSION native competing expected-absent requests produce one post and one complete rollback",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "ADJ031-ROLLBACK native failure after first Status leg and new Lot creation leaves no business artifacts",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "ADJ031-REVOKE-ORDER native revocation committed during stock wait defeats stale RR snapshot and rolls back",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "ADJ031-REVOKE-ORDER native final security locks serialize later revocation until posting completes",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "ADJ031-PROOF native signed-time expiry after stock locks rolls back Operation and zero destination",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "ADJ031-ACTOR-BIND native exact successful attribution and replay do not backfill existing NULL Lot creators",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "ADJ031-ACTOR-BIND native binding zero/DB error/deadline/abort reaches the intended stage and rolls back",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "ADJ031-COMPATIBILITY native Receipt retains actor attribution and immutable DATE semantics for new and existing Lots",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "ADJ031-DOMAIN-REPLAY real unique claim wait retains original result without recomputing changed stock or Item",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "ADJ031-LIFE-FIFO native DATE edges, minimum life, midnight wait and zero/positive anchors",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "ADJ031-ROLLBACK every intended native write checkpoint rolls back new Lot, zero destination and both Status legs",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-030 native multi-line document preserves Lot/status/BaseUOM and stores chained immutable paired legs",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-030 destination presence, source version and shared starting-version conflicts leave zero effects",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-030 gross OUT cannot use incoming quantities or consume allocated stock",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-030 natural expiry/uncovered Reservation does not block a conserving Move or change Control",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-030 FIFO clears exhausted source, initializes absent destination, retains positive destination anchor",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-030 source replay returns original scalar receipt and reauthorizes without re-reading changed stock",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-030 strict body, source/destination ownership and inactive Bin reject without state changes",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-030 injected P4 Counting signal rejects source or destination; no real Stocktake workflow claimed",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-030 deterministic same-version Move race has one whole-document winner",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-030 current read detects destination created after source discovery despite repeatable-read snapshot",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-030 injected mid-leg, Audit, Operation completion and pre-commit failures roll back entire real transaction",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-030 Move vs Dispatch serializes Control and has no overspend or partial loser",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-030 Move vs Issue preserves allocated stock and Reservation accounting under deterministic race",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-030 unsafe aggregate arithmetic and exhausted Balance version reject before any writes",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-030 mixed SKU/Lot/status documents conserve each scope and reject a late invalid destination atomically",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "REV032-RECEIPT native historical version5 uses current9 after legitimate later events and retains immutable original",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "REV032-ADJUSTMENT native both directions at all three statuses undo Base quantity without historical updates",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "REV032-PAIRS native shared-bucket BinMove and six Status pairs reverse descending IDs with chained versions",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "REV032-ISSUE native full consumed Issue restores stock but never revives Reservation or Allocation",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "REV032-VERSIONS native complete guards reject absent/missing/extra buckets and never create historical placeholders",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "REV032-RESERVED native Control coverage and gross OUT refuse Allocated or future inverse IN funding",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "REV032-LOT-LIFE-FIFO native expired original IN compensation preserves Lot dates/creator and never funds uncovered Sale Reserved",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "REV032-ONCE native different sources discover old RR snapshot but only one complete group wins",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "REV032-DOMAIN-REPLAY native source claim wait retains original four scalars despite changed stock and Item",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "REV032-REVOKE-ORDER native Warehouse/Lot/Bucket waits accept committed revocation then reject stale proof atomically",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "REV032-ROLLBACK native each leg/Audit/completion/precommit and actor-bind failures leave zero effects",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "REV032-GROUP native incomplete completed summary, forbidden Transfer and Reversal groups fail closed",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "REV032-RESERVED native competing Reserve and reversal serialize the same Control with one invariant-safe winner",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "REV032-REVOKE-ORDER native final security locks block revocation and preserve original proof deadlines after bind",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-014 posts, replays, conflicts and rolls back against real MySQL 26.7.0",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-020 serializes competing Reservations and rolls back failed state changes",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-019 creates rerunnable Reservation and Allocation persistence",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-012 applies Inventory 0055-0060 with owned stock and immutable movements",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-022 real MySQL Allocation transitions and Issue consume",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "DEV-025-API-01 real HTTP and provider permission boundaries",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-027 real Draft creation stores canonical SKU/Lot snapshots with zero stock effects",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-027 complete replacement preserves owned IDs, reorders, removes and adds atomically",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-027 stale header and retained-line versions have no effects",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-027 cross-owner child IDs cannot be moved or deleted",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-027 invalid last-line Bin or SKU/Lot ownership rolls back the whole document",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-027 Draft cancellation retains lines and records actor/time/reason/Audit",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-027 read queries expose versions, stable paging and four states without mutations",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-027 create/update/cancel replay original receipts after later mutations; conflicts reject",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-027 audit failure rolls back real create, replacement and cancellation transactions",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-027 same-version competing replacement and cancellation serialize with one winner",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-027 fresh authorization rejects revoked permissions even on replay",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-027 validates Active warehouses/Bins and tracking policy; non-Draft edits/cancel reject",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-027 Draft lifecycle leaves existing OnHand/Allocated/Reserved rows and versions byte-identical",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-027 complete replacement can change Active warehouse scope with new owned source Bins",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-028 real whole Dispatch/Receive conserves stock and persists paired immutable legs and actor/version",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-028 rejects insufficient aggregate quantity across repeated source buckets with whole rollback",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-028 Receive rejects missing, duplicate, extra and partial line quantities atomically",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-028 late-line destination ownership failure rolls back; Quarantined requires reason and keeps Lot",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-028 each posting event replays its original receipt after Receive; altered/cross-command event conflicts",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-028 Audit failure rolls back all lines, balances, Movements, In Transit and Operation",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-028 Reserved coverage and allocated units cannot be dispatched",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-028 stale versions, disabled destination and revoked replay permissions have zero effects",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-028 active Stocktake lock rejects posting even on a real transaction",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-028 concurrent Issue cannot let Dispatch consume allocated or reserved stock",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-028 same-version competing Dispatch and Receive each have one whole-document winner",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-028 failure between paired legs or after an earlier line has no partial effects",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-028 protects each Reservation's stricter remaining-life snapshot, not just total AVAILABLE",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-028 Receive rejects disabled/unknown Bins and destination Stocktake lock without clearing In Transit",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-028 Receive preserves physical quantity/Lot/Expiry even when expiry elapses in transit",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-028 keeping QUARANTINED/DAMAGED needs no new status-change reason and drains FIFO anchor",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TASK-028 destination quantity overflow cannot clear In Transit or create a Movement",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "Transfer migration creates complete typed schema, indexes and enforced constraints",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "Transfer migration rerun preserves header, lines and schema",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "Transfer header rejects same warehouse, invalid state/version, missing/duplicate operations",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "Transfer lines enforce parent, bins and composite SKU/Lot ownership",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "Transfer line quantity, whole in-transit amount, statuses and line uniqueness are constrained",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "Transfer movement references are optional, restrictive and retry-safe after interrupted FK attachment",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "Transfer migration fails closed on incompatible existing index, check and FK without further DDL",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "DEV-029-API-01 Draft full replacement, filters and cancellation leave stock untouched",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "DEV-029-API-02 whole Dispatch and Receive conserve stock with paired immutable legs",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "DEV-029-API-03 missing, repeated, extra and partial Receive lines have zero business effects",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "DEV-029-API-04 path-owned children, versions, same-name Bin ownership and InTransit immutability",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "DEV-029-API-05 Quarantined receipt requires reason and preserves exact dimensions",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "DEV-029-API-06 anonymous, read-only and freshly revoked JWT permissions cannot write or replay",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "DEV-029-API-07 HTTP key and domain event replay retain original receipts after later state",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "DEV-029-API-08 Audit failure rolls back Dispatch and same-intent retry posts once",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "DEV-029-LOOKUP-01 Inventory-only lookup enforces framework JWT revocation without Item grants",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "DEV-029-LOOKUP-02 strict whitelist and no-Balance SKU support Draft but never authorize Dispatch",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "DEV-029-LOOKUP-03 bounded Code, literal wildcards and collation never become catalogue search",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "DEV-029-LOOKUP-04 Item profile rejects invalid tracking/status/Base UOM and stale Draft input",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "DEV-029-LOOKUP-05 two-connection rename/inactivation cannot mix read snapshots or exempt later writes",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "DEV-030-API-01 whole Bin Move posts paired legs and immutable HTTP/domain replay",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "DEV-030-API-02 numeric-only bounded schema rejects all coerced IDs/versions and forged fields before claims",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "DEV-030-API-03 stale versions, absent/present destinations, ownership and free stock reject whole document",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "DEV-030-API-04 both permissions, fresh domain reauthorization and revoked JWT protect writes/replays",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "DEV-030-API-05 real Audit failure rolls back whole Move and same-intent retry posts once",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "ADJ031-INPUT real strong-auth HTTP rejects forged, mixed and coerced fields before claims",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "ADJ031-REASON exact categories, Unicode byte limit and OTHER detail survive real Audit",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "ADJ031-PROOF actual JWT, P-256 device and scrypt password are all mandatory",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "ADJ031-HTTP-REPLAY fresh credential/signature preserve immutable domain result and credential-free cache",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "ADJ031-CACHE-WAIT committed revocations and original proof deadline reject after real cache wait",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "ADJ031-STATUS strong-auth HTTP posts all six pairs with exact actor, conservation and immutable replay",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "ADJ031-REVOKE-ORDER real UserAdminService token-first disable commits before Warehouse wait release",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "REV032-INPUT real HTTP keeps canonical path and complete numeric guards strict before cache claims",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "REV032-HTTP-BOUNDARY real third route requires current JWT-device-password and fixed inventory view plus adjust",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "REV032-HTTP-REPLAY real permuted guards and fresh password replay the exact four scalars without credentials or second effects",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "REV032-HTTP-REPLAY real cache waits recheck all committed revocations and the original deadline without replacing keys",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "REV032-REVOKE-ORDER real token-first UserAdmin disable commits before reversal Warehouse wait release",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "REV032-ROLLBACK real required Audit failure leaves no inverse leg/link and same intent retry posts once",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "PASS"
+      },
+      {
+        "name": "TC-064 imports 10,000 Customer rows within the release budget",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "NOT_EXECUTED"
+      },
+      {
+        "name": "TASK-018 Core Stock capacity, query-plan and two-connection concurrency gate",
+        "full_command": "NOT_EXECUTED_GUARDED_SKIP",
+        "separate_current_native_execution": "NOT_EXECUTED"
+      }
+    ],
+    "capacity4": "NOT_EXECUTED",
+    "cleanup": "SCHEMAS_USERS_ABSENT_PRIVATE_PID_EXIT0_SOCKET_ABSENT_PORT_NO_LISTENER; EXACT_OWNED_ROOT_REMOVED_SLEEP_PREVENTION_RELEASED"
+  },
+  "self_review": {
+    "method": "SELF_REVIEW",
+    "author": "Codex /root",
+    "reviewer": "Codex /root",
+    "independent": false,
+    "reviewed_source": "ea5fed017f5eba2fcdfe2adf9bd74521deb6e95d863797892e5a0a9c15c03e43",
+    "open_critical": 0,
+    "open_high": 0,
+    "required_unresolved": 0,
+    "axes": [
+      "correctness",
+      "readability",
+      "architecture",
+      "security",
+      "performance"
+    ],
+    "limitation": "Bounded inverse group/guards200; inherited per-WH/SKU eligible-bucket coverage query is not capacity proof. Native suites stay in existing approved files/commands; no unrelated decomposition, new dependencies or auth/DDL edits."
+  },
+  "local_consistency_before_human_gate": {
+    "traceability": "STRUCTURE_PASS",
+    "boundary": "LOCAL_CHECKS_PASS",
+    "PLAN_READY": {
+      "schema_version": "2.0",
+      "module_id": "inventory-management",
+      "gate": "PLAN_READY",
+      "status": "LOCAL_CHECKS_PASS",
+      "issues": [],
+      "scope": "Local structural/evidence consistency only. External approval identity, CI authenticity, runtime leases and repository permissions MUST be verified separately. This command never authorizes, merges or deploys."
+    }
+  },
+  "evidence_adapter": "READ_ONLY_LOCAL_NATIVE_REPORT_VERIFICATION: exact actual nested directories, reviewed profile argv/tool/counts/required IDs, raw adapter agreement and artifact hashes; original run IDs/runtime identities preserved. Generic live-runtime/run-id-root MERGE_READY convention not satisfied; no generic merge gate PASS claimed.",
+  "exclusions": [
+    "TASK033+ / UI implementation",
+    "shared framework/auth/admin/Item/downstream edits",
+    "Operation/Audit service contract edits",
+    "new migrations/DDL/FK/permissions/dependencies",
+    "profile/parser/runner/floor/min-tests/skip changes",
+    "staging/commit/push/PR/remote CI/merge/main integration",
+    "formal TC/UAT/business/release/capacity acceptance",
+    "unseen implementation acceptance"
+  ],
+  "formal_TC_UAT": "NOT_RUN",
+  "CI_PR_publication": "NOT_EXECUTED"
+}

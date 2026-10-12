@@ -918,7 +918,7 @@ Stock list每個row回：`balanceId,warehouse,bin,sku,lot,stockStatus,isExpired,
 | `POST /api/v1/inventory/bin-moves` | `postBinMoveHandler.js` | jwt／view＋operation | 同Warehouse、同SKU／Lot／Status；成對Movement。 |
 | `POST /api/v1/inventory/status-transfers` | `postStatusTransferHandler.js` | jwt-device-password／view＋`inventory.adjust` | 同bucket維度轉Status；reason＋versions。 |
 | `POST /api/v1/inventory/adjustments` | `postAdjustmentHandler.js` | jwt-device-password／view＋adjust | 正／負、reason category/text、source、version。 |
-| `POST /api/v1/inventory/movements/:id/reverse` | `reverseMovementHandler.js` | jwt-device-password／view＋adjust | 完整反向原movement group；reason＋source；重驗現況。 |
+| `POST /api/v1/inventory/movements/:id/reverse` | `postingHandlers.js` / `ReverseInventoryMovementHandler` | jwt-device-password／view＋adjust | §5.4.3完整反向原group；reason＋source＋完整current-version guards；重驗現況。 |
 
 Inventory UI不提供沒有來源的Receipt／Issue表單；上述HTTP endpoints供已取得Inventory operation權限的倉務整合／營運入口。正式Receiving／Fulfillment頁應由其handler驗證自己的權限後直接呼叫§5.11 internal service，令下游角色不必取得Inventory管理頁權限。
 
@@ -958,6 +958,100 @@ Receipt request核心範例：
 
 Adjustment `reasonCategory`只接受`COUNT_GAIN, COUNT_LOSS, DAMAGE, EXPIRY, DATA_CORRECTION, TRANSFER_VARIANCE, OTHER`；所有類別均須reason text，`OTHER`須提供足以人工理解的更詳細說明。
 
+#### 5.4.1 Bin Move whole-document contract（TASK-030；HD107 A）
+
+HD109 A的最小相容擴充：Bin Move的static api設定inputCoercion=false，在schema驗證階段拒絕數字字串／boolean等非數字輸入，先於HTTP idempotency claim／cached replay及handler。這是選用的route metadata，只允許省略或literal false；省略沿用現有全域RequestValidator設定，true／null／string／object等非法設定須在啟動時拒絕，不能靜默轉型或重新啟用全域已停用的驗證。TASK030只由Bin Move選用；TASK031另由§5.4.2兩條新route選用已有能力。其他既有API的params／query／body轉型、defaults、trim、unknown-field及錯誤格式均保持原有政策。
+
+沿用API definition resolver→dispatcher→RequestValidator.compile流程；compile接受可省略的第三參數{coerceTypes:false}，只於route編譯時建立同配置但不轉型的validator，不修改共用instance或每request重建。保留原global validation.enabled、allErrors、useDefaults、removeAdditional、錯誤detail／上限等設定；不修改shared auth／Idempotency Service、全域request config或新增dependency。六個shared框架／測試精確路徑列於manifest approval_required_paths，使用新PLAN綁定的Sam scope批准；對其他route的相容性及嚴格route在cache前拒絕的順序須有框架回歸及real Bin Move HTTP／MySQL證據。
+
+`POST /api/v1/inventory/bin-moves`使用既有JWT、`inventory.view`＋`inventory.operation`及API idempotency框架；handler從已認證claims建立actor，固定domain purpose=`bin_move.post`／requiredCallerPermission=`inventory.operation`。Domain提交及重送前均沿用fresh authorization，不接受body自報actor／permission。
+
+Request body只接受`{source,warehouseId,reason?,lines}`，沿用既有完整source tuple及安全字串限制；reason可省略，trim後最多500 UTF-8 bytes，不接受control／DEL。`lines`為1～100行；每行只接受`{sourceBalanceId,destinationBinId,quantity,expectedSourceVersion,expectedDestinationVersion}`。IDs／quantity／非null versions均為positive safe integers；quantity明確是來源SKU的Base UOM，不接受Pack轉換或另一UOM。`expectedDestinationVersion`必填：positive version表示預期已有Bucket；explicit `null`表示預期該完整目的Bucket不存在，省略或把null當免檢均拒絕。未知fields及非法shape依既有schema／domain輸入錯誤拒絕。
+
+SKU、Lot、Expiry、Stock Status及Base UOM只從來源Balance、既有Lot及Item-owned inventory profile取得；不可由caller改動。來源及目的Bin必須不同、Active、屬於body同一Active Warehouse；跨倉須用Transfer。重用InventoryPostingService、InventoryOperationService及InventoryLockService，不新增表、權限、外部服務或通用movement framework；handler沿用現有postingHandlers／inventorySchemas及自動發現慣例。
+
+新執行先取得來源維度，按既有Warehouse→Stock Control→Bin／active Bin lock→Lot→完整sorted Balance protocol鎖定並重新驗證來源識別、profile、Lot、所有權及狀態，不把交易前預讀當作提交保證。Expected versions以整份操作開始的locked snapshot為準；同一Bucket重複引用須一致，目的不存在須在Control鎖持有下確認後才建立。不得把自建zero row誤判成原本存在；另一交易先建立即VERSION_CONFLICT，whole rollback包括新zero rows。
+
+同一來源Bucket的所有OUT quantity先合計，safe-integer溢位或超過原`on_hand - allocated`即整份拒絕；不得用本份操作的IN抵充OUT或搬走Allocation。共用目的Bucket亦須檢查累加overflow。每個SKU／Lot／Status在同倉內守恆，Reserved／Allocation總量不變，不得增加uncoveredReserved；既有因自然到期形成的uncovered不是新增「必須先完全覆蓋」門檻，不改Reservation或Expiry eligibility政策。任一來源／目的Counting lock均拒絕。
+
+所有行共用一個`BIN_MOVE_POST` Operation及一個movement group，每行按提交順序產生OUT／IN `BIN_MOVE` legs。完整Bucket versions在寫入前檢查；同Bucket多次leg採交易內依序before／after／version鏈，不重用client version作每個leg的中間版本。FIFO anchor沿用§3.5現有規則；每leg保存既有不可變Movement snapshots及安全source／actor／reason／correlation Audit。Balance、Movement、成功Audit及Operation completion同交易，任一行或任一階段失敗全部回滾。
+
+200沿用既有success envelope，data精確為`{status:"POSTED",operationId,movementGroupId,lineCount}`；不回raw rows／SQL或新增不可持久化的巢狀Operation summary。Movement細節由既有group／source查詢追溯。同source＋正規化payload重送，在fresh authorization後回原immutable scalar結果，不能以當前Balance版本重新計算原結果；不同payload（包括不同lines順序）沿用INVENTORY_SOURCE_CONFLICT。Stale來源／目的版本沿用VERSION_CONFLICT；missing／權限／Bin／stock／安全500錯誤沿用既有公開碼，不洩露內部資料。
+
+#### 5.4.2 Adjustment／Status Transfer exact contract（TASK-031；HD112–122 A）
+
+本增量只實作單次正／負Adjustment及單次Status Transfer，不含batch、Reversal、UI或Stocktake Posting。沿用兩條§5.4 POST route、`jwt-device-password`、`inventory.view`＋`inventory.adjust`，固定domain purpose=`adjustment.post`／`status_transfer.post`及requiredCallerPermission=`inventory.adjust`；caller不能指定actor、permission、proof或isHighRisk。
+
+**Request contract。** Params/query均為EMPTY；body為strict object、additionalProperties=false，兩條route明訂inputCoercion=false，沿用TASK030已有能力而不改RequestValidator。必填共通fields為`source,password,quantity,uomId,reasonText`。source沿用完整五欄tuple及既有安全限制；password沿用現有PASSWORD schema，只作認證，不能trim、正規化為業務資料或持久化。quantity與IDs為positive safe integers，versions為1～4294967295。
+
+| Request variant | 除共通fields外唯一接受的fields | Required guards |
+| --- | --- | --- |
+| Adjustment IN | `direction:"IN",warehouseId,binId,skuId,stockStatus,lotNumber?,expiryDate?,manufactureDate?,expectedBalanceVersion,reasonCategory` | Complete target；expectedBalanceVersion必填positive version或explicit null expected absent |
+| Adjustment OUT | `direction:"OUT",balanceId,expectedBalanceVersion,reasonCategory` | Server從既有Balance派生完整dimensions；expectedBalanceVersion必填positive version，不能null |
+| Status Transfer | `sourceBalanceId,destinationStatus,expectedSourceVersion,expectedDestinationVersion` | Source positive version；destination positive version或explicit null；destinationStatus與source不同 |
+
+不接受另一套target selector、caller lotId／firstReceiptDate／trackingPolicy、minimum-life override、quantityUnit alias或混合IN/OUT fields。`uomId`明確宣告quantity單位；Base及Pack均沿用ItemLookupService.resolveUomInTransaction及toBaseQuantity，必須是該SKU當下有效整數factor，無猜測、float或新Item規則。Stock只保存Base UOM整數。Payload hash保留caller inputQuantity/uomId及expected versions，不把當前factor或重新計算的Balance塞入intent；source重送須先通過當下強認證／fresh guard再回原immutable結果，不因後來UOM、Lot或版本改變而重算已完成結果。
+
+Adjustment固定七項reasonCategory allowlist不變，不新增category-direction配對限制。兩種操作reasonText均trim後非空、最多500 UTF-8 bytes且無control／DEL；OTHER另外至少10個非空白Unicode code points。這是長度下限，不是假裝能機械驗證原因真实性；仍須人工可理解的差異及調整說明。不同reason/category是不同payload。Status不接受reasonCategory；其Movement/Audit使用既有空category。
+
+**HTTP preparation / cached replay。** 只供這兩個新handler選用的server-owned static api metadata為`idempotencyPreparation:true`，省略保持所有舊route原行為；false/null/string/object等非法值或缺失hook、未啟用idempotency須啟動失敗。兩route明訂`idempotency:{enabled:true,ttlMs:604800000}`，不更改現有global 1h預設、header/key scope、store、lease、response limits或清理政策。保留既有timeout<lease啟動檢查。
+
+Resolver只傳遞metadata；dispatcher在既有auth→authorization→strict schema後、HTTP claim前呼叫handler.prepareIdempotency(req)。該方法先驗證／正規化全部業務shape和原因，排除password，建立frozen credential-free `{params:{},query:{},body:businessBody}`及Inventory-local trusted context並作fresh preflight。回傳server-owned `{input,replay}`；IdempotencyService.execute新增可省略第五參數接受此物件。選用route缺失／非法準備結果不得fallback回含password的req.input；省略選用的舊route沿用原四參數行為。
+
+Service以prepared input作原有HTTP fingerprint；replay分支將原生cached response發送動作交給`replay(sendCachedResponse)`。Inventory replay hook在一個短交易內重讀／鎖定最新actor/roles/permissions/device/token-version，驗證原signed window及JWT/session時效，再同步呼叫sendCachedResponse，中間不await其他工作；鎖持有到該read-only交易結束。Callback須恰好一次；missing／未呼叫／重複呼叫皆fail closed，不得另跑handler、釋放／覆寫既有成功key或新增Movement／成功Audit。失敗進入既有安全error及failure-audit路徑。既有store conflict/inProgress/unavailable/capacity/fencing及response capture lifecycle保持原樣。
+
+每次HTTP retry仍重新通過原強認證（新nonce／signature及當前password），不能重用nonce。相同actor/method/route/key及相同正規化業務input可回原成功；新password/token/signature/context不能改業務fingerprint；不同source／quantity／uom／target／versions／reason拒絕。Domain source tuple仍是第二道防重，不把header當eventId或另建Inventory快取。全域validation停用不能令新handler跳過自己的strict business normalization或缺失proof guard；不修改global config／認證策略／policy registry／bootstrap。
+
+**Trusted context / submission guard。** 小型Inventory-owned process-local WeakMap機制由已成功fixed strong-auth的Inventory HTTP adapter建立，綁actor、claims、device binding識別、公鑰fingerprint、action、source、正規化payload及原header signed timestamp。Context與serializable五欄command分開傳入；JSON、複製object、錯action／actor／payload／device或跨request重用都不是proof。密碼、token、signature、raw body及context不得進domain/hash/Audit/log/cache response；不新增bearer grant、auth strategy、表或service。只支援本process同步呼叫。
+
+Guard沿用APP_TIME_ZONE/time及現有signatureMaxSkewSeconds（目前60），abs clock skew含future timestamp，不在handler／lock-wait後刷新；同時檢查claims exp/auth_time／sessionMaxAge及當前fr_token_versions，不以可能落後的revocation snapshot代替提交驗證。缺失／偽造context沿用403安全拒絕、stale signature沿用DEVICE_SIGNATURE_STALE，JWT/session/token version沿用原401，actor／permission stale為PERMISSION_STALE，device不合資格沿用deviceStatusError／DEVICE_MISMATCH；未知錯誤安全500/503，不曝光SQL／proof。
+
+開始posting交易、Operation claim前先在該交易重讀actor/permissions/device/version並核对proof／時效；domain replay在可能等待unique claim後必須作current locking guard再回原結果。新posting在全部blocking stock locks／destination creation後、第一筆Movement/Balance業務mutation前，作current `FOR SHARE` guard：順序users→user_roles/roles→role_permissions/permissions（role ID排序）→user_devices→fr_token_versions，使用參數化查詢、JS dedup及既有assertPermissionsCurrent比較。不把先前RR snapshot或claims當最新資格；security表唯讀，無新serialization row或shared-auth SQL改寫。重新核對proof／time須在最後blocking read後；完成Operation前亦核對時效與request abort，逾時回滾包括此前Lot／zero Balance／Operation。
+
+**Actor FK staging（HD122 A；僅兩條TASK031新操作）。** 初始非鎖security檢查後，Operation claim在同一未提交posting transaction暫存`actor_user_id=NULL`，保留原actor_label及opaque context內可信actor ID；不得在stock／destination等待前以非NULL使用者外鍵取得隱含security鎖。Claim的source/hash/unique semantics不變；domain replay不綁定或改寫既有Operation／Lot，在unique等待後仍須current locking guard才回原結果。
+
+Positive Adjustment若確實建立新Lot，其nullable `created_by`也在同一未提交交易暫存NULL，以免0059的使用者外鍵在後续Bucket等待前提前鎖users。僅由本transaction成功INSERT的結果辨識本次新建Lot，不能以缺失snapshot、NULL created_by、時間戳或upsert affectedRows推測ownership；唯一鍵競爭沿既有並發拒絕／whole rollback，不自動重試。既有Lot（包括合法NULL建立者）、其日期與actor attribution不得補填／改寫；Receipt及其他writer維持既有行為，不新增caller控制的deferActor旗標或通用actor-binding API。
+
+全部stock／Lot／Bucket／Item/UOM blocking reads及final current security guard完成後、第一筆Balance／Movement mutation前，以參數化conditional UPDATE將可信actor ID綁到exact claimed、actor尚NULL且completed_at尚NULL的Operation（並限定本次command type）；若本次建立Lot，同時只綁exact owned new Lot的NULL created_by。每個應更新row須affectedRows=1，否則沿用CONCURRENT_OPERATION並回滾；binding後再檢查原proof時效／abort，不刷新憑證。安全read locks持有至同一posting交易結束；binding、stock、Movement、success Audit與Operation completion原子提交，提交成功當下不得留下這兩條操作的NULL-actor Operation或本次新建NULL-creator Lot。任何binding／guard／Audit／completion失敗包括temporary metadata全部回滾，不能另開交易補填或commit後修補。既有FK／ON DELETE SET NULL、schema、users/admin及其他routes不變；不關閉FK checks或改全域isolation。
+
+撤權已在final guard前提交者優先，包含stock／claim／cache等待期間完成的撤權；final guard先取得security read locks者先序列化完成，後來的停用／撤device／role change／token revoke會等待該交易結束，不能追溯取消已提交結果。不得持有preflight交易跨HTTP cache-store或stock等待；posting初始非鎖snapshot檢查不是最終許可。這不是宣稱無deadlock：security read鎖與既有admin寫入仍可能互等，沿用timeout/abort及whole rollback，不自動刷新proof或重送。需實際DB驗證兩種先後次序及stale RR snapshot；不更改全域isolation。
+
+**Stock transaction。** InventoryPostingService仍唯一owner，重用Operation/Audit/Lock/Item helpers。正Adjustment可按SKU＋normalized Lot resolve/create，重用Receipt的既有Lot resolution SQL，不虛構Receipt Movement；同一transaction內新Lot／Balance／ADJUSTMENT Movement／成功Audit／Operation全部提交或回滾。Existing expiry/manufacture incl NULL必須exact match，不填補／改日期。New Lot first_receipt_date使用本次server APP_TIME_ZONE submission date，意義為首次系統Adjustment IN而非historical receipt；caller不能倒填。Negative／Status不建立Lot。
+
+保持Warehouse→Warehouse/SKU Control→Bin/Counting lock→Lot→sorted full Bucket鎖協議、Active warehouse/bin/profile/tracking及ownership規則；目的original presence/version須在Control下current locking read確認，explicit null不得等於免檢，並發先建立者VERSION_CONFLICT。正Adjustment所有Status均拒絕expired及不足current minimumReceiptLifeDays的有expiry Lot，不接受override；none/batch無expiry照既有policy。Profile/UOM及submission local date在blocking locks後重驗，不能用過期的交易前資格。
+
+OUT只能扣onHand-allocated；allocated與Reserved不變。按相同Warehouse/SKU在Control鎖下current read其合資格AVAILABLE Buckets及Lot（非舊aggregate snapshot），計算操作前後uncoveredReserved，不能增加。自然到期已造成的uncovered不是要求全覆蓋的新門檻。Status三種Status六種不同方向均可，paired STATUS_TRANSFER OUT/IN同Warehouse/Bin/SKU/Lot、同Operation/group、總On Hand不變；不搬Allocation或改Lot，不新增expiry blanket ban，expired AVAILABLE仍非saleable。Counting lock、overflow／version overflow或任一leg/Audit失敗全部回滾。FIFO anchor既有positive→positive保留、0→positive當前local date、回0清空；existing Lot date不變。
+
+**Result / audit。** 200沿用success envelope，data固定且additionalProperties=false：`{status:"POSTED",operationId,movementGroupId,lineCount,inputQuantity,inputUom:{id,code},baseQuantity,baseUom:{id,code}}`。Adjustment lineCount=1；Status lineCount=2指legs。只持久化既有Operation scalar allowlist的對應欄位，replay從原summary還原相同data，不新增巢狀summary欄／re-query當前stock。Movement完整不可變snapshots、每Bucket before/after/version、category/reason與source trace保留；細節走既有Movement/group查詢。成功Audit保存既有actor/action/occurred_at及安全`deviceId,signedRequestAt` summary identifiers（只新增這兩個owned allowlist fields），沒有憑證／context；reject/failure可獨立記安全Audit但沒有stock／成功Audit半套。
+
+Stale版本／source衝突／stock及Lot規則沿用既有公開碼與格式；schema400 REQUEST_VALIDATION_FAILED、domain400 INVENTORY_INPUT_INVALID／INVENTORY_QUANTITY_INVALID、現有409 VERSION_CONFLICT／INVENTORY_SOURCE_CONFLICT／INSUFFICIENT_STOCK／INSUFFICIENT_ATP／LOT_*／BIN_LOCKED_BY_STOCKTAKE、404 INVENTORY_RESOURCE_NOT_FOUND。No silent partial success。TASK032 Reversal、TASK033 UI、formal Technical/UAT／full-P3 capacity未被本增量實作或接受。
+
+鎖語意依[MySQL26.7 locking reads](https://dev.mysql.com/doc/refman/26.7/en/innodb-locking-reads.html)及[foreign-key locks](https://dev.mysql.com/doc/refman/26.7/en/innodb-locks-set.html)：current locking reads與FK隱含鎖皆須納入上述順序；這只支持設計推論，不替代已批准26.7.0環境上的實測。MySQL DATE仍是calendar date，owned SQL讀取沿用既有Transfer的DATE_FORMAT pattern以保留YYYY-MM-DD／NULL，不能以全域或fixture-only dateStrings、JS時區切日或弱化日期驗證掩蓋DEF010。
+
+### 5.4.3 TASK032 Generic Reversal精確合約
+
+本節延續§3.8，不提供partial reversal、retarget或Fulfillment Reservation restoration。HD127 A選定current-version方向；以下精確契約須由Sam審閱批准後採用，不能把方向選擇視為未見契約或程式的批准。
+
+**入口與input：** 固定`POST /api/v1/inventory/movements/:id/reverse`，`jwt-device-password`且同時具備`inventory.view`＋`inventory.adjust`；只新增Inventory-owned第三個high-risk consumer。`inputCoercion:false`；query必須empty，params只接受id原始canonical decimal字串`^[1-9][0-9]*$`，再明確檢查正safe integer，不能靠global coercion。body只接受既有source、auth-only password、reasonText及`expectedBalances`；任何額外quantity/uom/direction/status/target/group/reauth-proof欄位均拒絕。reasonText沿用trim後nonempty、最多500 UTF8 bytes、禁止Cc/DEL；不新增reasonCategory或理由allowlist。
+
+`expectedBalances`必填1～200項，每項僅`{balanceId,expectedVersion}`，balanceId為正numeric safe integer，expectedVersion為numeric integer1～4294967295；不接受字串、bool、null、重複balanceId。normalize後按balanceId排序，對應完整原group實際涉及的**當下既存**Balance ID集合，missing/extra guard均拒絕。Movement歷史只有bucket維度及balance_version_after，不能把後者當成current version或暗中替client更新version。缺失歷史bucket fail closed，不upsert重建。新posting持鎖核對current version，stale回409 VERSION_CONFLICT且整組零效果；較舊group在後續事件後仍可反向，只要caller確認最新版本且全部current rules成立。
+
+**可信意圖與雙層冪等：** 固定purpose `movement.reverse`、command `MOVEMENT_REVERSE`，在現有process-opaque trusted context中綁actor/device/public-key claims、route、path movementId、source和credential-free normalized intent；不能冒充Adjustment/Status proof，不能接受serialized/copied context。selected movementId也是意圖的一部分，同group另一anchor不暗中視為同source payload。password只交既有auth；不得進business command/hash/Audit/result/log/cache fingerprint。此route選用既有idempotencyPreparation、7-day TTL604800000；排序後guards集合相同即同意圖。HTTP cache wait及domain unique-claim wait後，均須fresh current security guard及original signature/JWT/auth_time/token-version/deadline/abort檢查，不能renew proof。completed replay回原immutable scalar result，不重新比較已變動的stock/Lot/Item/version，不再次產生stock/Movement/success Audit；payload改變維持既有HTTP/source conflict。現有兩條high-risk routes、ordinary defaults及shared framework/store不改。
+
+**Group完整性與一次性：** id只是原immutable group定位點；server導出全部1～200 legs，確認同group、同original Operation、同allowlisted movement type、BIN location及completed MOVEMENT_GROUP result。原Operation summary須完整且與group一致：Receipt唯一movementId共1 leg；Adjustment lineCount=1；Status lineCount=2；Issue rowCount；Bin Move lineCount×2，並驗證各paired legs相同SKU/Lot/quantity及相應位置/Status守恆。缺資料、混合/損坏/不完整group拒絕，不能用client提供的數量補齊。Transfer、Stocktake、Opening、IN_TRANSIT、REVERSAL及其他type仍409 MOVEMENT_TYPE_NOT_REVERSIBLE；任一leg已有reversal link回409 MOVEMENT_ALREADY_REVERSED。只建立新REVERSAL group，每leg唯一reversal_of_movement_id，原Movement/Operation及terminal workflow不更新。
+
+**交易與鎖序：** 初始非locking discovery只用來選擇scope，之後既有Posting owner的單一transaction按§2.5 claim新Operation（暫時NULL actor）→sorted Warehouse→Warehouse/SKU controls→Bin/counting locks→sorted既存Lot→sorted全Bucket；再對原completed Operation/group及reversal links作current locking read並重驗discovery/guards。不能先锁原Movement再等待stock，也不能用舊RR snapshot決定once-only。使用TASK031已驗證的ordered current security guard（users→roles→permissions→devices→token）於所有blocking business reads後重驗，精確conditional bind本次未完成NULL-actor Operation且affectedRows=1，再重查original proof/abort。此流程不建Lot，不改Lot creator，也不引入public defer flag或generic binder。然後stock、全部新legs、required success Audit及Operation completion原子提交；任何失敗整組rollback，包括placeholder actor/Operation。最終成功actor必須是真實trusted actor。
+
+Warehouse/SKU control與full-bucket locks序列化同group不同source並發；existing unique reversal_of_movement_id是第二層保障，僅精確該constraint duplicate可映射already reversed，不吞其他DB错误。deadlock/lock timeout沿用409 CONCURRENT_OPERATION與whole rollback，不新增自動retry或改FK。MySQL locking reads在等待後讀當下committed rows，不以ordinary snapshot代替。
+
+**反向效果與current invariants：** 不重新套用當下Pack UOM factor，直接逐leg反向原positive Base quantity及原WH/Bin/SKU/Lot/Status；Item Base UOM已按既有contract於交易後禁止變更，current tracked/usable/nonserial profile仍須核對。所有Warehouse/Bin active、Counting exclusion、Lot/tracking identity、safe quantity/version上限仍生效。以original movement id descending作deterministic undo order；先對每Bucket聚合全部OUT，要求不超過其當下free=onHand−allocated，不能用同group預期IN替OUT融資。預先模擬逐legbalance/version chain，overflow或任何中途不變量失敗拒絕。按完整WH/SKU現況及最終效果重驗eligible coverage，不得增加uncovered Reserved；naturally expired既有uncovered不變成全覆蓋新門檻。Reserved/Allocation數量與狀態完全不改，Reverse Issue不復活Consumed workflow。
+
+**本期效期提案（須明確Sam批准）：** Reversal IN是把既有原Lot回到原位置/Status，不是新Receipt或positive Adjustment。因此過期或低於minimum receipt life的原Lot可回原Bucket，但始終按當下日期/Profile計算Sale eligibility，expired AVAILABLE不計入eligible，不能覆蓋需要可售庫存的Reserved；不允許override、新Lot、改Expiry/Manufacture/first_receipt_date或retarget。原Lot dates不變；no-Lot Bucket依既有0→positive設當下local date、positive→positive保留、歸0清NULL的FIFO政策，使用owned SQL DATE_FORMAT，不改global DB date parsing。Receipt／positive Adjustment的expiry/minlife硬拒絕及Status Transfer既有政策不變。若業務要求連歷史回庫都拒絕，須先修訂本節並重審，不能在實作中默默選擇。
+
+**結果／錯誤／Audit：** 成功200回既有scalar shape `{status:"POSTED",operationId,movementGroupId,lineCount}`，lineCount為新反向legs數；不新增Operation summary欄位或查詢endpoint，detail沿用Movement inquiry及reversal links。既有auth/input錯誤不改；non-reversible/already-reversed/current-rule failure使用現有MOVEMENT_TYPE_NOT_REVERSIBLE／MOVEMENT_ALREADY_REVERSED／REVERSAL_NOT_ALLOWED，stale VERSION_CONFLICT及concurrency/source conflicts不混淆。成功使用已存在`movement.reverse` Audit action，可信actor/device/signedAt、source/business references及每leg前後狀態由server提供，required Audit與posting同tx；失敗可用既有安全獨立failure Audit，但不得留下success artifacts或秘密。
+
+**交付限制：** 最小新增owned `inventoryReversalPosting.js`供既有Posting owner使用，handler/schema/context僅增加固定第三consumer；不改shared auth/framework/admin/Item/downstream、Operation/Audit service契約、migration/FK、lock runner/profile/floors或依賴。TASK033 UI、TASK034收斂、formal/UAT及capacity仍獨立，TASK032 developer checks不是這些階段的驗收。
+
 ### 5.5 Reservation／Allocation APIs
 
 | Method／Path | Auth／Permission | 行為 |
@@ -987,6 +1081,22 @@ Allocation create request必須帶Reservation version及每個Balance version；
 | `POST /api/v1/inventory/transfers/:id/receive` | jwt／view＋operation | 每line目的Bin／receive status；整張Receive。 |
 
 Receive body line ID集合必須與Transfer全部lines完全相等，不可缺漏、重複或多出；每行quantity固定等於dispatched quantity，client不可提交部分數量。
+
+#### 5.6.1 Draft SKU精確查找（HD-102 A）
+
+`GET /api/v1/inventory/sku-lookup?code=...` 是Inventory-owned唯讀入口，固定jwt＋`inventory.view`；不要求或授予`item.view`／`item.mgmt`，不接受caller自報權限。沿用框架當下JWT／撤權檢查及既有限流，不新增permission、migration或Item管理入口。目的只為支援既有Draft選料，不建立商品目錄。
+
+- Params為空；query只允許必填單一string `code`（1～190 Unicode code points，拒絕ASCII control／DEL）。未知query、重複code解析為array、非string、超界均400 `REQUEST_VALIDATION_FAILED`。通過schema後重用Item的`normalizeAndValidateSkuCode` trim及驗證，純空白回400 `SKU_CODE_INVALID`。保留大小寫及內部字元；使用Item `findByCode` 的參數化等值查詢與既有DB collation，不另設case-sensitive／uppercase規則。`%`／`_`是literal，不作LIKE；無barcode、模糊、分頁或batch查找。
+- 一次`withTransaction`（既有REPEATABLE READ）內，將同一executor交給ItemLookupService作`findByCode(code, {purpose: "inventory"})`及`getInventoryProfileInTransaction(tx, skuId)`；沿用Item-owned profile／Base UOM／可用性，不複製SQL或qualification規則，不修改Item code。兩次查找及UOM讀取必須在同一snapshot，不可把code查找留在交易外。無Balance row仍可查到SKU，不讀庫存作SKU資格門檻。
+- 200的既有success envelope中，`data`只含下列required whitelist；`data`及`baseUom`均`additionalProperties: false`。ID為positive safe integer；code/name/UOM code為既有Item string。200表示本次snapshot可供Transfer選料，不是庫存、Reservation或過帳保證，不另回`usable`／raw reasons／Item狀態／價格／media／行政欄位。
+
+```json
+{"skuId": 101, "skuCode": "SKU-001", "skuName": "示例商品", "trackingPolicy": "batch", "baseUom": {"uomId": 1, "uomCode": "EA"}}
+```
+
+`trackingPolicy`只允許`none`／`batch`／`batch_expiry`。未找到回404 `INVENTORY_RESOURCE_NOT_FOUND`；profile非inventoryTracked回400 `SKU_NOT_INVENTORY_TRACKED`，否則不可用回400 `INVENTORY_INPUT_INVALID`（safe field `skuId`），否則serial回400 `SERIAL_TRACKING_UNSUPPORTED`，與Transfer reference validation相同。不另要求Item active：SKU active且Item discontinued如既有inventory profile允許，仍可選。Base UOM缺失／factor不是1沿用400 `UOM_CONVERSION_INVALID`。認證／權限失敗沿用框架401／403及`PERMISSION_STALE`；未預期失敗沿用框架500 safe error，不回SQL、raw profile或內部錯誤細節。
+
+此GET不建立／修改Item、Lot、Balance、Transfer、Operation、Movement、Idempotency或業務Audit；只保留既有框架request logging。不持久cache查找資格，不新增retry、stock鎖或permission cache。create/update/dispatch仍在自己的交易重驗SKU／Lot／Bin／version及過帳規則；舊查找結果或client傳入skuId不能豁免驗證。Lookup成功後改碼／撤權／停用，不自動以其他SKU替換；失敗保留其他Draft輸入並要求重新查找／選料。
 
 ### 5.7 Stocktake APIs
 
@@ -1119,9 +1229,9 @@ Release payload `{warehouseId,expectedOrderVersion,intent:"ALL_OUTSTANDING"}`不
 
 1/100 demand的Item snapshot與ATP聚合查詢數為常數；child claims/completions及Reservation/audit writes按line數增加，release及lot/result traversal每頁100僅保證returned memory pages；完整control scope仍按unique SKUs，既有indexes的scan/lock footprint需CI EXPLAIN及實際並發/300 mappings計時，不聲稱LIMIT100等於bounded DB work。所有新MySQL回歸只在CI執行，本地SQL未授權；Fulfillment全域互鎖/worker delegation/後續formal acceptance仍pending。
 
-### 5.7.2 P2 Backorder worker sibling — DEC-021 owner adoption proposal
+### 5.7.2 P2 Backorder worker sibling — Inventory owner contract
 
-Only `reserveAvailableForSalesBackorderInTransaction(transaction,command)` is added. Trusted server registration binds `sales.backorderAllocate` / NULL user to reserve-only system authority, a fresh authorization callback and current fixed-job lease owner; arbitrary caller serviceName/permissions are not authority. Scheduler stopped/disabled, aborted signal, missing registration or expired/wrong lease fails before any effect and on replay. The lease row is locked before Sales owners and uses DB-clock expiry; the same row lock fences takeover until caller commit. Manual entry and hashes remain unchanged; P3 intake and worker release are not enabled. Add only `SALES_BACKORDER_BATCH_RESERVE` / `SALES_BACKORDER_LINE_RESERVE` to inventoryConstants.INVENTORY_COMMAND_TYPES; preserve every existing manual member and hash. Worker operation types/purpose bind service, actual SALES/SALES_ORDER owner, persistent event/line and original root/child membership. No Inventory schema or role grants are added. Reuse the established sorted claims, ATP locking, exact partial/zero results and replay validation. One FIFO entry per transaction respects the single-SO batch boundary; never claim later Inventory operations after stock locks. Inventory owner/human adoption is required; this text is a pending proposal, not observed implementation or authorization.
+Only `reserveAvailableForSalesBackorderInTransaction(transaction,command)` is added. Trusted server registration binds `sales.backorderAllocate` / NULL user to reserve-only system authority, a fresh authorization callback and current fixed-job lease owner; arbitrary caller serviceName/permissions are not authority. Scheduler stopped/disabled, aborted signal, missing registration or expired/wrong lease fails before any effect and on replay. The lease row is locked before Sales owners and uses DB-clock expiry; the same row lock fences takeover until caller commit. Manual entry and hashes remain unchanged; P3 intake and worker release are not enabled. Add only `SALES_BACKORDER_BATCH_RESERVE` / `SALES_BACKORDER_LINE_RESERVE` to inventoryConstants.INVENTORY_COMMAND_TYPES; preserve every existing manual member and hash. Worker operation types/purpose bind service, actual SALES/SALES_ORDER owner, persistent event/line and original root/child membership. No Inventory schema or role grants are added. Reuse the established sorted claims, ATP locking, exact partial/zero results and replay validation. One FIFO entry per transaction respects the single-SO batch boundary; never claim later Inventory operations after stock locks. Inventory owns this provided reserve-only contract and its operation, Reservation and Audit writes; Sales owns its order, queue and scheduler registration. Inventory does not write Sales records or the lease row. Specification adoption is not evidence of execution, scheduler activation, formal acceptance or release authorization.
 
 ---
 
@@ -1223,6 +1333,7 @@ Sidebar group「庫存管理」只顯示使用者可進入的頁面。無權限�
 ### 7.5 Transfer
 
 - Draft editor一次維護完整lines；每line選SKU／Lot／source Bin／quantity。離開前提示未保存變更。
+- SKU以§5.6.1精確Code查找後顯示名稱、Base UOM及tracking；不call Item管理list，不限已存在Balance的SKU。輸入Code改變即清除該行已選SKU及Lot，未完成查找不可保存該行；僅使用者明確選擇成功結果才綁定skuId。舊／較慢查找response不得覆蓋最新輸入；載入、未找到、資格／撤權／伺服器錯誤清楚顯示，不用numeric-ID輸入或stock-only picker降級。非交易寫入失敗不清除其他未保存lines；儲存失敗／409保留输入並提示重載／重新查找，不自動替換SKU或重送過帳。
 - Dispatch確認頁顯示來源總數、Reservation保障及「整張過帳，不支援部分」警告。
 - Receive要求每line選目的Bin；可選保持原Status或Quarantined，後者必填reason。
 - In Transit detail清楚顯示來源已扣、目的未入及每line in-transit數量；不顯示可修改／取消按鈕。
@@ -1250,6 +1361,35 @@ Sidebar group「庫存管理」只顯示使用者可進入的頁面。無權限�
 - FormPanel error summary取得focus並連到field error；quantity／date欄具有可理解label、hint及錯誤。
 - 鍵盤可完成filter、開啟detail、count、Transfer及高風險確認；不要求drag-and-drop。
 - 任何成功／失敗用`notifySuccess`／`notifyError`；狀態改變後重新fetch server事實，不只在前端改row。
+
+### 7.8.1 TASK033 high-risk operations UI exact contract（HD130 A；candidate）
+
+This increment implements only TASK033/P3-T08 UI over the unchanged §5.4.2/§5.4.3 APIs. No new endpoint, shared auth/UI/http service, permission, dependency, Item contract or DDL. Backend posting/current authorization remains authoritative; client checks are UX guards, not permission or transaction proof. Pack submission remains supported by the existing API; this minimal UI explicitly accepts Base UOM positive safe integers only, displaying the unit and submitting the server-read base uomId. It does not guess a Pack conversion or expose arbitrary numeric UOM IDs.
+
+**Pages and permissions.** New `/inventory/adjustments` metadata requires both `inventory.view` and `inventory.adjust`; use existing automatic page/menu discovery, not a shared menu/router change. Existing `/inventory/movements` remains view-only for reading history. Only its high-risk entry buttons require view+adjust. Neither inventory.operation nor inventory.fefo.override substitutes for adjust. Support single Adjustment IN/OUT, single Status Transfer and whole-group Reversal; no batch, Stocktake/Opening posting, history edits or downstream workflow resurrection. Movements links into the same Adjustments page with only allowlisted action and canonical positive movementId, never password, reason or command payload in URL. Recheck current session and selected target on confirmation; close/clear transient confirmation when actor changes or permission is lost.
+
+**Selection and current guards.** Reuse Inventory-only exact SKU Code lookup, active Warehouse/Bin selectors and Stock/Lot inquiry. IN supports a tracked usable SKU even without existing Balance, all three stock statuses, no-Lot or existing/new Lot according to tracking policy. Show existing Lot immutable dates; a new Lot takes explicit required expiry for batch_expiry and optional manufacture date. Never fill/change an existing Lot date or firstReceiptDate, use a numeric-ID picker, invent a minimum-life override, or treat an incomplete/failed query as expected absence. Paginate the narrow SKU/WH/Bin/status/Lot queries to completion, match full identity (including null versus actual Lot ID), deduplicate and fail closed on ambiguous/missing/inconsistent data. Explicit expectedBalanceVersion is current version or null only after a complete successful target read. Concurrent changes remain server VERSION_CONFLICT, not silently updated versions.
+
+OUT and Status start from a selected actual Stock bucket; get current detail to bind complete dimensions and base UOM. OUT never chooses new target dimensions. Status changes only status at identical WH/Bin/SKU/Lot, requires a distinct one of AVAILABLE/QUARANTINED/DAMAGED, current source version and current destination version or confirmed absence. Show On Hand, Allocated, Bucket Free and Reserved/uncovered summary without treating preview as a submission guarantee. Expired Status/reversal restoration is not a Sale eligibility override; show that warning without adding a new blanket ban.
+
+Reversal loads the immutable full original group through Movement detail and reads each unique affected current Stock bucket by complete original dimensions. Only RECEIPT/ISSUE/BIN_MOVE/STATUS_TRANSFER/ADJUSTMENT BIN groups, with no selected-leg reversal link and 1–200 complete guards, offer the entry. Unsupported or already-reversed groups show read-only explanation, not a misleading action. Missing historical bucket or incomplete current reads prevent confirmation; never reconstruct a bucket, use balanceVersionAfter as current intent, retarget, reconvert historical quantities or update original history. Show all legs, inverse Base quantity/direction, locations/Lot/status, current versus projected quantity and explicitly identify whole-group effects. Sort unique current `{balanceId,expectedVersion}`; no partial reversal. Server derives actual effects and rejects any concurrent/current-rule conflict.
+
+**Form and confirmation.** Adjustment uses the existing seven reason categories; all operations use existing trim/nonempty/no-control/500 UTF-8-byte reasonText, with OTHER's additional10 nonwhitespace Unicode-code-point minimum. No category-direction pairing or new validation semantics. Reject zero/negative/float/unsafe quantity and malformed dates; inline messages and focusable summary retain safe business input on errors. Review shows actual SKU/name/Base UOM, WH/Bin, Lot/expiry, status, quantity/direction, current versions, expected effects and reason. Escape all content using Vue, not raw HTML.
+
+Use an Inventory-owned Quasar confirmation dialog for the three actual high-risk actions and existing layout/form tokens. A native labelled password input is uncontrolled: no v-model/reactive password, Pinia/URL/storage/intent/cache/log, no prop or emitted password. Read it only into the transient submission call, clear DOM immediately after capture and on cancel/hide/unmount/actor change, and release the local reference in finally. Cancel never sends a POST; retries require new entry. This minimizes retention but cannot promise zeroization of immutable JS strings or protection from an active same-origin XSS/browser extension. Existing HttpClient/device signer transmits a one-use request with `signed:true`, supplied stable idempotency key and a new signature/nonce; no shared signing/auth changes.
+
+**Source and outcome recovery (HD130 A).** Create one Inventory UUID intent before first POST: source.module=INVENTORY, documentType=ADJUSTMENT/STATUS_TRANSFER/REVERSAL, independent UUID documentId and eventId, lineId empty; the header key is a separately generated UUID stable across attempts. Freeze the credential-free original business body/current guards/source/key. Disable duplicate submits and mutation of this intent; do not substitute later versions, reason, targets or quantity on retry.
+
+Before POST, save only `{source,action,movementId?}` under a versioned sessionStorage key namespaced to the authenticated actor; action is an allowlisted enum and movementId is a canonical safe positive ID. No header key, reason, password/token/signature/proof, command payload, quantity, versions or free-text identifiers are persisted. Validate the exact stored shape/UUIDs/action/path relationship before using it; never trust stored identity for authentication or turn a stored URL into a signed request. Storage failure blocks submission with a visible error; do not silently overwrite an unresolved recovery record. This is one unresolved intent per actor/tab, not a durable server inbox or cross-tab serialization.
+
+TIMEOUT, NETWORK_ERROR, indeterminate5xx/in-progress outcomes and navigation abort after submission retain UNKNOWN. Query the exact original source through existing operations/by-source first. A returned completed operation resolves from its original server result and matching Movement source/group; a null response or query error is not failed/rolled back, cannot clear UNKNOWN, generate a new event or authorize an automatic POST. Bounded/manual result queries do not alter the operation. Only while the original page still owns the unchanged intent may the user explicitly request a same-intent retry, after a fresh source query and fresh password/device signature/current session check. If source is already completed, return its result and never resend. After an UNKNOWN outcome, a later rejected attempt does not prove the earlier attempt failed; retain the reference until resolution/manual reconciliation.
+
+Initial definitive validation/auth/version/business rejection retains safe form input and explains the current error; no automatic repeat/new source. A fresh edited intent is permitted only after the prior attempt is known rejected without an older unknown attempt, an exact-source lookup shows no completed operation, and the user explicitly reloads/confirms current facts. A recovered completed result removes only that owned source record; deleting/abandoning an unknown record is not a UI workaround. On reload/navigation, original business body/key is gone: restore query-only recovery, no reconstructed retry, no new-effect controls while unresolved. Actor changes clear memory/dialog but never show another actor's recovery record. Keep same-actor unresolved record until resolved; browser/tab closure or storage clearing can lose it, so display/copy the safe source reference and explain manual reconciliation. No TTL expiry is used as permission to repeat an unknown event.
+
+**Results/history/accessibility.** Show original operation/group/result quantities, then re-fetch actual server Stock/Movement facts, never optimistic success. Locate result Movement by complete source (module/type/document/line/event and operation/group), not a loose source search's first row; source query has scalar resultSummary, not the POST nested result shape. Existing selected-leg reversal links remain bidirectional; full group display includes SKU/Lot/status/quantity and each leg navigation. Detail fetch generations/cancellation must prevent a late prior selection's result or error from rendering or launching a reversal for the current selection. Loading/empty/error/permission/UNKNOWN/resolved states have clear text/ARIA, keyboard focus/error summary, dialog focus trap/return and no color-only signal; validate320/768/1024/1440 widths.
+
+**Verification/evidence boundary.** Add native unit/service tests and eight real MySQL26.7.0/API/browser cases, not mocked-success Playwright. Browser uses the real client non-extractable device key, approved synthetic binding, password hash, JWT, limiter and strong-auth handler; response-loss/pre-forward abort are explicit transport fault injection, never fabricated API success. For the new high-risk browser spec, turn trace/video/automatic screenshots off; capture only explicit credential-cleared screens and safe boolean/allowlisted diagnostics, never raw POST body/auth headers/session exports. No raw high-risk trace is a fallback diagnostic. Retain existing Transfer browser8 and ordinary browser regression18; all applicable checks on the new source, zero forbidden skips and unchanged coverage/global34 floors. Developer PASS is not formal TC/UAT, capacity, Phase completion or publication approval. TASK034 and later remain separate.
+
 
 ---
 
@@ -1868,12 +2008,17 @@ Insufficient ATP, stale state, ineligible buckets or unauthorized FEFO deviation
 
 ### Decision
 Same-Warehouse moves are atomic paired movements; cross-Warehouse transfers use whole-document Draft, Dispatch/In-Transit and Receive states.
+Bin Move uses the §5.4.1 1–100-line contract with server-derived dimensions, complete source/destination expected-version guards, shared-Bucket gross-OUT protection and one atomic Operation/group.
+Draft selection uses the minimal Inventory-permission exact-Code read contract in §5.6.1, reusing Item-owned qualification and allowing SKUs without Balance rows.
 
 ### Rationale
 This matches the stated no-partial-transfer policy and provides explicit custody and reconciliation.
+The lookup preserves existing Draft semantics and least privilege without a new catalogue, Item administrative access or duplicated Item rules.
 
 ### Failure behavior
 Any invalid line, lock, quantity or destination rejects the whole transition with no partial movement.
+Bin Move absent/existing destination mismatches, inconsistent shared-Bucket versions, allocation/free-stock violations and any Balance/Movement/Audit/completion failure reject the whole document; retries never duplicate paired legs.
+Lookup failure selects nothing; stale selection never bypasses transaction-time validation or silently substitutes a different SKU.
 
 ## DES-006 — Adjustment, status transfer and reversal
 

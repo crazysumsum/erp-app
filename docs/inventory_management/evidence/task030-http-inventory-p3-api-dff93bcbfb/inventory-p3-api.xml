@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="DEV-029-API-01 Draft full replacement, filters and cancellation leave stock untouched" time="1.143929" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js"/>
+	<testcase name="DEV-029-API-02 whole Dispatch and Receive conserve stock with paired immutable legs" time="0.768044" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js"/>
+	<testcase name="DEV-029-API-03 missing, repeated, extra and partial Receive lines have zero business effects" time="1.029718" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js"/>
+	<testcase name="DEV-029-API-04 path-owned children, versions, same-name Bin ownership and InTransit immutability" time="1.592154" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js"/>
+	<testcase name="DEV-029-API-05 Quarantined receipt requires reason and preserves exact dimensions" time="0.518469" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js"/>
+	<testcase name="DEV-029-API-06 anonymous, read-only and freshly revoked JWT permissions cannot write or replay" time="0.871409" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js"/>
+	<testcase name="DEV-029-API-07 HTTP key and domain event replay retain original receipts after later state" time="0.614842" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js"/>
+	<testcase name="DEV-029-API-08 Audit failure rolls back Dispatch and same-intent retry posts once" time="0.502232" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js"/>
+	<testcase name="DEV-029-LOOKUP-01 Inventory-only lookup enforces framework JWT revocation without Item grants" time="0.996600" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js"/>
+	<testcase name="DEV-029-LOOKUP-02 strict whitelist and no-Balance SKU support Draft but never authorize Dispatch" time="0.385332" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js"/>
+	<testcase name="DEV-029-LOOKUP-03 bounded Code, literal wildcards and collation never become catalogue search" time="1.300277" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js"/>
+	<testcase name="DEV-029-LOOKUP-04 Item profile rejects invalid tracking/status/Base UOM and stale Draft input" time="1.351374" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js"/>
+	<testcase name="DEV-029-LOOKUP-05 two-connection rename/inactivation cannot mix read snapshots or exempt later writes" time="0.348355" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js"/>
+	<testcase name="DEV-030-API-01 whole Bin Move posts paired legs and immutable HTTP/domain replay" time="0.496027" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js" failure="Expected values to be strictly equal:&#10;&#10;86 !== 100&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly equal:&#10;&#10;86 !== 100">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly equal:
+
+86 !== 100
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  86 !== 100
+  
+      at TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js:357:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 86,
+    expected: 100,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="DEV-030-API-02 numeric-only bounded schema rejects all coerced IDs/versions and forged fields before claims" time="2.613655" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js"/>
+	<testcase name="DEV-030-API-03 stale versions, absent/present destinations, ownership and free stock reject whole document" time="0.887160" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js"/>
+	<testcase name="DEV-030-API-04 both permissions, fresh domain reauthorization and revoked JWT protect writes/replays" time="0.725319" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js"/>
+	<testcase name="DEV-030-API-05 real Audit failure rolls back whole Move and same-intent retry posts once" time="0.288152" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js"/>
+	<!-- tests 18 -->
+	<!-- suites 0 -->
+	<!-- pass 17 -->
+	<!-- fail 1 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 16629.134 -->
+</testsuites>

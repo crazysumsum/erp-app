@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="TASK-027 real Draft creation stores canonical SKU/Lot snapshots with zero stock effects" time="0.152708" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-027 complete replacement preserves owned IDs, reorders, removes and adds atomically" time="0.006994" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-027 stale header and retained-line versions have no effects" time="0.008626" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-027 cross-owner child IDs cannot be moved or deleted" time="0.008701" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-027 invalid last-line Bin or SKU/Lot ownership rolls back the whole document" time="0.011034" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-027 Draft cancellation retains lines and records actor/time/reason/Audit" time="0.005891" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-027 read queries expose versions, stable paging and four states without mutations" time="0.017790" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-027 create/update/cancel replay original receipts after later mutations; conflicts reject" time="0.011001" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-027 audit failure rolls back real create, replacement and cancellation transactions" time="0.010210" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-027 same-version competing replacement and cancellation serialize with one winner" time="0.005176" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-027 fresh authorization rejects revoked permissions even on replay" time="0.005011" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-027 validates Active warehouses/Bins and tracking policy; non-Draft edits/cancel reject" time="0.022926" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-027 Draft lifecycle leaves existing OnHand/Allocated/Reserved rows and versions byte-identical" time="0.007749" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-027 complete replacement can change Active warehouse scope with new owned source Bins" time="0.009680" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-028 real whole Dispatch/Receive conserves stock and persists paired immutable legs and actor/version" time="0.003252" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="service.dispatch is not a function">
+		<failure type="testCodeFailure" message="service.dispatch is not a function">
+[Error [ERR_TEST_FAILURE]: service.dispatch is not a function] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: TypeError: service.dispatch is not a function
+      at TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:341:36)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-028 rejects insufficient aggregate quantity across repeated source buckets with whole rollback" time="0.003538" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="service.dispatch is not a function">
+		<failure type="testCodeFailure" message="service.dispatch is not a function">
+[Error [ERR_TEST_FAILURE]: service.dispatch is not a function] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: TypeError: service.dispatch is not a function
+      at file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:377:40
+      at waitForActual (node:assert:601:21)
+      at strict.rejects (node:assert:738:31)
+      at rejectsUnchanged (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:123:16)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:377:3)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-028 Receive rejects missing, duplicate, extra and partial line quantities atomically" time="0.002056" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="service.dispatch is not a function">
+		<failure type="testCodeFailure" message="service.dispatch is not a function">
+[Error [ERR_TEST_FAILURE]: service.dispatch is not a function] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: TypeError: service.dispatch is not a function
+      at TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:382:36)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-028 late-line destination ownership failure rolls back; Quarantined requires reason and keeps Lot" time="0.002299" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="service.dispatch is not a function">
+		<failure type="testCodeFailure" message="service.dispatch is not a function">
+[Error [ERR_TEST_FAILURE]: service.dispatch is not a function] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: TypeError: service.dispatch is not a function
+      at TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:394:36)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-028 each posting event replays its original receipt after Receive; altered/cross-command event conflicts" time="0.002129" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="service.dispatch is not a function">
+		<failure type="testCodeFailure" message="service.dispatch is not a function">
+[Error [ERR_TEST_FAILURE]: service.dispatch is not a function] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: TypeError: service.dispatch is not a function
+      at TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:412:36)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-028 Audit failure rolls back all lines, balances, Movements, In Transit and Operation" time="0.002759" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="failing.dispatch is not a function">
+		<failure type="testCodeFailure" message="failing.dispatch is not a function">
+[Error [ERR_TEST_FAILURE]: failing.dispatch is not a function] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: TypeError: failing.dispatch is not a function
+      at TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:428:32)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-028 Reserved coverage and allocated units cannot be dispatched" time="0.004722" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="service.dispatch is not a function">
+		<failure type="testCodeFailure" message="service.dispatch is not a function">
+[Error [ERR_TEST_FAILURE]: service.dispatch is not a function] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: TypeError: service.dispatch is not a function
+      at file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:444:40
+      at waitForActual (node:assert:601:21)
+      at strict.rejects (node:assert:738:31)
+      at rejectsUnchanged (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:123:16)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:444:3)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-028 stale versions, disabled destination and revoked replay permissions have zero effects" time="0.002876" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="service.dispatch is not a function">
+		<failure type="testCodeFailure" message="service.dispatch is not a function">
+[Error [ERR_TEST_FAILURE]: service.dispatch is not a function] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: TypeError: service.dispatch is not a function
+      at file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:449:40
+      at waitForActual (node:assert:601:21)
+      at strict.rejects (node:assert:738:31)
+      at rejectsUnchanged (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:123:16)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:449:3)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-028 active Stocktake lock rejects posting even on a real transaction" time="0.003009" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="blocked.dispatch is not a function">
+		<failure type="testCodeFailure" message="blocked.dispatch is not a function">
+[Error [ERR_TEST_FAILURE]: blocked.dispatch is not a function] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: TypeError: blocked.dispatch is not a function
+      at file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:465:40
+      at waitForActual (node:assert:601:21)
+      at strict.rejects (node:assert:738:31)
+      at rejectsUnchanged (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:123:16)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:465:3)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-028 concurrent Issue cannot let Dispatch consume allocated or reserved stock" time="0.007536" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="competing.dispatch is not a function">
+		<failure type="testCodeFailure" message="competing.dispatch is not a function">
+[Error [ERR_TEST_FAILURE]: competing.dispatch is not a function] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: TypeError: competing.dispatch is not a function
+      at TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:490:55)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+}
+		</failure>
+	</testcase>
+	<!-- tests 24 -->
+	<!-- suites 0 -->
+	<!-- pass 14 -->
+	<!-- fail 10 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 404.16925 -->
+</testsuites>

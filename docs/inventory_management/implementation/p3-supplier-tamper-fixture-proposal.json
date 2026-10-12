@@ -1,0 +1,31 @@
+{
+  "decision": "HD-139",
+  "status": "PROPOSED_NOT_APPLIED",
+  "head": "209ac8d2cc329b2ba5e4146a202948758b0fe823",
+  "source": "b0a7c4ccdaf54326675fcca2aca1b511de0d632f2dc9455324f3870d291c7766",
+  "current_baselines": {
+    "design": "8c24fa028e39dcb578a5312de15293d61cad9b128bdc22c7cb5148986e211781",
+    "plan": "18bd2eb83087bc9a8499f3ed04de3495746d8529c8a8c6f2001822c18587ca66"
+  },
+  "proposed_baselines": {
+    "design": "b4720b69f67be272b7f605fa8bd83401792629ebd7ae16d1014aac2efcbf58ee",
+    "plan": "151cf5757a465b4df8a64f34e1f876ca6759a3bcc438ec721fb22bf7ab965a44"
+  },
+  "target_main": "0feb9d712072048adb20afc470eb87abc8911475",
+  "candidate_root": "/private/tmp/inventory-p3-hd139-candidate-izps7q0t",
+  "patch_sha256": "800a6102648b628a9acceb839d833302e0a526e962096611d3d31cdbb2063459",
+  "files": [
+    {
+      "path": "docs/inventory_management/00_module_manifest.json",
+      "before_sha256": "0200d18dadbd4a86ff5d64e148c771b7411e3091c5503cf58ec5281f8926b98e",
+      "after_sha256": "d4f291b5ec5f54c7f0477e5d90456dade3bb34a76600f0736cf7e854de92b218"
+    },
+    {
+      "path": "server/test/supplierBankCrypto.test.js",
+      "before_sha256": "4f444cbda5865ee8fd223d8de01434406647e1ff6c16587e101356ea1c94a7c9",
+      "after_sha256": "e4bad6e7ee25e957952601872fc69d2d4c93fc1f3b19bb5eb150608140c3dee5"
+    }
+  ],
+  "root_cause": "Existing fixture fills authTag[0] with zero; if already zero it does not tamper and the correct decrypt succeeds. Same unchanged file on fresh main. Observed real generated zero tag after1000 encryptions; equal-byte mutation succeeds, single-bit XOR is rejected. No keys exported.",
+  "limits": "Only exact Supplier test fixture plus one approval-required scope entry. Supplier production crypto, assertions, randomness, count, skips, thresholds, all suite commands and profile remain unchanged except strengthened tag-difference assertion. Rebind exact existing no-write shared scope to proposed DESIGN/PLAN; fresh main Item documentation only, ItemLookup source unchanged. Existing conditional publication retained, final exact-head approval/fiveCI/generic MERGE_READY separate. No Item TASK043 implementation, P4, formal/UAT, deployment or waiver."
+}

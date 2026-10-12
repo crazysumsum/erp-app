@@ -1,0 +1,78 @@
+{
+  "schema_version": "2.0",
+  "module_id": "inventory-management",
+  "run_id": "20261002T005559-44561cc7cdfe",
+  "suite_id": "inventory-task026-database",
+  "stage": "DEVELOPER",
+  "result": "FAIL",
+  "spec_baseline": "a1bb358b929a2d9a59e4e77d89458943ee8a828cdce8c3c78864da03aa520d19",
+  "source_fingerprint": "fa18b8847765ba8d7a8f536a65b0b11ba2e071b4b9b8835b5e8606f444138e07",
+  "code_commit": "29893c304eac11716b1758d9b5e25bd8f0080a7e",
+  "started_at": "2026-10-02T00:55:59.965541Z",
+  "ended_at": "2026-10-02T00:56:00.801271Z",
+  "environment_id": "inventory-isolated-test",
+  "runtime_instance_id": "erp_inventory_task026_b96a99b7a37e",
+  "data_reference": "Synthetic Inventory fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "node",
+    "--test",
+    "--test-concurrency=1",
+    "--import",
+    "./server/test-support/testEnv.js",
+    "--test-reporter=junit",
+    "--test-reporter-destination=/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/20261002T005559-44561cc7cdfe/inventory-task026-database.xml",
+    "server/test/integration/inventoryTransferMigrations.integration.test.js"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "82d8dd51567c4f6ac449fc0eacac8f99e37914c2b05da2c7d9942e07027fb00c",
+  "exit_code": 1,
+  "timed_out": false,
+  "counts": {
+    "total": 7,
+    "passed": 6,
+    "failed": 1,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/20261002T005559-44561cc7cdfe/stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/20261002T005559-44561cc7cdfe/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/20261002T005559-44561cc7cdfe/inventory-task026-database.xml",
+      "sha256": "5643935c76e1d035f5f9321055d23b9674c8219aed0fd85c71a7e698df3a4d9c",
+      "bytes": 3387
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    },
+    {
+      "argv": [
+        "mysql",
+        "--version"
+      ],
+      "output": "mysql  Ver 26.7.0 for macos15 on arm64 (MySQL Community Server - GPL)\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "Local observation only; external services/config/data and secret redaction completeness require review."
+  ]
+}

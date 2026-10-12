@@ -1,0 +1,211 @@
+{
+  "schema_version": "2.0",
+  "module_id": "inventory-management",
+  "run_id": "task032-nondb-nondb-9899ecf835-inventory-p3-server-coverage",
+  "suite_id": "inventory-p3-server-coverage",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "237d98e617f0a0f4612934118be2d589652b4eb70968291ad511fec6bb758658",
+  "source_fingerprint": "ea5fed017f5eba2fcdfe2adf9bd74521deb6e95d863797892e5a0a9c15c03e43",
+  "code_commit": "869ac07abdd3879254c351d857be911d71e68b6b",
+  "started_at": "2026-10-08T02:44:50.208331+00:00",
+  "ended_at": "2026-10-08T02:45:40.867090+00:00",
+  "environment_id": "inventory-isolated-test",
+  "runtime_instance_id": "erp-inventory-task032-nondb-nondb.obdj9vvp",
+  "data_reference": "Synthetic Inventory fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "node",
+    "--test",
+    "--test-concurrency=1",
+    "--import",
+    "./test-support/testEnv.js",
+    "--experimental-test-coverage",
+    "--test-reporter=junit",
+    "--test-reporter-destination=/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/task032-nondb-nondb-9899ecf835/inventory-p3-server-coverage/inventory-p3-server-coverage.xml",
+    "--test-reporter=lcov",
+    "--test-reporter-destination=/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/task032-nondb-nondb-9899ecf835/inventory-p3-server-coverage/server-coverage.lcov",
+    "test/*.test.js"
+  ],
+  "cwd": "server",
+  "command_contract_sha256": "18b44ef38ceaee6ea85e2c3fd34fb22ab3710cf96ddc10b9964b86fae80e8b4e",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 2195,
+    "passed": 2195,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [
+    {
+      "id": "TC-003",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-004",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-005",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-006",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-007",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-009",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-010",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-011",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-012",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-013",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-014",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-016",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-018",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-019",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-020",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-021",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-022",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-023",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-024",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-026",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-027",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-028",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-032",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-034",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-036",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-037",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-038",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-055",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-056",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-060",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-067",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-068",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-070",
+      "status": "PASS"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "evidence/task032-nondb-nondb-9899ecf835/inventory-p3-server-coverage/inventory-p3-server-coverage.xml",
+      "sha256": "575eefe30d646fa03dac65a344c011193e573685cd4e93ed0ac1672e8fc1435b",
+      "bytes": 506659
+    },
+    {
+      "path": "evidence/task032-nondb-nondb-9899ecf835/inventory-p3-server-coverage/server-coverage.lcov",
+      "sha256": "5315b1af9d7fe0d4cebdcd5d7d911a07c863f3d4011da6b3462ee4ab5d585256",
+      "bytes": 1059052
+    },
+    {
+      "path": "evidence/task032-nondb-nondb-9899ecf835/inventory-p3-server-coverage/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/task032-nondb-nondb-9899ecf835/inventory-p3-server-coverage/stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "HD128 TASK032 approved current-source native developer impact check; no formal/UI/current CI or Sam final source review claim."
+  ]
+}

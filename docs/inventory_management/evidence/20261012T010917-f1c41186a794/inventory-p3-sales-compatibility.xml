@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="TC-031 Inventory worker native partial membership replay and fresh lease remain inside the caller rollback" time="0.598895" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/salesBackorder.integration.test.js"/>
+	<testcase name="TC-027 FIFO allocates oldest partial demand, blocks later due entry behind cooldown and wakes whole scope without priority mutation" time="0.446756" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/salesBackorder.integration.test.js"/>
+	<testcase name="TC-031 zero ATP delays queue metadata only and stale zero-demand queue becomes terminal without Inventory" time="0.398677" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/salesBackorder.integration.test.js"/>
+	<testsuite name="TC-031 native allocation faults and authority changes roll back every Sales/Inventory projection" time="2.372906" disabled="0" errors="0" tests="6" failures="0" skipped="0" timestamp="2026-10-12T01:09:19.412Z" hostname="samMacBook-Pro.local">
+		<testcase name="TC-031 allocation rollback audit" time="0.395647" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/salesBackorder.integration.test.js"/>
+		<testcase name="TC-031 allocation rollback missing" time="0.404168" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/salesBackorder.integration.test.js"/>
+		<testcase name="TC-031 allocation rollback tampered" time="0.396891" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/salesBackorder.integration.test.js"/>
+		<testcase name="TC-031 allocation rollback authority" time="0.398326" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/salesBackorder.integration.test.js"/>
+		<testcase name="TC-031 allocation rollback life" time="0.378310" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/salesBackorder.integration.test.js"/>
+		<testcase name="TC-031 allocation rollback version" time="0.398907" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/salesBackorder.integration.test.js"/>
+	</testsuite>
+	<testcase name="TC-031 native lost COMMIT acknowledgement reconciles the persisted original allocation event once" time="0.389128" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/salesBackorder.integration.test.js"/>
+	<testcase name="TC-031 native proven rollback permits a new allocation event without preserving a fictitious effect" time="0.421239" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/salesBackorder.integration.test.js"/>
+	<testcase name="TC-027 true overlapping allocators fence one FIFO head and cannot over-reserve ATP" time="0.402670" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/salesBackorder.integration.test.js"/>
+	<testcase name="TC-031 concurrent cancellation observes allocation version then safely releases the worker mapping" time="0.381506" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/salesBackorder.integration.test.js"/>
+	<testcase name="TC-031 technical retry persists bounded exponential cooldown across a new allocator and manual wake cannot bypass FIFO" time="0.409790" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/salesBackorder.integration.test.js"/>
+	<testcase name="TC-031 actual registered Scheduler runtime uses SQL cluster admission, overlap and the NULL reserve-only actor" time="0.414635" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/salesBackorder.integration.test.js"/>
+	<testcase name="TC-031 real Scheduler shutdown aborts an in-flight Inventory allocation, preserves FIFO demand and a new registered runtime retries safely" time="0.414641" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/salesBackorder.integration.test.js"/>
+	<testcase name="TC-031 actual manual wake HTTP validates scope/fresh permissions, invokes registered Scheduler and accepts before allocation completion" time="0.479755" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/salesBackorder.integration.test.js"/>
+	<testcase name="TC-031 a terminal Sales owner with positive queued demand fails closed without rewriting business facts" time="0.399370" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/salesBackorder.integration.test.js"/>
+	<testcase name="TC-022 Phase A commits one durable original-user intent/DB-clock lease/history/audit without Inventory effects" time="0.580247" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/salesConfirmation.integration.test.js"/>
+	<testcase name="TC-022 Phase A chooses one intent under concurrent distinct events and blocks second confirmation" time="0.352951" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/salesConfirmation.integration.test.js"/>
+	<testcase name="TC-022 Phase A stale version rolls back the claim and replay rechecks real revoked permissions" time="0.349184" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/salesConfirmation.integration.test.js"/>
+	<testcase name="TC-022 Phase A required audit failure rolls back operation, CONFIRMING and history atomically" time="0.324360" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/salesConfirmation.integration.test.js"/>
+	<testsuite name="TC-021 Phase B confirms full, partial and zero ATP with exact mapping/backorder and stable replay" time="1.011936" disabled="0" errors="0" tests="3" failures="0" skipped="0" timestamp="2026-10-12T01:09:27.265Z" hostname="samMacBook-Pro.local">
+		<testcase name="TC-021 confirmation ATP 10" time="0.340131" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/salesConfirmation.integration.test.js"/>
+		<testcase name="TC-021 confirmation ATP 4" time="0.337781" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/salesConfirmation.integration.test.js"/>
+		<testcase name="TC-021 confirmation ATP 0" time="0.333625" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/salesConfirmation.integration.test.js"/>
+	</testsuite>
+	<testcase name="TC-024 Phase B rejects newly inactive Customer and commits Draft/FAILED without Inventory effects" time="0.321295" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/salesConfirmation.integration.test.js"/>
+	<testcase name="TC-023 multi-line failure rolls back every commitment before retry commits all snapshots" time="0.362174" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/salesConfirmation.integration.test.js"/>
+	<testsuite name="TC-024 credit ON_HOLD fails atomically while a configured limit is advisory" time="0.675443" disabled="0" errors="0" tests="2" failures="0" skipped="0" timestamp="2026-10-12T01:09:28.960Z" hostname="samMacBook-Pro.local">
+		<testcase name="on_hold" time="0.329513" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/salesConfirmation.integration.test.js"/>
+		<testcase name="normal" time="0.345659" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/salesConfirmation.integration.test.js"/>
+	</testsuite>
+	<testsuite name="TC-021 technical audit failure and malformed real provider result roll back all Inventory/Sales effects" time="0.778263" disabled="0" errors="0" tests="2" failures="0" skipped="0" timestamp="2026-10-12T01:09:29.635Z" hostname="samMacBook-Pro.local">
+		<testcase name="audit" time="0.389527" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/salesConfirmation.integration.test.js"/>
+		<testcase name="contract" time="0.388472" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/salesConfirmation.integration.test.js"/>
+	</testsuite>
+	<testsuite name="TC-024 invalid SKU/UOM/Warehouse revalidation safely returns Draft with no Inventory claims" time="1.038019" disabled="0" errors="0" tests="3" failures="0" skipped="0" timestamp="2026-10-12T01:09:30.413Z" hostname="samMacBook-Pro.local">
+		<testcase name="sku" time="0.369011" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/salesConfirmation.integration.test.js"/>
+		<testcase name="uom" time="0.342282" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/salesConfirmation.integration.test.js"/>
+		<testcase name="warehouse" time="0.326419" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/salesConfirmation.integration.test.js"/>
+	</testsuite>
+	<testsuite name="TC-026 confirmation exposes uncertain Phase A COMMIT and reconciles actual commit versus rollback by original event" time="0.668661" disabled="0" errors="0" tests="2" failures="0" skipped="0" timestamp="2026-10-12T01:09:31.452Z" hostname="samMacBook-Pro.local">
+		<testcase name="committed" time="0.336934" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/salesConfirmation.integration.test.js"/>
+		<testcase name="rolled_back" time="0.331460" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/salesConfirmation.integration.test.js"/>
+	</testsuite>
+	<testcase name="TC-022 operation lookup requires current original-user permissions and hides another actor's event" time="0.326194" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/salesConfirmation.integration.test.js"/>
+	<testcase name="TC-022 polling reads committed IN_PROGRESS without waiting for the executing operation lock" time="0.329148" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/salesConfirmation.integration.test.js"/>
+	<testcase name="TC-022 actual Confirm HTTP schema returns terminal detail and rejects type/identity injection" time="0.396180" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/salesConfirmation.integration.test.js"/>
+	<testcase name="TC-022 actual HTTP202 retains event/Retry-After and remains pollable before native Phase B commit" time="0.500504" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/salesConfirmation.integration.test.js"/>
+	<testcase name="Backorder worker requires live fixed registration and DB-clock lease before any claim, including replay" time="0.002459" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventorySalesWorkerContracts.test.js"/>
+	<testcase name="Backorder worker rejects human/arbitrary identity, extra authority and source input" time="0.000256" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventorySalesWorkerContracts.test.js"/>
+	<testcase name="Backorder completed replay uses distinct worker hashes and exact original members without mutable ATP reads" time="0.000522" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventorySalesWorkerContracts.test.js"/>
+	<!-- tests 49 -->
+	<!-- suites 0 -->
+	<!-- pass 49 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 15926.180458 -->
+</testsuites>
