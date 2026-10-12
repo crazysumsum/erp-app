@@ -1,0 +1,213 @@
+{
+  "status": "PROPOSED_NOT_APPLIED",
+  "decision": "HD-131",
+  "selected_direction": "Actual Sam HD130 A / APR175; direction only",
+  "code_commit": "869ac07abdd3879254c351d857be911d71e68b6b",
+  "source_fingerprint": "ea5fed017f5eba2fcdfe2adf9bd74521deb6e95d863797892e5a0a9c15c03e43",
+  "active_baselines": {
+    "design": "6db8d2b49512bda19f6b2b17c54e9882be75795c3c610ca92ca143860edd127d",
+    "plan": "237d98e617f0a0f4612934118be2d589652b4eb70968291ad511fec6bb758658"
+  },
+  "proposed_baselines": {
+    "design": "b1f4b54a95945c84d55e7828620b538830820dd140be2d15ef38b2695fb4abb4",
+    "plan": "997d8de40da4f362ef23d81cd57c2a65b8e096d64109a12ddc4ee738f5ff791a"
+  },
+  "patch": "task033-contract-proposal.patch",
+  "patch_sha256": "2c9309e68661cfa109b79fca0fcd45566ac22b4468cf47030622d9572c110307",
+  "files": [
+    {
+      "path": "docs/inventory_management/00_module_manifest.json",
+      "before_sha256": "89ce000da9c6a80471c8cb1a35c2dab00f0ebf6a82442cb9a8243c705caa6648",
+      "after_sha256": "ae25f1bc982ff429cb6c4eb928c03d7eb94cd0fc810a7dd85b4111992c5a2621"
+    },
+    {
+      "path": "docs/inventory_management/00_project_profile.json",
+      "before_sha256": "7e99eb6e8ba556e4a545770ba1c5bfd91c7ff15ee86b0388211974750fe4e8d6",
+      "after_sha256": "4e7b3dc780c94c13a0357ca06b5dcc2c4890996ae146921e618ed718fc612225"
+    },
+    {
+      "path": "docs/inventory_management/03_design_spec.md",
+      "before_sha256": "0c27331617a676d861dae3a0678f9e317e22a563855bc35e63ce3a81fc7a3ffc",
+      "after_sha256": "02e3274725c599635e9aa77baeb60b590ac61e2df641010ae04e37f7d5eaaf27"
+    },
+    {
+      "path": "docs/inventory_management/05_development_tasks.md",
+      "before_sha256": "136d6448e4c6a25b4b3d55d2ab47e6c87111c6803d0614ce9cfe1c73f75f33df",
+      "after_sha256": "b6f6fd8b54fc160c5f90c072c6a73a67c7024c9e3d27e08dd39015923bc4dc0c"
+    },
+    {
+      "path": "docs/inventory_management/06_technical_test_cases.md",
+      "before_sha256": "443534ebc2601abfec8ed2a7feeeed3b7a5a923ef84735a3829d1e099b31dc3f",
+      "after_sha256": "8ea2922bb4454b0efe4a147a3179c5e35cd8f3a324f78f0e6cab8f09e2255dea"
+    }
+  ],
+  "owned_source_test_paths": [
+    "client/src/services/inventory.js",
+    "client/src/pages/inventory/AdjustmentsPage.vue",
+    "client/src/pages/inventory/MovementsPage.vue",
+    "client/src/components/inventory/AdjustmentForm.vue",
+    "client/src/components/inventory/InventoryHighRiskDialog.vue",
+    "client/test/services/inventory.test.js",
+    "client/test/pages/inventory/inventoryAdjustments.test.js",
+    "client/test/pages/inventory/inventoryMovements.test.js",
+    "client/test/pages/inventory/inventoryInquiries.test.js",
+    "client/e2e/inventory-management/inventory-high-risk.spec.js"
+  ],
+  "new_owned_paths": [
+    "client/src/pages/inventory/AdjustmentsPage.vue",
+    "client/src/components/inventory/AdjustmentForm.vue",
+    "client/src/components/inventory/InventoryHighRiskDialog.vue",
+    "client/test/pages/inventory/inventoryAdjustments.test.js",
+    "client/test/pages/inventory/inventoryMovements.test.js",
+    "client/e2e/inventory-management/inventory-high-risk.spec.js"
+  ],
+  "owned_before_pins": {
+    "client/src/services/inventory.js": "2ec316bcb689cf42984368a10810138f631e0adfc879a369ad50ba30aca69587",
+    "client/src/pages/inventory/AdjustmentsPage.vue": null,
+    "client/src/pages/inventory/MovementsPage.vue": "4a883dfaf4be648f34354dd93c62c7a5a3f4510d38c115ce2b6faa9d464ca7c8",
+    "client/src/components/inventory/AdjustmentForm.vue": null,
+    "client/src/components/inventory/InventoryHighRiskDialog.vue": null,
+    "client/test/services/inventory.test.js": "10615c2697e66d16516d9d93af1a9f792470c96c0c0e0c154421c0decac1b18f",
+    "client/test/pages/inventory/inventoryAdjustments.test.js": null,
+    "client/test/pages/inventory/inventoryMovements.test.js": null,
+    "client/test/pages/inventory/inventoryInquiries.test.js": "8e12de15cba9475008b2bfd663926224d5cf6e23818b76118114d4df89021a4a",
+    "client/e2e/inventory-management/inventory-high-risk.spec.js": null
+  },
+  "shared_scope_rebind_no_write": [
+    "server/src/framework/api/apiDefinitionResolver.js",
+    "server/src/framework/middleware/apiDispatcher.js",
+    "server/src/services/idempotency/IdempotencyService.js",
+    "server/test/apiDefinitionResolver.test.js",
+    "server/test/apiDispatcher.test.js",
+    "server/test/idempotencyService.test.js",
+    "server/src/framework/validation/requestValidator.js",
+    "server/test/requestValidator.test.js",
+    "package-lock.json",
+    "server/database/migrations/0064_create_inventory_transfers.js"
+  ],
+  "unchanged_source_pins": {
+    "server/src/framework/api/apiDefinitionResolver.js": "b525db9717bbde5f9d6df0dd79d080e93cf1bbb7a2afeffd86bd615dcf9cdd39",
+    "server/src/framework/middleware/apiDispatcher.js": "7cf9879996dd7b092c5fa2aa50c4569415ca9b7d42674ee4430e34b2fb3b71b7",
+    "server/src/services/idempotency/IdempotencyService.js": "33abf93472c2d7a4687c1f4d323cd97f0e7d5f4c7875cb7161cfa06b1b0999aa",
+    "server/test/apiDefinitionResolver.test.js": "19cd265670940a5d3b5bfd42ae6062570f48ba3ba4be006d6322428682b84af6",
+    "server/test/apiDispatcher.test.js": "ee0c4580fb0d86625d815bf8916c45c276b7bc2004ddd47f932ea6ec3c49c7fa",
+    "server/test/idempotencyService.test.js": "f1a526a94cbe906349cc692cb321285fca99f3babc10c1ae7875791efb7a7ec9",
+    "server/src/framework/validation/requestValidator.js": "bb91d71879e4e75761f5a0c87e1608e0ee31488ea442878b87f10f331a007189",
+    "server/test/requestValidator.test.js": "47431b8f7e9052acfd2beeba1a78f969b1b0e35f22f390cb063d6d9d880fe80e",
+    "package-lock.json": "0e7cfc03260694b17565e28374ff85ed894b79082286025395779c6f436ecb49",
+    "server/database/migrations/0064_create_inventory_transfers.js": "07653bb700a40b026e8bb46b538e0e31b112d6c20010af45b4cc71a6ff7ac143"
+  },
+  "unchanged": {
+    "01_requirement_spec.md": "5a8c7575722c09972bae1642d6d1bb185ece5505b5d534509010313b99a630b8",
+    "07_uat_test_cases.md": "9f3c2aa2e3347089168c45c81350354b936bd15ecd639937b3fdb1a6a04737a4",
+    "08_traceability.json": "ac82a88c498b6de6f99ad14ca5adccfd7867be5ce2c2f06b26209f7f0e1de222",
+    "08_traceability_matrix.md": "e856d9e8ee4445b77ec18a852c8a2cee2f65f2932fbd3ab6c710356abf87f4f5"
+  },
+  "profile_changes": {
+    "inventory-p3-movements-client": {
+      "before_argv": [
+        "npm",
+        "test",
+        "--workspace",
+        "client",
+        "--",
+        "test/pages/inventory/inventoryMovements.test.js",
+        "--reporter=junit",
+        "--outputFile={run_dir}/inventory-p3-movements-client.xml"
+      ],
+      "after_argv": [
+        "npm",
+        "test",
+        "--workspace",
+        "client",
+        "--",
+        "test/pages/inventory/inventoryMovements.test.js",
+        "--reporter=junit",
+        "--outputFile={run_dir}/inventory-p3-movements-client.xml"
+      ],
+      "before_min_tests": 4,
+      "after_min_tests": 6,
+      "max_skipped": 0
+    },
+    "inventory-p3-adjustments-client": {
+      "before_argv": [
+        "npm",
+        "test",
+        "--workspace",
+        "client",
+        "--",
+        "test/pages/inventory/inventoryAdjustments.test.js",
+        "--reporter=junit",
+        "--outputFile={run_dir}/inventory-p3-adjustments-client.xml"
+      ],
+      "after_argv": [
+        "npm",
+        "test",
+        "--workspace",
+        "client",
+        "--",
+        "test/pages/inventory/inventoryAdjustments.test.js",
+        "--reporter=junit",
+        "--outputFile={run_dir}/inventory-p3-adjustments-client.xml"
+      ],
+      "before_min_tests": 4,
+      "after_min_tests": 12,
+      "max_skipped": 0
+    },
+    "inventory-p3-browser": {
+      "before_argv": [
+        "npx",
+        "--no-install",
+        "playwright",
+        "test",
+        "--config",
+        "client/e2e/inventory-management/playwright.config.js",
+        "inventory-warehouse-operations.spec.js"
+      ],
+      "after_argv": [
+        "npx",
+        "--no-install",
+        "playwright",
+        "test",
+        "--config",
+        "client/e2e/inventory-management/playwright.config.js",
+        "inventory-warehouse-operations.spec.js",
+        "inventory-high-risk.spec.js"
+      ],
+      "before_min_tests": 8,
+      "after_min_tests": 16,
+      "max_skipped": 0
+    }
+  },
+  "native_scenarios": [
+    "UI033-AUTH",
+    "UI033-SELECTORS",
+    "UI033-VALIDATION",
+    "UI033-CURRENT-GUARDS",
+    "UI033-IN-LOT",
+    "UI033-CONFIRM-SECRETS",
+    "UI033-SIGNED-INTENT",
+    "UI033-UNKNOWN-QUERY",
+    "UI033-RETRY",
+    "UI033-REFRESH",
+    "UI033-RECONCILE",
+    "UI033-UI-REGRESSION"
+  ],
+  "validation": {
+    "patch_preflight": "git apply --check PASS (read-only)",
+    "canonical_adoption": "NOT_APPLIED",
+    "profile_manifest_schema": "STRUCTURE_PASS",
+    "current_observed_state_trace_boundary": "LOCAL_CHECKS_PASS",
+    "future_candidate_approval": "PENDING",
+    "new_test_execution": "NOT_RUN",
+    "new_source_acceptance": "NOT_APPROVED"
+  },
+  "evidence_history_count": 253,
+  "limitations": [
+    "Base UOM input only in UI; existing Pack API remains unchanged",
+    "Recovery is actor/tab session only, not durable server or cross-tab serialization",
+    "Unknown after refresh is query-only/manual; no guessed retry",
+    "Generic merge gate/current CI/main freshness not satisfied; no publication approval",
+    "Historical developer reports are not new UI proof; formal/UAT/capacity not executed"
+  ]
+}

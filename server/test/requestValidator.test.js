@@ -31,6 +31,53 @@ const itemSchema = {
   }
 };
 
+test("route compile opt-out rejects coerced types without changing the shared validator", () => {
+  const schema = { body: {
+    type: "object", additionalProperties: false, required: ["quantity", "name"],
+    properties: {
+      quantity: { type: "integer", minimum: 1 },
+      name: { type: "string", trim: true, pattern: "^ok$" },
+      page: { type: "integer", default: 1 }
+    }
+  } };
+  const validator = new RequestValidator();
+  const strict = validator.compile(schema, "strict", { coerceTypes: false });
+  const legacy = validator.compile(schema, "legacy");
+  const request = (quantity, extra = {}) => ({ body: { quantity, name: " ok ", ...extra } });
+  for (const quantity of ["1", true, false]) {
+    assert.throws(() => strict(request(quantity)), RequestValidationError);
+  }
+  const valid = request(2);
+  strict(valid);
+  assert.deepEqual(valid.input.body, { quantity: 2, name: "ok", page: 1 });
+  for (const validate of [strict, legacy]) {
+    assert.throws(() => validate(request(2, { unknown: 1 })), RequestValidationError);
+  }
+  const coerced = request("2");
+  legacy(coerced);
+  assert.equal(coerced.input.body.quantity, 2);
+  assert.equal(validator.config.coerceTypes, true);
+  for (const options of [null, true, [], {}, { coerceTypes: true }, { coerceTypes: "false" }, { coerceTypes: false, enabled: true }]) {
+    assert.throws(() => validator.compile(schema, "invalid", options), /coerceTypes/);
+  }
+});
+
+test("route compile opt-out preserves global validation and error policies", () => {
+  const schema = { body: { type: "object", required: ["a", "b"], additionalProperties: false,
+    properties: { a: { type: "integer" }, b: { type: "integer" } } } };
+  const validator = new RequestValidator({ config: { ...requestConfig.validation.input, maxErrors: 1, includeErrorDetailsInResponse: false } });
+  const strict = validator.compile(schema, "strict", { coerceTypes: false });
+  assert.throws(() => strict({ body: { a: "1", b: true } }), (error) => {
+    assert.equal(error.details.length, 1);
+    assert.equal(error.publicDetails, undefined);
+    return error instanceof RequestValidationError;
+  });
+  const disabled = new RequestValidator({ config: { ...validator.config, enabled: false } });
+  const req = { body: { a: "1" } };
+  disabled.compile(schema, "disabled", { coerceTypes: false })(req);
+  assert.deepEqual(req.input.body, { a: "1" });
+});
+
 async function startServer(t, app) {
   const server = createServer(app);
   await new Promise((resolve, reject) => {

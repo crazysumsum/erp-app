@@ -1,0 +1,127 @@
+--- a/docs/inventory_management/00_module_manifest.json
++++ b/docs/inventory_management/00_module_manifest.json
+@@ -90,9 +90,9 @@
+     "provided": [
+       {
+         "id": "inventory-domain-contract",
+-        "version": "planning-v13; TASK031 final-guard Operation actor and owned-new-Lot creator binding; prior public contracts and other writers unchanged",
++        "version": "planning-v14; TASK032 current-version full-group strong-auth Reversal; prior routes and other writers unchanged",
+         "source": "docs/inventory_management/03_design_spec.md",
+-        "sha256": "6760eb6d7975b15c90b9abc653414d51020c529ef2984b32158dc598456bbdd5",
++        "sha256": "0c27331617a676d861dae3a0678f9e317e22a563855bc35e63ce3a81fc7a3ffc",
+         "consumers": [
+           "purchasing-receiving",
+           "sales-order",
+--- a/docs/inventory_management/03_design_spec.md
++++ b/docs/inventory_management/03_design_spec.md
+@@ -918,7 +918,7 @@
+ | `POST /api/v1/inventory/bin-moves` | `postBinMoveHandler.js` | jwt／view＋operation | 同Warehouse、同SKU／Lot／Status；成對Movement。 |
+ | `POST /api/v1/inventory/status-transfers` | `postStatusTransferHandler.js` | jwt-device-password／view＋`inventory.adjust` | 同bucket維度轉Status；reason＋versions。 |
+ | `POST /api/v1/inventory/adjustments` | `postAdjustmentHandler.js` | jwt-device-password／view＋adjust | 正／負、reason category/text、source、version。 |
+-| `POST /api/v1/inventory/movements/:id/reverse` | `reverseMovementHandler.js` | jwt-device-password／view＋adjust | 完整反向原movement group；reason＋source；重驗現況。 |
++| `POST /api/v1/inventory/movements/:id/reverse` | `postingHandlers.js` / `ReverseInventoryMovementHandler` | jwt-device-password／view＋adjust | §5.4.3完整反向原group；reason＋source＋完整current-version guards；重驗現況。 |
+ 
+ Inventory UI不提供沒有來源的Receipt／Issue表單；上述HTTP endpoints供已取得Inventory operation權限的倉務整合／營運入口。正式Receiving／Fulfillment頁應由其handler驗證自己的權限後直接呼叫§5.11 internal service，令下游角色不必取得Inventory管理頁權限。
+ 
+@@ -1028,6 +1028,30 @@
+ 
+ 鎖語意依[MySQL26.7 locking reads](https://dev.mysql.com/doc/refman/26.7/en/innodb-locking-reads.html)及[foreign-key locks](https://dev.mysql.com/doc/refman/26.7/en/innodb-locks-set.html)：current locking reads與FK隱含鎖皆須納入上述順序；這只支持設計推論，不替代已批准26.7.0環境上的實測。MySQL DATE仍是calendar date，owned SQL讀取沿用既有Transfer的DATE_FORMAT pattern以保留YYYY-MM-DD／NULL，不能以全域或fixture-only dateStrings、JS時區切日或弱化日期驗證掩蓋DEF010。
+ 
++### 5.4.3 TASK032 Generic Reversal精確合約
++
++本節延續§3.8，不提供partial reversal、retarget或Fulfillment Reservation restoration。HD127 A選定current-version方向；以下精確契約須由Sam審閱批准後採用，不能把方向選擇視為未見契約或程式的批准。
++
++**入口與input：** 固定`POST /api/v1/inventory/movements/:id/reverse`，`jwt-device-password`且同時具備`inventory.view`＋`inventory.adjust`；只新增Inventory-owned第三個high-risk consumer。`inputCoercion:false`；query必須empty，params只接受id原始canonical decimal字串`^[1-9][0-9]*$`，再明確檢查正safe integer，不能靠global coercion。body只接受既有source、auth-only password、reasonText及`expectedBalances`；任何額外quantity/uom/direction/status/target/group/reauth-proof欄位均拒絕。reasonText沿用trim後nonempty、最多500 UTF8 bytes、禁止Cc/DEL；不新增reasonCategory或理由allowlist。
++
++`expectedBalances`必填1～200項，每項僅`{balanceId,expectedVersion}`，balanceId為正numeric safe integer，expectedVersion為numeric integer1～4294967295；不接受字串、bool、null、重複balanceId。normalize後按balanceId排序，對應完整原group實際涉及的**當下既存**Balance ID集合，missing/extra guard均拒絕。Movement歷史只有bucket維度及balance_version_after，不能把後者當成current version或暗中替client更新version。缺失歷史bucket fail closed，不upsert重建。新posting持鎖核對current version，stale回409 VERSION_CONFLICT且整組零效果；較舊group在後續事件後仍可反向，只要caller確認最新版本且全部current rules成立。
++
++**可信意圖與雙層冪等：** 固定purpose `movement.reverse`、command `MOVEMENT_REVERSE`，在現有process-opaque trusted context中綁actor/device/public-key claims、route、path movementId、source和credential-free normalized intent；不能冒充Adjustment/Status proof，不能接受serialized/copied context。selected movementId也是意圖的一部分，同group另一anchor不暗中視為同source payload。password只交既有auth；不得進business command/hash/Audit/result/log/cache fingerprint。此route選用既有idempotencyPreparation、7-day TTL604800000；排序後guards集合相同即同意圖。HTTP cache wait及domain unique-claim wait後，均須fresh current security guard及original signature/JWT/auth_time/token-version/deadline/abort檢查，不能renew proof。completed replay回原immutable scalar result，不重新比較已變動的stock/Lot/Item/version，不再次產生stock/Movement/success Audit；payload改變維持既有HTTP/source conflict。現有兩條high-risk routes、ordinary defaults及shared framework/store不改。
++
++**Group完整性與一次性：** id只是原immutable group定位點；server導出全部1～200 legs，確認同group、同original Operation、同allowlisted movement type、BIN location及completed MOVEMENT_GROUP result。原Operation summary須完整且與group一致：Receipt唯一movementId共1 leg；Adjustment lineCount=1；Status lineCount=2；Issue rowCount；Bin Move lineCount×2，並驗證各paired legs相同SKU/Lot/quantity及相應位置/Status守恆。缺資料、混合/損坏/不完整group拒絕，不能用client提供的數量補齊。Transfer、Stocktake、Opening、IN_TRANSIT、REVERSAL及其他type仍409 MOVEMENT_TYPE_NOT_REVERSIBLE；任一leg已有reversal link回409 MOVEMENT_ALREADY_REVERSED。只建立新REVERSAL group，每leg唯一reversal_of_movement_id，原Movement/Operation及terminal workflow不更新。
++
++**交易與鎖序：** 初始非locking discovery只用來選擇scope，之後既有Posting owner的單一transaction按§2.5 claim新Operation（暫時NULL actor）→sorted Warehouse→Warehouse/SKU controls→Bin/counting locks→sorted既存Lot→sorted全Bucket；再對原completed Operation/group及reversal links作current locking read並重驗discovery/guards。不能先锁原Movement再等待stock，也不能用舊RR snapshot決定once-only。使用TASK031已驗證的ordered current security guard（users→roles→permissions→devices→token）於所有blocking business reads後重驗，精確conditional bind本次未完成NULL-actor Operation且affectedRows=1，再重查original proof/abort。此流程不建Lot，不改Lot creator，也不引入public defer flag或generic binder。然後stock、全部新legs、required success Audit及Operation completion原子提交；任何失敗整組rollback，包括placeholder actor/Operation。最終成功actor必須是真實trusted actor。
++
++Warehouse/SKU control與full-bucket locks序列化同group不同source並發；existing unique reversal_of_movement_id是第二層保障，僅精確該constraint duplicate可映射already reversed，不吞其他DB错误。deadlock/lock timeout沿用409 CONCURRENT_OPERATION與whole rollback，不新增自動retry或改FK。MySQL locking reads在等待後讀當下committed rows，不以ordinary snapshot代替。
++
++**反向效果與current invariants：** 不重新套用當下Pack UOM factor，直接逐leg反向原positive Base quantity及原WH/Bin/SKU/Lot/Status；Item Base UOM已按既有contract於交易後禁止變更，current tracked/usable/nonserial profile仍須核對。所有Warehouse/Bin active、Counting exclusion、Lot/tracking identity、safe quantity/version上限仍生效。以original movement id descending作deterministic undo order；先對每Bucket聚合全部OUT，要求不超過其當下free=onHand−allocated，不能用同group預期IN替OUT融資。預先模擬逐legbalance/version chain，overflow或任何中途不變量失敗拒絕。按完整WH/SKU現況及最終效果重驗eligible coverage，不得增加uncovered Reserved；naturally expired既有uncovered不變成全覆蓋新門檻。Reserved/Allocation數量與狀態完全不改，Reverse Issue不復活Consumed workflow。
++
++**本期效期提案（須明確Sam批准）：** Reversal IN是把既有原Lot回到原位置/Status，不是新Receipt或positive Adjustment。因此過期或低於minimum receipt life的原Lot可回原Bucket，但始終按當下日期/Profile計算Sale eligibility，expired AVAILABLE不計入eligible，不能覆蓋需要可售庫存的Reserved；不允許override、新Lot、改Expiry/Manufacture/first_receipt_date或retarget。原Lot dates不變；no-Lot Bucket依既有0→positive設當下local date、positive→positive保留、歸0清NULL的FIFO政策，使用owned SQL DATE_FORMAT，不改global DB date parsing。Receipt／positive Adjustment的expiry/minlife硬拒絕及Status Transfer既有政策不變。若業務要求連歷史回庫都拒絕，須先修訂本節並重審，不能在實作中默默選擇。
++
++**結果／錯誤／Audit：** 成功200回既有scalar shape `{status:"POSTED",operationId,movementGroupId,lineCount}`，lineCount為新反向legs數；不新增Operation summary欄位或查詢endpoint，detail沿用Movement inquiry及reversal links。既有auth/input錯誤不改；non-reversible/already-reversed/current-rule failure使用現有MOVEMENT_TYPE_NOT_REVERSIBLE／MOVEMENT_ALREADY_REVERSED／REVERSAL_NOT_ALLOWED，stale VERSION_CONFLICT及concurrency/source conflicts不混淆。成功使用已存在`movement.reverse` Audit action，可信actor/device/signedAt、source/business references及每leg前後狀態由server提供，required Audit與posting同tx；失敗可用既有安全獨立failure Audit，但不得留下success artifacts或秘密。
++
++**交付限制：** 最小新增owned `inventoryReversalPosting.js`供既有Posting owner使用，handler/schema/context僅增加固定第三consumer；不改shared auth/framework/admin/Item/downstream、Operation/Audit service契約、migration/FK、lock runner/profile/floors或依賴。TASK033 UI、TASK034收斂、formal/UAT及capacity仍獨立，TASK032 developer checks不是這些階段的驗收。
++
+ ### 5.5 Reservation／Allocation APIs
+ 
+ | Method／Path | Auth／Permission | 行為 |
+--- a/docs/inventory_management/05_development_tasks.md
++++ b/docs/inventory_management/05_development_tasks.md
+@@ -908,9 +908,17 @@
+ 
+ **Verification（納入 P3-GATE）：** allowlist、完整 group、already reversed、concurrent reversal及 current-rule failure tests。
+ 
++**TASK032 exact approach：** 採§5.4.3 current-version完整expectedBalances、固定movement.reverse強認證context、immutable原group/current locking once-only、TASK031 final guard及NULL-actor exact binding。只新增Inventory-owned第三consumer與Reversal helper；不接受partial/retarget、不修改workflow、不計算新UOM。效期回原Bucket但不增加Sale eligibility的條款須另獲Sam精確審閱；HD127 A只批准版本方向及candidate準備。
++
++**Minimum increments：** (1) strict route/schema/normalizer/proof及credential-free HTTP/domain replay red→green；(2) 同Posting owner的full-group locks/current-version/invariants/atomic inverse legs與Audit；(3) TC007全部16 REV032 named scenarios及TC004並發、fresh native DB/API和既有P3/security/Receipt/Issue/BinMove/Transfer/Adjustment/Status regression。每增量只做批准路徑，不預建TASK033 UI或generic movement engine。
++
++**Scope／unchanged rebind：** owned source僅InventoryPostingService.js、inventoryHighRiskContext.js、inventoryReversalPosting.js（新）、postingHandlers.js、inventorySchemas.js；tests僅inventoryPostingService／inventoryPostingHandlers／inventoryEndpointSecurity、fakeInventoryDatabase.js、inventoryMovement.integration.test.js、inventoryWarehouseOperationsApi.integration.test.js。既有八shared framework/test paths、root package-lock.json及0064 synthetic migration-use在新PLAN下僅rebind且byte-identical/no-write；不新增DDL、permissions、dependencies、profile/parser/command或floor更動。
++
++**Developer gate：** 必須有全部16 REV032 scenarios的current-source/PLAN實際named runner evidence，strict zero-skip；既有17 ADJ031/security/ordinary/Receipt/Issue/BinMove/Transfer契約及full server/Inventory/client/lint/build/global92/83/90＋全部34 per-file floors均維持。MySQL26.7.0 owned synthetic migrations、Movement及real API concurrent barriers／zero-effects snapshots與精確清理必做；既有real Transfer Playwright僅P3 regression，不是TASK033 UI完成。舊205 refs／TASK03119 PASS不可挪用為新Reversal證據。最後實作必須有實際Sam獨立source review；formalTC/UAT NOT_RUN、capacity4 NOT_EXECUTED不獲豁免。
++
+ **Dependencies：** P3-T05～T06。
+ 
+-**Files likely touched：** `InventoryPostingService.js`、`movementHandlers.js`、posting service/integration tests。
++**Files likely touched：** `InventoryPostingService.js`、`inventoryReversalPosting.js`、`inventoryHighRiskContext.js`、`postingHandlers.js`、`inventorySchemas.js`及上述owned posting/security/integration tests。
+ 
+ **Estimated scope：** M。
+ 
+@@ -2217,7 +2225,7 @@
+ 實作完整 Movement group反向，僅允許 Receipt、Issue、Bin Move、Status Transfer及 Adjustment；Transfer、Stocktake、Opening、In Transit與 Reversal本身走關聯 Adjustment/Status流程
+ 
+ ### Approach
+-Implement only the scope and dependencies of legacy task `P3-T07` inside `PHASE-004` using the design decisions mapped in `08_traceability.json`.
++Implement only legacy `P3-T07` inside `PHASE-004` using §5.4.3 / HD127 A plus Sam's exact candidate approval. Use the three increments and precise source/test/no-write rebind scope above; current-version guards, full-group undo, current strong-auth/replay/final guard, atomic once-only and current invariants are mandatory. The proposed historical-Lot restoration policy needs explicit approval; direction A alone is not authority to adopt or implement it.
+ 
+ ### Acceptance criteria
+ - 一個原 group只能完整 reverse一次，每個 leg以 unique `reversal_of_movement_id`連結，原 row不修改。
+@@ -2225,7 +2233,7 @@
+ - 不支援 group回固定 `MOVEMENT_TYPE_NOT_REVERSIBLE`；任何當下 invariant失敗整組零效果。
+ 
+ ### Definition of Done
+-The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
++Every16 REV032 named developer scenarios has current-source/approved-PLAN observed evidence with zero skip, required native regression/floors/real MySQL/API checks and actual independent Sam implementation review. TASK033/034, blanket formal TC007/UAT, capacity and full-P3 completion remain unclaimed. CI/PR/main integration requires separate publication authority and refreshed target/head gates.
+ 
+ ## TASK-033 — 完成 Adjustments／Movements 操作 UI (legacy P3-T08)
+ 
+--- a/docs/inventory_management/06_technical_test_cases.md
++++ b/docs/inventory_management/06_technical_test_cases.md
+@@ -170,6 +170,29 @@
+ | ADJ031-ROLLBACK | Inject Operation/Lot/Balance/actorbindings/each pairedleg/Audit/completion failure or deadline/abort; deadlock/DB-unavailable | All business changes rollback includingtemporary actor metadata/newLot/zerorows/Operation; safe独立failureAudit allowed; successAudit required; secrets absent | Native snapshots/checkpoints and safe errors; prove each intendedinjector was reached (earlierDATE validation failure is notAudit rollback proof) | NOT_RUN |
+ | ADJ031-COMPATIBILITY | Omittedcapability route, originalstrongauth/nonce/request rules, Receipt/Issue/BinMove/Transfer plus ownedAudit fields | Onlytwo newroutes opted; oldproduct contracts unchanged; fullnative gates/floors/zero-skip; UI unchanged | Fullserver/Inventory/client/lint/build/coverage and existingactualTransfer browser | NOT_RUN |
+ 
++#### TASK032 named developer scenarios — planned, not executed
++
++These16 scenarios cover §5.4.3 only after actual Sam exact-candidate approval. HD127 A selects current versions, not unseen source/expiry/proof contracts. All16 must appear as actual named cases in current-source/approved-PLAN native reports; aggregate old counts/TASK031 evidence do not satisfy them. TC004 provides concurrent-operation linkage; formal TC007 and UAT remain NOT_RUN. Existing17 ADJ031 rows/history are preserved, not silently relabelled as new-baseline PASS.
++
++| Case | Synthetic setup/action | Required observed result | Evidence | Status |
++| --- | --- | --- | --- | --- |
++| REV032-HTTP-BOUNDARY | Third fixed strong-auth route; plainJWT/bad password/permission/device/nonce; cross-purpose copied/JSON context; auth/global validation modes | Only view+adjust and trusted movement.reverse route/path/actor/device/source/intent allowed; auth→authz→strict preparation→claim; existing routes/defaults unchanged; no credential leakage | Handler/security unit and actual API/framework regression | NOT_RUN |
++| REV032-INPUT | Canonical/noncanonical/unsafe path id; unexpected query/body fields; missing/null/string/unsafe versions and IDs; duplicate/extra/missing guards; reasons500/501bytes/Cc/DEL | Reject before effects; body no coercion, params explicitly safe-parsed; exact1..200 unique sorted guards; full-group identity only, no caller quantity/UOM/target | Schema/unit and real API DB zero-effect snapshots | NOT_RUN |
++| REV032-GROUP | Allfive allowed types; Transfer/Stocktake/Opening/InTransit/Reversal; mixed/incomplete group/op summary/paired legs and >200 legs | Full server-derived immutable group only, count/identity/conservation checked; fixed nonreversible vs malformed rejection; original rows never updated/deleted | Real original Operation/Movement fixtures and native ledgers | NOT_RUN |
++| REV032-VERSIONS | Historicalversion5,current9; submit9 vs5; missing historical Bucket; multiple legs shareBucket; overflow | Current9 can succeed only if invariants pass; stale5 whole409; no bucket recreation; guard snapshot once and exact perleg version chain | Unit/native MySQL current reads and snapshots | NOT_RUN |
++| REV032-RECEIPT | Reverse original Receipt after later legitimate events; allocated/free/currentReserved constraint | Complete inverseOUT only if current free/eligible coverage safe; no Receiving workflow/history mutation or zero-row artifacts on reject | Movement DB and real API | NOT_RUN |
++| REV032-ISSUE | One/multiline originalIssue inclConsumed Reservation/Allocation; changed currentPack factor | Original Base quantities IN to same buckets, no re-conversion; workflow counters/states immutable; onlynewREVERSAL/Operation/Audit/stock effects | Native DB original/new links, workflow snapshots and Item compatibility | NOT_RUN |
++| REV032-ADJUSTMENT | Reverse IN/OUT Adjustment at allthree Statuses | Exact opposite original Base legs, no newreasonCategory policy, current free/tracking/active/Counting rules, original values unchanged | Unit/Movement/API plus all17 ADJ031 regression | NOT_RUN |
++| REV032-PAIRS | One/multiline BinMove and allsix Status directions inclsharedBucket; allocated OUT and expected IN funding | Entirepaired group undo in deterministic reverseID order; OUT aggregate limited by original currentfree, notfutureIN; conservation, exact links/version chains | Real DB and failure snapshots | NOT_RUN |
++| REV032-RESERVED | Current Reserved/eligible/allocated, naturallyexpired prioruncovered; competing Issue/Dispatch/Reserve | SameWH/SKU Control serializes; no increaseduncovered, no Reserved/Allocation writes; olduncovered notblanketfullcoverage gate | TC004 deterministic concurrent MySQL barriers/invariants | NOT_RUN |
++| REV032-LOT-LIFE-FIFO | Existing expired/today/low-life Lot, midnight wait; active/tracking/serial; noLot0/positive/zero | Approved restoration only originalBucket, nevernewLot/retarget/date change; current Sale eligibility excludesexpired and respectsReserved; FIFO/DATE policy exact; Receipt/positiveAdjustment expiry ban unchanged | Time/unit/SQL DATE_FORMAT and native DB/API | NOT_RUN |
++| REV032-ONCE | Same originalgroup, different source/key/anchor concurrent; partialpriorlinks; exactuniqueconstraint failure | Onecomplete winner; loser alreadyreversed or currentguard conflict, no partialgroup; completedsource replay immutable; unrelatedduplicates notmisclassified | Native DB current locking/unique barriers and group reconciliation | NOT_RUN |
++| REV032-HTTP-REPLAY | Same normalizedguards permuted; freshpassword/signature; changedversion/path/source intent; revoke/deadline duringcache wait | Original200/no extra effects after freshguard; changedintent conflict; nonce protections; callback once, no key overwrite/deletion on denied replay; 7day TTL unchanged | Real API/cache fingerprints/native DB and existing HTTP regression | NOT_RUN |
++| REV032-DOMAIN-REPLAY | Samebusinesssource/differentHTTP key; wait originalclaim; change currentstock/Item/Lot after success; revoke/deadline atwait | Fresh currentauth then original4scalar immutable result without stockrecomputation; source conflict on intentchange; no duplicate Audit/mutation/attribution change | MySQL/API Operation summary and originalresult assertions | NOT_RUN |
++| REV032-REVOKE-ORDER | OriginalRRsnapshot; gate Warehouse/Lot/Bucket/claim separately; actualadmin token-first/actor/role/device revocation writerCOMMIT before release; guardfirstcase | NoearlyusersFK from ownOperation; afterwait currentguard rejects committedrevoke; guardfirstwriter waits; exact actor binding, no proofrenewal, boundedrollback | Real0056/0059 MySQL deterministic barriers/writercompletion and API | NOT_RUN |
++| REV032-ROLLBACK | Bindrow0/error, eachBalance/leg/link/requiredAudit/completion injector; abort/deadline/deadlock/DBunavailable | Intendedinjector reached; wholezeroeffects inclplaceholder/Operation/links/stock/Audit; originalhistory/workflows immutable; safe independentfailureAudit only | Unitred→green and realDB before-after snapshots, safeerror/secret checks | NOT_RUN |
++| REV032-COMPATIBILITY | Existingordinary/auth/preparation routes, Receipt/Issue/BinMove/Transfer/Adjustment/Status, audit/pins/floors | No shared/framework/DDL/dependency/Item changes; fullnative global/floor checks unchanged, focusedfunctional0skip; existing Transfer realbrowser regression; noTASK033 claim | Fullserver/Inventory/client/lint/build/34floors/DB/API/Playwright native reports | NOT_RUN |
++
+ ### Expected result
+ Only authorized new compensating movements using the fixed reason allowlist occur; unknown categories and insufficient `OTHER` detail fail closed, totals and reservations remain valid, and immutable history cannot be changed.
+ 

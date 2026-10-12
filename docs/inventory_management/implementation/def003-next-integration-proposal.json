@@ -1,0 +1,166 @@
+{
+  "kind": "UNAPPLIED_NEXT_LOCAL_REFRESH_PROPOSAL",
+  "decision": "HD-090",
+  "approved_fix_head": "c9eba05e49917b8f439c3a71a6611b8947ef1209",
+  "approved_fix_source": "1f55eadfeece52f6716b13a901d9a2d90c5cb885572fc0681ef9c97c6e1736a0",
+  "inventory_head": "169659ba229e0ad49920e9f8916eb3c9a2ba03bb",
+  "inventory_source": "5a514df1ffec98155e7f2ebdf0dcc4b5e2ecf8f6dcc51cb05f3915e2626395b6",
+  "design": "53fe56c4bc2f45fb053036de71801ed6d0e8507887cd95b35e4645b9e87adfce",
+  "plan": "22064427195aa17bc01ae3abd171220feb1b743af23bc7ffbccf6b9c313358ab",
+  "observed_upstream_main": "bbb2383ab3be94e79cade34fc584f8e538ddcfaf",
+  "observed_at": "2026-10-05T01:21:26.231199+00:00",
+  "separate_branch_divergence": "4\t63",
+  "exact_reviewed_fix_series_patch": "implementation/def003-reviewed-fix-series.patch",
+  "patch_sha256": "34fae23c23e8cafa381b7a69734a71380e94723b4f6f97c1ec41cd45d1acf0d0",
+  "paths": [
+    {
+      "path": "server/test/authHandlers.test.js",
+      "upstream_changed": false,
+      "base_sha256": "7f0dfb9503820f5d004213adb48bb91ee467feeaaaf801d59f295e852d427f57",
+      "upstream_sha256": "7f0dfb9503820f5d004213adb48bb91ee467feeaaaf801d59f295e852d427f57",
+      "fix_sha256": "063af15df8be2a3725fa975e34e393dcc783baf8ce5bed87a65050be0016d17d"
+    },
+    {
+      "path": "server/test/customerLookupService.test.js",
+      "upstream_changed": true,
+      "base_sha256": "00a2275e6462832f467ac7689cf469fb9a35ed82417d60075c18d4d161d3c33d",
+      "upstream_sha256": "1b7f3aceb47b8a17115b6205a95caa33c3d29a748a27ff5b8beb9b13531e745e",
+      "fix_sha256": "8fa5d8743ef0349b42f778836523a4db2d65b44fb30f86c193e63d9fad3ef6e8"
+    },
+    {
+      "path": "server/test/integration/customerLookup.integration.test.js",
+      "upstream_changed": false,
+      "base_sha256": "4409861d32e0834f096815fb58a9284a29be2874b5f731df7287d7f3c0a277bf",
+      "upstream_sha256": "4409861d32e0834f096815fb58a9284a29be2874b5f731df7287d7f3c0a277bf",
+      "fix_sha256": "37e068d2573a9971593f8b81ecf9031d0fe5cf54b93851bb6aebe4ee4fd2d55e"
+    },
+    {
+      "path": "server/test/itemAuditLogService.test.js",
+      "upstream_changed": false,
+      "base_sha256": "923a9837c702f15155472b35e55ba14b1c66e3dfbc0678c15e58cbb701579d64",
+      "upstream_sha256": "923a9837c702f15155472b35e55ba14b1c66e3dfbc0678c15e58cbb701579d64",
+      "fix_sha256": "147cf2528fb1e37300334d9b02891e9dc24cf79d3160f7a75ec8af08ecaa9b4a"
+    },
+    {
+      "path": "server/test/jwtDeviceAuthStrategy.test.js",
+      "upstream_changed": false,
+      "base_sha256": "1f6f573918757f9448fc9b88bf7a1334d62aee14313a7a047bdd2a5695de3e4c",
+      "upstream_sha256": "1f6f573918757f9448fc9b88bf7a1334d62aee14313a7a047bdd2a5695de3e4c",
+      "fix_sha256": "d16a8409f7b419029d6e1482972bf7097a2cb5961a0aaa393d269c2d16bcc7af"
+    },
+    {
+      "path": "server/test/jwtDevicePasswordAuthStrategy.test.js",
+      "upstream_changed": false,
+      "base_sha256": "609eae8db42305c2a160f7e7e56fbb7bf5fa37efce177558534856fd4adb30a2",
+      "upstream_sha256": "609eae8db42305c2a160f7e7e56fbb7bf5fa37efce177558534856fd4adb30a2",
+      "fix_sha256": "d18a3f3d7783a59520397f928c8608122594d97741e68f84ebd07c7100a33d84"
+    },
+    {
+      "path": "server/test/jwtPasswordAuthStrategy.test.js",
+      "upstream_changed": false,
+      "base_sha256": "bede4150b64cb83c0b1e925f77051bde7faf6a740b5a9b262d519560a04d08d1",
+      "upstream_sha256": "bede4150b64cb83c0b1e925f77051bde7faf6a740b5a9b262d519560a04d08d1",
+      "fix_sha256": "f4d49caf1778e36208f6d6036fe7e243400708bcdab8c7db5e2ca9e3a28fc347"
+    },
+    {
+      "path": "server/test/mySqlIdempotencyStore.test.js",
+      "upstream_changed": false,
+      "base_sha256": "503a07c1bc31997eac9a5bf235516ce3db1f19dd21d900b086cb9f67e0675c2f",
+      "upstream_sha256": "503a07c1bc31997eac9a5bf235516ce3db1f19dd21d900b086cb9f67e0675c2f",
+      "fix_sha256": "e9c1e4dfa0fd738a10b9d53e555616c141735a7b31d7faaa2a3a4a5d95093c0c"
+    },
+    {
+      "path": "server/test/roleAdminService.test.js",
+      "upstream_changed": false,
+      "base_sha256": "cd1fa1fff2fe9c48552b4fa857768a20189852cb1a66b50bd72405fc5f9e86d8",
+      "upstream_sha256": "cd1fa1fff2fe9c48552b4fa857768a20189852cb1a66b50bd72405fc5f9e86d8",
+      "fix_sha256": "794072ba2c327d3e273732711e1e4beaf28e2e27c69952136c5d7452e9207d0d"
+    },
+    {
+      "path": "server/test/tokenRevocationJobs.test.js",
+      "upstream_changed": false,
+      "base_sha256": "e325d86caea85439562dd461d5929c2207f64dbbd19f429034061f4793e7fbd0",
+      "upstream_sha256": "e325d86caea85439562dd461d5929c2207f64dbbd19f429034061f4793e7fbd0",
+      "fix_sha256": "6c1a3a68edc17206a5f7f070db1433e647a78a521f96a2c143de412e851d5ac5"
+    }
+  ],
+  "inventory_apply_check": {
+    "exit": 0,
+    "stderr": ""
+  },
+  "inventory_boundary_issues": [
+    {
+      "code": "OUTSIDE_MODULE",
+      "path": "changes/server/test/authHandlers.test.js",
+      "message": "not in allowed_write_paths"
+    },
+    {
+      "code": "OUTSIDE_MODULE",
+      "path": "changes/server/test/customerLookupService.test.js",
+      "message": "not in allowed_write_paths"
+    },
+    {
+      "code": "OUTSIDE_MODULE",
+      "path": "changes/server/test/integration/customerLookup.integration.test.js",
+      "message": "not in allowed_write_paths"
+    },
+    {
+      "code": "OUTSIDE_MODULE",
+      "path": "changes/server/test/itemAuditLogService.test.js",
+      "message": "not in allowed_write_paths"
+    },
+    {
+      "code": "OUTSIDE_MODULE",
+      "path": "changes/server/test/jwtDeviceAuthStrategy.test.js",
+      "message": "not in allowed_write_paths"
+    },
+    {
+      "code": "OUTSIDE_MODULE",
+      "path": "changes/server/test/jwtDevicePasswordAuthStrategy.test.js",
+      "message": "not in allowed_write_paths"
+    },
+    {
+      "code": "OUTSIDE_MODULE",
+      "path": "changes/server/test/jwtPasswordAuthStrategy.test.js",
+      "message": "not in allowed_write_paths"
+    },
+    {
+      "code": "OUTSIDE_MODULE",
+      "path": "changes/server/test/mySqlIdempotencyStore.test.js",
+      "message": "not in allowed_write_paths"
+    },
+    {
+      "code": "OUTSIDE_MODULE",
+      "path": "changes/server/test/roleAdminService.test.js",
+      "message": "not in allowed_write_paths"
+    },
+    {
+      "code": "OUTSIDE_MODULE",
+      "path": "changes/server/test/tokenRevocationJobs.test.js",
+      "message": "not in allowed_write_paths"
+    }
+  ],
+  "legacy_three_tree_preview": {
+    "command": [
+      "git",
+      "merge-tree",
+      "95946469bde5fe4b64e185ce253baf9ef9d82e61",
+      "c9eba05e49917b8f439c3a71a6611b8947ef1209",
+      "bbb2383ab3be94e79cade34fc584f8e538ddcfaf"
+    ],
+    "sha256": "209eafbd3b1d90c12688800084be2882bd1b91f1a4beb333b8f793f1fe22dd2e",
+    "conflict_marker_lines": [],
+    "scope": "Read-only legacy three-tree preview, not a real merge or guarantee of clean merge/index/runtime"
+  },
+  "recommended": "Refresh separate fix branch with exact observed main; reverify preserved reviewed test delta and upstream Customer Sales tests; leave Inventory source/manifest/PLAN unchanged",
+  "authority_if_A": "Only local main integration in separate fix worktree, bounded non-DB native strict JUnit/root LCOV/floors/lint and local savepoint; future actual head requires Sam independent review",
+  "not_authorized": [
+    "Inventory product/manifest/profile/PLAN writes",
+    "Task029 resume",
+    "DB or migrations through new0067-0069",
+    "guard/capacity flags",
+    "push/PR/remoteCI/main merge",
+    "formal acceptance/UAT/deployment"
+  ],
+  "remaining_suites": "All14 guarded cases retain NOT_EXECUTED; full coverage/new migrations/current Inventory0064/client/browser/Phase gate require a later exact proposed scope, not old source evidence"
+}

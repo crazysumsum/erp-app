@@ -1,0 +1,70 @@
+{
+  "schema_version": "2.0",
+  "module_id": "inventory-management",
+  "run_id": "20261009T091507-4aa09a074e86",
+  "suite_id": "inventory-p3-adjustments-client",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "151cf5757a465b4df8a64f34e1f876ca6759a3bcc438ec721fb22bf7ab965a44",
+  "source_fingerprint": "3cdc51c462840f24f5a221218a928e795600de865f35042f2a087622cee9679e",
+  "code_commit": "168ceb1badd6e6ed3e2ae6976f95b224e86d54bb",
+  "started_at": "2026-10-09T09:15:07.925447Z",
+  "ended_at": "2026-10-09T09:15:09.506633Z",
+  "environment_id": "inventory-isolated-test",
+  "runtime_instance_id": "erp-inventory-p3-integration-2ngk1g1s",
+  "data_reference": "Synthetic Inventory fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "npm",
+    "test",
+    "--workspace",
+    "client",
+    "--",
+    "test/pages/inventory/inventoryAdjustments.test.js",
+    "--reporter=junit",
+    "--outputFile=/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/20261009T091507-4aa09a074e86/inventory-p3-adjustments-client.xml"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "7e4d66d39d0ce7f7ba85202228cf96419f3adff1277de3ccabfa6534279cf9ba",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 25,
+    "passed": 25,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/20261009T091507-4aa09a074e86/stdout.log",
+      "sha256": "b5ed83feaec95172a2b3a152b78f095100ddcaa699cbd2d416b8edda05f5bd7c",
+      "bytes": 464
+    },
+    {
+      "path": "evidence/20261009T091507-4aa09a074e86/stderr.log",
+      "sha256": "5dfd3c423f996ef213192fbd2ccb65aaf74ea2048aa1c71180ab2c2a0383b916",
+      "bytes": 665
+    },
+    {
+      "path": "evidence/20261009T091507-4aa09a074e86/inventory-p3-adjustments-client.xml",
+      "sha256": "520c384353e0df56581abeef5edd3c56e7c9cfdf7a924f0f0d08a3c54e22700d",
+      "bytes": 6915
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "Local observation only; external services/config/data and secret redaction completeness require review."
+  ]
+}

@@ -1,0 +1,356 @@
+<testsuites id="" name="" tests="16" failures="8" skipped="0" errors="0" time="90.603293">
+<testsuite name="inventory-high-risk.spec.js" timestamp="2026-10-08T07:31:48.020Z" hostname="technical" tests="8" failures="8" skipped="0" time="56.454" errors="0">
+<testcase name="TASK-033 @technical Base-only IN, three statuses and immutable/new Lot validate real facts" classname="inventory-high-risk.spec.js" time="1.603">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|playwright-artifacts/inventory-high-risk-TASK-0-551ab-new-Lot-validate-real-facts-technical/error-context.md]]
+
+[[ATTACHMENT|playwright-artifacts/inventory-high-risk-TASK-0-551ab-new-Lot-validate-real-facts-technical/error-context.md]]
+]]>
+</system-out>
+<failure message="expect(locator).toContainText(expected) failed" type="expect.toContainText">
+<![CDATA[  [technical] › inventory-high-risk.spec.js:147:1 › TASK-033 @technical Base-only IN, three statuses and immutable/new Lot validate real facts 
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: getByRole('alert')
+    Expected substring: "安全正整數"
+    Error: strict mode violation: getByRole('alert') resolved to 2 elements:
+        1) <div role="alert" tabindex="-1" data-v-9a2c9a0d="" class="bg-negative text-white q-pa-md q-mb-md">…</div> aka getByRole('alert').first()
+        2) <div role="alert">數量必須是 Base UOM 的安全正整數。</div> aka getByRole('group').getByText('數量必須是 Base UOM 的安全正整數。')
+
+    Call log:
+      - Expect "toContainText" getByRole('alert') with timeout 5000ms
+      - waiting for getByRole('alert')
+
+
+      147 | test("TASK-033 @technical Base-only IN, three statuses and immutable/new Lot validate real facts", async ({ page }) => {
+      148 |   await form(page, "IN", fixture.empty, "0"); await page.getByRole("button", { name: "準備確認", exact: true }).click();
+    > 149 |   await expect(page.getByRole("alert")).toContainText("安全正整數"); await expect(page.getByRole("dialog")).toHaveCount(0);
+          |                                         ^
+      150 |   await page.getByLabel("數量（Base UOM）", { exact: true }).fill("3"); await pick(page, "原因分類", "OTHER");
+      151 |   await page.getByLabel("原因說明", { exact: true }).fill("短原因"); await page.getByRole("button", { name: "準備確認", exact: true }).click();
+      152 |   await expect(page.getByRole("alert")).toContainText("OTHER"); await page.getByLabel("原因說明", { exact: true }).fill("一二三四五六七八九十");
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-high-risk.spec.js:149:41
+
+    Error Context: ../../../docs/inventory_management/evidence/task033-db-inventory-p3-browser-467dbda0b9/playwright-artifacts/inventory-high-risk-TASK-0-551ab-new-Lot-validate-real-facts-technical/error-context.md
+
+    Error Context: ../../../docs/inventory_management/evidence/task033-db-inventory-p3-browser-467dbda0b9/playwright-artifacts/inventory-high-risk-TASK-0-551ab-new-Lot-validate-real-facts-technical/error-context.md
+]]>
+</failure>
+</testcase>
+<testcase name="TASK-033 @technical OUT reads current guards and retains safe input after a real version rejection" classname="inventory-high-risk.spec.js" time="9.611">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|playwright-artifacts/inventory-high-risk-TASK-0-a6c97-er-a-real-version-rejection-technical/error-context.md]]
+
+[[ATTACHMENT|playwright-artifacts/inventory-high-risk-TASK-0-a6c97-er-a-real-version-rejection-technical/error-context.md]]
+]]>
+</system-out>
+<failure message="expect(locator).toBeVisible() failed" type="expect.toBeVisible">
+<![CDATA[  [technical] › inventory-high-risk.spec.js:169:1 › TASK-033 @technical OUT reads current guards and retains safe input after a real version rejection 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('heading', { name: /已確認過帳/u })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByRole('heading', { name: /已確認過帳/u }) with timeout 5000ms
+      - waiting for getByRole('heading', { name: /已確認過帳/u })
+
+
+      133 | }
+      134 | async function resolved(page) {
+    > 135 |   await expect(page.getByRole("heading", { name: /已確認過帳/u })).toBeVisible();
+          |                                                               ^
+      136 |   await expect(page.getByRole("button", { name: /查看已過帳 Movement/u }).first()).toBeVisible();
+      137 |   await expect(page.getByRole("button", { name: "重載已確認結果", exact: true })).toHaveCount(0);
+      138 | }
+        at resolved (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-high-risk.spec.js:135:63)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-high-risk.spec.js:176:93
+
+    Error Context: ../../../docs/inventory_management/evidence/task033-db-inventory-p3-browser-467dbda0b9/playwright-artifacts/inventory-high-risk-TASK-0-a6c97-er-a-real-version-rejection-technical/error-context.md
+
+    Error Context: ../../../docs/inventory_management/evidence/task033-db-inventory-p3-browser-467dbda0b9/playwright-artifacts/inventory-high-risk-TASK-0-a6c97-er-a-real-version-rejection-technical/error-context.md
+]]>
+</failure>
+</testcase>
+<testcase name="TASK-033 @technical Status paired effects and whole-group Reversal preserve actual history and stock" classname="inventory-high-risk.spec.js" time="8.115">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|playwright-artifacts/inventory-high-risk-TASK-0-84a75-ve-actual-history-and-stock-technical/error-context.md]]
+
+[[ATTACHMENT|playwright-artifacts/inventory-high-risk-TASK-0-84a75-ve-actual-history-and-stock-technical/error-context.md]]
+]]>
+</system-out>
+<failure message="expect(locator).toBeVisible() failed" type="expect.toBeVisible">
+<![CDATA[  [technical] › inventory-high-risk.spec.js:179:1 › TASK-033 @technical Status paired effects and whole-group Reversal preserve actual history and stock 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('heading', { name: /已確認過帳/u })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByRole('heading', { name: /已確認過帳/u }) with timeout 5000ms
+      - waiting for getByRole('heading', { name: /已確認過帳/u })
+
+
+      133 | }
+      134 | async function resolved(page) {
+    > 135 |   await expect(page.getByRole("heading", { name: /已確認過帳/u })).toBeVisible();
+          |                                                               ^
+      136 |   await expect(page.getByRole("button", { name: /查看已過帳 Movement/u }).first()).toBeVisible();
+      137 |   await expect(page.getByRole("button", { name: "重載已確認結果", exact: true })).toHaveCount(0);
+      138 | }
+        at resolved (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-high-risk.spec.js:135:63)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-high-risk.spec.js:182:30
+
+    Error Context: ../../../docs/inventory_management/evidence/task033-db-inventory-p3-browser-467dbda0b9/playwright-artifacts/inventory-high-risk-TASK-0-84a75-ve-actual-history-and-stock-technical/error-context.md
+
+    Error Context: ../../../docs/inventory_management/evidence/task033-db-inventory-p3-browser-467dbda0b9/playwright-artifacts/inventory-high-risk-TASK-0-84a75-ve-actual-history-and-stock-technical/error-context.md
+]]>
+</failure>
+</testcase>
+<testcase name="TASK-033 @technical actual permission, password and device gates cannot be replaced by operation or FEFO" classname="inventory-high-risk.spec.js" time="7.992">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|playwright-artifacts/inventory-high-risk-TASK-0-5009f-placed-by-operation-or-FEFO-technical/error-context.md]]
+
+[[ATTACHMENT|playwright-artifacts/inventory-high-risk-TASK-0-5009f-placed-by-operation-or-FEFO-technical/error-context.md]]
+]]>
+</system-out>
+<failure message="expect(page).toHaveURL(expected) failed" type="expect.toHaveURL">
+<![CDATA[  [technical] › inventory-high-risk.spec.js:196:1 › TASK-033 @technical actual permission, password and device gates cannot be replaced by operation or FEFO 
+
+    Error: expect(page).toHaveURL(expected) failed
+
+    Expected pattern: /\/login\?redirect=/u
+    Received string:  "http://127.0.0.1:5205/inventory/adjustments?action=IN"
+    Timeout: 5000ms
+
+    Call log:
+      - Expect "toHaveURL" with timeout 5000ms
+        14 × locator resolved to <html class="" dir="ltr" lang="en-US">…</html>
+           - unexpected value "http://127.0.0.1:5205/inventory/adjustments?action=IN"
+
+
+      202 |   await switchActor(page, fixture.adjuster); await form(page); await review(page);
+      203 |   expectedFailures.push({ path: "/api/v1/inventory/adjustments", status: 401 }); page.once("dialog", dialog => dialog.accept());
+    > 204 |   await confirm(page, "invalid-synthetic-entry"); await expect(page).toHaveURL(/\/login\?redirect=/u); expect(await operationCount()).toBe(0);
+          |                                                                      ^
+      205 |   await switchActor(page, fixture.adjuster); await page.goto("/inventory/adjustments");
+      206 |   await expect(page.getByText("重新載入後只可查詢", { exact: false })).toBeVisible();
+      207 |   // The prior rejected actor reference remains query-only after navigation; use a fresh owned actor for device/current-authority rejection.
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-high-risk.spec.js:204:70
+
+    Error: expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 1
+
+      Array [
+        Object {
+          "path": "/api/v1/inventory/adjustments",
+    -     "status": 401,
+    +     "status": 403,
+        },
+      ]
+
+       98 |   await page.evaluate(() => document.querySelectorAll('input[type="password"]').forEach(input => { input.value = ""; })).catch(() => {});
+       99 |   password = null;
+    > 100 |   expect(failures).toEqual(expectedFailures); expect(networkFailures).toEqual(expectedNetworkFailures);
+          |                    ^
+      101 |   expect(errors.filter(error => !/^Failed to load resource: (the server responded with a status of (400|401|403|404|409|500) \(|net::ERR_FAILED)/u.test(error))).toEqual([]);
+      102 |   expect(errors.filter(error => /^Failed to load resource:/u.test(error))).toHaveLength(expectedFailures.length + expectedNetworkFailures.length);
+      103 | });
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-high-risk.spec.js:100:20
+
+    Error Context: ../../../docs/inventory_management/evidence/task033-db-inventory-p3-browser-467dbda0b9/playwright-artifacts/inventory-high-risk-TASK-0-5009f-placed-by-operation-or-FEFO-technical/error-context.md
+
+    Error Context: ../../../docs/inventory_management/evidence/task033-db-inventory-p3-browser-467dbda0b9/playwright-artifacts/inventory-high-risk-TASK-0-5009f-placed-by-operation-or-FEFO-technical/error-context.md
+]]>
+</failure>
+</testcase>
+<testcase name="TASK-033 @technical pre-forward abort retries only original intent with fresh password/signature and one effect" classname="inventory-high-risk.spec.js" time="9.021">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|playwright-artifacts/inventory-high-risk-TASK-0-8f9b7-rd-signature-and-one-effect-technical/error-context.md]]
+
+[[ATTACHMENT|playwright-artifacts/inventory-high-risk-TASK-0-8f9b7-rd-signature-and-one-effect-technical/error-context.md]]
+]]>
+</system-out>
+<failure message="expect(locator).toBeVisible() failed" type="expect.toBeVisible">
+<![CDATA[  [technical] › inventory-high-risk.spec.js:212:1 › TASK-033 @technical pre-forward abort retries only original intent with fresh password/signature and one effect 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('heading', { name: /已確認過帳/u })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByRole('heading', { name: /已確認過帳/u }) with timeout 5000ms
+      - waiting for getByRole('heading', { name: /已確認過帳/u })
+
+
+      133 | }
+      134 | async function resolved(page) {
+    > 135 |   await expect(page.getByRole("heading", { name: /已確認過帳/u })).toBeVisible();
+          |                                                               ^
+      136 |   await expect(page.getByRole("button", { name: /查看已過帳 Movement/u }).first()).toBeVisible();
+      137 |   await expect(page.getByRole("button", { name: "重載已確認結果", exact: true })).toHaveCount(0);
+      138 | }
+        at resolved (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-high-risk.spec.js:135:63)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-high-risk.spec.js:221:30
+
+    Error Context: ../../../docs/inventory_management/evidence/task033-db-inventory-p3-browser-467dbda0b9/playwright-artifacts/inventory-high-risk-TASK-0-8f9b7-rd-signature-and-one-effect-technical/error-context.md
+
+    Error Context: ../../../docs/inventory_management/evidence/task033-db-inventory-p3-browser-467dbda0b9/playwright-artifacts/inventory-high-risk-TASK-0-8f9b7-rd-signature-and-one-effect-technical/error-context.md
+]]>
+</failure>
+</testcase>
+<testcase name="TASK-033 @technical real committed-response loss resolves original source without a second POST" classname="inventory-high-risk.spec.js" time="7.747">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|playwright-artifacts/inventory-high-risk-TASK-0-cbd42-ource-without-a-second-POST-technical/error-context.md]]
+
+[[ATTACHMENT|playwright-artifacts/inventory-high-risk-TASK-0-cbd42-ource-without-a-second-POST-technical/error-context.md]]
+]]>
+</system-out>
+<failure message="expect(locator).toBeVisible() failed" type="expect.toBeVisible">
+<![CDATA[  [technical] › inventory-high-risk.spec.js:227:1 › TASK-033 @technical real committed-response loss resolves original source without a second POST 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('heading', { name: /已確認過帳/u })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByRole('heading', { name: /已確認過帳/u }) with timeout 5000ms
+      - waiting for getByRole('heading', { name: /已確認過帳/u })
+
+
+      133 | }
+      134 | async function resolved(page) {
+    > 135 |   await expect(page.getByRole("heading", { name: /已確認過帳/u })).toBeVisible();
+          |                                                               ^
+      136 |   await expect(page.getByRole("button", { name: /查看已過帳 Movement/u }).first()).toBeVisible();
+      137 |   await expect(page.getByRole("button", { name: "重載已確認結果", exact: true })).toHaveCount(0);
+      138 | }
+        at resolved (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-high-risk.spec.js:135:63)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-high-risk.spec.js:231:131
+
+    Error Context: ../../../docs/inventory_management/evidence/task033-db-inventory-p3-browser-467dbda0b9/playwright-artifacts/inventory-high-risk-TASK-0-cbd42-ource-without-a-second-POST-technical/error-context.md
+
+    Error Context: ../../../docs/inventory_management/evidence/task033-db-inventory-p3-browser-467dbda0b9/playwright-artifacts/inventory-high-risk-TASK-0-cbd42-ource-without-a-second-POST-technical/error-context.md
+]]>
+</failure>
+</testcase>
+<testcase name="TASK-033 @technical refresh/navigation is query-only, actor-isolated and storage corruption blocks new effects" classname="inventory-high-risk.spec.js" time="3.475">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|playwright-artifacts/inventory-high-risk-TASK-0-601d9-rruption-blocks-new-effects-technical/error-context.md]]
+
+[[ATTACHMENT|playwright-artifacts/inventory-high-risk-TASK-0-601d9-rruption-blocks-new-effects-technical/error-context.md]]
+]]>
+</system-out>
+<failure message="expect(locator).toContainText(expected) failed" type="expect.toContainText">
+<![CDATA[  [technical] › inventory-high-risk.spec.js:237:1 › TASK-033 @technical refresh/navigation is query-only, actor-isolated and storage corruption blocks new effects 
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: getByRole('alert')
+    Expected substring: "復原識別格式無效"
+    Error: strict mode violation: getByRole('alert') resolved to 2 elements:
+        1) <div role="alert" data-v-65dfb858="" class="q-banner row items-center bg-negative text-white q-mb-md">…</div> aka getByRole('alert').filter({ hasText: /^復原識別格式無效；不可猜測或重新過帳，請人工核對。$/ })
+        2) <div role="alert" class="q-notification row items-stretch q-notification--standard bg-negative text-white q-notification--top-enter-from q-notification--top-enter-active">…</div> aka getByRole('alert').filter({ hasText: 'warning' })
+
+    Call log:
+      - Expect "toContainText" getByRole('alert') with timeout 5000ms
+      - waiting for getByRole('alert')
+
+
+      247 |   // Corrupt only this synthetic tab's reference to verify the trust boundary; never a product abandonment action.
+      248 |   await page.evaluate(key => sessionStorage.setItem(key, JSON.stringify({ action: "REVERSAL", source: {} })), recordKey()); await page.reload();
+    > 249 |   await expect(page.getByRole("alert")).toContainText("復原識別格式無效"); await expect(page.getByRole("button", { name: "準備確認", exact: true })).toBeDisabled();
+          |                                         ^
+      250 |   expect(attempts).toHaveLength(1); expect(await operationCount()).toBe(0);
+      251 | });
+      252 | test("TASK-033 @technical keyboard, cleared cancellation, XSS escaping, responsive and delayed real SKU lookup", async ({ page }) => {
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-high-risk.spec.js:249:41
+
+    Error Context: ../../../docs/inventory_management/evidence/task033-db-inventory-p3-browser-467dbda0b9/playwright-artifacts/inventory-high-risk-TASK-0-601d9-rruption-blocks-new-effects-technical/error-context.md
+
+    Error Context: ../../../docs/inventory_management/evidence/task033-db-inventory-p3-browser-467dbda0b9/playwright-artifacts/inventory-high-risk-TASK-0-601d9-rruption-blocks-new-effects-technical/error-context.md
+]]>
+</failure>
+</testcase>
+<testcase name="TASK-033 @technical keyboard, cleared cancellation, XSS escaping, responsive and delayed real SKU lookup" classname="inventory-high-risk.spec.js" time="8.89">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|playwright-artifacts/inventory-high-risk-TASK-0-53e4f-and-delayed-real-SKU-lookup-technical/error-context.md]]
+
+[[ATTACHMENT|playwright-artifacts/inventory-high-risk-TASK-0-53e4f-and-delayed-real-SKU-lookup-technical/error-context.md]]
+]]>
+</system-out>
+<failure message="expect(locator).toBeFocused() failed" type="expect.toBeFocused">
+<![CDATA[  [technical] › inventory-high-risk.spec.js:252:1 › TASK-033 @technical keyboard, cleared cancellation, XSS escaping, responsive and delayed real SKU lookup 
+
+    Error: expect(locator).toBeFocused() failed
+
+    Locator:  getByRole('button', { name: '準備確認', exact: true })
+    Expected: focused
+    Received: inactive
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toBeFocused" getByRole('button', { name: '準備確認', exact: true }) with timeout 5000ms
+      - waiting for getByRole('button', { name: '準備確認', exact: true })
+        14 × locator resolved to <button tabindex="0" type="submit" data-v-9a2c9a0d="" class="q-btn q-btn-item non-selectable no-outline q-btn--standard q-btn--rectangle bg-primary text-white q-btn--actionable q-focusable q-hoverable q-mt-md">…</button>
+           - unexpected value "inactive"
+
+
+      260 |   expect(await page.getByRole("dialog").locator("img").count()).toBe(0);
+      261 |   await page.getByLabel("目前密碼（必填）", { exact: true }).focus(); await page.keyboard.press("Tab"); await expect(page.getByRole("button", { name: "取消", exact: true })).toBeFocused();
+    > 262 |   await page.keyboard.press("Enter"); await expect(page.getByRole("dialog")).toBeHidden(); await expect(page.getByRole("button", { name: "準備確認", exact: true })).toBeFocused();
+          |                                                                                                                                                                  ^
+      263 |   let release, entered; const gate = new Promise(resolve => { release = resolve; }), started = new Promise(resolve => { entered = resolve; });
+      264 |   await page.route(url => url.origin === origin && url.pathname.endsWith("/sku-lookup") && url.searchParams.get("code") === fixture.plain.code,
+      265 |     async route => { entered(); await gate; await pace(); await route.continue(); });
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-high-risk.spec.js:262:162
+
+    Error Context: ../../../docs/inventory_management/evidence/task033-db-inventory-p3-browser-467dbda0b9/playwright-artifacts/inventory-high-risk-TASK-0-53e4f-and-delayed-real-SKU-lookup-technical/error-context.md
+
+    Error Context: ../../../docs/inventory_management/evidence/task033-db-inventory-p3-browser-467dbda0b9/playwright-artifacts/inventory-high-risk-TASK-0-53e4f-and-delayed-real-SKU-lookup-technical/error-context.md
+]]>
+</failure>
+</testcase>
+</testsuite>
+<testsuite name="inventory-warehouse-operations.spec.js" timestamp="2026-10-08T07:31:48.020Z" hostname="technical" tests="8" failures="0" skipped="0" time="25.108" errors="0">
+<testcase name="TASK-029 @technical Inventory-only two-line Draft Dispatch Receive conserves real stock" classname="inventory-warehouse-operations.spec.js" time="8.795">
+</testcase>
+<testcase name="TASK-029 @technical view-only actor sees real In Transit but no write controls" classname="inventory-warehouse-operations.spec.js" time="0.69">
+</testcase>
+<testcase name="TASK-029 @technical no-Balance SKU remains selectable and insufficient Dispatch keeps Draft" classname="inventory-warehouse-operations.spec.js" time="3.475">
+</testcase>
+<testcase name="TASK-029 @technical unknown SKU, invalid quantity and revoked token fail safely" classname="inventory-warehouse-operations.spec.js" time="2.321">
+</testcase>
+<testcase name="TASK-029 @technical delayed real lookup cannot replace a newer explicitly chosen SKU" classname="inventory-warehouse-operations.spec.js" time="2.305">
+</testcase>
+<testcase name="TASK-029 @technical stale Draft version returns 409 and retains unsaved quantity" classname="inventory-warehouse-operations.spec.js" time="1.16">
+</testcase>
+<testcase name="TASK-029 @technical Quarantined full receipt requires reason and destination ownership" classname="inventory-warehouse-operations.spec.js" time="2.632">
+</testcase>
+<testcase name="TASK-029 @technical keyboard lookup, unsaved close, responsive and URL refresh" classname="inventory-warehouse-operations.spec.js" time="3.73">
+</testcase>
+</testsuite>
+</testsuites>

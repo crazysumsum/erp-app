@@ -1,0 +1,49 @@
+{
+  "stage": "DEVELOPER_SUPPORTING_NOT_REGISTERED_SUITE",
+  "argv": [
+    "node",
+    "--test",
+    "--import",
+    "./server/test-support/testEnv.js",
+    "--test-reporter=junit",
+    "--test-reporter-destination=/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/hd140-coordinator-5cc09bbba981/functional-021/native.xml",
+    "server/test/integration/inventoryAllocation.integration.test.js"
+  ],
+  "head": "f51175e7b62623e50429232cf0aaf580a49461d9",
+  "source": "3cdc51c462840f24f5a221218a928e795600de865f35042f2a087622cee9679e",
+  "plan": "c145c025eae94a1570d1bd05a872da53335b931f9ea0f695595d02ddef258908",
+  "runtime_instance_id": "erp-inventory-p3-hd140-rd02hhpl",
+  "env_keys": [
+    "CUSTOMER_BANK_ACTIVE_KEY_ID",
+    "CUSTOMER_BANK_ENCRYPTION_KEYS",
+    "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+    "CUSTOMER_BANK_LOOKUP_KEYS",
+    "DB_INTEGRATION_TESTS",
+    "DB_NAME",
+    "DB_PASSWORD",
+    "DB_SOCKET",
+    "DB_SOCKET_PATH",
+    "DB_USER",
+    "HOME",
+    "INVENTORY_ALLOCATION_TESTS",
+    "LANG",
+    "LC_ALL",
+    "PATH",
+    "SUPPLIER_BANK_ACTIVE_KEY_ID",
+    "SUPPLIER_BANK_ENCRYPTION_KEYS",
+    "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+    "SUPPLIER_BANK_LOOKUP_KEYS"
+  ],
+  "started_at": "2026-10-12T01:11:06.560442+00:00",
+  "result": "PASS",
+  "exit_code": 0,
+  "timed_out": false,
+  "ended_at": "2026-10-12T01:11:06.854236+00:00",
+  "counts": {
+    "total": 3,
+    "passed": 3,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  }
+}

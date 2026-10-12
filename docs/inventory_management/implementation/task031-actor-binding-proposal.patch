@@ -1,0 +1,89 @@
+--- a/docs/inventory_management/00_module_manifest.json
++++ b/docs/inventory_management/00_module_manifest.json
+@@ -90,9 +90,9 @@
+     "provided": [
+       {
+         "id": "inventory-domain-contract",
+-        "version": "planning-v12; TASK031 single Adjustment/Status strong-auth context and two-route secure HTTP replay contract; prior contracts unchanged",
++        "version": "planning-v13; TASK031 final-guard Operation actor and owned-new-Lot creator binding; prior public contracts and other writers unchanged",
+         "source": "docs/inventory_management/03_design_spec.md",
+-        "sha256": "3574166ca581250f8ab2d110dbcbac7f4bf7245a0213ed6435bf33e6e0f6f096",
++        "sha256": "6760eb6d7975b15c90b9abc653414d51020c529ef2984b32158dc598456bbdd5",
+         "consumers": [
+           "purchasing-receiving",
+           "sales-order",
+--- a/docs/inventory_management/03_design_spec.md
++++ b/docs/inventory_management/03_design_spec.md
+@@ -978,7 +978,7 @@
+ 
+ 200沿用既有success envelope，data精確為`{status:"POSTED",operationId,movementGroupId,lineCount}`；不回raw rows／SQL或新增不可持久化的巢狀Operation summary。Movement細節由既有group／source查詢追溯。同source＋正規化payload重送，在fresh authorization後回原immutable scalar結果，不能以當前Balance版本重新計算原結果；不同payload（包括不同lines順序）沿用INVENTORY_SOURCE_CONFLICT。Stale來源／目的版本沿用VERSION_CONFLICT；missing／權限／Bin／stock／安全500錯誤沿用既有公開碼，不洩露內部資料。
+ 
+-#### 5.4.2 Adjustment／Status Transfer exact contract（TASK-031；HD112–120 A）
++#### 5.4.2 Adjustment／Status Transfer exact contract（TASK-031；HD112–122 A）
+ 
+ 本增量只實作單次正／負Adjustment及單次Status Transfer，不含batch、Reversal、UI或Stocktake Posting。沿用兩條§5.4 POST route、`jwt-device-password`、`inventory.view`＋`inventory.adjust`，固定domain purpose=`adjustment.post`／`status_transfer.post`及requiredCallerPermission=`inventory.adjust`；caller不能指定actor、permission、proof或isHighRisk。
+ 
+@@ -1008,6 +1008,12 @@
+ 
+ 開始posting交易、Operation claim前先在該交易重讀actor/permissions/device/version並核对proof／時效；domain replay在可能等待unique claim後必須作current locking guard再回原結果。新posting在全部blocking stock locks／destination creation後、第一筆Movement/Balance業務mutation前，作current `FOR SHARE` guard：順序users→user_roles/roles→role_permissions/permissions（role ID排序）→user_devices→fr_token_versions，使用參數化查詢、JS dedup及既有assertPermissionsCurrent比較。不把先前RR snapshot或claims當最新資格；security表唯讀，無新serialization row或shared-auth SQL改寫。重新核對proof／time須在最後blocking read後；完成Operation前亦核對時效與request abort，逾時回滾包括此前Lot／zero Balance／Operation。
+ 
++**Actor FK staging（HD122 A；僅兩條TASK031新操作）。** 初始非鎖security檢查後，Operation claim在同一未提交posting transaction暫存`actor_user_id=NULL`，保留原actor_label及opaque context內可信actor ID；不得在stock／destination等待前以非NULL使用者外鍵取得隱含security鎖。Claim的source/hash/unique semantics不變；domain replay不綁定或改寫既有Operation／Lot，在unique等待後仍須current locking guard才回原結果。
++
++Positive Adjustment若確實建立新Lot，其nullable `created_by`也在同一未提交交易暫存NULL，以免0059的使用者外鍵在後续Bucket等待前提前鎖users。僅由本transaction成功INSERT的結果辨識本次新建Lot，不能以缺失snapshot、NULL created_by、時間戳或upsert affectedRows推測ownership；唯一鍵競爭沿既有並發拒絕／whole rollback，不自動重試。既有Lot（包括合法NULL建立者）、其日期與actor attribution不得補填／改寫；Receipt及其他writer維持既有行為，不新增caller控制的deferActor旗標或通用actor-binding API。
++
++全部stock／Lot／Bucket／Item/UOM blocking reads及final current security guard完成後、第一筆Balance／Movement mutation前，以參數化conditional UPDATE將可信actor ID綁到exact claimed、actor尚NULL且completed_at尚NULL的Operation（並限定本次command type）；若本次建立Lot，同時只綁exact owned new Lot的NULL created_by。每個應更新row須affectedRows=1，否則沿用CONCURRENT_OPERATION並回滾；binding後再檢查原proof時效／abort，不刷新憑證。安全read locks持有至同一posting交易結束；binding、stock、Movement、success Audit與Operation completion原子提交，提交成功當下不得留下這兩條操作的NULL-actor Operation或本次新建NULL-creator Lot。任何binding／guard／Audit／completion失敗包括temporary metadata全部回滾，不能另開交易補填或commit後修補。既有FK／ON DELETE SET NULL、schema、users/admin及其他routes不變；不關閉FK checks或改全域isolation。
++
+ 撤權已在final guard前提交者優先，包含stock／claim／cache等待期間完成的撤權；final guard先取得security read locks者先序列化完成，後來的停用／撤device／role change／token revoke會等待該交易結束，不能追溯取消已提交結果。不得持有preflight交易跨HTTP cache-store或stock等待；posting初始非鎖snapshot檢查不是最終許可。這不是宣稱無deadlock：security read鎖與既有admin寫入仍可能互等，沿用timeout/abort及whole rollback，不自動刷新proof或重送。需實際DB驗證兩種先後次序及stale RR snapshot；不更改全域isolation。
+ 
+ **Stock transaction。** InventoryPostingService仍唯一owner，重用Operation/Audit/Lock/Item helpers。正Adjustment可按SKU＋normalized Lot resolve/create，重用Receipt的既有Lot resolution SQL，不虛構Receipt Movement；同一transaction內新Lot／Balance／ADJUSTMENT Movement／成功Audit／Operation全部提交或回滾。Existing expiry/manufacture incl NULL必須exact match，不填補／改日期。New Lot first_receipt_date使用本次server APP_TIME_ZONE submission date，意義為首次系統Adjustment IN而非historical receipt；caller不能倒填。Negative／Status不建立Lot。
+@@ -1020,7 +1026,7 @@
+ 
+ Stale版本／source衝突／stock及Lot規則沿用既有公開碼與格式；schema400 REQUEST_VALIDATION_FAILED、domain400 INVENTORY_INPUT_INVALID／INVENTORY_QUANTITY_INVALID、現有409 VERSION_CONFLICT／INVENTORY_SOURCE_CONFLICT／INSUFFICIENT_STOCK／INSUFFICIENT_ATP／LOT_*／BIN_LOCKED_BY_STOCKTAKE、404 INVENTORY_RESOURCE_NOT_FOUND。No silent partial success。TASK032 Reversal、TASK033 UI、formal Technical/UAT／full-P3 capacity未被本增量實作或接受。
+ 
+-鎖語意依[MySQL locking reads](https://dev.mysql.com/doc/refman/8.0/en/innodb-locking-reads.html)：FOR SHARE读取最新已完成寫入並保留shared locks至交易結束；這只支持設計推論，不替代已批准26.7.0環境上的實測。
++鎖語意依[MySQL26.7 locking reads](https://dev.mysql.com/doc/refman/26.7/en/innodb-locking-reads.html)及[foreign-key locks](https://dev.mysql.com/doc/refman/26.7/en/innodb-locks-set.html)：current locking reads與FK隱含鎖皆須納入上述順序；這只支持設計推論，不替代已批准26.7.0環境上的實測。MySQL DATE仍是calendar date，owned SQL讀取沿用既有Transfer的DATE_FORMAT pattern以保留YYYY-MM-DD／NULL，不能以全域或fixture-only dateStrings、JS時區切日或弱化日期驗證掩蓋DEF010。
+ 
+ ### 5.5 Reservation／Allocation APIs
+ 
+--- a/docs/inventory_management/05_development_tasks.md
++++ b/docs/inventory_management/05_development_tasks.md
+@@ -880,6 +880,8 @@
+ 
+ TASK031依§5.4.2及HD112–120 A，以三個薄增量交付：(1) 六個新shared boundary source/test路徑的選用capability與原route相容性；(2) owned trusted context＋單次Adjustment／Status domain及unit/failure regression；(3) strict HTTP handlers／real API＋MySQL race/replay/revocation/rollback驗證。每段先red case再最小實作，未有全部DoD證據不宣告DONE。無新auth策略／policy/bootstrap、全域config／isolation、schema／permission／dependency、client或其他TASK。
+ 
++HD122 A remediation只在既有owned Posting／Adjustment helper及其測試內延後Operation actor binding；positive Adjustment新Lot的created_by使用相同temporary-NULL／final-guard後綁定，須有實際INSERT ownership，不改寫existing Lot或Receipt。Final guard→exact-row actor binding（每row=1）→proof/abort recheck→stock／Movement／Audit／Operation complete全部同一transaction；任一失敗整組回滾，不允許成功提交時缺actor／new-Lot creator。No newOperation service／generic binder／DDL／auth policy；原shared framework paths保持本候選的現有bytes，只重新綁定新PLAN scope。DEF009先寫red回歸，再修最小owned source；DEF010沿用owned SQL DATE_FORMAT並實測，不以fixture設定或放寬contract替代。
++
+ 精確新shared路徑：`server/src/framework/api/apiDefinitionResolver.js`、`server/src/framework/middleware/apiDispatcher.js`、`server/src/services/idempotency/IdempotencyService.js`、`server/test/apiDefinitionResolver.test.js`、`server/test/apiDispatcher.test.js`、`server/test/idempotencyService.test.js`。只有新兩條route選用idempotencyPreparation:true／7-day TTL及已有inputCoercion:false；global default／原route契約不變。既有TASK030 RequestValidator source/test保持byte-identical，連同原六個shared paths及0064既有isolated migration使用需要綁新PLAN重新確認，不擴大寫入。
+ 
+ Owned source範圍：InventoryPostingService.js、inventoryHighRiskContext.js（新）、inventoryAdjustmentPosting.js（新）、InventoryAuditService.js、postingHandlers.js、inventorySchemas.js；測試沿用inventoryPostingService／inventoryPostingHandlers／inventoryAuditService／inventoryEndpointSecurity、fakeInventoryDatabase.js、inventoryMovement.integration.test.js及inventoryWarehouseOperationsApi.integration.test.js。只把Receipt既有Lot resolution移為同Posting owner的內部可重用helper，Receipt行為及已有proof回歸不變；不增加另一writer或任意movement engine。
+@@ -2199,6 +2201,7 @@
+ 
+ ### Approach
+ Implement only legacy `P3-T06` inside `PHASE-004`, using §5.4.2 / HD112–120 A and the three increments/exact scope under P3-T06. The opt-in HTTP preparation/replay hooks precede two consumers; trusted context is separate from serializable command. Current locking reads after waits, scalar original result, 500-byte reasons/OTHER detail, Lot creation/date/life and required versions are mandatory, not optional fallback.
++HD122 A adds transaction-local NULL actor staging for the new Operation and only an actually inserted new Lot, exact-row binding after the final current security guard, original-proof/abort recheck and atomic rollback. Existing rows/Receipt/shared auth remain unchanged. All17 TASK031 named scenarios, including early-FK regressions and owned DATE normalization, require fresh current-source/PLAN evidence; known DEF009/010 and final Sam source review block DONE.
+ 
+ ### Acceptance criteria
+ - 負 Adjustment只可扣 free quantity且不破壞 Reserved/Allocation；正 Adjustment遵守 Tracking/Lot/Bin/Expiry。
+--- a/docs/inventory_management/06_technical_test_cases.md
++++ b/docs/inventory_management/06_technical_test_cases.md
+@@ -148,7 +148,7 @@
+ 
+ #### TASK031 named developer scenarios — planned, not executed
+ 
+-These scenarios implement §5.4.2 / HD112–120 A. Developer verification is not formal TC007 PASS and does not execute TASK032 Reversal. Every row must appear as actual named cases in current-source/PLAN runner reports; aggregate legacy test counts cannot satisfy new coverage.
++These17 scenarios implement §5.4.2 / HD112–122 A. Developer verification is not formal TC007 PASS and does not execute TASK032 Reversal. Every row must appear as actual named cases in current-source/PLAN runner reports; aggregate legacy test counts cannot satisfy new coverage. DEF009/010 require targeted retest and impact regression before closure; the earlier21PASS/3FAIL native result is not current-candidate proof.
+ 
+ | Case | Synthetic setup/action | Required observed result | Evidence | Status |
+ | --- | --- | --- | --- | --- |
+@@ -165,8 +165,9 @@
+ | ADJ031-OUT-RESERVED | OnHand10 allocated4; reserved coverage; naturally expireduncovered; reservation races under sameControl | Onlyfree deducted; no Alloc/Reserved mutation or increaseduncovered; olduncovered notnewfull-coverage gate | Real concurrent DB barrier, snapshots/invariants | NOT_RUN |
+ | ADJ031-STATUS | Allsix distinctStatuspairs with same WH/Bin/SKU/Lot; allocations/AVAILABLEexpiry/Reserved; absentdest | Exactlypaired OUT/IN STATUS_TRANSFER legs, totalconservation/versionchain; noLot creation/retarget; expiredAVAILABLE non-saleable notblanketban | DB ledgers/Audit/result shape | NOT_RUN |
+ | ADJ031-LOCKS-VERSION | Active/inactiveWH/Bin/profile; Counting source/dest; sameversionrace; concurrentdestcreator; overflow | One validwinner or whole reject; current originalpresence read underControl; no zero-row remnants | MySQL concurrency/failure/unit | NOT_RUN |
+-| ADJ031-REVOKE-ORDER | Establish RR snapshot, gate stock/claim; commit actor/role/device/token invalidation beforefinalguard; secondcasefinalsecurity readlocksfirst | Earliercommitted invalidation rejects despite oldsnapshot; laterrevocation waits untilserializedtransactionends; no silentdeadlock/proof renewal; normal timeout rollback | Two-connection realMySQL barriers/order assertions | NOT_RUN |
+-| ADJ031-ROLLBACK | Inject Operation/Lot/Balance/each pairedleg/Audit/completion failure or deadline/abort; deadlock/DB-unavailable | All business changes rollback includingnewLot/zerorows/Operation; safe独立failureAudit allowed; successAudit required; secrets absent | Native snapshots/checkpoints and safe errors | NOT_RUN |
++| ADJ031-REVOKE-ORDER | Real0056/0059FKs; establishRRsnapshot; gate Warehouse and a post-new-Lot Bucketwait separately; commit actor/role/device/token invalidation beforefinalguard; secondcasefinalsecurity readlocksfirst | Revoke writer completes beforewait release (notjustattempted); currentguard rejects despiteoldsnapshot; no earlyuserlock fromOperation/Lot; guardfirst laterrevocation waits untiltxends; boundlocktimeouts/whole rollback/no proofrenewal | RealMySQL deterministic barriers, writercompletion/currentguard/order/stock assertions; realadmin-token-first path also regressed | NOT_RUN |
++| ADJ031-ACTOR-BIND | NewAdjustment IN/OUT and allStatus directions; genuinelynewLot vs existingLot inclNULLcreator; domain/HTTP replay; inject Operation/newLot bind row0/DBerror/deadline/abort | Beforefinalguard onlyowneduncommitted Operation/newLot actorNULL; afterguard each exactrow boundonce totrusted actor; commit actor/audit attribution matches; cannotbackfill existingNULLLot/change replay/othercommand; bindfailure rollsback Operation/Lot/zeroBalance/stock/Movement/successAudit; caller cannot select staging | Unitred→green and real0056/0059MySQL ownership/commit/rollback/lock-wait snapshots; Receipt/Issue/BinMove/Transfer compatibility | NOT_RUN |
++| ADJ031-ROLLBACK | Inject Operation/Lot/Balance/actorbindings/each pairedleg/Audit/completion failure or deadline/abort; deadlock/DB-unavailable | All business changes rollback includingtemporary actor metadata/newLot/zerorows/Operation; safe独立failureAudit allowed; successAudit required; secrets absent | Native snapshots/checkpoints and safe errors; prove each intendedinjector was reached (earlierDATE validation failure is notAudit rollback proof) | NOT_RUN |
+ | ADJ031-COMPATIBILITY | Omittedcapability route, originalstrongauth/nonce/request rules, Receipt/Issue/BinMove/Transfer plus ownedAudit fields | Onlytwo newroutes opted; oldproduct contracts unchanged; fullnative gates/floors/zero-skip; UI unchanged | Fullserver/Inventory/client/lint/build/coverage and existingactualTransfer browser | NOT_RUN |
+ 
+ ### Expected result

@@ -1,0 +1,70 @@
+{
+  "schema_version": "2.0",
+  "module_id": "inventory-management",
+  "run_id": "task031-hd125-nondb-bec97dc83a-inventory-p3-transfers-client",
+  "suite_id": "inventory-p3-transfers-client",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "4c074a4e344599e912aab7e351e93abfc5f447085657f59625f7c7a95c69440a",
+  "source_fingerprint": "894fb4eea4259c375705fdaea945a2a2fadc64736a9bbc335f47e35b5789e42e",
+  "code_commit": "869ac07abdd3879254c351d857be911d71e68b6b",
+  "started_at": "2026-10-08T00:53:43.673149+00:00",
+  "ended_at": "2026-10-08T00:53:46.578755+00:00",
+  "environment_id": "inventory-isolated-test",
+  "runtime_instance_id": "erp-inventory-task031-hd125-nondb.9mecgzed",
+  "data_reference": "Synthetic Inventory fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "npm",
+    "test",
+    "--workspace",
+    "client",
+    "--",
+    "test/pages/inventory/inventoryTransfers.test.js",
+    "--reporter=junit",
+    "--outputFile=/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-transfers-client/inventory-p3-transfers-client.xml"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "5e59adcee6af4448c8c325eec4f781eeb450536f9b24b912a69169d27d38b9c9",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 13,
+    "passed": 13,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-transfers-client/inventory-p3-transfers-client.xml",
+      "sha256": "0a1d13aec002e02372ff4f2f887f06b8f434d113f05758b065c38f4d9fb4fdc6",
+      "bytes": 5140
+    },
+    {
+      "path": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-transfers-client/stderr.log",
+      "sha256": "4104f25c1602dfa5bd7b20bb29a3d886313de4c94786bf90c3b75bcaa6ae9ad9",
+      "bytes": 269
+    },
+    {
+      "path": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-transfers-client/stdout.log",
+      "sha256": "5a99ec5b7e81f0dc4db7caf1dda9cb134df1b6ae4f34de61bfb247a3f5dea173",
+      "bytes": 522
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "Actual HD125 approved fresh original developer regression; defect disposition/final Sam Task review remain pending; not formal acceptance, UI or current CI."
+  ]
+}

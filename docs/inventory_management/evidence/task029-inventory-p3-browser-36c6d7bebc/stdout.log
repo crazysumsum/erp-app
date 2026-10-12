@@ -1,0 +1,53 @@
+
+Running 8 tests using 1 worker
+
+[1/8] [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:127:1 › TASK-029 @technical Inventory-only two-line Draft Dispatch Receive conserves real stock
+[2/8] [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:147:1 › TASK-029 @technical view-only actor sees real In Transit but no write controls
+[3/8] [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:154:1 › TASK-029 @technical no-Balance SKU remains selectable and insufficient Dispatch keeps Draft
+[4/8] [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:163:1 › TASK-029 @technical unknown SKU and invalid quantity preserve other Draft input
+[5/8] [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:172:1 › TASK-029 @technical delayed real lookup cannot replace a newer explicitly chosen SKU
+[6/8] [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:185:1 › TASK-029 @technical stale Draft version returns 409 and retains unsaved quantity
+[7/8] [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:196:1 › TASK-029 @technical Quarantined full receipt requires reason and destination ownership
+  1) [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:196:1 › TASK-029 @technical Quarantined full receipt requires reason and destination ownership 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: expect(received).toMatch(expected)
+
+    Expected pattern: /ERR_ABORTED|beforeunload/u
+    Received string:  "page.reload: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for navigation until \"load\"
+    "
+
+      202 |   const prompt = page.waitForEvent("dialog"), reload = page.reload();
+      203 |   const dialog = await prompt; expect(dialog.type()).toBe("beforeunload"); await dialog.dismiss();
+    > 204 |   await reload.catch(error => expect(error.message).toMatch(/ERR_ABORTED|beforeunload/u));
+          |                                                     ^
+      205 |   await expect(page.getByRole("dialog")).toBeVisible();
+      206 |   await expect(page.getByLabel("第 1 行收貨狀態", { exact: true })).toHaveValue("QUARANTINED");
+      207 |   await pick(page, "第 1 行目的庫位", "SAME");
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:204:53
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:204:3
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/task029-inventory-p3-browser-36c6d7bebc/playwright-artifacts/inventory-warehouse-operat-87860-n-and-destination-ownership-technical/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: docs/inventory_management/evidence/task029-inventory-p3-browser-36c6d7bebc/playwright-artifacts/inventory-warehouse-operat-87860-n-and-destination-ownership-technical/error-context.md
+
+    Error Context: docs/inventory_management/evidence/task029-inventory-p3-browser-36c6d7bebc/playwright-artifacts/inventory-warehouse-operat-87860-n-and-destination-ownership-technical/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/task029-inventory-p3-browser-36c6d7bebc/playwright-artifacts/inventory-warehouse-operat-87860-n-and-destination-ownership-technical/trace.zip
+    Usage:
+
+        npx playwright show-trace docs/inventory_management/evidence/task029-inventory-p3-browser-36c6d7bebc/playwright-artifacts/inventory-warehouse-operat-87860-n-and-destination-ownership-technical/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[8/8] [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:214:1 › TASK-029 @technical keyboard lookup, unsaved close, responsive and URL refresh
+  1 failed
+    [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:196:1 › TASK-029 @technical Quarantined full receipt requires reason and destination ownership 
+  7 passed (51.2s)

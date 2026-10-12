@@ -50,7 +50,17 @@ export class RequestValidator {
     this.ajv.addKeyword("trim");
   }
 
-  compile(requestSchema, routeKey) {
+  compile(requestSchema, routeKey, options) {
+    if (options !== undefined) {
+      if (
+        options === null || typeof options !== "object" || Array.isArray(options) ||
+        options.coerceTypes !== false || Object.keys(options).length !== 1
+      ) {
+        throw new TypeError(`compile options must contain only coerceTypes:false for ${routeKey}`);
+      }
+      return new RequestValidator({ config: { ...this.config, coerceTypes: false } })
+        .compile(requestSchema, routeKey);
+    }
     if (
       requestSchema === null ||
       typeof requestSchema !== "object" ||

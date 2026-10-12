@@ -1,0 +1,69 @@
+{
+  "schema_version": "2.0",
+  "module_id": "inventory-management",
+  "run_id": "task031-hd125-functional-025-api-inventory-p2-api-92c65bec47",
+  "suite_id": "inventory-p2-api",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "4c074a4e344599e912aab7e351e93abfc5f447085657f59625f7c7a95c69440a",
+  "source_fingerprint": "894fb4eea4259c375705fdaea945a2a2fadc64736a9bbc335f47e35b5789e42e",
+  "code_commit": "869ac07abdd3879254c351d857be911d71e68b6b",
+  "started_at": "2026-10-08T01:05:43.892536+00:00",
+  "ended_at": "2026-10-08T01:05:44.315143+00:00",
+  "environment_id": "inventory-isolated-test",
+  "runtime_instance_id": "erp_inventory_task025_00785cd50573",
+  "data_reference": "Synthetic Inventory fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "node",
+    "--test",
+    "--import",
+    "./server/test-support/testEnv.js",
+    "--test-reporter=junit",
+    "--test-reporter-destination=/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/task031-hd125-functional-025-api-inventory-p2-api-92c65bec47/inventory-p2-api.xml",
+    "server/test/integration/inventoryTask025Api.integration.test.js"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "c020a0c94e7b989652c2dab1bbfe7cfec433cbfcf8a59306bfdea139a1e58841",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 1,
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/task031-hd125-functional-025-api-inventory-p2-api-92c65bec47/stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/task031-hd125-functional-025-api-inventory-p2-api-92c65bec47/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/task031-hd125-functional-025-api-inventory-p2-api-92c65bec47/inventory-p2-api.xml",
+      "sha256": "fdc78957f280a497b5071879ac5154609442aeb445ecff6d4f498b0149a713fe",
+      "bytes": 725
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "mysql",
+        "--version"
+      ],
+      "output": "mysql  Ver 26.7.0 for macos15 on arm64 (MySQL Community Server - GPL)\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "DEVELOPER existing TASK031_HD125_FUNCTIONAL functional guard only; not full Phase/formal acceptance/CI. Supporting8 command snapshots are diagnostics only, not profile contracts."
+  ]
+}

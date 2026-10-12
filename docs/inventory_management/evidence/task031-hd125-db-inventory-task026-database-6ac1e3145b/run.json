@@ -1,0 +1,78 @@
+{
+  "schema_version": "2.0",
+  "module_id": "inventory-management",
+  "run_id": "task031-hd125-db-inventory-task026-database-6ac1e3145b",
+  "suite_id": "inventory-task026-database",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "4c074a4e344599e912aab7e351e93abfc5f447085657f59625f7c7a95c69440a",
+  "source_fingerprint": "894fb4eea4259c375705fdaea945a2a2fadc64736a9bbc335f47e35b5789e42e",
+  "code_commit": "869ac07abdd3879254c351d857be911d71e68b6b",
+  "started_at": "2026-10-08T00:55:29.839733+00:00",
+  "ended_at": "2026-10-08T00:55:30.323812+00:00",
+  "environment_id": "inventory-isolated-test",
+  "runtime_instance_id": "erp_inventory_task026_5cf6c61d0e24",
+  "data_reference": "Synthetic Inventory fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "node",
+    "--test",
+    "--test-concurrency=1",
+    "--import",
+    "./server/test-support/testEnv.js",
+    "--test-reporter=junit",
+    "--test-reporter-destination=/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/task031-hd125-db-inventory-task026-database-6ac1e3145b/inventory-task026-database.xml",
+    "server/test/integration/inventoryTransferMigrations.integration.test.js"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "82d8dd51567c4f6ac449fc0eacac8f99e37914c2b05da2c7d9942e07027fb00c",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 7,
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/task031-hd125-db-inventory-task026-database-6ac1e3145b/stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/task031-hd125-db-inventory-task026-database-6ac1e3145b/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/task031-hd125-db-inventory-task026-database-6ac1e3145b/inventory-task026-database.xml",
+      "sha256": "385bd20c081bdcf44aadccd05df476656094c5e40a30da08a169e16caf7a0404",
+      "bytes": 2169
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    },
+    {
+      "argv": [
+        "mysql",
+        "--version"
+      ],
+      "output": "mysql  Ver 26.7.0 for macos15 on arm64 (MySQL Community Server - GPL)\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "DEVELOPER HD125 unchanged fresh regression only; not full-P3/formal acceptance/CI. Capacity4 remains NOT_EXECUTED."
+  ]
+}

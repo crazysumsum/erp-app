@@ -224,7 +224,7 @@
 
 | ID | Priority | Phase | Role | Requirement／Risk | Preconditions | Test Data | User Steps | Expected Result | Required Evidence | Actual Evidence | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| MOVE-001 | P0 | P3 | U-OP | FR-MOVE-001／003、AC-028；Bin Move | BIN-A1有LOT-EARLY 10 EA | 移4至BIN-A2 | 提交Bin Move並查看兩Bin與Movement | 來源6、目的4、W-A及Total On Hand不變；產生同operation ID的Out／In Movement | 確認、兩Bin前後、成對Movement | — | NOT RUN |
+| MOVE-001 | P0 | P3 | U-OP | FR-MOVE-001／003、AC-028；Bin Move | BIN-A1有LOT-EARLY 10 EA；另備合法第二行 | 移4至BIN-A2及同倉多行Move | 提交Bin Move並查看兩Bin與Movement；再完整提交多行 | 來源6、目的4、W-A及Total On Hand不變；多行全有或全無，paired legs共用operation/group | 確認、每行前後、成對Movement | — | NOT RUN |
 | MOVE-002 | P0 | P3 | U-OP | FR-MOVE-002／004、AC-029；維度不變 | W-A／W-B及多狀態bucket | 同Bin、跨倉、改SKU／Lot／Expiry／Status | 逐一嘗試Bin Move | 同Bin及跨倉被拒絕並提示正確流程；不可藉Move改其他維度；數量不變 | 輸入、錯誤、前後Bucket | — | NOT RUN |
 | MOVE-003 | P0 | P3 | U-OP | FR-MOVE-005～007、AC-022；保障與鎖 | 來源有Reservation；另有Counting Bin | 可移不破壞保障／會破壞保障／數量0、小數、過量 | 逐一提交Move | 合法同倉Move成功且Reserved不變；破壞保障、非法數量、過量或Counting Bin全數拒絕且不部分移動 | 各結果、Reservation、兩Bin、Movement | — | NOT RUN |
 | MOVE-004 | P1 | P3 | U-OP | FR-TRANSFER-001／002、AC-030；Draft | W-A、W-B Active | 多行SKU／Lot／source Bin／qty | 建立Draft、修改完整lines、取消另一Draft | Draft建立／修改／取消均不改On Hand、Reserved或In Transit；取消狀態與原因清楚 | Draft歷程及前後Stock | — | NOT RUN |
@@ -1416,12 +1416,15 @@ Actor: U-OP. Validate the business outcome of legacy case `MOVE-001` at priority
 
 ### Preconditions and data
 Preconditions: BIN-A1有LOT-EARLY 10 EA Test data: 移4至BIN-A2
+補充：依§5.4.1／TC-006 Move技術就緒後，另備同倉第二行、既有及不存在目的Bucket；初始NOT_RUN。
 
 ### Steps
 提交Bin Move並查看兩Bin與Movement
+提交完整多行Move，核對每行保持原SKU／Lot／Expiry／Status／Base UOM，全部paired legs共用operation/group；把一行改成非法目的後重試，確認所有行皆不生效。
 
 ### Expected business result
 來源6、目的4、W-A及Total On Hand不變；產生同operation ID的Out／In Movement
+多行也是全有或全無；source trace及版本衝突可解釋、失敗不留下其他成功行。Required evidence包含完整文件／每行前後及group，仍需實際業務驗證，不由developer PASS推定。
 
 ### Acceptance criteria
 Required evidence: 確認、兩Bin前後、成對Movement Status remains `NOT_RUN`; mandatory and blocking. A baseline-bound business decision is required, and automation PASS never substitutes for human acceptance.
@@ -1450,12 +1453,15 @@ Actor: U-OP. Validate the business outcome of legacy case `MOVE-003` at priority
 
 ### Preconditions and data
 Preconditions: 來源有Reservation；另有Counting Bin Test data: 可移不破壞保障／會破壞保障／數量0、小數、過量
+補充：準備相同來源／目的版本的兩個操作頁、目的Bucket被另一操作更改／新增，以及完成後同source重送情境。
 
 ### Steps
 逐一提交Move
+先由一頁提交，再由舊頁提交來源或目的舊版本；目的原本不存在卻已新增時亦嘗試提交。刷新後按當下版本重試；完成後重送相同source／payload，再改數量重送。
 
 ### Expected business result
 合法同倉Move成功且Reserved不變；破壞保障、非法數量、過量或Counting Bin全數拒絕且不部分移動
+舊來源／目的版本衝突須要求刷新，不無聲覆蓋或自動重送；相同事件只一次成對效果，異內容明確衝突。既有因自然到期形成的uncovered不因合法同倉守恆Move增加或被自動消除。Required evidence含兩頁結果、版本與source trace；仍NOT_RUN。
 
 ### Acceptance criteria
 Required evidence: 各結果、Reservation、兩Bin、Movement Status remains `NOT_RUN`; mandatory and blocking. A baseline-bound business decision is required, and automation PASS never substitutes for human acceptance.
@@ -1467,12 +1473,15 @@ Actor: U-OP. Validate the business outcome of legacy case `MOVE-004` at priority
 
 ### Preconditions and data
 Preconditions: W-A、W-B Active Test data: 多行SKU／Lot／source Bin／qty
+補充：U-OP具inventory.view＋inventory.operation、無item.view／item.mgmt；合成SKU包含無任何Balance row且具合法Base UOM的可用SKU、不可用SKU及unknown Code。依TC-006 lookup子案例技術就緒後才執行，初始NOT_RUN。
 
 ### Steps
 建立Draft、修改完整lines、取消另一Draft
+以精確SKU Code查找並明確選料，核對名稱、Base UOM／tracking；修改Code確認清除該行SKU/Lot；查找不存在／不可用SKU，確認可理解的錯誤及其他lines保留。用無Balance SKU建／修改Draft，再嘗試Dispatch；refresh已保存Draft並驗證未保存離開提示。
 
 ### Expected business result
 Draft建立／修改／取消均不改On Hand、Reserved或In Transit；取消狀態與原因清楚
+Inventory-only actor可選無Balance SKU並保存Draft，不需Item管理權限；查找不公開價格或Item行政資料。不可用／未找到SKU不能選，Code改變不能保留舊skuId。無stock時Dispatch按既有規則拒絕，Draft及庫存不變；沒有自動替換／重送。Required evidence另含實際畫面、safe lookup request/response及無Balance／Dispatch失敗前後DB；仍NOT_RUN，需業務人員實際驗證及baseline-bound acceptance。
 
 ### Acceptance criteria
 Required evidence: Draft歷程及前後Stock Status remains `NOT_RUN`; mandatory and blocking. A baseline-bound business decision is required, and automation PASS never substitutes for human acceptance.

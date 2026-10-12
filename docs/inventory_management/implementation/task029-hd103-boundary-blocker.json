@@ -1,0 +1,11 @@
+{
+  "status": "BLOCKED",
+  "issues": [
+    {
+      "code": "SCOPE_APPROVAL_REQUIRED",
+      "path": "changes/server/database/migrations/0064_create_inventory_transfers.js",
+      "message": "shared/sensitive path requires a current scoped human approval"
+    }
+  ],
+  "scope": "Path consistency only; not process/data/API isolation or authenticated approval."
+}

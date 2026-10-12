@@ -1,0 +1,71 @@
+{
+  "schema_version": "2.0",
+  "module_id": "inventory-management",
+  "run_id": "task030-http-inventory-p3-unit-0f95fbdaa8",
+  "suite_id": "inventory-p3-unit",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "8ab85d87051f437b74c6cfb4efc39ba93c8c2dd9e56ca7ea210d7bc5bc705dc8",
+  "source_fingerprint": "cf8b982d065e7e6b02d16f85d61a6626638e32753ab8bcb44830c1a01e57ea69",
+  "code_commit": "869ac07abdd3879254c351d857be911d71e68b6b",
+  "started_at": "2026-10-07T03:20:12.462450+00:00",
+  "ended_at": "2026-10-07T03:20:12.841678+00:00",
+  "environment_id": "inventory-isolated-test",
+  "runtime_instance_id": "erp_inventory_p3_610b1e93ab8c",
+  "data_reference": "Synthetic Inventory fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "node",
+    "--test",
+    "--test-concurrency=1",
+    "--import",
+    "./server/test-support/testEnv.js",
+    "--test-reporter=junit",
+    "--test-reporter-destination=/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/task030-http-inventory-p3-unit-0f95fbdaa8/inventory-p3-unit.xml",
+    "server/test/inventoryTransferService.test.js",
+    "server/test/inventoryTransferHandlers.test.js"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "c979bc1863603ba5bef83c060734f19b550919820bf122d48526fdd874ac1c4f",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 27,
+    "passed": 27,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/task030-http-inventory-p3-unit-0f95fbdaa8/stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/task030-http-inventory-p3-unit-0f95fbdaa8/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/task030-http-inventory-p3-unit-0f95fbdaa8/inventory-p3-unit.xml",
+      "sha256": "0a7d584535779f1f23fcaf1ff73d70f26aed07145958f521fe4301cc5a3e6865",
+      "bytes": 6883
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "DEVELOPER TASK030 HTTP/domain plus Transfer compatibility only; not full-P3/formal acceptance/CI. Capacity4 remains NOT_EXECUTED."
+  ]
+}

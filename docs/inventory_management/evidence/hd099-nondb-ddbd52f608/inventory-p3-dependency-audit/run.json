@@ -1,0 +1,60 @@
+{
+  "schema_version": "2.0",
+  "module_id": "inventory-management",
+  "run_id": "hd099-nondb-ddbd52f608-inventory-p3-dependency-audit",
+  "suite_id": "inventory-p3-dependency-audit",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "11b815650cfb7851c5c096fe14fb7a2cff84ef3d28cd6d8afb1ae99d3ef8ad9a",
+  "source_fingerprint": "44ef6225ab74831ae34a2d93f40a421ed6a049f8032333d4af8da5cb544b702d",
+  "code_commit": "869ac07abdd3879254c351d857be911d71e68b6b",
+  "started_at": "2026-10-06T05:53:41.293030+00:00",
+  "ended_at": "2026-10-06T05:53:43.621518+00:00",
+  "environment_id": "inventory-isolated-test",
+  "runtime_instance_id": "erp-inventory-hd099-nondb.25gyboun",
+  "data_reference": "Synthetic Inventory fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "npm",
+    "run",
+    "security:audit"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "f2ddb885b3ce2c2545acaee4768430eea744cd2c404f8b7ecd37bd80a06cfc7d",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 0,
+    "passed": 0,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/hd099-nondb-ddbd52f608/inventory-p3-dependency-audit/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/hd099-nondb-ddbd52f608/inventory-p3-dependency-audit/stdout.log",
+      "sha256": "9a3c021852ad04a87935a6dc6f7f35748af820c4eb1f940fdc320158bc931fb3",
+      "bytes": 88
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "Approved HD099 developer remediation diagnostic while defect gate remains blocked; not formal acceptance, UI or current CI."
+  ]
+}

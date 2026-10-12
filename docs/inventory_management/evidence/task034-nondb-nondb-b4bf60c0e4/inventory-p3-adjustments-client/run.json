@@ -1,0 +1,70 @@
+{
+  "schema_version": "2.0",
+  "module_id": "inventory-management",
+  "run_id": "task034-nondb-nondb-b4bf60c0e4-inventory-p3-adjustments-client",
+  "suite_id": "inventory-p3-adjustments-client",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "6e27b339efb827ff8a2bb0c8ce82242f86c577f29bb4510b20884e854f456aac",
+  "source_fingerprint": "0cbbea162a3e377df50214fd63b2484b0585d68a2be8dc52ee1615d8b013178c",
+  "code_commit": "869ac07abdd3879254c351d857be911d71e68b6b",
+  "started_at": "2026-10-09T01:26:39.646270+00:00",
+  "ended_at": "2026-10-09T01:26:40.961177+00:00",
+  "environment_id": "inventory-isolated-test",
+  "runtime_instance_id": "erp-inventory-task034-nondb-nondb.ihjn3n3l",
+  "data_reference": "Synthetic Inventory fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "npm",
+    "test",
+    "--workspace",
+    "client",
+    "--",
+    "test/pages/inventory/inventoryAdjustments.test.js",
+    "--reporter=junit",
+    "--outputFile=/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/task034-nondb-nondb-b4bf60c0e4/inventory-p3-adjustments-client/inventory-p3-adjustments-client.xml"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "7e4d66d39d0ce7f7ba85202228cf96419f3adff1277de3ccabfa6534279cf9ba",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 25,
+    "passed": 25,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/task034-nondb-nondb-b4bf60c0e4/inventory-p3-adjustments-client/inventory-p3-adjustments-client.xml",
+      "sha256": "86ec2707bc76433c57e245e5a72a7f7e6dac47fe64cafffa469367406036d14e",
+      "bytes": 6905
+    },
+    {
+      "path": "evidence/task034-nondb-nondb-b4bf60c0e4/inventory-p3-adjustments-client/stderr.log",
+      "sha256": "c64ece51b3d1e5da976c9d3bdf51d97033ce8fedd3237bdf686b28b120336e14",
+      "bytes": 666
+    },
+    {
+      "path": "evidence/task034-nondb-nondb-b4bf60c0e4/inventory-p3-adjustments-client/stdout.log",
+      "sha256": "0a6e1e9274d34cab2e5f60fa8f4452f0423a32acfbd2663ade09d6d9ae156d0d",
+      "bytes": 532
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "HD134 TASK034 approved current-source native developer impact check; no formal/UI/current CI or Sam final source review claim."
+  ]
+}

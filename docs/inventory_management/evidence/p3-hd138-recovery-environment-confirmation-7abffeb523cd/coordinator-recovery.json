@@ -1,0 +1,8 @@
+{
+  "kind": "SUPPORTING_CONTROLLER_FAILURE_NOT_PRODUCT_DEFECT",
+  "observed": "Literal report placeholder was not expanded; JUnit contains1 pass0fail0skip but original process exit observation was not retained. No PASS accreditation. Original argv/metadata remain unchanged.",
+  "original_report_sha256": "2a9daae7e098c5f7e3dfe35a65abf0d5358399dc6bf90ba30e975beafe870261",
+  "source_restored": true,
+  "repair": "Expand the destination argument before execution, assert no placeholder remains, and rerun unchanged native test. Restore existing isolated admin GRANT OPTION.",
+  "cleanup": "Owned schema/users already removed and daemon shut down; exact remaining root removed."
+}

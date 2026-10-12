@@ -1,0 +1,57 @@
+{
+  "kind": "UNEXECUTED_EXACT_MAIN_REFRESH_AND_SCOPED_TEST_MAINTENANCE_PUBLICATION",
+  "decision": "HD-092",
+  "current_head": "fa4317cefb80c78e914b3158b2bf7b543d6035ff",
+  "current_source": "9bba52c4136d01a942c88ecfb6f0703c86f3af1da5dac279a119e960d92b3dc7",
+  "exact_upstream": "e3bfb02a3e48aac121386f6c5c9693487d17f346",
+  "upstream_changed_paths": [
+    "framework_readme.en.md",
+    "framework_readme.md",
+    "package-lock.json",
+    "server/package.json"
+  ],
+  "upstream_change": "Only dev nodemon removal/Node --watch/lock and README; product/test/migrations unchanged",
+  "legacy_preview_no_conflicts": true,
+  "legacy_preview_sha256": "595f58cea7af21baeecb41cabe369e3b2baf4286660ab9f6e9d17d9ce682be2a",
+  "approved_delta_sha256": "ee7aa97cc3a512bd004c2fead9728adbacb3be0a267b1357823d68b96ff18ebc",
+  "preserve_ten_paths": [
+    "server/test/authHandlers.test.js",
+    "server/test/customerLookupService.test.js",
+    "server/test/integration/customerLookup.integration.test.js",
+    "server/test/itemAuditLogService.test.js",
+    "server/test/jwtDeviceAuthStrategy.test.js",
+    "server/test/jwtDevicePasswordAuthStrategy.test.js",
+    "server/test/jwtPasswordAuthStrategy.test.js",
+    "server/test/mySqlIdempotencyStore.test.js",
+    "server/test/roleAdminService.test.js",
+    "server/test/tokenRevocationJobs.test.js"
+  ],
+  "pinned_migration_scope": {
+    "framework_entries": 3,
+    "delta_entries": 66,
+    "expected_fresh_ledger_entries": 69,
+    "absent": [
+      "0064",
+      "0065",
+      "0066"
+    ],
+    "new_since_old_diagnostic": [
+      "0067_seed_sales_permissions.js",
+      "0068_create_sales_document_sequences.js",
+      "0069_create_sales_operation_requests.js"
+    ],
+    "expected_not_observed": true
+  },
+  "shared_dependency_policy": "Reuse existing ignored installed dependencies; do not npmci through shared symlink or delete/mutate another worktree dependencies. Native CI npmci uses current lock. No local fresh-lock installation claim.",
+  "repeat_checks": "Exact bounded nonDB focused/root strictJUnit/LCOV/floors/lint then fresh private same69-entry DB migration/focused/nativefullcoverage using repaired controller and full metadata retention. No additional source fix/Inventoryguards/capacity/clientUIexecution. Existing fiveCIjobs authorized only by future actualSamHD092A afterlocalchecks/savepoint, not yet executed.",
+  "publication_if_A": "Push exact resulting isolated codex/inventory-def003-customer-label branch to origin and open PR main for only10testpaths57+/15-; no audit/evidence export. Sam independent exact newhead review and current CI still pending before later separate merge authority. No main merge authorized.",
+  "human_decision_text": "HD092 Decision Required: HD091 actual Sam A approved exactfa4317 and DB diagnostic; native2544PASS/0FAIL/14SKIP,coverage93.92/84.20/92.31/all34floors and focused1strictPASS. Own final checkpoint after root deletion failed; raw native artifacts preserved, recovered metadata explicitly incomplete (lost per-command times/exact testcreatednames), no complete Harness gate claimed; temporary helper fixed/selfcheck only, no replay. Fresh fetched main advanced bbb2383->e3bfb02a3e48aac121386f6c5c9693487d17f346 by2commits removing nodemon/devdependencies, node --watch and README updates only4paths. Migration/floorchecker/focused/Supplier side-effect bytes and exact coverage command unchanged; oldfa evidence remains sourcefa, not futurehead. A(recommended): on existing clean separatefixfa locally merge ONLY exacte3bfb02, no destructive reset/rebase/unreviewed conflict; preserve4fixcommits/15titles/2Auth/2Sales cases and identical10test-pathPRdelta57+/15-. Run bounded135focused/currentcomplete rootnative strictJUnit min108/maxskip0/LCOV/all34floors/lint, plus fresh private26.7.0 same69migration/focusedCustomer/fullserver92-83-90/all34floor diagnostic on resultingsource using corrected evidence helper (persist metadata/exactnames/times before precisecleanup). Synthetic8matchingBankkeys, rootnoDBflags, fullonlyDB_INTEGRATION_TESTS=1/privateaccounts; allotherguardcapacityflagsabsent/skipsNOT_EXECUTED; ownedfaultinjection/restore resources only; stop/triagefailure/no source repair or PLAN/parser/assertion/floor change. Existing ignored installed deps reused without mutating shared node_modules; no fresh-lock local install claim; PR CI uses its existing npmci on currentlock. Local savepoint only if unchangedscopechecks succeed. Then expressly authorize push this resulting separatefixbranch and open a narrow ten-test-file maintenance PR to main, allowing existing five mandatory CI jobs. Export only alreadytrackedtestdelta/public Git metadata, not accumulated local audit/evidence/credentials. Fresh observe main before merge/push; if moved or conflict/unreviewed change, stop for revised scope. No automatic mainmerge: new actualhead gets Sam independent review in PR and allcurrentCI/gates before a later merge decision; HD092 is workflow/scope approval, not futurehead approval. This separate crossmoduletest-remediation publication is not Inventory Phase merge/scope exception; all10paths remain OUTSIDE_MODULE and Inventorydirectadoption stays blocked. B: hold approvedfa/localresults, no further refresh/DB/pushPRCI; request changes if needed. A gets complete current-source evidence and reviewablePR without weakeningInventorygates, but repeats boundedDB work and grants remote publication/automaticCI cost; defaulthold. Neither grants Inventory source/manifest/profile/PLAN integration,0064/newguardcapacity,Task029resume,mainmerge,formalacceptance/UAT/deployment.",
+  "not_authorized": [
+    "Inventory product/spec/profile/manifest/PLAN writes",
+    "Inventory0064 migration",
+    "new guard/capacity suites",
+    "Task029 resume",
+    "push/PR/remoteCI/mainmerge",
+    "formal acceptance/UAT/deployment"
+  ]
+}

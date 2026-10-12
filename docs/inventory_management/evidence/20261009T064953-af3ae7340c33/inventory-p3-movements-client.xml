@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="7" failures="0" errors="0" time="0.171493">
+    <testsuite name="test/pages/inventory/inventoryMovements.test.js" timestamp="2026-10-09T06:49:54.688Z" hostname="samMacBook-Pro.local" tests="7" failures="0" errors="0" skipped="0" time="0.171493">
+        <testcase classname="test/pages/inventory/inventoryMovements.test.js" name="TASK033 Movement high-risk entry &gt; UI033-AUTH keeps history view-only and hides write actions for read-only and operation/FEFO actors" time="0.05150175">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryMovements.test.js" name="TASK033 Movement high-risk entry &gt; UI033-AUTH exposes exact local entry only with view+adjust and removes it on permission loss" time="0.0196935">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryMovements.test.js" name="TASK033 Movement high-risk entry &gt; UI033-RECONCILE shows the full original group and bidirectional reversal links without write entry on reversed legs" time="0.013494958">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryMovements.test.js" name="TASK033 Movement high-risk entry &gt; UI033-RECONCILE allows only whole BIN groups of the five reversible types" time="0.051532041">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryMovements.test.js" name="TASK033 Movement high-risk entry &gt; UI033-UI-REGRESSION ignores late detail success after a newer selection" time="0.012070375">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryMovements.test.js" name="TASK033 Movement high-risk entry &gt; UI033-UI-REGRESSION ignores late detail failure after newer success and rejects wrong server identity" time="0.014353542">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryMovements.test.js" name="TASK033 Movement high-risk entry &gt; UI033-UI-REGRESSION closes a pending detail without letting it reopen or show stale errors" time="0.008157834">
+        </testcase>
+    </testsuite>
+</testsuites>

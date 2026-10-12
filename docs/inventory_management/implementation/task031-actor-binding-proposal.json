@@ -1,0 +1,153 @@
+{
+  "status": "PROPOSED_NOT_APPLIED",
+  "decision": "HD-123",
+  "selected_option": "HD122 A",
+  "authority": "Actual Sam A selects Operation actor deferral and exact-candidate preparation only. Newly discovered new-Lot creator deferral and exact replacement baseline await Sam HD123 review.",
+  "code_commit": "869ac07abdd3879254c351d857be911d71e68b6b",
+  "source_fingerprint": "20ec89c06143f630bd00a5c4307d3ceb94936601b587fb610f8c5d74196aa00b",
+  "active_baselines": {
+    "design": "c99381982a7b07b8b310dbd0cabe2a40bd9118f6ce107c77ea211966c72ff265",
+    "plan": "66647031a7b6db326ca1d51e745289616daba67e5c98a02939dc3eda2367c31e"
+  },
+  "proposed_baselines": {
+    "design": "ccd54a79438c2bb7e1cfcc58c9b8878b47120f0a3f91110a13d7d28202e05853",
+    "plan": "4c074a4e344599e912aab7e351e93abfc5f447085657f59625f7c7a95c69440a"
+  },
+  "patch": "task031-actor-binding-proposal.patch",
+  "patch_sha256": "c48ceae8cc7380926a896c8344b2f26d5ae7c865e8af6e07a2f82cc095e21ae7",
+  "files": [
+    {
+      "path": "docs/inventory_management/00_module_manifest.json",
+      "before_sha256": "db9c12e2e738d9df8abccdb54d7d3a7fc8750a7420143b9bb0376f11a115c85a",
+      "after_sha256": "f1cb65608a2e26fa500991b04a7aff250e11188e6c72b94c87d0dccb5b873143"
+    },
+    {
+      "path": "docs/inventory_management/03_design_spec.md",
+      "before_sha256": "3574166ca581250f8ab2d110dbcbac7f4bf7245a0213ed6435bf33e6e0f6f096",
+      "after_sha256": "6760eb6d7975b15c90b9abc653414d51020c529ef2984b32158dc598456bbdd5"
+    },
+    {
+      "path": "docs/inventory_management/05_development_tasks.md",
+      "before_sha256": "408fc18002f60e544048bfcb990688f7bb41377771338d1aa99fd9d6dbadd440",
+      "after_sha256": "cc927d62de793ace73c90a921c0cd724601546740b081d9770e56d2be26898af"
+    },
+    {
+      "path": "docs/inventory_management/06_technical_test_cases.md",
+      "before_sha256": "62853f86b9e8bd9d6138dccfca8f24a708ab3c30627a0ad4a4ab279c64a52f4a",
+      "after_sha256": "570ab7b31e95ef29f5dee61f0b7a5a7d988372a4111069c2c3133b1f6b79e782"
+    }
+  ],
+  "shared_scope_rebind_paths": [
+    "server/src/framework/api/apiDefinitionResolver.js",
+    "server/src/framework/middleware/apiDispatcher.js",
+    "server/src/services/idempotency/IdempotencyService.js",
+    "server/test/apiDefinitionResolver.test.js",
+    "server/test/apiDispatcher.test.js",
+    "server/test/idempotencyService.test.js",
+    "server/src/framework/validation/requestValidator.js",
+    "server/test/requestValidator.test.js"
+  ],
+  "unchanged_shared_no_write": [
+    "server/src/framework/api/apiDefinitionResolver.js",
+    "server/src/framework/middleware/apiDispatcher.js",
+    "server/src/services/idempotency/IdempotencyService.js",
+    "server/test/apiDefinitionResolver.test.js",
+    "server/test/apiDispatcher.test.js",
+    "server/test/idempotencyService.test.js",
+    "server/src/framework/validation/requestValidator.js",
+    "server/test/requestValidator.test.js"
+  ],
+  "owned_source_test_paths": [
+    "server/src/modules/inventory/InventoryPostingService.js",
+    "server/src/modules/inventory/inventoryHighRiskContext.js",
+    "server/src/modules/inventory/inventoryAdjustmentPosting.js",
+    "server/src/modules/inventory/InventoryAuditService.js",
+    "server/src/handlers/inventory/postingHandlers.js",
+    "server/src/handlers/inventory/inventorySchemas.js",
+    "server/test/inventoryPostingService.test.js",
+    "server/test/inventoryPostingHandlers.test.js",
+    "server/test/inventoryAuditService.test.js",
+    "server/test/inventoryEndpointSecurity.test.js",
+    "server/test-support/fakeInventoryDatabase.js",
+    "server/test/integration/inventoryMovement.integration.test.js",
+    "server/test/integration/inventoryWarehouseOperationsApi.integration.test.js"
+  ],
+  "unchanged_source_pins": {
+    "server/src/framework/api/apiDefinitionResolver.js": "b525db9717bbde5f9d6df0dd79d080e93cf1bbb7a2afeffd86bd615dcf9cdd39",
+    "server/src/framework/middleware/apiDispatcher.js": "7cf9879996dd7b092c5fa2aa50c4569415ca9b7d42674ee4430e34b2fb3b71b7",
+    "server/src/services/idempotency/IdempotencyService.js": "33abf93472c2d7a4687c1f4d323cd97f0e7d5f4c7875cb7161cfa06b1b0999aa",
+    "server/test/apiDefinitionResolver.test.js": "19cd265670940a5d3b5bfd42ae6062570f48ba3ba4be006d6322428682b84af6",
+    "server/test/apiDispatcher.test.js": "ee0c4580fb0d86625d815bf8916c45c276b7bc2004ddd47f932ea6ec3c49c7fa",
+    "server/test/idempotencyService.test.js": "f1a526a94cbe906349cc692cb321285fca99f3babc10c1ae7875791efb7a7ec9",
+    "server/src/framework/validation/requestValidator.js": "bb91d71879e4e75761f5a0c87e1608e0ee31488ea442878b87f10f331a007189",
+    "server/test/requestValidator.test.js": "47431b8f7e9052acfd2beeba1a78f969b1b0e35f22f390cb063d6d9d880fe80e",
+    "server/src/modules/inventory/InventoryPostingService.js": "b9b189a86f20de4722862e3f3d08d7cc82ee6a269d7de22e4fac4acda8e38109",
+    "server/src/modules/inventory/inventoryHighRiskContext.js": "ae19869d779a775d42c0a302d9d07bfb0233e335df9abaf940bd3c59dcaa5c24",
+    "server/src/modules/inventory/inventoryAdjustmentPosting.js": "44cc7d23d322588c42c857e34846bb59479fc97189acf4993ab13b5eee3cc169",
+    "server/src/modules/inventory/InventoryAuditService.js": "4743053e7b5700e6fd025a191d317c4e2ab59a9f717970e8a0e686c99ff6e256",
+    "server/src/handlers/inventory/postingHandlers.js": "b257b670f399b650496c639e1b8e3146de6b7b751fd35006ec9b8590e021ec3e",
+    "server/src/handlers/inventory/inventorySchemas.js": "0ff488c33b9ac94cfb11bc7b2b83943502f4ee479ae9ce739e7282d5e904fbbe",
+    "server/test/inventoryPostingService.test.js": "b43ae3e80e732169f4c7b9ec1aadf0fec67f91f024346b6ec6dd769e86eea338",
+    "server/test/inventoryPostingHandlers.test.js": "d63d4bf64f933090f34b8baf351ac0d2e711b2ca7d8dd4ba10726f060b891295",
+    "server/test/inventoryAuditService.test.js": "6251170b424668875a78cc688f905a2ce3eead4d67be62e1bd2cbfe107ea45fb",
+    "server/test/inventoryEndpointSecurity.test.js": "71d9b1040696077397c22de59de2de9cfdf437f5d2fb880c57868a2f45212d44",
+    "server/test-support/fakeInventoryDatabase.js": "c2cc8ef9a118f5e3cf7fbe5f525fc72e6fe60dfdaa97a47cf73ed540c9daf4e4",
+    "server/test/integration/inventoryMovement.integration.test.js": "e2bcd70299b7aee117b7fde53951f1b691e43c4b819f22be0ca1efd2961420cc",
+    "server/test/integration/inventoryWarehouseOperationsApi.integration.test.js": "d7370716f817ec6e2f0881e53d8d9510528111a5775544b27d79b9695075289f"
+  },
+  "unchanged": {
+    "01_requirement_spec.md": "5a8c7575722c09972bae1642d6d1bb185ece5505b5d534509010313b99a630b8",
+    "00_project_profile.json": "7e99eb6e8ba556e4a545770ba1c5bfd91c7ff15ee86b0388211974750fe4e8d6",
+    "07_uat_test_cases.md": "9f3c2aa2e3347089168c45c81350354b936bd15ecd639937b3fdb1a6a04737a4",
+    "08_traceability.json": "ac82a88c498b6de6f99ad14ca5adccfd7867be5ce2c2f06b26209f7f0e1de222",
+    "08_traceability_matrix.md": "e856d9e8ee4445b77ec18a852c8a2cee2f65f2932fbd3ab6c710356abf87f4f5"
+  },
+  "unchanged_existing_0064": {
+    "path": "server/database/migrations/0064_create_inventory_transfers.js",
+    "sha256": "07653bb700a40b026e8bb46b538e0e31b112d6c20010af45b4cc71a6ff7ac143",
+    "requested_scope": "Rebind byte-identical existing0064 scope and existing approved owned synthetic migration use to the proposed PLAN; no new migration or DDL alteration."
+  },
+  "unchanged_actor_fk_migrations": {
+    "server/database/migrations/0056_create_inventory_operations.js": "a765aaa91084632362c37a21b98890093f98c760c9fbda7a5da499995263b570",
+    "server/database/migrations/0059_create_inventory_stock.js": "5360d2f514f61331c97382b4d1b308a6d9009790e1a15a136047ba8211e66617"
+  },
+  "validation": {
+    "traceability": "STRUCTURE_PASS",
+    "issues": [],
+    "matrix": "BYTE_IDENTICAL",
+    "provided_contract_pin": "MATCHES_DESIGN",
+    "consumed_item_contract": "UNCHANGED",
+    "fresh_copy_patch_replay": "PASS_EXACT_4_FILE_SHA256",
+    "profile_commands_parsers_floors": "BYTE_IDENTICAL",
+    "named_scenario_rows": 17,
+    "new_scenario_execution": "PLANNED_NOT_RUN",
+    "full_candidate_gate": "PENDING_ACTUAL_SAM_REVIEW_AND_APPROVAL"
+  },
+  "review": {
+    "method": "SELF_REVIEW",
+    "author": "Codex /root",
+    "reviewer": "Codex /root",
+    "independent": false,
+    "scope": "Docs-only: implicit Operation/Lot user FK locks, exact actual INSERT ownership, current final guard then conditional binding, no NULL-at-success commit, rollback/replay, immutable existing Lot/Receipt/public contract, dates and unchanged checks. Runtime defects remain OPEN; no independent candidate/source review."
+  },
+  "native_evidence_refs_retained": 164,
+  "known_defects": [
+    "DEF-009 HIGH OPEN: actor FK transaction order; new-Lot FK identified from unchanged0059/source, not yet runtime-retested",
+    "DEF-010 HIGH OPEN: DATE representation requires owned DATE_FORMAT and targeted/compatibility retest"
+  ],
+  "execution": "Temporary docs-copy validation and exact replay only. No active canonical/source/test edits or DB/API/browser/CI/publication execution. Original native21PASS/3FAIL/24/0skip retained unchanged.",
+  "exclusions": [
+    "shared auth/policy/bootstrap/Item changes",
+    "global request/idempotency/isolation config",
+    "new DDL/permissions/dependencies",
+    "client/frontend/TASK033",
+    "stage/commit/push/PR/remoteCI/merge/main adoption",
+    "TASK032+ execution",
+    "formal TC/UAT/business/release acceptance",
+    "capacity/check/floor waiver"
+  ],
+  "temporary_validation_roots": [
+    "/private/tmp/inventory-task031-hd122-candidate-vgxgvryq",
+    "/private/tmp/inventory-task031-hd122-replay-ggt0b3jl"
+  ]
+}

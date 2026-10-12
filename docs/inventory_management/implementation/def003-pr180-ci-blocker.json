@@ -1,0 +1,562 @@
+{
+  "decision": "HD-094",
+  "human_decision_text": "HD094 Decision Required: PR180 exacthead2abf56714c627af959dc89c527180853d05debc8 is OPEN; approved10test-file maintenance is published and bounded localchecks pass with14guardedNOT_EXECUTED. CurrentGitHubCI dependencyaudit FAILED:5vulnerabilities1critical3high1moderate; npmci succeeded, actualsyntheticmerge86f97eb on exactmainf81. Lockedvue/server-renderer3.5.40,proxy-addr2.0.7,source-map-js1.2.1,postcss-selector-parser7.1.5 are inheritedunchangedfrommain; no dependency/workflowdelta in PR180. No auditwaiver/automaticfix/merge. A(recommended): authorize a DISTINCT dependency-security remediation stream in a fresh isolated worktree from latestfetchedmain. Inspect officialadvisories/changelogs and dependency graph first, apply only compatible minimal non-major securityupdates needed by these reportedadvisories and consistentlock via package-manager; no blanketnpmauditfix/force, auditthresholdlowering, suppressions, unrelatedupgrades or productsemantics redesign. Verify freshownedlockedinstall/audit/lint/server+client/build and relevant realPlaywrightUI/securityregression using existingtooling/localownedresources; inspect requiredisolatedDBeffects before execution. Stop and ask if fix requires major/API/security-policy changes, changedsourceoutsideapproveddependencyremediation or unreviewedconflicts; preservefailures. Successfulreviewedchecks maycommit/push/open a separate focusedsecurityPR/runexistingmandatoryCI, notautomerge. Actualnewhead still needs Sam independentreview/separatemergeauthorization. Keep PR180 unmerged; re-establish exactmain/currentCI after anydependencyPRintegration only under subsequentappropriateapproval. B: holdallrepair/publication, retain PR180 and deferdependencyfix to an existingauthorizedstream. A fixes the blockingsecurityproblem without contaminating10-test-filePR but changes runtime/builddependencies and needs regressions; B avoidsdependencywrites now but leaves auditred/unmergeable. Defaulthold until Sam replies. Neither grants Inventorydirectadoption/source/manifest/profile/PLAN writes,0064/newguardcapacity/TASK029resume/formalacceptance/UAT/deployment/mainmerge.",
+  "ci": {
+    "observed_at": "2026-10-06T01:27:43.760436+00:00",
+    "provider": "GitHub Actions",
+    "pr": {
+      "additions": 57,
+      "baseRefOid": "f81feb8ee37871fe600352d6cc3ae92147ec4323",
+      "deletions": 15,
+      "files": [
+        {
+          "path": "server/test/authHandlers.test.js",
+          "additions": 42,
+          "deletions": 0,
+          "changeType": "MODIFIED"
+        },
+        {
+          "path": "server/test/customerLookupService.test.js",
+          "additions": 1,
+          "deletions": 1,
+          "changeType": "MODIFIED"
+        },
+        {
+          "path": "server/test/integration/customerLookup.integration.test.js",
+          "additions": 1,
+          "deletions": 1,
+          "changeType": "MODIFIED"
+        },
+        {
+          "path": "server/test/itemAuditLogService.test.js",
+          "additions": 6,
+          "deletions": 6,
+          "changeType": "MODIFIED"
+        },
+        {
+          "path": "server/test/jwtDeviceAuthStrategy.test.js",
+          "additions": 1,
+          "deletions": 1,
+          "changeType": "MODIFIED"
+        },
+        {
+          "path": "server/test/jwtDevicePasswordAuthStrategy.test.js",
+          "additions": 1,
+          "deletions": 1,
+          "changeType": "MODIFIED"
+        },
+        {
+          "path": "server/test/jwtPasswordAuthStrategy.test.js",
+          "additions": 1,
+          "deletions": 1,
+          "changeType": "MODIFIED"
+        },
+        {
+          "path": "server/test/mySqlIdempotencyStore.test.js",
+          "additions": 1,
+          "deletions": 1,
+          "changeType": "MODIFIED"
+        },
+        {
+          "path": "server/test/roleAdminService.test.js",
+          "additions": 2,
+          "deletions": 2,
+          "changeType": "MODIFIED"
+        },
+        {
+          "path": "server/test/tokenRevocationJobs.test.js",
+          "additions": 1,
+          "deletions": 1,
+          "changeType": "MODIFIED"
+        }
+      ],
+      "headRefOid": "2abf56714c627af959dc89c527180853d05debc8",
+      "number": 180,
+      "reviewDecision": "",
+      "state": "OPEN",
+      "statusCheckRollup": [
+        {
+          "__typename": "CheckRun",
+          "completedAt": "2026-10-06T01:22:20Z",
+          "conclusion": "FAILURE",
+          "detailsUrl": "https://github.com/crazysumsum/erp-app/actions/runs/37398781682/job/112060969080",
+          "name": "Dependency audit",
+          "startedAt": "2026-10-06T01:21:59Z",
+          "status": "COMPLETED",
+          "workflowName": "CI"
+        },
+        {
+          "__typename": "CheckRun",
+          "completedAt": "2026-10-06T01:22:27Z",
+          "conclusion": "SUCCESS",
+          "detailsUrl": "https://github.com/crazysumsum/erp-app/actions/runs/37398781682/job/112060969394",
+          "name": "Lint",
+          "startedAt": "2026-10-06T01:21:58Z",
+          "status": "COMPLETED",
+          "workflowName": "CI"
+        },
+        {
+          "__typename": "CheckRun",
+          "completedAt": "2026-10-06T01:24:16Z",
+          "conclusion": "SUCCESS",
+          "detailsUrl": "https://github.com/crazysumsum/erp-app/actions/runs/37398781682/job/112060969294",
+          "name": "Browser tests (Playwright)",
+          "startedAt": "2026-10-06T01:21:59Z",
+          "status": "COMPLETED",
+          "workflowName": "CI"
+        },
+        {
+          "__typename": "CheckRun",
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "detailsUrl": "https://github.com/crazysumsum/erp-app/actions/runs/37398781682/job/112060969399",
+          "name": "Test (server + client, MySQL integration)",
+          "startedAt": "2026-10-06T01:21:59Z",
+          "status": "IN_PROGRESS",
+          "workflowName": "CI"
+        },
+        {
+          "__typename": "CheckRun",
+          "completedAt": "2026-10-06T01:22:17Z",
+          "conclusion": "SUCCESS",
+          "detailsUrl": "https://github.com/crazysumsum/erp-app/actions/runs/37398781682/job/112060969398",
+          "name": "Build frontend",
+          "startedAt": "2026-10-06T01:21:59Z",
+          "status": "COMPLETED",
+          "workflowName": "CI"
+        }
+      ],
+      "url": "https://github.com/crazysumsum/erp-app/pull/180"
+    },
+    "run": {
+      "conclusion": "",
+      "event": "pull_request",
+      "headSha": "2abf56714c627af959dc89c527180853d05debc8",
+      "jobs": [
+        {
+          "completedAt": "2026-10-06T01:22:20Z",
+          "conclusion": "failure",
+          "databaseId": 112060969080,
+          "name": "Dependency audit",
+          "startedAt": "2026-10-06T01:21:59Z",
+          "status": "completed",
+          "steps": [
+            {
+              "completedAt": "2026-10-06T01:22:00Z",
+              "conclusion": "success",
+              "name": "Set up job",
+              "number": 1,
+              "startedAt": "2026-10-06T01:22:00Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-06T01:22:03Z",
+              "conclusion": "success",
+              "name": "Check out repository",
+              "number": 2,
+              "startedAt": "2026-10-06T01:22:00Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-06T01:22:11Z",
+              "conclusion": "success",
+              "name": "Set up Node.js",
+              "number": 3,
+              "startedAt": "2026-10-06T01:22:03Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-06T01:22:18Z",
+              "conclusion": "success",
+              "name": "Install locked dependencies",
+              "number": 4,
+              "startedAt": "2026-10-06T01:22:11Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-06T01:22:18Z",
+              "conclusion": "failure",
+              "name": "Scan dependencies",
+              "number": 5,
+              "startedAt": "2026-10-06T01:22:18Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-06T01:22:18Z",
+              "conclusion": "skipped",
+              "name": "Post Set up Node.js",
+              "number": 9,
+              "startedAt": "2026-10-06T01:22:18Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-06T01:22:19Z",
+              "conclusion": "success",
+              "name": "Post Check out repository",
+              "number": 10,
+              "startedAt": "2026-10-06T01:22:18Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-06T01:22:19Z",
+              "conclusion": "success",
+              "name": "Complete job",
+              "number": 11,
+              "startedAt": "2026-10-06T01:22:19Z",
+              "status": "completed"
+            }
+          ],
+          "url": "https://github.com/crazysumsum/erp-app/actions/runs/37398781682/job/112060969080"
+        },
+        {
+          "completedAt": "2026-10-06T01:24:16Z",
+          "conclusion": "success",
+          "databaseId": 112060969294,
+          "name": "Browser tests (Playwright)",
+          "startedAt": "2026-10-06T01:21:59Z",
+          "status": "completed",
+          "steps": [
+            {
+              "completedAt": "2026-10-06T01:22:00Z",
+              "conclusion": "success",
+              "name": "Set up job",
+              "number": 1,
+              "startedAt": "2026-10-06T01:22:00Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-06T01:22:03Z",
+              "conclusion": "success",
+              "name": "Check out repository",
+              "number": 2,
+              "startedAt": "2026-10-06T01:22:00Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-06T01:22:10Z",
+              "conclusion": "success",
+              "name": "Set up Node.js",
+              "number": 3,
+              "startedAt": "2026-10-06T01:22:03Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-06T01:22:15Z",
+              "conclusion": "success",
+              "name": "Install locked dependencies",
+              "number": 4,
+              "startedAt": "2026-10-06T01:22:10Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-06T01:22:46Z",
+              "conclusion": "success",
+              "name": "Install Playwright browser",
+              "number": 5,
+              "startedAt": "2026-10-06T01:22:15Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-06T01:24:12Z",
+              "conclusion": "success",
+              "name": "Run browser tests (network-mocked suites)",
+              "number": 6,
+              "startedAt": "2026-10-06T01:22:46Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-06T01:24:12Z",
+              "conclusion": "success",
+              "name": "Post Set up Node.js",
+              "number": 11,
+              "startedAt": "2026-10-06T01:24:12Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-06T01:24:13Z",
+              "conclusion": "success",
+              "name": "Post Check out repository",
+              "number": 12,
+              "startedAt": "2026-10-06T01:24:12Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-06T01:24:13Z",
+              "conclusion": "success",
+              "name": "Complete job",
+              "number": 13,
+              "startedAt": "2026-10-06T01:24:13Z",
+              "status": "completed"
+            }
+          ],
+          "url": "https://github.com/crazysumsum/erp-app/actions/runs/37398781682/job/112060969294"
+        },
+        {
+          "completedAt": "2026-10-06T01:22:27Z",
+          "conclusion": "success",
+          "databaseId": 112060969394,
+          "name": "Lint",
+          "startedAt": "2026-10-06T01:21:58Z",
+          "status": "completed",
+          "steps": [
+            {
+              "completedAt": "2026-10-06T01:22:00Z",
+              "conclusion": "success",
+              "name": "Set up job",
+              "number": 1,
+              "startedAt": "2026-10-06T01:21:59Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-06T01:22:01Z",
+              "conclusion": "success",
+              "name": "Check out repository",
+              "number": 2,
+              "startedAt": "2026-10-06T01:22:00Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-06T01:22:08Z",
+              "conclusion": "success",
+              "name": "Set up Node.js",
+              "number": 3,
+              "startedAt": "2026-10-06T01:22:01Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-06T01:22:15Z",
+              "conclusion": "success",
+              "name": "Install locked dependencies",
+              "number": 4,
+              "startedAt": "2026-10-06T01:22:08Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-06T01:22:25Z",
+              "conclusion": "success",
+              "name": "Lint (server + client, including .vue)",
+              "number": 5,
+              "startedAt": "2026-10-06T01:22:15Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-06T01:22:25Z",
+              "conclusion": "success",
+              "name": "Post Set up Node.js",
+              "number": 9,
+              "startedAt": "2026-10-06T01:22:25Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-06T01:22:25Z",
+              "conclusion": "success",
+              "name": "Post Check out repository",
+              "number": 10,
+              "startedAt": "2026-10-06T01:22:25Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-06T01:22:25Z",
+              "conclusion": "success",
+              "name": "Complete job",
+              "number": 11,
+              "startedAt": "2026-10-06T01:22:25Z",
+              "status": "completed"
+            }
+          ],
+          "url": "https://github.com/crazysumsum/erp-app/actions/runs/37398781682/job/112060969394"
+        },
+        {
+          "completedAt": "2026-10-06T01:22:17Z",
+          "conclusion": "success",
+          "databaseId": 112060969398,
+          "name": "Build frontend",
+          "startedAt": "2026-10-06T01:21:59Z",
+          "status": "completed",
+          "steps": [
+            {
+              "completedAt": "2026-10-06T01:22:00Z",
+              "conclusion": "success",
+              "name": "Set up job",
+              "number": 1,
+              "startedAt": "2026-10-06T01:22:00Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-06T01:22:02Z",
+              "conclusion": "success",
+              "name": "Check out repository",
+              "number": 2,
+              "startedAt": "2026-10-06T01:22:00Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-06T01:22:07Z",
+              "conclusion": "success",
+              "name": "Set up Node.js",
+              "number": 3,
+              "startedAt": "2026-10-06T01:22:02Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-06T01:22:14Z",
+              "conclusion": "success",
+              "name": "Install locked dependencies",
+              "number": 4,
+              "startedAt": "2026-10-06T01:22:07Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-06T01:22:15Z",
+              "conclusion": "success",
+              "name": "Build frontend",
+              "number": 5,
+              "startedAt": "2026-10-06T01:22:14Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-06T01:22:15Z",
+              "conclusion": "success",
+              "name": "Post Set up Node.js",
+              "number": 9,
+              "startedAt": "2026-10-06T01:22:15Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-06T01:22:16Z",
+              "conclusion": "success",
+              "name": "Post Check out repository",
+              "number": 10,
+              "startedAt": "2026-10-06T01:22:15Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-06T01:22:16Z",
+              "conclusion": "success",
+              "name": "Complete job",
+              "number": 11,
+              "startedAt": "2026-10-06T01:22:16Z",
+              "status": "completed"
+            }
+          ],
+          "url": "https://github.com/crazysumsum/erp-app/actions/runs/37398781682/job/112060969398"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "databaseId": 112060969399,
+          "name": "Test (server + client, MySQL integration)",
+          "startedAt": "2026-10-06T01:21:59Z",
+          "status": "in_progress",
+          "steps": [
+            {
+              "completedAt": "2026-10-06T01:22:00Z",
+              "conclusion": "success",
+              "name": "Set up job",
+              "number": 1,
+              "startedAt": "2026-10-06T01:22:00Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-06T01:22:30Z",
+              "conclusion": "success",
+              "name": "Initialize containers",
+              "number": 2,
+              "startedAt": "2026-10-06T01:22:00Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-06T01:22:31Z",
+              "conclusion": "success",
+              "name": "Check out repository",
+              "number": 3,
+              "startedAt": "2026-10-06T01:22:30Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-06T01:22:37Z",
+              "conclusion": "success",
+              "name": "Set up Node.js",
+              "number": 4,
+              "startedAt": "2026-10-06T01:22:31Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-06T01:22:43Z",
+              "conclusion": "success",
+              "name": "Install locked dependencies",
+              "number": 5,
+              "startedAt": "2026-10-06T01:22:37Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-06T01:22:44Z",
+              "conclusion": "success",
+              "name": "Verify exact MySQL server version",
+              "number": 6,
+              "startedAt": "2026-10-06T01:22:43Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-06T01:22:46Z",
+              "conclusion": "success",
+              "name": "Apply database migrations",
+              "number": 7,
+              "startedAt": "2026-10-06T01:22:44Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "0001-01-01T00:00:00Z",
+              "conclusion": "",
+              "name": "Run tests with coverage thresholds",
+              "number": 8,
+              "startedAt": "2026-10-06T01:22:46Z",
+              "status": "in_progress"
+            },
+            {
+              "completedAt": "0001-01-01T00:00:00Z",
+              "conclusion": "",
+              "name": "Post Set up Node.js",
+              "number": 14,
+              "startedAt": "0001-01-01T00:00:00Z",
+              "status": "pending"
+            },
+            {
+              "completedAt": "0001-01-01T00:00:00Z",
+              "conclusion": "",
+              "name": "Post Check out repository",
+              "number": 15,
+              "startedAt": "0001-01-01T00:00:00Z",
+              "status": "pending"
+            },
+            {
+              "completedAt": "0001-01-01T00:00:00Z",
+              "conclusion": "",
+              "name": "Stop containers",
+              "number": 16,
+              "startedAt": "0001-01-01T00:00:00Z",
+              "status": "pending"
+            }
+          ],
+          "url": "https://github.com/crazysumsum/erp-app/actions/runs/37398781682/job/112060969399"
+        }
+      ],
+      "status": "in_progress",
+      "url": "https://github.com/crazysumsum/erp-app/actions/runs/37398781682"
+    },
+    "head_sha": "2abf56714c627af959dc89c527180853d05debc8",
+    "synthetic_merge_sha_observed_in_job_log": "86f97eb52b500190fc1b2401f2d9e88b7f2b16ea",
+    "independent_review": "Sam approval of this new actual head NOT_RECEIVED",
+    "merge_authority": "NOT_GRANTED",
+    "audit_triage": "Existing lockfile/workflows equal exact upstream; 5 package vulnerabilities,1critical3high1moderate. Dependency repair is out of approved10test-file scope, no npm audit fix/rerun/waiver/merge executed."
+  },
+  "locked_versions": {
+    "vue": "3.5.40",
+    "@vue/server-renderer": "3.5.40",
+    "proxy-addr": "2.0.7",
+    "source-map-js": "1.2.1",
+    "postcss-selector-parser": "7.1.5"
+  },
+  "repair_authority": "NOT_GRANTED",
+  "dependency_files_equal_upstream": true
+}

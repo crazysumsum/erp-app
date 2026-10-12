@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="TC-064 imports 10,000 Customer rows within the release budget" time="27.950081" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/performance/customerImport.performance.test.js"/>
+	<!-- tests 1 -->
+	<!-- suites 0 -->
+	<!-- pass 1 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 28099.226583 -->
+</testsuites>

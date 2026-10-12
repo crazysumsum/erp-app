@@ -1,0 +1,115 @@
+{
+  "schema_version": "2.0",
+  "module_id": "inventory-management",
+  "run_id": "20261009T091613-cd1a3d94d37b",
+  "suite_id": "inventory-p3-client-coverage",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "151cf5757a465b4df8a64f34e1f876ca6759a3bcc438ec721fb22bf7ab965a44",
+  "source_fingerprint": "3cdc51c462840f24f5a221218a928e795600de865f35042f2a087622cee9679e",
+  "code_commit": "168ceb1badd6e6ed3e2ae6976f95b224e86d54bb",
+  "started_at": "2026-10-09T09:16:13.572442Z",
+  "ended_at": "2026-10-09T09:16:22.821004Z",
+  "environment_id": "inventory-isolated-test",
+  "runtime_instance_id": "erp-inventory-p3-integration-2ngk1g1s",
+  "data_reference": "Synthetic Inventory fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "npm",
+    "run",
+    "test:coverage",
+    "--workspace",
+    "client",
+    "--",
+    "--reporter=junit",
+    "--outputFile=/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/20261009T091613-cd1a3d94d37b/inventory-p3-client-coverage.xml"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "e22db846f42b44773957383bc79c36efcad805a780815679b0de73c084573b3d",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 860,
+    "passed": 860,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [
+    {
+      "id": "TC-011",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-016",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-019",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-022",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-024",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-027",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-028",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-029",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-030",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-070",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-075",
+      "status": "PASS"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "evidence/20261009T091613-cd1a3d94d37b/stdout.log",
+      "sha256": "f50a00dbbaeb3d8cf9a650303f071d6d41d2c37c86c0028d1c76cf74a3e2e117",
+      "bytes": 15631
+    },
+    {
+      "path": "evidence/20261009T091613-cd1a3d94d37b/stderr.log",
+      "sha256": "35f792c3ad7854ba51a71cb78cc39e1c69d783f93833095710ca010b8df28489",
+      "bytes": 16827
+    },
+    {
+      "path": "evidence/20261009T091613-cd1a3d94d37b/inventory-p3-client-coverage.xml",
+      "sha256": "51dbeb929146a52e45c1d816fd651373595ceb5ef531750c7c1331f58cecce3c",
+      "bytes": 256907
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "Local observation only; external services/config/data and secret redaction completeness require review."
+  ]
+}

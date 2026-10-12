@@ -1,0 +1,70 @@
+{
+  "schema_version": "2.0",
+  "module_id": "inventory-management",
+  "run_id": "hd099-nondb-ddbd52f608-inventory-task028-unit",
+  "suite_id": "inventory-task028-unit",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "11b815650cfb7851c5c096fe14fb7a2cff84ef3d28cd6d8afb1ae99d3ef8ad9a",
+  "source_fingerprint": "44ef6225ab74831ae34a2d93f40a421ed6a049f8032333d4af8da5cb544b702d",
+  "code_commit": "869ac07abdd3879254c351d857be911d71e68b6b",
+  "started_at": "2026-10-06T05:53:45.358768+00:00",
+  "ended_at": "2026-10-06T05:53:45.539345+00:00",
+  "environment_id": "inventory-isolated-test",
+  "runtime_instance_id": "erp-inventory-hd099-nondb.25gyboun",
+  "data_reference": "Synthetic Inventory fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "node",
+    "--test",
+    "--test-concurrency=1",
+    "--import",
+    "./server/test-support/testEnv.js",
+    "--test-reporter=junit",
+    "--test-reporter-destination=/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/hd099-nondb-ddbd52f608/inventory-task028-unit/inventory-task028-unit.xml",
+    "server/test/inventoryTransferService.test.js"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "6bfa6a56ca7814364f97974e8417e3605dc6ed8b2b213d32b8c973d4687534c8",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 13,
+    "passed": 13,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/hd099-nondb-ddbd52f608/inventory-task028-unit/inventory-task028-unit.xml",
+      "sha256": "9ca55b516f2ffe03abbffcb885b84389a40a0d156156dc679184e7c327009821",
+      "bytes": 3451
+    },
+    {
+      "path": "evidence/hd099-nondb-ddbd52f608/inventory-task028-unit/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/hd099-nondb-ddbd52f608/inventory-task028-unit/stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "Approved HD099 developer remediation diagnostic while defect gate remains blocked; not formal acceptance, UI or current CI."
+  ]
+}

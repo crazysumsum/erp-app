@@ -340,3 +340,60 @@ test("InventoryMasterService returns owner-safe Bin detail with its current lock
   const missing = fixture({ query: async () => [[]] }).service;
   await assert.rejects(() => missing.getBin(4, 9), (error) => error.code === "INVENTORY_RESOURCE_NOT_FOUND");
 });
+
+test("InventoryMasterService lists unlocked Bins before both Stocktake tables exist without losing owner filters", async () => {
+  for (const lockStatus of ["ALL", "UNLOCKED"]) {
+    const { service, calls } = fixture({ query: async (sql) => {
+      if (sql.includes("information_schema.tables")) return [[]];
+      if (sql.includes("inventory_bin_locks")) throw Object.assign(new Error("query failed"), { cause: { code: "ER_NO_SUCH_TABLE" } });
+      if (sql.startsWith("SELECT id FROM inventory_warehouses")) return [[{ id: 4 }]];
+      if (sql.includes("COUNT(*) AS total")) return [[{ total: 1 }]];
+      return [[{ id: 9, warehouse_id: 4, bin_code: "A-01", bin_name: "A", description: "", status: "ACTIVE", version: 2, created_at: 10, updated_at: 20, locked: 0 }]];
+    } });
+    const result = await service.listBins({ warehouseId: 4, lockStatus, status: "ACTIVE", q: "A", page: 2, pageSize: 10, sortBy: "name", descending: true });
+    assert.equal(result.items[0].locked, false);
+    assert.equal(result.items[0].warehouseId, 4);
+    assert.deepEqual([result.total, result.page, result.pageSize], [1, 2, 10]);
+    const query = calls.findLast(({ sql }) => sql.includes("SELECT b.*"));
+    assert.match(query.sql, /b\.warehouse_id = \?.*b\.status = \?/s);
+    assert.match(query.sql, /ORDER BY b\.bin_name DESC, b\.id DESC LIMIT \? OFFSET \?/);
+    assert.deepEqual(query.params, [4, "ACTIVE", "%A%", "%A%", 10, 10]);
+  }
+});
+
+test("InventoryMasterService returns no LOCKED Bins before both Stocktake tables exist", async () => {
+  const { service } = fixture({ query: async (sql) => {
+    if (sql.includes("information_schema.tables")) return [[]];
+    if (sql.includes("inventory_bin_locks")) throw Object.assign(new Error("missing table"), { code: "ER_NO_SUCH_TABLE" });
+    if (sql.startsWith("SELECT id FROM inventory_warehouses")) return [[{ id: 4 }]];
+    assert.match(sql, /\bFALSE\b/);
+    return sql.includes("COUNT(*)") ? [[{ total: 0 }]] : [[]];
+  } });
+  assert.deepEqual(await service.listBins({ warehouseId: 4, lockStatus: "LOCKED" }), { items: [], total: 0, page: 1, pageSize: 50 });
+});
+
+test("InventoryMasterService fails closed on partial or present Stocktake schema", async () => {
+  for (const names of [["inventory_stocktakes"], ["inventory_bin_locks"], ["inventory_stocktakes", "inventory_bin_locks"]]) {
+    const failure = Object.assign(new Error("missing table"), { code: "ER_NO_SUCH_TABLE" });
+    const { service } = fixture({ query: async (sql) => {
+      if (sql.includes("information_schema.tables")) return [names.map(table_name => ({ table_name }))];
+      if (sql.startsWith("SELECT id FROM inventory_warehouses")) return [[{ id: 4 }]];
+      throw failure;
+    } });
+    await assert.rejects(() => service.listBins({ warehouseId: 4 }), failure);
+  }
+});
+
+test("InventoryMasterService never treats other database errors or failed schema inspection as no locks", async () => {
+  for (const code of ["ER_ACCESS_DENIED_ERROR", "ER_BAD_FIELD_ERROR", "ER_NO_SUCH_TABLE"]) {
+    const failure = Object.assign(new Error("database failure"), { code });
+    const inspectionFailure = new Error("schema inspection denied");
+    const { service, calls } = fixture({ query: async (sql) => {
+      if (sql.startsWith("SELECT id FROM inventory_warehouses")) return [[{ id: 4 }]];
+      if (sql.includes("information_schema.tables")) throw inspectionFailure;
+      throw failure;
+    } });
+    await assert.rejects(() => service.listBins({ warehouseId: 4 }), code === "ER_NO_SUCH_TABLE" ? inspectionFailure : failure);
+    assert.equal(calls.some(({ sql }) => sql.includes("information_schema.tables")), code === "ER_NO_SUCH_TABLE");
+  }
+});

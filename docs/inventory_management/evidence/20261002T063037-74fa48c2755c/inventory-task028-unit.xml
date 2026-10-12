@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="TASK-027 creates a complete Draft and audit without quantity or movement writes" time="0.002216" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryTransferService.test.js"/>
+	<testcase name="TASK-027 rejects stale permission and caller-selected permission contracts before writes" time="0.000345" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryTransferService.test.js"/>
+	<testcase name="TASK-027 Draft creation rolls back if required audit fails" time="0.000173" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryTransferService.test.js"/>
+	<testcase name="TASK-027 rejects invalid Draft quantities, same warehouse, empty lines and caller snapshots" time="0.000509" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryTransferService.test.js"/>
+	<testcase name="TASK-027 replacement rejects duplicate IDs, absent/stale-shaped versions and caller posting fields" time="0.000393" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryTransferService.test.js"/>
+	<testcase name="TASK-027 cancellation requires a bounded nonblank reason and integer header version" time="0.000249" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryTransferService.test.js"/>
+	<testcase name="TASK-028 Dispatch rejects caller quantities, lines, status and unsafe identity/version" time="0.000293" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryTransferService.test.js"/>
+	<testcase name="TASK-028 Receive requires a bounded nonempty whole-line array" time="0.000867" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryTransferService.test.js" failure="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ Comparison {}&#10;- Comparison {&#10;-   code: 'INVENTORY_INPUT_INVALID'&#10;- }&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ Comparison {}&#10;- Comparison {&#10;-   code: 'INVENTORY_INPUT_INVALID'&#10;- }">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly deep-equal:
++ actual - expected
+
++ Comparison {}
+- Comparison {
+-   code: 'INVENTORY_INPUT_INVALID'
+- }
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + Comparison {}
+  - Comparison {
+  -   code: 'INVENTORY_INPUT_INVALID'
+  - }
+  
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryTransferService.test.js:131:5)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: TypeError: Inventory command payload.lines must contain JSON values only
+        at jsonValue (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/inventoryValidation.js:198:50)
+        at file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/inventoryValidation.js:208:20
+        at Array.map (&lt;anonymous>)
+        at jsonValue (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/inventoryValidation.js:206:55)
+        at validateInventoryCommandContext (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/inventoryValidation.js:303:14)
+        at #context (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:114:21)
+        at #post (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:397:40)
+        at InventoryTransferService.receiveInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:110:22)
+        at file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:104:55
+        at Object.withTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test-support/fakeInventoryDatabase.js:50:28),
+    expected: { code: 'INVENTORY_INPUT_INVALID' },
+    operator: 'rejects',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-028 Receive rejects caller SKU/Lot/Expiry snapshots and malformed line identities" time="0.000265" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryTransferService.test.js"/>
+	<testcase name="TASK-028 Receive rejects nonpositive, fractional or unsafe quantities" time="0.000163" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryTransferService.test.js"/>
+	<testcase name="TASK-028 posting revalidates current permission and rejects caller-selected contracts" time="0.000180" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryTransferService.test.js"/>
+	<testcase name="TASK-028 dispatch replays the original receipt without reloading or mutating a later state" time="0.000091" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryTransferService.test.js"/>
+	<testcase name="TASK-028 receive replays the original receipt without reloading or mutating a later state" time="0.000071" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryTransferService.test.js"/>
+	<!-- tests 13 -->
+	<!-- suites 0 -->
+	<!-- pass 12 -->
+	<!-- fail 1 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 73.400042 -->
+</testsuites>

@@ -1,0 +1,120 @@
+{
+  "schema_version": "2.0",
+  "module_id": "inventory-management",
+  "run_id": "task033-db-inventory-p3-browser-cad51c9740",
+  "suite_id": "inventory-p3-browser",
+  "stage": "DEVELOPER",
+  "result": "FAIL",
+  "spec_baseline": "997d8de40da4f362ef23d81cd57c2a65b8e096d64109a12ddc4ee738f5ff791a",
+  "source_fingerprint": "a95feba976f53181a298707f78b52247af1482c34960ef69376bc14d9f2bb536",
+  "code_commit": "869ac07abdd3879254c351d857be911d71e68b6b",
+  "started_at": "2026-10-08T07:35:16.618299+00:00",
+  "ended_at": "2026-10-08T07:36:31.809083+00:00",
+  "environment_id": "inventory-isolated-test",
+  "runtime_instance_id": "erp_inventory_p3_65d0f1329c1d",
+  "data_reference": "Synthetic Inventory fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "npx",
+    "--no-install",
+    "playwright",
+    "test",
+    "--config",
+    "client/e2e/inventory-management/playwright.config.js",
+    "inventory-warehouse-operations.spec.js",
+    "inventory-high-risk.spec.js"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "d31e9830e1836eb77ac94e73a8af8ad0af1a819518b4b7dbc2bf6883ef1d70c5",
+  "exit_code": 1,
+  "timed_out": false,
+  "counts": {
+    "total": 16,
+    "passed": 14,
+    "failed": 2,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/task033-db-inventory-p3-browser-cad51c9740/stdout.log",
+      "sha256": "f6378a79b7a967db5d570252fa9a2d732d4d26037e3b115e52fa45853dad63b8",
+      "bytes": 8031
+    },
+    {
+      "path": "evidence/task033-db-inventory-p3-browser-cad51c9740/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/task033-db-inventory-p3-browser-cad51c9740/inventory-p3-browser.xml",
+      "sha256": "c4beffc0e72d3a1d70fb3d3eba8fe338a7cd6b7b0aff0ce0724e6eaa57d216f4",
+      "bytes": 8836
+    },
+    {
+      "path": "evidence/task033-db-inventory-p3-browser-cad51c9740/high-risk-cleared-1024.png",
+      "sha256": "208b64c41232c3ec217016647e27f478d5c90cafced83a2b59f26db8353baa88",
+      "bytes": 125106
+    },
+    {
+      "path": "evidence/task033-db-inventory-p3-browser-cad51c9740/high-risk-cleared-1440.png",
+      "sha256": "7a9318bba631e5ec134f3f1ceb87c79c524f8ba8653e9ad3c10488e0e10ae25d",
+      "bytes": 144558
+    },
+    {
+      "path": "evidence/task033-db-inventory-p3-browser-cad51c9740/high-risk-cleared-320.png",
+      "sha256": "e20c20fbfd4dfd4f765883d136a3a03b23de2e4c8c2418de5e74040a8edf822e",
+      "bytes": 78908
+    },
+    {
+      "path": "evidence/task033-db-inventory-p3-browser-cad51c9740/high-risk-cleared-768.png",
+      "sha256": "9fd55fed95ff1d73090988013d844ff69d048a61973b35a4299e6ef878c66c15",
+      "bytes": 113097
+    },
+    {
+      "path": "evidence/task033-db-inventory-p3-browser-cad51c9740/high-risk-resolved-cleared.png",
+      "sha256": "c6b78c0ff25ba55c0eb8d344389fba392196a0c19e9ba4817f2bf913d77b55b8",
+      "bytes": 103639
+    },
+    {
+      "path": "evidence/task033-db-inventory-p3-browser-cad51c9740/transfer-draft-1024.png",
+      "sha256": "4eff86236d25070f0a413e1690fe84bfe1646a7a332402169d3cab768f4ea478",
+      "bytes": 76812
+    },
+    {
+      "path": "evidence/task033-db-inventory-p3-browser-cad51c9740/transfer-draft-1440.png",
+      "sha256": "005c86c706d633cc53fd1dd75a126eef16b2c2d223fecf998f3a20573de62c0f",
+      "bytes": 91605
+    },
+    {
+      "path": "evidence/task033-db-inventory-p3-browser-cad51c9740/transfer-draft-320.png",
+      "sha256": "7739c0bf6301e27a4f0ad8accbb9333af5b09876ab2879ad84abe01e880bba41",
+      "bytes": 48404
+    },
+    {
+      "path": "evidence/task033-db-inventory-p3-browser-cad51c9740/transfer-draft-768.png",
+      "sha256": "127f718160971e10dda817b3f39be9816c167dd407ac2324ca023107bb1651f2",
+      "bytes": 63658
+    },
+    {
+      "path": "evidence/task033-db-inventory-p3-browser-cad51c9740/transfer-received.png",
+      "sha256": "4ccfb00dd87c06d86eb8cbd7eefaab033ee14d742f44c7a4726538d056df78ef",
+      "bytes": 122508
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "DEVELOPER TASK033 native MySQL/current reads plus original TASK030/031 compatibility. Actual live-API Transfer8 plus TASK033 high-risk8 Playwright browser cases; actual non-extractable device key/P256/password/JWT, explicit transport faults, console/network assertions and credential-cleared screenshots only; not formal acceptance or full-P3 capacity proof; no formal/current CI/capacity claim."
+  ]
+}

@@ -1,0 +1,40 @@
+--- a/server/test/integration/inventoryTransfer.integration.test.js
++++ b/server/test/integration/inventoryTransfer.integration.test.js
+@@ -49,9 +49,12 @@
+       sku_name VARCHAR(190), status VARCHAR(20), purchasable BOOLEAN DEFAULT 1, sellable BOOLEAN DEFAULT 1,
+       inventory_tracked BOOLEAN DEFAULT 1, tracking_policy VARCHAR(20), shelf_life_days INT,
+       min_receipt_life_days INT, min_sale_life_days INT, effective_from DATE, effective_to DATE) ENGINE=InnoDB`,
+-    "CREATE TABLE item_uoms (id BIGINT UNSIGNED PRIMARY KEY, code VARCHAR(20)) ENGINE=InnoDB",
+-    `CREATE TABLE item_sku_uoms (sku_id BIGINT UNSIGNED, uom_id BIGINT UNSIGNED, to_base_factor DECIMAL(18,6),
+-      is_base BOOLEAN, is_default_purchase BOOLEAN, is_default_sale BOOLEAN) ENGINE=InnoDB`
++    `CREATE TABLE item_uoms (id BIGINT UNSIGNED PRIMARY KEY, code VARCHAR(20), name VARCHAR(100) NOT NULL,
++      status VARCHAR(20) NOT NULL DEFAULT 'active', version INT UNSIGNED NOT NULL DEFAULT 1) ENGINE=InnoDB`,
++    `CREATE TABLE item_sku_uoms (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
++      sku_id BIGINT UNSIGNED, uom_id BIGINT UNSIGNED, to_base_factor DECIMAL(18,6),
++      is_base BOOLEAN, is_default_purchase BOOLEAN, is_default_sale BOOLEAN,
++      version INT UNSIGNED NOT NULL DEFAULT 1) ENGINE=InnoDB`
+   ]) await pool.query(ddl);
+   for (const migrate of [permissions, operations, audit, master, stock, movements, reservations, transfers]) await migrate(pool);
+   await pool.query("INSERT INTO users VALUES (7, 'synthetic-operator', 'active')");
+@@ -63,8 +66,9 @@
+     VALUES (12, 1, 'SKU-12', 'Synthetic plain', 'active', 'none'),
+            (13, 1, 'SKU-13', 'Synthetic expiry', 'active', 'batch_expiry'),
+            (14, 1, 'SKU-14', 'Synthetic serial', 'active', 'serial')`);
+-  await pool.query("INSERT INTO item_uoms VALUES (1, 'EA')");
+-  await pool.query("INSERT INTO item_sku_uoms VALUES (12,1,1,1,1,1), (13,1,1,1,1,1), (14,1,1,1,1,1)");
++  await pool.query("INSERT INTO item_uoms (id, code, name) VALUES (1, 'EA', 'Each')");
++  await pool.query(`INSERT INTO item_sku_uoms (sku_id,uom_id,to_base_factor,is_base,is_default_purchase,is_default_sale)
++    VALUES (12,1,1,1,1,1), (13,1,1,1,1,1), (14,1,1,1,1,1)`);
+   for (const warehouseId of [1, 2, 3]) {
+     await pool.execute(`INSERT INTO inventory_warehouses
+       (id, warehouse_code, normalized_code, warehouse_name, created_at, updated_at) VALUES (?, ?, ?, ?, 1, 1)`,
+@@ -311,7 +315,8 @@
+   const skuId = postingSku++;
+   await pool.execute(`INSERT INTO item_skus (id,item_id,sku_code,sku_name,status,tracking_policy)
+     VALUES (?,1,?,?,'active',?)`, [skuId, `SKU-${skuId}`, `Synthetic ${skuId}`, tracking]);
+-  await pool.execute("INSERT INTO item_sku_uoms VALUES (?,1,1,1,1,1)", [skuId]);
++  await pool.execute(`INSERT INTO item_sku_uoms (sku_id,uom_id,to_base_factor,is_base,is_default_purchase,is_default_sale)
++    VALUES (?,1,1,1,1,1)`, [skuId]);
+   let lotId = null;
+   if (tracking !== "none") {
+     const [lot] = await pool.execute(`INSERT INTO inventory_lots

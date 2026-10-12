@@ -1,0 +1,5 @@
+
+> @erp/client@0.1.0 test
+> vitest run test/pages/inventory/inventoryAdjustments.test.js --reporter=junit --outputFile=/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/20261009T060949-efdb93654b10/inventory-p3-adjustments-client.xml
+
+JUNIT report written to /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/20261009T060949-efdb93654b10/inventory-p3-adjustments-client.xml

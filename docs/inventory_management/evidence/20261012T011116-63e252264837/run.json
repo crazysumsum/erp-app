@@ -1,0 +1,69 @@
+{
+  "schema_version": "2.0",
+  "module_id": "inventory-management",
+  "run_id": "20261012T011116-63e252264837",
+  "suite_id": "inventory-p2-api",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "c145c025eae94a1570d1bd05a872da53335b931f9ea0f695595d02ddef258908",
+  "source_fingerprint": "3cdc51c462840f24f5a221218a928e795600de865f35042f2a087622cee9679e",
+  "code_commit": "f51175e7b62623e50429232cf0aaf580a49461d9",
+  "started_at": "2026-10-12T01:11:16.690949Z",
+  "ended_at": "2026-10-12T01:11:17.408542Z",
+  "environment_id": "inventory-isolated-test",
+  "runtime_instance_id": "erp-inventory-p3-hd140-rd02hhpl",
+  "data_reference": "Synthetic Inventory fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "node",
+    "--test",
+    "--import",
+    "./server/test-support/testEnv.js",
+    "--test-reporter=junit",
+    "--test-reporter-destination=/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/20261012T011116-63e252264837/inventory-p2-api.xml",
+    "server/test/integration/inventoryTask025Api.integration.test.js"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "c020a0c94e7b989652c2dab1bbfe7cfec433cbfcf8a59306bfdea139a1e58841",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 1,
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/20261012T011116-63e252264837/stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/20261012T011116-63e252264837/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/20261012T011116-63e252264837/inventory-p2-api.xml",
+      "sha256": "1ee755536e651f980bd4cdd38ef58b7d4b5f9dea011369e499563b8238a05901",
+      "bytes": 725
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "mysql",
+        "--version"
+      ],
+      "output": "mysql  Ver 26.7.0 for macos15 on arm64 (MySQL Community Server - GPL)\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "Local observation only; external services/config/data and secret redaction completeness require review."
+  ]
+}

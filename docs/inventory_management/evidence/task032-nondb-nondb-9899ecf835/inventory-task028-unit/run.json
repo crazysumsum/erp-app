@@ -1,0 +1,70 @@
+{
+  "schema_version": "2.0",
+  "module_id": "inventory-management",
+  "run_id": "task032-nondb-nondb-9899ecf835-inventory-task028-unit",
+  "suite_id": "inventory-task028-unit",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "237d98e617f0a0f4612934118be2d589652b4eb70968291ad511fec6bb758658",
+  "source_fingerprint": "ea5fed017f5eba2fcdfe2adf9bd74521deb6e95d863797892e5a0a9c15c03e43",
+  "code_commit": "869ac07abdd3879254c351d857be911d71e68b6b",
+  "started_at": "2026-10-08T02:44:45.599647+00:00",
+  "ended_at": "2026-10-08T02:44:45.780496+00:00",
+  "environment_id": "inventory-isolated-test",
+  "runtime_instance_id": "erp-inventory-task032-nondb-nondb.obdj9vvp",
+  "data_reference": "Synthetic Inventory fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "node",
+    "--test",
+    "--test-concurrency=1",
+    "--import",
+    "./server/test-support/testEnv.js",
+    "--test-reporter=junit",
+    "--test-reporter-destination=/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/task032-nondb-nondb-9899ecf835/inventory-task028-unit/inventory-task028-unit.xml",
+    "server/test/inventoryTransferService.test.js"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "6bfa6a56ca7814364f97974e8417e3605dc6ed8b2b213d32b8c973d4687534c8",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 13,
+    "passed": 13,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/task032-nondb-nondb-9899ecf835/inventory-task028-unit/inventory-task028-unit.xml",
+      "sha256": "31c9e5850363048a3d2c3f9673f99cfea1c11bb774c4498b161b00e00258bd9c",
+      "bytes": 3451
+    },
+    {
+      "path": "evidence/task032-nondb-nondb-9899ecf835/inventory-task028-unit/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/task032-nondb-nondb-9899ecf835/inventory-task028-unit/stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "HD128 TASK032 approved current-source native developer impact check; no formal/UI/current CI or Sam final source review claim."
+  ]
+}

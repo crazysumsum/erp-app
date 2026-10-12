@@ -1,0 +1,59 @@
+{
+  "schema_version": "2.0",
+  "module_id": "inventory-management",
+  "run_id": "task029-hd104-nondb-95699e96cd-inventory-p3-coverage-floors",
+  "suite_id": "inventory-p3-coverage-floors",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "41949846cafde277c6887a7b572e0b3f945425d9a16f1b96517d99ca1674617c",
+  "source_fingerprint": "73bc7d29ee15d2d9261dc56da6f0e88733e72d291da6efb0c707ffa605a78eca",
+  "code_commit": "869ac07abdd3879254c351d857be911d71e68b6b",
+  "started_at": "2026-10-06T08:17:53.894913+00:00",
+  "ended_at": "2026-10-06T08:17:53.972737+00:00",
+  "environment_id": "inventory-isolated-test",
+  "runtime_instance_id": "erp-inventory-task029-hd104-nondb.p_5bj02l",
+  "data_reference": "Synthetic Inventory fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "node",
+    "server/scripts/checkCoverageFloors.js"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "574fbfac171f28c692cf3325f411a67e6338b7953dd89adc68395b02cf6058e2",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 0,
+    "passed": 0,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/task029-hd104-nondb-95699e96cd/inventory-p3-coverage-floors/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/task029-hd104-nondb-95699e96cd/inventory-p3-coverage-floors/stdout.log",
+      "sha256": "b6c27e79eb40982472268523d3c8b06017484cbe65f7ec77fd2930c2a7aa6b62",
+      "bytes": 53
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "Approved TASK029 API impact DEVELOPER checks only; not UI/formal acceptance/full-P3/current CI."
+  ]
+}
