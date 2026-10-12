@@ -39,9 +39,12 @@ integrationTest("0029 and 0030 create the exact Supplier root and owned gram sch
     "fk_suppliers_created_by",
     "fk_suppliers_updated_by",
     "idx_suppliers_currency_status",
+    // 0080（HD-088）喺已 migrate 嘅資料庫加嘅排序 index；0029 重跑唔會郁佢哋。
+    "idx_suppliers_name_id",
     "idx_suppliers_name_key",
     "idx_suppliers_payment_term_status",
     "idx_suppliers_status_updated_id",
+    "idx_suppliers_updated_id",
     "PRIMARY",
     "uq_suppliers_code_key"
   ]);
