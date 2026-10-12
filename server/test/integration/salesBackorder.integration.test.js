@@ -82,6 +82,16 @@ it("TC-027 true overlapping allocators fence one FIFO head and cannot over-reser
  try{results=await Promise.all(runs);}finally{barrier.resolve();await Promise.allSettled(runs);}
  assert.equal(entered,2);assert.equal(results.reduce((n,r)=>n+r.allocatedEntries,0),1);const state=await commitmentFacts(f);assert.equal(state.mappings.length,1);assert.equal(state.reservations.length,1);assert.equal(state.controls[0].reserved_quantity,4);assert.equal(state.order.lines[0].backorderedBaseQuantity,"6");
 });
+it("TC-021 an allocator holding its Order mapping locks never blocks another Order's confirmation behind the Warehouse lock",async t=>{
+ const f=await setup(t);await stock(f,0);await confirm(f);const second=await anotherOrder(f);await topup(f,20);const a=await allocator(f),inventory=a.s.inventory;let other,blocked=false;
+ // Inventory is the allocator's next lock rank: the other Order's confirmation takes the Warehouse lock, then inserts its own mapping.
+ // A mapping gap lock held by the allocator makes that insert wait; the allocator's Warehouse request then closes a deadlock cycle.
+ a.s.inventory={async reserveAvailableForSalesBackorderInTransaction(...args){other=confirm(f,second);const bound=Promise.withResolvers(),timer=setTimeout(()=>{blocked=true;bound.resolve();},5000);await Promise.race([other.catch(()=>{}),bound.promise]);clearTimeout(timer);return inventory.reserveAvailableForSalesBackorderInTransaction(...args);}};
+ let result;try{result=await a.s.runBatch({scope:{warehouseId:f.warehouseId,skuId:f.skuId},maxEntries:1});}finally{await other?.catch(()=>{});}
+ assert.ok(other,"the allocator never reached Inventory");assert.equal(blocked,false,"the other Order's confirmation waited on the allocator's Sales mapping locks");
+ assert.equal((await other).operation.status,"CONFIRMED");assert.equal(result.allocatedEntries,1);assert.equal(result.deferred,0);
+ const orders=await Promise.all([f.request.id,second].map(id=>readSalesOrderDetail(f.db,id)));assert.deepEqual(orders.map(o=>[o.status,o.lines[0].reservedBaseQuantity,o.lines[0].backorderedBaseQuantity]),[["CONFIRMED","10","0"],["CONFIRMED","10","0"]]);
+});
 it("TC-031 concurrent cancellation observes allocation version then safely releases the worker mapping",async t=>{
  const f=await setup(t);await stock(f,0);await confirm(f);await topup(f,4);const a=await allocator(f),inventory=a.s.inventory,entered=Promise.withResolvers(),release=Promise.withResolvers();a.s.inventory={async reserveAvailableForSalesBackorderInTransaction(...args){const r=await inventory.reserveAvailableForSalesBackorderInTransaction(...args);entered.resolve();await release.promise;return r;}};
  const allocation=a.s.runBatch({maxEntries:1});await Promise.race([entered.promise,allocation.then(()=>{throw Error("allocation did not enter Inventory");})]);const lifecycle=new SalesOrderLifecycleService({...f,services:f.app.services}),request={claims:f.claims,id:f.request.id,input:{eventId:randomUUID(),version:3,reason:"客戶要求取消訂單"}},cancel=lifecycle.cancel(request);const rejection=assert.rejects(()=>cancel,{code:"VERSION_CONFLICT"});release.resolve();try{assert.equal((await allocation).allocatedBaseQuantity,"4");await rejection;}finally{release.resolve();await Promise.allSettled([allocation,cancel]);}
