@@ -877,36 +877,46 @@ After REV-084 (HD-089): the list-index and lock-wait tests close their connectio
 fails the test instead of hanging it. Killed: "no skip when the index exists" (it used to hang) and "lock wait not set"
 (fails after 10 s).
 
-## TASK-038: Supplier–SKU relations (HD-081 B, HD-085, HD-086)
+## TASK-038: Supplier–SKU relations (HD-081 B, HD-085, HD-086, HD-090)
 
 - **Dependencies met.**
   - Item's SKU/UOM tables and `ItemLookupService` exist.
   - Item design §5.14 names the Supplier-owned `supplier_sku_refs` (PR #196).
   - The Supplier pin is refreshed to `5a44ef30` (PR #200, HD-085).
-- **Schema (HD-086), migration 0081:**
-  - `supplier_sku_refs` and `supplier_supply_events`, as approved.
-  - It refuses to run without the Item tables (MIG-007).
-  - On a rerun it checks the columns, the indexes, and every foreign key's columns, target and delete rule.
+- **Schema (HD-086, with HD-090 L4), migration 0081:**
+  - `supplier_sku_refs` and `supplier_supply_events` as approved, except that `event_id` is `ascii_bin`, because it is a case-sensitive machine key (HD-090 L4).
+  - It refuses to run without the Item tables or without `UNIQUE(id, sku_id)` on `item_sku_uoms` (MIG-007).
+  - On a rerun it checks the column set (an extra column is refused), types, nullability, collations, indexes, and every foreign key's columns, target and delete rule.
   - It is 0081 because 0080 went to the HD-088 list indexes.
 - **API:**
-  - `GET /api/v1/suppliers/:id/sku-relations` (`supplier.view`).
+  - `GET /api/v1/suppliers/:id/sku-relations` (`supplier.view`, with an actor check).
   - `POST …/sku-relations/create` and `POST …/sku-relations/:relationId/update` (`supplier.mgmt`).
-  - No field carries a price; unknown fields are refused.
+  - No field carries a price, and unknown fields are refused.
+  - An update must carry every field; a partial body is a 400, not silently cleared fields (REV-085 M1).
 - **Rules:**
-  - A new target must be purchasable (Item §5.14): Item and SKU active, purchasable, and inside the effective dates. This applies on create, on a change of purchase UOM, and when a stopped relation is made preferred or alternative again.
-  - Stopping a relation, or changing its MOQ or lead time, does not need a purchasable SKU, so relations to inactive SKUs stay as history.
-  - Archived Suppliers take no new or changed relations.
+  - A new target must be purchasable (Item §5.14): Item and SKU active, purchasable, and inside the effective dates. This applies on create, on a rebind to a different purchase UOM, and when a stopped relation is made preferred or alternative again.
+  - Clearing the purchase UOM, stopping a relation, or changing its MOQ or lead time does not need a purchasable SKU (REV-085 L6).
+  - Archived Suppliers take no new or changed relations. Suspended and blocked Suppliers can still keep relations: a relation grants no purchasing eligibility (HD-090).
   - The purchase UOM must belong to the SKU. The composite foreign key enforces this, and a failure becomes `SUPPLIER_SKU_UOM_INVALID`.
+  - A Supplier Item Code longer than 190 characters after NFKC is a 400.
+- **No second connection inside a transaction (REV-085 H1).** The Item lookup uses the pool, so it runs before the transaction. Purchasability is reported only after authorization (REV-085 L3).
+- **Accepted limitation (HD-090):** a SKU deactivated between that read and the write can still get a relation (REV-085 L2). The relation is only a reference, and Purchasing checks the SKU again when it orders.
 - **`recordSupply`:**
+  - It locks the Supplier first and then reads without locks, so concurrent first projections do not deadlock (REV-085 H2). Deadlocks are retried up to three times regardless of the message.
   - `event_id` and the source line are the fence. A replay returns the first outcome. The same event or source line with different content gives `IDEMPOTENCY_CONFLICT`.
   - It applies no purchasing-eligibility check: the Supplier and SKU only have to exist.
   - It never makes a relation preferred, and keeps first and last supplied as the minimum and maximum.
-  - It writes one system audit entry per source line.
+  - It does not set the purchase UOM (HD-090 L5 A): the reported UOM goes to the audit only. A code that is taken, or too long after NFKC, is dropped instead of failing.
+  - A failure logs `supplier.sku.supply_failed` with IDs and a code only.
 - **Open, for the Item owner:** the generic lookup projection gives each UOM's `uomId` but not the SKU-UOM mapping `id` that Supplier stores. Supplier checks ownership through the foreign key, but cannot check that the purchase UOM is still active.
 - **Open, for Purchasing:**
   - Item §5.14 asks the projection to verify that the source goods receipt is completed. Supplier cannot do this until Purchasing exists.
   - So `recordSupply` takes a `verifySource(connection, command)` from its caller. Without one it fails closed with 503 `SUPPLIER_SUPPLY_SOURCE_UNAVAILABLE`, and nothing is written.
-- **Mutation:** 22 mutants. 20 are killed by the tests. The other two:
-  - **"Supplier key CASCADE" in `CREATE`:** only a fresh migrate can see it, and there it fails at once through the post-create check.
-  - **"Same source with another event":** equivalent, because the payload hash already covers `eventId`.
-- **Full server suite,** run the CI way on a freshly migrated database: 3,080 tests, 0 failed, coverage floors met.
+- **Test files.** T38's Verification names `supplierRelationService.test.js`, `supplierRelationHandlers.test.js`, `supplierRecordSupply.test.js` and `integration/supplierSkuLookup.integration.test.js`. They are:
+  - `test/supplierRelationService.test.js` (retry, validation) and `test/supplierRelationHandlers.test.js`;
+  - `test/integration/supplierSkuRelations.integration.test.js`, which covers `recordSupply` and the relation API over real HTTP and MySQL.
+  - The for-SKU lookup test belongs to TASK-040.
+- **Mutation:** 46 mutants, every one killed, with each test file run in full.
+  - Three were killed by a negative control against the code before HD-090: the concurrency above the pool size, the concurrent projections, and the partial update.
+  - REV-085's own sweep had left 27 of 35 alive; the kinds it found are in this list.
+- **Full server suite:** see the PR.

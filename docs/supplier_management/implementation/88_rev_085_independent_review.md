@@ -90,4 +90,18 @@
   - **H1:** the Item lookups run inside `withTransaction` and use `this.database`.
   - **H2:** the retry guard needs a table name in the error.
   - **M1:** `useDefaults: true` in `normalizeRequestValidationConfig.js`.
-- **The findings** were taken to the Product Owner as HD-090.
+- **The findings** were taken to the Product Owner as HD-090. The answer: '全部按建議，L4 批准'.
+- **What was fixed:**
+  - **H1:** the Item lookups run before the transaction.
+  - **H2:** `recordSupply` locks the Supplier first and then reads without locks, and deadlocks are retried.
+  - **M1:** the update body has no defaults.
+  - **M2:** tests now cover HTTP authorization (incl. list), IDOR, list search and paging, archived updates, concurrency above the pool size, concurrent projections, command checks, and the migration rerun checks.
+  - **L1:** codes too long after NFKC are a 400, and the projection drops them.
+  - **L3:** purchasability is reported after authorization.
+  - **L4 (approved schema change):** `event_id` is `ascii_bin`, and collations are checked on a rerun.
+  - **L5 A:** the projection does not set the UOM.
+  - **L6:** clearing a UOM is not a rebind.
+  - **Info:** projection failures are logged, and the 404 code is `SUPPLIER_SKU_RELATION_NOT_FOUND`.
+- **Accepted:** L2, as a documented limitation; and suspended or blocked Suppliers keep relations.
+- **Negative control:** the H1, H2 and M1 tests fail on the code before these fixes.
+- **Mutation:** 46/46 killed (`62_task_041_carry_forward.md`).

@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 311,
+  "revision": 312,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -4976,6 +4976,18 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-12: '批准'. The migration is 0081 (0080 went to the HD-088 list indexes)."
+    },
+    {
+      "id": "HD-090",
+      "impact": "MAJOR",
+      "question": "REV-085 (PR #201): H1 Item lookups on a second pool connection inside transactions starve the pool; H2 concurrent recordSupply deadlocks and the retry is dead code; M1 partial updates wipe fields; M2 test gaps; L1-L6. (1) fix H1, H2, M1, M2, L1, L3, L6 and the Info items; (2) L4: make supplier_supply_events.event_id ascii_bin and check collations on rerun (schema change, 0081 not yet merged); (3) L5: (A) the projection does not set the purchase UOM, or (B) read item_sku_uoms directly; (4) accept L2 as documented; (5) keep only archived Suppliers blocked; (6) re-review limited to this round, then merge when CI passes.",
+      "affected_ids": [
+        "TASK-038",
+        "REV-085",
+        "HD-086"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-12: '全部按建議，L4 批准' (L5 A; L2 accepted; archived only; re-review; earlier: 'review，之後 CI 過就 merge')."
     }
   ],
   "external_actions": [
@@ -6052,5 +6064,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-038: REV-085 CHANGES_REQUESTED (H1 second pool connection inside transactions; H2 recordSupply deadlock and dead retry; M1 partial update wipes fields; M2 test gaps; L1-L6). Ask the Product Owner (HD-090)."
+  "next_safe_action": "TASK-038: HD-090 fixes done on claude/supplier-task-038 (PR #201). Full suite, push, REV-086 limited to this round; merge when CI passes after it."
 }

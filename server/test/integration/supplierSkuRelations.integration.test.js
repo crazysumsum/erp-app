@@ -300,6 +300,7 @@ integrationTest("TASK-038 (REV-085 M1, M2): over HTTP, authorization, the owner 
 
   assert.equal((await api(viewer, "POST", `/api/v1/suppliers/${supplierA}/sku-relations/create`, { skuId: third.id })).status, 403);
   assert.equal((await api(stale, "POST", `/api/v1/suppliers/${supplierA}/sku-relations/create`, { skuId: third.id })).code, "PERMISSION_STALE");
+  assert.equal((await api(stale, "GET", `/api/v1/suppliers/${supplierA}/sku-relations`)).code, "PERMISSION_STALE", "list checks the actor too");
   assert.equal((await api(manager, "POST", `/api/v1/suppliers/${supplierA}/sku-relations/create`, { skuId: third.id, price: 1 })).status, 400);
 
   // List：只列呢個 Supplier；preferred 排先；% 同 _ 係字面；SKU Code 精確搵到；分頁。
@@ -414,6 +415,10 @@ integrationTest("TASK-038 (REV-085 M2, HD-090 L4): a rerun refuses a missing col
   const missingIndex = await like("supplier_sku_refs");
   await h.db.query(`ALTER TABLE \`${missingIndex}\` DROP INDEX idx_supplier_sku_refs_sku_status_supplied`);
   await assert.rejects(() => inspectSupplierSkuRelationSchema(h.db, "supplier_sku_refs", { as: missingIndex }), /index: supplier_sku_refs/u);
+  const extraColumn = await like("supplier_sku_refs");
+  await h.db.query(`ALTER TABLE \`${extraColumn}\` ADD COLUMN unit_price DECIMAL(12,2) NULL`);
+  await assert.rejects(() => inspectSupplierSkuRelationSchema(h.db, "supplier_sku_refs", { as: extraColumn }),
+    /Incompatible existing Supplier schema: supplier_sku_refs$/u, "an extra column (a price) is refused");
   const missingColumn = await like("supplier_sku_refs");
   await h.db.query(`ALTER TABLE \`${missingColumn}\` DROP COLUMN source`);
   await assert.rejects(() => inspectSupplierSkuRelationSchema(h.db, "supplier_sku_refs", { as: missingColumn }), /Incompatible existing Supplier schema: supplier_sku_refs/u);
