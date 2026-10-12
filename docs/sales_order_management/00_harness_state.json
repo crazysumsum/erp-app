@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 393,
+  "revision": 419,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "9fcb51b2e67379dce1e8011524f767a085d28a3282474705bb730ba99a5ccdbd",
     "plan": "f0a8eca401f2c10e8d4473341466a3bb99c0013fe6fdb867913cc9095e15a2f6",
-    "code_commit": "5b2b6d37587830528a8e994cd897c679ba5e537f",
-    "source_fingerprint": "8ae94a3ccd3988ace1db487ec490a5e4b25b9dd24c11c0cb34ac7c4f0f9057e5",
+    "code_commit": "d91772dc629be86d97dc5e94f363ca88a2b5f2f2",
+    "source_fingerprint": "aaf5c6d32e7cbcb9af946384029d898134b744822e5e14df82b6ad9f3bbc620c",
     "worktree": "/Users/sam/.codex/worktrees/sales-p3-recovery/erp-app",
     "default_commit": "a2715077871ffa8289193d6482df6add6b363bd7",
     "mode_entry_commit": "6936736ba1fb98f4fcb8365377f59f0a0f7a4897"
@@ -5836,6 +5836,30 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-MIGRATION-NUMBER-COLLISION-DIRECTION-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p3_whole_phase_review",
+      "reviewed_baseline": "9fcb51b2e67379dce1e8011524f767a085d28a3282474705bb730ba99a5ccdbd",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/p3-migration-number-collision-direction-r1-reviewer-proof.json SHA256 17f174132e14a80d34369e089a439cfef0e899bbc5dfaf38a300d81083e5372f Genuine sole8aeFAIL/wildcards/unchangedSQLidempotency/5imports direction approved; exactpatch/newsourceverification pending; D/P unchanged, no approvalclones/human decision.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-MIGRATION-RENUMBER-EXACT-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p3_whole_phase_review",
+      "reviewed_baseline": "9fcb51b2e67379dce1e8011524f767a085d28a3282474705bb730ba99a5ccdbd",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/p3-migration-renumber-exact-r2-reviewer-proof.json SHA256 a8eedd24b4eda5f8dc5cc10589936f7adc0de19660cd4e871c804a081221eacb Actualpatcha057/3R100+1helperimport+4testimports/allSQLbytes/unchangedD9fPf0/wildcards/fast7proof/sourceaaf verified; no DB/defectclosure/full33/CI/finalGate approval.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -7851,6 +7875,28 @@
       "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/current33-qualified.json SHA256 f1717302c06e298c5bea0e326c373d751ca70d63acabe0a548ccc6e142e141e6 actual33PASS/35browser0fail0skip/currentallartifactSHA. Server3229/3097PASS/0FAIL/132reconciledskips,38floors93.79/85.88/92.53. Bothoriginalcapacitycases andactualREPO/SERVERcwdcleanupPASS; no original400/deadline rootcauseclaim. Newly authenticatedmaina271Supplier0080/metrics requires newintegratedall33; this authenticbundle remains historical, no relabel.",
       "actor": "Codex /root",
       "observed_at": "2026-10-12T04:37:58.198135+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEF-001 duplicate shared0080 migration prefix confirmed",
+      "code_commit": "d91772dc629be86d97dc5e94f363ca88a2b5f2f2",
+      "spec_baseline": "f0a8eca401f2c10e8d4473341466a3bb99c0013fe6fdb867913cc9095e15a2f6",
+      "source_fingerprint": "8ae94a3ccd3988ace1db487ec490a5e4b25b9dd24c11c0cb34ac7c4f0f9057e5",
+      "status": "FAIL",
+      "source_ref": "Actual evidence/20261012T044854-7fd9b72bf444/run.json/stdout sole migrate.test.js:24 assertion81!=82;3238tests/3105PASS/1FAIL/132reconciledskip. Nodeglobal93.80/85.90/92.56;38floors NOTrun after&&. Keepmain0080Supplier, shiftonlyfourunmergedownSales+1/update5imports; oldDBhistory retained. Originalschema-rejected proposedcheckpoint caused no mutation, actualrevision416 observed.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-12T05:23:59.709092+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEF-001 exact rename and supplemental unique migration regression",
+      "code_commit": "d91772dc629be86d97dc5e94f363ca88a2b5f2f2",
+      "spec_baseline": "f0a8eca401f2c10e8d4473341466a3bb99c0013fe6fdb867913cc9095e15a2f6",
+      "source_fingerprint": "aaf5c6d32e7cbcb9af946384029d898134b744822e5e14df82b6ad9f3bbc620c",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/migration-renumber-fast-unique-check/result.json SHA256 016d0894ca993326de8b19de146bba8c85171e5820825acc22616c38ac1d48b0 Actual7PASS0fail0skip/82unique names onstagedrenames; existingtest untouched, noDB. Exactpatcha05728c2 only4renames/5imports. Originalfailed8ae/rawrefs preserved. Highdefect remainsRETEST untilactualownedincremental/freshfullmigration/native checks; fullnewsource33/currentCI stillrequired.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-12T05:30:54.860926+00:00"
     }
   ],
   "pending_decisions": [
@@ -9542,8 +9588,42 @@
     "evidence/20261012T041541-b692036b4a46/run.json",
     "evidence/20261012T041624-babfe1825a78/run.json",
     "evidence/20261012T041626-6342686bb7da/run.json",
-    "evidence/20261012T041658-88b83c6aa2f4/run.json"
+    "evidence/20261012T041658-88b83c6aa2f4/run.json",
+    "evidence/20261012T044648-959e5aa24833/run.json",
+    "evidence/20261012T044654-032ab2ec7686/run.json",
+    "evidence/20261012T044657-81fe678d894e/run.json",
+    "evidence/20261012T044701-eafda46f8c15/run.json",
+    "evidence/20261012T044713-72d02c16668b/run.json",
+    "evidence/20261012T044715-409f8bd9c3f0/run.json",
+    "evidence/20261012T044726-2b734b8ef258/run.json",
+    "evidence/20261012T044748-5014dddc9a68/run.json",
+    "evidence/20261012T044750-ff96d5ce57c4/run.json",
+    "evidence/20261012T044752-08cd7e20b463/run.json",
+    "evidence/20261012T044754-f8fb8f62b7d4/run.json",
+    "evidence/20261012T044755-060ba83d9fd1/run.json",
+    "evidence/20261012T044757-d4b8c3a7316e/run.json",
+    "evidence/20261012T044759-841b47173c6a/run.json",
+    "evidence/20261012T044800-14d76a81bfa9/run.json",
+    "evidence/20261012T044802-7b163a83a961/run.json",
+    "evidence/20261012T044804-7881be3b9d66/run.json",
+    "evidence/20261012T044806-b4468f0cd6da/run.json",
+    "evidence/20261012T044808-ccae5540b895/run.json",
+    "evidence/20261012T044825-9bbeb5daa06b/run.json",
+    "evidence/20261012T044829-91d59bc467f2/run.json",
+    "evidence/20261012T044854-7fd9b72bf444/run.json"
   ],
-  "defects": [],
-  "next_safe_action": "Commit bookkeeping only and freeze actual newHEAD/SOURCE8ae/D9f/Pf0, then execute original33/35actualbrowser using confirmedfresh_a271bindings; no HEAD/source/spec/manualstate changes while runner active. Latest5CI/genuine finalwholequalification/DEC027qualifiedretirement/ordinaryMERGE_READY before authorizedmainmerge; no source750greenmapping."
+  "defects": [
+    {
+      "id": "DEF-001",
+      "severity": "HIGH",
+      "status": "RETEST",
+      "source_ids": [
+        "TASK-049",
+        "TC-034"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": null
+    }
+  ],
+  "next_safe_action": "Commit exactreviewed migration rename+5imports/bookkeeping, bindnewHEAD/sourceaaf. Prepare/review single owned preservation+incremental2DB/fresh10schemas/025fullmigration retainingalloldledgerrows; actualnative migrationGREEN beforeDEF001closure andoriginal33/currentCI/finalreview/indexretirement/Gate. No extraapprovalclones or bars change."
 }
