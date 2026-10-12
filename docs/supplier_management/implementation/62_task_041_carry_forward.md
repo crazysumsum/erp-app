@@ -876,3 +876,37 @@ caller.
 After REV-084 (HD-089): the list-index and lock-wait tests close their connections in `finally`, so a failing migration
 fails the test instead of hanging it. Killed: "no skip when the index exists" (it used to hang) and "lock wait not set"
 (fails after 10 s).
+
+## TASK-038: Supplier–SKU relations (HD-081 B, HD-085, HD-086)
+
+- **Dependencies met.**
+  - Item's SKU/UOM tables and `ItemLookupService` exist.
+  - Item design §5.14 names the Supplier-owned `supplier_sku_refs` (PR #196).
+  - The Supplier pin is refreshed to `5a44ef30` (PR #200, HD-085).
+- **Schema (HD-086), migration 0081:**
+  - `supplier_sku_refs` and `supplier_supply_events`, as approved.
+  - It refuses to run without the Item tables (MIG-007).
+  - On a rerun it checks the columns, the indexes, and every foreign key's columns, target and delete rule.
+  - It is 0081 because 0080 went to the HD-088 list indexes.
+- **API:**
+  - `GET /api/v1/suppliers/:id/sku-relations` (`supplier.view`).
+  - `POST …/sku-relations/create` and `POST …/sku-relations/:relationId/update` (`supplier.mgmt`).
+  - No field carries a price; unknown fields are refused.
+- **Rules:**
+  - A new target must be purchasable (Item §5.14): Item and SKU active, purchasable, and inside the effective dates. This applies on create, on a change of purchase UOM, and when a stopped relation is made preferred or alternative again.
+  - Stopping a relation, or changing its MOQ or lead time, does not need a purchasable SKU, so relations to inactive SKUs stay as history.
+  - Archived Suppliers take no new or changed relations.
+  - The purchase UOM must belong to the SKU. The composite foreign key enforces this, and a failure becomes `SUPPLIER_SKU_UOM_INVALID`.
+- **`recordSupply`:**
+  - `event_id` and the source line are the fence. A replay returns the first outcome. The same event or source line with different content gives `IDEMPOTENCY_CONFLICT`.
+  - It applies no purchasing-eligibility check: the Supplier and SKU only have to exist.
+  - It never makes a relation preferred, and keeps first and last supplied as the minimum and maximum.
+  - It writes one system audit entry per source line.
+- **Open, for the Item owner:** the generic lookup projection gives each UOM's `uomId` but not the SKU-UOM mapping `id` that Supplier stores. Supplier checks ownership through the foreign key, but cannot check that the purchase UOM is still active.
+- **Open, for Purchasing:**
+  - Item §5.14 asks the projection to verify that the source goods receipt is completed. Supplier cannot do this until Purchasing exists.
+  - So `recordSupply` takes a `verifySource(connection, command)` from its caller. Without one it fails closed with 503 `SUPPLIER_SUPPLY_SOURCE_UNAVAILABLE`, and nothing is written.
+- **Mutation:** 22 mutants. 20 are killed by the tests. The other two:
+  - **"Supplier key CASCADE" in `CREATE`:** only a fresh migrate can see it, and there it fails at once through the post-create check.
+  - **"Same source with another event":** equivalent, because the payload hash already covers `eventId`.
+- **Full server suite,** run the CI way on a freshly migrated database: 3,080 tests, 0 failed, coverage floors met.
