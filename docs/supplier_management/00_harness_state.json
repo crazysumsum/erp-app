@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 305,
+  "revision": 306,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -4867,6 +4867,18 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-12: 'A，全部按建議，再 review'. Measured after the fixes on the regenerated 100k seed: capped 97.74% (p50 69 ms) vs uncapped 98.40% (p50 773 ms)."
+    },
+    {
+      "id": "HD-088",
+      "impact": "MAJOR",
+      "question": "Schema: add idx_suppliers_updated_id (updated_at, id) and idx_suppliers_name_id (supplier_name, id) on suppliers for the default list, filters sorted by update time and sort by name (28.5 ms / 23 ms full sorts to 0.05-0.09 ms at 100k), online (INPLACE, LOCK=NONE), as migration 0080 in PR #197 (TASK-038 moves to 0081). Text search gets no index: an ngram FULLTEXT index was measured slower for common terms and changes results (one character, phone, e-mail, punctuation). Sort by status left unindexed.",
+      "affected_ids": [
+        "TASK-050",
+        "NFR-001",
+        "NFR-003"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-12: '批准'."
     }
   ],
   "external_actions": [
@@ -5943,5 +5955,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-050: HD-087 fixes done (M-1, cap/Dice/metrics tests, report and evidence regenerated, digest diff). Run the mutation sweep and the CI-style suite, push PR #197, then REV-084 limited to this round. TASK-038 committed locally, waiting for #197 and the pin refresh (HD-085)."
+  "next_safe_action": "TASK-050: HD-087 fixes and the HD-088 list indexes (migration 0080) in PR #197; REV-084 limited to this round. TASK-038 committed locally (migration to be renumbered 0081), waiting for #197 and the pin refresh (HD-085)."
 }

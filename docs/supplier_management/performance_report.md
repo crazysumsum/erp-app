@@ -10,12 +10,12 @@ Evidence: `evidence/20261009-t50-capacity/`.
 
 | Requirement | Result |
 | --- | --- |
-| NFR-001: p95 < 2 s under 50 online users | **Pass** after HD-084. The slowest operation's p95 is 123 ms, with an error rate of 0. Before HD-084, 11 of 12 operations failed (p95 3 to 12 s); only the duplicate check passed, at 1.6 s. |
+| NFR-001: p95 < 2 s under 50 online users | **Pass** after HD-084. The slowest operation's p95 is 145 ms, with an error rate of 0. Before HD-084, 11 of 12 operations failed (p95 3 to 12 s); only the duplicate check passed, at 1.6 s. |
 | NFR-002: server-side paging, 20 by default, at most 100 | Unchanged; the benchmark uses the defaults and `pageSize=50`. |
 | NFR-003: 100,000 Suppliers | **Pass** at 100,000 Suppliers with 1% at the per-Supplier upper bound. |
 | NFR-004 with online load (design §11.5) | **Pass.** A 10,000-row import took 69 s, entirely inside a 120 s measured window with 50 users; the slowest online p95 was 136 ms. |
 | NFR-005: for-SKU lookup | **Not run** (waits on TASK-040). |
-| EXPLAIN shows the designed indexes (T50 AC 1) | **Partly.** Detail, children, status filter, counts and the similar-name search use their indexes. The default list and text search read the whole `suppliers` table (see "Query plans"). |
+| EXPLAIN shows the designed indexes (T50 AC 1) | **Met for every sort and filter after HD-088,** and for detail, children, counts and the similar-name search. **Not met for the text search,** by decision: a full-text index was measured slower and changes results (see "List and search indexes"). |
 | Metrics, logs and alerts (T50 AC 2, design §12.4) | **Done** for approvals and imports; the other signals already have log events (see "Observability"). |
 | Manual SRE review | **Open.** Operations needs to review the alerts, the query plans and this report. |
 
@@ -72,28 +72,29 @@ node scripts/measureSupplierDuplicateRecall.js --database=<DB_NAME> --output <re
   | Create | 4 |
   | Update (read, then write) | 4 |
 
-## Latency (`load-50-users.json`, after HD-084 and REV-083)
+## Latency (`load-50-users.json`, after HD-084, REV-083 and the HD-088 list indexes)
 
 | Operation | Count | p50 ms | p95 ms | p99 ms |
 | --- | --- | --- | --- | --- |
-| Default list | 2,282 | 36.9 | 48.3 | 57.4 |
-| Exact Code search | 1,579 | 111.4 | 122.9 | 130.0 |
-| Name search | 1,311 | 102.5 | 115.9 | 122.1 |
-| Status filter | 925 | 6.5 | 18.0 | 27.2 |
-| Currency filter | 561 | 26.0 | 41.3 | 50.4 |
-| Sort by name | 500 | 41.0 | 52.8 | 60.2 |
-| Detail | 1,590 | 3.6 | 14.3 | 25.7 |
-| Heavy detail | 300 | 3.7 | 17.3 | 34.7 |
-| Bank list | 529 | 3.0 | 15.6 | 22.4 |
-| Duplicate check | 485 | 74.2 | 86.7 | 96.7 |
-| Create | 443 | 23.5 | 67.6 | 78.0 |
-| Update (two requests) | 445 | 89.5 | 117.8 | 126.2 |
-| **Overall** | **10,950** | **36.6** | **114.5** | **122.1** |
+| Default list | 2,211 | 12.7 | 26.5 | 37.6 |
+| Exact Code search | 1,623 | 114.8 | 138.0 | 168.9 |
+| Name search | 1,274 | 105.1 | 129.4 | 167.9 |
+| Status filter | 896 | 8.0 | 24.4 | 37.6 |
+| Currency filter | 599 | 8.6 | 23.7 | 39.2 |
+| Sort by name | 553 | 13.1 | 29.9 | 42.9 |
+| Detail | 1,616 | 5.4 | 19.5 | 35.8 |
+| Heavy detail | 354 | 5.9 | 20.5 | 41.1 |
+| Bank list | 557 | 4.4 | 20.4 | 28.4 |
+| Duplicate check | 446 | 78.0 | 109.4 | 147.5 |
+| Create | 459 | 28.5 | 76.2 | 86.5 |
+| Update (two requests) | 439 | 97.6 | 145.0 | 208.6 |
+| **Overall** | **11,027** | **15.2** | **121.1** | **144.3** |
 
-- **Throughput:** 91 requests a second, with no errors.
-- **Resources:** Node CPU 18% on average and 26% at peak, RSS 264 to 290 MiB, 11 DB connections.
+- **Throughput:** 92 requests a second, with no errors.
+- **Resources:** Node CPU 28% on average and 35% at peak, RSS 252 to 266 MiB, 11 DB connections.
+- **The same run before the list indexes** (`load-50-users-before-list-indexes.json`): default list 48 ms, sort by name 53 ms and currency filter 41 ms at p95. Overall p95 was 115 ms; the overall figure is dominated by the text searches, which the indexes do not change.
 - **During an import (`load-50-users-during-import.json`, `import-10000-rows-during-load.json`):**
-  - Same settings (120 s measured after 20 s of warm-up). The import started 1 s into the measured window and finished 74 s into it.
+  - Same settings (120 s measured after 20 s of warm-up), before the HD-088 list indexes. The import started 1 s into the measured window and finished 74 s into it.
   - Overall p95 was 127 ms; the slowest operation was the exact Code search at 136 ms.
   - The import's precheck took 6.3 s and its execution 63.0 s, with each row applied exactly once.
 
@@ -102,7 +103,7 @@ node scripts/measureSupplierDuplicateRecall.js --database=<DB_NAME> --output <re
 | p95 ms | List | Exact Code | Detail | Duplicate check | Create | Update |
 | --- | --- | --- | --- | --- | --- | --- |
 | Before (`load-50-users-before.json`) | 3,141 | 3,037 | 4,178 | 1,590 | 8,784 | 12,493 |
-| After | 48 | 123 | 14 | 87 | 68 | 118 |
+| After (HD-084, REV-083, HD-088) | 27 | 138 | 20 | 109 | 76 | 145 |
 
 - **The cause had three parts:**
   1. The similar-name search read every posting of the name's grams: about 2.25 million rows, 0.7 to 1 s per call.
@@ -136,19 +137,37 @@ Counts cover the measured window only (digests read at its start and end). The t
 
 | Statement | Calls | Avg ms | Rows read per call | Plan |
 | --- | --- | --- | --- | --- |
-| List page (default, Code search, name search) | 2,895 | 55 | 100,332 | `suppliers` ALL + filesort; primary contact by `uq_supplier_contact_primary` |
-| List count with search | 2,895 | 48 | 100,306 | `suppliers` ALL |
-| Similar-name search | 1,374 | 45 | 61,376 | rarest grams by `idx_supplier_name_grams_lookup`, then at most 3,000 candidates by primary key |
-| Rarest-gram counts (`UNION ALL`, one digest per gram count; the two busiest) | 395 + 161 | 6.7, 5.3 | 60,341, 47,991 | `idx_supplier_name_grams_lookup`, at most 2,000 entries per gram |
-| List count without search | 2,779 | 8 | 97,360 | `idx_suppliers_status_updated_id` range |
-| Status count | 925 | 2 | 28,721 | `idx_suppliers_status_updated_id` ref |
+| List page with a text search (Code or name) | 2,899 | 57 | 100,327 | `suppliers` ALL + filesort; primary contact by `uq_supplier_contact_primary` |
+| List count with a text search | 2,899 | 50 | 100,303 | `suppliers` ALL |
+| Similar-name search | 1,344 | 48 | 63,326 | rarest grams by `idx_supplier_name_grams_lookup`, then at most 3,000 candidates by primary key |
+| List count without a search | 2,765 | 8 | 97,281 | `idx_suppliers_status_updated_id` range |
+| Rarest-gram counts (`UNION ALL`; one digest per gram count, the three busiest) | 361 + 141 + 124 | 7.1, 5.6, 6.2 | 60,418, 47,995, 53,873 | `idx_supplier_name_grams_lookup`, at most 2,000 entries per gram |
+| Status count | 896 | 2 | 30,143 | `idx_suppliers_status_updated_id` ref |
+| Currency count | 599 | 3 | 23,513 | `idx_suppliers_currency_status` range |
 
-- **Detail, children and Bank list:** they read by owner indexes. They are not among the top statements, at 5 to 18 ms p95.
-- **The list and text search read the whole `suppliers` table.**
-  - Text search is `LIKE '%term%'` on five columns, so it cannot use an index.
-  - The default list filters `status != 'archived'` and sorts by `updated_at`. The `(status, updated_at, id)` index cannot give that order across several statuses.
-  - At 100,000 rows each call costs 25 to 55 ms of database time, and p95 still has a 16-fold margin under 2 s.
-  - Making them use an index needs a schema change. The Product Owner asked for it on 2026-10-12; it follows as a separate schema proposal.
+- **Detail, children and Bank list:** they read by owner indexes. They are not among the top statements, at 20 ms p95 or less.
+- **List pages without a text search:** they left the top statements once HD-088 added the list indexes (next section).
+
+## List and search indexes (HD-088)
+
+Measured on the 100k data, one query at a time (`EXPLAIN ANALYZE`):
+
+| Query | Before | After |
+| --- | --- | --- |
+| Default list (not archived, newest first, page 1) | 28.5 ms, sorts the whole table | 0.05 ms, reads `idx_suppliers_updated_id` backwards and stops at 20 rows |
+| Sort by name, either direction | 23 ms | 0.06 to 0.09 ms, `idx_suppliers_name_id` |
+| Currency filter, newest first | sorts the whole table | 0.14 ms (80 rows read) |
+| Default list, page 101 (offset 2,000) | sorts the whole table | 2.1 ms |
+| Sort by Code | already `uq_suppliers_code_key` | unchanged |
+
+- **Migration `0080_add_supplier_list_indexes.js`:** adds `idx_suppliers_updated_id (updated_at, id)` and `idx_suppliers_name_id (supplier_name, id)` online (`ALGORITHM=INPLACE, LOCK=NONE`). A rerun keeps them, and a same-named index on other columns is refused (integration test).
+- **Sort by status:** not indexed (about 20 ms). It would need `(status, id)`, or a change to the order within a status. It is rarely used, so it was left as it is.
+- **Text search stays a scan, by decision (HD-088).** A `FULLTEXT ... WITH PARSER ngram` index (stopwords off) was built and compared with today's `LIKE '%term%'` on 18 terms:
+  - It was faster only for selective terms (`Pacific` 17 ms against 56 ms) and slower for common ones (`有限公司` 70 to 97 ms against 43 ms). Wrapped with the Code prefix search (`IN … UNION`), it took 180 to 460 ms.
+  - It changes results: no match for one character, phone numbers or e-mail addresses, and `co.,` matched 96,980 rows instead of 8,529.
+  - Keeping `LIKE` for phone and e-mail makes the query `FULLTEXT OR LIKE`, which scans the table anyway.
+  - Text search p95 is 129 to 138 ms, more than 14 times under 2 s.
+- **No regression:** with the two new indexes present, a search page still uses the table scan (the `CASE` in its `ORDER BY` keeps the optimizer off them), at the same 48 to 61 ms.
 
 ## Observability (design §12.4; HD-083 A)
 
@@ -174,5 +193,5 @@ Counts cover the measured window only (digests read at its start and end). The t
 
 1. The for-SKU lookup (NFR-005, its metrics) and a final rerun, after TASK-040.
 2. The manual SRE review of this report, the alerts and the query plans.
-3. An index for the default list and the text search: requested by the Product Owner; the schema proposal follows.
+3. Sort by status is not indexed (about 20 ms). Text search stays a scan (HD-088).
 4. The `perf:supplier` npm script (`server/package.json`, needs approval).
