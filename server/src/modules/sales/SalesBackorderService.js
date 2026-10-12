@@ -3,7 +3,7 @@ import { InventoryReservationService } from "../inventory/InventoryReservationSe
 import { ItemLookupService } from "../item/ItemLookupService.js";
 import { SalesAuditService } from "./SalesAuditService.js";
 import { validateConfirmationInventoryResult } from "./SalesOrderConfirmationService.js";
-import { readSalesOrderDetail } from "./SalesOrderService.js";
+import { lockSalesOrderLines,readSalesOrderDetail } from "./SalesOrderService.js";
 import { requireSalesWriteActor } from "./salesAuthorization.js";
 import { assertQuantityConservation } from "./salesQuantityMath.js";
 import { salesError } from "./salesErrors.js";
@@ -77,11 +77,8 @@ export class SalesBackorderService{
   try{return await this.database.withTransaction(async tx=>{
    const {nowMs,leaseOwner}=await this.#lease(tx),orderId=Number(candidate.sales_order_id);
    const [[header]]=await tx.query("SELECT id,line_count FROM sales_orders WHERE id=? FOR UPDATE",[orderId]);if(!header)return {retry:true};
-   // Lock the Lines by full uq_sales_order_line_number keys: a FOR UPDATE search on sales_order_id alone also gap-locks up to the
-   // next Order's first line, which a new Order inserts into while its header FK check holds the Warehouse share lock (deadlock).
-   // The detail read after the head read is a plain read for the same reason; it is current because the read view starts after these locks.
-   const lineNumbers=Array.from({length:Number(header.line_count)},(_,index)=>index+1);
-   await tx.query(`SELECT id FROM sales_order_lines WHERE sales_order_id=? AND line_no IN (${lineNumbers.map(()=>"?").join(",")}) ORDER BY id FOR UPDATE`,[orderId,...lineNumbers]);
+   // The detail read after the head read is a plain read so it takes no Line gap lock; it is current because the read view starts after these locks.
+   await lockSalesOrderLines(tx,orderId,header.line_count);
    const [[queue]]=await tx.query("SELECT * FROM sales_backorder_entries WHERE id=? AND sales_order_id=? FOR UPDATE",[Number(candidate.id),orderId]);if(!queue||queue.status!=="OPEN")return {retry:true};
    // The first consistent InnoDB read follows the owned row locks: verify the current committed head without locking another Sales owner's queue.
    const [[head]]=await tx.query("SELECT id FROM sales_backorder_entries WHERE status='OPEN' AND warehouse_id=? AND sku_id=? ORDER BY priority_at,sales_order_id,line_no,id LIMIT 1",[Number(queue.warehouse_id),Number(queue.sku_id)]);

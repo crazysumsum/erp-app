@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { InventoryReservationService } from "../inventory/InventoryReservationService.js";
 import { inventoryOperationHash } from "../inventory/InventoryOperationService.js";
-import { SalesOrderService, readSalesOrderDetail } from "./SalesOrderService.js";
+import { SalesOrderService, lockSalesOrderLines, readSalesOrderDetail } from "./SalesOrderService.js";
 import { SalesFulfillmentGuardService } from "./SalesFulfillmentGuardService.js";
 import { requireSalesWriteActor } from "./salesAuthorization.js";
 import { transitionSalesOrder } from "./salesOrderStateMachine.js";
@@ -52,15 +52,18 @@ export class SalesOrderLifecycleService {
       const actor = await requireSalesWriteActor(tx,claims), nowMs = this.time.nowMs(), { eventId,...payload } = input;
       const claim = await this.order.operations.claim(tx,{ eventId,commandType: `${action}_ORDER`,targetId: id,payload,actor,nowMs,...trace });
       if (claim.replay) return { salesOrder: await readSalesOrderDetail(tx,id,{ lock: true }),operation: claim.replay };
-      const [[header]] = await tx.query("SELECT status,version FROM sales_orders WHERE id=? FOR UPDATE",[id]);
+      const [[header]] = await tx.query("SELECT status,version,line_count FROM sales_orders WHERE id=? FOR UPDATE",[id]);
       if (!header) throw salesError("SALES_ORDER_NOT_FOUND");
       if (Number(header.version) !== input.version) throw salesError("VERSION_CONFLICT",{ currentVersion: Number(header.version) });
-      await tx.query("SELECT id FROM sales_order_lines WHERE sales_order_id=? ORDER BY id FOR UPDATE",[id]);
+      await lockSalesOrderLines(tx,id,header.line_count);
       const order = await readSalesOrderDetail(tx,id), fulfilled = order.lines.reduce((sum,l) => sum+BigInt(l.fulfilledBaseQuantity),0n), ordered = order.lines.reduce((sum,l) => sum+BigInt(l.orderedBaseQuantity),0n);
       // State machine uses per-line safe integers; totals need only distinguish zero/partial/all.
       const status = transitionSalesOrder(order.status,action,{ reason: input.reason,fulfilledBaseQuantity: fulfilled === 0n ? 0 : fulfilled === ordered ? 2 : 1,orderedBaseQuantity: 2 });
       const [queue] = await tx.query("SELECT * FROM sales_backorder_entries WHERE sales_order_id=? ORDER BY id FOR UPDATE",[id]);
-      const [mappings] = await tx.query(`SELECT r.*,l.sku_id FROM sales_order_line_reservations r JOIN sales_order_lines l ON l.id=r.sales_order_line_id WHERE l.sales_order_id=? ORDER BY r.id FOR UPDATE`,[id]);
+      // Lock existing mappings by primary key only: a FOR UPDATE join searched from the Lines index gap-locks the next Order's Lines.
+      // The id read is a plain read whose view may predate the Order lock; a mapping it misses fails closed in validateLifecycleRelease.
+      const [owned] = await tx.query("SELECT r.id FROM sales_order_line_reservations r JOIN sales_order_lines l ON l.id=r.sales_order_line_id WHERE l.sales_order_id=?",[id]);
+      const [mappings] = owned.length ? await tx.query(`SELECT r.*,l.sku_id FROM sales_order_line_reservations r JOIN sales_order_lines l ON l.id=r.sales_order_line_id WHERE r.id IN (${owned.map(() => "?").join(",")}) ORDER BY r.id FOR UPDATE`,owned.map(row => Number(row.id))) : [[]];
       // Withdrawal re-fetches Draft display only; saleability is revalidated at the next confirmation.
       let draftCustomer,draftSkus;
       if (action === "WITHDRAW") {
