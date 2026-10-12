@@ -6,7 +6,7 @@ import path from "node:path";
 import { after, before, test } from "node:test";
 import mysql from "mysql2/promise";
 
-import { up as migrateSupplierSkuRefs } from "../../database/migrations/0080_create_supplier_sku_refs.js";
+import { up as migrateSupplierSkuRefs } from "../../database/migrations/0081_create_supplier_sku_refs.js";
 import { ItemLookupService } from "../../src/modules/item/ItemLookupService.js";
 import { SupplierRelationService } from "../../src/modules/supplier/SupplierRelationService.js";
 
