@@ -306,9 +306,9 @@
       {
         "module_id": "inventory-management",
         "id": "inventory-batch-reserve-release-contract",
-        "version": "observed-main-dd36250-PARTIAL-SALES-CONTRACT-NOT_IMPLEMENTED; TASK009-010 source pins reconciled, Sales additions CI pending",
+        "version": "observed-main-f7ddcfd-Inventory-P3; compatible Sales consumption, full integrated original33/currentCI required",
         "source": "docs/inventory_management/03_design_spec.md",
-        "sha256": "d24d46d353a62db558901dd87b44b77e75cf97ff8b5a23fc6922657ab95eddaa",
+        "sha256": "2fb61cce8ee4ff9f32cd9c6d0e2a9fc8f87c08d34823be7fb622908610b1ac53",
         "regression_suites": [
           "sales-technical"
         ]
@@ -346,9 +346,9 @@
       {
         "module_id": "framework",
         "id": "idempotency-service",
-        "version": "observed-main-dd36250",
+        "version": "observed-main-f7ddcfd-Inventory-P3; compatible Sales consumption, full integrated original33/currentCI required",
         "source": "server/src/services/idempotency/IdempotencyService.js",
-        "sha256": "b4a33f4abb73e16ec74d5f50c5ae25da308ac06049c8f8f4d1e20f8bf0412a28",
+        "sha256": "b574dd69c4fd006a550421d9bb1e550c94f8f39d22837eecd61f7cf079c6da9d",
         "regression_suites": [
           "sales-technical"
         ]
