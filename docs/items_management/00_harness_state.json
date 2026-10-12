@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "item-management",
-  "revision": 86,
+  "revision": 91,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,7 +11,7 @@
   "baseline": {
     "design": "59ee6cb3664ae1742e41b218ffd3bf223e396eb44a4aa24d82028ebb9cf7c16d",
     "plan": "01e51df95e1e8742e765c18ec3dcf8205d8b30dd97a9a2feb7b9b7221adef66a",
-    "code_commit": "26354042c21a3f6ba453c7b416bfb32299697334",
+    "code_commit": "2e0427e3abcc897992ed89bf04b6d69df35210e2",
     "source_fingerprint": "d2b9e7c67cd0a54a47746c09fc9282f7bf65f4703d73bcdc40dc448dcb6f986e",
     "worktree": "/private/tmp/erp-item-task-043-reference-guards",
     "default_commit": "0feb9d712072048adb20afc470eb87abc8911475",
@@ -27,7 +27,7 @@
       "import-root": "isolated Item worktree server/storage/imports and test-owned temporary roots",
       "web-port": "No application listener reserved for this metadata correction; browser behavior unchanged, prior actual Playwright evidence retained"
     },
-    "lease_ref": "Task created private directory XDoqyf and owns mysqld exec session14325; no shared MySQL service or schema changed."
+    "lease_ref": "Task-owned mysqld session14325 stopped via exactprivate mysqladminsocket afterallruns; datadir XDoqyf and synthetic schema retained, no active listener/shared service changed. Restart requires observed taskownedprivate-runtime lease."
   },
   "tasks": {
     "TASK-001": "DONE",
@@ -828,6 +828,45 @@
         "increment-B-execution-record"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-044",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Actual user async reply2026-10-12: 批准這3個原始附件的索引遷移（建議）; explicit one-time guarded reclassification with originals/history/waiver preserved, no core tool/gate change. 00_artifact_inventory.md and evidence/task043-index-migration-20261012/index-map.json.",
+      "recorded_at": "2026-10-12T01:00:00Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "01e51df95e1e8742e765c18ec3dcf8205d8b30dd97a9a2feb7b9b7221adef66a",
+      "code_commit": "2e0427e3abcc897992ed89bf04b6d69df35210e2",
+      "scope": [
+        "docs/items_management/00_harness_state.json",
+        "docs/items_management/00_artifact_inventory.md",
+        "raw-recovery-asset-index-migration-only"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-045",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Actual user instruction2026-10-12: 批准將本次4套合成測試證據保存到repository，請繼續推送新candidate，待CI和review通過後合併PR198，並清理Item分支及worktree。 Batch-specificexport only, unchanged default denial/noCIwaiver/formal acceptance.",
+      "recorded_at": "2026-10-12T01:06:38Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "01e51df95e1e8742e765c18ec3dcf8205d8b30dd97a9a2feb7b9b7221adef66a",
+      "code_commit": "2e0427e3abcc897992ed89bf04b6d69df35210e2",
+      "scope": [
+        "docs/items_management/evidence/20261012T005859-03e6e6fd8f6f/**",
+        "docs/items_management/evidence/20261012T005902-f45065a0c924/**",
+        "docs/items_management/evidence/20261012T005904-bbc9eb8bc27c/**",
+        "docs/items_management/evidence/20261012T005907-5088d16f4511/**",
+        "PR-198-CI-gated-merge",
+        "Item-branch-worktree-cleanup"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -1046,6 +1085,30 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-021",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/item_supplier_handoff_review",
+      "reviewed_baseline": "01e51df95e1e8742e765c18ec3dcf8205d8b30dd97a9a2feb7b9b7221adef66a",
+      "source_ref": "Actual reviewer final response2026-10-12 independently verified authorizedraw-indexmigration,21 priorrunpointers/3originalhashes/DEF103closure/waiver preserved; PLAN_READY/stateLOCAL_CHECKS_PASS; 00_artifact_inventory.md.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-022",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/item_supplier_handoff_review",
+      "reviewed_baseline": "01e51df95e1e8742e765c18ec3dcf8205d8b30dd97a9a2feb7b9b7221adef66a",
+      "source_ref": "Actual separate reviewer response2026-10-12: audited14 packagefiles/commands/contracts/artifacthashes/counts andDEVELOPERonly, no detectedsecrets; 500server/808clientPASS, lint/buildexit0. ExportpermissionstillpendingHD008.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -1230,6 +1293,28 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Sam active task2026-10-12: 批准; implementation/02_task043_increment_b_gate.md"
+    },
+    {
+      "id": "HD-007",
+      "impact": "MAJOR",
+      "question": "Authorize one-time reclassification of exactly3 raw Recovery asset pointers from run index, with exact revision/hash guard, Git recovery point, full history/file/waiver preservation and no validation relaxation?",
+      "affected_ids": [
+        "TASK-043",
+        "TASK-045"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Actual user async reply2026-10-12: 批准這3個原始附件的索引遷移（建議）; APR-044 and 00_artifact_inventory.md."
+    },
+    {
+      "id": "HD-008",
+      "impact": "MAJOR",
+      "question": "Approve repository export/storage of this batch of4 synthetic developer run packages (run.json/redactedlogs/JUnit) after content review? Default profile disallows export; no cookies/trace/usersecrets or formal acceptance.",
+      "affected_ids": [
+        "TASK-045",
+        "TASK-043"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Actual Sam instruction2026-10-12 approving4syntheticpackages, push and CI/review-gated PR198 merge/Itemcleanup; APR-045."
     }
   ],
   "external_actions": [
@@ -1656,6 +1741,22 @@
       "idempotency_key": "item-task043-isolated-runtime20261012-XDoqyf",
       "status": "CONFIRMED",
       "source_ref": "Author exec2026-10-12: existing migrations through0079 applied successfully on uniquely task-owned private schema; MySQL26.7.0, no shared database change."
+    },
+    {
+      "id": "ITEM-T043-INDEX-MIGRATION-99",
+      "kind": "MIGRATION",
+      "target": "docs/items_management/00_harness_state.json revision86→87, exactly3 misclassified rawRecovery pointers",
+      "idempotency_key": "item-task043-raw-index-r86-r87-20261012",
+      "status": "CONFIRMED",
+      "source_ref": "Exact pre-stateSHA368c4379/revision86 checked under exclusive lock; actual comparison verified only index3/revision changed, 21 runs preserved and 3 rawSHA unchanged. Recovery Git2e0427e3; index-map.json; APR-044."
+    },
+    {
+      "id": "ITEM-T043-PUSH-100",
+      "kind": "PUSH",
+      "target": "origin/codex/item-task-043-reference-guards for PR198",
+      "idempotency_key": "item-task043-approved-synthetic-evidence-finalpush-20261012",
+      "status": "PLANNED",
+      "source_ref": "APR-045; candidate freeze follows same source d2b9e7c and PLAN01e51df with4passing configured DEVELOPER runs. Observe exact pushedSHA/currentCI beforemerge."
     }
   ],
   "evidence_files": [
@@ -1680,9 +1781,10 @@
     "evidence/20260915T030248-57050e3d96b5/run.json",
     "evidence/20260915T030312-a6347c1d7274/run.json",
     "evidence/20260915T030630-20d57aa8c7d5/run.json",
-    "evidence/task-044-owner-waiver-20260921/manifest.json",
-    "evidence/task-044-owner-waiver-20260921/manifest.sig",
-    "evidence/task-044-owner-waiver-20260921/tc016-owner-waiver-report.json"
+    "evidence/20261012T005859-03e6e6fd8f6f/run.json",
+    "evidence/20261012T005902-f45065a0c924/run.json",
+    "evidence/20261012T005904-bbc9eb8bc27c/run.json",
+    "evidence/20261012T005907-5088d16f4511/run.json"
   ],
   "defects": [
     {
@@ -1816,5 +1918,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Execute all four configured DEVELOPER suites under corrected PLAN01e51df and isolated runtime, preserving old failures/evidence. Commit/push exact candidate to existing draftPR198, obtain current-candidate CI and independent review, then verify PHASE007 MERGE_READY before authorized merge/Item-only cleanup. TASK043 remains IN_PROGRESS; no formal acceptance or absent-consumer PASS."
+  "next_safe_action": "APR045 explicitly permits4auditedsyntheticpackages torepository and CI/review-gatedPR198merge/Itemcleanup. Freeze/push candidate on unchanged source d2b9e7c/PLAN01e51df, get exactcandidate independentreview/currentCI, complete scopedTASK045 andPHASE007MERGE_READY beforemerge. TASK043 overall remainsIN_PROGRESS; do notpromote DEVELOPER evidence toformalacceptance."
 }

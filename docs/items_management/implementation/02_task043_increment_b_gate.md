@@ -52,3 +52,53 @@ migrations through 0079 applied successfully; shared databases were not changed.
 Configured developer runs, exact new candidate CI/review and merge observations
 will be recorded below. Previous developer results are supporting history only,
 not current-plan runner results or formal TC/UAT acceptance.
+
+## Authorized raw-index migration
+
+The first configured-run attempts were BLOCKED before execution because the three
+raw Recovery assets had been registered as harness run records. Sam separately
+approved their one-time reclassification via the actual async reply
+「批准這 3 個原始附件的索引遷移（建議）」. The complete before-state is recoverable
+at Git `2e0427e3abcc897992ed89bf04b6d69df35210e2`. Under an exclusive checkpoint
+lock, exact state revision86/SHA checks guarded the revision86→87 migration; an
+after-state comparison confirmed that only the revision and those three pointers
+changed. All 21 prior run pointers, original assets/sha256, approval/failure history,
+DEF-103 closure references and waiver/TC-016 NOT_RUN semantics were preserved.
+The canonical artifact inventory and raw `index-map.json` retain the mapping.
+No core tool or gate validation changed; ordinary checkpointing resumed at revision88.
+
+The separate reviewer independently approved this migration integrity and observed
+PLAN_READY/state LOCAL_CHECKS_PASS. This is not formal acceptance. The external
+same-argv support run passed500 server cases, client808, lint/build; official runner
+execution is separately recorded below and is never inferred from external results.
+
+## Actual configured DEVELOPER runs
+
+All four runner records bind PLAN `01e51df…`, source `d2b9e7c…` and execution HEAD
+`2e0427e3abcc897992ed89bf04b6d69df35210e2`; source/spec stayed unchanged.
+
+| Suite | Actual result | Local run record |
+|---|---|---|
+| lint | PASS | evidence/20261012T005859-03e6e6fd8f6f/run.json |
+| client-build | PASS; existing large-chunk warning | evidence/20261012T005902-f45065a0c924/run.json |
+| item-client-technical, DEVELOPER stage | 808/808 PASS; no skip/not-run | evidence/20261012T005904-bbc9eb8bc27c/run.json |
+| item-server-technical, DEVELOPER stage | 500/500 PASS; no skip/not-run | evidence/20261012T005907-5088d16f4511/run.json |
+
+These are actual runner results, not external-run conversions, formal acceptance,
+or current-candidate CI. Sam explicitly approved repository storage of these four
+synthetic packages on2026-10-12 (HD-008/APR-045), and directed pushing the new
+candidate, merging PR #198 only after CI/review pass and cleaning only Item work.
+This is a batch-specific export grant, not a change to the profile's default denial.
+No browser session state/trace is included.
+The preceding preflight-blocked attempts remain reported above. Final candidate
+CI, independent review and PHASE-007 MERGE_READY must still be observed before merge.
+
+Independent package audit (REV-022) verified all14 files: commands/contracts,
+artifact sizes/hashes, JUnit500/808 counts and unchanged source/spec/HEAD. No detected
+passwords, keyrings/CI fixture key values, cookies, bearer/JWT tokens or private keys.
+Client case names include other modules and do not grant Item formal/recovery PASS.
+Audit is not export permission; APR-045 records the separate actual owner decision.
+Final-candidate CI/review/merge observations will be recorded on PR #198; this
+pre-push checkpoint does not claim those external actions already succeeded.
+The disposable MySQL process was stopped after tests; its data directory is retained
+for restart/recovery. No shared MySQL service/database or other worktree was changed.
