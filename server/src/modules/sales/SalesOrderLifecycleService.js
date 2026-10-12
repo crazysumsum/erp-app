@@ -56,14 +56,21 @@ export class SalesOrderLifecycleService {
       if (!header) throw salesError("SALES_ORDER_NOT_FOUND");
       if (Number(header.version) !== input.version) throw salesError("VERSION_CONFLICT",{ currentVersion: Number(header.version) });
       await lockSalesOrderLines(tx,id,header.line_count);
-      const order = await readSalesOrderDetail(tx,id), fulfilled = order.lines.reduce((sum,l) => sum+BigInt(l.fulfilledBaseQuantity),0n), ordered = order.lines.reduce((sum,l) => sum+BigInt(l.orderedBaseQuantity),0n);
+      const order = await readSalesOrderDetail(tx,id);
+      // The read view opened at the actor read, before the Order lock. Every writer of this Order's lines, mappings and queue bumps
+      // the version under that lock, so an equal snapshot version proves the plain reads below see this Order's current rows.
+      if (order.version !== Number(header.version)) throw salesError("CONCURRENT_OPERATION");
+      const fulfilled = order.lines.reduce((sum,l) => sum+BigInt(l.fulfilledBaseQuantity),0n), ordered = order.lines.reduce((sum,l) => sum+BigInt(l.orderedBaseQuantity),0n);
       // State machine uses per-line safe integers; totals need only distinguish zero/partial/all.
       const status = transitionSalesOrder(order.status,action,{ reason: input.reason,fulfilledBaseQuantity: fulfilled === 0n ? 0 : fulfilled === ordered ? 2 : 1,orderedBaseQuantity: 2 });
-      const [queue] = await tx.query("SELECT * FROM sales_backorder_entries WHERE sales_order_id=? ORDER BY id FOR UPDATE",[id]);
-      // Lock existing mappings by primary key only: a FOR UPDATE join searched from the Lines index gap-locks the next Order's Lines.
-      // The id read is a plain read whose view may predate the Order lock; a mapping it misses fails closed in validateLifecycleRelease.
-      const [owned] = await tx.query("SELECT r.id FROM sales_order_line_reservations r JOIN sales_order_lines l ON l.id=r.sales_order_line_id WHERE l.sales_order_id=?",[id]);
-      const [mappings] = owned.length ? await tx.query(`SELECT r.*,l.sku_id FROM sales_order_line_reservations r JOIN sales_order_lines l ON l.id=r.sales_order_line_id WHERE r.id IN (${owned.map(() => "?").join(",")}) ORDER BY r.id FOR UPDATE`,owned.map(row => Number(row.id))) : [[]];
+      // Lock this Order's queue and mappings by primary key only. A FOR UPDATE search by Order also locks other Orders' key ranges,
+      // which their confirmation or Backorder allocation inserts into while holding the Inventory Warehouse lock (deadlock).
+      const [queueIds] = await tx.query("SELECT id FROM sales_backorder_entries WHERE sales_order_id=?",[id]), queueKeys = queueIds.map(row => Number(row.id));
+      const [mappingIds] = await tx.query("SELECT r.id FROM sales_order_line_reservations r JOIN sales_order_lines l ON l.id=r.sales_order_line_id WHERE l.sales_order_id=?",[id]), mappingKeys = mappingIds.map(row => Number(row.id));
+      const [queue] = queueKeys.length ? await tx.query(`SELECT * FROM sales_backorder_entries WHERE id IN (${queueKeys.map(() => "?").join(",")}) ORDER BY id FOR UPDATE`,queueKeys) : [[]];
+      // No join in the locking statement: the optimizer may drive a join from another index and lock other Orders' lines and ranges.
+      const [locked] = mappingKeys.length ? await tx.query(`SELECT * FROM sales_order_line_reservations WHERE id IN (${mappingKeys.map(() => "?").join(",")}) ORDER BY id FOR UPDATE`,mappingKeys) : [[]];
+      const mappings = locked.map(row => ({ ...row,sku_id: order.lines.find(line => line.id === Number(row.sales_order_line_id))?.skuId }));
       // Withdrawal re-fetches Draft display only; saleability is revalidated at the next confirmation.
       let draftCustomer,draftSkus;
       if (action === "WITHDRAW") {
@@ -92,8 +99,8 @@ export class SalesOrderLifecycleService {
       await tx.execute(`INSERT INTO sales_order_status_history (sales_order_id,sequence_no,from_status,to_status,action,reason,order_version_after,event_id,actor_user_id,actor_label,occurred_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,[id,Number(sequence.next),order.status,status,actions[action],input.reason,version,eventId,actor.id,actor.username,nowMs]);
       for (const member of release) await tx.execute(`UPDATE sales_order_line_reservations SET released_base_quantity=?,outstanding_base_quantity=0,status='RELEASED',inventory_version=?,updated_at=? WHERE inventory_reservation_id=?`,[member.releasedQuantity,member.version,nowMs,member.reservationId]);
       if (action === "WITHDRAW") {
-        await tx.execute("DELETE FROM sales_backorder_entries WHERE sales_order_id=?",[id]);
-        await tx.execute("DELETE FROM sales_order_line_reservations WHERE sales_order_line_id IN (SELECT id FROM sales_order_lines WHERE sales_order_id=?)",[id]);
+        for (const key of queueKeys) await tx.execute("DELETE FROM sales_backorder_entries WHERE id=?",[key]);
+        for (const key of mappingKeys) await tx.execute("DELETE FROM sales_order_line_reservations WHERE id=?",[key]);
         for (const line of order.lines) {
           const sku = draftSkus.get(line.skuId);
           await tx.execute(`UPDATE sales_order_lines SET item_name_snapshot=?,sku_code_snapshot=?,sku_name_snapshot=?,reserved_outstanding_base_quantity=0,backordered_base_quantity=0,fulfilled_base_quantity=0,cancelled_base_quantity=0,version=version+1,updated_at=? WHERE id=?`,[sku.itemName,sku.skuCode,sku.skuName,nowMs,line.id]);
@@ -104,7 +111,7 @@ export class SalesOrderLifecycleService {
           const cancelled = action === "CANCEL" && order.status === "DRAFT" ? line.orderedBaseQuantity : (BigInt(line.cancelledBaseQuantity)+BigInt(line.reservedBaseQuantity)+BigInt(line.backorderedBaseQuantity)).toString();
           await tx.execute(`UPDATE sales_order_lines SET cancelled_base_quantity=?,reserved_outstanding_base_quantity=0,backordered_base_quantity=0,version=version+1,updated_at=? WHERE id=?`,[cancelled,nowMs,line.id]);
         }
-        await tx.execute("UPDATE sales_backorder_entries SET outstanding_base_quantity=0,status='CANCELLED',updated_at=? WHERE sales_order_id=? AND status='OPEN'",[nowMs,id]);
+        for (const row of queue) if (row.status === "OPEN") await tx.execute("UPDATE sales_backorder_entries SET outstanding_base_quantity=0,status='CANCELLED',updated_at=? WHERE id=?",[nowMs,Number(row.id)]);
         const milestone = action === "CANCEL" ? "cancelled" : "closed";
         await tx.execute(`UPDATE sales_orders SET ${milestone}_at=?,${milestone}_by=?,${action === "CANCEL" ? "cancel" : "close"}_reason=? WHERE id=?`,[nowMs,actor.id,input.reason,id]);
       }
