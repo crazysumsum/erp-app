@@ -168,7 +168,21 @@ jobs:
         run: npm run migrate --workspace server
 
       - name: Run tests with coverage thresholds
+        # TC-032 量的是 NFR-003 的延遲；V8 coverage 插樁會把 P95 推高到 3–5s，
+        # 量到的是插樁而不是系統，所以這一輪跳過它，交給下一步。
+        env:
+          SALES_CAPACITY_SEPARATE_STEP: "1"
         run: npm run test:coverage
+
+      - name: Run Sales capacity test without coverage instrumentation
+        working-directory: server
+        # 全部被 skip 時 node --test 一樣 exit 0；要求兩個場景都真的 pass。
+        run: |
+          status=0
+          node --test --test-concurrency=1 --import ./test-support/testEnv.js --test-reporter=tap test/integration/salesCapacity.integration.test.js > capacity.tap || status=$?
+          cat capacity.tap
+          test "$status" -eq 0
+          grep -qx "# pass 2" capacity.tap
 
   build:
     name: Build frontend

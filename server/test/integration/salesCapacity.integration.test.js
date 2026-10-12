@@ -14,7 +14,8 @@ import {defaultConfigurationSource} from "../../src/framework/configuration/appl
 import {SalesOrderService} from "../../src/modules/sales/SalesOrderService.js";
 import {SalesOrderConfirmationService} from "../../src/modules/sales/SalesOrderConfirmationService.js";
 
-const it=process.env.DB_INTEGRATION_TESTS==="1"?test:test.skip;
+// NFR-003 latency is not measurable under V8 coverage instrumentation; CI runs this file in its own uninstrumented step.
+const it=process.env.DB_INTEGRATION_TESTS==="1"&&process.env.SALES_CAPACITY_SEPARATE_STEP!=="1"?test:test.skip;
 async function capacity(t){
  const f=await setup(t);await stock(f,0);f.customerIds=[f.customerId];
  const source=defaultConfigurationSource(),app=await createApplication({configurationSource:{...source,application:{...source.application,port:0},security:{...source.security,reverseProxy:{...source.security.reverseProxy,trustProxy:"loopback"}},scheduler:{...source.scheduler,jobs:{...source.scheduler.jobs,"sales.confirmationRecovery":{enabled:true},"sales.backorderAllocate":{enabled:true}}}}});
