@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 1777,
+  "revision": 1818,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -10,16 +10,16 @@
   "current_task": "TASK-034",
   "baseline": {
     "design": "b4720b69f67be272b7f605fa8bd83401792629ebd7ae16d1014aac2efcbf58ee",
-    "plan": "151cf5757a465b4df8a64f34e1f876ca6759a3bcc438ec721fb22bf7ab965a44",
-    "code_commit": "209ac8d2cc329b2ba5e4146a202948758b0fe823",
-    "source_fingerprint": "7b6e006e9fee91a2163c12f14d8deba4f041f0c5e5ceb5e0b270334a4a00b8d5",
+    "plan": "c145c025eae94a1570d1bd05a872da53335b931f9ea0f695595d02ddef258908",
+    "code_commit": "168ceb1badd6e6ed3e2ae6976f95b224e86d54bb",
+    "source_fingerprint": "3cdc51c462840f24f5a221218a928e795600de865f35042f2a087622cee9679e",
     "worktree": "/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app",
-    "default_commit": "394fc3fb11b6dce0bf4c41288904a8fac6d3fa49",
+    "default_commit": "0feb9d712072048adb20afc470eb87abc8911475",
     "mode_entry_commit": "5402118617442d4d0651a3245a7b57bf1e30cc43"
   },
   "runtime": {
-    "instance_id": "erp-inventory-p3-integration-8rpdkwr_",
-    "owner": "Codex /root HD137+HD138",
+    "instance_id": "erp-inventory-p3-integration-2ngk1g1s",
+    "owner": "Codex /root HD137+HD138+HD139",
     "resources": {
       "workspace": "/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app"
     },
@@ -4113,6 +4113,82 @@
       "recorded_at": "2026-10-09T09:13:07.639273+00:00",
       "baseline_kind": "PLAN",
       "baseline_sha256": "151cf5757a465b4df8a64f34e1f876ca6759a3bcc438ec721fb22bf7ab965a44",
+      "code_commit": null,
+      "scope": [
+        "inventory-management",
+        "docs/inventory_management/**",
+        "docs/inventory_management/00_module_manifest.json",
+        "docs/inventory_management/00_project_profile.json",
+        "docs/inventory_management/03_design_spec.md",
+        "docs/inventory_management/05_development_tasks.md",
+        "docs/inventory_management/06_technical_test_cases.md",
+        "docs/inventory_management/08_traceability.json",
+        "docs/inventory_management/08_traceability_matrix.md",
+        "package-lock.json",
+        "server/src/framework/middleware/apiDispatcher.js",
+        "server/src/modules/inventory/InventoryReservationService.js",
+        "server/src/modules/inventory/inventoryConstants.js",
+        "server/src/modules/item/ItemLookupService.js",
+        "server/src/services/idempotency/IdempotencyService.js",
+        "server/test/apiDispatcher.test.js",
+        "server/test/idempotencyService.test.js",
+        "server/src/framework/api/apiDefinitionResolver.js",
+        "server/test/apiDefinitionResolver.test.js",
+        "server/src/framework/validation/requestValidator.js",
+        "server/test/requestValidator.test.js",
+        "server/database/migrations/0064_create_inventory_transfers.js",
+        "server/test/supplierBankCrypto.test.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-193",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam",
+      "decision": "APPROVED",
+      "source_ref": "Actual latest Sam A on2026-10-12 in this thread answers immediately preceding HD140 exact one-file CLIENT_URL execution-contract decision. Approve patch 5e5b837bec09e5c6c30158f365d3d3940cd8df105269bcc008dba07b3e8c31e5 / PLAN c145c025eae94a1570d1bd05a872da53335b931f9ea0f695595d02ddef258908; DESIGN b4720b69f67be272b7f605fa8bd83401792629ebd7ae16d1014aac2efcbf58ee / source 3cdc51c462840f24f5a221218a928e795600de865f35042f2a087622cee9679e unchanged. Add only CLIENT_URL to inventory-p3-browser env allowlist; set http://127.0.0.1:5205 solely in its owned local fixture process. No wildcard, production security default, product/shared/test/fixture/DDL/assertion/timeout/min16/zero-skip/coverage/tool/parser/gate changes. Rebind exact HD139 shared scopes byte-identical/no-write and rerun complete fresh generic/native/Sales/capacity/socket/API/realPlaywright verification; preserve420 original refs/failures and precisely clean owned resources. HD137 conditional oneP3PR publication remains only after mandatoryPASS and evidence classification. Final exacthead Sam source/merge review, fiveCI, genericMERGE_READY and fresh/reconciledmain remain separate. No new main code/contract adoption, P4, Item TASK043 implementation, formal/UAT/deploy or waiver inferred.",
+      "recorded_at": "2026-10-12T00:49:18.892724+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "c145c025eae94a1570d1bd05a872da53335b931f9ea0f695595d02ddef258908",
+      "code_commit": null,
+      "scope": [
+        "inventory-management",
+        "docs/inventory_management/**",
+        "docs/inventory_management/00_module_manifest.json",
+        "docs/inventory_management/00_project_profile.json",
+        "docs/inventory_management/03_design_spec.md",
+        "docs/inventory_management/05_development_tasks.md",
+        "docs/inventory_management/06_technical_test_cases.md",
+        "docs/inventory_management/08_traceability.json",
+        "docs/inventory_management/08_traceability_matrix.md",
+        "package-lock.json",
+        "server/src/framework/middleware/apiDispatcher.js",
+        "server/src/modules/inventory/InventoryReservationService.js",
+        "server/src/modules/inventory/inventoryConstants.js",
+        "server/src/modules/item/ItemLookupService.js",
+        "server/src/services/idempotency/IdempotencyService.js",
+        "server/test/apiDispatcher.test.js",
+        "server/test/idempotencyService.test.js",
+        "server/src/framework/api/apiDefinitionResolver.js",
+        "server/test/apiDefinitionResolver.test.js",
+        "server/src/framework/validation/requestValidator.js",
+        "server/test/requestValidator.test.js",
+        "server/database/migrations/0064_create_inventory_transfers.js",
+        "server/test/supplierBankCrypto.test.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-194",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam",
+      "decision": "APPROVED",
+      "source_ref": "Actual latest Sam A on2026-10-12 in this thread answers immediately preceding HD140 exact one-file CLIENT_URL execution-contract decision. Approve patch 5e5b837bec09e5c6c30158f365d3d3940cd8df105269bcc008dba07b3e8c31e5 / PLAN c145c025eae94a1570d1bd05a872da53335b931f9ea0f695595d02ddef258908; DESIGN b4720b69f67be272b7f605fa8bd83401792629ebd7ae16d1014aac2efcbf58ee / source 3cdc51c462840f24f5a221218a928e795600de865f35042f2a087622cee9679e unchanged. Add only CLIENT_URL to inventory-p3-browser env allowlist; set http://127.0.0.1:5205 solely in its owned local fixture process. No wildcard, production security default, product/shared/test/fixture/DDL/assertion/timeout/min16/zero-skip/coverage/tool/parser/gate changes. Rebind exact HD139 shared scopes byte-identical/no-write and rerun complete fresh generic/native/Sales/capacity/socket/API/realPlaywright verification; preserve420 original refs/failures and precisely clean owned resources. HD137 conditional oneP3PR publication remains only after mandatoryPASS and evidence classification. Final exacthead Sam source/merge review, fiveCI, genericMERGE_READY and fresh/reconciledmain remain separate. No new main code/contract adoption, P4, Item TASK043 implementation, formal/UAT/deploy or waiver inferred.",
+      "recorded_at": "2026-10-12T00:49:18.892739+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "c145c025eae94a1570d1bd05a872da53335b931f9ea0f695595d02ddef258908",
       "code_commit": null,
       "scope": [
         "inventory-management",
@@ -8337,6 +8413,20 @@
         "TASK-034"
       ],
       "question": "HD139 DECISION_REQUIRED: actual latest generic root coverage has2236PASS/1FAIL/0SKIP; unchanged Supplier test a malformed row fails with the same message as a real authentication failure fills authTag[0] with0. When original byte already0, fixture does not tamper and correct decryption succeeds. Minimal real-product reproduction found zero after1000 encryptions, confirmed equality and successful unchanged decrypt, then XOR1 was rejected. Exact same Supplier file on freshmain0feb9d712072048adb20afc470eb87abc8911475. No product security failure inferred. A recommended: Sam review/approve exact patch 800a6102648b628a9acceb839d833302e0a526e962096611d3d31cdbb2063459 and proposed DESIGN b4720b69f67be272b7f605fa8bd83401792629ebd7ae16d1014aac2efcbf58ee / PLAN 151cf5757a465b4df8a64f34e1f876ca6759a3bcc438ec721fb22bf7ab965a44. Change only Supplier test fixture to copied tag with first byte XOR1 and an added difference assertion, plus one approval-required scope entry in Inventory manifest. This extends the previous no-Supplier-fixture scope by exactly this file; production crypto/randomness/assertions/counts/skips/commands/timeouts/coverage/security unchanged. Rebind existing exact shared-source scopes byte-identical/no-write, integrate latest main Item documentation handoff (no Item TASK043 implementation/source change; ItemLookup pin unchanged), rerun all mandatory developer/native/Sales/capacity/real Playwright checks and exact owned cleanup. HD137 conditional commit/push/onePR authority remains only after mandatory PASS and evidence classification. Final exacthead Sam approval/fiveCI/generic MERGE_READY/freshmain separate. B hold P3 publication and wait for Supplier owner to fix the existing fixture onmain; do not rerun until green as waiver. Default hold until actual Sam approval. All396 historical refs/failures retained, current resources cleaned. P4/formal/UAT/deployment not authorized."
+    },
+    {
+      "id": "HD-140",
+      "impact": "MAJOR",
+      "status": "ANSWERED",
+      "answer_ref": "Actual latest Sam A on2026-10-12 in this thread answers immediately preceding HD140 exact one-file CLIENT_URL execution-contract decision. Approve patch 5e5b837bec09e5c6c30158f365d3d3940cd8df105269bcc008dba07b3e8c31e5 / PLAN c145c025eae94a1570d1bd05a872da53335b931f9ea0f695595d02ddef258908; DESIGN b4720b69f67be272b7f605fa8bd83401792629ebd7ae16d1014aac2efcbf58ee / source 3cdc51c462840f24f5a221218a928e795600de865f35042f2a087622cee9679e unchanged. Add only CLIENT_URL to inventory-p3-browser env allowlist; set http://127.0.0.1:5205 solely in its owned local fixture process. No wildcard, production security default, product/shared/test/fixture/DDL/assertion/timeout/min16/zero-skip/coverage/tool/parser/gate changes. Rebind exact HD139 shared scopes byte-identical/no-write and rerun complete fresh generic/native/Sales/capacity/socket/API/realPlaywright verification; preserve420 original refs/failures and precisely clean owned resources. HD137 conditional oneP3PR publication remains only after mandatoryPASS and evidence classification. Final exacthead Sam source/merge review, fiveCI, genericMERGE_READY and fresh/reconciledmain remain separate. No new main code/contract adoption, P4, Item TASK043 implementation, formal/UAT/deploy or waiver inferred.; APR193–194",
+      "affected_ids": [
+        "PHASE-004",
+        "TASK-029",
+        "TASK-031",
+        "TASK-033",
+        "TASK-034"
+      ],
+      "question": "HD140 DECISION_REQUIRED: HD139 exact Supplier fixture adopted and main0feb Item docs integrated; root2237PASS, full native2931PASS/0FAIL/132guardedSKIP with unchanged93.68/85.40/92.15 global coverage and per-file floors. Sales31, Customer10k, Core100kSKU/500kBucket/2MMovement, eight native guards and socket/API groups PASS. Actual real Playwright16FAIL/0PASS/0SKIP; mandatory browser regression not run. Root cause positively observed: owned worker6882 API63975 OPTIONS /api/v1/user/me at2026-10-09T09:32:46Z with actual browser Origin http://127.0.0.1:5205 returns403 CORS_ORIGIN_DENIED/no allow-origin header. Existing security config defaults only5173 and supports CLIENT_URL; generic browser suite env_keys omit CLIENT_URL, so it correctly rejects5205. This is the coordinator/profile omission, not evidence that production CORS/auth is broken; no origin/security workaround adopted. A recommended: approve exact one-file profile patch 5e5b837bec09e5c6c30158f365d3d3940cd8df105269bcc008dba07b3e8c31e5 / new PLAN c145c025eae94a1570d1bd05a872da53335b931f9ea0f695595d02ddef258908; DESIGN b4720b69f67be272b7f605fa8bd83401792629ebd7ae16d1014aac2efcbf58ee / source 3cdc51c462840f24f5a221218a928e795600de865f35042f2a087622cee9679e unchanged. Add only CLIENT_URL to inventory-p3-browser env allowlist and set CLIENT_URL=http://127.0.0.1:5205 solely in its owned local fixture process. No wildcard, production default/shared/source/test/fixture/assertion/timeout/min16/skip/coverage/tool/parser/gate change. Rebind exact HD139 shared scopes byte-identical/no-write, rerun full fresh currentPLAN generic/native/Sales/capacity/socket/API/realPlaywright checks with original gates, classify evidence and precisely clean own resources. Preserve420 original refs and original failed browser artifacts; no old PASS relabelling. HD137 conditional onePR publication only after mandatoryPASS/classification; final exacthead Sam/fiveCI/genericMERGE_READY/freshmain remain separate. B keep current canonical profile/source intact and publication blocked until browser environment contract is separately resolved. Default hold until actual Sam answer. No P4, Item TASK043 implementation, formal/UAT/deploy or waiver. All owned runtime databases/accounts/daemons/roots precisely removed; synthetic data unrecoverable, original evidence retained; no foreign runtime touched."
     }
   ],
   "external_actions": [
@@ -13019,6 +13109,62 @@
       "idempotency_key": "erp-inventory-p3-integration-8rpdkwr_",
       "status": "CONFIRMED",
       "source_ref": "Observed new owned26.7.0/loopback-onlyTCP/PID 97165/exactdatadir /private/tmp/erp-inventory-p3-integration-8rpdkwr_/data; synthetic schema erp_inventory_p3_integration_3e9fb6897d54 and schema-only account reserved. Web5205 exclusively reserved, opening root owned."
+    },
+    {
+      "id": "EXT-603",
+      "kind": "HD139_LOCAL_ITEM_DOCS_MAIN_REFRESH",
+      "target": "0feb9d712072048adb20afc470eb87abc8911475",
+      "idempotency_key": "hd139-item-docs-0feb9d712072048adb20afc470eb87abc8911475",
+      "status": "CONFIRMED",
+      "source_ref": "Actual local merge 168ceb1badd6e6ed3e2ae6976f95b224e86d54bb contains main0feb. Only approved eleven Item handoff docs advanced, shared code pins unchanged. Item TASK043 remains pending owner work; no formal acceptance or remote merge."
+    },
+    {
+      "id": "EXT-604",
+      "kind": "HD137_OWNED_LOCAL_MYSQL",
+      "target": "/private/tmp/erp-inventory-p3-integration-2ngk1g1s",
+      "idempotency_key": "erp-inventory-p3-integration-2ngk1g1s",
+      "status": "CONFIRMED",
+      "source_ref": "Observed new owned26.7.0/loopback-onlyTCP/PID 1006/exactdatadir /private/tmp/erp-inventory-p3-integration-2ngk1g1s/data; synthetic schema erp_inventory_p3_integration_2f69102914fc and schema-only account reserved. Web5205 exclusively reserved, opening root owned."
+    },
+    {
+      "id": "EXT-605",
+      "kind": "HD137_EXISTING_SYNTHETIC_MIGRATIONS",
+      "target": "erp_inventory_p3_integration_2f69102914fc",
+      "idempotency_key": "erp-inventory-p3-integration-2ngk1g1s-migrations",
+      "status": "CONFIRMED",
+      "source_ref": "Actual existing migration exit0; exact native ledger 80 rows matches repository filenames; no fixed historical count."
+    },
+    {
+      "id": "EXT-606",
+      "kind": "HD138_FULL_NATIVE_DIAGNOSTIC",
+      "target": "erp_inventory_p3_integration_2f69102914fc",
+      "idempotency_key": "erp-inventory-p3-integration-2ngk1g1s-full-native",
+      "status": "CONFIRMED",
+      "source_ref": "Actual exact native full command PASS; same LCOV and strict original floors; supporting log /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/p3-hd138-full-native-f8f8193de2aa"
+    },
+    {
+      "id": "EXT-607",
+      "kind": "HD138_OWNED_SOCKET_MIGRATIONS",
+      "target": "erp_inventory_task025_d32ecb3ac2c1@/private/tmp/erp-inventory-task025-mysql-2670.7bb06ac5b75e",
+      "idempotency_key": "erp-inventory-p3-integration-2ngk1g1s-erp_inventory_task025_d32ecb3ac2c1",
+      "status": "CONFIRMED",
+      "source_ref": "Actual native migration exit0; log /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/p3-hd138-migration-erp_inventory_task025_d32ecb3ac2c1/migration.log"
+    },
+    {
+      "id": "EXT-608",
+      "kind": "HD138_OWNED_SOCKET_MIGRATIONS",
+      "target": "erp_inventory_p3_eb6b26226f2a@/private/tmp/erp-inventory-p3-mysql-2670.434a4e9d8923",
+      "idempotency_key": "erp-inventory-p3-integration-2ngk1g1s-erp_inventory_p3_eb6b26226f2a",
+      "status": "CONFIRMED",
+      "source_ref": "Actual native migration exit0; log /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/p3-hd138-migration-erp_inventory_p3_eb6b26226f2a/migration.log"
+    },
+    {
+      "id": "EXT-609",
+      "kind": "HD138_OWNED_SOCKET_MIGRATIONS",
+      "target": "erp_inventory_p3_64f83cb414ac@/private/tmp/erp-inventory-p3-mysql-2670.434a4e9d8923",
+      "idempotency_key": "erp-inventory-p3-integration-2ngk1g1s-erp_inventory_p3_64f83cb414ac",
+      "status": "CONFIRMED",
+      "source_ref": "Actual native migration exit0; log /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/p3-hd138-migration-erp_inventory_p3_64f83cb414ac/migration.log"
     }
   ],
   "evidence_files": [
@@ -13417,7 +13563,31 @@
     "evidence/20261009T064950-c64f59fe3bea/run.json",
     "evidence/20261009T064953-af3ae7340c33/run.json",
     "evidence/20261009T064955-b2279ebb7acc/run.json",
-    "evidence/20261009T064958-fff06640186c/run.json"
+    "evidence/20261009T064958-fff06640186c/run.json",
+    "evidence/20261009T091456-36caedc05859/run.json",
+    "evidence/20261009T091457-c8939f7fd13b/run.json",
+    "evidence/20261009T091458-87a8f64a2314/run.json",
+    "evidence/20261009T091500-13728dff685f/run.json",
+    "evidence/20261009T091501-d1b5020bd98c/run.json",
+    "evidence/20261009T091503-98092767e50e/run.json",
+    "evidence/20261009T091505-038357af6712/run.json",
+    "evidence/20261009T091507-4aa09a074e86/run.json",
+    "evidence/20261009T091510-2493de45d19c/run.json",
+    "evidence/20261009T091608-a6a1d61e5e08/run.json",
+    "evidence/20261009T091613-cd1a3d94d37b/run.json",
+    "evidence/20261009T091623-cb30d57e4dc0/run.json",
+    "evidence/20261009T091625-2a1b06cd4ecf/run.json",
+    "evidence/20261009T092319-29f537dbc505/run.json",
+    "evidence/20261009T092320-cc490c709a6c/run.json",
+    "evidence/20261009T092337-5899981aa18c/run.json",
+    "evidence/20261009T092407-7f4f79a9b0ed/run.json",
+    "evidence/20261009T092524-b37225574626/run.json",
+    "evidence/20261009T092528-816b47c198d2/run.json",
+    "evidence/20261009T092531-87b9a14bf8af/run.json",
+    "evidence/20261009T092534-73e8b6785b74/run.json",
+    "evidence/20261009T092536-238caafc3884/run.json",
+    "evidence/20261009T092542-5fb21af8d7c1/run.json",
+    "evidence/20261009T092613-12673541b47f/run.json"
   ],
   "defects": [
     {
@@ -13586,5 +13756,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "HD139 actual Sam A exact candidate adopted. Save bounded local repair checkpoint; integrate approved Item documentation main0feb, then full fresh unchanged developer/native/capacity/real Playwright gates. Preserve396 refs. Conditional onePR publication after PASS/classification only; final exacthead review/CI/MERGE_READY separate."
+  "next_safe_action": "HD140 exact single env-name patch adopted by actual Sam A / APR193–194. Observe current main without adopting new material scope. Run fresh newPLAN checks with CLIENT_URL=http://127.0.0.1:5205 in owned browser fixture only; preserve420 refs. Conditional publication only after all mandatoryPASS/classification; finalhead Sam/CI/MERGE_READY/freshmain separate."
 }
