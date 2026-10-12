@@ -1,0 +1,11 @@
+{
+  "database": "erp_dev",
+  "suppliers": 100000,
+  "heavy": 973,
+  "addresses": 514595,
+  "contacts": 1038920,
+  "identifiers": 200000,
+  "bankAccounts": 207784,
+  "nameGrams": 2393331,
+  "seconds": 54
+}

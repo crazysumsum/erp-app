@@ -1,20 +1,20 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 301,
+  "revision": 308,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-004",
-  "current_task": "TASK-049",
+  "current_task": "TASK-050",
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
     "code_commit": "5b8aa9bbcf5217ab3a30f722ff241d167fa402f6",
     "source_fingerprint": "cd70f899bfaca539353988b320210dd24b2c3b8958b249224ad8dd55f701dc97",
-    "worktree": "/Users/sam/Documents/workspace/erp-supplier-hd081",
-    "default_commit": "9e9b0ff9ad87846a32036fc86138a834bdb5c82a",
+    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t50",
+    "default_commit": "394fc3fb11b6dce0bf4c41288904a8fac6d3fa49",
     "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
   },
   "runtime": {
@@ -77,7 +77,7 @@
     "TASK-047": "DONE",
     "TASK-048": "DONE",
     "TASK-049": "DONE",
-    "TASK-050": "PENDING",
+    "TASK-050": "IN_PROGRESS",
     "TASK-051": "PENDING"
   },
   "approvals": [
@@ -1922,6 +1922,30 @@
       "reviewer": "agent-skills:security-auditor, independent of the author, reviewing a8f2390889014243d2368a1e1bde88b16ada1d60 (PR #192), scope 3b0ea45..a8f2390 (HD-079 a)",
       "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
       "source_ref": "docs/supplier_management/implementation/85_rev_082_independent_review.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-083",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-050)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 7f339893585e7744213ae91fd598d7c980878b32 (PR #197)",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/86_rev_083_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-084",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-050)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing de030eb7b74e8cd0d70c98adc65273c73ac2514c (PR #197), the round after REV-083",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/87_rev_084_independent_review.md",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -4808,6 +4832,78 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-09: 'B，充分描述一下要item management 模塊負責人做咩'. Handoff written in docs/supplier_management/item_handoff_supplier_sku_refs.md."
+    },
+    {
+      "id": "HD-082",
+      "impact": "MAJOR",
+      "question": "While Supplier waits on the Item owner (HD-081 B), may work start out of plan order? (A) run TASK-050 now without its for-SKU part (100k dataset, list/search/detail p95, 50-user CRUD, EXPLAIN, metrics/logs/alerts, capacity report), adding the for-SKU part and a final rerun after TASK-040; (B) HD-057's similar-name exception list for legacy data; not now: the Item pin refresh (do it once after the Item change), TASK-038 code, the T51 release work.",
+      "affected_ids": [
+        "TASK-050",
+        "TASK-040",
+        "TASK-051",
+        "HD-057"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-09: '先做A的工作'. TASK-050 runs now without the for-SKU part (NFR-005, the for-SKU p95 and its metrics); its dependency on TASK-040 applies to that part and to the final rerun only."
+    },
+    {
+      "id": "HD-083",
+      "impact": "MINOR",
+      "question": "TASK-050 observability: (1) metrics mechanism: (A) a supplier.metrics job writing low-cardinality log lines plus alert events, as Sales does, or (B) a Prometheus endpoint (new dependency); (2) alert thresholds (approval pending 24 h warn, import waiting 15 min error, purge failure error) as code constants (A) or in server/config/supplier.js (B); (3) dataset: design §11.5 averages plus 1% at the NFR-003 upper bound.",
+      "affected_ids": [
+        "TASK-050"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-09: '全部按建議'."
+    },
+    {
+      "id": "HD-084",
+      "impact": "MAJOR",
+      "question": "TASK-050 at 100k Suppliers and 50 users failed NFR-001 everywhere (p95 3-12 s): the similar-name search read about 2.25M gram rows inside the create/update transaction while Business Master's assertCurrencyUsableInTransaction held the currency row's X lock, so writes queued and held pool connections. (A) run the search on the pool before the transaction and bound it (rarest grams, at most 3,000 candidates; recall 98.9% vs the old 99.1% against brute force); (B) only move it out of the lock (update p95 2.75 s, a known limitation); (C) an exact fast search through a schema change (FULLTEXT ngram).",
+      "affected_ids": [
+        "TASK-050",
+        "NFR-001",
+        "NFR-003"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-09: 'A'."
+    },
+    {
+      "id": "HD-087",
+      "impact": "MAJOR",
+      "question": "REV-083 (PR #197): M-1 floating-point rounding in minCommon drops names at exactly Dice 0.85 for 23/46/92/184-gram queries; the recall gap is not noise but deterministic and caused by the 3,000-candidate cap (REV-083: 98.31% vs 98.95%), which is also the whole speedup, correcting what HD-084 was decided on. (1) keep the cap (A), try a larger cap (B), or remove it (C); (2) fix M-1, test the cap ranking, the Dice filter and two metrics cases, correct the report and commit the recall evidence, diff digests instead of truncating; (3) re-review.",
+      "affected_ids": [
+        "TASK-050",
+        "HD-084",
+        "REV-083"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-12: 'A，全部按建議，再 review'. Measured after the fixes on the regenerated 100k seed: capped 97.74% (p50 69 ms) vs uncapped 98.40% (p50 773 ms)."
+    },
+    {
+      "id": "HD-088",
+      "impact": "MAJOR",
+      "question": "Schema: add idx_suppliers_updated_id (updated_at, id) and idx_suppliers_name_id (supplier_name, id) on suppliers for the default list, filters sorted by update time and sort by name (28.5 ms / 23 ms full sorts to 0.05-0.09 ms at 100k), online (INPLACE, LOCK=NONE), as migration 0080 in PR #197 (TASK-038 moves to 0081). Text search gets no index: an ngram FULLTEXT index was measured slower for common terms and changes results (one character, phone, e-mail, punctuation). Sort by status left unindexed.",
+      "affected_ids": [
+        "TASK-050",
+        "NFR-001",
+        "NFR-003"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-12: '批准'."
+    },
+    {
+      "id": "HD-089",
+      "impact": "MINOR",
+      "question": "REV-084 APPROVED PR #197 with five Low findings: L-1 the cap-ranking test proves neither cap nor ranking; L-2 a failed digest read crashes the benchmark before cleanup; L-3 migration 0080 waits on the suppliers metadata lock for the server's lock_wait_timeout (one year) behind an open transaction; L-4 the list-index test hangs when the migration throws; L-5 the cap's recall cost is 0.64-1.12 points across seeds, not 0.66. (A) fix all five in #197; (B) fix L-2, L-3, L-4 only. Then re-review or merge when CI passes.",
+      "affected_ids": [
+        "TASK-050",
+        "REV-084",
+        "HD-087",
+        "HD-088"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-12: 'A，唔使再 review，CI 過就 merge'."
     }
   ],
   "external_actions": [
@@ -5884,5 +5980,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Waiting on the Item module owner (HD-081 B): see docs/supplier_management/item_handoff_supplier_sku_refs.md. TASK-038 stays blocked until Item design §5.14 is aligned to supplier_sku_refs and merged; TASK-039, TASK-040, TASK-050 and TASK-051 wait on it. When it lands: refresh the Supplier pin on item-sku-uom-provider (already stale: pinned 5c193e20, Item now a058ede4; needs Product Owner approval), then explain the supplier_sku_refs and supplier_supply_events schema in chat and wait for sign-off before writing migrations. Open carry-forward: HD-057 (T51)."
+  "next_safe_action": "TASK-050 (without for-SKU): HD-089 fixes pushed to PR #197. Merge when CI is green on the head and main is unchanged (HD-089: no further review). Then: pin refresh PR (HD-085), TASK-038 PR (migration 0081, HD-086)."
 }

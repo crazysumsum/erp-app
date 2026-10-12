@@ -1,0 +1,105 @@
+{
+  "command": "/Users/sam/Documents/workspace/erp-supplier-t50/server/scripts/measureSupplierDuplicateRecall.js --database=erp_dev --output /private/tmp/claude-501/-Users-sam-Documents-workspace-erp-app/486c4c60-92de-4122-b0e0-a68866140aa1/scratchpad/recall50.json --queries=200 --seed=50",
+  "database": "erp_dev",
+  "suppliers": 100000,
+  "queries": 200,
+  "seed": 50,
+  "truthCandidates": 1063,
+  "variants": {
+    "capped": {
+      "candidateCap": 3000,
+      "recall": 0.9774,
+      "missed": 24,
+      "queriesMissing": 15,
+      "p50Ms": 69,
+      "p95Ms": 86
+    },
+    "uncapped": {
+      "candidateCap": 9007199254740991,
+      "recall": 0.984,
+      "missed": 17,
+      "queriesMissing": 9,
+      "p50Ms": 773,
+      "p95Ms": 889
+    }
+  },
+  "cappedMissExamples": [
+    {
+      "query": "wing silver lighting international ltd.",
+      "truthSize": 10,
+      "missedScores": [
+        0.9666666666666667,
+        0.8888888888888888
+      ]
+    },
+    {
+      "query": "hing grand taxtile (hk) limited",
+      "truthSize": 7,
+      "missedScores": [
+        0.8518518518518519
+      ]
+    },
+    {
+      "query": "ksummit wing engineering limited",
+      "truthSize": 10,
+      "missedScores": [
+        0.9130434782608695,
+        0.9130434782608695,
+        0.8837209302325582,
+        0.8571428571428571,
+        0.8571428571428571
+      ]
+    },
+    {
+      "query": "asia pearl chemical (hk) limited",
+      "truthSize": 10,
+      "missedScores": [
+        0.8679245283018868
+      ]
+    },
+    {
+      "query": "sunrise ng toys enterprises ltd.",
+      "truthSize": 10,
+      "missedScores": [
+        0.8679245283018868
+      ]
+    },
+    {
+      "query": "ng global lagting enterprises ltd.",
+      "truthSize": 10,
+      "missedScores": [
+        0.8813559322033898
+      ]
+    },
+    {
+      "query": "sunrise grand indqustrial (hk) limited",
+      "truthSize": 2,
+      "missedScores": [
+        0.875
+      ]
+    },
+    {
+      "query": "sunrise wong trading holiings limited",
+      "truthSize": 9,
+      "missedScores": [
+        0.8571428571428571
+      ]
+    },
+    {
+      "query": "leung kwong toys inteanational ltd.",
+      "truthSize": 7,
+      "missedScores": [
+        0.8771929824561403,
+        0.8620689655172413
+      ]
+    },
+    {
+      "query": "prime shun packaging limited",
+      "truthSize": 10,
+      "missedScores": [
+        0.875
+      ]
+    }
+  ],
+  "note": "single connection, one query at a time, no other load"
+}
