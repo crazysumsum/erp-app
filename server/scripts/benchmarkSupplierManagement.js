@@ -5,7 +5,8 @@
  *     [--users=50] [--seconds=120] [--warmup-seconds=20] [--think-ms=1000]
  *
  * 先用 `seedSupplierPerformanceFixtures.js` 準備資料。**只可以對用完即棄嘅資料庫跑**：佢會建 Supplier、改 seed
- * 嘅 Supplier（版本會加），完咗刪走自己建嘅 Supplier、user 同 role。
+ * 嘅 Supplier（版本會加），完咗刪走自己建嘅 Supplier、user 同 role。寫入時嘅 idempotency 紀錄（`fr_idempotency_keys`）
+ * 會留低，等佢哋按 TTL 過期（store key 係 hash，認唔出邊條係 benchmark 嘅）。
  *
  * - 同一個 process 起真 app（`createApplication`，HTTP、認證、權限、idempotency 全部照行），每 IP 嘅 request
  *   limiter 調高，因為所有虛擬用戶都由 127.0.0.1 發出。背景工作全部關閉，唔影響量度。
@@ -13,8 +14,8 @@
  *   每秒固定請求數。暖身期嘅結果唔計。
  * - 每個操作記 p50／p95／p99、錯誤率；另外記 process CPU、RSS、DB 連線數。負載產生器同 app 喺同一個 process，
  *   所以 CPU 係兩者加埋。
- * - 跑之前清空 performance_schema 嘅 statement digest（要 DB_ADMIN_USER），跑完攞最多時間嘅 SQL 同佢哋嘅
- *   EXPLAIN：證明用咗邊個 index、掃咗幾多行，而唔係靠估。
+ * - 量度開始同結束各讀一次 performance_schema 嘅 statement digest（要 DB_ADMIN_USER）再相減，攞量度期間最多時間
+ *   嘅 SQL 同佢哋嘅 EXPLAIN：證明用咗邊個 index、掃咗幾多行，而唔係靠估。唔清空成個 server 嘅統計。
  */
 import { randomBytes, randomInt, randomUUID } from "node:crypto";
 import fs from "node:fs";
@@ -154,10 +155,16 @@ try {
   const weighted = MIX.flatMap(([name, weight]) => Array(weight).fill(name));
   const samples = Object.fromEntries(MIX.map(([name]) => [name, { ms: [], errors: 0, statuses: {} }]));
 
-  await admin.query("TRUNCATE TABLE performance_schema.events_statements_summary_by_digest");
+  // Digest 統計係成個 server 共用嘅：唔清空，喺量度開始同結束各讀一次再相減（REV-083 L-5），暖身期亦唔計。
+  const readDigests = async () => new Map((await admin.query(`SELECT DIGEST AS id, DIGEST_TEXT AS digest, QUERY_SAMPLE_TEXT AS sample,
+      COUNT_STAR AS count, SUM_TIMER_WAIT AS wait, MAX_TIMER_WAIT AS maxWait, SUM_ROWS_EXAMINED AS rowsExamined, SUM_ROWS_SENT AS rowsSent,
+      SUM_NO_INDEX_USED AS noIndexUsed
+     FROM performance_schema.events_statements_summary_by_digest WHERE SCHEMA_NAME = ? AND DIGEST_TEXT LIKE 'SELECT%'`,
+  [process.env.DB_NAME]))[0].map((row) => [row.id, row]));
   const startedAt = Date.now();
   const measureFrom = startedAt + WARMUP_SECONDS * 1000;
   const endAt = measureFrom + SECONDS * 1000;
+  const digestsAtStart = sleep(WARMUP_SECONDS * 1000).then(readDigests);
   const resources = { cpuPercent: [], rssMiB: [], dbThreadsConnected: [] };
   let lastCpu = process.cpuUsage();
   let lastAt = performance.now();
@@ -211,12 +218,15 @@ try {
   const stats = (values) => ({ avg: values.length ? Math.round(values.reduce((a, b) => a + b, 0) / values.length) : null, max: values.length ? Math.max(...values) : null });
   report.resources = { processCpuPercent: stats(resources.cpuPercent), rssMiB: stats(resources.rssMiB), dbThreadsConnected: stats(resources.dbThreadsConnected) };
 
-  // 最多時間嘅 SQL（只計呢個 schema），連 EXPLAIN。
-  const [digests] = await admin.query(`SELECT DIGEST_TEXT AS digest, QUERY_SAMPLE_TEXT AS sample, COUNT_STAR AS count,
-      ROUND(SUM_TIMER_WAIT / 1e9, 1) AS totalMs, ROUND(AVG_TIMER_WAIT / 1e9, 2) AS avgMs, ROUND(MAX_TIMER_WAIT / 1e9, 1) AS maxMs,
-      SUM_ROWS_EXAMINED AS rowsExamined, SUM_ROWS_SENT AS rowsSent, SUM_NO_INDEX_USED AS noIndexUsed
-     FROM performance_schema.events_statements_summary_by_digest
-    WHERE SCHEMA_NAME = ? AND DIGEST_TEXT LIKE 'SELECT%' ORDER BY SUM_TIMER_WAIT DESC LIMIT 12`, [process.env.DB_NAME]);
+  // 量度期間最多時間嘅 SQL（只計呢個 schema），連 EXPLAIN。maxMs 係累計最大值，可能包括暖身。
+  const before = await digestsAtStart;
+  const digests = [...(await readDigests()).values()].map((row) => {
+    const start = before.get(row.id);
+    const minus = (field) => Number(row[field]) - Number(start?.[field] ?? 0);
+    return { digest: row.digest, sample: row.sample, count: minus("count"), totalMs: Math.round(minus("wait") / 1e8) / 10,
+      maxMs: Math.round(Number(row.maxWait) / 1e8) / 10, rowsExamined: minus("rowsExamined"), rowsSent: minus("rowsSent"), noIndexUsed: minus("noIndexUsed") };
+  }).filter((row) => row.count > 0).sort((left, right) => right.totalMs - left.totalMs).slice(0, 12)
+    .map((row) => ({ ...row, avgMs: Math.round((row.totalMs / row.count) * 100) / 100 }));
   report.topStatements = [];
   for (const row of digests) {
     let plan = null;

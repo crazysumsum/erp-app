@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 304,
+  "revision": 305,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -4855,6 +4855,18 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-09: 'A'."
+    },
+    {
+      "id": "HD-087",
+      "impact": "MAJOR",
+      "question": "REV-083 (PR #197): M-1 floating-point rounding in minCommon drops names at exactly Dice 0.85 for 23/46/92/184-gram queries; the recall gap is not noise but deterministic and caused by the 3,000-candidate cap (REV-083: 98.31% vs 98.95%), which is also the whole speedup, correcting what HD-084 was decided on. (1) keep the cap (A), try a larger cap (B), or remove it (C); (2) fix M-1, test the cap ranking, the Dice filter and two metrics cases, correct the report and commit the recall evidence, diff digests instead of truncating; (3) re-review.",
+      "affected_ids": [
+        "TASK-050",
+        "HD-084",
+        "REV-083"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-12: 'A，全部按建議，再 review'. Measured after the fixes on the regenerated 100k seed: capped 97.74% (p50 69 ms) vs uncapped 98.40% (p50 773 ms)."
     }
   ],
   "external_actions": [
@@ -5931,5 +5943,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-050: REV-083 CHANGES_REQUESTED (M-1 float rounding in minCommon; untested cap, metrics cases and Dice filter; recall gap is deterministic from the cap, correcting HD-084's 'within noise'). Ask the Product Owner (HD-087). TASK-038 code is committed locally on claude/supplier-task-038, waiting for #197 and the pin refresh (HD-085)."
+  "next_safe_action": "TASK-050: HD-087 fixes done (M-1, cap/Dice/metrics tests, report and evidence regenerated, digest diff). Run the mutation sweep and the CI-style suite, push PR #197, then REV-084 limited to this round. TASK-038 committed locally, waiting for #197 and the pin refresh (HD-085)."
 }
