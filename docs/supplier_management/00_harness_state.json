@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 303,
+  "revision": 304,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -1923,6 +1923,18 @@
       "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
       "source_ref": "docs/supplier_management/implementation/85_rev_082_independent_review.md",
       "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-083",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-050)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 7f339893585e7744213ae91fd598d7c980878b32 (PR #197)",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/86_rev_083_independent_review.md",
+      "status": "CHANGES_REQUESTED",
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
@@ -5919,5 +5931,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-050 (HD-082 A) without the for-SKU part: HD-084 fix, supplier.metrics job and performance_report.md done; all p95 under 2 s at 100k Suppliers and 50 users. Next: CI-style suite, PR, review. Open: the for-SKU part and a final rerun after TASK-040; the manual SRE review; whether the list and text search should use an index (schema); the perf:supplier npm script (server/package.json)."
+  "next_safe_action": "TASK-050: REV-083 CHANGES_REQUESTED (M-1 float rounding in minCommon; untested cap, metrics cases and Dice filter; recall gap is deterministic from the cap, correcting HD-084's 'within noise'). Ask the Product Owner (HD-087). TASK-038 code is committed locally on claude/supplier-task-038, waiting for #197 and the pin refresh (HD-085)."
 }
