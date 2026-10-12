@@ -1,0 +1,11 @@
+# P3 CI precheck remediation
+
+The first recovered candidate `185e187b` completed four required CI checks but failed the MySQL integration check in run `38222816127`. The original 50 MiB / 100,000-row / 10,000-order precheck exceeded its 30-second worker deadline. A separate processing-summary fixture also assumed which source would claim a duplicate key first, although spool enumeration is unordered.
+
+The precheck now persists bounded groups with multi-row writes and actual-ID readback. Each SQL chunk contains at most 50 source groups inside the original configured, fenced transaction. Existing source identity/payload collisions are rejected, committed rows retain their original processing events, and errors retain the original 200-entry cap and sentinel. Actor checks, transaction and worker deadlines, default batch size, payload limits, business duplicate rules and all merge thresholds are unchanged.
+
+The warning fixture now verifies the actual successful owner against known input contents, exact payload-hash relationships, Sales quantity, individual event warnings and the exact aggregate. Both legal owner sequences passed real MySQL verification. Additional native cases exercise second-chunk rollback, error-write rollback, lost actual commit acknowledgement, mixed existing/new replay and persisted-hash mismatch rejection.
+
+Final source fingerprint: `69b64e922a46c9ff83ae79cbdc607dcf4efa53dc7075744661f1b8a61e507328`; DESIGN `9fcb51b2…` / PLAN `f0a8eca4…` unchanged. The unchanged 50 MiB cases completed in 4.676 seconds (1,000 orders) and 6.284 seconds (10,000 orders), with no worker timeouts or failures. Independently reviewed scoped evidence supports closure of DEF-004 and DEF-005; old CI failures remain recorded.
+
+Standard lint and complete P3 unit/native suites passed on this source. The entire original 33-suite developer contract, all 35 real Playwright cases, current-candidate five-check CI, final independent Phase review, DEC-027 bounded evidence-index migration and standard merge Gate remain mandatory before merge. This report does not claim formal Technical Acceptance, business UAT or release approval. The 276 missing historical raw references remain active until the separately approved recovery conditions are actually satisfied.

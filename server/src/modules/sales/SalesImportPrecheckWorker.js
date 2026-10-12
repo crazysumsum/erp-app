@@ -94,19 +94,30 @@ export class SalesImportPrecheckWorker {
  }
  async #persist(claim,signal,groups) {
   await this.#transaction(claim,signal,async(tx,_job,nowMs)=>{
-   const [sizes]=await tx.query(groups.map(()=>"SELECT ? AS request_index,LENGTH(CAST(CAST(? AS JSON) AS CHAR CHARSET utf8mb4)) AS bytes").join(" UNION ALL "),groups.flatMap((group,index)=>[index,JSON.stringify(group.payload)]));
-   for(let index=0;index<groups.length;index++){
-    const group=groups[index],hash=sourceOrderPayloadHash(group),sourceHash=salesSourceHash(group.sourceOrderKey),[[existing]]=await tx.query("SELECT source_order_key,payload_hash FROM sales_intake_orders WHERE import_job_id=? AND source_order_key_hash=? FOR UPDATE",[claim.id,sourceHash]);
-    if(existing){if(existing.source_order_key!==group.sourceOrderKey||existing.payload_hash!==hash)throw salesError("SALES_SOURCE_HASH_COLLISION");continue;}
-    const errors=[...group.errors];if(Number(sizes[index].bytes)>131072)errors.push({rowNo:group.firstRowNo,field:"payload",code:"SALES_IMPORT_ORDER_INVALID"});
-    const [inserted]=await tx.execute(`INSERT INTO sales_intake_orders (import_job_id,source_type,source_order_key,source_order_key_hash,channel_code,external_order_id,external_order_id_hash,schema_version,payload_hash,safe_payload,
-     first_row_no,last_row_no,line_count,status,processing_event_id,created_at,updated_at) VALUES (?,'CSV',?,?,?,?,?,'1.0',?,?,?,?,?,?,?,?,?)`,[claim.id,group.sourceOrderKey,sourceHash,group.channelCode,group.externalOrderId,salesSourceHash(group.externalOrderId),hash,errors.length?null:JSON.stringify(group.payload),group.firstRowNo,group.lastRowNo,Math.max(1,Math.min(100,group.payload.lines.length)),errors.length?"INVALID":"RECEIVED",randomUUID(),nowMs,nowMs]);
-    await this.#errors(tx,inserted.insertId,errors,nowMs);
+   // Bound SQL packets while keeping the configured persistence batch in its original fenced transaction.
+   for(let offset=0;offset<groups.length;offset+=50){
+    const batch=groups.slice(offset,offset+50),members=new Map();
+    const [sizes]=await tx.query(batch.map(()=>"SELECT ? AS request_index,LENGTH(CAST(CAST(? AS JSON) AS CHAR CHARSET utf8mb4)) AS bytes").join(" UNION ALL "),batch.flatMap((group,index)=>[index,JSON.stringify(group.payload)]));
+    const sizeByIndex=new Map(sizes.map(row=>[Number(row.request_index),Number(row.bytes)]));
+    for(let index=0;index<batch.length;index++){
+     const group=batch[index],hash=sourceOrderPayloadHash(group),sourceHash=salesSourceHash(group.sourceOrderKey),identity=sourceHash.toString("hex"),previous=members.get(identity);
+     if(previous){if(previous.group.sourceOrderKey!==group.sourceOrderKey||previous.hash!==hash)throw salesError("SALES_SOURCE_HASH_COLLISION");continue;}
+     const errors=[...group.errors];if(sizeByIndex.get(index)>131072)errors.push({rowNo:group.firstRowNo,field:"payload",code:"SALES_IMPORT_ORDER_INVALID"});
+     members.set(identity,{group,hash,sourceHash,errors});
+    }
+    const values=[...members.values()],lookup=`SELECT id,source_order_key_hash,source_order_key,payload_hash,processing_event_id FROM sales_intake_orders WHERE import_job_id=? AND source_order_key_hash IN (${values.map(()=>"?").join(",")}) FOR UPDATE`,args=[claim.id,...values.map(value=>value.sourceHash)];
+    const [existing]=await tx.query(lookup,args),owned=new Map(existing.map(row=>[Buffer.from(row.source_order_key_hash).toString("hex"),row])),missing=[];
+    for(const [identity,value] of members){const row=owned.get(identity);if(row){if(row.source_order_key!==value.group.sourceOrderKey||row.payload_hash!==value.hash)throw salesError("SALES_SOURCE_HASH_COLLISION");}else {value.eventId=randomUUID();missing.push(value);}}
+    if(!missing.length)continue;
+    await tx.execute(`INSERT INTO sales_intake_orders (import_job_id,source_type,source_order_key,source_order_key_hash,channel_code,external_order_id,external_order_id_hash,schema_version,payload_hash,safe_payload,
+     first_row_no,last_row_no,line_count,status,processing_event_id,created_at,updated_at) VALUES ${missing.map(()=>"(?,'CSV',?,?,?,?,?,'1.0',?,?,?,?,?,?,?,?,?)").join(",")}`,missing.flatMap(({group,hash,sourceHash,errors,eventId})=>[claim.id,group.sourceOrderKey,sourceHash,group.channelCode,group.externalOrderId,salesSourceHash(group.externalOrderId),hash,errors.length?null:JSON.stringify(group.payload),group.firstRowNo,group.lastRowNo,Math.max(1,Math.min(100,group.payload.lines.length)),errors.length?"INVALID":"RECEIVED",eventId,nowMs,nowMs]));
+    const [inserted]=await tx.query(lookup,args),actual=new Map(inserted.map(row=>[Buffer.from(row.source_order_key_hash).toString("hex"),row]));
+    for(const member of missing){const row=actual.get(member.sourceHash.toString("hex"));if(!row||row.source_order_key!==member.group.sourceOrderKey||row.payload_hash!==member.hash||row.processing_event_id!==member.eventId)throw salesError("SALES_SOURCE_HASH_COLLISION");await this.#errors(tx,row.id,member.errors,nowMs);}
    }
   });
  }
  async #errors(tx,intakeId,errors,nowMs) {
   const bounded=errors.slice(0,200);if(errors.length>200)bounded[199]={rowNo:errors.at(-1).rowNo,field:"row",code:"TOO_MANY_ERRORS"};
-  for(const error of bounded)await tx.execute("INSERT INTO sales_intake_errors (intake_order_id,row_no,field_path,error_code,safe_message,created_at) VALUES (?,?,?,?,?,?)",[intakeId,error.rowNo,error.field,error.code,"來源訂單未通過驗證，請檢查指定欄位",nowMs]);
+  if(bounded.length)await tx.execute(`INSERT INTO sales_intake_errors (intake_order_id,row_no,field_path,error_code,safe_message,created_at) VALUES ${bounded.map(()=>"(?,?,?,?,?,?)").join(",")}`,bounded.flatMap(error=>[intakeId,error.rowNo,error.field,error.code,"來源訂單未通過驗證，請檢查指定欄位",nowMs]));
  }
 }

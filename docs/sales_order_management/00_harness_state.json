@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 528,
+  "revision": 542,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "9fcb51b2e67379dce1e8011524f767a085d28a3282474705bb730ba99a5ccdbd",
     "plan": "f0a8eca401f2c10e8d4473341466a3bb99c0013fe6fdb867913cc9095e15a2f6",
-    "code_commit": "a8c890c221b4895efaea82715b5abcd6d15c6426",
-    "source_fingerprint": "d41409e25260143e8520d62efa6769622d9deeb89331bb92cf76a03a6fec77bf",
+    "code_commit": "185e187bfe4cbf91e85817778fc4f65549dbdd56",
+    "source_fingerprint": "69b64e922a46c9ff83ae79cbdc607dcf4efa53dc7075744661f1b8a61e507328",
     "worktree": "/Users/sam/.codex/worktrees/sales-p3-recovery/erp-app",
     "default_commit": "e75414753bb898d9db69569f3130a63cae16a19c",
     "mode_entry_commit": "6936736ba1fb98f4fcb8365377f59f0a0f7a4897"
@@ -6052,6 +6052,114 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-CI185-PRECHECK-DEADLINE-TRIAGE-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p3_retention_review",
+      "reviewed_baseline": "9fcb51b2e67379dce1e8011524f767a085d28a3282474705bb730ba99a5ccdbd",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/p3-ci185-precheck-deadline-triage-r1-reviewer-proof.json SHA256 f9bedbc19a354ab48103f96374f23733eb0162db74bcef69fe12a39f6c1dac26 Minimum bounded batch persistence direction only, preserve originalfences/JSONsize/collision/replays/actualID/200errors/30sec, exactpatchapprovalpending.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-CI185-WARNING-NATIVE-REPRO-R3",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p3_whole_phase_review",
+      "reviewed_baseline": "9fcb51b2e67379dce1e8011524f767a085d28a3282474705bb730ba99a5ccdbd",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/p3-ci185-warning-enumeration-native-repro-r3-reviewer-proof.json SHA256 29836db93ac9993b9f98c283d83d90a83533d79f9825c0d352d2e36d7255ad72 Actualusualownerqty1PASSvslegalsortedfilesystemqty2ownerRED, warningscorrect/oldtestassumption reproduced, originalbytes/mode/FP restored. OldCIexactownerunobserved.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-CI185-SEMANTIC-OWNER-EXACT-R4",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p3_whole_phase_review",
+      "reviewed_baseline": "9fcb51b2e67379dce1e8011524f767a085d28a3282474705bb730ba99a5ccdbd",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/p3-ci185-semantic-owner-exact-r4-reviewer-proof.json SHA256 9c0d9b83c498e5bb5ba7f23fb155e912275891f6065fa1918f4bc1d8b7bbc01c Exactf3a4 nativecase patch strictsemanticowner+knowninputhash/SOqty/exactwarnings/oneSO/events/count; no productionrule orbar changes, both-orderGREEN pending.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-CI185-SEMANTIC-OWNER-NATIVE-GREEN-R5",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p3_whole_phase_review",
+      "reviewed_baseline": "9fcb51b2e67379dce1e8011524f767a085d28a3282474705bb730ba99a5ccdbd",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/p3-ci185-semantic-owner-native-green-r5-reviewer-proof.json SHA256 416af61602bc4278f970f5a2024fb9a146999730a1f818fd92fb8ef5c43df223 Scoped actual two legal owner sequences each1PASS0skip; no Phase or currentCI approval.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-CI185-BOUNDED-PRECHECK-EXACT-R3",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p3_retention_review",
+      "reviewed_baseline": "9fcb51b2e67379dce1e8011524f767a085d28a3282474705bb730ba99a5ccdbd",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/p3-ci185-bounded-precheck-exact-r3-reviewer-proof.json SHA256 b09aef51b5773cd432dceada85a657742a56d1363091af19647a15ec6d2bb6e5 Scoped exact source approval; actual focused/native/all33/CI performance remains pending.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-CI185-BULK-NATIVE-GUARDS-EXACT-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p3_whole_phase_review",
+      "reviewed_baseline": "9fcb51b2e67379dce1e8011524f767a085d28a3282474705bb730ba99a5ccdbd",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/p3-ci185-bulk-native-guards-exact-r2-reviewer-proof.json SHA256 8e61b19bcb737011e4220687399f820b0d12b0382f147bd4be5d31ca6b25aa88 Scoped exact source approval; actual focused/native/all33/CI performance remains pending.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-CI185-BULK-NATIVE-COLLISION-EXACT-R3",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p3_whole_phase_review",
+      "reviewed_baseline": "9fcb51b2e67379dce1e8011524f767a085d28a3282474705bb730ba99a5ccdbd",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/p3-ci185-bulk-native-collision-exact-r3-reviewer-proof.json SHA256 954387cc2ff3b5b664caf267c06cf54c850a3b654829d238a73417419a48eed7 Exact102-group outertransaction collision guard direction only; actualfinal69b scoped results saved separately, not finalPhase/currentCI approval.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-CI185B-RUNTIME-PREPARATION-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p3_retention_review",
+      "reviewed_baseline": "9fcb51b2e67379dce1e8011524f767a085d28a3282474705bb730ba99a5ccdbd",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/ci185b-runtime-preparation-r1-reviewer-proof.json SHA256 5045dea56cbdfd114ef32ece68df50fed2675a77b4357546f6aa8287c7e9eed3 Scoped fresh10schema helper/packet safety approval; no fullGate clearance.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-CI185-DEF004-CLOSURE-R5",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p3_retention_review",
+      "reviewed_baseline": "9fcb51b2e67379dce1e8011524f767a085d28a3282474705bb730ba99a5ccdbd",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/p3-ci185-def004-closure-r5-reviewer-proof.json SHA256 70b38957756c7a42309f1a07da92c5258428a9e063eb25dffdce06698cf3f4b8 Specific real reproduced deadline defect CLOSED supported by unchanged originalcase/bars and final69b realnative; full33/currentCI stillmandatory, reopenonactualfailure.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -8177,6 +8285,61 @@
       "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/current33-qualified.json SHA256 04f6d94d4d2f757bae1686aa8da0e216cb852b7f8d4c8d33d99031de325da94f Actual33/35browser/4performance allPASS; server3243/3111PASS0FAIL132 reconciledskips,93.80/85.90/92.55/floors38; currentCI/finalreview/276retirement stillpending.",
       "actor": "Codex /root",
       "observed_at": "2026-10-12T08:17:55.182255+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Dependency audit",
+      "code_commit": "185e187bfe4cbf91e85817778fc4f65549dbdd56",
+      "spec_baseline": "f0a8eca401f2c10e8d4473341466a3bb99c0013fe6fdb867913cc9095e15a2f6",
+      "source_fingerprint": "d41409e25260143e8520d62efa6769622d9deeb89331bb92cf76a03a6fec77bf",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/ci185-final-failure-observation.json SHA256 a021dd1bfe4d9c8966cf4c219f309e18804b5682b6c2902ebfb318c5d0ec2fb1 provider GitHubActions run38222816127/exacthead185; https://github.com/crazysumsum/erp-app/actions/runs/38222816127/job/114722949404 actualconclusion SUCCESS; originaldeveloper33PASSdoesnot override CI failure.",
+      "actor": "GitHub Actions observed via gh/CodeReview",
+      "observed_at": "2026-10-12T09:15:32.440714+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Lint",
+      "code_commit": "185e187bfe4cbf91e85817778fc4f65549dbdd56",
+      "spec_baseline": "f0a8eca401f2c10e8d4473341466a3bb99c0013fe6fdb867913cc9095e15a2f6",
+      "source_fingerprint": "d41409e25260143e8520d62efa6769622d9deeb89331bb92cf76a03a6fec77bf",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/ci185-final-failure-observation.json SHA256 a021dd1bfe4d9c8966cf4c219f309e18804b5682b6c2902ebfb318c5d0ec2fb1 provider GitHubActions run38222816127/exacthead185; https://github.com/crazysumsum/erp-app/actions/runs/38222816127/job/114722949218 actualconclusion SUCCESS; originaldeveloper33PASSdoesnot override CI failure.",
+      "actor": "GitHub Actions observed via gh/CodeReview",
+      "observed_at": "2026-10-12T09:15:32.440714+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Browser tests (Playwright)",
+      "code_commit": "185e187bfe4cbf91e85817778fc4f65549dbdd56",
+      "spec_baseline": "f0a8eca401f2c10e8d4473341466a3bb99c0013fe6fdb867913cc9095e15a2f6",
+      "source_fingerprint": "d41409e25260143e8520d62efa6769622d9deeb89331bb92cf76a03a6fec77bf",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/ci185-final-failure-observation.json SHA256 a021dd1bfe4d9c8966cf4c219f309e18804b5682b6c2902ebfb318c5d0ec2fb1 provider GitHubActions run38222816127/exacthead185; https://github.com/crazysumsum/erp-app/actions/runs/38222816127/job/114722949306 actualconclusion SUCCESS; originaldeveloper33PASSdoesnot override CI failure.",
+      "actor": "GitHub Actions observed via gh/CodeReview",
+      "observed_at": "2026-10-12T09:15:32.440714+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Test (server + client, MySQL integration)",
+      "code_commit": "185e187bfe4cbf91e85817778fc4f65549dbdd56",
+      "spec_baseline": "f0a8eca401f2c10e8d4473341466a3bb99c0013fe6fdb867913cc9095e15a2f6",
+      "source_fingerprint": "d41409e25260143e8520d62efa6769622d9deeb89331bb92cf76a03a6fec77bf",
+      "status": "FAIL",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/ci185-final-failure-observation.json SHA256 a021dd1bfe4d9c8966cf4c219f309e18804b5682b6c2902ebfb318c5d0ec2fb1 provider GitHubActions run38222816127/exacthead185; https://github.com/crazysumsum/erp-app/actions/runs/38222816127/job/114722949070 actualconclusion FAILURE; originaldeveloper33PASSdoesnot override CI failure.",
+      "actor": "GitHub Actions observed via gh/CodeReview",
+      "observed_at": "2026-10-12T09:15:32.440714+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Build frontend",
+      "code_commit": "185e187bfe4cbf91e85817778fc4f65549dbdd56",
+      "spec_baseline": "f0a8eca401f2c10e8d4473341466a3bb99c0013fe6fdb867913cc9095e15a2f6",
+      "source_fingerprint": "d41409e25260143e8520d62efa6769622d9deeb89331bb92cf76a03a6fec77bf",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/ci185-final-failure-observation.json SHA256 a021dd1bfe4d9c8966cf4c219f309e18804b5682b6c2902ebfb318c5d0ec2fb1 provider GitHubActions run38222816127/exacthead185; https://github.com/crazysumsum/erp-app/actions/runs/38222816127/job/114722949310 actualconclusion SUCCESS; originaldeveloper33PASSdoesnot override CI failure.",
+      "actor": "GitHub Actions observed via gh/CodeReview",
+      "observed_at": "2026-10-12T09:15:32.440714+00:00"
     }
   ],
   "pending_decisions": [
@@ -9564,8 +9727,40 @@
       "kind": "PUSH",
       "target": "origin refs/heads/codex/sales-order-phase-3-intake PR193",
       "idempotency_key": "sales-p3-726a0baa1fa1-candidate1-push",
+      "status": "CONFIRMED",
+      "source_ref": "Existing commit/push/PR/merge authority, current33 truePASS/current35 approvedUI; only fast-forward from observedoldhead35e470f, no force; no raw evidence staged.; Observed PR193OPENdraft/remote35e470f ancestor and candidate185e187b same verifiedd414/D9Pf0. Exact FF push only; inspect remote after any ambiguous outcome.; git FFpush exit0, trusted ghPR193 actualHEAD185e187b/OPENdraft confirmed at /Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/ci-candidate1-first-observation.json SHA256 aa2175a7f0f56ef7b3c2819d08e325639d812aa4b4ecc27e6c85691df0d1f08f. All5 currentCI required, not old35 results."
+    },
+    {
+      "id": "ACT-P3-RECOVERY-CANDIDATE1-PRBODY",
+      "kind": "PR_UPDATE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/193",
+      "idempotency_key": "sales-p3-726a0baa1fa1-candidate1-prbody",
+      "status": "CONFIRMED",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/pr193-recovery-candidate1-body.txt SHA256 a38645be23195e48bf3465661442c5c284bf5a2d0dfbc54fea9e59dff23852b2 actual33/35/P3scope, gap and outstandingcurrentCI/finalGate disclosed; existing PRauthorization.; gh edit exit0/trustedPR193actualbody equality/head185 OPENdraft confirmed /Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/ci-candidate1-body-confirmed-observation.json SHA256 1ddc8424ec0b63b368e106aa930d86108882c762f2b7cb4c702209abc4c8d879."
+    },
+    {
+      "id": "ACT-P3-RECOVERY-CANDIDATE1-CI",
+      "kind": "CI",
+      "target": "https://github.com/crazysumsum/erp-app/actions/runs/38222816127",
+      "idempotency_key": "sales-p3-726a0baa1fa1-candidate1-ci",
+      "status": "FAILED",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/ci185-final-failure-observation.json Exact1854success1failure; TC03550MiB10000 ingestionscheduler30s timeouts1/native34.2s; TC038 actualwarning2 vs1. CodecoverageglobalbarsPASS,but38floorcommandnotrunafter&&failure and separateTC032stepSKIPPED,no5CIpass."
+    },
+    {
+      "id": "ACT-P3-CI185B-NATIVE-PREPARATION",
+      "kind": "SQL_PREPARATION",
+      "target": "Owned MySQL726a0baa1fa1 tenInventory_port1->_ci185b schemas only",
+      "idempotency_key": "sales-p3-726a0baa1fa1-ci185b-native-preparation",
+      "status": "CONFIRMED",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/ci185b-runtime-preparation-plan.json SHA256 033d095565245116d5fb6e76032bd78aff8a49f97fbaa53ee04d16a287346bee; exacthelper cb98; preserveoldschemas/grants/emptyroot; existingisolatedSQLauthorization.; actualreceipt /Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/ci185b-runtime-preparation.json SHA256 e174c1cd99509e6d752f13f485e6ef1595811c981f7715ada34f2dd2fd6d15bc tenfreshschemas/025migrationPASS/emptyrootunchanged/no grants orolddata deletions."
+    },
+    {
+      "id": "ACT-P3-RECOVERY-CANDIDATE2-PUSH",
+      "kind": "PUSH",
+      "target": "origin refs/heads/codex/sales-order-phase-3-intake / PR193 draft",
+      "idempotency_key": "sales-p3-726a0baa1fa1-candidate2-push",
       "status": "PLANNED",
-      "source_ref": "Existing commit/push/PR/merge authority, current33 truePASS/current35 approvedUI; only fast-forward from observedoldhead35e470f, no force; no raw evidence staged."
+      "source_ref": "Current HEAD185 before fixing commit; exact reviewed source69b localfocused/lint/P3unit/native PASS. Fastforward only expectedremote185; draft diagnostics/CI, full33/35/finalreview/retirement/standardGate stillpending, no mergeapprovalclaim."
     }
   ],
   "evidence_files": [
@@ -10043,7 +10238,10 @@
     "evidence/20261012T080025-748e29f00620/run.json",
     "evidence/20261012T080108-8ce236d1b20f/run.json",
     "evidence/20261012T080110-124df3a02959/run.json",
-    "evidence/20261012T080142-465ee18e8469/run.json"
+    "evidence/20261012T080142-465ee18e8469/run.json",
+    "evidence/20261012T100359-5b3237393bfd/run.json",
+    "evidence/20261012T100405-d6ec6a6afe27/run.json",
+    "evidence/20261012T100411-5588b08ea62b/run.json"
   ],
   "defects": [
     {
@@ -10090,7 +10288,39 @@
       ],
       "closure_evidence": [],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-004",
+      "severity": "HIGH",
+      "status": "CLOSED",
+      "source_ids": [
+        "TASK-042",
+        "TASK-049",
+        "TC-035"
+      ],
+      "closure_evidence": [
+        "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/p3-ci185-def004-closure-r5-reviewer-proof.json SHA256 70b38957756c7a42309f1a07da92c5258428a9e063eb25dffdce06698cf3f4b8",
+        "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/ci185-fixed-r3-bulk-guards/result.json SHA256 23059ec44023c7845ca6fe7c514a03c5a265d077db94c988ece2e5810635c61e",
+        "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/ci185-fixed-r3-deadline/result.json SHA256 f54ffeede1dcaeb11278d729f0ee8e63ad5d3f1c830233fa7be1e8fc2c46c3d7"
+      ],
+      "risk_approval_id": null
+    },
+    {
+      "id": "DEF-005",
+      "severity": "MEDIUM",
+      "status": "CLOSED",
+      "source_ids": [
+        "TASK-045",
+        "TASK-049",
+        "TC-038"
+      ],
+      "closure_evidence": [
+        "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/p3-ci185-semantic-owner-native-green-r5-reviewer-proof.json SHA256 416af61602bc4278f970f5a2024fb9a146999730a1f818fd92fb8ef5c43df223",
+        "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/ci185-warning-semantic-green-usual-owner/result.json SHA256 dab8810cc522882b97e0f945877eb8374494539b0815fced6830fa3c64a38f7c",
+        "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/ci185-warning-semantic-green-quantity2-owner/result.json SHA256 1ed44ae892152d36f13ff4408b75ed8c70ff29f7aebbd5e8eb0e19c9b0a7943b"
+      ],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Commit only P3 source/bookkeeping docs, verify same d414 source/D/P and ownremote FF, bind actual candidate then push PR193 head and observe exactfive CI. DEF003 remains RETEST untilactualUbuntu, TASK049 IP and276 active until genuinefinalreview and ordinary Gate preview."
+  "next_safe_action": "Commit exact reviewed worker/native fixes, module state and report90 only; FFpush existingdraftPR193 correctedcandidate afterobservedremote185. Complete remaining30originalsuites on unchanged69b alongside current5CI; existing3officialPASS supply33 withoutskippinganycontract. FinalPhase/DEC027retirement/secondCI/standardGate required beforedirectmerge."
 }
