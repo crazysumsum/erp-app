@@ -1,12 +1,13 @@
 import path from "node:path";
 import {lstat,unlink} from "node:fs/promises";
 import {BaseService} from "../../../framework/services/BaseService.js";
+import {prepareDiskTempDirectory} from "../../../framework/upload/normalizeUploadConfig.js";
 const name="sales.fileRetention",day=86400000,terminal="('COMPLETED','PARTIAL_SUCCESS','FAILED','CANCELLED')";
 const privateEntry=(stat,directory)=>!stat.isSymbolicLink()&&(directory?stat.isDirectory():stat.isFile())&&(stat.mode&0o777)===(directory?0o700:0o600)&&(!process.getuid||stat.uid===process.getuid());
 export class SalesFileRetentionJob extends BaseService {
  static service=Object.freeze({name:"job.salesFileRetention",lifecycle:"singleton",dependencies:["scheduler","mysqldatabase","time","logging"],eager:true});
  static jobs=Object.freeze([{name,method:"run",scope:"cluster",intervalMs:day,timeoutMs:30000}]);
- constructor({config,services,options={}}={}){super({config,services,options});this.scheduler=services.require("scheduler");this.database=services.require("mysqldatabase");this.logger=services.require("logging").logger;this.root=path.resolve(options.root??"storage/sales-imports");this.fileDays=config?.sales?.importFileRetentionDays??90;this.payloadDays=config?.sales?.intakePayloadRetentionDays??90;}
+ constructor({config,services,options={}}={}){super({config,services,options});this.scheduler=services.require("scheduler");this.database=services.require("mysqldatabase");this.logger=services.require("logging").logger;this.root=options.root==null?prepareDiskTempDirectory("storage/sales-imports","Sales retention"):path.resolve(options.root);this.fileDays=config?.sales?.importFileRetentionDays??90;this.payloadDays=config?.sales?.intakePayloadRetentionDays??90;}
  async initialize(){this.scheduler.register(this);}
  #active(signal){const scheduler=this.scheduler,job=scheduler.jobs?.get(name);if(!scheduler.started||scheduler.stopped||scheduler.schedulerConfig?.enabled!==true||job?.serviceName!=="job.salesFileRetention"||job.method!=="run"||job.scope!=="cluster"||job.enabled!==true||scheduler.running?.get(name)?.controller.signal!==signal||signal?.aborted!==false)throw Error("Sales retention worker unavailable");return scheduler.owner;}
  async #lease(tx,signal,owner){if(this.#active(signal)!==owner)throw Error("Sales retention worker unavailable");const [[lease]]=await tx.query("SELECT owner,expires_at FROM fr_job_leases WHERE job_name='sales.fileRetention' FOR UPDATE"),[[clock]]=await tx.query("SELECT UNIX_TIMESTAMP() AS now,CAST(UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3))*1000 AS UNSIGNED) AS now_ms");if(this.#active(signal)!==owner||lease?.owner!==owner||![Number(lease?.expires_at),Number(clock?.now),Number(clock?.now_ms)].every(Number.isSafeInteger)||Number(lease.expires_at)<=Number(clock.now))throw Error("Sales retention lease unavailable");return Number(clock.now_ms);}

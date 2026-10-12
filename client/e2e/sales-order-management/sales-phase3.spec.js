@@ -1,7 +1,7 @@
 import process from "node:process";
 import {Buffer} from "node:buffer";
 import path from "node:path";
-import {rm,readFile} from "node:fs/promises";
+import {rm,readFile,lstat} from "node:fs/promises";
 import {randomUUID,randomInt} from "node:crypto";
 import {fileURLToPath} from "node:url";
 import {test,expect} from "@playwright/test";
@@ -11,13 +11,15 @@ import {migrationFixture} from "../../../server/test/sales/phase1/fixtures.js";
 import {SALES_CSV_COLUMNS} from "../../../server/src/modules/sales/salesCsv.js";
 import {createApplication} from "../../../server/src/framework/application/createApplication.js";
 import {defaultConfigurationSource} from "../../../server/src/framework/configuration/applicationConfiguration.js";
+import {prepareDiskTempDirectory} from "../../../server/src/framework/upload/normalizeUploadConfig.js";
 let f,app,vite,origin,operator,viewer,operatorId,row,completedId;const cleanup=[];
 test.beforeAll(async()=>{
  if(process.env.DB_INTEGRATION_TESTS!=="1"||!/^erp_sales_p3_[a-f0-9]+_t038$/u.test(process.env.DB_NAME??""))throw Error("P3 browser tests require the approved owned synthetic schema");
+ const importRoot=prepareDiskTempDirectory("storage/sales-imports");
  f=await migrationFixture({after(fn){cleanup.push(fn);}},[]);const source=defaultConfigurationSource(),port=randomInt(32000,59000);origin=`http://127.0.0.1:${port}`;
  app=await createApplication({configurationSource:{...source,application:{...source.application,port:0},sales:{...source.sales,importChannelCodes:["SYNTHETIC"]},scheduler:{...source.scheduler,jobs:{...source.scheduler.jobs,"sales.confirmationRecovery":{enabled:false},"sales.backorderAllocate":{enabled:false},"sales.importWorker":{enabled:true}}},security:{...source.security,cors:{...source.security.cors,allowedOrigins:origin}}}});
  async function actor(permissions){const label="p3-browser-"+randomUUID().slice(0,8),roleId=await f.insert("roles",{name:label,created_at:f.now}),id=await f.insert("users",{username:label,password_hash:"synthetic-only",display_name:"Synthetic browser",created_at:f.now,updated_at:f.now});await f.db.execute("INSERT INTO user_roles (user_id,role_id) VALUES (?,?)",[id,roleId]);for(const name of permissions)await f.db.execute("INSERT INTO role_permissions (role_id,permission_id) SELECT ?,id FROM permissions WHERE name=?",[roleId,name]);
- f.beforeParents.push(async()=>{const [jobs]=await f.db.query("SELECT batch_number FROM sales_import_jobs WHERE created_by=?",[id]);await f.db.execute("DELETE FROM sales_orders WHERE customer_id=?",[f.customerId]);await f.db.execute("DELETE FROM sales_external_order_keys WHERE channel_code='SYNTHETIC' AND external_order_id LIKE ?",['p3-browser-'+f.customerId+'-%']);await f.db.execute("DELETE FROM sales_import_jobs WHERE created_by=?",[id]);for(const job of jobs)await rm(path.join('storage/sales-imports',job.batch_number),{recursive:true,force:true});await f.db.execute("DELETE FROM sales_audit_logs WHERE actor_user_id=?",[id]);await f.db.execute("DELETE FROM sales_operation_requests WHERE actor_user_id=?",[id]);await f.db.execute("DELETE FROM fr_token_versions WHERE subject=?",[String(id)]);await f.db.execute("DELETE FROM role_permissions WHERE role_id=?",[roleId]);await f.db.execute("DELETE FROM user_roles WHERE user_id=?",[id]);});
+ f.beforeParents.push(async()=>{const [jobs]=await f.db.query("SELECT batch_number,source_file_path FROM sales_import_jobs WHERE created_by=?",[id]);await f.db.execute("DELETE FROM sales_orders WHERE customer_id=?",[f.customerId]);await f.db.execute("DELETE FROM sales_external_order_keys WHERE channel_code='SYNTHETIC' AND external_order_id LIKE ?",['p3-browser-'+f.customerId+'-%']);await f.db.execute("DELETE FROM sales_import_jobs WHERE created_by=?",[id]);for(const job of jobs){expect(job.batch_number).toMatch(/^SI-\d{6}-\d{6}$/u);expect(job.source_file_path).toBe(`${job.batch_number}/source.csv`);const directory=path.join(importRoot,job.batch_number);await rm(directory,{recursive:true,force:true});await expect(lstat(directory)).rejects.toMatchObject({code:"ENOENT"});}await f.db.execute("DELETE FROM sales_audit_logs WHERE actor_user_id=?",[id]);await f.db.execute("DELETE FROM sales_operation_requests WHERE actor_user_id=?",[id]);await f.db.execute("DELETE FROM fr_token_versions WHERE subject=?",[String(id)]);await f.db.execute("DELETE FROM role_permissions WHERE role_id=?",[roleId]);await f.db.execute("DELETE FROM user_roles WHERE user_id=?",[id]);});
  if(permissions.includes('sales.import'))operatorId=id;return app.services.require('jwt').issue({roles:[label],permissions},{subject:String(id),version:await app.services.require('tokenRevocation').currentVersion(String(id)),authTime:Math.floor(f.now/1000)});}
  operator=await actor(['sales.view','sales.import']);viewer=await actor(['sales.view']);
  await f.db.execute("UPDATE currencies SET status='ACTIVE' WHERE code=?",[f.currency]);await f.db.execute("UPDATE item_skus SET sellable=1,inventory_tracked=1 WHERE id=?",[f.skuId]);

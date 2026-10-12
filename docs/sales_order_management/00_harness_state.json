@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 419,
+  "revision": 448,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "9fcb51b2e67379dce1e8011524f767a085d28a3282474705bb730ba99a5ccdbd",
     "plan": "f0a8eca401f2c10e8d4473341466a3bb99c0013fe6fdb867913cc9095e15a2f6",
-    "code_commit": "d91772dc629be86d97dc5e94f363ca88a2b5f2f2",
-    "source_fingerprint": "aaf5c6d32e7cbcb9af946384029d898134b744822e5e14df82b6ad9f3bbc620c",
+    "code_commit": "236ed77d14fcb33a26c6447d7af35dfa75cf8864",
+    "source_fingerprint": "1d628a6286bee54c69ba077256cfea67a566bd0c769c32eeb47de68b5b2a448c",
     "worktree": "/Users/sam/.codex/worktrees/sales-p3-recovery/erp-app",
     "default_commit": "a2715077871ffa8289193d6482df6add6b363bd7",
     "mode_entry_commit": "6936736ba1fb98f4fcb8365377f59f0a0f7a4897"
@@ -5860,6 +5860,66 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-UNIT-MUTATION-PIN-R5",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p3_whole_phase_review",
+      "reviewed_baseline": "9fcb51b2e67379dce1e8011524f767a085d28a3282474705bb730ba99a5ccdbd",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/p3-unit-transition-mutation-pin-r5-reviewer-proof.json SHA256 1fba429d0a468c3899d2c88aa90a9034f9fbaeb0dbd9c83c442b0c50bc1e1170 Scoped exact private preparation only helper1bd/planb816; unchanged guards/unitcontract/target. Original33 actualPASS+idle prerequisite; no execution/DEFclosure/finalGate approved.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-RENUMBER81-RUNTIME-PREPARATION-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p3_retention_review",
+      "reviewed_baseline": "9fcb51b2e67379dce1e8011524f767a085d28a3282474705bb730ba99a5ccdbd",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/renumber81-runtime-preparation-r1-reviewer-proof.json SHA256 a56761801e3539f25133049f4231d3b80d2e5b995ba655bd81f43b8534c7ba29 Exacthelperb6e/packet/head236/sourceaaf; same4ownedruntimes/oldledgerpreservation/fresh_r81/0syntheticfiles. Supplementalexisting16leaves accepted, all33/fullnativeunchanged. No actualSQL/closure/finalGate yet.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-RENUMBER81-DEF001-CLOSURE-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p3_retention_review",
+      "reviewed_baseline": "9fcb51b2e67379dce1e8011524f767a085d28a3282474705bb730ba99a5ccdbd",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/renumber81-defect001-closure-r2-reviewer-proof.json SHA256 d66ea4b51258559bc9f76131af3570539ea4756e201dba823d20f3c334e58b35 Genuine narrow defectclosure actual7+16PASS/noFAIL/SKIP/both85oldledgernames/timestamps unchanged/new89/fresh025full. No original33/CI/finalPhase approval.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-WHOLE-STATIC-RETENTION-ROOT-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p3_whole_phase_review",
+      "reviewed_baseline": "9fcb51b2e67379dce1e8011524f767a085d28a3282474705bb730ba99a5ccdbd",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/p3-whole-phase-static-preliminary-retention-root-r1-reviewer-proof.json SHA256 8d5c874d1794aa52bdfc9b416f88453605faf25ab0fff4c7e5809ae3feb14b47 HIGH defaultroot cwd-dependent falsepurge marker; MEDIUMbrowserfixture relativecleanup. Genuine staticCHANGES_REQUESTED; actualRED/minfix/GREEN/allnew33/35/current5CI required.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-RETENTION-ROOT-EXACT-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p3_whole_phase_review",
+      "reviewed_baseline": "9fcb51b2e67379dce1e8011524f767a085d28a3282474705bb730ba99a5ccdbd",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/p3-retention-root-exact-patch-r2-reviewer-proof.json SHA256 5dbb7d643f2478a98b29f58a455725581e1d69d51d40c948cdd70cb002380b68 Exact3filepatch1d0b/defaulthelper anchor/explicitroot unchanged. Genuine nativeRED4of5->GREEN5of5 authenticated. This proof predates unit123/browser10 observations; own separateclosureaddendum pending. FullPhase33/35/CI/Gate stillpending.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -7897,6 +7957,72 @@
       "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/migration-renumber-fast-unique-check/result.json SHA256 016d0894ca993326de8b19de146bba8c85171e5820825acc22616c38ac1d48b0 Actual7PASS0fail0skip/82unique names onstagedrenames; existingtest untouched, noDB. Exactpatcha05728c2 only4renames/5imports. Originalfailed8ae/rawrefs preserved. Highdefect remainsRETEST untilactualownedincremental/freshfullmigration/native checks; fullnewsource33/currentCI stillrequired.",
       "actor": "Codex /root",
       "observed_at": "2026-10-12T05:30:54.860926+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEF001 actual migration repair retest before independent closure",
+      "code_commit": "236ed77d14fcb33a26c6447d7af35dfa75cf8864",
+      "spec_baseline": "f0a8eca401f2c10e8d4473341466a3bb99c0013fe6fdb867913cc9095e15a2f6",
+      "source_fingerprint": "aaf5c6d32e7cbcb9af946384029d898134b744822e5e14df82b6ad9f3bbc620c",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/renumber81-native-migration-check/result.json SHA256 f85cd89db0cb48d8fb7d6428574b0db566ee33fe257560c17e0710453c5cc8af Actual original16leaves/16PASS0FAIL0SKIP/TC035+TC037PASS/XMLacb14916; original7unique existingtestsPASS and both85oldledgernames/timestamps preserved/new89; fresh025full actualPASS. Supplementalonly; all33/fullnative/currentCI/finalGate stillpending.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-12T05:48:00.281484+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "SOURCEaaf original33 intentionally stopped after independent HIGH finding",
+      "code_commit": "236ed77d14fcb33a26c6447d7af35dfa75cf8864",
+      "spec_baseline": "f0a8eca401f2c10e8d4473341466a3bb99c0013fe6fdb867913cc9095e15a2f6",
+      "source_fingerprint": "aaf5c6d32e7cbcb9af946384029d898134b744822e5e14df82b6ad9f3bbc620c",
+      "status": "FAIL",
+      "source_ref": "evidence/20261012T055321-fa018847f8e1/run.json actualexit-15/no parsedtests/code+specunchanged. Prior21realPASS retained but not full33. StopreceiptSTARTEDtwo guard refusals no signals thenqualifiednpmrepocwd groupSIGTERM; processcontrol history retained.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-12T05:57:55.266715+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEF002 genuine nativeRED beforeproductfix",
+      "code_commit": "236ed77d14fcb33a26c6447d7af35dfa75cf8864",
+      "spec_baseline": "f0a8eca401f2c10e8d4473341466a3bb99c0013fe6fdb867913cc9095e15a2f6",
+      "source_fingerprint": "129cd2fcf7bf1a6affd4c6717bacc5974f29712342c382f12bf762fecd092ecf",
+      "status": "FAIL",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/retention-default-root-native-red/result.json SHA256 21090ae3a93fcb3bb556398d15111e8ce86e8694bb1fa154b046af8d2bd6b87e Actualcounts {\"total\":5,\"passed\":4,\"failed\":1,\"skipped\":0,\"not_run\":0} source/head/specunchanged true; supplementalonly/no original33substitution.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-12T06:08:35.182288+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEF002 genuine nativeGREEN5of5 defaultDI/filemarkertruth",
+      "code_commit": "236ed77d14fcb33a26c6447d7af35dfa75cf8864",
+      "spec_baseline": "f0a8eca401f2c10e8d4473341466a3bb99c0013fe6fdb867913cc9095e15a2f6",
+      "source_fingerprint": "1d628a6286bee54c69ba077256cfea67a566bd0c769c32eeb47de68b5b2a448c",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/retention-default-root-native-green/result.json SHA256 63bdae665c9a51c51538349777f2420709bfca5d8a39a7b24bcc4fcaaca85763 Actualcounts {\"total\":5,\"passed\":5,\"failed\":0,\"skipped\":0,\"not_run\":0} source/head/specunchanged true; supplementalonly/no original33substitution.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-12T06:08:35.182601+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEF002 originalfullP3unit123of123 supplementalGREEN",
+      "code_commit": "236ed77d14fcb33a26c6447d7af35dfa75cf8864",
+      "spec_baseline": "f0a8eca401f2c10e8d4473341466a3bb99c0013fe6fdb867913cc9095e15a2f6",
+      "source_fingerprint": "1d628a6286bee54c69ba077256cfea67a566bd0c769c32eeb47de68b5b2a448c",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/retention-default-root-fullunit-green/result.json SHA256 3f7d3faaef3a62c2184df525f1d4920d069a7f6de96b6cf106daf11d8d0261c1 Actualcounts {\"total\":123,\"passed\":123,\"failed\":0,\"skipped\":0,\"not_run\":0} source/head/specunchanged true; supplementalonly/no original33substitution.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-12T06:08:35.182754+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Original10Playwright actualflows andownedbatchcleanup supplementalGREEN",
+      "code_commit": "236ed77d14fcb33a26c6447d7af35dfa75cf8864",
+      "spec_baseline": "f0a8eca401f2c10e8d4473341466a3bb99c0013fe6fdb867913cc9095e15a2f6",
+      "source_fingerprint": "1d628a6286bee54c69ba077256cfea67a566bd0c769c32eeb47de68b5b2a448c",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/retention-browser-cleanup-fullplaywright-green/result.json SHA256 a948b05dcdfa203856d2cd570088bb9ad7c67396c9185aca9a816e688d635100 Actualcounts {\"total\":10,\"passed\":10,\"failed\":0,\"skipped\":0,\"not_run\":0} source/head/specunchanged true; supplementalonly/no original33substitution.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-12T06:08:35.182885+00:00"
     }
   ],
   "pending_decisions": [
@@ -9222,6 +9348,22 @@
       "idempotency_key": "p3-maina271-runtime-preparation",
       "status": "CONFIRMED",
       "source_ref": "ExistingSam ownedsyntheticmigration/cleanup/freshmain/DEC027 authority. Exact privatehelperba67311e/plan5dea36ac, immutable runtimehelper4c7abfbb; allpureguardsPASS. Waiting genuine scopedreview beforeSQL/rename. SameHEAD/source/D/P/ancestor, UIDfullargv/data/socket/version/noownedclients/knownmanifest/normalCASreceipts; no reset/drop/export/newgrant; oldbindings/schema/evidence retained. Actual exact independentd39bbbe1R1APPROVE; author/reviewer actualidle/source/spec/name/FS guards. Apply not yet executed; one-time no blindretry. Actual one-timeapply exit0; unique receipt /Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/maina271-runtime-preparation.json SHA256 cf1cb2b7e7520bda83bb8ed3b47f9636a7e9cac86d00eaf9a07bf79a0c3751d4. All8files/SHA/mode/UIDpreserved, 2corecoverageincremental/10freshschema/025fullmigratePASS; oldschemas/grants/data retained. Do not retry."
+    },
+    {
+      "id": "ACT-P3-RENUMBER81-RUNTIME-PREPARATION",
+      "kind": "TEST_RUNTIME",
+      "target": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/renumber81-runtime-preparation.json",
+      "idempotency_key": "sales-p3-726a0baa1fa1-renumber81",
+      "status": "CONFIRMED",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/renumber81-runtime-preparation.json SHA256 bdb7a50d021f481aa013e003feb98f95ce51aa2e80dda24a4efb1d0584f0f4b6 actualincremental2DB/fresh10+025full/85oldledgerrows each preservedexact; no olddata deletion/grantchange."
+    },
+    {
+      "id": "ACT-P3-RENUMBER81-ORIGINAL33",
+      "kind": "TEST_RUNTIME",
+      "target": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/renumber81-original33.log",
+      "idempotency_key": "sales-p3-726a0baa1fa1-renumber81-original33",
+      "status": "FAILED",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/renumber81-review-high-stop.json Guardqualified owned62617 npmgroup SIGTERM after genuineHIGHfinding; foreignwork untouched, runnerexit1. Actual21PASS then coverageFAIL(-15,0parsed), allrawrefs retained. Interruptedattempt not full33/currentqualification."
     }
   ],
   "evidence_files": [
@@ -9610,20 +9752,59 @@
     "evidence/20261012T044808-ccae5540b895/run.json",
     "evidence/20261012T044825-9bbeb5daa06b/run.json",
     "evidence/20261012T044829-91d59bc467f2/run.json",
-    "evidence/20261012T044854-7fd9b72bf444/run.json"
+    "evidence/20261012T044854-7fd9b72bf444/run.json",
+    "evidence/20261012T055110-080827f23903/run.json",
+    "evidence/20261012T055116-c3d10425de3f/run.json",
+    "evidence/20261012T055118-0e6700b1b936/run.json",
+    "evidence/20261012T055123-290a627bdb03/run.json",
+    "evidence/20261012T055136-706bdb454cc7/run.json",
+    "evidence/20261012T055138-5b50bfad3c67/run.json",
+    "evidence/20261012T055150-deed3d682e1f/run.json",
+    "evidence/20261012T055211-6f3b9e57a973/run.json",
+    "evidence/20261012T055214-c1de82d0664a/run.json",
+    "evidence/20261012T055216-27c71034bfb1/run.json",
+    "evidence/20261012T055217-5023eb8935a1/run.json",
+    "evidence/20261012T055219-9dd54c5017ac/run.json",
+    "evidence/20261012T055221-4b46d2c017ff/run.json",
+    "evidence/20261012T055223-0d38d82818cb/run.json",
+    "evidence/20261012T055224-129c008fc63c/run.json",
+    "evidence/20261012T055226-0b93f12ff5ba/run.json",
+    "evidence/20261012T055228-9234da52bdf1/run.json",
+    "evidence/20261012T055230-84ca77059678/run.json",
+    "evidence/20261012T055233-62f6596d114d/run.json",
+    "evidence/20261012T055251-aebf360e69d9/run.json",
+    "evidence/20261012T055255-d6170aeb4ed9/run.json",
+    "evidence/20261012T055321-fa018847f8e1/run.json"
   ],
   "defects": [
     {
       "id": "DEF-001",
       "severity": "HIGH",
-      "status": "RETEST",
+      "status": "CLOSED",
       "source_ids": [
         "TASK-049",
         "TC-034"
+      ],
+      "closure_evidence": [
+        "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/migration-renumber-fast-unique-check/result.json SHA256 016d0894ca993326de8b19de146bba8c85171e5820825acc22616c38ac1d48b0",
+        "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/renumber81-runtime-preparation.json SHA256 bdb7a50d021f481aa013e003feb98f95ce51aa2e80dda24a4efb1d0584f0f4b6",
+        "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/renumber81-native-migration-check/result.json SHA256 f85cd89db0cb48d8fb7d6428574b0db566ee33fe257560c17e0710453c5cc8af",
+        "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/renumber81-defect001-closure-r2-reviewer-proof.json SHA256 d66ea4b51258559bc9f76131af3570539ea4756e201dba823d20f3c334e58b35"
+      ],
+      "risk_approval_id": null
+    },
+    {
+      "id": "DEF-002",
+      "severity": "HIGH",
+      "status": "RETEST",
+      "source_ids": [
+        "TASK-046",
+        "TASK-049",
+        "TC-041"
       ],
       "closure_evidence": [],
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Commit exactreviewed migration rename+5imports/bookkeeping, bindnewHEAD/sourceaaf. Prepare/review single owned preservation+incremental2DB/fresh10schemas/025fullmigration retainingalloldledgerrows; actualnative migrationGREEN beforeDEF001closure andoriginal33/currentCI/finalreview/indexretirement/Gate. No extraapprovalclones or bars change."
+  "next_safe_action": "Commit exactreviewedretention threefiles/state/report87. Integratefreshmain9fbbc2Supplierdocs only, computeD/P/source. Independent actualclosureaddendum thenfreshcoverage/nativeownedfixtures andalloriginal33/currentCI/finalPhase/retirement/Gate."
 }
