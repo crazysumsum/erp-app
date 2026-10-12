@@ -1,0 +1,439 @@
+{
+  "status": "PROPOSED_NOT_APPLIED",
+  "direction_authority": "Actual Sam HD136 A: preparation only",
+  "decision": "HD-137",
+  "kind": "EXACT_BOUNDED_INTEGRATION_OWNER_CONTRACT_CANDIDATE",
+  "head": "869ac07abdd3879254c351d857be911d71e68b6b",
+  "current_source": "0cbbea162a3e377df50214fd63b2484b0585d68a2be8dc52ee1615d8b013178c",
+  "active_baselines": {
+    "design": "b1f4b54a95945c84d55e7828620b538830820dd140be2d15ef38b2695fb4abb4",
+    "plan": "6e27b339efb827ff8a2bb0c8ce82242f86c577f29bb4510b20884e854f456aac"
+  },
+  "target_main": "9e9b0ff9ad87846a32036fc86138a834bdb5c82a",
+  "main_tree": "19ef0148af5a07f90a7185f2b22f373063716414",
+  "branch_distance": "10\t143",
+  "proposed_baselines": {
+    "design": "8c24fa028e39dcb578a5312de15293d61cad9b128bdc22c7cb5148986e211781",
+    "plan": "4892535733987bd298004fff812c3ee0e8d217a51c01ef90dbf871c4d4b7f483"
+  },
+  "patch": "p3-integration-contract-proposal.patch",
+  "patch_sha256": "000687a2fbc2393ca2c78e66854834bd619834f3fe1e572b35fb62b1a7e74914",
+  "files": [
+    {
+      "path": "docs/inventory_management/00_module_manifest.json",
+      "before_sha256": "ae25f1bc982ff429cb6c4eb928c03d7eb94cd0fc810a7dd85b4111992c5a2621",
+      "after_sha256": "0200d18dadbd4a86ff5d64e148c771b7411e3091c5503cf58ec5281f8926b98e",
+      "main_sha256": "3eb14435ff3e573511a4f121715008ee61066399c7445c92a45a2a82b6c9a681"
+    },
+    {
+      "path": "docs/inventory_management/00_project_profile.json",
+      "before_sha256": "4e7b3dc780c94c13a0357ca06b5dcc2c4890996ae146921e618ed718fc612225",
+      "after_sha256": "637fbfef38da8a4a247a5fac82d05ff9a04f8ba1736515d20d52ae631c1e52df",
+      "main_sha256": "787556f04ff3c41b540261e8a8b6413b1b761734d94fb4af39f8578c1d9c4a4c"
+    },
+    {
+      "path": "docs/inventory_management/03_design_spec.md",
+      "before_sha256": "02e3274725c599635e9aa77baeb60b590ac61e2df641010ae04e37f7d5eaaf27",
+      "after_sha256": "2fb61cce8ee4ff9f32cd9c6d0e2a9fc8f87c08d34823be7fb622908610b1ac53",
+      "main_sha256": "d24d46d353a62db558901dd87b44b77e75cf97ff8b5a23fc6922657ab95eddaa"
+    },
+    {
+      "path": "docs/inventory_management/05_development_tasks.md",
+      "before_sha256": "96c4840d0f41ff53c9aaf288851ab82e558b1ac652a25f95b054aafb0b0d92c4",
+      "after_sha256": "914de6d3f3717a56c2ea13ea4e2b9c17dcfe2fcfd8249d630aa84341ae106b54",
+      "main_sha256": "3bce2b75177d72b896a3cf8675e28e521a18deeffe0c163417db8a962a16e559"
+    },
+    {
+      "path": "docs/inventory_management/06_technical_test_cases.md",
+      "before_sha256": "0e780e0177e60dec36c2786465701dda0eaed0c23ffba98adc6145f2867fb4f4",
+      "after_sha256": "07ea8d0ad3c5d3c1e9ab4c4ef39916f54a0f63003bbef642fa43ab2c056ba560",
+      "main_sha256": "53c1e0bfc5a0b910d0a8c33098434e49e32889da5ffe64970faf83b338081241"
+    },
+    {
+      "path": "docs/inventory_management/08_traceability.json",
+      "before_sha256": "8c31b62d447a9076ca0827e2a9442ba5c7abe8ac341c4ccf2d68636d6564e3de",
+      "after_sha256": "4d977c3d545431a624b2e972544eb4a9b00382e1495665bacbfe44415755d5fc",
+      "main_sha256": "a5f2c7a21b4214edbf556a74efc63c2d3c8a0481217469221054f94e419e2166"
+    },
+    {
+      "path": "docs/inventory_management/08_traceability_matrix.md",
+      "before_sha256": "139bc0d6676c853c7635a819bc1636772e45cc8442795855b2ac59e7fb772ddb",
+      "after_sha256": "139bc0d6676c853c7635a819bc1636772e45cc8442795855b2ac59e7fb772ddb",
+      "main_sha256": "e856d9e8ee4445b77ec18a852c8a2cee2f65f2932fbd3ab6c710356abf87f4f5"
+    },
+    {
+      "path": "package-lock.json",
+      "before_sha256": "0e7cfc03260694b17565e28374ff85ed894b79082286025395779c6f436ecb49",
+      "after_sha256": "9237de58eb27e9ba26a3c42ede6baf2e72f532fa5afc9bc8ba08a4fed55b2855",
+      "main_sha256": "9237de58eb27e9ba26a3c42ede6baf2e72f532fa5afc9bc8ba08a4fed55b2855"
+    },
+    {
+      "path": "server/src/framework/middleware/apiDispatcher.js",
+      "before_sha256": "7cf9879996dd7b092c5fa2aa50c4569415ca9b7d42674ee4430e34b2fb3b71b7",
+      "after_sha256": "3b40adcad196374749d14979cc77a8df910090d8266b129123b0885b6cffb90b",
+      "main_sha256": "8b07c965fd91cdcaebd99ccfdc0e008e280c6c48d3ba7e2f1e1c39cf4c6f2127"
+    },
+    {
+      "path": "server/src/modules/inventory/InventoryReservationService.js",
+      "before_sha256": "5aca9161da7c67772977af27933ba192fb5a33a1cc0ef17448ee8162118686ac",
+      "after_sha256": "621cbcdae1f331cd4a52c3e6e31b43838fe42b2d86e59eb3ddddc699c6f73f31",
+      "main_sha256": "621cbcdae1f331cd4a52c3e6e31b43838fe42b2d86e59eb3ddddc699c6f73f31"
+    },
+    {
+      "path": "server/src/modules/inventory/inventoryConstants.js",
+      "before_sha256": "eb2c93bcb994977856a306791b3ea724d46255d8e34d1b0569a6fd33012f0340",
+      "after_sha256": "910124cfa89920864f37fe889c1b417a63d8a58c093d5bc467c0a152a50c893b",
+      "main_sha256": "910124cfa89920864f37fe889c1b417a63d8a58c093d5bc467c0a152a50c893b"
+    },
+    {
+      "path": "server/src/modules/item/ItemLookupService.js",
+      "before_sha256": "558139b78cd6dabcd6edd6a7bca93e12b6724c9519eb1e87900b43ce21c76662",
+      "after_sha256": "30d6807978b27252fde194cc821c8fef5de000f27fa7eed404ed204abab2764a",
+      "main_sha256": "30d6807978b27252fde194cc821c8fef5de000f27fa7eed404ed204abab2764a"
+    },
+    {
+      "path": "server/src/services/idempotency/IdempotencyService.js",
+      "before_sha256": "33abf93472c2d7a4687c1f4d323cd97f0e7d5f4c7875cb7161cfa06b1b0999aa",
+      "after_sha256": "b574dd69c4fd006a550421d9bb1e550c94f8f39d22837eecd61f7cf079c6da9d",
+      "main_sha256": "b4a33f4abb73e16ec74d5f50c5ae25da308ac06049c8f8f4d1e20f8bf0412a28"
+    },
+    {
+      "path": "server/test/apiDispatcher.test.js",
+      "before_sha256": "ee0c4580fb0d86625d815bf8916c45c276b7bc2004ddd47f932ea6ec3c49c7fa",
+      "after_sha256": "bf63f8abcfeee3638544ef29610cebd267698b1c06a24575c098149f59107dd1",
+      "main_sha256": "283ff7d67082666f4e9c8aa5d69feb3bf6ecb4b4c3869f038aacd05be8a4e051"
+    },
+    {
+      "path": "server/test/idempotencyService.test.js",
+      "before_sha256": "f1a526a94cbe906349cc692cb321285fca99f3babc10c1ae7875791efb7a7ec9",
+      "after_sha256": "dbf44e8de16452c82f61f47a6e2b360e6d93678c0d065e672de5ec140ef98213",
+      "main_sha256": "740f058013da95ec7a575cefb10790c12e675e0ac5f078461985b927b4870e3f"
+    }
+  ],
+  "overlap_observation": [
+    {
+      "path": "docs/inventory_management/03_design_spec.md",
+      "base_sha256": "4a3834d65bdde92ac0f532ace7fe3fdaab05bc076b61da98977802b5474c6b29",
+      "worktree_sha256": "02e3274725c599635e9aa77baeb60b590ac61e2df641010ae04e37f7d5eaaf27",
+      "main_sha256": "d24d46d353a62db558901dd87b44b77e75cf97ff8b5a23fc6922657ab95eddaa",
+      "disposition": "TEXT_AUTO_MERGE_PROPOSED",
+      "conflict_regions": 0,
+      "candidate_sha256": "7a336cb261818c9f96ea2c6d72b6408d6c3ed39f30368c6a30b5a54f0a676bba"
+    },
+    {
+      "path": "package-lock.json",
+      "base_sha256": "e89f67821cd1867a094ecce6c89f39d74b2b10f360ebc42160b2e4156fc0a532",
+      "worktree_sha256": "0e7cfc03260694b17565e28374ff85ed894b79082286025395779c6f436ecb49",
+      "main_sha256": "9237de58eb27e9ba26a3c42ede6baf2e72f532fa5afc9bc8ba08a4fed55b2855",
+      "disposition": "TEXT_CONFLICT",
+      "conflict_regions": 1,
+      "candidate_sha256": "e91b59d5a2dd9387d3f08da903c00e0dde2bd3f477c0e70c8eefedcd2d487e6e"
+    },
+    {
+      "path": "server/src/framework/middleware/apiDispatcher.js",
+      "base_sha256": "0a98acb30366c94c585b0085ca4a2e4bc5db50cf01a523e9f6fd337bcc73eaa6",
+      "worktree_sha256": "7cf9879996dd7b092c5fa2aa50c4569415ca9b7d42674ee4430e34b2fb3b71b7",
+      "main_sha256": "8b07c965fd91cdcaebd99ccfdc0e008e280c6c48d3ba7e2f1e1c39cf4c6f2127",
+      "disposition": "TEXT_AUTO_MERGE_PROPOSED",
+      "conflict_regions": 0,
+      "candidate_sha256": "3b40adcad196374749d14979cc77a8df910090d8266b129123b0885b6cffb90b"
+    },
+    {
+      "path": "server/src/services/idempotency/IdempotencyService.js",
+      "base_sha256": "a4bcd80a3c5b067515b3200ea9de1cad0ec5e6f96f8824c2103cd1af0e97a291",
+      "worktree_sha256": "33abf93472c2d7a4687c1f4d323cd97f0e7d5f4c7875cb7161cfa06b1b0999aa",
+      "main_sha256": "b4a33f4abb73e16ec74d5f50c5ae25da308ac06049c8f8f4d1e20f8bf0412a28",
+      "disposition": "TEXT_CONFLICT",
+      "conflict_regions": 1,
+      "candidate_sha256": "724d88c4ed3edbccb5dcdaf19df5015a47b0d346dcf46e86739ad18f564a472e"
+    },
+    {
+      "path": "server/test/apiDispatcher.test.js",
+      "base_sha256": "0540b7159561a3b806168cd1ce1893ffec544fbea35b295a9aba9e8df7e18046",
+      "worktree_sha256": "ee0c4580fb0d86625d815bf8916c45c276b7bc2004ddd47f932ea6ec3c49c7fa",
+      "main_sha256": "283ff7d67082666f4e9c8aa5d69feb3bf6ecb4b4c3869f038aacd05be8a4e051",
+      "disposition": "TEXT_AUTO_MERGE_PROPOSED",
+      "conflict_regions": 0,
+      "candidate_sha256": "bf63f8abcfeee3638544ef29610cebd267698b1c06a24575c098149f59107dd1"
+    },
+    {
+      "path": "server/test/idempotencyService.test.js",
+      "base_sha256": "4b248556971070e485d67cac56861c67771512f7d34540ce3d316ec27c99b7c3",
+      "worktree_sha256": "f1a526a94cbe906349cc692cb321285fca99f3babc10c1ae7875791efb7a7ec9",
+      "main_sha256": "740f058013da95ec7a575cefb10790c12e675e0ac5f078461985b927b4870e3f",
+      "disposition": "TEXT_AUTO_MERGE_PROPOSED",
+      "conflict_regions": 0,
+      "candidate_sha256": "06391eb4bb74ab29fb69a69fa31396b9e3edbb7d0a216dbfdcf89073f49ee93c"
+    }
+  ],
+  "scope_note": "Fifteen exact postimages cover owner imports, additive Item consumed-source pin, overlapping shared/test/lockfile resolutions and seven canonical files. Other main content is integrated from the immutable target tree; no additional authored main changes.",
+  "added_developer_suites": [
+    {
+      "id": "inventory-p3-sales-compatibility",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-p3-sales-compatibility.xml",
+        "server/test/inventorySalesWorkerContracts.test.js",
+        "server/test/integration/salesConfirmation.integration.test.js",
+        "server/test/integration/salesBackorder.integration.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-p3-sales-compatibility.xml",
+      "min_tests": 31,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        },
+        {
+          "argv": [
+            "mysql",
+            "--version"
+          ],
+          "version_pattern": "(?i)(mysql.*26\\.7\\.0|26\\.7\\.0.*mysql)"
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_HOST",
+        "DB_PORT",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_NAME",
+        "DB_INTEGRATION_TESTS",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
+      ]
+    },
+    {
+      "id": "inventory-p3-customer-capacity",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-p3-customer-capacity.xml",
+        "server/test/performance/customerImport.performance.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1200,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-p3-customer-capacity.xml",
+      "min_tests": 1,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        },
+        {
+          "argv": [
+            "mysql",
+            "--version"
+          ],
+          "version_pattern": "(?i)(mysql.*26\\.7\\.0|26\\.7\\.0.*mysql)"
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_HOST",
+        "DB_PORT",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_NAME",
+        "DB_INTEGRATION_TESTS",
+        "CUSTOMER_IMPORT_PERFORMANCE_TESTS",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
+      ]
+    },
+    {
+      "id": "inventory-p3-core-capacity",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-p3-core-capacity.xml",
+        "server/test/performance/inventoryCore.performance.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 3000,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-p3-core-capacity.xml",
+      "min_tests": 1,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        },
+        {
+          "argv": [
+            "mysql",
+            "--version"
+          ],
+          "version_pattern": "(?i)(mysql.*26\\.7\\.0|26\\.7\\.0.*mysql)"
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_HOST",
+        "DB_PORT",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_NAME",
+        "INVENTORY_CORE_TESTS"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD"
+      ]
+    }
+  ],
+  "consumer_native_names": {
+    "server/test/inventorySalesWorkerContracts.test.js": [
+      "Backorder worker requires live fixed registration and DB-clock lease before any claim, including replay",
+      "Backorder worker rejects human/arbitrary identity, extra authority and source input",
+      "Backorder completed replay uses distinct worker hashes and exact original members without mutable ATP reads"
+    ],
+    "server/test/integration/salesConfirmation.integration.test.js": [
+      "TC-022 Phase A commits one durable original-user intent/DB-clock lease/history/audit without Inventory effects",
+      "TC-022 Phase A chooses one intent under concurrent distinct events and blocks second confirmation",
+      "TC-022 Phase A stale version rolls back the claim and replay rechecks real revoked permissions",
+      "TC-022 Phase A required audit failure rolls back operation, CONFIRMING and history atomically",
+      "TC-021 Phase B confirms full, partial and zero ATP with exact mapping/backorder and stable replay",
+      "TC-024 Phase B rejects newly inactive Customer and commits Draft/FAILED without Inventory effects",
+      "TC-023 multi-line failure rolls back every commitment before retry commits all snapshots",
+      "TC-024 credit ON_HOLD fails atomically while a configured limit is advisory",
+      "TC-021 technical audit failure and malformed real provider result roll back all Inventory/Sales effects",
+      "TC-024 invalid SKU/UOM/Warehouse revalidation safely returns Draft with no Inventory claims",
+      "TC-026 confirmation exposes uncertain Phase A COMMIT and reconciles actual commit versus rollback by original event",
+      "TC-022 operation lookup requires current original-user permissions and hides another actor's event",
+      "TC-022 polling reads committed IN_PROGRESS without waiting for the executing operation lock",
+      "TC-022 actual Confirm HTTP schema returns terminal detail and rejects type/identity injection",
+      "TC-022 actual HTTP202 retains event/Retry-After and remains pollable before native Phase B commit"
+    ],
+    "server/test/integration/salesBackorder.integration.test.js": [
+      "TC-031 Inventory worker native partial membership replay and fresh lease remain inside the caller rollback",
+      "TC-027 FIFO allocates oldest partial demand, blocks later due entry behind cooldown and wakes whole scope without priority mutation",
+      "TC-031 zero ATP delays queue metadata only and stale zero-demand queue becomes terminal without Inventory",
+      "TC-031 native allocation faults and authority changes roll back every Sales/Inventory projection",
+      "TC-031 native lost COMMIT acknowledgement reconciles the persisted original allocation event once",
+      "TC-031 native proven rollback permits a new allocation event without preserving a fictitious effect",
+      "TC-027 true overlapping allocators fence one FIFO head and cannot over-reserve ATP",
+      "TC-031 concurrent cancellation observes allocation version then safely releases the worker mapping",
+      "TC-031 technical retry persists bounded exponential cooldown across a new allocator and manual wake cannot bypass FIFO",
+      "TC-031 actual registered Scheduler runtime uses SQL cluster admission, overlap and the NULL reserve-only actor",
+      "TC-031 real Scheduler shutdown aborts an in-flight Inventory allocation, preserves FIFO demand and a new registered runtime retries safely",
+      "TC-031 actual manual wake HTTP validates scope/fresh permissions, invokes registered Scheduler and accepts before allocation completion",
+      "TC-031 a terminal Sales owner with positive queued demand fails closed without rewriting business facts"
+    ]
+  },
+  "consumer_fixture_pins": {
+    "server/test/inventorySalesWorkerContracts.test.js": "6cd0ec7e726916398e98ef888d24b891e191e601277abbabf9bba24c8c1b9aaa",
+    "server/test/integration/salesConfirmation.integration.test.js": "0ccdb35f786e6cb64c0695f515e602cb11a9b02a956605d9d0aec6c4e724fe77",
+    "server/test/integration/salesBackorder.integration.test.js": "424c16f48b7adf9b84de0a27c929ce5085841e38613f86f585013129d71694c2",
+    "server/test/sales/phase2/fixtures.js": "dcce7c16b05dbf232187b667fd308504aef59ecb8c194dd4a08f30a4eb69e32a",
+    "server/test/sales/phase1/fixtures.js": "d931356f02df2e3893493029ca5415192849c4b942c5146c69f74cc18adde023"
+  },
+  "unchanged_P3_shared_and_0064_no_write_rebind": {
+    "server/src/framework/api/apiDefinitionResolver.js": "b525db9717bbde5f9d6df0dd79d080e93cf1bbb7a2afeffd86bd615dcf9cdd39",
+    "server/test/apiDefinitionResolver.test.js": "19cd265670940a5d3b5bfd42ae6062570f48ba3ba4be006d6322428682b84af6",
+    "server/src/framework/validation/requestValidator.js": "bb91d71879e4e75761f5a0c87e1608e0ee31488ea442878b87f10f331a007189",
+    "server/test/requestValidator.test.js": "47431b8f7e9052acfd2beeba1a78f969b1b0e35f22f390cb063d6d9d880fe80e",
+    "server/database/migrations/0064_create_inventory_transfers.js": "07653bb700a40b026e8bb46b538e0e31b112d6c20010af45b4cc71a6ff7ac143"
+  },
+  "profile_existing_contracts_unchanged": true,
+  "existing_tool_probe_decoded_patterns_verified_unchanged": true,
+  "scope_allowlists_unchanged": true,
+  "formal_tests_and_task_relationships_unchanged": true,
+  "new_replay_regression_names": [
+    "P3 integration prepared 202 retry header is sent only inside the authorized replay callback",
+    "P3 integration rejected prepared 202 replay emits no retry header, body, replay flag or success log",
+    "P3 integration prepared 200 or undeclared 202 replay does not invent a retry header"
+  ],
+  "validation": {
+    "canonical_trace": "STRUCTURE_PASS_NOT_APPROVED",
+    "patch_exact_after_hash": "PASS_TEMP_ONLY",
+    "two_conflicts_resolved_in_proposal_only": true,
+    "original_local_and_main_test_names_preserved": true,
+    "product_execution": "NOT_RUN",
+    "CI_PR_merge": "NOT_RUN"
+  },
+  "historical_evidence_refs": 348,
+  "capacity": "NOT_EXECUTED_UNWAIVED",
+  "publication_authorized": false,
+  "final_head_review_authorized": false,
+  "P4_authorized": false
+}

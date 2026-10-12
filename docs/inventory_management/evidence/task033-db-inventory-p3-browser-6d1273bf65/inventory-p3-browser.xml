@@ -1,0 +1,93 @@
+<testsuites id="" name="" tests="16" failures="0" skipped="0" errors="1" time="97.841611">
+<testsuite name="inventory-high-risk.spec.js" timestamp="2026-10-08T08:51:34.526Z" hostname="technical" tests="8" failures="0" skipped="0" time="69.586" errors="1">
+<testcase name="TASK-033 @technical Base-only IN, three statuses and immutable/new Lot validate real facts" classname="inventory-high-risk.spec.js" time="14.53">
+</testcase>
+<testcase name="TASK-033 @technical OUT reads current guards and retains safe input after a real version rejection" classname="inventory-high-risk.spec.js" time="4.353">
+</testcase>
+<testcase name="TASK-033 @technical Status paired effects and whole-group Reversal preserve actual history and stock" classname="inventory-high-risk.spec.js" time="4.814">
+</testcase>
+<testcase name="TASK-033 @technical actual permission, password and device gates cannot be replaced by operation or FEFO" classname="inventory-high-risk.spec.js" time="5.746">
+</testcase>
+<testcase name="TASK-033 @technical pre-forward abort retries only original intent with fresh password/signature and one effect" classname="inventory-high-risk.spec.js" time="4.037">
+</testcase>
+<testcase name="TASK-033 @technical real committed-response loss resolves original source without a second POST" classname="inventory-high-risk.spec.js" time="2.727">
+</testcase>
+<testcase name="TASK-033 @technical refresh/navigation is query-only, actor-isolated and storage corruption blocks new effects" classname="inventory-high-risk.spec.js" time="3.361">
+</testcase>
+<testcase name="TASK-033 @technical keyboard, cleared cancellation, XSS escaping, responsive and delayed real SKU lookup" classname="inventory-high-risk.spec.js" time="30.018">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|playwright-artifacts/inventory-high-risk-TASK-0-53e4f-and-delayed-real-SKU-lookup-technical/error-context.md]]
+
+[[ATTACHMENT|playwright-artifacts/inventory-high-risk-TASK-0-53e4f-and-delayed-real-SKU-lookup-technical/error-context.md]]
+]]>
+</system-out>
+<error message="Test timeout of 30000ms exceeded." type="Error">
+<![CDATA[  [technical] › inventory-high-risk.spec.js:268:1 › TASK-033 @technical keyboard, cleared cancellation, XSS escaping, responsive and delayed real SKU lookup 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for getByRole('button', { name: '開關側邊欄', exact: true })
+        - locator resolved to <button tabindex="0" type="button" data-v-4ebd0b07="" aria-label="開關側邊欄" class="q-btn q-btn-item non-selectable no-outline q-btn--flat q-btn--round q-btn--actionable q-focusable q-hoverable q-btn--dense">…</button>
+      - attempting click action
+        2 × waiting for element to be visible, enabled and stable
+          - element is visible, enabled and stable
+          - scrolling into view if needed
+          - done scrolling
+          - <span aria-hidden="true">warehouse</span> from <div class="q-drawer-container">…</div> subtree intercepts pointer events
+        - retrying click action
+        - waiting 20ms
+        2 × waiting for element to be visible, enabled and stable
+          - element is visible, enabled and stable
+          - scrolling into view if needed
+          - done scrolling
+          - <span aria-hidden="true">warehouse</span> from <div class="q-drawer-container">…</div> subtree intercepts pointer events
+        - retrying click action
+          - waiting 100ms
+        50 × waiting for element to be visible, enabled and stable
+           - element is visible, enabled and stable
+           - scrolling into view if needed
+           - done scrolling
+           - <span aria-hidden="true">warehouse</span> from <div class="q-drawer-container">…</div> subtree intercepts pointer events
+         - retrying click action
+           - waiting 500ms
+
+
+      118 |     await expect.poll(() => page.locator(".q-page-container").evaluate(element => Math.round(element.getBoundingClientRect().left))).toBe(0);
+      119 |     const drawer = page.locator(".q-drawer");
+    > 120 |     if ((await drawer.boundingBox()).x >= 0) await page.getByRole("button", { name: "開關側邊欄", exact: true }).click();
+          |                                                                                                             ^
+      121 |     await expect.poll(() => drawer.evaluate(element => element.getBoundingClientRect().right)).toBeLessThanOrEqual(0);
+      122 |   }
+      123 |   await page.getByLabel("SKU Code", { exact: true }).fill(sku.code); await page.getByRole("button", { name: "查找 SKU", exact: true }).click();
+        at form (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-high-risk.spec.js:120:109)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-high-risk.spec.js:274:57
+
+    Error Context: ../../../docs/inventory_management/evidence/task033-db-inventory-p3-browser-6d1273bf65/playwright-artifacts/inventory-high-risk-TASK-0-53e4f-and-delayed-real-SKU-lookup-technical/error-context.md
+
+    Error Context: ../../../docs/inventory_management/evidence/task033-db-inventory-p3-browser-6d1273bf65/playwright-artifacts/inventory-high-risk-TASK-0-53e4f-and-delayed-real-SKU-lookup-technical/error-context.md
+]]>
+</error>
+</testcase>
+</testsuite>
+<testsuite name="inventory-warehouse-operations.spec.js" timestamp="2026-10-08T08:51:34.526Z" hostname="technical" tests="8" failures="0" skipped="0" time="25.424" errors="0">
+<testcase name="TASK-029 @technical Inventory-only two-line Draft Dispatch Receive conserves real stock" classname="inventory-warehouse-operations.spec.js" time="8.957">
+</testcase>
+<testcase name="TASK-029 @technical view-only actor sees real In Transit but no write controls" classname="inventory-warehouse-operations.spec.js" time="0.64">
+</testcase>
+<testcase name="TASK-029 @technical no-Balance SKU remains selectable and insufficient Dispatch keeps Draft" classname="inventory-warehouse-operations.spec.js" time="3.51">
+</testcase>
+<testcase name="TASK-029 @technical unknown SKU, invalid quantity and revoked token fail safely" classname="inventory-warehouse-operations.spec.js" time="2.364">
+</testcase>
+<testcase name="TASK-029 @technical delayed real lookup cannot replace a newer explicitly chosen SKU" classname="inventory-warehouse-operations.spec.js" time="2.307">
+</testcase>
+<testcase name="TASK-029 @technical stale Draft version returns 409 and retains unsaved quantity" classname="inventory-warehouse-operations.spec.js" time="1.334">
+</testcase>
+<testcase name="TASK-029 @technical Quarantined full receipt requires reason and destination ownership" classname="inventory-warehouse-operations.spec.js" time="2.632">
+</testcase>
+<testcase name="TASK-029 @technical keyboard lookup, unsaved close, responsive and URL refresh" classname="inventory-warehouse-operations.spec.js" time="3.68">
+</testcase>
+</testsuite>
+</testsuites>

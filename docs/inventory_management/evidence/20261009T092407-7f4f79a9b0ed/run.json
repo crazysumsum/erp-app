@@ -1,0 +1,78 @@
+{
+  "schema_version": "2.0",
+  "module_id": "inventory-management",
+  "run_id": "20261009T092407-7f4f79a9b0ed",
+  "suite_id": "inventory-p3-core-capacity",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "151cf5757a465b4df8a64f34e1f876ca6759a3bcc438ec721fb22bf7ab965a44",
+  "source_fingerprint": "3cdc51c462840f24f5a221218a928e795600de865f35042f2a087622cee9679e",
+  "code_commit": "168ceb1badd6e6ed3e2ae6976f95b224e86d54bb",
+  "started_at": "2026-10-09T09:24:07.642343Z",
+  "ended_at": "2026-10-09T09:25:13.512808Z",
+  "environment_id": "inventory-isolated-test",
+  "runtime_instance_id": "erp-inventory-p3-integration-2ngk1g1s",
+  "data_reference": "Synthetic Inventory fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "node",
+    "--test",
+    "--test-concurrency=1",
+    "--import",
+    "./server/test-support/testEnv.js",
+    "--test-reporter=junit",
+    "--test-reporter-destination=/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/20261009T092407-7f4f79a9b0ed/inventory-p3-core-capacity.xml",
+    "server/test/performance/inventoryCore.performance.test.js"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "fdd2c31cfd5b9a1bd9eb2d452d148d4e51840ce3f85a97d136134202b9fb2577",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 1,
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/20261009T092407-7f4f79a9b0ed/stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/20261009T092407-7f4f79a9b0ed/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/20261009T092407-7f4f79a9b0ed/inventory-p3-core-capacity.xml",
+      "sha256": "73e5e376e88784b54a8d1af785f911f3a85236547819bbd88341d416cb87a426",
+      "bytes": 487
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    },
+    {
+      "argv": [
+        "mysql",
+        "--version"
+      ],
+      "output": "mysql  Ver 26.7.0 for macos15 on arm64 (MySQL Community Server - GPL)\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "Local observation only; external services/config/data and secret redaction completeness require review."
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "status": "PROPOSED_NOT_APPLIED",
+  "decision": "HD-103",
+  "human_authority": "Sam actual active user A answering HD-102: preparation only; new exact DESIGN/PLAN independent review pending",
+  "code_commit": "869ac07abdd3879254c351d857be911d71e68b6b",
+  "source_fingerprint": "caf576fa738762dabb7faafe471c1ea95370138f21913ad5cf885084258c96f6",
+  "active_baselines": {
+    "design": "c8dc42b3fea72c2f6ab8a2bead404a25e65bb2ca9addcf15814d570b9a4c1cb1",
+    "plan": "11b815650cfb7851c5c096fe14fb7a2cff84ef3d28cd6d8afb1ae99d3ef8ad9a"
+  },
+  "proposed_baselines": {
+    "design": "de32a25f52faeddc65234963935f44a4e73a6a505f44f52dca2283f5e6913f93",
+    "plan": "41949846cafde277c6887a7b572e0b3f945425d9a16f1b96517d99ca1674617c"
+  },
+  "patch": "task029-sku-lookup-proposal.patch",
+  "patch_sha256": "fbd9f77a5c063cd362ff5e41bb157cf01983bce62eb598aa02c65e5328448bd6",
+  "files": [
+    {
+      "path": "docs/inventory_management/00_module_manifest.json",
+      "before_sha256": "3eb14435ff3e573511a4f121715008ee61066399c7445c92a45a2a82b6c9a681",
+      "after_sha256": "c47d9383e0dd5c2f8261e5de982b8387af859f0099ff5126275a623d988d5b92"
+    },
+    {
+      "path": "docs/inventory_management/03_design_spec.md",
+      "before_sha256": "4a3834d65bdde92ac0f532ace7fe3fdaab05bc076b61da98977802b5474c6b29",
+      "after_sha256": "298e6a40760b7e1f93161da0c17afaa50fceda7aeb7b0aaae540eb02384e6f3c"
+    },
+    {
+      "path": "docs/inventory_management/05_development_tasks.md",
+      "before_sha256": "cb5c3ece78faed91a9223412664422e2f70a33daf3fcfed66d97c30a90b193a8",
+      "after_sha256": "be806156f16791db50de1d27d5696bb2ef2fd89ab718e0caac4edde887e2f472"
+    },
+    {
+      "path": "docs/inventory_management/06_technical_test_cases.md",
+      "before_sha256": "53c1e0bfc5a0b910d0a8c33098434e49e32889da5ffe64970faf83b338081241",
+      "after_sha256": "0943423179cb04b1d1fb6d2bbeda88c0f64c038c9a9185bb52ee66dd5b82a42d"
+    },
+    {
+      "path": "docs/inventory_management/07_uat_test_cases.md",
+      "before_sha256": "230f74dfcad1337505e816cd9237279acc3244d643eff0c537cc8fdeab3eb99e",
+      "after_sha256": "8205c1e1929e7cd83b79ed652c681fe4e9fd3ff5b6481a9feff07bcd63f89ea4"
+    }
+  ],
+  "unchanged": {
+    "01_requirement_spec.md": "5a8c7575722c09972bae1642d6d1bb185ece5505b5d534509010313b99a630b8",
+    "00_project_profile.json": "7e99eb6e8ba556e4a545770ba1c5bfd91c7ff15ee86b0388211974750fe4e8d6",
+    "08_traceability.json": "ac82a88c498b6de6f99ad14ca5adccfd7867be5ce2c2f06b26209f7f0e1de222",
+    "08_traceability_matrix.md": "e856d9e8ee4445b77ec18a852c8a2cee2f65f2932fbd3ab6c710356abf87f4f5"
+  },
+  "consumed_item_contract_unchanged": true,
+  "provided_contract_pin_matches_design": true,
+  "validation": {
+    "traceability": "STRUCTURE_PASS",
+    "issues": [],
+    "matrix": "BYTE_IDENTICAL",
+    "fresh_copy_patch_replay": "PASS_EXACT_5_FILE_SHA256"
+  },
+  "review": {
+    "method": "SELF_REVIEW",
+    "reviewer": "Codex /root",
+    "independent": false,
+    "scope": "Five-document proposal only; schema/input/error/authorization, existing Item-owned profile reuse, same executor snapshot, no-Balance Draft semantics, stale UI selection, NOT_RUN cases, unchanged graph/checks/floors/CI/capacity policy. No blocking proposal finding; not Sam independent review or product verification."
+  },
+  "execution": "No product/test source edits or runtime/API/UI/DB/CI execution; all new cases NOT_RUN. Existing 111 native evidence refs unchanged and not relabeled to proposed PLAN.",
+  "next_safe_action": "Sam reviews exact patch and proposed DESIGN/PLAN; only after actual approval apply five-doc delta, reconcile new baselines and recheck local gates before TASK029 lookup/UI implementation.",
+  "exclusions": [
+    "Item source edits",
+    "new permissions",
+    "migrations",
+    "dependencies",
+    "fuzzy/barcode catalogue",
+    "commit/push/PR/CI/merge",
+    "later Tasks",
+    "formal acceptance/UAT/release",
+    "capacity waiver"
+  ],
+  "temporary_validation_roots": [
+    "/private/tmp/inventory-hd103-candidate.Q35ipx",
+    "/private/tmp/inventory-hd103-replay-arqwu6o5"
+  ]
+}

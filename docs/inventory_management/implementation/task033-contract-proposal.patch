@@ -1,0 +1,145 @@
+--- a/docs/inventory_management/00_module_manifest.json
++++ b/docs/inventory_management/00_module_manifest.json
+@@ -90,9 +90,9 @@
+     "provided": [
+       {
+         "id": "inventory-domain-contract",
+-        "version": "planning-v14; TASK032 current-version full-group strong-auth Reversal; prior routes and other writers unchanged",
++        "version": "planning-v15; TASK033 Base-UOM high-risk UI/HD130 same-intent recovery; all existing API/writer semantics unchanged",
+         "source": "docs/inventory_management/03_design_spec.md",
+-        "sha256": "0c27331617a676d861dae3a0678f9e317e22a563855bc35e63ce3a81fc7a3ffc",
++        "sha256": "02e3274725c599635e9aa77baeb60b590ac61e2df641010ae04e37f7d5eaaf27",
+         "consumers": [
+           "purchasing-receiving",
+           "sales-order",
+--- a/docs/inventory_management/00_project_profile.json
++++ b/docs/inventory_management/00_project_profile.json
+@@ -664,7 +664,7 @@
+       "timeout_seconds": 1800,
+       "result_adapter": "JUNIT",
+       "result_path": "inventory-p3-movements-client.xml",
+-      "min_tests": 4,
++      "min_tests": 6,
+       "max_skipped": 0,
+       "stages": [
+         "DEVELOPER"
+@@ -702,7 +702,7 @@
+       "timeout_seconds": 1800,
+       "result_adapter": "JUNIT",
+       "result_path": "inventory-p3-adjustments-client.xml",
+-      "min_tests": 4,
++      "min_tests": 12,
+       "max_skipped": 0,
+       "stages": [
+         "DEVELOPER"
+@@ -891,13 +891,14 @@
+         "test",
+         "--config",
+         "client/e2e/inventory-management/playwright.config.js",
+-        "inventory-warehouse-operations.spec.js"
++        "inventory-warehouse-operations.spec.js",
++        "inventory-high-risk.spec.js"
+       ],
+       "cwd": ".",
+       "timeout_seconds": 1800,
+       "result_adapter": "JUNIT",
+       "result_path": "inventory-p3-browser.xml",
+-      "min_tests": 8,
++      "min_tests": 16,
+       "max_skipped": 0,
+       "stages": [
+         "DEVELOPER"
+--- a/docs/inventory_management/03_design_spec.md
++++ b/docs/inventory_management/03_design_spec.md
+@@ -1358,6 +1358,35 @@
+ - 鍵盤可完成filter、開啟detail、count、Transfer及高風險確認；不要求drag-and-drop。
+ - 任何成功／失敗用`notifySuccess`／`notifyError`；狀態改變後重新fetch server事實，不只在前端改row。
+ 
++### 7.8.1 TASK033 high-risk operations UI exact contract（HD130 A；candidate）
++
++This increment implements only TASK033/P3-T08 UI over the unchanged §5.4.2/§5.4.3 APIs. No new endpoint, shared auth/UI/http service, permission, dependency, Item contract or DDL. Backend posting/current authorization remains authoritative; client checks are UX guards, not permission or transaction proof. Pack submission remains supported by the existing API; this minimal UI explicitly accepts Base UOM positive safe integers only, displaying the unit and submitting the server-read base uomId. It does not guess a Pack conversion or expose arbitrary numeric UOM IDs.
++
++**Pages and permissions.** New `/inventory/adjustments` metadata requires both `inventory.view` and `inventory.adjust`; use existing automatic page/menu discovery, not a shared menu/router change. Existing `/inventory/movements` remains view-only for reading history. Only its high-risk entry buttons require view+adjust. Neither inventory.operation nor inventory.fefo.override substitutes for adjust. Support single Adjustment IN/OUT, single Status Transfer and whole-group Reversal; no batch, Stocktake/Opening posting, history edits or downstream workflow resurrection. Movements links into the same Adjustments page with only allowlisted action and canonical positive movementId, never password, reason or command payload in URL. Recheck current session and selected target on confirmation; close/clear transient confirmation when actor changes or permission is lost.
++
++**Selection and current guards.** Reuse Inventory-only exact SKU Code lookup, active Warehouse/Bin selectors and Stock/Lot inquiry. IN supports a tracked usable SKU even without existing Balance, all three stock statuses, no-Lot or existing/new Lot according to tracking policy. Show existing Lot immutable dates; a new Lot takes explicit required expiry for batch_expiry and optional manufacture date. Never fill/change an existing Lot date or firstReceiptDate, use a numeric-ID picker, invent a minimum-life override, or treat an incomplete/failed query as expected absence. Paginate the narrow SKU/WH/Bin/status/Lot queries to completion, match full identity (including null versus actual Lot ID), deduplicate and fail closed on ambiguous/missing/inconsistent data. Explicit expectedBalanceVersion is current version or null only after a complete successful target read. Concurrent changes remain server VERSION_CONFLICT, not silently updated versions.
++
++OUT and Status start from a selected actual Stock bucket; get current detail to bind complete dimensions and base UOM. OUT never chooses new target dimensions. Status changes only status at identical WH/Bin/SKU/Lot, requires a distinct one of AVAILABLE/QUARANTINED/DAMAGED, current source version and current destination version or confirmed absence. Show On Hand, Allocated, Bucket Free and Reserved/uncovered summary without treating preview as a submission guarantee. Expired Status/reversal restoration is not a Sale eligibility override; show that warning without adding a new blanket ban.
++
++Reversal loads the immutable full original group through Movement detail and reads each unique affected current Stock bucket by complete original dimensions. Only RECEIPT/ISSUE/BIN_MOVE/STATUS_TRANSFER/ADJUSTMENT BIN groups, with no selected-leg reversal link and 1–200 complete guards, offer the entry. Unsupported or already-reversed groups show read-only explanation, not a misleading action. Missing historical bucket or incomplete current reads prevent confirmation; never reconstruct a bucket, use balanceVersionAfter as current intent, retarget, reconvert historical quantities or update original history. Show all legs, inverse Base quantity/direction, locations/Lot/status, current versus projected quantity and explicitly identify whole-group effects. Sort unique current `{balanceId,expectedVersion}`; no partial reversal. Server derives actual effects and rejects any concurrent/current-rule conflict.
++
++**Form and confirmation.** Adjustment uses the existing seven reason categories; all operations use existing trim/nonempty/no-control/500 UTF-8-byte reasonText, with OTHER's additional10 nonwhitespace Unicode-code-point minimum. No category-direction pairing or new validation semantics. Reject zero/negative/float/unsafe quantity and malformed dates; inline messages and focusable summary retain safe business input on errors. Review shows actual SKU/name/Base UOM, WH/Bin, Lot/expiry, status, quantity/direction, current versions, expected effects and reason. Escape all content using Vue, not raw HTML.
++
++Use an Inventory-owned Quasar confirmation dialog for the three actual high-risk actions and existing layout/form tokens. A native labelled password input is uncontrolled: no v-model/reactive password, Pinia/URL/storage/intent/cache/log, no prop or emitted password. Read it only into the transient submission call, clear DOM immediately after capture and on cancel/hide/unmount/actor change, and release the local reference in finally. Cancel never sends a POST; retries require new entry. This minimizes retention but cannot promise zeroization of immutable JS strings or protection from an active same-origin XSS/browser extension. Existing HttpClient/device signer transmits a one-use request with `signed:true`, supplied stable idempotency key and a new signature/nonce; no shared signing/auth changes.
++
++**Source and outcome recovery (HD130 A).** Create one Inventory UUID intent before first POST: source.module=INVENTORY, documentType=ADJUSTMENT/STATUS_TRANSFER/REVERSAL, independent UUID documentId and eventId, lineId empty; the header key is a separately generated UUID stable across attempts. Freeze the credential-free original business body/current guards/source/key. Disable duplicate submits and mutation of this intent; do not substitute later versions, reason, targets or quantity on retry.
++
++Before POST, save only `{source,action,movementId?}` under a versioned sessionStorage key namespaced to the authenticated actor; action is an allowlisted enum and movementId is a canonical safe positive ID. No header key, reason, password/token/signature/proof, command payload, quantity, versions or free-text identifiers are persisted. Validate the exact stored shape/UUIDs/action/path relationship before using it; never trust stored identity for authentication or turn a stored URL into a signed request. Storage failure blocks submission with a visible error; do not silently overwrite an unresolved recovery record. This is one unresolved intent per actor/tab, not a durable server inbox or cross-tab serialization.
++
++TIMEOUT, NETWORK_ERROR, indeterminate5xx/in-progress outcomes and navigation abort after submission retain UNKNOWN. Query the exact original source through existing operations/by-source first. A returned completed operation resolves from its original server result and matching Movement source/group; a null response or query error is not failed/rolled back, cannot clear UNKNOWN, generate a new event or authorize an automatic POST. Bounded/manual result queries do not alter the operation. Only while the original page still owns the unchanged intent may the user explicitly request a same-intent retry, after a fresh source query and fresh password/device signature/current session check. If source is already completed, return its result and never resend. After an UNKNOWN outcome, a later rejected attempt does not prove the earlier attempt failed; retain the reference until resolution/manual reconciliation.
++
++Initial definitive validation/auth/version/business rejection retains safe form input and explains the current error; no automatic repeat/new source. A fresh edited intent is permitted only after the prior attempt is known rejected without an older unknown attempt, an exact-source lookup shows no completed operation, and the user explicitly reloads/confirms current facts. A recovered completed result removes only that owned source record; deleting/abandoning an unknown record is not a UI workaround. On reload/navigation, original business body/key is gone: restore query-only recovery, no reconstructed retry, no new-effect controls while unresolved. Actor changes clear memory/dialog but never show another actor's recovery record. Keep same-actor unresolved record until resolved; browser/tab closure or storage clearing can lose it, so display/copy the safe source reference and explain manual reconciliation. No TTL expiry is used as permission to repeat an unknown event.
++
++**Results/history/accessibility.** Show original operation/group/result quantities, then re-fetch actual server Stock/Movement facts, never optimistic success. Locate result Movement by complete source (module/type/document/line/event and operation/group), not a loose source search's first row; source query has scalar resultSummary, not the POST nested result shape. Existing selected-leg reversal links remain bidirectional; full group display includes SKU/Lot/status/quantity and each leg navigation. Detail fetch generations/cancellation must prevent a late prior selection's result or error from rendering or launching a reversal for the current selection. Loading/empty/error/permission/UNKNOWN/resolved states have clear text/ARIA, keyboard focus/error summary, dialog focus trap/return and no color-only signal; validate320/768/1024/1440 widths.
++
++**Verification/evidence boundary.** Add native unit/service tests and eight real MySQL26.7.0/API/browser cases, not mocked-success Playwright. Browser uses the real client non-extractable device key, approved synthetic binding, password hash, JWT, limiter and strong-auth handler; response-loss/pre-forward abort are explicit transport fault injection, never fabricated API success. For the new high-risk browser spec, turn trace/video/automatic screenshots off; capture only explicit credential-cleared screens and safe boolean/allowlisted diagnostics, never raw POST body/auth headers/session exports. No raw high-risk trace is a fallback diagnostic. Retain existing Transfer browser8 and ordinary browser regression18; all applicable checks on the new source, zero forbidden skips and unchanged coverage/global34 floors. Developer PASS is not formal TC/UAT, capacity, Phase completion or publication approval. TASK034 and later remain separate.
++
++
+ ---
+ 
+ ## 8. 具體程式碼架構與變更清單
+--- a/docs/inventory_management/05_development_tasks.md
++++ b/docs/inventory_management/05_development_tasks.md
+@@ -2251,6 +2251,22 @@
+ ### Definition of Done
+ The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+ 
++### TASK033 exact local increment and developer checkpoints（candidate）
++
++Implement §7.8.1 only after actual Sam exact candidate approval. HD130 A selects recovery direction, not these unseen source/spec/profile changes. Keep canonical task/Phase/merge relationships and all prior invariants; do not introduce a second task ledger or rename this Task.
++
++1. Add signed Inventory service methods and credential-free intent/result recovery; add native service/Adjustment tests before behavior. Verify fixed routes, stable explicit key, current-source lookup and no credential persistence or automatic retry.
++2. Build Adjustment IN/OUT and Status selection/review over existing reads, with native uncontrolled confirmation and exact current guards. Verify numeric/reason/Lot/permission/error/UNKNOWN/refresh cases with at least12 native Adjustment cases.
++3. Add Movement-to-Reversal entry/full-group review and safe bidirectional navigation. Verify allowlist, incomplete guard rejection, current versus historical version, wrong/stale detail response and read-only actor with at least6 native Movement cases.
++4. Execute eight actual high-risk browser/MySQL cases and unchanged Transfer8, ordinary browser18, all current applicable developer/native functional/server/client/lint/build/audit/coverage-floor checks. Review sanitized screenshots320/768/1024/1440 and keyboard/console/network results. Final exact-source actual Sam review remains required before local TASK033 DONE.
++
++Proposed owned paths only: `client/src/services/inventory.js`, `client/src/pages/inventory/AdjustmentsPage.vue`, `client/src/pages/inventory/MovementsPage.vue`, `client/src/components/inventory/AdjustmentForm.vue`, `client/src/components/inventory/InventoryHighRiskDialog.vue`, `client/test/services/inventory.test.js`, `client/test/pages/inventory/inventoryAdjustments.test.js`, `client/test/pages/inventory/inventoryMovements.test.js`, `client/test/pages/inventory/inventoryInquiries.test.js` (existing page mounting/session compatibility only), `client/e2e/inventory-management/inventory-high-risk.spec.js`. No generic auth engine, store, shared confirmation or backend writer changes. Split actual form/confirmation responsibilities only, no speculative factory/helper library.
++
++Reviewed existing suite contracts gain stronger discovery floors: inventory-p3-adjustments-client4→12, inventory-p3-movements-client4→6; inventory-p3-browser retains existing warehouse-operations8 and adds high-risk8 with min8→16. Existing argv/result adapter/skip/timeout contracts otherwise unchanged; the new spec's bounded test watchdog fits the1800-second suite contract and has credential-sensitive capture disabled. Ordinary browser-regression18 is required here too; no missing or guarded-disabled browser run is PASS. Existing mandatory suite/profile/traceability relationships are retained.
++
++New PLAN must explicitly rebind the already-approved, byte-identical shared framework/test8, existing0064 and root lockfile scope only because existing dirty P3 changes remain in this worktree. Rebind is no-write adoption of verified pins, not permission for new shared/auth/DDL/dependency changes. Local owned synthetic MySQL/API/browser setup and precise cleanup reuse existing approved methods; no shared/production resource, CI/publication/main integration/formal/capacity waiver. Historical source/PLAN reports remain historical and cannot prove the new UI candidate.
++
++
+ ## TASK-034 — 完成倉務操作整合、並發及安全驗收 (legacy P3-T09)
+ 
+ ### Goal
+--- a/docs/inventory_management/06_technical_test_cases.md
++++ b/docs/inventory_management/06_technical_test_cases.md
+@@ -202,6 +202,28 @@
+ ### Cleanup
+ Remove only owned synthetic records and runtime resources from the isolated test instance; preserve redacted reports and do not touch shared or production data.
+ 
++### TASK033 named developer scenarios — proposed, not executed
++
++These12 UI033 prefixes specify §7.8.1 and the HD130 A recovery direction. They supplement existing TC004/TC007 intent without changing formal mappings or asserting formal PASS. Each prefix must appear in current-source native results; aggregate counts cannot replace the actual scenario. All rows are NOT_RUN until executed against the approved candidate; no existing TASK031/032 proof is relabelled UI evidence.
++
++| Case | Required synthetic setup/action | Required observable result | Native evidence | Status |
++| --- | --- | --- | --- | --- |
++| UI033-AUTH | view+adjust, view-only, operation/FEFO-only, missing view, changed actor/revoked permissions | Adjustments route/actions require both permissions; ordinary Movement history remains view-only; current strong auth rejects write/replay with no effects, cleared confirmation | Unit and actual browser/API | NOT_RUN |
++| UI033-SELECTORS | exact Code none/batch/batch_expiry, no-Balance SKU, unavailable/unknown lookup, active WH/Bin, late lookup responses | Clear old selection, explicit labels/Base unit, no numeric-ID or Item-management fallback, incomplete reads cannot confirm | Adjustment unit and actual browser | NOT_RUN |
++| UI033-VALIDATION | quantity0/negative/float/unsafe, date/unknown status, seven categories, OTHER Unicode10/nonempty500-byte reasons | Safe local field/summary errors, no POST, existing server validation unchanged; Base uomId explicit and no guessed Pack conversion | Unit/service and actual browser | NOT_RUN |
++| UI033-CURRENT-GUARDS | IN present/confirmed absent, OUT/Status source+destination, zero buckets, paginated Lot ambiguity, Reversal unique buckets/current versions unlike history | Full dimensions and current guards shown; failed/partial read not absence; missing/duplicate/>200 Reversal guards block, 409 doesn't substitute versions or retarget | Unit and actual browser/API | NOT_RUN |
++| UI033-IN-LOT | new/old tracked Lot and immutable dates; expiry/min-life refusal; six Status directions/expired warning | Correct input shape and original dates, all statuses supported; expired cannot become saleable, no override/blanket new rule, rejected submission no partial effects | Unit, real browser, unchanged native domain/API regression | NOT_RUN |
++| UI033-CONFIRM-SECRETS | submit/cancel/hide/unmount/actor change, invalid password/reason, form keyboard, sensitive capture settings | Password never reactive/store/URL/storage/intent/cache/log or event; transient read/DOM clear and fresh entry; focus trap/return; no credential trace/video/raw artifacts | Unit/service and actual browser safe boolean checks | NOT_RUN |
++| UI033-SIGNED-INTENT | actual browser device/signature/current password, duplicate click, later input changes | One supplied key/source/body per intent, no duplicate POST; fresh nonce/signature on explicit retry, no caller auth assertions or shared auth changes | Service/unit and actual browser/API/DB | NOT_RUN |
++| UI033-UNKNOWN-QUERY | real committed POST loses response; null source query, query error/in-progress/indeterminate error | UNKNOWN distinct from failure; query exact source first, completed resolves original result, null/error never authorizes new event or auto resend; one group/Audit effect | Unit and native transport-fault browser/API/DB | NOT_RUN |
++| UI033-RETRY | pre-forward transport abort, null source, explicit unchanged retry, completed-before-retry, later rejection after unknown | No automatic retry; only original page/fresh password/current auth/new signature+nonce/same body-source-key; completed query prevents POST, later rejection doesn't discard earlier UNKNOWN | Unit/service and real browser/API/DB | NOT_RUN |
++| UI033-REFRESH | refresh/leave before response, account change, malformed/mismatched recovery metadata, sessionStorage failure | Minimal actor-namespaced source/action/movement ID only, persist before POST; storage failure blocks; recovered state query-only/no guessed retry, another actor never sees it; closure limitations explicit | Unit and real browser | NOT_RUN |
++| UI033-RECONCILE | paired reversal and all allowlisted types, unsupported Transfer/Stocktake/Opening/Reversal, resultSummary flattened fields, group/source collisions | Whole-group effects/current facts, no immutable history mutation/workflow resurrection; locate full exact source and operation/group; original/reversal links both ways; unsupported actions absent | Movement unit, real browser, native domain/API regression | NOT_RUN |
++| UI033-UI-REGRESSION | late Movement detail/error after newer selection, loading/error/empty/success, literal XSS text, keyboard/back/refresh/320/768/1024/1440 | No stale target/data/action, escaped rendering, usable focus/labels/layout; zero unexpected console/page errors or API/network failures, sanctioned injected failures explicitly matched | Native client suites, real high-risk8+Transfer8, ordinary browser18, sanitized explicit screenshots | NOT_RUN |
++
++The eight new real browser cases cover: (1) minimal permissions/fresh revocation; (2) IN/new Lot/no-Balance SKU and OUT; (3) Status paired effects/current-rule errors; (4) whole-group Reversal/unsupported eligibility/links; (5) committed response loss queried without duplicate; (6) unchanged explicit same-page retry after unknown transport outcome; (7) refresh/account/storage/query-only recovery; (8) responsive keyboard/secret-lifecycle/error states. Retain real framework JWT/device/password/idempotency/limiter and MySQL26.7.0 transactional facts. Use no mocked successful API responses; only intentional transport loss for unknown-outcome scenarios. Disable high-risk trace/video/automatic screenshots; safe cleared-screen capture and boolean/allowlisted diagnostics only. Failure reports must be reviewed for credentials before retention/export, never saved session-state or raw request bodies. No formal acceptance or capacity waiver follows from developer checks.
++
++
+ ## TC-008 — Stocktake locking, counting and variance posting
+ 
+ ### Preconditions and data

@@ -116,6 +116,9 @@ export function validateApiConfig(
     }
 
     authorizationPolicies.normalize(route.authorizationPolicies, routeKey);
+    if (Object.hasOwn(route, "inputCoercion") && route.inputCoercion !== false) {
+      throw new TypeError(`inputCoercion must be false or omitted for ${routeKey}`);
+    }
 
     if (
       route.deprecation === null ||
@@ -148,6 +151,14 @@ export function validateApiConfig(
 
     if (!(handlers[route.handler] instanceof BaseRequestHandler)) {
       throw new Error(`Handler not found for ${routeKey}: ${route.handler}`);
+    }
+    if (Object.hasOwn(route, "idempotencyPreparation")) {
+      if (route.idempotencyPreparation !== true || route.idempotency.enabled !== true) {
+        throw new TypeError(`idempotencyPreparation must be true with enabled idempotency for ${routeKey}`);
+      }
+      if (typeof handlers[route.handler].prepareIdempotency !== "function") {
+        throw new TypeError(`prepareIdempotency hook is required for ${routeKey}`);
+      }
     }
 
     if (handlers[route.handler].authorizeRequest !== undefined && typeof handlers[route.handler].authorizeRequest !== "function") {
@@ -303,7 +314,10 @@ export function createApiDispatcher({
           gate: upload.storageMode === "disk" ? diskUploadGate : uploadGate
         })
       : null;
-    const validateRequest = activeValidator.compile(route.requestSchema, routeKey);
+    const validateRequest = activeValidator.compile(
+      route.requestSchema, routeKey,
+      route.inputCoercion === false ? { coerceTypes: false } : undefined
+    );
     const validateResponse = activeResponseValidator.compile(
       route.responseSchema,
       routeKey
@@ -393,9 +407,13 @@ export function createApiDispatcher({
           // service 缺席時 routeIdempotency.enabled 必為 false——宣告了
           // idempotency 的 route 在 validateApiConfig 就已經擋下啟動。
           if (routeIdempotency.enabled) {
-            await idempotency.execute(req, res, routeIdempotency, () =>
-              handler.handle(req, res, next)
-            );
+            const work = () => handler.handle(req, res, next);
+            if (route.idempotencyPreparation === true) {
+              const prepared = await handler.prepareIdempotency(req);
+              await idempotency.execute(req, res, routeIdempotency, work, prepared);
+            } else {
+              await idempotency.execute(req, res, routeIdempotency, work);
+            }
           } else {
             await handler.handle(req, res, next);
           }

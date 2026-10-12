@@ -1,0 +1,274 @@
+<testsuites id="" name="" tests="8" failures="2" skipped="0" errors="2" time="80.95908299999999">
+<testsuite name="inventory-warehouse-operations.spec.js" timestamp="2026-10-07T00:50:47.952Z" hostname="technical" tests="8" failures="2" skipped="0" time="75.262" errors="2">
+<testcase name="TASK-029 @technical Inventory-only two-line Draft Dispatch Receive conserves real stock" classname="inventory-warehouse-operations.spec.js" time="30.137">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|playwright-artifacts/inventory-warehouse-operat-58310-eceive-conserves-real-stock-technical/test-failed-1.png]]
+
+[[ATTACHMENT|playwright-artifacts/inventory-warehouse-operat-58310-eceive-conserves-real-stock-technical/error-context.md]]
+
+[[ATTACHMENT|playwright-artifacts/inventory-warehouse-operat-58310-eceive-conserves-real-stock-technical/error-context.md]]
+
+[[ATTACHMENT|playwright-artifacts/inventory-warehouse-operat-58310-eceive-conserves-real-stock-technical/trace.zip]]
+]]>
+</system-out>
+<error message="Test timeout of 30000ms exceeded." type="Error">
+<![CDATA[  [technical] › inventory-warehouse-operations.spec.js:122:1 › TASK-029 @technical Inventory-only two-line Draft Dispatch Receive conserves real stock 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: page.waitForResponse: Test timeout of 30000ms exceeded.
+
+      105 | }
+      106 | async function saveDraft(page) {
+    > 107 |   const posted = page.waitForResponse(response => response.url() === `${origin}/api/v1/inventory/transfers/create` && response.request().method() === "POST");
+          |                       ^
+      108 |   await page.getByRole("button", { name: "儲存草稿", exact: true }).click();
+      109 |   const response = await posted; expect(response.status()).toBe(200); const result = (await response.json()).data;
+      110 |   await expect(page.getByRole("dialog")).toBeHidden(); return result.id;
+        at saveDraft (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:107:23)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:123:63
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for getByRole('button', { name: '儲存草稿', exact: true })
+        - locator resolved to <button disabled tabindex="-1" type="submit" aria-disabled="true" class="q-btn q-btn-item non-selectable no-outline q-btn--unelevated q-btn--rectangle bg-primary text-white disabled">…</button>
+      - attempting click action
+        2 × waiting for element to be visible, enabled and stable
+          - element is not enabled
+        - retrying click action
+        - waiting 20ms
+        2 × waiting for element to be visible, enabled and stable
+          - element is not enabled
+        - retrying click action
+          - waiting 100ms
+        55 × waiting for element to be visible, enabled and stable
+           - element is not enabled
+         - retrying click action
+           - waiting 500ms
+
+
+      106 | async function saveDraft(page) {
+      107 |   const posted = page.waitForResponse(response => response.url() === `${origin}/api/v1/inventory/transfers/create` && response.request().method() === "POST");
+    > 108 |   await page.getByRole("button", { name: "儲存草稿", exact: true }).click();
+          |                                                                 ^
+      109 |   const response = await posted; expect(response.status()).toBe(200); const result = (await response.json()).data;
+      110 |   await expect(page.getByRole("dialog")).toBeHidden(); return result.id;
+      111 | }
+        at saveDraft (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:108:65)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:123:63
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../../docs/inventory_management/evidence/task029-inventory-p3-browser-706b56d556/playwright-artifacts/inventory-warehouse-operat-58310-eceive-conserves-real-stock-technical/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../docs/inventory_management/evidence/task029-inventory-p3-browser-706b56d556/playwright-artifacts/inventory-warehouse-operat-58310-eceive-conserves-real-stock-technical/error-context.md
+
+    Error Context: ../../../docs/inventory_management/evidence/task029-inventory-p3-browser-706b56d556/playwright-artifacts/inventory-warehouse-operat-58310-eceive-conserves-real-stock-technical/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../docs/inventory_management/evidence/task029-inventory-p3-browser-706b56d556/playwright-artifacts/inventory-warehouse-operat-58310-eceive-conserves-real-stock-technical/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../../docs/inventory_management/evidence/task029-inventory-p3-browser-706b56d556/playwright-artifacts/inventory-warehouse-operat-58310-eceive-conserves-real-stock-technical/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</error>
+</testcase>
+<testcase name="TASK-029 @technical view-only actor sees real In Transit but no write controls" classname="inventory-warehouse-operations.spec.js" time="0.73">
+</testcase>
+<testcase name="TASK-029 @technical no-Balance SKU remains selectable and insufficient Dispatch keeps Draft" classname="inventory-warehouse-operations.spec.js" time="30.127">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|playwright-artifacts/inventory-warehouse-operat-a4d93-icient-Dispatch-keeps-Draft-technical/test-failed-1.png]]
+
+[[ATTACHMENT|playwright-artifacts/inventory-warehouse-operat-a4d93-icient-Dispatch-keeps-Draft-technical/error-context.md]]
+
+[[ATTACHMENT|playwright-artifacts/inventory-warehouse-operat-a4d93-icient-Dispatch-keeps-Draft-technical/error-context.md]]
+
+[[ATTACHMENT|playwright-artifacts/inventory-warehouse-operat-a4d93-icient-Dispatch-keeps-Draft-technical/trace.zip]]
+]]>
+</system-out>
+<error message="Test timeout of 30000ms exceeded." type="Error">
+<![CDATA[  [technical] › inventory-warehouse-operations.spec.js:144:1 › TASK-029 @technical no-Balance SKU remains selectable and insufficient Dispatch keeps Draft 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: page.waitForResponse: Test timeout of 30000ms exceeded.
+
+      105 | }
+      106 | async function saveDraft(page) {
+    > 107 |   const posted = page.waitForResponse(response => response.url() === `${origin}/api/v1/inventory/transfers/create` && response.request().method() === "POST");
+          |                       ^
+      108 |   await page.getByRole("button", { name: "儲存草稿", exact: true }).click();
+      109 |   const response = await posted; expect(response.status()).toBe(200); const result = (await response.json()).data;
+      110 |   await expect(page.getByRole("dialog")).toBeHidden(); return result.id;
+        at saveDraft (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:107:23)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:145:57
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for getByRole('button', { name: '儲存草稿', exact: true })
+        - locator resolved to <button disabled tabindex="-1" type="submit" aria-disabled="true" class="q-btn q-btn-item non-selectable no-outline q-btn--unelevated q-btn--rectangle bg-primary text-white disabled">…</button>
+      - attempting click action
+        2 × waiting for element to be visible, enabled and stable
+          - element is not enabled
+        - retrying click action
+        - waiting 20ms
+        2 × waiting for element to be visible, enabled and stable
+          - element is not enabled
+        - retrying click action
+          - waiting 100ms
+        56 × waiting for element to be visible, enabled and stable
+           - element is not enabled
+         - retrying click action
+           - waiting 500ms
+
+
+      106 | async function saveDraft(page) {
+      107 |   const posted = page.waitForResponse(response => response.url() === `${origin}/api/v1/inventory/transfers/create` && response.request().method() === "POST");
+    > 108 |   await page.getByRole("button", { name: "儲存草稿", exact: true }).click();
+          |                                                                 ^
+      109 |   const response = await posted; expect(response.status()).toBe(200); const result = (await response.json()).data;
+      110 |   await expect(page.getByRole("dialog")).toBeHidden(); return result.id;
+      111 | }
+        at saveDraft (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:108:65)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:145:57
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../../docs/inventory_management/evidence/task029-inventory-p3-browser-706b56d556/playwright-artifacts/inventory-warehouse-operat-a4d93-icient-Dispatch-keeps-Draft-technical/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../docs/inventory_management/evidence/task029-inventory-p3-browser-706b56d556/playwright-artifacts/inventory-warehouse-operat-a4d93-icient-Dispatch-keeps-Draft-technical/error-context.md
+
+    Error Context: ../../../docs/inventory_management/evidence/task029-inventory-p3-browser-706b56d556/playwright-artifacts/inventory-warehouse-operat-a4d93-icient-Dispatch-keeps-Draft-technical/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../docs/inventory_management/evidence/task029-inventory-p3-browser-706b56d556/playwright-artifacts/inventory-warehouse-operat-a4d93-icient-Dispatch-keeps-Draft-technical/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../../docs/inventory_management/evidence/task029-inventory-p3-browser-706b56d556/playwright-artifacts/inventory-warehouse-operat-a4d93-icient-Dispatch-keeps-Draft-technical/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</error>
+</testcase>
+<testcase name="TASK-029 @technical unknown SKU and invalid quantity preserve other Draft input" classname="inventory-warehouse-operations.spec.js" time="1.321">
+</testcase>
+<testcase name="TASK-029 @technical delayed real lookup cannot replace a newer explicitly chosen SKU" classname="inventory-warehouse-operations.spec.js" time="1.289">
+</testcase>
+<testcase name="TASK-029 @technical stale Draft version returns 409 and retains unsaved quantity" classname="inventory-warehouse-operations.spec.js" time="1.246">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|playwright-artifacts/inventory-warehouse-operat-2af70-nd-retains-unsaved-quantity-technical/test-failed-1.png]]
+
+[[ATTACHMENT|playwright-artifacts/inventory-warehouse-operat-2af70-nd-retains-unsaved-quantity-technical/error-context.md]]
+
+[[ATTACHMENT|playwright-artifacts/inventory-warehouse-operat-2af70-nd-retains-unsaved-quantity-technical/error-context.md]]
+
+[[ATTACHMENT|playwright-artifacts/inventory-warehouse-operat-2af70-nd-retains-unsaved-quantity-technical/trace.zip]]
+]]>
+</system-out>
+<failure message="expect(locator).toContainText(expected) failed" type="expect.toContainText">
+<![CDATA[  [technical] › inventory-warehouse-operations.spec.js:175:1 › TASK-029 @technical stale Draft version returns 409 and retains unsaved quantity 
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: getByRole('dialog').getByRole('alert')
+    Expected substring: "輸入內容仍保留"
+    Error: strict mode violation: getByRole('dialog').getByRole('alert') resolved to 2 elements:
+        1) <div role="alert" tabindex="-1">…</div> aka getByRole('alert').first()
+        2) <div role="alert" class="q-banner row items-center bg-negative text-white q-mb-md">…</div> aka getByRole('alert').nth(1)
+
+    Call log:
+      - Expect "toContainText" getByRole('dialog').getByRole('alert') with timeout 5000ms
+      - waiting for getByRole('dialog').getByRole('alert')
+
+
+      181 |     lines: [{ id: current.lines[0].id, expectedVersion: current.lines[0].version, skuId: fixture.plain.id, sourceBinId: fixture.source.binId, lotId: null, stockStatus: "AVAILABLE", quantity: 4 }] });
+      182 |   expectedFailures.push({ path: `/api/v1/inventory/transfers/${draft.id}/update`, status: 409 });
+    > 183 |   await page.getByRole("button", { name: "儲存草稿", exact: true }).click(); await expect(page.getByRole("dialog").getByRole("alert")).toContainText("輸入內容仍保留");
+          |                                                                                                                                    ^
+      184 |   await expect(page.getByLabel("第 1 行數量", { exact: true })).toHaveValue("7"); expect((await api(`/${draft.id}`)).lines[0].quantity).toBe(4);
+      185 | });
+      186 | test("TASK-029 @technical Quarantined full receipt requires reason and destination ownership", async ({ page }) => {
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:183:132
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../../docs/inventory_management/evidence/task029-inventory-p3-browser-706b56d556/playwright-artifacts/inventory-warehouse-operat-2af70-nd-retains-unsaved-quantity-technical/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../docs/inventory_management/evidence/task029-inventory-p3-browser-706b56d556/playwright-artifacts/inventory-warehouse-operat-2af70-nd-retains-unsaved-quantity-technical/error-context.md
+
+    Error Context: ../../../docs/inventory_management/evidence/task029-inventory-p3-browser-706b56d556/playwright-artifacts/inventory-warehouse-operat-2af70-nd-retains-unsaved-quantity-technical/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../docs/inventory_management/evidence/task029-inventory-p3-browser-706b56d556/playwright-artifacts/inventory-warehouse-operat-2af70-nd-retains-unsaved-quantity-technical/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../../docs/inventory_management/evidence/task029-inventory-p3-browser-706b56d556/playwright-artifacts/inventory-warehouse-operat-2af70-nd-retains-unsaved-quantity-technical/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+</testcase>
+<testcase name="TASK-029 @technical Quarantined full receipt requires reason and destination ownership" classname="inventory-warehouse-operations.spec.js" time="2.463">
+</testcase>
+<testcase name="TASK-029 @technical keyboard lookup, unsaved close, responsive and URL refresh" classname="inventory-warehouse-operations.spec.js" time="7.949">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|playwright-artifacts/inventory-warehouse-operat-242a3--responsive-and-URL-refresh-technical/test-failed-1.png]]
+
+[[ATTACHMENT|playwright-artifacts/inventory-warehouse-operat-242a3--responsive-and-URL-refresh-technical/error-context.md]]
+
+[[ATTACHMENT|playwright-artifacts/inventory-warehouse-operat-242a3--responsive-and-URL-refresh-technical/error-context.md]]
+
+[[ATTACHMENT|playwright-artifacts/inventory-warehouse-operat-242a3--responsive-and-URL-refresh-technical/trace.zip]]
+]]>
+</system-out>
+<failure message="expect(locator).toContainText(expected) failed" type="expect.toContainText">
+<![CDATA[  [technical] › inventory-warehouse-operations.spec.js:196:1 › TASK-029 @technical keyboard lookup, unsaved close, responsive and URL refresh 
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: getByLabel('調撥狀態', { exact: true })
+    Expected substring: "DRAFT"
+    Received string:    ""
+    Timeout: 5000ms
+
+    Call log:
+      - Expect "toContainText" getByLabel('調撥狀態', { exact: true }) with timeout 5000ms
+      - waiting for getByLabel('調撥狀態', { exact: true })
+        14 × locator resolved to <input readonly tabindex="0" value="DRAFT" role="combobox" aria-label="調撥狀態" aria-readonly="false" aria-expanded="false" aria-autocomplete="none" class="q-select__focus-target" id="f_3b744f1d-1dc0-4779-a9fe-5c838c5a55b7"/>
+           - unexpected value ""
+
+
+      201 |   page.once("dialog", dialog => dialog.dismiss()); await page.getByRole("button", { name: "取消編輯", exact: true }).click(); await expect(page.getByRole("dialog")).toBeVisible();
+      202 |   page.once("dialog", dialog => dialog.accept()); await page.getByRole("button", { name: "取消編輯", exact: true }).click(); await expect(page.getByRole("dialog")).toBeHidden();
+    > 203 |   await pick(page, "調撥狀態", "DRAFT"); await expect(page).toHaveURL(/status=DRAFT/u); await page.reload(); await expect(page.getByLabel("調撥狀態", { exact: true })).toContainText("DRAFT");
+          |                                                                                                                                                                 ^
+      204 | });
+      205 |
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:203:161
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../../docs/inventory_management/evidence/task029-inventory-p3-browser-706b56d556/playwright-artifacts/inventory-warehouse-operat-242a3--responsive-and-URL-refresh-technical/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../docs/inventory_management/evidence/task029-inventory-p3-browser-706b56d556/playwright-artifacts/inventory-warehouse-operat-242a3--responsive-and-URL-refresh-technical/error-context.md
+
+    Error Context: ../../../docs/inventory_management/evidence/task029-inventory-p3-browser-706b56d556/playwright-artifacts/inventory-warehouse-operat-242a3--responsive-and-URL-refresh-technical/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../docs/inventory_management/evidence/task029-inventory-p3-browser-706b56d556/playwright-artifacts/inventory-warehouse-operat-242a3--responsive-and-URL-refresh-technical/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../../docs/inventory_management/evidence/task029-inventory-p3-browser-706b56d556/playwright-artifacts/inventory-warehouse-operat-242a3--responsive-and-URL-refresh-technical/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+</testcase>
+</testsuite>
+</testsuites>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="Transfer DRAFT edit becomes DRAFT" time="0.000877" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryStateMachines.test.js"/>
+	<testcase name="Transfer DRAFT dispatch becomes IN_TRANSIT" time="0.000092" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryStateMachines.test.js"/>
+	<testcase name="Transfer DRAFT cancel becomes CANCELLED" time="0.000047" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryStateMachines.test.js"/>
+	<testcase name="Transfer IN_TRANSIT receive becomes RECEIVED" time="0.000037" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryStateMachines.test.js"/>
+	<testcase name="Transfer rejects every other state/action pair" time="0.000862" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryStateMachines.test.js"/>
+	<testcase name="Transfer warehouses must be distinct positive safe integers" time="0.000155" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryStateMachines.test.js"/>
+	<testcase name="Transfer accepts all lines and full quantities regardless of input order" time="0.000361" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryStateMachines.test.js"/>
+	<testcase name="Transfer rejects missing line without mutating lines" time="0.000083" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryStateMachines.test.js"/>
+	<testcase name="Transfer rejects partial quantity without mutating lines" time="0.000067" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryStateMachines.test.js"/>
+	<testcase name="Transfer rejects excess quantity without mutating lines" time="0.000886" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryStateMachines.test.js"/>
+	<testcase name="Transfer rejects duplicate line without mutating lines" time="0.000593" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryStateMachines.test.js"/>
+	<testcase name="Transfer rejects unknown line without mutating lines" time="0.000085" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryStateMachines.test.js"/>
+	<testcase name="Transfer rejects malformed line sets and unsafe quantities" time="0.000285" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryStateMachines.test.js"/>
+	<testcase name="Transfer inspector reports an absent schema" time="0.000681" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryTransferMigration.test.js"/>
+	<testcase name="Transfer migration refuses incompatible partial columns before DDL" time="0.000290" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/inventoryTransferMigration.test.js"/>
+	<!-- tests 15 -->
+	<!-- suites 0 -->
+	<!-- pass 15 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 168.550958 -->
+</testsuites>

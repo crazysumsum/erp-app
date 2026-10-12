@@ -1,0 +1,62 @@
+{
+  "schema_version": "2.0",
+  "module_id": "inventory-management",
+  "run_id": "task030-nondb-38cb44c9c6-client-build",
+  "suite_id": "client-build",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "8ab85d87051f437b74c6cfb4efc39ba93c8c2dd9e56ca7ea210d7bc5bc705dc8",
+  "source_fingerprint": "fe3130fef55c9ec8cc71b2edf872a8a2076b5332581749ee281b211de38f2bc2",
+  "code_commit": "869ac07abdd3879254c351d857be911d71e68b6b",
+  "started_at": "2026-10-07T03:23:43.380885+00:00",
+  "ended_at": "2026-10-07T03:23:44.488592+00:00",
+  "environment_id": "inventory-isolated-test",
+  "runtime_instance_id": "erp-inventory-task030-nondb.rroufuwu",
+  "data_reference": "Synthetic Inventory fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "npm",
+    "run",
+    "build",
+    "--workspace",
+    "client"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "6c93f2b0ad4edee06fbef51a3028f476695c6716f11bdd4a85edeae6b1a4fb09",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 0,
+    "passed": 0,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/task030-nondb-38cb44c9c6/client-build/stderr.log",
+      "sha256": "351b524197fb492920789369e7f1a271420c757633fbb553b280a181ac4c31a4",
+      "bytes": 360
+    },
+    {
+      "path": "evidence/task030-nondb-38cb44c9c6/client-build/stdout.log",
+      "sha256": "6c2dbf9363394dcfbcfba56c511d3f2c353e0131d22bfa20a0a3e5990442581f",
+      "bytes": 636
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "Approved HD110 TASK030 current-source whole-branch DEVELOPER regression only; real API/browser evidence separate, not full-P3/formal acceptance/current CI."
+  ]
+}

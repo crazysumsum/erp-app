@@ -1,0 +1,88 @@
+{
+  "status": "PROPOSED_NOT_APPLIED",
+  "decision": "HD-108",
+  "selected_option": "HD107 A",
+  "authority": "Actual Sam active reply A answering HD107; choice of proposed multi-line/source-destination-version contract, not unseen candidate hash approval or independent implementation review.",
+  "code_commit": "869ac07abdd3879254c351d857be911d71e68b6b",
+  "source_fingerprint": "686578e6e2d8ee67f0e49d6d33080e6d0a31d2c4b230485288fa3ddc1a250338",
+  "active_baselines": {
+    "design": "de32a25f52faeddc65234963935f44a4e73a6a505f44f52dca2283f5e6913f93",
+    "plan": "41949846cafde277c6887a7b572e0b3f945425d9a16f1b96517d99ca1674617c"
+  },
+  "proposed_baselines": {
+    "design": "3df1df58f07bf46a6cbf0ef5135941cb70293822f8043fdca496d9fc1a36cf2c",
+    "plan": "64ce9971e8f4e9a6170f1c792be23ce7836e3719717985cbd282c335c6bd38f8"
+  },
+  "patch": "task030-bin-move-proposal.patch",
+  "patch_sha256": "c8f7b48740b138d0d72dbd673a0f9e5979df1788da82fc14167beaf862c1ec74",
+  "files": [
+    {
+      "path": "docs/inventory_management/00_module_manifest.json",
+      "before_sha256": "c47d9383e0dd5c2f8261e5de982b8387af859f0099ff5126275a623d988d5b92",
+      "after_sha256": "66227aa62bfb55da1fa46464f5867b582f135adcdd09445368e8175f21bb0a78"
+    },
+    {
+      "path": "docs/inventory_management/03_design_spec.md",
+      "before_sha256": "298e6a40760b7e1f93161da0c17afaa50fceda7aeb7b0aaae540eb02384e6f3c",
+      "after_sha256": "0ff888aad84fcd9c99bcd90620ad3a7348f092ce91622525f37dfc6f2ee0784e"
+    },
+    {
+      "path": "docs/inventory_management/05_development_tasks.md",
+      "before_sha256": "be806156f16791db50de1d27d5696bb2ef2fd89ab718e0caac4edde887e2f472",
+      "after_sha256": "599c9015725c636b7daa787601a93ec6b4fd24cad7e8751fa147d6f1358a0763"
+    },
+    {
+      "path": "docs/inventory_management/06_technical_test_cases.md",
+      "before_sha256": "0943423179cb04b1d1fb6d2bbeda88c0f64c038c9a9185bb52ee66dd5b82a42d",
+      "after_sha256": "58170537dddbe06f360bef7c6d14eddba2470f6dfe25efbab879afbe41b7a56f"
+    },
+    {
+      "path": "docs/inventory_management/07_uat_test_cases.md",
+      "before_sha256": "8205c1e1929e7cd83b79ed652c681fe4e9fd3ff5b6481a9feff07bcd63f89ea4",
+      "after_sha256": "9f3c2aa2e3347089168c45c81350354b936bd15ecd639937b3fdb1a6a04737a4"
+    }
+  ],
+  "unchanged": {
+    "01_requirement_spec.md": "5a8c7575722c09972bae1642d6d1bb185ece5505b5d534509010313b99a630b8",
+    "00_project_profile.json": "7e99eb6e8ba556e4a545770ba1c5bfd91c7ff15ee86b0388211974750fe4e8d6",
+    "08_traceability.json": "ac82a88c498b6de6f99ad14ca5adccfd7867be5ce2c2f06b26209f7f0e1de222",
+    "08_traceability_matrix.md": "e856d9e8ee4445b77ec18a852c8a2cee2f65f2932fbd3ab6c710356abf87f4f5"
+  },
+  "unchanged_existing_0064": {
+    "path": "server/database/migrations/0064_create_inventory_transfers.js",
+    "sha256": "07653bb700a40b026e8bb46b538e0e31b112d6c20010af45b4cc71a6ff7ac143",
+    "requested_scope": "Reconfirm existing byte-identical migration path scope on the new PLAN only; no DDL edit or new migration."
+  },
+  "validation": {
+    "traceability": "STRUCTURE_PASS",
+    "issues": [],
+    "matrix": "BYTE_IDENTICAL",
+    "provided_contract_pin": "MATCHES_DESIGN",
+    "consumed_item_contract": "UNCHANGED",
+    "fresh_copy_patch_replay": "PASS_EXACT_5_FILE_SHA256"
+  },
+  "review": {
+    "method": "SELF_REVIEW",
+    "author": "Codex /root",
+    "reviewer": "Codex /root",
+    "independent": false,
+    "scope": "Candidate document-only correctness/simplicity/ownership/auth/version/null/shared-Bucket conservation/replay/rollback/NOT_RUN review; no blocking proposal finding. Not Sam independent review or executed product verification."
+  },
+  "native_evidence_refs_retained": 140,
+  "execution": "No product/test source edits, API/DB/UI/CI test execution or canonical patch application. Eight scenario groups remain NOT_RUN; original failed/historical evidence is not current-candidate PASS.",
+  "next_safe_action": "Sam reviews exact candidate and independently approves DESIGN/PLAN plus unchanged0064 scope rebind; apply only these five files and validate local gates before approved TASK030 product/developer work.",
+  "exclusions": [
+    "new schema/migration",
+    "new permissions/dependencies",
+    "Item source or auth framework changes",
+    "frontend/TASK033 expansion",
+    "commit/push/PR/remoteCI/merge/new-main adoption",
+    "TASK031+ execution",
+    "formalTC/UAT/business/release acceptance",
+    "capacity/check/floor waiver"
+  ],
+  "temporary_validation_roots": [
+    "/private/tmp/inventory-hd108-candidate.rXhg8b",
+    "/private/tmp/inventory-hd108-replay-netokwq2"
+  ]
+}

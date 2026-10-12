@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="TASK-030 native multi-line document preserves Lot/status/BaseUOM and stores chained immutable paired legs" time="0.149690" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryMovement.integration.test.js"/>
+	<testcase name="TASK-030 destination presence, source version and shared starting-version conflicts leave zero effects" time="0.021050" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryMovement.integration.test.js"/>
+	<testcase name="TASK-030 gross OUT cannot use incoming quantities or consume allocated stock" time="0.011022" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryMovement.integration.test.js"/>
+	<testcase name="TASK-030 natural expiry/uncovered Reservation does not block a conserving Move or change Control" time="0.004408" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryMovement.integration.test.js"/>
+	<testcase name="TASK-030 FIFO clears exhausted source, initializes absent destination, retains positive destination anchor" time="0.007387" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryMovement.integration.test.js"/>
+	<testcase name="TASK-030 source replay returns original scalar receipt and reauthorizes without re-reading changed stock" time="0.009271" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryMovement.integration.test.js"/>
+	<testcase name="TASK-030 strict body, source/destination ownership and inactive Bin reject without state changes" time="0.012501" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryMovement.integration.test.js" failure="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ Comparison {}&#10;- Comparison {&#10;-   code: 'INVENTORY_INPUT_INVALID'&#10;- }&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;+ Comparison {}&#10;- Comparison {&#10;-   code: 'INVENTORY_INPUT_INVALID'&#10;- }">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly deep-equal:
++ actual - expected
+
++ Comparison {}
+- Comparison {
+-   code: 'INVENTORY_INPUT_INVALID'
+- }
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + Comparison {}
+  - Comparison {
+  -   code: 'INVENTORY_INPUT_INVALID'
+  - }
+  
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async rejectsUnchanged (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryMovement.integration.test.js:139:3)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryMovement.integration.test.js:228:75)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: TypeError: Inventory command payload.lines[0].expectedDestinationVersion must contain JSON values only
+        at jsonValue (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/inventoryValidation.js:198:50)
+        at file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/inventoryValidation.js:208:20
+        at Array.map (&lt;anonymous>)
+        at jsonValue (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/inventoryValidation.js:206:55)
+        at file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/inventoryValidation.js:203:42
+        at Array.map (&lt;anonymous>)
+        at jsonValue (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/inventoryValidation.js:203:20)
+        at file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/inventoryValidation.js:208:20
+        at Array.map (&lt;anonymous>)
+        at jsonValue (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/inventoryValidation.js:206:55),
+    expected: { code: 'INVENTORY_INPUT_INVALID' },
+    operator: 'rejects',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-030 injected P4 Counting signal rejects source or destination; no real Stocktake workflow claimed" time="0.007324" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryMovement.integration.test.js"/>
+	<testcase name="TASK-030 deterministic same-version Move race has one whole-document winner" time="0.006598" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryMovement.integration.test.js"/>
+	<testcase name="TASK-030 current read detects destination created after source discovery despite repeatable-read snapshot" time="0.007996" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryMovement.integration.test.js"/>
+	<testcase name="TASK-030 injected mid-leg, Audit, Operation completion and pre-commit failures roll back entire real transaction" time="0.024829" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryMovement.integration.test.js"/>
+	<testcase name="TASK-030 Move vs Dispatch serializes Control and has no overspend or partial loser" time="0.007889" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryMovement.integration.test.js"/>
+	<testcase name="TASK-030 Move vs Issue preserves allocated stock and Reservation accounting under deterministic race" time="0.011940" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryMovement.integration.test.js"/>
+	<testcase name="TASK-030 unsafe aggregate arithmetic and exhausted Balance version reject before any writes" time="0.008299" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryMovement.integration.test.js"/>
+	<!-- tests 14 -->
+	<!-- suites 0 -->
+	<!-- pass 13 -->
+	<!-- fail 1 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 398.509208 -->
+</testsuites>

@@ -1,0 +1,87 @@
+{
+  "schema_version": "2.0",
+  "module_id": "inventory-management",
+  "run_id": "task032-nondb-nondb-9899ecf835-inventory-p3-client-coverage",
+  "suite_id": "inventory-p3-client-coverage",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "237d98e617f0a0f4612934118be2d589652b4eb70968291ad511fec6bb758658",
+  "source_fingerprint": "ea5fed017f5eba2fcdfe2adf9bd74521deb6e95d863797892e5a0a9c15c03e43",
+  "code_commit": "869ac07abdd3879254c351d857be911d71e68b6b",
+  "started_at": "2026-10-08T02:45:46.565936+00:00",
+  "ended_at": "2026-10-08T02:45:54.313985+00:00",
+  "environment_id": "inventory-isolated-test",
+  "runtime_instance_id": "erp-inventory-task032-nondb-nondb.obdj9vvp",
+  "data_reference": "Synthetic Inventory fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "npm",
+    "run",
+    "test:coverage",
+    "--workspace",
+    "client",
+    "--",
+    "--reporter=junit",
+    "--outputFile=/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/task032-nondb-nondb-9899ecf835/inventory-p3-client-coverage/inventory-p3-client-coverage.xml"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "e22db846f42b44773957383bc79c36efcad805a780815679b0de73c084573b3d",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 706,
+    "passed": 706,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [
+    {
+      "id": "TC-011",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-016",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-070",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-075",
+      "status": "PASS"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "evidence/task032-nondb-nondb-9899ecf835/inventory-p3-client-coverage/inventory-p3-client-coverage.xml",
+      "sha256": "ce498db3272e747d8f7db905bd84d613cf135386b8f593fcea99e6fc46d529ae",
+      "bytes": 201089
+    },
+    {
+      "path": "evidence/task032-nondb-nondb-9899ecf835/inventory-p3-client-coverage/stderr.log",
+      "sha256": "439a8adc02efcfe927ebb1473df0a6c753564baf6eed87b31763958711b846b0",
+      "bytes": 12772
+    },
+    {
+      "path": "evidence/task032-nondb-nondb-9899ecf835/inventory-p3-client-coverage/stdout.log",
+      "sha256": "88e760eb033d737adfb40b93443af36ed42ccd00a32be28ae8e21af99c666463",
+      "bytes": 13587
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "HD128 TASK032 approved current-source native developer impact check; no formal/UI/current CI or Sam final source review claim."
+  ]
+}

@@ -348,6 +348,12 @@ test("service discovery finds the built-in public services", async () => {
       dependencies: ["scheduler", "mysqldatabase", "logging", "time", "job.supplierImportWorker"]
     },
     {
+      // Supplier 營運指標同告警（T50，HD-083）：每 5 分鐘，cluster scope。
+      name: "job.supplierMetrics",
+      lifecycle: "singleton",
+      dependencies: ["scheduler", "mysqldatabase", "logging", "time"]
+    },
+    {
       name: "time",
       lifecycle: "singleton",
       dependencies: []

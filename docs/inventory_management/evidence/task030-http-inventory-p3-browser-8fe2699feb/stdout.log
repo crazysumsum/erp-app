@@ -1,0 +1,12 @@
+
+Running 8 tests using 1 worker
+
+[1/8] [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:129:1 › TASK-029 @technical Inventory-only two-line Draft Dispatch Receive conserves real stock
+[2/8] [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:149:1 › TASK-029 @technical view-only actor sees real In Transit but no write controls
+[3/8] [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:156:1 › TASK-029 @technical no-Balance SKU remains selectable and insufficient Dispatch keeps Draft
+[4/8] [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:165:1 › TASK-029 @technical unknown SKU, invalid quantity and revoked token fail safely
+[5/8] [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:181:1 › TASK-029 @technical delayed real lookup cannot replace a newer explicitly chosen SKU
+[6/8] [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:195:1 › TASK-029 @technical stale Draft version returns 409 and retains unsaved quantity
+[7/8] [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:206:1 › TASK-029 @technical Quarantined full receipt requires reason and destination ownership
+[8/8] [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:224:1 › TASK-029 @technical keyboard lookup, unsaved close, responsive and URL refresh
+  8 passed (29.1s)

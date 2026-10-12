@@ -1,0 +1,33 @@
+--- a/docs/inventory_management/00_module_manifest.json
++++ b/docs/inventory_management/00_module_manifest.json
+@@ -68,7 +68,8 @@
+       "server/test/integration/migrations.integration.test.js",
+       "server/test/integration/passwordChange.integration.test.js",
+       "server/test/integration/roleManagement.integration.test.js",
+-      "server/test/integration/userManagement.integration.test.js"
++      "server/test/integration/userManagement.integration.test.js",
++      "server/test/supplierBankCrypto.test.js"
+     ],
+     "forbidden_paths": [
+       ".env",
+--- a/server/test/supplierBankCrypto.test.js
++++ b/server/test/supplierBankCrypto.test.js
+@@ -396,13 +396,17 @@
+   const context = crypto.newCryptoContext();
+   const sealed = crypto.encryptAccountNumber({ supplierId: 7, cryptoContext: context, accountNumber: ACCOUNT });
+ 
++  const flippedTag = Buffer.from(sealed.authTag);
++  flippedTag[0] ^= 1;
++  assert.notDeepEqual(flippedTag, sealed.authTag, "tampering must change the tag");
++
+   const malformed = [
+     ["truncated tag", { ...sealed, authTag: sealed.authTag.subarray(0, 8) }],
+     ["null tag", { ...sealed, authTag: null }],
+     ["null IV", { ...sealed, iv: null }],
+     ["truncated IV", { ...sealed, iv: sealed.iv.subarray(0, 11) }],
+     ["null ciphertext", { ...sealed, ciphertext: null }],
+-    ["flipped tag", { ...sealed, authTag: Buffer.from(sealed.authTag).fill(0, 0, 1) }]
++    ["flipped tag", { ...sealed, authTag: flippedTag }]
+   ];
+   for (const [what, row] of malformed) {
+     let thrown = null;

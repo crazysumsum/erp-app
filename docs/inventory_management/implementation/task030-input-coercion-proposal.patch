@@ -1,0 +1,83 @@
+*** Begin Patch
+*** Update File: /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/00_module_manifest.json
+@@
+     "approval_required_paths": [
+       "server/database/migrations/**",
+       "server/src/framework/configuration/applicationConfiguration.js",
++      "server/src/framework/api/apiDefinitionResolver.js",
++      "server/src/framework/middleware/apiDispatcher.js",
++      "server/src/framework/validation/requestValidator.js",
++      "server/test/apiDefinitionResolver.test.js",
++      "server/test/apiDispatcher.test.js",
++      "server/test/requestValidator.test.js",
+       "server/src/modules/authorization/permissionCatalogue.js",
+       "server/src/services/idempotency/**",
+       "server/src/modules/item/ItemLookupService.js",
+@@
+     "provided": [
+       {
+         "id": "inventory-domain-contract",
+-        "version": "planning-v10; TASK030 whole-document Bin Move with source/destination versions; other contracts unchanged",
++        "version": "planning-v11; TASK030 Bin Move route-only inputCoercion=false; other contracts unchanged",
+         "source": "docs/inventory_management/03_design_spec.md",
+-        "sha256": "0ff888aad84fcd9c99bcd90620ad3a7348f092ce91622525f37dfc6f2ee0784e",
++        "sha256": "acbdec75c9a357c5e02390d4bce8f8e9273064f6020c4d445edabb1f1ad5ae2d",
+         "consumers": [
+           "purchasing-receiving",
+           "sales-order",
+*** Update File: /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/03_design_spec.md
+@@
+ 
+ #### 5.4.1 Bin Move whole-document contract（TASK-030；HD107 A）
+ 
++HD109 A的最小相容擴充：Bin Move的static api設定inputCoercion=false，在schema驗證階段拒絕數字字串／boolean等非數字輸入，先於HTTP idempotency claim／cached replay及handler。這是選用的route metadata，只允許省略或literal false；省略沿用現有全域RequestValidator設定，true／null／string／object等非法設定須在啟動時拒絕，不能靜默轉型或重新啟用全域已停用的驗證。僅Bin Move選用；其他既有API的params／query／body轉型、defaults、trim、unknown-field及錯誤格式均保持原有政策。
++
++沿用API definition resolver→dispatcher→RequestValidator.compile流程；compile接受可省略的第三參數{coerceTypes:false}，只於route編譯時建立同配置但不轉型的validator，不修改共用instance或每request重建。保留原global validation.enabled、allErrors、useDefaults、removeAdditional、錯誤detail／上限等設定；不修改shared auth／Idempotency Service、全域request config或新增dependency。六個shared框架／測試精確路徑列於manifest approval_required_paths，使用新PLAN綁定的Sam scope批准；對其他route的相容性及嚴格route在cache前拒絕的順序須有框架回歸及real Bin Move HTTP／MySQL證據。
++
+ `POST /api/v1/inventory/bin-moves`使用既有JWT、`inventory.view`＋`inventory.operation`及API idempotency框架；handler從已認證claims建立actor，固定domain purpose=`bin_move.post`／requiredCallerPermission=`inventory.operation`。Domain提交及重送前均沿用fresh authorization，不接受body自報actor／permission。
+ 
+ Request body只接受`{source,warehouseId,reason?,lines}`，沿用既有完整source tuple及安全字串限制；reason可省略，trim後最多500 UTF-8 bytes，不接受control／DEL。`lines`為1～100行；每行只接受`{sourceBalanceId,destinationBinId,quantity,expectedSourceVersion,expectedDestinationVersion}`。IDs／quantity／非null versions均為positive safe integers；quantity明確是來源SKU的Base UOM，不接受Pack轉換或另一UOM。`expectedDestinationVersion`必填：positive version表示預期已有Bucket；explicit `null`表示預期該完整目的Bucket不存在，省略或把null當免檢均拒絕。未知fields及非法shape依既有schema／domain輸入錯誤拒絕。
+*** Update File: /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/05_development_tasks.md
+@@
+ 
+ **Description：** 實作同 Warehouse兩 Active Bins之間指定 SKU/Lot/Status的原子 Move，產生成對 OUT/IN legs且不改總 On Hand。
+ 依Design §5.4.1／HD107 A實作1～100行whole-document service＋HTTP handler；版本涵蓋來源及目的Bucket（explicit null僅指預期不存在），共用Bucket按整份操作snapshot及gross OUT驗證。SKU／Lot／Status／Base UOM由source派生，不新增schema／權限／依賴或TASK033 UI。
++依HD109 A追加僅Bin Move選用的inputCoercion=false，沿用resolver／dispatcher／RequestValidator compile；省略維持global既有行為，非法metadata啟動拒絕。只擴充manifest列出的三個framework source及三個回歸test路徑，不改全域設定或其他route政策；先取得精確新DESIGN／PLAN及shared-path scope批准，才實作和執行新source驗證。
+ 
+ **Traceability：** Design §§3.3、3.8、5.4；FR-MOVE-001～007、BR-023、AC-028～029。
+ 
+@@
+ 
+ **Verification（納入 P3-GATE）：** Bin Move service/handler/integration、reserved protection及 concurrency tests。
+ 沿用已配置Posting service/handler與Inventory developer回歸、real API及`inventoryMovement.integration.test.js`；最低discovery／zero-skip／coverage floors／CI政策不變。TASK030 developer結果只證明Bin Move增量，不宣告尚未實作的Adjustment／Status／Reversal或full-P3完成；formal TC／UAT維持NOT_RUN直到獨立執行。
++既有完整server root suite包含新增的apiDefinitionResolver／apiDispatcher／requestValidator相容性回歸；configured P3 real API suite新增Bin Move成功、非法型別／source／versions、HTTP cache前拒絕、domain replay、權限／零DB效果案例。沿用原argv／parser／min_tests／zero-skip／34 floors與full-P3 gate；新source／PLAN令既有證據變成歷史，必須重跑適用developer suites，不重綁舊PASS。
+ 
+ **Dependencies：** P2-GATE、P0-T07。
+ 
+@@
+ 
+ ### Approach
+ Implement only the scope and dependencies of legacy task `P3-T05` inside `PHASE-004` using the design decisions mapped in `08_traceability.json`.
+-Implement §5.4.1 whole-document Bin Move using existing Posting/Operation/Lock ownership, handler/schema conventions and configured developer checks; no migration, permission, dependency, generic framework or frontend expansion. Preserve mandatory future P3 checks and historical source-bound evidence.
++Implement §5.4.1 whole-document Bin Move using existing Posting/Operation/Lock ownership, handler/schema conventions and configured developer checks. HD109 A additionally permits only the narrowly scoped route-level inputCoercion=false extension and six exact shared source/test paths after current DESIGN/PLAN and scope approval; other routes/global request configuration remain unchanged. No migration, permission, dependency, generic framework or frontend expansion. Preserve mandatory future P3 checks and historical source-bound evidence.
+ 
+ ### Acceptance criteria
+ - 來源/目的不同且同 Warehouse；SKU/Lot/Status保持不變；quantity使用 Base UOM正整數。
+ - 不可移走 allocated quantity或令 eligible stock低於 Reserved；任一 Bin locked時拒絕。
+ - paired legs共用 group，任何失敗零 Balance/Movement/Audit半套；version/source重送語意正確。
+ - 1～100 lines全部成功或回滾；來源及目的expected versions按locked起始snapshot驗證，null只代表目的不存在；shared Bucket gross OUT／overflow／一致版本、並發建立目的及撤權重送均有實際developer證據。
++- Bin Move的HTTP schema在冪等claim／cached replay及handler前拒絕numeric strings／booleans；其他route的既有轉型及validation政策不變，非法inputCoercion metadata啟動拒絕。Framework regression＋real HTTP／MySQL須同source／PLAN通過。
+ 
+ ### Definition of Done
+ The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+*** Update File: /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/06_technical_test_cases.md
+@@
+ | Scenario／priority | Preconditions／synthetic data | Steps／input | Expected result | Required evidence | Status |
+ | --- | --- | --- | --- | --- | --- |
+ | Move-document P0 | Active W-A的A1/A2/A3；none／batch／batch_expiry及三種Status；source10／allocated2／Reserved8；部分目的不存在 | 兩行以上Base UOM Move；再查Balance／group／Audit／Operation及source replay | 全部paired BIN_MOVE legs同Operation/group；每維度總量守恆；來源合法free減量、目的等量增加；Reserved／Allocation不變，200 whitelist／FIFO anchors正確；目的可原子建立 | Service/handler assertions、real MySQL before/after ledger及real HTTP response | NOT_RUN |
+-| Move-input P1 | 合法source tuple及Bucket fixture | 0／101行、unknown fields、missing/null source version、omitted destination version、null/positive destination mismatch、非法IDs／quantity／超長或control reason；嘗試改SKU/Lot/Status/UOM | Strict boundary拒絕；null不能免檢；dimensions不能被替換；無Balance／Movement／成功Audit／Operation半套 | Schema/domain assertions、real API錯誤／安全body及DB zero-effects | NOT_RUN |
++| Move-input P1 | 合法source tuple及Bucket fixture；strict Bin Move及另一未選用route；已成功HTTP key cache | 0／101行、unknown fields、missing/null source version、omitted destination version、null/positive destination mismatch、ID／quantity／versions的numeric strings／booleans、非法IDs／quantity／超長或control reason；嘗試改SKU/Lot/Status/UOM；用已成功key重送型別非法body；非法inputCoercion metadata啟動 | Bin Move在schema/cache/handler前拒絕非數字；null不能免檢；dimensions不能被替換；無Balance／Movement／成功Audit／Operation半套；其他route維持原轉型/defaults/trim/unknown-field政策；metadata僅省略或false，其餘啟動失敗 | Schema/domain與三個shared framework regression；real API安全body、cache前拒絕及DB zero-effects | NOT_RUN |
+ | Move-ownership-lock P0 | 同Bin／cross-Warehouse／inactive或missing Bin／SKU及合法Lot；来源或目的Counting signal | 每一不合法行放在合法行後，提交whole document | 所有權／profile／同Bin／任一active lock皆拒絕整份；不得把缺表或query故障普遍當unlocked | Unit + real MySQL/HTTP rollback；P4未交付時注入lock signal須明列限制，不宣告real Stocktake workflow PASS | NOT_RUN |
+ | Move-shared-bucket P0 | source10 allocated3；兩行OUT各4至不同目的；另有共享目的及source同時是另一行destination | 測gross OUT不足、不能用IN抵OUT、expected versions互相矛盾、shared destination safe-integer overflow及合法shared stock | 不足／overflow／不一致全部回滾；合法合計成功，leg before/after/version連續；永不移走allocated量 | Deterministic unit／real MySQL前後完整snapshot與paired-leg reconciliation | NOT_RUN |
+ | Move-reserved-expiry P0 | 同倉有效Reserved但未Allocation；有因時間流逝既存uncovered／expired Lot | 合法同倉保維度Move；比較當下eligible／Reserved／uncovered，另提交會移走Allocation的量 | 合法守恆Move不改Reserved／eligible／既存uncovered；不新增全面coverage前置門檻，過量／allocated OUT拒絕；不改效期或Reservation policy | Fixed-date unit + real MySQL eligible/Reserved/Allocation before-after | NOT_RUN |
+*** End Patch

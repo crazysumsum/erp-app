@@ -1,0 +1,57 @@
+--- a/docs/inventory_management/00_project_profile.json
++++ b/docs/inventory_management/00_project_profile.json
+@@ -733,9 +733,6 @@
+         "--import",
+         "./test-support/testEnv.js",
+         "--experimental-test-coverage",
+-        "--test-coverage-lines=92",
+-        "--test-coverage-branches=83",
+-        "--test-coverage-functions=90",
+         "--test-reporter=junit",
+         "--test-reporter-destination={run_dir}/inventory-p3-server-coverage.xml",
+         "--test-reporter=lcov",
+@@ -764,8 +761,22 @@
+       "side_effects": [
+         "FILES"
+       ],
+-      "env_keys": [],
+-      "redaction_env_keys": []
++      "env_keys": [
++        "SUPPLIER_BANK_ACTIVE_KEY_ID",
++        "SUPPLIER_BANK_ENCRYPTION_KEYS",
++        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
++        "SUPPLIER_BANK_LOOKUP_KEYS",
++        "CUSTOMER_BANK_ACTIVE_KEY_ID",
++        "CUSTOMER_BANK_ENCRYPTION_KEYS",
++        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
++        "CUSTOMER_BANK_LOOKUP_KEYS"
++      ],
++      "redaction_env_keys": [
++        "SUPPLIER_BANK_ENCRYPTION_KEYS",
++        "SUPPLIER_BANK_LOOKUP_KEYS",
++        "CUSTOMER_BANK_ENCRYPTION_KEYS",
++        "CUSTOMER_BANK_LOOKUP_KEYS"
++      ]
+     },
+     {
+       "id": "inventory-p3-coverage-floors",
+--- a/docs/inventory_management/05_development_tasks.md
++++ b/docs/inventory_management/05_development_tasks.md
+@@ -1414,7 +1414,7 @@
+ | `inventory-p3-transfers-client` | Draft／In Transit／Receive、quantity／line-set／Bin 驗證與 conflict states | 4 | TASK-029 |
+ | `inventory-p3-movements-client` | 完整 group／reversal 雙向追溯、eligible action 與錯誤 states | 4 | TASK-033 |
+ | `inventory-p3-adjustments-client` | 高風險 reason／reauth／timeout、permission 與敏感 state 不保存 | 4 | TASK-033 |
+-| `inventory-p3-server-coverage` | 全 server root unit regression；92% lines／83% branches／90% functions；108 是既有 Inventory 最低 leaf floor，不是預測總數 | 108 | 完整 Phase |
++| `inventory-p3-server-coverage` | 全 server root unit regression、strict JUnit 與原始 LCOV；全部既有 assertions、108 leaf floor、zero-skip 與每檔高風險 floors 保留；全域 92／83／90 改由下述完整 server coverage 判定，不再要求 root-only LCOV 獨立達標 | 108 | 完整 Phase |
+ | `inventory-p3-coverage-floors` | 既有全部高風險 per-file coverage floors，消費當輪已核對 hash 的 LCOV | 0 | 完整 Phase |
+ | `inventory-p3-client-coverage` | 全 client regression／coverage；保留 Vitest 設定；baseline 687 leaves 下限 | 687 | 完整 Phase |
+ | `inventory-p3-dependency-audit` | 既有 npm audit --audit-level=high；非測試的靜態相依檢查 | 0 | 完整 Phase |
+@@ -1427,7 +1427,7 @@
+ 
+ 到完整 P3 cycle 時，P2 的 `erp_inventory_task025_*` regression、TASK-026 migration 與每項 P3 DB/API fixture 各有自己的合成 schema；保持既有 guard，不把不同 test-owned namespace 強行共用。P3 DB/API suite 必須檢查實際 server version 26.7.0、socket／schema ownership 與 `skip_networking=1`，使用新 `erp_inventory_p3_*` schemas；API test 必須驗證真成功效果與拒絕後零差異，不能只有負向驗證。新增 migration 後，P2 API 的既有 migration-history assertion 須按真實最新 migration 列表更新並重跑；不沿用舊 66-row 結果作新 baseline 證據。
+ 
+-Server coverage 執行全部 `server/test/*.test.js`，保留現有 92／83／90 floors，不加 coverage-exclude、不改高風險 per-file floors。Guarded DB integration 不在此 unit discovery；它們由上述 zero-skip 真 DB/API suites 另行執行。原 §5.4 的全專案 `npm run test:coverage` 仍是 Phase 必測命令，不能以這個 zero-skip unit coverage suite 取代；其中任何 guard skip 必須逐一分類並指向本輪獨立非 skip 的適用 DB 證據，缺少任何必測 evidence 就不通過。額外影響到的 Item／Auth／shared migration consumer regression 仍按設計及實際 diff 執行。
++Server root unit 執行全部 `server/test/*.test.js`，保留 strict JUnit、非零 discovery、全部 assertions、`max_skipped=0`、原始 LCOV 及全部高風險 per-file floors；允許傳入新鮮合成 Customer／Supplier Bank rings 並 redaction，無 DB enable flags 或真實 keys。全域 92% lines／83% branches／90% functions 固定由既有完整 `npm run test:coverage --workspace server`（含適用 DB integration）判定；取消 root-only LCOV 也須獨立達到相同全域百分比的重複條件，這是經 Sam 精確 PLAN 批准後才可生效的驗證準則變更，不是格式修正。不得加 coverage-exclude、降低任何完整 server／client 或 per-file 數字、改斷言或用 skip 取得通過。Guarded DB integration 的 test-owned namespaces／guards 不改；完整命令的任何 guard skip 必須逐一分類並指向同 source／PLAN、本輪獨立非 skip 的適用 DB／capacity／release evidence，缺少任何必測 evidence 就不通過。完整 `npm run test:coverage`（含 client）仍是 Phase 必測命令；native SPEC exit0 不是 strict JUnit／formal acceptance 證據，Customer mixed-ID 與任何其他 parser 阻擋須另行修復／實測。現有 14 項 skip、舊 fix-worktree coverage、舊 PLAN 或其他模組 TC 不可充作本輪 Inventory PASS。額外影響到的 Item／Auth／shared migration consumer regression 仍按設計及實際 diff 執行。
+ 
+ Coverage-floors 在本輪 server coverage 成功後執行：先將新 evidence run 內原始 `server-coverage.lcov` 按位元複製到 ignored `server/coverage/lcov.info`，核對 SHA-256 相等、source／PLAN baseline 相同、該 worktree 沒有競爭 writer，再執行既有 `checkCoverageFloors.js`。保存原始 LCOV 到 producer evidence，記錄 producer→consumer/hash 關係；舊報告或未知 producer 不算 PASS。Client coverage 執行全部 client tests，不刪除原有 tests、不改 coverage include 或設定。
+ 

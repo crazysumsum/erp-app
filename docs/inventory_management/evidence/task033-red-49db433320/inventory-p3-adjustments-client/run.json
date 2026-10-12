@@ -1,0 +1,70 @@
+{
+  "schema_version": "2.0",
+  "module_id": "inventory-management",
+  "run_id": "task033-red-49db433320-inventory-p3-adjustments-client",
+  "suite_id": "inventory-p3-adjustments-client",
+  "stage": "DEVELOPER",
+  "result": "FAIL",
+  "spec_baseline": "997d8de40da4f362ef23d81cd57c2a65b8e096d64109a12ddc4ee738f5ff791a",
+  "source_fingerprint": "6a9ab30f8bfcb5e68d1090dd8c8f5268cd4d576b5020f6ef07a10483a09afb29",
+  "code_commit": "869ac07abdd3879254c351d857be911d71e68b6b",
+  "started_at": "2026-10-08T07:40:34.859422+00:00",
+  "ended_at": "2026-10-08T07:40:36.567798+00:00",
+  "environment_id": "inventory-isolated-test",
+  "runtime_instance_id": "TASK033-NATIVE-NONDB",
+  "data_reference": "Synthetic Inventory fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "npm",
+    "test",
+    "--workspace",
+    "client",
+    "--",
+    "test/pages/inventory/inventoryAdjustments.test.js",
+    "--reporter=junit",
+    "--outputFile=/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/task033-red-49db433320/inventory-p3-adjustments-client/inventory-p3-adjustments-client.xml"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "7e4d66d39d0ce7f7ba85202228cf96419f3adff1277de3ccabfa6534279cf9ba",
+  "exit_code": 1,
+  "timed_out": false,
+  "counts": {
+    "total": 24,
+    "passed": 22,
+    "failed": 2,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/task033-red-49db433320/inventory-p3-adjustments-client/inventory-p3-adjustments-client.xml",
+      "sha256": "24733ef005aae09b75afc39b334b8019a7a02138b1c08b448e59496a653e741b",
+      "bytes": 13262
+    },
+    {
+      "path": "evidence/task033-red-49db433320/inventory-p3-adjustments-client/stderr.log",
+      "sha256": "ca6fbf2a8627fffacb3eec80370c35551dbf8da3722cce8f9edf3833965adf1c",
+      "bytes": 1224
+    },
+    {
+      "path": "evidence/task033-red-49db433320/inventory-p3-adjustments-client/stdout.log",
+      "sha256": "8b8957f77f91c20cca8e70622dfa46bac34b6d1266de75d648c3a6045bd6fc8d",
+      "bytes": 516
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "Approved TASK033 non-DB thin-increment native command; no MySQL/browser/final task acceptance/current CI/formal acceptance inferred. Generic runtime gate requires unrelated DB/ports, so this native record truthfully declares workspace only. Expected TDD RED retained, not PASS."
+  ]
+}

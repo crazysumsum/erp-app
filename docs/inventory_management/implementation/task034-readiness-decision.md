@@ -1,0 +1,39 @@
+# TASK-034 — integrated warehouse verification readiness / HD133
+
+Current disposition (HD135 approved): actual Sam 「批准」 recorded as HUMAN REV104 / APR183. TASK034 is DONE locally on exact source `0cbbea162a3e377df50214fd63b2484b0585d68a2be8dc52ee1615d8b013178c`, HEAD `869ac07abdd3879254c351d857be911d71e68b6b`, unchanged DESIGN `b1f4b54a95945c84d55e7828620b538830820dd140be2d15ef38b2695fb4abb4` / approved PLAN `6e27b339efb827ff8a2bb0c8ce82242f86c577f29bb4510b20884e854f456aac`, two-file test patch `6b3a892a95d816a38f0920fe0fef91dd55c5ebd558961860c5e20fa44da00429`. All22 original native developer contracts and12 INT034 families, five cleared screenshot hashes, writer inventory and historical reports reverified; tests were not rerun or relabelled. TASK026–034 are locallyDONE; P3 phase/integration readiness is not asserted. All326 pinned historical reports/348 indexed refs and original review JSON/patch retained. No publication/CI/PR/merge/main/future implementation/formal acceptance or capacity waiver. Earlier pending handoff below is historical context; this disposition and Harness state record the approval.
+
+Current disposition — HD134 ANSWERED: actual Sam A / HUMAN REV102 / APR181–182 adopted exact TASK034 four-file candidate; [adoption](task034-candidate-adoption.md). New PLAN 6e27b339efb827ff8a2bb0c8ce82242f86c577f29bb4510b20884e854f456aac, unchanged DESIGN/source. TASK034 test-only IMPLEMENTING;12 cases NOT_RUN; final source review pending. Historical pending text below retained. No product/shared/runtime change at adoption; no publication/formal/capacity authority.
+
+Current disposition — HD133 ANSWERED / APR180 actual Sam A (direction only). Exact TASK034 four-file/48-link/12-case/test-only candidate is ready; HD134 OPEN and PROPOSED_NOT_APPLIED. See [proposal](task034-contract-proposal.md) and its exact canonical patch/pins. Current source/DESIGN/PLAN unchanged; no new execution, publication or acceptance;326 historical evidence refs retained.
+
+## Status and observed baseline
+
+DECISION_REQUIRED. Actual Sam 「繼續」 on 2026-10-09 starts TASK034 discovery after independent local TASK033 approval. TASK026–033 stay locally DONE; TASK034 is IN_PROGRESS for discovery only, module BLOCKED with resume IMPLEMENTING. No product/test/canonical specification change, new runtime or test execution occurred.
+
+HEAD `869ac07abdd3879254c351d857be911d71e68b6b`; source `b56886894f758852f366ff95b4bdd77e8c34a5076e94da5763de6d500283c768`; DESIGN `b1f4b54a95945c84d55e7828620b538830820dd140be2d15ef38b2695fb4abb4`; PLAN `997d8de40da4f362ef23d81cd57c2a65b8e096d64109a12ddc4ee738f5ff791a`. All326 existing evidence references remain historical/current evidence of their original scope, not TASK034 execution proof. The primary checkout is clean and the dirty unmerged dedicated P3 worktree is preserved.
+
+## Confirmed semantic mismatch and test gap
+
+The canonical [TASK034 goal and acceptance](../05_development_tasks.md#task-034--完成倉務操作整合並發及安全驗收-legacy-p3-t09) and legacy P3-T09 require Bin Move, Transfer, Adjustment, Status and Reversal atomicity/concurrency/security/reconciliation, AC018 immutable Issue correction and AC022 unallocated Reserved conserving Bin movement. Dependencies in legacy prose are P3-T01–T08.
+
+The typed [ledger](../08_traceability.json) TASK034 record currently links only FR063 (same-Warehouse Bin Move), DES005 and TC006, depending directly only on TASK033. It does not express the Adjustment/Status/Reversal, concurrency or security coverage demanded by the narrative. Structural graph validation passing does not resolve this semantic omission. TASK033 already has earlier Tasks as transitive prerequisites, so direct-dependency clarification alone is not evidence of broken execution order; the substantive problem is incomplete requirement/design/test coverage.
+
+The existing [TASK028 native concurrency case](../../../server/test/integration/inventoryTransfer.integration.test.js) starts On Hand10, reserves/allocates4, and races Issue4 against Dispatch7. It asserts Issue succeeds, Dispatch rejects, final On Hand6 and no Transfer posting. This is useful protection evidence but not the exact TASK034 Issue7/Dispatch7 scenario. Existing Adjustment races, paired/reversal rollback, ownership/revocation/replay and browser XSS cases must be mapped to their actual assertions; old aggregate counts cannot establish the remaining integration acceptance. The [Movement integration suite](../../../server/test/integration/inventoryMovement.integration.test.js) also contains a direct UPDATE rejection assertion and immutable-row comparison; its exact rejection cause and sufficient UPDATE/DELETE coverage must be checked, not inferred from any rejected query.
+
+P3-GATE additionally requires a documented inventory of all Bin On Hand writers for later P4 lock coverage. That inventory is documentation of current handlers/internal services, not authority to implement Stocktake or claim persistent P4 locks are working. Existing synthetic lock-signal limitations remain explicit.
+
+## A — recommended: reconcile intended coverage, then implement only missing checks
+
+Prepare an exact reviewable TASK034 candidate: reconcile requirement/design/TC links and inverse links in the existing ledger, regenerate its matrix, clarify prerequisites and local developer DoD in the canonical plan, and map named deterministic integration/security/reconciliation cases to existing native suites. Cover the existing five operations and stated AC018/AC022 acceptance, including exact Issue7/Dispatch7, same-version Adjustment, whole rollback, immutable correction, ownership/replay/revocation/XSS protections and current writer inventory. Reuse already verified tests where their assertions genuinely cover a criterion; add or strengthen only missing tests. Do not add business functions, relax assertions/counts/floors/skips/timeouts or silently alter permissions, public APIs, security, DDL, dependencies or shared code.
+
+Benefit: completion will be judged against the full originally written TASK034 scope rather than the truncated typed graph. Cost: PLAN changes, so applicable evidence must be executed/reverified against that new approved PLAN and actual source; no old report is relabelled. Direction A authorizes candidate preparation only. The exact changed specification/profile/path scope still needs actual Sam approval before adoption and implementation; final source review remains separate.
+
+## B — hold for Sam's mapping correction
+
+Retain current specs/source and keep TASK034 BLOCKED while Sam supplies a different intended mapping or scope. This avoids choosing a replacement plan but does not complete TASK034. Restricting completion to TC006 alone would silently omit written mandatory behavior and is not offered as an acceptance shortcut.
+
+## Boundary and next safe action
+
+Recommend A; default without a choice is B/hold. Until actual decision, only unaffected read-only discovery may continue. No canonical adoption, new test/product/runtime execution, TASK034 DONE/full-P3 readiness, commit/push/PR/currentCI/merge/main integration, formalTC/UAT/business/release or capacity waiver follows from this discovery. The four capacity checks remain NOT_EXECUTED and their existing gates are not deferred or waived by this proposal. Local-resource standing authority remains usable after exact scope approval; no repeated resource-only approval is requested.
+
+Harness traceability and major-impact rules cause this pause because changing the mandatory coverage baseline is consequential. Planning/documentation skills keep the correction in the existing module artifacts, not a parallel task ledger. No existing Graphify graph is present; bounded direct source tracing was used without installing tools or generating a new out-of-scope repository graph.

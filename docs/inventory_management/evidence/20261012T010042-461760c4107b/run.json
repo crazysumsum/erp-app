@@ -1,0 +1,80 @@
+{
+  "schema_version": "2.0",
+  "module_id": "inventory-management",
+  "run_id": "20261012T010042-461760c4107b",
+  "suite_id": "inventory-p3-browser-regression",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "c145c025eae94a1570d1bd05a872da53335b931f9ea0f695595d02ddef258908",
+  "source_fingerprint": "3cdc51c462840f24f5a221218a928e795600de865f35042f2a087622cee9679e",
+  "code_commit": "f51175e7b62623e50429232cf0aaf580a49461d9",
+  "started_at": "2026-10-12T01:00:42.675541Z",
+  "ended_at": "2026-10-12T01:01:02.540033Z",
+  "environment_id": "inventory-isolated-test",
+  "runtime_instance_id": "erp-inventory-p3-hd140-rd02hhpl",
+  "data_reference": "Synthetic Inventory fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "npx",
+    "--no-install",
+    "playwright",
+    "test",
+    "--config",
+    "client/e2e/inventory-management/playwright.config.js",
+    "inventory-warehouses.spec.js",
+    "inventory-inquiries.spec.js",
+    "inventory-reservations.spec.js"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "70dd10f9ccf457a4b9dca4dce36170de081519d4c521a6abf268a5c0470c1c3f",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 18,
+    "passed": 18,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [
+    {
+      "id": "TC-021",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-022",
+      "status": "PASS"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "evidence/20261012T010042-461760c4107b/stdout.log",
+      "sha256": "f852fa1919a7703b7909e89572b824b950a46c7af7544f8829659af2013309af",
+      "bytes": 3086
+    },
+    {
+      "path": "evidence/20261012T010042-461760c4107b/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/20261012T010042-461760c4107b/inventory-p3-browser-regression.xml",
+      "sha256": "e94765c62f918d134f1b6aec7dc70f321c8a6ba654acf139eca11daa07bd4210",
+      "bytes": 3498
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "Local observation only; external services/config/data and secret redaction completeness require review."
+  ]
+}

@@ -1,0 +1,793 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="TASK-027 real Draft creation stores canonical SKU/Lot snapshots with zero stock effects" time="0.161332" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="Unknown column 'su.id' in 'field list'">
+		<failure type="testCodeFailure" message="Unknown column 'su.id' in 'field list'">
+[Error [ERR_TEST_FAILURE]: Unknown column 'su.id' in 'field list'] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: Error: Unknown column 'su.id' in 'field list'
+      at #loadUomRows (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:337:35)
+      at ItemLookupService.getInventoryProfileInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:267:44)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async #references (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:132:23)
+      at async InventoryTransferService.createInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:203:24)
+      at async Object.withTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:82:55)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:128:18)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    code: 'ER_BAD_FIELD_ERROR',
+    errno: 1054,
+    sqlState: '42S22',
+    sqlMessage: "Unknown column 'su.id' in 'field list'",
+    sql: 'SELECT su.id, su.sku_id, su.uom_id, su.version, u.code AS uom_code,\n              u.name AS uom_name, u.status AS uom_status, u.version AS uom_version, su.to_base_factor, su.is_base,\n              su.is_default_purchase, su.is_default_sale\n         FROM item_sku_uoms su\n         JOIN item_uoms u ON u.id = su.uom_id\n        WHERE su.sku_id IN (12)'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-027 complete replacement preserves owned IDs, reorders, removes and adds atomically" time="0.001335" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="Unknown column 'su.id' in 'field list'">
+		<failure type="testCodeFailure" message="Unknown column 'su.id' in 'field list'">
+[Error [ERR_TEST_FAILURE]: Unknown column 'su.id' in 'field list'] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: Error: Unknown column 'su.id' in 'field list'
+      at #loadUomRows (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:337:35)
+      at ItemLookupService.getInventoryProfileInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:267:44)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async #references (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:132:23)
+      at async InventoryTransferService.createInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:203:24)
+      at async Object.withTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:82:55)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:141:18)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    code: 'ER_BAD_FIELD_ERROR',
+    errno: 1054,
+    sqlState: '42S22',
+    sqlMessage: "Unknown column 'su.id' in 'field list'",
+    sql: 'SELECT su.id, su.sku_id, su.uom_id, su.version, u.code AS uom_code,\n              u.name AS uom_name, u.status AS uom_status, u.version AS uom_version, su.to_base_factor, su.is_base,\n              su.is_default_purchase, su.is_default_sale\n         FROM item_sku_uoms su\n         JOIN item_uoms u ON u.id = su.uom_id\n        WHERE su.sku_id IN (12)'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-027 stale header and retained-line versions have no effects" time="0.000891" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="Unknown column 'su.id' in 'field list'">
+		<failure type="testCodeFailure" message="Unknown column 'su.id' in 'field list'">
+[Error [ERR_TEST_FAILURE]: Unknown column 'su.id' in 'field list'] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: Error: Unknown column 'su.id' in 'field list'
+      at #loadUomRows (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:337:35)
+      at ItemLookupService.getInventoryProfileInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:267:44)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async #references (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:132:23)
+      at async InventoryTransferService.createInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:203:24)
+      at async Object.withTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:82:55)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:153:18)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    code: 'ER_BAD_FIELD_ERROR',
+    errno: 1054,
+    sqlState: '42S22',
+    sqlMessage: "Unknown column 'su.id' in 'field list'",
+    sql: 'SELECT su.id, su.sku_id, su.uom_id, su.version, u.code AS uom_code,\n              u.name AS uom_name, u.status AS uom_status, u.version AS uom_version, su.to_base_factor, su.is_base,\n              su.is_default_purchase, su.is_default_sale\n         FROM item_sku_uoms su\n         JOIN item_uoms u ON u.id = su.uom_id\n        WHERE su.sku_id IN (12)'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-027 cross-owner child IDs cannot be moved or deleted" time="0.000916" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="Unknown column 'su.id' in 'field list'">
+		<failure type="testCodeFailure" message="Unknown column 'su.id' in 'field list'">
+[Error [ERR_TEST_FAILURE]: Unknown column 'su.id' in 'field list'] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: Error: Unknown column 'su.id' in 'field list'
+      at #loadUomRows (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:337:35)
+      at ItemLookupService.getInventoryProfileInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:267:44)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async #references (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:132:23)
+      at async InventoryTransferService.createInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:203:24)
+      at async Object.withTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:82:55)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:160:17)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    code: 'ER_BAD_FIELD_ERROR',
+    errno: 1054,
+    sqlState: '42S22',
+    sqlMessage: "Unknown column 'su.id' in 'field list'",
+    sql: 'SELECT su.id, su.sku_id, su.uom_id, su.version, u.code AS uom_code,\n              u.name AS uom_name, u.status AS uom_status, u.version AS uom_version, su.to_base_factor, su.is_base,\n              su.is_default_purchase, su.is_default_sale\n         FROM item_sku_uoms su\n         JOIN item_uoms u ON u.id = su.uom_id\n        WHERE su.sku_id IN (12)'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-027 invalid last-line Bin or SKU/Lot ownership rolls back the whole document" time="0.000810" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="Unknown column 'su.id' in 'field list'">
+		<failure type="testCodeFailure" message="Unknown column 'su.id' in 'field list'">
+[Error [ERR_TEST_FAILURE]: Unknown column 'su.id' in 'field list'] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: Error: Unknown column 'su.id' in 'field list'
+      at #loadUomRows (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:337:35)
+      at ItemLookupService.getInventoryProfileInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:267:44)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async #references (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:132:23)
+      at async InventoryTransferService.createInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:203:24)
+      at async Object.withTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:82:55)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:167:18)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    code: 'ER_BAD_FIELD_ERROR',
+    errno: 1054,
+    sqlState: '42S22',
+    sqlMessage: "Unknown column 'su.id' in 'field list'",
+    sql: 'SELECT su.id, su.sku_id, su.uom_id, su.version, u.code AS uom_code,\n              u.name AS uom_name, u.status AS uom_status, u.version AS uom_version, su.to_base_factor, su.is_base,\n              su.is_default_purchase, su.is_default_sale\n         FROM item_sku_uoms su\n         JOIN item_uoms u ON u.id = su.uom_id\n        WHERE su.sku_id IN (12)'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-027 Draft cancellation retains lines and records actor/time/reason/Audit" time="0.000720" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="Unknown column 'su.id' in 'field list'">
+		<failure type="testCodeFailure" message="Unknown column 'su.id' in 'field list'">
+[Error [ERR_TEST_FAILURE]: Unknown column 'su.id' in 'field list'] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: Error: Unknown column 'su.id' in 'field list'
+      at #loadUomRows (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:337:35)
+      at ItemLookupService.getInventoryProfileInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:267:44)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async #references (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:132:23)
+      at async InventoryTransferService.createInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:203:24)
+      at async Object.withTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:82:55)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:175:18)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    code: 'ER_BAD_FIELD_ERROR',
+    errno: 1054,
+    sqlState: '42S22',
+    sqlMessage: "Unknown column 'su.id' in 'field list'",
+    sql: 'SELECT su.id, su.sku_id, su.uom_id, su.version, u.code AS uom_code,\n              u.name AS uom_name, u.status AS uom_status, u.version AS uom_version, su.to_base_factor, su.is_base,\n              su.is_default_purchase, su.is_default_sale\n         FROM item_sku_uoms su\n         JOIN item_uoms u ON u.id = su.uom_id\n        WHERE su.sku_id IN (12)'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-027 read queries expose versions, stable paging and four states without mutations" time="0.000764" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="Unknown column 'su.id' in 'field list'">
+		<failure type="testCodeFailure" message="Unknown column 'su.id' in 'field list'">
+[Error [ERR_TEST_FAILURE]: Unknown column 'su.id' in 'field list'] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: Error: Unknown column 'su.id' in 'field list'
+      at #loadUomRows (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:337:35)
+      at ItemLookupService.getInventoryProfileInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:267:44)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async #references (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:132:23)
+      at async InventoryTransferService.createInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:203:24)
+      at async Object.withTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:82:55)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:189:20)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    code: 'ER_BAD_FIELD_ERROR',
+    errno: 1054,
+    sqlState: '42S22',
+    sqlMessage: "Unknown column 'su.id' in 'field list'",
+    sql: 'SELECT su.id, su.sku_id, su.uom_id, su.version, u.code AS uom_code,\n              u.name AS uom_name, u.status AS uom_status, u.version AS uom_version, su.to_base_factor, su.is_base,\n              su.is_default_purchase, su.is_default_sale\n         FROM item_sku_uoms su\n         JOIN item_uoms u ON u.id = su.uom_id\n        WHERE su.sku_id IN (12)'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-027 create/update/cancel replay original receipts after later mutations; conflicts reject" time="0.001074" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="Unknown column 'su.id' in 'field list'">
+		<failure type="testCodeFailure" message="Unknown column 'su.id' in 'field list'">
+[Error [ERR_TEST_FAILURE]: Unknown column 'su.id' in 'field list'] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: Error: Unknown column 'su.id' in 'field list'
+      at #loadUomRows (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:337:35)
+      at ItemLookupService.getInventoryProfileInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:267:44)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async #references (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:132:23)
+      at async InventoryTransferService.createInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:203:24)
+      at async Object.withTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:82:55)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:211:18)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    code: 'ER_BAD_FIELD_ERROR',
+    errno: 1054,
+    sqlState: '42S22',
+    sqlMessage: "Unknown column 'su.id' in 'field list'",
+    sql: 'SELECT su.id, su.sku_id, su.uom_id, su.version, u.code AS uom_code,\n              u.name AS uom_name, u.status AS uom_status, u.version AS uom_version, su.to_base_factor, su.is_base,\n              su.is_default_purchase, su.is_default_sale\n         FROM item_sku_uoms su\n         JOIN item_uoms u ON u.id = su.uom_id\n        WHERE su.sku_id IN (12)'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-027 audit failure rolls back real create, replacement and cancellation transactions" time="0.000689" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="Unknown column 'su.id' in 'field list'">
+		<failure type="testCodeFailure" message="Unknown column 'su.id' in 'field list'">
+[Error [ERR_TEST_FAILURE]: Unknown column 'su.id' in 'field list'] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: Error: Unknown column 'su.id' in 'field list'
+      at #loadUomRows (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:337:35)
+      at ItemLookupService.getInventoryProfileInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:267:44)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async #references (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:132:23)
+      at async InventoryTransferService.createInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:203:24)
+      at async Object.withTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:82:55)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:227:18)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    code: 'ER_BAD_FIELD_ERROR',
+    errno: 1054,
+    sqlState: '42S22',
+    sqlMessage: "Unknown column 'su.id' in 'field list'",
+    sql: 'SELECT su.id, su.sku_id, su.uom_id, su.version, u.code AS uom_code,\n              u.name AS uom_name, u.status AS uom_status, u.version AS uom_version, su.to_base_factor, su.is_base,\n              su.is_default_purchase, su.is_default_sale\n         FROM item_sku_uoms su\n         JOIN item_uoms u ON u.id = su.uom_id\n        WHERE su.sku_id IN (12)'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-027 same-version competing replacement and cancellation serialize with one winner" time="0.000817" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="Unknown column 'su.id' in 'field list'">
+		<failure type="testCodeFailure" message="Unknown column 'su.id' in 'field list'">
+[Error [ERR_TEST_FAILURE]: Unknown column 'su.id' in 'field list'] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: Error: Unknown column 'su.id' in 'field list'
+      at #loadUomRows (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:337:35)
+      at ItemLookupService.getInventoryProfileInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:267:44)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async #references (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:132:23)
+      at async InventoryTransferService.createInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:203:24)
+      at async Object.withTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:82:55)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:237:18)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    code: 'ER_BAD_FIELD_ERROR',
+    errno: 1054,
+    sqlState: '42S22',
+    sqlMessage: "Unknown column 'su.id' in 'field list'",
+    sql: 'SELECT su.id, su.sku_id, su.uom_id, su.version, u.code AS uom_code,\n              u.name AS uom_name, u.status AS uom_status, u.version AS uom_version, su.to_base_factor, su.is_base,\n              su.is_default_purchase, su.is_default_sale\n         FROM item_sku_uoms su\n         JOIN item_uoms u ON u.id = su.uom_id\n        WHERE su.sku_id IN (12)'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-027 fresh authorization rejects revoked permissions even on replay" time="0.000796" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="Unknown column 'su.id' in 'field list'">
+		<failure type="testCodeFailure" message="Unknown column 'su.id' in 'field list'">
+[Error [ERR_TEST_FAILURE]: Unknown column 'su.id' in 'field list'] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: Error: Unknown column 'su.id' in 'field list'
+      at #loadUomRows (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:337:35)
+      at ItemLookupService.getInventoryProfileInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:267:44)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async #references (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:132:23)
+      at async InventoryTransferService.createInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:203:24)
+      at async Object.withTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:82:55)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:253:3)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    code: 'ER_BAD_FIELD_ERROR',
+    errno: 1054,
+    sqlState: '42S22',
+    sqlMessage: "Unknown column 'su.id' in 'field list'",
+    sql: 'SELECT su.id, su.sku_id, su.uom_id, su.version, u.code AS uom_code,\n              u.name AS uom_name, u.status AS uom_status, u.version AS uom_version, su.to_base_factor, su.is_base,\n              su.is_default_purchase, su.is_default_sale\n         FROM item_sku_uoms su\n         JOIN item_uoms u ON u.id = su.uom_id\n        WHERE su.sku_id IN (12)'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-027 validates Active warehouses/Bins and tracking policy; non-Draft edits/cancel reject" time="0.005016" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;  Comparison {&#10;+   code: 'ER_BAD_FIELD_ERROR'&#10;-   code: 'WAREHOUSE_INVALID'&#10;  }&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;  Comparison {&#10;+   code: 'ER_BAD_FIELD_ERROR'&#10;-   code: 'WAREHOUSE_INVALID'&#10;  }">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly deep-equal:
++ actual - expected
+
+  Comparison {
++   code: 'ER_BAD_FIELD_ERROR'
+-   code: 'WAREHOUSE_INVALID'
+  }
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    Comparison {
+  +   code: 'ER_BAD_FIELD_ERROR'
+  -   code: 'WAREHOUSE_INVALID'
+    }
+  
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async rejectsUnchanged (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:123:3)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:262:11)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: Error: Unknown column 'su.id' in 'field list'
+        at #loadUomRows (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:337:35)
+        at ItemLookupService.getInventoryProfileInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:267:44)
+        at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+        at async #references (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:132:23)
+        at async InventoryTransferService.createInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:203:24)
+        at async Object.withTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:82:55)
+        at async waitForActual (node:assert:615:5)
+        at async strict.rejects (node:assert:738:25)
+        at async rejectsUnchanged (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:123:3)
+        at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:262:11),
+    expected: { code: 'WAREHOUSE_INVALID' },
+    operator: 'rejects',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-027 Draft lifecycle leaves existing OnHand/Allocated/Reserved rows and versions byte-identical" time="0.002971" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="Unknown column 'su.id' in 'field list'">
+		<failure type="testCodeFailure" message="Unknown column 'su.id' in 'field list'">
+[Error [ERR_TEST_FAILURE]: Unknown column 'su.id' in 'field list'] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: Error: Unknown column 'su.id' in 'field list'
+      at #loadUomRows (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:337:35)
+      at ItemLookupService.getInventoryProfileInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:267:44)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async #references (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:132:23)
+      at async InventoryTransferService.createInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:203:24)
+      at async Object.withTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:82:55)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:285:20)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    code: 'ER_BAD_FIELD_ERROR',
+    errno: 1054,
+    sqlState: '42S22',
+    sqlMessage: "Unknown column 'su.id' in 'field list'",
+    sql: 'SELECT su.id, su.sku_id, su.uom_id, su.version, u.code AS uom_code,\n              u.name AS uom_name, u.status AS uom_status, u.version AS uom_version, su.to_base_factor, su.is_base,\n              su.is_default_purchase, su.is_default_sale\n         FROM item_sku_uoms su\n         JOIN item_uoms u ON u.id = su.uom_id\n        WHERE su.sku_id IN (12)'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-027 complete replacement can change Active warehouse scope with new owned source Bins" time="0.000801" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="Unknown column 'su.id' in 'field list'">
+		<failure type="testCodeFailure" message="Unknown column 'su.id' in 'field list'">
+[Error [ERR_TEST_FAILURE]: Unknown column 'su.id' in 'field list'] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: Error: Unknown column 'su.id' in 'field list'
+      at #loadUomRows (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:337:35)
+      at ItemLookupService.getInventoryProfileInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:267:44)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async #references (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:132:23)
+      at async InventoryTransferService.createInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:203:24)
+      at async Object.withTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:82:55)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:297:18)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    code: 'ER_BAD_FIELD_ERROR',
+    errno: 1054,
+    sqlState: '42S22',
+    sqlMessage: "Unknown column 'su.id' in 'field list'",
+    sql: 'SELECT su.id, su.sku_id, su.uom_id, su.version, u.code AS uom_code,\n              u.name AS uom_name, u.status AS uom_status, u.version AS uom_version, su.to_base_factor, su.is_base,\n              su.is_default_purchase, su.is_default_sale\n         FROM item_sku_uoms su\n         JOIN item_uoms u ON u.id = su.uom_id\n        WHERE su.sku_id IN (12)'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-028 real whole Dispatch/Receive conserves stock and persists paired immutable legs and actor/version" time="0.001830" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="Unknown column 'su.id' in 'field list'">
+		<failure type="testCodeFailure" message="Unknown column 'su.id' in 'field list'">
+[Error [ERR_TEST_FAILURE]: Unknown column 'su.id' in 'field list'] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: Error: Unknown column 'su.id' in 'field list'
+      at #loadUomRows (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:337:35)
+      at ItemLookupService.getInventoryProfileInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:267:44)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async #references (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:132:23)
+      at async InventoryTransferService.createInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:203:24)
+      at async Object.withTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:82:55)
+      at async postingFixture (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:326:17)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:340:13)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    code: 'ER_BAD_FIELD_ERROR',
+    errno: 1054,
+    sqlState: '42S22',
+    sqlMessage: "Unknown column 'su.id' in 'field list'",
+    sql: 'SELECT su.id, su.sku_id, su.uom_id, su.version, u.code AS uom_code,\n              u.name AS uom_name, u.status AS uom_status, u.version AS uom_version, su.to_base_factor, su.is_base,\n              su.is_default_purchase, su.is_default_sale\n         FROM item_sku_uoms su\n         JOIN item_uoms u ON u.id = su.uom_id\n        WHERE su.sku_id IN (100)'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-028 rejects insufficient aggregate quantity across repeated source buckets with whole rollback" time="0.001310" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="Unknown column 'su.id' in 'field list'">
+		<failure type="testCodeFailure" message="Unknown column 'su.id' in 'field list'">
+[Error [ERR_TEST_FAILURE]: Unknown column 'su.id' in 'field list'] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: Error: Unknown column 'su.id' in 'field list'
+      at #loadUomRows (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:337:35)
+      at ItemLookupService.getInventoryProfileInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:267:44)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async #references (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:132:23)
+      at async InventoryTransferService.createInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:203:24)
+      at async Object.withTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:82:55)
+      at async postingFixture (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:326:17)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:376:13)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    code: 'ER_BAD_FIELD_ERROR',
+    errno: 1054,
+    sqlState: '42S22',
+    sqlMessage: "Unknown column 'su.id' in 'field list'",
+    sql: 'SELECT su.id, su.sku_id, su.uom_id, su.version, u.code AS uom_code,\n              u.name AS uom_name, u.status AS uom_status, u.version AS uom_version, su.to_base_factor, su.is_base,\n              su.is_default_purchase, su.is_default_sale\n         FROM item_sku_uoms su\n         JOIN item_uoms u ON u.id = su.uom_id\n        WHERE su.sku_id IN (101)'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-028 Receive rejects missing, duplicate, extra and partial line quantities atomically" time="0.001129" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="Unknown column 'su.id' in 'field list'">
+		<failure type="testCodeFailure" message="Unknown column 'su.id' in 'field list'">
+[Error [ERR_TEST_FAILURE]: Unknown column 'su.id' in 'field list'] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: Error: Unknown column 'su.id' in 'field list'
+      at #loadUomRows (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:337:35)
+      at ItemLookupService.getInventoryProfileInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:267:44)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async #references (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:132:23)
+      at async InventoryTransferService.createInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:203:24)
+      at async Object.withTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:82:55)
+      at async postingFixture (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:326:17)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:381:13)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    code: 'ER_BAD_FIELD_ERROR',
+    errno: 1054,
+    sqlState: '42S22',
+    sqlMessage: "Unknown column 'su.id' in 'field list'",
+    sql: 'SELECT su.id, su.sku_id, su.uom_id, su.version, u.code AS uom_code,\n              u.name AS uom_name, u.status AS uom_status, u.version AS uom_version, su.to_base_factor, su.is_base,\n              su.is_default_purchase, su.is_default_sale\n         FROM item_sku_uoms su\n         JOIN item_uoms u ON u.id = su.uom_id\n        WHERE su.sku_id IN (102)'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-028 late-line destination ownership failure rolls back; Quarantined requires reason and keeps Lot" time="0.001184" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="Unknown column 'su.id' in 'field list'">
+		<failure type="testCodeFailure" message="Unknown column 'su.id' in 'field list'">
+[Error [ERR_TEST_FAILURE]: Unknown column 'su.id' in 'field list'] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: Error: Unknown column 'su.id' in 'field list'
+      at #loadUomRows (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:337:35)
+      at ItemLookupService.getInventoryProfileInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:267:44)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async #references (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:132:23)
+      at async InventoryTransferService.createInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:203:24)
+      at async Object.withTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:82:55)
+      at async postingFixture (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:326:17)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:393:13)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    code: 'ER_BAD_FIELD_ERROR',
+    errno: 1054,
+    sqlState: '42S22',
+    sqlMessage: "Unknown column 'su.id' in 'field list'",
+    sql: 'SELECT su.id, su.sku_id, su.uom_id, su.version, u.code AS uom_code,\n              u.name AS uom_name, u.status AS uom_status, u.version AS uom_version, su.to_base_factor, su.is_base,\n              su.is_default_purchase, su.is_default_sale\n         FROM item_sku_uoms su\n         JOIN item_uoms u ON u.id = su.uom_id\n        WHERE su.sku_id IN (103)'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-028 each posting event replays its original receipt after Receive; altered/cross-command event conflicts" time="0.000954" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="Unknown column 'su.id' in 'field list'">
+		<failure type="testCodeFailure" message="Unknown column 'su.id' in 'field list'">
+[Error [ERR_TEST_FAILURE]: Unknown column 'su.id' in 'field list'] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: Error: Unknown column 'su.id' in 'field list'
+      at #loadUomRows (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:337:35)
+      at ItemLookupService.getInventoryProfileInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:267:44)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async #references (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:132:23)
+      at async InventoryTransferService.createInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:203:24)
+      at async Object.withTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:82:55)
+      at async postingFixture (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:326:17)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:411:13)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    code: 'ER_BAD_FIELD_ERROR',
+    errno: 1054,
+    sqlState: '42S22',
+    sqlMessage: "Unknown column 'su.id' in 'field list'",
+    sql: 'SELECT su.id, su.sku_id, su.uom_id, su.version, u.code AS uom_code,\n              u.name AS uom_name, u.status AS uom_status, u.version AS uom_version, su.to_base_factor, su.is_base,\n              su.is_default_purchase, su.is_default_sale\n         FROM item_sku_uoms su\n         JOIN item_uoms u ON u.id = su.uom_id\n        WHERE su.sku_id IN (104)'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-028 Audit failure rolls back all lines, balances, Movements, In Transit and Operation" time="0.001481" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="Unknown column 'su.id' in 'field list'">
+		<failure type="testCodeFailure" message="Unknown column 'su.id' in 'field list'">
+[Error [ERR_TEST_FAILURE]: Unknown column 'su.id' in 'field list'] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: Error: Unknown column 'su.id' in 'field list'
+      at #loadUomRows (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:337:35)
+      at ItemLookupService.getInventoryProfileInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:267:44)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async #references (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:132:23)
+      at async InventoryTransferService.createInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:203:24)
+      at async Object.withTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:82:55)
+      at async postingFixture (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:326:17)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:424:13)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    code: 'ER_BAD_FIELD_ERROR',
+    errno: 1054,
+    sqlState: '42S22',
+    sqlMessage: "Unknown column 'su.id' in 'field list'",
+    sql: 'SELECT su.id, su.sku_id, su.uom_id, su.version, u.code AS uom_code,\n              u.name AS uom_name, u.status AS uom_status, u.version AS uom_version, su.to_base_factor, su.is_base,\n              su.is_default_purchase, su.is_default_sale\n         FROM item_sku_uoms su\n         JOIN item_uoms u ON u.id = su.uom_id\n        WHERE su.sku_id IN (105)'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-028 Reserved coverage and allocated units cannot be dispatched" time="0.001085" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="Unknown column 'su.id' in 'field list'">
+		<failure type="testCodeFailure" message="Unknown column 'su.id' in 'field list'">
+[Error [ERR_TEST_FAILURE]: Unknown column 'su.id' in 'field list'] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: Error: Unknown column 'su.id' in 'field list'
+      at #loadUomRows (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:337:35)
+      at ItemLookupService.getInventoryProfileInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:267:44)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async #references (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:132:23)
+      at async InventoryTransferService.createInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:203:24)
+      at async Object.withTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:82:55)
+      at async postingFixture (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:326:17)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:437:13)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    code: 'ER_BAD_FIELD_ERROR',
+    errno: 1054,
+    sqlState: '42S22',
+    sqlMessage: "Unknown column 'su.id' in 'field list'",
+    sql: 'SELECT su.id, su.sku_id, su.uom_id, su.version, u.code AS uom_code,\n              u.name AS uom_name, u.status AS uom_status, u.version AS uom_version, su.to_base_factor, su.is_base,\n              su.is_default_purchase, su.is_default_sale\n         FROM item_sku_uoms su\n         JOIN item_uoms u ON u.id = su.uom_id\n        WHERE su.sku_id IN (106)'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-028 stale versions, disabled destination and revoked replay permissions have zero effects" time="0.000915" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="Unknown column 'su.id' in 'field list'">
+		<failure type="testCodeFailure" message="Unknown column 'su.id' in 'field list'">
+[Error [ERR_TEST_FAILURE]: Unknown column 'su.id' in 'field list'] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: Error: Unknown column 'su.id' in 'field list'
+      at #loadUomRows (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:337:35)
+      at ItemLookupService.getInventoryProfileInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:267:44)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async #references (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:132:23)
+      at async InventoryTransferService.createInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:203:24)
+      at async Object.withTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:82:55)
+      at async postingFixture (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:326:17)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:448:13)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    code: 'ER_BAD_FIELD_ERROR',
+    errno: 1054,
+    sqlState: '42S22',
+    sqlMessage: "Unknown column 'su.id' in 'field list'",
+    sql: 'SELECT su.id, su.sku_id, su.uom_id, su.version, u.code AS uom_code,\n              u.name AS uom_name, u.status AS uom_status, u.version AS uom_version, su.to_base_factor, su.is_base,\n              su.is_default_purchase, su.is_default_sale\n         FROM item_sku_uoms su\n         JOIN item_uoms u ON u.id = su.uom_id\n        WHERE su.sku_id IN (107)'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-028 active Stocktake lock rejects posting even on a real transaction" time="0.000960" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="Unknown column 'su.id' in 'field list'">
+		<failure type="testCodeFailure" message="Unknown column 'su.id' in 'field list'">
+[Error [ERR_TEST_FAILURE]: Unknown column 'su.id' in 'field list'] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: Error: Unknown column 'su.id' in 'field list'
+      at #loadUomRows (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:337:35)
+      at ItemLookupService.getInventoryProfileInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:267:44)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async #references (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:132:23)
+      at async InventoryTransferService.createInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:203:24)
+      at async Object.withTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:82:55)
+      at async postingFixture (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:326:17)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:460:13)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    code: 'ER_BAD_FIELD_ERROR',
+    errno: 1054,
+    sqlState: '42S22',
+    sqlMessage: "Unknown column 'su.id' in 'field list'",
+    sql: 'SELECT su.id, su.sku_id, su.uom_id, su.version, u.code AS uom_code,\n              u.name AS uom_name, u.status AS uom_status, u.version AS uom_version, su.to_base_factor, su.is_base,\n              su.is_default_purchase, su.is_default_sale\n         FROM item_sku_uoms su\n         JOIN item_uoms u ON u.id = su.uom_id\n        WHERE su.sku_id IN (108)'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-028 concurrent Issue cannot let Dispatch consume allocated or reserved stock" time="0.001004" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="Unknown column 'su.id' in 'field list'">
+		<failure type="testCodeFailure" message="Unknown column 'su.id' in 'field list'">
+[Error [ERR_TEST_FAILURE]: Unknown column 'su.id' in 'field list'] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: Error: Unknown column 'su.id' in 'field list'
+      at #loadUomRows (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:337:35)
+      at ItemLookupService.getInventoryProfileInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:267:44)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async #references (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:132:23)
+      at async InventoryTransferService.createInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:203:24)
+      at async Object.withTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:82:55)
+      at async postingFixture (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:326:17)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:469:13)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    code: 'ER_BAD_FIELD_ERROR',
+    errno: 1054,
+    sqlState: '42S22',
+    sqlMessage: "Unknown column 'su.id' in 'field list'",
+    sql: 'SELECT su.id, su.sku_id, su.uom_id, su.version, u.code AS uom_code,\n              u.name AS uom_name, u.status AS uom_status, u.version AS uom_version, su.to_base_factor, su.is_base,\n              su.is_default_purchase, su.is_default_sale\n         FROM item_sku_uoms su\n         JOIN item_uoms u ON u.id = su.uom_id\n        WHERE su.sku_id IN (109)'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-028 same-version competing Dispatch and Receive each have one whole-document winner" time="0.000939" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="Unknown column 'su.id' in 'field list'">
+		<failure type="testCodeFailure" message="Unknown column 'su.id' in 'field list'">
+[Error [ERR_TEST_FAILURE]: Unknown column 'su.id' in 'field list'] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: Error: Unknown column 'su.id' in 'field list'
+      at #loadUomRows (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:337:35)
+      at ItemLookupService.getInventoryProfileInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:267:44)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async #references (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:132:23)
+      at async InventoryTransferService.createInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:203:24)
+      at async Object.withTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:82:55)
+      at async postingFixture (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:326:17)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:502:13)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    code: 'ER_BAD_FIELD_ERROR',
+    errno: 1054,
+    sqlState: '42S22',
+    sqlMessage: "Unknown column 'su.id' in 'field list'",
+    sql: 'SELECT su.id, su.sku_id, su.uom_id, su.version, u.code AS uom_code,\n              u.name AS uom_name, u.status AS uom_status, u.version AS uom_version, su.to_base_factor, su.is_base,\n              su.is_default_purchase, su.is_default_sale\n         FROM item_sku_uoms su\n         JOIN item_uoms u ON u.id = su.uom_id\n        WHERE su.sku_id IN (110)'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-028 failure between paired legs or after an earlier line has no partial effects" time="0.000938" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="Unknown column 'su.id' in 'field list'">
+		<failure type="testCodeFailure" message="Unknown column 'su.id' in 'field list'">
+[Error [ERR_TEST_FAILURE]: Unknown column 'su.id' in 'field list'] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: Error: Unknown column 'su.id' in 'field list'
+      at #loadUomRows (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:337:35)
+      at ItemLookupService.getInventoryProfileInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:267:44)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async #references (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:132:23)
+      at async InventoryTransferService.createInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:203:24)
+      at async Object.withTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:82:55)
+      at async postingFixture (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:326:17)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:527:13)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    code: 'ER_BAD_FIELD_ERROR',
+    errno: 1054,
+    sqlState: '42S22',
+    sqlMessage: "Unknown column 'su.id' in 'field list'",
+    sql: 'SELECT su.id, su.sku_id, su.uom_id, su.version, u.code AS uom_code,\n              u.name AS uom_name, u.status AS uom_status, u.version AS uom_version, su.to_base_factor, su.is_base,\n              su.is_default_purchase, su.is_default_sale\n         FROM item_sku_uoms su\n         JOIN item_uoms u ON u.id = su.uom_id\n        WHERE su.sku_id IN (111)'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-028 protects each Reservation's stricter remaining-life snapshot, not just total AVAILABLE" time="0.001131" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="Unknown column 'su.id' in 'field list'">
+		<failure type="testCodeFailure" message="Unknown column 'su.id' in 'field list'">
+[Error [ERR_TEST_FAILURE]: Unknown column 'su.id' in 'field list'] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: Error: Unknown column 'su.id' in 'field list'
+      at #loadUomRows (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:337:35)
+      at ItemLookupService.getInventoryProfileInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:267:44)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async #references (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:132:23)
+      at async InventoryTransferService.createInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:203:24)
+      at async Object.withTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:82:55)
+      at async postingFixture (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:326:17)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:544:13)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    code: 'ER_BAD_FIELD_ERROR',
+    errno: 1054,
+    sqlState: '42S22',
+    sqlMessage: "Unknown column 'su.id' in 'field list'",
+    sql: 'SELECT su.id, su.sku_id, su.uom_id, su.version, u.code AS uom_code,\n              u.name AS uom_name, u.status AS uom_status, u.version AS uom_version, su.to_base_factor, su.is_base,\n              su.is_default_purchase, su.is_default_sale\n         FROM item_sku_uoms su\n         JOIN item_uoms u ON u.id = su.uom_id\n        WHERE su.sku_id IN (112)'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-028 Receive rejects disabled/unknown Bins and destination Stocktake lock without clearing In Transit" time="0.000957" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="Unknown column 'su.id' in 'field list'">
+		<failure type="testCodeFailure" message="Unknown column 'su.id' in 'field list'">
+[Error [ERR_TEST_FAILURE]: Unknown column 'su.id' in 'field list'] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: Error: Unknown column 'su.id' in 'field list'
+      at #loadUomRows (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:337:35)
+      at ItemLookupService.getInventoryProfileInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:267:44)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async #references (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:132:23)
+      at async InventoryTransferService.createInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:203:24)
+      at async Object.withTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:82:55)
+      at async postingFixture (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:326:17)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:559:13)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    code: 'ER_BAD_FIELD_ERROR',
+    errno: 1054,
+    sqlState: '42S22',
+    sqlMessage: "Unknown column 'su.id' in 'field list'",
+    sql: 'SELECT su.id, su.sku_id, su.uom_id, su.version, u.code AS uom_code,\n              u.name AS uom_name, u.status AS uom_status, u.version AS uom_version, su.to_base_factor, su.is_base,\n              su.is_default_purchase, su.is_default_sale\n         FROM item_sku_uoms su\n         JOIN item_uoms u ON u.id = su.uom_id\n        WHERE su.sku_id IN (113)'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-028 Receive preserves physical quantity/Lot/Expiry even when expiry elapses in transit" time="0.000996" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="Unknown column 'su.id' in 'field list'">
+		<failure type="testCodeFailure" message="Unknown column 'su.id' in 'field list'">
+[Error [ERR_TEST_FAILURE]: Unknown column 'su.id' in 'field list'] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: Error: Unknown column 'su.id' in 'field list'
+      at #loadUomRows (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:337:35)
+      at ItemLookupService.getInventoryProfileInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:267:44)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async #references (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:132:23)
+      at async InventoryTransferService.createInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:203:24)
+      at async Object.withTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:82:55)
+      at async postingFixture (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:326:17)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:575:13)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    code: 'ER_BAD_FIELD_ERROR',
+    errno: 1054,
+    sqlState: '42S22',
+    sqlMessage: "Unknown column 'su.id' in 'field list'",
+    sql: 'SELECT su.id, su.sku_id, su.uom_id, su.version, u.code AS uom_code,\n              u.name AS uom_name, u.status AS uom_status, u.version AS uom_version, su.to_base_factor, su.is_base,\n              su.is_default_purchase, su.is_default_sale\n         FROM item_sku_uoms su\n         JOIN item_uoms u ON u.id = su.uom_id\n        WHERE su.sku_id IN (114)'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-028 keeping QUARANTINED/DAMAGED needs no new status-change reason and drains FIFO anchor" time="0.000900" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="Unknown column 'su.id' in 'field list'">
+		<failure type="testCodeFailure" message="Unknown column 'su.id' in 'field list'">
+[Error [ERR_TEST_FAILURE]: Unknown column 'su.id' in 'field list'] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: Error: Unknown column 'su.id' in 'field list'
+      at #loadUomRows (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:337:35)
+      at ItemLookupService.getInventoryProfileInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:267:44)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async #references (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:132:23)
+      at async InventoryTransferService.createInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:203:24)
+      at async Object.withTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:82:55)
+      at async postingFixture (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:326:17)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:590:15)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    code: 'ER_BAD_FIELD_ERROR',
+    errno: 1054,
+    sqlState: '42S22',
+    sqlMessage: "Unknown column 'su.id' in 'field list'",
+    sql: 'SELECT su.id, su.sku_id, su.uom_id, su.version, u.code AS uom_code,\n              u.name AS uom_name, u.status AS uom_status, u.version AS uom_version, su.to_base_factor, su.is_base,\n              su.is_default_purchase, su.is_default_sale\n         FROM item_sku_uoms su\n         JOIN item_uoms u ON u.id = su.uom_id\n        WHERE su.sku_id IN (115)'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-028 destination quantity overflow cannot clear In Transit or create a Movement" time="0.000821" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="Unknown column 'su.id' in 'field list'">
+		<failure type="testCodeFailure" message="Unknown column 'su.id' in 'field list'">
+[Error [ERR_TEST_FAILURE]: Unknown column 'su.id' in 'field list'] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: Error: Unknown column 'su.id' in 'field list'
+      at #loadUomRows (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:337:35)
+      at ItemLookupService.getInventoryProfileInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/item/ItemLookupService.js:267:44)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async #references (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:132:23)
+      at async InventoryTransferService.createInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:203:24)
+      at async Object.withTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:82:55)
+      at async postingFixture (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:326:17)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:604:13)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    code: 'ER_BAD_FIELD_ERROR',
+    errno: 1054,
+    sqlState: '42S22',
+    sqlMessage: "Unknown column 'su.id' in 'field list'",
+    sql: 'SELECT su.id, su.sku_id, su.uom_id, su.version, u.code AS uom_code,\n              u.name AS uom_name, u.status AS uom_status, u.version AS uom_version, su.to_base_factor, su.is_base,\n              su.is_default_purchase, su.is_default_sale\n         FROM item_sku_uoms su\n         JOIN item_uoms u ON u.id = su.uom_id\n        WHERE su.sku_id IN (116)'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 31 -->
+	<!-- suites 0 -->
+	<!-- pass 0 -->
+	<!-- fail 31 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 299.800584 -->
+</testsuites>

@@ -1,5 +1,5 @@
 import { InventoryOperationService } from "./InventoryOperationService.js";
-import { INVENTORY_RESERVATION_STATUSES } from "./inventoryConstants.js";
+import { INVENTORY_RESERVATION_STATUSES, INVENTORY_TRANSFER_STATUSES } from "./inventoryConstants.js";
 import { inventoryError } from "./inventoryErrors.js";
 import {
   movementProjection,
@@ -39,6 +39,9 @@ const STOCK_STATUSES = new Set(["AVAILABLE", "QUARANTINED", "DAMAGED"]);
 const AVAILABILITY_FILTERS = new Set(["ALL", "IN_STOCK", "NO_STOCK", "ZERO_ATP"]);
 const EXPIRY_STATES = new Set(["ALL", "UNEXPIRED", "EXPIRED", "WITHIN_DAYS"]);
 const RESERVATION_STATUSES = new Set(INVENTORY_RESERVATION_STATUSES);
+const TRANSFER_STATUSES = new Set(INVENTORY_TRANSFER_STATUSES);
+const TRANSFER_SORTS = Object.freeze({ updatedAt: "t.updated_at", createdAt: "t.created_at",
+  number: "t.transfer_number", status: "t.status" });
 const RESERVATION_SORTS = Object.freeze({
   updatedAt: "v.updated_at", createdAt: "v.created_at", status: "v.status", skuCode: "v.sku_code"
 });
@@ -267,6 +270,40 @@ function projectReservation(row) {
   };
 }
 
+function projectTransfer(row) {
+  const result = {
+    id: positiveId(row.id, "transferId"), number: row.transfer_number,
+    sourceWarehouseId: positiveId(row.source_warehouse_id, "sourceWarehouseId"),
+    destinationWarehouseId: positiveId(row.destination_warehouse_id, "destinationWarehouseId"),
+    status: row.status, version: positiveId(row.version, "version"), reason: row.reason,
+    inTransitQuantity: nonNegativeInteger(row.in_transit_quantity, "inTransitQuantity"),
+    createdAt: nonNegativeInteger(row.created_at, "createdAt"),
+    updatedAt: nonNegativeInteger(row.updated_at, "updatedAt")
+  };
+  for (const [field, column] of [["createdBy", "created_by"], ["updatedBy", "updated_by"],
+    ["dispatchedBy", "dispatched_by"], ["receivedBy", "received_by"], ["cancelledBy", "cancelled_by"]]) {
+    result[field] = positiveId(row[column], field, { optional: true });
+  }
+  for (const [field, column] of [["dispatchedAt", "dispatched_at"], ["receivedAt", "received_at"], ["cancelledAt", "cancelled_at"]]) {
+    result[field] = row[column] == null ? null : nonNegativeInteger(row[column], field);
+  }
+  return result;
+}
+
+function projectTransferLine(row) {
+  return {
+    id: positiveId(row.id, "lineId"), lineNumber: positiveId(row.line_number, "lineNumber"),
+    skuId: positiveId(row.sku_id, "skuId"), lotId: positiveId(row.lot_id, "lotId", { optional: true }),
+    sourceBinId: positiveId(row.source_bin_id, "sourceBinId"),
+    destinationBinId: positiveId(row.destination_bin_id, "destinationBinId", { optional: true }),
+    dispatchStockStatus: row.dispatch_stock_status, receiveStockStatus: row.receive_stock_status,
+    quantity: positiveId(row.quantity, "quantity"), inTransitQuantity: nonNegativeInteger(row.in_transit_quantity, "inTransitQuantity"),
+    skuCode: row.sku_code_snapshot, lotNumber: row.lot_number_snapshot, expiryDate: row.expiry_date_snapshot ?? null,
+    dispatchMovementGroupId: row.dispatch_movement_group_id ?? null,
+    receiveMovementGroupId: row.receive_movement_group_id ?? null, version: positiveId(row.version, "version")
+  };
+}
+
 function sourceProjection(row) {
   return {
     module: row.source_module,
@@ -297,6 +334,50 @@ export class InventoryInquiryService {
     this.database = database;
     this.time = time;
     this.operationService = operationService ?? new InventoryOperationService();
+  }
+
+  async listTransfers(input = {}) {
+    const { page, pageSize, sortColumn, direction, offset } = pageInput(input, TRANSFER_SORTS, "updatedAt");
+    const filters = [], params = [];
+    for (const [field, column] of [["sourceWarehouseId", "t.source_warehouse_id"], ["destinationWarehouseId", "t.destination_warehouse_id"]]) {
+      const value = positiveId(input[field], field, { optional: true });
+      if (value !== null) { filters.push(`${column} = ?`); params.push(value); }
+    }
+    const number = boundedText(input.number, "number", 100);
+    if (number) { filters.push("t.transfer_number LIKE ? ESCAPE '!'"); params.push(`%${escapeLike(number)}%`); }
+    const status = input.status ?? "ALL";
+    if (status !== "ALL" && !TRANSFER_STATUSES.has(status)) invalid("status");
+    if (status !== "ALL") { filters.push("t.status = ?"); params.push(status); }
+    // Like Movement postedFrom/postedTo, internal time filters are epoch milliseconds.
+    // The future HTTP/UI boundary owns company-timezone calendar conversion.
+    const from = nonNegativeInteger(input.createdFrom, "createdFrom");
+    const to = input.createdTo == null ? null : nonNegativeInteger(input.createdTo, "createdTo");
+    if (to !== null && from > to) invalid("createdFrom");
+    if (input.createdFrom !== undefined) { filters.push("t.created_at >= ?"); params.push(from); }
+    if (to !== null) { filters.push("t.created_at <= ?"); params.push(to); }
+    const clause = whereClause(filters);
+    const [[count]] = await this.database.query(`SELECT COUNT(*) AS total FROM inventory_transfers t${clause}`, params);
+    const [rows] = await this.database.query(`SELECT t.*,
+      (SELECT COALESCE(SUM(l.in_transit_quantity), 0) FROM inventory_transfer_lines l WHERE l.transfer_id = t.id) AS in_transit_quantity
+      FROM inventory_transfers t${clause} ORDER BY ${sortColumn} ${direction}, t.id ${direction} LIMIT ? OFFSET ?`,
+    [...params, pageSize, offset]);
+    return { items: rows.map(projectTransfer), total: nonNegativeInteger(count.total, "total"), page, pageSize };
+  }
+
+  async getTransfer(transferId) {
+    const id = positiveId(transferId, "transferId");
+    if (typeof this.database.withTransaction !== "function") throw new TypeError("Transfer detail requires transactional database");
+    // Read header, full child set and history from the same consistent transaction snapshot.
+    return this.database.withTransaction(async (tx) => {
+      const [[header]] = await tx.query("SELECT * FROM inventory_transfers WHERE id = ?", [id]);
+      if (!header) throw notFound();
+      const [rows] = await tx.query(`SELECT *, DATE_FORMAT(expiry_date_snapshot, '%Y-%m-%d') AS expiry_date_snapshot
+        FROM inventory_transfer_lines WHERE transfer_id = ? ORDER BY line_number, id`, [id]);
+      const lines = rows.map(projectTransferLine);
+      const inTransitQuantity = nonNegativeInteger(lines.reduce((sum, line) => sum + line.inTransitQuantity, 0), "inTransitQuantity");
+      const [movements] = await tx.query(`${MOVEMENT_SELECT} WHERE m.transfer_id = ? ORDER BY m.posted_at, m.id`, [id]);
+      return { ...projectTransfer({ ...header, in_transit_quantity: inTransitQuantity }), lines, movements: movements.map(projectMovement) };
+    });
   }
 
   async listReservations(input = {}) {

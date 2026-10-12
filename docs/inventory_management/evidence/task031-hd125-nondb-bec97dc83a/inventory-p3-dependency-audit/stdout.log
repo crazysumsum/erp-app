@@ -1,0 +1,15 @@
+
+> erp-app@0.1.0 security:audit
+> npm audit --audit-level=high
+
+# npm audit report
+
+quasar  <=2.32.1
+Quasar Framework: DOM Clobbering in Quasar openURL() SafariViewController Integration Causes Client-Side Denial of Service - https://github.com/advisories/GHSA-89vp-x45c-52cq
+fix available via `npm audit fix`
+node_modules/quasar
+
+1 low severity vulnerability
+
+To address all issues, run:
+  npm audit fix
