@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 306,
+  "revision": 307,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -1935,6 +1935,18 @@
       "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
       "source_ref": "docs/supplier_management/implementation/86_rev_083_independent_review.md",
       "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-084",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-050)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing de030eb7b74e8cd0d70c98adc65273c73ac2514c (PR #197), the round after REV-083",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/87_rev_084_independent_review.md",
+      "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
@@ -5955,5 +5967,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-050: HD-087 fixes and the HD-088 list indexes (migration 0080) in PR #197; REV-084 limited to this round. TASK-038 committed locally (migration to be renumbered 0081), waiting for #197 and the pin refresh (HD-085)."
+  "next_safe_action": "TASK-050: REV-084 APPROVED with five Low findings (cap test, benchmark unhandled rejection, migration lock wait, list-index test hang, recall range). Ask the Product Owner (HD-089). CI on 1a9b1e3 pending."
 }
