@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testsuite name="TASK-021 real MySQL Allocation integrity, contention and rollback" time="0.148589" disabled="0" errors="0" tests="3" failures="0" skipped="0" timestamp="2026-10-12T01:11:06.691Z" hostname="samMacBook-Pro.local">
+		<testcase name="DEV-021-DB-01 persists FEFO Allocation once and enforces the MySQL quantity check" time="0.015896" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryAllocation.integration.test.js"/>
+		<testcase name="DEV-021-DB-02 serializes two competing Allocation transactions" time="0.008470" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryAllocation.integration.test.js"/>
+		<testcase name="DEV-021-DB-03 rolls back all Allocation writes when required Audit fails" time="0.005111" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryAllocation.integration.test.js"/>
+	</testsuite>
+	<!-- tests 4 -->
+	<!-- suites 0 -->
+	<!-- pass 4 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 235.717792 -->
+</testsuites>

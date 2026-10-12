@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 1818,
+  "revision": 1876,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,19 +11,24 @@
   "baseline": {
     "design": "b4720b69f67be272b7f605fa8bd83401792629ebd7ae16d1014aac2efcbf58ee",
     "plan": "c145c025eae94a1570d1bd05a872da53335b931f9ea0f695595d02ddef258908",
-    "code_commit": "168ceb1badd6e6ed3e2ae6976f95b224e86d54bb",
+    "code_commit": "f51175e7b62623e50429232cf0aaf580a49461d9",
     "source_fingerprint": "3cdc51c462840f24f5a221218a928e795600de865f35042f2a087622cee9679e",
     "worktree": "/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app",
     "default_commit": "0feb9d712072048adb20afc470eb87abc8911475",
     "mode_entry_commit": "5402118617442d4d0651a3245a7b57bf1e30cc43"
   },
   "runtime": {
-    "instance_id": "erp-inventory-p3-integration-2ngk1g1s",
-    "owner": "Codex /root HD137+HD138+HD139",
+    "instance_id": "erp-inventory-p3-hd140-rd02hhpl",
+    "owner": "Codex /root HD137–HD140",
     "resources": {
-      "workspace": "/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app"
+      "workspace": "/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app",
+      "mysql-schema": "erp_inventory_p3_integration_62f8aad44166",
+      "mysql-socket": "/private/tmp/erp-inventory-p3-hd140-rd02hhpl/tcp/mysql.sock",
+      "mysql-port": "51758",
+      "web-port": "5205",
+      "opening-file-root": "/private/tmp/erp-inventory-p3-hd140-rd02hhpl/opening"
     },
-    "lease_ref": "Exact owned schemas/accounts absent; daemon exit0/socket absent; loopback port released; synthetic data unrecoverable."
+    "lease_ref": "Actual owned coordinator/PID/datadir/socket/TCP verification and exclusive loopback5205 reservation; child socket resources recorded in /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/hd140-coordinator-5cc09bbba981/observation.json"
   },
   "tasks": {
     "TASK-001": "DONE",
@@ -13165,6 +13170,118 @@
       "idempotency_key": "erp-inventory-p3-integration-2ngk1g1s-erp_inventory_p3_64f83cb414ac",
       "status": "CONFIRMED",
       "source_ref": "Actual native migration exit0; log /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/p3-hd138-migration-erp_inventory_p3_64f83cb414ac/migration.log"
+    },
+    {
+      "id": "EXT-610",
+      "kind": "HD140_OWNED_MYSQL_START",
+      "target": "/private/tmp/erp-inventory-p3-hd140-q3ss_zm7/tcp",
+      "idempotency_key": "erp-inventory-p3-hd140-q3ss_zm7-21d32694469147f6b06284d51af1eafa",
+      "status": "CONFIRMED",
+      "source_ref": "Observed actual26.7.0/PID7955/datadir/private/tmp/erp-inventory-p3-hd140-q3ss_zm7/tcp/data/network mode['26.7.0', '/private/tmp/erp-inventory-p3-hd140-q3ss_zm7/tcp/data/', '0', '50959']"
+    },
+    {
+      "id": "EXT-611",
+      "kind": "HD140_OWNED_MYSQL_START",
+      "target": "/private/tmp/erp-inventory-p3-mysql-2670.c245a5b1f7ea",
+      "idempotency_key": "erp-inventory-p3-hd140-q3ss_zm7-116b621d785740449ac1b844e17bf4e0",
+      "status": "CONFIRMED",
+      "source_ref": "Observed actual26.7.0/PID7979/datadir/private/tmp/erp-inventory-p3-mysql-2670.c245a5b1f7ea/data/network mode['26.7.0', '/private/tmp/erp-inventory-p3-mysql-2670.c245a5b1f7ea/data/', '1', '0']"
+    },
+    {
+      "id": "EXT-612",
+      "kind": "HD140_EXISTING_OWNED_MIGRATIONS",
+      "target": "erp_inventory_p3_58703db81a35@/private/tmp/erp-inventory-p3-mysql-2670.c245a5b1f7ea/mysql.sock",
+      "idempotency_key": "erp-inventory-p3-hd140-q3ss_zm7-29b16c4c364a48c9b01674f34c99e796",
+      "status": "CONFIRMED",
+      "source_ref": "Actual migration exit0; exact current ledger matched=True; proof /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/hd140-coordinator-81e6ba4122a3/migrate-erp_inventory_p3_58703db81a35"
+    },
+    {
+      "id": "EXT-613",
+      "kind": "HD140_OWNED_MYSQL_START",
+      "target": "/private/tmp/erp-inventory-p3-hd140-rd02hhpl/tcp",
+      "idempotency_key": "erp-inventory-p3-hd140-rd02hhpl-c699e0be10ed49d686c322c390d2ec39",
+      "status": "CONFIRMED",
+      "source_ref": "Observed actual26.7.0/PID9254/datadir/private/tmp/erp-inventory-p3-hd140-rd02hhpl/tcp/data/network mode['26.7.0', '/private/tmp/erp-inventory-p3-hd140-rd02hhpl/tcp/data/', '0', '51758']"
+    },
+    {
+      "id": "EXT-614",
+      "kind": "HD140_OWNED_MYSQL_START",
+      "target": "/private/tmp/erp-inventory-p3-mysql-2670.837f28b65c57",
+      "idempotency_key": "erp-inventory-p3-hd140-rd02hhpl-036d60bd153f48ac9b17d3ba0cc6b458",
+      "status": "CONFIRMED",
+      "source_ref": "Observed actual26.7.0/PID9387/datadir/private/tmp/erp-inventory-p3-mysql-2670.837f28b65c57/data/network mode['26.7.0', '/private/tmp/erp-inventory-p3-mysql-2670.837f28b65c57/data/', '1', '0']"
+    },
+    {
+      "id": "EXT-615",
+      "kind": "HD140_EXISTING_OWNED_MIGRATIONS",
+      "target": "erp_inventory_p3_2d86b3799a89@/private/tmp/erp-inventory-p3-mysql-2670.837f28b65c57/mysql.sock",
+      "idempotency_key": "erp-inventory-p3-hd140-rd02hhpl-7e25b2421994460ab356fe3ae6423302",
+      "status": "CONFIRMED",
+      "source_ref": "Actual migration exit0; exact current ledger matched=True; proof /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/hd140-coordinator-5cc09bbba981/migrate-erp_inventory_p3_2d86b3799a89"
+    },
+    {
+      "id": "EXT-616",
+      "kind": "HD140_EXISTING_OWNED_MIGRATIONS",
+      "target": "erp_inventory_p3_integration_62f8aad44166@/private/tmp/erp-inventory-p3-hd140-rd02hhpl/tcp/mysql.sock",
+      "idempotency_key": "erp-inventory-p3-hd140-rd02hhpl-0b69ce48cc0c4338b5e6fc9f466d0012",
+      "status": "CONFIRMED",
+      "source_ref": "Actual migration exit0; exact current ledger matched=True; proof /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/hd140-coordinator-5cc09bbba981/migrate-erp_inventory_p3_integration_62f8aad44166"
+    },
+    {
+      "id": "EXT-617",
+      "kind": "HD140_FULL_NATIVE_COVERAGE",
+      "target": "erp_inventory_p3_integration_62f8aad44166",
+      "idempotency_key": "erp-inventory-p3-hd140-rd02hhpl-5b27222130c74cd381f6c2214e9c0c54",
+      "status": "CONFIRMED",
+      "source_ref": "Actual unchanged full native coverage command PASS; strict global/perfile floors and fresh LCOV retained at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/hd140-coordinator-5cc09bbba981/full-native"
+    },
+    {
+      "id": "EXT-618",
+      "kind": "HD140_OWNED_MYSQL_START",
+      "target": "/private/tmp/erp-inventory-task023-mysql-2670.ab726bd76751",
+      "idempotency_key": "erp-inventory-p3-hd140-rd02hhpl-14ee616421dd4e4ba63655bed52377a9",
+      "status": "CONFIRMED",
+      "source_ref": "Observed actual26.7.0/PID13550/datadir/private/tmp/erp-inventory-task023-mysql-2670.ab726bd76751/data/network mode['26.7.0', '/private/tmp/erp-inventory-task023-mysql-2670.ab726bd76751/data/', '1', '0']"
+    },
+    {
+      "id": "EXT-619",
+      "kind": "HD140_OWNED_MYSQL_START",
+      "target": "/private/tmp/erp-inventory-task021-mysql-2670.08a3ecdfa99b",
+      "idempotency_key": "erp-inventory-p3-hd140-rd02hhpl-42cf2ad788f9497f9c40d5a45a2601c5",
+      "status": "CONFIRMED",
+      "source_ref": "Observed actual26.7.0/PID13578/datadir/private/tmp/erp-inventory-task021-mysql-2670.08a3ecdfa99b/data/network mode['26.7.0', '/private/tmp/erp-inventory-task021-mysql-2670.08a3ecdfa99b/data/', '1', '0']"
+    },
+    {
+      "id": "EXT-620",
+      "kind": "HD140_OWNED_MYSQL_START",
+      "target": "/private/tmp/erp-inventory-task026-mysql-2670.245fb560ac63",
+      "idempotency_key": "erp-inventory-p3-hd140-rd02hhpl-ba9b5ad16d75414cb3132ca76a6e97be",
+      "status": "CONFIRMED",
+      "source_ref": "Observed actual26.7.0/PID13596/datadir/private/tmp/erp-inventory-task026-mysql-2670.245fb560ac63/data/network mode['26.7.0', '/private/tmp/erp-inventory-task026-mysql-2670.245fb560ac63/data/', '1', '0']"
+    },
+    {
+      "id": "EXT-621",
+      "kind": "HD140_OWNED_MYSQL_START",
+      "target": "/private/tmp/erp-inventory-task025-mysql-2670.3e33e5739110",
+      "idempotency_key": "erp-inventory-p3-hd140-rd02hhpl-aee33b81f4004444822fcb3dcb610ff3",
+      "status": "CONFIRMED",
+      "source_ref": "Observed actual26.7.0/PID13628/datadir/private/tmp/erp-inventory-task025-mysql-2670.3e33e5739110/data/network mode['26.7.0', '/private/tmp/erp-inventory-task025-mysql-2670.3e33e5739110/data/', '1', '0']"
+    },
+    {
+      "id": "EXT-622",
+      "kind": "HD140_EXISTING_OWNED_MIGRATIONS",
+      "target": "erp_inventory_task025_47b2bc5065f1@/private/tmp/erp-inventory-task025-mysql-2670.3e33e5739110/mysql.sock",
+      "idempotency_key": "erp-inventory-p3-hd140-rd02hhpl-fc5d587a6ed745f1ac8ac0fd1cfec375",
+      "status": "CONFIRMED",
+      "source_ref": "Actual migration exit0; exact current ledger matched=True; proof /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/hd140-coordinator-5cc09bbba981/migrate-erp_inventory_task025_47b2bc5065f1"
+    },
+    {
+      "id": "EXT-623",
+      "kind": "HD140_EXISTING_OWNED_MIGRATIONS",
+      "target": "erp_inventory_p3_1fbc191bd424@/private/tmp/erp-inventory-p3-mysql-2670.837f28b65c57/mysql.sock",
+      "idempotency_key": "erp-inventory-p3-hd140-rd02hhpl-672b67e035d44c4dbdfdf6d18071522d",
+      "status": "CONFIRMED",
+      "source_ref": "Actual migration exit0; exact current ledger matched=True; proof /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/hd140-coordinator-5cc09bbba981/migrate-erp_inventory_p3_1fbc191bd424"
     }
   ],
   "evidence_files": [
@@ -13587,7 +13704,33 @@
     "evidence/20261009T092534-73e8b6785b74/run.json",
     "evidence/20261009T092536-238caafc3884/run.json",
     "evidence/20261009T092542-5fb21af8d7c1/run.json",
-    "evidence/20261009T092613-12673541b47f/run.json"
+    "evidence/20261009T092613-12673541b47f/run.json",
+    "evidence/20261012T005454-002d28c13da3/run.json",
+    "evidence/20261012T005918-2359468c5051/run.json",
+    "evidence/20261012T010042-461760c4107b/run.json",
+    "evidence/20261012T010103-a3a3e97fba6c/run.json",
+    "evidence/20261012T010104-ff4f524a596f/run.json",
+    "evidence/20261012T010106-af1387542608/run.json",
+    "evidence/20261012T010107-a9eabe8baa4d/run.json",
+    "evidence/20261012T010109-3ef134e17ebb/run.json",
+    "evidence/20261012T010110-6bd44082f0a6/run.json",
+    "evidence/20261012T010113-73096c934a80/run.json",
+    "evidence/20261012T010115-2e9cbf49438e/run.json",
+    "evidence/20261012T010118-e30d74653e77/run.json",
+    "evidence/20261012T010218-2633d292b195/run.json",
+    "evidence/20261012T010223-49077d774ce2/run.json",
+    "evidence/20261012T010234-dee2d536237b/run.json",
+    "evidence/20261012T010235-7aca1c9e5f8b/run.json",
+    "evidence/20261012T010916-e83b36460f76/run.json",
+    "evidence/20261012T010917-f1c41186a794/run.json",
+    "evidence/20261012T010934-41296317b100/run.json",
+    "evidence/20261012T011003-debaf105bebd/run.json",
+    "evidence/20261012T011109-1926992519ad/run.json",
+    "evidence/20261012T011113-c47ede05add9/run.json",
+    "evidence/20261012T011116-63e252264837/run.json",
+    "evidence/20261012T011118-e9d9d2fd0e91/run.json",
+    "evidence/20261012T011120-a437acc8f799/run.json",
+    "evidence/20261012T011127-1c37f44ac082/run.json"
   ],
   "defects": [
     {
@@ -13756,5 +13899,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "HD140 exact single env-name patch adopted by actual Sam A / APR193–194. Observe current main without adopting new material scope. Run fresh newPLAN checks with CLIENT_URL=http://127.0.0.1:5205 in owned browser fixture only; preserve420 refs. Conditional publication only after all mandatoryPASS/classification; finalhead Sam/CI/MERGE_READY/freshmain separate."
+  "next_safe_action": "P3 all mandatory integrated developer checksPASS and evidence classified; prepare/publish exact authorized onePR. Await Sam precise-head source/merge review and five currentCI; genericMERGE_READY/freshmain separate, no merge/P4/formal acceptance."
 }

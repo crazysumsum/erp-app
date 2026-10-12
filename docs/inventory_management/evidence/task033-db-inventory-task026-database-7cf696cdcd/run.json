@@ -1,0 +1,78 @@
+{
+  "schema_version": "2.0",
+  "module_id": "inventory-management",
+  "run_id": "task033-db-inventory-task026-database-7cf696cdcd",
+  "suite_id": "inventory-task026-database",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "997d8de40da4f362ef23d81cd57c2a65b8e096d64109a12ddc4ee738f5ff791a",
+  "source_fingerprint": "b56886894f758852f366ff95b4bdd77e8c34a5076e94da5763de6d500283c768",
+  "code_commit": "869ac07abdd3879254c351d857be911d71e68b6b",
+  "started_at": "2026-10-08T09:13:10.492268+00:00",
+  "ended_at": "2026-10-08T09:13:10.964294+00:00",
+  "environment_id": "inventory-isolated-test",
+  "runtime_instance_id": "erp_inventory_task026_44a48887b9e0",
+  "data_reference": "Synthetic Inventory fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "node",
+    "--test",
+    "--test-concurrency=1",
+    "--import",
+    "./server/test-support/testEnv.js",
+    "--test-reporter=junit",
+    "--test-reporter-destination=/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/task033-db-inventory-task026-database-7cf696cdcd/inventory-task026-database.xml",
+    "server/test/integration/inventoryTransferMigrations.integration.test.js"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "82d8dd51567c4f6ac449fc0eacac8f99e37914c2b05da2c7d9942e07027fb00c",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 7,
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/task033-db-inventory-task026-database-7cf696cdcd/stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/task033-db-inventory-task026-database-7cf696cdcd/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/task033-db-inventory-task026-database-7cf696cdcd/inventory-task026-database.xml",
+      "sha256": "d15fb079fdeaa8fd65271a8e1c4a0db409796102f2bbe2a11b256ddc436082d9",
+      "bytes": 2166
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    },
+    {
+      "argv": [
+        "mysql",
+        "--version"
+      ],
+      "output": "mysql  Ver 26.7.0 for macos15 on arm64 (MySQL Community Server - GPL)\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "DEVELOPER TASK033 native MySQL/current reads plus original TASK030/031 compatibility. Auth fixture is not real HTTP signature/password proof; API/browser/full-source gates remain pending; no formal/current CI/capacity claim."
+  ]
+}

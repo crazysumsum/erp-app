@@ -1,0 +1,20 @@
+{
+  "kind": "SELF_REVIEW_SUPPORTING_MUTATION_NOT_REGISTERED_SUITE",
+  "sourceFile": "server/test/supplierBankCrypto.test.js",
+  "sourceSha256": "e4bad6e7ee25e957952601872fc69d2d4c93fc1f3b19bb5eb150608140c3dee5",
+  "mutation": "Only isolated copy: XOR1 to XOR0; strengthened difference assertion must reject no-op tampering.",
+  "actualArgv": [
+    "/Users/sam/Documents/workspace/.tools/git-env/bin/node",
+    "--test",
+    "/private/tmp/inventory-hd139-mutation-ha6CKC/supplierBankCrypto.mutation.test.mjs"
+  ],
+  "actualExit": 1,
+  "counts": {
+    "total": 23,
+    "passed": 22,
+    "failed": 1,
+    "skipped": 0
+  },
+  "result": "EXPECTED_MUTANT_REJECTED",
+  "scope": "No repository source modified; no formal acceptance or independent review claimed."
+}

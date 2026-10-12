@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="ADJ031-UOM native Pack conversion, credential-free intent and original replay survive changed current factor" time="0.181035" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryMovement.integration.test.js"/>
+	<testcase name="ADJ031-STATUS native six different directions conserve On Hand, Allocation and Reserved" time="0.027380" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryMovement.integration.test.js"/>
+	<testcase name="ADJ031-IN-LOT native creation/exact NULL dates and receipt minimum-life remain all-or-none" time="0.003700" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryMovement.integration.test.js" failure="庫存輸入資料不正確">
+		<failure type="testCodeFailure" message="庫存輸入資料不正確">
+[Error [ERR_TEST_FAILURE]: 庫存輸入資料不正確] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: Error [ApplicationError]: 庫存輸入資料不正確
+      at inventoryError (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/inventoryErrors.js:58:10)
+      at dateOnly (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/inventoryValidation.js:29:11)
+      at optionalDateOnly (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/inventoryValidation.js:40:3)
+      at assertInventoryLotConsistency (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/inventoryValidation.js:141:22)
+      at InventoryPostingService.resolveReceiptLotInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryPostingService.js:820:5)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async post (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/inventoryAdjustmentPosting.js:151:26)
+      at async postAdjustmentInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/inventoryAdjustmentPosting.js:104:12)
+      at async Object.withTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryMovement.integration.test.js:95:55)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryMovement.integration.test.js:220:18) {
+    code: 'INVENTORY_INPUT_INVALID',
+    statusCode: 400,
+    details: { field: 'expiryDate' },
+    publicCode: 'INVENTORY_INPUT_INVALID',
+    publicMessage: '庫存輸入資料不正確',
+    publicDetails: { field: 'expiryDate' }
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="ADJ031-OUT-RESERVED native negative protects free stock/current eligible coverage but permits expired uncovered reduction" time="0.008525" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryMovement.integration.test.js" failure="庫存輸入資料不正確">
+		<failure type="testCodeFailure" message="庫存輸入資料不正確">
+[Error [ERR_TEST_FAILURE]: 庫存輸入資料不正確] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: Error [ApplicationError]: 庫存輸入資料不正確
+      at inventoryError (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/inventoryErrors.js:58:10)
+      at dateOnly (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/inventoryValidation.js:29:11)
+      at meetsMinimumRemainingLife (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/inventoryValidation.js:96:10)
+      at post (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/inventoryAdjustmentPosting.js:210:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async postAdjustmentInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/inventoryAdjustmentPosting.js:104:12)
+      at async Object.withTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryMovement.integration.test.js:95:55)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryMovement.integration.test.js:246:7)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    code: 'INVENTORY_INPUT_INVALID',
+    statusCode: 400,
+    details: { field: 'expiryDate' },
+    publicCode: 'INVENTORY_INPUT_INVALID',
+    publicMessage: '庫存輸入資料不正確',
+    publicDetails: { field: 'expiryDate' }
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="ADJ031-LOCKS-VERSION native competing expected-absent requests produce one post and one complete rollback" time="0.010804" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryMovement.integration.test.js"/>
+	<testcase name="ADJ031-ROLLBACK native failure after first Status leg and new Lot creation leaves no business artifacts" time="0.011133" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryMovement.integration.test.js"/>
+	<testcase name="ADJ031-REVOKE-ORDER native revocation committed during stock wait defeats stale RR snapshot and rolls back" time="50.178307" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryMovement.integration.test.js" failure="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;  Comparison {&#10;+   code: 'CONCURRENT_OPERATION'&#10;-   code: 'PERMISSION_STALE'&#10;  }&#10;">
+		<failure type="unhandledRejection" message="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;  Comparison {&#10;+   code: 'CONCURRENT_OPERATION'&#10;-   code: 'PERMISSION_STALE'&#10;  }">
+Error [ERR_TEST_FAILURE]: Expected values to be strictly deep-equal:
++ actual - expected
+
+  Comparison {
++   code: 'CONCURRENT_OPERATION'
+-   code: 'PERMISSION_STALE'
+  }
+
+    at process.emit (node:events:514:20) {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'unhandledRejection',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    Comparison {
+  +   code: 'CONCURRENT_OPERATION'
+  -   code: 'PERMISSION_STALE'
+    }
+  
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: ApplicationError: 同一庫存正在處理其他操作，請重試
+        at inventoryError (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/inventoryErrors.js:58:10)
+        at InventoryLockService.lockForCommand (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryLockService.js:229:15)
+        at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+        at async post (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/inventoryAdjustmentPosting.js:140:18)
+        at async postAdjustmentInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/inventoryAdjustmentPosting.js:104:12)
+        at async Object.withTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryMovement.integration.test.js:95:55)
+        at async waitForActual (node:assert:615:5)
+        at async strict.rejects (node:assert:738:25),
+    expected: { code: 'PERMISSION_STALE' },
+    operator: 'rejects',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="ADJ031-REVOKE-ORDER native final security locks serialize later revocation until posting completes" time="1.010879" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryMovement.integration.test.js"/>
+	<testcase name="ADJ031-PROOF native signed-time expiry after stock locks rolls back Operation and zero destination" time="0.006464" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryMovement.integration.test.js"/>
+	<testcase name="TASK-030 native multi-line document preserves Lot/status/BaseUOM and stores chained immutable paired legs" time="0.008472" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryMovement.integration.test.js"/>
+	<testcase name="TASK-030 destination presence, source version and shared starting-version conflicts leave zero effects" time="0.021832" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryMovement.integration.test.js"/>
+	<testcase name="TASK-030 gross OUT cannot use incoming quantities or consume allocated stock" time="0.012533" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryMovement.integration.test.js"/>
+	<testcase name="TASK-030 natural expiry/uncovered Reservation does not block a conserving Move or change Control" time="0.007139" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryMovement.integration.test.js"/>
+	<testcase name="TASK-030 FIFO clears exhausted source, initializes absent destination, retains positive destination anchor" time="0.007365" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryMovement.integration.test.js"/>
+	<testcase name="TASK-030 source replay returns original scalar receipt and reauthorizes without re-reading changed stock" time="0.010829" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryMovement.integration.test.js"/>
+	<testcase name="TASK-030 strict body, source/destination ownership and inactive Bin reject without state changes" time="0.021007" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryMovement.integration.test.js"/>
+	<testcase name="TASK-030 injected P4 Counting signal rejects source or destination; no real Stocktake workflow claimed" time="0.007742" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryMovement.integration.test.js"/>
+	<testcase name="TASK-030 deterministic same-version Move race has one whole-document winner" time="0.006249" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryMovement.integration.test.js"/>
+	<testcase name="TASK-030 current read detects destination created after source discovery despite repeatable-read snapshot" time="0.006946" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryMovement.integration.test.js"/>
+	<testcase name="TASK-030 injected mid-leg, Audit, Operation completion and pre-commit failures roll back entire real transaction" time="0.026642" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryMovement.integration.test.js"/>
+	<testcase name="TASK-030 Move vs Dispatch serializes Control and has no overspend or partial loser" time="0.010320" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryMovement.integration.test.js"/>
+	<testcase name="TASK-030 Move vs Issue preserves allocated stock and Reservation accounting under deterministic race" time="0.011905" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryMovement.integration.test.js"/>
+	<testcase name="TASK-030 unsafe aggregate arithmetic and exhausted Balance version reject before any writes" time="0.008964" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryMovement.integration.test.js"/>
+	<testcase name="TASK-030 mixed SKU/Lot/status documents conserve each scope and reject a late invalid destination atomically" time="0.010755" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryMovement.integration.test.js"/>
+	<!-- tests 24 -->
+	<!-- suites 0 -->
+	<!-- pass 21 -->
+	<!-- fail 3 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 51733.439375 -->
+</testsuites>

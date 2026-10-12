@@ -1,0 +1,11 @@
+Per-file coverage floors not met:
+  - src/modules/sales/SalesOrderConfirmationService.js: lines 16.37% is below the 95% floor
+  - src/modules/sales/SalesOrderConfirmationService.js: functions 10.00% is below the 90% floor
+  - src/modules/sales/SalesOrderLifecycleService.js: lines 25.44% is below the 95% floor
+  - src/modules/sales/SalesOrderLifecycleService.js: branches 66.67% is below the 90% floor
+  - src/modules/sales/SalesOrderLifecycleService.js: functions 14.29% is below the 90% floor
+  - src/modules/sales/SalesBackorderService.js: lines 17.69% is below the 95% floor
+  - src/modules/sales/SalesBackorderService.js: branches 66.67% is below the 90% floor
+  - src/modules/sales/SalesBackorderService.js: functions 14.29% is below the 90% floor
+
+These files are gated individually because a global threshold cannot detect them regressing.

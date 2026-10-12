@@ -1,0 +1,60 @@
+{
+  "schema_version": "2.0",
+  "module_id": "inventory-management",
+  "run_id": "task031-hd125-nondb-bec97dc83a-inventory-p3-dependency-audit",
+  "suite_id": "inventory-p3-dependency-audit",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "4c074a4e344599e912aab7e351e93abfc5f447085657f59625f7c7a95c69440a",
+  "source_fingerprint": "894fb4eea4259c375705fdaea945a2a2fadc64736a9bbc335f47e35b5789e42e",
+  "code_commit": "869ac07abdd3879254c351d857be911d71e68b6b",
+  "started_at": "2026-10-08T00:53:36.481751+00:00",
+  "ended_at": "2026-10-08T00:53:39.663786+00:00",
+  "environment_id": "inventory-isolated-test",
+  "runtime_instance_id": "erp-inventory-task031-hd125-nondb.9mecgzed",
+  "data_reference": "Synthetic Inventory fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "npm",
+    "run",
+    "security:audit"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "f2ddb885b3ce2c2545acaee4768430eea744cd2c404f8b7ecd37bd80a06cfc7d",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 0,
+    "passed": 0,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-dependency-audit/stderr.log",
+      "sha256": "bea6ba085f590d81a5fcaed95bc29fad624def59058ba6dba2d4c5d1b4ceb8bc",
+      "bytes": 209
+    },
+    {
+      "path": "evidence/task031-hd125-nondb-bec97dc83a/inventory-p3-dependency-audit/stdout.log",
+      "sha256": "bc26525dc9c561eb5022948f494803a59796c933961b5c14442cc01e9b188e40",
+      "bytes": 405
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "Actual HD125 approved fresh original developer regression; defect disposition/final Sam Task review remain pending; not formal acceptance, UI or current CI."
+  ]
+}

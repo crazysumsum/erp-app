@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="DEV-029-API-01 Draft full replacement, filters and cancellation leave stock untouched" time="2.128463" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js"/>
+	<testcase name="DEV-029-API-02 whole Dispatch and Receive conserve stock with paired immutable legs" time="0.992369" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js"/>
+	<testcase name="DEV-029-API-03 missing, repeated, extra and partial Receive lines have zero business effects" time="1.162306" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js"/>
+	<testcase name="DEV-029-API-04 path-owned children, versions, same-name Bin ownership and InTransit immutability" time="1.373960" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js"/>
+	<testcase name="DEV-029-API-05 Quarantined receipt requires reason and preserves exact dimensions" time="1.968809" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js"/>
+	<testcase name="DEV-029-API-06 anonymous, read-only and freshly revoked JWT permissions cannot write or replay" time="1.646131" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js"/>
+	<testcase name="DEV-029-API-07 HTTP key and domain event replay retain original receipts after later state" time="0.304637" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js"/>
+	<testcase name="DEV-029-API-08 Audit failure rolls back Dispatch and same-intent retry posts once" time="0.442194" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js"/>
+	<testcase name="DEV-029-LOOKUP-01 Inventory-only lookup enforces auth and fresh revocation without Item grants" time="0.612775" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js" failure="{&amp;quot;success&amp;quot;:true,&amp;quot;data&amp;quot;:{&amp;quot;skuId&amp;quot;:2,&amp;quot;skuCode&amp;quot;:&amp;quot;LK-%_b68c8522-4703-4c92-ac0f-4b5f33a7b2ff&amp;quot;,&amp;quot;skuName&amp;quot;:&amp;quot;Lookup SKU&amp;quot;,&amp;quot;trackingPolicy&amp;quot;:&amp;quot;none&amp;quot;,&amp;quot;baseUom&amp;quot;:{&amp;quot;uomId&amp;quot;:1,&amp;quot;uomCode&amp;quot;:&amp;quot;EA5c746f66&amp;quot;}},&amp;quot;meta&amp;quot;:{&amp;quot;requestId&amp;quot;:&amp;quot;7bc64de1-65b5-44f8-b72f-e4ecd1f3c061&amp;quot;,&amp;quot;timestamp&amp;quot;:&amp;quot;2026-10-06T16:10:53.518+08:00&amp;quot;}}&#10;&#10;200 !== 403&#10;">
+		<failure type="testCodeFailure" message="{&amp;quot;success&amp;quot;:true,&amp;quot;data&amp;quot;:{&amp;quot;skuId&amp;quot;:2,&amp;quot;skuCode&amp;quot;:&amp;quot;LK-%_b68c8522-4703-4c92-ac0f-4b5f33a7b2ff&amp;quot;,&amp;quot;skuName&amp;quot;:&amp;quot;Lookup SKU&amp;quot;,&amp;quot;trackingPolicy&amp;quot;:&amp;quot;none&amp;quot;,&amp;quot;baseUom&amp;quot;:{&amp;quot;uomId&amp;quot;:1,&amp;quot;uomCode&amp;quot;:&amp;quot;EA5c746f66&amp;quot;}},&amp;quot;meta&amp;quot;:{&amp;quot;requestId&amp;quot;:&amp;quot;7bc64de1-65b5-44f8-b72f-e4ecd1f3c061&amp;quot;,&amp;quot;timestamp&amp;quot;:&amp;quot;2026-10-06T16:10:53.518+08:00&amp;quot;}}&#10;&#10;200 !== 403">
+[Error [ERR_TEST_FAILURE]: {"success":true,"data":{"skuId":2,"skuCode":"LK-%_b68c8522-4703-4c92-ac0f-4b5f33a7b2ff","skuName":"Lookup SKU","trackingPolicy":"none","baseUom":{"uomId":1,"uomCode":"EA5c746f66"}},"meta":{"requestId":"7bc64de1-65b5-44f8-b72f-e4ecd1f3c061","timestamp":"2026-10-06T16:10:53.518+08:00"}}
+
+200 !== 403
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: {"success":true,"data":{"skuId":2,"skuCode":"LK-%_b68c8522-4703-4c92-ac0f-4b5f33a7b2ff","skuName":"Lookup SKU","trackingPolicy":"none","baseUom":{"uomId":1,"uomCode":"EA5c746f66"}},"meta":{"requestId":"7bc64de1-65b5-44f8-b72f-e4ecd1f3c061","timestamp":"2026-10-06T16:10:53.518+08:00"}}
+  
+  200 !== 403
+  
+      at rejectedLookup (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js:234:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js:247:9)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 200,
+    expected: 403,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="DEV-029-LOOKUP-02 strict whitelist and no-Balance SKU support Draft but never authorize Dispatch" time="0.007402" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js" failure="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;  [&#10;+   'uomCode',&#10;    'uomId',&#10;-   'uomCode'&#10;  ]&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;  [&#10;+   'uomCode',&#10;    'uomId',&#10;-   'uomCode'&#10;  ]">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly deep-equal:
++ actual - expected
+
+  [
++   'uomCode',
+    'uomId',
+-   'uomCode'
+  ]
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    [
+  +   'uomCode',
+      'uomId',
+  -   'uomCode'
+    ]
+  
+      at TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js:256:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'uomCode', 'uomId' ],
+    expected: [ 'uomId', 'uomCode' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="DEV-029-LOOKUP-03 bounded Code, literal wildcards and collation never become catalogue search" time="1.558920" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js"/>
+	<testcase name="DEV-029-LOOKUP-04 Item profile rejects invalid tracking/status/Base UOM and stale Draft input" time="2.176069" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js"/>
+	<testcase name="DEV-029-LOOKUP-05 two-connection rename/inactivation cannot mix read snapshots or exempt later writes" time="0.315812" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryWarehouseOperationsApi.integration.test.js"/>
+	<!-- tests 13 -->
+	<!-- suites 0 -->
+	<!-- pass 11 -->
+	<!-- fail 2 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 14896.540417 -->
+</testsuites>

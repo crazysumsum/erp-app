@@ -1,0 +1,70 @@
+{
+  "schema_version": "2.0",
+  "module_id": "inventory-management",
+  "run_id": "task033-nondb-nondb-723401a140-inventory-p3-movements-client",
+  "suite_id": "inventory-p3-movements-client",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "997d8de40da4f362ef23d81cd57c2a65b8e096d64109a12ddc4ee738f5ff791a",
+  "source_fingerprint": "b56886894f758852f366ff95b4bdd77e8c34a5076e94da5763de6d500283c768",
+  "code_commit": "869ac07abdd3879254c351d857be911d71e68b6b",
+  "started_at": "2026-10-08T09:11:12.646433+00:00",
+  "ended_at": "2026-10-08T09:11:13.744864+00:00",
+  "environment_id": "inventory-isolated-test",
+  "runtime_instance_id": "erp-inventory-task033-nondb-nondb.57lfytns",
+  "data_reference": "Synthetic Inventory fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "npm",
+    "test",
+    "--workspace",
+    "client",
+    "--",
+    "test/pages/inventory/inventoryMovements.test.js",
+    "--reporter=junit",
+    "--outputFile=/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/task033-nondb-nondb-723401a140/inventory-p3-movements-client/inventory-p3-movements-client.xml"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "571c6ee16037ab447661634eeb34353853ee761623ed4ded62506327a8c08c7c",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 7,
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/task033-nondb-nondb-723401a140/inventory-p3-movements-client/inventory-p3-movements-client.xml",
+      "sha256": "701c3e1e66ce5f719384c2925102854abafe63e5d87e5b736337e23406298b55",
+      "bytes": 2150
+    },
+    {
+      "path": "evidence/task033-nondb-nondb-723401a140/inventory-p3-movements-client/stderr.log",
+      "sha256": "425db5aec866626f66ee407dfc66b7aa289d0afc6fa66423aa646f4bac1be435",
+      "bytes": 182
+    },
+    {
+      "path": "evidence/task033-nondb-nondb-723401a140/inventory-p3-movements-client/stdout.log",
+      "sha256": "34041ce6ac9342210459d90d2c50c17880e759db30b0bc66713301bc38b7c741",
+      "bytes": 522
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "HD131 TASK033 approved current-source native developer impact check; no formal/UI/current CI or Sam final source review claim."
+  ]
+}

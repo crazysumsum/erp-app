@@ -1,0 +1,38 @@
+<testsuites id="" name="" tests="16" failures="0" skipped="0" errors="0" time="81.442917">
+<testsuite name="inventory-high-risk.spec.js" timestamp="2026-10-12T00:59:20.857Z" hostname="technical" tests="8" failures="0" skipped="0" time="52.417" errors="0">
+<testcase name="TASK-033 @technical Base-only IN, three statuses and immutable/new Lot validate real facts" classname="inventory-high-risk.spec.js" time="14.329">
+</testcase>
+<testcase name="TASK-033 @technical OUT reads current guards and retains safe input after a real version rejection" classname="inventory-high-risk.spec.js" time="4.327">
+</testcase>
+<testcase name="TASK-033 @technical Status paired effects and whole-group Reversal preserve actual history and stock" classname="inventory-high-risk.spec.js" time="4.588">
+</testcase>
+<testcase name="TASK-033 @technical actual permission, password and device gates cannot be replaced by operation or FEFO" classname="inventory-high-risk.spec.js" time="5.621">
+</testcase>
+<testcase name="TASK-033 @technical pre-forward abort retries only original intent with fresh password/signature and one effect" classname="inventory-high-risk.spec.js" time="3.931">
+</testcase>
+<testcase name="TASK-033 @technical real committed-response loss resolves original source without a second POST" classname="inventory-high-risk.spec.js" time="2.599">
+</testcase>
+<testcase name="TASK-033 @technical refresh/navigation is query-only, actor-isolated and storage corruption blocks new effects" classname="inventory-high-risk.spec.js" time="3.493">
+</testcase>
+<testcase name="TASK-033 @technical keyboard, cleared cancellation, XSS escaping, responsive and delayed real SKU lookup" classname="inventory-high-risk.spec.js" time="13.529">
+</testcase>
+</testsuite>
+<testsuite name="inventory-warehouse-operations.spec.js" timestamp="2026-10-12T00:59:20.857Z" hostname="technical" tests="8" failures="0" skipped="0" time="25.476" errors="0">
+<testcase name="TASK-029 @technical Inventory-only two-line Draft Dispatch Receive conserves real stock" classname="inventory-warehouse-operations.spec.js" time="8.962">
+</testcase>
+<testcase name="TASK-029 @technical view-only actor sees real In Transit but no write controls" classname="inventory-warehouse-operations.spec.js" time="0.658">
+</testcase>
+<testcase name="TASK-029 @technical no-Balance SKU remains selectable and insufficient Dispatch keeps Draft" classname="inventory-warehouse-operations.spec.js" time="3.44">
+</testcase>
+<testcase name="TASK-029 @technical unknown SKU, invalid quantity and revoked token fail safely" classname="inventory-warehouse-operations.spec.js" time="2.394">
+</testcase>
+<testcase name="TASK-029 @technical delayed real lookup cannot replace a newer explicitly chosen SKU" classname="inventory-warehouse-operations.spec.js" time="2.356">
+</testcase>
+<testcase name="TASK-029 @technical stale Draft version returns 409 and retains unsaved quantity" classname="inventory-warehouse-operations.spec.js" time="1.291">
+</testcase>
+<testcase name="TASK-029 @technical Quarantined full receipt requires reason and destination ownership" classname="inventory-warehouse-operations.spec.js" time="2.611">
+</testcase>
+<testcase name="TASK-029 @technical keyboard lookup, unsaved close, responsive and URL refresh" classname="inventory-warehouse-operations.spec.js" time="3.764">
+</testcase>
+</testsuite>
+</testsuites>

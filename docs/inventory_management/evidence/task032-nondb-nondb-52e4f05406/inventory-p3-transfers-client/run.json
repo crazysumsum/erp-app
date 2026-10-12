@@ -1,0 +1,70 @@
+{
+  "schema_version": "2.0",
+  "module_id": "inventory-management",
+  "run_id": "task032-nondb-nondb-52e4f05406-inventory-p3-transfers-client",
+  "suite_id": "inventory-p3-transfers-client",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "237d98e617f0a0f4612934118be2d589652b4eb70968291ad511fec6bb758658",
+  "source_fingerprint": "d0c522b096ce38fdb2719644e46b54da841febe3e08172732b7378c5426d0fac",
+  "code_commit": "869ac07abdd3879254c351d857be911d71e68b6b",
+  "started_at": "2026-10-08T02:31:15.137674+00:00",
+  "ended_at": "2026-10-08T02:31:16.510136+00:00",
+  "environment_id": "inventory-isolated-test",
+  "runtime_instance_id": "erp-inventory-task032-nondb-nondb.u_zdi4ce",
+  "data_reference": "Synthetic Inventory fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "npm",
+    "test",
+    "--workspace",
+    "client",
+    "--",
+    "test/pages/inventory/inventoryTransfers.test.js",
+    "--reporter=junit",
+    "--outputFile=/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/task032-nondb-nondb-52e4f05406/inventory-p3-transfers-client/inventory-p3-transfers-client.xml"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "5e59adcee6af4448c8c325eec4f781eeb450536f9b24b912a69169d27d38b9c9",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 13,
+    "passed": 13,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/task032-nondb-nondb-52e4f05406/inventory-p3-transfers-client/inventory-p3-transfers-client.xml",
+      "sha256": "0f90e525734349c9683a762c92b34ddbd10f06d2d8b75204fa2bdebed3fdc050",
+      "bytes": 5142
+    },
+    {
+      "path": "evidence/task032-nondb-nondb-52e4f05406/inventory-p3-transfers-client/stderr.log",
+      "sha256": "8642230c58b557db69a1916b9f677f58d17db419a94f8249be2aca99437aeb6d",
+      "bytes": 270
+    },
+    {
+      "path": "evidence/task032-nondb-nondb-52e4f05406/inventory-p3-transfers-client/stdout.log",
+      "sha256": "ec29e99d2ef52874b8c9a48bc4265fb027dd5804dbb60cf777e0256bd7b1c9fd",
+      "bytes": 522
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "HD128 TASK032 approved current-source native developer impact check; no formal/UI/current CI or Sam final source review claim."
+  ]
+}

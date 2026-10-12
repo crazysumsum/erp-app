@@ -1,0 +1,94 @@
+{
+  "schema_version": "2.0",
+  "module_id": "inventory-management",
+  "run_id": "task030-http-inventory-p3-browser-8fe2699feb",
+  "suite_id": "inventory-p3-browser",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "8ab85d87051f437b74c6cfb4efc39ba93c8c2dd9e56ca7ea210d7bc5bc705dc8",
+  "source_fingerprint": "fe3130fef55c9ec8cc71b2edf872a8a2076b5332581749ee281b211de38f2bc2",
+  "code_commit": "869ac07abdd3879254c351d857be911d71e68b6b",
+  "started_at": "2026-10-07T03:25:56.193060+00:00",
+  "ended_at": "2026-10-07T03:26:26.067138+00:00",
+  "environment_id": "inventory-isolated-test",
+  "runtime_instance_id": "erp_inventory_p3_87e8e15ea65f",
+  "data_reference": "Synthetic Inventory fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "npx",
+    "--no-install",
+    "playwright",
+    "test",
+    "--config",
+    "client/e2e/inventory-management/playwright.config.js",
+    "inventory-warehouse-operations.spec.js"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "f246e001ebb8bc5193c8866662eab10aa3d84af4ee52a10ff77545a4c5b4f51a",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 8,
+    "passed": 8,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/task030-http-inventory-p3-browser-8fe2699feb/stdout.log",
+      "sha256": "d9092a7784ee56b00a5ad4d95d3bd5c487617ace0172a7bd9cae12a5f2e18665",
+      "bytes": 1547
+    },
+    {
+      "path": "evidence/task030-http-inventory-p3-browser-8fe2699feb/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/task030-http-inventory-p3-browser-8fe2699feb/inventory-p3-browser.xml",
+      "sha256": "9e249b60560164debee09f62d011d5b216010a9bdd3c1c4ac2ef866206b68f53",
+      "bytes": 1720
+    },
+    {
+      "path": "evidence/task030-http-inventory-p3-browser-8fe2699feb/transfer-draft-1024.png",
+      "sha256": "192563d7176b8f750712cd7bdd0364ed066afa66dd5264bcce4ed7cddadd196f",
+      "bytes": 73589
+    },
+    {
+      "path": "evidence/task030-http-inventory-p3-browser-8fe2699feb/transfer-draft-1440.png",
+      "sha256": "16b7fb75c5f1a39489d5ab6fd933b3996ddb0418c4dcc09a0dc947c5d1006681",
+      "bytes": 88237
+    },
+    {
+      "path": "evidence/task030-http-inventory-p3-browser-8fe2699feb/transfer-draft-320.png",
+      "sha256": "1a3a30edf3087555f2744db4d609326c703911ea3a0f5148a70f715d75b92151",
+      "bytes": 46720
+    },
+    {
+      "path": "evidence/task030-http-inventory-p3-browser-8fe2699feb/transfer-draft-768.png",
+      "sha256": "b4a784308a0abfa3c99cf4638379697a17c2849c911a3b35e7ecb5fd6d8d538f",
+      "bytes": 61434
+    },
+    {
+      "path": "evidence/task030-http-inventory-p3-browser-8fe2699feb/transfer-received.png",
+      "sha256": "175e5f449981e6f15bfbe541cabb2bd096f44f180609572002b5b62e4d5d335b",
+      "bytes": 121666
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "DEVELOPER TASK030 HTTP/domain plus Transfer compatibility only; not full-P3/formal acceptance/CI. Capacity4 remains NOT_EXECUTED."
+  ]
+}
