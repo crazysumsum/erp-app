@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 308,
+  "revision": 309,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -9,12 +9,12 @@
   "current_phase": "PHASE-004",
   "current_task": "TASK-050",
   "baseline": {
-    "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
-    "plan": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
-    "code_commit": "5b8aa9bbcf5217ab3a30f722ff241d167fa402f6",
-    "source_fingerprint": "cd70f899bfaca539353988b320210dd24b2c3b8958b249224ad8dd55f701dc97",
-    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t50",
-    "default_commit": "394fc3fb11b6dce0bf4c41288904a8fac6d3fa49",
+    "design": "f2f4a82b76b40a6ddd214263023aa4b7383facdce30d33348cfd1d16dcdfe6ab",
+    "plan": "b5724a2fbaa17f3f592b81e7258fb36d13c8ba2480dae8e10a40bc0713510287",
+    "code_commit": "a2715077871ffa8289193d6482df6add6b363bd7",
+    "source_fingerprint": "7664683db568898d9d1e1751e9a0fff1ef29d7f7e58d915483cf9681ad056146",
+    "worktree": "/Users/sam/Documents/workspace/erp-supplier-pin",
+    "default_commit": "a2715077871ffa8289193d6482df6add6b363bd7",
     "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
   },
   "runtime": {
@@ -1022,6 +1022,40 @@
       "scope": [
         "server/config/supplier.js",
         "server/.env.example"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-085-DESIGN",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "HD-085: refresh of the consumed item-sku-uom-provider pin to 5a44ef30d5b3fab23d5f780005a0fd90ff70d4be56a31a48e69a5bf028a011a9. Only the manifest contracts block changed; it moves the design baseline from e4083319 to f2f4a82b. No requirement, design, phase, task, suite or test flag changed.",
+      "recorded_at": "2026-10-12T00:00:00+08:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "f2f4a82b76b40a6ddd214263023aa4b7383facdce30d33348cfd1d16dcdfe6ab",
+      "code_commit": "a2715077871ffa8289193d6482df6add6b363bd7",
+      "scope": [
+        "supplier-management manifest contracts.consumed item-sku-uom-provider",
+        "TASK-038"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-085-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "HD-085: refresh of the consumed item-sku-uom-provider pin to 5a44ef30d5b3fab23d5f780005a0fd90ff70d4be56a31a48e69a5bf028a011a9. Only the manifest contracts block changed; it moves the plan baseline from db529678 to b5724a2f. No requirement, design, phase, task, suite or test flag changed.",
+      "recorded_at": "2026-10-12T00:00:00+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "b5724a2fbaa17f3f592b81e7258fb36d13c8ba2480dae8e10a40bc0713510287",
+      "code_commit": "a2715077871ffa8289193d6482df6add6b363bd7",
+      "scope": [
+        "supplier-management manifest contracts.consumed item-sku-uom-provider",
+        "TASK-038"
       ],
       "expires_at": null
     }
@@ -4904,6 +4938,32 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-12: 'A，唔使再 review，CI 過就 merge'."
+    },
+    {
+      "id": "HD-085",
+      "impact": "MAJOR",
+      "question": "Refresh the Supplier manifest's consumed item-sku-uom-provider pin from 5c193e20 to the current Item design 5a44ef30 (Sales lookup additions and the PR #196 §5.14 alignment to the Supplier-owned supplier_sku_refs). The manifest feeds both harness digests, so the design and plan baselines move and the records bound to the old ones are kept as history: 14 approvals (APPROVAL-HD-017-DESIGN, APPROVAL-HD-031-PLAN, APPROVAL-HD-031-PLAN-REBIND-2 and 11 SCOPE approvals for paths used by earlier tasks), 66 reviews and 47 observations. Done after PR #197 merged, so REV-083/084 kept their baseline.",
+      "affected_ids": [
+        "TASK-038",
+        "DES-017"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-12: '開始 T38 嘅準備' in answer to a question that named the pin refresh as part of the preparation; the author then stated that he read it as approving the refresh after #197, and the Product Owner answered the same message '批准' without objection."
+    },
+    {
+      "id": "HD-086",
+      "impact": "MAJOR",
+      "question": "Schema for TASK-038 (design §5.11, §5.11.1): supplier_sku_refs (soft Supplier-SKU relation; FK suppliers and item_skus RESTRICT, composite FK (purchase_sku_uom_id, sku_id) to item_sku_uoms(id, sku_id) RESTRICT; UNIQUE(supplier_id, sku_id), UNIQUE(supplier_id, supplier_item_code_key), INDEX(sku_id, relationship_status, last_supplied_at); no price) and supplier_supply_events (append-only recordSupply fence; UNIQUE(event_id), UNIQUE(source_type, source_id, source_line_id), INDEX(relation_id, supplied_at); FKs RESTRICT). New tables only; the migration refuses without the Item SKU/UOM tables.",
+      "affected_ids": [
+        "TASK-038",
+        "FR-SKU-003",
+        "FR-SKU-004",
+        "FR-SKU-006",
+        "BR-023",
+        "BR-024"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-12: '批准'. The migration is 0081 (0080 went to the HD-088 list indexes)."
     }
   ],
   "external_actions": [
@@ -5980,5 +6040,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-050 (without for-SKU): HD-089 fixes pushed to PR #197. Merge when CI is green on the head and main is unchanged (HD-089: no further review). Then: pin refresh PR (HD-085), TASK-038 PR (migration 0081, HD-086)."
+  "next_safe_action": "HD-085 pin refresh (this PR). Next: TASK-038 PR (migration 0081, HD-086) on top of it. TASK-050 stays IN_PROGRESS for its for-SKU part after TASK-040."
 }
