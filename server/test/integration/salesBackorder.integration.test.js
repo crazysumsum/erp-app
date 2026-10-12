@@ -88,7 +88,7 @@ it("TC-021 an allocator holding its Order mapping locks never blocks another Ord
  // A mapping gap lock held by the allocator makes that insert wait; the allocator's Warehouse request then closes a deadlock cycle.
  a.s.inventory={async reserveAvailableForSalesBackorderInTransaction(...args){other=confirm(f,second);const bound=Promise.withResolvers(),timer=setTimeout(()=>{blocked=true;bound.resolve();},5000);await Promise.race([other.catch(()=>{}),bound.promise]);clearTimeout(timer);return inventory.reserveAvailableForSalesBackorderInTransaction(...args);}};
  let result;try{result=await a.s.runBatch({scope:{warehouseId:f.warehouseId,skuId:f.skuId},maxEntries:1});}finally{await other?.catch(()=>{});}
- assert.equal(blocked,false,"the other Order's confirmation waited on the allocator's Sales mapping locks");
+ assert.ok(other,"the allocator never reached Inventory");assert.equal(blocked,false,"the other Order's confirmation waited on the allocator's Sales mapping locks");
  assert.equal((await other).operation.status,"CONFIRMED");assert.equal(result.allocatedEntries,1);assert.equal(result.deferred,0);
  const orders=await Promise.all([f.request.id,second].map(id=>readSalesOrderDetail(f.db,id)));assert.deepEqual(orders.map(o=>[o.status,o.lines[0].reservedBaseQuantity,o.lines[0].backorderedBaseQuantity]),[["CONFIRMED","10","0"],["CONFIRMED","10","0"]]);
 });

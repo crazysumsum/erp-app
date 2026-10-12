@@ -83,9 +83,10 @@ export class SalesBackorderService{
    const [[head]]=await tx.query("SELECT id FROM sales_backorder_entries WHERE status='OPEN' AND warehouse_id=? AND sku_id=? ORDER BY priority_at,sales_order_id,line_no,id LIMIT 1",[Number(queue.warehouse_id),Number(queue.sku_id)]);
    if(Number(head?.id)!==Number(queue.id)||Number(queue.next_attempt_at)>nowMs)return {retry:true};
    const order=await readSalesOrderDetail(tx,orderId,{lock:true}),line=order.lines.find(value=>value.id===Number(queue.sales_order_line_id));
-   // Lock existing mappings by primary key only. A FOR UPDATE search on the line index would also gap-lock the next Order's
-   // mapping range, which that Order's confirmation inserts into while holding the Inventory Warehouse lock (deadlock).
-   // The Order row lock above already serializes every writer of this Order's mappings.
+   // Lock existing mappings by primary key only. A FOR UPDATE search on uq_sales_mapping_line_event would also gap-lock up to the
+   // next existing mapping key, which any higher line's confirmation inserts into while holding the Inventory Warehouse lock (deadlock).
+   // The Order row lock above serializes every writer of this Order's mappings, and the id read is complete only because the
+   // read view starts after that lock (the head read above): never add a plain InnoDB read before the Order lock.
    const [owned]=await tx.query("SELECT r.id FROM sales_order_line_reservations r JOIN sales_order_lines l ON l.id=r.sales_order_line_id WHERE l.sales_order_id=?",[orderId]);
    const [mappings]=owned.length?await tx.query(`SELECT * FROM sales_order_line_reservations WHERE id IN (${owned.map(()=>"?").join(",")}) ORDER BY id FOR UPDATE`,owned.map(row=>Number(row.id))):[[]];
    if(!line)throw salesError("SALES_DEPENDENCY_UNAVAILABLE");
