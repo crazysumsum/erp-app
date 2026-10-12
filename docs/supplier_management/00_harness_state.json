@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 312,
+  "revision": 313,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -1995,6 +1995,18 @@
       "status": "CHANGES_REQUESTED",
       "open_critical": 0,
       "open_high": 2,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-086",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-038)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 2a2d1aa20240dfe4223177754ed6fab46eb0fb2f (PR #201), the round after REV-085",
+      "reviewed_baseline": "f2f4a82b76b40a6ddd214263023aa4b7383facdce30d33348cfd1d16dcdfe6ab",
+      "source_ref": "docs/supplier_management/implementation/89_rev_086_independent_review.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
       "risk_approval_id": null
     }
   ],
@@ -6064,5 +6076,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-038: HD-090 fixes done on claude/supplier-task-038 (PR #201). Full suite, push, REV-086 limited to this round; merge when CI passes after it."
+  "next_safe_action": "TASK-038: REV-086 APPROVED with test (M-1, L-1) and doc (L-2) follow-ups. Ask the Product Owner (HD-091) whether to fix them before merging #201."
 }
