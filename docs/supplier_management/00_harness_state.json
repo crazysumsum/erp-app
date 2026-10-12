@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 310,
+  "revision": 311,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -1983,6 +1983,18 @@
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-085",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-038)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 62b34ecfc0044a907658358352b65828c239a3cc (PR #201)",
+      "reviewed_baseline": "f2f4a82b76b40a6ddd214263023aa4b7383facdce30d33348cfd1d16dcdfe6ab",
+      "source_ref": "docs/supplier_management/implementation/88_rev_085_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 2,
       "risk_approval_id": null
     }
   ],
@@ -6040,5 +6052,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-038: relations, recordSupply and migration 0081 implemented on claude/supplier-task-038 (PR). Independent review if the Product Owner wants it; merge only on the Product Owner's word. Open: Item mapping id in the lookup projection (UOM active check); Purchasing source verifier. TASK-050 stays IN_PROGRESS for its for-SKU part after TASK-040."
+  "next_safe_action": "TASK-038: REV-085 CHANGES_REQUESTED (H1 second pool connection inside transactions; H2 recordSupply deadlock and dead retry; M1 partial update wipes fields; M2 test gaps; L1-L6). Ask the Product Owner (HD-090)."
 }
