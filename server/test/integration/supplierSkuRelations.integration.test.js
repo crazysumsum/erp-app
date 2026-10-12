@@ -6,7 +6,7 @@ import path from "node:path";
 import { after, before, test } from "node:test";
 import mysql from "mysql2/promise";
 
-import { up as migrateSupplierSkuRefs } from "../../database/migrations/0081_create_supplier_sku_refs.js";
+import { inspectSupplierSkuRelationSchema, up as migrateSupplierSkuRefs } from "../../database/migrations/0081_create_supplier_sku_refs.js";
 import { ItemLookupService } from "../../src/modules/item/ItemLookupService.js";
 import { SupplierRelationService } from "../../src/modules/supplier/SupplierRelationService.js";
 
@@ -218,4 +218,26 @@ integrationTest("TASK-038: a Supplier with a SKU relation cannot be permanently 
   await service().create({ ...actor(), supplierId, skuId: (await sku()).id });
   await assert.rejects(() => h.db.execute("DELETE FROM suppliers WHERE id = ?", [supplierId]),
     (error) => /fk_supplier_sku_refs_supplier/u.test(String(error?.cause?.message)));
+});
+
+integrationTest("TASK-038: a rerun accepts the real tables but refuses a hand-made one whose foreign keys differ", async (t) => {
+  assert.equal(await inspectSupplierSkuRelationSchema(h.db, "supplier_sku_refs"), true);
+  assert.equal(await inspectSupplierSkuRelationSchema(h.db, "supplier_supply_events"), true);
+  const probe = `skr_probe_${randomUUID().slice(0, 8)}`;
+  t.after(() => h.db.query(`DROP TABLE IF EXISTS \`${probe}\``));
+  // LIKE 複製欄位同 index，但唔複製 FK。
+  await h.db.query(`CREATE TABLE \`${probe}\` LIKE supplier_sku_refs`);
+  await assert.rejects(() => inspectSupplierSkuRelationSchema(h.db, "supplier_sku_refs", { as: probe }), /foreign key/u, "no foreign keys at all");
+  const addKeys = (supplierRule) => h.db.query(`ALTER TABLE \`${probe}\`
+    ADD CONSTRAINT fk_${probe}_s FOREIGN KEY (supplier_id) REFERENCES suppliers (id) ON DELETE ${supplierRule},
+    ADD CONSTRAINT fk_${probe}_k FOREIGN KEY (sku_id) REFERENCES item_skus (id) ON DELETE RESTRICT,
+    ADD CONSTRAINT fk_${probe}_u FOREIGN KEY (purchase_sku_uom_id, sku_id) REFERENCES item_sku_uoms (id, sku_id) ON DELETE RESTRICT,
+    ADD CONSTRAINT fk_${probe}_c FOREIGN KEY (created_by) REFERENCES users (id) ON DELETE SET NULL,
+    ADD CONSTRAINT fk_${probe}_p FOREIGN KEY (updated_by) REFERENCES users (id) ON DELETE SET NULL`);
+  await addKeys("RESTRICT");
+  assert.equal(await inspectSupplierSkuRelationSchema(h.db, "supplier_sku_refs", { as: probe }), true, "control: the designed keys pass");
+  await h.db.query(`ALTER TABLE \`${probe}\` DROP FOREIGN KEY fk_${probe}_s`);
+  await h.db.query(`ALTER TABLE \`${probe}\` ADD CONSTRAINT fk_${probe}_s FOREIGN KEY (supplier_id) REFERENCES suppliers (id) ON DELETE CASCADE`);
+  await assert.rejects(() => inspectSupplierSkuRelationSchema(h.db, "supplier_sku_refs", { as: probe }),
+    /foreign key: supplier_sku_refs\.supplier_id>suppliers\(id\):RESTRICT/u, "a CASCADE would delete relations with their Supplier");
 });

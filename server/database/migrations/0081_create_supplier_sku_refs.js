@@ -20,6 +20,11 @@ const TABLES = Object.freeze({
       "uq_supplier_sku_refs_supplier_sku:0:supplier_id,sku_id",
       "uq_supplier_sku_refs_item_code:0:supplier_id,supplier_item_code_key",
       "idx_supplier_sku_refs_sku_status_supplied:1:sku_id,relationship_status,last_supplied_at"
+    ],
+    foreignKeys: [
+      "supplier_id>suppliers(id):RESTRICT", "sku_id>item_skus(id):RESTRICT",
+      "purchase_sku_uom_id,sku_id>item_sku_uoms(id,sku_id):RESTRICT",
+      "created_by>users(id):SET NULL", "updated_by>users(id):SET NULL"
     ]
   },
   supplier_supply_events: {
@@ -34,7 +39,8 @@ const TABLES = Object.freeze({
       "uq_supplier_supply_events_event:0:event_id",
       "uq_supplier_supply_events_source:0:source_type,source_id,source_line_id",
       "idx_supplier_supply_events_relation:1:relation_id,supplied_at"
-    ]
+    ],
+    foreignKeys: ["supplier_id>suppliers(id):RESTRICT", "sku_id>item_skus(id):RESTRICT", "relation_id>supplier_sku_refs(id):RESTRICT"]
   }
 });
 
@@ -44,11 +50,15 @@ async function tableExists(connection, table) {
   return rows.length > 0;
 }
 
-async function inspect(connection, table) {
+/**
+ * 驗證現有表同設計一樣：欄位、index，同埋每條 FK 嘅欄位、目標同 ON DELETE 規則（一張 CASCADE 嘅手建表唔可以
+ * 當成已經有）。`as` 俾測試用 probe 表，用 `table` 嘅規格去驗。冇呢張表就回 false。
+ */
+export async function inspectSupplierSkuRelationSchema(connection, table, { as = table } = {}) {
   const spec = TABLES[table];
   const [rows] = await connection.query(
     `SELECT column_name AS column_name, column_type AS column_type, is_nullable AS is_nullable
-       FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = ?`, [table]);
+       FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = ?`, [as]);
   if (rows.length === 0) return false;
   const found = new Map(rows.map((row) => [row.column_name, row]));
   if (found.size !== Object.keys(spec.columns).length) throw new Error(`Incompatible existing Supplier schema: ${table}`);
@@ -60,7 +70,7 @@ async function inspect(connection, table) {
   }
   const [indexRows] = await connection.query(
     `SELECT index_name AS index_name, non_unique AS non_unique, column_name AS column_name
-       FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = ? ORDER BY index_name, seq_in_index`, [table]);
+       FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = ? ORDER BY index_name, seq_in_index`, [as]);
   const grouped = new Map();
   for (const row of indexRows) {
     const key = `${row.index_name}:${Number(row.non_unique)}`;
@@ -69,6 +79,25 @@ async function inspect(connection, table) {
   const actual = new Set([...grouped].map(([key, columns]) => `${key}:${columns.join(",")}`));
   for (const expected of spec.indexes) {
     if (!actual.has(expected)) throw new Error(`Incompatible existing Supplier schema index: ${table}.${expected}`);
+  }
+  const [keyRows] = await connection.query(
+    `SELECT k.constraint_name AS constraint_name, k.column_name AS column_name, k.referenced_table_name AS referenced_table,
+            k.referenced_column_name AS referenced_column, r.delete_rule AS delete_rule
+       FROM information_schema.key_column_usage k
+       JOIN information_schema.referential_constraints r
+         ON r.constraint_schema = k.constraint_schema AND r.constraint_name = k.constraint_name AND r.table_name = k.table_name
+      WHERE k.table_schema = DATABASE() AND k.table_name = ? AND k.referenced_table_name IS NOT NULL
+      ORDER BY k.constraint_name, k.ordinal_position`, [as]);
+  const keys = new Map();
+  for (const row of keyRows) {
+    const key = keys.get(row.constraint_name) ?? { columns: [], targets: [], table: row.referenced_table, rule: row.delete_rule };
+    key.columns.push(row.column_name);
+    key.targets.push(row.referenced_column);
+    keys.set(row.constraint_name, key);
+  }
+  const actualKeys = new Set([...keys.values()].map((key) => `${key.columns.join(",")}>${key.table}(${key.targets.join(",")}):${key.rule}`));
+  for (const expected of spec.foreignKeys) {
+    if (!actualKeys.has(expected)) throw new Error(`Incompatible existing Supplier schema foreign key: ${table}.${expected}`);
   }
   return true;
 }
@@ -91,8 +120,8 @@ async function assertItemProvider(connection) {
 }
 
 export async function up(connection) {
-  const refs = await inspect(connection, "supplier_sku_refs");
-  const events = await inspect(connection, "supplier_supply_events");
+  const refs = await inspectSupplierSkuRelationSchema(connection, "supplier_sku_refs");
+  const events = await inspectSupplierSkuRelationSchema(connection, "supplier_supply_events");
   if (refs && events) return;
   await assertItemProvider(connection);
   if (!refs) {
@@ -153,6 +182,6 @@ export async function up(connection) {
       )
     `);
   }
-  await inspect(connection, "supplier_sku_refs");
-  await inspect(connection, "supplier_supply_events");
+  await inspectSupplierSkuRelationSchema(connection, "supplier_sku_refs");
+  await inspectSupplierSkuRelationSchema(connection, "supplier_supply_events");
 }
