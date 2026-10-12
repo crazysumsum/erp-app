@@ -1,0 +1,69 @@
+{
+  "schema_version": "2.0",
+  "module_id": "inventory-management",
+  "run_id": "task031-functional-regression-025-inventory-p2-database-4fd3fb9572",
+  "suite_id": "inventory-p2-database",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "4c074a4e344599e912aab7e351e93abfc5f447085657f59625f7c7a95c69440a",
+  "source_fingerprint": "7bc0fbfed8fb1f626b4c008f28310c2b1b8233622668b933d8f90b69780853df",
+  "code_commit": "869ac07abdd3879254c351d857be911d71e68b6b",
+  "started_at": "2026-10-07T09:08:31.784353+00:00",
+  "ended_at": "2026-10-07T09:08:32.124932+00:00",
+  "environment_id": "inventory-isolated-test",
+  "runtime_instance_id": "erp_inventory_task025_0a6c47efa734",
+  "data_reference": "Synthetic Inventory fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "node",
+    "--test",
+    "--import",
+    "./server/test-support/testEnv.js",
+    "--test-reporter=junit",
+    "--test-reporter-destination=/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/task031-functional-regression-025-inventory-p2-database-4fd3fb9572/inventory-p2-database.xml",
+    "server/test/integration/inventoryTask022.integration.test.js"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "f5a596e528a9c3a2f39a6d5233cb89a59e06a1419c126eaebc29bdf36a8c2470",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 7,
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/task031-functional-regression-025-inventory-p2-database-4fd3fb9572/stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/task031-functional-regression-025-inventory-p2-database-4fd3fb9572/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/task031-functional-regression-025-inventory-p2-database-4fd3fb9572/inventory-p2-database.xml",
+      "sha256": "136bfe1f653e35b21ac64d0fff00d6474a27f6fbe272b39f0e8ea37c783fc5ac",
+      "bytes": 2231
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "mysql",
+        "--version"
+      ],
+      "output": "mysql  Ver 26.7.0 for macos15 on arm64 (MySQL Community Server - GPL)\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "DEVELOPER existing TASK031_FUNCTIONAL functional guard only; not full Phase/formal acceptance/CI. Supporting8 command snapshots are diagnostics only, not profile contracts."
+  ]
+}

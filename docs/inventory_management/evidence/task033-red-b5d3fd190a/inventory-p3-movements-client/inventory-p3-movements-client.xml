@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="7" failures="5" errors="0" time="0.130645833">
+    <testsuite name="test/pages/inventory/inventoryMovements.test.js" timestamp="2026-10-08T06:02:00.933Z" hostname="samMacBook-Pro.local" tests="7" failures="5" errors="0" skipped="0" time="0.130645833">
+        <testcase classname="test/pages/inventory/inventoryMovements.test.js" name="TASK033 Movement high-risk entry &gt; UI033-AUTH keeps history view-only and hides write actions for read-only and operation/FEFO actors" time="0.049858792">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryMovements.test.js" name="TASK033 Movement high-risk entry &gt; UI033-AUTH exposes exact local entry only with view+adjust and removes it on permission loss" time="0.017678792">
+            <failure message="Cannot call attributes on an empty DOMWrapper." type="Error">
+Error: Cannot call attributes on an empty DOMWrapper.
+ ❯ Object.get ../node_modules/@vue/test-utils/dist/vue-test-utils.cjs.js:1482:27
+ ❯ test/pages/inventory/inventoryMovements.test.js:52:47
+            </failure>
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryMovements.test.js" name="TASK033 Movement high-risk entry &gt; UI033-RECONCILE shows the full original group and bidirectional reversal links without write entry on reversed legs" time="0.016212416">
+            <failure message="expected false to be true // Object.is equality" type="AssertionError">
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ test/pages/inventory/inventoryMovements.test.js:63:70
+            </failure>
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryMovements.test.js" name="TASK033 Movement high-risk entry &gt; UI033-RECONCILE allows only whole BIN groups of the five reversible types" time="0.010892334">
+            <failure message="expected false to be true // Object.is equality" type="AssertionError">
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ test/pages/inventory/inventoryMovements.test.js:69:72
+            </failure>
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryMovements.test.js" name="TASK033 Movement high-risk entry &gt; UI033-UI-REGRESSION ignores late detail success after a newer selection" time="0.01443625">
+            <failure message="expected &apos;庫存異動依固定時間順序追溯不可變 Movement、來源、同組 legs …&apos; not to contain &apos;GR-21 / 行&apos;" type="AssertionError">
+AssertionError: expected &apos;庫存異動依固定時間順序追溯不可變 Movement、來源、同組 legs …&apos; not to contain &apos;GR-21 / 行&apos;
+
+Expected: &quot;GR-21 / 行&quot;
+Received: &quot;庫存異動依固定時間順序追溯不可變 Movement、來源、同組 legs 與沖銷關聯。inventory庫存總覽event批次與效期異動日期從異動日期到異動類型來源模組來源單據類型來源單據 IDSKU ID倉庫 ID庫位 ID批次 ID操作者 IDMovement Ledger時間類型方向／數量SKU位置批次狀態來源操作15/11/2023 上午6:13:20RECEIPTsouth入 8SKU-3 — Widget WH-A/A-01無批次 AVAILABLERECEIVING / GOODS_RECEIPT / GR-21 / 行 1 / 事件 posted-1 open_in_new15/11/2023 上午6:13:20RECEIPTsouth入 8SKU-3 — Widget WH-A/A-01無批次 AVAILABLERECEIVING / GOODS_RECEIPT / GR-22 / 行 1 / 事件 posted-1 open_in_newRecords per page:20arrow_drop_down1–2 of 2Movement 22 詳情closeGroupgroup-1來源RECEIVING / GOODS_RECEIPT / GR-21 / 行 1 / 事件 posted-1操作者Samlink_off 沒有沖銷關聯同組 Movement legsMovement方向數量位置狀態21IN8WH-A/A-01AVAILABLE22OUT8WH-A/A-01AVAILABLERecords per page:20arrow_drop_down1–0 of 0&quot;
+
+ ❯ test/pages/inventory/inventoryMovements.test.js:85:75
+            </failure>
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryMovements.test.js" name="TASK033 Movement high-risk entry &gt; UI033-UI-REGRESSION ignores late detail failure after newer success and rejects wrong server identity" time="0.010060042">
+            <failure message="expected &apos;庫存異動依固定時間順序追溯不可變 Movement、來源、同組 legs …&apos; not to contain &apos;old response&apos;" type="AssertionError">
+AssertionError: expected &apos;庫存異動依固定時間順序追溯不可變 Movement、來源、同組 legs …&apos; not to contain &apos;old response&apos;
+
+Expected: &quot;old response&quot;
+Received: &quot;庫存異動依固定時間順序追溯不可變 Movement、來源、同組 legs 與沖銷關聯。inventory庫存總覽event批次與效期異動日期從異動日期到異動類型來源模組來源單據類型來源單據 IDSKU ID倉庫 ID庫位 ID批次 ID操作者 IDMovement Ledger時間類型方向／數量SKU位置批次狀態來源操作15/11/2023 上午6:13:20RECEIPTsouth入 8SKU-3 — Widget WH-A/A-01無批次 AVAILABLERECEIVING / GOODS_RECEIPT / GR-21 / 行 1 / 事件 posted-1 open_in_new15/11/2023 上午6:13:20RECEIPTsouth入 8SKU-3 — Widget WH-A/A-01無批次 AVAILABLERECEIVING / GOODS_RECEIPT / GR-22 / 行 1 / 事件 posted-1 open_in_newRecords per page:20arrow_drop_down1–2 of 2Movement 22 詳情closeold response重試Groupgroup-1來源RECEIVING / GOODS_RECEIPT / GR-22 / 行 1 / 事件 posted-1操作者Samlink_off 沒有沖銷關聯同組 Movement legsMovement方向數量位置狀態21IN8WH-A/A-01AVAILABLE22OUT8WH-A/A-01AVAILABLERecords per page:20arrow_drop_down1–0 of 0&quot;
+
+ ❯ test/pages/inventory/inventoryMovements.test.js:93:32
+            </failure>
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryMovements.test.js" name="TASK033 Movement high-risk entry &gt; UI033-UI-REGRESSION closes a pending detail without letting it reopen or show stale errors" time="0.010859792">
+        </testcase>
+    </testsuite>
+</testsuites>

@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="12" failures="12" errors="0" time="0.005027084">
+    <testsuite name="test/pages/inventory/inventoryAdjustments.test.js" timestamp="2026-10-08T06:12:45.468Z" hostname="samMacBook-Pro.local" tests="12" failures="12" errors="0" skipped="0" time="0.005027084">
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-SELECTORS supports exact-Code usable no-Balance SKU with explicit Base UOM and confirmed absence" time="0.002356625">
+            <failure message="Unknown variable dynamic import: ../../../src/components/inventory/AdjustmentForm.vue" type="Error">
+Error: Unknown variable dynamic import: ../../../src/components/inventory/AdjustmentForm.vue
+ ❯ vite/dynamic-import-helper.js:5:106
+ ❯ Module. vite/dynamic-import-helper.js:4:9
+ ❯ component test/pages/inventory/inventoryAdjustments.test.js:15:63
+ ❯ form test/pages/inventory/inventoryAdjustments.test.js:24:35
+ ❯ test/pages/inventory/inventoryAdjustments.test.js:49:27
+            </failure>
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-SELECTORS discards late SKU response after Code changed" time="0.000268375">
+            <failure message="Unknown variable dynamic import: ../../../src/components/inventory/AdjustmentForm.vue" type="Error">
+Error: Unknown variable dynamic import: ../../../src/components/inventory/AdjustmentForm.vue
+ ❯ vite/dynamic-import-helper.js:5:106
+ ❯ Module. vite/dynamic-import-helper.js:4:9
+ ❯ component test/pages/inventory/inventoryAdjustments.test.js:15:63
+ ❯ form test/pages/inventory/inventoryAdjustments.test.js:24:35
+ ❯ test/pages/inventory/inventoryAdjustments.test.js:57:27
+            </failure>
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-VALIDATION rejects nonpositive, fractional and unsafe Base quantities before review" time="0.000238416">
+            <failure message="Unknown variable dynamic import: ../../../src/components/inventory/AdjustmentForm.vue" type="Error">
+Error: Unknown variable dynamic import: ../../../src/components/inventory/AdjustmentForm.vue
+ ❯ vite/dynamic-import-helper.js:5:106
+ ❯ Module. vite/dynamic-import-helper.js:4:9
+ ❯ component test/pages/inventory/inventoryAdjustments.test.js:15:63
+ ❯ form test/pages/inventory/inventoryAdjustments.test.js:24:35
+ ❯ test/pages/inventory/inventoryAdjustments.test.js:63:27
+            </failure>
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-VALIDATION applies trim, Unicode OTHER minimum, control rejection and UTF-8 byte limit" time="0.000182583">
+            <failure message="Unknown variable dynamic import: ../../../src/components/inventory/AdjustmentForm.vue" type="Error">
+Error: Unknown variable dynamic import: ../../../src/components/inventory/AdjustmentForm.vue
+ ❯ vite/dynamic-import-helper.js:5:106
+ ❯ Module. vite/dynamic-import-helper.js:4:9
+ ❯ component test/pages/inventory/inventoryAdjustments.test.js:15:63
+ ❯ form test/pages/inventory/inventoryAdjustments.test.js:24:35
+ ❯ test/pages/inventory/inventoryAdjustments.test.js:70:27
+            </failure>
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-VALIDATION rejects invalid calendar dates for a new expiring Lot" time="0.000237625">
+            <failure message="Unknown variable dynamic import: ../../../src/components/inventory/AdjustmentForm.vue" type="Error">
+Error: Unknown variable dynamic import: ../../../src/components/inventory/AdjustmentForm.vue
+ ❯ vite/dynamic-import-helper.js:5:106
+ ❯ Module. vite/dynamic-import-helper.js:4:9
+ ❯ component test/pages/inventory/inventoryAdjustments.test.js:15:63
+ ❯ form test/pages/inventory/inventoryAdjustments.test.js:24:35
+ ❯ test/pages/inventory/inventoryAdjustments.test.js:79:27
+            </failure>
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-IN-LOT preserves existing immutable Lot dates and current Balance version" time="0.000218791">
+            <failure message="Unknown variable dynamic import: ../../../src/components/inventory/AdjustmentForm.vue" type="Error">
+Error: Unknown variable dynamic import: ../../../src/components/inventory/AdjustmentForm.vue
+ ❯ vite/dynamic-import-helper.js:5:106
+ ❯ Module. vite/dynamic-import-helper.js:4:9
+ ❯ component test/pages/inventory/inventoryAdjustments.test.js:15:63
+ ❯ form test/pages/inventory/inventoryAdjustments.test.js:24:35
+ ❯ test/pages/inventory/inventoryAdjustments.test.js:88:27
+            </failure>
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-CURRENT-GUARDS reads all target pages and distinguishes null Lot from a tracked Lot" time="0.000177">
+            <failure message="Unknown variable dynamic import: ../../../src/components/inventory/AdjustmentForm.vue" type="Error">
+Error: Unknown variable dynamic import: ../../../src/components/inventory/AdjustmentForm.vue
+ ❯ vite/dynamic-import-helper.js:5:106
+ ❯ Module. vite/dynamic-import-helper.js:4:9
+ ❯ component test/pages/inventory/inventoryAdjustments.test.js:15:63
+ ❯ form test/pages/inventory/inventoryAdjustments.test.js:24:35
+ ❯ test/pages/inventory/inventoryAdjustments.test.js:96:27
+            </failure>
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-CURRENT-GUARDS refuses failed, partial and duplicate target reads rather than inferring absence" time="0.000156334">
+            <failure message="Unknown variable dynamic import: ../../../src/components/inventory/AdjustmentForm.vue" type="Error">
+Error: Unknown variable dynamic import: ../../../src/components/inventory/AdjustmentForm.vue
+ ❯ vite/dynamic-import-helper.js:5:106
+ ❯ Module. vite/dynamic-import-helper.js:4:9
+ ❯ component test/pages/inventory/inventoryAdjustments.test.js:15:63
+ ❯ form test/pages/inventory/inventoryAdjustments.test.js:24:35
+ ❯ test/pages/inventory/inventoryAdjustments.test.js:101:27
+            </failure>
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-CURRENT-GUARDS binds OUT to freshly read source identity/version, not its list snapshot" time="0.000172625">
+            <failure message="Unknown variable dynamic import: ../../../src/components/inventory/AdjustmentForm.vue" type="Error">
+Error: Unknown variable dynamic import: ../../../src/components/inventory/AdjustmentForm.vue
+ ❯ vite/dynamic-import-helper.js:5:106
+ ❯ Module. vite/dynamic-import-helper.js:4:9
+ ❯ component test/pages/inventory/inventoryAdjustments.test.js:15:63
+ ❯ form test/pages/inventory/inventoryAdjustments.test.js:24:35
+ ❯ test/pages/inventory/inventoryAdjustments.test.js:110:27
+            </failure>
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-IN-LOT prepares paired Status effects using current source and confirmed absent destination" time="0.0001755">
+            <failure message="Unknown variable dynamic import: ../../../src/components/inventory/AdjustmentForm.vue" type="Error">
+Error: Unknown variable dynamic import: ../../../src/components/inventory/AdjustmentForm.vue
+ ❯ vite/dynamic-import-helper.js:5:106
+ ❯ Module. vite/dynamic-import-helper.js:4:9
+ ❯ component test/pages/inventory/inventoryAdjustments.test.js:15:63
+ ❯ form test/pages/inventory/inventoryAdjustments.test.js:24:35
+ ❯ test/pages/inventory/inventoryAdjustments.test.js:116:27
+            </failure>
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-RECONCILE derives complete unique current Reversal guards instead of historical versions" time="0.000173334">
+            <failure message="Unknown variable dynamic import: ../../../src/components/inventory/AdjustmentForm.vue" type="Error">
+Error: Unknown variable dynamic import: ../../../src/components/inventory/AdjustmentForm.vue
+ ❯ vite/dynamic-import-helper.js:5:106
+ ❯ Module. vite/dynamic-import-helper.js:4:9
+ ❯ component test/pages/inventory/inventoryAdjustments.test.js:15:63
+ ❯ form test/pages/inventory/inventoryAdjustments.test.js:24:35
+ ❯ test/pages/inventory/inventoryAdjustments.test.js:127:27
+            </failure>
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-CONFIRM-SECRETS clears native password immediately, never emits it, and clears cancel/hide/disable" time="0.000140792">
+            <failure message="Unknown variable dynamic import: ../../../src/components/inventory/InventoryHighRiskDialog.vue" type="Error">
+Error: Unknown variable dynamic import: ../../../src/components/inventory/InventoryHighRiskDialog.vue
+ ❯ vite/dynamic-import-helper.js:5:106
+ ❯ Module. vite/dynamic-import-helper.js:4:9
+ ❯ component test/pages/inventory/inventoryAdjustments.test.js:15:63
+ ❯ test/pages/inventory/inventoryAdjustments.test.js:133:39
+            </failure>
+        </testcase>
+    </testsuite>
+</testsuites>

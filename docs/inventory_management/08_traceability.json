@@ -1786,7 +1786,12 @@
         "SEC-005",
         "SEC-010",
         "SEC-011",
-        "SEC-012"
+        "SEC-012",
+        "FR-034",
+        "FR-037",
+        "FR-038",
+        "FR-039",
+        "FR-040"
       ],
       "design_ids": [
         "DES-005",
@@ -1815,7 +1820,27 @@
       "developer_suites": [
         "lint",
         "client-build",
-        "inventory-technical"
+        "inventory-developer",
+        "inventory-p2-database",
+        "inventory-p2-api",
+        "inventory-task026-unit",
+        "inventory-task026-database",
+        "inventory-p3-unit",
+        "inventory-p3-transfer-database",
+        "inventory-p3-movement-database",
+        "inventory-p3-api",
+        "inventory-p3-transfers-client",
+        "inventory-p3-movements-client",
+        "inventory-p3-adjustments-client",
+        "inventory-p3-server-coverage",
+        "inventory-p3-coverage-floors",
+        "inventory-p3-client-coverage",
+        "inventory-p3-dependency-audit",
+        "inventory-p3-browser",
+        "inventory-p3-browser-regression",
+        "inventory-p3-sales-compatibility",
+        "inventory-p3-customer-capacity",
+        "inventory-p3-core-capacity"
       ]
     },
     {
@@ -3019,16 +3044,76 @@
       "id": "TASK-034",
       "phase_id": "PHASE-004",
       "requirement_ids": [
-        "FR-063"
+        "FR-034",
+        "FR-037",
+        "FR-038",
+        "FR-039",
+        "FR-040",
+        "FR-041",
+        "FR-063",
+        "FR-064",
+        "FR-065",
+        "FR-066",
+        "FR-067",
+        "FR-068",
+        "FR-069",
+        "FR-070",
+        "FR-071",
+        "FR-072",
+        "FR-073",
+        "FR-074",
+        "FR-075",
+        "FR-076",
+        "FR-077",
+        "FR-078",
+        "FR-079",
+        "FR-080",
+        "FR-081",
+        "FR-082",
+        "FR-083",
+        "FR-084",
+        "FR-085",
+        "FR-086",
+        "FR-087",
+        "FR-088",
+        "FR-089",
+        "FR-090",
+        "FR-091",
+        "SEC-001",
+        "SEC-002",
+        "SEC-003",
+        "SEC-004",
+        "SEC-005",
+        "SEC-006",
+        "SEC-007",
+        "SEC-008",
+        "SEC-009",
+        "SEC-010",
+        "SEC-011",
+        "SEC-012",
+        "SEC-013"
       ],
       "design_ids": [
-        "DES-005"
+        "DES-003",
+        "DES-005",
+        "DES-006",
+        "DES-010"
       ],
       "depends_on": [
+        "TASK-026",
+        "TASK-027",
+        "TASK-028",
+        "TASK-029",
+        "TASK-030",
+        "TASK-031",
+        "TASK-032",
         "TASK-033"
       ],
       "technical_test_ids": [
-        "TC-006"
+        "TC-001",
+        "TC-004",
+        "TC-006",
+        "TC-007"
       ]
     },
     {
@@ -3709,6 +3794,7 @@
         "TASK-023",
         "TASK-026",
         "TASK-033",
+        "TASK-034",
         "TASK-035",
         "TASK-043",
         "TASK-044",
@@ -3843,6 +3929,7 @@
         "TASK-019",
         "TASK-022",
         "TASK-032",
+        "TASK-034",
         "TASK-048",
         "TASK-049",
         "TASK-051"
@@ -3966,6 +4053,7 @@
         "TASK-031",
         "TASK-032",
         "TASK-033",
+        "TASK-034",
         "TASK-038",
         "TASK-051"
       ],

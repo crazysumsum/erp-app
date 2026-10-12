@@ -1,0 +1,94 @@
+{
+  "schema_version": "2.0",
+  "module_id": "inventory-management",
+  "run_id": "task032-db-inventory-p3-browser-4637946965",
+  "suite_id": "inventory-p3-browser",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "237d98e617f0a0f4612934118be2d589652b4eb70968291ad511fec6bb758658",
+  "source_fingerprint": "ea5fed017f5eba2fcdfe2adf9bd74521deb6e95d863797892e5a0a9c15c03e43",
+  "code_commit": "869ac07abdd3879254c351d857be911d71e68b6b",
+  "started_at": "2026-10-08T02:52:13.558690+00:00",
+  "ended_at": "2026-10-08T02:52:41.655832+00:00",
+  "environment_id": "inventory-isolated-test",
+  "runtime_instance_id": "erp_inventory_p3_00756cc7ecbb",
+  "data_reference": "Synthetic Inventory fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "npx",
+    "--no-install",
+    "playwright",
+    "test",
+    "--config",
+    "client/e2e/inventory-management/playwright.config.js",
+    "inventory-warehouse-operations.spec.js"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "f246e001ebb8bc5193c8866662eab10aa3d84af4ee52a10ff77545a4c5b4f51a",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 8,
+    "passed": 8,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/task032-db-inventory-p3-browser-4637946965/stdout.log",
+      "sha256": "e1389ad2eefc42395ff39e3460aea7bce61c3df615f3473581b85ecab0c44d8c",
+      "bytes": 1547
+    },
+    {
+      "path": "evidence/task032-db-inventory-p3-browser-4637946965/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/task032-db-inventory-p3-browser-4637946965/inventory-p3-browser.xml",
+      "sha256": "fe2a091e96d4e3905c04761d1f66309627e865c6792fb03dd772df625c3540ab",
+      "bytes": 1715
+    },
+    {
+      "path": "evidence/task032-db-inventory-p3-browser-4637946965/transfer-draft-1024.png",
+      "sha256": "39b21cb08331ae61e721d4e53bef2b34265ea1e658ccf0616d23b78368d1804b",
+      "bytes": 75063
+    },
+    {
+      "path": "evidence/task032-db-inventory-p3-browser-4637946965/transfer-draft-1440.png",
+      "sha256": "36ce97ce5a7fdf52d2ee16edf284e451e53dbd5cde63f0d5a0568cac28fe4790",
+      "bytes": 89924
+    },
+    {
+      "path": "evidence/task032-db-inventory-p3-browser-4637946965/transfer-draft-320.png",
+      "sha256": "5d9504c8adc52a84042b024793a1fda6318e61bfa6e163e1adae1b3d4efa09cb",
+      "bytes": 47834
+    },
+    {
+      "path": "evidence/task032-db-inventory-p3-browser-4637946965/transfer-draft-768.png",
+      "sha256": "60354b89816428de190e129b27e4d11f1e5ae9404333fb8fdd29cb3aa86a02b5",
+      "bytes": 62652
+    },
+    {
+      "path": "evidence/task032-db-inventory-p3-browser-4637946965/transfer-received.png",
+      "sha256": "4db3546345ae745abbe5067a7ab7d608f8668b124a8dd8b8d50695ff807ac0d8",
+      "bytes": 120388
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "DEVELOPER TASK032 native MySQL/current reads plus original TASK030/031 compatibility. Actual existing live-API Transfer Playwright browser regression, including console/network assertions; not Reversal UI/TASK033, formal acceptance or full-P3 capacity proof; no formal/current CI/capacity claim."
+  ]
+}

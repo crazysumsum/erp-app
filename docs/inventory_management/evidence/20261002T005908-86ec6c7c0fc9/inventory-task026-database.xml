@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="Transfer migration creates complete typed schema, indexes and enforced constraints" time="0.000228" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransferMigrations.integration.test.js" failure="failed running before hook">
+		<failure type="hookFailed" message="failed running before hook">
+[Error [ERR_TEST_FAILURE]: failed running before hook] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'hookFailed',
+  cause: AssertionError [ERR_ASSERTION]: The input did not match the regular expression /^\/private\/tmp\/erp-inventory-task026-mysql-2670\.[A-Za-z0-9]+\/mysql\.sock$/u. Input:
+  
+  '/tmp/not-task-owned.sock'
+  
+      at TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransferMigrations.integration.test.js:26:10)
+      at TestHook.runInAsyncScope (node:async_hooks:226:14)
+      at TestHook.run (node:internal/test_runner/test:1397:25)
+      at TestHook.run (node:internal/test_runner/test:1741:18)
+      at TestHook.run (node:internal/util:581:20)
+      at Test.createHook (node:internal/test_runner/test:1112:33)
+      at node:internal/test_runner/harness:426:12
+      at file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransferMigrations.integration.test.js:21:1
+      at ModuleJob.run (node:internal/modules/esm/module_job:569:25)
+      at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:650:26) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '/tmp/not-task-owned.sock',
+    expected: /^\/private\/tmp\/erp-inventory-task026-mysql-2670\.[A-Za-z0-9]+\/mysql\.sock$/u,
+    operator: 'match',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="Transfer migration rerun preserves header, lines and schema" time="0.000023" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransferMigrations.integration.test.js" failure="failed running before hook">
+		<failure type="hookFailed" message="failed running before hook">
+[Error [ERR_TEST_FAILURE]: failed running before hook] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'hookFailed',
+  cause: AssertionError [ERR_ASSERTION]: The input did not match the regular expression /^\/private\/tmp\/erp-inventory-task026-mysql-2670\.[A-Za-z0-9]+\/mysql\.sock$/u. Input:
+  
+  '/tmp/not-task-owned.sock'
+  
+      at TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransferMigrations.integration.test.js:26:10)
+      at TestHook.runInAsyncScope (node:async_hooks:226:14)
+      at TestHook.run (node:internal/test_runner/test:1397:25)
+      at TestHook.run (node:internal/test_runner/test:1741:18)
+      at TestHook.run (node:internal/util:581:20)
+      at Test.createHook (node:internal/test_runner/test:1112:33)
+      at node:internal/test_runner/harness:426:12
+      at file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransferMigrations.integration.test.js:21:1
+      at ModuleJob.run (node:internal/modules/esm/module_job:569:25)
+      at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:650:26) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '/tmp/not-task-owned.sock',
+    expected: /^\/private\/tmp\/erp-inventory-task026-mysql-2670\.[A-Za-z0-9]+\/mysql\.sock$/u,
+    operator: 'match',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="Transfer header rejects same warehouse, invalid state/version, missing/duplicate operations" time="0.000016" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransferMigrations.integration.test.js" failure="failed running before hook">
+		<failure type="hookFailed" message="failed running before hook">
+[Error [ERR_TEST_FAILURE]: failed running before hook] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'hookFailed',
+  cause: AssertionError [ERR_ASSERTION]: The input did not match the regular expression /^\/private\/tmp\/erp-inventory-task026-mysql-2670\.[A-Za-z0-9]+\/mysql\.sock$/u. Input:
+  
+  '/tmp/not-task-owned.sock'
+  
+      at TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransferMigrations.integration.test.js:26:10)
+      at TestHook.runInAsyncScope (node:async_hooks:226:14)
+      at TestHook.run (node:internal/test_runner/test:1397:25)
+      at TestHook.run (node:internal/test_runner/test:1741:18)
+      at TestHook.run (node:internal/util:581:20)
+      at Test.createHook (node:internal/test_runner/test:1112:33)
+      at node:internal/test_runner/harness:426:12
+      at file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransferMigrations.integration.test.js:21:1
+      at ModuleJob.run (node:internal/modules/esm/module_job:569:25)
+      at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:650:26) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '/tmp/not-task-owned.sock',
+    expected: /^\/private\/tmp\/erp-inventory-task026-mysql-2670\.[A-Za-z0-9]+\/mysql\.sock$/u,
+    operator: 'match',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="Transfer lines enforce parent, bins and composite SKU/Lot ownership" time="0.000014" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransferMigrations.integration.test.js" failure="failed running before hook">
+		<failure type="hookFailed" message="failed running before hook">
+[Error [ERR_TEST_FAILURE]: failed running before hook] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'hookFailed',
+  cause: AssertionError [ERR_ASSERTION]: The input did not match the regular expression /^\/private\/tmp\/erp-inventory-task026-mysql-2670\.[A-Za-z0-9]+\/mysql\.sock$/u. Input:
+  
+  '/tmp/not-task-owned.sock'
+  
+      at TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransferMigrations.integration.test.js:26:10)
+      at TestHook.runInAsyncScope (node:async_hooks:226:14)
+      at TestHook.run (node:internal/test_runner/test:1397:25)
+      at TestHook.run (node:internal/test_runner/test:1741:18)
+      at TestHook.run (node:internal/util:581:20)
+      at Test.createHook (node:internal/test_runner/test:1112:33)
+      at node:internal/test_runner/harness:426:12
+      at file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransferMigrations.integration.test.js:21:1
+      at ModuleJob.run (node:internal/modules/esm/module_job:569:25)
+      at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:650:26) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '/tmp/not-task-owned.sock',
+    expected: /^\/private\/tmp\/erp-inventory-task026-mysql-2670\.[A-Za-z0-9]+\/mysql\.sock$/u,
+    operator: 'match',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="Transfer line quantity, whole in-transit amount, statuses and line uniqueness are constrained" time="0.000022" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransferMigrations.integration.test.js" failure="failed running before hook">
+		<failure type="hookFailed" message="failed running before hook">
+[Error [ERR_TEST_FAILURE]: failed running before hook] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'hookFailed',
+  cause: AssertionError [ERR_ASSERTION]: The input did not match the regular expression /^\/private\/tmp\/erp-inventory-task026-mysql-2670\.[A-Za-z0-9]+\/mysql\.sock$/u. Input:
+  
+  '/tmp/not-task-owned.sock'
+  
+      at TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransferMigrations.integration.test.js:26:10)
+      at TestHook.runInAsyncScope (node:async_hooks:226:14)
+      at TestHook.run (node:internal/test_runner/test:1397:25)
+      at TestHook.run (node:internal/test_runner/test:1741:18)
+      at TestHook.run (node:internal/util:581:20)
+      at Test.createHook (node:internal/test_runner/test:1112:33)
+      at node:internal/test_runner/harness:426:12
+      at file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransferMigrations.integration.test.js:21:1
+      at ModuleJob.run (node:internal/modules/esm/module_job:569:25)
+      at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:650:26) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '/tmp/not-task-owned.sock',
+    expected: /^\/private\/tmp\/erp-inventory-task026-mysql-2670\.[A-Za-z0-9]+\/mysql\.sock$/u,
+    operator: 'match',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="Transfer movement references are optional, restrictive and retry-safe after interrupted FK attachment" time="0.000017" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransferMigrations.integration.test.js" failure="failed running before hook">
+		<failure type="hookFailed" message="failed running before hook">
+[Error [ERR_TEST_FAILURE]: failed running before hook] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'hookFailed',
+  cause: AssertionError [ERR_ASSERTION]: The input did not match the regular expression /^\/private\/tmp\/erp-inventory-task026-mysql-2670\.[A-Za-z0-9]+\/mysql\.sock$/u. Input:
+  
+  '/tmp/not-task-owned.sock'
+  
+      at TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransferMigrations.integration.test.js:26:10)
+      at TestHook.runInAsyncScope (node:async_hooks:226:14)
+      at TestHook.run (node:internal/test_runner/test:1397:25)
+      at TestHook.run (node:internal/test_runner/test:1741:18)
+      at TestHook.run (node:internal/util:581:20)
+      at Test.createHook (node:internal/test_runner/test:1112:33)
+      at node:internal/test_runner/harness:426:12
+      at file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransferMigrations.integration.test.js:21:1
+      at ModuleJob.run (node:internal/modules/esm/module_job:569:25)
+      at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:650:26) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '/tmp/not-task-owned.sock',
+    expected: /^\/private\/tmp\/erp-inventory-task026-mysql-2670\.[A-Za-z0-9]+\/mysql\.sock$/u,
+    operator: 'match',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="Transfer migration fails closed on incompatible existing index, check and FK without further DDL" time="0.000018" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransferMigrations.integration.test.js" failure="failed running before hook">
+		<failure type="hookFailed" message="failed running before hook">
+[Error [ERR_TEST_FAILURE]: failed running before hook] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'hookFailed',
+  cause: AssertionError [ERR_ASSERTION]: The input did not match the regular expression /^\/private\/tmp\/erp-inventory-task026-mysql-2670\.[A-Za-z0-9]+\/mysql\.sock$/u. Input:
+  
+  '/tmp/not-task-owned.sock'
+  
+      at TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransferMigrations.integration.test.js:26:10)
+      at TestHook.runInAsyncScope (node:async_hooks:226:14)
+      at TestHook.run (node:internal/test_runner/test:1397:25)
+      at TestHook.run (node:internal/test_runner/test:1741:18)
+      at TestHook.run (node:internal/util:581:20)
+      at Test.createHook (node:internal/test_runner/test:1112:33)
+      at node:internal/test_runner/harness:426:12
+      at file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransferMigrations.integration.test.js:21:1
+      at ModuleJob.run (node:internal/modules/esm/module_job:569:25)
+      at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:650:26) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '/tmp/not-task-owned.sock',
+    expected: /^\/private\/tmp\/erp-inventory-task026-mysql-2670\.[A-Za-z0-9]+\/mysql\.sock$/u,
+    operator: 'match',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 7 -->
+	<!-- suites 0 -->
+	<!-- pass 0 -->
+	<!-- fail 7 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 83.075875 -->
+</testsuites>

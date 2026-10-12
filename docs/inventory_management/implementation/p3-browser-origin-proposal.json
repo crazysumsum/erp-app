@@ -1,0 +1,22 @@
+{
+  "decision": "HD-140",
+  "status": "PROPOSED_NOT_APPLIED",
+  "head": "168ceb1badd6e6ed3e2ae6976f95b224e86d54bb",
+  "source": "3cdc51c462840f24f5a221218a928e795600de865f35042f2a087622cee9679e",
+  "current_baselines": {
+    "design": "b4720b69f67be272b7f605fa8bd83401792629ebd7ae16d1014aac2efcbf58ee",
+    "plan": "151cf5757a465b4df8a64f34e1f876ca6759a3bcc438ec721fb22bf7ab965a44"
+  },
+  "proposed_baselines": {
+    "design": "b4720b69f67be272b7f605fa8bd83401792629ebd7ae16d1014aac2efcbf58ee",
+    "plan": "c145c025eae94a1570d1bd05a872da53335b931f9ea0f695595d02ddef258908"
+  },
+  "candidate_root": "/private/tmp/inventory-p3-hd140-candidate-bi0tbkvf",
+  "patch_sha256": "5e5b837bec09e5c6c30158f365d3d3940cd8df105269bcc008dba07b3e8c31e5",
+  "file": "docs/inventory_management/00_project_profile.json",
+  "before_sha256": "a1a8832285f5088bb69e9ce68a13c5828e20a30fb10e24905cdc5de9a0b75737",
+  "after_sha256": "9fc4a75918cc748ecb03863835a082feeb7b8de4e07a9634bf477b91e70a24db",
+  "runtime_value": "CLIENT_URL=http://127.0.0.1:5205, only this owned local browser/API fixture process",
+  "actual_probe": "2026-10-09T09:32:46Z, own Playwright worker6882 / loopback63975: unauthenticated OPTIONS /api/v1/user/me with Origin http://127.0.0.1:5205 returned403 CORS_ORIGIN_DENIED; no access-control-allow-origin header. Existing default allows only localhost/127.0.0.1:5173.",
+  "limits": "One env allowlist name only, existing strict non-wildcard config; no product/shared/test/DDL/fixture/assertion/security default/timeout/min16/zero-skip/coverage/tool/parser/gate changes. DESIGN/source unchanged, PLAN changes. Rebind exact HD139 existing shared scopes byte-identical/no-write; preserve all original evidence and failed real browser run. Full fresh generic/native/capacity/API/real Playwright verification required after actual approval. Conditional onePR publication only after PASS/classification; exacthead Sam/fiveCI/genericMERGE_READY/freshmain separate; no P4/formal/UAT/deploy."
+}

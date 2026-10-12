@@ -1,0 +1,51 @@
+✔ TC-067 (BANK-006): a round trip returns the account, and records the key ID that produced it (1.451958ms)
+✔ TC-067 (BANK-006): every row gets its own IV, so the same account never encrypts to the same bytes (0.17375ms)
+✔ TC-067 (BANK-006): moving a row to another Supplier makes it undecryptable (0.21375ms)
+✔ TC-067 (BANK-006): swapping the crypto context of two rows under one Supplier also fails (0.115542ms)
+✔ the AAD cannot be forged by shifting the boundary between its two parts (0.137666ms)
+✔ TC-067 (BANK-006): tampering with the ciphertext or the tag fails verification (0.156042ms)
+✔ a row whose key is no longer in the ring is refused, and the error is not an oracle (0.147ms)
+✔ rotation: a row encrypted under the old key still decrypts after the active key moves (0.148208ms)
+✔ the blind index is keyed, not a plain digest of the account (0.330208ms)
+✔ duplicate checking covers the whole lookup ring, not just the active key (0.606916ms)
+✔ TC-070 (BANK-009): formatting differences in the same account collide, so a duplicate cannot hide behind a space (0.305709ms)
+✔ an empty account is refused by both paths rather than indexed as nothing (0.110459ms)
+✔ encryption refuses to proceed without both halves of its AAD (0.143708ms)
+✔ a crypto cannot be built from half a configuration (0.09525ms)
+✔ masking never reveals a short account (0.085292ms)
+✔ the crypto redacts itself, so logging one cannot leak a key (0.192166ms)
+✔ the writer, not just the renderer, respects the short-account boundary (0.161417ms)
+✔ a lone surrogate cannot make two identities share one AAD (0.078542ms)
+✔ a key that is not 32 bytes is refused on both paths, not just the encrypting one (0.1255ms)
+✖ a malformed row fails with the same message as a real authentication failure (0.357625ms)
+✔ the read paths fail safe rather than throwing or passing on bad input (0.108291ms)
+✔ an account longer than the ciphertext column can hold is refused, not truncated (0.082875ms)
+✔ a character the normalizer cannot represent is refused, not silently deleted (0.169333ms)
+ℹ tests 23
+ℹ suites 0
+ℹ pass 22
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 75.198208
+
+✖ failing tests:
+
+test at ../../../../../../private/tmp/inventory-hd139-mutation-ha6CKC/supplierBankCrypto.mutation.test.mjs:391:1
+✖ a malformed row fails with the same message as a real authentication failure (0.357625ms)
+  AssertionError [ERR_ASSERTION]: tampering must change the tag
+      at TestContext.<anonymous> (file:///private/tmp/inventory-hd139-mutation-ha6CKC/supplierBankCrypto.mutation.test.mjs:401:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1397:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:969:18)
+      at Test.postRun (node:internal/test_runner/test:1537:19)
+      at Test.run (node:internal/test_runner/test:1462:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: <Buffer 16 82 1c 82 1f 98 af 88 7c da 25 f6 aa 4f 3e 11>,
+    expected: <Buffer 16 82 1c 82 1f 98 af 88 7c da 25 f6 aa 4f 3e 11>,
+    operator: 'notDeepStrictEqual',
+    diff: 'simple'
+  }

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="TASK-027 real Draft creation stores canonical SKU/Lot snapshots with zero stock effects" time="0.182261" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-027 complete replacement preserves owned IDs, reorders, removes and adds atomically" time="0.006615" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-027 stale header and retained-line versions have no effects" time="0.007319" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-027 cross-owner child IDs cannot be moved or deleted" time="0.007320" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-027 invalid last-line Bin or SKU/Lot ownership rolls back the whole document" time="0.011063" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-027 Draft cancellation retains lines and records actor/time/reason/Audit" time="0.005846" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-027 read queries expose versions, stable paging and four states without mutations" time="0.017134" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-027 create/update/cancel replay original receipts after later mutations; conflicts reject" time="0.010830" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-027 audit failure rolls back real create, replacement and cancellation transactions" time="0.009778" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-027 same-version competing replacement and cancellation serialize with one winner" time="0.005225" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-027 fresh authorization rejects revoked permissions even on replay" time="0.004693" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-027 validates Active warehouses/Bins and tracking policy; non-Draft edits/cancel reject" time="0.023863" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<!-- tests 12 -->
+	<!-- suites 0 -->
+	<!-- pass 12 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 376.062417 -->
+</testsuites>

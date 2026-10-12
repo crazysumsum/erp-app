@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="TASK-027 real Draft creation stores canonical SKU/Lot snapshots with zero stock effects" time="0.161001" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="庫存輸入資料不正確">
+		<failure type="testCodeFailure" message="庫存輸入資料不正確">
+[Error [ERR_TEST_FAILURE]: 庫存輸入資料不正確] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: Error [ApplicationError]: 庫存輸入資料不正確
+      at inventoryError (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/inventoryErrors.js:58:10)
+      at dateOnly (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/inventoryValidation.js:29:11)
+      at optionalDateOnly (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/inventoryValidation.js:40:3)
+      at validateInventoryLotInput (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/inventoryValidation.js:124:22)
+      at file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:122:24
+      at Array.map (&lt;anonymous>)
+      at #validateLocked (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:115:26)
+      at InventoryTransferService.createInTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:166:39)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Object.withTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:79:55) {
+    code: 'INVENTORY_INPUT_INVALID',
+    statusCode: 400,
+    details: { field: 'expiryDate' },
+    publicCode: 'INVENTORY_INPUT_INVALID',
+    publicMessage: '庫存輸入資料不正確',
+    publicDetails: { field: 'expiryDate' }
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-027 complete replacement preserves owned IDs, reorders, removes and adds atomically" time="0.005228" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="service.update is not a function">
+		<failure type="testCodeFailure" message="service.update is not a function">
+[Error [ERR_TEST_FAILURE]: service.update is not a function] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: TypeError: service.update is not a function
+      at TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:140:32)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-027 stale header and retained-line versions have no effects" time="0.004611" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="service.update is not a function">
+		<failure type="testCodeFailure" message="service.update is not a function">
+[Error [ERR_TEST_FAILURE]: service.update is not a function] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: TypeError: service.update is not a function
+      at file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:152:40
+      at waitForActual (node:assert:601:21)
+      at strict.rejects (node:assert:738:31)
+      at rejectsUnchanged (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:120:16)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:152:3)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-027 cross-owner child IDs cannot be moved or deleted" time="0.005274" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="service.update is not a function">
+		<failure type="testCodeFailure" message="service.update is not a function">
+[Error [ERR_TEST_FAILURE]: service.update is not a function] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: TypeError: service.update is not a function
+      at file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:160:40
+      at waitForActual (node:assert:601:21)
+      at strict.rejects (node:assert:738:31)
+      at rejectsUnchanged (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:120:16)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:160:3)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-027 invalid last-line Bin or SKU/Lot ownership rolls back the whole document" time="0.003302" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="service.update is not a function">
+		<failure type="testCodeFailure" message="service.update is not a function">
+[Error [ERR_TEST_FAILURE]: service.update is not a function] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: TypeError: service.update is not a function
+      at file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:167:42
+      at waitForActual (node:assert:601:21)
+      at strict.rejects (node:assert:738:31)
+      at rejectsUnchanged (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:120:16)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:167:5)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-027 Draft cancellation retains lines and records actor/time/reason/Audit" time="0.002305" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="service.cancel is not a function">
+		<failure type="testCodeFailure" message="service.cancel is not a function">
+[Error [ERR_TEST_FAILURE]: service.cancel is not a function] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: TypeError: service.cancel is not a function
+      at TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:174:32)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-027 read queries expose versions, stable paging and four states without mutations" time="0.003181" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="inquiry.getTransfer is not a function">
+		<failure type="testCodeFailure" message="inquiry.getTransfer is not a function">
+[Error [ERR_TEST_FAILURE]: inquiry.getTransfer is not a function] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: TypeError: inquiry.getTransfer is not a function
+      at TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:190:34)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-027 create/update/cancel replay original receipts after later mutations; conflicts reject" time="0.002684" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="service.update is not a function">
+		<failure type="testCodeFailure" message="service.update is not a function">
+[Error [ERR_TEST_FAILURE]: service.update is not a function] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: TypeError: service.update is not a function
+      at TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:210:32)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-027 audit failure rolls back real create, replacement and cancellation transactions" time="0.006374" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="failing[action] is not a function">
+		<failure type="testCodeFailure" message="failing[action] is not a function">
+[Error [ERR_TEST_FAILURE]: failing[action] is not a function] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: TypeError: failing[action] is not a function
+      at TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:228:41)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-027 same-version competing replacement and cancellation serialize with one winner" time="0.002097" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="competing.update is not a function">
+		<failure type="testCodeFailure" message="competing.update is not a function">
+[Error [ERR_TEST_FAILURE]: competing.update is not a function] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: TypeError: competing.update is not a function
+      at TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:241:55)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-027 fresh authorization rejects revoked permissions even on replay" time="0.004023" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-027 validates Active warehouses/Bins and tracking policy; non-Draft edits/cancel reject" time="0.010378" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="service.update is not a function">
+		<failure type="testCodeFailure" message="service.update is not a function">
+[Error [ERR_TEST_FAILURE]: service.update is not a function] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: TypeError: service.update is not a function
+      at file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:266:42
+      at waitForActual (node:assert:601:21)
+      at strict.rejects (node:assert:738:31)
+      at rejectsUnchanged (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:120:16)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:266:5)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+}
+		</failure>
+	</testcase>
+	<!-- tests 12 -->
+	<!-- suites 0 -->
+	<!-- pass 1 -->
+	<!-- fail 11 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 314.085417 -->
+</testsuites>

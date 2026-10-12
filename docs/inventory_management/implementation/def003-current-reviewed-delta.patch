@@ -1,0 +1,224 @@
+diff --git a/server/test/authHandlers.test.js b/server/test/authHandlers.test.js
+index 998272c..d8ec649 100644
+--- a/server/test/authHandlers.test.js
++++ b/server/test/authHandlers.test.js
+@@ -1042,6 +1042,48 @@ test("refresh never reports a negative session remainder, even right on the boun
+   assert.equal(response.data.sessionExpiresInSeconds, 0);
+ });
+ 
++test("RefreshTokenHandler preserves mandatory-password-change claims and request provenance", async () => {
++  const { handler, jwt, logger } = createRefreshHandler({
++    userService: { async findActiveById() { return { ...SAMPLE_USER, mustChangePassword: true }; } }
++  });
++  const request = refreshRequest();
++  request.requestId = "refresh-password-change";
++
++  const response = await handler.execute(request);
++
++  assert.equal(response.data.user.mustChangePassword, true);
++  assert.equal(jwt.issued.length, 1);
++  assert.deepEqual(jwt.issued[0].payload, {
++    roles: SAMPLE_USER.roles, permissions: SAMPLE_USER.permissions, did: DEVICE_ID, mcp: true
++  });
++  assert.deepEqual(jwt.issued[0].options, {
++    subject: "7", version: 9, authTime: request.auth.claims.auth_time
++  });
++  const entry = logger.entries.find((entry) => entry.event === "auth.token.refreshed");
++  assert.equal(entry.context.requestId, "refresh-password-change");
++});
++
++test("RefreshTokenHandler refuses a missing token version without issuing or marking the device used", async () => {
++  const deviceBinding = fakeDeviceBinding();
++  const { handler, jwt, logger } = createRefreshHandler({ deviceBinding });
++  const request = refreshRequest();
++  request.requestId = "refresh-missing-version";
++  delete request.auth.claims.ver;
++
++  await assert.rejects(() => handler.execute(request), (error) => {
++    assert.equal(error.code, "TOKEN_VERSION_STALE");
++    assert.equal(error.statusCode, 401);
++    assert.equal(error.publicCode, "Unauthorized Access");
++    return true;
++  });
++  assert.deepEqual(jwt.issued, []);
++  assert.deepEqual(deviceBinding.used, []);
++  const entry = logger.entries.find((entry) => entry.event === "auth.token.version_stale");
++  assert.equal(entry.context.requestId, "refresh-missing-version");
++  assert.equal(entry.context.tokenVersion, null);
++  assert.equal(entry.context.currentVersion, 9);
++});
++
+ test("a disabled account cannot refresh, which is what ends its session", async () => {
+   const { handler } = createRefreshHandler({
+     userService: {
+diff --git a/server/test/customerLookupService.test.js b/server/test/customerLookupService.test.js
+index dc923e3..1a48a96 100644
+--- a/server/test/customerLookupService.test.js
++++ b/server/test/customerLookupService.test.js
+@@ -178,7 +178,7 @@ test("TC-027 credit lookup preserves absent, zero and on-hold semantics without
+   await assert.rejects(() => lookup.getCreditPolicy(999), (error) => error.code === "CUSTOMER_NOT_FOUND");
+ });
+ 
+-test("TC-018 and TC-027 address lookup returns only active owned purpose rows and safe fields", async () => {
++test("TC-027 address lookup returns only active owned purpose rows and safe fields", async () => {
+   const row = {
+     id: 11, customer_id: 4, label: "Warehouse", recipient_company_department: "Receiving",
+     address_line1: "1 Main Street", address_line2: "", address_line3: "", city: "Hong Kong",
+diff --git a/server/test/integration/customerLookup.integration.test.js b/server/test/integration/customerLookup.integration.test.js
+index cefabaa..667f968 100644
+--- a/server/test/integration/customerLookup.integration.test.js
++++ b/server/test/integration/customerLookup.integration.test.js
+@@ -8,7 +8,7 @@ import { CustomerLookupService } from "../../src/modules/customer/CustomerLookup
+ 
+ const integrationTest = process.env.DB_INTEGRATION_TESTS === "1" ? test : test.skip;
+ 
+-integrationTest("TC-018 and TC-027 real MySQL lookup enforces status, ownership, purpose and version", async (t) => {
++integrationTest("TC-027 real MySQL lookup enforces status, ownership, purpose and version", async (t) => {
+   const source = defaultConfigurationSource();
+   const application = await createApplication({ configurationSource: { ...source, application: { ...source.application, port: 0 } } });
+   const database = application.services.require("mysqldatabase");
+diff --git a/server/test/itemAuditLogService.test.js b/server/test/itemAuditLogService.test.js
+index 7aa083d..fc3ab42 100644
+--- a/server/test/itemAuditLogService.test.js
++++ b/server/test/itemAuditLogService.test.js
+@@ -67,7 +67,7 @@ test("record writes into item_audit_logs, defaulting reason and detail", async (
+   ]);
+ });
+ 
+-test("record writes the caller's requestId and ip instead of the empty-string default", async () => {
++test("ItemAuditLogService: record writes the caller's requestId and ip instead of the empty-string default", async () => {
+   const { service } = createService();
+   const connection = fakeConnection();
+ 
+@@ -105,7 +105,7 @@ test("record accepts a null actorUserId and targetId", async () => {
+   assert.equal(params[5], null);
+ });
+ 
+-test("record keeps the reason text verbatim", async () => {
++test("ItemAuditLogService: record keeps the reason text verbatim", async () => {
+   const { service } = createService();
+   const connection = fakeConnection();
+ 
+@@ -123,7 +123,7 @@ test("record keeps the reason text verbatim", async () => {
+   assert.equal(params[7], "分類已停用不再需要");
+ });
+ 
+-test("record serializes detail as JSON", async () => {
++test("ItemAuditLogService: record serializes detail as JSON", async () => {
+   const { service } = createService();
+   const connection = fakeConnection();
+ 
+@@ -144,7 +144,7 @@ test("record serializes detail as JSON", async () => {
+   );
+ });
+ 
+-test("record uses the connection it was given, not the constructor's database", async () => {
++test("ItemAuditLogService: record uses the connection it was given, not the constructor's database", async () => {
+   // 這是稽核與變更同一個交易那條規則的斷言：constructor 拿到的 database 從來
+   // 沒有被叫過 execute，唯一被寫入的是傳進 record() 的那個連線。
+   const time = createTestTime({ clock: () => new Date(NOW_MS) });
+@@ -172,7 +172,7 @@ test("record uses the connection it was given, not the constructor's database",
+   assert.equal(connection.calls.length, 1);
+ });
+ 
+-test("record truncates a detail payload larger than 4KB and warns", async () => {
++test("ItemAuditLogService: record truncates a detail payload larger than 4KB and warns", async () => {
+   const { service, logger } = createService();
+   const connection = fakeConnection();
+   const huge = { blob: "x".repeat(5000) };
+@@ -197,7 +197,7 @@ test("record truncates a detail payload larger than 4KB and warns", async () =>
+   assert.equal(warning.context.action, "category.update");
+ });
+ 
+-test("record keeps a detail payload right at the 4KB boundary untouched", async () => {
++test("ItemAuditLogService: record keeps a detail payload right at the 4KB boundary untouched", async () => {
+   const { service, logger } = createService();
+   const connection = fakeConnection();
+   // 先算出 {"blob":"..."} 的固定開銷，再補到剛好 4096 bytes——不猜測字面
+diff --git a/server/test/jwtDeviceAuthStrategy.test.js b/server/test/jwtDeviceAuthStrategy.test.js
+index c5cd243..eda3437 100644
+--- a/server/test/jwtDeviceAuthStrategy.test.js
++++ b/server/test/jwtDeviceAuthStrategy.test.js
+@@ -333,7 +333,7 @@ test("verifies against the stored key and refuses a bad signature", async () =>
+   );
+ });
+ 
+-test("a clock skew rejection is told apart, because only the user can fix that one", async () => {
++test("JwtDeviceAuthStrategy: a clock skew rejection is told apart, because only the user can fix that one", async () => {
+   const deviceBinding = fakeDeviceBinding({
+     verification: { ok: false, reason: "timestamp_stale" }
+   });
+diff --git a/server/test/jwtDevicePasswordAuthStrategy.test.js b/server/test/jwtDevicePasswordAuthStrategy.test.js
+index 0d70b28..9d37360 100644
+--- a/server/test/jwtDevicePasswordAuthStrategy.test.js
++++ b/server/test/jwtDevicePasswordAuthStrategy.test.js
+@@ -150,7 +150,7 @@ function alwaysCorrectPassword() {
+   };
+ }
+ 
+-test("authType and service metadata are declared correctly", () => {
++test("JwtDevicePasswordAuthStrategy: authType and service metadata are declared correctly", () => {
+   assert.equal(JwtDevicePasswordAuthStrategy.authType, "jwt-device-password");
+   assert.equal(JwtDevicePasswordAuthStrategy.service.name, "auth.jwtDevicePassword");
+   assert.deepEqual(
+diff --git a/server/test/jwtPasswordAuthStrategy.test.js b/server/test/jwtPasswordAuthStrategy.test.js
+index 444d955..497cda7 100644
+--- a/server/test/jwtPasswordAuthStrategy.test.js
++++ b/server/test/jwtPasswordAuthStrategy.test.js
+@@ -270,7 +270,7 @@ test("a disabled account gets its own code, not the generic password-invalid one
+   );
+ });
+ 
+-test("authType and service metadata are declared correctly", () => {
++test("JwtPasswordAuthStrategy: authType and service metadata are declared correctly", () => {
+   assert.equal(JwtPasswordAuthStrategy.authType, "jwt-password");
+   assert.deepEqual(JwtPasswordAuthStrategy.service.dependencies, [
+     "jwt",
+diff --git a/server/test/mySqlIdempotencyStore.test.js b/server/test/mySqlIdempotencyStore.test.js
+index c49372f..01b3c28 100644
+--- a/server/test/mySqlIdempotencyStore.test.js
++++ b/server/test/mySqlIdempotencyStore.test.js
+@@ -446,7 +446,7 @@ test("the store refuses to build without a database or a time service", () => {
+   );
+ });
+ 
+-test("a missing table says which SQL file creates it", async () => {
++test("MySqlIdempotencyStore: a missing table says which SQL file creates it", async () => {
+   const database = fakeDatabase();
+   database.execute = async () => {
+     throw Object.assign(new Error("MySQL database execute failed"), {
+diff --git a/server/test/roleAdminService.test.js b/server/test/roleAdminService.test.js
+index de5ab0b..2093241 100644
+--- a/server/test/roleAdminService.test.js
++++ b/server/test/roleAdminService.test.js
+@@ -222,7 +222,7 @@ function seedWithAdmin(overrides = {}) {
+   });
+ }
+ 
+-test("constructor requires database, logger and time", () => {
++test("RoleAdminService: constructor requires database, logger and time", () => {
+   assert.throws(() => new RoleAdminService({}), TypeError);
+ });
+ 
+@@ -544,7 +544,7 @@ test("listPermissions returns the read-only catalogue", async () => {
+ 
+ // --- §1.4 第四道 ---------------------------------------------------------------
+ 
+-test("every write rejects with PERMISSION_STALE when the actor's permissions changed", async () => {
++test("RoleAdminService: every write rejects with PERMISSION_STALE when the actor's permissions changed", async () => {
+   const database = seedWithAdmin();
+   const { service } = createService({ database });
+ 
+diff --git a/server/test/tokenRevocationJobs.test.js b/server/test/tokenRevocationJobs.test.js
+index 83b2e18..e9f265f 100644
+--- a/server/test/tokenRevocationJobs.test.js
++++ b/server/test/tokenRevocationJobs.test.js
+@@ -148,7 +148,7 @@ test("a refresh that fails open still fails the job", async () => {
+   assert.deepEqual(refreshed, ["refresh"]);
+ });
+ 
+-test("the job is discovered by the ordinary service mechanism", async () => {
++test("TokenRevocationJobs: the job is discovered by the ordinary service mechanism", async () => {
+   const definitions = await discoverServiceDefinitions();
+   const names = definitions.map(({ name }) => name);
+ 

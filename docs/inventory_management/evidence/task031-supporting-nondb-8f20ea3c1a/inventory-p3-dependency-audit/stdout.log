@@ -1,0 +1,16 @@
+
+> erp-app@0.1.0 security:audit
+> npm audit --audit-level=high
+
+# npm audit report
+
+shell-quote  1.8.4 - 1.10.0
+Severity: critical
+shell-quote: `quote()` command injection via a line terminator in a token after a `{ comment }` token - https://github.com/advisories/GHSA-pqg4-j6r4-53mv
+fix available via `npm audit fix`
+node_modules/shell-quote
+
+1 critical severity vulnerability
+
+To address all issues, run:
+  npm audit fix

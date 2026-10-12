@@ -1,0 +1,7 @@
+# P3 integrated developer verification — HD140
+
+Current P3 checkpoint — HD140 exact local-origin contract; source 3cdc51c462840f24f5a221218a928e795600de865f35042f2a087622cee9679e / PLAN c145c025eae94a1570d1bd05a872da53335b931f9ea0f695595d02ddef258908. All23 mandatory generic groups plus TASK027/028 PASS on one actual owned runtime; real Playwright16/16 and regression18/18 zero-skip. Full native2931PASS/0FAIL/132guardedSKIP, strict global/perfile floors, eight real guards, Sales31 and full-scale Customer/Core capacity PASS. Ten fresh screenshots visually reviewed; prior16FAIL and retired-runtime successes remain unchanged. Classified proof may be published under existing conditional authority; final precise-head Sam/fiveCI/MERGE_READY/freshmain gates remain pending. No P4 or formal acceptance.
+
+[Exact commands, observations, retained failures and export classifications](p3-hd140-developer-verification.json). The local lease coordinator TIME_WAIT correction changes no product/profile/assertion; self-check proves it rejects active listener sharing. Old runtime was precisely cleaned and its original16/16 report registered, not rebound. Fresh full cycle uses a new actual runtime.
+
+The immutable coordinator snapshot records actual resources at verification time, not permanent or post-cleanup live resources. Required CI, independent Sam precise-head source/merge approval and final fresh-main check remain separate. Raw traces/video/historical unreviewed images are kept private; no acceptance/deployment sign-off is claimed.

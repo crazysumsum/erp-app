@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="13" failures="0" errors="0" time="0.141638792">
+    <testsuite name="test/pages/inventory/inventoryTransfers.test.js" timestamp="2026-10-09T09:15:04.617Z" hostname="samMacBook-Pro.local" tests="13" failures="0" errors="0" skipped="0" time="0.141638792">
+        <testcase classname="test/pages/inventory/inventoryTransfers.test.js" name="TASK-029 exact-Code Draft selector &gt; requires explicit selection, uses Inventory lookup and displays only its safe profile" time="0.017452792">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryTransfers.test.js" name="TASK-029 exact-Code Draft selector &gt; ignores an older successful response after Code changes" time="0.005224167">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryTransfers.test.js" name="TASK-029 exact-Code Draft selector &gt; clears selected SKU and Lot immediately on a Code edit" time="0.005515458">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryTransfers.test.js" name="TASK-029 exact-Code Draft selector &gt; rejects invalid Code locally and presents lookup failure without ID fallback" time="0.004102041">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryTransfers.test.js" name="TASK-029 Transfer page boundaries &gt; uses the existing Inventory menu and view-only read route without exposing writes" time="0.016330458">
+            <system-err>
+[VUE_ROUTER_R0020] No active route record was found when calling `onBeforeRouteLeave()`. Maybe you called it inside of App.vue?
+├▶ fix: Call it from a component rendered inside &lt;router-view&gt; (a page component or one of its children), not from App.vue.
+╰▶ see: https://router.vuejs.org/guide/advanced/composition-api.html#Navigation-Guards
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryTransfers.test.js" name="TASK-029 Transfer page boundaries &gt; In Transit operators can Receive but never edit, cancel or dispatch" time="0.007662625">
+            <system-err>
+[VUE_ROUTER_R0020] No active route record was found when calling `onBeforeRouteLeave()`. Maybe you called it inside of App.vue?
+├▶ fix: Call it from a component rendered inside &lt;router-view&gt; (a page component or one of its children), not from App.vue.
+╰▶ see: https://router.vuejs.org/guide/advanced/composition-api.html#Navigation-Guards
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryTransfers.test.js" name="TASK-029 Transfer page boundaries &gt; starting a new Draft clears the old detail identity from URL state" time="0.022708458">
+            <system-err>
+[VUE_ROUTER_R0020] No active route record was found when calling `onBeforeRouteLeave()`. Maybe you called it inside of App.vue?
+├▶ fix: Call it from a component rendered inside &lt;router-view&gt; (a page component or one of its children), not from App.vue.
+╰▶ see: https://router.vuejs.org/guide/advanced/composition-api.html#Navigation-Guards
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryTransfers.test.js" name="TASK-029 Transfer page boundaries &gt; Dispatch displays source Reservation protection before sending a whole-document versioned command" time="0.013422542">
+            <system-err>
+[VUE_ROUTER_R0020] No active route record was found when calling `onBeforeRouteLeave()`. Maybe you called it inside of App.vue?
+├▶ fix: Call it from a component rendered inside &lt;router-view&gt; (a page component or one of its children), not from App.vue.
+╰▶ see: https://router.vuejs.org/guide/advanced/composition-api.html#Navigation-Guards
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryTransfers.test.js" name="TASK-029 complete Draft and Receive forms &gt; requires explicit fresh SKU selection before saving retained lines and versions" time="0.016917375">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryTransfers.test.js" name="TASK-029 complete Draft and Receive forms &gt; keeps input and original versions after 409 without automatic repost" time="0.013616667">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryTransfers.test.js" name="TASK-029 complete Draft and Receive forms &gt; invalid quantity does not write and unsaved close requires confirmation" time="0.008653542">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryTransfers.test.js" name="TASK-029 complete Draft and Receive forms &gt; receives every immutable quantity using destination-owned Bin IDs and quarantine reason" time="0.005940792">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryTransfers.test.js" name="TASK-029 complete Draft and Receive forms &gt; guards status-only Receive changes on close and refresh, and removes its unload listener" time="0.003411333">
+        </testcase>
+    </testsuite>
+</testsuites>

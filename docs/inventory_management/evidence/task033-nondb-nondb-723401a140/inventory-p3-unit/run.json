@@ -1,0 +1,71 @@
+{
+  "schema_version": "2.0",
+  "module_id": "inventory-management",
+  "run_id": "task033-nondb-nondb-723401a140-inventory-p3-unit",
+  "suite_id": "inventory-p3-unit",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "997d8de40da4f362ef23d81cd57c2a65b8e096d64109a12ddc4ee738f5ff791a",
+  "source_fingerprint": "b56886894f758852f366ff95b4bdd77e8c34a5076e94da5763de6d500283c768",
+  "code_commit": "869ac07abdd3879254c351d857be911d71e68b6b",
+  "started_at": "2026-10-08T09:11:09.142903+00:00",
+  "ended_at": "2026-10-08T09:11:09.528149+00:00",
+  "environment_id": "inventory-isolated-test",
+  "runtime_instance_id": "erp-inventory-task033-nondb-nondb.57lfytns",
+  "data_reference": "Synthetic Inventory fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "node",
+    "--test",
+    "--test-concurrency=1",
+    "--import",
+    "./server/test-support/testEnv.js",
+    "--test-reporter=junit",
+    "--test-reporter-destination=/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/task033-nondb-nondb-723401a140/inventory-p3-unit/inventory-p3-unit.xml",
+    "server/test/inventoryTransferService.test.js",
+    "server/test/inventoryTransferHandlers.test.js"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "c979bc1863603ba5bef83c060734f19b550919820bf122d48526fdd874ac1c4f",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 27,
+    "passed": 27,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/task033-nondb-nondb-723401a140/inventory-p3-unit/inventory-p3-unit.xml",
+      "sha256": "c50021d4d4ab21139e97421fe651acece255587c7b26080d0a187be672b76cf3",
+      "bytes": 6883
+    },
+    {
+      "path": "evidence/task033-nondb-nondb-723401a140/inventory-p3-unit/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/task033-nondb-nondb-723401a140/inventory-p3-unit/stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "HD131 TASK033 approved current-source native developer impact check; no formal/UI/current CI or Sam final source review claim."
+  ]
+}

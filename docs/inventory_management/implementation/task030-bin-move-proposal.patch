@@ -1,0 +1,153 @@
+*** Begin Patch
+*** Update File: /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/00_module_manifest.json
+@@
+     "provided": [
+       {
+         "id": "inventory-domain-contract",
+-        "version": "planning-v9; TASK029 exact-Code Inventory SKU lookup proposal; existing write contracts unchanged",
++        "version": "planning-v10; TASK030 whole-document Bin Move with source/destination versions; other contracts unchanged",
+         "source": "docs/inventory_management/03_design_spec.md",
+-        "sha256": "298e6a40760b7e1f93161da0c17afaa50fceda7aeb7b0aaae540eb02384e6f3c",
++        "sha256": "0ff888aad84fcd9c99bcd90620ad3a7348f092ce91622525f37dfc6f2ee0784e",
+         "consumers": [
+           "purchasing-receiving",
+           "sales-order",
+*** Update File: /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/03_design_spec.md
+@@
+ 
+ Adjustment `reasonCategory`只接受`COUNT_GAIN, COUNT_LOSS, DAMAGE, EXPIRY, DATA_CORRECTION, TRANSFER_VARIANCE, OTHER`；所有類別均須reason text，`OTHER`須提供足以人工理解的更詳細說明。
+ 
++#### 5.4.1 Bin Move whole-document contract（TASK-030；HD107 A）
++
++`POST /api/v1/inventory/bin-moves`使用既有JWT、`inventory.view`＋`inventory.operation`及API idempotency框架；handler從已認證claims建立actor，固定domain purpose=`bin_move.post`／requiredCallerPermission=`inventory.operation`。Domain提交及重送前均沿用fresh authorization，不接受body自報actor／permission。
++
++Request body只接受`{source,warehouseId,reason?,lines}`，沿用既有完整source tuple及安全字串限制；reason可省略，trim後最多500 UTF-8 bytes，不接受control／DEL。`lines`為1～100行；每行只接受`{sourceBalanceId,destinationBinId,quantity,expectedSourceVersion,expectedDestinationVersion}`。IDs／quantity／非null versions均為positive safe integers；quantity明確是來源SKU的Base UOM，不接受Pack轉換或另一UOM。`expectedDestinationVersion`必填：positive version表示預期已有Bucket；explicit `null`表示預期該完整目的Bucket不存在，省略或把null當免檢均拒絕。未知fields及非法shape依既有schema／domain輸入錯誤拒絕。
++
++SKU、Lot、Expiry、Stock Status及Base UOM只從來源Balance、既有Lot及Item-owned inventory profile取得；不可由caller改動。來源及目的Bin必須不同、Active、屬於body同一Active Warehouse；跨倉須用Transfer。重用InventoryPostingService、InventoryOperationService及InventoryLockService，不新增表、權限、外部服務或通用movement framework；handler沿用現有postingHandlers／inventorySchemas及自動發現慣例。
++
++新執行先取得來源維度，按既有Warehouse→Stock Control→Bin／active Bin lock→Lot→完整sorted Balance protocol鎖定並重新驗證來源識別、profile、Lot、所有權及狀態，不把交易前預讀當作提交保證。Expected versions以整份操作開始的locked snapshot為準；同一Bucket重複引用須一致，目的不存在須在Control鎖持有下確認後才建立。不得把自建zero row誤判成原本存在；另一交易先建立即VERSION_CONFLICT，whole rollback包括新zero rows。
++
++同一來源Bucket的所有OUT quantity先合計，safe-integer溢位或超過原`on_hand - allocated`即整份拒絕；不得用本份操作的IN抵充OUT或搬走Allocation。共用目的Bucket亦須檢查累加overflow。每個SKU／Lot／Status在同倉內守恆，Reserved／Allocation總量不變，不得增加uncoveredReserved；既有因自然到期形成的uncovered不是新增「必須先完全覆蓋」門檻，不改Reservation或Expiry eligibility政策。任一來源／目的Counting lock均拒絕。
++
++所有行共用一個`BIN_MOVE_POST` Operation及一個movement group，每行按提交順序產生OUT／IN `BIN_MOVE` legs。完整Bucket versions在寫入前檢查；同Bucket多次leg採交易內依序before／after／version鏈，不重用client version作每個leg的中間版本。FIFO anchor沿用§3.5現有規則；每leg保存既有不可變Movement snapshots及安全source／actor／reason／correlation Audit。Balance、Movement、成功Audit及Operation completion同交易，任一行或任一階段失敗全部回滾。
++
++200沿用既有success envelope，data精確為`{status:"POSTED",operationId,movementGroupId,lineCount}`；不回raw rows／SQL或新增不可持久化的巢狀Operation summary。Movement細節由既有group／source查詢追溯。同source＋正規化payload重送，在fresh authorization後回原immutable scalar結果，不能以當前Balance版本重新計算原結果；不同payload（包括不同lines順序）沿用INVENTORY_SOURCE_CONFLICT。Stale來源／目的版本沿用VERSION_CONFLICT；missing／權限／Bin／stock／安全500錯誤沿用既有公開碼，不洩露內部資料。
++
+ ### 5.5 Reservation／Allocation APIs
+ 
+ | Method／Path | Auth／Permission | 行為 |
+@@
+ 
+ ### Decision
+ Same-Warehouse moves are atomic paired movements; cross-Warehouse transfers use whole-document Draft, Dispatch/In-Transit and Receive states.
++Bin Move uses the §5.4.1 1–100-line contract with server-derived dimensions, complete source/destination expected-version guards, shared-Bucket gross-OUT protection and one atomic Operation/group.
+ Draft selection uses the minimal Inventory-permission exact-Code read contract in §5.6.1, reusing Item-owned qualification and allowing SKUs without Balance rows.
+ 
+ ### Rationale
+@@
+ 
+ ### Failure behavior
+ Any invalid line, lock, quantity or destination rejects the whole transition with no partial movement.
++Bin Move absent/existing destination mismatches, inconsistent shared-Bucket versions, allocation/free-stock violations and any Balance/Movement/Audit/completion failure reject the whole document; retries never duplicate paired legs.
+ Lookup failure selects nothing; stale selection never bypasses transaction-time validation or silently substitutes a different SKU.
+ 
+ ## DES-006 — Adjustment, status transfer and reversal
+*** Update File: /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/05_development_tasks.md
+@@
+ ### P3-T05：完成 Bin Move 原子過帳
+ 
+ **Description：** 實作同 Warehouse兩 Active Bins之間指定 SKU/Lot/Status的原子 Move，產生成對 OUT/IN legs且不改總 On Hand。
++依Design §5.4.1／HD107 A實作1～100行whole-document service＋HTTP handler；版本涵蓋來源及目的Bucket（explicit null僅指預期不存在），共用Bucket按整份操作snapshot及gross OUT驗證。SKU／Lot／Status／Base UOM由source派生，不新增schema／權限／依賴或TASK033 UI。
+ 
+ **Traceability：** Design §§3.3、3.8、5.4；FR-MOVE-001～007、BR-023、AC-028～029。
+ 
+@@
+ - [ ] paired legs共用 group，任何失敗零 Balance/Movement/Audit半套；version/source重送語意正確。
+ 
+ **Verification（納入 P3-GATE）：** Bin Move service/handler/integration、reserved protection及 concurrency tests。
++沿用已配置Posting service/handler與Inventory developer回歸、real API及`inventoryMovement.integration.test.js`；最低discovery／zero-skip／coverage floors／CI政策不變。TASK030 developer結果只證明Bin Move增量，不宣告尚未實作的Adjustment／Status／Reversal或full-P3完成；formal TC／UAT維持NOT_RUN直到獨立執行。
+ 
+ **Dependencies：** P2-GATE、P0-T07。
+ 
+@@
+ 
+ ### Approach
+ Implement only the scope and dependencies of legacy task `P3-T05` inside `PHASE-004` using the design decisions mapped in `08_traceability.json`.
++Implement §5.4.1 whole-document Bin Move using existing Posting/Operation/Lock ownership, handler/schema conventions and configured developer checks; no migration, permission, dependency, generic framework or frontend expansion. Preserve mandatory future P3 checks and historical source-bound evidence.
+ 
+ ### Acceptance criteria
+ - 來源/目的不同且同 Warehouse；SKU/Lot/Status保持不變；quantity使用 Base UOM正整數。
+ - 不可移走 allocated quantity或令 eligible stock低於 Reserved；任一 Bin locked時拒絕。
+ - paired legs共用 group，任何失敗零 Balance/Movement/Audit半套；version/source重送語意正確。
++- 1～100 lines全部成功或回滾；來源及目的expected versions按locked起始snapshot驗證，null只代表目的不存在；shared Bucket gross OUT／overflow／一致版本、並發建立目的及撤權重送均有實際developer證據。
+ 
+ ### Definition of Done
+ The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+*** Update File: /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/06_technical_test_cases.md
+@@
+ 
+ ### Expected result
+ Paired movements and In-Transit totals reconcile; partial dispatch/receive never occurs and retries do not duplicate effects.
++
++#### TASK-030 Bin Move subcases（§5.4.1；developer及後續正式驗證）
++
++Trace: FR-063～069 → DES-005 → PHASE-004 → TASK-030 → TC-006；共同auth風險沿用SEC-001／TC-001。下列是scenario labels，不新增formal IDs／typed mappings；全部初始NOT_RUN。Unit／故障注入不能冒充真MySQL／HTTP／P4 Stocktake工作流證據。
++
++| Scenario／priority | Preconditions／synthetic data | Steps／input | Expected result | Required evidence | Status |
++| --- | --- | --- | --- | --- | --- |
++| Move-document P0 | Active W-A的A1/A2/A3；none／batch／batch_expiry及三種Status；source10／allocated2／Reserved8；部分目的不存在 | 兩行以上Base UOM Move；再查Balance／group／Audit／Operation及source replay | 全部paired BIN_MOVE legs同Operation/group；每維度總量守恆；來源合法free減量、目的等量增加；Reserved／Allocation不變，200 whitelist／FIFO anchors正確；目的可原子建立 | Service/handler assertions、real MySQL before/after ledger及real HTTP response | NOT_RUN |
++| Move-input P1 | 合法source tuple及Bucket fixture | 0／101行、unknown fields、missing/null source version、omitted destination version、null/positive destination mismatch、非法IDs／quantity／超長或control reason；嘗試改SKU/Lot/Status/UOM | Strict boundary拒絕；null不能免檢；dimensions不能被替換；無Balance／Movement／成功Audit／Operation半套 | Schema/domain assertions、real API錯誤／安全body及DB zero-effects | NOT_RUN |
++| Move-ownership-lock P0 | 同Bin／cross-Warehouse／inactive或missing Bin／SKU及合法Lot；来源或目的Counting signal | 每一不合法行放在合法行後，提交whole document | 所有權／profile／同Bin／任一active lock皆拒絕整份；不得把缺表或query故障普遍當unlocked | Unit + real MySQL/HTTP rollback；P4未交付時注入lock signal須明列限制，不宣告real Stocktake workflow PASS | NOT_RUN |
++| Move-shared-bucket P0 | source10 allocated3；兩行OUT各4至不同目的；另有共享目的及source同時是另一行destination | 測gross OUT不足、不能用IN抵OUT、expected versions互相矛盾、shared destination safe-integer overflow及合法shared stock | 不足／overflow／不一致全部回滾；合法合計成功，leg before/after/version連續；永不移走allocated量 | Deterministic unit／real MySQL前後完整snapshot與paired-leg reconciliation | NOT_RUN |
++| Move-reserved-expiry P0 | 同倉有效Reserved但未Allocation；有因時間流逝既存uncovered／expired Lot | 合法同倉保維度Move；比較當下eligible／Reserved／uncovered，另提交會移走Allocation的量 | 合法守恆Move不改Reserved／eligible／既存uncovered；不新增全面coverage前置門檻，過量／allocated OUT拒絕；不改效期或Reservation policy | Fixed-date unit + real MySQL eligible/Reserved/Allocation before-after | NOT_RUN |
++| Move-replay-auth P0 | 同一source事件；有／無view、operation JWT及已撤權actor | same payload重送；改qty／line order／reason重送；完成後撤權再重送；查group及Operation | fresh auth必須先通過；成功重送同immutable receipt、無新legs；changed payload source conflict；撤權不回成功結果；401/403／安全500沿用框架 | Real HTTP/MySQL、Operation hash/receipt及grant/revocation fixture，safe logs | NOT_RUN |
++| Move-races P0 | 兩連線讀同來源version／同已存在目的version；同missing目的；Issue/Dispatch競爭同source | barrier控制同version moves、目的先被更改／建立、Move vs Issue／Dispatch；拒絕任意sleep當同步 | locked當下version／free stock重驗；stale/loser衝突且零effects；不存在目的不能因upsert忽略null契約；stock與ledger守恆無deadlock破壞 | Real two-connection MySQL／API可重現barrier及結果／最終ledger | NOT_RUN |
++| Move-failure P0 | 合法多行及可失敗transaction checkpoints | 在早期行後、OUT/IN兩leg間、Balance／Movement／Audit／completion注入failure再用同事件重試 | failure包含新zero Bucket／Operation全部回滾；retry只一次完整成功；原始失敗證據保留 | Real MySQL snapshots／transaction evidence及unit failure checkpoints | NOT_RUN |
++
++新案例沿用既有configured discovery／zero-skip／34 floors及current-source證據規則，不把TASK030有限developer結果改標成full-P3或formal TC006 PASS。無frontend變更的service/API增量不需要Playwright；後續UI及其實際browser／console／network驗證義務不變。
+ 
+ #### TASK-029 SKU lookup subcases（§5.6.1；developer及後續正式驗證）
+ 
+*** Update File: /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/07_uat_test_cases.md
+@@
+ 
+ | ID | Priority | Phase | Role | Requirement／Risk | Preconditions | Test Data | User Steps | Expected Result | Required Evidence | Actual Evidence | Status |
+ | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+-| MOVE-001 | P0 | P3 | U-OP | FR-MOVE-001／003、AC-028；Bin Move | BIN-A1有LOT-EARLY 10 EA | 移4至BIN-A2 | 提交Bin Move並查看兩Bin與Movement | 來源6、目的4、W-A及Total On Hand不變；產生同operation ID的Out／In Movement | 確認、兩Bin前後、成對Movement | — | NOT RUN |
++| MOVE-001 | P0 | P3 | U-OP | FR-MOVE-001／003、AC-028；Bin Move | BIN-A1有LOT-EARLY 10 EA；另備合法第二行 | 移4至BIN-A2及同倉多行Move | 提交Bin Move並查看兩Bin與Movement；再完整提交多行 | 來源6、目的4、W-A及Total On Hand不變；多行全有或全無，paired legs共用operation/group | 確認、每行前後、成對Movement | — | NOT RUN |
+ | MOVE-002 | P0 | P3 | U-OP | FR-MOVE-002／004、AC-029；維度不變 | W-A／W-B及多狀態bucket | 同Bin、跨倉、改SKU／Lot／Expiry／Status | 逐一嘗試Bin Move | 同Bin及跨倉被拒絕並提示正確流程；不可藉Move改其他維度；數量不變 | 輸入、錯誤、前後Bucket | — | NOT RUN |
+ | MOVE-003 | P0 | P3 | U-OP | FR-MOVE-005～007、AC-022；保障與鎖 | 來源有Reservation；另有Counting Bin | 可移不破壞保障／會破壞保障／數量0、小數、過量 | 逐一提交Move | 合法同倉Move成功且Reserved不變；破壞保障、非法數量、過量或Counting Bin全數拒絕且不部分移動 | 各結果、Reservation、兩Bin、Movement | — | NOT RUN |
+ | MOVE-004 | P1 | P3 | U-OP | FR-TRANSFER-001／002、AC-030；Draft | W-A、W-B Active | 多行SKU／Lot／source Bin／qty | 建立Draft、修改完整lines、取消另一Draft | Draft建立／修改／取消均不改On Hand、Reserved或In Transit；取消狀態與原因清楚 | Draft歷程及前後Stock | — | NOT RUN |
+@@
+ 
+ ### Preconditions and data
+ Preconditions: BIN-A1有LOT-EARLY 10 EA Test data: 移4至BIN-A2
++補充：依§5.4.1／TC-006 Move技術就緒後，另備同倉第二行、既有及不存在目的Bucket；初始NOT_RUN。
+ 
+ ### Steps
+ 提交Bin Move並查看兩Bin與Movement
++提交完整多行Move，核對每行保持原SKU／Lot／Expiry／Status／Base UOM，全部paired legs共用operation/group；把一行改成非法目的後重試，確認所有行皆不生效。
+ 
+ ### Expected business result
+ 來源6、目的4、W-A及Total On Hand不變；產生同operation ID的Out／In Movement
++多行也是全有或全無；source trace及版本衝突可解釋、失敗不留下其他成功行。Required evidence包含完整文件／每行前後及group，仍需實際業務驗證，不由developer PASS推定。
+ 
+ ### Acceptance criteria
+ Required evidence: 確認、兩Bin前後、成對Movement Status remains `NOT_RUN`; mandatory and blocking. A baseline-bound business decision is required, and automation PASS never substitutes for human acceptance.
+@@
+ 
+ ### Preconditions and data
+ Preconditions: 來源有Reservation；另有Counting Bin Test data: 可移不破壞保障／會破壞保障／數量0、小數、過量
++補充：準備相同來源／目的版本的兩個操作頁、目的Bucket被另一操作更改／新增，以及完成後同source重送情境。
+ 
+ ### Steps
+ 逐一提交Move
++先由一頁提交，再由舊頁提交來源或目的舊版本；目的原本不存在卻已新增時亦嘗試提交。刷新後按當下版本重試；完成後重送相同source／payload，再改數量重送。
+ 
+ ### Expected business result
+ 合法同倉Move成功且Reserved不變；破壞保障、非法數量、過量或Counting Bin全數拒絕且不部分移動
++舊來源／目的版本衝突須要求刷新，不無聲覆蓋或自動重送；相同事件只一次成對效果，異內容明確衝突。既有因自然到期形成的uncovered不因合法同倉守恆Move增加或被自動消除。Required evidence含兩頁結果、版本與source trace；仍NOT_RUN。
+ 
+ ### Acceptance criteria
+ Required evidence: 各結果、Reservation、兩Bin、Movement Status remains `NOT_RUN`; mandatory and blocking. A baseline-bound business decision is required, and automation PASS never substitutes for human acceptance.
+*** End Patch

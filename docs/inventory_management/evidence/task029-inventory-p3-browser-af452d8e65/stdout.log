@@ -1,0 +1,420 @@
+
+Running 8 tests using 1 worker
+
+[1/8] [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:122:1 › TASK-029 @technical Inventory-only two-line Draft Dispatch Receive conserves real stock
+  1) [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:122:1 › TASK-029 @technical Inventory-only two-line Draft Dispatch Receive conserves real stock 
+
+    MySqlDatabaseOperationError: MySQL database execute failed
+
+       at ../../../server/src/services/mysqldatabase/MySqlDatabaseService.js:182
+
+      180 |       throw new TypeError("Database SQL must be a non-empty string");
+      181 |     }
+    > 182 |
+          | ^
+      183 |     const requestContext = this.context.get();
+      184 |     const activeSignal = signal || this.signal || requestContext?.signal || null;
+      185 |     const activeTimeoutMs = positiveTimeout(
+        at MySqlDatabaseService.run (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/services/mysqldatabase/MySqlDatabaseService.js:182:13)
+        at sku (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:64:21)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:69:109
+    [cause]: Error: Unknown column 'updated_at' in 'field list'
+        at MySqlDatabaseService.runOnPooledConnection (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/services/mysqldatabase/MySqlDatabaseService.js:204:53)
+        at MySqlDatabaseService.run (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/services/mysqldatabase/MySqlDatabaseService.js:164:34)
+        at sku (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:64:21)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:69:109
+
+    TypeError: Cannot read properties of undefined (reading 'filter')
+
+      81 |   expect(failures).toEqual(expectedFailures);
+      82 |   // Every expected console HTTP error must correspond to an asserted real API rejection.
+    > 83 |   expect(errors.filter(error => !/^Failed to load resource: the server responded with a status of (400|403|404|409|500) \(/u.test(error))).toEqual([]);
+         |                 ^
+      84 |   expect(errors.filter(error => /^Failed to load resource:/u.test(error))).toHaveLength(expectedFailures.length);
+      85 | });
+      86 | async function pick(page, label, option) {
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:83:17
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/task029-inventory-p3-browser-af452d8e65/playwright-artifacts/inventory-warehouse-operat-58310-eceive-conserves-real-stock-technical/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: docs/inventory_management/evidence/task029-inventory-p3-browser-af452d8e65/playwright-artifacts/inventory-warehouse-operat-58310-eceive-conserves-real-stock-technical/error-context.md
+
+    Error Context: docs/inventory_management/evidence/task029-inventory-p3-browser-af452d8e65/playwright-artifacts/inventory-warehouse-operat-58310-eceive-conserves-real-stock-technical/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/task029-inventory-p3-browser-af452d8e65/playwright-artifacts/inventory-warehouse-operat-58310-eceive-conserves-real-stock-technical/trace.zip
+    Usage:
+
+        npx playwright show-trace docs/inventory_management/evidence/task029-inventory-p3-browser-af452d8e65/playwright-artifacts/inventory-warehouse-operat-58310-eceive-conserves-real-stock-technical/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[2/8] [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:137:1 › TASK-029 @technical view-only actor sees real In Transit but no write controls
+  2) [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:137:1 › TASK-029 @technical view-only actor sees real In Transit but no write controls 
+
+    MySqlDatabaseOperationError: MySQL database execute failed
+
+       at ../../../server/src/services/mysqldatabase/MySqlDatabaseService.js:182
+
+      180 |       throw new TypeError("Database SQL must be a non-empty string");
+      181 |     }
+    > 182 |
+          | ^
+      183 |     const requestContext = this.context.get();
+      184 |     const activeSignal = signal || this.signal || requestContext?.signal || null;
+      185 |     const activeTimeoutMs = positiveTimeout(
+        at MySqlDatabaseService.run (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/services/mysqldatabase/MySqlDatabaseService.js:182:13)
+        at sku (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:64:21)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:69:109
+    [cause]: Error: Unknown column 'updated_at' in 'field list'
+        at MySqlDatabaseService.runOnPooledConnection (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/services/mysqldatabase/MySqlDatabaseService.js:204:53)
+        at MySqlDatabaseService.run (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/services/mysqldatabase/MySqlDatabaseService.js:164:34)
+        at sku (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:64:21)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:69:109
+
+    TypeError: Cannot read properties of undefined (reading 'filter')
+
+      81 |   expect(failures).toEqual(expectedFailures);
+      82 |   // Every expected console HTTP error must correspond to an asserted real API rejection.
+    > 83 |   expect(errors.filter(error => !/^Failed to load resource: the server responded with a status of (400|403|404|409|500) \(/u.test(error))).toEqual([]);
+         |                 ^
+      84 |   expect(errors.filter(error => /^Failed to load resource:/u.test(error))).toHaveLength(expectedFailures.length);
+      85 | });
+      86 | async function pick(page, label, option) {
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:83:17
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/task029-inventory-p3-browser-af452d8e65/playwright-artifacts/inventory-warehouse-operat-1e0a4-ansit-but-no-write-controls-technical/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: docs/inventory_management/evidence/task029-inventory-p3-browser-af452d8e65/playwright-artifacts/inventory-warehouse-operat-1e0a4-ansit-but-no-write-controls-technical/error-context.md
+
+    Error Context: docs/inventory_management/evidence/task029-inventory-p3-browser-af452d8e65/playwright-artifacts/inventory-warehouse-operat-1e0a4-ansit-but-no-write-controls-technical/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/task029-inventory-p3-browser-af452d8e65/playwright-artifacts/inventory-warehouse-operat-1e0a4-ansit-but-no-write-controls-technical/trace.zip
+    Usage:
+
+        npx playwright show-trace docs/inventory_management/evidence/task029-inventory-p3-browser-af452d8e65/playwright-artifacts/inventory-warehouse-operat-1e0a4-ansit-but-no-write-controls-technical/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[3/8] [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:144:1 › TASK-029 @technical no-Balance SKU remains selectable and insufficient Dispatch keeps Draft
+  3) [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:144:1 › TASK-029 @technical no-Balance SKU remains selectable and insufficient Dispatch keeps Draft 
+
+    MySqlDatabaseOperationError: MySQL database execute failed
+
+       at ../../../server/src/services/mysqldatabase/MySqlDatabaseService.js:182
+
+      180 |       throw new TypeError("Database SQL must be a non-empty string");
+      181 |     }
+    > 182 |
+          | ^
+      183 |     const requestContext = this.context.get();
+      184 |     const activeSignal = signal || this.signal || requestContext?.signal || null;
+      185 |     const activeTimeoutMs = positiveTimeout(
+        at MySqlDatabaseService.run (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/services/mysqldatabase/MySqlDatabaseService.js:182:13)
+        at sku (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:64:21)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:69:109
+    [cause]: Error: Unknown column 'updated_at' in 'field list'
+        at MySqlDatabaseService.runOnPooledConnection (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/services/mysqldatabase/MySqlDatabaseService.js:204:53)
+        at MySqlDatabaseService.run (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/services/mysqldatabase/MySqlDatabaseService.js:164:34)
+        at sku (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:64:21)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:69:109
+
+    TypeError: Cannot read properties of undefined (reading 'filter')
+
+      81 |   expect(failures).toEqual(expectedFailures);
+      82 |   // Every expected console HTTP error must correspond to an asserted real API rejection.
+    > 83 |   expect(errors.filter(error => !/^Failed to load resource: the server responded with a status of (400|403|404|409|500) \(/u.test(error))).toEqual([]);
+         |                 ^
+      84 |   expect(errors.filter(error => /^Failed to load resource:/u.test(error))).toHaveLength(expectedFailures.length);
+      85 | });
+      86 | async function pick(page, label, option) {
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:83:17
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/task029-inventory-p3-browser-af452d8e65/playwright-artifacts/inventory-warehouse-operat-a4d93-icient-Dispatch-keeps-Draft-technical/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: docs/inventory_management/evidence/task029-inventory-p3-browser-af452d8e65/playwright-artifacts/inventory-warehouse-operat-a4d93-icient-Dispatch-keeps-Draft-technical/error-context.md
+
+    Error Context: docs/inventory_management/evidence/task029-inventory-p3-browser-af452d8e65/playwright-artifacts/inventory-warehouse-operat-a4d93-icient-Dispatch-keeps-Draft-technical/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/task029-inventory-p3-browser-af452d8e65/playwright-artifacts/inventory-warehouse-operat-a4d93-icient-Dispatch-keeps-Draft-technical/trace.zip
+    Usage:
+
+        npx playwright show-trace docs/inventory_management/evidence/task029-inventory-p3-browser-af452d8e65/playwright-artifacts/inventory-warehouse-operat-a4d93-icient-Dispatch-keeps-Draft-technical/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[4/8] [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:153:1 › TASK-029 @technical unknown SKU and invalid quantity preserve other Draft input
+  4) [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:153:1 › TASK-029 @technical unknown SKU and invalid quantity preserve other Draft input 
+
+    MySqlDatabaseOperationError: MySQL database execute failed
+
+       at ../../../server/src/services/mysqldatabase/MySqlDatabaseService.js:182
+
+      180 |       throw new TypeError("Database SQL must be a non-empty string");
+      181 |     }
+    > 182 |
+          | ^
+      183 |     const requestContext = this.context.get();
+      184 |     const activeSignal = signal || this.signal || requestContext?.signal || null;
+      185 |     const activeTimeoutMs = positiveTimeout(
+        at MySqlDatabaseService.run (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/services/mysqldatabase/MySqlDatabaseService.js:182:13)
+        at sku (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:64:21)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:69:109
+    [cause]: Error: Unknown column 'updated_at' in 'field list'
+        at MySqlDatabaseService.runOnPooledConnection (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/services/mysqldatabase/MySqlDatabaseService.js:204:53)
+        at MySqlDatabaseService.run (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/services/mysqldatabase/MySqlDatabaseService.js:164:34)
+        at sku (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:64:21)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:69:109
+
+    TypeError: Cannot read properties of undefined (reading 'filter')
+
+      81 |   expect(failures).toEqual(expectedFailures);
+      82 |   // Every expected console HTTP error must correspond to an asserted real API rejection.
+    > 83 |   expect(errors.filter(error => !/^Failed to load resource: the server responded with a status of (400|403|404|409|500) \(/u.test(error))).toEqual([]);
+         |                 ^
+      84 |   expect(errors.filter(error => /^Failed to load resource:/u.test(error))).toHaveLength(expectedFailures.length);
+      85 | });
+      86 | async function pick(page, label, option) {
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:83:17
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/task029-inventory-p3-browser-af452d8e65/playwright-artifacts/inventory-warehouse-operat-46e17--preserve-other-Draft-input-technical/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: docs/inventory_management/evidence/task029-inventory-p3-browser-af452d8e65/playwright-artifacts/inventory-warehouse-operat-46e17--preserve-other-Draft-input-technical/error-context.md
+
+    Error Context: docs/inventory_management/evidence/task029-inventory-p3-browser-af452d8e65/playwright-artifacts/inventory-warehouse-operat-46e17--preserve-other-Draft-input-technical/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/task029-inventory-p3-browser-af452d8e65/playwright-artifacts/inventory-warehouse-operat-46e17--preserve-other-Draft-input-technical/trace.zip
+    Usage:
+
+        npx playwright show-trace docs/inventory_management/evidence/task029-inventory-p3-browser-af452d8e65/playwright-artifacts/inventory-warehouse-operat-46e17--preserve-other-Draft-input-technical/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[5/8] [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:162:1 › TASK-029 @technical delayed real lookup cannot replace a newer explicitly chosen SKU
+  5) [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:162:1 › TASK-029 @technical delayed real lookup cannot replace a newer explicitly chosen SKU 
+
+    MySqlDatabaseOperationError: MySQL database execute failed
+
+       at ../../../server/src/services/mysqldatabase/MySqlDatabaseService.js:182
+
+      180 |       throw new TypeError("Database SQL must be a non-empty string");
+      181 |     }
+    > 182 |
+          | ^
+      183 |     const requestContext = this.context.get();
+      184 |     const activeSignal = signal || this.signal || requestContext?.signal || null;
+      185 |     const activeTimeoutMs = positiveTimeout(
+        at MySqlDatabaseService.run (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/services/mysqldatabase/MySqlDatabaseService.js:182:13)
+        at sku (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:64:21)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:69:109
+    [cause]: Error: Unknown column 'updated_at' in 'field list'
+        at MySqlDatabaseService.runOnPooledConnection (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/services/mysqldatabase/MySqlDatabaseService.js:204:53)
+        at MySqlDatabaseService.run (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/services/mysqldatabase/MySqlDatabaseService.js:164:34)
+        at sku (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:64:21)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:69:109
+
+    TypeError: Cannot read properties of undefined (reading 'filter')
+
+      81 |   expect(failures).toEqual(expectedFailures);
+      82 |   // Every expected console HTTP error must correspond to an asserted real API rejection.
+    > 83 |   expect(errors.filter(error => !/^Failed to load resource: the server responded with a status of (400|403|404|409|500) \(/u.test(error))).toEqual([]);
+         |                 ^
+      84 |   expect(errors.filter(error => /^Failed to load resource:/u.test(error))).toHaveLength(expectedFailures.length);
+      85 | });
+      86 | async function pick(page, label, option) {
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:83:17
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/task029-inventory-p3-browser-af452d8e65/playwright-artifacts/inventory-warehouse-operat-77106-newer-explicitly-chosen-SKU-technical/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: docs/inventory_management/evidence/task029-inventory-p3-browser-af452d8e65/playwright-artifacts/inventory-warehouse-operat-77106-newer-explicitly-chosen-SKU-technical/error-context.md
+
+    Error Context: docs/inventory_management/evidence/task029-inventory-p3-browser-af452d8e65/playwright-artifacts/inventory-warehouse-operat-77106-newer-explicitly-chosen-SKU-technical/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/task029-inventory-p3-browser-af452d8e65/playwright-artifacts/inventory-warehouse-operat-77106-newer-explicitly-chosen-SKU-technical/trace.zip
+    Usage:
+
+        npx playwright show-trace docs/inventory_management/evidence/task029-inventory-p3-browser-af452d8e65/playwright-artifacts/inventory-warehouse-operat-77106-newer-explicitly-chosen-SKU-technical/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[6/8] [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:175:1 › TASK-029 @technical stale Draft version returns 409 and retains unsaved quantity
+  6) [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:175:1 › TASK-029 @technical stale Draft version returns 409 and retains unsaved quantity 
+
+    MySqlDatabaseOperationError: MySQL database execute failed
+
+       at ../../../server/src/services/mysqldatabase/MySqlDatabaseService.js:182
+
+      180 |       throw new TypeError("Database SQL must be a non-empty string");
+      181 |     }
+    > 182 |
+          | ^
+      183 |     const requestContext = this.context.get();
+      184 |     const activeSignal = signal || this.signal || requestContext?.signal || null;
+      185 |     const activeTimeoutMs = positiveTimeout(
+        at MySqlDatabaseService.run (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/services/mysqldatabase/MySqlDatabaseService.js:182:13)
+        at sku (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:64:21)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:69:109
+    [cause]: Error: Unknown column 'updated_at' in 'field list'
+        at MySqlDatabaseService.runOnPooledConnection (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/services/mysqldatabase/MySqlDatabaseService.js:204:53)
+        at MySqlDatabaseService.run (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/services/mysqldatabase/MySqlDatabaseService.js:164:34)
+        at sku (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:64:21)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:69:109
+
+    TypeError: Cannot read properties of undefined (reading 'filter')
+
+      81 |   expect(failures).toEqual(expectedFailures);
+      82 |   // Every expected console HTTP error must correspond to an asserted real API rejection.
+    > 83 |   expect(errors.filter(error => !/^Failed to load resource: the server responded with a status of (400|403|404|409|500) \(/u.test(error))).toEqual([]);
+         |                 ^
+      84 |   expect(errors.filter(error => /^Failed to load resource:/u.test(error))).toHaveLength(expectedFailures.length);
+      85 | });
+      86 | async function pick(page, label, option) {
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:83:17
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/task029-inventory-p3-browser-af452d8e65/playwright-artifacts/inventory-warehouse-operat-2af70-nd-retains-unsaved-quantity-technical/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: docs/inventory_management/evidence/task029-inventory-p3-browser-af452d8e65/playwright-artifacts/inventory-warehouse-operat-2af70-nd-retains-unsaved-quantity-technical/error-context.md
+
+    Error Context: docs/inventory_management/evidence/task029-inventory-p3-browser-af452d8e65/playwright-artifacts/inventory-warehouse-operat-2af70-nd-retains-unsaved-quantity-technical/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/task029-inventory-p3-browser-af452d8e65/playwright-artifacts/inventory-warehouse-operat-2af70-nd-retains-unsaved-quantity-technical/trace.zip
+    Usage:
+
+        npx playwright show-trace docs/inventory_management/evidence/task029-inventory-p3-browser-af452d8e65/playwright-artifacts/inventory-warehouse-operat-2af70-nd-retains-unsaved-quantity-technical/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[7/8] [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:186:1 › TASK-029 @technical Quarantined full receipt requires reason and destination ownership
+  7) [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:186:1 › TASK-029 @technical Quarantined full receipt requires reason and destination ownership 
+
+    MySqlDatabaseOperationError: MySQL database execute failed
+
+       at ../../../server/src/services/mysqldatabase/MySqlDatabaseService.js:182
+
+      180 |       throw new TypeError("Database SQL must be a non-empty string");
+      181 |     }
+    > 182 |
+          | ^
+      183 |     const requestContext = this.context.get();
+      184 |     const activeSignal = signal || this.signal || requestContext?.signal || null;
+      185 |     const activeTimeoutMs = positiveTimeout(
+        at MySqlDatabaseService.run (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/services/mysqldatabase/MySqlDatabaseService.js:182:13)
+        at sku (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:64:21)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:69:109
+    [cause]: Error: Unknown column 'updated_at' in 'field list'
+        at MySqlDatabaseService.runOnPooledConnection (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/services/mysqldatabase/MySqlDatabaseService.js:204:53)
+        at MySqlDatabaseService.run (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/services/mysqldatabase/MySqlDatabaseService.js:164:34)
+        at sku (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:64:21)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:69:109
+
+    TypeError: Cannot read properties of undefined (reading 'filter')
+
+      81 |   expect(failures).toEqual(expectedFailures);
+      82 |   // Every expected console HTTP error must correspond to an asserted real API rejection.
+    > 83 |   expect(errors.filter(error => !/^Failed to load resource: the server responded with a status of (400|403|404|409|500) \(/u.test(error))).toEqual([]);
+         |                 ^
+      84 |   expect(errors.filter(error => /^Failed to load resource:/u.test(error))).toHaveLength(expectedFailures.length);
+      85 | });
+      86 | async function pick(page, label, option) {
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:83:17
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/task029-inventory-p3-browser-af452d8e65/playwright-artifacts/inventory-warehouse-operat-87860-n-and-destination-ownership-technical/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: docs/inventory_management/evidence/task029-inventory-p3-browser-af452d8e65/playwright-artifacts/inventory-warehouse-operat-87860-n-and-destination-ownership-technical/error-context.md
+
+    Error Context: docs/inventory_management/evidence/task029-inventory-p3-browser-af452d8e65/playwright-artifacts/inventory-warehouse-operat-87860-n-and-destination-ownership-technical/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/task029-inventory-p3-browser-af452d8e65/playwright-artifacts/inventory-warehouse-operat-87860-n-and-destination-ownership-technical/trace.zip
+    Usage:
+
+        npx playwright show-trace docs/inventory_management/evidence/task029-inventory-p3-browser-af452d8e65/playwright-artifacts/inventory-warehouse-operat-87860-n-and-destination-ownership-technical/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[8/8] [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:196:1 › TASK-029 @technical keyboard lookup, unsaved close, responsive and URL refresh
+  8) [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:196:1 › TASK-029 @technical keyboard lookup, unsaved close, responsive and URL refresh 
+
+    MySqlDatabaseOperationError: MySQL database execute failed
+
+       at ../../../server/src/services/mysqldatabase/MySqlDatabaseService.js:182
+
+      180 |       throw new TypeError("Database SQL must be a non-empty string");
+      181 |     }
+    > 182 |
+          | ^
+      183 |     const requestContext = this.context.get();
+      184 |     const activeSignal = signal || this.signal || requestContext?.signal || null;
+      185 |     const activeTimeoutMs = positiveTimeout(
+        at MySqlDatabaseService.run (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/services/mysqldatabase/MySqlDatabaseService.js:182:13)
+        at sku (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:64:21)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:69:109
+    [cause]: Error: Unknown column 'updated_at' in 'field list'
+        at MySqlDatabaseService.runOnPooledConnection (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/services/mysqldatabase/MySqlDatabaseService.js:204:53)
+        at MySqlDatabaseService.run (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/services/mysqldatabase/MySqlDatabaseService.js:164:34)
+        at sku (/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:64:21)
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:69:109
+
+    TypeError: Cannot read properties of undefined (reading 'filter')
+
+      81 |   expect(failures).toEqual(expectedFailures);
+      82 |   // Every expected console HTTP error must correspond to an asserted real API rejection.
+    > 83 |   expect(errors.filter(error => !/^Failed to load resource: the server responded with a status of (400|403|404|409|500) \(/u.test(error))).toEqual([]);
+         |                 ^
+      84 |   expect(errors.filter(error => /^Failed to load resource:/u.test(error))).toHaveLength(expectedFailures.length);
+      85 | });
+      86 | async function pick(page, label, option) {
+        at /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/client/e2e/inventory-management/inventory-warehouse-operations.spec.js:83:17
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/task029-inventory-p3-browser-af452d8e65/playwright-artifacts/inventory-warehouse-operat-242a3--responsive-and-URL-refresh-technical/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: docs/inventory_management/evidence/task029-inventory-p3-browser-af452d8e65/playwright-artifacts/inventory-warehouse-operat-242a3--responsive-and-URL-refresh-technical/error-context.md
+
+    Error Context: docs/inventory_management/evidence/task029-inventory-p3-browser-af452d8e65/playwright-artifacts/inventory-warehouse-operat-242a3--responsive-and-URL-refresh-technical/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    docs/inventory_management/evidence/task029-inventory-p3-browser-af452d8e65/playwright-artifacts/inventory-warehouse-operat-242a3--responsive-and-URL-refresh-technical/trace.zip
+    Usage:
+
+        npx playwright show-trace docs/inventory_management/evidence/task029-inventory-p3-browser-af452d8e65/playwright-artifacts/inventory-warehouse-operat-242a3--responsive-and-URL-refresh-technical/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+  8 failed
+    [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:122:1 › TASK-029 @technical Inventory-only two-line Draft Dispatch Receive conserves real stock 
+    [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:137:1 › TASK-029 @technical view-only actor sees real In Transit but no write controls 
+    [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:144:1 › TASK-029 @technical no-Balance SKU remains selectable and insufficient Dispatch keeps Draft 
+    [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:153:1 › TASK-029 @technical unknown SKU and invalid quantity preserve other Draft input 
+    [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:162:1 › TASK-029 @technical delayed real lookup cannot replace a newer explicitly chosen SKU 
+    [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:175:1 › TASK-029 @technical stale Draft version returns 409 and retains unsaved quantity 
+    [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:186:1 › TASK-029 @technical Quarantined full receipt requires reason and destination ownership 
+    [technical] › client/e2e/inventory-management/inventory-warehouse-operations.spec.js:196:1 › TASK-029 @technical keyboard lookup, unsaved close, responsive and URL refresh 

@@ -1,0 +1,87 @@
+{
+  "schema_version": "2.0",
+  "module_id": "inventory-management",
+  "run_id": "hd099-nondb-continuation-8ee8c5cb94-inventory-p3-client-coverage",
+  "suite_id": "inventory-p3-client-coverage",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "11b815650cfb7851c5c096fe14fb7a2cff84ef3d28cd6d8afb1ae99d3ef8ad9a",
+  "source_fingerprint": "44ef6225ab74831ae34a2d93f40a421ed6a049f8032333d4af8da5cb544b702d",
+  "code_commit": "869ac07abdd3879254c351d857be911d71e68b6b",
+  "started_at": "2026-10-06T05:56:15.540822+00:00",
+  "ended_at": "2026-10-06T05:56:22.916246+00:00",
+  "environment_id": "inventory-isolated-test",
+  "runtime_instance_id": "erp-inventory-hd099-nondb.3q16c1yx",
+  "data_reference": "Synthetic Inventory fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "npm",
+    "run",
+    "test:coverage",
+    "--workspace",
+    "client",
+    "--",
+    "--reporter=junit",
+    "--outputFile=/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/hd099-nondb-continuation-8ee8c5cb94/inventory-p3-client-coverage/inventory-p3-client-coverage.xml"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "e22db846f42b44773957383bc79c36efcad805a780815679b0de73c084573b3d",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 691,
+    "passed": 691,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [
+    {
+      "id": "TC-011",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-016",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-070",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-075",
+      "status": "PASS"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "evidence/hd099-nondb-continuation-8ee8c5cb94/inventory-p3-client-coverage/inventory-p3-client-coverage.xml",
+      "sha256": "712b3a61e9d457c38ef086ea2f8286ee8b0f0c035d1aeff3fe1af55c600d736e",
+      "bytes": 195644
+    },
+    {
+      "path": "evidence/hd099-nondb-continuation-8ee8c5cb94/inventory-p3-client-coverage/stderr.log",
+      "sha256": "070afa16e2258dffde5c557e83c0c9dd57390608ae678c3136e033c56d3c6b5d",
+      "bytes": 12502
+    },
+    {
+      "path": "evidence/hd099-nondb-continuation-8ee8c5cb94/inventory-p3-client-coverage/stdout.log",
+      "sha256": "7322a4a3fceb793ab8a70f76c919880046531957b5d6bf17a11f18a4f7079ac5",
+      "bytes": 13273
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "Approved HD099 developer remediation diagnostic while defect gate remains blocked; not formal acceptance, UI or current CI."
+  ]
+}

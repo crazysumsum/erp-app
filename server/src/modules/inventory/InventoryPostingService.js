@@ -6,6 +6,9 @@ import { InventoryAuditService } from "./InventoryAuditService.js";
 import { InventoryLockService } from "./InventoryLockService.js";
 import { InventoryOperationService } from "./InventoryOperationService.js";
 import { inventoryError } from "./inventoryErrors.js";
+import { postBinMoveInTransaction } from "./inventoryBinMovePosting.js";
+import { postAdjustmentInTransaction } from "./inventoryAdjustmentPosting.js";
+import { reverseMovementInTransaction } from "./inventoryReversalPosting.js";
 import {
   assertInventoryLotConsistency,
   inventoryPositiveInteger,
@@ -289,6 +292,38 @@ export class InventoryPostingService {
 
   postReceipt(command) {
     return this.database.withTransaction((transaction) => this.postReceiptInTransaction(transaction, command));
+  }
+
+  postAdjustment(command, context) {
+    return this.database.withTransaction(tx => this.postAdjustmentInTransaction(tx, command, context));
+  }
+
+  postAdjustmentInTransaction(tx, command, context) {
+    return postAdjustmentInTransaction(this, tx, command, context, "adjustment.post");
+  }
+
+  postStatusTransfer(command, context) {
+    return this.database.withTransaction(tx => this.postStatusTransferInTransaction(tx, command, context));
+  }
+
+  postStatusTransferInTransaction(tx, command, context) {
+    return postAdjustmentInTransaction(this, tx, command, context, "status_transfer.post");
+  }
+
+  postBinMove(command) {
+    return this.database.withTransaction((transaction) => this.postBinMoveInTransaction(transaction, command));
+  }
+
+  reverseMovement(command, context) {
+    return this.database.withTransaction(tx => this.reverseMovementInTransaction(tx, command, context));
+  }
+
+  reverseMovementInTransaction(tx, command, context) {
+    return reverseMovementInTransaction(this, tx, command, context);
+  }
+
+  postBinMoveInTransaction(transaction, command) {
+    return postBinMoveInTransaction(this, transaction, command);
   }
 
   postReceiptInTransaction(transaction, command) {
@@ -609,7 +644,7 @@ export class InventoryPostingService {
     if (bin.status !== "ACTIVE") throw inventoryError("BIN_INVALID");
     if (locked.binLocks.length) throw inventoryError("BIN_LOCKED_BY_STOCKTAKE");
 
-    const lot = await this.#resolveLot(transaction, locked.lots, {
+    const lot = await this.resolveReceiptLotInTransaction(transaction, locked.lots, {
       payload, profile, lotInput, currentDate, postedAt, actorUserId: context.actor.userId
     });
     const balances = await this.locks.lockBalancesAfterLot(transaction, {
@@ -769,27 +804,39 @@ export class InventoryPostingService {
     };
   }
 
-  async #resolveLot(transaction, lockedLots, { payload, profile, lotInput, currentDate, postedAt, actorUserId }) {
+  async resolveReceiptLotInTransaction(transaction, lockedLots, { payload, profile, lotInput, currentDate, postedAt, actorUserId, createdLotIds = null }) {
     if (lotInput.normalizedLotNumber === null) return null;
     let lot = lockedLots.find((row) => Number(row.sku_id) === payload.skuId &&
       row.normalized_lot_number === lotInput.normalizedLotNumber);
     if (!lot) {
-      await transaction.execute(
+      let inserted;
+      try {
+        [inserted] = await transaction.execute(
         `INSERT INTO inventory_lots
            (sku_id, lot_number, normalized_lot_number, expiry_date, manufacture_date,
             first_receipt_date, sku_code_snapshot, created_at, created_by)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-         ON DUPLICATE KEY UPDATE id = id`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)${createdLotIds ? "" : " ON DUPLICATE KEY UPDATE id = id"}`,
         [payload.skuId, lotInput.lotNumber, lotInput.normalizedLotNumber, lotInput.expiryDate,
           lotInput.manufactureDate, currentDate, profile.skuCode, postedAt, actorUserId]
-      );
-      const [rows] = await transaction.query(
-        `SELECT * FROM inventory_lots
-          WHERE sku_id = ? AND normalized_lot_number = ? FOR UPDATE`,
-        [payload.skuId, lotInput.normalizedLotNumber]
-      );
-      [lot] = rows;
+        );
+      } catch (error) {
+        if (createdLotIds && (error?.cause?.code ?? error?.code) === "ER_DUP_ENTRY") throw inventoryError("CONCURRENT_OPERATION");
+        throw error;
+      }
+      if (createdLotIds) {
+        const id = Number(inserted.insertId);
+        if (Number(inserted.affectedRows) !== 1 || !Number.isSafeInteger(id) || id <= 0) throw inventoryError("CONCURRENT_OPERATION");
+        createdLotIds.add(id);
+      }
     }
+    // Preserve calendar dates rather than mysql2 Date/timezone conversions, including already locked Lots.
+    const [rows] = await transaction.query(`SELECT id, sku_id, lot_number, normalized_lot_number,
+      DATE_FORMAT(expiry_date, '%Y-%m-%d') AS expiry_date,
+      DATE_FORMAT(manufacture_date, '%Y-%m-%d') AS manufacture_date,
+      DATE_FORMAT(first_receipt_date, '%Y-%m-%d') AS first_receipt_date, sku_code_snapshot, created_at, created_by
+      FROM inventory_lots WHERE sku_id = ? AND normalized_lot_number = ? FOR UPDATE`,
+    [payload.skuId, lotInput.normalizedLotNumber]);
+    [lot] = rows;
     if (!lot) throw inventoryError("INVENTORY_DEPENDENCY_UNAVAILABLE");
     assertInventoryLotConsistency(
       { expiryDate: lot.expiry_date, manufactureDate: lot.manufacture_date },

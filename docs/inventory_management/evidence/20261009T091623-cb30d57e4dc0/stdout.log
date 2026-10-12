@@ -1,0 +1,15 @@
+
+> @erp/client@0.1.0 build
+> vite build
+
+vite v8.2.1 building client environment for production...
+[2Ktransforming...✓ 362 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                                    0.67 kB │ gzip:   0.40 kB
+dist/assets/flUhRq6tzZclQEJ-Vdg-IuiaDsNcIhQ8tQ-D-x-0Q06.woff2    128.61 kB
+dist/assets/flUhRq6tzZclQEJ-Vdg-IuiaDsNa-Dr0goTwe.woff           164.91 kB
+dist/assets/index-CavU-mpL.css                                   209.58 kB │ gzip:  37.38 kB
+dist/assets/index-BKQ4ldzf.js                                  1,037.02 kB │ gzip: 296.21 kB
+
+✓ built in 311ms

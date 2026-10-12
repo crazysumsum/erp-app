@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="24" failures="2" errors="0" time="0.379382958">
+    <testsuite name="test/pages/inventory/inventoryAdjustments.test.js" timestamp="2026-10-08T07:41:24.852Z" hostname="samMacBook-Pro.local" tests="24" failures="2" errors="0" skipped="0" time="0.379382958">
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-SELECTORS supports exact-Code usable no-Balance SKU with explicit Base UOM and confirmed absence" time="0.075664125">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-SELECTORS discards late SKU response after Code changed" time="0.011876041">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-VALIDATION rejects nonpositive, fractional and unsafe Base quantities before review" time="0.024737417">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-VALIDATION applies trim, Unicode OTHER minimum, control rejection and UTF-8 byte limit" time="0.025518584">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-CURRENT-GUARDS refuses incomplete Reservation summary instead of showing guessed safeguards" time="0.010115333">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-VALIDATION rejects invalid calendar dates for a new expiring Lot" time="0.015502875">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-IN-LOT preserves existing immutable Lot dates and current Balance version" time="0.013120541">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-CURRENT-GUARDS reads all target pages and distinguishes null Lot from a tracked Lot" time="0.008465958">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-CURRENT-GUARDS refuses failed, partial and duplicate target reads rather than inferring absence" time="0.016182">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-CURRENT-GUARDS binds OUT to freshly read source identity/version, not its list snapshot" time="0.012031416">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-IN-LOT prepares paired Status effects using current source and confirmed absent destination" time="0.011971959">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-RECONCILE derives complete unique current Reversal guards instead of historical versions" time="0.002352708">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-CURRENT-GUARDS rejects a Lot response owned by another SKU" time="0.012701833">
+            <failure message="expected [ [ { action: &apos;IN&apos;, …(3) } ] ] to be undefined" type="AssertionError">
+AssertionError: expected [ [ { action: &apos;IN&apos;, …(3) } ] ] to be undefined
+
+- Expected:
+undefined
+
++ Received:
+[
+  [
+    {
+      &quot;action&quot;: &quot;IN&quot;,
+      &quot;body&quot;: {
+        &quot;binId&quot;: 2,
+        &quot;direction&quot;: &quot;IN&quot;,
+        &quot;expectedBalanceVersion&quot;: null,
+        &quot;expiryDate&quot;: &quot;2027-09-27&quot;,
+        &quot;lotNumber&quot;: &quot;LOT-4&quot;,
+        &quot;quantity&quot;: 3,
+        &quot;reasonCategory&quot;: &quot;DATA_CORRECTION&quot;,
+        &quot;reasonText&quot;: &quot;庫存資料校正&quot;,
+        &quot;skuId&quot;: 3,
+        &quot;stockStatus&quot;: &quot;AVAILABLE&quot;,
+        &quot;uomId&quot;: 5,
+        &quot;warehouseId&quot;: 1,
+      },
+      &quot;movementId&quot;: undefined,
+      &quot;preview&quot;: {
+        &quot;legs&quot;: [
+          {
+            &quot;bucket&quot;: {
+              &quot;allocated&quot;: 0,
+              &quot;baseUom&quot;: {
+                &quot;uomCode&quot;: &quot;EA&quot;,
+                &quot;uomId&quot;: 5,
+              },
+              &quot;bin&quot;: {
+                &quot;binId&quot;: 2,
+                &quot;code&quot;: &quot;A-01&quot;,
+              },
+              &quot;bucketFree&quot;: 0,
+              &quot;lot&quot;: {
+                &quot;expiryDate&quot;: &quot;2027-09-27&quot;,
+                &quot;firstReceiptDate&quot;: &quot;2026-01-01&quot;,
+                &quot;lotId&quot;: 4,
+                &quot;lotNumber&quot;: &quot;LOT-4&quot;,
+                &quot;manufactureDate&quot;: null,
+                &quot;number&quot;: &quot;LOT-4&quot;,
+                &quot;sku&quot;: [Object],
+              },
+              &quot;onHand&quot;: 0,
+              &quot;sku&quot;: {
+                &quot;code&quot;: &quot;SKU-3&quot;,
+                &quot;name&quot;: &quot;Widget&quot;,
+                &quot;skuId&quot;: 3,
+              },
+              &quot;stockStatus&quot;: &quot;AVAILABLE&quot;,
+              &quot;version&quot;: null,
+              &quot;warehouse&quot;: {
+                &quot;code&quot;: &quot;WH-A&quot;,
+                &quot;warehouseId&quot;: 1,
+              },
+            },
+            &quot;direction&quot;: &quot;IN&quot;,
+            &quot;projected&quot;: 3,
+            &quot;quantity&quot;: 3,
+          },
+        ],
+        &quot;reasonCategory&quot;: &quot;DATA_CORRECTION&quot;,
+        &quot;reasonText&quot;: &quot;庫存資料校正&quot;,
+        &quot;summaries&quot;: [
+          {
+            &quot;atp&quot;: 6,
+            &quot;eligibleOnHand&quot;: 10,
+            &quot;reserved&quot;: 4,
+            &quot;sku&quot;: &quot;SKU-3&quot;,
+            &quot;uncoveredReserved&quot;: 0,
+            &quot;warehouse&quot;: &quot;WH-A&quot;,
+          },
+        ],
+      },
+    },
+  ],
+]
+
+ ❯ test/pages/inventory/inventoryAdjustments.test.js:174:39
+            </failure>
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-RECONCILE rejects duplicate original Movement legs instead of previewing duplicated effects" time="0.004171541">
+            <failure message="expected [ [ { action: &apos;REVERSAL&apos;, …(3) } ] ] to be undefined" type="AssertionError">
+AssertionError: expected [ [ { action: &apos;REVERSAL&apos;, …(3) } ] ] to be undefined
+
+- Expected:
+undefined
+
++ Received:
+[
+  [
+    {
+      &quot;action&quot;: &quot;REVERSAL&quot;,
+      &quot;body&quot;: {
+        &quot;expectedBalances&quot;: [
+          {
+            &quot;balanceId&quot;: 12,
+            &quot;expectedVersion&quot;: 6,
+          },
+        ],
+        &quot;reasonText&quot;: &quot;整組資料核對沖銷&quot;,
+      },
+      &quot;movementId&quot;: 21,
+      &quot;preview&quot;: {
+        &quot;legs&quot;: [
+          {
+            &quot;bucket&quot;: {
+              &quot;allocated&quot;: 2,
+              &quot;balanceId&quot;: 12,
+              &quot;baseUom&quot;: {
+                &quot;uomCode&quot;: &quot;EA&quot;,
+                &quot;uomId&quot;: 5,
+              },
+              &quot;bin&quot;: {
+                &quot;binId&quot;: 2,
+                &quot;code&quot;: &quot;A-01&quot;,
+              },
+              &quot;bucketFree&quot;: 8,
+              &quot;lot&quot;: null,
+              &quot;onHand&quot;: 10,
+              &quot;sku&quot;: {
+                &quot;code&quot;: &quot;SKU-3&quot;,
+                &quot;name&quot;: &quot;Widget&quot;,
+                &quot;skuId&quot;: 3,
+              },
+              &quot;stockStatus&quot;: &quot;AVAILABLE&quot;,
+              &quot;version&quot;: 6,
+              &quot;warehouse&quot;: {
+                &quot;code&quot;: &quot;WH-A&quot;,
+                &quot;warehouseId&quot;: 1,
+              },
+            },
+            &quot;direction&quot;: &quot;OUT&quot;,
+            &quot;movementId&quot;: 21,
+            &quot;projected&quot;: 6,
+            &quot;quantity&quot;: 2,
+          },
+          {
+            &quot;bucket&quot;: {
+              &quot;allocated&quot;: 2,
+              &quot;balanceId&quot;: 12,
+              &quot;baseUom&quot;: {
+                &quot;uomCode&quot;: &quot;EA&quot;,
+                &quot;uomId&quot;: 5,
+              },
+              &quot;bin&quot;: {
+                &quot;binId&quot;: 2,
+                &quot;code&quot;: &quot;A-01&quot;,
+              },
+              &quot;bucketFree&quot;: 8,
+              &quot;lot&quot;: null,
+              &quot;onHand&quot;: 10,
+              &quot;sku&quot;: {
+                &quot;code&quot;: &quot;SKU-3&quot;,
+                &quot;name&quot;: &quot;Widget&quot;,
+                &quot;skuId&quot;: 3,
+              },
+              &quot;stockStatus&quot;: &quot;AVAILABLE&quot;,
+              &quot;version&quot;: 6,
+              &quot;warehouse&quot;: {
+                &quot;code&quot;: &quot;WH-A&quot;,
+                &quot;warehouseId&quot;: 1,
+              },
+            },
+            &quot;direction&quot;: &quot;OUT&quot;,
+            &quot;movementId&quot;: 21,
+            &quot;projected&quot;: 6,
+            &quot;quantity&quot;: 2,
+          },
+        ],
+        &quot;reasonCategory&quot;: undefined,
+        &quot;reasonText&quot;: &quot;整組資料核對沖銷&quot;,
+        &quot;summaries&quot;: [
+          {
+            &quot;atp&quot;: 6,
+            &quot;eligibleOnHand&quot;: 10,
+            &quot;reserved&quot;: 4,
+            &quot;sku&quot;: &quot;SKU-3&quot;,
+            &quot;uncoveredReserved&quot;: 0,
+            &quot;warehouse&quot;: &quot;WH-A&quot;,
+          },
+        ],
+      },
+    },
+  ],
+]
+
+ ❯ test/pages/inventory/inventoryAdjustments.test.js:180:39
+            </failure>
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-CONFIRM-SECRETS clears native password immediately, never emits it, and clears cancel/hide/disable" time="0.013698417">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-AUTH requires view+adjust on the page and hides its form for read-only actors" time="0.02877125">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-SIGNED-INTENT freezes original input and persists only actor source identity before POST" time="0.012809">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-UNKNOWN-QUERY keeps null unresolved and never automatically creates or resends another intent" time="0.013301458">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-RETRY requires explicit retry and fresh entry with unchanged original business/source/key" time="0.014967375">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-REFRESH restores only query recovery, with no rebuilt payload or retry/new operation" time="0.001840917">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-REFRESH isolates actors and clears pending confirmation without deleting another actor&apos;s reference" time="0.0124785">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-REFRESH blocks POST when minimal recovery identity cannot be saved" time="0.010498791">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-RETRY preserves earlier UNKNOWN even when a later retry is definitively rejected" time="0.014142875">
+        </testcase>
+        <testcase classname="test/pages/inventory/inventoryAdjustments.test.js" name="TASK033 high-risk form and confirmation &gt; UI033-RECONCILE resolves only exact source/operation/group and reloads actual facts" time="0.01178075">
+        </testcase>
+    </testsuite>
+</testsuites>

@@ -396,13 +396,17 @@ test("a malformed row fails with the same message as a real authentication failu
   const context = crypto.newCryptoContext();
   const sealed = crypto.encryptAccountNumber({ supplierId: 7, cryptoContext: context, accountNumber: ACCOUNT });
 
+  const flippedTag = Buffer.from(sealed.authTag);
+  flippedTag[0] ^= 1;
+  assert.notDeepEqual(flippedTag, sealed.authTag, "tampering must change the tag");
+
   const malformed = [
     ["truncated tag", { ...sealed, authTag: sealed.authTag.subarray(0, 8) }],
     ["null tag", { ...sealed, authTag: null }],
     ["null IV", { ...sealed, iv: null }],
     ["truncated IV", { ...sealed, iv: sealed.iv.subarray(0, 11) }],
     ["null ciphertext", { ...sealed, ciphertext: null }],
-    ["flipped tag", { ...sealed, authTag: Buffer.from(sealed.authTag).fill(0, 0, 1) }]
+    ["flipped tag", { ...sealed, authTag: flippedTag }]
   ];
   for (const [what, row] of malformed) {
     let thrown = null;

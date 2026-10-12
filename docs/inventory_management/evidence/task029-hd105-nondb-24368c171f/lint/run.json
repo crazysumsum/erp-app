@@ -1,0 +1,60 @@
+{
+  "schema_version": "2.0",
+  "module_id": "inventory-management",
+  "run_id": "task029-hd105-nondb-24368c171f-lint",
+  "suite_id": "lint",
+  "stage": "DEVELOPER",
+  "result": "FAIL",
+  "spec_baseline": "41949846cafde277c6887a7b572e0b3f945425d9a16f1b96517d99ca1674617c",
+  "source_fingerprint": "cdeda177198dac8c7b38c0f3c9cafc83659532cca45054354799129e16b5b58e",
+  "code_commit": "869ac07abdd3879254c351d857be911d71e68b6b",
+  "started_at": "2026-10-07T01:01:50.663625+00:00",
+  "ended_at": "2026-10-07T01:01:54.276619+00:00",
+  "environment_id": "inventory-isolated-test",
+  "runtime_instance_id": "erp-inventory-task029-hd105-nondb.rc02220w",
+  "data_reference": "Synthetic Inventory fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "npm",
+    "run",
+    "lint"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "d9b002f5b56a257ac2f45384ae4c8a35adf99e52ecc80d9bc2a9d8c6460b8e07",
+  "exit_code": 1,
+  "timed_out": false,
+  "counts": {
+    "total": 0,
+    "passed": 0,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/task029-hd105-nondb-24368c171f/lint/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/task029-hd105-nondb-24368c171f/lint/stdout.log",
+      "sha256": "31aff5818cfb03df3cc6b57593f92814c7a21b95a5e998b523d4e49711ada3ad",
+      "bytes": 784
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "Approved current-source Transfer UI/Bin-query DEVELOPER regressions; browser verified separately, not formal acceptance/full-P3/current CI."
+  ]
+}

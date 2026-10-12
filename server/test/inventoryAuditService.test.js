@@ -5,6 +5,18 @@ import { InventoryAuditService } from "../src/modules/inventory/InventoryAuditSe
 
 const NOW_MS = 1_700_000_000_000;
 
+test("ADJ031-PROOF success audit allows only safe device/time identifiers, not trusted context", async () => {
+  let summary;
+  const service = new InventoryAuditService({ database: { async withTransaction() {} }, logger: logger(), time: { nowMs: () => NOW_MS } });
+  const tx = { async execute(_sql, values) { summary = JSON.parse(values[11]); } };
+  const identifiers = { deviceId: "a".repeat(64), signedRequestAt: NOW_MS };
+  await service.recordSucceeded(tx, input({ action: "adjustment.post", afterSummary: identifiers }));
+  assert.deepEqual(summary, identifiers);
+  for (const field of ["context", "signature", "password", "token", "publicKey"]) {
+    await assert.rejects(() => service.recordSucceeded(tx, input({ afterSummary: { [field]: "not-persisted" } })), /Unsupported Inventory audit summary field/u);
+  }
+});
+
 function input(overrides = {}) {
   return {
     actorUserId: 7,

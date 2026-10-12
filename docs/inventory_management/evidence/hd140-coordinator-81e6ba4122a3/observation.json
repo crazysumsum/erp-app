@@ -1,0 +1,38 @@
+{
+  "head": "f51175e7b62623e50429232cf0aaf580a49461d9",
+  "source": "3cdc51c462840f24f5a221218a928e795600de865f35042f2a087622cee9679e",
+  "baselines": {
+    "design": "b4720b69f67be272b7f605fa8bd83401792629ebd7ae16d1014aac2efcbf58ee",
+    "plan": "c145c025eae94a1570d1bd05a872da53335b931f9ea0f695595d02ddef258908"
+  },
+  "root": "/private/tmp/erp-inventory-p3-hd140-q3ss_zm7",
+  "runtime_instance_id": "erp-inventory-p3-hd140-q3ss_zm7",
+  "owner": "Codex /root HD137–HD140",
+  "checks": [],
+  "supporting_checks": [],
+  "mysql_instances": [
+    {
+      "root": "/private/tmp/erp-inventory-p3-hd140-q3ss_zm7/tcp",
+      "socket": "/private/tmp/erp-inventory-p3-hd140-q3ss_zm7/tcp/mysql.sock",
+      "tcp_port": 50959,
+      "schemas": [
+        "erp_inventory_p3_integration_cedb5846fe1b"
+      ],
+      "cleanup": "Exact owned schemas/daemon/socket/datadir removed; synthetic data unrecoverable.",
+      "pid": 7955
+    },
+    {
+      "root": "/private/tmp/erp-inventory-p3-mysql-2670.c245a5b1f7ea",
+      "socket": "/private/tmp/erp-inventory-p3-mysql-2670.c245a5b1f7ea/mysql.sock",
+      "tcp_port": 0,
+      "schemas": [
+        "erp_inventory_p3_58703db81a35"
+      ],
+      "cleanup": "Exact owned schemas/daemon/socket/datadir removed; synthetic data unrecoverable.",
+      "pid": 7979
+    }
+  ],
+  "cleanup": "All exactly owned schemas/accounts/daemons/sockets/datadirs removed; loopback leases released; synthetic data unrecoverable. Original evidence retained. Exact owned coordinator root removed.",
+  "passed": false,
+  "error": "OSError: [Errno 48] Address already in use"
+}

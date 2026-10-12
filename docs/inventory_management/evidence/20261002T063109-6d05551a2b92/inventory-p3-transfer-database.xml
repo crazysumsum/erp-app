@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="TASK-027 real Draft creation stores canonical SKU/Lot snapshots with zero stock effects" time="0.174643" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-027 complete replacement preserves owned IDs, reorders, removes and adds atomically" time="0.006708" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-027 stale header and retained-line versions have no effects" time="0.008742" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-027 cross-owner child IDs cannot be moved or deleted" time="0.006995" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-027 invalid last-line Bin or SKU/Lot ownership rolls back the whole document" time="0.011517" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-027 Draft cancellation retains lines and records actor/time/reason/Audit" time="0.013443" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-027 read queries expose versions, stable paging and four states without mutations" time="0.027476" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-027 create/update/cancel replay original receipts after later mutations; conflicts reject" time="0.013946" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-027 audit failure rolls back real create, replacement and cancellation transactions" time="0.013127" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-027 same-version competing replacement and cancellation serialize with one winner" time="0.005557" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-027 fresh authorization rejects revoked permissions even on replay" time="0.005058" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-027 validates Active warehouses/Bins and tracking policy; non-Draft edits/cancel reject" time="0.020593" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-027 Draft lifecycle leaves existing OnHand/Allocated/Reserved rows and versions byte-identical" time="0.007890" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-027 complete replacement can change Active warehouse scope with new owned source Bins" time="0.007605" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-028 real whole Dispatch/Receive conserves stock and persists paired immutable legs and actor/version" time="0.011976" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-028 rejects insufficient aggregate quantity across repeated source buckets with whole rollback" time="0.005737" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-028 Receive rejects missing, duplicate, extra and partial line quantities atomically" time="0.022064" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-028 late-line destination ownership failure rolls back; Quarantined requires reason and keeps Lot" time="0.008438" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js" failure="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;  Comparison {&#10;+   code: 'ER_NO_REFERENCED_ROW_2'&#10;-   code: 'BIN_WAREHOUSE_MISMATCH'&#10;  }&#10;">
+		<failure type="testCodeFailure" message="Expected values to be strictly deep-equal:&#10;+ actual - expected&#10;&#10;  Comparison {&#10;+   code: 'ER_NO_REFERENCED_ROW_2'&#10;-   code: 'BIN_WAREHOUSE_MISMATCH'&#10;  }">
+[Error [ERR_TEST_FAILURE]: Expected values to be strictly deep-equal:
++ actual - expected
+
+  Comparison {
++   code: 'ER_NO_REFERENCED_ROW_2'
+-   code: 'BIN_WAREHOUSE_MISMATCH'
+  }
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    Comparison {
+  +   code: 'ER_NO_REFERENCED_ROW_2'
+  -   code: 'BIN_WAREHOUSE_MISMATCH'
+    }
+  
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async rejectsUnchanged (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:123:3)
+      at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:396:3)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: Error: Cannot add or update a child row: a foreign key constraint fails (`erp_inventory_p3_5ac0eab1f0a2`.`inventory_stock_balances`, CONSTRAINT `fk_inventory_stock_balances_bin` FOREIGN KEY (`bin_id`, `warehouse_id`) REFERENCES `inventory_bins` (`id`, `warehouse_
+        at upsertAndLockBalances (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryLockService.js:151:20)
+        at InventoryLockService.lockForCommand (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryLockService.js:221:31)
+        at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+        at async #lockPosting (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:331:20)
+        at async #post (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/src/modules/inventory/InventoryTransferService.js:405:62)
+        at async Object.withTransaction (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:82:55)
+        at async waitForActual (node:assert:615:5)
+        at async strict.rejects (node:assert:738:25)
+        at async rejectsUnchanged (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:123:3)
+        at async TestContext.&lt;anonymous> (file:///Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js:396:3),
+    expected: { code: 'BIN_WAREHOUSE_MISMATCH' },
+    operator: 'rejects',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="TASK-028 each posting event replays its original receipt after Receive; altered/cross-command event conflicts" time="0.013615" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-028 Audit failure rolls back all lines, balances, Movements, In Transit and Operation" time="0.014237" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-028 Reserved coverage and allocated units cannot be dispatched" time="0.008001" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-028 stale versions, disabled destination and revoked replay permissions have zero effects" time="0.014271" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-028 active Stocktake lock rejects posting even on a real transaction" time="0.006299" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<testcase name="TASK-028 concurrent Issue cannot let Dispatch consume allocated or reserved stock" time="0.012285" classname="test" file="/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/server/test/integration/inventoryTransfer.integration.test.js"/>
+	<!-- tests 24 -->
+	<!-- suites 0 -->
+	<!-- pass 23 -->
+	<!-- fail 1 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 542.127209 -->
+</testsuites>
