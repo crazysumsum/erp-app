@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 330,
+  "revision": 355,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "9fcb51b2e67379dce1e8011524f767a085d28a3282474705bb730ba99a5ccdbd",
     "plan": "f0a8eca401f2c10e8d4473341466a3bb99c0013fe6fdb867913cc9095e15a2f6",
-    "code_commit": "833e32511f64692377b8a4c4a376468170661d0b",
-    "source_fingerprint": "f7535ba31e0d8125e17ae9c8ca5a2798ee8e28b568e1ce6b88b53a75e60e2e6d",
+    "code_commit": "6a6c57b30b49a95183bdeede63cf6f9573bd3507",
+    "source_fingerprint": "750980efe5c5dc665b04f8b2e2c4847937db2e897db9e73c8c03608724e0aacb",
     "worktree": "/Users/sam/.codex/worktrees/sales-p3-recovery/erp-app",
     "default_commit": "f7ddcfd57c1a6ecd3b57585719f92fd4d3dbdfcc",
     "mode_entry_commit": "6936736ba1fb98f4fcb8365377f59f0a0f7a4897"
@@ -5716,6 +5716,66 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-COVERAGE-FAILURE-TRIAGE-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p3_whole_phase_review",
+      "reviewed_baseline": "9fcb51b2e67379dce1e8011524f767a085d28a3282474705bb730ba99a5ccdbd",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/p3-integrated-coverage-failure-triage-r1-reviewer-proof.json SHA256 6dacad6d1884baa34cca737428decd3d11e5fbbdd32950464d089f3c40f70fb8 Authentic scoped triage/direction/preparation only; no finalPhase/candidateCI/retirementapplication/merge approval. Oldfailures preserved, original400/timeouts causalattribution unconfirmed.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-CAPACITY-CLEANUP-SOURCE-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p3_whole_phase_review",
+      "reviewed_baseline": "9fcb51b2e67379dce1e8011524f767a085d28a3282474705bb730ba99a5ccdbd",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/p3-capacity-cleanup-source-r1-reviewer-proof.json SHA256 1586c971f3371679035a58f4a557907a24b6db727b897ab07af70a9d398da63c Authentic scoped triage/direction/preparation only; no finalPhase/candidateCI/retirementapplication/merge approval. Oldfailures preserved, original400/timeouts causalattribution unconfirmed.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-CLEANUP-PREPARATION-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p3_retention_review",
+      "reviewed_baseline": "9fcb51b2e67379dce1e8011524f767a085d28a3282474705bb730ba99a5ccdbd",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/task049-cleanup-preparation-r1-reviewer-proof.json SHA256 fde6615be94d532def569b5752432f9f405b97832555f5611002a6c0906eb03a Authentic scoped triage/direction/preparation only; no finalPhase/candidateCI/retirementapplication/merge approval. Oldfailures preserved, original400/timeouts causalattribution unconfirmed.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-CLEANUP-PREPARATION-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p3_retention_review",
+      "reviewed_baseline": "9fcb51b2e67379dce1e8011524f767a085d28a3282474705bb730ba99a5ccdbd",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/task049-cleanup-preparation-r2-reviewer-proof.json SHA256 9ad6f1b0ca15d0efe7e63f568de154e33301e4d06b0abc750d9a25fac73aa322 Authentic scoped triage/direction/preparation only; no finalPhase/candidateCI/retirementapplication/merge approval. Oldfailures preserved, original400/timeouts causalattribution unconfirmed.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-CAPACITY-CLEANUP-EXACT-PATCH-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p3_whole_phase_review",
+      "reviewed_baseline": "9fcb51b2e67379dce1e8011524f767a085d28a3282474705bb730ba99a5ccdbd",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/p3-capacity-cleanup-exact-patch-r2-reviewer-proof.json SHA256 fbc9f4f037e4a11634d979ae2b9f6d187b69a037843d78f302e761085a6be786 Exact source review approved; real cleanup GREEN and all33/currentCI/final review still required.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -7709,6 +7769,17 @@
       "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/mainf7dd-preflight-contract-drift-not-executed.json Actual BLOCKED two compatible consumedpins; no suite/PASS inferred. Preserved raw preflight and original33 pre-main results. Exact mechanical correction independently authorized under existingSambindingauthority.",
       "actor": "Codex /root",
       "observed_at": "2026-10-12T02:29:03.242763+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Direct capacity cleanup RED and focused original capacity; no wholecoverage substitution",
+      "code_commit": "6a6c57b30b49a95183bdeede63cf6f9573bd3507",
+      "spec_baseline": "f0a8eca401f2c10e8d4473341466a3bb99c0013fe6fdb867913cc9095e15a2f6",
+      "source_fingerprint": "f7535ba31e0d8125e17ae9c8ca5a2798ee8e28b568e1ce6b88b53a75e60e2e6d",
+      "status": "FAIL",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/capacity-cleanup-direct-red.json Actualoriginalfocusedcapacity bodyPASS butSQLbatch107gone/serverrootCSVretained/wrongrelativeROOTabsent; definitefixturecleanupRED. Focusedcapacityduration813447.7ms/4034samples/P95119.828ms/zeroexcluded/mismatches, twofocusedworkerPASS recordedseparately, notfullcoveragePASS. OriginalfullcoverageFAIL3229/3093pass/4fail/132skip retains normalCASrunref; unchanged38floors notrun due&&shortcircuit. Sourcefixonly+4/-2testlines, admittedsourceguard/actualENOENTpostcondition; no product/rules/bar/specchanges.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-12T03:23:41.613735+00:00"
     }
   ],
   "pending_decisions": [
@@ -9010,6 +9081,14 @@
       "idempotency_key": "p3-mainf7dd-mechanical-binding",
       "status": "CONFIRMED",
       "source_ref": "Actual reviewed patchad3c6546 appliedexit0 under existingDEC025prospective narrowauthority; original105/DEC027answer retained byteequal288. Standard matrix regenerated deterministically (2approvalref textchanges only), no definition/bar/scope/command changes. Exactreviewedprivate83d9/416f helpers replaced oneAPR-ID each; originalsources retained, seven/eightpureguardPASS. NewDERIVEDrecords disclose computednotnewhumanapproval. Original33 mustactuallyrerun integratedsource/currentPLAN, no old greenreuse."
+    },
+    {
+      "id": "ACT-P3-CLEANUP-PRESERVATION-FRESH-BINDINGS",
+      "kind": "OWNED_FIXTURE_SCHEMA",
+      "target": "Exactseven owned managedserver/storage batches preservedprivatebytehashes; fresh managedroot andten_new_cleanup_Inventoryschemas/025fullmigration on same4ownedruntimes",
+      "idempotency_key": "p3-cleanup-preservation-fresh-bindings",
+      "status": "CONFIRMED",
+      "source_ref": "ExistingSam ownedsyntheticfixturecleanup/DEC027recoveryscope; exactb667480d helper/actualscoped9ad6f1b0R2 review. NoSQL/rename appliedyet; same4UIDfullargv/version/datadir/socket/strictidle guards, samefilesystemSHA+mode/owner/no links/unknownfiles; STARTEDreceipt-before-effects/atomicpreservingrename/noreset/drop/export/newgrant; oldbindings/schema/history retained. R1pgrepPOSIXerror source/proof preserved, actualR2idle rc1/stderr0. Actual one-time apply exit0; receipt /Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/cleanup-runtime-preparation.json SHA256 c45a061cbec6b3aea827f226078d99a2e92b1e7e4cf62e8dab29d121ff2a621b. All 10 file hashes/modes retained, seven batches quarantined; fresh10schemas/025migrationPASS; core/coverage and old schemas retained. Do not repeat."
     }
   ],
   "evidence_files": [
@@ -9321,8 +9400,30 @@
     "evidence/20261012T015503-18ea25f423c9/run.json",
     "evidence/20261012T015541-83f35a0e6b5e/run.json",
     "evidence/20261012T015542-baf758367132/run.json",
-    "evidence/20261012T015613-0417573362d7/run.json"
+    "evidence/20261012T015613-0417573362d7/run.json",
+    "evidence/20261012T023022-c0924703fda6/run.json",
+    "evidence/20261012T023028-b27dcd2ae13b/run.json",
+    "evidence/20261012T023030-ddfc7071b885/run.json",
+    "evidence/20261012T023034-ef4c817d085d/run.json",
+    "evidence/20261012T023046-db1647f35ed2/run.json",
+    "evidence/20261012T023048-d307d92d16c4/run.json",
+    "evidence/20261012T023059-85264ced45d5/run.json",
+    "evidence/20261012T023120-e190a60be42a/run.json",
+    "evidence/20261012T023123-ca5a788868f1/run.json",
+    "evidence/20261012T023124-9ff6b211aac3/run.json",
+    "evidence/20261012T023126-9c25edeef075/run.json",
+    "evidence/20261012T023128-173bdcdca8ec/run.json",
+    "evidence/20261012T023129-362291dc76c2/run.json",
+    "evidence/20261012T023131-9be1536b47bc/run.json",
+    "evidence/20261012T023133-c86ab0a0d054/run.json",
+    "evidence/20261012T023135-baed73abf458/run.json",
+    "evidence/20261012T023137-6c4d0276e72c/run.json",
+    "evidence/20261012T023139-7260378f38b9/run.json",
+    "evidence/20261012T023141-4f0b040790a5/run.json",
+    "evidence/20261012T023201-e3b1eee3646d/run.json",
+    "evidence/20261012T023206-6d1c63f3e246/run.json",
+    "evidence/20261012T023235-2da922d5bb72/run.json"
   ],
   "defects": [],
-  "next_safe_action": "Commit exact mechanical bookkeeping/sourcepins before frozennew original33; normalCAS baseline newHEAD; execute33 under reviewed83d9 privateadapter, sourcef753/PLANf0a8. No state/HEAD/source edits during suites. Lateractual5CI/finalreview/416fqualifiedretirement/unchangedGate required."
+  "next_safe_action": "Commit reviewed minimal capacity cleanup repair and freeze SOURCE750/D9f/Pf0; actual original33 rerun using confirmed fresh cleanup schemas, then current5CI/genuine finalreview/DEC027 qualified retirement/unchanged MERGE_READY before authorized main merge. No P4/UAT/release."
 }
