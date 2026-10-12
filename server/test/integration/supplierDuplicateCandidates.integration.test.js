@@ -111,3 +111,52 @@ integrationTest("TASK-050 (HD-084): the bounded search returns what comparing ev
   assert.ok(matched >= queries.length, "the queries have real candidates to find, so the comparison is not vacuous");
   assert.deepEqual(truth("golden harbour trading limited").slice(0, 3).sort(), ids.slice(-3).sort());
 });
+
+/** 插入一組名稱（name 即 key），連 gram；回 id，t.after 會清走。 */
+async function seedNames(connection, t, names) {
+  const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const ids = [];
+  t.after(async () => {
+    if (ids.length === 0) return;
+    await connection.query("DELETE FROM supplier_name_grams WHERE supplier_id IN (?)", [ids]);
+    await connection.query("DELETE FROM suppliers WHERE id IN (?)", [ids]);
+  });
+  for (const [index, name] of names.entries()) {
+    const [result] = await connection.execute(
+      `INSERT INTO suppliers (supplier_code, supplier_code_key, supplier_name, supplier_name_key, default_currency_code, status, version,
+         created_at, updated_at) VALUES (?, ?, ?, ?, 'HKD', 'draft', 1, ?, ?)`,
+      [`DUPX-${suffix}-${index}`, `dupx-${suffix}-${index}`, name, name, Date.now(), Date.now()]);
+    ids.push(Number(result.insertId));
+    await replaceSupplierNameGrams(connection, Number(result.insertId), name);
+  }
+  return ids;
+}
+
+integrationTest("TASK-050 (REV-083 M-1, D11): a name exactly at the threshold is found, and the Dice filter still drops a superset", async (t) => {
+  const connection = await mysql.createConnection(config());
+  // 17 個 gram 嘅名稱，全部喺 23 個 gram 嘅查詢入面：Dice = 34/40 = 0.85。浮點計 0.85×23/1.15 會多咗 1。
+  const [atThreshold, superset] = await seedNames(connection, t, ["abcdefghijklmnopqr", "abcdefghijklmnopqrstuvwxyz"]);
+  t.after(() => connection.end()); // 喺清理之後先關（after hook 按登記次序行）
+  const finder = new SupplierDuplicateCandidates();
+  const found = (await finder.find(connection, { nameKey: "abcdefghijklmnopqrstuvwx" })).map((row) => row.supplierId);
+  assert.ok(found.includes(atThreshold), "Dice exactly 0.85 is a candidate");
+  // 對照：26 個 gram 嘅查詢共有同樣 17 個，Dice = 34/43 ≈ 0.79，低過門檻。
+  const below = (await finder.find(connection, { nameKey: "abcdefghijklmnopqrstuvwxyz0" })).map((row) => row.supplierId);
+  assert.ok(!below.includes(atThreshold), "control: Dice 34/43 ≈ 0.79 is not a candidate");
+  // 「abcdefghij」嘅 9 個 gram 全部喺超集入面（共有數夠），但 Dice = 18/34 ≈ 0.53，一定要被 Dice 篩走。
+  const short = (await finder.find(connection, { nameKey: "abcdefghij" })).map((row) => row.supplierId);
+  assert.ok(!short.includes(superset), "sharing every gram is not enough when the other name is much longer");
+});
+
+integrationTest("TASK-050 (REV-083 L-1): when the candidate cap bites, the name matching the most rare grams is kept", async (t) => {
+  const connection = await mysql.createConnection(config());
+  const query = "kqxzvjwp";
+  const grams = Array.from({ length: query.length - 1 }, (_, index) => query.slice(index, index + 2));
+  // 目標包含查詢全部 7 個 gram（Dice 14/15）；每個 gram 另有 3 個名稱各只含佢一個，令所有 gram 都唔再罕見。
+  const noise = grams.flatMap((gram) => [1, 2, 3].map((n) => `${gram}-${n}${n}`));
+  const [target] = await seedNames(connection, t, [`${query}m`, ...noise]);
+  t.after(() => connection.end()); // 喺清理之後先關（after hook 按登記次序行）
+  const capped = new SupplierDuplicateCandidates({ candidateCap: 5 });
+  assert.ok((await capped.find(connection, { nameKey: query })).some((row) => row.supplierId === target));
+  assert.throws(() => new SupplierDuplicateCandidates({ candidateCap: 0 }), TypeError);
+});

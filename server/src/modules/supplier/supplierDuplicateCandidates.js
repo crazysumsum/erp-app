@@ -45,8 +45,10 @@ const RARITY_CAP = 2_000;
 const CANDIDATE_CAP = 3_000;
 
 export class SupplierDuplicateCandidates {
-  constructor({ threshold = 0.85 } = {}) {
+  constructor({ threshold = 0.85, candidateCap = CANDIDATE_CAP } = {}) {
+    if (!Number.isSafeInteger(candidateCap) || candidateCap < 1) throw new TypeError("candidateCap must be a positive integer");
     this.threshold = threshold;
+    this.candidateCap = candidateCap;
   }
 
   async find(connection, { nameKey, excludeSupplierId = null }) {
@@ -67,14 +69,16 @@ export class SupplierDuplicateCandidates {
       // T50：Dice = 2c/(a+b) ≥ t，而 b ≥ c，所以候選最少要同輸入共有 c ≥ ta/(2-t) 個 gram；佢最多缺 a-c 個，
       // 所以一定包含輸入任何 a-c+1 個 gram 之中嘅一個。揀最罕見嗰幾個搵候選，再對候選數齊共有 gram。
       // 結果同掃晒所有 gram 一樣（只係唔再計一定唔夠分嘅 Supplier），但唔使掃常見 gram 嘅成條 posting list。
-      const minCommon = Math.max(1, Math.ceil((this.threshold * hashes.length) / (2 - this.threshold)));
+      // 減一個極細嘅數再向上取整：0.85×23/1.15 喺浮點係 17.000000000000004，直接 ceil 會變 18，
+      // 漏咗 Dice 啱啱 0.85 嘅候選（REV-083 M-1）。偏細只會令搜尋範圍闊啲，唔會漏。
+      const minCommon = Math.max(1, Math.ceil((this.threshold * hashes.length) / (2 - this.threshold) - 1e-9));
       const rare = await this.#rarest(connection, hashes, hashes.length - minCommon + 1);
       const all = hashes.map(() => "?").join(", ");
       const exclusionSql = excludeSupplierId === null ? "" : " AND s.id <> ?";
       [gramRows] = await connection.query(
         `SELECT s.id, s.supplier_code, s.supplier_name, s.supplier_name_key, COUNT(*) AS common_grams
            FROM (SELECT supplier_id FROM supplier_name_grams WHERE gram_hash IN (${rare.map(() => "?").join(", ")})
-                 GROUP BY supplier_id ORDER BY COUNT(*) DESC, supplier_id ASC LIMIT ${CANDIDATE_CAP}) c
+                 GROUP BY supplier_id ORDER BY COUNT(*) DESC, supplier_id ASC LIMIT ?) c
            JOIN supplier_name_grams g ON g.supplier_id = c.supplier_id AND g.gram_hash IN (${all})
            JOIN suppliers s ON s.id = c.supplier_id
           WHERE 1 = 1${exclusionSql}
@@ -82,7 +86,7 @@ export class SupplierDuplicateCandidates {
          HAVING COUNT(*) >= ?
           ORDER BY common_grams DESC, s.id ASC
           LIMIT 50`,
-        [...rare, ...hashes, ...(excludeSupplierId === null ? [] : [excludeSupplierId]), minCommon]
+        [...rare, this.candidateCap, ...hashes, ...(excludeSupplierId === null ? [] : [excludeSupplierId]), minCommon]
       );
     }
 

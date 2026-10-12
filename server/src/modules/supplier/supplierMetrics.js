@@ -18,7 +18,10 @@ export const SUPPLIER_ALERT_THRESHOLDS = Object.freeze({
 
 const age = (nowMs, since) => (since === null || since === undefined ? null : Math.max(0, nowMs - Number(since)));
 
-/** 讀幾個數；兩條 query 都只掃未完成嘅 approval／import job。 */
+/**
+ * 讀幾個數。Import query 用 status index，只掃未完成嘅 job；approval query 冇以 status 開頭嘅 index，
+ * 會掃晒 `idx_supplier_activation_approver`（所有申請，包括已決定嘅）：而家好平，但隨歷史增長（REV-083 L-4）。
+ */
 export async function collectSupplierMetrics(database, nowMs, { stalledMs = SUPPLIER_ALERT_THRESHOLDS.importStalledMs } = {}) {
   const [[approvals]] = await database.query(
     "SELECT COUNT(*) AS pending, MIN(requested_at) AS oldest FROM supplier_activation_requests WHERE status = 'pending'");
