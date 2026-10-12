@@ -56,3 +56,51 @@ No new local-only evidence pointers are committed into the shared checkpoint.
 TASK-045 is the increment-B merge unit. Aggregate TASK-043 remains IN_PROGRESS:
 Supplier increment C and formal technical/UAT increment D are not claimed complete.
 Recovery owner waiver and TC-016 NOT_RUN semantics remain unchanged.
+
+## Preserved e88692 CI failure and consumer-mock correction
+
+Candidate `e88692e07bf576b093e6288177cf3e0fa10e9558` passed independent
+exact-candidate review and four CI jobs, but run38194625704/job114634468064 failed
+four cases. Three incoming Transfer lookup tests used an obsolete fake executor
+that returned SKU rows for discovery/current Item/UOM queries. The author reproduced
+11 pass/3 fail, then aligned only the fake rows with the existing provider's current
+locked reads and the constant seven-query lookup budget; original wildcard,
+eligibility, error, response and caller-executor assertions remain intact.
+Affected consumer/provider regression passed61/61, zero skips. No Inventory/Sales
+product code, public API, threshold or skip policy changed in this correction.
+
+The fourth failure was Sales TC-032 no-warmup completed-confirmation P95
+3016.0ms >3000ms. All coverage floors passed (93.66/85.47/92.17), but the overall
+CI result remains FAIL and was not retried or waived. The same existing capacity
+case ran on the task-owned private MySQL with150/150 correct HTTP200 outcomes,
+P95 673.146ms, zero commitment-reconciliation mismatches and successful background
+jobs. Different hardware means this supporting diagnostic cannot prove CI PASS
+or establish that the failed CI was flaky. The Sales batched provider retains its
+existing constant five/six-query paths; the extracted helper does not add an N+1.
+The corrected test-only source must receive fresh developer checks, review and
+mandatory CI before any merge. The failure remains in the runtime journal and PR.
+
+New source fingerprint:
+`57fa50775e0eb64f47bf7caadc9cc4dfec758580364ee6e01f3824d58072f36e`.
+Subsequent local-only evidence and revisioned runtime journal remain outside the
+tracked checkpoint; only the original approved four raw packages are exported.
+
+Extended2239 top-level server tests first exposed one local proxy-trust failure.
+It reproduced on untouched main while the identical CI Linux case passed. Runtime
+inspection identified borrowed shared `node_modules` with proxy-addr2.0.7 despite
+lockfile2.0.8. Only the Item-owned symlink was moved to the closeout recovery area;
+`npm ci --offline` installed the existing lockfile into the Item worktree, leaving
+the shared dependency directory, lockfile and all security code/assertions unchanged.
+The exact security case then passed with installed/locked2.0.8. The original failed
+XML is retained, and fresh mandatory checks plus extended regression use the correct
+task-owned dependencies. No unsupported macOS-security-defect claim is made.
+
+With the correct lockfile installation, extended2239/2239 server cases passed with
+zero skips, and the four configured developer suites again passed (server501,
+client860, lint/build). Separate reviewer independently executed61 affected cases
+and approved the narrow mock correction/source57fa; confirmed Sales batch query
+counts/lock order are unchanged. Final candidate CI is still mandatory, including
+the unchanged Sales capacity budget. The shared workspace dependency directory was
+not updated and may still require its owner's normal lockfile installation.
+Serial actual Item Playwright regression on the same correct dependencies passed
+12 cases with2 pre-existing formal-UAT gated skips and clean console/network checks.
