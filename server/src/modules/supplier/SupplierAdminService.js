@@ -233,7 +233,9 @@ export class SupplierAdminService {
 
   async createSupplier(input) {
     // 喺開 transaction 之前驗輸入，錯咗唔使掂資料庫；helper 入面會再做一次。
-    createFields(input);
+    const { name } = createFields(input);
+    // 相似名稱只係提示：喺 transaction 之外做，唔好令 currencies 嘅 X 鎖揸住成個查詢（T50，HD-084）。
+    const duplicateCandidates = await this.duplicates.find(this.database, { nameKey: name.key });
     let created;
     try {
       created = await this.database.withTransaction(async (connection) => {
@@ -242,7 +244,7 @@ export class SupplierAdminService {
           claimedRoles: input.claimedRoles,
           claimedPermissions: input.claimedPermissions
         });
-        return this.createSupplierInTransaction(connection, { actor, input });
+        return this.createSupplierInTransaction(connection, { actor, input, findDuplicates: false });
       });
     } catch (error) {
       if (duplicateEntry(error)) {
@@ -254,7 +256,7 @@ export class SupplierAdminService {
     const [[row]] = await this.database.query("SELECT * FROM suppliers WHERE id = ?", [created.id]);
     if (!row) throw supplierNotFound(created.id);
     const warnings = supplierCompletenessWarnings({ defaultPaymentTermId: row.default_payment_term_id });
-    return { ...toSupplierDetailResponse(row, { warnings }), duplicateCandidates: created.duplicateCandidates };
+    return { ...toSupplierDetailResponse(row, { warnings }), duplicateCandidates };
   }
 
   /**
@@ -370,7 +372,10 @@ export class SupplierAdminService {
       throw supplierConflict("SUPPLIER_CODE_CHANGE_REQUIRED", "Supplier Code 只能透過受控修正功能修改");
     }
     // 喺開 transaction 之前驗輸入；helper 入面會再做一次。
-    updateFields(input);
+    const { name } = updateFields(input);
+    // 同 createSupplier 一樣喺 transaction 之外做（T50，HD-084）。
+    const duplicateCandidates = (await this.duplicates.find(this.database, { nameKey: name.key }))
+      .filter((candidate) => Number(candidate.supplierId) !== Number(input.id));
     let outcome;
     await this.database.withTransaction(async (connection) => {
       const actor = await this.authorize(connection, {
@@ -378,7 +383,7 @@ export class SupplierAdminService {
         claimedRoles: input.claimedRoles,
         claimedPermissions: input.claimedPermissions
       });
-      outcome = await this.updateSupplierInTransaction(connection, { actor, input });
+      outcome = await this.updateSupplierInTransaction(connection, { actor, input, findDuplicates: false });
     });
 
     const detail = await this.getSupplier({
@@ -387,7 +392,7 @@ export class SupplierAdminService {
       claimedPermissions: input.claimedPermissions,
       id: input.id
     });
-    return { ...detail, ...outcome };
+    return { ...detail, ...outcome, duplicateCandidates };
   }
 
   /**
