@@ -6,6 +6,7 @@ import { InventoryReservationService } from "../../src/modules/inventory/Invento
 import { SalesBackorderService } from "../../src/modules/sales/SalesBackorderService.js";
 import { SalesOrderService,readSalesOrderDetail } from "../../src/modules/sales/SalesOrderService.js";
 import { SalesOrderLifecycleService } from "../../src/modules/sales/SalesOrderLifecycleService.js";
+import { SalesQuotationService } from "../../src/modules/sales/SalesQuotationService.js";
 import { SchedulerService } from "../../src/services/scheduler/SchedulerService.js";
 import { SalesJobRuntimeService } from "../../src/services/salesJobs/SalesJobRuntimeService.js";
 import { SalesBackorderAllocationJob } from "../../src/services/salesJobs/jobs/SalesBackorderAllocationJob.js";
@@ -91,6 +92,37 @@ it("TC-021 an allocator holding its Order mapping locks never blocks another Ord
  assert.ok(other,"the allocator never reached Inventory");assert.equal(blocked,false,"the other Order's confirmation waited on the allocator's Sales mapping locks");
  assert.equal((await other).operation.status,"CONFIRMED");assert.equal(result.allocatedEntries,1);assert.equal(result.deferred,0);
  const orders=await Promise.all([f.request.id,second].map(id=>readSalesOrderDetail(f.db,id)));assert.deepEqual(orders.map(o=>[o.status,o.lines[0].reservedBaseQuantity,o.lines[0].backorderedBaseQuantity]),[["CONFIRMED","10","0"],["CONFIRMED","10","0"]]);
+});
+// Pauses the first sales_order_lines INSERT of a draft writer, which by then holds the Warehouse share lock from its header's FK check.
+function pausedBeforeLines(f){
+ const reached=Promise.withResolvers(),release=Promise.withResolvers(),inserted=Promise.withResolvers(),database=Object.create(f.database);let paused=false;
+ database.withTransaction=(work,options)=>f.database.withTransaction(tx=>work(new Proxy(tx,{get(target,key){
+  if(key==="execute")return async(sql,params)=>{if(paused||!sql.startsWith("INSERT INTO sales_order_lines"))return target.execute(sql,params);paused=true;reached.resolve();await release.promise;const result=await target.execute(sql,params);inserted.resolve(true);return result;};
+  const value=Reflect.get(target,key);return typeof value==="function"?value.bind(target):value;}})),options);
+ return {database,reached:reached.promise,inserted:inserted.promise,release:release.resolve};
+}
+// §2.8: the allocator holds its Order's Lines (rank 1) and then enters Inventory (Warehouse X, rank 5). A new Order's header FK check
+// already holds the Warehouse share lock, so its first line insert must not wait on the allocator's Lines or the two deadlock.
+async function draftWriterAgainstAllocator(f,write){
+ await stock(f,0);await confirm(f);await topup(f,20);const a=await allocator(f),inventory=a.s.inventory,paused=pausedBeforeLines(f);let draft,inserted;
+ a.s.inventory={async reserveAvailableForSalesBackorderInTransaction(...args){draft=write(paused.database);await Promise.race([paused.reached,draft.then(()=>{throw Error("the draft writer never reached its line insert");})]);paused.release();
+  inserted=await Promise.race([paused.inserted,new Promise(resolve=>{setTimeout(resolve,5000,false);})]);return inventory.reserveAvailableForSalesBackorderInTransaction(...args);}};
+ let result;try{result=await a.s.runBatch({scope:{warehouseId:f.warehouseId,skuId:f.skuId},maxEntries:1});}finally{paused.release();await draft?.catch(()=>{});}
+ assert.ok(draft,"the allocator never reached Inventory");assert.equal(inserted,true,"the draft line insert waited on the allocator's Sales line locks");
+ assert.deepEqual([result.allocatedEntries,result.deferred],[1,0]);const written=await draft;
+ assert.deepEqual((await readSalesOrderDetail(f.db,f.request.id)).lines.map(l=>[l.reservedBaseQuantity,l.backorderedBaseQuantity]),[["10","0"]]);return written;
+}
+it("TC-021 a new draft Order in the allocator's Warehouse never deadlocks the allocator on its line insert",async t=>{
+ const f=await setup(t),created=await draftWriterAgainstAllocator(f,database=>new SalesOrderService({...f,database}).create({claims:f.claims,input:{eventId:randomUUID(),customerId:f.customerId,currencyCode:f.currency,fulfillmentWarehouseId:f.warehouseId,orderDate:f.time.fileDate(),lines:[{skuId:f.skuId,skuUomId:f.skuUomId,quantity:"10.000000",unitSellingPrice:"1.0000"}]}}));
+ const detail=await readSalesOrderDetail(f.db,created.salesOrder.id);assert.equal(detail.status,"DRAFT");assert.equal(detail.lines.length,1);
+});
+it("TC-021 a Quotation conversion in the allocator's Warehouse never deadlocks the allocator on its line insert",async t=>{
+ const f=await setup(t),quotations=new SalesQuotationService(f),date=f.time.fileDate(),line={skuId:f.skuId,skuUomId:f.skuUomId,quantity:"10.000000",unitSellingPrice:"1.0000"};
+ f.beforeParents.push(async()=>{await f.db.execute("DELETE FROM sales_quotation_conversions WHERE quotation_id IN (SELECT id FROM sales_quotations WHERE customer_id=?)",[f.customerId]);await f.db.execute("DELETE FROM sales_orders WHERE customer_id=?",[f.customerId]);await f.db.execute("DELETE FROM sales_quotations WHERE customer_id=?",[f.customerId]);});
+ const quotation=(await quotations.create({claims:f.claims,input:{eventId:randomUUID(),customerId:f.customerId,currencyCode:f.currency,quotationDate:date,validUntil:date,lines:[line]}})).quotation;
+ const issued=(await quotations.issue({claims:f.claims,id:quotation.id,input:{eventId:randomUUID(),version:1}})).quotation;
+ const converted=await draftWriterAgainstAllocator(f,database=>new SalesQuotationService({...f,database}).convert({claims:f.claims,id:quotation.id,input:{eventId:randomUUID(),version:issued.version,order:{customerId:f.customerId,currencyCode:f.currency,fulfillmentWarehouseId:f.warehouseId,orderDate:date,lines:[line]}}}));
+ assert.equal(converted.quotation.status,"CONVERTED");assert.equal((await readSalesOrderDetail(f.db,converted.salesOrder.id)).lines.length,1);
 });
 it("TC-031 concurrent cancellation observes allocation version then safely releases the worker mapping",async t=>{
  const f=await setup(t);await stock(f,0);await confirm(f);await topup(f,4);const a=await allocator(f),inventory=a.s.inventory,entered=Promise.withResolvers(),release=Promise.withResolvers();a.s.inventory={async reserveAvailableForSalesBackorderInTransaction(...args){const r=await inventory.reserveAvailableForSalesBackorderInTransaction(...args);entered.resolve();await release.promise;return r;}};

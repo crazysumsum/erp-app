@@ -76,13 +76,17 @@ export class SalesBackorderService{
   const eventId=randomUUID();let completed;
   try{return await this.database.withTransaction(async tx=>{
    const {nowMs,leaseOwner}=await this.#lease(tx),orderId=Number(candidate.sales_order_id);
-   const [[header]]=await tx.query("SELECT id FROM sales_orders WHERE id=? FOR UPDATE",[orderId]);if(!header)return {retry:true};
-   await tx.query("SELECT id FROM sales_order_lines WHERE sales_order_id=? ORDER BY id FOR UPDATE",[orderId]);
+   const [[header]]=await tx.query("SELECT id,line_count FROM sales_orders WHERE id=? FOR UPDATE",[orderId]);if(!header)return {retry:true};
+   // Lock the Lines by full uq_sales_order_line_number keys: a FOR UPDATE search on sales_order_id alone also gap-locks up to the
+   // next Order's first line, which a new Order inserts into while its header FK check holds the Warehouse share lock (deadlock).
+   // The detail read after the head read is a plain read for the same reason; it is current because the read view starts after these locks.
+   const lineNumbers=Array.from({length:Number(header.line_count)},(_,index)=>index+1);
+   await tx.query(`SELECT id FROM sales_order_lines WHERE sales_order_id=? AND line_no IN (${lineNumbers.map(()=>"?").join(",")}) ORDER BY id FOR UPDATE`,[orderId,...lineNumbers]);
    const [[queue]]=await tx.query("SELECT * FROM sales_backorder_entries WHERE id=? AND sales_order_id=? FOR UPDATE",[Number(candidate.id),orderId]);if(!queue||queue.status!=="OPEN")return {retry:true};
    // The first consistent InnoDB read follows the owned row locks: verify the current committed head without locking another Sales owner's queue.
    const [[head]]=await tx.query("SELECT id FROM sales_backorder_entries WHERE status='OPEN' AND warehouse_id=? AND sku_id=? ORDER BY priority_at,sales_order_id,line_no,id LIMIT 1",[Number(queue.warehouse_id),Number(queue.sku_id)]);
    if(Number(head?.id)!==Number(queue.id)||Number(queue.next_attempt_at)>nowMs)return {retry:true};
-   const order=await readSalesOrderDetail(tx,orderId,{lock:true}),line=order.lines.find(value=>value.id===Number(queue.sales_order_line_id));
+   const order=await readSalesOrderDetail(tx,orderId),line=order.lines.find(value=>value.id===Number(queue.sales_order_line_id));
    // Lock existing mappings by primary key only. A FOR UPDATE search on uq_sales_mapping_line_event would also gap-lock up to the
    // next existing mapping key, which any higher line's confirmation inserts into while holding the Inventory Warehouse lock (deadlock).
    // The Order row lock above serializes every writer of this Order's mappings, and the id read is complete only because the
