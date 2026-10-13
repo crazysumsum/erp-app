@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 315,
+  "revision": 316,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -66,7 +66,7 @@
     "TASK-036": "DONE",
     "TASK-037": "DONE",
     "TASK-038": "DONE",
-    "TASK-039": "PENDING",
+    "TASK-039": "BLOCKED",
     "TASK-040": "PENDING",
     "TASK-041": "DONE",
     "TASK-042": "DONE",
@@ -5033,6 +5033,19 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-13: 'A，CI過就merge'. Handover: docs/supplier_management/item_handoff_supplier_sku_refs.md §7."
+    },
+    {
+      "id": "HD-093",
+      "impact": "MAJOR",
+      "question": "TASK-039 needs a purchase-purpose SKU search and SKU-UOM mapping IDs (item_sku_uoms.id) in the purchase projection; ItemLookupService offers neither (only searchForSale, and the generic projection's uoms[] lack skuUomId/uomName/status). (A) ask Item for an additive purchase contract and hold TASK-039, doing TASK-040 meanwhile; (B) ship a reduced TASK-039 now (exact SKU code, no purchase UOM); (C) both.",
+      "affected_ids": [
+        "TASK-039",
+        "TASK-040",
+        "FR-SKU-003",
+        "DES-001"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-13: 'A'. Request: docs/supplier_management/item_handoff_purchase_lookup.md; corrects item_handoff_supplier_sku_refs.md §5."
     }
   ],
   "external_actions": [
@@ -6109,5 +6122,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-038 DONE (PR #201, 6ab2fb04). Item owner to decide HD-092 (item_handoff_supplier_sku_refs.md §7). Next: the Supplier client e2e race (currency select) as a small PR, then TASK-039 (UI) and TASK-040 (for-SKU lookup); TASK-050's for-SKU part after TASK-040."
+  "next_safe_action": "TASK-039 BLOCKED on Item (HD-093: searchForPurchase and skuUomId/uomName/status in the purchase projection, then a pin refresh). Next: TASK-040 (for-SKU lookup) — read its spec, confirm it does not depend on HD-093, and explain any schema/API change before writing it."
 }

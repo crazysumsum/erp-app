@@ -73,7 +73,7 @@
 
 - 唔使建表，亦唔使寫 migration。
 - 唔使改 Item API。
-- 唔使改 `ItemLookupService` 嘅現行 contract。
+- ~~唔使改 `ItemLookupService` 嘅現行 contract。~~ **更正（2026-10-13，HD-093）：** 呢句係錯嘅。TASK-039 需要採購用嘅 SKU 搜尋同 UOM mapping ID，詳見 `item_handoff_purchase_lookup.md`。
 - 對照嘅 CRUD API、UI、採購用嘅 for-SKU 查詢，同 Purchasing 嘅 `recordSupply`，全部由 Supplier 負責（TASK-038 至 TASK-040）。
 
 ## 6. 完成條件，同 Supplier 之後會做乜
