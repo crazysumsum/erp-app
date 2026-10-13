@@ -1,0 +1,32 @@
+# TASK-040 mutation sweep (after REV-087), 2026-10-13
+# Each mutant: one textual change, then test/supplierLookupService.test.js + test/integration/supplierSkuLookup.integration.test.js on real MySQL; source restored after each.
+# name | result | failing tests | file | change
+no active filter | KILLED | ℹ fail 4 | SupplierLookupService.js | let match = "s.status = 'active'"; => let match = "s.status <> 'zzz'";
+head join drops sku | KILLED | ℹ fail 1 | SupplierLookupService.js | LEFT JOIN supplier_sku_refs r ON r.supplier_id = s.id AND r.sku_id = ? WHERE ${match}`;    => LEFT JOIN supplier_sku_refs r ON r.supplier_id = s.id AND ? > 0 WHERE ${match}`;     const
+stopped ranks | KILLED | ℹ fail 3 | SupplierLookupService.js | (${alias}.relationship_status <> 'stopped' AND ${alias}.last_supplied_at IS NOT NULL) => (${alias}.last_supplied_at IS NOT NULL)
+unsupplied ranks | KILLED | ℹ fail 3 | SupplierLookupService.js | (${alias}.relationship_status <> 'stopped' AND ${alias}.last_supplied_at IS NOT NULL) => (${alias}.relationship_status <> 'stopped')
+null-unsafe preferred | KILLED | ℹ fail 1 | SupplierLookupService.js | (r.relationship_status <=> 'preferred') DESC => r.relationship_status = 'preferred' DESC
+head order stopped | KILLED | ℹ fail 1 | SupplierLookupService.js | CASE WHEN r.relationship_status <> 'stopped' THEN r.last_supplied_at END DESC => r.last_supplied_at DESC
+no preferred rank | KILLED | ℹ fail 4 | SupplierLookupService.js | ORDER BY exact_rank, (r.relationship_status <=> 'preferred') DESC, => ORDER BY exact_rank,
+preferred not ranked | KILLED | ℹ fail 5 | SupplierLookupService.js | `${alias}.relationship_status = 'preferred' OR ( => `${alias}.relationship_status = 'zzz' OR (
+no exact rank | KILLED | ℹ fail 4 | SupplierLookupService.js | const exact = search ? "CASE WHEN s.supplier_code_key = ? OR r.supplier_item_code_key = ?  => const exact = search ? "CASE WHEN ? = ? THEN 1 ELSE 1 END" : "1";
+no code exact in head | KILLED | ℹ fail 1 | SupplierLookupService.js | UNION SELECT id FROM suppliers WHERE supplier_code_key = ?" : ""}`; => UNION SELECT id FROM suppliers WHERE 0 = ?" : ""}`;
+rest keeps exact code | KILLED | ℹ fail 4 | SupplierLookupService.js | ${search ? " AND s.supplier_code_key <> ?" : ""}`; => ${search ? " AND ? IS NOT NULL" : ""}`;
+rest keeps exact item code | KILLED | ℹ fail 4 | SupplierLookupService.js | AND NOT COALESCE((${ranked("r")}${itemCodeExact("r")}), FALSE) => AND NOT COALESCE((${ranked("r")}${itemCodeExact("r").replace("OR", "AND 0 AND")}), FALSE)
+no item code match | KILLED | ℹ fail 2 | SupplierLookupService.js | OR s.id IN (${byItemCode => AND s.id IN (${byItemCode
+rest not excluding head | KILLED | ℹ fail 4 | SupplierLookupService.js | AND NOT COALESCE(( => AND NOT COALESCE(0 AND (
+rest null drops plain | KILLED | ℹ fail 5 | SupplierLookupService.js | ), FALSE)${search => ), TRUE)${search
+rest offset off by one | KILLED | ℹ fail 5 | SupplierLookupService.js | const restOffset = Math.max(0, offset - Number(headTotal)); => const restOffset = Math.max(0, offset - Number(headTotal) + 1);
+skip rest wrongly | KILLED | ℹ fail 2 | SupplierLookupService.js | Number(total) - Number(headTotal) > restOffset => Number(total) - Number(headTotal) > restOffset + 1
+head limit ignores offset | KILLED | ℹ fail 1 | SupplierLookupService.js | [...(search ? [key, key] : []), ...headParams, pageSize, offset]) => [...(search ? [key, key] : []), ...headParams, pageSize, 0])
+no name tiebreak id | KILLED | ℹ fail 3 | SupplierLookupService.js | ORDER BY s.supplier_name, s.id LIMIT => ORDER BY s.supplier_name, s.id DESC LIMIT
+no SKU check | KILLED | ℹ fail 4 | SupplierLookupService.js | await this.items.assertUsable(id, => void (id,
+rankReason stopped | KILLED | ℹ fail 2 | SupplierLookupService.js | row.relationship_status !== "stopped" && row.last_supplied_at !== null => row.last_supplied_at !== null
+no actor check | KILLED | ℹ fail 1 | listSuppliersForSkuHandler.js | await assertActorFresh( => void (
+wrong permission | KILLED | ℹ fail 6 | listSuppliersForSkuHandler.js | SUPPLIER_VIEW_POLICY,     requestSchema => [],     requestSchema
+REV-087 F: head tie drops name | KILLED | ℹ fail 1 | SupplierLookupService.js | END DESC, s.supplier_name, s.id => END DESC, s.id
+REV-087 H: head tie id DESC | KILLED | ℹ fail 1 | SupplierLookupService.js | END DESC, s.supplier_name, s.id => END DESC, s.supplier_name, s.id DESC
+REV-087 A: rest keeps item-code match | KILLED | ℹ fail 2 | SupplierLookupService.js | AND NOT COALESCE((${ranked("r")}${itemCodeExact("r")}), FALSE) => AND NOT COALESCE((${ranked("r")}), FALSE)${search ? " AND ? IS NOT NULL" : ""}
+no dedupe | KILLED | ℹ fail 1 | SupplierLookupService.js | .filter((row) => !seen.has(Number(row.id)) && seen.add(Number(row.id))) => .filter(() => seen)
+q control chars allowed | KILLED | ℹ fail 1 | listSuppliersForSkuHandler.js | pattern: "^[^\\u0000-\\u001f\\u007f-\\u009f]*$", => 
+null options crash | KILLED | ℹ fail 1 | SupplierLookupService.js | atMs: options?.atMs ?? => atMs: options.atMs ??

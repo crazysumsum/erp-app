@@ -1,20 +1,20 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 316,
+  "revision": 320,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-004",
-  "current_task": "TASK-038",
+  "current_task": "TASK-040",
   "baseline": {
-    "design": "f2f4a82b76b40a6ddd214263023aa4b7383facdce30d33348cfd1d16dcdfe6ab",
-    "plan": "b5724a2fbaa17f3f592b81e7258fb36d13c8ba2480dae8e10a40bc0713510287",
-    "code_commit": "6ab2fb045433726d5442022e57d1bed1b25de2f8",
-    "source_fingerprint": "b381f54b6ba1b3c3218b371d10b02655b7084d247e5a378a0e6e0a9c70e71758",
-    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t38-close",
-    "default_commit": "6ab2fb045433726d5442022e57d1bed1b25de2f8",
+    "design": "29a0615a61808b3747cd8feb522d051ba5a312da6fb0fccf36e7cf9746286775",
+    "plan": "441671a6dffc2a6dc2d0b1e17d0b411c748bae623abd17f2bb0b698bc4fe00c3",
+    "code_commit": "3d47f8fb5c7b3143ef08500546e86620ea02af63",
+    "source_fingerprint": "2674b77044f0483f793e13245ab45cb4b2e1a5c3f537ab51293f24c6d7083d15",
+    "worktree": "/Users/sam/Documents/workspace/erp-supplier-pin",
+    "default_commit": "3d47f8fb5c7b3143ef08500546e86620ea02af63",
     "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
   },
   "runtime": {
@@ -66,8 +66,8 @@
     "TASK-036": "DONE",
     "TASK-037": "DONE",
     "TASK-038": "DONE",
-    "TASK-039": "BLOCKED",
-    "TASK-040": "PENDING",
+    "TASK-039": "PENDING",
+    "TASK-040": "DONE",
     "TASK-041": "DONE",
     "TASK-042": "DONE",
     "TASK-043": "DONE",
@@ -1058,6 +1058,40 @@
         "TASK-038"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-097-DESIGN",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "recorded_at": "2026-10-13T00:00:00+08:00",
+      "code_commit": "308f0059359c4a7cd2ad51f43028cfda3910f979",
+      "scope": [
+        "supplier-management manifest contracts.consumed item-sku-uom-provider",
+        "TASK-039"
+      ],
+      "expires_at": null,
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "29a0615a61808b3747cd8feb522d051ba5a312da6fb0fccf36e7cf9746286775",
+      "source_ref": "HD-097: refresh of the consumed item-sku-uom-provider pin from 5a44ef30 to 1bbb882f0f1faed296615b5b253f3e6169d79b6289d1a6300e078377400e4a7f (Item §8.3.2 and DES-021, PR #210: additive purchase search and UOM mapping fields). Only the manifest contracts block changed; it moves the design baseline from f2f4a82b to 29a0615a. No requirement, design, phase, task, suite or test flag changed."
+    },
+    {
+      "id": "APPROVAL-HD-097-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "recorded_at": "2026-10-13T00:00:00+08:00",
+      "code_commit": "308f0059359c4a7cd2ad51f43028cfda3910f979",
+      "scope": [
+        "supplier-management manifest contracts.consumed item-sku-uom-provider",
+        "TASK-039"
+      ],
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "441671a6dffc2a6dc2d0b1e17d0b411c748bae623abd17f2bb0b698bc4fe00c3",
+      "source_ref": "HD-097: refresh of the consumed item-sku-uom-provider pin from 5a44ef30 to 1bbb882f0f1faed296615b5b253f3e6169d79b6289d1a6300e078377400e4a7f. Only the manifest contracts block changed; it moves the plan baseline from b5724a2f to 441671a6. No requirement, design, phase, task, suite or test flag changed."
     }
   ],
   "reviews": [
@@ -2005,6 +2039,18 @@
       "reviewed_baseline": "f2f4a82b76b40a6ddd214263023aa4b7383facdce30d33348cfd1d16dcdfe6ab",
       "source_ref": "docs/supplier_management/implementation/89_rev_086_independent_review.md",
       "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-087",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-040)",
+      "reviewer": "agent-skills:code-reviewer, independent of the author, reviewing 3216bb8e10b7ba5eb9f517a90dea6b47e17f7d63 (PR #211)",
+      "reviewed_baseline": "f2f4a82b76b40a6ddd214263023aa4b7383facdce30d33348cfd1d16dcdfe6ab",
+      "source_ref": "docs/supplier_management/implementation/90_rev_087_independent_review.md",
+      "status": "CHANGES_REQUESTED",
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
@@ -3825,6 +3871,17 @@
       "source_ref": "PR #201 merged as 6ab2fb045433726d5442022e57d1bed1b25de2f8 on the Product Owner's word (HD-091 'A', HD-092 'A，CI過就merge'), with --match-head-commit, after head 33ab754's CI run 38333279374 was green on all five checks and origin/main was unchanged at c143f3b1. Head 33ab754 merged main c143f3b1 (PR #198) into da5244e3, whose run 38331651664 was also green. Reviews: REV-085 CHANGES_REQUESTED, REV-086 APPROVED; HD-091 follow-ups not re-reviewed by decision. Main CI run 38336570916 on the merge commit was pending when this was recorded and is not claimed here. source_fingerprint computed with harness_core.fingerprint on a clean worktree at the merge commit.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-13T00:00:00+08:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "TASK-040 merged to main",
+      "code_commit": "3d47f8fb5c7b3143ef08500546e86620ea02af63",
+      "spec_baseline": "b5724a2fbaa17f3f592b81e7258fb36d13c8ba2480dae8e10a40bc0713510287",
+      "source_fingerprint": "2674b77044f0483f793e13245ab45cb4b2e1a5c3f537ab51293f24c6d7083d15",
+      "status": "PASS",
+      "source_ref": "PR #211 merged as 3d47f8fb5c7b3143ef08500546e86620ea02af63 on the Product Owner's word (HD-096 '全部按建議，唔使再 review，CI 過就 merge'), with --match-head-commit, after head d2b6d23's CI run 38367006113 was green on all five checks and origin/main was unchanged at 7c927e26. Head d2b6d23 merged main 7c927e26 (Item PR #210) into the REV-087 follow-ups. Review: REV-087 CHANGES_REQUESTED (0 Critical/High); follow-ups not re-reviewed by decision. Main CI run 38370156256 on the merge commit was in progress when this was recorded and is not claimed here. source_fingerprint computed with harness_core.fingerprint on a clean worktree at the merge commit.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-13T00:00:00+08:00"
     }
   ],
   "pending_decisions": [
@@ -5046,6 +5103,57 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-13: 'A'. Request: docs/supplier_management/item_handoff_purchase_lookup.md; corrects item_handoff_supplier_sku_refs.md §5."
+    },
+    {
+      "id": "HD-094",
+      "impact": "MAJOR",
+      "question": "TASK-040 for-SKU lookup, four points the design leaves open: (1) HTTP permission while Purchasing has none (A supplier.view; B service only; C new purchase.* permission); (2) whether a stopped relation ranks by history (A no; B yes); (3) an SKU that cannot be purchased (A fail closed with Item's SKU_NOT_FOUND/SKU_NOT_USABLE; B list anyway); (4) what q matches (A the Supplier list text search plus an exact Supplier Item Code for this SKU, exact Code or Item Code first; B Supplier code and name only).",
+      "affected_ids": [
+        "TASK-040",
+        "FR-LIST-008",
+        "FR-SKU-001",
+        "FR-SKU-002",
+        "BR-023",
+        "BR-024"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-13: '全部按建議' (1A, 2A, 3A, 4A)."
+    },
+    {
+      "id": "HD-095",
+      "impact": "MAJOR",
+      "question": "The single LEFT JOIN + sort over all 80,053 Active Suppliers gave p95 4.2 s with 50 users doing only for-SKU lookups (target 2 s). (A) keep it and judge in T50's mixed load; (B) two-part read (ranked head through the relation index, the rest through idx_suppliers_name_id), no schema change; (C) B plus an index on suppliers(status, supplier_name, id).",
+      "affected_ids": [
+        "TASK-040",
+        "NFR-005",
+        "SKU-008"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-13: 'B'. Result: p95 1,097 ms on the same worst case; evidence/20261013-t40-for-sku/. Correction (REV-087 M-1): that 1,097 ms run used a cheaper case mix and a pool of 20, so it was not the same worst case. Like-for-like (REV-087, in-process, hot-SKU mix): 1,423 ms with pool 20, 1,633 ms with the production pool of 10; HTTP not measured (TASK-050)."
+    },
+    {
+      "id": "HD-096",
+      "impact": "MINOR",
+      "question": "REV-087 CHANGES_REQUESTED PR #211 (0 Critical/High): M-1 performance claim not like-for-like; M-2 head tie-breaks untested; L-1..L-4 and I-1..I-7. Fix all as recommended (docs corrected to the like-for-like figures; tie, rest-exclusion and control-character tests; 400 for control characters; de-duplicate by Supplier ID; mutation list in evidence), then re-review or merge when CI passes?",
+      "affected_ids": [
+        "TASK-040",
+        "REV-087",
+        "NFR-005",
+        "SKU-002"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-13: '全部按建議，唔使再 review，CI 過就 merge'."
+    },
+    {
+      "id": "HD-097",
+      "impact": "MAJOR",
+      "question": "Item delivered HD-093 (PR #210; design 5a44ef30 → 1bbb882f, additive §8.3.2/DES-021). (A) refresh the Supplier pin now and start TASK-039, accepting that both baselines move and approvals, reviews, run evidence and observations bound to f2f4a82b/b5724a2f stay as history only; (B) defer the refresh and do TASK-050's for-SKU HTTP run first.",
+      "affected_ids": [
+        "TASK-039",
+        "item-sku-uom-provider"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-13: 'A'. APPROVAL-HD-097-DESIGN/PLAN record the new baselines; APPROVAL-HD-085-* and the records bound to the old baselines are kept unchanged as history."
     }
   ],
   "external_actions": [
@@ -6122,5 +6230,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-039 BLOCKED on Item (HD-093: searchForPurchase and skuUomId/uomName/status in the purchase projection, then a pin refresh). Next: TASK-040 (for-SKU lookup) — read its spec, confirm it does not depend on HD-093, and explain any schema/API change before writing it."
+  "next_safe_action": "HD-097 pin refresh (5a44ef30 → 1bbb882f) recorded. Next: TASK-039 — read its spec against Item's searchForPurchase/skuUomId, explain any API or design change (e.g. GET /api/v1/supplier-lookups/skus, purchase UOM in the relation list, active-UOM check) for approval before writing code. Also open: TASK-050's for-SKU run over HTTP at the production pool."
 }

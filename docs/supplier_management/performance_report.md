@@ -1,8 +1,8 @@
 # Supplier performance, capacity and observability (TASK-050)
 
 This is the T50 capacity report. It covers what was measured, on what, with which commands, and what is still open.
-The for-SKU lookup (NFR-005) is not in it yet: it needs TASK-038 to TASK-040, which wait on the Item owner (HD-081 B).
-HD-082 A started T50 without it, and its for-SKU part and a final rerun follow TASK-040.
+The for-SKU lookup (NFR-005) is not in this mixed-load benchmark yet. HD-082 A started T50 without it, and its for-SKU part and a final rerun follow TASK-040.
+TASK-040 measured the lookup on its own; see the NFR-005 row.
 
 Evidence: `evidence/20261009-t50-capacity/`.
 
@@ -14,7 +14,7 @@ Evidence: `evidence/20261009-t50-capacity/`.
 | NFR-002: server-side paging, 20 by default, at most 100 | Unchanged; the benchmark uses the defaults and `pageSize=50`. |
 | NFR-003: 100,000 Suppliers | **Pass** at 100,000 Suppliers with 1% at the per-Supplier upper bound. |
 | NFR-004 with online load (design §11.5) | **Pass.** A 10,000-row import took 69 s, entirely inside a 120 s measured window with 50 users; the slowest online p95 was 136 ms. |
-| NFR-005: for-SKU lookup | **Not run** (waits on TASK-040). |
+| NFR-005: for-SKU lookup | **Passes in-process, with thin headroom (TASK-040, HD-095, REV-087 M-1).** 50 users doing only for-SKU lookups on the hot SKU's expensive cases (think time 0 to 1 s), measured at the service with no HTTP: p95 1,423 ms with a pool of 20 and **1,633 ms with the production pool of 10**, no errors (REV-087's like-for-like rerun). Before HD-095 the same mix was 4,153 ms. Evidence in `evidence/20261013-t40-for-sku/`. **Not yet measured over HTTP**; that and the hot-SKU name-search and deep-page cases belong to T50's remaining for-SKU run. |
 | EXPLAIN shows the designed indexes (T50 AC 1) | **Met for the default list, every filter and the name and Code sorts after HD-088,** and for detail, children, counts and the similar-name search. Sort by status is not indexed (about 20 ms). **Not met for the text search,** by decision: a full-text index was measured slower and changes results (see "List and search indexes"). |
 | Metrics, logs and alerts (T50 AC 2, design §12.4) | **Done** for approvals and imports; the other signals already have log events (see "Observability"). |
 | Manual SRE review | **Open.** Operations needs to review the alerts, the query plans and this report. |

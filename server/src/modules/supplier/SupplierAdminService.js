@@ -96,6 +96,19 @@ function supplierSortColumn(sortBy) {
   return SUPPLIER_SORT_COLUMNS[sortBy] ?? SUPPLIER_SORT_COLUMNS.updatedAt;
 }
 
+/** 供應商列表同 for-SKU lookup 共用嘅文字搜尋（HD-094 4A）；`search` 要已經 NFKC 同 trim。 */
+export function supplierSearchCondition(search) {
+  const escaped = escapeLikeTerm(search);
+  return {
+    sql: `s.supplier_code_key LIKE ? ESCAPE '\\\\'
+      OR s.supplier_name LIKE ? ESCAPE '\\\\'
+      OR s.display_name LIKE ? ESCAPE '\\\\'
+      OR s.general_phone LIKE ? ESCAPE '\\\\'
+      OR s.general_email LIKE ? ESCAPE '\\\\'`,
+    params: [`${escaped.toLowerCase()}%`, `%${escaped}%`, `%${escaped}%`, `%${escaped}%`, `%${escaped}%`]
+  };
+}
+
 /**
  * 供應商列表嘅篩選同排序（alias `s`）。一般匯出（T47，FR-IMPORT-009）用同一個函式，保證匯出嘅就係列表見到嘅。
  */
@@ -133,16 +146,10 @@ export function supplierListQuery({
   const search = String(q ?? "").normalize("NFKC").trim();
   let exactCodeKey = null;
   if (search) {
-    const escaped = escapeLikeTerm(search);
     exactCodeKey = search.toLowerCase();
-    conditions.push(`(
-      s.supplier_code_key LIKE ? ESCAPE '\\\\'
-      OR s.supplier_name LIKE ? ESCAPE '\\\\'
-      OR s.display_name LIKE ? ESCAPE '\\\\'
-      OR s.general_phone LIKE ? ESCAPE '\\\\'
-      OR s.general_email LIKE ? ESCAPE '\\\\'
-    )`);
-    params.push(`${escaped.toLowerCase()}%`, `%${escaped}%`, `%${escaped}%`, `%${escaped}%`, `%${escaped}%`);
+    const condition = supplierSearchCondition(search);
+    conditions.push(`(${condition.sql})`);
+    params.push(...condition.params);
   }
 
   const direction = descending ? "DESC" : "ASC";

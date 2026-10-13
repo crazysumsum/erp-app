@@ -1,0 +1,184 @@
+
+==== COLD SKU (0 relations), no search ====
+-- SELECT COUNT(*) AS total FROM suppliers s WHERE s.status = 'active'…
+-> Aggregate: count(0)  (cost=16390 rows=1)
+    -> Covering index lookup on s using idx_suppliers_status_updated_id (status = 'active')  (cost=5019 rows=49350)
+
+-- SELECT COUNT(*) AS headTotal FROM suppliers s JOIN (SELECT y.supplier_id AS id FROM supplier_sku_refs y WHERE y.sku_id = ? AND (y.relationship_status = 'preferr…
+-> Aggregate: count(0)  (cost=5.37 rows=1)
+    -> Nested loop left join  (cost=4.91 rows=2)
+        -> Nested loop inner join  (cost=4.21 rows=2)
+            -> Index range scan on y using idx_supplier_sku_refs_sku_status_supplied over (sku_id = 2 AND relationship_status < 'preferred') OR (sku_id = 2 AND relationship_status = 'preferred') OR (2 more), with index condition: ((y.sku_id = 2) and ((y.relationship_status = 'preferred') or ((y.relationship_status <> 'stopped') and (y.last_supplied_at is not null))))  (cost=2.81 rows=4)
+            -> Filter: (s.`status` = 'active')  (cost=0.263 rows=0.5)
+                -> Single-row index lookup on s using PRIMARY (id = y.supplier_id)  (cost=0.263 rows=1)
+        -> Single-row covering index lookup on r using uq_supplier_sku_refs_supplier_sku (supplier_id = y.supplier_id, sku_id = 2)  (cost=0.3 rows=1)
+
+-- SELECT s.id, s.supplier_code, s.supplier_name, s.display_name, s.default_currency_code, s.default_payment_term_id, s.status, s.version, r.id AS relation_id, r.r…
+-> Limit: 20 row(s)  (cost=12340 rows=20)
+    -> Filter: (0 = coalesce(((r.relationship_status = 'preferred') or ((r.relationship_status <> 'stopped') and (r.last_supplied_at is not null))),false))  (cost=12340 rows=20)
+        -> Nested loop left join  (cost=12340 rows=20)
+            -> Filter: (s.`status` = 'active')  (cost=0.498 rows=20)
+                -> Index scan on s using idx_suppliers_name_id  (cost=0.498 rows=40)
+            -> Single-row index lookup on r using uq_supplier_sku_refs_supplier_sku (supplier_id = s.id, sku_id = 2)  (cost=0.25 rows=1)
+
+
+==== TYPICAL SKU (100 relations), no search ====
+-- SELECT COUNT(*) AS total FROM suppliers s WHERE s.status = 'active'…
+-> Aggregate: count(0)  (cost=16390 rows=1)
+    -> Covering index lookup on s using idx_suppliers_status_updated_id (status = 'active')  (cost=5019 rows=49350)
+
+-- SELECT COUNT(*) AS headTotal FROM suppliers s JOIN (SELECT y.supplier_id AS id FROM supplier_sku_refs y WHERE y.sku_id = ? AND (y.relationship_status = 'preferr…
+-> Aggregate: count(0)  (cost=113 rows=1)
+    -> Nested loop left join  (cost=101 rows=51.5)
+        -> Nested loop inner join  (cost=83.4 rows=51.5)
+            -> Index range scan on y using idx_supplier_sku_refs_sku_status_supplied over (sku_id = 3 AND relationship_status < 'preferred') OR (sku_id = 3 AND relationship_status = 'preferred') OR (2 more), with index condition: ((y.sku_id = 3) and ((y.relationship_status = 'preferred') or ((y.relationship_status <> 'stopped') and (y.last_supplied_at is not null))))  (cost=47.4 rows=103)
+            -> Filter: (s.`status` = 'active')  (cost=0.25 rows=0.5)
+                -> Single-row index lookup on s using PRIMARY (id = y.supplier_id)  (cost=0.25 rows=1)
+        -> Single-row covering index lookup on r using uq_supplier_sku_refs_supplier_sku (supplier_id = y.supplier_id, sku_id = 3)  (cost=0.252 rows=1)
+
+-- SELECT s.id, s.supplier_code, s.supplier_name, s.display_name, s.default_currency_code, s.default_payment_term_id, s.status, s.version, r.id AS relation_id, r.r…
+-> Limit: 20 row(s)
+    -> Sort: (r.relationship_status <=> 'preferred') DESC, (case when (r.relationship_status <> 'stopped') then r.last_supplied_at end) DESC, s.supplier_name, s.id, limit input to 20 row(s) per chunk
+        -> Stream results  (cost=101 rows=51.5)
+            -> Nested loop left join  (cost=101 rows=51.5)
+                -> Nested loop inner join  (cost=83.4 rows=51.5)
+                    -> Index range scan on y using idx_supplier_sku_refs_sku_status_supplied over (sku_id = 3 AND relationship_status < 'preferred') OR (sku_id = 3 AND relationship_status = 'preferred') OR (2 more), with index condition: ((y.sku_id = 3) and ((y.relationship_status = 'preferred') or ((y.relationship_status <> 'stopped') and (y.last_supplied_at is not null))))  (cost=47.4 rows=103)
+                    -> Filter: (s.`status` = 'active')  (cost=0.25 rows=0.5)
+                        -> Single-row index lookup on s using PRIMARY (id = y.supplier_id)  (cost=0.25 rows=1)
+                -> Single-row index lookup on r using uq_supplier_sku_refs_supplier_sku (supplier_id = y.supplier_id, sku_id = 3)  (cost=0.252 rows=1)
+
+
+==== TYPICAL SKU, page 50 ====
+-- SELECT COUNT(*) AS total FROM suppliers s WHERE s.status = 'active'…
+-> Aggregate: count(0)  (cost=16390 rows=1)
+    -> Covering index lookup on s using idx_suppliers_status_updated_id (status = 'active')  (cost=5019 rows=49350)
+
+-- SELECT COUNT(*) AS headTotal FROM suppliers s JOIN (SELECT y.supplier_id AS id FROM supplier_sku_refs y WHERE y.sku_id = ? AND (y.relationship_status = 'preferr…
+-> Aggregate: count(0)  (cost=113 rows=1)
+    -> Nested loop left join  (cost=101 rows=51.5)
+        -> Nested loop inner join  (cost=83.4 rows=51.5)
+            -> Index range scan on y using idx_supplier_sku_refs_sku_status_supplied over (sku_id = 3 AND relationship_status < 'preferred') OR (sku_id = 3 AND relationship_status = 'preferred') OR (2 more), with index condition: ((y.sku_id = 3) and ((y.relationship_status = 'preferred') or ((y.relationship_status <> 'stopped') and (y.last_supplied_at is not null))))  (cost=47.4 rows=103)
+            -> Filter: (s.`status` = 'active')  (cost=0.25 rows=0.5)
+                -> Single-row index lookup on s using PRIMARY (id = y.supplier_id)  (cost=0.25 rows=1)
+        -> Single-row covering index lookup on r using uq_supplier_sku_refs_supplier_sku (supplier_id = y.supplier_id, sku_id = 3)  (cost=0.252 rows=1)
+
+-- SELECT s.id, s.supplier_code, s.supplier_name, s.display_name, s.default_currency_code, s.default_payment_term_id, s.status, s.version, r.id AS relation_id, r.r…
+-> Limit/Offset: 20/926 row(s)  (cost=12457 rows=20)
+    -> Filter: (0 = coalesce(((r.relationship_status = 'preferred') or ((r.relationship_status <> 'stopped') and (r.last_supplied_at is not null))),false))  (cost=12457 rows=946)
+        -> Nested loop left join  (cost=12457 rows=946)
+            -> Filter: (s.`status` = 'active')  (cost=25.3 rows=946)
+                -> Index scan on s using idx_suppliers_name_id  (cost=25.3 rows=1892)
+            -> Single-row index lookup on r using uq_supplier_sku_refs_supplier_sku (supplier_id = s.id, sku_id = 3)  (cost=0.25 rows=1)
+
+
+==== HOT SKU (20,000 relations), no search ====
+-- SELECT COUNT(*) AS total FROM suppliers s WHERE s.status = 'active'…
+-> Aggregate: count(0)  (cost=16390 rows=1)
+    -> Covering index lookup on s using idx_suppliers_status_updated_id (status = 'active')  (cost=5019 rows=49350)
+
+-- SELECT COUNT(*) AS headTotal FROM suppliers s JOIN (SELECT y.supplier_id AS id FROM supplier_sku_refs y WHERE y.sku_id = ? AND (y.relationship_status = 'preferr…
+-> Aggregate: count(0)  (cost=34314 rows=1)
+    -> Nested loop left join  (cost=30688 rows=15737)
+        -> Nested loop inner join  (cost=25180 rows=15737)
+            -> Index range scan on y using idx_supplier_sku_refs_sku_status_supplied over (sku_id = 1 AND relationship_status < 'preferred') OR (sku_id = 1 AND relationship_status = 'preferred') OR (2 more), with index condition: ((y.sku_id = 1) and ((y.relationship_status = 'preferred') or ((y.relationship_status <> 'stopped') and (y.last_supplied_at is not null))))  (cost=14164 rows=31474)
+            -> Filter: (s.`status` = 'active')  (cost=0.25 rows=0.5)
+                -> Single-row index lookup on s using PRIMARY (id = y.supplier_id)  (cost=0.25 rows=1)
+        -> Single-row covering index lookup on r using uq_supplier_sku_refs_supplier_sku (supplier_id = y.supplier_id, sku_id = 1)  (cost=0.25 rows=1)
+
+-- SELECT s.id, s.supplier_code, s.supplier_name, s.display_name, s.default_currency_code, s.default_payment_term_id, s.status, s.version, r.id AS relation_id, r.r…
+-> Limit: 20 row(s)
+    -> Sort: (r.relationship_status <=> 'preferred') DESC, (case when (r.relationship_status <> 'stopped') then r.last_supplied_at end) DESC, s.supplier_name, s.id, limit input to 20 row(s) per chunk
+        -> Stream results  (cost=30688 rows=15737)
+            -> Nested loop left join  (cost=30688 rows=15737)
+                -> Nested loop inner join  (cost=25180 rows=15737)
+                    -> Index range scan on y using idx_supplier_sku_refs_sku_status_supplied over (sku_id = 1 AND relationship_status < 'preferred') OR (sku_id = 1 AND relationship_status = 'preferred') OR (2 more), with index condition: ((y.sku_id = 1) and ((y.relationship_status = 'preferred') or ((y.relationship_status <> 'stopped') and (y.last_supplied_at is not null))))  (cost=14164 rows=31474)
+                    -> Filter: (s.`status` = 'active')  (cost=0.25 rows=0.5)
+                        -> Single-row index lookup on s using PRIMARY (id = y.supplier_id)  (cost=0.25 rows=1)
+                -> Single-row index lookup on r using uq_supplier_sku_refs_supplier_sku (supplier_id = y.supplier_id, sku_id = 1)  (cost=0.25 rows=1)
+
+
+==== HOT SKU, exact Supplier Code ====
+-- SELECT supplier_id FROM supplier_sku_refs WHERE sku_id = ? AND supplier_item_code_key = ?…
+-> Filter: (supplier_sku_refs.supplier_item_code_key = 'p50-100000')  (cost=865 rows=3118)
+    -> Index lookup on supplier_sku_refs using idx_supplier_sku_refs_sku_status_supplied (sku_id = 1)  (cost=865 rows=31182)
+
+-- SELECT COUNT(*) AS total FROM suppliers s WHERE s.status = 'active' AND (s.supplier_code_key LIKE ? ESCAPE '\\' OR s.supplier_name LIKE ? ESCAPE '\\' OR s.displ…
+-> Aggregate: count(0)  (cost=8483 rows=1)
+    -> Filter: ((s.supplier_code_key like 'p50-100000%' escape '\\') or (s.supplier_name like '%P50-100000%' escape '\\') or (s.display_name like '%P50-100000%' escape '\\') or (s.general_phone like '%P50-100000%' escape '\\') or (s.general_email like '%P50-100000%' escape '\\'))  (cost=3423 rows=21963)
+        -> Index lookup on s using idx_suppliers_status_updated_id (status = 'active')  (cost=3423 rows=49350)
+
+-- SELECT COUNT(*) AS headTotal FROM suppliers s JOIN (SELECT y.supplier_id AS id FROM supplier_sku_refs y WHERE y.sku_id = ? AND (y.relationship_status = 'preferr…
+-> Aggregate: count(0)  (cost=22245 rows=1)
+    -> Nested loop left join  (cost=20892 rows=5871)
+        -> Nested loop inner join  (cost=18837 rows=5871)
+            -> Table scan on h  (cost=9270..9603 rows=26384)
+                -> Union materialize with deduplication  (cost=9270..9270 rows=26384)
+                    -> Filter: ((y.relationship_status = 'preferred') or ((y.relationship_status <> 'stopped') and (y.last_supplied_at is not null)) or (y.supplier_item_code_key = 'p50-100000'))  (cost=3191 rows=26383)
+                        -> Index lookup on y using idx_supplier_sku_refs_sku_status_supplied (sku_id = 1)  (cost=3191 rows=31182)
+                    -> Rows fetched before execution  (cost=0..0 rows=1)
+            -> Filter: ((s.`status` = 'active') and ((s.supplier_code_key like 'p50-100000%' escape '\\') or (s.supplier_name like '%P50-100000%' escape '\\') or (s.display_name like '%P50-100000%' escape '\\') or (s.general_phone like '%P50-100000%' escape '\\') or (s.general_email like '%P50-100000%' escape '\\')))  (cost=0.25 rows=0.223)
+                -> Single-row index lookup on s using PRIMARY (id = h.id)  (cost=0.25 rows=1)
+        -> Single-row covering index lookup on r using uq_supplier_sku_refs_supplier_sku (supplier_id = h.id, sku_id = 1)  (cost=0.25 rows=1)
+
+-- SELECT s.id, s.supplier_code, s.supplier_name, s.display_name, s.default_currency_code, s.default_payment_term_id, s.status, s.version, r.id AS relation_id, r.r…
+-> Limit: 20 row(s)
+    -> Sort: exact_rank, (r.relationship_status <=> 'preferred') DESC, (case when (r.relationship_status <> 'stopped') then r.last_supplied_at end) DESC, s.supplier_name, s.id, limit input to 20 row(s) per chunk
+        -> Stream results  (cost=20892 rows=5871)
+            -> Nested loop left join  (cost=20892 rows=5871)
+                -> Nested loop inner join  (cost=18837 rows=5871)
+                    -> Table scan on h  (cost=9270..9603 rows=26384)
+                        -> Union materialize with deduplication  (cost=9270..9270 rows=26384)
+                            -> Filter: ((y.relationship_status = 'preferred') or ((y.relationship_status <> 'stopped') and (y.last_supplied_at is not null)) or (y.supplier_item_code_key = 'p50-100000'))  (cost=3191 rows=26383)
+                                -> Index lookup on y using idx_supplier_sku_refs_sku_status_supplied (sku_id = 1)  (cost=3191 rows=31182)
+                            -> Rows fetched before execution  (cost=0..0 rows=1)
+                    -> Filter: ((s.`status` = 'active') and ((s.supplier_code_key like 'p50-100000%' escape '\\') or (s.supplier_name like '%P50-100000%' escape '\\') or (s.display_name like '%P50-100000%' escape '\\') or (s.general_phone like '%P50-100000%' escape '\\') or (s.general_email like '%P50-100000%' escape '\\')))  (cost=0.25 rows=0.223)
+                        -> Single-row index lookup on s using PRIMARY (id = h.id)  (cost=0.25 rows=1)
+                -> Single-row index lookup on r using uq_supplier_sku_refs_supplier_sku (supplier_id = h.id, sku_id = 1)  (cost=0.25 rows=1)
+
+
+==== TYPICAL SKU, name word ====
+-- SELECT supplier_id FROM supplier_sku_refs WHERE sku_id = ? AND supplier_item_code_key = ?…
+-> Filter: (supplier_sku_refs.supplier_item_code_key = 'trading')  (cost=26 rows=10)
+    -> Index lookup on supplier_sku_refs using idx_supplier_sku_refs_sku_status_supplied (sku_id = 3)  (cost=26 rows=100)
+
+-- SELECT COUNT(*) AS total FROM suppliers s WHERE s.status = 'active' AND (s.supplier_code_key LIKE ? ESCAPE '\\' OR s.supplier_name LIKE ? ESCAPE '\\' OR s.displ…
+-> Aggregate: count(0)  (cost=8483 rows=1)
+    -> Filter: ((s.supplier_code_key like 'trading%' escape '\\') or (s.supplier_name like '%Trading%' escape '\\') or (s.display_name like '%Trading%' escape '\\') or (s.general_phone like '%Trading%' escape '\\') or (s.general_email like '%Trading%' escape '\\'))  (cost=3423 rows=21963)
+        -> Index lookup on s using idx_suppliers_status_updated_id (status = 'active')  (cost=3423 rows=49350)
+
+-- SELECT COUNT(*) AS headTotal FROM suppliers s JOIN (SELECT y.supplier_id AS id FROM supplier_sku_refs y WHERE y.sku_id = ? AND (y.relationship_status = 'preferr…
+-> Aggregate: count(0)  (cost=97.2 rows=1)
+    -> Nested loop left join  (cost=92.8 rows=18.8)
+        -> Nested loop inner join  (cost=86.2 rows=18.8)
+            -> Table scan on h  (cost=53..56.5 rows=84.6)
+                -> Union materialize with deduplication  (cost=53..53 rows=84.6)
+                    -> Filter: ((y.relationship_status = 'preferred') or ((y.relationship_status <> 'stopped') and (y.last_supplied_at is not null)) or (y.supplier_item_code_key = 'trading'))  (cost=33.5 rows=84.6)
+                        -> Index lookup on y using idx_supplier_sku_refs_sku_status_supplied (sku_id = 3)  (cost=33.5 rows=100)
+                    -> Zero rows (no matching row in const table)  (cost=0..0 rows=0)
+            -> Filter: ((s.`status` = 'active') and ((s.supplier_code_key like 'trading%' escape '\\') or (s.supplier_name like '%Trading%' escape '\\') or (s.display_name like '%Trading%' escape '\\') or (s.general_phone like '%Trading%' escape '\\') or (s.general_email like '%Trading%' escape '\\')))  (cost=0.25 rows=0.223)
+                -> Single-row index lookup on s using PRIMARY (id = h.id)  (cost=0.25 rows=1)
+        -> Single-row covering index lookup on r using uq_supplier_sku_refs_supplier_sku (supplier_id = h.id, sku_id = 3)  (cost=0.255 rows=1)
+
+-- SELECT s.id, s.supplier_code, s.supplier_name, s.display_name, s.default_currency_code, s.default_payment_term_id, s.status, s.version, r.id AS relation_id, r.r…
+-> Limit: 20 row(s)
+    -> Sort: exact_rank, (r.relationship_status <=> 'preferred') DESC, (case when (r.relationship_status <> 'stopped') then r.last_supplied_at end) DESC, s.supplier_name, s.id, limit input to 20 row(s) per chunk
+        -> Stream results  (cost=92.8 rows=18.8)
+            -> Nested loop left join  (cost=92.8 rows=18.8)
+                -> Nested loop inner join  (cost=86.2 rows=18.8)
+                    -> Table scan on h  (cost=53..56.5 rows=84.6)
+                        -> Union materialize with deduplication  (cost=53..53 rows=84.6)
+                            -> Filter: ((y.relationship_status = 'preferred') or ((y.relationship_status <> 'stopped') and (y.last_supplied_at is not null)) or (y.supplier_item_code_key = 'trading'))  (cost=33.5 rows=84.6)
+                                -> Index lookup on y using idx_supplier_sku_refs_sku_status_supplied (sku_id = 3)  (cost=33.5 rows=100)
+                            -> Zero rows (no matching row in const table)  (cost=0..0 rows=0)
+                    -> Filter: ((s.`status` = 'active') and ((s.supplier_code_key like 'trading%' escape '\\') or (s.supplier_name like '%Trading%' escape '\\') or (s.display_name like '%Trading%' escape '\\') or (s.general_phone like '%Trading%' escape '\\') or (s.general_email like '%Trading%' escape '\\')))  (cost=0.25 rows=0.223)
+                        -> Single-row index lookup on s using PRIMARY (id = h.id)  (cost=0.25 rows=1)
+                -> Single-row index lookup on r using uq_supplier_sku_refs_supplier_sku (supplier_id = h.id, sku_id = 3)  (cost=0.255 rows=1)
+
+-- SELECT s.id, s.supplier_code, s.supplier_name, s.display_name, s.default_currency_code, s.default_payment_term_id, s.status, s.version, r.id AS relation_id, r.r…
+-> Limit: 17 row(s)  (cost=6170 rows=8.5)
+    -> Filter: (0 = coalesce(((r.relationship_status = 'preferred') or ((r.relationship_status <> 'stopped') and (r.last_supplied_at is not null)) or (r.supplier_item_code_key = 'trading')),false))  (cost=6170 rows=8.5)
+        -> Nested loop left join  (cost=6170 rows=8.5)
+            -> Filter: ((s.`status` = 'active') and ((s.supplier_code_key like 'trading%' escape '\\') or (s.supplier_name like '%Trading%' escape '\\') or (s.display_name like '%Trading%' escape '\\') or (s.general_phone like '%Trading%' escape '\\') or (s.general_email like '%Trading%' escape '\\')) and (s.supplier_code_key <> 'trading'))  (cost=0.423 rows=8.5)
+                -> Index scan on s using idx_suppliers_name_id  (cost=0.423 rows=34)
+            -> Single-row index lookup on r using uq_supplier_sku_refs_supplier_sku (supplier_id = s.id, sku_id = 3)  (cost=0.25 rows=1)
+

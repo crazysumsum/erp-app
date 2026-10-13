@@ -1,4 +1,5 @@
 import { ApplicationError } from "../../framework/errors/ApplicationError.js";
+import { supplierSearchCondition } from "./SupplierAdminService.js";
 import { normalizeSupplierCode } from "./supplierNormalization.js";
 import { supplierConflict, supplierNotFound } from "./supplierErrors.js";
 import { toAddressResponse } from "./supplierProjections.js";
@@ -36,6 +37,28 @@ function lookupOptions(options = {}) {
   return { purpose: options.purpose, atMs };
 }
 
+// 排得前嘅 relation：首選，或者唔係 stopped 而有供貨紀錄（HD-094 2A）。
+const ranked = (alias) => `${alias}.relationship_status = 'preferred' OR (${alias}.relationship_status <> 'stopped' AND ${alias}.last_supplied_at IS NOT NULL)`;
+const FOR_SKU_COLUMNS = `s.id, s.supplier_code, s.supplier_name, s.display_name, s.default_currency_code, s.default_payment_term_id,
+  s.status, s.version, r.id AS relation_id, r.relationship_status, r.supplier_item_code, r.last_supplied_at`;
+
+function forSkuQuery(options = {}) {
+  const { q = "", page = 1, pageSize = 20 } = options ?? {};
+  if (typeof q !== "string" || [...q].length > 190 || /\p{Cc}/u.test(q) || !Number.isSafeInteger(page) || page < 1 ||
+      !Number.isSafeInteger(pageSize) || pageSize < 1 || pageSize > 100 || !Number.isSafeInteger((page - 1) * pageSize)) {
+    throw new TypeError("Supplier for-SKU query is invalid");
+  }
+  return { search: q.normalize("NFKC").trim(), page, pageSize };
+}
+
+/** 設計 §8.7 嘅排序：exact → preferred → 最近供貨 → 名稱、ID。stopped 唔排前（HD-094 2A）。 */
+function rankReason(row) {
+  if (Number(row.exact_rank) === 0) return "exact_match";
+  if (row.relationship_status === "preferred") return "preferred";
+  if (row.relationship_status !== "stopped" && row.last_supplied_at !== null) return "recently_supplied";
+  return null;
+}
+
 function providerNotReady() {
   return new ApplicationError("Business Master provider is unavailable for Supplier purchase defaults", {
     code: "BUSINESS_MASTER_NOT_READY",
@@ -70,7 +93,7 @@ function toProjection(row, { purpose }) {
 export class SupplierLookupService {
   static contract = "supplier-core-provider/v1";
 
-  constructor({ database, logger, time, businessMaster = null } = {}) {
+  constructor({ database, logger, time, businessMaster = null, items = null } = {}) {
     if (!database || typeof database.withTransaction !== "function") {
       throw new TypeError("SupplierLookupService requires a transactional database");
     }
@@ -79,6 +102,7 @@ export class SupplierLookupService {
     this.logger = logger;
     this.time = time;
     this.businessMaster = businessMaster;
+    this.items = items;
   }
 
   async findById(supplierId, options) {
@@ -156,6 +180,84 @@ export class SupplierLookupService {
       currency: references.currency,
       paymentTerm: references.paymentTerm,
       orderingAddress
+    };
+  }
+
+  /**
+   * 採購揀 Supplier 用：全部 Active Supplier（冇 relation 都照出），relation 只影響排序同 `rankReason`。
+   * SKU 唔可以採購就 fail closed（HD-094 3A）。呢度唔授權，呼叫方要先授權；提交時仍要
+   * `assertUsableInTransaction()` 重驗（BR-032）。
+   *
+   * 兩段讀（HD-095 B）：head 係有排序理由（exact、首選、最近供貨）嘅 Supplier，由 relation index 同 code key 帶出再排序；
+   * rest 係其餘 Active Supplier，沿 `idx_suppliers_name_id` 按名稱讀。兩段互不重疊，合埋就係設計 §8.7 嘅次序。
+   * 一次過 JOIN 全部 Active Supplier 再排序，每次要排 8 萬行，50 人並發 p95 4 秒。
+   */
+  async listForSku(skuId, options = {}) {
+    const id = Number(skuId);
+    if (!Number.isSafeInteger(id) || id <= 0) throw new TypeError("SKU ID must be a positive safe integer");
+    const { search, page, pageSize } = forSkuQuery(options);
+    if (!this.items) throw new TypeError("SupplierLookupService.listForSku requires an Item lookup service");
+    await this.items.assertUsable(id, { purpose: "purchase", atMs: options?.atMs ?? this.time.nowMs() });
+
+    const key = search.toLowerCase();
+    let match = "s.status = 'active'";
+    const matchParams = [];
+    if (search) {
+      // 同供應商列表一樣嘅文字搜尋，或者呢隻 SKU 嘅 Supplier Item Code 完全相同（HD-094 4A）。
+      // Item Code 相同嘅 Supplier 先查出嚟（好少），唔好喺全表掃描入面每行行一條子查詢。
+      const [byItemCode] = await this.database.query(
+        "SELECT supplier_id FROM supplier_sku_refs WHERE sku_id = ? AND supplier_item_code_key = ?", [id, key]);
+      const condition = supplierSearchCondition(search);
+      match += ` AND (${condition.sql}${byItemCode.length ? ` OR s.id IN (${byItemCode.map(() => "?").join(",")})` : ""})`;
+      matchParams.push(...condition.params, ...byItemCode.map((row) => Number(row.supplier_id)));
+    }
+    const itemCodeExact = (alias) => (search ? ` OR ${alias}.supplier_item_code_key = ?` : "");
+    const headIds = `SELECT y.supplier_id AS id FROM supplier_sku_refs y WHERE y.sku_id = ? AND (${ranked("y")}${itemCodeExact("y")})${
+      search ? " UNION SELECT id FROM suppliers WHERE supplier_code_key = ?" : ""}`;
+    const headFrom = `FROM suppliers s JOIN (${headIds}) h ON h.id = s.id
+      LEFT JOIN supplier_sku_refs r ON r.supplier_id = s.id AND r.sku_id = ? WHERE ${match}`;
+    const headParams = [id, ...(search ? [key, key] : []), id, ...matchParams];
+    // rest 用已經 JOIN 咗嘅 r（每個 Supplier 最多一行）排除 head；寫成 NOT EXISTS 嘅話，optimizer 會將成張 relation 表掃一次再物化。
+    const restFrom = `FROM suppliers s LEFT JOIN supplier_sku_refs r ON r.supplier_id = s.id AND r.sku_id = ? WHERE ${match}
+      AND NOT COALESCE((${ranked("r")}${itemCodeExact("r")}), FALSE)${search ? " AND s.supplier_code_key <> ?" : ""}`;
+    const restParams = [id, ...matchParams, ...(search ? [key, key] : [])];
+
+    const offset = (page - 1) * pageSize;
+    const [[{ total }]] = await this.database.query(`SELECT COUNT(*) AS total FROM suppliers s WHERE ${match}`, matchParams);
+    const [[{ headTotal }]] = await this.database.query(`SELECT COUNT(*) AS headTotal ${headFrom}`, headParams);
+    const exact = search ? "CASE WHEN s.supplier_code_key = ? OR r.supplier_item_code_key = ? THEN 0 ELSE 1 END" : "1";
+    const [head] = offset < Number(headTotal)
+      ? await this.database.query(
+        `SELECT ${FOR_SKU_COLUMNS}, ${exact} AS exact_rank ${headFrom}
+          ORDER BY exact_rank, (r.relationship_status <=> 'preferred') DESC,
+                   CASE WHEN r.relationship_status <> 'stopped' THEN r.last_supplied_at END DESC, s.supplier_name, s.id
+          LIMIT ? OFFSET ?`,
+        [...(search ? [key, key] : []), ...headParams, pageSize, offset])
+      : [[]];
+    const restOffset = Math.max(0, offset - Number(headTotal));
+    // 其餘嗰段冇嘢可以攞就唔讀：搜完整代碼通常淨係中 head，咁可以慳一次全表掃描。
+    const [rest] = head.length < pageSize && Number(total) - Number(headTotal) > restOffset
+      ? await this.database.query(`SELECT ${FOR_SKU_COLUMNS}, 1 AS exact_rank ${restFrom} ORDER BY s.supplier_name, s.id LIMIT ? OFFSET ?`,
+        [...restParams, pageSize - head.length, restOffset])
+      : [[]];
+    // head 同 rest 係兩次讀；中間 relation 改咗嘅話同一個 Supplier 可能兩段都出。去重；呢個只係建議清單，
+    // 提交時 BR-032 會再驗（REV-087 L-3）。反方向（兩段都冇讀到）就會喺呢一頁漏咗，下次查詢會返嚟。
+    const seen = new Set();
+    const rows = [...head, ...rest].filter((row) => !seen.has(Number(row.id)) && seen.add(Number(row.id)));
+    return {
+      items: rows.map((row) => ({
+        ...toProjection(row, { purpose: "purchase" }),
+        rankReason: rankReason(row),
+        relation: row.relation_id === null ? null : {
+          relationId: Number(row.relation_id),
+          relationshipStatus: row.relationship_status,
+          supplierItemCode: row.supplier_item_code,
+          lastSuppliedAt: row.last_supplied_at === null ? null : Number(row.last_supplied_at)
+        }
+      })),
+      total: Number(total),
+      page,
+      pageSize
     };
   }
 
