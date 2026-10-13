@@ -439,3 +439,110 @@ integrationTest("TASK-038 (REV-085 M2): without UNIQUE(id, sku_id) on item_sku_u
   const [tables] = await admin.query("SELECT table_name FROM information_schema.tables WHERE table_schema = ? AND table_name LIKE 'supplier%'", [scratch]);
   assert.deepEqual(tables, []);
 });
+
+integrationTest("TASK-038 (REV-086 M-1): creates and first projections above the pool size all succeed", async () => {
+  const over = h.application.configuration.database.connectionLimit + 2;
+  const creates = [];
+  const projections = [];
+  const projector = service({ verifySource: async () => {} });
+  for (let index = 0; index < over; index += 1) {
+    const [supplierA, supplierB, itemA, itemB] = [await supplier(), await supplier(), await sku(), await sku()];
+    creates.push(() => service().create({ ...actor(), supplierId: supplierA, skuId: itemA.id }));
+    projections.push(() => projector.recordSupply({ eventId: `gr-${randomUUID()}`, sourceType: "goods_receipt", sourceId: 1_100, sourceLineId: index + 1,
+      supplierId: supplierB, skuId: itemB.id, purchaseSkuUomId: null, supplierItemCode: "", suppliedAt: 5_000 }));
+  }
+  for (const [label, work] of [["create", creates], ["recordSupply", projections]]) {
+    const results = await Promise.allSettled(work.map((run) => run()));
+    assert.deepEqual(results.filter((result) => result.status === "rejected").map((result) => result.reason?.message), [], label);
+  }
+});
+
+integrationTest("TASK-038 (REV-086 M-1): the same event or source line sent to different Suppliers succeeds once and conflicts for the rest", async () => {
+  const projector = service({ verifySource: async () => {} });
+  for (const variant of ["same event", "same source line"]) {
+    const suppliers = [await supplier(), await supplier(), await supplier(), await supplier()];
+    const item = await sku();
+    const eventId = `gr-${randomUUID()}`;
+    const results = await Promise.allSettled(suppliers.map((supplierId, index) => projector.recordSupply({
+      // 每個 variant 用自己嘅來源單據：「same event」各行唔同，「same source line」各 event 唔同。
+      eventId: variant === "same event" ? eventId : `${eventId}-${index}`, sourceType: "goods_receipt",
+      sourceId: variant === "same event" ? 1_200 : 1_201, sourceLineId: variant === "same event" ? index + 1 : 1,
+      supplierId, skuId: item.id, purchaseSkuUomId: null, supplierItemCode: "", suppliedAt: 6_000 })));
+    assert.equal(results.filter((result) => result.status === "fulfilled").length, 1, variant);
+    assert.deepEqual([...new Set(results.filter((result) => result.status === "rejected").map((result) => result.reason?.publicCode))],
+      ["IDEMPOTENCY_CONFLICT"], variant);
+    const [[{ n }]] = await h.db.query("SELECT COUNT(*) AS n FROM supplier_sku_refs WHERE sku_id = ?", [item.id]);
+    assert.equal(Number(n), 1, `${variant}: the losing Suppliers keep no relation`);
+  }
+});
+
+integrationTest("TASK-038 (REV-086 M-1, L-1): over HTTP, stale actors are refused on create and update, every update field is required, and the list order holds", async () => {
+  const manager = await httpUser(["supplier.mgmt", "supplier.view"]);
+  const stale = await httpUser(["supplier.view"], { claims: ["supplier.view", "supplier.mgmt"] });
+  const supplierId = await supplier();
+  const [preferred, recent, older, stopped, blocked] = [await sku(), await sku(), await sku(), await sku(), await sku({ status: "inactive" })];
+  // 一個過期 token 唔可以靠「SKU 唔可以採購」嘅錯誤探聽 SKU（L3）：先係權限錯誤。
+  assert.equal((await api(stale, "POST", `/api/v1/suppliers/${supplierId}/sku-relations/create`, { skuId: blocked.id })).code, "PERMISSION_STALE");
+  // preferred 最先建立（id 最細）：排序靠狀態同供貨時間，唔係 id。
+  const created = {};
+  for (const [name, item, status] of [["preferred", preferred, "preferred"], ["older", older, "alternative"], ["recent", recent, "alternative"],
+    ["stopped", stopped, "stopped"]]) {
+    created[name] = (await api(manager, "POST", `/api/v1/suppliers/${supplierId}/sku-relations/create`, { skuId: item.id, relationshipStatus: status })).data;
+  }
+  await h.db.execute("UPDATE supplier_sku_refs SET last_supplied_at = ? WHERE id = ?", [9_000, created.recent.id]);
+  await h.db.execute("UPDATE supplier_sku_refs SET last_supplied_at = ? WHERE id = ?", [1_000, created.older.id]);
+  const listed = await api(manager, "GET", `/api/v1/suppliers/${supplierId}/sku-relations`);
+  assert.deepEqual(listed.data.items.map((row) => row.id), [created.preferred.id, created.recent.id, created.older.id, created.stopped.id]);
+
+  const relation = (await api(manager, "GET", `/api/v1/suppliers/${supplierId}/sku-relations?q=${encodeURIComponent(older.code)}`)).data.items[0];
+  const body = fullUpdate(relation);
+  assert.equal((await api(stale, "POST", `/api/v1/suppliers/${supplierId}/sku-relations/${relation.id}/update`, body)).code, "PERMISSION_STALE");
+  for (const field of Object.keys(body)) {
+    const { [field]: _dropped, ...partial } = body;
+    assert.equal((await api(manager, "POST", `/api/v1/suppliers/${supplierId}/sku-relations/${relation.id}/update`, partial)).status, 400, field);
+  }
+  const [[stored]] = await h.db.query("SELECT version FROM supplier_sku_refs WHERE id = ?", [relation.id]);
+  assert.equal(Number(stored.version), relation.version, "no refused update changed the row");
+});
+
+integrationTest("TASK-038 (REV-086 L-1): command checks per field, empty codes on one Supplier, and the projection's version bump", async () => {
+  const projector = service({ verifySource: async () => {} });
+  const [supplierId, item] = [await supplier(), await sku()];
+  const base = { eventId: `gr-${randomUUID()}`, sourceType: "goods_receipt", sourceId: 1_300, sourceLineId: 1, supplierId, skuId: item.id,
+    purchaseSkuUomId: null, supplierItemCode: "", suppliedAt: 7_000 };
+  for (const [field, value] of [["eventId", "e".repeat(65)], ["skuId", 0], ["purchaseSkuUomId", -1], ["supplierItemCode", "bell\u0007"]]) {
+    await assert.rejects(() => projector.recordSupply({ ...base, [field]: value }),
+      (error) => error.publicCode === "SUPPLIER_SUPPLY_INVALID" && error.details?.field === field, `${field}`);
+  }
+  // 兩條冇代碼嘅關係可以喺同一個 Supplier（key 係 NULL，唔係 ""）。
+  const [first, second] = [await service().create({ ...actor(), supplierId, skuId: (await sku()).id }),
+    await service().create({ ...actor(), supplierId, skuId: (await sku()).id })];
+  const [[keys]] = await h.db.query("SELECT COUNT(*) AS n, SUM(supplier_item_code_key IS NULL) AS nulls FROM supplier_sku_refs WHERE id IN (?, ?)",
+    [first.id, second.id]);
+  assert.deepEqual([Number(keys.n), Number(keys.nulls)], [2, 2]);
+  // 投影更新現有關係時版本要加，咁用戶手上嘅舊版本修改會撞版本，而唔係覆蓋投影。
+  const projected = await projector.recordSupply({ ...base, skuId: first.skuId });
+  assert.equal(projected.relationId, first.id);
+  const [[after]] = await h.db.query("SELECT version FROM supplier_sku_refs WHERE id = ?", [first.id]);
+  assert.equal(Number(after.version), first.version + 1);
+});
+
+integrationTest("TASK-038 (REV-086 L-1): a rerun refuses a case-insensitive code key, a non-binary payload hash and a changed column type", async (t) => {
+  const probes = [];
+  t.after(async () => { for (const probe of probes) await h.db.query(`DROP TABLE IF EXISTS \`${probe}\``); });
+  const like = async (table, alter) => {
+    const probe = `skr_probe_${randomUUID().slice(0, 8)}`;
+    probes.push(probe);
+    await h.db.query(`CREATE TABLE \`${probe}\` LIKE ${table}`);
+    await h.db.query(`ALTER TABLE \`${probe}\` ${alter}`);
+    return probe;
+  };
+  const codeKey = await like("supplier_sku_refs", "MODIFY supplier_item_code_key VARCHAR(190) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL");
+  await assert.rejects(() => inspectSupplierSkuRelationSchema(h.db, "supplier_sku_refs", { as: codeKey }), /collation: supplier_sku_refs\.supplier_item_code_key/u);
+  const hash = await like("supplier_supply_events", "MODIFY payload_hash CHAR(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL");
+  await assert.rejects(() => inspectSupplierSkuRelationSchema(h.db, "supplier_supply_events", { as: hash }), /collation: supplier_supply_events\.payload_hash/u);
+  const widened = await like("supplier_sku_refs", "MODIFY minimum_order_qty BIGINT UNSIGNED NULL");
+  await assert.rejects(() => inspectSupplierSkuRelationSchema(h.db, "supplier_sku_refs", { as: widened }), /schema: supplier_sku_refs\.minimum_order_qty/u);
+  const required = await like("supplier_sku_refs", "MODIFY purchase_sku_uom_id BIGINT UNSIGNED NOT NULL");
+  await assert.rejects(() => inspectSupplierSkuRelationSchema(h.db, "supplier_sku_refs", { as: required }), /schema: supplier_sku_refs\.purchase_sku_uom_id/u);
+});

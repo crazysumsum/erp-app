@@ -283,27 +283,33 @@ export class SupplierRelationService {
    * 回 `{ eventId, relationId, replayed }`。
    */
   async recordSupply(command) {
-    const normalized = supplyCommand(command);
-    const payloadHash = createHash("sha256").update(JSON.stringify(normalized)).digest("hex");
-    // SKU 只用嚟做稽核標籤同確認未刪除：transaction 之前讀（REV-085 H1）；寫入時存唔存在由 FK 保證。
-    const sku = await this.items.findById(normalized.skuId);
-    for (let attempt = 0; ; attempt += 1) {
-      try {
-        return await this.database.withTransaction((connection) => this.#recordSupply(connection, normalized, payloadHash, sku));
-      } catch (error) {
-        // 兩個 transaction 同時寫同一個 event：輸咗嗰個 rollback 之後再讀，就會見到贏咗嗰個嘅結果。Deadlock 嘅訊息唔會
-        // 寫表名，所以唔睇訊息（REV-085 H2）。
-        const code = driverCode(error);
-        if (attempt < 2 && (code === "ER_LOCK_DEADLOCK" || (code === "ER_DUP_ENTRY" && constraintIn(error, "supplier_supply_events")))) continue;
-        const translated = translateWriteError(error);
-        // 投影失敗唔會回滾 Purchasing 已提交嘅 GR：要告警，等 reconciliation 按來源補回（設計 §6.8）。只記 ID 同代碼。
-        void this.logger?.error?.("supplier.sku.supply_failed", "Supplier supply projection failed", {
-          eventId: normalized.eventId, sourceType: normalized.sourceType, sourceId: normalized.sourceId,
-          sourceLineId: normalized.sourceLineId, supplierId: normalized.supplierId, skuId: normalized.skuId,
-          code: translated?.publicCode ?? translated?.code ?? code ?? "unknown"
-        });
-        throw translated;
+    let normalized = null;
+    try {
+      normalized = supplyCommand(command);
+      const payloadHash = createHash("sha256").update(JSON.stringify(normalized)).digest("hex");
+      // SKU 只用嚟做稽核標籤同確認未刪除：transaction 之前讀（REV-085 H1）；寫入時存唔存在由 FK 保證。
+      const sku = await this.items.findById(normalized.skuId);
+      for (let attempt = 0; ; attempt += 1) {
+        try {
+          return await this.database.withTransaction((connection) => this.#recordSupply(connection, normalized, payloadHash, sku));
+        } catch (error) {
+          // 兩個 transaction 同時寫同一個 event：輸咗嗰個 rollback 之後再讀，就會見到贏咗嗰個嘅結果。Deadlock 嘅訊息唔會
+          // 寫表名，所以唔睇訊息（REV-085 H2）。最多試三次（重試兩次）。
+          const code = driverCode(error);
+          if (attempt < 2 && (code === "ER_LOCK_DEADLOCK" || (code === "ER_DUP_ENTRY" && constraintIn(error, "supplier_supply_events")))) continue;
+          throw translateWriteError(error);
+        }
       }
+    } catch (error) {
+      // 投影失敗唔會回滾 Purchasing 已提交嘅 GR：任何失敗（包括指令唔啱、讀 Item 失敗）都要告警，等 reconciliation 按來源
+      // 補回（設計 §6.8；REV-086 Info）。只記 ID 同代碼；指令唔啱時只帶驗證過嘅值。
+      const safe = normalized ?? {};
+      void this.logger?.error?.("supplier.sku.supply_failed", "Supplier supply projection failed", {
+        eventId: safe.eventId ?? null, sourceType: safe.sourceType ?? null, sourceId: safe.sourceId ?? null,
+        sourceLineId: safe.sourceLineId ?? null, supplierId: safe.supplierId ?? null, skuId: safe.skuId ?? null,
+        code: error?.publicCode ?? error?.code ?? driverCode(error) ?? "unknown"
+      });
+      throw error;
     }
   }
 

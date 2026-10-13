@@ -46,3 +46,16 @@ test("TASK-038: relation fields refuse an unknown status and control characters 
       (error) => error.publicCode === "SUPPLIER_SKU_RELATION_INVALID" && error.details?.field === field, field);
   }
 });
+
+test("TASK-038 (REV-086 Info): an invalid command and a failed Item lookup are logged as failed projections too", async () => {
+  logged.length = 0;
+  const invalid = service({ withTransaction: async () => { throw new Error("must not run"); } });
+  await assert.rejects(() => invalid.recordSupply({ ...command, sourceType: "invoice" }));
+  const itemDown = service({ withTransaction: async () => { throw new Error("must not run"); },
+    items: { findById: async () => { throw new Error("item lookup down"); } } });
+  await assert.rejects(() => itemDown.recordSupply(command), /item lookup down/u);
+  assert.deepEqual(logged.map(({ event, context }) => [event, context.eventId, context.code]), [
+    ["supplier.sku.supply_failed", null, "SUPPLIER_SUPPLY_INVALID"],
+    ["supplier.sku.supply_failed", "GR-1", "unknown"]
+  ]);
+});
