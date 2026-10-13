@@ -1,0 +1,114 @@
+{
+  "schema_version": "2.0",
+  "module_id": "item-management",
+  "run_id": "20261013T090558-38c05f510397",
+  "suite_id": "item-client-technical",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "46dd2221fc8f8fe974adc6553d83c3eaefc706e81315b649a55b8331a715410b",
+  "source_fingerprint": "711f09a98d1f59c0362025aff3c0b89647eee4cac2250e833f747ec14e168549",
+  "code_commit": "3832635077ecc32c6a7b9292e2b9e155223008d0",
+  "started_at": "2026-10-13T09:05:58.569198Z",
+  "ended_at": "2026-10-13T09:06:07.619949Z",
+  "environment_id": "item-isolated-test",
+  "runtime_instance_id": "ITEM-SUPPLIER-C-DEVELOPER-20261013-vdXM5l",
+  "data_reference": "Synthetic Item fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "npm",
+    "test",
+    "--workspace",
+    "client",
+    "--",
+    "--reporter=junit",
+    "--outputFile=/Users/sam/.codex/worktrees/item-task043-supplier-guards/erp-app/docs/items_management/evidence/20261013T090558-38c05f510397/item-client-technical.xml"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "3aab64f1e11788965f2bec72865bacc1e9bdbf7d371835270d796ebe600f6c36",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 860,
+    "passed": 860,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [
+    {
+      "id": "TC-011",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-016",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-019",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-022",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-024",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-027",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-028",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-029",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-030",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-070",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-075",
+      "status": "PASS"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "evidence/20261013T090558-38c05f510397/stdout.log",
+      "sha256": "c7c0048ae1eb4952dfc771d2bfb5960cd25b2e61a6273626ca97587bf3dbb561",
+      "bytes": 396
+    },
+    {
+      "path": "evidence/20261013T090558-38c05f510397/stderr.log",
+      "sha256": "0c8319b970480a8bc30cdbe1168e5502c80a94dc2eeb31d812426d8fabc862f7",
+      "bytes": 16898
+    },
+    {
+      "path": "evidence/20261013T090558-38c05f510397/item-client-technical.xml",
+      "sha256": "746b2dc47e82cb4b41e16f84159cbfffbe2adde83902bdb66758342e237d75c5",
+      "bytes": 256881
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "Local observation only; external services/config/data and secret redaction completeness require review."
+  ]
+}

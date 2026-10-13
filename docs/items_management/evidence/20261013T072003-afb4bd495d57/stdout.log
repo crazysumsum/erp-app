@@ -1,0 +1,5 @@
+
+> @erp/client@0.1.0 test
+> vitest run --reporter=junit --outputFile=/Users/sam/.codex/worktrees/item-purchase-lookup-handoff/erp-app/docs/items_management/evidence/20261013T072003-afb4bd495d57/item-client-technical.xml
+
+JUNIT report written to /Users/sam/.codex/worktrees/item-purchase-lookup-handoff/erp-app/docs/items_management/evidence/20261013T072003-afb4bd495d57/item-client-technical.xml
