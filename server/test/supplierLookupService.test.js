@@ -166,3 +166,79 @@ test("unknown purpose, invalid timestamp, missing transaction and unavailable re
     (error) => error.code === "BUSINESS_MASTER_NOT_READY" && error.statusCode === 503
   );
 });
+
+// ---- TASK-040：listForSku（設計 §8.7，HD-094）----
+
+function poolDatabase(responses = []) {
+  const calls = [];
+  return {
+    calls,
+    async withTransaction() { throw new Error("listForSku reads from the pool"); },
+    async query(sql, params = []) {
+      calls.push({ sql, params });
+      return [responses.shift() ?? []];
+    }
+  };
+}
+
+function forSkuRow(overrides = {}) {
+  return { ...supplierRow(), relation_id: null, relationship_status: null, supplier_item_code: null, last_supplied_at: null, exact_rank: 1, ...overrides };
+}
+
+const purchasableItems = (calls = []) => ({
+  async assertUsable(skuId, options) { calls.push({ skuId, options }); return { skuId, usable: true }; }
+});
+
+test("TASK-040: listForSku rejects malformed input and needs an Item lookup", async () => {
+  const service = serviceFor(poolDatabase(), { items: purchasableItems() });
+  for (const [skuId, options] of [[0, {}], ["x", {}], [5, { q: "a".repeat(191) }], [5, { q: "a\u0000" }], [5, { q: 1 }],
+    [5, { page: 0 }], [5, { pageSize: 101 }], [5, { pageSize: 1.5 }], [5, { page: Number.MAX_SAFE_INTEGER, pageSize: 100 }]]) {
+    await assert.rejects(() => service.listForSku(skuId, options), TypeError, JSON.stringify([skuId, options]));
+  }
+  await assert.rejects(() => serviceFor(poolDatabase()).listForSku(5), /requires an Item lookup/u);
+});
+
+test("TASK-040 (HD-094 3A): an SKU that cannot be purchased fails closed before any Supplier query", async () => {
+  const database = poolDatabase();
+  const refused = Object.assign(new Error("SKU 5 is not usable"), { code: "SKU_NOT_USABLE" });
+  const service = serviceFor(database, { items: { async assertUsable() { throw refused; } } });
+  await assert.rejects(() => service.listForSku(5), (error) => error === refused);
+  assert.equal(database.calls.length, 0);
+});
+
+test("TASK-040: listForSku checks the SKU for purchase at the given time and keeps every Active Supplier via LEFT JOIN", async () => {
+  const database = poolDatabase([[{ total: 2 }], [forSkuRow(), forSkuRow({ id: 8, supplier_code: "SUP-008" })]]);
+  const itemCalls = [];
+  const result = await serviceFor(database, { items: purchasableItems(itemCalls) }).listForSku(5, { atMs: 900 });
+
+  assert.deepEqual(itemCalls, [{ skuId: 5, options: { purpose: "purchase", atMs: 900 } }]);
+  const [count, list] = database.calls;
+  assert.match(count.sql, /FROM suppliers s LEFT JOIN supplier_sku_refs r ON r\.supplier_id = s\.id AND r\.sku_id = \?\s+WHERE s\.status = 'active'$/u);
+  assert.deepEqual(count.params, [5]);
+  assert.deepEqual(list.params, [5, 20, 0], "no search: only the SKU, then LIMIT/OFFSET");
+  assert.equal(result.total, 2);
+  assert.deepEqual(result.items[0], {
+    supplierId: 7, supplierCode: "SUP-007", supplierName: "Evergreen Trading", displayName: "Evergreen", defaultCurrencyCode: "HKD",
+    defaultPaymentTermId: 3, status: "active", version: 4, usable: true, reasons: [], rankReason: null, relation: null
+  });
+  assert.equal(JSON.stringify(result).includes("bank"), false);
+});
+
+test("TASK-040 (HD-094 4A): a search matches the Supplier list fields or this SKU's Supplier Item Code, and exact matches rank first", async () => {
+  const database = poolDatabase([[{ total: 0 }], []]);
+  await serviceFor(database, { items: purchasableItems() }).listForSku(5, { q: " ＡＢ-1 ", page: 3, pageSize: 10 });
+  const [count, list] = database.calls;
+  assert.match(count.sql, /general_email LIKE \? ESCAPE '\\\\' OR r\.supplier_item_code_key = \?\)/u);
+  assert.deepEqual(count.params, [5, "ab-1%", "%AB-1%", "%AB-1%", "%AB-1%", "%AB-1%", "ab-1"], "NFKC, trimmed, item code key lower-cased");
+  assert.match(list.sql, /CASE WHEN s\.supplier_code_key = \? OR r\.supplier_item_code_key = \? THEN 0 ELSE 1 END AS exact_rank/u);
+  assert.deepEqual(list.params, ["ab-1", "ab-1", ...count.params, 10, 20]);
+});
+
+test("TASK-040 (HD-094 2A): rankReason follows exact, preferred, recently supplied; stopped never ranks", async () => {
+  const relation = (status, lastSuppliedAt = null, exact = 1) =>
+    forSkuRow({ relation_id: 9, relationship_status: status, supplier_item_code: "AB-1", last_supplied_at: lastSuppliedAt, exact_rank: exact });
+  const rows = [relation("stopped", 500, 0), relation("preferred"), relation("alternative", 400), relation("stopped", 300), relation("alternative")];
+  const result = await serviceFor(poolDatabase([[{ total: 5 }], rows]), { items: purchasableItems() }).listForSku(5);
+  assert.deepEqual(result.items.map((item) => item.rankReason), ["exact_match", "preferred", "recently_supplied", null, null]);
+  assert.deepEqual(result.items[3].relation, { relationId: 9, relationshipStatus: "stopped", supplierItemCode: "AB-1", lastSuppliedAt: 300 });
+});

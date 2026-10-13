@@ -1,4 +1,5 @@
 import { BaseService } from "../../framework/services/BaseService.js";
+import { ItemLookupService } from "../item/ItemLookupService.js";
 import { BusinessMasterLookupProvider } from "./providers/BusinessMasterLookupProvider.js";
 import { SupplierBusinessMasterImpactChecker } from "./SupplierBusinessMasterImpactChecker.js";
 import { SupplierLookupService } from "./SupplierLookupService.js";
@@ -45,12 +46,9 @@ export class SupplierCoreProviderService extends SupplierLookupService {
       provider: businessMasterService.provider,
       readiness: businessMasterService.readiness
     });
-    super({
-      database,
-      logger: services.require("logging").logger,
-      time: services.require("time"),
-      businessMaster
-    });
+    const logger = services.require("logging").logger;
+    const time = services.require("time");
+    super({ database, logger, time, businessMaster, items: new ItemLookupService({ database, logger, time }) });
     this.businessMasterLookup = businessMaster;
   }
 

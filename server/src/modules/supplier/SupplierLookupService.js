@@ -1,4 +1,5 @@
 import { ApplicationError } from "../../framework/errors/ApplicationError.js";
+import { supplierSearchCondition } from "./SupplierAdminService.js";
 import { normalizeSupplierCode } from "./supplierNormalization.js";
 import { supplierConflict, supplierNotFound } from "./supplierErrors.js";
 import { toAddressResponse } from "./supplierProjections.js";
@@ -36,6 +37,23 @@ function lookupOptions(options = {}) {
   return { purpose: options.purpose, atMs };
 }
 
+function forSkuQuery(options = {}) {
+  const { q = "", page = 1, pageSize = 20 } = options ?? {};
+  if (typeof q !== "string" || [...q].length > 190 || /\p{Cc}/u.test(q) || !Number.isSafeInteger(page) || page < 1 ||
+      !Number.isSafeInteger(pageSize) || pageSize < 1 || pageSize > 100 || !Number.isSafeInteger((page - 1) * pageSize)) {
+    throw new TypeError("Supplier for-SKU query is invalid");
+  }
+  return { search: q.normalize("NFKC").trim(), page, pageSize };
+}
+
+/** 設計 §8.7 嘅排序：exact → preferred → 最近供貨 → 名稱、ID。stopped 唔排前（HD-094 2A）。 */
+function rankReason(row) {
+  if (Number(row.exact_rank) === 0) return "exact_match";
+  if (row.relationship_status === "preferred") return "preferred";
+  if (row.relationship_status !== "stopped" && row.last_supplied_at !== null) return "recently_supplied";
+  return null;
+}
+
 function providerNotReady() {
   return new ApplicationError("Business Master provider is unavailable for Supplier purchase defaults", {
     code: "BUSINESS_MASTER_NOT_READY",
@@ -70,7 +88,7 @@ function toProjection(row, { purpose }) {
 export class SupplierLookupService {
   static contract = "supplier-core-provider/v1";
 
-  constructor({ database, logger, time, businessMaster = null } = {}) {
+  constructor({ database, logger, time, businessMaster = null, items = null } = {}) {
     if (!database || typeof database.withTransaction !== "function") {
       throw new TypeError("SupplierLookupService requires a transactional database");
     }
@@ -79,6 +97,7 @@ export class SupplierLookupService {
     this.logger = logger;
     this.time = time;
     this.businessMaster = businessMaster;
+    this.items = items;
   }
 
   async findById(supplierId, options) {
@@ -156,6 +175,60 @@ export class SupplierLookupService {
       currency: references.currency,
       paymentTerm: references.paymentTerm,
       orderingAddress
+    };
+  }
+
+  /**
+   * 採購揀 Supplier 用：全部 Active Supplier（LEFT JOIN，冇 relation 都照出），relation 只影響排序同 `rankReason`。
+   * SKU 唔可以採購就 fail closed（HD-094 3A）。呢度唔授權，呼叫方要先授權；提交時仍要
+   * `assertUsableInTransaction()` 重驗（BR-032）。
+   */
+  async listForSku(skuId, options = {}) {
+    const id = requireSupplierId(skuId);
+    const { search, page, pageSize } = forSkuQuery(options);
+    if (!this.items) throw new TypeError("SupplierLookupService.listForSku requires an Item lookup service");
+    await this.items.assertUsable(id, { purpose: "purchase", atMs: options.atMs ?? this.time.nowMs() });
+
+    const conditions = ["s.status = 'active'"];
+    const params = [];
+    let exact = "1";
+    const exactParams = [];
+    if (search) {
+      const key = search.toLowerCase();
+      const condition = supplierSearchCondition(search);
+      conditions.push(`(${condition.sql} OR r.supplier_item_code_key = ?)`);
+      params.push(...condition.params, key);
+      exact = "CASE WHEN s.supplier_code_key = ? OR r.supplier_item_code_key = ? THEN 0 ELSE 1 END";
+      exactParams.push(key, key);
+    }
+    // (supplier_id, sku_id) 唯一，LEFT JOIN 每個 Supplier 最多一行，count 唔會重複。
+    const from = `FROM suppliers s LEFT JOIN supplier_sku_refs r ON r.supplier_id = s.id AND r.sku_id = ?
+      WHERE ${conditions.join(" AND ")}`;
+    const [[{ total }]] = await this.database.query(`SELECT COUNT(*) AS total ${from}`, [id, ...params]);
+    const [rows] = await this.database.query(
+      `SELECT s.id, s.supplier_code, s.supplier_name, s.display_name, s.default_currency_code, s.default_payment_term_id,
+              s.status, s.version, r.id AS relation_id, r.relationship_status, r.supplier_item_code, r.last_supplied_at,
+              ${exact} AS exact_rank
+         ${from}
+        ORDER BY exact_rank, r.relationship_status = 'preferred' DESC,
+                 CASE WHEN r.relationship_status <> 'stopped' THEN r.last_supplied_at END DESC, s.supplier_name, s.id
+        LIMIT ? OFFSET ?`,
+      [...exactParams, id, ...params, pageSize, (page - 1) * pageSize]
+    );
+    return {
+      items: rows.map((row) => ({
+        ...toProjection(row, { purpose: "purchase" }),
+        rankReason: rankReason(row),
+        relation: row.relation_id === null ? null : {
+          relationId: Number(row.relation_id),
+          relationshipStatus: row.relationship_status,
+          supplierItemCode: row.supplier_item_code,
+          lastSuppliedAt: row.last_supplied_at === null ? null : Number(row.last_supplied_at)
+        }
+      })),
+      total: Number(total),
+      page,
+      pageSize
     };
   }
 
