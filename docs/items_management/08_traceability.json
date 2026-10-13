@@ -1622,7 +1622,8 @@
       ],
       "depends_on": [
         "PHASE-005",
-        "PHASE-007"
+        "PHASE-007",
+        "PHASE-009"
       ],
       "branch_strategy": "DEFAULT",
       "parent_commit": null,
@@ -1701,6 +1702,41 @@
       "parent_commit": null,
       "exception_approval_id": null,
       "merge_group": "item-purchase-provider-handoff",
+      "developer_suites": [
+        "lint",
+        "client-build",
+        "item-server-technical",
+        "item-client-technical"
+      ]
+    },
+    {
+      "id": "PHASE-009",
+      "requirement_ids": [
+        "FR-030",
+        "FR-031",
+        "FR-034",
+        "FR-037",
+        "FR-038",
+        "FR-043",
+        "SEC-008",
+        "NFR-006"
+      ],
+      "design_ids": [
+        "DES-003",
+        "DES-012",
+        "DES-020"
+      ],
+      "task_ids": [
+        "TASK-047"
+      ],
+      "depends_on": [
+        "PHASE-007",
+        "PHASE-008"
+      ],
+      "branch_strategy": "DEFAULT",
+      "parent_commit": null,
+      "exception_approval_id": null,
+      "merge_group": "item-supplier-reference-c-subset",
       "developer_suites": [
         "lint",
         "client-build",
@@ -3180,7 +3216,8 @@
         "DES-016"
       ],
       "depends_on": [
-        "TASK-045"
+        "TASK-045",
+        "TASK-047"
       ],
       "technical_test_ids": [
         "TC-004",
@@ -3276,6 +3313,33 @@
       "technical_test_ids": [
         "TC-017",
         "TC-018"
+      ]
+    },
+    {
+      "id": "TASK-047",
+      "phase_id": "PHASE-009",
+      "requirement_ids": [
+        "FR-030",
+        "FR-031",
+        "FR-034",
+        "FR-037",
+        "FR-038",
+        "FR-043",
+        "SEC-008",
+        "NFR-006"
+      ],
+      "design_ids": [
+        "DES-003",
+        "DES-012",
+        "DES-020"
+      ],
+      "depends_on": [
+        "TASK-045",
+        "TASK-046"
+      ],
+      "technical_test_ids": [
+        "TC-004",
+        "TC-005"
       ]
     }
   ],
@@ -3421,7 +3485,8 @@
         "TASK-016",
         "TASK-017",
         "TASK-043",
-        "TASK-045"
+        "TASK-045",
+        "TASK-047"
       ],
       "mandatory": true,
       "blocking": true,
@@ -3458,7 +3523,8 @@
         "TASK-040",
         "TASK-043",
         "TASK-033",
-        "TASK-045"
+        "TASK-045",
+        "TASK-047"
       ],
       "mandatory": true,
       "blocking": true,
