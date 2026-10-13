@@ -147,3 +147,13 @@ test("TC-034 consecutive groups flush before noncontiguous returns without losin
   else {assert.equal(source.errors.length,0);assert.equal(source.payload.lines[0].quantity,"0.600000");assert.deepEqual(source.payload.lines[0].rowNumbers,[2,3,5]);}
  }
 });
+
+test("TC-034 identifier controls invalidate only their source while multiline free text remains exact",async t=>{
+  for(const field of ["externalOrderId","warehouseCode","paymentTermCode","skuCode","salesUomCode"])for(const control of ["\t","\r","\n"]){
+    const rows=[{...row,[field]:"bad"+control+"code"},{...row,sourceOrderKey:"Peer",externalOrderId:"Peer",customerPoReference:"PO\tref\r\nnext",orderNotes:"notes\tvalue\r\nnext",lineNote:"line\tvalue\r\nnext"}];
+    const {orders}=await read(t,Buffer.from(stringify([names,...rows.map(value=>names.map(name=>value[name]))],{quoted:true,record_delimiter:"\r\n"})));
+    const invalid=orders.find(order=>order.sourceOrderKey===row.sourceOrderKey),peer=orders.find(order=>order.sourceOrderKey==="Peer");
+    assert.deepEqual(invalid.errors,[{rowNo:2,field,code:"SALES_IMPORT_ORDER_INVALID"}]);assert.equal(peer.errors.length,0);
+    assert.equal(peer.payload.customerPoReference,"PO\tref\r\nnext");assert.equal(peer.payload.notes,"notes\tvalue\r\nnext");assert.equal(peer.payload.lines[0].lineNote,"line\tvalue\r\nnext");
+  }
+});
