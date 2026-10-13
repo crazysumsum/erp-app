@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { InventoryReservationService } from "../inventory/InventoryReservationService.js";
 import { inventoryOperationHash } from "../inventory/InventoryOperationService.js";
-import { SalesOrderService, readSalesOrderDetail } from "./SalesOrderService.js";
+import { SalesOrderService, lockSalesOrderLines, readSalesOrderDetail } from "./SalesOrderService.js";
 import { SalesFulfillmentGuardService } from "./SalesFulfillmentGuardService.js";
 import { requireSalesWriteActor } from "./salesAuthorization.js";
 import { transitionSalesOrder } from "./salesOrderStateMachine.js";
@@ -52,10 +52,10 @@ export class SalesOrderLifecycleService {
       const actor = await requireSalesWriteActor(tx,claims), nowMs = this.time.nowMs(), { eventId,...payload } = input;
       const claim = await this.order.operations.claim(tx,{ eventId,commandType: `${action}_ORDER`,targetId: id,payload,actor,nowMs,...trace });
       if (claim.replay) return { salesOrder: await readSalesOrderDetail(tx,id,{ lock: true }),operation: claim.replay };
-      const [[header]] = await tx.query("SELECT status,version FROM sales_orders WHERE id=? FOR UPDATE",[id]);
+      const [[header]] = await tx.query("SELECT status,version,line_count FROM sales_orders WHERE id=? FOR UPDATE",[id]);
       if (!header) throw salesError("SALES_ORDER_NOT_FOUND");
       if (Number(header.version) !== input.version) throw salesError("VERSION_CONFLICT",{ currentVersion: Number(header.version) });
-      await tx.query("SELECT id FROM sales_order_lines WHERE sales_order_id=? ORDER BY id FOR UPDATE",[id]);
+      await lockSalesOrderLines(tx,id,header.line_count);
       const order = await readSalesOrderDetail(tx,id);
       // The read view opened at the actor read, before the Order lock. Every writer of this Order's lines, mappings and queue bumps
       // the version under that lock, so an equal snapshot version proves the plain reads below see this Order's current rows.
