@@ -1,0 +1,7 @@
+hot, no q, page 1      total  80053 p50 184 p95 219 max 259 ms
+hot, no q, page 200    total  80053 p50 196 p95 212 max 213 ms
+hot, exact code        total      1 p50 293 p95 319 max 325 ms
+hot, item code         total      1 p50 283 p95 365 max 372 ms
+hot, name word         total   2207 p50 300 p95 354 max 366 ms
+cold, no q             total  80053 p50 164 p95 167 max 172 ms
+50 users think 0-1s    n 735 errors 0 p50 3587 p95 4153 p99 4464 max 4826 ms

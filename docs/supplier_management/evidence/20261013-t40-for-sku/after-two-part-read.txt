@@ -1,0 +1,9 @@
+typical, no q, page 1  total  80053 p50 6 p95 6 max 6 ms
+typical, no q, page 50 total  80053 p50 7 p95 7 max 7 ms
+typical, exact code    total      1 p50 79 p95 82 max 83 ms
+typical, name word     total   2207 p50 77 p95 82 max 85 ms
+hot, no q, page 1      total  80053 p50 61 p95 68 max 68 ms
+hot, exact code        total      1 p50 133 p95 135 max 138 ms
+hot, item code         total      1 p50 130 p95 134 max 136 ms
+cold, no q             total  80053 p50 6 p95 6 max 6 ms
+50 users think 0-1s    n 2938 errors 0 p50 517 p95 1097 p99 1208 max 1336 ms

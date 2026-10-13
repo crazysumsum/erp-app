@@ -1,0 +1,22 @@
+const W = "<worktree>";
+const LIMIT = Number(process.argv[2]);
+const mysql = (await import(`${W}/node_modules/mysql2/promise.js`)).default;
+const { SupplierLookupService } = await import(`${W}/server/src/modules/supplier/SupplierLookupService.js`);
+const { ItemLookupService } = await import(`${W}/server/src/modules/item/ItemLookupService.js`);
+const pool = mysql.createPool({ host: "127.0.0.1", port: 3450, user: process.env.DB_USER, password: process.env.DB_PASSWORD, database: "erp_dev", connectionLimit: LIMIT });
+const database = { query: (s, p) => pool.query(s, p), withTransaction: async (w) => { const c = await pool.getConnection(); try { return await w(c); } finally { c.release(); } } };
+const time = { nowMs: () => Date.now() }, logger = { info() {}, warn() {}, error() {} };
+const svc = new SupplierLookupService({ database, logger, time, items: new ItemLookupService({ database, logger, time }) });
+const [[{ code }]] = await pool.query("SELECT supplier_code AS code FROM suppliers WHERE status='active' AND id % 5 = 0 ORDER BY id DESC LIMIT 1");
+// the case set of before-single-query.txt (hot SKU only, plus cold)
+const mix = [[1, {}], [1, { page: 200 }], [1, { q: code }], [1, { q: "SIC-50000" }], [1, { q: "Trading" }], [2, {}]];
+const pct = (a, p) => a[Math.min(a.length - 1, Math.ceil(p / 100 * a.length) - 1)];
+const t = []; let errors = 0;
+const start = performance.now(), warm = 20_000, end = warm + 60_000;
+await Promise.all(Array.from({ length: 50 }, async (_, u) => { let i = u;
+  while (performance.now() - start < end) { const [sku, o] = mix[i++ % mix.length]; const s = performance.now();
+    try { await svc.listForSku(sku, o); } catch { errors++; }
+    if (s - start >= warm) t.push(performance.now() - s);
+    await new Promise((r) => setTimeout(r, Math.floor(Math.random() * 1001))); } }));
+t.sort((a, b) => a - b); console.log("pool", LIMIT, "n", t.length, "errors", errors, "p50", pct(t, 50).toFixed(0), "p95", pct(t, 95).toFixed(0), "p99", pct(t, 99).toFixed(0), "max", t.at(-1).toFixed(0), "ms");
+await pool.end();

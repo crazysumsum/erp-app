@@ -1,19 +1,19 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 316,
+  "revision": 318,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-004",
-  "current_task": "TASK-038",
+  "current_task": "TASK-040",
   "baseline": {
     "design": "f2f4a82b76b40a6ddd214263023aa4b7383facdce30d33348cfd1d16dcdfe6ab",
     "plan": "b5724a2fbaa17f3f592b81e7258fb36d13c8ba2480dae8e10a40bc0713510287",
     "code_commit": "6ab2fb045433726d5442022e57d1bed1b25de2f8",
     "source_fingerprint": "b381f54b6ba1b3c3218b371d10b02655b7084d247e5a378a0e6e0a9c70e71758",
-    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t38-close",
+    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t40",
     "default_commit": "6ab2fb045433726d5442022e57d1bed1b25de2f8",
     "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
   },
@@ -67,7 +67,7 @@
     "TASK-037": "DONE",
     "TASK-038": "DONE",
     "TASK-039": "BLOCKED",
-    "TASK-040": "PENDING",
+    "TASK-040": "IN_PROGRESS",
     "TASK-041": "DONE",
     "TASK-042": "DONE",
     "TASK-043": "DONE",
@@ -2005,6 +2005,18 @@
       "reviewed_baseline": "f2f4a82b76b40a6ddd214263023aa4b7383facdce30d33348cfd1d16dcdfe6ab",
       "source_ref": "docs/supplier_management/implementation/89_rev_086_independent_review.md",
       "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-087",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-040)",
+      "reviewer": "agent-skills:code-reviewer, independent of the author, reviewing 3216bb8e10b7ba5eb9f517a90dea6b47e17f7d63 (PR #211)",
+      "reviewed_baseline": "f2f4a82b76b40a6ddd214263023aa4b7383facdce30d33348cfd1d16dcdfe6ab",
+      "source_ref": "docs/supplier_management/implementation/90_rev_087_independent_review.md",
+      "status": "CHANGES_REQUESTED",
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
@@ -5046,6 +5058,46 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-13: 'A'. Request: docs/supplier_management/item_handoff_purchase_lookup.md; corrects item_handoff_supplier_sku_refs.md §5."
+    },
+    {
+      "id": "HD-094",
+      "impact": "MAJOR",
+      "question": "TASK-040 for-SKU lookup, four points the design leaves open: (1) HTTP permission while Purchasing has none (A supplier.view; B service only; C new purchase.* permission); (2) whether a stopped relation ranks by history (A no; B yes); (3) an SKU that cannot be purchased (A fail closed with Item's SKU_NOT_FOUND/SKU_NOT_USABLE; B list anyway); (4) what q matches (A the Supplier list text search plus an exact Supplier Item Code for this SKU, exact Code or Item Code first; B Supplier code and name only).",
+      "affected_ids": [
+        "TASK-040",
+        "FR-LIST-008",
+        "FR-SKU-001",
+        "FR-SKU-002",
+        "BR-023",
+        "BR-024"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-13: '全部按建議' (1A, 2A, 3A, 4A)."
+    },
+    {
+      "id": "HD-095",
+      "impact": "MAJOR",
+      "question": "The single LEFT JOIN + sort over all 80,053 Active Suppliers gave p95 4.2 s with 50 users doing only for-SKU lookups (target 2 s). (A) keep it and judge in T50's mixed load; (B) two-part read (ranked head through the relation index, the rest through idx_suppliers_name_id), no schema change; (C) B plus an index on suppliers(status, supplier_name, id).",
+      "affected_ids": [
+        "TASK-040",
+        "NFR-005",
+        "SKU-008"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-13: 'B'. Result: p95 1,097 ms on the same worst case; evidence/20261013-t40-for-sku/. Correction (REV-087 M-1): that 1,097 ms run used a cheaper case mix and a pool of 20, so it was not the same worst case. Like-for-like (REV-087, in-process, hot-SKU mix): 1,423 ms with pool 20, 1,633 ms with the production pool of 10; HTTP not measured (TASK-050)."
+    },
+    {
+      "id": "HD-096",
+      "impact": "MINOR",
+      "question": "REV-087 CHANGES_REQUESTED PR #211 (0 Critical/High): M-1 performance claim not like-for-like; M-2 head tie-breaks untested; L-1..L-4 and I-1..I-7. Fix all as recommended (docs corrected to the like-for-like figures; tie, rest-exclusion and control-character tests; 400 for control characters; de-duplicate by Supplier ID; mutation list in evidence), then re-review or merge when CI passes?",
+      "affected_ids": [
+        "TASK-040",
+        "REV-087",
+        "NFR-005",
+        "SKU-002"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-13: '全部按建議，唔使再 review，CI 過就 merge'."
     }
   ],
   "external_actions": [
@@ -6122,5 +6174,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-039 BLOCKED on Item (HD-093: searchForPurchase and skuUomId/uomName/status in the purchase projection, then a pin refresh). Next: TASK-040 (for-SKU lookup) — read its spec, confirm it does not depend on HD-093, and explain any schema/API change before writing it."
+  "next_safe_action": "TASK-040: REV-087 follow-ups done (HD-096). Full suite, push PR #211; merge when CI is green and main is unchanged (no re-review). Then: TASK-050's for-SKU run over HTTP at the production pool (incl. hot-SKU name search and deep pages). TASK-039 waits on Item (HD-093)."
 }
