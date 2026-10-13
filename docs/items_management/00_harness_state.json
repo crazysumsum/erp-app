@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "item-management",
-  "revision": 98,
+  "revision": 102,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,23 +11,23 @@
   "baseline": {
     "design": "f7431c0934377f3331fd0a537e236eca8044df41f359d36202153803c4aca315",
     "plan": "d6db1f524df15257eca36eb0d4117efe8f20352a07e931b6511df7d8795e5de4",
-    "code_commit": "a71f348879bb04df38cdeda4348d9031ec10d7f3",
-    "source_fingerprint": "6cc076db5605b0ea5abcce7e2b9f24ee6967a151e1a732c674e3082b771565b6",
+    "code_commit": "34207893f0c543cfb7a82857a50736c6e80c4974",
+    "source_fingerprint": "726268dd250d995748d8487522c1193bec75cd7f8045f0ceeca4d02bf5de95e2",
     "worktree": "/Users/sam/.codex/worktrees/item-purchase-lookup-handoff/erp-app",
     "default_commit": "a71f348879bb04df38cdeda4348d9031ec10d7f3",
     "mode_entry_commit": "a71f348879bb04df38cdeda4348d9031ec10d7f3"
   },
   "runtime": {
-    "instance_id": "ITEM-PURCHASE-HANDOFF-PLANNING-20261013",
+    "instance_id": "ITEM-PURCHASE-DEVELOPER-20261013-4wDOc0",
     "owner": "Primary Item module agent",
     "resources": {
-      "workspace": "/Users/sam/.codex/worktrees/item-purchase-lookup-handoff/erp-app",
-      "mysql-schema": "NOT_PROVISIONED: no runtime or schema execution during planning",
-      "media-root": "NOT_PROVISIONED: no product/test runtime",
-      "import-root": "NOT_PROVISIONED: no product/test runtime",
-      "web-port": "NOT_RESERVED: backend-only planning, no browser/server executed"
+      "workspace": "/Users/sam/.codex/worktrees/item-purchase-lookup-handoff/erp-app; task-owned npmci--offline lockeddependencies429 installed, no source/lock changes",
+      "mysql-schema": "erp_item_purchase_20261013 on private socket /private/tmp/erp-item-purchase-mysql.4wDOc0/mysql.sock; TCP/MySQLX disabled, root empty synthetic fixture only",
+      "media-root": "/Users/sam/.codex/worktrees/item-purchase-lookup-handoff/erp-app/server/storage/media; isolated test-owned roots",
+      "import-root": "/Users/sam/.codex/worktrees/item-purchase-lookup-handoff/erp-app/server/storage/imports; isolated test-owned roots",
+      "web-port": "No frontend scope; direct integration apps bind ephemeral port0, no shared3000/4173server"
     },
-    "lease_ref": "Actual new managedworktree froma71fmain; no DB/media/import/web lease acquired. HistoricalItemprivateMySQLstopped perPR198closeout, not reused."
+    "lease_ref": "Actual private mysqld exec62728, newinitialized4wDOc0 datadir, mysqladminpingalive. No sharedMySQL/userpassword or historicaldatadir modification."
   },
   "tasks": {
     "TASK-001": "DONE",
@@ -1304,6 +1304,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-033",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/item_supplier_handoff_review",
+      "reviewed_baseline": "726268dd250d995748d8487522c1193bec75cd7f8045f0ceeca4d02bf5de95e2",
+      "source_ref": "Actualsource726finalAPPROVED2026-10-13; noactionablefindings, independentItem/Supplier/Inventory/SalesnonDB72/72PASS0skips. Reviewedactualpurchase-onlymetadata/mastermappingIDs,purchase+activeUOMsearchonly,prefix/bounds/sharedcountpage/3queries/advisoryrace/noSupplierchanges. Notformal/exactcandidateaudit.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -2355,6 +2367,46 @@
       "idempotency_key": "mode-change-98",
       "status": "CONFIRMED",
       "source_ref": "ActualSam asyncreply2026-10-13 approves exactDESf7431c09/PLANd6db1f52 and進入IMPLEMENT PHASE008/TASK046; newa71fmainworktree authorized."
+    },
+    {
+      "id": "ITEM-PURCHASE-PUSH-118",
+      "kind": "PUSH",
+      "target": "origin/codex/item-purchase-lookup-handoff",
+      "idempotency_key": "item-purchase-handoff-planning-push-20261013",
+      "status": "CONFIRMED",
+      "source_ref": "Actual planningcommit34207893 pushedandupstreamcreated. Proposedcheckpoint99wasrejectedbecausepreparedmemoryomittedautoMODE98; stateunchanged. Re-readactualCAS98 preservingautoMODE98/allhistory beforethisreconciliation; not tool/gate relaxation."
+    },
+    {
+      "id": "ITEM-PURCHASE-PR-119",
+      "kind": "PR_CREATE",
+      "target": "codex/item-purchase-lookup-handoff -> main",
+      "idempotency_key": "item-purchase-handoff-draft-pr-20261013",
+      "status": "CONFIRMED",
+      "source_ref": "Actual ghcreatePR210 DRAFT https://github.com/crazysumsum/erp-app/pull/210 andattached. Planningcandidate34207893, notimplementationCI/formalacceptance; no newmergeauthority."
+    },
+    {
+      "id": "ITEM-PURCHASE-MIGRATION-120",
+      "kind": "MIGRATION",
+      "target": "Existing repository migrations in new private schema erp_item_purchase_20261013 socket4wDOc0",
+      "idempotency_key": "item-purchase-4wDOc0-existingmigrations-20261013",
+      "status": "CONFIRMED",
+      "source_ref": "Actual existingmigrate applied allcurrentmigrations through0081 successfully in task-owned erp_item_purchase_20261013/private4wDOc0 socket. No migrationfile/sharedschema/Supplierproducts edited."
+    },
+    {
+      "id": "ITEM-PURCHASE-PUSH-121",
+      "kind": "PUSH",
+      "target": "PR210 implementation candidate origin/codex/item-purchase-lookup-handoff",
+      "idempotency_key": "item-purchase-provider-source726-push-20261013",
+      "status": "PLANNED",
+      "source_ref": "ActualSam approvedDES/PLAN+IMPLEMENT, developer4checksPASS509/860/lint/build, realMySQL14PASS, unit49PASS, sourceREV033approved72compatibilityPASS. Freezecode3files+report+trackedcheckpoint only; no rawexport. Fresha71 unchanged."
+    },
+    {
+      "id": "ITEM-PURCHASE-OLD-WT-122",
+      "kind": "CLEANUP",
+      "target": "Unused managed /Users/sam/.codex/worktrees/item-purchase-provider/erp-app and empty localbranch codex/item-purchase-provider",
+      "idempotency_key": "item-purchase-oldempty-worktree-archive-20261013",
+      "status": "CONFIRMED",
+      "source_ref": "Actualoldworktreeclean,no uniquecommits; app archivequeued thenobservedabsent fromgitinventory/path; nonforcebranch-d success6b7fcontainedmain. Recoverableappsnapshot; othermodules untouched."
     }
   ],
   "evidence_files": [
@@ -2516,5 +2568,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "ActualSamAPR048/049 approvesnewDESf743/PLANd6db andenterIMPLEMENT. TASK046IN_PROGRESS; freezeplanningdocsintoGit/PR thenTDD unit+realMySQL Itemlookup only, 4developer checks/exactCI+review; noSupplierwrites/endpoint/migration/barcode/searchlock. Mergeauthority/rawexport/formalUAT remain separate. OldTASK045DONE observedPR198;TASK043IN_PROGRESS."
+  "next_safe_action": "Currentsource726 developer4checksPASS509/860/lint/build, fullMySQLlookup14PASS, TDDunit49PASS, mutationcaught6!=5/restoredexact, independentsourceREV033APPROVED72compatPASS. CommitonlyItemsource/test/report/checkpoint(notraw), pushPR210 candidate thenactualexactreview+fiveCI. KeepTASK046IN_PROGRESS untilscopedDoD; no mergeauthority/rawexport/formalUAT/TASK043closure."
 }
