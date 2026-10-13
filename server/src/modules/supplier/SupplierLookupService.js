@@ -228,7 +228,7 @@ export class SupplierLookupService {
     const [head] = offset < Number(headTotal)
       ? await this.database.query(
         `SELECT ${FOR_SKU_COLUMNS}, ${exact} AS exact_rank ${headFrom}
-          ORDER BY exact_rank, r.relationship_status = 'preferred' DESC,
+          ORDER BY exact_rank, (r.relationship_status <=> 'preferred') DESC,
                    CASE WHEN r.relationship_status <> 'stopped' THEN r.last_supplied_at END DESC, s.supplier_name, s.id
           LIMIT ? OFFSET ?`,
         [...(search ? [key, key] : []), ...headParams, pageSize, offset])

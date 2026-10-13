@@ -238,3 +238,18 @@ integrationTest("TASK-040 (HD-095 B): the two-part read pages exactly like one L
     assert.equal((await lookup().listForSku(skuId, { q })).total, expected.length);
   }
 });
+
+integrationTest("TASK-040 (HD-094 2A): among exact matches a stopped relation still does not rank by history, and other SKUs' relations never leak in", async () => {
+  const prefix = `SKX${randomUUID().slice(0, 8)}`;
+  const [skuId, otherSku] = [await sku(), await sku()];
+  const byCode = await supplier({ code: prefix, name: `${prefix} Alpha` });
+  const byItemCode = await supplier({ code: `${prefix}-1`, name: `${prefix} Bravo` });
+  await relation(byItemCode, skuId, { status: "stopped", lastSuppliedAt: 5_000, itemCode: prefix });
+  await relation(byCode, otherSku, { status: "preferred", lastSuppliedAt: 6_000 });
+
+  const result = await lookup().listForSku(skuId, { q: prefix });
+  assert.deepEqual(result.items.map((item) => [item.supplierId, item.rankReason]), [[byCode, "exact_match"], [byItemCode, "exact_match"]],
+    "both exact; then by name, not by the stopped relation's history");
+  assert.equal(result.items[0].relation, null, "byCode's relation is for another SKU");
+  assert.equal(result.items[1].relation.relationshipStatus, "stopped");
+});
