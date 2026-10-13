@@ -115,6 +115,17 @@ async function openDetail(page) {
   await expect(page.getByRole("table", { name: "提交時快照與目前資料比較" })).toBeVisible();
 }
 
+/** 貨幣選項未載入完就撳，Quasar 唔會開選單，選項到咗之後亦唔會自己開（CI 試過等 30 秒都冇選項）。
+ * 所以未見到選項就再撳一次，直到選單打開為止。 */
+async function pickFirstCurrency(page) {
+  const option = page.getByRole("option").first();
+  await expect(async () => {
+    if (!(await option.isVisible())) await page.getByLabel("Default Currency *").first().click();
+    await expect(option).toBeVisible({ timeout: 1000 });
+  }).toPass();
+  await option.click();
+}
+
 /** DEF-018：Enter 喺輸入欄唔會提交，所以行 Tab 去確認掣。 */
 async function confirmByKeyboard(page, okLabel, { reason } = {}) {
   const dialog = page.locator(".q-dialog");
@@ -275,8 +286,7 @@ test("@technical the create page offers an approver only when the policy is on, 
 
   await page.getByLabel("Supplier Code *").fill("SUP-900");
   await page.getByLabel("Supplier Name *").fill("Keyboard Trading");
-  await page.getByLabel("Default Currency *").first().click();
-  await page.getByRole("option").first().click();
+  await pickFirstCurrency(page);
 
   await page.getByLabel("審批人", { exact: true }).click();
   await page.getByRole("option", { name: /Other/u }).click();
@@ -298,8 +308,7 @@ test("@technical with the policy off the create page shows no selector and sends
 
   await page.getByLabel("Supplier Code *").fill("SUP-901");
   await page.getByLabel("Supplier Name *").fill("No Approval Trading");
-  await page.getByLabel("Default Currency *").first().click();
-  await page.getByRole("option").first().click();
+  await pickFirstCurrency(page);
   await page.getByRole("button", { name: /直接啟用/u }).click();
   await expect(page.getByText("已建立")).toBeVisible();
 
