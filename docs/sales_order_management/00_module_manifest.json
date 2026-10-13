@@ -326,9 +326,9 @@
       {
         "module_id": "item-management",
         "id": "item-lookup-service",
-        "version": "observed-main-dd36250-PARTIAL-SALES-CONTRACT-NOT_IMPLEMENTED; TASK009-010 source pins reconciled, Sales additions CI pending",
+        "version": "integrated-main-c143f3b1-Item-reference-guards; compatible Sales consumption pending original33/currentCI",
         "source": "server/src/modules/item/ItemLookupService.js",
-        "sha256": "d4641ec09b5f6d5194f17fb54b8cc10c338ea9c202c6f9793f01eb6e64674b31",
+        "sha256": "e76a4f476673ae716fa6ebfbfb507655fad43ae5eb08d3e64ed36b6b9a5ae1cd",
         "regression_suites": [
           "sales-technical"
         ]
