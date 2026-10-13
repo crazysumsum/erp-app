@@ -99,7 +99,7 @@
         "id": "item-sku-uom-provider",
         "version": "aligned-design-v2",
         "source": "docs/items_management/03_design_spec.md",
-        "sha256": "5c193e20a3e7fec1cd02f3ea76969d616af74a62cde599eac6202c468d8e8ecd",
+        "sha256": "5a44ef30d5b3fab23d5f780005a0fd90ff70d4be56a31a48e69a5bf028a011a9",
         "regression_suites": [
           "supplier-server-integration"
         ]
