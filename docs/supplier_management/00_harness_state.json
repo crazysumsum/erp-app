@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 314,
+  "revision": 315,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "f2f4a82b76b40a6ddd214263023aa4b7383facdce30d33348cfd1d16dcdfe6ab",
     "plan": "b5724a2fbaa17f3f592b81e7258fb36d13c8ba2480dae8e10a40bc0713510287",
-    "code_commit": "a2715077871ffa8289193d6482df6add6b363bd7",
-    "source_fingerprint": "7664683db568898d9d1e1751e9a0fff1ef29d7f7e58d915483cf9681ad056146",
-    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t38",
-    "default_commit": "a2715077871ffa8289193d6482df6add6b363bd7",
+    "code_commit": "6ab2fb045433726d5442022e57d1bed1b25de2f8",
+    "source_fingerprint": "b381f54b6ba1b3c3218b371d10b02655b7084d247e5a378a0e6e0a9c70e71758",
+    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t38-close",
+    "default_commit": "6ab2fb045433726d5442022e57d1bed1b25de2f8",
     "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
   },
   "runtime": {
@@ -65,7 +65,7 @@
     "TASK-035": "DONE",
     "TASK-036": "DONE",
     "TASK-037": "DONE",
-    "TASK-038": "IN_PROGRESS",
+    "TASK-038": "DONE",
     "TASK-039": "PENDING",
     "TASK-040": "PENDING",
     "TASK-041": "DONE",
@@ -3814,6 +3814,17 @@
       "source_ref": "PR #165 merged as 5b8aa9bbcf5217ab3a30f722ff241d167fa402f6 on the Product Owner's word, after head 1f86002's CI run 36541458758 was green on all five checks and origin/main was unchanged at e36f0de. Main CI run 36543582766 green on the merge commit. Reviews: REV-061 and REV-062 CHANGES_REQUESTED, REV-063 APPROVED (post-approval fixes recorded at revision 255, not re-reviewed). source_fingerprint computed with harness_core.fingerprint on a clean worktree at the merge commit.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-09-29T08:45:08Z"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "TASK-038 merged to main",
+      "code_commit": "6ab2fb045433726d5442022e57d1bed1b25de2f8",
+      "spec_baseline": "b5724a2fbaa17f3f592b81e7258fb36d13c8ba2480dae8e10a40bc0713510287",
+      "source_fingerprint": "b381f54b6ba1b3c3218b371d10b02655b7084d247e5a378a0e6e0a9c70e71758",
+      "status": "PASS",
+      "source_ref": "PR #201 merged as 6ab2fb045433726d5442022e57d1bed1b25de2f8 on the Product Owner's word (HD-091 'A', HD-092 'A，CI過就merge'), with --match-head-commit, after head 33ab754's CI run 38333279374 was green on all five checks and origin/main was unchanged at c143f3b1. Head 33ab754 merged main c143f3b1 (PR #198) into da5244e3, whose run 38331651664 was also green. Reviews: REV-085 CHANGES_REQUESTED, REV-086 APPROVED; HD-091 follow-ups not re-reviewed by decision. Main CI run 38336570916 on the merge commit was pending when this was recorded and is not claimed here. source_fingerprint computed with harness_core.fingerprint on a clean worktree at the merge commit.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-13T00:00:00+08:00"
     }
   ],
   "pending_decisions": [
@@ -5011,6 +5022,17 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-13: 'A'."
+    },
+    {
+      "id": "HD-092",
+      "impact": "MAJOR",
+      "question": "After PR #198 (Item TASK-043) widened ItemAdminService#referenceTypes() from sales_/inventory_ tables to every non-item_ table with an FK to an Item id, merging TASK-038 makes any supplier_sku_refs or supplier_supply_events row block that SKU's UOM conversion and tracking-policy changes (archive unaffected). (A) merge TASK-038 unchanged and hand the rule to the Item owner; (B) hold #201 until Item decides; (C) accept as intended.",
+      "affected_ids": [
+        "TASK-038",
+        "FR-SKU-003"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-13: 'A，CI過就merge'. Handover: docs/supplier_management/item_handoff_supplier_sku_refs.md §7."
     }
   ],
   "external_actions": [
@@ -6087,5 +6109,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-038: HD-091 follow-ups done (tests, docs, failure logging). Full suite, push PR #201; merge when CI is green and main is unchanged (no further review, HD-091). Then: the Supplier client test race (currency select) as a small PR."
+  "next_safe_action": "TASK-038 DONE (PR #201, 6ab2fb04). Item owner to decide HD-092 (item_handoff_supplier_sku_refs.md §7). Next: the Supplier client e2e race (currency select) as a small PR, then TASK-039 (UI) and TASK-040 (for-SKU lookup); TASK-050's for-SKU part after TASK-040."
 }
