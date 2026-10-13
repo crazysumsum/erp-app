@@ -90,3 +90,32 @@
 2. 開始 TASK-038：先喺 chat 逐欄解釋兩張表嘅 schema，等 Product Owner 批准先寫 migration。
 
 有問題請喺 Supplier 模組嘅 PR 留言，或者直接搵 Product Owner。
+
+## 7. TASK-038 merge 之後新發現：供應商關係會擋 SKU 單位同追蹤方式修改（HD-092）
+
+**來源：** PR #198（Item TASK-043）將 `ItemAdminService#referenceTypes()` 的過濾條件，由 `sales_%`／`inventory_%` 放寬為「所有非 `item_` 開頭、有 FK 指向 `id` 的表」。PR #201（Supplier TASK-038，merge commit `6ab2fb04`）新增了以下三條 FK，全部會被這個過濾條件掃到：
+
+- `supplier_sku_refs.sku_id` → `item_skus.id`
+- `supplier_sku_refs.purchase_sku_uom_id` → `item_sku_uoms.id`
+- `supplier_supply_events.sku_id` → `item_skus.id`
+
+**行為：** 一個 SKU 只要有任何一筆供應商關係（包括沒有採購單位的 `alternative`），`updateSku` 就會被擋：
+
+- 修改換算或基本單位 → `UOM_CHANGE_BLOCKED`，`referenceTypes` 包含 `supplier_sku_refs`。
+- 修改 tracking policy → `trackingPolicyChangeBlocked`。
+
+移除一個被用作採購單位的 mapping 也會被擋；不過這一項本來就會被 FK RESTRICT 擋住，現在只是錯誤訊息更清楚。
+
+封存不受影響：`#archiveReferenceTypes()` 用的是一份明確列出的清單，不包括 supplier 表。
+
+**Supplier 一方的立場：**
+
+- 供貨關係屬軟性主檔；MOQ 只是參考值（FR-SKU-003），是否強制以採購交易為準。
+- 供應事件只記錄 ID 和時間，沒有數量或單位。
+- 所以修改換算不會令 Supplier 的數據失真。唯一受影響的是：設了 `purchase_sku_uom_id` 的關係，其參考 MOQ 換算成基本單位後的數值會跟着改變。
+
+**需要 Item 負責人決定：** 保持現狀（任何供應商關係都會擋），還是在 `#referenceTypes()` 排除 `supplier_` 開頭的表（或者只保留 `purchase_sku_uom_id` 這一項）。
+
+證據：以上結論來自閱讀 `origin/main` 的代碼，以及在已跑 0081 的資料庫上查 `information_schema.key_column_usage`；未有端到端測試證明。
+
+Supplier 一方不會修改 Item 的代碼。
