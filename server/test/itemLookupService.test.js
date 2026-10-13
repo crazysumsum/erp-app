@@ -79,6 +79,90 @@ function uomRow(overrides = {}) {
 const saleSku = () => skuRow({ sku_version: 3, item_version: 2, suggested_price_amount: "12.3400" });
 const saleUom = (overrides = {}) => uomRow({ id: 91, uom_name: "Each", uom_status: "active", uom_version: 4, version: 5, ...overrides });
 
+test("TC-017 purchase lookup adds mapping metadata without changing old fields or inactive UOM usability", async () => {
+  const old = { uomId: 5, uomCode: "EA", toBaseFactor: 1, isBase: true, isDefaultPurchase: false, isDefaultSale: true };
+  for (const lookup of [
+    service => service.findById(10, { purpose: "purchase" }),
+    service => service.findByCode("SKU-1", { purpose: "purchase" }),
+    service => service.findByBarcode("123", { purpose: "purchase" }),
+    async service => (await service.findManyByIds([10], { purpose: "purchase" })).get(10),
+    service => service.assertUsable(10, { purpose: "purchase" })
+  ]) {
+    const database = fakeDatabase([[skuRow()], [saleUom({ uom_status: "inactive" })]]);
+    const result = await lookup(createService({ database }).service);
+    assert.deepEqual(result.uoms, [{ ...old, skuUomId: 91, uomName: "Each", status: "inactive" }]);
+    assert.equal(result.usable, true);
+    assert.deepEqual(result.reasons, []);
+    assert.equal(database.calls.length, 2);
+  }
+  for (const options of [{}, { purpose: "sale" }, { purpose: "inventory" }]) {
+    const result = await createService({ database: fakeDatabase([[skuRow()], [saleUom()]]) }).service.findById(10, options);
+    assert.deepEqual(result.uoms, [old], "non-purchase projections are unchanged");
+  }
+});
+
+test("TC-018 purchase search returns bounded pages, escaped prefixes and metadata for serial non-sellable SKUs", async () => {
+  const database = fakeDatabase([[{ total: 5 }], [skuRow({ sellable: 0, tracking_policy: "serial" })],
+    [saleUom(), saleUom({ id: 92, uom_id: 6, uom_name: "Box", uom_status: "inactive", is_base: 0, to_base_factor: 24 })]]);
+  const { service } = createService({ database });
+  const result = await service.searchForPurchase({ q: " SKU_%! ", page: 2, pageSize: 1 });
+  assert.deepEqual({ total: result.total, page: result.page, pageSize: result.pageSize }, { total: 5, page: 2, pageSize: 1 });
+  assert.equal(result.items[0].usable, true);
+  assert.equal(result.items[0].sellable, false);
+  assert.equal(result.items[0].trackingPolicy, "serial");
+  assert.deepEqual(result.items[0].uoms.map(({ skuUomId, uomName, status }) => ({ skuUomId, uomName, status })),
+    [{ skuUomId: 91, uomName: "Each", status: "active" }, { skuUomId: 92, uomName: "Box", status: "inactive" }]);
+  assert.equal(database.calls.length, 3);
+  assert.deepEqual(database.calls[0].params, [NOW_MS, NOW_MS, "SKU!_!%!!%", "SKU!_!%!!%", "SKU!_!%!!%"]);
+  assert.deepEqual(database.calls[1].params.slice(-2), [1, 1]);
+  assert.match(database.calls[0].sql, /u\.status\s*=\s*'active'/);
+  assert.doesNotMatch(database.calls[0].sql, /s\.sellable|s\.tracking_policy/);
+});
+
+test("TC-018 purchase search rejects unsafe bounds before SQL and propagates database errors", async () => {
+  const database = fakeDatabase([]), { service } = createService({ database });
+  for (const input of [{ q: null }, { q: [] }, { q: "\n" }, { q: "a".repeat(191) },
+    { q: "😀".repeat(191) }, { page: 0 }, { page: 1.5 }, { page: "1" }, { pageSize: 0 },
+    { pageSize: 101 }, { pageSize: NaN }, { page: Number.MAX_SAFE_INTEGER, pageSize: 100 }]) {
+    await assert.rejects(() => service.searchForPurchase(input), TypeError);
+  }
+  assert.equal(database.calls.length, 0);
+  const outage = new Error("database unavailable");
+  const broken = createService({ database: { query: async () => { throw outage; } } }).service;
+  await assert.rejects(() => broken.searchForPurchase({}), error => error === outage);
+});
+
+test("TC-018 purchase empty pages keep the total with two queries and one clock capture", async () => {
+  const database = fakeDatabase([[{ total: 5 }], []]);
+  let clockCalls = 0;
+  const service = new ItemLookupService({ database, logger: collectingLogger(), time: { nowMs() { clockCalls++; return NOW_MS; } } });
+  assert.deepEqual(await service.searchForPurchase({ page: 9 }), { items: [], total: 5, page: 9, pageSize: 20 });
+  assert.equal(database.calls.length, 2);
+  assert.equal(clockCalls, 1);
+  assert.deepEqual(database.calls[0].params, [NOW_MS, NOW_MS]);
+  assert.deepEqual(database.calls[1].params, [NOW_MS, NOW_MS, 20, 160]);
+});
+
+test("TC-018 purchase search reuses purchase evaluation and rejects invalid provider rows", async () => {
+  for (const [overrides, reason] of [[{ item_status: "inactive" }, "STATUS_NOT_ACTIVE"],
+    [{ sku_status: "discontinued" }, "STATUS_NOT_ACTIVE"], [{ purchasable: 0 }, "NOT_PURCHASABLE"],
+    [{ effective_from: NOW_MS + 1 }, "OUTSIDE_EFFECTIVE_RANGE"], [{ effective_to: NOW_MS - 1 }, "OUTSIDE_EFFECTIVE_RANGE"]]) {
+    const { service } = createService({ database: fakeDatabase([[{ total: 1 }], [skuRow(overrides)], [saleUom()]]) });
+    await assert.rejects(() => service.searchForPurchase({}), error => error.code === "SKU_NOT_USABLE" &&
+      error.details.purpose === "purchase" && error.details.reasons.includes(reason));
+  }
+});
+
+test("TC-018 purchase search batch-loads UOMs for100 results without N+1", async () => {
+  const rows = Array.from({ length: 100 }, (_, i) => skuRow({ id: i + 10 }));
+  const database = fakeDatabase([[{ total: 100 }], rows, rows.map(row => saleUom({ sku_id: row.id, id: row.id + 1000 }))]);
+  const { service } = createService({ database });
+  const result = await service.searchForPurchase({ q: "😀".repeat(190), pageSize: 100 });
+  assert.equal(result.items.length, 100);
+  assert.equal(result.items[99].uoms[0].skuUomId, 1109);
+  assert.equal(database.calls.length, 3);
+});
+
 test("Sales search owns bounded count/page qualification and exact price projection with a constant query budget", async () => {
   const database = fakeDatabase([[{ total: 5 }], [saleSku()], [saleUom()]]), { service } = createService({ database });
   const result = await service.searchForSale({ q: "SKU_%", barcode: "1234-56 78", page: 2, pageSize: 1, atMs: NOW_MS });

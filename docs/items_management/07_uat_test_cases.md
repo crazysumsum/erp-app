@@ -308,3 +308,20 @@ Approved thresholds are met or a named owner records rejection/accepted residual
 
 ### Acceptance criteria
 Required evidence is complete and baseline-bound; the named business/control owner records PASS, FAIL, BLOCKED or accepted residual risk. Automation PASS never substitutes for business acceptance.
+
+## UAT-017 — Purchase discovery metadata and eligible choices / ERP Product Owner
+
+### Business objective and actor
+Owner verifies exact conversion identity/readable catalogue status and eligible purchase discovery for FR-065/FR-066. MANUAL_BUSINESS/MANUAL_REQUIRED; NOT_RUN. No Supplier endpoint or UI is implemented by this Item slice.
+
+### Preconditions and data
+Formal TC-017/TC-018 pass on the approved immutable baseline; synthetic distinct EA/BOX mapping/master IDs, inactive catalogue UOM and active/non-active/non-purchasable/dated SKU examples, including eligible serial/non-sellable SKU.
+
+### Steps
+Review actual lookup/search outputs for prefix/empty browse/paging and catalogue metadata. Compare search choices with approved purchase plus active-UOM discovery rule; retained all-inactive-UOM relations still display through generic purchase lookup. Verify association ID and existing fields and review consumer-owned submit validation.
+
+### Expected business result
+Correct conversion identity/name/status, only eligible searchable choices, no broadened authorization and no new Sale-only exclusion. Inactive UOM metadata is retained for history, not new-choice permission.
+
+### Acceptance criteria
+Actual owner records baseline-bound PASS/FAIL/BLOCKED with evidence; automation/CI is not business acceptance. No invented consumer UI journey, TASK-043 completion or Recovery acceptance change.

@@ -138,6 +138,101 @@ async function seedBarcode(db, { skuId, skuUomId, barcode }) {
   return row.insertId;
 }
 
+test("TC-017 purchase metadata returns actual association IDs and catalogue states without changing generic lookup", { skip }, async (t) => {
+  const application = await startApplication();
+  const db = application.services.require("mysqldatabase");
+  const catalog = await seedCatalog(db);
+  const fixture = await seedItemWithSku(db, catalog);
+  t.after(async () => {
+    await fixture.cleanup(); await catalog.cleanup(); await application.shutdown("purchase_metadata_complete");
+  });
+  await db.execute("UPDATE item_uoms SET status = 'inactive' WHERE id = ?", [catalog.uomIdB]);
+  const service = lookupService(application);
+  const [[mapping]] = await db.query("SELECT id FROM item_sku_uoms WHERE sku_id = ? AND uom_id = ?", [fixture.skuId, catalog.uomIdB]);
+  const barcode = "purchase-metadata-" + randomUUID();
+  await seedBarcode(db, { skuId: fixture.skuId, skuUomId: fixture.skuUomIdA, barcode });
+  for (const read of [
+    () => service.findById(fixture.skuId, { purpose: "purchase" }),
+    () => service.findByCode(fixture.skuCode, { purpose: "purchase" }),
+    () => service.findByBarcode(barcode, { purpose: "purchase" }),
+    async () => (await service.findManyByIds([fixture.skuId], { purpose: "purchase" })).get(fixture.skuId)
+  ]) {
+    const result = await read();
+    const box = result.uoms.find(uom => uom.uomId === catalog.uomIdB);
+    assert.equal(box.skuUomId, Number(mapping.id));
+    assert.equal(box.uomName, "Integration Test Unit B");
+    assert.equal(box.status, "inactive");
+    assert.equal(box.toBaseFactor, 12);
+    assert.equal(box.isDefaultPurchase, true);
+    assert.equal(result.uoms.length, 2);
+    assert.equal(result.usable, true);
+  }
+  const before = await service.findById(fixture.skuId);
+  assert.equal("skuUomId" in before.uoms[0], false);
+  assert.equal("status" in before.uoms[0], false);
+  await db.execute("UPDATE item_sku_uoms SET to_base_factor = 24 WHERE id = ?", [mapping.id]);
+  assert.equal((await service.findById(fixture.skuId, { purpose: "purchase" })).uoms.find(uom => uom.uomId === catalog.uomIdB).skuUomId, Number(mapping.id));
+});
+
+test("TC-018 actual MySQL purchase search covers statuses, inclusive dates, active-UOM gating, literal prefixes and paging", { skip }, async (t) => {
+  const application = await startApplication();
+  const db = application.services.require("mysqldatabase");
+  const catalog = await seedCatalog(db), inactiveCatalog = await seedCatalog(db);
+  const fixtures = [];
+  t.after(async () => {
+    for (const fixture of fixtures.reverse()) await fixture.cleanup();
+    await inactiveCatalog.cleanup(); await catalog.cleanup(); await application.shutdown("purchase_search_complete");
+  });
+  const now = Date.now(), prefix = "PUR-" + randomUUID().slice(0, 8) + "-";
+  const add = async (code, options = {}, selectedCatalog = catalog) => {
+    const fixture = await seedItemWithSku(db, selectedCatalog, options);
+    fixtures.push(fixture);
+    await db.execute("UPDATE item_skus SET sku_code = ?, sku_name = ? WHERE id = ?", [prefix + code, prefix + "name-" + code, fixture.skuId]);
+    await db.execute("UPDATE items SET name = ? WHERE id = ?", [prefix + "item-" + code, fixture.itemId]);
+    return fixture;
+  };
+  const regular = await add("01");
+  const boundary = await add("02", { overrides: { effectiveFrom: now, effectiveTo: now } });
+  const serial = await add("03", { overrides: { sellable: 0 } });
+  await db.execute("UPDATE item_skus SET tracking_policy = 'serial' WHERE id = ?", [serial.skuId]);
+  await add("future", { overrides: { effectiveFrom: now + 1 } });
+  await add("expired", { overrides: { effectiveTo: now - 1 } });
+  await add("not-purchasable", { overrides: { purchasable: 0 } });
+  for (const status of ["draft", "inactive", "discontinued", "archived"]) {
+    await add("item-" + status, { itemStatus: status });
+    await add("sku-" + status, { skuStatus: status });
+  }
+  const allInactive = await add("all-inactive", {}, inactiveCatalog);
+  await db.execute("UPDATE item_uoms SET status = 'inactive' WHERE id IN (?, ?)", [catalog.uomIdB, inactiveCatalog.uomIdA]);
+  await db.execute("UPDATE item_uoms SET status = 'archived' WHERE id = ?", [inactiveCatalog.uomIdB]);
+  const literal = await add("literal_%!A");
+  const decoy = await add("literalXA");
+  let calls = 0;
+  const service = new ItemLookupService({
+    database: { query: (...args) => { calls++; return db.query(...args); } },
+    logger: application.services.require("logging").logger,
+    time: { nowMs: () => now }
+  });
+  const expected = [regular.skuId, boundary.skuId, serial.skuId, literal.skuId, decoy.skuId];
+  const first = await service.searchForPurchase({ q: prefix, pageSize: 2 });
+  assert.equal(calls, 3);
+  assert.equal(first.total, expected.length);
+  assert.deepEqual(first.items.map(row => row.skuId), expected.slice(0, 2));
+  assert.deepEqual(first.items[0].uoms.map(uom => uom.status).sort(), ["active", "inactive"]);
+  const second = await service.searchForPurchase({ q: prefix, page: 2, pageSize: 2 });
+  const third = await service.searchForPurchase({ q: prefix, page: 3, pageSize: 2 });
+  assert.deepEqual([...first.items, ...second.items, ...third.items].map(row => row.skuId), expected);
+  const missing = await service.searchForPurchase({ q: prefix, page: 4, pageSize: 2 });
+  assert.equal(missing.total, expected.length);
+  assert.deepEqual(missing.items, []);
+  assert.equal((await service.searchForPurchase({ q: prefix + "name-03" })).items[0].skuId, serial.skuId);
+  assert.equal((await service.searchForPurchase({ q: prefix + "item-01" })).items[0].skuId, regular.skuId);
+  assert.deepEqual((await service.searchForPurchase({ q: "  " + prefix + "literal_%!  " })).items.map(row => row.skuId), [literal.skuId]);
+  assert.equal((await service.findById(allInactive.skuId, { purpose: "purchase" })).usable, true, "active UOM is search-only");
+  assert.deepEqual((await service.searchForPurchase({ q: prefix + "all-inactive" })).items, []);
+  assert.deepEqual((await service.searchForPurchase({ q: prefix + "no-such" })), { items: [], total: 0, page: 1, pageSize: 20 });
+});
+
 test("Sales named lookup and caller snapshots preserve mapping identity and hold current SHARE locks", { skip }, async (t) => {
   const application = await startApplication();
   const db = application.services.require("mysqldatabase");

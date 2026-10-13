@@ -137,6 +137,33 @@ export class ItemLookupService {
     return result;
   }
 
+  async searchForPurchase({ q = "", page = 1, pageSize = 20 } = {}) {
+    if (typeof q !== "string" || [...q].length > 190 || /[\p{Cc}]/u.test(q) ||
+        !Number.isSafeInteger(page) || page < 1 || !Number.isSafeInteger(pageSize) || pageSize < 1 || pageSize > 100 ||
+        !Number.isSafeInteger((page - 1) * pageSize)) throw new TypeError("Purchase search query is invalid");
+    const nowMs = this.time.nowMs();
+    const params = [nowMs, nowMs];
+    const conditions = ["i.status='active'", "s.status='active'", "s.purchasable=1",
+      "(s.effective_from IS NULL OR s.effective_from<=?)", "(s.effective_to IS NULL OR s.effective_to>=?)",
+      "EXISTS (SELECT 1 FROM item_sku_uoms su JOIN item_uoms u ON u.id=su.uom_id WHERE su.sku_id=s.id AND u.status='active')"];
+    if (q.trim()) {
+      const prefix = q.trim().replace(/[!%_]/gu, match => "!" + match) + "%";
+      conditions.push("(s.sku_code LIKE ? ESCAPE '!' OR s.sku_name LIKE ? ESCAPE '!' OR i.name LIKE ? ESCAPE '!')");
+      params.push(prefix, prefix, prefix);
+    }
+    const where = "WHERE " + conditions.join(" AND ");
+    const [[count]] = await this.database.query("SELECT COUNT(*) AS total FROM item_skus s JOIN items i ON i.id=s.item_id " + where, params);
+    const [rows] = await this.database.query(SKU_JOIN_ITEM_SELECT + " " + where + " ORDER BY s.sku_code,s.id LIMIT ? OFFSET ?",
+      [...params, pageSize, (page - 1) * pageSize]);
+    const uoms = await this.#loadUomRows(rows.map(row => Number(row.id)));
+    const items = rows.map(row => {
+      const sku = this.#toProjection(row, uoms.get(Number(row.id)) ?? [], { purpose: "purchase", atMs: nowMs });
+      if (!sku.usable) throw skuNotUsable(sku.skuId, "purchase", sku.reasons);
+      return sku;
+    });
+    return { items, total: Number(count.total), page, pageSize };
+  }
+
   async searchForSale({ q = "", barcode, page = 1, pageSize = 20, atMs } = {}) {
     const nowMs = this.#saleTime(atMs);
     if (typeof q !== "string" || [...q].length > 190 || /[\p{Cc}]/u.test(q) ||
@@ -470,7 +497,8 @@ export class ItemLookupService {
         toBaseFactor: Number(uom.to_base_factor),
         isBase: Boolean(uom.is_base),
         isDefaultPurchase: Boolean(uom.is_default_purchase),
-        isDefaultSale: Boolean(uom.is_default_sale)
+        isDefaultSale: Boolean(uom.is_default_sale),
+        ...(purpose === "purchase" ? { skuUomId: Number(uom.id), uomName: uom.uom_name, status: uom.uom_status } : {})
       })),
       usable,
       reasons
