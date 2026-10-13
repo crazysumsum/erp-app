@@ -104,3 +104,76 @@ the unchanged Sales capacity budget. The shared workspace dependency directory w
 not updated and may still require its owner's normal lockfile installation.
 Serial actual Item Playwright regression on the same correct dependencies passed
 12 cases with2 pre-existing formal-UAT gated skips and clean console/network checks.
+
+## Approved Supplier test synchronization only
+
+Sam expressly approved only the failing Supplier test's transaction synchronization,
+with no product-code, assertion or threshold changes (APR-046/APR-047; HD-009).
+Candidatea1301240's CI38196915622 failed solely at Supplier lock-wait recovery:
+expected `completed`, received `undefined`; both Sales capacity scenarios and the
+Item/Transfer corrections passed. The prior failures remain preserved, not retried
+away or converted to PASS.
+
+The failing test now acquires/releases the specific import-job row with `FOR UPDATE`
+after releasing HKD and before checking pending/no-write/recovery state. This is
+four added lines using the existing bounded transaction helper. Client exit is not
+a server-rollback acknowledgement; acquiring the target job lock establishes the
+missing synchronization without sleeps, retries, data mutations or weaker asserts.
+Every original timeout/pending/no-write/completed/exactly-once assertion remains.
+Worker timeout stays1500ms and no transaction budget/configuration was changed.
+
+Actual focused real-MySQL execution passed1/1; full Supplier import regression and
+four configured developer suites are recorded separately in the current journal.
+Separate reviewer approved the barrier/source after checking unchanged assertions,
+lock scope and no authored Supplier/database product changes.
+
+During resumption, fresh main advanced to
+`a2715077871ffa8289193d6482df6add6b363bd7` (already-merged Supplier PR197).
+It was normally integrated as `26d464ee33c8a76d36228959d7367a7abeb01065`.
+Existing0080 migration was applied only to the task-private synthetic schema;
+no migration or upstream Supplier product edit was authored for this correction.
+DESIGN/PLAN remain unchanged. New source:
+`b41b3be087d493e8a3c2e3de64d089aa4d628d00788471dad4f47ea7d816bd5d`.
+New candidate still requires exact-candidate review and all five fresh CI checks
+before PR198 merge/Item-only cleanup. Formal acceptance and aggregate TASK-043
+completion are not inferred from this developer regression.
+
+## Latest-main resumption — 2026-10-13
+
+Fetched main `e75414753bb898d9db69569f3130a63cae16a19c` was normally integrated
+as `8313d9c0a0ced39df2d2b5692a4ae4d255a61607`, preserving the four-line Supplier
+test barrier and all uncommitted evidence/journal. Already-merged upstream PRs
+200/202/203 contain Supplier provider pin and Sales lock/capacity-measurement changes;
+none was authored as this test correction. Upstream CI measures the same two Sales
+capacity scenarios without coverage instrumentation and explicitly requires2 PASS;
+the3000ms budget remains. This branch did not modify CI, Sales products or thresholds.
+
+Source `1867ca0eabc4218a8d00ceb6275dca7ab7c758bac41534681715351f6c80fa49`
+and unchanged DESIGN/PLAN identify the new integration baseline. Full real-MySQL
+Supplier import regression on this source passed42/42, zero failed/skipped.
+Old b41/57fa results and all failed CI runs remain historical; only fresh current
+developer/CI/review results may satisfy this candidate's merge gate. No formal
+TC/UAT/business acceptance or whole TASK-043 completion is claimed.
+
+## Final candidate preparation — main PR204
+
+The pre-commit freshness check found main advanced again to
+`cd1e102d403721d458185009b60c836ad8c48675`. Normal merge
+`e8bb13f28a5998ab052dd0dec1bb008b9fe11ddb` imported upstream Sales PR204's
+row-lock corrections without conflicts. No Supplier/Sales/database product or CI
+change was authored during this remediation. The Supplier test still differs by
+exactly four added synchronization lines; assertions and1500ms worker budget remain.
+
+Current source:
+`b21eef9542468222a85aacba2096dc9047f4fc6591c9d6cfdcbb94ebc0175520`.
+Full real-MySQL Supplier import regression passed42/42, zero failed/skipped.
+All four configured DEVELOPER runners passed on this source: lint, frontend build,
+server501/501 and client860/860, zero failed/skipped/not-run cases. Actual Item
+Playwright regression passed12 cases with2 pre-existing formal-UAT gated skips;
+the affected409/history/state flow and console/network assertions passed.
+Separate reviewer `/root/item_supplier_handoff_review` independently reran61
+provider/consumer cases (all PASS, zero skips) and approved this source after checking
+lock ordering, upstream integration and the exact four-line barrier. This is not
+human GitHub approval or formal TC/UAT acceptance. All earlier CI failures remain FAIL.
+Exact-candidate independent review and all five mandatory CI jobs are required;
+no old candidate's green result authorizes this merge.
