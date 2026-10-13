@@ -88,7 +88,7 @@ export function supplierApprovalRequestNotFound(id) {
 }
 
 export function supplierChildNotFound(childType) {
-  const labels = { address: "地址", contact: "聯絡人", identifier: "識別資料", bank: "銀行帳戶" };
+  const labels = { address: "地址", contact: "聯絡人", identifier: "識別資料", bank: "銀行帳戶", sku_relation: "供貨關係" };
   return supplierError(`Supplier ${childType} was not found for this owner`, {
     code: `SUPPLIER_${childType.toUpperCase()}_NOT_FOUND`,
     statusCode: 404,
