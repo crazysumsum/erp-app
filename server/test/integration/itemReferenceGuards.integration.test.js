@@ -6,6 +6,7 @@ import { defaultConfigurationSource } from "../../src/framework/configuration/ap
 import { ItemAdminService } from "../../src/modules/item/ItemAdminService.js";
 import { ItemLookupService } from "../../src/modules/item/ItemLookupService.js";
 import { InventoryPostingService } from "../../src/modules/inventory/InventoryPostingService.js";
+import { SupplierRelationService } from "../../src/modules/supplier/SupplierRelationService.js";
 import { inventoryCommandFixture } from "../../test-support/inventoryFixtures.js";
 
 const integrationTest = process.env.DB_INTEGRATION_TESTS === "1" ? test : test.skip;
@@ -103,6 +104,73 @@ function referenced(code, types) {
   };
 }
 
+// Real migrated Supplier tables; synthetic history is not an authoritative completed-GR fixture.
+async function supplierReference(f, { mappingId = f.mappingIds[1], event = false } = {}) {
+  const code = `IC-${f.suffix}`;
+  const supplierId = await f.insert(`INSERT INTO suppliers
+    (supplier_code, supplier_code_key, supplier_name, supplier_name_key, default_currency_code, status, created_at, updated_at)
+    VALUES (?, ?, ?, ?, 'HKD', 'active', ?, ?)`, [code, code.toLowerCase(), code, code.toLowerCase(), f.now, f.now]);
+  f.cleanup.push(async () => {
+    await f.db.execute("DELETE FROM supplier_supply_events WHERE supplier_id = ?", [supplierId]);
+    await f.db.execute("DELETE FROM supplier_sku_refs WHERE supplier_id = ?", [supplierId]);
+    await f.db.execute("DELETE FROM supplier_audit_logs WHERE supplier_id = ?", [supplierId]);
+    await f.db.execute("DELETE FROM suppliers WHERE id = ?", [supplierId]);
+  });
+  const relationId = await f.insert(`INSERT INTO supplier_sku_refs
+    (supplier_id, sku_id, purchase_sku_uom_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?)`,
+  [supplierId, f.skuIds[0], mappingId, f.now, f.now]);
+  if (event) await f.insert(`INSERT INTO supplier_supply_events
+    (event_id, source_type, source_id, source_line_id, supplier_id, sku_id, relation_id, supplied_at, payload_hash, created_at)
+    VALUES (?, 'goods_receipt', ?, 1, ?, ?, ?, ?, ?, ?)`,
+  [`IC-${f.suffix}-${supplierId}`, supplierId, supplierId, f.skuIds[0], relationId, f.now, "a".repeat(64), f.now]);
+  const snapshot = async () => {
+    const [relations] = await f.db.query("SELECT * FROM supplier_sku_refs WHERE supplier_id = ?", [supplierId]);
+    const [events] = await f.db.query("SELECT * FROM supplier_supply_events WHERE supplier_id = ?", [supplierId]);
+    const [audit] = await f.db.query("SELECT * FROM supplier_audit_logs WHERE supplier_id = ?", [supplierId]);
+    return { relations, events, audit };
+  };
+  const service = new SupplierRelationService({ database: f.db, items: f.lookup,
+    logger: f.app.services.require("logging").logger, time: f.app.services.require("time"),
+    authorize: async () => ({ username: "Item reference fixture" }) });
+  return { supplierId, relationId, snapshot, service };
+}
+
+integrationTest("TC-004/TC-005 TASK-043 C: real Supplier relations and events reject Draft deletion with public types and atomic rollback", async t => {
+  for (const event of [false, true]) await t.test(`event=${event}`, async child => {
+    const f = await fixture(child), supplier = await supplierReference(f, { event });
+    const before = await f.snapshot(), supplierBefore = await supplier.snapshot();
+    const types = event ? ["supplier_sku_refs", "supplier_supply_events"] : ["supplier_sku_refs"];
+    await assert.rejects(f.service.deleteSku({ ...f.command, id: f.skuIds[0] }), referenced("SKU_REFERENCED", types));
+    await assert.rejects(f.service.deleteItem({ ...f.command, id: f.itemId }), referenced("ITEM_REFERENCED", types));
+    assert.deepEqual(await f.snapshot(), before);
+    assert.deepEqual(await supplier.snapshot(), supplierBefore);
+  });
+});
+
+integrationTest("TC-004 TASK-043 C: Supplier mapping ownership and IDs survive safe edits while incompatible changes roll back", async t => {
+  const f = await fixture(t, { status: "active" }), supplier = await supplierReference(f);
+  await assert.rejects(f.db.execute("UPDATE supplier_sku_refs SET purchase_sku_uom_id = ? WHERE id = ?", [f.mappingIds[3], supplier.relationId]),
+    error => (error.cause?.code ?? error.code) === "ER_NO_REFERENCED_ROW_2");
+  const original = await f.snapshot(), supplierBefore = await supplier.snapshot();
+  await f.update({ suggestedPriceAmount: "2.0000" });
+  const before = await f.snapshot();
+  assert.deepEqual(before.uoms.map(row => row.id), original.uoms.map(row => row.id));
+  assert.deepEqual(await supplier.snapshot(), supplierBefore);
+  const uoms = before.uoms.filter(row => Number(row.sku_id) === f.skuIds[0]).map(row => ({
+    id: Number(row.id), uomId: Number(row.uom_id), toBaseFactor: Number(row.to_base_factor),
+    isBase: Boolean(row.is_base), isDefaultPurchase: Boolean(row.is_default_purchase), isDefaultSale: Boolean(row.is_default_sale)
+  }));
+  await assert.rejects(f.update({ version: 2, uoms: [uoms[0]] }), referenced("UOM_CHANGE_BLOCKED", ["supplier_sku_refs"]));
+  await assert.rejects(f.update({ version: 2, uoms: [uoms[0], { ...uoms[1], toBaseFactor: 30 }] }), referenced("UOM_CHANGE_BLOCKED", ["supplier_sku_refs"]));
+  await assert.rejects(f.update({ version: 2, trackingPolicy: "serial" }), error => {
+    assert.equal(error.publicCode, "TRACKING_POLICY_CHANGE_BLOCKED");
+    assert.equal(error.statusCode, 409);
+    return true;
+  });
+  assert.deepEqual(await f.snapshot(), before);
+  assert.deepEqual(await supplier.snapshot(), supplierBefore);
+});
+
 integrationTest("TASK-043: Draft Item and SKU deletion report real Inventory references and leave the aggregate untouched", async t => {
   const f = await fixture(t);
   await f.stock(0);
@@ -154,6 +222,122 @@ integrationTest("TASK-043: live Sales quotations/orders block archive, cancelled
       assert.equal(Number(line.to_base_factor_snapshot), 24);
     });
   }
+});
+
+integrationTest("TC-005 TASK-043 C: soft Supplier relations and history survive single and bulk archive and remain readable", async t => {
+  for (const target of ["item", "sku", "bulk"]) await t.test(target, async child => {
+    const f = await fixture(child, { status: "inactive" }), supplier = await supplierReference(f, { mappingId: null, event: true });
+    const before = await supplier.snapshot();
+    if (target === "item") await f.service.archiveItem({ ...f.command, id: f.itemId });
+    else if (target === "sku") await f.service.archiveSku({ ...f.command, id: f.skuIds[0] });
+    else await f.service.bulkChangeStatus({ ...f.command, targetType: "sku", action: "archive", targets: f.skuIds.map(id => ({ id, version: 1 })) });
+    assert.deepEqual(await supplier.snapshot(), before);
+    const view = await supplier.service.list({ ...f.command, supplierId: supplier.supplierId });
+    assert.equal(view.total, 1);
+    assert.equal(view.items[0].skuStatus, "archived");
+    assert.equal(view.items[0].relationshipStatus, "alternative");
+    assert.equal((await f.lookup.findById(f.skuIds[0], { purpose: "purchase" })).usable, false);
+    const archived = await f.snapshot();
+    await assert.rejects(f.update({ version: Number(archived.skus[0].version), uoms: [
+      { id: f.mappingIds[0], uomId: f.uomIds[0], toBaseFactor: 1, isBase: true, isDefaultPurchase: true, isDefaultSale: true },
+      { id: f.mappingIds[1], uomId: f.uomIds[1], toBaseFactor: 30, isBase: false }
+    ] }), referenced("UOM_CHANGE_BLOCKED", ["supplier_sku_refs", "supplier_supply_events"]));
+    assert.deepEqual(await f.snapshot(), archived);
+  });
+});
+
+integrationTest("TC-004/TC-005 TASK-043 C: native Supplier FK fallback returns public types or unknown without partial deletion", async t => {
+  for (const target of ["item", "sku", "uom"]) for (const hideFallback of [false, true]) {
+    await t.test(`${target}: hidden=${hideFallback}`, async child => {
+      const f = await fixture(child), supplier = await supplierReference(f);
+      let failed = false;
+      interceptTransactions(f, (tx, sql, params) => {
+        if (sql.includes("information_schema.key_column_usage") && (!failed || hideFallback)) return [[]];
+        return tx.query(sql, params);
+      });
+      const original = f.service.database.withTransaction;
+      f.service.database.withTransaction = (work, options) => original(tx => work({ ...tx,
+        execute: async (...args) => { try { return await tx.execute(...args); } catch (error) { failed = true; throw error; } }
+      }), options);
+      const before = await f.snapshot(), supplierBefore = await supplier.snapshot();
+      const action = target === "item" ? f.service.deleteItem({ ...f.command, id: f.itemId })
+        : target === "sku" ? f.service.deleteSku({ ...f.command, id: f.skuIds[0] })
+          : f.update({ uoms: [{ id: f.mappingIds[0], uomId: f.uomIds[0], toBaseFactor: 1, isBase: true, isDefaultPurchase: true, isDefaultSale: true }] });
+      await assert.rejects(action, referenced(target === "item" ? "ITEM_REFERENCED" : target === "sku" ? "SKU_REFERENCED" : "UOM_CHANGE_BLOCKED",
+        [hideFallback ? "unknown" : "supplier_sku_refs"]));
+      assert.equal(failed, true, "the actual migrated MySQL FK must reject deletion");
+      assert.deepEqual(await f.snapshot(), before);
+      assert.deepEqual(await supplier.snapshot(), supplierBefore);
+    });
+  }
+});
+
+integrationTest("TC-004 TASK-043 C: Supplier-create and UOM-removal races retain the native FK winner in both commit orders", { timeout: 10_000 }, async t => {
+  for (const supplierFirst of [true, false]) await t.test(`supplier first=${supplierFirst}`, async child => {
+    const f = await fixture(child, { status: "active" }), supplier = await supplierReference(f);
+    await f.db.execute("DELETE FROM supplier_sku_refs WHERE id = ?", [supplier.relationId]);
+    const ready = Promise.withResolvers(), release = Promise.withResolvers(), attempting = Promise.withResolvers();
+    const operations = [];
+    const start = promise => { operations.push(promise); void promise.catch(() => {}); return promise; };
+    const wait = (marker, operation) => Promise.race([marker, operation.then(() => { throw new Error("Operation completed before its scheduling marker"); })]);
+    f.cleanup.unshift(async () => { release.resolve(); await Promise.allSettled(operations); });
+    const create = () => supplier.service.create({ ...f.command, supplierId: supplier.supplierId, skuId: f.skuIds[0], purchaseSkuUomId: f.mappingIds[1] });
+    const remove = () => f.update({ uoms: [{ id: f.mappingIds[0], uomId: f.uomIds[0], toBaseFactor: 1, isBase: true, isDefaultPurchase: true, isDefaultSale: true }] });
+    const instrument = (tx, hold) => ({ query: (...args) => tx.query(...args), execute: async (sql, params) => {
+      const relevant = sql.includes(hold ? "INSERT INTO supplier_sku_refs" : "DELETE FROM item_sku_uoms");
+      const waiting = sql.includes(hold ? "DELETE FROM item_sku_uoms" : "INSERT INTO supplier_sku_refs");
+      if (waiting) attempting.resolve();
+      const result = await tx.execute(sql, params);
+      if (relevant) { ready.resolve(); await release.promise; }
+      return result;
+    } });
+    if (supplierFirst) {
+      supplier.service.database = { query: (...args) => f.db.query(...args),
+        withTransaction: (work, options) => f.db.withTransaction(tx => work(instrument(tx, true)), options) };
+      interceptTransactions(f, (tx, sql, params) => {
+        if (sql.includes("SELECT * FROM item_skus WHERE id = ? FOR UPDATE")) attempting.resolve();
+        return tx.query(sql, params);
+      });
+      const created = start(create());
+      await wait(ready.promise, created);
+      const before = await f.snapshot(), changing = start(remove());
+      const rejected = start(assert.rejects(changing, referenced("UOM_CHANGE_BLOCKED", ["supplier_sku_refs"])));
+      await wait(attempting.promise, changing);
+      release.resolve();
+      const relation = await created;
+      await rejected;
+      assert.equal(relation.purchaseSkuUomId, f.mappingIds[1]);
+      assert.deepEqual(await f.snapshot(), before);
+    } else {
+      f.service.database = { query: (...args) => f.db.query(...args),
+        withTransaction: (work, options) => f.db.withTransaction(tx => work(instrument(tx, false)), options) };
+      supplier.service.database = { query: (...args) => f.db.query(...args),
+        withTransaction: (work, options) => f.db.withTransaction(tx => work({ query: (...args) => tx.query(...args),
+          execute: (sql, params) => { if (sql.includes("INSERT INTO supplier_sku_refs")) attempting.resolve(); return tx.execute(sql, params); }
+        }), options) };
+      const supplierBefore = await supplier.snapshot(), removed = start(remove());
+      await wait(ready.promise, removed);
+      const creating = start(create()), rejected = start(assert.rejects(creating, error => error.publicCode === "SUPPLIER_SKU_UOM_INVALID"));
+      await wait(attempting.promise, creating);
+      release.resolve();
+      await removed;
+      await rejected;
+      assert.deepEqual(await supplier.snapshot(), supplierBefore);
+      const after = await f.snapshot();
+      assert.equal(after.uoms.some(row => Number(row.id) === f.mappingIds[1]), false);
+      assert.equal(Number(after.skus[0].version), 2);
+    }
+  });
+});
+
+integrationTest("TC-004 TASK-043 C: a new GR event fails closed without the real source adapter and leaves all histories unchanged", async t => {
+  const f = await fixture(t, { status: "inactive" }), supplier = await supplierReference(f);
+  const before = await f.snapshot(), supplierBefore = await supplier.snapshot();
+  await assert.rejects(supplier.service.recordSupply({ eventId: `IC-new-${f.suffix}`, sourceType: "goods_receipt",
+    sourceId: supplier.supplierId, sourceLineId: 1, supplierId: supplier.supplierId, skuId: f.skuIds[0], suppliedAt: f.now }),
+  error => { assert.equal(error.publicCode, "SUPPLIER_SUPPLY_SOURCE_UNAVAILABLE"); assert.equal(error.statusCode, 503); return true; });
+  assert.deepEqual(await f.snapshot(), before);
+  assert.deepEqual(await supplier.snapshot(), supplierBefore);
 });
 
 // Interception controls scheduling/fallback only; actual schema, locks and FK failures remain MySQL's.

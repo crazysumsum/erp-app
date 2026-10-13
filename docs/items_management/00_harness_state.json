@@ -1,33 +1,33 @@
 {
   "schema_version": "2.0",
   "module_id": "item-management",
-  "revision": 102,
+  "revision": 109,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
   "resume_status": "READY_FOR_TESTING",
-  "current_phase": "PHASE-008",
-  "current_task": "TASK-046",
+  "current_phase": "PHASE-009",
+  "current_task": "TASK-047",
   "baseline": {
     "design": "f7431c0934377f3331fd0a537e236eca8044df41f359d36202153803c4aca315",
-    "plan": "d6db1f524df15257eca36eb0d4117efe8f20352a07e931b6511df7d8795e5de4",
-    "code_commit": "34207893f0c543cfb7a82857a50736c6e80c4974",
-    "source_fingerprint": "726268dd250d995748d8487522c1193bec75cd7f8045f0ceeca4d02bf5de95e2",
-    "worktree": "/Users/sam/.codex/worktrees/item-purchase-lookup-handoff/erp-app",
-    "default_commit": "a71f348879bb04df38cdeda4348d9031ec10d7f3",
-    "mode_entry_commit": "a71f348879bb04df38cdeda4348d9031ec10d7f3"
+    "plan": "46dd2221fc8f8fe974adc6553d83c3eaefc706e81315b649a55b8331a715410b",
+    "code_commit": "3832635077ecc32c6a7b9292e2b9e155223008d0",
+    "source_fingerprint": "711f09a98d1f59c0362025aff3c0b89647eee4cac2250e833f747ec14e168549",
+    "worktree": "/Users/sam/.codex/worktrees/item-task043-supplier-guards/erp-app",
+    "default_commit": "3832635077ecc32c6a7b9292e2b9e155223008d0",
+    "mode_entry_commit": "7c927e26b386d87c595bf3c6111467d0ccc8b20d"
   },
   "runtime": {
-    "instance_id": "ITEM-PURCHASE-DEVELOPER-20261013-4wDOc0",
+    "instance_id": "ITEM-SUPPLIER-C-DEVELOPER-20261013-vdXM5l",
     "owner": "Primary Item module agent",
     "resources": {
-      "workspace": "/Users/sam/.codex/worktrees/item-purchase-lookup-handoff/erp-app; task-owned npmci--offline lockeddependencies429 installed, no source/lock changes",
-      "mysql-schema": "erp_item_purchase_20261013 on private socket /private/tmp/erp-item-purchase-mysql.4wDOc0/mysql.sock; TCP/MySQLX disabled, root empty synthetic fixture only",
-      "media-root": "/Users/sam/.codex/worktrees/item-purchase-lookup-handoff/erp-app/server/storage/media; isolated test-owned roots",
-      "import-root": "/Users/sam/.codex/worktrees/item-purchase-lookup-handoff/erp-app/server/storage/imports; isolated test-owned roots",
-      "web-port": "No frontend scope; direct integration apps bind ephemeral port0, no shared3000/4173server"
+      "workspace": "/Users/sam/.codex/worktrees/item-task043-supplier-guards/erp-app; ownlocked npmci429, no lockchange",
+      "mysql-schema": "erp_item_supplier_c_20261013 taskprivate /private/tmp/erp-item-supplier-c-mysql.vdXM5l/mysql.sock TCP/MySQLXdisabled; syntheticonly",
+      "media-root": "/Users/sam/.codex/worktrees/item-task043-supplier-guards/erp-app/server/storage/media",
+      "import-root": "/Users/sam/.codex/worktrees/item-task043-supplier-guards/erp-app/server/storage/imports",
+      "web-port": "No frontend scope; integration ephemeral port0"
     },
-    "lease_ref": "Actual private mysqld exec62728, newinitialized4wDOc0 datadir, mysqladminpingalive. No sharedMySQL/userpassword or historicaldatadir modification."
+    "lease_ref": "Actual taskprivate mysqldexec69019, freshinitializedvdXM5l, all existing migrations through0081 appliedsuccessfully. No sharedMySQL/userpassword/othermodules mutated."
   },
   "tasks": {
     "TASK-001": "DONE",
@@ -75,7 +75,8 @@
     "TASK-043": "IN_PROGRESS",
     "TASK-044": "DONE",
     "TASK-045": "DONE",
-    "TASK-046": "IN_PROGRESS"
+    "TASK-046": "DONE",
+    "TASK-047": "IN_PROGRESS"
   },
   "approvals": [
     {
@@ -954,6 +955,105 @@
         "UAT-017"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-050",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam currentuser2026-10-13: 批准 PR #210 在 CI 和 review 全通過後合併到 main，然後清理本次 Item 分支及 worktree；只處理 Item 模組，正式 UAT 另行處理。 SpecificCI/review-gatedmerge+Itemcleanup; no evidenceexport/formalacceptance.",
+      "recorded_at": "2026-10-13T07:49:16Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "d6db1f524df15257eca36eb0d4117efe8f20352a07e931b6511df7d8795e5de4",
+      "code_commit": "3af17c021a7b83155845be6e2345f5481c45de5a",
+      "scope": [
+        "item-management",
+        "PHASE-008",
+        "TASK-046",
+        "PR-210-CI-gated-merge",
+        "Item-branch-worktree-cleanup"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-051",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam current2026-10-13: 請檢查最新 main，確認 TASK-043 還剩下什麼未完成，並繼續推進可開發的部分；只處理 Item 模組，正式 UAT 另行處理。 Continue alreadyapprovedincrementC Itemtest/guard scope oncurrentPLAN, no HD092policychange/Supplier/Purchasingproducts or formalUAT/mergeauthority.",
+      "recorded_at": "2026-10-13T08:10:31Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "d6db1f524df15257eca36eb0d4117efe8f20352a07e931b6511df7d8795e5de4",
+      "code_commit": "7c927e26b386d87c595bf3c6111467d0ccc8b20d",
+      "scope": [
+        "item-management",
+        "TASK-043",
+        "increment-C-Item-only-developer-verification"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-052",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Actual latestSam2026-10-13 explicitly: 請繼續完成 Item 增量 C 的完整回歸與 developer checks，提交新 candidate 並建立 PR；CI 和 review 全通過後合併到 main，清理本次 Item 分支及 worktree。只處理 Item，權威 GR 整合及正式 UAT 另行處理。 PLAN2d975f is faithful execution-record decomposition of that exact authorizedCsubset/mergeboundary: PHASE009TASK047; no requirements/design/commands/threshold/GR/UAT change. No rawexport.",
+      "recorded_at": "2026-10-13T08:35:47Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "2d975f70c8f0e4f046dcc84911f5fc446a61d851fd89b97c5bf76c536b686add",
+      "code_commit": "7c927e26b386d87c595bf3c6111467d0ccc8b20d",
+      "scope": [
+        "item-management",
+        "PHASE-009",
+        "TASK-047",
+        "TASK-043-C-reference-subset",
+        "CI-review-gated-Item-merge",
+        "Item-cleanup"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-053",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Same actual latestSam explicitCtest-onlycandidatePR/CI+reviewmerge/main/Itemcleanup andGR/UATseparate. PLAN46dd is exactauthorizedexecutionunit withminorC-PLAN001DoDclarification: implementationDONE-beforegate vs phasepostmergeexit. No scope/requirements/design/test/commands/threshold change. Latestmain308f integrated, only upstreamSupplierPR211+closeout imported; no authoredSupplierwrite.",
+      "recorded_at": "2026-10-13T08:42:36Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "46dd2221fc8f8fe974adc6553d83c3eaefc706e81315b649a55b8331a715410b",
+      "code_commit": "308f0059359c4a7cd2ad51f43028cfda3910f979",
+      "scope": [
+        "item-management",
+        "PHASE-009",
+        "TASK-047",
+        "TASK-043-C-reference-subset",
+        "CI-review-gated-Item-merge",
+        "Item-cleanup"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-054",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "ActualSam currentasyncanswer to specificexport/destination/data-classificationquestion: 批准這批15套合成證據保存（建議）。 Exactlyfixed11historical+final4runnerpackages, runjson/redactedlogs/JUnit/build/lintincltestenvironmentpaths/metadata into crazysumsum/erp-app repository, scanbeforecommit; no login/browsertrace/secret/businessdata/formalGR/UATacceptance. Defaultallow_exportfalse unchanged.",
+      "recorded_at": "2026-10-13T08:42:36Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "46dd2221fc8f8fe974adc6553d83c3eaefc706e81315b649a55b8331a715410b",
+      "code_commit": "308f0059359c4a7cd2ad51f43028cfda3910f979",
+      "scope": [
+        "item-management",
+        "PHASE-009",
+        "TASK-047",
+        "15-synthetic-run-packages-batch-export"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -1316,6 +1416,54 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-034",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/item_supplier_handoff_review",
+      "reviewed_baseline": "726268dd250d995748d8487522c1193bec75cd7f8045f0ceeca4d02bf5de95e2",
+      "source_ref": "Actual exact3af17c021a7b83155845be6e2345f5481c45de5a finalAPPROVED2026-10-13, noactionablefindings. Source726/producttesthashesmatchREV033; all4localDEVELOPERruncommandcontracts/artifactSHA/bytes/sourcePLANverified, server509/client8600skip, lintbuildPASS. OnlyItemcode/tests/report/checkpoint, no newrawGit. Notmergeauthority/formalacceptance.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-035",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/item_supplier_handoff_review",
+      "reviewed_baseline": "57b95453be2c6ef7c2ac48c0aab3cbbfe968dbef15a2d43dc990fdf84dca376b",
+      "source_ref": "Actual finalsource57b954 APPROVED noopenfindings. MEDIUMracecleanup solved release/settle-first/observedoperations/markerfailure/10sdeadline; authorfaultinjectionbothorders~1.04s/cmprestored/fixturetables0. OnlyItemtest+bookkeeping; no product/Supplier/schema/UAT. TestSHAfd861a53a0fe085b01c9abf06b2abcf5e1df11fa983de5b05fc274cda96a37bc. NotreviewerDBrerun/formalacceptance.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-036",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/item_supplier_handoff_review",
+      "reviewed_baseline": "2d975f70c8f0e4f046dcc84911f5fc446a61d851fd89b97c5bf76c536b686add",
+      "source_ref": "ActualCHANGES_REQUESTED C-PLAN001MEDIUM: taskDoDactualmerge/cleanup circularwithMERGE_READYrequiresDONE. Allotherlinks/scopes/contracts/mandatoryflags pass. Minorclarificationapplied toPLAN46dd; finalnewreviewpending. Not ignored/waived.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-037",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/item_supplier_handoff_review",
+      "reviewed_baseline": "46dd2221fc8f8fe974adc6553d83c3eaefc706e81315b649a55b8331a715410b",
+      "source_ref": "ActualfinalPLAN46dd/source201f APPROVED atHEAD308f, noopenfindings; C-PLAN001RESOLVED implementationDoD/DONE-for-gate vsphasepostmergeexit. TypedstructurePASS, mandatory/UAT flags preserved. Testhashfd861 unchanged, no authoredproducts/Supplier/schema/CI/profile/contracts. Latest383263imports onlySupplierpin/journaldocs; finalcurrentcandidateauditrequired.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -1560,6 +1708,83 @@
       "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/38330748139/job/115079678084 ; actualgh finalSUCCESS exact962806b3, coverage step SUCCESS andcapacitystep SUCCESS, originalSupplierlockwaitcasePASS, capacity2PASS/0FAIL/0SKIP. PriorCIFAIL retained.",
       "actor": "GitHub Actions, actual authenticated gh finaljob/log observation",
       "observed_at": "2026-10-13T01:28:47Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "Dependency audit",
+      "code_commit": "3af17c021a7b83155845be6e2345f5481c45de5a",
+      "spec_baseline": "d6db1f524df15257eca36eb0d4117efe8f20352a07e931b6511df7d8795e5de4",
+      "source_fingerprint": "726268dd250d995748d8487522c1193bec75cd7f8045f0ceeca4d02bf5de95e2",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/38362721868/job/115180502308; actualghSUCCESS exact3af17c02. MySQLjobstillIN_PROGRESS, nooverallPASS.",
+      "actor": "GitHub Actions, actual authenticated gh observation",
+      "observed_at": "2026-10-13T07:34:51Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "Lint",
+      "code_commit": "3af17c021a7b83155845be6e2345f5481c45de5a",
+      "spec_baseline": "d6db1f524df15257eca36eb0d4117efe8f20352a07e931b6511df7d8795e5de4",
+      "source_fingerprint": "726268dd250d995748d8487522c1193bec75cd7f8045f0ceeca4d02bf5de95e2",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/38362721868/job/115180502521; actualghSUCCESS exact3af17c02. MySQLjobstillIN_PROGRESS, nooverallPASS.",
+      "actor": "GitHub Actions, actual authenticated gh observation",
+      "observed_at": "2026-10-13T07:34:51Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "Build frontend",
+      "code_commit": "3af17c021a7b83155845be6e2345f5481c45de5a",
+      "spec_baseline": "d6db1f524df15257eca36eb0d4117efe8f20352a07e931b6511df7d8795e5de4",
+      "source_fingerprint": "726268dd250d995748d8487522c1193bec75cd7f8045f0ceeca4d02bf5de95e2",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/38362721868/job/115180502423; actualghSUCCESS exact3af17c02. MySQLjobstillIN_PROGRESS, nooverallPASS.",
+      "actor": "GitHub Actions, actual authenticated gh observation",
+      "observed_at": "2026-10-13T07:34:51Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "Browser tests (Playwright)",
+      "code_commit": "3af17c021a7b83155845be6e2345f5481c45de5a",
+      "spec_baseline": "d6db1f524df15257eca36eb0d4117efe8f20352a07e931b6511df7d8795e5de4",
+      "source_fingerprint": "726268dd250d995748d8487522c1193bec75cd7f8045f0ceeca4d02bf5de95e2",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/38362721868/job/115180502084; actualghSUCCESS exact3af17c02. MySQLjobstillIN_PROGRESS, nooverallPASS.",
+      "actor": "GitHub Actions, actual authenticated gh observation",
+      "observed_at": "2026-10-13T07:34:51Z"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "PR210 exactcandidate independent review",
+      "code_commit": "3af17c021a7b83155845be6e2345f5481c45de5a",
+      "spec_baseline": "d6db1f524df15257eca36eb0d4117efe8f20352a07e931b6511df7d8795e5de4",
+      "source_fingerprint": "726268dd250d995748d8487522c1193bec75cd7f8045f0ceeca4d02bf5de95e2",
+      "status": "PASS",
+      "source_ref": "Actual separateagent /root/item_supplier_handoff_review finalresponse exact3af17c02 APPROVED; reviewed4rawlocalpackages/hashes/contracts/Itemscope. NohumanGHapproval/mergeauthority/formalacceptance.",
+      "actor": "/root/item_supplier_handoff_review, actual SEPARATE_AGENT",
+      "observed_at": "2026-10-13T07:37:01Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "Test (server + client, MySQL integration)",
+      "code_commit": "3af17c021a7b83155845be6e2345f5481c45de5a",
+      "spec_baseline": "d6db1f524df15257eca36eb0d4117efe8f20352a07e931b6511df7d8795e5de4",
+      "source_fingerprint": "726268dd250d995748d8487522c1193bec75cd7f8045f0ceeca4d02bf5de95e2",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/38362721868/job/115180502488 ; actualghSUCCESS exact3af17c02 all5CIcompletedPASS. CI logs actualnewTC017018unit+MySQLPASS; coverage step SUCCESS, Salescapacity2PASS0FAIL0SKIP. No formalacceptance or unknown skip promoted.",
+      "actor": "GitHub Actions, actual authenticated gh observation",
+      "observed_at": "2026-10-13T07:49:16Z"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "PR210 observed Item provider integration",
+      "code_commit": "3af17c021a7b83155845be6e2345f5481c45de5a",
+      "spec_baseline": "d6db1f524df15257eca36eb0d4117efe8f20352a07e931b6511df7d8795e5de4",
+      "source_fingerprint": "726268dd250d995748d8487522c1193bec75cd7f8045f0ceeca4d02bf5de95e2",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/210 ; actualmerge7c927e26b386d87c595bf3c6111467d0ccc8b20d. CleanrootmainFF froma71. gitdiffcandidate3af17→merge7c927emptywhole-tree; rootmainunit49/49PASS0skip. CandidateCIgreennotfabricatedmergeSHAci or formalacceptance.",
+      "actor": "Actual authenticated gh/Git observation and developer rerun",
+      "observed_at": "2026-10-13T07:52:19Z"
     }
   ],
   "pending_decisions": [
@@ -2397,8 +2622,8 @@
       "kind": "PUSH",
       "target": "PR210 implementation candidate origin/codex/item-purchase-lookup-handoff",
       "idempotency_key": "item-purchase-provider-source726-push-20261013",
-      "status": "PLANNED",
-      "source_ref": "ActualSam approvedDES/PLAN+IMPLEMENT, developer4checksPASS509/860/lint/build, realMySQL14PASS, unit49PASS, sourceREV033approved72compatibilityPASS. Freezecode3files+report+trackedcheckpoint only; no rawexport. Fresha71 unchanged."
+      "status": "CONFIRMED",
+      "source_ref": "Actual gitpush34207893..3af17c021a7b83155845be6e2345f5481c45de5a completed; authenticatedghPR210 observes exactHEAD/freshCI38362721868. No rawexport or merge authority."
     },
     {
       "id": "ITEM-PURCHASE-OLD-WT-122",
@@ -2407,6 +2632,78 @@
       "idempotency_key": "item-purchase-oldempty-worktree-archive-20261013",
       "status": "CONFIRMED",
       "source_ref": "Actualoldworktreeclean,no uniquecommits; app archivequeued thenobservedabsent fromgitinventory/path; nonforcebranch-d success6b7fcontainedmain. Recoverableappsnapshot; othermodules untouched."
+    },
+    {
+      "id": "ITEM-PURCHASE-READY-123",
+      "kind": "PR_READY",
+      "target": "GitHub PR210 exact3af17c02",
+      "idempotency_key": "item-purchase-pr210-ready3af17-20261013",
+      "status": "CONFIRMED",
+      "source_ref": "Actual ghPRready completed, remoteisDraftfalse; independentreviewprovenance https://github.com/crazysumsum/erp-app/pull/210#issuecomment-6140703985 . Notmergeauthority/formalacceptance."
+    },
+    {
+      "id": "ITEM-PURCHASE-MERGE-124",
+      "kind": "MERGE",
+      "target": "GitHub PR210 exact3af17c021a7b83155845be6e2345f5481c45de5a into maina71f348879bb04df38cdeda4348d9031ec10d7f3",
+      "idempotency_key": "item-purchase-pr210-merge3af17-20261013",
+      "status": "CONFIRMED",
+      "source_ref": "ActualghPR210MERGED2026-10-13T07:49:59Z head3af17c021a7b83155845be6e2345f5481c45de5a merge7c927e26b386d87c595bf3c6111467d0ccc8b20d; freshmaina71premerge/all5CI38362721868PASS/REV034exactAPPROVED/scopedPHASE008MERGE_READY LOCAL_CHECKS_PASS/APR050. Normalmerge,noadmin."
+    },
+    {
+      "id": "ITEM-PURCHASE-CLEANUP-125",
+      "kind": "CLEANUP",
+      "target": "Only /Users/sam/.codex/worktrees/item-purchase-lookup-handoff/erp-app, local/remote codex/item-purchase-lookup-handoff",
+      "idempotency_key": "item-purchase-pr210-mergedcleanup-20261013",
+      "status": "CONFIRMED",
+      "source_ref": "ActualPR210merged7c927andonlyItembranchlocal/remoteabsent, apprecoverablearchive verified. Closeout https://github.com/crazysumsum/erp-app/pull/210#issuecomment-6141015554 ; privateCAS107/receipt preserveshistory. No rawexport."
+    },
+    {
+      "id": "ITEM-SUPPLIER-C-WT-126",
+      "kind": "WORKTREE_CREATE",
+      "target": "/Users/sam/.codex/worktrees/item-task043-supplier-guards/erp-app",
+      "idempotency_key": "item-task043-supplier-guards-main7c927-20261013",
+      "status": "CONFIRMED",
+      "source_ref": "Actual appcreated+registered freshoriginmain7c927 worktree; branchcodex/item-task043-supplier-guards. Currentrootmainclean. No old Item/othermodules cleanup."
+    },
+    {
+      "id": "ITEM-SUPPLIER-C-MIG-127",
+      "kind": "MIGRATION",
+      "target": "Existingmigrations only innewprivate erp_item_supplier_c_20261013",
+      "idempotency_key": "item-supplier-c-vdXM5l-existingmigrations-20261013",
+      "status": "CONFIRMED",
+      "source_ref": "Actualnewprivate socket-onlyMySQL26.7.0 initializedrootempty; existingmigrations through0081complete. No schema/sourcefiles edited, sharedschemasunchanged."
+    },
+    {
+      "id": "MODE-CHANGE-103",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-103",
+      "status": "CONFIRMED",
+      "source_ref": "Actual Sam2026-10-13 continue TASK043 Item-onlydevelopment on latestmain7c927; formalUATseparate"
+    },
+    {
+      "id": "ITEM-C-MAIN-128",
+      "kind": "BASELINE_INTEGRATION",
+      "target": "origin/main308f0059359c4a7cd2ad51f43028cfda3910f979 inItemCworktree",
+      "idempotency_key": "item-c-latestmain308f-20261013",
+      "status": "CONFIRMED",
+      "source_ref": "Actualfreshfetch+fastforward7c927→308f afteralloldrunnerprocessesended. SupplierPR211andcloseout importedonly; authoredsource/Supplier/schema/config/UI diffempty. Existing0081schemaunchanged. Currentglobalfingerprint201f/newPLAN46dd; everyfinaldevelopercheck/review/CIwillbe rebound."
+    },
+    {
+      "id": "ITEM-C-MAIN-129",
+      "kind": "BASELINE_INTEGRATION",
+      "target": "origin/main3832635077ecc32c6a7b9292e2b9e155223008d0",
+      "idempotency_key": "item-c-latestmain383263-20261013",
+      "status": "CONFIRMED",
+      "source_ref": "ActualFF308f→383263 afterallprior4runsPASS. UpstreamPR213 refreshesonlySupplierproviderpin/journal, product/config/schemaunchanged. PLAN46dd/DESf743/Itemtestfd861 unchanged. Fresh4currentrunsreplaceunindexedintermediates asfinalbatch; no stale gatecredit."
+    },
+    {
+      "id": "ITEM-C-PUSH-130",
+      "kind": "PUSH",
+      "target": "New Item C candidate origin/codex/item-task043-supplier-guards",
+      "idempotency_key": "item-c-source711f09-candidate-push-20261013",
+      "status": "PLANNED",
+      "source_ref": "ActualSam explicitlyauthorizecandidatePR/CIreviewmerge/cleanup, currentfourrunnersallPASS524/860/lint/build, source/PLANreview+trace/boundaryPASS; fixedapproved15packages/52files1395834bytes classifiedintegrityPASS/no logintraceorvalues. Freshmain383263unchanged. FreezeonlyItemtest/docs/evidence; requireexactheadCI/reviewbeforemerge."
     }
   ],
   "evidence_files": [
@@ -2434,7 +2731,22 @@
     "evidence/20261012T005859-03e6e6fd8f6f/run.json",
     "evidence/20261012T005902-f45065a0c924/run.json",
     "evidence/20261012T005904-bbc9eb8bc27c/run.json",
-    "evidence/20261012T005907-5088d16f4511/run.json"
+    "evidence/20261012T005907-5088d16f4511/run.json",
+    "evidence/20261013T071952-44df4fe3d5d9/run.json",
+    "evidence/20261013T071957-3834f342b77f/run.json",
+    "evidence/20261013T072003-afb4bd495d57/run.json",
+    "evidence/20261013T072010-c821362edb23/run.json",
+    "evidence/20261013T082359-e863686eaedd/run.json",
+    "evidence/20261013T082429-d8aa980da5a7/run.json",
+    "evidence/20261013T082436-2a95360c9e4c/run.json",
+    "evidence/20261013T082939-a028d9364bc6/run.json",
+    "evidence/20261013T083627-b7ab263ebd60/run.json",
+    "evidence/20261013T083632-df6bfe65b332/run.json",
+    "evidence/20261013T083700-5f62ede3e5d6/run.json",
+    "evidence/20261013T090536-a50531c20f95/run.json",
+    "evidence/20261013T090546-9e92fa1004be/run.json",
+    "evidence/20261013T090553-78e0880a6907/run.json",
+    "evidence/20261013T090558-38c05f510397/run.json"
   ],
   "defects": [
     {
@@ -2568,5 +2880,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Currentsource726 developer4checksPASS509/860/lint/build, fullMySQLlookup14PASS, TDDunit49PASS, mutationcaught6!=5/restoredexact, independentsourceREV033APPROVED72compatPASS. CommitonlyItemsource/test/report/checkpoint(notraw), pushPR210 candidate thenactualexactreview+fiveCI. KeepTASK046IN_PROGRESS untilscopedDoD; no mergeauthority/rawexport/formalUAT/TASK043closure."
+  "next_safe_action": "Freshmain383263 unchanged; SOURCE711f09/PLAN46dd fourfinalDEVELOPERrunsPASS524/860/lint/build, source+planreview findings resolved. Exactly15approvedsyntheticpackages52files scanned/artifactsverified; original25+15 index40preserved. Commit/push immutableItemCcandidate/PR, actualexactreview+fiveCIbeforeowner-authorizedmerge/onlyItemcleanup. Preservefourunexported308fpackageslocally. TASK043IN_PROGRESS/GRpositive+D/UATnotdone."
 }

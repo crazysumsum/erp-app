@@ -1,0 +1,171 @@
+{
+  "schema_version": "2.0",
+  "module_id": "item-management",
+  "run_id": "20261013T072010-c821362edb23",
+  "suite_id": "item-server-technical",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "d6db1f524df15257eca36eb0d4117efe8f20352a07e931b6511df7d8795e5de4",
+  "source_fingerprint": "726268dd250d995748d8487522c1193bec75cd7f8045f0ceeca4d02bf5de95e2",
+  "code_commit": "34207893f0c543cfb7a82857a50736c6e80c4974",
+  "started_at": "2026-10-13T07:20:11.712096Z",
+  "ended_at": "2026-10-13T07:22:15.561410Z",
+  "environment_id": "item-isolated-test",
+  "runtime_instance_id": "ITEM-PURCHASE-DEVELOPER-20261013-4wDOc0",
+  "data_reference": "Synthetic Item fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "node",
+    "--test",
+    "--test-concurrency=1",
+    "--import",
+    "./test-support/testEnv.js",
+    "--test-reporter=junit",
+    "--test-reporter-destination=/Users/sam/.codex/worktrees/item-purchase-lookup-handoff/erp-app/docs/items_management/evidence/20261013T072010-c821362edb23/item-server-technical.xml",
+    "test/itemAuditLogService.test.js",
+    "test/itemCatalogHandlers.test.js",
+    "test/itemCatalogService.test.js",
+    "test/itemConfig.test.js",
+    "test/itemErrors.test.js",
+    "test/itemImportFileCleanupJob.test.js",
+    "test/itemImportProcessor.test.js",
+    "test/itemLookupService.test.js",
+    "test/itemMediaCleanupJob.test.js",
+    "test/itemPerformanceFixtures.test.js",
+    "test/itemReadProjection.test.js",
+    "test/itemValidation.test.js",
+    "test/variantSignature.test.js",
+    "test/integration/itemAttributeMigrations.integration.test.js",
+    "test/integration/itemAudit.integration.test.js",
+    "test/integration/itemBulkStatus.integration.test.js",
+    "test/integration/itemCatalog.integration.test.js",
+    "test/integration/itemConcurrency.integration.test.js",
+    "test/integration/itemCreate.integration.test.js",
+    "test/integration/itemExport.integration.test.js",
+    "test/integration/itemHighRisk.integration.test.js",
+    "test/integration/itemImport.integration.test.js",
+    "test/integration/itemImportFileCleanup.integration.test.js",
+    "test/integration/itemImportMigrations.integration.test.js",
+    "test/integration/itemLifecycle.integration.test.js",
+    "test/integration/itemLookup.integration.test.js",
+    "test/integration/itemManagement.integration.test.js",
+    "test/integration/itemMigrationIdempotency.integration.test.js",
+    "test/integration/itemMedia.integration.test.js",
+    "test/integration/itemRead.integration.test.js",
+    "test/integration/itemUpdate.integration.test.js",
+    "test/integration/itemReferenceGuards.integration.test.js",
+    "test/sales/itemUomCompatibility.test.js"
+  ],
+  "cwd": "server",
+  "command_contract_sha256": "450999fd6ff8d930073fd886ed18dfeaa4910247ac7f61394eb586e174db7620",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 509,
+    "passed": 509,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [
+    {
+      "id": "TC-001",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-002",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-003",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-004",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-005",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-006",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-007",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-008",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-009",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-010",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-013",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-014",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-015",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-017",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-018",
+      "status": "PASS"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "evidence/20261013T072010-c821362edb23/stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/20261013T072010-c821362edb23/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/20261013T072010-c821362edb23/item-server-technical.xml",
+      "sha256": "340e5651e9d6809195813357ce8d370d5634d2fa1fc073286283079a7febdc7d",
+      "bytes": 128269
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    },
+    {
+      "argv": [
+        "mysql",
+        "--version"
+      ],
+      "output": "mysql  Ver 26.7.0 for macos15 on arm64 (MySQL Community Server - GPL)\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "Local observation only; external services/config/data and secret redaction completeness require review."
+  ]
+}
