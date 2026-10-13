@@ -1,0 +1,73 @@
+{
+  "schema_version": "raw-asset-index-migration-1",
+  "module_id": "item-management",
+  "authorization_ref": "Sam actual async reply2026-10-12: 批准這3個原始附件的索引遷移（建議）; one-time revision/content-guarded migration, no gate waiver",
+  "recovery_commit": "2e0427e3abcc897992ed89bf04b6d69df35210e2",
+  "before_state_revision": 86,
+  "before_state_sha256": "368c4379d5918d1a2db67b30ca2f92df3ff4b035f4bd335ef50cf986bd65bb2c",
+  "after_state_revision": 87,
+  "before_run_index": [
+    "evidence/20260914T092531-d37464deab2b/run.json",
+    "evidence/20260914T092606-54f0584eddea/run.json",
+    "evidence/20260914T092629-d4f1cf71d1e8/run.json",
+    "evidence/20260914T093142-11c20da04269/run.json",
+    "evidence/20260914T093146-7574b753a291/run.json",
+    "testing/evidence/remediation-client.xml",
+    "testing/evidence/remediation-item-uat-browser.xml",
+    "testing/evidence/remediation-performance-bounded.xml",
+    "testing/evidence/remediation-server-scoped.xml",
+    "evidence/20260915T022734-0e13fa08d720/run.json",
+    "evidence/20260915T022954-219f01eed099/run.json",
+    "evidence/20260915T023008-644114a5c002/run.json",
+    "evidence/20260915T023324-35fe8b579a91/run.json",
+    "evidence/20260915T025642-5a90557a2bfb/run.json",
+    "evidence/20260915T025743-3ff0b84153c9/run.json",
+    "evidence/20260915T025801-1f98c219d70a/run.json",
+    "evidence/20260915T030118-828741e0f9f4/run.json",
+    "evidence/20260915T030140-5f4671994278/run.json",
+    "evidence/20260915T030248-57050e3d96b5/run.json",
+    "evidence/20260915T030312-a6347c1d7274/run.json",
+    "evidence/20260915T030630-20d57aa8c7d5/run.json",
+    "evidence/task-044-owner-waiver-20260921/manifest.json",
+    "evidence/task-044-owner-waiver-20260921/manifest.sig",
+    "evidence/task-044-owner-waiver-20260921/tc016-owner-waiver-report.json"
+  ],
+  "after_run_index": [
+    "evidence/20260914T092531-d37464deab2b/run.json",
+    "evidence/20260914T092606-54f0584eddea/run.json",
+    "evidence/20260914T092629-d4f1cf71d1e8/run.json",
+    "evidence/20260914T093142-11c20da04269/run.json",
+    "evidence/20260914T093146-7574b753a291/run.json",
+    "testing/evidence/remediation-client.xml",
+    "testing/evidence/remediation-item-uat-browser.xml",
+    "testing/evidence/remediation-performance-bounded.xml",
+    "testing/evidence/remediation-server-scoped.xml",
+    "evidence/20260915T022734-0e13fa08d720/run.json",
+    "evidence/20260915T022954-219f01eed099/run.json",
+    "evidence/20260915T023008-644114a5c002/run.json",
+    "evidence/20260915T023324-35fe8b579a91/run.json",
+    "evidence/20260915T025642-5a90557a2bfb/run.json",
+    "evidence/20260915T025743-3ff0b84153c9/run.json",
+    "evidence/20260915T025801-1f98c219d70a/run.json",
+    "evidence/20260915T030118-828741e0f9f4/run.json",
+    "evidence/20260915T030140-5f4671994278/run.json",
+    "evidence/20260915T030248-57050e3d96b5/run.json",
+    "evidence/20260915T030312-a6347c1d7274/run.json",
+    "evidence/20260915T030630-20d57aa8c7d5/run.json"
+  ],
+  "reclassified_raw_assets": [
+    {
+      "path": "evidence/task-044-owner-waiver-20260921/manifest.json",
+      "sha256": "4bdf46c63c98b2183c29f2e81ab8a5b2e3360949ee423efc8182d6e529dc606e"
+    },
+    {
+      "path": "evidence/task-044-owner-waiver-20260921/manifest.sig",
+      "sha256": "98a1afff1fca15d50655549f0d765da268a37e970dadd24386511192a50b3b77"
+    },
+    {
+      "path": "evidence/task-044-owner-waiver-20260921/tc016-owner-waiver-report.json",
+      "sha256": "082fa00b55321b5af49534651e799e656d2f26fdc601b5d3642d41f291cd8e18"
+    }
+  ],
+  "invariants": "Only raw-asset run-index membership and revision change in the exceptional migration; all files, approvals, reviews, failed run pointers, DEF103 closure refs, waiver and TC016 NOT_RUN semantics preserved. This map is a raw audit artifact, not harness run evidence."
+}
