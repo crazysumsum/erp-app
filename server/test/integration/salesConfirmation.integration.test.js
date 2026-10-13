@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import test from "node:test";
-import { SalesOrderService } from "../../src/modules/sales/SalesOrderService.js";
+import { SalesOrderService, readSalesOrderDetail } from "../../src/modules/sales/SalesOrderService.js";
 import { InventoryReservationService } from "../../src/modules/inventory/InventoryReservationService.js";
 import { formatDateForFile } from "../../src/services/time/timeFormat.js";
-import { setup, stock } from "../sales/phase2/fixtures.js";
+import { createOrder, newOrderInsideInventory, secondCustomer, setup, stock } from "../sales/phase2/fixtures.js";
 const integrationTest = process.env.DB_INTEGRATION_TESTS === "1" ? test : test.skip;
 
 integrationTest("TC-022 Phase A commits one durable original-user intent/DB-clock lease/history/audit without Inventory effects", async t => {
@@ -244,4 +244,18 @@ integrationTest("TC-022 actual HTTP202 retains event/Retry-After and remains pol
   assert.equal((await f.db.query("SELECT COUNT(*) AS n FROM inventory_reservations WHERE warehouse_id=?",[f.warehouseId]))[0][0].n,1);
   await f.db.execute("DELETE FROM role_permissions WHERE role_id=?",[f.roleId]);
   const revoked=await api.confirm();assert.equal(revoked.status,403);assert.equal((await revoked.json()).error.code,"PERMISSION_STALE");
+});
+// §2.8: confirmation holds its Order's Lines (rank 1) and then enters Inventory (Warehouse X, rank 5); a new Order's header FK check already
+// holds the Warehouse share lock, so its first line insert must not wait on the confirmation's Lines. Another Customer and Currency keep the
+// Customer and Currency locks from serializing the two first.
+integrationTest("TC-021 confirmation never deadlocks with another Customer's new Order in the same Warehouse", async t => {
+  const f = await setup(t); await stock(f, 20);
+  const other = await secondCustomer(f), real = new InventoryReservationService({ database: f.database, time: f.time, logger: f.logger });
+  const probe = newOrderInsideInventory(f, real, "reserveAvailableForSalesBatchInTransaction", database => createOrder(f, database, other));
+  const service = f.service({ inventory: probe.inventory }), intent = await service.startConfirmation(f.request);
+  try { await service.completeConfirmation({ eventId: intent.eventId, claims: f.claims, leaseOwner: intent.leaseOwner }); } finally { await probe.settle(); }
+  assert.equal(probe.state.inserted, true, "the new Order's line insert waited on the confirmation's Sales line locks");
+  const order = await readSalesOrderDetail(f.db, f.request.id);
+  assert.deepEqual([order.status, order.lines[0].reservedBaseQuantity], ["CONFIRMED", "10"]);
+  assert.equal((await probe.state.draft).salesOrder.status, "DRAFT");
 });

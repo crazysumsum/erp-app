@@ -1,11 +1,12 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import test from "node:test";
-import { setup,stock,waitForWorkerEntry } from "../sales/phase2/fixtures.js";
+import { createOrder,newOrderInsideInventory,setup,stock,waitForWorkerEntry } from "../sales/phase2/fixtures.js";
 import { InventoryReservationService } from "../../src/modules/inventory/InventoryReservationService.js";
 import { SalesBackorderService } from "../../src/modules/sales/SalesBackorderService.js";
 import { SalesOrderService,readSalesOrderDetail } from "../../src/modules/sales/SalesOrderService.js";
 import { SalesOrderLifecycleService } from "../../src/modules/sales/SalesOrderLifecycleService.js";
+import { SalesQuotationService } from "../../src/modules/sales/SalesQuotationService.js";
 import { SchedulerService } from "../../src/services/scheduler/SchedulerService.js";
 import { SalesJobRuntimeService } from "../../src/services/salesJobs/SalesJobRuntimeService.js";
 import { SalesBackorderAllocationJob } from "../../src/services/salesJobs/jobs/SalesBackorderAllocationJob.js";
@@ -81,6 +82,37 @@ it("TC-027 true overlapping allocators fence one FIFO head and cannot over-reser
  const left=new SalesBackorderService({...f,database,authorizeSalesBackorder:a.authorizeSalesBackorder}),right=new SalesBackorderService({...f,database,authorizeSalesBackorder:a.authorizeSalesBackorder});const runs=[left.runBatch({maxEntries:1}),right.runBatch({maxEntries:1})];let results;
  try{results=await Promise.all(runs);}finally{barrier.resolve();await Promise.allSettled(runs);}
  assert.equal(entered,2);assert.equal(results.reduce((n,r)=>n+r.allocatedEntries,0),1);const state=await commitmentFacts(f);assert.equal(state.mappings.length,1);assert.equal(state.reservations.length,1);assert.equal(state.controls[0].reserved_quantity,4);assert.equal(state.order.lines[0].backorderedBaseQuantity,"6");
+});
+it("TC-021 an allocator holding its Order mapping locks never blocks another Order's confirmation behind the Warehouse lock",async t=>{
+ const f=await setup(t);await stock(f,0);await confirm(f);const second=await anotherOrder(f);await topup(f,20);const a=await allocator(f),inventory=a.s.inventory;let other,blocked=false;
+ // Inventory is the allocator's next lock rank: the other Order's confirmation takes the Warehouse lock, then inserts its own mapping.
+ // A mapping gap lock held by the allocator makes that insert wait; the allocator's Warehouse request then closes a deadlock cycle.
+ a.s.inventory={async reserveAvailableForSalesBackorderInTransaction(...args){other=confirm(f,second);const bound=Promise.withResolvers(),timer=setTimeout(()=>{blocked=true;bound.resolve();},5000);await Promise.race([other.catch(()=>{}),bound.promise]);clearTimeout(timer);return inventory.reserveAvailableForSalesBackorderInTransaction(...args);}};
+ let result;try{result=await a.s.runBatch({scope:{warehouseId:f.warehouseId,skuId:f.skuId},maxEntries:1});}finally{await other?.catch(()=>{});}
+ assert.ok(other,"the allocator never reached Inventory");assert.equal(blocked,false,"the other Order's confirmation waited on the allocator's Sales mapping locks");
+ assert.equal((await other).operation.status,"CONFIRMED");assert.equal(result.allocatedEntries,1);assert.equal(result.deferred,0);
+ const orders=await Promise.all([f.request.id,second].map(id=>readSalesOrderDetail(f.db,id)));assert.deepEqual(orders.map(o=>[o.status,o.lines[0].reservedBaseQuantity,o.lines[0].backorderedBaseQuantity]),[["CONFIRMED","10","0"],["CONFIRMED","10","0"]]);
+});
+// §2.8: the allocator holds its Order's Lines (rank 1) and then enters Inventory (Warehouse X, rank 5). A new Order's header FK check
+// already holds the Warehouse share lock, so its first line insert must not wait on the allocator's Lines or the two deadlock.
+async function draftWriterAgainstAllocator(f,write){
+ await stock(f,0);await confirm(f);await topup(f,20);const a=await allocator(f),probe=newOrderInsideInventory(f,a.s.inventory,"reserveAvailableForSalesBackorderInTransaction",write);a.s.inventory=probe.inventory;
+ let result;try{result=await a.s.runBatch({scope:{warehouseId:f.warehouseId,skuId:f.skuId},maxEntries:1});}finally{await probe.settle();}
+ assert.ok(probe.state.draft,"the allocator never reached Inventory");assert.equal(probe.state.inserted,true,"the draft line insert waited on the allocator's Sales line locks");
+ assert.deepEqual([result.allocatedEntries,result.deferred],[1,0]);const written=await probe.state.draft;
+ assert.deepEqual((await readSalesOrderDetail(f.db,f.request.id)).lines.map(l=>[l.reservedBaseQuantity,l.backorderedBaseQuantity]),[["10","0"]]);return written;
+}
+it("TC-021 a new draft Order in the allocator's Warehouse never deadlocks the allocator on its line insert",async t=>{
+ const f=await setup(t),created=await draftWriterAgainstAllocator(f,database=>createOrder(f,database));
+ const detail=await readSalesOrderDetail(f.db,created.salesOrder.id);assert.equal(detail.status,"DRAFT");assert.equal(detail.lines.length,1);
+});
+it("TC-021 a Quotation conversion in the allocator's Warehouse never deadlocks the allocator on its line insert",async t=>{
+ const f=await setup(t),quotations=new SalesQuotationService(f),date=f.time.fileDate(),line={skuId:f.skuId,skuUomId:f.skuUomId,quantity:"10.000000",unitSellingPrice:"1.0000"};
+ f.beforeParents.push(async()=>{await f.db.execute("DELETE FROM sales_quotation_conversions WHERE quotation_id IN (SELECT id FROM sales_quotations WHERE customer_id=?)",[f.customerId]);await f.db.execute("DELETE FROM sales_orders WHERE customer_id=?",[f.customerId]);await f.db.execute("DELETE FROM sales_quotations WHERE customer_id=?",[f.customerId]);});
+ const quotation=(await quotations.create({claims:f.claims,input:{eventId:randomUUID(),customerId:f.customerId,currencyCode:f.currency,quotationDate:date,validUntil:date,lines:[line]}})).quotation;
+ const issued=(await quotations.issue({claims:f.claims,id:quotation.id,input:{eventId:randomUUID(),version:1}})).quotation;
+ const converted=await draftWriterAgainstAllocator(f,database=>new SalesQuotationService({...f,database}).convert({claims:f.claims,id:quotation.id,input:{eventId:randomUUID(),version:issued.version,order:{customerId:f.customerId,currencyCode:f.currency,fulfillmentWarehouseId:f.warehouseId,orderDate:date,lines:[line]}}}));
+ assert.equal(converted.quotation.status,"CONVERTED");assert.equal((await readSalesOrderDetail(f.db,converted.salesOrder.id)).lines.length,1);
 });
 it("TC-031 concurrent cancellation observes allocation version then safely releases the worker mapping",async t=>{
  const f=await setup(t);await stock(f,0);await confirm(f);await topup(f,4);const a=await allocator(f),inventory=a.s.inventory,entered=Promise.withResolvers(),release=Promise.withResolvers();a.s.inventory={async reserveAvailableForSalesBackorderInTransaction(...args){const r=await inventory.reserveAvailableForSalesBackorderInTransaction(...args);entered.resolve();await release.promise;return r;}};
