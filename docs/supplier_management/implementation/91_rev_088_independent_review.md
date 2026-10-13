@@ -301,7 +301,7 @@ Results after the fixes:
 - client vitest: 866 tests;
 - Supplier e2e: 42 tests (the SKU-relations spec 8/8, three times in a row);
 - integration (relations file and unit): 26 tests;
-- mutation: 20 mutants killed, plus the combined M-1 mutant;
+- mutation: 21 mutants, 20 killed. The survivor removes only one of the two M-1 layers, so the other still protects; removing both is killed;
 - lint and build: pass.
 
 Not re-reviewed, by decision (HD-099).

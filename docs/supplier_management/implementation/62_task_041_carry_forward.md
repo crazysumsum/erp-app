@@ -1055,7 +1055,7 @@ fails the test instead of hanging it. Killed: "no skip when the index exists" (i
     - a stale unit lookup (M-1);
     - picker input cleaning (M-3);
     - reactivation (M-4).
-- **Mutation:** 20 mutants, all killed. They cover:
+- **Mutation:** 21 mutants; 20 are killed. The one survivor removes only the late-response check while the abort still holds (see the next point). They cover:
   - the active-UOM checks on create, rebind and reactivation;
   - the Supplier-first order on create;
   - the list's `purpose`;

@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 321,
+  "revision": 322,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -2053,6 +2053,18 @@
       "status": "CHANGES_REQUESTED",
       "open_critical": 0,
       "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-088",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-039)",
+      "reviewer": "agent-skills:code-reviewer, independent of the author, reviewing e6e07d06874665c1007378a24354f784d3ba0118 (TASK-039 branch)",
+      "reviewed_baseline": "29a0615a61808b3747cd8feb522d051ba5a312da6fb0fccf36e7cf9746286775",
+      "source_ref": "docs/supplier_management/implementation/91_rev_088_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
       "risk_approval_id": null
     }
   ],
@@ -5168,6 +5180,17 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-13: '全部按建議' (1–5, design A). errorMessages.js turned out not to need a change: every new code already has a Chinese public message."
+    },
+    {
+      "id": "HD-099",
+      "impact": "MAJOR",
+      "question": "REV-088 CHANGES_REQUESTED TASK-039: H-1 (11 Supplier service tests overwritten), M-1 stale edit lookup, M-2 no re-read after VERSION_CONFLICT, M-3 English validation text from the picker, M-4 reactivating a stopped relation keeps an inactive UOM (A: require an active UOM or none; B: accept), L-1 exact SKU lookup, L-2 page bound, L-3 error order. Fix as recommended, then re-review or merge when CI passes?",
+      "affected_ids": [
+        "TASK-039",
+        "REV-088"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-13: '全部按建議，M-4 揀 A，唔使再 review，CI 過就 merge'. H-1 was fixed (tests restored), not accepted; REV-088's open High is closed by that fix, not by a risk approval."
     }
   ],
   "external_actions": [
@@ -6244,5 +6267,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-039: server API, UI, mocked e2e and the local real-backend Playwright run done (HD-098). Next: full CI-style suite, push, PR; review/merge per the Product Owner. Then TASK-050's for-SKU run over HTTP at the production pool."
+  "next_safe_action": "TASK-039: REV-088 follow-ups done (HD-099). Full suite, push, PR; merge when CI is green and main is unchanged (no re-review). Then TASK-050's for-SKU run over HTTP at the production pool."
 }
