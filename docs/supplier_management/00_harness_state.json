@@ -1,19 +1,19 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 309,
+  "revision": 314,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-004",
-  "current_task": "TASK-050",
+  "current_task": "TASK-038",
   "baseline": {
     "design": "f2f4a82b76b40a6ddd214263023aa4b7383facdce30d33348cfd1d16dcdfe6ab",
     "plan": "b5724a2fbaa17f3f592b81e7258fb36d13c8ba2480dae8e10a40bc0713510287",
     "code_commit": "a2715077871ffa8289193d6482df6add6b363bd7",
     "source_fingerprint": "7664683db568898d9d1e1751e9a0fff1ef29d7f7e58d915483cf9681ad056146",
-    "worktree": "/Users/sam/Documents/workspace/erp-supplier-pin",
+    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t38",
     "default_commit": "a2715077871ffa8289193d6482df6add6b363bd7",
     "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
   },
@@ -65,7 +65,7 @@
     "TASK-035": "DONE",
     "TASK-036": "DONE",
     "TASK-037": "DONE",
-    "TASK-038": "PENDING",
+    "TASK-038": "IN_PROGRESS",
     "TASK-039": "PENDING",
     "TASK-040": "PENDING",
     "TASK-041": "DONE",
@@ -1980,6 +1980,30 @@
       "reviewer": "agent-skills:security-auditor, independent of the author, reviewing de030eb7b74e8cd0d70c98adc65273c73ac2514c (PR #197), the round after REV-083",
       "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
       "source_ref": "docs/supplier_management/implementation/87_rev_084_independent_review.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-085",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-038)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 62b34ecfc0044a907658358352b65828c239a3cc (PR #201)",
+      "reviewed_baseline": "f2f4a82b76b40a6ddd214263023aa4b7383facdce30d33348cfd1d16dcdfe6ab",
+      "source_ref": "docs/supplier_management/implementation/88_rev_085_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 2,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-086",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-038)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 2a2d1aa20240dfe4223177754ed6fab46eb0fb2f (PR #201), the round after REV-085",
+      "reviewed_baseline": "f2f4a82b76b40a6ddd214263023aa4b7383facdce30d33348cfd1d16dcdfe6ab",
+      "source_ref": "docs/supplier_management/implementation/89_rev_086_independent_review.md",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -4964,6 +4988,29 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-12: '批准'. The migration is 0081 (0080 went to the HD-088 list indexes)."
+    },
+    {
+      "id": "HD-090",
+      "impact": "MAJOR",
+      "question": "REV-085 (PR #201): H1 Item lookups on a second pool connection inside transactions starve the pool; H2 concurrent recordSupply deadlocks and the retry is dead code; M1 partial updates wipe fields; M2 test gaps; L1-L6. (1) fix H1, H2, M1, M2, L1, L3, L6 and the Info items; (2) L4: make supplier_supply_events.event_id ascii_bin and check collations on rerun (schema change, 0081 not yet merged); (3) L5: (A) the projection does not set the purchase UOM, or (B) read item_sku_uoms directly; (4) accept L2 as documented; (5) keep only archived Suppliers blocked; (6) re-review limited to this round, then merge when CI passes.",
+      "affected_ids": [
+        "TASK-038",
+        "REV-085",
+        "HD-086"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-12: '全部按建議，L4 批准' (L5 A; L2 accepted; archived only; re-review; earlier: 'review，之後 CI 過就 merge')."
+    },
+    {
+      "id": "HD-091",
+      "impact": "MINOR",
+      "question": "REV-086 APPROVED PR #201 with M-1 (H1/H2 fixes only partly covered by tests), L-1 (more surviving mutants) and L-2 (doc claims too broad: '46/46', 'retried up to three times', the M2 list). (A) fix tests and docs before merging, no further review, merge when CI passes; (B) merge now and follow up.",
+      "affected_ids": [
+        "TASK-038",
+        "REV-086"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-13: 'A'."
     }
   ],
   "external_actions": [
@@ -6040,5 +6087,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "HD-085 pin refresh (this PR). Next: TASK-038 PR (migration 0081, HD-086) on top of it. TASK-050 stays IN_PROGRESS for its for-SKU part after TASK-040."
+  "next_safe_action": "TASK-038: HD-091 follow-ups done (tests, docs, failure logging). Full suite, push PR #201; merge when CI is green and main is unchanged (no further review, HD-091). Then: the Supplier client test race (currency select) as a small PR."
 }
