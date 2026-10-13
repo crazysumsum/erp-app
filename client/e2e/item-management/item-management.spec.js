@@ -35,7 +35,8 @@ test.describe.serial("Item Management executable UAT", () => {
       port: Number(process.env.DB_PORT || 3306),
       user: process.env.DB_USER || "erp_user",
       password: process.env.DB_PASSWORD || "",
-      database: process.env.DB_NAME || "erp_dev"
+      database: process.env.DB_NAME || "erp_dev",
+      socketPath: process.env.DB_SOCKET_PATH || undefined
     });
 
     const now = Date.now();
@@ -274,6 +275,52 @@ test.describe.serial("Item Management executable UAT", () => {
 
   test.skip("UAT-005 concurrent editors and real downstream SKU references protect history", async () => {
     // TASK-043 intentionally remains pending until a real downstream consumer owns the reference contract.
+  });
+
+  test("TASK-043 developer: referenced Item delete/archive show 409 without losing state, then zero-stock archive succeeds", async () => {
+    const now = Date.now();
+    const [[sku]] = await database.execute("SELECT id FROM item_skus WHERE item_id = ? ORDER BY id LIMIT 1", [variantItemId]);
+    const [warehouse] = await database.execute("INSERT INTO inventory_warehouses (warehouse_code, normalized_code, warehouse_name, created_at, updated_at) VALUES (?, ?, 'Item browser guard', ?, ?)",
+      [`IR-${marker.slice(-8)}`, `ir-${marker.slice(-8)}`, now, now]);
+    const [bin] = await database.execute("INSERT INTO inventory_bins (warehouse_id, bin_code, normalized_code, created_at, updated_at) VALUES (?, 'A', 'a', ?, ?)", [warehouse.insertId, now, now]);
+    await database.execute(`INSERT INTO inventory_stock_balances (warehouse_id, bin_id, sku_id, stock_status, on_hand_quantity, created_at, updated_at)
+      VALUES (?, ?, ?, 'AVAILABLE', 1, ?, ?)`, [warehouse.insertId, bin.insertId, sku.id, now, now]);
+    try {
+      for (const [label, action] of [["刪除", "delete"], ["封存", "archive"]]) {
+        await page.goto(`/items/${variantItemId}`);
+        await page.getByRole("button", { name: label, exact: true }).click();
+        const dialog = page.getByRole("dialog");
+        await dialog.getByLabel("你的密碼", { exact: true }).fill(password);
+        await dialog.getByLabel("原因", { exact: true }).fill("TASK-043 developer reference guard");
+        const response = page.waitForResponse(candidate => candidate.url().endsWith(`/items/${variantItemId}/${action}`) && candidate.request().method() === "POST");
+        await dialog.getByRole("button", { name: label, exact: true }).click();
+        const rejected = await response;
+        expect(rejected.status()).toBe(409);
+        expect((await rejected.json()).error.details.referenceTypes).toEqual(["inventory_stock_balances"]);
+        await expect(page.getByText("這個商品仍有相依資料，無法刪除或封存", { exact: true }).last()).toBeVisible();
+        await expect(page).toHaveURL(`/items/${variantItemId}`);
+        const [[item]] = await database.execute("SELECT status, version FROM items WHERE id = ?", [variantItemId]);
+        expect(item).toMatchObject({ status: "draft", version: 1 });
+      }
+      await database.execute("UPDATE inventory_stock_balances SET on_hand_quantity = 0 WHERE warehouse_id = ?", [warehouse.insertId]);
+      await page.reload();
+      await page.getByRole("button", { name: "封存", exact: true }).click();
+      const dialog = page.getByRole("dialog");
+      await dialog.getByLabel("你的密碼", { exact: true }).fill(password);
+      await dialog.getByLabel("原因", { exact: true }).fill("TASK-043 zero-stock archive");
+      const response = page.waitForResponse(candidate => candidate.url().endsWith(`/items/${variantItemId}/archive`) && candidate.request().method() === "POST");
+      await dialog.getByRole("button", { name: "封存", exact: true }).click();
+      expect((await response).status()).toBe(200);
+      await page.reload();
+      await expect(page.getByRole("button", { name: "從封存恢復", exact: true })).toBeVisible();
+      expect(unexpectedConsoleErrors).toEqual([]);
+      expect(failedRequests).toEqual([]);
+      expect(serverErrors).toEqual([]);
+    } finally {
+      await database.execute("DELETE FROM inventory_stock_balances WHERE warehouse_id = ?", [warehouse.insertId]);
+      await database.execute("DELETE FROM inventory_bins WHERE id = ?", [bin.insertId]);
+      await database.execute("DELETE FROM inventory_warehouses WHERE id = ?", [warehouse.insertId]);
+    }
   });
 
   test("UAT-006 unreferenced Brand can be created and permanently deleted with audit reason", async () => {

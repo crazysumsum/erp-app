@@ -1884,13 +1884,36 @@ Every mandatory linked technical case passes against the current immutable candi
 Run the profile-declared developer and affected contract/UI/database suites, including downstream consumers when their real contracts exist.
 
 ### Git and merge plan
-Use DEFAULT branch strategy from freshly observed main, one reviewable merge group, developer self-test, current CI and actual review before merge; clean up only after PR resolution.
+Use DEFAULT branch strategy from freshly observed main, developer self-test, current CI and actual review before merge; clean up only after PR resolution. TASK-043 increment B is independently gated by PHASE-007/TASK-045; PHASE-006 retains the aggregate Supplier/formal-acceptance obligations and depends on PHASE-007. Partial integration is not full module completion.
 
 ### Rollback
 Prefer reversible code/config rollback; database changes use reviewed forward fixes and never destructive reset. Documentation history remains recoverable from Git.
 
 ### Exit criteria
 The Phase merge group is complete, required evidence is baseline-bound, no unresolved blocking finding remains, and the integrated baseline is observed.
+
+## PHASE-007 — TASK-043 installed consumer increment B
+
+### Outcome
+Represent the already approved TASK-043 increment-B merge boundary independently, without adding business scope or declaring TASK-043 complete. TASK-045 owns this executable slice; typed membership/links are authoritative in 08_traceability.json.
+
+### Entry criteria
+The real Inventory/Sales schemas and reviewed Item provider contracts exist; the unchanged DESIGN and corrected PLAN have owner authorization. Recover the existing PR worktree from its preserved branch, fetch main and reconcile any target changes. Use isolated synthetic MySQL data and reviewed CI fixture crypto keys.
+
+### Acceptance criteria
+Installed-consumer deletion, archive, UOM/tracking and rollback behavior satisfy the increment-B checklist in TASK-043. Stable UOM mapping IDs, current transaction-scoped provider reads and lock ordering are covered by actual DB/concurrency tests. No fake Supplier schema, downstream source writes or reduction of acceptance criteria.
+
+### Integration and regression
+Retain all four mandatory developer suites and their zero-skip contracts. The server suite additionally executes the real reference-guard integration and Sales Item-UOM compatibility tests. Permit only the required DB socket/test crypto variables, redact keyring values and never store credentials in profile/argv. Existing formal case links remain applicable and blocking; developer-stage execution is not formal PASS.
+
+### Git and merge plan
+DEFAULT strategy; the existing fresh-main PR #198 carries this independent merge group. Merge only after TASK-045's scoped implementation/review/developer checks are complete, exact-candidate mandatory CI passes and actual review is recorded. No Supplier C/formal D completion prerequisite for B, and no gate waiver. Preserve TASK-043 IN_PROGRESS. Clean Item branch/worktree only after merge and dependency checks.
+
+### Rollback
+Reversible Item-only code correction; no new migration or data rewrite. Preserve historical documents, approvals and failed CI evidence. The execution-record correction does not authorize deployment or formal acceptance.
+
+### Exit criteria
+PHASE-007 MERGE_READY is verified for its immutable candidate and its PR merge is observed. Aggregate TASK-043 and whole-module READY_FOR_TESTING remain blocked until the remaining applicable branches are complete.
 
 ## TASK-001 — 修正 migration 編號並凍結實作映射
 
@@ -2486,13 +2509,27 @@ Scoped changes, review, developer tests, required CI, traceability and safe clea
 Complete the Inventory/Sales and Supplier reference-guard increments scheduled in the TASK-043 narrative above, preserving history and stable UOM identities.
 
 ### Approach
-Follow the components, dependencies, implementation notes and preserved decisions in `alignment remediation section`; typed membership and test links are in `08_traceability.json`.
+Follow the components, dependencies, implementation notes and preserved decisions in `alignment remediation section`; typed membership and test links are in `08_traceability.json`. TASK-045/PHASE-007 represents increment B only. This aggregate depends on that slice and retains Supplier C and formal acceptance D; it stays IN_PROGRESS after B merges.
 
 ### Acceptance criteria
 The task-specific checklist above is satisfied and linked cases TC-004, TC-005 provide current-candidate evidence without skipped mandatory behavior, including FR-043/UOM-008 dependency types, public Draft-delete conflicts and real-consumer archive/critical-change guards.
 
 ### Definition of Done
 Scoped changes, review, developer tests, required CI, traceability and safe cleanup are complete. Historical recorded completion is not upgraded to formal acceptance without a current observed run.
+
+## TASK-045 — TASK-043 increment B executable merge unit
+
+### Goal
+Complete only the installed Inventory/Sales reference protection already approved as TASK-043 increment B; Parent Phase: PHASE-007. This is execution-record decomposition, not a new product requirement.
+
+### Approach
+Reuse TASK-043's installed-consumer implementation and developer report. Keep actual FK types/public conflicts, stable UOM IDs, live-operation archive guards, current provider locking reads and atomic rollback. Add no Supplier tables, consumer code or endpoint. Resolve the stale Sales compatibility SQL assertion without removing its archived-reference blocking and permitted-price-edit checks.
+
+### Acceptance criteria
+The scoped real-DB/concurrency and affected browser behavior pass, all profile-declared developer suites run with no mandatory skips, exact-candidate CI and independent review pass. TC-004/TC-005 links remain formal obligations of TASK-043; no developer run grants acceptance for absent Supplier/transfer/in-transit branches.
+
+### Definition of Done
+Installed-consumer code and tests, independently reviewed execution profile, developer evidence and current-candidate CI/review are complete. Set only TASK-045 DONE for the PHASE-007 merge gate; record integration/cleanup afterward. TASK-043 remains IN_PROGRESS until all applicable branches and acceptance finish. Risk: high reference/locking correctness; rollback is reversible Item-only correction with no data/schema rewrite.
 
 ## TASK-044 — Complete independent acceptance and DR/sign-off evidence
 

@@ -196,12 +196,35 @@ export class ItemLookupService {
     const wanted = [...unique.values()].sort((a, b) => a.skuId - b.skuId || a.skuUomId - b.skuUomId);
     if (!wanted.length) return Object.freeze([]);
     const skuIds = saleIds(wanted.map(request => request.skuId));
+    const { items, skus, mappings } = await this.#lockSkuProfiles(transaction, skuIds);
+    const byItem = new Map(items.map(row => [Number(row.id), row]));
+    const projections = new Map();
+    for (const sku of skus) {
+      const item = byItem.get(Number(sku.item_id));
+      if (!item) throw skuNotFound(Number(sku.id));
+      const projection = this.#saleProjection({ ...sku, item_id: item.id, item_name: item.name, item_status: item.status,
+        product_type: item.product_type, item_version: item.version },
+      mappings.filter(row => Number(row.sku_id) === Number(sku.id)), nowMs);
+      if (!projection.usable) throw skuNotUsable(projection.skuId, "new_sale", projection.reasons);
+      projections.set(projection.skuId, projection);
+    }
+    return Object.freeze(wanted.map(({ skuId, skuUomId }) => {
+      const sku = projections.get(skuId);
+      if (!sku) throw skuNotFound(skuId);
+      const salesUom = sku.uoms.find(uom => uom.skuUomId === skuUomId);
+      if (!salesUom || salesUom.status !== "active") throw uomConversionInvalid("Sales UOM is missing, inactive or belongs to another SKU");
+      return Object.freeze({ ...sku, salesUom });
+    }));
+  }
+
+  async #lockSkuProfiles(transaction, skuIds) {
     // Discover first; every returned value below comes from current locked reads.
     const [discovered] = await transaction.query(
       `SELECT s.id AS sku_id, s.item_id, su.id, su.uom_id
          FROM item_skus s LEFT JOIN item_sku_uoms su ON su.sku_id = s.id
         WHERE s.id IN (${placeholders(skuIds)}) ORDER BY s.id, su.id`, skuIds
     );
+    if (!discovered.length) return { items: [], skus: [], mappings: [] };
     for (const id of skuIds) if (!discovered.some(row => Number(row.sku_id) === id)) throw skuNotFound(id);
     const itemIds = [...new Set(discovered.map(row => Number(row.item_id)))].sort((a, b) => a - b);
     const uomIds = [...new Set(discovered.filter(row => row.id !== null).map(row => Number(row.uom_id)))].sort((a, b) => a - b);
@@ -220,7 +243,6 @@ export class ItemLookupService {
       `SELECT * FROM item_sku_uoms WHERE sku_id IN (${placeholders(skuIds)}) ORDER BY id FOR SHARE`, skuIds
     );
     const byUom = new Map(uoms.map(row => [Number(row.id), row]));
-    const byItem = new Map(items.map(row => [Number(row.id), row]));
     const bySku = new Map(skus.map(row => [Number(row.id), row]));
     const original = new Map(discovered.filter(row => row.id !== null).map(row => [Number(row.id), row]));
     if (mappings.length !== original.size) throw uomConversionInvalid("SKU UOM associations changed; retry the transaction");
@@ -235,23 +257,7 @@ export class ItemLookupService {
       }
       byMapping.set(Number(mapping.id), { ...mapping, uom_code: uom.code, uom_name: uom.name, uom_status: uom.status, uom_version: uom.version });
     }
-    const projections = new Map();
-    for (const sku of skus) {
-      const item = byItem.get(Number(sku.item_id));
-      if (!item) throw skuNotFound(Number(sku.id));
-      const projection = this.#saleProjection({ ...sku, item_id: item.id, item_name: item.name, item_status: item.status,
-        product_type: item.product_type, item_version: item.version },
-      [...byMapping.values()].filter(row => Number(row.sku_id) === Number(sku.id)), nowMs);
-      if (!projection.usable) throw skuNotUsable(projection.skuId, "new_sale", projection.reasons);
-      projections.set(projection.skuId, projection);
-    }
-    return Object.freeze(wanted.map(({ skuId, skuUomId }) => {
-      const sku = projections.get(skuId);
-      if (!sku) throw skuNotFound(skuId);
-      const salesUom = sku.uoms.find(uom => uom.skuUomId === skuUomId);
-      if (!salesUom || salesUom.status !== "active") throw uomConversionInvalid("Sales UOM is missing, inactive or belongs to another SKU");
-      return Object.freeze({ ...sku, salesUom });
-    }));
+    return { items, skus, mappings: [...byMapping.values()] };
   }
 
   async getSalesInventoryProfilesInTransaction(transaction, skuIds, { atMs } = {}) {
@@ -290,13 +296,12 @@ export class ItemLookupService {
 
   async getInventoryProfileInTransaction(transaction, skuId) {
     this.#assertExecutor(transaction);
-    const [rows] = await transaction.query(`${SKU_JOIN_ITEM_SELECT} WHERE s.id = ?`, [skuId]);
-    if (!rows[0]) return null;
-
-    const uomRows = await this.#loadUomRows([rows[0].id], transaction);
+    const { items, skus, mappings } = await this.#lockSkuProfiles(transaction, [skuId]);
+    const sku = skus[0], item = items.find(row => Number(row.id) === Number(sku?.item_id));
+    if (!sku || !item) return null;
     const projection = this.#toProjection(
-      rows[0],
-      uomRows.get(Number(rows[0].id)) ?? [],
+      { ...sku, item_name: item.name, item_status: item.status, product_type: item.product_type },
+      mappings,
       { purpose: "inventory" }
     );
     const baseUom = projection.uoms.find((uom) => uom.isBase);
@@ -323,25 +328,20 @@ export class ItemLookupService {
 
   async resolveUomInTransaction(transaction, skuId, uomId) {
     this.#assertExecutor(transaction);
-    const [rows] = await transaction.query(
-      `SELECT su.sku_id, su.uom_id, u.code AS uom_code, su.to_base_factor, su.is_base
-         FROM item_sku_uoms su
-         JOIN item_uoms u ON u.id = su.uom_id
-        WHERE su.sku_id = ? AND su.uom_id = ? AND u.status = 'active'`,
-      [skuId, uomId]
-    );
-    if (!rows[0]) return null;
+    const { mappings } = await this.#lockSkuProfiles(transaction, [skuId]);
+    const row = mappings.find(row => Number(row.uom_id) === Number(uomId) && row.uom_status === "active");
+    if (!row) return null;
 
-    const factor = Number(rows[0].to_base_factor);
-    const isBase = Boolean(rows[0].is_base);
+    const factor = Number(row.to_base_factor);
+    const isBase = Boolean(row.is_base);
     if (!Number.isSafeInteger(factor) || factor < 1 || factor > 1_000_000 || (isBase && factor !== 1)) {
       throw uomConversionInvalid("Inventory UOM factor must be an integer from 1 to 1000000; Base UOM factor must be 1");
     }
 
     return {
-      skuId: Number(rows[0].sku_id),
-      uomId: Number(rows[0].uom_id),
-      uomCode: rows[0].uom_code,
+      skuId: Number(row.sku_id),
+      uomId: Number(row.uom_id),
+      uomCode: row.uom_code,
       toBaseFactor: factor,
       isBase
     };
