@@ -133,7 +133,10 @@ function lookupFixture({ sku = {}, uom = {}, missing = false, failure } = {}) {
   const tx = { async query(sql, params) {
     calls.push({ sql, params });
     if (failure) throw failure;
-    if (sql.includes("FROM item_sku_uoms")) return [[{ sku_id: 12, uom_id: 4, uom_code: "EA", is_base: 1, to_base_factor: 1, ...uom }]];
+    if (sql.includes("s.id AS sku_id")) return [missing ? [] : [{ sku_id: 12, item_id: 1, id: 20, uom_id: 4 }]];
+    if (sql.includes("FROM item_uoms")) return [[{ id: 4, code: "EA", name: "Each", status: "active", version: 1 }]];
+    if (sql.includes("FROM items")) return [[{ id: 1, name: row.item_name, product_type: row.product_type, status: row.item_status, version: 1 }]];
+    if (sql.includes("FROM item_sku_uoms")) return [[{ id: 20, sku_id: 12, uom_id: 4, uom_code: "EA", is_base: 1, to_base_factor: 1, version: 1, ...uom }]];
     assert.match(sql, /FROM item_skus/u);
     return [missing ? [] : [row]];
   } };
@@ -169,7 +172,7 @@ test("TASK-029 lookup trims Code, keeps literal wildcards and confines Item read
   const fixture = lookupFixture();
   assert.deepEqual(await fixture.lookup("  SKU-%_  "), { skuId: 12, skuCode: "SKU-%_", skuName: "Lookup SKU",
     trackingPolicy: "none", baseUom: { uomId: 4, uomCode: "EA" } });
-  assert.equal(fixture.calls.length, 4);
+  assert.equal(fixture.calls.length, 7);
   assert.match(fixture.calls[0].sql, /s\.sku_code = \?/u); assert.deepEqual(fixture.calls[0].params, ["SKU-%_"]);
   assert.deepEqual(fixture.calls[2].params, [12]);
   assert.ok(fixture.calls.every(({ sql }) => !/INSERT|UPDATE|FOR UPDATE|inventory_stock/iu.test(sql)));

@@ -17,6 +17,29 @@ Recovery point: clean `origin/main` at `394fc3fb11b6dce0bf4c41288904a8fac6d3fa49
 | Formal tests executed | None |
 | User decision | Production `RTO <= 4h`, `RPO <= 15m`, approved 2026-09-11 |
 
+## Raw Recovery assets — authorized index migration, 2026-10-12
+
+Sam explicitly approved one-time reclassification of three raw assets that were
+incorrectly registered as harness run records. No original file, signature,
+approval, failure, DEF-103 closure reference, waiver or TC-016 NOT_RUN decision was
+removed or changed. All 21 genuine prior run pointers remain in `evidence_files`.
+
+| Preserved raw asset (under module directory) | Unchanged SHA-256 |
+|---|---|
+| evidence/task-044-owner-waiver-20260921/manifest.json | 4bdf46c63c98b2183c29f2e81ab8a5b2e3360949ee423efc8182d6e529dc606e |
+| evidence/task-044-owner-waiver-20260921/manifest.sig | 98a1afff1fca15d50655549f0d765da268a37e970dadd24386511192a50b3b77 |
+| evidence/task-044-owner-waiver-20260921/tc016-owner-waiver-report.json | 082fa00b55321b5af49534651e799e656d2f26fdc601b5d3642d41f291cd8e18 |
+
+Git recovery point: `2e0427e3abcc897992ed89bf04b6d69df35210e2` (complete pre-migration
+state revision86). Original state SHA-256:
+`368c4379d5918d1a2db67b30ca2f92df3ff4b035f4bd335ef50cf986bd65bb2c`.
+The exact before/after index and authorization are retained in
+`evidence/task043-index-migration-20261012/index-map.json`, a raw audit map, not a
+test-run record. An exclusive checkpoint lock and exact revision/content checks
+guarded the explicitly approved revision86→87 migration. Only the three raw index
+pointers and revision changed; core tools and gate validation were not patched.
+Normal revision-checked checkpoints resume after this one-time repair.
+
 ## Source artifacts
 
 | Original artifact | Canonical artifact | Lines | Original SHA-256 | Authority / action |

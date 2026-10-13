@@ -1338,6 +1338,10 @@ integrationTest("TASK-045 (REV-071 L-2, HD-061 2A): a lock wait past the transac
   });
   assert.equal(outcome.code, 0);
   assert.equal(outcome.output.code, "DATABASE_TRANSACTION_TIMEOUT", JSON.stringify(outcome.output));
+  // Client exit does not acknowledge MySQL rollback; wait for this job's lock before testing recovery.
+  await h.db.withTransaction(async (connection) => {
+    await connection.query("SELECT id FROM supplier_import_jobs WHERE id = ? FOR UPDATE", [id]);
+  });
   const waiting = await job(id);
   assert.equal(waiting.status, "running", "the job keeps its lease");
   assert.deepEqual(await rowOutcomes(id), [[1, "valid", null]], "the row is left pending, not failed");
