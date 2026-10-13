@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import test from "node:test";
-import { setup,stock } from "../sales/phase2/fixtures.js";
+import { createOrder,newOrderInsideInventory,setup,stock } from "../sales/phase2/fixtures.js";
 import { SalesOrderLifecycleService } from "../../src/modules/sales/SalesOrderLifecycleService.js";
 import { InventoryReservationService } from "../../src/modules/inventory/InventoryReservationService.js";
 import { SalesOrderService,readSalesOrderDetail } from "../../src/modules/sales/SalesOrderService.js";
@@ -52,6 +52,16 @@ it("TC-029 real HTTP lifecycle validates strict input, terminal schema, same eve
 
 it("TC-029 inactive current Customer/SKU do not invent a new withdrawal restriction; Draft names refresh before release",async t=>{
  const f=await setup(t);await confirm(f);await f.db.execute("UPDATE customers SET status='inactive',legal_name='Inactive current customer' WHERE id=?",[f.customerId]);await f.db.execute("UPDATE item_skus SET status='inactive',sku_name='Inactive current SKU' WHERE id=?",[f.skuId]);const r=await lifecycle(f).withdrawConfirmation(command(f));assert.equal(r.salesOrder.status,"DRAFT");assert.equal(r.salesOrder.customerName,"Inactive current customer");assert.equal(r.salesOrder.lines[0].skuName,"Inactive current SKU");assert.equal(r.salesOrder.lines[0].quantity,"10.000000");assert.equal(r.salesOrder.lines[0].orderedBaseQuantity,"10");
+});
+// §2.8: a release holds its Order's Lines (rank 1) and then enters Inventory (Warehouse X, rank 5); a new Order's header FK check already holds
+// the Warehouse share lock, so its first line insert must not wait on the release's Lines. Lifecycle takes no Customer lock: same Customer.
+it("TC-021 cancel and withdrawal never deadlock with a new Order in the same Warehouse",async t=>{
+ for(const [action,status] of [["cancel","CANCELLED"],["withdrawConfirmation","DRAFT"]])await t.test(action,async child=>{
+  const f=await setup(child);await confirm(f,20);const service=lifecycle(f),probe=newOrderInsideInventory(f,service.inventory,"releaseSalesBatchInTransaction",database=>createOrder(f,database));service.inventory=probe.inventory;
+  let result;try{result=await service[action](command(f));}finally{await probe.settle();}
+  assert.equal(probe.state.inserted,true,"the new Order's line insert waited on the release's Sales line locks");
+  assert.equal(result.salesOrder.status,status);assert.equal((await probe.state.draft).salesOrder.status,"DRAFT");
+ });
 });
 for(const [topup,label] of [[10,"mapping"],[0,"Backorder entry"]])it(`TC-030 cancel holding its Order's Sales locks never blocks another Order's ${label} insert behind the Warehouse lock`,async t=>{
  const f=await setup(t);await confirm(f);const second=await anotherOrder(f),inventory=new InventoryReservationService(f);let other,blocked=false;

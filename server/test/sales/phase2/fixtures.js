@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { migrationFixture } from "../phase1/fixtures.js";
+import { createTestCurrency, migrationFixture } from "../phase1/fixtures.js";
 import { createApplication } from "../../../src/framework/application/createApplication.js";
 import { defaultConfigurationSource } from "../../../src/framework/configuration/applicationConfiguration.js";
 import { SalesOrderService } from "../../../src/modules/sales/SalesOrderService.js";
@@ -50,4 +50,48 @@ export async function stock(f, quantity, skuId = f.skuId) {
     await f.db.execute("DELETE FROM inventory_stock_balances WHERE warehouse_id=?", [f.warehouseId]);
     await f.db.execute("DELETE FROM inventory_stock_controls WHERE warehouse_id=?", [f.warehouseId]);
   });
+}
+
+// A new Order for another Customer and Currency: Confirmation's Customer and Currency locks would otherwise serialize it.
+export async function secondCustomer(f) {
+  const currencyCode = await createTestCurrency(f.db, f.cleanup, f.now), code = `p2c-${randomUUID().slice(0, 8)}`;
+  await f.db.execute("UPDATE currencies SET status='ACTIVE' WHERE code=?", [currencyCode]);
+  const customerId = await f.insert("customers", { customer_code: code, customer_code_key: code, legal_name: code, legal_name_key: code,
+    default_currency_code: currencyCode, status: "active", version: 1, created_at: f.now, updated_at: f.now });
+  f.beforeParents.push(() => f.db.execute("DELETE FROM sales_orders WHERE customer_id=?", [customerId]));
+  return { customerId, currencyCode };
+}
+
+export function createOrder(f, database, { customerId = f.customerId, currencyCode = f.currency } = {}) {
+  return new SalesOrderService({ ...f, database }).create({ claims: f.claims, input: { eventId: randomUUID(), customerId, currencyCode,
+    fulfillmentWarehouseId: f.warehouseId, orderDate: f.time.fileDate(), lines: [{ skuId: f.skuId, skuUomId: f.skuUomId, quantity: "1.000000", unitSellingPrice: "1.0000" }] } });
+}
+
+// Wraps one Inventory method of a Sales lock holder. On entry, a new Order (`write` gets a database whose transactions pause before
+// their first sales_order_lines INSERT, when the header FK check already holds the Warehouse share lock) runs to that insert and is
+// released; state.inserted records whether the insert completed within 5s while the holder still owned its Sales locks.
+export function newOrderInsideInventory(f, inventory, method, write) {
+  const reached = Promise.withResolvers(), release = Promise.withResolvers(), inserted = Promise.withResolvers(), database = Object.create(f.database), state = {};
+  let paused = false;
+  database.withTransaction = (work, options) => f.database.withTransaction(tx => work(new Proxy(tx, { get(target, key) {
+    const value = Reflect.get(target, key);
+    if (key !== "execute") return typeof value === "function" ? value.bind(target) : value;
+    return async (sql, params) => {
+      if (paused || !sql.startsWith("INSERT INTO sales_order_lines")) return target.execute(sql, params);
+      paused = true; reached.resolve(); await release.promise;
+      const result = await target.execute(sql, params); inserted.resolve(true); return result;
+    };
+  } })), options);
+  const bound = (promise, value) => Promise.race([promise, new Promise(resolve => { setTimeout(resolve, 5000, value); })]);
+  const wrapped = new Proxy(inventory, { get(target, key) {
+    const value = Reflect.get(target, key);
+    if (key !== method) return typeof value === "function" ? value.bind(target) : value;
+    return async (...args) => {
+      state.draft = write(database);
+      if (!await bound(Promise.race([reached.promise.then(() => true), state.draft.then(() => false)]), false)) throw new Error("the new Order never reached its line insert");
+      release.resolve(); state.inserted = await bound(inserted.promise, false);
+      return value.apply(target, args);
+    };
+  } });
+  return { inventory: wrapped, state, async settle() { release.resolve(); return state.draft?.catch(() => {}); } };
 }
