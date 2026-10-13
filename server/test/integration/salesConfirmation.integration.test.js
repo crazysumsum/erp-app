@@ -114,7 +114,7 @@ integrationTest("TC-023 multi-line failure rolls back every commitment before re
   assert.equal(result.salesOrder.backorderLineCount, 2); assert.equal(result.salesOrder.totalAmount, "30.0000");
 });
 integrationTest("TC-024 credit ON_HOLD fails atomically while a configured limit is advisory", async t => {
-  for (const status of ["on_hold","normal"]) await t.test(status, async child => {
+  for (const status of ["on_hold","normal"]) await t.test(`TC-024 ${status}`, async child => {
     const f = await setup(child); await stock(f,10);
     await f.insert("customer_credit_profiles", { customer_id: f.customerId,credit_limit: "1.0000",credit_currency_code: f.currency,credit_status: status,last_change_reason: "Synthetic test setup",version: 1,created_at: f.now,updated_at: f.now }, "customer_id");
     const intent = await f.service().startConfirmation(f.request), request = { eventId: intent.eventId,claims: f.claims,leaseOwner: intent.leaseOwner };
@@ -130,7 +130,7 @@ integrationTest("TC-024 credit ON_HOLD fails atomically while a configured limit
   });
 });
 integrationTest("TC-021 technical audit failure and malformed real provider result roll back all Inventory/Sales effects", async t => {
-  for (const mode of ["audit","contract"]) await t.test(mode, async child => {
+  for (const mode of ["audit","contract"]) await t.test(`TC-021 ${mode}`, async child => {
     const f = await setup(child); await stock(f,10); const intent = await f.service().startConfirmation(f.request);
     const options = mode === "audit" ? { audit: { async record() { throw new Error("Phase B required audit failure"); } } } : {
       inventory: { async reserveAvailableForSalesBatchInTransaction(tx, command) {
@@ -149,7 +149,7 @@ integrationTest("TC-021 technical audit failure and malformed real provider resu
   });
 });
 integrationTest("TC-024 invalid SKU/UOM/Warehouse revalidation safely returns Draft with no Inventory claims", async t => {
-  for (const kind of ["sku","uom","warehouse"]) await t.test(kind, async child => {
+  for (const kind of ["sku","uom","warehouse"]) await t.test(`TC-024 ${kind}`, async child => {
     const f = await setup(child); await stock(f,10); const intent = await f.service().startConfirmation(f.request);
     if (kind === "sku") await f.db.execute("UPDATE item_skus SET status='inactive' WHERE id=?", [f.skuId]);
     if (kind === "uom") await f.db.execute("UPDATE item_uoms SET status='inactive' WHERE id=(SELECT uom_id FROM item_sku_uoms WHERE id=?)", [f.skuUomId]);
@@ -161,7 +161,7 @@ integrationTest("TC-024 invalid SKU/UOM/Warehouse revalidation safely returns Dr
   });
 });
 integrationTest("TC-026 confirmation exposes uncertain Phase A COMMIT and reconciles actual commit versus rollback by original event", async t => {
-  for (const outcome of ["committed","rolled_back"]) await t.test(outcome, async child => {
+  for (const outcome of ["committed","rolled_back"]) await t.test(`TC-026 ${outcome}`, async child => {
     const f = await setup(child); await stock(f,10);
     const acquire=f.database.acquireConnection;
     f.database.acquireConnection=async function(...args){
