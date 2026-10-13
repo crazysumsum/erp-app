@@ -93,7 +93,21 @@ function translateWriteError(error) {
   return error;
 }
 
+/**
+ * 揀咗採購單位就要係呢個 SKU 而家 active 嘅單位（TASK-039，HD-097；TASK-038 留低嘅 open item）。
+ * 唔屬呢個 SKU 同 FK 撞到嘅一樣回 `SUPPLIER_SKU_UOM_INVALID`；停用咗就 `SUPPLIER_SKU_UOM_INACTIVE`。
+ */
+function requireActiveUom(sku, skuUomId) {
+  const uom = sku?.uoms?.find((candidate) => candidate.skuUomId === skuUomId);
+  if (!uom) throw invalidSupplierInput("SUPPLIER_SKU_UOM_INVALID", "採購單位不屬於這個 SKU", { field: "purchaseSkuUomId" });
+  if (uom.status !== "active") {
+    throw supplierConflict("SUPPLIER_SKU_UOM_INACTIVE", "這個採購單位已停用，請選擇其他單位", { field: "purchaseSkuUomId" });
+  }
+}
+
 function toRelationResponse(row, sku = null) {
+  const purchaseUom = row.purchase_sku_uom_id === null ? null
+    : sku?.uoms?.find((uom) => uom.skuUomId === Number(row.purchase_sku_uom_id)) ?? null;
   return {
     id: Number(row.id),
     supplierId: Number(row.supplier_id),
@@ -105,6 +119,9 @@ function toRelationResponse(row, sku = null) {
     supplierItemCode: row.supplier_item_code,
     supplierItemName: row.supplier_item_name,
     purchaseSkuUomId: row.purchase_sku_uom_id === null ? null : Number(row.purchase_sku_uom_id),
+    purchaseUomCode: purchaseUom?.uomCode ?? null,
+    purchaseUomName: purchaseUom?.uomName ?? null,
+    purchaseUomStatus: purchaseUom?.status ?? null,
     minimumOrderQty: row.minimum_order_qty === null ? null : Number(row.minimum_order_qty),
     standardLeadTimeDays: row.standard_lead_time_days === null ? null : Number(row.standard_lead_time_days),
     relationshipStatus: row.relationship_status,
@@ -190,7 +207,8 @@ export class SupplierRelationService {
         LIMIT ? OFFSET ?`,
       [...params, pageSize, (page - 1) * pageSize]
     );
-    const skus = await this.items.findManyByIds(rows.map((row) => Number(row.sku_id)));
+    // purchase 用途先有 skuUomId 同單位狀態（Item §8.3.2）。
+    const skus = await this.items.findManyByIds(rows.map((row) => Number(row.sku_id)), { purpose: "purchase" });
     return { items: rows.map((row) => toRelationResponse(row, skus.get(Number(row.sku_id)))), total: Number(total), page, pageSize };
   }
 
@@ -204,6 +222,7 @@ export class SupplierRelationService {
       return await this.database.withTransaction(async (connection) => {
         const actor = await this.authorize(connection, input);
         const sku = requirePurchasable(view);
+        if (fields.purchaseSkuUomId !== null) requireActiveUom(sku, fields.purchaseSkuUomId);
         const supplier = await this.#supplierForUpdate(connection, input.supplierId);
         if (supplier.status === "archived") {
           throw supplierConflict("SUPPLIER_SKU_RELATION_NOT_ALLOWED", "已封存供應商不可新增供貨關係", { status: supplier.status });
@@ -254,6 +273,8 @@ export class SupplierRelationService {
         const reactivated = before.relationshipStatus === "stopped" && fields.relationshipStatus !== "stopped";
         const rebound = fields.purchaseSkuUomId !== null && fields.purchaseSkuUomId !== before.purchaseSkuUomId;
         const sku = rebound || reactivated ? requirePurchasable(view) : view;
+        // 冇改採購單位就算佢已停用都照收（歷史資料）；改綁先要 active。
+        if (rebound) requireActiveUom(sku, fields.purchaseSkuUomId);
         const nowMs = this.time.nowMs();
         await connection.execute(
           `UPDATE supplier_sku_refs

@@ -546,3 +546,54 @@ integrationTest("TASK-038 (REV-086 L-1): a rerun refuses a case-insensitive code
   const required = await like("supplier_sku_refs", "MODIFY purchase_sku_uom_id BIGINT UNSIGNED NOT NULL");
   await assert.rejects(() => inspectSupplierSkuRelationSchema(h.db, "supplier_sku_refs", { as: required }), /schema: supplier_sku_refs\.purchase_sku_uom_id/u);
 });
+
+integrationTest("TASK-039 (HD-097): a purchase UOM must be active to be chosen; the list names it and keeps an inactive one as history", async () => {
+  const supplierId = await supplier();
+  const item = await sku({ uoms: 3 });
+  const other = await sku();
+  const [base, carton, pallet] = item.uoms;
+  await h.db.execute("UPDATE item_uoms SET status = 'inactive' WHERE id = (SELECT uom_id FROM item_sku_uoms WHERE id = ?)", [pallet]);
+
+  await assert.rejects(() => service().create({ ...actor(), supplierId, skuId: item.id, purchaseSkuUomId: pallet }),
+    conflict("SUPPLIER_SKU_UOM_INACTIVE"), "an inactive UOM cannot be chosen");
+  await assert.rejects(() => service().create({ ...actor(), supplierId, skuId: item.id, purchaseSkuUomId: other.uoms[0] }),
+    conflict("SUPPLIER_SKU_UOM_INVALID"), "another SKU's UOM");
+  const created = await service().create({ ...actor(), supplierId, skuId: item.id, purchaseSkuUomId: carton, minimumOrderQty: 2 });
+  assert.deepEqual([created.purchaseSkuUomId, created.purchaseUomCode, created.purchaseUomName, created.purchaseUomStatus],
+    [carton, `${item.code}-1`, "Each", "active"]);
+
+  // 用緊嘅單位之後先停用：列表照顯示並標示停用；唔改單位嘅修改照收，改綁去停用單位就唔得。
+  await h.db.execute("UPDATE item_uoms SET status = 'inactive' WHERE id = (SELECT uom_id FROM item_sku_uoms WHERE id = ?)", [carton]);
+  const [listed] = (await service().list({ ...actor(), supplierId })).items;
+  assert.deepEqual([listed.purchaseSkuUomId, listed.purchaseUomStatus], [carton, "inactive"]);
+  const kept = await service().update({ ...actor(), supplierId, relationId: created.id, version: 1, supplierItemCode: "", supplierItemName: "",
+    purchaseSkuUomId: carton, minimumOrderQty: 6, standardLeadTimeDays: null, relationshipStatus: "alternative" });
+  assert.deepEqual([kept.minimumOrderQty, kept.purchaseUomStatus, kept.version], [6, "inactive", 2]);
+  await assert.rejects(() => service().update({ ...actor(), supplierId, relationId: created.id, version: 2, supplierItemCode: "", supplierItemName: "",
+    purchaseSkuUomId: pallet, minimumOrderQty: 6, standardLeadTimeDays: null, relationshipStatus: "alternative" }), conflict("SUPPLIER_SKU_UOM_INACTIVE"));
+  const rebound = await service().update({ ...actor(), supplierId, relationId: created.id, version: 2, supplierItemCode: "", supplierItemName: "",
+    purchaseSkuUomId: base, minimumOrderQty: 6, standardLeadTimeDays: null, relationshipStatus: "alternative" });
+  assert.deepEqual([rebound.purchaseSkuUomId, rebound.purchaseUomStatus, rebound.version], [base, "active", 3]);
+  const cleared = await service().update({ ...actor(), supplierId, relationId: created.id, version: 3, supplierItemCode: "", supplierItemName: "",
+    purchaseSkuUomId: null, minimumOrderQty: 6, standardLeadTimeDays: null, relationshipStatus: "alternative" });
+  assert.deepEqual([cleared.purchaseUomCode, cleared.purchaseUomName, cleared.purchaseUomStatus], [null, null, null]);
+});
+
+integrationTest("TASK-039 (HD-097): over HTTP the SKU picker lists purchasable SKUs with their UOM mapping IDs, for supplier.mgmt only", async () => {
+  const [manager, viewer] = [await httpUser(["supplier.mgmt", "supplier.view"]), await httpUser(["supplier.view"])];
+  const stale = await httpUser(["supplier.view"], { claims: ["supplier.view", "supplier.mgmt"] });
+  const item = await sku({ uoms: 2 });
+  const notPurchasable = await sku({ purchasable: 0 });
+
+  const found = await api(manager, "GET", `/api/v1/supplier-lookups/skus?q=${encodeURIComponent(item.code)}`);
+  assert.equal(found.status, 200, JSON.stringify(found));
+  assert.deepEqual(found.data.items.map((row) => [row.skuId, row.skuCode, row.uoms.map((uom) => [uom.skuUomId, uom.uomCode, uom.status])]),
+    [[item.id, item.code, [[item.uoms[0], `${item.code}-0`, "active"], [item.uoms[1], `${item.code}-1`, "active"]]]]);
+  assert.equal(found.data.total, 1);
+  assert.deepEqual((await api(manager, "GET", `/api/v1/supplier-lookups/skus?q=${encodeURIComponent(notPurchasable.code)}`)).data.items, []);
+
+  assert.equal((await api(viewer, "GET", "/api/v1/supplier-lookups/skus")).status, 403);
+  assert.equal((await api(stale, "GET", "/api/v1/supplier-lookups/skus")).code, "PERMISSION_STALE");
+  assert.equal((await api(manager, "GET", "/api/v1/supplier-lookups/skus?q=a%01")).status, 400);
+  assert.equal((await api(manager, "GET", "/api/v1/supplier-lookups/skus?pageSize=101")).status, 400);
+});
