@@ -56,7 +56,7 @@ it("TC-029 inactive current Customer/SKU do not invent a new withdrawal restrict
 // §2.8: a release holds its Order's Lines (rank 1) and then enters Inventory (Warehouse X, rank 5); a new Order's header FK check already holds
 // the Warehouse share lock, so its first line insert must not wait on the release's Lines. Lifecycle takes no Customer lock: same Customer.
 it("TC-021 cancel and withdrawal never deadlock with a new Order in the same Warehouse",async t=>{
- for(const [action,status] of [["cancel","CANCELLED"],["withdrawConfirmation","DRAFT"]])await t.test(action,async child=>{
+ for(const [action,status] of [["cancel","CANCELLED"],["withdrawConfirmation","DRAFT"]])await t.test(`TC-021 ${action}`,async child=>{
   const f=await setup(child);await confirm(f,20);const service=lifecycle(f),probe=newOrderInsideInventory(f,service.inventory,"releaseSalesBatchInTransaction",database=>createOrder(f,database));service.inventory=probe.inventory;
   let result;try{result=await service[action](command(f));}finally{await probe.settle();}
   assert.equal(probe.state.inserted,true,"the new Order's line insert waited on the release's Sales line locks");
