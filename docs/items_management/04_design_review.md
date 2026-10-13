@@ -1,5 +1,13 @@
 # Item Management Design Review
 
+## REV-032 — Purchase lookup handoff design/plan review, 2026-10-13
+
+Actual SEPARATE_AGENT: author `/root`, reviewer `/root/item_design_review`, read-only review on main `a71f348879bb04df38cdeda4348d9031ec10d7f3`. DESIGN `f7431c0934377f3331fd0a537e236eca8044df41f359d36202153803c4aca315`; PLAN `d6db1f524df15257eca36eb0d4117efe8f20352a07e931b6511df7d8795e5de4`. Verdict APPROVED, 0 open Critical/High findings.
+
+Reviewed actual current provider, additive purchase-only fields, master/mapping identity distinction, search-only active-UOM requirement, retained inactive UOM history, bounded3-query/literal-prefix/stable-paging/advisory-snapshot contract, caller authorization/revalidation, consumer pin ownership and TC-017/018/UAT-017 traceability. No Supplier code, endpoint, schema, locks, barcode search, refactor or aggregate/formal-acceptance overclaim.
+
+Sam's actual async reply approves this exact new DESIGN/PLAN and entering IMPLEMENT (APR-048/049, HD-010). Old baseline approvals remain historical. This design review is not implementation review, human GitHub approval, CI or formal acceptance.
+
 ## REV-018 — Supplier handoff documentation review, 2026-10-09
 
 - Method: `SEPARATE_AGENT`; author `/root`, reviewer `/root/item_supplier_handoff_review`, separate read-only context.

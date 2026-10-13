@@ -1,0 +1,13 @@
+# Item purchase lookup handoff — approved planning baseline
+
+Mode: approved DESIGN_AND_PLAN, explicitly transitioned to IMPLEMENT by Sam's actual async reply on2026-10-13. Output/module: `docs/items_management` / `item-management`; worktree `/Users/sam/.codex/worktrees/item-purchase-lookup-handoff/erp-app`, branch `codex/item-purchase-lookup-handoff`, default/entry `a71f348879bb04df38cdeda4348d9031ec10d7f3`.
+
+Authority: Sam's two-feature request and later latest-main handoff/new-worktree instruction; `docs/supplier_management/item_handoff_purchase_lookup.md` HD-093 A. Reviewed requirements FR-065/066, DES-021, PHASE-008/TASK-046, TC-017/018 and manual UAT-017. DESIGN `f7431c0934377f3331fd0a537e236eca8044df41f359d36202153803c4aca315`, PLAN `d6db1f524df15257eca36eb0d4117efe8f20352a07e931b6511df7d8795e5de4`; actual owner APR-048/049 approved exact hashes. Actual independent REV-032 APPROVED, zero open Critical/High.
+
+Only Item writes: purchase metadata and internal search, existing unit/real-MySQL tests and Item documents. SEARCH additionally needs an active UOM; generic purchase eligibility/all UOM history stays unchanged. Serial/non-sellable SKU is not filtered by borrowed Sales policy. Prefix/bounds/query budget follow reviewed existing conventions; discovery does not grant current submit authorization. No Supplier path/pin, endpoint, migration, schema, lock, barcode or frontend scope.
+
+Structural traceability/matrix, boundary/whitespace and PLAN_READY checks pass; these are local consistency, not implementation/CI/business acceptance. Tests are PLANNED/NOT_RUN at this planning commit. Implementation requires TDD, task-owned real MySQL, four configured developer checks, installed consumer compatibility, exact candidate independent review and five green CI jobs. Merge/release/raw-evidence export authority is separate, not inherited from PR198.
+
+Actual PR198 closed TASK-045 at `c143f3b1` with CI/review and Item cleanup; runtime CAS115 and28 additional local-only packages remain retained outside the repository, linked in PR198 closeout. This selected repository checkpoint preserves its25 tracked evidence pointers and imports factual approvals/reviews/action history without exporting those local-only packages. Old results cannot satisfy this new baseline. TASK-043 remains IN_PROGRESS; Recovery owner waiver / TC016 NOT_RUN unchanged.
+
+The previous provisional managed worktree was observed clean with no unique commit; no draft loss is claimed. New requested work proceeds only in this fresh branch. Next: commit/push planning artifacts and open the scoped draft PR, then implement the already owner-approved contract there; no planning CI wait or merge bypass.

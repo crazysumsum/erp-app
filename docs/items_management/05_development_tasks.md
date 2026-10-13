@@ -2544,3 +2544,40 @@ The task-specific checklist above is satisfied and linked cases TC-001, TC-012, 
 
 ### Definition of Done
 Scoped changes, review, developer tests, required CI, traceability and safe cleanup are complete. Historical recorded completion is not upgraded to formal acceptance without a current observed run.
+
+## PHASE-008 — Supplier handoff: additive purchase provider
+
+### Outcome
+Deliver FR-065/FR-066 through DES-021/TASK-046 as one Item-only provider slice. PLANNED, pending current baseline approval; not full TASK-043 increment C or formal acceptance.
+
+### Entry criteria
+Reviewed DESIGN/PLAN and actual owner approval; fresh authoritative main in an isolated worktree. PR198/PHASE-007 is actually merged. Source handoff is `docs/supplier_management/item_handoff_purchase_lookup.md` (HD-093 A), now on main. No Supplier/migration/pin write scope.
+
+### Acceptance criteria
+Purchase metadata correctly distinguishes mapping/master IDs and retains all old fields/entries/policies. Search qualification, dates, search-only active-UOM rule, literal prefixes and bounded stable paging meet §8.3.2; TC-017/TC-018 mandatory behavior has no skips. Serial and non-sellable purchases remain allowed.
+
+### Integration and regression
+TDD unit and real-MySQL Item lookup tests: metadata, inactive UOM retention, all Item/SKU statuses, purchasable, inclusive/future/expired dates, active/all-inactive UOM search qualification, serial/non-sellable, prefix escaping, paging/count, invalid bounds and errors. Verify old generic/Sales and installed Supplier/Inventory consumer regressions unchanged. All four configured developer suites remain mandatory; no assertion/threshold/skip change or additional raw export. This backend-only slice has no new frontend behavior.
+
+### Git and merge plan
+DEFAULT from fetched main; dedicated worktree/branch and one scoped implementation PR after planning artifacts resolve. Developer checks → immutable candidate push → all five CI jobs PASS and exact independent review → merge only with actual authority for that PR → preserve evidence and clean this Item branch/worktree. No PR198 merge-authority reuse, bypass or Supplier PR changes.
+
+### Rollback
+Reversible Item-only provider/test correction; no data/schema rewrite. Coordinate rollback if consumers already adopt new fields/method. Keep all prior approvals/failures/owner-waiver history and do not upgrade old acceptance results.
+
+### Exit criteria
+Scoped TASK-046 DoD, exact-candidate CI/review and observed integration. UAT-017/business acceptance are later explicit testing; aggregate TASK-043 stays IN_PROGRESS.
+
+## TASK-046 — Purchase UOM metadata and searchForPurchase
+
+### Goal
+Parent Phase: PHASE-008. Implement the two owner-requested HD-093 additions under FR-065/FR-066/DES-021, only in Item-owned code/tests/docs.
+
+### Approach
+Change `server/src/modules/item/ItemLookupService.js` and Item lookup unit/integration tests. Existing loader already returns mapping ID/name/status; add fields only for purchase projections. Build shared count/page WHERE at one clock instant with purchase predicates plus active-UOM EXISTS; reuse batched UOM loading and current purchase evaluator. Do not refactor Sale methods or add locks/barcode/endpoint. Dependency: TASK-045 actual merged integration; Supplier consumer adoption/pin approval is independent.
+
+### Acceptance criteria
+TC-017/TC-018 unit and actual MySQL checks, compatibility and bounded query budget pass; no old value/membership/policy change. Search returns only eligible purchase candidates and preserves inactive UOM display. Consumer authorization/current-submit validation stays outside Item.
+
+### Definition of Done
+Independent review, TDD red/green, real-MySQL boundary/compatibility checks, four developer suites and exact-candidate five CI checks complete. Actual PR merge/cleanup only when authorized. Complexity: small; risk: medium additive shared interface. PLANNED, no implementation/developer/formal PASS claimed.
