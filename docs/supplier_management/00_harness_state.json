@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 318,
+  "revision": 319,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "f2f4a82b76b40a6ddd214263023aa4b7383facdce30d33348cfd1d16dcdfe6ab",
     "plan": "b5724a2fbaa17f3f592b81e7258fb36d13c8ba2480dae8e10a40bc0713510287",
-    "code_commit": "6ab2fb045433726d5442022e57d1bed1b25de2f8",
-    "source_fingerprint": "b381f54b6ba1b3c3218b371d10b02655b7084d247e5a378a0e6e0a9c70e71758",
-    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t40",
-    "default_commit": "6ab2fb045433726d5442022e57d1bed1b25de2f8",
+    "code_commit": "3d47f8fb5c7b3143ef08500546e86620ea02af63",
+    "source_fingerprint": "2674b77044f0483f793e13245ab45cb4b2e1a5c3f537ab51293f24c6d7083d15",
+    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t40-close",
+    "default_commit": "3d47f8fb5c7b3143ef08500546e86620ea02af63",
     "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
   },
   "runtime": {
@@ -67,7 +67,7 @@
     "TASK-037": "DONE",
     "TASK-038": "DONE",
     "TASK-039": "BLOCKED",
-    "TASK-040": "IN_PROGRESS",
+    "TASK-040": "DONE",
     "TASK-041": "DONE",
     "TASK-042": "DONE",
     "TASK-043": "DONE",
@@ -3837,6 +3837,17 @@
       "source_ref": "PR #201 merged as 6ab2fb045433726d5442022e57d1bed1b25de2f8 on the Product Owner's word (HD-091 'A', HD-092 'A，CI過就merge'), with --match-head-commit, after head 33ab754's CI run 38333279374 was green on all five checks and origin/main was unchanged at c143f3b1. Head 33ab754 merged main c143f3b1 (PR #198) into da5244e3, whose run 38331651664 was also green. Reviews: REV-085 CHANGES_REQUESTED, REV-086 APPROVED; HD-091 follow-ups not re-reviewed by decision. Main CI run 38336570916 on the merge commit was pending when this was recorded and is not claimed here. source_fingerprint computed with harness_core.fingerprint on a clean worktree at the merge commit.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-13T00:00:00+08:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "TASK-040 merged to main",
+      "code_commit": "3d47f8fb5c7b3143ef08500546e86620ea02af63",
+      "spec_baseline": "b5724a2fbaa17f3f592b81e7258fb36d13c8ba2480dae8e10a40bc0713510287",
+      "source_fingerprint": "2674b77044f0483f793e13245ab45cb4b2e1a5c3f537ab51293f24c6d7083d15",
+      "status": "PASS",
+      "source_ref": "PR #211 merged as 3d47f8fb5c7b3143ef08500546e86620ea02af63 on the Product Owner's word (HD-096 '全部按建議，唔使再 review，CI 過就 merge'), with --match-head-commit, after head d2b6d23's CI run 38367006113 was green on all five checks and origin/main was unchanged at 7c927e26. Head d2b6d23 merged main 7c927e26 (Item PR #210) into the REV-087 follow-ups. Review: REV-087 CHANGES_REQUESTED (0 Critical/High); follow-ups not re-reviewed by decision. Main CI run 38370156256 on the merge commit was in progress when this was recorded and is not claimed here. source_fingerprint computed with harness_core.fingerprint on a clean worktree at the merge commit.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-13T00:00:00+08:00"
     }
   ],
   "pending_decisions": [
@@ -6174,5 +6185,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-040: REV-087 follow-ups done (HD-096). Full suite, push PR #211; merge when CI is green and main is unchanged (no re-review). Then: TASK-050's for-SKU run over HTTP at the production pool (incl. hot-SKU name search and deep pages). TASK-039 waits on Item (HD-093)."
+  "next_safe_action": "TASK-040 DONE (PR #211, 3d47f8fb). Item delivered HD-093 (PR #210), so TASK-039 is unblocked once the item-sku-uom-provider pin is refreshed (5a44ef30 → 1bbb882f; needs Product Owner approval, moves both baselines). Also open: TASK-050's for-SKU run over HTTP at the production pool."
 }
