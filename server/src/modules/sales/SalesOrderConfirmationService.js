@@ -10,7 +10,7 @@ import { SalesOperationService } from "./SalesOperationService.js";
 import { SalesAuditService } from "./SalesAuditService.js";
 import { requireSalesRecoveryActor, requireSalesWriteActor } from "./salesAuthorization.js";
 import { salesPayloadHash } from "./salesCanonicalHash.js";
-import { readSalesOrderDetail } from "./SalesOrderService.js";
+import { lockSalesOrderLines, readSalesOrderDetail } from "./SalesOrderService.js";
 import { prepareSalesDocument } from "./prepareSalesDocument.js";
 import { documentTotal } from "./salesMoneyMath.js";
 import { assertQuantityConservation } from "./salesQuantityMath.js";
@@ -149,7 +149,7 @@ export class SalesOrderConfirmationService {
       const payload = typeof operation.recovery_payload === "string" ? JSON.parse(operation.recovery_payload) : operation.recovery_payload;
       if (!payload || Object.keys(payload).join(",") !== "version" || !Number.isSafeInteger(payload.version) || payload.version < 1 ||
           salesPayloadHash(payload) !== operation.request_hash) throw salesError("SALES_EVENT_CONFLICT");
-      const [[locked]] = await tx.query("SELECT status,version,confirmation_event_id FROM sales_orders WHERE id=? FOR UPDATE", [Number(operation.target_id)]);
+      const [[locked]] = await tx.query("SELECT status,version,confirmation_event_id,line_count FROM sales_orders WHERE id=? FOR UPDATE", [Number(operation.target_id)]);
       if (!locked || locked.status !== "CONFIRMING" || locked.confirmation_event_id !== eventId || Number(locked.version) !== payload.version + 1) throw salesError("SALES_EVENT_CONFLICT");
       const order = await readSalesOrderDetail(tx, Number(operation.target_id)), nowMs = this.time.nowMs();
       await tx.query("SAVEPOINT sales_confirmation_business");
@@ -184,7 +184,7 @@ export class SalesOrderConfirmationService {
     this.businessMaster ??= new BusinessMasterProvider({ database: this.database,repository: new BusinessMasterRepository() });
     const document = { ...order,lines: order.lines.map(line => ({ ...line,lineNote: line.lineNote ?? "" })) };
     const prepared = await prepareSalesDocument(tx, document, nowMs, this);
-    await tx.query("SELECT id FROM sales_order_lines WHERE sales_order_id=? ORDER BY id FOR UPDATE", [order.id]);
+    await lockSalesOrderLines(tx, order.id, order.lineCount);
     if (!prepared.customer.credit || !["not_configured","normal","on_hold"].includes(prepared.customer.credit.status)) throw salesError("SALES_DEPENDENCY_UNAVAILABLE");
     if (prepared.customer.credit.status === "on_hold") throw salesError("CUSTOMER_CREDIT_ON_HOLD");
     for (const snapshot of prepared.snapshots)
