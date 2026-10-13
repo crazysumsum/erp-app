@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 313,
+  "revision": 314,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -5000,6 +5000,17 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-12: '全部按建議，L4 批准' (L5 A; L2 accepted; archived only; re-review; earlier: 'review，之後 CI 過就 merge')."
+    },
+    {
+      "id": "HD-091",
+      "impact": "MINOR",
+      "question": "REV-086 APPROVED PR #201 with M-1 (H1/H2 fixes only partly covered by tests), L-1 (more surviving mutants) and L-2 (doc claims too broad: '46/46', 'retried up to three times', the M2 list). (A) fix tests and docs before merging, no further review, merge when CI passes; (B) merge now and follow up.",
+      "affected_ids": [
+        "TASK-038",
+        "REV-086"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-13: 'A'."
     }
   ],
   "external_actions": [
@@ -6076,5 +6087,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-038: REV-086 APPROVED with test (M-1, L-1) and doc (L-2) follow-ups. Ask the Product Owner (HD-091) whether to fix them before merging #201."
+  "next_safe_action": "TASK-038: HD-091 follow-ups done (tests, docs, failure logging). Full suite, push PR #201; merge when CI is green and main is unchanged (no further review, HD-091). Then: the Supplier client test race (currency select) as a small PR."
 }

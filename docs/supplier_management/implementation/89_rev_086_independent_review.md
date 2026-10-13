@@ -80,4 +80,20 @@ The code is correct today: the reviewer's probes pass, and they fail on the code
 
 ## Author's follow-up
 
-Taken to the Product Owner as HD-091.
+- **The findings** were taken to the Product Owner as HD-091. The answer: 'A' (fix the tests and docs before the merge, no further review, merge when CI passes).
+- **M-1 tests:**
+  - More creates and more projections than the pool has connections, on distinct Suppliers.
+  - The same event and the same source line sent to four Suppliers: exactly one success, `IDEMPOTENCY_CONFLICT` for the rest, and no relation on the losers.
+  - A stale actor creating against an inactive SKU gets `PERMISSION_STALE`.
+- **L-1 tests:**
+  - A stale actor on update.
+  - Each update field removed on its own gives 400, and nothing changes.
+  - The list order with the preferred row created first.
+  - `SUPPLIER_SUPPLY_INVALID` for a 65-character event ID, `skuId`, `purchaseSkuUomId` and a control character in `supplierItemCode`.
+  - Two code-less relations on one Supplier (both keys NULL).
+  - The projection's version bump.
+  - The rerun refusing a case-insensitive code key, a non-binary payload hash, a wider column and a changed nullability.
+- **Info:** an invalid command and a failed Item lookup now also log `supplier.sku.supply_failed` (unit test).
+- **L-2:** the retry count (three attempts, two retries), the mutation record and the M2 wording are corrected.
+- **Mutation:** all 13 of REV-086's non-equivalent survivors are now killed. The author's full set is 59 of 59.
+- **Not changed:** the error order in `create` (Info); it only affects which error comes first.

@@ -902,12 +902,12 @@ fails the test instead of hanging it. Killed: "no skip when the index exists" (i
 - **No second connection inside a transaction (REV-085 H1).** The Item lookup uses the pool, so it runs before the transaction. Purchasability is reported only after authorization (REV-085 L3).
 - **Accepted limitation (HD-090):** a SKU deactivated between that read and the write can still get a relation (REV-085 L2). The relation is only a reference, and Purchasing checks the SKU again when it orders.
 - **`recordSupply`:**
-  - It locks the Supplier first and then reads without locks, so concurrent first projections do not deadlock (REV-085 H2). Deadlocks are retried up to three times regardless of the message.
+  - It locks the Supplier first and then reads without locks, so concurrent first projections do not deadlock (REV-085 H2). A deadlock, or a duplicate event or source line from another Supplier, is retried: three attempts in all (two retries), whatever the message says.
   - `event_id` and the source line are the fence. A replay returns the first outcome. The same event or source line with different content gives `IDEMPOTENCY_CONFLICT`.
   - It applies no purchasing-eligibility check: the Supplier and SKU only have to exist.
   - It never makes a relation preferred, and keeps first and last supplied as the minimum and maximum.
   - It does not set the purchase UOM (HD-090 L5 A): the reported UOM goes to the audit only. A code that is taken, or too long after NFKC, is dropped instead of failing.
-  - A failure logs `supplier.sku.supply_failed` with IDs and a code only.
+  - Any failure logs `supplier.sku.supply_failed` with IDs and a code only, including an invalid command and a failed Item lookup (REV-086).
 - **Open, for the Item owner:** the generic lookup projection gives each UOM's `uomId` but not the SKU-UOM mapping `id` that Supplier stores. Supplier checks ownership through the foreign key, but cannot check that the purchase UOM is still active.
 - **Open, for Purchasing:**
   - Item §5.14 asks the projection to verify that the source goods receipt is completed. Supplier cannot do this until Purchasing exists.
@@ -916,7 +916,18 @@ fails the test instead of hanging it. Killed: "no skip when the index exists" (i
   - `test/supplierRelationService.test.js` (retry, validation) and `test/supplierRelationHandlers.test.js`;
   - `test/integration/supplierSkuRelations.integration.test.js`, which covers `recordSupply` and the relation API over real HTTP and MySQL.
   - The for-SKU lookup test belongs to TASK-040.
-- **Mutation:** 46 mutants, every one killed, with each test file run in full.
-  - Three were killed by a negative control against the code before HD-090: the concurrency above the pool size, the concurrent projections, and the partial update.
-  - REV-085's own sweep had left 27 of 35 alive; the kinds it found are in this list.
+- **Mutation:** the author's set has 59 mutants, every one killed, with each test file run in full.
+  - The first 46 count was written at `2a2d1aa` together with the claim that REV-085's kinds were covered. REV-086 showed that was too broad: its sweep of 69 mutants left 23 alive.
+  - About 6 to 8 of those 23 were equivalent or nearly so (for example "retry any duplicate", "version optional", or text lengths that the schema and the column already bound).
+  - The other 13 became tests and mutants in this set, and are killed:
+    - creates and projections above the pool size;
+    - the same event, and the same source line, sent to different Suppliers;
+    - a stale actor on create and on update;
+    - each update field required;
+    - the list order;
+    - a 65-character event ID;
+    - the code-key and payload-hash collations and the column types;
+    - an empty code key;
+    - the projection's version bump.
+  - The tests for the pool size, the concurrent projections and the partial update fail on the code before HD-090 (negative control).
 - **Full server suite:** see the PR.
