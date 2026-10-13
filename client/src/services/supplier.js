@@ -127,5 +127,25 @@ export default {
 
   deleteIdentifier(supplierId, identifierId, payload) {
     return httpClient.post(`/api/v1/suppliers/${supplierId}/identifiers/${identifierId}/delete`, { body: payload });
+  },
+
+  /** 供貨關係（TASK-039）：轉做 DataTable 嘅 `{ rows, rowsNumber }`。 */
+  listSkuRelations(supplierId, { page, rowsPerPage, filter }) {
+    return httpClient.get(`/api/v1/suppliers/${supplierId}/sku-relations`, {
+      params: { page, pageSize: rowsPerPage, q: filter || undefined }
+    }).then(({ items, total }) => ({ rows: items, rowsNumber: total }));
+  },
+
+  createSkuRelation(supplierId, payload) {
+    return httpClient.post(`/api/v1/suppliers/${supplierId}/sku-relations/create`, { body: payload });
+  },
+
+  updateSkuRelation(supplierId, relationId, payload) {
+    return httpClient.post(`/api/v1/suppliers/${supplierId}/sku-relations/${relationId}/update`, { body: payload });
+  },
+
+  /** 只列而家可以採購嘅 SKU 同佢哋嘅單位（Item searchForPurchase）。 */
+  searchPurchasableSkus({ q, pageSize = 20, signal } = {}) {
+    return httpClient.get("/api/v1/supplier-lookups/skus", { params: { q: q || undefined, pageSize }, signal });
   }
 };
