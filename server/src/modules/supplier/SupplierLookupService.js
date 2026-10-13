@@ -193,10 +193,11 @@ export class SupplierLookupService {
    * 一次過 JOIN 全部 Active Supplier 再排序，每次要排 8 萬行，50 人並發 p95 4 秒。
    */
   async listForSku(skuId, options = {}) {
-    const id = requireSupplierId(skuId);
+    const id = Number(skuId);
+    if (!Number.isSafeInteger(id) || id <= 0) throw new TypeError("SKU ID must be a positive safe integer");
     const { search, page, pageSize } = forSkuQuery(options);
     if (!this.items) throw new TypeError("SupplierLookupService.listForSku requires an Item lookup service");
-    await this.items.assertUsable(id, { purpose: "purchase", atMs: options.atMs ?? this.time.nowMs() });
+    await this.items.assertUsable(id, { purpose: "purchase", atMs: options?.atMs ?? this.time.nowMs() });
 
     const key = search.toLowerCase();
     let match = "s.status = 'active'";
@@ -239,8 +240,12 @@ export class SupplierLookupService {
       ? await this.database.query(`SELECT ${FOR_SKU_COLUMNS}, 1 AS exact_rank ${restFrom} ORDER BY s.supplier_name, s.id LIMIT ? OFFSET ?`,
         [...restParams, pageSize - head.length, restOffset])
       : [[]];
+    // head 同 rest 係兩次讀；中間 relation 改咗嘅話同一個 Supplier 可能兩段都出。去重；呢個只係建議清單，
+    // 提交時 BR-032 會再驗（REV-087 L-3）。反方向（兩段都冇讀到）就會喺呢一頁漏咗，下次查詢會返嚟。
+    const seen = new Set();
+    const rows = [...head, ...rest].filter((row) => !seen.has(Number(row.id)) && seen.add(Number(row.id)));
     return {
-      items: [...head, ...rest].map((row) => ({
+      items: rows.map((row) => ({
         ...toProjection(row, { purpose: "purchase" }),
         rankReason: rankReason(row),
         relation: row.relation_id === null ? null : {

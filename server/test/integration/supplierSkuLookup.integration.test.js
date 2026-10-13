@@ -209,6 +209,9 @@ integrationTest("TASK-040 (HD-094 1A): over HTTP the for-SKU lookup needs a fres
   assert.equal((await get(stale, url)).code, "PERMISSION_STALE");
   assert.equal((await get(viewer, `/api/v1/supplier-lookups/for-sku/${skuId}?q=${"a".repeat(191)}`)).status, 400);
   assert.equal((await get(viewer, "/api/v1/supplier-lookups/for-sku/0")).status, 400);
+  for (const control of ["%01", "%7F", "%C2%85"]) {
+    assert.equal((await get(viewer, `/api/v1/supplier-lookups/for-sku/${skuId}?q=a${control}`)).status, 400, `q with ${control} (REV-087 L-2)`);
+  }
   const inactive = await sku({ status: "inactive" });
   const refused = await get(viewer, `/api/v1/supplier-lookups/for-sku/${inactive}`);
   assert.deepEqual([refused.status, refused.code], [409, "SKU_NOT_USABLE"]);
@@ -249,9 +252,37 @@ integrationTest("TASK-040 (HD-094 2A): among exact matches a stopped relation st
   await relation(byItemCode, skuId, { status: "stopped", lastSuppliedAt: 5_000, itemCode: prefix });
   await relation(byCode, otherSku, { status: "preferred", lastSuppliedAt: 6_000 });
 
+  // 名都對得上 q、但冇 relation：令 rest 真係被讀（REV-087 L-1）。
+  const plainMatch = await supplier({ code: `${prefix}-2`, name: `${prefix} Charlie` });
+
   const result = await lookup().listForSku(skuId, { q: prefix });
-  assert.deepEqual(result.items.map((item) => [item.supplierId, item.rankReason]), [[byCode, "exact_match"], [byItemCode, "exact_match"]],
-    "both exact; then by name, not by the stopped relation's history");
+  assert.deepEqual(result.items.map((item) => [item.supplierId, item.rankReason]),
+    [[byCode, "exact_match"], [byItemCode, "exact_match"], [plainMatch, null]],
+    "both exact; then by name, not by the stopped relation's history; then the rest");
   assert.equal(result.items[0].relation, null, "byCode's relation is for another SKU");
   assert.equal(result.items[1].relation.relationshipStatus, "stopped");
+  assert.equal(result.total, 3);
+
+  // 一頁 2 個：第 2 頁全部嚟自 rest。Item Code 完全相同嘅 Supplier 只可以喺 head，唔可以喺 rest 再出現。
+  const paged = [];
+  for (const page of [1, 2]) paged.push(...(await lookup().listForSku(skuId, { q: prefix, page, pageSize: 2 })).items.map((item) => item.supplierId));
+  assert.deepEqual(paged, [byCode, byItemCode, plainMatch], "unique across pages, and as many as total");
+});
+
+integrationTest("TASK-040 (SKU-002, REV-087 M-2): ties inside the head fall back to name, then ID", async () => {
+  const prefix = `SKT${randomUUID().slice(0, 8)}`;
+  const skuId = await sku();
+  // 先建 Kilo 再建 India：ID 次序同名次序相反。
+  const kilo = await supplier({ code: `${prefix}-1`, name: `${prefix} Kilo` });
+  const india = await supplier({ code: `${prefix}-2`, name: `${prefix} India` });
+  const twinA = await supplier({ code: `${prefix}-3`, name: `${prefix} Twin` });
+  const twinB = await supplier({ code: `${prefix}-4`, name: `${prefix} Twin` });
+  await relation(kilo, skuId, { status: "preferred" });
+  await relation(india, skuId, { status: "preferred" });
+  await relation(twinA, skuId, { lastSuppliedAt: 1_500 });
+  await relation(twinB, skuId, { lastSuppliedAt: 1_500 });
+
+  const result = await lookup().listForSku(skuId, { q: prefix });
+  assert.deepEqual(result.items.map((item) => item.supplierId), [india, kilo, twinA, twinB],
+    "equal preferred → by name; equal name and last supplied → by ID");
 });

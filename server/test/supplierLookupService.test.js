@@ -263,10 +263,23 @@ test("TASK-040 (HD-095 B): no Item Code match adds no IN list, and an empty rest
 });
 
 test("TASK-040 (HD-094 2A): rankReason follows exact, preferred, recently supplied; stopped never ranks", async () => {
-  const relation = (status, lastSuppliedAt = null, exact = 1) =>
-    forSkuRow({ relation_id: 9, relationship_status: status, supplier_item_code: "AB-1", last_supplied_at: lastSuppliedAt, exact_rank: exact });
-  const rows = [relation("stopped", 500, 0), relation("preferred"), relation("alternative", 400), relation("stopped", 300), relation("alternative")];
+  const relation = (id, status, lastSuppliedAt = null, exact = 1) => forSkuRow({ id, relation_id: 9, relationship_status: status,
+    supplier_item_code: "AB-1", last_supplied_at: lastSuppliedAt, exact_rank: exact });
+  const rows = [relation(1, "stopped", 500, 0), relation(2, "preferred"), relation(3, "alternative", 400), relation(4, "stopped", 300),
+    relation(5, "alternative")];
   const result = await serviceFor(poolDatabase([[{ total: 5 }], [{ headTotal: 5 }], rows]), { items: purchasableItems() }).listForSku(5);
   assert.deepEqual(result.items.map((item) => item.rankReason), ["exact_match", "preferred", "recently_supplied", null, null]);
   assert.deepEqual(result.items[3].relation, { relationId: 9, relationshipStatus: "stopped", supplierItemCode: "AB-1", lastSuppliedAt: 300 });
+});
+
+test("TASK-040 (REV-087 I-3): an SKU ID is reported as one, and null options mean the defaults", async () => {
+  const service = serviceFor(poolDatabase([[{ total: 0 }], [{ headTotal: 0 }]]), { items: purchasableItems() });
+  await assert.rejects(() => service.listForSku(0), /^TypeError: SKU ID must be a positive safe integer$/u);
+  assert.deepEqual(await service.listForSku(5, null), { items: [], total: 0, page: 1, pageSize: 20 });
+});
+
+test("TASK-040 (REV-087 L-3): a Supplier seen in both reads is returned once", async () => {
+  const database = poolDatabase([[{ total: 3 }], [{ headTotal: 1 }], [forSkuRow()], [forSkuRow(), forSkuRow({ id: 8 })]]);
+  const result = await serviceFor(database, { items: purchasableItems() }).listForSku(5);
+  assert.deepEqual(result.items.map((item) => item.supplierId), [7, 8]);
 });

@@ -10,7 +10,8 @@ const PARAMS = Object.freeze({
 const QUERY = Object.freeze({
   type: "object", additionalProperties: false,
   properties: {
-    q: { type: "string", maxLength: 190, default: "" },
+    // 控制字元喺呢度擋成 400；唔擋嘅話 service 嘅 TypeError 會變 500（REV-087 L-2）。
+    q: { type: "string", maxLength: 190, pattern: "^[^\\u0000-\\u001f\\u007f-\\u009f]*$", default: "" },
     page: { type: "integer", minimum: 1, default: 1 },
     pageSize: { type: "integer", minimum: 1, maximum: 100, default: 20 }
   }
