@@ -326,9 +326,9 @@
       {
         "module_id": "item-management",
         "id": "item-lookup-service",
-        "version": "integrated-main-c143f3b1-Item-reference-guards; compatible Sales consumption pending original33/currentCI",
+        "version": "integrated-main-7c927e26-Item-purchase-lookup; Sales named contracts unchanged, current33/currentCI pending",
         "source": "server/src/modules/item/ItemLookupService.js",
-        "sha256": "e76a4f476673ae716fa6ebfbfb507655fad43ae5eb08d3e64ed36b6b9a5ae1cd",
+        "sha256": "1b58448ce97d48da19ab8fd47d6bacab48cec7878ffdbb76bb68af252cc60be6",
         "regression_suites": [
           "sales-technical"
         ]
