@@ -238,16 +238,26 @@ test("TASK-040 (HD-095 B): a page past the head skips the head query and offsets
 });
 
 test("TASK-040 (HD-094 4A): a search matches the Supplier list fields or this SKU's Supplier Item Code, and exact matches rank first", async () => {
-  const database = poolDatabase([[{ total: 0 }], [{ headTotal: 0 }], []]);
+  const database = poolDatabase([[{ supplier_id: 11 }, { supplier_id: 12 }], [{ total: 30 }], [{ headTotal: 0 }], []]);
   await serviceFor(database, { items: purchasableItems() }).listForSku(5, { q: " ＡＢ-1 ", page: 3, pageSize: 10 });
-  const [count, headCount, rest] = database.calls;
-  const match = ["ab-1%", "%AB-1%", "%AB-1%", "%AB-1%", "%AB-1%", 5, "ab-1"];
-  assert.match(count.sql, /general_email LIKE \? ESCAPE '\\\\'\n\s+OR EXISTS \(SELECT 1 FROM supplier_sku_refs x WHERE x\.supplier_id = s\.id AND x\.sku_id = \? AND x\.supplier_item_code_key = \?\)\)/u);
-  assert.deepEqual(count.params, match, "NFKC, trimmed, item code key lower-cased");
+  const [byItemCode, count, headCount, rest] = database.calls;
+  assert.deepEqual([byItemCode.sql, byItemCode.params],
+    ["SELECT supplier_id FROM supplier_sku_refs WHERE sku_id = ? AND supplier_item_code_key = ?", [5, "ab-1"]], "NFKC, trimmed, lower-cased");
+  const match = ["ab-1%", "%AB-1%", "%AB-1%", "%AB-1%", "%AB-1%", 11, 12];
+  assert.match(count.sql, /general_email LIKE \? ESCAPE '\\\\' OR s\.id IN \(\?,\?\)\)$/u);
+  assert.deepEqual(count.params, match);
   assert.match(headCount.sql, / OR y\.supplier_item_code_key = \?\) UNION SELECT id FROM suppliers WHERE supplier_code_key = \?\) h/u);
   assert.deepEqual(headCount.params, [5, "ab-1", "ab-1", 5, ...match]);
   assert.match(rest.sql, /AND s\.supplier_code_key <> \? ORDER BY/u);
   assert.deepEqual(rest.params, [5, ...match, 5, "ab-1", "ab-1", 10, 20]);
+});
+
+test("TASK-040 (HD-095 B): no Item Code match adds no IN list, and an empty rest is not read", async () => {
+  const database = poolDatabase([[], [{ total: 1 }], [{ headTotal: 1 }], [forSkuRow({ exact_rank: 0 })]]);
+  const result = await serviceFor(database, { items: purchasableItems() }).listForSku(5, { q: "SUP-007" });
+  assert.equal(database.calls.length, 4, "item code, count, head count, head — no rest query");
+  assert.doesNotMatch(database.calls[1].sql, / IN \(/u);
+  assert.deepEqual(result.items.map((item) => item.rankReason), ["exact_match"]);
 });
 
 test("TASK-040 (HD-094 2A): rankReason follows exact, preferred, recently supplied; stopped never ranks", async () => {

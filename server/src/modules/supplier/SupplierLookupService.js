@@ -203,10 +203,12 @@ export class SupplierLookupService {
     const matchParams = [];
     if (search) {
       // 同供應商列表一樣嘅文字搜尋，或者呢隻 SKU 嘅 Supplier Item Code 完全相同（HD-094 4A）。
+      // Item Code 相同嘅 Supplier 先查出嚟（好少），唔好喺全表掃描入面每行行一條子查詢。
+      const [byItemCode] = await this.database.query(
+        "SELECT supplier_id FROM supplier_sku_refs WHERE sku_id = ? AND supplier_item_code_key = ?", [id, key]);
       const condition = supplierSearchCondition(search);
-      match += ` AND (${condition.sql}
-        OR EXISTS (SELECT 1 FROM supplier_sku_refs x WHERE x.supplier_id = s.id AND x.sku_id = ? AND x.supplier_item_code_key = ?))`;
-      matchParams.push(...condition.params, id, key);
+      match += ` AND (${condition.sql}${byItemCode.length ? ` OR s.id IN (${byItemCode.map(() => "?").join(",")})` : ""})`;
+      matchParams.push(...condition.params, ...byItemCode.map((row) => Number(row.supplier_id)));
     }
     const ranked = `y.sku_id = ? AND (${RANKED}${search ? " OR y.supplier_item_code_key = ?" : ""})`;
     const rankedParams = search ? [id, key] : [id];
@@ -231,9 +233,11 @@ export class SupplierLookupService {
           LIMIT ? OFFSET ?`,
         [...(search ? [key, key] : []), ...headParams, pageSize, offset])
       : [[]];
-    const [rest] = head.length < pageSize
+    const restOffset = Math.max(0, offset - Number(headTotal));
+    // 其餘嗰段冇嘢可以攞就唔讀：搜完整代碼通常淨係中 head，咁可以慳一次全表掃描。
+    const [rest] = head.length < pageSize && Number(total) - Number(headTotal) > restOffset
       ? await this.database.query(`SELECT ${FOR_SKU_COLUMNS}, 1 AS exact_rank ${restFrom} ORDER BY s.supplier_name, s.id LIMIT ? OFFSET ?`,
-        [...restParams, pageSize - head.length, Math.max(0, offset - Number(headTotal))])
+        [...restParams, pageSize - head.length, restOffset])
       : [[]];
     return {
       items: [...head, ...rest].map((row) => ({
