@@ -1,7 +1,6 @@
 <script setup>
 import { computed, nextTick, reactive, ref } from "vue";
 import DataTable from "@/framework/ui/DataTable.vue";
-import EllipsisCell from "@/framework/ui/EllipsisCell.vue";
 import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
 import supplierService from "@/services/supplier.js";
 
@@ -188,14 +187,19 @@ async function submit() {
       <template #body-cell-sku="{ row }">
         <q-td>
           <div>{{ row.skuCode ?? `#${row.skuId}` }}</div>
-          <div class="text-caption text-grey-8"><EllipsisCell :text="row.skuName ?? ''" /></div>
+          <!-- 兩行嘅格：EllipsisCell 自己係一個 q-td，唔可以再放入 q-td，所以用返佢嘅 ellipsis 做法。 -->
+          <div v-if="row.skuName" class="text-caption text-grey-8 ellipsis" style="max-width: 220px">
+            {{ row.skuName }}<q-tooltip>{{ row.skuName }}</q-tooltip>
+          </div>
           <q-badge v-if="skuHistory(row)" color="grey" :label="`${skuHistory(row)}（歷史）`" />
         </q-td>
       </template>
       <template #body-cell-supplierItem="{ row }">
         <q-td>
           <div>{{ row.supplierItemCode || "—" }}</div>
-          <div class="text-caption text-grey-8"><EllipsisCell :text="row.supplierItemName" /></div>
+          <div v-if="row.supplierItemName" class="text-caption text-grey-8 ellipsis" style="max-width: 220px">
+            {{ row.supplierItemName }}<q-tooltip>{{ row.supplierItemName }}</q-tooltip>
+          </div>
         </q-td>
       </template>
       <template #body-cell-purchaseUom="{ row }">
