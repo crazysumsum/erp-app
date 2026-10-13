@@ -33,7 +33,7 @@ function relation(overrides = {}) {
     lastSuppliedAt: null, source: "manual", version: 3, updatedAt: 300, ...overrides };
 }
 
-async function installApi(page, { user = MANAGER, status = "active", relations = [], conflictOnUpdate = false } = {}) {
+async function installApi(page, { user = MANAGER, status = "active", relations = [], conflictOnUpdate = false, delaySkuId = null } = {}) {
   const state = { calls: [], relations: [...relations] };
   await page.addInitScript(() => {
     localStorage.setItem("erp.token", "browser-test-token");
@@ -56,6 +56,12 @@ async function installApi(page, { user = MANAGER, status = "active", relations =
     if (path === "/api/v1/suppliers/7/completeness") return ok({ supplierId: 7, issues: [], warnings: [] });
     if (path.startsWith("/api/v1/business-master/")) return ok({ items: [], total: 0 });
     if (path === "/api/v1/supplier-lookups/skus") {
+      const skuId = url.searchParams.get("skuId");
+      if (skuId) {
+        if (Number(skuId) === delaySkuId) await new Promise((resolve) => { setTimeout(resolve, 1_500); });
+        const items = SKUS.filter((sku) => sku.skuId === Number(skuId));
+        return ok({ items, total: items.length, page: 1, pageSize: 20 });
+      }
       const q = (url.searchParams.get("q") ?? "").toLowerCase();
       const items = SKUS.filter((sku) => sku.skuCode.toLowerCase().startsWith(q) || sku.skuName.toLowerCase().startsWith(q));
       return ok({ items, total: items.length, page: 1, pageSize: 20 });
@@ -75,8 +81,14 @@ async function installApi(page, { user = MANAGER, status = "active", relations =
     }
     const update = path.match(/^\/api\/v1\/suppliers\/7\/sku-relations\/(\d+)\/update$/u);
     if (update) {
-      if (conflictOnUpdate) return fail(409, "VERSION_CONFLICT", "供貨關係已被其他人修改，請重新載入");
       const index = state.relations.findIndex((row) => row.id === Number(update[1]));
+      if (body.version !== state.relations[index].version) return fail(409, "VERSION_CONFLICT", "供貨關係已被其他人修改，請重新載入");
+      if (conflictOnUpdate) {
+        // 第一次儲存之前，有人改咗 MOQ：版本加一，回衝突。
+        conflictOnUpdate = false;
+        state.relations[index] = { ...state.relations[index], minimumOrderQty: 99, version: state.relations[index].version + 1 };
+        return fail(409, "VERSION_CONFLICT", "供貨關係已被其他人修改，請重新載入");
+      }
       state.relations[index] = { ...state.relations[index], ...body, version: body.version + 1 };
       return ok(state.relations[index]);
     }
@@ -161,15 +173,79 @@ test("@technical TASK-039: an inactive SKU and UOM stay visible as history, and 
   expect(problems).toEqual([]);
 });
 
-test("@technical TASK-039: a version conflict keeps the dialog and the input, with a reload hint", async ({ page }) => {
-  await installApi(page, { relations: [relation()], conflictOnUpdate: true });
+test("@technical TASK-039 (REV-088 M-2): a version conflict keeps the draft, re-reads the list, and the next edit saves", async ({ page }) => {
+  const state = await installApi(page, { relations: [relation()], conflictOnUpdate: true });
   await openTab(page);
   await page.getByRole("button", { name: "編輯供貨關係 TEA-002" }).click();
   const dialog = page.getByRole("dialog");
   await dialog.getByLabel("最低訂購量").fill("30");
   await dialog.getByRole("button", { name: "儲存" }).click();
   await expect(dialog.getByRole("alert")).toContainText("已被其他人修改");
-  await expect(dialog.getByLabel("最低訂購量")).toHaveValue("30");
+  await expect(dialog.getByLabel("最低訂購量"), "the draft stays").toHaveValue("30");
+  await dialog.getByRole("button", { name: "取消" }).click();
+  await expect(page.getByRole("row", { name: /TEA-002/u }), "the list was re-read").toContainText("99");
+
+  await page.getByRole("button", { name: "編輯供貨關係 TEA-002" }).click();
+  await expect(dialog.getByLabel("最低訂購量")).toHaveValue("99");
+  await dialog.getByLabel("最低訂購量").fill("30");
+  await dialog.getByRole("button", { name: "儲存" }).click();
+  await expect(dialog).toBeHidden();
+  expect(state.calls.filter((call) => call.path.endsWith("/91/update")).map((call) => call.body.version)).toEqual([3, 4]);
+});
+
+test("@technical TASK-039 (REV-088 M-1): a slow unit lookup from an earlier edit does not overwrite the dialog that is open now", async ({ page }) => {
+  await installApi(page, { relations: [relation({ id: 93, skuId: 51, skuCode: "TEA-001", purchaseSkuUomId: 501, purchaseUomCode: "EA" }), relation()],
+    delaySkuId: 51 });
+  await openTab(page);
+  const slow = page.waitForRequest((request) => request.url().includes("skuId=51"));
+  await page.getByRole("button", { name: "編輯供貨關係 TEA-001" }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "取消" }).click();
+  await expect(dialog).toBeHidden();
+  await page.getByRole("button", { name: "編輯供貨關係 TEA-002" }).click();
+  await expect(dialog.getByLabel("採購單位")).toHaveValue("EA — Each，基本單位");
+  // 等嗰個慢請求完結（被取消就冇 response）：完成或者失敗都算，之後先睇選項有冇被蓋。
+  const request = await slow;
+  await Promise.race([request.response(), page.waitForEvent("requestfailed", (failed) => failed === request)]);
+  await dialog.getByLabel("採購單位").click();
+  await expect(page.getByRole("option")).toHaveText(["EA — Each，基本單位"]);
+});
+
+test("@technical TASK-039 (REV-088 M-3): the SKU picker never sends control characters or more than 190 characters", async ({ page }) => {
+  const problems = collectConsole(page);
+  const state = await installApi(page);
+  await openTab(page);
+  await page.getByRole("button", { name: "新增供貨關係" }).click();
+  const dialog = page.getByRole("dialog");
+  const searches = () => state.calls.filter((call) => call.path === "/api/v1/supplier-lookups/skus").map((call) => call.query.q ?? "");
+  // 每次輸入之後等請求真係出咗去先打下一次，唔係 debounce 會將兩次併做一次。
+  await dialog.getByLabel("SKU *").fill("TEA\t001");
+  await expect.poll(() => searches().length).toBe(1);
+  await dialog.getByLabel("SKU *").fill("a".repeat(200));
+  await expect.poll(() => searches().length).toBe(2);
+  const sent = searches();
+  expect(sent[0], "a pasted tab becomes a space").toBe("TEA 001");
+  expect(sent.every((q) => q.length <= 190 && !/\p{Cc}/u.test(q)), JSON.stringify(sent)).toBe(true);
+  await expect(dialog.getByText(/Request validation failed/u)).toHaveCount(0);
+  expect(problems).toEqual([]);
+});
+
+test("@technical TASK-039 (REV-088 M-4 A): reactivating a stopped relation asks for an active purchase UOM", async ({ page }) => {
+  const state = await installApi(page, { relations: [relation({ skuId: 51, skuCode: "TEA-001", relationshipStatus: "stopped", purchaseSkuUomId: 503,
+    purchaseUomCode: "PLT", purchaseUomName: "Pallet", purchaseUomStatus: "inactive" })] });
+  await openTab(page);
+  await page.getByRole("button", { name: "編輯供貨關係 TEA-001" }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.getByLabel("採購單位")).toHaveValue("PLT — Pallet（已停用） × 960");
+  await dialog.getByLabel("關係 *").click();
+  await page.getByRole("option", { name: "首選" }).click();
+  await expect(dialog.getByText("重新啟用關係需要有效的採購單位：請改選其他單位，或清除單位")).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "儲存" })).toBeDisabled();
+  await dialog.getByLabel("採購單位").click();
+  await page.getByRole("option", { name: /CTN — Carton × 24/u }).click();
+  await dialog.getByRole("button", { name: "儲存" }).click();
+  await expect(dialog).toBeHidden();
+  expect(state.calls.find((call) => call.path.endsWith("/91/update")).body).toMatchObject({ relationshipStatus: "preferred", purchaseSkuUomId: 502 });
 });
 
 test("@technical TASK-039: search goes to the server; viewers and archived Suppliers get no write actions", async ({ page, browser }) => {

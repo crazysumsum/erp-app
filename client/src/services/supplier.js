@@ -144,8 +144,8 @@ export default {
     return httpClient.post(`/api/v1/suppliers/${supplierId}/sku-relations/${relationId}/update`, { body: payload });
   },
 
-  /** 只列而家可以採購嘅 SKU 同佢哋嘅單位（Item searchForPurchase）。 */
-  searchPurchasableSkus({ q, pageSize = 20, signal } = {}) {
-    return httpClient.get("/api/v1/supplier-lookups/skus", { params: { q: q || undefined, pageSize }, signal });
+  /** 只列而家可以採購嘅 SKU 同佢哋嘅單位（Item searchForPurchase）；帶 `skuId` 就精確攞嗰一隻。 */
+  searchPurchasableSkus({ q, skuId, pageSize = 20, signal } = {}) {
+    return httpClient.get("/api/v1/supplier-lookups/skus", { params: { q: q || undefined, skuId, pageSize }, signal });
   }
 };

@@ -56,6 +56,14 @@ const dialogOpen = ref(false);
 const editing = ref(null);
 const submitting = ref(false);
 const errorMessage = ref("");
+const pickerError = ref("");
+// 修改對話框會讀嗰隻 SKU 嘅單位；換咗另一行或者關咗對話框，就要取消舊嗰個請求，唔好俾遲返嘅回應蓋住（REV-088 M-1）。
+let unitLookup = null;
+
+function cancelUnitLookup() {
+  unitLookup?.abort();
+  unitLookup = null;
+}
 const errorRef = ref(null);
 const skuOptions = ref([]);
 const skuUoms = ref([]);
@@ -81,15 +89,24 @@ const integerOrNull = (value) => (value === "" || value === null || value === un
 const inRange = (value, minimum, maximum) => value === null || (Number.isInteger(value) && value >= minimum && value <= maximum);
 const moqValid = computed(() => inRange(integerOrNull(form.minimumOrderQty), 1, 4_294_967_295));
 const leadTimeValid = computed(() => inRange(integerOrNull(form.standardLeadTimeDays), 0, 3650));
-const canSave = computed(() => (editing.value || form.sku) && moqValid.value && leadTimeValid.value);
+// 由 stopped 重新啟用等於新採購對象：採購單位一定要 active，或者清除（HD-098，REV-088 M-4 A）。
+const reactivationNeedsActiveUom = computed(() => {
+  if (editing.value?.relationshipStatus !== "stopped" || form.relationshipStatus === "stopped" || form.purchaseSkuUomId === null) return false;
+  return skuUoms.value.find((uom) => uom.skuUomId === form.purchaseSkuUomId)?.status !== "active";
+});
+const canSave = computed(() => (editing.value || form.sku) && moqValid.value && leadTimeValid.value && !reactivationNeedsActiveUom.value);
+
+// 伺服器只收 190 字、冇控制字元嘅搜尋字：喺呢度先清走（例如由試算表貼入嘅 Tab），唔好等伺服器 400（REV-088 M-3）。
+const searchText = (value) => value.replace(/\p{Cc}/gu, " ").trim().slice(0, 190);
 
 async function filterSkus(value, update, abort) {
   try {
-    const result = await supplierService.searchPurchasableSkus({ q: value.trim() });
+    const result = await supplierService.searchPurchasableSkus({ q: searchText(value) });
     update(() => { skuOptions.value = result.items; });
+    pickerError.value = "";
   } catch (error) {
     abort();
-    errorMessage.value = error.message || "搜尋 SKU 失敗";
+    pickerError.value = error.message || "搜尋 SKU 失敗";
   }
 }
 
@@ -100,8 +117,10 @@ function chooseSku(sku) {
 }
 
 function openCreate() {
+  cancelUnitLookup();
   editing.value = null;
   errorMessage.value = "";
+  pickerError.value = "";
   skuNotPurchasable.value = false;
   skuUoms.value = [];
   Object.assign(form, { sku: null, supplierItemCode: "", supplierItemName: "", purchaseSkuUomId: null,
@@ -110,8 +129,10 @@ function openCreate() {
 }
 
 async function openEdit(row) {
+  cancelUnitLookup();
   editing.value = row;
   errorMessage.value = "";
+  pickerError.value = "";
   Object.assign(form, { sku: null, supplierItemCode: row.supplierItemCode, supplierItemName: row.supplierItemName,
     purchaseSkuUomId: row.purchaseSkuUomId, minimumOrderQty: row.minimumOrderQty, standardLeadTimeDays: row.standardLeadTimeDays,
     relationshipStatus: row.relationshipStatus });
@@ -121,12 +142,17 @@ async function openEdit(row) {
   skuUoms.value = current;
   skuNotPurchasable.value = false;
   dialogOpen.value = true;
+  const lookup = new AbortController();
+  unitLookup = lookup;
   try {
-    const result = await supplierService.searchPurchasableSkus({ q: row.skuCode });
+    // 用 SKU ID 精確攞，唔靠前綴搜尋嘅第一頁（REV-088 L-1）。
+    const result = await supplierService.searchPurchasableSkus({ skuId: row.skuId, signal: lookup.signal });
+    if (lookup.signal.aborted || editing.value !== row) return;
     const sku = result.items.find((candidate) => candidate.skuId === row.skuId);
     if (sku) skuUoms.value = sku.uoms;
     else skuNotPurchasable.value = true;
   } catch (error) {
+    if (lookup.signal.aborted || editing.value !== row) return;
     errorMessage.value = error.message || "讀取 SKU 單位失敗";
   }
 }
@@ -157,8 +183,12 @@ async function submit() {
     dialogOpen.value = false;
     await table.value?.reload();
   } catch (error) {
+    if (error.code === "VERSION_CONFLICT") {
+      // 唔自動重試；即刻重新讀取列表，下次開啟就係最新資料同版本（設計 §7.4；REV-088 M-2）。
+      await table.value?.reload();
+    }
     errorMessage.value = error.code === "VERSION_CONFLICT"
-      ? "這項供貨關係已被其他人修改。你的輸入仍保留，請關閉後重新載入再核對。"
+      ? "這項供貨關係已被其他人修改，列表已重新載入最新資料。你的輸入仍保留在這裏，請關閉後重新開啟再修改。"
       : error.message || "儲存供貨關係失敗";
     notifyError(errorMessage.value);
     await nextTick();
@@ -226,7 +256,7 @@ async function submit() {
       </template>
     </DataTable>
 
-    <q-dialog v-model="dialogOpen" persistent>
+    <q-dialog v-model="dialogOpen" persistent @hide="cancelUnitLookup">
       <q-card style="width: min(640px, 96vw); max-width: 640px">
         <q-card-section><h3 class="text-h6 q-ma-none">{{ editing ? "編輯供貨關係" : "新增供貨關係" }}</h3></q-card-section>
         <q-card-section class="q-pt-none">
@@ -241,9 +271,10 @@ async function submit() {
             </div>
             <q-select
               v-else :model-value="form.sku" class="col-12" label="SKU *" outlined dense use-input fill-input hide-selected
-              input-debounce="300" :options="skuOptions" option-value="skuId"
+              input-debounce="300" maxlength="190" :options="skuOptions" option-value="skuId"
               :option-label="(sku) => `${sku.skuCode} — ${sku.skuName || sku.itemName}`"
-              hint="只列出目前可採購的 SKU" @filter="filterSkus" @update:model-value="chooseSku"
+              hint="只列出目前可採購的 SKU" :error="Boolean(pickerError)" :error-message="pickerError"
+              @filter="filterSkus" @update:model-value="chooseSku"
             >
               <template #no-option><q-item><q-item-section class="text-grey-8">沒有符合的可採購 SKU</q-item-section></q-item></template>
             </q-select>
@@ -251,6 +282,7 @@ async function submit() {
               v-model="form.purchaseSkuUomId" class="col-12 col-sm-6" label="採購單位" outlined dense clearable
               :options="uomOptions" emit-value map-options :disable="!editing && !form.sku"
               :hint="skuNotPurchasable ? 'SKU 目前不可採購，只可保留或清除現有單位' : ''"
+              :error="reactivationNeedsActiveUom" error-message="重新啟用關係需要有效的採購單位：請改選其他單位，或清除單位"
             />
             <q-select
               v-model="form.relationshipStatus" class="col-12 col-sm-6" label="關係 *" outlined dense
