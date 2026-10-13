@@ -30,6 +30,18 @@ This is the Supplier-side contract that a Purchasing module consumes. The design
 
   The response carries no Bank data.
 
+## Supplier–SKU relations UI support (TASK-039, HD-098)
+
+These are Supplier's own APIs for the relation tab. Purchasing does not call them.
+
+- `GET /api/v1/supplier-lookups/skus?q=&page=&pageSize=`:
+  - **Permission:** `supplier.mgmt`, with a fresh-actor check.
+  - **What it lists:** the SKUs that can be purchased now, through Item's `searchForPurchase` (Item §8.3.2): Item and SKU active, purchasable, within their effective dates, with at least one active UOM.
+  - **Each SKU:** `skuId`, `skuCode`, `skuName`, `itemName`, and `uoms[]`. Each UOM has `skuUomId`, `uomCode`, `uomName`, `status`, `toBaseFactor`, `isBase` and `isDefaultPurchase`.
+  - **Bad input:** control characters in `q` give 400.
+- **Relation responses** (list, create, update) now include `purchaseUomCode`, `purchaseUomName` and `purchaseUomStatus`. They are all `null` when no purchase UOM is set.
+- **Purchase UOM must be active.** Choosing a purchase UOM, on create or when changing it, needs that UOM to be active, otherwise 409 `SUPPLIER_SKU_UOM_INACTIVE`. A UOM that belongs to another SKU stays 400 `SUPPLIER_SKU_UOM_INVALID`. An update that keeps the current UOM is accepted even if that UOM has since been deactivated, because it is history.
+
 ## At submit time
 
 A list result is only a suggestion. When Purchasing saves an order, it must check the Supplier again, inside its own transaction (BR-032):
