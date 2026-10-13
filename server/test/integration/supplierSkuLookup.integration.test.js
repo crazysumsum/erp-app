@@ -231,8 +231,10 @@ integrationTest("TASK-040 (HD-095 B): the two-part read pages exactly like one L
   for (const [q, key] of [["", null], [prefix, prefix.toLowerCase()]]) {
     const expected = await reference(key);
     const actual = [];
-    for (let page = 1; actual.length < Math.min(expected.length, 150); page += 1) {
-      actual.push(...(await lookup().listForSku(skuId, { q, page, pageSize: 7 })).items.map((item) => item.supplierId));
+    for (let page = 1; page <= 30 && actual.length < Math.min(expected.length, 150); page += 1) {
+      const items = (await lookup().listForSku(skuId, { q, page, pageSize: 7 })).items;
+      if (items.length === 0) break;
+      actual.push(...items.map((item) => item.supplierId));
     }
     assert.deepEqual(actual.slice(0, 150), expected.slice(0, 150), `q=${JSON.stringify(q)}`);
     assert.equal((await lookup().listForSku(skuId, { q })).total, expected.length);
