@@ -1,5 +1,13 @@
 # Item Management Requirement Review
 
+## Purchase handoff requirement review — 2026-10-13
+
+Sam requested two additive Item purchase provider capabilities, then directed development from latest main using `docs/supplier_management/item_handoff_purchase_lookup.md` (HD-093 A). FR-065/FR-066 record those requirements; the handoff supersedes only the older no-provider-change statement. Status is specification prepared, not implemented or accepted.
+
+The handoff explicitly adds at-least-one-active-UOM for SEARCH, beyond existing purchase qualification. The draft keeps this search-only: generic purchase usability and every returned UOM remain unchanged, including inactive history. Discontinued Item/SKU is still ineligible for new purchase; serial/non-sellable is not excluded. Mapping identity and catalogue status follow existing Sales names, with no schema/endpoint/Supplier write.
+
+Prefix, paging, validation and batch conventions follow existing searchForSale; no barcode extension, locks or generic abstraction. Search is advisory; current submit/UOM validation remains consumer-owned. Independent review and actual new DESIGN/PLAN approval are required before product changes. Formal TC-017/018 and manual UAT-017 remain PLANNED/NOT_RUN. Earlier sections are historical, not current acceptance.
+
 ## Review result
 
 **CONDITIONAL APPROVAL.** The business baseline is unusually detailed and testable, but formal owner sign-off is absent and several implementation outcomes diverge from confirmed requirements. No CRITICAL requirement flaw was found.

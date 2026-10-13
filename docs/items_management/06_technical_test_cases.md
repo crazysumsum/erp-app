@@ -775,3 +775,37 @@ Every required source case passes with the expected observable and persisted res
 
 ### Cleanup
 timed runbook, backup IDs, RPO calculation, smoke/reconciliation; securely remove the isolated restored schema, restored volumes and manifest according to the approved exercise plan. Never remove the source backup or production data as adapter cleanup.
+
+## TC-017 — Purchase UOM additive metadata compatibility / P1
+
+### Preconditions and data
+PLANNED. FR-065/DES-021/TASK-046; Item-owned unit and actual-MySQL lookup suites with synthetic EA/BOX, distinct mapping/master IDs, active/inactive/archived UOMs and original generic/Sales/Inventory fixtures. Suite item-server-technical; mandatory/blocking flags are in the ledger.
+
+### Steps
+Read findById/Code/Barcode/Many/assertUsable with purchase purpose. Compare every old field/membership/usability; assert correct mapping ID/name/master status and retained inactive UOMs. Confirm mapping ID after permitted edit; old generic/Sales/Inventory projections and installed consumer behavior remain unchanged.
+
+### Expected result
+Exactly three additional purchase UOM fields, no extra query or purchase eligibility gate, no filtered UOM history and no writes/own authorization.
+
+### Acceptance criteria
+Current-baseline unit and actual-MySQL cases pass without mandatory skips; association/master ID cannot be confused. Developer checks do not constitute formal acceptance.
+
+### Cleanup
+Existing teardown deletes only task-owned synthetic Item fixtures in an isolated schema, never shared/Supplier data.
+
+## TC-018 — Purchase search qualification, paging and safe inputs / P1
+
+### Preconditions and data
+PLANNED. FR-066/DES-021/TASK-046; synthetic status/purchasable/effective-date boundaries, serial/non-sellable SKUs, active/mixed/all-inactive UOMs, literal `%_!` code/name, deterministic clock. Suite item-server-technical.
+
+### Steps
+Search empty/prefix/name/literal-wildcard inputs across first/last/out-of-range/no-match pages. Compare count/page with exact purchase rules plus active-UOM search gate; generic purchase lookup still reports its previous usability for all-inactive UOMs. Assert serial/non-sellable allowed, inactive metadata retained and equality dates included. Invalid q/control/length/page/pageSize/unsafe offset rejects before SQL; database errors propagate. Verify batched <=3 queries independent of page size.
+
+### Expected result
+Only eligible candidates with at least one active UOM count/page at one captured time; stable ordered purchase projections and accurate totals. No wildcard broadening, N+1, false empty success or borrowed Sales eligibility rule.
+
+### Acceptance criteria
+All mandatory unit/actual-MySQL cases pass on current immutable baseline without skips, including empty-page two-query budget and unchanged generic lookup/consumer regression. No discovery lock/submit authorization or formal PASS during planning.
+
+### Cleanup
+Existing Item lookup harness tears down synthetic fixtures; downstream/shared schemas remain unchanged.
