@@ -1,0 +1,62 @@
+{
+  "schema_version": "2.0",
+  "module_id": "item-management",
+  "run_id": "20261013T082429-d8aa980da5a7",
+  "suite_id": "client-build",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "d6db1f524df15257eca36eb0d4117efe8f20352a07e931b6511df7d8795e5de4",
+  "source_fingerprint": "57b95453be2c6ef7c2ac48c0aab3cbbfe968dbef15a2d43dc990fdf84dca376b",
+  "code_commit": "7c927e26b386d87c595bf3c6111467d0ccc8b20d",
+  "started_at": "2026-10-13T08:24:30.198966Z",
+  "ended_at": "2026-10-13T08:24:33.304374Z",
+  "environment_id": "item-isolated-test",
+  "runtime_instance_id": "ITEM-SUPPLIER-C-DEVELOPER-20261013-vdXM5l",
+  "data_reference": "Synthetic Item fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "npm",
+    "run",
+    "build",
+    "--workspace",
+    "client"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "6c93f2b0ad4edee06fbef51a3028f476695c6716f11bdd4a85edeae6b1a4fb09",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 0,
+    "passed": 0,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/20261013T082429-d8aa980da5a7/stdout.log",
+      "sha256": "58ea50ed4c0b9c3564ac6f144fc044ddcd6047a0163ed3d3160492e4e61da646",
+      "bytes": 646
+    },
+    {
+      "path": "evidence/20261013T082429-d8aa980da5a7/stderr.log",
+      "sha256": "351b524197fb492920789369e7f1a271420c757633fbb553b280a181ac4c31a4",
+      "bytes": 360
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "Local observation only; external services/config/data and secret redaction completeness require review."
+  ]
+}

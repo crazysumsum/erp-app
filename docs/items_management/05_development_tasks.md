@@ -191,7 +191,7 @@ The legacy body remains the authoritative development-progress record. On 2026-0
 - Acceptance: permanent deletion rejects references with public 409 and actual reference types; incompatible Base/factor/tracking/removal is blocked; archive rejects current stock/reservation/in-transit/open operations while preserving historical snapshots and soft Supplier relations; single and bulk operations roll back state/version/audit together.
 - Verification: true-DB integration/concurrency tests and downstream regression/CI.
 - Execution order: (A) merge this Item documentation handoff; (B) implement Inventory/Sales guards and public FK-error mapping against their installed tables, then current-candidate CI/review; (C) after Supplier TASK-038 merges, integrate and test `supplier_sku_refs`／`supplier_supply_events`, UOM-008 and Draft deletion races; include the first completed-GR history projection after SKU deactivation/expiry, which must record history without granting purchase eligibility; (D) execute TC-004／TC-005, UAT-005／UAT-013 and record authorized acceptance. Each implementation increment uses a fresh main-based worktree/PR; no fake Supplier table gives formal PASS credit.
-- Dependencies: Inventory/Sales branch `READY_FOR_IMPLEMENTATION`; Supplier-specific branch `BLOCKED` until Supplier TASK-038 schema/implementation merges. Risk: high reference/locking correctness. Rollback: forward-compatible guard correction; Item writes no Supplier schema/data.
+- Dependencies: Inventory/Sales increment B is merged through PR #198; real Supplier TASK-038 schema/service is installed on main. The Item-owned reference regression subset is PHASE-009/TASK-047; authoritative GR source/projection/reconciliation remains blocked on the real Purchasing adapter, and formal D/UAT stays separate. Risk: high reference/locking correctness. Rollback: forward-compatible guard correction; Item writes no Supplier schema/data in production.
 - Definition of Done/status: `PLANNED_INCREMENTS`; TASK-043 overall is not DONE until all applicable reference and acceptance branches complete.
 
 ### TASK-044 — Complete independent acceptance and DR/sign-off evidence
@@ -2509,7 +2509,7 @@ Scoped changes, review, developer tests, required CI, traceability and safe clea
 Complete the Inventory/Sales and Supplier reference-guard increments scheduled in the TASK-043 narrative above, preserving history and stable UOM identities.
 
 ### Approach
-Follow the components, dependencies, implementation notes and preserved decisions in `alignment remediation section`; typed membership and test links are in `08_traceability.json`. TASK-045/PHASE-007 represents increment B only. This aggregate depends on that slice and retains Supplier C and formal acceptance D; it stays IN_PROGRESS after B merges.
+Follow the components, dependencies, implementation notes and preserved decisions in `alignment remediation section`; typed membership and test links are in `08_traceability.json`. TASK-045/PHASE-007 represents increment B; TASK-047/PHASE-009 represents only C's installed Supplier reference regression. This aggregate retains authoritative GR integration and formal acceptance D; it stays IN_PROGRESS after these partial integrations.
 
 ### Acceptance criteria
 The task-specific checklist above is satisfied and linked cases TC-004, TC-005 provide current-candidate evidence without skipped mandatory behavior, including FR-043/UOM-008 dependency types, public Draft-delete conflicts and real-consumer archive/critical-change guards.
@@ -2548,7 +2548,7 @@ Scoped changes, review, developer tests, required CI, traceability and safe clea
 ## PHASE-008 — Supplier handoff: additive purchase provider
 
 ### Outcome
-Deliver FR-065/FR-066 through DES-021/TASK-046 as one Item-only provider slice. PLANNED, pending current baseline approval; not full TASK-043 increment C or formal acceptance.
+Deliver FR-065/FR-066 through DES-021/TASK-046 as one Item-only provider slice. Implemented and merged through PR #210 at `7c927e26b386d87c595bf3c6111467d0ccc8b20d`; not full TASK-043 increment C or formal acceptance.
 
 ### Entry criteria
 Reviewed DESIGN/PLAN and actual owner approval; fresh authoritative main in an isolated worktree. PR198/PHASE-007 is actually merged. Source handoff is `docs/supplier_management/item_handoff_purchase_lookup.md` (HD-093 A), now on main. No Supplier/migration/pin write scope.
@@ -2580,4 +2580,41 @@ Change `server/src/modules/item/ItemLookupService.js` and Item lookup unit/integ
 TC-017/TC-018 unit and actual MySQL checks, compatibility and bounded query budget pass; no old value/membership/policy change. Search returns only eligible purchase candidates and preserves inactive UOM display. Consumer authorization/current-submit validation stays outside Item.
 
 ### Definition of Done
-Independent review, TDD red/green, real-MySQL boundary/compatibility checks, four developer suites and exact-candidate five CI checks complete. Actual PR merge/cleanup only when authorized. Complexity: small; risk: medium additive shared interface. PLANNED, no implementation/developer/formal PASS claimed.
+Independent review, TDD red/green, real-MySQL boundary/compatibility checks, four developer suites and exact-candidate five CI checks complete. Actual PR merge/cleanup only when authorized. Complexity: small; risk: medium additive shared interface. Implementation DoD completed through PR #210 (all five CI checks and exact review passed); its Item branch/worktree were cleaned under explicit owner approval. Formal UAT-017 is NOT_RUN.
+
+## PHASE-009 — TASK-043 C installed Supplier reference subset
+
+### Outcome
+Deliver Item-owned regression for the real installed Supplier relations/events, without changing the approved Item reference policy or completing the aggregate TASK-043. Sam explicitly requests this standalone CI/review-gated merge; authoritative GR integration and formal UAT are separate.
+
+### Entry criteria
+Fresh main includes PR #198, Supplier TASK-038 migration0081/service and PR #210; unchanged DESIGN remains approved. Use a dedicated Item worktree and socket-only synthetic MySQL. Do not change Supplier/Purchasing products, schema, pins or UI; do not adopt HD-092's proposed policy relaxation.
+
+### Acceptance criteria
+Real Supplier FK dependencies produce public409 and actual types with atomic rollback/no success audit. Retained mapping identity and composite ownership hold. Incompatible removal/factor/tracking stays blocked; soft relations/history alone do not block single/bulk archive and remain readable. Test both native FK commit orders and fallback. New GR events fail closed503 without a source adapter, not a fake completed-GR PASS.
+
+### Integration and regression
+Run full Item reference regression and all four profile developer suites with unchanged cases/skip/coverage thresholds. Independent review validates deterministic barriers, failure teardown and data isolation; mutation proves Supplier guard omission is caught. Every actual candidate needs all five CI checks and exact review.
+
+### Git and merge plan
+DEFAULT from latest main. One scoped Item test/documentation PR; developer checks → immutable candidate → exact review and all five CI jobs PASS → owner-authorized merge → preserve local evidence and clean only this Item worktree/local/remote branch. This boundary is explicitly authorized by Sam's current request, not a waiver or an old PR approval.
+
+### Rollback
+Revert this Item test-only slice if necessary; no production data/schema/API change. Keep prior approvals/failures/Recovery waiver and acceptance obligations. No new raw evidence export is implied.
+
+### Exit criteria
+TASK-047 DoD and observed integration/cleanup complete. TASK-043 stays IN_PROGRESS because authoritative completed-GR first delayed projection/reconciliation and formal TC/UAT acceptance are not completed here.
+
+## TASK-047 — Verify installed Supplier references in Item increment C
+
+### Goal
+Parent Phase: PHASE-009. Finish only the existing TASK-043 C reference-protection subset under FR-030/031/034/037/038/043, SEC-008, NFR-006 and DES-003/012/020; no new product behavior.
+
+### Approach
+Extend the existing Item reference integration tests against real migration0081 Supplier tables/FKs and SupplierRelationService. Seed isolated synthetic references/history only; scheduling/fallback hooks do not fabricate FK errors or GR authority. Reuse existing Item guards and mapping updates; change product code only for a reproduced in-scope deviation, never a policy relaxation.
+
+### Acceptance criteria
+TC-004/TC-005 developer scenarios cover Draft deletion, dependency types/unknown fallback, mapping ownership/stability, incompatible change rollback, soft-history single/bulk archive and both Supplier-create/UOM-removal commit orders. Default verifier rejects new GR events503 without relation/event/audit writes. No source-adapter or formal-acceptance credit is inferred.
+
+### Definition of Done
+Implementation DoD before merge: full reference regression, four configured current-PLAN developer suites, independent test/plan review and exact-candidate five CI checks pass. Set only TASK-047 DONE for the scoped MERGE_READY gate; actual authorized merge/cleanup belongs to PHASE-009 exit, not this pre-merge prerequisite. Keep aggregate TASK-043, GR-positive integration and formal D/UAT unfinished. Do not delete or weaken existing tests or export raw evidence without separate approval.
