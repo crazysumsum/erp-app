@@ -1605,6 +1605,28 @@ The behavior and threshold stated for `FR-AUDIT-006` must be observable through 
 ### Failure behavior
 Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
 
+## FR-065 — Additive purchase UOM identity and catalogue metadata
+
+### Statement
+Purchase-purpose lookup projections add `skuUomId`, `uomName` and master-UOM `status` to every existing `uoms[]` entry, as requested by Sam and the HD-093 Supplier purchase handoff. Mapping identity is `item_sku_uoms.id`, not `item_uoms.id`.
+
+### Acceptance criteria
+Keep all existing fields/values, UOM membership and purchase usability/reasons. Retain inactive/archived UOM metadata for old relations; lookup alone grants no new choice eligibility. Default/generic, Inventory and existing Sales contracts remain unchanged. Names match Sales' additive metadata convention.
+
+### Failure behavior
+Existing null/error and caller-owned authorization remain. Read-only metadata never mutates Item/Supplier state or changes purchase qualification.
+
+## FR-066 — Bounded purchase-purpose SKU discovery
+
+### Statement
+Provide `searchForPurchase({ q, page, pageSize })` for Active Item/SKU, purchasable and inclusive effective dates, with the handoff's search-only requirement of at least one active master UOM. Discontinued is excluded. This is an internal provider method, not Supplier's HTTP API/UI.
+
+### Acceptance criteria
+Return `{items,total,page,pageSize}` with FR-065 projections. Follow existing Sales conventions: q defaults empty, trims and matches literal prefixes of SKU Code/SKU name/Item name; escape `%_!`, maximum190 Unicode code points, no control characters. Defaults page1/pageSize20, pageSize1..100, positive safe-integer page and safe offset; order by SKU Code then ID. Count/page share predicates and one captured clock time. At most3 batched queries (2 for an empty page), no N+1. Serial/non-sellable purchase SKUs are not excluded; inactive UOMs remain in returned projections, not new-choice authorization.
+
+### Failure behavior
+Invalid search input throws TypeError before SQL; database errors propagate, not false empty success. Empty/out-of-range page keeps accurate total. Discovery is advisory, not a locked snapshot or submit authorization; consumer must revalidate.
+
 ## NFR-001 — NFR-001
 
 ### Statement

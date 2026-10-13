@@ -1070,6 +1070,20 @@ Service 不讀 HTTP claims，也不自行授權。採購／庫存／銷售 Handl
 
 Lookup projection 須回傳 `shelfLifeDays`、`minimumReceiptLifeDays` 及 `minimumSaleLifeDays`。Receiving 模組計算實際剩餘天數；低於最低收貨效期時預設拒絕，只有具備 `receiving.override_shelf_life` 的操作者可在提交非空白原因後繼續。Receiving audit 須保存 SKU、批次、到期日、門檻、實際剩餘天數、操作者、原因及時間；`item.mgmt` 不授予此豁免能力。該權限、流程及 audit 由 Receiving 模組建立，Item Management 本期只提供政策資料及 contract tests。
 
+#### 8.3.2 Purchase discovery handoff — proposed2026-10-13
+
+Source: `docs/supplier_management/item_handoff_purchase_lookup.md`, HD-093 A, adopted for Item development by Sam's active-task instruction. The former Supplier handoff's "ItemLookupService contract need not change" statement is superseded for this additive slice only. No Supplier path, endpoint, UI, schema or consumer pin is owned by Item here.
+
+For existing lookup methods with `purpose:"purchase"`, add only `skuUomId:Number(item_sku_uoms.id)`, `uomName:item_uoms.name` and `status:item_uoms.status` to each `uoms[]` entry. Reuse the existing loader's columns without another query. Preserve old fields/values, all UOM entries, eligibility/reasons and mapping IDs; status denotes the master UOM, not the SKU or a new mapping lifecycle. Non-purchase generic/Inventory/Sales outputs remain unchanged. Consumers refuse inactive UOM for new choices while displaying retained relations; implementing that consumer behavior belongs to Supplier.
+
+Add `searchForPurchase({q="",page=1,pageSize=20}={})` returning `{items,total,page,pageSize}` with purchase projections. Reuse the existing purchase eligibility: Item active, SKU active, purchasable and inclusive effective-from/to dates; therefore discontinued cannot be selected. As expressly requested in the handoff, SEARCH ALONE additionally requires at least one active master UOM. Do not alter generic purchase evaluation or drop inactive UOMs from projections, and do not copy Sale's sellable or non-serial gates.
+
+Search conventions match `searchForSale`: trimmed literal prefix across SKU Code/SKU name/Item name, escaping `%`, `_`, `!`; q is a string up to190 Unicode code points with no control characters; positive safe-integer page/pageSize, pageSize<=100 and safe offset; stable `sku_code,id` ordering. Empty q browses eligible candidates. Count/page use identical predicates at one captured `time.nowMs()`. Batch-load page UOMs once: at most3 queries (2 for an empty page), no N+1. No barcode search, lock, transaction version, endpoint, own permission check or schema change.
+
+Discovery is advisory, not a locked transaction snapshot or submit authorization; the caller must authorize and revalidate its current write, including its selected UOM. Unsafe input throws TypeError before SQL; database errors propagate, never false empty success. Existing lookup null/error behavior remains. Reversible rollback affects only this additive method/fields and requires coordination if consumers adopt them.
+
+Item refreshes its provided document SHA after review; Supplier/Purchasing/Inventory/Sales owners refresh their own pins under their own approval flow. Existing generic/Sales and installed consumer regressions are required. This provider slice does not close TASK-043 reference/GR-history or formal acceptance obligations. Estimate: one small implementation slice after Item DESIGN/PLAN approval, with real-MySQL verification and CI/review; no completion date is promised before execution.
+
 #### 8.3.1 Sales具名確認契約（TASK009 source candidate）
 
 2026-10-02 Sam採納的Sales入口：`findManyForSale(skuIds,{atMs,purpose:"new_sale"})`、`findSaleUom(skuId,skuUomId,{atMs})`及`getSalesSnapshotsInTransaction(transaction,requests,{atMs})`。具名Sales採Item active＋SKU active＋sellable＋effective dates；generic sale的discontinued清貨語意保留。`skuUomId`是association ID；projection回mapping/masterUOM identity/status/code/name/factor/default及Item/SKU versions、stored decimal price/null、HKD/tax_not_applicable。最多100 unique requests；五階段caller-only query按UOM SHARE→Item SHARE→SKU SHARE→mapping SHARE，current association完整重驗，不補取更早rank的鎖。
@@ -1822,3 +1836,14 @@ This design is required by FR-014, FR-030, FR-031, FR-034, FR-037, FR-038, FR-04
 
 ### Failure behavior
 Boundary validation, authorization, optimistic concurrency, transaction/audit coupling and dependency readiness fail closed as applicable. Partial or unknown outcomes remain explicit and block acceptance until reconciled.
+
+## DES-021 — Additive purchase provider discovery contract
+
+### Decision
+Implement the two Item-only additions in §8.3.2 with the current loader/clock/purchase projection, bounded count/page search and search-only active-UOM EXISTS. No generic-search abstraction, schema, endpoint, Supplier path or existing purchase-rule change. New DESIGN/PLAN approval is pending; this specification claims no implementation.
+
+### Rationale
+FR-065 identifies the exact purchase mapping and readable catalogue status; FR-066 lets consumers discover usable choices without reading Item tables or misusing Sales' sellable/non-serial policy. Stable additive fields avoid replacement contracts. Consumer pins/choice validation remain consumer-owned.
+
+### Failure behavior
+Reject unsafe inputs before SQL, propagate database failures and preserve lookup null/error semantics. Current purchase validation remains required at submission; discovery cannot grant authorization or overwrite historical relations.

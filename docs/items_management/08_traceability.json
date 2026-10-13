@@ -705,6 +705,22 @@
         "reason": "",
         "approval_id": null
       }
+    },
+    {
+      "id": "FR-065",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-066",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
     }
   ],
   "designs": [
@@ -1090,6 +1106,13 @@
         "FR-038",
         "SEC-008",
         "FR-043"
+      ]
+    },
+    {
+      "id": "DES-021",
+      "requirement_ids": [
+        "FR-065",
+        "FR-066"
       ]
     }
   ],
@@ -1614,15 +1637,76 @@
     },
     {
       "id": "PHASE-007",
-      "requirement_ids": ["FR-043", "FR-025", "FR-026", "FR-027", "FR-028", "FR-029", "FR-030", "FR-031", "SEC-001", "SEC-006", "SEC-008", "NFR-006", "FR-032", "FR-033", "FR-034", "FR-035", "FR-036", "FR-037", "FR-038"],
-      "design_ids": ["DES-003", "DES-008", "DES-020", "DES-009", "DES-016"],
-      "task_ids": ["TASK-045"],
-      "depends_on": ["PHASE-005"],
+      "requirement_ids": [
+        "FR-043",
+        "FR-025",
+        "FR-026",
+        "FR-027",
+        "FR-028",
+        "FR-029",
+        "FR-030",
+        "FR-031",
+        "SEC-001",
+        "SEC-006",
+        "SEC-008",
+        "NFR-006",
+        "FR-032",
+        "FR-033",
+        "FR-034",
+        "FR-035",
+        "FR-036",
+        "FR-037",
+        "FR-038"
+      ],
+      "design_ids": [
+        "DES-003",
+        "DES-008",
+        "DES-020",
+        "DES-009",
+        "DES-016"
+      ],
+      "task_ids": [
+        "TASK-045"
+      ],
+      "depends_on": [
+        "PHASE-005"
+      ],
       "branch_strategy": "DEFAULT",
       "parent_commit": null,
       "exception_approval_id": null,
       "merge_group": "item-management-task043-increment-b",
-      "developer_suites": ["lint", "client-build", "item-server-technical", "item-client-technical"]
+      "developer_suites": [
+        "lint",
+        "client-build",
+        "item-server-technical",
+        "item-client-technical"
+      ]
+    },
+    {
+      "id": "PHASE-008",
+      "requirement_ids": [
+        "FR-065",
+        "FR-066"
+      ],
+      "design_ids": [
+        "DES-021"
+      ],
+      "task_ids": [
+        "TASK-046"
+      ],
+      "depends_on": [
+        "PHASE-007"
+      ],
+      "branch_strategy": "DEFAULT",
+      "parent_commit": null,
+      "exception_approval_id": null,
+      "merge_group": "item-purchase-provider-handoff",
+      "developer_suites": [
+        "lint",
+        "client-build",
+        "item-server-technical",
+        "item-client-technical"
+      ]
     }
   ],
   "tasks": [
@@ -3095,7 +3179,9 @@
         "DES-009",
         "DES-016"
       ],
-      "depends_on": ["TASK-045"],
+      "depends_on": [
+        "TASK-045"
+      ],
       "technical_test_ids": [
         "TC-004",
         "TC-005"
@@ -3140,10 +3226,57 @@
     {
       "id": "TASK-045",
       "phase_id": "PHASE-007",
-      "requirement_ids": ["FR-043", "FR-025", "FR-026", "FR-027", "FR-028", "FR-029", "FR-030", "FR-031", "SEC-001", "SEC-006", "SEC-008", "NFR-006", "FR-032", "FR-033", "FR-034", "FR-035", "FR-036", "FR-037", "FR-038"],
-      "design_ids": ["DES-003", "DES-008", "DES-020", "DES-009", "DES-016"],
+      "requirement_ids": [
+        "FR-043",
+        "FR-025",
+        "FR-026",
+        "FR-027",
+        "FR-028",
+        "FR-029",
+        "FR-030",
+        "FR-031",
+        "SEC-001",
+        "SEC-006",
+        "SEC-008",
+        "NFR-006",
+        "FR-032",
+        "FR-033",
+        "FR-034",
+        "FR-035",
+        "FR-036",
+        "FR-037",
+        "FR-038"
+      ],
+      "design_ids": [
+        "DES-003",
+        "DES-008",
+        "DES-020",
+        "DES-009",
+        "DES-016"
+      ],
       "depends_on": [],
-      "technical_test_ids": ["TC-004", "TC-005"]
+      "technical_test_ids": [
+        "TC-004",
+        "TC-005"
+      ]
+    },
+    {
+      "id": "TASK-046",
+      "phase_id": "PHASE-008",
+      "requirement_ids": [
+        "FR-065",
+        "FR-066"
+      ],
+      "design_ids": [
+        "DES-021"
+      ],
+      "depends_on": [
+        "TASK-045"
+      ],
+      "technical_test_ids": [
+        "TC-017",
+        "TC-018"
+      ]
     }
   ],
   "technical_tests": [
@@ -3693,6 +3826,46 @@
         "approval_id": null
       },
       "suite_id": "item-recovery"
+    },
+    {
+      "id": "TC-017",
+      "requirement_ids": [
+        "FR-065"
+      ],
+      "design_ids": [
+        "DES-021"
+      ],
+      "task_ids": [
+        "TASK-046"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "item-server-technical"
+    },
+    {
+      "id": "TC-018",
+      "requirement_ids": [
+        "FR-066"
+      ],
+      "design_ids": [
+        "DES-021"
+      ],
+      "task_ids": [
+        "TASK-046"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "item-server-technical"
     }
   ],
   "uat_tests": [
@@ -4114,6 +4287,27 @@
         "TC-011",
         "TC-012",
         "TC-016"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "MANUAL_BUSINESS",
+      "automation_suitability": "MANUAL_REQUIRED",
+      "suite_id": null
+    },
+    {
+      "id": "UAT-017",
+      "requirement_ids": [
+        "FR-065",
+        "FR-066"
+      ],
+      "technical_test_ids": [
+        "TC-017",
+        "TC-018"
       ],
       "mandatory": true,
       "blocking": true,
