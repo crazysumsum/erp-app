@@ -1,7 +1,7 @@
 import mysql from "<worktree>/node_modules/mysql2/promise.js";
 import { SupplierLookupService } from "<worktree>/server/src/modules/supplier/SupplierLookupService.js";
 import { ItemLookupService } from "<worktree>/server/src/modules/item/ItemLookupService.js";
-const pool = mysql.createPool({ host: "127.0.0.1", port: 3450, user: "root", password: "root", database: "erp_dev", connectionLimit: 20 });
+const pool = mysql.createPool({ host: "127.0.0.1", port: 3450, user: process.env.DB_USER, password: process.env.DB_PASSWORD, database: "erp_dev", connectionLimit: 20 });
 const database = { query: (s, p) => pool.query(s, p), withTransaction: async (w) => { const c = await pool.getConnection(); try { return await w(c); } finally { c.release(); } } };
 const time = { nowMs: () => Date.now() }, logger = { info() {}, warn() {}, error() {} };
 const svc = new SupplierLookupService({ database, logger, time, items: new ItemLookupService({ database, logger, time }) });

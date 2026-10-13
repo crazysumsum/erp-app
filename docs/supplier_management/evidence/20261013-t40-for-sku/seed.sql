@@ -1,6 +1,8 @@
 -- 喺 100k Supplier 基準庫（seedSupplierPerformanceFixtures.js，80,053 Active）上面加 for-SKU 數據。
--- HOT SKU (id 1)：每 5 個 Supplier 有 1 條 relation（20,000），5% preferred、5% stopped，約 2/3 有 last_supplied_at。
--- COLD SKU (id 2)：冇 relation。另外 1,000 隻 SKU：每 5 個 Supplier 揀 1 個關聯 5 隻（100,000 條），每隻約 100 條。
+-- HOT SKU (id 1)：id % 5 = 0 嘅 Supplier 各 1 條 relation（20,000）。實際係 5,000 preferred、15,000 alternative、0 stopped
+--   （id % 20 喺呢個子集只會係 0/5/10/15；REV-087 L-4 更正咗原本「5% preferred、5% stopped」嘅講法），約 2/3 有 last_supplied_at。
+-- COLD SKU (id 2)：冇 relation。另外 1,000 隻 SKU：id % 5 = 1 嘅 Supplier 各關聯 5 隻（100,000 條），每隻約 100 條；
+--   preferred 集中喺 50 隻 SKU、stopped 集中喺另外 50 隻（REV-087 L-4）。
 SET @now = 1760000000000;
 INSERT INTO items (name, status, created_at, updated_at) VALUES ('PERF-T40', 'active', @now, @now);
 SET @item = LAST_INSERT_ID();

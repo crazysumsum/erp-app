@@ -937,40 +937,67 @@ fails the test instead of hanging it. Killed: "no skip when the index exists" (i
 - **What:** `SupplierLookupService.listForSku()` on `supplierCoreProvider`, and `GET /api/v1/supplier-lookups/for-sku/:skuId`. The contract Purchasing uses is in `integration_contracts.md`.
 - **Decisions on what the design left open (HD-094, all A):**
   1. **Permission.** `supplier.view`, with a fresh-actor check, until Purchasing has its own permission.
-  2. **Stopped relations.** A `stopped` relation never ranks, not even when it has supply history.
+  2. **Stopped relations.** A `stopped` relation never ranks by being preferred or by its supply history. It can still be an exact match when `q` equals its Supplier Item Code (REV-087 I-1).
   3. **Unpurchasable SKU.** The lookup fails closed with Item's `SKU_NOT_FOUND` or `SKU_NOT_USABLE`.
   4. **Search.** `q` uses the Supplier list's text search (`supplierSearchCondition`, shared with `supplierListQuery`), plus an exact match on this SKU's Supplier Item Code.
 - **Two-part read (HD-095 B):**
   - **Why.** The first version joined every Active Supplier to the relation and sorted all of them. Each call took 160 to 380 ms. With 50 users all doing for-SKU lookups (think time 0 to 1 s), p95 was 4.2 s against the 2 s target.
   - **Head.** The Suppliers with a ranking reason: an exact match, a preferred relation, or recent supply. They are found through `idx_supplier_sku_refs_sku_status_supplied` and the Supplier code key, then sorted.
   - **Rest.** Every other Active Supplier, read in `idx_suppliers_name_id` order, and paged on after the head.
-  - **Excluding the head from the rest.** This goes through the already-joined relation `r`, which is unique per Supplier and SKU. A `NOT EXISTS` antijoin made MySQL scan and materialize every relation on each call. `explain.txt` shows no table scan now.
+  - **Excluding the head from the rest.** This goes through the already-joined relation `r`, which is unique per Supplier and SKU. A `NOT EXISTS` antijoin made MySQL scan and materialize every relation on each call.
+  - **What `explain.txt` shows.** There is no table scan of a base table now. A search still materializes the head's UNION as a derived table (`Table scan on h`); for the hot SKU that is about 26,000 rows per call (REV-087 L-4).
   - **Search.** The Item Code matches are resolved first, to a short `IN` list, rather than one correlated subquery per row. The rest is not read when the count shows it is empty.
   - **No schema change.**
 - **Two ordering defects found and fixed on the way:**
   - In SQL, `status = 'preferred'` is 0 for a relation that is not preferred and NULL for no relation, and `DESC` puts 0 first. So in the single-query version, a stopped relation, or an unsupplied alternative one, ranked ahead of Suppliers with no relation.
   - The two-part read avoids this in the rest. Among exact matches the head order now uses `<=>`.
   - Both have tests that fail on the earlier code (negative control).
-- **Performance** (evidence in `evidence/20261013-t40-for-sku/`):
-  - **Data.** The 100k baseline (80,053 Active Suppliers) plus `seed.sql`: one hot SKU with 20,000 relations, one SKU with none, and 1,000 SKUs with about 100 relations each.
-  - **Single calls.** 6 to 82 ms for a typical SKU, and 61 to 135 ms for the hot SKU.
-  - **50 users, all doing for-SKU lookups** (think time 0 to 1 s, 20 s warm-up, 60 s measured): p95 1,097 ms, p99 1,208 ms, no errors.
-  - This is the worst case of SKU-008, with no other operations in the mix. Other processes were loading the machine during the run (load average 4 to 22).
-  - `before-single-query.txt` is the first version on the hot-SKU-only data.
-  - The mixed-load rerun with for-SKU in the mix is TASK-050's remaining part.
+- **Performance** (evidence in `evidence/20261013-t40-for-sku/`). All figures come from calling the service in-process, with no HTTP, JWT or actor check.
+  - **Data.** The 100k baseline (80,053 Active Suppliers) plus `seed.sql`:
+    - one hot SKU with 20,000 relations (5,000 preferred, 15,000 alternative, no stopped);
+    - one SKU with none;
+    - 1,000 SKUs with about 100 relations each.
+  - **Single calls.** 6 to 82 ms for a typical SKU. For the hot SKU, 61 to 135 ms in `after-two-part-read.txt`, but up to about 210 ms for the cases that file leaves out: a rare name that walks the whole name index, the last page, and a name search on a deep page (REV-087 M-1).
+  - **Like-for-like under load.** 50 users, all doing for-SKU lookups on the hot SKU's expensive case mix (think time 0 to 1 s, 20 s warm-up, 60 s measured). This is REV-087's rerun with `rev087-load.mjs.txt`:
+
+    | Code | Pool | p95 |
+    | --- | --- | --- |
+    | Before HD-095 (`before-single-query.txt`) | 20 | 4,153 ms |
+    | After | 20 | 1,423 ms |
+    | After | 10 (production default) | **1,633 ms** |
+
+    There were no errors. NFR-005 passes in-process, but with about 0.4 s of headroom at the production pool size.
+  - **Correction (REV-087 M-1).** An earlier version of this section, the NFR-005 row and HD-095 quoted "p95 1,097 ms on the same worst case". That run used a different, cheaper case mix (`after-two-part-read.txt`) and a pool of 20, so it was not the same worst case.
+  - **Not measured.**
+    - HTTP latency.
+    - Load at the production pool size together with other operations.
+    - Both belong to TASK-050's remaining for-SKU run, which must include the hot-SKU name-search and deep-page cases.
+  - Other processes were loading the machine during these runs (load average 4 to 25).
 - **Tests:**
-  - `test/supplierLookupService.test.js`: 7 for-SKU unit tests (15 in the file).
-  - `test/integration/supplierSkuLookup.integration.test.js`: 5 tests on real MySQL and HTTP. Two of them matter most:
+  - `test/supplierLookupService.test.js`: 9 for-SKU unit tests (17 in the file).
+  - `test/integration/supplierSkuLookup.integration.test.js`: 6 tests on real MySQL and HTTP. The ones that matter most:
     - an oracle that pages the two-part read against one LEFT JOIN sorted in the design §8.7 order;
-    - the ordering inside the exact group.
-- **Mutation:** 23 mutants, all killed by assertions (none by timeout):
-  - the order and the rank conditions;
+    - the ordering inside the exact group;
+    - head ties broken by name and then ID (SKU-002, REV-087 M-2);
+    - an Item-Code match that must not reappear in the rest across pages (REV-087 L-1).
+- **Mutation:** 29 mutants, each killed by at least one failing assertion, none by timeout. The list, with each change and the failing count, is in `evidence/.../mutation.txt` (REV-087 I-7). It covers:
+  - the order and the rank conditions, and head tie-breaks;
   - the head/rest split and paging offsets;
   - exclusion of exact matches from the rest;
   - the Item Code match;
-  - the SKU check;
-  - the actor check;
-  - the permission.
+  - de-duplication;
+  - the SKU check, the actor check and the permission;
+  - control characters in `q`;
+  - `null` options.
+  REV-087's surviving mutants F, H and A are among them.
+- **After REV-087** (HD-096, the Product Owner chose "全部按建議, no re-review"):
+  - **L-2.** A control character in `q` is a 400 at the handler; it was a 500.
+  - **L-3.** Head and rest are separate reads. If a relation changes between them, a Supplier could appear in both. The response is now de-duplicated by Supplier ID. The opposite race, where a Supplier is missed for one call, is accepted: the list is advisory and BR-032 checks again at submit.
+  - **I-3.** The SKU ID error names the SKU, and `null` options mean the defaults.
+  - **No change, noted:**
+    - **I-4.** The provider imports `SupplierAdminService.js` for `supplierSearchCondition`. There is no cycle.
+    - **I-5.** The Item Code pre-query reads every relation of the SKU, about 9 ms for the hot SKU. A `(sku_id, supplier_item_code_key)` index is a candidate if T50 shows search-heavy load.
+    - **I-6.** A huge `page` is a 500 here, as it already is on the Supplier list.
 - **Not done here:**
   - The design text still says "呼叫方採購權限" and does not spell out HD-094 2A–4A. Editing `03_design_spec.md` would move both baselines, so the decisions live in the ledger and here until the next design revision.
   - The client side (§7.3: SuppliersPage opened with `skuId`) belongs to the Purchasing flow; TASK-040 lists no client files.

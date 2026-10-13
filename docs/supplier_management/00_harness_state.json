@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 317,
+  "revision": 318,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -2005,6 +2005,18 @@
       "reviewed_baseline": "f2f4a82b76b40a6ddd214263023aa4b7383facdce30d33348cfd1d16dcdfe6ab",
       "source_ref": "docs/supplier_management/implementation/89_rev_086_independent_review.md",
       "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-087",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-040)",
+      "reviewer": "agent-skills:code-reviewer, independent of the author, reviewing 3216bb8e10b7ba5eb9f517a90dea6b47e17f7d63 (PR #211)",
+      "reviewed_baseline": "f2f4a82b76b40a6ddd214263023aa4b7383facdce30d33348cfd1d16dcdfe6ab",
+      "source_ref": "docs/supplier_management/implementation/90_rev_087_independent_review.md",
+      "status": "CHANGES_REQUESTED",
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
@@ -5072,7 +5084,20 @@
         "SKU-008"
       ],
       "status": "ANSWERED",
-      "answer_ref": "Product Owner, 2026-10-13: 'B'. Result: p95 1,097 ms on the same worst case; evidence/20261013-t40-for-sku/."
+      "answer_ref": "Product Owner, 2026-10-13: 'B'. Result: p95 1,097 ms on the same worst case; evidence/20261013-t40-for-sku/. Correction (REV-087 M-1): that 1,097 ms run used a cheaper case mix and a pool of 20, so it was not the same worst case. Like-for-like (REV-087, in-process, hot-SKU mix): 1,423 ms with pool 20, 1,633 ms with the production pool of 10; HTTP not measured (TASK-050)."
+    },
+    {
+      "id": "HD-096",
+      "impact": "MINOR",
+      "question": "REV-087 CHANGES_REQUESTED PR #211 (0 Critical/High): M-1 performance claim not like-for-like; M-2 head tie-breaks untested; L-1..L-4 and I-1..I-7. Fix all as recommended (docs corrected to the like-for-like figures; tie, rest-exclusion and control-character tests; 400 for control characters; de-duplicate by Supplier ID; mutation list in evidence), then re-review or merge when CI passes?",
+      "affected_ids": [
+        "TASK-040",
+        "REV-087",
+        "NFR-005",
+        "SKU-002"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-13: '全部按建議，唔使再 review，CI 過就 merge'."
     }
   ],
   "external_actions": [
@@ -6149,5 +6174,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-040: two-part for-SKU read done (HD-094, HD-095), unit/integration/mutation and the worst-case load pass. Next: full CI-style suite, push, PR; review per the Product Owner; then TASK-050's for-SKU mixed-load rerun. TASK-039 waits on Item (HD-093)."
+  "next_safe_action": "TASK-040: REV-087 follow-ups done (HD-096). Full suite, push PR #211; merge when CI is green and main is unchanged (no re-review). Then: TASK-050's for-SKU run over HTTP at the production pool (incl. hot-SKU name search and deep pages). TASK-039 waits on Item (HD-093)."
 }
