@@ -16,7 +16,7 @@ const SKUS = [
     { skuUomId: 503, uomCode: "PLT", uomName: "Pallet", status: "inactive", toBaseFactor: 960, isBase: false, isDefaultPurchase: false }
   ] },
   { skuId: 52, skuCode: "TEA-002", skuName: "Oolong Tea 250g", itemName: "Oolong Tea", uoms: [
-    { skuUomId: 511, uomCode: "EA", uomName: "Each", status: "active", toBaseFactor: 1, isBase: true, isDefaultPurchase: true }
+    { skuUomId: 511, uomCode: "BTL", uomName: "Bottle", status: "active", toBaseFactor: 1, isBase: true, isDefaultPurchase: true }
   ] }
 ];
 
@@ -28,7 +28,7 @@ function supplier(status = "active") {
 
 function relation(overrides = {}) {
   return { id: 91, supplierId: 7, skuId: 52, skuCode: "TEA-002", skuName: "Oolong Tea 250g", skuStatus: "active", itemStatus: "active",
-    supplierItemCode: "OO-9", supplierItemName: "Oolong (old pack)", purchaseSkuUomId: 511, purchaseUomCode: "EA", purchaseUomName: "Each",
+    supplierItemCode: "OO-9", supplierItemName: "Oolong (old pack)", purchaseSkuUomId: 511, purchaseUomCode: "BTL", purchaseUomName: "Bottle",
     purchaseUomStatus: "active", minimumOrderQty: 12, standardLeadTimeDays: 7, relationshipStatus: "alternative", firstSuppliedAt: null,
     lastSuppliedAt: null, source: "manual", version: 3, updatedAt: 300, ...overrides };
 }
@@ -203,12 +203,19 @@ test("@technical TASK-039 (REV-088 M-1): a slow unit lookup from an earlier edit
   await dialog.getByRole("button", { name: "取消" }).click();
   await expect(dialog).toBeHidden();
   await page.getByRole("button", { name: "編輯供貨關係 TEA-002" }).click();
-  await expect(dialog.getByLabel("採購單位")).toHaveValue("EA — Each，基本單位");
+  await expect(dialog.getByLabel("採購單位")).toHaveValue("BTL — Bottle，基本單位");
   // 等嗰個慢請求完結（被取消就冇 response）：完成或者失敗都算，之後先睇選項有冇被蓋。
   const request = await slow;
-  await Promise.race([request.response(), page.waitForEvent("requestfailed", (failed) => failed === request)]);
+  const response = await Promise.race([request.response(), page.waitForEvent("requestfailed", (failed) => failed === request).then(() => null)]);
+  await response?.finished();
+  // 回應到咗瀏覽器之後，app 仲要 parse JSON 同等 Vue 更新先會（錯誤咁）覆蓋選項：喺頁面入面等一個 timer，
+  // 令嗰條 promise chain 行完先檢查。冇呢一步，斷言會喺覆蓋之前就通過（negative control 試過）。
+  await page.evaluate(() => new Promise((resolve) => { setTimeout(resolve, 200); }));
+  // 用正面斷言：B 嘅單位（BTL，A 冇）一定要仲喺選單。唔好用「選單冇某個選項」或者顯示值：Quasar 逐個 render 選項，
+  // 否定式斷言會喺第二個選項出現之前通過；揀咗嘅值會保留舊標籤，清單被換走都睇唔出（兩個 negative control 都試過）。
   await dialog.getByLabel("採購單位").click();
-  await expect(page.getByRole("option")).toHaveText(["EA — Each，基本單位"]);
+  await expect(page.getByRole("option", { name: "BTL — Bottle，基本單位" })).toBeVisible();
+  await expect(dialog.getByText("SKU 目前不可採購")).toHaveCount(0);
 });
 
 test("@technical TASK-039 (REV-088 M-3): the SKU picker never sends control characters or more than 190 characters", async ({ page }) => {
