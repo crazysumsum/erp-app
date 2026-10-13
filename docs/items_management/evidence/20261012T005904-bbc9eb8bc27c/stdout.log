@@ -1,0 +1,5 @@
+
+> @erp/client@0.1.0 test
+> vitest run --reporter=junit --outputFile=/private/tmp/erp-item-task-043-reference-guards/docs/items_management/evidence/20261012T005904-bbc9eb8bc27c/item-client-technical.xml
+
+JUNIT report written to /private/tmp/erp-item-task-043-reference-guards/docs/items_management/evidence/20261012T005904-bbc9eb8bc27c/item-client-technical.xml

@@ -88,6 +88,7 @@ const DETAIL_BEARING_CASES = [
   () => itemErrors.itemReferenced(["sku"]),
   () => itemErrors.skuReferenced(["barcode"]),
   () => itemErrors.catalogInUse(["item"]),
+  () => itemErrors.uomChangeBlocked(["sales_quotation_lines"]),
   () => itemErrors.categoryNameTaken("Vitamins"),
   () => itemErrors.brandNameTaken("Brand A"),
   () => itemErrors.uomCodeTaken("EA"),
