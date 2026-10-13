@@ -101,6 +101,8 @@ async function fixture() {
     stopped: await supplier({ code: `${prefix}-4`, name: `${prefix} Charlie` }),
     plainA: await supplier({ code: `${prefix}-5`, name: `${prefix} Echo` }),
     plainB: await supplier({ code: `${prefix}-6`, name: `${prefix} Echo` }),
+    // 冇 relation 而名排喺 stopped（Charlie）之前：stopped 唔可以因為「有 relation」而排前。
+    early: await supplier({ code: `${prefix}-9`, name: `${prefix} Able` }),
     suspended: await supplier({ code: `${prefix}-7`, name: `${prefix} Alpha`, status: "suspended" }),
     archived: await supplier({ code: `${prefix}-8`, name: `${prefix} Alpha`, status: "archived" })
   };
@@ -108,6 +110,7 @@ async function fixture() {
   await relation(s.recent, skuId, { lastSuppliedAt: 2_000 });
   await relation(s.older, skuId, { lastSuppliedAt: 1_000, itemCode: `${prefix}-Item` });
   await relation(s.stopped, skuId, { status: "stopped", lastSuppliedAt: 3_000 });
+  await relation(s.plainB, skuId);
   await relation(s.suspended, skuId, { status: "preferred", lastSuppliedAt: 4_000 });
   // 同一個 Supplier Item Code，不過係另一隻 SKU：唔可以令 plainA 喺呢隻 SKU 度變成 exact。
   await relation(s.plainA, otherSku, { itemCode: `${prefix}-Item` });
@@ -119,18 +122,23 @@ integrationTest("TASK-040 (SKU-001, SKU-002, AC-028–030): every Active Supplie
   const result = await lookup().listForSku(skuId, { q: prefix, pageSize: 100 });
 
   assert.deepEqual(result.items.map((item) => item.supplierId),
-    [s.exact, s.preferred, s.recent, s.older, s.stopped, s.plainA, s.plainB],
+    [s.exact, s.preferred, s.recent, s.older, s.early, s.stopped, s.plainA, s.plainB],
     "exact → preferred → recently supplied → name, ID; no-relation Suppliers present; Suspended and Archived absent");
   assert.deepEqual(result.items.map((item) => item.rankReason),
-    ["exact_match", "preferred", "recently_supplied", "recently_supplied", null, null, null]);
-  assert.equal(result.total, 7, "count is per Supplier, not inflated or shrunk by the join");
-  assert.deepEqual(result.items[4].relation, { relationId: result.items[4].relation.relationId, relationshipStatus: "stopped",
+    ["exact_match", "preferred", "recently_supplied", "recently_supplied", null, null, null, null]);
+  assert.equal(result.total, 8, "count is per Supplier, not inflated or shrunk by the join");
+  assert.deepEqual(result.items[5].relation, { relationId: result.items[5].relation.relationId, relationshipStatus: "stopped",
     supplierItemCode: "", lastSuppliedAt: 3_000 });
-  assert.equal(result.items[5].relation, null, "plainA's relation is for another SKU");
+  assert.equal(result.items[6].relation, null, "plainA's relation is for another SKU");
   assert.ok(result.items.every((item) => item.usable && item.status === "active"));
 
   const page = await lookup().listForSku(skuId, { q: prefix, page: 2, pageSize: 2 });
-  assert.deepEqual([page.items.map((item) => item.supplierId), page.total], [[s.recent, s.older], 7], "stable across pages");
+  assert.deepEqual([page.items.map((item) => item.supplierId), page.total], [[s.recent, s.older], 8], "stable across pages");
+  // HD-095 B：head（exact、首選、最近供貨，4 個）同 rest（其餘按名稱）分兩段讀，頁要跨段駁得啱。
+  const pages = [];
+  for (let number = 1; number <= 4; number += 1) pages.push((await lookup().listForSku(skuId, { q: prefix, page: number, pageSize: 3 })).items);
+  assert.deepEqual(pages.map((items) => items.map((item) => item.supplierId)),
+    [[s.exact, s.preferred, s.recent], [s.older, s.early, s.stopped], [s.plainA, s.plainB], []], "a page spanning head and rest, the rest alone, past the end");
 
   const byItemCode = await lookup().listForSku(skuId, { q: `${prefix}-item`.toLowerCase() });
   assert.deepEqual(byItemCode.items.map((item) => [item.supplierId, item.rankReason]), [[s.older, "exact_match"]],
@@ -194,7 +202,7 @@ integrationTest("TASK-040 (HD-094 1A): over HTTP the for-SKU lookup needs a fres
 
   const ok = await get(viewer, url);
   assert.equal(ok.status, 200, JSON.stringify(ok));
-  assert.deepEqual([ok.data.items.map((item) => item.supplierId), ok.data.total], [[s.exact, s.preferred, s.recent], 7]);
+  assert.deepEqual([ok.data.items.map((item) => item.supplierId), ok.data.total], [[s.exact, s.preferred, s.recent], 8]);
   assert.equal(JSON.stringify(ok.data).toLowerCase().includes("bank"), false);
 
   assert.equal((await get(outsider, url)).status, 403);
@@ -204,4 +212,29 @@ integrationTest("TASK-040 (HD-094 1A): over HTTP the for-SKU lookup needs a fres
   const inactive = await sku({ status: "inactive" });
   const refused = await get(viewer, `/api/v1/supplier-lookups/for-sku/${inactive}`);
   assert.deepEqual([refused.status, refused.code], [409, "SKU_NOT_USABLE"]);
+});
+
+integrationTest("TASK-040 (HD-095 B): the two-part read pages exactly like one LEFT JOIN sorted by the design §8.7 order", async () => {
+  const { prefix, skuId } = await fixture();
+  // 參照：設計 §8.7 原文嘅單一查詢（慢，但次序一目了然）。
+  const reference = async (key) => {
+    const where = key === null ? "" : "AND (s.supplier_name LIKE ? OR s.supplier_code_key LIKE ? OR r.supplier_item_code_key = ?)";
+    const [rows] = await h.db.query(
+      `SELECT s.id FROM suppliers s LEFT JOIN supplier_sku_refs r ON r.supplier_id = s.id AND r.sku_id = ?
+        WHERE s.status = 'active' ${where}
+        ORDER BY ${key === null ? "" : "COALESCE(s.supplier_code_key = ? OR r.supplier_item_code_key = ?, 0) DESC,"}
+                 COALESCE(r.relationship_status = 'preferred', 0) DESC, CASE WHEN r.relationship_status <> 'stopped' THEN r.last_supplied_at END DESC,
+                 s.supplier_name, s.id`,
+      key === null ? [skuId] : [skuId, `%${key}%`, `${key}%`, key, key, key]);
+    return rows.map((row) => Number(row.id));
+  };
+  for (const [q, key] of [["", null], [prefix, prefix.toLowerCase()]]) {
+    const expected = await reference(key);
+    const actual = [];
+    for (let page = 1; actual.length < Math.min(expected.length, 150); page += 1) {
+      actual.push(...(await lookup().listForSku(skuId, { q, page, pageSize: 7 })).items.map((item) => item.supplierId));
+    }
+    assert.deepEqual(actual.slice(0, 150), expected.slice(0, 150), `q=${JSON.stringify(q)}`);
+    assert.equal((await lookup().listForSku(skuId, { q })).total, expected.length);
+  }
 });

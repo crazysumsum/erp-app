@@ -206,39 +206,55 @@ test("TASK-040 (HD-094 3A): an SKU that cannot be purchased fails closed before 
   assert.equal(database.calls.length, 0);
 });
 
-test("TASK-040: listForSku checks the SKU for purchase at the given time and keeps every Active Supplier via LEFT JOIN", async () => {
-  const database = poolDatabase([[{ total: 2 }], [forSkuRow(), forSkuRow({ id: 8, supplier_code: "SUP-008" })]]);
+test("TASK-040 (HD-095 B): without a search, total counts Active Suppliers; ranked ones come first, the rest follow by name", async () => {
+  const database = poolDatabase([[{ total: 3 }], [{ headTotal: 1 }], [forSkuRow({ id: 9, relation_id: 4, relationship_status: "preferred" })],
+    [forSkuRow(), forSkuRow({ id: 8, supplier_code: "SUP-008" })]]);
   const itemCalls = [];
   const result = await serviceFor(database, { items: purchasableItems(itemCalls) }).listForSku(5, { atMs: 900 });
 
   assert.deepEqual(itemCalls, [{ skuId: 5, options: { purpose: "purchase", atMs: 900 } }]);
-  const [count, list] = database.calls;
-  assert.match(count.sql, /FROM suppliers s LEFT JOIN supplier_sku_refs r ON r\.supplier_id = s\.id AND r\.sku_id = \?\s+WHERE s\.status = 'active'$/u);
-  assert.deepEqual(count.params, [5]);
-  assert.deepEqual(list.params, [5, 20, 0], "no search: only the SKU, then LIMIT/OFFSET");
-  assert.equal(result.total, 2);
-  assert.deepEqual(result.items[0], {
+  const [count, headCount, head, rest] = database.calls;
+  assert.match(count.sql, /^SELECT COUNT\(\*\) AS total FROM suppliers s WHERE s\.status = 'active'$/u);
+  assert.deepEqual(count.params, []);
+  assert.match(headCount.sql, /JOIN \(SELECT y\.supplier_id AS id FROM supplier_sku_refs y WHERE y\.sku_id = \? AND \(y\.relationship_status = 'preferred'/u);
+  assert.deepEqual(headCount.params, [5, 5]);
+  assert.deepEqual(head.params, [5, 5, 20, 0]);
+  assert.match(rest.sql, /AND NOT EXISTS \(SELECT 1 FROM supplier_sku_refs y WHERE y\.supplier_id = s\.id AND y\.sku_id = \?/u);
+  assert.match(rest.sql, /ORDER BY s\.supplier_name, s\.id LIMIT \? OFFSET \?$/u);
+  assert.deepEqual(rest.params, [5, 5, 19, 0], "fills the page after the head, from the start of the rest");
+  assert.deepEqual([result.total, result.items.map((item) => item.supplierId)], [3, [9, 7, 8]]);
+  assert.deepEqual(result.items[1], {
     supplierId: 7, supplierCode: "SUP-007", supplierName: "Evergreen Trading", displayName: "Evergreen", defaultCurrencyCode: "HKD",
     defaultPaymentTermId: 3, status: "active", version: 4, usable: true, reasons: [], rankReason: null, relation: null
   });
   assert.equal(JSON.stringify(result).includes("bank"), false);
 });
 
+test("TASK-040 (HD-095 B): a page past the head skips the head query and offsets into the rest", async () => {
+  const database = poolDatabase([[{ total: 50 }], [{ headTotal: 7 }], []]);
+  await serviceFor(database, { items: purchasableItems() }).listForSku(5, { page: 3, pageSize: 10 });
+  assert.equal(database.calls.length, 3);
+  assert.deepEqual(database.calls[2].params.slice(-2), [10, 13]);
+});
+
 test("TASK-040 (HD-094 4A): a search matches the Supplier list fields or this SKU's Supplier Item Code, and exact matches rank first", async () => {
-  const database = poolDatabase([[{ total: 0 }], []]);
+  const database = poolDatabase([[{ total: 0 }], [{ headTotal: 0 }], []]);
   await serviceFor(database, { items: purchasableItems() }).listForSku(5, { q: " ＡＢ-1 ", page: 3, pageSize: 10 });
-  const [count, list] = database.calls;
-  assert.match(count.sql, /general_email LIKE \? ESCAPE '\\\\' OR r\.supplier_item_code_key = \?\)/u);
-  assert.deepEqual(count.params, [5, "ab-1%", "%AB-1%", "%AB-1%", "%AB-1%", "%AB-1%", "ab-1"], "NFKC, trimmed, item code key lower-cased");
-  assert.match(list.sql, /CASE WHEN s\.supplier_code_key = \? OR r\.supplier_item_code_key = \? THEN 0 ELSE 1 END AS exact_rank/u);
-  assert.deepEqual(list.params, ["ab-1", "ab-1", ...count.params, 10, 20]);
+  const [count, headCount, rest] = database.calls;
+  const match = ["ab-1%", "%AB-1%", "%AB-1%", "%AB-1%", "%AB-1%", 5, "ab-1"];
+  assert.match(count.sql, /general_email LIKE \? ESCAPE '\\\\'\n\s+OR EXISTS \(SELECT 1 FROM supplier_sku_refs x WHERE x\.supplier_id = s\.id AND x\.sku_id = \? AND x\.supplier_item_code_key = \?\)\)/u);
+  assert.deepEqual(count.params, match, "NFKC, trimmed, item code key lower-cased");
+  assert.match(headCount.sql, / OR y\.supplier_item_code_key = \?\) UNION SELECT id FROM suppliers WHERE supplier_code_key = \?\) h/u);
+  assert.deepEqual(headCount.params, [5, "ab-1", "ab-1", 5, ...match]);
+  assert.match(rest.sql, /AND s\.supplier_code_key <> \? ORDER BY/u);
+  assert.deepEqual(rest.params, [5, ...match, 5, "ab-1", "ab-1", 10, 20]);
 });
 
 test("TASK-040 (HD-094 2A): rankReason follows exact, preferred, recently supplied; stopped never ranks", async () => {
   const relation = (status, lastSuppliedAt = null, exact = 1) =>
     forSkuRow({ relation_id: 9, relationship_status: status, supplier_item_code: "AB-1", last_supplied_at: lastSuppliedAt, exact_rank: exact });
   const rows = [relation("stopped", 500, 0), relation("preferred"), relation("alternative", 400), relation("stopped", 300), relation("alternative")];
-  const result = await serviceFor(poolDatabase([[{ total: 5 }], rows]), { items: purchasableItems() }).listForSku(5);
+  const result = await serviceFor(poolDatabase([[{ total: 5 }], [{ headTotal: 5 }], rows]), { items: purchasableItems() }).listForSku(5);
   assert.deepEqual(result.items.map((item) => item.rankReason), ["exact_match", "preferred", "recently_supplied", null, null]);
   assert.deepEqual(result.items[3].relation, { relationId: 9, relationshipStatus: "stopped", supplierItemCode: "AB-1", lastSuppliedAt: 300 });
 });

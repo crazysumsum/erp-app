@@ -37,6 +37,11 @@ function lookupOptions(options = {}) {
   return { purpose: options.purpose, atMs };
 }
 
+// 排得前嘅 relation（alias y）：首選，或者唔係 stopped 而有供貨紀錄（HD-094 2A）。
+const RANKED = "y.relationship_status = 'preferred' OR (y.relationship_status <> 'stopped' AND y.last_supplied_at IS NOT NULL)";
+const FOR_SKU_COLUMNS = `s.id, s.supplier_code, s.supplier_name, s.display_name, s.default_currency_code, s.default_payment_term_id,
+  s.status, s.version, r.id AS relation_id, r.relationship_status, r.supplier_item_code, r.last_supplied_at`;
+
 function forSkuQuery(options = {}) {
   const { q = "", page = 1, pageSize = 20 } = options ?? {};
   if (typeof q !== "string" || [...q].length > 190 || /\p{Cc}/u.test(q) || !Number.isSafeInteger(page) || page < 1 ||
@@ -179,9 +184,13 @@ export class SupplierLookupService {
   }
 
   /**
-   * 採購揀 Supplier 用：全部 Active Supplier（LEFT JOIN，冇 relation 都照出），relation 只影響排序同 `rankReason`。
+   * 採購揀 Supplier 用：全部 Active Supplier（冇 relation 都照出），relation 只影響排序同 `rankReason`。
    * SKU 唔可以採購就 fail closed（HD-094 3A）。呢度唔授權，呼叫方要先授權；提交時仍要
    * `assertUsableInTransaction()` 重驗（BR-032）。
+   *
+   * 兩段讀（HD-095 B）：head 係有排序理由（exact、首選、最近供貨）嘅 Supplier，由 relation index 同 code key 帶出再排序；
+   * rest 係其餘 Active Supplier，沿 `idx_suppliers_name_id` 按名稱讀。兩段互不重疊，合埋就係設計 §8.7 嘅次序。
+   * 一次過 JOIN 全部 Active Supplier 再排序，每次要排 8 萬行，50 人並發 p95 4 秒。
    */
   async listForSku(skuId, options = {}) {
     const id = requireSupplierId(skuId);
@@ -189,34 +198,45 @@ export class SupplierLookupService {
     if (!this.items) throw new TypeError("SupplierLookupService.listForSku requires an Item lookup service");
     await this.items.assertUsable(id, { purpose: "purchase", atMs: options.atMs ?? this.time.nowMs() });
 
-    const conditions = ["s.status = 'active'"];
-    const params = [];
-    let exact = "1";
-    const exactParams = [];
+    const key = search.toLowerCase();
+    let match = "s.status = 'active'";
+    const matchParams = [];
     if (search) {
-      const key = search.toLowerCase();
+      // 同供應商列表一樣嘅文字搜尋，或者呢隻 SKU 嘅 Supplier Item Code 完全相同（HD-094 4A）。
       const condition = supplierSearchCondition(search);
-      conditions.push(`(${condition.sql} OR r.supplier_item_code_key = ?)`);
-      params.push(...condition.params, key);
-      exact = "CASE WHEN s.supplier_code_key = ? OR r.supplier_item_code_key = ? THEN 0 ELSE 1 END";
-      exactParams.push(key, key);
+      match += ` AND (${condition.sql}
+        OR EXISTS (SELECT 1 FROM supplier_sku_refs x WHERE x.supplier_id = s.id AND x.sku_id = ? AND x.supplier_item_code_key = ?))`;
+      matchParams.push(...condition.params, id, key);
     }
-    // (supplier_id, sku_id) 唯一，LEFT JOIN 每個 Supplier 最多一行，count 唔會重複。
-    const from = `FROM suppliers s LEFT JOIN supplier_sku_refs r ON r.supplier_id = s.id AND r.sku_id = ?
-      WHERE ${conditions.join(" AND ")}`;
-    const [[{ total }]] = await this.database.query(`SELECT COUNT(*) AS total ${from}`, [id, ...params]);
-    const [rows] = await this.database.query(
-      `SELECT s.id, s.supplier_code, s.supplier_name, s.display_name, s.default_currency_code, s.default_payment_term_id,
-              s.status, s.version, r.id AS relation_id, r.relationship_status, r.supplier_item_code, r.last_supplied_at,
-              ${exact} AS exact_rank
-         ${from}
-        ORDER BY exact_rank, r.relationship_status = 'preferred' DESC,
-                 CASE WHEN r.relationship_status <> 'stopped' THEN r.last_supplied_at END DESC, s.supplier_name, s.id
-        LIMIT ? OFFSET ?`,
-      [...exactParams, id, ...params, pageSize, (page - 1) * pageSize]
-    );
+    const ranked = `y.sku_id = ? AND (${RANKED}${search ? " OR y.supplier_item_code_key = ?" : ""})`;
+    const rankedParams = search ? [id, key] : [id];
+    const headIds = `SELECT y.supplier_id AS id FROM supplier_sku_refs y WHERE ${ranked}${
+      search ? " UNION SELECT id FROM suppliers WHERE supplier_code_key = ?" : ""}`;
+    const headFrom = `FROM suppliers s JOIN (${headIds}) h ON h.id = s.id
+      LEFT JOIN supplier_sku_refs r ON r.supplier_id = s.id AND r.sku_id = ? WHERE ${match}`;
+    const headParams = [...rankedParams, ...(search ? [key] : []), id, ...matchParams];
+    const restFrom = `FROM suppliers s LEFT JOIN supplier_sku_refs r ON r.supplier_id = s.id AND r.sku_id = ? WHERE ${match}
+      AND NOT EXISTS (SELECT 1 FROM supplier_sku_refs y WHERE y.supplier_id = s.id AND ${ranked})${search ? " AND s.supplier_code_key <> ?" : ""}`;
+    const restParams = [id, ...matchParams, ...rankedParams, ...(search ? [key] : [])];
+
+    const offset = (page - 1) * pageSize;
+    const [[{ total }]] = await this.database.query(`SELECT COUNT(*) AS total FROM suppliers s WHERE ${match}`, matchParams);
+    const [[{ headTotal }]] = await this.database.query(`SELECT COUNT(*) AS headTotal ${headFrom}`, headParams);
+    const exact = search ? "CASE WHEN s.supplier_code_key = ? OR r.supplier_item_code_key = ? THEN 0 ELSE 1 END" : "1";
+    const [head] = offset < Number(headTotal)
+      ? await this.database.query(
+        `SELECT ${FOR_SKU_COLUMNS}, ${exact} AS exact_rank ${headFrom}
+          ORDER BY exact_rank, r.relationship_status = 'preferred' DESC,
+                   CASE WHEN r.relationship_status <> 'stopped' THEN r.last_supplied_at END DESC, s.supplier_name, s.id
+          LIMIT ? OFFSET ?`,
+        [...(search ? [key, key] : []), ...headParams, pageSize, offset])
+      : [[]];
+    const [rest] = head.length < pageSize
+      ? await this.database.query(`SELECT ${FOR_SKU_COLUMNS}, 1 AS exact_rank ${restFrom} ORDER BY s.supplier_name, s.id LIMIT ? OFFSET ?`,
+        [...restParams, pageSize - head.length, Math.max(0, offset - Number(headTotal))])
+      : [[]];
     return {
-      items: rows.map((row) => ({
+      items: [...head, ...rest].map((row) => ({
         ...toProjection(row, { purpose: "purchase" }),
         rankReason: rankReason(row),
         relation: row.relation_id === null ? null : {
