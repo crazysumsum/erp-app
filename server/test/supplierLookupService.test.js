@@ -219,9 +219,10 @@ test("TASK-040 (HD-095 B): without a search, total counts Active Suppliers; rank
   assert.match(headCount.sql, /JOIN \(SELECT y\.supplier_id AS id FROM supplier_sku_refs y WHERE y\.sku_id = \? AND \(y\.relationship_status = 'preferred'/u);
   assert.deepEqual(headCount.params, [5, 5]);
   assert.deepEqual(head.params, [5, 5, 20, 0]);
-  assert.match(rest.sql, /AND NOT EXISTS \(SELECT 1 FROM supplier_sku_refs y WHERE y\.supplier_id = s\.id AND y\.sku_id = \?/u);
+  assert.match(rest.sql, /AND NOT COALESCE\(\(r\.relationship_status = 'preferred' OR \(r\.relationship_status <> 'stopped' AND r\.last_supplied_at IS NOT NULL\)\), FALSE\)/u);
+  assert.doesNotMatch(rest.sql, /NOT EXISTS/u, "an antijoin made MySQL scan every relation (HD-095)");
   assert.match(rest.sql, /ORDER BY s\.supplier_name, s\.id LIMIT \? OFFSET \?$/u);
-  assert.deepEqual(rest.params, [5, 5, 19, 0], "fills the page after the head, from the start of the rest");
+  assert.deepEqual(rest.params, [5, 19, 0], "fills the page after the head, from the start of the rest");
   assert.deepEqual([result.total, result.items.map((item) => item.supplierId)], [3, [9, 7, 8]]);
   assert.deepEqual(result.items[1], {
     supplierId: 7, supplierCode: "SUP-007", supplierName: "Evergreen Trading", displayName: "Evergreen", defaultCurrencyCode: "HKD",
@@ -249,7 +250,8 @@ test("TASK-040 (HD-094 4A): a search matches the Supplier list fields or this SK
   assert.match(headCount.sql, / OR y\.supplier_item_code_key = \?\) UNION SELECT id FROM suppliers WHERE supplier_code_key = \?\) h/u);
   assert.deepEqual(headCount.params, [5, "ab-1", "ab-1", 5, ...match]);
   assert.match(rest.sql, /AND s\.supplier_code_key <> \? ORDER BY/u);
-  assert.deepEqual(rest.params, [5, ...match, 5, "ab-1", "ab-1", 10, 20]);
+  assert.match(rest.sql, / OR r\.supplier_item_code_key = \?\), FALSE\) AND s\.supplier_code_key <> \? ORDER BY/u);
+  assert.deepEqual(rest.params, [5, ...match, "ab-1", "ab-1", 10, 20]);
 });
 
 test("TASK-040 (HD-095 B): no Item Code match adds no IN list, and an empty rest is not read", async () => {

@@ -37,8 +37,8 @@ function lookupOptions(options = {}) {
   return { purpose: options.purpose, atMs };
 }
 
-// 排得前嘅 relation（alias y）：首選，或者唔係 stopped 而有供貨紀錄（HD-094 2A）。
-const RANKED = "y.relationship_status = 'preferred' OR (y.relationship_status <> 'stopped' AND y.last_supplied_at IS NOT NULL)";
+// 排得前嘅 relation：首選，或者唔係 stopped 而有供貨紀錄（HD-094 2A）。
+const ranked = (alias) => `${alias}.relationship_status = 'preferred' OR (${alias}.relationship_status <> 'stopped' AND ${alias}.last_supplied_at IS NOT NULL)`;
 const FOR_SKU_COLUMNS = `s.id, s.supplier_code, s.supplier_name, s.display_name, s.default_currency_code, s.default_payment_term_id,
   s.status, s.version, r.id AS relation_id, r.relationship_status, r.supplier_item_code, r.last_supplied_at`;
 
@@ -210,16 +210,16 @@ export class SupplierLookupService {
       match += ` AND (${condition.sql}${byItemCode.length ? ` OR s.id IN (${byItemCode.map(() => "?").join(",")})` : ""})`;
       matchParams.push(...condition.params, ...byItemCode.map((row) => Number(row.supplier_id)));
     }
-    const ranked = `y.sku_id = ? AND (${RANKED}${search ? " OR y.supplier_item_code_key = ?" : ""})`;
-    const rankedParams = search ? [id, key] : [id];
-    const headIds = `SELECT y.supplier_id AS id FROM supplier_sku_refs y WHERE ${ranked}${
+    const itemCodeExact = (alias) => (search ? ` OR ${alias}.supplier_item_code_key = ?` : "");
+    const headIds = `SELECT y.supplier_id AS id FROM supplier_sku_refs y WHERE y.sku_id = ? AND (${ranked("y")}${itemCodeExact("y")})${
       search ? " UNION SELECT id FROM suppliers WHERE supplier_code_key = ?" : ""}`;
     const headFrom = `FROM suppliers s JOIN (${headIds}) h ON h.id = s.id
       LEFT JOIN supplier_sku_refs r ON r.supplier_id = s.id AND r.sku_id = ? WHERE ${match}`;
-    const headParams = [...rankedParams, ...(search ? [key] : []), id, ...matchParams];
+    const headParams = [id, ...(search ? [key, key] : []), id, ...matchParams];
+    // rest 用已經 JOIN 咗嘅 r（每個 Supplier 最多一行）排除 head；寫成 NOT EXISTS 嘅話，optimizer 會將成張 relation 表掃一次再物化。
     const restFrom = `FROM suppliers s LEFT JOIN supplier_sku_refs r ON r.supplier_id = s.id AND r.sku_id = ? WHERE ${match}
-      AND NOT EXISTS (SELECT 1 FROM supplier_sku_refs y WHERE y.supplier_id = s.id AND ${ranked})${search ? " AND s.supplier_code_key <> ?" : ""}`;
-    const restParams = [id, ...matchParams, ...rankedParams, ...(search ? [key] : [])];
+      AND NOT COALESCE((${ranked("r")}${itemCodeExact("r")}), FALSE)${search ? " AND s.supplier_code_key <> ?" : ""}`;
+    const restParams = [id, ...matchParams, ...(search ? [key, key] : [])];
 
     const offset = (page - 1) * pageSize;
     const [[{ total }]] = await this.database.query(`SELECT COUNT(*) AS total FROM suppliers s WHERE ${match}`, matchParams);
