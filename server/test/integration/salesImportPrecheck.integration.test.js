@@ -4,6 +4,7 @@ import {migrationFixture} from "../sales/phase1/fixtures.js";
 import {CustomerLookupService} from "../../src/modules/customer/CustomerLookupService.js";
 import {ItemLookupService} from "../../src/modules/item/ItemLookupService.js";
 const integrationTest=process.env.DB_INTEGRATION_TESTS==="1"?test:test.skip;
+const capacityTest=process.env.SALES_CAPACITY_SEPARATE_STEP==="1"?test.skip:integrationTest;
 integrationTest("TC-035 owner precheck batches resolve actual DB collation and preserve missing/inactive without business writes",async t=>{
  const f=await migrationFixture(t,[]),[[sku]]=await f.db.query("SELECT sku_code FROM item_skus WHERE id=?",[f.skuId]),[[uom]]=await f.db.query("SELECT code FROM item_uoms WHERE id=(SELECT uom_id FROM item_sku_uoms WHERE id=?)",[f.skuUomId]);
  let queries=0;const tx={query(...args){queries++;return f.db.query(...args);}},customers=new CustomerLookupService({database:f.db}),items=new ItemLookupService({database:f.db,time:{nowMs:()=>f.now},logger:{error:async()=>{}}});
@@ -98,7 +99,7 @@ integrationTest("TC-035 bounded errors roll back and committed replay preserves2
   const next=await f.registeredWorker();next.runtime.importer.workerOptions.config={...next.runtime.importer.workerOptions.config,importWorkerBatchSize:100};await next.run();await next.scheduler.stop();const complete=await f.facts(job.id);assert.equal(next.scheduler.stats.get("sales.importWorker").failures,0);assert.equal(complete.job.status,"READY");assert.equal(complete.children.length,102);assert.equal(complete.errors.length,301);const capped=complete.children.find(row=>row.source_order_key==="Errors"),errors=complete.errors.filter(row=>row.intake_order_id===capped.id);assert.equal(errors.length,200);assert.equal(errors.at(-1).error_code,"TOO_MANY_ERRORS");assert.equal(Number(errors.at(-1).row_no),169);for(const child of first.children){const replay=complete.children.find(row=>row.id===child.id);assert.equal(replay.processing_event_id,child.processing_event_id);assert.equal(replay.payload_hash,child.payload_hash);}
  });
 });
-integrationTest("TC-035 real registered worker completes bounded50MiB/100000-row ingestion inside its unchanged30-second deadline",async t=>{
+capacityTest("TC-035 real registered worker completes bounded50MiB/100000-row ingestion inside its unchanged30-second deadline",async t=>{
  for(const orders of [1000,10000])await t.test(`${orders}-orders`,async t=>{
   const f=await workerFixture(t,{batchSize:50}),{open,mkdtemp,writeFile}=await import("node:fs/promises"),path=(await import("node:path")).default,{randomUUID,createHash}=await import("node:crypto"),{SALES_CSV_COLUMNS}=await import("../../src/modules/sales/salesCsv.js"),{stringify}=await import("csv-stringify/sync"),directory=await mkdtemp(path.join(f.tempRoot,"upload-")),storedName=randomUUID()+".csv",filePath=path.join(directory,storedName),handle=await open(filePath,"w",0o600),digest=createHash("sha256");let bytes=0;
   const write=async text=>{digest.update(text);bytes+=Buffer.byteLength(text);await handle.write(text);};await write(SALES_CSV_COLUMNS.map(c=>c.name).join(",")+"\n");const lines=100000/orders;

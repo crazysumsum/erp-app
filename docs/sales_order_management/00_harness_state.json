@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 542,
+  "revision": 551,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "9fcb51b2e67379dce1e8011524f767a085d28a3282474705bb730ba99a5ccdbd",
     "plan": "f0a8eca401f2c10e8d4473341466a3bb99c0013fe6fdb867913cc9095e15a2f6",
-    "code_commit": "185e187bfe4cbf91e85817778fc4f65549dbdd56",
-    "source_fingerprint": "69b64e922a46c9ff83ae79cbdc607dcf4efa53dc7075744661f1b8a61e507328",
+    "code_commit": "3d932bd416b63114f7403234a86bff90630f2c06",
+    "source_fingerprint": "9f7c8aaf871424be7f5ff74168e6dbcfeccc050a8a37d05aad29efd10c8d2c97",
     "worktree": "/Users/sam/.codex/worktrees/sales-p3-recovery/erp-app",
     "default_commit": "e75414753bb898d9db69569f3130a63cae16a19c",
     "mode_entry_commit": "6936736ba1fb98f4fcb8365377f59f0a0f7a4897"
@@ -6160,6 +6160,66 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-CI3D-COVERED-PARSER-DIRECTION-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p3_retention_review",
+      "reviewed_baseline": "9fcb51b2e67379dce1e8011524f767a085d28a3282474705bb730ba99a5ccdbd",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/p3-ci3d-covered-parser-direction-r1-reviewer-proof.json SHA256 83eb9881d30fc82ed22831f78188345b3f7aa4dd58ad0db2faced33c7f1cfa82 Scoped conservative rawpayload upperbound/original exact128KiB fallback and boundaryoracle approval; no performance/CI/defectclosure claim.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-CI3D-CSV-UPPER-BOUND-EXACT-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p3_retention_review",
+      "reviewed_baseline": "9fcb51b2e67379dce1e8011524f767a085d28a3282474705bb730ba99a5ccdbd",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/p3-ci3d-csv-upper-bound-exact-r2-reviewer-proof.json SHA256 5ed7aa51a1d51638861521f8991c2dc1e8d877604774323e603729669bec2afb Scoped conservative rawpayload upperbound/original exact128KiB fallback and boundaryoracle approval; no performance/CI/defectclosure claim.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-CI3D-CAPACITY-MEASUREMENT-SCOPE-R3",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p3_retention_review",
+      "reviewed_baseline": "9fcb51b2e67379dce1e8011524f767a085d28a3282474705bb730ba99a5ccdbd",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/p3-ci3d-capacity-measurement-scope-direction-r3-reviewer-proof.json SHA256 7afedaee218857b07d5d5b012fb733261b2e0549533a6f30108ab18cceaa7efd Exact existingCI measurementpartition approval; oneTC035 parent realcoverageSKIP disclosed, bothoriginalNFR cases mandatoryseparate3PASS0SKIP; developer33/full-localcoverage/defaultflag/5CI/38floors/bars unchanged. No finalCI/Phase or waiver.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-CI3D-SEPARATE-IMPORT-CAPACITY-EXACT-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p3_whole_phase_review",
+      "reviewed_baseline": "9fcb51b2e67379dce1e8011524f767a085d28a3282474705bb730ba99a5ccdbd",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/p3-ci3d-separate-import-capacity-exact-r1-reviewer-proof.json SHA256 7fa51506b29f53ce1bbd857a85c0274c53470b453d4139f3ac70f47597a54617 Exact existingCI measurementpartition approval; oneTC035 parent realcoverageSKIP disclosed, bothoriginalNFR cases mandatoryseparate3PASS0SKIP; developer33/full-localcoverage/defaultflag/5CI/38floors/bars unchanged. No finalCI/Phase or waiver.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-CI3D-SEPARATE-IMPORT-CAPACITY-CLOSURE-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p3_whole_phase_review",
+      "reviewed_baseline": "9fcb51b2e67379dce1e8011524f767a085d28a3282474705bb730ba99a5ccdbd",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/p3-ci3d-separate-import-capacity-closure-r2-reviewer-proof.json SHA256 b486c9746b2f1e92b994006e04e39b993ee432a6e32ebb00eab080de1279ee04 SpecificCI measurementarrangement correction/retest verified, originalNFR3PASS0skip/defaultdeveloperflagabsence/unchangedbars; supportDEF004closedonly, freshUbuntu/full33/5CI stillrequired/reopenonfailure.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -8340,6 +8400,61 @@
       "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/ci185-final-failure-observation.json SHA256 a021dd1bfe4d9c8966cf4c219f309e18804b5682b6c2902ebfb318c5d0ec2fb1 provider GitHubActions run38222816127/exacthead185; https://github.com/crazysumsum/erp-app/actions/runs/38222816127/job/114722949310 actualconclusion SUCCESS; originaldeveloper33PASSdoesnot override CI failure.",
       "actor": "GitHub Actions observed via gh/CodeReview",
       "observed_at": "2026-10-12T09:15:32.440714+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Dependency audit",
+      "code_commit": "3d932bd416b63114f7403234a86bff90630f2c06",
+      "spec_baseline": "f0a8eca401f2c10e8d4473341466a3bb99c0013fe6fdb867913cc9095e15a2f6",
+      "source_fingerprint": "69b64e922a46c9ff83ae79cbdc607dcf4efa53dc7075744661f1b8a61e507328",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/ci3d-final-failure-observation.json SHA256 37e46bb3b8a0853bd575d99698fbfe727775f1c1fbaf87a19719d851c996246b https://github.com/crazysumsum/erp-app/actions/runs/38234364700/job/114761291188 actualconclusion SUCCESS",
+      "actor": "GitHub Actions observed via gh/CodeReview",
+      "observed_at": "2026-10-13T00:53:40.986646+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Lint",
+      "code_commit": "3d932bd416b63114f7403234a86bff90630f2c06",
+      "spec_baseline": "f0a8eca401f2c10e8d4473341466a3bb99c0013fe6fdb867913cc9095e15a2f6",
+      "source_fingerprint": "69b64e922a46c9ff83ae79cbdc607dcf4efa53dc7075744661f1b8a61e507328",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/ci3d-final-failure-observation.json SHA256 37e46bb3b8a0853bd575d99698fbfe727775f1c1fbaf87a19719d851c996246b https://github.com/crazysumsum/erp-app/actions/runs/38234364700/job/114761291094 actualconclusion SUCCESS",
+      "actor": "GitHub Actions observed via gh/CodeReview",
+      "observed_at": "2026-10-13T00:53:40.986646+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Browser tests (Playwright)",
+      "code_commit": "3d932bd416b63114f7403234a86bff90630f2c06",
+      "spec_baseline": "f0a8eca401f2c10e8d4473341466a3bb99c0013fe6fdb867913cc9095e15a2f6",
+      "source_fingerprint": "69b64e922a46c9ff83ae79cbdc607dcf4efa53dc7075744661f1b8a61e507328",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/ci3d-final-failure-observation.json SHA256 37e46bb3b8a0853bd575d99698fbfe727775f1c1fbaf87a19719d851c996246b https://github.com/crazysumsum/erp-app/actions/runs/38234364700/job/114761290923 actualconclusion SUCCESS",
+      "actor": "GitHub Actions observed via gh/CodeReview",
+      "observed_at": "2026-10-13T00:53:40.986646+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Test (server + client, MySQL integration)",
+      "code_commit": "3d932bd416b63114f7403234a86bff90630f2c06",
+      "spec_baseline": "f0a8eca401f2c10e8d4473341466a3bb99c0013fe6fdb867913cc9095e15a2f6",
+      "source_fingerprint": "69b64e922a46c9ff83ae79cbdc607dcf4efa53dc7075744661f1b8a61e507328",
+      "status": "FAIL",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/ci3d-final-failure-observation.json SHA256 37e46bb3b8a0853bd575d99698fbfe727775f1c1fbaf87a19719d851c996246b https://github.com/crazysumsum/erp-app/actions/runs/38234364700/job/114761291123 actualconclusion FAILURE",
+      "actor": "GitHub Actions observed via gh/CodeReview",
+      "observed_at": "2026-10-13T00:53:40.986646+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Build frontend",
+      "code_commit": "3d932bd416b63114f7403234a86bff90630f2c06",
+      "spec_baseline": "f0a8eca401f2c10e8d4473341466a3bb99c0013fe6fdb867913cc9095e15a2f6",
+      "source_fingerprint": "69b64e922a46c9ff83ae79cbdc607dcf4efa53dc7075744661f1b8a61e507328",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/ci3d-final-failure-observation.json SHA256 37e46bb3b8a0853bd575d99698fbfe727775f1c1fbaf87a19719d851c996246b https://github.com/crazysumsum/erp-app/actions/runs/38234364700/job/114761291200 actualconclusion SUCCESS",
+      "actor": "GitHub Actions observed via gh/CodeReview",
+      "observed_at": "2026-10-13T00:53:40.986646+00:00"
     }
   ],
   "pending_decisions": [
@@ -9759,8 +9874,24 @@
       "kind": "PUSH",
       "target": "origin refs/heads/codex/sales-order-phase-3-intake / PR193 draft",
       "idempotency_key": "sales-p3-726a0baa1fa1-candidate2-push",
+      "status": "CONFIRMED",
+      "source_ref": "Current HEAD185 before fixing commit; exact reviewed source69b localfocused/lint/P3unit/native PASS. Fastforward only expectedremote185; draft diagnostics/CI, full33/35/finalreview/retirement/standardGate stillpending, no mergeapprovalclaim.; actual FFpush185->3d confirmed by terminal and live PR193head3d/Opendraft/provider run38234364700, /Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/candidate2-push-ci-trigger-observation.json SHA256 c74512757e7ed3d6ad360d9c1af76f4c3d82de7e2c91cc68afb4eb7b99577482."
+    },
+    {
+      "id": "ACT-P3-RECOVERY-CANDIDATE2-CI",
+      "kind": "CI",
+      "target": "https://github.com/crazysumsum/erp-app/actions/runs/38234364700",
+      "idempotency_key": "sales-p3-726a0baa1fa1-candidate2-ci",
+      "status": "FAILED",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/ci3d-final-failure-observation.json SHA256 37e46bb3b8a0853bd575d99698fbfe727775f1c1fbaf87a19719d851c996246b Exact3d 4success1failure; originalTC035 1000/10000orders both worker timeouts1 undercoverage, native34135/34881ms; warningfixture no longer failing. Globalbars93.80/85.92/92.56PASS, floor38notrun after&&failure, separateTC032stepnotverified, no5CIpass."
+    },
+    {
+      "id": "ACT-P3-RECOVERY-CANDIDATE3-PUSH",
+      "kind": "PUSH",
+      "target": "origin refs/heads/codex/sales-order-phase-3-intake / PR193 draft",
+      "idempotency_key": "sales-p3-726a0baa1fa1-candidate3-push",
       "status": "PLANNED",
-      "source_ref": "Current HEAD185 before fixing commit; exact reviewed source69b localfocused/lint/P3unit/native PASS. Fastforward only expectedremote185; draft diagnostics/CI, full33/35/finalreview/retirement/standardGate stillpending, no mergeapprovalclaim."
+      "source_ref": "Exact independent-reviewed native6b154/workflow2b311; source9f7 localmandatoryNFR3PASS0skip, standardlint/unit123/native81PASS. Expectedremote3d, fastforwardonly; allremaining30/original33/currentCI/Phase/DEC027retirement/mergeGate stillpending."
     }
   ],
   "evidence_files": [
@@ -10241,7 +10372,10 @@
     "evidence/20261012T080142-465ee18e8469/run.json",
     "evidence/20261012T100359-5b3237393bfd/run.json",
     "evidence/20261012T100405-d6ec6a6afe27/run.json",
-    "evidence/20261012T100411-5588b08ea62b/run.json"
+    "evidence/20261012T100411-5588b08ea62b/run.json",
+    "evidence/20261013T011813-2fe93667f800/run.json",
+    "evidence/20261013T011819-424e1b6557f9/run.json",
+    "evidence/20261013T011826-c5de7d6d7e6b/run.json"
   ],
   "defects": [
     {
@@ -10301,7 +10435,9 @@
       "closure_evidence": [
         "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/p3-ci185-def004-closure-r5-reviewer-proof.json SHA256 70b38957756c7a42309f1a07da92c5258428a9e063eb25dffdce06698cf3f4b8",
         "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/ci185-fixed-r3-bulk-guards/result.json SHA256 23059ec44023c7845ca6fe7c514a03c5a265d077db94c988ece2e5810635c61e",
-        "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/ci185-fixed-r3-deadline/result.json SHA256 f54ffeede1dcaeb11278d729f0ee8e63ad5d3f1c830233fa7be1e8fc2c46c3d7"
+        "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/ci185-fixed-r3-deadline/result.json SHA256 f54ffeede1dcaeb11278d729f0ee8e63ad5d3f1c830233fa7be1e8fc2c46c3d7",
+        "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/p3-ci3d-separate-import-capacity-closure-r2-reviewer-proof.json SHA256 b486c9746b2f1e92b994006e04e39b993ee432a6e32ebb00eab080de1279ee04",
+        "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/ci3d-local-mandatory-import-capacity-step/result.json SHA256 3576486ff5ab6714b816c053b17917d48b8369e75437bafe3b65132680a8b160"
       ],
       "risk_approval_id": null
     },
@@ -10322,5 +10458,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Commit exact reviewed worker/native fixes, module state and report90 only; FFpush existingdraftPR193 correctedcandidate afterobservedremote185. Complete remaining30originalsuites on unchanged69b alongside current5CI; existing3officialPASS supply33 withoutskippinganycontract. FinalPhase/DEC027retirement/secondCI/standardGate required beforedirectmerge."
+  "next_safe_action": "Commit only approvedCI/native registration/state/report91, FFpush existingdraftPR193 afterremote3d/mainE754 actualcheck; confirmexternalpush/CItriggerbefore freezingHEAD/source/spec/state for unchanged runner remaining30 originalcontracts (existing3fresh9f7officialPASS formfull33). Actual5CI/all35/finalPhase/276retirement/secondCI requiredbeforemerge."
 }
