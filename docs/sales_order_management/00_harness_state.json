@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 644,
+  "revision": 656,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "4ad7634d09eec860edfb61b96eabab931b712318fd377a5c2e93e5cf7b9a4711",
     "plan": "93bdcdbd8704fb640fd6b27cdb158fe24666bd1c2cb18baf953c20375766e41b",
-    "code_commit": "2e18fbbe41162fecd586c3025187fdf7e7b4d02c",
-    "source_fingerprint": "6acb27c73e121954b895f6cfa6387801464be24b1e0083f62e1d4f4113e449ee",
+    "code_commit": "077941e68ffef737de5f21dc4dc54a0ed69703ba",
+    "source_fingerprint": "557d97cfe4b00d6d89a89773aa97ec4f43d5c614709e3d0c9f254e787dc2aae9",
     "worktree": "/Users/sam/.codex/worktrees/sales-p3-recovery/erp-app",
     "default_commit": "7c927e26b386d87c595bf3c6111467d0ccc8b20d",
     "mode_entry_commit": "6936736ba1fb98f4fcb8365377f59f0a0f7a4897"
@@ -24,7 +24,7 @@
       "workspace": "/Users/sam/.codex/worktrees/sales-p3-recovery/erp-app",
       "temp-directory": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private",
       "mysql-instance": "Actual owned mainPID14927 UID501 persistentdatadir /Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/mysql-main/data /socket /private/tmp/sales-p3-recovery-726a0baa1fa1/mysql.sock /TCP56780 MySQL26.7 logbin1/trust0, appfixtureSUPER=N originaladmintriggerSUPER; core/coverageadminmigrations PASS, reversibletemporaryrestoregrants actualsnapshotprivate0600. SOURCE52 currentfreshcoverage erp_sales_p3_726a0baa1fa152_t038 adminfullmigrationPASS/oldcoverage retained; exact3temporarynewcoverage grants withactualbaselineSHA andguardedrestore-newcoverage-grants, no additionalglobalprivilege.",
-      "inventory-native-runtimes": "ActualsamefourUID501/fullargv/PIDs14927/15000/15012/15019, sameprivatepersistentdata/sockets; current10fresh _r85 namespaces underexistingisolatedSQLauthority, task025fullcurrentmigrationPASS. Allprior_ci185b/_port1/_ret52/etc schemas+bindings+raw retained. Receipt26fa8212 exact5incremental core/coverage newnames, alloldledgernames/timestamps/grants preserved; no newglobalprivilege/drop/reset. CURRENT13a/de041 fresh10_m6b7 bindings on sameexactfourPIDs/UID/argv/sockets, aux025currentfullmigrationPASS; all prior_r85 schemas/bindings/native007reusedFAIL retained, no DROP/reset/grantchange. Receipt e90bdac0017d8143f6b4517ef0343d148ba6bb7ea234a7911bccc71253d9749f."
+      "inventory-native-runtimes": "ActualsamefourUID501/fullargv/PIDs14927/15000/15012/15019, sameprivatepersistentdata/sockets; current10fresh _r85 namespaces underexistingisolatedSQLauthority, task025fullcurrentmigrationPASS. Allprior_ci185b/_port1/_ret52/etc schemas+bindings+raw retained. Receipt26fa8212 exact5incremental core/coverage newnames, alloldledgernames/timestamps/grants preserved; no newglobalprivilege/drop/reset. CURRENT13a/de041 fresh10_m6b7 bindings on sameexactfourPIDs/UID/argv/sockets, aux025currentfullmigrationPASS; all prior_r85 schemas/bindings/native007reusedFAIL retained, no DROP/reset/grantchange. Receipt e90bdac0017d8143f6b4517ef0343d148ba6bb7ea234a7911bccc71253d9749f. CURRENT077/source6acb fresh_d00810privatebindings on same4ownedruntimeidentities; new025currentfullmigrationPASS receipt62a32ef2, allolder_m6b7/etcdata+bindings retained."
     },
     "lease_ref": null
   },
@@ -6852,6 +6852,66 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-MAIN7C927-MECHANICAL-POSTAPPLY-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "4ad7634d09eec860edfb61b96eabab931b712318fd377a5c2e93e5cf7b9a4711",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/p3-main7c927-mechanical-postapply-r1-reviewer-proof.json SHA256 495170f6dee45f1814e30e718fc8b1d3d8af1ed0c01942cd0436234eba78054a Narrow scope only, no Phase/index retirement/merge approval.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-MAIN7C927-INTEGRATION-COMPATIBILITY-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p3_whole_phase_review",
+      "reviewed_baseline": "4ad7634d09eec860edfb61b96eabab931b712318fd377a5c2e93e5cf7b9a4711",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/p3-main7c927-integration-compatibility-r1-reviewer-proof.json SHA256 2bb9426a404154e5991270559d60e507462bc5e2e401f7e13a93190ad3843206 Narrow scope only, no Phase/index retirement/merge approval.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-D008-BOUND-RUNTIME-ROOT-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root/sales_p3_retention_review",
+      "reviewer": "Codex /root",
+      "reviewed_baseline": "4ad7634d09eec860edfb61b96eabab931b712318fd377a5c2e93e5cf7b9a4711",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/p3-d008-bound-runtime-root-independent-review-r1.json SHA256 5f8a2d98198a7e8bcdd67ade3c8b9003f84b04b04d9569f1a926ea9d143a3a11 Independent exact separatelyauthored helper review, freshownedfixture only.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-ITEM-LAST-ACTIVE-DEADLOCK-TRIAGE-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p3_whole_phase_review",
+      "reviewed_baseline": "4ad7634d09eec860edfb61b96eabab931b712318fd377a5c2e93e5cf7b9a4711",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/p3-item-last-active-deadlock-triage-r1-reviewer-proof.json SHA256 b8395b90408849435b01b1f0a5cd12a759131862d9f169123441518f08da4efb Actual34/33PASS/1FAIL/0skip XML8240b328 and exact ownedInnoDBd13ccf TX2rollback/HTTP500. Existing unchangedcorrelatedUPDATEdeadlock; no purchase causality. Directiononlyone completepublicdeactivateSku retry afterknownrolledbackER_LOCK_DEADLOCK, no core/SQL/lockorder/APIcode changes.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-DEF009-BOUNDED-RETRY-EXACT-RETEST-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p3_whole_phase_review",
+      "reviewed_baseline": "4ad7634d09eec860edfb61b96eabab931b712318fd377a5c2e93e5cf7b9a4711",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/p3-def009-bounded-retry-exact-retest-r2-reviewer-proof.json SHA256 eff144a688f95a63a5361bc2a1a80eed8b7d7266e2cd89991f252a7d34e48bc5 Scopedclosure only; all33/currentCI/finalwholePhase pending.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -10767,7 +10827,7 @@
       "target": "Once-onlyCAS retirement ofexact276knownmissinghistorical refs fromactiveindex aftergenuine33/5CI/finalreview andstandardGatepreview; preserveoriginal288/lossmanifest/allnewattempts",
       "idempotency_key": "sales-p3-726a0baa1fa1-dec027-exact276-retirement",
       "status": "PLANNED",
-      "source_ref": "ExplicitSamDEC027boundedrecovery authority currentAPR-P3-EVIDENCE-LOSS-RECOVERY-DEC027-MAINc143-MECHANICAL; originalpacket81SHA2355e901432ef9569978c85aa4fc3c48ef51e10716d0bbe5e0757a1ae33cb9f0; reviewed onceonlyretirer d8971ecd21f9eb2fccb32b80e4f908a0e89661f2c7425777dd3ade5d3fcc93ef. Exact276 orderedmanifest32aaf87432e8a7475d4361de923129e64b8ae49a2089c2ec8a59c2d806722ecb, immutable288d63005ed retained. No rawoldPASS reconstruction; genuine finalqualification must exist/registered andTASK049DONE before anyapply; ordinaryMERGE_READY unchanged."
+      "source_ref": "ExplicitSamDEC027boundedrecovery authority currentAPR-P3-EVIDENCE-LOSS-RECOVERY-DEC027-MAINc143-MECHANICAL; originalpacket81SHA2355e901432ef9569978c85aa4fc3c48ef51e10716d0bbe5e0757a1ae33cb9f0; reviewed onceonlyretirer d8971ecd21f9eb2fccb32b80e4f908a0e89661f2c7425777dd3ade5d3fcc93ef. Exact276 orderedmanifest32aaf87432e8a7475d4361de923129e64b8ae49a2089c2ec8a59c2d806722ecb, immutable288d63005ed retained. No rawoldPASS reconstruction; genuine finalqualification must exist/registered andTASK049DONE before anyapply; ordinaryMERGE_READY unchanged. Current mechanical approval APR-P3-EVIDENCE-LOSS-RECOVERY-DEC027-MAIN7c927-MECHANICAL and exactprivateoneIDretirerab00c2fe710fbd7ec6570535cd0f603006146d9417928d361e8e00f3e73f3594 separatelypostreview495170f6/unchanged8pureguardsPASS; oldsource retained. Noapply untilfresh qualification."
     },
     {
       "id": "ACT-P3-INTEGRATE-MAIN7C927",
@@ -10776,6 +10836,38 @@
       "idempotency_key": "sales-p3-726a0baa1fa1-main7c927",
       "status": "CONFIRMED",
       "source_ref": "User requires fresh target integration before gated main merge; observed gitfetch originmain13Oct08:17Z, PR209Supplierdocs/PR210 Itempurchase owner extension, no Sales named service/source/API changes. Original state/missing276/private/raw preserved; surgical ownerpin/history-preserving DERIVED approvals under actual DEC025packet68line27 authority require genuine review; new all33/currentCI/finalreview before merge. Actual clean ort merge2e18fbbe41162fecd586c3025187fdf7e7b4d02c parents3bda/7c927; oldnamedSalesbytes preserved as genuine reviewer reverseproof. /Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/p3-main7c927-mechanical-authority-planning-r2-reviewer-proof.json SHA256 1f55fd7e5df73823f78a9bcffd1091fc66de7794846cba7519d52dce674c82a3"
+    },
+    {
+      "id": "ACT-P3-D008-INVENTORY-PREP",
+      "kind": "OWNED_FIXTURE_SCHEMA",
+      "target": "Sameowned4instances fresh10_d008synthetic schemas and fullcurrent025migration beforeprivatepointer publish",
+      "idempotency_key": "sales-p3-726a0baa1fa1-d008-inventory",
+      "status": "CONFIRMED",
+      "source_ref": "Existingapprovedsyntheticruntime/SQL/developmentauthority; Exact helper430dcb065fedb39d5ffee7e08becbd7aa684268d46dc9956b3b51f0549cc5c0f packetec5cd7378d88833e4432392a9d6e27c0058ed90753aa96b7d5a6778e7dec5132; /Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/p3-d008-bound-runtime-root-independent-review-r1.json SHA256 5f8a2d98198a7e8bcdd67ade3c8b9003f84b04b04d9569f1a926ea9d143a3a11 Actual /Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/inventory-d008-preparation.json SHA256 62a32ef22f18a3ff370f91bcfca36391a34848207d24f9eeb3e264d9d707e7f8 statusCONFIRMED; allolddata/receipts kept, exactfullskrrestore requiredafterrunneridle."
+    },
+    {
+      "id": "ACT-P3-D008-SKR-FIXTURE-PRIVILEGES",
+      "kind": "OTHER",
+      "target": "Exact literal skr_ CREATE/DROP forunchangedtwoSupplier scratchfixtures, ownedexistingadminlocalhost only",
+      "idempotency_key": "sales-p3-726a0baa1fa1-d008-skr",
+      "status": "CONFIRMED",
+      "source_ref": "Existingapprovedsyntheticruntime/SQL/developmentauthority; Exact helper307d3a588f978d59f8d54ea38c60441fda09bfa0909ca74d9f589f8ae6efbb51 plan38be6264c5d2c17180d43379cfccb60706a39d5e14aa5b1bfc0f56f510e9647b; capturedprivatebaseline4be8039f retained; fullcaptured baseline restoreafter33idle; oldRESTOREDreceipt/data kept. /Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/p3-d008-bound-runtime-root-independent-review-r1.json SHA256 5f8a2d98198a7e8bcdd67ade3c8b9003f84b04b04d9569f1a926ea9d143a3a11 Actual /Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/skr-d008-temporary-grants-receipt.json SHA256 dfe7a22cd0980d031adeeeb70ad9453d9b0445ecac77d77ce286c1e7f334215b statusGRANTED; allolddata/receipts kept, exactfullskrrestore requiredafterrunneridle."
+    },
+    {
+      "id": "ACT-P3-RECOVERY-CANDIDATE6-PUSH",
+      "kind": "PUSH",
+      "target": "NormalFF existingPR193 branch toexact077941e68ffef737de5f21dc4dc54a0ed69703ba",
+      "idempotency_key": "sales-p3-726a0baa1fa1-candidate6-push",
+      "status": "CONFIRMED",
+      "source_ref": "Existingapprovedsyntheticruntime/SQL/developmentauthority; Existingusercommit/PR authority; noforce; raw/privateexcluded; originalfiveCI/finalreview/all33/276CAS/Gatebeforemerge ActualFF13a→077gitpush andauthenticated /Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/candidate6-push-ci-trigger-observation.json SHA256 747efe7dcc075a3929ae7186ecbdc80b167b2c7f7a66277e5ce883fbf90988c4"
+    },
+    {
+      "id": "ACT-P3-RECOVERY-CANDIDATE6-CI",
+      "kind": "CI",
+      "target": "Originalfivechecks exact candidate077941e68ffef737de5f21dc4dc54a0ed69703ba",
+      "idempotency_key": "sales-p3-726a0baa1fa1-candidate6-ci",
+      "status": "CONFIRMED",
+      "source_ref": "Existingapprovedsyntheticruntime/SQL/developmentauthority; Old13a CIretained historical only; observeactual currenthead/fiveoutcomes, no priorPASS reuse Actualrun38370083248 exact077 triggered; /Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/candidate6-push-ci-trigger-observation.json SHA256 747efe7dcc075a3929ae7186ecbdc80b167b2c7f7a66277e5ce883fbf90988c4; 3success/2running observed, notfinalPASS. Trigger effect is already observedrun38370083248/head077; reconcile ledgerstatusCONFIRMED forknowntrigger only, notfinalCIcheckPASS. Firstlintpreflight didnotexecute because STARTEDisunknown byHarness, preserved /Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/candidate6-first-lint-preflight-blocked.json SHA256 754922f77ac95cbbc6519e0b330597faed241bca119c3651ebeb687fcea4ce8d. No remotejob replay/rerun orqualitybar change."
     }
   ],
   "evidence_files": [
@@ -11329,7 +11421,14 @@
     "evidence/20261013T072004-91a6d91f03bd/run.json",
     "evidence/20261013T072102-b03a82479a6d/run.json",
     "evidence/20261013T072105-67962d7d89a8/run.json",
-    "evidence/20261013T072137-6ea18c264834/run.json"
+    "evidence/20261013T072137-6ea18c264834/run.json",
+    "evidence/20261013T083638-3b5ae8693b8e/run.json",
+    "evidence/20261013T083645-20fd831f343c/run.json",
+    "evidence/20261013T083647-ddb53ae602d5/run.json",
+    "evidence/20261013T083651-307e90d8d85d/run.json",
+    "evidence/20261013T083703-37d75b543501/run.json",
+    "evidence/20261013T083706-09cef39a2b5a/run.json",
+    "evidence/20261013T083720-d7e16b8468e1/run.json"
   ],
   "defects": [
     {
@@ -11457,7 +11556,19 @@
         "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/p3-def008-exact-patch-and-retest-r3-reviewer-proof.json SHA256 5f4ec027627594814beaf309129de71edbbe4f1da49416c2e5adb1f4fe95282b Genuine scoped closure only: original quoted parser/native RED, exact one-line rawidentifier fix, parser15matrix/native6invalid+valid+nextjob GREEN0fail0skip, schedulerstop-before-facts. Whole new33/currentCI/finalPhase stillrequired."
       ],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-009",
+      "severity": "HIGH",
+      "status": "CLOSED",
+      "source_ids": [
+        "TASK-049"
+      ],
+      "closure_evidence": [
+        "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/p3-def009-bounded-retry-exact-retest-r2-reviewer-proof.json SHA256 eff144a688f95a63a5361bc2a1a80eed8b7d7266e2cd89991f252a7d34e48bc5 ExactoriginalrealHTTPpair200+409/oneactive anddeterministicactualSQLrollback syntheticfaults RED5/2pass3fail→GREEN6/6pass0skip. Second/nonlock/indeterminate originalerroridentity preserved; no ordinarynetworkCOMMITloss/absolute deadlockimmunity claim."
+      ],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Commit approved DEF008scheduler-safe regression and mechanicalItempin/docs/state candidate without anyraw/private; bind exactnewHEAD/SOURCE/D/P into separatelyauthored d008runtime helpers and rootindependentreview, registerPLANNEDactions, normalFFpush/observefiveCI. Fresh33 including35livebrowser and alloriginalbars, exactskrrestore, genuinefinalwholePhase, approved276retirement +ordinaryGate before mainmerge."
+  "next_safe_action": "Commit exactapproved publicItemdeadlock one-retry fix+native regression+trackedtruthfulreport/state excludingraw/private. Reconcile newcandidate/source557 sameD4ad/P93bd and actual unusedowned_d008/currentboundedskr continuity withgenuine review; normalFFpush/observeoriginalfiveCI then newall33. Existing0776PASS+ItemFAIL preserved, no evidence relabel orhelper replay. FullcurrentGate/finalreview/276CAS beforemerge."
 }
