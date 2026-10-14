@@ -278,6 +278,75 @@
       ]
     },
     {
+      "id": "item-reference-technical",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/item-reference-technical.xml",
+        "test/integration/itemReferenceGuards.integration.test.js"
+      ],
+      "cwd": "server",
+      "timeout_seconds": 600,
+      "result_adapter": "JUNIT",
+      "result_path": "item-reference-technical.xml",
+      "min_tests": 34,
+      "max_skipped": 0,
+      "stages": [
+        "TECHNICAL",
+        "REGRESSION"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        },
+        {
+          "argv": [
+            "mysql",
+            "--version"
+          ],
+          "version_pattern": "(?i)mysql"
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_HOST",
+        "DB_PORT",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_NAME",
+        "DB_INTEGRATION_TESTS",
+        "DB_SOCKET_PATH",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
+      ]
+    },
+    {
       "id": "item-performance",
       "kind": "PERFORMANCE",
       "argv": [
