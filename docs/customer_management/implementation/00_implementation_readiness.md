@@ -558,3 +558,17 @@ This is developer evidence only, not Technical Acceptance, UAT, CI or a merge cl
 - Reinspection of that integrated baseline still found no
   `server/src/modules/sales` implementation or real Sales consumer test. TASK-029
   therefore remains `BLOCKED` without expanding Customer ownership.
+
+### TASK-029 dependency adoption from current main
+
+- Current `main` now contains the real Sales provider/consumer integration from
+  PR #174 and the merged Sales Phase 1/2 implementations. Their exact PR heads
+  passed all five GitHub CI jobs, including the MySQL integration job.
+- The Customer provider contract is advanced additively to
+  `customer-purpose-provider-contracts/aligned-design-2.1`. `TC-070` exercises
+  the real Sales lookup, order and confirmation services for Active-only entry,
+  absence of an order-time shipping-address input, current default Payment Term,
+  submit-time Customer status/name and credit-policy revalidation.
+- Fulfillment, Invoicing/AR and Returns/Refund have design documents but no real
+  merged consumer modules in `server/src/modules`; TASK-030 and TASK-031 remain
+  blocked and no placeholder consumer is counted as passing evidence.
