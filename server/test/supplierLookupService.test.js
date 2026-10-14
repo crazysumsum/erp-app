@@ -216,7 +216,8 @@ test("TASK-040 (HD-095 B): without a search, total counts Active Suppliers; rank
   const [count, headCount, head, rest] = database.calls;
   assert.match(count.sql, /^SELECT COUNT\(\*\) AS total FROM suppliers s WHERE s\.status = 'active'$/u);
   assert.deepEqual(count.params, []);
-  assert.match(headCount.sql, /JOIN \(SELECT y\.supplier_id AS id FROM supplier_sku_refs y WHERE y\.sku_id = \? AND \(y\.relationship_status = 'preferred'/u);
+  assert.match(headCount.sql, /FROM \(SELECT y\.supplier_id AS id FROM supplier_sku_refs y WHERE y\.sku_id = \? AND \(y\.relationship_status = 'preferred'/u);
+  assert.match(headCount.sql, /\) h STRAIGHT_JOIN suppliers s ON s\.id = h\.id/u, "the head drives the join (TASK-050)");
   assert.deepEqual(headCount.params, [5, 5]);
   assert.deepEqual(head.params, [5, 5, 20, 0]);
   assert.match(rest.sql, /AND NOT COALESCE\(\(r\.relationship_status = 'preferred' OR \(r\.relationship_status <> 'stopped' AND r\.last_supplied_at IS NOT NULL\)\), FALSE\)/u);
@@ -282,4 +283,17 @@ test("TASK-040 (REV-087 L-3): a Supplier seen in both reads is returned once", a
   const database = poolDatabase([[{ total: 3 }], [{ headTotal: 1 }], [forSkuRow()], [forSkuRow(), forSkuRow({ id: 8 })]]);
   const result = await serviceFor(database, { items: purchasableItems() }).listForSku(5);
   assert.deepEqual(result.items.map((item) => item.supplierId), [7, 8]);
+});
+
+test("TASK-050 (design §12.4): each for-SKU lookup logs how many results each ranking reason placed, as numbers only", async () => {
+  const relation = (id, status, lastSuppliedAt = null, exact = 1) => forSkuRow({ id, supplier_name: `Secret ${id}`, relation_id: id,
+    relationship_status: status, supplier_item_code: "AB-1", last_supplied_at: lastSuppliedAt, exact_rank: exact });
+  const logged = [];
+  const logger = { info: (event, message, context) => logged.push({ event, context }), error() {} };
+  await serviceFor(poolDatabase([[], [{ total: 9 }], [{ headTotal: 4 }], [relation(1, "stopped", 5, 0), relation(2, "preferred"),
+    relation(3, "alternative", 4), relation(4, "alternative", 3)], [forSkuRow({ id: 5 })]]), { logger, items: purchasableItems() })
+    .listForSku(5, { q: "x", pageSize: 5 });
+  assert.deepEqual(logged, [{ event: "supplier.for_sku.lookup", context: { skuId: 5, page: 1, pageSize: 5, returned: 5, total: 9, searched: true,
+    ranked: { exact_match: 1, preferred: 1, recently_supplied: 2, none: 1 } } }]);
+  assert.equal(JSON.stringify(logged).includes("Secret"), false, "no Supplier names in the log");
 });

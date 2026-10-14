@@ -10,6 +10,11 @@
  * 形狀（設計 §11.5）：每個 Supplier 5 個地址、10 個聯絡人、2 個識別號、2 個 Bank 戶口；`--heavy-percent` 嘅
  * Supplier 用 NFR-003 嘅上限（20 地址、50 聯絡人、10 Bank）。名稱七成英文、三成中文，用常見字同後綴組合，
  * 令 name gram 嘅分佈似真實資料（「Trading」「有限公司」呢類熱門 gram 好多 Supplier 共用）。
+ *
+ * Supplier–SKU 關係（設計 §11.5「其中 20% 有 SKU relations」；NFR-005；TASK-050 for-SKU 部分）：
+ * - `PERF-SKU-HOT`：每 5 個 Supplier 有 1 條關係（最差情況），`PERF-SKU-COLD`：冇關係；
+ * - 1,000 隻 `PERF-SKU-0001…`：另外每 5 個 Supplier 揀 1 個關聯 5 隻，每隻平均約 100 條；
+ * - 關係狀態 preferred 10%、stopped 5%、其餘 alternative，約 2/3 有最近供貨時間；熱門 SKU 嘅 Supplier Item Code 係 `SIC-<id>`。
  */
 import { randomInt } from "node:crypto";
 import fs from "node:fs";
@@ -164,7 +169,33 @@ try {
     totals.nameGrams += batch.grams.length;
     if (first % 10_000 === 1) process.stderr.write(`${totals.suppliers} suppliers, ${Math.round((Date.now() - started) / 1000)} s\n`);
   }
-  await db.query("ANALYZE TABLE suppliers, supplier_name_grams, supplier_addresses, supplier_contacts, supplier_identifiers, supplier_bank_accounts");
+  // Supplier–SKU 關係：Item 資料都係直接用 SQL 寫（呢個資料庫用完即棄），一個 Item、一個 EA 單位。
+  const [item] = await db.query("INSERT INTO items (name, status, created_at, updated_at) VALUES ('PERF-T50 Item', 'active', ?, ?)", [now, now]);
+  const [uom] = await db.query("INSERT INTO item_uoms (code, name, status, created_at, updated_at) VALUES ('PERF-EA', 'Each', 'active', ?, ?)", [now, now]);
+  const skuCodes = ["PERF-SKU-HOT", "PERF-SKU-COLD", ...Array.from({ length: 1_000 }, (_, index) => `PERF-SKU-${String(index + 1).padStart(4, "0")}`)];
+  await insert(db, "item_skus", ["item_id", "sku_code", "sku_name", "status", "purchasable", "created_at", "updated_at"],
+    skuCodes.map((code) => [item.insertId, code, code, "active", 1, now, now]));
+  const [skus] = await db.query("SELECT id, sku_code FROM item_skus WHERE item_id = ? ORDER BY id", [item.insertId]);
+  await insert(db, "item_sku_uoms", ["sku_id", "uom_id", "to_base_factor", "is_base", "is_default_purchase", "created_at", "updated_at"],
+    skus.map((sku) => [sku.id, uom.insertId, 1, 1, 1, now, now]));
+  const skuId = Object.fromEntries(skus.map((sku) => [sku.sku_code, Number(sku.id)]));
+  const spread = skus.filter((sku) => /^PERF-SKU-\d{4}$/u.test(sku.sku_code)).map((sku) => Number(sku.id));
+  const relationStatus = () => { const roll = randomInt(100); return roll < 10 ? "preferred" : roll < 15 ? "stopped" : "alternative"; };
+  const lastSupplied = () => (randomInt(3) === 0 ? null : now - randomInt(365 * 86_400_000));
+  const relations = [];
+  for (let id = 1; id <= SUPPLIERS; id += 1) {
+    if (id % 5 === 0) relations.push([id, skuId["PERF-SKU-HOT"], `SIC-${id}`, `sic-${id}`, relationStatus(), lastSupplied(), now, now]);
+    if (id % 5 === 1) {
+      const chosen = new Set();
+      while (chosen.size < 5) chosen.add(pick(spread));
+      for (const sku of chosen) relations.push([id, sku, "", null, relationStatus(), lastSupplied(), now, now]);
+    }
+  }
+  await insert(db, "supplier_sku_refs", ["supplier_id", "sku_id", "supplier_item_code", "supplier_item_code_key", "relationship_status",
+    "last_supplied_at", "created_at", "updated_at"], relations);
+  totals.skuRelations = relations.length;
+  await db.query(`ANALYZE TABLE suppliers, supplier_name_grams, supplier_addresses, supplier_contacts, supplier_identifiers, supplier_bank_accounts,
+    item_skus, supplier_sku_refs`);
   console.log(JSON.stringify({ database: process.env.DB_NAME, ...totals, seconds: Math.round((Date.now() - started) / 1000) }, null, 2));
 } finally {
   await application.shutdown("seed");

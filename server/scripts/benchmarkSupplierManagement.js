@@ -2,7 +2,7 @@
  * Supplier 管理效能驗收（TASK-050；設計 §11.5；NFR-001、NFR-002、NFR-003；HD-082 A）。
  *
  *   node scripts/benchmarkSupplierManagement.js --database=<DB_NAME> --output <report.json>
- *     [--users=50] [--seconds=120] [--warmup-seconds=20] [--think-ms=1000]
+ *     [--users=50] [--seconds=120] [--warmup-seconds=20] [--think-ms=1000] [--only=<operation prefix>]
  *
  * 先用 `seedSupplierPerformanceFixtures.js` 準備資料。**只可以對用完即棄嘅資料庫跑**：佢會建 Supplier、改 seed
  * 嘅 Supplier（版本會加），完咗刪走自己建嘅 Supplier、user 同 role。寫入時嘅 idempotency 紀錄（`fr_idempotency_keys`）
@@ -11,7 +11,9 @@
  * - 同一個 process 起真 app（`createApplication`，HTTP、認證、權限、idempotency 全部照行），每 IP 嘅 request
  *   limiter 調高，因為所有虛擬用戶都由 127.0.0.1 發出。背景工作全部關閉，唔影響量度。
  * - `--users` 個虛擬用戶各自循環：揀一個操作（見 MIX）、等回應、再等 0..think-ms 隨機時間。即係「同時在線」，唔係
- *   每秒固定請求數。暖身期嘅結果唔計。
+ *   每秒固定請求數。暖身期嘅結果唔計。`--only=forSku` 只跑名以 forSku 開頭嘅操作（SKU-008 嘅最差情況）。
+ * - for-SKU 操作要 seed 嘅 `PERF-SKU-*`（seedSupplierPerformanceFixtures.js）；app 會好似 src/index.js 咁註冊
+ *   `supplierCoreProvider`，連線池用設定檔嘅預設（正式環境一樣）。
  * - 每個操作記 p50／p95／p99、錯誤率；另外記 process CPU、RSS、DB 連線數。負載產生器同 app 喺同一個 process，
  *   所以 CPU 係兩者加埋。
  * - 量度開始同結束各讀一次 performance_schema 嘅 statement digest（要 DB_ADMIN_USER）再相減，攞量度期間最多時間
@@ -38,6 +40,7 @@ const SECONDS = Number(arg("seconds", 120));
 const WARMUP_SECONDS = Number(arg("warmup-seconds", 20));
 const THINK_MS = Number(arg("think-ms", 1000));
 const OUTPUT = arg("output", null);
+const ONLY = arg("only", "");
 if (![USERS, SECONDS, WARMUP_SECONDS, THINK_MS].every(Number.isSafeInteger) || USERS < 1 || SECONDS < 1 || WARMUP_SECONDS < 0 ||
     THINK_MS < 0 || typeof OUTPUT !== "string") {
   throw new Error("usage: node scripts/benchmarkSupplierManagement.js --database=<DB_NAME> --output <report.json> [--users=50] [--seconds=120] [--warmup-seconds=20] [--think-ms=1000]");
@@ -50,11 +53,17 @@ if (arg("database", null) !== process.env.DB_NAME) {
 }
 fs.appendFileSync(OUTPUT, "");
 
-/** 操作同比重（加埋 100）。讀為主，寫入約一成，似日常採購／會計用法。 */
-const MIX = [
+/**
+ * 操作同比重。原本嘅 12 個加埋 100：讀為主，寫入約一成，似日常採購／會計用法。for-SKU（TASK-040）另加 10，
+ * 令原本操作之間嘅比例同之前嘅報告一樣；熱門 SKU 嘅名稱搜尋同深頁都包埋（REV-087 M-1）。
+ */
+const ALL_OPERATIONS = [
   ["list.default", 20], ["list.codeExact", 15], ["list.nameSearch", 12], ["list.statusFilter", 8], ["list.currencyFilter", 5],
-  ["list.sortByName", 5], ["detail", 15], ["detail.heavy", 3], ["bank.list", 5], ["duplicates.check", 4], ["create", 4], ["update", 4]
+  ["list.sortByName", 5], ["detail", 15], ["detail.heavy", 3], ["bank.list", 5], ["duplicates.check", 4], ["create", 4], ["update", 4],
+  ["forSku.typical", 3], ["forSku.hot", 2], ["forSku.codeExact", 2], ["forSku.nameSearch", 2], ["forSku.deepPage", 1]
 ];
+const MIX = ALL_OPERATIONS.filter(([name]) => name.startsWith(ONLY));
+if (MIX.length === 0) throw new Error(`--only=${ONLY} matches no operation`);
 const NAME_TERMS = ["Pacific", "Trading", "Golden Dragon", "Harbour", "Electronics", "貿易", "有限公司", "華興", "Kowloon", "Packaging"];
 const percentile = (sorted, fraction) => (sorted.length === 0 ? null : sorted[Math.min(sorted.length - 1, Math.ceil(sorted.length * fraction) - 1)]);
 const round = (value) => (value === null ? null : Math.round(value * 10) / 10);
@@ -79,6 +88,12 @@ try {
   const [heavyRows] = await admin.query(
     "SELECT supplier_id AS id FROM supplier_contacts GROUP BY supplier_id HAVING COUNT(*) >= 50 ORDER BY supplier_id LIMIT 200");
   if (ids.length === 0 || heavyRows.length === 0) throw new Error("the seeded P50- Suppliers or their heavy subset are missing");
+  const [skuRows] = await admin.query("SELECT id, sku_code FROM item_skus WHERE sku_code LIKE 'PERF-SKU-%' ORDER BY id");
+  const hotSku = Number(skuRows.find((row) => row.sku_code === "PERF-SKU-HOT")?.id);
+  const spreadSkus = skuRows.filter((row) => /^PERF-SKU-\d{4}$/u.test(row.sku_code)).map((row) => Number(row.id));
+  if (!hotSku || spreadSkus.length === 0) throw new Error("the seeded PERF-SKU-* fixtures for the for-SKU lookup are missing");
+  const [[{ relations }]] = await admin.query("SELECT COUNT(*) AS relations FROM supplier_sku_refs");
+  report.data.skuRelations = Number(relations);
 
   const nowMs = Date.now();
   const permissions = ["supplier.view", "supplier.mgmt", "supplier.bank.view"];
@@ -100,7 +115,11 @@ try {
       { ...(source.scheduler.jobs?.[name] ?? {}), enabled: name === "tokenRevocation.refresh" }])) },
     logging: { loggers: {
       request: { ...source.logging.loggers.request, directory: path.join(work, "requests") },
-      system: { ...source.logging.loggers.system, directory: path.join(work, "system") } } } } });
+      system: { ...source.logging.loggers.system, directory: path.join(work, "system") } } } },
+  // 同 src/index.js 一樣：for-SKU 經 supplierCoreProvider（依賴 businessMaster）。
+  serviceDiscoveryOptions: { additionalModuleUrls: [
+    new URL("../src/modules/businessMaster/BusinessMasterService.js", import.meta.url).href,
+    new URL("../src/modules/supplier/SupplierProviderServices.js", import.meta.url).href] } });
   const { url } = await application.start();
   const version = await application.services.require("tokenRevocation").currentVersion(String(created.userId));
   const token = await application.services.require("jwt").issue({ roles: [`perf50-${RUN}`], permissions },
@@ -138,6 +157,11 @@ try {
       return post("/api/v1/suppliers/create", { supplierCode: `P50W-${RUN}-${createdCount}`,
         supplierName: `Golden Pacific Trading ${RUN} ${createdCount} Limited`, defaultCurrencyCode: "HKD" });
     },
+    "forSku.typical": () => get(`/api/v1/supplier-lookups/for-sku/${spreadSkus[randomInt(spreadSkus.length)]}`),
+    "forSku.hot": () => get(`/api/v1/supplier-lookups/for-sku/${hotSku}`),
+    "forSku.codeExact": () => get(`/api/v1/supplier-lookups/for-sku/${hotSku}?q=${encodeURIComponent(ids[randomInt(ids.length)].supplier_code)}`),
+    "forSku.nameSearch": () => get(`/api/v1/supplier-lookups/for-sku/${hotSku}?q=${encodeURIComponent(NAME_TERMS[randomInt(NAME_TERMS.length)])}`),
+    "forSku.deepPage": () => get(`/api/v1/supplier-lookups/for-sku/${hotSku}?page=${randomInt(50, 401)}`),
     // 每個虛擬用戶改自己嗰份 Supplier（id ≡ 用戶號 mod USERS），避免版本衝突；先讀版本再寫，兩步一齊計時。
     update: async (userNumber) => {
       // 封存咗嘅 Supplier 唔可以改（409），只揀改得嘅狀態。
@@ -229,6 +253,13 @@ try {
       maxMs: Math.round(Number(row.maxWait) / 1e8) / 10, rowsExamined: minus("rowsExamined"), rowsSent: minus("rowsSent"), noIndexUsed: minus("noIndexUsed") };
   }).filter((row) => row.count > 0).sort((left, right) => right.totalMs - left.totalMs).slice(0, 12)
     .map((row) => ({ ...row, avgMs: Math.round((row.totalMs / row.count) * 100) / 100 }));
+  // Digest 表滿咗嘅話，新 SQL 會併入一行 DIGEST 係 NULL 嘅紀錄，下面就會靜靜雞冇嘢（TASK-050 for-SKU 撞過）：講明，唔好當冇慢 SQL。
+  const [[digestTable]] = await admin.query(`SELECT COUNT(*) AS used, @@performance_schema_digests_size AS size,
+    SUM(DIGEST IS NULL) AS overflow FROM performance_schema.events_statements_summary_by_digest`);
+  report.digestTable = { used: Number(digestTable.used), size: Number(digestTable.size), overflowRow: Number(digestTable.overflow) > 0 };
+  if (report.digestTable.overflowRow) {
+    report.digestTable.note = "performance_schema digest table is full; statements beyond it are not attributed, so topStatements is incomplete";
+  }
   report.topStatements = [];
   for (const row of digests) {
     let plan = null;
@@ -246,6 +277,9 @@ try {
   }
   const failing = Object.entries(report.operations).filter(([, value]) => value.p95 === null || value.p95 >= 2000 || value.errorRate > 0.01);
   report.nfr001 = { limitP95Ms: 2000, maxErrorRate: 0.01, failing: failing.map(([name]) => name), pass: failing.length === 0 };
+  // NFR-005：for-SKU 揀選器同樣 p95 < 2 秒（設計 §11.5）；冇跑 for-SKU 操作就記 null，唔當通過。
+  const forSku = failing.filter(([name]) => name.startsWith("forSku"));
+  report.nfr005 = MIX.some(([name]) => name.startsWith("forSku")) ? { failing: forSku.map(([name]) => name), pass: forSku.length === 0 } : null;
   report.ok = report.nfr001.pass;
   void db;
 } catch (error) {
