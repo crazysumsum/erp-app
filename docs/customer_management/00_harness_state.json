@@ -1,27 +1,27 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 154,
+  "revision": 155,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
   "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-004",
-  "current_task": "TASK-030",
+  "current_task": "TASK-033",
   "baseline": {
     "design": "24b905fb54f174a745979908a11d3e6d6f0f0c8e9f41d80ee9bb8eea0d946f01",
     "plan": "8e3ca15db849b5f9bbfcc23d06d24bbfd00eb20c874f6f65ce7a1b2b36149b4f",
-    "code_commit": "329f6ed4ec98f1f65673c913bcd8809c4a6bcaf4",
-    "source_fingerprint": "7cceffc523a8cd6e9b113f6fbf475c9a93a44c18f05a4a637fbe87e4a2401ebb",
-    "worktree": "/private/tmp/erp-customer-task029-adoption",
-    "default_commit": "e91197d5d71e110aa149b2af99492a7717af4f27",
+    "code_commit": "d9714a34f39a507528fc4c138496531cd1d57c69",
+    "source_fingerprint": "8c6770c3cf8984000a8b9f90e3f501f2ae74274354543f42c04ab229204ffa88",
+    "worktree": "/private/tmp/erp-customer-task033-operational-slice",
+    "default_commit": "d9714a34f39a507528fc4c138496531cd1d57c69",
     "mode_entry_commit": "f7fd95584e827f1bce112388fc2c196b5939671f"
   },
   "runtime": {
-    "instance_id": "customer-task029-adoption-20261014",
+    "instance_id": "customer-task033-operational-slice-20261014",
     "owner": "Primary harness agent",
     "resources": {
-      "workspace": "/private/tmp/erp-customer-task029-adoption"
+      "workspace": "/private/tmp/erp-customer-task033-operational-slice"
     },
     "lease_ref": null
   },
@@ -58,7 +58,7 @@
     "TASK-030": "BLOCKED",
     "TASK-031": "BLOCKED",
     "TASK-032": "BLOCKED",
-    "TASK-033": "PENDING",
+    "TASK-033": "IN_PROGRESS",
     "TASK-034": "PENDING",
     "TASK-035": "PENDING",
     "TASK-036": "PENDING"
@@ -2659,6 +2659,28 @@
       "source_ref": "REV-041",
       "actor": "Jason (/root/customer_task011_review), separate agent",
       "observed_at": "2026-10-14T06:56:57Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "TASK-029 PR #224 merge and exact-head CI reconciliation",
+      "code_commit": "210c9f1405091a1eb41f42d7d7bd5f0356f08b61",
+      "spec_baseline": "8e3ca15db849b5f9bbfcc23d06d24bbfd00eb20c874f6f65ce7a1b2b36149b4f",
+      "source_fingerprint": "7cceffc523a8cd6e9b113f6fbf475c9a93a44c18f05a4a637fbe87e4a2401ebb",
+      "status": "PASS",
+      "source_ref": "GitHub PR #224 is MERGED at 2026-10-14T07:21:02Z as d9714a34f39a507528fc4c138496531cd1d57c69. All five required checks succeeded on head 210c9f1405091a1eb41f42d7d7bd5f0356f08b61 in run 38525426127. Branch/worktree cleanup was verified.",
+      "actor": "GitHub Actions, observed by /root",
+      "observed_at": "2026-10-14T07:49:59Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-033 independent Customer telemetry/security/runbook preparation",
+      "code_commit": "d9714a34f39a507528fc4c138496531cd1d57c69",
+      "spec_baseline": "8e3ca15db849b5f9bbfcc23d06d24bbfd00eb20c874f6f65ce7a1b2b36149b4f",
+      "source_fingerprint": "8c6770c3cf8984000a8b9f90e3f501f2ae74274354543f42c04ab229204ffa88",
+      "status": "PASS",
+      "source_ref": "docs/customer_management/implementation/phase-PHASE-004-report.md#task-033-independent-preparation; TC-080 developer red/green regressions verify fixed alert reasons, request correlation, no plaintext/synthetic exception secret, safe 422 and no commit. Exact-lock Customer unit suite passed 253/253; lint and client build passed. This does not complete TASK-033, formal acceptance, production alert delivery or TASK-034/035 capacity/DR evidence.",
+      "actor": "/root developer verification",
+      "observed_at": "2026-10-14T07:49:59Z"
     }
   ],
   "pending_decisions": [
@@ -3362,16 +3384,42 @@
       "kind": "GIT_MERGE",
       "target": "github:crazysumsum/erp-app:main<-codex/customer-task029-adoption",
       "idempotency_key": "customer-task029-adoption-merge-v1",
+      "status": "CONFIRMED",
+      "source_ref": "GitHub PR #224 MERGED at 2026-10-14T07:21:02Z as d9714a34f39a507528fc4c138496531cd1d57c69 after all five required CI checks succeeded on head 210c9f1405091a1eb41f42d7d7bd5f0356f08b61; local/remote branch and worktree removed."
+    },
+    {
+      "id": "EXT-PUSH-059",
+      "kind": "GIT_PUSH",
+      "target": "github:crazysumsum/erp-app:refs/heads/codex/customer-task033-operational-slice",
+      "idempotency_key": "customer-task033-operational-slice-push-v1",
       "status": "PLANNED",
-      "source_ref": "Standing Product Owner authorization to merge completed Customer Management work after current required CI succeeds."
+      "source_ref": "Current user authorizes automatic execution of available Customer Management work; standing publication authorization applies to this independent TASK-033 preparation."
+    },
+    {
+      "id": "EXT-PR-060",
+      "kind": "PULL_REQUEST",
+      "target": "github:crazysumsum/erp-app:main<-codex/customer-task033-operational-slice",
+      "idempotency_key": "customer-task033-operational-slice-pr-v1",
+      "status": "PLANNED",
+      "source_ref": "Publish the independent TASK-033 preparation as a compatibility-safe slice under the standing approval; task dependencies and final DoD stay unchanged."
+    },
+    {
+      "id": "EXT-MERGE-061",
+      "kind": "GIT_MERGE",
+      "target": "github:crazysumsum/erp-app:main<-codex/customer-task033-operational-slice",
+      "idempotency_key": "customer-task033-operational-slice-merge-v1",
+      "status": "PLANNED",
+      "source_ref": "Standing Product Owner authorization; merge only after current mandatory CI and actual independent review pass."
     }
   ],
   "evidence_files": [
     "docs/customer_management/implementation/00_implementation_readiness.md",
     "docs/customer_management/implementation/phase-PHASE-001-report.md",
     "docs/customer_management/implementation/phase-PHASE-002-report.md",
-    "docs/customer_management/implementation/phase-PHASE-003-report.md"
+    "docs/customer_management/implementation/phase-PHASE-003-report.md",
+    "docs/customer_management/implementation/phase-PHASE-004-report.md",
+    "docs/customer_management/implementation/customer-operations-runbook.md"
   ],
   "defects": [],
-  "next_safe_action": "Push this publication-evidence checkpoint to PR #224, wait for all five current CI jobs on its exact head, then merge under the standing Product Owner authorization. After merge, clean the branch/worktree. TASK-030, TASK-031 and dependent TASK-032 remain blocked until real Fulfillment, Invoicing/AR and Returns/Refund consumers merge; do not create placeholders or treat design-only contracts as READY."
+  "next_safe_action": "Review, publish and require current CI for the independent TASK-033 Customer-safe telemetry/runbook slice, then merge and clean its branch/worktree under standing authorization. TASK-033 remains IN_PROGRESS until TASK-032 and integrated alert/security gates are satisfied; TASK-034/035/036 final verification still depends on the real provider set. TASK-030/031/032 remain BLOCKED; do not create placeholders or weaken completion criteria."
 }
