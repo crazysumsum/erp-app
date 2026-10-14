@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 156,
+  "revision": 157,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -3423,8 +3423,8 @@
       "kind": "PULL_REQUEST",
       "target": "github:crazysumsum/erp-app:main<-codex/customer-task033-operational-slice",
       "idempotency_key": "customer-task033-operational-slice-pr-v1",
-      "status": "PLANNED",
-      "source_ref": "Publish the independent TASK-033 preparation as a compatibility-safe slice under the standing approval; task dependencies and final DoD stay unchanged."
+      "status": "CONFIRMED",
+      "source_ref": "2026-10-14: GitHub PR #225 created at https://github.com/crazysumsum/erp-app/pull/225 for this compatibility-safe TASK-033 preparation; task dependencies and final DoD stay unchanged."
     },
     {
       "id": "EXT-MERGE-061",
@@ -3444,5 +3444,5 @@
     "docs/customer_management/implementation/customer-operations-runbook.md"
   ],
   "defects": [],
-  "next_safe_action": "Review, publish and require current CI for the independent TASK-033 Customer-safe telemetry/runbook slice, then merge and clean its branch/worktree under standing authorization. TASK-033 remains IN_PROGRESS until TASK-032 and integrated alert/security gates are satisfied; TASK-034/035/036 final verification still depends on the real provider set. TASK-030/031/032 remain BLOCKED; do not create placeholders or weaken completion criteria."
+  "next_safe_action": "Require all five current CI checks on the final PR #225 head, then recheck main freshness, merge and clean the TASK-033 slice branch/worktree under standing authorization. REV-042 approves the unchanged product fingerprint. TASK-033 remains IN_PROGRESS until TASK-032 and integrated alert/security gates are satisfied; TASK-034/035/036 final verification still depends on the real provider set. TASK-030/031/032 remain BLOCKED; do not create placeholders or weaken completion criteria."
 }
