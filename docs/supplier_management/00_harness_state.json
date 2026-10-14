@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 326,
+  "revision": 327,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -5238,6 +5238,16 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-14: '全部按建議，修完再review'."
+    },
+    {
+      "id": "HD-101",
+      "impact": "MINOR",
+      "question": "TASK-050 close-out: (1) the manual SRE review — author prepares a checklist for a human reviewer; (2) add the perf:supplier npm script to server/package.json (approval-required path) wrapping seed + benchmark, --concurrency mapped to --users; (3) keep erp_t50 until the SRE review ends.",
+      "affected_ids": [
+        "TASK-050"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-14: '批准' (1–3)."
     }
   ],
   "external_actions": [
@@ -6314,5 +6324,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-050 for-SKU part: REV-089 round 2 APPROVED. PR #218's Browser job failed on an unrelated flaky import e2e (debounce race); PR #219 fixes it. Merge #219, bring main into #218, then merge #218 when CI is green. TASK-050 stays IN_PROGRESS for the manual SRE review and the perf:supplier decision."
+  "next_safe_action": "TASK-050: perf:supplier added (HD-101). Awaiting the manual SRE review (T50 Verification) on the eight items in implementation/93_task_050_sre_review.md; the outcome will be recorded as a decision when given. erp_t50 is kept until then. After it: close TASK-050, drop erp_t50, then T51 (HD-057 open)."
 }

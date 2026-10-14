@@ -306,6 +306,6 @@ There is no schema change, and the ordering oracle test still passes.
 ## Open
 
 1. ~~The for-SKU lookup (NFR-005, its metrics) and a final rerun, after TASK-040.~~ Done on 2026-10-14; see "for-SKU lookup".
-2. The manual SRE review of this report, the alerts and the query plans.
+2. The manual SRE review of this report, the alerts and the query plans. The checklist is in `implementation/93_task_050_sre_review.md`.
 3. Sort by status is not indexed (about 20 ms). Text search stays a scan (HD-088).
-4. The `perf:supplier` npm script (`server/package.json`, needs approval).
+4. ~~The `perf:supplier` npm script (`server/package.json`, needs approval).~~ Added under HD-101: `npm run perf:supplier --workspace server -- --database=<DB> --suppliers=100000 --concurrency=50`. It seeds an empty database, then runs the benchmark; `--concurrency` maps to `--users`.
