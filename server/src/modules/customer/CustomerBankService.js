@@ -380,7 +380,8 @@ export class CustomerBankService {
         });
       } catch (error) {
         this.logger?.warn?.("customer.bank.reveal.unreadable", "Customer bank account could not be read", {
-          customerId: Number(row.customer_id), bankAccountId: Number(row.id), reason: error?.message ?? "unknown"
+          customerId: Number(row.customer_id), bankAccountId: Number(row.id), requestId: input.requestId ?? "",
+          reason: ["BANK_KEY_UNAVAILABLE", "BANK_INTEGRITY_FAILED"].includes(error?.code) ? error.code : "UNREADABLE"
         });
         throw customerBankError("BANK_ACCOUNT_UNREADABLE", 422, "這個銀行帳戶目前無法讀取，請聯絡系統管理員");
       }

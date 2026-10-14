@@ -69,13 +69,14 @@ function harness({ row = bankRow(), duplicates = [], permissions = ["customer.vi
     }
   };
   const audited = [];
+  const logs = [];
   const service = new CustomerBankService({
-    database, logger: { warn() {} }, time: { nowMs: () => 1_000 }, crypto,
+    database, logger: { warn(...entry) { logs.push(entry); } }, time: { nowMs: () => 1_000 }, crypto,
     businessMaster,
     authorize: async () => ({ id: 3, username: "tester", permissions }),
     audit: { async record(_connection, entry) { audited.push(entry); events.push(["audit", entry.action]); } }
   });
-  return { service, events, audited, crypto };
+  return { service, events, audited, crypto, logs };
 }
 
 test("Customer bank masked list never selects or returns cryptographic material", async () => {
@@ -172,4 +173,46 @@ test("Customer bank reveal commits its audit before returning plaintext", async 
   assert.equal(result.expiresInSeconds, 30);
   assert.equal(audited[0].action, "bank.reveal");
   assert.ok(events.findIndex(([kind]) => kind === "audit") < events.findIndex(([kind]) => kind === "commit"));
+});
+
+test("TC-080 Customer bank unreadable alert is correlated and excludes exception secrets", async () => {
+  const secretMarker = "synthetic-bank-secret-must-not-appear";
+  for (const [code, expectedReason] of [
+    ["BANK_KEY_UNAVAILABLE", "BANK_KEY_UNAVAILABLE"],
+    ["BANK_INTEGRITY_FAILED", "BANK_INTEGRITY_FAILED"],
+    [secretMarker, "UNREADABLE"]
+  ]) {
+    const { service, logs, audited, events } = harness({ sealedRow: bankRow() });
+    service.crypto = { decrypt() { throw Object.assign(new Error(secretMarker), { code }); } };
+    await assert.rejects(
+      () => service.reveal({ ...actor, customerId: 7, bankAccountId: 41, reason: "查看完整銀行帳號" }),
+      (error) => error.publicCode === "BANK_ACCOUNT_UNREADABLE" && error.statusCode === 422
+    );
+    assert.deepEqual(logs, [["customer.bank.reveal.unreadable", "Customer bank account could not be read", {
+      customerId: 7, bankAccountId: 41, requestId: "req-1", reason: expectedReason
+    }]]);
+    assert.equal(JSON.stringify(logs).includes(secretMarker), false);
+    assert.equal(audited.length, 0);
+    assert.equal(events.some(([kind]) => kind === "commit"), false);
+  }
+});
+
+test("TC-080 Customer bank crypto failures produce bounded alert reasons without plaintext", async () => {
+  const crypto = realCrypto();
+  const encrypted = crypto.encrypt({ customerId: 7, cryptoContext: "ctx-41", accountNumber: ACCOUNT });
+  for (const [encryptionKeyId, expectedReason] of [["missing-key", "BANK_KEY_UNAVAILABLE"], [encrypted.encryptionKeyId, "BANK_INTEGRITY_FAILED"]]) {
+    const badTag = Buffer.from(encrypted.authTag);
+    badTag[0] ^= 1;
+    const { service, logs } = harness({ sealedRow: {
+      ...bankRow(), account_ciphertext: encrypted.ciphertext, account_iv: encrypted.iv,
+      account_auth_tag: badTag, encryption_key_id: encryptionKeyId
+    } });
+    service.crypto = crypto;
+    await assert.rejects(
+      () => service.reveal({ ...actor, customerId: 7, bankAccountId: 41, reason: "測試不可讀的銀行帳戶" }),
+      (error) => error.publicCode === "BANK_ACCOUNT_UNREADABLE"
+    );
+    assert.equal(logs[0][2].reason, expectedReason);
+    assert.equal(JSON.stringify(logs).includes("123456789001"), false);
+  }
 });
