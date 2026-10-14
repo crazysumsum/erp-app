@@ -1684,7 +1684,8 @@
         "CUSTOMER_BANK_LOOKUP_KEYS",
         "JWT_SECRET",
         "DB_ADMIN_USER",
-        "DB_ADMIN_PASSWORD"
+        "DB_ADMIN_PASSWORD",
+        "MYSQL_BIN"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
