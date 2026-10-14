@@ -214,7 +214,9 @@ export class SupplierLookupService {
     const itemCodeExact = (alias) => (search ? ` OR ${alias}.supplier_item_code_key = ?` : "");
     const headIds = `SELECT y.supplier_id AS id FROM supplier_sku_refs y WHERE y.sku_id = ? AND (${ranked("y")}${itemCodeExact("y")})${
       search ? " UNION SELECT id FROM suppliers WHERE supplier_code_key = ?" : ""}`;
-    const headFrom = `FROM suppliers s JOIN (${headIds}) h ON h.id = s.id
+    // 由 head（呢隻 SKU 有排序理由嘅 relation）開始 join：唔固定次序，MySQL 會揀由 8 萬個 Active Supplier 做 LIKE 篩選
+    // 再逐個探 h，熱門 SKU 每次掃 8 萬行（TASK-050 for-SKU 負載；EXPLAIN ANALYZE 66→28 ms、搜尋 91→27 ms）。
+    const headFrom = `FROM (${headIds}) h STRAIGHT_JOIN suppliers s ON s.id = h.id
       LEFT JOIN supplier_sku_refs r ON r.supplier_id = s.id AND r.sku_id = ? WHERE ${match}`;
     const headParams = [id, ...(search ? [key, key] : []), id, ...matchParams];
     // rest 用已經 JOIN 咗嘅 r（每個 Supplier 最多一行）排除 head；寫成 NOT EXISTS 嘅話，optimizer 會將成張 relation 表掃一次再物化。
@@ -244,21 +246,23 @@ export class SupplierLookupService {
     // 提交時 BR-032 會再驗（REV-087 L-3）。反方向（兩段都冇讀到）就會喺呢一頁漏咗，下次查詢會返嚟。
     const seen = new Set();
     const rows = [...head, ...rest].filter((row) => !seen.has(Number(row.id)) && seen.add(Number(row.id)));
-    return {
-      items: rows.map((row) => ({
-        ...toProjection(row, { purpose: "purchase" }),
-        rankReason: rankReason(row),
-        relation: row.relation_id === null ? null : {
-          relationId: Number(row.relation_id),
-          relationshipStatus: row.relationship_status,
-          supplierItemCode: row.supplier_item_code,
-          lastSuppliedAt: row.last_supplied_at === null ? null : Number(row.last_supplied_at)
-        }
-      })),
-      total: Number(total),
-      page,
-      pageSize
-    };
+    const items = rows.map((row) => ({
+      ...toProjection(row, { purpose: "purchase" }),
+      rankReason: rankReason(row),
+      relation: row.relation_id === null ? null : {
+        relationId: Number(row.relation_id),
+        relationshipStatus: row.relationship_status,
+        supplierItemCode: row.supplier_item_code,
+        lastSuppliedAt: row.last_supplied_at === null ? null : Number(row.last_supplied_at)
+      }
+    }));
+    // 設計 §12.4：for-SKU 結果入面幾多個係因為歷史／首選排前。只記數字，唔記 Supplier（延遲睇 request log）。
+    const reasonCounts = { exact_match: 0, preferred: 0, recently_supplied: 0, none: 0 };
+    for (const item of items) reasonCounts[item.rankReason ?? "none"] += 1;
+    void this.logger?.info?.("supplier.for_sku.lookup", "Supplier for-SKU lookup", {
+      skuId: id, page, pageSize, returned: items.length, total: Number(total), searched: search !== "", ranked: reasonCounts
+    });
+    return { items, total: Number(total), page, pageSize };
   }
 
   #read(work) {

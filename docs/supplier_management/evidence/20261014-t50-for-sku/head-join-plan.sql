@@ -1,0 +1,13 @@
+-- EXPLAIN ANALYZE on the 100k seed (erp_t50), idle, hot SKU (20,000 relations).
+-- A/C = before (suppliers drives the join), B/D = after (STRAIGHT_JOIN from the head).
+-- Aggregate times: A 66.6 ms, B 28.4 ms, C (search 'Trading') 90.6 ms, D 27.3 ms.
+SELECT id INTO @hot FROM item_skus WHERE sku_code='PERF-SKU-HOT';
+SET @ranked = "(y.relationship_status = 'preferred' OR (y.relationship_status <> 'stopped' AND y.last_supplied_at IS NOT NULL))";
+-- A: current, no search
+EXPLAIN ANALYZE SELECT COUNT(*) FROM suppliers s JOIN (SELECT y.supplier_id AS id FROM supplier_sku_refs y WHERE y.sku_id = @hot AND (y.relationship_status = 'preferred' OR (y.relationship_status <> 'stopped' AND y.last_supplied_at IS NOT NULL))) h ON h.id = s.id LEFT JOIN supplier_sku_refs r ON r.supplier_id = s.id AND r.sku_id = @hot WHERE s.status = 'active';
+-- B: straight join, no search
+EXPLAIN ANALYZE SELECT COUNT(*) FROM (SELECT y.supplier_id AS id FROM supplier_sku_refs y WHERE y.sku_id = @hot AND (y.relationship_status = 'preferred' OR (y.relationship_status <> 'stopped' AND y.last_supplied_at IS NOT NULL))) h STRAIGHT_JOIN suppliers s ON s.id = h.id LEFT JOIN supplier_sku_refs r ON r.supplier_id = s.id AND r.sku_id = @hot WHERE s.status = 'active';
+-- C: current, search
+EXPLAIN ANALYZE SELECT COUNT(*) FROM suppliers s JOIN (SELECT y.supplier_id AS id FROM supplier_sku_refs y WHERE y.sku_id = @hot AND (y.relationship_status = 'preferred' OR (y.relationship_status <> 'stopped' AND y.last_supplied_at IS NOT NULL) OR y.supplier_item_code_key = 'trading') UNION SELECT id FROM suppliers WHERE supplier_code_key = 'trading') h ON h.id = s.id LEFT JOIN supplier_sku_refs r ON r.supplier_id = s.id AND r.sku_id = @hot WHERE s.status = 'active' AND (s.supplier_code_key LIKE 'trading%' OR s.supplier_name LIKE '%Trading%' OR s.display_name LIKE '%Trading%' OR s.general_phone LIKE '%Trading%' OR s.general_email LIKE '%Trading%');
+-- D: straight join, search
+EXPLAIN ANALYZE SELECT COUNT(*) FROM (SELECT y.supplier_id AS id FROM supplier_sku_refs y WHERE y.sku_id = @hot AND (y.relationship_status = 'preferred' OR (y.relationship_status <> 'stopped' AND y.last_supplied_at IS NOT NULL) OR y.supplier_item_code_key = 'trading') UNION SELECT id FROM suppliers WHERE supplier_code_key = 'trading') h STRAIGHT_JOIN suppliers s ON s.id = h.id LEFT JOIN supplier_sku_refs r ON r.supplier_id = s.id AND r.sku_id = @hot WHERE s.status = 'active' AND (s.supplier_code_key LIKE 'trading%' OR s.supplier_name LIKE '%Trading%' OR s.display_name LIKE '%Trading%' OR s.general_phone LIKE '%Trading%' OR s.general_email LIKE '%Trading%');
