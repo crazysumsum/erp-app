@@ -184,7 +184,7 @@ integrationTest("TASK-043: an upload the actor may no longer make leaves neither
   assert.equal(Number(jobsAfter), Number(jobsBefore));
 });
 
-integrationTest("TASK-043 IMP-004/005/011 (TC-090, TC-096): precheck classifies each row and writes nothing to Supplier tables", async () => {
+integrationTest("TASK-043 IMP-004/005/011 (TC-090): precheck classifies each row and writes nothing to Supplier tables", async () => {
   const tag = randomUUID().slice(0, 6).toUpperCase();
   const existingId = await seedSupplier({ code: `EX-${tag}`, name: `Existing ${tag}`, identifier: `TX${tag}` });
   const archivedId = await seedSupplier({ code: `AR-${tag}`, name: `Archived ${tag}`, status: "archived" });

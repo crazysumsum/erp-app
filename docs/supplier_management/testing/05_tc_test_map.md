@@ -13,7 +13,13 @@
 3. `supplierImport.integration.test.js:187` names two IDs, `(TC-090, TC-096)`. The harness JUnit adapter refuses a title with more than one ID, so the whole suite result would be rejected.
 4. Business Master's own tests use `TC-001`…`TC-020` in their titles for Business Master cases. They must stay outside every Supplier suite's file set, or they would be read as Supplier cases.
 
-## Summary
+## Changes made in step 1 (HD-103 1A)
+
+- Findings 1 and 3 are fixed. The three server suites now run from `server` with `--test-concurrency=1` and glob the existing files: `test/supplier*.test.js` and `test/integration/supplier*.integration.test.js`; Bank uses `supplierBank*` only. The double tag is now `(TC-090)`.
+- Six cases moved suite, because their only tests run in another runner: TC-013, TC-015, TC-029 and TC-075 to `supplier-client-ui` (Vitest), TC-085 and TC-101 to `supplier-performance`. `min_tests` equals the required case count in each suite.
+- Checked on erp_t51 (fresh migration, throwaway MySQL): the server glob runs 626 tests, all pass, none skipped, no duplicate JUnit names; the harness JUnit adapter parses the file once the double tag is gone.
+
+## Summary (before the suite moves)
 
 | Suite | Cases | COVERED (candidate) | PARTIAL | NONE |
 | --- | --- | --- | --- | --- |

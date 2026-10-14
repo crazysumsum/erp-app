@@ -237,17 +237,19 @@
       "argv": [
         "node",
         "--test",
+        "--test-concurrency=1",
         "--import",
-        "./server/test-support/testEnv.js",
+        "./test-support/testEnv.js",
         "--test-reporter=junit",
         "--test-reporter-destination={run_dir}/supplier-server-integration.xml",
-        "server/test/supplier-management"
+        "test/supplier*.test.js",
+        "test/integration/supplier*.integration.test.js"
       ],
-      "cwd": ".",
+      "cwd": "server",
       "timeout_seconds": 3600,
       "result_adapter": "JUNIT",
       "result_path": "supplier-server-integration.xml",
-      "min_tests": 94,
+      "min_tests": 89,
       "max_skipped": 0,
       "stages": [
         "DEVELOPER",
@@ -267,9 +269,7 @@
         "TC-010",
         "TC-011",
         "TC-012",
-        "TC-013",
         "TC-014",
-        "TC-015",
         "TC-016",
         "TC-017",
         "TC-018",
@@ -283,7 +283,6 @@
         "TC-026",
         "TC-027",
         "TC-028",
-        "TC-029",
         "TC-030",
         "TC-031",
         "TC-032",
@@ -323,7 +322,6 @@
         "TC-082",
         "TC-083",
         "TC-084",
-        "TC-085",
         "TC-086",
         "TC-087",
         "TC-088",
@@ -339,7 +337,6 @@
         "TC-098",
         "TC-099",
         "TC-100",
-        "TC-101",
         "TC-102",
         "TC-103",
         "TC-104",
@@ -394,17 +391,19 @@
       "argv": [
         "node",
         "--test",
+        "--test-concurrency=1",
         "--import",
-        "./server/test-support/testEnv.js",
+        "./test-support/testEnv.js",
         "--test-reporter=junit",
         "--test-reporter-destination={run_dir}/supplier-bank-security.xml",
-        "server/test/supplier-management/bank"
+        "test/supplierBank*.test.js",
+        "test/integration/supplierBank*.integration.test.js"
       ],
-      "cwd": ".",
+      "cwd": "server",
       "timeout_seconds": 3600,
       "result_adapter": "JUNIT",
       "result_path": "supplier-bank-security.xml",
-      "min_tests": 16,
+      "min_tests": 15,
       "max_skipped": 0,
       "stages": [
         "DEVELOPER",
@@ -425,7 +424,6 @@
         "TC-072",
         "TC-073",
         "TC-074",
-        "TC-075",
         "TC-076",
         "TC-077"
       ],
@@ -473,13 +471,15 @@
       "argv": [
         "node",
         "--test",
+        "--test-concurrency=1",
         "--import",
-        "./server/test-support/testEnv.js",
+        "./test-support/testEnv.js",
         "--test-reporter=junit",
         "--test-reporter-destination={run_dir}/supplier-security.xml",
-        "server/test/supplier-management/security"
+        "test/supplier*.test.js",
+        "test/integration/supplier*.integration.test.js"
       ],
-      "cwd": ".",
+      "cwd": "server",
       "timeout_seconds": 3600,
       "result_adapter": "JUNIT",
       "result_path": "supplier-security.xml",
@@ -558,7 +558,7 @@
       "timeout_seconds": 1800,
       "result_adapter": "JUNIT",
       "result_path": "supplier-client-ui.xml",
-      "min_tests": 7,
+      "min_tests": 11,
       "max_skipped": 0,
       "stages": [
         "DEVELOPER",
@@ -566,6 +566,10 @@
         "REGRESSION"
       ],
       "required_case_ids": [
+        "TC-013",
+        "TC-015",
+        "TC-029",
+        "TC-075",
         "TC-121",
         "TC-122",
         "TC-123",
@@ -606,13 +610,15 @@
       "timeout_seconds": 7200,
       "result_adapter": "HARNESS_JSON",
       "result_path": "supplier-performance.json",
-      "min_tests": 2,
+      "min_tests": 4,
       "max_skipped": 0,
       "stages": [
         "TECHNICAL",
         "REGRESSION"
       ],
       "required_case_ids": [
+        "TC-085",
+        "TC-101",
         "TC-128",
         "TC-129"
       ],
