@@ -7,6 +7,7 @@
     "dev": "node --watch src/index.js",
     "start": "node src/index.js",
     "migrate": "node scripts/migrate.js",
+    "perf:supplier": "node scripts/perfSupplier.js",
     "customer-bank:rotate": "node scripts/rotateCustomerBankEncryption.js",
     "customer-bank:reindex": "node scripts/reindexCustomerBankBlindIndexes.js",
     "create-user": "node scripts/createUser.js",
