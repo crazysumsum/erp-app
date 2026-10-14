@@ -17,6 +17,7 @@ import SupplierCompletenessBanner from "@/components/suppliers/SupplierCompleten
 import SupplierContactPanel from "@/components/suppliers/SupplierContactPanel.vue";
 import SupplierIdentifierPanel from "@/components/suppliers/SupplierIdentifierPanel.vue";
 import SupplierPaymentDefaults from "@/components/suppliers/SupplierPaymentDefaults.vue";
+import SupplierSkuRelationsPanel from "@/components/suppliers/SupplierSkuRelationsPanel.vue";
 import SupplierStatusActions from "@/components/suppliers/SupplierStatusActions.vue";
 import { can } from "@/framework/authorization/can.js";
 import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
@@ -353,6 +354,7 @@ watch(() => route.params.id, () => {
             由 SupplierBankPanel 自己叫 GET /suppliers/:id/bank-accounts 攞。
           -->
           <q-tab name="bank" label="銀行資料" />
+          <q-tab name="skuRelations" label="供貨關係" />
         </q-tabs>
 
         <q-tab-panels v-model="tab" animated>
@@ -440,6 +442,11 @@ watch(() => route.params.id, () => {
           </q-tab-panel>
           <q-tab-panel name="bank">
             <SupplierBankPanel :supplier-id="supplier.id" :supplier-code="supplier.supplierCode" @refresh="load" />
+          </q-tab-panel>
+          <q-tab-panel name="skuRelations">
+            <SupplierSkuRelationsPanel
+              :supplier-id="supplier.id" :supplier-code="supplier.supplierCode" :supplier-status="supplier.status" :can-manage="canManage"
+            />
           </q-tab-panel>
         </q-tab-panels>
       </template>

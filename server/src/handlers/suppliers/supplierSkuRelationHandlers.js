@@ -41,13 +41,15 @@ const nullableString = Object.freeze({ type: ["string", "null"] });
 const RELATION = Object.freeze({
   type: "object", additionalProperties: false,
   required: ["id", "supplierId", "skuId", "skuCode", "skuName", "skuStatus", "itemStatus", "supplierItemCode", "supplierItemName",
-    "purchaseSkuUomId", "minimumOrderQty", "standardLeadTimeDays", "relationshipStatus", "firstSuppliedAt", "lastSuppliedAt", "source",
+    "purchaseSkuUomId", "purchaseUomCode", "purchaseUomName", "purchaseUomStatus", "minimumOrderQty", "standardLeadTimeDays",
+    "relationshipStatus", "firstSuppliedAt", "lastSuppliedAt", "source",
     "version", "updatedAt"],
   properties: {
     id: { type: "integer" }, supplierId: { type: "integer" }, skuId: { type: "integer" },
     skuCode: nullableString, skuName: nullableString, skuStatus: nullableString, itemStatus: nullableString,
     supplierItemCode: { type: "string" }, supplierItemName: { type: "string" },
-    purchaseSkuUomId: nullableInteger, minimumOrderQty: nullableInteger, standardLeadTimeDays: nullableInteger,
+    purchaseSkuUomId: nullableInteger, purchaseUomCode: nullableString, purchaseUomName: nullableString, purchaseUomStatus: nullableString,
+    minimumOrderQty: nullableInteger, standardLeadTimeDays: nullableInteger,
     relationshipStatus: { type: "string", enum: [...SUPPLIER_SKU_RELATIONSHIP_STATUSES] },
     firstSuppliedAt: nullableInteger, lastSuppliedAt: nullableInteger, source: { type: "string", enum: ["manual", "purchasing"] },
     version: { type: "integer" }, updatedAt: { type: "integer" }

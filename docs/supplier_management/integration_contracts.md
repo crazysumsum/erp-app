@@ -30,6 +30,20 @@ This is the Supplier-side contract that a Purchasing module consumes. The design
 
   The response carries no Bank data.
 
+## Supplier–SKU relations UI support (TASK-039, HD-098)
+
+These are Supplier's own APIs for the relation tab. Purchasing does not call them.
+
+- `GET /api/v1/supplier-lookups/skus?q=&skuId=&page=&pageSize=`:
+  - **Permission:** `supplier.mgmt`, with a fresh-actor check.
+  - **What it lists:** the SKUs that can be purchased now, through Item's `searchForPurchase` (Item §8.3.2): Item and SKU active, purchasable, within their effective dates, with at least one active UOM.
+  - **Each SKU:** `skuId`, `skuCode`, `skuName`, `itemName`, and `uoms[]`. Each UOM has `skuUomId`, `uomCode`, `uomName`, `status`, `toBaseFactor`, `isBase` and `isDefaultPurchase`.
+  - **Exact lookup:** with `skuId`, it returns just that SKU when it is purchasable (Item `findById` with purpose `purchase`), and an empty list otherwise. The edit dialog uses this rather than the first page of a prefix search (REV-088 L-1).
+  - **Bad input:** control characters in `q`, or a `page` above 1,000,000, give 400.
+- **Relation responses** (list, create, update) now include `purchaseUomCode`, `purchaseUomName` and `purchaseUomStatus`. They are all `null` when no purchase UOM is set.
+- **Purchase UOM must be active.** Choosing a purchase UOM, on create or when changing it, needs that UOM to be active, otherwise 409 `SUPPLIER_SKU_UOM_INACTIVE`. A UOM that belongs to another SKU stays 400 `SUPPLIER_SKU_UOM_INVALID`. An update that keeps the current UOM is accepted even if that UOM has since been deactivated, because it is history. The exception is reactivating a `stopped` relation: like a new purchase target, that needs the UOM to be active, or no UOM (HD-099, REV-088 M-4 A).
+- **Error order on create:** a missing Supplier (404) or an archived one (`SUPPLIER_SKU_RELATION_NOT_ALLOWED`) is reported before any SKU or UOM problem, the same as on update (REV-088 L-3).
+
 ## At submit time
 
 A list result is only a suggestion. When Purchasing saves an order, it must check the Supplier again, inside its own transaction (BR-032):

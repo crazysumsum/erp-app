@@ -1001,3 +1001,84 @@ fails the test instead of hanging it. Killed: "no skip when the index exists" (i
 - **Not done here:**
   - The design text still says "呼叫方採購權限" and does not spell out HD-094 2A–4A. Editing `03_design_spec.md` would move both baselines, so the decisions live in the ledger and here until the next design revision.
   - The client side (§7.3: SuppliersPage opened with `skuId`) belongs to the Purchasing flow; TASK-040 lists no client files.
+
+## TASK-039: Supplier–SKU relations UI (HD-093, HD-097, HD-098)
+
+- **Dependency.** Item delivered the purchase lookup asked for in HD-093 (PR #210: `searchForPurchase`, plus `skuUomId`, `uomName` and `status` on purchase projections). The Supplier pin was refreshed to `1bbb882f` (HD-097, PR #213).
+- **Server (HD-098):**
+  - `GET /api/v1/supplier-lookups/skus` (`supplier.mgmt`) for the SKU picker.
+  - The relation list reads Item with `purpose: "purchase"`, so it can name the purchase UOM. Responses gain `purchaseUomCode`, `purchaseUomName` and `purchaseUomStatus`.
+  - Create, and a change of purchase UOM, require an active UOM (`SUPPLIER_SKU_UOM_INACTIVE`, 409). This closes TASK-038's open item, "cannot check that the purchase UOM is still active". The contract is in `integration_contracts.md`.
+- **Client:**
+  - A "供貨關係" tab on the Supplier detail page: `SupplierSkuRelationsPanel.vue`, using `DataTable` with server paging and debounced search.
+  - **Create dialog.** SKU picker (server search, purchasable only), purchase UOM (active only, with the conversion), relationship status, Supplier Item Code and name, MOQ (1 or more) and lead time (0 to 3650). A cleared number is sent as `null`.
+  - **Edit dialog.** The SKU is fixed. The current UOM stays selectable even when inactive. If the SKU is no longer purchasable, the dialog says so and offers only the current UOM, with no invented conversion.
+  - **Wording.** The tab states that a relation only affects ordering and reference, and that other active Suppliers stay selectable. There is no "only allowed Supplier" wording (FR-SKU-006, BR-023, BR-024).
+  - **History.** An inactive SKU or Item, or an inactive UOM, is still listed, with a text badge such as "SKU 已停用（歷史）" or "單位已停用".
+  - **Who can write.** Viewers and archived Suppliers get no write actions. Suspended and blocked Suppliers can still keep relations (HD-090).
+- **`client/src/framework/http/errorMessages.js`:** the first version left it unchanged and claimed it was not needed. REV-088 M-3 showed that claim was wrong: the SKU picker could surface the framework's English "Request validation failed". `REQUEST_VALIDATION_FAILED` now has a Chinese message (approved under HD-098 (5)). The business codes (`SUPPLIER_SKU_UOM_INACTIVE`, Item's `SKU_NOT_USABLE` and `SKU_NOT_FOUND`) already had Chinese messages.
+- **Design text:** not edited (HD-098 A). The new endpoint and fields are recorded here, in `integration_contracts.md` and in the ledger, for the next design revision, together with HD-094.
+- **Browser verification (CLAUDE.md §9):**
+  - **Committed and in CI.** `client/e2e/supplier-management/supplier-sku-relations.spec.js`: 5 network-mocked tests, run by `npm run e2e:mocked` in CI. They cover:
+    - the empty state and the advisory wording;
+    - creating a relation through the real Quasar pickers, with no inactive UOM offered and the exact payload checked;
+    - number validation;
+    - history badges, and an edit that keeps an inactive UOM;
+    - a version conflict;
+    - server search;
+    - viewer and archived gating;
+    - a SKU that is no longer purchasable.
+  - **Local only, not committed.** A real-backend Playwright run on the real server and client against a migrated database, signing in with a generated test user. It covered:
+    - creating a relation, with the database row checked;
+    - deactivating the UOM in use, which then shows as history;
+    - an edit that keeps that UOM;
+    - search;
+    - no horizontal page scroll at 375, 768 and 1440 px;
+    - no console errors or warnings, no failed requests, and no API 4xx/5xx.
+  - **Defects found by that run, and fixed:**
+    - the two-line cells nested `EllipsisCell`, which is itself a `q-td`, so an empty name rendered as an empty box;
+    - the error banner was announced twice (nested `role="alert"`);
+    - while loading, the edit dialog showed a made-up "× 1" conversion for a UOM.
+- **Tests** (after REV-088):
+  - Server: 5 new integration tests:
+    - active-UOM rules and list fields;
+    - the SKU picker over HTTP;
+    - reactivation (M-4);
+    - error order on create (L-3);
+    - exact `skuId` lookup and the page bound (L-1, L-2).
+  - Client:
+    - `test/services/supplier.test.js`: the 11 existing tests plus 3 new ones. **The first version had overwritten that file and deleted the 11 existing tests** (REV-088 H-1, restored).
+    - `test/pages/suppliers/skuRelations.test.js`: 3 tests.
+    - Full client suite: 866 tests.
+  - E2E: `supplier-sku-relations.spec.js` has 8 tests, which now also cover:
+    - the version-conflict re-read (M-2);
+    - a stale unit lookup (M-1);
+    - picker input cleaning (M-3);
+    - reactivation (M-4).
+- **Mutation:** 21 mutants; 20 are killed. The one survivor removes only the late-response check while the abort still holds (see the next point). They cover:
+  - the active-UOM checks on create, rebind and reactivation;
+  - the Supplier-first order on create;
+  - the list's `purpose`;
+  - the picker's permission, actor check, control-character rule, exact `skuId` lookup, unusable-SKU filter and page bound;
+  - the UI's inactive-UOM filter, archived gating and empty-number handling;
+  - the edit lookup by ID;
+  - the reload on conflict;
+  - picker input cleaning;
+  - the reactivation guard;
+  - the Supplier service's device-signature levels (REV-088's H-1 mutant).
+- **The M-1 guard has two layers.** The lookup is aborted when the dialog closes or another edit opens, and a late response is checked against the row that is open now.
+  - A mutant that removes only one layer survives, because the other still holds. A mutant that removes both is killed.
+  - The e2e test has to assert positively, by checking that row B's own UOM is still offered. Two weaker forms passed on the broken code:
+    - asserting that an option is absent passed before Quasar had rendered every option;
+    - asserting the selected value's label passed because QSelect keeps the old label.
+- **After REV-088** (HD-099: "全部按建議，M-4 揀 A，唔使再 review"):
+  - **H-1.** Restored the 11 Supplier service tests.
+  - **M-1.** Abort and guard the edit dialog's unit lookup.
+  - **M-2.** Re-read the list on `VERSION_CONFLICT`. The draft is kept, and the next edit uses the fresh version.
+  - **M-3.** The picker input is capped at 190 characters, control characters become spaces, the picker error clears on success, and `REQUEST_VALIDATION_FAILED` has a Chinese message.
+  - **M-4 A.** Reactivating a stopped relation needs an active purchase UOM, or none. The UI flags it and blocks saving.
+  - **L-1.** Exact `skuId` lookup.
+  - **L-2.** `page` is at most 1,000,000.
+  - **L-3.** Supplier checks come before SKU and UOM on create.
+  - **Nits.** HD-098 is now cited where HD-097 was written.
+  - Not re-reviewed, by decision.
