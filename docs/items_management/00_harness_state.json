@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "item-management",
-  "revision": 119,
+  "revision": 120,
   "mode": "TEST_AND_VERIFY",
   "active_mode": "TEST_AND_VERIFY",
   "status": "BLOCKED",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "f7431c0934377f3331fd0a537e236eca8044df41f359d36202153803c4aca315",
     "plan": "809f8a15b605975f2db4c94eb641bc6bf6e5e3aaf07ed5938bb8660f9899a8ef",
-    "code_commit": "dd3e176294bc94e6403a2e1dba3d052af8e27056",
-    "source_fingerprint": "4b1121c10dd4e05fc2a39305bf5cc262d5f52ae55ac6e8f5bff6852d656bb208",
+    "code_commit": "bd116b393bb3a88db1d59882f33a759e50679efe",
+    "source_fingerprint": "d735bc6f612f0ff635c571adde4d539f41a00c71e9d855a1b060127314ddd01c",
     "worktree": "/Users/sam/.codex/worktrees/item-tc004-tc005-verification/erp-app",
-    "default_commit": "f94ba467472bcfae851ed6cb2bb077ac67ab8be0",
+    "default_commit": "692a1d47d892601a96c13afa5d80bf67377e9fe4",
     "mode_entry_commit": "f94ba467472bcfae851ed6cb2bb077ac67ab8be0"
   },
   "runtime": {
@@ -3074,8 +3074,8 @@
       "kind": "REPORT_PUBLICATION",
       "target": "Current Item verification branch: two scoped native packages/report/profile/journal ONLY",
       "idempotency_key": "item-tv-plan809f-two-package-publication-20261014",
-      "status": "PLANNED",
-      "source_ref": "APR058 actual user authority. Latest origin/main692a1d47 adds Supplier documentation only; integrate it before freezing publication candidate. Historical native runs remain appf94/commanddd3/source4b112. Exact publication-head CI and separate review still pending; no full-module MERGE_READY/TechnicalAcceptance waiver."
+      "status": "STARTED",
+      "source_ref": "APR058 publication authority. Actual two approved native packages/report committed92a64f31, latestmain692a1d47 integrated in bd116b393bb3a88db1d59882f33a759e50679efe. Product/test/CI files unchanged versus testedf94; only Supplier docs alter global fingerprint. Original native evidence and observations retain historicaldd3/f94/source4b112, no relabelling or whole-gate waiver. Exact final publication-head CI/review pending."
     }
   ],
   "evidence_files": [
@@ -3263,5 +3263,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Publish only APR058 approved two native synthetic packages and scoped result/global-blocked-gate reports; classify/hash-check, integrate latest main, freeze/push report-only candidate, create PR, require exact-head all CI and independent review before normal merge; then safe current Item cleanup. Historical runs retain appf94/dd3/source4b112. DEF107HIGHOPEN/GRBLOCKED/TASK043IN_PROGRESS/fullTC incomplete/UATseparate unchanged; original40 generic indices unchanged."
+  "next_safe_action": "Freeze final report-only candidate after successful hash/classification, traceability, mode-boundary and diff checks. Push/create PR, require all five exact-candidate CI checks and real separate-agent review, fresh main before merge, then safe current Item cleanup. Original historical runs remain dd3/f94/source4b112; DEF107HIGHOPEN/GRBLOCKED/TASK043IN_PROGRESS/fullTC incomplete/UATseparate unchanged."
 }
