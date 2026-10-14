@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 323,
+  "revision": 324,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -13,7 +13,7 @@
     "plan": "441671a6dffc2a6dc2d0b1e17d0b411c748bae623abd17f2bb0b698bc4fe00c3",
     "code_commit": "f94ba467472bcfae851ed6cb2bb077ac67ab8be0",
     "source_fingerprint": "d81da3caa736ff95e431623c7c9bc944ced9ebdea1e035b1e37a3820b81b1b9a",
-    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t39-close",
+    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t50",
     "default_commit": "f94ba467472bcfae851ed6cb2bb077ac67ab8be0",
     "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
   },
@@ -6278,5 +6278,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-039 DONE (PR #215, f94ba467). Next: TASK-050's remaining for-SKU part — add the for-SKU lookup (incl. hot-SKU name search and deep pages) to the 50-user mixed benchmark over HTTP at the production pool (REV-087 M-1), then the final rerun. Design text still owes HD-094/HD-098 updates at the next design revision."
+  "next_safe_action": "TASK-050 for-SKU part and final rerun done (2026-10-14): NFR-001 and NFR-005 pass over HTTP at pool 10; for-SKU head join fixed with STRAIGHT_JOIN; ranking-count log added. Next: full suite, push, PR. TASK-050 stays IN_PROGRESS until the manual SRE review (Verification) and the perf:supplier script decision; then T51 (HD-057 open)."
 }

@@ -1,8 +1,7 @@
 # Supplier performance, capacity and observability (TASK-050)
 
 This is the T50 capacity report. It covers what was measured, on what, with which commands, and what is still open.
-The for-SKU lookup (NFR-005) is not in this mixed-load benchmark yet. HD-082 A started T50 without it, and its for-SKU part and a final rerun follow TASK-040.
-TASK-040 measured the lookup on its own; see the NFR-005 row.
+HD-082 A started T50 without the for-SKU lookup (NFR-005). Its for-SKU part and the final rerun were done on 2026-10-14, after TASK-040 and TASK-039; see "for-SKU lookup" below.
 
 Evidence: `evidence/20261009-t50-capacity/`.
 
@@ -14,7 +13,7 @@ Evidence: `evidence/20261009-t50-capacity/`.
 | NFR-002: server-side paging, 20 by default, at most 100 | Unchanged; the benchmark uses the defaults and `pageSize=50`. |
 | NFR-003: 100,000 Suppliers | **Pass** at 100,000 Suppliers with 1% at the per-Supplier upper bound. |
 | NFR-004 with online load (design §11.5) | **Pass.** A 10,000-row import took 69 s, entirely inside a 120 s measured window with 50 users; the slowest online p95 was 136 ms. |
-| NFR-005: for-SKU lookup | **Passes in-process, with thin headroom (TASK-040, HD-095, REV-087 M-1).** 50 users doing only for-SKU lookups on the hot SKU's expensive cases (think time 0 to 1 s), measured at the service with no HTTP: p95 1,423 ms with a pool of 20 and **1,633 ms with the production pool of 10**, no errors (REV-087's like-for-like rerun). Before HD-095 the same mix was 4,153 ms. Evidence in `evidence/20261013-t40-for-sku/`. **Not yet measured over HTTP**; that and the hot-SKU name-search and deep-page cases belong to T50's remaining for-SKU run. |
+| NFR-005: for-SKU lookup | **Pass over HTTP at the production pool of 10** (2026-10-14, `evidence/20261014-t50-for-sku/`).<br>• **Mixed load** (17 operations): the slowest for-SKU operation, a name search on a SKU with 20,000 relations, has p95 399 ms.<br>• **Worst case** (`--only=forSku`, 50 users doing nothing else, seven in ten of the lookups on that hot SKU): p95 1,300 ms overall and 1,467 ms for the slowest operation. Error rate 0.<br>• Before the head-join fix below, the same worst case had p95 3,573 ms and failed. |
 | EXPLAIN shows the designed indexes (T50 AC 1) | **Met for the default list, every filter and the name and Code sorts after HD-088,** and for detail, children, counts and the similar-name search. Sort by status is not indexed (about 20 ms). **Not met for the text search,** by decision: a full-text index was measured slower and changes results (see "List and search indexes"). |
 | Metrics, logs and alerts (T50 AC 2, design §12.4) | **Done** for approvals and imports; the other signals already have log events (see "Observability"). |
 | Manual SRE review | **Open.** Operations needs to review the alerts, the query plans and this report. |
@@ -190,15 +189,89 @@ Measured on the 100k data, one query at a time (`EXPLAIN ANALYZE`). These are ad
 | Bank integrity or key failure | `supplier.bank.integrity_failed` and `supplier.bank.key_unavailable`, error. They should be a critical alert. |
 | Bank duplicate check unavailable | `supplier.bank.duplicate_check_unavailable`, error |
 | Code or Identifier conflicts, unauthorised attempts | Request log status 409 and 403 with the route |
-| for-SKU latency and ranking | Waits on TASK-040 |
+| for-SKU latency and ranking | Latency: the request log for `/api/v1/supplier-lookups/for-sku/:skuId`. Ranking: `supplier.for_sku.lookup`, one info line per lookup, with counts only: `ranked.exact_match`, `preferred`, `recently_supplied` and `none`, plus `returned`, `total` and `searched` (design §12.4). |
 
 - **Format:** `supplier.metrics` and the alerts carry only numbers, never names, values or paths. A unit test checks this.
 - **Thresholds:** the thresholds are constants in `supplierMetrics.js` (HD-083 2A). If Operations wants to tune them, they move to `server/config/supplier.js`, which needs approval.
 - **Alerting:** this system has no metrics backend, so alerting means routing these log events. Operations decides how.
 
+## for-SKU lookup (TASK-050 for-SKU part, 2026-10-14)
+
+### Data
+
+The same 100k seed (`seed-100k.json`), plus Supplier–SKU relations from `seedSupplierPerformanceFixtures.js`:
+
+- 20% of Suppliers have relations (design §11.5). There are 120,000 relations over 1,002 SKUs.
+- `PERF-SKU-HOT` has 20,000 relations, from every fifth Supplier: 2,029 preferred, 997 stopped and 16,974 alternative. About 13,000 of them carry a ranking reason, so they are read as the head on every call.
+- `PERF-SKU-COLD` has none.
+- 1,000 `PERF-SKU-nnnn` have about 100 relations each.
+- Relation status is 10% preferred, 5% stopped and the rest alternative. About two thirds have a last-supplied time.
+- The hot SKU is a stress assumption: a single SKU supplied by a fifth of all Suppliers.
+
+### Commands
+
+```
+node scripts/seedSupplierPerformanceFixtures.js --database=<DB_NAME> --suppliers=100000
+node scripts/benchmarkSupplierManagement.js --database=<DB_NAME> --output load-50-users-with-for-sku.json
+node scripts/benchmarkSupplierManagement.js --database=<DB_NAME> --only=forSku --output load-50-users-for-sku-only.json
+```
+
+### Load
+
+The benchmark adds five for-SKU operations to the mix:
+
+| Operation | Weight |
+| --- | --- |
+| `forSku.typical`: a 100-relation SKU, no search | 3 |
+| `forSku.hot`: the hot SKU, page 1 | 2 |
+| `forSku.codeExact`: the hot SKU, searching an exact Supplier Code | 2 |
+| `forSku.nameSearch`: the hot SKU, searching a common name word | 2 |
+| `forSku.deepPage`: the hot SKU, page 50 to 400 | 1 |
+
+- The 12 earlier operations keep their weights (100), so their ratios match the earlier runs. The total is now 110.
+- The app registers `supplierCoreProvider` as `src/index.js` does, and uses the configured pool of 10.
+- Each request goes through HTTP, JWT, policy and the fresh-actor check.
+
+### Results
+
+| Run | Overall p95 | Slowest for-SKU p95 | Throughput | Errors |
+| --- | --- | --- | --- | --- |
+| Mixed (`load-50-users-with-for-sku.json`) | 127 ms | 399 ms (nameSearch) | 91/s | 0 |
+| for-SKU only (`load-50-users-for-sku-only.json`) | 1,300 ms | 1,467 ms (nameSearch) | 38/s | 0 |
+| for-SKU only, before the head-join fix (`…-before-straight-join.json`) | 3,573 ms | 3,914 ms | 16/s | 0 |
+
+In the mixed run every operation stays under 200 ms p95, except the two hot-SKU for-SKU searches (329 and 399 ms).
+
+### What the head-join fix changed
+
+`load-50-users-for-sku-only-before-straight-join.json` → `topStatements` showed that the head query of `listForSku()`, which reads the Suppliers with a ranking reason, examined about 80,000 rows per call for the hot SKU.
+
+The cause was join order. MySQL drove the join from all 80,053 Active Suppliers (with the LIKE filter applied) and probed the head's derived table for each one. Its estimate for `sku_id` was also off: 58,000 rows estimated against 20,000 real.
+
+`STRAIGHT_JOIN` from the head fixes the order. On an idle server (`head-join-plan.sql`, `EXPLAIN ANALYZE`):
+
+| Hot-SKU head count | Before | After |
+| --- | --- | --- |
+| No search | 66.6 ms | 28.4 ms |
+| Search | 90.6 ms | 27.3 ms |
+
+Under the worst-case load this cut p95 from 3.6 s to 1.3 s. There is no schema change, and the ordering oracle test in `supplierSkuLookup.integration.test.js` still passes.
+
+### What remains costly
+
+- **The text-search count.** `COUNT(*)` over Active Suppliers with the LIKE filters takes about 300 ms per call under the worst-case load and examines 80,000 rows. It is the same scan as the Supplier list search (HD-088: text search stays a scan).
+- **The hot SKU's head.** About 13,000 relation rows are read, each joined to its Supplier by primary key: 30 ms when idle.
+  - For the hot SKU, the plan scans `supplier_sku_refs`. Forcing `idx_supplier_sku_refs_sku_status_supplied` did not help: 30.1 ms against 31.4 ms, because the primary-key joins dominate.
+  - A typical SKU uses the index (0.17 ms).
+- **The Item Code pre-query** reads every relation of the SKU (37 ms per call under load for the hot SKU). A `(sku_id, supplier_item_code_key)` index would remove that (REV-087 I-5). It is not needed for NFR-005.
+
+### Measurement note
+
+`performance_schema`'s digest table holds 10,000 statements. On the shared test instance it was full of earlier runs, so new statements were not attributed and the first runs reported no `topStatements`. The benchmark now records `digestTable` and says so when this happens. The runs above were taken after `TRUNCATE performance_schema.events_statements_summary_by_digest` on that throwaway instance.
+
 ## Open
 
-1. The for-SKU lookup (NFR-005, its metrics) and a final rerun, after TASK-040.
+1. ~~The for-SKU lookup (NFR-005, its metrics) and a final rerun, after TASK-040.~~ Done on 2026-10-14; see "for-SKU lookup".
 2. The manual SRE review of this report, the alerts and the query plans.
 3. Sort by status is not indexed (about 20 ms). Text search stays a scan (HD-088).
 4. The `perf:supplier` npm script (`server/package.json`, needs approval).

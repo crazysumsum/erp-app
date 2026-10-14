@@ -1082,3 +1082,22 @@ fails the test instead of hanging it. Killed: "no skip when the index exists" (i
   - **L-3.** Supplier checks come before SKU and UOM on create.
   - **Nits.** HD-098 is now cited where HD-097 was written.
   - Not re-reviewed, by decision.
+
+## TASK-050: the for-SKU part and the final rerun (2026-10-14)
+
+- **Seed.** `seedSupplierPerformanceFixtures.js` now writes Supplier–SKU relations for 20% of Suppliers (design §11.5): a 20,000-relation hot SKU, a SKU with none, and 1,000 SKUs with about 100 each. The status mix is 10% preferred and 5% stopped. This replaces TASK-040's hand-written `seed.sql`, whose hot SKU had no stopped relations (REV-087 L-4).
+- **Benchmark.** `benchmarkSupplierManagement.js` adds five for-SKU operations (weight 10, on top of the earlier 100) and `--only=<prefix>`. It registers `supplierCoreProvider` as `src/index.js` does, reports `nfr005`, and records `digestTable`, flagging when the digest table is full and `topStatements` is therefore incomplete.
+- **Result.** Over HTTP at the production pool of 10:
+  - mixed load: p95 127 ms overall; the slowest for-SKU operation is 399 ms;
+  - for-SKU only, the worst case: p95 1,300 ms; the slowest operation is 1,467 ms;
+  - no errors in either run;
+  - details are in `performance_report.md` under "for-SKU lookup", and the evidence in `evidence/20261014-t50-for-sku/`.
+  This replaces TASK-040's in-process figures (REV-087 M-1).
+- **Fix found by the run.** Without a fixed join order, MySQL read the head query from all Active Suppliers rather than from the SKU's relations. That examined about 80,000 rows per call for the hot SKU, and the worst case failed at 3.6 s.
+  - `listForSku()` now uses `FROM (head) h STRAIGHT_JOIN suppliers s`.
+  - A unit test pins the SQL, and the ordering oracle still passes.
+  - This changes TASK-040 code under TASK-050. It is a query-plan hint only: the API, the order and the schema are unchanged.
+- **Observability (design §12.4).** `supplier.for_sku.lookup` logs counts only: `skuId`, `page`, `pageSize`, `returned`, `total`, `searched` and `ranked{exact_match, preferred, recently_supplied, none}`. A unit test checks that no Supplier name leaks. Latency comes from the request log.
+- **Still open for TASK-050:**
+  - the manual SRE review of the report, the alerts and the query plans;
+  - the `perf:supplier` npm script, which needs approval for `server/package.json`.
