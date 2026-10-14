@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 152,
+  "revision": 153,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,7 +11,7 @@
   "baseline": {
     "design": "24b905fb54f174a745979908a11d3e6d6f0f0c8e9f41d80ee9bb8eea0d946f01",
     "plan": "8e3ca15db849b5f9bbfcc23d06d24bbfd00eb20c874f6f65ce7a1b2b36149b4f",
-    "code_commit": "e91197d5d71e110aa149b2af99492a7717af4f27",
+    "code_commit": "329f6ed4ec98f1f65673c913bcd8809c4a6bcaf4",
     "source_fingerprint": "7cceffc523a8cd6e9b113f6fbf475c9a93a44c18f05a4a637fbe87e4a2401ebb",
     "worktree": "/private/tmp/erp-customer-task029-adoption",
     "default_commit": "e91197d5d71e110aa149b2af99492a7717af4f27",
