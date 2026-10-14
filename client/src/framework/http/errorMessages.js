@@ -33,6 +33,9 @@ export const ERROR_CODE_MESSAGES = Object.freeze({
   NOT_FOUND: "找不到請求的內容",
   REQUEST_BODY_TOO_LARGE: "請求內容過大",
   INVALID_JSON: "請求內容格式錯誤",
+  // 框架 request validator（server/src/framework/validation/requestValidator.js）嘅 publicMessage 係英文
+  // "Request validation failed"；以前前端都喺送出前擋住，Supplier 嘅 SKU 揀選器係第一個會漏出嚟嘅地方（REV-088 M-3）。
+  REQUEST_VALIDATION_FAILED: "輸入的資料格式不正確，請檢查後再試",
   // 上傳中間件（src/framework/upload/uploadMiddleware.js）嘅錯誤，同上面
   // 一樣一直未跟中文 publicMessage 慣例——T25／T26 之前冇任何功能用到
   // 上傳，而家先第一次由 media 上傳觸發呢幾個 code。
