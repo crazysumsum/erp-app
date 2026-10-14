@@ -251,3 +251,170 @@ Final runs on the new seed, over HTTP with pool 10:
 - Both runs: errors 0, `lostDuringRun` 0.
 
 Re-review requested by the Product Owner.
+
+---
+
+# REV-089 round 2 — re-review of the HD-100 follow-ups
+
+- **Reviewer:** `agent-skills:code-reviewer` (a separate agent, the same reviewer as REV-089; I did not write this code)
+- **Baseline commit:** `e7d8949c216ec2fe136e719faf718ee640378692` (PR #218 head), reviewed as `git diff f661d582..e7d8949c -- server docs/supplier_management`, follow-up commits `1180edf2` and `95b0307a`
+- **Verdict:** **APPROVED**
+- **Open Critical / High:** 0 / 0. There are no new Medium findings; two new Info notes, N-1 and N-2.
+
+Every REV-089 finding is resolved, and I ran the mechanism for each one rather than only reading the diff.
+
+The figures in the docs match the regenerated evidence JSON exactly. I found nothing new that blocks the merge.
+
+The one point worth recording comes from my own worst-case rerun: the slowest p95 reached 1,966 ms, above the documented "1.5 to 1.9 s" range. The instance was carrying load from other schemas during that run. NFR-005 still passed, but the margin is thin (N-1).
+
+## Per-finding status
+
+| Finding | Status | What I verified |
+| --- | --- | --- |
+| **M-1** `--only` claims NFR-001 | **Resolved** | See [M-1](#m-1) |
+| **M-2** worst case missed rest-deep pages; headroom overstated | **Resolved** | See [M-2](#m-2) |
+| **L-1** 40% seed, "same seed", 1,002 SKUs | **Resolved** | See [L-1](#l-1) |
+| **L-2** "about 13,000 rows read" | **Resolved** | See [L-2](#l-2) |
+| **L-3** `DIGEST IS NULL` is a sticky signal | **Resolved** (the mechanism with a full table is not reproduced; see below) | See [L-3](#l-3) |
+| **L-4** log tests thin | **Resolved** | See [L-4](#l-4) |
+| **I-1** log volume and correlation | **Resolved as recorded** (deferred to the SRE review, as recommended) | See [I-1](#i-1) |
+| **I-2** stale or wrong details | **Resolved** | See [I-2](#i-2) |
+
+### M-1
+
+- **The code.** `verdict(pick)` now builds `nfr001` from the non-`forSku` operations and `nfr005` from the `forSku` ones. Each is `null` when none of its operations ran, and `ok = verdicts.every(pass)` over the non-null verdicts.
+- **A for-SKU-only run.** My `--only=forSku` run (`rev089/r2-bench1-forsku-only.json`) gives `nfr001: null` and `nfr005: {operations: 6, pass: true}`.
+- **A run with no for-SKU operation.** My short `--only=list.default` run (`r2-bench2-list-only.json`) gives `nfr005: null` and `nfr001: {operations: 1, pass: true}`.
+- **The evidence.** The committed `load-50-users-for-sku-only.json` now has `nfr001: null`. The mixed run has `nfr001.operations: 12` and `nfr005.operations: 6`.
+
+### M-2
+
+- **Page range.** `deepPage` takes `randomInt(floor(head/20)+2, ceil(active/20)+1)`, worked out from the data.
+  - On `erp_t50` the head is 10,496 rows (525 pages; page 525 still holds 16 head rows), so the range is 526 to 3,999. That is the first purely rest page through the last page, as documented.
+  - On my reseed the head is 10,674 rows and the range is 535 to 4,004.
+- **The rest query is now exercised.** In my run it is the second most expensive statement: 410.8 ms per call and 122,525 rows examined per call, 647 calls.
+- **`forSku.cold`** was added, at weight 1, on random pages. Its p95 was 1,477 ms in my run.
+- **Headroom.** The docs now give a range ("1.5 to 1.9 s across four runs") instead of a single figure. See N-1 for a fifth run.
+
+### L-1
+
+- **The seed.** Relations go only to `id % 5 == 0`: the hot SKU plus 5 spread SKUs each.
+- **`erp_t50` (read-only).** 120,000 relations, 20,000 distinct Suppliers, 0 off the pattern, and 1,001 SKUs. Spread SKUs have 71 to 139 relations each, with an average of 100.
+- **My fresh `erp_rev089` seed** (60 s) gives the same: 120000, 20000, 0 and 1001.
+- **The docs** now say "a fresh 100k seed" and "1,001 SKUs", and record the correction.
+
+### L-2
+
+- **The wording** now says that the no-search head scans the whole `supplier_sku_refs`, so its cost grows with all relations, and that the plan needs a re-check at scale.
+- **The plan on the new seed.** I re-ran `head-join-plan.sql` on the reseeded `erp_t50`. Plan B still shows `Table scan on y (rows=120000)`, and the times are 81.7 → 34.3 ms (no search) and 117 → 41.4 ms (search). The statement holds on the new seed.
+
+### L-3
+
+- **The code.** `lostDuringRun` is the rise in `Performance_schema_digest_lost` between the end of warm-up and the end of the run. The note appears only when it is above 0.
+- **The counter exists and moves on this instance.** It read 541,255 before and after my runs; it is cumulative from earlier overflows, and `TRUNCATE` does not reset it. Taking the difference is therefore correct, and both of my runs report `lostDuringRun: 0`.
+- **Not verified:** a positive `lostDuringRun` under a full table. Filling the table would have needed server-wide action, which this review's rules do not allow.
+- **One caveat.** The counter is global, so statements from other schemas can raise it. That can only over-warn, never hide a loss; see N-2.
+
+### L-4
+
+The new test covers no search, `page: 2` and a Supplier that appears in both the head and the rest. With it, the unit suite passes 19 of 19. I re-ran each mutant against `supplierLookupService.test.js` and restored the file afterwards (checked with `cmp`):
+
+| Mutant | Result |
+| --- | --- |
+| `searched: true` (constant) | **killed** |
+| `page: 1` (constant) | **killed** |
+| counting before de-duplication | **killed** |
+| `STRAIGHT_JOIN` reverted | **killed** |
+| new: `returned` counted before de-duplication | **killed** |
+
+### I-1
+
+The performance report's measurement notes and the carry-forward record:
+
+- the volume of about 290 bytes per lookup, roughly 0.9 GB a day at 38 lookups per second;
+- the missing `requestId`;
+- the unimplemented `supplier.lookup.slow`.
+
+All three are routed to the SRE review, as I recommended.
+
+### I-2
+
+- **`next_safe_action`** has been updated.
+- **"80,053"** is gone from the for-SKU section. The figure that remains at carry-forward line 956 is TASK-040's own baseline, which is correct.
+- **The NFR-001 row** now cites the final mixed rerun: 136 ms, from `update` at 135.5.
+- **The usage text** mentions `--only`.
+- **The "before" file** is described as coming from an uncommitted script version on the 40% seed, and as not a like-for-like baseline.
+
+## New findings
+
+### N-1 (Info): A fifth worst-case run went past the documented headroom range
+
+**What I saw.** My `--only=forSku` run on a fresh 20% seed in `erp_rev089` gave:
+
+- overall p95 1,751 ms;
+- **nameSearch p95 1,966 ms**, p99 2,183 ms, max 2,272 ms;
+- `codeExact` p95 1,799 ms;
+- 0 errors; NFR-005 passed.
+
+The machine's load average rose from 4.7 to 12.4 during the run. The digest table also held 1,056 to 1,245 digests from other schemas (`erp_t50i`, `item_recovery_it_*`), against 45 in the author's run. So other work was hitting the same MySQL instance at the same time.
+
+The documented range "1.5 to 1.9 s across four runs" is accurate for the runs it lists. It also mixes configurations:
+
+- the author's 1,467 ms run used the old mix on the 40% seed;
+- my 1,907 ms run used rest-deep pages on the 40% seed, with no cold SKU.
+
+**Recommendation (optional).**
+
+- Widen the range to "1.5 to 2.0 s across five runs", or note that p99 exceeded 2 s in three of them.
+- Keep the existing sentence that capacity planning should use the range.
+- The text-search `COUNT(*)` (about 344 ms per call under load) remains the lever if NFR-005 needs real margin.
+
+This does not block the merge: the NFR passed in every run.
+
+### N-2 (Info): A partial `--only` run still reports a pass, and the digest-loss counter is global
+
+- **Partial runs.** `--only=list.default` yields `nfr001: {operations: 1, pass: true}`, a pass based on 1 of 12 operations. The `operations` count discloses this, so it is not the M-1 defect. Optional: mark the verdict as partial when `operations` is below the full set.
+- **The digest counter.** `Performance_schema_digest_lost` counts statements from every schema and session on the instance, including the benchmark's own `SHOW GLOBAL STATUS` sampling. On a shared instance with a full digest table, the note could appear while this schema's statements were fully attributed. That errs in the safe direction, and no change is needed.
+
+## What I checked
+
+- **The diff.** I read `git diff f661d582..e7d8949c` for `server/` and `docs/supplier_management/`, and ignored the Item merge.
+- **The committed REV-089 report.** `92_rev_089_independent_review.md` matches my round-1 report word for word, apart from the scratchpad path being shortened to `<scratchpad>`. The author's follow-up table describes the changes accurately.
+- **The docs against the evidence JSON. Every figure matches:**
+  - **Mixed run:** overall p95 156.9 → 157 ms; `update` 135.5 → 136 ms; nameSearch 434.6 and 498.2 → 435 and 498 ms; cold 304.7 → 305 ms; 90/s.
+  - **for-SKU only:** 1,487.8 → 1,488 ms; nameSearch 1,678.2 and 1,848.8 → 1,678 and 1,849 ms; 33/s.
+  - **Both runs:** `lostDuringRun` 0, errors 0.
+  - **Data:** active 79,976; hot SKU 1,974 preferred, 1,057 stopped, 16,969 alternative; head 10,496 = 525 pages; range 526 to 3,999; weight 111; 18 operations.
+  - **Seed:** `seed-100k.json`, skuRelations 120,000.
+  - **Head-join reproduction:** "103 → 33" and "109 → 32" match my round-1 figures. I re-ran the plans on the new seed: 81.7 → 34.3 and 117 → 41.4.
+- **Stale figures.** Searching the performance report and the carry-forward for 110, "five for-SKU", "seven in ten", 13,000 and 1,002 found nothing outdated.
+- **New code, edge cases.**
+  - When the head is a multiple of 20, the first deep page is one later than it could be: harmless.
+  - `ok` is `false` only if both verdicts are null, which cannot happen because `MIX` is never empty.
+  - Seeded spread relations now all belong to Suppliers that also have a hot relation. That is harmless for these measurements.
+- **Tests.**
+  - `node --test test/supplierLookupService.test.js`: 19 of 19 pass, with the mutants listed above.
+  - The integration test file did not change in this diff, and I did not re-run it, because `erp_rev089` now holds the 100k seed.
+- **Benchmarks.** I ran two on `erp_rev089`:
+  - a full `--only=forSku` run, after a digest `TRUNCATE`;
+  - a 5-second `--only=list.default` run with 2 users, to exercise the `nfr005: null` path.
+- **Cleanup.** No `perf50-` roles or users and no `p50w-` Suppliers are left.
+
+**Not verified:**
+
+- the CI result for PR #218;
+- a positive `lostDuringRun` under a full table;
+- the load averages stated for the author's runs, which the evidence JSON does not record;
+- the forced-index figures of 30.1 and 31.4 ms.
+
+**Housekeeping:**
+
+- All writes went only to `erp_rev089`; I ran only reads and `EXPLAIN ANALYZE` against `erp_t50`.
+- I restored `SupplierLookupService.js` after the mutants and checked it with `cmp`.
+- `git -C /Users/sam/Documents/workspace/erp-rev089 status --porcelain` is empty, and HEAD is `e7d8949c`.
+- The outputs are in `<scratchpad>/rev089/`: `r2-bench1-forsku-only.json`, `r2-bench2-list-only.json`, `seed2.json` and `planout_r2.txt`.
+
+### Author's note on round 2
+
+- **N-1.** The headroom is now stated as "five runs, slowest p95 1.5 to 2.0 s, p99 over 2 s in three", and each run's seed and mix is listed.
+- **N-2.** Not changed. The `operations` count already shows how complete a verdict is, and the digest counter can over-warn but cannot hide a loss.

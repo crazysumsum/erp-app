@@ -1101,7 +1101,7 @@ fails the test instead of hanging it. Killed: "no skip when the index exists" (i
   | Mixed | 157 ms | NFR-001: slowest 136 ms. NFR-005: slowest 435 ms |
   | for-SKU only, the worst case | 1,488 ms | Slowest operation 1,678 ms (p99 1,849 ms) |
 
-  Across four worst-case runs on this machine (two by the author, two by REV-089), the slowest p95 was 1.5 to 1.9 s.
+  Across five worst-case runs on this machine (two by the author, three by REV-089), the slowest p95 was 1.5 to 2.0 s, and p99 went over 2 s in three of them.
   - Details are in `performance_report.md` under "for-SKU lookup". This replaces TASK-040's in-process figures (REV-087 M-1).
 - **Fix found by the run.** Without a fixed join order, MySQL read the head query from all Active Suppliers rather than from the SKU's relations. That examined about 80,000 rows per call for the hot SKU, and the worst case failed at 3.6 s.
   - `listForSku()` now uses `FROM (head) h STRAIGHT_JOIN suppliers s`. A unit test pins the SQL; the ordering oracle still passes.
@@ -1110,7 +1110,7 @@ fails the test instead of hanging it. Killed: "no skip when the index exists" (i
 - **Observability (design §12.4).** `supplier.for_sku.lookup` logs counts only: `skuId`, `page`, `pageSize`, `returned`, `total`, `searched` and `ranked{…}`, counted after de-duplication.
   - Unit tests pin the counts, the page, the search flag and that no Supplier name leaks (REV-089 L-4).
   - Its volume, the missing `requestId`, and the unimplemented `supplier.lookup.slow` from §12.3 are for the SRE review (REV-089 I-1).
-- **Review.** REV-089 (CHANGES_REQUESTED, no Critical or High). Follow-ups are under HD-100; the report and follow-up are in `implementation/92_rev_089_independent_review.md`. A re-review was requested by the Product Owner.
+- **Review.** REV-089 (CHANGES_REQUESTED, no Critical or High). Follow-ups are under HD-100. The re-review, REV-089 round 2, was APPROVED, with every finding resolved and two Info notes. Both reports and the follow-up are in `implementation/92_rev_089_independent_review.md`.
 - **Still open for TASK-050:**
   - the manual SRE review of the report, the alerts, the query plans and the lookup log;
   - the `perf:supplier` npm script, which needs approval for `server/package.json`.

@@ -13,7 +13,7 @@ Evidence: `evidence/20261009-t50-capacity/`.
 | NFR-002: server-side paging, 20 by default, at most 100 | Unchanged; the benchmark uses the defaults and `pageSize=50`. |
 | NFR-003: 100,000 Suppliers | **Pass** at 100,000 Suppliers with 1% at the per-Supplier upper bound. |
 | NFR-004 with online load (design §11.5) | **Pass.** A 10,000-row import took 69 s, entirely inside a 120 s measured window with 50 users; the slowest online p95 was 136 ms. |
-| NFR-005: for-SKU lookup | **Pass over HTTP at the production pool of 10** (2026-10-14, `evidence/20261014-t50-for-sku/`, REV-089).<br>• **Mixed load** (18 operations): the slowest for-SKU operation, a name search on a SKU with 20,000 relations, has p95 435 ms.<br>• **Worst case** (`--only=forSku`, 50 users doing nothing else, including deep pages past the hot SKU's head and the SKU with no relations): p95 1,488 ms overall and 1,678 ms for the slowest operation. Error rate 0.<br>• **Headroom:** across four worst-case runs on this machine the slowest operation's p95 was 1.5 to 1.9 s.<br>• Before the head-join fix below, the worst case had p95 3,573 ms and failed. |
+| NFR-005: for-SKU lookup | **Pass over HTTP at the production pool of 10** (2026-10-14, `evidence/20261014-t50-for-sku/`, REV-089).<br>• **Mixed load** (18 operations): the slowest for-SKU operation, a name search on a SKU with 20,000 relations, has p95 435 ms.<br>• **Worst case** (`--only=forSku`, 50 users doing nothing else, including deep pages past the hot SKU's head and the SKU with no relations): p95 1,488 ms overall and 1,678 ms for the slowest operation. Error rate 0.<br>• **Headroom:** across five worst-case runs on this machine the slowest operation's p95 was 1.5 to 2.0 s, and p99 went over 2 s in three of them.<br>• Before the head-join fix below, the worst case had p95 3,573 ms and failed. |
 | EXPLAIN shows the designed indexes (T50 AC 1) | **Met for the default list, every filter and the name and Code sorts after HD-088,** and for detail, children, counts and the similar-name search. Sort by status is not indexed (about 20 ms). **Not met for the text search,** by decision: a full-text index was measured slower and changes results (see "List and search indexes"). |
 | Metrics, logs and alerts (T50 AC 2, design §12.4) | **Done** for approvals and imports; the other signals already have log events (see "Observability"). |
 | Manual SRE review | **Open.** Operations needs to review the alerts, the query plans and this report. |
@@ -249,12 +249,16 @@ Six for-SKU operations are added to the mix:
 - **Mixed run.**
   - All 12 earlier operations stay under 136 ms p95 (the slowest is `update`), so NFR-001 passes.
   - The for-SKU operations stay under 435 ms p95, so NFR-005 passes. The cold SKU, mostly on deep pages, is 305 ms.
-- **The worst case passes, with variable headroom on this machine.**
-  - Across four for-SKU-only runs, the slowest operation's p95 was 1.5 to 1.9 s:
-    - 1,467 and 1,678 ms in the author's runs;
-    - 1,809 and 1,907 ms in REV-089's two runs on the earlier 40% seed.
-  - In REV-089's runs p99 reached 2.0 to 2.1 s.
+- **The worst case passes, but the headroom is thin and varies on this machine.**
+  - Across five for-SKU-only runs, the slowest operation's p95 was 1.5 to 2.0 s:
+    - 1,467 ms (author, old mix on the 40% seed);
+    - 1,678 ms (author, this mix on this seed);
+    - 1,809 and 1,907 ms (REV-089 on the 40% seed);
+    - 1,966 ms (REV-089 round 2, this mix on a fresh 20% seed, with other work on the same MySQL instance).
+  - p99 went over 2 s in three of them (up to 2,183 ms).
+  - The runs used different seeds and mixes, as listed.
   - The machine's load average was about 3 to 12 during these runs. Production capacity planning should use the range, not one figure.
+  - The text-search `COUNT(*)` is the next step if NFR-005 needs real margin (REV-089 round 2 N-1).
 - **The "before" file.** It was produced by an earlier, uncommitted version of the benchmark (no `digestTable`, deep pages within the head) on the 40% seed. It shows the size of the head-join fix, not a like-for-like baseline.
 
 ### What the head-join fix changed
