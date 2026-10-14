@@ -107,14 +107,14 @@ export class CustomerBankCrypto {
 
   decrypt({ customerId, cryptoContext, ciphertext, iv, authTag, encryptionKeyId }) {
     const secret = this.#encryption.keyRing[String(encryptionKeyId ?? "")];
-    if (!secret) throw new Error("Customer bank account encryption key is unavailable");
+    if (!secret) throw Object.assign(new Error("Customer bank account encryption key is unavailable"), { code: "BANK_KEY_UNAVAILABLE" });
     try {
       const decipher = createDecipheriv("aes-256-gcm", key(secret), Buffer.from(iv));
       decipher.setAAD(aad(customerId, cryptoContext));
       decipher.setAuthTag(Buffer.from(authTag));
       return Buffer.concat([decipher.update(Buffer.from(ciphertext)), decipher.final()]).toString("utf8");
     } catch {
-      throw new Error("Customer bank account failed authentication");
+      throw Object.assign(new Error("Customer bank account failed authentication"), { code: "BANK_INTEGRITY_FAILED" });
     }
   }
 

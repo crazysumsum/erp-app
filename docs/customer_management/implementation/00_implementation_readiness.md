@@ -2,7 +2,15 @@
 
 ## Status
 
-`BLOCKED` — PHASE-001 implementation, remediation and final developer verification
+`BLOCKED` for complete PHASE-004 integration: TASK-029 is merged; TASK-030/031/032
+await real downstream consumers. TASK-033's Customer-local telemetry/security/runbook
+preparation is executable under the standing continuation authorization. See the
+[current PHASE-004 report](phase-PHASE-004-report.md); it supersedes historical
+entry/readiness statements below, without changing task completion dependencies.
+
+## Historical PHASE-001 readiness
+
+PHASE-001 implementation, remediation and final developer verification
 are complete through integrated candidate `1b78eb769cb69ecf1407d489f44e811477ef68de`.
 A non-semantic manifest schema
 repair refreshed DESIGN to
