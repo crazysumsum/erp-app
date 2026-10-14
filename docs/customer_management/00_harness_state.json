@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 157,
+  "revision": 158,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "24b905fb54f174a745979908a11d3e6d6f0f0c8e9f41d80ee9bb8eea0d946f01",
     "plan": "8e3ca15db849b5f9bbfcc23d06d24bbfd00eb20c874f6f65ce7a1b2b36149b4f",
-    "code_commit": "e5e67c550215cc056a0d72bfb6d623b9fb3e68a8",
-    "source_fingerprint": "8c6770c3cf8984000a8b9f90e3f501f2ae74274354543f42c04ab229204ffa88",
+    "code_commit": "630fc8cdf2432297227d283b121eac1391362ffe",
+    "source_fingerprint": "45cdca57dcb1c2667c3feaedd4ac4477eb03b92b06d4fb37d42b0a2198152daf",
     "worktree": "/private/tmp/erp-customer-task033-operational-slice",
-    "default_commit": "d9714a34f39a507528fc4c138496531cd1d57c69",
+    "default_commit": "fcfb172144f240db6a1d9b14cab1adbd0e4a597b",
     "mode_entry_commit": "f7fd95584e827f1bce112388fc2c196b5939671f"
   },
   "runtime": {
@@ -2119,6 +2119,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-043",
+      "method": "SEPARATE_AGENT",
+      "author": "/root TASK-033 main-integrated preparation",
+      "reviewer": "Jason (/root/customer_task011_review), separate agent",
+      "reviewed_baseline": "45cdca57dcb1c2667c3feaedd4ac4477eb03b92b06d4fb37d42b0a2198152daf",
+      "source_ref": "2026-10-14 independent re-review of integrated candidate 630fc8cdf2432297227d283b121eac1391362ffe against main fcfb172 confirmed identical Customer product/test/runbook patch, only Customer changes in the target diff, and passing diff/traceability/boundary checks. APPROVE with no Critical, High or Required finding; state-only reconciliation follows.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -2704,6 +2716,17 @@
       "source_ref": "REV-042; an additional allowlist-condition mutation caused both TC-080 tests to fail as expected, then the exact committed source was restored.",
       "actor": "Jason (/root/customer_task011_review), separate agent; mutation observed by /root",
       "observed_at": "2026-10-14T07:53:34Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-033 integration of moved main and refreshed developer verification",
+      "code_commit": "630fc8cdf2432297227d283b121eac1391362ffe",
+      "spec_baseline": "8e3ca15db849b5f9bbfcc23d06d24bbfd00eb20c874f6f65ce7a1b2b36149b4f",
+      "source_fingerprint": "45cdca57dcb1c2667c3feaedd4ac4477eb03b92b06d4fb37d42b0a2198152daf",
+      "status": "PASS",
+      "source_ref": "Integrated origin/main fcfb172144f240db6a1d9b14cab1adbd0e4a597b (two Supplier documentation files only) with no conflict. Customer diff and DESIGN/PLAN are unchanged. Reran Customer unit checks 253/253, lint and client build successfully. CI run 38531500861 belongs to superseded head 88dcec48 and cannot authorize this merge candidate; require a new final-head run.",
+      "actor": "/root integrated-candidate verification",
+      "observed_at": "2026-10-14T08:12:28Z"
     }
   ],
   "pending_decisions": [
@@ -3444,5 +3467,5 @@
     "docs/customer_management/implementation/customer-operations-runbook.md"
   ],
   "defects": [],
-  "next_safe_action": "Require all five current CI checks on the final PR #225 head, then recheck main freshness, merge and clean the TASK-033 slice branch/worktree under standing authorization. REV-042 approves the unchanged product fingerprint. TASK-033 remains IN_PROGRESS until TASK-032 and integrated alert/security gates are satisfied; TASK-034/035/036 final verification still depends on the real provider set. TASK-030/031/032 remain BLOCKED; do not create placeholders or weaken completion criteria."
+  "next_safe_action": "Require all five current CI checks on the final main-integrated PR #225 head, then recheck main freshness, merge and clean the TASK-033 slice branch/worktree under standing authorization. REV-043 approves the integrated fingerprint. TASK-033 remains IN_PROGRESS until TASK-032 and integrated alert/security gates are satisfied; TASK-034/035/036 final verification still depends on the real provider set. TASK-030/031/032 remain BLOCKED; do not create placeholders or weaken completion criteria."
 }

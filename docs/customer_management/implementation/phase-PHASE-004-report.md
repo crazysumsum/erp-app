@@ -7,6 +7,11 @@ TASK-029 merged as PR #224; its head `210c9f1405091a1eb41f42d7d7bd5f0356f08b61`
 passed all five mandatory CI jobs in run `38525426127`. Its branch/worktree were
 removed after the merge.
 
+Before TASK-033 slice publication completed, `main` advanced to
+`fcfb172144f240db6a1d9b14cab1adbd0e4a597b` with two unrelated documentation changes.
+It was integrated without conflicts; the unchanged Customer diff passed the 253
+unit checks, lint and build again. CI must pass on the new final PR #225 head.
+
 | Task | Work that can proceed | Remaining completion dependency |
 | --- | --- | --- |
 | TASK-030 / 031 / 032 | No additional consumer integration on this baseline. | Real Fulfillment, Invoicing/AR and Returns/Refund consumers and complete provider readiness. |
