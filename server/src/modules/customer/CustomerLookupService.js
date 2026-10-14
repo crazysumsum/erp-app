@@ -106,7 +106,7 @@ function creditProjection(row) {
 }
 
 export class CustomerLookupService {
-  static contract = "customer-purpose-provider-contracts/aligned-design-2.0";
+  static contract = "customer-purpose-provider-contracts/aligned-design-2.1";
 
   constructor({ database } = {}) {
     if (!database || typeof database.query !== "function") throw new TypeError("CustomerLookupService requires a database");

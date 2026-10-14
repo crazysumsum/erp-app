@@ -55,7 +55,7 @@ test("Sales snapshot preserves absent credit and inactive Customer facts, and re
 test("TC-027 rejects an unknown purpose before querying and exposes the versioned contract", async () => {
   let queries = 0;
   const lookup = new CustomerLookupService({ database: { async query() { queries += 1; return [[]]; } } });
-  assert.equal(CustomerLookupService.contract, "customer-purpose-provider-contracts/aligned-design-2.0");
+  assert.equal(CustomerLookupService.contract, "customer-purpose-provider-contracts/aligned-design-2.1");
   await assert.rejects(
     () => lookup.findById(4, { purpose: "generic_status_bypass" }),
     (error) => error.code === "CUSTOMER_LOOKUP_PURPOSE_INVALID" && error.statusCode === 400

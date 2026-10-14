@@ -138,9 +138,9 @@
       },
       {
         "id": "customer-purpose-provider-contracts",
-        "version": "aligned-design-2.0; TASK009-010 source pins reconciled, Sales additions CI pending",
+        "version": "aligned-design-2.1; Sales consumer merged and TC-070 verified; later consumers blocked",
         "source": "docs/customer_management/03_design_spec.md",
-        "sha256": "1ff3954f4c925d9a5b972fb8c55676731dd0cfa7861f280b2c0ceccb4795d73d",
+        "sha256": "224d735cd14d579949fe0a33b452af341266f0c775669d329191640db44e3dca",
         "consumers": [
           "sales-order-management",
           "fulfillment-shipping-management",
@@ -164,9 +164,9 @@
       {
         "module_id": "sales-order-management",
         "id": "customer-consumer-contract",
-        "version": "observed-main-design; TASK009-010 source pins reconciled, Sales additions CI pending",
+        "version": "implemented-main; Customer provider 2.1 and Sales consumer verified",
         "source": "docs/sales_order_management/03_design_spec.md",
-        "sha256": "cf4cb43b84698637a70cc742e48a9c85a736c18b3ebb91b5a70119a59e547b68",
+        "sha256": "a1a468ff6b91366f3e5328da5691ce61d3ae798a3265ed43196a4fe5a93a3577",
         "regression_suites": [
           "customer-server-technical"
         ]
@@ -174,9 +174,9 @@
       {
         "module_id": "fulfillment-shipping-management",
         "id": "customer-consumer-contract",
-        "version": "observed-main-design",
+        "version": "observed-main-design; BLOCKED pending real Fulfillment consumer",
         "source": "docs/fulfillment_shipping_management/03_design_spec.md",
-        "sha256": "7c0101e85f9651b8588fe3b09508cc7961238a69d9903c33d7a8f8bd8e2de4ec",
+        "sha256": "74d837322ff98d7868c088854c398f162f0bb6c161ae179d856a2783efe93790",
         "regression_suites": [
           "customer-server-technical"
         ]
@@ -184,7 +184,7 @@
       {
         "module_id": "invoicing-accounts-receivable-management",
         "id": "customer-consumer-contract",
-        "version": "observed-main-design",
+        "version": "observed-main-design; BLOCKED pending real Invoicing/AR consumer",
         "source": "docs/invoicing_accounts_receivable_management/03_system_design_spec.md",
         "sha256": "7f992059b26d3ed96f14868c056073a88247a6073e92c7eddf5605048faf799b",
         "regression_suites": [
