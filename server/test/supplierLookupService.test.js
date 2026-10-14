@@ -297,3 +297,13 @@ test("TASK-050 (design §12.4): each for-SKU lookup logs how many results each r
     ranked: { exact_match: 1, preferred: 1, recently_supplied: 2, none: 1 } } }]);
   assert.equal(JSON.stringify(logged).includes("Secret"), false, "no Supplier names in the log");
 });
+
+test("TASK-050 (REV-089 L-4): the lookup log reflects no search, the requested page and the de-duplicated results", async () => {
+  const logged = [];
+  const logger = { info: (event, message, context) => logged.push(context), error() {} };
+  const preferred = forSkuRow({ id: 3, relation_id: 30, relationship_status: "preferred" });
+  await serviceFor(poolDatabase([[{ total: 9 }], [{ headTotal: 3 }], [preferred], [preferred, forSkuRow({ id: 4 })]]),
+    { logger, items: purchasableItems() }).listForSku(5, { page: 2, pageSize: 2 });
+  assert.deepEqual(logged, [{ skuId: 5, page: 2, pageSize: 2, returned: 2, total: 9, searched: false,
+    ranked: { exact_match: 0, preferred: 1, recently_supplied: 0, none: 1 } }], "the duplicate Supplier 3 is counted once");
+});

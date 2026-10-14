@@ -43,7 +43,7 @@ const OUTPUT = arg("output", null);
 const ONLY = arg("only", "");
 if (![USERS, SECONDS, WARMUP_SECONDS, THINK_MS].every(Number.isSafeInteger) || USERS < 1 || SECONDS < 1 || WARMUP_SECONDS < 0 ||
     THINK_MS < 0 || typeof OUTPUT !== "string") {
-  throw new Error("usage: node scripts/benchmarkSupplierManagement.js --database=<DB_NAME> --output <report.json> [--users=50] [--seconds=120] [--warmup-seconds=20] [--think-ms=1000]");
+  throw new Error("usage: node scripts/benchmarkSupplierManagement.js --database=<DB_NAME> --output <report.json> [--users=50] [--seconds=120] [--warmup-seconds=20] [--think-ms=1000] [--only=<operation prefix>]");
 }
 const missing = ["DB_HOST", "DB_PORT", "DB_USER", "DB_PASSWORD", "DB_NAME", "DB_ADMIN_USER", "DB_ADMIN_PASSWORD"]
   .filter((key) => (key.endsWith("PASSWORD") ? process.env[key] === undefined : !process.env[key]));
@@ -54,13 +54,13 @@ if (arg("database", null) !== process.env.DB_NAME) {
 fs.appendFileSync(OUTPUT, "");
 
 /**
- * 操作同比重。原本嘅 12 個加埋 100：讀為主，寫入約一成，似日常採購／會計用法。for-SKU（TASK-040）另加 10，
- * 令原本操作之間嘅比例同之前嘅報告一樣；熱門 SKU 嘅名稱搜尋同深頁都包埋（REV-087 M-1）。
+ * 操作同比重。原本嘅 12 個加埋 100：讀為主，寫入約一成，似日常採購／會計用法。for-SKU（TASK-040）另加 11，
+ * 令原本操作之間嘅比例同之前嘅報告一樣；熱門 SKU 嘅名稱搜尋同 head 之後嘅深頁都包埋（REV-087 M-1、REV-089 M-2）。
  */
 const ALL_OPERATIONS = [
   ["list.default", 20], ["list.codeExact", 15], ["list.nameSearch", 12], ["list.statusFilter", 8], ["list.currencyFilter", 5],
   ["list.sortByName", 5], ["detail", 15], ["detail.heavy", 3], ["bank.list", 5], ["duplicates.check", 4], ["create", 4], ["update", 4],
-  ["forSku.typical", 3], ["forSku.hot", 2], ["forSku.codeExact", 2], ["forSku.nameSearch", 2], ["forSku.deepPage", 1]
+  ["forSku.typical", 3], ["forSku.cold", 1], ["forSku.hot", 2], ["forSku.codeExact", 2], ["forSku.nameSearch", 2], ["forSku.deepPage", 1]
 ];
 const MIX = ALL_OPERATIONS.filter(([name]) => name.startsWith(ONLY));
 if (MIX.length === 0) throw new Error(`--only=${ONLY} matches no operation`);
@@ -90,8 +90,16 @@ try {
   if (ids.length === 0 || heavyRows.length === 0) throw new Error("the seeded P50- Suppliers or their heavy subset are missing");
   const [skuRows] = await admin.query("SELECT id, sku_code FROM item_skus WHERE sku_code LIKE 'PERF-SKU-%' ORDER BY id");
   const hotSku = Number(skuRows.find((row) => row.sku_code === "PERF-SKU-HOT")?.id);
+  const coldSku = Number(skuRows.find((row) => row.sku_code === "PERF-SKU-COLD")?.id);
   const spreadSkus = skuRows.filter((row) => /^PERF-SKU-\d{4}$/u.test(row.sku_code)).map((row) => Number(row.id));
-  if (!hotSku || spreadSkus.length === 0) throw new Error("the seeded PERF-SKU-* fixtures for the for-SKU lookup are missing");
+  if (!hotSku || !coldSku || spreadSkus.length === 0) throw new Error("the seeded PERF-SKU-* fixtures for the for-SKU lookup are missing");
+  // 深頁要喺 head（有排序理由嘅 Supplier）之後，先會行到最貴嘅 rest 讀法（REV-089 M-2）：用實際資料計頁數範圍，唔好寫死。
+  const [[pages]] = await admin.query(`SELECT
+      (SELECT COUNT(*) FROM supplier_sku_refs y JOIN suppliers s ON s.id = y.supplier_id AND s.status = 'active' WHERE y.sku_id = ?
+        AND (y.relationship_status = 'preferred' OR (y.relationship_status <> 'stopped' AND y.last_supplied_at IS NOT NULL))) AS head,
+      (SELECT COUNT(*) FROM suppliers WHERE status = 'active') AS active`, [hotSku]);
+  const restPages = { first: Math.floor(Number(pages.head) / 20) + 2, last: Math.ceil(Number(pages.active) / 20) };
+  report.data.hotSkuPages = { headRows: Number(pages.head), activeSuppliers: Number(pages.active), deepPageRange: [restPages.first, restPages.last] };
   const [[{ relations }]] = await admin.query("SELECT COUNT(*) AS relations FROM supplier_sku_refs");
   report.data.skuRelations = Number(relations);
 
@@ -161,7 +169,8 @@ try {
     "forSku.hot": () => get(`/api/v1/supplier-lookups/for-sku/${hotSku}`),
     "forSku.codeExact": () => get(`/api/v1/supplier-lookups/for-sku/${hotSku}?q=${encodeURIComponent(ids[randomInt(ids.length)].supplier_code)}`),
     "forSku.nameSearch": () => get(`/api/v1/supplier-lookups/for-sku/${hotSku}?q=${encodeURIComponent(NAME_TERMS[randomInt(NAME_TERMS.length)])}`),
-    "forSku.deepPage": () => get(`/api/v1/supplier-lookups/for-sku/${hotSku}?page=${randomInt(50, 401)}`),
+    "forSku.cold": () => get(`/api/v1/supplier-lookups/for-sku/${coldSku}?page=${randomInt(1, restPages.last + 1)}`),
+    "forSku.deepPage": () => get(`/api/v1/supplier-lookups/for-sku/${hotSku}?page=${randomInt(restPages.first, restPages.last + 1)}`),
     // 每個虛擬用戶改自己嗰份 Supplier（id ≡ 用戶號 mod USERS），避免版本衝突；先讀版本再寫，兩步一齊計時。
     update: async (userNumber) => {
       // 封存咗嘅 Supplier 唔可以改（409），只揀改得嘅狀態。
@@ -188,7 +197,9 @@ try {
   const startedAt = Date.now();
   const measureFrom = startedAt + WARMUP_SECONDS * 1000;
   const endAt = measureFrom + SECONDS * 1000;
-  const digestsAtStart = sleep(WARMUP_SECONDS * 1000).then(readDigests);
+  // Digest 表滿咗嘅話，新 SQL 唔會有自己一行：用 Performance_schema_digest_lost 喺量度期間嘅增加量講明（REV-089 L-3）。
+  const digestLost = async () => Number((await admin.query("SHOW GLOBAL STATUS LIKE 'Performance_schema_digest_lost'"))[0][0]?.Value ?? 0);
+  const digestsAtStart = sleep(WARMUP_SECONDS * 1000).then(async () => ({ digests: await readDigests(), lost: await digestLost() }));
   // 等到量度完先 await：先掛個 handler，讀唔到都唔好令 process 即刻死、跳過清理（REV-084 L-2）。下面 await 時照樣拋。
   digestsAtStart.catch(() => {});
   const resources = { cpuPercent: [], rssMiB: [], dbThreadsConnected: [] };
@@ -245,7 +256,7 @@ try {
   report.resources = { processCpuPercent: stats(resources.cpuPercent), rssMiB: stats(resources.rssMiB), dbThreadsConnected: stats(resources.dbThreadsConnected) };
 
   // 量度期間最多時間嘅 SQL（只計呢個 schema），連 EXPLAIN。maxMs 係 server 上次清空 digest 以嚟嘅最大值，可能包括之前嘅 run。
-  const before = await digestsAtStart;
+  const { digests: before, lost: lostAtStart } = await digestsAtStart;
   const digests = [...(await readDigests()).values()].map((row) => {
     const start = before.get(row.id);
     const minus = (field) => Number(row[field]) - Number(start?.[field] ?? 0);
@@ -253,12 +264,11 @@ try {
       maxMs: Math.round(Number(row.maxWait) / 1e8) / 10, rowsExamined: minus("rowsExamined"), rowsSent: minus("rowsSent"), noIndexUsed: minus("noIndexUsed") };
   }).filter((row) => row.count > 0).sort((left, right) => right.totalMs - left.totalMs).slice(0, 12)
     .map((row) => ({ ...row, avgMs: Math.round((row.totalMs / row.count) * 100) / 100 }));
-  // Digest 表滿咗嘅話，新 SQL 會併入一行 DIGEST 係 NULL 嘅紀錄，下面就會靜靜雞冇嘢（TASK-050 for-SKU 撞過）：講明，唔好當冇慢 SQL。
-  const [[digestTable]] = await admin.query(`SELECT COUNT(*) AS used, @@performance_schema_digests_size AS size,
-    SUM(DIGEST IS NULL) AS overflow FROM performance_schema.events_statements_summary_by_digest`);
-  report.digestTable = { used: Number(digestTable.used), size: Number(digestTable.size), overflowRow: Number(digestTable.overflow) > 0 };
-  if (report.digestTable.overflowRow) {
-    report.digestTable.note = "performance_schema digest table is full; statements beyond it are not attributed, so topStatements is incomplete";
+  const [[digestTable]] = await admin.query(`SELECT COUNT(*) AS used, @@performance_schema_digests_size AS size
+    FROM performance_schema.events_statements_summary_by_digest`);
+  report.digestTable = { used: Number(digestTable.used), size: Number(digestTable.size), lostDuringRun: (await digestLost()) - lostAtStart };
+  if (report.digestTable.lostDuringRun > 0) {
+    report.digestTable.note = "performance_schema digest table was full during the run; those statements are not attributed, so topStatements is incomplete";
   }
   report.topStatements = [];
   for (const row of digests) {
@@ -275,12 +285,17 @@ try {
       avgMs: Number(row.avgMs), maxMs: Number(row.maxMs), rowsExaminedPerCall: Math.round(Number(row.rowsExamined) / Number(row.count)),
       rowsSentPerCall: Math.round(Number(row.rowsSent) / Number(row.count)), noIndexUsed: Number(row.noIndexUsed), plan });
   }
-  const failing = Object.entries(report.operations).filter(([, value]) => value.p95 === null || value.p95 >= 2000 || value.errorRate > 0.01);
-  report.nfr001 = { limitP95Ms: 2000, maxErrorRate: 0.01, failing: failing.map(([name]) => name), pass: failing.length === 0 };
-  // NFR-005：for-SKU 揀選器同樣 p95 < 2 秒（設計 §11.5）；冇跑 for-SKU 操作就記 null，唔當通過。
-  const forSku = failing.filter(([name]) => name.startsWith("forSku"));
-  report.nfr005 = MIX.some(([name]) => name.startsWith("forSku")) ? { failing: forSku.map(([name]) => name), pass: forSku.length === 0 } : null;
-  report.ok = report.nfr001.pass;
+  // NFR-001（一般操作）同 NFR-005（for-SKU 揀選器）各自只計自己嗰類操作；冇跑過就記 null，唔當通過（REV-089 M-1）。
+  const verdict = (pick) => {
+    const names = MIX.map(([name]) => name).filter(pick);
+    if (names.length === 0) return null;
+    const failing = names.filter((name) => { const value = report.operations[name]; return value.p95 === null || value.p95 >= 2000 || value.errorRate > 0.01; });
+    return { limitP95Ms: 2000, maxErrorRate: 0.01, operations: names.length, failing, pass: failing.length === 0 };
+  };
+  report.nfr001 = verdict((name) => !name.startsWith("forSku"));
+  report.nfr005 = verdict((name) => name.startsWith("forSku"));
+  const verdicts = [report.nfr001, report.nfr005].filter(Boolean);
+  report.ok = verdicts.length > 0 && verdicts.every((item) => item.pass);
   void db;
 } catch (error) {
   report.ok = false;
@@ -315,5 +330,5 @@ try {
   await application?.shutdown("supplier-performance").catch(() => {});
   await admin.end();
   fs.rmSync(work, { recursive: true, force: true });
-  console.log(JSON.stringify({ ok: report.ok, overall: report.overall, nfr001: report.nfr001, error: report.error }, null, 2));
+  console.log(JSON.stringify({ ok: report.ok, overall: report.overall, nfr001: report.nfr001, nfr005: report.nfr005, error: report.error }, null, 2));
 }

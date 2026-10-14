@@ -12,8 +12,9 @@
  * 令 name gram 嘅分佈似真實資料（「Trading」「有限公司」呢類熱門 gram 好多 Supplier 共用）。
  *
  * Supplier–SKU 關係（設計 §11.5「其中 20% 有 SKU relations」；NFR-005；TASK-050 for-SKU 部分）：
- * - `PERF-SKU-HOT`：每 5 個 Supplier 有 1 條關係（最差情況），`PERF-SKU-COLD`：冇關係；
- * - 1,000 隻 `PERF-SKU-0001…`：另外每 5 個 Supplier 揀 1 個關聯 5 隻，每隻平均約 100 條；
+ * - 有關係嘅都係 id 為 5 嘅倍數嗰 20% Supplier（REV-089 L-1：之前用咗兩組，變咗 40%）；
+ * - `PERF-SKU-HOT`：嗰 20% 每個都有一條（20,000 條，最差情況），`PERF-SKU-COLD`：冇關係；
+ * - 1,000 隻 `PERF-SKU-0001…`：嗰 20% 每個再關聯 5 隻，每隻平均約 100 條；
  * - 關係狀態 preferred 10%、stopped 5%、其餘 alternative，約 2/3 有最近供貨時間；熱門 SKU 嘅 Supplier Item Code 係 `SIC-<id>`。
  */
 import { randomInt } from "node:crypto";
@@ -184,12 +185,11 @@ try {
   const lastSupplied = () => (randomInt(3) === 0 ? null : now - randomInt(365 * 86_400_000));
   const relations = [];
   for (let id = 1; id <= SUPPLIERS; id += 1) {
-    if (id % 5 === 0) relations.push([id, skuId["PERF-SKU-HOT"], `SIC-${id}`, `sic-${id}`, relationStatus(), lastSupplied(), now, now]);
-    if (id % 5 === 1) {
-      const chosen = new Set();
-      while (chosen.size < 5) chosen.add(pick(spread));
-      for (const sku of chosen) relations.push([id, sku, "", null, relationStatus(), lastSupplied(), now, now]);
-    }
+    if (id % 5 !== 0) continue;
+    relations.push([id, skuId["PERF-SKU-HOT"], `SIC-${id}`, `sic-${id}`, relationStatus(), lastSupplied(), now, now]);
+    const chosen = new Set();
+    while (chosen.size < 5) chosen.add(pick(spread));
+    for (const sku of chosen) relations.push([id, sku, "", null, relationStatus(), lastSupplied(), now, now]);
   }
   await insert(db, "supplier_sku_refs", ["supplier_id", "sku_id", "supplier_item_code", "supplier_item_code_key", "relationship_status",
     "last_supplied_at", "created_at", "updated_at"], relations);
