@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 153,
+  "revision": 154,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -3346,16 +3346,16 @@
       "kind": "GIT_PUSH",
       "target": "github:crazysumsum/erp-app:refs/heads/codex/customer-task029-adoption",
       "idempotency_key": "customer-task029-adoption-push-v1",
-      "status": "PLANNED",
-      "source_ref": "Standing Product Owner authorization to push completed Customer Management work after local checks and independent review."
+      "status": "CONFIRMED",
+      "source_ref": "2026-10-14: pushed codex/customer-task029-adoption through reviewed checkpoint commit 24eb5d81e8f7aa4c42120a13a87e6f9920f17d1f."
     },
     {
       "id": "EXT-PR-057",
       "kind": "PULL_REQUEST",
       "target": "github:crazysumsum/erp-app:main<-codex/customer-task029-adoption",
       "idempotency_key": "customer-task029-adoption-pr-v1",
-      "status": "PLANNED",
-      "source_ref": "Standing Product Owner authorization to create a Customer Management PR after independent review."
+      "status": "CONFIRMED",
+      "source_ref": "2026-10-14: GitHub PR #224 created at https://github.com/crazysumsum/erp-app/pull/224."
     },
     {
       "id": "EXT-MERGE-058",
@@ -3373,5 +3373,5 @@
     "docs/customer_management/implementation/phase-PHASE-003-report.md"
   ],
   "defects": [],
-  "next_safe_action": "Obtain independent exact-candidate review, commit and push codex/customer-task029-adoption, create a PR, require current CI, and merge under the standing Product Owner authorization. After merge, clean the branch/worktree. TASK-030, TASK-031 and dependent TASK-032 remain blocked until real Fulfillment, Invoicing/AR and Returns/Refund consumers merge; do not create placeholders or treat design-only contracts as READY."
+  "next_safe_action": "Push this publication-evidence checkpoint to PR #224, wait for all five current CI jobs on its exact head, then merge under the standing Product Owner authorization. After merge, clean the branch/worktree. TASK-030, TASK-031 and dependent TASK-032 remain blocked until real Fulfillment, Invoicing/AR and Returns/Refund consumers merge; do not create placeholders or treat design-only contracts as READY."
 }
