@@ -127,22 +127,23 @@
       "argv": [
         "node",
         "--test",
+        "--test-concurrency=1",
         "--import",
-        "./server/test-support/testEnv.js",
+        "./test-support/testEnv.js",
         "--test-reporter=junit",
         "--test-reporter-destination={run_dir}/supplier-phase-001-server.xml",
-        "server/test/supplier*.test.js",
-        "server/test/integration/supplier*.integration.test.js",
-        "server/test/businessMasterSupplierContract.test.js",
-        "server/test/business-master/consumer-contract/providerContract.test.js",
-        "server/test/business-master/http.integration.test.js",
-        "server/test/permissionCatalogueConventions.test.js",
-        "server/test/configuration.test.js",
-        "server/test/configSecrets.test.js",
-        "server/test/integration/migrations.integration.test.js",
-        "server/test/integration/itemImportMigrations.integration.test.js"
+        "test/supplier*.test.js",
+        "test/integration/supplier*.integration.test.js",
+        "test/businessMasterSupplierContract.test.js",
+        "test/business-master/consumer-contract/providerContract.test.js",
+        "test/business-master/http.integration.test.js",
+        "test/permissionCatalogueConventions.test.js",
+        "test/configuration.test.js",
+        "test/configSecrets.test.js",
+        "test/integration/migrations.integration.test.js",
+        "test/integration/itemImportMigrations.integration.test.js"
       ],
-      "cwd": ".",
+      "cwd": "server",
       "timeout_seconds": 3600,
       "result_adapter": "JUNIT",
       "result_path": "supplier-phase-001-server.xml",
@@ -182,12 +183,22 @@
         "SUPPLIER_BANK_ACTIVE_KEY_ID",
         "SUPPLIER_BANK_ENCRYPTION_KEYS",
         "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
-        "SUPPLIER_BANK_LOOKUP_KEYS"
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "DB_ADMIN_USER",
+        "DB_ADMIN_PASSWORD",
+        "MYSQL_BIN",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
         "SUPPLIER_BANK_ENCRYPTION_KEYS",
-        "SUPPLIER_BANK_LOOKUP_KEYS"
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "DB_ADMIN_PASSWORD",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
       ]
     },
     {
@@ -249,7 +260,7 @@
       "timeout_seconds": 3600,
       "result_adapter": "JUNIT",
       "result_path": "supplier-server-integration.xml",
-      "min_tests": 89,
+      "min_tests": 620,
       "max_skipped": 0,
       "stages": [
         "DEVELOPER",
@@ -413,7 +424,7 @@
       "timeout_seconds": 3600,
       "result_adapter": "JUNIT",
       "result_path": "supplier-bank-security.xml",
-      "min_tests": 15,
+      "min_tests": 135,
       "max_skipped": 0,
       "stages": [
         "DEVELOPER",
@@ -503,7 +514,7 @@
       "timeout_seconds": 3600,
       "result_adapter": "JUNIT",
       "result_path": "supplier-security.xml",
-      "min_tests": 10,
+      "min_tests": 620,
       "max_skipped": 0,
       "stages": [
         "DEVELOPER",
@@ -682,12 +693,18 @@
         "SUPPLIER_BANK_ACTIVE_KEY_ID",
         "SUPPLIER_BANK_ENCRYPTION_KEYS",
         "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
-        "SUPPLIER_BANK_LOOKUP_KEYS"
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
         "SUPPLIER_BANK_ENCRYPTION_KEYS",
-        "SUPPLIER_BANK_LOOKUP_KEYS"
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
       ]
     },
     {
@@ -744,12 +761,18 @@
         "SUPPLIER_BANK_ACTIVE_KEY_ID",
         "SUPPLIER_BANK_ENCRYPTION_KEYS",
         "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
-        "SUPPLIER_BANK_LOOKUP_KEYS"
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
         "SUPPLIER_BANK_ENCRYPTION_KEYS",
-        "SUPPLIER_BANK_LOOKUP_KEYS"
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
       ]
     },
     {
@@ -804,12 +827,18 @@
         "SUPPLIER_BANK_ACTIVE_KEY_ID",
         "SUPPLIER_BANK_ENCRYPTION_KEYS",
         "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
-        "SUPPLIER_BANK_LOOKUP_KEYS"
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
         "SUPPLIER_BANK_ENCRYPTION_KEYS",
-        "SUPPLIER_BANK_LOOKUP_KEYS"
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
       ]
     },
     {
@@ -866,12 +895,18 @@
         "SUPPLIER_BANK_ACTIVE_KEY_ID",
         "SUPPLIER_BANK_ENCRYPTION_KEYS",
         "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
-        "SUPPLIER_BANK_LOOKUP_KEYS"
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
         "SUPPLIER_BANK_ENCRYPTION_KEYS",
-        "SUPPLIER_BANK_LOOKUP_KEYS"
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
       ]
     },
     {

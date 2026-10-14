@@ -2,7 +2,7 @@
 
 **Purpose:** T51 requires every suite runner to emit canonical case IDs (`TC-nnn`, `UAT-nnn`), and a gate fails on a missing, duplicate or skipped ID. This map shows, for each technical case, which existing tests are candidates to carry its ID, and where no test exists.
 
-**Baseline:** main `d9714a34`, 2026-10-14.
+**Baseline:** main `d9714a34` for the map; the PR is based on `fcfb1721` (ledger-only change since), 2026-10-14.
 
 **Method:** test titles only. A candidate is matched on its title, not on its body. Before an ID is put on a test title, the test is read and must actually assert the case's Expected Result. A COVERED row here is a candidate, not a verdict.
 
@@ -16,8 +16,9 @@
 ## Changes made in step 1 (HD-103 1A)
 
 - Findings 1 and 3 are fixed. The three server suites now run from `server` with `--test-concurrency=1` and glob the existing files: `test/supplier*.test.js` and `test/integration/supplier*.integration.test.js`; Bank uses `supplierBank*` only. The double tag is now `(TC-090)`.
-- Six cases moved suite, because their only tests run in another runner: TC-013, TC-015, TC-029 and TC-075 to `supplier-client-ui` (Vitest), TC-085 and TC-101 to `supplier-performance`. `min_tests` equals the required case count in each suite.
-- The server suites also pass `DB_ADMIN_USER`, `DB_ADMIN_PASSWORD`, `MYSQL_BIN` and the four `CUSTOMER_BANK_*` keys. `run_check` passes only listed keys: without the admin keys the Bank restore test hung, and without the Customer keys configuration refused to load. `run_check --suite supplier-bank-security --stage DEVELOPER --execute` then passed all 15 required cases (`evidence/20261014T082013-b336a4b827af`).
+- Six cases moved suite. TC-013, TC-015, TC-029 and TC-075 go to `supplier-client-ui` (Vitest), because their only tests are client tests. TC-085 and TC-101 go to `supplier-performance`, because their Expected Result is a load measurement; TC-101 does have a partial server test (10,000 rows within the job timeout), which stays in the server suite untagged. Both target suites have no runner yet, so these six IDs cannot pass any gate until step 2 adds them: they fail closed. `min_tests` equals the required case count in each suite.
+- The server suites, `supplier-phase-001-server` included, also pass `DB_ADMIN_USER`, `DB_ADMIN_PASSWORD`, `MYSQL_BIN` and the four `CUSTOMER_BANK_*` keys. `run_check` passes only listed keys: without the admin keys the Bank restore test hung, and without the Customer keys configuration refused to load. `run_check --suite supplier-bank-security --stage DEVELOPER --execute` then passed all 15 required cases (`evidence/20261014T082013-b336a4b827af`).
+- After review (REV-091 on PR #226): `supplier-phase-001-server` also runs from `server` with `--test-concurrency=1`; from the repository root its integration files ran in parallel on one database and hung. The four operations suites get the `CUSTOMER_BANK_*` keys. `min_tests` floors sit near the real counts (620, 620, 135), so a glob that silently shrank would fail. `supplierBankRestore.integration` now asserts the admin keys before it opens a connection: a connection opened before the failed assert had no `t.after` yet and kept the process alive until the runner's timeout.
 - Checked on erp_t51 (fresh migration, throwaway MySQL): the server glob runs 626 tests, all pass, none skipped, no duplicate JUnit names; the harness JUnit adapter parses the file once the double tag is gone.
 
 ## Summary (before the suite moves)
@@ -112,7 +113,7 @@ PARTIAL means existing tests cover part of the Expected Result. The gap column s
 | TC-086 | IMP-001 | `supplierCsvSchema` (template); `supplierImport.integration` (already tagged TC-086) | COVERED | |
 | TC-087 | IMP-002 | `supplierCsvSchema` (RFC 4180, leading zeros) | COVERED | |
 | TC-088 | IMP-003 | `supplierImport.integration` (IMP-003); `supplierImportConfig` | COVERED | |
-| TC-089 | IMP-004 | `supplierImport.integration` (precheck writes nothing) | COVERED | |
+| TC-089 | IMP-004 | `supplierImport.integration` (precheck writes nothing) | COVERED | The same test carries TC-090 now; TC-089 needs its own carrier |
 | TC-090 | IMP-005 | same test, currently double-tagged | COVERED | Split the double tag (finding 3) |
 | TC-091 | IMP-006 | `supplierImport.integration` (draft import writes valid rows) | COVERED | |
 | TC-092 | IMP-007 | `supplierImport.integration` (HD-048 4) | COVERED | |
