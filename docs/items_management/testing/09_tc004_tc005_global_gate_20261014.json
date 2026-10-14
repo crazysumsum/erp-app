@@ -1,0 +1,59 @@
+{
+  "schema_version": "2.0",
+  "module_id": "item-management",
+  "gate": "TECHNICAL_ACCEPTANCE",
+  "status": "BLOCKED",
+  "issues": [
+    {
+      "code": "BLOCKING_DEFECT",
+      "path": "state/defects/DEF-107",
+      "message": "unresolved critical/high issue"
+    },
+    {
+      "code": "TASK_INCOMPLETE",
+      "path": "state/tasks/TASK-043",
+      "message": "complete Definition of Done before gate"
+    },
+    {
+      "code": "REQUIRED_RUN_MISSING",
+      "path": "gate/TECHNICAL/item-client-technical",
+      "message": "no current-baseline run evidence"
+    },
+    {
+      "code": "REQUIRED_RUN_MISSING",
+      "path": "gate/TECHNICAL/item-performance",
+      "message": "no current-baseline run evidence"
+    },
+    {
+      "code": "REQUIRED_RUN_MISSING",
+      "path": "gate/TECHNICAL/item-recovery",
+      "message": "no current-baseline run evidence"
+    },
+    {
+      "code": "REQUIRED_RUN_MISSING",
+      "path": "gate/TECHNICAL/item-server-technical",
+      "message": "no current-baseline run evidence"
+    },
+    {
+      "code": "REQUIRED_RUN_MISSING",
+      "path": "gate/REGRESSION/item-client-technical",
+      "message": "no current-baseline run evidence"
+    },
+    {
+      "code": "REQUIRED_RUN_MISSING",
+      "path": "gate/REGRESSION/item-performance",
+      "message": "no current-baseline run evidence"
+    },
+    {
+      "code": "REQUIRED_RUN_MISSING",
+      "path": "gate/REGRESSION/item-recovery",
+      "message": "no current-baseline run evidence"
+    },
+    {
+      "code": "REQUIRED_RUN_MISSING",
+      "path": "gate/REGRESSION/item-server-technical",
+      "message": "no current-baseline run evidence"
+    }
+  ],
+  "scope": "Local structural/evidence consistency only. External approval identity, CI authenticity, runtime leases and repository permissions MUST be verified separately. This command never authorizes, merges or deploys."
+}

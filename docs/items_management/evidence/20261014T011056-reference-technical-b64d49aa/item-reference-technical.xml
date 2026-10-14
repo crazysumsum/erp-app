@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testsuite name="TC-004/TC-005 TASK-043 C: real Supplier relations and events reject Draft deletion with public types and atomic rollback" time="1.442841" disabled="0" errors="0" tests="2" failures="0" skipped="0" timestamp="2026-10-14T01:10:58.502Z" hostname="samMacBook-Pro.local">
+		<testcase name="event=false" time="0.934925" classname="test" file="/Users/sam/.codex/worktrees/item-tc004-tc005-verification/erp-app/server/test/integration/itemReferenceGuards.integration.test.js"/>
+		<testcase name="event=true" time="0.507099" classname="test" file="/Users/sam/.codex/worktrees/item-tc004-tc005-verification/erp-app/server/test/integration/itemReferenceGuards.integration.test.js"/>
+	</testsuite>
+	<testcase name="TC-004 TASK-043 C: Supplier mapping ownership and IDs survive safe edits while incompatible changes roll back" time="0.485411" classname="test" file="/Users/sam/.codex/worktrees/item-tc004-tc005-verification/erp-app/server/test/integration/itemReferenceGuards.integration.test.js"/>
+	<testcase name="TASK-043: Draft Item and SKU deletion report real Inventory references and leave the aggregate untouched" time="0.505013" classname="test" file="/Users/sam/.codex/worktrees/item-tc004-tc005-verification/erp-app/server/test/integration/itemReferenceGuards.integration.test.js"/>
+	<testcase name="TASK-043: unreferenced Draft SKU and Item deletion still succeed and record only successful audits" time="0.467074" classname="test" file="/Users/sam/.codex/worktrees/item-tc004-tc005-verification/erp-app/server/test/integration/itemReferenceGuards.integration.test.js"/>
+	<testcase name="TASK-043: real Sales quotation UOM references block removal and Draft deletion without rebuilding retained mappings" time="0.452689" classname="test" file="/Users/sam/.codex/worktrees/item-tc004-tc005-verification/erp-app/server/test/integration/itemReferenceGuards.integration.test.js"/>
+	<testsuite name="TASK-043: live Sales quotations/orders block archive, cancelled/completed snapshots remain readable after archive" time="0.979937" disabled="0" errors="0" tests="2" failures="0" skipped="0" timestamp="2026-10-14T01:11:01.855Z" hostname="samMacBook-Pro.local">
+		<testcase name="quotation" time="0.499568" classname="test" file="/Users/sam/.codex/worktrees/item-tc004-tc005-verification/erp-app/server/test/integration/itemReferenceGuards.integration.test.js"/>
+		<testcase name="order" time="0.479986" classname="test" file="/Users/sam/.codex/worktrees/item-tc004-tc005-verification/erp-app/server/test/integration/itemReferenceGuards.integration.test.js"/>
+	</testsuite>
+	<testsuite name="TC-005 TASK-043 C: soft Supplier relations and history survive single and bulk archive and remain readable" time="1.417837" disabled="0" errors="0" tests="3" failures="0" skipped="0" timestamp="2026-10-14T01:11:02.835Z" hostname="samMacBook-Pro.local">
+		<testcase name="item" time="0.485914" classname="test" file="/Users/sam/.codex/worktrees/item-tc004-tc005-verification/erp-app/server/test/integration/itemReferenceGuards.integration.test.js"/>
+		<testcase name="sku" time="0.442316" classname="test" file="/Users/sam/.codex/worktrees/item-tc004-tc005-verification/erp-app/server/test/integration/itemReferenceGuards.integration.test.js"/>
+		<testcase name="bulk" time="0.489207" classname="test" file="/Users/sam/.codex/worktrees/item-tc004-tc005-verification/erp-app/server/test/integration/itemReferenceGuards.integration.test.js"/>
+	</testsuite>
+	<testsuite name="TC-004/TC-005 TASK-043 C: native Supplier FK fallback returns public types or unknown without partial deletion" time="2.899142" disabled="0" errors="0" tests="6" failures="0" skipped="0" timestamp="2026-10-14T01:11:04.252Z" hostname="samMacBook-Pro.local">
+		<testcase name="item: hidden=false" time="0.508733" classname="test" file="/Users/sam/.codex/worktrees/item-tc004-tc005-verification/erp-app/server/test/integration/itemReferenceGuards.integration.test.js"/>
+		<testcase name="item: hidden=true" time="0.476625" classname="test" file="/Users/sam/.codex/worktrees/item-tc004-tc005-verification/erp-app/server/test/integration/itemReferenceGuards.integration.test.js"/>
+		<testcase name="sku: hidden=false" time="0.475177" classname="test" file="/Users/sam/.codex/worktrees/item-tc004-tc005-verification/erp-app/server/test/integration/itemReferenceGuards.integration.test.js"/>
+		<testcase name="sku: hidden=true" time="0.479978" classname="test" file="/Users/sam/.codex/worktrees/item-tc004-tc005-verification/erp-app/server/test/integration/itemReferenceGuards.integration.test.js"/>
+		<testcase name="uom: hidden=false" time="0.485410" classname="test" file="/Users/sam/.codex/worktrees/item-tc004-tc005-verification/erp-app/server/test/integration/itemReferenceGuards.integration.test.js"/>
+		<testcase name="uom: hidden=true" time="0.472558" classname="test" file="/Users/sam/.codex/worktrees/item-tc004-tc005-verification/erp-app/server/test/integration/itemReferenceGuards.integration.test.js"/>
+	</testsuite>
+	<testsuite name="TC-004 TASK-043 C: Supplier-create and UOM-removal races retain the native FK winner in both commit orders" time="1.020291" disabled="0" errors="0" tests="2" failures="0" skipped="0" timestamp="2026-10-14T01:11:07.151Z" hostname="samMacBook-Pro.local">
+		<testcase name="supplier first=true" time="0.507308" classname="test" file="/Users/sam/.codex/worktrees/item-tc004-tc005-verification/erp-app/server/test/integration/itemReferenceGuards.integration.test.js"/>
+		<testcase name="supplier first=false" time="0.512539" classname="test" file="/Users/sam/.codex/worktrees/item-tc004-tc005-verification/erp-app/server/test/integration/itemReferenceGuards.integration.test.js"/>
+	</testsuite>
+	<testcase name="TC-004 TASK-043 C: a new GR event fails closed without the real source adapter and leaves all histories unchanged" time="0.474661" classname="test" file="/Users/sam/.codex/worktrees/item-tc004-tc005-verification/erp-app/server/test/integration/itemReferenceGuards.integration.test.js"/>
+	<testcase name="TASK-043: archive sees a newly committed reference after its authorization read" time="0.476011" classname="test" file="/Users/sam/.codex/worktrees/item-tc004-tc005-verification/erp-app/server/test/integration/itemReferenceGuards.integration.test.js"/>
+	<testsuite name="TASK-043: raced FK failures map to public 409, including unknown fallback, with complete rollback" time="2.312632" disabled="0" errors="0" tests="5" failures="0" skipped="0" timestamp="2026-10-14T01:11:09.122Z" hostname="samMacBook-Pro.local">
+		<testcase name="item: fallback hidden=false" time="0.462608" classname="test" file="/Users/sam/.codex/worktrees/item-tc004-tc005-verification/erp-app/server/test/integration/itemReferenceGuards.integration.test.js"/>
+		<testcase name="sku: fallback hidden=false" time="0.439772" classname="test" file="/Users/sam/.codex/worktrees/item-tc004-tc005-verification/erp-app/server/test/integration/itemReferenceGuards.integration.test.js"/>
+		<testcase name="sku: fallback hidden=true" time="0.465822" classname="test" file="/Users/sam/.codex/worktrees/item-tc004-tc005-verification/erp-app/server/test/integration/itemReferenceGuards.integration.test.js"/>
+		<testcase name="uom: fallback hidden=false" time="0.472689" classname="test" file="/Users/sam/.codex/worktrees/item-tc004-tc005-verification/erp-app/server/test/integration/itemReferenceGuards.integration.test.js"/>
+		<testcase name="uom: fallback hidden=true" time="0.471196" classname="test" file="/Users/sam/.codex/worktrees/item-tc004-tc005-verification/erp-app/server/test/integration/itemReferenceGuards.integration.test.js"/>
+	</testsuite>
+	<testcase name="TASK-043: consumer-held Item locks serialize factor changes until committed references can be checked" time="0.451101" classname="test" file="/Users/sam/.codex/worktrees/item-tc004-tc005-verification/erp-app/server/test/integration/itemReferenceGuards.integration.test.js"/>
+	<testcase name="TASK-043: barcode-bound UOM removal is rejected with the actual dependency and full rollback" time="0.455603" classname="test" file="/Users/sam/.codex/worktrees/item-tc004-tc005-verification/erp-app/server/test/integration/itemReferenceGuards.integration.test.js"/>
+	<testcase name="TASK-043: single Item/SKU and bulk archive share live-stock guards and atomic audit rollback" time="0.479596" classname="test" file="/Users/sam/.codex/worktrees/item-tc004-tc005-verification/erp-app/server/test/integration/itemReferenceGuards.integration.test.js"/>
+	<testcase name="TASK-043: reserved quantity blocks archive but zero balance/control and retained lot history do not" time="0.486331" classname="test" file="/Users/sam/.codex/worktrees/item-tc004-tc005-verification/erp-app/server/test/integration/itemReferenceGuards.integration.test.js"/>
+	<testcase name="TASK-043: real Draft/in-transit Transfer obligations block archive but completed history remains readable" time="0.454096" classname="test" file="/Users/sam/.codex/worktrees/item-tc004-tc005-verification/erp-app/server/test/integration/itemReferenceGuards.integration.test.js"/>
+	<testcase name="TASK-043: Inventory profile and UOM resolution read current locked values after an earlier RR snapshot" time="0.458725" classname="test" file="/Users/sam/.codex/worktrees/item-tc004-tc005-verification/erp-app/server/test/integration/itemReferenceGuards.integration.test.js"/>
+	<testcase name="TASK-043: the real Inventory receipt consumer posts the locked Item conversion and rolls back its caller transaction" time="0.485305" classname="test" file="/Users/sam/.codex/worktrees/item-tc004-tc005-verification/erp-app/server/test/integration/itemReferenceGuards.integration.test.js"/>
+	<testcase name="TASK-043: Item-first factor update makes an earlier-snapshot Inventory consumer observe the committed conversion" time="0.482705" classname="test" file="/Users/sam/.codex/worktrees/item-tc004-tc005-verification/erp-app/server/test/integration/itemReferenceGuards.integration.test.js"/>
+	<!-- tests 40 -->
+	<!-- suites 0 -->
+	<!-- pass 40 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 16934.259708 -->
+</testsuites>
