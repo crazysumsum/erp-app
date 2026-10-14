@@ -33,6 +33,8 @@ The four final current-PLAN/main developer runners PASS: lint/build, server524/5
 
 ## Remaining TASK-043 work
 
+Purchasing／Supplier 解鎖責任、權威來源／verifier／投影／補寫證據及未決接線，見 [TASK-043 權威 GR 交接](../item_handoff_authoritative_gr.md)。此交接不更改既有 contract 或宣告 GR／正式 UAT 已完成。
+
 The authority adapter for completed Purchasing GR sources is absent on main; production recordSupply defaults to sourceVerifierUnavailable. Positive first delayed projection after SKU deactivation/expiry, source-backed reconciliation and actual completed-GR end-to-end proof remain BLOCKED on that external integration. Synthetic seeded history or a test verifier is not authority and is not promoted to that result.
 
 Formal TC-004/TC-005, UAT-005/UAT-013 and new provider UAT-017 remain later TEST_AND_VERIFY/business acceptance work. Recovery owner-waiver and TC-016 NOT_RUN history are preserved. No whole-module readiness, business acceptance or release approval is claimed.
