@@ -1085,19 +1085,32 @@ fails the test instead of hanging it. Killed: "no skip when the index exists" (i
 
 ## TASK-050: the for-SKU part and the final rerun (2026-10-14)
 
-- **Seed.** `seedSupplierPerformanceFixtures.js` now writes Supplier–SKU relations for 20% of Suppliers (design §11.5): a 20,000-relation hot SKU, a SKU with none, and 1,000 SKUs with about 100 each. The status mix is 10% preferred and 5% stopped. This replaces TASK-040's hand-written `seed.sql`, whose hot SKU had no stopped relations (REV-087 L-4).
-- **Benchmark.** `benchmarkSupplierManagement.js` adds five for-SKU operations (weight 10, on top of the earlier 100) and `--only=<prefix>`. It registers `supplierCoreProvider` as `src/index.js` does, reports `nfr005`, and records `digestTable`, flagging when the digest table is full and `topStatements` is therefore incomplete.
-- **Result.** Over HTTP at the production pool of 10:
-  - mixed load: p95 127 ms overall; the slowest for-SKU operation is 399 ms;
-  - for-SKU only, the worst case: p95 1,300 ms; the slowest operation is 1,467 ms;
-  - no errors in either run;
-  - details are in `performance_report.md` under "for-SKU lookup", and the evidence in `evidence/20261014-t50-for-sku/`.
-  This replaces TASK-040's in-process figures (REV-087 M-1).
+- **Seed.** `seedSupplierPerformanceFixtures.js` writes Supplier–SKU relations for 20% of Suppliers (design §11.5): the 20,000 whose ID is a multiple of 5. Each gets the hot SKU plus 5 of 1,000 SKUs (about 100 relations each). `PERF-SKU-COLD` gets none. The status mix is 10% preferred and 5% stopped.
+  - This replaces TASK-040's hand-written `seed.sql`, whose hot SKU had no stopped relations (REV-087 L-4).
+  - REV-089 L-1 corrected the first version, which gave relations to 40% of Suppliers.
+- **Benchmark.** `benchmarkSupplierManagement.js`:
+  - adds six for-SKU operations (weight 11, on top of the earlier 100), including the cold SKU, and deep pages worked out from the data to lie past the hot SKU's head (REV-089 M-2);
+  - adds `--only=<prefix>`;
+  - registers `supplierCoreProvider` as `src/index.js` does;
+  - reports separate `nfr001` (non-for-SKU) and `nfr005` (for-SKU) verdicts, each `null` when not run, with `ok` set from the non-null ones (REV-089 M-1);
+  - reports `digestTable.lostDuringRun` (REV-089 L-3).
+- **Result.** Over HTTP at the production pool of 10, both runs had no errors and lost no digests:
+
+  | Run | Overall p95 | Detail |
+  | --- | --- | --- |
+  | Mixed | 157 ms | NFR-001: slowest 136 ms. NFR-005: slowest 435 ms |
+  | for-SKU only, the worst case | 1,488 ms | Slowest operation 1,678 ms (p99 1,849 ms) |
+
+  Across four worst-case runs on this machine (two by the author, two by REV-089), the slowest p95 was 1.5 to 1.9 s.
+  - Details are in `performance_report.md` under "for-SKU lookup". This replaces TASK-040's in-process figures (REV-087 M-1).
 - **Fix found by the run.** Without a fixed join order, MySQL read the head query from all Active Suppliers rather than from the SKU's relations. That examined about 80,000 rows per call for the hot SKU, and the worst case failed at 3.6 s.
-  - `listForSku()` now uses `FROM (head) h STRAIGHT_JOIN suppliers s`.
-  - A unit test pins the SQL, and the ordering oracle still passes.
-  - This changes TASK-040 code under TASK-050. It is a query-plan hint only: the API, the order and the schema are unchanged.
-- **Observability (design §12.4).** `supplier.for_sku.lookup` logs counts only: `skuId`, `page`, `pageSize`, `returned`, `total`, `searched` and `ranked{exact_match, preferred, recently_supplied, none}`. A unit test checks that no Supplier name leaks. Latency comes from the request log.
+  - `listForSku()` now uses `FROM (head) h STRAIGHT_JOIN suppliers s`. A unit test pins the SQL; the ordering oracle still passes.
+  - REV-089 found identical pages in 17 compared cases and no case slower.
+  - This changes TASK-040 code under TASK-050, as a query-plan hint only.
+- **Observability (design §12.4).** `supplier.for_sku.lookup` logs counts only: `skuId`, `page`, `pageSize`, `returned`, `total`, `searched` and `ranked{…}`, counted after de-duplication.
+  - Unit tests pin the counts, the page, the search flag and that no Supplier name leaks (REV-089 L-4).
+  - Its volume, the missing `requestId`, and the unimplemented `supplier.lookup.slow` from §12.3 are for the SRE review (REV-089 I-1).
+- **Review.** REV-089 (CHANGES_REQUESTED, no Critical or High). Follow-ups are under HD-100; the report and follow-up are in `implementation/92_rev_089_independent_review.md`. A re-review was requested by the Product Owner.
 - **Still open for TASK-050:**
-  - the manual SRE review of the report, the alerts and the query plans;
+  - the manual SRE review of the report, the alerts, the query plans and the lookup log;
   - the `perf:supplier` npm script, which needs approval for `server/package.json`.

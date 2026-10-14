@@ -1,12 +1,12 @@
 {
   "database": "erp_t50",
   "suppliers": 100000,
-  "heavy": 978,
-  "addresses": 514670,
-  "contacts": 1039120,
+  "heavy": 1061,
+  "addresses": 515915,
+  "contacts": 1042440,
   "identifiers": 200000,
-  "bankAccounts": 207824,
-  "nameGrams": 2391307,
+  "bankAccounts": 208488,
+  "nameGrams": 2392694,
   "skuRelations": 120000,
-  "seconds": 58
+  "seconds": 63
 }

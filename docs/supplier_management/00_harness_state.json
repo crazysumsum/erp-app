@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 324,
+  "revision": 325,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -2065,6 +2065,18 @@
       "status": "CHANGES_REQUESTED",
       "open_critical": 0,
       "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-089",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-050 for-SKU part)",
+      "reviewer": "agent-skills:code-reviewer, independent of the author, reviewing f661d5825737096e83c7d154e110f9c14c1ecfd7 (PR #218)",
+      "reviewed_baseline": "29a0615a61808b3747cd8feb522d051ba5a312da6fb0fccf36e7cf9746286775",
+      "source_ref": "docs/supplier_management/implementation/92_rev_089_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
       "risk_approval_id": null
     }
   ],
@@ -5202,6 +5214,18 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-13: '全部按建議，M-4 揀 A，唔使再 review，CI 過就 merge'. H-1 was fixed (tests restored), not accepted; REV-088's open High is closed by that fix, not by a risk approval."
+    },
+    {
+      "id": "HD-100",
+      "impact": "MINOR",
+      "question": "REV-089 CHANGES_REQUESTED PR #218 (0 Critical/High): M-1 an --only run claims NFR-001; M-2 the worst case missed the deep rest pages and headroom is thinner than reported; L-1 seed gave relations to 40% not 20%; L-2..L-4, I-1, I-2. Fix as recommended (separate verdicts, deep pages past the head plus the cold SKU, 20% seed and reseed, lostDuringRun, log tests, doc corrections; I-1 to the SRE review), then re-review or merge when CI passes?",
+      "affected_ids": [
+        "TASK-050",
+        "REV-089",
+        "NFR-005"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-14: '全部按建議，修完再review'."
     }
   ],
   "external_actions": [
@@ -6278,5 +6302,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-050 for-SKU part and final rerun done (2026-10-14): NFR-001 and NFR-005 pass over HTTP at pool 10; for-SKU head join fixed with STRAIGHT_JOIN; ranking-count log added. Next: full suite, push, PR. TASK-050 stays IN_PROGRESS until the manual SRE review (Verification) and the perf:supplier script decision; then T51 (HD-057 open)."
+  "next_safe_action": "TASK-050 for-SKU part: REV-089 follow-ups done (HD-100), reseeded and rerun (mixed p95 157 ms; for-SKU-only p95 1,488 ms, slowest 1,678 ms). Next: re-review of PR #218 per the Product Owner; then merge when CI is green. TASK-050 stays IN_PROGRESS for the manual SRE review and the perf:supplier decision."
 }
