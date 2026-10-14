@@ -30,14 +30,14 @@ npm run perf:supplier --workspace server -- --database=<throwaway DB> --concurre
 
 | # | Approved / changes needed | Notes |
 | --- | --- | --- |
-| 1 | | |
-| 2 | | |
-| 3 | | |
-| 4 | | |
-| 5 | | |
-| 6 | | |
-| 7 | | |
-| 8 | | |
+| 1 | Approved | Slowest p95 136 ms against 2 s. |
+| 2 | Approved as a known limitation | The worst case (for-SKU only) reaches p95 1.5–2.0 s; the mixed run's slowest is 435 ms. Optimising the text-search count would change the design and is not done now. T51's release evidence lists this limitation and asks for a re-check after go-live. |
+| 3 | Approved | |
+| 4 | Approved | The no-search for-SKU plan is re-checked after go-live at production scale. |
+| 5 | Approved | Thresholds stay constants; moving them to config needs separate approval. |
+| 6 | Approved | |
+| 7 | Approved: keep one log line per lookup | 0.9 GB a day assumes a sustained 38 lookups per second; real volume is expected to be lower (not measured). Replace it with a counter in `supplier.metrics` only if log cost becomes a problem. |
+| 8 | Approved | Every event goes to Operations on-call. Bank integrity and key failures are critical and also go to Security. |
 
-- **Reviewer:**
-- **Date:**
+- **Reviewer:** the Product Owner, acting for SRE (not an independent SRE). The author's recommendations were accepted as a whole: '全部按建議'.
+- **Date:** 2026-10-14
