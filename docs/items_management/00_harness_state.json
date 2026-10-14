@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "item-management",
-  "revision": 124,
+  "revision": 125,
   "mode": "TEST_AND_VERIFY",
   "active_mode": "TEST_AND_VERIFY",
   "status": "BLOCKED",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "f7431c0934377f3331fd0a537e236eca8044df41f359d36202153803c4aca315",
     "plan": "809f8a15b605975f2db4c94eb641bc6bf6e5e3aaf07ed5938bb8660f9899a8ef",
-    "code_commit": "572146b8f7ff9fa2963f8b63ae459ba72405b92b",
-    "source_fingerprint": "cad808f35e03b9eda82f148a50a840cf8beaf9e432a0de9acf0f8b764ea10eea",
+    "code_commit": "97367b3a137e15f35ff39e502d20740b11df677b",
+    "source_fingerprint": "b8e8f982203314337d84738b78ec9f0595df416f3f6c387be43bbd0176fef942",
     "worktree": "/Users/sam/.codex/worktrees/item-authoritative-gr-handoff/erp-app",
-    "default_commit": "cb75f25a87cb8f0cb97b14dc6bdc4131c3217b17",
+    "default_commit": "3239b98f8938697475bf6201ba1a52c48ccef127",
     "mode_entry_commit": "f94ba467472bcfae851ed6cb2bb077ac67ab8be0"
   },
   "runtime": {
@@ -3233,7 +3233,7 @@
       "target": "PR220 Item documentation ONLY",
       "idempotency_key": "item-gr-pr220-gated-merge-20261014",
       "status": "PLANNED",
-      "source_ref": "APR060 actualuserauthority. Originalhead572 CI38509498967 allfiveSUCCESS but latestorigin/main3239b98f advanced with Supplier TASK050 lookup/perf/evidence; Item/SupplierRelationService/Purchasing runtime unchanged. Commit existing postcandidate journal+authority and integrate latestmain, freeze newcandidate and require its CI/review; oldheadPASS not sufficient. No merge executed."
+      "source_ref": "APR060 normalreport/docs mergeauthority. Actual latestmain3239b98f integrated in 97367b3a137e15f35ff39e502d20740b11df677b; authored PRdelta only3Itemdocs, canonicalDESf743/PLAN809f/evidence40 unchanged. NoGR authority/provider/product/test/gate change authored. Freeze/push finalcandidate then actual exactheadindependentreview+allfiveCI; original572 CI38509498967 retainedhistorical only, notnewcandidate credit. Merge remains PLANNED."
     }
   ],
   "evidence_files": [
@@ -3421,5 +3421,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "PR220 mergeauthorizedAPR060 after allcurrentCI/review; integrate latestmain3239b98f, newcandidate Itemdocs-onlydelta, verifyunchanged canonicalDES/PLAN/evidence+GRBLOCKED, push and exactindependentreview/currentfiveCI then normalmerge. Only currentItemcleanup afterward; noGR/UAT/wholeacceptance waiver or product changes."
+  "next_safe_action": "Freeze/push final integratedPR220 documentationcandidate, markPRready, require its exactindependentreview and allfiveCI. Before normalmerge re-fetchmain and re-evaluate base/head. Preserve livejournal then recoverablyarchive onlycurrentItem and nonforce delete exactmergedbranch. GR/DEF107/TASK043/UAT limits unchanged; no moduleMERGE_READY/acceptance waiver."
 }
