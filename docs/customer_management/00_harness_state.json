@@ -1,27 +1,27 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 149,
+  "revision": 154,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
   "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-004",
-  "current_task": "TASK-029",
+  "current_task": "TASK-030",
   "baseline": {
-    "design": "a711118a2d5b4867e9866ad1e572139e6d589ae72e258ae39d5fa882f88a6115",
-    "plan": "5014886f1be14900ca65c0e017cd02ff30b65032f69dc1152a6d100cd77598d3",
-    "code_commit": "c0ea960b9ca061b26cfee037163b4e5e7c42a1d0",
-    "source_fingerprint": "bc50b4f7ff27fb29c02f1d8d9d0256d54228d647bc1b2cfe291d40ef2273fbf3",
-    "worktree": "/private/tmp/erp-customer-p4-state-reconcile",
-    "default_commit": "c0ea960b9ca061b26cfee037163b4e5e7c42a1d0",
+    "design": "24b905fb54f174a745979908a11d3e6d6f0f0c8e9f41d80ee9bb8eea0d946f01",
+    "plan": "8e3ca15db849b5f9bbfcc23d06d24bbfd00eb20c874f6f65ce7a1b2b36149b4f",
+    "code_commit": "329f6ed4ec98f1f65673c913bcd8809c4a6bcaf4",
+    "source_fingerprint": "7cceffc523a8cd6e9b113f6fbf475c9a93a44c18f05a4a637fbe87e4a2401ebb",
+    "worktree": "/private/tmp/erp-customer-task029-adoption",
+    "default_commit": "e91197d5d71e110aa149b2af99492a7717af4f27",
     "mode_entry_commit": "f7fd95584e827f1bce112388fc2c196b5939671f"
   },
   "runtime": {
-    "instance_id": "customer-phase004-state-reconcile-20260925",
+    "instance_id": "customer-task029-adoption-20261014",
     "owner": "Primary harness agent",
     "resources": {
-      "workspace": "/private/tmp/erp-customer-p4-state-reconcile"
+      "workspace": "/private/tmp/erp-customer-task029-adoption"
     },
     "lease_ref": null
   },
@@ -54,10 +54,10 @@
     "TASK-026": "DONE",
     "TASK-027": "DONE",
     "TASK-028": "DONE",
-    "TASK-029": "BLOCKED",
-    "TASK-030": "PENDING",
-    "TASK-031": "PENDING",
-    "TASK-032": "PENDING",
+    "TASK-029": "DONE",
+    "TASK-030": "BLOCKED",
+    "TASK-031": "BLOCKED",
+    "TASK-032": "BLOCKED",
     "TASK-033": "PENDING",
     "TASK-034": "PENDING",
     "TASK-035": "PENDING",
@@ -1551,6 +1551,68 @@
         "docs/customer_management/**"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-DESIGN-015",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Standing Product Owner instruction that every required Customer Management design approval is recorded as Sam's direct approval; successor binds the latest-main Sales adoption and preserves absent downstream consumers as blocked.",
+      "recorded_at": "2026-10-14T06:50:52Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "24b905fb54f174a745979908a11d3e6d6f0f0c8e9f41d80ee9bb8eea0d946f01",
+      "code_commit": "e91197d5d71e110aa149b2af99492a7717af4f27",
+      "scope": [
+        "customer-management",
+        "PHASE-004",
+        "TASK-029",
+        "Sales customer-consumer contract adoption",
+        "downstream contracts remain blocked until real consumers merge"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-PLAN-015",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Standing Product Owner instruction approving all required Customer Management PLAN successors and automatic continuation where no new material decision is required.",
+      "recorded_at": "2026-10-14T06:50:52Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "8e3ca15db849b5f9bbfcc23d06d24bbfd00eb20c874f6f65ce7a1b2b36149b4f",
+      "code_commit": "e91197d5d71e110aa149b2af99492a7717af4f27",
+      "scope": [
+        "customer-management",
+        "PHASE-004",
+        "TASK-029",
+        "TASK-030",
+        "TASK-031",
+        "TASK-032"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-040",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-10-14 user instruction to recheck dependencies from latest main, update stale state and contract references, continue TASK-029, and keep unready downstream contracts blocked.",
+      "recorded_at": "2026-10-14T06:50:52Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "8e3ca15db849b5f9bbfcc23d06d24bbfd00eb20c874f6f65ce7a1b2b36149b4f",
+      "code_commit": "e91197d5d71e110aa149b2af99492a7717af4f27",
+      "scope": [
+        "PHASE-004",
+        "TASK-029",
+        "server/src/modules/customer/CustomerLookupService.js",
+        "server/test/customer*",
+        "server/test/integration/customer*",
+        "docs/customer_management/**"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -2029,6 +2091,18 @@
       "reviewer": "Jason (/root/customer_task011_review), separate agent",
       "reviewed_baseline": "bc50b4f7ff27fb29c02f1d8d9d0256d54228d647bc1b2cfe291d40ef2273fbf3",
       "source_ref": "2026-09-25 final pre-publication review verified PR #144/#145 action evidence, corrected PR-head versus merge identities and identical tree, current runtime worktree, unchanged approved baselines, and the continuing real-Sales-consumer blocker. The pre-commit checkpoint inspect passed; a later tracked documentation commit necessarily changes HEAD without changing the product source fingerprint. Final verdict APPROVED with no Required finding.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-041",
+      "method": "SEPARATE_AGENT",
+      "author": "/root TASK-029 Sales contract adoption candidate",
+      "reviewer": "Jason (/root/customer_task011_review), separate agent",
+      "reviewed_baseline": "7cceffc523a8cd6e9b113f6fbf475c9a93a44c18f05a4a637fbe87e4a2401ebb",
+      "source_ref": "2026-10-14 exact-candidate review confirmed the additive Customer provider 2.1 marker, real Sales lookup/order/confirmation coverage in TC-070, exact contract hashes, truthful PR/CI evidence and continued blocking of absent Fulfillment/Invoicing/Returns consumers. Reviewer ran diff, state, traceability, boundary and focused real-MySQL checks. Final verdict APPROVED with no Critical, High or Required finding.",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -2530,6 +2604,61 @@
       "source_ref": "state_tool inspect at PR #146 head ae4fd70d4ac83cbf91861e9b3cd1f76062b21a39 reports COMMIT_CHANGED because baseline.code_commit remains the integrated product baseline c0ea960b9ca061b26cfee037163b4e5e7c42a1d0. This is an expected tracked-state self-reference after the documentation commit: design, plan, source fingerprint, and worktree remained consistent, and no product evidence was reused for changed source.",
       "actor": "/root state reconciliation",
       "observed_at": "2026-09-25T00:54:41Z"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "PR #146 PHASE-004 Customer state reconciliation integrated into main",
+      "code_commit": "9107d07739b5f1a03e5f16dabe501547def21811",
+      "spec_baseline": "5014886f1be14900ca65c0e017cd02ff30b65032f69dc1152a6d100cd77598d3",
+      "source_fingerprint": "bc50b4f7ff27fb29c02f1d8d9d0256d54228d647bc1b2cfe291d40ef2273fbf3",
+      "status": "PASS",
+      "source_ref": "GitHub PR #146 reported MERGED at 2026-09-25T00:58:32Z as 9107d07739b5f1a03e5f16dabe501547def21811; all five CI checks on exact head e4da5e8b01076bd2ff6df7e8467de17a4f1845ba completed SUCCESS in run 36079863356.",
+      "actor": "GitHub, observed by /root",
+      "observed_at": "2026-10-14T06:50:52Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "TASK-029 Sales dependency adoption evidence from merged exact PR heads",
+      "code_commit": "e91197d5d71e110aa149b2af99492a7717af4f27",
+      "spec_baseline": "8e3ca15db849b5f9bbfcc23d06d24bbfd00eb20c874f6f65ce7a1b2b36149b4f",
+      "source_fingerprint": "7a4ba26fa09456bb605b9c5c7316d8345ec7487a39b56b4485e1491f62affe1e",
+      "status": "PASS",
+      "source_ref": "GitHub PR #174 exact head 697b434a7d741b49a5e7adde3e38715ac4e5c5d6 merged as bbb2383ab3be94e79cade34fc584f8e538ddcfaf with all five CI checks SUCCESS (run 36986307700). Sales Phase 1 PR #184 head 5d17a075605ba25e41e76c6fcc2cdeb9d689e02a and Phase 2 PR #190 head 381834f80a860e86f1db4aec269d385e32a73f1b likewise had all five checks SUCCESS before merge.",
+      "actor": "GitHub Actions, observed by /root",
+      "observed_at": "2026-10-14T06:50:52Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-029 TC-070 real Customer/Sales consumer contract verification",
+      "code_commit": "e91197d5d71e110aa149b2af99492a7717af4f27",
+      "spec_baseline": "8e3ca15db849b5f9bbfcc23d06d24bbfd00eb20c874f6f65ce7a1b2b36149b4f",
+      "source_fingerprint": "7cceffc523a8cd6e9b113f6fbf475c9a93a44c18f05a4a637fbe87e4a2401ebb",
+      "status": "PASS",
+      "source_ref": "Isolated MySQL 26.7.0 on 127.0.0.1:3306: final TC-070 passed 1/1 including a real blocked-Customer Sales write rejection; the prior focused Customer/Sales provider-consumer regression passed 63/63. Lint, client build and 866/866 client unit tests passed. The preceding complete exact-lock server run recorded 3164 cases, 3032 passed, 132 pre-existing gated/performance skips, and 0 failures; the final delta only strengthened TC-070 with the focused rerun.",
+      "actor": "/root local developer verification",
+      "observed_at": "2026-10-14T06:50:52Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-030 and TASK-031 real downstream consumer readiness inspection",
+      "code_commit": "e91197d5d71e110aa149b2af99492a7717af4f27",
+      "spec_baseline": "8e3ca15db849b5f9bbfcc23d06d24bbfd00eb20c874f6f65ce7a1b2b36149b4f",
+      "source_fingerprint": "7a4ba26fa09456bb605b9c5c7316d8345ec7487a39b56b4485e1491f62affe1e",
+      "status": "BLOCKED",
+      "source_ref": "Latest main contains downstream design documents but no real Fulfillment, Invoicing/AR or Returns/Refund module directories under server/src/modules. Their contract hashes were refreshed for traceability only; TASK-030, TASK-031 and dependent TASK-032 remain blocked and no placeholder consumer was introduced.",
+      "actor": "/root dependency reinspection",
+      "observed_at": "2026-10-14T06:50:52Z"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "TASK-029 Customer/Sales contract adoption independent exact-candidate review",
+      "code_commit": "e91197d5d71e110aa149b2af99492a7717af4f27",
+      "spec_baseline": "8e3ca15db849b5f9bbfcc23d06d24bbfd00eb20c874f6f65ce7a1b2b36149b4f",
+      "source_fingerprint": "7cceffc523a8cd6e9b113f6fbf475c9a93a44c18f05a4a637fbe87e4a2401ebb",
+      "status": "PASS",
+      "source_ref": "REV-041",
+      "actor": "Jason (/root/customer_task011_review), separate agent",
+      "observed_at": "2026-10-14T06:56:57Z"
     }
   ],
   "pending_decisions": [
@@ -3209,8 +3338,32 @@
       "kind": "GIT_MERGE",
       "target": "github:crazysumsum/erp-app:main<-codex/customer-p4-state-reconcile",
       "idempotency_key": "customer-phase004-state-reconcile-merge-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-10-14 reconciliation: GitHub reports PR #146 MERGED at 2026-09-25T00:58:32Z as 9107d07739b5f1a03e5f16dabe501547def21811; exact head e4da5e8b01076bd2ff6df7e8467de17a4f1845ba had all five CI checks SUCCESS."
+    },
+    {
+      "id": "EXT-PUSH-056",
+      "kind": "GIT_PUSH",
+      "target": "github:crazysumsum/erp-app:refs/heads/codex/customer-task029-adoption",
+      "idempotency_key": "customer-task029-adoption-push-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-10-14: pushed codex/customer-task029-adoption through reviewed checkpoint commit 24eb5d81e8f7aa4c42120a13a87e6f9920f17d1f."
+    },
+    {
+      "id": "EXT-PR-057",
+      "kind": "PULL_REQUEST",
+      "target": "github:crazysumsum/erp-app:main<-codex/customer-task029-adoption",
+      "idempotency_key": "customer-task029-adoption-pr-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-10-14: GitHub PR #224 created at https://github.com/crazysumsum/erp-app/pull/224."
+    },
+    {
+      "id": "EXT-MERGE-058",
+      "kind": "GIT_MERGE",
+      "target": "github:crazysumsum/erp-app:main<-codex/customer-task029-adoption",
+      "idempotency_key": "customer-task029-adoption-merge-v1",
       "status": "PLANNED",
-      "source_ref": "Standing publication authorization and documentation-only no-CI exception apply after independent review."
+      "source_ref": "Standing Product Owner authorization to merge completed Customer Management work after current required CI succeeds."
     }
   ],
   "evidence_files": [
@@ -3220,5 +3373,5 @@
     "docs/customer_management/implementation/phase-PHASE-003-report.md"
   ],
   "defects": [],
-  "next_safe_action": "Commit and push this reviewed revision-149 reconciliation to the existing GitHub PR #146, then re-observe its exact remote head before merging under the approved documentation-only no-CI exception. After merge, clean its worktree/branches. TASK-029 remains blocked until a real Sales implementation and consumer contract test merge to main; then re-fetch origin/main, reconcile the exact contract, and resume without modifying Sales-owned production code or adding a fake consumer."
+  "next_safe_action": "Push this publication-evidence checkpoint to PR #224, wait for all five current CI jobs on its exact head, then merge under the standing Product Owner authorization. After merge, clean the branch/worktree. TASK-030, TASK-031 and dependent TASK-032 remain blocked until real Fulfillment, Invoicing/AR and Returns/Refund consumers merge; do not create placeholders or treat design-only contracts as READY."
 }

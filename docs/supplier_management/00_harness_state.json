@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 327,
+  "revision": 328,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -3927,6 +3927,17 @@
       "source_fingerprint": "d81da3caa736ff95e431623c7c9bc944ced9ebdea1e035b1e37a3820b81b1b9a",
       "status": "PASS",
       "source_ref": "PR #215 merged as f94ba467472bcfae851ed6cb2bb077ac67ab8be0 on the Product Owner's word (HD-099 '全部按建議，M-4 揀 A，唔使再 review，CI 過就 merge'), with --match-head-commit, after head 9f9730dd's CI run 38379185503 was green on all five checks and origin/main was unchanged at 268d6815. Review: REV-088 CHANGES_REQUESTED (1 High: deleted service tests, fixed by restoring them); follow-ups not re-reviewed by decision. Main CI on the merge commit (38491486959 in_progress) is not claimed here. source_fingerprint computed with harness_core.fingerprint on a clean worktree at the merge commit.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-14T00:00:00+08:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "TASK-050 perf:supplier (PR #221) merged to main",
+      "code_commit": "769d05cd2b8db3a9f99d84722c7d1d819aca3f4e",
+      "spec_baseline": "441671a6dffc2a6dc2d0b1e17d0b411c748bae623abd17f2bb0b698bc4fe00c3",
+      "source_fingerprint": "ed46a1f4d5abee1adcef2921a2a3b95aad78667eee251daa4b56591eff9376b8",
+      "status": "PASS",
+      "source_ref": "PR #221 merged as 769d05cd on the Product Owner's word ('CI過就merge', then 'CI已通過'), with --match-head-commit and origin/main unchanged. Process defect: at merge time head 811117be's run 38520260498 job 'Test (server + client, MySQL integration)' was still IN_PROGRESS; the merge command printed the checks through a pipe and did not stop on pending. Reported to the Product Owner at once. The job later finished SUCCESS (coverage suite and TC-032 capacity both passed), so all five checks on the merged head are green after the fact. Merge commands are now gated on every check being SUCCESS. Main CI run 38520668308 on 769d05cd was cancelled (superseded by Item PR #220's merge a909c769) and is not claimed. Separately, main run 38518674925 on #218's merge 3239b98f failed only Sales TC-032 (five-warmup confirmation p95 3027.3 ms > 3000 ms); Sales code is outside this module and the same test passed on #221's run. source_fingerprint computed with harness_core.fingerprint on a clean worktree at the merge commit.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-14T00:00:00+08:00"
     }
