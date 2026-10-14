@@ -250,7 +250,11 @@ test("@technical typing a row number shows that row even when an earlier keystro
   await page.goto("/suppliers/imports?job=7");
   const rowNumberInput = page.locator(".q-dialog").getByLabel("行號");
   const late = page.waitForResponse((response) => new URL(response.url()).searchParams.get("rowNumber") === "1");
-  await rowNumberInput.pressSequentially("1", { delay: 350 });
+  // 等 rowNumber=1 個請求真係出咗去（輸入框 debounce 300 ms）先打「2」。以前用 350 ms 嘅按鍵延遲，只差 50 ms：
+  // CI 慢少少，兩下按鍵就會被 debounce 併埋，rowNumber=1 從來冇發出，個 waitForResponse 就等到 timeout。
+  const early = page.waitForRequest((request) => new URL(request.url()).searchParams.get("rowNumber") === "1");
+  await rowNumberInput.pressSequentially("1");
+  await early;
   await rowNumberInput.pressSequentially("2");
   await late; // 遲到嘅 rowNumber=1 回應返咗嚟之後，表格仍然要係第 12 列
   await expect.poll(() => page.locator(".q-dialog tbody tr td:first-child").allInnerTexts()).toEqual(["12"]);
