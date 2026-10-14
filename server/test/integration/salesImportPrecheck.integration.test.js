@@ -42,6 +42,26 @@ async function workerFixture(t,{batchSize=2,channels=["SYNTHETIC"]}={}){
  const facts=async id=>({job:(await f.db.query("SELECT * FROM sales_import_jobs WHERE id=?",[id]))[0][0],children:(await f.db.query("SELECT * FROM sales_intake_orders WHERE import_job_id=? ORDER BY id",[id]))[0],errors:(await f.db.query("SELECT e.* FROM sales_intake_errors e JOIN sales_intake_orders i ON i.id=e.intake_order_id WHERE i.import_job_id=? ORDER BY e.id",[id]))[0]});
  return {...f,app,database,time,logger,root,tempRoot,userId,roleId,claims,row,service,upload,registeredWorker,facts};
 }
+integrationTest("TC-035 configured persistence batches above100 classify bounded groups and release the next valid job",async t=>{
+ for(const batchSize of [101,102])await t.test(`batch=${batchSize}`,async t=>{
+  const f=await workerFixture(t,{batchSize});assert.equal(f.app.configuration.sales.importWorkerBatchSize,batchSize);
+  const rows=Array.from({length:110},(_,index)=>({...f.row,sourceOrderKey:`Config${batchSize}-${index}`,externalOrderId:`${f.row.externalOrderId}-Config${batchSize}-${index}`}));
+  const job=await f.upload(rows),later=await f.upload([{...f.row,sourceOrderKey:`AfterConfig${batchSize}`,externalOrderId:`${f.row.externalOrderId}-AfterConfig${batchSize}`}]),worker=await f.registeredWorker();
+  let observed;const run=worker.runtime.importer.runPrecheckBatch.bind(worker.runtime.importer);
+  worker.runtime.importer.runPrecheckBatch=async input=>{try{return await run(input);}catch(error){observed=error;throw error;}};
+  await worker.run();await worker.scheduler.stop();const first=await f.facts(job.id),waiting=await f.facts(later.id);
+  const effects=async()=>{const [[result]]=await f.db.query("SELECT (SELECT COUNT(*) FROM sales_orders WHERE created_by=?) AS orders,(SELECT COUNT(*) FROM inventory_reservations WHERE sku_id=?) AS reservations,(SELECT COUNT(*) FROM sales_external_order_keys WHERE external_order_id LIKE ?) AS source_keys",[f.userId,f.skuId,`${f.row.externalOrderId}-%`]);return result;};
+  t.diagnostic(JSON.stringify({batchSize,failures:worker.scheduler.stats.get("sales.importWorker").failures,errorCode:observed?.code,status:first.job.status,children:first.children.length,valid:Number(first.job.valid_count),received:first.children.filter(row=>row.status==="RECEIVED").length,nextStatus:waiting.job.status,effects:await effects()}));
+  assert.equal(worker.scheduler.stats.get("sales.importWorker").failures,0);assert.equal(worker.scheduler.stats.get("sales.importWorker").timeouts,0);
+  assert.equal(first.job.status,"VALIDATING");assert.equal(Number(first.job.source_order_count),110);assert.equal(first.children.length,110);assert.equal(Number(first.job.valid_count),100);assert.equal(first.children.filter(row=>row.status==="RECEIVED").length,10);assert.equal(first.job.lease_owner,null);assert.equal(waiting.job.status,"UPLOADED");
+  const identities=first.children.map(row=>[row.id,row.source_order_key,row.processing_event_id,Buffer.from(row.source_order_key_hash).toString("hex"),row.payload_hash]);assert.equal(new Set(first.children.map(row=>row.processing_event_id)).size,110);
+  const resumed=await f.registeredWorker();await resumed.run();await resumed.scheduler.stop();const complete=await f.facts(job.id);
+  assert.equal(resumed.scheduler.stats.get("sales.importWorker").failures,0);assert.equal(resumed.scheduler.stats.get("sales.importWorker").timeouts,0);assert.equal(complete.job.status,"READY");assert.equal(Number(complete.job.valid_count),110);assert.ok(complete.children.every(row=>row.status==="VALID"));assert.deepEqual(complete.children.map(row=>[row.id,row.source_order_key,row.processing_event_id,Buffer.from(row.source_order_key_hash).toString("hex"),row.payload_hash]),identities);assert.deepEqual(complete.errors,[]);
+  const next=await f.registeredWorker();await next.run();await next.scheduler.stop();const advanced=await f.facts(later.id);
+  assert.equal(next.scheduler.stats.get("sales.importWorker").failures,0);assert.equal(next.scheduler.stats.get("sales.importWorker").timeouts,0);assert.equal(advanced.job.status,"READY");assert.equal(Number(advanced.job.valid_count),1);assert.deepEqual(await effects(),{orders:0,reservations:0,source_keys:0});
+ });
+});
+
 integrationTest("TC-035 real registered worker persists bounded partial precheck, resumes original children and has zero business effects",async t=>{
  const f=await workerFixture(t),job=await f.upload([f.row,{...f.row,sourceOrderKey:"B",externalOrderId:"B",skuCode:"MISSING"},{...f.row,sourceOrderKey:"C",externalOrderId:"C",quantity:"bad"},{...f.row,sourceOrderKey:"D",externalOrderId:"D"}]),worker=await f.registeredWorker();
  await worker.run();assert.equal(worker.scheduler.stats.get("sales.importWorker").failures,0);const first=await f.facts(job.id);assert.equal(first.job.status,"VALIDATING");assert.equal(Number(first.job.total_row_count),4);assert.equal(first.children.length,4);assert.notEqual(first.children[0].processing_event_id,worker.scheduler.owner);assert.equal(first.job.lease_owner,null);

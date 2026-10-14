@@ -63,7 +63,7 @@ export class SalesImportPrecheckWorker {
    }
    const classified=await this.#transaction(claim,signal,async(tx,job,nowMs)=>{
     const [[count]]=await tx.query("SELECT COUNT(*) AS n FROM sales_intake_orders WHERE import_job_id=?",[job.id]);if(Number(count.n)!==Number(job.source_order_count))throw salesError("SALES_DEPENDENCY_UNAVAILABLE");
-    const [rows]=await tx.query("SELECT * FROM sales_intake_orders WHERE import_job_id=? AND status='RECEIVED' ORDER BY id LIMIT ? FOR UPDATE",[job.id,this.config.importWorkerBatchSize]);
+    const [rows]=await tx.query("SELECT * FROM sales_intake_orders WHERE import_job_id=? AND status='RECEIVED' ORDER BY id LIMIT ? FOR UPDATE",[job.id,Math.min(this.config.importWorkerBatchSize,100)]);
     const groups=[],selected=[],pairs=new Set();
     for(const row of rows){const payload=json(row.safe_payload),keys=payload.lines.map(line=>JSON.stringify([line.skuCode,line.salesUomCode])),next=new Set([...pairs,...keys]);if(next.size>100)break;for(const key of keys)pairs.add(key);
      groups.push({payload,errors:[],channelCode:row.channel_code,externalOrderId:row.external_order_id,firstRowNo:Number(row.first_row_no),lastRowNo:Number(row.last_row_no),processingEventId:row.processing_event_id});selected.push(row);}
