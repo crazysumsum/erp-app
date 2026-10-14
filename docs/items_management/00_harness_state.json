@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "item-management",
-  "revision": 122,
+  "revision": 124,
   "mode": "TEST_AND_VERIFY",
   "active_mode": "TEST_AND_VERIFY",
   "status": "BLOCKED",
@@ -11,7 +11,7 @@
   "baseline": {
     "design": "f7431c0934377f3331fd0a537e236eca8044df41f359d36202153803c4aca315",
     "plan": "809f8a15b605975f2db4c94eb641bc6bf6e5e3aaf07ed5938bb8660f9899a8ef",
-    "code_commit": "cb75f25a87cb8f0cb97b14dc6bdc4131c3217b17",
+    "code_commit": "572146b8f7ff9fa2963f8b63ae459ba72405b92b",
     "source_fingerprint": "cad808f35e03b9eda82f148a50a840cf8beaf9e432a0de9acf0f8b764ea10eea",
     "worktree": "/Users/sam/.codex/worktrees/item-authoritative-gr-handoff/erp-app",
     "default_commit": "cb75f25a87cb8f0cb97b14dc6bdc4131c3217b17",
@@ -1152,6 +1152,26 @@
         "docs/items_management/implementation/05_task043_supplier_reference_c.md",
         "docs/items_management/00_harness_state.json",
         "Item-only-documentation"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-060",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Actual current user: 批准 PR #220 在 CI 和 review 全通過後合併到 main，然後清理本次 Item 分支及 worktree；只處理 Item 文件，權威 GR 案例維持 BLOCKED，正式 UAT 另行處理。 PR220-only report/docs merge after fresh-main integration and all exact-candidate CI+actual independent review; current Item cleanup only. Not product/crossmodule authored writes, newcontracts/GR waiver, rawexport/UAT/business/release acceptance.",
+      "recorded_at": "2026-10-14T05:51:17.921658+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "809f8a15b605975f2db4c94eb641bc6bf6e5e3aaf07ed5938bb8660f9899a8ef",
+      "code_commit": "572146b8f7ff9fa2963f8b63ae459ba72405b92b",
+      "scope": [
+        "PR-220",
+        "Item-documentation-only",
+        "fresh-main-integration",
+        "exact-candidate-CI-and-review-gated-merge",
+        "current-Item-branch-worktree-cleanup"
       ],
       "expires_at": null
     }
@@ -3204,8 +3224,16 @@
       "kind": "DOCUMENTATION_PR",
       "target": "codex/item-authoritative-gr-handoff Item documents ONLY",
       "idempotency_key": "item-gr-handoff-doc-pr-20261014",
-      "status": "STARTED",
-      "source_ref": "APR059 documentation-onlyhandoff; actual2MDartifacts + journalreconciliation independentlyreviewedREV042,0findings, traceSTRUCTURE_PASS, ItemboundaryLOCAL_CHECKS_PASS,7linktargets valid andcanonicalDES/PLAN/evidencebytes unchanged. Normaldocumentationcommit/push/PR remains pending; no merge authority, DB/tests/rawexport or wholeacceptance inference."
+      "status": "CONFIRMED",
+      "source_ref": "Actual committed+pushed 572146b8f7ff9fa2963f8b63ae459ba72405b92b; draft PR220 OPEN samehead https://github.com/crazysumsum/erp-app/pull/220 ; attachedcurrenttask. Only3Itemdocs paths, source/DES/PLAN/evidence unchanged; actualREV042 artifactreview APPROVED and localtrace/boundary/links/whitespace PASS. Normaldocsworkflow via authenticatedgh, no website/merge/DB/tests/rawexport/UAT. CI mayautostart but not explicitlywaited orreportedPASS. This is postcandidate local observation, notcontent already in PRhead."
+    },
+    {
+      "id": "ITEM-GR-HANDOFF-MERGE-145",
+      "kind": "PR_MERGE",
+      "target": "PR220 Item documentation ONLY",
+      "idempotency_key": "item-gr-pr220-gated-merge-20261014",
+      "status": "PLANNED",
+      "source_ref": "APR060 actualuserauthority. Originalhead572 CI38509498967 allfiveSUCCESS but latestorigin/main3239b98f advanced with Supplier TASK050 lookup/perf/evidence; Item/SupplierRelationService/Purchasing runtime unchanged. Commit existing postcandidate journal+authority and integrate latestmain, freeze newcandidate and require its CI/review; oldheadPASS not sufficient. No merge executed."
     }
   ],
   "evidence_files": [
@@ -3393,5 +3421,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Publish reviewed Item-only GR handoff/entrylink/journal in documentationPR; do notmerge withoutnewauthority. Keep openPRbranch/worktree or safelyarchive withoutdeleteopenremote. Receiving/Purchasing+Supplier owners need source/verifier/caller/reconciliation implementation and response to pendingmapping/reversal/committedReceiptprovider beforeItemnewPLAN/integration/testing. GR/DEF107/TASK043/UAT limits unchanged."
+  "next_safe_action": "PR220 mergeauthorizedAPR060 after allcurrentCI/review; integrate latestmain3239b98f, newcandidate Itemdocs-onlydelta, verifyunchanged canonicalDES/PLAN/evidence+GRBLOCKED, push and exactindependentreview/currentfiveCI then normalmerge. Only currentItemcleanup afterward; noGR/UAT/wholeacceptance waiver or product changes."
 }

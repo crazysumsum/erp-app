@@ -8,6 +8,8 @@
 
 檢查 baseline：main `cb75f25a87cb8f0cb97b14dc6bdc4131c3217b17`。Inventory／Sales 引用保護、Supplier 已安裝引用的增量 C、採購 lookup 已分別合併；[限定引用驗證報告](testing/09_tc004_tc005_reference_verification_20261014.md)保存兩次各34個 leaf PASS，但不是完整 TC-004／TC-005 或 GR 正向證據。
 
+PR #220 合併前再觀察 main `3239b98f8938697475bf6201ba1a52c48ccef127`：新增 Supplier for-SKU lookup 效能／測試／報告；Item provider、SupplierRelationService 與 Purchasing GR 接線未變。整合此 main 後的新文件 candidate 必須重新通過 CI／review，不能沿用舊 head 的 CI；本交接的 GR 缺口及 owner 待確認事項保持不變。
+
 - [Item 設計 §5.14](03_design_spec.md#514-supplier-referencesupplier-擁有)：已提交 Confirmed GR 的歷史 projection 不套用新採購資格，仍須核實來源、未物理刪除的 SKU identity 及相關 UOM ownership；不得恢復 Active、preferred 或新採購資格。
 - [TASK-043](05_development_tasks.md#task-043--integrate-first-real-downstream-reference-guard)：C 的剩餘 GR 整合與 D 的完整技術／UAT 接受不能由局部完成取代。
 - [Supplier 設計 §6.8](../supplier_management/03_design_spec.md#68-supplier－sku-relation-與-lookup-apis)與[實際 service](../../server/src/modules/supplier/SupplierRelationService.js)：`verifySource(connection, command)`預設回503 `SUPPLIER_SUPPLY_SOURCE_UNAVAILABLE`，尚無正式來源 adapter；既有 event 重送會先回 durable fence 結果，不再次呼叫 verifier。
