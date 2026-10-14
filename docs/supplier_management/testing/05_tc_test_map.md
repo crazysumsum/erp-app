@@ -17,6 +17,7 @@
 
 - Findings 1 and 3 are fixed. The three server suites now run from `server` with `--test-concurrency=1` and glob the existing files: `test/supplier*.test.js` and `test/integration/supplier*.integration.test.js`; Bank uses `supplierBank*` only. The double tag is now `(TC-090)`.
 - Six cases moved suite, because their only tests run in another runner: TC-013, TC-015, TC-029 and TC-075 to `supplier-client-ui` (Vitest), TC-085 and TC-101 to `supplier-performance`. `min_tests` equals the required case count in each suite.
+- The server suites also pass `DB_ADMIN_USER`, `DB_ADMIN_PASSWORD`, `MYSQL_BIN` and the four `CUSTOMER_BANK_*` keys. `run_check` passes only listed keys: without the admin keys the Bank restore test hung, and without the Customer keys configuration refused to load. `run_check --suite supplier-bank-security --stage DEVELOPER --execute` then passed all 15 required cases (`evidence/20261014T082013-b336a4b827af`).
 - Checked on erp_t51 (fresh migration, throwaway MySQL): the server glob runs 626 tests, all pass, none skipped, no duplicate JUnit names; the harness JUnit adapter parses the file once the double tag is gone.
 
 ## Summary (before the suite moves)

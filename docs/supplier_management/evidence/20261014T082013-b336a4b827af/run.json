@@ -1,0 +1,140 @@
+{
+  "schema_version": "2.0",
+  "module_id": "supplier-management",
+  "run_id": "20261014T082013-b336a4b827af",
+  "suite_id": "supplier-bank-security",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "c2013bc7ef6310794116465a207b2ae7d1c9a8848246751dfa8af67b1fa884f3",
+  "source_fingerprint": "2050d1e6d0a1eb4e4210e2db2d5b05eb823a5e785a41dfb97e8715871fa73e75",
+  "code_commit": "c81f19886c616411e4353d42281e498bfc566822",
+  "started_at": "2026-10-14T08:20:13.798954Z",
+  "ended_at": "2026-10-14T08:20:24.186150Z",
+  "environment_id": "supplier-isolated-test",
+  "runtime_instance_id": "supplier-phase-001-local-mysql-v2",
+  "data_reference": "Synthetic Supplier fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "node",
+    "--test",
+    "--test-concurrency=1",
+    "--import",
+    "./test-support/testEnv.js",
+    "--test-reporter=junit",
+    "--test-reporter-destination=/Users/sam/Documents/workspace/erp-supplier-t51/docs/supplier_management/evidence/20261014T082013-b336a4b827af/supplier-bank-security.xml",
+    "test/supplierBank*.test.js",
+    "test/integration/supplierBank*.integration.test.js"
+  ],
+  "cwd": "server",
+  "command_contract_sha256": "e0fba909cc1422d16fcb4b0f12e99752a979b4fab290d431adc83a30a6712cdb",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 139,
+    "passed": 139,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [
+    {
+      "id": "TC-062",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-063",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-064",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-065",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-066",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-067",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-068",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-069",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-070",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-071",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-072",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-073",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-074",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-076",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-077",
+      "status": "PASS"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "evidence/20261014T082013-b336a4b827af/stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/20261014T082013-b336a4b827af/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/20261014T082013-b336a4b827af/supplier-bank-security.xml",
+      "sha256": "c7556c175a784f81cbb4a447c8b36749c936ec2e6407e683c92d38307407c3e2",
+      "bytes": 32415
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    },
+    {
+      "argv": [
+        "mysql",
+        "--version"
+      ],
+      "output": "mysql  Ver 26.7.0 for macos15 on arm64 (MySQL Community Server - GPL)\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "Local observation only; external services/config/data and secret redaction completeness require review."
+  ]
+}
