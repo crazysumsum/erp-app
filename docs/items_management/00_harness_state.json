@@ -1,33 +1,33 @@
 {
   "schema_version": "2.0",
   "module_id": "item-management",
-  "revision": 109,
-  "mode": "IMPLEMENT",
-  "active_mode": "IMPLEMENT",
+  "revision": 120,
+  "mode": "TEST_AND_VERIFY",
+  "active_mode": "TEST_AND_VERIFY",
   "status": "BLOCKED",
   "resume_status": "READY_FOR_TESTING",
-  "current_phase": "PHASE-009",
-  "current_task": "TASK-047",
+  "current_phase": "PHASE-006",
+  "current_task": "TASK-043",
   "baseline": {
     "design": "f7431c0934377f3331fd0a537e236eca8044df41f359d36202153803c4aca315",
-    "plan": "46dd2221fc8f8fe974adc6553d83c3eaefc706e81315b649a55b8331a715410b",
-    "code_commit": "3832635077ecc32c6a7b9292e2b9e155223008d0",
-    "source_fingerprint": "711f09a98d1f59c0362025aff3c0b89647eee4cac2250e833f747ec14e168549",
-    "worktree": "/Users/sam/.codex/worktrees/item-task043-supplier-guards/erp-app",
-    "default_commit": "3832635077ecc32c6a7b9292e2b9e155223008d0",
-    "mode_entry_commit": "7c927e26b386d87c595bf3c6111467d0ccc8b20d"
+    "plan": "809f8a15b605975f2db4c94eb641bc6bf6e5e3aaf07ed5938bb8660f9899a8ef",
+    "code_commit": "bd116b393bb3a88db1d59882f33a759e50679efe",
+    "source_fingerprint": "d735bc6f612f0ff635c571adde4d539f41a00c71e9d855a1b060127314ddd01c",
+    "worktree": "/Users/sam/.codex/worktrees/item-tc004-tc005-verification/erp-app",
+    "default_commit": "692a1d47d892601a96c13afa5d80bf67377e9fe4",
+    "mode_entry_commit": "f94ba467472bcfae851ed6cb2bb077ac67ab8be0"
   },
   "runtime": {
-    "instance_id": "ITEM-SUPPLIER-C-DEVELOPER-20261013-vdXM5l",
-    "owner": "Primary Item module agent",
+    "instance_id": "ITEM-TC004-TC005-20261014",
+    "owner": "Item primary QA execution /root",
     "resources": {
-      "workspace": "/Users/sam/.codex/worktrees/item-task043-supplier-guards/erp-app; ownlocked npmci429, no lockchange",
-      "mysql-schema": "erp_item_supplier_c_20261013 taskprivate /private/tmp/erp-item-supplier-c-mysql.vdXM5l/mysql.sock TCP/MySQLXdisabled; syntheticonly",
-      "media-root": "/Users/sam/.codex/worktrees/item-task043-supplier-guards/erp-app/server/storage/media",
-      "import-root": "/Users/sam/.codex/worktrees/item-task043-supplier-guards/erp-app/server/storage/imports",
-      "web-port": "No frontend scope; integration ephemeral port0"
+      "workspace": "/Users/sam/.codex/worktrees/item-tc004-tc005-verification/erp-app",
+      "mysql-schema": "erp_item_supplier_c_20261013 @ /private/tmp/erp-item-supplier-c-mysql.vdXM5l/mysql.sock (MySQL26.7.0, socket-only)",
+      "media-root": "/Users/sam/.codex/worktrees/item-tc004-tc005-verification/erp-app/server/storage/media",
+      "import-root": "/Users/sam/.codex/worktrees/item-tc004-tc005-verification/erp-app/server/storage/imports",
+      "web-port": "0: per-test OS allocation"
     },
-    "lease_ref": "Actual taskprivate mysqldexec69019, freshinitializedvdXM5l, all existing migrations through0081 appliedsuccessfully. No sharedMySQL/userpassword/othermodules mutated."
+    "lease_ref": "STOPPED: actual owned mysqladmin shutdown successful; private socket/pid absent, datadir retained. Before any future execution re-observe/reacquire own runtime; do not treat this metadata as a live lease."
   },
   "tasks": {
     "TASK-001": "DONE",
@@ -76,7 +76,7 @@
     "TASK-044": "DONE",
     "TASK-045": "DONE",
     "TASK-046": "DONE",
-    "TASK-047": "IN_PROGRESS"
+    "TASK-047": "DONE"
   },
   "approvals": [
     {
@@ -1054,6 +1054,87 @@
         "15-synthetic-run-packages-batch-export"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-055",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Actual current user2026-10-14: 請進入TEST_AND_VERIFY，執行TC004/TC005已就緒的Item引用保護案例並記錄結果；需要權威GR維持BLOCKED，正式UAT另行，只處理Item。 Authorizes mode and limited testing/reporting only; DOES NOT approve proposed new command PLAN, schema execution, raw export, PR/merge or business acceptance.",
+      "recorded_at": "2026-10-14T00:48:53.067Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a3e53f33ae19eaf12a19bbd4c512f2a66cce1ec2713d74a0bafe866821558b74",
+      "code_commit": "f94ba467472bcfae851ed6cb2bb077ac67ab8be0",
+      "scope": [
+        "item-management",
+        "TEST_AND_VERIFY",
+        "TC-004/TC-005-ready-reference-branches",
+        "REPORT_ONLY"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-056",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Actual current user async answer to exact PLAN809f approval question: 批准此PLAN，執行限定引用保護驗證（建議）. App mainf94, optional34-leaf reference suite0skip, TECHNICAL+REGRESSION/local evidence only. GR-positive staysBLOCKED, UATseparate; no schema/product/assertion/gate changes, newrawexport/PR/merge/business acceptance. This is PLAN approval, NOT an exception/waiver of DEF107 HIGH or whole-module acceptance.",
+      "recorded_at": "2026-10-14T01:02:06.687Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "809f8a15b605975f2db4c94eb641bc6bf6e5e3aaf07ed5938bb8660f9899a8ef",
+      "code_commit": "f94ba467472bcfae851ed6cb2bb077ac67ab8be0",
+      "scope": [
+        "item-management",
+        "TC-004/TC-005-ready-reference-branches",
+        "item-reference-technical",
+        "TECHNICAL",
+        "REGRESSION",
+        "local-evidence-only"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-057",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Actual current async Sam answer to exact HD012 question: 批准相同命令直接執行，保留全部gate／GR阻擋（建議）. Execute same PLAN809f Node argv34service/DB leaves TECHNICAL+REGRESSION once each, frozenappf94/source4b112/command metadatachilddd3, realMySQL/JUnit/hashes/cleanup. Explicitly no coretools/gate edits or DEF107 close/downgrade/waiver; scoped actual evidence only NOT genericHarnessgate/fullTC/technicalacceptancePASS; no schema/products/tests/assertions/rawexport/PR/merge/UAT.",
+      "recorded_at": "2026-10-14T01:07:51.134Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "809f8a15b605975f2db4c94eb641bc6bf6e5e3aaf07ed5938bb8660f9899a8ef",
+      "code_commit": "f94ba467472bcfae851ed6cb2bb077ac67ab8be0",
+      "scope": [
+        "item-management",
+        "scoped-native-reference-execution",
+        "TECHNICAL",
+        "REGRESSION",
+        "local-evidence-only"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-058",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Actual user2026-10-14: 批准將本次兩套合成測試證據及結果報告保存到 repository；請提交、推送並建立 PR，CI 和 review 通過後合併到 main，清理本次 Item 分支及 worktree。權威 GR 案例維持 BLOCKED，正式 UAT 另行處理。 Only the two native TECHNICAL/REGRESSION packages named in the scoped report and that result/global-blocked-gate report; no additional raw exports, products/tests/schema/gate edits or acceptance waiver.",
+      "recorded_at": "2026-10-14T01:29:17.595346+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "809f8a15b605975f2db4c94eb641bc6bf6e5e3aaf07ed5938bb8660f9899a8ef",
+      "code_commit": "dd3e176294bc94e6403a2e1dba3d052af8e27056",
+      "scope": [
+        "item-management",
+        "two-scoped-synthetic-evidence-packages",
+        "result-report",
+        "commit-push-PR",
+        "exact-candidate-CI-and-review-gated-report-merge",
+        "current-Item-branch-worktree-cleanup"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -1464,6 +1545,42 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-038",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/item_supplier_handoff_review",
+      "reviewed_baseline": "711f09a98d1f59c0362025aff3c0b89647eee4cac2250e833f747ec14e168549",
+      "source_ref": "Actual final separate-agent APPROVED exact 46abfafa2679343eda6f7b1f5170baa7e37025a3; no actionable findings. Verified Item-only diff, test fd861, PLAN46dd, final 4 checks, 15 approved packages (52 files), all 40 evidence pointers; no product/Supplier/schema/CI/policy changes. https://github.com/crazysumsum/erp-app/pull/214#issuecomment-6142366415 . Not human GitHub approval or formal acceptance.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-039",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/item_supplier_handoff_review",
+      "reviewed_baseline": "809f8a15b605975f2db4c94eb641bc6bf6e5e3aaf07ed5938bb8660f9899a8ef",
+      "source_ref": "Actual final APPROVED pre-execution PLAN809f/source4b112/frozenappf94, no actionable findings. Independently count34JUnit leaves14direct+20nested; optionalprofileonly, alloriginalfields/suites/flags/gates unchanged. Readonlydependency inspection foundnoDDL infocusedpath; 13P0 NOT_RUN/3GRBLOCKED; service409notHTTP, discoveredTC IDs remain suite-local notwholeTCacceptance. State111/trace structure PASS; product/test/DES unchanged,40indicespreserved. HD011 needs actualhumanPLANapproval and frozencommandcontract before execution. Reviewer performed no tests/DB/install/writes.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-040",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/item_supplier_handoff_review",
+      "reviewed_baseline": "4b1121c10dd4e05fc2a39305bf5cc262d5f52ae55ac6e8f5bff6852d656bb208",
+      "source_ref": "Actual separate-agent final APPROVED scoped execution evidence ONLY,0actionablefindings; frozendd3/appf94/PLAN809f/source4b112. TECH metadataSHA84175edc96eea0eb2c4b70172b03b7cb88384a9c41dc518142956c43fdda406c; REGmetadataSHAc4aa8e506e9ddacdc6a87a0bb891d038d693ee997905711740a70ab4483ed089. Independently parsed34uniqueleafPASS0failure/skip perXML, exactargv/contract/artifacthash/bytes,13groups,91count/normalizedschema snapshots,8file secret scan clean,40historicalindices unchanged. Rowcounts do notprove retainedcontents; SHOWCREATEhashes excludeAUTO_INCREMENTcounters; caveat addedreport. DEF107HIGHOPEN/globalgatesBLOCKED/Task043IN_PROGRESS. Actualread-only artifact/staticaudit; no reviewerDB/test execution or humanacceptance.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -1785,6 +1902,149 @@
       "source_ref": "https://github.com/crazysumsum/erp-app/pull/210 ; actualmerge7c927e26b386d87c595bf3c6111467d0ccc8b20d. CleanrootmainFF froma71. gitdiffcandidate3af17→merge7c927emptywhole-tree; rootmainunit49/49PASS0skip. CandidateCIgreennotfabricatedmergeSHAci or formalacceptance.",
       "actor": "Actual authenticated gh/Git observation and developer rerun",
       "observed_at": "2026-10-13T07:52:19Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "Dependency audit",
+      "code_commit": "46abfafa2679343eda6f7b1f5170baa7e37025a3",
+      "spec_baseline": "46dd2221fc8f8fe974adc6553d83c3eaefc706e81315b649a55b8331a715410b",
+      "source_fingerprint": "711f09a98d1f59c0362025aff3c0b89647eee4cac2250e833f747ec14e168549",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/38374653410/job/115219889870; actualghSUCCESS exact46abfafa, fullMySQLcoveragejobstillIN_PROGRESS. NooverallPASSclaim.",
+      "actor": "GitHub Actions, actual authenticated gh observation",
+      "observed_at": "2026-10-13T09:17:18Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "Lint",
+      "code_commit": "46abfafa2679343eda6f7b1f5170baa7e37025a3",
+      "spec_baseline": "46dd2221fc8f8fe974adc6553d83c3eaefc706e81315b649a55b8331a715410b",
+      "source_fingerprint": "711f09a98d1f59c0362025aff3c0b89647eee4cac2250e833f747ec14e168549",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/38374653410/job/115219890079; actualghSUCCESS exact46abfafa, fullMySQLcoveragejobstillIN_PROGRESS. NooverallPASSclaim.",
+      "actor": "GitHub Actions, actual authenticated gh observation",
+      "observed_at": "2026-10-13T09:17:18Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "Build frontend",
+      "code_commit": "46abfafa2679343eda6f7b1f5170baa7e37025a3",
+      "spec_baseline": "46dd2221fc8f8fe974adc6553d83c3eaefc706e81315b649a55b8331a715410b",
+      "source_fingerprint": "711f09a98d1f59c0362025aff3c0b89647eee4cac2250e833f747ec14e168549",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/38374653410/job/115219889952; actualghSUCCESS exact46abfafa, fullMySQLcoveragejobstillIN_PROGRESS. NooverallPASSclaim.",
+      "actor": "GitHub Actions, actual authenticated gh observation",
+      "observed_at": "2026-10-13T09:17:18Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "Browser tests (Playwright)",
+      "code_commit": "46abfafa2679343eda6f7b1f5170baa7e37025a3",
+      "spec_baseline": "46dd2221fc8f8fe974adc6553d83c3eaefc706e81315b649a55b8331a715410b",
+      "source_fingerprint": "711f09a98d1f59c0362025aff3c0b89647eee4cac2250e833f747ec14e168549",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/38374653410/job/115219889559; actualghSUCCESS exact46abfafa, fullMySQLcoveragejobstillIN_PROGRESS. NooverallPASSclaim.",
+      "actor": "GitHub Actions, actual authenticated gh observation",
+      "observed_at": "2026-10-13T09:17:18Z"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "PR214 exact candidate independent review",
+      "code_commit": "46abfafa2679343eda6f7b1f5170baa7e37025a3",
+      "spec_baseline": "46dd2221fc8f8fe974adc6553d83c3eaefc706e81315b649a55b8331a715410b",
+      "source_fingerprint": "711f09a98d1f59c0362025aff3c0b89647eee4cac2250e833f747ec14e168549",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/214#issuecomment-6142366415 ; actual separate-agent final APPROVED exact 46abfafa, 0 actionable findings, not human GitHub approval. PR now ready for review.",
+      "actor": "/root/item_supplier_handoff_review, actual SEPARATE_AGENT",
+      "observed_at": "2026-10-13T09:22:57.788Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "Browser tests (Playwright)",
+      "code_commit": "46abfafa2679343eda6f7b1f5170baa7e37025a3",
+      "spec_baseline": "46dd2221fc8f8fe974adc6553d83c3eaefc706e81315b649a55b8331a715410b",
+      "source_fingerprint": "711f09a98d1f59c0362025aff3c0b89647eee4cac2250e833f747ec14e168549",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/38374653410/job/115219889559 ; actual final completed SUCCESS, entire CI38374653410 SUCCESS exact46abfafa. Coverage thresholds and capacity step passed. No waiver/bypass.",
+      "actor": "GitHub Actions, actual authenticated gh observation",
+      "observed_at": "2026-10-13T09:33:27.751Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "Dependency audit",
+      "code_commit": "46abfafa2679343eda6f7b1f5170baa7e37025a3",
+      "spec_baseline": "46dd2221fc8f8fe974adc6553d83c3eaefc706e81315b649a55b8331a715410b",
+      "source_fingerprint": "711f09a98d1f59c0362025aff3c0b89647eee4cac2250e833f747ec14e168549",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/38374653410/job/115219889870 ; actual final completed SUCCESS, entire CI38374653410 SUCCESS exact46abfafa. Coverage thresholds and capacity step passed. No waiver/bypass.",
+      "actor": "GitHub Actions, actual authenticated gh observation",
+      "observed_at": "2026-10-13T09:33:27.751Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "Build frontend",
+      "code_commit": "46abfafa2679343eda6f7b1f5170baa7e37025a3",
+      "spec_baseline": "46dd2221fc8f8fe974adc6553d83c3eaefc706e81315b649a55b8331a715410b",
+      "source_fingerprint": "711f09a98d1f59c0362025aff3c0b89647eee4cac2250e833f747ec14e168549",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/38374653410/job/115219889952 ; actual final completed SUCCESS, entire CI38374653410 SUCCESS exact46abfafa. Coverage thresholds and capacity step passed. No waiver/bypass.",
+      "actor": "GitHub Actions, actual authenticated gh observation",
+      "observed_at": "2026-10-13T09:33:27.751Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "Test (server + client, MySQL integration)",
+      "code_commit": "46abfafa2679343eda6f7b1f5170baa7e37025a3",
+      "spec_baseline": "46dd2221fc8f8fe974adc6553d83c3eaefc706e81315b649a55b8331a715410b",
+      "source_fingerprint": "711f09a98d1f59c0362025aff3c0b89647eee4cac2250e833f747ec14e168549",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/38374653410/job/115219890018 ; actual final completed SUCCESS, entire CI38374653410 SUCCESS exact46abfafa. Coverage thresholds and capacity step passed. No waiver/bypass.",
+      "actor": "GitHub Actions, actual authenticated gh observation",
+      "observed_at": "2026-10-13T09:33:27.752Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "Lint",
+      "code_commit": "46abfafa2679343eda6f7b1f5170baa7e37025a3",
+      "spec_baseline": "46dd2221fc8f8fe974adc6553d83c3eaefc706e81315b649a55b8331a715410b",
+      "source_fingerprint": "711f09a98d1f59c0362025aff3c0b89647eee4cac2250e833f747ec14e168549",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/38374653410/job/115219890079 ; actual final completed SUCCESS, entire CI38374653410 SUCCESS exact46abfafa. Coverage thresholds and capacity step passed. No waiver/bypass.",
+      "actor": "GitHub Actions, actual authenticated gh observation",
+      "observed_at": "2026-10-13T09:33:27.752Z"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "PR214 integrated Item C subset",
+      "code_commit": "268d6815ca7caa9f16542a38507b4d7c819affce",
+      "spec_baseline": "46dd2221fc8f8fe974adc6553d83c3eaefc706e81315b649a55b8331a715410b",
+      "source_fingerprint": "711f09a98d1f59c0362025aff3c0b89647eee4cac2250e833f747ec14e168549",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/214 ; observed MERGED exact46abfafa on latest383263, identical Git tree; exactcandidate CI5/5/review passed before merge; primarymain FF and ItemLookup49/49 smoke. No formal TC/GR/UAT claim.",
+      "actor": "GitHub actual authenticated gh + observed Git integration",
+      "observed_at": "2026-10-13T09:35:26.847Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TC-004/TC-005 ready reference branches ONLY — TECHNICAL",
+      "code_commit": "dd3e176294bc94e6403a2e1dba3d052af8e27056",
+      "spec_baseline": "809f8a15b605975f2db4c94eb641bc6bf6e5e3aaf07ed5938bb8660f9899a8ef",
+      "source_fingerprint": "4b1121c10dd4e05fc2a39305bf5cc262d5f52ae55ac6e8f5bff6852d656bb208",
+      "status": "PASS",
+      "source_ref": "Actual approved native Node execution APR057; evidence/20261014T011056-reference-technical-b64d49aa/scoped-execution.json SHA256 84175edc96eea0eb2c4b70172b03b7cb88384a9c41dc518142956c43fdda406c; original JUnit SHA256 d38be900fa4d96883bd6991a3922e965b7e81a39acb4c20bd15c465b33cca1fd. Counts34/34 PASS/0fail/skip/notrun,exit0; tool/source/spec/HEAD unchanged; all91table counts/schema hashes identical before/after. Suite-local branch result ONLY, NOT run_check/full canonicalTC/globalgate PASS; GRblocked. Raw evidence local-only.",
+      "actor": "Item QA /root — actual native Node/MySQL execution under explicit APR057",
+      "observed_at": "2026-10-14T01:11:15.273665Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TC-004/TC-005 ready reference branches ONLY — REGRESSION",
+      "code_commit": "dd3e176294bc94e6403a2e1dba3d052af8e27056",
+      "spec_baseline": "809f8a15b605975f2db4c94eb641bc6bf6e5e3aaf07ed5938bb8660f9899a8ef",
+      "source_fingerprint": "4b1121c10dd4e05fc2a39305bf5cc262d5f52ae55ac6e8f5bff6852d656bb208",
+      "status": "PASS",
+      "source_ref": "Actual approved native Node execution APR057; evidence/20261014T011117-reference-regression-f16a12cb/scoped-execution.json SHA256 c4aa8e506e9ddacdc6a87a0bb891d038d693ee997905711740a70ab4483ed089; original JUnit SHA256 1388af08b44454ab2e70f9c0928533e36db44da17471a8269d73fd042e7933c3. Counts34/34 PASS/0fail/skip/notrun,exit0; tool/source/spec/HEAD unchanged; all91table counts/schema hashes identical before/after. Suite-local branch result ONLY, NOT run_check/full canonicalTC/globalgate PASS; GRblocked. Raw evidence local-only.",
+      "actor": "Item QA /root — actual native Node/MySQL execution under explicit APR057",
+      "observed_at": "2026-10-14T01:11:36.269327Z"
     }
   ],
   "pending_decisions": [
@@ -2006,6 +2266,30 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Actual Sam asyncreply2026-10-13: 批准新DESIGN／PLAN，進入IMPLEMENT（建議）, toexactf7431c09/d6db1f52 approvalquestion; search-onlyactiveUOM, Item-onlyscope, noformal/merge/rawexportauthority."
+    },
+    {
+      "id": "HD-011",
+      "impact": "MAJOR",
+      "question": "Approve proposed PLAN 809f8a15 and additive optional item-reference-technical command contract: same existing34leaf reference file, no DDL, no product/test/assertion edits, all mandatory suites/thresholds/TC flags unchanged; formal ready-branch testing only, GR-positive BLOCKED, UAT separate. Original fullserver command includes migration replay and transient schema effects forbidden in TEST_AND_VERIFY. Default no execution pending actual reviewer and human decision. Preparation count40 included6Nodeparents; actualhistoricalJUnit leaves34, no test execution or approval of either proposal.",
+      "affected_ids": [
+        "TC-004",
+        "TC-005",
+        "TASK-043"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Actual async Sam answer2026-10-14 approving exact809f PLAN. APR056; preserves GRBLOCKED and all mandatory gates, not risk waiver."
+    },
+    {
+      "id": "HD-012",
+      "impact": "MAJOR",
+      "question": "Generic PLAN_READY remains BLOCKED by HIGH/OPEN DEF107 and has no partial-suite gate despite actual scoped PLAN809f approval. Approve direct execution of EXACT same frozen Node command/34leaf suite, true TECHNICAL+REGRESSION scoped evidence, all source/spec/tool/DB/discovery/hash/cleanup checks, NO genericrun_check/gate/fullTC PASS claim, no product/test/schema/threshold/core changes/waiver/rawexport/PR/merge/UAT? Alternative keep allNOT_RUN until tools support scoped gate. Default no tests pending actual answer.",
+      "affected_ids": [
+        "TC-004",
+        "TC-005",
+        "TASK-043"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Actual async Sam approved identical native command while keeping all gates/GRBLOCKED; APR057. Not risk or acceptance waiver."
     }
   ],
   "external_actions": [
@@ -2702,8 +2986,96 @@
       "kind": "PUSH",
       "target": "New Item C candidate origin/codex/item-task043-supplier-guards",
       "idempotency_key": "item-c-source711f09-candidate-push-20261013",
-      "status": "PLANNED",
-      "source_ref": "ActualSam explicitlyauthorizecandidatePR/CIreviewmerge/cleanup, currentfourrunnersallPASS524/860/lint/build, source/PLANreview+trace/boundaryPASS; fixedapproved15packages/52files1395834bytes classifiedintegrityPASS/no logintraceorvalues. Freshmain383263unchanged. FreezeonlyItemtest/docs/evidence; requireexactheadCI/reviewbeforemerge."
+      "status": "CONFIRMED",
+      "source_ref": "Actualgitpushcreatedorigin/codex/item-task043-supplier-guards at46abfafa2679343eda6f7b1f5170baa7e37025a3. OnlyItemtest/docs/fixed15approvedraw52files. NoPrduplicateexists, actualcurrentplan46dd/source711 matchedselfchecks. CI/exactfinalreviewpending."
+    },
+    {
+      "id": "ITEM-C-PR-131",
+      "kind": "PR_CREATE",
+      "target": "codex/item-task043-supplier-guards→main",
+      "idempotency_key": "item-c-source711f-pr-create-20261013",
+      "status": "CONFIRMED",
+      "source_ref": "ActualGitHubconnectorcreate403withoutPR; authenticatedghrecheckedbranchPRlist[]thencreatedDRAFT PR214 https://github.com/crazysumsum/erp-app/pull/214 , attached. RemoteHEAD46abfafa andfreshCI38374653410IN_PROGRESS. No bypass/duplicate or PASSclaim."
+    },
+    {
+      "id": "ITEM-C-MERGE-132",
+      "kind": "MERGE",
+      "target": "PR214 head46abfafa2679343eda6f7b1f5170baa7e37025a3 → main3832635077ecc32c6a7b9292e2b9e155223008d0",
+      "idempotency_key": "item-c-pr214-46ab-normal-merge-20261013",
+      "status": "CONFIRMED",
+      "source_ref": "Actual normal gh merge, no admin/bypass; PR214 MERGED at2026-10-13T09:33:57Z to268d6815ca7caa9f16542a38507b4d7c819affce. Parents383263 and46abfafa verified; merge tree identical candidate (git diff exit0). Clean primary main safely FF to268d6815; DB-free ItemLookup smoke49/49 PASS zero fail/skip."
+    },
+    {
+      "id": "ITEM-C-CLEANUP-133",
+      "kind": "CLEANUP",
+      "target": "Only managed item-task043-supplier-guards/erp-app and local/remote codex/item-task043-supplier-guards",
+      "idempotency_key": "item-c-pr214-merged-only-cleanup-20261013",
+      "status": "CONFIRMED",
+      "source_ref": "Actual preserved closeout receipt and PR214 comment6142677623: worktree recoverably archived; local/remote branch absent; cleanmain268d6815; all private evidence/journal retained. No othermodule changes."
+    },
+    {
+      "id": "ITEM-TV-WT-134",
+      "kind": "WORKTREE_CREATE",
+      "target": "/Users/sam/.codex/worktrees/item-tc004-tc005-verification/erp-app",
+      "idempotency_key": "item-tv-004005-mainf94-20261014",
+      "status": "CONFIRMED",
+      "source_ref": "App create_worktree op385441b5 completed; actual HEADf94ba467 latestorigin/main; new local branch codex/item-tc004-tc005-verification. Own lockfile npmci offline ignore-scripts; source unchanged. Recover journal115 from private SHA4a2b581c... all known histories retained, reconcile current tracked109 via CAS110; not a fake reuse of current CI/acceptance."
+    },
+    {
+      "id": "MODE-CHANGE-110",
+      "kind": "MODE_CHANGE",
+      "target": "TEST_AND_VERIFY",
+      "idempotency_key": "mode-change-110",
+      "status": "CONFIRMED",
+      "source_ref": "Actual Sam2026-10-14 explicitly requests TEST_AND_VERIFY, TC004/005 ready Item reference branches only; GR-positive BLOCKED and formal UAT separate; immutable entry mainf94ba467"
+    },
+    {
+      "id": "ITEM-TV-CONTRACT-135",
+      "kind": "EXECUTION_CONTRACT_PREP",
+      "target": "Optional item-reference-technical / PLAN809f8a15b605975f2db4c94eb641bc6bf6e5e3aaf07ed5938bb8660f9899a8ef",
+      "idempotency_key": "item-tv-34leaf-plan809f-20261014",
+      "status": "CONFIRMED",
+      "source_ref": "Actual existingJUnit14direct+20nested=34leaves, Node40includes6parents. Correct unapproved new contract min34/maxskip0; no existingthreshold/assertion/mandatorysuite change. Canonical TC group status remains incomplete/BLOCKED; directservice error409 is not HTTP/browser. PLAN review/human approval required; no tests/DB/DDL executed. Actual human APR056 after separate REV039; executable source unchanged, command contract freeze pending."
+    },
+    {
+      "id": "ITEM-TV-FREEZE-136",
+      "kind": "LOCAL_CONTRACT_FREEZE",
+      "target": "Only approved Item profile and pre-execution plan report; source/appf94 unchanged",
+      "idempotency_key": "item-tv-plan809f-commandfreeze-20261014",
+      "status": "CONFIRMED",
+      "source_ref": "Actual local commit dd3e176294bc94e6403a2e1dba3d052af8e27056 contains only approved Item profile+initial report. Parentappf94 retained; no raw evidence/stateexport/push/PR/merge. Exact PLAN809f/source4b112 unchanged, entryf94 notrewritten. This metadatafreeze does not change appsource/authority binding or imply new CI/acceptance."
+    },
+    {
+      "id": "ITEM-TV-RUNTIME-137",
+      "kind": "RUNTIME_START",
+      "target": "Only existing private MySQL /private/tmp/erp-item-supplier-c-mysql.vdXM5l/mysql.sock",
+      "idempotency_key": "item-tv-existing-mysql-start-preflight-20261014",
+      "status": "CONFIRMED",
+      "source_ref": "Actual owned Mysqld PID11168 inexistingprivate datadir/socket, version26.7.0/skip_networking1/schemaerp_item_supplier_c_20261013,91tables,4Supplier→ItemFKcolumns, ref/actor/ICfixturecounts0. No migrations/DDL/upgrades/sharedMySQL/usercredentials. Runtime only forapprovedscopedexecution, stop ownserverafterresults."
+    },
+    {
+      "id": "ITEM-TV-EXEC-138",
+      "kind": "SCOPED_TEST_EXECUTION",
+      "target": "Approved optional reference command TECHNICAL+REGRESSION at dd3e1762/appf94",
+      "idempotency_key": "item-tv-plan809f-native-two-runs-20261014",
+      "status": "CONFIRMED",
+      "source_ref": "ActualTECH34/34 andREG34/34, originalJUnit/scopedJSON2runs preserved locally with hash/schema/count/source invariants. No product/test/core/gate/assertion/DDL change. Exact34unique leaves repeated68executions;13aliasgroups allscopedPASS;3positiveGRbranchesBLOCKED; fullTC004/005/Task043/acceptance unfinished."
+    },
+    {
+      "id": "ITEM-TV-STOP-139",
+      "kind": "RUNTIME_STOP",
+      "target": "Only owned MySQL private socket/datadir",
+      "idempotency_key": "item-tv-owned-mysql-stop-20261014",
+      "status": "CONFIRMED",
+      "source_ref": "Actual mysqladmin shutdown socket/privateownedroot, exit0; ownedmysql.sock andmysql-tv.pid absent. Bothruns priorafter-snapshots matchbefore all91tablecounts andnormalizedschemas. Datadirretained; no sharedservice,unrelatedmodule or businessdata cleanup."
+    },
+    {
+      "id": "ITEM-TV-PUBLISH-140",
+      "kind": "REPORT_PUBLICATION",
+      "target": "Current Item verification branch: two scoped native packages/report/profile/journal ONLY",
+      "idempotency_key": "item-tv-plan809f-two-package-publication-20261014",
+      "status": "STARTED",
+      "source_ref": "APR058 publication authority. Actual two approved native packages/report committed92a64f31, latestmain692a1d47 integrated in bd116b393bb3a88db1d59882f33a759e50679efe. Product/test/CI files unchanged versus testedf94; only Supplier docs alter global fingerprint. Original native evidence and observations retain historicaldd3/f94/source4b112, no relabelling or whole-gate waiver. Exact final publication-head CI/review pending."
     }
   ],
   "evidence_files": [
@@ -2878,7 +3250,18 @@
         "testing/evidence/def106-server-regression.junit.xml"
       ],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-107",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "source_ids": [
+        "TC-004",
+        "TC-005"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Freshmain383263 unchanged; SOURCE711f09/PLAN46dd fourfinalDEVELOPERrunsPASS524/860/lint/build, source+planreview findings resolved. Exactly15approvedsyntheticpackages52files scanned/artifactsverified; original25+15 index40preserved. Commit/push immutableItemCcandidate/PR, actualexactreview+fiveCIbeforeowner-authorizedmerge/onlyItemcleanup. Preservefourunexported308fpackageslocally. TASK043IN_PROGRESS/GRpositive+D/UATnotdone."
+  "next_safe_action": "Freeze final report-only candidate after successful hash/classification, traceability, mode-boundary and diff checks. Push/create PR, require all five exact-candidate CI checks and real separate-agent review, fresh main before merge, then safe current Item cleanup. Original historical runs remain dd3/f94/source4b112; DEF107HIGHOPEN/GRBLOCKED/TASK043IN_PROGRESS/fullTC incomplete/UATseparate unchanged."
 }
