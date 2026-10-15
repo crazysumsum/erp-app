@@ -88,6 +88,13 @@ retain the observed output without keys or row contents.
 
 ## Reproduction
 
+Separate reviewer Jason (`/root/customer_task011_review`) approved candidate
+`892db1efefa70aa2728d53e6678fececd0cb5572` / the measured fingerprint above:
+no Critical/High/Required issue in this test/evidence change. He independently
+matched raw output to the report/JSON, reran safe guards/lint/structural checks
+and confirmed old evidence unchanged and no product/CI/acceptance waiver.
+The pre-existing HIGH product defect remains open; final-head CI is required.
+
 Against a fresh migrated task-owned schema, with ephemeral shared Customer/Supplier
 startup key rings (never committed):
 

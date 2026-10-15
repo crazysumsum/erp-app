@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 167,
+  "revision": 168,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,7 +11,7 @@
   "baseline": {
     "design": "8462e9c2bc9909f413bb0063de29b44bcbe205d8bfd1209c254ff5d1090f9944",
     "plan": "55ea357b07fb39cc1131b61757b95ca4aa07b246a8dbabfddfecb914e79ba247",
-    "code_commit": "8b44c8978872d8c9357603059f7cc45d85294f71",
+    "code_commit": "892db1efefa70aa2728d53e6678fececd0cb5572",
     "source_fingerprint": "d70da3f3ce07cd241d2dcad5406a8a68b37207a97f9257aee7a3c7027b6596bd",
     "worktree": "/private/tmp/erp-customer-capacity-requirement-50k-20",
     "default_commit": "3faf93e57892577c03d7bc6d7ba62e23963941e2",
@@ -22,11 +22,11 @@
     "owner": "Primary harness agent; approved Customer-local retest",
     "resources": {
       "workspace": "/private/tmp/erp-customer-capacity-requirement-50k-20",
-      "mysql-instance": "task-owned127.0.0.1:13369; /private/tmp/erp-customer-hd010-runtime.WEYDQZ/mysql",
-      "mysql-schema": "erp_customer_hd010_capacity_20261015",
+      "mysql-instance": "CLEANED: own127.0.0.1:13369 stopped; /private/tmp/erp-customer-hd010-runtime.WEYDQZ/mysql removed",
+      "mysql-schema": "CLEANED with own datadir: erp_customer_hd010_capacity_20261015",
       "customer-file-root": "not exercised; task-owned synthetic capacity data only",
       "customer-import-root": "not exercised; unchanged previous import evidence remains historical",
-      "web-port": "OS-assigned application listener in isolated load test; closed by test cleanup"
+      "web-port": "CLOSED: OS-assigned application listener closed by test cleanup"
     },
     "lease_ref": null
   },
@@ -2221,6 +2221,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-046",
+      "method": "SEPARATE_AGENT",
+      "author": "/root HD-010 executable profile and local remeasurement",
+      "reviewer": "Jason (/root/customer_task011_review), separate read-only agent",
+      "reviewed_baseline": "d70da3f3ce07cd241d2dcad5406a8a68b37207a97f9257aee7a3c7027b6596bd",
+      "source_ref": "2026-10-15 APPROVE exact892db1efefa70aa2728d53e6678fececd0cb5572/fingerprintd70da3f3...b6596bd. All strict50k/20/child10/30s guards and inclusive5000ms correct; raw/report/JSON match1508correctops/0errors/latencyPASS with2actualALL failures/combinedexit1. OldPR228blobs byte-identical. Five safe regressions,lint,diff,traceability,boundary passed. No Critical/High/Required issue in test/evidence patch; productDEF-034001 HIGH OPEN and full downstream BLOCKED preserved. State-only publication reconciliation follows.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -3663,7 +3675,7 @@
       "target": "github:crazysumsum/erp-app:refs/heads/codex/customer-capacity-requirement-50k-20",
       "idempotency_key": "customer-capacity-requirement-50k-20-push-v1",
       "status": "CONFIRMED",
-      "source_ref": "Pushed documentation-only reviewed candidate0e34f11afd829414021a5e24475604788df142d9 to codex/customer-capacity-requirement-50k-20. No product/test execution or acceptance; state-only publication reconciliation follows."
+      "source_ref": "Initial planning candidate0e34f11a was pushed, then HD-010 approval/test/evidence candidate892db1efefa70aa2728d53e6678fececd0cb5572 pushed to the same PR#230 branch. Final state-only review reconciliation follows; require final-head CI, no product acceptance claim."
     },
     {
       "id": "EXT-PR-067",
@@ -3671,7 +3683,7 @@
       "target": "github:crazysumsum/erp-app:main<-codex/customer-capacity-requirement-50k-20",
       "idempotency_key": "customer-capacity-requirement-50k-20-pr-v1",
       "status": "CONFIRMED",
-      "source_ref": "GitHub PR #230 created: https://github.com/crazysumsum/erp-app/pull/230. Documentation-only revision remains OPEN for HD-010 exact-baseline approval; do not merge/change executable test gates before approval. Previous failure/non-amended gates preserved."
+      "source_ref": "GitHub PR #230 https://github.com/crazysumsum/erp-app/pull/230 remains OPEN; HD-010 is now actually approved and the same PR includes executable-profile alignment plus fresh measured evidence. Title/body disclose latencyPASS/planFAIL and remaining HIGH defect. Previous failure/non-amended gates preserved; final exact-head CI and independent review required before evidence-only merge."
     },
     {
       "id": "MODE-CHANGE-162",
@@ -3736,5 +3748,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "HD-010 approved profile alignment and fresh measurement are complete: all p95<=5000ms, actual-list COUNT/page plansFAIL. DEF-034001 stays HIGH OPEN/TASK-034 BLOCKED. Obtain independent review of this test/evidence-only change, publish via PR#230, require all5CI checks on final exact head, fetch/reconcile main, merge under standing authority and clean only this task branch/worktree. Do not optimize product or waive plan/index checks under this request. Complete downstream/production DR and generic module gates remain BLOCKED; evidence-path/base helper limitation is documented, not turned into a fake green gate."
+  "next_safe_action": "HD-010 profile/retest and independent reviewREV-046 are complete: all p95<=5000ms, actual-list COUNT/page plansFAIL. DEF-034001 stays HIGH OPEN/TASK-034 BLOCKED. Publish this state-only final checkpoint to PR#230, require all5CI checks on its final exact head, fetch/reconcile main, then merge the approved baseline/test/evidence-only publication under standing authority and clean only this task branch/worktree. Do not optimize product or waive plan/index checks. Complete downstream/production DR and generic module gates remain BLOCKED; evidence-path/base helper limitation is documented, not a fake green gate."
 }
