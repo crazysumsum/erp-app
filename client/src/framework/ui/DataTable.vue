@@ -98,8 +98,10 @@ async function onRequest({ pagination: requestedPagination, filter: requestedFil
 // 第一頁，刪除最後一頁最後一行呢類情境先唔會無端端跳走用戶正睇緊嗰頁。
 // 淨係伺服器模式先有嘢做:客戶端模式嘅資料本身就係呼叫端傳落嚟嘅 `rows`
 // prop，改咗個來源陣列，Vue 嘅 reactivity 已經自動反映，唔使呼叫 reload()。
-function reload() {
-  return isServerMode.value ? onRequest({ pagination: pagination.value, filter: props.filter }) : undefined;
+// 篩選條件變咗就要 `{ firstPage: true }`：舊頁碼喺新結果入面冇意義，留低會跳過前面嘅結果。
+function reload({ firstPage = false } = {}) {
+  if (!isServerMode.value) return undefined;
+  return onRequest({ pagination: firstPage ? { ...pagination.value, page: 1 } : pagination.value, filter: props.filter });
 }
 
 defineExpose({ reload });

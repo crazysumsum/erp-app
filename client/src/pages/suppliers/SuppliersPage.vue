@@ -42,10 +42,14 @@ const canApprove = computed(() => can(session, { permissions: ["supplier.view", 
 const initialQuery = route.query;
 const searchText = ref(typeof initialQuery.q === "string" ? initialQuery.q : "");
 const statusFilter = ref(typeof initialQuery.status === "string" ? initialQuery.status : null);
+// 貨幣／付款條件嘅選項要 business_master.view；冇呢個權限就唔顯示呢兩個篩選，
+// URL 帶落嚟嘅值亦唔用：睇唔到又清唔走嘅篩選唔可以靜靜雞收窄列表同匯出（REV-095 M-2）。
+const canPickMasters = computed(() => can(session, { permissions: ["business_master.view"] }));
+const initialPaymentTermId = Number(initialQuery.paymentTermId);
 // 設計 7.3 嘅其餘篩選（HD-107 G4）；日期用 YYYY-MM-DD 存，送 API 先轉香港時間 epoch ms。
 const filters = reactive({
-  currencyCode: /^[A-Z]{3}$/u.test(initialQuery.currencyCode) ? initialQuery.currencyCode : null,
-  paymentTermId: Number(initialQuery.paymentTermId) > 0 ? Number(initialQuery.paymentTermId) : null,
+  currencyCode: canPickMasters.value && /^[A-Z]{3}$/u.test(initialQuery.currencyCode) ? initialQuery.currencyCode : null,
+  paymentTermId: canPickMasters.value && Number.isInteger(initialPaymentTermId) && initialPaymentTermId > 0 ? initialPaymentTermId : null,
   missingPrimaryContact: initialQuery.missingPrimaryContact === "true",
   missingAddress: initialQuery.missingAddress === "true",
   missingBank: initialQuery.missingBank === "true",
@@ -56,8 +60,6 @@ const filters = reactive({
   updatedTo: dateQuery(initialQuery.updatedTo)
 });
 const DATE_RANGES = Object.freeze([["created", "建立日期"], ["updated", "更新日期"]]);
-// 貨幣／付款條件嘅選項要 business_master.view；冇呢個權限就唔顯示呢兩個篩選。
-const canPickMasters = computed(() => can(session, { permissions: ["business_master.view"] }));
 const currencyOptions = ref([]);
 const paymentTermOptions = ref([]);
 const initialPagination = {
@@ -83,8 +85,11 @@ const columns = [
   { name: "actions", label: "", field: "id", align: "right" }
 ];
 
+// 要係真嘅日子：2026-13-01、2026-02-31 呢類會變 NaN 或者靜靜雞跳去下個月（REV-095 L-1）；0000 年會變負數。
 function dateQuery(value) {
-  return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/u.test(value) ? value : "";
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/u.test(value) || value < "1970-01-02") return "";
+  const parsed = new Date(`${value}T00:00:00Z`);
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value ? value : "";
 }
 
 function dayStart(value) { return value ? new Date(`${value}T00:00:00+08:00`).getTime() : undefined; }
@@ -132,7 +137,7 @@ function fetchSuppliers(request) {
   return supplierService.list({ ...request, ...filterParams() });
 }
 
-watch([statusFilter, filters], () => table.value?.reload());
+watch([statusFilter, filters], () => table.value?.reload({ firstPage: true }));
 
 async function loadMasterOptions() {
   if (!canPickMasters.value) return;

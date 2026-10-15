@@ -363,7 +363,8 @@ function childCount(rows) {
           <q-tab name="skuRelations" label="供貨關係" />
         </q-tabs>
 
-        <q-tab-panels v-model="tab" animated>
+        <!-- 轉 tab 唔好丟咗「載入更多」載入咗嘅地址／聯絡人（REV-095 L-2）；其他 panel 照舊每次重新掛載。 -->
+        <q-tab-panels v-model="tab" animated keep-alive keep-alive-include="addresses,contacts">
           <q-tab-panel name="overview" class="q-pa-none">
             <div class="row q-gutter-sm q-mb-md">
               <q-btn v-if="canManage && !editing && supplier.status !== 'archived'" color="primary" label="編輯一般資料" @click="startEdit" />

@@ -125,7 +125,9 @@ describe("pages/suppliers/SuppliersPage.vue", () => {
     const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
     promptPassword.mockResolvedValue("pw");
     supplierService.exportCsv.mockResolvedValue({ blob: new Blob(["x"]), fileName: "s.csv" });
-    const { body, router } = await mountPage({ initialRoute: "/suppliers?currencyCode=USD&paymentTermId=3&missingPrimaryContact=true"
+    businessMasterService.currencyList.mockResolvedValue({ rows: [], rowsNumber: 0 });
+    businessMasterService.paymentTermList.mockResolvedValue({ rows: [], rowsNumber: 0 });
+    const { body, router } = await mountPage({ permissions: ["supplier.view", "supplier.mgmt", "business_master.view"], initialRoute: "/suppliers?currencyCode=USD&paymentTermId=3&missingPrimaryContact=true"
       + "&missingAddress=true&missingBank=true&includeArchived=true&createdFrom=2026-10-01&createdTo=2026-10-02&updatedTo=2026-10-15" });
     const expected = {
       currencyCode: "USD", paymentTermId: 3, missingPrimaryContact: true, missingAddress: true, missingBank: true, includeArchived: true,
@@ -177,5 +179,42 @@ describe("pages/suppliers/SuppliersPage.vue", () => {
     expect(businessMasterService.paymentTermList).toHaveBeenCalledWith({ page: 1, rowsPerPage: 100, sortBy: "code" });
     expect(result.body.findAll(".q-field").some((field) => field.text().includes("貨幣"))).toBe(true);
     expect(result.body.findAll(".q-field").some((field) => field.text().includes("付款條件"))).toBe(true);
+  });
+
+  it("goes back to page 1 when a filter changes (REV-095 M-1)", async () => {
+    const { body, router } = await mountPage({ initialRoute: "/suppliers?page=3&sortBy=supplierName&descending=false" });
+    expect(supplierService.list).toHaveBeenLastCalledWith(expect.objectContaining({ page: 3 }));
+    await body.findAll(".q-checkbox").find((box) => box.text().includes("缺採購地址")).trigger("click");
+    await flushPromises();
+    expect(supplierService.list).toHaveBeenLastCalledWith(expect.objectContaining({
+      page: 1, missingAddress: true, sortBy: "supplierName", descending: false
+    }));
+    expect(router.currentRoute.value.query.page).toBe("1");
+  });
+
+  it("ignores currency and payment term from the URL without business_master.view (REV-095 M-2)", async () => {
+    const { router } = await mountPage({ permissions: ["supplier.view"], initialRoute: "/suppliers?currencyCode=USD&paymentTermId=3" });
+    expect(supplierService.list).toHaveBeenLastCalledWith(expect.objectContaining({ currencyCode: null, paymentTermId: null }));
+    expect(router.currentRoute.value.query.currencyCode).toBeUndefined();
+    expect(router.currentRoute.value.query.paymentTermId).toBeUndefined();
+  });
+
+  it.each([
+    ["createdFrom=2026-13-01"], ["createdFrom=2026-02-31"], ["createdFrom=0000-01-01"], ["createdFrom=1970-01-01"]
+  ])("drops a date that has the right shape but is not a usable day: %s (REV-095 L-1)", async (query) => {
+    await mountPage({ initialRoute: `/suppliers?${query}` });
+    expect(supplierService.list).toHaveBeenLastCalledWith(expect.objectContaining({ createdFrom: undefined }));
+  });
+
+  it("drops a payment term id that is not a whole number (REV-095 L-1)", async () => {
+    businessMasterService.currencyList.mockResolvedValue({ rows: [], rowsNumber: 0 });
+    businessMasterService.paymentTermList.mockResolvedValue({ rows: [], rowsNumber: 0 });
+    await mountPage({ permissions: ["supplier.view", "business_master.view"], initialRoute: "/suppliers?paymentTermId=3.5&currencyCode=USD" });
+    expect(supplierService.list).toHaveBeenLastCalledWith(expect.objectContaining({ paymentTermId: null, currencyCode: "USD" }));
+  });
+
+  it("keeps a real leap day", async () => {
+    await mountPage({ initialRoute: "/suppliers?createdFrom=2028-02-29" });
+    expect(supplierService.list).toHaveBeenLastCalledWith(expect.objectContaining({ createdFrom: Date.parse("2028-02-28T16:00:00Z") }));
   });
 });
