@@ -1,5 +1,20 @@
 # Customer Management Final Alignment Review
 
+## Current HD-011 implementation (2026-10-15)
+
+Sam approved PR#232's exact DESIGN25833d2d...3d51 and PLAN7b1eb467...1a34;
+planning merged d69b267d. The scoped query/index/plan-guard remedy passes final
+developer semantics/migration checks and two50k/20-worker/30s measurements;
+listp957.891083/6.992709ms. Independent code review findings were corrected;
+immutable-candidate review and final-head CI still gate the implementation merge.
+Latest-main integrated sourcec6ca3645/fpbccc7235...3449 freshly repeats all Customer
+checks and two17/17 capacity runs(listp957.586708/7.463459ms); independent reviewer
+approves scoped DEF-034001 closure. Final PR-head CI/review still gate normal merge;
+TASK-034 and downstream integration remain BLOCKED.
+Separate unresolved frontend acceptance gaps are retained, not silently fixed or
+waived. [Current remediation report](implementation/def034001-remediation-report.md)
+supersedes the older status sections below; approved canonical spec bytes unchanged.
+
 ## Current capacity amendment — HD-009 (2026-10-15)
 
 Sam explicitly changed the capacity requirement to 50,000 Customers, 20 concurrent

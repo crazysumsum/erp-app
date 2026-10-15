@@ -485,30 +485,30 @@ export class CustomerService {
     const params = [];
     const search = String(q).trim();
     let exactOrder = [];
+    let searchJoin = "";
     if (search) {
       const name = normalizeLegalName(search).key;
       const normalizedSearch = search.normalize("NFKC");
       const namePrefix = prefix(name);
       const identifierPrefix = prefix(normalizeIdentifierValue(search).key);
-      const childConditions = [
-        "trading_name_key LIKE ? ESCAPE '!'",
-        "general_phone LIKE ? ESCAPE '!'",
-        "general_email LIKE ? ESCAPE '!'",
-        `EXISTS (SELECT 1 FROM customer_identifiers ci WHERE ci.customer_id = customers.id AND ci.status = 'active' AND ci.identifier_value_key LIKE ? ESCAPE '!')`,
-        `EXISTS (SELECT 1 FROM customer_contacts cc WHERE cc.customer_id = customers.id AND cc.status = 'active'
-          AND (cc.name LIKE ? ESCAPE '!' OR cc.email LIKE ? ESCAPE '!' OR cc.phone LIKE ? ESCAPE '!' OR cc.mobile LIKE ? ESCAPE '!'))`,
-        `EXISTS (SELECT 1 FROM customer_addresses ca WHERE ca.customer_id = customers.id AND ca.status = 'active'
-          AND (ca.label LIKE ? ESCAPE '!' OR ca.address_line1 LIKE ? ESCAPE '!' OR ca.city LIKE ? ESCAPE '!' OR ca.postal_code LIKE ? ESCAPE '!'))`
+      // HD-011: independent range predicates avoid a root scan over correlated ORs.
+      const candidates = [
+        ...["legal_name_key", "trading_name_key", "general_phone", "general_email"].map((column) =>
+          `SELECT id AS candidate_id FROM customers WHERE ${column} LIKE ? ESCAPE '!'`),
+        "SELECT customer_id AS candidate_id FROM customer_identifiers WHERE status = 'active' AND identifier_value_key LIKE ? ESCAPE '!'",
+        ...["name", "email", "phone", "mobile"].map((column) =>
+          `SELECT customer_id AS candidate_id FROM customer_contacts WHERE status = 'active' AND ${column} LIKE ? ESCAPE '!'`),
+        ...["label", "address_line1", "city", "postal_code"].map((column) =>
+          `SELECT customer_id AS candidate_id FROM customer_addresses WHERE status = 'active' AND ${column} LIKE ? ESCAPE '!'`)
       ];
+      params.push(namePrefix, namePrefix, namePrefix, namePrefix, identifierPrefix, ...Array(8).fill(namePrefix));
       if ([...search].length <= 64 && [...normalizedSearch].length <= 64) {
         const code = normalizeCustomerCode(search).key;
-        conditions.push(`(customer_code_key LIKE ? ESCAPE '!' OR legal_name_key LIKE ? ESCAPE '!' OR ${childConditions.join(" OR ")})`);
-        params.push(prefix(code), namePrefix, namePrefix, namePrefix, namePrefix, identifierPrefix, ...Array(8).fill(namePrefix));
+        candidates.unshift("SELECT id AS candidate_id FROM customers WHERE customer_code_key LIKE ? ESCAPE '!'");
+        params.unshift(prefix(code));
         exactOrder = [code, name];
-      } else {
-        conditions.push(`(legal_name_key LIKE ? ESCAPE '!' OR ${childConditions.join(" OR ")})`);
-        params.push(namePrefix, namePrefix, namePrefix, namePrefix, identifierPrefix, ...Array(8).fill(namePrefix));
       }
+      searchJoin = `JOIN (${candidates.join(" UNION ")}) customer_search_matches ON customer_search_matches.candidate_id = customers.id`;
     }
     const statuses = list(status);
     if (statuses.length) {
@@ -547,9 +547,9 @@ export class CustomerService {
     const sort = SORT_COLUMNS[sortBy] ?? SORT_COLUMNS.updatedAt;
     const direction = sortDirection ? (sortDirection === "asc" ? "ASC" : "DESC") : (descending ? "DESC" : "ASC");
     const ranking = exactOrder.length ? "CASE WHEN customer_code_key = ? THEN 0 WHEN legal_name_key = ? THEN 1 ELSE 2 END, " : "";
-    const [countRows] = await reader.query(`SELECT COUNT(*) AS total FROM customers ${where}`, params);
+    const [countRows] = await reader.query(`SELECT COUNT(*) AS total FROM customers ${searchJoin} ${where}`, params);
     const [idRows] = await reader.query(
-      `SELECT id FROM customers ${where}
+      `SELECT id FROM customers ${searchJoin} ${where}
        ORDER BY ${ranking}${sort} ${direction}, id DESC LIMIT ? OFFSET ?`,
       [...params, ...exactOrder, safePageSize, (safePage - 1) * safePageSize]
     );
