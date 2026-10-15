@@ -1,5 +1,48 @@
 # Customer Management Harness 2.0 Validation Report
 
+## HD-012 current UI proposal boundary
+
+Revised DESIGNa2b29b79...2356 / PLAN3b15603d...35e0 are proposals, not yet human
+approved. Product code unchanged; the separate implementation branch preserves
+test-only reproductions and the targeted import-test correction. Current diagnosis:
+baseline full Customer15PASS/1FAIL, search ordering1PASS/2FAIL, corrected import
+focused1PASS; no full-suite PASS or defect closure. [Details](implementation/ui-defects-remediation-report.md).
+Structural/path checks on the docs-only proposal do not authorize DataTable changes;
+human HD-012 and independent review must be actual, not inferred from these checks.
+
+Actual final checks: state revision184 LOCAL_CHECKS_PASS, traceability with approval
+consistency STRUCTURE_PASS, docs-only boundary against10ca62ad LOCAL_CHECKS_PASS,
+git diff --check PASS. Own design-document contract pin refreshed after an initial
+CONTRACT_DRIFT; final proposed hashes above supersede that draft without changing
+provider behavior. Actual separate reviewer APPROVE exact final hashes; HD-012
+still OPEN and no generic PLAN_READY/human approval is claimed. Design-stage CI is
+not explicitly waited as a gate; implementation still requires exact-head CI.
+
+## Current HD-011 developer verification (2026-10-15)
+
+Sam's approved DESIGN25833d2d...3d51 / PLAN7b1eb467...1a34 are unchanged.
+Final source af7cbcb3222405b2e826254bbfd6bae5aab2c13883068aedbae077bde28456e9:
+Customer/safety280PASS/2explicitextendedskips/0FAIL; real MySQL24PASS/0SKIP;
+each enabled50k/20-worker capacity run17PASS/0FAIL/0SKIP. Expected-key and physical
+ALL guard mutations fail as intended and were restored. Lint/build pass; dependency
+audit exits0 at the existing high-severity threshold with one existing LOW Quasar
+advisory. No audit threshold/dependency/CI setting changed. Real URL-state browser
+checks pass; typed-search and clean-main import gaps remain explicitly OPEN,
+so no full browser/developer-module/technical acceptance PASS is claimed.
+Local structural/state/boundary checks and immutable review/current-head CI are
+recorded separately at publication, not inferred from these scoped measurements.
+[Detailed evidence](implementation/def034001-remediation-report.md).
+
+Latest-main integrated sourcec6ca3645/fingerprintbccc7235...3449 freshly passed the
+same Customer280/24 checks, lint/build and two17/17 unchanged-profile capacity runs
+(listp957.586708/7.463459ms). Actual independent reviewer approves scoped developer
+DEF-034001 closure; no full-module acceptance. Traceability STRUCTURE_PASS and
+module-boundary LOCAL_CHECKS_PASS against latestmaine56ad1a9, exact28 additional
+branch records/metrics consistency and git diff --check passed. Both owned runtimes
+and the detached comparison worktree are cleaned. Final PR-head CI/review/merge/
+topic-cleanup observations belong to PR#233's closure record, not a future PASS
+in this pre-publication checkpoint.
+
 ## HD-010 approved implementation verification (2026-10-15)
 
 Sam approved the exact DESIGN/PLAN below and scoped executable-profile alignment
