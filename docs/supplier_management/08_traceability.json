@@ -3871,7 +3871,7 @@
         "reason": "",
         "approval_id": null
       },
-      "suite_id": "supplier-server-integration"
+      "suite_id": "supplier-client-ui"
     },
     {
       "id": "TC-014",
@@ -3939,7 +3939,7 @@
         "reason": "",
         "approval_id": null
       },
-      "suite_id": "supplier-server-integration"
+      "suite_id": "supplier-client-ui"
     },
     {
       "id": "TC-016",
@@ -4319,7 +4319,7 @@
         "reason": "",
         "approval_id": null
       },
-      "suite_id": "supplier-server-integration"
+      "suite_id": "supplier-client-ui"
     },
     {
       "id": "TC-030",
@@ -5581,7 +5581,7 @@
         "reason": "",
         "approval_id": null
       },
-      "suite_id": "supplier-bank-security"
+      "suite_id": "supplier-client-ui"
     },
     {
       "id": "TC-076",
@@ -5844,7 +5844,7 @@
         "reason": "",
         "approval_id": null
       },
-      "suite_id": "supplier-server-integration"
+      "suite_id": "supplier-performance"
     },
     {
       "id": "TC-086",
@@ -6281,7 +6281,7 @@
         "reason": "",
         "approval_id": null
       },
-      "suite_id": "supplier-server-integration"
+      "suite_id": "supplier-performance"
     },
     {
       "id": "TC-102",

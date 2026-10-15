@@ -133,10 +133,12 @@ const actor = {
 const details = { accountHolderName: "Restore Holder", bankName: "Restore Bank" };
 
 integrationTest("TC-077 (BANK-016): a restored backup reveals with its key ring, and fails closed without it", async (t) => {
-  const source = await mysql.createConnection(config());
+  // Assert before opening anything: a connection opened before a failed assert has no
+  // t.after to close it yet, and keeps the process alive until the runner's timeout.
   const options = adminOptions();
   assert.ok(options.user && options.password,
     "DB_ADMIN_USER / DB_ADMIN_PASSWORD are required: creating the restore schema needs more than the application account");
+  const source = await mysql.createConnection(config());
   const admin = await mysql.createConnection({ ...options, database: process.env.DB_NAME });
   const restoreName = `erp_restore_${randomUUID().replace(/-/gu, "").slice(0, 12)}`;
   let supplierId = null;
