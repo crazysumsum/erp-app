@@ -18,7 +18,7 @@ Business Master already registers the Customer impact checker; no duplicate is
 needed. Canonical DESIGN/PLAN and pinned contract bytes remain unchanged.
 
 Continue existing approved IMPLEMENT developer preparation only: Customer-local
-TC-081 least-privilege proof (TASK-033) and TC-083 default contention subset
+TC-081 least-privilege proof (TASK-033) and TC-083 default/decision contention subsets
 (TASK-034). Use a fresh task-owned loopback MySQL, existing immutable migrations,
 synthetic data and ephemeral fixture credentials. No shared3306, deployed account,
 production permission policy, other-module product code or CI edit. Current source
@@ -32,11 +32,14 @@ Critical cases defined before automation/execution:
 | LOCAL-081-DML / TC-081 | P0; FR-099, DES-021; runtime overprivilege or unusable least privilege | Fresh migrated own schema; admin fixture connection; unique restricted SQL user; real application actor/role and synthetic draft | Grant only named table SELECT/DML; run real CustomerService create, replay, read and update with real fresh-actor verification and append-only audit | One customer/operation per idempotent create; normal update/read; audit append and request correlation; no schema/global/admin grants; observed assertions and sanitized result | NOT RUN |
 | LOCAL-081-DENY / TC-081 | P0; FR-099, SEC-010..014; audit tamper or DDL escalation | Same restricted SQL account, nonempty correlated audit and disposable canary | Attempt CREATE/ALTER/DROP, audit UPDATE/DELETE and role escalation as runtime; compare actual rows/shape; execute fixture DDL as isolated admin | MySQL privilege errors (not fake/transport errors); no audit mutation or shape loss; runtime still usable; controlled admin succeeds; cleanup own user/data | NOT RUN |
 | LOCAL-083-DEFAULT / local TC-083 subset | P0; NFR-007, DES-007; duplicate default or lost update | Own schema; real CustomerPartyService, fresh actor, transaction wrapper and audit; two owned shipping addresses | Release 100 same-version competing default updates through a barrier and bounded normal pool; reconcile persisted purposes, versions and audit | Exactly one CAS winner per address, remaining VERSION_CONFLICT; exactly one final shipping default; no unexpected DB/timeouts; root/child versions and successful audit counts reconcile | NOT RUN |
+| LOCAL-083-DECISION / additional local TC-083 subset | P0; NFR-007, DES-011; double approval decision or unlogged transition | Same owned DB; real CustomerApprovalService/actor/audit/BusinessMaster; separate requester/approver; pending request created through transaction helper with explicit approval-policy snapshot fixture (no shared settings write) | Release100 alternating approve/reject commands, distinct operation/request IDs, same request version; reconcile terminal request/Customer/operations/audit | Exactly1 non-replayed transition,49 same-terminal replay results,50 opposite-decision conflicts; no unexpected failures; one decision audit plus one matching Customer status audit, versions+1, no processing/duplicate decision | NOT RUN before automation/execution |
 
 These prove only local developer subsets. TASK-033 remains IN_PROGRESS pending
 real alert delivery/reset, integrated privilege/security evidence and TASK-032.
 TASK-034 remains BLOCKED; the 100-command contention case does not replace the
-approved50k/20-worker mixed-load benchmark or approval-decision contention.
+approved50k/20-worker mixed-load benchmark or integrated acceptance.
+The local default and decision subsets do not replace full/formal TC-083
+approval/default contention acceptance on the integrated downstream baseline.
 TASK-035's existing local restore evidence remains separate from production
 RTO/RPO/provider reconciliation and Operations/Security review. TASK-036 may update
 handoff/blocker inventory, but full handoff/acceptance cannot complete yet.
@@ -56,10 +59,23 @@ Developer verification only, not Technical Acceptance, UAT, Security/Operations
 sign-off or release approval. Source starts at main392b9f9d; the only executable
 change is `server/test/integration/customerOperationalGuards.integration.test.js`.
 No application, migration, contract, dependency, CI or canonical DESIGN/PLAN edit.
-Final test SHA256:
+Earlier default-only test SHA256 (PR238 initial75ad044f candidate):
 `81ccdaa45d58f3091e0d16c990c8b44a5173e8ca513df12dbb21c39362c86feb`;
 source fingerprint:
 `bfdc1ccd41fb9738378ba7112e4e109a3d3c208575ef1e3db774beb0b7e49011`.
+
+Final extended default+decision test SHA256:
+`b6ae4f6e0cafd2bd81ab615313ed312f3dce71ca811484e6e19e64038225ffe9`;
+integrated source fingerprint:
+`5b3e5b55c3184d2a852f60cdfceacf765204acc042024ee475c732afebbd06eb`.
+This source passed73 files/294 executed nodes,0FAIL/0SKIP in20.545s, including
+all four local cases (five nodes including parent); final lint also passes.
+Earlier293-node results remain scoped to the earlier default-only source.
+Actual separate reviewer `/root/customer_task011_review` approved this extended
+core and current scoped documentation (REV-062), after earlier privilege-oracle
+and documentation findings were corrected. This is agent review, not Sam's
+business/Security/Operations acceptance. Final PR-head mandatory CI and fresh-main
+merge observation are still required; earlier75ad044f CI/review is not reused.
 
 Environment: Node26.6.0; fresh MySQL26.7.0 loopback13378, own schema
 `erp_customer_p4_test`, unchanged migrations through0082. A random temporary SQL
@@ -75,8 +91,9 @@ key rings, audit contents or browser traces exported.
 | LOCAL-081-DML | PASS | Create/replay returns the same Customer and operation; exactly one root, two succeeded create/update operations, version2, persisted update and two correctly correlated audit rows. Draft/root/party subset only, not all Customer runtime capabilities. |
 | LOCAL-081-DENY | PASS | All six CREATE/ALTER/DROP/audit UPDATE/audit DELETE/self-GRANT attempts return actual MySQL privilege errors (errno1044/1142/1227, SQLSTATE42000 accepted; no generic/transport failure accepted). Audit rows/canary shape unchanged; denied CREATE absent; runtime still reads; fixture admin CREATE/ALTER/DROP succeeds. |
 | Privilege negative controls | EXPECTED FAIL, then restored | Initial audit UPDATE mutation fails with `Missing expected rejection` (2PASS/2FAIL nodes,0SKIP). Independent review removed unnecessary audit SELECT and fixed the non-USAGE global grant check. On the tightened fixture, audit UPDATE mutation fails on unexpected column SELECT denial (not accepted as proof of denied UPDATE); global `SELECT ON *.*` fails the grant check (0PASS/1FAIL/0SKIP). Exact INFORMATION_SCHEMA table/privilege/grantability equality and zero column grants now also reject an added audit SELECT (0PASS/1FAIL/0SKIP). All mutations removed. No product defect inferred from deliberately unsafe fixtures. |
-| LOCAL-083-DEFAULT | PASS |100 commands released together into the normal bounded pool, two addresses with version1; exactly2 winners (one per address),98 VERSION_CONFLICT,0 unexpected DB/timeouts. Exactly1 shipping default, each child version2, root+2, exactly2 successful update audits. This is100 contenders, not100 physical DB connections, and not the50k/20-worker mixed-load or approval-decision test. |
-| Customer/Sales-Customer regression | PASS | Final source73 selected files,293 executed test nodes,0FAIL/0SKIP,19.044s. Includes real DB/HTTP root, party, lookup, search/index, bank, import/export, attachment and Sales snapshot/contract cases; no claim that unselected module/acceptance cases ran. |
+| LOCAL-083-DEFAULT | PASS |100 commands released together into the normal bounded pool, two addresses with version1; exactly2 winners (one per address),98 VERSION_CONFLICT,0 unexpected DB/timeouts. Exactly1 shipping default, each child version2, root+2, exactly2 successful update audits. This is100 contenders, not100 physical DB connections or the50k/20-worker mixed-load test. |
+| LOCAL-083-DECISION | PASS local developer subset |100 alternating approve/reject commands on one real pending request:1 non-replayed transition,49 same-terminal replays,50 opposite `APPROVAL_REQUEST_NOT_OPEN`,0 unexpected failures. Customer/request each advance exactly1 version; exactly1 decision audit plus1 matching Customer status audit with winner correlation;50 succeeded durable operations and no processing residue. |
+| Customer/Sales-Customer regression | PASS | Final extended source73 selected files,294 executed test nodes,0FAIL/0SKIP,20.545s. Includes real DB/HTTP root, party, lookup, search/index, bank, import/export, attachment and Sales snapshot/contract cases; no claim that unselected module/acceptance cases ran. |
 | Lint / client build | PASS | Existing repository lint/build succeed; pre-existing large-chunk build advisory remains, no UI code changed. |
 
 Reproduce from `server/` against an explicitly provisioned disposable migrated DB:
@@ -94,9 +111,26 @@ counts: Customers0, fixture SQL users0, canaries0, fixture actors0. The owned My
 service remains running for integrated post-merge verification; its shutdown and
 PR-head CI/review observations must be recorded before closure.
 
+Decision-case setup limitation: the first attempt used the narrower TC-081 SQL
+role with extra SELECT-only Currency access. MySQL26.7.0 rejected Currency
+`SELECT ... FOR UPDATE`; the suite correctly failed (3PASS/2FAIL nodes,0SKIP,
+including parent). This was fixture insufficiency, not a double-decision product
+defect. No extra Currency mutation/locking privilege was granted to that role.
+The corrected contention case uses the existing integration DB_USER account
+(CI's disposable erp_user), with real authorization/audit/provider code. It does
+not prove least-privilege approval/Currency access or deployed privilege policy.
+Its pending request is created through the real transaction helper with an
+explicit policy snapshot fixture, without toggling the shared settings singleton;
+the public settings/HTTP submission path is not covered by this case.
+The synthetic application role includes `customer.approval` to make the separate
+approver eligible; both actors' complete claims are freshly checked. This does not
+expand the TC-081 SQL role: SELECT on13 named tables plus INSERT-only audit
+(14 distinct tables total) is unchanged, with no Currency/approval-table or
+global/schema privileges.
+
 Remaining conditional work is environmental/integrational: real downstream
 consumers/provider readiness, alert receiver delivery/reset, deployed runtime/
-migration/emergency role and session-revocation evidence, approval contention,
+migration/emergency role and session-revocation evidence, integrated contention,
 production-like consistent restore and Operations/Security review. Local proof
 does not satisfy these dependencies; TASK-030/031/032/034 stay BLOCKED,
 TASK-033/035 IN_PROGRESS, TASK-036 PENDING. No new Sam decision is required for

@@ -106,11 +106,15 @@ DB_INTEGRATION_TESTS=1 node --test --import ./test-support/testEnv.js test/integ
 The fixture administrator creates/drops one random SQL user and canary tables;
 the runtime fixture receives only named-table DML, never audit UPDATE/DELETE or
 DDL. The real Customer services verify idempotency, fresh permissions, audit and
-100 default-address contenders through a10-connection bounded pool. All fixture
+100 default-address contenders through a10-connection bounded pool. The separate
+100-command approve/reject case uses the existing integration DB_USER privileges,
+not the TC-081 role, and supplies the transaction helper's policy snapshot fixture
+without changing the shared settings singleton. It does not certify least-privilege
+Currency locking, the public settings/submission path or deployed role policy. All fixture
 data/account cleanup is owner scoped; a failed cleanup is a failed test, not PASS.
 Never supply deployed administrative credentials or use this as a provisioning
 script. This local TC-081/083 subset does not prove deployed privilege separation,
-emergency access/session revocation, approval races or full downstream readiness.
+emergency access/session revocation, integrated races or full downstream readiness.
 See [current local results](phase-PHASE-004-report.md#local-execution-results--2026-10-15).
 
 ## Unauthorized sensitive access

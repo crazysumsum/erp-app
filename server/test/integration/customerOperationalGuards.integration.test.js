@@ -4,6 +4,7 @@ import test from "node:test";
 
 import databaseConfig from "../../config/database.js";
 import { normalizeDatabaseConfig } from "../../src/framework/configuration/normalizeDatabaseConfig.js";
+import { CustomerApprovalService } from "../../src/modules/customer/CustomerApprovalService.js";
 import { CustomerPartyService } from "../../src/modules/customer/CustomerPartyService.js";
 import { CustomerService } from "../../src/modules/customer/CustomerService.js";
 import { hashPassword } from "../../src/modules/user/passwordHash.js";
@@ -13,7 +14,7 @@ import { MySqlDatabaseService } from "../../src/services/mysqldatabase/MySqlData
 
 const integrationTest = process.env.DB_INTEGRATION_TESTS === "1" ? test : test.skip;
 
-integrationTest("TC-081 / local TC-083 real Customer least privilege and default contention", { timeout: 60_000 }, async (t) => {
+integrationTest("TC-081 / local TC-083 real Customer least privilege and contention", { timeout: 60_000 }, async (t) => {
   assert.ok(process.env.DB_ADMIN_USER, "DB_ADMIN_USER must identify the isolated fixture administrator");
   assert.notEqual(process.env.DB_ADMIN_PASSWORD, undefined, "DB_ADMIN_PASSWORD must be explicitly configured");
   const config = normalizeDatabaseConfig(databaseConfig);
@@ -23,20 +24,24 @@ integrationTest("TC-081 / local TC-083 real Customer least privilege and default
   const canary = `cm_guard_${suffix}`;
   const deniedCanary = `${canary}_denied`;
   const roleName = `customer-guard-${suffix}`;
-  const permissions = ["customer.mgmt", "customer.view"];
+  const permissions = ["customer.approval", "customer.mgmt", "customer.view"];
   let db = null;
+  let approvalDb = null;
   let actorId = null;
   let roleId = null;
+  let approverId = null;
   let customerId;
 
   t.after(async () => {
     try {
+      await approvalDb?.shutdown();
       await db?.shutdown();
       if (actorId) {
-        await admin.execute("DELETE FROM customer_audit_logs WHERE actor_user_id = ?", [actorId]);
-        await admin.execute("DELETE FROM customer_operation_requests WHERE actor_user_id = ?", [actorId]);
+        await admin.execute("DELETE FROM customer_audit_logs WHERE actor_user_id IN (?, ?)", [actorId, approverId ?? 0]);
+        await admin.execute("DELETE FROM customer_operation_requests WHERE actor_user_id IN (?, ?)", [actorId, approverId ?? 0]);
+        await admin.execute("DELETE FROM customer_activation_requests WHERE customer_id IN (SELECT id FROM customers WHERE created_by = ?)", [actorId]);
         await admin.execute("DELETE FROM customers WHERE created_by = ?", [actorId]);
-        await admin.execute("DELETE FROM users WHERE id = ?", [actorId]);
+        await admin.execute("DELETE FROM users WHERE id IN (?, ?)", [actorId, approverId ?? 0]);
       }
       if (roleId) await admin.execute("DELETE FROM roles WHERE id = ?", [roleId]);
       await admin.query("DROP TABLE IF EXISTS ??, ??", [canary, deniedCanary]);
@@ -84,7 +89,7 @@ integrationTest("TC-081 / local TC-083 real Customer least privilege and default
   const [role] = await admin.execute("INSERT INTO roles (name, created_at) VALUES (?, ?)", [roleName, now]);
   roleId = Number(role.insertId);
   await admin.execute("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)", [actorId, roleId]);
-  const [seededPermissions] = await admin.execute("SELECT id FROM permissions WHERE name IN (?, ?)", permissions);
+  const [seededPermissions] = await admin.execute("SELECT id FROM permissions WHERE name IN (?, ?, ?)", permissions);
   assert.equal(seededPermissions.length, permissions.length);
   for (const permission of seededPermissions) {
     await admin.execute("INSERT INTO role_permissions (role_id, permission_id) VALUES (?, ?)", [roleId, permission.id]);
@@ -178,5 +183,49 @@ integrationTest("TC-081 / local TC-083 real Customer least privilege and default
     assert.deepEqual(audit.map((row) => [Number(row.target_id), row.request_id]), expectedAudit);
     const [[afterAudit]] = await admin.execute("SELECT COUNT(*) AS n FROM customer_audit_logs WHERE customer_id = ?", [customerId]);
     assert.equal(Number(afterAudit.n), Number(beforeAudit.n) + 2);
+  });
+
+  await t.test("LOCAL-083-DECISION: 100 approve/reject contenders produce exactly one audited transition", async () => {
+    assert.ok(customerId, "positive fixture must exist before decision contention");
+    const [approver] = await admin.execute("INSERT INTO users (username, password_hash, created_at, updated_at) VALUES (?, ?, ?, ?)", [`approver-${suffix}`, await hashPassword(password), now, now]);
+    approverId = Number(approver.insertId);
+    await admin.execute("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)", [approverId, roleId]);
+    const before = await service.get({ ...actor, id: customerId });
+    // Decision contention uses the existing integration runtime, not the narrower TC-081 fixture role.
+    approvalDb = new MySqlDatabaseService({ pool: createMySqlDatabasePool(config), config, context });
+    await approvalDb.initialize();
+    const approvalCustomers = new CustomerService({ database: approvalDb, time });
+    await approvalCustomers.update({ ...input, id: customerId, version: before.version, idempotencyKey: `currency-${suffix}`, defaultCurrencyCode: "HKD", reason: "local approval fixture" });
+    const approvals = new CustomerApprovalService({ database: approvalDb, time });
+    // Use the transaction helper's policy snapshot input; never toggle the shared settings singleton.
+    const request = await approvalDb.withTransaction((connection) => approvals.submitInTransaction(connection, { ...actor, customerId, approverUserId: approverId, requestNote: "local decision contention" }, { setting: { require_activation_approval: 1, version: 1 } }));
+    const pending = await service.get({ ...actor, id: customerId });
+    const [[beforeAudit]] = await admin.execute("SELECT COUNT(*) AS n FROM customer_audit_logs WHERE customer_id = ?", [customerId]);
+    const start = Promise.withResolvers();
+    const commands = Array.from({ length: 100 }, (_, index) => start.promise.then(() => approvals[index % 2 === 0 ? "approve" : "reject"]({ ...actor, actorId: approverId, id: request.id, version: 1, reason: "local conflicting decision", idempotencyKey: `decision-${suffix}-${index}`, requestId: `decision-${suffix}-${index}` })));
+    start.resolve();
+    const results = await Promise.allSettled(commands);
+    const fulfilled = results.filter((result) => result.status === "fulfilled").map((result) => result.value);
+    const rejected = results.filter((result) => result.status === "rejected");
+    assert.equal(fulfilled.length, 50);
+    assert.equal(rejected.length, 50);
+    assert.ok(rejected.every((result) => result.reason.code === "APPROVAL_REQUEST_NOT_OPEN"), "opposite decisions must conflict, not fail on DB/permissions/timeouts");
+    const transitions = fulfilled.filter((result) => !result.replayed);
+    assert.equal(transitions.length, 1);
+    assert.ok(fulfilled.every((result) => result.status === transitions[0].status && result.version === 2));
+    const winnerIndex = results.findIndex((result) => result.status === "fulfilled" && !result.value.replayed);
+    const [[terminal]] = await admin.execute("SELECT status, version, decided_by FROM customer_activation_requests WHERE id = ?", [request.id]);
+    assert.equal(terminal.status, winnerIndex % 2 === 0 ? "approved" : "rejected");
+    assert.equal(Number(terminal.version), 2);
+    assert.equal(Number(terminal.decided_by), approverId);
+    const after = await service.get({ ...actor, id: customerId });
+    assert.equal(after.status, terminal.status === "approved" ? "active" : "draft");
+    assert.equal(after.version, pending.version + 1);
+    const [decisions] = await admin.execute("SELECT action, request_id FROM customer_audit_logs WHERE customer_id = ? AND action IN ('approval.approve', 'approval.reject', 'customer.activate', 'customer.status') ORDER BY id", [customerId]);
+    assert.deepEqual(decisions.map((row) => [row.action, row.request_id]), [[terminal.status === "approved" ? "approval.approve" : "approval.reject", `decision-${suffix}-${winnerIndex}`], [terminal.status === "approved" ? "customer.activate" : "customer.status", `decision-${suffix}-${winnerIndex}`]]);
+    const [[afterAudit]] = await admin.execute("SELECT COUNT(*) AS n FROM customer_audit_logs WHERE customer_id = ?", [customerId]);
+    assert.equal(Number(afterAudit.n), Number(beforeAudit.n) + 2);
+    const [operations] = await admin.execute("SELECT status, COUNT(*) AS n FROM customer_operation_requests WHERE actor_user_id = ? GROUP BY status", [approverId]);
+    assert.deepEqual(operations.map((row) => [row.status, Number(row.n)]), [["succeeded", 50]]);
   });
 });
