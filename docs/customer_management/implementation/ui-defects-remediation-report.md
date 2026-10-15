@@ -126,3 +126,19 @@ corrected `--grep TC-065`, and independently authored `--grep DEF-034002` (RED).
 Each used a separate HARNESS_RUN_DIR/HARNESS_RESULT_PATH under the owned root.
 No final shared implementation, final-head implementation CI, formal Technical
 Acceptance or UAT has occurred.
+
+## Proposal publication
+
+Docs-only proposal published as draft PR #234:
+https://github.com/crazysumsum/erp-app/pull/234 . Push/create completed successfully;
+GitHub observed OPEN/DRAFT at initial head `f01f477e05682c78d0a35906e9e995690ec32dd2`
+with only the ten proposal documentation paths. The PR is attached to this chat.
+HD-012 remains OPEN; neither publication nor independent proposal review is Sam's
+approval. Preserve unpublished reproduction tests and private browser evidence
+until the scope decision; no shared product implementation or merge has occurred.
+
+After proposal commit, state inspection reports `COMMIT_CHANGED`: its preserved
+code baseline is main `10ca62ad`, whereas HEAD includes this documentation-only
+proposal. The source fingerprint is unchanged (`bccc7235…b3449`); this is not an
+implementation gate PASS or new test-baseline approval. Reconcile the eventual
+approved/merged proposal before returning to IMPLEMENT.

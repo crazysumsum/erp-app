@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 185,
+  "revision": 186,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "DESIGN_AND_PLAN",
   "status": "BLOCKED",
@@ -4223,16 +4223,16 @@
       "kind": "GIT_PUSH",
       "target": "origin codex/customer-ui-ordering-design; HD012 docs-only proposal",
       "idempotency_key": "customer-ui-hd012-planning-proposal-push-v1",
-      "status": "PLANNED",
-      "source_ref": "Sam authorizedtwoUIdefectrepair; sharedDataTableexceptionrequiresHD012humanchoice. Publishonlycanonicalproposal/state/report, no product/executabletestdiff. SeparateWIPtestcommit3b890ef4 retainedunpublished."
+      "status": "CONFIRMED",
+      "source_ref": "Sam authorizedtwoUIdefectrepair; sharedDataTableexceptionrequiresHD012humanchoice. Publishonlycanonicalproposal/state/report, no product/executabletestdiff. SeparateWIPtestcommit3b890ef4 retainedunpublished. Observed push exit 0; gh pr create returned https://github.com/crazysumsum/erp-app/pull/234. Reconciled via gh pr view: OPEN, DRAFT, head f01f477e05682c78d0a35906e9e995690ec32dd2, ten docs-only paths; attached to current chat. No merge or human approval."
     },
     {
       "id": "EXT-PR-084",
       "kind": "PR_CREATE",
       "target": "github:crazysumsum/erp-app:main<-codex/customer-ui-ordering-design DRAFT; Sam exactDESIGN/PLAN/sharedscope decision",
       "idempotency_key": "customer-ui-hd012-draft-proposal-pr-v1",
-      "status": "PLANNED",
-      "source_ref": "Docs-onlyplanningboundary; no product, CI waiver, approval or mergeinferred. Do not explicitlywaitdesignCI; never bypassprotection; implementationbranchheldpendingdecision."
+      "status": "CONFIRMED",
+      "source_ref": "Docs-onlyplanningboundary; no product, CI waiver, approval or mergeinferred. Do not explicitlywaitdesignCI; never bypassprotection; implementationbranchheldpendingdecision. Observed push exit 0; gh pr create returned https://github.com/crazysumsum/erp-app/pull/234. Reconciled via gh pr view: OPEN, DRAFT, head f01f477e05682c78d0a35906e9e995690ec32dd2, ten docs-only paths; attached to current chat. No merge or human approval."
     }
   ],
   "evidence_files": [
@@ -4301,5 +4301,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "FinalHD012proposalindependentREV055APPROVED,structural/state/docs-onlyboundary/diffPASS. Commit/pushdocs-onlydraftPR underEXT083/084 thenaskSamonequestionfor exactDESIGNa2b29b795515f6ee408201d3ac2650a1d42d74728c1ca4c9f2fe68cbfc292356 PLAN3b15603d9608dcb388f90806f643a5d221514b17ef302f2e2d2f2851699735e0 andsoleDataTablesharedscopeexception. UntilanswerNOsharedproductfix. RetainseparateWIPtestcommit3b890ef4; importfocusedPASSnotfullclosure; searchRED; downstreamBLOCKED. InspectremotePRbeforeanyretry."
+  "next_safe_action": "Await Sam HD-012 approval of DESIGN a2b29b795515f6ee408201d3ac2650a1d42d74728c1ca4c9f2fe68cbfc292356, PLAN 3b15603d9608dcb388f90806f643a5d221514b17ef302f2e2d2f2851699735e0 and sole shared DataTable.vue exception in draft PR #234. No shared product edits until decision. Retain unpublished WIP tests 3b890ef47a46d36c717f12cd83e82cf7f8a4ac94 and private browser evidence. Import focused PASS is not full closure; search RED and full downstream acceptance BLOCKED."
 }
