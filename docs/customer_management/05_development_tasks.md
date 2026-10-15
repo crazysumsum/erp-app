@@ -12,6 +12,20 @@ reviewed closure evidence exists. Do not edit the PR #228 measured-result files.
 
 ## 1. Execution Rules
 
+HD-011 / DEF-034001 remediation proposal is PENDING Sam approval on the revised
+DESIGN/PLAN. After approval, TASK-034's Customer-local subset may implement the
+DES-019 distinct indexed candidate-ID search and its one additive Customer index
+migration, plus TC-028's explicit physical-vs-materialized plan classification.
+Run migration fresh/rerun/incompatible-shape checks, search semantics/export and
+authorization regressions, physical-scan guard mutations, and fresh 50k/20-worker/
+30s/default-pool10/p95<=5s measurements on isolated MySQL. Exercise all existing
+root/active-child search branches, duplicate matches, literal wildcard escaping,
+inactive/archived exclusion, exact ranking, filters and stable paging. Preserve
+original failures. One scoped remediation PR follows independent review, mandatory
+final-head CI and fresh-main integration; no merge while required checks fail.
+TASK-030/031/032, full mixed/downstream acceptance and formal production DR remain
+BLOCKED; this local remediation cannot mark TASK-034 or PHASE-004 DONE.
+
 - Status of every Phase and Task is `PLANNED`; this review implemented no product code.
 - One Phase is one independently reviewable/testable merge checkpoint and one integration PR by default. Task IDs appear in atomic commits; separate PRs require documented ordering and compatibility.
 - Each Phase starts from current `origin/main` in a dedicated worktree. If main moves before merge, integrate it in the Phase worktree and rerun the entire Phase gate.

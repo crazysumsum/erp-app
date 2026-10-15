@@ -2,6 +2,13 @@
 
 ## Status
 
+Current HD-011 / DEF-034001 remediation is **BLOCKED on Sam's revised DESIGN/PLAN
+decision**. Fresh unchanged reproduction still has both physical Customer ALL
+scans. Independent proposal review REV-048 approved the narrow candidate-UNION/
+ten-index/physical-plan-classification correction, not implementation authority.
+No product source, executable assertion or migration is changed. See the
+[current diagnosis and exact proposed baselines](def034001-remediation-report.md).
+
 `BLOCKED` for complete PHASE-004 integration: TASK-029 is merged; TASK-030/031/032
 await real downstream consumers. TASK-033's Customer-local telemetry/security/runbook
 preparation is executable under the standing continuation authorization. See the

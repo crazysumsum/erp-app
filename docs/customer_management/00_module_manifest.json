@@ -140,7 +140,7 @@
         "id": "customer-purpose-provider-contracts",
         "version": "aligned-design-2.1; Sales consumer merged and TC-070 verified; later consumers blocked",
         "source": "docs/customer_management/03_design_spec.md",
-        "sha256": "d4de85dc79059ad25af071ca4cdbb6a6527c6a816ed7ac5e09542271fe1c3e3a",
+        "sha256": "8ae6911b46dc9e0f4175198b7d523bf7f5786734f427d9d00c28e5ef694750eb",
         "consumers": [
           "sales-order-management",
           "fulfillment-shipping-management",
