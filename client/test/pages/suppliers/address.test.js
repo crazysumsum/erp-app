@@ -4,7 +4,7 @@ import { Quasar } from "quasar";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/services/supplier.js", () => ({
-  default: { createAddress: vi.fn(), updateAddress: vi.fn(), deactivateAddress: vi.fn() }, service: { name: "supplier" }
+  default: { createAddress: vi.fn(), listAddresses: vi.fn(), updateAddress: vi.fn(), deactivateAddress: vi.fn() }, service: { name: "supplier" }
 }));
 vi.mock("@/framework/ui/confirm.js", () => ({ confirm: vi.fn() }));
 vi.mock("@/framework/ui/notify.js", () => ({ notifySuccess: vi.fn(), notifyError: vi.fn() }));
@@ -76,5 +76,26 @@ describe("SupplierAddressPanel", () => {
     await body.find('[aria-label="停用地址 總部"]').trigger("click");
     await flushPromises();
     expect(supplierService.deactivateAddress).toHaveBeenCalledWith(7, 12, { version: 1 });
+  });
+
+  it("loads addresses past the detail's 100 a page at a time, without duplicates, and stops at the total (HD-107 G5)", async () => {
+    const make = (id) => ({ ...ADDRESSES[0], id, label: `Address ${id}`, purposes: [] });
+    const first = Array.from({ length: 100 }, (_, index) => make(1000 + index));
+    supplierService.listAddresses.mockResolvedValue({ items: [make(1099), ...Array.from({ length: 5 }, (_, index) => make(2000 + index))], total: 105, page: 2, pageSize: 100 });
+    const { body } = mountPanel({ addresses: first });
+    expect(body.text()).toContain("已顯示 100 個地址，可能還有更多");
+
+    await body.findAll(".q-btn").find((button) => button.text().includes("載入更多地址")).trigger("click");
+    await flushPromises();
+    expect(supplierService.listAddresses).toHaveBeenCalledWith(7, { page: 2, pageSize: 100 });
+    expect(body.text()).toContain("已顯示 105 個地址，共 105 個");
+    expect(body.text()).toContain("Address 2004");
+    expect(body.findAll(".q-btn").some((button) => button.text().includes("載入更多地址"))).toBe(false);
+  });
+
+  it("offers no load-more below the detail's 100", () => {
+    const { body } = mountPanel();
+    expect(body.text()).not.toContain("已顯示");
+    expect(body.findAll(".q-btn").some((button) => button.text().includes("載入更多"))).toBe(false);
   });
 });

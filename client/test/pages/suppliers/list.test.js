@@ -7,10 +7,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("@/services/supplier.js", () => ({
   default: { list: vi.fn(), exportCsv: vi.fn() }, service: { name: "supplier" }
 }));
+vi.mock("@/services/businessMaster.js", () => ({ default: { currencyList: vi.fn(), paymentTermList: vi.fn() } }));
 vi.mock("@/framework/ui/confirm.js", () => ({ confirm: vi.fn(), promptPassword: vi.fn() }));
 vi.mock("@/framework/ui/notify.js", () => ({ notifyError: vi.fn(), notifySuccess: vi.fn() }));
 
 import supplierService from "@/services/supplier.js";
+import businessMasterService from "@/services/businessMaster.js";
 import { promptPassword } from "@/framework/ui/confirm.js";
 import { notifyError } from "@/framework/ui/notify.js";
 import SuppliersPage, { page } from "@/pages/suppliers/SuppliersPage.vue";
@@ -83,9 +85,9 @@ describe("pages/suppliers/SuppliersPage.vue", () => {
     await body.findAll("button").find((button) => button.text().includes("匯出 CSV")).trigger("click");
     await flushPromises();
 
-    expect(supplierService.exportCsv).toHaveBeenCalledWith({
+    expect(supplierService.exportCsv).toHaveBeenCalledWith(expect.objectContaining({
       filter: "evergreen", status: "active", sortBy: "supplierName", descending: false, password: "pw"
-    });
+    }));
     expect(clicks).toEqual(["suppliers-20261006T070809Z.csv"]);
     click.mockRestore();
   });
@@ -111,5 +113,65 @@ describe("pages/suppliers/SuppliersPage.vue", () => {
       page: 2, filter: "evergreen", status: "active", sortBy: "supplierName", descending: false
     }));
     expect(router.currentRoute.value.query.q).toBe("evergreen");
+  });
+
+  it("restores the HD-107 filters from the URL and sends them to the list and the export as Hong Kong day bounds", async () => {
+    URL.createObjectURL = vi.fn(() => "blob:x");
+    URL.revokeObjectURL = vi.fn();
+    const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+    promptPassword.mockResolvedValue("pw");
+    supplierService.exportCsv.mockResolvedValue({ blob: new Blob(["x"]), fileName: "s.csv" });
+    const { body, router } = await mountPage({ initialRoute: "/suppliers?currencyCode=USD&paymentTermId=3&missingPrimaryContact=true"
+      + "&missingAddress=true&missingBank=true&includeArchived=true&createdFrom=2026-10-01&createdTo=2026-10-02&updatedTo=2026-10-15" });
+    const expected = {
+      currencyCode: "USD", paymentTermId: 3, missingPrimaryContact: true, missingAddress: true, missingBank: true, includeArchived: true,
+      createdFrom: Date.parse("2026-09-30T16:00:00Z"), createdTo: Date.parse("2026-10-02T15:59:59.999Z"),
+      updatedFrom: undefined, updatedTo: Date.parse("2026-10-15T15:59:59.999Z")
+    };
+    expect(supplierService.list).toHaveBeenLastCalledWith(expect.objectContaining(expected));
+    expect(router.currentRoute.value.query).toMatchObject({ currencyCode: "USD", paymentTermId: "3", missingBank: "true", createdFrom: "2026-10-01" });
+    expect(router.currentRoute.value.query.updatedFrom).toBeUndefined();
+
+    await body.findAll("button").find((button) => button.text().includes("匯出 CSV")).trigger("click");
+    await flushPromises();
+    expect(supplierService.exportCsv).toHaveBeenCalledWith(expect.objectContaining(expected));
+    click.mockRestore();
+  });
+
+  it("ignores malformed filter values in the URL", async () => {
+    await mountPage({ initialRoute: "/suppliers?currencyCode=usd&paymentTermId=-1&missingBank=1&createdFrom=yesterday" });
+    expect(supplierService.list).toHaveBeenLastCalledWith(expect.objectContaining({
+      currencyCode: null, paymentTermId: null, missingBank: false, createdFrom: undefined
+    }));
+  });
+
+  it("reloads and updates the URL when a missing-data filter is ticked", async () => {
+    const { body, router } = await mountPage();
+    supplierService.list.mockClear();
+    await body.findAll(".q-checkbox").find((box) => box.text().includes("缺有效銀行資料")).trigger("click");
+    await flushPromises();
+    expect(supplierService.list).toHaveBeenCalledWith(expect.objectContaining({ missingBank: true }));
+    expect(router.currentRoute.value.query.missingBank).toBe("true");
+  });
+
+  it("flags a date range that ends before it starts", async () => {
+    const { body } = await mountPage({ initialRoute: "/suppliers?updatedFrom=2026-10-15&updatedTo=2026-10-01" });
+    expect(body.text()).toContain("結束日期不可早於開始日期");
+  });
+
+  it("offers currency and payment-term filters only with business_master.view, including inactive masters", async () => {
+    businessMasterService.currencyList.mockResolvedValue({ rows: [{ code: "USD", name: "US Dollar" }], rowsNumber: 1 });
+    businessMasterService.paymentTermList.mockResolvedValue({ rows: [{ id: 3, code: "N30", name: "Net 30" }], rowsNumber: 1 });
+    let result = await mountPage();
+    expect(businessMasterService.currencyList).not.toHaveBeenCalled();
+    expect(result.body.findAll(".q-field").some((field) => field.text().includes("貨幣"))).toBe(false);
+    result.wrapper.unmount();
+    document.body.innerHTML = "";
+
+    result = await mountPage({ permissions: ["supplier.view", "business_master.view"] });
+    expect(businessMasterService.currencyList).toHaveBeenCalledWith({ page: 1, rowsPerPage: 100, sortBy: "code" });
+    expect(businessMasterService.paymentTermList).toHaveBeenCalledWith({ page: 1, rowsPerPage: 100, sortBy: "code" });
+    expect(result.body.findAll(".q-field").some((field) => field.text().includes("貨幣"))).toBe(true);
+    expect(result.body.findAll(".q-field").some((field) => field.text().includes("付款條件"))).toBe(true);
   });
 });

@@ -4,7 +4,7 @@ import { Quasar } from "quasar";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/services/supplier.js", () => ({
-  default: { createContact: vi.fn(), updateContact: vi.fn(), deactivateContact: vi.fn() }, service: { name: "supplier" }
+  default: { createContact: vi.fn(), listContacts: vi.fn(), updateContact: vi.fn(), deactivateContact: vi.fn() }, service: { name: "supplier" }
 }));
 vi.mock("@/framework/ui/confirm.js", () => ({ confirm: vi.fn() }));
 vi.mock("@/framework/ui/notify.js", () => ({ notifySuccess: vi.fn(), notifyError: vi.fn() }));
@@ -85,5 +85,26 @@ describe("SupplierContactPanel", () => {
     await flushPromises();
     expect(supplierService.deactivateContact).toHaveBeenCalledWith(7, 21, { version: 1 });
     expect(body.find('[aria-label="編輯聯絡人 Former Buyer"]').exists()).toBe(false);
+  });
+
+  it("loads contacts past the detail's 100 a page at a time, without duplicates, and stops at the total (HD-107 G5)", async () => {
+    const make = (id) => ({ ...CONTACTS[0], id, name: `Contact ${id}`, purposes: [] });
+    const first = Array.from({ length: 100 }, (_, index) => make(1000 + index));
+    supplierService.listContacts.mockResolvedValue({ items: [make(1099), ...Array.from({ length: 5 }, (_, index) => make(2000 + index))], total: 105, page: 2, pageSize: 100 });
+    const { body } = mountPanel({ contacts: first });
+    expect(body.text()).toContain("已顯示 100 個聯絡人，可能還有更多");
+
+    await body.findAll(".q-btn").find((button) => button.text().includes("載入更多聯絡人")).trigger("click");
+    await flushPromises();
+    expect(supplierService.listContacts).toHaveBeenCalledWith(7, { page: 2, pageSize: 100 });
+    expect(body.text()).toContain("已顯示 105 個聯絡人，共 105 個");
+    expect(body.text()).toContain("Contact 2004");
+    expect(body.findAll(".q-btn").some((button) => button.text().includes("載入更多聯絡人"))).toBe(false);
+  });
+
+  it("offers no load-more below the detail's 100", () => {
+    const { body } = mountPanel();
+    expect(body.text()).not.toContain("已顯示");
+    expect(body.findAll(".q-btn").some((button) => button.text().includes("載入更多"))).toBe(false);
   });
 });
