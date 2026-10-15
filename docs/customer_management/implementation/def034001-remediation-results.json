@@ -1,0 +1,362 @@
+{
+  "stage": "DEVELOPER_DIAGNOSIS_ONLY",
+  "status": "BEFORE_FAIL_AFTER_NOT_RUN",
+  "codeCommit": "09487bc65bff3a2360dffcaa246d5630269f11d2",
+  "sourceFingerprint": "685238fea731fd9b586449a3a587c6236faaee451a916377817a7b3fdf9a4aa4",
+  "approvedDesign": "8462e9c2bc9909f413bb0063de29b44bcbe205d8bfd1209c254ff5d1090f9944",
+  "approvedPlan": "55ea357b07fb39cc1131b61757b95ca4aa07b246a8dbabfddfecb914e79ba247",
+  "date": "2026-10-15",
+  "before": {
+    "tc": "TC-028",
+    "fixtureVersion": "customer-hd010-capacity-50k-20-v2",
+    "data": {
+      "customers": 50000,
+      "addresses": 5000,
+      "contacts": 5000
+    },
+    "load": {
+      "concurrency": 20,
+      "warmListMs": 180.92841700000008,
+      "p95BudgetMs": 5000,
+      "requestedDurationMs": 30000,
+      "elapsedMs": 30575.552249999997,
+      "errors": 0,
+      "operationsPerSecond": 51.413625734266176
+    },
+    "environment": {
+      "node": "v26.6.0",
+      "mysql": "26.7.0",
+      "logicalCpu": 15,
+      "memoryBytes": 25769803776
+    },
+    "resources": {
+      "heapPeakBytes": 85706240,
+      "rssBytes": 252870656,
+      "cpuMicroseconds": {
+        "user": 569502,
+        "system": 58369
+      },
+      "mysqlBefore": {
+        "Innodb_row_lock_current_waits": 0,
+        "Innodb_row_lock_waits": 0,
+        "Threads_connected": 1
+      },
+      "mysqlAfter": {
+        "Innodb_row_lock_current_waits": 0,
+        "Innodb_row_lock_waits": 0,
+        "Threads_connected": 10
+      }
+    },
+    "latencyMs": {
+      "list": {
+        "count": 393,
+        "p50": 1217.6307079999988,
+        "p95": 1662.1295,
+        "p99": 1927.5710000000004
+      },
+      "exactLookup": {
+        "count": 393,
+        "p50": 80.62358300000051,
+        "p95": 281.44158400000015,
+        "p99": 368.4022079999995
+      },
+      "addressLookup": {
+        "count": 393,
+        "p50": 62.728665999999066,
+        "p95": 279.26674999999886,
+        "p99": 338.3580839999995
+      },
+      "contactLookup": {
+        "count": 393,
+        "p50": 64.32412499999919,
+        "p95": 284.64029200000004,
+        "p99": 350.48833300000115
+      }
+    },
+    "plans": {
+      "exactCode": [
+        {
+          "id": 1,
+          "select_type": "SIMPLE",
+          "table": "customers",
+          "partitions": null,
+          "type": "const",
+          "possible_keys": "uq_customers_code_key",
+          "key": "uq_customers_code_key",
+          "key_len": "258",
+          "ref": "const",
+          "rows": 1,
+          "filtered": 100,
+          "Extra": "Using index"
+        }
+      ],
+      "codePrefix": [
+        {
+          "id": 1,
+          "select_type": "SIMPLE",
+          "table": "customers",
+          "partitions": null,
+          "type": "range",
+          "possible_keys": "uq_customers_code_key",
+          "key": "uq_customers_code_key",
+          "key_len": "258",
+          "ref": null,
+          "rows": 100,
+          "filtered": 100,
+          "Extra": "Using where; Using index"
+        }
+      ],
+      "legalNamePrefix": [
+        {
+          "id": 1,
+          "select_type": "SIMPLE",
+          "table": "customers",
+          "partitions": null,
+          "type": "range",
+          "possible_keys": "uq_customers_legal_name_key,idx_customers_legal_name",
+          "key": "uq_customers_legal_name_key",
+          "key_len": "762",
+          "ref": null,
+          "rows": 100,
+          "filtered": 100,
+          "Extra": "Using where; Using index"
+        }
+      ],
+      "shippingExists": [
+        {
+          "id": 1,
+          "select_type": "SIMPLE",
+          "table": "c",
+          "partitions": null,
+          "type": "const",
+          "possible_keys": "PRIMARY",
+          "key": "PRIMARY",
+          "key_len": "8",
+          "ref": "const",
+          "rows": 1,
+          "filtered": 100,
+          "Extra": "Using index"
+        },
+        {
+          "id": 1,
+          "select_type": "SIMPLE",
+          "table": "a",
+          "partitions": null,
+          "type": "ref",
+          "possible_keys": "PRIMARY,uq_customer_addresses_owner,idx_customer_addresses_owner_status",
+          "key": "idx_customer_addresses_owner_status",
+          "key_len": "90",
+          "ref": "const,const",
+          "rows": 1,
+          "filtered": 100,
+          "Extra": "Using index"
+        },
+        {
+          "id": 1,
+          "select_type": "SIMPLE",
+          "table": "p",
+          "partitions": null,
+          "type": "eq_ref",
+          "possible_keys": "PRIMARY,uq_customer_address_default,idx_customer_address_purpose,fk_customer_address_purposes_owner",
+          "key": "PRIMARY",
+          "key_len": "130",
+          "ref": "erp_customer_def034001_20261015.a.id,const",
+          "rows": 1,
+          "filtered": 5,
+          "Extra": "Using where; FirstMatch(c)"
+        }
+      ],
+      "actualList": [
+        [
+          {
+            "id": 1,
+            "select_type": "PRIMARY",
+            "table": "customers",
+            "partitions": null,
+            "type": "ALL",
+            "possible_keys": "uq_customers_code_key,uq_customers_legal_name_key,idx_customers_status_updated,idx_customers_legal_name,idx_customers_trading_name",
+            "key": null,
+            "key_len": null,
+            "ref": null,
+            "rows": 49468,
+            "filtered": 60.11,
+            "Extra": "Using where"
+          },
+          {
+            "id": 4,
+            "select_type": "DEPENDENT SUBQUERY",
+            "table": "ca",
+            "partitions": null,
+            "type": "ref",
+            "possible_keys": "idx_customer_addresses_owner_status",
+            "key": "idx_customer_addresses_owner_status",
+            "key_len": "90",
+            "ref": "erp_customer_def034001_20261015.customers.id,const",
+            "rows": 1,
+            "filtered": 37.57,
+            "Extra": "Using where"
+          },
+          {
+            "id": 3,
+            "select_type": "DEPENDENT SUBQUERY",
+            "table": "cc",
+            "partitions": null,
+            "type": "ref",
+            "possible_keys": "idx_customer_contacts_owner_status,idx_customer_contacts_owner_name,idx_customer_contacts_email",
+            "key": "idx_customer_contacts_owner_status",
+            "key_len": "90",
+            "ref": "erp_customer_def034001_20261015.customers.id,const",
+            "rows": 1,
+            "filtered": 37.57,
+            "Extra": "Using where"
+          },
+          {
+            "id": 2,
+            "select_type": "DEPENDENT SUBQUERY",
+            "table": "ci",
+            "partitions": null,
+            "type": "ref",
+            "possible_keys": "idx_customer_identifiers_owner",
+            "key": "idx_customer_identifiers_owner",
+            "key_len": "90",
+            "ref": "erp_customer_def034001_20261015.customers.id,const",
+            "rows": 1,
+            "filtered": 100,
+            "Extra": "Using where"
+          }
+        ],
+        [
+          {
+            "id": 1,
+            "select_type": "PRIMARY",
+            "table": "customers",
+            "partitions": null,
+            "type": "ALL",
+            "possible_keys": "uq_customers_code_key,uq_customers_legal_name_key,idx_customers_status_updated,idx_customers_legal_name,idx_customers_trading_name",
+            "key": null,
+            "key_len": null,
+            "ref": null,
+            "rows": 49468,
+            "filtered": 60.11,
+            "Extra": "Using where; Using filesort"
+          },
+          {
+            "id": 4,
+            "select_type": "DEPENDENT SUBQUERY",
+            "table": "ca",
+            "partitions": null,
+            "type": "ref",
+            "possible_keys": "idx_customer_addresses_owner_status",
+            "key": "idx_customer_addresses_owner_status",
+            "key_len": "90",
+            "ref": "erp_customer_def034001_20261015.customers.id,const",
+            "rows": 1,
+            "filtered": 37.57,
+            "Extra": "Using where"
+          },
+          {
+            "id": 3,
+            "select_type": "DEPENDENT SUBQUERY",
+            "table": "cc",
+            "partitions": null,
+            "type": "ref",
+            "possible_keys": "idx_customer_contacts_owner_status,idx_customer_contacts_owner_name,idx_customer_contacts_email",
+            "key": "idx_customer_contacts_owner_status",
+            "key_len": "90",
+            "ref": "erp_customer_def034001_20261015.customers.id,const",
+            "rows": 1,
+            "filtered": 37.57,
+            "Extra": "Using where"
+          },
+          {
+            "id": 2,
+            "select_type": "DEPENDENT SUBQUERY",
+            "table": "ci",
+            "partitions": null,
+            "type": "ref",
+            "possible_keys": "idx_customer_identifiers_owner",
+            "key": "idx_customer_identifiers_owner",
+            "key_len": "90",
+            "ref": "erp_customer_def034001_20261015.customers.id,const",
+            "rows": 1,
+            "filtered": 100,
+            "Extra": "Using where"
+          }
+        ],
+        [
+          {
+            "id": 1,
+            "select_type": "PRIMARY",
+            "table": "customers",
+            "partitions": null,
+            "type": "range",
+            "possible_keys": "PRIMARY",
+            "key": "PRIMARY",
+            "key_len": "8",
+            "ref": null,
+            "rows": 20,
+            "filtered": 100,
+            "Extra": "Using where"
+          },
+          {
+            "id": 2,
+            "select_type": "DEPENDENT SUBQUERY",
+            "table": "cp",
+            "partitions": null,
+            "type": "eq_ref",
+            "possible_keys": "PRIMARY",
+            "key": "PRIMARY",
+            "key_len": "8",
+            "ref": "erp_customer_def034001_20261015.customers.id",
+            "rows": 1,
+            "filtered": 100,
+            "Extra": null
+          }
+        ]
+      ]
+    },
+    "gateFailures": [
+      "actual list full-scanned customers",
+      "actual list full-scanned customers"
+    ]
+  },
+  "after": null,
+  "materializationDiagnostic": {
+    "scope": "TEMPORARY synthetic diagnostic tables only; not Customer implementation or acceptance",
+    "rows": [
+      {
+        "table": "<derived2>",
+        "type": "ALL",
+        "rows": 109
+      },
+      {
+        "table": "diagnostic_parent",
+        "type": "eq_ref",
+        "key": "PRIMARY",
+        "rows": 1
+      },
+      {
+        "table": "diagnostic_root",
+        "type": "range",
+        "key": "search_prefix",
+        "rows": 99
+      },
+      {
+        "table": "diagnostic_child",
+        "type": "range",
+        "key": "search_prefix",
+        "rows": 10
+      },
+      {
+        "table": "<union2,3>",
+        "type": "ALL",
+        "rows": null,
+        "select_type": "UNION RESULT",
+        "Extra": "Using temporary"
+      }
+    ],
+    "cleanup": "All TEMPORARY tables removed on diagnostic connection close; Customer rows0 after baseline test"
+  },
+  "decision": "HD-011 PENDING; no product SQL/index/test assertion was changed",
+  "downstreamAcceptance": "BLOCKED"
+}

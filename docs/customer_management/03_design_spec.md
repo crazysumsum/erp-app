@@ -21,6 +21,11 @@ remains failed historical measurement; this revision supplies no fresh PASS.
 
 ## 1. Authority and Alignment Model
 
+HD-011 proposal (2026-10-15), **PENDING Sam approval**: remedy DEF-034001 with
+indexed, de-duplicated search candidates as specified in DES-019 below. This draft
+does not authorize implementation/migration or close the defect. HD-010's capacity
+targets and every public/search/authorization/data semantic remain unchanged.
+
 The complete aligned detailed design is the preserved legacy design body below. This specification is the normative harness traceability entry: it assigns stable `DES-*` identifiers and records the corrections incorporated into that full design.
 
 Precedence is:
@@ -981,7 +986,7 @@ M14雖在table依賴末段建立，部署server前全部migrations先完成，�
 | `POST /api/v1/customers/:id/delete` | `deleteCustomerHandler.js` | jwt-device-password／view＋mgmt | 只限never-active、unreferenced Draft；reason＋version。 |
 | `GET /api/v1/customers/:id/completeness` | `getCustomerCompletenessHandler.js` | jwt／customer.view | blocking issues與non-blocking warnings。 |
 
-List query：`q,page,pageSize,sortBy,sortDirection,status[],currencyCode,paymentTermId,accountManagerUserId,categoryId,industryId,territoryId,creditStatus,missing[],createdFrom,createdTo,updatedFrom,updatedTo,includeArchived`。Search query用EXISTS查child，避免join倍增count；exact code排第一，再legal exact，最後是indexed normalized token-prefix。標準路徑不使用`%term%` leading-wildcard scan。`missing`只接受shippingDefault、billingDefault、contactDefault、paymentTerm、credit、bank、attachment。
+List query：`q,page,pageSize,sortBy,sortDirection,status[],currencyCode,paymentTermId,accountManagerUserId,categoryId,industryId,territoryId,creditStatus,missing[],createdFrom,createdTo,updatedFrom,updatedTo,includeArchived`。HD-011 proposed search query uses the distinct candidate-ID union specified in DES-019; completeness/non-search child filters retain EXISTS. No multi-child count join is allowed；exact code排第一，再legal exact，最後是indexed normalized token-prefix。標準路徑不使用`%term%` leading-wildcard scan。`missing`只接受shippingDefault、billingDefault、contactDefault、paymentTerm、credit、bank、attachment。
 
 Create request可包含root及各一組optional初始address/contact/identifier/credit；整個aggregate同transaction。`activate=true`且setting ON要求`approverUserId`，OFF時帶approver回`APPROVER_NOT_REQUIRED`。
 
@@ -1945,6 +1950,36 @@ Boundary validation, transaction/CAS rules, idempotent outcome reconciliation, f
 ### Decision
 
 Query plans use two-step page IDs/summary projections, `EXISTS` for completeness/child filters, allowlisted sort, stable tie-breaker and no multi-child count join.
+
+HD-011 proposed correction, effective only after Sam approves the revised DESIGN
+and PLAN: for non-empty `q`, form a distinct Customer-ID candidate set with UNION
+branches for the existing independently indexed root and active-child prefix
+predicates. Join this one-row-per-Customer set to Customers before the unchanged
+outer filters, COUNT and page-ID query. Preserve all current fields, normalization,
+literal LIKE escaping, exact-code then exact-legal ranking, allowlisted direction,
+`id DESC` tie-breaker, archived behavior, reader/transaction and authorization.
+No unbounded application-side candidate fetch, cache, token table or new API.
+`EXISTS` remains for completeness and non-search child filters; do not join several
+child tables into the count. Empty `q` retains the current non-search path.
+
+One forward, Customer-owned migration adds the ten missing search-leading indexes:
+Customers `(general_phone,id)` and `(general_email,id)`; identifiers
+`(status,identifier_value_key,customer_id)`; contacts `(status,name,customer_id)`,
+`(status,phone,customer_id)`, `(status,mobile,customer_id)`; addresses
+`(status,label,customer_id)`, `(status,address_line1,customer_id)`,
+`(status,city,customer_id)`, `(status,postal_code,customer_id)`. Reuse existing
+code/legal/trading and contact-email indexes. Allocate the migration number only
+after fresh main/shared-sequence inspection. Applied migrations are immutable.
+Use the existing bounded metadata-lock/INPLACE/LOCK=NONE convention; unsupported
+online DDL or incompatible existing indexes fails closed, without destructive
+fallback. Measure index size/build and write-cost limitations; no production DDL
+is authorized. Reverting the query retains additive indexes; dropping them needs
+a separately reviewed operational action.
+
+Actual plans must retain every physical branch and reject any physical-table ALL
+or absent access type. TC-028 defines the sole explicit materialized-result-row
+classification; it cannot hide a physical scan or replace actual queries with
+index probes. A virtual UNION/derived result scan is not a base-table full scan.
 
 ### Rationale
 
