@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 172,
+  "revision": 173,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "DESIGN_AND_PLAN",
   "status": "BLOCKED",
@@ -11,7 +11,7 @@
   "baseline": {
     "design": "25833d2d2e09a2ce0c763c374d0a0a9b64d3d92e9ee79e8f60cd3ea1e0003d51",
     "plan": "7b1eb4674d231be20c8882b47a1fe5db0550b2c3429adc859e0be27630a51a34",
-    "code_commit": "09487bc65bff3a2360dffcaa246d5630269f11d2",
+    "code_commit": "a12943ea88c3445f9e7f2a8e8a36f6a78174927e",
     "source_fingerprint": "685238fea731fd9b586449a3a587c6236faaee451a916377817a7b3fdf9a4aa4",
     "worktree": "/private/tmp/erp-customer-def034001-indexed-search",
     "default_commit": "09487bc65bff3a2360dffcaa246d5630269f11d2",
@@ -3843,16 +3843,16 @@
       "kind": "GIT_PUSH",
       "target": "origin codex/customer-def034001-indexed-search; proposal/docs only",
       "idempotency_key": "customer-def034001-hd011-proposal-push-v1",
-      "status": "PLANNED",
-      "source_ref": "Actual Sam authorizes Customer remediation publication; harness design-defect route requires a proposed amendment and human gate. Publish only canonical draft, diagnosis, state/review, no product/assertion/migration."
+      "status": "CONFIRMED",
+      "source_ref": "Observed successful gitpush of a12943ea88c3445f9e7f2a8e8a36f6a78174927e; scoped docs/diagnostics only; no product/test/migration change."
     },
     {
       "id": "EXT-PR-072",
       "kind": "PR_CREATE",
       "target": "github:crazysumsum/erp-app:main<-codex/customer-def034001-indexed-search DRAFT HD-011 proposal",
       "idempotency_key": "customer-def034001-hd011-draft-pr-v1",
-      "status": "PLANNED",
-      "source_ref": "Scoped draft planning PR under actual user remediation/PR instruction and harness design route. No merge before Sam answers HD011; no implementation or defect closure claimed."
+      "status": "CONFIRMED",
+      "source_ref": "Observed https://github.com/crazysumsum/erp-app/pull/232 OPEN,isDrafttrue,head a12943ea88c3445f9e7f2a8e8a36f6a78174927e,basemain; attached tocurrenttask. Sam HD011 remains OPEN; no merge/implementation approved. Design-stageCI not waited/bypassed."
     }
   ],
   "evidence_files": [
@@ -3887,5 +3887,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "HD011DECISION_REQUIRED on exact DESIGN25833d2d...003d51/PLAN7b1eb467...a51a34. REV048proposalAPPROVED, original2physicalALLFAIL retained, runtimeremoved. Publish docs-onlyDRAFTPR and request Sam approval; do not waitCIasdesigngate or merge unapprovedproposal. After actualbaselineapproval andplanningresolution, refreshmain/sequence/runtimeto implementandretest; preserve complete downstream blocking."
+  "next_safe_action": "Await real Sam answer to HD011/exact proposed DESIGN25833d2d...003d51 and PLAN7b1eb467...a51a34 in draftPR232. Do NOT recreatePR, replayPR230, mergeorimplement pendingproposal, or closeDEF034001. Afterapproval reconcile latestmain/sequence, planningresolution, recreateownruntime andimplement minimumsemantics-preserving indexedcandidate query/forwardmigration/physical-planclassifier with regressions and fresh50k/20/5000ms measurements,actualcodereview/currentcandidateCI/authorizedmergecleanup. Full downstream acceptance remains BLOCKED; keep this openPR branch/worktree."
 }
