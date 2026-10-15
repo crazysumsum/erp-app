@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 353,
+  "revision": 354,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,7 +11,7 @@
   "baseline": {
     "design": "29a0615a61808b3747cd8feb522d051ba5a312da6fb0fccf36e7cf9746286775",
     "plan": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
-    "code_commit": "272e4376b5324774f0d972e291f052c7e2960a71",
+    "code_commit": "b8b27ec125d89d31a4e4a4b8614d409f8aa1d701",
     "source_fingerprint": "d289275eff4031d24398cd6eedde8584b52e7150fc4da0caeafcf2414763a5b5",
     "worktree": "/Users/sam/Documents/workspace/erp-supplier-hd107c",
     "default_commit": "985411544dc278ee451ec542fd9a14ce50133bab",
@@ -4224,6 +4224,17 @@
       "source_ref": "The previous record's M-1 fix changed client/src/framework/ui/DataTable.vue; validate_module_boundary then returned BLOCKED (OUTSIDE_MODULE), so DataTable.vue and its test were restored to main and the page reset moved into SuppliersPage.vue (remount on page 1, keeping sort and page size). After that: validate_module_boundary LOCAL_CHECKS_PASS; client vitest 109 files / 893 tests pass; eslint clean; build ok; Supplier Playwright suite 47/47. Negative control: the old reload() without a page reset fails exactly the two M-1 tests (one vitest, one browser). Local, not CI.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-15T15:29:34+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Correction: the two previous HD-107 client records claimed eslint was clean; it was not",
+      "code_commit": "b8b27ec125d89d31a4e4a4b8614d409f8aa1d701",
+      "spec_baseline": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
+      "source_fingerprint": "d289275eff4031d24398cd6eedde8584b52e7150fc4da0caeafcf2414763a5b5",
+      "status": "PASS",
+      "source_ref": "PR #239 CI Lint (run 38699144924, job 116302821750) failed with 27 no-undef errors in the evidence scripts under docs/supplier_management/evidence/20261015-hd107-client/, which `eslint .` covers. The local check had read only the last line of the lint output, which was blank, and never its exit code. Fixed with `/* global */` declarations and by removing an unused import from the evidence copy of the server script. `npx eslint .` now exits 0, checked by exit code. Client code was unchanged.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-15T15:38:18+08:00"
     }
   ],
   "pending_decisions": [
