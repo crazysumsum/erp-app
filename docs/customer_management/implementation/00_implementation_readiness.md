@@ -2,12 +2,32 @@
 
 ## Status
 
-Current HD-011 / DEF-034001 remediation is **BLOCKED on Sam's revised DESIGN/PLAN
-decision**. Fresh unchanged reproduction still has both physical Customer ALL
-scans. Independent proposal review REV-048 approved the narrow candidate-UNION/
-ten-index/physical-plan-classification correction, not implementation authority.
-No product source, executable assertion or migration is changed. See the
-[current diagnosis and exact proposed baselines](def034001-remediation-report.md).
+Current UI-remediation boundary: **BLOCKED on HD-012**, not on another approval of
+already-merged PR#233. Sam authorized DEF-034002/DEF-027001 repair, but current
+DESIGN9.1 prohibits modifying shared DataTable. Reproduced stale-success/error
+responses require the narrow shared-root exception proposed in DES-016 and the
+manifest; exact revised DESIGNa2b29b79...2356 / PLAN3b15603d...35e0 need Sam approval.
+Separate implementation test-only commit3b890ef4 retains RED search regressions
+and the targeted PASS import-focus synchronization correction; no shared/product
+fix or full-browser PASS is claimed. [Decision/evidence](ui-defects-remediation-report.md).
+TASK-016/027 scoped remediation is IN_PROGRESS; full downstream acceptance remains
+BLOCKED. Existing historical results below are not approval of HD-012.
+
+HD-011 / PR#232's exact DESIGN/PLAN are explicitly approved by Sam, and planning
+merged at d69b267d. The authorized candidate-UNION/ten-index fix and final developer
+retests are complete: both physical Customer ALL scans removed; two unchanged
+50k/20-worker/30s runs pass17/17, listp957.891083/6.992709ms. Scoped implementation
+publication remains CONDITIONAL on final immutable review/current CI/fresh main;
+DEF-034001 is CLOSED for scoped developer remediation, not a full capacity or
+release acceptance. Integrated sourcec6ca3645/fpbccc7235...3449 freshly repeated
+all Customer checks plus two17/17 capacity runs(listp957.586708/7.463459ms);
+actual independent reviewer approved. Exact final PR-head CI/review still gate
+normal merge. See the
+[current evidence and limitations](def034001-remediation-report.md).
+
+Full Customer acceptance additionally retains unresolved frontend gaps
+DEF-034002 (typed-search stale display) and DEF-027001 (clean-main reproducible
+mocked import UI failure). No frontend/CI setting or acceptance bar is changed.
 
 `BLOCKED` for complete PHASE-004 integration: TASK-029 is merged; TASK-030/031/032
 await real downstream consumers. TASK-033's Customer-local telemetry/security/runbook

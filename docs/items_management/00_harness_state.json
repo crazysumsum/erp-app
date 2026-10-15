@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "item-management",
-  "revision": 182,
+  "revision": 190,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,11 +11,11 @@
   "baseline": {
     "design": "3daef7460516dd7e24d5db5575a1b580dbc81f078d31a1c54867192bc1904a66",
     "plan": "be063ddf5ad07c545f6e4b83f3d973ac01aaddc1f59b055101d5bb1c68c676ea",
-    "code_commit": "b27cf3ce75fc1be74297d55a3c0c3115364b6b38",
-    "source_fingerprint": "287d0112061345616462e2b33da1faf0573233c5ba369697f39ab45d2dd87e50",
+    "code_commit": "a05762ce54576b3d5b776e8b9b7234f6bd1666c0",
+    "source_fingerprint": "dc2d3386c7b459a5d2c795645b6822e5124113d1a142fe9319a5fdb860415ac7",
     "worktree": "LOCAL_ONLY_NON_LIVE: actual workspace retained privately; reconcile before resuming execution",
     "default_commit": "3faf93e57892577c03d7bc6d7ba62e23963941e2",
-    "mode_entry_commit": "b27cf3ce75fc1be74297d55a3c0c3115364b6b38"
+    "mode_entry_commit": "a05762ce54576b3d5b776e8b9b7234f6bd1666c0"
   },
   "runtime": {
     "instance_id": "LOCAL_ONLY_NON_LIVE",
@@ -1529,6 +1529,126 @@
         "formal-UAT-separate"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-074",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Current user message: 批准 HD-024 的 P2 限定範圍，請推送 candidate a05762ce 並建立 Draft PR，明示尚未整合最新 main；只發布已審查的 Item 內容及去識別化摘要，不匯出原始證據。DEF-107／權威 GR 維持 BLOCKED，不修改 gate 或繞過 CI／分支保護，不合併或清理，正式 UAT 另行處理。 Exact prior proposal/private action journals retained; not retrospective execution credit.",
+      "recorded_at": "2026-10-15T06:33:48.523824Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "be063ddf5ad07c545f6e4b83f3d973ac01aaddc1f59b055101d5bb1c68c676ea",
+      "code_commit": "a05762ce54576b3d5b776e8b9b7234f6bd1666c0",
+      "scope": [
+        "item-management",
+        "PHASE-010",
+        "TASK-048",
+        "HD-024",
+        "historical-P2-Draft-only",
+        "no-product-test-core-assertion-change",
+        "no-raw-export",
+        "DEF107-GR-BLOCKED",
+        "formal-UAT-separate"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-075",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Current user message: 批准 HD-025，將 Draft-only P2 目標改綁10ca62ad，推送 candidate a05762ce 並建立 Draft PR，明示尚未整合最新 main；其餘 HD-024 限制不變，不匯出原始證據、不合併或清理，DEF-107／權威 GR 維持 BLOCKED，正式 UAT 另行處理。 Exact prior proposal/private action journals retained; not retrospective execution credit.",
+      "recorded_at": "2026-10-15T06:33:48.533527Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "be063ddf5ad07c545f6e4b83f3d973ac01aaddc1f59b055101d5bb1c68c676ea",
+      "code_commit": "a05762ce54576b3d5b776e8b9b7234f6bd1666c0",
+      "scope": [
+        "item-management",
+        "PHASE-010",
+        "TASK-048",
+        "HD-025",
+        "historical-P2-Draft-only",
+        "no-product-test-core-assertion-change",
+        "no-raw-export",
+        "DEF107-GR-BLOCKED",
+        "formal-UAT-separate"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-076",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Current user message explicitly approves HD026 rebinding remaining Draft PR creation target to6b3faa1f with candidatea05762ce unchanged, no re-push, disclosure of unintegrated latestmain, all HD024 limits, no raw evidence export/merge/cleanup, DEF107/GRBLOCKED and formalUAT separate. Exact prior proposal/private action journals retained; not retrospective execution credit.",
+      "recorded_at": "2026-10-15T06:33:48.542405Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "be063ddf5ad07c545f6e4b83f3d973ac01aaddc1f59b055101d5bb1c68c676ea",
+      "code_commit": "a05762ce54576b3d5b776e8b9b7234f6bd1666c0",
+      "scope": [
+        "item-management",
+        "PHASE-010",
+        "TASK-048",
+        "HD-026",
+        "historical-P2-Draft-only",
+        "no-product-test-core-assertion-change",
+        "no-raw-export",
+        "DEF107-GR-BLOCKED",
+        "formal-UAT-separate"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-077",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Current user explicitly approves existing locally authenticated gh CLI after identity/permission/remote checks, exacta057 Draft PR only, no repush/protection bypass/merge/cleanup/raw export; disclose unintegrated latestmain, DEF107GRBLOCKED/formalUAT separate. Exact prior proposal/private action journals retained; not retrospective execution credit.",
+      "recorded_at": "2026-10-15T06:33:48.550780Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "be063ddf5ad07c545f6e4b83f3d973ac01aaddc1f59b055101d5bb1c68c676ea",
+      "code_commit": "a05762ce54576b3d5b776e8b9b7234f6bd1666c0",
+      "scope": [
+        "item-management",
+        "PHASE-010",
+        "TASK-048",
+        "HD-027",
+        "historical-P2-Draft-only",
+        "no-product-test-core-assertion-change",
+        "no-raw-export",
+        "DEF107-GR-BLOCKED",
+        "formal-UAT-separate"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-078",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam APPROVED HD028 limited local execution in current user message: latest-main integration after0082 compatibility review, new exclusiveMySQL/original4 complete checks/independentreview/conditionalLOCALcandidate; no product/test/assertion changes, push/PRupdate/mainmerge/cleanup/rawexport, DEF107GRBLOCKED/formalUATseparate. Exact prior proposal/private action journals retained; not retrospective execution credit.",
+      "recorded_at": "2026-10-15T06:33:48.559240Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "be063ddf5ad07c545f6e4b83f3d973ac01aaddc1f59b055101d5bb1c68c676ea",
+      "code_commit": "a05762ce54576b3d5b776e8b9b7234f6bd1666c0",
+      "scope": [
+        "item-management",
+        "PHASE-010",
+        "TASK-048",
+        "HD-028",
+        "P1-local-only",
+        "no-product-test-core-assertion-change",
+        "no-raw-export",
+        "DEF107-GR-BLOCKED",
+        "formal-UAT-separate"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -2499,6 +2619,126 @@
       "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=3d258e48dbbc146eea06cfe25b9820a2b2d7c0243bc075d247168e2b24ef1395",
       "reviewed_baseline": "be063ddf5ad07c545f6e4b83f3d973ac01aaddc1f59b055101d5bb1c68c676ea",
       "source_ref": "Actual final P1 source/evidence/cleanup/status review APPROVED,0blockingfindings. Independently verified exact PLANbe/source287/headb27/MERGE_HEADd69/index8412/catalogceb/threeblobs/native54f7/integrationb29; all4artifacthashes+contracts PASS,538server866client unique0skip/all14TC019/all16requiredIDs. SoleSETUPONLY separate, finalonly10nonce34completed201/oldTTL+11schedulerrowsequality/schema91tables/identity/allothercountsunchanged; supporting10final+2setupnegatives. Ownedshutdownobserved2026-10-15T03:40:21.509204Z, socketPIDabsent/700data. State180/reporttruthful; source-summarySHA736d430bee93d7f20a306803e915e48b839c732a80643a5b80bc867697e04747. Approves progression to private portableproposal/exact22path-objectreview, NOT staging/candidate untilactualprivacyreview+CAS+normalindexchecks. No formalTC/UAT/CI/export/publicationcredit.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-085",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
+      "reviewed_baseline": "be063ddf5ad07c545f6e4b83f3d973ac01aaddc1f59b055101d5bb1c68c676ea",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "source_ref": "Actual independent final privacy review APPROVED0P0P1P2, with explicit followup covering contents not merely allowlist: verified21current Item file SHAs versus d69 plus reviewed state182 as22nd; raw181/candidate/control/map/CAS semantics/40historicalindices/IDs/statuses/DEF107HIGHOPEN/DEF108developeronlypreserved. NONLIVE truthful, no privatecoords/nativeproof. Approved CAS exactstate182, explicitnormalindex22stage, oneLOCALmergecandidateparentsb27,d69 afterguards. Committedguard scans every newlyreachableblob againstd69 including inheritedb27; private273f/f8 notancestors; fixedpolicyprohibitionliteral and logicalreviewerprovenance accepted. Bounded localcoordinator35f66648 reviewed/private600archivesjournals/explicit22add/exacthash/guardsbeforeactualreceipt. No product/test/core/externalchange/publication/P2P3/CI/formalacceptance authority.",
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-086",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
+      "status": "CHANGES_REQUESTED",
+      "open_high": 1,
+      "source_ref": "Actual proposal review required schema0082 impact/contract/caller read-only compatibility review and conditional migration authority before any P1 runtime work; main presence alone is not approval. Preserved, not hidden.",
+      "reviewed_baseline": "be063ddf5ad07c545f6e4b83f3d973ac01aaddc1f59b055101d5bb1c68c676ea",
+      "open_critical": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-087",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "source_ref": "Actual followup independently inspected0082/CustomerService/Item boundaries; confirmed corrected conditional HD028 consistent with procedure10. No Item/GR/CI/profile/package drift found; unknown/changed schema or compatibility ambiguity stops. Proposal review only, not execution/push/PR update/merge/human acceptance.",
+      "reviewed_baseline": "be063ddf5ad07c545f6e4b83f3d973ac01aaddc1f59b055101d5bb1c68c676ea",
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-088",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
+      "reviewed_baseline": "be063ddf5ad07c545f6e4b83f3d973ac01aaddc1f59b055101d5bb1c68c676ea",
+      "source_ref": "Actual HD028 executionpreflight: technical0082/Customer compatibility approved, but persistedproposal stillPENDING contradicted actual human approval. Require authorityreconciliation before integration/DDL/tests; no other P0P1technicalblocker.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-089",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
+      "reviewed_baseline": "be063ddf5ad07c545f6e4b83f3d973ac01aaddc1f59b055101d5bb1c68c676ea",
+      "source_ref": "Actual followup independently verifies proposalANSWERED/actualSamHD028, originalproposalarchive80bb607d preserved, currenta057clean and conditional0082compatibility. Persistedauthoritycontradictionclosed. Normalconflict-freeLOCAL6b→a057no-commit integration mayproceed afterstateCAS. No mainwrite/producttestchanges/newcommitbefore4PASS+reviewsprivacy/pushPRcleanup/UAT authority.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-090",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=3d258e48dbbc146eea06cfe25b9820a2b2d7c0243bc075d247168e2b24ef1395",
+      "reviewed_baseline": "be063ddf5ad07c545f6e4b83f3d973ac01aaddc1f59b055101d5bb1c68c676ea",
+      "source_ref": "Actual source/integration/catalog preexecution APPROVED no blockingfindings: HEADa057/MERGE_HEADoriginmain6b/mergebased69/indexbc1f/source dc2d/PLANbe/DES3da; staged29 exacttargetbytes/no conflicts/manualedits. ThreeItempins c0c317/1e55e5/c494ee unchanged; migration0082SHA00fecc96 Customer-only10indexes compatible, newruntime postmigration schema mustbe actualsnapshot notoldhash. Integration03541e86mode600/catalog5d35/builder8c6286 all144selectedhashes/538server866client14TC019 exact149d. State184/APR078/HD028/currentreviews/DEF107BLOCKED correct, no producttestedits/no currentPASS. Runtimehelperreview stillrequired.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-091",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
+      "reviewed_baseline": "be063ddf5ad07c545f6e4b83f3d973ac01aaddc1f59b055101d5bb1c68c676ea",
+      "source_ref": "Actual privatehelperspreexec APPROVED0P0P1P2: native7024cc17261a314f99f3c318d0f62fd4f4afc8d446731a24cc02f7c7d8f539ea/runtimec18915c63fce6d57e5a1d8112e08fcc8e82a5b260c8693bde7850613c8582812/selfcheckb3bc846a5f4491c4e565ea7acb1d9538802a766905e5d04646509120f88c8945/captureca224cc16c7d65f172dbeee5bb09b28f868bfedef5c2098bb8cac5587dfd2ff8 bind exactPLAN/APR078/head/source/6b/indexbc1f/integration0354/catalog5d35/0082pin. Newemptyowned700parent/data/600reservationcredentials/socketonly26.7/nonce/no reuse. Original4contracts/completeleafzeroSkip/requiredIDs/pendingintegrationfences/strictTTLoldrows-schemaidentityPID-counts-schedulerrows unchanged, singlefinalrecord; supporting10final+2setupnegatives. P1localruntime+fourchecks only, not generic/formal/publication authority.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-092",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
+      "reviewed_baseline": "be063ddf5ad07c545f6e4b83f3d973ac01aaddc1f59b055101d5bb1c68c676ea",
+      "source_ref": "Actual portablehelper9a866cd3a0a398af9e78b107117fa1d5bfa16d0f6911ceea1b3778b76f0c8c58 precheck APPROVED0P0/P1/P2. Exactpendingheada057/6b/indexbc1f/PLANbe/DES/sourcedc2d/STOPPEDguards/current600location/owned700retention/nonoverwrite600candidatecontrolmapbackup/wholefields/NONLIVE/statusIDs40 preserved. Helpernotexecuted; onlyafterobservedshutdown/finalrawstate-reportsettled. Actualcandidatebytes/all22review stillrequired beforestaging/localcommit.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-093",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
+      "reviewed_baseline": "be063ddf5ad07c545f6e4b83f3d973ac01aaddc1f59b055101d5bb1c68c676ea",
+      "source_ref": "Actual operationaltriage APPROVED: parallelhelper gitwrite-tree transientindexlock failedlintpreflight before run_dir/probes/execute_process, npm lintNOT_RUN not producttestfailure. No lockdelete/helper/test/contractchange. Other3runssamefrozenintegration; after finalserverterminalPASS/lockabsent/sourcePLANheadtargetindexexact, one sequential same7024 lint-final firstactualcommand permitted withinHD028/no newhumandirection. Incidentretained, no preflightPASSFAILcredit orhiddenretry.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-094",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=3d258e48dbbc146eea06cfe25b9820a2b2d7c0243bc075d247168e2b24ef1395",
+      "reviewed_baseline": "be063ddf5ad07c545f6e4b83f3d973ac01aaddc1f59b055101d5bb1c68c676ea",
+      "source_ref": "Actual HD028 finalindependent APPROVED no blockingfindings. Verified exactheada057/MERGE_HEAD6b/indexbc1f/29targetexactpaths/source dc2d/PLANbe/catalog5d35/native7024/threeItempins/144selectedhashes. Fourrecordartifacthashes verified lintbuildexit0/client866server538/0fail0skipNOTRUN/exactleafmultisets/14TC019/all16requiredIDs. SoleSETUPONLYseparate+11zeroedleases; support10final+2setupnegative/no fifthcredit. FinalDBonly10nonce34completed201/boundedTTL/allpriorrows/schemaidentityPID-schedulerrows/allothercounts unchanged. Incident1d0ccf retainedpreflightNOTRUN/noapplintfirsttime; REV093sequentialunchangedlintdisposition observed. Actualshutdown2026-10-15T06:43:52.981813Z/logf416c9/socketPIDabsent/700data600configs retained. State188/reportaccurate/DEF107GRBLOCKED/DEF108developeronlyclosed/formalTCUATnewCInotrun. Approves proceedprivateportableproposal+all22exactbytes/objectprivacy/normalindexaudit ONLY; no staging/commituntilthosepass, no pushPRupdate/mainmergecleanuprawexport/acceptance. Evidence reviewed, testsnotrerun.",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -3537,6 +3777,81 @@
       "status": "ANSWERED",
       "answer_ref": "Actual Sam approved HD023 P1 limitedIMPLEMENT: integrate latestmain/original4fullregression/independentreview/conditionalLOCALcandidate; no product/test/assertionchanges, DEF107GRBLOCKED/coreunchanged/CIprotectionnotbypassed/no pushPRmergeexport/formalUATseparate. HD023 previously presented LOCALmain→Itembranch integration, not PR/branch→main merge. This actualanswer binds exactPLANbe063ddf/procedurec1efcd77/inputb27 and allHD023 boundedruntime/native/localproof/privacy effects. APR-073.",
       "question": "P1 execution decision under exact approvedPLANbe063ddf/procedurec1efcd77, inputb27cf3ce75fc1be74297d55a3c0c3115364b6b38/sourceffe3985/DES3da, not automaticP0: authorize limitedIMPLEMENT/latest-main refresh+conflict-free LOCALmain→Itembranch merge only (not PR/branch→main merge), private recovery+precommit sanitization/local planningcheckpoint commits, carry3exactexecutableblobs without product/testedits,22Itempathceiling/statusbookkeeping only. New exclusive socket-only MySQL26.7.0/0700parentdatadir/0600credentials/private rootbootstrap+existingmigrations/testtransientDDL/schema-scopedsyntheticfixtures/sharedCustomerSupplier syntheticrings, no sharedDB/oldruntime/production/newmigration. Reconcile/pin/review actualintegratedHEAD/source/PLAN/blob/catalog/helper before directoriginal4nativeDEVELOPER contracts lint/client-build/item-server-technical/item-client-technical unchanged/0fail0skipNOTRUN/fullcatalog/allrequiredIDs; old538/866/14TC019 is historicalinventory notquota/PASS. AtmostoneidenticalserverSETUP_ONLY ifneeded/strict11zeroedleases+TTL; finalonly+10nonce/+34completed201idem withboundedTTL/oldrows/schema/tableidentityPID/allothercounts unchanged; supportingnegativeobserverproof/not5thsuite. Localredactedboundedproof/provenance/all40historicalindices/failures, ownedshutdown+retainprivate data. Independent source/evidence/privacy+all22content/newreachableobjectreview, raworiginal/hashmapprivate, honestNONLIVEportable state, conditionalnormal-index LOCALCpub+receipt onlyafterallPASS. Stoponconflict/ItemGRcontract/source/config/schema/CI drift/unrelatedfailure/secret/ownership/mandatorytoolrefusal; no corefilter/fakegenericrun/thresholdassertionchanges/othermodulefix/oldPASSreuse. No push/PR/PRmerge/mainwrite/CItrigger/export/deploy/release/UAT or unmergedWTcleanup. Recommendation approveP1only; alternative/defaultholdb27+planningdocs withnoexecution pendinganswer. Cost freshDB/full4runs/review, benefit current-source verification without external effects; no guaranteegateswillallowlatermerge.",
+      "affected_ids": [
+        "PHASE-010",
+        "TASK-048",
+        "TC-019",
+        "UAT-018",
+        "DEF-107",
+        "DEF-108"
+      ]
+    },
+    {
+      "id": "HD-024",
+      "impact": "MAJOR",
+      "status": "ANSWERED",
+      "answer_ref": "Current user message: 批准 HD-024 的 P2 限定範圍，請推送 candidate a05762ce 並建立 Draft PR，明示尚未整合最新 main；只發布已審查的 Item 內容及去識別化摘要，不匯出原始證據。DEF-107／權威 GR 維持 BLOCKED，不修改 gate 或繞過 CI／分支保護，不合併或清理，正式 UAT 另行處理。 APR-074",
+      "question": "Historical P2 publication/target binding/alternate authenticated CLI scope; inspect retained actual journal for exact target and attempted/completed effects.",
+      "affected_ids": [
+        "PHASE-010",
+        "TASK-048",
+        "TC-019",
+        "UAT-018",
+        "DEF-107",
+        "DEF-108"
+      ]
+    },
+    {
+      "id": "HD-025",
+      "impact": "MAJOR",
+      "status": "ANSWERED",
+      "answer_ref": "Current user message: 批准 HD-025，將 Draft-only P2 目標改綁10ca62ad，推送 candidate a05762ce 並建立 Draft PR，明示尚未整合最新 main；其餘 HD-024 限制不變，不匯出原始證據、不合併或清理，DEF-107／權威 GR 維持 BLOCKED，正式 UAT 另行處理。 APR-075",
+      "question": "Historical P2 publication/target binding/alternate authenticated CLI scope; inspect retained actual journal for exact target and attempted/completed effects.",
+      "affected_ids": [
+        "PHASE-010",
+        "TASK-048",
+        "TC-019",
+        "UAT-018",
+        "DEF-107",
+        "DEF-108"
+      ]
+    },
+    {
+      "id": "HD-026",
+      "impact": "MAJOR",
+      "status": "ANSWERED",
+      "answer_ref": "Current user message explicitly approves HD026 rebinding remaining Draft PR creation target to6b3faa1f with candidatea05762ce unchanged, no re-push, disclosure of unintegrated latestmain, all HD024 limits, no raw evidence export/merge/cleanup, DEF107/GRBLOCKED and formalUAT separate. APR-076",
+      "question": "Historical P2 publication/target binding/alternate authenticated CLI scope; inspect retained actual journal for exact target and attempted/completed effects.",
+      "affected_ids": [
+        "PHASE-010",
+        "TASK-048",
+        "TC-019",
+        "UAT-018",
+        "DEF-107",
+        "DEF-108"
+      ]
+    },
+    {
+      "id": "HD-027",
+      "impact": "MAJOR",
+      "status": "ANSWERED",
+      "answer_ref": "Current user explicitly approves existing locally authenticated gh CLI after identity/permission/remote checks, exacta057 Draft PR only, no repush/protection bypass/merge/cleanup/raw export; disclose unintegrated latestmain, DEF107GRBLOCKED/formalUAT separate. APR-077",
+      "question": "Historical P2 publication/target binding/alternate authenticated CLI scope; inspect retained actual journal for exact target and attempted/completed effects.",
+      "affected_ids": [
+        "PHASE-010",
+        "TASK-048",
+        "TC-019",
+        "UAT-018",
+        "DEF-107",
+        "DEF-108"
+      ]
+    },
+    {
+      "id": "HD-028",
+      "impact": "MAJOR",
+      "status": "ANSWERED",
+      "answer_ref": "Actual Sam APPROVED HD028 limited local execution in current user message: latest-main integration after0082 compatibility review, new exclusiveMySQL/original4 complete checks/independentreview/conditionalLOCALcandidate; no product/test/assertion changes, push/PRupdate/mainmerge/cleanup/rawexport, DEF107GRBLOCKED/formalUATseparate. APR-078",
+      "question": "Approved local scope only, full original four checks/new exclusive MySQL/review/conditional local candidate after compatibility; no push/PRupdate/mainmerge/cleanup/export.",
       "affected_ids": [
         "PHASE-010",
         "TASK-048",
@@ -4739,6 +5054,70 @@
       "idempotency_key": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=6458a23321b394283e2989724571b6bdd73d521d6cdbeaeda0c23259d6d7ab4f",
       "status": "CONFIRMED",
       "source_ref": "STOPPED actualownedmysqladminexit0/logshutdown2026-10-15T03:40:21.509204Z, socketPIDabsent, retainedparent/datadir0700/config600. No activelease/reuse/sharedprocess/data deletion; exactresourcefacts/rawproofLOCAL_ONLY. mysql.logSHA45342a9ffd3922cac8aae3d2cc198de9da827f65d1caf8da0b12ebea89d6776c"
+    },
+    {
+      "id": "ITEM-T048-P2-PUSH-OBS-183",
+      "kind": "OTHER",
+      "target": "RemoteItempublicationbranch exacta057",
+      "idempotency_key": "item-t048-p2-push-obs-183",
+      "status": "CONFIRMED",
+      "source_ref": "Actual priorHD025pushCONFIRMED, no repush authorized. Private journal hash3bf450b3c5d8f4f8baba203c6a14292e95ac8e7425c9d22861b2a9cf8d74bf59"
+    },
+    {
+      "id": "ITEM-T048-P2-DRAFT-OBS-183",
+      "kind": "OTHER",
+      "target": "Draft PR236 exactheada057/base6b",
+      "idempotency_key": "item-t048-p2-draft-obs-183",
+      "status": "CONFIRMED",
+      "source_ref": "ActualHD027authorizedghCLIidentity/callCONFIRMED+attached; earlierHD025targetdrift andHD026GitHub403 preserved, not retried or erased. Privatejournalhash3b9cbaaf9f530fb6a6b23f8cfb302f3759b913ca08e99e4dbd40ddfd013530a8"
+    },
+    {
+      "id": "ITEM-T048-P1C-INTEGRATE-184",
+      "kind": "OTHER",
+      "target": "Only LOCAL main6b3faa1fd70c10105cb0cf53f733d12d2202d78f into ItemHEADa057",
+      "idempotency_key": "item048-p1c-integration-6b-20261015",
+      "status": "CONFIRMED",
+      "source_ref": "Actualconflict-free no-commit6b→a057 exit0; HEADa057/MERGE_HEAD6b/indexbc1f/exact29mainadoptedbytes/no producttestedits verified. Integratedsourcedc2d/PLANbe/3pins frozen. IntegrationrecordSHA03541e863625ade20dec325fcee366541237d09c1decf86b143efa87065c3bf1; no newcommit/mainwrite/PRupdate."
+    },
+    {
+      "id": "MODE-CHANGE-183",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-183",
+      "status": "CONFIRMED",
+      "source_ref": "Actual Sam HD028 approves new local integration execution baseline a057; no external publication authority"
+    },
+    {
+      "id": "ITEM-T048-P1C-DB-185",
+      "kind": "OTHER",
+      "target": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=8fdf3277f56e2498b422dae22f4e44c64b44d7ba0eeefde73fec3519c74b75a0",
+      "idempotency_key": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=814e0d37ea4accd83f8e757162af121429755c6f5c0594438e588d5d7eef4128",
+      "status": "CONFIRMED",
+      "source_ref": "Actualreviewedruntimec189 exit0; observedownedidentity/PID/privatepermissions/existingmigrationscomplete, no source/schema-scriptchange or sharedDB. Credentialsnotprinted. All4checksNOT_RUNyet; runtimeinstance nowobserved BEFORE captureloading toavoidoldstale-labelissue."
+    },
+    {
+      "id": "ITEM-T048-P1C-CHECKS-187",
+      "kind": "OTHER",
+      "target": "Original4 complete native DEVELOPER checks on pendinglocalmainintegration sourcedc2dd/PLANbe/heada057/MERGE_HEAD6b/indexbc1f",
+      "idempotency_key": "item048-p1c-final4-20261015",
+      "status": "CONFIRMED",
+      "source_ref": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=dad791924beb08f2ffb0a0ed76796079ff715b170d8400ef04710c1b00e50672"
+    },
+    {
+      "id": "ITEM-T048-P1C-STOP-188",
+      "kind": "OTHER",
+      "target": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=f1c282c0880e6bdc02f54605a25dce97feb8f1cb11fc607d04f3fbd8cc071085",
+      "idempotency_key": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=dc920a7a6e062f1aa951264aa855e1721d4b67eff5f9c87ef052e506c4f22985",
+      "status": "CONFIRMED",
+      "source_ref": "STOPPED actualownedmysqladminexit0/logshutdown2026-10-15T06:43:52.981813Z, socketPIDabsent, retainedparent/datadir0700/config600. No activelease/reuse/sharedprocess/data deletion; exactresourcefacts/rawproofLOCAL_ONLY. mysql.logSHAf416c92b613b86c3798719d9db91823c974a66d8a5acf0bdf8734bd74a0e6f2a"
+    },
+    {
+      "id": "ITEM-T048-P1C-LINT-PREFLIGHT",
+      "kind": "OTHER",
+      "target": "Coordinator git write-tree preflight only; original lint command NOT_RUN",
+      "idempotency_key": "item048-p1c-lint-preflight-incident-20261015",
+      "status": "FAILED",
+      "source_ref": "Actual parallelindexlock contention exit128 before application command; lockselfreleased, no deletion/mutation. REV093 triage dispositionsatisfied before single sequential actuallintPASS. Originaltrace/privateincident preserved SHA1d0ccf5104c5db7ec74e51e4a3c2939be11ae73aaa36ce96e378de25ed448d0b. No producttestfailure or waived lint; all originalfour actualfinalresults separatelyverified."
     }
   ],
   "evidence_files": [
@@ -4939,5 +5318,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "HD023 P1 local preparation only. This is a sanitized NON_LIVE portable precommit checkpoint, not a live execution or clean-checkout PASS. Actual final privacy review/pending-integration facts and later candidate receipt/workspace/runtime/native proof/original-state mapping retained LOCAL_ONLY. Four-check summaries and genuine source review are baseline-bound; exact Cpub is observed only after local commit. Reconcile observations before further work. No P2/P3/push/PR/mainmerge/CI/export/formal acceptance authority; DEF107 HIGH/OPEN/GR/global BLOCKED, TASK043048 IN_PROGRESS, formal UAT separate."
+  "next_safe_action": "HD028 P1 local preparation only. This is a sanitized NON_LIVE portable precommit checkpoint, not a live execution or clean-checkout PASS. Actual final privacy review/pending-integration facts and later candidate receipt/workspace/runtime/native proof/original-state mapping retained LOCAL_ONLY. Four-check summaries and genuine source review are baseline-bound; exact Cpub is observed only after local commit. Reconcile observations before further work. No P2/P3/push/PR/mainmerge/CI/export/formal acceptance authority; DEF107 HIGH/OPEN/GR/global BLOCKED, TASK043048 IN_PROGRESS, formal UAT separate."
 }

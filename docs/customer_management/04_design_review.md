@@ -1,5 +1,24 @@
 # Customer Management Design Review
 
+## Current UI shared-root exception — HD-012 (proposal only)
+
+Sam authorized DEF-034002/DEF-027001 repair/verification/PRmerge. Current DESIGN9.1
+and module scope prohibit modifying shared DataTable, whose unconditional async
+completion reproduces the two stale-response failures. The narrow proposal changes
+only generic latest-request-wins handling without a public component/API contract,
+schema, security, dependency or other module product change. It requires exact
+DESIGNa2b29b795515f6ee408201d3ac2650a1d42d74728c1ca4c9f2fe68cbfc292356 /
+PLAN3b15603d9608dcb388f90806f643a5d221514b17ef302f2e2d2f2851699735e0 and shared
+file approval; HD-012 remains OPEN. Actual independent review is recorded only
+after its verdict. [Evidence/options](implementation/ui-defects-remediation-report.md).
+No shared product code changed, no final/full Customer acceptance PASS or release.
+
+Actual independent reviewer Jason (`/root/customer_task011_review`), method
+SEPARATE_AGENT, APPROVED the exact final hashes above after state revision184
+reconciled the baseline/HD-012 question and own-document contract pin. Earlier draft
+review and the Required metadata correction remain REV-053/054; final proposal
+approval REV-055 does not authenticate Sam or authorize shared implementation.
+
 ## Current capacity amendment — HD-009 (2026-10-15)
 
 Sam's confirmed requirement is 50,000 Customers, 20 concurrent workers and
@@ -152,3 +171,23 @@ APPROVAL-DESIGN-017 / PLAN-017 / SCOPE-043 retain the actual user instruction.
 Canonical proposal bytes stay unchanged to preserve the approved hashes; their
 PENDING labels describe the proposal before this decision. This approval activates
 only the proposed remedy, not a capacity PASS or full downstream acceptance.
+
+## HD-011 implementation review (2026-10-15)
+
+Actual separate reviewer Jason (`/root/customer_task011_review`) first requested
+an exact expected-key assertion and no-index-hint proof, beyond range alone.
+The author added both and demonstrated the wrong-key mutation failing. Jason then
+APPROVED the current code/test slice, with no remaining Required finding; final
+immutable-candidate review/CI remains a publication gate. Both final capacity runs
+on source af7cbcb3222405b2e826254bbfd6bae5aab2c13883068aedbae077bde28456e9
+pass17/17 with no skips and listp957.891083/6.992709ms. The clean-main import UI
+failure is outside this backend-only diff, remains OPEN, and does not become PASS.
+Full downstream, browser acceptance and release remain blocked/not accepted.
+
+Final integrated sourcec6ca3645/fpbccc7235...3449 was freshly remeasured twice with
+17/17 passes each(listp957.586708/7.463459ms) and all Customer regressions rerun.
+Jason's actual separate APPROVE permits only scoped developer DEF-034001 closure;
+no remaining Required finding after correcting source-commit evidence provenance.
+This later docs-only checkpoint still requires exact final-head CI/immutable review
+and fresh-main verification before normal PR#233 merge. Inspect its closure comment
+for actual publication/merge/cleanup observations, not an inferred future success.

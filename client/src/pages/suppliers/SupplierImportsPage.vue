@@ -30,7 +30,7 @@ const CANCELLABLE = new Set(["uploaded", "ready", "ready_with_errors", "queued"]
 const CONFIRMABLE = new Set(["ready", "ready_with_errors"]);
 const STATUS_LABEL = Object.freeze({
   uploaded: "已上傳，等候預檢", validating: "預檢中", ready: "待確認", ready_with_errors: "待確認（有錯誤列）",
-  queued: "已排入佇列", running: "執行中", completed: "已完成", completed_with_errors: "已完成（有失敗列）",
+  queued: "已排入佇列", running: "執行中", completed: "已完成", completed_with_errors: "已完成（有錯誤列）",
   failed: "失敗", cancelled: "已取消"
 });
 const STATUS_COLOR = Object.freeze({

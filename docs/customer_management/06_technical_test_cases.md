@@ -1021,6 +1021,15 @@ Running app; manager actor
 
 Create/search/edit/address/contact/credit
 
+HD-012 proposed regression extension, PENDING approval: type successive search
+values, clear, and verify rows/empty state plus URL match the latest request.
+Hold an older successful/error response, complete the newer empty result first,
+then release the older response; rows/count/page/error/retry must remain current.
+Component unit checks also cover an old request finishing while the newest remains
+loading, a latest failure after older success, and existing client-side/sort/paging
+behavior. Verify mutation of request-identity guards is detected. Use deterministic
+promise gates/observable completion, no sleeps or skipped failures.
+
 ### Expected result
 
 Observable state/audit and URL refresh correct
@@ -1570,6 +1579,13 @@ Valid/error/partial/failed/expired jobs
 ### Steps
 
 Template-upload-precheck-confirm-poll-result
+
+HD-012 proposed automation clarification: after upload, wait for the upload dialog
+to leave the DOM before focusing the job-detail button; assert focus and use Enter.
+Keep visible invalid-row errors, mobile layout, password confirmation, applied/
+skipped counts and downloadable result assertions. Run the full Customer suite to
+cover the original order-sensitive failure; do not replace keyboard with a forced
+click or use arbitrary delay/retries to hide it.
 
 ### Expected result
 
