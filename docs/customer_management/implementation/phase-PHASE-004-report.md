@@ -46,6 +46,20 @@ handoff/blocker inventory, but full handoff/acceptance cannot complete yet.
 
 ### Local execution results — 2026-10-15
 
+Additional existing-case execution charter, defined before re-execution on the
+extended immutable executable baseline6faac5fd / sourcefp5b3e5b55:
+
+| Case | Preconditions / steps | Expected / limits | Initial status |
+| --- | --- | --- | --- |
+| Existing TC-028 / TASK-034 local capacity | New own MySQL13369/runtime, fresh migrated empty capacity schema; run unchanged `customerManagement.performance.test.js` with50k Customers,5k addresses/contacts,20workers,30s admission window | p95<=5000ms, no physical ALL,14 actual positive range branches, correct results/cleanup; no full downstream load/acceptance | NOT RUN on this executable baseline |
+| Existing TC-064 / local import capacity | Separate fresh migrated import schema on same own instance; unchanged10k-row test, parallel real Customer HTTP sample | <10min, API p95<2s, no row-lock waits, bounded pool/heap; import actor/scanner assumptions are developer fixtures, not security acceptance | NOT RUN on this executable baseline |
+| Existing LOCAL-035 / TC-085/086/087 | Fresh migrated named DR source plus empty restore schema; unchanged safety-guarded real mysqldump/mysql, DB/key/file/audit comparison and wrong/missing-key denials | Actual counts/hashes and local elapsed/loss window reconcile; no real scanner/provider/production DR or Ops/Security sign-off | NOT RUN on this executable baseline |
+
+All use only fresh task-owned `/private/tmp/erp-customer-local-runtime.IcjivL`,
+loopback13369 (observed unused), new named schemas and ephemeral credentials;
+shared3306/production and existing13378 fixtures are not reset. No executable
+script, schema, benchmark threshold or CI configuration changes are needed.
+
 Latest-main reconciliation superseding the initial392b9f9d snapshot:
 `985411544dc278ee451ec542fd9a14ce50133bab` (Supplier PR235) was fetched and
 fast-forward integrated without conflicts or Customer diff changes. Its module
@@ -71,11 +85,50 @@ integrated source fingerprint:
 This source passed73 files/294 executed nodes,0FAIL/0SKIP in20.545s, including
 all four local cases (five nodes including parent); final lint also passes.
 Earlier293-node results remain scoped to the earlier default-only source.
-Actual separate reviewer `/root/customer_task011_review` approved this extended
-core and current scoped documentation (REV-062), after earlier privilege-oracle
-and documentation findings were corrected. This is agent review, not Sam's
-business/Security/Operations acceptance. Final PR-head mandatory CI and fresh-main
-merge observation are still required; earlier75ad044f CI/review is not reused.
+
+### Current executable baseline capacity / import / restore recheck
+
+On unchanged executable6faac5fd / sourcefp5b3e5b55, the chartered existing scripts
+were actually executed. [Sanitized complete records](phase4-local-recheck-results.jsonl)
+(SHA256 `8252fe8dd8dd9aa32df3ed884fb50fc4bbc194ca34912a93ddfec023ac8d8ed6`)
+preserve every actual search-plan branch, metrics, restore hashes and initial
+environment failures. No raw dump, file contents, account data or key rings exported.
+
+| Existing local check | Measured result | Scope / limitations |
+| --- | --- | --- |
+| TC-028 capacity |17PASS/0FAIL/0SKIP;50k Customers,5k addresses/contacts,20workers,30.007s load;269,328 correct operations,0 errors. p95 list9.428042ms, exact3.148333ms, address3.240042ms, contact3.233583ms, all<=5000ms. Physical ALL0; all14 positive branches use expected range keys. | Actual10-connection pool,128MiB buffer pool, Node26.6.0/MySQL26.7.0, local hardware15 logical CPUs/24GiB; post-load plan probes are not latency samples. Not downstream/production load or final TASK-034 acceptance. |
+| TC-064 import |1PASS/0FAIL/0SKIP;10k rows, precheck501.446ms + execution28,614.983ms =29,116.429ms;0failed/skipped rows.262 concurrent HTTP samples,0errors,p9514.146917ms; heap growth86,397,840bytes; row-lock wait delta0,maxwait0,connection growth1. | Existing direct import authorization fixture; real parallel Customer HTTP/API sampling and DB writes. No scheduler/distributed-worker/full downstream acceptance. |
+| LOCAL-035 / TC-085/086/087 |3PASS/0FAIL/0SKIP including2safety guards; actual logical dump/restore plus20Customer-table count/hash comparisons;2attachment objects+2import objects;1bank row decrypts;4audit rows reconcile;6wrong/missing-key denials. Local loss window174ms,recovery673.580042ms. | One synthetic Customer, not50k/production restore. Bank authorization and clean-scanner fixtures remain; no real downstream/provider/scanner, off-host disaster/failover, production RPO/RTO or Operations/Security sign-off. `productionRtoRpo=NOT_PROVEN`. |
+
+The first capacity/import attempt failed application startup because test bank key
+rings were absent: capacity15PASS/1FAIL, import0PASS/1FAIL,0SKIP, no load/throughput
+claimed. DR passed independently on that attempt. Supplied fresh matching Customer/
+Supplier test-only key rings and reran the unchanged two scripts; thresholds, source,
+CI and Supplier product code were not changed. These failures are retained as
+environment-setup failures, not recast as product failures or successful measurements.
+
+Capacity/import Customer fixture counts returned to0. DR source2 (including the
+intentional post-backup loss marker) and restore1 matched expectations before
+owner-scoped disposal. Only the four freshly created13369 schemas are cleanup
+targets; they were dropped, the verified service exited0, its listener/PID are
+absent, and only its owned datadir was removed (small private config/log retained).
+Own13378 remains separate for post-merge checks. Full downstream
+acceptance stays BLOCKED; these rechecks add current local evidence, not sign-off.
+
+Prior to these reruns, actual separate reviewer `/root/customer_task011_review`
+approved the extended default/decision core and then-current scoped documentation
+(REV-062), after earlier privilege-oracle/documentation findings were corrected.
+REV-064 separately approved the self-reference metadata correction. Neither
+approval covered these later capacity/import/restore records. REV-065 then
+independently approved the actual25-record evidence artifact and state199,
+verifying14/14 expected range probes,0physical ALL, retained startup failures,
+matching metrics/cleanup and no key/credential export. This is agent review, not Sam's business/Security/Operations
+acceptance. Final PR-head mandatory CI and fresh-main merge observation remain
+required; earlier75ad044f CI/review is not reused.
+Publication note: this is a pre-merge checkpoint. Actual final-head CI, review,
+merge and owned-resource cleanup receipts belong to the
+[PR238 timeline](https://github.com/crazysumsum/erp-app/pull/238); inspect that
+trusted source on resume before replaying any pending local external-action entry.
 
 Environment: Node26.6.0; fresh MySQL26.7.0 loopback13378, own schema
 `erp_customer_p4_test`, unchanged migrations through0082. A random temporary SQL
