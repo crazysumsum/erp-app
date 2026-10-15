@@ -41,7 +41,7 @@ PARTIAL means existing tests cover part of the Expected Result. The gap column s
 
 Generated from the test titles. Each carrier's assertions, not only its title, cover the case's **main** Expected Result: the stated outcome, and any real-database or concurrency condition its Steps require. A case can have several carriers; the harness takes the worst result. Smaller clauses a carrier does not assert are listed under Notes and are accepted as partial. Review REV-092 removed 26 tags that did not meet this bar.
 
-Coverage: supplier-bank-security 15/15, supplier-server-integration 64/89, supplier-security 2/10.
+Coverage: supplier-bank-security 15/15, supplier-server-integration 64/89, supplier-security 10/10.
 
 | TC | Carriers (file:line — title) | Notes |
 | --- | --- | --- |
@@ -124,8 +124,16 @@ Coverage: supplier-bank-security 15/15, supplier-server-integration 64/89, suppl
 | TC-102 | `integration/supplierExport.integration.test.js:131` — TASK-047 (HD-067 2A): the export is the list's rows in the list's order, under the import template v1 header<br>`integration/supplierExport.integration.test.js:188` — TASK-047 (BR-028, SEC-012): no Bank data and no live formula in the file; awkward text survives the round trip<br>`integration/supplierExport.integration.test.js:225` — TASK-047 (HD-067 1A): password, permission and the 10,000-row cap |  |
 | TC-104 | `supplierAuditLogService.test.js:35` — audit writer rejects unknown actions, unknown detail keys and Bank-sensitive fields<br>`supplierBankService.test.js:152` — create encrypts, indexes and audits, and no plaintext reaches the audit entry |  |
 | TC-105 | `integration/supplierAudit.integration.test.js:13` — Supplier audit follows its caller transaction and committed rows remain queryable<br>`supplierBankService.test.js:380` — a reveal whose audit fails returns no account at all<br>`supplierExportService.test.js:55` — the audit names the actor, the filters and the count, and a failed audit means no file |  |
+| TC-111 | `integration/supplierSecurityAcceptance.integration.test.js:325` — every registered Supplier route refuses an anonymous or forged caller, writes nothing, and answers alike for existing and missing IDs | client page guards are carried by the client route-guard tests, not here |
+| TC-112 | `integration/supplierSecurityAcceptance.integration.test.js:343` — the route-by-role matrix grants exactly the specified permission combinations | allowed combinations are checked at the route policy with missing IDs, so they stop at 400/404; the service's fresh DB check is carried by TC-115 |
+| TC-113 | `integration/supplierSecurityAcceptance.integration.test.js:369` — a Purchasing caller gets only the minimal provider projection and no Supplier admin, reveal or Settings access | Purchasing has no permission yet (HD-094 1A), so U-PO holds an unrelated one; there is no Finance Bank provider (design §8.4 defers it) |
 | TC-114 | `integration/supplierBank.integration.test.js:645` — no Bank route reaches another Supplier's row, and the refusal changes nothing<br>`integration/supplierImport.integration.test.js:784` — TASK-044 (REV-069 L-1): another user's cancel answers 404 at once, without waiting on a job someone holds |  |
 | TC-115 | `integration/supplierImport.integration.test.js:738` — TASK-044: a manager whose permission was withdrawn after the token was issued is refused at once<br>`supplierBankService.test.js:334` — every write re-checks the permission, so a revoked token cannot keep writing |  |
+| TC-116 | `integration/supplierSecurityAcceptance.integration.test.js:390` — authType is fixed in metadata as specified, and a weaker credential or a payload cannot lower it |  |
+| TC-117 | `integration/supplierSecurityAcceptance.integration.test.js:430` — every API class refuses malformed, mistyped, out-of-range or extra input with a stable 400 and writes nothing; IDs are positive integers and booleans are strict | a wrong content type is read as an empty body and answered 400, not 415 |
+| TC-118 | `integration/supplierSecurityAcceptance.integration.test.js:510` — only the reveal response carries the plaintext, under no-store; other projections carry no internal keys; export and reveal leave a low-sensitivity audit | Cache-Control is no-store without private (accepted deviation, 2026-09-21) |
+| TC-119 | `integration/supplierSecurityAcceptance.integration.test.js:555` — script and HTML are stored and returned as plain text, control characters are refused, and prototype keys neither pollute nor pass | CSV import of markup is not exercised; client rendering is covered by list.test |
+| TC-120 | `integration/supplierSecurityAcceptance.integration.test.js:598` — each error class answers with its stable HTTP status and code, and never SQL, constraint names, secrets or another Supplier's data | per-type child 404 codes (HD-110 A); Currency and Payment Term codes as REV-064 I-2; the 403 code is the framework's |
 
 ### Not tagged: tests to write in step 2b
 
@@ -156,14 +164,6 @@ Coverage: supplier-bank-security 15/15, supplier-server-integration 64/89, suppl
 | TC-108 | AUD-006 | no test enumerates routes or attempts an audit write (REV-092 M-4) |
 | TC-109 | AUD-007 | audit kept after target/actor deletion not asserted |
 | TC-110 | AUD-008 | time formats and requestId join not asserted |
-| TC-111 | AUTH-001 | no test calls Supplier routes without a token; the former carriers only use authenticated users (REV-092 H-1) |
-| TC-112 | AUTH-002 | no single route-by-role matrix |
-| TC-113 | AUTH-003 | the refusal of CRUD, reveal and Settings to an integration consumer is not asserted (REV-092 H-3) |
-| TC-116 | AUTH-006 | metadata for three handler families only; a lower credential and payload downgrade are never exercised (REV-092 M-9) |
-| TC-117 | AUTH-007 | 415, positive-integer IDs and strict booleans per API class |
-| TC-118 | AUTH-008 | no-store not asserted by the carriers; only Bank schemas scanned; bulk-event audit not asserted (REV-092 M-10) |
-| TC-119 | AUTH-009 | script rendering and prototype pollution |
-| TC-120 | AUTH-010 | two narrow error classes; the case needs each class over HTTP (REV-092 M-11) |
 
 ## supplier-server-integration (94)
 
