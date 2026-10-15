@@ -2,6 +2,27 @@
 
 ## Status
 
+### Latest-main contract drift — approval required before PR244 merge
+
+During PR244 verification, main advanced to `0fa41eef54fd01bb163f1ceaf57f46b5acada1a7`
+(including PR193/243). Integrated without conflicts at `4e725c92` before resuming
+merge checks. This brings an existing-main addition to CustomerLookupService:
+`getSalesPrecheckSnapshotsInTransaction()` (bounded100 unique Customer IDs) and an
+updated consumed Sales design. These are inherited changes, not authored by this
+Customer documentation PR. The validator now reports **CONTRACT_DRIFT**:
+Customer still pins Sales design `a1a468ff...a3577`; actual bytes hash
+`5f82a24962a4f8e853acba56a83dedb7ceec94513497895f29966024100cbfdc`.
+
+HD-014 is DECISION_REQUIRED: obtain Sam's authority for Customer-owned contract/
+design/plan reconciliation and review of this newly merged API boundary before
+refreshing pins/baselines. Do not merely replace the hash, claim the old baseline
+approves the extension, or modify Sales/Supplier code. PR244 must remain unmerged
+until this drift and subsequent exact-candidate validation/review/CI are resolved.
+The earlier0550fadc review/green checks cover only that pre-integration candidate;
+they are not current merged-baseline evidence. Timing waiver and full downstream
+BLOCKED remain unchanged. The f4d50bd5 assessment below is a historical snapshot,
+not the latest-main readiness result.
+
 **BLOCKED for whole-module/formal operations acceptance**, reconciled on main
 `f4d50bd5f6e751a99882a6ef5547d646d2e2c84e` (PR242). This current summary supersedes
 the historical approval/publication checkpoints below; it does not approve release.

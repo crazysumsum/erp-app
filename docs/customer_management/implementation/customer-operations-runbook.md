@@ -7,6 +7,14 @@ alert/restore drills remain required before release.
 
 ## Current formal operations evidence checklist
 
+**Latest integration blocker (HD-014):** main moved to `0fa41eef` during PR244's
+checks and was integrated at `4e725c92`. The consumed Sales design changed together
+with a bounded Customer batch-precheck API supplement. Approval-aware traceability
+now reports CONTRACT_DRIFT; Customer pin/baseline adoption needs its own reviewed,
+human-authorized reconciliation. Do not merge PR244 using0550fadc's earlier review/
+CI or silently refresh the contract hash. No API change or new baseline is approved
+here; the operating prerequisites below remain necessary but are not yet satisfied.
+
 Reconciled against main `f4d50bd5f6e751a99882a6ef5547d646d2e2c84e` (PR242).
 This is an evidence/handoff inventory under TASK-033/035/036, not a new policy or
 formal acceptance run. DESIGNfa4dbd1e / PLANa1d5e05a remain unchanged. HD-013 waives
@@ -15,7 +23,7 @@ TC-086/087 timing acceptance; those measurements are not prerequisites below.
 | Remaining condition / existing reference | Evidence still needed | Responsible role / prerequisite |
 | --- | --- | --- |
 | Real telemetry and alert drills / DES-023, TC-080 | Success/conflict/denial/integrity/stuck cases correlated in deployed logs/metrics; zero sensitive markers; low-cardinality labels; actual alert receipt and reset, including audit/settings/schema failures | Operations/Backend: existing approved target, receiver/routing and monitoring access. Local logger capture is not delivered alert evidence. |
-| Secure capability configuration / DES-014/015/024, SEC-010..014 | Approved key-ring/version retrieval and rotation/retention evidence; encrypted private General/Bank Sensitive/import storage, controlled access; real scanner clean/reject/unavailable fail-closed results | Operations/Security/Backend: configured non-production acceptance target and genuine secret-store/storage/ClamAV integration. Export IDs/counts/hashes, never keys or private contents. |
+| Secure capability configuration / DES-011/012/015/024, SEC-010..014 | Approved key-ring/version retrieval and rotation/retention evidence; encrypted private General/Bank Sensitive/import storage, controlled access; real scanner clean/reject/unavailable fail-closed results | Operations/Security/Backend: configured non-production acceptance target and genuine secret-store/storage/ClamAV integration. Export IDs/counts/hashes, never keys or private contents. |
 | Deployed DB role separation / DES-021/024, TC-081 | Working bank/approval/worker paths with actual runtime least privilege; runtime denied DDL/audit UPDATE/DELETE; separate controlled migration/emergency access with audit and existing-session revocation | Operations/DB/Security: actual role/grant inventory and authorized isolated test accounts. Fixture NULL-currency bank and local session-kill proof do not certify non-null Currency locking or deployed accounts. |
 | Recovery integrity / DES-024, TC-085, TASK-035 | Same/version-linked DB, key/config and private-object recovery set; controlled recovery access/encryption; representative restored Customer/approval/bank/files/import/audit samples; real provider reconciliation; reviewed recovery evidence | Operations/Security with Backend: genuine backup/key/storage configuration. PR240's six-member manifest/20-table hashes/fail-closed cases are local preparation, not off-host production proof. No RPO/RTO timing acceptance required. |
 | Compatible rollout/rollback / DES-025, TC-088 | Identified previous/new app artifacts and upgraded schema; mixed-window/compatible app rollback, disabled capability safety and no corrupt writes/unknown states; deployment smoke | Operations/Backend: approved acceptance deployment and compatible prior artifact. No production deployment or new rollback strategy is authorized by this checklist. |

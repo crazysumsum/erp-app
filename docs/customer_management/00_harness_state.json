@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 210,
+  "revision": 212,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "fa4dbd1ef42d14fab8321b3ced7be4093dbcabc8408c15dda852f9cd5777906b",
     "plan": "a1d5e05a8d2eff9a4d76435c701f8ebc054b5e7a1ba27b0cf366643cbf685d9b",
-    "code_commit": "f4d50bd5f6e751a99882a6ef5547d646d2e2c84e",
-    "source_fingerprint": "9bb750facdd83862da50991dd459b808022a115ba08bef701560c0ccfdea3d9b",
+    "code_commit": "4e725c92d1cc9036b2a7d12bf6804c8d2f333a04",
+    "source_fingerprint": "87e3e848740a55aba7bc30e552062c9887b4d37f5fdce53e30acf32c66918f76",
     "worktree": "/private/tmp/erp-customer-operations-readiness",
-    "default_commit": "f4d50bd5f6e751a99882a6ef5547d646d2e2c84e",
+    "default_commit": "0fa41eef54fd01bb163f1ceaf57f46b5acada1a7",
     "mode_entry_commit": "392b9f9db0f36f5a3bbabf2854bf3ee20a7bf227"
   },
   "runtime": {
@@ -2794,6 +2794,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-069",
+      "method": "SEPARATE_AGENT",
+      "author": "/root Customer operating readiness docs",
+      "reviewer": "/root/customer_task011_review (actual separate read-only agent)",
+      "reviewed_baseline": "a1d5e05a8d2eff9a4d76435c701f8ebc054b5e7a1ba27b0cf366643cbf685d9b",
+      "source_ref": "Actual exactclean0550fadc APPROVE docs3files vs f4d50bd5; PR244comment6189378744. Existing24hDESIGN13.5 separatedfromTC088; no formalapproval. Superseded for currentcandidate after main0fa41eef/4e725c92 integration and actualCONTRACT_DRIFT; no currentAPI/baseline adoption or mergeapproval inferred.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -3687,6 +3699,17 @@
       "subject": "TASK033 local TC080081 bank security and owned SQL session revocation",
       "status": "PASS",
       "source_ref": "implementation/phase4-operational-security-results.json;73files298PASS0FAIL0SKIP20.655652s;8operationalchildren+parentPASS; mutation detected and product restored diff0;lint/build/traceability PASS. Localdeveloperonly; non-nullCurrency/deployedpolicy/realalert/scanner/formalacceptance notcertified; HD013waiver unchanged."
+    },
+    {
+      "code_commit": "4e725c92d1cc9036b2a7d12bf6804c8d2f333a04",
+      "spec_baseline": "a1d5e05a8d2eff9a4d76435c701f8ebc054b5e7a1ba27b0cf366643cbf685d9b",
+      "source_fingerprint": "87e3e848740a55aba7bc30e552062c9887b4d37f5fdce53e30acf32c66918f76",
+      "actor": "/root Customer dependency-recheck",
+      "observed_at": "2026-10-15T10:10:32Z",
+      "kind": "MANUAL_TEST",
+      "subject": "Latest-main supporting Customer lookup/impact/registry unit checks only",
+      "status": "PASS",
+      "source_ref": "Existing3files20PASS0FAIL0SKIP70.494875ms; no realDB/formalacceptance or newAPI adoption. Approval-awaretraceability BLOCKED withCONTRACT_DRIFT on consumedSalesdesign; old26docschecks/lint/build are0550preintegration notcurrentfullgate."
     }
   ],
   "pending_decisions": [
@@ -3878,6 +3901,20 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Actual Sam current user: RPO/ RTO 不用做驗收了，我批準通過。 HD-013 records this exact narrow acceptance-policy exception, not agent-inferred operational achievement. Prior approved DESIGNa2b29b79/PLAN3b15603d unchanged outside this delta. No wholemodule/UAT/release/othercontrol/CI waiver. APPROVAL-DESIGN019/PLAN019/RISK005. Canonicalspecs/ledger/profile/matrix/runbook aligned; NOT_APPLICABLE means requiredexecutionwaived, not technicalnonapplicability/PASS. Risk accepted: actualconfirmedlossmayexceed15min andactualsafe recoverymayexceed4h; no formal bound established."
+    },
+    {
+      "id": "HD-014",
+      "impact": "MAJOR",
+      "question": "Main0fa41eef (PR193/243) adds CustomerLookupService.getSalesPrecheckSnapshotsInTransaction(max100uniqueIDs) and changes consumed Sales design: pinned a1a468ff6b91366f3e5328da5691ce61d3ae798a3265ed43196a4fe5a93a3577 vs actual5f82a24962a4f8e853acba56a83dedb7ceec94513497895f29966024100cbfdc; validator CONTRACT_DRIFT. Approve a Customer-owned DESIGN/PLAN/contract reconciliation proposal and independent review, preserving full downstreamBLOCKED/HD013waiver/no othermodule product writes, before new exactbaseline adoption approval and merge? Recommended explicitreconciliation; alternative retain oldpins and PR244BLOCKED pendingowner disposition. Do not automatically approve newAPI or repin just to clearvalidator.",
+      "affected_ids": [
+        "customer-management",
+        "DES-017",
+        "TASK-029",
+        "TC-070",
+        "consumed:sales-order-management/customer-consumer-contract"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
     }
   ],
   "external_actions": [
@@ -4934,16 +4971,16 @@
       "kind": "GIT_PUSH",
       "target": "origin codex/customer-operations-readiness",
       "idempotency_key": "customer-ops-readiness-EXT-PUSH-108",
-      "status": "PLANNED",
-      "source_ref": "APPROVAL-SCOPE049 actualSam continuing independentwork/PRmerge. Docs-only status/evidence inventory, no newformaltest or deployment. Observe realtarget before retry; exacthead normalCI/review required. HD013waiver/full downstreamBLOCKED unchanged."
+      "status": "CONFIRMED",
+      "source_ref": "APPROVAL-SCOPE049 actualSam continuing independentwork/PRmerge. Docs-only status/evidence inventory, no newformaltest or deployment. Observe realtarget before retry; exacthead normalCI/review required. HD013waiver/full downstreamBLOCKED unchanged. Actual0550fadc pushed; OPEN https://github.com/crazysumsum/erp-app/pull/244 attached; exactreview6189378744; CI38716443065 initialcandidateonly. Mainmoved0fa41eef integrated4e725c92; currentCONTRACT_DRIFT blocksmerge. No oldheadCI/review reuse."
     },
     {
       "id": "EXT-PR-109",
       "kind": "PR_CREATE",
       "target": "main <- codex/customer-operations-readiness docs-only current operating evidence/handoff",
       "idempotency_key": "customer-ops-readiness-EXT-PR-109",
-      "status": "PLANNED",
-      "source_ref": "APPROVAL-SCOPE049 actualSam continuing independentwork/PRmerge. Docs-only status/evidence inventory, no newformaltest or deployment. Observe realtarget before retry; exacthead normalCI/review required. HD013waiver/full downstreamBLOCKED unchanged."
+      "status": "CONFIRMED",
+      "source_ref": "APPROVAL-SCOPE049 actualSam continuing independentwork/PRmerge. Docs-only status/evidence inventory, no newformaltest or deployment. Observe realtarget before retry; exacthead normalCI/review required. HD013waiver/full downstreamBLOCKED unchanged. Actual0550fadc pushed; OPEN https://github.com/crazysumsum/erp-app/pull/244 attached; exactreview6189378744; CI38716443065 initialcandidateonly. Mainmoved0fa41eef integrated4e725c92; currentCONTRACT_DRIFT blocksmerge. No oldheadCI/review reuse."
     },
     {
       "id": "EXT-MERGE-110",
@@ -4951,7 +4988,15 @@
       "target": "Customer readiness documentation PR -> main after actualreview/currentCI/freshmain",
       "idempotency_key": "customer-ops-readiness-EXT-MERGE-110",
       "status": "PLANNED",
-      "source_ref": "APPROVAL-SCOPE049 actualSam continuing independentwork/PRmerge. Docs-only status/evidence inventory, no newformaltest or deployment. Observe realtarget before retry; exacthead normalCI/review required. HD013waiver/full downstreamBLOCKED unchanged."
+      "source_ref": "APPROVAL-SCOPE049 actualSam continuing independentwork/PRmerge. Docs-only status/evidence inventory, no newformaltest or deployment. Observe realtarget before retry; exacthead normalCI/review required. HD013waiver/full downstreamBLOCKED unchanged. Now BLOCKED by HD014/CONTRACT_DRIFT; do not merge until explicitCustomercontractreconciliation and exactcurrentbaseline approvals/validation/review/CI. Previouscandidate0550evidence not current."
+    },
+    {
+      "id": "EXT-PUSH-112",
+      "kind": "GIT_PUSH",
+      "target": "origin codex/customer-operations-readiness currentmainintegrated docs-only HD014blocker",
+      "idempotency_key": "customer-readiness-contract-drift-push112",
+      "status": "PLANNED",
+      "source_ref": "CurrentSam authorizedscopedPRdocs; publish actualblocker/reconcilecurrentmain only, no adoption or canonicalpin/sourcechange. PR244mustremainunmerged untilHD014; actualCItriggers notapproval."
     }
   ],
   "evidence_files": [
@@ -5027,5 +5072,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Validate/review/normalCI/PRmerge current3-file Customer readiness documentation only; correct stale closeddefect/timing/runtimecache statements and provide actual external evidence prerequisites. No source/test/schema/CI/spec/profile/ledger change or new technical run. Remaining formalOps needs supplied acceptance target/artifacts/config/receiver/scanner/roles and actualOpsSecurityreview; complete downstreamBLOCKED, HD013timingwaived. Do not invent policy/signoffs or rerun localtests to pretend external readiness."
+  "next_safe_action": "STOP affected contract adoption/merge pending Sam HD014 scope decision. PR244currentmainintegrated reportsactualCONTRACT_DRIFT, newCustomerbatchprecheck and changedSalescontract; retainoldapprovedpins/DESIGNfa/PLANa1 no fakeapproval. Supporting20unitPASS notformalacceptance. After authorizedreconciliation, review newcontracts and prepare exactDESIGNPLANbaselineproposal for Sam approval; then actualcurrentCI/review/freshmain/normalmerge/cleanup. Full downstreamBLOCKED, HD013timingwaived, no production/infrastructure/othermodulecode changes. Keep openPRbranch/worktree and do not replay priorPR242effects."
 }
