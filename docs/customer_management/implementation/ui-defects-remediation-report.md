@@ -1,6 +1,97 @@
 # Customer UI defects / HD-012 bounded shared-table proposal
 
-## Current decision boundary
+## Current approved implementation — 2026-10-15
+
+Sam explicitly approved HD-012, PR #234's exact DESIGN/PLAN and the narrow
+`DataTable.vue` repair. APPROVAL-DESIGN-018 / PLAN-018 / SCOPE-045 bind DESIGN
+`a2b29b795515f6ee408201d3ac2650a1d42d74728c1ca4c9f2fe68cbfc292356` and PLAN
+`3b15603d9608dcb388f90806f643a5d221514b17ef302f2e2d2f2851699735e0`.
+PR #234 merged at `6b3faa1fd70c10105cb0cf53f733d12d2202d78f` on
+2026-10-15T05:56:53Z. The earlier OPEN/proposal statements below are history,
+not the current decision status; approved canonical specification bytes stay fixed.
+
+Product/test commit `f3413abe214c4df11efd245625b157b4eeccafbd`, source fingerprint
+`3d98d69b15499f08f0c22cfd7d6d545967eb95457118646f8d2b3f7be57c9083`:
+
+- A local request counter guards shared-table success, error and finally writes.
+  New requests retain their page/sort before awaiting, so failure/retry uses the
+  current search rather than a previously successful page. Public props, slots,
+  fetch/reload signatures and client-side mode are unchanged; no cancellation API.
+- Customer input uses QTable's existing filter request instead of an additional
+  immediate reload using stale child props. Only this Customer input is changed;
+  other modules' product code, schema, packages and CI remain untouched.
+- TC-065 waits for upload-dialog detachment and asserts detail-button focus before
+  Enter. All original import/password/count/error/download assertions remain.
+
+Final-source UI checks and supporting server verification (not formal Technical
+Acceptance or UAT):
+
+| Check | Observed result |
+|---|---|
+| Client coverage/unit suite | 872 PASS, 0 FAIL, 0 SKIP |
+| DataTable component cases | 21 PASS; 35/35 lines, 14/14 functions, 25/25 branches |
+| Customer real-browser suite | 20 PASS, 0 FAIL, 0 SKIP, 29.0s |
+| Existing Business Master browser callers | 15 PASS, 0 FAIL, 0 SKIP |
+| Existing Supplier browser callers | 42 PASS, 0 FAIL, 0 SKIP |
+| Client production build / repository lint | PASS / PASS |
+| Playwright CLI search/clear | PASS at 320/768/1024/1440; ten API requests 200; no console warning/error or failed request |
+| Full server isolated-MySQL supporting regression | Exit 0; Node summary 3083 PASS / 0 FAIL / 133 conditional SKIP; not a zero-skip module gate |
+| Customer functional server subset | 305 executed JUnit testcase nodes, no failures; three separately gated capacity/import-performance/restore cases NOT_RUN |
+
+Six new component cases were observed RED before their respective fixes (first
+five ordering cases, then one latest-error page/sort retry case). Inverting the
+catch guard produced six failures, then the correct guard was restored. The final
+full client run passed after the later retry correction. DataTable coverage is
+100% for the affected component, not the whole client: overall lines77.98%,
+branches70.24%, functions70.14%, statements75.69%; no thresholds were changed.
+
+Preserved intermediate evidence includes a new browser assertion corrected from
+internal `descending` to the actual existing API `sortDirection=asc`, and the
+subsequent genuine page-3 retry regression (19 PASS/1 FAIL before its fix). An
+attached debug run reproduced that retry failure; it is not a reliability PASS.
+The standalone CLI probe initially used an unavailable Node URL global, then used
+string parsing and passed in a fresh task browser. Neither diagnostic changed
+product contracts. Existing jsdom/Node warnings and the >500kB build chunk warning
+remain visible; no suppression or unrelated optimization was added.
+
+Browser tests run the actual Vue/Quasar application with synthetic API boundaries;
+they do not prove a live downstream end-to-end integration. Raw JUnit/traces stay
+private under `/private/tmp/erp-customer-ui-runtime.kirCP5/`; final files use
+`client-final-v3.xml`, `customer-final-v3.xml`, `business-final.xml`,
+`supplier-final.xml` and `server-full.xml`. Only this minimized summary is published.
+Actual separate reviewer Jason (`/root/customer_task011_review`) APPROVED exact
+product commitf3413abe, reran21/21 component cases and checked connected callers,
+latest-state/retry handling and import synchronization. REV-056 records this scoped
+developer review. Both defects are CLOSED for scoped developer remediation only;
+exact-final-head CI and normal merge remain integration gates, not assumed done.
+This is not a full Customer/business acceptance sign-off.
+TASK-030/031/032/034 and full downstream integration acceptance remain BLOCKED.
+
+Server verification used only owned MySQL26.7.0 at127.0.0.1:13376 with fresh schema
+`erp_customer_ui_test`, unchanged existing migrations, dedicated synthetic accounts
+and the repository's public CI-only bank keys. Shared3306 and real credentials were
+not accessed. Initial sandbox initialization crashed before creating files; the
+same empty owned directory initialized successfully with host execution permission.
+The initial explicit `node --test test` invocation discovered only a failing
+directory entry under Node26, not real tests; the corrected repository discovery
+form (`node --test --test-concurrency=1 --import ./test-support/testEnv.js` from
+server) executed the full suite in376.239s. Both failures are retained, not reported
+as product failures or PASS. JUnit contains3201 testcase nodes (0 failures,133
+skipped); Node's own final counters include3083 passes/133 skips. Inventory's
+separate opt-in integrations and Customer/import/item performance/restore gates
+were not enabled by DB_INTEGRATION_TESTS. No skipped case is counted PASS or waived.
+The generic whole-module zero-skip/required-case acceptance gate remains BLOCKED;
+this PR satisfies HD-012's explicitly scoped UI developer checks plus required CI,
+not those deferred acceptance gates. Full Customer capacity/DR acceptance is not
+rerun or unblocked by this change.
+
+The supporting server run began before the additional frontend retry correction
+and finished after product commitf3413abe. No server/database/config/dependency
+file changed during it (identical backend tree to main6b3faa1f); it is supporting
+backend-only evidence, not a generic frozen whole-source run. Final UI checks ran
+after the last product change; mandatory CI must verify the immutable full PR head.
+
+## Historical proposal decision boundary
 
 Sam explicitly authorized DEF-034002 and DEF-027001 repair, verification and normal
 PR/merge, preserving full downstream acceptance BLOCKED. Existing DESIGN section9.1
