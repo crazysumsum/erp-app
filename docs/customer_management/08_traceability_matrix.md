@@ -225,8 +225,8 @@ This is a structural planning view, not execution evidence or approval.
 | TC-083 | true | true | APPLICABLE | customer-server-technical | TECHNICAL | PROFILE_SUITE |
 | TC-084 | true | true | APPLICABLE | customer-server-technical | TECHNICAL | PROFILE_SUITE |
 | TC-085 | true | true | APPLICABLE | customer-server-technical | TECHNICAL | PROFILE_SUITE |
-| TC-086 | true | true | APPLICABLE | customer-server-technical | TECHNICAL | PROFILE_SUITE |
-| TC-087 | true | true | APPLICABLE | customer-server-technical | TECHNICAL | PROFILE_SUITE |
+| TC-086 | false | false | NOT_APPLICABLE | customer-server-technical | TECHNICAL | PROFILE_SUITE |
+| TC-087 | false | false | NOT_APPLICABLE | customer-server-technical | TECHNICAL | PROFILE_SUITE |
 | TC-088 | true | true | APPLICABLE | customer-server-technical | TECHNICAL | PROFILE_SUITE |
 | TC-089 | true | true | APPLICABLE | customer-server-technical | TECHNICAL | PROFILE_SUITE |
 | TC-090 | true | true | APPLICABLE | customer-server-technical | TECHNICAL | PROFILE_SUITE |
@@ -292,4 +292,5 @@ This is a structural planning view, not execution evidence or approval.
 
 ## N/A decisions
 
-None.
+- TC-086: HD-013: Sam explicitly waived formal RPO/RTO measurement acceptance and approved that subset. NOT_APPLICABLE to required execution only; objectives retained NOT_PROVEN, not technical PASS. Backup integrity/other operating controls/downstream acceptance remain required. (approval reference: APPROVAL-RISK-005; verify authority separately).
+- TC-087: HD-013: Sam explicitly waived formal RPO/RTO measurement acceptance and approved that subset. NOT_APPLICABLE to required execution only; objectives retained NOT_PROVEN, not technical PASS. Backup integrity/other operating controls/downstream acceptance remain required. (approval reference: APPROVAL-RISK-005; verify authority separately).

@@ -1,31 +1,31 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 203,
+  "revision": 206,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
   "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-004",
-  "current_task": "TASK-033",
+  "current_task": "TASK-035",
   "baseline": {
-    "design": "a2b29b795515f6ee408201d3ac2650a1d42d74728c1ca4c9f2fe68cbfc292356",
-    "plan": "3b15603d9608dcb388f90806f643a5d221514b17ef302f2e2d2f2851699735e0",
-    "code_commit": "80aee6561a3c51d44d3aec04b280f46cef40adbe",
-    "source_fingerprint": "816c5877f983364ba178b181e45782496974453d380f5e9cbdd74b219b1417e7",
-    "worktree": "/private/tmp/erp-customer-restore-readiness",
-    "default_commit": "80aee6561a3c51d44d3aec04b280f46cef40adbe",
+    "design": "fa4dbd1ef42d14fab8321b3ced7be4093dbcabc8408c15dda852f9cd5777906b",
+    "plan": "a1d5e05a8d2eff9a4d76435c701f8ebc054b5e7a1ba27b0cf366643cbf685d9b",
+    "code_commit": "dd63519ecf18210e31b0462f6d2f91234738a76f",
+    "source_fingerprint": "cb7a6bc42c98c80f01c539c8fa6cc4ef7fb32a3f4c3330cf8c255c214802a97a",
+    "worktree": "/private/tmp/erp-customer-hd013-rpo-rto-waiver",
+    "default_commit": "dd63519ecf18210e31b0462f6d2f91234738a76f",
     "mode_entry_commit": "392b9f9db0f36f5a3bbabf2854bf3ee20a7bf227"
   },
   "runtime": {
-    "instance_id": "customer-restore-readiness-20261015",
-    "owner": "/root Customer TASK035 developer preparation",
+    "instance_id": "customer-hd013-docs-20261015",
+    "owner": "/root Customer decision record only",
     "resources": {
-      "workspace": "/private/tmp/erp-customer-restore-readiness",
-      "mysql-schema": "new loopback13369 /private/tmp/erp-customer-local-runtime.jG5b0T/mysql; erp_customer_local_dr_source_20261015_ready and erp_customer_local_dr_restore_20261015_ready",
-      "customer-file-root": "/private/tmp/erp-customer-local-runtime.jG5b0T synthetic only",
-      "customer-import-root": "/private/tmp/erp-customer-local-runtime.jG5b0T synthetic only",
-      "web-port": "none; backend restore only"
+      "workspace": "/private/tmp/erp-customer-hd013-rpo-rto-waiver",
+      "mysql-schema": "not allocated; prior owned13369 stopped/schemas+datadir removed (PR240comment6187844633)",
+      "customer-file-root": "not allocated",
+      "customer-import-root": "not allocated",
+      "web-port": "not allocated; docs-only"
     },
     "lease_ref": null
   },
@@ -1882,6 +1882,62 @@
         "owned synthetic MySQL/migrations/fixtures, no shared3306/production"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-DESIGN-019",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam current user: RPO/ RTO 不用做驗收了，我批準通過。 HD-013 records this exact narrow acceptance-policy exception, not agent-inferred operational achievement. Prior approved DESIGNa2b29b79/PLAN3b15603d unchanged outside this delta. No wholemodule/UAT/release/othercontrol/CI waiver.",
+      "recorded_at": "2026-10-15T08:34:07Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "fa4dbd1ef42d14fab8321b3ced7be4093dbcabc8408c15dda852f9cd5777906b",
+      "code_commit": "48ba4b7f03eabf776e26c3a9a4d3b0b3d58495d2",
+      "scope": [
+        "HD-013",
+        "NFR-015 timing acceptance",
+        "DES-024 timing proof only"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-PLAN-019",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam current user: RPO/ RTO 不用做驗收了，我批準通過。 HD-013 records this exact narrow acceptance-policy exception, not agent-inferred operational achievement. Prior approved DESIGNa2b29b79/PLAN3b15603d unchanged outside this delta. No wholemodule/UAT/release/othercontrol/CI waiver.",
+      "recorded_at": "2026-10-15T08:34:07Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a1d5e05a8d2eff9a4d76435c701f8ebc054b5e7a1ba27b0cf366643cbf685d9b",
+      "code_commit": "48ba4b7f03eabf776e26c3a9a4d3b0b3d58495d2",
+      "scope": [
+        "HD-013",
+        "TASK-035 timing acceptance",
+        "TC-086",
+        "TC-087"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-RISK-005",
+      "kind": "RISK",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam current user: RPO/ RTO 不用做驗收了，我批準通過。 HD-013 records this exact narrow acceptance-policy exception, not agent-inferred operational achievement. Prior approved DESIGNa2b29b79/PLAN3b15603d unchanged outside this delta. No wholemodule/UAT/release/othercontrol/CI waiver.",
+      "recorded_at": "2026-10-15T08:34:07Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a1d5e05a8d2eff9a4d76435c701f8ebc054b5e7a1ba27b0cf366643cbf685d9b",
+      "code_commit": "48ba4b7f03eabf776e26c3a9a4d3b0b3d58495d2",
+      "scope": [
+        "HD-013",
+        "TC-086",
+        "TC-087",
+        "NFR-015 timing acceptance"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -2672,6 +2728,18 @@
       "reviewer": "/root/customer_task011_review (actual separate read-only agent)",
       "reviewed_baseline": "816c5877f983364ba178b181e45782496974453d380f5e9cbdd74b219b1417e7",
       "source_ref": "Actual separate agent APPROVE current source/docs/state202: runbook distinguishes inventory vs compatibility; explicit assignee linkage; runtime/evidence status reconciled; memberintegrityfailclosed/mutationhistory retained. Reviewer independently executed2no-connectguardsPASS; supplied actual3restore/35relatedunitresults consistent. Onlysource-levelapproval, exactcommittedhead/mandatoryCI stillrequired.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-067",
+      "method": "SEPARATE_AGENT",
+      "author": "/root Customer human acceptance-decision synchronization",
+      "reviewer": "/root/customer_task011_review (actual separate read-only agent)",
+      "reviewed_baseline": "a1d5e05a8d2eff9a4d76435c701f8ebc054b5e7a1ba27b0cf366643cbf685d9b",
+      "source_ref": "Actual separate reviewer APPROVE HD013 current docs/state205 onfreshmain dd63519e: DESIGNfa4dbd1e/PLANa1d5e05a, exactonlyTC086087 requiredexecutionwaived, NOTPROVENobjectivesretained, TC085/otherops/security/CI/downstream/UAT/release unchanged. validate_traceability --check-approvalsPASS; noRequiredfindings. Notproduct/formaltestapproval.",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -3735,6 +3803,20 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "APPROVAL-DESIGN-018 / APPROVAL-PLAN-018 / APPROVAL-SCOPE-045; Actual Sam user: 批准 HD-012、PR #234 的 DESIGN／PLAN baseline，以及 DataTable.vue 的窄範圍修復。繼續完成驗證、建立 PR 並合併；完整下游整合驗收保持阻塞，沒有需要我決策的事就自動繼續。"
+    },
+    {
+      "id": "HD-013",
+      "impact": "MAJOR",
+      "question": "Whether to require formal Customer RPO<=15min/RTO<=4h measurement acceptance. Narrow scope: NFR015/DES024 timing subset, TASK035, TC086/087 only; operational objectives remain NOT_PROVEN, backup/key/file/audit/otheroperating/downstream/CI/release gates unchanged.",
+      "affected_ids": [
+        "NFR-015",
+        "DES-024",
+        "TASK-035",
+        "TC-086",
+        "TC-087"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Actual Sam current user: RPO/ RTO 不用做驗收了，我批準通過。 HD-013 records this exact narrow acceptance-policy exception, not agent-inferred operational achievement. Prior approved DESIGNa2b29b79/PLAN3b15603d unchanged outside this delta. No wholemodule/UAT/release/othercontrol/CI waiver. APPROVAL-DESIGN019/PLAN019/RISK005. Canonicalspecs/ledger/profile/matrix/runbook aligned; NOT_APPLICABLE means requiredexecutionwaived, not technicalnonapplicability/PASS. Risk accepted: actualconfirmedlossmayexceed15min andactualsafe recoverymayexceed4h; no formal bound established."
     }
   ],
   "external_actions": [
@@ -4696,31 +4778,55 @@
       "target": "new loopback13369 /private/tmp/erp-customer-local-runtime.jG5b0T/mysql; erp_customer_local_dr_source_20261015_ready and erp_customer_local_dr_restore_20261015_ready",
       "idempotency_key": "customer-restore-readiness-runtime-v1",
       "status": "CONFIRMED",
-      "source_ref": "Actual latestSam request independentlyfillformalOps/RPO/RTOgaps, standingTASK035isolatedrestoreauthority. Port13369 observedfree; freshdatadir initialize-insecure exited0, service/schema/test notyetstarted. Onlynewtaskownedruntime,migrations,syntheticfixtures; shared3306/productionuntouched. ActualMySQL26.7port13369/datadir verified,83existingmigrations,syntheticonly. Reviewer-corrected3PASS0FAIL0SKIP1196.789ms,20tables/6manifestmembers/4damagedsetrefusals/6keydenials; loss176ms/recovery624.720ms, productionNOTPROVEN. Service currentlyownedrunningforpostmergerecheck; source2/dest1 fixtures cleanupaftermerge."
+      "source_ref": "Actual latestSam request independentlyfillformalOps/RPO/RTOgaps, standingTASK035isolatedrestoreauthority. Port13369 observedfree; freshdatadir initialize-insecure exited0, service/schema/test notyetstarted. Onlynewtaskownedruntime,migrations,syntheticfixtures; shared3306/productionuntouched. ActualMySQL26.7port13369/datadir verified,83existingmigrations,syntheticonly. Reviewer-corrected3PASS0FAIL0SKIP1196.789ms,20tables/6manifestmembers/4damagedsetrefusals/6keydenials; loss176ms/recovery624.720ms, productionNOTPROVEN. Service currentlyownedrunningforpostmergerecheck; source2/dest1 fixtures cleanupaftermerge. Subsequent actualcleanupconfirmed PR240comment6187844633: bothsyntheticschemas dropped, ownedserviceexited0/listenerPIDgone, datadirremoved andcasebackuproots0; historical currentlyrunning wording superseded."
     },
     {
       "id": "EXT-PUSH-097",
       "kind": "GIT_PUSH",
       "target": "codex/customer-restore-readiness -> origin",
       "idempotency_key": "customer-restore-readiness-ext-push-097",
-      "status": "PLANNED",
-      "source_ref": "APPROVAL-SCOPE047 + standing Sam scoped PR/normal merge authority; exactcandidate allfiveCI and actualseparatereview required; no adminbypass. Observe targetbefore retry. Full downstream/formalRPO/RTO BLOCKED."
+      "status": "CONFIRMED",
+      "source_ref": "APPROVAL-SCOPE047 + standing Sam scoped PR/normal merge authority; exactcandidate allfiveCI and actualseparatereview required; no adminbypass. Observe targetbefore retry. Full downstream/formalRPO/RTO BLOCKED. Actual trusted GitHub PR240/closurecomment6187844633: head1111ea4e fiveCI38703821406 SUCCESS, actualseparatereview, MERGED48ba4b7f at2026-10-15T08:24:52Z, treeidentical/postmerge3PASS0skip; ownschemas/service/datadir/worktree/local+remotebranchcleanupactuallycomplete. No replay."
     },
     {
       "id": "EXT-PR-098",
       "kind": "PR_CREATE",
       "target": "main <- codex/customer-restore-readiness scoped local restore readiness",
       "idempotency_key": "customer-restore-readiness-ext-pr-098",
-      "status": "PLANNED",
-      "source_ref": "APPROVAL-SCOPE047 + standing Sam scoped PR/normal merge authority; exactcandidate allfiveCI and actualseparatereview required; no adminbypass. Observe targetbefore retry. Full downstream/formalRPO/RTO BLOCKED."
+      "status": "CONFIRMED",
+      "source_ref": "APPROVAL-SCOPE047 + standing Sam scoped PR/normal merge authority; exactcandidate allfiveCI and actualseparatereview required; no adminbypass. Observe targetbefore retry. Full downstream/formalRPO/RTO BLOCKED. Actual trusted GitHub PR240/closurecomment6187844633: head1111ea4e fiveCI38703821406 SUCCESS, actualseparatereview, MERGED48ba4b7f at2026-10-15T08:24:52Z, treeidentical/postmerge3PASS0skip; ownschemas/service/datadir/worktree/local+remotebranchcleanupactuallycomplete. No replay."
     },
     {
       "id": "EXT-MERGE-099",
       "kind": "PR_MERGE",
       "target": "scoped Customer restore readiness PR -> main after exacthead mandatoryCI/actualreview/freshmain",
       "idempotency_key": "customer-restore-readiness-ext-merge-099",
+      "status": "CONFIRMED",
+      "source_ref": "APPROVAL-SCOPE047 + standing Sam scoped PR/normal merge authority; exactcandidate allfiveCI and actualseparatereview required; no adminbypass. Observe targetbefore retry. Full downstream/formalRPO/RTO BLOCKED. Actual trusted GitHub PR240/closurecomment6187844633: head1111ea4e fiveCI38703821406 SUCCESS, actualseparatereview, MERGED48ba4b7f at2026-10-15T08:24:52Z, treeidentical/postmerge3PASS0skip; ownschemas/service/datadir/worktree/local+remotebranchcleanupactuallycomplete. No replay."
+    },
+    {
+      "id": "EXT-PUSH-100",
+      "kind": "GIT_PUSH",
+      "target": "origin codex/customer-hd013-rpo-rto-waiver",
+      "idempotency_key": "customer-hd013-EXT-PUSH-100",
       "status": "PLANNED",
-      "source_ref": "APPROVAL-SCOPE047 + standing Sam scoped PR/normal merge authority; exactcandidate allfiveCI and actualseparatereview required; no adminbypass. Observe targetbefore retry. Full downstream/formalRPO/RTO BLOCKED."
+      "source_ref": "Actual Sam explicit HD013 approval plus standing scopedPR/normalmerge authority; no bypass; docs-only decision sync, no new data/acceptance execution or production change. Observe real target before retry."
+    },
+    {
+      "id": "EXT-PR-101",
+      "kind": "PR_CREATE",
+      "target": "main <- codex/customer-hd013-rpo-rto-waiver docs-only human RPO/RTO acceptance exception",
+      "idempotency_key": "customer-hd013-EXT-PR-101",
+      "status": "PLANNED",
+      "source_ref": "Actual Sam explicit HD013 approval plus standing scopedPR/normalmerge authority; no bypass; docs-only decision sync, no new data/acceptance execution or production change. Observe real target before retry."
+    },
+    {
+      "id": "EXT-MERGE-102",
+      "kind": "PR_MERGE",
+      "target": "Customer HD013 documentation PR -> main after actual review/currentcandidate CI/freshmain",
+      "idempotency_key": "customer-hd013-EXT-MERGE-102",
+      "status": "PLANNED",
+      "source_ref": "Actual Sam explicit HD013 approval plus standing scopedPR/normalmerge authority; no bypass; docs-only decision sync, no new data/acceptance execution or production change. Observe real target before retry."
     }
   ],
   "evidence_files": [
@@ -4795,5 +4901,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Extend existing TASK035 local restore samples/set integrity under approved DESIGN/PLAN; execute chartered cases then actual separate review/current-candidate CI/normal scoped PRmerge. Full downstream/formal Ops/RPO/RTO acceptance BLOCKED."
+  "next_safe_action": "Publish/review normal docs-only HD013 decision PR; formal TC086/087 timing acceptance WAIVED_BY_HUMAN/APPROVED by Sam, objective attainment NOT_PROVEN, no further required timing acceptance runs. Keep backup integrity/remaining Operations/Security controls TASK033/035 IN_PROGRESS, TASK030031032034/full downstream BLOCKED, TASK036PENDING. Preserve original evidence; do not reuse oldspec formalresults as newbaseline PASS. Freshmain dd63519e SupplierPR239 inheritedbyff-onlywithoutCustomerconflict; no othermodule authoredchange. Currentdocs-onlydelta andwaiver DESIGN/PLAN unchanged; priorprototype/sourceproofs historicalnotnewbaselineformalPASS."
 }

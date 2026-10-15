@@ -6625,12 +6625,12 @@
       "task_ids": [
         "TASK-035"
       ],
-      "mandatory": true,
-      "blocking": true,
+      "mandatory": false,
+      "blocking": false,
       "applicability": {
-        "status": "APPLICABLE",
-        "reason": "",
-        "approval_id": null
+        "status": "NOT_APPLICABLE",
+        "reason": "HD-013: Sam explicitly waived formal RPO/RTO measurement acceptance and approved that subset. NOT_APPLICABLE to required execution only; objectives retained NOT_PROVEN, not technical PASS. Backup integrity/other operating controls/downstream acceptance remain required.",
+        "approval_id": "APPROVAL-RISK-005"
       },
       "suite_id": "customer-server-technical"
     },
@@ -6646,12 +6646,12 @@
       "task_ids": [
         "TASK-035"
       ],
-      "mandatory": true,
-      "blocking": true,
+      "mandatory": false,
+      "blocking": false,
       "applicability": {
-        "status": "APPLICABLE",
-        "reason": "",
-        "approval_id": null
+        "status": "NOT_APPLICABLE",
+        "reason": "HD-013: Sam explicitly waived formal RPO/RTO measurement acceptance and approved that subset. NOT_APPLICABLE to required execution only; objectives retained NOT_PROVEN, not technical PASS. Backup integrity/other operating controls/downstream acceptance remain required.",
+        "approval_id": "APPROVAL-RISK-005"
       },
       "suite_id": "customer-server-technical"
     },

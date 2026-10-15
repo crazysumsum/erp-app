@@ -1,5 +1,16 @@
 # Customer Management Final Alignment Review
 
+## Current HD-013 human acceptance exception
+
+Sam explicitly approved omitting formal RPO/RTO acceptance: `RPO/ RTO 不用做驗收了，我批準通過。`
+Only TC-086/087 required execution/timing gates are waived; NOT_PROVEN objectives
+and prior evidence remain unchanged. The ledger records nonmandatory/nonblocking
+NOT_APPLICABLE-to-required-execution with scoped RISK approval; profile drops only
+these two required-case IDs. This is human acceptance by exception, not measured
+PASS or whole-module Technical Acceptance/UAT/release. TC-085, remaining operating
+controls and full downstream integration are not waived. No product/test-script/
+schema/runtime/CI configuration changes or new acceptance execution occur here.
+
 ## Current HD-012 implementation
 
 Sam approved exact DESIGN a2b29b79...2356 / PLAN3b15603d...35e0 and the sole shared
