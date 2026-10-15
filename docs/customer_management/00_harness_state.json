@@ -1,9 +1,9 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 174,
+  "revision": 181,
   "mode": "FULL_LIFECYCLE",
-  "active_mode": "DESIGN_AND_PLAN",
+  "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
   "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-004",
@@ -11,22 +11,22 @@
   "baseline": {
     "design": "25833d2d2e09a2ce0c763c374d0a0a9b64d3d92e9ee79e8f60cd3ea1e0003d51",
     "plan": "7b1eb4674d231be20c8882b47a1fe5db0550b2c3429adc859e0be27630a51a34",
-    "code_commit": "8c5acf7dd34fbd75677c0844973bdf490319b0b2",
-    "source_fingerprint": "685238fea731fd9b586449a3a587c6236faaee451a916377817a7b3fdf9a4aa4",
-    "worktree": "/private/tmp/erp-customer-def034001-indexed-search",
-    "default_commit": "09487bc65bff3a2360dffcaa246d5630269f11d2",
-    "mode_entry_commit": "09487bc65bff3a2360dffcaa246d5630269f11d2"
+    "code_commit": "c6ca364522664254951133984910ca933749b368",
+    "source_fingerprint": "bccc7235e5af4852f78eddcefff68c9989ca7d57770abc7cc7930b32b1fb3449",
+    "worktree": "/private/tmp/erp-customer-def034001-fix",
+    "default_commit": "e56ad1a90f5938bd4799fd784a74aa5772e027ea",
+    "mode_entry_commit": "d69b267df3e7cfcbb703b16ff459c87215815f7c"
   },
   "runtime": {
-    "instance_id": "customer-def034001-20261015",
+    "instance_id": "customer-def034001-integrated-20261015",
     "owner": "Primary Customer remediation agent",
     "resources": {
-      "workspace": "/private/tmp/erp-customer-def034001-indexed-search",
-      "mysql-instance": "CLEANED: verified own13371 server shut down; exact /private/tmp/erp-customer-def034001-runtime.kLnI3D removed",
-      "mysql-schema": "CLEANED with own datadir; synthetic Customers0 verified before shutdown",
-      "customer-file-root": "not exercised",
-      "customer-import-root": "not exercised",
-      "web-port": "CLOSED by baseline test application cleanup"
+      "workspace": "/private/tmp/erp-customer-def034001-fix",
+      "mysql-instance": "CLEANED own integrated-runtime.3nNabW/MySQL13373 and priorfix-runtime.i1kGVP; serversexit0",
+      "mysql-schema": "CLEANED own two synthetic schemas/datadirs after fixtureCustomers0 and durableevidence",
+      "customer-file-root": "No persistent deployment; own temporary integration fixtures cleaned",
+      "customer-import-root": "No persistent deployment; own temporary integration fixtures cleaned",
+      "web-port": "Real browser13374backend/13375Vite stopped after URL-state checks; mocked5204/clean-main suite stopped"
     },
     "lease_ref": null
   },
@@ -2337,6 +2337,54 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-049",
+      "method": "SEPARATE_AGENT",
+      "author": "/root HD011 product/test implementation",
+      "reviewer": "Jason (/root/customer_task011_review), actual separate read-only agent",
+      "reviewed_baseline": "920c35d19b54de8b87ca9f9523c0b4cfcd2153ced64de16703fca55f22b46705",
+      "source_ref": "Actual initial CHANGES_REQUESTED: range alone could select wrong index; require per-field expected search-leading keys and no optimizer/index hints. No finding erased; addressed by test-only guard and actual mutation proof, subsequent approval recorded separately.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-050",
+      "method": "SEPARATE_AGENT",
+      "author": "/root HD011 code/test refinements",
+      "reviewer": "Jason (/root/customer_task011_review), actual separate read-only agent",
+      "reviewed_baseline": "af7cbcb3222405b2e826254bbfd6bae5aab2c13883068aedbae077bde28456e9",
+      "source_ref": "Actual APPROVE dirty code/test slice after expected-key/nohint fix; no Required finding. Main clean d69 fullmockbrowser reproduces importfailure15/1, acknowledgedoutsidebackenddiff notwaived. Final source adds post-load read-only footprint query after this slice review; finalimmutablecandidate review remainsrequired.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-051",
+      "method": "SEPARATE_AGENT",
+      "author": "/root HD011 immutable candidate7fae1308",
+      "reviewer": "Jason (/root/customer_task011_review), actual separate read-only agent",
+      "reviewed_baseline": "af7cbcb3222405b2e826254bbfd6bae5aab2c13883068aedbae077bde28456e9",
+      "source_ref": "Actual CHANGES_REQUESTED candidate7fae1308991d5efac03ffe618bd49e3956c9fb96: finalexpectedkey/nohint/footprint testbytesnotinfc32a0e, state/evidence must bind exactsourcecommit7fae1308 while preserving actual precommitexecutioncontext. No sourcecorrectness/scopefinding. Corrected in laterdocs-onlycheckpoint; finalapprovalrequired.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-052",
+      "method": "SEPARATE_AGENT",
+      "author": "/root HD011 latest-main integrated source/evidence",
+      "reviewer": "Jason (/root/customer_task011_review), actual separate read-only agent",
+      "reviewed_baseline": "bccc7235e5af4852f78eddcefff68c9989ca7d57770abc7cc7930b32b1fb3449",
+      "source_ref": "Actual APPROVE sourcec6ca364522664254951133984910ca933749b368/fpbccc7235e5af4852f78eddcefff68c9989ca7d57770abc7cc7930b32b1fb3449, fresh runs6/7 each17/17/0skip,emptygates,all14expectedkeys,retained4/5historical/provenancecorrected. MaycloseDEF034001 scopeddeveloperremediationonly; TASK034/fullCustomer/browseracceptanceblocked,DEF034002/027001OPEN. Laterdocs-onlyimmutablehead/CIreviewflow required. No remaining Required finding.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -3021,6 +3069,50 @@
       "source_ref": "implementation/def034001-remediation-report.md; resultsJSON.5PASS/1FAIL/0skip; exactly2actualphysicalALL,all4p95pass. Product unchanged. Separate TEMPdiagnostic confirms virtualALL mustbe explicitly distinguished, not silentlyignored. ProposednewDESIGN/PLAN have nohumanapproval.",
       "actor": "/root developer diagnostic",
       "observed_at": "2026-10-15T03:02:25Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "HD011 final scoped Customer query/migration developer verification",
+      "code_commit": "7fae1308991d5efac03ffe618bd49e3956c9fb96",
+      "spec_baseline": "7b1eb4674d231be20c8882b47a1fe5db0550b2c3429adc859e0be27630a51a34",
+      "source_fingerprint": "af7cbcb3222405b2e826254bbfd6bae5aab2c13883068aedbae077bde28456e9",
+      "status": "PASS",
+      "source_ref": "implementation/def034001-remediation-report.md; exactresultsJSON/fullbranchplansJSONL. Unit280PASS2explicitextendedskips,realintegration24PASS0skip; finalenabledcapacity2x17PASS0skip,50k20workers30s5000ms,p95list7.891083/6.992709,all14expectedrange/nohint/physicalALL0; failedguards/mutations retained. Lint/buildPASS; auditexit0oneexistingLOW. Not fullTC/UAT/moduleacceptance. Execution preceded source commit7fae1308 atfc32a0e+dirtyfinaltests; fingerprintmatches7fae1308 exactly, laterdocs-onlycheckpoint notnewexecution.",
+      "actor": "/root scoped developer verification",
+      "observed_at": "2026-10-15T03:44:39Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Existing Customer browser full-suite import regression on clean main",
+      "code_commit": "7fae1308991d5efac03ffe618bd49e3956c9fb96",
+      "spec_baseline": "7b1eb4674d231be20c8882b47a1fe5db0550b2c3429adc859e0be27630a51a34",
+      "source_fingerprint": "af7cbcb3222405b2e826254bbfd6bae5aab2c13883068aedbae077bde28456e9",
+      "status": "FAIL",
+      "source_ref": "DEF-027001: fix and clean d69b267d fullunchangedsuite15PASS1FAIL0skip TC065line313 focusEnternoerrordetail. BaselinefocusedPASS confirms timing/order sensitivity notrootcause. No frontend/E2Ediff; separate acceptance blocker, no waiver/fullbrowserPASS. Execution preceded source commit7fae1308 atfc32a0e+dirtyfinaltests; fingerprintmatches7fae1308 exactly, laterdocs-onlycheckpoint notnewexecution.",
+      "actor": "/root scoped developer verification",
+      "observed_at": "2026-10-15T03:44:39Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Real Customer typed-search stale display versus URL-loaded state",
+      "code_commit": "7fae1308991d5efac03ffe618bd49e3956c9fb96",
+      "spec_baseline": "7b1eb4674d231be20c8882b47a1fe5db0550b2c3429adc859e0be27630a51a34",
+      "source_fingerprint": "af7cbcb3222405b2e826254bbfd6bae5aab2c13883068aedbae077bde28456e9",
+      "status": "FAIL",
+      "source_ref": "DEF-034002: successive input API total0 but priorrowrendered untilreload; frontendunchanged, requestorderingcausenotconfirmed. URL-loaded realbackend+Playwright search/paging/refresh/dedup/literal/empty/validationerrorrecovery/detailback PASS0unexpectedconsole/network. FailedtypingnotrelabeledPASS. Execution preceded source commit7fae1308 atfc32a0e+dirtyfinaltests; fingerprintmatches7fae1308 exactly, laterdocs-onlycheckpoint notnewexecution.",
+      "actor": "/root scoped developer verification",
+      "observed_at": "2026-10-15T03:44:39Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "HD011 latest-main integrated fresh developer verification",
+      "code_commit": "c6ca364522664254951133984910ca933749b368",
+      "spec_baseline": "7b1eb4674d231be20c8882b47a1fe5db0550b2c3429adc859e0be27630a51a34",
+      "source_fingerprint": "bccc7235e5af4852f78eddcefff68c9989ca7d57770abc7cc7930b32b1fb3449",
+      "status": "PASS",
+      "source_ref": "implementation/def034001-remediation-report.md; results.after.integration and56branchrecords. Actualfreshsameprofile2x17PASS0skip,listp957.586708/7.463459,all14expectedrange0physicalALL/nohint. IntegratedCustomerunits280PASS2extendedskips,realintegration24PASS0skip,lint/buildPASS. Sourcecommitactualimmutablebeforeexecution; ownruntimecleanuprecordedseparately. Fullmodule/browser/downstreamacceptanceBLOCKED.",
+      "actor": "/root integrated-source developer verification",
+      "observed_at": "2026-10-15T03:51:30Z"
     }
   ],
   "pending_decisions": [
@@ -3917,8 +4009,80 @@
       "kind": "GIT_MERGE",
       "target": "github:crazysumsum/erp-app PR232 -> main; approvedHD011 planningdocs only",
       "idempotency_key": "customer-hd011-planning-merge-v1",
+      "status": "CONFIRMED",
+      "source_ref": "Observed PR232 MERGED2026-10-15T03:10:00Z commitd69b267df3e7cfcbb703b16ff459c87215815f7c. Exact approved DESIGN/PLAN unchanged, actualseparatereviewREV048. Docs-only designboundary, normalghmerge withoutadmin/protectionbypass, noCIwaitasdesigngate. Ownplanningbranch/worktree cleaned; freshimplementationworktreefrommain."
+    },
+    {
+      "id": "EXT-MYSQL-074",
+      "kind": "DATABASE_TEST",
+      "target": "Ownloopback13373; /private/tmp/erp-customer-def034001-fix-runtime.i1kGVP/mysql; schemaerp_customer_def034001_fix_20261015",
+      "idempotency_key": "customer-def034001-approved-fix-tests-20261015-v1",
+      "status": "CONFIRMED",
+      "source_ref": "Own fresh migrations0082,10additiveindexes/replay/wrongshape/realmetadata-locktimeout+sessionrestore; Customerintegration24PASS0skip. Finalunchangedprofile capacity runs4/5 each17PASS0FAIL0skip atfpaf7cb...456e9,listp957.891083/6.992709ms,physicalALL0,14expectedrangekeys,251780/289768correctops0errors,fixtures0. ActualURL-statebrowserPASS; typedstaleUI/importbaselinefailures separately retained. No shared3306/production/secret export; runtime cleanup pending."
+    },
+    {
+      "id": "MODE-CHANGE-175",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-175",
+      "status": "CONFIRMED",
+      "source_ref": "Actual Sam approved HD-011 and PR232 exact DESIGN/PLAN and explicitly ordered continued implementation/retest/PRmerge; observed planning merge d69b267d"
+    },
+    {
+      "id": "EXT-PUSH-075",
+      "kind": "GIT_PUSH",
+      "target": "origin codex/customer-def034001-fix; approved HD011 scoped backend remedy and truthful developer evidence",
+      "idempotency_key": "customer-def034001-approved-implementation-push-v1",
+      "status": "CONFIRMED",
+      "source_ref": "Observed successful origin push7fae1308991d5efac03ffe618bd49e3956c9fb96; initialCI38677936331 started, not a final-headPASS. Subsequent docs-only provenance correction requiresnewCI."
+    },
+    {
+      "id": "EXT-PR-076",
+      "kind": "PR_CREATE",
+      "target": "github:crazysumsum/erp-app:main<-codex/customer-def034001-fix",
+      "idempotency_key": "customer-def034001-approved-implementation-pr-v1",
+      "status": "CONFIRMED",
+      "source_ref": "Observed https://github.com/crazysumsum/erp-app/pull/233 OPEN basemain head7fae1308991d5efac03ffe618bd49e3956c9fb96; attached to current task. No merge yet."
+    },
+    {
+      "id": "EXT-PUSH-077",
+      "kind": "GIT_PUSH",
+      "target": "origin codex/customer-def034001-fix; final docs-only source/evidence binding checkpoint",
+      "idempotency_key": "customer-def034001-final-provenance-push-v1",
       "status": "PLANNED",
-      "source_ref": "Actual Sam user: 批准 HD-011，以及 PR #232 的 DESIGN／PLAN baseline；繼續修復並按新基準重新實測，完整下游整合驗收保持阻塞，完成後建立 PR 並合併，沒有需要我決策的事就自動繼續。 Design-stage resolution under harness; no product implementation or defect closure. No branch-protection bypass."
+      "source_ref": "Correctactualindependentreviewprovenancefinding; exactproduct/testsource remains7fae1308/af7cbfingerprint. Require newfinalheadCI."
+    },
+    {
+      "id": "EXT-CLEANUP-078",
+      "kind": "RUNTIME_CLEANUP",
+      "target": "Own MySQL13373/runtime /private/tmp/erp-customer-def034001-fix-runtime.i1kGVP and detached comparison worktree /private/tmp/erp-customer-hd011-ui-baseline",
+      "idempotency_key": "customer-def034001-own-runtime-cleanup-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-10-15T03:47Z verifiedown13373/datadir,Customers0; mysqladminshutdown/server38533exit0, ports13373/4/5closed; exactrootruntime.i1kGVP and cleandetachedcomparisonworktree removed. Sanitizedevidencedurable. Sharedmain nowobservede56ad1a9; freshfetch confirmed unrelatedSupplierchange, integrated c6ca364522664254951133984910ca933749b368 withoutconflict."
+    },
+    {
+      "id": "EXT-MERGE-079",
+      "kind": "GIT_MERGE",
+      "target": "github:crazysumsum/erp-app PR233 -> main, normal merge then own implementation branch/worktree cleanup",
+      "idempotency_key": "customer-def034001-approved-implementation-merge-v1",
+      "status": "PLANNED",
+      "source_ref": "Sam explicitly authorized merge after completion; only after finalexacthead5CIgreen, independentcandidateapproval, freshmainintegration ifmoved. No admin bypass/fullacceptance."
+    },
+    {
+      "id": "EXT-MYSQL-080",
+      "kind": "DATABASE_TEST",
+      "target": "Own new /private/tmp/erp-customer-def034001-integrated-runtime.3nNabW/mysql; freed loopback13373; schemaerp_customer_def034001_integrated_20261015",
+      "idempotency_key": "customer-def034001-latestmain-integrated-retest-v1",
+      "status": "CONFIRMED",
+      "source_ref": "Fresh MySQL26.7.0/datadir/port13373 verified, schema freshrunnerthrough0082. Sourcec6ca3645/fpbccc7235...3449 realCustomerintegration24PASS0skip,units280PASS2extendedskips,lint/buildPASS;2fresh50k/20/30s/pool10/5000ms runs6/7 each17PASS0skip,listp957.586708/7.463459ms,264364/269232correctops0errors,physicalALL0,all14expectedrange. Actualfixtures0 afterboth;56completebranchrecords durable. Not formal/fullacceptance."
+    },
+    {
+      "id": "EXT-CLEANUP-081",
+      "kind": "RUNTIME_CLEANUP",
+      "target": "Own integrated-runtime /private/tmp/erp-customer-def034001-integrated-runtime.3nNabW; MySQLloopback13373 exactverifieddatadir",
+      "idempotency_key": "customer-def034001-integrated-runtime-cleanup-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-10-15T03:52Z actualdatadir/port13373 verified,Customers0; mysqladminshutdown,server2478exit0,PIDremoved; exact integrated-runtime.3nNabW removed. FullsanitizedJSON/56branchrecords retained. No shared3306/production/unrelatedprocess effects."
     }
   ],
   "evidence_files": [
@@ -3933,13 +4097,14 @@
     "docs/customer_management/implementation/local-capacity-restore-report.md",
     "docs/customer_management/implementation/local-capacity-restore-results.json",
     "implementation/def034001-remediation-report.md",
-    "implementation/def034001-remediation-results.json"
+    "implementation/def034001-remediation-results.json",
+    "implementation/def034001-search-branch-plans.jsonl"
   ],
   "defects": [
     {
       "id": "DEF-034001",
       "severity": "HIGH",
-      "status": "OPEN",
+      "status": "CLOSED",
       "source_ids": [
         "TASK-034",
         "TC-028",
@@ -3949,9 +4114,41 @@
         "DES-018",
         "DES-019"
       ],
+      "closure_evidence": [
+        "implementation/def034001-remediation-report.md",
+        "implementation/def034001-remediation-results.json",
+        "implementation/def034001-search-branch-plans.jsonl"
+      ],
+      "risk_approval_id": null
+    },
+    {
+      "id": "DEF-034002",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "source_ids": [
+        "TASK-016",
+        "TC-040",
+        "DES-019",
+        "PHASE-002",
+        "NFR-001"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": null
+    },
+    {
+      "id": "DEF-027001",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "source_ids": [
+        "TASK-027",
+        "TC-065",
+        "PHASE-003",
+        "DES-016",
+        "NFR-001"
+      ],
       "closure_evidence": [],
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "HD011 actually approved on exact proposed DESIGN/PLAN. Resolve approved planningPR232 normally, verifymerge, cleanplanningbranch; refreshmainandnewimplementationworktree; implement/test exactlyapproved query/index/classifier correction, repeated50k/20/5s proof, actualreview/finalheadCI/freshmain before authorized implementationPRmerge. Full downstream and formalacceptance BLOCKED."
+  "next_safe_action": "PR233 is authoritative remote resolution record: inspect actualhead/checks/review/merge before anyretry. If OPEN: push finaldocs-onlycheckpoint, require all5exactheadCI and independentimmutableheadapproval, freshfetchmain/integrate/reverify ifmoved, thenSam-authorizednormalmergeandownbranch/worktreecleanup. If MERGED: neverreplaypush/merge; follow closurecomment. DEF034001CLOSEDscopeddeveloperonly; TASK034/full downstream/CustomerbrowseracceptanceBLOCKED,DEF034002/027001OPEN. Ownedruntimescleaned; no productionrelease."
 }

@@ -1,6 +1,6 @@
 {
-  "stage": "DEVELOPER_DIAGNOSIS_ONLY",
-  "status": "BEFORE_FAIL_AFTER_NOT_RUN",
+  "stage": "DEVELOPER_REMEDIATION_VERIFICATION",
+  "status": "SCOPED_DEVELOPER_DEF034001_CLOSED_FULL_ACCEPTANCE_BLOCKED",
   "codeCommit": "09487bc65bff3a2360dffcaa246d5630269f11d2",
   "sourceFingerprint": "685238fea731fd9b586449a3a587c6236faaee451a916377817a7b3fdf9a4aa4",
   "approvedDesign": "8462e9c2bc9909f413bb0063de29b44bcbe205d8bfd1209c254ff5d1090f9944",
@@ -320,7 +320,2943 @@
       "actual list full-scanned customers"
     ]
   },
-  "after": null,
+  "after": {
+    "sourceFingerprint": "af7cbcb3222405b2e826254bbfd6bae5aab2c13883068aedbae077bde28456e9",
+    "sourceCommit": "7fae1308991d5efac03ffe618bd49e3956c9fb96",
+    "productCommit": "fc32a0e393b6b76d497ea774911497a7dae0181b",
+    "codeCommitAtMeasurement": "fc32a0e393b6b76d497ea774911497a7dae0181b",
+    "sourceState": "Measured before source commit7fae1308 while HEAD wasfc32a0e plus dirty final tests; exact af7cb fingerprint equals all source/test bytes in7fae1308. Later documentation-only commits do not imply a new execution or rebind the original measurement HEAD.",
+    "design": "25833d2d2e09a2ce0c763c374d0a0a9b64d3d92e9ee79e8f60cd3ea1e0003d51",
+    "plan": "7b1eb4674d231be20c8882b47a1fe5db0550b2c3429adc859e0be27630a51a34",
+    "stage": "DEVELOPER",
+    "runs": [
+      {
+        "attempt": 4,
+        "tests": {
+          "passed": 17,
+          "failed": 0,
+          "skipped": 0
+        },
+        "tc": "TC-028",
+        "fixtureVersion": "customer-hd011-indexed-search-50k-20-v3",
+        "data": {
+          "customers": 50000,
+          "addresses": 5000,
+          "contacts": 5000
+        },
+        "load": {
+          "concurrency": 20,
+          "warmListMs": 2.507832999999664,
+          "p95BudgetMs": 5000,
+          "requestedDurationMs": 30000,
+          "elapsedMs": 30003.671875,
+          "errors": 0,
+          "operationsPerSecond": 8391.639564949082
+        },
+        "environment": {
+          "node": "v26.6.0",
+          "mysql": "26.7.0",
+          "logicalCpu": 15,
+          "memoryBytes": 25769803776
+        },
+        "resources": {
+          "heapPeakBytes": 261036680,
+          "rssBytes": 318062592,
+          "cpuMicroseconds": {
+            "user": 26433685,
+            "system": 3127923
+          },
+          "mysqlBefore": {
+            "Innodb_row_lock_current_waits": 0,
+            "Innodb_row_lock_waits": 10,
+            "Threads_connected": 1
+          },
+          "mysqlAfter": {
+            "Innodb_row_lock_current_waits": 0,
+            "Innodb_row_lock_waits": 10,
+            "Threads_connected": 10
+          }
+        },
+        "latencyMs": {
+          "list": {
+            "count": 62945,
+            "p50": 5.055416999999579,
+            "p95": 7.891082999998616,
+            "p99": 9.198124999998981
+          },
+          "exactLookup": {
+            "count": 62945,
+            "p50": 1.1529999999984284,
+            "p95": 2.110333000000537,
+            "p99": 4.1334160000005795
+          },
+          "addressLookup": {
+            "count": 62945,
+            "p50": 1.2675839999992604,
+            "p95": 2.498583000000508,
+            "p99": 4.285542000001442
+          },
+          "contactLookup": {
+            "count": 62945,
+            "p50": 1.2442089999995005,
+            "p95": 2.4559580000004644,
+            "p99": 4.263208000000304
+          }
+        },
+        "plans": {
+          "exactCode": [
+            {
+              "id": 1,
+              "select_type": "SIMPLE",
+              "table": "customers",
+              "partitions": null,
+              "type": "const",
+              "possible_keys": "uq_customers_code_key",
+              "key": "uq_customers_code_key",
+              "key_len": "258",
+              "ref": "const",
+              "rows": 1,
+              "filtered": 100,
+              "Extra": "Using index"
+            }
+          ],
+          "codePrefix": [
+            {
+              "id": 1,
+              "select_type": "SIMPLE",
+              "table": "customers",
+              "partitions": null,
+              "type": "range",
+              "possible_keys": "uq_customers_code_key",
+              "key": "uq_customers_code_key",
+              "key_len": "258",
+              "ref": null,
+              "rows": 100,
+              "filtered": 100,
+              "Extra": "Using where; Using index"
+            }
+          ],
+          "legalNamePrefix": [
+            {
+              "id": 1,
+              "select_type": "SIMPLE",
+              "table": "customers",
+              "partitions": null,
+              "type": "range",
+              "possible_keys": "uq_customers_legal_name_key,idx_customers_legal_name",
+              "key": "uq_customers_legal_name_key",
+              "key_len": "762",
+              "ref": null,
+              "rows": 100,
+              "filtered": 100,
+              "Extra": "Using where; Using index"
+            }
+          ],
+          "shippingExists": [
+            {
+              "id": 1,
+              "select_type": "SIMPLE",
+              "table": "c",
+              "partitions": null,
+              "type": "const",
+              "possible_keys": "PRIMARY",
+              "key": "PRIMARY",
+              "key_len": "8",
+              "ref": "const",
+              "rows": 1,
+              "filtered": 100,
+              "Extra": "Using index"
+            },
+            {
+              "id": 1,
+              "select_type": "SIMPLE",
+              "table": "a",
+              "partitions": null,
+              "type": "ref",
+              "possible_keys": "PRIMARY,uq_customer_addresses_owner,idx_customer_addresses_owner_status,idx_customer_addresses_search_label,idx_customer_addresses_search_address_line1,idx_customer_addresses_search_city,idx_customer_addresses_search_postal_code",
+              "key": "idx_customer_addresses_owner_status",
+              "key_len": "90",
+              "ref": "const,const",
+              "rows": 1,
+              "filtered": 100,
+              "Extra": "Using index"
+            },
+            {
+              "id": 1,
+              "select_type": "SIMPLE",
+              "table": "p",
+              "partitions": null,
+              "type": "eq_ref",
+              "possible_keys": "PRIMARY,uq_customer_address_default,idx_customer_address_purpose,fk_customer_address_purposes_owner",
+              "key": "PRIMARY",
+              "key_len": "130",
+              "ref": "erp_customer_def034001_fix_20261015.a.id,const",
+              "rows": 1,
+              "filtered": 5,
+              "Extra": "Using where; FirstMatch(c)"
+            }
+          ],
+          "actualList": [
+            [
+              {
+                "id": 1,
+                "select_type": "PRIMARY",
+                "table": "<derived2>",
+                "partitions": null,
+                "type": "ALL",
+                "possible_keys": null,
+                "key": null,
+                "key_len": null,
+                "ref": null,
+                "rows": 126,
+                "filtered": 100,
+                "Extra": null
+              },
+              {
+                "id": 1,
+                "select_type": "PRIMARY",
+                "table": "customers",
+                "partitions": null,
+                "type": "eq_ref",
+                "possible_keys": "PRIMARY,idx_customers_status_updated",
+                "key": "PRIMARY",
+                "key_len": "8",
+                "ref": "customer_search_matches.candidate_id",
+                "rows": 1,
+                "filtered": 60.11,
+                "Extra": "Using where"
+              },
+              {
+                "id": 2,
+                "select_type": "DERIVED",
+                "table": "customers",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "uq_customers_code_key",
+                "key": "uq_customers_code_key",
+                "key_len": "258",
+                "ref": null,
+                "rows": 100,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 3,
+                "select_type": "UNION",
+                "table": "customers",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "uq_customers_legal_name_key,idx_customers_legal_name",
+                "key": "uq_customers_legal_name_key",
+                "key_len": "762",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 4,
+                "select_type": "UNION",
+                "table": "customers",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "idx_customers_trading_name",
+                "key": "idx_customers_trading_name",
+                "key_len": "763",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 5,
+                "select_type": "UNION",
+                "table": "customers",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "idx_customers_search_phone",
+                "key": "idx_customers_search_phone",
+                "key_len": "202",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 6,
+                "select_type": "UNION",
+                "table": "customers",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "idx_customers_search_email",
+                "key": "idx_customers_search_email",
+                "key_len": "1018",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 7,
+                "select_type": "UNION",
+                "table": "customer_identifiers",
+                "partitions": null,
+                "type": "index",
+                "possible_keys": "idx_customer_identifiers_search_value",
+                "key": "idx_customer_identifiers_search_value",
+                "key_len": "852",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 8,
+                "select_type": "UNION",
+                "table": "customer_contacts",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "idx_customer_contacts_search_name,idx_customer_contacts_search_phone,idx_customer_contacts_search_mobile",
+                "key": "idx_customer_contacts_search_name",
+                "key_len": "844",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 9,
+                "select_type": "UNION",
+                "table": "customer_contacts",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "idx_customer_contacts_email,idx_customer_contacts_search_name,idx_customer_contacts_search_phone,idx_customer_contacts_search_mobile",
+                "key": "idx_customer_contacts_email",
+                "key_len": "1018",
+                "ref": null,
+                "rows": 1,
+                "filtered": 50,
+                "Extra": "Using index condition; Using where"
+              },
+              {
+                "id": 10,
+                "select_type": "UNION",
+                "table": "customer_contacts",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "idx_customer_contacts_search_name,idx_customer_contacts_search_phone,idx_customer_contacts_search_mobile",
+                "key": "idx_customer_contacts_search_phone",
+                "key_len": "284",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 11,
+                "select_type": "UNION",
+                "table": "customer_contacts",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "idx_customer_contacts_search_name,idx_customer_contacts_search_phone,idx_customer_contacts_search_mobile",
+                "key": "idx_customer_contacts_search_mobile",
+                "key_len": "284",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 12,
+                "select_type": "UNION",
+                "table": "customer_addresses",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "idx_customer_addresses_search_label,idx_customer_addresses_search_address_line1,idx_customer_addresses_search_city,idx_customer_addresses_search_postal_code",
+                "key": "idx_customer_addresses_search_label",
+                "key_len": "484",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 13,
+                "select_type": "UNION",
+                "table": "customer_addresses",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "idx_customer_addresses_search_label,idx_customer_addresses_search_address_line1,idx_customer_addresses_search_city,idx_customer_addresses_search_postal_code",
+                "key": "idx_customer_addresses_search_address_line1",
+                "key_len": "844",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 14,
+                "select_type": "UNION",
+                "table": "customer_addresses",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "idx_customer_addresses_search_label,idx_customer_addresses_search_address_line1,idx_customer_addresses_search_city,idx_customer_addresses_search_postal_code",
+                "key": "idx_customer_addresses_search_city",
+                "key_len": "484",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 15,
+                "select_type": "UNION",
+                "table": "customer_addresses",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "idx_customer_addresses_search_label,idx_customer_addresses_search_address_line1,idx_customer_addresses_search_city,idx_customer_addresses_search_postal_code",
+                "key": "idx_customer_addresses_search_postal_code",
+                "key_len": "484",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 16,
+                "select_type": "UNION RESULT",
+                "table": "<union2,3,4,5,6,7,8,9,10,11,12,13,14,15>",
+                "partitions": null,
+                "type": "ALL",
+                "possible_keys": null,
+                "key": null,
+                "key_len": null,
+                "ref": null,
+                "rows": null,
+                "filtered": null,
+                "Extra": "Using temporary"
+              }
+            ],
+            [
+              {
+                "id": 1,
+                "select_type": "PRIMARY",
+                "table": "<derived2>",
+                "partitions": null,
+                "type": "ALL",
+                "possible_keys": null,
+                "key": null,
+                "key_len": null,
+                "ref": null,
+                "rows": 126,
+                "filtered": 100,
+                "Extra": "Using temporary; Using filesort"
+              },
+              {
+                "id": 1,
+                "select_type": "PRIMARY",
+                "table": "customers",
+                "partitions": null,
+                "type": "eq_ref",
+                "possible_keys": "PRIMARY,idx_customers_status_updated",
+                "key": "PRIMARY",
+                "key_len": "8",
+                "ref": "customer_search_matches.candidate_id",
+                "rows": 1,
+                "filtered": 60.11,
+                "Extra": "Using where"
+              },
+              {
+                "id": 2,
+                "select_type": "DERIVED",
+                "table": "customers",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "uq_customers_code_key",
+                "key": "uq_customers_code_key",
+                "key_len": "258",
+                "ref": null,
+                "rows": 100,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 3,
+                "select_type": "UNION",
+                "table": "customers",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "uq_customers_legal_name_key,idx_customers_legal_name",
+                "key": "uq_customers_legal_name_key",
+                "key_len": "762",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 4,
+                "select_type": "UNION",
+                "table": "customers",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "idx_customers_trading_name",
+                "key": "idx_customers_trading_name",
+                "key_len": "763",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 5,
+                "select_type": "UNION",
+                "table": "customers",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "idx_customers_search_phone",
+                "key": "idx_customers_search_phone",
+                "key_len": "202",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 6,
+                "select_type": "UNION",
+                "table": "customers",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "idx_customers_search_email",
+                "key": "idx_customers_search_email",
+                "key_len": "1018",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 7,
+                "select_type": "UNION",
+                "table": "customer_identifiers",
+                "partitions": null,
+                "type": "index",
+                "possible_keys": "idx_customer_identifiers_search_value",
+                "key": "idx_customer_identifiers_search_value",
+                "key_len": "852",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 8,
+                "select_type": "UNION",
+                "table": "customer_contacts",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "idx_customer_contacts_search_name,idx_customer_contacts_search_phone,idx_customer_contacts_search_mobile",
+                "key": "idx_customer_contacts_search_name",
+                "key_len": "844",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 9,
+                "select_type": "UNION",
+                "table": "customer_contacts",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "idx_customer_contacts_email,idx_customer_contacts_search_name,idx_customer_contacts_search_phone,idx_customer_contacts_search_mobile",
+                "key": "idx_customer_contacts_email",
+                "key_len": "1018",
+                "ref": null,
+                "rows": 1,
+                "filtered": 50,
+                "Extra": "Using index condition; Using where"
+              },
+              {
+                "id": 10,
+                "select_type": "UNION",
+                "table": "customer_contacts",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "idx_customer_contacts_search_name,idx_customer_contacts_search_phone,idx_customer_contacts_search_mobile",
+                "key": "idx_customer_contacts_search_phone",
+                "key_len": "284",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 11,
+                "select_type": "UNION",
+                "table": "customer_contacts",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "idx_customer_contacts_search_name,idx_customer_contacts_search_phone,idx_customer_contacts_search_mobile",
+                "key": "idx_customer_contacts_search_mobile",
+                "key_len": "284",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 12,
+                "select_type": "UNION",
+                "table": "customer_addresses",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "idx_customer_addresses_search_label,idx_customer_addresses_search_address_line1,idx_customer_addresses_search_city,idx_customer_addresses_search_postal_code",
+                "key": "idx_customer_addresses_search_label",
+                "key_len": "484",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 13,
+                "select_type": "UNION",
+                "table": "customer_addresses",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "idx_customer_addresses_search_label,idx_customer_addresses_search_address_line1,idx_customer_addresses_search_city,idx_customer_addresses_search_postal_code",
+                "key": "idx_customer_addresses_search_address_line1",
+                "key_len": "844",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 14,
+                "select_type": "UNION",
+                "table": "customer_addresses",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "idx_customer_addresses_search_label,idx_customer_addresses_search_address_line1,idx_customer_addresses_search_city,idx_customer_addresses_search_postal_code",
+                "key": "idx_customer_addresses_search_city",
+                "key_len": "484",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 15,
+                "select_type": "UNION",
+                "table": "customer_addresses",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "idx_customer_addresses_search_label,idx_customer_addresses_search_address_line1,idx_customer_addresses_search_city,idx_customer_addresses_search_postal_code",
+                "key": "idx_customer_addresses_search_postal_code",
+                "key_len": "484",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 16,
+                "select_type": "UNION RESULT",
+                "table": "<union2,3,4,5,6,7,8,9,10,11,12,13,14,15>",
+                "partitions": null,
+                "type": "ALL",
+                "possible_keys": null,
+                "key": null,
+                "key_len": null,
+                "ref": null,
+                "rows": null,
+                "filtered": null,
+                "Extra": "Using temporary"
+              }
+            ],
+            [
+              {
+                "id": 1,
+                "select_type": "PRIMARY",
+                "table": "customers",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "PRIMARY",
+                "key": "PRIMARY",
+                "key_len": "8",
+                "ref": null,
+                "rows": 20,
+                "filtered": 100,
+                "Extra": "Using where"
+              },
+              {
+                "id": 2,
+                "select_type": "DEPENDENT SUBQUERY",
+                "table": "cp",
+                "partitions": null,
+                "type": "eq_ref",
+                "possible_keys": "PRIMARY",
+                "key": "PRIMARY",
+                "key_len": "8",
+                "ref": "erp_customer_def034001_fix_20261015.customers.id",
+                "rows": 1,
+                "filtered": 100,
+                "Extra": null
+              }
+            ]
+          ]
+        },
+        "gateFailures": [],
+        "postLoadStorage": {
+          "tc": "TC-028-storage",
+          "phase": "POST_LOAD_NOT_LATENCY_MEASUREMENT",
+          "storage": [
+            {
+              "TABLE_NAME": "customer_addresses",
+              "TABLE_ROWS": 4904,
+              "DATA_LENGTH": 1589248,
+              "INDEX_LENGTH": 1523712
+            },
+            {
+              "TABLE_NAME": "customer_contacts",
+              "TABLE_ROWS": 4954,
+              "DATA_LENGTH": 1589248,
+              "INDEX_LENGTH": 1671168
+            },
+            {
+              "TABLE_NAME": "customer_identifiers",
+              "TABLE_ROWS": 0,
+              "DATA_LENGTH": 16384,
+              "INDEX_LENGTH": 98304
+            },
+            {
+              "TABLE_NAME": "customers",
+              "TABLE_ROWS": 49468,
+              "DATA_LENGTH": 9977856,
+              "INDEX_LENGTH": 28033024
+            }
+          ]
+        },
+        "searchBranches": {
+          "tc": "TC-028-search-branches",
+          "phase": "POST_LOAD_NOT_LATENCY_MEASUREMENT",
+          "fields": 14,
+          "diagnosticData": {
+            "identifiers": 5000,
+            "creditProfiles": 1
+          },
+          "failures": []
+        },
+        "fullBranchPlans": "def034001-search-branch-plans.jsonl (run=4; 14 records)"
+      },
+      {
+        "attempt": 5,
+        "tests": {
+          "passed": 17,
+          "failed": 0,
+          "skipped": 0
+        },
+        "tc": "TC-028",
+        "fixtureVersion": "customer-hd011-indexed-search-50k-20-v3",
+        "data": {
+          "customers": 50000,
+          "addresses": 5000,
+          "contacts": 5000
+        },
+        "load": {
+          "concurrency": 20,
+          "warmListMs": 2.56899999999996,
+          "p95BudgetMs": 5000,
+          "requestedDurationMs": 30000,
+          "elapsedMs": 30004.410583,
+          "errors": 0,
+          "operationsPerSecond": 9657.513491172453
+        },
+        "environment": {
+          "node": "v26.6.0",
+          "mysql": "26.7.0",
+          "logicalCpu": 15,
+          "memoryBytes": 25769803776
+        },
+        "resources": {
+          "heapPeakBytes": 254292720,
+          "rssBytes": 338575360,
+          "cpuMicroseconds": {
+            "user": 26707882,
+            "system": 3068723
+          },
+          "mysqlBefore": {
+            "Innodb_row_lock_current_waits": 0,
+            "Innodb_row_lock_waits": 10,
+            "Threads_connected": 1
+          },
+          "mysqlAfter": {
+            "Innodb_row_lock_current_waits": 0,
+            "Innodb_row_lock_waits": 10,
+            "Threads_connected": 10
+          }
+        },
+        "latencyMs": {
+          "list": {
+            "count": 72442,
+            "p50": 4.405832999997074,
+            "p95": 6.992708999998285,
+            "p99": 8.013750000000073
+          },
+          "exactLookup": {
+            "count": 72442,
+            "p50": 0.9884170000004815,
+            "p95": 1.7579999999998108,
+            "p99": 3.6525000000001455
+          },
+          "addressLookup": {
+            "count": 72442,
+            "p50": 1.09429099999943,
+            "p95": 2.2220410000008997,
+            "p99": 3.756249999998545
+          },
+          "contactLookup": {
+            "count": 72442,
+            "p50": 1.0732500000012806,
+            "p95": 1.9726670000000013,
+            "p99": 3.75066599999991
+          }
+        },
+        "plans": {
+          "exactCode": [
+            {
+              "id": 1,
+              "select_type": "SIMPLE",
+              "table": "customers",
+              "partitions": null,
+              "type": "const",
+              "possible_keys": "uq_customers_code_key",
+              "key": "uq_customers_code_key",
+              "key_len": "258",
+              "ref": "const",
+              "rows": 1,
+              "filtered": 100,
+              "Extra": "Using index"
+            }
+          ],
+          "codePrefix": [
+            {
+              "id": 1,
+              "select_type": "SIMPLE",
+              "table": "customers",
+              "partitions": null,
+              "type": "range",
+              "possible_keys": "uq_customers_code_key",
+              "key": "uq_customers_code_key",
+              "key_len": "258",
+              "ref": null,
+              "rows": 100,
+              "filtered": 100,
+              "Extra": "Using where; Using index"
+            }
+          ],
+          "legalNamePrefix": [
+            {
+              "id": 1,
+              "select_type": "SIMPLE",
+              "table": "customers",
+              "partitions": null,
+              "type": "range",
+              "possible_keys": "uq_customers_legal_name_key,idx_customers_legal_name",
+              "key": "uq_customers_legal_name_key",
+              "key_len": "762",
+              "ref": null,
+              "rows": 100,
+              "filtered": 100,
+              "Extra": "Using where; Using index"
+            }
+          ],
+          "shippingExists": [
+            {
+              "id": 1,
+              "select_type": "SIMPLE",
+              "table": "c",
+              "partitions": null,
+              "type": "const",
+              "possible_keys": "PRIMARY",
+              "key": "PRIMARY",
+              "key_len": "8",
+              "ref": "const",
+              "rows": 1,
+              "filtered": 100,
+              "Extra": "Using index"
+            },
+            {
+              "id": 1,
+              "select_type": "SIMPLE",
+              "table": "a",
+              "partitions": null,
+              "type": "ref",
+              "possible_keys": "PRIMARY,uq_customer_addresses_owner,idx_customer_addresses_owner_status,idx_customer_addresses_search_label,idx_customer_addresses_search_address_line1,idx_customer_addresses_search_city,idx_customer_addresses_search_postal_code",
+              "key": "idx_customer_addresses_owner_status",
+              "key_len": "90",
+              "ref": "const,const",
+              "rows": 1,
+              "filtered": 100,
+              "Extra": "Using index"
+            },
+            {
+              "id": 1,
+              "select_type": "SIMPLE",
+              "table": "p",
+              "partitions": null,
+              "type": "eq_ref",
+              "possible_keys": "PRIMARY,uq_customer_address_default,idx_customer_address_purpose,fk_customer_address_purposes_owner",
+              "key": "PRIMARY",
+              "key_len": "130",
+              "ref": "erp_customer_def034001_fix_20261015.a.id,const",
+              "rows": 1,
+              "filtered": 5,
+              "Extra": "Using where; FirstMatch(c)"
+            }
+          ],
+          "actualList": [
+            [
+              {
+                "id": 1,
+                "select_type": "PRIMARY",
+                "table": "<derived2>",
+                "partitions": null,
+                "type": "ALL",
+                "possible_keys": null,
+                "key": null,
+                "key_len": null,
+                "ref": null,
+                "rows": 126,
+                "filtered": 100,
+                "Extra": null
+              },
+              {
+                "id": 1,
+                "select_type": "PRIMARY",
+                "table": "customers",
+                "partitions": null,
+                "type": "eq_ref",
+                "possible_keys": "PRIMARY,idx_customers_status_updated",
+                "key": "PRIMARY",
+                "key_len": "8",
+                "ref": "customer_search_matches.candidate_id",
+                "rows": 1,
+                "filtered": 60.11,
+                "Extra": "Using where"
+              },
+              {
+                "id": 2,
+                "select_type": "DERIVED",
+                "table": "customers",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "uq_customers_code_key",
+                "key": "uq_customers_code_key",
+                "key_len": "258",
+                "ref": null,
+                "rows": 100,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 3,
+                "select_type": "UNION",
+                "table": "customers",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "uq_customers_legal_name_key,idx_customers_legal_name",
+                "key": "uq_customers_legal_name_key",
+                "key_len": "762",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 4,
+                "select_type": "UNION",
+                "table": "customers",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "idx_customers_trading_name",
+                "key": "idx_customers_trading_name",
+                "key_len": "763",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 5,
+                "select_type": "UNION",
+                "table": "customers",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "idx_customers_search_phone",
+                "key": "idx_customers_search_phone",
+                "key_len": "202",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 6,
+                "select_type": "UNION",
+                "table": "customers",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "idx_customers_search_email",
+                "key": "idx_customers_search_email",
+                "key_len": "1018",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 7,
+                "select_type": "UNION",
+                "table": "customer_identifiers",
+                "partitions": null,
+                "type": "index",
+                "possible_keys": "idx_customer_identifiers_search_value",
+                "key": "idx_customer_identifiers_search_value",
+                "key_len": "852",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 8,
+                "select_type": "UNION",
+                "table": "customer_contacts",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "idx_customer_contacts_search_name,idx_customer_contacts_search_phone,idx_customer_contacts_search_mobile",
+                "key": "idx_customer_contacts_search_name",
+                "key_len": "844",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 9,
+                "select_type": "UNION",
+                "table": "customer_contacts",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "idx_customer_contacts_email,idx_customer_contacts_search_name,idx_customer_contacts_search_phone,idx_customer_contacts_search_mobile",
+                "key": "idx_customer_contacts_email",
+                "key_len": "1018",
+                "ref": null,
+                "rows": 1,
+                "filtered": 50,
+                "Extra": "Using index condition; Using where"
+              },
+              {
+                "id": 10,
+                "select_type": "UNION",
+                "table": "customer_contacts",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "idx_customer_contacts_search_name,idx_customer_contacts_search_phone,idx_customer_contacts_search_mobile",
+                "key": "idx_customer_contacts_search_phone",
+                "key_len": "284",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 11,
+                "select_type": "UNION",
+                "table": "customer_contacts",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "idx_customer_contacts_search_name,idx_customer_contacts_search_phone,idx_customer_contacts_search_mobile",
+                "key": "idx_customer_contacts_search_mobile",
+                "key_len": "284",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 12,
+                "select_type": "UNION",
+                "table": "customer_addresses",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "idx_customer_addresses_search_label,idx_customer_addresses_search_address_line1,idx_customer_addresses_search_city,idx_customer_addresses_search_postal_code",
+                "key": "idx_customer_addresses_search_label",
+                "key_len": "484",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 13,
+                "select_type": "UNION",
+                "table": "customer_addresses",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "idx_customer_addresses_search_label,idx_customer_addresses_search_address_line1,idx_customer_addresses_search_city,idx_customer_addresses_search_postal_code",
+                "key": "idx_customer_addresses_search_address_line1",
+                "key_len": "844",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 14,
+                "select_type": "UNION",
+                "table": "customer_addresses",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "idx_customer_addresses_search_label,idx_customer_addresses_search_address_line1,idx_customer_addresses_search_city,idx_customer_addresses_search_postal_code",
+                "key": "idx_customer_addresses_search_city",
+                "key_len": "484",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 15,
+                "select_type": "UNION",
+                "table": "customer_addresses",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "idx_customer_addresses_search_label,idx_customer_addresses_search_address_line1,idx_customer_addresses_search_city,idx_customer_addresses_search_postal_code",
+                "key": "idx_customer_addresses_search_postal_code",
+                "key_len": "484",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 16,
+                "select_type": "UNION RESULT",
+                "table": "<union2,3,4,5,6,7,8,9,10,11,12,13,14,15>",
+                "partitions": null,
+                "type": "ALL",
+                "possible_keys": null,
+                "key": null,
+                "key_len": null,
+                "ref": null,
+                "rows": null,
+                "filtered": null,
+                "Extra": "Using temporary"
+              }
+            ],
+            [
+              {
+                "id": 1,
+                "select_type": "PRIMARY",
+                "table": "<derived2>",
+                "partitions": null,
+                "type": "ALL",
+                "possible_keys": null,
+                "key": null,
+                "key_len": null,
+                "ref": null,
+                "rows": 126,
+                "filtered": 100,
+                "Extra": "Using temporary; Using filesort"
+              },
+              {
+                "id": 1,
+                "select_type": "PRIMARY",
+                "table": "customers",
+                "partitions": null,
+                "type": "eq_ref",
+                "possible_keys": "PRIMARY,idx_customers_status_updated",
+                "key": "PRIMARY",
+                "key_len": "8",
+                "ref": "customer_search_matches.candidate_id",
+                "rows": 1,
+                "filtered": 60.11,
+                "Extra": "Using where"
+              },
+              {
+                "id": 2,
+                "select_type": "DERIVED",
+                "table": "customers",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "uq_customers_code_key",
+                "key": "uq_customers_code_key",
+                "key_len": "258",
+                "ref": null,
+                "rows": 100,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 3,
+                "select_type": "UNION",
+                "table": "customers",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "uq_customers_legal_name_key,idx_customers_legal_name",
+                "key": "uq_customers_legal_name_key",
+                "key_len": "762",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 4,
+                "select_type": "UNION",
+                "table": "customers",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "idx_customers_trading_name",
+                "key": "idx_customers_trading_name",
+                "key_len": "763",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 5,
+                "select_type": "UNION",
+                "table": "customers",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "idx_customers_search_phone",
+                "key": "idx_customers_search_phone",
+                "key_len": "202",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 6,
+                "select_type": "UNION",
+                "table": "customers",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "idx_customers_search_email",
+                "key": "idx_customers_search_email",
+                "key_len": "1018",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 7,
+                "select_type": "UNION",
+                "table": "customer_identifiers",
+                "partitions": null,
+                "type": "index",
+                "possible_keys": "idx_customer_identifiers_search_value",
+                "key": "idx_customer_identifiers_search_value",
+                "key_len": "852",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 8,
+                "select_type": "UNION",
+                "table": "customer_contacts",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "idx_customer_contacts_search_name,idx_customer_contacts_search_phone,idx_customer_contacts_search_mobile",
+                "key": "idx_customer_contacts_search_name",
+                "key_len": "844",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 9,
+                "select_type": "UNION",
+                "table": "customer_contacts",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "idx_customer_contacts_email,idx_customer_contacts_search_name,idx_customer_contacts_search_phone,idx_customer_contacts_search_mobile",
+                "key": "idx_customer_contacts_email",
+                "key_len": "1018",
+                "ref": null,
+                "rows": 1,
+                "filtered": 50,
+                "Extra": "Using index condition; Using where"
+              },
+              {
+                "id": 10,
+                "select_type": "UNION",
+                "table": "customer_contacts",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "idx_customer_contacts_search_name,idx_customer_contacts_search_phone,idx_customer_contacts_search_mobile",
+                "key": "idx_customer_contacts_search_phone",
+                "key_len": "284",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 11,
+                "select_type": "UNION",
+                "table": "customer_contacts",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "idx_customer_contacts_search_name,idx_customer_contacts_search_phone,idx_customer_contacts_search_mobile",
+                "key": "idx_customer_contacts_search_mobile",
+                "key_len": "284",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 12,
+                "select_type": "UNION",
+                "table": "customer_addresses",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "idx_customer_addresses_search_label,idx_customer_addresses_search_address_line1,idx_customer_addresses_search_city,idx_customer_addresses_search_postal_code",
+                "key": "idx_customer_addresses_search_label",
+                "key_len": "484",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 13,
+                "select_type": "UNION",
+                "table": "customer_addresses",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "idx_customer_addresses_search_label,idx_customer_addresses_search_address_line1,idx_customer_addresses_search_city,idx_customer_addresses_search_postal_code",
+                "key": "idx_customer_addresses_search_address_line1",
+                "key_len": "844",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 14,
+                "select_type": "UNION",
+                "table": "customer_addresses",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "idx_customer_addresses_search_label,idx_customer_addresses_search_address_line1,idx_customer_addresses_search_city,idx_customer_addresses_search_postal_code",
+                "key": "idx_customer_addresses_search_city",
+                "key_len": "484",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 15,
+                "select_type": "UNION",
+                "table": "customer_addresses",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "idx_customer_addresses_search_label,idx_customer_addresses_search_address_line1,idx_customer_addresses_search_city,idx_customer_addresses_search_postal_code",
+                "key": "idx_customer_addresses_search_postal_code",
+                "key_len": "484",
+                "ref": null,
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              },
+              {
+                "id": 16,
+                "select_type": "UNION RESULT",
+                "table": "<union2,3,4,5,6,7,8,9,10,11,12,13,14,15>",
+                "partitions": null,
+                "type": "ALL",
+                "possible_keys": null,
+                "key": null,
+                "key_len": null,
+                "ref": null,
+                "rows": null,
+                "filtered": null,
+                "Extra": "Using temporary"
+              }
+            ],
+            [
+              {
+                "id": 1,
+                "select_type": "PRIMARY",
+                "table": "customers",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "PRIMARY",
+                "key": "PRIMARY",
+                "key_len": "8",
+                "ref": null,
+                "rows": 20,
+                "filtered": 100,
+                "Extra": "Using where"
+              },
+              {
+                "id": 2,
+                "select_type": "DEPENDENT SUBQUERY",
+                "table": "cp",
+                "partitions": null,
+                "type": "eq_ref",
+                "possible_keys": "PRIMARY",
+                "key": "PRIMARY",
+                "key_len": "8",
+                "ref": "erp_customer_def034001_fix_20261015.customers.id",
+                "rows": 1,
+                "filtered": 100,
+                "Extra": null
+              }
+            ]
+          ]
+        },
+        "gateFailures": [],
+        "postLoadStorage": {
+          "tc": "TC-028-storage",
+          "phase": "POST_LOAD_NOT_LATENCY_MEASUREMENT",
+          "storage": [
+            {
+              "TABLE_NAME": "customer_addresses",
+              "TABLE_ROWS": 4904,
+              "DATA_LENGTH": 1589248,
+              "INDEX_LENGTH": 1523712
+            },
+            {
+              "TABLE_NAME": "customer_contacts",
+              "TABLE_ROWS": 5084,
+              "DATA_LENGTH": 1589248,
+              "INDEX_LENGTH": 1671168
+            },
+            {
+              "TABLE_NAME": "customer_identifiers",
+              "TABLE_ROWS": 0,
+              "DATA_LENGTH": 16384,
+              "INDEX_LENGTH": 98304
+            },
+            {
+              "TABLE_NAME": "customers",
+              "TABLE_ROWS": 49468,
+              "DATA_LENGTH": 9977856,
+              "INDEX_LENGTH": 28033024
+            }
+          ]
+        },
+        "searchBranches": {
+          "tc": "TC-028-search-branches",
+          "phase": "POST_LOAD_NOT_LATENCY_MEASUREMENT",
+          "fields": 14,
+          "diagnosticData": {
+            "identifiers": 5000,
+            "creditProfiles": 1
+          },
+          "failures": []
+        },
+        "fullBranchPlans": "def034001-search-branch-plans.jsonl (run=5; 14 records)"
+      }
+    ],
+    "cleanup": "Own synthetic Customers=0 after each test; browser backend/Vite stopped before final timed runs. Verified own datadir/port13373; mysqladmin shutdown and serverexit0; exact task-owned runtime and clean detached comparison worktree removed2026-10-15T03:47Z. Sanitized evidence retained; no user3306/unrelated worktree touched.",
+    "limitations": [
+      "Local synthetic core four-operation service-only mix, not HTTP/browser latency or mixed-write/full-downstream acceptance.",
+      "20 service workers use unchanged pool10 and same 30s admission; this is not 20 simultaneous database sessions.",
+      "Per-field probes and information_schema footprint are post-load, excluded from timed metrics. 5000 identifiers/one credit profile added only for diagnostic probes.",
+      "TABLE_ROWS is an estimate; INDEX_LENGTH includes all pre-existing and new indexes, not measured incremental ten-index storage.",
+      "Fresh empty-schema ten-index installation measured26.2325ms; no 50k populated/production index-build duration, write amplification or DDL operational guarantee.",
+      "No exclusive host reservation; unrelated project services were not modified. No task-owned competing build/browser/migration/test ran during final timed load.",
+      "Virtual materialized candidate scans/filesort/temporary results remain; no claim of zero sorting/materialization.",
+      "All failed intermediate attempts and unrelated browser acceptance gaps retained in report."
+    ],
+    "integration": {
+      "sourceCommit": "c6ca364522664254951133984910ca933749b368",
+      "sourceFingerprint": "bccc7235e5af4852f78eddcefff68c9989ca7d57770abc7cc7930b32b1fb3449",
+      "mainCommit": "e56ad1a90f5938bd4799fd784a74aa5772e027ea",
+      "scope": "Fresh latest-main merge adds Supplier import changes only; Customer source/tests unchanged. All Customer tests and two full local capacity measurements reexecuted, not rebinding prior runs.",
+      "runtime": {
+        "mysql": "26.7.0",
+        "host": "127.0.0.1",
+        "port": 13373,
+        "schema": "erp_customer_def034001_integrated_20261015",
+        "datadir": "/private/tmp/erp-customer-def034001-integrated-runtime.3nNabW/mysql/",
+        "migrations": "fresh runner through0082"
+      },
+      "regression": {
+        "unitPassed": 280,
+        "unitExtendedRuntimeSkipped": 2,
+        "integrationTestNodesPassed": 24,
+        "integrationSkipped": 0,
+        "lint": "PASS",
+        "build": "PASS(existing chunk warning)"
+      },
+      "runs": [
+        {
+          "attempt": 6,
+          "tests": {
+            "passed": 17,
+            "failed": 0,
+            "skipped": 0
+          },
+          "tc": "TC-028",
+          "fixtureVersion": "customer-hd011-indexed-search-50k-20-v3",
+          "data": {
+            "customers": 50000,
+            "addresses": 5000,
+            "contacts": 5000
+          },
+          "load": {
+            "concurrency": 20,
+            "warmListMs": 3.082166000000143,
+            "p95BudgetMs": 5000,
+            "requestedDurationMs": 30000,
+            "elapsedMs": 30007.157958999996,
+            "errors": 0,
+            "operationsPerSecond": 8810.031271912232
+          },
+          "environment": {
+            "node": "v26.6.0",
+            "mysql": "26.7.0",
+            "logicalCpu": 15,
+            "memoryBytes": 25769803776
+          },
+          "resources": {
+            "heapPeakBytes": 262061640,
+            "rssBytes": 391577600,
+            "cpuMicroseconds": {
+              "user": 26465112,
+              "system": 3144974
+            },
+            "mysqlBefore": {
+              "Innodb_row_lock_current_waits": 0,
+              "Innodb_row_lock_waits": 5,
+              "Threads_connected": 1
+            },
+            "mysqlAfter": {
+              "Innodb_row_lock_current_waits": 0,
+              "Innodb_row_lock_waits": 5,
+              "Threads_connected": 10
+            }
+          },
+          "latencyMs": {
+            "list": {
+              "count": 66091,
+              "p50": 4.894916999999623,
+              "p95": 7.586707999998907,
+              "p99": 8.427583999999115
+            },
+            "exactLookup": {
+              "count": 66091,
+              "p50": 1.0971250000002328,
+              "p95": 1.863208000000668,
+              "p99": 3.9225829999995767
+            },
+            "addressLookup": {
+              "count": 66091,
+              "p50": 1.203750000000582,
+              "p95": 2.0747919999998885,
+              "p99": 4.028582999999344
+            },
+            "contactLookup": {
+              "count": 66091,
+              "p50": 1.187207999999373,
+              "p95": 2.1222499999994398,
+              "p99": 4.047417000001587
+            }
+          },
+          "plans": {
+            "exactCode": [
+              {
+                "id": 1,
+                "select_type": "SIMPLE",
+                "table": "customers",
+                "partitions": null,
+                "type": "const",
+                "possible_keys": "uq_customers_code_key",
+                "key": "uq_customers_code_key",
+                "key_len": "258",
+                "ref": "const",
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using index"
+              }
+            ],
+            "codePrefix": [
+              {
+                "id": 1,
+                "select_type": "SIMPLE",
+                "table": "customers",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "uq_customers_code_key",
+                "key": "uq_customers_code_key",
+                "key_len": "258",
+                "ref": null,
+                "rows": 100,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              }
+            ],
+            "legalNamePrefix": [
+              {
+                "id": 1,
+                "select_type": "SIMPLE",
+                "table": "customers",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "uq_customers_legal_name_key,idx_customers_legal_name",
+                "key": "uq_customers_legal_name_key",
+                "key_len": "762",
+                "ref": null,
+                "rows": 100,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              }
+            ],
+            "shippingExists": [
+              {
+                "id": 1,
+                "select_type": "SIMPLE",
+                "table": "c",
+                "partitions": null,
+                "type": "const",
+                "possible_keys": "PRIMARY",
+                "key": "PRIMARY",
+                "key_len": "8",
+                "ref": "const",
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using index"
+              },
+              {
+                "id": 1,
+                "select_type": "SIMPLE",
+                "table": "a",
+                "partitions": null,
+                "type": "ref",
+                "possible_keys": "PRIMARY,uq_customer_addresses_owner,idx_customer_addresses_owner_status,idx_customer_addresses_search_label,idx_customer_addresses_search_address_line1,idx_customer_addresses_search_city,idx_customer_addresses_search_postal_code",
+                "key": "idx_customer_addresses_owner_status",
+                "key_len": "90",
+                "ref": "const,const",
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using index"
+              },
+              {
+                "id": 1,
+                "select_type": "SIMPLE",
+                "table": "p",
+                "partitions": null,
+                "type": "eq_ref",
+                "possible_keys": "PRIMARY,uq_customer_address_default,idx_customer_address_purpose,fk_customer_address_purposes_owner",
+                "key": "PRIMARY",
+                "key_len": "130",
+                "ref": "erp_customer_def034001_integrated_20261015.a.id,const",
+                "rows": 1,
+                "filtered": 5,
+                "Extra": "Using where; FirstMatch(c)"
+              }
+            ],
+            "actualList": [
+              [
+                {
+                  "id": 1,
+                  "select_type": "PRIMARY",
+                  "table": "<derived2>",
+                  "partitions": null,
+                  "type": "ALL",
+                  "possible_keys": null,
+                  "key": null,
+                  "key_len": null,
+                  "ref": null,
+                  "rows": 126,
+                  "filtered": 100,
+                  "Extra": null
+                },
+                {
+                  "id": 1,
+                  "select_type": "PRIMARY",
+                  "table": "customers",
+                  "partitions": null,
+                  "type": "eq_ref",
+                  "possible_keys": "PRIMARY,idx_customers_status_updated",
+                  "key": "PRIMARY",
+                  "key_len": "8",
+                  "ref": "customer_search_matches.candidate_id",
+                  "rows": 1,
+                  "filtered": 60.11,
+                  "Extra": "Using where"
+                },
+                {
+                  "id": 2,
+                  "select_type": "DERIVED",
+                  "table": "customers",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "uq_customers_code_key",
+                  "key": "uq_customers_code_key",
+                  "key_len": "258",
+                  "ref": null,
+                  "rows": 100,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 3,
+                  "select_type": "UNION",
+                  "table": "customers",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "uq_customers_legal_name_key,idx_customers_legal_name",
+                  "key": "uq_customers_legal_name_key",
+                  "key_len": "762",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 4,
+                  "select_type": "UNION",
+                  "table": "customers",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "idx_customers_trading_name",
+                  "key": "idx_customers_trading_name",
+                  "key_len": "763",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 5,
+                  "select_type": "UNION",
+                  "table": "customers",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "idx_customers_search_phone",
+                  "key": "idx_customers_search_phone",
+                  "key_len": "202",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 6,
+                  "select_type": "UNION",
+                  "table": "customers",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "idx_customers_search_email",
+                  "key": "idx_customers_search_email",
+                  "key_len": "1018",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 7,
+                  "select_type": "UNION",
+                  "table": "customer_identifiers",
+                  "partitions": null,
+                  "type": "index",
+                  "possible_keys": "idx_customer_identifiers_search_value",
+                  "key": "idx_customer_identifiers_search_value",
+                  "key_len": "852",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 8,
+                  "select_type": "UNION",
+                  "table": "customer_contacts",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "idx_customer_contacts_search_name,idx_customer_contacts_search_phone,idx_customer_contacts_search_mobile",
+                  "key": "idx_customer_contacts_search_name",
+                  "key_len": "844",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 9,
+                  "select_type": "UNION",
+                  "table": "customer_contacts",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "idx_customer_contacts_email,idx_customer_contacts_search_name,idx_customer_contacts_search_phone,idx_customer_contacts_search_mobile",
+                  "key": "idx_customer_contacts_email",
+                  "key_len": "1018",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 50,
+                  "Extra": "Using index condition; Using where"
+                },
+                {
+                  "id": 10,
+                  "select_type": "UNION",
+                  "table": "customer_contacts",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "idx_customer_contacts_search_name,idx_customer_contacts_search_phone,idx_customer_contacts_search_mobile",
+                  "key": "idx_customer_contacts_search_phone",
+                  "key_len": "284",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 11,
+                  "select_type": "UNION",
+                  "table": "customer_contacts",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "idx_customer_contacts_search_name,idx_customer_contacts_search_phone,idx_customer_contacts_search_mobile",
+                  "key": "idx_customer_contacts_search_mobile",
+                  "key_len": "284",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 12,
+                  "select_type": "UNION",
+                  "table": "customer_addresses",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "idx_customer_addresses_search_label,idx_customer_addresses_search_address_line1,idx_customer_addresses_search_city,idx_customer_addresses_search_postal_code",
+                  "key": "idx_customer_addresses_search_label",
+                  "key_len": "484",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 13,
+                  "select_type": "UNION",
+                  "table": "customer_addresses",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "idx_customer_addresses_search_label,idx_customer_addresses_search_address_line1,idx_customer_addresses_search_city,idx_customer_addresses_search_postal_code",
+                  "key": "idx_customer_addresses_search_address_line1",
+                  "key_len": "844",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 14,
+                  "select_type": "UNION",
+                  "table": "customer_addresses",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "idx_customer_addresses_search_label,idx_customer_addresses_search_address_line1,idx_customer_addresses_search_city,idx_customer_addresses_search_postal_code",
+                  "key": "idx_customer_addresses_search_city",
+                  "key_len": "484",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 15,
+                  "select_type": "UNION",
+                  "table": "customer_addresses",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "idx_customer_addresses_search_label,idx_customer_addresses_search_address_line1,idx_customer_addresses_search_city,idx_customer_addresses_search_postal_code",
+                  "key": "idx_customer_addresses_search_postal_code",
+                  "key_len": "484",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 16,
+                  "select_type": "UNION RESULT",
+                  "table": "<union2,3,4,5,6,7,8,9,10,11,12,13,14,15>",
+                  "partitions": null,
+                  "type": "ALL",
+                  "possible_keys": null,
+                  "key": null,
+                  "key_len": null,
+                  "ref": null,
+                  "rows": null,
+                  "filtered": null,
+                  "Extra": "Using temporary"
+                }
+              ],
+              [
+                {
+                  "id": 1,
+                  "select_type": "PRIMARY",
+                  "table": "<derived2>",
+                  "partitions": null,
+                  "type": "ALL",
+                  "possible_keys": null,
+                  "key": null,
+                  "key_len": null,
+                  "ref": null,
+                  "rows": 126,
+                  "filtered": 100,
+                  "Extra": "Using temporary; Using filesort"
+                },
+                {
+                  "id": 1,
+                  "select_type": "PRIMARY",
+                  "table": "customers",
+                  "partitions": null,
+                  "type": "eq_ref",
+                  "possible_keys": "PRIMARY,idx_customers_status_updated",
+                  "key": "PRIMARY",
+                  "key_len": "8",
+                  "ref": "customer_search_matches.candidate_id",
+                  "rows": 1,
+                  "filtered": 60.11,
+                  "Extra": "Using where"
+                },
+                {
+                  "id": 2,
+                  "select_type": "DERIVED",
+                  "table": "customers",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "uq_customers_code_key",
+                  "key": "uq_customers_code_key",
+                  "key_len": "258",
+                  "ref": null,
+                  "rows": 100,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 3,
+                  "select_type": "UNION",
+                  "table": "customers",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "uq_customers_legal_name_key,idx_customers_legal_name",
+                  "key": "uq_customers_legal_name_key",
+                  "key_len": "762",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 4,
+                  "select_type": "UNION",
+                  "table": "customers",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "idx_customers_trading_name",
+                  "key": "idx_customers_trading_name",
+                  "key_len": "763",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 5,
+                  "select_type": "UNION",
+                  "table": "customers",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "idx_customers_search_phone",
+                  "key": "idx_customers_search_phone",
+                  "key_len": "202",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 6,
+                  "select_type": "UNION",
+                  "table": "customers",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "idx_customers_search_email",
+                  "key": "idx_customers_search_email",
+                  "key_len": "1018",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 7,
+                  "select_type": "UNION",
+                  "table": "customer_identifiers",
+                  "partitions": null,
+                  "type": "index",
+                  "possible_keys": "idx_customer_identifiers_search_value",
+                  "key": "idx_customer_identifiers_search_value",
+                  "key_len": "852",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 8,
+                  "select_type": "UNION",
+                  "table": "customer_contacts",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "idx_customer_contacts_search_name,idx_customer_contacts_search_phone,idx_customer_contacts_search_mobile",
+                  "key": "idx_customer_contacts_search_name",
+                  "key_len": "844",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 9,
+                  "select_type": "UNION",
+                  "table": "customer_contacts",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "idx_customer_contacts_email,idx_customer_contacts_search_name,idx_customer_contacts_search_phone,idx_customer_contacts_search_mobile",
+                  "key": "idx_customer_contacts_email",
+                  "key_len": "1018",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 50,
+                  "Extra": "Using index condition; Using where"
+                },
+                {
+                  "id": 10,
+                  "select_type": "UNION",
+                  "table": "customer_contacts",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "idx_customer_contacts_search_name,idx_customer_contacts_search_phone,idx_customer_contacts_search_mobile",
+                  "key": "idx_customer_contacts_search_phone",
+                  "key_len": "284",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 11,
+                  "select_type": "UNION",
+                  "table": "customer_contacts",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "idx_customer_contacts_search_name,idx_customer_contacts_search_phone,idx_customer_contacts_search_mobile",
+                  "key": "idx_customer_contacts_search_mobile",
+                  "key_len": "284",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 12,
+                  "select_type": "UNION",
+                  "table": "customer_addresses",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "idx_customer_addresses_search_label,idx_customer_addresses_search_address_line1,idx_customer_addresses_search_city,idx_customer_addresses_search_postal_code",
+                  "key": "idx_customer_addresses_search_label",
+                  "key_len": "484",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 13,
+                  "select_type": "UNION",
+                  "table": "customer_addresses",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "idx_customer_addresses_search_label,idx_customer_addresses_search_address_line1,idx_customer_addresses_search_city,idx_customer_addresses_search_postal_code",
+                  "key": "idx_customer_addresses_search_address_line1",
+                  "key_len": "844",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 14,
+                  "select_type": "UNION",
+                  "table": "customer_addresses",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "idx_customer_addresses_search_label,idx_customer_addresses_search_address_line1,idx_customer_addresses_search_city,idx_customer_addresses_search_postal_code",
+                  "key": "idx_customer_addresses_search_city",
+                  "key_len": "484",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 15,
+                  "select_type": "UNION",
+                  "table": "customer_addresses",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "idx_customer_addresses_search_label,idx_customer_addresses_search_address_line1,idx_customer_addresses_search_city,idx_customer_addresses_search_postal_code",
+                  "key": "idx_customer_addresses_search_postal_code",
+                  "key_len": "484",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 16,
+                  "select_type": "UNION RESULT",
+                  "table": "<union2,3,4,5,6,7,8,9,10,11,12,13,14,15>",
+                  "partitions": null,
+                  "type": "ALL",
+                  "possible_keys": null,
+                  "key": null,
+                  "key_len": null,
+                  "ref": null,
+                  "rows": null,
+                  "filtered": null,
+                  "Extra": "Using temporary"
+                }
+              ],
+              [
+                {
+                  "id": 1,
+                  "select_type": "PRIMARY",
+                  "table": "customers",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "PRIMARY",
+                  "key": "PRIMARY",
+                  "key_len": "8",
+                  "ref": null,
+                  "rows": 20,
+                  "filtered": 100,
+                  "Extra": "Using where"
+                },
+                {
+                  "id": 2,
+                  "select_type": "DEPENDENT SUBQUERY",
+                  "table": "cp",
+                  "partitions": null,
+                  "type": "eq_ref",
+                  "possible_keys": "PRIMARY",
+                  "key": "PRIMARY",
+                  "key_len": "8",
+                  "ref": "erp_customer_def034001_integrated_20261015.customers.id",
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": null
+                }
+              ]
+            ]
+          },
+          "gateFailures": [],
+          "postLoadStorage": {
+            "tc": "TC-028-storage",
+            "phase": "POST_LOAD_NOT_LATENCY_MEASUREMENT",
+            "storage": [
+              {
+                "TABLE_NAME": "customer_addresses",
+                "TABLE_ROWS": 4904,
+                "DATA_LENGTH": 1589248,
+                "INDEX_LENGTH": 1523712
+              },
+              {
+                "TABLE_NAME": "customer_contacts",
+                "TABLE_ROWS": 5004,
+                "DATA_LENGTH": 1589248,
+                "INDEX_LENGTH": 1933312
+              },
+              {
+                "TABLE_NAME": "customer_identifiers",
+                "TABLE_ROWS": 0,
+                "DATA_LENGTH": 16384,
+                "INDEX_LENGTH": 98304
+              },
+              {
+                "TABLE_NAME": "customers",
+                "TABLE_ROWS": 49468,
+                "DATA_LENGTH": 9977856,
+                "INDEX_LENGTH": 28033024
+              }
+            ]
+          },
+          "searchBranches": {
+            "tc": "TC-028-search-branches",
+            "phase": "POST_LOAD_NOT_LATENCY_MEASUREMENT",
+            "fields": 14,
+            "diagnosticData": {
+              "identifiers": 5000,
+              "creditProfiles": 1
+            },
+            "failures": []
+          },
+          "fullBranchPlans": "def034001-search-branch-plans.jsonl (run=6;14records)"
+        },
+        {
+          "attempt": 7,
+          "tests": {
+            "passed": 17,
+            "failed": 0,
+            "skipped": 0
+          },
+          "tc": "TC-028",
+          "fixtureVersion": "customer-hd011-indexed-search-50k-20-v3",
+          "data": {
+            "customers": 50000,
+            "addresses": 5000,
+            "contacts": 5000
+          },
+          "load": {
+            "concurrency": 20,
+            "warmListMs": 2.5006670000002487,
+            "p95BudgetMs": 5000,
+            "requestedDurationMs": 30000,
+            "elapsedMs": 30004.474124999997,
+            "errors": 0,
+            "operationsPerSecond": 8973.061779998787
+          },
+          "environment": {
+            "node": "v26.6.0",
+            "mysql": "26.7.0",
+            "logicalCpu": 15,
+            "memoryBytes": 25769803776
+          },
+          "resources": {
+            "heapPeakBytes": 261738944,
+            "rssBytes": 359710720,
+            "cpuMicroseconds": {
+              "user": 26384125,
+              "system": 3133973
+            },
+            "mysqlBefore": {
+              "Innodb_row_lock_current_waits": 0,
+              "Innodb_row_lock_waits": 5,
+              "Threads_connected": 1
+            },
+            "mysqlAfter": {
+              "Innodb_row_lock_current_waits": 0,
+              "Innodb_row_lock_waits": 5,
+              "Threads_connected": 10
+            }
+          },
+          "latencyMs": {
+            "list": {
+              "count": 67308,
+              "p50": 4.719834000000446,
+              "p95": 7.463459000000512,
+              "p99": 8.696749999999156
+            },
+            "exactLookup": {
+              "count": 67308,
+              "p50": 1.057541999998648,
+              "p95": 2.0323329999991984,
+              "p99": 3.8557920000002923
+            },
+            "addressLookup": {
+              "count": 67308,
+              "p50": 1.1667919999999867,
+              "p95": 2.3486250000005384,
+              "p99": 3.9917920000007143
+            },
+            "contactLookup": {
+              "count": 67308,
+              "p50": 1.1478750000023865,
+              "p95": 2.2677499999990687,
+              "p99": 3.9761670000007143
+            }
+          },
+          "plans": {
+            "exactCode": [
+              {
+                "id": 1,
+                "select_type": "SIMPLE",
+                "table": "customers",
+                "partitions": null,
+                "type": "const",
+                "possible_keys": "uq_customers_code_key",
+                "key": "uq_customers_code_key",
+                "key_len": "258",
+                "ref": "const",
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using index"
+              }
+            ],
+            "codePrefix": [
+              {
+                "id": 1,
+                "select_type": "SIMPLE",
+                "table": "customers",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "uq_customers_code_key",
+                "key": "uq_customers_code_key",
+                "key_len": "258",
+                "ref": null,
+                "rows": 100,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              }
+            ],
+            "legalNamePrefix": [
+              {
+                "id": 1,
+                "select_type": "SIMPLE",
+                "table": "customers",
+                "partitions": null,
+                "type": "range",
+                "possible_keys": "uq_customers_legal_name_key,idx_customers_legal_name",
+                "key": "uq_customers_legal_name_key",
+                "key_len": "762",
+                "ref": null,
+                "rows": 100,
+                "filtered": 100,
+                "Extra": "Using where; Using index"
+              }
+            ],
+            "shippingExists": [
+              {
+                "id": 1,
+                "select_type": "SIMPLE",
+                "table": "c",
+                "partitions": null,
+                "type": "const",
+                "possible_keys": "PRIMARY",
+                "key": "PRIMARY",
+                "key_len": "8",
+                "ref": "const",
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using index"
+              },
+              {
+                "id": 1,
+                "select_type": "SIMPLE",
+                "table": "a",
+                "partitions": null,
+                "type": "ref",
+                "possible_keys": "PRIMARY,uq_customer_addresses_owner,idx_customer_addresses_owner_status,idx_customer_addresses_search_label,idx_customer_addresses_search_address_line1,idx_customer_addresses_search_city,idx_customer_addresses_search_postal_code",
+                "key": "idx_customer_addresses_owner_status",
+                "key_len": "90",
+                "ref": "const,const",
+                "rows": 1,
+                "filtered": 100,
+                "Extra": "Using index"
+              },
+              {
+                "id": 1,
+                "select_type": "SIMPLE",
+                "table": "p",
+                "partitions": null,
+                "type": "eq_ref",
+                "possible_keys": "PRIMARY,uq_customer_address_default,idx_customer_address_purpose,fk_customer_address_purposes_owner",
+                "key": "PRIMARY",
+                "key_len": "130",
+                "ref": "erp_customer_def034001_integrated_20261015.a.id,const",
+                "rows": 1,
+                "filtered": 5,
+                "Extra": "Using where; FirstMatch(c)"
+              }
+            ],
+            "actualList": [
+              [
+                {
+                  "id": 1,
+                  "select_type": "PRIMARY",
+                  "table": "<derived2>",
+                  "partitions": null,
+                  "type": "ALL",
+                  "possible_keys": null,
+                  "key": null,
+                  "key_len": null,
+                  "ref": null,
+                  "rows": 126,
+                  "filtered": 100,
+                  "Extra": null
+                },
+                {
+                  "id": 1,
+                  "select_type": "PRIMARY",
+                  "table": "customers",
+                  "partitions": null,
+                  "type": "eq_ref",
+                  "possible_keys": "PRIMARY,idx_customers_status_updated",
+                  "key": "PRIMARY",
+                  "key_len": "8",
+                  "ref": "customer_search_matches.candidate_id",
+                  "rows": 1,
+                  "filtered": 60.11,
+                  "Extra": "Using where"
+                },
+                {
+                  "id": 2,
+                  "select_type": "DERIVED",
+                  "table": "customers",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "uq_customers_code_key",
+                  "key": "uq_customers_code_key",
+                  "key_len": "258",
+                  "ref": null,
+                  "rows": 100,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 3,
+                  "select_type": "UNION",
+                  "table": "customers",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "uq_customers_legal_name_key,idx_customers_legal_name",
+                  "key": "uq_customers_legal_name_key",
+                  "key_len": "762",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 4,
+                  "select_type": "UNION",
+                  "table": "customers",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "idx_customers_trading_name",
+                  "key": "idx_customers_trading_name",
+                  "key_len": "763",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 5,
+                  "select_type": "UNION",
+                  "table": "customers",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "idx_customers_search_phone",
+                  "key": "idx_customers_search_phone",
+                  "key_len": "202",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 6,
+                  "select_type": "UNION",
+                  "table": "customers",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "idx_customers_search_email",
+                  "key": "idx_customers_search_email",
+                  "key_len": "1018",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 7,
+                  "select_type": "UNION",
+                  "table": "customer_identifiers",
+                  "partitions": null,
+                  "type": "index",
+                  "possible_keys": "idx_customer_identifiers_search_value",
+                  "key": "idx_customer_identifiers_search_value",
+                  "key_len": "852",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 8,
+                  "select_type": "UNION",
+                  "table": "customer_contacts",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "idx_customer_contacts_search_name,idx_customer_contacts_search_phone,idx_customer_contacts_search_mobile",
+                  "key": "idx_customer_contacts_search_name",
+                  "key_len": "844",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 9,
+                  "select_type": "UNION",
+                  "table": "customer_contacts",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "idx_customer_contacts_email,idx_customer_contacts_search_name,idx_customer_contacts_search_phone,idx_customer_contacts_search_mobile",
+                  "key": "idx_customer_contacts_email",
+                  "key_len": "1018",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 49.99,
+                  "Extra": "Using index condition; Using where"
+                },
+                {
+                  "id": 10,
+                  "select_type": "UNION",
+                  "table": "customer_contacts",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "idx_customer_contacts_search_name,idx_customer_contacts_search_phone,idx_customer_contacts_search_mobile",
+                  "key": "idx_customer_contacts_search_phone",
+                  "key_len": "284",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 11,
+                  "select_type": "UNION",
+                  "table": "customer_contacts",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "idx_customer_contacts_search_name,idx_customer_contacts_search_phone,idx_customer_contacts_search_mobile",
+                  "key": "idx_customer_contacts_search_mobile",
+                  "key_len": "284",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 12,
+                  "select_type": "UNION",
+                  "table": "customer_addresses",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "idx_customer_addresses_search_label,idx_customer_addresses_search_address_line1,idx_customer_addresses_search_city,idx_customer_addresses_search_postal_code",
+                  "key": "idx_customer_addresses_search_label",
+                  "key_len": "484",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 13,
+                  "select_type": "UNION",
+                  "table": "customer_addresses",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "idx_customer_addresses_search_label,idx_customer_addresses_search_address_line1,idx_customer_addresses_search_city,idx_customer_addresses_search_postal_code",
+                  "key": "idx_customer_addresses_search_address_line1",
+                  "key_len": "844",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 14,
+                  "select_type": "UNION",
+                  "table": "customer_addresses",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "idx_customer_addresses_search_label,idx_customer_addresses_search_address_line1,idx_customer_addresses_search_city,idx_customer_addresses_search_postal_code",
+                  "key": "idx_customer_addresses_search_city",
+                  "key_len": "484",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 15,
+                  "select_type": "UNION",
+                  "table": "customer_addresses",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "idx_customer_addresses_search_label,idx_customer_addresses_search_address_line1,idx_customer_addresses_search_city,idx_customer_addresses_search_postal_code",
+                  "key": "idx_customer_addresses_search_postal_code",
+                  "key_len": "484",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 16,
+                  "select_type": "UNION RESULT",
+                  "table": "<union2,3,4,5,6,7,8,9,10,11,12,13,14,15>",
+                  "partitions": null,
+                  "type": "ALL",
+                  "possible_keys": null,
+                  "key": null,
+                  "key_len": null,
+                  "ref": null,
+                  "rows": null,
+                  "filtered": null,
+                  "Extra": "Using temporary"
+                }
+              ],
+              [
+                {
+                  "id": 1,
+                  "select_type": "PRIMARY",
+                  "table": "<derived2>",
+                  "partitions": null,
+                  "type": "ALL",
+                  "possible_keys": null,
+                  "key": null,
+                  "key_len": null,
+                  "ref": null,
+                  "rows": 126,
+                  "filtered": 100,
+                  "Extra": "Using temporary; Using filesort"
+                },
+                {
+                  "id": 1,
+                  "select_type": "PRIMARY",
+                  "table": "customers",
+                  "partitions": null,
+                  "type": "eq_ref",
+                  "possible_keys": "PRIMARY,idx_customers_status_updated",
+                  "key": "PRIMARY",
+                  "key_len": "8",
+                  "ref": "customer_search_matches.candidate_id",
+                  "rows": 1,
+                  "filtered": 60.11,
+                  "Extra": "Using where"
+                },
+                {
+                  "id": 2,
+                  "select_type": "DERIVED",
+                  "table": "customers",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "uq_customers_code_key",
+                  "key": "uq_customers_code_key",
+                  "key_len": "258",
+                  "ref": null,
+                  "rows": 100,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 3,
+                  "select_type": "UNION",
+                  "table": "customers",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "uq_customers_legal_name_key,idx_customers_legal_name",
+                  "key": "uq_customers_legal_name_key",
+                  "key_len": "762",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 4,
+                  "select_type": "UNION",
+                  "table": "customers",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "idx_customers_trading_name",
+                  "key": "idx_customers_trading_name",
+                  "key_len": "763",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 5,
+                  "select_type": "UNION",
+                  "table": "customers",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "idx_customers_search_phone",
+                  "key": "idx_customers_search_phone",
+                  "key_len": "202",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 6,
+                  "select_type": "UNION",
+                  "table": "customers",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "idx_customers_search_email",
+                  "key": "idx_customers_search_email",
+                  "key_len": "1018",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 7,
+                  "select_type": "UNION",
+                  "table": "customer_identifiers",
+                  "partitions": null,
+                  "type": "index",
+                  "possible_keys": "idx_customer_identifiers_search_value",
+                  "key": "idx_customer_identifiers_search_value",
+                  "key_len": "852",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 8,
+                  "select_type": "UNION",
+                  "table": "customer_contacts",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "idx_customer_contacts_search_name,idx_customer_contacts_search_phone,idx_customer_contacts_search_mobile",
+                  "key": "idx_customer_contacts_search_name",
+                  "key_len": "844",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 9,
+                  "select_type": "UNION",
+                  "table": "customer_contacts",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "idx_customer_contacts_email,idx_customer_contacts_search_name,idx_customer_contacts_search_phone,idx_customer_contacts_search_mobile",
+                  "key": "idx_customer_contacts_email",
+                  "key_len": "1018",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 49.99,
+                  "Extra": "Using index condition; Using where"
+                },
+                {
+                  "id": 10,
+                  "select_type": "UNION",
+                  "table": "customer_contacts",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "idx_customer_contacts_search_name,idx_customer_contacts_search_phone,idx_customer_contacts_search_mobile",
+                  "key": "idx_customer_contacts_search_phone",
+                  "key_len": "284",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 11,
+                  "select_type": "UNION",
+                  "table": "customer_contacts",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "idx_customer_contacts_search_name,idx_customer_contacts_search_phone,idx_customer_contacts_search_mobile",
+                  "key": "idx_customer_contacts_search_mobile",
+                  "key_len": "284",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 12,
+                  "select_type": "UNION",
+                  "table": "customer_addresses",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "idx_customer_addresses_search_label,idx_customer_addresses_search_address_line1,idx_customer_addresses_search_city,idx_customer_addresses_search_postal_code",
+                  "key": "idx_customer_addresses_search_label",
+                  "key_len": "484",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 13,
+                  "select_type": "UNION",
+                  "table": "customer_addresses",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "idx_customer_addresses_search_label,idx_customer_addresses_search_address_line1,idx_customer_addresses_search_city,idx_customer_addresses_search_postal_code",
+                  "key": "idx_customer_addresses_search_address_line1",
+                  "key_len": "844",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 14,
+                  "select_type": "UNION",
+                  "table": "customer_addresses",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "idx_customer_addresses_search_label,idx_customer_addresses_search_address_line1,idx_customer_addresses_search_city,idx_customer_addresses_search_postal_code",
+                  "key": "idx_customer_addresses_search_city",
+                  "key_len": "484",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 15,
+                  "select_type": "UNION",
+                  "table": "customer_addresses",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "idx_customer_addresses_search_label,idx_customer_addresses_search_address_line1,idx_customer_addresses_search_city,idx_customer_addresses_search_postal_code",
+                  "key": "idx_customer_addresses_search_postal_code",
+                  "key_len": "484",
+                  "ref": null,
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": "Using where; Using index"
+                },
+                {
+                  "id": 16,
+                  "select_type": "UNION RESULT",
+                  "table": "<union2,3,4,5,6,7,8,9,10,11,12,13,14,15>",
+                  "partitions": null,
+                  "type": "ALL",
+                  "possible_keys": null,
+                  "key": null,
+                  "key_len": null,
+                  "ref": null,
+                  "rows": null,
+                  "filtered": null,
+                  "Extra": "Using temporary"
+                }
+              ],
+              [
+                {
+                  "id": 1,
+                  "select_type": "PRIMARY",
+                  "table": "customers",
+                  "partitions": null,
+                  "type": "range",
+                  "possible_keys": "PRIMARY",
+                  "key": "PRIMARY",
+                  "key_len": "8",
+                  "ref": null,
+                  "rows": 20,
+                  "filtered": 100,
+                  "Extra": "Using where"
+                },
+                {
+                  "id": 2,
+                  "select_type": "DEPENDENT SUBQUERY",
+                  "table": "cp",
+                  "partitions": null,
+                  "type": "eq_ref",
+                  "possible_keys": "PRIMARY",
+                  "key": "PRIMARY",
+                  "key_len": "8",
+                  "ref": "erp_customer_def034001_integrated_20261015.customers.id",
+                  "rows": 1,
+                  "filtered": 100,
+                  "Extra": null
+                }
+              ]
+            ]
+          },
+          "gateFailures": [],
+          "postLoadStorage": {
+            "tc": "TC-028-storage",
+            "phase": "POST_LOAD_NOT_LATENCY_MEASUREMENT",
+            "storage": [
+              {
+                "TABLE_NAME": "customer_addresses",
+                "TABLE_ROWS": 4904,
+                "DATA_LENGTH": 1589248,
+                "INDEX_LENGTH": 1523712
+              },
+              {
+                "TABLE_NAME": "customer_contacts",
+                "TABLE_ROWS": 4913,
+                "DATA_LENGTH": 1589248,
+                "INDEX_LENGTH": 1671168
+              },
+              {
+                "TABLE_NAME": "customer_identifiers",
+                "TABLE_ROWS": 0,
+                "DATA_LENGTH": 16384,
+                "INDEX_LENGTH": 98304
+              },
+              {
+                "TABLE_NAME": "customers",
+                "TABLE_ROWS": 49468,
+                "DATA_LENGTH": 9977856,
+                "INDEX_LENGTH": 28033024
+              }
+            ]
+          },
+          "searchBranches": {
+            "tc": "TC-028-search-branches",
+            "phase": "POST_LOAD_NOT_LATENCY_MEASUREMENT",
+            "fields": 14,
+            "diagnosticData": {
+              "identifiers": 5000,
+              "creditProfiles": 1
+            },
+            "failures": []
+          },
+          "fullBranchPlans": "def034001-search-branch-plans.jsonl (run=7;14records)"
+        }
+      ],
+      "cleanup": "Verified own datadir/13373 andCustomers0; mysqladmin shutdown, serverexit0, exact integrated-runtime.3nNabW removed2026-10-15T03:52Z. No shared3306 effects. Sanitized metrics/full plans retained.",
+      "review": "Actual separate Jason APPROVE sourcec6ca3645/fpbccc7235...3449 and runs6/7; scoped developer DEF034001 closure only. Final PR-head CI/review and observed merge/cleanup recorded separately in PR233 closure comment."
+    }
+  },
   "materializationDiagnostic": {
     "scope": "TEMPORARY synthetic diagnostic tables only; not Customer implementation or acceptance",
     "rows": [
@@ -357,6 +3293,15 @@
     ],
     "cleanup": "All TEMPORARY tables removed on diagnostic connection close; Customer rows0 after baseline test"
   },
-  "decision": "HD-011 PENDING; no product SQL/index/test assertion was changed",
-  "downstreamAcceptance": "BLOCKED"
+  "decision": "Sam explicitly approved HD-011 and PR232 exact DESIGN/PLAN; planning merged d69b267df3e7cfcbb703b16ff459c87215815f7c. Canonical proposal bytes unchanged.",
+  "downstreamAcceptance": "BLOCKED",
+  "historicalDiagnosis": {
+    "stage": "DEVELOPER_DIAGNOSIS_ONLY",
+    "status": "BEFORE_FAIL_AFTER_NOT_RUN",
+    "codeCommit": "09487bc65bff3a2360dffcaa246d5630269f11d2",
+    "sourceFingerprint": "685238fea731fd9b586449a3a587c6236faaee451a916377817a7b3fdf9a4aa4",
+    "approvedDesign": "8462e9c2bc9909f413bb0063de29b44bcbe205d8bfd1209c254ff5d1090f9944",
+    "approvedPlan": "55ea357b07fb39cc1131b61757b95ca4aa07b246a8dbabfddfecb914e79ba247",
+    "decision": "HD-011 PENDING; no product SQL/index/test assertion was changed"
+  }
 }

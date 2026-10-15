@@ -152,3 +152,23 @@ APPROVAL-DESIGN-017 / PLAN-017 / SCOPE-043 retain the actual user instruction.
 Canonical proposal bytes stay unchanged to preserve the approved hashes; their
 PENDING labels describe the proposal before this decision. This approval activates
 only the proposed remedy, not a capacity PASS or full downstream acceptance.
+
+## HD-011 implementation review (2026-10-15)
+
+Actual separate reviewer Jason (`/root/customer_task011_review`) first requested
+an exact expected-key assertion and no-index-hint proof, beyond range alone.
+The author added both and demonstrated the wrong-key mutation failing. Jason then
+APPROVED the current code/test slice, with no remaining Required finding; final
+immutable-candidate review/CI remains a publication gate. Both final capacity runs
+on source af7cbcb3222405b2e826254bbfd6bae5aab2c13883068aedbae077bde28456e9
+pass17/17 with no skips and listp957.891083/6.992709ms. The clean-main import UI
+failure is outside this backend-only diff, remains OPEN, and does not become PASS.
+Full downstream, browser acceptance and release remain blocked/not accepted.
+
+Final integrated sourcec6ca3645/fpbccc7235...3449 was freshly remeasured twice with
+17/17 passes each(listp957.586708/7.463459ms) and all Customer regressions rerun.
+Jason's actual separate APPROVE permits only scoped developer DEF-034001 closure;
+no remaining Required finding after correcting source-commit evidence provenance.
+This later docs-only checkpoint still requires exact final-head CI/immutable review
+and fresh-main verification before normal PR#233 merge. Inspect its closure comment
+for actual publication/merge/cleanup observations, not an inferred future success.

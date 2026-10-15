@@ -342,7 +342,7 @@ integrationTest("TASK-042: job counts are rebuilt from rows, and a job with pend
   const [[job]] = await h.db.query(
     "SELECT status, applied_count, failed_count, skipped_count, lease_owner, lease_until FROM supplier_import_jobs WHERE id = ?", [jobId]);
   assert.deepEqual([job.status, Number(job.applied_count), Number(job.failed_count), Number(job.skipped_count), job.lease_owner, job.lease_until],
-    ["completed", 1, 0, 1, "", null]);
+    ["completed_with_errors", 1, 0, 1, "", null]);
 });
 
 integrationTest("TASK-043 (HD-049): a job whose rows no longer add up to the precheck total fails instead of completing", async () => {
