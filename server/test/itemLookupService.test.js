@@ -79,6 +79,121 @@ function uomRow(overrides = {}) {
 const saleSku = () => skuRow({ sku_version: 3, item_version: 2, suggested_price_amount: "12.3400" });
 const saleUom = (overrides = {}) => uomRow({ id: 91, uom_name: "Each", uom_status: "active", uom_version: 4, version: 5, ...overrides });
 
+test("TC-019 committed receipt validates IDs and time before SQL including empty requests", async () => {
+  const database = fakeDatabase([]);
+  const { service } = createService({ database });
+  for (const ids of [null, undefined, "10", {}, ["10"], [0], [-1], [1.5], [NaN], [Infinity], [Number.MAX_SAFE_INTEGER + 1], Array(1), Array.from({ length: 101 }, (_, i) => i + 1)]) {
+    await assert.rejects(() => service.findManyForCommittedReceipt(ids), TypeError);
+  }
+  for (const atMs of [null, -1, 1.5, NaN, Infinity, Number.MAX_SAFE_INTEGER + 1, "0"]) {
+    await assert.rejects(() => service.findManyForCommittedReceipt([], { atMs }), TypeError);
+  }
+  assert.deepEqual(await service.findManyForCommittedReceipt([], { atMs: 0 }), new Map());
+  assert.deepEqual(await service.findManyForCommittedReceipt([], { atMs: Number.MAX_SAFE_INTEGER }), new Map());
+  assert.equal(database.calls.length, 0);
+});
+
+test("TC-019 committed receipt batches 100 unique IDs in ascending order using two parameterized SELECTs", async () => {
+  const ids = Array.from({ length: 100 }, (_, i) => i + 1);
+  const database = fakeDatabase([ids.toReversed().map(id => skuRow({ id })), []]);
+  const { service } = createService({ database });
+  const result = await service.findManyForCommittedReceipt([...ids.toReversed(), ...ids]);
+  assert.deepEqual([...result.keys()], ids);
+  assert.equal(database.calls.length, 2);
+  for (const { sql, params } of database.calls) {
+    assert.match(sql, /^\s*SELECT\b/i);
+    assert.doesNotMatch(sql, /FOR SHARE|FOR UPDATE|START TRANSACTION|COMMIT/i);
+    assert.equal((sql.match(/\?/g) ?? []).length, 100);
+    assert.deepEqual(params, ids);
+  }
+});
+
+test("TC-019 committed receipt returns current facts and all historical UOMs without eligibility or authority fields", async () => {
+  for (const trackingPolicy of ["none", "batch", "batch_expiry"]) {
+    const row = skuRow({ tracking_policy: trackingPolicy, shelf_life_days: "90", min_receipt_life_days: "30", min_sale_life_days: "10", sellable: 0 });
+    const uoms = [saleUom({ id: 93, uom_status: "archived" }), saleUom({ id: 92, uom_status: "inactive" }), saleUom()];
+    const generic = await createService({ database: fakeDatabase([[row], uoms]) }).service.findById(10, { purpose: "purchase" });
+    const database = fakeDatabase([[row], uoms]);
+    const result = (await createService({ database }).service.findManyForCommittedReceipt([10])).get(10);
+    const { usable, reasons, ...expected } = generic;
+    assert.equal(usable, true); assert.deepEqual(reasons, []);
+    expected.uoms.sort((a, b) => a.skuUomId - b.skuUomId);
+    assert.deepEqual(result, { ...expected, warnings: [] });
+    assert.deepEqual(Object.keys(result).sort(), ["skuId", "skuCode", "skuName", "skuStatus", "itemId", "itemName", "productType", "itemStatus", "purchasable", "sellable", "inventoryTracked", "trackingPolicy", "shelfLifeDays", "minimumReceiptLifeDays", "minimumSaleLifeDays", "effectiveFrom", "effectiveTo", "uoms", "warnings"].sort());
+    assert.deepEqual(Object.keys(result.uoms[0]).sort(), ["skuUomId", "uomId", "uomCode", "uomName", "status", "toBaseFactor", "isBase", "isDefaultPurchase", "isDefaultSale"].sort());
+    assert.notEqual(result.uoms[0].skuUomId, result.uoms[0].uomId);
+    for (const key of ["usable", "reasons", "canReceive", "suggestedPrice", "skuVersion", "poSnapshot"]) assert.equal(key in result, false);
+    assert.equal(result.trackingPolicy, trackingPolicy);
+    assert.equal(result.shelfLifeDays, 90);
+    assert.equal(result.minimumReceiptLifeDays, 30);
+    assert.equal(result.minimumSaleLifeDays, 10);
+  }
+});
+
+test("TC-019 committed receipt reports nonactive Item and SKU states once in fixed warning order", async () => {
+  for (const status of ["draft", "inactive", "discontinued", "archived"]) {
+    for (const states of [{ item_status: status }, { sku_status: status }, { item_status: status, sku_status: status }]) {
+      const database = fakeDatabase([[skuRow({ ...states, purchasable: 0, inventory_tracked: 0, effective_from: NOW_MS + 1 })], []]);
+      const result = (await createService({ database }).service.findManyForCommittedReceipt([10])).get(10);
+      assert.deepEqual(result.warnings, ["STATUS_NOT_ACTIVE", "NOT_PURCHASABLE", "NOT_INVENTORY_TRACKED", "OUTSIDE_EFFECTIVE_RANGE"]);
+      assert.deepEqual(result.uoms, []);
+    }
+  }
+});
+
+test("TC-019 committed receipt warnings use inclusive dates and one captured default time", async () => {
+  let clockCalls = 0;
+  for (const [range, warnings] of [
+    [{ effective_from: NOW_MS, effective_to: NOW_MS }, []],
+    [{ effective_from: null, effective_to: null }, []],
+    [{ effective_from: NOW_MS + 1 }, ["OUTSIDE_EFFECTIVE_RANGE"]],
+    [{ effective_to: NOW_MS - 1 }, ["OUTSIDE_EFFECTIVE_RANGE"]],
+    [{ purchasable: 0 }, ["NOT_PURCHASABLE"]],
+    [{ inventory_tracked: 0 }, ["NOT_INVENTORY_TRACKED"]]
+  ]) {
+    const service = new ItemLookupService({ database: fakeDatabase([[skuRow(range)], [], [skuRow(range)], []]), logger: collectingLogger(), time: { nowMs: () => { clockCalls++; return NOW_MS; } } });
+    assert.deepEqual((await service.findManyForCommittedReceipt([10])).get(10).warnings, warnings);
+    assert.deepEqual((await service.findManyForCommittedReceipt([10], { atMs: undefined })).get(10).warnings, warnings);
+    assert.deepEqual((await new ItemLookupService({ database: fakeDatabase([[skuRow(range)], []]), logger: collectingLogger(), time: { nowMs: () => { throw new Error("explicit time must not read clock"); } } }).findManyForCommittedReceipt([10], { atMs: NOW_MS })).get(10).warnings, warnings);
+  }
+  assert.equal(clockCalls, 12);
+});
+
+test("TC-019 committed receipt rejects the lowest missing identity before serial or UOM loading", async () => {
+  const database = fakeDatabase([[skuRow({ id: 10, tracking_policy: "serial" })]]);
+  await assert.rejects(() => createService({ database }).service.findManyForCommittedReceipt([12, 10, 11]), error => error.code === "SKU_NOT_FOUND" && error.statusCode === 404 && error.message.includes("11"));
+  assert.equal(database.calls.length, 1);
+});
+
+test("TC-019 committed receipt rejects the lowest serial identity without a partial Map", async () => {
+  const database = fakeDatabase([[skuRow({ id: 12, tracking_policy: "serial" }), skuRow({ id: 10 }), skuRow({ id: 11, tracking_policy: "serial" })]]);
+  await assert.rejects(() => createService({ database }).service.findManyForCommittedReceipt([12, 10, 11]), error => {
+    assert.equal(error.code, "SKU_NOT_USABLE");
+    assert.equal(error.statusCode, 409);
+    assert.deepEqual(error.details, { skuId: 11, purpose: "committed_receipt", reasons: ["SERIAL_NOT_SUPPORTED"] });
+    return true;
+  });
+  assert.equal(database.calls.length, 1);
+});
+
+test("TC-019 committed receipt propagates either executor failure without retry or fallback", async () => {
+  for (const failAt of [1, 2]) {
+    let calls = 0;
+    const failure = new Error("synthetic database failure");
+    const database = { query: async () => { if (++calls === failAt) throw failure; return [[skuRow()]]; } };
+    await assert.rejects(() => createService({ database }).service.findManyForCommittedReceipt([10]), error => error === failure);
+    assert.equal(calls, failAt);
+  }
+});
+
+test("TC-019 committed receipt does not add a generic purpose or relax purchase and inventory rules", async () => {
+  const row = skuRow({ sku_status: "archived", purchasable: 0, inventory_tracked: 0 });
+  const service = createService({ database: fakeDatabase([[row], [], [row], [], [row], [], [row], []]) }).service;
+  assert.deepEqual((await service.findManyForCommittedReceipt([10])).get(10).warnings, ["STATUS_NOT_ACTIVE", "NOT_PURCHASABLE", "NOT_INVENTORY_TRACKED"]);
+  for (const purpose of ["purchase", "inventory"]) assert.equal((await service.findById(10, { purpose })).usable, false);
+  await assert.rejects(() => service.findById(10, { purpose: "committed_receipt" }), TypeError);
+});
+
 test("TC-017 purchase lookup adds mapping metadata without changing old fields or inactive UOM usability", async () => {
   const old = { uomId: 5, uomCode: "EA", toBaseFactor: 1, isBase: true, isDefaultPurchase: false, isDefaultSale: true };
   for (const lookup of [

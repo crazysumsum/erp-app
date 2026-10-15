@@ -137,6 +137,38 @@ export class ItemLookupService {
     return result;
   }
 
+  // Current facts only: receiving authorization and locked revalidation belong to the caller.
+  async findManyForCommittedReceipt(skuIds, { atMs } = {}) {
+    const nowMs = atMs === undefined ? this.time.nowMs() : atMs;
+    if (!Number.isSafeInteger(nowMs) || nowMs < 0) throw new TypeError("atMs must be a non-negative safe integer");
+    if (!Array.isArray(skuIds)) throw new TypeError("Committed receipt IDs must be an array");
+    const unique = new Set();
+    for (const id of skuIds) {
+      if (!Number.isSafeInteger(id) || id < 1) throw new TypeError("Committed receipt IDs must be positive safe integers");
+      unique.add(id);
+      if (unique.size > 100) throw new TypeError("Committed receipt supports at most 100 unique requests");
+    }
+    const ids = [...unique].sort((a, b) => a - b);
+    if (!ids.length) return new Map();
+    const [rows] = await this.database.query(`${SKU_JOIN_ITEM_SELECT} WHERE s.id IN (${placeholders(ids)}) ORDER BY s.id`, ids);
+    const byId = new Map(rows.map(row => [Number(row.id), row]));
+    for (const id of ids) if (!byId.has(id)) throw skuNotFound(id);
+    for (const id of ids) if (byId.get(id).tracking_policy === "serial") throw skuNotUsable(id, "committed_receipt", ["SERIAL_NOT_SUPPORTED"]);
+    const uoms = await this.#loadUomRows(ids);
+    return new Map(ids.map(id => {
+      const projection = this.#toProjection(byId.get(id), (uoms.get(id) ?? []).sort((a, b) => Number(a.id) - Number(b.id)), { purpose: "purchase", atMs: nowMs });
+      const warnings = [];
+      if (projection.itemStatus !== "active" || projection.skuStatus !== "active") warnings.push("STATUS_NOT_ACTIVE");
+      if (!projection.purchasable) warnings.push("NOT_PURCHASABLE");
+      if (!projection.inventoryTracked) warnings.push("NOT_INVENTORY_TRACKED");
+      if ((projection.effectiveFrom !== null && nowMs < projection.effectiveFrom) ||
+          (projection.effectiveTo !== null && nowMs > projection.effectiveTo)) warnings.push("OUTSIDE_EFFECTIVE_RANGE");
+      delete projection.usable;
+      delete projection.reasons;
+      return [id, { ...projection, warnings }];
+    }));
+  }
+
   async searchForPurchase({ q = "", page = 1, pageSize = 20 } = {}) {
     if (typeof q !== "string" || [...q].length > 190 || /[\p{Cc}]/u.test(q) ||
         !Number.isSafeInteger(page) || page < 1 || !Number.isSafeInteger(pageSize) || pageSize < 1 || pageSize > 100 ||

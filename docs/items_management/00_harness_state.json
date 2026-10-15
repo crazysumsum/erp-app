@@ -1,33 +1,33 @@
 {
   "schema_version": "2.0",
   "module_id": "item-management",
-  "revision": 125,
-  "mode": "TEST_AND_VERIFY",
-  "active_mode": "TEST_AND_VERIFY",
+  "revision": 169,
+  "mode": "IMPLEMENT",
+  "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
   "resume_status": "READY_FOR_TESTING",
-  "current_phase": "PHASE-006",
-  "current_task": "TASK-043",
+  "current_phase": "PHASE-010",
+  "current_task": "TASK-048",
   "baseline": {
-    "design": "f7431c0934377f3331fd0a537e236eca8044df41f359d36202153803c4aca315",
-    "plan": "809f8a15b605975f2db4c94eb641bc6bf6e5e3aaf07ed5938bb8660f9899a8ef",
-    "code_commit": "97367b3a137e15f35ff39e502d20740b11df677b",
-    "source_fingerprint": "b8e8f982203314337d84738b78ec9f0595df416f3f6c387be43bbd0176fef942",
-    "worktree": "/Users/sam/.codex/worktrees/item-authoritative-gr-handoff/erp-app",
-    "default_commit": "3239b98f8938697475bf6201ba1a52c48ccef127",
-    "mode_entry_commit": "f94ba467472bcfae851ed6cb2bb077ac67ab8be0"
+    "design": "3daef7460516dd7e24d5db5575a1b580dbc81f078d31a1c54867192bc1904a66",
+    "plan": "720dc5db8e97910f3fc4b567a21fc2eb7c2176dc8a435b63f977c9bb1859c062",
+    "code_commit": "5e121cece2d55cd60851a7c3a87712925c046968",
+    "source_fingerprint": "ffe3985ddb04639c9a8757eafbe521d8e5b2da205aa368431a4626460b7a4454",
+    "worktree": "LOCAL_ONLY_NON_LIVE: actual workspace retained privately; reconcile before resuming execution",
+    "default_commit": "3faf93e57892577c03d7bc6d7ba62e23963941e2",
+    "mode_entry_commit": "5e121cece2d55cd60851a7c3a87712925c046968"
   },
   "runtime": {
-    "instance_id": "ITEM-TC004-TC005-20261014",
-    "owner": "Item primary QA execution /root",
+    "instance_id": "LOCAL_ONLY_NON_LIVE",
+    "owner": "Item primary",
     "resources": {
-      "workspace": "/Users/sam/.codex/worktrees/item-tc004-tc005-verification/erp-app",
-      "mysql-schema": "erp_item_supplier_c_20261013 @ /private/tmp/erp-item-supplier-c-mysql.vdXM5l/mysql.sock (MySQL26.7.0, socket-only)",
-      "media-root": "/Users/sam/.codex/worktrees/item-tc004-tc005-verification/erp-app/server/storage/media",
-      "import-root": "/Users/sam/.codex/worktrees/item-tc004-tc005-verification/erp-app/server/storage/imports",
-      "web-port": "0: per-test OS allocation"
+      "workspace": "LOCAL_ONLY_NON_LIVE: exact stopped resource identity retained privately",
+      "mysql-schema": "LOCAL_ONLY_NON_LIVE: exact stopped resource identity retained privately",
+      "media-root": "LOCAL_ONLY_NON_LIVE: exact stopped resource identity retained privately",
+      "import-root": "LOCAL_ONLY_NON_LIVE: exact stopped resource identity retained privately",
+      "web-port": "LOCAL_ONLY_NON_LIVE: exact stopped resource identity retained privately"
     },
-    "lease_ref": "STOPPED: actual owned mysqladmin shutdown successful; private socket/pid absent, datadir retained. Before any future execution re-observe/reacquire own runtime; do not treat this metadata as a live lease."
+    "lease_ref": "STOPPED observed locally; no live runtime lease or reusable workspace is asserted by this portable snapshot. Exact original observations, raw state and source-to-sanitized hash mapping retained LOCAL_ONLY. Generic clean-checkout/worktree/runtime availability remains BLOCKED; markers are not observations."
   },
   "tasks": {
     "TASK-001": "DONE",
@@ -76,7 +76,8 @@
     "TASK-044": "DONE",
     "TASK-045": "DONE",
     "TASK-046": "DONE",
-    "TASK-047": "DONE"
+    "TASK-047": "DONE",
+    "TASK-048": "IN_PROGRESS"
   },
   "approvals": [
     {
@@ -1174,14 +1175,294 @@
         "current-Item-branch-worktree-cleanup"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-061",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam current task: 同意，先進入 DESIGN_AND_PLAN，規劃 Item 的 findManyForCommittedReceipt() provider；只處理 Item，不放寬現有 purchase／inventory 規則，權威 GR 維持 BLOCKED，正式 UAT 另行處理。 Planning/mode/scope only; not approval of proposed DESIGN/PLAN, implementation, merge or acceptance.",
+      "recorded_at": "2026-10-14T07:54:20.244148+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "809f8a15b605975f2db4c94eb641bc6bf6e5e3aaf07ed5938bb8660f9899a8ef",
+      "code_commit": "d9714a34f39a507528fc4c138496531cd1d57c69",
+      "scope": [
+        "DESIGN_AND_PLAN",
+        "Item-only",
+        "committed-receipt-provider-planning",
+        "no-existing-purchase-inventory-relaxation",
+        "GR-BLOCKED",
+        "formal-UAT-separate"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-062",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam current user response: 核准. This answers the immediately preceding HD013 question for DESIGN3daef746 and PLAN38b2a632 full hashes in 09_committed_receipt_planning_review.md. That question explicitly limits this decision to DESIGN/PLAN content, not IMPLEMENT or merge. Recommended dedicated bounded current-facts Map/four warnings/missing+serial hard errors accepted; existing purchase/inventory rules, GR BLOCKED and formal UAT separate retained. Module-qualified subject item-management is the identity of this exact Item DESIGN/PLAN content decision, following existing approval conventions; it does not expand the listed provider-only scope or grant global readiness/IMPLEMENT/merge.",
+      "recorded_at": "2026-10-14T08:12:32.723045+00:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "3daef7460516dd7e24d5db5575a1b580dbc81f078d31a1c54867192bc1904a66",
+      "code_commit": "d9714a34f39a507528fc4c138496531cd1d57c69",
+      "scope": [
+        "item-management",
+        "FR-067",
+        "DES-022",
+        "PHASE-010",
+        "TASK-048",
+        "TC-019",
+        "UAT-018",
+        "Item-provider-content-only",
+        "no-existing-purpose-relaxation",
+        "no-IMPLEMENT-or-merge-authority",
+        "GR-BLOCKED",
+        "formal-UAT-separate"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-063",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam current user response: 核准. This answers the immediately preceding HD013 question for DESIGN3daef746 and PLAN38b2a632 full hashes in 09_committed_receipt_planning_review.md. That question explicitly limits this decision to DESIGN/PLAN content, not IMPLEMENT or merge. Recommended dedicated bounded current-facts Map/four warnings/missing+serial hard errors accepted; existing purchase/inventory rules, GR BLOCKED and formal UAT separate retained. Module-qualified subject item-management is the identity of this exact Item DESIGN/PLAN content decision, following existing approval conventions; it does not expand the listed provider-only scope or grant global readiness/IMPLEMENT/merge.",
+      "recorded_at": "2026-10-14T08:12:32.723045+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "38b2a632f19a437c5b4b2040b39d60154c33df612fd651b515b978f05463901f",
+      "code_commit": "d9714a34f39a507528fc4c138496531cd1d57c69",
+      "scope": [
+        "item-management",
+        "FR-067",
+        "DES-022",
+        "PHASE-010",
+        "TASK-048",
+        "TC-019",
+        "UAT-018",
+        "Item-provider-content-only",
+        "no-existing-purpose-relaxation",
+        "no-IMPLEMENT-or-merge-authority",
+        "GR-BLOCKED",
+        "formal-UAT-separate"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-064",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam latest user: 批准新 PLAN a988403a54052de14169c49fd4596a05415499ae2aeadd0f306bc9100313d126，進入限定 IMPLEMENT：只開發 TASK-048，使用新獨佔 MySQL 執行既有 migrations／測試暫存 DDL及原四套 developer checks，保存本機證據與 candidate。DEF-107／權威 GR 維持 BLOCKED，不修改核心 gate 或放寬 purchase／inventory 規則；不含 push／PR／merge／證據匯出，正式 UAT 另行處理。Binds pinned procedure8b073ef4 and fresh DEFAULT/local recovery/candidate workflow; not gate waiver.",
+      "recorded_at": "2026-10-14T09:18:40.935348+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a988403a54052de14169c49fd4596a05415499ae2aeadd0f306bc9100313d126",
+      "code_commit": "d9714a34f39a507528fc4c138496531cd1d57c69",
+      "scope": [
+        "item-management",
+        "PHASE-010",
+        "TASK-048",
+        "IMPLEMENT",
+        "server/src/modules/item/ItemLookupService.js",
+        "server/src/modules/item/itemConstants.js",
+        "server/test/itemLookupService.test.js",
+        "server/test/integration/itemLookup.integration.test.js",
+        "docs/items_management/**",
+        "fresh-DEFAULT-Item-worktree",
+        "new-private-synthetic-MySQL",
+        "existing-migrations-transient-test-DDL",
+        "exact-four-native-DEVELOPER-suites",
+        "local-redacted-scoped-evidence-and-candidate",
+        "no-push-PR-merge-export",
+        "GR-BLOCKED",
+        "formal-UAT-separate"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-065",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam latest user: 批准新 PLAN a988403a54052de14169c49fd4596a05415499ae2aeadd0f306bc9100313d126，進入限定 IMPLEMENT：只開發 TASK-048，使用新獨佔 MySQL 執行既有 migrations／測試暫存 DDL及原四套 developer checks，保存本機證據與 candidate。DEF-107／權威 GR 維持 BLOCKED，不修改核心 gate 或放寬 purchase／inventory 規則；不含 push／PR／merge／證據匯出，正式 UAT 另行處理。Binds pinned procedure8b073ef4 and fresh DEFAULT/local recovery/candidate workflow; not gate waiver.",
+      "recorded_at": "2026-10-14T09:18:40.935348+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a988403a54052de14169c49fd4596a05415499ae2aeadd0f306bc9100313d126",
+      "code_commit": "d9714a34f39a507528fc4c138496531cd1d57c69",
+      "scope": [
+        "item-management",
+        "PHASE-010",
+        "TASK-048",
+        "IMPLEMENT",
+        "server/src/modules/item/ItemLookupService.js",
+        "server/src/modules/item/itemConstants.js",
+        "server/test/itemLookupService.test.js",
+        "server/test/integration/itemLookup.integration.test.js",
+        "docs/items_management/**",
+        "fresh-DEFAULT-Item-worktree",
+        "new-private-synthetic-MySQL",
+        "existing-migrations-transient-test-DDL",
+        "exact-four-native-DEVELOPER-suites",
+        "local-redacted-scoped-evidence-and-candidate",
+        "no-push-PR-merge-export",
+        "GR-BLOCKED",
+        "formal-UAT-separate"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-066",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam user message: 批准 PLAN 47647ffbe62ef6fcfdd8d2de55e03179d61596eb023fa0f94053b43b79118db7 的內容；請提出下一階段本機整合、完整回歸及建立新 candidate 的執行核准範圍。本輪不 push／PR／merge／匯出證據，DEF-107／權威 GR 維持 BLOCKED，不修改核心 gate，正式 UAT 另行處理。 P0 content approval only; request for P1 proposal, not execution authority.",
+      "recorded_at": "2026-10-15T01:50:21.207901+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "47647ffbe62ef6fcfdd8d2de55e03179d61596eb023fa0f94053b43b79118db7",
+      "code_commit": "273f9d00af729efd2749eb2eeb0dbc95f6f2d200",
+      "scope": [
+        "item-management",
+        "PHASE-010",
+        "TASK-048",
+        "P0-content-only",
+        "no-P1-IMPLEMENT-runtime-candidate-authority",
+        "no-P2-push-PR",
+        "no-P3-merge",
+        "no-evidence-export",
+        "DEF-107-GR-BLOCKED",
+        "formal-UAT-separate"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-067",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam user: 批准 HD-017 的 P1 本機執行範圍，請整合最新 main、完成原四套完整回歸及獨立 review，建立本機 candidate；不 push／PR／merge／匯出證據，不修改產品或測試以求通過。DEF-107／權威 GR 維持 BLOCKED，不修改核心 gate，正式 UAT 另行處理。 Binds PLAN47647ffb/pinnedprocedure8f662427 and HD017 exact P1 limits in09; no P2/P3 authority.",
+      "recorded_at": "2026-10-15T01:54:37.295650+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "47647ffbe62ef6fcfdd8d2de55e03179d61596eb023fa0f94053b43b79118db7",
+      "code_commit": "273f9d00af729efd2749eb2eeb0dbc95f6f2d200",
+      "scope": [
+        "item-management",
+        "PHASE-010",
+        "TASK-048",
+        "IMPLEMENT",
+        "P1-only",
+        "fresh-DEFAULT-sanitized-20path-transplant",
+        "exact-three-frozen-Item-code-test-blobs",
+        "new-exclusive-MySQL-existing-migrations-transient-test-DDL",
+        "original-four-native-DEVELOPER-contracts",
+        "private-helper-independent-review-and-negative-selfchecks",
+        "bounded-local-evidence-and-local-candidate",
+        "no-product-test-fixes",
+        "no-push-PR-merge-export",
+        "DEF107-GR-BLOCKED",
+        "formal-UAT-separate"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-068",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam user: 批准進入 DESIGN_AND_PLAN，制定修復 DEF-108 的新 PLAN，只補齊兩個 Item 測試檔的 tracking policy 覆蓋；完成獨立 review 後交我核准。不修改產品或放寬斷言，DEF-107／GR 維持 BLOCKED，不 push／PR／merge／匯出證據，正式 UAT 另行處理。 Planning/documents/review only; no newPLAN contentapproval, testimplementation/runtime or candidate authority.",
+      "recorded_at": "2026-10-15T02:15:10.421783+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "47647ffbe62ef6fcfdd8d2de55e03179d61596eb023fa0f94053b43b79118db7",
+      "code_commit": "3faf93e57892577c03d7bc6d7ba62e23963941e2",
+      "scope": [
+        "item-management",
+        "PHASE-010",
+        "TASK-048",
+        "DEF-108",
+        "TC-019",
+        "DESIGN_AND_PLAN",
+        "two-Item-test-files-tracking-policy-remediation-plan-only",
+        "no-product-or-test-implementation",
+        "no-assertion-threshold-relaxation",
+        "independent-plan-review-before-owner-contentdecision",
+        "no-runtime-candidate-push-PR-merge-export",
+        "DEF107-GR-BLOCKED",
+        "formal-UAT-separate"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-069",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam user: 批准 PLAN 720dc5db8e97910f3fc4b567a21fc2eb7c2176dc8a435b63f977c9bb1859c062 的內容；請提出下一階段限定 IMPLEMENT 的執行核准範圍，只補齊兩個 Item 測試檔，不修改產品或放寬斷言。DEF-107／GR 維持 BLOCKED，不 push／PR／merge／匯出證據，正式 UAT 另行處理。 Exact PLAN content approval only, request for execution-scope proposal, not IMPLEMENT/runtime/test-write/candidate permission.",
+      "recorded_at": "2026-10-15T02:32:07.749168+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "720dc5db8e97910f3fc4b567a21fc2eb7c2176dc8a435b63f977c9bb1859c062",
+      "code_commit": "3faf93e57892577c03d7bc6d7ba62e23963941e2",
+      "scope": [
+        "item-management",
+        "PHASE-010",
+        "TASK-048",
+        "DEF-108",
+        "TC-019",
+        "content-only",
+        "two-test-file-tracking-policy-remediation-plan",
+        "no-IMPLEMENT-test-write-runtime-candidate-authority",
+        "no-product-or-assertion-relaxation",
+        "no-push-PR-merge-export",
+        "DEF107-GR-BLOCKED",
+        "formal-UAT-separate"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-070",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam user: 批准 HD-020 的限定 IMPLEMENT 範圍，請整合最新 main、只補齊兩個 Item 測試檔，完成原四套完整回歸及獨立 review，通過後建立本機 candidate。不修改產品或放寬斷言，DEF-107／GR 維持 BLOCKED，不修改核心 gate，不 push／PR／merge／匯出證據，正式 UAT 另行處理。 Binds exact PLAN720dc/procedure45c025/HD020 bounded two-test P1-R/private MySQL+existingDDL/original4nativechecks/localproof/conditionalprivacy-safe localcandidate only; no P2/P3.",
+      "recorded_at": "2026-10-15T02:34:11.224957+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "720dc5db8e97910f3fc4b567a21fc2eb7c2176dc8a435b63f977c9bb1859c062",
+      "code_commit": "3faf93e57892577c03d7bc6d7ba62e23963941e2",
+      "scope": [
+        "item-management",
+        "PHASE-010",
+        "TASK-048",
+        "DEF-108",
+        "IMPLEMENT",
+        "server/test/itemLookupService.test.js",
+        "server/test/integration/itemLookup.integration.test.js",
+        "safe-fresh-main-integration",
+        "new-private-MySQL-existing-migrations-transient-fixture-DDL",
+        "original-four-native-DEVELOPER-contracts",
+        "independent-source-helper-privacy-review",
+        "local-redacted-evidence-and-conditional-sanitized-local-candidate",
+        "no-product-mutation-assertion-relaxation-coregatechange",
+        "no-push-PR-merge-export",
+        "DEF107-GR-BLOCKED",
+        "formal-UAT-separate"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
     {
       "id": "REV-001",
       "method": "SELF_REVIEW",
-      "author": "/root",
-      "reviewer": "/root in the same active context",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=bb29bccb7b17838a9c3661bf1fd7466271313ba12dedc50445e0202deb744a41",
       "reviewed_baseline": "018bea0802000f1d991645c0a36fe0c8f98f96c2d591a784c8f2017f86c811ef",
       "source_ref": "docs/items_management/04_design_review.md#reviewer-provenance",
       "status": "CHANGES_REQUESTED",
@@ -1192,8 +1473,8 @@
     {
       "id": "REV-002",
       "method": "SEPARATE_AGENT",
-      "author": "/root",
-      "reviewer": "/root/item_design_review",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
       "reviewed_baseline": "6f8d2f674e624cd5311b644b9b466e74f465a1e2d1149ae2d1e2044f027470fc",
       "source_ref": "docs/items_management/04_design_review.md#rev-002--separate-task-037-implementation-readiness-review",
       "status": "APPROVED",
@@ -1204,8 +1485,8 @@
     {
       "id": "REV-005",
       "method": "SEPARATE_AGENT",
-      "author": "/root",
-      "reviewer": "/root/item_design_review",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
       "reviewed_baseline": "51c93c71143f0ad5f8723cd1966d41fb26f85c7359c93e2768fc8d154e84e771",
       "source_ref": "docs/items_management/04_design_review.md#rev-005--separate-task-038-implementation-review",
       "status": "APPROVED",
@@ -1216,8 +1497,8 @@
     {
       "id": "REV-006",
       "method": "SEPARATE_AGENT",
-      "author": "/root",
-      "reviewer": "/root/item_design_review",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
       "reviewed_baseline": "40d102072bb65a4910d98fafa08b720d4f0ecbfce13749afbbb32949306535dc",
       "source_ref": "docs/items_management/04_design_review.md#rev-006--separate-task-039-implementation-review",
       "status": "APPROVED",
@@ -1228,8 +1509,8 @@
     {
       "id": "REV-007",
       "method": "SEPARATE_AGENT",
-      "author": "/root",
-      "reviewer": "/root/item_design_review",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
       "reviewed_baseline": "fa34b7a4c43bf4c6d425f88e3a33ad95770876c617990dcf2356e57a85cd8b8b",
       "source_ref": "docs/items_management/04_design_review.md#rev-007--separate-task-040-implementation-review",
       "status": "APPROVED",
@@ -1240,8 +1521,8 @@
     {
       "id": "REV-008",
       "method": "SEPARATE_AGENT",
-      "author": "/root",
-      "reviewer": "/root/item_design_review",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
       "reviewed_baseline": "905b8478823c24e24f89af163c0d551edb42d616178572b1fd11dd64b04a3073",
       "source_ref": "docs/items_management/04_design_review.md#rev-008--separate-task-041-implementation-review",
       "status": "APPROVED",
@@ -1252,8 +1533,8 @@
     {
       "id": "REV-009",
       "method": "SEPARATE_AGENT",
-      "author": "/root",
-      "reviewer": "/root/item_design_review",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
       "reviewed_baseline": "bf2d68787d0a0a15253c4e126dcbaec5f7ed4ca31ad7bcdd97e8f6898faf1ac9",
       "source_ref": "docs/items_management/04_design_review.md#rev-009--separate-task-042-documentation-reconciliation-review",
       "status": "APPROVED",
@@ -1264,8 +1545,8 @@
     {
       "id": "REV-010",
       "method": "SEPARATE_AGENT",
-      "author": "/root",
-      "reviewer": "/root/item_design_review",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
       "reviewed_baseline": "cdca7fa0e1861eda5f4e19d67701bcc58743ea4b022863f93c53e0df8d46ce4a",
       "source_ref": "docs/items_management/04_design_review.md#rev-010--test-and-verify-entry-readiness-review",
       "status": "CHANGES_REQUESTED",
@@ -1276,8 +1557,8 @@
     {
       "id": "REV-011",
       "method": "SEPARATE_AGENT",
-      "author": "/root",
-      "reviewer": "/root/item_design_review",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
       "reviewed_baseline": "cdca7fa0e1861eda5f4e19d67701bcc58743ea4b022863f93c53e0df8d46ce4a",
       "source_ref": "docs/items_management/04_design_review.md#rev-011--test_and_verify-entry-follow-up-review",
       "status": "APPROVED",
@@ -1288,8 +1569,8 @@
     {
       "id": "REV-012",
       "method": "SEPARATE_AGENT",
-      "author": "/root",
-      "reviewer": "/root/item_design_review",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
       "reviewed_baseline": "de36880e949c9d73391d3090324f071da1e1f9a4ad96599a68b782f68f186f91",
       "source_ref": "docs/items_management/04_design_review.md#rev-012--remediate_and_retest-independent-review",
       "status": "APPROVED",
@@ -1300,8 +1581,8 @@
     {
       "id": "REV-013",
       "method": "SEPARATE_AGENT",
-      "author": "/root",
-      "reviewer": "/root/item_design_review",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
       "reviewed_baseline": "ac982ae8325ccaad6be80e726672a5a28831ff5263d2b8faa4084e139b311db9",
       "source_ref": "docs/items_management/04_design_review.md#rev-013--task-044-recovery-adapter-independent-review",
       "status": "APPROVED",
@@ -1312,8 +1593,8 @@
     {
       "id": "REV-014",
       "method": "SEPARATE_AGENT",
-      "author": "/root",
-      "reviewer": "/root/item_pr117_review",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=3d258e48dbbc146eea06cfe25b9820a2b2d7c0243bc075d247168e2b24ef1395",
       "reviewed_baseline": "5f70451306bccddd38542911d7ce249ba11d8fa0f14d83491ac46fa3a38f73d7",
       "source_ref": "Active Codex task: independent reviewer re-reviewed PR #117 after BRANCH-SYNC-67 and returned APPROVE on 2026-09-21; Item-only diff, task statuses, traceability and boundary had no blocking findings.",
       "status": "APPROVED",
@@ -1324,8 +1605,8 @@
     {
       "id": "REV-015",
       "method": "SEPARATE_AGENT",
-      "author": "/root",
-      "reviewer": "/root/item_pr117_review",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=3d258e48dbbc146eea06cfe25b9820a2b2d7c0243bc075d247168e2b24ef1395",
       "reviewed_baseline": "874fd40674d4a7e84cfe8cfaf1e48a4408fecfaf93f0262b79a9c9d2fdd00cf3",
       "source_ref": "Active Codex task: independent reviewer checked candidate 655a190 on 2026-09-21. Code, signature, public-key binding, private-key deletion and waiver-aware NOT_RUN semantics passed; canonical-state reconciliation was requested before approval.",
       "status": "CHANGES_REQUESTED",
@@ -1336,8 +1617,8 @@
     {
       "id": "REV-016",
       "method": "SEPARATE_AGENT",
-      "author": "/root",
-      "reviewer": "/root/item_pr117_review",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=3d258e48dbbc146eea06cfe25b9820a2b2d7c0243bc075d247168e2b24ef1395",
       "reviewed_baseline": "ffbda80ecae8cd5d9d18be7423b49750cc2d38e6aeadf5014145784a262b58bd",
       "source_ref": "Active Codex task: independent reviewer checked synchronized candidate e8bf646 on 2026-09-21. Owner-waiver state and implementation were correct; reviewer requested only restoration of accidentally changed DEF-101 status.",
       "status": "CHANGES_REQUESTED",
@@ -1348,8 +1629,8 @@
     {
       "id": "REV-017",
       "method": "SEPARATE_AGENT",
-      "author": "/root",
-      "reviewer": "/root/item_pr117_review",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=3d258e48dbbc146eea06cfe25b9820a2b2d7c0243bc075d247168e2b24ef1395",
       "reviewed_baseline": "ffbda80ecae8cd5d9d18be7423b49750cc2d38e6aeadf5014145784a262b58bd",
       "source_ref": "Active Codex task: independent reviewer returned APPROVE for candidate 4c84174 on 2026-09-21 after DEF-101 was restored; no critical or high findings remain.",
       "status": "APPROVED",
@@ -1360,8 +1641,8 @@
     {
       "id": "REV-018",
       "method": "SEPARATE_AGENT",
-      "author": "/root",
-      "reviewer": "/root/item_supplier_handoff_review",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=f1d725f4bbc37a2c8f3364f69e62a5af2dcd19121125f8c9d785dab45dc0f708",
       "reviewed_baseline": "59ee6cb3664ae1742e41b218ffd3bf223e396eb44a4aa24d82028ebb9cf7c16d",
       "source_ref": "Active Codex task 2026-10-09: separate reviewer approved corrected DESIGN 59ee6cb and PLAN 9084e8e after ISR-001 remediation; docs/items_management/04_design_review.md#rev-018--supplier-handoff-documentation-review-2026-10-09. Documentation only; no implementation or acceptance approval.",
       "status": "APPROVED",
@@ -1372,8 +1653,8 @@
     {
       "id": "REV-019",
       "method": "SEPARATE_AGENT",
-      "author": "/root",
-      "reviewer": "/root/item_supplier_handoff_review",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=f1d725f4bbc37a2c8f3364f69e62a5af2dcd19121125f8c9d785dab45dc0f708",
       "reviewed_baseline": "5c581c92d43c9edfbe7cf1c98949d843e145d2b1b500e18e46f4e39e2817a855",
       "source_ref": "docs/items_management/implementation/01_task043_reference_guards.md#rev-019--independent-code-test-review; actual reviewer final response on 2026-10-09 approves product/test code, independently ran 92 tests; merge contract remains BLOCKED.",
       "status": "APPROVED",
@@ -1384,8 +1665,8 @@
     {
       "id": "REV-020",
       "method": "SEPARATE_AGENT",
-      "author": "/root",
-      "reviewer": "/root/item_supplier_handoff_review",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=f1d725f4bbc37a2c8f3364f69e62a5af2dcd19121125f8c9d785dab45dc0f708",
       "reviewed_baseline": "01e51df95e1e8742e765c18ec3dcf8205d8b30dd97a9a2feb7b9b7221adef66a",
       "source_ref": "Active reviewer final response2026-10-12; implementation/02_task043_increment_b_gate.md#rev-020--independent-execution-contract-review; independently96/96 tests passed, no actionable findings.",
       "status": "APPROVED",
@@ -1396,8 +1677,8 @@
     {
       "id": "REV-021",
       "method": "SEPARATE_AGENT",
-      "author": "/root",
-      "reviewer": "/root/item_supplier_handoff_review",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=f1d725f4bbc37a2c8f3364f69e62a5af2dcd19121125f8c9d785dab45dc0f708",
       "reviewed_baseline": "01e51df95e1e8742e765c18ec3dcf8205d8b30dd97a9a2feb7b9b7221adef66a",
       "source_ref": "Actual reviewer final response2026-10-12 independently verified authorizedraw-indexmigration,21 priorrunpointers/3originalhashes/DEF103closure/waiver preserved; PLAN_READY/stateLOCAL_CHECKS_PASS; 00_artifact_inventory.md.",
       "status": "APPROVED",
@@ -1408,8 +1689,8 @@
     {
       "id": "REV-022",
       "method": "SEPARATE_AGENT",
-      "author": "/root",
-      "reviewer": "/root/item_supplier_handoff_review",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=f1d725f4bbc37a2c8f3364f69e62a5af2dcd19121125f8c9d785dab45dc0f708",
       "reviewed_baseline": "01e51df95e1e8742e765c18ec3dcf8205d8b30dd97a9a2feb7b9b7221adef66a",
       "source_ref": "Actual separate reviewer response2026-10-12: audited14 packagefiles/commands/contracts/artifacthashes/counts andDEVELOPERonly, no detectedsecrets; 500server/808clientPASS, lint/buildexit0. ExportpermissionstillpendingHD008.",
       "status": "APPROVED",
@@ -1420,8 +1701,8 @@
     {
       "id": "REV-023",
       "method": "SEPARATE_AGENT",
-      "author": "/root",
-      "reviewer": "/root/item_supplier_handoff_review",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=f1d725f4bbc37a2c8f3364f69e62a5af2dcd19121125f8c9d785dab45dc0f708",
       "reviewed_baseline": "d2b9e7c67cd0a54a47746c09fc9282f7bf65f4703d73bcdc40dc448dcb6f986e",
       "source_ref": "Actual separate-agent finalAPPROVED candidate71cfd18 on2026-10-12, no actionablefindings; https://github.com/crazysumsum/erp-app/pull/198#issuecomment-6115984771 author-recordedprovenance(notGitHubhumanreview).",
       "status": "APPROVED",
@@ -1432,8 +1713,8 @@
     {
       "id": "REV-024",
       "method": "SEPARATE_AGENT",
-      "author": "/root",
-      "reviewer": "/root/item_supplier_handoff_review",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=f1d725f4bbc37a2c8f3364f69e62a5af2dcd19121125f8c9d785dab45dc0f708",
       "reviewed_baseline": "6008fc287f88515a54aa4e3dbce9c1599731493344733053feaaf229f6363e53",
       "source_ref": "Actual separate-agent review2026-10-12 requestedchanges R03 cleanuporder, R04 Draft obligations, R05 incomingfixtureversions. Historical findings all resolved inREV025; sourceapprovalnotoriginalcandidateCI.",
       "status": "CHANGES_REQUESTED",
@@ -1444,8 +1725,8 @@
     {
       "id": "REV-025",
       "method": "SEPARATE_AGENT",
-      "author": "/root",
-      "reviewer": "/root/item_supplier_handoff_review",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=f1d725f4bbc37a2c8f3364f69e62a5af2dcd19121125f8c9d785dab45dc0f708",
       "reviewed_baseline": "3da037cd9926466f4d8753d353b9b648ffd4e41c94d998cc93058b29e7822dae",
       "source_ref": "Actual separate-agent finalAPPROVED2026-10-12 source3da037cd, allR03-R05resolved; implementation/03_task043_latest_main_integration.md. No reviewerDBexecutionclaimed.",
       "status": "APPROVED",
@@ -1456,8 +1737,8 @@
     {
       "id": "REV-026",
       "method": "SEPARATE_AGENT",
-      "author": "/root",
-      "reviewer": "/root/item_supplier_handoff_review",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=f1d725f4bbc37a2c8f3364f69e62a5af2dcd19121125f8c9d785dab45dc0f708",
       "reviewed_baseline": "3da037cd9926466f4d8753d353b9b648ffd4e41c94d998cc93058b29e7822dae",
       "source_ref": "Actual separate-agent finalAPPROVED exact e88692e07bf576b093e6288177cf3e0fa10e9558; noactionablefindings; https://github.com/crazysumsum/erp-app/pull/198#issuecomment-6116512556 recordsactualreview(notGitHubhumanapproval).",
       "status": "APPROVED",
@@ -1468,8 +1749,8 @@
     {
       "id": "REV-027",
       "method": "SEPARATE_AGENT",
-      "author": "/root",
-      "reviewer": "/root/item_supplier_handoff_review",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=f1d725f4bbc37a2c8f3364f69e62a5af2dcd19121125f8c9d785dab45dc0f708",
       "reviewed_baseline": "57fa50775e0eb64f47bf7caadc9cc4dfec758580364ee6e01f3824d58072f36e",
       "source_ref": "Actual finalAPPROVED source57fa mockcorrection; independently61/61PASS. VerifiedunchangedSales5/6batchqueries/lockorder vs0feb; preservecapacity3016msfailure/local673msnotsubstituteCI. Noformalapproval.",
       "status": "APPROVED",
@@ -1480,8 +1761,8 @@
     {
       "id": "REV-028",
       "method": "SEPARATE_AGENT",
-      "author": "/root",
-      "reviewer": "/root/item_supplier_handoff_review",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=f1d725f4bbc37a2c8f3364f69e62a5af2dcd19121125f8c9d785dab45dc0f708",
       "reviewed_baseline": "57fa50775e0eb64f47bf7caadc9cc4dfec758580364ee6e01f3824d58072f36e",
       "source_ref": "Actual finalAPPROVED exacta13012401a250026ba42d1cae42ae067ce31e80d; independently61/61PASS, audited4latestpackages501/860PASS hashes, retained2239unit+12browserPASS/2formalgatedskips. ReviewerownsecurityexecutionEPERMnotclaimedPASS. CurrentPRcommentauthorrecordsactualseparateprovenance.",
       "status": "APPROVED",
@@ -1492,8 +1773,8 @@
     {
       "id": "REV-030",
       "method": "SEPARATE_AGENT",
-      "author": "/root",
-      "reviewer": "/root/item_supplier_handoff_review",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=f1d725f4bbc37a2c8f3364f69e62a5af2dcd19121125f8c9d785dab45dc0f708",
       "reviewed_baseline": "b21eef9542468222a85aacba2096dc9047f4fc6591c9d6cfdcbb94ebc0175520",
       "source_ref": "Actual2026-10-13 sourceb21eef APPROVED finalresponse; reviewerindependently61/61PASS no skips. Verifiedmaindc1 integratede8bb, unchangedItemhashes/lockgraph, four-lineSupplierbarrier/1500ms/originalassertions, noauthoredSupplier/Sales/DB/CIproducts. NotformalorhumanGHapproval.",
       "status": "APPROVED",
@@ -1504,8 +1785,8 @@
     {
       "id": "REV-031",
       "method": "SEPARATE_AGENT",
-      "author": "/root",
-      "reviewer": "/root/item_supplier_handoff_review",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=f1d725f4bbc37a2c8f3364f69e62a5af2dcd19121125f8c9d785dab45dc0f708",
       "reviewed_baseline": "b21eef9542468222a85aacba2096dc9047f4fc6591c9d6cfdcbb94ebc0175520",
       "source_ref": "Actual exact962806b37b5898672e6cd8d8ba3a667366176f73 finalAPPROVED2026-10-13; artifactsbytes/hashes4suites501/860 andsource verified; Supplier42/browser12+2formalgatedskips XML retained. Independent61PASS source; https://github.com/crazysumsum/erp-app/pull/198#issuecomment-6135892918 . Not humanGH/formalapproval.",
       "status": "APPROVED",
@@ -1516,8 +1797,8 @@
     {
       "id": "REV-032",
       "method": "SEPARATE_AGENT",
-      "author": "/root",
-      "reviewer": "/root/item_design_review",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
       "reviewed_baseline": "f7431c0934377f3331fd0a537e236eca8044df41f359d36202153803c4aca315",
       "source_ref": "Actual separate read-only finalAPPROVED2026-10-13 exactDESf7431c09/PLANd6db1f52, zeroCritical/High. Reviewedactualsource/contract/3-query/advisorysnapshot/activeUOMsearchonly/metadata+scope+TC017018UAT017 andtraceability. Productunchanged; nothuman/formalacceptance.",
       "status": "APPROVED",
@@ -1528,8 +1809,8 @@
     {
       "id": "REV-033",
       "method": "SEPARATE_AGENT",
-      "author": "/root",
-      "reviewer": "/root/item_supplier_handoff_review",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=f1d725f4bbc37a2c8f3364f69e62a5af2dcd19121125f8c9d785dab45dc0f708",
       "reviewed_baseline": "726268dd250d995748d8487522c1193bec75cd7f8045f0ceeca4d02bf5de95e2",
       "source_ref": "Actualsource726finalAPPROVED2026-10-13; noactionablefindings, independentItem/Supplier/Inventory/SalesnonDB72/72PASS0skips. Reviewedactualpurchase-onlymetadata/mastermappingIDs,purchase+activeUOMsearchonly,prefix/bounds/sharedcountpage/3queries/advisoryrace/noSupplierchanges. Notformal/exactcandidateaudit.",
       "status": "APPROVED",
@@ -1540,8 +1821,8 @@
     {
       "id": "REV-034",
       "method": "SEPARATE_AGENT",
-      "author": "/root",
-      "reviewer": "/root/item_supplier_handoff_review",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=f1d725f4bbc37a2c8f3364f69e62a5af2dcd19121125f8c9d785dab45dc0f708",
       "reviewed_baseline": "726268dd250d995748d8487522c1193bec75cd7f8045f0ceeca4d02bf5de95e2",
       "source_ref": "Actual exact3af17c021a7b83155845be6e2345f5481c45de5a finalAPPROVED2026-10-13, noactionablefindings. Source726/producttesthashesmatchREV033; all4localDEVELOPERruncommandcontracts/artifactSHA/bytes/sourcePLANverified, server509/client8600skip, lintbuildPASS. OnlyItemcode/tests/report/checkpoint, no newrawGit. Notmergeauthority/formalacceptance.",
       "status": "APPROVED",
@@ -1552,8 +1833,8 @@
     {
       "id": "REV-035",
       "method": "SEPARATE_AGENT",
-      "author": "/root",
-      "reviewer": "/root/item_supplier_handoff_review",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=f1d725f4bbc37a2c8f3364f69e62a5af2dcd19121125f8c9d785dab45dc0f708",
       "reviewed_baseline": "57b95453be2c6ef7c2ac48c0aab3cbbfe968dbef15a2d43dc990fdf84dca376b",
       "source_ref": "Actual finalsource57b954 APPROVED noopenfindings. MEDIUMracecleanup solved release/settle-first/observedoperations/markerfailure/10sdeadline; authorfaultinjectionbothorders~1.04s/cmprestored/fixturetables0. OnlyItemtest+bookkeeping; no product/Supplier/schema/UAT. TestSHAfd861a53a0fe085b01c9abf06b2abcf5e1df11fa983de5b05fc274cda96a37bc. NotreviewerDBrerun/formalacceptance.",
       "status": "APPROVED",
@@ -1564,8 +1845,8 @@
     {
       "id": "REV-036",
       "method": "SEPARATE_AGENT",
-      "author": "/root",
-      "reviewer": "/root/item_supplier_handoff_review",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=f1d725f4bbc37a2c8f3364f69e62a5af2dcd19121125f8c9d785dab45dc0f708",
       "reviewed_baseline": "2d975f70c8f0e4f046dcc84911f5fc446a61d851fd89b97c5bf76c536b686add",
       "source_ref": "ActualCHANGES_REQUESTED C-PLAN001MEDIUM: taskDoDactualmerge/cleanup circularwithMERGE_READYrequiresDONE. Allotherlinks/scopes/contracts/mandatoryflags pass. Minorclarificationapplied toPLAN46dd; finalnewreviewpending. Not ignored/waived.",
       "status": "CHANGES_REQUESTED",
@@ -1576,8 +1857,8 @@
     {
       "id": "REV-037",
       "method": "SEPARATE_AGENT",
-      "author": "/root",
-      "reviewer": "/root/item_supplier_handoff_review",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=f1d725f4bbc37a2c8f3364f69e62a5af2dcd19121125f8c9d785dab45dc0f708",
       "reviewed_baseline": "46dd2221fc8f8fe974adc6553d83c3eaefc706e81315b649a55b8331a715410b",
       "source_ref": "ActualfinalPLAN46dd/source201f APPROVED atHEAD308f, noopenfindings; C-PLAN001RESOLVED implementationDoD/DONE-for-gate vsphasepostmergeexit. TypedstructurePASS, mandatory/UAT flags preserved. Testhashfd861 unchanged, no authoredproducts/Supplier/schema/CI/profile/contracts. Latest383263imports onlySupplierpin/journaldocs; finalcurrentcandidateauditrequired.",
       "status": "APPROVED",
@@ -1588,8 +1869,8 @@
     {
       "id": "REV-038",
       "method": "SEPARATE_AGENT",
-      "author": "/root",
-      "reviewer": "/root/item_supplier_handoff_review",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=f1d725f4bbc37a2c8f3364f69e62a5af2dcd19121125f8c9d785dab45dc0f708",
       "reviewed_baseline": "711f09a98d1f59c0362025aff3c0b89647eee4cac2250e833f747ec14e168549",
       "source_ref": "Actual final separate-agent APPROVED exact 46abfafa2679343eda6f7b1f5170baa7e37025a3; no actionable findings. Verified Item-only diff, test fd861, PLAN46dd, final 4 checks, 15 approved packages (52 files), all 40 evidence pointers; no product/Supplier/schema/CI/policy changes. https://github.com/crazysumsum/erp-app/pull/214#issuecomment-6142366415 . Not human GitHub approval or formal acceptance.",
       "status": "APPROVED",
@@ -1600,8 +1881,8 @@
     {
       "id": "REV-039",
       "method": "SEPARATE_AGENT",
-      "author": "/root",
-      "reviewer": "/root/item_supplier_handoff_review",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=f1d725f4bbc37a2c8f3364f69e62a5af2dcd19121125f8c9d785dab45dc0f708",
       "reviewed_baseline": "809f8a15b605975f2db4c94eb641bc6bf6e5e3aaf07ed5938bb8660f9899a8ef",
       "source_ref": "Actual final APPROVED pre-execution PLAN809f/source4b112/frozenappf94, no actionable findings. Independently count34JUnit leaves14direct+20nested; optionalprofileonly, alloriginalfields/suites/flags/gates unchanged. Readonlydependency inspection foundnoDDL infocusedpath; 13P0 NOT_RUN/3GRBLOCKED; service409notHTTP, discoveredTC IDs remain suite-local notwholeTCacceptance. State111/trace structure PASS; product/test/DES unchanged,40indicespreserved. HD011 needs actualhumanPLANapproval and frozencommandcontract before execution. Reviewer performed no tests/DB/install/writes.",
       "status": "APPROVED",
@@ -1612,8 +1893,8 @@
     {
       "id": "REV-040",
       "method": "SEPARATE_AGENT",
-      "author": "/root",
-      "reviewer": "/root/item_supplier_handoff_review",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=f1d725f4bbc37a2c8f3364f69e62a5af2dcd19121125f8c9d785dab45dc0f708",
       "reviewed_baseline": "4b1121c10dd4e05fc2a39305bf5cc262d5f52ae55ac6e8f5bff6852d656bb208",
       "source_ref": "Actual separate-agent final APPROVED scoped execution evidence ONLY,0actionablefindings; frozendd3/appf94/PLAN809f/source4b112. TECH metadataSHA84175edc96eea0eb2c4b70172b03b7cb88384a9c41dc518142956c43fdda406c; REGmetadataSHAc4aa8e506e9ddacdc6a87a0bb891d038d693ee997905711740a70ab4483ed089. Independently parsed34uniqueleafPASS0failure/skip perXML, exactargv/contract/artifacthash/bytes,13groups,91count/normalizedschema snapshots,8file secret scan clean,40historicalindices unchanged. Rowcounts do notprove retainedcontents; SHOWCREATEhashes excludeAUTO_INCREMENTcounters; caveat addedreport. DEF107HIGHOPEN/globalgatesBLOCKED/Task043IN_PROGRESS. Actualread-only artifact/staticaudit; no reviewerDB/test execution or humanacceptance.",
       "status": "APPROVED",
@@ -1624,8 +1905,8 @@
     {
       "id": "REV-041",
       "method": "SEPARATE_AGENT",
-      "author": "/root",
-      "reviewer": "/root/item_supplier_handoff_review",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=f1d725f4bbc37a2c8f3364f69e62a5af2dcd19121125f8c9d785dab45dc0f708",
       "reviewed_baseline": "d735bc6f612f0ff635c571adde4d539f41a00c71e9d855a1b060127314ddd01c",
       "source_ref": "Actual independent APPROVED exact publication candidate fd4e4c8a3939482e05cbe186ec1270371090f85e/base692a1d47,0actionable findings. Read-only Gitdiff/JSON/originalXML/hash/bytes/secret scan/Harness boundary audit; no test or DB execution. All12authoredfiles Itemdocs/evidence; original8nativeartifacts/34uniquePASS each/40historicalindices/classification preserved. Nativehistoricf94/dd3/source4b112 distinctfrompublicationhead; DEF107HIGHOPEN/GRBLOCKED/TASK043IN_PROGRESS/canonicalTC/UATlimits unchanged. Not human GitHubapproval or wholeacceptance. Public provenance https://github.com/crazysumsum/erp-app/pull/217#issuecomment-6158897147 ; exact-head five-checkCI stillpending.",
       "status": "APPROVED",
@@ -1636,10 +1917,418 @@
     {
       "id": "REV-042",
       "method": "SEPARATE_AGENT",
-      "author": "/root",
-      "reviewer": "/root/item_supplier_handoff_review",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=f1d725f4bbc37a2c8f3364f69e62a5af2dcd19121125f8c9d785dab45dc0f708",
       "reviewed_baseline": "a328f69be9f3d791ae240e13dedb9aca6d4c3197498ed1c4d159ebcc809191dd",
       "source_ref": "Actual independent handoff-artifact review APPROVED,0actionable findings at basecb75f25a. ExacthandoffSHAa328f69be9f3d791ae240e13dedb9aca6d4c3197498ed1c4d159ebcc809191dd, entryreportSHAfaedda095d07a6d0ba0d76c401ddc4c7b649958d4be881db77bdb0b779e25a5b, pre-reviewrecordjournal121SHA09488320991ff5ba8fe77d708f90b1dfbacdc987ea551ab19585d466bb9c772f. Readonly actual Item/Supplier/Purchasing sources,0081schema,doc/hash/link/state/boundary audit; no tests/DB/writes/externalactions. Correctnew-eventfailclosed versus replayfence; owner-pending granularity/eventmapping/reversal/retry/newItemprovider notselected ordeclaredready; only3Itemdocpaths,7linktargets,40indices andDES/PLAN/blockedGR/UAT intact. Not humanapproval, mergepermission or formalacceptance.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-043",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=f1d725f4bbc37a2c8f3364f69e62a5af2dcd19121125f8c9d785dab45dc0f708",
+      "reviewed_baseline": "b8e8f982203314337d84738b78ec9f0595df416f3f6c387be43bbd0176fef942",
+      "source_ref": "Actual exactcandidate9ba75fa312d6f4c1fbba370e834d93dcfebb04f7/base3239b98f independentAPPROVED,0actionablefindings. Readonly Gitdiff/source/JSON/hash/links/secret/Harnessboundary audit; no DB/tests/writes. Authoreddelta3Itemdocs only; inheritedSupplierT50 notauthored; unchangedItemprovider/SupplierRelationService/PurchasingGRwiring. HandoffSHAbb646bb05ad988be47c8581f854be70afcc792b8ce104d33b1ed5a8dab47ef34. CanonicalDES/PLAN/profile/evidence40/oldmodeentry+observations preserved; newprovider/eventmapping/granularity/reversal/retry ownerpending; GR/DEF107/TASK043/UAT limits intact. Newexactheadreview, notREV042/572CI reuse; nothumanGitHubapproval oracceptance. Publicprovenance postedonPR220; CI38518971182 stillinprogress. Public provenance https://github.com/crazysumsum/erp-app/pull/220#issuecomment-6161926747 .",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-044",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=f1d725f4bbc37a2c8f3364f69e62a5af2dcd19121125f8c9d785dab45dc0f708",
+      "reviewed_baseline": "bb646bb05ad988be47c8581f854be70afcc792b8ce104d33b1ed5a8dab47ef34",
+      "source_ref": "Actual new postmerge ItemintegrationAPPROVED,0findings at exacta909c7698121ecfcadc7aa08ad67af8cf22b6a71/actualfirstparent769d05cd2b8db3a9f99d84722c7d1d819aca3f4e. Gitobject/firstparentdiff/blobhash/links/stateaudit, no dirtylocaljournal/DB/tests. Itempatch equalsreviewedcandidate9ba andsamehandoffSHA; canonicalpolicies/40indices/Itemprovider/SupplierRelationService/PurchasingGR/schema unchanged. EntiretreeDIFFERS9ba becauseparallelSupplierPR221; thatSuppliercode correctness outside Itemreview, andnotmergedmainCI PASS. GR/DEF107/TASK043/UAT limits preserved. Thispostmergereview isdistinctfrompremergeREV043.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-045",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=f1d725f4bbc37a2c8f3364f69e62a5af2dcd19121125f8c9d785dab45dc0f708",
+      "reviewed_baseline": "bb646bb05ad988be47c8581f854be70afcc792b8ce104d33b1ed5a8dab47ef34",
+      "source_ref": "Actual new readonly Itemintegration/CI-contentmapping APPROVED,0findings: a909 ancestorof exacte91197d5d71e110aa149b2af99492a7717af4f27; compare4466trackedGitentries(mode/type/blob), onlySupplierjournal differs. AllItemdocs/server/client/roottrackedfiles/CIworkflow same; samehandoffSHA/DES/PLAN/evidence40/entryf94/GR/DEF107/TASK043/UAT limits. Gitobjects/fulltreecomparison/hash/mergedstateparse; no dirtylocalstate/DB/tests/externalwrites. Not wholetree/globalfingerprint equality, Supplierjournal correctness, cancelleda909CIPASS, fullacceptance orwaiver. Actuale911 CI38522475658 allchecks stillneedsobservedPASS.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-046",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
+      "reviewed_baseline": "3daef7460516dd7e24d5db5575a1b580dbc81f078d31a1c54867192bc1904a66",
+      "source_ref": "Actual new read-only independent review APPROVED no P0/P1 findings, entryd9714a34, DESIGN3daef746 initialPLAN94f9798c rawdesignf553cf74 sourced55cf833. Provider contract/current-state warnings/missing-serial ordering/UOM history/executor/advisory consistency/legacy compatibility/test traceability checked; validators STRUCTURE_PASS/LOCAL_CHECKS_PASS. No DB/tests or human approval. Files were unstaged, not a committed candidate.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-047",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
+      "reviewed_baseline": "3daef7460516dd7e24d5db5575a1b580dbc81f078d31a1c54867192bc1904a66",
+      "source_ref": "Actual follow-up CHANGES_REQUESTED P1: state126 PLAN94f9798c stale versus current38b2a632 after adding already-existing fifthCI Browser tests (Playwright) inventory. No other P0/P1/P2 findings; fifthjob matches actualworkflow/strengthens mapping only. APR061 planning-only and HD013/DEF107 blockers honest. This CAS repairs only baseline bookkeeping; retain original requested-changes record and obtain actual new follow-up review, no waiver.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-048",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
+      "reviewed_baseline": "3daef7460516dd7e24d5db5575a1b580dbc81f078d31a1c54867192bc1904a66",
+      "source_ref": "Actual final new read-only reviewer turn APPROVED, REV047 P1 stale PLAN closed; no new P0/P1/P2. Independently confirmed state127 inspect LOCAL_CHECKS_PASS zeroissues, DESIGN3daef746 PLAN38b2a632 entryd9714a34, preserved REV046/047 and APR061 planning-only, HD013 OPEN/DEF107 HIGH OPEN/TASK043 IN_PROGRESS/TASK048 PENDING/40indices. Not human newdesign/plan approval or globalPLAN_READY/implementation/CI/UAT acceptance.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-049",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
+      "reviewed_baseline": "3daef7460516dd7e24d5db5575a1b580dbc81f078d31a1c54867192bc1904a66",
+      "source_ref": "Actual read-only scoped-entry proposal review CHANGES_REQUESTED, no P0; original procedure d82dbd27 at DESIGN3daef746/PLAN38b2a632. P1: material native execution/governance route must enter canonical PHASE010/TASK048/new PLAN, not rely on excluded implementation document and old APR063. P2: retained JUnit/build artifacts need bounded validation/redaction/classification, not raw JUnit with only log redaction. Four exact command hashes/boundaries/fresh DEFAULT/no merge/export/GR limits otherwise correct. Primary proposed canonical PLANa988403a with exact revised procedure8b073ef4 pin and all-artifact redaction; actual follow-up review still required, no fabricated closure.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-050",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
+      "reviewed_baseline": "3daef7460516dd7e24d5db5575a1b580dbc81f078d31a1c54867192bc1904a66",
+      "source_ref": "Actual new read-only follow-up APPROVED, REV049 P1/P2 closed, no new P0/P1/P2. Independently observed exact procedure8b073ef4, DESIGN3daef746, new PLANa988403a, state131 inspect LOCAL_CHECKS_PASS zeroissues; canonical PHASE010/TASK048 binds complete procedure and new PLAN+HD014 IMPLEMENT/native/privateDDL approval required. Four original suite contracts byte-identical; all retained output classes bounded/validated/redacted/classified/postredaction checked, unreviewed plaintext not retained. DES behavior/four-path/freshDEFAULT/DEF107HIGHOPEN/genericBLOCKED/no waiver/no push/PR/merge/export/formal acceptance preserved. Proposal-only review; not human authority or actual product/test/runtime execution. Original REV049 findings remain history.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-051",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
+      "reviewed_baseline": "52905a4dedd55bfd562d760f2d8f8084cf3465b828a9bfc5b2a5751a00f6b90a",
+      "source_ref": "Actual test-only separate-agent review: noP0/P1, P2 exact19top-level keys/explicitundefinedtime/404409status assertions requested before provider. Original test hashes52905a4d/c2fe18da. All closed by subsequent amendedtests RED3841 and REV052; preserved historical request, not implementation approval.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-052",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
+      "reviewed_baseline": "f7d34aaf823791612ac011a6a037a172f056e9a581b5a0d61fd30dbc7e9890f2",
+      "source_ref": "Actual independent source+tests APPROVED,0P0/P1/P2. Observed providerc0c31785/unite36df73c/integration5f6774a3, exact sourcefingerprintf7d34aaf. All priorP2s closed. Validates bounded preSQL input/time,missing-before-serial,two injected read-only queries/currentfacts/warnings/UOM/history/advisory-vs-snapshot,unchangedpurpose rules. Static review only; no TC/UAT/CI/merge credit.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-053",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
+      "reviewed_baseline": "f7d34aaf823791612ac011a6a037a172f056e9a581b5a0d61fd30dbc7e9890f2",
+      "source_ref": "Actual native evidence/cleanup review: parsed original lint/build/client866/server537PASS but helper500FAIL_OR_BLOCKED; P1 pin exact permitted nonce+10/idempotency+34 TTL/schema/allothercounts/oldrows policy, P2 preserve oldfailedrecord. No product regression. Proposal review not permission/coregate waiver.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-054",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
+      "reviewed_baseline": "f7d34aaf823791612ac011a6a037a172f056e9a581b5a0d61fd30dbc7e9890f2",
+      "source_ref": "Actual read-only helper ae56e470 review APPROVED rerun,P1/P2closed. Exact2tablepositive deltas/TTL/oldrows/table-set/schema/mysqlidentity/PID/allothercounts; policy/helper hashes frozen, old500failedrun linked unchanged. Optional identity/state/status selfcheck cases added and all9 supporting negatives rejected. No profile/coregate/command/testassertion change or acceptance credit.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-055",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
+      "reviewed_baseline": "f7d34aaf823791612ac011a6a037a172f056e9a581b5a0d61fd30dbc7e9890f2",
+      "source_ref": "Actual final evidence read-only review CHANGES_REQUESTED: noP0, P1 stale delivery paragraph/next-safe-action; P2 bounded selfcheck provenance absent. Otherwise independently parsed 4final PASS/537 and866 exactcatalog/16requiredIDs/13TC019/artifacthashes/helperpolicy/mutation/restoredsource; old500failure intact and no genericrun/index/export. Report/state updated to actualfinalfacts atCAS137; fresh bounded supporting5a2109de now supplied. Original requestedchanges retained pending actual follow-up; no acceptance/CI/merge credit.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-056",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
+      "reviewed_baseline": "f7d34aaf823791612ac011a6a037a172f056e9a581b5a0d61fd30dbc7e9890f2",
+      "source_ref": "Actual independent follow-up APPROVED localcandidate step,0P0/P1/P2, REV055P1/P2closed. Independently verified exactsource/spec/HEAD, truthfulfinal4+mutation report, support artifactb3cc553b/loghashes/bytes/exit0/valid+9negatives/script986c/helperae56/noDBorcredit, state138BLOCKED+STOPPEDobserved+40historicalindices and exact3Itemsource/test scope. No formalTC/UAT/CI/globalgate/push/PR/merge/export approval. Report actual closure statement added without source/spec change.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-057",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
+      "reviewed_baseline": "f7d34aaf823791612ac011a6a037a172f056e9a581b5a0d61fd30dbc7e9890f2",
+      "source_ref": "Actual read-only preliminary publication options review CHANGES_REQUESTED for B; A sounddefault. P1 exactpublishpath/content classification vsraw/local runtime metadata; P1 exactintegratedcandidate/newPLAN/base/hash/runtime/4check boundpushDraftapproval separatefromfinalmergeauthority. OptionB onlyexplicitgovernance notgenericgate/DEFwaiver/adminbypass; mandatorynormalHarnesscontrolskeepDraft. Initial informal20existingpath estimate corrected by actualgitdiff19; revisedproposal20includingnewdoc. Writtenproposale0804098e4888c9993f20f51da7a3a11bb3c2a4e73f98a9342f9f198f1c892fd supplied for actualfollowup; notexecution/merge/export permission.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 2,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-058",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
+      "reviewed_baseline": "e0804098e4888c9993f20f51da7a3a11bb3c2a4e73f98a9342f9f198f1c892fd",
+      "source_ref": "Actual read-only revisedpublication proposal APPROVED, REV057P1sclosed, noP0/P1. Independently verified actual19merge-base/candidatepaths+newproposal20ceiling, explicitsanitizedmetadata/raw/runtime/helper/credential exclusions, laternewcanonicalPLAN+exacttarget/base/newcandidate binding, freshapprovedruntime/4nativechecks/5CI/realreview, distinctpushDraft/finalmergeapproval, targetrace reintegration, no core/index/admin bypass/DEFwaiver, mandatoryHarnesscontrol=>holdDraft. HD015OPEN andcurrentcandidate/oldPLAN unchanged; proposalreviewonly, noexecution/publication/mergeauthority. Optionalclarity note on19path merge-basecomparison retained as nonblocking.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-059",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
+      "reviewed_baseline": "47647ffbe62ef6fcfdd8d2de55e03179d61596eb023fa0f94053b43b79118db7",
+      "source_ref": "Actual independent newcanonicalB PLAN47647ffb/procedure8f662427 APPROVED forHD016submission,0P0/P1/P2. VerifiedP0/P1/P2/P3split/freshDEFAULTsanitized20pathtransplant/allreachableobjects/no private273f-f8ancestry/original4contracts/currentcatalog/strictTTL/setupbounds/5CI+authenticreview+targetrace+normalprotection/localrawandruntimeonly/mandatorycontrol=>Draft/unchangedDEF107GRgenericflags/history. Source273f/fpf7 andDES3da unchanged. Review actualstate144 DESIGN_AND_PLAN/BLOCKED/HD016OPEN; noHumanP0 orP1/P2/P3permission. NotoldREV058reuse. See09_committed_receipt_planning_review.md for exactbaselines/localchecks/noexecution.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-060",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
+      "reviewed_baseline": "47647ffbe62ef6fcfdd8d2de55e03179d61596eb023fa0f94053b43b79118db7",
+      "source_ref": "Actual independent P1 transplantprivacy review: exact20paths/3blobs/designPLAN unchanged; must sanitize private statepaths and report07 evidence locations BEFORE COMMIT. Accepted; local live state remains private through runtime, publicstate later truthfulLOCALONLY. No commitstaged.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-061",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
+      "reviewed_baseline": "47647ffbe62ef6fcfdd8d2de55e03179d61596eb023fa0f94053b43b79118db7",
+      "source_ref": "Actual independent preexecution review required failclosed exactcatalog/blob/basepins, preciseSETUPONLYDBpolicy and ownednon-symlink600location/700emptydir/reservation guards. Fixedbeforeexecution; no product/test/corechange.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 3,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-062",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
+      "reviewed_baseline": "47647ffbe62ef6fcfdd8d2de55e03179d61596eb023fa0f94053b43b79118db7",
+      "source_ref": "Actual followup closed priorfindings butrequired runtime bootstrap assert mode/design/PLAN/source/base/APR067/MySQLversion BEFORE DDL. Fixedbeforeexecution.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-063",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
+      "reviewed_baseline": "47647ffbe62ef6fcfdd8d2de55e03179d61596eb023fa0f94053b43b79118db7",
+      "source_ref": "Actual separateagent finalpreexecution verdict APPROVED0P0/P1/P2. Exact native db8e075534aa1d6e7eefd38cedb67211e35b418c9090a4720ba18f5fe5ffc822; catalog ddeb9d61d0442684fd6d7ef3923e889df23e51302e19bf657171b60808e84ec3; runtime9f96ea8debb7796a07f8bec45ae24f2199ac81669187aa0806bd6fdd257687ee; selfchecke5962286d5eb07e1bc7fab02e22a5eb2889fc46939192b17abe961a17320922d. ExactPLAN/design/source/base/APR067/version/location guards; precise11zeroedschedulerbootstraprows plusTTLpolicy, finalpolicyunchanged; no suiteoutcome/candidate/CI/formalcredit. PrivacyREV060stillprecommitrequirement.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-064",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=3d258e48dbbc146eea06cfe25b9820a2b2d7c0243bc075d247168e2b24ef1395",
+      "reviewed_baseline": "47647ffbe62ef6fcfdd8d2de55e03179d61596eb023fa0f94053b43b79118db7",
+      "source_ref": "Actual independent freshbase3faf exact3blob source review REQUESTCHANGES P1 TC019 tracking-policy coverage: spec799 requires none/batch/batch_expiry/serial; unit112 usesunsupportedlot; integrationfixtures none→serial only. Regression rejecting/misprojecting batch/batch_expiry would pass. No additional product/caller/SQL/auth/query-budget issue found. Read-only, no mutation/tests byreviewer. Root inspectedactualspec/tests confirms; no product/testfix authority underAPR067, STOPcandidatecommit. DEF108 opened, not implementationbug proof.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-065",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
+      "reviewed_baseline": "47647ffbe62ef6fcfdd8d2de55e03179d61596eb023fa0f94053b43b79118db7",
+      "source_ref": "Actual separate secondreview P1confirmed TC019 supportedpolicy testgap, stopcandidatecommit; minimal futuretest-only unit+MySQL none/batch/batch_expiry accepted/currentprojection+serialharderror, no service/profile/threshold change; newexacttestpins/sourcefp require canonicalPLAN amendment/review/explicitauthorization/newcatalog+rerun. Independently parsed SETUP_ONLY537/537 strict+11leases/+10nonce/+34idem andfinalserver537/537 precisefinalTTL; real localdeveloperPASS cannot fillcoveragegap orformalacceptance.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-066",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=3d258e48dbbc146eea06cfe25b9820a2b2d7c0243bc075d247168e2b24ef1395",
+      "reviewed_baseline": "fa5c1977fd5cb0d45c1d33efc63b16b1f6417e98236be957d9fccd4987d449e5",
+      "source_ref": "Actual independent newDEF108PLAN review REQUESTCHANGES:1MEDIUM factual main-suite impact statement. Supplier changedtests excludedfromserver/clientJUnitleafselection BUT includedinmandatory repowidelinteslint. Correctprocedure/report/stateobservation, updatepin/PLAN, retainall4reruns andoriginalfetchhistory. Otherwise narrow2testscope/supportedpolicy+serial assertions/1newDBleaf/providerdesignspecprofilethresholdunchanged/P2P3privacyGRUAT adequate. Actualstate/tracepass; boundaryhonestlyblockedby3inheritedP1transplants. No test/product/externalexecution. CorrectioninnewPLAN720dc/procedure45c025, notyetfollowupapproved.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-067",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=3d258e48dbbc146eea06cfe25b9820a2b2d7c0243bc075d247168e2b24ef1395",
+      "reviewed_baseline": "720dc5db8e97910f3fc4b567a21fc2eb7c2176dc8a435b63f977c9bb1859c062",
+      "source_ref": "Actual independent followup APPROVED exactPLAN720dc5db8e97910f3fc4b567a21fc2eb7c2176dc8a435b63f977c9bb1859c062/procedure45c02513ec177d698e105f7ad20159f1e459624abbe3ff083b1b121628049771/state156, no remainingfindings. REV066MEDIUM resolved:SupplierJUnitexcluded/repolintincluded correctlystated, all4checks rerunafterfreshmain, original164preserved+165correction, canonical05/HD019/state/report/pinsagree, product+2tests/design/spec/profile/commands/thresholds unchanged. Read-onlystateLOCAL/traceSTRUCTUREpass/whitespaceclean/stagedempty; genericPLAN_READYBLOCKEDHD019+DEF107/108+missinghumanapproval; boundaryhonestlyBLOCKED3inheritedP1diff. Planreviewonly, nothumancontentapproval/DEF108closure/IMPLEMENT/P2/P3/UAT/exportauthority.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-068",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
+      "reviewed_baseline": "720dc5db8e97910f3fc4b567a21fc2eb7c2176dc8a435b63f977c9bb1859c062",
+      "source_ref": "Actual independent pre-execution helper APPROVED, 0 P0/P1/P2. Exact native40b3cb6b4677ddc2d5f1be673f05c084beb8ec6281fbae37e838dcf660694847/runtimec571c0206218082b41998f0e0c2596909202052659d38002bec3fb72b4049e2f/catalogaa68567554bfbbbbc74a28b767b4ada97158b86b16620e1e9df1dd675cc5102f/selfcheck8da70b4bf5bedfa019f18e78733d87d2db2c8300b3ce01b2ce4bf16d7a044827. PLAN720/DES3da/APR070/head5e/source9db/blobpins/original4contracts/catalog37ec failclosed; owned location600/dir700/empty reservation and precise setup/final cleanup reviewed. Original runtime newline correctness independently checked by AST; original exact c571 restored before any execution. Helper approval not source/runtime/candidate/CI/formal credit.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-069",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=3d258e48dbbc146eea06cfe25b9820a2b2d7c0243bc075d247168e2b24ef1395",
+      "reviewed_baseline": "720dc5db8e97910f3fc4b567a21fc2eb7c2176dc8a435b63f977c9bb1859c062",
+      "source_ref": "Actual independent static source APPROVED, no blocking findings. Exact source9db817765be44d792911e84c46ad5839ffdb4950a67bad3a45a51216ccbf2eb9/providerc0c31785/unit1e55e59f/integratione8f65e6c. Only two authorized test changes; all none/batch/batch_expiry policies, exact membership/lifecycle/UOM/history/noauthority/immutability, old assertions retained. Unique expected TC01914. No tests executed by reviewer; DEF108 remainsOPEN until actual four checks and DB cleanup/proof/final review.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-070",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=3d258e48dbbc146eea06cfe25b9820a2b2d7c0243bc075d247168e2b24ef1395",
+      "reviewed_baseline": "720dc5db8e97910f3fc4b567a21fc2eb7c2176dc8a435b63f977c9bb1859c062",
+      "source_ref": "Actual independent diagnosis APPROVED same-PLAN narrow remediation. LOW TEST_AUTOMATION_DEFECT: lint soleprefer-const newfixture145, logs/exit1/source/head consistent. letcatalog=null minimal valid correction preserves earlyt.after/optionalcleanup/assertions/intent; insideexactAPR070two-testcoverage work, no newDESIGN/PLAN/ownercontentapproval. Stop-for-diagnosis honored; before resume rebindnewhash/source/catalog/helperreview+all4freshchecks; no oldPASSreuse or secondSETUP_ONLY. DEF108OPEN; stale setup runtime label corrected separately fromactualDBsnap, originalproofunchanged.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-071",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=3d258e48dbbc146eea06cfe25b9820a2b2d7c0243bc075d247168e2b24ef1395",
+      "reviewed_baseline": "720dc5db8e97910f3fc4b567a21fc2eb7c2176dc8a435b63f977c9bb1859c062",
+      "source_ref": "Actual preexecution resumption APPROVED0blockingfindings. Exactnew sourceffe3985/provider c0c317/unit1e55/integrationc494; reversingonly letcatalog=null toletcatalog reproduces prior e8fhash. Native725f9374 diffonly3pins; catalogscript7f5ec1a5 diffonlytestpin; catalog149d1ae0 diffonlysource/testhash, exact538/866/14identities. No assertion/product/scope/contracts/teardown changes, whitespacePASS. State164actualnewsourcebinding verifiedbycoordinator; no newPLAN/ownerdecision needed, resumeoriginal4once, no secondSETUP/oldPASSreuse. Static approval only, DEF108OPEN.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-072",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
+      "reviewed_baseline": "720dc5db8e97910f3fc4b567a21fc2eb7c2176dc8a435b63f977c9bb1859c062",
+      "source_ref": "Actual independent21pathprivacy prep CHANGES_REQUESTED P1 oldunexecutedsanitizer hardcodesstale runtime/currentR notcovered, partialregex leaksotherschemas/runtime/actionkeys/PIDresources. Require dynamicowned700nonsymlinknonce-retentioninput/currentSTOPPED/rawbackup+mapping, whole-sensitive-fieldNONLIVEhashmarkers, fullserializedfailclosedscan; preserveIDs/status/history40indices andtruthfulnonliveworktree/runtimeavailability. P2 report09 currentresults onlyafteractual4rerun; report07historicalalreadyredacted. No candidate beforeactualcorrectedhelperandbyte-review; no rawexport.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-073",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=3d258e48dbbc146eea06cfe25b9820a2b2d7c0243bc075d247168e2b24ef1395",
+      "reviewed_baseline": "720dc5db8e97910f3fc4b567a21fc2eb7c2176dc8a435b63f977c9bb1859c062",
+      "source_ref": "Actual final independent source/coverage/runtime/evidence APPROVED0blocking. Exacthead5e121/PLAN720/sourceffe3985/catalog149d/providerc0c317/unit1e55/integrationc494. Independently verifiedall4record/artifact/JUnitSHA/counts/uniqueexactcatalog/server538client866/14TC019/all16IDs/support9ede+helper725f. FinalDBall91tables/schema/identity/PID/oldTTL/zeroItemfixtures unchanged exceptexact+10nonce/+34completed201idem; originalfailure/triage/soleSETUP retained. Shutdownactual167/logfdcc7228/socketPIDabsent/dataretained. DEF108 mayCLOSEdevelopertrackingpolicycoverage only, notformalTC/UATCI/global/candidate/taskDONE. Nonblockingactualruntimeparent0700/datadir0750effectiveowner-only; coordinatorobserved/tightenedchild0700aftershutdown, nofalsehistorical0700claim orrerunneeded.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-074",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
+      "reviewed_baseline": "720dc5db8e97910f3fc4b567a21fc2eb7c2176dc8a435b63f977c9bb1859c062",
+      "source_ref": "Actual helper751f90 review P1 proposedoldrevisionbytes notactualincrementedcandidate; P1unguardedproposedoutputreplacement. Require soleactualcandidateincrementedfileSHA equalmap/CASoutput, separateoldrevisioncontrolforunchangedstate_tool, alloutputsownedretention/nonoverwrite600. P2 denyinternaltaskpaths/roleonlyowner. Notexecuted; actualfixesfollowed.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 2,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-075",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
+      "reviewed_baseline": "720dc5db8e97910f3fc4b567a21fc2eb7c2176dc8a435b63f977c9bb1859c062",
+      "source_ref": "Actual helpera6bb2 followup closedtwoP1s/taskpathissue butP1bindexactcurrentPLAN/source/head/modebeforewrites; P2checkalloutputcollisionsbeforefirstwrite. Notexecuted; exactguards/orderfixedbeforegeneration.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-076",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
+      "reviewed_baseline": "720dc5db8e97910f3fc4b567a21fc2eb7c2176dc8a435b63f977c9bb1859c062",
+      "source_ref": "Actual correctedhelper04ad04bfe5ad2424036aab872d89bbcbe1f2c36f7c24a5feb443083403dddf31 APPROVEDforprivateproposedgenerationonly. ExactIMPLEMENT/BLOCKED/PLAN720/DES3da/head5e/sourceffe3985guards, ownedretention/STOPPED/nonoverwrite600/candidateincrementSHAequal/controlseparate/NONLIVE/historypreserved. Doesnotapproveactualproposedbytes/staging/candidate/P2P3/formalgates; finalrawstate/reportthenindependent21byte-review required.",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -1666,7 +2355,7 @@
       "source_fingerprint": "d2b9e7c67cd0a54a47746c09fc9282f7bf65f4703d73bcdc40dc448dcb6f986e",
       "status": "PASS",
       "source_ref": "https://github.com/crazysumsum/erp-app/pull/198#issuecomment-6115984771; actualSEPARATE_AGENTreviewfinalresponseconfirms71cfd18/code/evidence/metadata. NotimpersonatedGitHubhumanapproval.",
-      "actor": "/root/item_supplier_handoff_review",
+      "actor": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=f1d725f4bbc37a2c8f3364f69e62a5af2dcd19121125f8c9d785dab45dc0f708",
       "observed_at": "2026-10-12T01:12:09Z"
     },
     {
@@ -1699,7 +2388,7 @@
       "source_fingerprint": "3da037cd9926466f4d8753d353b9b648ffd4e41c94d998cc93058b29e7822dae",
       "status": "PASS",
       "source_ref": "Actual reviewer finalresponse APPROVED exacte88692; https://github.com/crazysumsum/erp-app/pull/198#issuecomment-6116512556. Source3da/PLAN01 stable; noimpersonatedhumanreview.",
-      "actor": "/root/item_supplier_handoff_review",
+      "actor": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=f1d725f4bbc37a2c8f3364f69e62a5af2dcd19121125f8c9d785dab45dc0f708",
       "observed_at": "2026-10-12T02:11:15Z"
     },
     {
@@ -1765,7 +2454,7 @@
       "source_fingerprint": "57fa50775e0eb64f47bf7caadc9cc4dfec758580364ee6e01f3824d58072f36e",
       "status": "PASS",
       "source_ref": "Actualseparate-agentfinalAPPROVED exacta1301240 on2026-10-12, nofindings; PR198currentcandidatecomment authoredrecordnotimpersonatedhumanreview.",
-      "actor": "/root/item_supplier_handoff_review",
+      "actor": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=f1d725f4bbc37a2c8f3364f69e62a5af2dcd19121125f8c9d785dab45dc0f708",
       "observed_at": "2026-10-12T02:45:00Z"
     },
     {
@@ -1831,7 +2520,7 @@
       "source_fingerprint": "b21eef9542468222a85aacba2096dc9047f4fc6591c9d6cfdcbb94ebc0175520",
       "status": "PASS",
       "source_ref": "https://github.com/crazysumsum/erp-app/pull/198#issuecomment-6135892918 ; actual separateagent finalAPPROVED exactSHA, 0 actionablefindings; nothumanGHapproval.",
-      "actor": "/root/item_supplier_handoff_review, actual SEPARATE_AGENT",
+      "actor": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=80d742e876f2d4385bb7bbc25e81f648313b2622c278cdc5dc6c131a5abb4694",
       "observed_at": "2026-10-13T01:11:00Z"
     },
     {
@@ -1940,8 +2629,8 @@
       "spec_baseline": "d6db1f524df15257eca36eb0d4117efe8f20352a07e931b6511df7d8795e5de4",
       "source_fingerprint": "726268dd250d995748d8487522c1193bec75cd7f8045f0ceeca4d02bf5de95e2",
       "status": "PASS",
-      "source_ref": "Actual separateagent /root/item_supplier_handoff_review finalresponse exact3af17c02 APPROVED; reviewed4rawlocalpackages/hashes/contracts/Itemscope. NohumanGHapproval/mergeauthority/formalacceptance.",
-      "actor": "/root/item_supplier_handoff_review, actual SEPARATE_AGENT",
+      "source_ref": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=62255436df91a3bf0f9d6721164704097274fdc05f4875b1a1a5e44a86358060",
+      "actor": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=80d742e876f2d4385bb7bbc25e81f648313b2622c278cdc5dc6c131a5abb4694",
       "observed_at": "2026-10-13T07:37:01Z"
     },
     {
@@ -2018,7 +2707,7 @@
       "source_fingerprint": "711f09a98d1f59c0362025aff3c0b89647eee4cac2250e833f747ec14e168549",
       "status": "PASS",
       "source_ref": "https://github.com/crazysumsum/erp-app/pull/214#issuecomment-6142366415 ; actual separate-agent final APPROVED exact 46abfafa, 0 actionable findings, not human GitHub approval. PR now ready for review.",
-      "actor": "/root/item_supplier_handoff_review, actual SEPARATE_AGENT",
+      "actor": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=80d742e876f2d4385bb7bbc25e81f648313b2622c278cdc5dc6c131a5abb4694",
       "observed_at": "2026-10-13T09:22:57.788Z"
     },
     {
@@ -2095,7 +2784,7 @@
       "source_fingerprint": "4b1121c10dd4e05fc2a39305bf5cc262d5f52ae55ac6e8f5bff6852d656bb208",
       "status": "PASS",
       "source_ref": "Actual approved native Node execution APR057; evidence/20261014T011056-reference-technical-b64d49aa/scoped-execution.json SHA256 84175edc96eea0eb2c4b70172b03b7cb88384a9c41dc518142956c43fdda406c; original JUnit SHA256 d38be900fa4d96883bd6991a3922e965b7e81a39acb4c20bd15c465b33cca1fd. Counts34/34 PASS/0fail/skip/notrun,exit0; tool/source/spec/HEAD unchanged; all91table counts/schema hashes identical before/after. Suite-local branch result ONLY, NOT run_check/full canonicalTC/globalgate PASS; GRblocked. Raw evidence local-only.",
-      "actor": "Item QA /root — actual native Node/MySQL execution under explicit APR057",
+      "actor": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=5a7c58c0fe06d886c98860e46053a78e311c09fb2d7af3ef4c324695e47e9c7d",
       "observed_at": "2026-10-14T01:11:15.273665Z"
     },
     {
@@ -2106,7 +2795,7 @@
       "source_fingerprint": "4b1121c10dd4e05fc2a39305bf5cc262d5f52ae55ac6e8f5bff6852d656bb208",
       "status": "PASS",
       "source_ref": "Actual approved native Node execution APR057; evidence/20261014T011117-reference-regression-f16a12cb/scoped-execution.json SHA256 c4aa8e506e9ddacdc6a87a0bb891d038d693ee997905711740a70ab4483ed089; original JUnit SHA256 1388af08b44454ab2e70f9c0928533e36db44da17471a8269d73fd042e7933c3. Counts34/34 PASS/0fail/skip/notrun,exit0; tool/source/spec/HEAD unchanged; all91table counts/schema hashes identical before/after. Suite-local branch result ONLY, NOT run_check/full canonicalTC/globalgate PASS; GRblocked. Raw evidence local-only.",
-      "actor": "Item QA /root — actual native Node/MySQL execution under explicit APR057",
+      "actor": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=5a7c58c0fe06d886c98860e46053a78e311c09fb2d7af3ef4c324695e47e9c7d",
       "observed_at": "2026-10-14T01:11:36.269327Z"
     },
     {
@@ -2163,6 +2852,116 @@
       "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/38496213208/job/115632437687",
       "actor": "Actual GitHub Actions CI run38496213208",
       "observed_at": "2026-10-14T01:52:16.545716+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Browser tests (Playwright)",
+      "code_commit": "9ba75fa312d6f4c1fbba370e834d93dcfebb04f7",
+      "spec_baseline": "809f8a15b605975f2db4c94eb641bc6bf6e5e3aaf07ed5938bb8660f9899a8ef",
+      "source_fingerprint": "b8e8f982203314337d84738b78ec9f0595df416f3f6c387be43bbd0176fef942",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/38518971182/job/115704046424",
+      "actor": "Actual GitHub Actions CI38518971182",
+      "observed_at": "2026-10-14T06:09:57.659483+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Build frontend",
+      "code_commit": "9ba75fa312d6f4c1fbba370e834d93dcfebb04f7",
+      "spec_baseline": "809f8a15b605975f2db4c94eb641bc6bf6e5e3aaf07ed5938bb8660f9899a8ef",
+      "source_fingerprint": "b8e8f982203314337d84738b78ec9f0595df416f3f6c387be43bbd0176fef942",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/38518971182/job/115704046558",
+      "actor": "Actual GitHub Actions CI38518971182",
+      "observed_at": "2026-10-14T06:09:57.659483+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Lint",
+      "code_commit": "9ba75fa312d6f4c1fbba370e834d93dcfebb04f7",
+      "spec_baseline": "809f8a15b605975f2db4c94eb641bc6bf6e5e3aaf07ed5938bb8660f9899a8ef",
+      "source_fingerprint": "b8e8f982203314337d84738b78ec9f0595df416f3f6c387be43bbd0176fef942",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/38518971182/job/115704046668",
+      "actor": "Actual GitHub Actions CI38518971182",
+      "observed_at": "2026-10-14T06:09:57.659483+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Dependency audit",
+      "code_commit": "9ba75fa312d6f4c1fbba370e834d93dcfebb04f7",
+      "spec_baseline": "809f8a15b605975f2db4c94eb641bc6bf6e5e3aaf07ed5938bb8660f9899a8ef",
+      "source_fingerprint": "b8e8f982203314337d84738b78ec9f0595df416f3f6c387be43bbd0176fef942",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/38518971182/job/115704046693",
+      "actor": "Actual GitHub Actions CI38518971182",
+      "observed_at": "2026-10-14T06:09:57.659483+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Test (server + client, MySQL integration)",
+      "code_commit": "9ba75fa312d6f4c1fbba370e834d93dcfebb04f7",
+      "spec_baseline": "809f8a15b605975f2db4c94eb641bc6bf6e5e3aaf07ed5938bb8660f9899a8ef",
+      "source_fingerprint": "b8e8f982203314337d84738b78ec9f0595df416f3f6c387be43bbd0176fef942",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/38518971182/job/115704046745",
+      "actor": "Actual GitHub Actions CI38518971182",
+      "observed_at": "2026-10-14T06:09:57.659483+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Lint",
+      "code_commit": "e91197d5d71e110aa149b2af99492a7717af4f27",
+      "spec_baseline": "809f8a15b605975f2db4c94eb641bc6bf6e5e3aaf07ed5938bb8660f9899a8ef",
+      "source_fingerprint": "33f5387f12455ab19ba23a23f9355e5770e1b46f6498530e66595844b843e4b3",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/38522475658/job/115715343856",
+      "actor": "Actual GitHub Actions latest-main CI38522475658",
+      "observed_at": "2026-10-14T06:52:58.002166+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Dependency audit",
+      "code_commit": "e91197d5d71e110aa149b2af99492a7717af4f27",
+      "spec_baseline": "809f8a15b605975f2db4c94eb641bc6bf6e5e3aaf07ed5938bb8660f9899a8ef",
+      "source_fingerprint": "33f5387f12455ab19ba23a23f9355e5770e1b46f6498530e66595844b843e4b3",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/38522475658/job/115715344132",
+      "actor": "Actual GitHub Actions latest-main CI38522475658",
+      "observed_at": "2026-10-14T06:52:58.002166+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Build frontend",
+      "code_commit": "e91197d5d71e110aa149b2af99492a7717af4f27",
+      "spec_baseline": "809f8a15b605975f2db4c94eb641bc6bf6e5e3aaf07ed5938bb8660f9899a8ef",
+      "source_fingerprint": "33f5387f12455ab19ba23a23f9355e5770e1b46f6498530e66595844b843e4b3",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/38522475658/job/115715344190",
+      "actor": "Actual GitHub Actions latest-main CI38522475658",
+      "observed_at": "2026-10-14T06:52:58.002166+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Browser tests (Playwright)",
+      "code_commit": "e91197d5d71e110aa149b2af99492a7717af4f27",
+      "spec_baseline": "809f8a15b605975f2db4c94eb641bc6bf6e5e3aaf07ed5938bb8660f9899a8ef",
+      "source_fingerprint": "33f5387f12455ab19ba23a23f9355e5770e1b46f6498530e66595844b843e4b3",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/38522475658/job/115715344231",
+      "actor": "Actual GitHub Actions latest-main CI38522475658",
+      "observed_at": "2026-10-14T06:52:58.002166+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Test (server + client, MySQL integration)",
+      "code_commit": "e91197d5d71e110aa149b2af99492a7717af4f27",
+      "spec_baseline": "809f8a15b605975f2db4c94eb641bc6bf6e5e3aaf07ed5938bb8660f9899a8ef",
+      "source_fingerprint": "33f5387f12455ab19ba23a23f9355e5770e1b46f6498530e66595844b843e4b3",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/38522475658/job/115715344344",
+      "actor": "Actual GitHub Actions latest-main CI38522475658",
+      "observed_at": "2026-10-14T06:52:58.002166+00:00"
     }
   ],
   "pending_decisions": [
@@ -2408,6 +3207,129 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Actual async Sam approved identical native command while keeping all gates/GRBLOCKED; APR057. Not risk or acceptance waiver."
+    },
+    {
+      "id": "HD-013",
+      "impact": "MAJOR",
+      "status": "ANSWERED",
+      "answer_ref": "Actual Sam current user response: 核准. This answers the immediately preceding HD013 question for DESIGN3daef746 and PLAN38b2a632 full hashes in 09_committed_receipt_planning_review.md. That question explicitly limits this decision to DESIGN/PLAN content, not IMPLEMENT or merge. Recommended dedicated bounded current-facts Map/four warnings/missing+serial hard errors accepted; existing purchase/inventory rules, GR BLOCKED and formal UAT separate retained. Recorded APR062/DESIGN and APR063/PLAN.",
+      "question": "Approve proposed Item committed-receipt dedicated current-facts Map, four current-state warnings (not PO diffs), strict ID/time limits, missing/serial all-or-error and advisory/injected-executor read consistency under new DESIGN/PLAN after independent review? Planning scope only is approved. Preserve existing purpose rules, GR/DEF107 blocking and formal UAT separately; no product/merge authority or global PLAN_READY claim inferred. Alternative revise/hold proposal for consumer contract confirmation.",
+      "affected_ids": [
+        "FR-067",
+        "DES-022",
+        "PHASE-010",
+        "TASK-048",
+        "TC-019",
+        "UAT-018"
+      ]
+    },
+    {
+      "id": "HD-014",
+      "impact": "MAJOR",
+      "status": "ANSWERED",
+      "answer_ref": "Actual Sam latest user: 批准新 PLAN a988403a54052de14169c49fd4596a05415499ae2aeadd0f306bc9100313d126，進入限定 IMPLEMENT：只開發 TASK-048，使用新獨佔 MySQL 執行既有 migrations／測試暫存 DDL及原四套 developer checks，保存本機證據與 candidate。DEF-107／權威 GR 維持 BLOCKED，不修改核心 gate 或放寬 purchase／inventory 規則；不含 push／PR／merge／證據匯出，正式 UAT 另行處理。Binds pinned procedure8b073ef4 and fresh DEFAULT/local recovery/candidate workflow; not gate waiver. APR064/065.",
+      "question": "Approve new canonical PLANa988403a54052de14169c49fd4596a05415499ae2aeadd0f306bc9100313d126 pinning exact procedure8b073ef4a4eaf8ea732faa4704aaa0f008f60f84f01e57bd6bafeb91e7426e6b after actual follow-up review, and explicitly authorize only TASK048 scoped IMPLEMENT, four named Item source/test paths, fresh DEFAULT worktree/local Git recovery/candidate, new task-private synthetic MySQL existing migrations/transient test DDL, exact four profile DEVELOPER commands native execution with bounded redacted non-generic local evidence and independent source review? No product/runtime execution before answer; alternative hold until authoritative GR/official partial-gate support. DEF107 HIGH OPEN and all generic gates/GR BLOCKED retained, no risk waiver/core edit/purpose relaxation/push/PR/merge/raw export/formal TC/UAT/business/release authority. Prior PLAN38b/APR063 remain history, not this new route approval.",
+      "affected_ids": [
+        "PHASE-010",
+        "TASK-048",
+        "TC-019",
+        "UAT-018",
+        "TASK-043"
+      ]
+    },
+    {
+      "id": "HD-015",
+      "impact": "MAJOR",
+      "status": "ANSWERED",
+      "answer_ref": "Actual Sam2026-10-15: 選 B，請先制定 TASK-048 限定發布／合併治理的新 PLAN，完成獨立 review 後提交給我審批；DEF-107／權威 GR 維持 BLOCKED，不修改核心 gate，不繞過 CI 或分支保護，正式 UAT 另行處理。本輪先不 push／PR／merge／匯出證據。 Route selection/planning only, not newPLAN approval, IMPLEMENT/runtime/push/merge authority.",
+      "question": "Choose TASK048 publication/integration route for immutablelocalcandidate273f9d00: A conservative/default newpushDraftPRplan, no merge untilnormalgateslegitimatelypass; or B prepare newexplicitTASK048-onlygovernance publication/merge PLAN whileDEF107/GR/globalgatesremainBLOCKED, exact20path/sanitizedcontent allowlist, freshmain integration/newcandidate/privateDB+4unchangednativechecks/current5CI/realreview, separateexactcandidate pushDraftPRapproval and laterfinalownermergeauthority, no core/index/protection bypass/rawexport/formalacceptance? Proposal implementation/08_task048_publication_proposal.md SHAe0804098e4888c9993f20f51da7a3a11bb3c2a4e73f98a9342f9f198f1c892fd. Currentrequestproposesonly, notchoice/execution. OldDESIGN/PLAN unchanged; no genericmergeexception automaticallyexists.",
+      "affected_ids": [
+        "PHASE-010",
+        "TASK-048",
+        "TC-019",
+        "UAT-018",
+        "TASK-043",
+        "DEF-107"
+      ]
+    },
+    {
+      "id": "HD-016",
+      "impact": "MAJOR",
+      "status": "ANSWERED",
+      "answer_ref": "Actual Sam user message: 批准 PLAN 47647ffbe62ef6fcfdd8d2de55e03179d61596eb023fa0f94053b43b79118db7 的內容；請提出下一階段本機整合、完整回歸及建立新 candidate 的執行核准範圍。本輪不 push／PR／merge／匯出證據，DEF-107／權威 GR 維持 BLOCKED，不修改核心 gate，正式 UAT 另行處理。 P0 content approval only; request for P1 proposal, not execution authority. APR-066; proposed P1 is HD-017 OPEN.",
+      "question": "After real independent review, approve exact new TASK048 routeB PLAN 47647ffbe62ef6fcfdd8d2de55e03179d61596eb023fa0f94053b43b79118db7 pinning procedure8f662427c2cd3e623993c01bc83acfb6f166b0bb47ada79f4c56130d695f3da4 at localcandidate273f/sourcef7 and observedtarget3faf? P0 is contentapproval only: distinctP1localprep/privateMySQL+existingmigrations/fixtureDDL/original4commands+onefullserverSETUPONLY, P2exactclassifiedfreshDEFAULTcandidate push/DraftPR, P3exactPR/head/target/5CI/realreview/finalownermerege are separately required. No private273f/f8 ancestry/raw/runtime metadata export, nocore/index/CI/protection bypass/DEF107waiver/formalUAT. This turn is only drafting/review/submission; no execution approval exists.",
+      "affected_ids": [
+        "PHASE-010",
+        "TASK-048",
+        "TC-019",
+        "UAT-018",
+        "TASK-043",
+        "DEF-107"
+      ]
+    },
+    {
+      "id": "HD-017",
+      "impact": "MAJOR",
+      "status": "ANSWERED",
+      "answer_ref": "Actual Sam user: 批准 HD-017 的 P1 本機執行範圍，請整合最新 main、完成原四套完整回歸及獨立 review，建立本機 candidate；不 push／PR／merge／匯出證據，不修改產品或測試以求通過。DEF-107／權威 GR 維持 BLOCKED，不修改核心 gate，正式 UAT 另行處理。 Binds PLAN47647ffb/pinnedprocedure8f662427 and HD017 exact P1 limits in09; no P2/P3 authority.",
+      "question": "Approve P1 scoped IMPLEMENT/local preparation under PLAN 47647ffbe62ef6fcfdd8d2de55e03179d61596eb023fa0f94053b43b79118db7, source273f9d00af729efd2749eb2eeb0dbc95f6f2d200/fpf7d34aaf: fresh observed DEFAULT main managed codex/item-task048-publication worktree, sanitized20-path transplant with exact3pinned Item source/test blobs/no private ancestry, new owned socket-only syntheticMySQL26.7.0/private rootbootstrap+existingmigrations+temporaryfixtureDDL/schema-scopedtests/observedshutdown+retention, independentlyreviewed/pinned privatehelper+9negativechecks/currentcompletecatalogs/original4nativeDEVELOPERcontracts+oneSETUP_ONLYfullserver/strictTTLcleanup/localboundedredactedproof/sourceprivacyreview/localcandidatecommit(s)? Actualbase/runtime/newSHA recorded during authorizedexecution, not invented. No product/testfixes/othermoduleedits/thresholdrelaxation/coregatechanges/genericproofindexing/sharedDB/unmergedrecoverycleanup/pushPRmerge/export/deployment/formalacceptance. Stoponconflict/pindrift/unexpectedDBwrites/outofItemregression/missingproof; preserveDEF107HIGHOPEN/GR/globalBLOCKED. See09 P1scope; alternative defer, default noexecution until actualanswer.",
+      "affected_ids": [
+        "PHASE-010",
+        "TASK-048",
+        "TC-019",
+        "UAT-018",
+        "TASK-043",
+        "DEF-107"
+      ]
+    },
+    {
+      "id": "HD-018",
+      "impact": "MAJOR",
+      "status": "ANSWERED",
+      "answer_ref": "Actual Sam user: 批准進入 DESIGN_AND_PLAN，制定修復 DEF-108 的新 PLAN，只補齊兩個 Item 測試檔的 tracking policy 覆蓋；完成獨立 review 後交我核准。不修改產品或放寬斷言，DEF-107／GR 維持 BLOCKED，不 push／PR／merge／匯出證據，正式 UAT 另行處理。 Planning/documents/review only; no newPLAN contentapproval, testimplementation/runtime or candidate authority. APR-068.",
+      "question": "Approve DESIGN_AND_PLAN preparation of a new TASK048 test-only remediation PLAN for DEF108 TC019 missing supported tracking-policy coverage? Scope proposal only2 Item lookup test files, replaceunsupportedlot/tableverify none/batch/batch_expiry currentfacts andserialhardrejection inunit+realMySQL; no service/product/profile/threshold/gate/purchaseinventory change. Existing frozenPLAN476/pins andAPR067 prohibit testfixes; do not change tests untilnewcanonicalPLAN independentlyreviewed and exacthuman content+IMPLEMENT execution approvals. Freshmain/currentcatalog/full4nativechecks/localcandidate rebind required later. Alternative hold withno candidate; defaultSTOP. No pushPRmerge/export/GRwaiver/formalUAT; DEF107 andDEF108OPEN retained.",
+      "affected_ids": [
+        "PHASE-010",
+        "TASK-048",
+        "TC-019",
+        "UAT-018",
+        "DEF-108",
+        "DEF-107"
+      ]
+    },
+    {
+      "id": "HD-019",
+      "impact": "MAJOR",
+      "status": "ANSWERED",
+      "answer_ref": "Actual Sam user: 批准 PLAN 720dc5db8e97910f3fc4b567a21fc2eb7c2176dc8a435b63f977c9bb1859c062 的內容；請提出下一階段限定 IMPLEMENT 的執行核准範圍，只補齊兩個 Item 測試檔，不修改產品或放寬斷言。DEF-107／GR 維持 BLOCKED，不 push／PR／merge／匯出證據，正式 UAT 另行處理。 Exact PLAN content approval only, request for execution-scope proposal, not IMPLEMENT/runtime/test-write/candidate permission. APR-069.",
+      "question": "After genuine independent review, approve exact new DEF108/TASK048 two-test-file trackingpolicy remediation PLAN 720dc5db8e97910f3fc4b567a21fc2eb7c2176dc8a435b63f977c9bb1859c062 pinning complete procedure45c02513ec177d698e105f7ad20159f1e459624abbe3ff083b1b121628049771? Contentapproval only: tabledrive existing unit facts leaf overnone/batch/batch_expiry instead oflot, preserveallassertions/name, addone uniquelynamed realMySQL supportednonserialleaf, retainserial/missing/oldpurposecoverage. ProviderSHA c0c31785/requirementsDESIGN/profile/commands/ledger/flags/thresholds unchanged. Oldtestpins recoveryinputs; lateractualnewtest/source/catalog/helper/runtime binding+full4nativechecks+independentreview+localprivacyclosure need separatelyauthorizedIMPLEMENT. OldrouteB controls retained withnarrow2testpinpermissionandoneplanningdoc21pathamendment; no public/raw/privatehistoryexport/P2/P3/coregatebypass/GRwaiver/formalUAT. Current3faf/source3f unchanged; read-onlylatestmain5e121 notintegrated. No remediationexecuted andDEF108/107HIGHOPEN remain. APR068 authorizesonlyplanning, notthiscontentdecision.",
+      "affected_ids": [
+        "FR-067",
+        "DES-022",
+        "PHASE-010",
+        "TASK-048",
+        "TC-019",
+        "UAT-018",
+        "DEF-108",
+        "DEF-107"
+      ]
+    },
+    {
+      "id": "HD-020",
+      "impact": "MAJOR",
+      "status": "ANSWERED",
+      "answer_ref": "Actual Sam user: 批准 HD-020 的限定 IMPLEMENT 範圍，請整合最新 main、只補齊兩個 Item 測試檔，完成原四套完整回歸及獨立 review，通過後建立本機 candidate。不修改產品或放寬斷言，DEF-107／GR 維持 BLOCKED，不修改核心 gate，不 push／PR／merge／匯出證據，正式 UAT 另行處理。 Binds exact PLAN720dc/procedure45c025/HD020 bounded two-test P1-R/private MySQL+existingDDL/original4nativechecks/localproof/conditionalprivacy-safe localcandidate only; no P2/P3. APR-070.",
+      "question": "Approve P1-R limited IMPLEMENT under exact PLAN 720dc5db8e97910f3fc4b567a21fc2eb7c2176dc8a435b63f977c9bb1859c062 /procedure45c02513, current local3faf/source3f278 and input3blobpins? Only the2named Item lookup testfiles trackingpolicycoverage: existingunitprojection loopnone/batch/batch_expiry retainingallassertions/name+directpolicy/lifechecks, oneplannedactualMySQLleaf; preserveeveryserial/missing/legacyassertion/helperdefault/providerc0c31785. Read-onlyfreshmain+safeexistingDEFAULTWTreconcile, actualnewsource/test/base/catalog/helper/runtime bindings andindependentreview, newowned socket-onlysyntheticMySQL26.7/private rootbootstrap/existingmigrations/transientfixtureDDL/schema-scopedtests/original4complete nativeDEVELOPERcontracts+bounds/supportingcleanupchecks/strictsetupTTL/shutdownretention, localredactedproof and sanitizedlocalcandidatecommit(s) onlyaftercurrentPASS/allactionablereview+privacyclosure? See09 HD020 exactlimits. No productmutation/newscope/testweakening/othermodulefix/coregatechange/rawproofstage/indexrewrite/sharedDB/pushPRmerge/CItrigger/export/formalacceptance. Failures/conflicts/sourceorcontractdrift/unexpectedDBdelta stopforreview/direction; nohiddenretry/helperrelaxation. DEF108closesonlyonactualnewcoverage+full4+independentreview, notapproval; DEF107/GR/globalBLOCKED/formalUATseparate retained. Alternative/defaultholdDESIGN_AND_PLAN/noexecutionuntilactualanswer; APR069contentapproval grantsnoneofthese effects.",
+      "affected_ids": [
+        "FR-067",
+        "DES-022",
+        "PHASE-010",
+        "TASK-048",
+        "TC-019",
+        "UAT-018",
+        "DEF-108",
+        "DEF-107"
+      ]
     }
   ],
   "external_actions": [
@@ -2478,10 +3400,10 @@
     {
       "id": "ENV-PROVISION-55",
       "kind": "ENVIRONMENT_PROVISION",
-      "target": "local MySQL staging-like source item_recovery_tc016_20260915 and restored target item_recovery_tc016_20260915_run1; preserve erp_dev",
+      "target": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=0c5ed31ff41c7ed3bc759f7d283bd86e0ff771f7b4dabd7ddccd5c4d3bbc685d",
       "idempotency_key": "item-recovery-local-mysql-provision-20260915",
       "status": "CONFIRMED",
-      "source_ref": "Observed local MySQL 26.7.0 provisioning on 2026-09-15: 40/40 total schemas tables and all 16 Item table counts matched source to item_recovery_tc016_20260915_run1; restored files matched 29/59 byte sizes and SHA-256; erp_user SELECT succeeded; erp_dev Item/SKU/media/import remained unchanged. Unsigned manifest: /private/tmp/item-recovery-restored-20260915/manifest.json (SHA-256 3badb73c88fae7aefdc40baeb404616e32c4b75cc89837df9b6d3951b50314df)."
+      "source_ref": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=4489254a386570f55b8754439d1ea883310cf0be02eec3ea07a55f5b2954d387"
     },
     {
       "id": "BRANCH-SYNC-59",
@@ -2593,7 +3515,7 @@
       "target": "item_recovery_tc016_20260921_restore_run2 and restored media/import roots",
       "idempotency_key": "item-tc016-recovery-run2-20260921",
       "status": "CONFIRMED",
-      "source_ref": "Observed on 2026-09-21: fresh isolated database and file restore completed; 16 Item table counts, SKU/audit smoke records and file hashes reconciled; erp_dev item_skus remained unchanged at zero."
+      "source_ref": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=e41f65936ac25bf8014ac9252e4f38a21b129da0cf7f66d8475129484caf7743"
     },
     {
       "id": "BRANCH-SYNC-72",
@@ -2649,7 +3571,7 @@
       "target": "TC-016 isolated MySQL schemas, restored roots, temporary signing key and encrypted login path",
       "idempotency_key": "item-tc016-cleanup-20260921",
       "status": "CONFIRMED",
-      "source_ref": "Observed on 2026-09-21: all three exact exercise schemas and temporary files/login path were removed; erp_dev item_skus remained zero."
+      "source_ref": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=a8823be46939d574d26cd78629502b7e18ad01569ac18eefc8a86b68adf518d9"
     },
     {
       "id": "UAT-AUTH-79",
@@ -2702,10 +3624,10 @@
     {
       "id": "ENV-PROVISION-84",
       "kind": "ENV_PROVISION",
-      "target": "isolated local schema erp_item_uat_acceptance_20260922 and dedicated media/import roots",
+      "target": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=786dfa19acec34b6591ecbfc4b714f1732d94dda927b303b5e4854a9338b69dd",
       "idempotency_key": "item-uat-acceptance-env-20260922",
       "status": "CONFIRMED",
-      "source_ref": "Observed on 2026-09-22: a fresh migrated schema and isolated storage roots were used with advisory locking; fixtures were synthetic and erp_dev remained free of all acceptance markers."
+      "source_ref": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=18a9cb7af275f964a9e8bbdfc6af0b7dcd2301e2caab1b07fc0af60a77df6296"
     },
     {
       "id": "UAT-RUN-85",
@@ -2734,10 +3656,10 @@
     {
       "id": "CLEANUP-88",
       "kind": "ENV_CLEANUP",
-      "target": "erp_item_uat_acceptance_20260922, dedicated roots, grant, advisory lock and web ports",
+      "target": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=35c37e6aade92a67238e501a62931356a132d28d114ba69a83dddb7818310e90",
       "idempotency_key": "item-uat-acceptance-cleanup-20260922",
       "status": "CONFIRMED",
-      "source_ref": "Observed after acceptance: schema count 0, IS_FREE_LOCK=1, dedicated schema grant absent, exact storage root removed, ports 3000/4173 unused and erp_dev acceptance-marker counts all zero."
+      "source_ref": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=e5ed6aedade037ddd06cc8565c3ecbee99590b3bd419a578837dcbf6cd5793c3"
     },
     {
       "id": "PUSH-89",
@@ -2806,7 +3728,7 @@
     {
       "id": "ITEM-HANDOFF-CLEANUP-96",
       "kind": "BRANCH_CLEANUP",
-      "target": "/private/tmp/erp-item-supplier-reference-alignment and codex/item-supplier-reference-alignment local/remote branch",
+      "target": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=5b3dd64e47d2354e28a6e27422c5eea3a4bbf473aa2799e0090f2da194bd64e5",
       "idempotency_key": "item-supplier-handoff-cleanup-20261009",
       "status": "CONFIRMED",
       "source_ref": "Observed previous turn: merged Item handoff worktree and local/remote branch removed, root main clean. Sales/Inventory/Supplier worktrees preserved."
@@ -2830,7 +3752,7 @@
     {
       "id": "ITEM-T043-RUNTIME-98",
       "kind": "MIGRATION",
-      "target": "erp_item_task043_20261012 on /private/tmp/erp-item-task043-mysql.XDoqyf/mysql.sock",
+      "target": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=9d7e4c76d592c9a1d6cc557150bfc846a0523b52d91c7ad657a98904477a5e79",
       "idempotency_key": "item-task043-isolated-runtime20261012-XDoqyf",
       "status": "CONFIRMED",
       "source_ref": "Author exec2026-10-12: existing migrations through0079 applied successfully on uniquely task-owned private schema; MySQL26.7.0, no shared database change."
@@ -2862,7 +3784,7 @@
     {
       "id": "ITEM-T043-CLEANUP-102",
       "kind": "CLEANUP",
-      "target": "Only codex/item-task-043-reference-guards remote/local branch and /private/tmp/erp-item-task-043-reference-guards worktree",
+      "target": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=0a0b1799e7f294b89539a29fd2dbae65c9dc5f323fd22b36700030c4267cdde5",
       "idempotency_key": "item-task043-pr198-itemonlycleanup-20261012",
       "status": "CONFIRMED",
       "source_ref": "Actual2026-10-13 cleanupobserved and https://github.com/crazysumsum/erp-app/pull/198#issuecomment-6136157461 . OwnItemworktree/localnonforce+remote branchremoved; rootmaincleanfftoc143, privateMySQLstopped/datadirretained. Local-only28run dirs/98files/fullCAS115 retained atprivatecloseout. Othermodule resourcesuntouched."
@@ -2886,7 +3808,7 @@
     {
       "id": "ITEM-T043-TRANSFER-MIGRATION-105",
       "kind": "MIGRATION",
-      "target": "Existing0064 migration to private erp_item_task043_20261012",
+      "target": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=2cc078e4fa19502f91f2a5d72c573fd5effda2fe4070754ce43bcabcb681f07c",
       "idempotency_key": "item-task043-XDoqyf-0064",
       "status": "CONFIRMED",
       "source_ref": "Actual migrate command applied0064 only; all other migrations skipped; task-owned synthetic socket schema under existing isolation authorization."
@@ -2942,7 +3864,7 @@
     {
       "id": "ITEM-T043-MIGRATION-112",
       "kind": "MIGRATION",
-      "target": "Existing0080 migration in task-private erp_item_task043_20261012",
+      "target": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=c6bc0ddbbd3297898196db5cde6c3c2d2e925bfb1caa9b6b13b3f76161f00be5",
       "idempotency_key": "item-task043-XDoqyf-0080",
       "status": "CONFIRMED",
       "source_ref": "Approvedisolatedsyntheticruntimeexistingmigrate applied0080only, othersskip; no migration edits orsharedDBchanges."
@@ -2982,7 +3904,7 @@
     {
       "id": "ITEM-PURCHASE-PLANNING-117",
       "kind": "WORKTREE_CREATE",
-      "target": "/Users/sam/.codex/worktrees/item-purchase-lookup-handoff/erp-app on codex/item-purchase-lookup-handoff",
+      "target": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=70df2a5f0f62b7b94f9ad98d98b95573172231b45b71efec60d999975cd6b95b",
       "idempotency_key": "item-purchase-handoff-a71-planning-20261013",
       "status": "CONFIRMED",
       "source_ref": "ActualSam2026-10-13 requested checkoutlatestmain/readSupplierpurchasehandoff/newworktree Item development. Actualmanagedcreateworktree+git switch branch froma71f3488, rootmaincleanlatest. OnlyItemdocs drafted; no source/test/schema/Supplier changes. Previousmanagedworktree item-purchase-provider observedclean,no unique commits/uncommitteddraft; retained."
@@ -3014,10 +3936,10 @@
     {
       "id": "ITEM-PURCHASE-MIGRATION-120",
       "kind": "MIGRATION",
-      "target": "Existing repository migrations in new private schema erp_item_purchase_20261013 socket4wDOc0",
+      "target": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=437b6aeafbc037571e4193caf3639b7f97a0b414ed18fa2164fe7db07b2158ff",
       "idempotency_key": "item-purchase-4wDOc0-existingmigrations-20261013",
       "status": "CONFIRMED",
-      "source_ref": "Actual existingmigrate applied allcurrentmigrations through0081 successfully in task-owned erp_item_purchase_20261013/private4wDOc0 socket. No migrationfile/sharedschema/Supplierproducts edited."
+      "source_ref": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=a33bee93ee6fa118b1eed8aa29209a9a5b1a135520aafc886ac44352c86c6a74"
     },
     {
       "id": "ITEM-PURCHASE-PUSH-121",
@@ -3030,7 +3952,7 @@
     {
       "id": "ITEM-PURCHASE-OLD-WT-122",
       "kind": "CLEANUP",
-      "target": "Unused managed /Users/sam/.codex/worktrees/item-purchase-provider/erp-app and empty localbranch codex/item-purchase-provider",
+      "target": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=3c160de8ece7e442785a8446ccf5016bbeb1ff93cb6e761a055fad6ff87cd15c",
       "idempotency_key": "item-purchase-oldempty-worktree-archive-20261013",
       "status": "CONFIRMED",
       "source_ref": "Actualoldworktreeclean,no uniquecommits; app archivequeued thenobservedabsent fromgitinventory/path; nonforcebranch-d success6b7fcontainedmain. Recoverableappsnapshot; othermodules untouched."
@@ -3054,7 +3976,7 @@
     {
       "id": "ITEM-PURCHASE-CLEANUP-125",
       "kind": "CLEANUP",
-      "target": "Only /Users/sam/.codex/worktrees/item-purchase-lookup-handoff/erp-app, local/remote codex/item-purchase-lookup-handoff",
+      "target": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=b3fc248275265b09d87f7e8740d16269b7b914e698c4e1ade5c65d319f59a7e4",
       "idempotency_key": "item-purchase-pr210-mergedcleanup-20261013",
       "status": "CONFIRMED",
       "source_ref": "ActualPR210merged7c927andonlyItembranchlocal/remoteabsent, apprecoverablearchive verified. Closeout https://github.com/crazysumsum/erp-app/pull/210#issuecomment-6141015554 ; privateCAS107/receipt preserveshistory. No rawexport."
@@ -3062,7 +3984,7 @@
     {
       "id": "ITEM-SUPPLIER-C-WT-126",
       "kind": "WORKTREE_CREATE",
-      "target": "/Users/sam/.codex/worktrees/item-task043-supplier-guards/erp-app",
+      "target": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=84e588641c3654c560a9baf29a22058424c9a90634c3ba6db8b20cf49253136f",
       "idempotency_key": "item-task043-supplier-guards-main7c927-20261013",
       "status": "CONFIRMED",
       "source_ref": "Actual appcreated+registered freshoriginmain7c927 worktree; branchcodex/item-task043-supplier-guards. Currentrootmainclean. No old Item/othermodules cleanup."
@@ -3070,7 +3992,7 @@
     {
       "id": "ITEM-SUPPLIER-C-MIG-127",
       "kind": "MIGRATION",
-      "target": "Existingmigrations only innewprivate erp_item_supplier_c_20261013",
+      "target": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=2470f2da33be5f80eca690a0cb31356d000c8f8f25994053222b16108be3e6bc",
       "idempotency_key": "item-supplier-c-vdXM5l-existingmigrations-20261013",
       "status": "CONFIRMED",
       "source_ref": "Actualnewprivate socket-onlyMySQL26.7.0 initializedrootempty; existingmigrations through0081complete. No schema/sourcefiles edited, sharedschemasunchanged."
@@ -3134,7 +4056,7 @@
     {
       "id": "ITEM-TV-WT-134",
       "kind": "WORKTREE_CREATE",
-      "target": "/Users/sam/.codex/worktrees/item-tc004-tc005-verification/erp-app",
+      "target": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=e55b517fc5a0715a3d3646ee7fe6d53f0388a0b372e92d9e6ff1f2dfab913cbd",
       "idempotency_key": "item-tv-004005-mainf94-20261014",
       "status": "CONFIRMED",
       "source_ref": "App create_worktree op385441b5 completed; actual HEADf94ba467 latestorigin/main; new local branch codex/item-tc004-tc005-verification. Own lockfile npmci offline ignore-scripts; source unchanged. Recover journal115 from private SHA4a2b581c... all known histories retained, reconcile current tracked109 via CAS110; not a fake reuse of current CI/acceptance."
@@ -3166,10 +4088,10 @@
     {
       "id": "ITEM-TV-RUNTIME-137",
       "kind": "RUNTIME_START",
-      "target": "Only existing private MySQL /private/tmp/erp-item-supplier-c-mysql.vdXM5l/mysql.sock",
+      "target": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=009d114d93ac8d7288a02f5f3c1d8e0421dcde23a2e93552d9e87feadc1e7768",
       "idempotency_key": "item-tv-existing-mysql-start-preflight-20261014",
       "status": "CONFIRMED",
-      "source_ref": "Actual owned Mysqld PID11168 inexistingprivate datadir/socket, version26.7.0/skip_networking1/schemaerp_item_supplier_c_20261013,91tables,4Supplier→ItemFKcolumns, ref/actor/ICfixturecounts0. No migrations/DDL/upgrades/sharedMySQL/usercredentials. Runtime only forapprovedscopedexecution, stop ownserverafterresults."
+      "source_ref": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=88c8769ee11ec4959b17de1278d903db4a9a12eab87329774d47d2902d18ec7d"
     },
     {
       "id": "ITEM-TV-EXEC-138",
@@ -3185,7 +4107,7 @@
       "target": "Only owned MySQL private socket/datadir",
       "idempotency_key": "item-tv-owned-mysql-stop-20261014",
       "status": "CONFIRMED",
-      "source_ref": "Actual mysqladmin shutdown socket/privateownedroot, exit0; ownedmysql.sock andmysql-tv.pid absent. Bothruns priorafter-snapshots matchbefore all91tablecounts andnormalizedschemas. Datadirretained; no sharedservice,unrelatedmodule or businessdata cleanup."
+      "source_ref": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=ebcfc1538c51e5a168fdca80101da477e8b39af10f4230beea96672568d3e755"
     },
     {
       "id": "ITEM-TV-PUBLISH-140",
@@ -3206,7 +4128,7 @@
     {
       "id": "ITEM-TV-CLEANUP-142",
       "kind": "WORKTREE_BRANCH_CLEANUP",
-      "target": "Only codex/item-tc004-tc005-verification and attached /Users/sam/.codex/worktrees/item-tc004-tc005-verification/erp-app",
+      "target": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=aafa2095d9e109c52ee9b04f00dac5f0f143269936768bff5fa9e9f04423fde8",
       "idempotency_key": "item-tv-pr217-owned-cleanup-20261014",
       "status": "CONFIRMED",
       "source_ref": "Actual PR217 closeout https://github.com/crazysumsum/erp-app/pull/217#issuecomment-6160187508 ; normalmerge7cfd6e66, exactheadCI run38496213208 allfiveSUCCESS, independentREV041APPROVED, mergedmainCI run38498055835SUCCESS. OwnedItem verificationworktree observedarchived/absent; localbranchnonforce+exactremote deleted, privatejournal/ignoredlogs retainedrecoverably. Noothermodules/globalprune. This recovers actual postcandidate124 observations, NOT newtest/UAT/acceptance credit or repeated external actions."
@@ -3214,7 +4136,7 @@
     {
       "id": "ITEM-GR-HANDOFF-WT-143",
       "kind": "WORKTREE_CREATE",
-      "target": "/Users/sam/.codex/worktrees/item-authoritative-gr-handoff/erp-app",
+      "target": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=d24c79d092f25e8e3db1a648e40444d4019c392e4038f34219015f69d5213d86",
       "idempotency_key": "item-gr-handoff-doc-wt-20261014",
       "status": "CONFIRMED",
       "source_ref": "Actual managedcreate fromfresh origin/maincb75f25a, attached; dedicated codex/item-authoritative-gr-handoff branch. ExistingItem WT archived, allothermodules untouched."
@@ -3232,8 +4154,296 @@
       "kind": "PR_MERGE",
       "target": "PR220 Item documentation ONLY",
       "idempotency_key": "item-gr-pr220-gated-merge-20261014",
-      "status": "PLANNED",
-      "source_ref": "APR060 normalreport/docs mergeauthority. Actual latestmain3239b98f integrated in 97367b3a137e15f35ff39e502d20740b11df677b; authored PRdelta only3Itemdocs, canonicalDESf743/PLAN809f/evidence40 unchanged. NoGR authority/provider/product/test/gate change authored. Freeze/push finalcandidate then actual exactheadindependentreview+allfiveCI; original572 CI38509498967 retainedhistorical only, notnewcandidate credit. Merge remains PLANNED."
+      "status": "CONFIRMED",
+      "source_ref": "Actual PR220 normalMERGED2026-10-14T06:10:45Z to a909c7698121ecfcadc7aa08ad67af8cf22b6a71; exacthead9ba premergeCI38518971182 allfiveSUCCESS+REV043APPROVED, latestbase3239 verified beforecommand. Parallel SupplierPR221 advancedmain769d betweenlastcheck/merge; actualfirstparent769d. Wholemerge treeNOT equalcandidate, doNOT relabeloldCI asintegratedPASS. Actualfirstparentdiff only3Itemdocs andItemdocs blobs identicalcandidate. No intentionalCI/adminbypass orGRwaiver. Await exactmergedmainCI38520700841 + postintegrationreview beforecleanup; otherSupplier changes notours."
+    },
+    {
+      "id": "ITEM-GR-HANDOFF-INTEGRATION-146",
+      "kind": "POST_MERGE_INTEGRATION_VERIFY",
+      "target": "Exact mergedmain a909c7698121ecfcadc7aa08ad67af8cf22b6a71",
+      "idempotency_key": "item-gr-pr220-merged-main-ci-20261014",
+      "status": "CONFIRMED",
+      "source_ref": "Actual e91197d5 CI38522475658 all five SUCCESS + REV045 independent content mapping APPROVED. Compared 4466 tracked entries: only Supplier journal differs from actual PR220 merge a909c769; all Item/product/test/build/workflow content identical. Whole tree/global fingerprint differ. Original a909 CI38520700841 remains CANCELLED due newer main push, never PASS. Actual merge first parent769d differs premerge checked3239; preserved REV044 race disposition. No Supplier fix, CI waiver, new GR/TC/UAT or whole-module acceptance credit."
+    },
+    {
+      "id": "ITEM-GR-HANDOFF-CLEANUP-147",
+      "kind": "WORKTREE_BRANCH_CLEANUP",
+      "target": "Only codex/item-authoritative-gr-handoff and attached Item handoff worktree",
+      "idempotency_key": "item-gr-pr220-owned-cleanup-20261014",
+      "status": "CONFIRMED",
+      "source_ref": "Observed actual prior task cleanup after PR220 normal merge a909 and candidate9ba CI/review PASS. Actual latest integrated e911 CI38522475658 all five SUCCESS; REV045 mapping confirmed. Owned Item handoff worktree recoverably archived/checkout absent, local branch non-force deleted, remote exact9ba SHA-lease deleted/no open dependent PR; primary clean. Postcandidate state130 retained privately/in app archive, not mistaken for merged candidate bytes. Original a909 CI38520700841 cancellation retained, not PASS. No other cleanup or GR/UAT acceptance. No public closeout comment was sent after automatic permission rejection; no workaround."
+    },
+    {
+      "id": "ITEM-COMMITTED-RECEIPT-WT-148",
+      "kind": "WORKTREE_CREATE",
+      "target": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=f57acf262c00bad81c523e4d46dac0ffae541b99bd240e900e8fea7137a22357",
+      "idempotency_key": "item-committed-receipt-plan-wt-20261014",
+      "status": "CONFIRMED",
+      "source_ref": "Actual managed operation6f0ca820 completed from freshly fetched main d9714a34; registered then dedicated codex/item-committed-receipt-plan branch created. Prior Item handoff archived, all other worktrees untouched. Docs-only planning, no DB/test execution."
+    },
+    {
+      "id": "MODE-CHANGE-126",
+      "kind": "MODE_CHANGE",
+      "target": "DESIGN_AND_PLAN",
+      "idempotency_key": "mode-change-126",
+      "status": "CONFIRMED",
+      "source_ref": "Actual Sam current task: authorize DESIGN_AND_PLAN only for Item findManyForCommittedReceipt planning; no existing purchase/inventory relaxation, GR remains BLOCKED, formal UAT separate; APR061."
+    },
+    {
+      "id": "ITEM-T048-WT-149",
+      "kind": "WORKTREE_CREATE",
+      "target": "Fresh DEFAULT Item task048 committed-receipt provider worktree",
+      "idempotency_key": "item-task048-fresh-default-wt-20261014",
+      "status": "CONFIRMED",
+      "source_ref": "Managed operation e19b9f89-ab31-4256-95f0-a62110984c52 COMPLETED. Fresh DEFAULT main8bbb0d3d; local branch codex/item-task048-provider. Planning recovery535f549c applied without conflicts as f8ce9027; original planning WT preserved. DESIGN/PLAN unchanged; no push."
+    },
+    {
+      "id": "MODE-CHANGE-133",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-133",
+      "status": "CONFIRMED",
+      "source_ref": "Actual Sam latest user approves exact PLANa988 and scoped TASK048 IMPLEMENT/privateMySQL existing migrations/testDDL/exact four native developer suites/local candidate only; APR064/065, no push PR merge export UAT and GR remains BLOCKED."
+    },
+    {
+      "id": "ITEM-T048-DB-150",
+      "kind": "OTHER",
+      "target": "New task-owned synthetic socket-only MySQL instance, existing migrations and fixture DDL only",
+      "idempotency_key": "item048-private-mysql-20261014",
+      "status": "CONFIRMED",
+      "source_ref": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=5a3ffae5b019f4cfba65eb7b4779b56513ad9263b8bab505cdae0cf6fab634e3"
+    },
+    {
+      "id": "MODE-CHANGE-134",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-134",
+      "status": "CONFIRMED",
+      "source_ref": "Actual Sam APR064/065: fresh DEFAULT Item worktree and scoped IMPLEMENT baseline transition; main8bbb plus approved Item planning recovery only"
+    },
+    {
+      "id": "ITEM-T048-MIG-151",
+      "kind": "OTHER",
+      "target": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=70917f0b9716d54ee60aba6d139304b9ebddff3ae886e3c84d8e1eaaa96f2dce",
+      "idempotency_key": "item048-migrations-20261014",
+      "status": "CONFIRMED",
+      "source_ref": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=46caf93ce5a2b4284dc0a8c643c97e7ac154d6d7ac11ae31bf5dbd14f2161f0e"
+    },
+    {
+      "id": "ITEM-T048-RED-152",
+      "kind": "OTHER",
+      "target": "Original full server developer command, tests-first native execution",
+      "idempotency_key": "item048-original-server-red-20261014",
+      "status": "CONFIRMED",
+      "source_ref": "Native first run FAIL237 (228 config+9 missingmethod), preservedc9c341a4. Root cause synthetic Customer/Supplier rings generated separately; corrected private env only to latest-main shared-ring contract. Corrected RED17ba729a and strengthened tests RED3841cb95 each537 total/524PASS/13TC019 expected missingmethod FAIL/0skip/NOTRUN. New13leaf catalog fixed before execution; not generic evidence/gate/formal acceptance."
+    },
+    {
+      "id": "ITEM-T048-FINAL-153",
+      "kind": "OTHER",
+      "target": "Four original native developer suites on frozen Item sourcef7d34aaf",
+      "idempotency_key": "item048-final-four-native-20261014",
+      "status": "CONFIRMED",
+      "source_ref": "Actual final lintb8f0b730/build895be119 PASS; clientafaf9f8b866/866 and server1391b3bb537/537 incl13TC019,0fail/skip/NOTRUN. Exactcompletecatalog/requiredIDs/source/spec/helper/contract/tool/artifact hashes verified. First native configfailure and auxiliarycleanup500failure preserved; mutation1b474117 killedby6TC019only and originalproviderSHA restored. Local-only scoped-developer-execution.json; old40 generic indices untouched. Not Harness gate/CI/formalTC/UAT PASS."
+    },
+    {
+      "id": "ITEM-T048-STOP-154",
+      "kind": "OTHER",
+      "target": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=0d502651b54aa9e45ccaeaafcbc0d7af03e11149f7c1d89a2e68994fa8d20d86",
+      "idempotency_key": "item048-owned-mysql-stop-20261014",
+      "status": "CONFIRMED",
+      "source_ref": "Read-only resumption observation2026-10-15: exact owned log records SHUTDOWN via user signal00:51:51Z and Shutdown complete00:51:52Z; private socket/PID absent, owned-data retained. No resumed-agent shutdown/restart/delete is claimed; no shared process touched."
+    },
+    {
+      "id": "ITEM-T048-CAND-155",
+      "kind": "COMMIT",
+      "target": "Local codex/item-task048-provider candidate:3allowedsource/tests + Item reports/state only",
+      "idempotency_key": "item048-local-candidate-20261014",
+      "status": "CONFIRMED",
+      "source_ref": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=493aa74c0c686daa84d4969be2cb28471fa6a216560c9401dd71a841f0d1ab7c"
+    },
+    {
+      "id": "ITEM-T048-SUPPORT-156",
+      "kind": "OTHER",
+      "target": "Bounded local supporting native cleanup selfcheck only",
+      "idempotency_key": "item048-supporting-selfcheck-provenance-20261015",
+      "status": "CONFIRMED",
+      "source_ref": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=437cc042a7b4fe9e2102d789c97da03e6b71ebd2ff551035cfa9a86661b67d94"
+    },
+    {
+      "id": "ITEM-T048-MAIN-157",
+      "kind": "OTHER",
+      "target": "Read-only fresh origin/main observation for publication proposal",
+      "idempotency_key": "item048-publication-main-observe-20261015",
+      "status": "CONFIRMED",
+      "source_ref": "Actual gitfetchoriginmain succeeded, target63fa5063b78d15375fe9f4891fb9ef0424b22639 vsentry8bbb onlySupplierdocs/evidence+2tests; Itemsource/spec/CIworkflowunchanged. Nointegration/newtests/code/PR/push/merge executed. Local273f/codefp unchanged; actualMERGE_READY PHASE010BLOCKED onDEF107/Taskincomplete/4nativegenericrunmissing/5CI/PRreviewmissing. NotSuppliercontent correctness review or currentCIcredit."
+    },
+    {
+      "id": "MODE-CHANGE-143",
+      "kind": "MODE_CHANGE",
+      "target": "DESIGN_AND_PLAN",
+      "idempotency_key": "mode-change-143",
+      "status": "CONFIRMED",
+      "source_ref": "Actual Sam selects B/newPLAN drafting+independentreview+humanapproval only, no publication/runtime. DESIGN_AND_PLAN entry at localcandidate273f9d00."
+    },
+    {
+      "id": "ITEM-T048-B-MAIN-158",
+      "kind": "OTHER",
+      "target": "Read-only fresh main observation during routeB planning only",
+      "idempotency_key": "item048-routeB-main-plan-20261015",
+      "status": "CONFIRMED",
+      "source_ref": "Actual gitfetchoriginmain complete target3faf93e57892577c03d7bc6d7ba62e23963941e2. Since63fa onlyCustomerdocs+performance/recoverytests; Itemsource/spec/CIworkflowunchanged since8bbb. No targetintegration/newbranch/runtime/test/pushPRmerge executed. FutureP1mustrefresh; default_commit8bbb retains originalWTcreation meaning andplanningentry273f remains exactcurrentapp."
+    },
+    {
+      "id": "ITEM-T048-P1-WT-159",
+      "kind": "OTHER",
+      "target": "fresh DEFAULT origin/main3faf93e57892577c03d7bc6d7ba62e23963941e2 managed Item publication worktree, codex/item-task048-publication",
+      "idempotency_key": "item048-p1-publication-wt-20261015",
+      "status": "CONFIRMED",
+      "source_ref": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=5b1e127780a0cd10def25ee57a704589a4fda993b5e357d9314585e679cd3955"
+    },
+    {
+      "id": "MODE-CHANGE-147",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-147",
+      "status": "CONFIRMED",
+      "source_ref": "Actual Sam HD-017 P1 execution approval in this chat; APR-067"
+    },
+    {
+      "id": "MODE-CHANGE-148",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-148",
+      "status": "CONFIRMED",
+      "source_ref": "Actual Sam HD-017 APR-067 fresh DEFAULT P1 integration approval; new worktree mode entry main3faf"
+    },
+    {
+      "id": "ITEM-T048-P1-DB-160",
+      "kind": "OTHER",
+      "target": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=251f4365efd34e5287eec1403c88f3ab72390e076ca4db106d2b1123b4386b1e",
+      "idempotency_key": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=12797940965854c465e89dd19e708503f0ba2fd9f3d5a494cd6b20ac1ce72c5c",
+      "status": "CONFIRMED",
+      "source_ref": "Actual reviewedruntime9f96 exit0; socket-only owned mysqld identity verified, existingmigrations through0081 complete, private credentials retained600 notprinted. No source/schema script changes or sharedDB effects."
+    },
+    {
+      "id": "ITEM-T048-P1-CHECKS-161",
+      "kind": "OTHER",
+      "target": "Original four native developer contracts on actualfreshmain3faf/source3f278/PLAN476, privateevidenceonly",
+      "idempotency_key": "item048-p1-final4-20261015",
+      "status": "CONFIRMED",
+      "source_ref": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=8a34dabff901fc272a739046fe8f32c14d78c59a555be100e0d4fff31ddb19e2"
+    },
+    {
+      "id": "ITEM-T048-P1-PROTECTION-162",
+      "kind": "OTHER",
+      "target": "Read-only GitHub main branchprotection/rules observation",
+      "idempotency_key": "item048-p1-main-protection-20261015",
+      "status": "CONFIRMED",
+      "source_ref": "Actual ghapi branchmain/protection HTTP404 message Branch not protected; branchrules endpoint returned[] exit0. No configuration/permission/CI/review requirements modified. FutureP2/P3 must reobserve; localchecks notexternalCI/mergeauthority."
+    },
+    {
+      "id": "ITEM-T048-P1-STOP-163",
+      "kind": "OTHER",
+      "target": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=d0dc79863b3e91fe59618146e1184591129d433cfa1efb53cbae43cf77fe7826",
+      "idempotency_key": "item048-p1-owned-shutdown-20261015",
+      "status": "CONFIRMED",
+      "source_ref": "STOPPED actually by currentP1 coordinator: mysqladmin clean shutdown observed2026-10-15T02:09:46.642049Z in exactownedmysql.log, private socket/PID absent; owned datadir/privatecredentials/evidence retained. No live lease claimed, no sharedprocess/data deletion. Raw source/resource detailsLOCAL_ONLY, no candidate/publication dueDEF108. Actual shutdownscript exit0; mysql.log SHA 731c7e95f3cb897bf9c77547e00a765c7878667af529451686722df1d9fd10ec"
+    },
+    {
+      "id": "MODE-CHANGE-154",
+      "kind": "MODE_CHANGE",
+      "target": "DESIGN_AND_PLAN",
+      "idempotency_key": "mode-change-154",
+      "status": "CONFIRMED",
+      "source_ref": "Actual Sam HD-018 APR-068 DESIGN_AND_PLAN authorization for DEF-108 two-test-file plan/review only"
+    },
+    {
+      "id": "ITEM-T048-DEF108-MAIN-164",
+      "kind": "OTHER",
+      "target": "Read-only main freshness observation during test-only planning",
+      "idempotency_key": "item048-def108-plan-main-20261015",
+      "status": "CONFIRMED",
+      "source_ref": "Actualgitfetchoriginmain observed5e121cece2d55cd60851a7c3a87712925c046968; deltafrom3faf onlySupplierdocs/tests, noItemsource/spec/product/config/schema/client/CI changes; changedtestfilesnotselectedbyfourItemcontracts. Notintegrated/notothermodulecorrectnessreview/notnewsourcePASS. ExistingWTbase/default/modeentry3faf andsource3f remainactual; futureexecutionmustrefresh/reconcile/rebind."
+    },
+    {
+      "id": "ITEM-T048-DEF108-CORRECTION-165",
+      "kind": "OTHER",
+      "target": "Correct suite-impact wording of prior read-only main observation164 without deleting history",
+      "idempotency_key": "item048-def108-lint-impact-correction-20261015",
+      "status": "CONFIRMED",
+      "source_ref": "Original mainfetch5e121 andactualdelta remainvalid; original164 claim changedSupplierfilesnotselectedbyfourItemcontracts was inaccurate. Actualpackage.json lint=eslint . andeslint.config.js server/**/*.js INCLUDEthechangedSuppliertests. Onlyserver/clientJUnitleafselections excludethem. Correctedprocedure/report/futurefull4rerun requirement; no lintskip/command/profile/core/producttest change or newexecution. PriorPLANfa5/ed2draft remainsREV066history; newPLAN720dc/procedure45c025 awaitsindependentfollowup+Sam HD019contentapproval."
+    },
+    {
+      "id": "ITEM-T048-R-INTEGRATE-166",
+      "kind": "OTHER",
+      "target": "Existing codex/item-task048-publication branch safe fast-forward main3faf→5e121cece2d55cd60851a7c3a87712925c046968",
+      "idempotency_key": "item048-r-main-integration-20261015",
+      "status": "CONFIRMED",
+      "source_ref": "Actual gitmerge--ff-only3faf→5e121 succeeded, disjointSupplierdocs/tests adoptedbyancestry. AllItemdirtywork preserved; onlytwoauthorizedtestedits afterward, providerexactc0c31785. No private273f/f8ancestorcommits/currentnewcommit. default_commit3faf retainsoriginalWTcreationmeaning; modeentry/headactual5e121 underAPR070."
+    },
+    {
+      "id": "MODE-CHANGE-159",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-159",
+      "status": "CONFIRMED",
+      "source_ref": "Actual Sam HD-020 APR-070 limited IMPLEMENT authorization"
+    },
+    {
+      "id": "MODE-CHANGE-160",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-160",
+      "status": "CONFIRMED",
+      "source_ref": "Actual Sam HD020 APR070 authorizes safe fresh-main integration and revised two-test source binding"
+    },
+    {
+      "id": "ITEM-T048-R-DB-167",
+      "kind": "OTHER",
+      "target": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=8bf2d1a6c1c69d395c6fd67d054d64064971318810d2957817d78b40a4ab9c4c",
+      "idempotency_key": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=1194161f1be61fdaf1aa7cc93c1b40f08a0f84465c37144b8094ad1559480e34",
+      "status": "CONFIRMED",
+      "source_ref": "Actual reviewed runtime c571 exit0; owned identity verified, existing migrations complete; private credentials600 not printed. No source/schema-script changes or shared DB effects."
+    },
+    {
+      "id": "ITEM-T048-R-CHECKS-168",
+      "kind": "OTHER",
+      "target": "HD020 initial original native checks on integrated main5e/source9db/PLAN720; local evidence only",
+      "idempotency_key": "item048-r-initial-checks-20261015",
+      "status": "CONFIRMED",
+      "source_ref": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=d20cdff7bc590f26c71ad7065e7c111916915dd07ce2188b6b3494da7a3d51fb"
+    },
+    {
+      "id": "ITEM-T048-R-TRIAGE-169",
+      "kind": "OTHER",
+      "target": "Preserved LOW TEST_AUTOMATION_DEFECT prefer-const in new Item coverage fixture",
+      "idempotency_key": "item048-r-lint-triage-20261015",
+      "status": "CONFIRMED",
+      "source_ref": "Actual REV070 directed minimal in-scope letcatalog=null correction; appliedone line only within originallyauthorizednewleaf. No product/assertion/helperpolicy/spec edits. Failedsource9db/initialintegratione8f/initialhelper40b3/catalog37ec preserved privately and evidence action168 unchanged. New integrationc494eeb3f5c08afea9b3c0342d723e58b622c36215953492aa858d8623a3d9f4/sourceffe3985ddb04639c9a8757eafbe521d8e5b2da205aa368431a4626460b7a4454/native725f/catalog149d needactualnewreview before all4reruns. Not a waiveddefect/hiddenretry/oldPASSbinding."
+    },
+    {
+      "id": "ITEM-T048-R-CHECKS-170",
+      "kind": "OTHER",
+      "target": "Original4 full native checks new sourceffe3985/PLAN720/head5e121",
+      "idempotency_key": "item048-r-corrected-final4-20261015",
+      "status": "CONFIRMED",
+      "source_ref": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=a94ca23a1d453ddd230ed2ce82d548c4fe5f1d913c7c64910bab4ca3da55cecd"
+    },
+    {
+      "id": "ITEM-T048-R-STOP-171",
+      "kind": "OTHER",
+      "target": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=2e9d20ab14d76dcb6a4abfb183fb1bc73feecdaf4f53f5e85996344a95d3a4ae",
+      "idempotency_key": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=24de026cde49f52f6e657f8fcecfc5c69c7a16b5f0c7721bfcec9395ebf7a621",
+      "status": "CONFIRMED",
+      "source_ref": "STOPPED observed by current coordinator at2026-10-15T02:54:08.566641Z, actualmysqladmin exit0/socketPIDfilesabsent, owned datadir/credentials/evidence retained. No livelease/reuse/sharedprocess/data deletion. Exact private runtime details LOCAL_ONLY. mysql.log SHAfdcc72280b6943d0aa4542ffa2b9862950ee233a050130bf43bb219ef5a4416f"
+    },
+    {
+      "id": "ITEM-T048-R-RETENTION-172",
+      "kind": "OTHER",
+      "target": "Only stopped task-owned MySQL owned-data directory privacy mode",
+      "idempotency_key": "item048-r-retention-mode-20261015",
+      "status": "CONFIRMED",
+      "source_ref": "Actual stat observed parent0700/child0750 duringexecution, effectiveowner-only dueparent. Aftershutdown coordinatorchmod child0700/statverified; no datareadwrite/delete/sharedresourceeffect, nofalseclaimoldchild0700, no source/test/contractchange."
     }
   ],
   "evidence_files": [
@@ -3419,7 +4629,20 @@
       ],
       "closure_evidence": [],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-108",
+      "severity": "HIGH",
+      "status": "CLOSED",
+      "source_ids": [
+        "TC-019"
+      ],
+      "closure_evidence": [
+        "Developer-only tracking-policy coverage closure, actualREV073; PLAN720dc5db8e97910f3fc4b567a21fc2eb7c2176dc8a435b63f977c9bb1859c062 sourceffe3985ddb04639c9a8757eafbe521d8e5b2da205aa368431a4626460b7a4454; unit1e55e59f0b2188587fe973e27d2213eb0f9075e8c64740fb3829e643d889e722 integrationc494eeb3f5c08afea9b3c0342d723e58b622c36215953492aa858d8623a3d9f4, allsupportednonserial policies plusunchangedserialhardrejection.",
+        "Actual targetedTC01914leaf+fullregressionserver538/client866/0fail0skip0NOTRUN, lintbuildexit0, exactcatalog149d1ae02034bfee248e37f9824c259d7b6d333c5363197d06dbc3e809c471a6. LOCAL_ONLY native execution records SHA lintae559d2fc3318ee7a2ceb5d658ac4453d47b200e16c7ee1d97da25dded6969bd buildf96514b9493bd04f55584fd6d2fa7930781f9a1c5db3c5f69340b01578f0a20f clientf906c2fb6bf26860a51fd181ef19473f25eafc982dd12a19d40b604d2d762ea0 server2526ba14368de6c5a9b63dd99365ab99e951abaddee04ed3b7b9dc4cc7bb5936. Fullrawproofretainedprivately; unavailableinportablecheckout, notgenericrun/formalTC/UAT/CIcredit."
+      ],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Freeze/push final integratedPR220 documentationcandidate, markPRready, require its exactindependentreview and allfiveCI. Before normalmerge re-fetchmain and re-evaluate base/head. Preserve livejournal then recoverablyarchive onlycurrentItem and nonforce delete exactmergedbranch. GR/DEF107/TASK043/UAT limits unchanged; no moduleMERGE_READY/acceptance waiver."
+  "next_safe_action": "HD020 limited local preparation completed only if actual result summaries and genuine final reviews recorded below support it. This is a sanitized NON_LIVE portable checkpoint, not a live execution or clean-checkout PASS. Exact candidate receipt/workspace/runtime/native proof and original-state hash mapping retained LOCAL_ONLY after commit. Reconcile actual observations before future work. No P2/P3/push/PR/merge/CI/export/formal acceptance authority. DEF107 HIGH/OPEN and GR/global gates BLOCKED; TASK043/048 IN_PROGRESS, formal UAT separate."
 }

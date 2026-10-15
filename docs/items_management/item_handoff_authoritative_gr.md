@@ -66,6 +66,7 @@ Verifier 必須區分「無法取得／核實來源」與「來源不符合已�
 - GR 後來`PARTIALLY_REVERSED`／`REVERSED`時，歷史來源核實及首次延遲投影怎樣判定；不能只比對目前header status就擅自接受或拒絕。保持既有不可變歷史，新增補償語義須另走 owner 決策。
 - 正式 verifier 的接線／來源讀取一致性／鎖順序、錯誤處置；reconciliation入口、執行owner、授權、批次／重試與runtime隔離。不得為了通過測試另開每次成功的fallback verifier。
 - Purchasing §2.4 提到的`ItemLookupService.findManyForCommittedReceipt(skuIds,{atMs})`在 baseline **尚未由Item提供**。它涉及 Receiving 已有承諾與目前 lifecycle／flags／warnings 的新專用合約，不等於現有泛用`findById`或purchase lookup。若Purchasing需要，須向Item交回具體consumer合約與snapshot／warning／exception要求，由Item另行 DESIGN／PLAN 審查及owner核准後開發；本次交接不授權或宣告已交付。
+  - 2026-10-14 Sam已另外授權只做規劃；Item的[DES-022／TASK-048提案與待核准決策](09_committed_receipt_planning_review.md)已整理。這不是provider已實作、consumer已採用或GR已解鎖；既有purchase／inventory規則不放寬。
 
 ## 6. TASK-043 解鎖／Item 重入條件
 

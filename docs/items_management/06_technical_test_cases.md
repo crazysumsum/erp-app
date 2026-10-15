@@ -793,6 +793,27 @@ Current-baseline unit and actual-MySQL cases pass without mandatory skips; assoc
 ### Cleanup
 Existing teardown deletes only task-owned synthetic Item fixtures in an isolated schema, never shared/Supplier data.
 
+## TC-019 — Committed-receipt provider contract and compatibility / P1
+
+### Preconditions and data
+PLANNED, NOT_RUN. FR-067/DES-022/TASK-048; existing item-server-technical suite, mandatory/blocking in typed ledger. Synthetic Item-only fixtures: each Item/SKU status, independent false flags, null/boundary dates, none/batch/batch_expiry/serial, distinct EA/BOX association/master IDs and active/inactive/archived UOMs; injected clock/query recorder/failures and actual isolated MySQL with existing migrations. No live PO/GR, test verifier or fake source-authority claim.
+
+### Steps
+1. Empty/duplicate/reordered/100-unique valid IDs and omitted versus explicit atMs; malformed array/ID, string/zero/negative/fractional/unsafe/101-unique, null/nonfinite/unsafe time. Assert validation before any SQL, zero-query empty Map, deduplicated numeric ordered output and one captured clock.
+2. For all valid nonserial identities combine independent lifecycle, flags and effective-date predicates; assert exact current fields, four-code ordered/deduplicated allowlist, inclusive boundaries, no usable/reasons and no receipt/purchase grant. Compare with unchanged generic/purchase/search/Sales/Inventory calls on the same fixture. Capture false-to-true flag/current-vs-snapshot distinction without inventing Item PO reads.
+3. Request mixed valid/missing IDs and serial/missing pairs in either input order: lowest missing ID 404 takes precedence, otherwise lowest serial ID 409 and SERIAL_NOT_SUPPORTED; no partial Map. SQL errors at both read stages propagate, no empty-success/partial result or retries. Unknown generic purpose remains rejected.
+4. Assert exact nine-field UOM projection, stable association ownership and numeric ordering, inactive/archived history retained, no current UOM auto-selection or snapshot conversion substitution. At most two SELECTs independent of batch size; no N+1, writes, audit/state/version changes or global fixture cleanup.
+5. With real MySQL, inject one caller-owned transaction executor into the provider and prove both reads stay on it without pool access or provider commit/rollback/locks. Controlled master changes demonstrate advisory normal reads versus an existing transaction read view; do not claim locking/current revalidation. Existing caller guard tests remain unchanged. Release/settle every transaction before Item-owned teardown; no arbitrary sleeps.
+
+### Expected result
+Complete deterministic current-facts/warnings Map or specified error; no broader generic eligibility, forged historical commitment/source authority, write, connection duplication or misleading read-consistency guarantee. Record original leaf outcomes/query executor/zero-write DB assertions and exact baseline; no GR-positive PASS.
+
+### Acceptance criteria
+All specified provider/compatibility unit and real-MySQL cases pass on approved immutable source/PLAN with zero mandatory skips and unchanged thresholds; four developer suites and five exact-candidate CI jobs remain required for implementation. Formal technical acceptance requires separate actual execution under approved TEST_AND_VERIFY; planning supplies no PASS credit.
+
+### Cleanup
+Only task-owned synthetic Item fixtures in a separately leased isolated schema; settle connections/promises first and confirm fixture/audit counts restored. No Purchasing/Supplier/Inventory production writes or migrations in DESIGN_AND_PLAN; no raw evidence export authority.
+
 ## TC-018 — Purchase search qualification, paging and safe inputs / P1
 
 ### Preconditions and data

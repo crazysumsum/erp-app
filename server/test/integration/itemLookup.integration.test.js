@@ -138,6 +138,137 @@ async function seedBarcode(db, { skuId, skuUomId, barcode }) {
   return row.insertId;
 }
 
+test("TC-019 actual MySQL committed receipt accepts all supported nonserial tracking policies", { skip }, async (t) => {
+  const application = await startApplication();
+  const db = application.services.require("mysqldatabase");
+  const fixtures = [];
+  let catalog = null;
+  t.after(async () => {
+    try {
+      for (const fixture of fixtures.reverse()) await fixture.cleanup();
+      await catalog?.cleanup();
+    } finally {
+      await application.shutdown("committed_receipt_policies_complete");
+    }
+  });
+  catalog = await seedCatalog(db);
+  await db.execute("UPDATE item_uoms SET status = 'inactive' WHERE id = ?", [catalog.uomIdB]);
+  const policies = ["none", "batch", "batch_expiry"];
+  for (const policy of policies) {
+    const fixture = await seedItemWithSku(db, catalog);
+    fixtures.push(fixture);
+    await db.execute("UPDATE item_skus SET tracking_policy = ?, shelf_life_days = 90, min_receipt_life_days = 30, min_sale_life_days = 10 WHERE id = ?", [policy, fixture.skuId]);
+  }
+  const ids = fixtures.map(fixture => fixture.skuId);
+  const readFacts = () => db.query("SELECT id, tracking_policy, shelf_life_days, min_receipt_life_days, min_sale_life_days FROM item_skus WHERE id IN (?, ?, ?) ORDER BY id", ids);
+  const [before] = await readFacts();
+  assert.deepEqual(before.map(row => row.tracking_policy), policies);
+  const results = await lookupService(application).findManyForCommittedReceipt(ids);
+  assert.deepEqual([...results.keys()], ids);
+  for (const [index, fixture] of fixtures.entries()) {
+    const result = results.get(fixture.skuId);
+    assert.equal(result.trackingPolicy, policies[index]);
+    assert.equal(result.trackingPolicy, before[index].tracking_policy);
+    assert.equal(result.shelfLifeDays, 90);
+    assert.equal(result.minimumReceiptLifeDays, 30);
+    assert.equal(result.minimumSaleLifeDays, 10);
+    assert.deepEqual(result.warnings, []);
+    assert.equal(result.uoms.length, 2);
+    assert.equal(result.uoms[0].skuUomId, fixture.skuUomIdA);
+    assert.deepEqual(result.uoms.map(row => row.uomId), [catalog.uomIdA, catalog.uomIdB]);
+    assert.equal(result.uoms[1].status, "inactive");
+    for (const key of ["usable", "reasons", "canReceive", "poSnapshot"]) assert.equal(key in result, false);
+  }
+  assert.deepEqual((await readFacts())[0], before, "provider leaves persisted fixture facts unchanged");
+});
+
+test("TC-019 actual MySQL committed receipt keeps current inactive facts and historical mapping identity", { skip }, async (t) => {
+  const application = await startApplication();
+  const db = application.services.require("mysqldatabase");
+  const catalog = await seedCatalog(db);
+  const now = Date.now();
+  const fixture = await seedItemWithSku(db, catalog, { itemStatus: "archived", skuStatus: "inactive", overrides: { purchasable: 0, inventoryTracked: 0, effectiveTo: now - 1 } });
+  const control = await seedItemWithSku(db, catalog, { overrides: { effectiveFrom: now, effectiveTo: now } });
+  t.after(async () => { await control.cleanup(); await fixture.cleanup(); await catalog.cleanup(); await application.shutdown("committed_receipt_facts_complete"); });
+  await db.execute("UPDATE item_uoms SET status = 'archived' WHERE id = ?", [catalog.uomIdB]);
+  const [[mapping]] = await db.query("SELECT id FROM item_sku_uoms WHERE sku_id = ? AND uom_id = ?", [fixture.skuId, catalog.uomIdB]);
+  const service = lookupService(application);
+  const batch = await service.findManyForCommittedReceipt([control.skuId, fixture.skuId, fixture.skuId], { atMs: now });
+  assert.deepEqual([...batch.keys()], [fixture.skuId, control.skuId]);
+  assert.deepEqual(batch.get(control.skuId).warnings, []);
+  assert.equal(batch.get(control.skuId).uoms[0].skuUomId, control.skuUomIdA);
+  assert.equal(batch.get(control.skuId).uoms.length, 2);
+  const result = batch.get(fixture.skuId);
+  assert.equal(result.itemStatus, "archived"); assert.equal(result.skuStatus, "inactive");
+  assert.deepEqual(result.warnings, ["STATUS_NOT_ACTIVE", "NOT_PURCHASABLE", "NOT_INVENTORY_TRACKED", "OUTSIDE_EFFECTIVE_RANGE"]);
+  assert.deepEqual(result.uoms.map(row => row.skuUomId), [fixture.skuUomIdA, Number(mapping.id)]);
+  assert.equal(result.uoms[1].status, "archived"); assert.equal(result.uoms[1].uomName, "Integration Test Unit B");
+  assert.equal(result.uoms[1].uomId, catalog.uomIdB); assert.equal(result.uoms[1].toBaseFactor, 12);
+  assert.equal("usable" in result, false); assert.equal("reasons" in result, false);
+  for (const purpose of ["purchase", "inventory"]) assert.equal((await service.findById(fixture.skuId, { purpose })).usable, false);
+  await db.execute("UPDATE item_sku_uoms SET to_base_factor = 24 WHERE id = ?", [mapping.id]);
+  const changed = (await service.findManyForCommittedReceipt([fixture.skuId], { atMs: now })).get(fixture.skuId);
+  assert.equal(changed.uoms[1].skuUomId, Number(mapping.id)); assert.equal(changed.uoms[1].toBaseFactor, 24);
+});
+
+test("TC-019 actual MySQL committed receipt rejects missing before serial and does not query UOMs on rejection", { skip }, async (t) => {
+  const application = await startApplication();
+  const db = application.services.require("mysqldatabase"), catalog = await seedCatalog(db);
+  const fixture = await seedItemWithSku(db, catalog);
+  t.after(async () => { await fixture.cleanup(); await catalog.cleanup(); await application.shutdown("committed_receipt_errors_complete"); });
+  await db.execute("UPDATE item_skus SET tracking_policy = 'serial' WHERE id = ?", [fixture.skuId]);
+  const calls = [];
+  const service = new ItemLookupService({ database: { query: (...args) => { calls.push(args); return db.query(...args); } }, logger: application.services.require("logging").logger, time: application.services.require("time") });
+  assert.deepEqual(await service.findManyForCommittedReceipt([]), new Map()); assert.equal(calls.length, 0);
+  const missingId = Number.MAX_SAFE_INTEGER;
+  await assert.rejects(() => service.findManyForCommittedReceipt([missingId, fixture.skuId]), error => error.code === "SKU_NOT_FOUND" && error.statusCode === 404);
+  assert.equal(calls.length, 1);
+  await assert.rejects(() => service.findManyForCommittedReceipt([fixture.skuId]), error => error.code === "SKU_NOT_USABLE" && error.statusCode === 409 && error.details.purpose === "committed_receipt" && error.details.reasons[0] === "SERIAL_NOT_SUPPORTED");
+  assert.equal(calls.length, 2);
+  assert.ok(calls.every(([sql]) => !sql.includes("item_sku_uoms")));
+});
+
+test("TC-019 actual MySQL committed receipt uses caller transaction snapshot across a concurrent master update", { skip }, async (t) => {
+  const application = await startApplication();
+  const db = application.services.require("mysqldatabase"), catalog = await seedCatalog(db);
+  const fixture = await seedItemWithSku(db, catalog);
+  t.after(async () => { await fixture.cleanup(); await catalog.cleanup(); await application.shutdown("committed_receipt_snapshot_complete"); });
+  const calls = [];
+  await db.withTransaction(async transaction => {
+    const database = { query: async (sql, params) => {
+      calls.push(sql);
+      const result = await transaction.query(sql, params);
+      if (calls.length === 1) await db.execute("UPDATE item_uoms SET status = 'inactive' WHERE id = ?", [catalog.uomIdA]);
+      return result;
+    } };
+    const service = new ItemLookupService({ database, logger: application.services.require("logging").logger, time: application.services.require("time") });
+    const result = (await service.findManyForCommittedReceipt([fixture.skuId])).get(fixture.skuId);
+    assert.equal(result.uoms[0].status, "active", "both SELECTs use the caller-owned REPEATABLE READ snapshot");
+  });
+  assert.equal(calls.length, 2); assert.ok(calls.every(sql => !/FOR SHARE|FOR UPDATE/i.test(sql)));
+  assert.equal((await lookupService(application).findManyForCommittedReceipt([fixture.skuId])).get(fixture.skuId).uoms[0].status, "inactive", "later pool read sees committed current facts");
+});
+
+test("TC-019 actual MySQL committed receipt pool reads remain advisory across a concurrent master update", { skip }, async (t) => {
+  const application = await startApplication();
+  const db = application.services.require("mysqldatabase"), catalog = await seedCatalog(db);
+  const fixture = await seedItemWithSku(db, catalog);
+  t.after(async () => { await fixture.cleanup(); await catalog.cleanup(); await application.shutdown("committed_receipt_advisory_complete"); });
+  let calls = 0;
+  const service = new ItemLookupService({ database: { query: async (sql, params) => {
+    const result = await db.query(sql, params);
+    if (++calls === 1) {
+      await db.execute("UPDATE item_skus SET purchasable = 0 WHERE id = ?", [fixture.skuId]);
+      await db.execute("UPDATE item_uoms SET status = 'inactive' WHERE id = ?", [catalog.uomIdA]);
+    }
+    return result;
+  } }, logger: application.services.require("logging").logger, time: application.services.require("time") });
+  const result = (await service.findManyForCommittedReceipt([fixture.skuId])).get(fixture.skuId);
+  assert.equal(calls, 2); assert.equal(result.purchasable, true); assert.deepEqual(result.warnings, []);
+  assert.equal(result.uoms[0].status, "inactive", "nontransactional reads do not promise one snapshot or receiving authority");
+  assert.equal((await lookupService(application).findManyForCommittedReceipt([fixture.skuId])).get(fixture.skuId).purchasable, false);
+});
+
 test("TC-017 purchase metadata returns actual association IDs and catalogue states without changing generic lookup", { skip }, async (t) => {
   const application = await startApplication();
   const db = application.services.require("mysqldatabase");

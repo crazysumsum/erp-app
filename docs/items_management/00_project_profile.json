@@ -187,7 +187,8 @@
         "TC-014",
         "TC-015",
         "TC-017",
-        "TC-018"
+        "TC-018",
+        "TC-019"
       ],
       "tool_probes": [
         {
@@ -547,7 +548,8 @@
       "Dependency audit",
       "Lint",
       "Test (server + client, MySQL integration)",
-      "Build frontend"
+      "Build frontend",
+      "Browser tests (Playwright)"
     ]
   },
   "acceptance": {
