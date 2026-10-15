@@ -225,7 +225,8 @@ integrationTest("TC-010 (LIST-003): filters return only their intersection, with
   const weak = await seedSupplier({ code: `${tag}-WEAK`, name: `Filter ${tag} weak`, status: "suspended", at: t0 + 300, createdAt: t0 + 30 });
   // 只算啟用中、啱用途嘅：非主要、停用、其他用途都唔算數。
   await seedContact(weak, { name: "Not primary", purpose: "orders", primary: false });
-  await seedContact(weak, { name: "Inactive primary", status: "inactive", purpose: "orders", primary: true });
+  // 停用會清走 primary（SupplierContactService.deactivate），所以停用嘅聯絡人只會留低非 primary 嘅用途。
+  await seedContact(weak, { name: "Inactive", status: "inactive", purpose: "orders", primary: false });
   await seedAddress(weak, { purpose: "billing" });
   await seedAddress(weak, { status: "inactive", purpose: "ordering" });
   const inactiveBank = await seedBank(weak, `${tag}w`);

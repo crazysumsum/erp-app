@@ -166,10 +166,11 @@ export function supplierListQuery({
     params.push(createdTo);
   }
   // 「缺少」同 completeness warning 用同一個定義（ORDERS_CONTACT_MISSING、ORDERING_ADDRESS_MISSING）。
+  // 停用聯絡人會清走佢嘅 primary（SupplierContactService.deactivate），所以 primary slot 一定係啟用中嘅聯絡人，
+  // 唔使再 join supplier_contacts：100k 上面由 724 ms 跌到 124 ms（HD-107）。
   if (missingPrimaryContact) {
     conditions.push(`NOT EXISTS (SELECT 1 FROM supplier_contact_purposes cp
-      JOIN supplier_contacts c ON c.id = cp.contact_id AND c.supplier_id = cp.supplier_id
-      WHERE cp.supplier_id = s.id AND cp.purpose_code = 'orders' AND cp.primary_slot = 1 AND c.status = 'active')`);
+      WHERE cp.supplier_id = s.id AND cp.purpose_code = 'orders' AND cp.primary_slot = 1)`);
   }
   if (missingAddress) {
     conditions.push(`NOT EXISTS (SELECT 1 FROM supplier_address_purposes ap

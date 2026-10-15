@@ -41,11 +41,16 @@ PARTIAL means existing tests cover part of the Expected Result. The gap column s
 
 Generated from the test titles. Each carrier's assertions, not only its title, cover the case's **main** Expected Result: the stated outcome, and any real-database or concurrency condition its Steps require. A case can have several carriers; the harness takes the worst result. Smaller clauses a carrier does not assert are listed under Notes and are accepted as partial. Review REV-092 removed 26 tags that did not meet this bar.
 
-Coverage: supplier-bank-security 15/15, supplier-server-integration 58/89, supplier-security 2/10.
+Coverage: supplier-bank-security 15/15, supplier-server-integration 64/89, supplier-security 2/10.
 
 | TC | Carriers (file:line — title) | Notes |
 | --- | --- | --- |
 | TC-007 | `integration/supplierSkuRelations.integration.test.js:108` — TASK-038 (MIG-007): without the Item SKU/UOM tables the migration refuses and creates nothing<br>`integration/supplierSkuRelations.integration.test.js:239` — TASK-038: a rerun accepts the real tables but refuses a hand-made one whose foreign keys differ |  |
+| TC-008 | `integration/supplierListAcceptance.integration.test.js:155` — the list pages 20 by default and at most 100, refuses other bounds, and hides Archived unless asked |  |
+| TC-009 | `integration/supplierListAcceptance.integration.test.js:181` — every searchable field matches in full and in part, Code and Name ignore case and edge spaces, with no duplicate rows |  |
+| TC-010 | `integration/supplierListAcceptance.integration.test.js:216` — filters return only their intersection, with missing contact, address and Bank and both date ranges exact at the edges |  |
+| TC-011 | `integration/supplierListAcceptance.integration.test.js:259` — each allowed sort orders the set, ties fall back to ID in the same direction, and pages neither skip nor repeat |  |
+| TC-012 | `integration/supplierListAcceptance.integration.test.js:297` — LIKE wildcards are searched literally, an unknown sort is 400, and nothing in the database moves |  |
 | TC-016 | `integration/supplierSkuLookup.integration.test.js:197` — TASK-040 (HD-094 1A): over HTTP the for-SKU lookup needs a fresh supplier.view and returns no Bank data | carrier mostly checks auth; reasons and searchability are carried by TC-078/079 |
 | TC-018 | `supplierAdminService.test.js:77` — create Supplier revalidates actor and Business Master inside one transaction and atomically writes root, grams and audit<br>`supplierLifecycleService.test.js:94` — activate and reactivate revalidate activation data and write one atomic audit |  |
 | TC-019 | `integration/supplierApproval.integration.test.js:343` — a Supplier created with activate can actually be approved<br>`supplierAdminService.test.js:95` — creating with activate under approval ON lands in pending_approval, not active | assigned approver, returned Code and next step not asserted |
@@ -67,6 +72,7 @@ Coverage: supplier-bank-security 15/15, supplier-server-integration 58/89, suppl
 | TC-043 | `supplierAddressService.test.js:64` — address deactivate clears primary flags and preserves purpose mappings<br>`supplierContactService.test.js:99` — contact deactivate clears primary flags and preserves purpose mappings<br>`supplierIdentifierService.test.js:106` — delete rejects referenced identifiers and audits an allowed versioned deletion |  |
 | TC-044 | `integration/supplierParty.integration.test.js:191` — Identifier normalization, global uniqueness, ownership and deletion are enforced by service and MySQL<br>`supplierIdentifierService.test.js:53` — create normalizes identifier type, country and separator-insensitive key before auditing |  |
 | TC-047 | `supplierContactService.test.js:79` — create rejects malformed optional email and phone values<br>`supplierIdentifierService.test.js:82` — create rejects oversized notes at the domain boundary |  |
+| TC-048 | `integration/supplierListAcceptance.integration.test.js:315` — detail carries at most 100 contacts and addresses; the dedicated lists page the rest exactly |  |
 | TC-049 | `integration/supplierCoreMigrations.integration.test.js:151` — 0036 seeds the settings singleton once and a rerun neither duplicates nor resets it<br>`supplierSettingsService.test.js:59` — reading settings returns the typed singleton with its version |  |
 | TC-050 | `supplierSettingsHandlers.test.js:9` — both settings routes require supplier.settings and nothing weaker |  |
 | TC-051 | `supplierSettingsService.test.js:66` — updating locks id=1, checks the version and audits before/after with the reason<br>`supplierSettingsService.test.js:98` — a stale version is a conflict and writes nothing<br>`supplierSettingsService.test.js:118` — an unknown setting field is rejected rather than stored |  |
@@ -131,11 +137,6 @@ Coverage: supplier-bank-security 15/15, supplier-server-integration 58/89, suppl
 | TC-004 | MIG-004 | fake DB; approval default OFF and no Currency seed not asserted in this suite (REV-092 Low) |
 | TC-005 | MIG-005 | config validation only; no server start per bad config |
 | TC-006 | MIG-006 | upgrade from main and rollback rehearsal (T51 rehearsal) |
-| TC-008 | LIST-001 | default 20 and 400 on 0 or 101 not asserted; archived exclusion is a regex on SQL text (REV-092 M-7) |
-| TC-009 | LIST-002 | no per-field hit, case/trim or no-duplicate-row test |
-| TC-010 | LIST-003 | filter combinations and boundaries not tested |
-| TC-011 | LIST-004 | no cross-page stability test on MySQL |
-| TC-012 | LIST-005 | the escaped LIKE is asserted on SQL text only; no illegal-sort 400 or literal-wildcard result on MySQL |
 | TC-014 | LIST-007 | non-Active not-purchasable hint |
 | TC-017 | CORE-001 | no test asserts a Draft create with version 1, children and audit in one transaction |
 | TC-020 | CORE-004 | no 400 for invalid input over the API, and the race is a faked ER_DUP_ENTRY, not two connections (REV-092 M-5) |
@@ -147,7 +148,6 @@ Coverage: supplier-bank-security 15/15, supplier-server-integration 58/89, suppl
 | TC-038 | STATE-009 | no barrier-synchronised concurrent transitions |
 | TC-045 | PARTY-006 | update only on a fake DB; read, deactivate and delete untested (REV-092 Low) |
 | TC-046 | PARTY-007 | no test asserts warnings present, issues empty and activation allowed together (REV-092 M-8) |
-| TC-048 | PARTY-009 | no detail child cap or server-paged child list test |
 | TC-082 | SKU-005 | sequential only; Steps require concurrent creates and direct-DB negatives (REV-092 Low) |
 | TC-093 | IMP-008 | no barrier-synchronised same-key submit |
 | TC-103 | AUD-001 | requestId and IP are not asserted per action |
