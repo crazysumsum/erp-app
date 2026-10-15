@@ -81,8 +81,9 @@ skipped); Node's own final counters include3083 passes/133 skips. Inventory's
 separate opt-in integrations and Customer/import/item performance/restore gates
 were not enabled by DB_INTEGRATION_TESTS. No skipped case is counted PASS or waived.
 The generic whole-module zero-skip/required-case acceptance gate remains BLOCKED;
-this PR satisfies HD-012's explicitly scoped UI developer checks plus required CI,
-not those deferred acceptance gates. Full Customer capacity/DR acceptance is not
+HD-012's explicitly scoped UI developer checks pass, while exact-final-head required
+CI is still pending. This does not satisfy the deferred acceptance gates. Full
+Customer capacity/DR acceptance is not
 rerun or unblocked by this change.
 
 The supporting server run began before the additional frontend retry correction
