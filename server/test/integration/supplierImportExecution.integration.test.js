@@ -427,7 +427,7 @@ integrationTest("TASK-042: a worker that loses its lease while a row fails leave
   assert.equal((await next.processNextRow({ jobId, leaseOwner: "new", leaseDurationMs: 60_000, applyRow: writeSupplier() })).status, "applied");
 });
 
-integrationTest("TC-120 (AUTH-010): TASK-042: a failure that is not a domain error is stored as the fixed Supplier pair and logged once, without its message", async () => {
+integrationTest("TASK-042: a failure that is not a domain error is stored as the fixed Supplier pair and logged once, without its message", async () => {
   clock += 1_000_000;
   await quiesce();
   const jobId = await seedJob({ rows: ["valid", "valid", "valid"] });

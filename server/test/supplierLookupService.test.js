@@ -53,13 +53,13 @@ function serviceFor(database, overrides = {}) {
   });
 }
 
-test("TC-113 (AUTH-003): requires its minimal dependencies and exposes a versioned downstream contract", () => {
+test("requires its minimal dependencies and exposes a versioned downstream contract", () => {
   assert.throws(() => new SupplierLookupService(), TypeError);
   assert.throws(() => new SupplierLookupService({ database: {} }), TypeError);
   assert.equal(SupplierLookupService.contract, "supplier-core-provider/v1");
 });
 
-test("TC-113 (AUTH-003): findById uses a bounded read transaction and returns only the minimal non-bank projection", async () => {
+test("findById uses a bounded read transaction and returns only the minimal non-bank projection", async () => {
   const database = fakeDatabase([[supplierRow()]]);
   const result = await serviceFor(database).findById(7, { purpose: "purchase", atMs: 900 });
 
@@ -104,7 +104,7 @@ test("findByCode normalizes the manually entered Code and missing Suppliers retu
   assert.equal(await service.findById(999, { purpose: "history" }), null);
 });
 
-test("TC-039 (STATE-010): findManyByIds de-duplicates stable IDs, performs one query and rejects unbounded or invalid inputs", async () => {
+test("findManyByIds de-duplicates stable IDs, performs one query and rejects unbounded or invalid inputs", async () => {
   const database = fakeDatabase([[supplierRow(), supplierRow({ id: 8, supplier_code: "SUP-008" })]]);
   const service = serviceFor(database);
 

@@ -938,7 +938,7 @@ integrationTest("TASK-045: confirm needs the uploader's password, a ready job at
   await api(owner, "POST", `/api/v1/supplier-imports/${second.id}/cancel`, { body: { version: second.version + 1 }, key: randomUUID() });
 });
 
-integrationTest("TC-091 (IMP-006): TASK-045: a draft import writes each valid row as one Supplier aggregate with its children and audit, and skips invalid rows", async () => {
+integrationTest("TASK-045: a draft import writes each valid row as one Supplier aggregate with its children and audit, and skips invalid rows", async () => {
   const owner = await makeUser("dr", ["supplier.mgmt"], { withPassword: true });
   const tag = randomUUID().slice(0, 6).toUpperCase();
   const { id, version } = await readyJob(owner, [

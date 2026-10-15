@@ -88,7 +88,7 @@ test("TC-047 (PARTY-008): create rejects malformed optional email and phone valu
   );
 });
 
-test("TC-045 (PARTY-006): contact update rejects a child id that does not belong to the route Supplier", async () => {
+test("contact update rejects a child id that does not belong to the route Supplier", async () => {
   const { service } = harness({ contact: null });
   await assert.rejects(
     () => service.update({ ...actor, supplierId: 8, contactId: 21, version: 1, name: "Amy", purposes: [] }),

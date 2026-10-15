@@ -53,7 +53,7 @@ test("TC-040 (PARTY-001): create switches each requested primary and writes addr
   assert.equal(events.at(-1)[0], "audit");
 });
 
-test("TC-045 (PARTY-006): address update rejects a child id that does not belong to the route Supplier", async () => {
+test("address update rejects a child id that does not belong to the route Supplier", async () => {
   const { service } = harness({ address: null });
   await assert.rejects(
     () => service.update({ ...actor, supplierId: 8, addressId: 12, version: 1, label: "Other", purposes: [] }),

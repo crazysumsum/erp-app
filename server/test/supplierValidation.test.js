@@ -45,7 +45,7 @@ test("TC-022 (CORE-006): missing optional data produces bounded warnings and nev
   }), []);
 });
 
-test("TC-046 (PARTY-007): bank completeness is only evaluated once a caller can answer it", () => {
+test("bank completeness is only evaluated once a caller can answer it", () => {
   // DEF-001: Bank accounts arrive in PHASE-003. While no caller supplies the
   // flag, emitting the warning produced one no user action could ever clear.
   const everythingElseSatisfied = { defaultPaymentTermId: 2, hasOrderingAddress: true, hasOrdersContact: true, hasIdentifier: true };
@@ -55,7 +55,7 @@ test("TC-046 (PARTY-007): bank completeness is only evaluated once a caller can 
   ]);
 });
 
-test("TC-046 (PARTY-007): activation issues can be projected separately from non-blocking completeness warnings", () => {
+test("activation issues can be projected separately from non-blocking completeness warnings", () => {
   assert.deepEqual(
     supplierActivatabilityIssues({ ...valid, defaultCurrency: { code: "HKD", status: "INACTIVE" } }).map((issue) => issue.code),
     ["CURRENCY_NOT_ACTIVE"]

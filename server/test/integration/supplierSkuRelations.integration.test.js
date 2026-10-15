@@ -149,7 +149,7 @@ integrationTest("TC-081 (SKU-004): TASK-038 (SKU-004): create and update keep MO
   assert.ok(!columns.some(({ name }) => /price|cost|amount|quote/iu.test(name)), "the table cannot hold a price (FR-SKU-006)");
 });
 
-integrationTest("TC-082 (SKU-005): TASK-038: one relation per Supplier and SKU, one SKU per Supplier Item Code, and the purchase UOM must belong to the SKU", async () => {
+integrationTest("TASK-038: one relation per Supplier and SKU, one SKU per Supplier Item Code, and the purchase UOM must belong to the SKU", async () => {
   const supplierId = await supplier();
   const [first, second] = [await sku(), await sku()];
   await service().create({ ...actor(), supplierId, skuId: first.id, supplierItemCode: "Code-9" });
@@ -287,7 +287,7 @@ const fullUpdate = (row, changes = {}) => ({ supplierItemCode: row.supplierItemC
   purchaseSkuUomId: row.purchaseSkuUomId, minimumOrderQty: row.minimumOrderQty, standardLeadTimeDays: row.standardLeadTimeDays,
   relationshipStatus: row.relationshipStatus, version: row.version, ...changes });
 
-integrationTest("TC-111 (AUTH-001): TASK-038 (REV-085 M1, M2): over HTTP, authorization, the owner check, list search and a partial update are enforced", async () => {
+integrationTest("TASK-038 (REV-085 M1, M2): over HTTP, authorization, the owner check, list search and a partial update are enforced", async () => {
   const [manager, viewer] = [await httpUser(["supplier.mgmt", "supplier.view"]), await httpUser(["supplier.view"])];
   const stale = await httpUser(["supplier.view"], { claims: ["supplier.view", "supplier.mgmt"] });
   const [supplierA, supplierB] = [await supplier(), await supplier()];
@@ -579,7 +579,7 @@ integrationTest("TASK-039 (HD-098): a purchase UOM must be active to be chosen; 
   assert.deepEqual([cleared.purchaseUomCode, cleared.purchaseUomName, cleared.purchaseUomStatus], [null, null, null]);
 });
 
-integrationTest("TC-111 (AUTH-001): TASK-039 (HD-098): over HTTP the SKU picker lists purchasable SKUs with their UOM mapping IDs, for supplier.mgmt only", async () => {
+integrationTest("TASK-039 (HD-098): over HTTP the SKU picker lists purchasable SKUs with their UOM mapping IDs, for supplier.mgmt only", async () => {
   const [manager, viewer] = [await httpUser(["supplier.mgmt", "supplier.view"]), await httpUser(["supplier.view"])];
   const stale = await httpUser(["supplier.view"], { claims: ["supplier.view", "supplier.mgmt"] });
   const item = await sku({ uoms: 2 });

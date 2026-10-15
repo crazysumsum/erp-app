@@ -56,7 +56,7 @@ function harness({ rows = [row()], duplicateRows = [] } = {}) {
   return { service, queries, events };
 }
 
-test("TC-008 (LIST-001): list applies bounded paging, escaped search, allowlisted stable sort and excludes archived by default", async () => {
+test("list applies bounded paging, escaped search, allowlisted stable sort and excludes archived by default", async () => {
   const { service, queries, events } = harness();
   const result = await service.listSuppliers({
     actorId: 1,

@@ -519,7 +519,7 @@ test("duplicate detection asks the same question as the unique index, inactive r
     "filtering by status makes the service disagree with the index that actually enforces the rule");
 });
 
-test("TC-120 (AUTH-010): a create that loses the race is a 409, not a 500 carrying the blind index", async () => {
+test("a create that loses the race is a 409, not a 500 carrying the blind index", async () => {
   // 設計 §2.5：DB unique 係競態下最後防線，service 預查只為回傳較清晰嘅公開錯誤 ——
   // 所以兩者要講同一句。查重讀唔上鎖，所以兩個並發嘅 create 都可以讀到「冇重覆」。
   const duplicate = harness({ statementFails: { on: "INSERT INTO supplier_bank_accounts", constraint: "uq_supplier_bank_blind_index" } });

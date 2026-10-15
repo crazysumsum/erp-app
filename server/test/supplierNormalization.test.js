@@ -10,7 +10,7 @@ import {
   normalizeSupplierUrl
 } from "../src/modules/supplier/supplierNormalization.js";
 
-test("TC-020 (CORE-004): Supplier Code keeps the trimmed display value and derives an NFKC case-insensitive key", () => {
+test("Supplier Code keeps the trimmed display value and derives an NFKC case-insensitive key", () => {
   assert.deepEqual(normalizeSupplierCode("  ＡＢＣ-零食  "), {
     value: "ＡＢＣ-零食",
     key: "abc-零食"
@@ -55,7 +55,7 @@ test("Email comparison and URL validation do not rewrite display values", () => 
   assert.throws(() => normalizeSupplierUrl("javascript:alert(1)"), (error) => error.publicCode === "WEBSITE_INVALID");
 });
 
-test("TC-047 (PARTY-008): normalizers reject blank, overlong and control-character input", () => {
+test("normalizers reject blank, overlong and control-character input", () => {
   assert.throws(() => normalizeSupplierCode("   "), (error) => error.publicCode === "SUPPLIER_CODE_INVALID");
   assert.throws(() => normalizeSupplierCode(`ABC\u0000DEF`), (error) => error.publicCode === "SUPPLIER_CODE_INVALID");
   assert.throws(() => normalizeSupplierCode("x".repeat(65)), (error) => error.publicCode === "SUPPLIER_CODE_INVALID");

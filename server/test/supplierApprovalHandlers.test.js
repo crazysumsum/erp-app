@@ -53,7 +53,7 @@ test("the approver lookup accepts mgmt or approval, and is not a User Admin API"
   assert.equal(policy.options.match, "any");
 });
 
-test("TC-116 (AUTH-006): approve, reject and reassign re-confirm the password; reading the queue does not", () => {
+test("approve, reject and reassign re-confirm the password; reading the queue does not", () => {
   for (const Handler of DECISION_HANDLERS) {
     assert.equal(Handler.api.authType, "jwt-password", `${Handler.handlerName} must re-confirm the password`);
   }

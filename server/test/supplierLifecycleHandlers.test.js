@@ -25,7 +25,7 @@ test("Supplier lifecycle handlers expose the designed routes and management perm
   }
 });
 
-test("TC-116 (AUTH-006): high-risk auth and reason requirements match the lifecycle contract", () => {
+test("high-risk auth and reason requirements match the lifecycle contract", () => {
   assert.equal(ActivateSupplierHandler.api.authType ?? "jwt", "jwt");
   assert.equal(SuspendSupplierHandler.api.authType, "jwt-password");
   assert.equal(ReactivateSupplierHandler.api.authType, "jwt-password");

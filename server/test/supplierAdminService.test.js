@@ -191,7 +191,7 @@ test("TASK-050 (HD-084): update returns the similar names found before the trans
   assert.deepEqual((await service.updateSupplier(updateInput)).duplicateCandidates, [other]);
 });
 
-test("TC-027 (CORE-011): update Supplier rejects stale version before catalog, data or audit writes", async () => {
+test("update Supplier rejects stale version before catalog, data or audit writes", async () => {
   const { service, events } = updateHarness({ version: 3 });
   await assert.rejects(() => service.updateSupplier(updateInput), (error) => error.publicCode === "VERSION_CONFLICT");
   assert.equal(events.some(([name]) => name === "business-master" || name === "execute" || name === "audit"), false);
@@ -223,7 +223,7 @@ test("TC-026 (CORE-010): change Supplier Code requires an unreferenced Supplier 
   assert.deepEqual(audit.detail, { before: { supplierCode: "SUP-7" }, after: { supplierCode: "SUP-NEW" } });
 });
 
-test("TC-020 (CORE-004): change Supplier Code maps the database uniqueness race without disclosing another Supplier", async () => {
+test("change Supplier Code maps the database uniqueness race without disclosing another Supplier", async () => {
   const { service } = updateHarness({ duplicateError: true });
   await assert.rejects(
     () => service.changeSupplierCode({ ...updateInput, supplierCode: "SUP-NEW", reason: "Correct legacy code" }),
