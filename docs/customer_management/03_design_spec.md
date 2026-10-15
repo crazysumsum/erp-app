@@ -1,5 +1,14 @@
 # Customer Management System Design Specification (Harness 2.0 Aligned)
 
+## HD-013 — Human-approved timing acceptance waiver
+
+Sam: `RPO/ RTO 不用做驗收了，我批準通過。` Formal TC-086/087 timing
+measurement is WAIVED_BY_HUMAN / APPROVED; the RPO<=15min/RTO<=4h objectives below
+remain NOT_PROVEN. This supersedes only DES-024's requirement to prove those timing
+objectives as acceptance gates, not its recoverable-set integrity/encryption/access/
+retention/fail-closed requirements or real downstream reconciliation. No runtime,
+backup cadence, production permission or recovery implementation is changed.
+
 ## Harness alignment record
 
 | Item | Value |
@@ -2068,6 +2077,9 @@ Requirement basis: NFR-001..010; SEC-010..014. Provenance: `EXISTING + ENHANCED`
 Boundary validation, transaction/CAS rules, idempotent outcome reconciliation, fail-closed dependency handling and auditable recovery apply. Partial or ambiguous effects remain blocked until reconciled against the durable resource/operation state.
 
 ## DES-024 — Backup/restore treats DB, key rings, general files, bank-sensitive files and audit as one recoverable set; production RTO<=4h and RPO<=15m are proven by isolated restore/reconciliation.
+
+HD-013 overrides the timing-proof acceptance clause in this retained heading and
+statement: human-approved waiver, not technical PASS. All non-timing controls remain.
 
 ### Decision
 

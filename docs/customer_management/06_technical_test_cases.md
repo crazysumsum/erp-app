@@ -2,7 +2,7 @@
 
 ## 1. Status and Evidence Boundary
 
-All cases are specifications with status `PLANNED`. No test, build, migration, browser flow, load run or restore drill was executed during `REVIEW_AND_ALIGN`. Formal execution belongs to `TEST_AND_VERIFY` against a declared commit/build, environment and data baseline.
+Cases remain specifications, not executed results. HD-013: Sam explicitly waived formal RPO/RTO acceptance (`RPO/ RTO 不用做驗收了，我批準通過。`); TC-086/087 have disposition `WAIVED_BY_HUMAN / APPROVED`, not technical PASS. Their retained scenarios are optional reference, not mandatory/blocking acceptance; ledger applicability is NOT_APPLICABLE to required execution with APPROVAL-RISK-005. Other cases retain their existing requirements. No test, build, migration, browser flow, load run or restore drill was executed during `REVIEW_AND_ALIGN`. Formal execution belongs to `TEST_AND_VERIFY` against a declared commit/build, environment and data baseline.
 
 Priorities: `P0` protects authorization, sensitive data, data integrity and irreversible outcomes; `P1` covers principal behavior/recovery/performance; `P2` covers safely recoverable secondary behavior.
 
@@ -112,8 +112,8 @@ Each run must capture build SHA, environment, actor/permission set, request/oper
 | TC-083 Default/approval contention load | Concurrency/P0 | NFR-007; DES-007, DES-008, DES-010; TASK-034 | 100 concurrent conflicting commands | Barrier load | No double default/decision/lost update; bounded conflict | DB invariants and audit reconcile | Reset DB | PARTIAL | PLANNED |
 | TC-084 Dependency outage degradation | Resilience/P0 | NFR-010; DES-020, DES-025; TASK-032, TASK-033 | Scanner/key/storage/provider outage | Operate core/sensitive/destructive paths | Core safe reads continue where designed; sensitive/delete fail closed | No eligibility relaxation/data exposure | Restore dependency | PARTIAL | PLANNED |
 | TC-085 Backup restore completeness | Recovery/P0 | NFR-009, NFR-015; DES-024; TASK-035 | Backup with DB/keys/files/audit/import | Isolated restore and smoke | Every sampled resource decrypts/downloads/traces; bad/missing key fails closed | Counts/hashes/references reconcile | Destroy restore | PARTIAL | PLANNED |
-| TC-086 RPO measurement | DR/P0 | NFR-015; DES-024; TASK-035 | Timed writes before simulated loss | Restore latest permitted point | Maximum confirmed data loss <=15m | Timeline and reconciliation prove bound | Destroy restore | NO | PLANNED |
-| TC-087 RTO measurement | DR/P0 | NFR-015; DES-024; TASK-035 | Declared incident start/runbook/team | Restore, reconcile, readiness, smoke | Safe service recovered <=4h | Timer includes keys/files/provider reconciliation | Destroy restore | NO | PLANNED |
+| TC-086 RPO measurement | DR/P0 | NFR-015; DES-024; TASK-035 | Retained optional scenario: timed writes before simulated loss | Restore latest permitted point | Target <=15m remains NOT_PROVEN | HD-013 / APPROVAL-RISK-005; not required execution or technical PASS | Destroy restore if executed | NO | WAIVED_BY_HUMAN / APPROVED |
+| TC-087 RTO measurement | DR/P0 | NFR-015; DES-024; TASK-035 | Retained optional scenario: declared incident start/runbook/team | Restore, reconcile, readiness, smoke | Target <=4h remains NOT_PROVEN | HD-013 / APPROVAL-RISK-005; not required execution or technical PASS | Destroy restore if executed | NO | WAIVED_BY_HUMAN / APPROVED |
 | TC-088 Compatible deployment/rollback | Deployment/P0 | NFR-006, NFR-011; DES-022, DES-025; TASK-036 | Previous/new app and upgrade DB | Deploy mixed window then rollback app | No corrupt writes/unknown states; disabled capabilities safe | Forward schema and old app compatibility proven | Reset environment | PARTIAL | PLANNED |
 | TC-089 Full regression and coverage | Regression/P0 | FR-001..FR-100; SEC-001..SEC-014; NFR-001..NFR-015; DES-001..DES-025; TASK-036 | Candidate build | Run lint, coverage, server/client, MySQL, Playwright, security | Required suites pass with no skips/lowered floors | Evidence tied to build; defects triaged | Reset test env | PARTIAL | PLANNED |
 | TC-090 Formal testing handoff integrity | Review/P0 | All canonical requirements; DES-025; TASK-036 | Complete implementation evidence | Audit traceability/baseline/runbooks | Test team can execute independently; blockers explicit | Status only READY_FOR_TESTING, never accepted | None | NO | PLANNED |
@@ -2053,6 +2053,9 @@ Destroy restore
 
 ## TC-086 — RPO measurement
 
+HD-013 / APPROVAL-RISK-005: formal acceptance execution waived and approved by Sam;
+not mandatory/blocking. The retained steps/target below are optional and NOT_PROVEN.
+
 ### Preconditions and data
 
 Timed writes before simulated loss
@@ -2067,13 +2070,16 @@ Maximum confirmed data loss <=15m
 
 ### Acceptance criteria
 
-Timeline and reconciliation prove bound Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+WAIVED_BY_HUMAN / APPROVED under HD-013. No timing evidence or technical PASS is claimed; optional future execution must use baseline-bound, low-sensitive timeline/reconciliation evidence. TC-085 and other controls are not waived.
 
 ### Cleanup
 
 Destroy restore
 
 ## TC-087 — RTO measurement
+
+HD-013 / APPROVAL-RISK-005: formal acceptance execution waived and approved by Sam;
+not mandatory/blocking. The retained steps/target below are optional and NOT_PROVEN.
 
 ### Preconditions and data
 
@@ -2089,7 +2095,7 @@ Safe service recovered <=4h
 
 ### Acceptance criteria
 
-Timer includes keys/files/provider reconciliation Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+WAIVED_BY_HUMAN / APPROVED under HD-013. No timing evidence or technical PASS is claimed; optional future execution must time keys/files/provider reconciliation as well as restore. Non-timing reconciliation and other controls are not waived.
 
 ### Cleanup
 

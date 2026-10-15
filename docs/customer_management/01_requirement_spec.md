@@ -1,5 +1,16 @@
 # Customer Management Requirement Specification (Harness 2.0 Aligned)
 
+## HD-013 — RPO/RTO acceptance exception (2026-10-15)
+
+Sam explicitly decided: `RPO/ RTO 不用做驗收了，我批準通過。`
+Formal RPO/RTO measurement acceptance is **WAIVED_BY_HUMAN / APPROVED** for
+NFR-015's timing subset, TC-086 and TC-087. The operational objectives RPO<=15min
+and RTO<=4h remain documented but are **NOT_PROVEN**, not measured PASS. The risk
+of greater data loss or longer recovery than these objectives is accepted by Sam.
+This overrides only the mandatory timing-acceptance wording below; backup/key/file/
+audit integrity, TC-085, retention/legal hold, other operating controls and full
+downstream integration remain required. No whole-module/UAT/release approval.
+
 ## Harness alignment record
 
 | Item | Value |
@@ -2746,7 +2757,7 @@ Archived ── restore ──> Suspended
 
 ### Acceptance criteria
 
-依 `06_technical_test_cases.md` 的 mandatory technical case 取得相同 candidate、環境、資料量與門檻證據；可由使用者觀察的結果另由 UAT 驗收。
+HD-013：Sam 免除 TC-086／TC-087 正式 RPO／RTO 量測驗收並批准此部分通過（人為豁免，不是實測 PASS）；15分鐘／4小時目標仍未經正式證明。TC-085 的一致恢復集合、金鑰／檔案／audit 與其他未豁免驗收仍須取得 baseline-bound 證據。
 
 ### Failure behavior
 
