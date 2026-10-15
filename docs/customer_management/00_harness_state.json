@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 163,
+  "revision": 164,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "DESIGN_AND_PLAN",
   "status": "BLOCKED",
@@ -11,7 +11,7 @@
   "baseline": {
     "design": "8462e9c2bc9909f413bb0063de29b44bcbe205d8bfd1209c254ff5d1090f9944",
     "plan": "55ea357b07fb39cc1131b61757b95ca4aa07b246a8dbabfddfecb914e79ba247",
-    "code_commit": "3faf93e57892577c03d7bc6d7ba62e23963941e2",
+    "code_commit": "0e34f11afd829414021a5e24475604788df142d9",
     "source_fingerprint": "013351d743371a72bcfc3b30fc6eafe6b0435ad62cd9f4533817f1ae9df48535",
     "worktree": "/private/tmp/erp-customer-capacity-requirement-50k-20",
     "default_commit": "3faf93e57892577c03d7bc6d7ba62e23963941e2",
@@ -3585,16 +3585,16 @@
       "kind": "GIT_PUSH",
       "target": "github:crazysumsum/erp-app:refs/heads/codex/customer-capacity-requirement-50k-20",
       "idempotency_key": "customer-capacity-requirement-50k-20-push-v1",
-      "status": "PLANNED",
-      "source_ref": "Sam explicitly requests capacity requirement amendment; standing autonomous continuation/publication authorization. Documentation-only design/plan change; no new product/test execution or acceptance."
+      "status": "CONFIRMED",
+      "source_ref": "Pushed documentation-only reviewed candidate0e34f11afd829414021a5e24475604788df142d9 to codex/customer-capacity-requirement-50k-20. No product/test execution or acceptance; state-only publication reconciliation follows."
     },
     {
       "id": "EXT-PR-067",
       "kind": "PULL_REQUEST",
       "target": "github:crazysumsum/erp-app:main<-codex/customer-capacity-requirement-50k-20",
       "idempotency_key": "customer-capacity-requirement-50k-20-pr-v1",
-      "status": "PLANNED",
-      "source_ref": "Publish reviewed capacity requirement/design/plan revision for exact-baseline approval. Do not merge or modify executable test gates before the new approval; preserve previous failure and all non-amended gates."
+      "status": "CONFIRMED",
+      "source_ref": "GitHub PR #230 created: https://github.com/crazysumsum/erp-app/pull/230. Documentation-only revision remains OPEN for HD-010 exact-baseline approval; do not merge/change executable test gates before approval. Previous failure/non-amended gates preserved."
     },
     {
       "id": "MODE-CHANGE-162",
@@ -3633,5 +3633,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Independent review REV-045 approved; publish the documentation-only 50k/20-worker/p95<=5s amendment PR, leaving it open for HD-010. Obtain explicit approval of DESIGN8462e9c2bc9909f413bb0063de29b44bcbe205d8bfd1209c254ff5d1090f9944 and PLAN55ea357b07fb39cc1131b61757b95ca4aa07b246a8dbabfddfecb914e79ba247 before re-entering IMPLEMENT to align executable capacity tests and rerun. Old approvals remain historical, not rebound. PR #228 is already merged/cleaned; never replay EXT-MERGE-065. DEF-034001 stays HIGH OPEN and TASK-034 BLOCKED; actual plan/index checks, full downstream integration and production DR remain required."
+  "next_safe_action": "PR #230 is OPEN and REV-045 approved the documentation revision. Await HD-010 explicit approval of DESIGN8462e9c2bc9909f413bb0063de29b44bcbe205d8bfd1209c254ff5d1090f9944 and PLAN55ea357b07fb39cc1131b61757b95ca4aa07b246a8dbabfddfecb914e79ba247 before merge or re-entering IMPLEMENT to align executable capacity tests and rerun. Old approvals remain historical, not rebound. Keep the branch/worktree for this open PR. Generic PLAN_READY remains BLOCKED, including the pre-existing evidence-path/base mismatch documented in09_traceability_validation.md. PR #228 is already merged/cleaned; never replay EXT-MERGE-065. DEF-034001 stays HIGH OPEN and TASK-034 BLOCKED; actual plan/index checks, full downstream integration and production DR remain required."
 }
