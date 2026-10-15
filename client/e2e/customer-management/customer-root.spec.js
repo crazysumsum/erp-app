@@ -426,3 +426,34 @@ for (const olderOutcome of ["success", "error"]) {
     expect(problems).toEqual([]);
   });
 }
+
+test("@technical DEF-034002 latest search failure retries with current URL state and resets the page once", async ({ page }) => {
+  const problems = collectConsole(page, { ignore: ["status of 500"] });
+  const requests = [];
+  let failSearch = true;
+  await installSearchApi(page, async ({ route, query, respond }) => {
+    requests.push(Object.fromEntries(new URL(route.request().url()).searchParams));
+    if (!query || !failSearch) return respond([customer]);
+    failSearch = false;
+    await route.fulfill({ status: 500,
+      headers: { "content-type": "application/json", "access-control-allow-origin": "http://127.0.0.1:5204" },
+      body: JSON.stringify({ success: false, error: { code: "INTERNAL_ERROR", message: "Latest search failed" } }) });
+  });
+  await page.goto("/customers?page=3&sortBy=code&descending=false");
+  await expect(page.getByRole("link", { name: "查看 CUS-007 詳情" })).toBeVisible();
+  await page.getByPlaceholder("搜尋代碼、名稱、電話、電郵或識別資料").fill("Evergreen");
+  await expect(page.getByText("Latest search failed", { exact: true })).toBeVisible();
+  expect(requests).toHaveLength(2);
+  expect(requests[1]).toMatchObject({ q: "Evergreen", page: "1", sortBy: "code", sortDirection: "asc" });
+  const retryUrl = page.url();
+  await page.getByRole("button", { name: "重試", exact: true }).click();
+  await expect(page.getByRole("link", { name: "查看 CUS-007 詳情" })).toBeVisible();
+  await expect(page.getByText("Latest search failed", { exact: true })).toHaveCount(0);
+  expect(page.url()).toBe(retryUrl);
+  expect(requests[2]).toEqual(requests[1]);
+  await page.reload();
+  await expect(page.getByRole("link", { name: "查看 CUS-007 詳情" })).toBeVisible();
+  await expect(page.getByPlaceholder("搜尋代碼、名稱、電話、電郵或識別資料")).toHaveValue("Evergreen");
+  expect(requests.at(-1)).toEqual(requests[1]);
+  expect(problems).toEqual([]);
+});
