@@ -1,5 +1,15 @@
 # Customer Management Aligned Development Plan
 
+## HD-013 — Approved RPO/RTO acceptance exception
+
+Sam: `RPO/ RTO 不用做驗收了，我批準通過。` TC-086/087 are no longer
+mandatory/blocking formal acceptance cases (human-approved waiver, not measured
+PASS). Historical timing targets/evidence are retained. This overrides the timing
+gate in PHASE-004/TASK-035 below only. TASK-035 stays IN_PROGRESS for backup/key/
+file/audit integrity, real provider reconciliation and remaining Operations/Security
+evidence. TASK-030/031/032/034/full downstream acceptance stay BLOCKED; TASK-036
+PENDING. No production, whole-module acceptance, release or CI exception is granted.
+
 ## Capacity amendment — HD-009 (2026-10-15)
 
 Use 50,000 Customers, 20 concurrent workers and standard-query p95 <=5s for the
@@ -932,7 +942,7 @@ Files/scope: backup manifests, isolated restore, smoke/runbook/report. Dependenc
 
 ### Acceptance criteria
 
-RPO<=15m, RTO<=4h; correct keys/files/audit/provider references; missing key fails closed.
+HD-013: formal RPO<=15m/RTO<=4h measurement acceptance is WAIVED_BY_HUMAN / APPROVED by Sam, not technically proven. Correct keys/files/audit/provider references and missing-key fail-closed behavior remain mandatory; no other TASK-035 completion gate is waived.
 
 ### Definition of Done
 

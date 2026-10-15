@@ -115,7 +115,7 @@ Completion requires all P0 PASS, no open S1/S2, every P1 executed or documented 
 
 Business acceptance covers FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013, FR-014, FR-015, FR-016, FR-017, FR-018, FR-019, FR-020, FR-021, FR-022, FR-023, FR-024, FR-025, FR-026, FR-027, FR-028, FR-029, FR-030, FR-031, FR-032, FR-033, FR-034, FR-035, FR-036, FR-037, FR-038, FR-039, FR-040, FR-041, FR-042, FR-043, FR-044, FR-045, FR-046, FR-047, FR-048, FR-049, FR-050, FR-051, FR-052, FR-053, FR-054, FR-055, FR-056, FR-057, FR-058, FR-059, FR-060, FR-061, FR-062, FR-063, FR-064, FR-065, FR-066, FR-067, FR-068, FR-069, FR-070, FR-071, FR-072, FR-073, FR-074, FR-075, FR-076, FR-077, FR-078, FR-079, FR-080, FR-081, FR-082, FR-083, FR-084, FR-085, FR-086, FR-087, FR-088, FR-089, FR-090, FR-091, FR-092, FR-093, FR-094, FR-095, FR-096, FR-097, FR-098, FR-099, FR-100.
 
-User-observable security coverage includes SEC-001, SEC-002, SEC-003, SEC-004, SEC-005, SEC-006, SEC-007, SEC-008, SEC-009, SEC-012, SEC-013 and SEC-014. Encryption, runtime DB privilege, RPO/RTO and other purely technical controls are UAT `N/A` and remain covered by Technical Tests.
+User-observable security coverage includes SEC-001, SEC-002, SEC-003, SEC-004, SEC-005, SEC-006, SEC-007, SEC-008, SEC-009, SEC-012, SEC-013 and SEC-014. Encryption, runtime DB privilege, RPO/RTO and other purely technical controls are UAT `N/A`. HD-013: Sam waived TC-086/087 formal timing acceptance and approved that narrow subset, without measured PASS or business UAT/release approval. Other purely technical controls remain covered by required Technical Tests.
 
 <!-- HARNESS_V2_FORMAL_DEFINITIONS -->
 

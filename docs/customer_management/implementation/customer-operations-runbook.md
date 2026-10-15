@@ -149,6 +149,15 @@ purge or production restore.
 
 ## Formal operations / recovery readiness — 2026-10-15
 
+Current HD-013 decision supersedes the RPO/RTO acceptance blockers in this historical
+assessment: Sam explicitly stated `RPO/ RTO 不用做驗收了，我批準通過。` TC-086/087
+formal measurement acceptance is WAIVED_BY_HUMAN / APPROVED, not technical PASS;
+the timing objectives remain NOT_PROVEN and no further timing acceptance run is
+required. Timing measurement alone must no longer block Customer acceptance.
+Backup/key/file/audit integrity, other operating/security controls, real downstream
+reconciliation, whole-module acceptance and release gates are not waived. TASK-035
+therefore remains IN_PROGRESS; full downstream integration stays BLOCKED.
+
 Latest observed main is `80aee6561a3c51d44d3aec04b280f46cef40adbe` (PR238).
 Its actual merge/cleanup receipt is
 [comment6187285228](https://github.com/crazysumsum/erp-app/pull/238#issuecomment-6187285228).
