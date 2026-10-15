@@ -3,6 +3,7 @@ import { nextTick, reactive, ref } from "vue";
 import { confirm } from "@/framework/ui/confirm.js";
 import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
 import supplierService from "@/services/supplier.js";
+import { useMoreChildRows } from "./useMoreChildRows.js";
 
 const props = defineProps({
   supplierId: { type: Number, required: true },
@@ -11,6 +12,7 @@ const props = defineProps({
   canManage: { type: Boolean, default: false }
 });
 const emit = defineEmits(["refresh"]);
+const { rows, total, hasMore, loading: loadingMore, loadMore } = useMoreChildRows(() => props.addresses, (page) => supplierService.listAddresses(props.supplierId, page));
 
 const PURPOSES = Object.freeze([
   ["registered", "註冊地址"], ["office", "辦公地址"], ["ordering", "採購地址"],
@@ -104,9 +106,9 @@ function purposeText(address) {
       <h2 id="supplier-addresses-heading" class="text-h6 q-ma-none">地址</h2>
       <q-btn v-if="canManage" color="primary" flat icon="add" label="新增地址" @click="openCreate" />
     </div>
-    <div v-if="!addresses.length" class="text-grey-7">尚未設定地址</div>
+    <div v-if="!rows.length" class="text-grey-7">尚未設定地址</div>
     <q-list v-else bordered separator>
-      <q-item v-for="address in addresses" :key="address.id">
+      <q-item v-for="address in rows" :key="address.id">
         <q-item-section>
           <q-item-label>{{ address.label }} <q-badge v-if="address.status === 'inactive'" color="grey" label="已停用" /></q-item-label>
           <q-item-label caption>{{ [address.addressLine1, address.city, address.countryCode].filter(Boolean).join("，") || "未填地址內容" }}</q-item-label>
@@ -118,6 +120,12 @@ function purposeText(address) {
         </q-item-section>
       </q-item>
     </q-list>
+    <div v-if="hasMore || total !== null" class="row items-center q-gutter-sm q-mt-sm">
+      <span class="text-caption text-grey-7" role="status">
+        已顯示 {{ rows.length }} 個地址{{ total === null ? "，可能還有更多" : `，共 ${total} 個` }}
+      </span>
+      <q-btn v-if="hasMore" flat dense color="primary" label="載入更多地址" :loading="loadingMore" @click="loadMore" />
+    </div>
 
     <q-dialog v-model="dialogOpen" persistent>
       <q-card style="width: min(760px, 96vw); max-width: 760px">

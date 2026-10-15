@@ -1,0 +1,50 @@
+{
+  "touchedBanks": 146,
+  "results": [
+    {
+      "name": "list request carries the filters as HK day bounds (browser in New York)",
+      "ok": true,
+      "detail": "{\"page\":\"1\",\"pageSize\":\"20\",\"currencyCode\":\"USD\",\"missingBank\":\"true\",\"createdFrom\":\"1697472000000\",\"createdTo\":\"1697558399999\",\"sortBy\":\"updatedAt\",\"descending\":\"true\"}"
+    },
+    {
+      "name": "API total equals a direct DB count",
+      "ok": true,
+      "detail": "api 21 db 21"
+    },
+    {
+      "name": "pager shows the same total",
+      "ok": true,
+      "detail": "Records per page: 20 arrow_drop_down 1–20 of 21 chevron_left chevron_right"
+    },
+    {
+      "name": "reload restores the filters and the same result",
+      "ok": true,
+      "detail": "http://127.0.0.1:5173/suppliers?page=1&sortBy=updatedAt&descending=true&currencyCode=USD&missingBank=true&createdFrom=2023-10-17&createdTo=2023-10-17"
+    },
+    {
+      "name": "export has the same rows as the filtered list",
+      "ok": true,
+      "detail": "csv rows 21"
+    },
+    {
+      "name": "detail contact tab says 100+",
+      "ok": true,
+      "detail": "聯絡人 (100+)"
+    },
+    {
+      "name": "load more reaches every contact in the DB",
+      "ok": true,
+      "detail": "已顯示 115 個聯絡人，共 115 個 after 1 click(s)"
+    },
+    {
+      "name": "the last contact by sort order is on screen",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "no console errors or failed responses",
+      "ok": true,
+      "detail": "[]"
+    }
+  ]
+}

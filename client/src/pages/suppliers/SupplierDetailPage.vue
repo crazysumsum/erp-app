@@ -24,6 +24,7 @@ import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
 import { mapValidationDetailsToFieldErrors, unmatchedFieldErrors } from "@/framework/ui/validationIssues.js";
 import supplierService from "@/services/supplier.js";
 import { useSessionStore } from "@/stores/session.js";
+import { DETAIL_CHILD_LIMIT } from "@/components/suppliers/useMoreChildRows.js";
 
 const STATUS_LABEL = Object.freeze({
   draft: "草稿", pending_approval: "待審批", active: "啟用", suspended: "已暫停",
@@ -312,6 +313,11 @@ watch(() => route.params.id, () => {
   Object.assign(codeForm, { supplierCode: "", reason: "", password: "" });
   void load();
 });
+
+// 詳情讀滿 100 筆即係可能仲有，面板入面可以載入更多（HD-107 G5）。
+function childCount(rows) {
+  return rows.length === DETAIL_CHILD_LIMIT ? `${DETAIL_CHILD_LIMIT}+` : rows.length;
+}
 </script>
 
 <template>
@@ -345,8 +351,8 @@ watch(() => route.params.id, () => {
 
         <q-tabs v-model="tab" align="left" active-color="primary" class="q-mb-md">
           <q-tab name="overview" label="概覽" />
-          <q-tab name="addresses" :label="`地址 (${supplier.addresses.length})`" />
-          <q-tab name="contacts" :label="`聯絡人 (${supplier.contacts.length})`" />
+          <q-tab name="addresses" :label="`地址 (${childCount(supplier.addresses)})`" />
+          <q-tab name="contacts" :label="`聯絡人 (${childCount(supplier.contacts)})`" />
           <q-tab name="identifiers" :label="`識別資料 (${supplier.identifiers.length})`" />
           <!--
             冇數字：supplier detail 個 bankAccounts 恒空（toSupplierDetailResponse
@@ -357,7 +363,8 @@ watch(() => route.params.id, () => {
           <q-tab name="skuRelations" label="供貨關係" />
         </q-tabs>
 
-        <q-tab-panels v-model="tab" animated>
+        <!-- 轉 tab 唔好丟咗「載入更多」載入咗嘅地址／聯絡人（REV-095 L-2）；其他 panel 照舊每次重新掛載。 -->
+        <q-tab-panels v-model="tab" animated keep-alive keep-alive-include="addresses,contacts">
           <q-tab-panel name="overview" class="q-pa-none">
             <div class="row q-gutter-sm q-mb-md">
               <q-btn v-if="canManage && !editing && supplier.status !== 'archived'" color="primary" label="編輯一般資料" @click="startEdit" />

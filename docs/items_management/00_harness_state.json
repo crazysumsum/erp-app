@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "item-management",
-  "revision": 217,
+  "revision": 227,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,11 +11,11 @@
   "baseline": {
     "design": "3daef7460516dd7e24d5db5575a1b580dbc81f078d31a1c54867192bc1904a66",
     "plan": "be063ddf5ad07c545f6e4b83f3d973ac01aaddc1f59b055101d5bb1c68c676ea",
-    "code_commit": "1b1bf7ba14af7f1e4a03ad0cf7a9b68ec93acfda",
-    "source_fingerprint": "adf5521eef7a0259ab27f09e7194481c7b9ee554d9461545c4cbe9c8f51e51e4",
+    "code_commit": "24ac4fd577fd2e31a8cb43502ba9b8cf602f31ca",
+    "source_fingerprint": "cef6381b70fe700b20dabe65ee908731004930d1540dfc6b43804807d2235480",
     "worktree": "LOCAL_ONLY_NON_LIVE: actual workspace retained privately; reconcile before resuming execution",
-    "default_commit": "48ba4b7f03eabf776e26c3a9a4d3b0b3d58495d2",
-    "mode_entry_commit": "1b1bf7ba14af7f1e4a03ad0cf7a9b68ec93acfda"
+    "default_commit": "52bb48ad35f1da41508c7bf608af4e67c630dae9",
+    "mode_entry_commit": "24ac4fd577fd2e31a8cb43502ba9b8cf602f31ca"
   },
   "runtime": {
     "instance_id": "LOCAL_ONLY_NON_LIVE",
@@ -1766,6 +1766,52 @@
         "formal-UAT-separate"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-084",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Current user explicitly approved limitedP2 push candidate24ac4fd5/update existingDraftPR236; disclose integrated48 notlatestmain; onlyreviewedItemcontents/sanitizedsummaries; no rawexport/gatechanges/protectionbypass/merge/cleanup; DEF107GRBLOCKED/UATseparate.",
+      "recorded_at": "2026-10-15T09:35:45.655259Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "be063ddf5ad07c545f6e4b83f3d973ac01aaddc1f59b055101d5bb1c68c676ea",
+      "code_commit": "24ac4fd577fd2e31a8cb43502ba9b8cf602f31ca",
+      "scope": [
+        "item-management",
+        "PHASE-010",
+        "TASK-048",
+        "HD-034",
+        "HistoricalP2 exact24ac push/Draft236 descriptionupdate only actuallycompleted; notnewP2/P3",
+        "no-raw-export",
+        "DEF107-GR-BLOCKED",
+        "formal-UAT-separate"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-085",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Actual current Sam user approved limited P1 from24ac4fd5 integrate exactmain52bb48ad; NEWexclusiveMySQL/existingmigrations/testtransientDDL, originalfourcompletechecks, reviewedItemPlaywright contract thenactualbrowser, independentreview andconditionalLOCALcandidate. No product/test/assertion/threshold/coregatechanges; no push/PRupdate/mainmerge/branchworktreecleanup/rawexport; DEF107GRBLOCKED/formalUATseparate.",
+      "recorded_at": "2026-10-15T09:35:45.655387Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "be063ddf5ad07c545f6e4b83f3d973ac01aaddc1f59b055101d5bb1c68c676ea",
+      "code_commit": "24ac4fd577fd2e31a8cb43502ba9b8cf602f31ca",
+      "scope": [
+        "item-management",
+        "PHASE-010",
+        "TASK-048",
+        "HD-035",
+        "P1 local-only exact24ac→52; nativeoriginal4+reviewedItembrowser supplement, no generic/formalcredit",
+        "no-raw-export",
+        "DEF107-GR-BLOCKED",
+        "formal-UAT-separate"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -3388,6 +3434,114 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-139",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
+      "reviewed_baseline": "be063ddf5ad07c545f6e4b83f3d973ac01aaddc1f59b055101d5bb1c68c676ea",
+      "source_ref": "Actual prior exactv2privacyreview APPROVED state6ae3/controlb2b5/mapf58b 356exactfinalfieldmappings/40pointers/22Itempaths/publicb27a057ba1b ancestry; v1map8overridefinding andv2controlcollision preserved privately, correctedmapper1ea859/preflight e8fd/observe16bc. Actualcandidate24ac receipt805f verifiesparents1b48/treec07/sourceadf/committedblobs/stoppedruntime. ActualP2body/guard and CLI403remediation independentlyreviewed and completed; journal retainsallapprovals/failures. No newP2P3/acceptance.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-140",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
+      "reviewed_baseline": "be063ddf5ad07c545f6e4b83f3d973ac01aaddc1f59b055101d5bb1c68c676ea",
+      "source_ref": "Actual separate new preintegration APPROVED exact52→24, noP0P1blocker.29SupplierCustomerdocs/UI/tests only/noItemsharedcomponentmigrationprofileCIpackage change. Original3Itempins and22Itempaths unchanged. AlluntrackedItemevidence preserved; adoptunchangedtargetancestry only/no othermodulefix. NotSuppliercorrectness/testPASS. Freshselectedcatalog/runtime/native/browserreviews beforeexecution; noP2P3/export/UAT.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-141",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=3d258e48dbbc146eea06cfe25b9820a2b2d7c0243bc075d247168e2b24ef1395",
+      "reviewed_baseline": "be063ddf5ad07c545f6e4b83f3d973ac01aaddc1f59b055101d5bb1c68c676ea",
+      "source_ref": "Actualnativepreexec APPROVED no blockingfindings HEAD24ac/MERGE52bb/indexcc9/sourcecef/PLANbe063/state219/APR085HD035;29exactadoptedtargetblobs/3Itempins/migration0082 unchanged. Catalog265113 all144filehashes/139unchanged, prior872clientallretained+21unique17literal4parameterized=893,no removalrename;server538/14TC019 unchanged. Exactruntime89e1f1 selfSHA/preDDLordinarysoleDEF107/empty700freshMySQL/authbindings; native761b59 original4+oneserverSETUPONLY/exactJUnit/0skip/requiredIDs/strictobserver/redaction/sourceintegrationfences/ownedSOCKET unchanged; selfcheck7f9e/supporte653/verifier3bf76mechanicallyboundandexpected221. Executiononlyaftercheckpoint; no actualPASS/candidate/P2P3/formal/globalcredit.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-142",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
+      "reviewed_baseline": "be063ddf5ad07c545f6e4b83f3d973ac01aaddc1f59b055101d5bb1c68c676ea",
+      "source_ref": "Actualbrowserpreexec contract2612 P1 staleHD033authority in paragraph; neverexecuted, correctedtoHD035/APR085 beforeREV143. HistoricalarchiveHD033 retainedonlyasprovenance.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-143",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
+      "reviewed_baseline": "be063ddf5ad07c545f6e4b83f3d973ac01aaddc1f59b055101d5bb1c68c676ea",
+      "source_ref": "Actualseparatereview correctedcontract8483ee98803d2e95bf9ad8e693ecfd779fea44ed5d0b957273c8f929777fa547/controlfff2450709c07d24c97ca9ac46fdca9d11bb995ec1d573c047385964de56cc66/auth0c1b633b+casepins/stop00e0c8263fd653e7c36ee6c16e8b42b3adcda3f506eb4c81b4d45d7fa8592d42 APPROVED. Samefresh25realAPIfixture200mspace/no429whitelist/realsignedleastprivilege/external700nonlink600actions/1200deadline/stopfirstfailure. OwnednativeonlySQL/socket/PIDstartgroup/SIGTERM/mysqladminretention fences. Supportingcaptureguard actual4positive3negativePASS no suitecredit. Separateexactstartupreview neededafter4nativePASS; no browserexecutionresultimplied.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-144",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=3d258e48dbbc146eea06cfe25b9820a2b2d7c0243bc075d247168e2b24ef1395",
+      "reviewed_baseline": "be063ddf5ad07c545f6e4b83f3d973ac01aaddc1f59b055101d5bb1c68c676ea",
+      "source_ref": "Actualseparate native reviewAPPROVED summaryb9d682a5237e40fc2140f22d090238006912bde7d09b2ffaf457158ef907ce03 HEAD24ac4fd577fd2e31a8cb43502ba9b8cf602f31ca sourcecef6381b70fe700b20dabe65ee908731004930d1540dfc6b43804807d2235480 MERGE52/indexcc9/PLANbe063/state221. Allrecord/artifactSHA+sizes independentlyverified;893client538serveruniquecompleteXML/exactcatalog/no errorfailureskip/recordleafresults/all16IDs14TC019; setup7c63 distinct538/supporta366 noextra suitecredit. Bothsetup/finalstrictDBoldTTLrowequality/+10nonce+34completed201boundedTTLs/91tablesDDLidentityPID/allothercounts unchanged; setup11zeroedjobs/finalpreservesexactvalues. Sourceheadspecindex/helper/runtimebindings/3Itempins unchanged. NonfailingVitechunk/jsdomnavigationlocalStoragescrollTowarnings retained; native-only noformal/browser/CI/global/candidate credit.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-145",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
+      "reviewed_baseline": "be063ddf5ad07c545f6e4b83f3d973ac01aaddc1f59b055101d5bb1c68c676ea",
+      "source_ref": "Actualexactstartup58d288700ce12980ba8c20c450eb58be0e5dfc67b2c674a4283373b15212aa92 preexecseparateAPPROVED noP0P1; correctlybound24ac52/sourcecef/APR085HD035/actualREV144/summaryb9d682/supporta366/contract8483/auth0c1b. Preserves exactselfSHA/ordinarysoleDEF107preflight/liveownedPIDpssocketdatadirSQLidentity/newseparateUI/privateowner700nonlinkfences beforeDDL/logwrite; newrandomcredentials/realAPIhealth/Viteownedstrictport/authfixtureonly; privateSTARTEDbeforeDDL. No startup/browser resultclaimed.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-146",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=3d258e48dbbc146eea06cfe25b9820a2b2d7c0243bc075d247168e2b24ef1395",
+      "reviewed_baseline": "be063ddf5ad07c545f6e4b83f3d973ac01aaddc1f59b055101d5bb1c68c676ea",
+      "source_ref": "Actualfinal separate P1Gsource/browser/evidence/report/state225 reviewAPPROVED no blockingfindings; head24/MERGE52/sourcecef/indexcc9/PLANbe063/3Itempins/29exacttargetblobs unchanged; only2authoredItemdocs. Exactly16soleattemptbrowserphases/18commandsall0/allstdoutstderr+external600nonlinkactionhashes/owned700root/exactfff245+8483+runtime89aba6e2/session/source bindings;46.60s<1200. RealAPI25ItemSKU/25uniqueidem/contractcases02..10/diagnostics18b8d25c zero unexpectedconsolepagenetwork+onepending403+onecontrolledabort/close0fd10159 exact. Startupnative91snapshot matchesfinalserver snapshot countsPIDidentitynormalizedDDL; exactreviewedstop00e0 receipt9eb68a00 STOPPED_RETAINED/PIDssocketabsent/nativeequal/privatefiles retained. State225 distinctCONFIRMED CHECKS/UI/BROWSER/STOP ledger/reportHD035/REV142→143 correction/40pointers/DEF107HIGHOPEN/TASKINPROGRESS honest; noformalCIUAT/global/candidate credit.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-147",
+      "method": "SEPARATE_AGENT",
+      "author": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=94a6b447580330f9f2b609422537b04239ff3a39df9137e32efd559f1a2935cb",
+      "reviewer": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=26845f43c49d5a357d022dada15c9f3ce681f60bc2cac980ef7db13140233cd7",
+      "reviewed_baseline": "be063ddf5ad07c545f6e4b83f3d973ac01aaddc1f59b055101d5bb1c68c676ea",
+      "source_ref": "Actualseparate portable-generation/candidateguard precheckAPPROVED noP0P1 exactmapper6378c06a48357122523bf03ec11687d122033f6a0e8d91fe90a96ba99b166959/preflightdb6db69dcd32c490fcc757157c92bdb4bb288efd59a608348f9b7616e36d83a4/observerca827a95138e4b6312ed74289f84cf736ca70a09ecff2dce4fdb7cc6e956e27e. Raw226→candidate227/sourcecef/indexcc9/parents24+52/stoppedreceipt9eb/full22blobset/selfSHAmapper-preflightchain/publicb27a057ba1b24NEW ancestry/finalfieldmapping assertions/IDsstatuses40pointers preserved. Onlyprivateproposal generationprecheck; exactgeneratedbytes/full22paths/newobjects stillseparateapprovalbeforeCAS/stage/localcommit. NoP2P3/export/UAT/gatechange.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -4574,6 +4728,34 @@
         "UAT-018"
       ],
       "question": "Approve onlycopy+verify thenlocalrelocateexact18untrackedP1Dprivatebrowseractionfiles (2containoldisolatedsyntheticUIloginliteral) tooneowned700privatearchive/files600, preservebytes/SHA/size/mode/originalpathmap andalloriginalstep/failedlint/40genericpointers; oldargvpathsbecomeexplicitNONLIVE withrecoverymap. Futuregeneratedbrowseractioncode outside repoESLintdiscovery. Afterindependentarchive+revisedcapturecontract review, permitonefreshexclusiveMySQL/existingmigrations/transientDDL rerunoforiginal4completecommands+ItemPlaywright frombeginning andconditionalreviewedLOCALcandidate. No product/tests/assertions/profile/lintignore/coregate/thresholdchanges, no push/PR/mainmerge/branchworktreecleanup/rawexport/UAT; DEF107GRBLOCKED. Alternativekeepallunchanged/NOTRUN andholdcandidate."
+    },
+    {
+      "id": "HD-034",
+      "impact": "MAJOR",
+      "status": "ANSWERED",
+      "answer_ref": "Current user explicitly approved limitedP2 push candidate24ac4fd5/update existingDraftPR236; disclose integrated48 notlatestmain; onlyreviewedItemcontents/sanitizedsummaries; no rawexport/gatechanges/protectionbypass/merge/cleanup; DEF107GRBLOCKED/UATseparate. APR-084",
+      "question": "HistoricalP2 exact24ac push/Draft236 descriptionupdate only actuallycompleted; notnewP2/P3",
+      "affected_ids": [
+        "PHASE-010",
+        "TASK-048",
+        "TC-019",
+        "UAT-018",
+        "DEF-107"
+      ]
+    },
+    {
+      "id": "HD-035",
+      "impact": "MAJOR",
+      "status": "ANSWERED",
+      "answer_ref": "Actual current Sam user approved limited P1 from24ac4fd5 integrate exactmain52bb48ad; NEWexclusiveMySQL/existingmigrations/testtransientDDL, originalfourcompletechecks, reviewedItemPlaywright contract thenactualbrowser, independentreview andconditionalLOCALcandidate. No product/test/assertion/threshold/coregatechanges; no push/PRupdate/mainmerge/branchworktreecleanup/rawexport; DEF107GRBLOCKED/formalUATseparate. APR-085",
+      "question": "P1 local-only exact24ac→52; nativeoriginal4+reviewedItembrowser supplement, no generic/formalcredit",
+      "affected_ids": [
+        "PHASE-010",
+        "TASK-048",
+        "TC-019",
+        "UAT-018",
+        "DEF-107"
+      ]
     }
   ],
   "external_actions": [
@@ -6016,6 +6198,78 @@
       "idempotency_key": "item-t048-p1f-stop-214",
       "status": "CONFIRMED",
       "source_ref": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=66c995a6af5c31fd50b2715fa659ba1f4ded3b22255e9d55eafa495b2f38ef6f"
+    },
+    {
+      "id": "item048-p2-24ac4fd5-push",
+      "kind": "OTHER",
+      "target": "24ac4fd577fd2e31a8cb43502ba9b8cf602f31ca -> refs/heads/codex/item-task048-publication",
+      "idempotency_key": "item048-p2-24ac4fd5-single-topic-ff-20261015",
+      "status": "CONFIRMED",
+      "source_ref": "Actualnormalnonforce singlebranchpush exit0 plus Gitadvertisedtopic and trustedPR236 head exactcandidate; OPEN/DRAFT/main/noauto-merge observed. privateP2journalSHA0977a818cac325cf2927c72c3c320fa146a423be3feb39863848ec56fe666617; connector403preserved/sameauthorizedghCLIbodyroute, no gate/protectionchange/merge/cleanup/export."
+    },
+    {
+      "id": "item048-p2-24ac4fd5-body",
+      "kind": "OTHER",
+      "target": "PR236 descriptiononly exactsanitizedbodySHAe3c1798dc93f60f447d6e1a9f5311d387be2fbb21e1d054da8416fce288aab60",
+      "idempotency_key": "item048-p2-24ac4fd5-PR236-body-20261015",
+      "status": "CONFIRMED",
+      "source_ref": "TrustedGitHubPR reread exactnewbody/head/OPEN/DRAFT/main/noauto-merge/mergednull; historicalbody preserved as superseded. privateP2journalSHA0977a818cac325cf2927c72c3c320fa146a423be3feb39863848ec56fe666617; connector403preserved/sameauthorizedghCLIbodyroute, no gate/protectionchange/merge/cleanup/export."
+    },
+    {
+      "id": "ITEM-T048-P1G-INTEGRATE-218",
+      "kind": "OTHER",
+      "target": "LOCALexactmain52bb48ad35f1da41508c7bf608af4e67c630dae9 intoItem24ac4fd577fd2e31a8cb43502ba9b8cf602f31ca",
+      "idempotency_key": "item048-p1g-local52-into24-20261015",
+      "status": "CONFIRMED",
+      "source_ref": "Actual reviewed normalnoff/nocommit52→24 exit0 conflictfree,29exacttargetbytes/HEAD24/MERGE52/indexcc9e0e6904110b0b1311c39ffceb5913ae825fe9/sourcecef6381b70fe700b20dabe65ee908731004930d1540dfc6b43804807d2235480 IntegrationSHAcfb5b211cca134704649af5d5dfe35e87930a3ca2bcafaeaaf8e0cce9ac72aea; no authoredothermodule/product/testchanges/mainwrite/newcandidate."
+    },
+    {
+      "id": "MODE-CHANGE-218",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-218",
+      "status": "CONFIRMED",
+      "source_ref": "Actual Sam current approved P1:24ac integrate exact52bb;newexclusiveMySQL/original4/reviewedItemPlaywright/independentreview/localcandidateonly HD035 APR085"
+    },
+    {
+      "id": "ITEM-T048-P1G-DB-220",
+      "kind": "OTHER",
+      "target": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=b4659ab949b361b3ce4de5d9fd4e8aba60404226f3cd5fb396a60aacc136ff9f",
+      "idempotency_key": "LOCAL_ONLY_NON_LIVE: original field retained privately; sha256=7955dd1e3d9c2a51853b1444a323324e8e61241caf138a58c15e052507d2c8bd",
+      "status": "CONFIRMED",
+      "source_ref": "Actualexactreviewedruntime89e1 bootstrap/migrationexit0; observedownedversion26.7/socketdatadirPID/schema/91tables/skipnetworking1/logbin0/base-data700/config600; nooldDBreuse/newmigration. Privateproofretained."
+    },
+    {
+      "id": "ITEM-T048-P1G-CHECKS-221",
+      "kind": "OTHER",
+      "target": "Original4nativeDEVELOPER +support/oneSETUP_ONLY onnewownedP1G",
+      "idempotency_key": "item048-p1g-original4-20261015",
+      "status": "CONFIRMED",
+      "source_ref": "Actual fresh original4PASS summarySHAb9d682a5237e40fc2140f22d090238006912bde7d09b2ffaf457158ef907ce03; originalrecords/artifacts/uniquecomplete893client538server/14TC019/all16IDs/0fail0skip andstrictTTL/scheduler/schemaPIDidentity/count observer independentlyreviewedREV144. Supporta366/setupdistinct no extra/finalcredit; sourceheadPLAN/indexunchanged. Localonly/nogenericformalCIUATcredit."
+    },
+    {
+      "id": "ITEM-T048-P1G-UI-223",
+      "kind": "OTHER",
+      "target": "New separate owned P1G UI schema/account/API/Vite startup",
+      "idempotency_key": "item-t048-p1g-ui-223",
+      "status": "CONFIRMED",
+      "source_ref": "Actual reviewed startup exit0 READYrecordSHA89aba6e25b8ff41eeb7ce8176b6896c4146afc6c253a1876b6a73369d7b87139; realownedAPIhealth+Vitelogin200/processstartidentities/newseparateUIauthprereqs/native91unchanged; no Itembusinessfixtures yet."
+    },
+    {
+      "id": "ITEM-T048-P1G-BROWSER-223",
+      "kind": "OTHER",
+      "target": "Reviewed Item Playwright16phases onfreshownedP1G",
+      "idempotency_key": "item-t048-p1g-browser-223",
+      "status": "CONFIRMED",
+      "source_ref": "Actual16phasesCOMPLETE/commands0/exactheadsourcePLAN/control/session/runtime; seedSHAb49b429926be5d2aa1f7f1e7a3ea27da805bc7a1a2049454077c8275bb986b38 diagnosticsSHA18b8d25cc633eee6ef804507f86354f4c9bc6bfa852da20944360bcca23ff813 closeSHA0fd1015919e526429df4d887674c2670fb10f6d14fd2ca2d4acb9250bc0a5533;25realAPIItemSKU/25uniqueidem/0unexpectedconsolepagenetwork/1expectedpending403+1controlledabort/1200deadline; actualrecordsprivateonly/noformalcredit."
+    },
+    {
+      "id": "ITEM-T048-P1G-STOP-223",
+      "kind": "OTHER",
+      "target": "Graceful stop only owned P1G browser/API/Vite/MySQL; retainfiles",
+      "idempotency_key": "item-t048-p1g-stop-223",
+      "status": "CONFIRMED",
+      "source_ref": "Actual reviewedownedstop receiptSHA9eb68a00cb793811cf5bdb81e35148f301ccdde063461401302e0d99a2bd00c5 STOPPED_RETAINED/native91tablecountDDLidentityPIDequal beforeafterbrowser/appshutdown; socketPIDabsent/SIGTERM-only/dataconfigarchiveevidence/branchworktree retained. No cleanup/export."
     }
   ],
   "evidence_files": [
@@ -6216,5 +6470,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "HD033 P1 local preparation only. This sanitized NON_LIVE portable precommit checkpoint is not a live execution or clean-checkout PASS. Four original complete developer checks and reviewed real Item browser supplement actually passed on frozen source integrated to exact48ba4b7f; original HD032 lint failure, exact18 recoverable private archive and rejected-before-execution helper findings remain preserved; fresh HD033 browser needed no failed-phase continuation. Actual final reviews/pending-integration facts and subsequent candidate receipt/workspace/stopped-runtime/native proof/original-state mapping retained LOCAL_ONLY. Exact candidate observed only after local commit. Reconcile before resuming. No P2/P3/push/PRupdate/mainmerge/CI/export/branchworktreecleanup/formal acceptance authority; DEF107 HIGH/OPEN/GR/global BLOCKED, TASK043048 IN_PROGRESS, formal UAT separate."
+  "next_safe_action": "HD035 P1 local preparation only. This sanitized NON_LIVE portable precommit checkpoint is not a live execution or clean-checkout PASS. Four original complete developer checks and reviewed real Item browser supplement actually passed on frozen source integrated to exact52bb48ad; original HD032 lint failure, exact18 recoverable private archive and rejected-before-execution helper findings remain preserved; fresh HD035 browser needed no failed-phase continuation. Actual final reviews/pending-integration facts and subsequent candidate receipt/workspace/stopped-runtime/native proof/original-state mapping retained LOCAL_ONLY. Exact candidate observed only after local commit. Reconcile before resuming. No P2/P3/push/PRupdate/mainmerge/CI/export/branchworktreecleanup/formal acceptance authority; DEF107 HIGH/OPEN/GR/global BLOCKED, TASK043048 IN_PROGRESS, formal UAT separate."
 }
