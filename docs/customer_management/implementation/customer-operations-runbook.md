@@ -112,9 +112,25 @@ not the TC-081 role, and supplies the transaction helper's policy snapshot fixtu
 without changing the shared settings singleton. It does not certify least-privilege
 Currency locking, the public settings/submission path or deployed role policy. All fixture
 data/account cleanup is owner scoped; a failed cleanup is a failed test, not PASS.
+The extended fixture also exercises real nullable-currency bank create/list/reveal/
+update/deactivate, encrypted persistence, masked responses and correlated append-only
+audit. Withdrawing bank-view permission or audit INSERT must deny plaintext without
+changing the bank row. Corrupting the stored GCM tag must yield safe422 plus one fixed,
+correlated unreadable event; the capture is not a real alert receiver.
+
+The fixture drops only its random SQL account and explicitly kills only its enumerated
+connections after verifying their exact user and schema. It asserts the held connection
+is unusable, new login is denied and no fixture account/session remains. This verifies
+local revocation mechanics, not deployed emergency-access policy. [MySQL DROP USER](https://dev.mysql.com/doc/refman/8.4/en/drop-user.html)
+does not terminate already connected sessions; [KILL CONNECTION](https://dev.mysql.com/doc/refman/8.4/en/kill.html)
+is required to close those sessions explicitly.
+
 Never supply deployed administrative credentials or use this as a provisioning
 script. This local TC-081/083 subset does not prove deployed privilege separation,
-emergency access/session revocation, integrated races or full downstream readiness.
+emergency access policy, integrated races or full downstream readiness. Non-null bank
+Currency locking remains outside this narrowly granted fixture; do not add Currency
+UPDATE or global privileges to make it pass.
+See [post-waiver security results](phase-PHASE-004-report.md#post-hd-013-local-security-results).
 See [current local results](phase-PHASE-004-report.md#local-execution-results--2026-10-15).
 
 ## Unauthorized sensitive access
