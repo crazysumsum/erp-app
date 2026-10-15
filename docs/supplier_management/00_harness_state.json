@@ -1,11 +1,11 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 355,
+  "revision": 356,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
-  "status": "IMPLEMENTING",
-  "resume_status": null,
+  "status": "BLOCKED",
+  "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-004",
   "current_task": "TASK-051",
   "baseline": {
@@ -5645,6 +5645,28 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-15: 'A、C1，review 完 CI 過就 merge'."
+    },
+    {
+      "id": "HD-109",
+      "impact": "MAJOR",
+      "question": "AUTH-007 (TC-117) requires wrong types to answer 400 and booleans not to accept arbitrary truthy values. Supplier routes run with the framework default coerceTypes:true, so a JSON body is coerced before validation: activate:1 becomes true and creates an ACTIVE Supplier (observed 201 on erp_t51), supplierName:12345 becomes \"12345\", notes:true becomes \"true\", defaultPaymentTermId:\"1\" becomes 1, version:\"1\" becomes 1. Query strings stay strict for booleans (\"1\", \"yes\", \"TRUE\" refused). (A) set the existing per-route inputCoercion:false on every Supplier POST route with a JSON body (not the multipart upload, not GET), so wrong JSON types answer 400; (B) keep coercion and record it as an accepted deviation from AUTH-007; (C) like A, but also on GET routes (would break numeric query strings; not recommended).",
+      "affected_ids": [
+        "TC-117",
+        "TASK-051"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
+    },
+    {
+      "id": "HD-110",
+      "impact": "MINOR",
+      "question": "AUTH-010 (TC-120): design §6.11 lists one 404 code SUPPLIER_CHILD_NOT_FOUND for a child that is missing or belongs to another Supplier. The implementation returns one code per child type: SUPPLIER_ADDRESS_NOT_FOUND, SUPPLIER_CONTACT_NOT_FOUND, SUPPLIER_IDENTIFIER_NOT_FOUND, SUPPLIER_BANK_NOT_FOUND, SUPPLIER_SKU_RELATION_NOT_FOUND (supplierErrors.js supplierChildNotFound, since the first child commit). The client depends on none of them; server tests depend on the per-type codes. (A) keep the per-type codes and record an accepted deviation from §6.11 without editing the design, as REV-064 I-2 did for the Currency/Payment Term codes; (B) change the server to SUPPLIER_CHILD_NOT_FOUND as designed and update the tests.",
+      "affected_ids": [
+        "TC-120",
+        "TASK-051"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
     }
   ],
   "external_actions": [
@@ -6725,5 +6747,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-051 step 2b: write and tag tests for the untagged cases in testing/05_tc_test_map.md, then the missing runners, UAT IDs and T51 rehearsals; HD-057 before DONE."
+  "next_safe_action": "Await HD-109 (JSON type coercion on Supplier routes, blocks TC-117) and HD-110 (child 404 code, blocks TC-120's last assertion). Unaffected TASK-051 step 2b work may continue."
 }
