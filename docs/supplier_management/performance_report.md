@@ -319,7 +319,7 @@ The benchmark gained three operations: `list.identifierSearch`, `list.missingFil
 | Mixed, 50 users (NFR-001, NFR-005) | **Pass.** Slowest p95 is 489 ms (`forSku.nameSearch`). `list.missingFilter` p95 367 ms, p99 550 ms. `list.identifierSearch` 229 ms. | Pass. Slowest p95 438 ms. |
 | for-SKU only, worst case (NFR-005) | **Pass.** Slowest p95 1,801 ms (`forSku.nameSearch`), p99 1,967 ms. | Pass. 1,742 ms, p99 1,935 ms. |
 
-**What it costs.** The list's text searches (name, Code, identifier) got slower: p95 220 ms against 122 ms on `main`. That is the identifier subquery: each search also scans the 200,000 identifier keys, because a `%value%` match cannot use an index. A single COUNT goes from 47 ms to 91 ms.
+**What it costs.** The list's text searches (name, Code, identifier) got slower: p95 220 ms against 122 ms on `main`. That is the identifier subquery: each search also scans the 200,000 identifier keys, because a `%value%` match cannot use an index. One COUNT, timed by hand once with `EXPLAIN ANALYZE` on an idle instance at the 128 MiB pool, went from 47 ms to 91 ms. It is not in the evidence files; the digest averages in files 15 and 16 give 49.5 and 87.8 ms.
 
 Every other operation is slower too, because the heavier new operations hold the 10 pool connections longer and the rest queue behind them. At p95:
 
@@ -328,7 +328,8 @@ Every other operation is slower too, because the heavier new operations hold the
 | detail | 57 ms | 19 ms |
 | update | 217 ms | 128 ms |
 | list default | 43 ms | 25 ms |
-| `forSku.*` | 10–30% higher | |
+| `forSku.typical` | 72 ms | 24 ms |
+| other `forSku.*` | 12–34% higher | |
 
 All of them stay far under 2 s. The for-SKU worst-case run above has no list operations in it, which is why it matches `main`.
 
@@ -336,12 +337,14 @@ All of them stay far under 2 s. The for-SKU worst-case run above has no list ope
 
 1. **The for-SKU lookup does not search identifiers (HD-108 A).**
    - With the identifier subquery shared into the for-SKU search, its worst case failed: `forSku.nameSearch` p95 2,511 ms against 1,974 ms on `main` (files 07–08).
+   - That comparison is one pair of runs at the 128 MiB pool (files 07 and 08), not alternating and not repeated at 4 GiB. The direction is clear, though: +537 ms against about ±80 ms between runs in the pairs below.
    - The lookup now runs the search it had before HD-107. Four alternating runs, two of each, under the same machine load gave 2,032 and 2,113 ms on `main` against 2,067 and 2,133 ms on the branch (files 11–14). That is noise, so the lookup is unchanged.
    - This departs from HD-094 4A, which said the for-SKU search covers the list's fields: identifiers are now the one exception.
 2. **The missing-data filters stay as `NOT EXISTS` queries (HD-108 C1).**
    - When few Suppliers match, the query must check every one. Under a 128 MiB buffer pool their p95 was 1.6–1.8 s, with p99 over 2 s, across three runs (files 02–04).
    - With the 4 GiB pool they are 367 ms.
-   - The missing-contact filter no longer joins `supplier_contacts`. The primary slot only ever belongs to an active contact: deactivating clears it, and an inactive contact cannot be updated. That brought it from 724 to 124 ms on its own.
+   - The missing-contact filter no longer joins `supplier_contacts`. The primary slot only ever belongs to an active contact: deactivating clears it, and an inactive contact cannot be updated. A real-database test deactivates through the service and checks the filter, so a change to that rule shows up there.
+   - Measured once by hand with `EXPLAIN ANALYZE` (not in the evidence files): the COUNT went from 724 to 124 ms at the 128 MiB pool. REV-094 measured 241 to 129 ms at 4 GiB.
    - Denormalised flags on `suppliers` (HD-108 C2) were not built.
 
 ### Measurement notes
