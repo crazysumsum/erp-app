@@ -95,6 +95,20 @@ matched raw output to the report/JSON, reran safe guards/lint/structural checks
 and confirmed old evidence unchanged and no product/CI/acceptance waiver.
 The pre-existing HIGH product defect remains open; final-head CI is required.
 
+Before merge, main advanced to `5e121cece2d55cd60851a7c3a87712925c046968`
+(Supplier documentation and Supplier test-ID labels only). It was integrated at
+`f25e142aa1171002374521f21e1d2c2fe20a76ed` without conflict. Git comparison confirms
+no change to product source/config/schema/dependencies, test support or the executed
+Customer capacity body/fixture. Thus the raw measurement above retains its original
+baseline; it is not relabeled as a new run. Customer/safety regression,lint,build,
+traceability and boundary are rerun on the integrated candidate, and old-head CI
+cannot authorize it. New final-head CI is required.
+
+The integrated regression passed260 cases with2 explicit extended-runtime skips,
+lint/build/traceability/boundary/diff passed, and separate reviewer Jason approved
+the dependency mapping and unchanged hashes (REV-047). Prior candidate `d04a1965`
+passed all five checks in run38668569774, but this cannot authorize the new head.
+
 Against a fresh migrated task-owned schema, with ephemeral shared Customer/Supplier
 startup key rings (never committed):
 

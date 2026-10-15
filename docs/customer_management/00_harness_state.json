@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 168,
+  "revision": 169,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "8462e9c2bc9909f413bb0063de29b44bcbe205d8bfd1209c254ff5d1090f9944",
     "plan": "55ea357b07fb39cc1131b61757b95ca4aa07b246a8dbabfddfecb914e79ba247",
-    "code_commit": "892db1efefa70aa2728d53e6678fececd0cb5572",
-    "source_fingerprint": "d70da3f3ce07cd241d2dcad5406a8a68b37207a97f9257aee7a3c7027b6596bd",
+    "code_commit": "f25e142aa1171002374521f21e1d2c2fe20a76ed",
+    "source_fingerprint": "685238fea731fd9b586449a3a587c6236faaee451a916377817a7b3fdf9a4aa4",
     "worktree": "/private/tmp/erp-customer-capacity-requirement-50k-20",
-    "default_commit": "3faf93e57892577c03d7bc6d7ba62e23963941e2",
+    "default_commit": "5e121cece2d55cd60851a7c3a87712925c046968",
     "mode_entry_commit": "3faf93e57892577c03d7bc6d7ba62e23963941e2"
   },
   "runtime": {
@@ -2233,6 +2233,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-047",
+      "method": "SEPARATE_AGENT",
+      "author": "/root HD-010 latest-main integrated evidence publication",
+      "reviewer": "Jason (/root/customer_task011_review), separate read-only agent",
+      "reviewed_baseline": "685238fea731fd9b586449a3a587c6236faaee451a916377817a7b3fdf9a4aa4",
+      "source_ref": "2026-10-15 APPROVE integratedf25e142aa1171002374521f21e1d2c2fe20a76ed against latestmain5e121cec. New main changes disjoint from Customer execution dependencies; performance body/product/config/schema/packages/locks/test support unchanged. Original measurement remains bound tod70da3 source, not a fresh f25e run. DESIGN/PLAN unchanged, approval provenance/retained HIGH defect/runtime cleanup accurate. Traceability/boundary pass; new final-head CI required. No Critical/High/Required publication finding.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -2873,6 +2885,28 @@
       "source_ref": "implementation/hd010-capacity-retest-report.md and resultsJSON. Actual50000/5000address/5000contact,20workers/30s/defaultpool10;1508correctops/0errors. p95ms list1521.02/exact298.68/address305.74/contact288.71 all<=5000. COUNT/pageCustomerALL(~49468rows) gives2gateFailures, combinedcaseFAIL;5newregressionsPASS,0skip in enabledsuite. Separate260PASS/2explicitextendedskips/0FAIL, lint/buildPASS; inclusive5000ms mutation detected/restored. Fixturecleanup0, ownMySQLshutdown/private-root deletion verified. No product/query/index/CI change, riskwaiver or full acceptance.",
       "actor": "/root approved local developer measurement",
       "observed_at": "2026-10-15T01:54:18Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "Superseded HD-010 candidate all-five CI success; not authority for integrated head",
+      "code_commit": "d04a196555361eac8dab25500cac73bdb856c336",
+      "spec_baseline": "55ea357b07fb39cc1131b61757b95ca4aa07b246a8dbabfddfecb914e79ba247",
+      "source_fingerprint": "d70da3f3ce07cd241d2dcad5406a8a68b37207a97f9257aee7a3c7027b6596bd",
+      "status": "PASS",
+      "source_ref": "GitHub Actions run38668569774 SUCCESS on exactd04a1965: audit,lint,build,Playwright,server+clientMySQL/coverage all succeeded. Test job20m32s. Main moved while this ran; its success cannot authorize the new main-integrated candidate. Require fresh final-head CI.",
+      "actor": "/root actual GitHub CI observation",
+      "observed_at": "2026-10-15T02:20:52Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "HD-010 latest-main dependency mapping and integrated regression",
+      "code_commit": "f25e142aa1171002374521f21e1d2c2fe20a76ed",
+      "spec_baseline": "55ea357b07fb39cc1131b61757b95ca4aa07b246a8dbabfddfecb914e79ba247",
+      "source_fingerprint": "685238fea731fd9b586449a3a587c6236faaee451a916377817a7b3fdf9a4aa4",
+      "status": "PASS",
+      "source_ref": "Mergedmain5e121cec without conflict. Git comparison proves only Supplier docs/test-ID labels changed, not executed Customer test/fixture/product/config/schema/dependencies/test support. Old measurement preserved at originald70da3 fingerprint; not rerun/rebound. Integrated Customer/safety260PASS/2explicitextendedskips/0FAIL; lint/build/traceability/boundary/diffPASS; reviewerREV-047approved. No full-module/latency/planPASS is inferred from this mapping.",
+      "actor": "/root integrated-candidate developer verification",
+      "observed_at": "2026-10-15T02:20:52Z"
     }
   ],
   "pending_decisions": [
@@ -3748,5 +3782,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "HD-010 profile/retest and independent reviewREV-046 are complete: all p95<=5000ms, actual-list COUNT/page plansFAIL. DEF-034001 stays HIGH OPEN/TASK-034 BLOCKED. Publish this state-only final checkpoint to PR#230, require all5CI checks on its final exact head, fetch/reconcile main, then merge the approved baseline/test/evidence-only publication under standing authority and clean only this task branch/worktree. Do not optimize product or waive plan/index checks. Complete downstream/production DR and generic module gates remain BLOCKED; evidence-path/base helper limitation is documented, not a fake green gate."
+  "next_safe_action": "HD-010 measurement unchanged: latencyPASS/plansFAIL; DEF-034001 HIGH OPEN/TASK-034 BLOCKED. Latestmain5e121cec integrated atf25e142a with unchanged Customer measurement dependencies; integrated260PASS/2extendedskips,lint/build/structuralPASS and REV-047approved. Publish checkpoint, require fresh final-head all5CI (old d04a run38668569774 succeeded but is superseded), fetch/reconcile main, then merge approved baseline/test/evidence-only PR#230 and clean this task branch/worktree. No product optimization/plan waiver/full downstream or production DR acceptance. Generic module gates remain BLOCKED, including documented helper/path-base limitation."
 }
