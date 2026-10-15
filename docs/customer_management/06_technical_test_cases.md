@@ -39,7 +39,7 @@ Each run must capture build SHA, environment, actor/permission set, request/oper
 | TC-025 Credit audit redaction | Security/P0 | FR-053, FR-054, FR-094..FR-100; DES-021; TASK-008 | Notes/reason with sensitive markers | Save/query logs/audit | Required before/after/reason; forbidden data absent | Controlled search count=0 | Delete fixture | YES | PLANNED |
 | TC-026 Provider registry readiness | Contract/Resilience/P0 | FR-037..FR-041; NFR-010; DES-020; TASK-009 | READY/UNKNOWN/missing providers | Delete/archive/read health | Destructive command only on all READY/NO_REFERENCE | Unknown never treated as clear | Restore provider | YES | PLANNED |
 | TC-027 Purpose lookup matrix | Contract/P0 | FR-034, FR-047, FR-048, FR-054..FR-056; DES-017; TASK-009 | All statuses/purposes | Call named lookup/assert | Matrix exact; unknown purpose rejected; minimal projection | No status or data overreach | None | YES | PLANNED |
-| TC-028 Query plan/deep data | MySQL/Performance/P1 | FR-001..FR-016; NFR-001..NFR-003; DES-018, DES-019; TASK-010 | 100k distribution | EXPLAIN and representative queries | Indexed exact/prefix/EXISTS; stable paging | No leading-wildcard standard path/cartesian count | Drop dataset | PARTIAL | PLANNED |
+| TC-028 Query plan/deep data | MySQL/Performance/P1 | FR-001..FR-016; NFR-001..NFR-003; DES-018, DES-019; TASK-010 | 50k distribution | EXPLAIN and representative queries | Indexed exact/prefix/EXISTS; stable paging | No leading-wildcard standard path/cartesian count | Drop dataset | PARTIAL | PLANNED |
 | TC-029 Public error/log redaction | Security/P0 | SEC-009..SEC-014; DES-014, DES-021, DES-023; TASK-005, TASK-010 | SQL/file/bank/secret markers | Trigger validation/DB/internal errors | Stable public codes; no stack/path/index/plaintext | Controlled response/log scan zero hits | Remove fixtures | YES | PLANNED |
 
 ## 3. Lifecycle, Approval and Browser Core
@@ -108,7 +108,7 @@ Each run must capture build SHA, environment, actor/permission set, request/oper
 | TC-079 Resource exhaustion/backpressure | Resilience/P1 | NFR-001..NFR-005; DES-019, DES-023; TASK-034 | Pool/upload/worker/query limits | Saturate bounded resources | Bounded 429/503/queue; core health remains meaningful | No unbounded memory/queue/lock | Stop load | PARTIAL | PLANNED |
 | TC-080 Structured logs/metrics/alerts | Observability/P1 | FR-094..FR-100; DES-023; TASK-033 | Trigger success/conflict/denial/integrity/stuck cases | Inspect telemetry/alerts | Correlation works; low-cardinality labels; alerts fire/reset | Sensitive marker scan zero; runbook actionable | Reset alerts | PARTIAL | PLANNED |
 | TC-081 Runtime DB privilege separation | Security/DB/P0 | FR-099; DES-021; TASK-033 | Runtime/migration/emergency DB roles | Attempt DDL/audit mutation with runtime | Runtime denied; migration path controlled and logged | App functions normally with least privilege | Revoke test session | PARTIAL | PLANNED |
-| TC-082 100k/50-user latency | Performance/P1 | NFR-001..NFR-005; DES-018, DES-019, DES-023; TASK-034 | Declared dataset/mix/environment | Warm and fixed-window load | p95<2s target/error<1%; invariant zero; metrics complete | Reproducible report with plans/resources | Drop dataset | PARTIAL | PLANNED |
+| TC-082 50k/20-worker latency | Performance/P1 | NFR-001..NFR-005; DES-018, DES-019, DES-023; TASK-034 | 50k Customers, 20 workers; declared child cardinality/mix/environment | Warm and fixed-window load | p95<=5s target/error<1%; invariant zero; metrics complete | Reproducible report with plans/resources | Drop dataset | PARTIAL | PLANNED |
 | TC-083 Default/approval contention load | Concurrency/P0 | NFR-007; DES-007, DES-008, DES-010; TASK-034 | 100 concurrent conflicting commands | Barrier load | No double default/decision/lost update; bounded conflict | DB invariants and audit reconcile | Reset DB | PARTIAL | PLANNED |
 | TC-084 Dependency outage degradation | Resilience/P0 | NFR-010; DES-020, DES-025; TASK-032, TASK-033 | Scanner/key/storage/provider outage | Operate core/sensitive/destructive paths | Core safe reads continue where designed; sensitive/delete fail closed | No eligibility relaxation/data exposure | Restore dependency | PARTIAL | PLANNED |
 | TC-085 Backup restore completeness | Recovery/P0 | NFR-009, NFR-015; DES-024; TASK-035 | Backup with DB/keys/files/audit/import | Isolated restore and smoke | Every sampled resource decrypts/downloads/traces; bad/missing key fails closed | Counts/hashes/references reconcile | Destroy restore | PARTIAL | PLANNED |
@@ -734,7 +734,7 @@ No mutable fixture cleanup; preserve redacted evidence and never delete audit/fa
 
 ### Preconditions and data
 
-100k distribution
+50k distribution
 
 ### Steps
 
@@ -743,6 +743,23 @@ EXPLAIN and representative queries
 ### Expected result
 
 Indexed exact/prefix/EXISTS; stable paging
+
+HD-011 proposed correction, PENDING revised DESIGN/PLAN approval: actual COUNT,
+page-ID and summary queries must be explained, along with every candidate branch
+from DES-019. Every physical table must have a real access type and must not use
+ALL; selective prefix branches must actually use their search-leading indexes,
+not merely FORCE INDEX to scan the whole index. Retain complete raw plans.
+Only engine-generated materialized `<derivedN>` / `<unionN,...>` result rows may
+have ALL or no access type. Match these synthetic forms exactly; unknown rows
+fail closed. Test this classifier against physical Customers/child ALL and missing
+type, mixed physical/derived plans and unknown pseudo rows. Physical scans remain
+failures even when a valid materialization row occurs in the same plan.
+Use real fixtures that hit each root/identifier/contact/address prefix field,
+including duplicate multi-field matches and inactive children. Assert deduplicated
+totals, exact-code then legal ranking, outer filters, literal `!%_` escaping,
+long-name code omission and stable pagination. No assertion may be removed just
+to produce PASS. This explicit classification corrects synthetic-result handling;
+it is not a physical query-plan or latency waiver.
 
 ### Acceptance criteria
 
@@ -1918,11 +1935,15 @@ App functions normally with least privilege Required evidence must be baseline-b
 
 Revoke test session
 
-## TC-082 — 100k/50-user latency
+## TC-082 — 50k/20-worker latency
 
 ### Preconditions and data
 
-Declared dataset/mix/environment
+50,000 Customers, 20 concurrent workers; declare environment, child cardinalities
+and the existing representative workload mix. For the separate local four-operation
+developer subset, preserve the 30s admission window, default pool of 10 and existing
+1-in-10 address/contact fixture ratio (5,000 each). This subset cannot satisfy
+complete mixed-load/browser/downstream acceptance.
 
 ### Steps
 
@@ -1930,7 +1951,15 @@ Warm and fixed-window load
 
 ### Expected result
 
-p95<2s target/error<1%; invariant zero; metrics complete
+p95<=5s target/error<1%; invariant zero; metrics complete. Keep all existing
+query-plan/index assertions and emit every failed latency/plan gate before the
+terminal assertion. New results must bind the revised baseline; prior 100k/50/2s
+failures remain unchanged and cannot be relabeled PASS.
+
+HD-011 proposal, effective only after approval: TC-028's exact physical-vs-synthetic
+plan-row classification supersedes the blanket row-type handling for materialized
+results only. Every physical scan, latency, error, resource and workload gate
+remains mandatory; no historical run is rebound to this proposed revision.
 
 ### Acceptance criteria
 

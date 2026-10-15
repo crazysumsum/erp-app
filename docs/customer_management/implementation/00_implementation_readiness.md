@@ -2,11 +2,23 @@
 
 ## Status
 
+Current HD-011 / DEF-034001 remediation is **BLOCKED on Sam's revised DESIGN/PLAN
+decision**. Fresh unchanged reproduction still has both physical Customer ALL
+scans. Independent proposal review REV-048 approved the narrow candidate-UNION/
+ten-index/physical-plan-classification correction, not implementation authority.
+No product source, executable assertion or migration is changed. See the
+[current diagnosis and exact proposed baselines](def034001-remediation-report.md).
+
 `BLOCKED` for complete PHASE-004 integration: TASK-029 is merged; TASK-030/031/032
 await real downstream consumers. TASK-033's Customer-local telemetry/security/runbook
 preparation is executable under the standing continuation authorization. See the
 [current PHASE-004 report](phase-PHASE-004-report.md); it supersedes historical
 entry/readiness statements below, without changing task completion dependencies.
+
+HD-010 is approved on DESIGN8462e9c2...f9944 / PLAN55ea357b...ba247. Its scoped
+50k/20-worker/5s test alignment and local measurement completed in IMPLEMENT;
+latency passed, actual-list plans failed. This does not make TASK-034, PHASE-004
+or the module READY_FOR_TESTING. See the current PHASE-004 report for exact evidence.
 
 ## Historical PHASE-001 readiness
 

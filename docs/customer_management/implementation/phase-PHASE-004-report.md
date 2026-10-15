@@ -2,6 +2,14 @@
 
 ## Current scope
 
+2026-10-15 / HD-010 approved retest:50,000 Customers,20 concurrent workers,p95<=5s.
+The new run meets latency (list1,521.02ms; exact298.68ms; address305.74ms;
+contact288.71ms), with1,508 correct operations and0operation errors. Actual list
+COUNT/page still full-scan, so the combined case FAILS, DEF-034001 stays HIGH/OPEN
+and TASK-034 stays BLOCKED. See the [new measured report](hd010-capacity-retest-report.md)
+and [exact sanitized results](hd010-capacity-retest-results.json). Prior measurements
+below remain unchanged; complete downstream acceptance stays BLOCKED.
+
 2026-10-15 update: PR #225 is merged (`8bbb0d3d`); local TASK-034/035 execution
 continues from refreshed main `66ddcb9a`. See the
 [local measured report](local-capacity-restore-report.md) and
@@ -58,3 +66,13 @@ Review and publish the TASK-034/035 local measurement evidence under the explici
 2026-10-15 instruction, with current CI before merge. Keep DEF-034001 open and
 do not issue full capacity/restore sign-off. Complete integrated gates only when
 the real provider set and remaining operational requirements are ready.
+
+2026-10-15 current update: HD-010 evidence was merged in PR#230/main09487bc6.
+Sam then authorized DEF-034001 remediation. A fresh unchanged50k/20 run still
+failed both actual Customer scans (listp951662.13ms,alllatencypassed). Independent
+review found that a correct remedy needs HD-011's explicit DES-019 candidate-ID
+UNION/ten-index and synthetic-plan-row classification amendment. Current next
+action is Sam's exact proposed DESIGN/PLAN decision, not replaying PR#230 or
+closing the defect. [Diagnosis/proposal](def034001-remediation-report.md) retains
+raw sanitized before evidence. No product fix/after measurement exists yet;
+TASK-030/031/032 and full acceptance remain BLOCKED.

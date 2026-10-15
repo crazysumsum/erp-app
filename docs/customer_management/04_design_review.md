@@ -1,5 +1,33 @@
 # Customer Management Design Review
 
+## Current capacity amendment — HD-009 (2026-10-15)
+
+Sam's confirmed requirement is 50,000 Customers, 20 concurrent workers and
+p95 <=5s. Requirement/design/plan/technical/UAT specifications are aligned in place;
+interfaces, search semantics, security, child-cardinality and all other gates are
+unchanged. The provided-contract file pin changes only because its design document
+also contains NFR prose; provider contract version/behavior is unchanged.
+
+Fresh independent review: APPROVED by Jason (`/root/customer_task011_review`),
+a separate read-only agent/context, for DESIGN
+`8462e9c2bc9909f413bb0063de29b44bcbe205d8bfd1209c254ff5d1090f9944` and PLAN
+`55ea357b07fb39cc1131b61757b95ca4aa07b246a8dbabfddfecb914e79ba247`.
+The reviewer found no Critical, High or Required issue in this amendment and
+verified unchanged historical report/JSON bytes, unchanged non-amended controls,
+matching contract pin, passing traceability/boundary/diff checks. This is not a
+performance run or closure of the pre-existing product defect.
+Sam explicitly approved HD-010 and ordered test alignment/remeasurement on
+2026-10-15; APPROVAL-DESIGN-016 and APPROVAL-PLAN-016 bind the exact hashes above.
+Prior approval/review records below apply only to their stated historical baselines.
+The executable profile is aligned and the new local run meets all5s latency budgets,
+but fails both actual-list full-scan gates. DEF-034001 remains HIGH/OPEN, with no
+risk waiver or whole-module acceptance. See the HD-010 measured report. Pending
+wording in the canonical amendment records its creation-time state; this review
+and the revisioned approval ledger record the subsequent actual decision without
+changing/re-hashing approved specification bytes.
+
+## Historical review and approval record
+
 ## Reviewer provenance
 
 | Field | Value |
@@ -93,3 +121,34 @@ On 2026-09-14, Sam explicitly approved the independent design review, the exact 
 | Gate status | `APPROVED` for the recorded DESIGN/PLAN baselines |
 
 Final disposition: the exact DESIGN and PLAN baselines are approved for implementation planning. Actual implementation still requires an explicit mode transition and normal Phase-entry, developer-test, review and CI controls. Sensitive and downstream capabilities retain their fail-closed readiness gates.
+
+## HD-011 / DEF-034001 proposed amendment review (2026-10-15)
+
+This current proposal is **PENDING Sam's decision**; the historical approvals above
+do not authorize its revised baselines.
+
+- DESIGN `25833d2d2e09a2ce0c763c374d0a0a9b64d3d92e9ee79e8f60cd3ea1e0003d51`.
+- PLAN `7b1eb4674d231be20c8882b47a1fe5db0550b2c3429adc859e0be27630a51a34`.
+- Method `SEPARATE_AGENT`, author `/root`, reviewer Jason
+  (`/root/customer_task011_review`), actual read-only proposal re-review REV-048.
+- Verdict APPROVE proposal only; no remaining Required/Critical/High proposal
+  finding after HD-011 was recorded as an OPEN major decision in state revision171.
+  This is neither human approval nor product verification/defect closure.
+- Reviewer independently checked the actual canonical diff, exact hashes, ten
+  additive index inventory/reused email index, unchanged search/filter/ranking/
+  pagination/auth semantics, bounded online DDL and physical-scan classifier.
+  State inspection and structural traceability passed.
+- Required gates remain: Sam baseline decision before product/migration/assertion
+  changes; all-branch real-MySQL correctness, migration replay/incompatible-index
+  checks, physical-scan negative/mutation guards, unchanged-profile capacity proof,
+  impact regression, actual code review/current-head CI/fresh-main before merge.
+
+DEF-034001 remains HIGH/OPEN; full downstream and production DR acceptance remain
+BLOCKED. See [diagnosis and decision](implementation/def034001-remediation-report.md).
+
+Sam subsequently explicitly approved HD-011 and PR#232's exact DESIGN/PLAN
+baselines above, and authorized implementation, fresh measurement, PR and merge.
+APPROVAL-DESIGN-017 / PLAN-017 / SCOPE-043 retain the actual user instruction.
+Canonical proposal bytes stay unchanged to preserve the approved hashes; their
+PENDING labels describe the proposal before this decision. This approval activates
+only the proposed remedy, not a capacity PASS or full downstream acceptance.
