@@ -316,9 +316,9 @@
       {
         "module_id": "customer-management",
         "id": "customer-snapshot-and-credit-contract",
-        "version": "integrated-main-d69b267-Customer-HD011-indexed-search-design; Sales snapshot/credit contracts and thresholds unchanged; fresh original33/currentCI required",
+        "version": "integrated-main-6b3faa-Customer-HD012-design-document; Sales snapshot/credit/provider/runtime contracts unchanged; no future shared UI implementation adopted; fresh original33/currentCI required",
         "source": "docs/customer_management/03_design_spec.md",
-        "sha256": "8ae6911b46dc9e0f4175198b7d523bf7f5786734f427d9d00c28e5ef694750eb",
+        "sha256": "5020a183c2ea1e290b8ba0ce1736524e21a99b6268ee54502c5ac48f7e10873d",
         "regression_suites": [
           "sales-technical"
         ]
