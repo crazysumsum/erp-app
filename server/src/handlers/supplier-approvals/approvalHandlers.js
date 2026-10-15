@@ -101,7 +101,7 @@ export class ApproveSupplierApprovalHandler extends SupplierApprovalHandler {
   static handlerName = "approveSupplierApproval";
 
   static api = {
-    method: "POST",
+    method: "POST", inputCoercion: false,
     path: "/api/v1/supplier-approvals/:id/approve",
     description: "由指定審批人批准啟用申請。",
     authType: "jwt-password",
@@ -119,7 +119,7 @@ export class RejectSupplierApprovalHandler extends SupplierApprovalHandler {
   static handlerName = "rejectSupplierApproval";
 
   static api = {
-    method: "POST",
+    method: "POST", inputCoercion: false,
     path: "/api/v1/supplier-approvals/:id/reject",
     description: "由指定審批人拒絕啟用申請並記錄原因。",
     authType: "jwt-password",
@@ -137,7 +137,7 @@ export class ReassignSupplierApprovalHandler extends SupplierApprovalHandler {
   static handlerName = "reassignSupplierApproval";
 
   static api = {
-    method: "POST",
+    method: "POST", inputCoercion: false,
     path: "/api/v1/supplier-approvals/:id/reassign",
     description: "將待處理的啟用申請重新指派給另一名審批人。",
     authType: "jwt-password",

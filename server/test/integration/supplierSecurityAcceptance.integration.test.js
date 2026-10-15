@@ -427,6 +427,86 @@ integrationTest("TC-116 (AUTH-006): authType is fixed in metadata as specified, 
   assert.deepEqual(await snapshot(), before, "no Supplier table changed");
 });
 
+integrationTest("TC-117 (AUTH-007): every API class refuses malformed, mistyped, out-of-range or extra input with a stable 400 and writes nothing; IDs are positive integers and booleans are strict", async () => {
+  // HD-109 A：每條帶 JSON body 嘅 Supplier POST route 都唔轉型（multipart upload 除外，佢嘅欄位本身係字串）。
+  const handlers = [];
+  for (const directory of ["supplier-approvals", "supplier-exports", "supplier-imports", "supplier-settings", "suppliers"]) {
+    const folder = new URL(`../../src/handlers/${directory}/`, import.meta.url);
+    for (const file of fs.readdirSync(folder).filter((name) => name.endsWith(".js"))) {
+      for (const exported of Object.values(await import(new URL(file, folder).href))) {
+        if (typeof exported === "function" && exported.api?.method === "POST") handlers.push(exported.api);
+      }
+    }
+  }
+  const posts = h.routes.filter((r) => r.method === "POST");
+  assert.equal(handlers.length, posts.length, "every registered POST route has a handler here");
+  assert.deepEqual(handlers.filter((api) => api.upload?.enabled !== true && api.inputCoercion !== false).map((api) => api.path), []);
+
+  const mgmt = h.users["U-MGMT"];
+  const f = h.fixture;
+  const tag = randomUUID().slice(0, 8).toUpperCase();
+  const create = route("POST /api/v1/suppliers/create");
+  const valid = { supplierCode: `T117-${tag}`, supplierName: "Valid", defaultCurrencyCode: "HKD" };
+  const update = { version: 1, supplierName: "x", displayName: "", defaultCurrencyCode: "HKD", defaultPaymentTermId: null, website: "",
+    generalPhone: "", generalEmail: "", notes: "" };
+  const list = route("GET /api/v1/suppliers");
+  const detail = route("GET /api/v1/suppliers/:id");
+  const query = (search) => ({ ...list, path: `/api/v1/suppliers?${search}` });
+  const before = await snapshot();
+  const cases = [
+    // 列表 query：越界、錯型、未知 enum、多餘參數、唔係 "true"／"false" 嘅 boolean。
+    ...["page=0", "page=-1", "page=abc", "page=1.5", "pageSize=0", "pageSize=101", "sortBy=bogus", "status=bogus", "bogus=1",
+      "includeArchived=yes", "includeArchived=1", "includeArchived=TRUE", "missingBank=0", "paymentTermId=0", "currencyCode=hkd"]
+      .map((search) => [`list ?${search}`, mgmt, query(search), {}]),
+    // Path ID：只收正整數。
+    ...["0", "-1", "1.5", "abc", "+5", "05", "1e3", "99999999999999999999"].map((id) => [`detail /${id}`, mgmt, detail, { ids: { id } }]),
+    ["child id 0", mgmt, route("POST /api/v1/suppliers/:supplierId/addresses/:addressId/deactivate"), { ids: { supplierId: f.supplierId, addressId: 0 }, body: { version: 1 } }],
+    ["import id abc", mgmt, route("POST /api/v1/supplier-imports/:id/cancel"), { ids: { id: "abc" }, body: { version: 1 } }],
+    ["import id 16 digits", mgmt, route("POST /api/v1/supplier-imports/:id/cancel"), { ids: { id: "1234567890123456" }, body: { version: 1 } }],
+    // JSON body：壞 JSON、唔係 object、錯 content-type、多餘欄、缺欄、null、錯型、超長。
+    ["malformed JSON", mgmt, create, { raw: "{\"supplierCode\":" }],
+    ["array body", mgmt, create, { body: [] }],
+    ["text/plain", mgmt, create, { raw: JSON.stringify(valid), contentType: "text/plain" }],
+    ["form-encoded", mgmt, create, { raw: "supplierCode=X&supplierName=Y&defaultCurrencyCode=HKD", contentType: "application/x-www-form-urlencoded" }],
+    ["additional property", mgmt, create, { body: { ...valid, isAdmin: true } }],
+    ["missing required", mgmt, create, { body: { supplierCode: valid.supplierCode } }],
+    ["null name", mgmt, create, { body: { ...valid, supplierName: null } }],
+    ["number as name", mgmt, create, { body: { ...valid, supplierName: 12345 } }],
+    ["boolean as notes", mgmt, create, { body: { ...valid, notes: true } }],
+    ["name too long", mgmt, create, { body: { ...valid, supplierName: "x".repeat(191) } }],
+    ["currency enum", mgmt, create, { body: { ...valid, defaultCurrencyCode: "hkd" } }],
+    ["term id as string", mgmt, create, { body: { ...valid, defaultPaymentTermId: "1" } }],
+    ["term id 0", mgmt, create, { body: { ...valid, defaultPaymentTermId: 0 } }],
+    ["term id 1.5", mgmt, create, { body: { ...valid, defaultPaymentTermId: 1.5 } }],
+    ...[1, 0, "true", "1", "yes", null, []].map((value) => [`activate ${JSON.stringify(value)}`, mgmt, create, { body: { ...valid, activate: value } }]),
+    ["update version string", mgmt, route("POST /api/v1/suppliers/:id/update"), { ids: { id: f.supplierId }, body: { ...update, version: "1" } }],
+    ["update version 0", mgmt, route("POST /api/v1/suppliers/:id/update"), { ids: { id: f.supplierId }, body: { ...update, version: 0 } }],
+    ["update version -1", mgmt, route("POST /api/v1/suppliers/:id/update"), { ids: { id: f.supplierId }, body: { ...update, version: -1 } }],
+    ["archive version string", mgmt, route("POST /api/v1/suppliers/:id/archive"), { ids: { id: f.supplierId }, body: { version: "1", reason: "TC-117 archive" } }],
+    ["identifier enum", mgmt, route("POST /api/v1/suppliers/:supplierId/identifiers/create"), { ids: { supplierId: f.supplierId },
+      body: { identifierType: "passport_of_mars", issuerCountryCode: "HK", identifierValue: "X1" } }],
+    ["export boolean string", h.users["U-SYS"], route("POST /api/v1/supplier-exports"), { body: { filters: { missingBank: "true" } } }],
+    ["export id string", h.users["U-SYS"], route("POST /api/v1/supplier-exports"), { body: { filters: { paymentTermId: "1" } } }]
+  ];
+  const wrong = [];
+  for (const [name, user, r, options] of cases) {
+    const response = await send(user, r, options);
+    if (response.status !== 400 || !["REQUEST_VALIDATION_FAILED", "INVALID_JSON"].includes(response.code)) {
+      wrong.push(`${name}: ${response.status} ${response.code}`);
+    }
+  }
+  assert.deepEqual(wrong, []);
+  assert.deepEqual(await snapshot(), before, "nothing was written, partially or otherwise");
+
+  // 同一個 body 用啱嘅型就收：上面嘅 400 唔係因為 route 本身壞咗。
+  const made = await send(mgmt, create, { body: { ...valid, activate: false } });
+  assert.equal(made.status, 201, made.text);
+  h.supplierIds.push(made.json.data.id);
+  assert.equal(made.json.data.status, "draft");
+  const cancelled = await send(mgmt, route("POST /api/v1/supplier-imports/:id/cancel"), { ids: { id: MISSING }, body: { version: 1 } });
+  assert.equal(cancelled.status, 404, `a well-formed import ID reaches the service: ${cancelled.text}`);
+});
+
 integrationTest("TC-118 (AUTH-008): only the reveal response carries the plaintext, under no-store; other projections carry no internal keys; export and reveal leave a low-sensitivity audit", async () => {
   const f = h.fixture;
   const ids = existingIds();
@@ -547,8 +627,14 @@ integrationTest("TC-120 (AUTH-010): each error class answers with its stable HTT
       [400, "SUPPLIER_NAME_INVALID", await send(mgmt, create, { body: { supplierCode: `BAD-${tag}`, supplierName: "x\u0000", defaultCurrencyCode: "HKD" } })],
       [403, null, await send(h.users["U-VIEW"], create, { body: { supplierCode: `BAD-${tag}` } })],
       [404, "SUPPLIER_NOT_FOUND", await send(mgmt, route("GET /api/v1/suppliers/:id"), { ids: { id: MISSING } })],
-      [404, "SUPPLIER_CHILD_NOT_FOUND", await send(mgmt, route("POST /api/v1/suppliers/:supplierId/addresses/:addressId/deactivate"),
+      // 每類 child 一個 code，唔係設計 §6.11 嘅 SUPPLIER_CHILD_NOT_FOUND（HD-110 A，接受偏離）。
+      // 用另一個 Supplier 嘅 route 掂呢個 Supplier 嘅 child：答案同唔存在一樣，唔講屬於邊個。
+      [404, "SUPPLIER_ADDRESS_NOT_FOUND", await send(mgmt, route("POST /api/v1/suppliers/:supplierId/addresses/:addressId/deactivate"),
         { ids: { supplierId: f.otherId, addressId: f.addressId }, body: { version: 1 } })],
+      [404, "SUPPLIER_CONTACT_NOT_FOUND", await send(mgmt, route("POST /api/v1/suppliers/:supplierId/contacts/:contactId/deactivate"),
+        { ids: { supplierId: f.otherId, contactId: f.contactId }, body: { version: 1 } })],
+      [404, "SUPPLIER_IDENTIFIER_NOT_FOUND", await send(mgmt, route("POST /api/v1/suppliers/:supplierId/identifiers/:identifierId/delete"),
+        { ids: { supplierId: f.otherId, identifierId: f.identifierId }, body: { version: 1, reason: "TC-120 other owner" } })],
       [409, "SUPPLIER_CODE_TAKEN", await send(mgmt, create, { body: { supplierCode: `SEC-${f.tag}`, supplierName: "x", defaultCurrencyCode: "HKD" } })],
       // 冇預檢：靠 DB unique 撞出 ER_DUP_ENTRY，再按 constraint 映射；唔可以講出另一個 Supplier 係邊個。
       [409, "SUPPLIER_IDENTIFIER_TAKEN", await send(mgmt, route("POST /api/v1/suppliers/:supplierId/identifiers/create"), { ids: { supplierId: f.otherId },

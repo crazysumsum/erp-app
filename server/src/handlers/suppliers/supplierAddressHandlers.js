@@ -73,7 +73,7 @@ class SupplierAddressHandler extends BaseRequestHandler {
 export class CreateSupplierAddressHandler extends SupplierAddressHandler {
   static handlerName = "createSupplierAddress";
   static api = {
-    method: "POST", path: "/api/v1/suppliers/:supplierId/addresses/create", description: "新增供應商地址及用途。",
+    method: "POST", inputCoercion: false, path: "/api/v1/suppliers/:supplierId/addresses/create", description: "新增供應商地址及用途。",
     authorizationPolicies: SUPPLIER_MGMT_POLICY,
     requestSchema: { params: OWNER_PARAMS, query: EMPTY_SUPPLIER_SCHEMA, body: CREATE_BODY }, responseSchema: { 201: ADDRESS_RESPONSE }
   };
@@ -83,7 +83,7 @@ export class CreateSupplierAddressHandler extends SupplierAddressHandler {
 export class UpdateSupplierAddressHandler extends SupplierAddressHandler {
   static handlerName = "updateSupplierAddress";
   static api = {
-    method: "POST", path: "/api/v1/suppliers/:supplierId/addresses/:addressId/update", description: "按版本更新供應商地址及完整用途集合。",
+    method: "POST", inputCoercion: false, path: "/api/v1/suppliers/:supplierId/addresses/:addressId/update", description: "按版本更新供應商地址及完整用途集合。",
     authorizationPolicies: SUPPLIER_MGMT_POLICY,
     requestSchema: { params: CHILD_PARAMS, query: EMPTY_SUPPLIER_SCHEMA, body: UPDATE_BODY }, responseSchema: { 200: ADDRESS_RESPONSE }
   };
@@ -95,7 +95,7 @@ export class UpdateSupplierAddressHandler extends SupplierAddressHandler {
 export class DeactivateSupplierAddressHandler extends SupplierAddressHandler {
   static handlerName = "deactivateSupplierAddress";
   static api = {
-    method: "POST", path: "/api/v1/suppliers/:supplierId/addresses/:addressId/deactivate", description: "停用供應商地址並清除其主要用途標記。",
+    method: "POST", inputCoercion: false, path: "/api/v1/suppliers/:supplierId/addresses/:addressId/deactivate", description: "停用供應商地址並清除其主要用途標記。",
     authorizationPolicies: SUPPLIER_MGMT_POLICY,
     requestSchema: { params: CHILD_PARAMS, query: EMPTY_SUPPLIER_SCHEMA, body: DEACTIVATE_BODY }, responseSchema: { 200: ADDRESS_RESPONSE }
   };

@@ -70,7 +70,7 @@ class SupplierContactHandler extends BaseRequestHandler {
 export class CreateSupplierContactHandler extends SupplierContactHandler {
   static handlerName = "createSupplierContact";
   static api = {
-    method: "POST", path: "/api/v1/suppliers/:supplierId/contacts/create", description: "新增供應商聯絡人及用途。",
+    method: "POST", inputCoercion: false, path: "/api/v1/suppliers/:supplierId/contacts/create", description: "新增供應商聯絡人及用途。",
     authorizationPolicies: SUPPLIER_MGMT_POLICY,
     requestSchema: { params: OWNER_PARAMS, query: EMPTY_SUPPLIER_SCHEMA, body: CREATE_BODY }, responseSchema: { 201: CONTACT_RESPONSE }
   };
@@ -80,7 +80,7 @@ export class CreateSupplierContactHandler extends SupplierContactHandler {
 export class UpdateSupplierContactHandler extends SupplierContactHandler {
   static handlerName = "updateSupplierContact";
   static api = {
-    method: "POST", path: "/api/v1/suppliers/:supplierId/contacts/:contactId/update", description: "按版本更新供應商聯絡人及完整用途集合。",
+    method: "POST", inputCoercion: false, path: "/api/v1/suppliers/:supplierId/contacts/:contactId/update", description: "按版本更新供應商聯絡人及完整用途集合。",
     authorizationPolicies: SUPPLIER_MGMT_POLICY,
     requestSchema: { params: CHILD_PARAMS, query: EMPTY_SUPPLIER_SCHEMA, body: UPDATE_BODY }, responseSchema: { 200: CONTACT_RESPONSE }
   };
@@ -92,7 +92,7 @@ export class UpdateSupplierContactHandler extends SupplierContactHandler {
 export class DeactivateSupplierContactHandler extends SupplierContactHandler {
   static handlerName = "deactivateSupplierContact";
   static api = {
-    method: "POST", path: "/api/v1/suppliers/:supplierId/contacts/:contactId/deactivate", description: "停用供應商聯絡人並清除其主要用途標記。",
+    method: "POST", inputCoercion: false, path: "/api/v1/suppliers/:supplierId/contacts/:contactId/deactivate", description: "停用供應商聯絡人並清除其主要用途標記。",
     authorizationPolicies: SUPPLIER_MGMT_POLICY,
     requestSchema: { params: CHILD_PARAMS, query: EMPTY_SUPPLIER_SCHEMA, body: DEACTIVATE_BODY }, responseSchema: { 200: CONTACT_RESPONSE }
   };

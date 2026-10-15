@@ -10,7 +10,7 @@ import { EMPTY_SUPPLIER_SCHEMA, SUPPLIER_CREATE_SCHEMA, SUPPLIER_DETAIL_SCHEMA, 
 export class CreateSupplierHandler extends BaseRequestHandler {
   static handlerName = "createSupplier";
   static api = {
-    method: "POST", path: "/api/v1/suppliers/create", description: "建立草稿供應商，或在審批關閉時直接啟用。",
+    method: "POST", inputCoercion: false, path: "/api/v1/suppliers/create", description: "建立草稿供應商，或在審批關閉時直接啟用。",
     authorizationPolicies: SUPPLIER_MGMT_POLICY, idempotency: { enabled: true },
     requestSchema: { params: EMPTY_SUPPLIER_SCHEMA, query: EMPTY_SUPPLIER_SCHEMA, body: SUPPLIER_CREATE_SCHEMA },
     responseSchema: { 201: SUPPLIER_DETAIL_SCHEMA }

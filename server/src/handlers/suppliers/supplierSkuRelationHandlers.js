@@ -90,7 +90,7 @@ export class ListSupplierSkuRelationsHandler extends SupplierSkuRelationHandler 
 export class CreateSupplierSkuRelationHandler extends SupplierSkuRelationHandler {
   static handlerName = "createSupplierSkuRelation";
   static api = {
-    method: "POST", path: "/api/v1/suppliers/:id/sku-relations/create", description: "建立軟性供貨關係；不改變採購資格。",
+    method: "POST", inputCoercion: false, path: "/api/v1/suppliers/:id/sku-relations/create", description: "建立軟性供貨關係；不改變採購資格。",
     authorizationPolicies: SUPPLIER_MGMT_POLICY,
     requestSchema: { params: OWNER_PARAMS, query: EMPTY_SUPPLIER_SCHEMA, body: CREATE_BODY }, responseSchema: { 201: RELATION }
   };
@@ -100,7 +100,7 @@ export class CreateSupplierSkuRelationHandler extends SupplierSkuRelationHandler
 export class UpdateSupplierSkuRelationHandler extends SupplierSkuRelationHandler {
   static handlerName = "updateSupplierSkuRelation";
   static api = {
-    method: "POST", path: "/api/v1/suppliers/:id/sku-relations/:relationId/update", description: "按版本更新採購單位、MOQ、交期或關係狀態。",
+    method: "POST", inputCoercion: false, path: "/api/v1/suppliers/:id/sku-relations/:relationId/update", description: "按版本更新採購單位、MOQ、交期或關係狀態。",
     authorizationPolicies: SUPPLIER_MGMT_POLICY,
     requestSchema: { params: CHILD_PARAMS, query: EMPTY_SUPPLIER_SCHEMA, body: UPDATE_BODY }, responseSchema: { 200: RELATION }
   };

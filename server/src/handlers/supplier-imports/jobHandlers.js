@@ -3,7 +3,7 @@ import { SupplierImportService } from "../../modules/supplier/SupplierImportServ
 import { SUPPLIER_MGMT_POLICY } from "../suppliers/supplierSchemas.js";
 import {
   SUPPLIER_IMPORT_CANCEL_BODY_SCHEMA, SUPPLIER_IMPORT_CONFIRM_BODY_SCHEMA, SUPPLIER_IMPORT_DETAIL_RESPONSE_SCHEMA, SUPPLIER_IMPORT_EMPTY_SCHEMA,
-  SUPPLIER_IMPORT_GET_QUERY_SCHEMA, SUPPLIER_IMPORT_ID_PARAMS_SCHEMA, SUPPLIER_IMPORT_JOB_SCHEMA,
+  SUPPLIER_IMPORT_GET_QUERY_SCHEMA, SUPPLIER_IMPORT_ID_PARAMS_SCHEMA, SUPPLIER_IMPORT_ID_STRING_PARAMS_SCHEMA, SUPPLIER_IMPORT_JOB_SCHEMA,
   SUPPLIER_IMPORT_LIST_QUERY_SCHEMA, SUPPLIER_IMPORT_LIST_RESPONSE_SCHEMA
 } from "./importSchemas.js";
 
@@ -73,13 +73,13 @@ export class CancelSupplierImportHandler extends BaseRequestHandler {
   static handlerName = "cancelSupplierImport";
 
   static api = {
-    method: "POST",
+    method: "POST", inputCoercion: false,
     path: "/api/v1/supplier-imports/:id/cancel",
     description: "取消自己尚未預檢或執行的供應商匯入工作（uploaded、ready、ready_with_errors、queued）；"
       + "來源檔即時刪除，摘要及逐列結果保留。",
     authorizationPolicies: SUPPLIER_MGMT_POLICY,
     idempotency: { enabled: true },
-    requestSchema: { params: SUPPLIER_IMPORT_ID_PARAMS_SCHEMA, query: SUPPLIER_IMPORT_EMPTY_SCHEMA, body: SUPPLIER_IMPORT_CANCEL_BODY_SCHEMA },
+    requestSchema: { params: SUPPLIER_IMPORT_ID_STRING_PARAMS_SCHEMA, query: SUPPLIER_IMPORT_EMPTY_SCHEMA, body: SUPPLIER_IMPORT_CANCEL_BODY_SCHEMA },
     responseSchema: { 200: SUPPLIER_IMPORT_JOB_SCHEMA }
   };
 
@@ -92,7 +92,7 @@ export class CancelSupplierImportHandler extends BaseRequestHandler {
 
   async execute(req) {
     return this.response(await this.imports.cancel({
-      ...actor(req), id: req.input.params.id, version: req.input.body.version, root: this.importRoot(),
+      ...actor(req), id: Number(req.input.params.id), version: req.input.body.version, root: this.importRoot(),
       requestId: req.requestId ?? "", ip: req.ip || req.socket?.remoteAddress || ""
     }));
   }
@@ -102,14 +102,14 @@ export class ConfirmSupplierImportHandler extends BaseRequestHandler {
   static handlerName = "confirmSupplierImport";
 
   static api = {
-    method: "POST",
+    method: "POST", inputCoercion: false,
     path: "/api/v1/supplier-imports/:id/confirm",
     description: "確認自己已完成預檢的供應商匯入（需要密碼）：選擇草稿或啟用；啟用而設定要求審批時須指定另一位有審批權限的使用者。"
       + "確認後背景逐列寫入，合法列寫入、錯誤列略過；已寫入的列不會因其他列失敗而回滾。",
     authType: "jwt-password",
     authorizationPolicies: SUPPLIER_MGMT_POLICY,
     idempotency: { enabled: true },
-    requestSchema: { params: SUPPLIER_IMPORT_ID_PARAMS_SCHEMA, query: SUPPLIER_IMPORT_EMPTY_SCHEMA, body: SUPPLIER_IMPORT_CONFIRM_BODY_SCHEMA },
+    requestSchema: { params: SUPPLIER_IMPORT_ID_STRING_PARAMS_SCHEMA, query: SUPPLIER_IMPORT_EMPTY_SCHEMA, body: SUPPLIER_IMPORT_CONFIRM_BODY_SCHEMA },
     responseSchema: { 200: SUPPLIER_IMPORT_JOB_SCHEMA }
   };
 
@@ -121,7 +121,7 @@ export class ConfirmSupplierImportHandler extends BaseRequestHandler {
   async execute(req) {
     const { version, activationMode, approverUserId = null } = req.input.body;
     return this.response(await this.imports.confirm({
-      ...actor(req), id: req.input.params.id, version, activationMode, approverUserId,
+      ...actor(req), id: Number(req.input.params.id), version, activationMode, approverUserId,
       requestId: req.requestId ?? "", ip: req.ip || req.socket?.remoteAddress || ""
     }));
   }

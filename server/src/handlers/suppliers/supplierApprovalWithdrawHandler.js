@@ -26,7 +26,7 @@ export class WithdrawSupplierApprovalHandler extends BaseRequestHandler {
   static handlerName = "withdrawSupplierApproval";
 
   static api = {
-    method: "POST",
+    method: "POST", inputCoercion: false,
     path: "/api/v1/suppliers/:id/approval/withdraw",
     description: "由原提交人撤回待處理的啟用申請，供應商回到草稿。",
     authorizationPolicies: SUPPLIER_MGMT_POLICY,

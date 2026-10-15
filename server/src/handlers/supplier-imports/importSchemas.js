@@ -16,6 +16,14 @@ export const SUPPLIER_IMPORT_ID_PARAMS_SCHEMA = Object.freeze({
   properties: { id: { type: "integer", minimum: 1, maximum: Number.MAX_SAFE_INTEGER } }
 });
 
+// POST route 唔轉型（HD-109 A），params 照設計 §6.1 用正整數字串；最多 15 位，轉做 Number 一定係安全整數。
+export const SUPPLIER_IMPORT_ID_STRING_PARAMS_SCHEMA = Object.freeze({
+  type: "object",
+  required: ["id"],
+  additionalProperties: false,
+  properties: { id: { type: "string", pattern: "^[1-9][0-9]{0,14}$" } }
+});
+
 const PAGE = Object.freeze({ type: "integer", minimum: 1, maximum: 1_000_000, default: 1 });
 const PAGE_SIZE = Object.freeze({ type: "integer", minimum: 1, maximum: 100, default: 20 });
 
