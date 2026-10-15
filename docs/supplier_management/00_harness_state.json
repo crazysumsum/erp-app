@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 347,
+  "revision": 349,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "29a0615a61808b3747cd8feb522d051ba5a312da6fb0fccf36e7cf9746286775",
     "plan": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
-    "code_commit": "e56ad1a90f5938bd4799fd784a74aa5772e027ea",
-    "source_fingerprint": "59bd8822fd0692e4e09fddfc50477b1002bdca9a0745d4580dcb07a6deaf7460",
+    "code_commit": "6fafaa29af476b29c2b8b95d06a8530d7bc89e57",
+    "source_fingerprint": "251d6735032a311f94e25a71ed6f16836717153bc1f453cafc770c0fce908028",
     "worktree": "/Users/sam/Documents/workspace/erp-supplier-t51d",
     "default_commit": "e56ad1a90f5938bd4799fd784a74aa5772e027ea",
     "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
@@ -4145,6 +4145,17 @@
       "source_ref": "PR #231 merged as e56ad1a90f5938bd4799fd784a74aa5772e027ea on the Product Owner's word ('B，CI過就merge'), under the new rule B: main had moved only by Customer docs (09487bc6 -> d69b267d, all paths under docs/customer_management), the previous head 001798a3 had all five checks successful, and the merge head cf9f5116 adds only that drift; cf9f5116 itself had no completed CI run when merged. --match-head-commit used. Review REV-093 APPROVED, follow-ups applied. Recorded as the first commit of the next change PR.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-15T11:41:29+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "HD-107/HD-108 local checks and 100k capacity (PR on claude/supplier-task-051-tests-2)",
+      "code_commit": "6fafaa29af476b29c2b8b95d06a8530d7bc89e57",
+      "spec_baseline": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
+      "source_fingerprint": "251d6735032a311f94e25a71ed6f16836717153bc1f453cafc770c0fce908028",
+      "status": "PASS",
+      "source_ref": "Local, not CI. supplier-phase-001-server with only the profile env keys on erp_t51: 690 tests, all pass. New list acceptance tests: 6 pass; with the server code reverted to main, TC-009, TC-010 and TC-048 fail. 100k capacity on erp_t51p, 4 GiB pool, 50 users: mixed NFR-001 and NFR-005 pass, slowest p95 489 ms (main 438); for-SKU worst case p95 1,801 ms (main 1,742). Evidence: evidence/20261015-hd107-list/ (files 01-14 at a 128 MiB pool, kept for paired comparisons).",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-15T13:04:02+08:00"
     }
   ],
   "pending_decisions": [
@@ -5517,6 +5528,33 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-15: 'A'."
+    },
+    {
+      "id": "HD-107",
+      "impact": "MAJOR",
+      "question": "Step 2b found list/detail features required but never built: G1 identifier search (FR-LIST-002 Must); G2 missing-primary-contact and created-date filters (FR-LIST-004 Must); G3 missing-address and missing-bank filters (design 7.3); G4 list page filter controls (design 7.3); G5 paged contacts/addresses past the detail cap of 100 (design). (A) build all, in a server PR and a client PR, with a 100k performance check; (B) build only the Must items and amend the rest; (C) defer all as known limitations.",
+      "affected_ids": [
+        "TC-009",
+        "TC-010",
+        "TC-048",
+        "TASK-051"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-15: 'A，review 完 CI 過就 merge'."
+    },
+    {
+      "id": "HD-108",
+      "impact": "MAJOR",
+      "question": "HD-107 performance on 100k: the identifier subquery shared into the for-SKU search failed NFR-005's worst case (2.5 s vs 2.0 s on main), and the missing-data filters had p95 1.6–1.8 s, p99 over 2 s (128 MiB pool). (A) the for-SKU search excludes identifiers; (B) index identifier_value_key and make identifier search prefix-only (schema change); (C1) keep the missing-data filters as NOT EXISTS and record the margin; (C2) denormalised completeness flags on suppliers (schema change).",
+      "affected_ids": [
+        "TC-009",
+        "TC-010",
+        "NFR-001",
+        "NFR-005",
+        "TASK-051"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-15: 'A、C1，review 完 CI 過就 merge'."
     }
   ],
   "external_actions": [
@@ -6597,5 +6635,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-051 step 2b part 1 (branch claude/supplier-task-051-tests): HD-106 done — a job with skipped or failed rows ends as completed_with_errors; label '已完成（有錯誤列）'; TC-091 carried by the mixed end-to-end import test. REV-093 APPROVED with follow-ups applied; merge when CI is green. Next: step 2b tests for the 39 untagged cases, the five missing runners and UAT IDs; then T51 rehearsals. HD-057 must be answered before TASK-051 is DONE."
+  "next_safe_action": "TASK-051 step 2b part 2 (branch claude/supplier-task-051-tests-2): HD-107 server side (identifier search in the list, missing-data and created-date filters, paged contacts/addresses) and HD-108 (A: for-SKU excludes identifiers; C1: NOT EXISTS filters kept). Coverage: server-integration 64/89. Review, then merge when CI is green. Next: the HD-107 client PR (list filter controls, Playwright), then the remaining step 2b tests, the five runners and UAT IDs; then T51 rehearsals. HD-057 must be answered before TASK-051 is DONE."
 }
