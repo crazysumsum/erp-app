@@ -1,32 +1,31 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 181,
+  "revision": 183,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
   "resume_status": "IMPLEMENTING",
-  "current_phase": "PHASE-004",
-  "current_task": "TASK-034",
+  "current_phase": "PHASE-002",
+  "current_task": "TASK-016",
   "baseline": {
     "design": "25833d2d2e09a2ce0c763c374d0a0a9b64d3d92e9ee79e8f60cd3ea1e0003d51",
     "plan": "7b1eb4674d231be20c8882b47a1fe5db0550b2c3429adc859e0be27630a51a34",
-    "code_commit": "c6ca364522664254951133984910ca933749b368",
+    "code_commit": "10ca62adc47d4d099a78afba04e7b569bdd6b370",
     "source_fingerprint": "bccc7235e5af4852f78eddcefff68c9989ca7d57770abc7cc7930b32b1fb3449",
-    "worktree": "/private/tmp/erp-customer-def034001-fix",
-    "default_commit": "e56ad1a90f5938bd4799fd784a74aa5772e027ea",
-    "mode_entry_commit": "d69b267df3e7cfcbb703b16ff459c87215815f7c"
+    "worktree": "/private/tmp/erp-customer-ui-defect-remediation",
+    "default_commit": "10ca62adc47d4d099a78afba04e7b569bdd6b370",
+    "mode_entry_commit": "10ca62adc47d4d099a78afba04e7b569bdd6b370"
   },
   "runtime": {
-    "instance_id": "customer-def034001-integrated-20261015",
-    "owner": "Primary Customer remediation agent",
+    "instance_id": "customer-ui-defects-20261015",
+    "owner": "/root Customer UI remediation",
     "resources": {
-      "workspace": "/private/tmp/erp-customer-def034001-fix",
-      "mysql-instance": "CLEANED own integrated-runtime.3nNabW/MySQL13373 and priorfix-runtime.i1kGVP; serversexit0",
-      "mysql-schema": "CLEANED own two synthetic schemas/datadirs after fixtureCustomers0 and durableevidence",
-      "customer-file-root": "No persistent deployment; own temporary integration fixtures cleaned",
-      "customer-import-root": "No persistent deployment; own temporary integration fixtures cleaned",
-      "web-port": "Real browser13374backend/13375Vite stopped after URL-state checks; mocked5204/clean-main suite stopped"
+      "workspace": "/private/tmp/erp-customer-ui-defect-remediation",
+      "web-port": "own5204 mockedbrowser then13374/13375 realbrowser ifneeded",
+      "mysql-schema": "fresh own only if needed; shared3306 forbidden",
+      "customer-file-root": "/private/tmp/erp-customer-ui-runtime.kirCP5 own synthetic fixtures only",
+      "customer-import-root": "/private/tmp/erp-customer-ui-runtime.kirCP5 own synthetic fixtures only"
     },
     "lease_ref": null
   },
@@ -46,7 +45,7 @@
     "TASK-013": "DONE",
     "TASK-014": "DONE",
     "TASK-015": "DONE",
-    "TASK-016": "DONE",
+    "TASK-016": "IN_PROGRESS",
     "TASK-017": "DONE",
     "TASK-018": "DONE",
     "TASK-019": "DONE",
@@ -57,7 +56,7 @@
     "TASK-024": "DONE",
     "TASK-025": "DONE",
     "TASK-026": "DONE",
-    "TASK-027": "DONE",
+    "TASK-027": "IN_PROGRESS",
     "TASK-028": "DONE",
     "TASK-029": "DONE",
     "TASK-030": "BLOCKED",
@@ -1757,6 +1756,31 @@
         "server/database/migrations/*_add_customer_search_indexes.js",
         "fresh task-owned synthetic MySQL existing migrations plus approved additive Customer migration",
         "scoped design and implementation PR/merge after applicable actual gates"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-044",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Actual user: 繼續修復 DEF-034002 搜尋輸入顯示舊結果，以及 DEF-027001 匯入 UI 測試問題，完成驗證後建立 PR 並合併；完整下游整合驗收保持阻塞，沒有需要我決策的事就自動繼續。",
+      "recorded_at": "2026-10-15T04:12:41Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "7b1eb4674d231be20c8882b47a1fe5db0550b2c3429adc859e0be27630a51a34",
+      "code_commit": "10ca62adc47d4d099a78afba04e7b569bdd6b370",
+      "scope": [
+        "TASK-016",
+        "TASK-027",
+        "DEF-034002",
+        "DEF-027001",
+        "client/src/pages/customers/**",
+        "client/test/**",
+        "client/e2e/customer-management/**",
+        "docs/customer_management/**",
+        "isolated-synthetic-browser-verification",
+        "PR-and-normal-merge-after-gates"
       ],
       "expires_at": null
     }
@@ -4049,8 +4073,8 @@
       "kind": "GIT_PUSH",
       "target": "origin codex/customer-def034001-fix; final docs-only source/evidence binding checkpoint",
       "idempotency_key": "customer-def034001-final-provenance-push-v1",
-      "status": "PLANNED",
-      "source_ref": "Correctactualindependentreviewprovenancefinding; exactproduct/testsource remains7fae1308/af7cbfingerprint. Require newfinalheadCI."
+      "status": "CONFIRMED",
+      "source_ref": "Correctactualindependentreviewprovenancefinding; exactproduct/testsource remains7fae1308/af7cbfingerprint. Require newfinalheadCI. Observed PR233closure https://github.com/crazysumsum/erp-app/pull/233#issuecomment-6184204337: merged10ca62ad,exacthead2f93/all5CI38678608817SUCCESS,ownworktree/branches/runtimescleaned. No replay."
     },
     {
       "id": "EXT-CLEANUP-078",
@@ -4065,8 +4089,8 @@
       "kind": "GIT_MERGE",
       "target": "github:crazysumsum/erp-app PR233 -> main, normal merge then own implementation branch/worktree cleanup",
       "idempotency_key": "customer-def034001-approved-implementation-merge-v1",
-      "status": "PLANNED",
-      "source_ref": "Sam explicitly authorized merge after completion; only after finalexacthead5CIgreen, independentcandidateapproval, freshmainintegration ifmoved. No admin bypass/fullacceptance."
+      "status": "CONFIRMED",
+      "source_ref": "Sam explicitly authorized merge after completion; only after finalexacthead5CIgreen, independentcandidateapproval, freshmainintegration ifmoved. No admin bypass/fullacceptance. Observed PR233closure https://github.com/crazysumsum/erp-app/pull/233#issuecomment-6184204337: merged10ca62ad,exacthead2f93/all5CI38678608817SUCCESS,ownworktree/branches/runtimescleaned. No replay."
     },
     {
       "id": "EXT-MYSQL-080",
@@ -4083,6 +4107,22 @@
       "idempotency_key": "customer-def034001-integrated-runtime-cleanup-v1",
       "status": "CONFIRMED",
       "source_ref": "2026-10-15T03:52Z actualdatadir/port13373 verified,Customers0; mysqladminshutdown,server2478exit0,PIDremoved; exact integrated-runtime.3nNabW removed. FullsanitizedJSON/56branchrecords retained. No shared3306/production/unrelatedprocess effects."
+    },
+    {
+      "id": "EXT-BROWSER-082",
+      "kind": "BROWSER_TEST",
+      "target": "Ownworktree /private/tmp/erp-customer-ui-defect-remediation; loopback5204; runtime.kirCP5 synthetic Customer mocks/baseline",
+      "idempotency_key": "customer-ui-defects-reproduction-20261015-v1",
+      "status": "PLANNED",
+      "source_ref": "Actual Sam scoped bugfix/validationauthority; Playwright CLI/runtime plus exactexistingCustomer suite. No production/user data or external transactions; preserve RED beforefix."
+    },
+    {
+      "id": "MODE-CHANGE-182",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-182",
+      "status": "CONFIRMED",
+      "source_ref": "Actual Sam explicit DEF034002/027001 remediation+validation+PRmerge request; latestmain10ca62ad observed; continue IMPLEMENT not formalacceptance"
     }
   ],
   "evidence_files": [
@@ -4124,7 +4164,7 @@
     {
       "id": "DEF-034002",
       "severity": "MEDIUM",
-      "status": "OPEN",
+      "status": "IN_PROGRESS",
       "source_ids": [
         "TASK-016",
         "TC-040",
@@ -4138,7 +4178,7 @@
     {
       "id": "DEF-027001",
       "severity": "MEDIUM",
-      "status": "OPEN",
+      "status": "IN_PROGRESS",
       "source_ids": [
         "TASK-027",
         "TC-065",
@@ -4150,5 +4190,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "PR233 is authoritative remote resolution record: inspect actualhead/checks/review/merge before anyretry. If OPEN: push finaldocs-onlycheckpoint, require all5exactheadCI and independentimmutableheadapproval, freshfetchmain/integrate/reverify ifmoved, thenSam-authorizednormalmergeandownbranch/worktreecleanup. If MERGED: neverreplaypush/merge; follow closurecomment. DEF034001CLOSEDscopeddeveloperonly; TASK034/full downstream/CustomerbrowseracceptanceBLOCKED,DEF034002/027001OPEN. Ownedruntimescleaned; no productionrelease."
+  "next_safe_action": "PAUSED: shared DataTable.vue root cause conflicts with approved DESIGN section 9.1 and manifest scope. Canonical HD-012 pending DESIGN/PLAN proposal and observations live in draft PR #234 on codex/customer-ui-ordering-design. Await Sam exact proposal/scope approval before any shared product edits. Retain this unpublished test-only commit 3b890ef47a46d36c717f12cd83e82cf7f8a4ac94; corrected TC-065 1 PASS, search regressions 1 PASS/2 FAIL (unchanged product), not defect closure. Runtime evidence remains private at /private/tmp/erp-customer-ui-runtime.kirCP5. Resume from fresh main and reconcile approved proposal after decision; do not replay old approvals or merge this WIP. Full downstream acceptance BLOCKED."
 }
