@@ -1,6 +1,6 @@
 # Customer UI defects / HD-012 bounded shared-table proposal
 
-## Current approved implementation — 2026-10-15
+## Approved implementation checkpoint before final CI — 2026-10-15
 
 Sam explicitly approved HD-012, PR #234's exact DESIGN/PLAN and the narrow
 `DataTable.vue` repair. APPROVAL-DESIGN-018 / PLAN-018 / SCOPE-045 bind DESIGN
@@ -91,6 +91,18 @@ and finished after product commitf3413abe. No server/database/config/dependency
 file changed during it (identical backend tree to main6b3faa1f); it is supporting
 backend-only evidence, not a generic frozen whole-source run. Final UI checks ran
 after the last product change; mandatory CI must verify the immutable full PR head.
+
+### Implementation publication and independent review
+
+Implementation PR: https://github.com/crazysumsum/erp-app/pull/237 . Actual
+push/create succeeded; initial observed head25c044ca/base6b3faa1f was OPEN and CI
+started. A docs review Required correction (REV-057) removed a false implication
+that pending CI had already passed. Actual reviewer then APPROVED clean25c044ca
+docs (REV-058), including skip/provenance/authority/closure limits. This publication
+checkpoint records those observations only; subsequent metadata-only commit still
+needs its own final-head CI. Final CI, fresh-main, merge and cleanup receipts are
+recorded in that PR's comments to avoid self-referential commit/evidence rewrites.
+Do not replay publication/merge from the stored PLANNED action: inspect the PR.
 
 ## Historical proposal decision boundary
 

@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 191,
+  "revision": 192,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -2516,6 +2516,30 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-057",
+      "method": "SEPARATE_AGENT",
+      "author": "/root HD012 documentation checkpoint",
+      "reviewer": "Jason (/root/customer_task011_review), actual separate read-only agent",
+      "reviewed_baseline": "3d98d69b15499f08f0c22cfd7d6d545967eb95457118646f8d2b3f7be57c9083",
+      "source_ref": "Actual reviewer Required docs correction on9907fe1a: report said UI checks plus requiredCI satisfied while CI pending; implication removed in25c044ca. Historical finding resolved by REV058; no source/test change.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-058",
+      "method": "SEPARATE_AGENT",
+      "author": "/root HD012 documentation checkpoint",
+      "reviewer": "Jason (/root/customer_task011_review), actual separate read-only agent",
+      "reviewed_baseline": "3d98d69b15499f08f0c22cfd7d6d545967eb95457118646f8d2b3f7be57c9083",
+      "source_ref": "Actual separate reviewer APPROVE clean25c044ca docs, product f3413abe/sourcefp3d98. Correct pending-CI wording, conditional133skips/3CustomerNOT_RUN, backend-only server evidence, authority, scoped developer closure and blocked downstream/UAT/release consistent.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -4367,21 +4391,21 @@
       "kind": "GIT_PUSH",
       "target": "origin codex/customer-ui-defect-remediation",
       "idempotency_key": "customer-hd012-implementation-push-v1",
-      "status": "PLANNED",
-      "source_ref": "APPROVAL-SCOPE-045 actual Sam approval; HD012 approved DESIGN/PLAN unchanged. Scoped UI developer/review checks PASS; full module/downstream acceptance remains BLOCKED. Observe actual final-head five CI checks and freshmain before normal merge; inspect existing actions before retry."
+      "status": "CONFIRMED",
+      "source_ref": "APPROVAL-SCOPE-045 actual Sam approval; HD012 approved DESIGN/PLAN unchanged. Scoped UI developer/review checks PASS; full module/downstream acceptance remains BLOCKED. Observe actual final-head five CI checks and freshmain before normal merge; inspect existing actions before retry. Actual push/create exit0; observed OPEN PR https://github.com/crazysumsum/erp-app/pull/237 head25c044ca5f189cee5f692a3245b6c3bc931d7c9c base6b3faa1f. PR attached to current chat. CI38691168701 started on25c044ca; no CI pass/merge inferred."
     },
     {
       "id": "EXT-PR-088",
       "kind": "PR_CREATE",
       "target": "main <- codex/customer-ui-defect-remediation; two approved UI defects",
       "idempotency_key": "customer-hd012-implementation-pr-v1",
-      "status": "PLANNED",
-      "source_ref": "APPROVAL-SCOPE-045 actual Sam approval; HD012 approved DESIGN/PLAN unchanged. Scoped UI developer/review checks PASS; full module/downstream acceptance remains BLOCKED. Observe actual final-head five CI checks and freshmain before normal merge; inspect existing actions before retry."
+      "status": "CONFIRMED",
+      "source_ref": "APPROVAL-SCOPE-045 actual Sam approval; HD012 approved DESIGN/PLAN unchanged. Scoped UI developer/review checks PASS; full module/downstream acceptance remains BLOCKED. Observe actual final-head five CI checks and freshmain before normal merge; inspect existing actions before retry. Actual push/create exit0; observed OPEN PR https://github.com/crazysumsum/erp-app/pull/237 head25c044ca5f189cee5f692a3245b6c3bc931d7c9c base6b3faa1f. PR attached to current chat. CI38691168701 started on25c044ca; no CI pass/merge inferred."
     },
     {
       "id": "EXT-MERGE-089",
       "kind": "PR_MERGE",
-      "target": "scoped Customer UI repair PR after exact-head CI/review/fresh main",
+      "target": "PR #237 main <- codex/customer-ui-defect-remediation after exact-final-head CI/review/freshmain",
       "idempotency_key": "customer-hd012-implementation-merge-v1",
       "status": "PLANNED",
       "source_ref": "APPROVAL-SCOPE-045 actual Sam approval; HD012 approved DESIGN/PLAN unchanged. Scoped UI developer/review checks PASS; full module/downstream acceptance remains BLOCKED. Observe actual final-head five CI checks and freshmain before normal merge; inspect existing actions before retry."
@@ -4457,5 +4481,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Publish scoped HD012 implementation and minimized report; observe created PR URL/head and exact-head five CI checks. Independent product review REV056 APPROVED f3413abe; final docs consistency review pending. Keep full module/downstream acceptance BLOCKED and133conditional server skips NOT_RUN, no waiver. Re-fetch main before normal merge; if moved integrate/reverify. After actual merge, record remote closure and safely stop/remove only owned runtime/worktrees/branches. No additional source edits planned."
+  "next_safe_action": "PR #237 OPEN/published; product/source unchanged f3413abe/fp3d98; approved canonical DESIGN/PLAN unchanged. Actual independent code+docs reviews REV056/058 APPROVED, intermediate docs implication REV057 corrected. Publish this metadata-only observation checkpoint, then inspect final PR head and require all five CI checks on that exact candidate; never reuse25c044ca CI after new commit. Freshmain fetch/integration before normal merge. Record final exact-head CI/merge receipts as PR comments without manufacturing local self-referential head evidence. Full module/downstream acceptance remains BLOCKED; retained133conditional skips notPASS. Owned runtime stopped, planning PR234 worktree/local/remote branches cleaned; implementation cleanup only after observed merge."
 }
