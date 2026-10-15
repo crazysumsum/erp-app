@@ -173,5 +173,23 @@ test("@technical a detail with 100 contacts says so and loads the rest a page at
   await expect(page.getByText("Contact 2004")).toBeVisible();
   await expect(page.getByRole("button", { name: "載入更多聯絡人" })).toHaveCount(0);
   expect(state.contactPages).toEqual([{ page: "2", pageSize: "100" }]);
+
+  // REV-095 L-2：轉去概覽再返嚟，已載入嘅唔使再攞。
+  await page.getByRole("tab", { name: "概覽" }).click();
+  await page.getByRole("tab", { name: "聯絡人 (100+)" }).click();
+  await expect(page.getByText("已顯示 105 個聯絡人，共 105 個")).toBeVisible();
+  expect(state.contactPages).toHaveLength(1);
+  expect(problems).toEqual([]);
+});
+
+test("@technical ticking a filter on a later page goes back to page 1 (REV-095 M-1)", async ({ page }) => {
+  const problems = collectProblems(page);
+  const state = await installApi(page);
+  await page.goto("/suppliers?page=3");
+  await expect(page.getByText("SUP-007")).toBeVisible();
+  expect(state.lists.at(-1)).toMatchObject({ page: "3" });
+  await page.getByRole("checkbox", { name: "缺主要訂單聯絡人" }).click();
+  await expect.poll(() => state.lists.at(-1)).toMatchObject({ page: "1", missingPrimaryContact: "true" });
+  await expect(page).toHaveURL(/[?&]page=1(&|$)/u);
   expect(problems).toEqual([]);
 });
