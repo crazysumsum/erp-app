@@ -2,6 +2,18 @@
 
 ## Current scope
 
+2026-10-15 / HD-011 approved scoped remediation supersedes the historical status
+below. Planning PR#232 merged d69b267d; CustomerService.list now uses distinct
+indexed candidate IDs plus ten forward indexes0082. Final source af7cbcb3...456e9
+passes two unchanged50k/20-worker/30s capacity runs17/17 each, listp957.891083 and
+6.992709ms; all14 actual positive branches use expected range keys and no physical
+table ALL appears. DEF-034001 RETEST pending final review/CI/integration;
+TASK-034/full downstream acceptance remain BLOCKED. Separate frontend issues
+DEF-034002/DEF-027001 remain OPEN; no full browser/module PASS is claimed.
+[Current report](def034001-remediation-report.md) preserves all failures/limitations
+and links exact metrics/plans. Historical HD-010/earlier statements are not current
+HD-011 approval or verification status.
+
 2026-10-15 / HD-010 approved retest:50,000 Customers,20 concurrent workers,p95<=5s.
 The new run meets latency (list1,521.02ms; exact298.68ms; address305.74ms;
 contact288.71ms), with1,508 correct operations and0operation errors. Actual list

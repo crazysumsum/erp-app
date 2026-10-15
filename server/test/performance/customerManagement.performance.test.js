@@ -162,6 +162,19 @@ function queryPlanFailures(rows, label) {
   });
 }
 
+function selectivePrefixFailures(row, expectedKeys, label) {
+  return row?.type === "range" && expectedKeys.includes(row.key)
+    ? [] : [`${label} positive prefix must range over ${expectedKeys.join(" or ")}`];
+}
+
+test("Customer prefix proof rejects a wrong range index, a full index scan and absent plans", () => {
+  const keys = ["idx_customers_search_phone"];
+  assert.deepEqual(selectivePrefixFailures({ type: "range", key: keys[0] }, keys, "phone"), []);
+  for (const row of [{ type: "range", key: "PRIMARY" }, { type: "index", key: keys[0] }, { type: "ALL", key: null }, undefined]) {
+    assert.equal(selectivePrefixFailures(row, keys, "phone").length, 1);
+  }
+});
+
 async function assertIndexedPlan(database, label, sql, params) {
   const [rows] = await database.query(`EXPLAIN FORMAT=TRADITIONAL ${sql}`, params);
   assert.deepEqual(queryPlanFailures(rows, label), [], `${label} must keep every physical table indexed`);
@@ -262,6 +275,7 @@ test(
     }));
     plans.actualList = [];
     for (const { sql, params } of actualListQueries) {
+      assert.doesNotMatch(sql, /\b(?:FORCE|USE|IGNORE)\s+(?:INDEX|KEY)\b|\/\*\+/iu, "actual Customer queries must not force a plan");
       plans.actualList.push((await database.query(`EXPLAIN FORMAT=TRADITIONAL ${sql}`, params))[0]);
     }
     await lookupService.findByCode(fixtures.sampleActiveCustomerCode, { purpose: "new_sale" });
@@ -324,14 +338,21 @@ test(
     }));
     assert.deepEqual(gateFailures, [], "Customer latency and query-plan gates must all pass");
 
+    const [storage] = await database.query(
+      "SELECT TABLE_NAME, TABLE_ROWS, DATA_LENGTH, INDEX_LENGTH FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME IN ('customers','customer_contacts','customer_addresses','customer_identifiers') ORDER BY TABLE_NAME"
+    );
+    console.log(JSON.stringify({ tc: "TC-028-storage", phase: "POST_LOAD_NOT_LATENCY_MEASUREMENT", storage }));
+
     await t.test("every selective search field uses its actual candidate range after the measured load", async () => {
       const probes = [
-        ["code", fixtures.sampleActiveCustomerCode, "customers"],
-        ["legalName", `Performance Customer ${fixtures.marker} 00001`, "customers"],
-        ...["trading", "phone", "email"].map((field) => [field, `probe-${fixtures.marker}-${field}`, "customers"]),
-        ["identifier", `probe-${fixtures.marker}-identifier-${String(fixtures.sampleActiveCustomerId).padStart(8, "0")}`, "customer_identifiers"],
-        ...["name", "email", "phone", "mobile"].map((field) => [`contact.${field}`, `probe-${fixtures.marker}-contact-${field}`, "customer_contacts"]),
-        ...["label", "address_line1", "city", "postal_code"].map((field) => [`address.${field}`, `probe-${fixtures.marker}-address-${field}`, "customer_addresses"])
+        ["code", fixtures.sampleActiveCustomerCode, "customers", ["uq_customers_code_key"]],
+        ["legalName", `Performance Customer ${fixtures.marker} 00001`, "customers", ["uq_customers_legal_name_key", "idx_customers_legal_name"]],
+        ...["trading", "phone", "email"].map((field) => [field, `probe-${fixtures.marker}-${field}`, "customers",
+          [field === "trading" ? "idx_customers_trading_name" : `idx_customers_search_${field}`]]),
+        ["identifier", `probe-${fixtures.marker}-identifier-${String(fixtures.sampleActiveCustomerId).padStart(8, "0")}`, "customer_identifiers", ["idx_customer_identifiers_search_value"]],
+        ...["name", "email", "phone", "mobile"].map((field) => [`contact.${field}`, `probe-${fixtures.marker}-contact-${field}`, "customer_contacts",
+          [field === "email" ? "idx_customer_contacts_email" : `idx_customer_contacts_search_${field}`]]),
+        ...["label", "address_line1", "city", "postal_code"].map((field) => [`address.${field}`, `probe-${fixtures.marker}-address-${field}`, "customer_addresses", [`idx_customer_addresses_search_${field}`]])
       ];
       // Only this post-load phase changes probe fields; the measured fixture/mix is unchanged.
       await database.execute(
@@ -358,7 +379,7 @@ test(
       }
       await database.query("ANALYZE TABLE customers, customer_contacts, customer_addresses, customer_identifiers, customer_credit_profiles");
       const failures = [];
-      for (const [index, [field, q, table]] of probes.entries()) {
+      for (const [index, [field, q, table, expectedKeys]] of probes.entries()) {
         const queries = [];
         const page = await customerService.list({ ...actor, q, sortBy: "code", descending: false }, {
           async query(sql, params) { queries.push({ sql, params }); return database.query(sql, params); }
@@ -367,13 +388,14 @@ test(
         assert.deepEqual(page.items.map((item) => item.id), [fixtures.sampleActiveCustomerId], field);
         const actual = [];
         for (const { sql, params } of queries) {
+          assert.doesNotMatch(sql, /\b(?:FORCE|USE|IGNORE)\s+(?:INDEX|KEY)\b|\/\*\+/iu, field);
           const [rows] = await database.query(`EXPLAIN FORMAT=TRADITIONAL ${sql}`, params);
           actual.push(rows);
           failures.push(...queryPlanFailures(rows, field));
         }
         const positiveBranch = actual[0].find((row) => Number(row.id) === index + 2 && row.table === table);
-        if (!positiveBranch || positiveBranch.type !== "range" || !positiveBranch.key) failures.push(`${field} positive prefix branch must use a selective index range`);
-        console.log(JSON.stringify({ tc: "TC-028-search-branch", phase: "POST_LOAD_NOT_LATENCY_MEASUREMENT", field, positiveBranch, actual }));
+        failures.push(...selectivePrefixFailures(positiveBranch, expectedKeys, field));
+        console.log(JSON.stringify({ tc: "TC-028-search-branch", phase: "POST_LOAD_NOT_LATENCY_MEASUREMENT", field, expectedKeys, positiveBranch, actual }));
       }
       console.log(JSON.stringify({ tc: "TC-028-search-branches", phase: "POST_LOAD_NOT_LATENCY_MEASUREMENT", fields: probes.length,
         diagnosticData: { identifiers: 5000, creditProfiles: 1 }, failures }));

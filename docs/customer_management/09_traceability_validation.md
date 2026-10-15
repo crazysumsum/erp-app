@@ -1,5 +1,20 @@
 # Customer Management Harness 2.0 Validation Report
 
+## Current HD-011 developer verification (2026-10-15)
+
+Sam's approved DESIGN25833d2d...3d51 / PLAN7b1eb467...1a34 are unchanged.
+Final source af7cbcb3222405b2e826254bbfd6bae5aab2c13883068aedbae077bde28456e9:
+Customer/safety280PASS/2explicitextendedskips/0FAIL; real MySQL24PASS/0SKIP;
+each enabled50k/20-worker capacity run17PASS/0FAIL/0SKIP. Expected-key and physical
+ALL guard mutations fail as intended and were restored. Lint/build pass; dependency
+audit exits0 at the existing high-severity threshold with one existing LOW Quasar
+advisory. No audit threshold/dependency/CI setting changed. Real URL-state browser
+checks pass; typed-search and clean-main import gaps remain explicitly OPEN,
+so no full browser/developer-module/technical acceptance PASS is claimed.
+Local structural/state/boundary checks and immutable review/current-head CI are
+recorded separately at publication, not inferred from these scoped measurements.
+[Detailed evidence](implementation/def034001-remediation-report.md).
+
 ## HD-010 approved implementation verification (2026-10-15)
 
 Sam approved the exact DESIGN/PLAN below and scoped executable-profile alignment

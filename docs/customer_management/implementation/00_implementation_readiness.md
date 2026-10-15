@@ -2,12 +2,17 @@
 
 ## Status
 
-Current HD-011 / DEF-034001 remediation is **BLOCKED on Sam's revised DESIGN/PLAN
-decision**. Fresh unchanged reproduction still has both physical Customer ALL
-scans. Independent proposal review REV-048 approved the narrow candidate-UNION/
-ten-index/physical-plan-classification correction, not implementation authority.
-No product source, executable assertion or migration is changed. See the
-[current diagnosis and exact proposed baselines](def034001-remediation-report.md).
+HD-011 / PR#232's exact DESIGN/PLAN are explicitly approved by Sam, and planning
+merged at d69b267d. The authorized candidate-UNION/ten-index fix and final developer
+retests are complete: both physical Customer ALL scans removed; two unchanged
+50k/20-worker/30s runs pass17/17, listp957.891083/6.992709ms. Scoped implementation
+publication remains CONDITIONAL on final immutable review/current CI/fresh main;
+DEF-034001 is RETEST, not a full capacity or release acceptance. See the
+[current evidence and limitations](def034001-remediation-report.md).
+
+Full Customer acceptance additionally retains unresolved frontend gaps
+DEF-034002 (typed-search stale display) and DEF-027001 (clean-main reproducible
+mocked import UI failure). No frontend/CI setting or acceptance bar is changed.
 
 `BLOCKED` for complete PHASE-004 integration: TASK-029 is merged; TASK-030/031/032
 await real downstream consumers. TASK-033's Customer-local telemetry/security/runbook

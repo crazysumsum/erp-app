@@ -165,7 +165,7 @@ integrationTest("DEF-034001 real MySQL Customer search preserves prefix, ranking
       await expectIds(q, {}, [id]);
     }
     const normalized = await customer({ legal_name: `Normalized ${suffix} Name` });
-    await expectIds(`  ＮＯＲＭＡＬＩＺＥＤ   ${suffix}　ＮＡＭＥ  `, {}, [normalized]);
+    await expectIds(`  ＮＯＲＭＡＬＩＺＥＤ   ${suffix}\u3000ＮＡＭＥ  `, {}, [normalized]);
     for (const q of [`${marker}${"x".repeat(65)}`, `${"ﬃ".repeat(22)}${suffix}`]) {
       const exactId = await customer({ legal_name: q, updated_at: now - 1 });
       const prefixId = await customer({ legal_name: `${q} suffix`, updated_at: now });

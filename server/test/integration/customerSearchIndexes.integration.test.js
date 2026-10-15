@@ -33,10 +33,11 @@ integrationTest("TC-028 Customer prefix indexes install, rerun safely and reject
     await connection.query("ALTER TABLE customers DROP INDEX idx_customers_search_email, ADD INDEX idx_customers_search_email (general_email(8), id)");
     await assert.rejects(() => up(connection), /Incompatible existing Customer search index: customers.idx_customers_search_email/);
   } finally {
-    const actual = (await indexes(connection)).filter((row) => row.index_name === "idx_customers_search_email");
-    if (actual.some((row) => row.sub_part !== null)) await connection.query("ALTER TABLE customers DROP INDEX idx_customers_search_email");
-    await up(connection);
-    await connection.end();
+    try {
+      const actual = (await indexes(connection)).filter((row) => row.index_name === "idx_customers_search_email");
+      if (actual.some((row) => row.sub_part !== null)) await connection.query("ALTER TABLE customers DROP INDEX idx_customers_search_email");
+      await up(connection);
+    } finally { await connection.end(); }
   }
 });
 
@@ -51,7 +52,7 @@ integrationTest("TC-028 Customer index migration bounds a real metadata-lock wai
     attempt = up(connection, { lockWaitSeconds: 1 });
     const outcome = await Promise.race([
       attempt.then(() => "unexpected success", (error) => error),
-      new Promise((resolve) => setTimeout(() => resolve("still waiting after 10 seconds"), 10_000).unref())
+      new Promise((resolve) => { setTimeout(() => resolve("still waiting after 10 seconds"), 10_000).unref(); })
     ]);
     assert.match(String(outcome?.message ?? outcome), /metadata lock/);
     const [[{ current }]] = await connection.query("SELECT @@SESSION.lock_wait_timeout AS current");
@@ -60,9 +61,10 @@ integrationTest("TC-028 Customer index migration bounds a real metadata-lock wai
     await up(connection);
     assert.equal((await indexes(connection)).filter((row) => row.index_name === "idx_customers_search_email").length, 2);
   } finally {
-    await holder.rollback();
-    await attempt?.catch(() => {});
-    await up(connection);
-    await Promise.all([connection.end(), holder.end()]);
+    try {
+      await holder.rollback();
+      await attempt?.catch(() => {});
+      await up(connection);
+    } finally { await Promise.all([connection.end(), holder.end()]); }
   }
 });
