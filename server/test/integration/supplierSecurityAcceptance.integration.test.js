@@ -523,7 +523,8 @@ integrationTest("TC-120 (AUTH-010): each error class answers with its stable HTT
   const create = route("POST /api/v1/suppliers/create");
   const config = h.application.services.config;
 
-  // ER_DUP_ENTRY：兩個同 Code 嘅 create 同時入，至少一個要撞 DB 嘅 unique index。
+  // 同 Code 並發 create：create 喺 transaction 入面先查後寫，所以係應用層嘅 409，唔係 DB 嘅 ER_DUP_ENTRY
+  // （拎走 ER_DUP_ENTRY 映射呢度照樣綠，已經試過）。ER_DUP_ENTRY 由下面 identifier 嗰個 case 撞。
   const racers = await Promise.all(Array.from({ length: 6 }, () => send(mgmt, create,
     { body: { supplierCode: `DUP-${tag}`, supplierName: `Dup ${tag}`, defaultCurrencyCode: "HKD" } })));
   for (const made of racers.filter((r) => r.status === 201)) h.supplierIds.push(made.json.data.id);
@@ -549,6 +550,9 @@ integrationTest("TC-120 (AUTH-010): each error class answers with its stable HTT
       [404, "SUPPLIER_CHILD_NOT_FOUND", await send(mgmt, route("POST /api/v1/suppliers/:supplierId/addresses/:addressId/deactivate"),
         { ids: { supplierId: f.otherId, addressId: f.addressId }, body: { version: 1 } })],
       [409, "SUPPLIER_CODE_TAKEN", await send(mgmt, create, { body: { supplierCode: `SEC-${f.tag}`, supplierName: "x", defaultCurrencyCode: "HKD" } })],
+      // 冇預檢：靠 DB unique 撞出 ER_DUP_ENTRY，再按 constraint 映射；唔可以講出另一個 Supplier 係邊個。
+      [409, "SUPPLIER_IDENTIFIER_TAKEN", await send(mgmt, route("POST /api/v1/suppliers/:supplierId/identifiers/create"), { ids: { supplierId: f.otherId },
+        body: { identifierType: "business_registration", issuerCountryCode: "HK", identifierValue: `BR${f.tag}` } })],
       [409, "VERSION_CONFLICT", await send(mgmt, route("POST /api/v1/suppliers/:id/update"), { ids: { id: f.supplierId },
         body: { version: 99, supplierName: "x", displayName: "", defaultCurrencyCode: "HKD", defaultPaymentTermId: null, website: "", generalPhone: "", generalEmail: "", notes: "" } })],
       [410, "IMPORT_FILE_EXPIRED", await send(mgmt, route("GET /api/v1/supplier-imports/:id/result"), { ids: { id: Number(job.insertId) } })],
@@ -557,7 +561,7 @@ integrationTest("TC-120 (AUTH-010): each error class answers with its stable HTT
         { ids: { id: f.supplierId, bankAccountId: second.id }, body: { reason: "TC-120 retired key" } })]
     ];
     const forbidden = [/\bER_[A-Z_]+/u, /Duplicate entry/iu, /\bSELECT\b|\bINSERT\b|\bUPDATE\b.*\bSET\b/u, /\buq_[a-z_]+/u, /\bfk_[a-z_]+/u, /sqlMessage|sqlState/u,
-      /tc120-retired-key/u, /Other Supplier/u, /stack|at [A-Za-z]+ \(/u];
+      /tc120-retired-key/u, /Other Supplier/u, /Security Fixture/u, /stack|at [A-Za-z]+ \(/u];
     const secrets = [config.database?.password, config.jwt?.secret, process.env.DB_PASSWORD, process.env.SUPPLIER_BANK_ENCRYPTION_KEYS,
       process.env.SUPPLIER_BANK_LOOKUP_KEYS, f.account].filter((value) => typeof value === "string" && value.length >= 6);
     for (const [status, code, response] of [...cases, ...racers.filter((r) => r.status === 409).map((r) => [409, "SUPPLIER_CODE_TAKEN", r])]) {
