@@ -1,11 +1,11 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 356,
+  "revision": 357,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
-  "status": "BLOCKED",
-  "resume_status": "IMPLEMENTING",
+  "status": "IMPLEMENTING",
+  "resume_status": null,
   "current_phase": "PHASE-004",
   "current_task": "TASK-051",
   "baseline": {
@@ -5654,8 +5654,8 @@
         "TC-117",
         "TASK-051"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-15: 'HD-109 A' — inputCoercion:false on every Supplier POST route with a JSON body; multipart upload and GET routes unchanged."
     },
     {
       "id": "HD-110",
@@ -5665,8 +5665,8 @@
         "TC-120",
         "TASK-051"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-15: 'HD-110 A' — keep the per-type child 404 codes as an accepted deviation from design §6.11; the design is not edited (same handling as REV-064 I-2)."
     }
   ],
   "external_actions": [
@@ -6747,5 +6747,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Await HD-109 (JSON type coercion on Supplier routes, blocks TC-117) and HD-110 (child 404 code, blocks TC-120's last assertion). Unaffected TASK-051 step 2b work may continue."
+  "next_safe_action": "Implement HD-109 A, write TC-117, assert the per-type child codes in TC-120 (HD-110 A), update the test map, independent review, PR."
 }
