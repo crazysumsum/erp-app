@@ -69,7 +69,7 @@ class SupplierIdentifierHandler extends BaseRequestHandler {
 export class CreateSupplierIdentifierHandler extends SupplierIdentifierHandler {
   static handlerName = "createSupplierIdentifier";
   static api = {
-    method: "POST", path: "/api/v1/suppliers/:supplierId/identifiers/create", description: "新增全公司唯一的供應商識別資料。",
+    method: "POST", inputCoercion: false, path: "/api/v1/suppliers/:supplierId/identifiers/create", description: "新增全公司唯一的供應商識別資料。",
     authorizationPolicies: SUPPLIER_MGMT_POLICY,
     requestSchema: { params: OWNER_PARAMS, query: EMPTY_SUPPLIER_SCHEMA, body: CREATE_BODY }, responseSchema: { 201: IDENTIFIER_RESPONSE }
   };
@@ -79,7 +79,7 @@ export class CreateSupplierIdentifierHandler extends SupplierIdentifierHandler {
 export class UpdateSupplierIdentifierHandler extends SupplierIdentifierHandler {
   static handlerName = "updateSupplierIdentifier";
   static api = {
-    method: "POST", path: "/api/v1/suppliers/:supplierId/identifiers/:identifierId/update", description: "按版本及原因更新供應商識別資料。",
+    method: "POST", inputCoercion: false, path: "/api/v1/suppliers/:supplierId/identifiers/:identifierId/update", description: "按版本及原因更新供應商識別資料。",
     authorizationPolicies: SUPPLIER_MGMT_POLICY,
     requestSchema: { params: CHILD_PARAMS, query: EMPTY_SUPPLIER_SCHEMA, body: UPDATE_BODY }, responseSchema: { 200: IDENTIFIER_RESPONSE }
   };
@@ -91,7 +91,7 @@ export class UpdateSupplierIdentifierHandler extends SupplierIdentifierHandler {
 export class DeleteSupplierIdentifierHandler extends SupplierIdentifierHandler {
   static handlerName = "deleteSupplierIdentifier";
   static api = {
-    method: "POST", path: "/api/v1/suppliers/:supplierId/identifiers/:identifierId/delete", description: "按版本及原因刪除未引用的供應商識別資料。",
+    method: "POST", inputCoercion: false, path: "/api/v1/suppliers/:supplierId/identifiers/:identifierId/delete", description: "按版本及原因刪除未引用的供應商識別資料。",
     authorizationPolicies: SUPPLIER_MGMT_POLICY,
     requestSchema: { params: CHILD_PARAMS, query: EMPTY_SUPPLIER_SCHEMA, body: DELETE_BODY }, responseSchema: { 200: DELETE_RESPONSE }
   };

@@ -1,3 +1,4 @@
+import {salesError} from "./salesErrors.js";
 import { ApplicationError } from "../../framework/errors/ApplicationError.js";
 import { assertActorFresh, loadRoleNamesForUser, loadPermissionNamesForUser } from "../authorization/directoryLookups.js";
 import { SALES_PERMISSIONS } from "./salesConstants.js";
@@ -19,12 +20,25 @@ export async function requireSalesWriteActor(connection, claims) {
 }
 
 export async function requireSalesRecoveryActor(connection, actorId) {
+  return requireOriginalSalesActor(connection,actorId,"sales.mgmt");
+}
+export async function requireSalesImportActorById(connection, actorId) {
+  return requireOriginalSalesActor(connection,actorId,"sales.import");
+}
+async function requireOriginalSalesActor(connection, actorId, permission) {
   if (!Number.isSafeInteger(actorId) || actorId < 1) throw new TypeError("Invalid recovery actor");
   const [[user]] = await connection.query("SELECT username FROM users WHERE id = ? AND status = 'active'", [actorId]);
   if (!user?.username) throw new ApplicationError("Original Sales actor is inactive", { code: "FORBIDDEN", statusCode: 403 });
   const roles = await loadRoleNamesForUser(connection, actorId);
   const permissions = await loadPermissionNamesForUser(connection, actorId);
-  if (!["sales.view", "sales.mgmt"].every(name => permissions.includes(name)))
+  if (!["sales.view", permission].every(name => permissions.includes(name)))
     throw new ApplicationError("Original Sales actor no longer has permission", { code: "FORBIDDEN", statusCode: 403 });
   return { id: actorId, username: user.username, roles, permissions };
 }
+
+export async function requireSalesImportWorker(tx,authorize,signal,previous){
+  const principal=await authorize?.();if(!principal||principal.signal!==signal||signal?.aborted!==false||typeof principal.leaseOwner!=="string"||!principal.leaseOwner||previous&&principal.leaseOwner!==previous.leaseOwner)throw salesError("SALES_DEPENDENCY_UNAVAILABLE");
+  const [[lease]]=await tx.query("SELECT owner,expires_at FROM fr_job_leases WHERE job_name='sales.importWorker' FOR UPDATE"),[[clock]]=await tx.query("SELECT UNIX_TIMESTAMP() AS now,CAST(UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3))*1000 AS UNSIGNED) AS now_ms"),fresh=await authorize?.();
+  if(!lease||lease.owner!==principal.leaseOwner||![Number(lease.expires_at),Number(clock.now),Number(clock.now_ms)].every(Number.isSafeInteger)||Number(lease.expires_at)<=Number(clock.now)||fresh?.leaseOwner!==principal.leaseOwner||fresh.signal!==signal||signal.aborted)throw salesError("SALES_DEPENDENCY_UNAVAILABLE");
+  return {...principal,nowMs:Number(clock.now_ms)};
+ }

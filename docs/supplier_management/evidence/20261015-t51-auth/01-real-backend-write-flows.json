@@ -1,0 +1,127 @@
+{
+  "what": "HD-109 A check: real browser (Playwright) against the app on erp_t51 with inputCoercion:false on Supplier JSON POST routes; every client write flow below sent typed JSON and was accepted.",
+  "commit": "109436aec35fcbc3f46afecd5032ad062ae3b921",
+  "results": [
+    {
+      "name": "create with payment term",
+      "ok": true
+    },
+    {
+      "name": "edit general info",
+      "ok": true
+    },
+    {
+      "name": "add ordering address (primary)",
+      "ok": true
+    },
+    {
+      "name": "add orders contact (primary)",
+      "ok": true
+    },
+    {
+      "name": "add identifier",
+      "ok": true
+    },
+    {
+      "name": "activate",
+      "ok": true
+    },
+    {
+      "name": "suspend (password)",
+      "ok": true
+    },
+    {
+      "name": "reactivate (password)",
+      "ok": true
+    },
+    {
+      "name": "archive (password)",
+      "ok": true
+    },
+    {
+      "name": "restore (password)",
+      "ok": true
+    },
+    {
+      "name": "no console errors",
+      "ok": true
+    },
+    {
+      "name": "every Supplier write accepted",
+      "ok": true
+    }
+  ],
+  "writes": [
+    {
+      "url": "/api/v1/suppliers/duplicates/check",
+      "status": 200
+    },
+    {
+      "url": "/api/v1/suppliers/create",
+      "status": 201
+    },
+    {
+      "url": "/api/v1/suppliers/92311/update",
+      "status": 200
+    },
+    {
+      "url": "/api/v1/suppliers/92311/addresses/create",
+      "status": 201
+    },
+    {
+      "url": "/api/v1/suppliers/92311/contacts/create",
+      "status": 201
+    },
+    {
+      "url": "/api/v1/suppliers/92311/identifiers/create",
+      "status": 201
+    },
+    {
+      "url": "/api/v1/suppliers/92311/activate",
+      "status": 200
+    },
+    {
+      "url": "/api/v1/suppliers/92311/suspend",
+      "status": 200
+    },
+    {
+      "url": "/api/v1/suppliers/92311/reactivate",
+      "status": 200
+    },
+    {
+      "url": "/api/v1/suppliers/92311/archive",
+      "status": 200
+    },
+    {
+      "url": "/api/v1/suppliers/92311/restore",
+      "status": 200
+    }
+  ],
+  "scope": {
+    "covered": [
+      "suppliers/create (with payment term)",
+      "suppliers/:id/update",
+      "addresses/create",
+      "contacts/create",
+      "identifiers/create",
+      "activate",
+      "suspend",
+      "reactivate",
+      "archive",
+      "restore"
+    ],
+    "not covered in a browser": [
+      "child update/deactivate/delete",
+      "sku-relations",
+      "bank writes",
+      "block/unblock",
+      "code change",
+      "delete",
+      "approvals",
+      "import confirm/cancel",
+      "settings update",
+      "export"
+    ],
+    "note": "The uncovered payloads were checked statically by REV-096 (types from integer response fields, Number(), real booleans); no type problem found."
+  }
+}

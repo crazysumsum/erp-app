@@ -30,7 +30,7 @@ export class DownloadSupplierImportResultHandler extends BaseRequestHandler {
   async execute(req, res) {
     const { fileName, content } = await this.imports.resultCsv({
       actorId: Number(req.auth.claims.sub), claimedRoles: req.auth.claims.roles, claimedPermissions: req.auth.claims.permissions,
-      id: req.input.params.id
+      id: Number(req.input.params.id)
     });
     // Cache-Control: private, no-store 由框架嘅 file response 寫（REV-073 I-1）；Pragma 俾 HTTP/1.0 cache。
     res.setHeader("Pragma", "no-cache");

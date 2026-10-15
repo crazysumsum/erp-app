@@ -27,7 +27,7 @@ export class ExportSuppliersHandler extends BaseRequestHandler {
   static handlerName = "exportSuppliers";
 
   static api = {
-    method: "POST",
+    method: "POST", inputCoercion: false,
     path: "/api/v1/supplier-exports",
     authType: "jwt-password",
     description: "按列表篩選匯出一般供應商資料 CSV（匯入範本 v1 欄位，永不包含銀行資料）；最多 10,000 列。",

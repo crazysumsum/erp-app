@@ -108,7 +108,7 @@ export class CreateSupplierBankAccountHandler extends SupplierBankHandler {
   static handlerName = "createSupplierBankAccount";
 
   static api = {
-    method: "POST",
+    method: "POST", inputCoercion: false,
     path: "/api/v1/suppliers/:id/bank-accounts/create",
     description: "新增供應商銀行帳戶，加密帳號並記錄稽核。",
     authType: "jwt-device-password",
@@ -126,7 +126,7 @@ export class UpdateSupplierBankAccountHandler extends SupplierBankHandler {
   static handlerName = "updateSupplierBankAccount";
 
   static api = {
-    method: "POST",
+    method: "POST", inputCoercion: false,
     path: "/api/v1/suppliers/:id/bank-accounts/:bankAccountId/update",
     description: "修改銀行帳戶；帳號有變更才重新加密。",
     authType: "jwt-device-password",
@@ -144,7 +144,7 @@ export class SetDefaultSupplierBankAccountHandler extends SupplierBankHandler {
   static handlerName = "setDefaultSupplierBankAccount";
 
   static api = {
-    method: "POST",
+    method: "POST", inputCoercion: false,
     path: "/api/v1/suppliers/:id/bank-accounts/:bankAccountId/default",
     description: "在同一交易內切換唯一的預設銀行帳戶。",
     authType: "jwt-device-password",
@@ -162,7 +162,7 @@ export class DeactivateSupplierBankAccountHandler extends SupplierBankHandler {
   static handlerName = "deactivateSupplierBankAccount";
 
   static api = {
-    method: "POST",
+    method: "POST", inputCoercion: false,
     path: "/api/v1/suppliers/:id/bank-accounts/:bankAccountId/deactivate",
     description: "停用銀行帳戶並清除預設；已引用的帳戶仍然保留。",
     authType: "jwt-device-password",
@@ -180,7 +180,7 @@ export class RevealSupplierBankAccountHandler extends SupplierBankHandler {
   static handlerName = "revealSupplierBankAccount";
 
   static api = {
-    method: "POST",
+    method: "POST", inputCoercion: false,
     path: "/api/v1/suppliers/:id/bank-accounts/:bankAccountId/reveal",
     description: "解密並回傳完整帳號，同時記錄查看稽核。",
     // 設計 §6.6：reveal 係 jwt-password，唔係 device-password —— 佢係一個讀取動作，

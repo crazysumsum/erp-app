@@ -67,7 +67,7 @@ export class GetSupplierHandler extends SupplierQueryHandler {
 export class CheckSupplierDuplicatesHandler extends SupplierQueryHandler {
   static handlerName = "checkSupplierDuplicates";
   static api = {
-    method: "POST", path: "/api/v1/suppliers/duplicates/check", description: "檢查 Supplier Code 衝突及名稱近似提示。",
+    method: "POST", inputCoercion: false, path: "/api/v1/suppliers/duplicates/check", description: "檢查 Supplier Code 衝突及名稱近似提示。",
     authorizationPolicies: SUPPLIER_MGMT_POLICY,
     requestSchema: { params: EMPTY_SUPPLIER_SCHEMA, query: EMPTY_SUPPLIER_SCHEMA, body: SUPPLIER_DUPLICATE_CHECK_SCHEMA },
     responseSchema: { 200: SUPPLIER_DUPLICATE_RESPONSE_SCHEMA }

@@ -2,7 +2,7 @@ import { DOCUMENT_SEQUENCE_MAX } from "./salesConstants.js";
 import { salesError } from "./salesErrors.js";
 import { formatDateForFile } from "../../services/time/timeFormat.js";
 
-const PREFIXES = Object.freeze({ QUOTATION: "QT", SALES_ORDER: "SO" });
+const PREFIXES = Object.freeze({ QUOTATION: "QT", SALES_ORDER: "SO", IMPORT_BATCH: "SI" });
 export class SalesSequenceService {
   constructor({ time }) { this.time = time; }
 
