@@ -795,7 +795,8 @@ export class SupplierImportService {
           { jobId, expected: Number(job.total_count), actual: counts.total });
         return { id: jobId, status: "failed", ...counts };
       }
-      const status = counts.failed > 0 ? "completed_with_errors" : "completed";
+      // HD-106：預檢時略過嘅列一樣冇寫入，所以都算錯誤（IMP-006）。
+      const status = counts.failed > 0 || counts.skipped > 0 ? "completed_with_errors" : "completed";
       assertJobTransition(job.status, status);
       await connection.execute(
         `UPDATE supplier_import_jobs SET status = ?, applied_count = ?, failed_count = ?, skipped_count = ?,
