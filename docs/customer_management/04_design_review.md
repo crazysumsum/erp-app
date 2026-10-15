@@ -16,10 +16,15 @@ The reviewer found no Critical, High or Required issue in this amendment and
 verified unchanged historical report/JSON bytes, unchanged non-amended controls,
 matching contract pin, passing traceability/boundary/diff checks. This is not a
 performance run or closure of the pre-existing product defect.
-Exact revised DESIGN/PLAN human approval remains pending as HD-010.
+Sam explicitly approved HD-010 and ordered test alignment/remeasurement on
+2026-10-15; APPROVAL-DESIGN-016 and APPROVAL-PLAN-016 bind the exact hashes above.
 Prior approval/review records below apply only to their stated historical baselines.
-DEF-034001 remains HIGH/OPEN; no new measurement or accepted-risk disposition exists.
-Executable tests remain at the former profile until the revised baseline is approved.
+The executable profile is aligned and the new local run meets all5s latency budgets,
+but fails both actual-list full-scan gates. DEF-034001 remains HIGH/OPEN, with no
+risk waiver or whole-module acceptance. See the HD-010 measured report. Pending
+wording in the canonical amendment records its creation-time state; this review
+and the revisioned approval ledger record the subsequent actual decision without
+changing/re-hashing approved specification bytes.
 
 ## Historical review and approval record
 

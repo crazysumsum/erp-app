@@ -1,6 +1,18 @@
 # Customer Management Harness 2.0 Validation Report
 
-## Current capacity amendment validation (2026-10-15)
+## HD-010 approved implementation verification (2026-10-15)
+
+Sam approved the exact DESIGN/PLAN below and scoped executable-profile alignment
+and a new local run. Five new regressions failed under the former settings and
+passed after alignment; an inclusive-boundary mutation was detected and restored.
+Customer/safety regression:260 passed,2 explicit extended-runtime skips,0 failures.
+Enabled actual capacity suite:5 passed,1 failed,0 skips; latency PASS,plan FAIL.
+Lint and client build passed (existing chunk-size warning only). Historical PR#228
+report/JSON bytes are unchanged. No CI setting, product query or index changed.
+Formal acceptance and the complete module gate remain blocked; current-candidate
+review and required PR CI are still required before test/evidence publication.
+
+## Historical pre-approval amendment validation (2026-10-15)
 
 DESIGN `8462e9c2bc9909f413bb0063de29b44bcbe205d8bfd1209c254ff5d1090f9944`;
 PLAN `55ea357b07fb39cc1131b61757b95ca4aa07b246a8dbabfddfecb914e79ba247`.

@@ -1,9 +1,9 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 164,
+  "revision": 167,
   "mode": "FULL_LIFECYCLE",
-  "active_mode": "DESIGN_AND_PLAN",
+  "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
   "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-004",
@@ -11,17 +11,22 @@
   "baseline": {
     "design": "8462e9c2bc9909f413bb0063de29b44bcbe205d8bfd1209c254ff5d1090f9944",
     "plan": "55ea357b07fb39cc1131b61757b95ca4aa07b246a8dbabfddfecb914e79ba247",
-    "code_commit": "0e34f11afd829414021a5e24475604788df142d9",
-    "source_fingerprint": "013351d743371a72bcfc3b30fc6eafe6b0435ad62cd9f4533817f1ae9df48535",
+    "code_commit": "8b44c8978872d8c9357603059f7cc45d85294f71",
+    "source_fingerprint": "d70da3f3ce07cd241d2dcad5406a8a68b37207a97f9257aee7a3c7027b6596bd",
     "worktree": "/private/tmp/erp-customer-capacity-requirement-50k-20",
     "default_commit": "3faf93e57892577c03d7bc6d7ba62e23963941e2",
     "mode_entry_commit": "3faf93e57892577c03d7bc6d7ba62e23963941e2"
   },
   "runtime": {
-    "instance_id": "customer-capacity-amendment-50k-20-20261015",
-    "owner": "Primary harness agent; documentation-only amendment",
+    "instance_id": "customer-hd010-capacity-retest-20261015",
+    "owner": "Primary harness agent; approved Customer-local retest",
     "resources": {
-      "workspace": "/private/tmp/erp-customer-capacity-requirement-50k-20"
+      "workspace": "/private/tmp/erp-customer-capacity-requirement-50k-20",
+      "mysql-instance": "task-owned127.0.0.1:13369; /private/tmp/erp-customer-hd010-runtime.WEYDQZ/mysql",
+      "mysql-schema": "erp_customer_hd010_capacity_20261015",
+      "customer-file-root": "not exercised; task-owned synthetic capacity data only",
+      "customer-import-root": "not exercised; unchanged previous import evidence remains historical",
+      "web-port": "OS-assigned application listener in isolated load test; closed by test cleanup"
     },
     "lease_ref": null
   },
@@ -1613,6 +1618,67 @@
         "docs/customer_management/**"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-DESIGN-016",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-10-15 current human user: 批准 HD-010，按新基準調整測試並重新實測，完整下游整合驗收保持阻塞；沒有需要我決策的事就自動繼續。 Refers to exact DESIGN in HD-010 / PR #230, not a performance acceptance or query-plan waiver.",
+      "recorded_at": "2026-10-15T01:48:47Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "8462e9c2bc9909f413bb0063de29b44bcbe205d8bfd1209c254ff5d1090f9944",
+      "code_commit": "8b44c8978872d8c9357603059f7cc45d85294f71",
+      "scope": [
+        "customer-management",
+        "HD-009",
+        "HD-010",
+        "NFR-001",
+        "NFR-003",
+        "TASK-034"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-PLAN-016",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-10-15 current human user explicitly approves HD-010 and requests test alignment/rerun under its exact PLAN; full downstream acceptance remains blocked.",
+      "recorded_at": "2026-10-15T01:48:47Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "55ea357b07fb39cc1131b61757b95ca4aa07b246a8dbabfddfecb914e79ba247",
+      "code_commit": "8b44c8978872d8c9357603059f7cc45d85294f71",
+      "scope": [
+        "customer-management",
+        "HD-010",
+        "TASK-034",
+        "TC-028",
+        "TC-082"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-041",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-10-15 current HD-010 instruction authorizes changing the executable capacity profile and fresh local measurement; standing isolated-MySQL setup/migration and publication/merge authorization applies. Test/evidence only; no production optimization, acceptance waiver, shared DB reset or downstream fake readiness.",
+      "recorded_at": "2026-10-15T01:48:47Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "55ea357b07fb39cc1131b61757b95ca4aa07b246a8dbabfddfecb914e79ba247",
+      "code_commit": "8b44c8978872d8c9357603059f7cc45d85294f71",
+      "scope": [
+        "docs/customer_management/**",
+        "server/test/performance/customerManagement.performance.test.js",
+        "Customer-local synthetic capacity schema on task-owned MySQL13369",
+        "existing migrations applied to fresh task-owned instance",
+        "PR #230 test/evidence publication"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -2784,6 +2850,17 @@
       "source_ref": "GitHub PR #228 MERGED at2026-10-15T01:30:58Z as3faf93e5; run38664731754 SUCCESS on088b1b53, all5checks passed. Task worktree/local+remote branch and dedicated13369 MySQL/runtime were removed; no3306 change. Verified remote again before this docs-only amendment. Existing failure evidence remains tied to its old spec baseline; not current capacity acceptance.",
       "actor": "/root actual remote/state recovery",
       "observed_at": "2026-10-15T01:45:07Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "HD-01050k/20-worker/p95<=5s local capacity retest: latencyPASS, actual plansFAIL",
+      "code_commit": "8b44c8978872d8c9357603059f7cc45d85294f71",
+      "spec_baseline": "55ea357b07fb39cc1131b61757b95ca4aa07b246a8dbabfddfecb914e79ba247",
+      "source_fingerprint": "d70da3f3ce07cd241d2dcad5406a8a68b37207a97f9257aee7a3c7027b6596bd",
+      "status": "FAIL",
+      "source_ref": "implementation/hd010-capacity-retest-report.md and resultsJSON. Actual50000/5000address/5000contact,20workers/30s/defaultpool10;1508correctops/0errors. p95ms list1521.02/exact298.68/address305.74/contact288.71 all<=5000. COUNT/pageCustomerALL(~49468rows) gives2gateFailures, combinedcaseFAIL;5newregressionsPASS,0skip in enabledsuite. Separate260PASS/2explicitextendedskips/0FAIL, lint/buildPASS; inclusive5000ms mutation detected/restored. Fixturecleanup0, ownMySQLshutdown/private-root deletion verified. No product/query/index/CI change, riskwaiver or full acceptance.",
+      "actor": "/root approved local developer measurement",
+      "observed_at": "2026-10-15T01:54:18Z"
     }
   ],
   "pending_decisions": [
@@ -2927,8 +3004,8 @@
         "TC-082",
         "DEF-034001"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "APPROVAL-DESIGN-016; APPROVAL-PLAN-016; APPROVAL-SCOPE-041. Sam explicitly approved HD-010 and ordered test alignment/rerun; full downstream acceptance remains BLOCKED."
     }
   ],
   "external_actions": [
@@ -3603,9 +3680,35 @@
       "idempotency_key": "mode-change-162",
       "status": "CONFIRMED",
       "source_ref": "2026-10-15 Sam explicitly requests capacity requirement revision: 調整需求，5萬客戶，20個並行工作者， p95要求5秒內; re-enter DESIGN_AND_PLAN only, no new baseline approval implied"
+    },
+    {
+      "id": "MODE-CHANGE-165",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-165",
+      "status": "CONFIRMED",
+      "source_ref": "2026-10-15 actual Sam approval HD-010: 批准 HD-010，按新基準調整測試並重新實測，完整下游整合驗收保持阻塞；沒有需要我決策的事就自動繼續。 Scoped return to IMPLEMENT for test alignment and fresh local measurement."
+    },
+    {
+      "id": "EXT-MYSQL-068",
+      "kind": "DATABASE_TEST",
+      "target": "task-ownedMySQL26.7.0 at127.0.0.1:13369; datadir/private/tmp/erp-customer-hd010-runtime.WEYDQZ/mysql; schemaerp_customer_hd010_capacity_20261015",
+      "idempotency_key": "customer-hd010-local-capacity-20261015-v1",
+      "status": "CONFIRMED",
+      "source_ref": "Fresh task-owned MySQL26.7.0/datadir/13369 verified before writes; one fresh synthetic schema migrated through0081 and measured with approved50k/20profile. LatencyPASS/plansFAIL retained; no production/shared3306 writes. Fixtures0, server stopped and exact temporary root removed. Summary/complete plans sanitized; no key/rowcontents exported."
+    },
+    {
+      "id": "EXT-MERGE-069",
+      "kind": "GIT_MERGE",
+      "target": "github:crazysumsum/erp-app:main<-codex/customer-capacity-requirement-50k-20 PR#230",
+      "idempotency_key": "customer-hd010-capacity-profile-evidence-merge-v1",
+      "status": "PLANNED",
+      "source_ref": "HD-010/current autonomous continuation plus standing PR/merge authorization. Test/profile/evidence only, after independent review, final-head mandatory CI and fresh main check. Not performance acceptance or waiver of remaining HIGH defect/downstream integration."
     }
   ],
   "evidence_files": [
+    "docs/customer_management/implementation/hd010-capacity-retest-results.json",
+    "docs/customer_management/implementation/hd010-capacity-retest-report.md",
     "docs/customer_management/implementation/00_implementation_readiness.md",
     "docs/customer_management/implementation/phase-PHASE-001-report.md",
     "docs/customer_management/implementation/phase-PHASE-002-report.md",
@@ -3633,5 +3736,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "PR #230 is OPEN and REV-045 approved the documentation revision. Await HD-010 explicit approval of DESIGN8462e9c2bc9909f413bb0063de29b44bcbe205d8bfd1209c254ff5d1090f9944 and PLAN55ea357b07fb39cc1131b61757b95ca4aa07b246a8dbabfddfecb914e79ba247 before merge or re-entering IMPLEMENT to align executable capacity tests and rerun. Old approvals remain historical, not rebound. Keep the branch/worktree for this open PR. Generic PLAN_READY remains BLOCKED, including the pre-existing evidence-path/base mismatch documented in09_traceability_validation.md. PR #228 is already merged/cleaned; never replay EXT-MERGE-065. DEF-034001 stays HIGH OPEN and TASK-034 BLOCKED; actual plan/index checks, full downstream integration and production DR remain required."
+  "next_safe_action": "HD-010 approved profile alignment and fresh measurement are complete: all p95<=5000ms, actual-list COUNT/page plansFAIL. DEF-034001 stays HIGH OPEN/TASK-034 BLOCKED. Obtain independent review of this test/evidence-only change, publish via PR#230, require all5CI checks on final exact head, fetch/reconcile main, merge under standing authority and clean only this task branch/worktree. Do not optimize product or waive plan/index checks under this request. Complete downstream/production DR and generic module gates remain BLOCKED; evidence-path/base helper limitation is documented, not turned into a fake green gate."
 }
