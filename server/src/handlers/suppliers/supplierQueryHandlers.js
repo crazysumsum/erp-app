@@ -12,6 +12,8 @@ import {
   SUPPLIER_MGMT_POLICY,
   SUPPLIER_VIEW_POLICY
 } from "./supplierSchemas.js";
+import { ADDRESS_RESPONSE } from "./supplierAddressHandlers.js";
+import { CONTACT_RESPONSE } from "./supplierContactHandlers.js";
 
 function actor(req) {
   return {
@@ -87,5 +89,45 @@ export class GetSupplierCompletenessHandler extends SupplierQueryHandler {
 
   async execute(req) {
     return this.response(await this.suppliers.getSupplierCompleteness({ ...actor(req), id: Number(req.input.params.id) }));
+  }
+}
+
+const CHILD_PAGE_QUERY = Object.freeze({
+  type: "object", additionalProperties: false,
+  properties: { page: { type: "integer", minimum: 1, default: 1 }, pageSize: { type: "integer", minimum: 1, maximum: 100, default: 20 } }
+});
+const childPageResponse = (item) => Object.freeze({
+  type: "object", additionalProperties: false, required: ["items", "total", "page", "pageSize"],
+  properties: {
+    items: { type: "array", items: item }, total: { type: "integer", minimum: 0 },
+    page: { type: "integer", minimum: 1 }, pageSize: { type: "integer", minimum: 1, maximum: 100 }
+  }
+});
+
+export class ListSupplierAddressesHandler extends SupplierQueryHandler {
+  static handlerName = "listSupplierAddresses";
+  static api = {
+    method: "GET", path: "/api/v1/suppliers/:id/addresses", description: "分頁列出供應商地址（超過詳情上限時用）。",
+    authorizationPolicies: SUPPLIER_VIEW_POLICY,
+    requestSchema: { params: SUPPLIER_ID_PARAMS_SCHEMA, query: CHILD_PAGE_QUERY },
+    responseSchema: { 200: childPageResponse(ADDRESS_RESPONSE) }
+  };
+
+  async execute(req) {
+    return this.response(await this.suppliers.listSupplierAddresses({ ...actor(req), id: Number(req.input.params.id), ...req.input.query }));
+  }
+}
+
+export class ListSupplierContactsHandler extends SupplierQueryHandler {
+  static handlerName = "listSupplierContacts";
+  static api = {
+    method: "GET", path: "/api/v1/suppliers/:id/contacts", description: "分頁列出供應商聯絡人（超過詳情上限時用）。",
+    authorizationPolicies: SUPPLIER_VIEW_POLICY,
+    requestSchema: { params: SUPPLIER_ID_PARAMS_SCHEMA, query: CHILD_PAGE_QUERY },
+    responseSchema: { 200: childPageResponse(CONTACT_RESPONSE) }
+  };
+
+  async execute(req) {
+    return this.response(await this.suppliers.listSupplierContacts({ ...actor(req), id: Number(req.input.params.id), ...req.input.query }));
   }
 }

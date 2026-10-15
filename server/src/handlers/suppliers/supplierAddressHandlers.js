@@ -41,7 +41,7 @@ const DEACTIVATE_BODY = Object.freeze({
   type: "object", required: ["version"], additionalProperties: false,
   properties: { version: { type: "integer", minimum: 1 } }
 });
-const ADDRESS_RESPONSE = Object.freeze({
+export const ADDRESS_RESPONSE = Object.freeze({
   type: "object", additionalProperties: false,
   required: ["id", "supplierId", "label", "addressLine1", "addressLine2", "addressLine3", "city", "stateRegion", "postalCode", "countryCode", "phone", "notes", "status", "purposes", "version", "updatedAt"],
   properties: {
