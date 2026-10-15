@@ -744,6 +744,23 @@ EXPLAIN and representative queries
 
 Indexed exact/prefix/EXISTS; stable paging
 
+HD-011 proposed correction, PENDING revised DESIGN/PLAN approval: actual COUNT,
+page-ID and summary queries must be explained, along with every candidate branch
+from DES-019. Every physical table must have a real access type and must not use
+ALL; selective prefix branches must actually use their search-leading indexes,
+not merely FORCE INDEX to scan the whole index. Retain complete raw plans.
+Only engine-generated materialized `<derivedN>` / `<unionN,...>` result rows may
+have ALL or no access type. Match these synthetic forms exactly; unknown rows
+fail closed. Test this classifier against physical Customers/child ALL and missing
+type, mixed physical/derived plans and unknown pseudo rows. Physical scans remain
+failures even when a valid materialization row occurs in the same plan.
+Use real fixtures that hit each root/identifier/contact/address prefix field,
+including duplicate multi-field matches and inactive children. Assert deduplicated
+totals, exact-code then legal ranking, outer filters, literal `!%_` escaping,
+long-name code omission and stable pagination. No assertion may be removed just
+to produce PASS. This explicit classification corrects synthetic-result handling;
+it is not a physical query-plan or latency waiver.
+
 ### Acceptance criteria
 
 No leading-wildcard standard path/cartesian count Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
@@ -1938,6 +1955,11 @@ p95<=5s target/error<1%; invariant zero; metrics complete. Keep all existing
 query-plan/index assertions and emit every failed latency/plan gate before the
 terminal assertion. New results must bind the revised baseline; prior 100k/50/2s
 failures remain unchanged and cannot be relabeled PASS.
+
+HD-011 proposal, effective only after approval: TC-028's exact physical-vs-synthetic
+plan-row classification supersedes the blanket row-type handling for materialized
+results only. Every physical scan, latency, error, resource and workload gate
+remains mandatory; no historical run is rebound to this proposed revision.
 
 ### Acceptance criteria
 
