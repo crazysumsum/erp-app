@@ -69,7 +69,13 @@ const initialPagination = {
   sortBy: ["supplierCode", "supplierName", "status", "updatedAt"].includes(initialQuery.sortBy) ? initialQuery.sortBy : "updatedAt",
   descending: initialQuery.descending !== "false"
 };
-const currentRequest = ref({ page: initialPagination.page, sortBy: initialPagination.sortBy, descending: initialPagination.descending });
+const currentRequest = ref({
+  page: initialPagination.page, rowsPerPage: initialPagination.rowsPerPage, sortBy: initialPagination.sortBy, descending: initialPagination.descending
+});
+// 篩選變咗要返第一頁（REV-095 M-1）：舊頁碼喺新結果入面冇意義，留低會跳過前面嘅結果。
+// 共用 DataTable 唔喺本模組範圍，所以由頁面用新 key 重新掛載，帶住目前排序同每頁筆數由第 1 頁開始。
+const tablePagination = ref(initialPagination);
+const tableKey = ref(0);
 const table = ref(null);
 const exporting = ref(false);
 
@@ -132,12 +138,15 @@ function syncUrl() {
 }
 
 function fetchSuppliers(request) {
-  currentRequest.value = { page: request.page, sortBy: request.sortBy, descending: request.descending };
+  currentRequest.value = { page: request.page, rowsPerPage: request.rowsPerPage, sortBy: request.sortBy, descending: request.descending };
   syncUrl();
   return supplierService.list({ ...request, ...filterParams() });
 }
 
-watch([statusFilter, filters], () => table.value?.reload({ firstPage: true }));
+watch([statusFilter, filters], () => {
+  tablePagination.value = { ...initialPagination, ...currentRequest.value, page: 1 };
+  tableKey.value += 1;
+});
 
 async function loadMasterOptions() {
   if (!canPickMasters.value) return;
@@ -237,8 +246,8 @@ async function exportSuppliers() {
 
     <div class="q-px-md q-pb-md">
       <DataTable
-        ref="table" :fetch="fetchSuppliers" :columns="columns" :filter="searchText"
-        :initial-pagination="initialPagination" sticky-actions
+        ref="table" :key="tableKey" :fetch="fetchSuppliers" :columns="columns" :filter="searchText"
+        :initial-pagination="tablePagination" sticky-actions
       >
         <template #body-cell-supplierName="{ value }"><EllipsisCell :text="value" max-width="240px" /></template>
         <template #body-cell-displayName="{ value }"><EllipsisCell :text="value || '—'" max-width="180px" /></template>

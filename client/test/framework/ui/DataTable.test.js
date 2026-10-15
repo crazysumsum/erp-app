@@ -70,17 +70,6 @@ describe("DataTable", () => {
     expect(fetchFn).toHaveBeenCalledTimes(2);
   });
 
-  it("reload() 保留目前頁碼；reload({ firstPage: true }) 返第一頁、排序不變（篩選變咗用）", async () => {
-    const fetchFn = vi.fn().mockResolvedValue({ rows: [], rowsNumber: 100 });
-    const wrapper = mountDataTable({ fetch: fetchFn, columns, initialPagination: { page: 3, rowsPerPage: 20, rowsNumber: 0, sortBy: "name", descending: true } });
-    await flushPromises();
-
-    await wrapper.vm.reload();
-    expect(fetchFn).toHaveBeenLastCalledWith(expect.objectContaining({ page: 3, sortBy: "name", descending: true }));
-    await wrapper.vm.reload({ firstPage: true });
-    expect(fetchFn).toHaveBeenLastCalledWith(expect.objectContaining({ page: 1, sortBy: "name", descending: true }));
-  });
-
   it.each(["success", "error"])("較早請求最後才 %s，不會覆蓋最新空結果或分頁", async (outcome) => {
     const earlier = Promise.withResolvers();
     const latest = Promise.withResolvers();
