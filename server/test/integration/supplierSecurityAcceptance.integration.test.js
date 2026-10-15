@@ -145,8 +145,8 @@ after(async () => {
   if (!h.db) return;
   for (const id of h.jobIds) await h.db.execute("DELETE FROM supplier_import_jobs WHERE id = ?", [id]);
   for (const id of h.supplierIds) {
-    for (const table of ["supplier_contact_purposes", "supplier_contacts", "supplier_address_purposes", "supplier_addresses",
-      "supplier_identifiers", "supplier_bank_accounts", "supplier_audit_logs"]) {
+    for (const table of ["supplier_activation_requests", "supplier_contact_purposes", "supplier_contacts", "supplier_address_purposes",
+      "supplier_addresses", "supplier_identifiers", "supplier_bank_accounts", "supplier_audit_logs"]) {
       await h.db.execute(`DELETE FROM ${table} WHERE supplier_id = ?`, [id]);
     }
     await h.db.execute("DELETE FROM suppliers WHERE id = ?", [id]);
@@ -261,6 +261,7 @@ function fill(routePath, ids = {}) {
   return routePath.replace(/:([A-Za-z]+)/gu, (_, name) => String(ids[name] ?? MISSING));
 }
 
+// 審批、匯入同 SKU relation 冇 fixture，呢啲 route 嘅「存在」ID 其實唔存在；TC-111 嘅認證喺查找之前已經失敗，所以唔影響結果。
 function existingIds() {
   const f = h.fixture;
   return { id: f.supplierId, supplierId: f.supplierId, addressId: f.addressId, contactId: f.contactId, identifierId: f.identifierId,
@@ -461,6 +462,8 @@ integrationTest("TC-117 (AUTH-007): every API class refuses malformed, mistyped,
     // Path ID：只收正整數。
     ...["0", "-1", "1.5", "abc", "+5", "05", "1e3", "99999999999999999999"].map((id) => [`detail /${id}`, mgmt, detail, { ids: { id } }]),
     ["child id 0", mgmt, route("POST /api/v1/suppliers/:supplierId/addresses/:addressId/deactivate"), { ids: { supplierId: f.supplierId, addressId: 0 }, body: { version: 1 } }],
+    ...["0", "05", "+5", "1e3", "0x10", "abc", "1234567890123456"].map((id) => [`import GET /${id}`, mgmt, route("GET /api/v1/supplier-imports/:id"), { ids: { id } }]),
+    ["import result id 1e3", mgmt, route("GET /api/v1/supplier-imports/:id/result"), { ids: { id: "1e3" } }],
     ["import id abc", mgmt, route("POST /api/v1/supplier-imports/:id/cancel"), { ids: { id: "abc" }, body: { version: 1 } }],
     ["import id 16 digits", mgmt, route("POST /api/v1/supplier-imports/:id/cancel"), { ids: { id: "1234567890123456" }, body: { version: 1 } }],
     // JSON body：壞 JSON、唔係 object、錯 content-type、多餘欄、缺欄、null、錯型、超長。
@@ -520,7 +523,41 @@ integrationTest("TC-118 (AUTH-008): only the reveal response carries the plainte
   const exported = await send(admin, route("POST /api/v1/supplier-exports"), { body: { filters: { q: f.tag } } });
   assert.equal(exported.status, 200, exported.text);
 
-  const markers = [f.account, f.stored.cipherHex, f.stored.cipherB64, f.stored.indexHex, f.stored.indexB64, f.stored.keyId, f.stored.indexKeyId,
+  // 審批投影要有一個真嘅 pending 申請先掃得到嘢；嗰個 Supplier 嘅 Bank 經 HTTP 建立，audit 先有真嘅 create 紀錄（REV-096 M-2）。
+  const pendingId = await seedSupplier(`APR-${f.tag}`, `Pending ${f.tag}`, "draft");
+  const pendingAccount = `62${String(Date.now()).slice(-10)}`;
+  const bankMade = await send(h.users["U-BANK-W"], route("POST /api/v1/suppliers/:id/bank-accounts/create"), { ids: { id: pendingId },
+    body: { accountHolderName: `Pending Holder ${f.tag}`, bankName: `Pending Bank ${f.tag}`, accountNumber: pendingAccount, reason: "TC-118 bank over HTTP" } });
+  assert.equal(bankMade.status, 200, bankMade.text);
+  const [[pendingStored]] = await h.db.query(
+    "SELECT HEX(account_ciphertext) AS cipherHex, HEX(account_blind_index) AS indexHex FROM supplier_bank_accounts WHERE supplier_id = ?", [pendingId]);
+  const settingsRoute = route("POST /api/v1/supplier-settings/update");
+  const readSettings = async () => (await send(h.users["U-SET"], route("GET /api/v1/supplier-settings"))).json.data;
+  const setApproval = async (on) => {
+    const current = await readSettings();
+    if (current.requireActivationApproval === on) return;
+    const changed = await send(h.users["U-SET"], settingsRoute, { body: { requireActivationApproval: on, version: current.version,
+      reason: `TC-118 approval ${on ? "on" : "off"}` } });
+    assert.equal(changed.status, 200, changed.text);
+  };
+  let approvals;
+  let approvalDetail;
+  const wasOn = (await readSettings()).requireActivationApproval;
+  try {
+    await setApproval(true);
+    const activated = await send(h.users["U-MGMT"], route("POST /api/v1/suppliers/:id/activate"), { ids: { id: pendingId },
+      body: { version: 1, approverUserId: h.users["U-APR"].userId } });
+    assert.equal(activated.status, 200, activated.text);
+    approvals = await send(admin, { ...route("GET /api/v1/supplier-approvals"), path: "/api/v1/supplier-approvals?scope=all&pageSize=100" });
+    const request = approvals.json.data.items.find((item) => item.supplierId === pendingId);
+    assert.ok(request, "the pending request is in the queue");
+    approvalDetail = await send(admin, route("GET /api/v1/supplier-approvals/:id"), { ids: { id: request.id } });
+    assert.equal(approvalDetail.status, 200, approvalDetail.text);
+  } finally {
+    await setApproval(wasOn);
+  }
+
+  const markers = [f.account, pendingAccount, pendingStored.cipherHex, pendingStored.indexHex, f.stored.cipherHex, f.stored.cipherB64, f.stored.indexHex, f.stored.indexB64, f.stored.keyId, f.stored.indexKeyId,
     f.stored.context, "ciphertext", "blindIndex", "blind_index", "authTag", "auth_tag", "cryptoContext", "crypto_context", "encryptionKeyId",
     "encryption_key_id", "password_hash", "passwordHash"];
   const scanned = [
@@ -529,7 +566,9 @@ integrationTest("TC-118 (AUTH-008): only the reveal response carries the plainte
     ["completeness", await send(admin, route("GET /api/v1/suppliers/:id/completeness"), { ids })],
     ["bank list (U-VIEW)", await send(h.users["U-VIEW"], route("GET /api/v1/suppliers/:id/bank-accounts"), { ids })],
     ["bank list (U-BANK-W)", await send(h.users["U-BANK-W"], route("GET /api/v1/suppliers/:id/bank-accounts"), { ids })],
-    ["approvals", await send(admin, route("GET /api/v1/supplier-approvals"))],
+    ["approvals (scope=all)", approvals],
+    ["approval detail", approvalDetail],
+    ["pending bank audit", await send(admin, { ...route("GET /api/v1/supplier-audit/logs"), path: `/api/v1/supplier-audit/logs?supplierId=${pendingId}&pageSize=100` })],
     ["audit", await send(admin, { ...route("GET /api/v1/supplier-audit/logs"), path: `/api/v1/supplier-audit/logs?supplierId=${f.supplierId}&pageSize=100` })],
     ["export audit", await send(admin, { ...route("GET /api/v1/supplier-audit/logs"), path: "/api/v1/supplier-audit/logs?action=supplier.export&pageSize=5" })],
     ["export csv", exported],
@@ -545,10 +584,13 @@ integrationTest("TC-118 (AUTH-008): only the reveal response carries the plainte
   assert.equal(bankList.status, 200);
   assert.ok(bankList.text.includes(f.account.slice(-4)), "the masked list still shows the last four");
 
+  const pendingAudit = scanned.find(([name]) => name === "pending bank audit")[1];
+  assert.ok(pendingAudit.json.data.items.some((entry) => entry.action === "supplier.bank.create"), "the HTTP Bank create left an audit entry to scan");
   const [audits] = await h.db.query(
     `SELECT action, CAST(detail AS CHAR) AS detail FROM supplier_audit_logs
-      WHERE (action = 'supplier.bank.reveal' AND target_id = ?) OR (action = 'supplier.export' AND actor_user_id = ?)`, [f.bankId, admin.userId]);
-  assert.deepEqual([...new Set(audits.map((a) => a.action))].sort(), ["supplier.bank.reveal", "supplier.export"]);
+      WHERE (action = 'supplier.bank.reveal' AND target_id = ?) OR (action = 'supplier.export' AND actor_user_id = ?)
+         OR (action = 'supplier.bank.create' AND supplier_id = ?)`, [f.bankId, admin.userId, pendingId]);
+  assert.deepEqual([...new Set(audits.map((a) => a.action))].sort(), ["supplier.bank.create", "supplier.bank.reveal", "supplier.export"]);
   for (const audit of audits) for (const marker of markers) assert.ok(!(audit.detail ?? "").includes(marker), `${audit.action} audit holds ${marker}`);
 });
 
@@ -598,18 +640,17 @@ integrationTest("TC-119 (AUTH-009): script and HTML are stored and returned as p
 integrationTest("TC-120 (AUTH-010): each error class answers with its stable HTTP status and code, and never SQL, constraint names, secrets or another Supplier's data", async () => {
   const f = h.fixture;
   const mgmt = h.users["U-MGMT"];
-  const admin = h.users["U-SYS"];
   const tag = randomUUID().slice(0, 8).toUpperCase();
   const create = route("POST /api/v1/suppliers/create");
-  const config = h.application.services.config;
 
-  // 同 Code 並發 create：create 喺 transaction 入面先查後寫，所以係應用層嘅 409，唔係 DB 嘅 ER_DUP_ENTRY
-  // （拎走 ER_DUP_ENTRY 映射呢度照樣綠，已經試過）。ER_DUP_ENTRY 由下面 identifier 嗰個 case 撞。
+  // 同 Code 並發 create：先查嗰句 SELECT 唔鎖，所以並發嘅 create 會撞 DB unique index（ER_DUP_ENTRY），再映射成 409。
+  // 每一個 racer 都要係 201 或者 409 SUPPLIER_CODE_TAKEN：拎走映射會有 500（REV-096 H-1）。identifier 嗰個 case 係第二個 carrier。
   const racers = await Promise.all(Array.from({ length: 6 }, () => send(mgmt, create,
     { body: { supplierCode: `DUP-${tag}`, supplierName: `Dup ${tag}`, defaultCurrencyCode: "HKD" } })));
   for (const made of racers.filter((r) => r.status === 201)) h.supplierIds.push(made.json.data.id);
   assert.equal(racers.filter((r) => r.status === 201).length, 1, racers.map((r) => `${r.status} ${r.code}`).join(","));
-  assert.ok(racers.filter((r) => r.status === 409).every((r) => r.code === "SUPPLIER_CODE_TAKEN"));
+  assert.ok(racers.every((r) => r.status === 201 || (r.status === 409 && r.code === "SUPPLIER_CODE_TAKEN")),
+    racers.map((r) => `${r.status} ${r.code}`).join(","));
 
   // 名稱空白：最低欄位唔齊，啟用要 422（一個有 Code、名同幣別嘅 Draft 係啟用得嘅）。
   const draft = await seedSupplier(`DRF-${tag}`, "", "draft");
@@ -636,7 +677,7 @@ integrationTest("TC-120 (AUTH-010): each error class answers with its stable HTT
       [404, "SUPPLIER_IDENTIFIER_NOT_FOUND", await send(mgmt, route("POST /api/v1/suppliers/:supplierId/identifiers/:identifierId/delete"),
         { ids: { supplierId: f.otherId, identifierId: f.identifierId }, body: { version: 1, reason: "TC-120 other owner" } })],
       [409, "SUPPLIER_CODE_TAKEN", await send(mgmt, create, { body: { supplierCode: `SEC-${f.tag}`, supplierName: "x", defaultCurrencyCode: "HKD" } })],
-      // 冇預檢：靠 DB unique 撞出 ER_DUP_ENTRY，再按 constraint 映射；唔可以講出另一個 Supplier 係邊個。
+      // 冇預檢：一定靠 DB unique 撞出 ER_DUP_ENTRY，再按 constraint 映射；唔可以講出另一個 Supplier 係邊個。
       [409, "SUPPLIER_IDENTIFIER_TAKEN", await send(mgmt, route("POST /api/v1/suppliers/:supplierId/identifiers/create"), { ids: { supplierId: f.otherId },
         body: { identifierType: "business_registration", issuerCountryCode: "HK", identifierValue: `BR${f.tag}` } })],
       [409, "VERSION_CONFLICT", await send(mgmt, route("POST /api/v1/suppliers/:id/update"), { ids: { id: f.supplierId },
@@ -648,8 +689,13 @@ integrationTest("TC-120 (AUTH-010): each error class answers with its stable HTT
     ];
     const forbidden = [/\bER_[A-Z_]+/u, /Duplicate entry/iu, /\bSELECT\b|\bINSERT\b|\bUPDATE\b.*\bSET\b/u, /\buq_[a-z_]+/u, /\bfk_[a-z_]+/u, /sqlMessage|sqlState/u,
       /tc120-retired-key/u, /Other Supplier/u, /Security Fixture/u, /stack|at [A-Za-z]+ \(/u];
-    const secrets = [config.database?.password, config.jwt?.secret, process.env.DB_PASSWORD, process.env.SUPPLIER_BANK_ENCRYPTION_KEYS,
-      process.env.SUPPLIER_BANK_LOOKUP_KEYS, f.account].filter((value) => typeof value === "string" && value.length >= 6);
+    // config 入面嘅 secret 係 SecretValue：用 reveal() 攞 app 真正用緊嘅值；key ring 拆開逐條 key 搵（REV-096 L-2）。
+    const ringKeys = (name) => { try { return Object.values(JSON.parse(process.env[name] ?? "{}")); } catch { return []; } };
+    const reveal = (value) => (typeof value?.reveal === "function" ? value.reveal() : value);
+    const config = h.application.services.config;
+    const secrets = [reveal(config.jwt?.secret), reveal(config.database?.password), process.env.DB_PASSWORD, process.env.DB_ADMIN_PASSWORD, ...ringKeys("SUPPLIER_BANK_ENCRYPTION_KEYS"),
+      ...ringKeys("SUPPLIER_BANK_LOOKUP_KEYS"), f.account].filter((value) => typeof value === "string" && value.length >= 6);
+    assert.ok(secrets.length >= 4, `secrets to scan for: ${secrets.length}`);
     for (const [status, code, response] of [...cases, ...racers.filter((r) => r.status === 409).map((r) => [409, "SUPPLIER_CODE_TAKEN", r])]) {
       assert.equal(response.status, status, `${code}: ${response.text}`);
       if (code) assert.equal(response.code, code, response.text);
@@ -659,5 +705,4 @@ integrationTest("TC-120 (AUTH-010): each error class answers with its stable HTT
   } finally {
     await h.db.execute("UPDATE supplier_bank_accounts SET encryption_key_id = ? WHERE id = ?", [f.stored.keyId, second.id]);
   }
-  void admin;
 });

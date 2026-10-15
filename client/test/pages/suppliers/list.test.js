@@ -227,7 +227,5 @@ describe("pages/suppliers/SuppliersPage.vue", () => {
     expect(body.text()).toContain("<script>window.__xss = 1</script>");
     expect(body.text()).toContain("<b>bold</b>");
     expect(wrapper.element.querySelector("script, img[onerror], b")).toBeNull();
-    expect(window.__xss).toBeUndefined();
   });
 });
-

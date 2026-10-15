@@ -3,7 +3,7 @@ import { SupplierImportService } from "../../modules/supplier/SupplierImportServ
 import { SUPPLIER_MGMT_POLICY } from "../suppliers/supplierSchemas.js";
 import {
   SUPPLIER_IMPORT_CANCEL_BODY_SCHEMA, SUPPLIER_IMPORT_CONFIRM_BODY_SCHEMA, SUPPLIER_IMPORT_DETAIL_RESPONSE_SCHEMA, SUPPLIER_IMPORT_EMPTY_SCHEMA,
-  SUPPLIER_IMPORT_GET_QUERY_SCHEMA, SUPPLIER_IMPORT_ID_PARAMS_SCHEMA, SUPPLIER_IMPORT_ID_STRING_PARAMS_SCHEMA, SUPPLIER_IMPORT_JOB_SCHEMA,
+  SUPPLIER_IMPORT_GET_QUERY_SCHEMA, SUPPLIER_IMPORT_ID_PARAMS_SCHEMA, SUPPLIER_IMPORT_JOB_SCHEMA,
   SUPPLIER_IMPORT_LIST_QUERY_SCHEMA, SUPPLIER_IMPORT_LIST_RESPONSE_SCHEMA
 } from "./importSchemas.js";
 
@@ -65,7 +65,7 @@ export class GetSupplierImportHandler extends BaseRequestHandler {
   }
 
   async execute(req) {
-    return this.response(await this.imports.get({ ...actor(req), id: req.input.params.id, ...req.input.query }));
+    return this.response(await this.imports.get({ ...actor(req), id: Number(req.input.params.id), ...req.input.query }));
   }
 }
 
@@ -79,7 +79,7 @@ export class CancelSupplierImportHandler extends BaseRequestHandler {
       + "來源檔即時刪除，摘要及逐列結果保留。",
     authorizationPolicies: SUPPLIER_MGMT_POLICY,
     idempotency: { enabled: true },
-    requestSchema: { params: SUPPLIER_IMPORT_ID_STRING_PARAMS_SCHEMA, query: SUPPLIER_IMPORT_EMPTY_SCHEMA, body: SUPPLIER_IMPORT_CANCEL_BODY_SCHEMA },
+    requestSchema: { params: SUPPLIER_IMPORT_ID_PARAMS_SCHEMA, query: SUPPLIER_IMPORT_EMPTY_SCHEMA, body: SUPPLIER_IMPORT_CANCEL_BODY_SCHEMA },
     responseSchema: { 200: SUPPLIER_IMPORT_JOB_SCHEMA }
   };
 
@@ -109,7 +109,7 @@ export class ConfirmSupplierImportHandler extends BaseRequestHandler {
     authType: "jwt-password",
     authorizationPolicies: SUPPLIER_MGMT_POLICY,
     idempotency: { enabled: true },
-    requestSchema: { params: SUPPLIER_IMPORT_ID_STRING_PARAMS_SCHEMA, query: SUPPLIER_IMPORT_EMPTY_SCHEMA, body: SUPPLIER_IMPORT_CONFIRM_BODY_SCHEMA },
+    requestSchema: { params: SUPPLIER_IMPORT_ID_PARAMS_SCHEMA, query: SUPPLIER_IMPORT_EMPTY_SCHEMA, body: SUPPLIER_IMPORT_CONFIRM_BODY_SCHEMA },
     responseSchema: { 200: SUPPLIER_IMPORT_JOB_SCHEMA }
   };
 

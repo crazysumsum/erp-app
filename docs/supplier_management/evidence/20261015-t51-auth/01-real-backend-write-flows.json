@@ -1,6 +1,6 @@
 {
   "what": "HD-109 A check: real browser (Playwright) against the app on erp_t51 with inputCoercion:false on Supplier JSON POST routes; every client write flow below sent typed JSON and was accepted.",
-  "commit": "working tree on claude/supplier-task-051-tests-3 after the HD-109 A change",
+  "commit": "109436aec35fcbc3f46afecd5032ad062ae3b921",
   "results": [
     {
       "name": "create with payment term",
@@ -96,5 +96,32 @@
       "url": "/api/v1/suppliers/92311/restore",
       "status": 200
     }
-  ]
+  ],
+  "scope": {
+    "covered": [
+      "suppliers/create (with payment term)",
+      "suppliers/:id/update",
+      "addresses/create",
+      "contacts/create",
+      "identifiers/create",
+      "activate",
+      "suspend",
+      "reactivate",
+      "archive",
+      "restore"
+    ],
+    "not covered in a browser": [
+      "child update/deactivate/delete",
+      "sku-relations",
+      "bank writes",
+      "block/unblock",
+      "code change",
+      "delete",
+      "approvals",
+      "import confirm/cancel",
+      "settings update",
+      "export"
+    ],
+    "note": "The uncovered payloads were checked statically by REV-096 (types from integer response fields, Number(), real booleans); no type problem found."
+  }
 }

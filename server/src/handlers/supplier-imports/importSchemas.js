@@ -9,15 +9,9 @@ export const SUPPLIER_IMPORT_UPLOAD_BODY_SCHEMA = Object.freeze({
   properties: { mode: { type: "string", enum: ["create_only", "upsert"] } }
 });
 
+// 照設計 §6.1 用正整數字串（POST route 唔轉型，HD-109 A；GET 都用同一個，REV-096 M-1）。
+// 最多 15 位，handler 轉做 Number 一定係安全整數。
 export const SUPPLIER_IMPORT_ID_PARAMS_SCHEMA = Object.freeze({
-  type: "object",
-  required: ["id"],
-  additionalProperties: false,
-  properties: { id: { type: "integer", minimum: 1, maximum: Number.MAX_SAFE_INTEGER } }
-});
-
-// POST route 唔轉型（HD-109 A），params 照設計 §6.1 用正整數字串；最多 15 位，轉做 Number 一定係安全整數。
-export const SUPPLIER_IMPORT_ID_STRING_PARAMS_SCHEMA = Object.freeze({
   type: "object",
   required: ["id"],
   additionalProperties: false,
