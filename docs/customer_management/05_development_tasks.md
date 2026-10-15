@@ -12,6 +12,22 @@ reviewed closure evidence exists. Do not edit the PR #228 measured-result files.
 
 ## 1. Execution Rules
 
+HD-012 / DEF-034002 and DEF-027001 proposal is **PENDING** revised DESIGN/PLAN and
+exact shared-file scope approval. Reopen TASK-016 / TASK-027 only for these scoped
+defects; historical completed implementation and failed evidence remain preserved.
+The sole proposed shared-product exception is
+`client/src/framework/ui/DataTable.vue`, generic request-order handling under
+DES-016; no API/schema/dependency/CI/other-module product edits. Keep the existing
+component contract and apply no shared fix until approval. One implementation PR
+for the two defects follows independent code review, full Customer browser/affected
+client tests/build/lint, all configured final-head CI and fresh-main integration.
+Add deterministic stale-success/stale-error/loading/latest-failure unit/browser
+regressions and verify the fix detects a guard mutation; retain client-side mode,
+sort/page/URL/clear/error/retry/permission behavior and real Playwright validation.
+TC-065's dialog wait/focus correction must preserve keyboard/import checks and pass
+the entire Customer suite, not merely a focused rerun. Full downstream integration,
+TASK-030/031/032/034 and production DR/business/release acceptance stay BLOCKED.
+
 HD-011 / DEF-034001 remediation proposal is PENDING Sam approval on the revised
 DESIGN/PLAN. After approval, TASK-034's Customer-local subset may implement the
 DES-019 distinct indexed candidate-ID search and its one additive Customer index

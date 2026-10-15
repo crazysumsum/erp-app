@@ -1,5 +1,24 @@
 # Customer Management Design Review
 
+## Current UI shared-root exception — HD-012 (proposal only)
+
+Sam authorized DEF-034002/DEF-027001 repair/verification/PRmerge. Current DESIGN9.1
+and module scope prohibit modifying shared DataTable, whose unconditional async
+completion reproduces the two stale-response failures. The narrow proposal changes
+only generic latest-request-wins handling without a public component/API contract,
+schema, security, dependency or other module product change. It requires exact
+DESIGNa2b29b795515f6ee408201d3ac2650a1d42d74728c1ca4c9f2fe68cbfc292356 /
+PLAN3b15603d9608dcb388f90806f643a5d221514b17ef302f2e2d2f2851699735e0 and shared
+file approval; HD-012 remains OPEN. Actual independent review is recorded only
+after its verdict. [Evidence/options](implementation/ui-defects-remediation-report.md).
+No shared product code changed, no final/full Customer acceptance PASS or release.
+
+Actual independent reviewer Jason (`/root/customer_task011_review`), method
+SEPARATE_AGENT, APPROVED the exact final hashes above after state revision184
+reconciled the baseline/HD-012 question and own-document contract pin. Earlier draft
+review and the Required metadata correction remain REV-053/054; final proposal
+approval REV-055 does not authenticate Sam or authorize shared implementation.
+
 ## Current capacity amendment — HD-009 (2026-10-15)
 
 Sam's confirmed requirement is 50,000 Customers, 20 concurrent workers and
