@@ -1,0 +1,226 @@
+{
+  "schema_version": 1,
+  "source_baseline": "66ddcb9acdd9790b307b76ce198953d64efd70ec",
+  "stage": "DEVELOPER_LOCAL",
+  "environment": {
+    "node": "v26.6.0",
+    "mysql": "26.7.0",
+    "logicalCpu": 15,
+    "memoryBytes": 25769803776,
+    "mysqlPort": 13369,
+    "poolLimit": 10
+  },
+  "capacity": {
+    "status": "FAIL",
+    "defect": "DEF-034001",
+    "data": {
+      "customers": 100000,
+      "addresses": 10000,
+      "contacts": 10000
+    },
+    "load": {
+      "workers": 50,
+      "admissionMs": 30000,
+      "elapsedMs": 34639.2125,
+      "operations": 892,
+      "errors": 0,
+      "operationsPerSecond": 25.75116278985846,
+      "warmListMs": 349.143125
+    },
+    "latencyMs": {
+      "list": {
+        "count": 223,
+        "p50": 6462.144750000003,
+        "p95": 8902.452708,
+        "p99": 10635.222958999999
+      },
+      "exactLookup": {
+        "count": 223,
+        "p50": 51.6462500000016,
+        "p95": 2358.161249999999,
+        "p99": 2418.7550830000037
+      },
+      "addressLookup": {
+        "count": 223,
+        "p50": 8.733457999998791,
+        "p95": 1334.620583,
+        "p99": 2722.6692920000023
+      },
+      "contactLookup": {
+        "count": 223,
+        "p50": 8.968958999999813,
+        "p95": 1155.145583999998,
+        "p99": 2486.420666000002
+      }
+    },
+    "resources": {
+      "heapPeakBytes": 92751560,
+      "rssBytes": 248102912,
+      "cpuUserUs": 371233,
+      "cpuSystemUs": 40439,
+      "rowLockWaitsDelta": 0,
+      "rowLockCurrentWaits": 0,
+      "connectionsBefore": 1,
+      "connectionsAfter": 10
+    },
+    "actualListPlans": {
+      "count": {
+        "customerAccess": "ALL",
+        "estimatedCustomerRows": 98853,
+        "dependentSubqueries": 3
+      },
+      "idPage": {
+        "customerAccess": "ALL",
+        "estimatedCustomerRows": 98853,
+        "dependentSubqueries": 3,
+        "filesort": true
+      },
+      "projection": {
+        "customerAccess": "range",
+        "estimatedCustomerRows": 20
+      }
+    },
+    "priorAttempts": [
+      {
+        "status": "FAIL",
+        "listP95Ms": 9151.1
+      },
+      {
+        "status": "FAIL",
+        "listP95Ms": 9733.952874999995,
+        "setupInterference": "separate-schema preparation overlapped; not the final clean baseline"
+      },
+      {
+        "status": "FAIL",
+        "phase": "warmup",
+        "code": "DATABASE_QUERY_TIMEOUT",
+        "residualQueryCleaned": true
+      },
+      {
+        "status": "FAIL",
+        "statistics": "ANALYZE TABLE",
+        "listP95Ms": 9558.012833
+      }
+    ]
+  },
+  "import": {
+    "status": "PASS",
+    "rows": 10000,
+    "precheckMs": 252.397167,
+    "executionMs": 25845.591167000002,
+    "totalMs": 26097.988334,
+    "throughputRowsPerSecond": 386.91318513031865,
+    "apiSamples": 245,
+    "apiErrors": 0,
+    "apiP95Ms": 8.521916999998211,
+    "heapGrowthBytes": 93735600,
+    "rowLockWaitsDelta": 0,
+    "maxRowLockCurrentWaits": 0,
+    "connectionGrowth": 1
+  },
+  "restore": {
+    "status": "PASS",
+    "case": "LOCAL-035",
+    "mysql": "26.7.0",
+    "sourceName": "erp_customer_local_dr_source_20261015",
+    "restoreName": "erp_customer_local_dr_restore_20261015",
+    "backupPoint": 1792026451417,
+    "latestRecoveredWrite": 1792026451411,
+    "lastConfirmedWrite": 1792026451595,
+    "incidentAt": 1792026451595,
+    "localLossWindowMs": 184,
+    "localRecoveryMs": 624.4883329999999,
+    "dumpSha256": "15d3186f9945b3573059d3f9182b48aa6e1a011893599f38ac3c470764561c80",
+    "tables": {
+      "customer_activation_requests": {
+        "count": 0,
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "customer_address_purposes": {
+        "count": 0,
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "customer_addresses": {
+        "count": 0,
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "customer_attachment_stages": {
+        "count": 0,
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "customer_attachments": {
+        "count": 2,
+        "sha256": "b841d5a715a0150a0a0353060fa64532263b8b2e6f425c3043d1b8db6dba28ab"
+      },
+      "customer_audit_logs": {
+        "count": 4,
+        "sha256": "732928c7e745e0e9708479eda2831f9af428d69899ffb85e831d49f4fc18756b"
+      },
+      "customer_bank_accounts": {
+        "count": 1,
+        "sha256": "b092b6f2f18d5047f6461b343e5e7679953cb42633c46a7a09aa42cbe8785e4c"
+      },
+      "customer_categories": {
+        "count": 0,
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "customer_contact_purposes": {
+        "count": 0,
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "customer_contacts": {
+        "count": 0,
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "customer_credit_profiles": {
+        "count": 0,
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "customer_export_jobs": {
+        "count": 0,
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "customer_identifiers": {
+        "count": 0,
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "customer_import_jobs": {
+        "count": 1,
+        "sha256": "1f64f2a19b9f370992e858677264224b8ef5e41a5555d397e12e05ce1327b908"
+      },
+      "customer_import_rows": {
+        "count": 1,
+        "sha256": "e2ba3a8b5a205978b9091b551c2b947941960789a5f986988bf3da84f54bf927"
+      },
+      "customer_industries": {
+        "count": 0,
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "customer_operation_requests": {
+        "count": 3,
+        "sha256": "49ad817234ae6c4c90056303f1a499074e92b641a91f8ee85de1cc2012cc676e"
+      },
+      "customer_settings": {
+        "count": 1,
+        "sha256": "994b1449ad101b020e997fec0d6f9ed3a25a1292395e54cf4854520c48e7cf09"
+      },
+      "customer_territories": {
+        "count": 0,
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "customers": {
+        "count": 1,
+        "sha256": "0c01ec25f46bbb082d48f1ecb319a056d44ef813a982af0ecc931bc6bd72aff9"
+      }
+    },
+    "attachmentObjects": 2,
+    "importObjects": 2,
+    "failClosedChecks": 6,
+    "downstreamIntegration": "BLOCKED",
+    "productionRtoRpo": "NOT_PROVEN"
+  },
+  "fullDownstreamIntegration": "BLOCKED",
+  "task034": "BLOCKED",
+  "task035": "IN_PROGRESS",
+  "productionRtoRpo": "NOT_PROVEN"
+}

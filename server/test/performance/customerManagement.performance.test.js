@@ -16,7 +16,7 @@ const CUSTOMER_COUNT = Number(process.env.CUSTOMER_PERFORMANCE_CUSTOMER_COUNT ||
 const CHILD_INTERVAL = Number(process.env.CUSTOMER_PERFORMANCE_CHILD_INTERVAL || 10);
 const BATCH_SIZE = Number(process.env.CUSTOMER_PERFORMANCE_BATCH_SIZE || 500);
 const CONCURRENCY = Number(process.env.CUSTOMER_PERFORMANCE_CONCURRENCY || 50);
-const OPS_PER_WORKER = Number(process.env.CUSTOMER_PERFORMANCE_OPS_PER_WORKER || 5);
+const DURATION_MS = Number(process.env.CUSTOMER_PERFORMANCE_DURATION_MS || 30_000);
 const P95_BUDGET_MS = 2_000;
 const TEST_TIMEOUT_MS = 30 * 60 * 1_000;
 
@@ -24,9 +24,9 @@ function placeholders(rowCount, columnCount) {
   return Array(rowCount).fill(`(${Array(columnCount).fill("?").join(",")})`).join(",");
 }
 
-function p95(values) {
+function percentile(values, ratio) {
   const sorted = [...values].sort((left, right) => left - right);
-  return sorted[Math.max(0, Math.ceil(sorted.length * 0.95) - 1)];
+  return sorted[Math.max(0, Math.ceil(sorted.length * ratio) - 1)];
 }
 
 async function timeIt(work) {
@@ -123,9 +123,10 @@ async function seedCustomerPerformanceFixtures(database) {
 }
 
 async function assertIndexedPlan(database, label, sql, params) {
-  const [rows] = await database.query(`EXPLAIN ${sql}`, params);
+  const [rows] = await database.query(`EXPLAIN FORMAT=TRADITIONAL ${sql}`, params);
   assert.ok(rows.length > 0, `${label} returned no EXPLAIN rows`);
   for (const row of rows) {
+    assert.equal(typeof row.type, "string", `${label} must return a real access type`);
     assert.notEqual(row.type, "ALL", `${label} full-scanned ${row.table}: ${JSON.stringify(row)}`);
   }
   return rows;
@@ -135,6 +136,10 @@ test(
   "TC-028 100k Customer query plans and 50-user core lookup mix remain indexed and bounded",
   { skip, timeout: TEST_TIMEOUT_MS },
   async (t) => {
+    assert.equal(CUSTOMER_COUNT, 100_000, "capacity evidence requires the approved 100k dataset");
+    assert.equal(CONCURRENCY, 50, "capacity evidence requires 50 concurrent workers");
+    assert.equal(CHILD_INTERVAL, 10, "capacity evidence requires 10k address/contact fixtures");
+    assert.equal(DURATION_MS, 30_000, "capacity evidence requires a 30-second admission window");
     const source = defaultConfigurationSource();
     const application = await createApplication({ configurationSource: { ...source, application: { ...source.application, port: 0 } } });
     const database = application.services.require("mysqldatabase");
@@ -149,6 +154,7 @@ test(
       await application.shutdown("customer_phase001_performance_complete");
     });
     fixtures = await seedCustomerPerformanceFixtures(database);
+    await database.query("ANALYZE TABLE customers, customer_addresses, customer_contacts, customer_address_purposes, customer_contact_purposes, customer_identifiers");
 
     const plans = {
       exactCode: await assertIndexedPlan(
@@ -189,37 +195,74 @@ test(
       actorVerifier: async () => ({ username: "customer-performance" })
     });
     const lookupService = new CustomerLookupService({ database });
-    await customerService.list({ ...actor, q: fixtures.codePrefix, sortBy: "code", descending: false, page: 1, pageSize: 20 });
+    const actualListQueries = [];
+    const warmListMs = await timeIt(() => customerService.list({ ...actor, q: fixtures.codePrefix, sortBy: "code", descending: false, page: 1, pageSize: 20 }, {
+      async query(sql, params) { actualListQueries.push({ sql, params }); return database.query(sql, params); }
+    }));
+    plans.actualList = [];
+    for (const { sql, params } of actualListQueries) {
+      plans.actualList.push((await database.query(`EXPLAIN FORMAT=TRADITIONAL ${sql}`, params))[0]);
+    }
     await lookupService.findByCode(fixtures.sampleActiveCustomerCode, { purpose: "new_sale" });
     await lookupService.listAddresses(fixtures.sampleActiveCustomerId, { purpose: "shipping" });
     await lookupService.listContacts(fixtures.sampleActiveCustomerId, { purpose: "shipping" });
 
     const timings = { list: [], exactLookup: [], addressLookup: [], contactLookup: [] };
+    const [statusBefore] = await database.query("SHOW GLOBAL STATUS WHERE Variable_name IN ('Innodb_row_lock_waits','Innodb_row_lock_current_waits','Threads_connected')");
+    const cpuBefore = process.cpuUsage();
+    let heapPeakBytes = process.memoryUsage().heapUsed;
+    const sampleHeap = setInterval(() => { heapPeakBytes = Math.max(heapPeakBytes, process.memoryUsage().heapUsed); }, 25);
+    t.after(() => clearInterval(sampleHeap));
+    const loadStarted = performance.now();
+    const deadline = loadStarted + DURATION_MS;
     await Promise.all(Array.from({ length: CONCURRENCY }, async () => {
-      for (let index = 0; index < OPS_PER_WORKER; index += 1) {
+      while (performance.now() < deadline) {
         timings.list.push(await timeIt(async () => {
           const page = await customerService.list({ ...actor, q: fixtures.codePrefix, sortBy: "code", descending: false, page: 1, pageSize: 20 });
           assert.equal(page.items.length, 20);
         }));
-        timings.exactLookup.push(await timeIt(() => lookupService.findByCode(fixtures.sampleActiveCustomerCode, { purpose: "new_sale" })));
-        timings.addressLookup.push(await timeIt(() => lookupService.listAddresses(fixtures.sampleActiveCustomerId, { purpose: "shipping" })));
-        timings.contactLookup.push(await timeIt(() => lookupService.listContacts(fixtures.sampleActiveCustomerId, { purpose: "shipping" })));
+        timings.exactLookup.push(await timeIt(async () => {
+          assert.equal((await lookupService.findByCode(fixtures.sampleActiveCustomerCode, { purpose: "new_sale" })).customerId, fixtures.sampleActiveCustomerId);
+        }));
+        timings.addressLookup.push(await timeIt(async () => {
+          assert.equal((await lookupService.listAddresses(fixtures.sampleActiveCustomerId, { purpose: "shipping" })).length, 1);
+        }));
+        timings.contactLookup.push(await timeIt(async () => {
+          assert.equal((await lookupService.listContacts(fixtures.sampleActiveCustomerId, { purpose: "shipping" })).length, 1);
+        }));
       }
     }));
-
-    const latencyMs = Object.fromEntries(Object.entries(timings).map(([name, values]) => [name, { count: values.length, p95: p95(values) }]));
-    for (const [name, metric] of Object.entries(latencyMs)) {
-      assert.ok(metric.p95 < P95_BUDGET_MS, `${name} p95 ${metric.p95.toFixed(1)}ms exceeds ${P95_BUDGET_MS}ms`);
-    }
+    const elapsedMs = performance.now() - loadStarted;
+    clearInterval(sampleHeap);
+    const [statusAfter] = await database.query("SHOW GLOBAL STATUS WHERE Variable_name IN ('Innodb_row_lock_waits','Innodb_row_lock_current_waits','Threads_connected')");
+    const [[remaining]] = await database.query("SELECT COUNT(*) AS total FROM customers WHERE customer_code_key LIKE ?", [`perf-cus-${fixtures.marker}-%`]);
+    assert.equal(Number(remaining.total), CUSTOMER_COUNT);
+    const latencyMs = Object.fromEntries(Object.entries(timings).map(([name, values]) => [name, {
+      count: values.length, p50: percentile(values, 0.5), p95: percentile(values, 0.95), p99: percentile(values, 0.99)
+    }]));
     const [[mysql]] = await database.query("SELECT VERSION() AS version");
     console.log(JSON.stringify({
       tc: "TC-028",
       fixtureVersion: "customer-phase001-performance-v1",
       data: { customers: fixtures.customerCount, addresses: fixtures.childCount, contacts: fixtures.childCount },
-      load: { concurrency: CONCURRENCY, operationsPerWorker: OPS_PER_WORKER },
+      load: { concurrency: CONCURRENCY, warmListMs,
+        requestedDurationMs: DURATION_MS, elapsedMs, errors: 0,
+        operationsPerSecond: Object.values(timings).reduce((sum, values) => sum + values.length, 0) * 1000 / elapsedMs },
       environment: { node: process.version, mysql: mysql.version, logicalCpu: os.cpus().length, memoryBytes: os.totalmem() },
+      resources: { heapPeakBytes, rssBytes: process.memoryUsage().rss, cpuMicroseconds: process.cpuUsage(cpuBefore),
+        mysqlBefore: Object.fromEntries(statusBefore.map((row) => [row.Variable_name, Number(row.Value)])),
+        mysqlAfter: Object.fromEntries(statusAfter.map((row) => [row.Variable_name, Number(row.Value)])) },
       latencyMs,
       plans
     }));
+    for (const [name, metric] of Object.entries(latencyMs)) {
+      assert.ok(metric.p95 < P95_BUDGET_MS, `${name} p95 ${metric.p95.toFixed(1)}ms exceeds ${P95_BUDGET_MS}ms`);
+    }
+    for (const plan of plans.actualList) {
+      for (const row of plan) {
+        assert.equal(typeof row.type, "string");
+        assert.notEqual(row.type, "ALL", `actual list full-scanned ${row.table}`);
+      }
+    }
   }
 );
