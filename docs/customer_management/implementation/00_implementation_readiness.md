@@ -2,6 +2,17 @@
 
 ## Status
 
+Current UI-remediation boundary: **BLOCKED on HD-012**, not on another approval of
+already-merged PR#233. Sam authorized DEF-034002/DEF-027001 repair, but current
+DESIGN9.1 prohibits modifying shared DataTable. Reproduced stale-success/error
+responses require the narrow shared-root exception proposed in DES-016 and the
+manifest; exact revised DESIGNa2b29b79...2356 / PLAN3b15603d...35e0 need Sam approval.
+Separate implementation test-only commit3b890ef4 retains RED search regressions
+and the targeted PASS import-focus synchronization correction; no shared/product
+fix or full-browser PASS is claimed. [Decision/evidence](ui-defects-remediation-report.md).
+TASK-016/027 scoped remediation is IN_PROGRESS; full downstream acceptance remains
+BLOCKED. Existing historical results below are not approval of HD-012.
+
 HD-011 / PR#232's exact DESIGN/PLAN are explicitly approved by Sam, and planning
 merged at d69b267d. The authorized candidate-UNION/ten-index fix and final developer
 retests are complete: both physical Customer ALL scans removed; two unchanged

@@ -1,5 +1,18 @@
 # Customer Management Final Alignment Review
 
+## Current HD-012 proposal / pending human decision
+
+DESIGN a2b29b795515f6ee408201d3ac2650a1d42d74728c1ca4c9f2fe68cbfc292356 /
+PLAN3b15603d9608dcb388f90806f643a5d221514b17ef302f2e2d2f2851699735e0 propose the
+sole shared DataTable request-ordering exception for DEF-034002, retaining its
+public contract and all non-Customer module product code. DEF-027001's targeted
+test synchronization correction preserves every keyboard/import assertion.
+Actual separate review approves the proposal, not implementation; Sam's HD-012
+remains OPEN. Structural/state/path checks pass on the docs-only branch; the
+separate implementation worktree's test-only RED/PASS evidence is preserved and
+is not included as source changes in this planning PR. No shared product fix or
+full-module acceptance is claimed. [Decision/evidence](implementation/ui-defects-remediation-report.md).
+
 ## Current HD-011 implementation (2026-10-15)
 
 Sam approved PR#232's exact DESIGN25833d2d...3d51 and PLAN7b1eb467...1a34;

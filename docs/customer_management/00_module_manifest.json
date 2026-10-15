@@ -36,7 +36,8 @@
       "client/src/pages/customers/**",
       "client/src/components/customers/**",
       "client/src/services/customer*.js",
-      "client/src/framework/http/HttpClient.js"
+      "client/src/framework/http/HttpClient.js",
+      "client/src/framework/ui/DataTable.vue"
     ],
     "test_paths": [
       "server/test/**",
@@ -77,7 +78,8 @@
       "client/src/framework/http/HttpClient.js",
       "server/test/**",
       "client/test/**",
-      "client/e2e/customer-management/**"
+      "client/e2e/customer-management/**",
+      "client/src/framework/ui/DataTable.vue"
     ],
     "approval_required_paths": [
       "server/database/migrations/**",
@@ -103,7 +105,8 @@
       "docs/sales_order_management/**",
       "docs/fulfillment_shipping_management/**",
       "docs/invoicing_accounts_receivable_management/**",
-      "docs/inventory_management/**"
+      "docs/inventory_management/**",
+      "client/src/framework/ui/DataTable.vue"
     ],
     "forbidden_paths": [
       ".env",
@@ -140,7 +143,7 @@
         "id": "customer-purpose-provider-contracts",
         "version": "aligned-design-2.1; Sales consumer merged and TC-070 verified; later consumers blocked",
         "source": "docs/customer_management/03_design_spec.md",
-        "sha256": "8ae6911b46dc9e0f4175198b7d523bf7f5786734f427d9d00c28e5ef694750eb",
+        "sha256": "5020a183c2ea1e290b8ba0ce1736524e21a99b6268ee54502c5ac48f7e10873d",
         "consumers": [
           "sales-order-management",
           "fulfillment-shipping-management",
