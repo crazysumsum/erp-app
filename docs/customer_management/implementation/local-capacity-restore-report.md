@@ -8,6 +8,11 @@ TASK-030/031/032 and complete downstream integration acceptance stay BLOCKED.
 TASK-034 and TASK-035 cannot be marked fully DONE by these local cases.
 
 Source baseline: `66ddcb9acdd9790b307b76ce198953d64efd70ec`.
+Before publication, main `63fa5063b78d15375fe9f4891fb9ef0424b22639` was
+integrated at `4e539d8b79c4cf7c016fb2b208e253d9a15fa0e9`; its only change
+was the Supplier harness-state document. Customer code, fixtures and measured
+test bodies were unchanged. Traceability, boundary and restore safety checks
+were rerun on that integrated candidate; measurements retain their actual baseline.
 Use a fresh task-owned MySQL 26.7.0 instance on loopback port 13369, separate
 synthetic schemas and temporary private roots. No shared application DB, production
 restore, real payment, external notification or real personal data is in scope.

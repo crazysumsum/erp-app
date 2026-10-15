@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 159,
+  "revision": 160,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "24b905fb54f174a745979908a11d3e6d6f0f0c8e9f41d80ee9bb8eea0d946f01",
     "plan": "8e3ca15db849b5f9bbfcc23d06d24bbfd00eb20c874f6f65ce7a1b2b36149b4f",
-    "code_commit": "66ddcb9acdd9790b307b76ce198953d64efd70ec",
-    "source_fingerprint": "5f63583a047dee6cc117c151078fa041941772db54c40e2b712b4ad38bc72029",
+    "code_commit": "4e539d8b79c4cf7c016fb2b208e253d9a15fa0e9",
+    "source_fingerprint": "b1ab0d80ffbb323192848a1de0d3396d4fd064d7b45248a8c9331047b60b662d",
     "worktree": "/private/tmp/erp-customer-local-capacity-restore",
-    "default_commit": "66ddcb9acdd9790b307b76ce198953d64efd70ec",
+    "default_commit": "63fa5063b78d15375fe9f4891fb9ef0424b22639",
     "mode_entry_commit": "f7fd95584e827f1bce112388fc2c196b5939671f"
   },
   "runtime": {
