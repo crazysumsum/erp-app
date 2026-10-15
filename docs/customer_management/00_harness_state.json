@@ -1,32 +1,27 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 161,
+  "revision": 163,
   "mode": "FULL_LIFECYCLE",
-  "active_mode": "IMPLEMENT",
+  "active_mode": "DESIGN_AND_PLAN",
   "status": "BLOCKED",
   "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-004",
   "current_task": "TASK-034",
   "baseline": {
-    "design": "24b905fb54f174a745979908a11d3e6d6f0f0c8e9f41d80ee9bb8eea0d946f01",
-    "plan": "8e3ca15db849b5f9bbfcc23d06d24bbfd00eb20c874f6f65ce7a1b2b36149b4f",
-    "code_commit": "0b0f81a9613fde76185bf334c5303a128ae19968",
+    "design": "8462e9c2bc9909f413bb0063de29b44bcbe205d8bfd1209c254ff5d1090f9944",
+    "plan": "55ea357b07fb39cc1131b61757b95ca4aa07b246a8dbabfddfecb914e79ba247",
+    "code_commit": "3faf93e57892577c03d7bc6d7ba62e23963941e2",
     "source_fingerprint": "013351d743371a72bcfc3b30fc6eafe6b0435ad62cd9f4533817f1ae9df48535",
-    "worktree": "/private/tmp/erp-customer-local-capacity-restore",
-    "default_commit": "63fa5063b78d15375fe9f4891fb9ef0424b22639",
-    "mode_entry_commit": "f7fd95584e827f1bce112388fc2c196b5939671f"
+    "worktree": "/private/tmp/erp-customer-capacity-requirement-50k-20",
+    "default_commit": "3faf93e57892577c03d7bc6d7ba62e23963941e2",
+    "mode_entry_commit": "3faf93e57892577c03d7bc6d7ba62e23963941e2"
   },
   "runtime": {
-    "instance_id": "customer-local-capacity-restore-20261015",
-    "owner": "Primary harness agent",
+    "instance_id": "customer-capacity-amendment-50k-20-20261015",
+    "owner": "Primary harness agent; documentation-only amendment",
     "resources": {
-      "workspace": "/private/tmp/erp-customer-local-capacity-restore",
-      "mysql-instance": "127.0.0.1:13369; datadir /private/tmp/erp-customer-local-runtime.4hF1Yy/mysql",
-      "mysql-schema": "erp_customer_local_capacity_20261015; erp_customer_local_dr_source_20261015; erp_customer_local_dr_restore_20261015",
-      "customer-file-root": "task-owned restore-case-* roots under /private/tmp/erp-customer-local-runtime.4hF1Yy; removed by test cleanup",
-      "customer-import-root": "task-owned synthetic import/restore roots; removed by test cleanup",
-      "web-port": "OS-assigned ephemeral port in TC-064; closed by test cleanup"
+      "workspace": "/private/tmp/erp-customer-capacity-requirement-50k-20"
     },
     "lease_ref": null
   },
@@ -2148,6 +2143,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-045",
+      "method": "SEPARATE_AGENT",
+      "author": "/root Customer capacity requirement amendment",
+      "reviewer": "Jason (/root/customer_task011_review), separate read-only agent",
+      "reviewed_baseline": "8462e9c2bc9909f413bb0063de29b44bcbe205d8bfd1209c254ff5d1090f9944",
+      "source_ref": "2026-10-15 APPROVE for DESIGN8462e9c2...f9944 and PLAN55ea357b07fb39cc1131b61757b95ca4aa07b246a8dbabfddfecb914e79ba247 against main3faf93e5. Only50k/20-worker/p95<=5s changed; all other controls preserved, workers not browser users. Historical report/JSON byte-identical, provider pin matches design bytes without behavior change, traceability/boundary/diff pass. No Critical/High/Required amendment issue. Existing DEF-034001 HIGH OPEN and new human baseline approval pending; no test run or acceptance implied.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -2766,6 +2773,17 @@
       "source_ref": "docs/customer_management/implementation/local-capacity-restore-results.json; final gated suite 3/3 passed. Real mysqldump/mysql restore reconciled all20 Customer tables, encrypted bank,2 encrypted attachments,2 import objects,4audit records,3operation records. Six missing/wrongkey reads failed closed. Local loss184ms/recovery624.49ms; production RTO/RPO and downstream integration NOT_PROVEN/BLOCKED. Final source-schema guard mutation was detected. No production data/restore or raw key export.",
       "actor": "/root local developer recovery drill",
       "observed_at": "2026-10-15T01:08:00Z"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "Reconcile completed PR #228 publication and cleanup before capacity amendment",
+      "code_commit": "3faf93e57892577c03d7bc6d7ba62e23963941e2",
+      "spec_baseline": "8e3ca15db849b5f9bbfcc23d06d24bbfd00eb20c874f6f65ce7a1b2b36149b4f",
+      "source_fingerprint": "013351d743371a72bcfc3b30fc6eafe6b0435ad62cd9f4533817f1ae9df48535",
+      "status": "PASS",
+      "source_ref": "GitHub PR #228 MERGED at2026-10-15T01:30:58Z as3faf93e5; run38664731754 SUCCESS on088b1b53, all5checks passed. Task worktree/local+remote branch and dedicated13369 MySQL/runtime were removed; no3306 change. Verified remote again before this docs-only amendment. Existing failure evidence remains tied to its old spec baseline; not current capacity acceptance.",
+      "actor": "/root actual remote/state recovery",
+      "observed_at": "2026-10-15T01:45:07Z"
     }
   ],
   "pending_decisions": [
@@ -2877,6 +2895,40 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "APPROVAL-DESIGN-004; APPROVAL-PLAN-004; APPROVAL-SCOPE-013"
+    },
+    {
+      "id": "HD-009",
+      "impact": "MAJOR",
+      "question": "Change Customer capacity from100k/50-worker/p95<2s to50k/20-worker/p95<=5s while preserving all other controls?",
+      "affected_ids": [
+        "NFR-001",
+        "NFR-003",
+        "KPI-06",
+        "DES-018",
+        "DES-019",
+        "DES-023",
+        "TASK-010",
+        "TASK-034",
+        "TC-028",
+        "TC-082",
+        "UAT-058"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "2026-10-15 current human user Sam: 調整需求，5萬客戶，20個並行工作者， p95要求5秒內. Exact three-value requirement amendment confirmed; not a new DESIGN/PLAN hash approval or acceptance/risk waiver."
+    },
+    {
+      "id": "HD-010",
+      "impact": "MAJOR",
+      "question": "Approve revised DESIGN8462e9c2bc9909f413bb0063de29b44bcbe205d8bfd1209c254ff5d1090f9944 and PLAN55ea357b07fb39cc1131b61757b95ca4aa07b246a8dbabfddfecb914e79ba247 after independent review, then authorize executable-profile alignment and a new Customer-local run? Existing query-plan/index/error/import/DR/downstream gates and DEF-034001 remain unchanged.",
+      "affected_ids": [
+        "customer-management",
+        "TASK-034",
+        "TC-028",
+        "TC-082",
+        "DEF-034001"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
     }
   ],
   "external_actions": [
@@ -3525,8 +3577,32 @@
       "kind": "GIT_MERGE",
       "target": "github:crazysumsum/erp-app:main<-codex/customer-local-capacity-restore",
       "idempotency_key": "customer-local-capacity-restore-merge-v1",
+      "status": "CONFIRMED",
+      "source_ref": "GitHub PR #228 merged2026-10-15T01:30:58Z as3faf93e57892577c03d7bc6d7ba62e23963941e2 after all5CI checks succeeded on088b1b530fb82e647a9c629ef09ad5851f430eb1 (run38664731754). Local main fast-forward and own worktree/local+remote branch/dedicated MySQL cleanup verified; see issuecomment6182318111. Never replay this action."
+    },
+    {
+      "id": "EXT-PUSH-066",
+      "kind": "GIT_PUSH",
+      "target": "github:crazysumsum/erp-app:refs/heads/codex/customer-capacity-requirement-50k-20",
+      "idempotency_key": "customer-capacity-requirement-50k-20-push-v1",
       "status": "PLANNED",
-      "source_ref": "Explicit current user authorization to merge measured results and limits after actual independent review/current mandatory CI; not authorization to waive the failed capacity or blocked full acceptance."
+      "source_ref": "Sam explicitly requests capacity requirement amendment; standing autonomous continuation/publication authorization. Documentation-only design/plan change; no new product/test execution or acceptance."
+    },
+    {
+      "id": "EXT-PR-067",
+      "kind": "PULL_REQUEST",
+      "target": "github:crazysumsum/erp-app:main<-codex/customer-capacity-requirement-50k-20",
+      "idempotency_key": "customer-capacity-requirement-50k-20-pr-v1",
+      "status": "PLANNED",
+      "source_ref": "Publish reviewed capacity requirement/design/plan revision for exact-baseline approval. Do not merge or modify executable test gates before the new approval; preserve previous failure and all non-amended gates."
+    },
+    {
+      "id": "MODE-CHANGE-162",
+      "kind": "MODE_CHANGE",
+      "target": "DESIGN_AND_PLAN",
+      "idempotency_key": "mode-change-162",
+      "status": "CONFIRMED",
+      "source_ref": "2026-10-15 Sam explicitly requests capacity requirement revision: 調整需求，5萬客戶，20個並行工作者， p95要求5秒內; re-enter DESIGN_AND_PLAN only, no new baseline approval implied"
     }
   ],
   "evidence_files": [
@@ -3557,5 +3633,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "PR #228 publishes reviewed Customer-local evidence only. Require all five CI checks on final exact head, fetch/reconcile main, then merge under explicit user authorization and remove this task worktree/runtime. DEF-034001 stays HIGH OPEN and TASK-034 BLOCKED; TASK-035 local verification is not full completion. Downstream integration, production capacity/DR acceptance and release remain BLOCKED."
+  "next_safe_action": "Independent review REV-045 approved; publish the documentation-only 50k/20-worker/p95<=5s amendment PR, leaving it open for HD-010. Obtain explicit approval of DESIGN8462e9c2bc9909f413bb0063de29b44bcbe205d8bfd1209c254ff5d1090f9944 and PLAN55ea357b07fb39cc1131b61757b95ca4aa07b246a8dbabfddfecb914e79ba247 before re-entering IMPLEMENT to align executable capacity tests and rerun. Old approvals remain historical, not rebound. PR #228 is already merged/cleaned; never replay EXT-MERGE-065. DEF-034001 stays HIGH OPEN and TASK-034 BLOCKED; actual plan/index checks, full downstream integration and production DR remain required."
 }

@@ -2,6 +2,12 @@
 
 ## Current scope
 
+2026-10-15 / HD-009 requirement amendment: 50,000 Customers, 20 concurrent workers,
+p95 <=5s. This design/planning revision does not rerun tests or alter the original
+measurements below. Revised baseline approval and executable-profile alignment are
+pending; DEF-034001 stays HIGH/OPEN and TASK-034 remains BLOCKED. Full downstream
+acceptance and the original query-plan/error/import/DR controls remain unchanged.
+
 2026-10-15 update: PR #225 is merged (`8bbb0d3d`); local TASK-034/035 execution
 continues from refreshed main `66ddcb9a`. See the
 [local measured report](local-capacity-restore-report.md) and

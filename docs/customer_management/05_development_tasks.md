@@ -1,5 +1,15 @@
 # Customer Management Aligned Development Plan
 
+## Capacity amendment — HD-009 (2026-10-15)
+
+Use 50,000 Customers, 20 concurrent workers and standard-query p95 <=5s for the
+next approved capacity baseline. All other acceptance, dependency and merge gates
+remain unchanged. Existing DONE entries/evidence remain historical implementation
+observations; this revision does not retroactively revalidate them. After revised
+DESIGN/PLAN approval, align the executable capacity profile and rerun TASK-034's
+local subset, retaining all latency and actual-plan checks and DEF-034001 until
+reviewed closure evidence exists. Do not edit the PR #228 measured-result files.
+
 ## 1. Execution Rules
 
 - Status of every Phase and Task is `PLANNED`; this review implemented no product code.
@@ -44,7 +54,7 @@
 | TASK-007 (PHASE-001) | Create address/contact/purpose persistence and atomic default switching. | FR-042..FR-048; DES-004, DES-008 | migrations, party service, handlers/tests | TASK-005 (PHASE-001) | Composite ownership, active-purpose rule and single default hold under race; IDOR safe. | Child tables additive. | `HIGH`; DoD = real-MySQL default/ownership tests pass. |
 | TASK-008 (PHASE-001) | Create Identifier and Credit policy persistence/APIs preserving null/zero/hold semantics. | FR-049..FR-056; DES-003, DES-004, DES-009 | migrations, credit/party services, handlers/tests | TASK-003 (PHASE-001)..TASK-005 (PHASE-001) | Identifier unique race safe; credit clear/create CAS; no exposure calculation. | Additive; clear is audited business operation. | `HIGH`; DoD = TC-021..TC-025 checks pass. |
 | TASK-009 (PHASE-001) | Implement reference-provider registry and minimum Customer lookup contracts for core use. | FR-034..FR-041, FR-047, FR-048; DES-005, DES-017, DES-020 | lookup/reference services, registry/readiness, tests | TASK-005 (PHASE-001)..TASK-008 (PHASE-001) | Unknown purpose/provider fails closed; new_sale Active-only; ownership validation safe. | Disable dependent commands if provider unavailable. | `HIGH`; DoD = readiness/lookup contract tests pass. |
-| TASK-010 (PHASE-001) | Complete Phase integration, query-plan, regression and controlled capability gate. | All PHASE-001 scope; DES-018, DES-019, DES-023, DES-025 | integration/performance fixtures, metrics, Phase report | TASK-002 (PHASE-001)..TASK-009 (PHASE-001) | Fresh/upgrade DB, APIs, 100k representative query plans, coverage/lint/build and regressions pass. | Rehearse compatible app rollback. | `HIGH`; DoD = PHASE-001 evidence approved and PR ready. |
+| TASK-010 (PHASE-001) | Complete Phase integration, query-plan, regression and controlled capability gate. | All PHASE-001 scope; DES-018, DES-019, DES-023, DES-025 | integration/performance fixtures, metrics, Phase report | TASK-002 (PHASE-001)..TASK-009 (PHASE-001) | Fresh/upgrade DB, APIs, 50k representative query plans, coverage/lint/build and regressions pass. | Rehearse compatible app rollback. | `HIGH`; DoD = PHASE-001 evidence approved and PR ready. |
 
 ## 4. PHASE-002 — Lifecycle & User Experience
 
@@ -109,7 +119,7 @@
 - Requirement scope: FR-001..FR-100; SEC-001..SEC-014; NFR-001..NFR-015; BR-001..BR-042; AC-001..AC-052.
 - Design: DES-001..DES-025.
 - Entry: PHASE-003 merged; each touched consumer/provider is merged on main and version-verified; production-like test environment exists.
-- Acceptance: cross-module status/ownership/snapshot contracts pass; 100k/50-user performance and RTO/RPO restore meet thresholds; formal test handoff is complete.
+- Acceptance: cross-module status/ownership/snapshot contracts pass; 50k/20-worker performance and RTO/RPO restore meet thresholds; formal test handoff is complete.
 - Phase verification: TC-070..TC-090 plus full regression. UAT remains for `TEST_AND_VERIFY` and business acceptance.
 - PR/rollback: one Phase integration PR or explicitly ordered compatible PR set when different owners require it; each merge leaves existing modules operable.
 - Exit: no unresolved blocking review finding/dependency, runbooks and evidence ready, status `READY_FOR_TESTING` only after implementation mode—not from this plan.
@@ -123,7 +133,7 @@
 | TASK-031 (PHASE-004) | Implement Invoicing/AR/Returns/Refund purpose contracts only where real modules exist. | FR-034, FR-047..FR-063; DES-017 | named provider methods and actual consumers/tests | Actual merged module per task | Manual invoice Active-only; existing shipment/AR/return continues; refund bank active/owned/audited; no generic decrypt. | Each absent consumer remains blocked, not faked. | `HIGH`; DoD = per-consumer contract sign-off. |
 | TASK-032 (PHASE-004) | Complete archive/delete/open-matter Provider registry and degraded-mode behavior. | FR-037..FR-041; NFR-010; DES-020 | provider registry/readiness/health/runbook/tests | TASK-029 (PHASE-004)..TASK-031 (PHASE-004) | Every mandatory provider READY; tri-state enforced; unknown blocks destructive action and is observable. | Disable delete/archive if registry degraded. | `HIGH`; DoD = outage tests and owner review pass. |
 | TASK-033 (PHASE-004) | Complete observability, security scans and operational runbooks. | FR-094..FR-100; SEC-010..SEC-014; DES-021, DES-023 | structured events/metrics/alerts/runbooks/tests | TASK-028 (PHASE-003), TASK-032 (PHASE-004) | Useful low-cardinality signals, request/operation correlation, zero secret fixtures in logs/evidence. | Alert/config rollback documented. | `MEDIUM`; DoD = alert drills and redaction scans pass. |
-| TASK-034 (PHASE-004) | Execute 100k Customer/50-user/query/lock capacity proof. | NFR-001..NFR-005, NFR-007; DES-018, DES-019, DES-023 | data generator/load tests/query tuning/report | TASK-029 (PHASE-004)..TASK-033 (PHASE-004) | p95/error/import targets met with reproducible environment and no invariant violations. | Focused index forward changes only. | `HIGH`; DoD = signed performance report. |
+| TASK-034 (PHASE-004) | Execute 50k Customer/20-worker/query/lock capacity proof. | NFR-001..NFR-005, NFR-007; DES-018, DES-019, DES-023 | data generator/load tests/query tuning/report | TASK-029 (PHASE-004)..TASK-033 (PHASE-004) | p95/error/import targets met with reproducible environment and no invariant violations. | Focused index forward changes only. | `HIGH`; DoD = signed performance report. |
 | TASK-035 (PHASE-004) | Execute backup/restore, key/file/audit reconciliation and RTO/RPO drill. | NFR-009, NFR-015; DES-024 | backup manifests, isolated restore, smoke/runbook/report | TASK-021 (PHASE-003)..TASK-033 (PHASE-004) | RPO<=15m, RTO<=4h; correct keys/files/audit/provider references; missing key fails closed. | No production restore or destructive purge. | `HIGH`; DoD = Operations/Security reviewed evidence. |
 | TASK-036 (PHASE-004) | Complete regression, release-readiness and formal-test handoff. | All requirements; DES-001..DES-025 | full suites, traceability, release/handoff report | TASK-029 (PHASE-004)..TASK-035 (PHASE-004) | Lint/coverage/build, real MySQL, Playwright, security, performance, DR and regressions pass; known blockers explicit. | Approved safe revert/disable strategy. | `HIGH`; DoD = Phase PR ready and baseline declared for TEST_AND_VERIFY. |
 
@@ -442,7 +452,7 @@ Files/scope: integration/performance fixtures, metrics, Phase report. Dependenci
 
 ### Acceptance criteria
 
-Fresh/upgrade DB, APIs, 100k representative query plans, coverage/lint/build and regressions pass.
+Fresh/upgrade DB, APIs, 50k representative query plans, coverage/lint/build and regressions pass.
 
 ### Definition of Done
 
@@ -862,11 +872,11 @@ Useful low-cardinality signals, request/operation correlation, zero secret fixtu
 
 `MEDIUM`; DoD = alert drills and redaction scans pass. Migration/rollback: Alert/config rollback documented.. Code review, developer evidence, traceability and safe worktree/branch cleanup must be complete before DONE.
 
-## TASK-034 — Execute 100k Customer/50-user/query/lock capacity proof
+## TASK-034 — Execute 50k Customer/20-worker/query/lock capacity proof
 
 ### Goal
 
-Execute 100k Customer/50-user/query/lock capacity proof.
+Execute 50k Customer/20-worker/query/lock capacity proof.
 
 ### Approach
 

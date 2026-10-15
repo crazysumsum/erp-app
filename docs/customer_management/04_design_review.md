@@ -1,5 +1,28 @@
 # Customer Management Design Review
 
+## Current capacity amendment — HD-009 (2026-10-15)
+
+Sam's confirmed requirement is 50,000 Customers, 20 concurrent workers and
+p95 <=5s. Requirement/design/plan/technical/UAT specifications are aligned in place;
+interfaces, search semantics, security, child-cardinality and all other gates are
+unchanged. The provided-contract file pin changes only because its design document
+also contains NFR prose; provider contract version/behavior is unchanged.
+
+Fresh independent review: APPROVED by Jason (`/root/customer_task011_review`),
+a separate read-only agent/context, for DESIGN
+`8462e9c2bc9909f413bb0063de29b44bcbe205d8bfd1209c254ff5d1090f9944` and PLAN
+`55ea357b07fb39cc1131b61757b95ca4aa07b246a8dbabfddfecb914e79ba247`.
+The reviewer found no Critical, High or Required issue in this amendment and
+verified unchanged historical report/JSON bytes, unchanged non-amended controls,
+matching contract pin, passing traceability/boundary/diff checks. This is not a
+performance run or closure of the pre-existing product defect.
+Exact revised DESIGN/PLAN human approval remains pending as HD-010.
+Prior approval/review records below apply only to their stated historical baselines.
+DEF-034001 remains HIGH/OPEN; no new measurement or accepted-risk disposition exists.
+Executable tests remain at the former profile until the revised baseline is approved.
+
+## Historical review and approval record
+
 ## Reviewer provenance
 
 | Field | Value |
