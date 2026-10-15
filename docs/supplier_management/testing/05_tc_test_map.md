@@ -41,7 +41,7 @@ PARTIAL means existing tests cover part of the Expected Result. The gap column s
 
 Generated from the test titles. Each carrier's assertions, not only its title, cover the case's **main** Expected Result: the stated outcome, and any real-database or concurrency condition its Steps require. A case can have several carriers; the harness takes the worst result. Smaller clauses a carrier does not assert are listed under Notes and are accepted as partial. Review REV-092 removed 26 tags that did not meet this bar.
 
-Coverage: supplier-bank-security 15/15, supplier-server-integration 57/89, supplier-security 2/10.
+Coverage: supplier-bank-security 15/15, supplier-server-integration 58/89, supplier-security 2/10.
 
 | TC | Carriers (file:line — title) | Notes |
 | --- | --- | --- |
@@ -101,11 +101,12 @@ Coverage: supplier-bank-security 15/15, supplier-server-integration 57/89, suppl
 | TC-081 | `integration/supplierSkuRelations.integration.test.js:122` — TASK-038 (SKU-004): create and update keep MOQ, lead time and status in bounds, with one audit each and no price |  |
 | TC-083 | `integration/supplierSkuRelations.integration.test.js:189` — TASK-038 (SKU-006): recordSupply is idempotent, never makes a relation preferred and fails closed without a source verifier |  |
 | TC-084 | `supplierRelationHandlers.test.js:19` — TASK-038 (SKU-007, FR-SKU-006): no request or response carries a price, and unknown fields are refused |  |
-| TC-086 | `integration/supplierImport.integration.test.js:1528` — TASK-049 (TC-086, SUP-CAP-05): one mixed file end to end — counts agree everywhere, and nothing leaks<br>`supplierCsvSchema.test.js:33` — the template is UTF-8 with a BOM, CRLF, the v1 columns, a description row that says Bank is not accepted, and an example |  |
+| TC-086 | `supplierCsvSchema.test.js:33` — the template is UTF-8 with a BOM, CRLF, the v1 columns, a description row that says Bank is not accepted, and an example |  |
 | TC-087 | `supplierCsvSchema.test.js:72` — RFC 4180: quoted commas, doubled quotes, CRLF or LF, with or without BOM, Chinese text and leading zeros<br>`supplierImportResultHandlers.test.js:47` — the result CSV has a BOM, one header and one record per row, joins issues and guards every cell |  |
 | TC-088 | `integration/supplierImport.integration.test.js:160` — TASK-043 IMP-003: upload stores the file under a server-made name, 0600, inside the root, and records the job<br>`supplierCsvSchema.test.js:128` — malformed, non-UTF-8, empty, oversized and over-long files are rejected with their own code |  |
 | TC-089 | `integration/supplierImport.integration.test.js:187` — TASK-043 IMP-004/005/011 (TC-089): precheck classifies each row and writes nothing to Supplier tables |  |
 | TC-090 | `integration/supplierImport.integration.test.js:607` — TASK-044: detail pages the rows by row number, filters by status, and serves none before precheck finishes<br>`supplierImportHandlers.test.js:91` — the summary projects every public field and says whether the files are gone |  |
+| TC-091 | `integration/supplierImport.integration.test.js:1528` — TASK-049 (SUP-CAP-05): one mixed file end to end — counts agree everywhere, and nothing leaks | HD-106: the code now ends a job with skipped rows as completed_with_errors |
 | TC-092 | `integration/supplierImport.integration.test.js:1083` — TASK-045 (HD-048 4): a failure after the real Supplier write leaves no Supplier, child, name gram or audit behind |  |
 | TC-094 | `integration/supplierImport.integration.test.js:1141` — TASK-045 fault injection: a worker killed before or after a row's commit leaves both or neither, and the next worker finishes once |  |
 | TC-095 | `integration/supplierImport.integration.test.js:1171` — TASK-045: two workers never apply a row twice — one claim wins, and a worker that lost its lease writes nothing<br>`integration/supplierImportExecution.integration.test.js:301` — TASK-042: a row applied before a crash is not applied again, and the job resumes after the lease expires |  |
@@ -148,7 +149,6 @@ Coverage: supplier-bank-security 15/15, supplier-server-integration 57/89, suppl
 | TC-046 | PARTY-007 | no test asserts warnings present, issues empty and activation allowed together (REV-092 M-8) |
 | TC-048 | PARTY-009 | no detail child cap or server-paged child list test |
 | TC-082 | SKU-005 | sequential only; Steps require concurrent creates and direct-DB negatives (REV-092 Low) |
-| TC-091 | IMP-006 | the carrier asserts job status completed with a skipped row, while IMP-006 expects completed_with_errors; the code sets it only when a row failed. Decision pending (REV-092 H-2) |
 | TC-093 | IMP-008 | no barrier-synchronised same-key submit |
 | TC-103 | AUD-001 | requestId and IP are not asserted per action |
 | TC-106 | AUD-004 | over-limit detail: whole-transaction failure and alert not asserted |
