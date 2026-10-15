@@ -107,18 +107,21 @@ function identifierPatterns(search) {
   return [`%${escapeLikeTerm(upper.replace(/[\s-]+/gu, ""))}%`, `%${escapeLikeTerm(upper)}%`];
 }
 
-/** 供應商列表同 for-SKU lookup 共用嘅文字搜尋（HD-094 4A）；`search` 要已經 NFKC 同 trim。 */
-export function supplierSearchCondition(search) {
+/**
+ * 供應商列表同 for-SKU lookup 共用嘅文字搜尋（HD-094 4A）；`search` 要已經 NFKC 同 trim。
+ * 識別號只喺列表搜（HD-108 A）：佢係 `%值%`，用唔到 index，for-SKU 最差情況加咗佢就超過 NFR-005。
+ */
+export function supplierSearchCondition(search, { identifiers = true } = {}) {
   const escaped = escapeLikeTerm(search);
   return {
     sql: `s.supplier_code_key LIKE ? ESCAPE '\\\\'
       OR s.supplier_name LIKE ? ESCAPE '\\\\'
       OR s.display_name LIKE ? ESCAPE '\\\\'
       OR s.general_phone LIKE ? ESCAPE '\\\\'
-      OR s.general_email LIKE ? ESCAPE '\\\\'
+      OR s.general_email LIKE ? ESCAPE '\\\\'${identifiers ? `
       OR s.id IN (SELECT i.supplier_id FROM supplier_identifiers i
-                   WHERE i.identifier_value_key LIKE ? ESCAPE '\\\\' OR i.identifier_value_key LIKE ? ESCAPE '\\\\')`,
-    params: [`${escaped.toLowerCase()}%`, `%${escaped}%`, `%${escaped}%`, `%${escaped}%`, `%${escaped}%`, ...identifierPatterns(search)]
+                   WHERE i.identifier_value_key LIKE ? ESCAPE '\\\\' OR i.identifier_value_key LIKE ? ESCAPE '\\\\')` : ""}`,
+    params: [`${escaped.toLowerCase()}%`, `%${escaped}%`, `%${escaped}%`, `%${escaped}%`, `%${escaped}%`, ...(identifiers ? identifierPatterns(search) : [])]
   };
 }
 

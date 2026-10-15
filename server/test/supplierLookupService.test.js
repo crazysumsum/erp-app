@@ -245,10 +245,10 @@ test("TASK-040 (HD-094 4A): a search matches the Supplier list fields or this SK
   const [byItemCode, count, headCount, rest] = database.calls;
   assert.deepEqual([byItemCode.sql, byItemCode.params],
     ["SELECT supplier_id FROM supplier_sku_refs WHERE sku_id = ? AND supplier_item_code_key = ?", [5, "ab-1"]], "NFKC, trimmed, lower-cased");
-  // HD-107：識別號用 key 寫法（大寫、冇連字號）同原樣兩種試。
-  const match = ["ab-1%", "%AB-1%", "%AB-1%", "%AB-1%", "%AB-1%", "%AB1%", "%AB-1%", 11, 12];
-  assert.match(count.sql,
-    /general_email LIKE \? ESCAPE '\\\\'\s+OR s\.id IN \(SELECT i\.supplier_id FROM supplier_identifiers i\s+WHERE i\.identifier_value_key LIKE \? ESCAPE '\\\\' OR i\.identifier_value_key LIKE \? ESCAPE '\\\\'\) OR s\.id IN \(\?,\?\)\)$/u);
+  // HD-108 A：for-SKU 唔搜識別號，所以冇 supplier_identifiers 子查詢。
+  const match = ["ab-1%", "%AB-1%", "%AB-1%", "%AB-1%", "%AB-1%", 11, 12];
+  assert.match(count.sql, /general_email LIKE \? ESCAPE '\\\\' OR s\.id IN \(\?,\?\)\)$/u);
+  assert.doesNotMatch(count.sql, /supplier_identifiers/u);
   assert.deepEqual(count.params, match);
   assert.match(headCount.sql, / OR y\.supplier_item_code_key = \?\) UNION SELECT id FROM suppliers WHERE supplier_code_key = \?\) h/u);
   assert.deepEqual(headCount.params, [5, "ab-1", "ab-1", 5, ...match]);
@@ -261,7 +261,7 @@ test("TASK-040 (HD-095 B): no Item Code match adds no IN list, and an empty rest
   const database = poolDatabase([[], [{ total: 1 }], [{ headTotal: 1 }], [forSkuRow({ exact_rank: 0 })]]);
   const result = await serviceFor(database, { items: purchasableItems() }).listForSku(5, { q: "SUP-007" });
   assert.equal(database.calls.length, 4, "item code, count, head count, head — no rest query");
-  assert.doesNotMatch(database.calls[1].sql, / IN \(\?/u, "the identifier subquery is not an Item Code list");
+  assert.doesNotMatch(database.calls[1].sql, / IN \(/u);
   assert.deepEqual(result.items.map((item) => item.rankReason), ["exact_match"]);
 });
 
