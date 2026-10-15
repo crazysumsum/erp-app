@@ -1,27 +1,32 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 158,
+  "revision": 161,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
   "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-004",
-  "current_task": "TASK-033",
+  "current_task": "TASK-034",
   "baseline": {
     "design": "24b905fb54f174a745979908a11d3e6d6f0f0c8e9f41d80ee9bb8eea0d946f01",
     "plan": "8e3ca15db849b5f9bbfcc23d06d24bbfd00eb20c874f6f65ce7a1b2b36149b4f",
-    "code_commit": "630fc8cdf2432297227d283b121eac1391362ffe",
-    "source_fingerprint": "45cdca57dcb1c2667c3feaedd4ac4477eb03b92b06d4fb37d42b0a2198152daf",
-    "worktree": "/private/tmp/erp-customer-task033-operational-slice",
-    "default_commit": "fcfb172144f240db6a1d9b14cab1adbd0e4a597b",
+    "code_commit": "0b0f81a9613fde76185bf334c5303a128ae19968",
+    "source_fingerprint": "013351d743371a72bcfc3b30fc6eafe6b0435ad62cd9f4533817f1ae9df48535",
+    "worktree": "/private/tmp/erp-customer-local-capacity-restore",
+    "default_commit": "63fa5063b78d15375fe9f4891fb9ef0424b22639",
     "mode_entry_commit": "f7fd95584e827f1bce112388fc2c196b5939671f"
   },
   "runtime": {
-    "instance_id": "customer-task033-operational-slice-20261014",
+    "instance_id": "customer-local-capacity-restore-20261015",
     "owner": "Primary harness agent",
     "resources": {
-      "workspace": "/private/tmp/erp-customer-task033-operational-slice"
+      "workspace": "/private/tmp/erp-customer-local-capacity-restore",
+      "mysql-instance": "127.0.0.1:13369; datadir /private/tmp/erp-customer-local-runtime.4hF1Yy/mysql",
+      "mysql-schema": "erp_customer_local_capacity_20261015; erp_customer_local_dr_source_20261015; erp_customer_local_dr_restore_20261015",
+      "customer-file-root": "task-owned restore-case-* roots under /private/tmp/erp-customer-local-runtime.4hF1Yy; removed by test cleanup",
+      "customer-import-root": "task-owned synthetic import/restore roots; removed by test cleanup",
+      "web-port": "OS-assigned ephemeral port in TC-064; closed by test cleanup"
     },
     "lease_ref": null
   },
@@ -59,8 +64,8 @@
     "TASK-031": "BLOCKED",
     "TASK-032": "BLOCKED",
     "TASK-033": "IN_PROGRESS",
-    "TASK-034": "PENDING",
-    "TASK-035": "PENDING",
+    "TASK-034": "BLOCKED",
+    "TASK-035": "IN_PROGRESS",
     "TASK-036": "PENDING"
   },
   "approvals": [
@@ -2131,6 +2136,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-044",
+      "method": "SEPARATE_AGENT",
+      "author": "/root TASK-034/035 local measurement evidence",
+      "reviewer": "Jason (/root/customer_task011_review), separate agent",
+      "reviewed_baseline": "013351d743371a72bcfc3b30fc6eafe6b0435ad62cd9f4533817f1ae9df48535",
+      "source_ref": "2026-10-15 independent final review APPROVE for exact source fingerprint. All latency/actual-plan gates execute and export three real failures before one terminal assertion; report/JSON agree with raw TAP. Port/schema safety guards, both key-ring redaction and strict profile findings closed. Guard tests2/2, lint,diff,traceability,boundary passed. No blocking finding in this evidence/test change; product DEF-034001 HIGH OPEN and full acceptance remain blocked. State-only reconciliation follows.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -2727,6 +2744,28 @@
       "source_ref": "Integrated origin/main fcfb172144f240db6a1d9b14cab1adbd0e4a597b (two Supplier documentation files only) with no conflict. Customer diff and DESIGN/PLAN are unchanged. Reran Customer unit checks 253/253, lint and client build successfully. CI run 38531500861 belongs to superseded head 88dcec48 and cannot authorize this merge candidate; require a new final-head run.",
       "actor": "/root integrated-candidate verification",
       "observed_at": "2026-10-14T08:12:28Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-034 Customer-local 100k/50-worker capacity and 10k import execution",
+      "code_commit": "66ddcb9acdd9790b307b76ce198953d64efd70ec",
+      "spec_baseline": "8e3ca15db849b5f9bbfcc23d06d24bbfd00eb20c874f6f65ce7a1b2b36149b4f",
+      "source_fingerprint": "5f63583a047dee6cc117c151078fa041941772db54c40e2b712b4ad38bc72029",
+      "status": "FAIL",
+      "source_ref": "docs/customer_management/implementation/local-capacity-restore-report.md; DEF-034001. Strict run list p95 8902.45ms/exact2358.16ms, then review-corrected rerun on main-integrated 0b0f81a9 plus all-gate collection: list9692.78ms/exact1706.94ms; 892 correct operations, zero errors,25.90ops/s. Final exported gateFailures include both list latency and both full-scan plans (~98853 estimated rows). TC-064 PASS10k/26097.99ms/APIp958.52ms. No product optimization/waiver; Task BLOCKED.",
+      "actor": "/root local developer measurement",
+      "observed_at": "2026-10-15T01:08:00Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-035 actual isolated SQL/key/file/audit restore and fail-closed checks",
+      "code_commit": "66ddcb9acdd9790b307b76ce198953d64efd70ec",
+      "spec_baseline": "8e3ca15db849b5f9bbfcc23d06d24bbfd00eb20c874f6f65ce7a1b2b36149b4f",
+      "source_fingerprint": "5f63583a047dee6cc117c151078fa041941772db54c40e2b712b4ad38bc72029",
+      "status": "PASS",
+      "source_ref": "docs/customer_management/implementation/local-capacity-restore-results.json; final gated suite 3/3 passed. Real mysqldump/mysql restore reconciled all20 Customer tables, encrypted bank,2 encrypted attachments,2 import objects,4audit records,3operation records. Six missing/wrongkey reads failed closed. Local loss184ms/recovery624.49ms; production RTO/RPO and downstream integration NOT_PROVEN/BLOCKED. Final source-schema guard mutation was detected. No production data/restore or raw key export.",
+      "actor": "/root local developer recovery drill",
+      "observed_at": "2026-10-15T01:08:00Z"
     }
   ],
   "pending_decisions": [
@@ -3454,8 +3493,40 @@
       "kind": "GIT_MERGE",
       "target": "github:crazysumsum/erp-app:main<-codex/customer-task033-operational-slice",
       "idempotency_key": "customer-task033-operational-slice-merge-v1",
+      "status": "CONFIRMED",
+      "source_ref": "GitHub PR #225 MERGED at 2026-10-14T08:34:56Z as 8bbb0d3d69e5843f663ada3313644d704363ccc1; all five checks succeeded on head 3af0789489bfd8ec37541ec19af99e3cf50db10d (run38533646981). Branch/worktree cleanup was confirmed."
+    },
+    {
+      "id": "EXT-MYSQL-062",
+      "kind": "DATABASE_TEST",
+      "target": "task-owned MySQL26.7.0 at127.0.0.1:13369, /private/tmp/erp-customer-local-runtime.4hF1Yy/mysql",
+      "idempotency_key": "customer-local-capacity-restore-20261015-v1",
+      "status": "CONFIRMED",
+      "source_ref": "Current Sam instruction explicitly authorizes local capacity and isolated restore execution. Three fresh synthetic schemas were created/migrated; capacity FAIL and restore/import PASS are retained in the sanitized report/results. Dedicated datadir/port/schema checks precede restore writes; no shared DB was reset."
+    },
+    {
+      "id": "EXT-PUSH-063",
+      "kind": "GIT_PUSH",
+      "target": "github:crazysumsum/erp-app:refs/heads/codex/customer-local-capacity-restore",
+      "idempotency_key": "customer-local-capacity-restore-push-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-10-15 pushed 0b0f81a9 on codex/customer-local-capacity-restore; subsequent review corrections are published to the same branch. Full downstream acceptance stays blocked."
+    },
+    {
+      "id": "EXT-PR-064",
+      "kind": "PULL_REQUEST",
+      "target": "github:crazysumsum/erp-app:main<-codex/customer-local-capacity-restore",
+      "idempotency_key": "customer-local-capacity-restore-pr-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-10-15 GitHub PR #228 created: https://github.com/crazysumsum/erp-app/pull/228. Evidence/test-only; OPEN DEF-034001, BLOCKED TASK-034 and downstream acceptance preserved. No performance/DR sign-off or product fix."
+    },
+    {
+      "id": "EXT-MERGE-065",
+      "kind": "GIT_MERGE",
+      "target": "github:crazysumsum/erp-app:main<-codex/customer-local-capacity-restore",
+      "idempotency_key": "customer-local-capacity-restore-merge-v1",
       "status": "PLANNED",
-      "source_ref": "Standing Product Owner authorization; merge only after current mandatory CI and actual independent review pass."
+      "source_ref": "Explicit current user authorization to merge measured results and limits after actual independent review/current mandatory CI; not authorization to waive the failed capacity or blocked full acceptance."
     }
   ],
   "evidence_files": [
@@ -3464,8 +3535,27 @@
     "docs/customer_management/implementation/phase-PHASE-002-report.md",
     "docs/customer_management/implementation/phase-PHASE-003-report.md",
     "docs/customer_management/implementation/phase-PHASE-004-report.md",
-    "docs/customer_management/implementation/customer-operations-runbook.md"
+    "docs/customer_management/implementation/customer-operations-runbook.md",
+    "docs/customer_management/implementation/local-capacity-restore-report.md",
+    "docs/customer_management/implementation/local-capacity-restore-results.json"
   ],
-  "defects": [],
-  "next_safe_action": "Require all five current CI checks on the final main-integrated PR #225 head, then recheck main freshness, merge and clean the TASK-033 slice branch/worktree under standing authorization. REV-043 approves the integrated fingerprint. TASK-033 remains IN_PROGRESS until TASK-032 and integrated alert/security gates are satisfied; TASK-034/035/036 final verification still depends on the real provider set. TASK-030/031/032 remain BLOCKED; do not create placeholders or weaken completion criteria."
+  "defects": [
+    {
+      "id": "DEF-034001",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "source_ids": [
+        "TASK-034",
+        "TC-028",
+        "TC-082",
+        "NFR-001",
+        "NFR-002",
+        "DES-018",
+        "DES-019"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": null
+    }
+  ],
+  "next_safe_action": "PR #228 publishes reviewed Customer-local evidence only. Require all five CI checks on final exact head, fetch/reconcile main, then merge under explicit user authorization and remove this task worktree/runtime. DEF-034001 stays HIGH OPEN and TASK-034 BLOCKED; TASK-035 local verification is not full completion. Downstream integration, production capacity/DR acceptance and release remain BLOCKED."
 }
