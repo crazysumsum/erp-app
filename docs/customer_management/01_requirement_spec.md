@@ -10,7 +10,24 @@
 | Provenance | Existing Customer business baseline plus the already recorded RTO/RPO decision |
 | Product-code change | None |
 
-The canonical aliases and clarifications below preserve the former requirement source. The complete legacy body is retained verbatim in this file, so no second active requirement authority is required.
+The canonical aliases and clarifications below preserve the former requirement source, with explicitly authorized amendments applied in place. The original text remains recoverable in Git; there is no second active requirement authority.
+
+## Capacity requirement amendment — HD-009 (2026-10-15)
+
+Sam explicitly requested: `調整需求，5萬客戶，20個並行工作者， p95要求5秒內`.
+The current capacity target is 50,000 Customers, 20 concurrent workload workers
+and p95 <=5,000ms for the existing standard list/search/exact and shipping/contact
+lookup scope. Workers are load generators, not evidence of 20 authenticated browser
+users or a supported-user ceiling. This supersedes only the former 100,000/50/2s
+target in NFR-001, NFR-003 and KPI-06; child-cardinality limits, workload mix,
+error rate <1%, pagination, query-plan requirements, 10k-import budgets and all
+security/downstream/DR controls are unchanged. A local 30s four-operation retest
+is partial developer evidence, not full mixed-load/browser acceptance.
+
+The 100k/50-worker failure in PR #228 remains historical evidence. DEF-034001 is
+not resolved or risk-accepted by this requirement change; a new run and review of
+the unchanged query-plan assertions are required. Revised DESIGN/PLAN approval
+and executable-test alignment are pending; no new PASS is inferred.
 
 ## 1. Normative Baseline
 
@@ -65,9 +82,9 @@ They require backend authorization, no permission inheritance, non-self approval
 
 | Canonical ID | Source / requirement | Measure | Provenance |
 | --- | --- | --- | --- |
-| NFR-001 | Existing NFR-001 | 50-user normal mixed load: standard list and exact code/name query p95 < 2 seconds. | `EXISTING` |
+| NFR-001 | Existing NFR-001 | 20-worker normal mixed load: standard list and exact code/name query p95 <= 5 seconds. | `EXISTING` |
 | NFR-002 | Existing NFR-002 | Server paging defaults to 20 and caps at 100. | `EXISTING` |
-| NFR-003 | Existing NFR-003 | Validate 100,000 customers with stated child-cardinality baseline. | `EXISTING` |
+| NFR-003 | Existing NFR-003 | Validate 50,000 customers with stated child-cardinality baseline. | `EXISTING` |
 | NFR-004 | Existing NFR-004 | 10,000-row CSV precheck plus execution < 10 minutes, excluding user wait. | `EXISTING` |
 | NFR-005 | Existing NFR-005 | Address/contact lookup meets p95 target with zero cross-customer leakage. | `EXISTING` |
 | NFR-006 | Existing NFR-006 | Domain data, children, status, settings and audit have consistent outcomes. | `EXISTING` |
@@ -178,7 +195,7 @@ Customer Management 將建立單一客戶主資料來源。銷售下單時只選
 | KPI-03 | 正規化後重複公司名稱 | 0 |
 | KPI-04 | 已填寫法定識別資料重複且未被阻擋 | 0 |
 | KPI-05 | 客戶狀態、信用、銀行、附件、審批及設定變更可追溯率 | 100% |
-| KPI-06 | 以 Customer Code 或公司名稱搜尋的回應時間 | 95% 請求在 2 秒內完成 |
+| KPI-06 | 以 Customer Code 或公司名稱搜尋的回應時間 | 95% 請求在 5 秒內完成 |
 | KPI-07 | 發貨時有效地址選擇及默認地址帶入準確率 | 100% |
 | KPI-08 | 合法 CSV 資料列匯入成功率 | 99.5% 以上；錯誤列必須可定位及修正 |
 | KPI-09 | 未獲授權使用者取得完整銀行帳號或敏感銀行附件的事件 | 0 |
@@ -836,9 +853,9 @@ Archived ── restore ──> Suspended
 
 | 編號 | 需求 |
 | --- | --- |
-| NFR-001 | 在最多50名同時在線使用者的正常混合負載下，一般列表、精確Customer Code及精確Legal Name查詢的p95應少於2秒。 |
+| NFR-001 | 在20個並行工作者的正常混合負載下，一般列表、精確Customer Code及精確Legal Name查詢的p95應不超過5秒（<=5,000ms）。 |
 | NFR-002 | 列表使用server-side分頁，單頁預設20、上限100，沿用ERP既有慣例。 |
-| NFR-003 | 建議以100,000 Customer、每Customer 20個地址、50名聯絡人、10個識別資料、10個銀行帳戶及20個附件作容量驗證上限。 |
+| NFR-003 | 建議以50,000 Customer、每Customer 20個地址、50名聯絡人、10個識別資料、10個銀行帳戶及20個附件作容量驗證上限。 |
 | NFR-004 | 10,000列一般Customer CSV的預檢及執行系統處理時間合計應在10分鐘內完成，不計使用者停留時間。 |
 | NFR-005 | 發貨地址及聯絡人查找在容量基準下仍須符合一般查詢p95目標，且不得出現跨Customer資料。 |
 
@@ -1092,7 +1109,7 @@ Archived ── restore ──> Suspended
 - 銀行加密、blind index、金鑰管理、備份、輪替、遮蔽及短時reveal的技術方案。
 - 附件單檔大小、總容量、儲存、惡意檔掃描、預覽、孤兒檔清理及敏感附件備份方案。
 - 大型CSV檔案大小、背景執行門檻、Job通知方式及結果檔保留清理設定。
-- 100,000 Customer容量基準、50名並發及2秒p95的正式驗收環境與錯誤率門檻。
+- 50,000 Customer容量基準、20個並行工作者及5秒p95的正式驗收環境與錯誤率門檻。
 - Customer主資料、稽核、銀行及附件至少7年、CSV檔案建議1年的法務／合規核對。
 
 ## 19. 需求追溯摘要及簽核

@@ -2,6 +2,14 @@
 
 ## Current scope
 
+2026-10-15 / HD-010 approved retest:50,000 Customers,20 concurrent workers,p95<=5s.
+The new run meets latency (list1,521.02ms; exact298.68ms; address305.74ms;
+contact288.71ms), with1,508 correct operations and0operation errors. Actual list
+COUNT/page still full-scan, so the combined case FAILS, DEF-034001 stays HIGH/OPEN
+and TASK-034 stays BLOCKED. See the [new measured report](hd010-capacity-retest-report.md)
+and [exact sanitized results](hd010-capacity-retest-results.json). Prior measurements
+below remain unchanged; complete downstream acceptance stays BLOCKED.
+
 2026-10-15 update: PR #225 is merged (`8bbb0d3d`); local TASK-034/035 execution
 continues from refreshed main `66ddcb9a`. See the
 [local measured report](local-capacity-restore-report.md) and

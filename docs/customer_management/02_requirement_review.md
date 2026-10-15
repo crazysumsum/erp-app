@@ -4,6 +4,13 @@
 
 Status: `READY_FOR_DESIGN_ALIGNMENT`.
 
+2026-10-15 / HD-009: Sam changed capacity to 50,000 Customers, 20 concurrent
+workers and p95 <=5s. These three values are confirmed requirements, not an agent
+workaround for the old failure. Existing workload/child-cardinality, error, query
+plan, import, security, downstream and DR criteria remain unchanged. No additional
+business behavior or architecture is introduced. New baseline approval and retest
+remain required; old failed evidence and DEF-034001 are retained.
+
 The canonical requirement, including the preserved full legacy body is unusually complete for an existing artifact: it states business goals, in/out scope, roles, lifecycle, functional requirements, 42 business rules, 14 security requirements, measurable capacity targets, exception handling and 52 Given/When/Then acceptance criteria. No core capability needs to be invented.
 
 ## 2. Preserved Intent
