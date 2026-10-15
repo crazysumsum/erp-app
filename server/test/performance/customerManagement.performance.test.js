@@ -9,6 +9,7 @@ import { createApplication } from "../../src/framework/application/createApplica
 import { defaultConfigurationSource } from "../../src/framework/configuration/applicationConfiguration.js";
 import { CustomerLookupService } from "../../src/modules/customer/CustomerLookupService.js";
 import { CustomerService } from "../../src/modules/customer/CustomerService.js";
+import { normalizeIdentifierValue } from "../../src/modules/customer/customerNormalization.js";
 
 const skip = process.env.CUSTOMER_PERFORMANCE_TESTS === "1"
   ? false
@@ -150,14 +151,46 @@ async function seedCustomerPerformanceFixtures(database) {
   };
 }
 
+function queryPlanFailures(rows, label) {
+  if (rows.length === 0) return [`${label} returned no EXPLAIN rows`];
+  return rows.flatMap((row) => {
+    // HD-011: scanning materialized candidate IDs is not scanning a physical table.
+    if (/^<(?:derived[1-9]\d*|union[1-9]\d*(?:,[1-9]\d*)+)>$/u.test(row.table)) return [];
+    if (typeof row.table !== "string" || !row.table || row.table.startsWith("<")) return [`${label} unknown EXPLAIN table ${row.table}`];
+    if (typeof row.type !== "string") return [`${label} missing access type for ${row.table}`];
+    return row.type === "ALL" ? [`${label} full-scanned ${row.table}`] : [];
+  });
+}
+
 async function assertIndexedPlan(database, label, sql, params) {
   const [rows] = await database.query(`EXPLAIN FORMAT=TRADITIONAL ${sql}`, params);
-  assert.ok(rows.length > 0, `${label} returned no EXPLAIN rows`);
-  for (const row of rows) {
-    assert.equal(typeof row.type, "string", `${label} must return a real access type`);
-    assert.notEqual(row.type, "ALL", `${label} full-scanned ${row.table}: ${JSON.stringify(row)}`);
-  }
+  assert.deepEqual(queryPlanFailures(rows, label), [], `${label} must keep every physical table indexed`);
   return rows;
+}
+
+test("Customer plans allow only exact materialized result forms alongside indexed physical rows", async () => {
+  const rows = [
+    { table: "<derived2>", type: "ALL" },
+    { table: "<union2,3>", type: null },
+    { table: "customers", type: "eq_ref" },
+    { table: "cc", type: "range" }
+  ];
+  assert.deepEqual(await assertIndexedPlan({ query: async () => [rows] }, "candidate", "SELECT", []), rows);
+});
+
+for (const table of ["customers", "ci", "cc", "ca"]) {
+  test(`Customer plans reject physical ${table} scans even beside materialized results`, async () => {
+    await assert.rejects(() => assertIndexedPlan({ query: async () => [[
+      { table: "<derived2>", type: "ALL" }, { table, type: "ALL" }
+    ]] }, "candidate", "SELECT", []), new RegExp(`full-scanned ${table}`));
+    await assert.rejects(() => assertIndexedPlan({ query: async () => [[{ table, type: null }]] }, "candidate", "SELECT", []), /access type/);
+  });
+}
+
+for (const table of ["<derived2oops>", "<union2,3oops>", "<subquery2>", null]) {
+  test(`Customer plans reject unknown or malformed pseudo table ${table}`, async () => {
+    await assert.rejects(() => assertIndexedPlan({ query: async () => [[{ table, type: "ref" }]] }, "candidate", "SELECT", []), /unknown/);
+  });
 }
 
 test(
@@ -273,15 +306,10 @@ test(
     for (const [name, metric] of Object.entries(latencyMs)) {
       if (!withinLatencyBudget(metric.p95)) gateFailures.push(`${name} p95 ${metric.p95.toFixed(1)}ms exceeds ${P95_BUDGET_MS}ms`);
     }
-    for (const plan of plans.actualList) {
-      for (const row of plan) {
-        if (typeof row.type !== "string") gateFailures.push(`actual list missing access type for ${row.table}`);
-        if (row.type === "ALL") gateFailures.push(`actual list full-scanned ${row.table}`);
-      }
-    }
+    for (const plan of plans.actualList) gateFailures.push(...queryPlanFailures(plan, "actual list"));
     console.log(JSON.stringify({
       tc: "TC-028",
-      fixtureVersion: "customer-hd010-capacity-50k-20-v2",
+      fixtureVersion: "customer-hd011-indexed-search-50k-20-v3",
       data: { customers: fixtures.customerCount, addresses: fixtures.childCount, contacts: fixtures.childCount },
       load: { concurrency: CONCURRENCY, warmListMs, p95BudgetMs: P95_BUDGET_MS,
         requestedDurationMs: DURATION_MS, elapsedMs, errors: 0,
@@ -295,5 +323,61 @@ test(
       gateFailures
     }));
     assert.deepEqual(gateFailures, [], "Customer latency and query-plan gates must all pass");
+
+    await t.test("every selective search field uses its actual candidate range after the measured load", async () => {
+      const probes = [
+        ["code", fixtures.sampleActiveCustomerCode, "customers"],
+        ["legalName", `Performance Customer ${fixtures.marker} 00001`, "customers"],
+        ...["trading", "phone", "email"].map((field) => [field, `probe-${fixtures.marker}-${field}`, "customers"]),
+        ["identifier", `probe-${fixtures.marker}-identifier-${String(fixtures.sampleActiveCustomerId).padStart(8, "0")}`, "customer_identifiers"],
+        ...["name", "email", "phone", "mobile"].map((field) => [`contact.${field}`, `probe-${fixtures.marker}-contact-${field}`, "customer_contacts"]),
+        ...["label", "address_line1", "city", "postal_code"].map((field) => [`address.${field}`, `probe-${fixtures.marker}-address-${field}`, "customer_addresses"])
+      ];
+      // Only this post-load phase changes probe fields; the measured fixture/mix is unchanged.
+      await database.execute(
+        "UPDATE customers SET trading_name = ?, trading_name_key = ?, general_phone = ?, general_email = ? WHERE id = ?",
+        [probes[2][1], probes[2][1], probes[3][1], probes[4][1], fixtures.sampleActiveCustomerId]
+      );
+      await database.execute(
+        `INSERT INTO customer_identifiers (customer_id,identifier_type,issuer_country_code,identifier_value,identifier_value_key,created_at,updated_at)
+         SELECT id,'other','HK',CONCAT(?,LPAD(id,8,'0')),CONCAT(?,LPAD(id,8,'0')),?,?
+           FROM customers WHERE customer_code_key LIKE ? ORDER BY id LIMIT 5000`,
+        [`probe-${fixtures.marker}-identifier-`, normalizeIdentifierValue(`probe-${fixtures.marker}-identifier-`).key,
+          Date.now(), Date.now(), `perf-cus-${fixtures.marker}-%`]
+      );
+      await database.execute(
+        "INSERT INTO customer_credit_profiles (customer_id,credit_status,last_change_reason,created_at,updated_at) VALUES (?,'normal','synthetic plan probe',?,?)",
+        [fixtures.sampleActiveCustomerId, Date.now(), Date.now()]
+      );
+      for (const [table, fields, offset] of [
+        ["customer_contacts", ["name", "email", "phone", "mobile"], 6],
+        ["customer_addresses", ["label", "address_line1", "city", "postal_code"], 10]
+      ]) {
+        await database.execute(`UPDATE ${table} SET ${fields.map((field) => `${field} = ?`).join(",")} WHERE customer_id = ?`,
+          [...fields.map((_, index) => probes[offset + index][1]), fixtures.sampleActiveCustomerId]);
+      }
+      await database.query("ANALYZE TABLE customers, customer_contacts, customer_addresses, customer_identifiers, customer_credit_profiles");
+      const failures = [];
+      for (const [index, [field, q, table]] of probes.entries()) {
+        const queries = [];
+        const page = await customerService.list({ ...actor, q, sortBy: "code", descending: false }, {
+          async query(sql, params) { queries.push({ sql, params }); return database.query(sql, params); }
+        });
+        assert.equal(page.total, 1, field);
+        assert.deepEqual(page.items.map((item) => item.id), [fixtures.sampleActiveCustomerId], field);
+        const actual = [];
+        for (const { sql, params } of queries) {
+          const [rows] = await database.query(`EXPLAIN FORMAT=TRADITIONAL ${sql}`, params);
+          actual.push(rows);
+          failures.push(...queryPlanFailures(rows, field));
+        }
+        const positiveBranch = actual[0].find((row) => Number(row.id) === index + 2 && row.table === table);
+        if (!positiveBranch || positiveBranch.type !== "range" || !positiveBranch.key) failures.push(`${field} positive prefix branch must use a selective index range`);
+        console.log(JSON.stringify({ tc: "TC-028-search-branch", phase: "POST_LOAD_NOT_LATENCY_MEASUREMENT", field, positiveBranch, actual }));
+      }
+      console.log(JSON.stringify({ tc: "TC-028-search-branches", phase: "POST_LOAD_NOT_LATENCY_MEASUREMENT", fields: probes.length,
+        diagnosticData: { identifiers: 5000, creditProfiles: 1 }, failures }));
+      assert.deepEqual(failures, [], "all actual search branches must remain indexed");
+    });
   }
 );

@@ -99,9 +99,10 @@ test("TC-012/013 Customer list applies the approved search, filter, missing-data
   assert.match(countSql, /trading_name_key LIKE/);
   assert.match(countSql, /general_phone LIKE/);
   assert.match(countSql, /general_email LIKE/);
-  assert.match(countSql, /EXISTS \(SELECT 1 FROM customer_identifiers/);
-  assert.match(countSql, /EXISTS \(SELECT 1 FROM customer_contacts/);
-  assert.match(countSql, /EXISTS \(SELECT 1 FROM customer_addresses/);
+  assert.match(countSql, /UNION SELECT customer_id AS candidate_id FROM customer_identifiers WHERE status = 'active'/);
+  assert.match(countSql, /UNION SELECT customer_id AS candidate_id FROM customer_contacts WHERE status = 'active'/);
+  assert.match(countSql, /UNION SELECT customer_id AS candidate_id FROM customer_addresses WHERE status = 'active'/);
+  assert.doesNotMatch(countSql, /UNION ALL/);
   assert.match(countSql, /status IN \(\?,\?\)/);
   assert.match(countSql, /default_currency_code = \?/);
   assert.match(countSql, /EXISTS \(SELECT 1 FROM customer_credit_profiles/);
