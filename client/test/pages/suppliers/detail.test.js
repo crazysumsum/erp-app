@@ -220,4 +220,15 @@ describe("pages/suppliers/SupplierDetailPage.vue", () => {
     expect(body.text()).not.toContain("SUP-009");
     expect(body.text()).not.toContain("Kowloon Metals");
   });
+
+  it("shows 100+ on the address and contact tabs when the detail holds its 100-row page (HD-107 G5)", async () => {
+    const rows = (count) => Array.from({ length: count }, (_, index) => ({
+      id: index + 1, supplierId: 7, label: `A${index}`, name: `C${index}`, status: "active", purposes: [], version: 1
+    }));
+    const { body } = await mountPage({ detail: { ...DETAIL, addresses: rows(100), contacts: rows(99) } });
+    const tabs = body.findAll(".q-tab").map((tab) => tab.text());
+    expect(tabs.some((text) => text.includes("地址 (100+)"))).toBe(true);
+    expect(tabs.some((text) => text.includes("聯絡人 (99)"))).toBe(true);
+  });
 });
+

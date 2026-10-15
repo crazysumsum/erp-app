@@ -72,6 +72,33 @@ describe("supplier service", () => {
     });
   });
 
+  it("sends every HD-107 list filter, drops empty ones, and exports with the same filters", async () => {
+    httpClient.get.mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 20 });
+    httpClient.postBlob.mockResolvedValue({ blob: "b", fileName: "x.csv" });
+    const filters = {
+      status: "", currencyCode: "USD", paymentTermId: 3, missingPrimaryContact: true, missingAddress: false,
+      missingBank: true, includeArchived: true, createdFrom: 1000, createdTo: 2000, updatedFrom: undefined, updatedTo: null
+    };
+    await supplierService.list({ page: 2, rowsPerPage: 20, sortBy: "supplierCode", descending: false, filter: "", ...filters });
+    const sent = { currencyCode: "USD", paymentTermId: 3, missingPrimaryContact: true, missingBank: true, includeArchived: true,
+      createdFrom: 1000, createdTo: 2000 };
+    expect(httpClient.get).toHaveBeenCalledWith("/api/v1/suppliers", {
+      params: { page: 2, pageSize: 20, q: undefined, ...sent, sortBy: "supplierCode", descending: false }
+    });
+    await supplierService.exportCsv({ filter: "SUP", sortBy: "supplierCode", descending: false, password: "pw", ...filters });
+    expect(httpClient.postBlob.mock.calls[0][1].body.filters).toEqual({ q: "SUP", ...sent, sortBy: "supplierCode", descending: false });
+  });
+
+  it("pages addresses and contacts past the detail's 100 (HD-107 G5)", async () => {
+    httpClient.get.mockResolvedValue({ items: [], total: 0, page: 2, pageSize: 100 });
+    await supplierService.listAddresses(7, { page: 2, pageSize: 100 });
+    await supplierService.listContacts(7, { page: 3, pageSize: 100 });
+    expect(httpClient.get.mock.calls).toEqual([
+      ["/api/v1/suppliers/7/addresses", { params: { page: 2, pageSize: 100 } }],
+      ["/api/v1/suppliers/7/contacts", { params: { page: 3, pageSize: 100 } }]
+    ]);
+  });
+
   it("loads detail and completeness by Supplier id", async () => {
     httpClient.get.mockResolvedValueOnce({ id: 7 }).mockResolvedValueOnce({ supplierId: 7, issues: [], warnings: [] });
     expect(await supplierService.getById(7)).toEqual({ id: 7 });

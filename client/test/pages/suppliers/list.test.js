@@ -3,18 +3,24 @@ import { createPinia, setActivePinia } from "pinia";
 import { Quasar } from "quasar";
 import { createMemoryHistory, createRouter } from "vue-router";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import process from "node:process";
 
 vi.mock("@/services/supplier.js", () => ({
   default: { list: vi.fn(), exportCsv: vi.fn() }, service: { name: "supplier" }
 }));
+vi.mock("@/services/businessMaster.js", () => ({ default: { currencyList: vi.fn(), paymentTermList: vi.fn() } }));
 vi.mock("@/framework/ui/confirm.js", () => ({ confirm: vi.fn(), promptPassword: vi.fn() }));
 vi.mock("@/framework/ui/notify.js", () => ({ notifyError: vi.fn(), notifySuccess: vi.fn() }));
 
 import supplierService from "@/services/supplier.js";
+import businessMasterService from "@/services/businessMaster.js";
 import { promptPassword } from "@/framework/ui/confirm.js";
 import { notifyError } from "@/framework/ui/notify.js";
 import SuppliersPage, { page } from "@/pages/suppliers/SuppliersPage.vue";
 import { useSessionStore } from "@/stores/session.js";
+
+// 頁面要用香港時間計日界；本機時區如果剛好係香港就分唔出，所以固定用 UTC 跑（Node 改 TZ 即時生效）。
+process.env.TZ = "UTC";
 
 const ROW = {
   id: 7, supplierCode: "SUP-007", supplierName: "Evergreen Trading", displayName: "Evergreen",
@@ -83,9 +89,9 @@ describe("pages/suppliers/SuppliersPage.vue", () => {
     await body.findAll("button").find((button) => button.text().includes("匯出 CSV")).trigger("click");
     await flushPromises();
 
-    expect(supplierService.exportCsv).toHaveBeenCalledWith({
+    expect(supplierService.exportCsv).toHaveBeenCalledWith(expect.objectContaining({
       filter: "evergreen", status: "active", sortBy: "supplierName", descending: false, password: "pw"
-    });
+    }));
     expect(clicks).toEqual(["suppliers-20261006T070809Z.csv"]);
     click.mockRestore();
   });
@@ -111,5 +117,104 @@ describe("pages/suppliers/SuppliersPage.vue", () => {
       page: 2, filter: "evergreen", status: "active", sortBy: "supplierName", descending: false
     }));
     expect(router.currentRoute.value.query.q).toBe("evergreen");
+  });
+
+  it("restores the HD-107 filters from the URL and sends them to the list and the export as Hong Kong day bounds", async () => {
+    URL.createObjectURL = vi.fn(() => "blob:x");
+    URL.revokeObjectURL = vi.fn();
+    const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+    promptPassword.mockResolvedValue("pw");
+    supplierService.exportCsv.mockResolvedValue({ blob: new Blob(["x"]), fileName: "s.csv" });
+    businessMasterService.currencyList.mockResolvedValue({ rows: [], rowsNumber: 0 });
+    businessMasterService.paymentTermList.mockResolvedValue({ rows: [], rowsNumber: 0 });
+    const { body, router } = await mountPage({ permissions: ["supplier.view", "supplier.mgmt", "business_master.view"], initialRoute: "/suppliers?currencyCode=USD&paymentTermId=3&missingPrimaryContact=true"
+      + "&missingAddress=true&missingBank=true&includeArchived=true&createdFrom=2026-10-01&createdTo=2026-10-02&updatedTo=2026-10-15" });
+    const expected = {
+      currencyCode: "USD", paymentTermId: 3, missingPrimaryContact: true, missingAddress: true, missingBank: true, includeArchived: true,
+      createdFrom: Date.parse("2026-09-30T16:00:00Z"), createdTo: Date.parse("2026-10-02T15:59:59.999Z"),
+      updatedFrom: undefined, updatedTo: Date.parse("2026-10-15T15:59:59.999Z")
+    };
+    expect(supplierService.list).toHaveBeenLastCalledWith(expect.objectContaining(expected));
+    expect(router.currentRoute.value.query).toMatchObject({ currencyCode: "USD", paymentTermId: "3", missingBank: "true", createdFrom: "2026-10-01" });
+    expect(router.currentRoute.value.query.updatedFrom).toBeUndefined();
+
+    await body.findAll("button").find((button) => button.text().includes("匯出 CSV")).trigger("click");
+    await flushPromises();
+    expect(supplierService.exportCsv).toHaveBeenCalledWith(expect.objectContaining(expected));
+    click.mockRestore();
+  });
+
+  it("ignores malformed filter values in the URL", async () => {
+    await mountPage({ initialRoute: "/suppliers?currencyCode=usd&paymentTermId=-1&missingBank=1&createdFrom=yesterday" });
+    expect(supplierService.list).toHaveBeenLastCalledWith(expect.objectContaining({
+      currencyCode: null, paymentTermId: null, missingBank: false, createdFrom: undefined
+    }));
+  });
+
+  it("reloads and updates the URL when a missing-data filter is ticked", async () => {
+    const { body, router } = await mountPage();
+    supplierService.list.mockClear();
+    await body.findAll(".q-checkbox").find((box) => box.text().includes("缺有效銀行資料")).trigger("click");
+    await flushPromises();
+    expect(supplierService.list).toHaveBeenCalledWith(expect.objectContaining({ missingBank: true }));
+    expect(router.currentRoute.value.query.missingBank).toBe("true");
+  });
+
+  it("flags a date range that ends before it starts", async () => {
+    const { body } = await mountPage({ initialRoute: "/suppliers?updatedFrom=2026-10-15&updatedTo=2026-10-01" });
+    expect(body.text()).toContain("結束日期不可早於開始日期");
+  });
+
+  it("offers currency and payment-term filters only with business_master.view, including inactive masters", async () => {
+    businessMasterService.currencyList.mockResolvedValue({ rows: [{ code: "USD", name: "US Dollar" }], rowsNumber: 1 });
+    businessMasterService.paymentTermList.mockResolvedValue({ rows: [{ id: 3, code: "N30", name: "Net 30" }], rowsNumber: 1 });
+    let result = await mountPage();
+    expect(businessMasterService.currencyList).not.toHaveBeenCalled();
+    expect(result.body.findAll(".q-field").some((field) => field.text().includes("貨幣"))).toBe(false);
+    result.wrapper.unmount();
+    document.body.innerHTML = "";
+
+    result = await mountPage({ permissions: ["supplier.view", "business_master.view"] });
+    expect(businessMasterService.currencyList).toHaveBeenCalledWith({ page: 1, rowsPerPage: 100, sortBy: "code" });
+    expect(businessMasterService.paymentTermList).toHaveBeenCalledWith({ page: 1, rowsPerPage: 100, sortBy: "code" });
+    expect(result.body.findAll(".q-field").some((field) => field.text().includes("貨幣"))).toBe(true);
+    expect(result.body.findAll(".q-field").some((field) => field.text().includes("付款條件"))).toBe(true);
+  });
+
+  it("goes back to page 1 when a filter changes (REV-095 M-1)", async () => {
+    const { body, router } = await mountPage({ initialRoute: "/suppliers?page=3&sortBy=supplierName&descending=false" });
+    expect(supplierService.list).toHaveBeenLastCalledWith(expect.objectContaining({ page: 3 }));
+    await body.findAll(".q-checkbox").find((box) => box.text().includes("缺採購地址")).trigger("click");
+    await flushPromises();
+    expect(supplierService.list).toHaveBeenLastCalledWith(expect.objectContaining({
+      page: 1, missingAddress: true, sortBy: "supplierName", descending: false
+    }));
+    expect(router.currentRoute.value.query.page).toBe("1");
+  });
+
+  it("ignores currency and payment term from the URL without business_master.view (REV-095 M-2)", async () => {
+    const { router } = await mountPage({ permissions: ["supplier.view"], initialRoute: "/suppliers?currencyCode=USD&paymentTermId=3" });
+    expect(supplierService.list).toHaveBeenLastCalledWith(expect.objectContaining({ currencyCode: null, paymentTermId: null }));
+    expect(router.currentRoute.value.query.currencyCode).toBeUndefined();
+    expect(router.currentRoute.value.query.paymentTermId).toBeUndefined();
+  });
+
+  it.each([
+    ["createdFrom=2026-13-01"], ["createdFrom=2026-02-31"], ["createdFrom=0000-01-01"], ["createdFrom=1970-01-01"]
+  ])("drops a date that has the right shape but is not a usable day: %s (REV-095 L-1)", async (query) => {
+    await mountPage({ initialRoute: `/suppliers?${query}` });
+    expect(supplierService.list).toHaveBeenLastCalledWith(expect.objectContaining({ createdFrom: undefined }));
+  });
+
+  it("drops a payment term id that is not a whole number (REV-095 L-1)", async () => {
+    businessMasterService.currencyList.mockResolvedValue({ rows: [], rowsNumber: 0 });
+    businessMasterService.paymentTermList.mockResolvedValue({ rows: [], rowsNumber: 0 });
+    await mountPage({ permissions: ["supplier.view", "business_master.view"], initialRoute: "/suppliers?paymentTermId=3.5&currencyCode=USD" });
+    expect(supplierService.list).toHaveBeenLastCalledWith(expect.objectContaining({ paymentTermId: null, currencyCode: "USD" }));
+  });
+
+  it("keeps a real leap day", async () => {
+    await mountPage({ initialRoute: "/suppliers?createdFrom=2028-02-29" });
+    expect(supplierService.list).toHaveBeenLastCalledWith(expect.objectContaining({ createdFrom: Date.parse("2028-02-28T16:00:00Z") }));
   });
 });

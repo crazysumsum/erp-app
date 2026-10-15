@@ -3,6 +3,7 @@ import { nextTick, reactive, ref } from "vue";
 import { confirm } from "@/framework/ui/confirm.js";
 import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
 import supplierService from "@/services/supplier.js";
+import { useMoreChildRows } from "./useMoreChildRows.js";
 
 const props = defineProps({
   supplierId: { type: Number, required: true },
@@ -11,6 +12,7 @@ const props = defineProps({
   canManage: { type: Boolean, default: false }
 });
 const emit = defineEmits(["refresh"]);
+const { rows, total, hasMore, loading: loadingMore, loadMore } = useMoreChildRows(() => props.contacts, (page) => supplierService.listContacts(props.supplierId, page));
 
 const PURPOSES = Object.freeze([
   ["general", "一般聯絡"], ["orders", "訂單聯絡"], ["sales", "銷售聯絡"],
@@ -105,9 +107,9 @@ function contactText(contact) {
       <h2 id="supplier-contacts-heading" class="text-h6 q-ma-none">聯絡人</h2>
       <q-btn v-if="canManage" color="primary" flat icon="add" label="新增聯絡人" @click="openCreate" />
     </div>
-    <div v-if="!contacts.length" class="text-grey-7">尚未設定聯絡人</div>
+    <div v-if="!rows.length" class="text-grey-7">尚未設定聯絡人</div>
     <q-list v-else bordered separator>
-      <q-item v-for="contact in contacts" :key="contact.id">
+      <q-item v-for="contact in rows" :key="contact.id">
         <q-item-section>
           <q-item-label>
             {{ contact.name }}
@@ -125,6 +127,12 @@ function contactText(contact) {
         </q-item-section>
       </q-item>
     </q-list>
+    <div v-if="hasMore || total !== null" class="row items-center q-gutter-sm q-mt-sm">
+      <span class="text-caption text-grey-7" role="status">
+        已顯示 {{ rows.length }} 個聯絡人{{ total === null ? "，可能還有更多" : `，共 ${total} 個` }}
+      </span>
+      <q-btn v-if="hasMore" flat dense color="primary" label="載入更多聯絡人" :loading="loadingMore" @click="loadMore" />
+    </div>
 
     <q-dialog v-model="dialogOpen" persistent>
       <q-card style="width: min(760px, 96vw); max-width: 760px">

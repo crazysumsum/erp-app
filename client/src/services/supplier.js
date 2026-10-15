@@ -2,6 +2,18 @@ import { httpClient } from "@/framework/http/HttpClient.js";
 
 export const service = { name: "supplier" };
 
+const LIST_FILTERS = Object.freeze([
+  "status", "currencyCode", "paymentTermId", "missingPrimaryContact", "missingAddress", "missingBank", "includeArchived",
+  "createdFrom", "createdTo", "updatedFrom", "updatedTo"
+]);
+
+// 空字串、null、false 都當「冇篩選」唔送：false 嘅 missing* 喺 API 係「唔缺」，唔係「唔篩」。
+function listFilters(filters) {
+  return Object.fromEntries(LIST_FILTERS
+    .filter((name) => filters[name] !== undefined && filters[name] !== null && filters[name] !== "" && filters[name] !== false)
+    .map((name) => [name, filters[name]]));
+}
+
 export default {
   create(payload) {
     return httpClient.post("/api/v1/suppliers/create", {
@@ -16,33 +28,28 @@ export default {
     });
   },
 
-  list({
-    page, rowsPerPage, sortBy, descending, filter, status, currencyCode, paymentTermId,
-    updatedFrom, updatedTo, includeArchived
-  }) {
+  /** `filters`：status、currencyCode、paymentTermId、missing*、includeArchived、created／updated 範圍（epoch ms）；空值唔送。 */
+  list({ page, rowsPerPage, sortBy, descending, filter, ...filters }) {
     return httpClient.get("/api/v1/suppliers", {
-      params: {
-        page,
-        pageSize: rowsPerPage,
-        q: filter || undefined,
-        status: status || undefined,
-        currencyCode: currencyCode || undefined,
-        paymentTermId: paymentTermId || undefined,
-        updatedFrom,
-        updatedTo,
-        includeArchived,
-        sortBy: sortBy || undefined,
-        descending
-      }
+      params: { page, pageSize: rowsPerPage, q: filter || undefined, ...listFilters(filters), sortBy: sortBy || undefined, descending }
     }).then(({ items, total }) => ({ rows: items, rowsNumber: total }));
   },
 
   /** 一般匯出（T47；HD-067）：同列表一樣嘅篩選同排序，要密碼確認；回 `{ blob, fileName }`。 */
-  exportCsv({ filter, status, sortBy, descending, password, signal }) {
+  exportCsv({ filter, sortBy, descending, password, signal, ...filters }) {
     return httpClient.postBlob("/api/v1/supplier-exports", {
-      body: { password, filters: { q: filter || undefined, status: status || undefined, sortBy: sortBy || undefined, descending } },
+      body: { password, filters: { q: filter || undefined, ...listFilters(filters), sortBy: sortBy || undefined, descending } },
       signal
     });
+  },
+
+  /** 詳情最多帶 100 筆地址／聯絡人，之後用呢兩個分頁讀（HD-107 G5）。 */
+  listAddresses(id, { page, pageSize }) {
+    return httpClient.get(`/api/v1/suppliers/${id}/addresses`, { params: { page, pageSize } });
+  },
+
+  listContacts(id, { page, pageSize }) {
+    return httpClient.get(`/api/v1/suppliers/${id}/contacts`, { params: { page, pageSize } });
   },
 
   getById(id) {

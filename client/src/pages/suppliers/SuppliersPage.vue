@@ -9,7 +9,7 @@ export const page = {
 </script>
 
 <script setup>
-import { computed, ref, watch } from "vue";
+import { computed, onMounted, reactive, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import appConfig from "@config/app.js";
 import PageHeader from "@/framework/layout/PageHeader.vue";
@@ -20,6 +20,7 @@ import { can } from "@/framework/authorization/can.js";
 import { promptPassword } from "@/framework/ui/confirm.js";
 import { notifyError } from "@/framework/ui/notify.js";
 import { useSessionStore } from "@/stores/session.js";
+import businessMasterService from "@/services/businessMaster.js";
 import supplierService from "@/services/supplier.js";
 
 const STATUS_LABEL = Object.freeze({
@@ -41,6 +42,26 @@ const canApprove = computed(() => can(session, { permissions: ["supplier.view", 
 const initialQuery = route.query;
 const searchText = ref(typeof initialQuery.q === "string" ? initialQuery.q : "");
 const statusFilter = ref(typeof initialQuery.status === "string" ? initialQuery.status : null);
+// 貨幣／付款條件嘅選項要 business_master.view；冇呢個權限就唔顯示呢兩個篩選，
+// URL 帶落嚟嘅值亦唔用：睇唔到又清唔走嘅篩選唔可以靜靜雞收窄列表同匯出（REV-095 M-2）。
+const canPickMasters = computed(() => can(session, { permissions: ["business_master.view"] }));
+const initialPaymentTermId = Number(initialQuery.paymentTermId);
+// 設計 7.3 嘅其餘篩選（HD-107 G4）；日期用 YYYY-MM-DD 存，送 API 先轉香港時間 epoch ms。
+const filters = reactive({
+  currencyCode: canPickMasters.value && /^[A-Z]{3}$/u.test(initialQuery.currencyCode) ? initialQuery.currencyCode : null,
+  paymentTermId: canPickMasters.value && Number.isInteger(initialPaymentTermId) && initialPaymentTermId > 0 ? initialPaymentTermId : null,
+  missingPrimaryContact: initialQuery.missingPrimaryContact === "true",
+  missingAddress: initialQuery.missingAddress === "true",
+  missingBank: initialQuery.missingBank === "true",
+  includeArchived: initialQuery.includeArchived === "true",
+  createdFrom: dateQuery(initialQuery.createdFrom),
+  createdTo: dateQuery(initialQuery.createdTo),
+  updatedFrom: dateQuery(initialQuery.updatedFrom),
+  updatedTo: dateQuery(initialQuery.updatedTo)
+});
+const DATE_RANGES = Object.freeze([["created", "建立日期"], ["updated", "更新日期"]]);
+const currencyOptions = ref([]);
+const paymentTermOptions = ref([]);
 const initialPagination = {
   page: Number(initialQuery.page) > 0 ? Number(initialQuery.page) : 1,
   rowsPerPage: appConfig.defaultPageSize,
@@ -48,7 +69,13 @@ const initialPagination = {
   sortBy: ["supplierCode", "supplierName", "status", "updatedAt"].includes(initialQuery.sortBy) ? initialQuery.sortBy : "updatedAt",
   descending: initialQuery.descending !== "false"
 };
-const currentRequest = ref({ page: initialPagination.page, sortBy: initialPagination.sortBy, descending: initialPagination.descending });
+const currentRequest = ref({
+  page: initialPagination.page, rowsPerPage: initialPagination.rowsPerPage, sortBy: initialPagination.sortBy, descending: initialPagination.descending
+});
+// 篩選變咗要返第一頁（REV-095 M-1）：舊頁碼喺新結果入面冇意義，留低會跳過前面嘅結果。
+// 共用 DataTable 唔喺本模組範圍，所以由頁面用新 key 重新掛載，帶住目前排序同每頁筆數由第 1 頁開始。
+const tablePagination = ref(initialPagination);
+const tableKey = ref(0);
 const table = ref(null);
 const exporting = ref(false);
 
@@ -64,23 +91,78 @@ const columns = [
   { name: "actions", label: "", field: "id", align: "right" }
 ];
 
+// 要係真嘅日子：2026-13-01、2026-02-31 呢類會變 NaN 或者靜靜雞跳去下個月（REV-095 L-1）；0000 年會變負數。
+function dateQuery(value) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/u.test(value) || value < "1970-01-02") return "";
+  const parsed = new Date(`${value}T00:00:00Z`);
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value ? value : "";
+}
+
+function dayStart(value) { return value ? new Date(`${value}T00:00:00+08:00`).getTime() : undefined; }
+function dayEnd(value) { return value ? new Date(`${value}T23:59:59.999+08:00`).getTime() : undefined; }
+
+function rangeError(prefix) {
+  const from = filters[`${prefix}From`];
+  const to = filters[`${prefix}To`];
+  return from && to && from > to ? "結束日期不可早於開始日期" : "";
+}
+
+function filterParams() {
+  return {
+    status: statusFilter.value,
+    currencyCode: filters.currencyCode,
+    paymentTermId: filters.paymentTermId,
+    missingPrimaryContact: filters.missingPrimaryContact,
+    missingAddress: filters.missingAddress,
+    missingBank: filters.missingBank,
+    includeArchived: filters.includeArchived,
+    createdFrom: dayStart(filters.createdFrom),
+    createdTo: dayEnd(filters.createdTo),
+    updatedFrom: dayStart(filters.updatedFrom),
+    updatedTo: dayEnd(filters.updatedTo)
+  };
+}
+
 function syncUrl() {
+  const filterQuery = Object.fromEntries(Object.entries(filters)
+    .filter(([, value]) => value !== null && value !== "" && value !== false)
+    .map(([name, value]) => [name, String(value)]));
   router.replace({ query: {
     page: currentRequest.value.page,
     sortBy: currentRequest.value.sortBy,
     descending: String(currentRequest.value.descending),
     q: searchText.value || undefined,
-    status: statusFilter.value || undefined
+    status: statusFilter.value || undefined,
+    ...filterQuery
   } });
 }
 
 function fetchSuppliers(request) {
-  currentRequest.value = { page: request.page, sortBy: request.sortBy, descending: request.descending };
+  currentRequest.value = { page: request.page, rowsPerPage: request.rowsPerPage, sortBy: request.sortBy, descending: request.descending };
   syncUrl();
-  return supplierService.list({ ...request, status: statusFilter.value });
+  return supplierService.list({ ...request, ...filterParams() });
 }
 
-watch(statusFilter, () => table.value?.reload());
+watch([statusFilter, filters], () => {
+  tablePagination.value = { ...initialPagination, ...currentRequest.value, page: 1 };
+  tableKey.value += 1;
+});
+
+async function loadMasterOptions() {
+  if (!canPickMasters.value) return;
+  try {
+    const [currencies, paymentTerms] = await Promise.all([
+      businessMasterService.currencyList({ page: 1, rowsPerPage: 100, sortBy: "code" }),
+      businessMasterService.paymentTermList({ page: 1, rowsPerPage: 100, sortBy: "code" })
+    ]);
+    currencyOptions.value = currencies.rows.map((item) => ({ label: `${item.code} — ${item.name}`, value: item.code }));
+    paymentTermOptions.value = paymentTerms.rows.map((item) => ({ label: `${item.code} — ${item.name}`, value: item.id }));
+  } catch (error) {
+    notifyError(error.message || "載入貨幣／付款條件失敗");
+  }
+}
+
+onMounted(loadMasterOptions);
 
 function formatDate(value) {
   return new Date(value).toLocaleString("zh-HK", { timeZone: "Asia/Hong_Kong" });
@@ -99,14 +181,14 @@ function downloadBlob(blob, filename) {
 async function exportSuppliers() {
   const password = await promptPassword({
     title: "匯出供應商",
-    message: "按目前的搜尋、狀態及排序匯出供應商一般資料（匯入範本格式，不含銀行資料），最多 10,000 筆。",
+    message: "按目前的搜尋、篩選及排序匯出供應商一般資料（匯入範本格式，不含銀行資料），最多 10,000 筆。",
     okLabel: "匯出"
   });
   if (password === null) return;
   exporting.value = true;
   try {
     const { blob, fileName } = await supplierService.exportCsv({
-      filter: searchText.value, status: statusFilter.value,
+      filter: searchText.value, ...filterParams(),
       sortBy: currentRequest.value.sortBy, descending: currentRequest.value.descending, password
     });
     downloadBlob(blob, fileName ?? "suppliers.csv");
@@ -135,12 +217,37 @@ async function exportSuppliers() {
         @update:model-value="table?.reload()"
       ><template #prepend><q-icon name="search" /></template></q-input>
       <q-select v-model="statusFilter" dense outlined emit-value map-options :options="statusOptions" label="狀態" style="width: 160px" />
+      <template v-if="canPickMasters">
+        <q-select
+          v-model="filters.currencyCode" dense outlined emit-value map-options clearable
+          :options="currencyOptions" label="貨幣" style="width: 200px"
+        />
+        <q-select
+          v-model="filters.paymentTermId" dense outlined emit-value map-options clearable
+          :options="paymentTermOptions" label="付款條件" style="width: 220px"
+        />
+      </template>
+    </div>
+    <div class="q-px-md q-pb-md row q-gutter-sm items-start">
+      <q-checkbox v-model="filters.missingPrimaryContact" dense label="缺主要訂單聯絡人" />
+      <q-checkbox v-model="filters.missingAddress" dense label="缺採購地址" />
+      <q-checkbox v-model="filters.missingBank" dense label="缺有效銀行資料" />
+      <q-checkbox v-model="filters.includeArchived" dense label="包括已封存" />
+      <template v-for="[prefix, label] in DATE_RANGES" :key="prefix">
+        <q-input
+          v-model="filters[`${prefix}From`]" dense outlined stack-label type="date" :label="`${label}由`" style="width: 170px"
+        />
+        <q-input
+          v-model="filters[`${prefix}To`]" dense outlined stack-label type="date" :label="`${label}至`" style="width: 170px"
+          :error="!!rangeError(prefix)" :error-message="rangeError(prefix)"
+        />
+      </template>
     </div>
 
     <div class="q-px-md q-pb-md">
       <DataTable
-        ref="table" :fetch="fetchSuppliers" :columns="columns" :filter="searchText"
-        :initial-pagination="initialPagination" sticky-actions
+        ref="table" :key="tableKey" :fetch="fetchSuppliers" :columns="columns" :filter="searchText"
+        :initial-pagination="tablePagination" sticky-actions
       >
         <template #body-cell-supplierName="{ value }"><EllipsisCell :text="value" max-width="240px" /></template>
         <template #body-cell-displayName="{ value }"><EllipsisCell :text="value || '—'" max-width="180px" /></template>
