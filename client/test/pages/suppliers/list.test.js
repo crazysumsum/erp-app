@@ -217,4 +217,17 @@ describe("pages/suppliers/SuppliersPage.vue", () => {
     await mountPage({ initialRoute: "/suppliers?createdFrom=2028-02-29" });
     expect(supplierService.list).toHaveBeenLastCalledWith(expect.objectContaining({ createdFrom: Date.parse("2028-02-28T16:00:00Z") }));
   });
+
+  it("renders markup in Supplier fields as text, never as elements (AUTH-009 client side)", async () => {
+    const { body, wrapper } = await mountPage();
+    supplierService.list.mockResolvedValue({ rows: [{ ...ROW, supplierName: "<script>window.__xss = 1</script>",
+      displayName: "<img src=x onerror=\"window.__xss = 2\">", primaryContactName: "<b>bold</b>" }], rowsNumber: 1 });
+    await body.findAll(".q-checkbox").find((box) => box.text().includes("包括已封存")).trigger("click");
+    await flushPromises();
+    expect(body.text()).toContain("<script>window.__xss = 1</script>");
+    expect(body.text()).toContain("<b>bold</b>");
+    expect(wrapper.element.querySelector("script, img[onerror], b")).toBeNull();
+    expect(window.__xss).toBeUndefined();
+  });
 });
+
