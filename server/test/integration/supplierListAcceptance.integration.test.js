@@ -7,6 +7,7 @@ import path from "node:path";
 
 import { SupplierBankCrypto } from "../../src/modules/supplier/SupplierBankCrypto.js";
 import { SupplierBankService } from "../../src/modules/supplier/SupplierBankService.js";
+import { SupplierContactService } from "../../src/modules/supplier/SupplierContactService.js";
 
 /**
  * TASK-051 step 2b（HD-107）：列表、搜尋、篩選、排序同子資料分頁，打真 HTTP 同真 MySQL。
@@ -14,7 +15,7 @@ import { SupplierBankService } from "../../src/modules/supplier/SupplierBankServ
  */
 const integrationTest = process.env.DB_INTEGRATION_TESTS === "1" ? test : test.skip;
 const PASSWORD = "List-T51-Password!";
-const h = { application: null, url: "", db: null, jwt: null, logRoot: "", supplierIds: [], roleIds: [], userIds: [] };
+const h = { application: null, url: "", db: null, jwt: null, logRoot: "", supplierIds: [], roleIds: [], userIds: [], termIds: [] };
 
 before(async () => {
   if (process.env.DB_INTEGRATION_TESTS !== "1") return;
@@ -44,7 +45,9 @@ after(async () => {
     }
     await h.db.execute("DELETE FROM suppliers WHERE id = ?", [id]);
   }
+  for (const id of h.termIds) await h.db.execute("DELETE FROM payment_terms WHERE id = ?", [id]);
   for (const id of h.userIds) {
+    await h.db.execute("DELETE FROM supplier_audit_logs WHERE actor_user_id = ?", [id]);
     await h.db.execute("DELETE FROM user_roles WHERE user_id = ?", [id]);
     await h.db.execute("DELETE FROM users WHERE id = ?", [id]);
   }
@@ -75,7 +78,7 @@ async function makeUser(label, permissions) {
   await h.db.execute("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)", [userId, roleId]);
   const version = await h.application.services.require("tokenRevocation").currentVersion(String(userId));
   const token = await h.jwt.issue({ roles: [name], permissions }, { subject: String(userId), version, authTime: Math.floor(now / 1000) });
-  return { userId, token };
+  return { userId, token, permissions, roles: [name] };
 }
 
 async function seedSupplier({ code, name, status = "active", at = Date.now(), createdAt = at, displayName = "", phone = "", email = "",
@@ -125,6 +128,24 @@ async function seedIdentifier(supplierId, value, key) {
      VALUES (?, 'business_registration', 'HK', ?, ?, ?, ?)`, [supplierId, value, key, now, now]);
 }
 
+async function seedPaymentTerm(code) {
+  const now = Date.now();
+  const [inserted] = await h.db.execute(
+    `INSERT INTO payment_terms (code, code_key, name, calculation_type, due_days, status, version, created_at, updated_at)
+     VALUES (?, ?, ?, 'NET_DAYS', 30, 'ACTIVE', 1, ?, ?)`, [code, code.toUpperCase(), `Term ${code}`, now, now]);
+  h.termIds.push(Number(inserted.insertId));
+  return Number(inserted.insertId);
+}
+
+async function exportWith(user, filters) {
+  const response = await fetch(`${h.url}/api/v1/supplier-exports`, { method: "POST",
+    headers: { authorization: `Bearer ${user.token}`, "content-type": "application/json" }, body: JSON.stringify({ password: PASSWORD, filters }) });
+  const text = await response.text();
+  let code = null;
+  try { code = JSON.parse(text)?.error?.code ?? null; } catch { /* CSV */ }
+  return { status: response.status, code, text };
+}
+
 function bankService() {
   const crypto = new SupplierBankCrypto({ encryption: h.application.services.config.supplier.bankEncryption,
     lookup: h.application.services.config.supplier.bankLookup });
@@ -156,23 +177,24 @@ integrationTest("TC-008 (LIST-001): the list pages 20 by default and at most 100
   const viewer = await makeUser("viewer", ["supplier.view"]);
   const tag = `L1${randomUUID().slice(0, 6).toUpperCase()}`;
   const base = Date.now() - 100_000;
-  for (let n = 0; n < 24; n += 1) await seedSupplier({ code: `${tag}-${String(n).padStart(2, "0")}`, name: `Paging ${tag} ${n}`, at: base + n });
+  for (let n = 0; n < 124; n += 1) await seedSupplier({ code: `${tag}-${String(n).padStart(3, "0")}`, name: `Paging ${tag} ${n}`, at: base + n });
   const archived = await seedSupplier({ code: `${tag}-AR`, name: `Paging ${tag} archived`, status: "archived", at: base + 99 });
 
   const first = await list(viewer, { q: tag });
   assert.equal(first.status, 200);
-  assert.deepEqual([first.data.items.length, first.data.total, first.data.page, first.data.pageSize], [20, 24, 1, 20],
+  assert.deepEqual([first.data.items.length, first.data.total, first.data.page, first.data.pageSize], [20, 124, 1, 20],
     "20 by default; total counts the filtered set, not the page");
   assert.ok(!ids(first).includes(archived), "Archived is hidden by default");
-  const second = await list(viewer, { q: tag, page: "2" });
-  assert.equal(second.data.items.length, 4);
-  assert.equal(new Set([...ids(first), ...ids(second)]).size, 24, "the two pages partition the set");
-  assert.equal((await list(viewer, { q: tag, pageSize: "100" })).data.items.length, 24);
-  for (const bad of [{ pageSize: "0" }, { pageSize: "101" }, { page: "0" }, { page: "x" }]) {
+  assert.deepEqual([(await list(viewer, { q: tag, pageSize: "1" })).data.items.length], [1]);
+  const hundred = await list(viewer, { q: tag, pageSize: "100" });
+  const rest = await list(viewer, { q: tag, pageSize: "100", page: "2" });
+  assert.deepEqual([hundred.data.items.length, rest.data.items.length, hundred.data.total], [100, 24, 124], "a page holds at most 100");
+  assert.equal(new Set([...ids(hundred), ...ids(rest)]).size, 124, "the two pages partition the set");
+  for (const bad of [{ pageSize: "0" }, { pageSize: "101" }, { page: "0" }, { page: "x" }, { page: "100000000000000000000" }]) {
     assert.equal((await list(viewer, { q: tag, ...bad })).status, 400, JSON.stringify(bad));
   }
   const withArchived = await list(viewer, { q: tag, includeArchived: "true", pageSize: "100" });
-  assert.equal(withArchived.data.total, 25);
+  assert.equal(withArchived.data.total, 125);
   assert.ok(ids(withArchived).includes(archived));
   const onlyArchived = await list(viewer, { q: tag, status: "archived" });
   assert.deepEqual([ids(onlyArchived), onlyArchived.data.total], [[archived], 1], "an explicit status filter finds it");
@@ -208,8 +230,16 @@ integrationTest("TC-009 (LIST-002): every searchable field matches in full and i
     const result = await find(q);
     assert.deepEqual([result.items.map((item) => item.id), result.total], [[target], 1], label);
   }
+  // 淨係分隔符嘅搜尋唔可以變成 `%%`，配中所有識別號（REV-094 M-1）。
+  const plain = await seedSupplier({ code: `LZ${tag}PLAIN`, name: `Plain ${tag} Co` });
+  await seedIdentifier(plain, `BR ${tag} 99`, `BR${tag}99`);
+  for (const q of ["-", " - ", "--"]) {
+    const result = await list(viewer, { q, pageSize: "100", includeArchived: "true" });
+    assert.equal(result.status, 200, q);
+    assert.ok(!ids(result).includes(plain), `${JSON.stringify(q)} must not match a Supplier with no dash anywhere`);
+  }
   const both = await find(tag);
-  assert.deepEqual([both.items.map((item) => item.id).sort(), both.total], [[target, other].sort(), 2],
+  assert.deepEqual([both.items.map((item) => item.id).sort(), both.total], [[target, other, plain].sort(), 3],
     "two identifiers that both match do not repeat the row, and total agrees");
 });
 
@@ -217,11 +247,14 @@ integrationTest("TC-010 (LIST-003): filters return only their intersection, with
   const viewer = await makeUser("viewer", ["supplier.view"]);
   const tag = `L3${randomUUID().slice(0, 6).toUpperCase()}`;
   const t0 = Date.now() - 1_000_000;
-  const complete = await seedSupplier({ code: `${tag}-FULL`, name: `Filter ${tag} full`, at: t0 + 100, createdAt: t0 + 10 });
+  const term = await seedPaymentTerm(`T51-${tag}`);
+  const complete = await seedSupplier({ code: `${tag}-FULL`, name: `Filter ${tag} full`, at: t0 + 100, createdAt: t0 + 10, paymentTermId: term });
   await seedContact(complete, { name: "Orders lead", purpose: "orders", primary: true });
   await seedAddress(complete, { purpose: "ordering" });
   await seedBank(complete, tag);
   const bare = await seedSupplier({ code: `${tag}-BARE`, name: `Filter ${tag} bare`, at: t0 + 200, createdAt: t0 + 20 });
+  // 其他用途嘅 primary 唔算「主要聯絡人」：冇咗 purpose_code 條件就會被當成有。
+  await seedContact(bare, { name: "Sales lead", purpose: "sales", primary: true });
   const weak = await seedSupplier({ code: `${tag}-WEAK`, name: `Filter ${tag} weak`, status: "suspended", at: t0 + 300, createdAt: t0 + 30 });
   // 只算啟用中、啱用途嘅：非主要、停用、其他用途都唔算數。
   await seedContact(weak, { name: "Not primary", purpose: "orders", primary: false });
@@ -247,6 +280,8 @@ integrationTest("TC-010 (LIST-003): filters return only their intersection, with
   assert.deepEqual(await found({ status: "suspended", missingBank: "true" }), [weak], "filters intersect");
   assert.deepEqual(await found({ status: "active", missingAddress: "true" }), [bare]);
   assert.deepEqual(await found({ currencyCode: "HKD" }), sorted(complete, bare, weak));
+  assert.deepEqual(await found({ paymentTermId: String(term) }), [complete]);
+  assert.deepEqual(await found({ paymentTermId: String(term), missingBank: "true" }), []);
   assert.deepEqual(await found({ currencyCode: "USD" }), []);
   assert.deepEqual(await found({ updatedFrom: String(t0 + 200), updatedTo: String(t0 + 300) }), sorted(bare, weak), "updated range is inclusive");
   assert.deepEqual(await found({ updatedFrom: String(t0 + 201) }), [weak]);
@@ -299,11 +334,16 @@ integrationTest("TC-012 (LIST-005): LIKE wildcards are searched literally, an un
   const viewer = await makeUser("viewer", ["supplier.view"]);
   const tag = `L5${randomUUID().slice(0, 6).toUpperCase()}`;
   const literal = await seedSupplier({ code: `${tag}-PCT`, name: `Rate ${tag} 100%_off` });
+  const slash = await seedSupplier({ code: `${tag}-BSL`, name: `Path ${tag} a\\b` });
+  const unicode = await seedSupplier({ code: `${tag}-UNI`, name: `華興${tag}貿易有限公司` });
   await seedSupplier({ code: `${tag}-NOPE`, name: `Rate ${tag} 1000 offer` });
   const before = await supplierCount();
   const percent = await list(viewer, { q: `${tag} 100%_` });
   assert.deepEqual([ids(percent), percent.data.total], [[literal], 1], "% and _ match themselves, not any text");
   assert.deepEqual(ids(await list(viewer, { q: `${tag} 10_` })), [], "_ is not a single-character wildcard");
+  assert.deepEqual(ids(await list(viewer, { q: `${tag} a\\b` })), [slash], "a backslash is literal too");
+  assert.deepEqual(ids(await list(viewer, { q: `${tag} a\\\\b` })), [], "and is not an escape character for the caller");
+  assert.deepEqual(ids(await list(viewer, { q: `${tag}貿易` })), [unicode], "Chinese text matches in part");
   const injection = await list(viewer, { q: `${tag}' OR '1'='1` });
   assert.deepEqual([injection.status, injection.data.total], [200, 0], "a quote is data, not SQL");
   for (const sortBy of ["supplierId", "supplier_name", "1; DROP TABLE suppliers"]) {
@@ -319,12 +359,18 @@ integrationTest("TC-048 (PARTY-009): detail carries at most 100 contacts and add
   const tag = `P9${randomUUID().slice(0, 6).toUpperCase()}`;
   const id = await seedSupplier({ code: `${tag}-BIG`, name: `Many children ${tag}` });
   for (let n = 0; n < 105; n += 1) {
-    await seedContact(id, { name: `Contact ${String(n).padStart(3, "0")}`, purpose: n === 0 ? "orders" : null, primary: n === 0 });
-    await seedAddress(id, { label: `Address ${n}`, purpose: n === 0 ? "ordering" : null });
+    // 主要聯絡人同採購地址放喺第 105 筆：detail 只帶頭 100 筆，但判斷「缺唔缺」要睇晒（REV-094 L-2）。
+    await seedContact(id, { name: `Contact ${String(n).padStart(3, "0")}`, purpose: n === 104 ? "orders" : null, primary: n === 104 });
+    await seedAddress(id, { label: `Address ${n}`, purpose: n === 104 ? "ordering" : null });
   }
 
   const detail = await get(viewer, `/api/v1/suppliers/${id}`);
   assert.deepEqual([detail.status, detail.data.contacts.length, detail.data.addresses.length], [200, 100, 100], "detail stops at the design cap");
+  assert.deepEqual(detail.data.warnings.map((warning) => warning.code).filter((code) => /ORDERS_CONTACT|ORDERING_ADDRESS/u.test(code)), [],
+    "the 105th rows still count, so detail does not warn");
+  for (const filter of ["missingPrimaryContact", "missingAddress"]) {
+    assert.deepEqual(ids(await list(viewer, { q: tag, [filter]: "true" })), [], `${filter} agrees with detail`);
+  }
   for (const kind of ["contacts", "addresses"]) {
     const seen = [];
     for (let page = 1; page <= 3; page += 1) {
@@ -336,14 +382,41 @@ integrationTest("TC-048 (PARTY-009): detail carries at most 100 contacts and add
     assert.equal(seen.length, 105, `${kind}: every row comes back once`);
     assert.equal(new Set(seen.map((item) => item.id)).size, 105, `${kind}: no row repeats across pages`);
     assert.ok(seen.every((item) => item.supplierId === id), `${kind}: only this Supplier's rows`);
-    assert.deepEqual(seen[0].purposes, [{ purposeCode: kind === "contacts" ? "orders" : "ordering", isPrimary: kind === "contacts" }],
-      `${kind}: purposes come with the page`);
+    assert.deepEqual(seen.filter((item) => item.purposes.length > 0).map((item) => item.purposes),
+      [[{ purposeCode: kind === "contacts" ? "orders" : "ordering", isPrimary: kind === "contacts" }]], `${kind}: purposes come with the page`);
     assert.equal((await get(viewer, `/api/v1/suppliers/${id}/${kind}`)).data.pageSize, 20, `${kind}: 20 by default`);
-    for (const bad of ["pageSize=0", "pageSize=101", "page=0"]) {
+    for (const bad of ["pageSize=0", "pageSize=101", "page=0", "page=100000000000000000000"]) {
       assert.equal((await get(viewer, `/api/v1/suppliers/${id}/${kind}?${bad}`)).status, 400, `${kind} ${bad}`);
     }
-    assert.equal((await get(viewer, `/api/v1/suppliers/999999999999/${kind}`)).code, "SUPPLIER_NOT_FOUND", `${kind}: unknown Supplier`);
+    const unknown = await get(viewer, `/api/v1/suppliers/999999999999/${kind}`);
+    assert.deepEqual([unknown.status, unknown.code], [404, "SUPPLIER_NOT_FOUND"], `${kind}: unknown Supplier`);
     assert.equal((await get(outsider, `/api/v1/suppliers/${id}/${kind}`)).status, 403, `${kind}: needs supplier.view`);
     assert.equal((await get(null, `/api/v1/suppliers/${id}/${kind}`)).status, 401, `${kind}: needs a token`);
   }
+});
+
+integrationTest("REV-094 L-3: a primary contact deactivated through the service leaves the Supplier missing one", async () => {
+  const manager = await makeUser("manager", ["supplier.view", "supplier.mgmt"]);
+  const tag = `L3S${randomUUID().slice(0, 6).toUpperCase()}`;
+  const id = await seedSupplier({ code: `${tag}-SVC`, name: `Service ${tag}` });
+  const contacts = new SupplierContactService({ database: h.db, logger: { info() {}, warn() {}, error() {} }, time: { nowMs: () => Date.now() } });
+  const actor = { actorId: manager.userId, claimedRoles: manager.roles, claimedPermissions: manager.permissions, requestId: `t51-${tag}`, ip: "127.0.0.1" };
+  const created = await contacts.create({ ...actor, supplierId: id, name: "Orders lead", purposes: [{ purposeCode: "orders", isPrimary: true }] });
+  assert.deepEqual(ids(await list(manager, { q: tag, missingPrimaryContact: "true" })), [], "with a primary orders contact");
+  await contacts.deactivate({ ...actor, supplierId: id, contactId: created.id, version: created.version });
+  assert.deepEqual(ids(await list(manager, { q: tag, missingPrimaryContact: "true" })), [id],
+    "deactivating clears the primary slot, which is what the filter relies on");
+});
+
+integrationTest("REV-094 L-4: export lets only a supplier.view holder filter on Bank existence", async () => {
+  const managerOnly = await makeUser("mgmt-only", ["supplier.mgmt"]);
+  const both = await makeUser("mgmt-view", ["supplier.mgmt", "supplier.view"]);
+  const tag = `L4X${randomUUID().slice(0, 6).toUpperCase()}`;
+  await seedSupplier({ code: `${tag}-EXP`, name: `Export ${tag}` });
+  const refused = await exportWith(managerOnly, { q: tag, missingBank: true });
+  assert.deepEqual([refused.status, refused.code], [403, "SUPPLIER_EXPORT_FILTER_FORBIDDEN"]);
+  assert.equal((await exportWith(managerOnly, { q: tag, missingAddress: true })).status, 200, "other filters stay open to supplier.mgmt");
+  const allowed = await exportWith(both, { q: tag, missingBank: true });
+  assert.equal(allowed.status, 200);
+  assert.ok(allowed.text.includes(`${tag}-EXP`), "the Supplier without a Bank account is exported");
 });

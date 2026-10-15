@@ -94,7 +94,7 @@ export class GetSupplierCompletenessHandler extends SupplierQueryHandler {
 
 const CHILD_PAGE_QUERY = Object.freeze({
   type: "object", additionalProperties: false,
-  properties: { page: { type: "integer", minimum: 1, default: 1 }, pageSize: { type: "integer", minimum: 1, maximum: 100, default: 20 } }
+  properties: { page: { type: "integer", minimum: 1, maximum: 1_000_000, default: 1 }, pageSize: { type: "integer", minimum: 1, maximum: 100, default: 20 } }
 });
 const childPageResponse = (item) => Object.freeze({
   type: "object", additionalProperties: false, required: ["items", "total", "page", "pageSize"],

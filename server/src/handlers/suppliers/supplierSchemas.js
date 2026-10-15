@@ -15,7 +15,7 @@ export const SUPPLIER_LIST_QUERY_SCHEMA = Object.freeze({
   type: "object",
   additionalProperties: false,
   properties: {
-    page: { type: "integer", minimum: 1, default: 1 },
+    page: { type: "integer", minimum: 1, maximum: 1_000_000, default: 1 },
     pageSize: { type: "integer", minimum: 1, maximum: 100, default: 20 },
     q: { type: "string", maxLength: 190, default: "" },
     status: { type: "string", enum: [...SUPPLIER_STATUSES] },

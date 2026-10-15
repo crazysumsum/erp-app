@@ -104,7 +104,10 @@ const CHILD_DETAIL_LIMIT = 100;
  */
 function identifierPatterns(search) {
   const upper = search.toUpperCase();
-  return [`%${escapeLikeTerm(upper.replace(/[\s-]+/gu, ""))}%`, `%${escapeLikeTerm(upper)}%`];
+  const stripped = upper.replace(/[\s-]+/gu, "");
+  const asTyped = `%${escapeLikeTerm(upper)}%`;
+  // 淨係分隔符（例如「-」）剷完就係空字串，`%%` 會配中所有識別號（REV-094 M-1）。
+  return [stripped ? `%${escapeLikeTerm(stripped)}%` : asTyped, asTyped];
 }
 
 /**
@@ -170,7 +173,7 @@ export function supplierListQuery({
   }
   // 「缺少」同 completeness warning 用同一個定義（ORDERS_CONTACT_MISSING、ORDERING_ADDRESS_MISSING）。
   // 停用聯絡人會清走佢嘅 primary（SupplierContactService.deactivate），所以 primary slot 一定係啟用中嘅聯絡人，
-  // 唔使再 join supplier_contacts：100k 上面由 724 ms 跌到 124 ms（HD-107）。
+  // 唔使再 join supplier_contacts（HD-107；計時見 performance_report.md）。
   if (missingPrimaryContact) {
     conditions.push(`NOT EXISTS (SELECT 1 FROM supplier_contact_purposes cp
       WHERE cp.supplier_id = s.id AND cp.purpose_code = 'orders' AND cp.primary_slot = 1)`);
@@ -895,14 +898,29 @@ export class SupplierAdminService {
     return byOwner;
   }
 
+  async #completenessFlags(id) {
+    const [[flags]] = await this.database.query(
+      `SELECT EXISTS (SELECT 1 FROM supplier_addresses a
+                JOIN supplier_address_purposes p ON p.address_id = a.id AND p.supplier_id = a.supplier_id
+               WHERE a.supplier_id = ? AND a.status = 'active' AND p.purpose_code = 'ordering') AS has_ordering_address,
+              EXISTS (SELECT 1 FROM supplier_contact_purposes cp
+               WHERE cp.supplier_id = ? AND cp.purpose_code = 'orders' AND cp.primary_slot = 1) AS has_orders_contact`,
+      [id, id]);
+    return { hasOrderingAddress: Boolean(Number(flags.has_ordering_address)), hasOrdersContact: Boolean(Number(flags.has_orders_contact)) };
+  }
+
   async getSupplier({ actorId, claimedRoles, claimedPermissions, id }) {
     await this.authorize(this.database, { actorId, claimedRoles, claimedPermissions });
     const [[row]] = await this.database.query("SELECT * FROM suppliers WHERE id = ?", [id]);
     if (!row) throw supplierNotFound(id);
     const addresses = await this.#addresses(id, { limit: CHILD_DETAIL_LIMIT, offset: 0 });
-    const hasOrderingAddress = addresses.some((address) => address.status === "active" && address.purposes.some((purpose) => purpose.purposeCode === "ordering"));
     const contacts = await this.#contacts(id, { limit: CHILD_DETAIL_LIMIT, offset: 0 });
-    const hasOrdersContact = contacts.some((contact) => contact.status === "active" && contact.purposes.some((purpose) => purpose.purposeCode === "orders" && purpose.isPrimary));
+    // 讀滿上限即係可能仲有：嗰陣先問 DB，判斷先會同列表嘅「缺少」篩選一致（REV-094 L-2）。
+    const truncated = addresses.length === CHILD_DETAIL_LIMIT || contacts.length === CHILD_DETAIL_LIMIT;
+    const { hasOrderingAddress, hasOrdersContact } = truncated ? await this.#completenessFlags(id) : {
+      hasOrderingAddress: addresses.some((address) => address.status === "active" && address.purposes.some((purpose) => purpose.purposeCode === "ordering")),
+      hasOrdersContact: contacts.some((contact) => contact.status === "active" && contact.purposes.some((purpose) => purpose.purposeCode === "orders" && purpose.isPrimary))
+    };
     const [identifierRows] = await this.database.query(
       "SELECT * FROM supplier_identifiers WHERE supplier_id = ? ORDER BY identifier_type, issuer_country_code, id LIMIT 100",
       [id]
