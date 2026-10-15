@@ -15,7 +15,7 @@ const valid = Object.freeze({
   defaultCurrency: { code: "HKD", status: "ACTIVE" }
 });
 
-test("Supplier activation requires only Code, Name, an Active Currency and an allowed source state", () => {
+test("TC-022 (CORE-006): Supplier activation requires only Code, Name, an Active Currency and an allowed source state", () => {
   assert.doesNotThrow(() => assertSupplierActivatable(valid));
   assert.doesNotThrow(() => assertSupplierActivatable({ ...valid, status: "suspended" }));
   assert.throws(
@@ -29,7 +29,7 @@ test("Supplier activation requires only Code, Name, an Active Currency and an al
   );
 });
 
-test("missing optional data produces bounded warnings and never activation issues", () => {
+test("TC-022 (CORE-006): missing optional data produces bounded warnings and never activation issues", () => {
   assert.deepEqual(supplierCompletenessWarnings({}), [
     { field: "defaultPaymentTermId", code: "PAYMENT_TERM_MISSING", message: "尚未設定預設付款條款" },
     { field: "addresses", code: "ORDERING_ADDRESS_MISSING", message: "尚未設定採購用途地址" },
@@ -45,7 +45,7 @@ test("missing optional data produces bounded warnings and never activation issue
   }), []);
 });
 
-test("bank completeness is only evaluated once a caller can answer it", () => {
+test("TC-046 (PARTY-007): bank completeness is only evaluated once a caller can answer it", () => {
   // DEF-001: Bank accounts arrive in PHASE-003. While no caller supplies the
   // flag, emitting the warning produced one no user action could ever clear.
   const everythingElseSatisfied = { defaultPaymentTermId: 2, hasOrderingAddress: true, hasOrdersContact: true, hasIdentifier: true };
@@ -55,14 +55,14 @@ test("bank completeness is only evaluated once a caller can answer it", () => {
   ]);
 });
 
-test("activation issues can be projected separately from non-blocking completeness warnings", () => {
+test("TC-046 (PARTY-007): activation issues can be projected separately from non-blocking completeness warnings", () => {
   assert.deepEqual(
     supplierActivatabilityIssues({ ...valid, defaultCurrency: { code: "HKD", status: "INACTIVE" } }).map((issue) => issue.code),
     ["CURRENCY_NOT_ACTIVE"]
   );
 });
 
-test("unknown write fields are rejected instead of silently persisted", () => {
+test("TC-023 (CORE-007): unknown write fields are rejected instead of silently persisted", () => {
   assert.doesNotThrow(() => assertKnownSupplierFields({ supplierCode: "S1", supplierName: "Name" }));
   assert.throws(
     () => assertKnownSupplierFields({ supplierCode: "S1", surprise: true }),

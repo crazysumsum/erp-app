@@ -91,7 +91,7 @@ function harness({ status = "draft", version = 2, references = 0, openFlows = 0,
 
 const context = { actorId: 1, claimedRoles: [], claimedPermissions: ["supplier.mgmt"], id: 7, version: 2, reason: "Valid lifecycle reason", requestId: "req-1", ip: "127.0.0.1" };
 
-test("activate and reactivate revalidate activation data and write one atomic audit", async () => {
+test("TC-018 (CORE-002): activate and reactivate revalidate activation data and write one atomic audit", async () => {
   const activation = harness();
   assert.equal((await activation.service.activateSupplier({ ...context })).status, "active");
   assert.deepEqual(activation.events.filter(([name]) => ["authorize", "business-master", "audit"].includes(name)).map(([name]) => name), ["authorize", "business-master", "audit", "authorize"]);
@@ -102,7 +102,7 @@ test("activate and reactivate revalidate activation data and write one atomic au
   assert.equal(reactivation.events.find(([name]) => name === "audit")[1].action, "supplier.reactivate");
 });
 
-test("same-target lifecycle replay returns current state without version increment or duplicate audit", async () => {
+test("TC-037 (STATE-008): same-target lifecycle replay returns current state without version increment or duplicate audit", async () => {
   const { service, events } = harness({ status: "suspended", version: 5, latestAction: "supplier.suspend" });
   const result = await service.suspendSupplier({ ...context, version: 2 });
   assert.equal(result.status, "suspended");
@@ -166,7 +166,7 @@ test("replay detection ignores non-lifecycle audit rows written after the comman
   );
 });
 
-test("block and unblock follow the exact state matrix and unblock only to Suspended", async () => {
+test("TC-032 (STATE-003): block and unblock follow the exact state matrix and unblock only to Suspended", async () => {
   const blocked = harness({ status: "active" });
   assert.equal((await blocked.service.blockSupplier({ ...context })).status, "blocked");
   const unblocked = harness({ status: "blocked" });
@@ -177,7 +177,7 @@ test("block and unblock follow the exact state matrix and unblock only to Suspen
   await assert.rejects(() => activeUnblock.service.unblockSupplier({ ...context }), (error) => error.publicCode === "STATUS_TRANSITION_INVALID");
 });
 
-test("archive returns named open-flow blockers and restore only returns Suspended", async () => {
+test("TC-033 (STATE-004): archive returns named open-flow blockers and restore only returns Suspended", async () => {
   const blocked = harness({ status: "active", openFlows: 2 });
   await assert.rejects(
     () => blocked.service.archiveSupplier({ ...context }),
@@ -191,7 +191,7 @@ test("archive returns named open-flow blockers and restore only returns Suspende
   await assert.rejects(() => activeRestore.service.restoreSupplier({ ...context }), (error) => error.publicCode === "STATUS_TRANSITION_INVALID");
 });
 
-test("delete permits only an unreferenced never-active Draft and retains a reasoned audit", async () => {
+test("TC-035 (STATE-006): delete permits only an unreferenced never-active Draft and retains a reasoned audit", async () => {
   const referenced = harness({ references: 1 });
   await assert.rejects(() => referenced.service.deleteSupplier({ ...context }), (error) => error.publicCode === "SUPPLIER_REFERENCED");
   const active = harness({ status: "active" });
@@ -204,7 +204,7 @@ test("delete permits only an unreferenced never-active Draft and retains a reaso
   assert.equal(audit.reason, context.reason);
 });
 
-test("audit failure rolls a lifecycle state change back as one transaction", async () => {
+test("TC-028 (CORE-012): audit failure rolls a lifecycle state change back as one transaction", async () => {
   const { service, events } = harness({ status: "active", auditFails: true });
   await assert.rejects(() => service.suspendSupplier({ ...context }), /audit failed/u);
   assert.equal(events.at(-1)[1], "rollback");

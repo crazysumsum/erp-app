@@ -251,7 +251,7 @@ async function seedPendingApproval(connection, suffix) {
  * 呢個規則冇一段對應嘅程式碼 —— 佢係「冇任何一條路會咁做」。所以佢要用行為證：
  * 真係關一次政策，然後睇住張申請。
  */
-integrationTest("turning the approval policy off does not decide an already pending request", async (t) => {
+integrationTest("TC-058 (APR-010): turning the approval policy off does not decide an already pending request", async (t) => {
   const connection = await mysql.createConnection(config());
   t.after(() => connection.end());
 

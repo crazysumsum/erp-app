@@ -128,7 +128,7 @@ const exportAudits = async (userId) => (await h.db.query(
   "SELECT action, target_type, supplier_id, detail FROM supplier_audit_logs WHERE actor_user_id = ? AND action = 'supplier.export' ORDER BY id",
   [userId]))[0];
 
-integrationTest("TASK-047 (HD-067 2A): the export is the list's rows in the list's order, under the import template v1 header", async () => {
+integrationTest("TC-102 (IMP-017): TASK-047 (HD-067 2A): the export is the list's rows in the list's order, under the import template v1 header", async () => {
   const user = await makeUser("list", ["supplier.mgmt", "supplier.view"]);
   const tag = randomUUID().slice(0, 6).toUpperCase();
   // `=` 開頭：Business Master 接受呢種 Code，匯出都要防公式（REV-075 L-3）。
@@ -185,7 +185,7 @@ integrationTest("TASK-047 (HD-067 2A): the export is the list's rows in the list
   assert.deepEqual([audits[0].target_type, audits[0].supplier_id, detail], ["export", null, { metadata: { filters: { q: tag, includeArchived: false, sortBy: "updatedAt", descending: true } }, count: 2 }]);
 });
 
-integrationTest("TASK-047 (BR-028, SEC-012): no Bank data and no live formula in the file; awkward text survives the round trip", async () => {
+integrationTest("TC-102 (IMP-017): TASK-047 (BR-028, SEC-012): no Bank data and no live formula in the file; awkward text survives the round trip", async () => {
   const user = await makeUser("sec", ["supplier.mgmt"]);
   const tag = randomUUID().slice(0, 6).toUpperCase();
   const tricky = {
@@ -222,7 +222,7 @@ integrationTest("TASK-047 (BR-028, SEC-012): no Bank data and no live formula in
   for (const secret of [ACCOUNT_NUMBER, `Holder ${tag}`, tricky.notes]) assert.ok(!audit.includes(secret), "the audit carries filters and a count only");
 });
 
-integrationTest("TASK-047 (HD-067 1A): password, permission and the 10,000-row cap", async () => {
+integrationTest("TC-102 (IMP-017): TASK-047 (HD-067 1A): password, permission and the 10,000-row cap", async () => {
   const manager = await makeUser("mgr", ["supplier.mgmt"]);
   const viewer = await makeUser("view", ["supplier.view"]);
   const tag = randomUUID().slice(0, 6).toUpperCase();

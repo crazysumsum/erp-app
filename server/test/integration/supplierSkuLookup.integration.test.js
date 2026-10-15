@@ -117,7 +117,7 @@ async function fixture() {
   return { prefix, skuId, s };
 }
 
-integrationTest("TASK-040 (SKU-001, SKU-002, AC-028–030): every Active Supplier stays, relations only rank, stopped and inactive never rank up", async () => {
+integrationTest("TC-078 (SKU-001): TASK-040 (SKU-001, SKU-002, AC-028–030): every Active Supplier stays, relations only rank, stopped and inactive never rank up", async () => {
   const { prefix, skuId, s } = await fixture();
   const result = await lookup().listForSku(skuId, { q: prefix, pageSize: 100 });
 
@@ -149,7 +149,7 @@ integrationTest("TASK-040 (SKU-001, SKU-002, AC-028–030): every Active Supplie
   assert.equal(unfiltered.total, Number(active), "without a search every Active Supplier counts");
 });
 
-integrationTest("TASK-040 (SKU-003, BR-024, BR-032): a preferred mark never makes a suspended Supplier or an unpurchasable SKU usable", async () => {
+integrationTest("TC-080 (SKU-003): TASK-040 (SKU-003, BR-024, BR-032): a preferred mark never makes a suspended Supplier or an unpurchasable SKU usable", async () => {
   const { prefix, skuId, s } = await fixture();
   const lookups = lookup();
   await assert.rejects(() => h.db.withTransaction((connection) =>
@@ -194,7 +194,7 @@ async function get(user, url) {
   return { status: response.status, data: json?.data ?? json, code: json?.error?.code ?? json?.code };
 }
 
-integrationTest("TASK-040 (HD-094 1A): over HTTP the for-SKU lookup needs a fresh supplier.view and returns no Bank data", async () => {
+integrationTest("TC-016 (LIST-009): TASK-040 (HD-094 1A): over HTTP the for-SKU lookup needs a fresh supplier.view and returns no Bank data", async () => {
   const { prefix, skuId, s } = await fixture();
   const [viewer, outsider] = [await httpUser(["supplier.view"]), await httpUser([])];
   const stale = await httpUser([], { claims: ["supplier.view"] });
@@ -217,7 +217,7 @@ integrationTest("TASK-040 (HD-094 1A): over HTTP the for-SKU lookup needs a fres
   assert.deepEqual([refused.status, refused.code], [409, "SKU_NOT_USABLE"]);
 });
 
-integrationTest("TASK-040 (HD-095 B): the two-part read pages exactly like one LEFT JOIN sorted by the design §8.7 order", async () => {
+integrationTest("TC-079 (SKU-002): TASK-040 (HD-095 B): the two-part read pages exactly like one LEFT JOIN sorted by the design §8.7 order", async () => {
   const { prefix, skuId } = await fixture();
   // 參照：設計 §8.7 原文嘅單一查詢（慢，但次序一目了然）。
   const reference = async (key) => {
@@ -244,7 +244,7 @@ integrationTest("TASK-040 (HD-095 B): the two-part read pages exactly like one L
   }
 });
 
-integrationTest("TASK-040 (HD-094 2A): among exact matches a stopped relation still does not rank by history, and other SKUs' relations never leak in", async () => {
+integrationTest("TC-079 (SKU-002): TASK-040 (HD-094 2A): among exact matches a stopped relation still does not rank by history, and other SKUs' relations never leak in", async () => {
   const prefix = `SKX${randomUUID().slice(0, 8)}`;
   const [skuId, otherSku] = [await sku(), await sku()];
   const byCode = await supplier({ code: prefix, name: `${prefix} Alpha` });
@@ -269,7 +269,7 @@ integrationTest("TASK-040 (HD-094 2A): among exact matches a stopped relation st
   assert.deepEqual(paged, [byCode, byItemCode, plainMatch], "unique across pages, and as many as total");
 });
 
-integrationTest("TASK-040 (SKU-002, REV-087 M-2): ties inside the head fall back to name, then ID", async () => {
+integrationTest("TC-079 (SKU-002): TASK-040 (SKU-002, REV-087 M-2): ties inside the head fall back to name, then ID", async () => {
   const prefix = `SKT${randomUUID().slice(0, 8)}`;
   const skuId = await sku();
   // 先建 Kilo 再建 India：ID 次序同名次序相反。

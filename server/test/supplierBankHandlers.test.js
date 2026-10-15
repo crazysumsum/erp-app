@@ -69,7 +69,7 @@ test("reveal demands view plus bank.view, and deliberately not bank.mgmt", () =>
     "both permissions, not either of them");
 });
 
-test("every write demands all three permissions and a device password", () => {
+test("TC-116 (AUTH-006): every write demands all three permissions and a device password", () => {
   for (const Handler of WRITE_HANDLERS) {
     assert.deepEqual(permissionsOf(Handler),
       ["supplier.view", "supplier.bank.view", "supplier.bank.mgmt"], Handler.handlerName);
@@ -91,7 +91,7 @@ test("no request schema accepts an unknown field, on any Bank route", () => {
   }
 });
 
-test("no response schema can utter an account number or any crypto metadata", () => {
+test("TC-118 (AUTH-008): no response schema can utter an account number or any crypto metadata", () => {
   // FR-BANK-007／SEC-006。呢個係結構性防線：就算 service 有一日開始多回一個欄位，
   // response validation 都會攔住佢，唔使靠每個 handler 記得投影。
   const forbidden = [
@@ -185,7 +185,7 @@ test("the child routes name the account in the path, so ownership is a route par
  * 教訓比呢個 header 本身重要：一個斷言「我打算做乜」嘅測試，唔係一個斷言「發生咗乜」
  * 嘅測試。
  */
-test("reveal sets the one cache header the framework does not overwrite", async () => {
+test("TC-118 (AUTH-008): reveal sets the one cache header the framework does not overwrite", async () => {
   const headers = {};
   const res = { setHeader(name, value) { headers[name] = value; } };
   const handler = Object.create(RevealSupplierBankAccountHandler.prototype);

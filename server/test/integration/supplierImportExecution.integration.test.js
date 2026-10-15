@@ -298,7 +298,7 @@ integrationTest("TASK-042: a row's Supplier, audit and applied marker commit tog
   assert.deepEqual([done.status, done.applied, done.failed, done.skipped], ["completed_with_errors", 1, 3, 0]);
 });
 
-integrationTest("TASK-042: a row applied before a crash is not applied again, and the job resumes after the lease expires", async () => {
+integrationTest("TC-095 (IMP-010): TASK-042: a row applied before a crash is not applied again, and the job resumes after the lease expires", async () => {
   clock += 1_000_000;
   await quiesce();
   const jobId = await seedJob({ rows: ["valid", "valid"] });
@@ -427,7 +427,7 @@ integrationTest("TASK-042: a worker that loses its lease while a row fails leave
   assert.equal((await next.processNextRow({ jobId, leaseOwner: "new", leaseDurationMs: 60_000, applyRow: writeSupplier() })).status, "applied");
 });
 
-integrationTest("TASK-042: a failure that is not a domain error is stored as the fixed Supplier pair and logged once, without its message", async () => {
+integrationTest("TC-120 (AUTH-010): TASK-042: a failure that is not a domain error is stored as the fixed Supplier pair and logged once, without its message", async () => {
   clock += 1_000_000;
   await quiesce();
   const jobId = await seedJob({ rows: ["valid", "valid", "valid"] });

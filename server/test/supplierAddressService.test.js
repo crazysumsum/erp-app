@@ -41,7 +41,7 @@ function harness({ address = addressRow() } = {}) {
 
 const actor = { actorId: 1, claimedRoles: [], claimedPermissions: ["supplier.mgmt"], requestId: "req-1" };
 
-test("create switches each requested primary and writes address, purposes and audit in one transaction", async () => {
+test("TC-040 (PARTY-001): create switches each requested primary and writes address, purposes and audit in one transaction", async () => {
   const { service, events } = harness();
   const result = await service.create({
     ...actor, supplierId: 7, label: "總部", addressLine1: "1 Main Street", countryCode: "hk",
@@ -53,7 +53,7 @@ test("create switches each requested primary and writes address, purposes and au
   assert.equal(events.at(-1)[0], "audit");
 });
 
-test("address update rejects a child id that does not belong to the route Supplier", async () => {
+test("TC-045 (PARTY-006): address update rejects a child id that does not belong to the route Supplier", async () => {
   const { service } = harness({ address: null });
   await assert.rejects(
     () => service.update({ ...actor, supplierId: 8, addressId: 12, version: 1, label: "Other", purposes: [] }),
@@ -61,7 +61,7 @@ test("address update rejects a child id that does not belong to the route Suppli
   );
 });
 
-test("address deactivate clears primary flags and preserves purpose mappings", async () => {
+test("TC-043 (PARTY-004): address deactivate clears primary flags and preserves purpose mappings", async () => {
   const { service, events } = harness();
   const result = await service.deactivate({ ...actor, supplierId: 7, addressId: 12, version: 1 });
   assert.equal(result.status, "inactive");

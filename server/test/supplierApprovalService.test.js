@@ -66,7 +66,7 @@ const context = { actorId: 2, claimedRoles: [], claimedPermissions: ["supplier.a
 
 // ---- AC1: eligible approver -------------------------------------------------
 
-test("an approver must be named, must be someone else, must be active and must hold the permission now", async () => {
+test("TC-052 (APR-004): an approver must be named, must be someone else, must be active and must hold the permission now", async () => {
   const cases = [
     [{ approverUserId: undefined }, "APPROVER_REQUIRED", {}],
     [{ approverUserId: 1 }, "APPROVER_MUST_DIFFER", {}],
@@ -94,7 +94,7 @@ test("the permission is read from the database, not from what the submitter clai
 
 // ---- AC2: snapshot ----------------------------------------------------------
 
-test("the snapshot carries the minimum activation data and masks identifiers", async () => {
+test("TC-053 (APR-005): the snapshot carries the minimum activation data and masks identifiers", async () => {
   const summary = buildApprovalSummary(
     { supplier_code: "SUP-7", supplier_name: "Demo", display_name: "D", default_currency_code: "HKD", default_payment_term_id: 3 },
     [{ identifier_type: "tax", issuer_country_code: "HK", identifier_value: "12345678" }]
@@ -140,7 +140,7 @@ test("approving moves the Supplier to active and closes the request in one trans
   assert.deepEqual(audit.detail.after, { requestStatus: "approved", supplierStatus: "active" });
 });
 
-test("rejecting returns the Supplier to draft and keeps the reason", async () => {
+test("TC-055 (APR-007): rejecting returns the Supplier to draft and keeps the reason", async () => {
   const { service, events } = harness();
   const result = await service.rejectRequest({ ...context, reason: "幣別資料需要補充" });
   assert.equal(result.supplierStatus, "draft");
@@ -149,7 +149,7 @@ test("rejecting returns the Supplier to draft and keeps the reason", async () =>
   assert.equal(audit.reason, "幣別資料需要補充");
 });
 
-test("rejecting without a reason is refused before anything is locked", async () => {
+test("TC-055 (APR-007): rejecting without a reason is refused before anything is locked", async () => {
   const { service, events } = harness();
   await assert.rejects(
     () => service.rejectRequest({ ...context, reason: "  " }),
@@ -181,7 +181,7 @@ test("an approver who has lost the permission since submission cannot decide", a
   );
 });
 
-test("only the requester may withdraw", async () => {
+test("TC-056 (APR-008): only the requester may withdraw", async () => {
   const { service } = harness({ requestedBy: 1, actorId: 2 });
   await assert.rejects(
     () => service.withdrawRequest({ ...context, supplierId: 7, reason: "暫時不需要這個供應商" }),
@@ -192,7 +192,7 @@ test("only the requester may withdraw", async () => {
   assert.equal(result.supplierStatus, "draft");
 });
 
-test("a Supplier changed since submission cannot be approved on the old request", async () => {
+test("TC-057 (APR-009): a Supplier changed since submission cannot be approved on the old request", async () => {
   // AC-012: the snapshot is bound to a Supplier version.
   const { service, events } = harness({ supplierVersion: 8, requestSupplierVersion: 5 });
   await assert.rejects(
@@ -241,7 +241,7 @@ test("a writer that slips in between the lock and the UPDATE is caught by the WH
   assert.equal(events.at(-1)[1], "rollback");
 });
 
-test("reassigning changes the approver without touching the Supplier", async () => {
+test("TC-059 (APR-011): reassigning changes the approver without touching the Supplier", async () => {
   const { service, events } = harness({ actorId: 1 });
   const result = await service.reassignRequest({ ...context, actorId: 1, approverUserId: 3, reason: "原審批人休假" });
   assert.equal(result.assignedApproverId, 3);

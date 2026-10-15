@@ -3,7 +3,7 @@ import test from "node:test";
 
 import { ListSupplierAuditLogsHandler } from "../src/handlers/supplier-audit/auditHandlers.js";
 
-test("Supplier audit query API is read-only, permission protected and schema bounded", () => {
+test("TC-108 (AUD-006): Supplier audit query API is read-only, permission protected and schema bounded", () => {
   assert.equal(ListSupplierAuditLogsHandler.api.method, "GET");
   assert.equal(ListSupplierAuditLogsHandler.api.path, "/api/v1/supplier-audit/logs");
   assert.deepEqual(ListSupplierAuditLogsHandler.api.authorizationPolicies[0].options.permissions, ["supplier.view"]);

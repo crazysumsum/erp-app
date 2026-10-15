@@ -61,7 +61,7 @@ function harness({ contact = contactRow() } = {}) {
 
 const actor = { actorId: 1, claimedRoles: [], claimedPermissions: ["supplier.mgmt"], requestId: "req-1" };
 
-test("create normalizes contact fields, switches the requested primary and audits atomically", async () => {
+test("TC-041 (PARTY-002): create normalizes contact fields, switches the requested primary and audits atomically", async () => {
   const { service, events } = harness();
   const result = await service.create({
     ...actor, supplierId: 7, name: " Amy Chan ", jobTitle: "Buyer", department: "Purchasing",
@@ -76,7 +76,7 @@ test("create normalizes contact fields, switches the requested primary and audit
   assert.equal(events.at(-1)[0], "audit");
 });
 
-test("create rejects malformed optional email and phone values", async () => {
+test("TC-047 (PARTY-008): create rejects malformed optional email and phone values", async () => {
   const { service } = harness();
   await assert.rejects(
     () => service.create({ ...actor, supplierId: 7, name: "Amy", email: "not-an-email", purposes: [] }),
@@ -88,7 +88,7 @@ test("create rejects malformed optional email and phone values", async () => {
   );
 });
 
-test("contact update rejects a child id that does not belong to the route Supplier", async () => {
+test("TC-045 (PARTY-006): contact update rejects a child id that does not belong to the route Supplier", async () => {
   const { service } = harness({ contact: null });
   await assert.rejects(
     () => service.update({ ...actor, supplierId: 8, contactId: 21, version: 1, name: "Amy", purposes: [] }),
@@ -96,7 +96,7 @@ test("contact update rejects a child id that does not belong to the route Suppli
   );
 });
 
-test("contact deactivate clears primary flags and preserves purpose mappings", async () => {
+test("TC-043 (PARTY-004): contact deactivate clears primary flags and preserves purpose mappings", async () => {
   const { service, events } = harness();
   const result = await service.deactivate({ ...actor, supplierId: 7, contactId: 21, version: 1 });
   assert.equal(result.status, "inactive");

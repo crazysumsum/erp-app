@@ -37,6 +37,118 @@
 
 PARTIAL means existing tests cover part of the Expected Result. The gap column says which part.
 
+## Step 2a — IDs on server and security tests
+
+Each carrier below was read: its assertions, not only its title, cover the case's main Expected Result. A case can have several carriers; the harness takes the worst result among them. A test carries one ID only. Smaller clauses a carrier does not assert are left to the step 2b tests where they matter.
+
+Checked on erp_t51 with only the profile's env keys: 626 tests, all pass, none skipped; the harness JUnit adapter parses the report. supplier-bank-security has 15 of 15 required IDs, supplier-server-integration 66 of 89, supplier-security 7 of 10.
+
+| TC | Case | Carriers |
+| --- | --- | --- |
+| TC-004 | MIG-004 | `supplierPermissionsMigration` — 0028 seeds all six Supplier permissions; `supplierPermissionsMigration` — 0028 converges when it is run more than once |
+| TC-007 | MIG-007 | `supplierSkuRelations.integration` — TASK-038 (MIG-007): without the Item SKU/UOM tables; `supplierSkuRelations.integration` — TASK-038: a rerun accepts the real tables but refuses a hand-made one |
+| TC-008 | LIST-001 | `supplierQueryHandlers` — list applies bounded paging, escaped search |
+| TC-016 | LIST-009 | `supplierSkuLookup.integration` — TASK-040 (HD-094 1A): over HTTP the for-SKU lookup |
+| TC-018 | CORE-002 | `supplierLifecycleService` — activate and reactivate revalidate activation data; `supplierAdminService` — create Supplier revalidates actor and Business Master |
+| TC-019 | CORE-003 | `supplierAdminService` — creating with activate under approval ON lands in pending_approval; `supplierApproval.integration` — a Supplier created with activate can actually be approved |
+| TC-020 | CORE-004 | `supplierNormalization` — Supplier Code keeps the trimmed display value; `supplierAdminService` — change Supplier Code maps the database uniqueness race |
+| TC-021 | CORE-005 | `supplierDuplicateCandidates` — candidate ranking is exact first, thresholded, stable and capped; `supplierAdminService` — duplicate names remain warnings and do not block creation |
+| TC-022 | CORE-006 | `supplierValidation` — Supplier activation requires only Code, Name, an Active Currency; `supplierValidation` — missing optional data produces bounded warnings |
+| TC-023 | CORE-007 | `supplierValidation` — unknown write fields are rejected instead of silently persisted; `supplierCreateHandlers` — Supplier create route is idempotent, permission protected |
+| TC-025 | CORE-009 | `supplierAdminService` — update Supplier locks and revalidates actor/catalog |
+| TC-026 | CORE-010 | `supplierAdminService` — change Supplier Code requires an unreferenced Supplier; `supplierManagement.integration` — Supplier root update and controlled Code correction |
+| TC-027 | CORE-011 | `supplierAdminService` — update Supplier rejects stale version before catalog |
+| TC-028 | CORE-012 | `supplierManagement.integration` — Supplier create atomically persists root, grams and audit; `supplierLifecycleService` — audit failure rolls a lifecycle state change back |
+| TC-030 | STATE-001 | `supplierManagement.integration` — Supplier core lookup keeps history visible |
+| TC-032 | STATE-003 | `supplierLifecycleService` — block and unblock follow the exact state matrix; `supplierLifecycleHandlers` — block and unblock require both view and approval |
+| TC-033 | STATE-004 | `supplierLifecycleService` — archive returns named open-flow blockers |
+| TC-035 | STATE-006 | `supplierLifecycleService` — delete permits only an unreferenced never-active Draft; `supplierSkuRelations.integration` — TASK-038: a Supplier with a SKU relation cannot be permanently deleted |
+| TC-037 | STATE-008 | `supplierLifecycleService` — same-target lifecycle replay returns current state; `supplierManagement.integration` — Supplier lifecycle is atomic, idempotent at the target state |
+| TC-039 | STATE-010 | `supplierLookupService` — purchase marks non-Active Suppliers unusable; `supplierLookupService` — findManyByIds de-duplicates stable IDs |
+| TC-040 | PARTY-001 | `supplierAddressService` — create switches each requested primary and writes address, purposes and audit |
+| TC-041 | PARTY-002 | `supplierContactService` — create normalizes contact fields, switches the requested primary |
+| TC-042 | PARTY-003 | `supplierParty.integration` — Address ownership, primary switching, concurrency; `supplierParty.integration` — Contact ownership, primary switching, concurrency |
+| TC-043 | PARTY-004 | `supplierAddressService` — address deactivate clears primary flags; `supplierContactService` — contact deactivate clears primary flags; `supplierIdentifierService` — delete rejects referenced identifiers |
+| TC-044 | PARTY-005 | `supplierParty.integration` — Identifier normalization, global uniqueness; `supplierIdentifierService` — create normalizes identifier type, country |
+| TC-045 | PARTY-006 | `supplierAddressService` — address update rejects a child id; `supplierContactService` — contact update rejects a child id |
+| TC-046 | PARTY-007 | `supplierValidation` — activation issues can be projected separately; `supplierValidation` — bank completeness is only evaluated once |
+| TC-047 | PARTY-008 | `supplierContactService` — create rejects malformed optional email and phone; `supplierIdentifierService` — create rejects oversized notes; `supplierNormalization` — normalizers reject blank, overlong and control-character input |
+| TC-049 | APR-001 | `supplierSettingsService` — reading settings returns the typed singleton; `supplierCoreMigrations.integration` — 0036 seeds the settings singleton once |
+| TC-050 | APR-002 | `supplierSettingsHandlers` — both settings routes require supplier.settings |
+| TC-051 | APR-003 | `supplierSettingsService` — updating locks id=1, checks the version and audits; `supplierSettingsService` — a stale version is a conflict and writes nothing; `supplierSettingsService` — an unknown setting field is rejected rather than stored |
+| TC-052 | APR-004 | `supplierApprovalService` — an approver must be named, must be someone else; `supplierApproval.integration` — the database refuses a second pending request |
+| TC-053 | APR-005 | `supplierApprovalHandlers` — the eligible approver projection is exactly id, username and displayName; `supplierApprovalHandlers` — the eligible approver lookup is capped; `supplierApprovalService` — the snapshot carries the minimum activation data and masks identifiers |
+| TC-054 | APR-006 | `supplierApproval.integration` — approving runs against real MySQL |
+| TC-055 | APR-007 | `supplierApprovalService` — rejecting returns the Supplier to draft and keeps the reason; `supplierApprovalService` — rejecting without a reason is refused |
+| TC-056 | APR-008 | `supplierApprovalService` — only the requester may withdraw; `supplierApproval.integration` — withdrawing through another Supplier's route |
+| TC-057 | APR-009 | `supplierAdminService` — a significant edit while pending invalidates the request; `supplierApprovalService` — a Supplier changed since submission cannot be approved |
+| TC-058 | APR-010 | `supplierSettings.integration` — turning the approval policy off does not decide |
+| TC-059 | APR-011 | `supplierApproval.integration` — the queue scopes resolve against real MySQL joins; `supplierApproval.integration` — the queue counts and pages the same filtered set; `supplierApprovalService` — reassigning changes the approver without touching the Supplier |
+| TC-060 | APR-012 | `supplierApproval.integration` — two concurrent approves produce one transition |
+| TC-061 | APR-013 | `supplierApproval.integration` — a decision made after the approver's permission is revoked; `supplierApproval.integration` — a disabled user can neither receive a reassignment nor decide |
+| TC-078 | SKU-001 | `supplierSkuLookup.integration` — TASK-040 (SKU-001, SKU-002, AC-028–030): every Active Supplier stays |
+| TC-079 | SKU-002 | `supplierSkuLookup.integration` — TASK-040 (SKU-002, REV-087 M-2): ties inside the head; `supplierSkuLookup.integration` — TASK-040 (HD-095 B): the two-part read pages exactly; `supplierSkuLookup.integration` — TASK-040 (HD-094 2A): among exact matches a stopped relation |
+| TC-080 | SKU-003 | `supplierSkuLookup.integration` — TASK-040 (SKU-003, BR-024, BR-032) |
+| TC-081 | SKU-004 | `supplierSkuRelations.integration` — TASK-038 (SKU-004): create and update keep MOQ |
+| TC-082 | SKU-005 | `supplierSkuRelations.integration` — TASK-038: one relation per Supplier and SKU, one SKU per Supplier Item Code |
+| TC-083 | SKU-006 | `supplierSkuRelations.integration` — TASK-038 (SKU-006): recordSupply is idempotent |
+| TC-084 | SKU-007 | `supplierRelationHandlers` — TASK-038 (SKU-007, FR-SKU-006) |
+| TC-086 | IMP-001 | `supplierCsvSchema` — the template is UTF-8 with a BOM, CRLF |
+| TC-087 | IMP-002 | `supplierCsvSchema` — RFC 4180: quoted commas, doubled quotes; `supplierImportResultHandlers` — the result CSV has a BOM, one header and one record per row |
+| TC-088 | IMP-003 | `supplierImport.integration` — TASK-043 IMP-003: upload stores the file under a server-made name; `supplierCsvSchema` — malformed, non-UTF-8, empty, oversized and over-long files are rejected |
+| TC-090 | IMP-005 | `supplierImportHandlers` — the summary projects every public field; `supplierImport.integration` — TASK-044: detail pages the rows by row number |
+| TC-091 | IMP-006 | `supplierImport.integration` — TASK-045: a draft import writes each valid row |
+| TC-092 | IMP-007 | `supplierImport.integration` — TASK-045 (HD-048 4): a failure after the real Supplier write |
+| TC-094 | IMP-009 | `supplierImport.integration` — TASK-045 fault injection: a worker killed before or after |
+| TC-095 | IMP-010 | `supplierImport.integration` — TASK-045: two workers never apply a row twice; `supplierImportExecution.integration` — TASK-042: a row applied before a crash is not applied again |
+| TC-096 | IMP-011 | `supplierImportPrecheck` — upsert matches by supplierId first and cross-checks the code; `supplierImport.integration` — TASK-045: execution re-checks what precheck saw |
+| TC-097 | IMP-012 | `supplierImport.integration` — TASK-045 (AC-013, BR-012): activation follows the policy snapshotted |
+| TC-098 | IMP-013 | `supplierImport.integration` — TASK-044 (HD-058 2A/3A): cancel ends the job; `supplierImportService` — job counts are rebuilt from row statuses |
+| TC-099 | IMP-014 | `supplierCsvSchema` — a Bank column rejects the whole file |
+| TC-100 | IMP-015 | `supplierImport.integration` — TASK-044 IMP-015: only the uploader lists; `supplierImportRetention.integration` — TASK-048: executed jobs past 365 days |
+| TC-102 | IMP-017 | `supplierExport.integration` — TASK-047 (HD-067 2A): the export is the list's rows; `supplierExport.integration` — TASK-047 (BR-028, SEC-012); `supplierExport.integration` — TASK-047 (HD-067 1A): password, permission |
+| TC-104 | AUD-002 | `supplierAuditLogService` — audit writer rejects unknown actions, unknown detail keys and Bank-sensitive fields; `supplierBankService` — create encrypts, indexes and audits, and no plaintext reaches the audit entry |
+| TC-105 | AUD-003 | `supplierBankService` — a reveal whose audit fails returns no account at all; `supplierExportService` — a failed audit means no file; `supplierAudit.integration` — Supplier audit follows its caller transaction |
+| TC-108 | AUD-006 | `supplierAuditHandlers` — Supplier audit query API is read-only |
+| TC-111 | AUTH-001 | `supplierSkuRelations.integration` — TASK-038 (REV-085 M1, M2): over HTTP, authorization; `supplierSkuRelations.integration` — TASK-039 (HD-098): over HTTP the SKU picker |
+| TC-113 | AUTH-003 | `supplierLookupService` — requires its minimal dependencies and exposes a versioned downstream contract; `supplierLookupService` — findById uses a bounded read transaction |
+| TC-114 | AUTH-004 | `supplierBank.integration` — no Bank route reaches another Supplier's row; `supplierImport.integration` — TASK-044 (REV-069 L-1): another user's cancel answers 404 |
+| TC-115 | AUTH-005 | `supplierImport.integration` — TASK-044: a manager whose permission was withdrawn; `supplierBankService` — every write re-checks the permission |
+| TC-116 | AUTH-006 | `supplierLifecycleHandlers` — high-risk auth and reason requirements match; `supplierBankHandlers` — every write demands all three permissions and a device password; `supplierApprovalHandlers` — approve, reject and reassign re-confirm the password |
+| TC-118 | AUTH-008 | `supplierBankHandlers` — reveal sets the one cache header; `supplierBankHandlers` — no response schema can utter an account number |
+| TC-120 | AUTH-010 | `supplierBankService` — a create that loses the race is a 409; `supplierImportExecution.integration` — TASK-042: a failure that is not a domain error |
+
+### Not tagged: tests to write in step 2b
+
+| TC | Case | Why not |
+| --- | --- | --- |
+| TC-001 | MIG-001 | no Supplier test asserts the absence of a Currency/Payment Term shadow schema; providers resolve only against a fake DB |
+| TC-002 | MIG-002 | reruns converge, but a half-applied schema is refused, not converged; needs investigation against the design |
+| TC-003 | MIG-003 | one-pending is DB-enforced; no barrier race across primary/default/pending in one place |
+| TC-005 | MIG-005 | config validation only; no server start per bad config |
+| TC-006 | MIG-006 | upgrade from main and rollback rehearsal (T51 rehearsal) |
+| TC-009 | LIST-002 | no per-field hit, case/trim or no-duplicate-row test |
+| TC-010 | LIST-003 | filter combinations and boundaries not tested |
+| TC-011 | LIST-004 | no cross-page stability test on MySQL |
+| TC-012 | LIST-005 | the escaped LIKE is asserted on SQL text only; no illegal-sort 400 or literal-wildcard result on MySQL |
+| TC-014 | LIST-007 | non-Active not-purchasable hint |
+| TC-017 | CORE-001 | no test asserts a Draft create with version 1, children and audit in one transaction |
+| TC-024 | CORE-008 | no concurrent same-key create on MySQL |
+| TC-031 | STATE-002 | no test reactivates an incomplete Supplier and expects 422 with the status kept |
+| TC-034 | STATE-005 | no test lists archived Suppliers by explicit filter and then restores one |
+| TC-036 | STATE-007 | no two-connection ordering swap |
+| TC-038 | STATE-009 | no barrier-synchronised concurrent transitions |
+| TC-048 | PARTY-009 | no detail child cap or server-paged child list test |
+| TC-093 | IMP-008 | no barrier-synchronised same-key submit |
+| TC-103 | AUD-001 | requestId and IP are not asserted per action |
+| TC-106 | AUD-004 | over-limit detail: whole-transaction failure and alert not asserted |
+| TC-107 | AUD-005 | ordering and total across pages not asserted |
+| TC-109 | AUD-007 | audit kept after target/actor deletion not asserted |
+| TC-110 | AUD-008 | time formats and requestId join not asserted |
+| TC-112 | AUTH-002 | no single route-by-role matrix |
+| TC-117 | AUTH-007 | 415, positive-integer IDs and strict booleans per API class |
+| TC-119 | AUTH-009 | script rendering and prototype pollution |
+
 ## supplier-server-integration (94)
 
 | TC | Case | Candidate tests | Status | Gap |

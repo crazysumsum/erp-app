@@ -53,7 +53,7 @@ test("the approver lookup accepts mgmt or approval, and is not a User Admin API"
   assert.equal(policy.options.match, "any");
 });
 
-test("approve, reject and reassign re-confirm the password; reading the queue does not", () => {
+test("TC-116 (AUTH-006): approve, reject and reassign re-confirm the password; reading the queue does not", () => {
   for (const Handler of DECISION_HANDLERS) {
     assert.equal(Handler.api.authType, "jwt-password", `${Handler.handlerName} must re-confirm the password`);
   }
@@ -115,14 +115,14 @@ test("reject and reassign demand a reason; approve does not invent one", () => {
   assert.ok(ReassignSupplierApprovalHandler.api.requestSchema.body.required.includes("approverUserId"));
 });
 
-test("the eligible approver projection is exactly id, username and displayName", () => {
+test("TC-053 (APR-005): the eligible approver projection is exactly id, username and displayName", () => {
   // 設計 6.4／SEC-009：唔回 roles、其他 permission、email 或帳號安全狀態。
   const item = ListSupplierApproversHandler.api.responseSchema[200].properties.items.items;
   assert.deepEqual(Object.keys(item.properties).sort(), ["displayName", "id", "username"]);
   assert.equal(item.additionalProperties, false);
 });
 
-test("the eligible approver lookup is capped and can exclude the requester", () => {
+test("TC-053 (APR-005): the eligible approver lookup is capped and can exclude the requester", () => {
   const query = ListSupplierApproversHandler.api.requestSchema.query;
   assert.equal(ListSupplierApproversHandler.api.responseSchema[200].properties.items.maxItems, 100);
   assert.deepEqual(Object.keys(query.properties).sort(), ["excludeUserId", "q"]);

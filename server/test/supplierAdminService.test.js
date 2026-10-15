@@ -74,7 +74,7 @@ const input = {
   defaultCurrencyVersion: 1, defaultPaymentTermId: null, activate: true, requestId: "req-7", ip: "127.0.0.1"
 };
 
-test("create Supplier revalidates actor and Business Master inside one transaction and atomically writes root, grams and audit", async () => {
+test("TC-018 (CORE-002): create Supplier revalidates actor and Business Master inside one transaction and atomically writes root, grams and audit", async () => {
   const { service, events } = harness();
   const result = await service.createSupplier(input);
   assert.equal(result.status, "active");
@@ -86,13 +86,13 @@ test("create Supplier revalidates actor and Business Master inside one transacti
   assert.equal(events.at(-1)[1], "commit");
 });
 
-test("duplicate names remain warnings and do not block creation", async () => {
+test("TC-021 (CORE-005): duplicate names remain warnings and do not block creation", async () => {
   const warning = { supplierId: 2, score: 1, warningOnly: true };
   const { service } = harness({ duplicateRows: [warning] });
   assert.deepEqual((await service.createSupplier({ ...input, activate: false })).duplicateCandidates, [warning]);
 });
 
-test("creating with activate under approval ON lands in pending_approval, not active", async () => {
+test("TC-019 (CORE-003): creating with activate under approval ON lands in pending_approval, not active", async () => {
   // Replaces TASK-025's placeholder refusal. Design 4.4: the setting decides
   // draft -> active or draft -> pending_approval at submission time.
   const { service, events } = harness({ approvalRequired: true });
@@ -172,7 +172,7 @@ const updateInput = {
   generalEmail: "", notes: "", version: 2, requestId: "req-update", ip: "127.0.0.1"
 };
 
-test("update Supplier locks and revalidates actor/catalog, replaces name grams and writes audit in one transaction", async () => {
+test("TC-025 (CORE-009): update Supplier locks and revalidates actor/catalog, replaces name grams and writes audit in one transaction", async () => {
   const { service, events } = updateHarness();
   const result = await service.updateSupplier(updateInput);
   assert.equal(result.supplierName, "New Name");
@@ -191,7 +191,7 @@ test("TASK-050 (HD-084): update returns the similar names found before the trans
   assert.deepEqual((await service.updateSupplier(updateInput)).duplicateCandidates, [other]);
 });
 
-test("update Supplier rejects stale version before catalog, data or audit writes", async () => {
+test("TC-027 (CORE-011): update Supplier rejects stale version before catalog, data or audit writes", async () => {
   const { service, events } = updateHarness({ version: 3 });
   await assert.rejects(() => service.updateSupplier(updateInput), (error) => error.publicCode === "VERSION_CONFLICT");
   assert.equal(events.some(([name]) => name === "business-master" || name === "execute" || name === "audit"), false);
@@ -206,7 +206,7 @@ test("changing default currency requires a bounded reason", async () => {
   assert.equal(events.some(([name]) => name === "execute" || name === "audit"), false);
 });
 
-test("change Supplier Code requires an unreferenced Supplier and writes a reasoned audit", async () => {
+test("TC-026 (CORE-010): change Supplier Code requires an unreferenced Supplier and writes a reasoned audit", async () => {
   const blocked = updateHarness({ references: 1 });
   await assert.rejects(
     () => blocked.service.changeSupplierCode({ ...updateInput, supplierCode: "SUP-NEW", reason: "Correct legacy code" }),
@@ -223,7 +223,7 @@ test("change Supplier Code requires an unreferenced Supplier and writes a reason
   assert.deepEqual(audit.detail, { before: { supplierCode: "SUP-7" }, after: { supplierCode: "SUP-NEW" } });
 });
 
-test("change Supplier Code maps the database uniqueness race without disclosing another Supplier", async () => {
+test("TC-020 (CORE-004): change Supplier Code maps the database uniqueness race without disclosing another Supplier", async () => {
   const { service } = updateHarness({ duplicateError: true });
   await assert.rejects(
     () => service.changeSupplierCode({ ...updateInput, supplierCode: "SUP-NEW", reason: "Correct legacy code" }),
@@ -252,7 +252,7 @@ test("naming an approver while the policy is OFF is refused rather than ignored"
 
 // ---- REV-022 H-B: fixes that previously survived deletion with the suite green ----
 
-test("a significant edit while pending invalidates the request and returns the Supplier to draft", async () => {
+test("TC-057 (APR-009): a significant edit while pending invalidates the request and returns the Supplier to draft", async () => {
   const { service, events } = updateHarness({ status: "pending_approval" });
   const result = await service.updateSupplier({
     ...updateInput, supplierName: "A Completely Different Name", reason: "更正供應商名稱"

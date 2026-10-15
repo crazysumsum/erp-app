@@ -55,7 +55,7 @@ function fakeDatabase() {
   };
 }
 
-test("0028 seeds all six Supplier permissions and grants each to system-admin", async () => {
+test("TC-004 (MIG-004): 0028 seeds all six Supplier permissions and grants each to system-admin", async () => {
   const database = fakeDatabase();
 
   await up(database);
@@ -66,7 +66,7 @@ test("0028 seeds all six Supplier permissions and grants each to system-admin", 
   assert.equal(held.length, EXPECTED_PERMISSIONS.length);
 });
 
-test("0028 converges when it is run more than once", async () => {
+test("TC-004 (MIG-004): 0028 converges when it is run more than once", async () => {
   const database = fakeDatabase();
 
   await up(database);

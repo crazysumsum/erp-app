@@ -56,14 +56,14 @@ const context = {
   reason: "公司開始要求供應商建檔覆核", requestId: "req-1", ip: "127.0.0.1"
 };
 
-test("reading settings returns the typed singleton with its version", async () => {
+test("TC-049 (APR-001): reading settings returns the typed singleton with its version", async () => {
   const { service } = harness({ requireActivationApproval: 1, version: 4 });
   assert.deepEqual(await service.getSettings({ ...context }), {
     requireActivationApproval: true, version: 4, updatedAt: 10, updatedBy: null
   });
 });
 
-test("updating locks id=1, checks the version and audits before/after with the reason", async () => {
+test("TC-051 (APR-003): updating locks id=1, checks the version and audits before/after with the reason", async () => {
   const { service, events } = harness({ requireActivationApproval: 0, version: 4 });
   const result = await service.updateSettings({ ...context, version: 4, requireActivationApproval: true });
   assert.deepEqual(result, { requireActivationApproval: true, version: 5, updatedAt: 100, updatedBy: 1 });
@@ -95,7 +95,7 @@ test("a settings change touches neither suppliers nor pending activation request
   assert.deepEqual(touched, [], "the settings update reached Supplier or approval rows");
 });
 
-test("a stale version is a conflict and writes nothing", async () => {
+test("TC-051 (APR-003): a stale version is a conflict and writes nothing", async () => {
   const { service, events, row } = harness({ version: 4 });
   await assert.rejects(
     () => service.updateSettings({ ...context, version: 2, requireActivationApproval: true }),
@@ -115,7 +115,7 @@ test("a missing reason is rejected before anything is locked", async () => {
   assert.equal(events.length, 0, "the transaction must not open for an input the service already knows is invalid");
 });
 
-test("an unknown setting field is rejected rather than stored", async () => {
+test("TC-051 (APR-003): an unknown setting field is rejected rather than stored", async () => {
   // FR-SET-006: a parameter that is not defined must produce no business effect.
   // The handler schema rejects it too; the service does not rely on that.
   const { service } = harness({ version: 4 });
