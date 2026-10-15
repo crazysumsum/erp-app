@@ -1,32 +1,32 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 169,
+  "revision": 174,
   "mode": "FULL_LIFECYCLE",
-  "active_mode": "IMPLEMENT",
+  "active_mode": "DESIGN_AND_PLAN",
   "status": "BLOCKED",
   "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-004",
   "current_task": "TASK-034",
   "baseline": {
-    "design": "8462e9c2bc9909f413bb0063de29b44bcbe205d8bfd1209c254ff5d1090f9944",
-    "plan": "55ea357b07fb39cc1131b61757b95ca4aa07b246a8dbabfddfecb914e79ba247",
-    "code_commit": "f25e142aa1171002374521f21e1d2c2fe20a76ed",
+    "design": "25833d2d2e09a2ce0c763c374d0a0a9b64d3d92e9ee79e8f60cd3ea1e0003d51",
+    "plan": "7b1eb4674d231be20c8882b47a1fe5db0550b2c3429adc859e0be27630a51a34",
+    "code_commit": "8c5acf7dd34fbd75677c0844973bdf490319b0b2",
     "source_fingerprint": "685238fea731fd9b586449a3a587c6236faaee451a916377817a7b3fdf9a4aa4",
-    "worktree": "/private/tmp/erp-customer-capacity-requirement-50k-20",
-    "default_commit": "5e121cece2d55cd60851a7c3a87712925c046968",
-    "mode_entry_commit": "3faf93e57892577c03d7bc6d7ba62e23963941e2"
+    "worktree": "/private/tmp/erp-customer-def034001-indexed-search",
+    "default_commit": "09487bc65bff3a2360dffcaa246d5630269f11d2",
+    "mode_entry_commit": "09487bc65bff3a2360dffcaa246d5630269f11d2"
   },
   "runtime": {
-    "instance_id": "customer-hd010-capacity-retest-20261015",
-    "owner": "Primary harness agent; approved Customer-local retest",
+    "instance_id": "customer-def034001-20261015",
+    "owner": "Primary Customer remediation agent",
     "resources": {
-      "workspace": "/private/tmp/erp-customer-capacity-requirement-50k-20",
-      "mysql-instance": "CLEANED: own127.0.0.1:13369 stopped; /private/tmp/erp-customer-hd010-runtime.WEYDQZ/mysql removed",
-      "mysql-schema": "CLEANED with own datadir: erp_customer_hd010_capacity_20261015",
-      "customer-file-root": "not exercised; task-owned synthetic capacity data only",
-      "customer-import-root": "not exercised; unchanged previous import evidence remains historical",
-      "web-port": "CLOSED: OS-assigned application listener closed by test cleanup"
+      "workspace": "/private/tmp/erp-customer-def034001-indexed-search",
+      "mysql-instance": "CLEANED: verified own13371 server shut down; exact /private/tmp/erp-customer-def034001-runtime.kLnI3D removed",
+      "mysql-schema": "CLEANED with own datadir; synthetic Customers0 verified before shutdown",
+      "customer-file-root": "not exercised",
+      "customer-import-root": "not exercised",
+      "web-port": "CLOSED by baseline test application cleanup"
     },
     "lease_ref": null
   },
@@ -1679,6 +1679,86 @@
         "PR #230 test/evidence publication"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-042",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-10-15 actual Sam user: 繼續修復 DEF-034001 的兩處全表掃描，按 5 萬客戶、20 並行工作者、p95 5 秒內的基準重新實測，完整下游整合驗收保持阻塞；沒有需要我決策的事就自動繼續，完成後建立 PR 並合併。",
+      "recorded_at": "2026-10-15T02:54:53Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "55ea357b07fb39cc1131b61757b95ca4aa07b246a8dbabfddfecb914e79ba247",
+      "code_commit": "09487bc65bff3a2360dffcaa246d5630269f11d2",
+      "scope": [
+        "DEF-034001 Customer query remediation within approved TASK-034 query-tuning scope",
+        "server/src/modules/customer/**",
+        "server/test/customer*.test.js",
+        "server/test/performance/customerManagement.performance.test.js",
+        "docs/customer_management/**",
+        "fresh isolated synthetic capacity data/migrations and sanitized results",
+        "PR and merge after actual independent review/current-candidate mandatory CI"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-DESIGN-017",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam user: 批准 HD-011，以及 PR #232 的 DESIGN／PLAN baseline；繼續修復並按新基準重新實測，完整下游整合驗收保持阻塞，完成後建立 PR 並合併，沒有需要我決策的事就自動繼續。",
+      "recorded_at": "2026-10-15T03:09:24Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "25833d2d2e09a2ce0c763c374d0a0a9b64d3d92e9ee79e8f60cd3ea1e0003d51",
+      "code_commit": "8c5acf7dd34fbd75677c0844973bdf490319b0b2",
+      "scope": [
+        "HD-011",
+        "DES-019",
+        "DEF-034001"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-PLAN-017",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam user: 批准 HD-011，以及 PR #232 的 DESIGN／PLAN baseline；繼續修復並按新基準重新實測，完整下游整合驗收保持阻塞，完成後建立 PR 並合併，沒有需要我決策的事就自動繼續。",
+      "recorded_at": "2026-10-15T03:09:24Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "7b1eb4674d231be20c8882b47a1fe5db0550b2c3429adc859e0be27630a51a34",
+      "code_commit": "8c5acf7dd34fbd75677c0844973bdf490319b0b2",
+      "scope": [
+        "HD-011",
+        "TASK-034",
+        "TC-028",
+        "TC-082"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-043",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam user: 批准 HD-011，以及 PR #232 的 DESIGN／PLAN baseline；繼續修復並按新基準重新實測，完整下游整合驗收保持阻塞，完成後建立 PR 並合併，沒有需要我決策的事就自動繼續。",
+      "recorded_at": "2026-10-15T03:09:24Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "7b1eb4674d231be20c8882b47a1fe5db0550b2c3429adc859e0be27630a51a34",
+      "code_commit": "8c5acf7dd34fbd75677c0844973bdf490319b0b2",
+      "scope": [
+        "docs/customer_management/**",
+        "server/src/modules/customer/**",
+        "server/test/**",
+        "server/database/migrations/*_add_customer_search_indexes.js",
+        "fresh task-owned synthetic MySQL existing migrations plus approved additive Customer migration",
+        "scoped design and implementation PR/merge after applicable actual gates"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -2241,6 +2321,18 @@
       "reviewer": "Jason (/root/customer_task011_review), separate read-only agent",
       "reviewed_baseline": "685238fea731fd9b586449a3a587c6236faaee451a916377817a7b3fdf9a4aa4",
       "source_ref": "2026-10-15 APPROVE integratedf25e142aa1171002374521f21e1d2c2fe20a76ed against latestmain5e121cec. New main changes disjoint from Customer execution dependencies; performance body/product/config/schema/packages/locks/test support unchanged. Original measurement remains bound tod70da3 source, not a fresh f25e run. DESIGN/PLAN unchanged, approval provenance/retained HIGH defect/runtime cleanup accurate. Traceability/boundary pass; new final-head CI required. No Critical/High/Required publication finding.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-048",
+      "method": "SEPARATE_AGENT",
+      "author": "/root DEF-034001 proposal",
+      "reviewer": "Jason (/root/customer_task011_review), actual separate read-only agent",
+      "reviewed_baseline": "25833d2d2e09a2ce0c763c374d0a0a9b64d3d92e9ee79e8f60cd3ea1e0003d51",
+      "source_ref": "2026-10-15 actual final APPROVE proposal only for DESIGN25833d2d2e09a2ce0c763c374d0a0a9b64d3d92e9ee79e8f60cd3ea1e0003d51/PLAN7b1eb4674d231be20c8882b47a1fe5db0550b2c3429adc859e0be27630a51a34. Required provenance finding resolved in revision171 (HD011OPEN/exacthashes/noimpluntilanswer). Correct10indexes, semantics/DDL/classifier/regressions; stateinspect/structuralpass. Not Sam approval/product fix/acceptance; DEF034001HIGHOPEN.",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -2907,6 +2999,28 @@
       "source_ref": "Mergedmain5e121cec without conflict. Git comparison proves only Supplier docs/test-ID labels changed, not executed Customer test/fixture/product/config/schema/dependencies/test support. Old measurement preserved at originald70da3 fingerprint; not rerun/rebound. Integrated Customer/safety260PASS/2explicitextendedskips/0FAIL; lint/build/traceability/boundary/diffPASS; reviewerREV-047approved. No full-module/latency/planPASS is inferred from this mapping.",
       "actor": "/root integrated-candidate developer verification",
       "observed_at": "2026-10-15T02:20:52Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEF-034001 recovery and explicit remediation authority",
+      "code_commit": "09487bc65bff3a2360dffcaa246d5630269f11d2",
+      "spec_baseline": "55ea357b07fb39cc1131b61757b95ca4aa07b246a8dbabfddfecb914e79ba247",
+      "source_fingerprint": "685238fea731fd9b586449a3a587c6236faaee451a916377817a7b3fdf9a4aa4",
+      "status": "PASS",
+      "source_ref": "Recovered priorPR230 actualmerge+cleanup; freshfetch observedmain09487bc6; dedicatednewworktree; unchanged DESIGN/PLAN. New user authority retained verbatim; product not changed yet.",
+      "actor": "/root",
+      "observed_at": "2026-10-15T02:54:53Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Unchanged DEF-034001 baseline reproduction and materialization-only diagnostic",
+      "code_commit": "09487bc65bff3a2360dffcaa246d5630269f11d2",
+      "spec_baseline": "55ea357b07fb39cc1131b61757b95ca4aa07b246a8dbabfddfecb914e79ba247",
+      "source_fingerprint": "685238fea731fd9b586449a3a587c6236faaee451a916377817a7b3fdf9a4aa4",
+      "status": "FAIL",
+      "source_ref": "implementation/def034001-remediation-report.md; resultsJSON.5PASS/1FAIL/0skip; exactly2actualphysicalALL,all4p95pass. Product unchanged. Separate TEMPdiagnostic confirms virtualALL mustbe explicitly distinguished, not silentlyignored. ProposednewDESIGN/PLAN have nohumanapproval.",
+      "actor": "/root developer diagnostic",
+      "observed_at": "2026-10-15T03:02:25Z"
     }
   ],
   "pending_decisions": [
@@ -3052,6 +3166,21 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "APPROVAL-DESIGN-016; APPROVAL-PLAN-016; APPROVAL-SCOPE-041. Sam explicitly approved HD-010 and ordered test alignment/rerun; full downstream acceptance remains BLOCKED."
+    },
+    {
+      "id": "HD-011",
+      "impact": "MAJOR",
+      "question": "Approve revised DESIGN25833d2d2e09a2ce0c763c374d0a0a9b64d3d92e9ee79e8f60cd3ea1e0003d51 and PLAN7b1eb4674d231be20c8882b47a1fe5db0550b2c3429adc859e0be27630a51a34: permit distinct independently indexed root/active-child Customer-ID UNION for nonempty q, ten Customer-only additive search indexes via fresh-number bounded-online migration, and exact synthetic materialized-row plan classification while rejecting every physical ALL/missing access type; preserve all semantics,50k/20/p95<=5s and downstream blocking? No implementation, new index migration or defect closure is authorized until answered.",
+      "affected_ids": [
+        "DES-018",
+        "DES-019",
+        "TASK-034",
+        "TC-028",
+        "TC-082",
+        "DEF-034001"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Actual Sam user: 批准 HD-011，以及 PR #232 的 DESIGN／PLAN baseline；繼續修復並按新基準重新實測，完整下游整合驗收保持阻塞，完成後建立 PR 並合併，沒有需要我決策的事就自動繼續。 APPROVAL-DESIGN-017 / PLAN-017 / SCOPE-043."
     }
   ],
   "external_actions": [
@@ -3748,8 +3877,48 @@
       "kind": "GIT_MERGE",
       "target": "github:crazysumsum/erp-app:main<-codex/customer-capacity-requirement-50k-20 PR#230",
       "idempotency_key": "customer-hd010-capacity-profile-evidence-merge-v1",
+      "status": "CONFIRMED",
+      "source_ref": "Observed PR#230 MERGED2026-10-15T02:42:18Z at09487bc65bff3a2360dffcaa246d5630269f11d2; exactheadc28bb100/run38670593030 all5SUCCESS/REV047; closure https://github.com/crazysumsum/erp-app/pull/230#issuecomment-6183196777; own branch/worktree/runtime cleaned; localmain clean."
+    },
+    {
+      "id": "EXT-MYSQL-070",
+      "kind": "DATABASE_TEST",
+      "target": "Own /private/tmp/erp-customer-def034001-runtime.kLnI3D/mysql; loopback13371; schemaerp_customer_def034001_20261015",
+      "idempotency_key": "customer-def034001-reproduction-retest-20261015-v1",
+      "status": "CONFIRMED",
+      "source_ref": "ActualMySQL26.7.0/datadir/port13371 verified; freshschema through0081; unchanged50k/20worker30s benchmark5PASS/1FAIL/0skip, exactly2physicalCustomerALL,allp95<=5000ms,1572correctoperations0errors. TEMP-table-only diagnostic showed physicalrange99/10+PKeq_ref1 versus virtualderivedALL109. Ownfixtures0; server shutdownsession27552exit0; exactownedtempRoot removed. Sanitized report/results retained; no keys or user3306 writes."
+    },
+    {
+      "id": "MODE-CHANGE-171",
+      "kind": "MODE_CHANGE",
+      "target": "DESIGN_AND_PLAN",
+      "idempotency_key": "mode-change-171",
+      "status": "CONFIRMED",
+      "source_ref": "Actual Sam DEF-034001 remediation request; harness design-defect routing; HD-011 proposal only, no human design approval inferred"
+    },
+    {
+      "id": "EXT-PUSH-071",
+      "kind": "GIT_PUSH",
+      "target": "origin codex/customer-def034001-indexed-search; proposal/docs only",
+      "idempotency_key": "customer-def034001-hd011-proposal-push-v1",
+      "status": "CONFIRMED",
+      "source_ref": "Observed successful gitpush of a12943ea88c3445f9e7f2a8e8a36f6a78174927e; scoped docs/diagnostics only; no product/test/migration change."
+    },
+    {
+      "id": "EXT-PR-072",
+      "kind": "PR_CREATE",
+      "target": "github:crazysumsum/erp-app:main<-codex/customer-def034001-indexed-search DRAFT HD-011 proposal",
+      "idempotency_key": "customer-def034001-hd011-draft-pr-v1",
+      "status": "CONFIRMED",
+      "source_ref": "Observed https://github.com/crazysumsum/erp-app/pull/232 OPEN,isDrafttrue,head a12943ea88c3445f9e7f2a8e8a36f6a78174927e,basemain; attached tocurrenttask. Sam HD011 remains OPEN; no merge/implementation approved. Design-stageCI not waited/bypassed."
+    },
+    {
+      "id": "EXT-MERGE-073",
+      "kind": "GIT_MERGE",
+      "target": "github:crazysumsum/erp-app PR232 -> main; approvedHD011 planningdocs only",
+      "idempotency_key": "customer-hd011-planning-merge-v1",
       "status": "PLANNED",
-      "source_ref": "HD-010/current autonomous continuation plus standing PR/merge authorization. Test/profile/evidence only, after independent review, final-head mandatory CI and fresh main check. Not performance acceptance or waiver of remaining HIGH defect/downstream integration."
+      "source_ref": "Actual Sam user: 批准 HD-011，以及 PR #232 的 DESIGN／PLAN baseline；繼續修復並按新基準重新實測，完整下游整合驗收保持阻塞，完成後建立 PR 並合併，沒有需要我決策的事就自動繼續。 Design-stage resolution under harness; no product implementation or defect closure. No branch-protection bypass."
     }
   ],
   "evidence_files": [
@@ -3762,7 +3931,9 @@
     "docs/customer_management/implementation/phase-PHASE-004-report.md",
     "docs/customer_management/implementation/customer-operations-runbook.md",
     "docs/customer_management/implementation/local-capacity-restore-report.md",
-    "docs/customer_management/implementation/local-capacity-restore-results.json"
+    "docs/customer_management/implementation/local-capacity-restore-results.json",
+    "implementation/def034001-remediation-report.md",
+    "implementation/def034001-remediation-results.json"
   ],
   "defects": [
     {
@@ -3782,5 +3953,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "HD-010 measurement unchanged: latencyPASS/plansFAIL; DEF-034001 HIGH OPEN/TASK-034 BLOCKED. Latestmain5e121cec integrated atf25e142a with unchanged Customer measurement dependencies; integrated260PASS/2extendedskips,lint/build/structuralPASS and REV-047approved. Publish checkpoint, require fresh final-head all5CI (old d04a run38668569774 succeeded but is superseded), fetch/reconcile main, then merge approved baseline/test/evidence-only PR#230 and clean this task branch/worktree. No product optimization/plan waiver/full downstream or production DR acceptance. Generic module gates remain BLOCKED, including documented helper/path-base limitation."
+  "next_safe_action": "HD011 actually approved on exact proposed DESIGN/PLAN. Resolve approved planningPR232 normally, verifymerge, cleanplanningbranch; refreshmainandnewimplementationworktree; implement/test exactlyapproved query/index/classifier correction, repeated50k/20/5s proof, actualreview/finalheadCI/freshmain before authorized implementationPRmerge. Full downstream and formalacceptance BLOCKED."
 }
