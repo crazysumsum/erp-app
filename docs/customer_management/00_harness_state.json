@@ -1,31 +1,31 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 192,
+  "revision": 200,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
   "resume_status": "IMPLEMENTING",
-  "current_phase": "PHASE-002",
-  "current_task": "TASK-016",
+  "current_phase": "PHASE-004",
+  "current_task": "TASK-033",
   "baseline": {
     "design": "a2b29b795515f6ee408201d3ac2650a1d42d74728c1ca4c9f2fe68cbfc292356",
     "plan": "3b15603d9608dcb388f90806f643a5d221514b17ef302f2e2d2f2851699735e0",
-    "code_commit": "f3413abe214c4df11efd245625b157b4eeccafbd",
-    "source_fingerprint": "3d98d69b15499f08f0c22cfd7d6d545967eb95457118646f8d2b3f7be57c9083",
-    "worktree": "/private/tmp/erp-customer-ui-defect-remediation",
-    "default_commit": "6b3faa1fd70c10105cb0cf53f733d12d2202d78f",
-    "mode_entry_commit": "e2cb7a78daaf8aa5de6d22d7640751ba8441210b"
+    "code_commit": "6faac5fd869c0dfd6e678d22a21cc26d0c87794a",
+    "source_fingerprint": "5b3e5b55c3184d2a852f60cdfceacf765204acc042024ee475c732afebbd06eb",
+    "worktree": "/private/tmp/erp-customer-phase4-followthrough",
+    "default_commit": "985411544dc278ee451ec542fd9a14ce50133bab",
+    "mode_entry_commit": "392b9f9db0f36f5a3bbabf2854bf3ee20a7bf227"
   },
   "runtime": {
-    "instance_id": "customer-ui-defects-20261015",
-    "owner": "/root Customer UI remediation",
+    "instance_id": "customer-p4-local-20261015",
+    "owner": "/root Customer local operational checks",
     "resources": {
-      "workspace": "/private/tmp/erp-customer-ui-defect-remediation",
-      "web-port": "own5204 mockedbrowser then13374/13375 realbrowser ifneeded",
-      "mysql-schema": "owned MySQL 26.7.0 127.0.0.1:13376 erp_customer_ui_test; datadir /private/tmp/erp-customer-ui-runtime.kirCP5/mysql-data; shared3306 untouched",
-      "customer-file-root": "/private/tmp/erp-customer-ui-runtime.kirCP5 own synthetic fixtures only",
-      "customer-import-root": "/private/tmp/erp-customer-ui-runtime.kirCP5 own synthetic fixtures only"
+      "workspace": "/private/tmp/erp-customer-phase4-followthrough",
+      "mysql-schema": "planned own MySQL26.7.0 loopback13378 erp_customer_p4_test; /private/tmp/erp-customer-p4-runtime.hqpvO0/mysql",
+      "customer-file-root": "/private/tmp/erp-customer-p4-runtime.hqpvO0 synthetic only",
+      "customer-import-root": "/private/tmp/erp-customer-p4-runtime.hqpvO0 synthetic only",
+      "web-port": "not allocated; direct backend checks only, no UI behavior changed"
     },
     "lease_ref": null
   },
@@ -1842,6 +1842,27 @@
         "PR #234 and scoped implementation PR normal merge after gates"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-046",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam user: 從最新 main 重新核對 Customer Management 的下游依賴與剩餘工作，有條件執行的就自動繼續；未就緒的完整下游整合驗收保持阻塞，沒有需要我決策的事就不要停下來。 Standing prior authority: scoped completed work PR/normal merge after gates; no new production/security policy approval inferred.",
+      "recorded_at": "2026-10-15T06:49:05Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "3b15603d9608dcb388f90806f643a5d221514b17ef302f2e2d2f2851699735e0",
+      "code_commit": "392b9f9db0f36f5a3bbabf2854bf3ee20a7bf227",
+      "scope": [
+        "TASK-033 local TC-081 developer proof",
+        "TASK-034 local TC-083 default contention subset",
+        "TASK-036 blocker inventory only",
+        "server/test/integration/customerOperationalGuards.integration.test.js",
+        "docs/customer_management/**",
+        "owned synthetic MySQL/migrations/fixture user only; no shared3306 or deployed policy"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -2536,6 +2557,90 @@
       "reviewer": "Jason (/root/customer_task011_review), actual separate read-only agent",
       "reviewed_baseline": "3d98d69b15499f08f0c22cfd7d6d545967eb95457118646f8d2b3f7be57c9083",
       "source_ref": "Actual separate reviewer APPROVE clean25c044ca docs, product f3413abe/sourcefp3d98. Correct pending-CI wording, conditional133skips/3CustomerNOT_RUN, backend-only server evidence, authority, scoped developer closure and blocked downstream/UAT/release consistent.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-059",
+      "method": "SEPARATE_AGENT",
+      "author": "/root Customer phase4 local checks",
+      "reviewer": "/root/customer_task011_review (actual separate read-only agent)",
+      "reviewed_baseline": "bfdc1ccd41fb9738378ba7112e4e109a3d3c208575ef1e3db774beb0b7e49011",
+      "source_ref": "Actual separate reviewer requested removing unnecessary audit SELECT and closing global/table privilege-allowlist proof holes; all corrected in final testSHA81ccdaa4, with actual global/table overgrant negative controls. Latest final re-review pending; do not treat this entry as approval.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-060",
+      "method": "SEPARATE_AGENT",
+      "author": "/root Customer local operational checks",
+      "reviewer": "/root/customer_task011_review (actual separate read-only agent)",
+      "reviewed_baseline": "e453c52d1ca54723c9e0d571725fc840c6cbf22f84cd4c91fce8ba2132033280",
+      "source_ref": "Actual separate reviewer APPROVE exactinitialPR238head75ad044f vs98541154, testSHA81ccdaa4 core+docs, whitespace/Node syntax/CIserializedMySQL inspected. Only earlier default-only candidate; NOT approval for later decision extension.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-061",
+      "method": "SEPARATE_AGENT",
+      "author": "/root Customer local decision contention extension",
+      "reviewer": "/root/customer_task011_review (actual separate read-only agent)",
+      "reviewed_baseline": "5b3e5b55c3184d2a852f60cdfceacf765204acc042024ee475c732afebbd06eb",
+      "source_ref": "Actual separate reviewer found no blocking core problem but requested clear full/formal approval-contention limitation and application-approval vs unchanged SQL allowlist scope. Clarified current report, with first fixturefailure, policy-snapshot fixture and separateexistingDB_USER limitations. Final re-review pending; no prior approval reused.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-062",
+      "method": "SEPARATE_AGENT",
+      "author": "/root Customer local decision contention extension",
+      "reviewer": "/root/customer_task011_review (actual separate read-only agent)",
+      "reviewed_baseline": "5b3e5b55c3184d2a852f60cdfceacf765204acc042024ee475c732afebbd06eb",
+      "source_ref": "Actual separate reviewer APPROVE current extendeddirtydiff vsPR238initial75ad, testSHAb6ae4f6e/sourcefp5b3e5b55. No Required finding; realrequester/approver/operations/version/twoaudits,1transition49replay50conflicts; separate existingDB_USER vsTC081 SQLallowlist, snapshotfixture/firstfailurelimits and fullacceptanceBLOCKED correct. Diff+syntax inspected, supplied294PASS0skip. Finalheadmetadata/currentCI stillpending; no humanacceptance inferred.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-063",
+      "method": "SEPARATE_AGENT",
+      "author": "/root Customer finalhead metadata",
+      "reviewer": "/root/customer_task011_review (actual separate read-only agent)",
+      "reviewed_baseline": "5b3e5b55c3184d2a852f60cdfceacf765204acc042024ee475c732afebbd06eb",
+      "source_ref": "Actual separate reviewer CHANGES_REQUESTED exact6faac5fd metadata: stale awaitingpush/nextaction and baseline75ad extendedfingerprint mismatch. Executableb6ae4f6e/fp5b3e5b55/coredocs otherwise match. Reconciled here to actualimmutable6fa executable and explicit self-reference/COMMIT_CHANGED treatment; finalmetadata rereview remains required.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-064",
+      "method": "SEPARATE_AGENT",
+      "author": "/root Customer finalhead metadata",
+      "reviewer": "/root/customer_task011_review (actual separate read-only agent)",
+      "reviewed_baseline": "5b3e5b55c3184d2a852f60cdfceacf765204acc042024ee475c732afebbd06eb",
+      "source_ref": "Actual separate reviewer APPROVE state198 metadata fixes: immutableexecutable6fa/fp5b3 binding, explicittrackedstate-self-reference/COMMIT_CHANGEDnotautomaticPASS, observedpush/CI38697064383pending, no stale repush action. Does NOT cover later capacity/import/restore evidence; final evidence review remains required.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-065",
+      "method": "SEPARATE_AGENT",
+      "author": "/root Customer latest-executable local rerun evidence",
+      "reviewer": "/root/customer_task011_review (actual separate read-only agent)",
+      "reviewed_baseline": "5b3e5b55c3184d2a852f60cdfceacf765204acc042024ee475c732afebbd06eb",
+      "source_ref": "Actual separate reviewer APPROVE state199/evidenceJSONLsha8252fe8d,25records/14of14expectedpositivekeyrangeprobes,0physicalALL(derivedUNIONnotphysical),startupfailuresretained,metrics/importDRcounts/cleanup/NOTPROVENlimitsconsistent,fullacceptanceBLOCKED,nocredentials/keymaterial. ActualUTF8artifactsize181419bytes; earlierJSstringlength181373notbytecountandnotatrackedclaim. Onlyagentreview, nohuman/CIacceptance.",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -3334,6 +3439,83 @@
       "subject": "HD-012 TDD mutation",
       "status": "PASS",
       "source_ref": "implementation/ui-defects-remediation-report.md; five RED ordering component cases thenGREEN; new retrypage/sortRED then21PASS. Catch guard inversion6FAIL detected; restored. Browser prior19/1 retry failure retained thenfinal20PASS."
+    },
+    {
+      "code_commit": "392b9f9db0f36f5a3bbabf2854bf3ee20a7bf227",
+      "spec_baseline": "3b15603d9608dcb388f90806f643a5d221514b17ef302f2e2d2f2851699735e0",
+      "source_fingerprint": "3d98d69b15499f08f0c22cfd7d6d545967eb95457118646f8d2b3f7be57c9083",
+      "actor": "/root latestmain reconciliation",
+      "observed_at": "2026-10-15T06:49:05Z",
+      "kind": "MANUAL_TEST",
+      "subject": "Latest main dependencies / previous merge closure",
+      "status": "BLOCKED",
+      "source_ref": "implementation/phase-PHASE-004-report.md latestmain charter. Fresh origin/main392b9f9d; actual module inventory no Fulfillment/InvoicingAR/ReturnsRefund runtime, empty Customer registry NOT_READY/UNKNOWN. PR237 merged, prior CIpending/defectOPEN statements historical. Only approved local TC081/defaultTC083 independent preparation actionable."
+    },
+    {
+      "code_commit": "392b9f9db0f36f5a3bbabf2854bf3ee20a7bf227",
+      "spec_baseline": "3b15603d9608dcb388f90806f643a5d221514b17ef302f2e2d2f2851699735e0",
+      "source_fingerprint": "bfdc1ccd41fb9738378ba7112e4e109a3d3c208575ef1e3db774beb0b7e49011",
+      "actor": "/root developer verification",
+      "observed_at": "2026-10-15T07:01:13Z",
+      "kind": "MANUAL_TEST",
+      "subject": "Customer local TC081 / default TC083 subsets; final executable testSHA81ccdaa4",
+      "status": "PASS",
+      "source_ref": "implementation/phase-PHASE-004-report.md#local-execution-results--2026-10-15; final73files293PASS0FAIL0SKIP19.044s,lint/buildPASS, fixturecounts0. InitialauditUPDATEcontrol2PASS2FAIL; post-tighteningcolumnSELECTdenialnotaccepted; globalSELECT and tableauditSELECT controls0PASS1FAIL each; restored. No product/CI/canonicalbaseline change; no full TC081/083/moduleacceptance."
+    },
+    {
+      "code_commit": "985411544dc278ee451ec542fd9a14ce50133bab",
+      "spec_baseline": "3b15603d9608dcb388f90806f643a5d221514b17ef302f2e2d2f2851699735e0",
+      "source_fingerprint": "e453c52d1ca54723c9e0d571725fc840c6cbf22f84cd4c91fce8ba2132033280",
+      "actor": "/root latestmain integrated developer verification",
+      "observed_at": "2026-10-15T07:02:49Z",
+      "kind": "MANUAL_TEST",
+      "subject": "Integrated freshmain98541154, Customer diff unchanged/testSHA81ccdaa4",
+      "status": "PASS",
+      "source_ref": "implementation/phase-PHASE-004-report.md; origin/main advancedSupplierPR235, freshfetch fastforward/noCustomerconflict. Integrated73files293PASS0FAIL0SKIP18.724s,lint/build/boundaryPASS. Inventory remains missing3realdownstreammodules. No Supplier edits. Old392-local evidence retained; source fingerprint replaced only after real integrated retest."
+    },
+    {
+      "code_commit": "75ad044f23b5cf92e09fbd82908878791ddef8f2",
+      "spec_baseline": "3b15603d9608dcb388f90806f643a5d221514b17ef302f2e2d2f2851699735e0",
+      "source_fingerprint": "5b3e5b55c3184d2a852f60cdfceacf765204acc042024ee475c732afebbd06eb",
+      "actor": "/root integrated developer verification",
+      "observed_at": "2026-10-15T07:10:25Z",
+      "kind": "MANUAL_TEST",
+      "subject": "Extended local TC083 decision proof, exacttestSHAb6ae4f6e",
+      "status": "PASS",
+      "source_ref": "implementation/phase-PHASE-004-report.md currentextendedsource:73files294PASS0FAIL0SKIP20.545s,lintPASS;100default2wins98CAS and100decision1transition49same-terminalreplays50oppositeconflicts; realDBversions/audit/operationsreconcile. InitialinsufficientCurrencylockingfixture3PASS2FAIL preserved; fixedtestusesexistingDB_USER, noTC081overgrant/sharedsetting/providerchange. No fullacceptance/signoff."
+    },
+    {
+      "code_commit": "6faac5fd869c0dfd6e678d22a21cc26d0c87794a",
+      "spec_baseline": "3b15603d9608dcb388f90806f643a5d221514b17ef302f2e2d2f2851699735e0",
+      "source_fingerprint": "5b3e5b55c3184d2a852f60cdfceacf765204acc042024ee475c732afebbd06eb",
+      "actor": "/root postcommit provenance reconciliation",
+      "observed_at": "2026-10-15T07:16:07Z",
+      "kind": "MANUAL_TEST",
+      "subject": "Tracked-state self-reference / actual pushed executable baseline",
+      "status": "PASS",
+      "source_ref": "6faac5fd is immutable final executable commit, testSHAb6ae4f6e/fp5b3e5b55; initial75ad is NOT bound as extended executable. This next checkpoint changes docs/state only and cannot contain its own future commit SHA. Any postcommit COMMIT_CHANGED must be reconciled by observed PR-head ancestry + identical executable fingerprint and trusted exact-head CI/reviewer receipt, not ignored or called PASS automatically. Additional existing-case reruns change no source."
+    },
+    {
+      "code_commit": "6faac5fd869c0dfd6e678d22a21cc26d0c87794a",
+      "spec_baseline": "3b15603d9608dcb388f90806f643a5d221514b17ef302f2e2d2f2851699735e0",
+      "source_fingerprint": "5b3e5b55c3184d2a852f60cdfceacf765204acc042024ee475c732afebbd06eb",
+      "actor": "/root existingcase developer rerun",
+      "observed_at": "2026-10-15T07:24:38Z",
+      "kind": "MANUAL_TEST",
+      "subject": "Initial capacity/import environment setup failure on current executable",
+      "status": "FAIL",
+      "source_ref": "implementation/phase4-local-recheck-results.jsonl initial_environment_failure records; unchangedscripts capacity15PASS1FAIL/import0PASS1FAIL0skip due absent matchedCustomer/Suppliertestkeyrings atapplicationstartup; no validload/importthroughput evidence frominitialattempt. Correctedruntimeenv only, no product/CI/threshold changes. DRindependently3PASS."
+    },
+    {
+      "code_commit": "6faac5fd869c0dfd6e678d22a21cc26d0c87794a",
+      "spec_baseline": "3b15603d9608dcb388f90806f643a5d221514b17ef302f2e2d2f2851699735e0",
+      "source_fingerprint": "5b3e5b55c3184d2a852f60cdfceacf765204acc042024ee475c732afebbd06eb",
+      "actor": "/root existingcase developer rerun",
+      "observed_at": "2026-10-15T07:24:38Z",
+      "kind": "MANUAL_TEST",
+      "subject": "Current executable local TC028/064/085086087 subset rechecks",
+      "status": "PASS",
+      "source_ref": "implementation/phase4-local-recheck-results.jsonl sha8252fe8dd8dd9aa32df3ed884fb50fc4bbc194ca34912a93ddfec023ac8d8ed6; capacity17PASS/import1PASS/restore3PASS0skip afterenvironmentcorrection; actual14completebranchrecords/fullplans, load/importmetrics and20Customer-table datahashes retained. Localonly/mockbankauth+clean-scanner and no integratedprovider/Opssignoff; fullacceptanceBLOCKED. Own13369cleanupconfirmed095."
     }
   ],
   "pending_decisions": [
@@ -4407,8 +4589,64 @@
       "kind": "PR_MERGE",
       "target": "PR #237 main <- codex/customer-ui-defect-remediation after exact-final-head CI/review/freshmain",
       "idempotency_key": "customer-hd012-implementation-merge-v1",
+      "status": "CONFIRMED",
+      "source_ref": "APPROVAL-SCOPE-045 actual Sam approval; HD012 approved DESIGN/PLAN unchanged. Scoped UI developer/review checks PASS; full module/downstream acceptance remains BLOCKED. Observe actual final-head five CI checks and freshmain before normal merge; inspect existing actions before retry. Actual PR237 MERGED 2026-10-15T06:36:58Z ->392b9f9d; exacthead966702e8 all5checks38691260886 success; closure https://github.com/crazysumsum/erp-app/pull/237#issuecomment-6186126920 verifies integrated21+5PASS and own cleanup. Observed this turn; do not replay."
+    },
+    {
+      "id": "EXT-MYSQL-090",
+      "kind": "ISOLATED_RUNTIME",
+      "target": "own /private/tmp/erp-customer-p4-runtime.hqpvO0/mysql; loopback13378; schemaerp_customer_p4_test",
+      "idempotency_key": "customer-p4-leastpriv-contention-local-v1",
+      "status": "CONFIRMED",
+      "source_ref": "APPROVAL-SCOPE-046 approved local developer checks using fresh unchanged migrations and ephemeral fixture SQL user. Port13378 verified free; no shared3306, real data, production permission changes or external alert delivery. Actual MySQL26.7.0 verified @@port13378 and @@datadir ownedhqpvO0/mysql; unchanged migrations through0082; finalsource81ccdaa4/fpbfdc1ccd,73files293PASS0FAIL0SKIP19.044s; six actualdenials +100contenders2wins98CAS,3negativecontrols recorded. Own Customers/accounts/canaries/actors all0 postrun; service retained for postmerge only. Conditional continuation within Sam's approved TC083 scope added100approve/reject case. Initial SELECT-onlyCurrency fixture failed3PASS2FAIL; no extraSQLgrants or provider changes. Corrected separate existingDB_USER runtime; explicittransactionpolicy snapshot, no sharedsettingswrite. Finalextendedtestb6ae4f6e/fp5b3e5b55,73files294PASS0FAIL0SKIP20.545s. Customers,SQLfixtureaccounts,canaries,bothactors,approvalrequests all0. TC081 read13tables+auditINSERT-only14distinct remains unchanged; approvalcase not leastpriv proof."
+    },
+    {
+      "id": "MODE-CHANGE-193",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-193",
+      "status": "CONFIRMED",
+      "source_ref": "Actual Sam latest-main reconciliation and continued approved local IMPLEMENT preparation request, preserving full downstream BLOCKED"
+    },
+    {
+      "id": "EXT-PUSH-091",
+      "kind": "GIT_PUSH",
+      "target": "origin codex/customer-phase4-followthrough",
+      "idempotency_key": "customer-p4-local-operational-push-v1",
+      "status": "CONFIRMED",
+      "source_ref": "APPROVAL-SCOPE-046 actualSam conditional continue + standing scoped PR/merge authority; no admin bypass, exacthead mandatory5CI+actualindependentreview required. DESIGN/PLAN unchanged; full downstream acceptance BLOCKED. Observe action target before retry. Actual pushed75ad044f and created OPEN https://github.com/crazysumsum/erp-app/pull/238, attached to task; CI38696262443 started oninitial75ad. Candidateextendedaftercreation; oldCI/review must not be reused for finalhead. Await finalpush and exacthead checks. Actual extended candidate pushed6faac5fd869c0dfd6e678d22a21cc26d0c87794a, CI38697064383 inprogress (audit/lint/build success, browser/MySQL pending), not earlier75ad. Subsequent trackedstate/report checkpoint is metadata-only; exact publication head is observed on PR, not self-hashed into its own state."
+    },
+    {
+      "id": "EXT-PR-092",
+      "kind": "PR_CREATE",
+      "target": "main <- codex/customer-phase4-followthrough; Customer local operational developer proof",
+      "idempotency_key": "customer-p4-local-operational-pr-v1",
+      "status": "CONFIRMED",
+      "source_ref": "APPROVAL-SCOPE-046 actualSam conditional continue + standing scoped PR/merge authority; no admin bypass, exacthead mandatory5CI+actualindependentreview required. DESIGN/PLAN unchanged; full downstream acceptance BLOCKED. Observe action target before retry. Actual pushed75ad044f and created OPEN https://github.com/crazysumsum/erp-app/pull/238, attached to task; CI38696262443 started oninitial75ad. Candidateextendedaftercreation; oldCI/review must not be reused for finalhead. Await finalpush and exacthead checks. Actual extended candidate pushed6faac5fd869c0dfd6e678d22a21cc26d0c87794a, CI38697064383 inprogress (audit/lint/build success, browser/MySQL pending), not earlier75ad. Subsequent trackedstate/report checkpoint is metadata-only; exact publication head is observed on PR, not self-hashed into its own state."
+    },
+    {
+      "id": "EXT-MERGE-093",
+      "kind": "PR_MERGE",
+      "target": "new Customer phase4 local-checks PR -> main after exact-head CI/review and freshmain",
+      "idempotency_key": "customer-p4-local-operational-merge-v1",
       "status": "PLANNED",
-      "source_ref": "APPROVAL-SCOPE-045 actual Sam approval; HD012 approved DESIGN/PLAN unchanged. Scoped UI developer/review checks PASS; full module/downstream acceptance remains BLOCKED. Observe actual final-head five CI checks and freshmain before normal merge; inspect existing actions before retry."
+      "source_ref": "APPROVAL-SCOPE-046 actualSam conditional continue + standing scoped PR/merge authority; no admin bypass, exacthead mandatory5CI+actualindependentreview required. DESIGN/PLAN unchanged; full downstream acceptance BLOCKED. Observe action target before retry."
+    },
+    {
+      "id": "EXT-MYSQL-094",
+      "kind": "ISOLATED_RUNTIME",
+      "target": "own /private/tmp/erp-customer-local-runtime.IcjivL/mysql loopback13369; new erp_customer_p4_capacity,erp_customer_p4_import,erp_customer_local_dr_source_20261015_p4,erp_customer_local_dr_restore_20261015_p4",
+      "idempotency_key": "customer-p4-currenthead-existing-perf-restore-rerun-v1",
+      "status": "CONFIRMED",
+      "source_ref": "Actual Sam conditionalcontinue/latestmain + standing explicit TASK034localcapacity/TASK035isolatedrestore authority; existingapprovedTC028/064/085086087 unchangedtestscripts. Port13369 observed free/newruntime unique; freshschemas/migrations/syntheticdata only. No shared3306, deployedprivilege, provider/scanner/signoff or benchmark change. Charter casefirst in phase4report. Actual freshMySQL26.7/migrations0082 complete. Initialcapacity15PASS1FAIL/import0PASS1FAIL due missingtestkeyrings, no metrics claimed; DR3PASS. Added matchingephemeral Customer/Suppliertestkeys, unchangedcapacity17PASS0skip:269328correctops0errors,listp959.428042ms,14rangebranches/0physicalALL. Import1PASS0skip:10000rows29.116429s,262HTTP0error/p9514.146917ms,0lockwaits,86.4MBheapgrowth. ActualDR20tablehashes/4objects/6failclosed,loss174ms/localrecovery673.580042ms,productionNOTPROVEN. Raw-sensitiveexportsnone; sanitized25recordJSONLsha8252fe8d durable."
+    },
+    {
+      "id": "EXT-CLEANUP-095",
+      "kind": "RUNTIME_CLEANUP",
+      "target": "only four newly owned schemas in own13369/runtime.IcjivL and exact mysql datadir",
+      "idempotency_key": "customer-p4-currenthead-local-rerun-cleanup-v1",
+      "status": "CONFIRMED",
+      "source_ref": "Actual @@port/datadir verified13369/runtime.IcjivL/mysql. Capacity/import roots0, DRsource2(lossmarker)/destination1 as expected. Dropped exact4ownschemas, mysqladminsocketshutdownexit0/serverexec63452exit0, listenerabsent/PIDgone. Removed only exactownedmysql datadir; smallconfig/log retained private, sanitizedevidence durable. Shared3306, otherworktrees/processes/data untouched; own13378 remainsforpostmerge."
     }
   ],
   "evidence_files": [
@@ -4425,7 +4663,8 @@
     "implementation/def034001-remediation-report.md",
     "implementation/def034001-remediation-results.json",
     "implementation/def034001-search-branch-plans.jsonl",
-    "implementation/ui-defects-remediation-report.md"
+    "implementation/ui-defects-remediation-report.md",
+    "implementation/phase4-local-recheck-results.jsonl"
   ],
   "defects": [
     {
@@ -4481,5 +4720,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "PR #237 OPEN/published; product/source unchanged f3413abe/fp3d98; approved canonical DESIGN/PLAN unchanged. Actual independent code+docs reviews REV056/058 APPROVED, intermediate docs implication REV057 corrected. Publish this metadata-only observation checkpoint, then inspect final PR head and require all five CI checks on that exact candidate; never reuse25c044ca CI after new commit. Freshmain fetch/integration before normal merge. Record final exact-head CI/merge receipts as PR comments without manufacturing local self-referential head evidence. Full module/downstream acceptance remains BLOCKED; retained133conditional skips notPASS. Owned runtime stopped, planning PR234 worktree/local/remote branches cleaned; implementation cleanup only after observed merge."
+  "next_safe_action": "Read actualPR238 finalpublishedhead and reconcile metadata-only publication with immutable executable6faac5fd/testb6ae4f6e/sourcefp5b3e5b55 and approvedevidence8252fe8d/REV065. Require that exacthead's5mandatoryCIchecks and freshmain before normalmerge; never reuse supersededheadCI or replaycompletedpush/PR. Then integrated same-source check, own13378runtimecleanup and safeownbranch/worktreeremoval. Own13369alreadycleaned. Full downstream/task030031032034 acceptanceBLOCKED;033035partial/036pending; no humanOps/Security/UAT/release signoff."
 }
