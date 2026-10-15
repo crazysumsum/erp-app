@@ -109,6 +109,32 @@ test("LOCAL-035 TC-085/086/087 isolated logical restore reconciles Customer DB, 
     "INSERT INTO customers (customer_code,customer_code_key,legal_name,legal_name_key,default_currency_code,created_at,updated_at) VALUES ('LOCAL-RESTORE','local-restore','Local Restore','local restore','HKD',?,?)", [now, now]
   );
   const customerId = Number(customer.insertId);
+  const [address] = await source.query("INSERT INTO customer_addresses SET ?", {
+    customer_id: customerId, label: "Restore shipping", address_line1: "Synthetic address",
+    country_code: "HK", created_at: now, updated_at: now, created_by: actorId
+  });
+  await source.query("INSERT INTO customer_address_purposes SET ?", {
+    address_id: address.insertId, customer_id: customerId, purpose_code: "shipping", is_default: 1,
+    created_at: now, updated_at: now, created_by: actorId
+  });
+  const [contact] = await source.query("INSERT INTO customer_contacts SET ?", {
+    customer_id: customerId, name: "Synthetic restore contact", email: "restore@example.invalid",
+    created_at: now, updated_at: now, created_by: actorId
+  });
+  await source.query("INSERT INTO customer_contact_purposes SET ?", {
+    contact_id: contact.insertId, customer_id: customerId, purpose_code: "ordering", is_default: 1,
+    created_at: now, updated_at: now, created_by: actorId
+  });
+  const [approver] = await source.execute(
+    "INSERT INTO users (username,password_hash,display_name,created_at,updated_at) VALUES (?,?,?,?,?)",
+    [`restore-approver-${randomUUID()}`, "unused-test-hash", "Synthetic restore approver", now, now]
+  );
+  const [approval] = await source.query("INSERT INTO customer_activation_requests SET ?", {
+    customer_id: customerId, requested_by: actorId, assigned_approver_id: approver.insertId,
+    customer_version: 1, critical_snapshot_hash: randomBytes(32), summary: JSON.stringify({ customerCode: "LOCAL-RESTORE" }),
+    approval_setting_value: 1, approval_setting_version: 1, status: "rejected", request_note: "Synthetic historical decision",
+    decision_reason: "Synthetic restore sample", requested_at: now, decided_at: now, decided_by: approver.insertId
+  });
   const database = { query: source.query.bind(source), async withTransaction(work) {
     await source.beginTransaction();
     try { const value = await work(source); await source.commit(); return value; }
@@ -116,6 +142,9 @@ test("LOCAL-035 TC-085/086/087 isolated logical restore reconciles Customer DB, 
   } };
   const account = `88${randomBytes(10).toString("hex").toUpperCase()}`;
   const audit = new CustomerAuditLogService();
+  await audit.record(source, { occurredAt: now, actorUserId: Number(approver.insertId), actorUsername: "restore-approver",
+    action: "approval.reject", targetType: "approval", targetId: Number(approval.insertId), customerId,
+    reason: "Synthetic restore sample", detail: { after: { status: "rejected" } }, requestId: "local-restore-approval" });
   const bank = await new CustomerBankService({ database, crypto: bankCrypto(keys), time: { nowMs: () => Date.now() },
     authorize: async () => ({ username: "restore-test", permissions: ["customer.view", "customer.bank.view", "customer.bank.mgmt"] })
   }).create({ actorId, customerId, accountNumber: account, accountHolderName: "Synthetic Restore", bankName: "Synthetic Bank",
@@ -175,6 +204,9 @@ test("LOCAL-035 TC-085/086/087 isolated logical restore reconciles Customer DB, 
   const expected = await snapshot(source);
   assert.equal(expected.customer_bank_accounts.count, 1);
   assert.equal(expected.customer_attachments.count, 2);
+  for (const name of ["customer_addresses", "customer_address_purposes", "customer_contacts", "customer_contact_purposes", "customer_activation_requests"]) {
+    assert.equal(expected[name].count, 1, `${name} must have a representative restore sample`);
+  }
   assert.ok(expected.customer_audit_logs.count >= 4);
   const backupPoint = Date.now();
   const dumpFile = path.join(root, "backup.sql");
@@ -190,10 +222,49 @@ test("LOCAL-035 TC-085/086/087 isolated logical restore reconciles Customer DB, 
   await cp(filesRoot, path.join(root, "backup-files"), { recursive: true });
   await writeFile(path.join(root, "backup-keys.json"), JSON.stringify(keys), { mode: 0o600, flag: "wx" });
   const dumpSha256 = hash(await readFile(dumpFile));
+  const [schemaVersions] = await source.query("SELECT name FROM fr_schema_migrations ORDER BY name");
+  const members = [dumpFile, path.join(root, "backup-keys.json"),
+    ...attachments.map(({ metadata }) => path.join(root, "backup-files", metadata.sensitivity === "general" ? "general" : "sensitive", metadata.storedName)),
+    path.join(root, "backup-files", "imports", "source", importSource.storedName),
+    path.join(root, "backup-files", "imports", "result", importResult.storedName)];
+  const revision = spawnSync("git", ["rev-parse", "HEAD"], { cwd: path.dirname(import.meta.filename), encoding: "utf8", timeout: 10_000 });
+  assert.equal(revision.status, 0);
+  const manifest = { format: "customer-local-restore-v1", backupPoint, mysql: server.version,
+    codeCommit: revision.stdout.trim(), config: { general: "general", bankSensitive: "sensitive", imports: "imports", scanner: "clean test fixture" },
+    consistency: "quiescent synthetic source; DB dump then private files; no concurrent writers",
+    schemaVersions, tables: expected, keyIds: { encryption: keys.bankEncryption.activeKeyId, lookup: keys.bankLookup.activeKeyId },
+    testSha256: hash(await readFile(import.meta.filename)),
+    members: await Promise.all(members.map(async (file) => ({ file: path.relative(root, file), sha256: hash(await readFile(file)) }))) };
+  await writeFile(path.join(root, "backup-manifest.json"), JSON.stringify(manifest), { mode: 0o600, flag: "wx" });
+  const manifestSha256 = hash(await readFile(path.join(root, "backup-manifest.json")));
+  async function preflight() {
+    assert.equal(hash(await readFile(path.join(root, "backup-manifest.json"))), manifestSha256, "manifest integrity");
+    const recoveredKeys = JSON.parse(await readFile(path.join(root, "backup-keys.json"), "utf8"));
+    assert.deepEqual({ encryption: recoveredKeys.bankEncryption.activeKeyId, lookup: recoveredKeys.bankLookup.activeKeyId }, manifest.keyIds, "key version linkage");
+    for (const member of manifest.members) assert.equal(hash(await readFile(path.join(root, member.file))), member.sha256, "backup member integrity");
+  }
+  let setFailures = 0;
+  // shortcut: fixture-owned manifest and in-memory digest, not a signed production recovery-set verifier.
+  for (const [file, replacement, expectedError] of [
+    [members[2], null, { code: "ENOENT" }],
+    [members[4], Buffer.from("corrupt synthetic import object"), /backup member integrity/u],
+    [members[1], null, { code: "ENOENT" }],
+    [members[1], Buffer.from(JSON.stringify({ ...keys, bankEncryption: { ...keys.bankEncryption, activeKeyId: "wrong-version" } })), /key version linkage/u]
+  ]) {
+    const original = await readFile(file);
+    try {
+      if (replacement === null) await rm(file); else await writeFile(file, replacement);
+      await assert.rejects(preflight, expectedError);
+      assert.equal((await destination.query("SHOW TABLES"))[0].length, 0, "damaged backup must not be imported");
+      setFailures += 1;
+    } finally { await writeFile(file, original, { mode: 0o600 }); }
+  }
   await source.execute("INSERT INTO customers (customer_code,customer_code_key,legal_name,legal_name_key,created_at,updated_at) VALUES ('LOSS-MARKER','loss-marker','Loss Marker','loss marker',?,?)", [Date.now(), Date.now()]);
   const lastConfirmedWrite = Date.now();
   const incidentAt = Date.now();
   const restoreStarted = performance.now();
+  await preflight();
+  const preflightMs = performance.now() - restoreStarted;
   const dumpInput = openSync(dumpFile, "r");
   try {
     const restored = spawnSync(process.env.CUSTOMER_MYSQL_BIN || "mysql", [...clientArgs, restoreName],
@@ -204,6 +275,22 @@ test("LOCAL-035 TC-085/086/087 isolated logical restore reconciles Customer DB, 
   await cp(path.join(root, "backup-files"), restoredRoot, { recursive: true });
   const restoredKeys = JSON.parse(await readFile(path.join(root, "backup-keys.json"), "utf8"));
   assert.deepEqual(await snapshot(destination), expected);
+  assert.deepEqual((await destination.query("SELECT name FROM fr_schema_migrations ORDER BY name"))[0], schemaVersions);
+  const [[restoredAddress]] = await destination.query(
+    "SELECT a.customer_id,p.is_default FROM customer_addresses a JOIN customer_address_purposes p ON p.address_id=a.id AND p.customer_id=a.customer_id WHERE a.id=? AND p.purpose_code='shipping'", [address.insertId]);
+  assert.equal(Number(restoredAddress.customer_id), customerId);
+  assert.equal(Number(restoredAddress.is_default), 1);
+  const [[restoredContact]] = await destination.query(
+    "SELECT c.customer_id,p.is_default FROM customer_contacts c JOIN customer_contact_purposes p ON p.contact_id=c.id AND p.customer_id=c.customer_id WHERE c.id=? AND p.purpose_code='ordering'", [contact.insertId]);
+  assert.equal(Number(restoredContact.customer_id), customerId);
+  assert.equal(Number(restoredContact.is_default), 1);
+  const [[restoredDecision]] = await destination.query(
+    "SELECT r.status,r.requested_by,r.assigned_approver_id,r.decided_by,COUNT(a.id) AS audit_count FROM customer_activation_requests r JOIN users u ON u.id=r.requested_by JOIN users d ON d.id=r.decided_by JOIN customer_audit_logs a ON a.customer_id=r.customer_id AND a.target_id=r.id AND a.request_id='local-restore-approval' WHERE r.id=? GROUP BY r.id", [approval.insertId]);
+  assert.equal(restoredDecision.status, "rejected");
+  assert.equal(Number(restoredDecision.requested_by), actorId);
+  assert.equal(Number(restoredDecision.assigned_approver_id), Number(approver.insertId));
+  assert.equal(Number(restoredDecision.decided_by), Number(approver.insertId));
+  assert.equal(Number(restoredDecision.audit_count), 1);
   const [[loss]] = await destination.query("SELECT COUNT(*) AS total FROM customers WHERE customer_code_key='loss-marker'");
   assert.equal(Number(loss.total), 0);
   const restoredStorage = attachmentStorage(restoredRoot, restoredKeys);
@@ -232,7 +319,9 @@ test("LOCAL-035 TC-085/086/087 isolated logical restore reconciles Customer DB, 
   assert.ok(recoveryMs <= 4 * 60 * 60_000);
   const summary = { case: "LOCAL-035", mysql: server.version, sourceName, restoreName,
     backupPoint, latestRecoveredWrite, lastConfirmedWrite, incidentAt, localLossWindowMs, localRecoveryMs: recoveryMs,
-    dumpSha256, tables: expected, attachmentObjects: attachments.length, importObjects: 2,
+    dumpSha256, manifestSha256, manifestMembers: manifest.members.length, schemaVersionCount: schemaVersions.length,
+    preflightMs, rejectedBackupSets: setFailures, representativeSamples: ["customer", "address_default", "contact_default", "approval_decision", "bank", "general_attachment", "bank_sensitive_attachment", "import", "audit"],
+    tables: expected, attachmentObjects: attachments.length, importObjects: 2,
     failClosedChecks: keyFailures, downstreamIntegration: "BLOCKED", productionRtoRpo: "NOT_PROVEN" };
   const serialized = JSON.stringify(summary);
   assert.equal(serialized.includes(account), false);

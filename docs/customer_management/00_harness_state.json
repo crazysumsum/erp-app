@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 200,
+  "revision": 203,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,21 +11,21 @@
   "baseline": {
     "design": "a2b29b795515f6ee408201d3ac2650a1d42d74728c1ca4c9f2fe68cbfc292356",
     "plan": "3b15603d9608dcb388f90806f643a5d221514b17ef302f2e2d2f2851699735e0",
-    "code_commit": "6faac5fd869c0dfd6e678d22a21cc26d0c87794a",
-    "source_fingerprint": "5b3e5b55c3184d2a852f60cdfceacf765204acc042024ee475c732afebbd06eb",
-    "worktree": "/private/tmp/erp-customer-phase4-followthrough",
-    "default_commit": "985411544dc278ee451ec542fd9a14ce50133bab",
+    "code_commit": "80aee6561a3c51d44d3aec04b280f46cef40adbe",
+    "source_fingerprint": "816c5877f983364ba178b181e45782496974453d380f5e9cbdd74b219b1417e7",
+    "worktree": "/private/tmp/erp-customer-restore-readiness",
+    "default_commit": "80aee6561a3c51d44d3aec04b280f46cef40adbe",
     "mode_entry_commit": "392b9f9db0f36f5a3bbabf2854bf3ee20a7bf227"
   },
   "runtime": {
-    "instance_id": "customer-p4-local-20261015",
-    "owner": "/root Customer local operational checks",
+    "instance_id": "customer-restore-readiness-20261015",
+    "owner": "/root Customer TASK035 developer preparation",
     "resources": {
-      "workspace": "/private/tmp/erp-customer-phase4-followthrough",
-      "mysql-schema": "planned own MySQL26.7.0 loopback13378 erp_customer_p4_test; /private/tmp/erp-customer-p4-runtime.hqpvO0/mysql",
-      "customer-file-root": "/private/tmp/erp-customer-p4-runtime.hqpvO0 synthetic only",
-      "customer-import-root": "/private/tmp/erp-customer-p4-runtime.hqpvO0 synthetic only",
-      "web-port": "not allocated; direct backend checks only, no UI behavior changed"
+      "workspace": "/private/tmp/erp-customer-restore-readiness",
+      "mysql-schema": "new loopback13369 /private/tmp/erp-customer-local-runtime.jG5b0T/mysql; erp_customer_local_dr_source_20261015_ready and erp_customer_local_dr_restore_20261015_ready",
+      "customer-file-root": "/private/tmp/erp-customer-local-runtime.jG5b0T synthetic only",
+      "customer-import-root": "/private/tmp/erp-customer-local-runtime.jG5b0T synthetic only",
+      "web-port": "none; backend restore only"
     },
     "lease_ref": null
   },
@@ -1863,6 +1863,25 @@
         "owned synthetic MySQL/migrations/fixture user only; no shared3306 or deployed policy"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-047",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam latest user: Customer Management 的正式營運／RPO／RTO 驗收還缺哪些條件？能獨立補齊的就直接繼續，完整下游整合驗收保持阻塞，沒有需要我決策的事就不要停下來。 Existing scoped PR/normal merge authority retained; no production/security/acceptance decision inferred.",
+      "recorded_at": "2026-10-15T08:07:55Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "3b15603d9608dcb388f90806f643a5d221514b17ef302f2e2d2f2851699735e0",
+      "code_commit": "80aee6561a3c51d44d3aec04b280f46cef40adbe",
+      "scope": [
+        "TASK-033/035 local operational/recovery preparation only",
+        "server/test/recovery/customerLocalRestore.test.js",
+        "docs/customer_management/**",
+        "owned synthetic MySQL/migrations/fixtures, no shared3306/production"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -2641,6 +2660,18 @@
       "reviewer": "/root/customer_task011_review (actual separate read-only agent)",
       "reviewed_baseline": "5b3e5b55c3184d2a852f60cdfceacf765204acc042024ee475c732afebbd06eb",
       "source_ref": "Actual separate reviewer APPROVE state199/evidenceJSONLsha8252fe8d,25records/14of14expectedpositivekeyrangeprobes,0physicalALL(derivedUNIONnotphysical),startupfailuresretained,metrics/importDRcounts/cleanup/NOTPROVENlimitsconsistent,fullacceptanceBLOCKED,nocredentials/keymaterial. ActualUTF8artifactsize181419bytes; earlierJSstringlength181373notbytecountandnotatrackedclaim. Onlyagentreview, nohuman/CIacceptance.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-066",
+      "method": "SEPARATE_AGENT",
+      "author": "/root Customer restore readiness implementation",
+      "reviewer": "/root/customer_task011_review (actual separate read-only agent)",
+      "reviewed_baseline": "816c5877f983364ba178b181e45782496974453d380f5e9cbdd74b219b1417e7",
+      "source_ref": "Actual separate agent APPROVE current source/docs/state202: runbook distinguishes inventory vs compatibility; explicit assignee linkage; runtime/evidence status reconciled; memberintegrityfailclosed/mutationhistory retained. Reviewer independently executed2no-connectguardsPASS; supplied actual3restore/35relatedunitresults consistent. Onlysource-levelapproval, exactcommittedhead/mandatoryCI stillrequired.",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -3516,6 +3547,17 @@
       "subject": "Current executable local TC028/064/085086087 subset rechecks",
       "status": "PASS",
       "source_ref": "implementation/phase4-local-recheck-results.jsonl sha8252fe8dd8dd9aa32df3ed884fb50fc4bbc194ca34912a93ddfec023ac8d8ed6; capacity17PASS/import1PASS/restore3PASS0skip afterenvironmentcorrection; actual14completebranchrecords/fullplans, load/importmetrics and20Customer-table datahashes retained. Localonly/mockbankauth+clean-scanner and no integratedprovider/Opssignoff; fullacceptanceBLOCKED. Own13369cleanupconfirmed095."
+    },
+    {
+      "code_commit": "80aee6561a3c51d44d3aec04b280f46cef40adbe",
+      "spec_baseline": "3b15603d9608dcb388f90806f643a5d221514b17ef302f2e2d2f2851699735e0",
+      "source_fingerprint": "816c5877f983364ba178b181e45782496974453d380f5e9cbdd74b219b1417e7",
+      "actor": "/root Customer developer restore readiness",
+      "observed_at": "2026-10-15T08:07:55Z",
+      "kind": "MANUAL_TEST",
+      "subject": "TASK035 independent restore sample/set integrity subset",
+      "status": "PASS",
+      "source_ref": "implementation/phase4-restore-readiness-results.json; final593d17f4test sourcefp816c5877;3restore+35relatedunit PASS0skip,lint/build+traceability/boundarylocalPASS. ExpectedREDemptyaddress,fixtureauditnamefailure,mutationexpectedfailure retained; no productchange/formalacceptance. Review requested documentation narrowed to inventory rather than deployedcompatibility verification; assignee explicitlychecked."
     }
   ],
   "pending_decisions": [
@@ -4629,8 +4671,8 @@
       "kind": "PR_MERGE",
       "target": "new Customer phase4 local-checks PR -> main after exact-head CI/review and freshmain",
       "idempotency_key": "customer-p4-local-operational-merge-v1",
-      "status": "PLANNED",
-      "source_ref": "APPROVAL-SCOPE-046 actualSam conditional continue + standing scoped PR/merge authority; no admin bypass, exacthead mandatory5CI+actualindependentreview required. DESIGN/PLAN unchanged; full downstream acceptance BLOCKED. Observe action target before retry."
+      "status": "CONFIRMED",
+      "source_ref": "APPROVAL-SCOPE-046 actualSam conditional continue + standing scoped PR/merge authority; no admin bypass, exacthead mandatory5CI+actualindependentreview required. DESIGN/PLAN unchanged; full downstream acceptance BLOCKED. Observe action target before retry. Actual GitHub PR238 MERGED80aee656, observed closurecomment6187285228 confirms exacthead18619a98 fiveCI success, separate review, postmerge smoke and ownruntime/branch cleanup; no replay."
     },
     {
       "id": "EXT-MYSQL-094",
@@ -4647,6 +4689,38 @@
       "idempotency_key": "customer-p4-currenthead-local-rerun-cleanup-v1",
       "status": "CONFIRMED",
       "source_ref": "Actual @@port/datadir verified13369/runtime.IcjivL/mysql. Capacity/import roots0, DRsource2(lossmarker)/destination1 as expected. Dropped exact4ownschemas, mysqladminsocketshutdownexit0/serverexec63452exit0, listenerabsent/PIDgone. Removed only exactownedmysql datadir; smallconfig/log retained private, sanitizedevidence durable. Shared3306, otherworktrees/processes/data untouched; own13378 remainsforpostmerge."
+    },
+    {
+      "id": "EXT-MYSQL-096",
+      "kind": "ISOLATED_RUNTIME",
+      "target": "new loopback13369 /private/tmp/erp-customer-local-runtime.jG5b0T/mysql; erp_customer_local_dr_source_20261015_ready and erp_customer_local_dr_restore_20261015_ready",
+      "idempotency_key": "customer-restore-readiness-runtime-v1",
+      "status": "CONFIRMED",
+      "source_ref": "Actual latestSam request independentlyfillformalOps/RPO/RTOgaps, standingTASK035isolatedrestoreauthority. Port13369 observedfree; freshdatadir initialize-insecure exited0, service/schema/test notyetstarted. Onlynewtaskownedruntime,migrations,syntheticfixtures; shared3306/productionuntouched. ActualMySQL26.7port13369/datadir verified,83existingmigrations,syntheticonly. Reviewer-corrected3PASS0FAIL0SKIP1196.789ms,20tables/6manifestmembers/4damagedsetrefusals/6keydenials; loss176ms/recovery624.720ms, productionNOTPROVEN. Service currentlyownedrunningforpostmergerecheck; source2/dest1 fixtures cleanupaftermerge."
+    },
+    {
+      "id": "EXT-PUSH-097",
+      "kind": "GIT_PUSH",
+      "target": "codex/customer-restore-readiness -> origin",
+      "idempotency_key": "customer-restore-readiness-ext-push-097",
+      "status": "PLANNED",
+      "source_ref": "APPROVAL-SCOPE047 + standing Sam scoped PR/normal merge authority; exactcandidate allfiveCI and actualseparatereview required; no adminbypass. Observe targetbefore retry. Full downstream/formalRPO/RTO BLOCKED."
+    },
+    {
+      "id": "EXT-PR-098",
+      "kind": "PR_CREATE",
+      "target": "main <- codex/customer-restore-readiness scoped local restore readiness",
+      "idempotency_key": "customer-restore-readiness-ext-pr-098",
+      "status": "PLANNED",
+      "source_ref": "APPROVAL-SCOPE047 + standing Sam scoped PR/normal merge authority; exactcandidate allfiveCI and actualseparatereview required; no adminbypass. Observe targetbefore retry. Full downstream/formalRPO/RTO BLOCKED."
+    },
+    {
+      "id": "EXT-MERGE-099",
+      "kind": "PR_MERGE",
+      "target": "scoped Customer restore readiness PR -> main after exacthead mandatoryCI/actualreview/freshmain",
+      "idempotency_key": "customer-restore-readiness-ext-merge-099",
+      "status": "PLANNED",
+      "source_ref": "APPROVAL-SCOPE047 + standing Sam scoped PR/normal merge authority; exactcandidate allfiveCI and actualseparatereview required; no adminbypass. Observe targetbefore retry. Full downstream/formalRPO/RTO BLOCKED."
     }
   ],
   "evidence_files": [
@@ -4664,7 +4738,8 @@
     "implementation/def034001-remediation-results.json",
     "implementation/def034001-search-branch-plans.jsonl",
     "implementation/ui-defects-remediation-report.md",
-    "implementation/phase4-local-recheck-results.jsonl"
+    "implementation/phase4-local-recheck-results.jsonl",
+    "implementation/phase4-restore-readiness-results.json"
   ],
   "defects": [
     {
@@ -4720,5 +4795,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Read actualPR238 finalpublishedhead and reconcile metadata-only publication with immutable executable6faac5fd/testb6ae4f6e/sourcefp5b3e5b55 and approvedevidence8252fe8d/REV065. Require that exacthead's5mandatoryCIchecks and freshmain before normalmerge; never reuse supersededheadCI or replaycompletedpush/PR. Then integrated same-source check, own13378runtimecleanup and safeownbranch/worktreeremoval. Own13369alreadycleaned. Full downstream/task030031032034 acceptanceBLOCKED;033035partial/036pending; no humanOps/Security/UAT/release signoff."
+  "next_safe_action": "Extend existing TASK035 local restore samples/set integrity under approved DESIGN/PLAN; execute chartered cases then actual separate review/current-candidate CI/normal scoped PRmerge. Full downstream/formal Ops/RPO/RTO acceptance BLOCKED."
 }

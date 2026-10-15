@@ -1,0 +1,446 @@
+{
+  "scope": "IMPLEMENT developer-only TASK-035; no formal acceptance",
+  "baseCommit": "80aee6561a3c51d44d3aec04b280f46cef40adbe",
+  "recordedAt": "2026-10-15T08:04:00Z",
+  "environment": {
+    "node": "26.6.0",
+    "mysql": "26.7.0",
+    "host": "127.0.0.1",
+    "port": 13369,
+    "runtime": "/private/tmp/erp-customer-local-runtime.jG5b0T",
+    "data": "synthetic, source quiescent"
+  },
+  "attempts": [
+    {
+      "stage": "RED",
+      "executed": 3,
+      "pass": 2,
+      "fail": 1,
+      "skip": 0,
+      "observed": "customer_addresses must have a representative restore sample:0 !==1",
+      "interpretation": "Existing fixture coverage gap, not a product restore failure"
+    },
+    {
+      "stage": "FIXTURE_CORRECTION",
+      "executed": 3,
+      "pass": 2,
+      "fail": 1,
+      "skip": 0,
+      "observed": "Unsupported Customer audit action: activation.reject",
+      "interpretation": "New fixture action corrected to existing approval.reject; no product audit allowlist change"
+    },
+    {
+      "stage": "GREEN",
+      "executed": 3,
+      "pass": 3,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 1424.897959,
+      "metrics": {
+        "case": "LOCAL-035",
+        "mysql": "26.7.0",
+        "sourceName": "erp_customer_local_dr_source_20261015_ready",
+        "restoreName": "erp_customer_local_dr_restore_20261015_ready",
+        "backupPoint": 1792051421461,
+        "latestRecoveredWrite": 1792051421454,
+        "lastConfirmedWrite": 1792051421662,
+        "incidentAt": 1792051421662,
+        "localLossWindowMs": 208,
+        "localRecoveryMs": 735.418167,
+        "dumpSha256": "8d17c4c9dbe48c655610c3a008d033624af034f03ee220e1ed9b766c283df433",
+        "manifestSha256": "73b50e8c41c38e257247b6603d2138638b101a26d95cb77182b91d3997d3ef04",
+        "manifestMembers": 6,
+        "schemaVersionCount": 83,
+        "preflightMs": 0.9523749999999609,
+        "rejectedBackupSets": 4,
+        "representativeSamples": [
+          "customer",
+          "address_default",
+          "contact_default",
+          "approval_decision",
+          "bank",
+          "general_attachment",
+          "bank_sensitive_attachment",
+          "import",
+          "audit"
+        ],
+        "tables": {
+          "customer_activation_requests": {
+            "count": 1,
+            "sha256": "8236c16aca98ec0276bcdd480c1fedf9a617400395fc861151d3671280da79dc"
+          },
+          "customer_address_purposes": {
+            "count": 1,
+            "sha256": "362d48e703b1081b7fdb6be96703011ff2848548e299652bad29b8987e67681c"
+          },
+          "customer_addresses": {
+            "count": 1,
+            "sha256": "28c698c94a36c3316d99274a274afb61888caf40294408589fd21ec1e99f220c"
+          },
+          "customer_attachment_stages": {
+            "count": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "customer_attachments": {
+            "count": 2,
+            "sha256": "0832c5febbf2eec2976fad4ea2ec285b40619e9fe482c9923cb13d83b4df5730"
+          },
+          "customer_audit_logs": {
+            "count": 5,
+            "sha256": "5821413575c6d437d89b60cb330f1ad366db57f1d1a5e3074509f54cc0aa3825"
+          },
+          "customer_bank_accounts": {
+            "count": 1,
+            "sha256": "17a2eeab8e55636fc68a5ec400f736689567dc89adc82657c27d08fb99f66630"
+          },
+          "customer_categories": {
+            "count": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "customer_contact_purposes": {
+            "count": 1,
+            "sha256": "d194375f22e0bfe3306f22c6d2835e37b8a4a6d4832b0f24e52133bd8489f1ae"
+          },
+          "customer_contacts": {
+            "count": 1,
+            "sha256": "a63674eebe3b062eac68a14bd39fe96b4b831680439cfc681f3ab661f13dfd17"
+          },
+          "customer_credit_profiles": {
+            "count": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "customer_export_jobs": {
+            "count": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "customer_identifiers": {
+            "count": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "customer_import_jobs": {
+            "count": 1,
+            "sha256": "315c3ab9ccba94d54ac6f2e7482d2da43c98c93f899ce6498d80e3501752fe6c"
+          },
+          "customer_import_rows": {
+            "count": 1,
+            "sha256": "e2ba3a8b5a205978b9091b551c2b947941960789a5f986988bf3da84f54bf927"
+          },
+          "customer_industries": {
+            "count": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "customer_operation_requests": {
+            "count": 3,
+            "sha256": "c3265c267d13fe507bde8d87a1bd9b8fdaf0ba8feec2ff04f3257a77e61e372e"
+          },
+          "customer_settings": {
+            "count": 1,
+            "sha256": "9f19a6332feb86aa3ef82c784cb60b6826fef9755221b9595c12804d65377257"
+          },
+          "customer_territories": {
+            "count": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "customers": {
+            "count": 1,
+            "sha256": "8442d9bd38d05fbd7f99ff641e894a1d77922e9a65cbe87cf4833685cb5f3dae"
+          }
+        },
+        "attachmentObjects": 2,
+        "importObjects": 2,
+        "failClosedChecks": 6,
+        "downstreamIntegration": "BLOCKED",
+        "productionRtoRpo": "NOT_PROVEN"
+      }
+    },
+    {
+      "stage": "MUTATION_CONTROL",
+      "executed": 3,
+      "pass": 2,
+      "fail": 1,
+      "skip": 0,
+      "observed": "Missing expected rejection after bypassing backup member read/hash equality",
+      "interpretation": "Expected failure proves missing-object oracle; mutation restored immediately"
+    },
+    {
+      "stage": "FINAL_RESTORED_SOURCE",
+      "executed": 3,
+      "pass": 3,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 1242.604584,
+      "metrics": {
+        "case": "LOCAL-035",
+        "mysql": "26.7.0",
+        "sourceName": "erp_customer_local_dr_source_20261015_ready",
+        "restoreName": "erp_customer_local_dr_restore_20261015_ready",
+        "backupPoint": 1792051526257,
+        "latestRecoveredWrite": 1792051526251,
+        "lastConfirmedWrite": 1792051526430,
+        "incidentAt": 1792051526430,
+        "localLossWindowMs": 179,
+        "localRecoveryMs": 668.7946250000001,
+        "dumpSha256": "ba05092a01cc3e6ec26385a7fc924705d5f2396a2aee25e3748646d0e7fda798",
+        "manifestSha256": "b6ecc58d128bacd9de8f3128ad4be68edf191660c534265167b89b082d7026e2",
+        "manifestMembers": 6,
+        "schemaVersionCount": 83,
+        "preflightMs": 0.6987080000000105,
+        "rejectedBackupSets": 4,
+        "representativeSamples": [
+          "customer",
+          "address_default",
+          "contact_default",
+          "approval_decision",
+          "bank",
+          "general_attachment",
+          "bank_sensitive_attachment",
+          "import",
+          "audit"
+        ],
+        "tables": {
+          "customer_activation_requests": {
+            "count": 1,
+            "sha256": "adda3c02182fc769370c0efe27201a2d8f4e7bad344469a9a8386a4eff05a4af"
+          },
+          "customer_address_purposes": {
+            "count": 1,
+            "sha256": "b1e26aaa7bb1d22fb2b348ec32eddf1df3bcad142d3c285e4e6069e36fea8644"
+          },
+          "customer_addresses": {
+            "count": 1,
+            "sha256": "39733c1fb728f88299c60c645be26b016e1cb0e369d54273fa32d0b3c31f43b2"
+          },
+          "customer_attachment_stages": {
+            "count": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "customer_attachments": {
+            "count": 2,
+            "sha256": "069e298fc83c05d33834c7ffa2692cb9860db51bbdd8cdb1c255a6ea05b6479d"
+          },
+          "customer_audit_logs": {
+            "count": 5,
+            "sha256": "52aaef79985842b5c9ccdd1acc92cf33e8c016fd3b559b4c6aaa248ae465be3d"
+          },
+          "customer_bank_accounts": {
+            "count": 1,
+            "sha256": "793f714997af076692d3d13fd026aa0317104db9582854933c6e81db147643af"
+          },
+          "customer_categories": {
+            "count": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "customer_contact_purposes": {
+            "count": 1,
+            "sha256": "85ac25080d8acbb409425effbcf6b360920438216b4c73a133e7ff5c3f349241"
+          },
+          "customer_contacts": {
+            "count": 1,
+            "sha256": "beee63b6bcefc833791a57df0115763acf75325bf623cc337fcb4bfcd0c1a398"
+          },
+          "customer_credit_profiles": {
+            "count": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "customer_export_jobs": {
+            "count": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "customer_identifiers": {
+            "count": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "customer_import_jobs": {
+            "count": 1,
+            "sha256": "b6ad2f85d961d144fb34c361b3be11d136526884cc51f03733f3dc52c26e944d"
+          },
+          "customer_import_rows": {
+            "count": 1,
+            "sha256": "e2ba3a8b5a205978b9091b551c2b947941960789a5f986988bf3da84f54bf927"
+          },
+          "customer_industries": {
+            "count": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "customer_operation_requests": {
+            "count": 3,
+            "sha256": "5d679cd421eb8e6e69bd737eea35206e1a35e4fb3546ef1e2bbd839725d59917"
+          },
+          "customer_settings": {
+            "count": 1,
+            "sha256": "f2f3f3faad5cceced6dcb6281eeb12a14ba7a3c856a09c731e85b2d0af521175"
+          },
+          "customer_territories": {
+            "count": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "customers": {
+            "count": 1,
+            "sha256": "06c10ea26be2b796d26cbe4215518eb80a64d4bd1e7303e27e01c392849f33e0"
+          }
+        },
+        "attachmentObjects": 2,
+        "importObjects": 2,
+        "failClosedChecks": 6,
+        "downstreamIntegration": "BLOCKED",
+        "productionRtoRpo": "NOT_PROVEN"
+      },
+      "sourceTestSha256": "35193dc1e312d9b7bf5e6b3379a5bfa33f96479608e7c8a414eae5928583ffc8"
+    },
+    {
+      "stage": "REVIEWED_ASSIGNEE_ASSERTION",
+      "executed": 3,
+      "pass": 3,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 1196.788833,
+      "metrics": {
+        "case": "LOCAL-035",
+        "mysql": "26.7.0",
+        "sourceName": "erp_customer_local_dr_source_20261015_ready",
+        "restoreName": "erp_customer_local_dr_restore_20261015_ready",
+        "backupPoint": 1792051669048,
+        "latestRecoveredWrite": 1792051669043,
+        "lastConfirmedWrite": 1792051669219,
+        "incidentAt": 1792051669219,
+        "localLossWindowMs": 176,
+        "localRecoveryMs": 624.7195409999999,
+        "dumpSha256": "de95a63b2f91d12452306c8a665d3dfb4c4abf8c4dd85b4bd705ac856ab8ae77",
+        "manifestSha256": "8ab918511f2da452802d60280fb7aefcac5eb50423bc2d73f267f880c669b7b2",
+        "manifestMembers": 6,
+        "schemaVersionCount": 83,
+        "preflightMs": 0.7191659999999729,
+        "rejectedBackupSets": 4,
+        "representativeSamples": [
+          "customer",
+          "address_default",
+          "contact_default",
+          "approval_decision",
+          "bank",
+          "general_attachment",
+          "bank_sensitive_attachment",
+          "import",
+          "audit"
+        ],
+        "tables": {
+          "customer_activation_requests": {
+            "count": 1,
+            "sha256": "33899941af7bac8dc53d988b858de468d0b58a221a4885b7ce0cadd777c28880"
+          },
+          "customer_address_purposes": {
+            "count": 1,
+            "sha256": "5496d567487a29ebd37ba92337e657c4133874cb1c94f4cfb032683e150a32bd"
+          },
+          "customer_addresses": {
+            "count": 1,
+            "sha256": "e822ca19cfcec01006f91cc0ecd5cf092a4f4badb5918e35952eaf945d4adfc8"
+          },
+          "customer_attachment_stages": {
+            "count": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "customer_attachments": {
+            "count": 2,
+            "sha256": "44f7d679f3bce4c4476c459eaccccced67b20d682ac5b2b9e0ba929f5540a235"
+          },
+          "customer_audit_logs": {
+            "count": 5,
+            "sha256": "43b59c952e93df4492c0f69e88f7a2fdbf918d310ff4661597f78ba410002f96"
+          },
+          "customer_bank_accounts": {
+            "count": 1,
+            "sha256": "becd60746a415fc731dc541e8ebc5d787f1a4bbbcdc9e6ddd0a9d15ecc47fdbc"
+          },
+          "customer_categories": {
+            "count": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "customer_contact_purposes": {
+            "count": 1,
+            "sha256": "ec2324ce1451ad817f9709b74062cd7eab5825786b17d58e92e3255d342b46d0"
+          },
+          "customer_contacts": {
+            "count": 1,
+            "sha256": "280a578e9445111ee015eaa487e3839f025802ff2b9cf5dd9a55209360c3f1e1"
+          },
+          "customer_credit_profiles": {
+            "count": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "customer_export_jobs": {
+            "count": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "customer_identifiers": {
+            "count": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "customer_import_jobs": {
+            "count": 1,
+            "sha256": "5a328198f856fa7a19ee8ca18874b39a7ddfd3043d6e32f2537c46f7659a8393"
+          },
+          "customer_import_rows": {
+            "count": 1,
+            "sha256": "e2ba3a8b5a205978b9091b551c2b947941960789a5f986988bf3da84f54bf927"
+          },
+          "customer_industries": {
+            "count": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "customer_operation_requests": {
+            "count": 3,
+            "sha256": "b58bf5cef1dfc5c677e62e506072b98d7daf265c18e8457fda1aac895fb12287"
+          },
+          "customer_settings": {
+            "count": 1,
+            "sha256": "c0891723459cec2ec7c66e7fccd4361b4b22773038f8ab6fc2be5c96d9940258"
+          },
+          "customer_territories": {
+            "count": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "customers": {
+            "count": 1,
+            "sha256": "4b6010e4e26f20464ca9762b9cf6df0274934a867ef57fa53e63a1bb5f4ade46"
+          }
+        },
+        "attachmentObjects": 2,
+        "importObjects": 2,
+        "failClosedChecks": 6,
+        "downstreamIntegration": "BLOCKED",
+        "productionRtoRpo": "NOT_PROVEN"
+      }
+    }
+  ],
+  "limitations": [
+    "One synthetic Customer, not representative production/50k restore volume",
+    "Historical approval seeded directly, not restored public approval workflow/real scanner/authorization acceptance",
+    "Manifest digest anchored in fixture memory, no signed/off-host archive or actual secret-store recovery",
+    "Local RTO starts immediately before intact-set preflight; incident detection/owner response/environment provisioning/real provider readiness not executed",
+    "One deliberate post-backup loss marker; no backup cadence/log shipping/PITR proof",
+    "Full downstream acceptance BLOCKED; productionRtoRpo NOT_PROVEN"
+  ],
+  "testSha256": "593d17f4262cc1dc65ff9138ca2e626f9147032b0c779038ffd0d02e50dc5423",
+  "sourceFingerprint": "816c5877f983364ba178b181e45782496974453d380f5e9cbdd74b219b1417e7",
+  "relatedChecks": {
+    "cryptoAndStorage": {
+      "pass": 16,
+      "fail": 0,
+      "skip": 0
+    },
+    "audit": {
+      "pass": 4,
+      "fail": 0,
+      "skip": 0
+    },
+    "lint": "PASS",
+    "clientBuild": "PASS; existing chunk-size advisory",
+    "traceability": "STRUCTURE_PASS only",
+    "moduleBoundary": "LOCAL_CHECKS_PASS only",
+    "approvalAndParty": {
+      "pass": 15,
+      "fail": 0,
+      "skip": 0
+    }
+  }
+}
