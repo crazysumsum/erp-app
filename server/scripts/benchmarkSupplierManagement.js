@@ -60,7 +60,9 @@ fs.appendFileSync(OUTPUT, "");
 const ALL_OPERATIONS = [
   ["list.default", 20], ["list.codeExact", 15], ["list.nameSearch", 12], ["list.statusFilter", 8], ["list.currencyFilter", 5],
   ["list.sortByName", 5], ["detail", 15], ["detail.heavy", 3], ["bank.list", 5], ["duplicates.check", 4], ["create", 4], ["update", 4],
-  ["forSku.typical", 3], ["forSku.cold", 1], ["forSku.hot", 2], ["forSku.codeExact", 2], ["forSku.nameSearch", 2], ["forSku.deepPage", 1]
+  ["forSku.typical", 3], ["forSku.cold", 1], ["forSku.hot", 2], ["forSku.codeExact", 2], ["forSku.nameSearch", 2], ["forSku.deepPage", 1],
+  // HD-107：識別號搜尋、缺資料篩選同建立日期範圍。缺資料嘅結果可能好少，要掃晒先知，係最差情況。
+  ["list.identifierSearch", 3], ["list.missingFilter", 3], ["list.createdRange", 2]
 ];
 const MIX = ALL_OPERATIONS.filter(([name]) => name.startsWith(ONLY));
 if (MIX.length === 0) throw new Error(`--only=${ONLY} matches no operation`);
@@ -155,6 +157,12 @@ try {
     "list.statusFilter": () => get(`/api/v1/suppliers?status=${["active", "suspended", "draft"][randomInt(3)]}&page=${randomInt(1, 6)}`),
     "list.currencyFilter": () => get(`/api/v1/suppliers?currencyCode=${["HKD", "USD", "CNY", "EUR"][randomInt(4)]}&pageSize=50`),
     "list.sortByName": () => get(`/api/v1/suppliers?sortBy=supplierName&descending=false&page=${randomInt(1, 6)}`),
+    "list.identifierSearch": () => get(`/api/v1/suppliers?q=${encodeURIComponent(`BR${ids[randomInt(ids.length)].id}`.slice(0, 6))}`),
+    "list.missingFilter": () => get(`/api/v1/suppliers?${["missingPrimaryContact", "missingAddress", "missingBank"][randomInt(3)]}=true&page=${randomInt(1, 6)}`),
+    "list.createdRange": () => {
+      const from = Date.now() - randomInt(3 * 365) * 86_400_000;
+      return get(`/api/v1/suppliers?createdFrom=${from}&createdTo=${from + 30 * 86_400_000}&page=${randomInt(1, 4)}`);
+    },
     detail: () => get(`/api/v1/suppliers/${anyId()}`),
     "detail.heavy": () => get(`/api/v1/suppliers/${heavyRows[randomInt(heavyRows.length)].id}`),
     "bank.list": () => get(`/api/v1/suppliers/${anyId()}/bank-accounts`),

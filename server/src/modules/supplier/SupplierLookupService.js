@@ -207,7 +207,7 @@ export class SupplierLookupService {
       // Item Code 相同嘅 Supplier 先查出嚟（好少），唔好喺全表掃描入面每行行一條子查詢。
       const [byItemCode] = await this.database.query(
         "SELECT supplier_id FROM supplier_sku_refs WHERE sku_id = ? AND supplier_item_code_key = ?", [id, key]);
-      const condition = supplierSearchCondition(search);
+      const condition = supplierSearchCondition(search, { identifiers: false });
       match += ` AND (${condition.sql}${byItemCode.length ? ` OR s.id IN (${byItemCode.map(() => "?").join(",")})` : ""})`;
       matchParams.push(...condition.params, ...byItemCode.map((row) => Number(row.supplier_id)));
     }
