@@ -245,8 +245,10 @@ test("TASK-040 (HD-094 4A): a search matches the Supplier list fields or this SK
   const [byItemCode, count, headCount, rest] = database.calls;
   assert.deepEqual([byItemCode.sql, byItemCode.params],
     ["SELECT supplier_id FROM supplier_sku_refs WHERE sku_id = ? AND supplier_item_code_key = ?", [5, "ab-1"]], "NFKC, trimmed, lower-cased");
+  // HD-108 A：for-SKU 唔搜識別號，所以冇 supplier_identifiers 子查詢。
   const match = ["ab-1%", "%AB-1%", "%AB-1%", "%AB-1%", "%AB-1%", 11, 12];
   assert.match(count.sql, /general_email LIKE \? ESCAPE '\\\\' OR s\.id IN \(\?,\?\)\)$/u);
+  assert.doesNotMatch(count.sql, /supplier_identifiers/u);
   assert.deepEqual(count.params, match);
   assert.match(headCount.sql, / OR y\.supplier_item_code_key = \?\) UNION SELECT id FROM suppliers WHERE supplier_code_key = \?\) h/u);
   assert.deepEqual(headCount.params, [5, "ab-1", "ab-1", 5, ...match]);

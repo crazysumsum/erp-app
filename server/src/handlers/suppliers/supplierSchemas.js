@@ -15,7 +15,7 @@ export const SUPPLIER_LIST_QUERY_SCHEMA = Object.freeze({
   type: "object",
   additionalProperties: false,
   properties: {
-    page: { type: "integer", minimum: 1, default: 1 },
+    page: { type: "integer", minimum: 1, maximum: 1_000_000, default: 1 },
     pageSize: { type: "integer", minimum: 1, maximum: 100, default: 20 },
     q: { type: "string", maxLength: 190, default: "" },
     status: { type: "string", enum: [...SUPPLIER_STATUSES] },
@@ -23,6 +23,11 @@ export const SUPPLIER_LIST_QUERY_SCHEMA = Object.freeze({
     paymentTermId: { type: "integer", minimum: 1 },
     updatedFrom: { type: "integer", minimum: 0 },
     updatedTo: { type: "integer", minimum: 0 },
+    createdFrom: { type: "integer", minimum: 0 },
+    createdTo: { type: "integer", minimum: 0 },
+    missingPrimaryContact: { type: "boolean" },
+    missingAddress: { type: "boolean" },
+    missingBank: { type: "boolean" },
     includeArchived: { type: "boolean", default: false },
     sortBy: { type: "string", enum: ["supplierCode", "supplierName", "status", "updatedAt"], default: "updatedAt" },
     descending: { type: "boolean", default: true }

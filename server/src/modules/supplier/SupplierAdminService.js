@@ -96,16 +96,35 @@ function supplierSortColumn(sortBy) {
   return SUPPLIER_SORT_COLUMNS[sortBy] ?? SUPPLIER_SORT_COLUMNS.updatedAt;
 }
 
-/** 供應商列表同 for-SKU lookup 共用嘅文字搜尋（HD-094 4A）；`search` 要已經 NFKC 同 trim。 */
-export function supplierSearchCondition(search) {
+const CHILD_DETAIL_LIMIT = 100;
+
+/**
+ * 識別號嘅 key 係大寫，除咗 `other` 之外仲剷走空格同連字號（normalizeIdentifier）。搜尋唔知類型，
+ * 所以兩種寫法都試（FR-LIST-002，HD-107）。
+ */
+function identifierPatterns(search) {
+  const upper = search.toUpperCase();
+  const stripped = upper.replace(/[\s-]+/gu, "");
+  const asTyped = `%${escapeLikeTerm(upper)}%`;
+  // 淨係分隔符（例如「-」）剷完就係空字串，`%%` 會配中所有識別號（REV-094 M-1）。
+  return [stripped ? `%${escapeLikeTerm(stripped)}%` : asTyped, asTyped];
+}
+
+/**
+ * 供應商列表同 for-SKU lookup 共用嘅文字搜尋（HD-094 4A）；`search` 要已經 NFKC 同 trim。
+ * 識別號只喺列表搜（HD-108 A）：佢係 `%值%`，用唔到 index，for-SKU 最差情況加咗佢就超過 NFR-005。
+ */
+export function supplierSearchCondition(search, { identifiers = true } = {}) {
   const escaped = escapeLikeTerm(search);
   return {
     sql: `s.supplier_code_key LIKE ? ESCAPE '\\\\'
       OR s.supplier_name LIKE ? ESCAPE '\\\\'
       OR s.display_name LIKE ? ESCAPE '\\\\'
       OR s.general_phone LIKE ? ESCAPE '\\\\'
-      OR s.general_email LIKE ? ESCAPE '\\\\'`,
-    params: [`${escaped.toLowerCase()}%`, `%${escaped}%`, `%${escaped}%`, `%${escaped}%`, `%${escaped}%`]
+      OR s.general_email LIKE ? ESCAPE '\\\\'${identifiers ? `
+      OR s.id IN (SELECT i.supplier_id FROM supplier_identifiers i
+                   WHERE i.identifier_value_key LIKE ? ESCAPE '\\\\' OR i.identifier_value_key LIKE ? ESCAPE '\\\\')` : ""}`,
+    params: [`${escaped.toLowerCase()}%`, `%${escaped}%`, `%${escaped}%`, `%${escaped}%`, `%${escaped}%`, ...(identifiers ? identifierPatterns(search) : [])]
   };
 }
 
@@ -113,7 +132,9 @@ export function supplierSearchCondition(search) {
  * 供應商列表嘅篩選同排序（alias `s`）。一般匯出（T47，FR-IMPORT-009）用同一個函式，保證匯出嘅就係列表見到嘅。
  */
 export function supplierListQuery({
-  q = "", status, currencyCode, paymentTermId, updatedFrom, updatedTo, includeArchived = false, sortBy = "updatedAt", descending = true
+  q = "", status, currencyCode, paymentTermId, updatedFrom, updatedTo, createdFrom, createdTo,
+  missingPrimaryContact = false, missingAddress = false, missingBank = false,
+  includeArchived = false, sortBy = "updatedAt", descending = true
 } = {}) {
   const conditions = [];
   const params = [];
@@ -141,6 +162,29 @@ export function supplierListQuery({
   if (updatedTo !== undefined) {
     conditions.push("s.updated_at <= ?");
     params.push(updatedTo);
+  }
+  if (createdFrom !== undefined) {
+    conditions.push("s.created_at >= ?");
+    params.push(createdFrom);
+  }
+  if (createdTo !== undefined) {
+    conditions.push("s.created_at <= ?");
+    params.push(createdTo);
+  }
+  // 「缺少」同 completeness warning 用同一個定義（ORDERS_CONTACT_MISSING、ORDERING_ADDRESS_MISSING）。
+  // 停用聯絡人會清走佢嘅 primary（SupplierContactService.deactivate），所以 primary slot 一定係啟用中嘅聯絡人，
+  // 唔使再 join supplier_contacts（HD-107；計時見 performance_report.md）。
+  if (missingPrimaryContact) {
+    conditions.push(`NOT EXISTS (SELECT 1 FROM supplier_contact_purposes cp
+      WHERE cp.supplier_id = s.id AND cp.purpose_code = 'orders' AND cp.primary_slot = 1)`);
+  }
+  if (missingAddress) {
+    conditions.push(`NOT EXISTS (SELECT 1 FROM supplier_address_purposes ap
+      JOIN supplier_addresses a ON a.id = ap.address_id AND a.supplier_id = ap.supplier_id
+      WHERE ap.supplier_id = s.id AND ap.purpose_code = 'ordering' AND a.status = 'active')`);
+  }
+  if (missingBank) {
+    conditions.push("NOT EXISTS (SELECT 1 FROM supplier_bank_accounts b WHERE b.supplier_id = s.id AND b.status = 'active')");
   }
 
   const search = String(q ?? "").normalize("NFKC").trim();
@@ -782,14 +826,10 @@ export class SupplierAdminService {
     paymentTermId,
     updatedFrom,
     updatedTo,
-    includeArchived = false,
-    sortBy = "updatedAt",
-    descending = true
+    ...filters
   }) {
     await this.authorize(this.database, { actorId, claimedRoles, claimedPermissions });
-    const { where, params, orderBy, orderParams } = supplierListQuery({
-      q, status, currencyCode, paymentTermId, updatedFrom, updatedTo, includeArchived, sortBy, descending
-    });
+    const { where, params, orderBy, orderParams } = supplierListQuery({ q, status, currencyCode, paymentTermId, updatedFrom, updatedTo, ...filters });
     const offset = (page - 1) * pageSize;
     const [countRows] = await this.database.query(`SELECT COUNT(*) AS total FROM suppliers s ${where}`, params);
     const listParams = [...params, ...orderParams, pageSize, offset];
@@ -810,48 +850,77 @@ export class SupplierAdminService {
     return { items: rows.map(toSupplierSummaryResponse), total: Number(countRows[0].total), page, pageSize };
   }
 
+  /** detail 最多帶 100 筆地址同聯絡人；再多就用呢兩個分頁讀（design：GET .../contacts／addresses，PARTY-009，HD-107）。 */
+  async listSupplierAddresses({ actorId, claimedRoles, claimedPermissions, id, page = 1, pageSize = 20 }) {
+    return this.#childPage("supplier_addresses", (offset) => this.#addresses(id, { limit: pageSize, offset }),
+      { actorId, claimedRoles, claimedPermissions, id, page, pageSize });
+  }
+
+  async listSupplierContacts({ actorId, claimedRoles, claimedPermissions, id, page = 1, pageSize = 20 }) {
+    return this.#childPage("supplier_contacts", (offset) => this.#contacts(id, { limit: pageSize, offset }),
+      { actorId, claimedRoles, claimedPermissions, id, page, pageSize });
+  }
+
+  async #childPage(table, readPage, { actorId, claimedRoles, claimedPermissions, id, page, pageSize }) {
+    await this.authorize(this.database, { actorId, claimedRoles, claimedPermissions });
+    const [[supplier]] = await this.database.query("SELECT id FROM suppliers WHERE id = ?", [id]);
+    if (!supplier) throw supplierNotFound(id);
+    const [[{ total }]] = await this.database.query(`SELECT COUNT(*) AS total FROM ${table} WHERE supplier_id = ?`, [id]);
+    return { items: await readPage((page - 1) * pageSize), total: Number(total), page, pageSize };
+  }
+
+  async #addresses(id, { limit, offset }) {
+    const [rows] = await this.database.query(
+      "SELECT * FROM supplier_addresses WHERE supplier_id = ? ORDER BY status, id LIMIT ? OFFSET ?", [id, limit, offset]);
+    const purposes = await this.#purposes("supplier_address_purposes", "address_id", id, rows);
+    return rows.map((address) => toAddressResponse(address, purposes.get(Number(address.id)) ?? []));
+  }
+
+  async #contacts(id, { limit, offset }) {
+    const [rows] = await this.database.query(
+      "SELECT * FROM supplier_contacts WHERE supplier_id = ? ORDER BY status, name, id LIMIT ? OFFSET ?", [id, limit, offset]);
+    const purposes = await this.#purposes("supplier_contact_purposes", "contact_id", id, rows);
+    return rows.map((contact) => toContactResponse(contact, purposes.get(Number(contact.id)) ?? []));
+  }
+
+  async #purposes(table, column, supplierId, rows) {
+    const byOwner = new Map();
+    if (rows.length === 0) return byOwner;
+    const [purposeRows] = await this.database.query(
+      `SELECT ${column}, purpose_code, is_primary FROM ${table}
+        WHERE supplier_id = ? AND ${column} IN (${rows.map(() => "?").join(", ")}) ORDER BY ${column}, purpose_code`,
+      [supplierId, ...rows.map((row) => row.id)]);
+    for (const purpose of purposeRows) {
+      const ownerId = Number(purpose[column]);
+      if (!byOwner.has(ownerId)) byOwner.set(ownerId, []);
+      byOwner.get(ownerId).push(purpose);
+    }
+    return byOwner;
+  }
+
+  async #completenessFlags(id) {
+    const [[flags]] = await this.database.query(
+      `SELECT EXISTS (SELECT 1 FROM supplier_addresses a
+                JOIN supplier_address_purposes p ON p.address_id = a.id AND p.supplier_id = a.supplier_id
+               WHERE a.supplier_id = ? AND a.status = 'active' AND p.purpose_code = 'ordering') AS has_ordering_address,
+              EXISTS (SELECT 1 FROM supplier_contact_purposes cp
+               WHERE cp.supplier_id = ? AND cp.purpose_code = 'orders' AND cp.primary_slot = 1) AS has_orders_contact`,
+      [id, id]);
+    return { hasOrderingAddress: Boolean(Number(flags.has_ordering_address)), hasOrdersContact: Boolean(Number(flags.has_orders_contact)) };
+  }
+
   async getSupplier({ actorId, claimedRoles, claimedPermissions, id }) {
     await this.authorize(this.database, { actorId, claimedRoles, claimedPermissions });
     const [[row]] = await this.database.query("SELECT * FROM suppliers WHERE id = ?", [id]);
     if (!row) throw supplierNotFound(id);
-    const [addressRows] = await this.database.query(
-      "SELECT * FROM supplier_addresses WHERE supplier_id = ? ORDER BY status, id LIMIT 100",
-      [id]
-    );
-    let purposeRows = [];
-    if (addressRows.length > 0) {
-      [purposeRows] = await this.database.query(
-        "SELECT address_id, purpose_code, is_primary FROM supplier_address_purposes WHERE supplier_id = ? ORDER BY address_id, purpose_code",
-        [id]
-      );
-    }
-    const purposesByAddress = new Map();
-    for (const purpose of purposeRows) {
-      const addressId = Number(purpose.address_id);
-      if (!purposesByAddress.has(addressId)) purposesByAddress.set(addressId, []);
-      purposesByAddress.get(addressId).push(purpose);
-    }
-    const addresses = addressRows.map((address) => toAddressResponse(address, purposesByAddress.get(Number(address.id)) ?? []));
-    const hasOrderingAddress = addresses.some((address) => address.status === "active" && address.purposes.some((purpose) => purpose.purposeCode === "ordering"));
-    const [contactRows] = await this.database.query(
-      "SELECT * FROM supplier_contacts WHERE supplier_id = ? ORDER BY status, name, id LIMIT 100",
-      [id]
-    );
-    let contactPurposeRows = [];
-    if (contactRows.length > 0) {
-      [contactPurposeRows] = await this.database.query(
-        "SELECT contact_id, purpose_code, is_primary FROM supplier_contact_purposes WHERE supplier_id = ? ORDER BY contact_id, purpose_code",
-        [id]
-      );
-    }
-    const purposesByContact = new Map();
-    for (const purpose of contactPurposeRows) {
-      const contactId = Number(purpose.contact_id);
-      if (!purposesByContact.has(contactId)) purposesByContact.set(contactId, []);
-      purposesByContact.get(contactId).push(purpose);
-    }
-    const contacts = contactRows.map((contact) => toContactResponse(contact, purposesByContact.get(Number(contact.id)) ?? []));
-    const hasOrdersContact = contacts.some((contact) => contact.status === "active" && contact.purposes.some((purpose) => purpose.purposeCode === "orders" && purpose.isPrimary));
+    const addresses = await this.#addresses(id, { limit: CHILD_DETAIL_LIMIT, offset: 0 });
+    const contacts = await this.#contacts(id, { limit: CHILD_DETAIL_LIMIT, offset: 0 });
+    // 讀滿上限即係可能仲有：嗰陣先問 DB，判斷先會同列表嘅「缺少」篩選一致（REV-094 L-2）。
+    const truncated = addresses.length === CHILD_DETAIL_LIMIT || contacts.length === CHILD_DETAIL_LIMIT;
+    const { hasOrderingAddress, hasOrdersContact } = truncated ? await this.#completenessFlags(id) : {
+      hasOrderingAddress: addresses.some((address) => address.status === "active" && address.purposes.some((purpose) => purpose.purposeCode === "ordering")),
+      hasOrdersContact: contacts.some((contact) => contact.status === "active" && contact.purposes.some((purpose) => purpose.purposeCode === "orders" && purpose.isPrimary))
+    };
     const [identifierRows] = await this.database.query(
       "SELECT * FROM supplier_identifiers WHERE supplier_id = ? ORDER BY identifier_type, issuer_country_code, id LIMIT 100",
       [id]

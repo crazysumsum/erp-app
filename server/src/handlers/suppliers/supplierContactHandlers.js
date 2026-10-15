@@ -39,7 +39,7 @@ const DEACTIVATE_BODY = Object.freeze({
   type: "object", required: ["version"], additionalProperties: false,
   properties: { version: { type: "integer", minimum: 1 } }
 });
-const CONTACT_RESPONSE = Object.freeze({
+export const CONTACT_RESPONSE = Object.freeze({
   type: "object", additionalProperties: false,
   required: ["id", "supplierId", "name", "jobTitle", "department", "email", "phone", "mobile", "preferredLanguage", "notes", "status", "purposes", "version", "updatedAt"],
   properties: {
