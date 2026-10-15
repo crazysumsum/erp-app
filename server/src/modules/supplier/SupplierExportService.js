@@ -3,7 +3,7 @@ import { stringify } from "csv-stringify/sync";
 import { assertActorFresh } from "../authorization/directoryLookups.js";
 import { supplierListQuery } from "./SupplierAdminService.js";
 import { SupplierAuditLogService } from "./SupplierAuditLogService.js";
-import { supplierImportError } from "./supplierErrors.js";
+import { supplierForbidden, supplierImportError } from "./supplierErrors.js";
 import { SUPPLIER_CSV_STRINGIFY_OPTIONS, SUPPLIER_IMPORT_COLUMN_NAMES, guardSpreadsheetCell } from "./import/supplierCsvSchema.js";
 
 /** 匯入範本 v1 欄名 → `suppliers` 欄（HD-067 2A）。地址、聯絡人、識別號三組留空，所以匯出嘅檔可以照樣用 upsert 匯返入。 */
@@ -18,7 +18,7 @@ const PROCESS_GATE = { active: 0 };
 
 /**
  * 一般供應商匯出（T47；設計 §6.9；HD-067）。用列表嘅篩選同排序，直接回 CSV：唔開 job、唔存檔。
- * 只讀 `suppliers`，永遠唔讀 Bank 表（BR-028）；每次匯出記一條 `supplier.export` 稽核，只有篩選同列數。
+ * 永遠唔匯出 Bank 資料（BR-028）；`missingBank` 篩選只問有冇啟用中嘅帳戶，而且要 supplier.view（REV-094 L-4）；每次匯出記一條 `supplier.export` 稽核，只有篩選同列數。
  * 每個 process 最多同時 `maxConcurrent`（2）個匯出，再多就 429 `SUPPLIER_EXPORT_BUSY`（HD-074 2B）。
  */
 export class SupplierExportService {
@@ -53,6 +53,10 @@ export class SupplierExportService {
   }
 
   async #export(actor, { actorId, filters = {}, requestId = "", ip = "" }) {
+    // 有冇銀行帳戶本來只有 supplier.view 睇得到（遮罩列表）；匯出只要 supplier.mgmt，唔可以借篩選知道（REV-094 L-4）。
+    if (filters.missingBank && !actor.permissions.includes("supplier.view")) {
+      throw supplierForbidden("SUPPLIER_EXPORT_FILTER_FORBIDDEN", "用銀行資料篩選需要供應商檢視權限");
+    }
     const { where, params, orderBy, orderParams } = supplierListQuery(filters);
     // 多攞一列就知超咗上限，唔使另外 COUNT。
     const [rows] = await this.database.query(

@@ -1,0 +1,523 @@
+{
+  "run": "31CF19",
+  "command": "/private/tmp/claude-501/-Users-sam-Documents-workspace-erp-app/486c4c60-92de-4122-b0e0-a68866140aa1/scratchpad/mainctl/server/scripts/benchmarkSupplierManagement.js --database=erp_t51p --users=50 --only=forSku --output=/private/tmp/claude-501/-Users-sam-Documents-workspace-erp-app/486c4c60-92de-4122-b0e0-a68866140aa1/scratchpad/t51perf/pair-main1.json",
+  "startedAt": "2026-10-15T04:41:44.032Z",
+  "load": {
+    "users": 50,
+    "seconds": 120,
+    "warmupSeconds": 20,
+    "thinkMs": "uniform 0..1000",
+    "mix": {
+      "forSku.typical": 3,
+      "forSku.cold": 1,
+      "forSku.hot": 2,
+      "forSku.codeExact": 2,
+      "forSku.nameSearch": 2,
+      "forSku.deepPage": 1
+    }
+  },
+  "data": {
+    "suppliers": 100000,
+    "active": 80303,
+    "addresses": 514820,
+    "contacts": 1039520,
+    "identifiers": 200000,
+    "bankAccounts": 207904,
+    "nameGrams": 2391967,
+    "hotSkuPages": {
+      "headRows": 10747,
+      "activeSuppliers": 80303,
+      "deepPageRange": [
+        539,
+        4016
+      ]
+    },
+    "skuRelations": 120000
+  },
+  "environment": {
+    "os": "Darwin 27.0.0 arm64",
+    "cpu": "Apple M5 Pro",
+    "cpus": 15,
+    "totalMemoryGiB": 24,
+    "node": "v26.6.0",
+    "mysql": {
+      "version": "26.7.0",
+      "bufferPoolBytes": 134217728,
+      "innodbFlushLogAtTrxCommit": 1,
+      "syncBinlog": 1,
+      "maxConnections": 151
+    },
+    "database": {
+      "name": "erp_t51p",
+      "host": "127.0.0.1",
+      "port": 3450,
+      "socketPath": null
+    },
+    "appPoolConnectionLimit": 10,
+    "note": "the load generator and the app share one Node process"
+  },
+  "operations": {
+    "forSku.typical": {
+      "count": 998,
+      "p50": 862,
+      "p95": 1129.6,
+      "p99": 1220.3,
+      "max": 1443.3,
+      "errorRate": 0,
+      "statuses": {
+        "200": 998
+      }
+    },
+    "forSku.cold": {
+      "count": 314,
+      "p50": 1269.5,
+      "p95": 1496.8,
+      "p99": 1620.9,
+      "max": 1780.3,
+      "errorRate": 0,
+      "statuses": {
+        "200": 314
+      }
+    },
+    "forSku.hot": {
+      "count": 636,
+      "p50": 1076.8,
+      "p95": 1312.9,
+      "p99": 1455.1,
+      "max": 1610.2,
+      "errorRate": 0,
+      "statuses": {
+        "200": 636
+      }
+    },
+    "forSku.codeExact": {
+      "count": 608,
+      "p50": 1499,
+      "p95": 1888.6,
+      "p99": 2072.1,
+      "max": 2202.6,
+      "errorRate": 0,
+      "statuses": {
+        "200": 608
+      }
+    },
+    "forSku.nameSearch": {
+      "count": 618,
+      "p50": 1573.2,
+      "p95": 2031.9,
+      "p99": 2172.2,
+      "max": 2454.4,
+      "errorRate": 0,
+      "statuses": {
+        "200": 618
+      }
+    },
+    "forSku.deepPage": {
+      "count": 311,
+      "p50": 1362.7,
+      "p95": 1639.5,
+      "p99": 1714.6,
+      "max": 1979.5,
+      "errorRate": 0,
+      "statuses": {
+        "200": 311
+      }
+    }
+  },
+  "overall": {
+    "count": 3485,
+    "p50": 1210,
+    "p95": 1795.3,
+    "p99": 2044,
+    "max": 2454.4,
+    "errorRate": 0,
+    "throughputPerSecond": 29
+  },
+  "resources": {
+    "processCpuPercent": {
+      "avg": 10,
+      "max": 18
+    },
+    "rssMiB": {
+      "avg": 274,
+      "max": 277
+    },
+    "dbThreadsConnected": {
+      "avg": 11,
+      "max": 11
+    }
+  },
+  "digestTable": {
+    "used": 45,
+    "size": 10000,
+    "lostDuringRun": 0
+  },
+  "topStatements": [
+    {
+      "digest": "SELECT COUNT ( * ) AS `total` FROM `suppliers` `s` WHERE `s` . `status` = ? AND ( `s` . `supplier_code_key` LIKE ? ESCAPE ? OR `s` . `supplier_name` LIKE ? ESCAPE ? OR `s` . `display_name` LIKE ? ESCAPE ? OR `s` . `general_phone` LIKE ? ESCAPE ? OR `s` . `general_email` LIKE ? ESCAPE ? )",
+      "count": 1241,
+      "totalMs": 430456.8,
+      "avgMs": 346.86,
+      "maxMs": 378.9,
+      "rowsExaminedPerCall": 80303,
+      "rowsSentPerCall": 1,
+      "noIndexUsed": 0,
+      "plan": [
+        {
+          "table": "s",
+          "type": "ref",
+          "key": "idx_suppliers_status_updated_id",
+          "rows": 49443,
+          "filtered": 44.5,
+          "extra": "Using where"
+        }
+      ]
+    },
+    {
+      "digest": "SELECT `s` . `id` , `s` . `supplier_code` , `s` . `supplier_name` , `s` . `display_name` , `s` . `default_currency_code` , `s` . `default_payment_term_id` , `s` . `status` , `s` . `version` , `r` . `id` AS `relation_id` , `r` . `relationship_status` , `r` . `supplier_item_code` , `r` . `last_supplied_at` , ? AS `exact_rank` FROM `suppliers` `s` LEFT JOIN `supplier_sku_refs` `r` ON `r` . `supplier_",
+      "count": 631,
+      "totalMs": 272166.6,
+      "avgMs": 431.33,
+      "maxMs": 570.1,
+      "rowsExaminedPerCall": 124310,
+      "rowsSentPerCall": 20,
+      "noIndexUsed": 0,
+      "plan": [
+        {
+          "table": "s",
+          "type": "ref",
+          "key": "idx_suppliers_status_updated_id",
+          "rows": 49443,
+          "filtered": 100,
+          "extra": "Using filesort"
+        },
+        {
+          "table": "r",
+          "type": "eq_ref",
+          "key": "uq_supplier_sku_refs_supplier_sku",
+          "rows": 1,
+          "filtered": 100,
+          "extra": "Using where"
+        }
+      ]
+    },
+    {
+      "digest": "SELECT COUNT ( * ) AS `headTotal` FROM ( SELECT `y` . `supplier_id` AS `id` FROM `supplier_sku_refs` `y` WHERE `y` . `sku_id` = ? AND ( `y` . `relationship_status` = ? OR ( `y` . `relationship_status` != ? AND `y` . `last_supplied_at` IS NOT NULL ) OR `y` . `supplier_item_code_key` = ? ) UNION SELECT `id` FROM `suppliers` WHERE `supplier_code_key` = ? ) `h` STRAIGHT_JOIN `suppliers` `s` ON `s` . `",
+      "count": 1243,
+      "totalMs": 129102.2,
+      "avgMs": 103.86,
+      "maxMs": 125.7,
+      "rowsExaminedPerCall": 26950,
+      "rowsSentPerCall": 1,
+      "noIndexUsed": 1243,
+      "plan": [
+        {
+          "table": "<derived2>",
+          "type": "ALL",
+          "key": null,
+          "rows": 50499,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "s",
+          "type": "eq_ref",
+          "key": "PRIMARY",
+          "rows": 1,
+          "filtered": 22.25,
+          "extra": "Using where"
+        },
+        {
+          "table": "r",
+          "type": "eq_ref",
+          "key": "uq_supplier_sku_refs_supplier_sku",
+          "rows": 1,
+          "filtered": 100,
+          "extra": "Using index"
+        },
+        {
+          "table": "y",
+          "type": "ref",
+          "key": "idx_supplier_sku_refs_sku_status_supplied",
+          "rows": 59684,
+          "filtered": 84.61,
+          "extra": "Using where"
+        },
+        {
+          "table": "suppliers",
+          "type": "const",
+          "key": "uq_suppliers_code_key",
+          "rows": 1,
+          "filtered": 100,
+          "extra": "Using index"
+        },
+        {
+          "table": "<union2,3>",
+          "type": "ALL",
+          "key": null,
+          "rows": 0,
+          "filtered": 0,
+          "extra": "Using temporary"
+        }
+      ]
+    },
+    {
+      "digest": "SELECT `s` . `id` , `s` . `supplier_code` , `s` . `supplier_name` , `s` . `display_name` , `s` . `default_currency_code` , `s` . `default_payment_term_id` , `s` . `status` , `s` . `version` , `r` . `id` AS `relation_id` , `r` . `relationship_status` , `r` . `supplier_item_code` , `r` . `last_supplied_at` , CASE WHEN `s` . `supplier_code_key` = ? OR `r` . `supplier_item_code_key` = ? THEN ? ELSE ? ",
+      "count": 1118,
+      "totalMs": 118611.5,
+      "avgMs": 106.09,
+      "maxMs": 137.1,
+      "rowsExaminedPerCall": 27018,
+      "rowsSentPerCall": 11,
+      "noIndexUsed": 1119,
+      "plan": null
+    },
+    {
+      "digest": "SELECT COUNT ( * ) AS `headTotal` FROM ( SELECT `y` . `supplier_id` AS `id` FROM `supplier_sku_refs` `y` WHERE `y` . `sku_id` = ? AND ( `y` . `relationship_status` = ? OR ( `y` . `relationship_status` != ? AND `y` . `last_supplied_at` IS NOT NULL ) ) ) `h` STRAIGHT_JOIN `suppliers` `s` ON `s` . `id` = `h` . `id` LEFT JOIN `supplier_sku_refs` `r` ON `r` . `supplier_id` = `s` . `id` AND `r` . `sku_i",
+      "count": 2270,
+      "totalMs": 80561.4,
+      "avgMs": 35.49,
+      "maxMs": 93.2,
+      "rowsExaminedPerCall": 60504,
+      "rowsSentPerCall": 1,
+      "noIndexUsed": 952,
+      "plan": [
+        {
+          "table": "y",
+          "type": "ALL",
+          "key": null,
+          "rows": 119369,
+          "filtered": 51.7,
+          "extra": "Using where"
+        },
+        {
+          "table": "s",
+          "type": "eq_ref",
+          "key": "PRIMARY",
+          "rows": 1,
+          "filtered": 50,
+          "extra": "Using where"
+        },
+        {
+          "table": "r",
+          "type": "eq_ref",
+          "key": "uq_supplier_sku_refs_supplier_sku",
+          "rows": 1,
+          "filtered": 100,
+          "extra": "Using index"
+        }
+      ]
+    },
+    {
+      "digest": "SELECT `s` . `id` , `s` . `supplier_code` , `s` . `supplier_name` , `s` . `display_name` , `s` . `default_currency_code` , `s` . `default_payment_term_id` , `s` . `status` , `s` . `version` , `r` . `id` AS `relation_id` , `r` . `relationship_status` , `r` . `supplier_item_code` , `r` . `last_supplied_at` , ? AS `exact_rank` FROM ( SELECT `y` . `supplier_id` AS `id` FROM `supplier_sku_refs` `y` WHE",
+      "count": 1644,
+      "totalMs": 74726.1,
+      "avgMs": 45.45,
+      "maxMs": 129.9,
+      "rowsExaminedPerCall": 56308,
+      "rowsSentPerCall": 20,
+      "noIndexUsed": 641,
+      "plan": [
+        {
+          "table": "y",
+          "type": "ALL",
+          "key": null,
+          "rows": 119369,
+          "filtered": 51.7,
+          "extra": "Using where; Using temporary; Using filesort"
+        },
+        {
+          "table": "s",
+          "type": "eq_ref",
+          "key": "PRIMARY",
+          "rows": 1,
+          "filtered": 50,
+          "extra": "Using where"
+        },
+        {
+          "table": "r",
+          "type": "eq_ref",
+          "key": "uq_supplier_sku_refs_supplier_sku",
+          "rows": 1,
+          "filtered": 100,
+          "extra": null
+        }
+      ]
+    },
+    {
+      "digest": "SELECT `supplier_id` FROM `supplier_sku_refs` WHERE `sku_id` = ? AND `supplier_item_code_key` = ?",
+      "count": 1237,
+      "totalMs": 58591.5,
+      "avgMs": 47.37,
+      "maxMs": 70.6,
+      "rowsExaminedPerCall": 20000,
+      "rowsSentPerCall": 0,
+      "noIndexUsed": 0,
+      "plan": [
+        {
+          "table": "supplier_sku_refs",
+          "type": "ref",
+          "key": "idx_supplier_sku_refs_sku_status_supplied",
+          "rows": 59684,
+          "filtered": 10,
+          "extra": "Using where"
+        }
+      ]
+    },
+    {
+      "digest": "SELECT `s` . `id` , `s` . `supplier_code` , `s` . `supplier_name` , `s` . `display_name` , `s` . `default_currency_code` , `s` . `default_payment_term_id` , `s` . `status` , `s` . `version` , `r` . `id` AS `relation_id` , `r` . `relationship_status` , `r` . `supplier_item_code` , `r` . `last_supplied_at` , ? AS `exact_rank` FROM `suppliers` `s` LEFT JOIN `supplier_sku_refs` `r` ON `r` . `supplier_",
+      "count": 116,
+      "totalMs": 21548,
+      "avgMs": 185.76,
+      "maxMs": 334,
+      "rowsExaminedPerCall": 43905,
+      "rowsSentPerCall": 12,
+      "noIndexUsed": 0,
+      "plan": [
+        {
+          "table": "s",
+          "type": "index",
+          "key": "idx_suppliers_name_id",
+          "rows": 10,
+          "filtered": 25,
+          "extra": "Using where"
+        },
+        {
+          "table": "r",
+          "type": "eq_ref",
+          "key": "uq_supplier_sku_refs_supplier_sku",
+          "rows": 1,
+          "filtered": 100,
+          "extra": "Using where"
+        }
+      ]
+    },
+    {
+      "digest": "SELECT COUNT ( * ) AS `total` FROM `suppliers` `s` WHERE `s` . `status` = ?",
+      "count": 2266,
+      "totalMs": 18307.4,
+      "avgMs": 8.08,
+      "maxMs": 14.3,
+      "rowsExaminedPerCall": 80303,
+      "rowsSentPerCall": 1,
+      "noIndexUsed": 0,
+      "plan": [
+        {
+          "table": "s",
+          "type": "ref",
+          "key": "idx_suppliers_status_updated_id",
+          "rows": 49443,
+          "filtered": 100,
+          "extra": "Using index"
+        }
+      ]
+    },
+    {
+      "digest": "SELECT DISTINCTROW `p` . `name` FROM `permissions` `p` JOIN `role_permissions` `rp` ON `rp` . `permission_id` = `p` . `id` JOIN `user_roles` `ur` ON `ur` . `role_id` = `rp` . `role_id` WHERE `ur` . `user_id` = ? ORDER BY `p` . `name`",
+      "count": 3495,
+      "totalMs": 368.1,
+      "avgMs": 0.11,
+      "maxMs": 0.3,
+      "rowsExaminedPerCall": 10,
+      "rowsSentPerCall": 3,
+      "noIndexUsed": 0,
+      "plan": [
+        {
+          "table": "ur",
+          "type": "ref",
+          "key": "PRIMARY",
+          "rows": 1,
+          "filtered": 100,
+          "extra": "Using index; Using temporary; Using filesort"
+        },
+        {
+          "table": "rp",
+          "type": "ref",
+          "key": "PRIMARY",
+          "rows": 20,
+          "filtered": 100,
+          "extra": "Using index"
+        },
+        {
+          "table": "p",
+          "type": "eq_ref",
+          "key": "PRIMARY",
+          "rows": 1,
+          "filtered": 100,
+          "extra": null
+        }
+      ]
+    },
+    {
+      "digest": "SELECT `su` . `id` , `su` . `sku_id` , `su` . `uom_id` , `su` . `version` , `u` . `code` AS `uom_code` , `u` . `name` AS `uom_name` , `u` . `status` AS `uom_status` , `u` . `version` AS `uom_version` , `su` . `to_base_factor` , `su` . `is_base` , `su` . `is_default_purchase` , `su` . `is_default_sale` FROM `item_sku_uoms` `su` JOIN `item_uoms` `u` ON `u` . `id` = `su` . `uom_id` WHERE `su` . `sku_",
+      "count": 3499,
+      "totalMs": 356.1,
+      "avgMs": 0.1,
+      "maxMs": 0.3,
+      "rowsExaminedPerCall": 2,
+      "rowsSentPerCall": 1,
+      "noIndexUsed": 0,
+      "plan": [
+        {
+          "table": "su",
+          "type": "ref",
+          "key": "uq_item_sku_uoms_sku_uom",
+          "rows": 1,
+          "filtered": 100,
+          "extra": null
+        },
+        {
+          "table": "u",
+          "type": "eq_ref",
+          "key": "PRIMARY",
+          "rows": 1,
+          "filtered": 100,
+          "extra": null
+        }
+      ]
+    },
+    {
+      "digest": "SELECT `r` . `name` FROM `roles` `r` JOIN `user_roles` `ur` ON `ur` . `role_id` = `r` . `id` WHERE `ur` . `user_id` = ? ORDER BY `r` . `name`",
+      "count": 3489,
+      "totalMs": 307.8,
+      "avgMs": 0.09,
+      "maxMs": 0.2,
+      "rowsExaminedPerCall": 3,
+      "rowsSentPerCall": 1,
+      "noIndexUsed": 0,
+      "plan": [
+        {
+          "table": "ur",
+          "type": "ref",
+          "key": "PRIMARY",
+          "rows": 1,
+          "filtered": 100,
+          "extra": "Using index; Using temporary; Using filesort"
+        },
+        {
+          "table": "r",
+          "type": "eq_ref",
+          "key": "PRIMARY",
+          "rows": 1,
+          "filtered": 100,
+          "extra": null
+        }
+      ]
+    }
+  ],
+  "nfr001": null,
+  "nfr005": {
+    "limitP95Ms": 2000,
+    "maxErrorRate": 0.01,
+    "operations": 6,
+    "failing": [
+      "forSku.nameSearch"
+    ],
+    "pass": false
+  },
+  "ok": false,
+  "cleanup": {
+    "createdSuppliers": 0
+  },
+  "finishedAt": "2026-10-15T04:44:07.045Z"
+}

@@ -70,6 +70,86 @@ describe("DataTable", () => {
     expect(fetchFn).toHaveBeenCalledTimes(2);
   });
 
+  it.each(["success", "error"])("較早請求最後才 %s，不會覆蓋最新空結果或分頁", async (outcome) => {
+    const earlier = Promise.withResolvers();
+    const latest = Promise.withResolvers();
+    const fetchFn = vi.fn().mockReturnValueOnce(earlier.promise).mockReturnValueOnce(latest.promise);
+    const wrapper = mountDataTable({ fetch: fetchFn, columns });
+    const requestedPagination = { page: 2, rowsPerPage: 20, sortBy: "name", descending: true };
+    wrapper.findComponent(QTable).vm.$emit("request", { pagination: requestedPagination, filter: "new" });
+
+    latest.resolve({ rows: [], rowsNumber: 30 });
+    await flushPromises();
+    if (outcome === "success") earlier.resolve({ rows: [{ name: "舊結果" }], rowsNumber: 99 });
+    else earlier.reject(new Error("舊錯誤"));
+    await flushPromises();
+
+    expect(wrapper.findComponent(QTable).props("rows")).toEqual([]);
+    expect(wrapper.findComponent(QTable).props("pagination")).toMatchObject({ ...requestedPagination, rowsNumber: 30 });
+    expect(wrapper.find(".q-banner").exists()).toBe(false);
+    expect(wrapper.findComponent(QTable).props("loading")).toBe(false);
+    wrapper.unmount();
+  });
+
+  it.each(["success", "error"])("較早請求先 %s，最新請求仍然顯示載入且可失敗後重試", async (outcome) => {
+    const earlier = Promise.withResolvers();
+    const latest = Promise.withResolvers();
+    const fetchFn = vi.fn().mockReturnValueOnce(earlier.promise).mockReturnValueOnce(latest.promise)
+      .mockResolvedValueOnce({ rows: [{ name: "重試結果" }], rowsNumber: 1 });
+    const wrapper = mountDataTable({ fetch: fetchFn, columns });
+    const reload = wrapper.vm.reload();
+    if (outcome === "success") earlier.resolve({ rows: [{ name: "舊結果" }], rowsNumber: 99 });
+    else earlier.reject(new Error("舊錯誤"));
+    await flushPromises();
+
+    expect(wrapper.findComponent(QTable).props("loading")).toBe(true);
+    expect(wrapper.findComponent(QTable).props("rows")).toEqual([]);
+    expect(wrapper.find(".q-banner").exists()).toBe(false);
+    latest.reject(new Error("最新錯誤"));
+    await reload;
+    await flushPromises();
+    expect(wrapper.text()).toContain("最新錯誤");
+    expect(wrapper.findComponent(QTable).props("loading")).toBe(false);
+
+    await wrapper.find('button[aria-label="重試"]').trigger("click");
+    await flushPromises();
+    expect(wrapper.text()).toContain("重試結果");
+    expect(wrapper.find(".q-banner").exists()).toBe(false);
+    wrapper.unmount();
+  });
+
+  it("較早成功回應不會清除最新失敗狀態", async () => {
+    const earlier = Promise.withResolvers();
+    const fetchFn = vi.fn().mockReturnValueOnce(earlier.promise).mockRejectedValueOnce(new Error("最新錯誤"));
+    const wrapper = mountDataTable({ fetch: fetchFn, columns });
+    await wrapper.vm.reload();
+    earlier.resolve({ rows: [{ name: "舊結果" }], rowsNumber: 99 });
+    await flushPromises();
+
+    expect(wrapper.text()).toContain("最新錯誤");
+    expect(wrapper.findComponent(QTable).props("rows")).toEqual([]);
+    expect(wrapper.findComponent(QTable).props("loading")).toBe(false);
+    wrapper.unmount();
+  });
+
+  it("最新篩選請求失敗後，重試保留要求的頁碼與排序", async () => {
+    const fetchFn = vi.fn().mockResolvedValueOnce({ rows: [{ name: "舊結果" }], rowsNumber: 50 })
+      .mockRejectedValueOnce(new Error("搜尋失敗")).mockResolvedValueOnce({ rows: [], rowsNumber: 0 });
+    const wrapper = mountDataTable({ fetch: fetchFn, columns,
+      initialPagination: { page: 3, rowsPerPage: 20, sortBy: "name", descending: true, rowsNumber: 0 } });
+    await flushPromises();
+    wrapper.findComponent(QTable).vm.$emit("request", {
+      pagination: { page: 1, rowsPerPage: 20, sortBy: "name", descending: false }, filter: ""
+    });
+    await flushPromises();
+    await wrapper.find('button[aria-label="重試"]').trigger("click");
+    await flushPromises();
+
+    expect(fetchFn).toHaveBeenLastCalledWith({ page: 1, rowsPerPage: 20, sortBy: "name", descending: false, filter: "" });
+    expect(wrapper.findComponent(QTable).props("pagination")).toMatchObject({ page: 1, descending: false, rowsNumber: 0 });
+    wrapper.unmount();
+  });
+
   it("將頁面傳落嚟嘅 slot（例如 body-cell-actions）原樣轉發俾內部嘅 QTable", async () => {
     const actionColumns = [...columns, { name: "actions", label: "操作", field: "actions" }];
     const fetchFn = vi.fn().mockResolvedValue({ rows: [{ name: "訂單 A" }], rowsNumber: 1 });

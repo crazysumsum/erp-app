@@ -1,6 +1,18 @@
 # Customer Management Final Alignment Review
 
-## Current HD-012 proposal / pending human decision
+## Current HD-012 implementation
+
+Sam approved exact DESIGN a2b29b79...2356 / PLAN3b15603d...35e0 and the sole shared
+DataTable exception; PR#234 merged6b3faa1f. Scoped implementationf3413abe preserves
+public contracts and other modules' product code. Client872, DataTable21,
+Customer20, Business15 and Supplier42 developer cases pass. Server supporting run
+exits0 with3083 PASS/133 conditional SKIP/0 FAIL (not whole-module gate PASS).
+Actual separate reviewer approvesf3413abe; scoped developer defects are closed.
+Exact-head implementation CI/normal merge remain gates.
+No full-module downstream acceptance is unblocked.
+[Current evidence](implementation/ui-defects-remediation-report.md).
+
+## Historical HD-012 proposal / pending human decision
 
 DESIGN a2b29b795515f6ee408201d3ac2650a1d42d74728c1ca4c9f2fe68cbfc292356 /
 PLAN3b15603d9608dcb388f90806f643a5d221514b17ef302f2e2d2f2851699735e0 propose the
