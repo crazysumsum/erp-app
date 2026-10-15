@@ -211,6 +211,8 @@ test("@technical an expired result says the summary stays, and the 410 is explai
     job: baseJob({ status: "completed", totalCount: 1, validCount: 1, appliedCount: 1, confirmedAt: 1, version: 6 }),
     rows: [{ ...PRECHECK_ROWS[0], status: "applied", appliedSupplierId: 41 }] });
   await page.goto("/suppliers/imports?job=7");
+  // 冇略過或失敗列嘅 job 先係「已完成」（HD-106）。
+  await expect(page.locator(".q-dialog").getByText("已完成", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "下載結果" }).click();
   await expect(page.getByText("結果已過保留期限；工作摘要及逐列結果仍可在此查閱")).toBeVisible();
   await expect(page.getByText("已寫入", { exact: true })).toBeVisible();

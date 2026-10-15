@@ -1564,6 +1564,7 @@ integrationTest("TC-091 (IMP-006): TASK-049 (SUP-CAP-05): one mixed file end to 
   const updated = await supplierByCode(`EU-${tag}`);
   assert.deepEqual([updated.notes, updated.status, updated.supplier_name], ["updated by T49", before.status, before.supplier_name]);
   assert.equal(Number(existing), Number(updated.id));
+  assert.equal(await supplierByCode(`E3-${tag}`), undefined, "the invalid row wrote no Supplier, so no child or audit either (IMP-006)");
 
   // 結果 CSV 同逐列結果、job 統計一致（HD-049）。
   const result = await downloadResult(owner, id);
