@@ -3,13 +3,13 @@ import { randomUUID } from "node:crypto";
 import test from "node:test";
 import mysql from "mysql2/promise";
 import { migrationFixture } from "../sales/phase1/fixtures.js";
-import { up as jobsUp, inspectSalesImportJobSchema } from "../../database/migrations/0082_create_sales_import_jobs.js";
-import { up as ordersUp, inspectSalesIntakeSchema } from "../../database/migrations/0083_create_sales_intake_orders.js";
-import { up as errorsUp, inspectSalesIntakeErrorSchema } from "../../database/migrations/0084_create_sales_intake_errors.js";
+import { up as jobsUp, inspectSalesImportJobSchema } from "../../database/migrations/0083_create_sales_import_jobs.js";
+import { up as ordersUp, inspectSalesIntakeSchema } from "../../database/migrations/0084_create_sales_intake_orders.js";
+import { up as errorsUp, inspectSalesIntakeErrorSchema } from "../../database/migrations/0085_create_sales_intake_errors.js";
 import { up as orderUp } from "../../database/migrations/0073_create_sales_orders.js";
 import { up as linesUp } from "../../database/migrations/0074_create_sales_order_lines.js";
 import { up as mappingUp } from "../../database/migrations/0078_create_sales_order_line_reservations.js";
-import { up as projectionUp } from "../../database/migrations/0085_extend_sales_reservation_intake_projection.js";
+import { up as projectionUp } from "../../database/migrations/0086_extend_sales_reservation_intake_projection.js";
 import { up as keyUp } from "../../database/migrations/0072_create_sales_external_order_keys.js";
 
 const integrationTest=process.env.DB_INTEGRATION_TESTS==="1"?test:test.skip;

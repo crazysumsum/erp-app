@@ -1,5 +1,5 @@
 import { createSalesTable, inspectSalesTable } from "./0070_create_sales_quotations.js";
-import { inspectSalesChecks } from "./0082_create_sales_import_jobs.js";
+import { inspectSalesChecks } from "./0083_create_sales_import_jobs.js";
 
 const CONTRACT={
   table:"sales_intake_orders",
