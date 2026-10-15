@@ -2,6 +2,31 @@
 
 ## Status
 
+**BLOCKED for whole-module/formal operations acceptance**, reconciled on main
+`f4d50bd5f6e751a99882a6ef5547d646d2e2c84e` (PR242). This current summary supersedes
+the historical approval/publication checkpoints below; it does not approve release.
+
+- DEF-034001/034002/027001 developer remedies are CLOSED and merged through
+  PR233/237. Do not reopen them from historical premerge wording.
+- PR238/240/242 provide merged local capacity, restore-integrity and security
+  developer evidence. PR242's exact candidate passed73 selected files/298 nodes,
+  all five CI checks and separate review; actual merged-tree smoke9PASS. These are
+  identified historical runs, not a new formal acceptance execution.
+- HD-013 (PR241) waives only TC-086/087 timing acceptance. RPO/RTO objectives stay
+  NOT_PROVEN; no additional timing run or waiver is needed.
+- TASK-030/031/032/034/full downstream acceptance remain BLOCKED, TASK-033/035
+  IN_PROGRESS and TASK-036 PENDING. No Technical Acceptance/UAT/release sign-off.
+
+The remaining non-timing prerequisites and required low-sensitive evidence are in
+the [current operations evidence checklist](customer-operations-runbook.md#current-formal-operations-evidence-checklist).
+Actual [PR242 closure](https://github.com/crazysumsum/erp-app/pull/242#issuecomment-6189186480)
+confirms merge and complete owner-only cleanup; state209's planned effects are a
+pre-publication cache, not unfinished pushes or a reusable running MySQL fixture.
+This continuation corrects handoff/readiness documentation only: no executable,
+test, schema, canonical requirement/design/plan, CI or acceptance criterion changes.
+
+### Historical HD-012 implementation checkpoint before publication
+
 Current HD-012: **APPROVED by Sam**, DESIGN a2b29b79...2356 / PLAN3b15603d...35e0;
 planning PR#234 merged main6b3faa1f. Scoped product/test commitf3413abe implements
 generic latest-request state protection, latest failure/retry pagination, Customer
@@ -40,7 +65,7 @@ actual independent reviewer approved. Exact final PR-head CI/review still gate
 normal merge. See the
 [current evidence and limitations](def034001-remediation-report.md).
 
-Full Customer acceptance additionally retains unresolved frontend gaps
+Historical pre-remediation assessment retained unresolved frontend gaps
 DEF-034002 (typed-search stale display) and DEF-027001 (clean-main reproducible
 mocked import UI failure). No frontend/CI setting or acceptance bar is changed.
 

@@ -5,6 +5,48 @@ and DES-024. It does not complete either task, configure an external alert recei
 or authorize production maintenance. TASK-032 provider readiness and the integrated
 alert/restore drills remain required before release.
 
+## Current formal operations evidence checklist
+
+Reconciled against main `f4d50bd5f6e751a99882a6ef5547d646d2e2c84e` (PR242).
+This is an evidence/handoff inventory under TASK-033/035/036, not a new policy or
+formal acceptance run. DESIGNfa4dbd1e / PLANa1d5e05a remain unchanged. HD-013 waives
+TC-086/087 timing acceptance; those measurements are not prerequisites below.
+
+| Remaining condition / existing reference | Evidence still needed | Responsible role / prerequisite |
+| --- | --- | --- |
+| Real telemetry and alert drills / DES-023, TC-080 | Success/conflict/denial/integrity/stuck cases correlated in deployed logs/metrics; zero sensitive markers; low-cardinality labels; actual alert receipt and reset, including audit/settings/schema failures | Operations/Backend: existing approved target, receiver/routing and monitoring access. Local logger capture is not delivered alert evidence. |
+| Secure capability configuration / DES-014/015/024, SEC-010..014 | Approved key-ring/version retrieval and rotation/retention evidence; encrypted private General/Bank Sensitive/import storage, controlled access; real scanner clean/reject/unavailable fail-closed results | Operations/Security/Backend: configured non-production acceptance target and genuine secret-store/storage/ClamAV integration. Export IDs/counts/hashes, never keys or private contents. |
+| Deployed DB role separation / DES-021/024, TC-081 | Working bank/approval/worker paths with actual runtime least privilege; runtime denied DDL/audit UPDATE/DELETE; separate controlled migration/emergency access with audit and existing-session revocation | Operations/DB/Security: actual role/grant inventory and authorized isolated test accounts. Fixture NULL-currency bank and local session-kill proof do not certify non-null Currency locking or deployed accounts. |
+| Recovery integrity / DES-024, TC-085, TASK-035 | Same/version-linked DB, key/config and private-object recovery set; controlled recovery access/encryption; representative restored Customer/approval/bank/files/import/audit samples; real provider reconciliation; reviewed recovery evidence | Operations/Security with Backend: genuine backup/key/storage configuration. PR240's six-member manifest/20-table hashes/fail-closed cases are local preparation, not off-host production proof. No RPO/RTO timing acceptance required. |
+| Compatible rollout/rollback / DES-025, TC-088 | Identified previous/new app artifacts and upgraded schema; mixed-window/compatible app rollback, disabled capability safety and no corrupt writes/unknown states; deployment smoke | Operations/Backend: approved acceptance deployment and compatible prior artifact. No production deployment or new rollback strategy is authorized by this checklist. |
+| Whole-module handoff and acceptance / TC-089/090, TASK-036 | Complete baseline-bound zero-unexplained-skip required suites and reviewed handoff, then separate technical testing, business UAT/acceptance and release decisions | Test/Operations/Security/Product Owner as applicable. Passing developer CI or approving design is not these sign-offs. |
+| Complete downstream integration / TASK-030/031/032/034 | Genuine ready Fulfillment, Invoicing/AR, Returns/Refund consumers, tri-state/reference reconciliation, integrated outage/recovery/mixed-load evidence and full regression | Consumer owners/Backend; remains BLOCKED. Sales readiness or a fake READY provider does not satisfy missing consumers. |
+
+Separately, existing DES-025 / DESIGN§13.5 step7 requires24-hour error/latency/audit/security
+observation before unfreezing the old master or admitting formal downstream traffic.
+That release step is not an additional TC-088 timing acceptance requirement.
+
+Already independently completed and merged: PR233/237 scoped query/UI defects;
+PR23850k/20-worker/p95<=5s local capacity/import/contention proof; PR240 local
+restore-set integrity; PR242 real local bank grants/denials/integrity and owned SQL
+session revocation. Exact [PR242 closure and cleanup](https://github.com/crazysumsum/erp-app/pull/242#issuecomment-6189186480)
+and linked reports identify their measured baselines and limits; no rerun is claimed.
+
+Current safe next step: obtain the actual acceptance target/build/config identifiers
+and accountable Operations/Security evidence for the rows above, then execute only
+the authorized target-specific checks. No target/receiver/scanner/deployed-role
+evidence has been supplied to this chat. Local `clamd`/`clamdscan` are unavailable
+and the Docker daemon is unreachable; do not start/install infrastructure, invent
+an external receiver or choose deployment/security policy to manufacture readiness.
+Documentation preparation can proceed independently, not these external proofs.
+
+Attach sanitized receipts containing immutable app/config IDs, case/reference,
+environment, timestamp, executor, expected/actual assertions, failed attempts,
+cleanup and actual reviewer/owner disposition. Record missing proof as NOT_READY
+or BLOCKED, not PASS. TASK-033/035 remain IN_PROGRESS; TASK-030/031/032/034 and full
+downstream acceptance BLOCKED; TASK-036 PENDING. The historical sections below
+preserve prior observations but cannot reinstate waived timing gates or open defects.
+
 ## Bank unreadable alert
 
 Treat every `customer.bank.reveal.unreadable` event as P1, as required by DES-023.
@@ -164,6 +206,8 @@ review exist. Keep retention/legal-hold rules in force; this runbook introduces 
 purge or production restore.
 
 ## Formal operations / recovery readiness — 2026-10-15
+
+Historical assessment below; the current checklist above governs remaining work.
 
 Current HD-013 decision supersedes the RPO/RTO acceptance blockers in this historical
 assessment: Sam explicitly stated `RPO/ RTO 不用做驗收了，我批準通過。` TC-086/087
