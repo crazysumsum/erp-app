@@ -951,7 +951,7 @@ integrationTest("TASK-045: a draft import writes each valid row as one Supplier 
   ]);
   assert.equal((await confirmJob(owner, id, { version, activationMode: "draft" })).status, 200);
   const result = await execute(id);
-  assert.deepEqual([result.status, result.applied], ["completed", 2]);
+  assert.deepEqual([result.status, result.applied], ["completed_with_errors", 2]);
   assert.deepEqual(await rowOutcomes(id), [[1, "applied", null], [2, "applied", null], [3, "skipped", "SUPPLIER_IMPORT_REQUIRED_FIELD"]]);
 
   const one = await supplierByCode(`A1-${tag}`);
@@ -970,7 +970,7 @@ integrationTest("TASK-045: a draft import writes each valid row as one Supplier 
   assert.equal(Number(marker.applied_supplier_id), Number(one.id));
   const detail = await api(owner, "GET", `/api/v1/supplier-imports/${id}`);
   assert.deepEqual([detail.data.job.status, detail.data.job.appliedCount, detail.data.job.failedCount, detail.data.job.skippedCount],
-    ["completed", 2, 0, 1]);
+    ["completed_with_errors", 2, 0, 1]);
 });
 
 integrationTest("TC-097 (IMP-012): TASK-045 (AC-013, BR-012): activation follows the policy snapshotted at confirm; with approval it opens a request that already lists the new identifier", async () => {
@@ -1525,7 +1525,7 @@ function allLogText() {
   return texts.join("\n");
 }
 
-integrationTest("TASK-049 (TC-086, SUP-CAP-05): one mixed file end to end — counts agree everywhere, and nothing leaks", async () => {
+integrationTest("TC-091 (IMP-006): TASK-049 (SUP-CAP-05): one mixed file end to end — counts agree everywhere, and nothing leaks", async () => {
   const owner = await makeUser("e49", ["supplier.mgmt"], { withPassword: true });
   const approver = await makeUser("a49", ["supplier.view", "supplier.approval"]);
   const tag = randomUUID().slice(0, 6).toUpperCase();
@@ -1553,7 +1553,7 @@ integrationTest("TASK-049 (TC-086, SUP-CAP-05): one mixed file end to end — co
     [4, "applied", null], [5, "applied", null]]);
   const finished = await job(id);
   assert.deepEqual([finished.status, finished.applied_count, finished.failed_count, finished.skipped_count].map(String),
-    ["completed", "4", "0", "1"]);
+    ["completed_with_errors", "4", "0", "1"]);
   assert.equal(Number(finished.applied_count) + Number(finished.failed_count) + Number(finished.skipped_count), Number(finished.total_count));
   for (const code of [`E1-${tag}`, `E2-${tag}`, `E5-${tag}`]) {
     const created = await supplierByCode(code);
