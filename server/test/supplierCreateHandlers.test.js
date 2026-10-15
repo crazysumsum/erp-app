@@ -3,7 +3,7 @@ import test from "node:test";
 
 import { CreateSupplierHandler } from "../src/handlers/suppliers/createSupplierHandler.js";
 
-test("Supplier create route is idempotent, permission protected and accepts only the minimum root fields", () => {
+test("TC-023 (CORE-007): Supplier create route is idempotent, permission protected and accepts only the minimum root fields", () => {
   assert.equal(CreateSupplierHandler.api.method, "POST");
   assert.equal(CreateSupplierHandler.api.path, "/api/v1/suppliers/create");
   assert.equal(CreateSupplierHandler.api.idempotency.enabled, true);

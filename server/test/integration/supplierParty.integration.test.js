@@ -51,7 +51,7 @@ async function cleanupActor(pool, actorId) {
   await pool.query("DELETE FROM users WHERE id = ?", [actorId]);
 }
 
-integrationTest("Address ownership, primary switching, concurrency and deactivation are enforced by service and MySQL", async (t) => {
+integrationTest("TC-042 (PARTY-003): Address ownership, primary switching, concurrency and deactivation are enforced by service and MySQL", async (t) => {
   const pool = mysql.createPool({ ...config(), connectionLimit: 6 });
   const suffix = String(Date.now());
   const supplierIds = [];
@@ -118,7 +118,7 @@ integrationTest("Address ownership, primary switching, concurrency and deactivat
   assert.equal(Number(afterConcurrent.total), 1);
 });
 
-integrationTest("Contact ownership, primary switching, concurrency and deactivation are enforced by service and MySQL", async (t) => {
+integrationTest("TC-042 (PARTY-003): Contact ownership, primary switching, concurrency and deactivation are enforced by service and MySQL", async (t) => {
   const pool = mysql.createPool({ ...config(), connectionLimit: 6 });
   const suffix = String(Date.now());
   const supplierIds = [];
@@ -188,7 +188,7 @@ integrationTest("Contact ownership, primary switching, concurrency and deactivat
   assert.equal(Number(afterConcurrent.total), 1);
 });
 
-integrationTest("Identifier normalization, global uniqueness, ownership and deletion are enforced by service and MySQL", async (t) => {
+integrationTest("TC-044 (PARTY-005): Identifier normalization, global uniqueness, ownership and deletion are enforced by service and MySQL", async (t) => {
   const pool = mysql.createPool({ ...config(), connectionLimit: 6 });
   const suffix = String(Date.now());
   const supplierIds = [];

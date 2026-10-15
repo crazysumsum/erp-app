@@ -6,7 +6,7 @@ import { GetSupplierSettingsHandler, UpdateSupplierSettingsHandler } from "../sr
 import { ActivateSupplierHandler } from "../src/handlers/suppliers/supplierLifecycleHandlers.js";
 import { getActivationPolicy } from "../src/modules/supplier/SupplierSettingsService.js";
 
-test("both settings routes require supplier.settings and nothing weaker", () => {
+test("TC-050 (APR-002): both settings routes require supplier.settings and nothing weaker", () => {
   // BR-022: 一般 Supplier 管理權限唔包含設定權限。
   for (const Handler of [GetSupplierSettingsHandler, UpdateSupplierSettingsHandler]) {
     assert.deepEqual(Handler.api.authorizationPolicies[0].options.permissions, ["supplier.settings"]);

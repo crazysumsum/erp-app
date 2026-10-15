@@ -148,7 +148,7 @@ integrationTest("0035 gives the database the one-pending-request guarantee and c
   assert.equal(Number(counts.pending ?? counts.PENDING), 1);
 });
 
-integrationTest("0036 seeds the settings singleton once and a rerun neither duplicates nor resets it", async (t) => {
+integrationTest("TC-049 (APR-001): 0036 seeds the settings singleton once and a rerun neither duplicates nor resets it", async (t) => {
   const connection = await mysql.createConnection(config());
   t.after(() => connection.end());
   await createSupplierSettings(connection);

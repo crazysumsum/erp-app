@@ -8,6 +8,11 @@ preparation is executable under the standing continuation authorization. See the
 [current PHASE-004 report](phase-PHASE-004-report.md); it supersedes historical
 entry/readiness statements below, without changing task completion dependencies.
 
+HD-010 is approved on DESIGN8462e9c2...f9944 / PLAN55ea357b...ba247. Its scoped
+50k/20-worker/5s test alignment and local measurement completed in IMPLEMENT;
+latency passed, actual-list plans failed. This does not make TASK-034, PHASE-004
+or the module READY_FOR_TESTING. See the current PHASE-004 report for exact evidence.
+
 ## Historical PHASE-001 readiness
 
 PHASE-001 implementation, remediation and final developer verification

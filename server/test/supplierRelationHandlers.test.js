@@ -16,7 +16,7 @@ test("TASK-038: the SKU relation routes and their permissions follow design §6.
   ]);
 });
 
-test("TASK-038 (SKU-007, FR-SKU-006): no request or response carries a price, and unknown fields are refused", () => {
+test("TC-084 (SKU-007): TASK-038 (SKU-007, FR-SKU-006): no request or response carries a price, and unknown fields are refused", () => {
   for (const Handler of [CreateSupplierSkuRelationHandler, UpdateSupplierSkuRelationHandler]) {
     const body = Handler.api.requestSchema.body;
     assert.equal(body.additionalProperties, false, Handler.handlerName);

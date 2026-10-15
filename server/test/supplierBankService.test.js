@@ -149,7 +149,7 @@ test("the masked list never selects an encrypted column", async () => {
   assert.ok(!sql.includes("SELECT *"), "a SELECT * would pull the ciphertext along with everything else");
 });
 
-test("create encrypts, indexes and audits, and no plaintext reaches the audit entry", async () => {
+test("TC-104 (AUD-002): create encrypts, indexes and audits, and no plaintext reaches the audit entry", async () => {
   const { service, events, audited } = harness();
   const result = await service.create({ ...actor, ...bankDetails, supplierId: 7, accountNumber: ACCOUNT, reason: "新增已核對的收款帳戶" });
 
@@ -331,7 +331,7 @@ test("a bank account belonging to another Supplier is not found rather than refu
   }
 });
 
-test("every write re-checks the permission, so a revoked token cannot keep writing", async () => {
+test("TC-115 (AUTH-005): every write re-checks the permission, so a revoked token cannot keep writing", async () => {
   // assertActorFresh 只比對 claim 同現況，佢唔執行任何 permission。一個誠實地冇
   // bank.mgmt 嘅 caller 要喺呢度停低。
   const { service } = harness({ permissions: ["supplier.view"] });
@@ -377,7 +377,7 @@ test("reveal writes the audit inside the transaction and only returns the accoun
   assert.ok(!JSON.stringify(audited.at(-1)).includes(NORMALIZED));
 });
 
-test("a reveal whose audit fails returns no account at all", async () => {
+test("TC-105 (AUD-003): a reveal whose audit fails returns no account at all", async () => {
   const crypto = realCrypto();
   const sealed = crypto.encryptAccountNumber({ supplierId: 7, cryptoContext: "ctx-41", accountNumber: ACCOUNT });
   const { service } = harness({

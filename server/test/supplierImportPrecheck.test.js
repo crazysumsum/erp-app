@@ -151,7 +151,7 @@ test("create rows may carry one primary Address, Contact and Identifier, validat
   assert.deepEqual(codes(purpose), [["addressPurpose", "SUPPLIER_ADDRESS_PURPOSE_INVALID"]]);
 });
 
-test("upsert matches by supplierId first and cross-checks the code; code alone also matches (IMP-011)", async () => {
+test("TC-096 (IMP-011): upsert matches by supplierId first and cross-checks the code; code alone also matches (IMP-011)", async () => {
   const connection = database({ suppliers: [existing, { id: 8, supplier_code_key: "sup-8", status: "active", version: 1, default_currency_code: "HKD", default_payment_term_id: null }] });
   const { rows } = await precheck([
     { supplierId: "7", supplierCode: "SUP-7", supplierName: "Renamed" },

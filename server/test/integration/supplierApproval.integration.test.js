@@ -111,7 +111,7 @@ async function cleanup(connection, supplierId) {
   await connection.execute("DELETE FROM suppliers WHERE id = ?", [supplierId]);
 }
 
-integrationTest("approving runs against real MySQL: every column exists and the row really moves", async (t) => {
+integrationTest("TC-054 (APR-006): approving runs against real MySQL: every column exists and the row really moves", async (t) => {
   // 假連線用 sql.includes(...) 派送，所以一個打錯咗嘅欄位名照樣「成功」。呢度會
   // 真係出 ER_BAD_FIELD_ERROR。
   const connection = await mysql.createConnection(config());
@@ -146,7 +146,7 @@ integrationTest("approving runs against real MySQL: every column exists and the 
   assert.equal(audit.action, "approval.approve");
 });
 
-integrationTest("the database refuses a second pending request for one Supplier", async (t) => {
+integrationTest("TC-052 (APR-004): the database refuses a second pending request for one Supplier", async (t) => {
   const connection = await mysql.createConnection(config());
   let supplierId = null;
   let who = null;
@@ -340,7 +340,7 @@ integrationTest("createSupplier really does read the policy before the currency 
     `design 2.6 puts settings first; saw settings at ${settingsAt} and currency at ${currencyAt}`);
 });
 
-integrationTest("a Supplier created with activate can actually be approved", async (t) => {
+integrationTest("TC-019 (CORE-003): a Supplier created with activate can actually be approved", async (t) => {
   // The submit path exists twice -- createSupplier and activateSupplier -- and the
   // round trip was only covered on the second. Mutating createSupplier's snapshot
   // version leaves the whole suite green while making every Supplier created this
@@ -448,7 +448,7 @@ async function seedQueue(connection, suffix, { requesterId, approverId }) {
   return created;
 }
 
-integrationTest("the queue scopes resolve against real MySQL joins", async (t) => {
+integrationTest("TC-059 (APR-011): the queue scopes resolve against real MySQL joins", async (t) => {
   const connection = await mysql.createConnection(config());
   let who = null;
   let created = [];
@@ -477,7 +477,7 @@ integrationTest("the queue scopes resolve against real MySQL joins", async (t) =
   assert.equal(unassignedOurs[0].assignedApprover, null, "an unassigned request must read as nobody");
 });
 
-integrationTest("the queue counts and pages the same filtered set", async (t) => {
+integrationTest("TC-059 (APR-011): the queue counts and pages the same filtered set", async (t) => {
   const connection = await mysql.createConnection(config());
   let who = null;
   let created = [];
@@ -636,7 +636,7 @@ async function countAudit(connection, supplierId, action) {
  * 死」，而係**只有一個 transition 同一筆 decision audit** —— 兩筆 audit 就係兩次
  * 決定，即使最終狀態睇落一樣。
  */
-integrationTest("two concurrent approves produce one transition and exactly one decision audit", async (t) => {
+integrationTest("TC-060 (APR-012): two concurrent approves produce one transition and exactly one decision audit", async (t) => {
   const first = await mysql.createConnection(config());
   const second = await mysql.createConnection(config());
   const setup = await mysql.createConnection(config());
@@ -781,7 +781,7 @@ integrationTest("an approve racing a significant edit yields one terminal result
  *   - 第二層 `#assertActorMayDecide` 擋「claim 同現況夾晒，但個人根本冇審批權」，
  *     即係一個誠實地冇權嘅 caller。淨係有第一層嘅話，佢會直接批到。
  */
-integrationTest("a decision made after the approver's permission is revoked fails at both guards", async (t) => {
+integrationTest("TC-061 (APR-013): a decision made after the approver's permission is revoked fails at both guards", async (t) => {
   const connection = await mysql.createConnection(config());
   let supplierId = null;
   let who = null;
@@ -833,7 +833,7 @@ integrationTest("a decision made after the approver's permission is revoked fail
  * BR-012／AC-008：審批人被停用。`assertEligibleApprover` 查嘅係 `status = 'active'`，
  * 所以呢度要真嘅 users row 先證得到 —— 一個 stub loadPermissions 係唔會睇 status 嘅。
  */
-integrationTest("a disabled user can neither receive a reassignment nor decide", async (t) => {
+integrationTest("TC-061 (APR-013): a disabled user can neither receive a reassignment nor decide", async (t) => {
   const connection = await mysql.createConnection(config());
   let supplierId = null;
   let who = null;
@@ -901,7 +901,7 @@ integrationTest("a disabled user can neither receive a reassignment nor decide",
  * request 嘅 Supplier 要夾得返。呢度用真 row 證：借 Supplier B 條 route 去撤
  * Supplier A 嘅申請，要當「搵唔到」處理，而且 A 嗰個申請要原封不動。
  */
-integrationTest("withdrawing through another Supplier's route is refused and changes nothing", async (t) => {
+integrationTest("TC-056 (APR-008): withdrawing through another Supplier's route is refused and changes nothing", async (t) => {
   const connection = await mysql.createConnection(config());
   let targetId = null;
   let decoyId = null;
