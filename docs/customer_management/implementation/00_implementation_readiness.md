@@ -7,7 +7,11 @@ merged at d69b267d. The authorized candidate-UNION/ten-index fix and final devel
 retests are complete: both physical Customer ALL scans removed; two unchanged
 50k/20-worker/30s runs pass17/17, listp957.891083/6.992709ms. Scoped implementation
 publication remains CONDITIONAL on final immutable review/current CI/fresh main;
-DEF-034001 is RETEST, not a full capacity or release acceptance. See the
+DEF-034001 is CLOSED for scoped developer remediation, not a full capacity or
+release acceptance. Integrated sourcec6ca3645/fpbccc7235...3449 freshly repeated
+all Customer checks plus two17/17 capacity runs(listp957.586708/7.463459ms);
+actual independent reviewer approved. Exact final PR-head CI/review still gate
+normal merge. See the
 [current evidence and limitations](def034001-remediation-report.md).
 
 Full Customer acceptance additionally retains unresolved frontend gaps

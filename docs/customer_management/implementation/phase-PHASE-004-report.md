@@ -7,7 +7,9 @@ below. Planning PR#232 merged d69b267d; CustomerService.list now uses distinct
 indexed candidate IDs plus ten forward indexes0082. Final source af7cbcb3...456e9
 passes two unchanged50k/20-worker/30s capacity runs17/17 each, listp957.891083 and
 6.992709ms; all14 actual positive branches use expected range keys and no physical
-table ALL appears. DEF-034001 RETEST pending final review/CI/integration;
+table ALL appears. Latest-main integrated sourcec6ca3645 additionally passes fresh
+runs6/7,listp957.586708/7.463459ms,17/17 each and actual independent review;
+DEF-034001 CLOSED scoped developer remediation, final PR-head CI/review pending;
 TASK-034/full downstream acceptance remain BLOCKED. Separate frontend issues
 DEF-034002/DEF-027001 remain OPEN; no full browser/module PASS is claimed.
 [Current report](def034001-remediation-report.md) preserves all failures/limitations

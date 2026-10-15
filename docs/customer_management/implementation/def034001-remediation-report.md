@@ -13,10 +13,18 @@ The canonical proposal bytes remain unchanged to preserve the approved baselines
   index-key/no-hint guards, teardown and post-load footprint refinements.
 - Final measured source fingerprint
   `af7cbcb3222405b2e826254bbfd6bae5aab2c13883068aedbae077bde28456e9`.
+- Exact committed source/test tree: `7fae1308991d5efac03ffe618bd49e3956c9fb96`.
+  Measurements preceded this commit at fc32a0e plus dirty final tests; the same
+  fingerprint proves all measured bytes are in7fae1308. Later docs-only checkpoints
+  do not claim a rerun or move the historical measurement HEAD.
+- Latest-main integrated source: `c6ca364522664254951133984910ca933749b368`,
+  fingerprint `bccc7235e5af4852f78eddcefff68c9989ca7d57770abc7cc7930b32b1fb3449`.
+  Fresh tests/runs6/7 below bind to this actual committed source, not7fae1308.
 
 **The two physical Customer scans are fixed and final scoped developer checks
-pass.** DEF-034001 is in RETEST pending immutable-candidate review/current CI and
-authorized integration; this is not full Customer acceptance or release approval.
+pass.** DEF-034001 is CLOSED as scoped developer remediation after actual independent
+review of integrated sourcec6ca3645. Final PR-head CI/review still gate publication;
+this is not full Customer acceptance or release approval.
 TASK-034 and complete downstream/mixed-load acceptance remain BLOCKED. The older
 diagnosis/decision section below is immutable historical context, not current
 approval/readiness status.
@@ -90,6 +98,11 @@ operational limitations, not waived release gates.
 and [all28 complete per-field actual plan records](def034001-search-branch-plans.jsonl).
 All fixtures were cleaned after each run (Customers0).
 
+After evidence capture the verified own13373 MySQL was shut down (serverexit0);
+the exact owned runtime root and clean detached baseline-comparison worktree were
+removed. Only reproducible synthetic data/raw test traces were removed; sanitized
+metrics/plans remain tracked. No user's3306 or unrelated module worktree changed.
+
 ```sh
 DB_HOST=127.0.0.1 DB_PORT=13373 DB_USER=root DB_NAME=erp_customer_def034001_fix_20261015 CUSTOMER_PERFORMANCE_TESTS=1 node --test --test-reporter=tap --test-reporter-destination=/private/tmp/customer-def034001-after-4.tap --import /path/to/private-key-preload.mjs --import ./server/test-support/testEnv.js server/test/performance/customerManagement.performance.test.js
 ```
@@ -98,7 +111,40 @@ The same command ran again with destination after-5.tap; no source/profile chang
 between those runs. Raw temporary logs are summarized/sanitized here and removed
 only after durable evidence capture.
 
-### Regression, actual browser and retained failures
+### Latest-main integration and fresh repeated verification
+
+Main advanced to `e56ad1a90f5938bd4799fd784a74aa5772e027ea` (PR#231 Supplier
+import service/UI/tests/docs only). It was merged without conflicts as
+`c6ca364522664254951133984910ca933749b368`. Customer source/tests/migration/CLI
+browser dependencies are unchanged. Rather than rebinding earlier measurements,
+a **new** own MySQL26.7.0 datadir
+`/private/tmp/erp-customer-def034001-integrated-runtime.3nNabW/mysql/` on the freed
+loopback13373, schema `erp_customer_def034001_integrated_20261015`, was initialized
+and freshly migrated through0082. Customer units/safety280PASS/2extendedskips,
+real MySQL24PASS/0SKIP, lint and build all passed again. No parallel own load/build/
+browser/integration/migration ran during either timed measurement.
+
+| Operation | Integrated run6 p95 ms | Integrated run7 p95 ms |
+| --- | --- | --- |
+| List/search | 7.586708 | 7.463459 |
+| Exact lookup | 1.863208 | 2.032333 |
+| Address lookup | 2.074792 | 2.348625 |
+| Contact lookup | 2.122250 | 2.267750 |
+
+Both: **17PASS/0FAIL/0SKIP**, approved50k/20workers/30s/pool10/5000ms unchanged;
+all14 expected positive range keys and actual COUNT/page/projection with0physical
+ALL. Run6:264,364 correct operations,0errors,8810.03ops/s; run7:269,232 correct
+operations,0errors,8973.06ops/s. InnoDB row-lock-wait counter delta0 in both
+(pre-existing5from deliberate lock regressions). Original runs4/5 stay bound to
+their original source; JSON now separately stores the integrated runs and all
+**56** complete branch-plan records (runs4..7,14each). This fresh integrated proof
+supersedes earlier measurements for the final candidate without erasing them.
+
+Same approved command, replacing DB_NAME with
+`erp_customer_def034001_integrated_20261015`, preload under the new owned root and
+destinations after-6.tap / after-7.tap. No changed source/profile between runs.
+
+### Regression details and retained failures
 
 - Final Customer/safety routine suite:280PASS/0FAIL,2 explicit extended-runtime
   skips (capacity and restore opt-ins); enabled capacity above has0skips.
@@ -116,16 +162,16 @@ only after durable evidence capture.
   production device policy changed. This is not user/business acceptance.
 - **DEF-034002 OPEN/MEDIUM:** typing successive searches exposed a stale displayed
   prior row even when the matching new API response had total0. Reloading the URL
-  Scope links: PHASE-002/TASK-016/TC-040, FR-001/NFR-001, DES-016/018/019.
-  rendered0 correctly. Client/E2E bytes are unchanged from d69b267d; the exact
+  rendered0 correctly. Scope links: PHASE-002/TASK-016/TC-040, FR-001/NFR-001,
+  DES-016/018/019. Client/E2E bytes are unchanged from d69b267d; the exact
   reactive request ordering cause remains unconfirmed (duplicate reload/QTable
   requests suspected). Do not call the failed typing path PASS. Diagnose/fix via
   Customer list/DataTable task and retest rapid edits, clear/empty/error, paging and
   request ordering; it is a separate frontend acceptance gap, not a physical scan.
 - **DEF-027001 OPEN/MEDIUM:** the unchanged Customer mocked-browser full suite is
   15PASS/1FAIL/0SKIP on both fix and clean main d69b267d. TC-065 line313 never sees
-  import errors after job-detail focus/Enter. Focused clean-main case passed, so
-  Scope links: PHASE-003/TASK-027/TC-065, FR-082/NFR-001, DES-013/016.
+  import errors after job-detail focus/Enter. Scope links: PHASE-003/TASK-027/
+  TC-065, FR-084..093/NFR-001, DES-013/016. Focused clean-main case passed, so
   timing/order sensitivity is suspected, not yet a proven product cause. Preserve
   failure; diagnose import-dialog/focus restoration separately and rerun the full
   suite, keyboard flow and related import recovery. No test was skipped/weakened
@@ -158,6 +204,20 @@ requested the expected-index/no-hint guard; after correction approved the code/t
 slice with no remaining Required finding. Final immutable candidate and final-head
 CI must still be observed before merge. The implementation PR/merge/cleanup result
 will be referenced in state and the PR closure record without rewriting measurements.
+
+PR#233 is open at https://github.com/crazysumsum/erp-app/pull/233. Final review of
+7fae1308 requested one provenance correction: bind final evidence to the committed
+source/test tree7fae1308, not product-onlyfc32a0e. Corrected explicitly above/in JSON
+and state, while preserving actual precommit execution context. Subsequent changes
+are documentation only; final candidate CI/review must be observed separately.
+
+Jason independently APPROVED integrated sourcec6ca3645/fingerprintbccc7235...3449
+and actual runs6/7, permitting only DEF-034001's scoped developer closure. No
+Required finding remains. Own second MySQL server then exited0 and its exact
+integrated runtime was removed2026-10-15T03:52Z; sanitized evidence survives.
+Final implementation PR status, exact-head CI/review, merge SHA and branch/worktree
+cleanup are observed in PR#233's closure comment; inspect it before retrying any
+external action. This checkpoint does not predeclare those future effects successful.
 
 ## Historical pre-approval diagnosis and decision (unchanged)
 
