@@ -177,7 +177,7 @@ async function registeredSupplierRoutes() {
             authType: api.authType, policies: api.authorizationPolicies, idempotent: api.idempotency?.enabled === true }));
       }
     }
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await new Promise((resolve) => { setTimeout(resolve, 100); });
   }
   throw new Error("api.registration.completed never reached the system log");
 }
