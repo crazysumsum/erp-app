@@ -79,7 +79,7 @@ async function installApi(page, options = {}) {
       } else if (state.job.status === "queued") {
         state.job = { ...state.job, status: "running" };
       } else if (state.job.status === "running") {
-        state.job = { ...state.job, status: "completed", appliedCount: 1, skippedCount: 1, completedAt: Date.now(), version: state.job.version + 2 };
+        state.job = { ...state.job, status: "completed_with_errors", appliedCount: 1, skippedCount: 1, completedAt: Date.now(), version: state.job.version + 2 };
         state.rows = [{ ...PRECHECK_ROWS[0], status: "applied", appliedSupplierId: 41 }, { ...PRECHECK_ROWS[1], status: "skipped" }];
       }
       const rowStatus = url.searchParams.get("rowStatus");
@@ -146,7 +146,8 @@ test("@technical upload, precheck, confirm with the password, follow progress an
 
   await page.getByRole("button", { name: "確認匯入" }).click();
   await enterPassword(page, PASSWORD);
-  await expect(page.locator(".q-dialog").getByText("已完成", { exact: true })).toBeVisible({ timeout: 10_000 });
+  // HD-106：有一列略過，所以係「有錯誤列」，唔係「已完成」。
+  await expect(page.locator(".q-dialog").getByText("已完成（有錯誤列）", { exact: true })).toBeVisible({ timeout: 10_000 });
   await expect(page.getByTestId("job-counts")).toContainText("已寫入 1");
 
   const confirm = state.calls.find((call) => call.path === "/api/v1/supplier-imports/7/confirm");
@@ -210,6 +211,8 @@ test("@technical an expired result says the summary stays, and the 410 is explai
     job: baseJob({ status: "completed", totalCount: 1, validCount: 1, appliedCount: 1, confirmedAt: 1, version: 6 }),
     rows: [{ ...PRECHECK_ROWS[0], status: "applied", appliedSupplierId: 41 }] });
   await page.goto("/suppliers/imports?job=7");
+  // 冇略過或失敗列嘅 job 先係「已完成」（HD-106）。
+  await expect(page.locator(".q-dialog").getByText("已完成", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "下載結果" }).click();
   await expect(page.getByText("結果已過保留期限；工作摘要及逐列結果仍可在此查閱")).toBeVisible();
   await expect(page.getByText("已寫入", { exact: true })).toBeVisible();
