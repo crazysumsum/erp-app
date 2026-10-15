@@ -2,6 +2,14 @@
 
 ## Current scope
 
+2026-10-15 update: PR #225 is merged (`8bbb0d3d`); local TASK-034/035 execution
+continues from refreshed main `66ddcb9a`. See the
+[local measured report](local-capacity-restore-report.md) and
+[sanitized results](local-capacity-restore-results.json). Capacity is FAIL with OPEN
+HIGH DEF-034001; import and isolated restore pass only their local subsets.
+TASK-034 is BLOCKED, TASK-035 IN_PROGRESS, and full downstream acceptance BLOCKED.
+The earlier planning/preparation statements below are historical.
+
 The 2026-10-14 default baseline is `d9714a34f39a507528fc4c138496531cd1d57c69`.
 TASK-029 merged as PR #224; its head `210c9f1405091a1eb41f42d7d7bd5f0356f08b61`
 passed all five mandatory CI jobs in run `38525426127`. Its branch/worktree were
@@ -46,8 +54,7 @@ or claim completed capacity/DR/UAT/release checks.
 
 ## Next safe work
 
-Complete the review and current-candidate CI for this independent TASK-033 slice,
-then merge under the standing Product Owner authorization. Continue TASK-033's
-integrated gate when TASK-032 is ready. TASK-034 and TASK-035 can reuse their existing
-tooling/runbook, but cannot issue final capacity or restore sign-off while the real
-provider set is incomplete.
+Review and publish the TASK-034/035 local measurement evidence under the explicit
+2026-10-15 instruction, with current CI before merge. Keep DEF-034001 open and
+do not issue full capacity/restore sign-off. Complete integrated gates only when
+the real provider set and remaining operational requirements are ready.
