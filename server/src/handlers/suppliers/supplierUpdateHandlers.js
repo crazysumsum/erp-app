@@ -40,7 +40,7 @@ function supplierService(services) {
 export class UpdateSupplierHandler extends BaseRequestHandler {
   static handlerName = "updateSupplier";
   static api = {
-    method: "POST",
+    method: "POST", inputCoercion: false,
     path: "/api/v1/suppliers/:id/update",
     description: "以版本控制更新供應商一般主資料；不接受 Supplier Code。",
     authorizationPolicies: SUPPLIER_MGMT_POLICY,
@@ -65,7 +65,7 @@ export class UpdateSupplierHandler extends BaseRequestHandler {
 export class ChangeSupplierCodeHandler extends BaseRequestHandler {
   static handlerName = "changeSupplierCode";
   static api = {
-    method: "POST",
+    method: "POST", inputCoercion: false,
     path: "/api/v1/suppliers/:id/code/change",
     description: "僅為未被引用的供應商受控修正 Supplier Code。",
     authType: "jwt-device-password",
