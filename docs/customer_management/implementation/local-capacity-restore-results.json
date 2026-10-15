@@ -21,43 +21,43 @@
     "load": {
       "workers": 50,
       "admissionMs": 30000,
-      "elapsedMs": 34639.2125,
+      "elapsedMs": 34442.810417,
       "operations": 892,
       "errors": 0,
-      "operationsPerSecond": 25.75116278985846,
-      "warmListMs": 349.143125
+      "operationsPerSecond": 25.898002782018448,
+      "warmListMs": 374.9391249999999
     },
     "latencyMs": {
       "list": {
         "count": 223,
-        "p50": 6462.144750000003,
-        "p95": 8902.452708,
-        "p99": 10635.222958999999
+        "p50": 6758.959166000001,
+        "p95": 9692.778916,
+        "p99": 10584.737582999998
       },
       "exactLookup": {
         "count": 223,
-        "p50": 51.6462500000016,
-        "p95": 2358.161249999999,
-        "p99": 2418.7550830000037
+        "p50": 10.376499999998487,
+        "p95": 1706.9380410000012,
+        "p99": 2491.5419170000023
       },
       "addressLookup": {
         "count": 223,
-        "p50": 8.733457999998791,
-        "p95": 1334.620583,
-        "p99": 2722.6692920000023
+        "p50": 8.155833000000712,
+        "p95": 1210.5283329999984,
+        "p99": 2673.598167
       },
       "contactLookup": {
         "count": 223,
-        "p50": 8.968958999999813,
-        "p95": 1155.145583999998,
-        "p99": 2486.420666000002
+        "p50": 8.17162499999904,
+        "p95": 1092.3975419999988,
+        "p99": 2563.1976670000004
       }
     },
     "resources": {
-      "heapPeakBytes": 92751560,
-      "rssBytes": 248102912,
-      "cpuUserUs": 371233,
-      "cpuSystemUs": 40439,
+      "heapPeakBytes": 93407448,
+      "rssBytes": 249085952,
+      "cpuUserUs": 340040,
+      "cpuSystemUs": 40704,
       "rowLockWaitsDelta": 0,
       "rowLockCurrentWaits": 0,
       "connectionsBefore": 1,
@@ -80,7 +80,19 @@
         "estimatedCustomerRows": 20
       }
     },
+    "gateFailures": [
+      "list p95 9692.8ms exceeds 2000ms",
+      "actual list full-scanned customers",
+      "actual list full-scanned customers"
+    ],
+    "measurementCandidate": "0b0f81a9613fde76185bf334c5303a128ae19968 plus reviewed all-gate collection change",
     "priorAttempts": [
+      {
+        "status": "FAIL",
+        "listP95Ms": 8902.452708,
+        "exactLookupP95Ms": 2358.161249999999,
+        "limit": "latency assertion stopped before actual-plan assertions; plans were exported but not gated"
+      },
       {
         "status": "FAIL",
         "listP95Ms": 9151.1

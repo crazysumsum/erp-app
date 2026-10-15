@@ -51,20 +51,21 @@ analyzed run completed 892 correct operations with zero errors in 34,605.88ms
 
 | Operation | Samples | p50 ms | p95 ms | p99 ms |
 | --- | --- | --- | --- | --- |
-| Customer list | 223 | 6,462.14 | 8,902.45 | 10,635.22 |
-| Exact Customer lookup | 223 | 51.65 | 2,358.16 | 2,418.76 |
-| Shipping address lookup | 223 | 8.73 | 1,334.62 | 2,722.67 |
-| Shipping contact lookup | 223 | 8.97 | 1,155.15 | 2,486.42 |
+| Customer list | 223 | 6,758.96 | 9,692.78 | 10,584.74 |
+| Exact Customer lookup | 223 | 10.38 | 1,706.94 | 2,491.54 |
+| Shipping address lookup | 223 | 8.16 | 1,210.53 | 2,673.60 |
+| Shipping contact lookup | 223 | 8.17 | 1,092.40 | 2,563.20 |
 
-The table is the final strict-profile rerun: 892 correct operations, zero errors,
-34,639.21ms including drain, 25.75 operations/s. Both list and exact lookup exceed
-the 2s p95 target under shared-pool load. Warm single-worker list took 349.14ms.
+The table is the final review-corrected strict-profile rerun: 892 correct operations,
+zero errors, 34,442.81ms including drain, 25.90 operations/s. List exceeds the 2s
+p95 target; exact lookup is below it in this run but exceeded it in the preceding
+strict-profile run (2,358.16ms; list 8,902.45ms). Warm list took 374.94ms.
 The earlier 9,733.95ms attempt overlapped separate-schema preparation and is not
 used as the final clean baseline. Final post-ANALYZE runs were serialized.
 
 Environment: Node 26.6.0, MySQL 26.7.0, macOS ARM64, 15 logical CPUs and 24GiB RAM;
-application DB pool remains 10. Heap sampled every 25ms peaked at 92,751,560 bytes;
-end RSS was 248,102,912 bytes. Node CPU during final load: 371,233us user / 40,439us
+application DB pool remains 10. Heap sampled every 25ms peaked at 93,407,448 bytes;
+end RSS was 249,085,952 bytes. Node CPU during final load: 340,040us user / 40,704us
 system. MySQL row-lock waits/current waiters stayed 0/0; connections grew 1 to 10.
 No query optimization, index change, larger pool or weaker budget was introduced.
 
@@ -80,7 +81,9 @@ regression. TASK-034 remains BLOCKED on this finding as well as integration gate
 The test now explicitly requests `EXPLAIN FORMAT=TRADITIONAL` and checks actual
 access-type fields: MySQL 26's default TREE format previously allowed the old
 `row.type !== 'ALL'` check to pass on `undefined`. Every actual-list plan row is
-retained and checked after metrics output. The 100k/50-worker/30-second evidence
+retained and checked before the final assertion. The final run's exported failures
+include both the list p95 breach and both Customer full scans, so an earlier latency
+failure cannot bypass plan checks. The 100k/50-worker/30-second evidence
 profile is mandatory; smaller overrides cannot produce a misleading PASS.
 
 One diagnostic attempt after repeated fixture deletion/recreation timed out during

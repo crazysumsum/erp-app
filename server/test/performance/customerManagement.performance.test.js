@@ -241,6 +241,16 @@ test(
       count: values.length, p50: percentile(values, 0.5), p95: percentile(values, 0.95), p99: percentile(values, 0.99)
     }]));
     const [[mysql]] = await database.query("SELECT VERSION() AS version");
+    const gateFailures = [];
+    for (const [name, metric] of Object.entries(latencyMs)) {
+      if (!(metric.p95 < P95_BUDGET_MS)) gateFailures.push(`${name} p95 ${metric.p95.toFixed(1)}ms exceeds ${P95_BUDGET_MS}ms`);
+    }
+    for (const plan of plans.actualList) {
+      for (const row of plan) {
+        if (typeof row.type !== "string") gateFailures.push(`actual list missing access type for ${row.table}`);
+        if (row.type === "ALL") gateFailures.push(`actual list full-scanned ${row.table}`);
+      }
+    }
     console.log(JSON.stringify({
       tc: "TC-028",
       fixtureVersion: "customer-phase001-performance-v1",
@@ -253,16 +263,9 @@ test(
         mysqlBefore: Object.fromEntries(statusBefore.map((row) => [row.Variable_name, Number(row.Value)])),
         mysqlAfter: Object.fromEntries(statusAfter.map((row) => [row.Variable_name, Number(row.Value)])) },
       latencyMs,
-      plans
+      plans,
+      gateFailures
     }));
-    for (const [name, metric] of Object.entries(latencyMs)) {
-      assert.ok(metric.p95 < P95_BUDGET_MS, `${name} p95 ${metric.p95.toFixed(1)}ms exceeds ${P95_BUDGET_MS}ms`);
-    }
-    for (const plan of plans.actualList) {
-      for (const row of plan) {
-        assert.equal(typeof row.type, "string");
-        assert.notEqual(row.type, "ALL", `actual list full-scanned ${row.table}`);
-      }
-    }
+    assert.deepEqual(gateFailures, [], "Customer latency and query-plan gates must all pass");
   }
 );

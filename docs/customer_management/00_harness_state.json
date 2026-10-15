@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 160,
+  "revision": 161,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "24b905fb54f174a745979908a11d3e6d6f0f0c8e9f41d80ee9bb8eea0d946f01",
     "plan": "8e3ca15db849b5f9bbfcc23d06d24bbfd00eb20c874f6f65ce7a1b2b36149b4f",
-    "code_commit": "4e539d8b79c4cf7c016fb2b208e253d9a15fa0e9",
-    "source_fingerprint": "b1ab0d80ffbb323192848a1de0d3396d4fd064d7b45248a8c9331047b60b662d",
+    "code_commit": "0b0f81a9613fde76185bf334c5303a128ae19968",
+    "source_fingerprint": "013351d743371a72bcfc3b30fc6eafe6b0435ad62cd9f4533817f1ae9df48535",
     "worktree": "/private/tmp/erp-customer-local-capacity-restore",
     "default_commit": "63fa5063b78d15375fe9f4891fb9ef0424b22639",
     "mode_entry_commit": "f7fd95584e827f1bce112388fc2c196b5939671f"
@@ -2136,6 +2136,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-044",
+      "method": "SEPARATE_AGENT",
+      "author": "/root TASK-034/035 local measurement evidence",
+      "reviewer": "Jason (/root/customer_task011_review), separate agent",
+      "reviewed_baseline": "013351d743371a72bcfc3b30fc6eafe6b0435ad62cd9f4533817f1ae9df48535",
+      "source_ref": "2026-10-15 independent final review APPROVE for exact source fingerprint. All latency/actual-plan gates execute and export three real failures before one terminal assertion; report/JSON agree with raw TAP. Port/schema safety guards, both key-ring redaction and strict profile findings closed. Guard tests2/2, lint,diff,traceability,boundary passed. No blocking finding in this evidence/test change; product DEF-034001 HIGH OPEN and full acceptance remain blocked. State-only reconciliation follows.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -2740,7 +2752,7 @@
       "spec_baseline": "8e3ca15db849b5f9bbfcc23d06d24bbfd00eb20c874f6f65ce7a1b2b36149b4f",
       "source_fingerprint": "5f63583a047dee6cc117c151078fa041941772db54c40e2b712b4ad38bc72029",
       "status": "FAIL",
-      "source_ref": "docs/customer_management/implementation/local-capacity-restore-report.md; DEF-034001. Final strict 100k/50-worker/30s run: list p95 8902.45ms and exact lookup p95 2358.16ms exceed 2000ms; 892 correct operations, zero errors, 25.75ops/s; actual count/page plans full-scan ~98853 estimated rows. TC-064 separately PASS: 10k rows in 26097.99ms, real Customer API p95 8.52ms. No product optimization or acceptance waiver; Task remains BLOCKED.",
+      "source_ref": "docs/customer_management/implementation/local-capacity-restore-report.md; DEF-034001. Strict run list p95 8902.45ms/exact2358.16ms, then review-corrected rerun on main-integrated 0b0f81a9 plus all-gate collection: list9692.78ms/exact1706.94ms; 892 correct operations, zero errors,25.90ops/s. Final exported gateFailures include both list latency and both full-scan plans (~98853 estimated rows). TC-064 PASS10k/26097.99ms/APIp958.52ms. No product optimization/waiver; Task BLOCKED.",
       "actor": "/root local developer measurement",
       "observed_at": "2026-10-15T01:08:00Z"
     },
@@ -3497,16 +3509,16 @@
       "kind": "GIT_PUSH",
       "target": "github:crazysumsum/erp-app:refs/heads/codex/customer-local-capacity-restore",
       "idempotency_key": "customer-local-capacity-restore-push-v1",
-      "status": "PLANNED",
-      "source_ref": "2026-10-15 Sam requests publication and merge of measured local results/limitations, with full downstream acceptance blocked."
+      "status": "CONFIRMED",
+      "source_ref": "2026-10-15 pushed 0b0f81a9 on codex/customer-local-capacity-restore; subsequent review corrections are published to the same branch. Full downstream acceptance stays blocked."
     },
     {
       "id": "EXT-PR-064",
       "kind": "PULL_REQUEST",
       "target": "github:crazysumsum/erp-app:main<-codex/customer-local-capacity-restore",
       "idempotency_key": "customer-local-capacity-restore-pr-v1",
-      "status": "PLANNED",
-      "source_ref": "Evidence/test-only PR; preserve OPEN DEF-034001, BLOCKED TASK-034 and downstream acceptance; no performance/DR sign-off or product fix."
+      "status": "CONFIRMED",
+      "source_ref": "2026-10-15 GitHub PR #228 created: https://github.com/crazysumsum/erp-app/pull/228. Evidence/test-only; OPEN DEF-034001, BLOCKED TASK-034 and downstream acceptance preserved. No performance/DR sign-off or product fix."
     },
     {
       "id": "EXT-MERGE-065",
@@ -3545,5 +3557,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Independently review and publish the local measurement/test report, require current PR CI, recheck main, then merge and clean the worktree/runtime under the explicit user instruction. This evidence-only merge does not close DEF-034001 or accept failed capacity. TASK-034 stays BLOCKED; TASK-035 is only locally verified IN_PROGRESS. Complete downstream integration, production capacity/DR acceptance and release remain BLOCKED."
+  "next_safe_action": "PR #228 publishes reviewed Customer-local evidence only. Require all five CI checks on final exact head, fetch/reconcile main, then merge under explicit user authorization and remove this task worktree/runtime. DEF-034001 stays HIGH OPEN and TASK-034 BLOCKED; TASK-035 local verification is not full completion. Downstream integration, production capacity/DR acceptance and release remain BLOCKED."
 }
