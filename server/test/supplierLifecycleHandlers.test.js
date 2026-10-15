@@ -38,7 +38,7 @@ test("high-risk auth and reason requirements match the lifecycle contract", () =
   }
 });
 
-test("block and unblock require both view and approval with device-password auth", () => {
+test("TC-032 (STATE-003): block and unblock require both view and approval with device-password auth", () => {
   for (const Handler of [BlockSupplierHandler, UnblockSupplierHandler]) {
     assert.equal(Handler.api.authType, "jwt-device-password");
     assert.deepEqual(Handler.api.authorizationPolicies[0].options.permissions, ["supplier.view", "supplier.approval"]);

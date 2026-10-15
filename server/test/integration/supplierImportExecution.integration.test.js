@@ -298,7 +298,7 @@ integrationTest("TASK-042: a row's Supplier, audit and applied marker commit tog
   assert.deepEqual([done.status, done.applied, done.failed, done.skipped], ["completed_with_errors", 1, 3, 0]);
 });
 
-integrationTest("TASK-042: a row applied before a crash is not applied again, and the job resumes after the lease expires", async () => {
+integrationTest("TC-095 (IMP-010): TASK-042: a row applied before a crash is not applied again, and the job resumes after the lease expires", async () => {
   clock += 1_000_000;
   await quiesce();
   const jobId = await seedJob({ rows: ["valid", "valid"] });

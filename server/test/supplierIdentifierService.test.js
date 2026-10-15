@@ -50,7 +50,7 @@ function harness({ identifier = identifierRow(), referenceCount = 0, duplicateOn
 
 const actor = { actorId: 1, claimedRoles: [], claimedPermissions: ["supplier.mgmt"], requestId: "req-1" };
 
-test("create normalizes identifier type, country and separator-insensitive key before auditing", async () => {
+test("TC-044 (PARTY-005): create normalizes identifier type, country and separator-insensitive key before auditing", async () => {
   const { service, events } = harness();
   const result = await service.create({
     ...actor, supplierId: 7, identifierType: "BUSINESS_REGISTRATION", issuerCountryCode: "hk",
@@ -79,7 +79,7 @@ test("create and update map database races to a non-disclosing public conflict",
   );
 });
 
-test("create rejects oversized notes at the domain boundary", async () => {
+test("TC-047 (PARTY-008): create rejects oversized notes at the domain boundary", async () => {
   const { service } = harness();
   await assert.rejects(
     () => service.create({
@@ -103,7 +103,7 @@ test("update requires reason and enforces child ownership and version", async ()
   );
 });
 
-test("delete rejects referenced identifiers and audits an allowed versioned deletion", async () => {
+test("TC-043 (PARTY-004): delete rejects referenced identifiers and audits an allowed versioned deletion", async () => {
   const blocked = harness({ referenceCount: 1 }).service;
   await assert.rejects(
     () => blocked.delete({ ...actor, supplierId: 7, identifierId: 31, version: 1, reason: "obsolete" }),

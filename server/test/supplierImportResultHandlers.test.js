@@ -44,7 +44,7 @@ test("a cell that a spreadsheet would run as a formula is turned into text", () 
   assert.equal(guardSpreadsheetCell(5), "5");
 });
 
-test("the result CSV has a BOM, one header and one record per row, joins issues and guards every cell", () => {
+test("TC-087 (IMP-002): the result CSV has a BOM, one header and one record per row, joins issues and guards every cell", () => {
   const csv = buildSupplierImportResult([
     { rowNumber: 1, operation: "create", status: "applied", supplierCode: "S-1", appliedSupplierId: 41, errors: [], warnings: [{ code: "W1" }] },
     { rowNumber: 2, operation: "update", status: "failed", supplierCode: "=HYPERLINK(\"x\")", appliedSupplierId: null,

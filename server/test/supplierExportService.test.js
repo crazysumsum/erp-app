@@ -52,7 +52,7 @@ test("each payment term is looked up once and written as its code", async () => 
   assert.deepEqual(parse(content, { bom: true }).slice(1).map((record) => record[column]), ["TERM-5", "TERM-5"]);
 });
 
-test("the audit names the actor, the filters and the count, and a failed audit means no file", async () => {
+test("TC-105 (AUD-003): the audit names the actor, the filters and the count, and a failed audit means no file", async () => {
   const { service, calls } = fakes({ rows: [supplier(1, { notes: "secret-ish note" })] });
   const result = await service.exportCsv({ ...actor, filters: { status: "active" } });
   assert.deepEqual(calls.audits, [{

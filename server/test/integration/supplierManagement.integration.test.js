@@ -85,7 +85,7 @@ async function cleanupActor(pool, actorId) {
   await pool.query("DELETE FROM users WHERE id = ?", [actorId]);
 }
 
-integrationTest("Supplier create atomically persists root, grams and audit while duplicate codes and audit failure leave no partial data", async (t) => {
+integrationTest("TC-028 (CORE-012): Supplier create atomically persists root, grams and audit while duplicate codes and audit failure leave no partial data", async (t) => {
   const pool = mysql.createPool({ ...config(), connectionLimit: 5 });
   const suffix = String(Date.now());
   const codes = [`INT-${suffix}-A`, `INT-${suffix}-B`];
@@ -162,7 +162,7 @@ integrationTest("Supplier create atomically persists root, grams and audit while
   assert.equal(Number(rollbackCount.total), 0);
 });
 
-integrationTest("Supplier root update and controlled Code correction enforce CAS, global uniqueness and reference guard", async (t) => {
+integrationTest("TC-026 (CORE-010): Supplier root update and controlled Code correction enforce CAS, global uniqueness and reference guard", async (t) => {
   const pool = mysql.createPool({ ...config(), connectionLimit: 5 });
   const suffix = String(Date.now());
   const originalCode = `UPD-${suffix}-A`;
@@ -273,7 +273,7 @@ integrationTest("Supplier root update and controlled Code correction enforce CAS
   assert.equal(audits.at(-1).reason, "Correct an onboarding typo");
 });
 
-integrationTest("Supplier lifecycle is atomic, idempotent at the target state and preserves delete audit", async (t) => {
+integrationTest("TC-037 (STATE-008): Supplier lifecycle is atomic, idempotent at the target state and preserves delete audit", async (t) => {
   const pool = mysql.createPool({ ...config(), connectionLimit: 5 });
   const suffix = String(Date.now());
   const ids = [];
@@ -362,7 +362,7 @@ integrationTest("Supplier lifecycle is atomic, idempotent at the target state an
   assert.equal(Number(afterRollback.version), restored.version);
 });
 
-integrationTest("Supplier core lookup keeps history visible and revalidates purchase eligibility in the caller transaction", async (t) => {
+integrationTest("TC-030 (STATE-001): Supplier core lookup keeps history visible and revalidates purchase eligibility in the caller transaction", async (t) => {
   const pool = mysql.createPool({ ...config(), connectionLimit: 5 });
   const suffix = String(Date.now());
   const code = `LOOK-${suffix}`;

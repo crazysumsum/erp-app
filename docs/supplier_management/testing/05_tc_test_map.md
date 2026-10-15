@@ -37,6 +37,134 @@
 
 PARTIAL means existing tests cover part of the Expected Result. The gap column says which part.
 
+## Step 2a — IDs on server and security tests
+
+Generated from the test titles. Each carrier's assertions, not only its title, cover the case's **main** Expected Result: the stated outcome, and any real-database or concurrency condition its Steps require. A case can have several carriers; the harness takes the worst result. Smaller clauses a carrier does not assert are listed under Notes and are accepted as partial. Review REV-092 removed 26 tags that did not meet this bar.
+
+Coverage: supplier-bank-security 15/15, supplier-server-integration 57/89, supplier-security 2/10.
+
+| TC | Carriers (file:line — title) | Notes |
+| --- | --- | --- |
+| TC-007 | `integration/supplierSkuRelations.integration.test.js:108` — TASK-038 (MIG-007): without the Item SKU/UOM tables the migration refuses and creates nothing<br>`integration/supplierSkuRelations.integration.test.js:239` — TASK-038: a rerun accepts the real tables but refuses a hand-made one whose foreign keys differ |  |
+| TC-016 | `integration/supplierSkuLookup.integration.test.js:197` — TASK-040 (HD-094 1A): over HTTP the for-SKU lookup needs a fresh supplier.view and returns no Bank data | carrier mostly checks auth; reasons and searchability are carried by TC-078/079 |
+| TC-018 | `supplierAdminService.test.js:77` — create Supplier revalidates actor and Business Master inside one transaction and atomically writes root, grams and audit<br>`supplierLifecycleService.test.js:94` — activate and reactivate revalidate activation data and write one atomic audit |  |
+| TC-019 | `integration/supplierApproval.integration.test.js:343` — a Supplier created with activate can actually be approved<br>`supplierAdminService.test.js:95` — creating with activate under approval ON lands in pending_approval, not active | assigned approver, returned Code and next step not asserted |
+| TC-021 | `supplierAdminService.test.js:89` — duplicate names remain warnings and do not block creation<br>`supplierDuplicateCandidates.test.js:25` — candidate ranking is exact first, thresholded, stable and capped at ten warnings |  |
+| TC-022 | `supplierValidation.test.js:18` — Supplier activation requires only Code, Name, an Active Currency and an allowed source state<br>`supplierValidation.test.js:32` — missing optional data produces bounded warnings and never activation issues |  |
+| TC-023 | `supplierCreateHandlers.test.js:6` — Supplier create route is idempotent, permission protected and accepts only the minimum root fields<br>`supplierValidation.test.js:65` — unknown write fields are rejected instead of silently persisted |  |
+| TC-025 | `supplierAdminService.test.js:175` — update Supplier locks and revalidates actor/catalog, replaces name grams and writes audit in one transaction |  |
+| TC-026 | `integration/supplierManagement.integration.test.js:165` — Supplier root update and controlled Code correction enforce CAS, global uniqueness and reference guard<br>`supplierAdminService.test.js:209` — change Supplier Code requires an unreferenced Supplier and writes a reasoned audit |  |
+| TC-028 | `integration/supplierManagement.integration.test.js:88` — Supplier create atomically persists root, grams and audit while duplicate codes and audit failure leave no partial data<br>`supplierLifecycleService.test.js:207` — audit failure rolls a lifecycle state change back as one transaction |  |
+| TC-030 | `integration/supplierManagement.integration.test.js:365` — Supplier core lookup keeps history visible and revalidates purchase eligibility in the caller transaction |  |
+| TC-032 | `supplierLifecycleHandlers.test.js:41` — block and unblock require both view and approval with device-password auth<br>`supplierLifecycleService.test.js:169` — block and unblock follow the exact state matrix and unblock only to Suspended |  |
+| TC-033 | `supplierLifecycleService.test.js:180` — archive returns named open-flow blockers and restore only returns Suspended |  |
+| TC-035 | `integration/supplierSkuRelations.integration.test.js:232` — TASK-038: a Supplier with a SKU relation cannot be permanently deleted<br>`supplierLifecycleService.test.js:194` — delete permits only an unreferenced never-active Draft and retains a reasoned audit |  |
+| TC-037 | `integration/supplierManagement.integration.test.js:276` — Supplier lifecycle is atomic, idempotent at the target state and preserves delete audit<br>`supplierLifecycleService.test.js:105` — same-target lifecycle replay returns current state without version increment or duplicate audit |  |
+| TC-039 | `supplierLookupService.test.js:82` — purchase marks non-Active Suppliers unusable while history keeps every non-deleted status visible |  |
+| TC-040 | `supplierAddressService.test.js:44` — create switches each requested primary and writes address, purposes and audit in one transaction |  |
+| TC-041 | `supplierContactService.test.js:64` — create normalizes contact fields, switches the requested primary and audits atomically |  |
+| TC-042 | `integration/supplierParty.integration.test.js:54` — Address ownership, primary switching, concurrency and deactivation are enforced by service and MySQL<br>`integration/supplierParty.integration.test.js:121` — Contact ownership, primary switching, concurrency and deactivation are enforced by service and MySQL |  |
+| TC-043 | `supplierAddressService.test.js:64` — address deactivate clears primary flags and preserves purpose mappings<br>`supplierContactService.test.js:99` — contact deactivate clears primary flags and preserves purpose mappings<br>`supplierIdentifierService.test.js:106` — delete rejects referenced identifiers and audits an allowed versioned deletion |  |
+| TC-044 | `integration/supplierParty.integration.test.js:191` — Identifier normalization, global uniqueness, ownership and deletion are enforced by service and MySQL<br>`supplierIdentifierService.test.js:53` — create normalizes identifier type, country and separator-insensitive key before auditing |  |
+| TC-047 | `supplierContactService.test.js:79` — create rejects malformed optional email and phone values<br>`supplierIdentifierService.test.js:82` — create rejects oversized notes at the domain boundary |  |
+| TC-049 | `integration/supplierCoreMigrations.integration.test.js:151` — 0036 seeds the settings singleton once and a rerun neither duplicates nor resets it<br>`supplierSettingsService.test.js:59` — reading settings returns the typed singleton with its version |  |
+| TC-050 | `supplierSettingsHandlers.test.js:9` — both settings routes require supplier.settings and nothing weaker |  |
+| TC-051 | `supplierSettingsService.test.js:66` — updating locks id=1, checks the version and audits before/after with the reason<br>`supplierSettingsService.test.js:98` — a stale version is a conflict and writes nothing<br>`supplierSettingsService.test.js:118` — an unknown setting field is rejected rather than stored |  |
+| TC-052 | `integration/supplierApproval.integration.test.js:149` — the database refuses a second pending request for one Supplier<br>`supplierApprovalService.test.js:69` — an approver must be named, must be someone else, must be active and must hold the permission now |  |
+| TC-053 | `supplierApprovalHandlers.test.js:118` — the eligible approver projection is exactly id, username and displayName<br>`supplierApprovalHandlers.test.js:125` — the eligible approver lookup is capped and can exclude the requester<br>`supplierApprovalService.test.js:97` — the snapshot carries the minimum activation data and masks identifiers |  |
+| TC-054 | `integration/supplierApproval.integration.test.js:114` — approving runs against real MySQL: every column exists and the row really moves | decided_by not asserted; audit read with LIMIT 1 |
+| TC-055 | `supplierApprovalService.test.js:143` — rejecting returns the Supplier to draft and keeps the reason<br>`supplierApprovalService.test.js:152` — rejecting without a reason is refused before anything is locked | 5–500 reason bounds and request status Rejected not asserted |
+| TC-056 | `integration/supplierApproval.integration.test.js:904` — withdrawing through another Supplier's route is refused and changes nothing<br>`supplierApprovalService.test.js:184` — only the requester may withdraw |  |
+| TC-057 | `supplierAdminService.test.js:255` — a significant edit while pending invalidates the request and returns the Supplier to draft<br>`supplierApprovalService.test.js:195` — a Supplier changed since submission cannot be approved on the old request |  |
+| TC-058 | `integration/supplierSettings.integration.test.js:254` — turning the approval policy off does not decide an already pending request | audit stubbed; a new submission after OFF not checked |
+| TC-059 | `integration/supplierApproval.integration.test.js:451` — the queue scopes resolve against real MySQL joins<br>`integration/supplierApproval.integration.test.js:480` — the queue counts and pages the same filtered set<br>`supplierApprovalService.test.js:244` — reassigning changes the approver without touching the Supplier | refusing the requester and audit before/after not asserted |
+| TC-060 | `integration/supplierApproval.integration.test.js:639` — two concurrent approves produce one transition and exactly one decision audit |  |
+| TC-061 | `integration/supplierApproval.integration.test.js:784` — a decision made after the approver's permission is revoked fails at both guards<br>`integration/supplierApproval.integration.test.js:836` — a disabled user can neither receive a reassignment nor decide |  |
+| TC-062 | `integration/supplierBankAcceptance.integration.test.js:175` — every role that may list Bank rows sees only masks, short accounts fully masked, no crypto metadata |  |
+| TC-063 | `integration/supplierBankAcceptance.integration.test.js:216` — reveal needs bank.view and the current password, is audited, and is not cacheable |  |
+| TC-064 | `integration/supplierBankAcceptance.integration.test.js:261` — only view + bank.view + bank.mgmt, with device and password, may write; everyone else changes nothing |  |
+| TC-065 | `integration/supplierBankDeviceWrites.integration.test.js:56` — every Bank write refuses a missing or wrong password, a missing or revoked device, a moved signature and a replayed nonce |  |
+| TC-066 | `integration/supplierBank.integration.test.js:149` — create really writes every column, and the encrypted ones are binary of the right width<br>`integration/supplierBank.integration.test.js:173` — the plaintext account appears in no column of the Bank table or the audit log |  |
+| TC-067 | `integration/supplierBank.integration.test.js:371` — a row moved to another Supplier cannot be revealed, because the AAD is bound to the owner<br>`supplierBankCrypto.test.js:45` — a round trip returns the account, and records the key ID that produced it<br>`supplierBankCrypto.test.js:60` — every row gets its own IV, so the same account never encrypts to the same bytes<br>`supplierBankCrypto.test.js:72` — moving a row to another Supplier makes it undecryptable<br>`supplierBankCrypto.test.js:85` — swapping the crypto context of two rows under one Supplier also fails<br>`supplierBankCrypto.test.js:116` — tampering with the ciphertext or the tag fails verification |  |
+| TC-068 | `integration/supplierBankAcceptance.integration.test.js:335` — a row whose encryption key is not in the ring is never revealed<br>`integration/supplierBankAcceptance.integration.test.js:346` — the refusal is 503 BANK_KEY_UNAVAILABLE, as design 6 and 8.3 specify<br>`integration/supplierBankAcceptance.integration.test.js:357` — a duplicate check that cannot read an existing row's lookup key fails closed<br>`integration/supplierBankAcceptance.integration.test.js:390` — re-entering the account on the only unreadable row repairs it; a second one still blocks<br>`integration/supplierBankAcceptance.integration.test.js:410` — a deactivated row on a lookup key outside the ring still blocks, as the unique index would<br>`integration/supplierBankAcceptance.integration.test.js:424` — a Supplier locked by a lost lookup key is recovered by the --from-lost reindex (HD-038)<br>`supplierBankService.test.js:219` — a Supplier with a row on a lookup key outside the ring cannot add or change an account |  |
+| TC-069 | `integration/supplierBank.integration.test.js:229` — the database refuses a second active default even if the service is bypassed<br>`integration/supplierBank.integration.test.js:258` — switching the default clears the old one, and deactivating frees the slot<br>`integration/supplierBank.integration.test.js:290` — two concurrent default switches leave exactly one default |  |
+| TC-070 | `integration/supplierBank.integration.test.js:322` — the same account twice under one Supplier is refused by the database as well as the service<br>`integration/supplierBank.integration.test.js:400` — a real ER_DUP_ENTRY from the driver becomes a 409, not a 500 carrying the blind index<br>`supplierBankCrypto.test.js:218` — formatting differences in the same account collide, so a duplicate cannot hide behind a space<br>`supplierBankService.test.js:174` — a same-Supplier duplicate is blocked and a cross-Supplier one is only a warning |  |
+| TC-071 | `integration/supplierBankAcceptance.integration.test.js:478` — an update that keeps the account keeps every encrypted byte; one that changes it replaces them all |  |
+| TC-072 | `integration/supplierBankAcceptance.integration.test.js:512` — deactivation clears the default and keeps the row; there is no route that deletes one |  |
+| TC-073 | `integration/supplierBankAcceptance.integration.test.js:550` — when the audit cannot be written, no Bank write lands and no reveal returns an account |  |
+| TC-074 | `integration/supplierBank.integration.test.js:788` — after success and failure flows, no channel on this baseline carries the account |  |
+| TC-076 | `integration/supplierBankRotation.integration.test.js:141` — encryption rotation re-encrypts real rows and leaves them decryptable and un-reindexed<br>`integration/supplierBankRotation.integration.test.js:186` — lookup rotation rewrites index and key id together, and the unique constraint holds<br>`integration/supplierBankRotation.integration.test.js:222` — a duplicate is still refused while the ring is half rotated<br>`integration/supplierBankRotation.integration.test.js:266` — an interrupted rotation resumes and finishes on real rows |  |
+| TC-077 | `integration/supplierBankRestore.integration.test.js:135` — a restored backup reveals with its key ring, and fails closed without it |  |
+| TC-078 | `integration/supplierSkuLookup.integration.test.js:120` — TASK-040 (SKU-001, SKU-002, AC-028–030): every Active Supplier stays, relations only rank, stopped and inactive never rank up |  |
+| TC-079 | `integration/supplierSkuLookup.integration.test.js:220` — TASK-040 (HD-095 B): the two-part read pages exactly like one LEFT JOIN sorted by the design §8.7 order<br>`integration/supplierSkuLookup.integration.test.js:247` — TASK-040 (HD-094 2A): among exact matches a stopped relation still does not rank by history, and other SKUs' relations never leak in<br>`integration/supplierSkuLookup.integration.test.js:272` — TASK-040 (SKU-002, REV-087 M-2): ties inside the head fall back to name, then ID |  |
+| TC-080 | `integration/supplierSkuLookup.integration.test.js:152` — TASK-040 (SKU-003, BR-024, BR-032): a preferred mark never makes a suspended Supplier or an unpurchasable SKU usable |  |
+| TC-081 | `integration/supplierSkuRelations.integration.test.js:122` — TASK-038 (SKU-004): create and update keep MOQ, lead time and status in bounds, with one audit each and no price |  |
+| TC-083 | `integration/supplierSkuRelations.integration.test.js:189` — TASK-038 (SKU-006): recordSupply is idempotent, never makes a relation preferred and fails closed without a source verifier |  |
+| TC-084 | `supplierRelationHandlers.test.js:19` — TASK-038 (SKU-007, FR-SKU-006): no request or response carries a price, and unknown fields are refused |  |
+| TC-086 | `integration/supplierImport.integration.test.js:1528` — TASK-049 (TC-086, SUP-CAP-05): one mixed file end to end — counts agree everywhere, and nothing leaks<br>`supplierCsvSchema.test.js:33` — the template is UTF-8 with a BOM, CRLF, the v1 columns, a description row that says Bank is not accepted, and an example |  |
+| TC-087 | `supplierCsvSchema.test.js:72` — RFC 4180: quoted commas, doubled quotes, CRLF or LF, with or without BOM, Chinese text and leading zeros<br>`supplierImportResultHandlers.test.js:47` — the result CSV has a BOM, one header and one record per row, joins issues and guards every cell |  |
+| TC-088 | `integration/supplierImport.integration.test.js:160` — TASK-043 IMP-003: upload stores the file under a server-made name, 0600, inside the root, and records the job<br>`supplierCsvSchema.test.js:128` — malformed, non-UTF-8, empty, oversized and over-long files are rejected with their own code |  |
+| TC-089 | `integration/supplierImport.integration.test.js:187` — TASK-043 IMP-004/005/011 (TC-089): precheck classifies each row and writes nothing to Supplier tables |  |
+| TC-090 | `integration/supplierImport.integration.test.js:607` — TASK-044: detail pages the rows by row number, filters by status, and serves none before precheck finishes<br>`supplierImportHandlers.test.js:91` — the summary projects every public field and says whether the files are gone |  |
+| TC-092 | `integration/supplierImport.integration.test.js:1083` — TASK-045 (HD-048 4): a failure after the real Supplier write leaves no Supplier, child, name gram or audit behind |  |
+| TC-094 | `integration/supplierImport.integration.test.js:1141` — TASK-045 fault injection: a worker killed before or after a row's commit leaves both or neither, and the next worker finishes once |  |
+| TC-095 | `integration/supplierImport.integration.test.js:1171` — TASK-045: two workers never apply a row twice — one claim wins, and a worker that lost its lease writes nothing<br>`integration/supplierImportExecution.integration.test.js:301` — TASK-042: a row applied before a crash is not applied again, and the job resumes after the lease expires |  |
+| TC-096 | `integration/supplierImport.integration.test.js:1050` — TASK-045: execution re-checks what precheck saw — a Code or Identifier taken since, an archived target, a moved version, a retired currency<br>`supplierImportPrecheck.test.js:154` — upsert matches by supplierId first and cross-checks the code; code alone also matches (IMP-011) |  |
+| TC-097 | `integration/supplierImport.integration.test.js:976` — TASK-045 (AC-013, BR-012): activation follows the policy snapshotted at confirm; with approval it opens a request that already lists the new identifier |  |
+| TC-098 | `integration/supplierImport.integration.test.js:677` — TASK-044 (HD-058 2A/3A): cancel ends the job, deletes the source, keeps the rows and is replay-safe<br>`supplierImportService.test.js:32` — job counts are rebuilt from row statuses, with invalid rows still pending until they are skipped |  |
+| TC-099 | `integration/supplierImport.integration.test.js:264` — TASK-043 IMP-014 (TC-099): a Bank column is refused at upload and its value reaches no row, job, file, audit or log<br>`supplierCsvSchema.test.js:94` — a Bank column rejects the whole file: no row is produced and the value appears nowhere in the result |  |
+| TC-100 | `integration/supplierImport.integration.test.js:572` — TASK-044 IMP-015: only the uploader lists, reads and cancels a job; the job API tells no one else it exists<br>`integration/supplierImportRetention.integration.test.js:105` — TASK-048: executed jobs past 365 days lose their files and answer 410; the job, its rows and audit stay |  |
+| TC-102 | `integration/supplierExport.integration.test.js:131` — TASK-047 (HD-067 2A): the export is the list's rows in the list's order, under the import template v1 header<br>`integration/supplierExport.integration.test.js:188` — TASK-047 (BR-028, SEC-012): no Bank data and no live formula in the file; awkward text survives the round trip<br>`integration/supplierExport.integration.test.js:225` — TASK-047 (HD-067 1A): password, permission and the 10,000-row cap |  |
+| TC-104 | `supplierAuditLogService.test.js:35` — audit writer rejects unknown actions, unknown detail keys and Bank-sensitive fields<br>`supplierBankService.test.js:152` — create encrypts, indexes and audits, and no plaintext reaches the audit entry |  |
+| TC-105 | `integration/supplierAudit.integration.test.js:13` — Supplier audit follows its caller transaction and committed rows remain queryable<br>`supplierBankService.test.js:380` — a reveal whose audit fails returns no account at all<br>`supplierExportService.test.js:55` — the audit names the actor, the filters and the count, and a failed audit means no file |  |
+| TC-114 | `integration/supplierBank.integration.test.js:645` — no Bank route reaches another Supplier's row, and the refusal changes nothing<br>`integration/supplierImport.integration.test.js:784` — TASK-044 (REV-069 L-1): another user's cancel answers 404 at once, without waiting on a job someone holds |  |
+| TC-115 | `integration/supplierImport.integration.test.js:738` — TASK-044: a manager whose permission was withdrawn after the token was issued is refused at once<br>`supplierBankService.test.js:334` — every write re-checks the permission, so a revoked token cannot keep writing |  |
+
+### Not tagged: tests to write in step 2b
+
+| TC | Case | Why not |
+| --- | --- | --- |
+| TC-001 | MIG-001 | no Supplier test asserts the absence of a Currency/Payment Term shadow schema; providers resolve only against a fake DB |
+| TC-002 | MIG-002 | reruns converge, but a half-applied schema is refused, not converged; needs investigation against the design |
+| TC-003 | MIG-003 | one-pending is DB-enforced; no barrier race across primary/default/pending in one place |
+| TC-004 | MIG-004 | fake DB; approval default OFF and no Currency seed not asserted in this suite (REV-092 Low) |
+| TC-005 | MIG-005 | config validation only; no server start per bad config |
+| TC-006 | MIG-006 | upgrade from main and rollback rehearsal (T51 rehearsal) |
+| TC-008 | LIST-001 | default 20 and 400 on 0 or 101 not asserted; archived exclusion is a regex on SQL text (REV-092 M-7) |
+| TC-009 | LIST-002 | no per-field hit, case/trim or no-duplicate-row test |
+| TC-010 | LIST-003 | filter combinations and boundaries not tested |
+| TC-011 | LIST-004 | no cross-page stability test on MySQL |
+| TC-012 | LIST-005 | the escaped LIKE is asserted on SQL text only; no illegal-sort 400 or literal-wildcard result on MySQL |
+| TC-014 | LIST-007 | non-Active not-purchasable hint |
+| TC-017 | CORE-001 | no test asserts a Draft create with version 1, children and audit in one transaction |
+| TC-020 | CORE-004 | no 400 for invalid input over the API, and the race is a faked ER_DUP_ENTRY, not two connections (REV-092 M-5) |
+| TC-024 | CORE-008 | no concurrent same-key create on MySQL |
+| TC-027 | CORE-011 | stale version on a fake DB only; no concurrent save, no HTTP 409 (REV-092 M-6) |
+| TC-031 | STATE-002 | no test reactivates an incomplete Supplier and expects 422 with the status kept |
+| TC-034 | STATE-005 | no test lists archived Suppliers by explicit filter and then restores one |
+| TC-036 | STATE-007 | no two-connection ordering swap |
+| TC-038 | STATE-009 | no barrier-synchronised concurrent transitions |
+| TC-045 | PARTY-006 | update only on a fake DB; read, deactivate and delete untested (REV-092 Low) |
+| TC-046 | PARTY-007 | no test asserts warnings present, issues empty and activation allowed together (REV-092 M-8) |
+| TC-048 | PARTY-009 | no detail child cap or server-paged child list test |
+| TC-082 | SKU-005 | sequential only; Steps require concurrent creates and direct-DB negatives (REV-092 Low) |
+| TC-091 | IMP-006 | the carrier asserts job status completed with a skipped row, while IMP-006 expects completed_with_errors; the code sets it only when a row failed. Decision pending (REV-092 H-2) |
+| TC-093 | IMP-008 | no barrier-synchronised same-key submit |
+| TC-103 | AUD-001 | requestId and IP are not asserted per action |
+| TC-106 | AUD-004 | over-limit detail: whole-transaction failure and alert not asserted |
+| TC-107 | AUD-005 | ordering and total across pages not asserted |
+| TC-108 | AUD-006 | no test enumerates routes or attempts an audit write (REV-092 M-4) |
+| TC-109 | AUD-007 | audit kept after target/actor deletion not asserted |
+| TC-110 | AUD-008 | time formats and requestId join not asserted |
+| TC-111 | AUTH-001 | no test calls Supplier routes without a token; the former carriers only use authenticated users (REV-092 H-1) |
+| TC-112 | AUTH-002 | no single route-by-role matrix |
+| TC-113 | AUTH-003 | the refusal of CRUD, reveal and Settings to an integration consumer is not asserted (REV-092 H-3) |
+| TC-116 | AUTH-006 | metadata for three handler families only; a lower credential and payload downgrade are never exercised (REV-092 M-9) |
+| TC-117 | AUTH-007 | 415, positive-integer IDs and strict booleans per API class |
+| TC-118 | AUTH-008 | no-store not asserted by the carriers; only Bank schemas scanned; bulk-event audit not asserted (REV-092 M-10) |
+| TC-119 | AUTH-009 | script rendering and prototype pollution |
+| TC-120 | AUTH-010 | two narrow error classes; the case needs each class over HTTP (REV-092 M-11) |
+
 ## supplier-server-integration (94)
 
 | TC | Case | Candidate tests | Status | Gap |

@@ -22,7 +22,7 @@ test("Dice score has deterministic exact and threshold boundaries", () => {
   assert.ok(bigramDiceScore("abcdefghij", "abcdefgxyz") < 0.85);
 });
 
-test("candidate ranking is exact first, thresholded, stable and capped at ten warnings", async () => {
+test("TC-021 (CORE-005): candidate ranking is exact first, thresholded, stable and capped at ten warnings", async () => {
   const rows = [
     { id: 9, supplier_code: "S9", supplier_name: "ABC Trading", supplier_name_key: "abc trading" },
     { id: 3, supplier_code: "S3", supplier_name: "ABC Trading", supplier_name_key: "abc trading" },

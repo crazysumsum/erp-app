@@ -32,7 +32,7 @@ test("audit writer uses only the caller connection and writes an allowlisted bou
   assert.deepEqual(JSON.parse(calls[0][1][9]), { before: { supplierName: "Old" }, after: { supplierName: "New" } });
 });
 
-test("audit writer rejects unknown actions, unknown detail keys and Bank-sensitive fields", async () => {
+test("TC-104 (AUD-002): audit writer rejects unknown actions, unknown detail keys and Bank-sensitive fields", async () => {
   const connection = { async execute() { throw new Error("must not write"); } };
   await assert.rejects(() => service().record(connection, { action: "unknown", targetType: "supplier" }), /Unsupported Supplier audit action/u);
   await assert.rejects(() => service().record(connection, { action: "supplier.update", targetType: "supplier", detail: { surprise: true } }), /detail key/u);

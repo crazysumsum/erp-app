@@ -79,7 +79,7 @@ test("findById uses a bounded read transaction and returns only the minimal non-
   assert.deepEqual(database.transactions, [{ isolationLevel: "READ COMMITTED", timeoutMs: 5_000 }]);
 });
 
-test("purchase marks non-Active Suppliers unusable while history keeps every non-deleted status visible", async () => {
+test("TC-039 (STATE-010): purchase marks non-Active Suppliers unusable while history keeps every non-deleted status visible", async () => {
   const database = fakeDatabase([
     [supplierRow({ status: "blocked" })],
     [supplierRow({ status: "archived" })]
