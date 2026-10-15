@@ -1289,7 +1289,7 @@ export class ItemAdminService {
   /** active → inactive；唔可以停用父 Item（本身仍然 active 嗰陣）最後一個
    * Active SKU（design_spec §4.2）。 */
   async deactivateSku({ actorId, claimedRoles, claimedPermissions, id, reason, version, requestId, ip }) {
-    const skuId = await this.database.withTransaction(async (connection) => {
+    const deactivateOnce = () => this.database.withTransaction(async (connection) => {
       const actor = await assertActorFresh(connection, { actorId, claimedRoles, claimedPermissions });
       await this.#deactivateSkuCore(connection, {
         id,
@@ -1303,6 +1303,15 @@ export class ItemAdminService {
       });
       return id;
     });
+
+    let skuId;
+    try {
+      skuId = await deactivateOnce();
+    } catch (error) {
+      if (error.code === "DATABASE_TRANSACTION_INDETERMINATE" || (error.cause?.code ?? error.code) !== "ER_LOCK_DEADLOCK") throw error;
+      // Retry the rolled-back victim once with a fresh actor/read view and last-active guard.
+      skuId = await deactivateOnce();
+    }
 
     return this.getSku({ actorId, claimedRoles, claimedPermissions, id: skuId });
   }

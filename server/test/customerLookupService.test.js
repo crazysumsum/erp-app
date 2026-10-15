@@ -240,3 +240,14 @@ test("TC-018 contact assertion uses the same safe absent response for missing an
     (error) => error.code === "CUSTOMER_LOOKUP_PURPOSE_INVALID"
   );
 });
+
+
+test("TC-035 Customer precheck batch preserves missing/inactive members and uses one safe caller query",async()=>{
+ const calls=[],tx={async query(sql,args){calls.push({sql,args});return [[{...activeCustomer,credit_version:null},{...activeCustomer,id:5,status:"blocked",credit_status:"on_hold",credit_version:1,credit_limit:"1.0000",credit_currency_code:"HKD"}]];}};
+ const service=new CustomerLookupService({database:{query(){throw new Error("Pool read forbidden");}}});
+ const rows=await service.getSalesPrecheckSnapshotsInTransaction(tx,[4,5,6,4],{atMs:1});
+ assert.equal(calls.length,1);assert.deepEqual(calls[0].args,[4,5,6]);assert.equal(rows.get(4).credit.configured,false);assert.equal(rows.get(5).status,"blocked");assert.equal(rows.get(6),null);assert.equal(rows.get(5).credit.status,"on_hold");assert.equal(Object.hasOwn(rows.get(4),"notes"),false);
+ assert.deepEqual(await service.getSalesPrecheckSnapshotsInTransaction(tx,[]),new Map());assert.equal(calls.length,1);
+ for(const ids of [[0],[NaN],Array.from({length:101},(_,i)=>i+1)])await assert.rejects(()=>service.getSalesPrecheckSnapshotsInTransaction(tx,ids),TypeError);
+ assert.equal(calls.length,1);
+});

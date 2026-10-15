@@ -37,7 +37,13 @@
       "client/src/composables/sales/**",
       "server/src/modules/inventory/InventoryReservationService.js",
       "server/src/modules/inventory/inventoryConstants.js",
-      "server/src/services/idempotency/IdempotencyService.js"
+      "server/src/services/idempotency/IdempotencyService.js",
+      "server/src/services/salesJobs/jobs/SalesImportJob.js",
+      "server/src/services/salesJobs/jobs/SalesFileRetentionJob.js",
+      "server/src/handlers/sales-import-templates/**",
+      "server/src/modules/customer/CustomerLookupService.js",
+      "server/config/api.js",
+      "server/src/framework/middleware/bodyReceiveTimeout.js"
     ],
     "test_paths": [
       "server/test/sales/**",
@@ -79,7 +85,9 @@
       "server/test/inventorySalesWorkerContracts.test.js",
       "client/test/composables/sales/**",
       "server/test/idempotencyService.test.js",
-      "server/test/integration/itemRecoveryAcceptance.integration.test.js"
+      "server/test/integration/itemRecoveryAcceptance.integration.test.js",
+      "server/test/sales/phase3/**",
+      "server/test-support/salesProcessingCrashChild.js"
     ],
     "allowed_write_paths": [
       "docs/sales_order_management/**",
@@ -145,7 +153,25 @@
       "server/src/modules/inventory/inventoryConstants.js",
       "server/src/services/idempotency/IdempotencyService.js",
       "server/test/idempotencyService.test.js",
-      "server/test/integration/itemRecoveryAcceptance.integration.test.js"
+      "server/test/integration/itemRecoveryAcceptance.integration.test.js",
+      "server/src/services/salesJobs/jobs/SalesImportJob.js",
+      "server/src/services/salesJobs/jobs/SalesFileRetentionJob.js",
+      "server/src/handlers/sales-import-templates/**",
+      "server/src/modules/customer/CustomerLookupService.js",
+      "server/test/sales/phase3/**",
+      "server/database/migrations/*_create_sales_import_jobs.js",
+      "server/database/migrations/*_create_sales_intake_orders.js",
+      "server/database/migrations/*_create_sales_intake_errors.js",
+      "server/database/migrations/*_extend_sales_reservation_intake_projection.js",
+      "server/test/itemLookupService.test.js",
+      "server/test/customerLookupService.test.js",
+      "server/test/configNormalizers.test.js",
+      "server/test/configuration.test.js",
+      "docs/customer_management/03_design_spec.md",
+      "docs/items_management/03_design_spec.md",
+      "server/config/api.js",
+      "server/src/framework/middleware/bodyReceiveTimeout.js",
+      "server/test-support/salesProcessingCrashChild.js"
     ],
     "approval_required_paths": [
       "server/database/migrations/**",
@@ -211,7 +237,14 @@
       "docs/fulfillment_shipping_management/03_design_spec.md",
       "server/src/modules/inventory/inventoryConstants.js",
       "server/test/idempotencyService.test.js",
-      "server/test/integration/itemRecoveryAcceptance.integration.test.js"
+      "server/test/integration/itemRecoveryAcceptance.integration.test.js",
+      "server/src/modules/customer/CustomerLookupService.js",
+      "docs/customer_management/03_design_spec.md",
+      "docs/items_management/03_design_spec.md",
+      "server/database/migrations/*_create_sales_import_jobs.js",
+      "server/database/migrations/*_create_sales_intake_orders.js",
+      "server/database/migrations/*_create_sales_intake_errors.js",
+      "server/database/migrations/*_extend_sales_reservation_intake_projection.js"
     ],
     "forbidden_paths": [
       ".env",
@@ -236,7 +269,11 @@
       "server/database/migrations/*_create_sales_quotation_conversions.js",
       "server/database/migrations/*_create_sales_external_order_keys.js",
       "server/database/migrations/*_create_sales_order_line_reservations.js",
-      "server/database/migrations/*_create_sales_backorder_entries.js"
+      "server/database/migrations/*_create_sales_backorder_entries.js",
+      "server/database/migrations/*_create_sales_import_jobs.js",
+      "server/database/migrations/*_create_sales_intake_orders.js",
+      "server/database/migrations/*_create_sales_intake_errors.js",
+      "server/database/migrations/*_extend_sales_reservation_intake_projection.js"
     ],
     "shared_resources": [
       "global-migration-sequence",
@@ -257,7 +294,7 @@
         "id": "sales-fulfillment-projection-and-lifecycle-contract",
         "version": "planning-only-NOT_IMPLEMENTED; TASK009-010 source pins reconciled, Sales additions CI pending",
         "source": "docs/sales_order_management/03_design_spec.md",
-        "sha256": "a1a468ff6b91366f3e5328da5691ce61d3ae798a3265ed43196a4fe5a93a3577",
+        "sha256": "5f82a24962a4f8e853acba56a83dedb7ceec94513497895f29966024100cbfdc",
         "consumers": [
           "fulfillment-shipping-management",
           "inventory-management",
@@ -269,9 +306,9 @@
       {
         "module_id": "inventory-management",
         "id": "inventory-batch-reserve-release-contract",
-        "version": "observed-main-dd36250-PARTIAL-SALES-CONTRACT-NOT_IMPLEMENTED; TASK009-010 source pins reconciled, Sales additions CI pending",
+        "version": "observed-main-f7ddcfd-Inventory-P3; compatible Sales consumption, full integrated original33/currentCI required",
         "source": "docs/inventory_management/03_design_spec.md",
-        "sha256": "d24d46d353a62db558901dd87b44b77e75cf97ff8b5a23fc6922657ab95eddaa",
+        "sha256": "2fb61cce8ee4ff9f32cd9c6d0e2a9fc8f87c08d34823be7fb622908610b1ac53",
         "regression_suites": [
           "sales-technical"
         ]
@@ -279,9 +316,9 @@
       {
         "module_id": "customer-management",
         "id": "customer-snapshot-and-credit-contract",
-        "version": "observed-main-dd36250; TASK009-010 source pins reconciled, Sales additions CI pending",
+        "version": "integrated-main-6b3faa-Customer-HD012-design-document; Sales snapshot/credit/provider/runtime contracts unchanged; no future shared UI implementation adopted; fresh original33/currentCI required",
         "source": "docs/customer_management/03_design_spec.md",
-        "sha256": "1ff3954f4c925d9a5b972fb8c55676731dd0cfa7861f280b2c0ceccb4795d73d",
+        "sha256": "5020a183c2ea1e290b8ba0ce1736524e21a99b6268ee54502c5ac48f7e10873d",
         "regression_suites": [
           "sales-technical"
         ]
@@ -289,9 +326,9 @@
       {
         "module_id": "item-management",
         "id": "item-lookup-service",
-        "version": "observed-main-dd36250-PARTIAL-SALES-CONTRACT-NOT_IMPLEMENTED; TASK009-010 source pins reconciled, Sales additions CI pending",
+        "version": "integrated-main-7c927e26-Item-purchase-lookup; Sales named contracts unchanged, current33/currentCI pending",
         "source": "server/src/modules/item/ItemLookupService.js",
-        "sha256": "30d6807978b27252fde194cc821c8fef5de000f27fa7eed404ed204abab2764a",
+        "sha256": "1b58448ce97d48da19ab8fd47d6bacab48cec7878ffdbb76bb68af252cc60be6",
         "regression_suites": [
           "sales-technical"
         ]
@@ -309,9 +346,9 @@
       {
         "module_id": "framework",
         "id": "idempotency-service",
-        "version": "observed-main-dd36250",
+        "version": "observed-main-f7ddcfd-Inventory-P3; compatible Sales consumption, full integrated original33/currentCI required",
         "source": "server/src/services/idempotency/IdempotencyService.js",
-        "sha256": "b4a33f4abb73e16ec74d5f50c5ae25da308ac06049c8f8f4d1e20f8bf0412a28",
+        "sha256": "b574dd69c4fd006a550421d9bb1e550c94f8f39d22837eecd61f7cf079c6da9d",
         "regression_suites": [
           "sales-technical"
         ]

@@ -501,3 +501,37 @@ test("Last-active race：兩個並行 deactivate 想同時停用一個 Item 底�
   );
   assert.equal(activeCount, 1, "個 Item 唔可以喺呢個過程之後零個 Active SKU");
 });
+
+test("Last-active rollback retry is bounded, preserves one audit and never replays unknown outcomes", { skip }, async t => {
+  const { MySqlDatabaseOperationError } = await import("../../src/services/mysqldatabase/MySqlDatabaseService.js");
+  for (const scenario of ["once", "second", "network", "indeterminate"]) await t.test(scenario, async t => {
+    const application = await startApplication();
+    const manager = await withManager(t, application), { db } = manager, catalog = await seedCatalog(db);
+    const fixture = await seedItemWithSkus(db, catalog, { itemStatus: "active", skuStatuses: ["active", "active"] });
+    t.after(async () => { await fixture.cleanup(); await catalog.cleanup(); await application.shutdown("deactivate_retry_complete"); });
+    const cause = Object.assign(new Error("Synthetic transaction fault"), { code: scenario === "network" ? "ECONNRESET" : "ER_LOCK_DEADLOCK" });
+    const injected = new MySqlDatabaseOperationError("Synthetic rolled-back operation", { code: scenario === "indeterminate" ? "DATABASE_TRANSACTION_INDETERMINATE" : "DATABASE_OPERATION_FAILED", cause });
+    let attempts = 0;
+    const database = {
+      query: db.query.bind(db),
+      withTransaction(work, options) {
+        attempts++;
+        return db.withTransaction(async connection => {
+          const [[before]] = await connection.query("SELECT COUNT(*) AS n FROM item_skus WHERE item_id=? AND status='active' AND version=1", [fixture.itemId]);
+          assert.equal(Number(before.n), 2);
+          const result = await work(connection);
+          if (scenario !== "once" || attempts === 1) throw injected;
+          return result;
+        }, options);
+      }
+    };
+    const service = new ItemAdminService({ database, time: application.services.require("time"), logger: application.services.require("logging").logger });
+    const input = { actorId: manager.actorId, claimedRoles: [manager.roleName], claimedPermissions: ["item.view", "item.mgmt"], id: fixture.skus[0].id, version: 1, reason: "Synthetic deadlock recovery" };
+    if (scenario === "once") {
+      const result = await service.deactivateSku(input);assert.equal(result.status, "inactive");assert.equal(result.version, 2);
+    } else await assert.rejects(() => service.deactivateSku(input), error => error === injected);
+    assert.equal(attempts, ["once", "second"].includes(scenario) ? 2 : 1);
+    const [[facts]] = await db.query("SELECT (SELECT COUNT(*) FROM item_skus WHERE item_id=? AND status='active') AS active,(SELECT COUNT(*) FROM item_audit_logs WHERE target_id=? AND action='sku.deactivate') AS audits", [fixture.itemId, fixture.skus[0].id]);
+    assert.deepEqual([Number(facts.active), Number(facts.audits)], scenario === "once" ? [1, 1] : [2, 0]);
+  });
+});

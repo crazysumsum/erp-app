@@ -3,7 +3,7 @@ import { salesError, SALES_ERROR_STATUS } from "./salesErrors.js";
 import { salesEventId } from "./salesValidation.js";
 
 const TARGETS = Object.freeze({ CREATE_QUOTATION: "QUOTATION", UPDATE_QUOTATION: "QUOTATION", ISSUE_QUOTATION: "QUOTATION",
-  CANCEL_QUOTATION: "QUOTATION", CONVERT_QUOTATION: "QUOTATION", CREATE_ORDER: "SALES_ORDER", UPDATE_ORDER: "SALES_ORDER", WITHDRAW_ORDER: "SALES_ORDER", CANCEL_ORDER: "SALES_ORDER", CLOSE_REMAINING_ORDER: "SALES_ORDER" });
+  CANCEL_QUOTATION: "QUOTATION", CONVERT_QUOTATION: "QUOTATION", CREATE_ORDER: "SALES_ORDER", UPDATE_ORDER: "SALES_ORDER", WITHDRAW_ORDER: "SALES_ORDER", CANCEL_ORDER: "SALES_ORDER", CLOSE_REMAINING_ORDER: "SALES_ORDER", CONFIRM_IMPORT: "IMPORT_JOB", CANCEL_IMPORT: "IMPORT_JOB" });
 const STATUSES = ["DRAFT", "ISSUED", "EXPIRED", "CANCELLED", "CONVERTED", "CONFIRMED", "CLOSED"];
 function identifier(value) {
   if (!Number.isSafeInteger(value) || value <= 0) throw new TypeError("Invalid Sales operation identifier");
@@ -20,7 +20,8 @@ function trace(value = "") {
 function safeResult(value) {
   const result = typeof value === "string" ? JSON.parse(value) : value;
   if (!result || Object.keys(result).sort().join(",") !== "id,number,status,version" ||
-      typeof result.number !== "string" || !/^(SO|QT)-\d{6}-\d{6}$/u.test(result.number) || !STATUSES.includes(result.status)) throw new TypeError("Invalid Sales operation result");
+      typeof result.number !== "string" || !/^(SO|QT|SI)-\d{6}-\d{6}$/u.test(result.number) ||
+      !(result.number.startsWith("SI-") ? ["QUEUED","CANCELLED"] : STATUSES).includes(result.status)) throw new TypeError("Invalid Sales operation result");
   identifier(result.id); identifier(result.version);
   return { id: result.id, number: result.number, status: result.status, version: result.version };
 }
@@ -86,7 +87,7 @@ export class SalesOperationService {
   }
 
   async succeed(connection, { operationId, result, nowMs }) {
-    const summary = safeResult(result), resultType = summary.number.startsWith("QT-") ? "QUOTATION" : "SALES_ORDER";
+    const summary = safeResult(result), resultType = summary.number.startsWith("QT-") ? "QUOTATION" : summary.number.startsWith("SI-") ? "IMPORT_JOB" : "SALES_ORDER";
     const [row] = await connection.execute(`UPDATE sales_operation_requests SET status = 'SUCCEEDED', result_type = ?, result_id = ?,
       result_summary = ?, updated_at = ?, completed_at = ? WHERE id = ? AND status = 'IN_PROGRESS'`,
     [resultType, summary.id, JSON.stringify(summary), timestamp(nowMs), nowMs, identifier(operationId)]);
@@ -95,7 +96,7 @@ export class SalesOperationService {
 
   async getForActor(connection, { eventId, actor }) {
     const [[row]] = await connection.query(`SELECT status, result_summary, error_code FROM sales_operation_requests
-      WHERE event_id = ? AND actor_user_id = ?`, [salesEventId(eventId), identifier(actor.id)]);
+      WHERE event_id = ? AND actor_user_id = ? AND target_type IN ('SALES_ORDER','QUOTATION')`, [salesEventId(eventId), identifier(actor.id)]);
     if (!row) return null;
     return { status: row.status, result: row.status === "SUCCEEDED" ? safeResult(row.result_summary) : null,
       ...(row.status === "FAILED" ? { errorCode: Object.hasOwn(SALES_ERROR_STATUS, row.error_code) ? row.error_code : "SALES_DEPENDENCY_UNAVAILABLE" } : {}) };

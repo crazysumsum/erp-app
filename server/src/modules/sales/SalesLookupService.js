@@ -1,3 +1,4 @@
+import defaults from "../../../config/sales.js";
 import { CustomerLookupService } from "../customer/CustomerLookupService.js";
 import { ItemLookupService } from "../item/ItemLookupService.js";
 import { requireSalesActor, requireSalesWriteActor } from "./salesAuthorization.js";
@@ -20,7 +21,7 @@ const creditProjection = row => row ? { configured: true, creditLimit: row.credi
   { configured: false, creditLimit: null, currencyCode: null, status: "not_configured", policyVersion: null };
 
 export class SalesLookupService {
-  constructor({ database, time, logger } = {}) { this.database = database; this.time = time; this.logger = logger; }
+  constructor({ database, time, logger, config = defaults } = {}) { this.database = database; this.time = time; this.logger = logger; this.config = config; }
   async list({ claims, kind, input = {} }) {
     if (!["customers", "skus", "warehouses", "channels"].includes(kind)) throw new TypeError("Unknown Sales lookup kind");
     const query = validateSalesLookupQuery(input, kind);
@@ -28,8 +29,8 @@ export class SalesLookupService {
       if (kind === "channels") {
         const actor = await requireSalesActor(tx, claims, "sales.import");
         if (!actor.permissions.includes("sales.view")) throw new ApplicationError("Sales view permission is required", { code: "FORBIDDEN", statusCode: 403 });
-        // Initial controlled codes are a CSV go-live input (approved Design15.2); none are configured in P1.
-        return { items: [], total: 0, page: query.page, pageSize: query.pageSize };
+        const codes = this.config.importChannelCodes.filter(code => code.includes(query.q.trim().toUpperCase()));
+        return { items: codes.slice((query.page - 1) * query.pageSize, query.page * query.pageSize).map(code => ({ code, name: code })), total: codes.length, page: query.page, pageSize: query.pageSize };
       }
       await requireSalesWriteActor(tx, claims);
       if (kind === "customers") return this.#customers(tx, query);

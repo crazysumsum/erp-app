@@ -31,3 +31,10 @@ test("TC-009 Sales error catalogue exposes stable codes and only safe field meta
   assert.throws(() => salesError("UNKNOWN"));
   assert.throws(() => salesError("SALES_INPUT_INVALID", { field: "SQL: synthetic" }));
 });
+
+test("TC-035 import channel catalogue is deployment-owned, bounded, unique and defaults closed",()=>{
+ const normalize=input=>normalizeSalesConfig({...defaults,...input},{requestTimeoutMs:60000});
+ assert.deepEqual(normalize({importChannelCodes:[]}).importChannelCodes,[]);
+ const input=["SYNTHETIC","TEST_2"],config=normalize({importChannelCodes:input});input.push("OTHER");assert.deepEqual(config.importChannelCodes,["SYNTHETIC","TEST_2"]);assert.equal(Object.isFrozen(config.importChannelCodes),true);
+ for(const importChannelCodes of ["SYNTHETIC",[""],["lower"],["A","A"],["A_"],["A__B"],Array(1),["A".repeat(51)],Array.from({length:101},(_,i)=>"SYNTHETIC_"+i)])assert.throws(()=>normalize({importChannelCodes}));
+});

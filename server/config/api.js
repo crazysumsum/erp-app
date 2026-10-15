@@ -145,7 +145,8 @@ const apiConfig = {
     // 並留出應用程式本身的用量。
     maxUploadMemoryBytes: 268435456,
     maxConcurrentDiskUploads: 4,
-    maxDiskUploadBytesInFlight: 200 * 1024 * 1024,
+    // Four50MiB disk requests include128KiB multipart framing each.
+    maxDiskUploadBytesInFlight: 4 * (50 * 1024 * 1024 + 128 * 1024),
     diskTempDirectory: "storage/uploads/tmp",
     diskOrphanMaxAgeSeconds: 3600
   }

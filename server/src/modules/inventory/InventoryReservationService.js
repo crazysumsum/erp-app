@@ -183,7 +183,7 @@ function allocationReleaseFromSummary(summary, lines) {
 }
 
 export class InventoryReservationService {
-  constructor({ database, logger, time, itemLookup, authorize = assertActorFresh, authorizeSalesBackorder, audit, operations, locks } = {}) {
+  constructor({ database, logger, time, itemLookup, authorize = assertActorFresh, authorizeSalesBackorder, authorizeSalesIntake, audit, operations, locks } = {}) {
     if (!database || typeof database.withTransaction !== "function" || !time ||
         typeof time.nowMs !== "function" || typeof time.fileDate !== "function" ||
         typeof authorize !== "function") {
@@ -194,6 +194,7 @@ export class InventoryReservationService {
     this.itemLookup = itemLookup ?? new ItemLookupService({ database, logger, time });
     this.authorize = authorize;
     this.authorizeSalesBackorder = authorizeSalesBackorder;
+    this.authorizeSalesIntake = authorizeSalesIntake;
     this.audit = audit ?? new InventoryAuditService({ database, logger, time });
     this.operations = operations ?? new InventoryOperationService();
     this.locks = locks ?? new InventoryLockService();
@@ -225,13 +226,23 @@ export class InventoryReservationService {
     }
     // Fixed scalars and 100 demand lines bound serialization before the generic JSON copier/hash.
     if (Buffer.byteLength(JSON.stringify(payload)) > 65_536) throw inventoryError("INVENTORY_INPUT_INVALID", { field: "payload" });
+    const intake = worker === "intake";
     const contract = { module: "SALES", documentType: "SALES_ORDER",
-      authorization: { purpose: worker ? "sales.backorder.reserve" : `sales.batch.${action}`, requiredCallerPermission: worker ? "sales.backorderAllocate" : "sales.mgmt" } };
+      authorization: { purpose: intake ? "sales.intake.reserve" : worker ? "sales.backorder.reserve" : `sales.batch.${action}`, requiredCallerPermission: intake ? "sales.importWorker" : worker ? "sales.backorderAllocate" : "sales.mgmt" } };
     const context = validateInventoryCommandContext(transaction,
       providerInventoryCommand(transaction, { ...command, payload }, contract), contract.authorization);
     if (context.source.lineId !== "" ||
         !/^[1-9][0-9]*$/u.test(context.source.documentId) || !Number.isSafeInteger(Number(context.source.documentId))) {
       throw inventoryError("INVENTORY_INPUT_INVALID", { field: "source/actor" });
+    }
+    if (intake) {
+      if (context.actor.userId !== null || context.actor.serviceName !== "sales.importWorker" || context.actor.claimedRoles.length ||
+          context.actor.claimedPermissions.length !== 1 || context.actor.claimedPermissions[0] !== "sales.importWorker" ||
+          !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/iu.test(context.source.eventId)) throw inventoryError("INVENTORY_INPUT_INVALID", { field: "actor/source" });
+      const principal = await this.#intakePrincipal(transaction);
+      await this.#intakeOwner(transaction, context);
+      await this.#intakePrincipal(transaction, principal);
+      return { ...context, actorLabel: "sales.importWorker", timestamp: this.time.nowMs(), intakePrincipal: principal };
     }
     if (worker) {
       if (context.actor.userId !== null || context.actor.serviceName !== "sales.backorderAllocate" || context.actor.claimedRoles.length ||
@@ -250,6 +261,36 @@ export class InventoryReservationService {
       claimedRoles: context.actor.claimedRoles, claimedPermissions: context.actor.claimedPermissions });
     if (!actor?.permissions?.includes("sales.mgmt")) throw inventoryError("PERMISSION_STALE");
     return { ...context, actorLabel: actor.username || `user:${context.actor.userId}`, timestamp: this.time.nowMs() };
+  }
+
+  async #intakePrincipal(transaction, previous) {
+    const principal = await this.authorizeSalesIntake?.();
+    if (!principal || typeof principal.leaseOwner !== "string" || !principal.leaseOwner || principal.leaseOwner.length > 190 || principal.signal?.aborted !== false ||
+        previous && (principal.leaseOwner !== previous.leaseOwner || principal.signal !== previous.signal)) throw inventoryError("PERMISSION_STALE");
+    const [[lease]] = await transaction.query("SELECT owner,expires_at FROM fr_job_leases WHERE job_name='sales.importWorker' FOR UPDATE");
+    const [[clock]] = await transaction.query("SELECT UNIX_TIMESTAMP() AS now");
+    const fresh = await this.authorizeSalesIntake?.();
+    if (!lease || lease.owner !== principal.leaseOwner || !Number.isSafeInteger(Number(lease.expires_at)) || !Number.isSafeInteger(Number(clock.now)) || Number(lease.expires_at) <= Number(clock.now) ||
+        fresh?.leaseOwner !== principal.leaseOwner || fresh?.signal !== principal.signal || principal.signal.aborted) throw inventoryError("PERMISSION_STALE");
+    return principal;
+  }
+
+  async #intakeOwner(transaction, context) {
+    // Sales holds lease/operation/source/Job/SO/lines already; recheck the exact locked owner chain before Inventory effects.
+    const [[owner]] = await transaction.query(`SELECT o.id,o.fulfillment_warehouse_id AS warehouse_id,o.version FROM sales_orders o
+      JOIN sales_intake_orders i ON i.id=o.source_intake_order_id AND i.sales_order_id=o.id AND i.status='PROCESSING'
+      JOIN sales_operation_requests r ON r.event_id=i.processing_event_id AND r.command_type='PROCESS_INTAKE' AND r.target_type='INTAKE_ORDER' AND r.target_id=i.id AND r.status='IN_PROGRESS' AND r.request_hash=i.payload_hash
+      JOIN sales_external_order_keys k ON k.id=o.external_order_key_id AND k.id=i.external_order_key_id AND k.status='PROCESSING' AND k.source_type=i.source_type
+        AND k.channel_code=i.channel_code AND BINARY k.external_order_id=BINARY i.external_order_id AND k.external_order_id_hash=i.external_order_id_hash AND k.payload_hash=i.payload_hash
+      LEFT JOIN sales_import_jobs j ON j.id=i.import_job_id
+      WHERE o.id=? AND o.status='DRAFT' AND o.source_type=i.source_type AND o.confirmation_event_id=i.processing_event_id AND i.processing_event_id=?
+        AND o.channel_code_snapshot=i.channel_code AND BINARY o.external_order_id_snapshot=BINARY i.external_order_id
+        AND ((i.source_type='CSV' AND j.status='PROCESSING' AND j.confirmed_by=r.actor_user_id AND REGEXP_LIKE(j.lease_owner,'^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$','c')
+          AND j.lease_until>CAST(UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3))*1000 AS UNSIGNED)) OR (i.source_type='CHANNEL' AND i.import_job_id IS NULL AND r.actor_user_id IS NULL)) FOR UPDATE`,
+    [Number(context.source.documentId),context.source.eventId]);
+    if (!owner || Number(owner.warehouse_id) !== context.payload.warehouseId || Number(owner.version) !== context.payload.expectedOrderVersion) throw inventoryError("INVENTORY_SOURCE_CONFLICT");
+    const [lines] = await transaction.query("SELECT id,sku_id,ordered_base_quantity FROM sales_order_lines WHERE sales_order_id=? ORDER BY id LIMIT 101 FOR UPDATE", [Number(context.source.documentId)]);
+    if (lines.length !== context.payload.lines.length || lines.some(row => !context.payload.lines.some(line => line.sourceLineId === Number(row.id) && line.skuId === Number(row.sku_id) && line.orderedBaseQuantity === Number(row.ordered_base_quantity)))) throw inventoryError("INVENTORY_SOURCE_CONFLICT");
   }
 
   #salesClaimInput(context, commandType, payload, lineId = "") {
@@ -278,7 +319,7 @@ export class InventoryReservationService {
 
   async #verifySalesMembers(transaction, context, root, rootHash, type, expectedLines = null) {
     const summary = root.replay.resultSummary;
-    const reserve = type === "SALES_LINE_RESERVE" || type === "SALES_BACKORDER_LINE_RESERVE";
+    const reserve = type === "SALES_LINE_RESERVE" || type === "SALES_BACKORDER_LINE_RESERVE" || type === "SALES_INTAKE_LINE_RESERVE";
     if (!summary || root.replay.resultType !== (reserve ? "SALES_RESERVATION_BATCH" : "SALES_RELEASE_BATCH") ||
         root.replay.resultId !== context.source.documentId || summary.operationId !== root.operationId || summary.warehouseId !== context.payload.warehouseId ||
         summary.expectedOrderVersion !== context.payload.expectedOrderVersion || !Number.isSafeInteger(summary.lineCount) || summary.lineCount < 0) {
@@ -326,6 +367,14 @@ export class InventoryReservationService {
   async reserveAvailableForSalesBackorderInTransaction(transaction, command) {
     const context = await this.#salesBatchContext(transaction, command, "reserve", true);
     return this.#reserveSalesBatch(transaction, context, "SALES_BACKORDER_BATCH_RESERVE", "SALES_BACKORDER_LINE_RESERVE");
+  }
+
+  async reserveAvailableForSalesIntakeInTransaction(transaction, command) {
+    const context = await this.#salesBatchContext(transaction, command, "reserve", "intake");
+    const principal = await this.#intakePrincipal(transaction, context.intakePrincipal);
+    const result = await this.#reserveSalesBatch(transaction, context, "SALES_INTAKE_BATCH_RESERVE", "SALES_INTAKE_LINE_RESERVE");
+    await this.#intakePrincipal(transaction, principal);
+    return result;
   }
 
   async #reserveSalesBatch(transaction, context, rootType, childType) {
