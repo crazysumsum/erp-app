@@ -1,3 +1,6 @@
+// 頁面要用香港時間計日界；本機時區如果剛好係香港就分唔出，所以固定用 UTC 跑。
+process.env.TZ = "UTC";
+
 import { DOMWrapper, flushPromises, mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
 import { Quasar } from "quasar";
