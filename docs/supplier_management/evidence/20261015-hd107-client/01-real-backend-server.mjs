@@ -1,3 +1,4 @@
+/* global process, console */
 // 本機真後端：用 erp_t51p（100k）起 app 喺 3000，建一個有密碼嘅測試用戶，畀一個 Supplier 加到 105 個聯絡人。
 // 收到 SIGTERM／SIGINT 就清走自己加嘅嘢。只寫拋棄式 DB。
 import fs from "node:fs";
@@ -9,7 +10,6 @@ const mysql = (await import(pathToFileURL(require.resolve("mysql2/promise")).hre
 const imp = (p) => import(pathToFileURL(W + p).href);
 const { createApplication } = await imp("src/framework/application/createApplication.js");
 const { defaultConfigurationSource } = await imp("src/framework/configuration/applicationConfiguration.js");
-const { discoverServiceDefinitions } = await imp("src/framework/services/serviceDiscovery.js");
 const { hashPassword } = await imp("src/modules/user/passwordHash.js");
 
 const OUT = process.argv[2];

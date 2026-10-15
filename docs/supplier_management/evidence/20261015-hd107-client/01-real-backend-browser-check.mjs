@@ -1,3 +1,4 @@
+/* global process, console, localStorage, URL */
 // 真瀏覽器 + 真後端（erp_t51p 100k）驗 HD-107 G4／G5。結果同 DB 直接數嘅數比較。
 import fs from "node:fs";
 import { createRequire } from "node:module";
