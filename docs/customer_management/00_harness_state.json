@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 173,
+  "revision": 174,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "DESIGN_AND_PLAN",
   "status": "BLOCKED",
@@ -11,7 +11,7 @@
   "baseline": {
     "design": "25833d2d2e09a2ce0c763c374d0a0a9b64d3d92e9ee79e8f60cd3ea1e0003d51",
     "plan": "7b1eb4674d231be20c8882b47a1fe5db0550b2c3429adc859e0be27630a51a34",
-    "code_commit": "a12943ea88c3445f9e7f2a8e8a36f6a78174927e",
+    "code_commit": "8c5acf7dd34fbd75677c0844973bdf490319b0b2",
     "source_fingerprint": "685238fea731fd9b586449a3a587c6236faaee451a916377817a7b3fdf9a4aa4",
     "worktree": "/private/tmp/erp-customer-def034001-indexed-search",
     "default_commit": "09487bc65bff3a2360dffcaa246d5630269f11d2",
@@ -1701,6 +1701,64 @@
         "PR and merge after actual independent review/current-candidate mandatory CI"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-DESIGN-017",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam user: 批准 HD-011，以及 PR #232 的 DESIGN／PLAN baseline；繼續修復並按新基準重新實測，完整下游整合驗收保持阻塞，完成後建立 PR 並合併，沒有需要我決策的事就自動繼續。",
+      "recorded_at": "2026-10-15T03:09:24Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "25833d2d2e09a2ce0c763c374d0a0a9b64d3d92e9ee79e8f60cd3ea1e0003d51",
+      "code_commit": "8c5acf7dd34fbd75677c0844973bdf490319b0b2",
+      "scope": [
+        "HD-011",
+        "DES-019",
+        "DEF-034001"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-PLAN-017",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam user: 批准 HD-011，以及 PR #232 的 DESIGN／PLAN baseline；繼續修復並按新基準重新實測，完整下游整合驗收保持阻塞，完成後建立 PR 並合併，沒有需要我決策的事就自動繼續。",
+      "recorded_at": "2026-10-15T03:09:24Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "7b1eb4674d231be20c8882b47a1fe5db0550b2c3429adc859e0be27630a51a34",
+      "code_commit": "8c5acf7dd34fbd75677c0844973bdf490319b0b2",
+      "scope": [
+        "HD-011",
+        "TASK-034",
+        "TC-028",
+        "TC-082"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-043",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam user: 批准 HD-011，以及 PR #232 的 DESIGN／PLAN baseline；繼續修復並按新基準重新實測，完整下游整合驗收保持阻塞，完成後建立 PR 並合併，沒有需要我決策的事就自動繼續。",
+      "recorded_at": "2026-10-15T03:09:24Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "7b1eb4674d231be20c8882b47a1fe5db0550b2c3429adc859e0be27630a51a34",
+      "code_commit": "8c5acf7dd34fbd75677c0844973bdf490319b0b2",
+      "scope": [
+        "docs/customer_management/**",
+        "server/src/modules/customer/**",
+        "server/test/**",
+        "server/database/migrations/*_add_customer_search_indexes.js",
+        "fresh task-owned synthetic MySQL existing migrations plus approved additive Customer migration",
+        "scoped design and implementation PR/merge after applicable actual gates"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -3121,8 +3179,8 @@
         "TC-082",
         "DEF-034001"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Actual Sam user: 批准 HD-011，以及 PR #232 的 DESIGN／PLAN baseline；繼續修復並按新基準重新實測，完整下游整合驗收保持阻塞，完成後建立 PR 並合併，沒有需要我決策的事就自動繼續。 APPROVAL-DESIGN-017 / PLAN-017 / SCOPE-043."
     }
   ],
   "external_actions": [
@@ -3853,6 +3911,14 @@
       "idempotency_key": "customer-def034001-hd011-draft-pr-v1",
       "status": "CONFIRMED",
       "source_ref": "Observed https://github.com/crazysumsum/erp-app/pull/232 OPEN,isDrafttrue,head a12943ea88c3445f9e7f2a8e8a36f6a78174927e,basemain; attached tocurrenttask. Sam HD011 remains OPEN; no merge/implementation approved. Design-stageCI not waited/bypassed."
+    },
+    {
+      "id": "EXT-MERGE-073",
+      "kind": "GIT_MERGE",
+      "target": "github:crazysumsum/erp-app PR232 -> main; approvedHD011 planningdocs only",
+      "idempotency_key": "customer-hd011-planning-merge-v1",
+      "status": "PLANNED",
+      "source_ref": "Actual Sam user: 批准 HD-011，以及 PR #232 的 DESIGN／PLAN baseline；繼續修復並按新基準重新實測，完整下游整合驗收保持阻塞，完成後建立 PR 並合併，沒有需要我決策的事就自動繼續。 Design-stage resolution under harness; no product implementation or defect closure. No branch-protection bypass."
     }
   ],
   "evidence_files": [
@@ -3887,5 +3953,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Await real Sam answer to HD011/exact proposed DESIGN25833d2d...003d51 and PLAN7b1eb467...a51a34 in draftPR232. Do NOT recreatePR, replayPR230, mergeorimplement pendingproposal, or closeDEF034001. Afterapproval reconcile latestmain/sequence, planningresolution, recreateownruntime andimplement minimumsemantics-preserving indexedcandidate query/forwardmigration/physical-planclassifier with regressions and fresh50k/20/5000ms measurements,actualcodereview/currentcandidateCI/authorizedmergecleanup. Full downstream acceptance remains BLOCKED; keep this openPR branch/worktree."
+  "next_safe_action": "HD011 actually approved on exact proposed DESIGN/PLAN. Resolve approved planningPR232 normally, verifymerge, cleanplanningbranch; refreshmainandnewimplementationworktree; implement/test exactlyapproved query/index/classifier correction, repeated50k/20/5s proof, actualreview/finalheadCI/freshmain before authorized implementationPRmerge. Full downstream and formalacceptance BLOCKED."
 }

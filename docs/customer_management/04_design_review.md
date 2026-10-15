@@ -145,3 +145,10 @@ do not authorize its revised baselines.
 
 DEF-034001 remains HIGH/OPEN; full downstream and production DR acceptance remain
 BLOCKED. See [diagnosis and decision](implementation/def034001-remediation-report.md).
+
+Sam subsequently explicitly approved HD-011 and PR#232's exact DESIGN/PLAN
+baselines above, and authorized implementation, fresh measurement, PR and merge.
+APPROVAL-DESIGN-017 / PLAN-017 / SCOPE-043 retain the actual user instruction.
+Canonical proposal bytes stay unchanged to preserve the approved hashes; their
+PENDING labels describe the proposal before this decision. This approval activates
+only the proposed remedy, not a capacity PASS or full downstream acceptance.
