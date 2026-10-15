@@ -56,6 +56,7 @@ const displayLoading = computed(() => (isServerMode.value ? fetchLoading.value :
 const fetchedRows = ref([]);
 const fetchLoading = ref(false);
 const error = ref(null);
+let latestRequestId = 0;
 const pagination = ref(
   props.initialPagination ?? {
     page: 1,
@@ -67,6 +68,8 @@ const pagination = ref(
 );
 
 async function onRequest({ pagination: requestedPagination, filter: requestedFilter }) {
+  const requestId = ++latestRequestId;
+  pagination.value = { ...pagination.value, ...requestedPagination };
   fetchLoading.value = true;
   error.value = null;
 
@@ -79,13 +82,15 @@ async function onRequest({ pagination: requestedPagination, filter: requestedFil
       filter: requestedFilter
     });
 
+    if (requestId !== latestRequestId) return;
     fetchedRows.value = result.rows;
     pagination.value = { ...requestedPagination, rowsNumber: result.rowsNumber };
   } catch (fetchError) {
+    if (requestId !== latestRequestId) return;
     error.value = fetchError;
     fetchedRows.value = [];
   } finally {
-    fetchLoading.value = false;
+    if (requestId === latestRequestId) fetchLoading.value = false;
   }
 }
 
