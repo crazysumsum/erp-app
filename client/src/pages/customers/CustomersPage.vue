@@ -79,7 +79,7 @@ watch(statusFilter, () => table.value?.reload());
       </template>
     </PageHeader>
     <div class="q-px-md q-pb-md row q-gutter-sm items-center">
-      <q-input v-model="searchText" dense outlined debounce="300" placeholder="搜尋代碼、名稱、電話、電郵或識別資料" style="width: 300px" @update:model-value="table?.reload()"><template #prepend><q-icon name="search" /></template></q-input>
+      <q-input v-model="searchText" dense outlined debounce="300" placeholder="搜尋代碼、名稱、電話、電郵或識別資料" style="width: 300px"><template #prepend><q-icon name="search" /></template></q-input>
       <q-select v-model="statusFilter" dense outlined emit-value map-options :options="statusOptions" label="狀態" style="width: 160px" />
     </div>
     <div class="q-px-md q-pb-md">

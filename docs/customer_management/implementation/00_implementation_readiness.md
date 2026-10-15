@@ -2,6 +2,21 @@
 
 ## Status
 
+Current HD-012: **APPROVED by Sam**, DESIGN a2b29b79...2356 / PLAN3b15603d...35e0;
+planning PR#234 merged main6b3faa1f. Scoped product/test commitf3413abe implements
+generic latest-request state protection, latest failure/retry pagination, Customer
+duplicate-reload removal and import-test dialog/focus synchronization. Final client
+872/872, DataTable21/21, Customer20/20, Business15/15 and Supplier42/42 developer
+checks pass, as do build/lint and actual Playwright CLI search/clear checks.
+Full server supporting regression exits0 (3083 PASS/133 conditional SKIP/0 FAIL),
+not a zero-skip module acceptance result. Actual separate reviewer APPROVED scoped
+product commitf3413abe. DEF-034002/DEF-027001 are CLOSED for developer remediation;
+exact-candidate CI/normal merge still gate integration closure. Full downstream
+and whole-module zero-skip acceptance stay BLOCKED.
+[Current evidence and limitations](ui-defects-remediation-report.md).
+
+### Historical HD-012 proposal entry (superseded by Sam approval)
+
 Current UI-remediation boundary: **BLOCKED on HD-012**, not on another approval of
 already-merged PR#233. Sam authorized DEF-034002/DEF-027001 repair, but current
 DESIGN9.1 prohibits modifying shared DataTable. Reproduced stale-success/error
