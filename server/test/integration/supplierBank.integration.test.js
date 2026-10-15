@@ -642,7 +642,7 @@ integrationTest("the Bank routes answer over real HTTP, and the masked list leak
  * 唔為佢砌一條測試：要砌就要直接叫一個 private method，或者砌一個到唔到嘅狀態，
  * 而咁樣嘅測試釘住嘅係實作形狀，唔係行為。記低咗，唔係扮咗。
  */
-integrationTest("no Bank route reaches another Supplier's row, and the refusal changes nothing", async (t) => {
+integrationTest("TC-114 (AUTH-004): no Bank route reaches another Supplier's row, and the refusal changes nothing", async (t) => {
   const connection = await mysql.createConnection(config());
   let victimId = null;
   let attackerId = null;

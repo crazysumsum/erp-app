@@ -157,7 +157,7 @@ async function supplierTableCounts() {
   return counts;
 }
 
-integrationTest("TASK-043 IMP-003: upload stores the file under a server-made name, 0600, inside the root, and records the job", async () => {
+integrationTest("TC-088 (IMP-003): TASK-043 IMP-003: upload stores the file under a server-made name, 0600, inside the root, and records the job", async () => {
   const content = csv([{ supplierCode: `U-${randomUUID().slice(0, 6)}`, supplierName: "Upload Only", defaultCurrencyCode: "HKD" }]);
   const created = await upload(content);
   assert.deepEqual([created.status, created.mode, created.templateVersion, created.totalCount], ["uploaded", "create_only", "v1", 0]);
@@ -184,7 +184,7 @@ integrationTest("TASK-043: an upload the actor may no longer make leaves neither
   assert.equal(Number(jobsAfter), Number(jobsBefore));
 });
 
-integrationTest("TASK-043 IMP-004/005/011 (TC-090): precheck classifies each row and writes nothing to Supplier tables", async () => {
+integrationTest("TASK-043 IMP-004/005/011 (TC-089): precheck classifies each row and writes nothing to Supplier tables", async () => {
   const tag = randomUUID().slice(0, 6).toUpperCase();
   const existingId = await seedSupplier({ code: `EX-${tag}`, name: `Existing ${tag}`, identifier: `TX${tag}` });
   const archivedId = await seedSupplier({ code: `AR-${tag}`, name: `Archived ${tag}`, status: "archived" });
@@ -569,7 +569,7 @@ async function sourceExists(jobId) {
   return fs.existsSync(path.join(h.worker.preparedRoot, "source", name));
 }
 
-integrationTest("TASK-044 IMP-015: only the uploader lists, reads and cancels a job; the job API tells no one else it exists", async () => {
+integrationTest("TC-100 (IMP-015): TASK-044 IMP-015: only the uploader lists, reads and cancels a job; the job API tells no one else it exists", async () => {
   const owner = await makeUser("own", ["supplier.mgmt"]);
   const other = await makeUser("oth", ["supplier.mgmt"]);
   const viewer = await makeUser("v44", ["supplier.view"]);
@@ -604,7 +604,7 @@ integrationTest("TASK-044 IMP-015: only the uploader lists, reads and cancels a 
   assert.deepEqual([own.status, own.data.status], [200, "cancelled"], "the uploader can");
 });
 
-integrationTest("TASK-044: detail pages the rows by row number, filters by status, and serves none before precheck finishes", async () => {
+integrationTest("TC-090 (IMP-005): TASK-044: detail pages the rows by row number, filters by status, and serves none before precheck finishes", async () => {
   const owner = await makeUser("det", ["supplier.mgmt"]);
   const tag = randomUUID().slice(0, 6).toUpperCase();
   const existing = await seedSupplier({ code: `D6-${tag}`, name: `Detail Six ${tag}` });
@@ -674,7 +674,7 @@ integrationTest("TASK-044: detail pages the rows by row number, filters by statu
   }
 });
 
-integrationTest("TASK-044 (HD-058 2A/3A): cancel ends the job, deletes the source, keeps the rows and is replay-safe", async () => {
+integrationTest("TC-098 (IMP-013): TASK-044 (HD-058 2A/3A): cancel ends the job, deletes the source, keeps the rows and is replay-safe", async () => {
   const owner = await makeUser("can", ["supplier.mgmt"]);
   const tag = randomUUID().slice(0, 6).toUpperCase();
   const ready = await httpUpload(owner, csv([{ supplierCode: `C1-${tag}`, supplierName: `Cancel ${tag}`, defaultCurrencyCode: "HKD" }]));
@@ -735,7 +735,7 @@ integrationTest("TASK-044 (HD-058 3A): a source that cannot be deleted is logged
   fs.rmSync(path.join(h.worker.preparedRoot, "source", name));
 });
 
-integrationTest("TASK-044: a manager whose permission was withdrawn after the token was issued is refused at once", async () => {
+integrationTest("TC-115 (AUTH-005): TASK-044: a manager whose permission was withdrawn after the token was issued is refused at once", async () => {
   const owner = await makeUser("stl", ["supplier.mgmt"]);
   const created = await httpUpload(owner, csv([{ supplierCode: `S-${randomUUID().slice(0, 6)}`, supplierName: "Stale", defaultCurrencyCode: "HKD" }]));
   await h.db.execute(
@@ -781,7 +781,7 @@ integrationTest("TASK-044 (REV-069 M-1): cancel waits for a claim that holds the
   }
 });
 
-integrationTest("TASK-044 (REV-069 L-1): another user's cancel answers 404 at once, without waiting on a job someone holds", async () => {
+integrationTest("TC-114 (AUTH-004): TASK-044 (REV-069 L-1): another user's cancel answers 404 at once, without waiting on a job someone holds", async () => {
   const stranger = { actorId: h.userId, claimedRoles: [], claimedPermissions: [] };
   const owner = await makeUser("lck", ["supplier.mgmt"]);
   const created = await httpUpload(owner, csv([{ supplierCode: `L-${randomUUID().slice(0, 6)}`, supplierName: "Locked", defaultCurrencyCode: "HKD" }]));
@@ -973,7 +973,7 @@ integrationTest("TASK-045: a draft import writes each valid row as one Supplier 
     ["completed", 2, 0, 1]);
 });
 
-integrationTest("TASK-045 (AC-013, BR-012): activation follows the policy snapshotted at confirm; with approval it opens a request that already lists the new identifier", async () => {
+integrationTest("TC-097 (IMP-012): TASK-045 (AC-013, BR-012): activation follows the policy snapshotted at confirm; with approval it opens a request that already lists the new identifier", async () => {
   const owner = await makeUser("ac", ["supplier.mgmt"], { withPassword: true });
   const approver = await makeUser("aa", ["supplier.view", "supplier.approval"]);
   const tag = randomUUID().slice(0, 6).toUpperCase();
@@ -1047,7 +1047,7 @@ integrationTest("TASK-045: update rows change root fields only, keep blank cells
   assert.equal(audit.reason, `CSV 匯入 #${update.id}`, "the currency change carries the import as its reason");
 });
 
-integrationTest("TASK-045: execution re-checks what precheck saw — a Code or Identifier taken since, an archived target, a moved version, a retired currency", async () => {
+integrationTest("TC-096 (IMP-011): TASK-045: execution re-checks what precheck saw — a Code or Identifier taken since, an archived target, a moved version, a retired currency", async () => {
   const owner = await makeUser("rc", ["supplier.mgmt"], { withPassword: true });
   const tag = randomUUID().slice(0, 6).toUpperCase();
   const retired = await testCurrency("T45 retired currency");
@@ -1080,7 +1080,7 @@ integrationTest("TASK-045: execution re-checks what precheck saw — a Code or I
   assert.equal(await supplierByCode(`N2-${tag}`), undefined, "the identifier failure rolled back the Supplier it would have joined");
 });
 
-integrationTest("TASK-045 (HD-048 4): a failure after the real Supplier write leaves no Supplier, child, name gram or audit behind", async () => {
+integrationTest("TC-092 (IMP-007): TASK-045 (HD-048 4): a failure after the real Supplier write leaves no Supplier, child, name gram or audit behind", async () => {
   const owner = await makeUser("fw", ["supplier.mgmt"], { withPassword: true });
   const tag = randomUUID().slice(0, 6).toUpperCase();
   const { id, version } = await readyJob(owner, [{ supplierCode: `F-${tag}`, supplierName: `Fails Late ${tag}`, defaultCurrencyCode: "HKD",
@@ -1138,7 +1138,7 @@ async function crashWorker(point, env = {}) {
   });
 }
 
-integrationTest("TASK-045 fault injection: a worker killed before or after a row's commit leaves both or neither, and the next worker finishes once", async () => {
+integrationTest("TC-094 (IMP-009): TASK-045 fault injection: a worker killed before or after a row's commit leaves both or neither, and the next worker finishes once", async () => {
   const owner = await makeUser("kl", ["supplier.mgmt"], { withPassword: true });
   for (const point of ["before", "after"]) {
     const tag = randomUUID().slice(0, 6).toUpperCase();
@@ -1168,7 +1168,7 @@ integrationTest("TASK-045 fault injection: a worker killed before or after a row
   }
 });
 
-integrationTest("TASK-045: two workers never apply a row twice — one claim wins, and a worker that lost its lease writes nothing", async () => {
+integrationTest("TC-095 (IMP-010): TASK-045: two workers never apply a row twice — one claim wins, and a worker that lost its lease writes nothing", async () => {
   const owner = await makeUser("tw", ["supplier.mgmt"], { withPassword: true });
   const tag = randomUUID().slice(0, 6).toUpperCase();
   const codes = [1, 2, 3].map((n) => `W${n}-${tag}`);

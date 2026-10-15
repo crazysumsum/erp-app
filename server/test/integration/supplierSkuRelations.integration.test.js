@@ -105,7 +105,7 @@ async function supplier(status = "active") {
 
 const conflict = (code) => (error) => error.publicCode === code || error.code === code;
 
-integrationTest("TASK-038 (MIG-007): without the Item SKU/UOM tables the migration refuses and creates nothing", async (t) => {
+integrationTest("TC-007 (MIG-007): TASK-038 (MIG-007): without the Item SKU/UOM tables the migration refuses and creates nothing", async (t) => {
   const githubActions = process.env.GITHUB_ACTIONS === "true";
   const admin = await mysql.createConnection({ host: process.env.DB_HOST, port: Number(process.env.DB_PORT),
     user: process.env.DB_ADMIN_USER ?? (githubActions ? "root" : undefined),
@@ -119,7 +119,7 @@ integrationTest("TASK-038 (MIG-007): without the Item SKU/UOM tables the migrati
   assert.deepEqual(tables, [], "no weakened table");
 });
 
-integrationTest("TASK-038 (SKU-004): create and update keep MOQ, lead time and status in bounds, with one audit each and no price", async () => {
+integrationTest("TC-081 (SKU-004): TASK-038 (SKU-004): create and update keep MOQ, lead time and status in bounds, with one audit each and no price", async () => {
   const supplierId = await supplier();
   const item = await sku({ uoms: 2 });
   const other = await sku();
@@ -186,7 +186,7 @@ integrationTest("TASK-038 (FR-SKU-005, Item §5.14): only purchasable SKUs becom
   await assert.rejects(() => service().create({ ...actor(), supplierId: archived, skuId: fresh.id }), conflict("SUPPLIER_SKU_RELATION_NOT_ALLOWED"));
 });
 
-integrationTest("TASK-038 (SKU-006): recordSupply is idempotent, never makes a relation preferred and fails closed without a source verifier", async () => {
+integrationTest("TC-083 (SKU-006): TASK-038 (SKU-006): recordSupply is idempotent, never makes a relation preferred and fails closed without a source verifier", async () => {
   const supplierId = await supplier("suspended");
   const item = await sku({ status: "inactive" });
   const command = { eventId: `gr-${randomUUID()}`, sourceType: "goods_receipt", sourceId: 501, sourceLineId: 1, supplierId, skuId: item.id,
@@ -229,14 +229,14 @@ integrationTest("TASK-038 (SKU-006): recordSupply is idempotent, never makes a r
   assert.deepEqual([noCode.supplier_item_code, noCode.supplier_item_code_key], ["", null]);
 });
 
-integrationTest("TASK-038: a Supplier with a SKU relation cannot be permanently deleted", async () => {
+integrationTest("TC-035 (STATE-006): TASK-038: a Supplier with a SKU relation cannot be permanently deleted", async () => {
   const supplierId = await supplier("draft");
   await service().create({ ...actor(), supplierId, skuId: (await sku()).id });
   await assert.rejects(() => h.db.execute("DELETE FROM suppliers WHERE id = ?", [supplierId]),
     (error) => /fk_supplier_sku_refs_supplier/u.test(String(error?.cause?.message)));
 });
 
-integrationTest("TASK-038: a rerun accepts the real tables but refuses a hand-made one whose foreign keys differ", async (t) => {
+integrationTest("TC-007 (MIG-007): TASK-038: a rerun accepts the real tables but refuses a hand-made one whose foreign keys differ", async (t) => {
   assert.equal(await inspectSupplierSkuRelationSchema(h.db, "supplier_sku_refs"), true);
   assert.equal(await inspectSupplierSkuRelationSchema(h.db, "supplier_supply_events"), true);
   const probe = `skr_probe_${randomUUID().slice(0, 8)}`;

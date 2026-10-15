@@ -29,7 +29,7 @@ test("the job state machine covers the ten designed states and only the designed
   }
 });
 
-test("job counts are rebuilt from row statuses, with invalid rows still pending until they are skipped", () => {
+test("TC-098 (IMP-013): job counts are rebuilt from row statuses, with invalid rows still pending until they are skipped", () => {
   assert.deepEqual(countsFromRows([
     { status: "applied", total: 3 }, { status: "failed", total: "2" }, { status: "skipped", total: 1 }
   ]), { total: 6, applied: 3, failed: 2, skipped: 1, pending: 0 });

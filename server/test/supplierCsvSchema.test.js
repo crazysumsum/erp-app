@@ -30,7 +30,7 @@ const line = (record, header = SUPPLIER_IMPORT_COLUMN_NAMES) => header.map((name
 const csv = (records, { header = SUPPLIER_IMPORT_COLUMN_NAMES } = {}) =>
   stringify([header, ...records.map((record) => line(record, header))], SUPPLIER_CSV_STRINGIFY_OPTIONS);
 
-test("the template is UTF-8 with a BOM, CRLF, the v1 columns, a description row that says Bank is not accepted, and an example", () => {
+test("TC-086 (IMP-001): the template is UTF-8 with a BOM, CRLF, the v1 columns, a description row that says Bank is not accepted, and an example", () => {
   const template = buildSupplierImportTemplate();
   assert.equal(template.charCodeAt(0), 0xfeff);
   assert.match(template, /\r\n$/u);
@@ -69,7 +69,7 @@ test("Bank-like headers are recognised however they are spelled", () => {
   for (const header of ["supplierName", "notes", "contactPhone", "postalCode"]) assert.equal(isBankColumn(header), false, header);
 });
 
-test("RFC 4180: quoted commas, doubled quotes, CRLF or LF, with or without BOM, Chinese text and leading zeros", async () => {
+test("TC-087 (IMP-002): RFC 4180: quoted commas, doubled quotes, CRLF or LF, with or without BOM, Chinese text and leading zeros", async () => {
   const record = valid({ supplierName: "大華, \"Acme\" 有限公司", postalCode: "00123", addressLabel: "總部", addressPurpose: "office",
     identifierType: "business_registration", issuerCountryCode: "HK", identifierValue: "0012345" });
   for (const [label, text] of [
@@ -91,7 +91,7 @@ test("a quoted newline stays inside its cell: only that field is invalid, the co
   assert.equal(rows[0].normalizedPayload.root.website, "https://example.com");
 });
 
-test("a Bank column rejects the whole file: no row is produced and the value appears nowhere in the result", async () => {
+test("TC-099 (IMP-014): a Bank column rejects the whole file: no row is produced and the value appears nowhere in the result", async () => {
   const header = [...SUPPLIER_IMPORT_COLUMN_NAMES, "Unknown", "accountNumber"];
   const text = csv([{ ...valid(), Unknown: "x", accountNumber: "123456789012" }], { header });
   const result = await run(text);
@@ -125,7 +125,7 @@ test("header problems reject the whole file", async () => {
   }
 });
 
-test("malformed, non-UTF-8, empty, oversized and over-long files are rejected with their own code", async () => {
+test("TC-088 (IMP-003): malformed, non-UTF-8, empty, oversized and over-long files are rejected with their own code", async () => {
   const header = SUPPLIER_IMPORT_COLUMN_NAMES.join(",");
   const cases = [
     ["SUPPLIER_IMPORT_CSV_MALFORMED", `${header}\r\n"unterminated,${",".repeat(SUPPLIER_IMPORT_COLUMN_NAMES.length - 1)}\r\n`],
