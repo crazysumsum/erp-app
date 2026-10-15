@@ -1,5 +1,23 @@
 # Customer Management Harness 2.0 Validation Report
 
+## HD-012 current UI proposal boundary
+
+Revised DESIGNa2b29b79...2356 / PLAN3b15603d...35e0 are proposals, not yet human
+approved. Product code unchanged; the separate implementation branch preserves
+test-only reproductions and the targeted import-test correction. Current diagnosis:
+baseline full Customer15PASS/1FAIL, search ordering1PASS/2FAIL, corrected import
+focused1PASS; no full-suite PASS or defect closure. [Details](implementation/ui-defects-remediation-report.md).
+Structural/path checks on the docs-only proposal do not authorize DataTable changes;
+human HD-012 and independent review must be actual, not inferred from these checks.
+
+Actual final checks: state revision184 LOCAL_CHECKS_PASS, traceability with approval
+consistency STRUCTURE_PASS, docs-only boundary against10ca62ad LOCAL_CHECKS_PASS,
+git diff --check PASS. Own design-document contract pin refreshed after an initial
+CONTRACT_DRIFT; final proposed hashes above supersede that draft without changing
+provider behavior. Actual separate reviewer APPROVE exact final hashes; HD-012
+still OPEN and no generic PLAN_READY/human approval is claimed. Design-stage CI is
+not explicitly waited as a gate; implementation still requires exact-head CI.
+
 ## Current HD-011 developer verification (2026-10-15)
 
 Sam's approved DESIGN25833d2d...3d51 / PLAN7b1eb467...1a34 are unchanged.

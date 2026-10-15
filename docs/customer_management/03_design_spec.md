@@ -1291,6 +1291,16 @@ export.create export.download
 
 不修改handler registry、page discovery、router builder、BaseRequestHandler、DataTable或FormPanel；現有extension points足夠。
 
+HD-012 proposed narrow exception, **PENDING Sam approval**: DEF-034002 is a
+reproduced response-ordering defect in shared
+`client/src/framework/ui/DataTable.vue`. After exact revised DESIGN/PLAN and scope
+approval only, permit a component-local monotonically increasing request identity
+so older fetch success/error/finally cannot replace the newest rows, pagination,
+error or loading state. Keep the existing fetch arguments/result, reload and slots,
+client-side mode, authorization and all APIs unchanged; no Customer-specific logic
+in the shared component. Remove Customer list's duplicate input-triggered reload
+and use the existing QTable filter request. No other framework component exception.
+
 ### 9.2 新增 shared foundation
 
 | 路徑 | 檔案／責任 |
@@ -1908,6 +1918,18 @@ Boundary validation, transaction/CAS rules, idempotent outcome reconciliation, f
 ### Decision
 
 Frontend follows `docs/frontend-design.md`, shared components, URL filters, accessible status/error/focus behavior, 375–1440px layouts, and never stores sensitive plaintext in Pinia, URL or local storage.
+
+HD-012 proposal (effective only after approval): shared DataTable server-side
+requests are latest-request-wins for successful rows/count/pagination, errors and
+loading completion. A stale success or failure must not change a newer completed
+result, and finishing an old request must not clear a newer request's loading.
+Latest failures still show the existing error/retry behavior. Customer search
+uses the existing filter-driven page-one request without a duplicate immediate
+reload using stale props. Query normalization, server search/rank, initial URL,
+sort, paging, caller signature and client-side table mode remain unchanged.
+TC-065 keeps keyboard activation and every import assertion, but waits for the
+upload dialog to be detached and verifies intended focus before Enter; no fixed
+sleep, forced click, retry or skipped assertion is a fix.
 
 ### Rationale
 
