@@ -1383,7 +1383,10 @@ Complete daily work without excessive wait / operational users
 
 ### Preconditions and data
 
-Acceptance load environment
+Acceptance load environment with 50,000 Customers and 20 concurrent workload
+workers; browser-user count and real UI/HTTP behavior require separate observed
+evidence. Standard query p95 must be <=5s; existing import/error/security criteria
+are unchanged. A local service-only load run is not this business acceptance.
 
 ### Steps
 

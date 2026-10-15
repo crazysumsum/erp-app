@@ -12,6 +12,13 @@
 
 The aligned decisions and complete legacy body form one canonical design. Typed relations are owned by `08_traceability.json`.
 
+2026-10-15 / HD-009 changes only the capacity target to 50,000 Customers,
+20 concurrent workers and p95 <=5s. All query-plan/index, bounded-resource,
+error-rate, child-cardinality, workload-mix, 10k-import, security and DR constraints
+remain. Workers do not establish authenticated browser-user capacity. No service,
+schema, provider/API contract or search semantics changes are proposed. PR #228
+remains failed historical measurement; this revision supplies no fresh PASS.
+
 ## 1. Authority and Alignment Model
 
 The complete aligned detailed design is the preserved legacy design body below. This specification is the normative harness traceability entry: it assigns stable `DES-*` identifiers and records the corrections incorporated into that full design.
@@ -200,8 +207,8 @@ Bank plaintext exists only inside the active reveal/form component, is cleared o
 
 ## 10. Performance, Availability and Operations
 
-- Capacity baseline: 100,000 customers, stated child cardinalities, 50 concurrent users and 10,000-row imports.
-- Standard list/exact/prefix and shipping/contact lookups: p95 < 2s under the declared mixed load; error rate <1%; no unbounded DB/request queue.
+- Capacity baseline: 50,000 customers, stated child cardinalities, 20 concurrent workers and 10,000-row imports.
+- Standard list/exact/prefix and shipping/contact lookups: p95 <= 5s under the declared mixed load; error rate <1%; no unbounded DB/request queue.
 - Import precheck+execution: <10 minutes excluding human delay.
 - Record dataset generator version, distribution, hardware, MySQL config, warm-up, p50/p95/p99, throughput, errors, CPU/memory and lock metrics.
 - Health/readiness reports schema, mandatory provider registry, key ring, scanner, storage and worker readiness per capability. Optional sensitive capability failure does not corrupt or overexpose core Customer reads.
@@ -334,7 +341,7 @@ The aligned architecture is implementable, but the Human Design Gate is `CONDITI
 4. 每個地址／聯絡用途及每個 Customer 的有效銀行帳戶最多一個 default，並發切換不能留下兩個 default。
 5. 所有一般 projection 都沒有銀行明文、ciphertext、IV、tag、blind index、key ID 或 Bank Sensitive 儲存路徑；reveal／下載有強認證與 audit。
 6. Sales 只取得 Active Customer；Fulfillment 只取得所屬 Customer 的 active Shipping Address，提交時再驗證並由下游保存 snapshot。
-7. 100,000 Customers 容量及 50 concurrent users 下，指定查詢 p95 < 2 秒；10,000-row import 總處理時間 < 10 分鐘。
+7. 50,000 Customers 容量及 20 concurrent workers 下，指定查詢 p95 <= 5 秒；10,000-row import 總處理時間 < 10 分鐘。
 8. Phase 1～3 各自的 migration、server、client、permissions、tests 及 release gate 一併交付，沒有「先上 UI、日後補權限／audit」的半成品。
 
 ### 1.3 Capability Map
@@ -1459,12 +1466,12 @@ Shared crypto只提供typed primitive，不提供HTTP handler／generic row decr
 
 ### 11.6 效能與容量
 
-基準：100,000 Customers；每Customer最多20 addresses、50 contacts、10 identifiers、10 banks、20 attachments；50 concurrent users。代表性mix：40% list/search、25% detail、15% lookup、10% child write、5% approval、5% audit/import status。
+基準：50,000 Customers；每Customer最多20 addresses、50 contacts、10 identifiers、10 banks、20 attachments；20 concurrent workers。代表性mix：40% list/search、25% detail、15% lookup、10% child write、5% approval、5% audit/import status。
 
 | 測試 | 門檻 |
 | --- | --- |
-| exact code／legal name、一般list、shipping/contact lookup | p95 <2s；error rate <1%；DB pool無無界queue。 |
-| token-prefix search＋filters＋completeness | p95 <2s；query plan使用指定index，無leading-wildcard scan或全child cartesian join。 |
+| exact code／legal name、一般list、shipping/contact lookup | p95 <=5s；error rate <1%；DB pool無無界queue。 |
+| token-prefix search＋filters＋completeness | p95 <=5s；query plan使用指定index，無leading-wildcard scan或全child cartesian join。 |
 | 10,000-row precheck＋execute | 系統處理合計<10分鐘；heap維持config budget；worker可resume。 |
 | 100 concurrent default/approval races | invariant零違反；deadlock轉safe retryable error。 |
 | sensitive download | 不佔滿normal request pool；upload/download concurrency gate生效。 |
@@ -1552,7 +1559,7 @@ Alerts：bank integrity failure或unknown key立即P1；敏感access denied spik
 ### 13.2 Phase 1／Core
 
 - Root、classification、Address、Contact、Identifier、Credit、audit、Customer UI、status、reference guard、CustomerLookup。
-- Gate：AC-001～035、050～051；MySQL unique/default/CAS；Sales/Fulfillment basic contracts；100k query targets。
+- Gate：AC-001～035、050～051；MySQL unique/default/CAS；Sales/Fulfillment basic contracts；50k query targets。
 
 ### 13.3 Phase 2／Approval、Bank與Files
 
@@ -1599,7 +1606,7 @@ Alerts：bank integrity failure或unknown key立即P1；敏感access denied spik
 | OBJ-08 | CAP-04、§4.7、§5.17、§6.9 | partial-success及AC-044～046/052 |
 | OBJ-09 | CAP-05、§6.10、§11.3 | consumer revalidation/snapshot contracts |
 | KPI-01～05 | §1.2、§5 constraints、§8.8、§11.1～2 | completeness、zero duplicate、100% critical audit evidence |
-| KPI-06～08 | §5 indexes、§11.6、§12.3 | p95<2s、address accuracy、import result metrics |
+| KPI-06～08 | §5 indexes、§11.6、§12.3 | p95<=5s、address accuracy、import result metrics |
 | KPI-09 | §3、§11.5、§12 | unauthorized plaintext event target=0及security scans |
 
 ### 14.1 Functional requirements
@@ -1631,7 +1638,7 @@ Alerts：bank integrity failure或unknown key立即P1；敏感access denied spik
 | BR-030～035 | §3.4、§5.12～13、§6.7～8/10 | bank/file/snapshot security |
 | BR-036～042 | §2.4、§4.7、§6、§8、§11 | channel parity/CAS/submit recheck |
 | SEC-001～014 | §3、§6.1/7/8/9、§11.5、§12 | permission matrix、IDOR、redaction、backup |
-| NFR-001～005 | §5 indexes、§6.2/10、§11.6 | 100k/50-user/10k-row results |
+| NFR-001～005 | §5 indexes、§6.2/10、§11.6 | 50k/20-worker/10k-row results |
 | NFR-006～010 | §2.4～5、§5 constraints、§8、§13.6 | transaction/race/idempotency/DR |
 | NFR-011～014 | §4.2/7、§6.1/11、§7、§12 | schema parity、timezone/decimal/UI |
 | DEC-001～023 | §0.2～3、§2～8 | design review checklist＋AC suite |
@@ -1671,7 +1678,7 @@ Alerts：bank integrity failure或unknown key立即P1；敏感access denied spik
 3. Block／Archive顯示哪些已落地下游open-flow類型；每個consumer落地時加入reference checker及contract test。
 4. 法務確認Customer/audit/bank/attachment至少7年與Import files 365日保留期。
 5. 生產ClamAV、private storage、backup及key-management owner；未完成則CAP-03不可release。
-6. 正式效能環境規格與測試資料；門檻仍是requirement的2秒／10分鐘。
+6. 正式效能環境規格與測試資料；門檻仍是requirement的5秒／10分鐘。
 
 ### 15.3 變更控制
 

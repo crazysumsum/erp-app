@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import os from "node:os";
 import { performance } from "node:perf_hooks";
@@ -11,14 +12,41 @@ import { CustomerService } from "../../src/modules/customer/CustomerService.js";
 
 const skip = process.env.CUSTOMER_PERFORMANCE_TESTS === "1"
   ? false
-  : "set CUSTOMER_PERFORMANCE_TESTS=1 against a fresh, migrated isolated MySQL schema; this 100k release-performance test is not routine CI";
-const CUSTOMER_COUNT = Number(process.env.CUSTOMER_PERFORMANCE_CUSTOMER_COUNT || 100_000);
+  : "set CUSTOMER_PERFORMANCE_TESTS=1 against a fresh, migrated isolated MySQL schema; this 50k release-performance test is not routine CI";
+const CUSTOMER_COUNT = Number(process.env.CUSTOMER_PERFORMANCE_CUSTOMER_COUNT || 50_000);
 const CHILD_INTERVAL = Number(process.env.CUSTOMER_PERFORMANCE_CHILD_INTERVAL || 10);
 const BATCH_SIZE = Number(process.env.CUSTOMER_PERFORMANCE_BATCH_SIZE || 500);
-const CONCURRENCY = Number(process.env.CUSTOMER_PERFORMANCE_CONCURRENCY || 50);
+const CONCURRENCY = Number(process.env.CUSTOMER_PERFORMANCE_CONCURRENCY || 20);
 const DURATION_MS = Number(process.env.CUSTOMER_PERFORMANCE_DURATION_MS || 30_000);
-const P95_BUDGET_MS = 2_000;
+const P95_BUDGET_MS = 5_000;
 const TEST_TIMEOUT_MS = 30 * 60 * 1_000;
+const withinLatencyBudget = (latencyMs) => latencyMs <= P95_BUDGET_MS;
+
+test("Customer capacity latency budget includes exactly 5000ms and rejects anything above", () => {
+  assert.equal(withinLatencyBudget(4999.99), true);
+  assert.equal(withinLatencyBudget(5000), true);
+  assert.equal(withinLatencyBudget(5000.01), false);
+});
+
+for (const [name, override, expected] of [
+  ["smaller dataset", { CUSTOMER_PERFORMANCE_CUSTOMER_COUNT: "49999" }, /approved 50k dataset/u],
+  ["fewer workers", { CUSTOMER_PERFORMANCE_CONCURRENCY: "19" }, /20 concurrent workers/u],
+  ["different child ratio", { CUSTOMER_PERFORMANCE_CHILD_INTERVAL: "9" }, /5k address\/contact fixtures/u],
+  ["shorter duration", { CUSTOMER_PERFORMANCE_DURATION_MS: "29999" }, /30-second admission window/u]
+]) {
+  test(`Customer capacity profile rejects ${name} before connecting`, () => {
+    const env = { ...process.env, CUSTOMER_PERFORMANCE_TESTS: "1",
+      CUSTOMER_PERFORMANCE_CUSTOMER_COUNT: "50000", CUSTOMER_PERFORMANCE_CONCURRENCY: "20",
+      CUSTOMER_PERFORMANCE_CHILD_INTERVAL: "10", CUSTOMER_PERFORMANCE_DURATION_MS: "30000", ...override };
+    delete env.NODE_TEST_CONTEXT;
+    const result = spawnSync(process.execPath, ["--test", "--test-name-pattern=^TC-028", import.meta.filename], {
+      env, encoding: "utf8", timeout: 10_000
+    });
+    assert.equal(result.status, 1);
+    assert.match(result.stdout, expected);
+    assert.doesNotMatch(result.stdout + result.stderr, /ECONNREFUSED|Access denied/u);
+  });
+}
 
 function placeholders(rowCount, columnCount) {
   return Array(rowCount).fill(`(${Array(columnCount).fill("?").join(",")})`).join(",");
@@ -133,12 +161,12 @@ async function assertIndexedPlan(database, label, sql, params) {
 }
 
 test(
-  "TC-028 100k Customer query plans and 50-user core lookup mix remain indexed and bounded",
+  "TC-028 50k Customer query plans and 20-worker core lookup mix remain indexed and bounded",
   { skip, timeout: TEST_TIMEOUT_MS },
   async (t) => {
-    assert.equal(CUSTOMER_COUNT, 100_000, "capacity evidence requires the approved 100k dataset");
-    assert.equal(CONCURRENCY, 50, "capacity evidence requires 50 concurrent workers");
-    assert.equal(CHILD_INTERVAL, 10, "capacity evidence requires 10k address/contact fixtures");
+    assert.equal(CUSTOMER_COUNT, 50_000, "capacity evidence requires the approved 50k dataset");
+    assert.equal(CONCURRENCY, 20, "capacity evidence requires 20 concurrent workers");
+    assert.equal(CHILD_INTERVAL, 10, "capacity evidence requires 5k address/contact fixtures");
     assert.equal(DURATION_MS, 30_000, "capacity evidence requires a 30-second admission window");
     const source = defaultConfigurationSource();
     const application = await createApplication({ configurationSource: { ...source, application: { ...source.application, port: 0 } } });
@@ -243,7 +271,7 @@ test(
     const [[mysql]] = await database.query("SELECT VERSION() AS version");
     const gateFailures = [];
     for (const [name, metric] of Object.entries(latencyMs)) {
-      if (!(metric.p95 < P95_BUDGET_MS)) gateFailures.push(`${name} p95 ${metric.p95.toFixed(1)}ms exceeds ${P95_BUDGET_MS}ms`);
+      if (!withinLatencyBudget(metric.p95)) gateFailures.push(`${name} p95 ${metric.p95.toFixed(1)}ms exceeds ${P95_BUDGET_MS}ms`);
     }
     for (const plan of plans.actualList) {
       for (const row of plan) {
@@ -253,9 +281,9 @@ test(
     }
     console.log(JSON.stringify({
       tc: "TC-028",
-      fixtureVersion: "customer-phase001-performance-v1",
+      fixtureVersion: "customer-hd010-capacity-50k-20-v2",
       data: { customers: fixtures.customerCount, addresses: fixtures.childCount, contacts: fixtures.childCount },
-      load: { concurrency: CONCURRENCY, warmListMs,
+      load: { concurrency: CONCURRENCY, warmListMs, p95BudgetMs: P95_BUDGET_MS,
         requestedDurationMs: DURATION_MS, elapsedMs, errors: 0,
         operationsPerSecond: Object.values(timings).reduce((sum, values) => sum + values.length, 0) * 1000 / elapsedMs },
       environment: { node: process.version, mysql: mysql.version, logicalCpu: os.cpus().length, memoryBytes: os.totalmem() },

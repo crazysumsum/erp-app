@@ -1,5 +1,24 @@
 # Customer Management Final Alignment Review
 
+## Current capacity amendment — HD-009 (2026-10-15)
+
+Sam explicitly changed the capacity requirement to 50,000 Customers, 20 concurrent
+workers and p95 <=5s. The canonical five specifications and related review prose
+now carry these values; stable IDs, traceability relations, query-plan criteria,
+error/import budgets and downstream/DR blockers are unchanged. Separate reviewer
+Jason approved the exact revised DESIGN/PLAN with no blocking amendment finding
+(REV-045). Sam subsequently approved HD-010 and scoped test alignment/remeasurement
+(APPROVAL-DESIGN-016/PLAN-016/SCOPE-041); active mode returned to IMPLEMENT.
+Only the test profile/regressions and evidence changed; product code is untouched.
+The fresh local run meets all5s latency budgets but fails both actual-list full-scan
+gates. This is not an optimization or full capacity acceptance; see the
+[HD-010 report](implementation/hd010-capacity-retest-report.md).
+
+PR #228 merged at `3faf93e57892577c03d7bc6d7ba62e23963941e2`; its actual
+100k/50/2s failures remain evidence of that former baseline, not evidence for the
+new requirement. DEF-034001 remains HIGH/OPEN after the fresh plan assessment.
+The sections below are historical alignment evidence, not approval of this revision.
+
 ## Outcome
 
 The Customer Management design package is now aligned in place to Software Engineering Harness 2.0 from recovery/mode-entry baseline `0996cb7e85e377981121d2d9b0fd7e99ff8eb1a7`, then reconciled with latest `origin/main` at `46c1235dfd169e15da38e0de1b5ce1818dbabb0d`. One canonical document set preserves all unique requirement/design narrative, formalizes 129 requirements, 25 designs, four Phases, 36 Tasks, 90 technical cases and 59 UAT cases, and moves typed relationships to `08_traceability.json`.
