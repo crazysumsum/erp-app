@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 186,
+  "revision": 187,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "DESIGN_AND_PLAN",
   "status": "BLOCKED",
@@ -1783,6 +1783,65 @@
         "PR-and-normal-merge-after-gates"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-DESIGN-018",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam user: 批准 HD-012、PR #234 的 DESIGN／PLAN baseline，以及 DataTable.vue 的窄範圍修復。繼續完成驗證、建立 PR 並合併；完整下游整合驗收保持阻塞，沒有需要我決策的事就自動繼續。",
+      "recorded_at": "2026-10-15T05:56:24Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "a2b29b795515f6ee408201d3ac2650a1d42d74728c1ca4c9f2fe68cbfc292356",
+      "code_commit": "72d45eeeb555cee0c9fddd03d55f40aeab42cb93",
+      "scope": [
+        "HD-012",
+        "DES-016"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-PLAN-018",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam user: 批准 HD-012、PR #234 的 DESIGN／PLAN baseline，以及 DataTable.vue 的窄範圍修復。繼續完成驗證、建立 PR 並合併；完整下游整合驗收保持阻塞，沒有需要我決策的事就自動繼續。",
+      "recorded_at": "2026-10-15T05:56:24Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "3b15603d9608dcb388f90806f643a5d221514b17ef302f2e2d2f2851699735e0",
+      "code_commit": "72d45eeeb555cee0c9fddd03d55f40aeab42cb93",
+      "scope": [
+        "HD-012",
+        "TASK-016",
+        "TASK-027",
+        "TC-040",
+        "TC-065"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-045",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam user: 批准 HD-012、PR #234 的 DESIGN／PLAN baseline，以及 DataTable.vue 的窄範圍修復。繼續完成驗證、建立 PR 並合併；完整下游整合驗收保持阻塞，沒有需要我決策的事就自動繼續。",
+      "recorded_at": "2026-10-15T05:56:24Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "3b15603d9608dcb388f90806f643a5d221514b17ef302f2e2d2f2851699735e0",
+      "code_commit": "72d45eeeb555cee0c9fddd03d55f40aeab42cb93",
+      "scope": [
+        "client/src/framework/ui/DataTable.vue",
+        "client/src/pages/customers/**",
+        "client/test/**",
+        "client/e2e/customer-management/**",
+        "docs/customer_management/**",
+        "isolated synthetic browser/unit verification",
+        "PR #234 and scoped implementation PR normal merge after gates"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -3381,8 +3440,8 @@
         "DEF-034002",
         "DEF-027001"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "APPROVAL-DESIGN-018 / APPROVAL-PLAN-018 / APPROVAL-SCOPE-045; Actual Sam user: 批准 HD-012、PR #234 的 DESIGN／PLAN baseline，以及 DataTable.vue 的窄範圍修復。繼續完成驗證、建立 PR 並合併；完整下游整合驗收保持阻塞，沒有需要我決策的事就自動繼續。"
     }
   ],
   "external_actions": [
@@ -4233,6 +4292,14 @@
       "idempotency_key": "customer-ui-hd012-draft-proposal-pr-v1",
       "status": "CONFIRMED",
       "source_ref": "Docs-onlyplanningboundary; no product, CI waiver, approval or mergeinferred. Do not explicitlywaitdesignCI; never bypassprotection; implementationbranchheldpendingdecision. Observed push exit 0; gh pr create returned https://github.com/crazysumsum/erp-app/pull/234. Reconciled via gh pr view: OPEN, DRAFT, head f01f477e05682c78d0a35906e9e995690ec32dd2, ten docs-only paths; attached to current chat. No merge or human approval."
+    },
+    {
+      "id": "EXT-MERGE-085",
+      "kind": "PR_MERGE",
+      "target": "PR #234 main <- codex/customer-ui-ordering-design",
+      "idempotency_key": "customer-hd012-planning-merge-v1",
+      "status": "PLANNED",
+      "source_ref": "Actual Sam user: 批准 HD-012、PR #234 的 DESIGN／PLAN baseline，以及 DataTable.vue 的窄範圍修復。繼續完成驗證、建立 PR 並合併；完整下游整合驗收保持阻塞，沒有需要我決策的事就自動繼續。 Observed main 10ca62ad unchanged; docs-only PR72d45eee, independent review REV-055; baseline hashes unchanged. No branch-protection bypass."
     }
   ],
   "evidence_files": [
@@ -4301,5 +4368,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Await Sam HD-012 approval of DESIGN a2b29b795515f6ee408201d3ac2650a1d42d74728c1ca4c9f2fe68cbfc292356, PLAN 3b15603d9608dcb388f90806f643a5d221514b17ef302f2e2d2f2851699735e0 and sole shared DataTable.vue exception in draft PR #234. No shared product edits until decision. Retain unpublished WIP tests 3b890ef47a46d36c717f12cd83e82cf7f8a4ac94 and private browser evidence. Import focused PASS is not full closure; search RED and full downstream acceptance BLOCKED."
+  "next_safe_action": "HD-012 approved by Sam exact PR #234 DESIGN/PLAN and shared DataTable scope. Commit approval record, verify latest main and canonical hashes unchanged; ready/merge docs-only PR normally. Then integrate fresh main into preserved implementation WIP, reconcile mode/state, minimal request ordering fix, developer/browser regression and current-head CI plus independent review; implementation PR merge only after gates. Full downstream acceptance remains BLOCKED."
 }
