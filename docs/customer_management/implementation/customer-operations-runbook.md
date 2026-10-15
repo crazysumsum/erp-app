@@ -93,6 +93,26 @@ Backend owns shape/transaction diagnosis; Operations owns DB credentials and
 rollout. Revert only to a schema-compatible app or disable the affected capability.
 Verify a successful normal command with its append-only audit record before recovery.
 
+## Disposable least-privilege and default-contention developer check
+
+Use `server/test/integration/customerOperationalGuards.integration.test.js` only on
+an explicitly owned, migrated disposable MySQL. From `server/`, with DB connection
+variables and explicit DB_ADMIN_USER/DB_ADMIN_PASSWORD supplied privately:
+
+```sh
+DB_INTEGRATION_TESTS=1 node --test --import ./test-support/testEnv.js test/integration/customerOperationalGuards.integration.test.js
+```
+
+The fixture administrator creates/drops one random SQL user and canary tables;
+the runtime fixture receives only named-table DML, never audit UPDATE/DELETE or
+DDL. The real Customer services verify idempotency, fresh permissions, audit and
+100 default-address contenders through a10-connection bounded pool. All fixture
+data/account cleanup is owner scoped; a failed cleanup is a failed test, not PASS.
+Never supply deployed administrative credentials or use this as a provisioning
+script. This local TC-081/083 subset does not prove deployed privilege separation,
+emergency access/session revocation, approval races or full downstream readiness.
+See [current local results](phase-PHASE-004-report.md#local-execution-results--2026-10-15).
+
 ## Unauthorized sensitive access
 
 Correlate request ID, route, safe denial code and the actor's fresh role/permission
