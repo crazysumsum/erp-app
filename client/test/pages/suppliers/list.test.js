@@ -1,11 +1,9 @@
-// 頁面要用香港時間計日界；本機時區如果剛好係香港就分唔出，所以固定用 UTC 跑。
-process.env.TZ = "UTC";
-
 import { DOMWrapper, flushPromises, mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
 import { Quasar } from "quasar";
 import { createMemoryHistory, createRouter } from "vue-router";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import process from "node:process";
 
 vi.mock("@/services/supplier.js", () => ({
   default: { list: vi.fn(), exportCsv: vi.fn() }, service: { name: "supplier" }
@@ -20,6 +18,9 @@ import { promptPassword } from "@/framework/ui/confirm.js";
 import { notifyError } from "@/framework/ui/notify.js";
 import SuppliersPage, { page } from "@/pages/suppliers/SuppliersPage.vue";
 import { useSessionStore } from "@/stores/session.js";
+
+// 頁面要用香港時間計日界；本機時區如果剛好係香港就分唔出，所以固定用 UTC 跑（Node 改 TZ 即時生效）。
+process.env.TZ = "UTC";
 
 const ROW = {
   id: 7, supplierCode: "SUP-007", supplierName: "Evergreen Trading", displayName: "Evergreen",
