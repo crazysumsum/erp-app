@@ -5,8 +5,11 @@ import test from "node:test";
 import databaseConfig from "../../config/database.js";
 import { normalizeDatabaseConfig } from "../../src/framework/configuration/normalizeDatabaseConfig.js";
 import { CustomerApprovalService } from "../../src/modules/customer/CustomerApprovalService.js";
+import { CustomerBankCrypto } from "../../src/modules/customer/CustomerBankCrypto.js";
+import { CustomerBankService } from "../../src/modules/customer/CustomerBankService.js";
 import { CustomerPartyService } from "../../src/modules/customer/CustomerPartyService.js";
 import { CustomerService } from "../../src/modules/customer/CustomerService.js";
+import { normalizeCustomerConfig } from "../../src/modules/customer/normalizeCustomerConfig.js";
 import { hashPassword } from "../../src/modules/user/passwordHash.js";
 import { RequestContextService } from "../../src/services/context/RequestContextService.js";
 import { createMySqlDatabasePool } from "../../src/services/mysqldatabase/connection.js";
@@ -14,7 +17,7 @@ import { MySqlDatabaseService } from "../../src/services/mysqldatabase/MySqlData
 
 const integrationTest = process.env.DB_INTEGRATION_TESTS === "1" ? test : test.skip;
 
-integrationTest("TC-081 / local TC-083 real Customer least privilege and contention", { timeout: 60_000 }, async (t) => {
+integrationTest("Local TC-080/081/083 real Customer security and contention", { timeout: 60_000 }, async (t) => {
   assert.ok(process.env.DB_ADMIN_USER, "DB_ADMIN_USER must identify the isolated fixture administrator");
   assert.notEqual(process.env.DB_ADMIN_PASSWORD, undefined, "DB_ADMIN_PASSWORD must be explicitly configured");
   const config = normalizeDatabaseConfig(databaseConfig);
@@ -24,7 +27,7 @@ integrationTest("TC-081 / local TC-083 real Customer least privilege and content
   const canary = `cm_guard_${suffix}`;
   const deniedCanary = `${canary}_denied`;
   const roleName = `customer-guard-${suffix}`;
-  const permissions = ["customer.approval", "customer.mgmt", "customer.view"];
+  const permissions = ["customer.approval", "customer.bank.mgmt", "customer.bank.view", "customer.mgmt", "customer.view"];
   let db = null;
   let approvalDb = null;
   let actorId = null;
@@ -58,13 +61,13 @@ integrationTest("TC-081 / local TC-083 real Customer least privilege and content
     "users", "roles", "permissions", "user_roles", "role_permissions", "customers",
     "customer_operation_requests", "customer_addresses",
     "customer_address_purposes", "customer_contacts", "customer_contact_purposes",
-    "customer_identifiers", "customer_credit_profiles"
+    "customer_identifiers", "customer_credit_profiles", "customer_bank_accounts"
   ];
   const expectedPrivileges = readTables.map((table) => `${config.database}.${table}:SELECT:NO`);
   for (const table of readTables) {
     await admin.query("GRANT SELECT ON ??.?? TO ?@'%'", [config.database, table, sqlUser]);
   }
-  for (const table of ["customers", "customer_operation_requests", "customer_addresses"]) {
+  for (const table of ["customers", "customer_operation_requests", "customer_addresses", "customer_bank_accounts"]) {
     await admin.query("GRANT INSERT, UPDATE ON ??.?? TO ?@'%'", [config.database, table, sqlUser]);
     expectedPrivileges.push(`${config.database}.${table}:INSERT:NO`, `${config.database}.${table}:UPDATE:NO`);
   }
@@ -89,7 +92,7 @@ integrationTest("TC-081 / local TC-083 real Customer least privilege and content
   const [role] = await admin.execute("INSERT INTO roles (name, created_at) VALUES (?, ?)", [roleName, now]);
   roleId = Number(role.insertId);
   await admin.execute("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)", [actorId, roleId]);
-  const [seededPermissions] = await admin.execute("SELECT id FROM permissions WHERE name IN (?, ?, ?)", permissions);
+  const [seededPermissions] = await admin.execute("SELECT id FROM permissions WHERE name IN (?, ?, ?, ?, ?)", permissions);
   assert.equal(seededPermissions.length, permissions.length);
   for (const permission of seededPermissions) {
     await admin.execute("INSERT INTO role_permissions (role_id, permission_id) VALUES (?, ?)", [roleId, permission.id]);
@@ -104,6 +107,17 @@ integrationTest("TC-081 / local TC-083 real Customer least privilege and content
   const service = new CustomerService({ database: db, time });
   const actor = { actorId, claimedRoles: [roleName], claimedPermissions: permissions };
   const input = { ...actor, idempotencyKey: `create-${suffix}`, customerCode: `GUARD-${suffix}`, legalName: `Guard fixture ${suffix}`, requestId: `create-${suffix}` };
+  const keyMaterial = [randomBytes(32).toString("base64"), randomBytes(32).toString("base64")];
+  const bankConfig = normalizeCustomerConfig({
+    bankEncryption: { activeKeyId: "guard-enc", keyRing: { "guard-enc": keyMaterial[0] } },
+    bankLookup: { activeKeyId: "guard-lookup", keyRing: { "guard-lookup": keyMaterial[1] } }
+  });
+  const logs = [];
+  const banks = new CustomerBankService({ database: db, time,
+    crypto: new CustomerBankCrypto({ encryption: bankConfig.bankEncryption, lookup: bankConfig.bankLookup }),
+    logger: { warn: (...args) => logs.push(args) } });
+  const accountNumber = randomBytes(16).toString("hex").toUpperCase();
+  let bankId;
 
   await t.test("LOCAL-081-DML: real actor, idempotent create, read, update and correlated audit", async () => {
     const created = await service.create(input);
@@ -148,6 +162,72 @@ integrationTest("TC-081 / local TC-083 real Customer least privilege and content
     await admin.query("ALTER TABLE ?? ADD COLUMN admin_control INT", [canary]);
     assert.equal((await admin.query("SHOW COLUMNS FROM ??", [canary]))[0].length, beforeColumns.length + 1);
     await admin.query("DROP TABLE ??", [canary]);
+  });
+
+  await t.test("LOCAL-081-BANK: real nullable-currency bank commands use only owned tables and append-only audit", async () => {
+    assert.ok(customerId);
+    const common = { ...actor, customerId, accountHolderName: "Synthetic guard holder", bankName: "Synthetic guard bank",
+      bankCountryCode: "HK", reason: "local bank privilege proof" };
+    const created = await banks.create({ ...common, accountNumber, requestId: `bank-create-${suffix}` });
+    bankId = created.id;
+    const masked = await banks.list({ ...actor, customerId });
+    assert.equal(masked.items.length, 1);
+    assert.equal(masked.items[0].accountNumber, undefined);
+    assert.equal(JSON.stringify(masked).includes(accountNumber), false);
+    const revealed = await banks.reveal({ ...actor, customerId, bankAccountId: bankId, reason: common.reason, requestId: `bank-reveal-${suffix}` });
+    assert.equal(revealed.accountNumber, accountNumber);
+    const updated = await banks.update({ ...common, bankAccountId: bankId, version: 1, bankName: "Updated synthetic bank", requestId: `bank-update-${suffix}` });
+    assert.equal(updated.version, 2);
+    const inactive = await banks.deactivate({ ...actor, customerId, bankAccountId: bankId, version: 2, reason: common.reason, requestId: `bank-deactivate-${suffix}` });
+    assert.equal(inactive.status, "inactive");
+    const [[row]] = await admin.execute("SELECT account_ciphertext, account_currency_code, status, version FROM customer_bank_accounts WHERE id=?", [bankId]);
+    assert.equal(row.account_currency_code, null, "non-null Currency locking is outside this least-privilege subset");
+    assert.equal(row.status, "inactive");
+    assert.equal(Number(row.version), 3);
+    assert.equal(row.account_ciphertext.includes(Buffer.from(accountNumber)), false);
+    const [audit] = await admin.execute("SELECT action,request_id,detail FROM customer_audit_logs WHERE customer_id=? AND target_type='bank' AND target_id=? ORDER BY id", [customerId, bankId]);
+    assert.deepEqual(audit.map(r => [r.action, r.request_id]), ["create", "reveal", "update", "deactivate"].map(action => [`bank.${action}`, `bank-${action}-${suffix}`]));
+    for (const secret of [accountNumber, ...keyMaterial]) assert.equal(JSON.stringify(audit).includes(secret), false);
+  });
+
+  await t.test("LOCAL-081-BANK-DENY: fresh permission and audit failure deny plaintext without bank mutation", async () => {
+    assert.ok(bankId, "positive bank fixture must exist");
+    const request = { ...actor, customerId, bankAccountId: bankId, reason: "local denied reveal proof", requestId: `bank-denied-${suffix}` };
+    const [beforeAudit] = await admin.execute("SELECT * FROM customer_audit_logs WHERE customer_id=? ORDER BY id", [customerId]);
+    const [beforeBank] = await admin.execute("SELECT * FROM customer_bank_accounts WHERE id=?", [bankId]);
+    const [[permission]] = await admin.execute("SELECT id FROM permissions WHERE name='customer.bank.view'");
+    await admin.execute("DELETE FROM role_permissions WHERE role_id=? AND permission_id=?", [roleId, permission.id]);
+    try {
+      await assert.rejects(() => banks.reveal(request), error => error.code === "PERMISSION_STALE");
+      await assert.rejects(() => banks.reveal({ ...request, claimedPermissions: permissions.filter(p => p !== "customer.bank.view") }), error => error.publicCode === "BANK_PERMISSION_LOST");
+    } finally { await admin.execute("INSERT INTO role_permissions (role_id,permission_id) VALUES (?,?)", [roleId, permission.id]); }
+    await admin.query("REVOKE INSERT ON ??.customer_audit_logs FROM ?@'%'", [config.database, sqlUser]);
+    let returned = false;
+    try {
+      await assert.rejects(() => banks.reveal(request).then(value => { returned = true; return value; }), error => error.code === "DATABASE_OPERATION_FAILED" && error.cause?.errno === 1142 && error.cause?.sqlState === "42000");
+    } finally { await admin.query("GRANT INSERT ON ??.customer_audit_logs TO ?@'%'", [config.database, sqlUser]); }
+    assert.equal(returned, false, "audit failure must prevent a plaintext result");
+    assert.deepEqual((await admin.execute("SELECT * FROM customer_audit_logs WHERE customer_id=? ORDER BY id", [customerId]))[0], beforeAudit);
+    assert.deepEqual((await admin.execute("SELECT * FROM customer_bank_accounts WHERE id=?", [bankId]))[0], beforeBank);
+  });
+
+  await t.test("LOCAL-080-BANK-DB: stored integrity failure emits only a safe correlated event", async () => {
+    assert.ok(bankId, "positive bank fixture must exist");
+    const [[row]] = await admin.execute("SELECT account_auth_tag FROM customer_bank_accounts WHERE id=?", [bankId]);
+    const changed = Buffer.from(row.account_auth_tag); changed[0] ^= 1;
+    const [[before]] = await admin.execute("SELECT COUNT(*) AS n FROM customer_audit_logs WHERE customer_id=? AND action='bank.reveal'", [customerId]);
+    await admin.execute("UPDATE customer_bank_accounts SET account_auth_tag=? WHERE id=?", [changed, bankId]);
+    try {
+      await assert.rejects(() => banks.reveal({ ...actor, customerId, bankAccountId: bankId, reason: "local corrupt bank proof", requestId: `integrity-${suffix}` }), error => error.publicCode === "BANK_ACCOUNT_UNREADABLE" && error.statusCode === 422);
+      assert.deepEqual(logs, [["customer.bank.reveal.unreadable", "Customer bank account could not be read", {
+        customerId, bankAccountId: bankId, requestId: `integrity-${suffix}`, reason: "BANK_INTEGRITY_FAILED"
+      }]]);
+      for (const secret of [accountNumber, ...keyMaterial]) assert.equal(JSON.stringify(logs).includes(secret), false);
+      const [[after]] = await admin.execute("SELECT COUNT(*) AS n FROM customer_audit_logs WHERE customer_id=? AND action='bank.reveal'", [customerId]);
+      assert.equal(Number(after.n), Number(before.n));
+    } finally { await admin.execute("UPDATE customer_bank_accounts SET account_auth_tag=? WHERE id=?", [row.account_auth_tag, bankId]); }
+    assert.equal((await banks.reveal({ ...actor, customerId, bankAccountId: bankId, reason: "local repaired fixture proof", requestId: `repaired-${suffix}` })).accountNumber, accountNumber);
+    assert.equal(logs.length, 1, "successful read must not emit another unreadable event");
   });
 
   await t.test("LOCAL-083-DEFAULT: 100 same-version commands reconcile defaults, versions and real audit", async () => {
@@ -227,5 +307,29 @@ integrationTest("TC-081 / local TC-083 real Customer least privilege and content
     assert.equal(Number(afterAudit.n), Number(beforeAudit.n) + 2);
     const [operations] = await admin.execute("SELECT status, COUNT(*) AS n FROM customer_operation_requests WHERE actor_user_id = ? GROUP BY status", [approverId]);
     assert.deepEqual(operations.map((row) => [row.status, Number(row.n)]), [["succeeded", 50]]);
+  });
+
+  await t.test("LOCAL-081-SESSION: revoking the owned SQL account also closes its verified live sessions", async (sessionTest) => {
+    const connection = await pool.getConnection();
+    sessionTest.after(() => connection.destroy());
+    assert.equal((await connection.query("SELECT id FROM customers WHERE id=?", [customerId]))[0].length, 1);
+    const [[held]] = await connection.query("SELECT CONNECTION_ID() AS id");
+    const [sessions] = await admin.execute("SELECT ID AS id, USER AS user, DB AS db FROM information_schema.PROCESSLIST WHERE USER=?", [sqlUser]);
+    assert.ok(sessions.some(session => Number(session.id) === Number(held.id)));
+    assert.ok(sessions.every(session => session.user === sqlUser && session.db === config.database), "never kill an unowned session");
+    const disconnected = new Promise(resolve => { connection.once("error", resolve); });
+    await admin.query("DROP USER ?@'%'", [sqlUser]);
+    for (const session of sessions) await admin.query("KILL CONNECTION ?", [Number(session.id)]);
+    assert.equal((await disconnected).code, "PROTOCOL_CONNECTION_LOST");
+    await assert.rejects(() => connection.query("SELECT 1"), /closed state/u);
+    await db.shutdown(); db = null;
+    const denied = createMySqlDatabasePool(runtimeConfig);
+    try {
+      await assert.rejects(() => denied.query("SELECT 1"), error => error.errno === 1045 && error.sqlState === "28000");
+    } finally { await denied.end(); }
+    const [[remaining]] = await admin.execute("SELECT COUNT(*) AS n FROM information_schema.PROCESSLIST WHERE USER=?", [sqlUser]);
+    assert.equal(Number(remaining.n), 0);
+    const [[users]] = await admin.execute("SELECT COUNT(*) AS n FROM mysql.user WHERE User=? AND Host='%'", [sqlUser]);
+    assert.equal(Number(users.n), 0);
   });
 });

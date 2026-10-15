@@ -1,5 +1,81 @@
 # Customer PHASE-004 implementation progress
 
+## Post-HD-013 independent security checks — execution charter
+
+Latest main `52bb48ad35f1da41508c7bf608af4e67c630dae9` contains the approved
+HD-013 waiver. TC-086/087 are WAIVED_BY_HUMAN / APPROVED; no timing acceptance
+run is required or planned. DESIGNfa4dbd1e / PLANa1d5e05a remain unchanged.
+PR241's actual closure is [comment6188463352](https://github.com/crazysumsum/erp-app/pull/241#issuecomment-6188463352);
+state206 is a pre-publication cache, not an unperformed merge.
+
+Continue TASK-033 developer preparation only, reusing the existing real-MySQL
+operational guard fixture. Scope reaches its named SQL grants, synthetic role/data,
+real CustomerBankService/crypto/fresh-actor/audit paths and owner-scoped cleanup.
+No product, provider contract, schema, CI, deployed permission policy or key-store
+change. Bank currency is legitimately NULL in this subset; non-null Currency locking
+and approval least privilege remain unproven, not bypassed or certified. There is
+no configured real alert receiver or installed ClamAV tool available for a delivered
+alert/scanner acceptance claim. Graphify has no usable graph.json; source inspection
+is used without rebuilding the unrelated whole-repository index.
+
+Critical cases defined before automation/execution:
+
+| Case / reference | Priority / requirement-risk | Preconditions / data | Steps | Expected result / evidence | Initial status |
+| --- | --- | --- | --- | --- | --- |
+| LOCAL-081-BANK / TC-081 | P0; FR-099, SEC-010..014, DES-014/021; sensitive service unusable or overprivileged | Fresh owned13378/MySQL, migrated synthetic schema, real fresh actor, random Customer bank account/key rings; exact named grants and INSERT-only audit | Exercise real bank create/list/reveal/update/deactivate using only owned-table SELECT/INSERT/UPDATE; compare masked output, persisted ciphertext and correlated audit | Normal commands work, plaintext only in authorized reveal result; no plaintext/key values in DB audit/telemetry; no global/schema/DDL/audit mutation/Currency grants | NOT RUN |
+| LOCAL-081-BANK-DENY / TC-081, local SEC boundary | P0; stale role or failed audit leaks plaintext | Same owned fixture with a readable bank row | Remove synthetic bank.view permission; try stale and fresh insufficient claims; restore role; revoke audit INSERT, try reveal, restore only original grant | PERMISSION_STALE then BANK_PERMISSION_LOST; audit-write MySQL privilege denial prevents reveal result; denial paths add no successful reveal audit or bank mutation; fixture restoration succeeds | NOT RUN |
+| LOCAL-080-BANK-DB / TC-080 local event subset | P1; DES-023, SEC-010..014; corrupt stored ciphertext leaks secrets or reports successful reveal | Same bank, actual stored GCM tag and service logger capture | Flip one stored tag byte as fixture admin; reveal through restricted SQL/runtime and real crypto; restore tag | BANK_ACCOUNT_UNREADABLE422, one request-correlated fixed BANK_INTEGRITY_FAILED event, no successful reveal audit or sensitive marker in captured telemetry; not alert delivery/reset | NOT RUN |
+| LOCAL-081-SESSION / TC-081 | P0; revoked SQL account retains live sessions | Unique fixture SQL user with held verified connection and current successful reads; admin confirms every selected thread's exact user/schema | Drop only fixture SQL user, KILL only its enumerated verified connection IDs; verify disconnection, residual sessions/account, old connection and new login | Held connection closes, all owned user sessions/account0, old connection unusable and fresh login1045/28000 denied; no other session touched; no production/emergency-role policy claim | NOT RUN |
+
+Only local developer evidence may be produced. TASK-033/035 remain IN_PROGRESS;
+TASK-030/031/032/034/full downstream acceptance remain BLOCKED, TASK-036 PENDING.
+No Technical Acceptance/UAT/release or Operations/Security approval is inferred.
+
+### Post-HD-013 local security results
+
+Executable testSHA256 `60e4111cf64457d7dad03df6c2342d4b7e2f8efa2f9f068b344db66785b5560d`,
+source fingerprint `9bb750facdd83862da50991dd459b808022a115ba08bef701560c0ccfdea3d9b`.
+[Sanitized execution evidence](phase4-operational-security-results.json) retains
+initial failures, negative control, final assertions and limits; no plaintext bank
+account, password, key material or raw DB export is published.
+
+| Verification | Actual result | Scope / limit |
+| --- | --- | --- |
+| LOCAL-081-BANK | PASS: create/list/reveal/update/deactivate; persisted ciphertext, masked list,4 correlated bank audit actions; exact named grants including Customer bank SELECT/INSERT/UPDATE | Bank currency NULL only; audit INSERT-only; no Currency/DDL/global grant or product change |
+| LOCAL-081-BANK-DENY | PASS: actual permission withdrawal gives PERMISSION_STALE/BANK_PERMISSION_LOST; audit INSERT denial1142/42000 returns no plaintext; bank/audit unchanged | Real actor refresh, SQL and transaction; fixture grant restored; not deployed policy certification |
+| LOCAL-080-BANK-DB | PASS: actual stored GCM corruption yields422, exactly one safe correlated BANK_INTEGRITY_FAILED event, no successful reveal audit; restored row reveals normally | Captured event only, not real alert delivery/reset |
+| LOCAL-081-SESSION | PASS: verified owned connection IDs explicitly killed after exact fixture SQL-user drop; old session unusable, new login1045/28000; accounts/sessions0 | Local mechanics only; no other user's session or production account touched |
+| Existing contention | PASS:100 defaults ->2 winners/98 CAS conflicts/1 default;100 decisions ->1 transition/49 replays/50 opposite conflicts | Existing local TC-083 subset only; approval uses separate integration DB_USER, not restricted bank role |
+| Final Customer/Sales-Customer regression |73 files,298PASS/0FAIL/0SKIP,20.655652s | Serial shared-schema runner, as CI; excludes performance/recovery, no RPO/RTO rerun |
+| Lint / build / traceability | PASS / PASS / STRUCTURE_PASS with approval checks | Existing bundle-size advisory remains; no CI threshold/rule weakened |
+
+Initial RED was the real bank INSERT denial under the prior narrower fixture grants
+(5PASS/4FAIL including dependent cases and parent). Added only Customer bank
+INSERT/UPDATE; corrected test predicates to actual statusCode and wrapped MySQL
+cause. GREEN9PASS/0FAIL/0SKIP. Temporary unreadable-status422->500 mutation was
+detected (7PASS/2FAIL including parent), then product source restored with diff0.
+Lint found a promise-executor return and passed after its surgical fixture fix.
+Initial wider regression correctly refused missing application bank keys, then
+default parallel execution raced existing shared-schema migration/cleanup fixtures.
+Ephemeral matching test keys and the existing CI-style serial runner resolved the
+environment/invocation failures without product, timeout, floor or policy changes.
+
+Actual post-run own fixture SQL accounts, sessions, canaries, users and Customers
+are all0 on verified loopback13378/datadirTT2dab/mysql. Service is retained only for
+postmerge recheck, then exact owned schema/service/datadir cleanup. Review/current
+candidate five CI checks and normal merge are still pending at this checkpoint;
+actual immutable-head/merge/cleanup receipts will be on the PR timeline.
+
+Remaining executable boundary: local source/test preparation is complete for this
+slice; TC-080 real alert delivery/reset needs an actual approved receiver, deployed
+TC-081 privilege/security evidence needs real account/environment owners and real
+scanner evidence needs the configured scanner. TASK-030/031/032/full integration
+still need real ready Fulfillment/InvoicingAR/ReturnsRefund consumers. Do not invent
+these integrations, grant Currency UPDATE, certify a capture as alert delivery or
+change acceptance to PASS. HD-013 timing waiver is effective; TC-085 backup/key/file/
+audit and other Operations/Security requirements remain. TASK-033/035 IN_PROGRESS,
+TASK-030/031/032/034 BLOCKED and TASK-036 PENDING.
+
 ## Latest-main follow-through — execution charter (2026-10-15)
 
 Observed authoritative main `392b9f9db0f36f5a3bbabf2854bf3ee20a7bf227`.

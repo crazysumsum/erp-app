@@ -1,0 +1,155 @@
+{
+  "schemaVersion": 1,
+  "module": "customer-management",
+  "task": "TASK-033",
+  "kind": "LOCAL_DEVELOPER_ONLY",
+  "recordedAt": "2026-10-15T09:19:08Z",
+  "baseCommit": "52bb48ad35f1da41508c7bf608af4e67c630dae9",
+  "designBaseline": "fa4dbd1ef42d14fab8321b3ced7be4093dbcabc8408c15dda852f9cd5777906b",
+  "planBaseline": "a1d5e05a8d2eff9a4d76435c701f8ebc054b5e7a1ba27b0cf366643cbf685d9b",
+  "sourceFingerprint": "9bb750facdd83862da50991dd459b808022a115ba08bef701560c0ccfdea3d9b",
+  "test": {
+    "path": "server/test/integration/customerOperationalGuards.integration.test.js",
+    "sha256": "60e4111cf64457d7dad03df6c2342d4b7e2f8efa2f9f068b344db66785b5560d"
+  },
+  "environment": {
+    "mysqlVersion": "26.7.0",
+    "host": "127.0.0.1",
+    "port": 13378,
+    "schema": "erp_customer_ops_security_20261015",
+    "datadir": "/private/tmp/erp-customer-security-runtime.TT2dab/mysql",
+    "syntheticOnly": true,
+    "shared3306Touched": false
+  },
+  "runs": [
+    {
+      "kind": "RED",
+      "result": "EXPECTED_FAILURE",
+      "pass": 5,
+      "fail": 4,
+      "skip": 0,
+      "durationMs": 731.6545,
+      "reason": "Bank INSERT absent from exact named grants; bank positive case and dependent checks fail. Parent counted among failures; not a product defect."
+    },
+    {
+      "kind": "GREEN",
+      "pass": 9,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 622.858417,
+      "reason": "Added only Customer bank INSERT/UPDATE to synthetic fixture grants; corrected error predicates to real statusCode and wrapped MySQL cause."
+    },
+    {
+      "kind": "MUTATION_CONTROL",
+      "result": "DETECTED",
+      "pass": 7,
+      "fail": 2,
+      "skip": 0,
+      "durationMs": 528.811041,
+      "mutation": "Temporary public unreadable status422->500; integrity case and parent fail. Restored byte-identical product source; no product diff retained."
+    },
+    {
+      "kind": "REGRESSION_SETUP_FAILURE",
+      "result": "NOT_PASS",
+      "reason": "Initial wider command omitted application bank key configuration; real SupplierBankCrypto bootstrap correctly refused. Ephemeral matching Customer/Supplier key configuration supplied privately; no product/config change."
+    },
+    {
+      "kind": "REGRESSION_CONCURRENCY_FAILURE",
+      "result": "NOT_PASS",
+      "reason": "Default multi-file concurrency raced existing shared-schema migration/cleanup fixtures, causing query timeouts/assertion failures. Reran serially, matching CI coverage runner; no timeout/threshold relaxation."
+    },
+    {
+      "kind": "RESTORED_SERIAL_REGRESSION",
+      "files": 73,
+      "pass": 298,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 20655.65175,
+      "testConcurrency": 1,
+      "includes": "8 operational security/contention children plus parent; all existing selected Customer/Sales-Customer cases",
+      "excludes": [
+        "performance directory",
+        "recovery directory; RPO/RTO already waived"
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "id": "LOCAL-081-BANK",
+      "status": "PASS",
+      "assertions": [
+        "named-table grants match exact information_schema allowlist; no global/schema/DDL/grant option/column grants",
+        "bank currency NULL, real CustomerBankService/crypto/fresh actor/audit",
+        "create/list/reveal/update/deactivate; ciphertext excludes account marker; masked responses contain no plaintext",
+        "four correlated bank audit actions exclude account/key markers"
+      ]
+    },
+    {
+      "id": "LOCAL-081-BANK-DENY",
+      "status": "PASS",
+      "assertions": [
+        "stale claims PERMISSION_STALE; fresh insufficient claims BANK_PERMISSION_LOST",
+        "revoked audit INSERT yields wrapped MySQL1142/42000 and no plaintext result",
+        "bank row and all prior Customer audit rows unchanged; original grants restored"
+      ]
+    },
+    {
+      "id": "LOCAL-080-BANK-DB",
+      "status": "PASS",
+      "assertions": [
+        "actual stored GCM-tag corruption gives BANK_ACCOUNT_UNREADABLE422",
+        "one fixed BANK_INTEGRITY_FAILED event with Customer/bank/request correlation; no account/key marker",
+        "no successful reveal audit on corrupt row; restored tag permits real reveal"
+      ],
+      "limit": "Captured service event only; no alert delivery/reset claim."
+    },
+    {
+      "id": "LOCAL-081-SESSION",
+      "status": "PASS",
+      "assertions": [
+        "drop only random fixture SQL account; kill only live IDs verified exact user/schema",
+        "held connection receives PROTOCOL_CONNECTION_LOST and becomes unusable",
+        "new login denied1045/28000; residual exact fixture account/session0"
+      ],
+      "limit": "Local mechanics, not deployed emergency-access policy."
+    },
+    {
+      "id": "LOCAL-083-DEFAULT",
+      "status": "PASS",
+      "commands": 100,
+      "winners": 2,
+      "versionConflicts": 98,
+      "finalDefault": 1
+    },
+    {
+      "id": "LOCAL-083-DECISION",
+      "status": "PASS",
+      "commands": 100,
+      "transitions": 1,
+      "sameTerminalReplays": 49,
+      "oppositeDecisionConflicts": 50
+    }
+  ],
+  "checks": {
+    "lint": "PASS after fixing no-promise-executor-return; no rule suppression",
+    "clientBuild": "PASS; existing >500kB bundle advisory retained",
+    "traceabilityWithApprovals": "STRUCTURE_PASS; not formal test acceptance",
+    "postRunFixtureResiduals": {
+      "sqlAccounts": 0,
+      "sqlSessions": 0,
+      "canaryTables": 0,
+      "fixtureUsers": 0,
+      "customers": 0
+    }
+  },
+  "limitations": [
+    "RPO/RTO acceptance WAIVED_BY_HUMAN under HD-013; objectives remain NOT_PROVEN, no new timing run",
+    "TASK-033 and TASK-035 remain IN_PROGRESS",
+    "TASK-030/031/032/034 and full downstream acceptance remain BLOCKED; TASK-036 PENDING",
+    "Non-null Currency locking and approval least privilege not certified",
+    "No deployed runtime/migration/emergency-role separation, production privilege policy or Operations/Security sign-off",
+    "No real alert receiver/delivery/reset, installed ClamAV, real downstream consumers, formal Technical Acceptance/UAT/release",
+    "Local test authorization/scanner assumptions in pre-existing regression cases do not become security acceptance"
+  ],
+  "publication": "Pre-publication evidence. Actual immutable review, exact-head CI, merge and cleanup receipts belong to the PR timeline."
+}
