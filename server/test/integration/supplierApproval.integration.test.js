@@ -333,7 +333,7 @@ integrationTest("createSupplier really does read the policy before the currency 
   }).catch(() => {});   // the transaction is rolled back either way; the order is the assertion
 
   const settingsAt = order.findIndex((sql) => sql.includes("supplier_settings"));
-  const currencyAt = order.findIndex((sql) => sql.includes("FROM currencies") && sql.includes("FOR UPDATE"));
+  const currencyAt = order.findIndex((sql) => sql.includes("FROM currencies") && sql.includes("LOCK IN SHARE MODE"));
   assert.notEqual(settingsAt, -1, "createSupplier did not read the activation policy");
   assert.notEqual(currencyAt, -1, "createSupplier did not take the currency lock");
   assert.ok(settingsAt < currencyAt,

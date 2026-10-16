@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 217,
+  "revision": 219,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -9,23 +9,23 @@
   "current_phase": "PHASE-004",
   "current_task": "TASK-033",
   "baseline": {
-    "design": "fa4dbd1ef42d14fab8321b3ced7be4093dbcabc8408c15dda852f9cd5777906b",
-    "plan": "a1d5e05a8d2eff9a4d76435c701f8ebc054b5e7a1ba27b0cf366643cbf685d9b",
-    "code_commit": "e9ce220cc28e42fed292bd32317bc0f81fd29872",
-    "source_fingerprint": "87e3e848740a55aba7bc30e552062c9887b4d37f5fdce53e30acf32c66918f76",
+    "design": "13a77ed225d0253eaac097b5e3bb13f60c6078d1019500b95e976dd6617af721",
+    "plan": "b390c588a323b3c3677bb031f287cebefe2cb284571e901d56aa3f14814f44db",
+    "code_commit": "899779a428561f14b2b66f484f99243996ab5295",
+    "source_fingerprint": "1dbed0971bf4d0ac0d4a6c5d2ad0e1b7f97e4f0010f5f04263ff3760642b6c22",
     "worktree": "/private/tmp/erp-customer-operations-readiness",
-    "default_commit": "0fa41eef54fd01bb163f1ceaf57f46b5acada1a7",
+    "default_commit": "4439014e9a9d03f233e858e56f93617e787ecb8c",
     "mode_entry_commit": "392b9f9db0f36f5a3bbabf2854bf3ee20a7bf227"
   },
   "runtime": {
-    "instance_id": "customer-lock-probe-c898BU-closed",
-    "owner": "/root Customer local verification",
+    "instance_id": "customer-hd016-qWNdul-active",
+    "owner": "/root Customer HD016 implementation",
     "resources": {
       "workspace": "/private/tmp/erp-customer-operations-readiness",
-      "mysql-schema": "CLEANED new customer_lock_probe + SELECT-only account on owned13369/c898BU; server exited0/stopped datadir removed",
-      "customer-file-root": "not allocated",
-      "customer-import-root": "not allocated",
-      "web-port": "not allocated; no frontend changes"
+      "mysql-schema": "owned13369/qWNdul/mysql + erp_customer_hd016; fixture-only administrator with private ephemeral credentials; actual Customer role catalogSELECTonly",
+      "customer-file-root": "existing integration synthetic owned temp roots",
+      "customer-import-root": "Sales registeredworker synthetic spool/ownedfixture cleanup",
+      "web-port": "ephemeral application ports owned by existing tests"
     },
     "lease_ref": null
   },
@@ -2012,6 +2012,86 @@
         "TC-088",
         "TC-080 alert delivery only",
         "ClamAV real clean/infected acceptance only"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-DESIGN-020",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam current user: 批准 HD-016、PR #244 的 DESIGN baseline 13a77ed2、PLAN baseline b390c588，以及兩個共用檔案的窄範圍修復。繼續實作及驗證，完成後合併；完整下游整合驗收保持阻塞，沒有需要我決策的事就不要停下來。 Full hashes resolve uniquely to published/reviewed PR244 proposal. Carries already accepted HD013/15 clauses, no new waiver/PASS or CI exception; independent ledger old approval records preserved.",
+      "recorded_at": "2026-10-16T01:28:48Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "13a77ed225d0253eaac097b5e3bb13f60c6078d1019500b95e976dd6617af721",
+      "code_commit": "899779a428561f14b2b66f484f99243996ab5295",
+      "scope": [
+        "HD-016",
+        "DES-017",
+        "customer-management"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-PLAN-020",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam current user: 批准 HD-016、PR #244 的 DESIGN baseline 13a77ed2、PLAN baseline b390c588，以及兩個共用檔案的窄範圍修復。繼續實作及驗證，完成後合併；完整下游整合驗收保持阻塞，沒有需要我決策的事就不要停下來。 Full hashes resolve uniquely to published/reviewed PR244 proposal. Carries already accepted HD013/15 clauses, no new waiver/PASS or CI exception; independent ledger old approval records preserved.",
+      "recorded_at": "2026-10-16T01:28:48Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "b390c588a323b3c3677bb031f287cebefe2cb284571e901d56aa3f14814f44db",
+      "code_commit": "899779a428561f14b2b66f484f99243996ab5295",
+      "scope": [
+        "HD-016",
+        "TASK-029",
+        "TASK-033",
+        "TC-070",
+        "TC-081",
+        "customer-management"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-051",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam current user: 批准 HD-016、PR #244 的 DESIGN baseline 13a77ed2、PLAN baseline b390c588，以及兩個共用檔案的窄範圍修復。繼續實作及驗證，完成後合併；完整下游整合驗收保持阻塞，沒有需要我決策的事就不要停下來。 Full hashes resolve uniquely to published/reviewed PR244 proposal. Carries already accepted HD013/15 clauses, no new waiver/PASS or CI exception; independent ledger old approval records preserved.",
+      "recorded_at": "2026-10-16T01:28:48Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "b390c588a323b3c3677bb031f287cebefe2cb284571e901d56aa3f14814f44db",
+      "code_commit": "899779a428561f14b2b66f484f99243996ab5295",
+      "scope": [
+        "server/src/modules/businessMaster/BusinessMasterProvider.js",
+        "server/src/modules/businessMaster/BusinessMasterRepository.js",
+        "server/src/modules/customer/CustomerLookupService.js",
+        "server/test/**",
+        "docs/customer_management/**"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-RISK-007",
+      "kind": "RISK",
+      "authority_kind": "HUMAN",
+      "actor": "Sam",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam current user: 批准 HD-016、PR #244 的 DESIGN baseline 13a77ed2、PLAN baseline b390c588，以及兩個共用檔案的窄範圍修復。繼續實作及驗證，完成後合併；完整下游整合驗收保持阻塞，沒有需要我決策的事就不要停下來。 Full hashes resolve uniquely to published/reviewed PR244 proposal. Carries already accepted HD013/15 clauses, no new waiver/PASS or CI exception; independent ledger old approval records preserved.",
+      "recorded_at": "2026-10-16T01:28:48Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "b390c588a323b3c3677bb031f287cebefe2cb284571e901d56aa3f14814f44db",
+      "code_commit": "899779a428561f14b2b66f484f99243996ab5295",
+      "scope": [
+        "HD-013",
+        "HD-015",
+        "TC-086",
+        "TC-087",
+        "TC-088",
+        "TC-080 alert delivery only"
       ],
       "expires_at": null
     }
@@ -4031,8 +4111,8 @@
         "HD-014",
         "HD-015"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Actual Sam current user: 批准 HD-016、PR #244 的 DESIGN baseline 13a77ed2、PLAN baseline b390c588，以及兩個共用檔案的窄範圍修復。繼續實作及驗證，完成後合併；完整下游整合驗收保持阻塞，沒有需要我決策的事就不要停下來。 Full hashes resolve uniquely to published/reviewed PR244 proposal."
     }
   ],
   "external_actions": [
@@ -5153,8 +5233,24 @@
       "kind": "GIT_PUSH",
       "target": "github:crazysumsum/erp-app:codex/customer-operations-readiness existing draftPR244",
       "idempotency_key": "customer-hd014-hd016-proposal-push117",
+      "status": "CONFIRMED",
+      "source_ref": "Actual pushed899779a4, remote DraftPR244head verified, trusted receipt issuecomment6205897006."
+    },
+    {
+      "id": "EXT-LOCAL-118",
+      "kind": "ISOLATED_RUNTIME",
+      "target": "new /private/tmp/customer-hd016.qWNdul/mysql loopback13369; own erp_customer_hd016 schema, ephemeral test users/keys",
+      "idempotency_key": "customer-hd016-qWNdul-118",
+      "status": "CONFIRMED",
+      "source_ref": "Ownruntime actual26.7/87existing migrations. Catalog+runtime10PASS; newSalesmutable-state3PASS; deterministicnarrowapproval9PASS. CurrentfailedTC042load is under causal diagnostic, runtime stillactive, no cleanup claimed."
+    },
+    {
+      "id": "EXT-PUSH-119",
+      "kind": "GIT_PUSH",
+      "target": "github:crazysumsum/erp-app:codex/customer-operations-readiness DraftPR244",
+      "idempotency_key": "customer-hd016-wip-code-push119",
       "status": "PLANNED",
-      "source_ref": "Publish independently reviewed proposal + actual bounded SQL evidence only; no implementation/merge approval inferred. Keep Draft and preserve all blockers."
+      "source_ref": "Authorized HD016 WIP implementation/evidence checkpoint, NOT merge-ready while real TC042 failure causality and finalselftest/CI unresolved. All CI unchanged; no merge/bypass."
     }
   ],
   "evidence_files": [
@@ -5179,7 +5275,8 @@
     "implementation/local-operations-20261016-results.json",
     "implementation/local-operations-20261016-output.txt",
     "implementation/hd014-readonly-lock-proposal.md",
-    "implementation/hd014-lock-probe-output.txt"
+    "implementation/hd014-lock-probe-output.txt",
+    "implementation/hd016-implementation-report.md"
   ],
   "defects": [
     {
@@ -5233,7 +5330,21 @@
         "implementation/ui-defects-remediation-report.md; scoped developer closure on f3413abe / fp3d98d69b; Customer20PASS including keyboard import and four search cases, component21PASS, client872PASS, Business15/Supplier42PASS, build/lint and CLI PASS; REV-056 actual independent APPROVE. Exact-head CI/normal merge remains mandatory, not formal acceptance."
       ],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-033001",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "source_ids": [
+        "TASK-033",
+        "DES-017",
+        "TC-081"
+      ],
+      "closure_evidence": [
+        "Actual full server coverage mixed-load Sales-module TC042 failure CONCURRENT_OPERATION ~35s; may be existing load/deadlock behavior, cause not established. OwnMySQL printall-deadlock diagnostic + unchanged uninstru scenario running. No Sales product remediation inferred, no Customer/sharedfix acceptance/merge while blocker unresolved."
+      ],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Await one HD016 exact DESIGN 13a77ed2/PLAN b390c588 + two shared BusinessMaster source path adoption decision. Then actual readonly shared-lock provider fix and full planned real Customer/non-null Currency/default/approval/credit + Sales/Supplier regressions, batch2.2/finalmutable-state regression, fresh-main/exact-head CI/review/normal merge. HD014 proposal authorized, not implementationadoption. HD0151–3 waivers recorded, no control/CI/PASS inference; HD013 unchanged. NewPLAN N/Aapproval bindings intentionally pending, oldapprovals never rewritten. Full downstreamBLOCKED; preserve DraftPR244/worktree. No more ClamAV/alert/rollback infrastructure input needed."
+  "next_safe_action": "Continue active uninstrumented unchanged SalesTC042 mixedload causal run, capture original DB deadlock diagnostics and compare old provider control if needed. Customer readonly shared-lock/non-nullBank/defaultTerm/credit/deterministicapproval/Salesmutable-state regressions PASS, client903PASS/build/lint/highseverityaudit gatepass(lowadvisoryretained). Full server coverage firstFAIL4; restoreadminenv2 fixed+rechecked, staleSupplierassertion fixed/rechecked, TC042 unresolved. Keep DraftPR244, no merge until proper final-head CI/review and regressionresolved. ApprovedDESIGN13a77ed2/PLANb390c588 unchanged. RISK007 preserves current humanwaiverprovenance despite oldledgerpointer generic limitation. Full downstream remainsBLOCKED."
 }
