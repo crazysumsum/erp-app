@@ -4,8 +4,8 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import { SupplierBankCrypto } from "../src/modules/supplier/SupplierBankCrypto.js";
-import { SupplierBankService } from "../src/modules/supplier/SupplierBankService.js";
+import { SupplierBankCrypto } from "../../src/modules/supplier/SupplierBankCrypto.js";
+import { SupplierBankService } from "../../src/modules/supplier/SupplierBankService.js";
 
 export const PASSWORD = "Supplier-T51-Password!";
 export const MISSING = 999_999_999;
@@ -25,9 +25,9 @@ export function createSupplierHarness(prefix) {
 
   h.start = async () => {
     h.logRoot = fs.mkdtempSync(path.join(os.tmpdir(), `${prefix}-logs-`));
-    const { createApplication } = await import("../src/framework/application/createApplication.js");
-    const { defaultConfigurationSource } = await import("../src/framework/configuration/applicationConfiguration.js");
-    const { discoverServiceDefinitions } = await import("../src/framework/services/serviceDiscovery.js");
+    const { createApplication } = await import("../../src/framework/application/createApplication.js");
+    const { defaultConfigurationSource } = await import("../../src/framework/configuration/applicationConfiguration.js");
+    const { discoverServiceDefinitions } = await import("../../src/framework/services/serviceDiscovery.js");
     const source = defaultConfigurationSource();
     // 背景工作會改 supplier_* 表，令「冇副作用」嘅 checksum 唔可靠；淨係留 tokenRevocation.refresh（設定要求）。
     const jobs = (await discoverServiceDefinitions()).flatMap((definition) => (definition.ServiceClass?.jobs ?? []).map((job) => job.name));
@@ -40,8 +40,8 @@ export function createSupplierHarness(prefix) {
           request: { ...source.logging.loggers.request, directory: path.join(h.logRoot, "requests") },
           system: { ...source.logging.loggers.system, directory: path.join(h.logRoot, "system") } } } },
       serviceDiscoveryOptions: { additionalModuleUrls: [
-        new URL("../src/modules/businessMaster/BusinessMasterService.js", import.meta.url).href,
-        new URL("../src/modules/supplier/SupplierProviderServices.js", import.meta.url).href] }
+        new URL("../../src/modules/businessMaster/BusinessMasterService.js", import.meta.url).href,
+        new URL("../../src/modules/supplier/SupplierProviderServices.js", import.meta.url).href] }
     });
     h.db = h.application.services.require("mysqldatabase");
     h.jwt = h.application.services.require("jwt");
@@ -101,7 +101,7 @@ export function createSupplierHarness(prefix) {
       const [[row]] = await h.db.query("SELECT id FROM permissions WHERE name = ?", [permission]);
       await h.db.execute("INSERT INTO role_permissions (role_id, permission_id) VALUES (?, ?)", [roleId, row.id]);
     }
-    const passwordHash = await (await import("../src/modules/user/passwordHash.js")).hashPassword(PASSWORD);
+    const passwordHash = await (await import("../../src/modules/user/passwordHash.js")).hashPassword(PASSWORD);
     const [user] = await h.db.execute(
       "INSERT INTO users (username, password_hash, display_name, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
       [name, passwordHash, `${prefix} ${label}`, now, now]);

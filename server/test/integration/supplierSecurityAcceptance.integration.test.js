@@ -3,7 +3,7 @@ import { after, before, test } from "node:test";
 import { randomUUID } from "node:crypto";
 import fs from "node:fs";
 
-import { MISSING, createSupplierHarness } from "../../test-support/supplierHttpHarness.js";
+import { MISSING, createSupplierHarness } from "./supplierHttpHarness.js";
 
 /**
  * TASK-051 step 2b：AUTH-001～AUTH-010（TC-111～TC-120，TC-114／TC-115 已有 carrier）喺真 app、真 HTTP、真 MySQL。

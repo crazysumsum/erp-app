@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
 import { randomUUID } from "node:crypto";
 
-import { MISSING, createSupplierHarness } from "../../test-support/supplierHttpHarness.js";
+import { MISSING, createSupplierHarness } from "./supplierHttpHarness.js";
 
 /**
  * TASK-051 step 2b：建立、Code、冪等、樂觀鎖、狀態機同 child ownership（CORE-001/004/008/011、STATE-002/005/007/009、
