@@ -56,7 +56,7 @@ function lifecycle(action, id, body, user = h.users.mgmt) {
 const updateBody = (version, supplierName, extra = {}) => ({ version, supplierName, displayName: "", defaultCurrencyCode: "HKD",
   defaultPaymentTermId: null, website: "", generalPhone: "", generalEmail: "", notes: "", ...extra });
 
-integrationTest("TC-017 (CORE-001): create makes a Draft at version 1 with its audit and name index, readable at once, and a failed create leaves nothing", async () => {
+integrationTest("TC-017 (CORE-001): create makes a Draft at version 1 with its audit and name index, readable at once, and a refused create leaves nothing", async () => {
   const t = tag();
   const made = await create({ supplierCode: `C001-${t}`, supplierName: `Core One ${t}`, displayName: "Core", notes: "first" });
   assert.equal(made.status, 201, made.text);
@@ -71,7 +71,8 @@ integrationTest("TC-017 (CORE-001): create makes a Draft at version 1 with its a
   const detail = await h.send(h.users.mgmt, h.route("GET /api/v1/suppliers/:id"), { ids: { id } });
   assert.deepEqual([detail.status, detail.json.data.supplierCode, detail.json.data.version], [200, `C001-${t}`, 1]);
 
-  // 同一個 Code 再建：DB 撞 unique 之後成個 transaction 退返，冇半份 audit 或者 name index 留低。
+  // 同一個 Code 再建：喺寫入之前已經被預檢拒絕，所以冇嘢留低。呢度唔證明 transaction 原子性（寫入後出錯回滾），
+  // 嗰個由 TC-028（supplierManagement.integration）用 audit 失敗證明（REV-097 M-2）。
   const [[before]] = await h.db.query("SELECT (SELECT COUNT(*) FROM supplier_audit_logs) AS audits, (SELECT COUNT(*) FROM supplier_name_grams) AS grams");
   const again = await create({ supplierCode: `c001-${t.toLowerCase()}`, supplierName: `Loser ${t}` });
   assert.deepEqual([again.status, again.code], [409, "SUPPLIER_CODE_TAKEN"]);
@@ -100,6 +101,8 @@ integrationTest("TC-020 (CORE-004): Codes are kept exactly as typed, invalid one
     const duplicate = await create({ supplierCode: code.toLowerCase(), supplierName: `Dup ${status} ${t}` });
     assert.deepEqual([duplicate.status, duplicate.code], [409, "SUPPLIER_CODE_TAKEN"], status);
   }
+  const [[refusedRoots]] = await h.db.query("SELECT COUNT(*) AS n FROM suppliers WHERE supplier_name LIKE ?", [`Bad ${t}`]);
+  assert.equal(Number(refusedRoots.n), 0, "no root row from a refused create");
   const afterRefusals = await h.snapshot();
   assert.deepEqual(Object.fromEntries(Object.entries(afterRefusals).filter(([table]) => !table.endsWith(".suppliers"))),
     Object.fromEntries(Object.entries(before).filter(([table]) => !table.endsWith(".suppliers"))), "refusals wrote no audit, grams or children");
@@ -136,7 +139,7 @@ integrationTest("TC-024 (CORE-008): one Idempotency-Key makes one Supplier wheth
   const repeat = await create(body, { idempotencyKey: key });
   assert.deepEqual([repeat.status, repeat.json.data], [201, first.json.data], "the repeat replays the first result");
   const changed = await create({ ...body, supplierName: `Other ${t}` }, { idempotencyKey: key });
-  assert.equal(changed.code, "IDEMPOTENCY_CONFLICT", changed.text);
+  assert.deepEqual([changed.status, changed.code], [409, "IDEMPOTENCY_CONFLICT"], changed.text);
   const newKey = await create(body);
   assert.deepEqual([newKey.status, newKey.code], [409, "SUPPLIER_CODE_TAKEN"]);
 
@@ -192,7 +195,7 @@ integrationTest("TC-031 (STATE-002): reactivate makes a complete Supplier Active
   const incomplete = await h.seedSupplier(`RE-NO-${t}`, "", "suspended");
   const refused = await lifecycle("reactivate", incomplete, { version: 1, reason: REASON });
   assert.deepEqual([refused.status, refused.code], [422, "SUPPLIER_NOT_ACTIVATABLE"], refused.text);
-  assert.ok(Array.isArray(refused.json.error.details?.issues ?? refused.json.error.details), "the issues are returned");
+  assert.deepEqual(refused.json.error.details.issues.map((issue) => issue.field), ["supplierName"], "the issue names the missing field");
   const stored = await row(incomplete);
   assert.deepEqual([stored.status, Number(stored.version)], ["suspended", 1]);
   assert.deepEqual(await audits(incomplete), []);
@@ -243,15 +246,53 @@ integrationTest("TC-036 (STATE-007): a purchase transaction's FOR UPDATE seriali
     order.push("purchase committed");
   });
   await isLocked;
-  const suspend = lifecycle("suspend", id, { version: made.json.data.version, reason: REASON }).then((response) => { order.push("suspend answered"); return response; });
-  await new Promise((resolve) => { setTimeout(resolve, 500); });
-  assert.deepEqual(order, [], "the status change is waiting on the purchase lock");
-  release();
-  await purchase;
+  let suspend;
+  try {
+    suspend = lifecycle("suspend", id, { version: made.json.data.version, reason: REASON }).then((response) => { order.push("suspend answered"); return response; });
+    await new Promise((resolve) => { setTimeout(resolve, 500); });
+    assert.deepEqual(order, [], "the status change is waiting on the purchase lock");
+  } finally {
+    // 斷言失敗都要放鎖，唔係 after() 刪唔到行，成個 process 會吊住（REV-097 M-1）。
+    release();
+    await purchase.catch(() => {});
+  }
   assert.equal((await suspend).status, 200);
   assert.deepEqual(order, ["purchase committed", "suspend answered"]);
 
-  // B 先：狀態已經改咗，purchase transaction 入面重驗就拒絕，唔會開到新交易。舊畫面（之前 lookup 係 usable）一樣。
+  // B 先，而且仲揸住鎖：connection B 鎖住並改咗狀態未 commit；A 已經有 snapshot，佢嘅 FOR UPDATE 要等 B，
+  // 之後讀到 B commit 咗嘅狀態而拒絕（REV-097 L-1）。冇 FOR UPDATE 嘅話 A 會讀到舊 snapshot 嘅 active。
+  const held = await create({ supplierCode: `PO3-${t}`, supplierName: `Purchase Three ${t}`, activate: true });
+  const heldId = held.json.data.id;
+  let bLocked;
+  const bIsLocked = new Promise((resolve) => { bLocked = resolve; });
+  let bRelease;
+  const bReleased = new Promise((resolve) => { bRelease = resolve; });
+  const steps = [];
+  const statusChange = h.db.withTransaction(async (connection) => {
+    await connection.query("SELECT id FROM suppliers WHERE id = ? FOR UPDATE", [heldId]);
+    await connection.query("UPDATE suppliers SET status = 'suspended', version = version + 1 WHERE id = ?", [heldId]);
+    bLocked();
+    await bReleased;
+    steps.push("status change committed");
+  });
+  let purchaseAfter;
+  try {
+    await bIsLocked;
+    purchaseAfter = h.db.withTransaction(async (connection) => {
+      await connection.query("SELECT status FROM suppliers WHERE id = ?", [heldId]);
+      await provider.assertUsableInTransaction(connection, heldId, { purpose: "purchase" });
+      steps.push("purchase opened");
+    }).catch((error) => { steps.push(`purchase refused ${error.publicCode}`); });
+    await new Promise((resolve) => { setTimeout(resolve, 500); });
+    assert.deepEqual(steps, [], "the purchase check waits for the held status change");
+  } finally {
+    bRelease();
+    await statusChange.catch(() => {});
+  }
+  await purchaseAfter;
+  assert.deepEqual(steps, ["status change committed", "purchase refused SUPPLIER_NOT_USABLE"]);
+
+  // B 先而且已經 commit：重驗拒絕，唔會開到新交易。舊畫面（之前 lookup 係 usable）一樣。
   const other = await create({ supplierCode: `PO2-${t}`, supplierName: `Purchase Two ${t}`, activate: true });
   const otherId = other.json.data.id;
   assert.equal((await provider.findById(otherId, { purpose: "purchase" })).usable, true, "the screen loaded while usable");

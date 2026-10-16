@@ -236,6 +236,8 @@ describe("pages/suppliers/SupplierDetailPage.vue", () => {
     const banner = body.find('[aria-label="非阻擋完整度提示"]');
     expect(banner.exists()).toBe(true);
     expect(banner.text()).toContain("尚未設定採購用途地址");
+    expect(banner.text()).toContain("不影響啟用");
+    expect(banner.attributes("role")).not.toBe("alert");
   });
 });
 

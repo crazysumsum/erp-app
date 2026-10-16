@@ -52,6 +52,16 @@ export function createSupplierHarness(prefix) {
 
   h.stop = async () => {
     if (!h.db) return;
+    try {
+      await removeFixtures();
+    } finally {
+      // 刪唔到（例如行仲被鎖住）都要關 app，唔係 HTTP server 同連線池會令成個 process 吊住（REV-097 M-1）。
+      await h.application.shutdown("test");
+      fs.rmSync(h.logRoot, { recursive: true, force: true });
+    }
+  };
+
+  async function removeFixtures() {
     for (const id of h.jobIds) await h.db.execute("DELETE FROM supplier_import_jobs WHERE id = ?", [id]);
     for (const id of h.supplierIds) {
       for (const table of ["supplier_activation_requests", "supplier_contact_purposes", "supplier_contacts", "supplier_address_purposes",
@@ -70,9 +80,7 @@ export function createSupplierHarness(prefix) {
       await h.db.execute("DELETE FROM role_permissions WHERE role_id = ?", [id]);
       await h.db.execute("DELETE FROM roles WHERE id = ?", [id]);
     }
-    await h.application.shutdown("test");
-    fs.rmSync(h.logRoot, { recursive: true, force: true });
-  };
+  }
 
   async function registeredSupplierRoutes() {
     const directory = path.join(h.logRoot, "system");
