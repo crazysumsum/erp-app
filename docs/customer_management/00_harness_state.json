@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 222,
+  "revision": 223,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,21 +11,21 @@
   "baseline": {
     "design": "13a77ed225d0253eaac097b5e3bb13f60c6078d1019500b95e976dd6617af721",
     "plan": "b390c588a323b3c3677bb031f287cebefe2cb284571e901d56aa3f14814f44db",
-    "code_commit": "83603aeb059f4c6a067814d467dcf209f06d7957",
-    "source_fingerprint": "397e161701b2e6af7a3dd7be702d4d48c057f49c1d2d9aed6f62ecbf606c8510",
+    "code_commit": "2d1e49565f8e74b2a65434545a81ae5342820965",
+    "source_fingerprint": "a8939571af7415b62b307d40d4080570cd86b7b5c18dea546ae2e23bb9b32a4d",
     "worktree": "/private/tmp/erp-customer-operations-readiness",
     "default_commit": "089dd45b6ca5558511ae6396a88f732d5df43927",
     "mode_entry_commit": "392b9f9db0f36f5a3bbabf2854bf3ee20a7bf227"
   },
   "runtime": {
-    "instance_id": "customer-hd016-qWNdul-cleaned",
-    "owner": "/root Customer HD016 implementation",
+    "instance_id": "customer-independent-jevRrC-cleaned",
+    "owner": "/root Customer independent readiness recheck",
     "resources": {
       "workspace": "/private/tmp/erp-customer-operations-readiness",
-      "mysql-schema": "CLEANED: owned13369 schema+ephemeraladmin dropped; ownmysqld shutdown02:13:06 verified sessions43711/73057 exit0,socketgone; exactstoppeddatadir+admin.json removed. No shared3306 changes. Credentialfree evidence retained.",
-      "customer-file-root": "existing integration synthetic owned temp roots",
-      "customer-import-root": "Sales registeredworker synthetic spool/ownedfixture cleanup",
-      "web-port": "ephemeral application ports owned by existing tests"
+      "mysql-schema": "CLEANED: ownedjevRrC/mysql13369 and3syntheticschemas;DROP/SHUTDOWN06:18:40/socketabsent/exactdatadirremoved verified;shared3306untouched",
+      "customer-file-root": "Test-owned restore roots/backupkeys/files cleaned byunchangedtest;smallcredentialfree logs retained",
+      "customer-import-root": "Restorefixture-only source/result objects cleaned;no runningworkers",
+      "web-port": "No server/browserstarted;appcreatedonlyforcapacity andshutdowncomplete"
     },
     "lease_ref": null
   },
@@ -3920,6 +3920,17 @@
       "subject": "Integrated serial fullcoverage and minimal100line Sales lock proof",
       "status": "FAIL",
       "source_ref": "implementation/hd016-implementation-report.md serialterminalsection. Actual3441tests3304PASS1FAIL136existingSKIP; onlyTC042,0parallelheavyjobs. Coverage94.00/86.40/93.14 and38floorsPASS do not negateFAIL. Nativecycle+two100lineprobeFAIL,actualEXPLAINuqsalesorderskuuomrange. Full-logSHA0fc84ddf;probeExplainSHA60a81ab7. No Salesproductfix/CIedit/merge. OwnedMySQLschema+fixtureadmin dropped,shutdowncompleted02:13:06,socketgone,datadir+privatecredentialremoved; rawcredentialfreelogs/probe retained."
+    },
+    {
+      "code_commit": "2d1e49565f8e74b2a65434545a81ae5342820965",
+      "spec_baseline": "13a77ed225d0253eaac097b5e3bb13f60c6078d1019500b95e976dd6617af721",
+      "source_fingerprint": "a8939571af7415b62b307d40d4080570cd86b7b5c18dea546ae2e23bb9b32a4d",
+      "actor": "/root Customer independent readiness recheck",
+      "observed_at": "2026-10-16T06:18:14Z",
+      "kind": "MANUAL_TEST",
+      "subject": "Current-candidate local restore integrity,crypto/storage/audit and50k20worker capacity only",
+      "status": "PASS",
+      "source_ref": "implementation/independent-readiness-recheck-20261016.md +results.json;40PASS0FAIL0SKIP=3realrestore+20support+17capacity/guards.20Customer tables/87migrations/6manifestmembers/4damagedsetrefusals/6badkeydenials.50kCustomers5kchildren20workers30s,300948ops0errors/listp956.95525ms/otherlookup2.17-2.68ms<=5000,14branchranges/physicalscanchecksPASS. Scanner/authfixtures explicit; no actualIAM/ClamAV/alerts/rollback/RPOproof orSalesfullintegration. SalesDEF033001HIGHOPEN andfullsuiteoriginalFAILretained. Onlydocs/evidence changes;localchecks don'tcloseTASK034or036."
     }
   ],
   "pending_decisions": [
@@ -5326,6 +5337,30 @@
       "idempotency_key": "customer-hd016-cleanup121",
       "status": "CONFIRMED",
       "source_ref": "Actualpreflightdatadir/port/accountlist/nootheractivesessions; droppedownedbase/admin,shutdown02:13:06 bothsessions0,verifiedsocketabsent,removedexactstoppeddatadir+privatecredential. OwnCustomerworktree/branch/DraftPR retained forpendingHD017; evidence logs retained. No thirdpartyor sharedresource touched."
+    },
+    {
+      "id": "EXT-HANDOFF-122",
+      "kind": "DEFECT_REGISTRATION_NOTIFICATION",
+      "target": "Sales testissue register +sales_order_management thread01a0f0e2-2647-7dc2-a1d4-a7cefa29d0f6",
+      "idempotency_key": "customer-def033001-sales-registration122",
+      "status": "CONFIRMED",
+      "source_ref": "Actualdoc-only2d1e4956 pushed existingDraftPR244; docs/sales_order_management/testing/04_defect_register.md includes nativecycle/repro/SHA/PRdependency. Actualsend_message_to_thread deliverysuccess; PRreceipt6209331081. No acceptance/fixclaimed. Sourcefingerprint397->a893 onlynewSalesregisterdocoutsideCustomerdocs; no executable changes. CurrentSam independentlycontinueauthority preservesSalesownedscope/PRblock."
+    },
+    {
+      "id": "EXT-LOCAL-123",
+      "kind": "ISOLATED_RUNTIME",
+      "target": "owned /private/tmp/erp-customer-local-runtime.jevRrC/mysql loopback13369,new3syntheticschemas only",
+      "idempotency_key": "customer-independent-readiness-123",
+      "status": "CONFIRMED",
+      "source_ref": "ActualIOP0353PASS,IOP03320PASS,IOP03417PASS,0FAIL0SKIP; existingunchangedtests on current2d1e/sourcea893.3schemascreated/migrated87/realrestore+50k20worker30s; no shared3306. Verifiedcleanupcapacity0/source2/restore1/0otheractivesessions;3ownschemas dropped,ownmysqldshutdown06:18:40UTC sessions79543/21390exit0/socketgone,exactstoppeddatadirremoved. Keys/dumps/files test-owned removed, credentialfree rawlogs retained. ResultsJSON/reportrecordactualsource/scope, no RPOacceptance/fulltaskcompletion."
+    },
+    {
+      "id": "EXT-PUSH-124",
+      "kind": "GIT_PUSH",
+      "target": "existingDraftPR244 codex/customer-operations-readiness,Customer docs/state/minimized independent testresults only",
+      "idempotency_key": "customer-independent-evidence-push124",
+      "status": "PLANNED",
+      "source_ref": "Userauthorizesindependentscopework;publishobserved40PASSslice/unchangedcanonbaselines,no product/test/CIchanges ormerge. ActualpushreceipttoPRtimeline; completeCI/fullsuite stillblockedbySales."
     }
   ],
   "evidence_files": [
@@ -5352,7 +5387,9 @@
     "implementation/hd014-readonly-lock-proposal.md",
     "implementation/hd014-lock-probe-output.txt",
     "implementation/hd016-implementation-report.md",
-    "implementation/hd016-isolated-load-results.json"
+    "implementation/hd016-isolated-load-results.json",
+    "implementation/independent-readiness-recheck-20261016.md",
+    "implementation/independent-readiness-recheck-20261016-results.json"
   ],
   "defects": [
     {
@@ -5424,5 +5461,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "HD017 ANSWERED by Sam: keepPR244BLOCKED and currentCustomer/twoBMsharedscope unchanged; Sales owns separate100line deadlock remediation. Do not implementSalesfix or merge/waiveDEF033001. Retain openPR/branch/worktree and credentialfreeevidence; isolatedruntime alreadycleaned. Once separateSalesfix is actually available on authoritative main, verifyitsreceipt, integratefreshmain intoCustomerbranch, rerunaffectedreal100line/unchangedTC042/fullcoverage/currentheadCI/independentreview before anymerge; no automatic scopeextension. Full downstream030031032/UAT remainsBLOCKED. No other task was created or messaged by this checkpoint."
+  "next_safe_action": "Independent approved local slices refreshed40PASS0FAIL0SKIP on2d1e/sourcea893; no newapprovedunblockedproducttaskfound. KeepTASK029/033/035IN_PROGRESS,030031032034BLOCKED,036PENDING andPR244Draft/BLOCKED. Await separateSalesDEF033001repair andactualdownstreamcontracts; do notimplementSalesfix orweakenexistinggates/waivers. Salesregistration+message confirmedpreviously; no repeatnotification needed. Onceactualupstreamfixavailable/relevantuserrequest, verifyfreshmain/integrate/retestreal100line/unchangedTC042/fullcoverage/currentheadCI/independentreview beforemerge; no automaticfakeREADY/UATacceptance. Ownruntimecleaned; evidence retained. LocalcapacityPASSdoesnotcompletefullTASK034,restoredoesnotcompletefullTASK035;no formalreadiness/release."
 }
