@@ -37,8 +37,10 @@ function boundedDetail(detail) {
     Array.isArray(value) ? { count: value.length, sample: value.slice(0, 3), truncated: true } : value
   ]));
   serialized = JSON.stringify(summarized);
-  if (Buffer.byteLength(serialized, "utf8") > MAX_DETAIL_BYTES) {
-    throw new TypeError("Supplier audit detail exceeds 8192 bytes after bounded summarization");
+  const bytes = Buffer.byteLength(serialized, "utf8");
+  if (bytes > MAX_DETAIL_BYTES) {
+    throw Object.assign(new TypeError("Supplier audit detail exceeds 8192 bytes after bounded summarization"),
+      { code: "SUPPLIER_AUDIT_DETAIL_TOO_LARGE", bytes });
   }
   return serialized;
 }
@@ -61,7 +63,17 @@ export class SupplierAuditLogService {
     if (!ACTION_PREFIXES.some((prefix) => String(input.action).startsWith(prefix))) {
       throw new TypeError(`Unsupported Supplier audit action ${input.action}`);
     }
-    const detail = boundedDetail(input.detail);
+    let detail;
+    try {
+      detail = boundedDetail(input.detail);
+    } catch (error) {
+      // 設計 §5.12：摘要後仍超限就成個業務 transaction 失敗並告警（唔可以有資料冇 audit）。
+      if (error.code === "SUPPLIER_AUDIT_DETAIL_TOO_LARGE") {
+        this.logger?.error?.("supplier.audit.detail_too_large", "Supplier audit detail exceeds its limit after summarization",
+          { action: String(input.action), targetType: String(input.targetType), targetId: input.targetId ?? null, bytes: error.bytes });
+      }
+      throw error;
+    }
     await connection.execute(
       `INSERT INTO supplier_audit_logs
         (occurred_at, actor_user_id, actor_username, action, target_type, target_id,
