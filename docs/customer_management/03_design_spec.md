@@ -1,5 +1,50 @@
 # Customer Management System Design Specification (Harness 2.0 Aligned)
 
+## HD-014 / HD-015 / HD-016 — Scoped continuation and pending remediation
+
+Sam: `1-3 我批准不用做，只需要推進4-5項`. HD-015 waives actual ClamAV
+clean/infected acceptance, alert fire/reset delivery acceptance, and TC-088
+compatible deployment/rollback acceptance drill. These are WAIVED_BY_HUMAN, never
+technical PASS. Preserve scanner fail-closed, encryption, logging/correlation/
+redaction, operational safe-deployment controls and CI. HD-013 remains; complete
+downstream integration stays BLOCKED. No whole-module or release approval follows.
+
+HD-014 authorizes the proposal/review, not future exact-baseline adoption. Proposed
+additive Customer provider2.2 adds
+`getSalesPrecheckSnapshotsInTransaction(transaction, customerIds, {atMs})` to the
+existing methods below. Runtime2.1 is not relabelled before approved implementation.
+Require a query-capable caller connection and an array of positive safe-integer IDs;
+optional `atMs`, when supplied, must be a non-negative safe integer. Deduplicate,
+reject more than100 unique IDs, sort numerically, and return a Map seeded with every
+requested ID -> null. Empty input issues no SQL. One bounded parameterized Customer/
+credit LEFT JOIN returns frozen allowlisted Customer/default/version/status and
+credit snapshots; no bank, contact, notes, pool read or commit. Inactive/hold facts
+remain visible for Sales diagnostic rejection. This non-locking precheck grants no
+sale authority: final creation still locks Customer -> credit in the caller's write
+transaction and revalidates current status/hold and owner Currency/Term/Item facts.
+Sales retains authentication, worker lease and confirmed-user authority ownership.
+
+HD-016 least-privilege repair is **PENDING exact DESIGN/PLAN and shared-path Sam
+approval**. Only reference assertions use shared current reads, via repository
+`{forShare:true}` -> `LOCK IN SHARE MODE`; existing `{forUpdate:true}` stays
+exclusive, omitted/false flags stay nonlocking. Both flags must be booleans and
+cannot both be true; invalid combinations throw before SQL. This preserves existing
+owner callers without a broad lock-API migration. No plain SELECT fallback, catalog
+UPDATE/DELETE/LOCK TABLES grant, schema/dependency/CI change or provider retry.
+Active/history/version/projection/errors and caller transaction ownership remain.
+
+Lock order: consumers acquire their aggregate locks (Customer then credit where
+applicable), then Currency codes ascending, then Payment Term IDs ascending.
+Consumers never mutate catalog rows or upgrade reference locks. Business Master
+owner mutation takes exclusive catalog locks and keeps impact checkers nonlocking;
+it must not acquire consumer aggregate locks, avoiding reverse edges. Existing
+exclusive owner writes and fixed caller order stay unchanged. Real MySQL tests must
+exercise consumer-vs-owner contention for both tables and rollback/retry behavior.
+Shared source scope is only BusinessMasterProvider.js and BusinessMasterRepository.js,
+plus tests; no other module behavior/docs change. MySQL5.7-compatible syntax is
+retained, but local26.7 proof is not5.7/early8.0 runtime certification. Versions whose
+SELECT-only shared reads are unsupported remain fail-closed, not privilege-expanded.
+
 ## HD-013 — Human-approved timing acceptance waiver
 
 Sam: `RPO/ RTO 不用做驗收了，我批準通過。` Formal TC-086/087 timing
@@ -1111,6 +1156,7 @@ CustomerLookupService.findById(customerId, { purpose, atMs })
 CustomerLookupService.findByCode(customerCode, { purpose, atMs })
 CustomerLookupService.listActive({ q, page, pageSize, purpose, atMs })
 CustomerLookupService.getCreditPolicy(customerId, { atMs })
+CustomerLookupService.getSalesPrecheckSnapshotsInTransaction(transaction, customerIds, { atMs })
 CustomerLookupService.getSalesSnapshotInTransaction(transaction, customerId, { atMs })
 CustomerLookupService.listAddresses(customerId, { purpose: "shipping", atMs })
 CustomerLookupService.assertAddressUsable(customerId, addressId, { purpose, atMs })
@@ -1121,6 +1167,16 @@ CustomerLookupService.assertContactUsableInTransaction(transaction, customerId, 
 ```
 
 Purpose必須使用已註冊值，未知purpose fail closed：`new_sale`及`manual_invoice`只接受Active；`existing_order_fulfillment`、`invoice_existing_shipment`、`ar_existing_document`、`historical_return`、`refund_existing_transaction`及`history`不會只因Customer後來變成Suspended／Blocked／Archived而拒絕既有合法流程。Fulfillment地址仍只回active＋shipping，Refund銀行仍須active、owned且目的授權。
+
+HD-014 pending candidate defines the additive contract
+`customer-purpose-provider-contracts/aligned-design-2.2`, including the batch method
+listed above with the complete bounded/deduplicated/null-map/allowlisted/nonlocking
+semantics in this document's HD-014 section. This candidate is not adopted yet;
+implementation will update the runtime label only after exact-baseline approval.
+The following 2.1 statement describes the observed current runtime and historical
+single-Customer Sales contract, not the candidate's version or omission of its
+batch extension. Final confirmation must never substitute the batch precheck for
+the locked single-Customer snapshot.
 
 一般assert只供非transaction read／precheck。會在同一MySQL schema完成跨模組寫入的Shipment等流程，必須使用`*InTransaction`版本，傳入caller現有executor及畫面選擇時的expected version；方法在同一觀察點重驗Customer status、child ownership、active、purpose及version並回必要snapshot，沒有transaction立即throw `TypeError`。下游把code／name／address／contact／currency／term／credit policy version的必要值存入自己的snapshot，Customer模組不寫Sales／Shipment tables。
 

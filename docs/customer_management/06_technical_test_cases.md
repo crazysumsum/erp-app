@@ -1,5 +1,16 @@
 # Customer Management Technical Test Specification
 
+## HD-015 — Narrow human-approved operating acceptance waivers
+
+Sam: `1-3 我批准不用做，只需要推進4-5項`. Real ClamAV clean/infected
+acceptance, delivered alert fire/reset assertions in TC-080, and the TC-088
+compatible deployment/rollback drill are WAIVED_BY_HUMAN, not measured PASS.
+Only those execution clauses are overridden. Existing scanner fail-closed and
+crypto/storage assertions, TC-080 correlation/redaction/metrics, TC-081 least
+privilege, integrity recovery, normal CI and full downstream blockers remain.
+The retained scenarios below are historical/reference criteria where waived;
+do not run/install the waived infrastructure or mark whole TC-080 inapplicable.
+
 ## 1. Status and Evidence Boundary
 
 Cases remain specifications, not executed results. HD-013: Sam explicitly waived formal RPO/RTO acceptance (`RPO/ RTO 不用做驗收了，我批準通過。`); TC-086/087 have disposition `WAIVED_BY_HUMAN / APPROVED`, not technical PASS. Their retained scenarios are optional reference, not mandatory/blocking acceptance; ledger applicability is NOT_APPLICABLE to required execution with APPROVAL-RISK-005. Other cases retain their existing requirements. No test, build, migration, browser flow, load run or restore drill was executed during `REVIEW_AND_ALIGN`. Formal execution belongs to `TEST_AND_VERIFY` against a declared commit/build, environment and data baseline.

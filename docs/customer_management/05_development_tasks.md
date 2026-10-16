@@ -1,5 +1,41 @@
 # Customer Management Aligned Development Plan
 
+## HD-014 / HD-015 / HD-016 — Scoped continuation
+
+HD-015: Sam waived inputs1–3 (real scanner clean/infected acceptance, delivered
+alert fire/reset acceptance, TC-088 deployment/rollback drill), not controls or
+technical PASS. TC-080 logging/correlation/redaction remains required. HD-013 and
+full downstream/TASK-030/031/032/034 blockers remain.
+
+HD-014 contract proposal/review is authorized. Reopen only TASK-029 contract
+reconciliation under DES-017/TC-070 for the merged Sales batch precheck. Historical
+DONE evidence is preserved, not relabelled as approval of the new provider contract.
+
+HD-016 TASK-033/TC-081 remediation is PENDING Sam approval of this exact DESIGN/PLAN
+and the two shared Business Master source paths. After approval:
+
+1. Prove the current provider SELECT-only denial with a regression; implement the
+   three repository lock states and shared provider assertions under DES-017.
+2. Verify real Currency/Term SELECT-only assertions; deny INSERT/UPDATE/DELETE;
+   concurrent readers; owner deactivation blocked until consumer commit/rollback;
+   post-commit inactive/version rejection; current reads despite an older snapshot;
+   timeout propagation; no provider commit; retained exclusive owner mutation.
+3. Exercise Customer bank non-null Currency, default Currency/Term, approval and
+   credit workflows using runtime grants; regress Customer/Sales/Supplier consumers.
+   No null-currency workaround, replacement provider or widened catalog grants.
+4. Bump additive Customer provider2.2 and contract tests; verify batch boundaries,
+   safe fields, missing/inactive/hold states and real MySQL. Regress precheck-active
+   -> blocked/on-hold before final confirmation: locked confirmation rejects, no
+   Sales Order/reservation/source success. No Sales behavior change or fake downstream.
+5. Independent review, relevant full tests/lint/build and configured exact-head CI;
+   integrate fresh main before PR244 normal merge. No admin merge or old-head CI.
+   Clean branch/worktree only after observed merge and dependency checks.
+
+No product implementation is authorized by the proposal alone. SQL diagnostics in
+implementation/hd014-readonly-lock-proposal.md establish feasibility, not a fixed
+provider's acceptance. Complete downstream integration and whole-module sign-off
+stay BLOCKED; RPO/RTO remains waived, not proven.
+
 ## HD-013 — Approved RPO/RTO acceptance exception
 
 Sam: `RPO/ RTO 不用做驗收了，我批準通過。` TC-086/087 are no longer

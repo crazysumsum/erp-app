@@ -1,5 +1,10 @@
 # Customer local operations execution — 2026-10-16
 
+Follow-up disposition: Sam waived consolidated inputs1–3 and authorized progressing
+4–5 (`1-3 我批准不用做，只需要推進4-5項`). The original run/input history below
+is preserved, not a renewed request for scanner/alert/rollback configuration.
+See [actual shared-lock feasibility and reviewed HD-014/016 proposal](hd014-readonly-lock-proposal.md).
+
 Sam explicitly designated this machine as the acceptance environment and requested
 actual independent operating checks, not further document-only alignment. Frozen
 checkout: e9ce220cc28e42fed292bd32317bc0f81fd29872; executable source fingerprint

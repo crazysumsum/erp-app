@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 214,
+  "revision": 217,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -18,14 +18,14 @@
     "mode_entry_commit": "392b9f9db0f36f5a3bbabf2854bf3ee20a7bf227"
   },
   "runtime": {
-    "instance_id": "customer-local-ops-20261016-closed",
+    "instance_id": "customer-lock-probe-c898BU-closed",
     "owner": "/root Customer local verification",
     "resources": {
       "workspace": "/private/tmp/erp-customer-operations-readiness",
-      "mysql-schema": "CLEANED owned13369/vvrvRm/3syntheticschemas; no active instance",
-      "customer-file-root": "test and restore roots CLEANED; private credential-free diagnostic retained",
-      "customer-import-root": "restore roots CLEANED",
-      "web-port": "not allocated; no UI/deployment"
+      "mysql-schema": "CLEANED new customer_lock_probe + SELECT-only account on owned13369/c898BU; server exited0/stopped datadir removed",
+      "customer-file-root": "not allocated",
+      "customer-import-root": "not allocated",
+      "web-port": "not allocated; no frontend changes"
     },
     "lease_ref": null
   },
@@ -58,7 +58,7 @@
     "TASK-026": "DONE",
     "TASK-027": "DONE",
     "TASK-028": "DONE",
-    "TASK-029": "DONE",
+    "TASK-029": "IN_PROGRESS",
     "TASK-030": "BLOCKED",
     "TASK-031": "BLOCKED",
     "TASK-032": "BLOCKED",
@@ -1995,6 +1995,25 @@
         "docs/customer_management/implementation/local-operations-20261016*"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-RISK-006",
+      "kind": "RISK",
+      "authority_kind": "HUMAN",
+      "actor": "Sam",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam: 1-3 我批准不用做，只需要推進4-5項. Narrow HD015 acceptance drill waiver only; not approval of future exact DESIGN/PLAN, control disabling, CI/release/downstream sign-off. Bound here to prior approved PLAN; carrying to new proposed PLAN remains HD016 pending.",
+      "recorded_at": "2026-10-16T01:20:26Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a1d5e05a8d2eff9a4d76435c701f8ebc054b5e7a1ba27b0cf366643cbf685d9b",
+      "code_commit": "dee50a2763c6e0f3cd8b7cf63c0884a2b275859b",
+      "scope": [
+        "HD-015",
+        "TC-088",
+        "TC-080 alert delivery only",
+        "ClamAV real clean/infected acceptance only"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -2833,6 +2852,18 @@
       "reviewer": "/root/customer_task011_review (actual separate read-only QA agent)",
       "reviewed_baseline": "87e3e848740a55aba7bc30e552062c9887b4d37f5fdce53e30acf32c66918f76",
       "source_ref": "ActualAPPROVED limitedlocaloperationsevidenceonly. Verified57=37+14+3+3/0FAIL0SKIP,13frozenrepositorytestSHA/private3case diagnosticSHA/outputexcerptSHA, exactargv/cwd/redactedenv andscope/cleanup. TwoRequiredprovenancefindings resolved: newlyauthoredprivatediagnosticexplicit, fullsource/invocationmanifest+selectedoriginaltoolreturnexcerpts retainedwithhonestnotfullrawarchive qualifier. No actualfullrawreplay/OpsSecurity/formalTC/UAT/releaseadoptionapproval; AV/alerts/rollback/Currencyleastpriv/HD014/downstream stillblocked.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-071",
+      "method": "SEPARATE_AGENT",
+      "author": "/root Customer scoped readonly lock / batch contract proposal",
+      "reviewer": "/root/customer_task011_review",
+      "reviewed_baseline": "13a77ed225d0253eaac097b5e3bb13f60c6078d1019500b95e976dd6617af721",
+      "source_ref": "Actual independent APPROVE proposal only, PLANb390c588;0Critical0High0Required. Earlier Required shared-lock modes/lockorder/no-upgrade/2.2 contract+§6.10 conflict were fixed and actually re-reviewed. Minimal compatible boolean3state accepted; SQL feasibility limits honest. Sharedsource/exactbaselineSamapproval and implementation/regression/CI remain pending. implementation/hd014-readonly-lock-proposal.md",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -3752,6 +3783,17 @@
       "subject": "User-designated local operating checks, limited evidence only",
       "status": "PASS",
       "source_ref": "local-operations-20261016 report/results:57uniquePASS0FAIL0SKIP=37supporting+14realDB+3restore+3actualboundarychecks. ActualClamdrefusal0objects; realbankfreshactor/crypto/audit->SystemLogger/privateJSONL422/nomarkers/0600/0700/repairedrevealaudit1; actualSELECTonlyCurrencyproviderlockingdenial meansfullruntimeBLOCKED. Scannerfixtures/authorizationassumptions explicit. No wholemoduleTC/UAT/business/release/Opssignoff. Recordingtime corrected from chartercreation00:43:09 to actualconsolidatedobservation00:57:58; no execution-time claim. Exactargv/sourcehashes and selectedoriginaltooloutputexcerptdigestf695c6b7 recorded; notfullrawstdoutarchive."
+    },
+    {
+      "code_commit": "dee50a2763c6e0f3cd8b7cf63c0884a2b275859b",
+      "spec_baseline": "d3c3883f9620df9dce379110e76139c915c11b18b8f633f69ee7a3a118c76d19",
+      "source_fingerprint": "0cdf631da12bde118d69641b64163b1d6a7dba35355bcf5903b4597ffd08cc2f",
+      "actor": "/root Customer isolated SQL investigation",
+      "observed_at": "2026-10-16T01:20:26Z",
+      "kind": "MANUAL_TEST",
+      "subject": "Candidate shared SQL feasibility and existing contract units, not adopted fix",
+      "status": "PASS",
+      "source_ref": "implementation/hd014-readonly-lock-proposal.md + directlycaptured hd014-lock-probe-output.txt e74a0255. FinalSQL1PASS+existingunit31PASS,0SKIP; two initialcleanup1064 failures preserved. No actualfixedprovider/fullworkflow/earlyMySQL/downstream acceptance. Main4439014e Salesdocs-only integrated; relevant Salesdesign5f82/source unchanged from prior0fa, sourcefingerprint changes because othermodule docs included."
     }
   ],
   "pending_decisions": [
@@ -3954,6 +3996,40 @@
         "TASK-029",
         "TC-070",
         "consumed:sales-order-management/customer-consumer-contract"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Actual Sam: 1-3 我批准不用做，只需要推進4-5項. Authorizes Customer-owned contract/design/plan proposal and independent review (item5); not yet approval of future exact DESIGN/PLAN hashes."
+    },
+    {
+      "id": "HD-015",
+      "impact": "MAJOR",
+      "question": "Waive actual scanner clean/infected acceptance, actual alert fire/reset delivery acceptance, and compatible deployment/rollback acceptance drills (prior consolidated inputs1–3), without disabling controls or granting production/release/CI/downstream acceptance?",
+      "affected_ids": [
+        "DES-012",
+        "DES-023",
+        "DES-025",
+        "TASK-033",
+        "TASK-035",
+        "TC-080",
+        "TC-088"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Actual Sam: 1-3 我批准不用做，只需要推進4-5項. WAIVED_BY_HUMAN, not technical PASS. Existing fail-closed scanner, logging, encryption, access, operating policies and full downstream blockers remain."
+    },
+    {
+      "id": "HD-016",
+      "impact": "MAJOR",
+      "question": "Approve proposed DESIGN 13a77ed225d0253eaac097b5e3bb13f60c6078d1019500b95e976dd6617af721 and PLAN b390c588a323b3c3677bb031f287cebefe2cb284571e901d56aa3f14814f44db, HD014 additive Customer provider2.2 reconciliation, and narrow shared source BusinessMasterProvider.js/BusinessMasterRepository.js reference shared-lock repair? Preserve existing exclusive owner mutation, no catalog write grants or consumer mutation/lock upgrade; authorize planned real Customer/Sales/Supplier regressions and carry existing HD013/HD015 waivers to this proposed baseline, not technical PASS. Default affected implementation/merge remains BLOCKED until exact-baseline/shared-path decision; alternative retain exclusive implementation and readonly runtime blocker.",
+      "affected_ids": [
+        "DES-017",
+        "DES-015",
+        "TASK-029",
+        "TASK-033",
+        "TC-070",
+        "TC-081",
+        "HD-013",
+        "HD-014",
+        "HD-015"
       ],
       "status": "OPEN",
       "answer_ref": null
@@ -5055,6 +5131,30 @@
       "idempotency_key": "customer-local-ops-20261016-cleanup114",
       "status": "CONFIRMED",
       "source_ref": "Actualinstanceidentityverified; SQLfixtureusers/sessions/opsCustomers/pipelineactorrole0;3exactownschemasdropped/remaining0,SHUTDOWNsuccess/server82988exit0,listener/PIDabsent,exactdatadirremoved,secretcommandstorescleared. Smallprivateconfig/log/credential-freescript retained; shareddata/otherprocesses untouched."
+    },
+    {
+      "id": "EXT-LOCAL-115",
+      "kind": "ISOLATED_RUNTIME",
+      "target": "only new /private/tmp/customer-lock-probe.c898BU/mysql loopback13369; own schema customer_lock_probe; private socket root without remote credentials; synthetic rows",
+      "idempotency_key": "customer-lock-probe-c898BU-115",
+      "status": "CONFIRMED",
+      "source_ref": "Actual LOCK001/002 candidate SQL proof, final1PASS0FAIL0SKIP; MySQL26.7/source0cdf631d. Currency+Term existingprovider1142, SELECTonly sharedsuccess, two readers, DML1142, ownerwriter1205, releasedwriter/currentversion2 vs snapshot1. Two initialcleanupSQL1064 failures retained. Full fixedprovider/consumer not implemented."
+    },
+    {
+      "id": "EXT-CLEANUP-116",
+      "kind": "RUNTIME_CLEANUP",
+      "target": "only /private/tmp/customer-lock-probe.c898BU/mysql and owned customer_lock_probe/account on13369",
+      "idempotency_key": "customer-lock-probe-c898BU-cleanup116",
+      "status": "CONFIRMED",
+      "source_ref": "Verified exact@@datadir/@@port, schema/user0; SHUTDOWNsuccess; server99641exit0; PIDabsent; exactstoppeddatadirremoved. Preserved small private credential-free probe/config/log, shared3306untouched."
+    },
+    {
+      "id": "EXT-PUSH-117",
+      "kind": "GIT_PUSH",
+      "target": "github:crazysumsum/erp-app:codex/customer-operations-readiness existing draftPR244",
+      "idempotency_key": "customer-hd014-hd016-proposal-push117",
+      "status": "PLANNED",
+      "source_ref": "Publish independently reviewed proposal + actual bounded SQL evidence only; no implementation/merge approval inferred. Keep Draft and preserve all blockers."
     }
   ],
   "evidence_files": [
@@ -5077,7 +5177,9 @@
     "implementation/phase4-operational-security-results.json",
     "implementation/local-operations-20261016.md",
     "implementation/local-operations-20261016-results.json",
-    "implementation/local-operations-20261016-output.txt"
+    "implementation/local-operations-20261016-output.txt",
+    "implementation/hd014-readonly-lock-proposal.md",
+    "implementation/hd014-lock-probe-output.txt"
   ],
   "defects": [
     {
@@ -5133,5 +5235,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Independentlocaloperatingchecks actuallyexecuted57PASS; ownruntimecleanupcomplete. Obtain consolidatedinputs inlocalopsreport: genuineClamAVendpoint or Docker/downloadpermission; realmonitor/receiver or isolatedlocalpipelineapproval; previousrollbackversion; authorize reviewedleastprivilegeCurrencylockingremediationwithoutBusinessMasterwritegrant; HD014contractproposal/exactbaselineapproval. Continueactualchecks, notdocs-onlyalignment. Full downstreamBLOCKED/HD013waived. Preserve draftPR244/worktree/newlocalevidence; no productchange/currentCI/merge/adoption claim. Currentlocalreport/evidence is reviewed and committed locally only; no push/merge/CI reuse inferred. Consolidatedconfigs/permissions/decisions must be obtained before infrastructure startup or source remediation."
+  "next_safe_action": "Await one HD016 exact DESIGN 13a77ed2/PLAN b390c588 + two shared BusinessMaster source path adoption decision. Then actual readonly shared-lock provider fix and full planned real Customer/non-null Currency/default/approval/credit + Sales/Supplier regressions, batch2.2/finalmutable-state regression, fresh-main/exact-head CI/review/normal merge. HD014 proposal authorized, not implementationadoption. HD0151–3 waivers recorded, no control/CI/PASS inference; HD013 unchanged. NewPLAN N/Aapproval bindings intentionally pending, oldapprovals never rewritten. Full downstreamBLOCKED; preserve DraftPR244/worktree. No more ClamAV/alert/rollback infrastructure input needed."
 }
