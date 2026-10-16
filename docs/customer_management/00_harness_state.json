@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 221,
+  "revision": 222,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -4170,8 +4170,8 @@
         "TC-081",
         "HD-016"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Actual Sam current user decision: 維持 PR 阻塞，另由 Sales 工作處理；不擴大目前範圍. Scope extension declined; no Sales implementation or failure waiver authorized. PR244 stays Draft/BLOCKED pending separately delivered Sales repair and fresh integrated regression/current-head CI/review. No claim another Sales thread was created/messaged or work dispatched."
     }
   ],
   "external_actions": [
@@ -5424,5 +5424,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Wait for consolidated HD017 explicit scope decision: genuine serialTC042HIGHdeadlock requires SalesOrderService.lockSalesOrderLines and direct100lineregression, outsideapprovedCustomer+twoBMsharedfiles. No furtherproductchanges ormerge. Preserve exactD13a/Pb390 approvals and originalfailures; do notwaive/ignore test, revertforShare, reducecapacity orCIgates. PR244Draft has published83603 plus terminal receipts; ownedMySQLcleaned,evidence retained. IfHD017approved, reconcile required design/plan scope beforeminimalSalesfix,TDDreal100lineprobe,unchangedTC042,serialfullcoverage,exactheadCI,independentreview,freshmain normalmerge andownedworktreecleanup. Full downstream030031032/UAT remainsBLOCKED."
+  "next_safe_action": "HD017 ANSWERED by Sam: keepPR244BLOCKED and currentCustomer/twoBMsharedscope unchanged; Sales owns separate100line deadlock remediation. Do not implementSalesfix or merge/waiveDEF033001. Retain openPR/branch/worktree and credentialfreeevidence; isolatedruntime alreadycleaned. Once separateSalesfix is actually available on authoritative main, verifyitsreceipt, integratefreshmain intoCustomerbranch, rerunaffectedreal100line/unchangedTC042/fullcoverage/currentheadCI/independentreview before anymerge; no automatic scopeextension. Full downstream030031032/UAT remainsBLOCKED. No other task was created or messaged by this checkpoint."
 }

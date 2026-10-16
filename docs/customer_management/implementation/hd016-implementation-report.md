@@ -176,3 +176,14 @@ owned schema and ephemeral administrator were dropped, owned MySQL13369 stopped
 datadir/private credential file removed. These were disposable synthetic test
 resources, not recoverable business data; credential-free logs/probe remain.
 Customer worktree/branch/DraftPR244 remain for resumption. Shared MySQL untouched.
+
+## HD-017 human disposition
+
+Sam: 「維持 PR 阻塞，另由 Sales 工作處理；不擴大目前範圍」。
+Scope extension is declined; HD-017 is answered, not awaiting approval. Sales owns
+the separate deadlock repair. Customer makes no Sales product/test changes, does
+not waive DEF-033001, and keeps PR244 Draft/BLOCKED. No Sales task dispatch or
+completion is claimed. After the separately delivered fix is available on verified
+main, integrate and repeat affected regressions/full coverage/current-head CI and
+independent review before considering merge. Full downstream acceptance remains
+BLOCKED, and the existing DESIGN/PLAN baseline approvals remain unchanged.
