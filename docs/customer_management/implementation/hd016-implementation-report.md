@@ -187,3 +187,23 @@ completion is claimed. After the separately delivered fix is available on verifi
 main, integrate and repeat affected regressions/full coverage/current-head CI and
 independent review before considering merge. Full downstream acceptance remains
 BLOCKED, and the existing DESIGN/PLAN baseline approvals remain unchanged.
+
+## HD-018 — separately delivered Sales repair approved
+
+Sales independently requalified the narrow fix (111affected regressions and original
+TC0422cases PASS), but its fullP4 delivery is blocked atTASK057 by actual Fulfillment
+contracts and previously prohibited partialmain merge. Customer recorded HD018 to
+ask about that delivery boundary, not to implement a Sales fix itself.
+
+Sam explicitly approved HD018: Sales should split only the deadlock fix and directly
+related tests into an independent PR, pass normal CI/review and merge that repair
+to main first; Customer then automatically integrates/revalidates and merges PR244
+only after allits gates. No Customer repair-scope expansion; full downstream
+acceptance stays BLOCKED. Actual notification to `sales_order_management` chat
+01a0f0e2-2647-7dc2-a1d4-a7cefa29d0f6 succeeded, carrying Sam's exact decision,
+the isolated minimal split/preserveexistingchanges boundary and allnormal gates.
+Notification is not Sales acceptance, a new PR, defect closure or upstream merge.
+The existing15minute Customer heartbeat was updated successfully with this decision
+so it does not stop on staleHD018OPEN cache or ask for the same approval again.
+Actual merged-main receipt remains required before Customer integration. Existing
+Customer DESIGN13a77ed2/PLANb390c588 approval/history and all genuine failures remain.
