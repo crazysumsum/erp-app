@@ -19,8 +19,10 @@ export const MISSING = 999_999_999;
  */
 export function createSupplierHarness(prefix) {
   const h = {
-    application: null, url: "", db: null, jwt: null, binding: null, logRoot: "", routes: [],
-    supplierIds: [], roleIds: [], userIds: [], jobIds: []
+    application: null, url: "", db: null, jwt: null, binding: null, worker: null, logRoot: "", routes: [],
+    supplierIds: [], roleIds: [], userIds: [], jobIds: [],
+    // 其他要清嘅行（例如 Item fixture）：[sql, params]，喺 Supplier 之後倒序執行。
+    cleanup: []
   };
 
   h.start = async () => {
@@ -38,7 +40,9 @@ export function createSupplierHarness(prefix) {
           { ...(source.scheduler.jobs?.[name] ?? {}), enabled: name === "tokenRevocation.refresh" }])) },
         logging: { loggers: {
           request: { ...source.logging.loggers.request, directory: path.join(h.logRoot, "requests") },
-          system: { ...source.logging.loggers.system, directory: path.join(h.logRoot, "system") } } } },
+          system: { ...source.logging.loggers.system, directory: path.join(h.logRoot, "system") } } },
+        // 匯入檔案放喺 log 目錄入面，stop 一齊刪；precheck／execute 工作同其他背景工作一樣停咗，由測試直接叫 h.worker。
+        supplier: { ...source.supplier, import: { ...source.supplier.import, root: path.join(h.logRoot, "imports") } } },
       serviceDiscoveryOptions: { additionalModuleUrls: [
         new URL("../../src/modules/businessMaster/BusinessMasterService.js", import.meta.url).href,
         new URL("../../src/modules/supplier/SupplierProviderServices.js", import.meta.url).href] }
@@ -46,6 +50,7 @@ export function createSupplierHarness(prefix) {
     h.db = h.application.services.require("mysqldatabase");
     h.jwt = h.application.services.require("jwt");
     h.binding = h.application.services.require("deviceBinding");
+    h.worker = h.application.services.require("job.supplierImportWorker");
     ({ url: h.url } = await h.application.start());
     h.routes = await registeredSupplierRoutes();
   };
@@ -62,9 +67,13 @@ export function createSupplierHarness(prefix) {
   };
 
   async function removeFixtures() {
-    for (const id of h.jobIds) await h.db.execute("DELETE FROM supplier_import_jobs WHERE id = ?", [id]);
+    for (const id of h.jobIds) {
+      await h.db.execute("DELETE FROM supplier_import_rows WHERE job_id = ?", [id]);
+      await h.db.execute("DELETE FROM supplier_audit_logs WHERE target_type = 'import' AND target_id = ?", [id]);
+      await h.db.execute("DELETE FROM supplier_import_jobs WHERE id = ?", [id]);
+    }
     for (const id of h.supplierIds) {
-      for (const table of ["supplier_activation_requests", "supplier_contact_purposes", "supplier_contacts", "supplier_address_purposes",
+      for (const table of ["supplier_supply_events", "supplier_sku_refs", "supplier_activation_requests", "supplier_contact_purposes", "supplier_contacts", "supplier_address_purposes",
         "supplier_addresses", "supplier_identifiers", "supplier_bank_accounts", "supplier_name_grams", "supplier_audit_logs"]) {
         await h.db.execute(`DELETE FROM ${table} WHERE supplier_id = ?`, [id]);
       }
@@ -80,6 +89,7 @@ export function createSupplierHarness(prefix) {
       await h.db.execute("DELETE FROM role_permissions WHERE role_id = ?", [id]);
       await h.db.execute("DELETE FROM roles WHERE id = ?", [id]);
     }
+    for (const [sql, params] of [...h.cleanup].reverse()) await h.db.execute(sql, params);
   }
 
   async function registeredSupplierRoutes() {
