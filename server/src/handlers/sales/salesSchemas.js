@@ -70,7 +70,7 @@ export const SALES_CONFIRMATION_PENDING_RESPONSE = object({ outcome: { const: "C
   statusUrl: { type: "string",pattern: "^/api/v1/sales-operations/by-event/[0-9a-fA-F-]{36}$" },retryAfterSeconds: { const: 2 } });
 export const SALES_OPERATION_EVENT_PARAMS = object({ eventId: SALES_CONFIRMATION_INPUT.properties.eventId });
 export const SALES_OPERATION_LOOKUP_RESPONSE = object({ eventId: SALES_CONFIRMATION_INPUT.properties.eventId,operationId: ID,
-  status: { enum: ["IN_PROGRESS","SUCCEEDED","FAILED"] },result: { anyOf: [{ type: "null" },object({ id: ID,number: { type: "string",pattern: "^(SO|QT|SI)-\\d{6}-\\d{6}$" },
+  status: { enum: ["IN_PROGRESS","SUCCEEDED","FAILED"] },result: { anyOf: [{ type: "null" },object({id:ID}),object({ id: ID,number: { type: "string",pattern: "^(SO|QT|SI)-\\d{6}-\\d{6}$" },
     status: { enum: ["DRAFT","ISSUED","EXPIRED","CANCELLED","CONVERTED","CONFIRMED","CLOSED","UPLOADED","QUEUED"] },version: ID })] },errorCode: nullableString });
 
 export function salesOrderCommandRequest(req,update=false){return {claims:salesActorClaims(req),input:validateSalesOrderInput(req.input.body,update),trace:{requestId:req.requestId ?? "",correlationId:req.correlationId ?? "",ipAddress:req.ip ?? ""}};}

@@ -12,6 +12,11 @@ export function validateSalesExportInput(input) {
  return {scope:input.scope,filters};
 }
 
+export function validateSalesExportJobsQuery(input={}){
+ if(!input||typeof input!=="object"||Array.isArray(input)||Object.keys(input).some(key=>!["page","pageSize"].includes(key)))throw salesError("SALES_INPUT_INVALID");
+ const query={page:input.page??1,pageSize:input.pageSize??20};if(!Number.isSafeInteger(query.page)||query.page<1||!Number.isSafeInteger(query.pageSize)||query.pageSize<1||query.pageSize>100||!Number.isSafeInteger((query.page-1)*query.pageSize))throw salesError("SALES_INPUT_INVALID");return query;
+}
+
 import path from "node:path";
 import {constants,createWriteStream} from "node:fs";
 import {mkdir,lstat,open,rename,unlink} from "node:fs/promises";
@@ -24,6 +29,8 @@ import {requireSalesActor,requireSalesExportActorById} from "./salesAuthorizatio
 import {salesOrderWhere,SALES_ORDER_SORT_COLUMNS} from "./SalesInquiryService.js";
 import {salesPayloadHash} from "./salesCanonicalHash.js";
 import {safeSalesCsvCell} from "./salesCsv.js";
+import {SalesOperationService} from "./SalesOperationService.js";
+import {salesEventId} from "./salesValidation.js";
 import {SalesAuditService} from "./SalesAuditService.js";
 
 export const SALES_EXPORT_COLUMNS=Object.freeze(["number","sourceType","channelCode","externalOrderId","customerCode","customerName","orderDate","warehouseCode","warehouseName","status","currencyCode","totalAmount","orderedBaseQuantity","reservedBaseQuantity","backorderedBaseQuantity","fulfilledBaseQuantity","cancelledBaseQuantity","outstandingBaseQuantity"]);
@@ -32,14 +39,35 @@ const privateEntry=(stat,directory=false)=>!stat.isSymbolicLink()&&(directory?st
 const parsed=value=>typeof value==="string"?JSON.parse(value):value;
 export function toSalesExportSummary(row){return {id:Number(row.id),scope:row.scope,filters:parsed(row.filters),status:row.status,rowCount:Number(row.row_count),errorCode:row.error_code,createdAt:Number(row.created_at),startedAt:row.started_at===null?null:Number(row.started_at),completedAt:row.completed_at===null?null:Number(row.completed_at),expiresAt:row.expires_at===null?null:Number(row.expires_at)};}
 export class SalesExportService {
- constructor({database,time,config={},root="storage/sales-exports",authorizeSalesExport,audit=new SalesAuditService()}={}){this.database=database;this.time=time;this.maxRows=config.exportMaxRows??250000;this.fileDays=config.exportFileRetentionDays??7;this.root=prepareDiskTempDirectory(root,"Sales export");this.authorize=authorizeSalesExport;this.audit=audit;}
- async create({claims,input,signal}){
-  const snapshot=validateSalesExportInput(input),hash=salesPayloadHash(snapshot);signal?.throwIfAborted();
-  return this.database.withTransaction(async tx=>{const actor=await requireSalesActor(tx,claims,"sales.view"),now=this.time.nowMs();
+ constructor({database,time,config={},root="storage/sales-exports",authorizeSalesExport,audit=new SalesAuditService(),operations=new SalesOperationService()}={}){this.database=database;this.time=time;this.maxRows=config.exportMaxRows??250000;this.fileDays=config.exportFileRetentionDays??7;this.root=prepareDiskTempDirectory(root,"Sales export");this.authorize=authorizeSalesExport;this.audit=audit;this.operations=operations;}
+ async authorizeCreate(claims){return this.database.withTransaction(async tx=>{await requireSalesActor(tx,claims,"sales.view");return true;});}
+ async create({claims,eventId,input,signal,trace={}}){
+  salesEventId(eventId);const snapshot=validateSalesExportInput(input),hash=salesPayloadHash(snapshot);signal?.throwIfAborted();
+  return this.operations.run(this.database,async tx=>{const actor=await requireSalesActor(tx,claims,"sales.view"),now=this.time.nowMs(),claim=await this.operations.claim(tx,{eventId,commandType:"CREATE_EXPORT",payload:snapshot,actor,nowMs:now,requestId:trace.requestId,correlationId:trace.correlationId});
+   if(claim.replay)return this.#summary((await this.#job(tx,claims,claim.replay.id,true)).row);
    const [inserted]=await tx.execute("INSERT INTO sales_export_jobs(scope,filters,filters_hash,status,created_by,created_at) VALUES(?,?,?,'QUEUED',?,?)",[snapshot.scope,JSON.stringify(snapshot.filters),hash,actor.id,now]),id=Number(inserted.insertId);
-   await this.audit.record(tx,{actor,action:"sales_export.created",targetId:id,targetNumber:String(id),eventId:randomUUID(),nowMs:now,details:{scope:snapshot.scope,filtersHash:hash,rowCount:0}});
+   await this.audit.record(tx,{actor,action:"sales_export.created",targetId:id,targetNumber:String(id),eventId,nowMs:now,details:{scope:snapshot.scope,filtersHash:hash,rowCount:0}});
+   await this.operations.succeed(tx,{operationId:claim.operationId,commandType:"CREATE_EXPORT",result:{id},nowMs:now});
    const [[row]]=await tx.query("SELECT * FROM sales_export_jobs WHERE id=?",[id]);return toSalesExportSummary(row);
   },{signal});
+ }
+
+ #summary(row){const result=toSalesExportSummary(row);if(row.status==="COMPLETED"&&(row.expires_at===null||this.time.nowMs()>=Number(row.expires_at)))result.status="EXPIRED";return result;}
+ async #job(tx,claims,id,lock=false){
+  if(!Number.isSafeInteger(id)||id<1)throw salesError("SALES_INPUT_INVALID");const actor=await requireSalesActor(tx,claims,"sales.view"),[[row]]=await tx.query("SELECT * FROM sales_export_jobs WHERE id=? AND created_by=?"+(lock?" FOR UPDATE":""),[id,actor.id]);if(!row)throw salesError("SALES_EXPORT_NOT_FOUND");return {actor,row};
+ }
+ list({claims,input={},signal}){const query=validateSalesExportJobsQuery(input);return this.database.withTransaction(async tx=>{const actor=await requireSalesActor(tx,claims,"sales.view"),[[count]]=await tx.query("SELECT COUNT(*) AS total FROM sales_export_jobs WHERE created_by=?",[actor.id]),[rows]=await tx.query("SELECT * FROM sales_export_jobs WHERE created_by=? ORDER BY created_at DESC,id DESC LIMIT ? OFFSET ?",[actor.id,query.pageSize,(query.page-1)*query.pageSize]);return {items:rows.map(row=>this.#summary(row)),total:Number(count.total),...query};},{signal});}
+ get({claims,id,signal}){return this.database.withTransaction(async tx=>this.#summary((await this.#job(tx,claims,id)).row),{signal});}
+ #downloadable(row){if(row.status==="EXPIRED"||row.status==="COMPLETED"&&(row.expires_at===null||this.time.nowMs()>=Number(row.expires_at)))throw salesError("SALES_EXPORT_EXPIRED");if(row.status!=="COMPLETED")throw salesError("SALES_STATE_CONFLICT");}
+ async resolveDownload({claims,id,signal}){
+  const {row}=await this.database.withTransaction(tx=>this.#job(tx,claims,id),{signal});this.#downloadable(row);let handle;
+  try{
+   if(!new RegExp(`^${id}/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\\.csv$`,"u").test(row.file_path))throw salesError("SALES_EXPORT_EXPIRED");
+   if(!privateEntry(await lstat(this.root),true)||!privateEntry(await lstat(path.join(this.root,String(id))),true)||!privateEntry(await lstat(path.join(this.root,row.file_path))))throw salesError("SALES_EXPORT_EXPIRED");
+   signal?.throwIfAborted();handle=await open(path.join(this.root,row.file_path),constants.O_RDONLY|constants.O_NOFOLLOW);if(!privateEntry(await handle.stat()))throw salesError("SALES_EXPORT_EXPIRED");
+   await this.database.withTransaction(async tx=>{const {row:fresh,actor}=await this.#job(tx,claims,id,true);this.#downloadable(fresh);if(fresh.file_path!==row.file_path)throw salesError("SALES_EXPORT_EXPIRED");await this.audit.record(tx,{actor,action:"sales_export.downloaded",targetId:id,targetNumber:String(id),eventId:randomUUID(),nowMs:this.time.nowMs(),details:{scope:fresh.scope,filtersHash:fresh.filters_hash,rowCount:Number(fresh.row_count)}});},{signal});
+   signal?.throwIfAborted();return {stream:handle.createReadStream({autoClose:true,signal}),fileName:`Sales-export-${id}.csv`};
+  }catch(error){await handle?.close();if(["ENOENT","ELOOP"].includes(error.code))throw salesError("SALES_EXPORT_EXPIRED");throw error;}
  }
  async #principal(tx,signal){
   const first=await this.authorize?.();if(!first||first.signal!==signal||signal?.aborted!==false||typeof first.leaseOwner!=="string"||!first.leaseOwner)throw salesError("SALES_DEPENDENCY_UNAVAILABLE");
