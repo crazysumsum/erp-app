@@ -8,7 +8,9 @@
 
 ### 2026-10-16 main 重核（優先於下列歷史 baseline 敘述）
 
-本次 fetch 後的 `origin/main` 為 `089dd45b6ca5558511ae6396a88f732d5df43927`，即 [PR #236](https://github.com/crazysumsum/erp-app/pull/236) 的實際 merge commit；沒有較新的 main 來源可解鎖 GR。只做 repository source／migration／接線盤點，沒有查驗部署中資料庫，也沒有重跑 DB、Technical Acceptance 或 UAT。既有測試保留其原始 baseline，不改標成本次執行 PASS。
+初次重核 fetch 後的 `origin/main` 為 `089dd45b6ca5558511ae6396a88f732d5df43927`，即 [PR #236](https://github.com/crazysumsum/erp-app/pull/236) 的實際 merge commit。只做 repository source／migration／接線盤點，沒有查驗部署中資料庫，也沒有重跑 DB、Technical Acceptance 或 UAT。既有測試保留其原始 baseline，不改標成本次執行 PASS。
+
+PR #247 合併前再核對並整合 main `97c443f0202bff3f476b94a8b72443d2aec2006d`：9 個變更檔為 Supplier 提示元件、其 UI／整合測試與專用 HTTP harness、Supplier 文件；未改 Item、共用框架／認證、schema、依賴或 CI。新增 harness 僅供 Supplier 測試使用，沒有新增 production GR 正本、verifier、投影 caller 或 reconciliation；下列 GR 缺口不變。文件結構／邊界／連結檢查與獨立 review 針對整合後內容重核，新 head 另須自己的五項 CI 成功，不能拿整合前 head 的 CI 代替。
 
 | 能力／剩餘工作 | 最新 main 觀察與分工 |
 | --- | --- |
