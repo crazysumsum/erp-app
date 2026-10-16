@@ -49,5 +49,9 @@ export default {
   confirmImport(id,payload,{signal}={}) {return write(`/api/v1/sales-imports/${id}/confirm`,payload,{signal});},
   cancelImport(id,payload,{signal}={}) {return write(`/api/v1/sales-imports/${id}/cancel`,payload,{signal});},
   downloadImportResult(id,{signal}={}) {return httpClient.getBlob(`/api/v1/sales-imports/${id}/result`,{signal});},
+  createExport(payload,{signal}={}) {return write("/api/v1/sales-exports/create",payload,{signal});},
+  listExports({page=1,rowsPerPage,pageSize=20,signal}={}) {return httpClient.get("/api/v1/sales-exports",{params:{page,pageSize:rowsPerPage??pageSize},signal});},
+  getExport(id,{signal}={}) {return httpClient.get(`/api/v1/sales-exports/${id}`,{signal});},
+  downloadExport(id,{signal}={}) {return httpClient.getBlob(`/api/v1/sales-exports/${id}/download`,{signal});},
   getOperation(eventId,{signal}={}) { return httpClient.get(`/api/v1/sales-operations/by-event/${eventId}`,{signal}); }
 };
