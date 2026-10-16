@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 363,
+  "revision": 364,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -5768,6 +5768,17 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-15: 'HD-110 A' — keep the per-type child 404 codes as an accepted deviation from design §6.11; the design is not edited (same handling as REV-064 I-2)."
+    },
+    {
+      "id": "HD-111",
+      "impact": "MINOR",
+      "question": "AUD-001 (TC-103): design §8.9 lists the audit action names; the implementation writes different ones for the same events: address.*/contact.*/identifier.*/bank.* are written as supplier.address.*, supplier.contact.*, supplier.identifier.*, supplier.bank.*; supplier.settings.update as setting.update; supplier_sku_ref.create/update as supplier_sku.create/update (plus supplier_sku.supply); supplier.import as the finer import.upload/precheck/confirm/cancel/expire. Approval and Supplier root actions match. No decision records the difference. (A) keep the implementation names and record an accepted deviation with a mapping table in the TC-103 notes, without editing the design (as HD-110 and REV-064 I-2); (B) rename the written actions to the design names (code, tests and any client filter that names them).",
+      "affected_ids": [
+        "TC-103",
+        "TASK-051"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
     }
   ],
   "external_actions": [
