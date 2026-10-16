@@ -1,3 +1,4 @@
+import {SalesExportService} from "../../modules/sales/SalesExportService.js";
 import {SalesImportService} from "../../modules/sales/SalesImportService.js";
 import { BaseService } from "../../framework/services/BaseService.js";
 import { SalesQuotationService } from "../../modules/sales/SalesQuotationService.js";
@@ -10,6 +11,7 @@ export class SalesJobRuntimeService extends BaseService {
   constructor({ config, services, options = {} } = {}) {
     super({ config, services, options });
     this.logger = services.require("logging").logger;
+    this.exports=new SalesExportService({database:services.require("mysqldatabase"),time:services.require("time"),config:config?.sales,authorizeSalesExport:()=>this.exportPrincipal()});
     this.quotation = new SalesQuotationService({ database: services.require("mysqldatabase"), time: services.require("time"), logger: this.logger });
     this.confirmation = new SalesOrderConfirmationService({ database: services.require("mysqldatabase"), time: services.require("time"), logger: this.logger, config: config?.sales });
   }
@@ -29,6 +31,9 @@ export class SalesJobRuntimeService extends BaseService {
     if (result.deferred) throw new Error("Sales confirmation recovery incomplete");
     return result;
   }
+  bindExportScheduler(scheduler){const job=scheduler.jobs.get("sales.exportWorker");if(job?.serviceName!=="job.salesExport"||job.scope!=="cluster"||job.method!=="run")throw new Error("Sales Export job registration invalid");this.exportScheduler=scheduler;this.exportJob=job;}
+  exportPrincipal(){const scheduler=this.exportScheduler,job=this.exportJob;if(scheduler?.started!==true||scheduler.stopped!==false||scheduler.schedulerConfig.enabled!==true||job?.enabled!==true||scheduler.jobs.get(job.name)!==job)return null;const signal=scheduler.running.get(job.name)?.controller.signal;return signal?.aborted===false?{leaseOwner:scheduler.owner,signal}:null;}
+  async processExports(signal){if(signal!==this.exportPrincipal()?.signal)throw new Error("Sales Export worker unavailable");let result;try{result=await this.exports.runBatch({signal});}catch{throw new Error("Sales Export processing failed");}if(result.processed)await this.logger.info("sales.export_completed","Sales export batch completed",result);return result;}
   bindImportScheduler(scheduler) {
     const job=scheduler.jobs.get("sales.importWorker");
     if(job?.serviceName!=="job.salesImport"||job.scope!=="cluster"||job.method!=="run")throw new Error("Sales Import job registration invalid");

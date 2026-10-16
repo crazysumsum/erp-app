@@ -30,14 +30,19 @@ export function validateSalesAuditQuery(input={}) {
  if(query.targetType!==undefined&&!["ORDER","QUOTATION","IMPORT_JOB","EXPORT_JOB","ARCHIVE_BATCH"].includes(query.targetType)||query.action!==undefined&&(typeof query.action!=="string"||query.action.length>80)||query.occurredFrom!==undefined&&query.occurredTo!==undefined&&query.occurredFrom>query.occurredTo)throw salesError("SALES_INPUT_INVALID");
  return query;
 }
-export function salesOrderWhere(query){
+export {sort as SALES_ORDER_SORT_COLUMNS};
+export function salesOrderWhere(query,{actorId,outstanding=false,archived=false}={}){
  const clauses=[],values=[];
  for(const [field,column] of [["number","sales_order_number"],["customerId","customer_id"],["warehouseId","fulfillment_warehouse_id"],["hasBackorder","has_backorder"]])if(query[field]!==undefined){clauses.push(`${column}=?`);values.push(query[field]);}
  for(const [field,column] of [["status","status"],["sourceType","source_type"]])if(query[field]){clauses.push(`${column} IN (${query[field].map(()=>"?").join(",")})`);values.push(...query[field]);}
- if(query.externalOrderId){clauses.push(`external_order_key_id IN (SELECT id FROM sales_external_order_keys WHERE external_order_id_hash=? AND BINARY external_order_id=BINARY ? AND is_order_archived=0${query.channelCode?" AND channel_code=?":""})`);values.push(createHash("sha256").update(query.externalOrderId).digest(),query.externalOrderId);if(query.channelCode)values.push(query.channelCode);}
+ if(query.externalOrderId){clauses.push(`external_order_key_id IN (SELECT id FROM sales_external_order_keys WHERE external_order_id_hash=? AND BINARY external_order_id=BINARY ? AND is_order_archived=${archived?1:0}${query.channelCode?" AND channel_code=?":""})`);values.push(createHash("sha256").update(query.externalOrderId).digest(),query.externalOrderId);if(query.channelCode)values.push(query.channelCode);}
  else if(query.channelCode){clauses.push("channel_code_snapshot=?");values.push(query.channelCode);}
  if(query.q){const escaped=query.q.replace(/[!%_]/gu,value=>`!${value}`);clauses.push("(sales_order_number=? OR customer_code_snapshot LIKE ? ESCAPE '!' OR customer_name_snapshot LIKE ? ESCAPE '!' OR customer_po_reference=?)");values.push(query.q,`${escaped}%`,`%${escaped}%`,query.q);}
  for(const [prefix,column] of [["orderDate","order_date"],["updated","updated_at"]])for(const [suffix,operator] of [["From",">="],["To","<="]])if(query[prefix+suffix]!==undefined){clauses.push(`${column}${operator}?`);values.push(query[prefix+suffix]);}
+ if(query.view==="mine"){if(!Number.isSafeInteger(actorId)||actorId<1)throw salesError("SALES_INPUT_INVALID");clauses.push("created_by=?");values.push(actorId);}
+ if(query.view==="backorder")clauses.push("has_backorder=1");
+ if(query.view==="finalized")clauses.push("status IN ('COMPLETED','CLOSED','CANCELLED')");
+ if(outstanding||query.view==="outstanding")clauses.push(`status IN ('CONFIRMED','PARTIALLY_FULFILLED') AND EXISTS (SELECT 1 FROM ${archived?"sales_order_lines_archive":"sales_order_lines"} l WHERE l.sales_order_id=${archived?"sales_orders_archive":"sales_orders"}.id AND l.ordered_base_quantity>l.fulfilled_base_quantity+l.cancelled_base_quantity)`);
  return {where:clauses.length?` WHERE ${clauses.join(" AND ")}`:"",values};
 }
 const summarySelect=`id,sales_order_number,status,source_type,source_quotation_id,channel_code_snapshot,external_order_id_snapshot,version,customer_id,customer_code_snapshot,customer_name_snapshot,currency_code,
@@ -47,13 +52,8 @@ export function toSalesOrderSummary(row){return {id:Number(row.id),number:row.sa
  orderDate:row.order_date,lineCount:Number(row.line_count),totalAmount:String(row.total_amount),hasBackorder:Boolean(row.has_backorder),backorderLineCount:Number(row.backorder_line_count),createdAt:Number(row.created_at),updatedAt:Number(row.updated_at)};}
 export class SalesInquiryService{
  constructor({database,time,logger}={}){this.database=database;this.time=time;this.logger=logger;}
- async list({claims,input={},outstanding=false}){const query=validateSalesOrderQuery(input),includeQuantities=outstanding,{where:filterWhere,values}=salesOrderWhere(query);let where=filterWhere;outstanding=outstanding||query.view==="outstanding";
-  return this.database.withTransaction(async tx=>{const actor=await requireSalesActor(tx,claims,"sales.view"),constraints=[];
-   if(query.view==="mine"){constraints.push("created_by=?");values.push(actor.id);}
-   if(query.view==="backorder")constraints.push("has_backorder=1");
-   if(query.view==="finalized")constraints.push("status IN ('COMPLETED','CLOSED','CANCELLED')");
-   if(outstanding)constraints.push("status IN ('CONFIRMED','PARTIALLY_FULFILLED') AND EXISTS (SELECT 1 FROM sales_order_lines l WHERE l.sales_order_id=sales_orders.id AND l.ordered_base_quantity>l.fulfilled_base_quantity+l.cancelled_base_quantity)");
-   if(constraints.length)where+=(where?" AND ":" WHERE ")+constraints.join(" AND ");
+ async list({claims,input={},outstanding=false}){const query=validateSalesOrderQuery(input),includeQuantities=outstanding;
+  return this.database.withTransaction(async tx=>{const actor=await requireSalesActor(tx,claims,"sales.view"),{where,values}=salesOrderWhere(query,{actorId:actor.id,outstanding});
    const [[count]]=await tx.query(`SELECT COUNT(*) AS total FROM sales_orders${where}`,values);
    const [page]=await tx.query(`SELECT id FROM sales_orders${where} ORDER BY ${sort[query.sortBy]} ${query.descending?"DESC":"ASC"},id ${query.descending?"DESC":"ASC"} LIMIT ? OFFSET ?`,[...values,query.pageSize,(query.page-1)*query.pageSize]);
    const [rows]=page.length?await tx.query(`SELECT ${summarySelect} FROM sales_orders WHERE id IN (${page.map(()=>"?").join(",")})`,page.map(row=>row.id)):[[]];

@@ -4,6 +4,7 @@ import { salesEventId, salesReason } from "./salesValidation.js";
 const DOCUMENT = ["version", "lineCount", "totalAmount", "currencyCode"];
 const TRANSITION = ["fromStatus", "toStatus", "version"];
 const CONVERSION = ["quotationId", "salesOrderId", "addedCount", "removedCount", "quantityChangedCount", "priceChangedCount", "differenceHash"];
+const EXPORT=["scope","filtersHash","rowCount"];
 const BUILDERS = Object.freeze({ "sales_quotation.created": DOCUMENT, "sales_quotation.updated": DOCUMENT,
   "sales_order.created": DOCUMENT, "sales_order.updated": DOCUMENT, "sales_quotation.issued": TRANSITION,
   "sales_quotation.expired": TRANSITION, "sales_quotation.cancelled": TRANSITION, "sales_quotation.converted": CONVERSION,
@@ -12,7 +13,8 @@ const BUILDERS = Object.freeze({ "sales_quotation.created": DOCUMENT, "sales_quo
   "sales_order.confirm_started": TRANSITION, "sales_order.confirmed": TRANSITION, "sales_order.confirm_failed": TRANSITION,
   "sales_import.uploaded": ["version"], "sales_import.confirmed": TRANSITION, "sales_import.cancelled": TRANSITION,
   "sales_import.prechecked": ["version","rowCount","sourceOrderCount","validCount","invalidCount","duplicateCount"],
-  "sales_import.completed": ["version","sourceOrderCount","successCount","failedCount","invalidCount","duplicateCount"] });
+  "sales_import.completed": ["version","sourceOrderCount","successCount","failedCount","invalidCount","duplicateCount"],
+  "sales_export.created":EXPORT,"sales_export.completed":EXPORT,"sales_export.downloaded":EXPORT,"sales_export.expired":EXPORT });
 const STATUSES = ["DRAFT", "ISSUED", "EXPIRED", "CANCELLED", "CONVERTED", "CONFIRMING", "CONFIRMED", "PARTIALLY_FULFILLED", "COMPLETED", "CLOSED"];
 const IMPORT_STATUSES=["UPLOADED","VALIDATING","READY","QUEUED","PROCESSING","COMPLETED","PARTIAL_SUCCESS","FAILED","CANCELLED"];
 function bounded(value, maximum, { ascii = false, empty = false } = {}) {
@@ -28,11 +30,13 @@ function detailsFor(action, details) {
   const fields = BUILDERS[action];
   if (!fields || !details || Object.keys(details).sort().join(",") !== [...fields].sort().join(",")) throw new TypeError("Invalid Sales audit details");
   for (const [key, value] of Object.entries(details)) {
-    if (key === "totalAmount") { if (typeof value !== "string" || normalizeMoney(value) !== value) throw new TypeError("Invalid Sales audit amount"); }
+    if(key==="scope"){if(!["ACTIVE","ARCHIVE"].includes(value))throw new TypeError("Invalid Sales audit scope");}
+    else if(key==="filtersHash"){if(typeof value!=="string"||!/^[a-f0-9]{64}$/u.test(value))throw new TypeError("Invalid Sales audit hash");}
+    else if (key === "totalAmount") { if (typeof value !== "string" || normalizeMoney(value) !== value) throw new TypeError("Invalid Sales audit amount"); }
     else if (key === "currencyCode") { if (typeof value !== "string" || !/^[A-Z]{3}$/u.test(value)) throw new TypeError("Invalid Sales audit currency"); }
     else if (key === "differenceHash" || key === "commitmentHash") { if (typeof value !== "string" || !/^[a-f0-9]{64}$/u.test(value)) throw new TypeError("Invalid Sales audit hash"); }
     else if (key === "fromStatus" || key === "toStatus") { if (!(action.startsWith("sales_import.")?IMPORT_STATUSES:STATUSES).includes(value)) throw new TypeError("Invalid Sales audit status"); }
-    else if (key.endsWith("Count")) { if (!Number.isSafeInteger(value) || value < (key === "lineCount" ? 1 : 0) || value > (action.startsWith("sales_import.")?(key==="rowCount"?100000:10000):100)) throw new TypeError("Invalid Sales audit count"); }
+    else if (key.endsWith("Count")) { if (!Number.isSafeInteger(value) || value < (key === "lineCount" ? 1 : 0) || value > (action.startsWith("sales_export.")?250000:action.startsWith("sales_import.")?(key==="rowCount"?100000:10000):100)) throw new TypeError("Invalid Sales audit count"); }
     else positive(value);
   }
   return JSON.stringify(Object.fromEntries(fields.map(field => [field, details[field]])));
@@ -45,7 +49,7 @@ export class SalesAuditService {
     await connection.execute(`INSERT INTO sales_audit_logs
       (occurred_at, actor_user_id, actor_label, action, target_type, target_id, target_number, outcome, reason, details,
         event_id, request_id, correlation_id, ip_address) VALUES (?, ?, ?, ?, ?, ?, ?, 'SUCCESS', ?, ?, ?, ?, ?, ?)`,
-    [nowMs, actor.id === null ? null : positive(actor.id), bounded(actor.username, 190), action, action.startsWith("sales_quotation.") ? "QUOTATION" : action.startsWith("sales_import.") ? "IMPORT_JOB" : "ORDER",
+    [nowMs, actor.id === null ? null : positive(actor.id), bounded(actor.username, 190), action, action.startsWith("sales_quotation.") ? "QUOTATION" : action.startsWith("sales_import.") ? "IMPORT_JOB" : action.startsWith("sales_export.") ? "EXPORT_JOB" : "ORDER",
       positive(targetId), bounded(targetNumber, 30, { ascii: true }), reason === "" ? "" : salesReason(reason), summary, salesEventId(eventId),
       bounded(requestId, 64, { ascii: true, empty: true }), bounded(correlationId, 64, { ascii: true, empty: true }), bounded(ipAddress, 45, { ascii: true, empty: true })]);
   }

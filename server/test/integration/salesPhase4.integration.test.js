@@ -1,3 +1,8 @@
+import {readFile,rm,readdir} from "node:fs/promises";
+import path from "node:path";
+import {parse} from "csv-parse/sync";
+import {SalesExportService} from "../../src/modules/sales/SalesExportService.js";
+import {prepareDiskTempDirectory} from "../../src/framework/upload/normalizeUploadConfig.js";
 import assert from "node:assert/strict";
 import {randomUUID} from "node:crypto";
 import test from "node:test";
@@ -64,4 +69,84 @@ integrationTest("TC-046 Import upload operation uses original import permission 
  await f.db.query("INSERT INTO sales_operation_requests SET ?",{event_id:event,command_type:"UPLOAD_IMPORT",target_type:"IMPORT_JOB",target_id:job.insertId,request_hash:"a".repeat(64),status:"SUCCEEDED",actor_user_id:f.userId,actor_label:"Synthetic",created_at:f.now,updated_at:f.now,result_summary:JSON.stringify({importJob:{id:Number(job.insertId),batchNumber:batch,status:"UPLOADED",version:1,filePath:"must-not-expose"},warnings:[]})});
  const request=await http(f),path=`/api/v1/sales-operations/by-event/${event}`,result=await request(path,{claims});assert.equal(result.status,200,JSON.stringify(result.body));assert.deepEqual(result.body.data.result,{id:Number(job.insertId),number:batch,status:"UPLOADED",version:1});
  await f.db.execute("DELETE rp FROM role_permissions rp JOIN permissions p ON p.id=rp.permission_id WHERE rp.role_id=? AND p.name='sales.import'",[f.roleId]);assert.equal((await request(path,{claims:{...f.claims,claimedPermissions:["sales.view"]}})).status,403);
+});
+
+async function exportFixture(t){
+ const f=await setup(t);await f.app.start();const runtime=f.app.services.require("salesJobs"),scheduler=f.app.services.require("scheduler"),exports=runtime.exports;
+ assert.ok(exports instanceof SalesExportService);const root=prepareDiskTempDirectory("storage/sales-export-test-"+randomUUID());exports.root=root;
+ f.beforeParents.push(async()=>{await f.app.shutdown("sales_export_test_complete");await f.db.execute("DELETE FROM sales_export_jobs WHERE created_by=?",[f.userId]);assert.match(path.basename(root),/^sales-export-test-[a-f0-9-]+$/u);await rm(root,{recursive:true});});
+ async function run(id){await scheduler.execute(scheduler.jobs.get("sales.exportWorker"));const [[row]]=await f.db.query("SELECT * FROM sales_export_jobs WHERE id=?",[id]);return row;}
+ return {...f,exports,run};
+}
+integrationTest("TC-045 actual durable Export scheduler publishes safe CSV and exact quantities",{timeout:45000},async t=>{
+ const f=await exportFixture(t);await f.db.execute("UPDATE sales_orders SET customer_name_snapshot=? WHERE id=?",['=HYPERLINK("synthetic"), safe\nname',f.request.id]);const created=await f.exports.create({claims:f.claims,input:{scope:"ACTIVE",filters:{customerId:f.customerId}}});
+ assert.equal(created.status,"QUEUED");assert.equal(created.filePath,undefined);const row=await f.run(created.id);assert.equal(row.status,"COMPLETED");assert.equal(Number(row.row_count),1);assert.ok(Number(row.expires_at)>Number(row.completed_at));
+ const csv=parse(await readFile(path.join(f.exports.root,row.file_path),"utf8"),{bom:true,columns:true});assert.equal(csv.length,1);assert.equal(csv[0].customerName,'\'=HYPERLINK("synthetic"), safe\nname');assert.equal(csv[0].orderedBaseQuantity,"10");assert.equal(csv[0].reservedBaseQuantity,"0");assert.equal(csv[0].number,(await f.db.query("SELECT sales_order_number FROM sales_orders WHERE id=?",[f.request.id]))[0][0].sales_order_number);
+});
+integrationTest("TC-050 bounded empty Archive export is read-only and never falls back to Active",{timeout:45000},async t=>{
+ const f=await exportFixture(t),created=await f.exports.create({claims:f.claims,input:{scope:"ARCHIVE",filters:{customerId:f.customerId}}}),row=await f.run(created.id);
+ assert.equal(row.status,"COMPLETED");assert.equal(Number(row.row_count),0);assert.deepEqual(parse(await readFile(path.join(f.exports.root,row.file_path),"utf8"),{bom:true,columns:true}),[]);const [[active]]=await f.db.query("SELECT COUNT(*) AS n FROM sales_orders WHERE customer_id=?",[f.customerId]);assert.equal(Number(active.n),1);
+});
+integrationTest("TC-045 Export keyset spans pages without truncation or duplicate order headers",{timeout:90000},async t=>{
+ const f=await exportFixture(t);for(let i=0;i<5002;i++)await createOrder(f,f.database);
+ for(const price of ["2.0000","100.0000"])await new SalesOrderService(f).create({claims:f.claims,input:{eventId:randomUUID(),customerId:f.customerId,currencyCode:f.currency,fulfillmentWarehouseId:f.warehouseId,orderDate:f.time.fileDate(),lines:[{skuId:f.skuId,skuUomId:f.skuUomId,quantity:"1.000000",unitSellingPrice:price}]}});
+ const columns={number:"sales_order_number",customerCode:"customer_code_snapshot",customerName:"customer_name_snapshot",orderDate:"order_date",updatedAt:"updated_at",status:"status",sourceType:"source_type",totalAmount:"total_amount"};
+ for(const [sortBy,column] of Object.entries(columns))for(const descending of [false,true]){
+  const created=await f.exports.create({claims:f.claims,input:{scope:"ACTIVE",filters:{customerId:f.customerId,sortBy,descending}}}),row=await f.run(created.id);assert.equal(row.status,"COMPLETED");assert.equal(Number(row.row_count),5005);const csv=parse(await readFile(path.join(f.exports.root,row.file_path),"utf8"),{bom:true,columns:true});assert.equal(new Set(csv.map(x=>x.number)).size,5005);
+  const direction=descending?"DESC":"ASC",[expected]=await f.db.query(`SELECT sales_order_number FROM sales_orders WHERE customer_id=? ORDER BY ${column} ${direction},id ${direction}`,[f.customerId]);assert.deepEqual(csv.map(x=>x.number),expected.map(x=>x.sales_order_number),sortBy+direction);
+  if(sortBy==="totalAmount")assert.deepEqual(descending?csv.slice(0,3).map(x=>x.totalAmount):csv.slice(-3).map(x=>x.totalAmount),descending?["100.0000","10.0000","2.0000"]:["2.0000","10.0000","100.0000"]);
+ }
+});
+
+integrationTest("TC-045 Export row cap fails without publishing a truncated CSV",{timeout:45000},async t=>{
+ const f=await exportFixture(t);await createOrder(f,f.database);f.exports.maxRows=1;
+ const created=await f.exports.create({claims:f.claims,input:{scope:"ACTIVE",filters:{customerId:f.customerId}}}),row=await f.run(created.id);
+ assert.equal(row.status,"FAILED");assert.equal(row.error_code,"SALES_EXPORT_ROW_LIMIT_EXCEEDED");assert.equal(row.file_path,"");assert.equal(Number(row.row_count),0);assert.deepEqual(await readdir(path.join(f.exports.root,String(created.id))),[]);
+});
+integrationTest("TC-045 Export rechecks current permission before reading or publishing",{timeout:45000},async t=>{
+ const f=await exportFixture(t),created=await f.exports.create({claims:f.claims,input:{scope:"ACTIVE",filters:{customerId:f.customerId}}});
+ await f.db.execute("DELETE rp FROM role_permissions rp JOIN permissions p ON p.id=rp.permission_id WHERE rp.role_id=? AND p.name='sales.view'",[f.roleId]);
+ const row=await f.run(created.id);assert.equal(row.status,"FAILED");assert.equal(row.file_path,"");assert.deepEqual(await readdir(path.join(f.exports.root,String(created.id))),[]);
+});
+integrationTest("TC-045 Export reconciles an unknown publish commit without removing its completed file",{timeout:45000},async t=>{
+ const f=await exportFixture(t),created=await f.exports.create({claims:f.claims,input:{scope:"ACTIVE",filters:{customerId:f.customerId}}}),database=f.exports.database;let injected=false;
+ f.exports.database=Object.assign(Object.create(database),{async withTransaction(work,options){let published=false;const result=await database.withTransaction(tx=>work(new Proxy(tx,{get(target,key){const value=Reflect.get(target,key);if(key!=="execute")return typeof value==="function"?value.bind(target):value;return async(sql,args)=>{const result=await target.execute(sql,args);if(sql.startsWith("UPDATE sales_export_jobs SET status='COMPLETED'"))published=true;return result;};}})),options);if(published&&!injected){injected=true;throw Error("Synthetic lost COMMIT acknowledgement");}return result;}});
+ const row=await f.run(created.id);assert.equal(injected,true);assert.equal(row.status,"COMPLETED");assert.equal(parse(await readFile(path.join(f.exports.root,row.file_path),"utf8"),{bom:true,columns:true}).length,1);const [[audit]]=await f.db.query("SELECT COUNT(*) AS n FROM sales_audit_logs WHERE actor_user_id=? AND action='sales_export.completed'",[f.userId]);assert.equal(Number(audit.n),1);
+});
+integrationTest("TC-045 Export rejects unregistered workers before claiming a durable job",{timeout:45000},async t=>{
+ const f=await exportFixture(t),created=await f.exports.create({claims:f.claims,input:{scope:"ACTIVE",filters:{customerId:f.customerId}}});
+ await assert.rejects(()=>f.exports.runBatch({signal:new AbortController().signal}),{code:"SALES_DEPENDENCY_UNAVAILABLE"});const [[row]]=await f.db.query("SELECT status,file_path FROM sales_export_jobs WHERE id=?",[created.id]);assert.equal(row.status,"QUEUED");assert.equal(row.file_path,"");assert.deepEqual(await readdir(f.exports.root),[]);
+});
+
+integrationTest("TC-045 Export abort removes attempt files and expired claim recovers through the scheduler",{timeout:45000},async t=>{
+ const f=await exportFixture(t),created=await f.exports.create({claims:f.claims,input:{scope:"ACTIVE",filters:{customerId:f.customerId}}}),database=f.exports.database,scheduler=f.app.services.require("scheduler");let aborted=false;
+ f.exports.database=Object.assign(Object.create(database),{withTransaction(work,options){return database.withTransaction(tx=>work(new Proxy(tx,{get(target,key){const value=Reflect.get(target,key);if(key!=="query")return typeof value==="function"?value.bind(target):value;return async(sql,args)=>{const result=await target.query(sql,args);if(!aborted&&sql.includes(" AS cursor_value,")){aborted=true;scheduler.running.get("sales.exportWorker").controller.abort(Error("Synthetic Export abort"));}return result;};}})),options);}});
+ const interrupted=await f.run(created.id);assert.equal(aborted,true);assert.equal(interrupted.status,"PROCESSING");assert.equal(interrupted.file_path,"");assert.deepEqual(await readdir(path.join(f.exports.root,String(created.id))),[]);
+ f.exports.database=database;await f.db.execute("UPDATE sales_export_jobs SET lease_until=0 WHERE id=? AND created_by=?",[created.id,f.userId]);const recovered=await f.run(created.id);assert.equal(recovered.status,"COMPLETED");assert.equal(parse(await readFile(path.join(f.exports.root,recovered.file_path),"utf8"),{bom:true,columns:true}).length,1);
+});
+integrationTest("TC-045 Export stale claim cannot publish or overwrite a successor lease",{timeout:45000},async t=>{
+ const f=await exportFixture(t),created=await f.exports.create({claims:f.claims,input:{scope:"ACTIVE",filters:{customerId:f.customerId}}}),database=f.exports.database,successor=randomUUID();let injected=false;
+ f.exports.database=Object.assign(Object.create(database),{async withTransaction(work,options){let wrote=false;const result=await database.withTransaction(tx=>work(new Proxy(tx,{get(target,key){const value=Reflect.get(target,key);if(key!=="query")return typeof value==="function"?value.bind(target):value;return async(sql,args)=>{const result=await target.query(sql,args);if(sql.includes(" AS cursor_value,"))wrote=true;return result;};}})),options);if(wrote&&!injected){injected=true;await f.db.execute("UPDATE sales_export_jobs SET lease_owner=? WHERE id=? AND created_by=?",[successor,created.id,f.userId]);}return result;}});
+ const row=await f.run(created.id);assert.equal(injected,true);assert.equal(row.status,"PROCESSING");assert.equal(row.lease_owner,successor);assert.equal(row.file_path,"");assert.deepEqual(await readdir(path.join(f.exports.root,String(created.id))),[]);const [[audit]]=await f.db.query("SELECT COUNT(*) AS n FROM sales_audit_logs WHERE actor_user_id=? AND action='sales_export.completed'",[f.userId]);assert.equal(Number(audit.n),0);
+});
+
+integrationTest("TC-050 bounded nonempty Archive Export reads only immutable header and line projections",{timeout:45000},async t=>{
+ const f=await exportFixture(t);await new SalesOrderLifecycleService(f).cancel({claims:f.claims,id:f.request.id,input:{eventId:randomUUID(),version:1,reason:"Synthetic Archive read fixture"}});
+ const batch=await f.insert("sales_archive_batches",{batch_number:"TEST-"+randomUUID().slice(0,20),period_key:"209901",cutoff_at:f.now,status:"COMPLETED",started_at:f.now,updated_at:f.now}),[[order]]=await f.db.query("SELECT * FROM sales_orders WHERE id=?",[f.request.id]),[[line]]=await f.db.query("SELECT * FROM sales_order_lines WHERE sales_order_id=?",[f.request.id]),archivedId=Number(order.id)+8000000000;
+ // This is a synthetic read-store fixture, without invoking or qualifying Archive movement/providers.
+ f.beforeParents.push(()=>f.db.execute("DELETE FROM sales_orders_archive WHERE id=? AND archive_batch_id=?",[archivedId,batch]));
+ await f.db.query("INSERT INTO sales_orders_archive SET ?",{...order,id:archivedId,sales_order_number:"SO-209901-999999",customer_name_snapshot:"Archive-only",archive_batch_id:batch,archived_at:f.now,row_hash:"a".repeat(64)});
+ await f.db.query("INSERT INTO sales_order_lines_archive SET ?",{...line,id:Number(line.id)+8000000000,sales_order_id:archivedId,archive_batch_id:batch,archived_at:f.now,row_hash:"b".repeat(64)});
+ const created=await f.exports.create({claims:f.claims,input:{scope:"ARCHIVE",filters:{customerId:f.customerId}}}),row=await f.run(created.id),csv=parse(await readFile(path.join(f.exports.root,row.file_path),"utf8"),{bom:true,columns:true});assert.equal(row.status,"COMPLETED");assert.equal(csv.length,1);assert.equal(csv[0].number,"SO-209901-999999");assert.equal(csv[0].customerName,"Archive-only");assert.equal(csv[0].cancelledBaseQuantity,"10");assert.equal(csv[0].outstandingBaseQuantity,"0");
+});
+integrationTest("TC-045 Export completes its full 250000-row supported cap within the actual worker and transaction budgets",{timeout:180000},async t=>{
+ const f=await exportFixture(t),prefix="EX"+randomUUID().replaceAll("-","").slice(0,8);
+ const [headerColumns]=await f.db.query("SELECT COLUMN_NAME AS name FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='sales_orders' AND COLUMN_NAME<>'id' ORDER BY ORDINAL_POSITION"),[lineColumns]=await f.db.query("SELECT COLUMN_NAME AS name FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='sales_order_lines' AND COLUMN_NAME<>'id' ORDER BY ORDINAL_POSITION");
+ const quote=name=>{assert.match(name,/^[a-z_]+$/u);return "`"+name+"`";},headers=headerColumns.map(x=>quote(x.name)).join(","),headerSelect=headerColumns.map(x=>x.name==="sales_order_number"?"CONCAT(?,LPAD(n.n,6,'0'))":"o."+quote(x.name)).join(",");
+ for(let start=1;start<250000;start+=1000){const values=Array.from({length:Math.min(1000,250000-start)},(_,i)=>start+i);await f.db.query(`INSERT INTO sales_orders(${headers}) SELECT ${headerSelect} FROM sales_orders o JOIN JSON_TABLE(?,'$[*]' COLUMNS(n INT PATH '$')) n ON TRUE WHERE o.id=?`,[prefix,JSON.stringify(values),f.request.id]);}
+ const lines=lineColumns.map(x=>quote(x.name)).join(","),lineSelect=lineColumns.map(x=>x.name==="sales_order_id"?"o.id":"l."+quote(x.name)).join(",");await f.db.query(`INSERT INTO sales_order_lines(${lines}) SELECT ${lineSelect} FROM sales_orders o JOIN sales_order_lines l ON l.sales_order_id=? WHERE o.customer_id=? AND o.id<>?`,[f.request.id,f.customerId,f.request.id]);
+ for(const sortBy of ["orderDate","totalAmount"]){
+  const created=await f.exports.create({claims:f.claims,input:{scope:"ACTIVE",filters:{customerId:f.customerId,sortBy}}}),started=performance.now();global.gc?.();const memoryBefore=process.memoryUsage(),peak={...memoryBefore},retainedPeak={...memoryBefore},sample=setInterval(()=>{let memory=process.memoryUsage();for(const key of Object.keys(peak))peak[key]=Math.max(peak[key],memory[key]);if(global.gc){global.gc();memory=process.memoryUsage();for(const key of Object.keys(retainedPeak))retainedPeak[key]=Math.max(retainedPeak[key],memory[key]);}},100);let row;try{row=await f.run(created.id);}finally{clearInterval(sample);}const durationMs=performance.now()-started;t.diagnostic(JSON.stringify({sortBy,retainedMemoryGc:typeof global.gc==="function",retainedMemoryDelta:Object.fromEntries(Object.keys(retainedPeak).map(key=>[key,Math.max(0,retainedPeak[key]-memoryBefore[key])])),memoryDelta:Object.fromEntries(Object.keys(peak).map(key=>[key,Math.max(0,peak[key]-memoryBefore[key])])),exportRows:Number(row.row_count),durationMs,transactionTimeoutMs:f.database.config.transactionTimeoutMs,schedulerTimeoutMs:f.app.services.require("scheduler").jobs.get("sales.exportWorker").timeoutMs}));assert.equal(row.status,"COMPLETED");assert.equal(Number(row.row_count),250000);assert.ok(durationMs<30000);
+  let rows=0;const {createReadStream}=await import("node:fs"),{parse:streamParser}=await import("csv-parse");for await(const csvRow of createReadStream(path.join(f.exports.root,row.file_path)).pipe(streamParser({bom:true,columns:true}))){assert.equal(csvRow.orderedBaseQuantity,"10");rows++;}assert.equal(rows,250000);
+ }
 });

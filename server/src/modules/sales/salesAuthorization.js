@@ -25,6 +25,7 @@ export async function requireSalesRecoveryActor(connection, actorId) {
 export async function requireSalesImportActorById(connection, actorId) {
   return requireOriginalSalesActor(connection,actorId,"sales.import");
 }
+export function requireSalesExportActorById(connection,actorId){return requireOriginalSalesActor(connection,actorId,"sales.view");}
 async function requireOriginalSalesActor(connection, actorId, permission) {
   if (!Number.isSafeInteger(actorId) || actorId < 1) throw new TypeError("Invalid recovery actor");
   const [[user]] = await connection.query("SELECT username FROM users WHERE id = ? AND status = 'active'", [actorId]);
