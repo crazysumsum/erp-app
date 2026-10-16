@@ -1,0 +1,103 @@
+Customer local operating checks: selected original tool-output excerpts.
+Source e9ce220cc28e42fed292bd32317bc0f81fd29872 / executable FP87e3e848740a55aba7bc30e552062c9887b4d37f5fdce53e30acf32c66918f76.
+These excerpts were transcribed from the actual tool returns after execution, not
+rerun after cleanup. They are not a complete raw stdout archive. No secret env
+values, raw dump, account number or private file bytes are retained here.
+Exact paths, source hashes and credential-redacted invocations: results JSON.
+
+[Original tool chunk b918e5: existing eight-file supporting batch]
+✔ Customer attachment storage validates, scans, encrypts and finalizes without plaintext on disk (6.46475ms)
+✔ Customer attachment storage rejects unsafe types and failed scans before writing (1.180792ms)
+✔ Customer attachment storage idempotently deletes its controlled temp object (1.405958ms)
+✔ Customer attachment recovery finalizes a valid temp object and rejects tamper or symlink (2.114541ms)
+✔ Customer attachment storage rejects a symlinked configured root (0.894167ms)
+✔ Customer bank crypto round-trips with random IV and owner/context-bound AAD (1.599333ms)
+✔ Customer bank AAD framing is injective for every JavaScript string (0.135584ms)
+✔ Customer bank blind indexes normalize formatting and cover every lookup key (1.126875ms)
+✔ Customer bank crypto rejects unusable direct key rings and redacts inspection (0.2585ms)
+✔ Customer bank masking never reveals a complete short account (0.067209ms)
+✔ Customer cross-owner confirmation tokens bind actor, target, normalized scope and expiry (0.27275ms)
+✔ Customer bank encryption rotation rewrites an old-key row and emits counts-only audit (1.972541ms)
+✔ Customer bank reindex refuses a duplicate instead of overwriting it (0.475459ms)
+✔ Customer bank masked list never selects or returns cryptographic material (1.223208ms)
+✔ Customer bank create requires a bound token for a cross-Customer duplicate (1.5405ms)
+✔ Customer bank duplicate confirmation rejects replay under a different actor or target (0.737208ms)
+✔ Customer bank mutations hide cross-owner rows and re-check fresh permissions (0.281791ms)
+✔ Customer bank update translates a raced same-owner duplicate to the stable public conflict (0.474375ms)
+✔ Customer bank create rejects an inactive account currency through Business Master (0.156791ms)
+✔ Customer bank reveal commits its audit before returning plaintext (0.327333ms)
+✔ TC-080 Customer bank unreadable alert is correlated and excludes exception secrets (0.978583ms)
+✔ TC-080 Customer bank crypto failures produce bounded alert reasons without plaintext (0.404625ms)
+✔ Clamd scanner sends bounded INSTREAM frames and accepts only an explicit clean response (1.753167ms)
+✔ Clamd response parsing distinguishes malware and fails closed on scanner errors (0.206708ms)
+✔ Clamd scanner rejects a connection closed before a complete response (0.53325ms)
+✔ Customer bank and import capabilities are disabled when their config is absent (0.933959ms)
+✔ Customer attachment config requires isolated absolute roots, encryption and scanner (0.693125ms)
+✔ Customer config validates independent key rings and redacts their material (0.635375ms)
+✔ Customer config fails closed for incomplete or unusable key rings (0.170125ms)
+✔ generic logger sanitizes entries before delegating to its writer (8.39225ms)
+✔ generic logger rejects profile-specific top-level fields (0.277875ms)
+✔ generic logger formats timestamps in the application time zone (0.111708ms)
+✔ logger registry creates and exposes every configured logger profile (0.129042ms)
+✔ generic logger filters entries below its configured minimum level (0.093834ms)
+✔ logging service flushes registry loggers once and separately flushes an injected logger (0.214291ms)
+✔ system logger requires an injected logger (0.702167ms)
+✔ system logger writes independent JSONL logs and redacts sensitive context (15.343959ms)
+ℹ tests 37
+ℹ pass 37
+ℹ fail 0
+ℹ skipped 0
+ℹ duration_ms 575.723875
+
+[Original tool chunk 89e3a1: existing four-file real MySQL batch]
+✔ Customer attachment upload is encrypted, durable, replay-safe and operation-complete (113.800792ms)
+✔ Customer bank service stores no plaintext, confirms cross-owner duplicates and audits reveal (22.536666ms)
+✔ Customer bank key rotation and reindex resume idempotently with zero-old proof (10.079583ms)
+✔ Customer bank update/default/deactivate enforce ownership and optimistic versions (9.3265ms)
+✔ Customer bank migration enforces no-plaintext, duplicate and default contracts (15.551708ms)
+▶ Local TC-080/081/083 real Customer security and contention
+  ✔ LOCAL-081-DML: real actor, idempotent create, read, update and correlated audit (14.68ms)
+  ✔ LOCAL-081-DENY: actual MySQL denies DDL, audit mutation and self-grants (14.520834ms)
+  ✔ LOCAL-081-BANK: real nullable-currency bank commands use only owned tables and append-only audit (11.98825ms)
+  ✔ LOCAL-081-BANK-DENY: fresh permission and audit failure deny plaintext without bank mutation (6.334459ms)
+  ✔ LOCAL-080-BANK-DB: stored integrity failure emits only a safe correlated event (3.5205ms)
+  ✔ LOCAL-083-DEFAULT: 100 same-version commands reconcile defaults, versions and real audit (71.020125ms)
+  ✔ LOCAL-083-DECISION: 100 approve/reject contenders produce exactly one audited transition (160.329625ms)
+  ✔ LOCAL-081-SESSION: revoking the owned SQL account also closes its verified live sessions (5.861292ms)
+✔ Local TC-080/081/083 real Customer security and contention (436.789417ms)
+ℹ tests 14
+ℹ pass 14
+ℹ fail 0
+ℹ skipped 0
+ℹ duration_ms 1031.769958
+
+[Original tool chunks 48ef1c + b2275d: actual restore batch, selected summary]
+✔ Customer restore safety guard rejects an ordinary DB name before connecting (143.456458ms)
+✔ Customer restore safety guard rejects a non-task MySQL port before connecting (140.211875ms)
+✔ LOCAL-035 TC-085/086/087 isolated logical restore reconciles Customer DB, keys, files and audit (1130.390834ms)
+ℹ tests 3
+ℹ pass 3
+ℹ fail 0
+ℹ skipped 0
+ℹ duration_ms 1507.635375
+Actual JSON summary fields from b2275d (not full raw JSON):
+manifestMembers=6 schemaVersionCount=87 rejectedBackupSets=4 failClosedChecks=6
+attachmentObjects=2 importObjects=2 customer_audit_logs.count=5
+dumpSha256=e61f4d85582b937f90d1700b5f3136fbfc131f08e38dfc858b3f96383d64772b
+manifestSha256=9d88e661e2ed7bc79561acd88fd24062da364f92cc5a434a6d2195b34e2e7338
+downstreamIntegration=BLOCKED productionRtoRpo=NOT_PROVEN
+
+[Original tool chunk 3c20a3: final three-case private diagnostic]
+✔ LOP-008 actual SELECT-only Currency locking precondition is denied without broadening runtime privilege (21.004ms)
+✔ LOP-006 actual absent ClamAV refuses attachment before any object is written (3.029667ms)
+✔ LOP-007 actual bank integrity denial reaches private JSONL without secrets; restored bank reveals with audit (153.30925ms)
+ℹ tests 3
+ℹ pass 3
+ℹ fail 0
+ℹ skipped 0
+ℹ duration_ms 289.183458
+
+Counts 37+14+3+3=57 (includes the operational parent node; not57 formal cases).
+Earlier two-case diagnostic chunk a37f72 passed2, not counted again.
+Actual cleanup chunks297b1c/6cddb8/61c4d0: only3owned schemas dropped,0remaining,
+fixture SQL users0, shutdown succeeded, server exited0, PID/listener/datadir absent.

@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 212,
+  "revision": 214,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,21 +11,21 @@
   "baseline": {
     "design": "fa4dbd1ef42d14fab8321b3ced7be4093dbcabc8408c15dda852f9cd5777906b",
     "plan": "a1d5e05a8d2eff9a4d76435c701f8ebc054b5e7a1ba27b0cf366643cbf685d9b",
-    "code_commit": "4e725c92d1cc9036b2a7d12bf6804c8d2f333a04",
+    "code_commit": "e9ce220cc28e42fed292bd32317bc0f81fd29872",
     "source_fingerprint": "87e3e848740a55aba7bc30e552062c9887b4d37f5fdce53e30acf32c66918f76",
     "worktree": "/private/tmp/erp-customer-operations-readiness",
     "default_commit": "0fa41eef54fd01bb163f1ceaf57f46b5acada1a7",
     "mode_entry_commit": "392b9f9db0f36f5a3bbabf2854bf3ee20a7bf227"
   },
   "runtime": {
-    "instance_id": "customer-operations-readiness-docs-20261015",
-    "owner": "/root Customer readiness documentation",
+    "instance_id": "customer-local-ops-20261016-closed",
+    "owner": "/root Customer local verification",
     "resources": {
       "workspace": "/private/tmp/erp-customer-operations-readiness",
-      "mysql-schema": "not allocated; previous PR242 runtime actually removed",
-      "customer-file-root": "not allocated",
-      "customer-import-root": "not allocated",
-      "web-port": "not allocated; no executable/UI change"
+      "mysql-schema": "CLEANED owned13369/vvrvRm/3syntheticschemas; no active instance",
+      "customer-file-root": "test and restore roots CLEANED; private credential-free diagnostic retained",
+      "customer-import-root": "restore roots CLEANED",
+      "web-port": "not allocated; no UI/deployment"
     },
     "lease_ref": null
   },
@@ -1976,6 +1976,25 @@
         "TASK-033/035/036 partial documentation/handoff preparation; full task completion unchanged"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-050",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam",
+      "decision": "APPROVED",
+      "source_ref": "Actual user2026-10-16: 先不要再只做文件對齊，直接用本機作為驗收環境，補齊能獨立執行的營運驗證；需要我提供的配置、權限或決策一次列清楚，完整下游整合驗收保持阻塞。 Independentlocaldiagnostics only, no HD014adoption/newinfrastructure/fullsignoff.",
+      "recorded_at": "2026-10-16T00:43:09Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a1d5e05a8d2eff9a4d76435c701f8ebc054b5e7a1ba27b0cf366643cbf685d9b",
+      "code_commit": "e9ce220cc28e42fed292bd32317bc0f81fd29872",
+      "scope": [
+        "Customer independent local operating checks; frozene9ce/source87e3",
+        "Owned13369/vvrvRm/3newsyntheticschemas only; unchangedmigrations/tests; ephemeralkeys/accounts/privatefiles",
+        "Temporaryactualscanneroutage/bankJSONL/Currencylockdiagnostic; no product/existingtest/schema-definition/CI edit",
+        "docs/customer_management/implementation/local-operations-20261016*"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -2802,6 +2821,18 @@
       "reviewer": "/root/customer_task011_review (actual separate read-only agent)",
       "reviewed_baseline": "a1d5e05a8d2eff9a4d76435c701f8ebc054b5e7a1ba27b0cf366643cbf685d9b",
       "source_ref": "Actual exactclean0550fadc APPROVE docs3files vs f4d50bd5; PR244comment6189378744. Existing24hDESIGN13.5 separatedfromTC088; no formalapproval. Superseded for currentcandidate after main0fa41eef/4e725c92 integration and actualCONTRACT_DRIFT; no currentAPI/baseline adoption or mergeapproval inferred.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-070",
+      "method": "SEPARATE_AGENT",
+      "author": "/root Customer user-designated local operating checks",
+      "reviewer": "/root/customer_task011_review (actual separate read-only QA agent)",
+      "reviewed_baseline": "87e3e848740a55aba7bc30e552062c9887b4d37f5fdce53e30acf32c66918f76",
+      "source_ref": "ActualAPPROVED limitedlocaloperationsevidenceonly. Verified57=37+14+3+3/0FAIL0SKIP,13frozenrepositorytestSHA/private3case diagnosticSHA/outputexcerptSHA, exactargv/cwd/redactedenv andscope/cleanup. TwoRequiredprovenancefindings resolved: newlyauthoredprivatediagnosticexplicit, fullsource/invocationmanifest+selectedoriginaltoolreturnexcerpts retainedwithhonestnotfullrawarchive qualifier. No actualfullrawreplay/OpsSecurity/formalTC/UAT/releaseadoptionapproval; AV/alerts/rollback/Currencyleastpriv/HD014/downstream stillblocked.",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -3710,6 +3741,17 @@
       "subject": "Latest-main supporting Customer lookup/impact/registry unit checks only",
       "status": "PASS",
       "source_ref": "Existing3files20PASS0FAIL0SKIP70.494875ms; no realDB/formalacceptance or newAPI adoption. Approval-awaretraceability BLOCKED withCONTRACT_DRIFT on consumedSalesdesign; old26docschecks/lint/build are0550preintegration notcurrentfullgate."
+    },
+    {
+      "code_commit": "e9ce220cc28e42fed292bd32317bc0f81fd29872",
+      "spec_baseline": "a1d5e05a8d2eff9a4d76435c701f8ebc054b5e7a1ba27b0cf366643cbf685d9b",
+      "source_fingerprint": "87e3e848740a55aba7bc30e552062c9887b4d37f5fdce53e30acf32c66918f76",
+      "actor": "/root Customer local operations",
+      "observed_at": "2026-10-16T00:57:58Z",
+      "kind": "MANUAL_TEST",
+      "subject": "User-designated local operating checks, limited evidence only",
+      "status": "PASS",
+      "source_ref": "local-operations-20261016 report/results:57uniquePASS0FAIL0SKIP=37supporting+14realDB+3restore+3actualboundarychecks. ActualClamdrefusal0objects; realbankfreshactor/crypto/audit->SystemLogger/privateJSONL422/nomarkers/0600/0700/repairedrevealaudit1; actualSELECTonlyCurrencyproviderlockingdenial meansfullruntimeBLOCKED. Scannerfixtures/authorizationassumptions explicit. No wholemoduleTC/UAT/business/release/Opssignoff. Recordingtime corrected from chartercreation00:43:09 to actualconsolidatedobservation00:57:58; no execution-time claim. Exactargv/sourcehashes and selectedoriginaltooloutputexcerptdigestf695c6b7 recorded; notfullrawstdoutarchive."
     }
   ],
   "pending_decisions": [
@@ -4995,8 +5037,24 @@
       "kind": "GIT_PUSH",
       "target": "origin codex/customer-operations-readiness currentmainintegrated docs-only HD014blocker",
       "idempotency_key": "customer-readiness-contract-drift-push112",
-      "status": "PLANNED",
-      "source_ref": "CurrentSam authorizedscopedPRdocs; publish actualblocker/reconcilecurrentmain only, no adoption or canonicalpin/sourcechange. PR244mustremainunmerged untilHD014; actualCItriggers notapproval."
+      "status": "CONFIRMED",
+      "source_ref": "CurrentSam authorizedscopedPRdocs; publish actualblocker/reconcilecurrentmain only, no adoption or canonicalpin/sourcechange. PR244mustremainunmerged untilHD014; actualCItriggers notapproval. ActualPR244receipts6189691104/6189716816 verify exacte9ce push,DRAFT/base0fa, blockedreportreviewonly; noCI/merge/adoption inferred."
+    },
+    {
+      "id": "EXT-LOCAL-113",
+      "kind": "ISOLATED_RUNTIME",
+      "target": "own /private/tmp/erp-customer-local-runtime.vvrvRm/mysql loopback13369; erp_customer_ops_local_20261016 + erp_customer_local_dr_source_20261016_ops + erp_customer_local_dr_restore_20261016_ops",
+      "idempotency_key": "customer-local-ops-20261016-113",
+      "status": "CONFIRMED",
+      "source_ref": "ActualSam scope050; LOPcases definedbeforeexecution. MySQL26.7/Node26.6/87migrations actual;57uniquePASS0FAIL0SKIP. Realscanneroutage0files/privatebankJSONL/SELECTonlyCurrencydenial1142/42000; fullCurrency/approval/realAV/delivery/rollback/formalacceptance notcertified. Reports/results actual, no shared3306 or sourcefix."
+    },
+    {
+      "id": "EXT-CLEANUP-114",
+      "kind": "RUNTIME_CLEANUP",
+      "target": "only3ownschemas/server13369/vvrvRm/mysql datadir",
+      "idempotency_key": "customer-local-ops-20261016-cleanup114",
+      "status": "CONFIRMED",
+      "source_ref": "Actualinstanceidentityverified; SQLfixtureusers/sessions/opsCustomers/pipelineactorrole0;3exactownschemasdropped/remaining0,SHUTDOWNsuccess/server82988exit0,listener/PIDabsent,exactdatadirremoved,secretcommandstorescleared. Smallprivateconfig/log/credential-freescript retained; shareddata/otherprocesses untouched."
     }
   ],
   "evidence_files": [
@@ -5016,7 +5074,10 @@
     "implementation/ui-defects-remediation-report.md",
     "implementation/phase4-local-recheck-results.jsonl",
     "implementation/phase4-restore-readiness-results.json",
-    "implementation/phase4-operational-security-results.json"
+    "implementation/phase4-operational-security-results.json",
+    "implementation/local-operations-20261016.md",
+    "implementation/local-operations-20261016-results.json",
+    "implementation/local-operations-20261016-output.txt"
   ],
   "defects": [
     {
@@ -5072,5 +5133,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "STOP affected contract adoption/merge pending Sam HD014 scope decision. PR244currentmainintegrated reportsactualCONTRACT_DRIFT, newCustomerbatchprecheck and changedSalescontract; retainoldapprovedpins/DESIGNfa/PLANa1 no fakeapproval. Supporting20unitPASS notformalacceptance. After authorizedreconciliation, review newcontracts and prepare exactDESIGNPLANbaselineproposal for Sam approval; then actualcurrentCI/review/freshmain/normalmerge/cleanup. Full downstreamBLOCKED, HD013timingwaived, no production/infrastructure/othermodulecode changes. Keep openPRbranch/worktree and do not replay priorPR242effects."
+  "next_safe_action": "Independentlocaloperatingchecks actuallyexecuted57PASS; ownruntimecleanupcomplete. Obtain consolidatedinputs inlocalopsreport: genuineClamAVendpoint or Docker/downloadpermission; realmonitor/receiver or isolatedlocalpipelineapproval; previousrollbackversion; authorize reviewedleastprivilegeCurrencylockingremediationwithoutBusinessMasterwritegrant; HD014contractproposal/exactbaselineapproval. Continueactualchecks, notdocs-onlyalignment. Full downstreamBLOCKED/HD013waived. Preserve draftPR244/worktree/newlocalevidence; no productchange/currentCI/merge/adoption claim. Currentlocalreport/evidence is reviewed and committed locally only; no push/merge/CI reuse inferred. Consolidatedconfigs/permissions/decisions must be obtained before infrastructure startup or source remediation."
 }
