@@ -69,7 +69,7 @@ export class SupplierAuditLogService {
     } catch (error) {
       // 設計 §5.12：摘要後仍超限就成個業務 transaction 失敗並告警（唔可以有資料冇 audit）。
       if (error.code === "SUPPLIER_AUDIT_DETAIL_TOO_LARGE") {
-        this.logger?.error?.("supplier.audit.detail_too_large", "Supplier audit detail exceeds its limit after summarization",
+        void this.logger?.error?.("supplier.audit.detail_too_large", "Supplier audit detail exceeds its limit after summarization",
           { action: String(input.action), targetType: String(input.targetType), targetId: input.targetId ?? null, bytes: error.bytes });
       }
       throw error;

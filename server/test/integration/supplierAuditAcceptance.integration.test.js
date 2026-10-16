@@ -85,27 +85,37 @@ async function uploadImport(user, code) {
   return json;
 }
 
-integrationTest("TC-103 (AUD-001): every state-changing or sensitive Supplier action writes exactly its audit rows, with actor, target, reason, requestId and IP", async () => {
+integrationTest("TC-103 (AUD-001): every state-changing or sensitive Supplier action writes exactly its audit rows, with actor, target, Code, before/after, reason, requestId and IP", async () => {
   const t = tag();
-  const steps = [];
+  const exercised = new Set();
   const started = Date.now();
-  // 每一步：發請求、要 2xx，再按 response 嘅 requestId 搵 audit 行；預期 action 係嗰個請求應該寫嘅全部 action。
-  const step = async (name, user, run, expected, { reason = null, supplierId = undefined } = {}) => {
+  /**
+   * 每一步：發請求、要 2xx，再按 response 嘅 requestId 搵 audit 行。`targets` 係「呢個請求應該寫嘅每個 action」對
+   * [target_type, target_id, target_label]（label 對 Supplier 層 action 即係 Supplier Code）；行數同 action 要完全一致。
+   * `details` 係個別 action 嘅 before／after 檢查。
+   */
+  const step = async (name, user, run, targets, { reason = null, supplierId = undefined, details = {} } = {}) => {
     const response = await run();
     assert.ok(response.status >= 200 && response.status < 300, `${name}: ${response.status} ${response.text ?? JSON.stringify(response.json)}`);
+    // JSON 回應喺 meta；CSV 下載（匯出）喺 header。
     const requestId = response.json?.meta?.requestId ?? response.headers?.get?.("x-request-id");
     assert.ok(requestId, `${name}: response carries a requestId`);
     const rows = await auditsFor(requestId);
-    steps.push({ name, actions: rows.map((row) => row.action) });
-    assert.deepEqual(rows.map((row) => row.action).sort(), [...expected].sort(), `${name}: audit actions`);
+    assert.deepEqual(rows.map((row) => row.action).sort(), Object.keys(targets).sort(), `${name}: audit actions`);
     for (const row of rows) {
+      exercised.add(row.action);
       assert.equal(Number(row.actor_user_id), user.userId, `${name}: actor id`);
       assert.equal(row.actor_username, user.username, `${name}: actor username snapshot`);
       assert.match(row.ip, LOOPBACK, `${name}: ip`);
       assert.ok(Number(row.occurred_at) >= started && Number(row.occurred_at) <= Date.now(), `${name}: occurred_at`);
-      assert.ok(row.target_type && row.target_label !== null, `${name}: target`);
+      // target_id `undefined` = 呢個請求先建立嘅行，ID 喺 response 先知，之後另外對。
+      const [type, targetId, label] = targets[row.action];
+      const actualId = row.target_id === null ? null : Number(row.target_id);
+      assert.deepEqual([row.target_type, targetId === undefined ? undefined : actualId, row.target_label], [type, targetId, label],
+        `${name} ${row.action}: target`);
       if (supplierId !== undefined) assert.equal(row.supplier_id === null ? null : Number(row.supplier_id), supplierId, `${name}: supplier_id`);
-      if (reason !== null && !row.action.startsWith("approval.invalidate")) assert.equal(row.reason, reason, `${name}: reason`);
+      if (reason !== null && row.action !== "approval.invalidate") assert.equal(row.reason, reason, `${name}: reason`);
+      if (details[row.action]) details[row.action](row.detail === null ? null : (typeof row.detail === "string" ? JSON.parse(row.detail) : row.detail));
     }
     return response;
   };
@@ -113,154 +123,204 @@ integrationTest("TC-103 (AUD-001): every state-changing or sensitive Supplier ac
   const send = (user, key, options) => h.send(user, h.route(key), options);
 
   // Supplier root 同 child。
-  const made = await step("create", mgmt, () => create({ supplierCode: `AUD-${t}`, supplierName: `Audit ${t}` }), ["supplier.create"]);
+  const made = await step("create", mgmt, () => create({ supplierCode: `AUD-${t}`, supplierName: `Audit ${t}` }), { "supplier.create": ["supplier", undefined, `AUD-${t}`] });
   const id = made.json.data.id;
+  const [createRow] = await auditsFor(made.json.meta.requestId);
+  assert.equal(Number(createRow.target_id), id);
   let version = made.json.data.version;
   const updated = await step("update", mgmt, () => send(mgmt, "POST /api/v1/suppliers/:id/update", { ids: { id }, body: { version, supplierName: `Audit ${t} v2`,
-    displayName: "", defaultCurrencyCode: "HKD", defaultPaymentTermId: null, website: "", generalPhone: "", generalEmail: "", notes: "" } }), ["supplier.update"], { supplierId: id });
-  const [[updateRow]] = await h.db.query("SELECT CAST(detail AS CHAR) AS detail FROM supplier_audit_logs WHERE request_id = ?", [updated.json.meta.requestId]);
-  const updateDetail = JSON.parse(updateRow.detail);
-  assert.deepEqual([updateDetail.before.supplierName, updateDetail.after.supplierName], [`Audit ${t}`, `Audit ${t} v2`], "before and after are recorded");
+    displayName: "", defaultCurrencyCode: "HKD", defaultPaymentTermId: null, website: "", generalPhone: "", generalEmail: "", notes: "" } }),
+  { "supplier.update": ["supplier", id, `AUD-${t}`] }, { supplierId: id, details: { "supplier.update": (detail) =>
+    assert.deepEqual([detail.before.supplierName, detail.after.supplierName], [`Audit ${t}`, `Audit ${t} v2`], "update before/after") } });
   version = updated.json.data.version;
   const recoded = await step("code change", mgmt, () => send(mgmt, "POST /api/v1/suppliers/:id/code/change", { ids: { id },
-    body: { supplierCode: `AUD2-${t}`, reason: REASON, version } }), ["supplier.code.change"], { reason: REASON, supplierId: id });
+    body: { supplierCode: `AUD2-${t}`, reason: REASON, version } }), { "supplier.code.change": ["supplier", id, `AUD2-${t}`] },
+  { reason: REASON, supplierId: id, details: { "supplier.code.change": (detail) =>
+    assert.deepEqual([detail.before.supplierCode, detail.after.supplierCode], [`AUD-${t}`, `AUD2-${t}`], "code change before/after") } });
   version = recoded.json.data.version;
+  const code = `AUD2-${t}`;
+  const childRoute = { address: "addresses", contact: "contacts", identifier: "identifiers" };
   const child = async (kind, body, label) => {
-    const createdChild = await step(`${kind} create`, mgmt, () => send(mgmt, `POST /api/v1/suppliers/:supplierId/${{ address: "addresses", contact: "contacts", identifier: "identifiers" }[kind]}/create`, { ids: { supplierId: id }, body }),
-      [`supplier.${kind}.create`], { supplierId: id });
-    return { id: createdChild.json.data.id, version: createdChild.json.data.version, label };
+    const response = await h.send(mgmt, h.route(`POST /api/v1/suppliers/:supplierId/${childRoute[kind]}/create`), { ids: { supplierId: id }, body });
+    const rows = await auditsFor(response.json.meta.requestId);
+    const childId = response.json.data.id;
+    assert.deepEqual(rows.map((row) => [row.action, row.target_type, Number(row.target_id), row.target_label, Number(row.supplier_id)]),
+      [[`supplier.${kind}.create`, kind, childId, label, id]], `${kind} create`);
+    exercised.add(`supplier.${kind}.create`);
+    return { id: childId, version: response.json.data.version };
   };
-  const address = await child("address", { label: "HQ", purposes: [] });
+  const address = await child("address", { label: "HQ", purposes: [] }, "HQ");
   const addressUpdated = await step("address update", mgmt, () => send(mgmt, "POST /api/v1/suppliers/:supplierId/addresses/:addressId/update",
-    { ids: { supplierId: id, addressId: address.id }, body: { version: address.version, label: "HQ2", purposes: [] } }), ["supplier.address.update"], { supplierId: id });
+    { ids: { supplierId: id, addressId: address.id }, body: { version: address.version, label: "HQ2", purposes: [] } }),
+  { "supplier.address.update": ["address", address.id, "HQ2"] }, { supplierId: id });
   await step("address deactivate", mgmt, () => send(mgmt, "POST /api/v1/suppliers/:supplierId/addresses/:addressId/deactivate",
-    { ids: { supplierId: id, addressId: address.id }, body: { version: addressUpdated.json.data.version } }), ["supplier.address.deactivate"], { supplierId: id });
-  const contact = await child("contact", { name: "Amy", purposes: [] });
+    { ids: { supplierId: id, addressId: address.id }, body: { version: addressUpdated.json.data.version } }),
+  { "supplier.address.deactivate": ["address", address.id, "HQ2"] }, { supplierId: id });
+  const contact = await child("contact", { name: "Amy", purposes: [] }, "Amy");
   const contactUpdated = await step("contact update", mgmt, () => send(mgmt, "POST /api/v1/suppliers/:supplierId/contacts/:contactId/update",
-    { ids: { supplierId: id, contactId: contact.id }, body: { version: contact.version, name: "Amy Two", purposes: [] } }), ["supplier.contact.update"], { supplierId: id });
+    { ids: { supplierId: id, contactId: contact.id }, body: { version: contact.version, name: "Amy Two", purposes: [] } }),
+  { "supplier.contact.update": ["contact", contact.id, "Amy Two"] }, { supplierId: id });
   await step("contact deactivate", mgmt, () => send(mgmt, "POST /api/v1/suppliers/:supplierId/contacts/:contactId/deactivate",
-    { ids: { supplierId: id, contactId: contact.id }, body: { version: contactUpdated.json.data.version } }), ["supplier.contact.deactivate"], { supplierId: id });
-  const identifier = await child("identifier", { identifierType: "business_registration", issuerCountryCode: "HK", identifierValue: `AU${t}` });
+    { ids: { supplierId: id, contactId: contact.id }, body: { version: contactUpdated.json.data.version } }),
+  { "supplier.contact.deactivate": ["contact", contact.id, "Amy Two"] }, { supplierId: id });
+  const identifier = await child("identifier", { identifierType: "business_registration", issuerCountryCode: "HK", identifierValue: `AU${t}` }, "business_registration:HK");
   const identifierUpdated = await step("identifier update", mgmt, () => send(mgmt, "POST /api/v1/suppliers/:supplierId/identifiers/:identifierId/update",
     { ids: { supplierId: id, identifierId: identifier.id }, body: { version: identifier.version, identifierType: "business_registration",
-      issuerCountryCode: "HK", identifierValue: `AV${t}`, reason: REASON } }), ["supplier.identifier.update"], { reason: REASON, supplierId: id });
+      issuerCountryCode: "HK", identifierValue: `AV${t}`, reason: REASON } }),
+  { "supplier.identifier.update": ["identifier", identifier.id, "business_registration:HK"] }, { reason: REASON, supplierId: id });
   await step("identifier delete", mgmt, () => send(mgmt, "POST /api/v1/suppliers/:supplierId/identifiers/:identifierId/delete",
     { ids: { supplierId: id, identifierId: identifier.id }, body: { version: identifierUpdated.json.data.version, reason: REASON } }),
-  ["supplier.identifier.delete"], { reason: REASON, supplierId: id });
+  { "supplier.identifier.delete": ["identifier", identifier.id, "business_registration:HK"] }, { reason: REASON, supplierId: id });
 
-  // Bank（device＋password），連 reveal 呢個敏感讀取。
+  // Bank（device＋password），連 reveal 呢個敏感讀取。兩個帳號一定唔同（REV-098 F-1）。
   const bank = h.users.bank;
   const account = `63${String(Date.now()).slice(-10)}`;
+  const otherAccount = `${account.slice(0, -1)}${(Number(account.at(-1)) + 1) % 10}`;
+  const masked = (value) => (detail) => {
+    assert.ok(!JSON.stringify(detail).includes(value), "no account number in the audit");
+    assert.ok(String(detail.after?.maskedAccountNumber ?? "").endsWith(value.slice(-4)), "the masked last four only");
+  };
   const bankA = await step("bank create", bank, () => send(bank, "POST /api/v1/suppliers/:id/bank-accounts/create", { ids: { id },
-    body: { accountHolderName: "Holder A", bankName: "Bank A", accountNumber: account, isDefault: true, reason: REASON } }), ["supplier.bank.create"], { reason: REASON, supplierId: id });
+    body: { accountHolderName: "Holder A", bankName: "Bank A", accountNumber: account, isDefault: true, reason: REASON } }),
+  { "supplier.bank.create": ["bank", undefined, "Bank A"] }, { reason: REASON, supplierId: id, details: { "supplier.bank.create": masked(account) } });
   const bankB = await step("bank create 2", bank, () => send(bank, "POST /api/v1/suppliers/:id/bank-accounts/create", { ids: { id },
-    body: { accountHolderName: "Holder B", bankName: "Bank B", accountNumber: `${account.slice(0, -1)}7`, reason: REASON } }), ["supplier.bank.create"], { reason: REASON, supplierId: id });
+    body: { accountHolderName: "Holder B", bankName: "Bank B", accountNumber: otherAccount, reason: REASON } }),
+  { "supplier.bank.create": ["bank", undefined, "Bank B"] }, { reason: REASON, supplierId: id });
+  const bankAId = bankA.json.data.id;
+  const bankBId = bankB.json.data.id;
   const bankAUpdated = await step("bank update", bank, () => send(bank, "POST /api/v1/suppliers/:id/bank-accounts/:bankAccountId/update",
-    { ids: { id, bankAccountId: bankA.json.data.id }, body: { accountHolderName: "Holder A2", bankName: "Bank A", version: bankA.json.data.version, reason: REASON } }),
-  ["supplier.bank.update"], { reason: REASON, supplierId: id });
+    { ids: { id, bankAccountId: bankAId }, body: { accountHolderName: "Holder A2", bankName: "Bank A", version: bankA.json.data.version, reason: REASON } }),
+  { "supplier.bank.update": ["bank", bankAId, "Bank A"] }, { reason: REASON, supplierId: id, details: { "supplier.bank.update": (detail) => {
+    masked(account)(detail);
+    assert.equal(detail.changes.accountNumberChanged, false);
+  } } });
   await step("bank default", bank, () => send(bank, "POST /api/v1/suppliers/:id/bank-accounts/:bankAccountId/default",
-    { ids: { id, bankAccountId: bankB.json.data.id }, body: { version: bankB.json.data.version, reason: REASON } }), ["supplier.bank.default"], { reason: REASON, supplierId: id });
+    { ids: { id, bankAccountId: bankBId }, body: { version: bankB.json.data.version, reason: REASON } }),
+  { "supplier.bank.default": ["bank", bankBId, "Bank B"] }, { reason: REASON, supplierId: id, details: { "supplier.bank.default": (detail) =>
+    assert.deepEqual([detail.before.isDefault, detail.after.isDefault], [false, true], "default before/after") } });
   const [[bankAVersion]] = await h.db.query("SELECT version FROM supplier_bank_accounts WHERE id = ?", [bankAUpdated.json.data.id]);
   await step("bank deactivate", bank, () => send(bank, "POST /api/v1/suppliers/:id/bank-accounts/:bankAccountId/deactivate",
-    { ids: { id, bankAccountId: bankA.json.data.id }, body: { version: Number(bankAVersion.version), reason: REASON } }), ["supplier.bank.deactivate"], { reason: REASON, supplierId: id });
+    { ids: { id, bankAccountId: bankAId }, body: { version: Number(bankAVersion.version), reason: REASON } }),
+  { "supplier.bank.deactivate": ["bank", bankAId, "Bank A"] }, { reason: REASON, supplierId: id });
   await step("bank reveal", bank, () => send(bank, "POST /api/v1/suppliers/:id/bank-accounts/:bankAccountId/reveal",
-    { ids: { id, bankAccountId: bankB.json.data.id }, body: { reason: REASON } }), ["supplier.bank.reveal"], { reason: REASON, supplierId: id });
+    { ids: { id, bankAccountId: bankBId }, body: { reason: REASON } }), { "supplier.bank.reveal": ["bank", bankBId, "Bank B"] },
+  { reason: REASON, supplierId: id, details: { "supplier.bank.reveal": (detail) => assert.ok(!JSON.stringify(detail).includes(otherAccount)) } });
+  const [[createdBank]] = await h.db.query("SELECT target_id FROM supplier_audit_logs WHERE request_id = ?", [bankA.json.meta.requestId]);
+  assert.equal(Number(createdBank.target_id), bankAId, "bank create targets the new account");
 
   // SKU relation。
   const { skuId, uomId } = await purchasableSku();
+  const [[skuRow]] = await h.db.query("SELECT sku_code FROM item_skus WHERE id = ?", [skuId]);
   const relation = await step("relation create", mgmt, () => send(mgmt, "POST /api/v1/suppliers/:id/sku-relations/create",
-    { ids: { id }, body: { skuId, purchaseSkuUomId: uomId } }), ["supplier_sku.create"], { supplierId: id });
+    { ids: { id }, body: { skuId, purchaseSkuUomId: uomId } }), { "supplier_sku.create": ["supplier_sku", undefined, skuRow.sku_code] }, { supplierId: id });
+  const [relationRow] = await auditsFor(relation.json.meta.requestId);
+  assert.equal(Number(relationRow.target_id), relation.json.data.id, "relation create targets the new relation");
   await step("relation update", mgmt, () => send(mgmt, "POST /api/v1/suppliers/:id/sku-relations/:relationId/update",
     { ids: { id, relationId: relation.json.data.id }, body: { supplierItemCode: `SI-${t}`, supplierItemName: "Item", purchaseSkuUomId: uomId,
-      minimumOrderQty: 5, standardLeadTimeDays: 7, relationshipStatus: "preferred", version: relation.json.data.version } }), ["supplier_sku.update"], { supplierId: id });
+      minimumOrderQty: 5, standardLeadTimeDays: 7, relationshipStatus: "preferred", version: relation.json.data.version } }),
+  { "supplier_sku.update": ["supplier_sku", relation.json.data.id, skuRow.sku_code] }, { supplierId: id });
 
   // 狀態機（審批關閉）。
-  const life = async (action, user, expected, body) => {
+  const life = async (action, user, body) => {
     const response = await step(action, user, () => send(user, `POST /api/v1/suppliers/:id/${action}`, { ids: { id }, body: { version, ...body } }),
-      expected, { reason: body?.reason ?? null, supplierId: id });
+      { [`supplier.${action}`]: ["supplier", id, code] }, { reason: body?.reason ?? null, supplierId: id });
     version = response.json.data.version;
   };
-  await life("activate", mgmt, ["supplier.activate"]);
-  await life("suspend", mgmt, ["supplier.suspend"], { reason: REASON });
-  await life("reactivate", mgmt, ["supplier.reactivate"], { reason: REASON });
-  await life("block", h.users.approver, ["supplier.block"], { reason: REASON });
-  await life("unblock", h.users.approver, ["supplier.unblock"], { reason: REASON });
-  await life("archive", mgmt, ["supplier.archive"], { reason: REASON });
-  await life("restore", mgmt, ["supplier.restore"], { reason: REASON });
+  await life("activate", mgmt);
+  await life("suspend", mgmt, { reason: REASON });
+  await life("reactivate", mgmt, { reason: REASON });
+  await life("block", h.users.approver, { reason: REASON });
+  await life("unblock", h.users.approver, { reason: REASON });
+  await life("archive", mgmt, { reason: REASON });
+  await life("restore", mgmt, { reason: REASON });
   const doomed = await create({ supplierCode: `DEL-${t}`, supplierName: `Delete ${t}` });
   await step("delete", mgmt, () => send(mgmt, "POST /api/v1/suppliers/:id/delete", { ids: { id: doomed.json.data.id }, body: { version: 1, reason: REASON } }),
-    ["supplier.delete"], { reason: REASON, supplierId: doomed.json.data.id });
+    { "supplier.delete": ["supplier", doomed.json.data.id, `DEL-${t}`] }, { reason: REASON, supplierId: doomed.json.data.id });
 
   // 匯出、匯入（precheck 係背景工作，冇 request；由 worker 直接跑）。
-  await step("export", mgmt, () => send(mgmt, "POST /api/v1/supplier-exports", { body: { filters: { q: `AUD2-${t}` } } }), ["supplier.export"]);
+  await step("export", mgmt, () => send(mgmt, "POST /api/v1/supplier-exports", { body: { filters: { q: code } } }), { "supplier.export": ["export", null, "suppliers"] });
   const uploaded = await uploadImport(mgmt, `IMP-${t}`);
-  steps.push({ name: "import upload", actions: (await auditsFor(uploaded.meta.requestId)).map((row) => row.action) });
-  assert.deepEqual((await auditsFor(uploaded.meta.requestId)).map((row) => row.action), ["import.upload"]);
+  const jobId = uploaded.data.id;
+  assert.deepEqual((await auditsFor(uploaded.meta.requestId)).map((row) => [row.action, row.target_type, Number(row.target_id), row.target_label]),
+    [["import.upload", "import", jobId, `import-${jobId}`]]);
+  exercised.add("import.upload");
   for (let attempt = 0; attempt < 20; attempt += 1) {
     const result = await h.worker.runPrecheck(new AbortController().signal);
-    if (!result.claimed || result.jobId === uploaded.data.id) break;
+    if (!result.claimed || result.jobId === jobId) break;
   }
-  const [precheckRows] = await h.db.query("SELECT action FROM supplier_audit_logs WHERE target_type = 'import' AND target_id = ? AND action = 'import.precheck'",
-    [uploaded.data.id]);
+  const [precheckRows] = await h.db.query("SELECT action FROM supplier_audit_logs WHERE target_type = 'import' AND target_id = ? AND action = 'import.precheck'", [jobId]);
   assert.equal(precheckRows.length, 1, "the background precheck writes one audit row");
-  const job = (await send(mgmt, "GET /api/v1/supplier-imports/:id", { ids: { id: uploaded.data.id } })).json.data.job;
+  exercised.add("import.precheck");
+  const job = (await send(mgmt, "GET /api/v1/supplier-imports/:id", { ids: { id: jobId } })).json.data.job;
   assert.equal(job.status, "ready", "prechecked and ready to confirm");
-  await step("import confirm", mgmt, () => send(mgmt, "POST /api/v1/supplier-imports/:id/confirm", { ids: { id: uploaded.data.id },
-    body: { version: job.version, activationMode: "draft", approverUserId: null } }), ["import.confirm"]);
+  await step("import confirm", mgmt, () => send(mgmt, "POST /api/v1/supplier-imports/:id/confirm", { ids: { id: jobId },
+    body: { version: job.version, activationMode: "draft", approverUserId: null } }), { "import.confirm": ["import", jobId, `import-${jobId}`] });
   const cancelled = await uploadImport(mgmt, `IMC-${t}`);
   await step("import cancel", mgmt, () => send(mgmt, "POST /api/v1/supplier-imports/:id/cancel", { ids: { id: cancelled.data.id },
-    body: { version: cancelled.data.version } }), ["import.cancel"]);
+    body: { version: cancelled.data.version } }), { "import.cancel": ["import", cancelled.data.id, `import-${cancelled.data.id}`] });
 
   // 設定同審批流程。
   try {
     const on = await setApproval(true);
-    await step("settings update", h.users.settings, async () => on, ["setting.update"], { reason: `${REASON} on` });
+    await step("settings update", h.users.settings, async () => on, { "setting.update": ["setting", 1, "supplier_settings"] }, { reason: `${REASON} on` });
     const pending = async (label) => {
-      const response = await step(`${label} submit`, mgmt, () => create({ supplierCode: `${label}-${t}`, supplierName: `${label} ${t}`, activate: true,
-        approverUserId: h.users.approver.userId }), ["supplier.create", "approval.submit"]);
+      const supplierCode = `${label}-${t}`;
+      const response = await create({ supplierCode, supplierName: `${label} ${t}`, activate: true, approverUserId: h.users.approver.userId });
       const queue = await h.send(h.users.approver, { ...h.route("GET /api/v1/supplier-approvals"), path: "/api/v1/supplier-approvals?scope=all&pageSize=100" });
-      return { supplier: response.json.data, request: queue.json.data.items.find((item) => item.supplierId === response.json.data.id) };
+      const request = queue.json.data.items.find((item) => item.supplierId === response.json.data.id);
+      const rows = await auditsFor(response.json.meta.requestId);
+      assert.deepEqual(rows.map((row) => [row.action, row.target_type, Number(row.target_id), row.target_label]).sort(),
+        [["approval.submit", "approval", request.id, supplierCode], ["supplier.create", "supplier", response.json.data.id, supplierCode]], `${label} submit`);
+      exercised.add("approval.submit");
+      return { supplier: response.json.data, request, supplierCode };
     };
     const approved = await pending("APV");
     await step("approve", h.users.approver, () => send(h.users.approver, "POST /api/v1/supplier-approvals/:id/approve",
-      { ids: { id: approved.request.id }, body: { version: approved.request.version } }), ["approval.approve"]);
+      { ids: { id: approved.request.id }, body: { version: approved.request.version } }), { "approval.approve": ["approval", approved.request.id, approved.supplierCode] });
     const rejected = await pending("REJ");
     await step("reject", h.users.approver, () => send(h.users.approver, "POST /api/v1/supplier-approvals/:id/reject",
-      { ids: { id: rejected.request.id }, body: { version: rejected.request.version, reason: REASON } }), ["approval.reject"], { reason: REASON });
+      { ids: { id: rejected.request.id }, body: { version: rejected.request.version, reason: REASON } }),
+    { "approval.reject": ["approval", rejected.request.id, rejected.supplierCode] }, { reason: REASON });
     const reassigned = await pending("RAS");
     await step("reassign", h.users.approver, () => send(h.users.approver, "POST /api/v1/supplier-approvals/:id/reassign",
       { ids: { id: reassigned.request.id }, body: { version: reassigned.request.version, approverUserId: h.users.approver2.userId, reason: REASON } }),
-    ["approval.reassign"], { reason: REASON });
+    { "approval.reassign": ["approval", reassigned.request.id, reassigned.supplierCode] }, { reason: REASON, details: { "approval.reassign": (detail) =>
+      assert.deepEqual([detail.before.assignedApproverId, detail.after.assignedApproverId], [h.users.approver.userId, h.users.approver2.userId]) } });
     const withdrawn = await pending("WDR");
     await step("withdraw", mgmt, () => send(mgmt, "POST /api/v1/suppliers/:id/approval/withdraw", { ids: { id: withdrawn.supplier.id },
-      body: { requestId: withdrawn.request.id, version: withdrawn.request.version } }), ["approval.withdraw"]);
+      body: { requestId: withdrawn.request.id, version: withdrawn.request.version } }), { "approval.withdraw": ["approval", withdrawn.request.id, withdrawn.supplierCode] });
     const invalidated = await pending("INV");
     await step("update while pending", mgmt, () => send(mgmt, "POST /api/v1/suppliers/:id/update", { ids: { id: invalidated.supplier.id },
       body: { version: invalidated.supplier.version, supplierName: `INV ${t} renamed`, displayName: "", defaultCurrencyCode: "HKD", defaultPaymentTermId: null,
-        website: "", generalPhone: "", generalEmail: "", notes: "" } }), ["supplier.update", "approval.invalidate"]);
+        website: "", generalPhone: "", generalEmail: "", notes: "" } }),
+    { "supplier.update": ["supplier", invalidated.supplier.id, invalidated.supplierCode], "approval.invalidate": ["approval", invalidated.request.id, invalidated.supplierCode] });
   } finally {
     await setApproval(false);
   }
 
   // 冇 audit 行帶 Bank 明文。
-  const [leaks] = await h.db.query("SELECT COUNT(*) AS n FROM supplier_audit_logs WHERE supplier_id = ? AND CAST(detail AS CHAR) LIKE ?", [id, `%${account}%`]);
+  const [leaks] = await h.db.query("SELECT COUNT(*) AS n FROM supplier_audit_logs WHERE supplier_id = ? AND (CAST(detail AS CHAR) LIKE ? OR CAST(detail AS CHAR) LIKE ?)",
+    [id, `%${account}%`, `%${otherAccount}%`]);
   assert.equal(Number(leaks[0].n), 0);
-  const covered = new Set(steps.flatMap((s) => s.actions));
-  covered.add("import.precheck");
-  const implemented = ["supplier.create", "supplier.update", "supplier.code.change", "supplier.activate", "supplier.suspend", "supplier.reactivate",
-    "supplier.block", "supplier.unblock", "supplier.archive", "supplier.restore", "supplier.delete", "supplier.address.create", "supplier.address.update",
-    "supplier.address.deactivate", "supplier.contact.create", "supplier.contact.update", "supplier.contact.deactivate", "supplier.identifier.create",
-    "supplier.identifier.update", "supplier.identifier.delete", "supplier.bank.create", "supplier.bank.update", "supplier.bank.default",
-    "supplier.bank.deactivate", "supplier.bank.reveal", "approval.submit", "approval.approve", "approval.reject", "approval.withdraw",
-    "approval.reassign", "approval.invalidate", "setting.update", "supplier_sku.create", "supplier_sku.update", "import.upload", "import.precheck",
-    "import.confirm", "import.cancel", "supplier.export"];
-  assert.deepEqual(implemented.filter((action) => !covered.has(action)), [], "every action was exercised");
+  // 每個可以寫嘅 action 都由原始碼收集（REV-098 F-5），淨係兩個背景／收貨先寫嘅明文豁免。
+  const written = new Set();
+  const folder = new URL("../../src/modules/supplier/", import.meta.url);
+  for (const file of fs.readdirSync(folder).filter((name) => name.endsWith(".js"))) {
+    for (const match of fs.readFileSync(new URL(file, folder), "utf8").matchAll(/action: "([a-z_.]+)"/gu)) written.add(match[1]);
+  }
+  const notExercised = new Set(["import.expire", "supplier_sku.supply"]);
+  assert.ok(written.size >= 40, `${written.size} actions found in the source`);
+  assert.deepEqual([...written].filter((action) => !exercised.has(action) && !notExercised.has(action)).sort(), [], "every written action was exercised");
 });
 
 integrationTest("TC-106 (AUD-004): detail up to 8192 bytes is stored whole, a larger list is summarised to count/sample/truncated, and anything still too large fails the whole transaction with an alert", async () => {
-  const alerts = [];
-  const logger = { info() {}, warn() {}, error: (event, message, context) => alerts.push({ event, context }) };
-  const audit = new SupplierAuditLogService({ database: h.db, logger, time: { nowMs: () => Date.now() } });
+  // 用 app 真正嘅 system logger，告警要落到 system log 先算（REV-098 F-4）。
+  const audit = new SupplierAuditLogService({ database: h.db, logger: h.application.services.require("logging").logger, time: { nowMs: () => Date.now() } });
+  const alertLines = () => {
+    const directory = path.join(h.logRoot, "system");
+    return fs.readdirSync(directory).flatMap((file) => fs.readFileSync(path.join(directory, file), "utf8").split("\n"))
+      .filter((line) => line.includes("\"supplier.audit.detail_too_large\""));
+  };
   const t = tag();
   const supplierId = await h.seedSupplier(`AUDSZ-${t}`, `Audit Size ${t}`);
   const write = (detail, label) => h.db.withTransaction((connection) => audit.record(connection, {
@@ -282,7 +342,7 @@ integrationTest("TC-106 (AUD-004): detail up to 8192 bytes is stored whole, a la
   await write({ changes: list }, "list");
   assert.deepEqual(JSON.parse(await stored("list")), { changes: { count: 400, sample: list.slice(0, 3), truncated: true } });
 
-  const before = alerts.length;
+  const before = alertLines().length;
   await assert.rejects(h.db.withTransaction(async (connection) => {
     await connection.execute("UPDATE suppliers SET notes = 'written before the audit' WHERE id = ?", [supplierId]);
     await audit.record(connection, { actorUserId: null, actorUsername: "aud51", action: "supplier.update", targetType: "supplier", targetId: supplierId,
@@ -291,7 +351,13 @@ integrationTest("TC-106 (AUD-004): detail up to 8192 bytes is stored whole, a la
   assert.equal(await stored("8193"), null, "no audit row");
   const [[supplier]] = await h.db.query("SELECT notes FROM suppliers WHERE id = ?", [supplierId]);
   assert.equal(supplier.notes, "", "the business write rolled back with it");
-  assert.deepEqual(alerts.slice(before).map((alert) => [alert.event, alert.context.bytes]), [["supplier.audit.detail_too_large", 8193]]);
+  let alerts = [];
+  for (let attempt = 0; attempt < 50 && alerts.length === 0; attempt += 1) {
+    alerts = alertLines().slice(before);
+    if (alerts.length === 0) await new Promise((resolve) => { setTimeout(resolve, 100); });
+  }
+  assert.deepEqual(alerts.map((line) => JSON.parse(line)).map((entry) => [entry.level, entry.context.bytes, entry.context.targetId]),
+    [["error", 8193, supplierId]], "one error event in the system log");
 });
 
 integrationTest("TC-107 (AUD-005): audit search returns only matching rows, newest first with a stable id tie-break, with exact totals and edges, and Bank detail stays masked", async () => {
@@ -438,10 +504,16 @@ integrationTest("TC-014 (LIST-007): detail returns the general data, children, p
   const t = tag();
   const provider = h.application.services.require("supplierCoreProvider");
   const account = `65${String(Date.now()).slice(-10)}`;
+  const termNow = Date.now();
+  const [term] = await h.db.execute(`INSERT INTO payment_terms (code, code_key, name, calculation_type, due_days, status, version, created_at, updated_at)
+    VALUES (?, ?, 'Net 30', 'NET_DAYS', 30, 'ACTIVE', 1, ?, ?)`, [`DT-${t}`, `DT-${t}`.toUpperCase(), termNow, termNow]);
+  const termId = Number(term.insertId);
+  h.cleanup.push(["DELETE FROM payment_terms WHERE id = ?", [termId]]);
   for (const status of ["draft", "pending_approval", "active", "suspended", "blocked", "archived"]) {
     const id = await h.seedSupplier(`DET-${status.slice(0, 3).toUpperCase()}-${t}`, `Detail ${status} ${t}`, status);
     const now = Date.now();
-    await h.db.execute("UPDATE suppliers SET display_name = 'Shown', website = 'https://example.test', general_phone = '2123', general_email = 'a@example.test', notes = 'n' WHERE id = ?", [id]);
+    await h.db.execute(`UPDATE suppliers SET display_name = 'Shown', website = 'https://example.test', general_phone = '2123', general_email = 'a@example.test',
+      notes = 'n', default_payment_term_id = ? WHERE id = ?`, [termId, id]);
     await h.db.execute("INSERT INTO supplier_addresses (supplier_id, label, status, created_at, updated_at) VALUES (?, 'HQ', 'active', ?, ?)", [id, now, now]);
     await h.db.execute("INSERT INTO supplier_contacts (supplier_id, name, status, created_at, updated_at) VALUES (?, 'Amy', 'active', ?, ?)", [id, now, now]);
     await h.db.execute(`INSERT INTO supplier_identifiers (supplier_id, identifier_type, issuer_country_code, identifier_value, identifier_value_key, created_at, updated_at)
@@ -453,7 +525,7 @@ integrationTest("TC-014 (LIST-007): detail returns the general data, children, p
     assert.equal(detail.status, 200, `${status}: ${detail.text}`);
     const data = detail.json.data;
     assert.deepEqual([data.status, data.displayName, data.website, data.generalPhone, data.generalEmail, data.notes, data.defaultCurrencyCode, data.defaultPaymentTermId],
-      [status, "Shown", "https://example.test", "2123", "a@example.test", "n", "HKD", null], status);
+      [status, "Shown", "https://example.test", "2123", "a@example.test", "n", "HKD", termId], status);
     assert.deepEqual([data.addresses.length, data.contacts.length, data.identifiers.length], [1, 1, 1], status);
     assert.deepEqual(Object.keys(data).filter((key) => /order|invoice|total|amount|balance|payment(?!Term)/iu.test(key)), [], `${status}: no transaction data`);
     const banks = await h.send(h.users.view, h.route("GET /api/v1/suppliers/:id/bank-accounts"), { ids: { id } });
