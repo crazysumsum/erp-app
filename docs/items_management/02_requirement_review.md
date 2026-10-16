@@ -57,3 +57,9 @@ The review did not modify the established business semantics and did not mark an
 Status: **MATERIAL DECISIONS ANSWERED; REVIEW STILL CHANGES_REQUESTED**. `HD-001` retained standalone SKU creation and `HD-002` confirmed `ERP Product Owner (Sam)` as the accountable module owner on 2026-09-11. Existing requirement quality remains conditional on implementation evidence, independent review and formal approvals; no requirement was removed or weakened.
 
 The current requirement definitions and traceability are structurally prepared. Owner approval, current plan hash approval and actual business/QA/Ops/compliance decisions remain absent; no textual “conditional approval” in this file authenticates them.
+
+## Committed-receipt provider requirement review — 2026-10-14
+
+New FR-067 is a proposed Item-only contract from Sam's explicit DESIGN_AND_PLAN request and Purchasing §2.4/§3.6/P0-T05. Current master facts/warnings are separated from consumer-owned PO confirmation/snapshot/quantity/permission/reason and commit-time revalidation. Existing purchase/inventory/Sales/generic rules are retained; no serial eligibility, source authority or receipt grant is inferred. A dedicated provider may be implemented before GR runtime, but cannot complete TASK-043 or DEF-107.
+
+Proposed details requiring new human DESIGN/PLAN approval: exact Map/UOM shape, four current-state warnings (not snapshot changes), strict time/100-ID bound, missing-before-serial errors and advisory/transaction-injected read semantics. The initial actual separate-agent review (REV-046) found no blocking findings; that is not human approval. TC-019 and manual UAT-018 are linked as PLANNED/NOT_RUN. No new requirement/test was executed, no older evidence promoted to this baseline.
