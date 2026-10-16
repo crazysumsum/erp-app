@@ -184,6 +184,19 @@ jobs:
           test "$status" -eq 0
           grep -qx "# pass 2" capacity.tap
 
+      - name: Run Sales import capacity test without coverage instrumentation
+        working-directory: server
+        # Both original 50MiB cases must pass their unchanged 30-second worker deadline.
+        run: |
+          precheck_status=0
+          node --test --test-concurrency=1 --import ./test-support/testEnv.js --test-reporter=tap --test-name-pattern='TC-035 real registered worker completes bounded50MiB/100000-row ingestion inside its unchanged30-second deadline' test/integration/salesImportPrecheck.integration.test.js > import-capacity.tap || precheck_status=$?
+          cat import-capacity.tap
+          test "$precheck_status" -eq 0
+          grep -qx "# tests 3" import-capacity.tap
+          grep -qx "# pass 3" import-capacity.tap
+          grep -qx "# fail 0" import-capacity.tap
+          grep -qx "# skipped 0" import-capacity.tap
+
   build:
     name: Build frontend
     runs-on: ubuntu-latest

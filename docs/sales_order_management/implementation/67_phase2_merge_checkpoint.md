@@ -1,0 +1,11 @@
+# P2 observed merge checkpoint
+
+PR190 is actually MERGED at2026-10-07T08:12:11Z. Main4fb62b001d331f719ac9aa1e7aefbdebbdd298f3 has exact parents8ac45e94e25962da0988e297ae0a93cfb65191e8 and reviewed candidate381834f80a860e86f1db4aec269d385e32a73f1b; its entire Git tree equals the candidate. Source68b8adc3abe418898ef510c85d665b136ed9e7c64582e989d178c275593a8d31 and approved DESIGN c45760f… / PLAN fc7b1d… remain identical. This proves integration mapping of developer evidence; no new main CI is invented.
+
+All28 approved developer contracts pass. Two actual independent reviewers approve exact committed381834f: backend61Gitblob hashes/actualrunJSON+artifactSHAs and UIsevenblob hashes/17realPlaywright+94client/lint/build. GitHub workflow37590107738 completedSUCCESS on381834f; Dependency audit, Lint, Test(server+client,MySQLintegration), Build frontend and Browser tests(Playwright) allSUCCESS. MERGE_READY PHASE003 actually returned LOCAL_CHECKS_PASS with zeroissues before normalauthorized ghmerge, with freshlyverified main8ac and exacthead guard; noadmin/waiver.
+
+Server2800PASS/0FAIL/14approvedoptionalcoverage skips and37criticalfloors, client808PASS, native74uniquePASS,17actualbrowserPASS andtwo50-usercapacitycasesPASS remain DEVELOPER results. TenoriginalInventorynative suites execute separately andPASS. TASK028–037 developer DoD and the P2 mergegroup are complete. Formal60 technical cases, UAT, business/release acceptance and P3 implementation remain separate and unexecuted.
+
+Temporary DEC023 rights were revoked and SHOWGRANTS exactly restored. Four ownedMySQLPIDs36251/62388/62429/62474 exited, socketsgone, tenInventory/Phase1browser aliases stopped after exactPIDUIDargv checks; datadirs/syntheticdata/privateproof retained. No other process, account, worktree or module was cleaned.
+
+Primary main safely fastforwarded to4fb62b0 and is clean. The complete localmodule/state240/evidence snapshot is preserved privately before restoring only ownedfeature bookkeeping and removing the resolved P2worktree/localremote branch. Actual final cleanup will be recorded separately in completion-pr190.json; this immutable checkpoint does not pretend a future deletion already occurred. Raw credentials/screenshots/logs/JUnit are not exported. The original blockedruns/reviews/decisions remain in the preserved snapshot and Git history.

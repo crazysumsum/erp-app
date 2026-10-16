@@ -115,7 +115,7 @@ integrationTest("Sales ATP reads newly committed lot expiry after an earlier RR 
   const audit = f.service.audit;
   f.service.audit = { async recordSucceeded() { throw new Error("Synthetic audit failure"); } };
   await assert.rejects(() => f.db.withTransaction(tx => f.service.reserveAvailableForSalesBatchInTransaction(tx, fail)), e => e.cause?.message === "Synthetic audit failure");
-  const [[count]] = await f.db.query("SELECT COUNT(*) AS n FROM inventory_operation_requests WHERE source_module = 'SALES' AND source_document_id = '70004'");
+  const [[count]] = await f.db.query("SELECT COUNT(*) AS n FROM inventory_operation_requests WHERE source_module = 'SALES' AND source_document_id = '70004' AND source_event_id = ?", [fail.source.eventId]);
   assert.equal(Number(count.n), 0);
   f.service.audit = audit;
 });

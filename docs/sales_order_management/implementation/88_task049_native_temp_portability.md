@@ -1,0 +1,9 @@
+# TASK-049 — Native retention fixture temporary-directory portability
+
+The explicit private-root native retention fixture now uses Node `os.tmpdir()` instead of a Darwin-specific `/private/tmp/` parent. The existing five case bodies, canonical default-root case, synthetic SQL, permissions and cleanup guards are unchanged. The exact two-line proposal was approved by the separate whole-Phase reviewer; DEF-003 remains RETEST pending actual new-candidate native and Ubuntu CI execution. No Linux failure or pass is inferred from static review.
+
+The previous immutable source `52ecc9959d19ee6cc52ad4896c290cc0a3f399012b6ca7f4322158a4c0993a7a` completed all original 33 developer contracts, all 35 real Playwright cases and 38 server per-file floors. Server coverage was 93.81% lines / 85.89% branches / 92.54% functions, with 3107 passes, no failures and 132 explicitly reconciled opt-in/formal-performance skips. These are historical results, not qualification for the changed source.
+
+The separately reviewed supplemental transition mutation was actually killed by two TC-037 failures (123 cases, 121 passes, 2 expected failures, zero skips). Exact source bytes, mode, HEAD and specification baselines were restored, then the original standard unit contract passed all 123 cases. This experiment is supplemental evidence, not a substitute for any of the original 33 contracts.
+
+The qualified historical bundle, artifact hashes and mutation receipt remain private; all canonical run references and historical failures remain retained. Latest main Backorder and CI integration, a fresh complete 33-contract run, current five CI checks, independent final Phase review, exact approved missing-reference retirement and the unmodified merge Gate remain required. Formal acceptance, UAT and production are outside this implementation stage.

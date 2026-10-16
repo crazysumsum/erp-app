@@ -20,7 +20,7 @@ test("TC-013 Sequence refuses exhaustion and invalid allocation inputs before in
   const tx = { async execute() { writes++; return [{ affectedRows: 1 }]; }, async query() { return [[{ next_value: 1000000 }]]; } };
   await assert.rejects(() => service.nextNumberInTransaction(tx, { documentType: "SALES_ORDER", nowMs: 0 }), { code: "SALES_SEQUENCE_EXHAUSTED" });
   assert.equal(writes, 1);
-  for (const input of [{ documentType: "IMPORT_BATCH", nowMs: 0 }, { documentType: "QUOTATION", nowMs: NaN }])
+  for (const input of [{ documentType: "UNKNOWN", nowMs: 0 }, { documentType: "QUOTATION", nowMs: NaN }])
     await assert.rejects(() => service.nextNumberInTransaction(tx, input), TypeError);
   assert.equal(writes, 1);
 });
@@ -29,4 +29,10 @@ test("TC-013 Sales business month stays HKT when the application clock timezone 
   const tx = { async execute() { return [{ affectedRows: 1 }]; }, async query() { return [[{ next_value: 1 }]]; } };
   assert.equal(await new SalesSequenceService({ time: utc }).nextNumberInTransaction(tx,
     { documentType: "QUOTATION", nowMs: Date.parse("2026-09-30T16:00:00Z") }), "QT-202610-000001");
+});
+
+test("TC-034 Import batch uses existing transactional HKT allocation", async () => {
+  const tx = { async execute() { return [{ affectedRows: 1 }]; }, async query() { return [[{ next_value: 7 }]]; } };
+  assert.equal(await new SalesSequenceService({ time }).nextNumberInTransaction(tx,
+    { documentType: "IMPORT_BATCH", nowMs: Date.parse("2026-09-30T16:00:00Z") }), "SI-202610-000007");
 });

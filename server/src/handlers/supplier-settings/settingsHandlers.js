@@ -52,7 +52,7 @@ export class UpdateSupplierSettingsHandler extends SupplierSettingsHandler {
   static handlerName = "updateSupplierSettings";
 
   static api = {
-    method: "POST",
+    method: "POST", inputCoercion: false,
     path: "/api/v1/supplier-settings/update",
     description: "修改供應商模組設定；只影響之後提交的啟用操作。",
     authType: "jwt-device-password",

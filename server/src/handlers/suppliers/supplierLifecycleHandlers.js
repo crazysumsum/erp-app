@@ -52,7 +52,7 @@ class SupplierLifecycleHandler extends BaseRequestHandler {
 
 function api({ path, description, authType, policy = SUPPLIER_MGMT_POLICY, body = SUPPLIER_LIFECYCLE_SCHEMA, response = SUPPLIER_DETAIL_SCHEMA }) {
   return {
-    method: "POST", path, description, ...(authType ? { authType } : {}), authorizationPolicies: policy,
+    method: "POST", inputCoercion: false, path, description, ...(authType ? { authType } : {}), authorizationPolicies: policy,
     requestSchema: { params: SUPPLIER_ID_PARAMS_SCHEMA, query: EMPTY_SUPPLIER_SCHEMA, body },
     responseSchema: { 200: response }
   };

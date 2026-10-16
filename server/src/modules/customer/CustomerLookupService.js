@@ -170,6 +170,28 @@ export class CustomerLookupService {
     return creditProjection(row);
   }
 
+  async getSalesPrecheckSnapshotsInTransaction(transaction, customerIds, { atMs } = {}) {
+    requireExecutor(transaction); requireAtMs(atMs);
+    if (!Array.isArray(customerIds)) throw new TypeError("Customer precheck requires an ID array");
+    const ids = [...new Set(customerIds)];
+    if (ids.length > 100) throw new TypeError("Customer precheck supports at most100 unique IDs");
+    for (const id of ids) requireId(id, "customerId");
+    ids.sort((a, b) => a - b);
+    const result = new Map(ids.map(id => [id, null]));
+    if (!ids.length) return result;
+    const [rows] = await transaction.query(`SELECT c.id,c.customer_code,c.legal_name,c.default_currency_code,
+      c.default_payment_term_id,c.status,c.version,p.credit_limit,p.credit_currency_code,p.credit_status,p.version AS credit_version
+      FROM customers c LEFT JOIN customer_credit_profiles p ON p.customer_id=c.id
+      WHERE c.id IN (${ids.map(() => "?").join(",")}) ORDER BY c.id`, ids);
+    for (const row of rows) result.set(Number(row.id), Object.freeze({
+      customerId: Number(row.id), customerCode: row.customer_code, legalName: row.legal_name,
+      defaultCurrencyCode: row.default_currency_code,
+      defaultPaymentTermId: row.default_payment_term_id === null ? null : Number(row.default_payment_term_id),
+      status: row.status, customerVersion: Number(row.version), credit: creditProjection(row)
+    }));
+    return result;
+  }
+
   async getSalesSnapshotInTransaction(transaction, customerId, { atMs } = {}) {
     requireExecutor(transaction); requireId(customerId, "customerId"); requireAtMs(atMs);
     const [[customer]] = await transaction.query(

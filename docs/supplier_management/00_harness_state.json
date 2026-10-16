@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 354,
+  "revision": 359,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "29a0615a61808b3747cd8feb522d051ba5a312da6fb0fccf36e7cf9746286775",
     "plan": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
-    "code_commit": "b8b27ec125d89d31a4e4a4b8614d409f8aa1d701",
-    "source_fingerprint": "d289275eff4031d24398cd6eedde8584b52e7150fc4da0caeafcf2414763a5b5",
-    "worktree": "/Users/sam/Documents/workspace/erp-supplier-hd107c",
-    "default_commit": "985411544dc278ee451ec542fd9a14ce50133bab",
+    "code_commit": "f9217eb33802524ad74576783f3c21a05882c1ca",
+    "source_fingerprint": "294afb1037c2f2ef35b087b5bebc1214f2e4e16cf1952509003a186eafba652b",
+    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t51e",
+    "default_commit": "dd63519ecf18210e31b0462f6d2f91234738a76f",
     "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
   },
   "runtime": {
@@ -2253,6 +2253,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-096",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-051 step 2b, AUTH carriers and HD-109 A)",
+      "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-task-051-tests-3 at fcd66e06 (+ merge of main)",
+      "reviewed_baseline": "29a0615a61808b3747cd8feb522d051ba5a312da6fb0fccf36e7cf9746286775",
+      "source_ref": "docs/supplier_management/implementation/99_rev_096_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -4235,6 +4247,50 @@
       "source_ref": "PR #239 CI Lint (run 38699144924, job 116302821750) failed with 27 no-undef errors in the evidence scripts under docs/supplier_management/evidence/20261015-hd107-client/, which `eslint .` covers. The local check had read only the last line of the lint output, which was blank, and never its exit code. Fixed with `/* global */` declarations and by removing an unused import from the evidence copy of the server script. `npx eslint .` now exits 0, checked by exit code. Client code was unchanged.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-15T15:38:18+08:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "HD-107 client, G4/G5 (PR #239) merged to main",
+      "code_commit": "dd63519ecf18210e31b0462f6d2f91234738a76f",
+      "spec_baseline": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
+      "source_fingerprint": "4aeb1cbd3b2ae5b9c0a8d5210e5c4b6a7d8ba3422901d6f301fe734e368427be",
+      "status": "PASS",
+      "source_ref": "PR #239 merged as dd63519ecf18210e31b0462f6d2f91234738a76f at 2026-10-15T08:32:49Z under rule B as extended by the Product Owner the same day ('批準如果 main 嘅改動只係其他模組嘅 docs/ 或者佢哋自己嘅測試檔案…就 merge main 入嚟之後直接 merge'). Gate, in code: previous head bee23704 had all five check-runs success; the merge head 2cd91e65 has bee23704 as first parent and main 48ba4b7f (Customer #240) as second; origin/main was still 48ba4b7f; the drift was three docs/customer_management files and server/test/recovery/customerLocalRestore.test.js, nothing naming supplier. 2cd91e65 itself had no CI run when merged. --match-head-commit used. Earlier attempts were refused by the gate: once for Customer #238 (a Customer integration test, before the rule was extended; main merged in and CI re-ran green on bee23704), and once by a gate bug of mine (compared main with HEAD^1^2 instead of HEAD^2), which refused rather than merged. Review REV-095 CHANGES_REQUESTED (0 Critical/High), follow-ups applied; not re-reviewed. Recorded as the first commit of the next change PR.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-15T16:35:49+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-051 step 2b: AUTH-001..010 carriers (TC-111..113, TC-116..120) and HD-109 A",
+      "code_commit": "a1fecf40fc1198db1664f917de9975495c51a73c",
+      "spec_baseline": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
+      "source_fingerprint": "ba5b9e16c22b01e28e749055790cca71e85facfd6c28d037e65a384c1eacb90c",
+      "status": "PASS",
+      "source_ref": "Local, not CI, on erp_t51 (throwaway MySQL 3450). New server/test/integration/supplierSecurityAcceptance.integration.test.js reads the routes the app actually registered (system log api.registration.completed) and compares all 57 with a contract table from design §3.2/§6 plus decided deviations (HD-020, HD-067, HD-094). Supplier server glob: 642 tests, all pass. supplier-security suite with only its profile env keys: 642 cases, 0 failed, 0 skipped, no duplicate names, all 10 required IDs present. Client vitest 109 files / 894 tests; eslint exit 0. HD-109 A: inputCoercion:false on every Supplier JSON POST route (29 declarations; multipart upload excluded); import confirm/cancel get a string ID params schema (15 digits max). Real browser against the app: 12/12 write-flow checks, 11 writes accepted with typed JSON (evidence/20261015-t51-auth/). Negative controls, each reverted: reveal policy without bank.view (TC-112, TC-116 red); archive authType jwt (TC-116); account number in the reveal audit (TC-118); open create schema (TC-119); identifier ER_DUP_ENTRY unmapped (TC-120, 500); notes in the provider projection (TC-113); detail route public (TC-111); create coercing again (TC-117, both the static and the behavioural half); integer import params (TC-117); v-html for the list name (client test). One control did not discriminate and was replaced: a concurrent same-Code create is refused by the app before the DB, so removing the Code ER_DUP_ENTRY mapping left TC-120 green; the identifier constraint is used instead. Mutation runs leaked three Supplier rows into erp_t51; they were deleted and checked at 0.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-15T17:14:45+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Correction to the previous AUTH-carrier record: the Supplier Code race is settled by ER_DUP_ENTRY, not by the application",
+      "code_commit": "f9217eb33802524ad74576783f3c21a05882c1ca",
+      "spec_baseline": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
+      "source_fingerprint": "294afb1037c2f2ef35b087b5bebc1214f2e4e16cf1952509003a186eafba652b",
+      "status": "PASS",
+      "source_ref": "The previous MANUAL_TEST record said a concurrent same-Code create is refused by the app before the DB, so removing the Code ER_DUP_ENTRY mapping left TC-120 green. REV-096 H-1 showed the reason was a gap in the test, not the mechanism: the pre-check SELECT does not lock, concurrent creates reach the unique index, and with the mapping removed racers answer 500, which TC-120 did not check. TC-120 now requires every racer to be 201 or 409 SUPPLIER_CODE_TAKEN; with both mappings removed two runs gave 201, 500 x4, 409 and failed. The earlier record is left as written.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-15T17:36:49+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "REV-096 follow-ups: local checks",
+      "code_commit": "f9217eb33802524ad74576783f3c21a05882c1ca",
+      "spec_baseline": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
+      "source_fingerprint": "294afb1037c2f2ef35b087b5bebc1214f2e4e16cf1952509003a186eafba652b",
+      "status": "PASS",
+      "source_ref": "Local, not CI, on erp_t51. supplier-security suite with only its profile env keys: 642 cases, 0 failed, 0 skipped, no duplicate names, all 10 required IDs present (TC-114/115 have two carriers each). Client vitest 110 files / 895 tests; eslint exit 0; Supplier Playwright (API mocked) 47/47. Negative controls, each reverted: Code mappings removed (TC-120, twice); integer import params (TC-117); a public Settings page (pageGuards.test). No sec51/T117/APR test rows left in erp_t51; activation approval setting back to off.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-15T17:36:49+08:00"
     }
   ],
   "pending_decisions": [
@@ -5634,6 +5690,28 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-15: 'A、C1，review 完 CI 過就 merge'."
+    },
+    {
+      "id": "HD-109",
+      "impact": "MAJOR",
+      "question": "AUTH-007 (TC-117) requires wrong types to answer 400 and booleans not to accept arbitrary truthy values. Supplier routes run with the framework default coerceTypes:true, so a JSON body is coerced before validation: activate:1 becomes true and creates an ACTIVE Supplier (observed 201 on erp_t51), supplierName:12345 becomes \"12345\", notes:true becomes \"true\", defaultPaymentTermId:\"1\" becomes 1, version:\"1\" becomes 1. Query strings stay strict for booleans (\"1\", \"yes\", \"TRUE\" refused). (A) set the existing per-route inputCoercion:false on every Supplier POST route with a JSON body (not the multipart upload, not GET), so wrong JSON types answer 400; (B) keep coercion and record it as an accepted deviation from AUTH-007; (C) like A, but also on GET routes (would break numeric query strings; not recommended).",
+      "affected_ids": [
+        "TC-117",
+        "TASK-051"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-15: 'HD-109 A' — inputCoercion:false on every Supplier POST route with a JSON body; multipart upload and GET routes unchanged."
+    },
+    {
+      "id": "HD-110",
+      "impact": "MINOR",
+      "question": "AUTH-010 (TC-120): design §6.11 lists one 404 code SUPPLIER_CHILD_NOT_FOUND for a child that is missing or belongs to another Supplier. The implementation returns one code per child type: SUPPLIER_ADDRESS_NOT_FOUND, SUPPLIER_CONTACT_NOT_FOUND, SUPPLIER_IDENTIFIER_NOT_FOUND, SUPPLIER_BANK_NOT_FOUND, SUPPLIER_SKU_RELATION_NOT_FOUND (supplierErrors.js supplierChildNotFound, since the first child commit). The client depends on none of them; server tests depend on the per-type codes. (A) keep the per-type codes and record an accepted deviation from §6.11 without editing the design, as REV-064 I-2 did for the Currency/Payment Term codes; (B) change the server to SUPPLIER_CHILD_NOT_FOUND as designed and update the tests.",
+      "affected_ids": [
+        "TC-120",
+        "TASK-051"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-15: 'HD-110 A' — keep the per-type child 404 codes as an accepted deviation from design §6.11; the design is not edited (same handling as REV-064 I-2)."
     }
   ],
   "external_actions": [
@@ -6714,5 +6792,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Open the HD-107 client PR; merge when CI on its head is all SUCCESS and main has not moved (Product Owner: 'review 完 CI 過就 merge'). Then the remaining TASK-051 step 2b work."
+  "next_safe_action": "Open the PR for TASK-051 step 2b part 3 (AUTH carriers, HD-109 A, HD-110 A); merge when CI is all SUCCESS and main has not moved (rule B as extended)."
 }

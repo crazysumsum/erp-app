@@ -1,31 +1,31 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 206,
+  "revision": 209,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
   "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-004",
-  "current_task": "TASK-035",
+  "current_task": "TASK-033",
   "baseline": {
     "design": "fa4dbd1ef42d14fab8321b3ced7be4093dbcabc8408c15dda852f9cd5777906b",
     "plan": "a1d5e05a8d2eff9a4d76435c701f8ebc054b5e7a1ba27b0cf366643cbf685d9b",
-    "code_commit": "dd63519ecf18210e31b0462f6d2f91234738a76f",
-    "source_fingerprint": "cb7a6bc42c98c80f01c539c8fa6cc4ef7fb32a3f4c3330cf8c255c214802a97a",
-    "worktree": "/private/tmp/erp-customer-hd013-rpo-rto-waiver",
-    "default_commit": "dd63519ecf18210e31b0462f6d2f91234738a76f",
+    "code_commit": "52bb48ad35f1da41508c7bf608af4e67c630dae9",
+    "source_fingerprint": "9bb750facdd83862da50991dd459b808022a115ba08bef701560c0ccfdea3d9b",
+    "worktree": "/private/tmp/erp-customer-operational-security-checks",
+    "default_commit": "52bb48ad35f1da41508c7bf608af4e67c630dae9",
     "mode_entry_commit": "392b9f9db0f36f5a3bbabf2854bf3ee20a7bf227"
   },
   "runtime": {
-    "instance_id": "customer-hd013-docs-20261015",
-    "owner": "/root Customer decision record only",
+    "instance_id": "customer-ops-security-20261015",
+    "owner": "/root Customer TASK033 developer checks",
     "resources": {
-      "workspace": "/private/tmp/erp-customer-hd013-rpo-rto-waiver",
-      "mysql-schema": "not allocated; prior owned13369 stopped/schemas+datadir removed (PR240comment6187844633)",
-      "customer-file-root": "not allocated",
+      "workspace": "/private/tmp/erp-customer-operational-security-checks",
+      "mysql-schema": "new loopback13378 erp_customer_ops_security_20261015; /private/tmp/erp-customer-security-runtime.TT2dab/mysql",
+      "customer-file-root": "not allocated; DB/bank service tests only",
       "customer-import-root": "not allocated",
-      "web-port": "not allocated; docs-only"
+      "web-port": "not allocated; no UI change"
     },
     "lease_ref": null
   },
@@ -1938,6 +1938,25 @@
         "NFR-015 timing acceptance"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-048",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Actual current Sam user: RPO／RTO 已豁免，請繼續推進 Customer Management 其餘可獨立執行的工作；完整下游整合驗收保持阻塞，沒有需要我決策的事就不要停下來，完成驗證後建立 PR 並合併。 Scope below is existing TASK033 local developer preparation, no new production/security policy or formal acceptance authorization.",
+      "recorded_at": "2026-10-15T09:10:06Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a1d5e05a8d2eff9a4d76435c701f8ebc054b5e7a1ba27b0cf366643cbf685d9b",
+      "code_commit": "52bb48ad35f1da41508c7bf608af4e67c630dae9",
+      "scope": [
+        "TASK-033 local TC-080/081 bank least-privilege, freshpermission/audit/integrity denial and owned SQL session-revocation developer subsets",
+        "server/test/integration/customerOperationalGuards.integration.test.js",
+        "docs/customer_management/**",
+        "new task-owned synthetic MySQL/migrations/SQLusers/role/session only; no shared3306/production or Currency privilege policy"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -2740,6 +2759,18 @@
       "reviewer": "/root/customer_task011_review (actual separate read-only agent)",
       "reviewed_baseline": "a1d5e05a8d2eff9a4d76435c701f8ebc054b5e7a1ba27b0cf366643cbf685d9b",
       "source_ref": "Actual separate reviewer APPROVE HD013 current docs/state205 onfreshmain dd63519e: DESIGNfa4dbd1e/PLANa1d5e05a, exactonlyTC086087 requiredexecutionwaived, NOTPROVENobjectivesretained, TC085/otherops/security/CI/downstream/UAT/release unchanged. validate_traceability --check-approvalsPASS; noRequiredfindings. Notproduct/formaltestapproval.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-068",
+      "method": "SEPARATE_AGENT",
+      "author": "/root Customer local operational security checks",
+      "reviewer": "/root/customer_task011_review (actual separate read-only agent)",
+      "reviewed_baseline": "9bb750facdd83862da50991dd459b808022a115ba08bef701560c0ccfdea3d9b",
+      "source_ref": "Actual separate reviewer: no Required finding on TASK033 scoped bank grant/realservice/freshauth/auditfail/GCMcorruption/safeevent/owneduser+schema SQLsession oracles and connected product paths. No expandedCurrency/schema/global/auditmutation privilege; HD013/formalOps/downstreamblocked unchanged. Reviewer noDBloadsyntax/diffPASS; localrealMySQLresults/finalimmutablehead recheckpending, no formalapproval inferred.",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -3626,6 +3657,17 @@
       "subject": "TASK035 independent restore sample/set integrity subset",
       "status": "PASS",
       "source_ref": "implementation/phase4-restore-readiness-results.json; final593d17f4test sourcefp816c5877;3restore+35relatedunit PASS0skip,lint/build+traceability/boundarylocalPASS. ExpectedREDemptyaddress,fixtureauditnamefailure,mutationexpectedfailure retained; no productchange/formalacceptance. Review requested documentation narrowed to inventory rather than deployedcompatibility verification; assignee explicitlychecked."
+    },
+    {
+      "code_commit": "52bb48ad35f1da41508c7bf608af4e67c630dae9",
+      "spec_baseline": "a1d5e05a8d2eff9a4d76435c701f8ebc054b5e7a1ba27b0cf366643cbf685d9b",
+      "source_fingerprint": "9bb750facdd83862da50991dd459b808022a115ba08bef701560c0ccfdea3d9b",
+      "actor": "/root Customer developer operational security checks",
+      "observed_at": "2026-10-15T09:19:08Z",
+      "kind": "MANUAL_TEST",
+      "subject": "TASK033 local TC080081 bank security and owned SQL session revocation",
+      "status": "PASS",
+      "source_ref": "implementation/phase4-operational-security-results.json;73files298PASS0FAIL0SKIP20.655652s;8operationalchildren+parentPASS; mutation detected and product restored diff0;lint/build/traceability PASS. Localdeveloperonly; non-nullCurrency/deployedpolicy/realalert/scanner/formalacceptance notcertified; HD013waiver unchanged."
     }
   ],
   "pending_decisions": [
@@ -4809,24 +4851,56 @@
       "kind": "GIT_PUSH",
       "target": "origin codex/customer-hd013-rpo-rto-waiver",
       "idempotency_key": "customer-hd013-EXT-PUSH-100",
-      "status": "PLANNED",
-      "source_ref": "Actual Sam explicit HD013 approval plus standing scopedPR/normalmerge authority; no bypass; docs-only decision sync, no new data/acceptance execution or production change. Observe real target before retry."
+      "status": "CONFIRMED",
+      "source_ref": "Actual Sam explicit HD013 approval plus standing scopedPR/normalmerge authority; no bypass; docs-only decision sync, no new data/acceptance execution or production change. Observe real target before retry. Actual GitHub PR241 closurecomment6188463352 confirms MERGED52bb48ad at2026-10-15T09:00:53Z, exacthead d81e4caf fiveCI38707146138SUCCESS, actualreview6188061594, scope/traceabilitypostmergePASS and ownbranch/worktreecleanupcomplete. HD013timingwaiver effective; no replay."
     },
     {
       "id": "EXT-PR-101",
       "kind": "PR_CREATE",
       "target": "main <- codex/customer-hd013-rpo-rto-waiver docs-only human RPO/RTO acceptance exception",
       "idempotency_key": "customer-hd013-EXT-PR-101",
-      "status": "PLANNED",
-      "source_ref": "Actual Sam explicit HD013 approval plus standing scopedPR/normalmerge authority; no bypass; docs-only decision sync, no new data/acceptance execution or production change. Observe real target before retry."
+      "status": "CONFIRMED",
+      "source_ref": "Actual Sam explicit HD013 approval plus standing scopedPR/normalmerge authority; no bypass; docs-only decision sync, no new data/acceptance execution or production change. Observe real target before retry. Actual GitHub PR241 closurecomment6188463352 confirms MERGED52bb48ad at2026-10-15T09:00:53Z, exacthead d81e4caf fiveCI38707146138SUCCESS, actualreview6188061594, scope/traceabilitypostmergePASS and ownbranch/worktreecleanupcomplete. HD013timingwaiver effective; no replay."
     },
     {
       "id": "EXT-MERGE-102",
       "kind": "PR_MERGE",
       "target": "Customer HD013 documentation PR -> main after actual review/currentcandidate CI/freshmain",
       "idempotency_key": "customer-hd013-EXT-MERGE-102",
+      "status": "CONFIRMED",
+      "source_ref": "Actual Sam explicit HD013 approval plus standing scopedPR/normalmerge authority; no bypass; docs-only decision sync, no new data/acceptance execution or production change. Observe real target before retry. Actual GitHub PR241 closurecomment6188463352 confirms MERGED52bb48ad at2026-10-15T09:00:53Z, exacthead d81e4caf fiveCI38707146138SUCCESS, actualreview6188061594, scope/traceabilitypostmergePASS and ownbranch/worktreecleanupcomplete. HD013timingwaiver effective; no replay."
+    },
+    {
+      "id": "EXT-MYSQL-103",
+      "kind": "ISOLATED_RUNTIME",
+      "target": "new loopback13378 erp_customer_ops_security_20261015; /private/tmp/erp-customer-security-runtime.TT2dab/mysql",
+      "idempotency_key": "customer-ops-security-EXT-MYSQL-103",
+      "status": "CONFIRMED",
+      "source_ref": "APPROVAL-SCOPE048 actualSam independentcontinue/verify/PRmerge; bank/nullCurrencylocalfixtures/ownedSQLsessiononly; charter definedbeforeautomation/execution; no shared3306/production/realthirdpartyalert/scanner/othermodulepolicy. Port13378 observedfree, unique temp rootcreated; service/schema notstarted. No RPO/RTOformaltest. Actual MySQL26.7 port13378/datadirTT2dab/mysql verified; migrations0082 unchanged. Final73files298PASS0FAIL0SKIP20.655652s with exacttest60e4111c/sourcefp9bb750fa; actual bank/freshauth/auditfail/integrity/session casesPASS; expectedRED/mutation and setup/concurrencyfailures retained in sanitizedresults. Ownaccounts/sessions/canaries/users/customers all0; ownedservice retained only for postmergerecheck."
+    },
+    {
+      "id": "EXT-PUSH-104",
+      "kind": "GIT_PUSH",
+      "target": "origin codex/customer-operational-security-checks",
+      "idempotency_key": "customer-ops-security-EXT-PUSH-104",
       "status": "PLANNED",
-      "source_ref": "Actual Sam explicit HD013 approval plus standing scopedPR/normalmerge authority; no bypass; docs-only decision sync, no new data/acceptance execution or production change. Observe real target before retry."
+      "source_ref": "APPROVAL-SCOPE048 actualSam independentcontinue/verify/PRmerge; bank/nullCurrencylocalfixtures/ownedSQLsessiononly; charter definedbeforeautomation/execution; no shared3306/production/realthirdpartyalert/scanner/othermodulepolicy. Port13378 observedfree, unique temp rootcreated; service/schema notstarted. No RPO/RTOformaltest."
+    },
+    {
+      "id": "EXT-PR-105",
+      "kind": "PR_CREATE",
+      "target": "main <- codex/customer-operational-security-checks scoped local Customer security checks",
+      "idempotency_key": "customer-ops-security-EXT-PR-105",
+      "status": "PLANNED",
+      "source_ref": "APPROVAL-SCOPE048 actualSam independentcontinue/verify/PRmerge; bank/nullCurrencylocalfixtures/ownedSQLsessiononly; charter definedbeforeautomation/execution; no shared3306/production/realthirdpartyalert/scanner/othermodulepolicy. Port13378 observedfree, unique temp rootcreated; service/schema notstarted. No RPO/RTOformaltest."
+    },
+    {
+      "id": "EXT-MERGE-106",
+      "kind": "PR_MERGE",
+      "target": "scoped Customer security PR -> main after currentcandidateCI/actualreview/freshmain",
+      "idempotency_key": "customer-ops-security-EXT-MERGE-106",
+      "status": "PLANNED",
+      "source_ref": "APPROVAL-SCOPE048 actualSam independentcontinue/verify/PRmerge; bank/nullCurrencylocalfixtures/ownedSQLsessiononly; charter definedbeforeautomation/execution; no shared3306/production/realthirdpartyalert/scanner/othermodulepolicy. Port13378 observedfree, unique temp rootcreated; service/schema notstarted. No RPO/RTOformaltest."
     }
   ],
   "evidence_files": [
@@ -4845,7 +4919,8 @@
     "implementation/def034001-search-branch-plans.jsonl",
     "implementation/ui-defects-remediation-report.md",
     "implementation/phase4-local-recheck-results.jsonl",
-    "implementation/phase4-restore-readiness-results.json"
+    "implementation/phase4-restore-readiness-results.json",
+    "implementation/phase4-operational-security-results.json"
   ],
   "defects": [
     {
@@ -4901,5 +4976,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Publish/review normal docs-only HD013 decision PR; formal TC086/087 timing acceptance WAIVED_BY_HUMAN/APPROVED by Sam, objective attainment NOT_PROVEN, no further required timing acceptance runs. Keep backup integrity/remaining Operations/Security controls TASK033/035 IN_PROGRESS, TASK030031032034/full downstream BLOCKED, TASK036PENDING. Preserve original evidence; do not reuse oldspec formalresults as newbaseline PASS. Freshmain dd63519e SupplierPR239 inheritedbyff-onlywithoutCustomerconflict; no othermodule authoredchange. Currentdocs-onlydelta andwaiver DESIGN/PLAN unchanged; priorprototype/sourceproofs historicalnotnewbaselineformalPASS."
+  "next_safe_action": "Obtain actual separate review of scoped Customer security test/docs, publish and observe exactcandidate five CI gates, fetch freshmain/integrateifmoved then normal PR merge; actualpostmerge focusedcheck and owner-onlyschema/service/datadir/worktree/branchcleanup. Full downstreamBLOCKED, HD013RPO/RTOwaived; no production policy/scanner/receiver/signoff invented. Current state is prepublication; actual remote receipts must be observed before replay."
 }

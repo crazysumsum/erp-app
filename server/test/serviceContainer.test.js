@@ -314,6 +314,16 @@ test("service discovery finds the built-in public services", async () => {
       dependencies: ["scheduler", "salesJobs"]
     },
     {
+      name: "job.salesFileRetention",
+      lifecycle: "singleton",
+      dependencies: ["scheduler", "mysqldatabase", "time", "logging"]
+    },
+    {
+      name: "job.salesImport",
+      lifecycle: "singleton",
+      dependencies: ["scheduler", "salesJobs"]
+    },
+    {
       name: "job.salesQuotationExpiry",
       lifecycle: "singleton",
       dependencies: ["scheduler", "salesJobs"]
