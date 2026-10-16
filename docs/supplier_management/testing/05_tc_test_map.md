@@ -41,7 +41,7 @@ PARTIAL means existing tests cover part of the Expected Result. The gap column s
 
 Generated from the test titles. Each carrier's assertions, not only its title, cover the case's **main** Expected Result: the stated outcome, and any real-database or concurrency condition its Steps require. A case can have several carriers; the harness takes the worst result. Smaller clauses a carrier does not assert are listed under Notes and are accepted as partial. Review REV-092 removed 26 tags that did not meet this bar.
 
-Coverage: supplier-bank-security 15/15, supplier-server-integration 74/89, supplier-security 10/10.
+Coverage: supplier-bank-security 15/15, supplier-server-integration 81/89, supplier-security 10/10.
 
 | TC | Carriers (file:line — title) | Notes |
 | --- | --- | --- |
@@ -51,6 +51,7 @@ Coverage: supplier-bank-security 15/15, supplier-server-integration 74/89, suppl
 | TC-010 | `integration/supplierListAcceptance.integration.test.js:246` — filters return only their intersection, with missing contact, address and Bank and both date ranges exact at the edges |  |
 | TC-011 | `integration/supplierListAcceptance.integration.test.js:295` — each allowed sort orders the set, ties fall back to ID in the same direction, and pages neither skip nor repeat |  |
 | TC-012 | `integration/supplierListAcceptance.integration.test.js:333` — LIKE wildcards are searched literally, an unknown sort is 400, and nothing in the database moves |  |
+| TC-014 | `integration/supplierAuditAcceptance.integration.test.js:437` — detail returns the general data, children, payment term and masked Bank for every status, computes no transactions, and the provider marks every non-Active Supplier not purchasable | no downstream summaries exist yet (Purchasing is not built); the UI hint is carried by client detail.test |
 | TC-016 | `integration/supplierSkuLookup.integration.test.js:197` — TASK-040 (HD-094 1A): over HTTP the for-SKU lookup needs a fresh supplier.view and returns no Bank data | carrier mostly checks auth; reasons and searchability are carried by TC-078/079 |
 | TC-017 | `integration/supplierCoreAcceptance.integration.test.js:59` — create makes a Draft at version 1 with its audit and name index, readable at once, and a refused create leaves nothing | create takes no children (its schema has none; children use their own routes); atomicity is not asserted here: the duplicate is refused by the pre-insert check before any write; rollback after an audit failure is carried by TC-028 |
 | TC-018 | `supplierAdminService.test.js:77` — create Supplier revalidates actor and Business Master inside one transaction and atomically writes root, grams and audit<br>`supplierLifecycleService.test.js:94` — activate and reactivate revalidate activation data and write one atomic audit |  |
@@ -132,8 +133,14 @@ Coverage: supplier-bank-security 15/15, supplier-server-integration 74/89, suppl
 | TC-099 | `integration/supplierImport.integration.test.js:264` — TASK-043 IMP-014 (TC-099): a Bank column is refused at upload and its value reaches no row, job, file, audit or log<br>`supplierCsvSchema.test.js:94` — a Bank column rejects the whole file: no row is produced and the value appears nowhere in the result |  |
 | TC-100 | `integration/supplierImport.integration.test.js:572` — TASK-044 IMP-015: only the uploader lists, reads and cancels a job; the job API tells no one else it exists<br>`integration/supplierImportRetention.integration.test.js:105` — TASK-048: executed jobs past 365 days lose their files and answer 410; the job, its rows and audit stay |  |
 | TC-102 | `integration/supplierExport.integration.test.js:131` — TASK-047 (HD-067 2A): the export is the list's rows in the list's order, under the import template v1 header<br>`integration/supplierExport.integration.test.js:188` — TASK-047 (BR-028, SEC-012): no Bank data and no live formula in the file; awkward text survives the round trip<br>`integration/supplierExport.integration.test.js:225` — TASK-047 (HD-067 1A): password, permission and the 10,000-row cap |  |
+| TC-103 | `integration/supplierAuditAcceptance.integration.test.js:88` — every state-changing or sensitive Supplier action writes exactly its audit rows, with actor, target, reason, requestId and IP | names per HD-111 A (design → written): address/contact/identifier/bank.* → supplier.address/contact/identifier/bank.*; supplier.settings.update → setting.update; supplier_sku_ref.* → supplier_sku.*; supplier.import → import.upload/precheck/confirm/cancel. The background precheck has no requestId; import.expire and supplier_sku.supply (background and receiving) are not exercised |
 | TC-104 | `supplierAuditLogService.test.js:35` — audit writer rejects unknown actions, unknown detail keys and Bank-sensitive fields<br>`supplierBankService.test.js:152` — create encrypts, indexes and audits, and no plaintext reaches the audit entry |  |
 | TC-105 | `integration/supplierAudit.integration.test.js:13` — Supplier audit follows its caller transaction and committed rows remain queryable<br>`supplierBankService.test.js:380` — a reveal whose audit fails returns no account at all<br>`supplierExportService.test.js:55` — the audit names the actor, the filters and the count, and a failed audit means no file |  |
+| TC-106 | `integration/supplierAuditAcceptance.integration.test.js:260` — detail up to 8192 bytes is stored whole, a larger list is summarised to count/sample/truncated, and anything still too large fails the whole transaction with an alert | the alert is a system-log error event; no external alerting exists |
+| TC-107 | `integration/supplierAuditAcceptance.integration.test.js:297` — audit search returns only matching rows, newest first with a stable id tie-break, with exact totals and edges, and Bank detail stays masked | the Code filter is the target-label search |
+| TC-108 | `integration/supplierAuditAcceptance.integration.test.js:350` — there is no way to change or delete audit: only a GET route exists, guessed write routes are refused, the service has no write method, and no source writes it | the database user can UPDATE and DELETE; immutability rests on the API and the code, not on grants |
+| TC-109 | `integration/supplierAuditAcceptance.integration.test.js:381` — audit survives the deletion of its Supplier and of its actor, keeping the target IDs and the actor's username |  |
+| TC-110 | `integration/supplierAuditAcceptance.integration.test.js:410` — times are epoch milliseconds in the DB and the API, and one requestId joins the response, the request log and the audit row | Supplier CSVs carry no time columns, so the ISO 8601 offset clause has nothing to check; the UI time zone is carried by client list.test; no controllable clock is used |
 | TC-111 | `integration/supplierSecurityAcceptance.integration.test.js:153` — every registered Supplier route refuses an anonymous or forged caller, writes nothing, and answers alike for existing and missing IDs | Supplier pages: client pageGuards.test checks every page declares permissions and none is public |
 | TC-112 | `integration/supplierSecurityAcceptance.integration.test.js:171` — the route-by-role matrix grants exactly the specified permission combinations | allowed combinations are checked at the route policy with missing IDs, so they stop at 400/404; the service's fresh DB check is carried by TC-115; U-SYS Bank masking, audit and alert are not asserted (TC-116 covers its re-authentication) |
 | TC-113 | `integration/supplierSecurityAcceptance.integration.test.js:197` — a Purchasing caller gets only the minimal provider projection and no Supplier admin, reveal or Settings access | Purchasing has no permission yet (HD-094 1A), so U-PO holds an unrelated one; there is no Finance Bank provider (design §8.4 defers it) |
@@ -155,15 +162,8 @@ Coverage: supplier-bank-security 15/15, supplier-server-integration 74/89, suppl
 | TC-004 | MIG-004 | fake DB; approval default OFF and no Currency seed not asserted in this suite (REV-092 Low) |
 | TC-005 | MIG-005 | config validation only; no server start per bad config |
 | TC-006 | MIG-006 | upgrade from main and rollback rehearsal (T51 rehearsal) |
-| TC-014 | LIST-007 | non-Active not-purchasable hint |
 | TC-082 | SKU-005 | sequential only; Steps require concurrent creates and direct-DB negatives (REV-092 Low) |
 | TC-093 | IMP-008 | no barrier-synchronised same-key submit |
-| TC-103 | AUD-001 | requestId and IP are not asserted per action |
-| TC-106 | AUD-004 | over-limit detail: whole-transaction failure and alert not asserted |
-| TC-107 | AUD-005 | ordering and total across pages not asserted |
-| TC-108 | AUD-006 | no test enumerates routes or attempts an audit write (REV-092 M-4) |
-| TC-109 | AUD-007 | audit kept after target/actor deletion not asserted |
-| TC-110 | AUD-008 | time formats and requestId join not asserted |
 
 ## supplier-server-integration (94)
 
