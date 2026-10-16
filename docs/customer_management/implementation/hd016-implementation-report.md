@@ -76,3 +76,37 @@ reports TC086/087/088 NA_APPROVAL_STALE. This is explicitly not STRUCTURE/approv
 PASS; actual human source plus current RISK007 supplies reviewed baseline provenance.
 The independent reviewer accepted this minimal historical-preservation approach.
 No CI, product-failure, downstream or release waiver is implied.
+
+## Isolated terminal result and final publication protocol
+
+Unchanged TC-042 scenario on the repaired source completed1PASS0FAIL0SKIP:
+10,000 orders/50,000 lines,50 foreground users/4,045 samples, p95=86.791291ms,
+workload806271.523ms. All406 import/27 recovery/2 backorder ticks had0failures/
+timeouts;14,048 orders/93,647 lines/mappings reconciled with0differences in every
+category. This is actual developer regression, not Customer TASK-034/full downstream
+or UAT sign-off. [Minimized measurements and provenance](hd016-isolated-load-results.json).
+
+The first full coverage failure occurred while a separate112-file/903-test client
+coverage run was also active. That capacity sample did not have its declared fixed
+background workload and cannot certify capacity. Preserve its failure, do not assert
+the CPU overlap is the proven sole cause of its transaction conflict. A clean isolated
+PASS alone does not permit merge: repeat full server coverage without parallel local
+CPU-heavy jobs, then require the exact published candidate's complete CI and actual
+independent integration-review disposition. No threshold, skip policy or CI edits.
+
+Fresh main089dd45b6ca5558511ae6396a88f732d5df43927 integrated without conflict at
+26ed9a6e8b951cbd585cf74f0a2eb00031a3e337. Its Item receipt method is additive;
+existing Sales-called Item methods and Customer canonical baselines remain unchanged.
+Integrated executable/source fingerprint:
+397e161701b2e6af7a3dd7be702d4d48c057f49c1d2d9aed6f62ecbf606c8510.
+Complete CI-equivalent server coverage is now executing serially on this integrated
+source with proper owned fixture credentials, existing SALES_CAPACITY_SEPARATE_STEP
+policy and unchanged TC-042. The local log remains private until minimized results.
+
+This is a pre-final-gates publication checkpoint, not a claim those pending gates
+passed. Actual immutable final test/CI/review/merge/cleanup receipts are recorded in
+[PR244 timeline](https://github.com/crazysumsum/erp-app/pull/244) against the final
+published head, avoiding repeated documentation-only commits invalidating the very
+CI identity they describe. A later receipt supersedes this pending checkpoint only
+when the actual observation exists. No final success, defect closure or cleanup is
+claimed in advance. Whole-module state stays BLOCKED for the unready downstreams.

@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 219,
+  "revision": 220,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "13a77ed225d0253eaac097b5e3bb13f60c6078d1019500b95e976dd6617af721",
     "plan": "b390c588a323b3c3677bb031f287cebefe2cb284571e901d56aa3f14814f44db",
-    "code_commit": "899779a428561f14b2b66f484f99243996ab5295",
-    "source_fingerprint": "1dbed0971bf4d0ac0d4a6c5d2ad0e1b7f97e4f0010f5f04263ff3760642b6c22",
+    "code_commit": "26ed9a6e8b951cbd585cf74f0a2eb00031a3e337",
+    "source_fingerprint": "397e161701b2e6af7a3dd7be702d4d48c057f49c1d2d9aed6f62ecbf606c8510",
     "worktree": "/private/tmp/erp-customer-operations-readiness",
-    "default_commit": "4439014e9a9d03f233e858e56f93617e787ecb8c",
+    "default_commit": "089dd45b6ca5558511ae6396a88f732d5df43927",
     "mode_entry_commit": "392b9f9db0f36f5a3bbabf2854bf3ee20a7bf227"
   },
   "runtime": {
@@ -2948,6 +2948,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-072",
+      "method": "SEPARATE_AGENT",
+      "author": "/root Customer HD016 implementation",
+      "reviewer": "/root/customer_task011_review",
+      "reviewed_baseline": "1dbed0971bf4d0ac0d4a6c5d2ad0e1b7f97e4f0010f5f04263ff3760642b6c22",
+      "source_ref": "Actual CODE ONLY APPROVE0Critical0High0Required;30unitsPASS. Reviewer inspected defed..26ed Item-only integration, Customer/BM reviewed code unchanged. Initial TC042 INVALID_NON_ISOLATED_TEST_PROFILE accepted as measurement classification, not resolved defect/waived failure. Final integrated full coverage/exact-head CI and merge disposition still required.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -3874,6 +3886,17 @@
       "subject": "Candidate shared SQL feasibility and existing contract units, not adopted fix",
       "status": "PASS",
       "source_ref": "implementation/hd014-readonly-lock-proposal.md + directlycaptured hd014-lock-probe-output.txt e74a0255. FinalSQL1PASS+existingunit31PASS,0SKIP; two initialcleanup1064 failures preserved. No actualfixedprovider/fullworkflow/earlyMySQL/downstream acceptance. Main4439014e Salesdocs-only integrated; relevant Salesdesign5f82/source unchanged from prior0fa, sourcefingerprint changes because othermodule docs included."
+    },
+    {
+      "code_commit": "26ed9a6e8b951cbd585cf74f0a2eb00031a3e337",
+      "spec_baseline": "13a77ed225d0253eaac097b5e3bb13f60c6078d1019500b95e976dd6617af721",
+      "source_fingerprint": "397e161701b2e6af7a3dd7be702d4d48c057f49c1d2d9aed6f62ecbf606c8510",
+      "actor": "/root Customer HD016 verification",
+      "observed_at": "2026-10-16T02:05:00Z",
+      "kind": "MANUAL_TEST",
+      "subject": "Isolated unchanged TC042 and latest-main integration checkpoint, not final gates",
+      "status": "PASS",
+      "source_ref": "implementation/hd016-isolated-load-results.json: actual scenario at defed source1dbed,1PASS0FAIL0SKIP,829888ms,10korders50klines50users4045samples,p9586.791291ms; no failures/timeouts/mismatches. Initial invalid-profile FAIL preserved. Main089dd45b integrated26ed; independent reviewer confirmed only additive Item paths, reviewed Customer/BM source unchanged. Complete serial coverage on source397 active, exact finalheadCI/review pending. No full downstream signoff."
     }
   ],
   "pending_decisions": [
@@ -5249,8 +5272,16 @@
       "kind": "GIT_PUSH",
       "target": "github:crazysumsum/erp-app:codex/customer-operations-readiness DraftPR244",
       "idempotency_key": "customer-hd016-wip-code-push119",
+      "status": "CONFIRMED",
+      "source_ref": "Actual remote PR244 head defed40858265ee58bc0c4002c9d8f3786fdafde verified; CI38837147300 started. WIP only, no merge approval inferred."
+    },
+    {
+      "id": "EXT-PUSH-120",
+      "kind": "GIT_PUSH",
+      "target": "github:crazysumsum/erp-app:codex/customer-operations-readiness existing draftPR244",
+      "idempotency_key": "customer-hd016-integrated-publication120",
       "status": "PLANNED",
-      "source_ref": "Authorized HD016 WIP implementation/evidence checkpoint, NOT merge-ready while real TC042 failure causality and finalselftest/CI unresolved. All CI unchanged; no merge/bypass."
+      "source_ref": "Authorized final scoped integrated candidate publication, not claim pending coverage/CI/review passed. Actual publish/gates/merge/cleanup receipts to PR244 timeline against immutable finalhead."
     }
   ],
   "evidence_files": [
@@ -5276,7 +5307,8 @@
     "implementation/local-operations-20261016-output.txt",
     "implementation/hd014-readonly-lock-proposal.md",
     "implementation/hd014-lock-probe-output.txt",
-    "implementation/hd016-implementation-report.md"
+    "implementation/hd016-implementation-report.md",
+    "implementation/hd016-isolated-load-results.json"
   ],
   "defects": [
     {
@@ -5334,17 +5366,18 @@
     {
       "id": "DEF-033001",
       "severity": "HIGH",
-      "status": "OPEN",
+      "status": "RETEST",
       "source_ids": [
         "TASK-033",
         "DES-017",
         "TC-081"
       ],
       "closure_evidence": [
-        "Actual full server coverage mixed-load Sales-module TC042 failure CONCURRENT_OPERATION ~35s; may be existing load/deadlock behavior, cause not established. OwnMySQL printall-deadlock diagnostic + unchanged uninstru scenario running. No Sales product remediation inferred, no Customer/sharedfix acceptance/merge while blocker unresolved."
+        "Actual full server coverage mixed-load Sales-module TC042 failure CONCURRENT_OPERATION ~35s; may be existing load/deadlock behavior, cause not established. OwnMySQL printall-deadlock diagnostic + unchanged uninstru scenario running. No Sales product remediation inferred, no Customer/sharedfix acceptance/merge while blocker unresolved.",
+        "Independent /root/customer_task011_review classifies initial TC042 measurement INVALID_NON_ISOLATED_TEST_PROFILE: simultaneous client coverage outside fixed workload. Original FAIL retained; no established sole cause/product defect resolution. Schema has no invalid-profile status, RETEST preserves pending final gates. Isolated unchanged scenario actual1PASS0FAIL0SKIP at defed/source1dbed, p95 86.791291ms, all scheduler failures/timeouts/reconciliation differences0. Integrated source397 full serial coverage and final exact-head CI pending; no CLOSED/waived failure."
       ],
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Continue active uninstrumented unchanged SalesTC042 mixedload causal run, capture original DB deadlock diagnostics and compare old provider control if needed. Customer readonly shared-lock/non-nullBank/defaultTerm/credit/deterministicapproval/Salesmutable-state regressions PASS, client903PASS/build/lint/highseverityaudit gatepass(lowadvisoryretained). Full server coverage firstFAIL4; restoreadminenv2 fixed+rechecked, staleSupplierassertion fixed/rechecked, TC042 unresolved. Keep DraftPR244, no merge until proper final-head CI/review and regressionresolved. ApprovedDESIGN13a77ed2/PLANb390c588 unchanged. RISK007 preserves current humanwaiverprovenance despite oldledgerpointer generic limitation. Full downstream remainsBLOCKED."
+  "next_safe_action": "Publish integrated candidate checkpoint to existing PR244; keep draft until actual integrated serial full coverage, exact final published-head complete CI, independent final review and fresh-main check pass. Record immutable terminal receipts on PR244 timeline rather than metadata-only commit loops. DEF033001 RETEST is schema-compatible pending disposition of invalid non-isolated measurement; preserve originalFAIL, never claim sole cause/closure. Full downstream030031032 and wholemodule acceptance BLOCKED; HD013/015 unchanged waivers and HD016 exact approvals retained."
 }
