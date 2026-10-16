@@ -230,5 +230,12 @@ describe("pages/suppliers/SupplierDetailPage.vue", () => {
     expect(tabs.some((text) => text.includes("地址 (100+)"))).toBe(true);
     expect(tabs.some((text) => text.includes("聯絡人 (99)"))).toBe(true);
   });
+
+  it("labels missing optional data as a non-blocking hint (PARTY-007 UI)", async () => {
+    const { body } = await mountPage();
+    const banner = body.find('[aria-label="非阻擋完整度提示"]');
+    expect(banner.exists()).toBe(true);
+    expect(banner.text()).toContain("尚未設定採購用途地址");
+  });
 });
 
