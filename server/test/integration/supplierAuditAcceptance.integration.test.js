@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { stringify } from "csv-stringify/sync";
@@ -131,7 +131,7 @@ integrationTest("TC-103 (AUD-001): every state-changing or sensitive Supplier ac
   const updated = await step("update", mgmt, () => send(mgmt, "POST /api/v1/suppliers/:id/update", { ids: { id }, body: { version, supplierName: `Audit ${t} v2`,
     displayName: "", defaultCurrencyCode: "HKD", defaultPaymentTermId: null, website: "", generalPhone: "", generalEmail: "", notes: "" } }),
   { "supplier.update": ["supplier", id, `AUD-${t}`] }, { supplierId: id, details: { "supplier.update": (detail) =>
-    assert.deepEqual([detail.before.supplierName, detail.after.supplierName], [`Audit ${t}`, `Audit ${t} v2`], "update before/after") } });
+    assert.deepEqual(detail, { before: { supplierName: `Audit ${t}` }, after: { supplierName: `Audit ${t} v2` } }, "only the changed field (HD-112 A)") } });
   version = updated.json.data.version;
   const recoded = await step("code change", mgmt, () => send(mgmt, "POST /api/v1/suppliers/:id/code/change", { ids: { id },
     body: { supplierCode: `AUD2-${t}`, reason: REASON, version } }), { "supplier.code.change": ["supplier", id, `AUD2-${t}`] },
@@ -152,14 +152,16 @@ integrationTest("TC-103 (AUD-001): every state-changing or sensitive Supplier ac
   const address = await child("address", { label: "HQ", purposes: [] }, "HQ");
   const addressUpdated = await step("address update", mgmt, () => send(mgmt, "POST /api/v1/suppliers/:supplierId/addresses/:addressId/update",
     { ids: { supplierId: id, addressId: address.id }, body: { version: address.version, label: "HQ2", purposes: [] } }),
-  { "supplier.address.update": ["address", address.id, "HQ2"] }, { supplierId: id });
+  { "supplier.address.update": ["address", address.id, "HQ2"] }, { supplierId: id, details: { "supplier.address.update": (detail) =>
+    assert.deepEqual(detail, { before: { label: "HQ" }, after: { label: "HQ2" } }, "only the changed field (HD-112 A)") } });
   await step("address deactivate", mgmt, () => send(mgmt, "POST /api/v1/suppliers/:supplierId/addresses/:addressId/deactivate",
     { ids: { supplierId: id, addressId: address.id }, body: { version: addressUpdated.json.data.version } }),
   { "supplier.address.deactivate": ["address", address.id, "HQ2"] }, { supplierId: id });
   const contact = await child("contact", { name: "Amy", purposes: [] }, "Amy");
   const contactUpdated = await step("contact update", mgmt, () => send(mgmt, "POST /api/v1/suppliers/:supplierId/contacts/:contactId/update",
     { ids: { supplierId: id, contactId: contact.id }, body: { version: contact.version, name: "Amy Two", purposes: [] } }),
-  { "supplier.contact.update": ["contact", contact.id, "Amy Two"] }, { supplierId: id });
+  { "supplier.contact.update": ["contact", contact.id, "Amy Two"] }, { supplierId: id, details: { "supplier.contact.update": (detail) =>
+    assert.deepEqual(detail, { before: { name: "Amy" }, after: { name: "Amy Two" } }, "only the changed field (HD-112 A)") } });
   await step("contact deactivate", mgmt, () => send(mgmt, "POST /api/v1/suppliers/:supplierId/contacts/:contactId/deactivate",
     { ids: { supplierId: id, contactId: contact.id }, body: { version: contactUpdated.json.data.version } }),
   { "supplier.contact.deactivate": ["contact", contact.id, "Amy Two"] }, { supplierId: id });
@@ -358,6 +360,26 @@ integrationTest("TC-106 (AUD-004): detail up to 8192 bytes is stored whole, a la
   }
   assert.deepEqual(alerts.map((line) => JSON.parse(line)).map((entry) => [entry.level, entry.context.bytes, entry.context.targetId]),
     [["error", 8193, supplierId]], "one error event in the system log");
+
+  // HD-112 A：notes 只記長度同 SHA-256，兩次 2000 字中文嘅合法更新唔會再因為 audit 超限而失敗。
+  const made = await h.send(h.users.mgmt, h.route("POST /api/v1/suppliers/create"),
+    { body: { supplierCode: `AUDNT-${t}`, supplierName: `供應商${"名".repeat(150)}`, defaultCurrencyCode: "HKD" } });
+  assert.equal(made.status, 201, made.text);
+  h.supplierIds.push(made.json.data.id);
+  let version = made.json.data.version;
+  const notes = ["甲".repeat(2000), "乙".repeat(2000)];
+  for (const [index, text] of notes.entries()) {
+    const saved = await h.send(h.users.mgmt, h.route("POST /api/v1/suppliers/:id/update"), { ids: { id: made.json.data.id }, body: { version,
+      supplierName: `供應商${"新".repeat(150)}${index}`, displayName: "顯".repeat(190), defaultCurrencyCode: "HKD", defaultPaymentTermId: null,
+      website: "", generalPhone: "", generalEmail: "", notes: text } });
+    assert.equal(saved.status, 200, `update ${index}: ${saved.text}`);
+    version = saved.json.data.version;
+    const [[row]] = await h.db.query("SELECT CAST(detail AS CHAR) AS detail FROM supplier_audit_logs WHERE request_id = ?", [saved.json.meta.requestId]);
+    assert.ok(Buffer.byteLength(row.detail) <= 8192, `${Buffer.byteLength(row.detail)} bytes`);
+    const detail = JSON.parse(row.detail);
+    assert.ok(!row.detail.includes(text.slice(0, 20)), "the notes text is not stored");
+    assert.deepEqual(detail.after.notes, { length: 2000, sha256: createHash("sha256").update(text, "utf8").digest("hex") });
+  }
 });
 
 integrationTest("TC-107 (AUD-005): audit search returns only matching rows, newest first with a stable id tie-break, with exact totals and edges, and Bank detail stays masked", async () => {

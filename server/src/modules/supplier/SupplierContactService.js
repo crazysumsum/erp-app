@@ -1,4 +1,5 @@
 import { assertActorFresh } from "../authorization/directoryLookups.js";
+import { changedFieldsDetail, purposeList, sortedPurposes } from "./auditChanges.js";
 import { SupplierAuditLogService } from "./SupplierAuditLogService.js";
 import { invalidSupplierInput, supplierChildNotFound, supplierConflict, supplierNotFound } from "./supplierErrors.js";
 import { normalizeContactEmail } from "./supplierNormalization.js";
@@ -162,12 +163,21 @@ export class SupplierContactService {
         [contact.name, contact.jobTitle, contact.department, contact.email, contact.phone, contact.mobile,
           contact.preferredLanguage, contact.notes, nowMs, input.actorId, input.contactId, input.supplierId, input.version]
       );
+      const [beforePurposes] = await connection.query(
+        "SELECT purpose_code, is_primary FROM supplier_contact_purposes WHERE contact_id = ? AND supplier_id = ? ORDER BY purpose_code", [input.contactId, input.supplierId]);
       await this.#replacePurposes(connection, { supplierId: input.supplierId, contactId: input.contactId, purposes: contact.purposes, actorId: input.actorId, nowMs, replace: true });
       const projected = await this.#project(connection, input.supplierId, input.contactId);
       await this.audit.record(connection, {
         actorUserId: input.actorId, actorUsername: actor?.username ?? "", action: "supplier.contact.update",
         targetType: "contact", targetId: input.contactId, supplierId: input.supplierId, targetLabel: contact.name,
-        detail: { changes: { purposes: contact.purposes } }, requestId: input.requestId, ip: input.ip
+        // HD-112 A：只記錄改咗嘅欄位同用途嘅前後值。
+        detail: changedFieldsDetail({
+          name: current.name, jobTitle: current.job_title, department: current.department, email: current.email, phone: current.phone,
+          mobile: current.mobile, preferredLanguage: current.preferred_language, notes: current.notes, purposes: purposeList(beforePurposes)
+        }, {
+          name: contact.name, jobTitle: contact.jobTitle, department: contact.department, email: contact.email, phone: contact.phone,
+          mobile: contact.mobile, preferredLanguage: contact.preferredLanguage, notes: contact.notes, purposes: sortedPurposes(contact.purposes)
+        }), requestId: input.requestId, ip: input.ip
       });
       return projected;
     });
