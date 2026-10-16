@@ -6,6 +6,31 @@
 
 ## 1. 現況與權威來源
 
+### 2026-10-16 main 重核（優先於下列歷史 baseline 敘述）
+
+本次 fetch 後的 `origin/main` 為 `089dd45b6ca5558511ae6396a88f732d5df43927`，即 [PR #236](https://github.com/crazysumsum/erp-app/pull/236) 的實際 merge commit；沒有較新的 main 來源可解鎖 GR。只做 repository source／migration／接線盤點，沒有查驗部署中資料庫，也沒有重跑 DB、Technical Acceptance 或 UAT。既有測試保留其原始 baseline，不改標成本次執行 PASS。
+
+| 能力／剩餘工作 | 最新 main 觀察與分工 |
+| --- | --- |
+| Item 已交付 | Inventory／Sales 引用保護（TASK-045）、已安裝 Supplier 引用回歸（TASK-047）、purchase lookup（TASK-046）均已整合；TASK-048 `findManyForCommittedReceipt()` 現亦已透過 PR #236 合併，不再是待 Item 開發的 provider。這些局部交付不等於 TASK-043 完成。 |
+| GR 正本、Confirm、Inventory 原子結果 | `server/database/migrations` 未有 `goods_receipts`／`goods_receipt_lines`／`goods_receipt_details` 的建表實作；`server/src` 未有正式 Purchasing／Receiving Confirm runtime。由 Purchasing／Receiving 交回實作及正式流程產生的合成來源。 |
+| 正式來源 verifier | `SupplierRelationService` 仍以 `sourceVerifierUnavailable` 為預設；production 建構點 `supplierSkuRelationHandlers.js` 沒有注入 `verifySource`。測試注入的 verifier 不算正式接線。由 Purchasing／Supplier 按第 2–5 節交回來源一致性及 ownership 證據。 |
+| post-commit caller／reconciliation | `server/src` 中未找到正式 `recordSupply()` caller 或由權威 GR 發現漏投影的補寫實作；方法本身與低敏失敗告警不是完整補寫流程。由 Purchasing／Supplier 完成，不由 Item 代建。 |
+| Item 尚欠的 TASK-043 C | GR-01 首次延遲歷史投影、GR-02 真來源重送／衝突、GR-03 失敗後 reconciliation 的實際 consumer integration，均等待上述正式路徑；維持 BLOCKED／DEF-107 HIGH OPEN。 |
+| Item 尚欠的 TASK-043 D | 完整 TC-004／TC-005 技術接受及 UAT-005／UAT-013；不能由既有局部 34-case 或 TASK-048 developer checks 代替。正式 UAT 仍另行處理。 |
+
+### TASK-048 已交付邊界及可採用入口
+
+權威合約仍是 [Item DES-022](03_design_spec.md#des-022--dedicated-committed-receipt-current-facts-provider)；實作位於 [ItemLookupService](../../server/src/modules/item/ItemLookupService.js) 的 `findManyForCommittedReceipt(skuIds, { atMs })`。這是唯讀的**目前事實**，不是已提交 PO／GR 證明，不會自行核准 Receiving 例外，也沒有改變既有 purchase／inventory 用途的資格規則。
+
+- 輸入為最多 100 個去重後的正 safe-integer SKU IDs，回傳按 ID 排序的 Map；不存在的 SKU 或 serial tracking 仍 fail closed。
+- 回傳目前 lifecycle／flags、UOM association identity／ownership／master status 與 warnings，不因目前停用／到期等情況授予新採購資格。呼叫方仍須核對 Confirmed PO 快照、例外原因、交易內重驗及 Inventory 收貨規則；不能把目前 facts 當作原單據 snapshot。
+- Purchasing 可在其自身獲批准的 consumer 實作流程採用此 provider，本文件不代其授權；若有新的 snapshot、警告、鎖／交易需求，先交回具體 contract diff，不能由 Item 在無 caller 的情況下猜測或新增用途。Supplier 的來源 verifier／事件投影仍是獨立交接條件。
+
+本次可推進的是修正這份 Item 交接狀態及確認上述入口；未發現另一項已具備真來源前提、尚未開發的 Item 產品改動。不新增假 GR、測試專用成功 verifier、空 reconciliation job，也不更改現有 PLAN、核心 gate、正式接受或其他模組文件。第 5 節的「尚未提供」及規劃狀態保留為 2026-10-14 歷史，已由本節的實際合併觀察取代。
+
+### 歷史 baseline 與交接沿革
+
 檢查 baseline：main `cb75f25a87cb8f0cb97b14dc6bdc4131c3217b17`。Inventory／Sales 引用保護、Supplier 已安裝引用的增量 C、採購 lookup 已分別合併；[限定引用驗證報告](testing/09_tc004_tc005_reference_verification_20261014.md)保存兩次各34個 leaf PASS，但不是完整 TC-004／TC-005 或 GR 正向證據。
 
 PR #220 合併前再觀察 main `3239b98f8938697475bf6201ba1a52c48ccef127`：新增 Supplier for-SKU lookup 效能／測試／報告；Item provider、SupplierRelationService 與 Purchasing GR 接線未變。整合此 main 後的新文件 candidate 必須重新通過 CI／review，不能沿用舊 head 的 CI；本交接的 GR 缺口及 owner 待確認事項保持不變。
