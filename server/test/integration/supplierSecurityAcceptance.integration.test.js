@@ -1,12 +1,9 @@
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
-import { randomUUID, webcrypto } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import fs from "node:fs";
-import os from "node:os";
-import path from "node:path";
 
-import { SupplierBankCrypto } from "../../src/modules/supplier/SupplierBankCrypto.js";
-import { SupplierBankService } from "../../src/modules/supplier/SupplierBankService.js";
+import { MISSING, createSupplierHarness } from "../../test-support/supplierHttpHarness.js";
 
 /**
  * TASK-051 step 2b：AUTH-001～AUTH-010（TC-111～TC-120，TC-114／TC-115 已有 carrier）喺真 app、真 HTTP、真 MySQL。
@@ -15,10 +12,7 @@ import { SupplierBankService } from "../../src/modules/supplier/SupplierBankServ
  * 再同下面 CONTRACT（設計 §3.2、§6 加已批准嘅偏離）逐條對。咁新加一條 Supplier route 而冇入 CONTRACT 就會紅。
  */
 const integrationTest = process.env.DB_INTEGRATION_TESTS === "1" ? test : test.skip;
-const PASSWORD = "Sec-T51-Password!";
-const MISSING = 999_999_999;
-const h = { application: null, url: "", db: null, jwt: null, binding: null, logRoot: "", routes: [], users: {},
-  supplierIds: [], roleIds: [], userIds: [], jobIds: [], fixture: {} };
+const h = Object.assign(createSupplierHarness("sec51"), { users: {}, fixture: {} });
 
 const V = "supplier.view";
 const M = "supplier.mgmt";
@@ -113,129 +107,17 @@ const PERSONAS = Object.freeze({
 
 before(async () => {
   if (process.env.DB_INTEGRATION_TESTS !== "1") return;
-  h.logRoot = fs.mkdtempSync(path.join(os.tmpdir(), "supplier-security-logs-"));
-  const { createApplication } = await import("../../src/framework/application/createApplication.js");
-  const { defaultConfigurationSource } = await import("../../src/framework/configuration/applicationConfiguration.js");
-  const { discoverServiceDefinitions } = await import("../../src/framework/services/serviceDiscovery.js");
-  const source = defaultConfigurationSource();
-  // 背景工作會改 supplier_* 表，令「冇副作用」嘅 checksum 唔可靠；淨係留 tokenRevocation.refresh（設定要求）。
-  const jobs = (await discoverServiceDefinitions()).flatMap((definition) => (definition.ServiceClass?.jobs ?? []).map((job) => job.name));
-  h.application = await createApplication({
-    configurationSource: { ...source, application: { ...source.application, port: 0 },
-      requestLimiter: { ...source.requestLimiter, maxRequestsPerIpPerWindow: 100_000 },
-      scheduler: { ...source.scheduler, jobs: Object.fromEntries(jobs.map((name) => [name,
-        { ...(source.scheduler.jobs?.[name] ?? {}), enabled: name === "tokenRevocation.refresh" }])) },
-      logging: { loggers: {
-        request: { ...source.logging.loggers.request, directory: path.join(h.logRoot, "requests") },
-        system: { ...source.logging.loggers.system, directory: path.join(h.logRoot, "system") } } } },
-    serviceDiscoveryOptions: { additionalModuleUrls: [
-      new URL("../../src/modules/businessMaster/BusinessMasterService.js", import.meta.url).href,
-      new URL("../../src/modules/supplier/SupplierProviderServices.js", import.meta.url).href] }
-  });
-  h.db = h.application.services.require("mysqldatabase");
-  h.jwt = h.application.services.require("jwt");
-  h.binding = h.application.services.require("deviceBinding");
-  ({ url: h.url } = await h.application.start());
-  h.routes = await registeredSupplierRoutes();
-  for (const [label, permissions] of Object.entries(PERSONAS)) h.users[label] = await makeUser(label, permissions);
+  await h.start();
+  for (const [label, permissions] of Object.entries(PERSONAS)) h.users[label] = await h.makeUser(label, permissions);
   await seedFixture();
 });
 
-after(async () => {
-  if (!h.db) return;
-  for (const id of h.jobIds) await h.db.execute("DELETE FROM supplier_import_jobs WHERE id = ?", [id]);
-  for (const id of h.supplierIds) {
-    for (const table of ["supplier_activation_requests", "supplier_contact_purposes", "supplier_contacts", "supplier_address_purposes",
-      "supplier_addresses", "supplier_identifiers", "supplier_bank_accounts", "supplier_audit_logs"]) {
-      await h.db.execute(`DELETE FROM ${table} WHERE supplier_id = ?`, [id]);
-    }
-    await h.db.execute("DELETE FROM suppliers WHERE id = ?", [id]);
-  }
-  for (const id of h.userIds) {
-    await h.db.execute("DELETE FROM supplier_audit_logs WHERE actor_user_id = ?", [id]);
-    await h.db.execute("DELETE FROM user_devices WHERE user_id = ?", [id]);
-    await h.db.execute("DELETE FROM user_roles WHERE user_id = ?", [id]);
-    await h.db.execute("DELETE FROM users WHERE id = ?", [id]);
-  }
-  for (const id of h.roleIds) {
-    await h.db.execute("DELETE FROM role_permissions WHERE role_id = ?", [id]);
-    await h.db.execute("DELETE FROM roles WHERE id = ?", [id]);
-  }
-  await h.application.shutdown("test");
-  fs.rmSync(h.logRoot, { recursive: true, force: true });
-});
-
-async function registeredSupplierRoutes() {
-  const directory = path.join(h.logRoot, "system");
-  for (let attempt = 0; attempt < 50; attempt += 1) {
-    for (const file of fs.existsSync(directory) ? fs.readdirSync(directory) : []) {
-      const line = fs.readFileSync(path.join(directory, file), "utf8").split("\n").find((entry) => entry.includes("\"api.registration.completed\""));
-      if (line) {
-        return JSON.parse(line).context.registeredApis
-          .filter((api) => api.path.startsWith("/api/v1/supplier"))
-          .map((api) => ({ key: `${api.method.toUpperCase()} ${api.path}`, method: api.method.toUpperCase(), path: api.path,
-            authType: api.authType, policies: api.authorizationPolicies, idempotent: api.idempotency?.enabled === true }));
-      }
-    }
-    await new Promise((resolve) => { setTimeout(resolve, 100); });
-  }
-  throw new Error("api.registration.completed never reached the system log");
-}
-
-async function makeUser(label, permissions) {
-  const now = Date.now();
-  const name = `sec51-${label.toLowerCase()}-${randomUUID().slice(0, 8)}`;
-  const [role] = await h.db.execute("INSERT INTO roles (name, created_at) VALUES (?, ?)", [name, now]);
-  const roleId = Number(role.insertId);
-  h.roleIds.push(roleId);
-  for (const permission of permissions) {
-    const [[row]] = await h.db.query("SELECT id FROM permissions WHERE name = ?", [permission]);
-    await h.db.execute("INSERT INTO role_permissions (role_id, permission_id) VALUES (?, ?)", [roleId, row.id]);
-  }
-  const passwordHash = await (await import("../../src/modules/user/passwordHash.js")).hashPassword(PASSWORD);
-  const [user] = await h.db.execute(
-    "INSERT INTO users (username, password_hash, display_name, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
-    [name, passwordHash, `Sec ${label}`, now, now]);
-  const userId = Number(user.insertId);
-  h.userIds.push(userId);
-  await h.db.execute("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)", [userId, roleId]);
-  // 每個角色都有一部已核准設備：咁 jwt-device-password 嘅結果只取決於權限，唔係因為冇設備。
-  const keyPair = await webcrypto.subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, false, ["sign", "verify"]);
-  const spki = Buffer.from(await webcrypto.subtle.exportKey("spki", keyPair.publicKey));
-  const deviceId = h.binding.deviceIdFor(spki);
-  await h.binding.requestBinding({ userId, deviceId, publicKeyDer: spki, label: `sec51-${label}` });
-  await h.db.execute("UPDATE user_devices SET status = 'approved' WHERE user_id = ? AND device_id = ?", [userId, deviceId]);
-  const version = await h.application.services.require("tokenRevocation").currentVersion(String(userId));
-  const token = await h.jwt.issue({ roles: [name], permissions, did: deviceId },
-    { subject: String(userId), version, authTime: Math.floor(now / 1000) });
-  return { label, userId, username: name, token, permissions, keyPair, deviceId };
-}
-
-function bankService() {
-  const crypto = new SupplierBankCrypto({ encryption: h.application.services.config.supplier.bankEncryption,
-    lookup: h.application.services.config.supplier.bankLookup });
-  return new SupplierBankService({
-    database: h.db, logger: { warn() {}, info() {}, error() {} }, time: { nowMs: () => Date.now() }, crypto,
-    authorize: async () => ({ id: null, username: "sec51-seed", permissions: [V, BV, BM] }),
-    audit: { async record() {} }
-  });
-}
-
-async function seedSupplier(code, name, status = "active") {
-  const now = Date.now();
-  const [inserted] = await h.db.execute(
-    `INSERT INTO suppliers (supplier_code, supplier_code_key, supplier_name, supplier_name_key, display_name, default_currency_code,
-       website, general_phone, general_email, notes, status, created_at, updated_at)
-     VALUES (?, ?, ?, ?, '', 'HKD', '', '', '', '', ?, ?, ?)`, [code, code.toLowerCase(), name, name.toLowerCase(), status, now, now]);
-  const id = Number(inserted.insertId);
-  h.supplierIds.push(id);
-  return id;
-}
+after(() => h.stop());
 
 async function seedFixture() {
   const tag = randomUUID().slice(0, 8).toUpperCase();
-  const supplierId = await seedSupplier(`SEC-${tag}`, `Security Fixture ${tag}`);
-  const otherId = await seedSupplier(`SEO-${tag}`, `Other Supplier ${tag}`);
+  const supplierId = await h.seedSupplier(`SEC-${tag}`, `Security Fixture ${tag}`);
+  const otherId = await h.seedSupplier(`SEO-${tag}`, `Other Supplier ${tag}`);
   const now = Date.now();
   const [address] = await h.db.execute("INSERT INTO supplier_addresses (supplier_id, label, status, created_at, updated_at) VALUES (?, 'HQ', 'active', ?, ?)",
     [supplierId, now, now]);
@@ -245,7 +127,7 @@ async function seedFixture() {
     `INSERT INTO supplier_identifiers (supplier_id, identifier_type, issuer_country_code, identifier_value, identifier_value_key, created_at, updated_at)
      VALUES (?, 'business_registration', 'HK', ?, ?, ?, ?)`, [supplierId, `BR${tag}`, `BR${tag}`, now, now]);
   const account = `61${String(Date.now()).slice(-10)}`;
-  const bank = await bankService().create({ actorId: null, claimedRoles: [], claimedPermissions: [], supplierId, accountHolderName: `Holder ${tag}`,
+  const bank = await h.bankService().create({ actorId: null, claimedRoles: [], claimedPermissions: [], supplierId, accountHolderName: `Holder ${tag}`,
     bankName: `Bank ${tag}`, bankCountryCode: "HK", bankCode: "999", branchCode: "001", swiftBic: "EXAMPLEHH", accountCurrencyCode: "HKD",
     accountNumber: account, isDefault: true, reason: "T51 security seed" });
   const [[stored]] = await h.db.query(
@@ -256,11 +138,6 @@ async function seedFixture() {
     identifierId: Number(identifier.insertId), bankId: bank.id, account, stored };
 }
 
-/** Path 參數：`ids` 冇提供嘅一律填一個唔存在嘅 ID。 */
-function fill(routePath, ids = {}) {
-  return routePath.replace(/:([A-Za-z]+)/gu, (_, name) => String(ids[name] ?? MISSING));
-}
-
 // 審批、匯入同 SKU relation 冇 fixture，呢啲 route 嘅「存在」ID 其實唔存在；TC-111 嘅認證喺查找之前已經失敗，所以唔影響結果。
 function existingIds() {
   const f = h.fixture;
@@ -268,87 +145,37 @@ function existingIds() {
     bankAccountId: f.bankId };
 }
 
-/**
- * 發一個請求。POST 預設 body `{}`；route 要密碼就補 `password`，要設備就用該角色嘅設備簽。
- * `password: false`／`device: false` 用嚟測降級。
- */
-async function send(user, route, { ids, body, password = true, device = true, raw, contentType = "application/json", headers = {} } = {}) {
-  const requestPath = fill(route.path, ids);
-  const request = { method: route.method, headers: { ...headers } };
-  if (user) request.headers.authorization = `Bearer ${user.token}`;
-  if (route.idempotent) request.headers["idempotency-key"] = randomUUID();
-  if (route.method === "POST") {
-    let payload = body ?? {};
-    if (password && (route.authType === JP || route.authType === JDP) && payload && typeof payload === "object" && !Array.isArray(payload)) {
-      payload = { password: PASSWORD, ...payload };
-    }
-    request.body = raw ?? JSON.stringify(payload);
-    request.headers["content-type"] = contentType;
-    if (user && device && route.authType === JDP) {
-      const nonce = randomUUID();
-      const timestamp = Date.now();
-      const input = h.binding.signingInput({
-        accessTokenHash: h.binding.accessTokenHash(user.token), bodyHash: h.binding.bodyHash(Buffer.from(request.body)),
-        deviceId: user.deviceId, method: "POST", nonce, path: requestPath, timestamp });
-      const signature = Buffer.from(await webcrypto.subtle.sign({ name: "ECDSA", hash: "SHA-256" }, user.keyPair.privateKey, Buffer.from(input)))
-        .toString("base64url");
-      Object.assign(request.headers, { "X-Device-Id": user.deviceId, "X-Device-Timestamp": String(timestamp), "X-Device-Nonce": nonce,
-        "X-Device-Signature": signature });
-    }
-  }
-  const response = await fetch(`${h.url}${requestPath}`, request);
-  const text = await response.text();
-  let json = null;
-  try { json = JSON.parse(text); } catch { /* CSV 或者空 */ }
-  return { status: response.status, code: json?.error?.code ?? null, message: json?.error?.message ?? null, json, text,
-    headers: response.headers };
-}
-
 function allowed(route, permissions) {
   const [, required, match] = CONTRACT[route.key];
   return match === "any" ? required.some((p) => permissions.includes(p)) : required.every((p) => permissions.includes(p));
 }
 
-/** 所有 supplier_* 表嘅 checksum：一個請求有冇寫過任何嘢。 */
-async function snapshot() {
-  const [tables] = await h.db.query(
-    "SELECT table_name AS name FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name LIKE 'supplier\\_%' ORDER BY table_name");
-  const [rows] = await h.db.query(`CHECKSUM TABLE ${tables.map(({ name }) => `\`${name}\``).join(", ")}`);
-  return Object.fromEntries(rows.map((row) => [row.Table, String(row.Checksum)]));
-}
-
-function route(key) {
-  const found = h.routes.find((candidate) => candidate.key === key);
-  assert.ok(found, `${key} is registered`);
-  return found;
-}
-
 integrationTest("TC-111 (AUTH-001): every registered Supplier route refuses an anonymous or forged caller, writes nothing, and answers alike for existing and missing IDs", async () => {
   assert.deepEqual(h.routes.map((r) => r.key).sort(), Object.keys(CONTRACT).sort(), "the runtime route set is exactly the contract");
   const forged = { token: `${h.users["U-SYS"].token.slice(0, -4)}AAAA` };
-  const before = await snapshot();
+  const before = await h.snapshot();
   for (const r of h.routes) {
     const results = [];
     for (const caller of [null, forged]) {
       for (const ids of [existingIds(), {}]) {
-        const response = await send(caller, r, { ids, password: false, device: false });
+        const response = await h.send(caller, r, { ids, password: false, device: false });
         results.push(`${response.status} ${response.code} ${response.message}`);
       }
     }
     assert.equal(results[0].split(" ")[0], "401", `${r.key} anonymous`);
     assert.equal(new Set(results).size, 1, `${r.key}: anonymous and forged callers get one answer whether the target exists or not: ${results}`);
   }
-  assert.deepEqual(await snapshot(), before, "no Supplier table changed");
+  assert.deepEqual(await h.snapshot(), before, "no Supplier table changed");
 });
 
 integrationTest("TC-112 (AUTH-002): the route-by-role matrix grants exactly the specified permission combinations", async () => {
-  const before = await snapshot();
+  const before = await h.snapshot();
   const mismatches = [];
   const denialCodes = new Set();
   for (const r of h.routes) {
     for (const [label, user] of Object.entries(h.users)) {
       // 匯出嘅 body 冇必填欄，`{}` 會真係匯出（一個有 audit 嘅讀取）；畀一個非法 filter，令佢停喺驗證。
-      const response = await send(user, r, r.key === "POST /api/v1/supplier-exports" ? { body: { filters: { notAFilter: true } } } : {});
+      const response = await h.send(user, r, r.key === "POST /api/v1/supplier-exports" ? { body: { filters: { notAFilter: true } } } : {});
       const expected = allowed(r, user.permissions);
       if (expected && (response.status === 401 || response.status === 403)) mismatches.push(`${label} ${r.key}: refused ${response.status} ${response.code}`);
       if (!expected && response.status !== 403) mismatches.push(`${label} ${r.key}: expected 403, got ${response.status} ${response.code}`);
@@ -358,13 +185,13 @@ integrationTest("TC-112 (AUTH-002): the route-by-role matrix grants exactly the 
   assert.deepEqual(mismatches, []);
   assert.equal(denialCodes.size, 1, `one stable refusal code: ${[...denialCodes]}`);
   // 設計明文嘅幾條：mgmt 唔包 approval／Bank／settings；Bank 寫要三個權限；審批要 view＋approval。
-  assert.equal(allowed(route("POST /api/v1/supplier-approvals/:id/approve"), PERSONAS["U-MGMT"]), false);
-  assert.equal(allowed(route("POST /api/v1/suppliers/:id/bank-accounts/create"), PERSONAS["U-BANK-R"]), false);
-  assert.equal(allowed(route("POST /api/v1/suppliers/:id/bank-accounts/create"), PERSONAS["U-BANK-W"]), true);
-  assert.equal(allowed(route("GET /api/v1/supplier-settings"), PERSONAS["U-MGMT"]), false);
-  assert.equal(allowed(route("GET /api/v1/supplier-approvals"), [A]), false, "approval without view is not enough");
+  assert.equal(allowed(h.route("POST /api/v1/supplier-approvals/:id/approve"), PERSONAS["U-MGMT"]), false);
+  assert.equal(allowed(h.route("POST /api/v1/suppliers/:id/bank-accounts/create"), PERSONAS["U-BANK-R"]), false);
+  assert.equal(allowed(h.route("POST /api/v1/suppliers/:id/bank-accounts/create"), PERSONAS["U-BANK-W"]), true);
+  assert.equal(allowed(h.route("GET /api/v1/supplier-settings"), PERSONAS["U-MGMT"]), false);
+  assert.equal(allowed(h.route("GET /api/v1/supplier-approvals"), [A]), false, "approval without view is not enough");
   // 全部嘅請求都用唔存在嘅 ID，獲准嘅都停喺驗證或者 404：
-  assert.deepEqual(await snapshot(), before, "no Supplier table changed");
+  assert.deepEqual(await h.snapshot(), before, "no Supplier table changed");
 });
 
 integrationTest("TC-113 (AUTH-003): a Purchasing caller gets only the minimal provider projection and no Supplier admin, reveal or Settings access", async () => {
@@ -373,7 +200,7 @@ integrationTest("TC-113 (AUTH-003): a Purchasing caller gets only the minimal pr
   for (const key of ["GET /api/v1/suppliers/:id", "POST /api/v1/suppliers/:id/update", "POST /api/v1/suppliers/create",
     "POST /api/v1/suppliers/:id/bank-accounts/:bankAccountId/reveal", "GET /api/v1/suppliers/:id/bank-accounts",
     "GET /api/v1/supplier-settings", "POST /api/v1/supplier-settings/update", "GET /api/v1/supplier-audit/logs", "POST /api/v1/supplier-exports"]) {
-    const response = await send(purchasing, route(key), { ids: fixture });
+    const response = await h.send(purchasing, h.route(key), { ids: fixture });
     assert.equal(response.status, 403, `${key}: ${response.status} ${response.code}`);
   }
   const provider = h.application.services.require("supplierCoreProvider");
@@ -385,7 +212,7 @@ integrationTest("TC-113 (AUTH-003): a Purchasing caller gets only the minimal pr
     assert.ok(!serialized.includes(secret), `the projection carries no Bank data (${secret})`);
   }
   // 用過 provider 之後，佢嘅 token 都冇多咗任何 Supplier 權限：
-  assert.equal((await send(purchasing, route("GET /api/v1/suppliers"))).status, 403);
+  assert.equal((await h.send(purchasing, h.route("GET /api/v1/suppliers"))).status, 403);
 });
 
 integrationTest("TC-116 (AUTH-006): authType is fixed in metadata as specified, and a weaker credential or a payload cannot lower it", async () => {
@@ -400,8 +227,8 @@ integrationTest("TC-116 (AUTH-006): authType is fixed in metadata as specified, 
   assert.deepEqual(drift, []);
 
   // 錯密碼會觸發重新認證嘅鎖定，所以用一個專用嘅全權用戶，唔好連累其他 case 用 U-SYS。
-  const admin = await makeUser("U-SYS-REAUTH", PERSONAS["U-SYS"]);
-  const before = await snapshot();
+  const admin = await h.makeUser("U-SYS-REAUTH", PERSONAS["U-SYS"]);
+  const before = await h.snapshot();
   const strong = h.routes.filter((r) => r.authType === JP || r.authType === JDP);
   assert.equal(strong.length, Object.values(CONTRACT).filter(([authType]) => authType !== J).length);
   const accepted = [];
@@ -415,7 +242,7 @@ integrationTest("TC-116 (AUTH-006): authType is fixed in metadata as specified, 
     ];
     if (r.authType === JDP) attempts.push(["password without device", { device: false }]);
     for (const [name, options] of attempts) {
-      const response = await send(admin, r, options);
+      const response = await h.send(admin, r, options);
       // 認證失敗嘅答案：唔可以去到 schema 驗證（REQUEST_VALIDATION_FAILED）或者業務（404 等）。
       if (![400, 401, 403].includes(response.status) || response.code === "REQUEST_VALIDATION_FAILED") {
         accepted.push(`${r.key} ${name}: ${response.status} ${response.code}`);
@@ -425,7 +252,7 @@ integrationTest("TC-116 (AUTH-006): authType is fixed in metadata as specified, 
   assert.deepEqual(accepted, []);
   // U-SYS 有齊六個權限，但 Bank reveal 照樣要密碼（上面「no password」已經包括 reveal）：
   assert.ok(strong.some((r) => r.key.endsWith("/reveal")));
-  assert.deepEqual(await snapshot(), before, "no Supplier table changed");
+  assert.deepEqual(await h.snapshot(), before, "no Supplier table changed");
 });
 
 integrationTest("TC-117 (AUTH-007): every API class refuses malformed, mistyped, out-of-range or extra input with a stable 400 and writes nothing; IDs are positive integers and booleans are strict", async () => {
@@ -446,14 +273,14 @@ integrationTest("TC-117 (AUTH-007): every API class refuses malformed, mistyped,
   const mgmt = h.users["U-MGMT"];
   const f = h.fixture;
   const tag = randomUUID().slice(0, 8).toUpperCase();
-  const create = route("POST /api/v1/suppliers/create");
+  const create = h.route("POST /api/v1/suppliers/create");
   const valid = { supplierCode: `T117-${tag}`, supplierName: "Valid", defaultCurrencyCode: "HKD" };
   const update = { version: 1, supplierName: "x", displayName: "", defaultCurrencyCode: "HKD", defaultPaymentTermId: null, website: "",
     generalPhone: "", generalEmail: "", notes: "" };
-  const list = route("GET /api/v1/suppliers");
-  const detail = route("GET /api/v1/suppliers/:id");
+  const list = h.route("GET /api/v1/suppliers");
+  const detail = h.route("GET /api/v1/suppliers/:id");
   const query = (search) => ({ ...list, path: `/api/v1/suppliers?${search}` });
-  const before = await snapshot();
+  const before = await h.snapshot();
   const cases = [
     // 列表 query：越界、錯型、未知 enum、多餘參數、唔係 "true"／"false" 嘅 boolean。
     ...["page=0", "page=-1", "page=abc", "page=1.5", "pageSize=0", "pageSize=101", "sortBy=bogus", "status=bogus", "bogus=1",
@@ -461,11 +288,11 @@ integrationTest("TC-117 (AUTH-007): every API class refuses malformed, mistyped,
       .map((search) => [`list ?${search}`, mgmt, query(search), {}]),
     // Path ID：只收正整數。
     ...["0", "-1", "1.5", "abc", "+5", "05", "1e3", "99999999999999999999"].map((id) => [`detail /${id}`, mgmt, detail, { ids: { id } }]),
-    ["child id 0", mgmt, route("POST /api/v1/suppliers/:supplierId/addresses/:addressId/deactivate"), { ids: { supplierId: f.supplierId, addressId: 0 }, body: { version: 1 } }],
-    ...["0", "05", "+5", "1e3", "0x10", "abc", "1234567890123456"].map((id) => [`import GET /${id}`, mgmt, route("GET /api/v1/supplier-imports/:id"), { ids: { id } }]),
-    ["import result id 1e3", mgmt, route("GET /api/v1/supplier-imports/:id/result"), { ids: { id: "1e3" } }],
-    ["import id abc", mgmt, route("POST /api/v1/supplier-imports/:id/cancel"), { ids: { id: "abc" }, body: { version: 1 } }],
-    ["import id 16 digits", mgmt, route("POST /api/v1/supplier-imports/:id/cancel"), { ids: { id: "1234567890123456" }, body: { version: 1 } }],
+    ["child id 0", mgmt, h.route("POST /api/v1/suppliers/:supplierId/addresses/:addressId/deactivate"), { ids: { supplierId: f.supplierId, addressId: 0 }, body: { version: 1 } }],
+    ...["0", "05", "+5", "1e3", "0x10", "abc", "1234567890123456"].map((id) => [`import GET /${id}`, mgmt, h.route("GET /api/v1/supplier-imports/:id"), { ids: { id } }]),
+    ["import result id 1e3", mgmt, h.route("GET /api/v1/supplier-imports/:id/result"), { ids: { id: "1e3" } }],
+    ["import id abc", mgmt, h.route("POST /api/v1/supplier-imports/:id/cancel"), { ids: { id: "abc" }, body: { version: 1 } }],
+    ["import id 16 digits", mgmt, h.route("POST /api/v1/supplier-imports/:id/cancel"), { ids: { id: "1234567890123456" }, body: { version: 1 } }],
     // JSON body：壞 JSON、唔係 object、錯 content-type、多餘欄、缺欄、null、錯型、超長。
     ["malformed JSON", mgmt, create, { raw: "{\"supplierCode\":" }],
     ["array body", mgmt, create, { body: [] }],
@@ -482,31 +309,31 @@ integrationTest("TC-117 (AUTH-007): every API class refuses malformed, mistyped,
     ["term id 0", mgmt, create, { body: { ...valid, defaultPaymentTermId: 0 } }],
     ["term id 1.5", mgmt, create, { body: { ...valid, defaultPaymentTermId: 1.5 } }],
     ...[1, 0, "true", "1", "yes", null, []].map((value) => [`activate ${JSON.stringify(value)}`, mgmt, create, { body: { ...valid, activate: value } }]),
-    ["update version string", mgmt, route("POST /api/v1/suppliers/:id/update"), { ids: { id: f.supplierId }, body: { ...update, version: "1" } }],
-    ["update version 0", mgmt, route("POST /api/v1/suppliers/:id/update"), { ids: { id: f.supplierId }, body: { ...update, version: 0 } }],
-    ["update version -1", mgmt, route("POST /api/v1/suppliers/:id/update"), { ids: { id: f.supplierId }, body: { ...update, version: -1 } }],
-    ["archive version string", mgmt, route("POST /api/v1/suppliers/:id/archive"), { ids: { id: f.supplierId }, body: { version: "1", reason: "TC-117 archive" } }],
-    ["identifier enum", mgmt, route("POST /api/v1/suppliers/:supplierId/identifiers/create"), { ids: { supplierId: f.supplierId },
+    ["update version string", mgmt, h.route("POST /api/v1/suppliers/:id/update"), { ids: { id: f.supplierId }, body: { ...update, version: "1" } }],
+    ["update version 0", mgmt, h.route("POST /api/v1/suppliers/:id/update"), { ids: { id: f.supplierId }, body: { ...update, version: 0 } }],
+    ["update version -1", mgmt, h.route("POST /api/v1/suppliers/:id/update"), { ids: { id: f.supplierId }, body: { ...update, version: -1 } }],
+    ["archive version string", mgmt, h.route("POST /api/v1/suppliers/:id/archive"), { ids: { id: f.supplierId }, body: { version: "1", reason: "TC-117 archive" } }],
+    ["identifier enum", mgmt, h.route("POST /api/v1/suppliers/:supplierId/identifiers/create"), { ids: { supplierId: f.supplierId },
       body: { identifierType: "passport_of_mars", issuerCountryCode: "HK", identifierValue: "X1" } }],
-    ["export boolean string", h.users["U-SYS"], route("POST /api/v1/supplier-exports"), { body: { filters: { missingBank: "true" } } }],
-    ["export id string", h.users["U-SYS"], route("POST /api/v1/supplier-exports"), { body: { filters: { paymentTermId: "1" } } }]
+    ["export boolean string", h.users["U-SYS"], h.route("POST /api/v1/supplier-exports"), { body: { filters: { missingBank: "true" } } }],
+    ["export id string", h.users["U-SYS"], h.route("POST /api/v1/supplier-exports"), { body: { filters: { paymentTermId: "1" } } }]
   ];
   const wrong = [];
   for (const [name, user, r, options] of cases) {
-    const response = await send(user, r, options);
+    const response = await h.send(user, r, options);
     if (response.status !== 400 || !["REQUEST_VALIDATION_FAILED", "INVALID_JSON"].includes(response.code)) {
       wrong.push(`${name}: ${response.status} ${response.code}`);
     }
   }
   assert.deepEqual(wrong, []);
-  assert.deepEqual(await snapshot(), before, "nothing was written, partially or otherwise");
+  assert.deepEqual(await h.snapshot(), before, "nothing was written, partially or otherwise");
 
   // 同一個 body 用啱嘅型就收：上面嘅 400 唔係因為 route 本身壞咗。
-  const made = await send(mgmt, create, { body: { ...valid, activate: false } });
+  const made = await h.send(mgmt, create, { body: { ...valid, activate: false } });
   assert.equal(made.status, 201, made.text);
   h.supplierIds.push(made.json.data.id);
   assert.equal(made.json.data.status, "draft");
-  const cancelled = await send(mgmt, route("POST /api/v1/supplier-imports/:id/cancel"), { ids: { id: MISSING }, body: { version: 1 } });
+  const cancelled = await h.send(mgmt, h.route("POST /api/v1/supplier-imports/:id/cancel"), { ids: { id: MISSING }, body: { version: 1 } });
   assert.equal(cancelled.status, 404, `a well-formed import ID reaches the service: ${cancelled.text}`);
 });
 
@@ -514,29 +341,29 @@ integrationTest("TC-118 (AUTH-008): only the reveal response carries the plainte
   const f = h.fixture;
   const ids = existingIds();
   const admin = h.users["U-SYS"];
-  const reveal = await send(h.users["U-BANK-R"], route("POST /api/v1/suppliers/:id/bank-accounts/:bankAccountId/reveal"),
+  const reveal = await h.send(h.users["U-BANK-R"], h.route("POST /api/v1/suppliers/:id/bank-accounts/:bankAccountId/reveal"),
     { ids, body: { reason: "TC-118 reveal check" } });
   assert.equal(reveal.status, 200, reveal.text);
   assert.ok(reveal.text.includes(f.account), "reveal returns the account number");
   assert.match(reveal.headers.get("cache-control") ?? "", /no-store/u);
   // `private` 去唔到線上（框架 sendSuccess 覆寫成 no-store）；Product Owner 2026-09-21 接受偏離，見 supplierBankHandlers.js。
-  const exported = await send(admin, route("POST /api/v1/supplier-exports"), { body: { filters: { q: f.tag } } });
+  const exported = await h.send(admin, h.route("POST /api/v1/supplier-exports"), { body: { filters: { q: f.tag } } });
   assert.equal(exported.status, 200, exported.text);
 
   // 審批投影要有一個真嘅 pending 申請先掃得到嘢；嗰個 Supplier 嘅 Bank 經 HTTP 建立，audit 先有真嘅 create 紀錄（REV-096 M-2）。
-  const pendingId = await seedSupplier(`APR-${f.tag}`, `Pending ${f.tag}`, "draft");
+  const pendingId = await h.seedSupplier(`APR-${f.tag}`, `Pending ${f.tag}`, "draft");
   const pendingAccount = `62${String(Date.now()).slice(-10)}`;
-  const bankMade = await send(h.users["U-BANK-W"], route("POST /api/v1/suppliers/:id/bank-accounts/create"), { ids: { id: pendingId },
+  const bankMade = await h.send(h.users["U-BANK-W"], h.route("POST /api/v1/suppliers/:id/bank-accounts/create"), { ids: { id: pendingId },
     body: { accountHolderName: `Pending Holder ${f.tag}`, bankName: `Pending Bank ${f.tag}`, accountNumber: pendingAccount, reason: "TC-118 bank over HTTP" } });
   assert.equal(bankMade.status, 200, bankMade.text);
   const [[pendingStored]] = await h.db.query(
     "SELECT HEX(account_ciphertext) AS cipherHex, HEX(account_blind_index) AS indexHex FROM supplier_bank_accounts WHERE supplier_id = ?", [pendingId]);
-  const settingsRoute = route("POST /api/v1/supplier-settings/update");
-  const readSettings = async () => (await send(h.users["U-SET"], route("GET /api/v1/supplier-settings"))).json.data;
+  const settingsRoute = h.route("POST /api/v1/supplier-settings/update");
+  const readSettings = async () => (await h.send(h.users["U-SET"], h.route("GET /api/v1/supplier-settings"))).json.data;
   const setApproval = async (on) => {
     const current = await readSettings();
     if (current.requireActivationApproval === on) return;
-    const changed = await send(h.users["U-SET"], settingsRoute, { body: { requireActivationApproval: on, version: current.version,
+    const changed = await h.send(h.users["U-SET"], settingsRoute, { body: { requireActivationApproval: on, version: current.version,
       reason: `TC-118 approval ${on ? "on" : "off"}` } });
     assert.equal(changed.status, 200, changed.text);
   };
@@ -545,13 +372,13 @@ integrationTest("TC-118 (AUTH-008): only the reveal response carries the plainte
   const wasOn = (await readSettings()).requireActivationApproval;
   try {
     await setApproval(true);
-    const activated = await send(h.users["U-MGMT"], route("POST /api/v1/suppliers/:id/activate"), { ids: { id: pendingId },
+    const activated = await h.send(h.users["U-MGMT"], h.route("POST /api/v1/suppliers/:id/activate"), { ids: { id: pendingId },
       body: { version: 1, approverUserId: h.users["U-APR"].userId } });
     assert.equal(activated.status, 200, activated.text);
-    approvals = await send(admin, { ...route("GET /api/v1/supplier-approvals"), path: "/api/v1/supplier-approvals?scope=all&pageSize=100" });
+    approvals = await h.send(admin, { ...h.route("GET /api/v1/supplier-approvals"), path: "/api/v1/supplier-approvals?scope=all&pageSize=100" });
     const request = approvals.json.data.items.find((item) => item.supplierId === pendingId);
     assert.ok(request, "the pending request is in the queue");
-    approvalDetail = await send(admin, route("GET /api/v1/supplier-approvals/:id"), { ids: { id: request.id } });
+    approvalDetail = await h.send(admin, h.route("GET /api/v1/supplier-approvals/:id"), { ids: { id: request.id } });
     assert.equal(approvalDetail.status, 200, approvalDetail.text);
   } finally {
     await setApproval(wasOn);
@@ -561,19 +388,19 @@ integrationTest("TC-118 (AUTH-008): only the reveal response carries the plainte
     f.stored.context, "ciphertext", "blindIndex", "blind_index", "authTag", "auth_tag", "cryptoContext", "crypto_context", "encryptionKeyId",
     "encryption_key_id", "password_hash", "passwordHash"];
   const scanned = [
-    ["list", await send(admin, route("GET /api/v1/suppliers"), { ids })],
-    ["detail", await send(admin, route("GET /api/v1/suppliers/:id"), { ids })],
-    ["completeness", await send(admin, route("GET /api/v1/suppliers/:id/completeness"), { ids })],
-    ["bank list (U-VIEW)", await send(h.users["U-VIEW"], route("GET /api/v1/suppliers/:id/bank-accounts"), { ids })],
-    ["bank list (U-BANK-W)", await send(h.users["U-BANK-W"], route("GET /api/v1/suppliers/:id/bank-accounts"), { ids })],
+    ["list", await h.send(admin, h.route("GET /api/v1/suppliers"), { ids })],
+    ["detail", await h.send(admin, h.route("GET /api/v1/suppliers/:id"), { ids })],
+    ["completeness", await h.send(admin, h.route("GET /api/v1/suppliers/:id/completeness"), { ids })],
+    ["bank list (U-VIEW)", await h.send(h.users["U-VIEW"], h.route("GET /api/v1/suppliers/:id/bank-accounts"), { ids })],
+    ["bank list (U-BANK-W)", await h.send(h.users["U-BANK-W"], h.route("GET /api/v1/suppliers/:id/bank-accounts"), { ids })],
     ["approvals (scope=all)", approvals],
     ["approval detail", approvalDetail],
-    ["pending bank audit", await send(admin, { ...route("GET /api/v1/supplier-audit/logs"), path: `/api/v1/supplier-audit/logs?supplierId=${pendingId}&pageSize=100` })],
-    ["audit", await send(admin, { ...route("GET /api/v1/supplier-audit/logs"), path: `/api/v1/supplier-audit/logs?supplierId=${f.supplierId}&pageSize=100` })],
-    ["export audit", await send(admin, { ...route("GET /api/v1/supplier-audit/logs"), path: "/api/v1/supplier-audit/logs?action=supplier.export&pageSize=5" })],
+    ["pending bank audit", await h.send(admin, { ...h.route("GET /api/v1/supplier-audit/logs"), path: `/api/v1/supplier-audit/logs?supplierId=${pendingId}&pageSize=100` })],
+    ["audit", await h.send(admin, { ...h.route("GET /api/v1/supplier-audit/logs"), path: `/api/v1/supplier-audit/logs?supplierId=${f.supplierId}&pageSize=100` })],
+    ["export audit", await h.send(admin, { ...h.route("GET /api/v1/supplier-audit/logs"), path: "/api/v1/supplier-audit/logs?action=supplier.export&pageSize=5" })],
     ["export csv", exported],
-    ["404", await send(admin, route("GET /api/v1/suppliers/:id"), { ids: { id: MISSING } })],
-    ["403", await send(h.users["U-VIEW"], route("POST /api/v1/suppliers/:id/bank-accounts/:bankAccountId/reveal"), { ids, body: { reason: "TC-118 refused" } })]
+    ["404", await h.send(admin, h.route("GET /api/v1/suppliers/:id"), { ids: { id: MISSING } })],
+    ["403", await h.send(h.users["U-VIEW"], h.route("POST /api/v1/suppliers/:id/bank-accounts/:bankAccountId/reveal"), { ids, body: { reason: "TC-118 refused" } })]
   ];
   for (const [name, response] of scanned) {
     assert.ok(response.status < 500, `${name}: ${response.status}`);
@@ -595,43 +422,43 @@ integrationTest("TC-118 (AUTH-008): only the reveal response carries the plainte
 });
 
 integrationTest("TC-119 (AUTH-009): script and HTML are stored and returned as plain text, control characters are refused, and prototype keys neither pollute nor pass", async () => {
-  const create = route("POST /api/v1/suppliers/create");
+  const create = h.route("POST /api/v1/suppliers/create");
   const mgmt = h.users["U-MGMT"];
   const tag = randomUUID().slice(0, 8).toUpperCase();
   const script = "<script>alert(1)</script>";
   const html = "<img src=x onerror=alert(1)>";
-  const made = await send(mgmt, create, { body: { supplierCode: `XSS-${tag}`, supplierName: script, displayName: html, defaultCurrencyCode: "HKD",
+  const made = await h.send(mgmt, create, { body: { supplierCode: `XSS-${tag}`, supplierName: script, displayName: html, defaultCurrencyCode: "HKD",
     notes: "a‮b" } });
   assert.equal(made.status, 201, made.text);
   h.supplierIds.push(made.json.data.id);
-  const detail = await send(mgmt, route("GET /api/v1/suppliers/:id"), { ids: { id: made.json.data.id } });
+  const detail = await h.send(mgmt, h.route("GET /api/v1/suppliers/:id"), { ids: { id: made.json.data.id } });
   assert.equal(detail.json.data.supplierName, script);
   assert.equal(detail.json.data.displayName, html);
   assert.match(detail.headers.get("content-type"), /^application\/json/u);
   assert.equal(detail.headers.get("x-content-type-options"), "nosniff");
 
   for (const [field, value] of [["supplierName", "x\u0000y"], ["supplierName", "x\u0007y"], ["supplierCode", `C\u001b${tag}`]]) {
-    const refused = await send(mgmt, create, { body: { supplierCode: `CTL-${tag}`, supplierName: "ok", defaultCurrencyCode: "HKD", [field]: value } });
+    const refused = await h.send(mgmt, create, { body: { supplierCode: `CTL-${tag}`, supplierName: "ok", defaultCurrencyCode: "HKD", [field]: value } });
     assert.equal(refused.status, 400, `${field} ${JSON.stringify(value)}: ${refused.text}`);
   }
 
-  const before = await snapshot();
+  const before = await h.snapshot();
   const polluting = [
     `{"__proto__":{"polluted":true},"supplierCode":"PP1-${tag}","supplierName":"ok","defaultCurrencyCode":"HKD"}`,
     JSON.stringify({ supplierCode: `PP2-${tag}`, supplierName: "ok", defaultCurrencyCode: "HKD", constructor: { prototype: { polluted: true } } }),
     JSON.stringify({ supplierCode: `PP3-${tag}`, supplierName: "ok", defaultCurrencyCode: "HKD", prototype: { polluted: true } })
   ];
   for (const raw of polluting) {
-    const refused = await send(mgmt, create, { raw });
+    const refused = await h.send(mgmt, create, { raw });
     assert.equal(refused.status, 400, refused.text);
     assert.equal(refused.code, "REQUEST_VALIDATION_FAILED");
     assert.ok(!refused.text.includes("polluted"), "the refusal does not echo the payload");
   }
   assert.equal({}.polluted, undefined, "Object.prototype untouched in the server process");
   assert.equal(Object.prototype.polluted, undefined);
-  assert.deepEqual(await snapshot(), before);
+  assert.deepEqual(await h.snapshot(), before);
 
-  const update = await send(mgmt, route("POST /api/v1/suppliers/:id/update"), { ids: { id: made.json.data.id },
+  const update = await h.send(mgmt, h.route("POST /api/v1/suppliers/:id/update"), { ids: { id: made.json.data.id },
     body: { version: 1, supplierName: `${script}x\u0000` } });
   assert.equal(update.status, 400);
   assert.ok(!update.text.includes("<script>"), "a refusal does not reflect the submitted markup");
@@ -641,11 +468,11 @@ integrationTest("TC-120 (AUTH-010): each error class answers with its stable HTT
   const f = h.fixture;
   const mgmt = h.users["U-MGMT"];
   const tag = randomUUID().slice(0, 8).toUpperCase();
-  const create = route("POST /api/v1/suppliers/create");
+  const create = h.route("POST /api/v1/suppliers/create");
 
   // 同 Code 並發 create：先查嗰句 SELECT 唔鎖，所以並發嘅 create 會撞 DB unique index（ER_DUP_ENTRY），再映射成 409。
   // 每一個 racer 都要係 201 或者 409 SUPPLIER_CODE_TAKEN：拎走映射會有 500（REV-096 H-1）。identifier 嗰個 case 係第二個 carrier。
-  const racers = await Promise.all(Array.from({ length: 6 }, () => send(mgmt, create,
+  const racers = await Promise.all(Array.from({ length: 6 }, () => h.send(mgmt, create,
     { body: { supplierCode: `DUP-${tag}`, supplierName: `Dup ${tag}`, defaultCurrencyCode: "HKD" } })));
   for (const made of racers.filter((r) => r.status === 201)) h.supplierIds.push(made.json.data.id);
   assert.equal(racers.filter((r) => r.status === 201).length, 1, racers.map((r) => `${r.status} ${r.code}`).join(","));
@@ -653,7 +480,7 @@ integrationTest("TC-120 (AUTH-010): each error class answers with its stable HTT
     racers.map((r) => `${r.status} ${r.code}`).join(","));
 
   // 名稱空白：最低欄位唔齊，啟用要 422（一個有 Code、名同幣別嘅 Draft 係啟用得嘅）。
-  const draft = await seedSupplier(`DRF-${tag}`, "", "draft");
+  const draft = await h.seedSupplier(`DRF-${tag}`, "", "draft");
   const [job] = await h.db.execute(
     `INSERT INTO supplier_import_jobs (template_version, source_stored_name, source_sha256, mode, status, created_by, created_at, updated_at,
        confirmed_at, completed_at, files_purged_at)
@@ -664,27 +491,27 @@ integrationTest("TC-120 (AUTH-010): each error class answers with its stable HTT
   await h.db.execute("UPDATE supplier_bank_accounts SET encryption_key_id = 'tc120-retired-key' WHERE id = ?", [second.id]);
   try {
     const cases = [
-      [400, "REQUEST_VALIDATION_FAILED", await send(mgmt, create, { body: { supplierCode: `BAD-${tag}` } })],
-      [400, "SUPPLIER_NAME_INVALID", await send(mgmt, create, { body: { supplierCode: `BAD-${tag}`, supplierName: "x\u0000", defaultCurrencyCode: "HKD" } })],
-      [403, null, await send(h.users["U-VIEW"], create, { body: { supplierCode: `BAD-${tag}` } })],
-      [404, "SUPPLIER_NOT_FOUND", await send(mgmt, route("GET /api/v1/suppliers/:id"), { ids: { id: MISSING } })],
+      [400, "REQUEST_VALIDATION_FAILED", await h.send(mgmt, create, { body: { supplierCode: `BAD-${tag}` } })],
+      [400, "SUPPLIER_NAME_INVALID", await h.send(mgmt, create, { body: { supplierCode: `BAD-${tag}`, supplierName: "x\u0000", defaultCurrencyCode: "HKD" } })],
+      [403, null, await h.send(h.users["U-VIEW"], create, { body: { supplierCode: `BAD-${tag}` } })],
+      [404, "SUPPLIER_NOT_FOUND", await h.send(mgmt, h.route("GET /api/v1/suppliers/:id"), { ids: { id: MISSING } })],
       // 每類 child 一個 code，唔係設計 §6.11 嘅 SUPPLIER_CHILD_NOT_FOUND（HD-110 A，接受偏離）。
       // 用另一個 Supplier 嘅 route 掂呢個 Supplier 嘅 child：答案同唔存在一樣，唔講屬於邊個。
-      [404, "SUPPLIER_ADDRESS_NOT_FOUND", await send(mgmt, route("POST /api/v1/suppliers/:supplierId/addresses/:addressId/deactivate"),
+      [404, "SUPPLIER_ADDRESS_NOT_FOUND", await h.send(mgmt, h.route("POST /api/v1/suppliers/:supplierId/addresses/:addressId/deactivate"),
         { ids: { supplierId: f.otherId, addressId: f.addressId }, body: { version: 1 } })],
-      [404, "SUPPLIER_CONTACT_NOT_FOUND", await send(mgmt, route("POST /api/v1/suppliers/:supplierId/contacts/:contactId/deactivate"),
+      [404, "SUPPLIER_CONTACT_NOT_FOUND", await h.send(mgmt, h.route("POST /api/v1/suppliers/:supplierId/contacts/:contactId/deactivate"),
         { ids: { supplierId: f.otherId, contactId: f.contactId }, body: { version: 1 } })],
-      [404, "SUPPLIER_IDENTIFIER_NOT_FOUND", await send(mgmt, route("POST /api/v1/suppliers/:supplierId/identifiers/:identifierId/delete"),
+      [404, "SUPPLIER_IDENTIFIER_NOT_FOUND", await h.send(mgmt, h.route("POST /api/v1/suppliers/:supplierId/identifiers/:identifierId/delete"),
         { ids: { supplierId: f.otherId, identifierId: f.identifierId }, body: { version: 1, reason: "TC-120 other owner" } })],
-      [409, "SUPPLIER_CODE_TAKEN", await send(mgmt, create, { body: { supplierCode: `SEC-${f.tag}`, supplierName: "x", defaultCurrencyCode: "HKD" } })],
+      [409, "SUPPLIER_CODE_TAKEN", await h.send(mgmt, create, { body: { supplierCode: `SEC-${f.tag}`, supplierName: "x", defaultCurrencyCode: "HKD" } })],
       // 冇預檢：一定靠 DB unique 撞出 ER_DUP_ENTRY，再按 constraint 映射；唔可以講出另一個 Supplier 係邊個。
-      [409, "SUPPLIER_IDENTIFIER_TAKEN", await send(mgmt, route("POST /api/v1/suppliers/:supplierId/identifiers/create"), { ids: { supplierId: f.otherId },
+      [409, "SUPPLIER_IDENTIFIER_TAKEN", await h.send(mgmt, h.route("POST /api/v1/suppliers/:supplierId/identifiers/create"), { ids: { supplierId: f.otherId },
         body: { identifierType: "business_registration", issuerCountryCode: "HK", identifierValue: `BR${f.tag}` } })],
-      [409, "VERSION_CONFLICT", await send(mgmt, route("POST /api/v1/suppliers/:id/update"), { ids: { id: f.supplierId },
+      [409, "VERSION_CONFLICT", await h.send(mgmt, h.route("POST /api/v1/suppliers/:id/update"), { ids: { id: f.supplierId },
         body: { version: 99, supplierName: "x", displayName: "", defaultCurrencyCode: "HKD", defaultPaymentTermId: null, website: "", generalPhone: "", generalEmail: "", notes: "" } })],
-      [410, "IMPORT_FILE_EXPIRED", await send(mgmt, route("GET /api/v1/supplier-imports/:id/result"), { ids: { id: Number(job.insertId) } })],
-      [422, "SUPPLIER_NOT_ACTIVATABLE", await send(mgmt, route("POST /api/v1/suppliers/:id/activate"), { ids: { id: draft }, body: { version: 1 } })],
-      [503, "BANK_KEY_UNAVAILABLE", await send(h.users["U-BANK-R"], route("POST /api/v1/suppliers/:id/bank-accounts/:bankAccountId/reveal"),
+      [410, "IMPORT_FILE_EXPIRED", await h.send(mgmt, h.route("GET /api/v1/supplier-imports/:id/result"), { ids: { id: Number(job.insertId) } })],
+      [422, "SUPPLIER_NOT_ACTIVATABLE", await h.send(mgmt, h.route("POST /api/v1/suppliers/:id/activate"), { ids: { id: draft }, body: { version: 1 } })],
+      [503, "BANK_KEY_UNAVAILABLE", await h.send(h.users["U-BANK-R"], h.route("POST /api/v1/suppliers/:id/bank-accounts/:bankAccountId/reveal"),
         { ids: { id: f.supplierId, bankAccountId: second.id }, body: { reason: "TC-120 retired key" } })]
     ];
     const forbidden = [/\bER_[A-Z_]+/u, /Duplicate entry/iu, /\bSELECT\b|\bINSERT\b|\bUPDATE\b.*\bSET\b/u, /\buq_[a-z_]+/u, /\bfk_[a-z_]+/u, /sqlMessage|sqlState/u,
