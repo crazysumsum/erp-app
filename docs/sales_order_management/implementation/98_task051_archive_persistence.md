@@ -1,0 +1,13 @@
+# TASK-051 relational Archive persistence
+
+Status: DEVELOPER_VERIFIED persistence foundation, Archive business execution disabled.
+
+Forward0088 creates month-unique resumable batches and permanent order manifests;0089 creates all six explicit mirrors from immutable0073–0079 column contracts. Original IDs/snapshots/types/defaults/quantities preserved, AUTO_INCREMENT removed, batch/time/hash metadata added. Only Archive aggregate/batch FKs exist; no mutablemaster or Inventory FK. Backorder requires terminal zero-outstanding plus composite line/order ownership. Designquery indexes present; no partitioning. Immutable row guards are still TASK059, and no Archive mover/job/API is enabled by this persistence task.
+
+Before installation, existing BusinessMaster checker now includes historical Archive references and watermark while rejecting partial schemas, nonterminal Archive statuses, invalid counts and database failure. TDD observed4PASS2FAIL before fix then6PASS. Separate review independently parsed six source contracts and verified46/26/13/17/12/15 original columns exactly (excluding3newmetadata). No applied historical migration changed.
+
+Native13PASS0skip covers batch/manifest unique routes, counters/leases, all six complete column parities, historical master IDs, Archive-only FK, composite Backorder scope, native historical Currency usage and drift rejection preserving rows. After actual isolated87→89 migration, integrated35PASS0FAIL0SKIP (nativeExport8+Archive13+BusinessMasterHTTP1+checker6+migrate7), lintPASS. Initial sharedHTTP failed for missing synthetic bank test rings, retained as failed evidence; adding a new private synthetic-only test-env fixed environment without changing pinnedoriginal env or productconfiguration.
+
+Actual normal admin migration ran only on two sameowned synthetic schemas through bound current source6423223f, with separate source reviewe5abd65e and exact durable wrapper reviewf7f29467. Both ledgers now90entries; all88 old names/applied timestamps and all3original grant sets unchanged, zero archivedbusinessorders. STARTED/CONFIRMED receipts fsynced, original setup/recovery failures retained. No old P3 data reused or reset.
+
+Fresh main089dd45b ItemPR236 adds only findManyForCommittedReceipt and its docs/tests; existing Sales called methods/privatehelpers unchanged. Integrate and mechanically reconcile consumed pin before Phase merge with relevant Item/Sales provider regression, keeping original Gates. Full P4 and realFulfillment same-transaction integration remain pending. Raw logs/runtime/credentials remain private, not committed.

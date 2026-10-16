@@ -26,12 +26,28 @@ test("Sales impact classifies all persisted document statuses and exposes only a
   assert.doesNotMatch(calls[1].sql, /customer_name|notes|SELECT \*/u);
 });
 
-test("Sales impact empty installation is READY; absence, partial schemas and archive installation stay distinct", async () => {
+test("Sales impact empty installation is READY; absence and partial active/archive schemas stay distinct", async () => {
   assert.equal((await fixture().checker.check(subject)).status, "READY");
   assert.equal((await fixture([], []).checker.check(subject)).status, "NOT_INSTALLED");
-  for (const tables of [[installed[0]], [...installed, { name: "sales_orders_archive" }]]) {
+  for (const tables of [[installed[0]], [{ name: "sales_orders_archive" }], [installed[0], { name: "sales_orders_archive" }]]) {
     await assert.rejects(() => fixture(tables).checker.check(subject), /schema/u);
   }
+});
+
+test("TC-047 Sales impact counts immutable Archive as historical with bound Currency and Payment Term keys", async () => {
+  const rows=[row("order","CONFIRMED",2),row("archive","COMPLETED",3),row("archive","CLOSED",4),row("archive","CANCELLED",5)];
+  const {checker,calls}=fixture([...installed,{name:"sales_orders_archive"}],rows);
+  const result=await checker.check(subject);assert.equal(result.openUseCount,2);assert.equal(result.historicalCount,12);
+  assert.match(calls[1].sql,/FROM sales_orders_archive WHERE currency_code = \?/u);assert.deepEqual(calls[1].args,["HKD","HKD","HKD"]);
+  await checker.check({entityType:"PAYMENT_TERM",entityKey:17});assert.deepEqual(calls[3].args,[17,17,17]);
+  assert.doesNotMatch(calls[1].sql,/SELECT \*|customer_name|notes/u);
+});
+
+test("TC-047 Sales Archive watermark tracks historical references and rejects nonterminal Archive facts", async () => {
+  const tables=[...installed,{name:"sales_orders_archive"}],rows=[row("archive","CLOSED")],{checker}=fixture(tables,rows);
+  const initial=await checker.check(subject);rows[0].version_sum++;assert.notEqual((await checker.check(subject)).watermark,initial.watermark);
+  rows[0].reference_count++;assert.notEqual((await checker.check(subject)).watermark,initial.watermark);
+  for(const status of ["DRAFT","CONFIRMED","UNKNOWN"])await assert.rejects(()=>fixture(tables,[row("archive",status)]).checker.check(subject),/Unclassified/u);
 });
 
 test("Sales impact validates keys, status and arithmetic; Payment Term uses bound IDs", async () => {

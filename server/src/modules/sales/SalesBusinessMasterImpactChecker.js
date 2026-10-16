@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 
 const OPEN = { quotation: new Set(["DRAFT", "ISSUED"]), order: new Set(["DRAFT", "CONFIRMING", "CONFIRMED", "PARTIALLY_FULFILLED"]) };
-const HISTORICAL = { quotation: new Set(["EXPIRED", "CONVERTED", "CANCELLED"]), order: new Set(["COMPLETED", "CLOSED", "CANCELLED"]) };
+const HISTORICAL = { quotation: new Set(["EXPIRED", "CONVERTED", "CANCELLED"]), order: new Set(["COMPLETED", "CLOSED", "CANCELLED"]), archive: new Set(["COMPLETED", "CLOSED", "CANCELLED"]) };
 
 function count(row, field) {
   const value = Number(row[field]);
@@ -29,9 +29,9 @@ export class SalesBusinessMasterImpactChecker {
           AND table_name IN ('sales_quotations', 'sales_orders', 'sales_orders_archive')`
     );
     if (Number(tables?.present) === 0) return { status: "NOT_INSTALLED", activeDefaultCount: 0, openUseCount: 0, historicalCount: 0, watermark: "not-installed:sales" };
-    // ponytail: P1 active tables only; Phase 4 must add archive aggregation before installing archive tables.
-    if (Number(tables?.present) !== 2 || Number(tables?.archived) !== 0) {
-      throw new Error("Sales impact schema is incomplete or requires archive support");
+    const archived = Number(tables?.archived) === 1;
+    if (Number(tables?.present) !== (archived ? 3 : 2)) {
+      throw new Error("Sales impact schema is incomplete");
     }
     const [rows] = await this.database.query(
       `SELECT 'quotation' AS document_type, status, COUNT(*) AS reference_count,
@@ -40,7 +40,10 @@ export class SalesBusinessMasterImpactChecker {
        UNION ALL
        SELECT 'order', status, COUNT(*), COALESCE(SUM(version), 0), COALESCE(MAX(updated_at), 0), COALESCE(MAX(id), 0)
          FROM sales_orders WHERE ${column} = ? GROUP BY status
-       ORDER BY document_type, status`, [key, key]
+       ${archived ? `UNION ALL
+       SELECT 'archive', status, COUNT(*), COALESCE(SUM(version), 0), COALESCE(MAX(updated_at), 0), COALESCE(MAX(id), 0)
+         FROM sales_orders_archive WHERE ${column} = ? GROUP BY status` : ""}
+       ORDER BY document_type, status`, archived ? [key, key, key] : [key, key]
     );
     let openUseCount = 0, historicalCount = 0;
     const projection = rows.map(row => {

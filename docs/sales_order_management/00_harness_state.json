@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1066,
+  "revision": 1068,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-005",
-  "current_task": "TASK-051",
+  "current_task": "TASK-052",
   "baseline": {
     "design": "5c1ed45c588b6a7f547566d11ce51167c7a9dfe94303028c31fe49d2cfea57d6",
     "plan": "93cd021bc60862aa9c80f8e978b310933b78b2a3efb9cf1905965dc65a38a54f",
-    "code_commit": "4439014e9a9d03f233e858e56f93617e787ecb8c",
-    "source_fingerprint": "8eec89705029763e7ab74fc1dccdcb77f4bb4a935665d96efd809e2a7c0aedb0",
+    "code_commit": "6182422d109843b79c58474511630a93fb7f431f",
+    "source_fingerprint": "6423223fd08d6e4876c1c47b6e13f89bff9c4d40667397d92041127a4488eeb3",
     "worktree": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app",
     "default_commit": "4439014e9a9d03f233e858e56f93617e787ecb8c",
     "mode_entry_commit": "4439014e9a9d03f233e858e56f93617e787ecb8c"
@@ -23,7 +23,7 @@
     "resources": {
       "workspace": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app",
       "temp-directory": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private",
-      "mysql-instance": "READY socket-only ownedpid16287 /private/tmp/sales-p4-c6b1e4326668/mysql.sock; two schemas migrated through0087, private credentials, old P3 stopped.",
+      "mysql-instance": "READY sameownedpid16287/socket, two synthetic schemasthrough0089;90migrationrecords each, old88names/timestamps exact, originalgrants unchanged; no businessArchive effects.",
       "database": "erp_sales_p4_c6b1e4326668_core,erp_sales_p4_c6b1e4326668_focused"
     },
     "lease_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/runtime-continuation-r2.json SHA256e82a01289f5a154b2230e51c20db252b179f54b267aa5a8f9bfcf2e2b2eaf6f6"
@@ -79,7 +79,8 @@
     "TASK-048": "DONE",
     "TASK-049": "DONE",
     "TASK-050": "DONE",
-    "TASK-051": "IN_PROGRESS"
+    "TASK-051": "DONE",
+    "TASK-052": "IN_PROGRESS"
   },
   "approvals": [
     {
@@ -9224,6 +9225,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-P4-TASK051-SOURCE-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p3_whole_phase_review",
+      "reviewed_baseline": "5c1ed45c588b6a7f547566d11ce51167c7a9dfe94303028c31fe49d2cfea57d6",
+      "source_ref": "/private/tmp/p4-task051-source-and-migration-r1-reviewer-proof.json SHA256e5abd65ed09e412209f4a0c2b5afd70fa315d0bf68a6efb8f9547b2c35b82ba1; normalwrapperdurableR2 f7f29467a916e1a59d994ce78752aba9d2a4f21906014a905230bbb46c538c76; scoped source642/TASK051 only, not Phase approval",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -12075,6 +12088,17 @@
       "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/task050-native-green.log; actual tool outputs migrateunit/lint; current candidate source only, no new CI/formalUAT/release claim",
       "actor": "Codex /root",
       "observed_at": "2026-10-16T02:01:01.034917+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK051 developer integrated persistence/native BusinessMaster HTTP/checker/migration runner35PASS0FAIL0SKIP after actualowned88/89 upgrade; lintPASS",
+      "code_commit": "6182422d109843b79c58474511630a93fb7f431f",
+      "spec_baseline": "93cd021bc60862aa9c80f8e978b310933b78b2a3efb9cf1905965dc65a38a54f",
+      "source_fingerprint": "6423223fd08d6e4876c1c47b6e13f89bff9c4d40667397d92041127a4488eeb3",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/task051-integrated-green.log SHA256d9d743c5cf3e63585eda8256fb1a72fa6af998626aede544a35cb2744031857f; task051-native-first13PASS; unit4PASS2FAIL→6PASS toolprovenance; missingcryptokey initialsharedFAIL retained; no formal/Phase qualification",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-16T02:28:54.981372+00:00"
     }
   ],
   "pending_decisions": [
@@ -14688,6 +14712,14 @@
       "idempotency_key": "p4-mysql-continue-c6b1e4326668-r2",
       "status": "CONFIRMED",
       "source_ref": "Root actual independent review /Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/runtime-continuation-r2-root-independent-review.json SHA256da0890e71a063dc1aeac9801bc3a3a35e6b23ef8b80966615071b0a9b16801e6 helper SHA25631fc4c9da3417159323b4e31b4c21817fddd9a4fbd5c63674bcfab5fbd83ccdc packet SHA2569e13c7853a1eef6f30dcf7ab0e4fd92a23f7e3a367360dda4b233db66d00fd21; actual original preparation FAILED at readonly inspector normalization; preserve original STARTED/log, no prepare retry. Standard migrate resumes same exact-owned partial empty table after fullinspector, preserves originalledger+grants.; actual receipt /Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/runtime-continuation-r2.json SHA256e82a01289f5a154b2230e51c20db252b179f54b267aa5a8f9bfcf2e2b2eaf6f6; both2schemas nowcomplete87, oldnames+timestamps exact, Export0rows andoriginalgrants unchanged."
+    },
+    {
+      "id": "ACT-P4-TASK051-MIGRATE",
+      "kind": "MIGRATION",
+      "target": "erp_sales_p4_c6b1e4326668_core,erp_sales_p4_c6b1e4326668_focused through0088/0089 only",
+      "idempotency_key": "p4-task051-schema-upgrade-c6b1e4326668",
+      "status": "CONFIRMED",
+      "source_ref": "Actual separate scoped source proofe5abd65e and wrapperdurable proof /private/tmp/p4-task051-migration-durable-r2-reviewer-proof.json SHA256f7f29467a916e1a59d994ce78752aba9d2a4f21906014a905230bbb46c538c76 helper SHA2563ef11a578e643276fc089198dbf1c01fd297dfff9ba69dc5078153ab1fb64579 packet SHA256d46f20e87b11e8bf4296f3c4d1a0a158409254bdf1930c7f68713f9e83f85ce4; same owned socket, two synthetic schemas; standardadminmigrate; originalnames+timestamps/grants retained; no Archive business effects.; /Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/task051-migration-confirmed.json SHA25603de44defb8bbc232f6fc697149f7144b12c40bd31cf1c6f1776021a62544750 two schemas87→89; both90 migrationrecords, all88 prior names/timestamps exact, grants unchanged, zeroArchivedorders."
     }
   ],
   "evidence_files": [
@@ -15561,5 +15593,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Commit atomic TASK050 export persistence and P4 reviewed activation, then TDD BusinessMaster historical Archive support before TASK051 Archive table install. No export API/client filename/path accepted yet; canonical allowlisted filter creation and background lifecycle still TASK054. Fulfillment absent keeps Archive execution disabled and fullPhase merge blocked. Preserve all39 developer/actualcandidateCI/wholeReview/Gates."
+  "next_safe_action": "Commit atomicTASK051 relationalArchive persistence and prerequisite historicalBusinessMaster support. Then TASK052 outstanding/audit/owner-safe originalpermission operation inquiries with TDD/liveHTTP; no UI completion before Playwright. Freshmain089dd45b ItemPR236 adds only committedReceipt method; existingSales methods/helpers unchanged, integration+consumedpin+focusedregression before merge, no oldperf replay solelythatmethod. Fulfillment actualOpenMatter/sameTXparticipant absent: Archive effects and completePhase mainmerge blocked; all39/currentCI/wholeReview/Gates preserved."
 }
