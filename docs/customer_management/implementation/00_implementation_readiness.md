@@ -2,6 +2,52 @@
 
 ## Status
 
+### Latest-main contract drift — approval required before PR244 merge
+
+During PR244 verification, main advanced to `0fa41eef54fd01bb163f1ceaf57f46b5acada1a7`
+(including PR193/243). Integrated without conflicts at `4e725c92` before resuming
+merge checks. This brings an existing-main addition to CustomerLookupService:
+`getSalesPrecheckSnapshotsInTransaction()` (bounded100 unique Customer IDs) and an
+updated consumed Sales design. These are inherited changes, not authored by this
+Customer documentation PR. The validator now reports **CONTRACT_DRIFT**:
+Customer still pins Sales design `a1a468ff...a3577`; actual bytes hash
+`5f82a24962a4f8e853acba56a83dedb7ceec94513497895f29966024100cbfdc`.
+
+HD-014 is DECISION_REQUIRED: obtain Sam's authority for Customer-owned contract/
+design/plan reconciliation and review of this newly merged API boundary before
+refreshing pins/baselines. Do not merely replace the hash, claim the old baseline
+approves the extension, or modify Sales/Supplier code. PR244 must remain unmerged
+until this drift and subsequent exact-candidate validation/review/CI are resolved.
+The earlier0550fadc review/green checks cover only that pre-integration candidate;
+they are not current merged-baseline evidence. Timing waiver and full downstream
+BLOCKED remain unchanged. The f4d50bd5 assessment below is a historical snapshot,
+not the latest-main readiness result.
+
+**BLOCKED for whole-module/formal operations acceptance**, reconciled on main
+`f4d50bd5f6e751a99882a6ef5547d646d2e2c84e` (PR242). This current summary supersedes
+the historical approval/publication checkpoints below; it does not approve release.
+
+- DEF-034001/034002/027001 developer remedies are CLOSED and merged through
+  PR233/237. Do not reopen them from historical premerge wording.
+- PR238/240/242 provide merged local capacity, restore-integrity and security
+  developer evidence. PR242's exact candidate passed73 selected files/298 nodes,
+  all five CI checks and separate review; actual merged-tree smoke9PASS. These are
+  identified historical runs, not a new formal acceptance execution.
+- HD-013 (PR241) waives only TC-086/087 timing acceptance. RPO/RTO objectives stay
+  NOT_PROVEN; no additional timing run or waiver is needed.
+- TASK-030/031/032/034/full downstream acceptance remain BLOCKED, TASK-033/035
+  IN_PROGRESS and TASK-036 PENDING. No Technical Acceptance/UAT/release sign-off.
+
+The remaining non-timing prerequisites and required low-sensitive evidence are in
+the [current operations evidence checklist](customer-operations-runbook.md#current-formal-operations-evidence-checklist).
+Actual [PR242 closure](https://github.com/crazysumsum/erp-app/pull/242#issuecomment-6189186480)
+confirms merge and complete owner-only cleanup; state209's planned effects are a
+pre-publication cache, not unfinished pushes or a reusable running MySQL fixture.
+This continuation corrects handoff/readiness documentation only: no executable,
+test, schema, canonical requirement/design/plan, CI or acceptance criterion changes.
+
+### Historical HD-012 implementation checkpoint before publication
+
 Current HD-012: **APPROVED by Sam**, DESIGN a2b29b79...2356 / PLAN3b15603d...35e0;
 planning PR#234 merged main6b3faa1f. Scoped product/test commitf3413abe implements
 generic latest-request state protection, latest failure/retry pagination, Customer
@@ -40,7 +86,7 @@ actual independent reviewer approved. Exact final PR-head CI/review still gate
 normal merge. See the
 [current evidence and limitations](def034001-remediation-report.md).
 
-Full Customer acceptance additionally retains unresolved frontend gaps
+Historical pre-remediation assessment retained unresolved frontend gaps
 DEF-034002 (typed-search stale display) and DEF-027001 (clean-main reproducible
 mocked import UI failure). No frontend/CI setting or acceptance bar is changed.
 

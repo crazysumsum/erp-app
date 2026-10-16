@@ -3,6 +3,14 @@ import { businessMasterConflict } from "./businessMasterErrors.js";
 const CURRENCY_SORTS = Object.freeze({ code: "code", name: "name", status: "status", updatedAt: "updated_at" });
 const PAYMENT_TERM_SORTS = Object.freeze({ code: "code_key", name: "name", status: "status", updatedAt: "updated_at" });
 
+function lockingClause(forUpdate, forShare) {
+  if (typeof forUpdate !== "boolean" || typeof forShare !== "boolean" || (forUpdate && forShare)) {
+    throw new TypeError("Catalog lock flags must be booleans and mutually exclusive");
+  }
+  if (forUpdate) return " FOR UPDATE";
+  return forShare ? " LOCK IN SHARE MODE" : "";
+}
+
 function currency(row) {
   if (!row) return null;
   return {
@@ -76,10 +84,11 @@ export class BusinessMasterRepository {
     return { items: rows.map(currency), total: Number(countRows[0].total), page, pageSize };
   }
 
-  async getCurrency(connection, code, { forUpdate = false } = {}) {
+  async getCurrency(connection, code, { forUpdate = false, forShare = false } = {}) {
+    const lock = lockingClause(forUpdate, forShare);
     const [rows] = await connection.query(
       `SELECT code, name, decimal_places, status, version, created_at, updated_at
-         FROM currencies WHERE code = ?${forUpdate ? " FOR UPDATE" : ""}`,
+         FROM currencies WHERE code = ?${lock}`,
       [code]
     );
     return currency(rows[0]);
@@ -137,10 +146,11 @@ export class BusinessMasterRepository {
     return { items: rows.map(paymentTerm), total: Number(countRows[0].total), page, pageSize };
   }
 
-  async getPaymentTerm(connection, id, { forUpdate = false } = {}) {
+  async getPaymentTerm(connection, id, { forUpdate = false, forShare = false } = {}) {
+    const lock = lockingClause(forUpdate, forShare);
     const [rows] = await connection.query(
       `SELECT id, code, code_key, name, description, calculation_type, due_days, status, version, created_at, updated_at
-         FROM payment_terms WHERE id = ?${forUpdate ? " FOR UPDATE" : ""}`,
+         FROM payment_terms WHERE id = ?${lock}`,
       [id]
     );
     return paymentTerm(rows[0]);

@@ -9,6 +9,7 @@ import { CustomerBankCrypto } from "../../src/modules/customer/CustomerBankCrypt
 import { CustomerBankService } from "../../src/modules/customer/CustomerBankService.js";
 import { CustomerPartyService } from "../../src/modules/customer/CustomerPartyService.js";
 import { CustomerService } from "../../src/modules/customer/CustomerService.js";
+import { CustomerCreditService } from "../../src/modules/customer/CustomerCreditService.js";
 import { normalizeCustomerConfig } from "../../src/modules/customer/normalizeCustomerConfig.js";
 import { hashPassword } from "../../src/modules/user/passwordHash.js";
 import { RequestContextService } from "../../src/services/context/RequestContextService.js";
@@ -34,6 +35,7 @@ integrationTest("Local TC-080/081/083 real Customer security and contention", { 
   let roleId = null;
   let approverId = null;
   let customerId;
+  let termId = null;
 
   t.after(async () => {
     try {
@@ -47,6 +49,7 @@ integrationTest("Local TC-080/081/083 real Customer security and contention", { 
         await admin.execute("DELETE FROM users WHERE id IN (?, ?)", [actorId, approverId ?? 0]);
       }
       if (roleId) await admin.execute("DELETE FROM roles WHERE id = ?", [roleId]);
+      if (termId) await admin.execute("DELETE FROM payment_terms WHERE id = ?", [termId]);
       await admin.query("DROP TABLE IF EXISTS ??, ??", [canary, deniedCanary]);
     } finally {
       try { await admin.query("DROP USER IF EXISTS ?@'%'", [sqlUser]); }
@@ -61,16 +64,19 @@ integrationTest("Local TC-080/081/083 real Customer security and contention", { 
     "users", "roles", "permissions", "user_roles", "role_permissions", "customers",
     "customer_operation_requests", "customer_addresses",
     "customer_address_purposes", "customer_contacts", "customer_contact_purposes",
-    "customer_identifiers", "customer_credit_profiles", "customer_bank_accounts"
+    "customer_identifiers", "customer_credit_profiles", "customer_bank_accounts",
+    "currencies", "payment_terms", "customer_activation_requests", "customer_settings"
   ];
   const expectedPrivileges = readTables.map((table) => `${config.database}.${table}:SELECT:NO`);
   for (const table of readTables) {
     await admin.query("GRANT SELECT ON ??.?? TO ?@'%'", [config.database, table, sqlUser]);
   }
-  for (const table of ["customers", "customer_operation_requests", "customer_addresses", "customer_bank_accounts"]) {
+  for (const table of ["customers", "customer_operation_requests", "customer_addresses", "customer_bank_accounts", "customer_credit_profiles", "customer_activation_requests"]) {
     await admin.query("GRANT INSERT, UPDATE ON ??.?? TO ?@'%'", [config.database, table, sqlUser]);
     expectedPrivileges.push(`${config.database}.${table}:INSERT:NO`, `${config.database}.${table}:UPDATE:NO`);
   }
+  await admin.query("GRANT UPDATE ON ??.customer_identifiers TO ?@'%'", [config.database, sqlUser]);
+  expectedPrivileges.push(`${config.database}.customer_identifiers:UPDATE:NO`);
   await admin.query("GRANT INSERT ON ??.customer_audit_logs TO ?@'%'", [config.database, sqlUser]);
   await admin.query("GRANT INSERT, UPDATE, DELETE ON ??.customer_address_purposes TO ?@'%'", [config.database, sqlUser]);
   expectedPrivileges.push(`${config.database}.customer_audit_logs:INSERT:NO`, ...["INSERT", "UPDATE", "DELETE"].map((privilege) => `${config.database}.customer_address_purposes:${privilege}:NO`));
@@ -106,7 +112,9 @@ integrationTest("Local TC-080/081/083 real Customer security and contention", { 
   await db.initialize();
   const service = new CustomerService({ database: db, time });
   const actor = { actorId, claimedRoles: [roleName], claimedPermissions: permissions };
-  const input = { ...actor, idempotencyKey: `create-${suffix}`, customerCode: `GUARD-${suffix}`, legalName: `Guard fixture ${suffix}`, requestId: `create-${suffix}` };
+  const [term] = await admin.execute("INSERT INTO payment_terms (code, code_key, name, calculation_type, due_days, status, version, created_at, updated_at) VALUES (?, ?, 'Guard term', 'NET_DAYS', 30, 'ACTIVE', 1, ?, ?)", [`G-${suffix}`, `G-${suffix}`.toUpperCase(), now, now]);
+  termId = Number(term.insertId);
+  const input = { ...actor, idempotencyKey: `create-${suffix}`, customerCode: `GUARD-${suffix}`, legalName: `Guard fixture ${suffix}`, requestId: `create-${suffix}`, defaultCurrencyCode: "HKD", defaultPaymentTermId: termId };
   const keyMaterial = [randomBytes(32).toString("base64"), randomBytes(32).toString("base64")];
   const bankConfig = normalizeCustomerConfig({
     bankEncryption: { activeKeyId: "guard-enc", keyRing: { "guard-enc": keyMaterial[0] } },
@@ -126,6 +134,8 @@ integrationTest("Local TC-080/081/083 real Customer security and contention", { 
     assert.equal(replay.customer.id, customerId);
     assert.equal(replay.operation.operationId, created.operation.operationId);
     assert.equal((await service.get({ ...actor, id: customerId })).version, 1);
+    assert.equal(created.customer.defaultCurrencyCode, "HKD");
+    assert.equal(created.customer.defaultPaymentTermId, termId);
     const updated = await service.update({ ...input, id: customerId, version: 1, idempotencyKey: `update-${suffix}`, requestId: `update-${suffix}`, reason: "local least privilege proof", notes: "synthetic update" });
     assert.equal(updated.customer.version, 2);
     assert.equal((await service.get({ ...actor, id: customerId })).notes, "synthetic update");
@@ -164,10 +174,10 @@ integrationTest("Local TC-080/081/083 real Customer security and contention", { 
     await admin.query("DROP TABLE ??", [canary]);
   });
 
-  await t.test("LOCAL-081-BANK: real nullable-currency bank commands use only owned tables and append-only audit", async () => {
+  await t.test("LOCAL-081-BANK: real non-null Currency bank commands use catalog SELECT only and append-only audit", async () => {
     assert.ok(customerId);
     const common = { ...actor, customerId, accountHolderName: "Synthetic guard holder", bankName: "Synthetic guard bank",
-      bankCountryCode: "HK", reason: "local bank privilege proof" };
+      bankCountryCode: "HK", accountCurrencyCode: "HKD", reason: "local bank privilege proof" };
     const created = await banks.create({ ...common, accountNumber, requestId: `bank-create-${suffix}` });
     bankId = created.id;
     const masked = await banks.list({ ...actor, customerId });
@@ -181,7 +191,7 @@ integrationTest("Local TC-080/081/083 real Customer security and contention", { 
     const inactive = await banks.deactivate({ ...actor, customerId, bankAccountId: bankId, version: 2, reason: common.reason, requestId: `bank-deactivate-${suffix}` });
     assert.equal(inactive.status, "inactive");
     const [[row]] = await admin.execute("SELECT account_ciphertext, account_currency_code, status, version FROM customer_bank_accounts WHERE id=?", [bankId]);
-    assert.equal(row.account_currency_code, null, "non-null Currency locking is outside this least-privilege subset");
+    assert.equal(row.account_currency_code, "HKD", "catalog validation must work without Currency write grants");
     assert.equal(row.status, "inactive");
     assert.equal(Number(row.version), 3);
     assert.equal(row.account_ciphertext.includes(Buffer.from(accountNumber)), false);
@@ -271,12 +281,22 @@ integrationTest("Local TC-080/081/083 real Customer security and contention", { 
     approverId = Number(approver.insertId);
     await admin.execute("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)", [approverId, roleId]);
     const before = await service.get({ ...actor, id: customerId });
-    // Decision contention uses the existing integration runtime, not the narrower TC-081 fixture role.
-    approvalDb = new MySqlDatabaseService({ pool: createMySqlDatabasePool(config), config, context });
+    // Catalog rows remain SELECT-only even for approval/credit contention.
+    approvalDb = new MySqlDatabaseService({ pool: createMySqlDatabasePool(runtimeConfig), config: runtimeConfig, context });
     await approvalDb.initialize();
     const approvalCustomers = new CustomerService({ database: approvalDb, time });
     await approvalCustomers.update({ ...input, id: customerId, version: before.version, idempotencyKey: `currency-${suffix}`, defaultCurrencyCode: "HKD", reason: "local approval fixture" });
     const approvals = new CustomerApprovalService({ database: approvalDb, time });
+    const credit = new CustomerCreditService({ database: approvalDb, time });
+    const savedCredit = await credit.save({ ...actor, customerId, version: null, creditLimit: "100.0000", creditCurrencyCode: "HKD", creditStatus: "normal", reason: "least privilege credit proof" });
+    assert.equal(savedCredit.currencyCode, "HKD");
+    const proof = await approvalCustomers.create({ ...input, customerCode: `${input.customerCode}-APP`, legalName: `${input.legalName} approval`, idempotencyKey: `proof-${suffix}` });
+    const proofRequest = await approvalDb.withTransaction(connection => approvals.submitInTransaction(connection, { ...actor, customerId: proof.customer.id, approverUserId: approverId, requestNote: "read-only catalog approval proof" }, { setting: { require_activation_approval: 1, version: 1 } }));
+    const approved = await approvals.approve({ ...actor, actorId: approverId, id: proofRequest.id, version: 1, idempotencyKey: `proof-approve-${suffix}`, requestId: `proof-approve-${suffix}` });
+    assert.equal(approved.status, "approved");
+    assert.equal((await approvalCustomers.get({ ...actor, id: proof.customer.id })).status, "active");
+    const [proofAudit] = await admin.execute("SELECT action FROM customer_audit_logs WHERE customer_id=? AND action IN ('approval.approve','customer.activate') ORDER BY id", [proof.customer.id]);
+    assert.deepEqual(proofAudit.map(row => row.action), ["approval.approve", "customer.activate"]);
     // Use the transaction helper's policy snapshot input; never toggle the shared settings singleton.
     const request = await approvalDb.withTransaction((connection) => approvals.submitInTransaction(connection, { ...actor, customerId, approverUserId: approverId, requestNote: "local decision contention" }, { setting: { require_activation_approval: 1, version: 1 } }));
     const pending = await service.get({ ...actor, id: customerId });
@@ -305,7 +325,7 @@ integrationTest("Local TC-080/081/083 real Customer security and contention", { 
     assert.deepEqual(decisions.map((row) => [row.action, row.request_id]), [[terminal.status === "approved" ? "approval.approve" : "approval.reject", `decision-${suffix}-${winnerIndex}`], [terminal.status === "approved" ? "customer.activate" : "customer.status", `decision-${suffix}-${winnerIndex}`]]);
     const [[afterAudit]] = await admin.execute("SELECT COUNT(*) AS n FROM customer_audit_logs WHERE customer_id = ?", [customerId]);
     assert.equal(Number(afterAudit.n), Number(beforeAudit.n) + 2);
-    const [operations] = await admin.execute("SELECT status, COUNT(*) AS n FROM customer_operation_requests WHERE actor_user_id = ? GROUP BY status", [approverId]);
+    const [operations] = await admin.execute("SELECT status, COUNT(*) AS n FROM customer_operation_requests WHERE actor_user_id = ? AND resource_id = ? GROUP BY status", [approverId, request.id]);
     assert.deepEqual(operations.map((row) => [row.status, Number(row.n)]), [["succeeded", 50]]);
   });
 

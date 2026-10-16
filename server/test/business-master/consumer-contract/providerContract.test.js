@@ -9,6 +9,26 @@ import { createBusinessMasterAdminService } from "../../../src/modules/businessM
 
 const here = dirname(fileURLToPath(import.meta.url));
 
+test("HD-016 reference assertions request shared current reads and propagate transaction failures", async () => {
+  const calls = [];
+  const tx = { query() {} };
+  const failure = Object.assign(new Error("lock timeout"), { errno: 1205 });
+  let fail = false;
+  const repository = Object.fromEntries(["getCurrency", "getPaymentTerm"].map(method => [method, async (connection, key, options) => {
+    assert.equal(connection, tx);
+    calls.push([method, key, options]);
+    if (fail) throw failure;
+    return { code: "HKD", id: 1, status: "ACTIVE", version: 2 };
+  }]));
+  const provider = new BusinessMasterProvider({ database: {}, repository });
+  await provider.assertCurrencyUsableInTransaction(tx, { code: "HKD", expectedVersion: 2 });
+  await provider.assertPaymentTermUsableInTransaction(tx, { id: 1, expectedVersion: 2 });
+  assert.deepEqual(calls, [["getCurrency", "HKD", { forShare: true }], ["getPaymentTerm", 1, { forShare: true }]]);
+  fail = true;
+  await assert.rejects(() => provider.assertCurrencyUsableInTransaction(tx, { code: "HKD" }), error => error === failure);
+  await assert.rejects(() => provider.assertPaymentTermUsableInTransaction(tx, { id: 1 }), error => error === failure);
+});
+
 test("TC-020 v1 consumer provider returns minimal stable projections without admin permission input", async () => {
   const currency = { code: "HKD", name: "Hong Kong Dollar", decimalPlaces: 2, status: "ACTIVE", version: 4 };
   const term = { id: 8, code: "NET30", name: "Net 30", description: "Thirty days", calculationType: "NET_DAYS", dueDays: 30, status: "ACTIVE", version: 2 };

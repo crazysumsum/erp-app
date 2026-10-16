@@ -55,7 +55,7 @@ test("Sales snapshot preserves absent credit and inactive Customer facts, and re
 test("TC-027 rejects an unknown purpose before querying and exposes the versioned contract", async () => {
   let queries = 0;
   const lookup = new CustomerLookupService({ database: { async query() { queries += 1; return [[]]; } } });
-  assert.equal(CustomerLookupService.contract, "customer-purpose-provider-contracts/aligned-design-2.1");
+  assert.equal(CustomerLookupService.contract, "customer-purpose-provider-contracts/aligned-design-2.2");
   await assert.rejects(
     () => lookup.findById(4, { purpose: "generic_status_bypass" }),
     (error) => error.code === "CUSTOMER_LOOKUP_PURPOSE_INVALID" && error.statusCode === 400
@@ -250,4 +250,30 @@ test("TC-035 Customer precheck batch preserves missing/inactive members and uses
  assert.deepEqual(await service.getSalesPrecheckSnapshotsInTransaction(tx,[]),new Map());assert.equal(calls.length,1);
  for(const ids of [[0],[NaN],Array.from({length:101},(_,i)=>i+1)])await assert.rejects(()=>service.getSalesPrecheckSnapshotsInTransaction(tx,ids),TypeError);
  assert.equal(calls.length,1);
+});
+
+test("HD-014 batch contract bounds unique IDs, rejects unsafe input before SQL and freezes safe snapshots", async () => {
+  const queries = [];
+  const tx = { async query(sql, ids) { queries.push({ sql, ids }); return [[{ ...activeCustomer, credit_version: null }]]; } };
+  const service = new CustomerLookupService({ database: { query() { assert.fail("caller transaction only"); } } });
+  const ids = Array.from({ length: 100 }, (_, index) => 100 - index);
+  const result = await service.getSalesPrecheckSnapshotsInTransaction(tx, [...ids, 4, 4], { atMs: 0 });
+  assert.equal(result.size, 100);
+  assert.deepEqual([...result.keys()], [...ids].reverse());
+  assert.equal(queries.length, 1);
+  assert.equal(queries[0].ids.length, 100);
+  assert.equal((queries[0].sql.match(/\?/gu) ?? []).length, 100);
+  assert.doesNotMatch(queries[0].sql, /FOR UPDATE|FOR SHARE|LOCK IN SHARE MODE/iu);
+  const row = result.get(4);
+  assert.deepEqual(Object.keys(row), ["customerId", "customerCode", "legalName", "defaultCurrencyCode", "defaultPaymentTermId", "status", "customerVersion", "credit"]);
+  assert.ok(Object.isFrozen(row) && Object.isFrozen(row.credit));
+  assert.throws(() => { row.status = "blocked"; }, TypeError);
+  for (const input of [null, "4", ["4"], [1.5], [-1], [Number.MAX_SAFE_INTEGER + 1], [Infinity]]) {
+    await assert.rejects(() => service.getSalesPrecheckSnapshotsInTransaction(tx, input), TypeError);
+  }
+  for (const atMs of [-1, NaN, "0", Number.MAX_SAFE_INTEGER + 1]) {
+    await assert.rejects(() => service.getSalesPrecheckSnapshotsInTransaction(tx, [4], { atMs }), TypeError);
+  }
+  await assert.rejects(() => service.getSalesPrecheckSnapshotsInTransaction(null, [4]), TypeError);
+  assert.equal(queries.length, 1);
 });

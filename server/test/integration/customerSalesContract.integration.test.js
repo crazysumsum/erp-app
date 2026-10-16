@@ -10,7 +10,7 @@ import { setup, stock } from "../sales/phase2/fixtures.js";
 
 const integrationTest = process.env.DB_INTEGRATION_TESTS === "1" ? test : test.skip;
 
-integrationTest("TC-070 Sales consumes the Customer 2.1 active/default/current-policy contract", async t => {
+integrationTest("TC-070 Sales consumes the Customer 2.2 active/default/current-policy contract", async t => {
   const orderInput = f => ({ eventId: randomUUID(), customerId: f.customerId, currencyCode: f.currency,
     fulfillmentWarehouseId: f.warehouseId, orderDate: f.time.fileDate(),
     lines: [{ skuId: f.skuId, skuUomId: f.skuUomId, quantity: "10.000000", unitSellingPrice: "1.0000" }] });
@@ -36,7 +36,7 @@ integrationTest("TC-070 Sales consumes the Customer 2.1 active/default/current-p
     input: { ...orderInput(f), version: 1 } });
   assert.equal(order.salesOrder.paymentTermId, termId);
   assert.equal(order.salesOrder.paymentTermCode, termCode);
-  assert.equal(CustomerLookupService.contract, "customer-purpose-provider-contracts/aligned-design-2.1");
+  assert.equal(CustomerLookupService.contract, "customer-purpose-provider-contracts/aligned-design-2.2");
 
   await stock(f, 10);
   const intent = await f.service().startConfirmation({ ...f.request, input: { ...f.request.input, version: 2 } });
