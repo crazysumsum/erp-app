@@ -194,3 +194,29 @@ The earlier “Independent” title is historical wording without sufficient pro
 - findings closed: the candidate contains an initially `UNPROVISIONED` repo trust policy, detached Ed25519 verification of exact manifest bytes, approved environment/schema-prefix binding plus defence-in-depth blacklist, per-table `COUNT(*)` integration logic with mismatch assertion, conservative RTO calculation through adapter verification start, and superseded readiness/gap records
 - evidence reviewed: focused recovery tests 10/10, full server regression 1,497 total / 1,255 pass / 0 fail / 242 gated skips, lint pass and traceability `STRUCTURE_PASS`; the local true-MySQL rehearsal remains unexecuted because `erp_user` cannot create an isolated recovery schema
 - final disposition: `APPROVED`, no remaining Critical/Required finding. This approves the implementation increment only; the unprovisioned trust key, approved staging-like restore, TC-016 formal execution, PLAN/candidate approval, CI and release gates remain separate.
+
+## REV-046 — Committed-receipt provider proposed design and plan
+
+Actual SEPARATE_AGENT review by `/root/item_design_review`, author `/root`, new read-only turn on entry main `d9714a34f39a507528fc4c138496531cd1d57c69`. DESIGN `3daef7460516dd7e24d5db5575a1b580dbc81f078d31a1c54867192bc1904a66`; initial PLAN `94f9798c85ad56f211e414eaf904dab43de183241ef804639f5fc8a4ae7f2c5e`. Source fingerprint `d55cf833bed2764aef43601f2fd40fdc26f701a751a7afab68365bab2001e847`; raw design pin `f553cf74068b22b6e0645c37131ae57918ecadb701dcdfabe0d70361266a3cd9`.
+
+APPROVED, no blocking findings. Reviewer inspected Purchasing §2.4/§3.6/P0-T05, installed Item lookup/constants/errors/tests, new FR-067/DES-022/PHASE-010/TASK-048/TC-019/UAT-018 and typed profile/manifest/ledger. Confirmed dedicated bounded current-facts Map without usable/reasons, ordered current-state warnings not snapshot diffs, missing-before-serial errors, advisory/injected-executor consistency, UOM history not conversion authorization, unchanged old purposes and caller-owned commitment/revalidation. Read-only structural/boundary checks passed; no DB/test execution, external write or human approval.
+
+This approves proposal content only. The nine files were unstaged, not a committed candidate. A subsequent profile-only addition records the already-existing fifth CI job, Browser tests (Playwright), changing PLAN to `38b2a632f19a437c5b4b2040b39d60154c33df612fd651b515b978f05463901f`; final follow-up review remains separately recorded. Human approval HD-013 is still required; global PLAN_READY/DEF-107 GR blocker is neither removed nor waived.
+
+## REV-047 / REV-048 — Current PLAN checkpoint reconciliation
+
+Actual same separate reviewer follow-up returned CHANGES_REQUESTED with one P1: state126 still held initial PLAN94f while current profile produced PLAN38b. No other P0/P1/P2 findings; the added Browser tests check exactly matches the already-existing fifth workflow job, changing no workflow/command/threshold/skip. Preserve that failed review, do not rewrite it as initial approval.
+
+Primary repaired the checkpoint through revision-checked CAS126→127; no canonical design/plan bytes changed. Actual new reviewer turn independently verified state127 `LOCAL_CHECKS_PASS`, zero issues, exact DESIGN3daef746/PLAN38b2a632/entryd971 and retained all scope/blockers/history. Final REV-048 APPROVED: REV-047 P1 closed, no new P0/P1/P2. This is independent proposal/checkpoint review, not human DESIGN/PLAN approval, global PLAN_READY, implementation, CI or acceptance evidence.
+
+## REV-049 — Initial scoped IMPLEMENT execution-route review
+
+Actual read-only separate-agent reviewer `/root/item_design_review` returned CHANGES_REQUESTED, no P0, against original procedure SHA `d82dbd2743153358e22c638110c354787616ea598d7c480381db4aadd3d7d411`, DESIGN3daef746/PLAN38b2a632. P1: running original profile commands natively outside the generic PLAN_READY-enforcing runner is a material execution/governance route and must be bound through canonical PHASE-010/TASK-048/new PLAN approval, not only an excluded implementation document/old APR-063. P2: retained JUnit/build artifacts, not just logs, require size-capped validation/redaction/classification. Reviewer confirmed exact four suite hashes, boundaries, fresh DEFAULT, no merge/export claims and preserved DEF-107/GR/UAT restrictions; no DB/tests/network executed.
+
+Primary revised the proposal: canonical PLANa988403a pins complete procedure8b073ef4; provider DESIGN/profile/commands/thresholds/gates remain unchanged, original PLAN/approvals retained. All retained report classes require bounded validation/redaction and no unreviewed plaintext retention. This records proposed remediation, not fabricated reviewer closure; actual follow-up and HD-014/new PLAN/IMPLEMENT/private-DDL authorization remain pending.
+
+## REV-050 — Scoped-entry proposal follow-up
+
+Actual new read-only reviewer turn `/root/item_design_review` APPROVED: REV-049 P1/P2 closed, no new P0/P1/P2. Independently confirmed procedure `8b073ef4a4eaf8ea732faa4704aaa0f008f60f84f01e57bd6bafeb91e7426e6b`, unchanged DESIGN3daef746, new PLAN `a988403a54052de14169c49fd4596a05415499ae2aeadd0f306bc9100313d126`, state131 inspect LOCAL_CHECKS_PASS/zero issues, exact canonical route pin, four original suite contracts unchanged and all retained artifacts bounded/validated/redacted/classified/post-redaction verified. Original REV-049 requested-changes record remains.
+
+This approves the revised proposal only; actual HD-014/new PLAN/scoped IMPLEMENT/private-DDL authorization is still required. No product/tests/DB/runtime execution, generic gate PASS, source authority, push/PR/merge/export or formal acceptance is observed or granted. DEF-107 HIGH/OPEN, four-file Item scope, fresh DEFAULT, original purposes and all GR/UAT restrictions remain unchanged.

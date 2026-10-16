@@ -721,6 +721,10 @@
         "reason": "",
         "approval_id": null
       }
+    },
+    {
+      "id": "FR-067",
+      "uat": { "status": "APPLICABLE", "reason": "", "approval_id": null }
     }
   ],
   "designs": [
@@ -1114,6 +1118,10 @@
         "FR-065",
         "FR-066"
       ]
+    },
+    {
+      "id": "DES-022",
+      "requirement_ids": ["FR-067"]
     }
   ],
   "phases": [
@@ -1743,6 +1751,18 @@
         "item-server-technical",
         "item-client-technical"
       ]
+    },
+    {
+      "id": "PHASE-010",
+      "requirement_ids": ["FR-067"],
+      "design_ids": ["DES-022"],
+      "task_ids": ["TASK-048"],
+      "depends_on": ["PHASE-008"],
+      "branch_strategy": "DEFAULT",
+      "parent_commit": null,
+      "exception_approval_id": null,
+      "merge_group": "item-committed-receipt-provider",
+      "developer_suites": ["lint", "client-build", "item-server-technical", "item-client-technical"]
     }
   ],
   "tasks": [
@@ -3341,6 +3361,14 @@
         "TC-004",
         "TC-005"
       ]
+    },
+    {
+      "id": "TASK-048",
+      "phase_id": "PHASE-010",
+      "requirement_ids": ["FR-067"],
+      "design_ids": ["DES-022"],
+      "depends_on": ["TASK-046"],
+      "technical_test_ids": ["TC-019"]
     }
   ],
   "technical_tests": [
@@ -3932,6 +3960,16 @@
         "approval_id": null
       },
       "suite_id": "item-server-technical"
+    },
+    {
+      "id": "TC-019",
+      "requirement_ids": ["FR-067"],
+      "design_ids": ["DES-022"],
+      "task_ids": ["TASK-048"],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": { "status": "APPLICABLE", "reason": "", "approval_id": null },
+      "suite_id": "item-server-technical"
     }
   ],
   "uat_tests": [
@@ -4382,6 +4420,17 @@
         "reason": "",
         "approval_id": null
       },
+      "execution_surface": "MANUAL_BUSINESS",
+      "automation_suitability": "MANUAL_REQUIRED",
+      "suite_id": null
+    },
+    {
+      "id": "UAT-018",
+      "requirement_ids": ["FR-067"],
+      "technical_test_ids": ["TC-019"],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": { "status": "APPLICABLE", "reason": "", "approval_id": null },
       "execution_surface": "MANUAL_BUSINESS",
       "automation_suitability": "MANUAL_REQUIRED",
       "suite_id": null

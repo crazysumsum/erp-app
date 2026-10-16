@@ -72,6 +72,7 @@ This is a structural planning view, not execution evidence or approval.
 | FR-064 | DES-002, DES-012, DES-016 | PHASE-001, PHASE-002, PHASE-006 | TASK-002, TASK-011, TASK-020, TASK-039, TASK-041 | TC-010 | UAT-010 | APPLICABLE |
 | FR-065 | DES-021 | PHASE-008 | TASK-046 | TC-017 | UAT-017 | APPLICABLE |
 | FR-066 | DES-021 | PHASE-008 | TASK-046 | TC-018 | UAT-017 | APPLICABLE |
+| FR-067 | DES-022 | PHASE-010 | TASK-048 | TC-019 | UAT-018 | APPLICABLE |
 | NFR-001 | DES-001, DES-016, DES-017 | PHASE-001, PHASE-005, PHASE-006 | TASK-003, TASK-035, TASK-044 | TC-012 | UAT-016 | APPLICABLE |
 | NFR-002 | DES-014, DES-016, DES-017 | PHASE-001, PHASE-002, PHASE-005, PHASE-006 | TASK-003, TASK-012, TASK-013, TASK-017, TASK-022, TASK-035, TASK-037, TASK-039, TASK-044 | TC-002, TC-012 | UAT-016 | APPLICABLE |
 | NFR-003 | DES-014, DES-016, DES-017 | PHASE-001, PHASE-002, PHASE-005, PHASE-006 | TASK-003, TASK-012, TASK-013, TASK-017, TASK-022, TASK-035, TASK-037, TASK-039, TASK-044 | TC-002, TC-012 | UAT-016 | APPLICABLE |
@@ -119,6 +120,7 @@ This is a structural planning view, not execution evidence or approval.
 | TC-016 | true | true | APPLICABLE | item-recovery | TECHNICAL | PROFILE_SUITE |
 | TC-017 | true | true | APPLICABLE | item-server-technical | TECHNICAL | PROFILE_SUITE |
 | TC-018 | true | true | APPLICABLE | item-server-technical | TECHNICAL | PROFILE_SUITE |
+| TC-019 | true | true | APPLICABLE | item-server-technical | TECHNICAL | PROFILE_SUITE |
 | UAT-001 | true | true | APPLICABLE | item-uat-browser | UI_BROWSER | PLAYWRIGHT_PREFERRED |
 | UAT-002 | true | true | APPLICABLE | item-uat-browser | UI_BROWSER | PLAYWRIGHT_PREFERRED |
 | UAT-003 | true | true | APPLICABLE | item-uat-browser | UI_BROWSER | PLAYWRIGHT_PREFERRED |
@@ -136,6 +138,7 @@ This is a structural planning view, not execution evidence or approval.
 | UAT-015 | true | true | APPLICABLE | item-uat-browser | UI_BROWSER | PLAYWRIGHT_PREFERRED |
 | UAT-016 | true | true | APPLICABLE | MANUAL | MANUAL_BUSINESS | MANUAL_REQUIRED |
 | UAT-017 | true | true | APPLICABLE | MANUAL | MANUAL_BUSINESS | MANUAL_REQUIRED |
+| UAT-018 | true | true | APPLICABLE | MANUAL | MANUAL_BUSINESS | MANUAL_REQUIRED |
 
 ## N/A decisions
 

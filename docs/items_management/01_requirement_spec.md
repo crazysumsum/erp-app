@@ -1605,6 +1605,17 @@ The behavior and threshold stated for `FR-AUDIT-006` must be observable through 
 ### Failure behavior
 Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
 
+## FR-067 — Current Item facts for an existing committed receipt
+
+### Statement
+PROPOSED; Sam authorized DESIGN_AND_PLAN only on 2026-10-14. Provide the dedicated internal read-only `findManyForCommittedReceipt(skuIds, { atMs })` requested by Purchasing §2.4/P0-T05. Existing Item/SKU identity and current lifecycle/flags/effective dates remain readable for fulfillment of a caller-proven Confirmed PO; lifecycle or disabled flags produce current-state warnings rather than new-purchase eligibility rejection.
+
+### Acceptance criteria
+The proposed DES-022 contract is bounded, batch-based and all-or-error for missing SKU or unsupported serial tracking. It returns current facts, stable SKU/UOM ownership and a deterministic warning allowlist, not an authorization/receipt eligibility boolean or PO snapshot. Existing generic, purchase/search, Sales and Inventory contracts and rules remain unchanged. The caller owns permissions, PO ownership/confirmation/outstanding quantity, immutable snapshot comparison, exception reason, commit-time revalidation and all Receiving/Inventory safety checks. Item reads/writes no Purchasing/Supplier transaction data.
+
+### Failure behavior
+Invalid IDs/time fail before SQL; missing identity, serial or unavailable database fail closed without partial return or writes. A warning-free response cannot prove a PO exists, a source GR committed, or a receipt may post. Authoritative GR/DEF-107/TASK-043 and formal UAT remain separate and blocked/uncompleted as previously recorded; no planning result is executed acceptance.
+
 ## FR-065 — Additive purchase UOM identity and catalogue metadata
 
 ### Statement

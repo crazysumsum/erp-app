@@ -309,6 +309,23 @@ Approved thresholds are met or a named owner records rejection/accepted residual
 ### Acceptance criteria
 Required evidence is complete and baseline-bound; the named business/control owner records PASS, FAIL, BLOCKED or accepted residual risk. Automation PASS never substitutes for business acceptance.
 
+## UAT-018 — Review current Item facts for a committed receipt / ERP Product Owner
+
+### Business objective and actor
+FR-067: owner verifies the Item provider represents current master facts without rejecting a separately proven historical commitment solely for changed lifecycle/flags or authorizing a new PO/receipt. MANUAL_BUSINESS / MANUAL_REQUIRED, NOT_RUN. No Receiving UI/end-to-end journey is invented by this Item-only slice.
+
+### Preconditions and data
+Formal TC-019 passed on the approved immutable baseline; reviewed synthetic current projections for inactive/discontinued/archived Item/SKU, disabled flags and dated/nonserial examples. Separate consumer owner confirms immutable PO snapshot/confirmation/outstanding quantity/permission/reason/revalidation responsibilities. Real GR source and GR-positive acceptance remain BLOCKED until their owner integration is ready.
+
+### Steps
+Review batch outputs/errors against DES-022, including current-versus-historical facts, four warnings and stable UOM ownership. Confirm missing identity/serial are hard errors, no usable/canReceive grant, and existing purchase/inventory policy still rejects its previous invalid cases. Review consumer obligations without treating contract fakes as completed receipts.
+
+### Expected business result
+Operators can understand current master exceptions while Item leaves actual fulfillment authority and snapshots to Receiving. No new purchase eligibility, state restoration or completed-GR claim; no silent partial receipt line omission.
+
+### Acceptance criteria
+Named owner records actual baseline-bound PASS/FAIL/BLOCKED with evidence in a later authorized UAT session. Technical/developer/CI success is not this acceptance. TASK-043/DEF-107/GR and all prior UAT/Recovery obligations remain unchanged.
+
 ## UAT-017 — Purchase discovery metadata and eligible choices / ERP Product Owner
 
 ### Business objective and actor
