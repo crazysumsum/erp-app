@@ -1,6 +1,8 @@
 import { salesPayloadHash } from "./salesCanonicalHash.js";
 import { salesError, SALES_ERROR_STATUS } from "./salesErrors.js";
 import { salesEventId } from "./salesValidation.js";
+import { requireSalesActor } from "./salesAuthorization.js";
+import { ApplicationError } from "../../framework/errors/ApplicationError.js";
 
 const TARGETS = Object.freeze({ CREATE_QUOTATION: "QUOTATION", UPDATE_QUOTATION: "QUOTATION", ISSUE_QUOTATION: "QUOTATION",
   CANCEL_QUOTATION: "QUOTATION", CONVERT_QUOTATION: "QUOTATION", CREATE_ORDER: "SALES_ORDER", UPDATE_ORDER: "SALES_ORDER", WITHDRAW_ORDER: "SALES_ORDER", CANCEL_ORDER: "SALES_ORDER", CLOSE_REMAINING_ORDER: "SALES_ORDER", CONFIRM_IMPORT: "IMPORT_JOB", CANCEL_IMPORT: "IMPORT_JOB" });
@@ -17,11 +19,14 @@ function trace(value = "") {
   if (typeof value !== "string" || !/^[\x20-\x7e]{0,64}$/u.test(value)) throw new TypeError("Invalid Sales operation trace");
   return value;
 }
-function safeResult(value) {
-  const result = typeof value === "string" ? JSON.parse(value) : value;
+export function safeSalesOperationResult(value, commandType) {
+  let result = typeof value === "string" ? JSON.parse(value) : value;
+  if (commandType === "UPLOAD_IMPORT") {
+    const job=result?.importJob;result={id:job?.id,number:job?.batchNumber,status:job?.status,version:job?.version};
+  }
   if (!result || Object.keys(result).sort().join(",") !== "id,number,status,version" ||
       typeof result.number !== "string" || !/^(SO|QT|SI)-\d{6}-\d{6}$/u.test(result.number) ||
-      !(result.number.startsWith("SI-") ? ["QUEUED","CANCELLED"] : STATUSES).includes(result.status)) throw new TypeError("Invalid Sales operation result");
+      !(result.number.startsWith("SI-") ? commandType === "UPLOAD_IMPORT" ? ["UPLOADED"] : ["QUEUED","CANCELLED"] : STATUSES).includes(result.status)) throw new TypeError("Invalid Sales operation result");
   identifier(result.id); identifier(result.version);
   return { id: result.id, number: result.number, status: result.status, version: result.version };
 }
@@ -48,7 +53,7 @@ export class SalesOperationService {
       if (!row || row.request_hash !== hash || Number(row.actor_user_id) !== actor.id || row.command_type !== "CONFIRM_ORDER" ||
           row.target_type !== "SALES_ORDER" || Number(row.target_id) !== targetId) throw salesError("SALES_EVENT_CONFLICT");
       if (row.status === "FAILED") throw salesError(Object.hasOwn(SALES_ERROR_STATUS, row.error_code) ? row.error_code : "SALES_DEPENDENCY_UNAVAILABLE");
-      if (row.status === "SUCCEEDED") return { operationId: identifier(Number(row.id)), eventId, status: "SUCCEEDED", leaseOwner: null, replay: safeResult(row.result_summary) };
+      if (row.status === "SUCCEEDED") return { operationId: identifier(Number(row.id)), eventId, status: "SUCCEEDED", leaseOwner: null, replay: safeSalesOperationResult(row.result_summary) };
       if (row.status !== "IN_PROGRESS") throw salesError("CONCURRENT_OPERATION");
       const stored = typeof row.recovery_payload === "string" ? JSON.parse(row.recovery_payload) : row.recovery_payload;
       if (salesPayloadHash(stored) !== hash) throw salesError("SALES_EVENT_CONFLICT");
@@ -82,12 +87,12 @@ export class SalesOperationService {
           row.target_type !== targetType || (row.target_id === null ? null : Number(row.target_id)) !== targetId) throw salesError("SALES_EVENT_CONFLICT");
       if (row.status === "FAILED" && Object.hasOwn(SALES_ERROR_STATUS, row.error_code)) throw salesError(row.error_code);
       if (row.status !== "SUCCEEDED") throw salesError("CONCURRENT_OPERATION");
-      return { operationId: identifier(Number(row.id)), replay: safeResult(row.result_summary) };
+      return { operationId: identifier(Number(row.id)), replay: safeSalesOperationResult(row.result_summary) };
     }
   }
 
   async succeed(connection, { operationId, result, nowMs }) {
-    const summary = safeResult(result), resultType = summary.number.startsWith("QT-") ? "QUOTATION" : summary.number.startsWith("SI-") ? "IMPORT_JOB" : "SALES_ORDER";
+    const summary = safeSalesOperationResult(result), resultType = summary.number.startsWith("QT-") ? "QUOTATION" : summary.number.startsWith("SI-") ? "IMPORT_JOB" : "SALES_ORDER";
     const [row] = await connection.execute(`UPDATE sales_operation_requests SET status = 'SUCCEEDED', result_type = ?, result_id = ?,
       result_summary = ?, updated_at = ?, completed_at = ? WHERE id = ? AND status = 'IN_PROGRESS'`,
     [resultType, summary.id, JSON.stringify(summary), timestamp(nowMs), nowMs, identifier(operationId)]);
@@ -98,8 +103,22 @@ export class SalesOperationService {
     const [[row]] = await connection.query(`SELECT status, result_summary, error_code FROM sales_operation_requests
       WHERE event_id = ? AND actor_user_id = ? AND target_type IN ('SALES_ORDER','QUOTATION')`, [salesEventId(eventId), identifier(actor.id)]);
     if (!row) return null;
-    return { status: row.status, result: row.status === "SUCCEEDED" ? safeResult(row.result_summary) : null,
+    return { status: row.status, result: row.status === "SUCCEEDED" ? safeSalesOperationResult(row.result_summary) : null,
       ...(row.status === "FAILED" ? { errorCode: Object.hasOwn(SALES_ERROR_STATUS, row.error_code) ? row.error_code : "SALES_DEPENDENCY_UNAVAILABLE" } : {}) };
+  }
+
+  async lookup(database,{claims,eventId}) {
+    salesEventId(eventId);
+    return database.withTransaction(async tx=>{
+      const actor=await requireSalesActor(tx,claims,"sales.view");
+      const [[row]]=await tx.query(`SELECT id,command_type,target_type,status,result_summary,error_code FROM sales_operation_requests WHERE event_id=? AND actor_user_id=?`,[eventId,actor.id]);
+      const target=row&&(TARGETS[row.command_type]??({CONFIRM_ORDER:"SALES_ORDER",UPLOAD_IMPORT:"IMPORT_JOB"})[row.command_type]);
+      if(!row||!target||target!==row.target_type)throw salesError("SALES_ORDER_NOT_FOUND");
+      if(!actor.permissions.includes(target==="IMPORT_JOB"?"sales.import":"sales.mgmt"))throw new ApplicationError("Original operation permission required",{code:"FORBIDDEN",statusCode:403});
+      const result=row.status==="SUCCEEDED"?safeSalesOperationResult(row.result_summary,row.command_type):null;
+      if(result&&(target==="IMPORT_JOB")!==result.number.startsWith("SI-"))throw new TypeError("Invalid Sales operation target result");
+      return {eventId,operationId:identifier(Number(row.id)),status:row.status,result,errorCode:row.status==="FAILED"?(Object.hasOwn(SALES_ERROR_STATUS,row.error_code)?row.error_code:"SALES_DEPENDENCY_UNAVAILABLE"):null};
+    });
   }
 
   async run(database, work, options) {
