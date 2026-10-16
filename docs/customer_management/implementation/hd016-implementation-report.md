@@ -110,3 +110,69 @@ published head, avoiding repeated documentation-only commits invalidating the ve
 CI identity they describe. A later receipt supersedes this pending checkpoint only
 when the actual observation exists. No final success, defect closure or cleanup is
 claimed in advance. Whole-module state stays BLOCKED for the unready downstreams.
+
+## Serial full-run failure supersedes the pending checkpoint
+
+On the integrated executable/source397e1617, the serial CI-equivalent server
+coverage invocation completed exit1:3,441 tests,3,304PASS,1FAIL,136existingSKIP,
+0cancelled,585928.640416ms. The only failure was unchanged Sales TC-042 mixed
+load (34722.812459ms), CONCURRENT_OPERATION, before import READY. No other
+CPU-heavy local test job overlapped this run. Therefore the earlier non-isolated
+measurement classification does NOT dispose of the newly reproduced regression.
+DEF-033001 remains HIGH/OPEN; the isolated successful scenario is not a substitute.
+Coverage lines94.00%, branches86.40%, functions93.14%; all38 high-risk per-file
+floors pass independently, but the full test command FAIL remains a merge blocker.
+Existing skip policy, assertions, thresholds and CI are unchanged.
+
+Owned MySQL native deadlock diagnostics identify a real cycle: a new Sales draft
+holds the Warehouse shared FK lock and waits for an insert-intention lock on
+`sales_order_lines.uq_sales_order_line_sku_uom` supremum; a confirmation holds
+that line-index range and waits for the same Warehouse's exclusive Inventory lock.
+Currency/Payment Term do not participate in this captured wait cycle. This does
+not prove the new shared catalog concurrency is irrelevant to its exposure.
+
+A private diagnostic reuses the existing TC-021 fixture/probe with100 distinct
+SKU/UOM lines, a different Customer and a different Currency for the competing
+draft. Twice it failed the existing observable invariant: the competing first-line
+INSERT cannot complete while the confirmation holds its Sales-line locks.
+The second invocation0PASS1FAIL0SKIP,5944.703583ms captured actual EXPLAIN:
+`Index lookup ... using uq_sales_order_line_sku_uom (sales_order_id=15169)`, then
+filter `line_no IN (1..100)` and sort `id`. This is not the intended full-unique
+line-number point-lock plan. Existing one-line TC-021 passes but misses this case.
+SalesOrderService and the mixed-load test are identical to latest main089dd45b;
+no Sales product repair has been made or implicitly authorized by HD016.
+
+Proposed next decision HD-017: extend only SalesOrderService.lockSalesOrderLines
+and directly related Sales regression tests to enforce intended unique-record
+locking for supported100-line orders. Preserve lock order, atomicity, error handling,
+owner/provider boundaries, schema/grants, fixed capacity profile and every gate.
+Then rerun the minimal reproducer, unchanged TC-042, full coverage and exact-head CI.
+This touches a third module product file outside Sam's explicitly approved two
+shared files, so implementation/merge must wait for that scope decision. No waiver
+of this genuine failure is proposed; reverting to catalog exclusive reads would
+restore the demonstrated SELECT-only Customer runtime denial and is not a solution.
+
+Actual private evidence retained (no secret values):
+
+| Evidence | SHA256 |
+| --- | --- |
+| server-coverage-final.log | 0fc84ddffc86b3507558de0dd33d5d1da90553e2e73402ca0ff6f87f9b87885c |
+| sales-lock-probe.mjs | 99ddebef81b818ee283ba462d9697c514edbd515625097923d609dd846e947e8 |
+| sales-lock-probe-explain.log | 60a81ab71df17d87422ce4336ac0b510a92fdfda338a568ceb5e3c90c2526289 |
+| mysql.log at diagnosis before runtime cleanup | 15e9340492ff199a1266f6b5c25b73e4adf99d3f20639d0b606e7e5cc36dd492 |
+
+Paths are under `/private/tmp/customer-hd016.qWNdul/`; the probe's command was
+`node /private/tmp/customer-hd016.qWNdul/run.mjs node --test --test-concurrency=1 --import ./server/test-support/testEnv.js /private/tmp/customer-hd016.qWNdul/sales-lock-probe.mjs`
+from this owned Customer worktree. Probe setup/teardown uses real registered
+services and real MySQL, not mocked database locks. It is diagnostic evidence,
+not an added approved Sales implementation/regression or downstream acceptance.
+
+Independent reviewer `/root/customer_task011_review` returned CHANGES_REQUESTED
+on source397e1617/PR83603: the serial failure is a valid HIGH blocker, and HD-017
+is required before Sales product changes. No merge is permitted by the code-only
+earlier approval. Before pausing for the consolidated scope decision, only the
+owned schema and ephemeral administrator were dropped, owned MySQL13369 stopped
+(shutdown02:13:06UTC; process sessions exit0/socket absent), and its exact stopped
+datadir/private credential file removed. These were disposable synthetic test
+resources, not recoverable business data; credential-free logs/probe remain.
+Customer worktree/branch/DraftPR244 remain for resumption. Shared MySQL untouched.

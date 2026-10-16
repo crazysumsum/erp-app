@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 220,
+  "revision": 221,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,18 +11,18 @@
   "baseline": {
     "design": "13a77ed225d0253eaac097b5e3bb13f60c6078d1019500b95e976dd6617af721",
     "plan": "b390c588a323b3c3677bb031f287cebefe2cb284571e901d56aa3f14814f44db",
-    "code_commit": "26ed9a6e8b951cbd585cf74f0a2eb00031a3e337",
+    "code_commit": "83603aeb059f4c6a067814d467dcf209f06d7957",
     "source_fingerprint": "397e161701b2e6af7a3dd7be702d4d48c057f49c1d2d9aed6f62ecbf606c8510",
     "worktree": "/private/tmp/erp-customer-operations-readiness",
     "default_commit": "089dd45b6ca5558511ae6396a88f732d5df43927",
     "mode_entry_commit": "392b9f9db0f36f5a3bbabf2854bf3ee20a7bf227"
   },
   "runtime": {
-    "instance_id": "customer-hd016-qWNdul-active",
+    "instance_id": "customer-hd016-qWNdul-cleaned",
     "owner": "/root Customer HD016 implementation",
     "resources": {
       "workspace": "/private/tmp/erp-customer-operations-readiness",
-      "mysql-schema": "owned13369/qWNdul/mysql + erp_customer_hd016; fixture-only administrator with private ephemeral credentials; actual Customer role catalogSELECTonly",
+      "mysql-schema": "CLEANED: owned13369 schema+ephemeraladmin dropped; ownmysqld shutdown02:13:06 verified sessions43711/73057 exit0,socketgone; exactstoppeddatadir+admin.json removed. No shared3306 changes. Credentialfree evidence retained.",
       "customer-file-root": "existing integration synthetic owned temp roots",
       "customer-import-root": "Sales registeredworker synthetic spool/ownedfixture cleanup",
       "web-port": "ephemeral application ports owned by existing tests"
@@ -2960,6 +2960,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-073",
+      "method": "SEPARATE_AGENT",
+      "author": "/root Customer HD016 integrated implementation",
+      "reviewer": "/root/customer_task011_review",
+      "reviewed_baseline": "397e161701b2e6af7a3dd7be702d4d48c057f49c1d2d9aed6f62ecbf606c8510",
+      "source_ref": "Actual separate reviewer CHANGES_REQUESTED on83603: serialTC042genuineHIGHblocker, nativecycleWarehouseS->lineindexinsert vslineindexX->WarehouseX.100lineplan/probe confirms existingone-lineTC021gap. No merge. Explicit HD017scope needed before SalesOrderService+directregressionfix; do notbackoutforShare/read-onlyruntimecontrol.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -3897,6 +3909,17 @@
       "subject": "Isolated unchanged TC042 and latest-main integration checkpoint, not final gates",
       "status": "PASS",
       "source_ref": "implementation/hd016-isolated-load-results.json: actual scenario at defed source1dbed,1PASS0FAIL0SKIP,829888ms,10korders50klines50users4045samples,p9586.791291ms; no failures/timeouts/mismatches. Initial invalid-profile FAIL preserved. Main089dd45b integrated26ed; independent reviewer confirmed only additive Item paths, reviewed Customer/BM source unchanged. Complete serial coverage on source397 active, exact finalheadCI/review pending. No full downstream signoff."
+    },
+    {
+      "code_commit": "83603aeb059f4c6a067814d467dcf209f06d7957",
+      "spec_baseline": "13a77ed225d0253eaac097b5e3bb13f60c6078d1019500b95e976dd6617af721",
+      "source_fingerprint": "397e161701b2e6af7a3dd7be702d4d48c057f49c1d2d9aed6f62ecbf606c8510",
+      "actor": "/root Customer HD016 serial verification",
+      "observed_at": "2026-10-16T02:13:19Z",
+      "kind": "MANUAL_TEST",
+      "subject": "Integrated serial fullcoverage and minimal100line Sales lock proof",
+      "status": "FAIL",
+      "source_ref": "implementation/hd016-implementation-report.md serialterminalsection. Actual3441tests3304PASS1FAIL136existingSKIP; onlyTC042,0parallelheavyjobs. Coverage94.00/86.40/93.14 and38floorsPASS do not negateFAIL. Nativecycle+two100lineprobeFAIL,actualEXPLAINuqsalesorderskuuomrange. Full-logSHA0fc84ddf;probeExplainSHA60a81ab7. No Salesproductfix/CIedit/merge. OwnedMySQLschema+fixtureadmin dropped,shutdowncompleted02:13:06,socketgone,datadir+privatecredentialremoved; rawcredentialfreelogs/probe retained."
     }
   ],
   "pending_decisions": [
@@ -4136,6 +4159,19 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Actual Sam current user: 批准 HD-016、PR #244 的 DESIGN baseline 13a77ed2、PLAN baseline b390c588，以及兩個共用檔案的窄範圍修復。繼續實作及驗證，完成後合併；完整下游整合驗收保持阻塞，沒有需要我決策的事就不要停下來。 Full hashes resolve uniquely to published/reviewed PR244 proposal."
+    },
+    {
+      "id": "HD-017",
+      "impact": "MAJOR",
+      "question": "Extend HD016 approved Customer/twoBMshared scope only to SalesOrderService.js lockSalesOrderLines and directly related Sales regression tests, to repair actual100line unique-record lock plan/deadlock? DifferentCustomer/Currency diagnostic twiceFAIL and nativeWarehouse/lineindexcycle proven; preserve fixedlockorder,atomicity,errorhandling,schema,grants,CI,capacitythresholds. Then rerun minimalproof/unchangedTC042/fullcoverage/exactheadCI+independentreview before normalmerge. Alternative keepDraft androuteSalesrepairseparately; no waiver/mergeoverfailure recommended. No Sales product implementation authorized yet.",
+      "affected_ids": [
+        "DEF-033001",
+        "TASK-033",
+        "TC-081",
+        "HD-016"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
     }
   ],
   "external_actions": [
@@ -5280,8 +5316,16 @@
       "kind": "GIT_PUSH",
       "target": "github:crazysumsum/erp-app:codex/customer-operations-readiness existing draftPR244",
       "idempotency_key": "customer-hd016-integrated-publication120",
-      "status": "PLANNED",
-      "source_ref": "Authorized final scoped integrated candidate publication, not claim pending coverage/CI/review passed. Actual publish/gates/merge/cleanup receipts to PR244 timeline against immutable finalhead."
+      "status": "CONFIRMED",
+      "source_ref": "Actual published83603aeb PR244 Draft receipt issuecomment6206410018; exactheadCI38838659721 started,4gatesPASS,server/clienttestpending at02:11. Local fullcoverageFAIL preventsmerge regardlesslaterCI. No merge."
+    },
+    {
+      "id": "EXT-CLEANUP-121",
+      "kind": "ISOLATED_RUNTIME_CLEANUP",
+      "target": "owned /private/tmp/customer-hd016.qWNdul/mysql datadir,erp_customer_hd016 schema,hd016_admin,loopback13369,privateadmin.json only",
+      "idempotency_key": "customer-hd016-cleanup121",
+      "status": "CONFIRMED",
+      "source_ref": "Actualpreflightdatadir/port/accountlist/nootheractivesessions; droppedownedbase/admin,shutdown02:13:06 bothsessions0,verifiedsocketabsent,removedexactstoppeddatadir+privatecredential. OwnCustomerworktree/branch/DraftPR retained forpendingHD017; evidence logs retained. No thirdpartyor sharedresource touched."
     }
   ],
   "evidence_files": [
@@ -5366,7 +5410,7 @@
     {
       "id": "DEF-033001",
       "severity": "HIGH",
-      "status": "RETEST",
+      "status": "OPEN",
       "source_ids": [
         "TASK-033",
         "DES-017",
@@ -5374,10 +5418,11 @@
       ],
       "closure_evidence": [
         "Actual full server coverage mixed-load Sales-module TC042 failure CONCURRENT_OPERATION ~35s; may be existing load/deadlock behavior, cause not established. OwnMySQL printall-deadlock diagnostic + unchanged uninstru scenario running. No Sales product remediation inferred, no Customer/sharedfix acceptance/merge while blocker unresolved.",
-        "Independent /root/customer_task011_review classifies initial TC042 measurement INVALID_NON_ISOLATED_TEST_PROFILE: simultaneous client coverage outside fixed workload. Original FAIL retained; no established sole cause/product defect resolution. Schema has no invalid-profile status, RETEST preserves pending final gates. Isolated unchanged scenario actual1PASS0FAIL0SKIP at defed/source1dbed, p95 86.791291ms, all scheduler failures/timeouts/reconciliation differences0. Integrated source397 full serial coverage and final exact-head CI pending; no CLOSED/waived failure."
+        "Independent /root/customer_task011_review classifies initial TC042 measurement INVALID_NON_ISOLATED_TEST_PROFILE: simultaneous client coverage outside fixed workload. Original FAIL retained; no established sole cause/product defect resolution. Schema has no invalid-profile status, RETEST preserves pending final gates. Isolated unchanged scenario actual1PASS0FAIL0SKIP at defed/source1dbed, p95 86.791291ms, all scheduler failures/timeouts/reconciliation differences0. Integrated source397 full serial coverage and final exact-head CI pending; no CLOSED/waived failure.",
+        "Superseding actual serial integrated full run:3441tests3304PASS1FAIL136existingSKIP,0cancelled585928.640416ms; onlyTC042 failsCONCURRENT_OPERATION34722ms withoutparallelheavyjobs. NativewarehouseS/lineindexXsupremum/warehouseX deadlock captured.100line/differentCustomerCurrency diagnostic twiceFAIL; MySQLplanchoosesuq_sales_order_line_sku_uom range,not intendedunique line_number points. Independent CHANGES_REQUESTED confirmsHIGH validblocker; not invalidprofile/waived/resolved. Repair SalesOrderService.lockSalesOrderLines+directtests requiresnewHD017scopeapproval."
       ],
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Publish integrated candidate checkpoint to existing PR244; keep draft until actual integrated serial full coverage, exact final published-head complete CI, independent final review and fresh-main check pass. Record immutable terminal receipts on PR244 timeline rather than metadata-only commit loops. DEF033001 RETEST is schema-compatible pending disposition of invalid non-isolated measurement; preserve originalFAIL, never claim sole cause/closure. Full downstream030031032 and wholemodule acceptance BLOCKED; HD013/015 unchanged waivers and HD016 exact approvals retained."
+  "next_safe_action": "Wait for consolidated HD017 explicit scope decision: genuine serialTC042HIGHdeadlock requires SalesOrderService.lockSalesOrderLines and direct100lineregression, outsideapprovedCustomer+twoBMsharedfiles. No furtherproductchanges ormerge. Preserve exactD13a/Pb390 approvals and originalfailures; do notwaive/ignore test, revertforShare, reducecapacity orCIgates. PR244Draft has published83603 plus terminal receipts; ownedMySQLcleaned,evidence retained. IfHD017approved, reconcile required design/plan scope beforeminimalSalesfix,TDDreal100lineprobe,unchangedTC042,serialfullcoverage,exactheadCI,independentreview,freshmain normalmerge andownedworktreecleanup. Full downstream030031032/UAT remainsBLOCKED."
 }
