@@ -49,7 +49,8 @@
       "server/src/handlers/sales-archive-batches/**",
       "server/src/services/salesJobs/jobs/SalesExportJob.js",
       "server/src/services/salesJobs/jobs/SalesArchiveJob.js",
-      "docs/runbooks/sales-order-management.md"
+      "docs/runbooks/sales-order-management.md",
+      "client/src/framework/layout/AppTopbar.vue"
     ],
     "test_paths": [
       "server/test/sales/**",
@@ -189,7 +190,8 @@
       "server/database/migrations/*_create_sales_archive_batches.js",
       "server/database/migrations/*_create_sales_archive_tables.js",
       "server/database/migrations/*_protect_sales_archive_immutability.js",
-      "server/test-capacity/sales/phase4/**"
+      "server/test-capacity/sales/phase4/**",
+      "client/src/framework/layout/AppTopbar.vue"
     ],
     "approval_required_paths": [
       "server/database/migrations/**",

@@ -1,0 +1,10 @@
+import {mount} from "@vue/test-utils";
+import {Quasar} from "quasar";
+import {expect,it} from "vitest";
+import {createMemoryHistory,createRouter} from "vue-router";
+import Source from "@/components/sales/SalesOrderSourcePanel.vue";
+import Timeline from "@/components/sales/SalesOrderStatusTimeline.vue";
+const global={plugins:[Quasar,createRouter({history:createMemoryHistory(),routes:[]})]};
+it("TC-044 source links the actual quotation and escapes external identity",()=>{const w=mount(Source,{global,props:{order:{sourceType:"QUOTATION",sourceQuotationId:19,channelCode:"WEB",externalOrderId:"<img src=x>"}}});expect(w.find('a[href="/sales/quotations/19"]').exists()).toBe(true);expect(w.text()).toContain("<img src=x>");expect(w.find("img").exists()).toBe(false);w.unmount();});
+it("TC-044 manual source has no invented import or quotation link",()=>{const w=mount(Source,{global,props:{order:{sourceType:"MANUAL",sourceQuotationId:null,externalOrderId:""}}});expect(w.find("a").exists()).toBe(false);expect(w.text()).toContain("人工");w.unmount();});
+it("TC-046 timeline preserves safe reasons, actor, versions and truncation warning",()=>{const w=mount(Timeline,{global,props:{truncated:true,history:[{id:1,occurredAt:0,actorLabel:"Synthetic",fromStatus:"DRAFT",toStatus:"CANCELLED",action:"CANCEL",reason:"<script>x</script>",version:2}]}});expect(w.text()).toContain("最近 100 項");expect(w.text()).toContain("Synthetic");expect(w.text()).toContain("版本 2");expect(w.text()).toContain("<script>x</script>");expect(w.find("script").exists()).toBe(false);w.unmount();});
