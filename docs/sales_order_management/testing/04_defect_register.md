@@ -110,3 +110,9 @@ Sales已接手triage，本地對照 `sales-order-management:DEF-016` 與 `custom
 Sales已核對來源診斷腳本、EXPLAIN診斷log及完整coverage log三項原SHA一致，並複製到P4私有證據目錄保留；mysql.log另保存當前shutdown追加後版本，明確不等同原快照。私有receipt為 `phase4-private/customer-def033001-received/receipt.json`，不提交原始log或憑證。上述fullcoverage數字屬Customer來源結果，並非Sales本次執行或對Sales零skip門檻的豁免。
 
 歷史P3合併及CI成功不被改寫，但目前Sales鎖路徑／混合負載資格須重新驗證。修復需100行barrier、原單行TC021、確認／Backorder／lifecycle相關鎖序及原完整TC042，保留原50users與各延遲／失敗門檻；另須依當前候選執行CI／獨立審查。Customer PR244仍BLOCKED；僅接手或單項綠燈不能解除。P4 DEC028的頁首批准與本缺陷處置互不替代。
+
+### Sales 本地修復重驗結果
+
+目前本地DEF016為RETEST，非CLOSED／waived。已在Sales原範圍修正共用lockSalesOrderLines：僅固定使用既有完整line-number唯一索引，保留原predicate／參數／FOR UPDATE／transaction／lock ranks，沒有migration或增加retry。原100行barrier先1FAIL後1PASS，EXPLAIN改為100完整唯一鍵等值範圍；確認／Backorder／lifecycle相關111PASS0FAIL0SKIP。
+
+原完整TC042檔2PASS0FAIL0SKIP：10,000單／50,000行、50使用者、4002前景操作全完成；P95119.992ms<3000，未排除失敗；三排程worker0failures／timeouts，六類對帳差異全0，原50MiB記憶體門檻通過。測試期間來源324a283d不變，最終lint與獨立修復覆核通過，詳見../implementation/102_def016_lock_remediation.md及私有rawSHA56588eb7。仍須整合候選的完整Phase／CI／審查；Customer PR244不得據此單獨解除阻塞，來源Customer缺陷不在本工作關閉。

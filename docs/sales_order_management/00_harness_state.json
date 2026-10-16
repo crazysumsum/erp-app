@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1072,
+  "revision": 1074,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
-  "current_phase": "PHASE-003",
-  "current_task": "TASK-030",
+  "current_phase": "PHASE-005",
+  "current_task": "TASK-054",
   "baseline": {
     "design": "af176fea5409aadc193a2f397750344b9c4cc217ea77b10bffeebda1265e5fdb",
     "plan": "99a048fd69847b62c6345836baf431f33a20b4c137fa3702e0c8a2d8c430be03",
-    "code_commit": "cb376aa4fe27cdbe3c18b69093b0369e1a552af7",
-    "source_fingerprint": "2e5cb1c439e7369c69803376d3b70e050c1ee907bf11b5c106651a4e52bbb528",
+    "code_commit": "bcb034e4ed895519fd2589a8c3c7f27db427dfa5",
+    "source_fingerprint": "324a283d7cb6e1314cec1e12d8f3c8cafdd498d9407588716f0fa717878f9647",
     "worktree": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app",
     "default_commit": "4439014e9a9d03f233e858e56f93617e787ecb8c",
     "mode_entry_commit": "4439014e9a9d03f233e858e56f93617e787ecb8c"
@@ -58,7 +58,7 @@
     "TASK-027": "DONE",
     "TASK-028": "DONE",
     "TASK-029": "DONE",
-    "TASK-030": "IN_PROGRESS",
+    "TASK-030": "DONE",
     "TASK-031": "DONE",
     "TASK-032": "DONE",
     "TASK-033": "DONE",
@@ -81,7 +81,8 @@
     "TASK-050": "DONE",
     "TASK-051": "DONE",
     "TASK-052": "DONE",
-    "TASK-053": "DONE"
+    "TASK-053": "DONE",
+    "TASK-054": "IN_PROGRESS"
   },
   "approvals": [
     {
@@ -9501,6 +9502,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-DEF016-LOCK-AND-TC042-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_def016_lock_review",
+      "reviewed_baseline": "af176fea5409aadc193a2f397750344b9c4cc217ea77b10bffeebda1265e5fdb",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/def016-lock-remediation-r1-reviewer-proof.json SHA2569a298bed5a16b47153d61b04b517dec6f4e8505cd4d1200ec7f562f0efbeffd2; native/111/originalTC042/frozen324 scopedAPPROVED only, full39/candidateCI/Phase/Customer244 stillpending",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -12407,6 +12420,28 @@
       "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/def016-local-red.log SHA256eafe635fe49591afadcd73fc0f6748aa4d91248efc8a6232924e251046834155; incoming 2d1e4956 source3hashes verified; see testing/04_defect_register.md; Customer244 remainsBLOCKED, no previoushistorical result overwritten",
       "actor": "Codex /root",
       "observed_at": "2026-10-16T06:22:49.121225+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEF016 unique-index fix: 100-line barrier1PASS and affected confirmation/Backorder/lifecycle111PASS0FAIL0SKIP; TC042 not yet executed",
+      "code_commit": "bcb034e4ed895519fd2589a8c3c7f27db427dfa5",
+      "spec_baseline": "99a048fd69847b62c6345836baf431f33a20b4c137fa3702e0c8a2d8c430be03",
+      "source_fingerprint": "324a283d7cb6e1314cec1e12d8f3c8cafdd498d9407588716f0fa717878f9647",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/def016-local-hint-green.log SHA256384a974e7ce302cf64fe9a678eb94c6e049d020f610f73bbe540a073d3fe6bc2; /Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/def016-caller-regression.log SHA256563c9d81f0d44361511cfe7a7465f05816bc3c33ebc817b9b60177d88d85666c; no closure/merge/Customer244 unblock",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-16T08:20:55.213987+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEF016 actual unchangedTC042 fullfile2PASS0FAIL0SKIP;10k/50k/50actors4002foreground,p95119.992ms,allworker failures0/reconciliation0/originalmemoryPASS; final lint and independent scopedreviewPASS",
+      "code_commit": "bcb034e4ed895519fd2589a8c3c7f27db427dfa5",
+      "spec_baseline": "99a048fd69847b62c6345836baf431f33a20b4c137fa3702e0c8a2d8c430be03",
+      "source_fingerprint": "324a283d7cb6e1314cec1e12d8f3c8cafdd498d9407588716f0fa717878f9647",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/def016-tc042-r1.log SHA25656588eb7a06869a4d3b68535bcd75fdb3f6774763af28596d504509cc092b7ce; actualexit0 fullfile2PASS0FAIL0SKIP839463ms; summaryjson and actualindependent9a298bed; sameUUID/schema migration90, test-owneddata normallycleaned; no wholePhase/CI/Customer244 closure; no full39/candidateCI/formal/UAT/mainclaim",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-16T08:37:51.615104+00:00"
     }
   ],
   "pending_decisions": [
@@ -15039,6 +15074,14 @@
       "idempotency_key": "p4-task051-schema-upgrade-c6b1e4326668",
       "status": "CONFIRMED",
       "source_ref": "Actual separate scoped source proofe5abd65e and wrapperdurable proof /private/tmp/p4-task051-migration-durable-r2-reviewer-proof.json SHA256f7f29467a916e1a59d994ce78752aba9d2a4f21906014a905230bbb46c538c76 helper SHA2563ef11a578e643276fc089198dbf1c01fd297dfff9ba69dc5078153ab1fb64579 packet SHA256d46f20e87b11e8bf4296f3c4d1a0a158409254bdf1930c7f68713f9e83f85ce4; same owned socket, two synthetic schemas; standardadminmigrate; originalnames+timestamps/grants retained; no Archive business effects.; /Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/task051-migration-confirmed.json SHA25603de44defb8bbc232f6fc697149f7144b12c40bd31cf1c6f1776021a62544750 two schemas87→89; both90 migrationrecords, all88 prior names/timestamps exact, grants unchanged, zeroArchivedorders."
+    },
+    {
+      "id": "P4-DEF016-TC042-R1",
+      "kind": "ISOLATED_DEVELOPER_TEST",
+      "target": "owned erp_sales_p4_c6b1e4326668_core via socket /private/tmp/sales-p4-c6b1e4326668/mysql.sock, mysql UUID4f3e7cbc-c904-11f1-b26a-245e6b02c5d6",
+      "idempotency_key": "p4-def016-tc042-r1-324a283d7cb6e1314cec1e12d8f3c8cafdd498d9407588716f0fa717878f9647",
+      "status": "CONFIRMED",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/def016-tc042-r1.log SHA25656588eb7a06869a4d3b68535bcd75fdb3f6774763af28596d504509cc092b7ce; actualexit0 fullfile2PASS0FAIL0SKIP839463ms; summaryjson and actualindependent9a298bed; sameUUID/schema migration90, test-owneddata normallycleaned; no wholePhase/CI/Customer244 closure"
     }
   ],
   "evidence_files": [
@@ -15914,7 +15957,7 @@
     {
       "id": "DEF-016",
       "severity": "HIGH",
-      "status": "OPEN",
+      "status": "RETEST",
       "source_ids": [
         "TC-021",
         "TC-042",
@@ -15925,5 +15968,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Commit scopedTASK053 UI with transparent DEC028 bindings and incomingDEF016OPEN registration, preserve separateuncommitted100lineREDtest. Stop newfeatures for currentTASK030 HIGH remediations: independently review smallest fullunique-key lock access path, preserve lockranks/transaction/permissions and oldtests; then native100+singleline/callerregression and unchangedactualTC042 before closure. No Customer scope expansion or PR244 unblock. HistoricalmergedP3 unchanged; currentqualification reopened. Then return PHASE005/TASK054 strictdeps. No partialP4mainmerge; realFulfillment providers still absent and all39/currentcandidateCI/wholeGate required."
+  "next_safe_action": "Commit isolated minimalDEF016 lockfix+100lineguard+actualproof reports; DefRETEST notclosed until final integratedPhase/CI/whole review, Customer244stillblocked. Then continue approvedPHASE005TASK054 durablebackgroundExport TDD, boundedACTIVE/ARCHIVE snapshots/selectedsortkeyset/rowcap/privatefencedpublication/freshowner/audit/7dayretention; no ImportResult publicscope. Archive read bounds exactSO/external ORCustomer ORdate<=366 canonical6.7, not silentCustomer+date restriction. PriorUI053 actual104/12PW done. FullP4 requiresall39/currentCI/wholeGate/latestmainintegration; actualFulfillment providers stillmissing, Archive movement/fullmainmerge disabled, no partialmerge/waiver."
 }
