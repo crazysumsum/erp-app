@@ -43,7 +43,13 @@
       "server/src/handlers/sales-import-templates/**",
       "server/src/modules/customer/CustomerLookupService.js",
       "server/config/api.js",
-      "server/src/framework/middleware/bodyReceiveTimeout.js"
+      "server/src/framework/middleware/bodyReceiveTimeout.js",
+      "server/src/handlers/outstanding-sales-orders/**",
+      "server/src/handlers/sales-audit-logs/**",
+      "server/src/handlers/sales-archive-batches/**",
+      "server/src/services/salesJobs/jobs/SalesExportJob.js",
+      "server/src/services/salesJobs/jobs/SalesArchiveJob.js",
+      "docs/runbooks/sales-order-management.md"
     ],
     "test_paths": [
       "server/test/sales/**",
@@ -87,7 +93,8 @@
       "server/test/idempotencyService.test.js",
       "server/test/integration/itemRecoveryAcceptance.integration.test.js",
       "server/test/sales/phase3/**",
-      "server/test-support/salesProcessingCrashChild.js"
+      "server/test-support/salesProcessingCrashChild.js",
+      "server/test-capacity/sales/phase4/**"
     ],
     "allowed_write_paths": [
       "docs/sales_order_management/**",
@@ -171,7 +178,18 @@
       "docs/items_management/03_design_spec.md",
       "server/config/api.js",
       "server/src/framework/middleware/bodyReceiveTimeout.js",
-      "server/test-support/salesProcessingCrashChild.js"
+      "server/test-support/salesProcessingCrashChild.js",
+      "server/src/handlers/outstanding-sales-orders/**",
+      "server/src/handlers/sales-audit-logs/**",
+      "server/src/handlers/sales-archive-batches/**",
+      "server/src/services/salesJobs/jobs/SalesExportJob.js",
+      "server/src/services/salesJobs/jobs/SalesArchiveJob.js",
+      "docs/runbooks/sales-order-management.md",
+      "server/database/migrations/*_create_sales_export_jobs.js",
+      "server/database/migrations/*_create_sales_archive_batches.js",
+      "server/database/migrations/*_create_sales_archive_tables.js",
+      "server/database/migrations/*_protect_sales_archive_immutability.js",
+      "server/test-capacity/sales/phase4/**"
     ],
     "approval_required_paths": [
       "server/database/migrations/**",
@@ -244,7 +262,11 @@
       "server/database/migrations/*_create_sales_import_jobs.js",
       "server/database/migrations/*_create_sales_intake_orders.js",
       "server/database/migrations/*_create_sales_intake_errors.js",
-      "server/database/migrations/*_extend_sales_reservation_intake_projection.js"
+      "server/database/migrations/*_extend_sales_reservation_intake_projection.js",
+      "server/database/migrations/*_create_sales_export_jobs.js",
+      "server/database/migrations/*_create_sales_archive_batches.js",
+      "server/database/migrations/*_create_sales_archive_tables.js",
+      "server/database/migrations/*_protect_sales_archive_immutability.js"
     ],
     "forbidden_paths": [
       ".env",
@@ -273,7 +295,11 @@
       "server/database/migrations/*_create_sales_import_jobs.js",
       "server/database/migrations/*_create_sales_intake_orders.js",
       "server/database/migrations/*_create_sales_intake_errors.js",
-      "server/database/migrations/*_extend_sales_reservation_intake_projection.js"
+      "server/database/migrations/*_extend_sales_reservation_intake_projection.js",
+      "server/database/migrations/*_create_sales_export_jobs.js",
+      "server/database/migrations/*_create_sales_archive_batches.js",
+      "server/database/migrations/*_create_sales_archive_tables.js",
+      "server/database/migrations/*_protect_sales_archive_immutability.js"
     ],
     "shared_resources": [
       "global-migration-sequence",

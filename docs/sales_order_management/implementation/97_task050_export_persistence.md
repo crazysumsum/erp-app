@@ -1,0 +1,11 @@
+# TASK-050 Export persistence
+
+Status: DEVELOPER_VERIFIED persistence foundation; no P4 merge/formal/UAT/release claim.
+
+Added forward0087 sales_export_jobs with original16columns, ACTIVE/ARCHIVE/IMPORT_RESULT scopes, five statuses, owner FK SETNULL, status/owner/expiry/lease claim indexes, paired leases and object JSON bounded at16KiB UTF-8. There is no client filename/path or export endpoint in this task. Canonical allowlisted filter creation, file lifecycle and background worker remain TASK054; schema prevents malformed/oversized storage before that entry exists. Historical migrations unchanged.
+
+TDD first observed missing migration import, then native CHECK inspector mismatch. MySQL normalizes OCTET_LENGTH to LENGTH and CHAR CHARACTER SET to CHAR CHARSET, and inserts logical parentheses; the new unrecorded migration now uses the exact established canonical SQL and grouped-check inspector. No CHECK semantics or existing inspector was weakened. A drift fixture widening hash CHAR64 to65 avoids truncating its preserved synthetic row.
+
+Actual native8PASS0FAIL0SKIP, migration runner7PASS0SKIP and lintPASS. Native tests cover clean create/rerun/stored rows/defaults/indexes, valid scopes/states/paired leases, JSON scalar/array/UTF8 byte cap and malformed JSON, owner deletion with retained metadata, invalidowner, column/index/check drift failclosed without rewriting rows. Separate source review d30c8e66 approved exactsource8eec8970.
+
+Fresh socket-only private MySQL26.7 uses two owned synthetic schemas and appDML/fixtureDDL/admintriggerSUPER accounts, noTCP/noGO/noCREATEUSER/no broad restore grants. Initial standard migration stopped with core through86 and empty unrecorded87table, focusedempty; originalSTARTED receipt/errorlog preserved. Independently reviewed bounded continuation31fc4c9d/9e13c785 completed only the original migrate path, verifying full existingtable first, PID/UUID/socket/source/privateinput fences, exact old migration names+timestamps, zeroExportrows and unchanged three original grant sets. Both schemas nowthrough87. No reset/reinit/drop/oldP3 runtime reuse occurred. Raw evidence stays private; merged P3 history and276 retired references remain unchanged.
