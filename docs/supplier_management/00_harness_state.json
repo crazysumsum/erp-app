@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 364,
+  "revision": 365,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -5777,8 +5777,8 @@
         "TC-103",
         "TASK-051"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-16: 'HD-111 A，review 完 CI 過就 merge' — keep the implementation's audit action names as an accepted deviation from design §8.9 with a mapping in the TC-103 notes; the design is not edited."
     }
   ],
   "external_actions": [
@@ -6859,5 +6859,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-051 step 2b part 5: carriers for AUD-001, AUD-004..008 and LIST-007."
+  "next_safe_action": "Write AUD-001, AUD-004..008 and LIST-007 carriers (HD-111 A names); add the AUD-004 alert; review; PR; merge on CI green."
 }
