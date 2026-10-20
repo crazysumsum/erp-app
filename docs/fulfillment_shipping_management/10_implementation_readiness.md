@@ -67,11 +67,17 @@ These use injected test executors and do not prove real MySQL, Fulfillment consu
 
 - Traceability: `STRUCTURE_PASS`; matrix regenerated deterministically. 145 requirements / 14 designs / 4 Phases / 45 Tasks / 12 TC / 120 UAT retained.
 - Contract pins: all seven match observed files; not semantic adoption.
-- Approval-aware traceability: expected BLOCKED on stale NFR-023 N/A approval until renewed.
-- PLAN_READY: expected BLOCKED on HD-006/HD-007, current DESIGN/PLAN approval and independent review; resolving hashes is not readiness.
+- Approval-aware traceability: BLOCKED on stale NFR-023 N/A approval until renewed.
+- PLAN_READY: BLOCKED on HD-006/HD-007, current DESIGN/PLAN approval and independent review; resolving hashes is not readiness.
 - Boundary / whitespace / local links: checked before the planning commit; scope limited to this documentation directory.
 - Migration inventory: 84 JavaScript files, highest prefix 0087, no duplicate numeric prefix at the observed baseline. No sequence reserved; re-inventory on actual implementation start.
 - Browser: root Playwright pin and CI job exist. Current CI runs `e2e:mocked` for other modules; Fulfillment suite/profile/CI coverage remains a PHASE-002 delivery obligation, not a reason to claim no browser tooling exists.
-- External freshness: fetched main before branch creation; re-fetch and inspect target changes before future merge. Planning PR is a draft pending decisions; no merge authorization is implied.
+- External freshness: fetched main before branch creation; re-fetch and inspect target changes before future merge. Publication is blocked pending explicit user egress approval; no remote branch or PR was created, and no merge authorization is implied.
 
 Next safe action: obtain HD-006/HD-007 and independent baseline review; resolve any exact provider contract/scope and installation choices; record current DESIGN/PLAN/NFR-023 decisions; only then assess PLAN_READY and request/record the intended IMPLEMENT scope. Business acceptance and release sign-off remain open by design.
+
+## Publication disposition
+
+Local planning commit `1811e2fc` preserves the substantive candidate; the following local metadata commit records this disposition. Automatic approval review rejected `git push -u origin codex/fulfillment-readiness-alignment` before execution: the user authorized local preparation but had not specifically authorized egress of potentially sensitive internal readiness documentation to `https://github.com/crazysumsum/erp-app`. No alternate connector or indirect push was used. No remote branch, pull request or merge was created by this work. The intended draft PR remains PLANNED pending explicit user permission to publish these exact documents to that repository.
+
+Local worktree/branch are intentionally retained for review. Before any authorized retry, inspect actual remote state and fetch main; do not replay an unknown external action. Publishing permission alone does not decide HD-006/HD-007 or authorize product implementation.

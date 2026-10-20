@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 7,
+  "revision": 9,
   "mode": "REVIEW_AND_ALIGN",
   "active_mode": "REVIEW_AND_ALIGN",
   "status": "BLOCKED",
@@ -11,7 +11,7 @@
   "baseline": {
     "design": "683abcc2192073c57df58023bd876f03904e868d27181a3cd1d438df1c452e27",
     "plan": "234867a700205bacd60800173655bfbc391de18dfa241d07477dd20bd8415a96",
-    "code_commit": "64bee2e00dfae71131c7cfa54049cac0941d6f85",
+    "code_commit": "1811e2fcd170126773fc4c56e63e10855cbb16a1",
     "source_fingerprint": "70eed2ff3e806da18ce44c0711712425806ffde3dbfaf3412457cf3e39fc4143",
     "worktree": "/private/tmp/erp-fulfillment-readiness",
     "default_commit": "64bee2e00dfae71131c7cfa54049cac0941d6f85",
@@ -393,8 +393,8 @@
       "kind": "PUSH",
       "target": "origin/codex/fulfillment-readiness-alignment",
       "idempotency_key": "fulfillment-readiness-push-20261020",
-      "status": "PLANNED",
-      "source_ref": null
+      "status": "FAILED",
+      "source_ref": "docs/fulfillment_shipping_management/10_implementation_readiness.md#publication-disposition: automatic approval review rejected before execution; no push occurred; explicit GitHub egress approval required."
     },
     {
       "id": "READINESS-PR-20261020",
@@ -407,5 +407,5 @@
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Read 10_implementation_readiness.md. Documentation candidate only; BLOCKED on HD006 P0 sequencing/owner scope and HD007 MySQL26.7 baseline, current DESIGN/PLAN/NFR023 decision and actual independent review. Candidate hashes are observations, not approvals; preserve historical APR/HD/REV records. Publish this documentation-only draft PR after local boundary/traceability/link checks; inspect external receipts before retry. Do not enter IMPLEMENT, change upstream/source/schema, send other chats messages, migrate/deploy/merge, or claim native/browser/formalTC/UAT acceptance. All45tasks remainPENDING; existing75provider unit PASS is limited evidence."
+  "next_safe_action": "Local candidate only. Read10_implementation_readiness.md: await HD006A/B, HD007A/B and actual independent DESIGN/PLAN/NFR023 review. Automatic approval review rejected git push before execution for missing explicit internal-document egress authorization to github.com/crazysumsum/erp-app; no push or PR occurred. Do not use another connector or retry until actual user publication permission. If authorized, first inspect/fetch remote state, publish documentation-only branch and draft PR, record receipts and retain branch until PR resolution. No IMPLEMENT/upstream code/schema/migration/deploy/merge/other-chat messaging authority; all45TasksPENDING. Candidate source baseline64bee2e0; local metadata commits do not imply new product code/test authority."
 }
