@@ -1050,6 +1050,8 @@ Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：
 
 ## TC-042 — 10,000-order CSV performance
 
+**CI developer benchmark override（Sam，2026-10-20）**：使用者於目前 CI 優化對話明確指出「實際業務沒有那麼大量的CSV上傳和在線使用者，將測試規模減少至原來的1/5」。因此 `salesImportCapacity.integration.test.js` 的 developer／CI 負載改為 2,000 張來源訂單、10,000 行、10 位互動使用者及 10 個客戶；獨立非連續 grouping 案例改為 1MiB／200 張／1,000 行與 10MiB／2,000 張／10,000 行。保留 1／100 行互動分布、各預檢／處理階段至少 50 個確認樣本、確認 P95≤3 秒、原 30 分鐘期限、50 張／2 秒／30 秒 worker 設定、10 條連線／200 queue、所有失敗／對帳／結果檢查及 GC 後 16／32／64MiB 增長門檻。縮短後透過既有 HTTP 手動喚醒接口讓註冊的缺貨分配排程在負載期間執行，保留原租約與分配結果驗證。此決定只調整 developer／CI 測試規模；產品上限、下列原全量驗收定義及歷史證據不改，較小負載 PASS 不可替代原 10,000 張／50 人／50MiB 的正式驗收。
+
 ### Preconditions and data
 
 <=50MB, ~50k lines, standard env。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
