@@ -1,7 +1,7 @@
 # REV-099 — independent review of HD-112 A (audit content)
 
 - **Reviewer:** `agent-skills:code-reviewer` (a separate agent; I did not write this change)
-- **Baseline:** branch `claude/supplier-hd112-audit-content`, reviewed as `git diff 37a8bb99..HEAD -- server client docs/supplier_management`
+- **Baseline:** branch `claude/supplier-hd112-audit-content` at `54ba28ad`, reviewed as `git diff 37a8bb99..HEAD -- server client docs/supplier_management`
 - **Verdict:** **CHANGES_REQUESTED**
 - **Open Critical / High:** 0 / 0. Four Medium and one Low, plus Info items.
 
