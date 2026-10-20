@@ -91,7 +91,7 @@ function* textSlices(text) {
     start = end;
   }
 }
-const CSV_OPTIONS = Object.freeze({
+export const CSV_OPTIONS = Object.freeze({
   bom: true, skip_empty_lines: true, max_record_size: 65_536,
   cast(value, { index }) {
     if (index >= MAX_FIELDS) throw new CsvError("CSV_TOO_MANY_FIELDS", `a record has more than ${MAX_FIELDS} fields`, {});
