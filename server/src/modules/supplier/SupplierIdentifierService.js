@@ -56,6 +56,7 @@ export class SupplierIdentifierService {
     this.database = database;
     this.time = time;
     this.authorize = authorize;
+    this.logger = logger;
     this.audit = audit ?? new SupplierAuditLogService({ database, logger, time });
     this.countReferences = countReferences;
     this.approvals = approvals ?? new SupplierApprovalService({ database, logger, time, audit: this.audit });
@@ -112,7 +113,7 @@ export class SupplierIdentifierService {
       return await retryOnceOnDeadlock(() => this.database.withTransaction(async (connection) => {
         const actor = await this.authorize(connection, input);
         return this.createInTransaction(connection, { actor, input });
-      }));
+      }), { logger: this.logger, operation: "supplier.identifier.create", requestId: input.requestId });
     } catch (error) {
       if (duplicateEntry(error)) throw taken(identifier);
       throw error;
@@ -188,7 +189,7 @@ export class SupplierIdentifierService {
           requestId: input.requestId, ip: input.ip
         });
         return { ...projected, approvalInvalidated };
-      }));
+      }), { logger: this.logger, operation: "supplier.identifier.update", requestId: input.requestId });
     } catch (error) {
       if (duplicateEntry(error)) throw taken(identifier);
       throw error;
