@@ -58,3 +58,11 @@ What fixes it, verified on a populated table: drop the foreign key and that inde
 The service checks the SKU before inserting, so today only direct writes are exposed.
 
 A scan of all 250 foreign keys found the same fault on `item_skus.item_id` and `item_media.item_id`, which belong to Item. Decision: HD-113.
+
+Fix, per HD-113 A: migration `0087_fix_supplier_sku_refs_sku_foreign_key.js` stops and lists orphan rows if there are any. Otherwise it rebuilds the keys in that order: drop the foreign key and the composite index, add `idx_supplier_sku_refs_sku (sku_id)`, re-add the composite index, then re-add the foreign key with a COPY rebuild, so the server checks every row.
+
+A rerun after a finished or half-done run completes the fix. A manual `down` restores the 0081 keys.
+
+`supplierSkuForeignKeyMigration.integration.test.js` exercises it on a copy of the table, with the 0081 definition as a control. The TC-082 carrier's direct orphan insert is now refused.
+
+The Item finding is handed over in `item_handoff_foreign_keys.md`.
