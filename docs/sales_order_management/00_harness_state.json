@@ -1,32 +1,32 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1268,
+  "revision": 1271,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-005",
-  "current_task": "TASK-064",
+  "current_task": "TASK-065",
   "baseline": {
     "design": "ef5e7624f64ce0e819a85cadf0d3a43c15104421c1ef068549ef63d5189d13cd",
     "plan": "b791cec4ed059697c859b00b49c94d8d8b35c13ca031c8a8ab16ff633a642ba1",
-    "code_commit": "d4a1c701618f1041cb3375f510d9e268e9c4bedc",
+    "code_commit": "34c6158c6e7f972ba27b1a036b5f11d3bbb82e8f",
     "source_fingerprint": "503973d7356f0e61003ce911d3f52953f3fec1bca1fe9af9db18b774f0ab7e56",
     "worktree": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app",
     "default_commit": "64bee2e00dfae71131c7cfa54049cac0941d6f85",
     "mode_entry_commit": "4439014e9a9d03f233e858e56f93617e787ecb8c"
   },
   "runtime": {
-    "instance_id": "sales-p4-c6b1e4326668",
+    "instance_id": "sales-p4-37e933d0a9db",
     "owner": "Codex /root",
     "resources": {
       "workspace": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app",
-      "temp-directory": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private",
-      "mysql-instance": "Historical READY record superseded by actual PID16287 absent observation task057-runtime-pid-observation-r1.json; old data/socket ownership/outcome not yet reconciled. No SQL/reset/reuse/cleanup authorized by this observation.",
-      "database": "erp_sales_p4_c6b1e4326668_core,erp_sales_p4_c6b1e4326668_focused"
+      "temp-directory": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/dec029-runtime-37e933d0a9db",
+      "mysql-instance": "READY own PID71339 UID501/nice10/socket-only /private/tmp/sales-p4-37e933d0a9db/mysql.sock; two synthetic schemas91migrations each through0090; originalgrants unchanged; no owner0091+ yet.",
+      "database": "erp_sales_p4_37e933d0a9db_core,erp_sales_p4_37e933d0a9db_focused"
     },
-    "lease_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/runtime-continuation-r2.json SHA256e82a01289f5a154b2230e51c20db252b179f54b267aa5a8f9bfcf2e2b2eaf6f6"
+    "lease_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/dec029-runtime-37e933d0a9db/runtime.json; actual owned PID/socket/auto.cnf verified by reviewed helper and fresh process/nice check."
   },
   "tasks": {
     "TASK-001": "DONE",
@@ -86,8 +86,8 @@
     "TASK-055": "DONE",
     "TASK-056": "DONE",
     "TASK-057": "BLOCKED",
-    "TASK-064": "IN_PROGRESS",
-    "TASK-065": "PENDING",
+    "TASK-064": "DONE",
+    "TASK-065": "IN_PROGRESS",
     "TASK-066": "PENDING",
     "TASK-067": "PENDING",
     "TASK-068": "PENDING"
@@ -10857,6 +10857,30 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK064-NATIVE-CODE-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "f7bcf13cfa426181a2f2d7dc2a343137d0e1be72be4bf3d883dac59bb40b665e",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/task064-export-numbering-native-r1-reviewer-proof.json SHA256e75913a20dbf31bf9ca595cae2760ae74e05e30f539d5b8bcd784814b620bf71; actual scoped independent review TASK064 numbering/actual runner legacy upgrade; reviewed exact file hashes retained, zero required findings. Not current full Phase approval.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK065-HASH-COMPONENT-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "f7bcf13cfa426181a2f2d7dc2a343137d0e1be72be4bf3d883dac59bb40b665e",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/task065-owner-hash-component-r1-reviewer-proof.json SHA25665a297b56b28a22eb7d8c1eaf5a296e3c22b1dcb698f730b7a3dcd206f509df8; actual scoped independent review TASK065 hash component only; native schema/providers pending; reviewed exact file hashes retained, zero required findings. Not current full Phase approval.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -14170,6 +14194,28 @@
       "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/109_dec029_plan_activation_and_owner_hash_partial.md; actual raw logs private, not indexed as typed suite evidence. No taskDONE/currentCI/fullPhase/merge claim.",
       "actor": "Codex /root",
       "observed_at": "2026-10-20T08:40:27.989565Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEC029 fresh owned MySQL26.7 READY socketonly/nice10;91originalmigrations in each of2synthetic schemas; no newownerDDL/nativeGate yet",
+      "code_commit": "34c6158c6e7f972ba27b1a036b5f11d3bbb82e8f",
+      "spec_baseline": "b791cec4ed059697c859b00b49c94d8d8b35c13ca031c8a8ab16ff633a642ba1",
+      "source_fingerprint": "503973d7356f0e61003ce911d3f52953f3fec1bca1fe9af9db18b774f0ab7e56",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/dec029-runtime-37e933d0a9db/runtime-preparation.json actual CONFIRMED; privategrants/credentials retained locally, no export. Setup is not P4 native/provider/Phase completion.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-20T08:42:52.971125Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK064 complete: original migration identity/body preservation, actual legacy upgrade and drift rejection10PASS0FAIL0SKIP, scoped lint and separate review; code committed40b8ed4f",
+      "code_commit": "40b8ed4fc10e9c8c1b09a7b9fc9a2104218e3f1b",
+      "spec_baseline": "b791cec4ed059697c859b00b49c94d8d8b35c13ca031c8a8ab16ff633a642ba1",
+      "source_fingerprint": "f7bcf13cfa426181a2f2d7dc2a343137d0e1be72be4bf3d883dac59bb40b665e",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/task064-native-export-upgrade-r1.log; native local log plus exact reviewer proof; no full Phase/CI/Gate claim.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-20T08:56:46.807757Z"
     }
   ],
   "pending_decisions": [
@@ -17127,6 +17173,14 @@
       "idempotency_key": "mode-change-1261",
       "status": "CONFIRMED",
       "source_ref": "Actual Sam P4 and exact DEC029 approved phase5 continuation; preserve immutable final1260 and parallelP4 history, no acceptance/source evidence rebinding."
+    },
+    {
+      "id": "ACT-P4-DEC029-OWNED-MYSQL-PREP",
+      "kind": "ISOLATED_RUNTIME_PREPARATION",
+      "target": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/dec029-runtime-37e933d0a9db; socket-only MySQL26.7, two fresh owned synthetic schemas; existing old P4 untouched",
+      "idempotency_key": "p4-dec029-owned-mysql-prep-37e933d0a9db",
+      "status": "CONFIRMED",
+      "source_ref": "Actual Sam DEC029 approval + runtime separate reviewdc1c8e4f; final planSHA256 6d877d0de2ca280675fcd5b50e9bb3b170629800b523707b50c14f73c773d4a0 helperSHA256 4c8e9f6fe7a2c29c1b7d3f237d83fde2b560341f1d4cc4e770f5475a384a77dd; exactcurrent91migrations through0090, sourcefreeze during setup, nice10 inheritedchildren. Exclusive STARTED/receipts; no retry/reset/drop/production.; Actual newruntime preparation receiptCONFIRMED, metadataREADY, both91ledgers and unchanged original grants verified, actualmysqld PID71339 UID501/nice10/socket-only. No owner0091+ applied; old P4 untouched."
     }
   ],
   "evidence_files": [
@@ -18179,5 +18233,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Native runtime exactreview+bind+PLANNEDaction, then freeze source/canonical during one setup. Do not include unreviewed owner0091+ in setup inventory. Native upgrade0090 and owner schema/provider/participant/coordinator still incomplete. All45 developer/currentCI/review/unchangedGate before fullP4 merge."
+  "next_safe_action": "Owned runtime READY. Run actual old0087/new0090 native upgrade compatibility in a new exactowned fixture namespace with originalledgers preserved; then owner0091+ schema RED/GREEN and separate reviewedmigration apply, realprovider/participant/coordinator and all45original+extraGates/currentCI/review before fullP4merge. Never rerun preparationhelper."
 }
