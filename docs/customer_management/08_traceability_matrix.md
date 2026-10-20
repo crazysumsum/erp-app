@@ -227,7 +227,7 @@ This is a structural planning view, not execution evidence or approval.
 | TC-085 | true | true | APPLICABLE | customer-server-technical | TECHNICAL | PROFILE_SUITE |
 | TC-086 | false | false | NOT_APPLICABLE | customer-server-technical | TECHNICAL | PROFILE_SUITE |
 | TC-087 | false | false | NOT_APPLICABLE | customer-server-technical | TECHNICAL | PROFILE_SUITE |
-| TC-088 | true | true | APPLICABLE | customer-server-technical | TECHNICAL | PROFILE_SUITE |
+| TC-088 | false | false | NOT_APPLICABLE | customer-server-technical | TECHNICAL | PROFILE_SUITE |
 | TC-089 | true | true | APPLICABLE | customer-server-technical | TECHNICAL | PROFILE_SUITE |
 | TC-090 | true | true | APPLICABLE | customer-server-technical | TECHNICAL | PROFILE_SUITE |
 | UAT-001 | true | true | APPLICABLE | customer-uat-browser | UI_BROWSER | PLAYWRIGHT_PREFERRED |
@@ -294,3 +294,4 @@ This is a structural planning view, not execution evidence or approval.
 
 - TC-086: HD-013: Sam explicitly waived formal RPO/RTO measurement acceptance and approved that subset. NOT_APPLICABLE to required execution only; objectives retained NOT_PROVEN, not technical PASS. Backup integrity/other operating controls/downstream acceptance remain required. (approval reference: APPROVAL-RISK-005; verify authority separately).
 - TC-087: HD-013: Sam explicitly waived formal RPO/RTO measurement acceptance and approved that subset. NOT_APPLICABLE to required execution only; objectives retained NOT_PROVEN, not technical PASS. Backup integrity/other operating controls/downstream acceptance remain required. (approval reference: APPROVAL-RISK-005; verify authority separately).
+- TC-088: HD-015: Sam explicitly waived item3 compatible deployment/rollback acceptance drill. Required execution waived, not technical PASS or operating-control removal. CI, integrity, least privilege and downstream blockers remain. (approval reference: APPROVAL-RISK-006; verify authority separately).

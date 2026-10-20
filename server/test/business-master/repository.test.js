@@ -4,6 +4,24 @@ import test from "node:test";
 import { BusinessMasterAuditLogService } from "../../src/modules/businessMaster/BusinessMasterAuditLogService.js";
 import { BusinessMasterRepository } from "../../src/modules/businessMaster/BusinessMasterRepository.js";
 
+test("HD-016 catalog reads distinguish shared, exclusive and unlocked modes and reject ambiguous locks before SQL", async () => {
+  const repository = new BusinessMasterRepository();
+  for (const [method, key, table, column] of [["getCurrency", "HKD", "currencies", "code"], ["getPaymentTerm", 1, "payment_terms", "id"]]) {
+    const calls = [];
+    const connection = { async query(sql, args) { calls.push({ sql, args }); return [[]]; } };
+    for (const [options, suffix] of [[undefined, ""], [{ forUpdate: false, forShare: false }, ""], [{ forShare: true }, " LOCK IN SHARE MODE"], [{ forUpdate: true }, " FOR UPDATE"]]) {
+      assert.equal(await repository[method](connection, key, options), null);
+      assert.ok(calls.at(-1).sql.endsWith(`FROM ${table} WHERE ${column} = ?${suffix}`));
+      assert.deepEqual(calls.at(-1).args, [key]);
+    }
+    const before = calls.length;
+    for (const options of [{ forUpdate: true, forShare: true }, { forUpdate: 1 }, { forShare: "true" }, { forUpdate: null }, { forShare: null }]) {
+      await assert.rejects(() => repository[method](connection, key, options), TypeError);
+    }
+    assert.equal(calls.length, before);
+  }
+});
+
 test("TC-003 list query keeps user search and sort values out of SQL", async () => {
   const calls = [];
   const database = {

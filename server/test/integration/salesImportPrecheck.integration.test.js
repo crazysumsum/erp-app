@@ -27,6 +27,40 @@ integrationTest("TC-035 real owner precheck batches isolate invalid sources and 
  const [[effects]]=await f.db.query("SELECT (SELECT COUNT(*) FROM sales_orders WHERE customer_id=?) AS orders,(SELECT COUNT(*) FROM inventory_reservations WHERE sku_id=?) AS reservations,(SELECT COUNT(*) FROM sales_external_order_keys WHERE external_order_id_hash=?) AS source_keys",[f.customerId,f.skuId,salesSourceHash(valid.externalOrderId)]);assert.equal(effects.orders,0);assert.equal(effects.reservations,0);assert.equal(effects.source_keys,0);
 });
 
+integrationTest("HD-014 Customer batch precheck cannot authorize intake after Customer block or credit hold", async t => {
+ for (const change of ["blocked", "on_hold"]) await t.test(change, async t => {
+  const {randomUUID}=await import("node:crypto");
+  const {salesSourceHash}=await import("../../src/modules/sales/salesImportPrecheck.js");
+  const f=await workerFixture(t);
+  await f.db.execute("UPDATE currencies SET status='ACTIVE' WHERE code=?",[f.currency]);
+  await f.db.execute("UPDATE item_skus SET sellable=1 WHERE id=?",[f.skuId]);
+  const job=await f.upload(),worker=await f.registeredWorker();
+  await worker.run();
+  const ready=await f.facts(job.id);
+  assert.equal(ready.job.status,"READY");assert.equal(ready.children[0].status,"VALID");
+  const lookup=new CustomerLookupService({database:f.database});
+  await f.database.withTransaction(async tx=>{
+   const map=await lookup.getSalesPrecheckSnapshotsInTransaction(tx,[f.customerId,Number.MAX_SAFE_INTEGER,f.customerId]);
+   assert.equal(map.size,2);assert.equal(map.get(Number.MAX_SAFE_INTEGER),null);
+   assert.equal(map.get(f.customerId).status,"active");assert.equal(map.get(f.customerId).credit.configured,false);
+   assert.ok(Object.isFrozen(map.get(f.customerId))&&Object.isFrozen(map.get(f.customerId).credit));
+  });
+  if(change==="blocked")await f.db.execute("UPDATE customers SET status='blocked',version=version+1 WHERE id=?",[f.customerId]);
+  else await f.insert("customer_credit_profiles",{customer_id:f.customerId,credit_limit:"0.0000",credit_currency_code:f.currency,credit_status:"on_hold",credit_notes:"must not project",last_change_reason:"synthetic race",version:1,created_at:f.now,updated_at:f.now},"customer_id");
+  const current=await f.database.withTransaction(tx=>lookup.getSalesPrecheckSnapshotsInTransaction(tx,[f.customerId]));
+  assert.equal(change==="blocked"?current.get(f.customerId).status:current.get(f.customerId).credit.status,change);
+  assert.equal(Object.hasOwn(current.get(f.customerId).credit,"creditNotes"),false);
+  await f.service.confirm({claims:f.claims,id:job.id,input:{eventId:randomUUID(),version:Number(ready.job.version)}});
+  await worker.run();
+  const failed=await f.facts(job.id),expected=change==="blocked"?"CUSTOMER_NOT_SALEABLE":"CUSTOMER_CREDIT_ON_HOLD";
+  assert.equal(failed.children[0].status,"FAILED");assert.equal(failed.children[0].result_code,expected);
+  assert.ok(failed.errors.some(row=>row.error_code===expected));
+  const [[effects]]=await f.db.query("SELECT (SELECT COUNT(*) FROM sales_orders WHERE customer_id=?) AS orders,(SELECT COUNT(*) FROM inventory_reservations WHERE sku_id=?) AS reservations,(SELECT COUNT(*) FROM sales_external_order_keys WHERE external_order_id_hash=?) AS source_keys",[f.customerId,f.skuId,salesSourceHash(f.row.externalOrderId)]);
+  assert.deepEqual(effects,{orders:0,reservations:0,source_keys:0});
+  assert.equal(worker.scheduler.stats.get("sales.importWorker").failures,0);
+ });
+});
+
 async function workerFixture(t,{batchSize=2,channels=["SYNTHETIC"]}={}){
  const {randomUUID,createHash}=await import("node:crypto"),path=(await import("node:path")).default,{mkdtemp,writeFile,rm}=await import("node:fs/promises"),{stringify}=await import("csv-stringify/sync"),{SALES_CSV_COLUMNS}=await import("../../src/modules/sales/salesCsv.js"),{SalesImportService}=await import("../../src/modules/sales/SalesImportService.js"),{prepareDiskTempDirectory}=await import("../../src/framework/upload/normalizeUploadConfig.js"),{createApplication}=await import("../../src/framework/application/createApplication.js"),{defaultConfigurationSource}=await import("../../src/framework/configuration/applicationConfiguration.js"),{SchedulerService}=await import("../../src/services/scheduler/SchedulerService.js"),{SalesJobRuntimeService}=await import("../../src/services/salesJobs/SalesJobRuntimeService.js"),{SalesImportJob}=await import("../../src/services/salesJobs/jobs/SalesImportJob.js");
  const f=await migrationFixture(t,[]),source=defaultConfigurationSource(),config={...source,application:{...source.application,port:0},sales:{...source.sales,importChannelCodes:channels,importWorkerBatchSize:batchSize},scheduler:{...source.scheduler,jobs:{...source.scheduler.jobs,"sales.importWorker":{enabled:false}}}},app=await createApplication({configurationSource:config});t.after(()=>app.shutdown("sales_import_precheck_complete"));
