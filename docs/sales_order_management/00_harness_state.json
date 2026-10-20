@@ -1,13 +1,13 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1275,
+  "revision": 1277,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
   "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-005",
-  "current_task": "TASK-064",
+  "current_task": "TASK-058",
   "baseline": {
     "design": "ef5e7624f64ce0e819a85cadf0d3a43c15104421c1ef068549ef63d5189d13cd",
     "plan": "b791cec4ed059697c859b00b49c94d8d8b35c13ca031c8a8ab16ff633a642ba1",
@@ -90,7 +90,8 @@
     "TASK-065": "BLOCKED",
     "TASK-066": "BLOCKED",
     "TASK-067": "PENDING",
-    "TASK-068": "PENDING"
+    "TASK-068": "PENDING",
+    "TASK-058": "BLOCKED"
   },
   "approvals": [
     {
@@ -10941,6 +10942,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-P4-SALES-ARCHIVE-HASH-COMPONENT-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "c3678a5ec5db4939477875be01b874d9aa3de34f335302159fa116795d6e6889",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/sales-archive-hash-component-r1-reviewer-proof.json SHA2567818669954c98de1d9605e6918324ee348ebe73df5d2e269ca0b5f9083b3daa1; exact3filecomponent only; no coordinator/participant/P0/fullPhaseCI/Gate approval.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -14320,6 +14333,39 @@
       "source_ref": "docs/sales_order_management/implementation/112_hd008_fulfillment_p0_coordination.md#exact-sales-owner-source-acceptance-completed; ownerobservedrevision22/TASK002. Source0088+helpers reviewedexact; local13native is2directfoundation+11relatedSales, cannottransplanttoP0. No migration/credentialtransfer/ownerworktreewrite/merge.",
       "actor": "Codex /root",
       "observed_at": "2026-10-20T09:41:06.507020Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Resume only independent Sales DES017 fixed-column hash preparation while formal ownerP0/participant dependency remains BLOCKED; direct Sam renewed coordination/verification/merge instruction",
+      "code_commit": "0aa35d3fcb6b6b08c39546472d0c6180f8ed1a1a",
+      "spec_baseline": "b791cec4ed059697c859b00b49c94d8d8b35c13ca031c8a8ab16ff633a642ba1",
+      "source_fingerprint": "31fad2c9af4d16135ea115d613136e38f827196036d167431576b91995ce5b95",
+      "status": "BLOCKED",
+      "source_ref": "Actual current Sam message: 請繼續協調 Fulfillment P0，正式依賴就緒後完成 P4 聯合驗證、CI 與所有 Gate，通過後直接合併到 main。 Explicit outbound coordination sent to authorized existing P0 thread; observed realP0eb44ea5b/TASK002. Pure Sales hash is unchanged DES017/originalTASK058 scope, no owner writes/publicABI/schema/job activation/taskDONE.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-20T09:44:44.949207Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "0aa35d3fcb6b6b08c39546472d0c6180f8ed1a1a",
+      "spec_baseline": "b791cec4ed059697c859b00b49c94d8d8b35c13ca031c8a8ab16ff633a642ba1",
+      "source_fingerprint": "aba2490b5393a546f08317e3c0c4c5b627f0503e1138f2dfc9c91b926cdfa7c9",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-20T09:54:43.728423Z",
+      "subject": "OriginalDES017/TASK058 independentSaleshashpartialcomponent: exactsixcolumns/stream; real17native+unit0skip and65relatedunit0skip; scopedlint andseparatereviewPASS",
+      "status": "PASS",
+      "source_ref": "docs/sales_order_management/implementation/114_sales_archive_hash_component.md; private sales-archive-hash-native-r2.log + sales-archive-hash-unit-regression-r1.log. No task058DONE/fullcapacity/P0/P4CI qualification."
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "0aa35d3fcb6b6b08c39546472d0c6180f8ed1a1a",
+      "spec_baseline": "b791cec4ed059697c859b00b49c94d8d8b35c13ca031c8a8ab16ff633a642ba1",
+      "source_fingerprint": "aba2490b5393a546f08317e3c0c4c5b627f0503e1138f2dfc9c91b926cdfa7c9",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-20T09:54:43.728423Z",
+      "subject": "ActualauthorizedP0coordination: namedSalesTASK004provider contribution requested byowner, feasibility reviewed; requiredtwo-stage/Inventoryreverse/zeroLine/ItemBaseUOM ABI stillunfrozen; no competingownerwrites",
+      "status": "BLOCKED",
+      "source_ref": "docs/sales_order_management/implementation/113_p0_sales_provider_handoff.md; actualmessages toexistinghuman-authorized fulfillment and shipping chat01a15862-9933-7e50-8e10-4015cf35d078, observedP0eb44ea5b+Task003WIP. Independentfeasibilityproofa2b0b184 no productapproval; askownerABI, notnewhuman decision."
     }
   ],
   "pending_decisions": [
@@ -18354,5 +18400,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "BLOCKED onlyonactualownerP0 artifact, nothumanapproval: HD008/009A1 verified andsingleinventory/sourcehandoffapproved850b3763. CoordinatorP0 observedTASK002. Read implementation112 exactSalesACK:0088exactb6ee contribution in completeP0PR,0089/90staySales,old0091–93referenceonly/exitfinalinstallers,P0sole91–99. Owner mustsatisfy own0B/fullnative/currentCI/review/merge; noprototypePASS=newquantityruleproof. OnactualP0artifact/contract availability, reconcilebothcanonicalhistories/newD/Pbindings andresumeIMPLEMENTING, integratefreshactualP0main, retireduplicateinstaller/sourcecontributions safely, adaptcumulativeallocation/fullshortpickedline andrealparticipant/coordinator, executealloriginal39+6/fullcapacity/currentCI/fullreview/unchangedMERGE_READY thenmergeunderexistingSamapproval. No furtherdecisionpendingforexacthandoff; nootherchatoutboundauthority inferred. Allhistory/raw/typedrefs retained."
+  "next_safe_action": "AwaitactualP0Task005/006ABI response andfinishnamedSalesTask004contributioninthisworktree underexistinghuman-authorizedcoordination; implementation113 listsimmutablemappingroots/twostagejournal/exactzeroLines/currentreads/ItemBaseUOM. SourcecontributionadoptedonlyincompleteP0PR; noearlyprovidermerge. Saleshashpartialcomponent reviewed78186699/native17+relatedunit65PASS0skip,Task058stillBLOCKED,notphaseCI/Gate. PreserveHD008/009singleinventory:0088exactinP0,0089/90Sales,P0sole91–99,withdrawnold91–93exitfinalcandidate. OnceactualfullP0mainready,reconcileownerhistoriesandcanonicalbindings,integratefreshmain,finishcoordinator/participant/original39+6/fullcapacity/Playwright/currentCI/independentphase/unchangedMERGE_READY thenmergeunderexistingSamauthority. No additionalhuman decision pending; no fullGatePASS claimed."
 }
