@@ -129,7 +129,7 @@ async function execute(jobId) {
   throw new Error(`job ${jobId} never finished`);
 }
 
-integrationTest("TC-093 (IMP-008): one key makes one job whether repeated or raced, a different file under it is refused, a double confirm queues once, and the same file under two keys never creates a Supplier twice", async () => {
+integrationTest("TC-093 (IMP-008): one key makes one job whether repeated or raced, a different file under it is refused, a double confirm queues once, and the same file under a second key is refused at precheck once the first has run", async () => {
   const t = tag();
   const csv = (codes) => stringify([SUPPLIER_IMPORT_COLUMN_NAMES, ...codes.map((code) =>
     SUPPLIER_IMPORT_COLUMN_NAMES.map((name) => ({ supplierCode: code, supplierName: `Imported ${code}`, defaultCurrencyCode: "HKD" })[name] ?? ""))],
@@ -155,6 +155,8 @@ integrationTest("TC-093 (IMP-008): one key makes one job whether repeated or rac
   const racedIds = new Set(raced.filter((r) => r.status === 201).map((r) => r.json.data.id));
   assert.equal(racedIds.size, 1, raced.map((r) => `${r.status} ${r.code}`).join(","));
   assert.ok(raced.every((r) => r.status === 201 || r.code === "IDEMPOTENCY_IN_PROGRESS"), raced.map((r) => `${r.status} ${r.code}`).join(","));
+  // 至少一個撞到「處理中」：證明請求真係重疊，唔係逐個做完（REV-100 L-5）。
+  assert.ok(raced.some((r) => r.code === "IDEMPOTENCY_IN_PROGRESS"), raced.map((r) => `${r.status} ${r.code}`).join(","));
   assert.equal(await jobsBefore(), start + 2, "two jobs: one per key");
 
   // 雙擊確認：兩個唔同 key 嘅 confirm 同時入，只有一個排到隊，一行 audit。
@@ -168,19 +170,16 @@ integrationTest("TC-093 (IMP-008): one key makes one job whether repeated or rac
   const [confirmAudits] = await h.db.query("SELECT COUNT(*) AS n FROM supplier_audit_logs WHERE target_type = 'import' AND target_id = ? AND action = 'import.confirm'", [jobId]);
   assert.equal(Number(confirmAudits[0].n), 1);
 
-  // 同一個檔用第二個 key：係另一個 job，但執行完 Supplier 唔會重複。
+  // 同一個檔用第二個 key：係另一個 job，但第一個執行完之後，precheck 每行都報 Code 已被使用，冇嘢可以確認。
   const second = await upload(file, randomUUID());
   assert.equal(second.status, 201);
   assert.notEqual(second.json.data.id, jobId);
   assert.equal(await execute(jobId), "completed");
   await precheck(second.json.data.id);
   const secondJob = (await h.send(h.users.mgmt, h.route("GET /api/v1/supplier-imports/:id"), { ids: { id: second.json.data.id } })).json.data;
-  if (secondJob.job.status === "ready") {
-    const confirmed = await h.send(h.users.mgmt, h.route("POST /api/v1/supplier-imports/:id/confirm"),
-      { ids: { id: second.json.data.id }, body: { version: secondJob.job.version, activationMode: "draft", approverUserId: null } });
-    assert.equal(confirmed.status, 200, confirmed.text);
-    await execute(second.json.data.id);
-  }
+  assert.equal(secondJob.job.status, "ready_with_errors", JSON.stringify(secondJob.job));
+  assert.deepEqual(secondJob.rows.map((row) => [row.rowNumber, row.status, row.errors.map((issue) => issue.code)]),
+    [[1, "invalid", ["SUPPLIER_CODE_TAKEN"]], [2, "invalid", ["SUPPLIER_CODE_TAKEN"]]]);
   const [created] = await h.db.query("SELECT id, supplier_code FROM suppliers WHERE supplier_code IN (?, ?)", codes);
   for (const row of created) h.supplierIds.push(Number(row.id));
   assert.deepEqual(created.map((row) => row.supplier_code).sort(), [...codes].sort(), "each imported Supplier exists exactly once");

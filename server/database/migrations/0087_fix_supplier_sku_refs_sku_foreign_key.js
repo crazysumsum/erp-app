@@ -1,16 +1,17 @@
 /**
- * 令 `supplier_sku_refs.sku_id` 嘅 FK 真係生效（DEF-029；HD-113 A 批准）。
+ * 令 `supplier_sku_refs.sku_id` 嘅 FK 真係生效（DEF-029；HD-113 A，做法按 REV-100 H-1 改咗，見 HD-114）。
  *
  * InnoDB 用第一個以 `sku_id` 開頭嘅 index 去做 FK 檢查。0081 只建咗 `(sku_id, relationship_status, last_supplied_at)`，
  * 尾欄可以係 NULL，MySQL 26.7.0 喺呢個情況下寫子表時唔檢查：指向唔存在 SKU 嘅關係都入到（刪 SKU 就照樣拒絕）。
- * 淨係加 `(sku_id)` index、或者刪咗 FK 再加都冇用，因為複合 index 仲排喺前面。要咁做：
- *   1. 刪 FK、刪複合 index（如果之前有人手加過 `(sku_id)` 都一齊刪），加 `idx_supplier_sku_refs_sku (sku_id)`，再加返複合 index；
- *   2. 加返 FK（ON DELETE RESTRICT 不變）。呢步用 COPY 重建張表，server 會逐行檢查，期間只可以讀、唔可以寫。
- * 開始之前先查孤兒資料（關係指向唔存在嘅 SKU）：有就停低列出嚟，唔會自己刪。
- * 重跑：已經修好就乜都唔做；第 1 步做完但第 2 步未做（例如等 lock 超時）就淨係補 FK。
+ * 淨係喺後面加 `(sku_id)` index 冇用，因為複合 index 仲排喺前面。所以用一句 ALTER（INPLACE、LOCK=NONE）：
+ * 加 `idx_supplier_sku_refs_sku (sku_id)`，刪複合 index 再加返，令 `(sku_id)` 排先（如果之前有人手加過排錯位嘅
+ * `(sku_id)`，先另外刪咗佢）。FK 由頭到尾都喺度，唔使重建張表，期間讀寫照常。
+ * 前後都查孤兒資料（關係指向唔存在嘅 SKU）：有就停低列出嚟，唔會自己刪，runner 亦唔會記低呢個 migration。
+ * ALTER 之前檢查嗰陣 FK 仲未生效，所以 ALTER 之後要再查一次；之後 FK 已經生效，唔會再有新嘅孤兒。
+ * 重跑：已經修好就只查孤兒。`foreign_key_checks` 係 0 嘅連線會拒絕，因為咁樣寫入唔受 FK 約束。
  * 等 metadata lock 最多 `lockWaitSeconds`（預設 10 秒），等唔到就失敗講明原因，同 0080 一樣。
  * `table` 只係俾測試用一張複製表，FK 名跟住表名（真表就係 `fk_supplier_sku_refs_sku`）。
- * migration runner 冇 down；`down` 要人手跑，還原 0081 嘅定義（index 次序除外，FK 會再次唔生效）。
+ * migration runner 冇 down；`down` 要人手跑：刪 `(sku_id)` index，FK 退返用複合 index，即係 0081 嘅樣（再次唔生效）。
  */
 const SKU_INDEX = "idx_supplier_sku_refs_sku";
 const COMPOSITE_INDEX = "idx_supplier_sku_refs_sku_status_supplied";
@@ -19,20 +20,20 @@ const ORPHAN_REPORT_LIMIT = 20;
 
 async function inspect(connection, table) {
   const [indexRows] = await connection.query(`SHOW INDEX FROM \`${table}\``);
-  // SHOW INDEX 按 index 喺表入面嘅次序列出，即係 InnoDB 揀 FK index 嘅次序。
-  const order = [...new Set(indexRows.map((row) => row.Key_name))];
   const skuColumns = indexRows.filter((row) => row.Key_name === SKU_INDEX).map((row) => row.Column_name);
   if (skuColumns.length > 0 && skuColumns.join(",") !== "sku_id") {
     throw new Error(`Incompatible existing Supplier schema index: ${table}.${SKU_INDEX}`);
   }
+  // SHOW INDEX 按 index 喺表入面嘅次序列出，即係 InnoDB 揀 FK index 嘅次序：第一個以 sku_id 開頭嘅就係 FK 用嗰個。
+  const first = indexRows.find((row) => Number(row.Seq_in_index) === 1 && row.Column_name === "sku_id")?.Key_name ?? null;
   const [[{ fks }]] = await connection.query(
     `SELECT COUNT(*) AS fks FROM information_schema.referential_constraints
       WHERE constraint_schema = DATABASE() AND table_name = ? AND constraint_name = ?`, [table, `fk_${table}_sku`]);
+  if (Number(fks) === 0) throw new Error(`Incompatible existing Supplier schema: ${table} has no foreign key fk_${table}_sku`);
   return {
     hasSkuIndex: skuColumns.length > 0,
-    hasComposite: order.includes(COMPOSITE_INDEX),
-    skuIndexFirst: skuColumns.length > 0 && (!order.includes(COMPOSITE_INDEX) || order.indexOf(SKU_INDEX) < order.indexOf(COMPOSITE_INDEX)),
-    hasForeignKey: Number(fks) > 0
+    hasComposite: indexRows.some((row) => row.Key_name === COMPOSITE_INDEX),
+    servingIndex: first
   };
 }
 
@@ -61,33 +62,31 @@ async function withLockWait(connection, table, lockWaitSeconds, work) {
   }
 }
 
-const addForeignKey = (table) =>
-  `ALTER TABLE \`${table}\` ADD CONSTRAINT \`fk_${table}_sku\` FOREIGN KEY (sku_id) REFERENCES item_skus (id) ON DELETE RESTRICT`;
-
 export async function up(connection, { lockWaitSeconds = 10, table = "supplier_sku_refs" } = {}) {
+  const [[{ checks }]] = await connection.query("SELECT @@SESSION.foreign_key_checks AS checks");
+  if (Number(checks) !== 1) throw new Error("foreign_key_checks must be 1 to make the supplier_sku_refs SKU foreign key effective");
   const state = await inspect(connection, table);
-  if (state.skuIndexFirst && state.hasComposite && state.hasForeignKey) return;
   await refuseOrphans(connection, table);
+  if (state.servingIndex === SKU_INDEX && state.hasComposite) return;
   await withLockWait(connection, table, lockWaitSeconds, async () => {
-    if (!state.skuIndexFirst || !state.hasComposite) {
-      const drops = [
-        state.hasForeignKey && `DROP FOREIGN KEY \`fk_${table}_sku\``,
-        state.hasSkuIndex && `DROP INDEX ${SKU_INDEX}`,
-        state.hasComposite && `DROP INDEX ${COMPOSITE_INDEX}`
-      ].filter(Boolean);
-      await connection.query(`ALTER TABLE \`${table}\` ${[...drops, `ADD INDEX ${SKU_INDEX} (sku_id)`,
-        `ADD INDEX ${COMPOSITE_INDEX} (${COMPOSITE_COLUMNS})`].join(", ")}, ALGORITHM=INPLACE, LOCK=NONE`);
-    }
-    await connection.query(addForeignKey(table));
+    // 排錯位嘅 `(sku_id)` 同一句入面刪咗再加返，複合 index 仍然排先（實測），所以要先刪。之後就係 0081 嘅樣，
+    // 中途停咗重跑都得。
+    if (state.hasSkuIndex) await connection.query(`ALTER TABLE \`${table}\` DROP INDEX ${SKU_INDEX}, ALGORITHM=INPLACE, LOCK=NONE`);
+    const changes = [`ADD INDEX ${SKU_INDEX} (sku_id)`, state.hasComposite && `DROP INDEX ${COMPOSITE_INDEX}`,
+      `ADD INDEX ${COMPOSITE_INDEX} (${COMPOSITE_COLUMNS})`].filter(Boolean);
+    await connection.query(`ALTER TABLE \`${table}\` ${changes.join(", ")}, ALGORITHM=INPLACE, LOCK=NONE`);
   });
+  const after = await inspect(connection, table);
+  // 例如另一個以 sku_id 開頭嘅 UNIQUE index：MySQL 一定將 UNIQUE 排喺普通 index 前面，FK 會繼續用佢。
+  if (after.servingIndex !== SKU_INDEX) {
+    throw new Error(`${table}.${after.servingIndex} still serves fk_${table}_sku ahead of ${SKU_INDEX}; the foreign key may stay unenforced`);
+  }
+  await refuseOrphans(connection, table);
 }
 
 export async function down(connection, { lockWaitSeconds = 10, table = "supplier_sku_refs" } = {}) {
   const state = await inspect(connection, table);
   if (!state.hasSkuIndex) return;
-  await withLockWait(connection, table, lockWaitSeconds, async () => {
-    if (state.hasForeignKey) await connection.query(`ALTER TABLE \`${table}\` DROP FOREIGN KEY \`fk_${table}_sku\``);
-    await connection.query(`ALTER TABLE \`${table}\` DROP INDEX ${SKU_INDEX}`);
-    await connection.query(addForeignKey(table));
-  });
+  await withLockWait(connection, table, lockWaitSeconds, () =>
+    connection.query(`ALTER TABLE \`${table}\` DROP INDEX ${SKU_INDEX}, ALGORITHM=INPLACE, LOCK=NONE`));
 }
