@@ -68,3 +68,45 @@ while final local serial checks run; it is NOT merge readiness. Actual terminal
 results/review/CI/fresh-main/merge/cleanup receipts attach to PR244 timeline against
 the immutable published head, rather than endless metadata-only candidate changes.
 No successful pending gate or cleanup is recorded before it actually occurs.
+
+## Terminal local results and necessary authorization bookkeeping
+
+On unchanged executable fingerprint48c132ee, original TC042 replay completed
+2PASS/0FAIL/0SKIP in841393.11375ms. Import10k/50k finished808208.515ms<30min;
+4045foreground samples(3645single/400hundred), p95=90.535542ms<=3000ms,
+excludedFailures0/warmups0. Scheduler405/27/2runs all failure/timeout0;
+all six reconciliation mismatches0. Existing isolated50MiB memory assertions PASS.
+Raw original-tc042.log SHA256
+fd2bc4f5010a3e8dc9229d431f5e4a14bb7dba6bdd9a231aaac02241fa68867e.
+
+Full server coverage3478tests/3340PASS/0FAIL/0cancel/138existingconditionalSKIP,
+571362.429208ms; lines94.12/branches86.58/functions93.51 and38file floors PASS.
+Conditional Inventory/Customer opt-in cases are not asserted PASS or a generic
+zero-skip formal acceptance. Five capacity transfers are not inferred PASS:
+separate SalesCapacity2PASS/0SKIP8232.879916ms; precheck50MiB/100000rows
+3PASS/0SKIP12278.8395ms,1000/10000-order ingestion4874/5377ms<=30000ms.
+Full coverage SHA25647a33eb0c3a9c6f10aa9dfb261be8e58b3915e2d34b68e04630161ebe1f7917d;
+SalesCapacity SHA2562d8738d236979ee7a5a66185d8ba0bae1220995276793c3431e52e5709969601;
+precheck SHA2562490dfb7c960c535e6703a373791dbbc71996b68002579c530ca6022ad0d5a00.
+All raw logs are retained in the owned runtime root above.
+
+OPEN runtime observation: original replay emitted Node
+`MaxListenersExceededWarning: 11 close listeners added to [ServerResponse]`.
+Similar warnings appear in existing non-Customer full-suite cases. No stack trace
+or demonstrated leak/Customer attribution; actual HTTP samples complete without
+request errors. No suppression or listener-limit change. Independent reviewer
+`/root/customer_task011_review` verified the raw metrics and requires this disclosure;
+TC042 correctness/performance PASS_WITH_OBSERVATION, not warning-free. Any future
+minimal trace-warnings reproduction/shared-framework fix is outside this scope.
+
+Exact e26841c CI39389732794 completed all13normaljobs SUCCESS. Final structural
+check exposed an omitted SCOPE entry for the unchanged historical Sales defect
+report. State227 APPROVAL-SCOPE052 records Sam's actual prior explicit request
+to register DEF033001 with reproduction/deadlock/PR244 evidence and notify Sales;
+original actual receipt6209331081 remains. This is not new human approval, a
+baseline change or permission to repair Sales. Boundary must be rerun after the
+record is added. This necessary metadata correction creates a new candidate:
+old-head CI is historical, new exact-head normal CI/final independent review and
+fresh-main reconciliation remain required. No executable change or repeated
+heavy local suite is claimed. Final merge/cleanup receipts remain on PR timeline;
+full downstream acceptance BLOCKED, scheduler PAUSED and existing waivers unchanged.

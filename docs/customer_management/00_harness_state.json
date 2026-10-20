@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 226,
+  "revision": 227,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,7 +11,7 @@
   "baseline": {
     "design": "13a77ed225d0253eaac097b5e3bb13f60c6078d1019500b95e976dd6617af721",
     "plan": "b390c588a323b3c3677bb031f287cebefe2cb284571e901d56aa3f14814f44db",
-    "code_commit": "e7bbe6b714bb7c0abc1c5cabd4ecee372310581f",
+    "code_commit": "e26841c57a04acf43493c77209344cf795d4daac",
     "source_fingerprint": "48c132eecf07a4a3621c70e06161985c3f31d913987bc3fe6b10da8ca5ea3972",
     "worktree": "/private/tmp/erp-customer-operations-readiness",
     "default_commit": "64bee2e00dfae71131c7cfa54049cac0941d6f85",
@@ -2092,6 +2092,22 @@
         "TC-087",
         "TC-088",
         "TC-080 alert delivery only"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-052",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam",
+      "decision": "APPROVED",
+      "source_ref": "Late bookkeeping of actual prior human request in this chat: 請將 DEF-033001 登記到 Sales Order 的測試問題清單，附上重現步驟、死鎖證據及 PR #244 的阻塞關係，並通知 Sales 工作處理；不要擴大 Customer 的修復範圍。 Original execution/notification receipt https://github.com/crazysumsum/erp-app/pull/244#issuecomment-6209331081 and state EXT record preserved. Unchanged file authored after HD016 PLANb390 approval; missing path authorization recorded now, not a new decision, baseline change or Sales product-repair authorization. Current Sam also authorizes PR250 integration and normal PR244 merge without scope expansion.",
+      "recorded_at": "2026-10-20T08:21:06Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "b390c588a323b3c3677bb031f287cebefe2cb284571e901d56aa3f14814f44db",
+      "code_commit": "e26841c57a04acf43493c77209344cf795d4daac",
+      "scope": [
+        "docs/sales_order_management/testing/04_defect_register.md"
       ],
       "expires_at": null
     }
@@ -5415,8 +5431,16 @@
       "kind": "GIT_PUSH",
       "target": "existingDraftPR244 codex/customer-operations-readiness integratedcandidate",
       "idempotency_key": "customer-pr250-integrated-publication128",
-      "status": "PLANNED",
-      "source_ref": "Publishpreliminarydeveloperpassed integratedcandidate/docs checkpoint,notmerge-ready untilactual10k50load/fullservercoverage/exactheadnormalCI/independentreview/freshmain pass. No newsource/test/CI/canonbaseline changes. Finalimmutablegates/merge/cleanupreceiptsPR244timeline."
+      "status": "CONFIRMED",
+      "source_ref": "Publishpreliminarydeveloperpassed integratedcandidate/docs checkpoint,notmerge-ready untilactual10k50load/fullservercoverage/exactheadnormalCI/independentreview/freshmain pass. No newsource/test/CI/canonbaseline changes. Finalimmutablegates/merge/cleanupreceiptsPR244timeline. Actual e26841c push and API match confirmed; receipt https://github.com/crazysumsum/erp-app/pull/244#issuecomment-6286285160. Exact e268 CI39389732794 all13SUCCESS, receipt6286438396. Missing-scope-record correction requires new exact-head CI, not reuse of old head as newheadPASS."
+    },
+    {
+      "id": "EXT-LOCAL-129",
+      "kind": "INTEGRATION_DEVELOPER_GATES",
+      "target": "e26841c executablefp48c132ee;ownedKPWDDe13369;originalTC042+fullserver+capacitytransfers",
+      "idempotency_key": "customer-pr250-final-local129",
+      "status": "CONFIRMED",
+      "source_ref": "Original10k50TC0422PASS0FAIL0SKIP841393ms,p95=90.535542ms/4045samples,excludedFailures0,808208ms<30min,all6reconciliation0,schedulerfailures/timeouts0; original50MiBmemoryassertionsPASS. Raw SHAfd2bc4f5010a3e8dc9229d431f5e4a14bb7dba6bdd9a231aaac02241fa68867e,actual independent review receipt6286534578. Fullserver3478tests3340PASS0FAIL138existingconditionalSKIP571362ms,94.12/86.58/93.51and38floorsPASS,SHA47a33eb0c3a9c6f10aa9dfb261be8e58b3915e2d34b68e04630161ebe1f7917d. Separatetransfers Salescapacity2PASS0skip8233ms SHA2d8738d236979ee7a5a66185d8ba0bae1220995276793c3431e52e5709969601;50MiB100000rowprecheck3PASS0skip12279ms SHA2490dfb7c960c535e6703a373791dbbc71996b68002579c530ca6022ad0d5a00. OPEN Node11close-listenerwarning retained,no suppression,no memoryleak/Customer attribution; notwarningfree. Conditional skips notPASS/noformaloverallgateclaim. Finalboundary found missing historicSalesdocscopeapproval; APPROVAL-SCOPE052 records actualSam request, no content/scope change. Allrawlogs retainedKPWDDe; schedulerPAUSED,fullDownstreamBLOCKED,waiversnottechnicalPASS. Finalindependentreview/newmetadataheadCI/freshmain/normalmerge+cleanupstillpending."
     }
   ],
   "evidence_files": [
@@ -5519,5 +5543,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Continueactive91931 historicaloriginalTC042exact10korders50usersreplayalone againstintegratedproducts,then fullservercoveragewithunchangedapprovedtransferflags andseparatecapacitycases. No ownCPU-heavyjobsduringload. PublishDraftcheckpointfornormalexactheadCI; actualindependentreviewerreviewrequired. SchedulerMUSTremainPAUSEDperSamcurrentrequest;manualcontinuationauthorized. PreserveD13a/Pb390/RISK007waiverprovenanceandgenericNAvalidatorlimit; no newscope. DEF033001RETEST,notcloseduntilvalidcurrentfullproof; allgates/freshmainthenSamapprovednormalmerge244 andobservedownedcleanup. Full030031032/downstreamacceptance/UATreleaseBLOCKED."
+  "next_safe_action": "Validate missing historical Sales-defect-report authorization record and unchanged exact DESIGN/PLAN/source fingerprint; commit necessary bookkeeping correction, publish existing DraftPR244, require all13normalCI on new exacthead and actual separate final review. Existing e268 local fullcoverage/originalTC042/capacity/client/browser proofs apply only unchanged executablefp48c; do not call old-headCI new-headPASS. Freshfetchmain before merge and integrate/reverify any movement. Sam-authorized normalmerge only; noadmin/bypass. Then observe actualmerge and clean only owned runtime/worktree/topicbranch. SchedulerPAUSED,full030/031/032/downstream/UAT/operations/release acceptanceBLOCKED; DEF033001RETESTuntilfinalgates. Priorfailure/waiver/approvalalias evidence preserved."
 }
