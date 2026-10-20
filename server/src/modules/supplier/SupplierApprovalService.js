@@ -660,6 +660,8 @@ export class SupplierApprovalService {
       if (updated.affectedRows === 0) {
         throw supplierConflict("VERSION_CONFLICT", "審批申請已被其他人修改，請重新載入");
       }
+      // 同其他審批 action 一樣用 Supplier Code 做 label（REV-098 F-2；之前係空字串）。
+      const [[supplier]] = await connection.query("SELECT supplier_code FROM suppliers WHERE id = ?", [request.supplier_id]);
       await this.audit.record(connection, {
         actorUserId: input.actorId,
         actorUsername: actor.username,
@@ -667,7 +669,7 @@ export class SupplierApprovalService {
         targetType: "approval",
         targetId: Number(request.id),
         supplierId: Number(request.supplier_id),
-        targetLabel: "",
+        targetLabel: supplier?.supplier_code ?? "",
         reason,
         detail: {
           before: { assignedApproverId: Number(request.assigned_approver_id) },
