@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 377,
+  "revision": 378,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -13,8 +13,8 @@
     "plan": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
     "code_commit": "186a660ec0ef3037ffc9ef92adcd31b20f1e072d",
     "source_fingerprint": "43f7f525f708bb08a1cb3994bd6ed7a36548794d3eaf9e7e06f18ae5caa911ad",
-    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t51h",
-    "default_commit": "72e205efe8601f848f7492dc8df8d2b9335d3c72",
+    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t51m",
+    "default_commit": "64bee2e00dfae71131c7cfa54049cac0941d6f85",
     "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
   },
   "runtime": {
@@ -4533,6 +4533,17 @@
       "source_ref": "Local, not CI, on erp_t51. supplierSimilarNameReport.integration.test.js 7/7 (plus supplierImportPrecheck and supplierCsvSchema unit files, 37 tests in all): existing and in-file matches equal pairwise bigramDiceScore with planted pairs as control; row numbers equal precheckSupplierCsv's on a file with blank rows between data rows; 3,000 identical names give 2,999 lines; 300 near-identical names stay within 10 per row (control: some row exceeds the cap); upsert excludes the row's own Supplier and keeps blank names (create mode as control); header, bank-column and malformed-body refusals without cell content; formula guard; the CLI with --name value, through a symlink, refusing overwrite, a wrong database and a missing mode; the session's first statement is SET SESSION TRANSACTION READ ONLY, all others SELECT, and a write on it is refused; UI create's checker uses the class default (DEF-030 pin). Nine mutations each failed the file (read-only statement, realpath guard, per-row cap, identical grouping, upsert exclusion, CsvError mapping, kept-name branch, '--name value' parsing, ID-based target). The first sweep hung on the read-only mutant because the test did not close its recording connection on failure; fixed with finally, then the sweep completed. Timing with a stub connection: 10,000 rows sharing 「貿易有限公司」 0.9 s (42,255 matches, 18,549 lines); 10,000 rows of 'TBC' 52 ms (9,999 lines). Lint exit 0.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-20T11:00:49+08:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "HD-113/HD-114 migration 0087, TC-082/TC-093 carriers and the HD-057 A similar-name report (PR #251) merged to main",
+      "code_commit": "64bee2e00dfae71131c7cfa54049cac0941d6f85",
+      "spec_baseline": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
+      "source_fingerprint": "7f1c1e3bc49bf92bc60518309adda88cd1078f1085be434817f02f70bf820f7b",
+      "status": "PASS",
+      "source_ref": "PR #251 merged as 64bee2e00dfae71131c7cfa54049cac0941d6f85 at 2026-10-20T07:41:40Z on the Product Owner's word ('HD-114 A，CI 過就 merge', then 'CI已通過'), with --match-head-commit, after a gate that refused unless every check was SUCCESS and main was an ancestor of HEAD: head cc3b8c77 green on all 13 checks (PR run 39386915752). Main moved three times during the gate (#252/#254 changed ci.yml, #253 ci.yml and server/package.json, #250 Sales source), none eligible under rule B, so main was merged in and CI re-ran each time. Reviews REV-100 and REV-101 CHANGES_REQUESTED (0 Critical; REV-100 H-1 fixed per HD-114 A), follow-ups applied; not re-reviewed. The main push run 39388203146 was in progress when recorded. Recorded as the first commit of the next change PR.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-20T15:48:16+08:00"
     }
   ],
   "pending_decisions": [
@@ -7086,7 +7097,7 @@
     {
       "id": "DEF-029",
       "severity": "HIGH",
-      "status": "OPEN",
+      "status": "CLOSED",
       "source_ids": [
         "TC-082",
         "SKU-005",
@@ -7094,7 +7105,12 @@
         "supplier_sku_refs.fk_supplier_sku_refs_sku",
         "MySQL 26.7.0"
       ],
-      "closure_evidence": [],
+      "closure_evidence": [
+        "PR #251 merge commit 64bee2e00dfae71131c7cfa54049cac0941d6f85",
+        "PR CI run 39386915752 on head cc3b8c77: all 13 checks success",
+        "REV-100 (docs/supplier_management/implementation/103_rev_100_independent_review.md); procedure per HD-114 A",
+        "TC-082 direct orphan insert refused; supplierSkuForeignKeyMigration.integration.test.js on copy tables"
+      ],
       "risk_approval_id": null
     },
     {
@@ -7112,5 +7128,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "PR #251: merge when every check is SUCCESS (Product Owner, 'CI 過就 merge'), gated in code; record the merge as the first commit of the next change PR. Then MIG-001..006 carriers."
+  "next_safe_action": "TASK-051 MIG carriers: TC-001, TC-002, TC-004, TC-005 in one PR; TC-003 next; TC-006 in the T51 rehearsal."
 }
