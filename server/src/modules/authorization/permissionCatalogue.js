@@ -47,6 +47,8 @@ export const PERMISSION_CATALOGUE = Object.freeze([
   Object.freeze({ name: "sales.view", description: "查看報價、銷售訂單及匯出" }),
   Object.freeze({ name: "sales.mgmt", description: "管理報價、銷售訂單與確認操作" }),
   Object.freeze({ name: "sales.import", description: "匯入銷售訂單及管理外部接單" }),
+  Object.freeze({ name: "fulfillment.view", description: "查看履約、出貨及歷史資料" }),
+  Object.freeze({ name: "fulfillment.reverse", description: "沖銷已確認出貨" }),
   Object.freeze({ name: "fulfillment.operation", description: "執行履約庫存分配及出庫" })
 ]);
 
