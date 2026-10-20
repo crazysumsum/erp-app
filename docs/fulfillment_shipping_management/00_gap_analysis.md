@@ -1,5 +1,7 @@
 # Fulfillment & Shipping Management Gap Analysis
 
+> Current observation: [2026-10-20 readiness requalification](10_implementation_readiness.md) supersedes the implementation/readiness conclusions below. The original alignment observations are retained as dated history, not current repository facts.
+
 ## Scope and method
 
 Mode `REVIEW_AND_ALIGN` against the four legacy narratives at commit `b6f03219259129de6735263a4d369de2b15a5f9f`, cross-checked against the observed repository (source tree, CI workflow, package manifests, permission catalogue) and against the already-aligned Inventory, Supplier, Item, Customer, Business Master and Purchasing & Receiving modules.
@@ -48,3 +50,7 @@ These are the hard dependencies that make `PHASE-001` a real gate rather than a 
 ## Result
 
 All documentation gaps found in this run are closed. `GAP-TR-002` was delivered as the separately scoped PR #97 and is now `CLOSED`; `GAP-TC-001`, downgraded to MEDIUM on 2026-09-14 — a verified-working Playwright CLI exists on the development machine, but it is not yet pinned into the repository or CI, so its results stay local observations rather than Gate evidence; and `GAP-RQ-002`, which keeps business acceptance and release sign-off open by design. No product code was changed, no test was executed, and no case was marked PASS.
+
+## 2026-10-20 requalification disposition
+
+The current contract inventory, ownership, proposed P0 dependency correction, HD-006/HD-007 alternatives, exact candidate hashes and verification limits are recorded in [10_implementation_readiness.md](10_implementation_readiness.md). No legacy narrative is deleted. Seven source pins are refreshed as observations with review-pending versions; historical approval records are preserved. Product implementation remains BLOCKED.

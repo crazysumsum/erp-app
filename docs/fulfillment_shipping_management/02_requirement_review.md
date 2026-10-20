@@ -1,5 +1,7 @@
 # Fulfillment & Shipping Management Requirement Review
 
+> 2026-10-20 readiness requalification: current candidate is `PROPOSED / BLOCKED`, pending HD-006 / HD-007 and independent review. The 2026-09-14 approvals below are historical and do not approve this candidate. See [current readiness and decisions](10_implementation_readiness.md).
+
 ## Review result
 
 `APPROVED PLANNING BASELINE` — Sam, as ERP Product Owner and named human independent reviewer, approved the aligned requirement baseline on 2026-09-14 together with the design and the Phase P0–P3 plan. This approval does not authorize `IMPLEMENT`, test execution, UAT, Go-Live or release, and it is not business acceptance: the sign-off table in `01_requirement_spec.md` §19.2 remains empty by design (`GAP-RQ-002`).

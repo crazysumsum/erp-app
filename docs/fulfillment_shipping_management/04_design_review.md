@@ -1,5 +1,7 @@
 # Fulfillment & Shipping Management Design Review
 
+> 2026-10-20 readiness requalification: current candidate is `PROPOSED / BLOCKED`, pending HD-006 / HD-007 and independent review. The 2026-09-14 approvals below are historical and do not approve this candidate. See [current readiness and decisions](10_implementation_readiness.md).
+
 ## Review result
 
 `APPROVED` as a planning baseline by human independent reviewer Sam on 2026-09-14. The MySQL 8.0 compatibility baseline and the Phase P0 → P3 order are confirmed. This review does not authorize entry to `IMPLEMENT`, test execution, UAT, Go-Live or release.

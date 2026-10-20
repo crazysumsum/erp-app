@@ -1,5 +1,7 @@
 # Fulfillment & Shipping Management 開發執行計劃（Harness Aligned）
 
+> 2026-10-20 readiness requalification: current candidate is `PROPOSED / BLOCKED`, pending HD-006 / HD-007 and independent review. The 2026-09-14 approvals below are historical and do not approve this candidate. See [current readiness and decisions](10_implementation_readiness.md).
+
 ## 0. 文件資訊
 
 | 項目 | 內容 |
@@ -33,7 +35,7 @@
 
 - [ ] Phase內全部Tasks及Intermediate Checkpoints完成，沒有TODO stub、未解決blocker或未配置migration。
 - [ ] 在該Phase專用worktree執行`npm run lint`、server／client tests、coverage、client build及`npm run security:audit`。
-- [ ] 涉及DB的Phase在明確標記的專用MySQL 8.0測試庫執行fresh／upgrade migration、integration、concurrency及rollback／recovery案例。（2026-09-14 對齊更正：原文為MySQL 5.7；專案CI實際執行`mysql:8.0`，決策 HD-001。）
+- [ ] 涉及DB的Phase在明確標記的專用MySQL 26.7.0測試庫（HD-007候選，未批准）執行fresh／upgrade migration、integration、concurrency及rollback／recovery案例。（2026-09-14 對齊更正：原文為MySQL 5.7；專案CI實際執行`mysql:8.0`，決策 HD-001。）
 - [ ] PR描述列出需求追溯、migration／rollback影響、測試命令與結果、效能或安全證據、已知限制及下一Phase gate。
 - [ ] 合併前fetch最新`origin/main`；如target已移動，先在Phase分支整合、解決衝突並重跑完整Phase Gate。
 - [ ] 人工review批准後才合併；合併完成後移除該Phase worktree及已合併分支，再從最新main開始下一Phase。
@@ -47,28 +49,26 @@
 | P2 Shipment & Atomic Issue | `codex/fulfillment-p2-shipment` | 可由PICKED工作建立Shipment，經兩階段可恢復操作原子完成Inventory Issue、Sales Fulfilled及Delivery Note。 | P1 |
 | P3 Reversal, Archive & Release Evidence | `codex/fulfillment-p3-reversal-release` | 可整張Reversal並重開SO；Active／Archive查詢、Export、Archive、Reconciliation及正式發布證據完整。 | P2；Sales Archive協調能力 |
 
-### 1.4 實作前硬性 Gate
+### 1.4 實作前硬性 Gate（HD-006 候選修訂，未批准）
 
-Phase P0開始前必須確認：
+本候選把「已存在的上游核心」與「本 Phase 負責補齊的 Fulfillment 專用契約」分開，解除 TASK-001 與 TASK-004～006 的循環入口；保留原四個 Phase、單一 P0 PR、全部語意及驗證門檻。HD-006／HD-007、當前 DESIGN／PLAN 審查與 IMPLEMENT 授權未完成前，本節不可用作執行許可。
 
-- [ ] Item Management正式提供SKU／Base UOM／Tracking Policy／Minimum Sale Life的transaction-aware lookup，且Serial SKU可fail closed。
-- [ ] Customer Management正式提供Shipping Address／Contact list及transaction-aware ownership、purpose、status、version assertions。
-- [ ] Sales Order Management正式提供Fulfillment projection、line／reservation mapping locks、confirm／reverse result及lifecycle guard契約。
-- [ ] Inventory Management正式提供candidate、batch allocation／release／issue及「reverse issue並恢復原Reservation」契約與固定lock order。
-- [ ] 上游Provider contracts、錯誤碼、decimal-string數量及同transaction executor語意已由provider owner批准並有consumer contract tests。
-- [ ] 已fetch最新main並重新盤點全部migration；不得沿用設計文件示例號碼或修改已套用migration。
-- [ ] Phase測試使用可清除的專用MySQL測試庫；不得指向開發者日常資料或正式資料。
-
-任何Sales、Inventory或Customer硬依賴未落地時，P0-T01須回報`BLOCKED`並停止該依賴鏈；不得建立影子table、複製domain規則、以自由文字reference或production fake繞過。
+- P0 入口：Item／Customer／Sales／Inventory 核心、SO line／reservation mapping、Inventory Reservation／Allocation／Posting 已合 main；TASK-001 記錄每項實際 symbol、版本、owner、差異及驗證結果。核心缺失即 BLOCKED；專用 extension 尚缺時只把受影響依賴鏈記為 BLOCKED，不把盤點誤報為契約 PASS。
+- TASK-002～003：只完成權限／設定／純規則；沿用已存在的 `fulfillment.operation` 與 `inventory.fefo.override`，不重建或自動 grant。`fulfillment.view`／`fulfillment.reverse` 仍屬 TASK-002 交付。
+- TASK-004～006：Sales／Inventory provider owner 負責各自模塊的 additive contract；Fulfillment 負責 consumer 驗證及整合。跨模塊檔案仍須當前 plan 的 SCOPE 批准，不因本計劃而取得其他模塊寫入權；不使用 raw-table fallback、影子 table 或 production fake。
+- Checkpoint 0B：四個 provider 的 wire shape、decimal-string 邊界、trusted source／actor、exact-set、versions、同 transaction、全域鎖序、原子 rollback 與專用 reversal tests 全部通過，才可開始 TASK-007～010 的 Fulfillment persistence/schema。TASK-007 明確依賴 TASK-004／005／006。
+- Fulfillment／Shipment schema 或 migration history 出現前，另須具體核准 Sales 啟用協調：停止 Sales release writers → migrations → 註冊並驗證真實 `fulfillmentOpenMatter` provider 及所有節點 → 證明 Sales → Fulfillment → Inventory 鎖序 → 恢復 writers。現有 `NOT_REQUIRED` 只適用完全未安裝狀態；不得在有 schema 後繼續依賴它。本文件不授權部署或操作共用資料庫。
+- P0 Gate：全部 11 個 Task、provider integration、fresh／upgrade migration、並發／rollback／recovery、原 coverage／CI／人工審查全部完成才可交付單一 P0 PR；不開啟業務 route、menu 或 scheduler。後續 P1 UI 另需本模塊真實 Playwright flow、profile suite 及 CI coverage。
+- 每次執行前 fetch 最新 main、盤點並分配當時 migration 序號；測試僅用已確認可清除的專用 schema。MySQL compatibility 仍由 HD-007 決定，現有 8.0 批准不能以 26.7.0 結果替代。
 
 ### 1.5 依賴圖
 
 ```text
-Item + Customer + Sales + Inventory provider implementations
+Item + Customer + Sales + Inventory core implementations
                          │
                          ▼
 P0: baseline → permission/config → pure rules
-              → provider contracts → operation/schema/lock proof
+              → provider extensions → Checkpoint 0B → operation/schema/lock proof
                          │
                          ▼
 P1: Queue → DRAFT Claims → Allocation/Reallocation
@@ -182,7 +182,7 @@ Focused verification可使用`npm test --workspace server -- <test-file>`及`npm
 
 ### Task P0-T01：鎖定最新主幹、Migration序號及Provider readiness
 
-**Description：** 從最新`origin/main`建立P0 worktree，記錄基線commit、實際下一個migration序號及四個上游Provider的實作位置、版本和測試結果；任何硬依賴缺失均明確標為BLOCKED。
+**Description：** 從最新`origin/main`建立P0 worktree，記錄基線commit、實際下一個migration序號及四個上游Provider的實作位置、版本和測試結果；核心缺失即BLOCKED；Fulfillment專用extension缺口逐項記錄，由TASK-004～006完成，Checkpoint 0B前不宣告provider PASS（HD-006候選，未批准）。
 
 **Acceptance criteria：**
 
@@ -192,7 +192,7 @@ Focused verification可使用`npm test --workspace server -- <test-file>`及`npm
 
 **Verification：** `git status --short --branch`、`git log --oneline -5`、migration inventory及Provider focused tests；結果附於P0 PR checklist。
 
-**Dependencies：** 最新`origin/main`；Item、Customer、Sales、Inventory實作分支已合併。
+**Dependencies：** 最新`origin/main`；Item、Customer、Sales、Inventory核心已合併，專用extension仍可由P0-T04～06補足（HD-006候選）。
 
 **Files likely touched：** `docs/fulfillment_shipping_management/05_development_tasks.md`及P0 PR描述；如無規格碰撞，不修改production code。
 
@@ -336,7 +336,7 @@ Focused verification可使用`npm test --workspace server -- <test-file>`及`npm
 
 **Verification：** sequence、operation hash、claim race、lease takeover、replay/conflict及真MySQL unique tests。
 
-**Dependencies：** P0-T02、P0-T03。
+**Dependencies：** P0-T02、P0-T03、P0-T04、P0-T05、P0-T06；Checkpoint 0B通過（HD-006候選）。
 
 **Files likely touched：** 一支sequence／operation migration、`FulfillmentOperationService.js`、`fulfillmentOperationService.test.js`、`fulfillmentOperationMigrations.integration.test.js`、operation fixtures。
 
@@ -1481,7 +1481,7 @@ Task實作時須把每項新增測試case ID回填到本表或Phase evidence；�
 明確結果：全部active／archive schema、純規則、durable operation及Sales／Inventory／Customer／Item契約可供後續Phase使用；一般使用者沒有Fulfillment menu、route或業務API入口。 範圍為本 Phase 的 11 個 Task（`TASK-001`～`TASK-011`，legacy `P0-T01`～`P0-T11`）。Owner：ERP Product Owner（Sam）指派的實作者；本文件不代表已開始功能開發。
 
 ### Entry criteria
-`05_development_tasks.md` §1.4 的七項硬性 Gate 全部確認：Item、Customer、Sales、Inventory 四個 Provider 的 transaction-aware 契約、錯誤碼及 decimal-string 數量語意已由 provider owner 批准並有 consumer contract tests；已 fetch 最新 `origin/main` 並重新盤點全部 migration；Phase 測試使用可清除的專用 MySQL 8.0 測試庫。任一硬依賴未落地時 `TASK-001` 回報 `BLOCKED` 並停止該依賴鏈，不得建立影子 table、production fake 或可被誤用的 feature 入口。
+依 §1.4 的 HD-006 候選入口，四個上游核心及 Sales reservation mapping 已合 main，先由 TASK-001 記錄現況與 extension 缺口；TASK-004～006 完成全部交易契約與 provider-owner／consumer 驗證後，Checkpoint 0B 才可解除 TASK-007～010 的阻塞。核心缺失仍 BLOCKED；不得以影子 table、production fake 或業務入口繞過。HD-006／HD-007、當前 DESIGN／PLAN 批准、獨立 review、IMPLEMENT 授權、最新 main／migration 盤點及已確認隔離 runtime 都是執行前條件；候選測試庫為專用 MySQL 26.7.0，未批准前不取代歷史 8.0 基線。
 
 ### Acceptance criteria
 - 所有P0 Tasks及Intermediate Checkpoints完成，Provider readiness全為PASS。
@@ -1588,12 +1588,12 @@ P3-GATE「最終完整測試及PR」：執行§1.7及P0～P3所有真MySQL、pro
 ## TASK-001 — 鎖定最新主幹、Migration序號及Provider readiness
 
 ### Goal
-從最新`origin/main`建立P0 worktree，記錄基線commit、實際下一個migration序號及四個上游Provider的實作位置、版本和測試結果；任何硬依賴缺失均明確標為BLOCKED。 （Legacy identity：`P0-T01`；規模估算：XS。）
+從最新`origin/main`建立P0 worktree，記錄基線commit、實際下一個migration序號及四個上游Provider的實作位置、版本和測試結果；核心缺失即BLOCKED；Fulfillment專用extension缺口逐項記錄，由TASK-004～006完成，Checkpoint 0B前不宣告provider PASS（HD-006候選，未批准）。 （Legacy identity：`P0-T01`；規模估算：XS。）
 
 ### Approach
 預計變更範圍：`docs/fulfillment_shipping_management/05_development_tasks.md`及P0 PR描述；如無規格碰撞，不修改production code。
 
-依賴：最新`origin/main`；Item、Customer、Sales、Inventory實作分支已合併。
+依賴：最新`origin/main`；Item、Customer、Sales、Inventory核心已合併，專用extension仍可由P0-T04～06補足（HD-006候選）。
 
 規格追溯：Requirement §2.4、§12、§16.2；Design §§0.2、6、9.3、13.1、14.2。
 
@@ -1755,7 +1755,7 @@ Commit：`feat: complete fulfillment master data contracts`。
 ### Approach
 預計變更範圍：一支sequence／operation migration、`FulfillmentOperationService.js`、`fulfillmentOperationService.test.js`、`fulfillmentOperationMigrations.integration.test.js`、operation fixtures。
 
-依賴：P0-T02、P0-T03。
+依賴：P0-T02、P0-T03、P0-T04、P0-T05、P0-T06；Checkpoint 0B通過（HD-006候選）。
 
 規格追溯：Requirement BR-001、BR-024～027、FR-QUEUE-008～009；Design §§4.2、4.14、8.8。
 

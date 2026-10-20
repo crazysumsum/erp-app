@@ -2454,7 +2454,10 @@
       ],
       "depends_on": [
         "TASK-002",
-        "TASK-003"
+        "TASK-003",
+        "TASK-004",
+        "TASK-005",
+        "TASK-006"
       ],
       "technical_test_ids": [
         "TC-010"

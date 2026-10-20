@@ -1,5 +1,7 @@
 # Fulfillment & Shipping Management Final Alignment Review
 
+> 2026-10-20 readiness requalification: current candidate is `PROPOSED / BLOCKED`, pending HD-006 / HD-007 and independent review. The 2026-09-14 approvals below are historical and do not approve this candidate. See [current readiness and decisions](10_implementation_readiness.md).
+
 ## Result
 
 `ALIGNED` — `docs/fulfillment_shipping_management` is now a single consistent source of truth in the Harness 2.0 canonical layout. `validate_traceability.py` reports `STRUCTURE_PASS`. The module state is `BLOCKED` with `resume_status` `PLANNED`: the design and plan are approved planning baselines, but `IMPLEMENT` is not authorized and four upstream providers do not exist.
@@ -83,3 +85,7 @@ Both legacy sign-off tables were empty, so no separate reviewer existed. Sam ide
 ## Is this documentation now a single consistent source of truth?
 
 Yes, for planning purposes. No two active documents claim authority over the same harness artifact, no superseded duplicate remains, the typed ledger and the generated matrix agree, and every implementation gap is represented as planned work rather than rewritten history. The module is ready for the next selected lifecycle stage — `IMPLEMENT` — only after the four provider dependencies land and an explicit mode authorization is given. No product code was changed, no command was executed against product code, no test was run and no case was marked PASS in this run.
+
+## 2026-10-20 requalification disposition
+
+The current contract inventory, ownership, proposed P0 dependency correction, HD-006/HD-007 alternatives, exact candidate hashes and verification limits are recorded in [10_implementation_readiness.md](10_implementation_readiness.md). No legacy narrative is deleted. Seven source pins are refreshed as observations with review-pending versions; historical approval records are preserved. Product implementation remains BLOCKED.
