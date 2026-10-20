@@ -22,7 +22,8 @@ import {prepareDiskTempDirectory} from "../../src/framework/upload/normalizeUplo
 import {SALES_CSV_COLUMNS} from "../../src/modules/sales/salesCsv.js";
 import {SalesOrderService} from "../../src/modules/sales/SalesOrderService.js";
 import {SalesOrderConfirmationService} from "../../src/modules/sales/SalesOrderConfirmationService.js";
-const it=process.env.DB_INTEGRATION_TESTS==='1'?test:test.skip;
+// CI runs these unchanged scenarios in a separate, impact-selected job.
+const it=process.env.DB_INTEGRATION_TESTS==='1'&&process.env.SALES_IMPORT_CAPACITY_SEPARATE_STEP!=='1'?test:test.skip;
 it('TC-042 actual10000-order50000-line streaming HTTP CSV with50 foreground users and fixed scheduled workers', {timeout:1800000},async t=>{
  const f=await setup(t);await stock(f,0);const source=defaultConfigurationSource(),app=await createApplication({configurationSource:{...source,application:{...source.application,port:0},sales:{...source.sales,importChannelCodes:['SYNTHETIC']},security:{...source.security,reverseProxy:{...source.security.reverseProxy,trustProxy:'loopback'}},scheduler:{...source.scheduler,jobs:{...source.scheduler.jobs,'sales.importWorker':{enabled:true},'sales.confirmationRecovery':{enabled:true},'sales.backorderAllocate':{enabled:true}}}}});t.after(()=>app.shutdown('sales_import_capacity_complete'));
  const importRoot=prepareDiskTempDirectory("storage/sales-imports");
