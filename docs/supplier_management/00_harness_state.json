@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 372,
+  "revision": 373,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
-  "status": "IMPLEMENTING",
-  "resume_status": null,
+  "status": "BLOCKED",
+  "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-004",
   "current_task": "TASK-051",
   "baseline": {
     "design": "29a0615a61808b3747cd8feb522d051ba5a312da6fb0fccf36e7cf9746286775",
     "plan": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
-    "code_commit": "72e205efe8601f848f7492dc8df8d2b9335d3c72",
-    "source_fingerprint": "9df677e81dd6d7c416fd189b99310b5695b02d17bcadb1ed7e2fd000e5f147d0",
+    "code_commit": "186a660ec0ef3037ffc9ef92adcd31b20f1e072d",
+    "source_fingerprint": "43f7f525f708bb08a1cb3994bd6ed7a36548794d3eaf9e7e06f18ae5caa911ad",
     "worktree": "/Users/sam/Documents/workspace/erp-supplier-t51h",
     "default_commit": "72e205efe8601f848f7492dc8df8d2b9335d3c72",
     "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
@@ -4448,6 +4448,17 @@
       "source_ref": "PR #249 merged as 72e205efe8601f848f7492dc8df8d2b9335d3c72 at 2026-10-20T02:04:57Z on the Product Owner's word ('CI已通過'), with --match-head-commit, after a gate that refused unless every check was SUCCESS: head 67623be4 green on all five checks, origin/main unchanged at 37a8bb99. Review REV-099 CHANGES_REQUESTED (0 Critical/High), follow-ups applied; not re-reviewed. Recorded as the first commit of the next change PR.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-20T10:12:56+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "IMP-008 carrier; SKU-005 blocked by DEF-029 (FK not enforced)",
+      "code_commit": "186a660ec0ef3037ffc9ef92adcd31b20f1e072d",
+      "spec_baseline": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
+      "source_fingerprint": "43f7f525f708bb08a1cb3994bd6ed7a36548794d3eaf9e7e06f18ae5caa911ad",
+      "status": "PASS",
+      "source_ref": "Local, not CI, on erp_t51. New server/test/integration/supplierConcurrencyAcceptance.integration.test.js carries TC-093 (IMP-008): same-key upload replay and race give one job, a different file under the key is IDEMPOTENCY_CONFLICT, two concurrent confirms give 200 and 409 with one import.confirm audit, the same file under a second key never duplicates a Supplier after both execute. The TC-082 carrier failed its direct-DB negative: an INSERT with a non-existent sku_id was accepted. Reproduced in MySQL CLI and in a scratch schema (fkprobe, dropped): the FK served by a multi-column index whose trailing column is nullable is not checked on child writes; a plain FK or one served by (sku_id, status) is. A scan of all 250 FKs in erp_t51 plus rolled-back insert probes: not enforced on supplier_sku_refs.sku_id, item_skus.item_id, item_media.item_id; enforced on the activation-request FKs and on the controls. The TC-082 test is kept aside until HD-113 is answered.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-20T10:19:27+08:00"
     }
   ],
   "pending_decisions": [
@@ -5894,6 +5905,19 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-16: 'HD-112 A，CI 過就 merge' — audit only changed fields as before/after for Supplier and child updates, and record long free text (notes) as {changed, length, sha256} instead of its content."
+    },
+    {
+      "id": "HD-113",
+      "impact": "MAJOR",
+      "question": "DEF-029 (found writing the SKU-005 carrier): on MySQL 26.7.0 (the CI and target version) the foreign key fk_supplier_sku_refs_sku (sku_id -> item_skus.id) is not enforced for child INSERT/UPDATE: a relation row with a non-existent sku_id is accepted; deleting a referenced SKU is still refused. Cause, reproduced in a scratch schema: InnoDB serves the FK with the first index whose leading column is sku_id, here idx_supplier_sku_refs_sku_status_supplied (sku_id, relationship_status, last_supplied_at); when that index carries a nullable column the child-side check is skipped. Adding a (sku_id) index later, or dropping and re-adding the FK, does not help; what works is: drop the FK, drop that index, add KEY (sku_id) then re-add the composite index and the FK (verified to survive FLUSH TABLES; the re-add fails if orphan rows exist). The service checks the SKU before inserting, so only direct writes are exposed today. A full scan of 250 FKs found the same fault on two Item FKs (item_skus.item_id, item_media.item_id), which are not Supplier's to change. (A) Approve a Supplier migration 0087: refuse with a report if any supplier_sku_refs row has no item_skus parent; then drop fk_supplier_sku_refs_sku and idx_supplier_sku_refs_sku_status_supplied, add idx_supplier_sku_refs_sku (sku_id), re-add the composite index and the FK; down migration restores the original definition; plus a test that pins enforcement; and hand the Item finding to the Item owner. (B) Keep the schema, accept the risk (service-level check only), record it. (C) Escalate as a cross-module MySQL issue first and decide after the Item owner answers.",
+      "affected_ids": [
+        "TC-082",
+        "SKU-005",
+        "DEF-029",
+        "TASK-051"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
     }
   ],
   "external_actions": [
@@ -6972,7 +6996,21 @@
         "REV-058 APPROVED (docs/supplier_management/implementation/60_rev_058_independent_review.md)"
       ],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-029",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "source_ids": [
+        "TC-082",
+        "SKU-005",
+        "server/database/migrations/0081_create_supplier_sku_refs.js",
+        "supplier_sku_refs.fk_supplier_sku_refs_sku",
+        "MySQL 26.7.0"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-051 step 2b: SKU-005 and IMP-008 carriers, then MIG-001..006; then runners, UAT IDs, T51 rehearsals; HD-057 open."
+  "next_safe_action": "Await HD-113 (schema fix for DEF-029) and HD-057; meanwhile MIG-001..006 carriers that do not depend on it."
 }
