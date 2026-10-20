@@ -1,20 +1,20 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1271,
+  "revision": 1273,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-005",
-  "current_task": "TASK-065",
+  "current_task": "TASK-066",
   "baseline": {
     "design": "ef5e7624f64ce0e819a85cadf0d3a43c15104421c1ef068549ef63d5189d13cd",
     "plan": "b791cec4ed059697c859b00b49c94d8d8b35c13ca031c8a8ab16ff633a642ba1",
-    "code_commit": "34c6158c6e7f972ba27b1a036b5f11d3bbb82e8f",
-    "source_fingerprint": "503973d7356f0e61003ce911d3f52953f3fec1bca1fe9af9db18b774f0ab7e56",
+    "code_commit": "d01162f6159ec40981453d00936fb713296f35a3",
+    "source_fingerprint": "d8075b361e3c93662ac824c58d93e41327363bc2404e742366ee742ac7d39234",
     "worktree": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app",
-    "default_commit": "64bee2e00dfae71131c7cfa54049cac0941d6f85",
+    "default_commit": "35af2ab7010d8a42cdbc3ca55d23c9c9ce95856c",
     "mode_entry_commit": "4439014e9a9d03f233e858e56f93617e787ecb8c"
   },
   "runtime": {
@@ -87,8 +87,8 @@
     "TASK-056": "DONE",
     "TASK-057": "BLOCKED",
     "TASK-064": "DONE",
-    "TASK-065": "IN_PROGRESS",
-    "TASK-066": "PENDING",
+    "TASK-065": "BLOCKED",
+    "TASK-066": "BLOCKED",
     "TASK-067": "PENDING",
     "TASK-068": "PENDING"
   },
@@ -10881,6 +10881,30 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK065-NATIVE-SCHEMA-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "d8075b361e3c93662ac824c58d93e41327363bc2404e742366ee742ac7d39234",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/task065-owner-schema-r1-reviewer-proof.json SHA2566806a53a47f66e1cd6a4e189f6adcfcf2ac8e60eb7e3d5c39c5ac3e439ab66eb; exact original file hashes and actual scoped findings retained. R1 contact-NULL and native acceptance gaps closed by R2. Not whole Phase approval.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK065-NATIVE-SCHEMA-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "d8075b361e3c93662ac824c58d93e41327363bc2404e742366ee742ac7d39234",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/task065-owner-schema-r2-reviewer-proof.json SHA256d1da55603809dd779991393eadd6c31644b9acc04e4524702612b3e728ca9d22; exact original file hashes and actual scoped findings retained. R1 contact-NULL and native acceptance gaps closed by R2. Not whole Phase approval.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -14216,6 +14240,28 @@
       "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/task064-native-export-upgrade-r1.log; native local log plus exact reviewer proof; no full Phase/CI/Gate claim.",
       "actor": "Codex /root",
       "observed_at": "2026-10-20T08:56:46.807757Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK065 native schema complete23 schema+10 legacyExport+18hash+37eligibility+7migration=95PASS0FAIL0SKIP; actual Contact RED→GREEN and R2 independent review",
+      "code_commit": "d01162f6159ec40981453d00936fb713296f35a3",
+      "spec_baseline": "b791cec4ed059697c859b00b49c94d8d8b35c13ca031c8a8ab16ff633a642ba1",
+      "source_fingerprint": "d8075b361e3c93662ac824c58d93e41327363bc2404e742366ee742ac7d39234",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/task065-owner-schema-native-r10.log; scopedlint-r2 exit0; actual R2d1da5560. Current main35af integrated11c88e0a; preserves source Customer defect-register full prefix plus Sales follow-ups. No fullP4/CI/Gate claim.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-20T09:13:52.475092Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "HD008 actual newer P0 ownership authority confirmed; preserve prototype39PASS and oldschema95PASS historically, affected qualification BLOCKED pending cumulative/zero-picked semantics and unique migration contract/order",
+      "code_commit": "fdd93a508e4b18dd1e2c806d5f6a9f5cc972198b",
+      "spec_baseline": "b791cec4ed059697c859b00b49c94d8d8b35c13ca031c8a8ab16ff633a642ba1",
+      "source_fingerprint": "31fad2c9af4d16135ea115d613136e38f827196036d167431576b91995ce5b95",
+      "status": "BLOCKED",
+      "source_ref": "docs/sales_order_management/implementation/112_hd008_fulfillment_p0_coordination.md; actual Sam direct async approval A read in source chat01a15862-9933-7e50-8e10-4015cf35d078. Immutable13file private receipt9f3bef53 retained; sourcefdd93a50 preserved, no overlapping product edits or merge after direction. Latest observedmain76223f4 not yet integrated.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-20T09:30:52.531785Z"
     }
   ],
   "pending_decisions": [
@@ -18233,5 +18279,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Owned runtime READY. Run actual old0087/new0090 native upgrade compatibility in a new exactowned fixture namespace with originalledgers preserved; then owner0091+ schema RED/GREEN and separate reviewedmigration apply, realprovider/participant/coordinator and all45original+extraGates/currentCI/review before fullP4merge. Never rerun preparationhelper."
+  "next_safe_action": "Read implementation/112_hd008_fulfillment_p0_coordination.md. Actual Sam HD008 makes approved FulfillmentP0 authoritative for active schema/quantities/lifecycle. Existing0091-0093 paused and exit final SalesP4 as duplicate installers;0088-0090 Salesowned. Preserve d011/fdd93/oldreviews/13filecustody; nooverlapwrites/SQLmigration/merge untilonecontract+numbering+ownershiprecorded. OwnerP0Task010mirrors requiresSales0088batch/manifest absentmain: exact narrowdependency/mergepolicy contribution needs concrete disposition, not duplicate tables or blind oldhash rebinding. Independentcoordinationreviewpending. BothP0fullGate andalloriginalSales39+6/currentCI/review/unchangedP4Gate remain. Nooutboundotherchatmessaging inferred."
 }

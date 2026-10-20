@@ -1,0 +1,9 @@
+# TASK065 native owner schema checkpoint
+
+Completed the approved narrow owner persistence slice after actual R2 separate review d1da5560, atomic source commit d01162f6 and local native acceptance. Twelve full Active tables and twelve immutable original-ID Archive mirrors use real owner/master/Sales/Inventory FKs, composite ownership, stored generated Active values and physical Archive snapshots, bounded routing indexes and retained operation intents. No Fulfillment HTTP/UI business writers or full owner Phase completion are enabled.
+
+Original RED/failures and R1 review are preserved. MySQL CHECK previously accepted a nonnull Contact with null version; the explicit nonnull predicate now rejects it while valid pairs and both-null remain accepted. R2 closes both R1 findings. Native checks prove complete snapshots/hashes,24 mirror mutation rejections, byte-accurate guarded Active deletion, legitimate leaf-to-root deletion after pointer clearing, retained intent deletion rejection, and real0091/0092 implicit-commit interruption recovery. Storage-order positive is not business eligibility/participant authorization evidence.
+
+Actual focused result95PASS,0FAIL,0SKIP (23 schema,10 legacyExport,18 hash,37 eligibility,7 migration identity); scoped ESLint exit0. The first state proposal used unsupported CHANGES_REQUIRED instead of the actual schema enum CHANGES_REQUESTED; original standard CAS rejected it without state mutation. A separate corrected proposal preserves that original and recorded the exact R1/R2 findings normally. No installed Harness or Gate was modified.
+
+Local scoped results do not replace all45 runner suites, exact-candidate CI, full P4 review, formal acceptance or merge readiness. Raw logs/proofs remain private observation references, not fabricated typed run evidence. TASK066 is next;067/068 and original057–063 remain incomplete.
