@@ -4,7 +4,7 @@ import { APPROVAL_SIGNIFICANT_COLUMNS, SupplierApprovalService, buildApprovalSum
 import { SupplierAuditLogService } from "./SupplierAuditLogService.js";
 import { SupplierDuplicateCandidates, replaceSupplierNameGrams } from "./supplierDuplicateCandidates.js";
 import { SupplierReferenceService } from "./SupplierReferenceService.js";
-import { invalidSupplierInput, supplierConflict, supplierNotFound } from "./supplierErrors.js";
+import { invalidSupplierInput, retryOnceOnDeadlock, supplierConflict, supplierNotFound } from "./supplierErrors.js";
 import {
   escapeLikeTerm,
   normalizeContactEmail,
@@ -290,14 +290,14 @@ export class SupplierAdminService {
     const duplicateCandidates = await this.duplicates.find(this.database, { nameKey: name.key });
     let created;
     try {
-      created = await this.database.withTransaction(async (connection) => {
+      created = await retryOnceOnDeadlock(() => this.database.withTransaction(async (connection) => {
         const actor = await this.authorize(connection, {
           actorId: input.actorId,
           claimedRoles: input.claimedRoles,
           claimedPermissions: input.claimedPermissions
         });
         return this.createSupplierInTransaction(connection, { actor, input, findDuplicates: false });
-      });
+      }));
     } catch (error) {
       if (duplicateEntry(error)) {
         throw supplierConflict("SUPPLIER_CODE_TAKEN", "這個 Supplier Code 已被使用", { supplierCode: normalizeSupplierCode(input.supplierCode).value });
