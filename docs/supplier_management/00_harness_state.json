@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 379,
+  "revision": 380,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -13,8 +13,8 @@
     "plan": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
     "code_commit": "186a660ec0ef3037ffc9ef92adcd31b20f1e072d",
     "source_fingerprint": "43f7f525f708bb08a1cb3994bd6ed7a36548794d3eaf9e7e06f18ae5caa911ad",
-    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t51m",
-    "default_commit": "64bee2e00dfae71131c7cfa54049cac0941d6f85",
+    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t51r",
+    "default_commit": "cb70aacc18d5c825f2af990079ef5e1f61996e9f",
     "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
   },
   "runtime": {
@@ -4567,6 +4567,17 @@
       "source_ref": "Local, not CI, on erp_t51's MySQL 26.7.0 with scratch databases created and dropped by the tests. supplierMigrationAcceptance.integration.test.js 4/4 (~25 s). TC-001: real runner on an empty database (ledger lists every file; a second run skips every file and leaves the ledger unchanged), Supplier table list, no Supplier Currency/Payment Term table, Supplier FKs to Business Master only, real server process (node src/index.js) starts with fake Bank keys and /api/v1/health is 200, container resolves supplierCoreProvider (READY, contract) and supplierBusinessMasterImpactChecker (check returns READY with zero counts for HKD and Payment Term 1). TC-002: 15 Supplier migrations, 31 runs stopped before each write (16 after at least one write) converge to a clean run's schema and data; a rerun of each finished migration runs no DDL and changes no row; rerunning all 15 over business rows changes nothing. TC-004: six permissions and six system-admin grants once, no other role, settings id=1 approval OFF, HKD active before the first Supplier migration, no Supplier write to currencies/payment_terms, reruns of 0028/0036 keep counts and the operator's approval setting. TC-005: eleven bad configurations (including no Bank keys for either owner, per design §1700) never print 'API listening on' and exit 1; messages name the setting; no key material or raw value in the output; the good configuration starts. Mutations: ten in all failed the file (migration guards, seeds, config leak, relative import root, early 'listening', impact checker table, approval reset on rerun, runner ledger check); one equivalent mutant (0030 IF NOT EXISTS alone) explained. No scratch database left after failing runs. Lint exit 0.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-20T16:10:57+08:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "MIG-001/002/004/005 carriers (PR #255) merged to main",
+      "code_commit": "cb70aacc18d5c825f2af990079ef5e1f61996e9f",
+      "spec_baseline": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
+      "source_fingerprint": "0c35ed1f12e82717372712c8dea624b7308c064169eaafdda5f2897ff00243c7",
+      "status": "PASS",
+      "source_ref": "PR #255 merged as cb70aacc18d5c825f2af990079ef5e1f61996e9f at 2026-10-20T09:04:16Z on the Product Owner's word ('review 完 CI 過就 merge', then 'CI已通過'), with --match-head-commit, after a gate that refused unless the latest run of every check was SUCCESS and main was an ancestor of HEAD: head d9bf0e99 green on all 13 checks (PR run 39396357244). Earlier head 8a77eee7 failed once on Sales TC-032 (P95 3005.2 ms over 3000 ms in the separate shard-1 capacity step; this PR's tests ran in shard 2); the failed jobs were re-run and passed. Main then moved by PR #244 (Business Master source: currency/payment-term reads now LOCK IN SHARE MODE; Customer source; and a Supplier test, supplierApproval.integration, edited by the Customer change), not eligible under rule B: main merged in, all 681 Supplier tests passed locally, CI re-ran. Review REV-102 CHANGES_REQUESTED (0 Critical/High), follow-ups applied; not re-reviewed. Recorded as the first commit of the next change PR.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-20T17:14:25+08:00"
     }
   ],
   "pending_decisions": [
@@ -7151,5 +7162,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "PR for claude/supplier-task-051-mig (TC-001/002/004/005); merge per the Product Owner's 'review 完 CI 過就 merge' once every check is SUCCESS. Then TC-003 (MIG-003 races)."
+  "next_safe_action": "TC-003 (MIG-003) barrier races for Code, Identifier, primary purpose, default Bank and pending approval; plus a test pinning that Business Master deactivation waits for an in-flight Supplier create under the shared currency lock (PR #244)."
 }
