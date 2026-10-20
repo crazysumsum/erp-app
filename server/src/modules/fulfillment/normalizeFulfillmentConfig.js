@@ -13,6 +13,10 @@ const DEFAULTS = Object.freeze({
 });
 
 const MAXIMUMS = Object.freeze({
+  operationLeaseMs: 2147483647,
+  recoveryBatchSize: 100,
+  exportBatchSize: 1000,
+  reconciliationBatchSize: 500,
   maxLinesPerDocument: 100,
   maxAllocationsPerLine: 50,
   defaultPageSize: 100,
@@ -21,7 +25,7 @@ const MAXIMUMS = Object.freeze({
   archiveQueryMaxRangeDays: 366
 });
 
-export function normalizeFulfillmentConfig(source = {}) {
+export function normalizeFulfillmentConfig(source = {}, { requestTimeoutMs } = {}) {
   if (!source || typeof source !== "object" || Array.isArray(source)) {
     throw new TypeError("Fulfillment config must be an object");
   }
@@ -40,6 +44,9 @@ export function normalizeFulfillmentConfig(source = {}) {
   }
   if (config.defaultPageSize > config.maxPageSize) {
     throw new Error('Fulfillment config "defaultPageSize" must not exceed "maxPageSize"');
+  }
+  if (requestTimeoutMs !== undefined && (!Number.isSafeInteger(requestTimeoutMs) || requestTimeoutMs < 1 || config.operationLeaseMs <= requestTimeoutMs)) {
+    throw new Error('Fulfillment config "operationLeaseMs" must exceed the application request timeout');
   }
   return Object.freeze(config);
 }

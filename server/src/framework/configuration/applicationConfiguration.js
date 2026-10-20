@@ -109,7 +109,7 @@ export function validateApplicationConfiguration(
   validateSection("idempotency", () =>
     normalizeIdempotencyConfig(source?.idempotency)
   );
-  validateSection("fulfillment", () => normalizeFulfillmentConfig(source?.fulfillment));
+  validateSection("fulfillment", () => normalizeFulfillmentConfig(source?.fulfillment, { requestTimeoutMs: normalized.application?.requestTimeoutMs }));
   validateSection("inventory", () => normalizeInventoryConfig(source?.inventory));
   validateSection("item", () => normalizeItemConfig(source?.item));
   validateSection("jwt", () => normalizeJwtConfig(source?.jwt));

@@ -49,8 +49,9 @@ test("every Fulfillment numeric setting fails closed for nonpositive, fractional
     for (const value of [0, -1, 1.5, NaN, Infinity, Number.MAX_SAFE_INTEGER + 1, null, true, [], "1"]) {
       assert.throws(() => configuration({ [field]: value }), undefined, `${field}: ${String(value)}`);
     }
-    const config = configuration({ [field]: 1, ...(field === "maxPageSize" ? { defaultPageSize: 1 } : {}) });
-    assert.equal(config.fulfillment[field], 1);
+    const value = field === "operationLeaseMs" ? 30001 : 1;
+    const config = configuration({ [field]: value, ...(field === "maxPageSize" ? { defaultPageSize: 1 } : {}) });
+    assert.equal(config.fulfillment[field], value);
   }
 });
 
@@ -80,4 +81,12 @@ test("invalid Fulfillment environment configuration stops the actual server befo
   assert.match(result.stderr, /CONFIGURATION_INVALID/);
   assert.match(result.stderr, /maxLinesPerDocument/);
   assert.doesNotMatch(result.stdout + result.stderr, /API listening|DATABASE_OPERATION_FAILED/);
+});
+
+test("Fulfillment bounds worker batches and keeps leases beyond the request budget without timer overflow", () => {
+  for (const fulfillment of [{ recoveryBatchSize: 101 }, { exportBatchSize: 1001 },
+    { reconciliationBatchSize: 501 }, { operationLeaseMs: 30000 }, { operationLeaseMs: 2147483648 }]) {
+    assert.throws(() => configuration(fulfillment));
+  }
+  assert.equal(configuration({ operationLeaseMs: 30001 }).fulfillment.operationLeaseMs, 30001);
 });
