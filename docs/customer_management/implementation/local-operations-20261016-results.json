@@ -1,0 +1,326 @@
+{
+  "module": "customer-management",
+  "kind": "USER_DESIGNATED_LOCAL_OPERATIONS_LIMITED_VERIFICATION",
+  "date": "2026-10-16",
+  "timezone": "Asia/Hong_Kong",
+  "commit": "e9ce220cc28e42fed292bd32317bc0f81fd29872",
+  "sourceFingerprint": "87e3e848740a55aba7bc30e552062c9887b4d37f5fdce53e30acf32c66918f76",
+  "environment": {
+    "node": "26.6.0",
+    "mysql": "26.7.0",
+    "host": "127.0.0.1",
+    "port": 13369,
+    "runtime": "/private/tmp/erp-customer-local-runtime.vvrvRm",
+    "schemas": [
+      "erp_customer_ops_local_20261016",
+      "erp_customer_local_dr_source_20261016_ops",
+      "erp_customer_local_dr_restore_20261016_ops"
+    ],
+    "data": "synthetic only; fresh random credentials and keys; no shared3306",
+    "migrations": 87
+  },
+  "runs": [
+    {
+      "name": "existing logger/crypto/storage/config/scanner-protocol supporting checks",
+      "files": 8,
+      "tests": 37,
+      "pass": 37,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 575.723875,
+      "testPaths": [
+        "test/logger.test.js",
+        "test/systemLogger.test.js",
+        "test/customerAttachmentStorage.test.js",
+        "test/customerBankCrypto.test.js",
+        "test/customerBankService.test.js",
+        "test/customerBankMaintenance.test.js",
+        "test/customerConfig.test.js",
+        "test/customerClamdScanner.test.js"
+      ],
+      "invocation": {
+        "cwd": "/private/tmp/erp-customer-operations-readiness/server",
+        "argv": [
+          "node",
+          "--test",
+          "--test-concurrency=1",
+          "--import",
+          "./test-support/testEnv.js",
+          "test/logger.test.js",
+          "test/systemLogger.test.js",
+          "test/customerAttachmentStorage.test.js",
+          "test/customerBankCrypto.test.js",
+          "test/customerBankService.test.js",
+          "test/customerBankMaintenance.test.js",
+          "test/customerConfig.test.js",
+          "test/customerClamdScanner.test.js"
+        ],
+        "env": {}
+      }
+    },
+    {
+      "name": "real MySQL bank/maintenance/schema/attachment/operational guards",
+      "files": 4,
+      "tests": 14,
+      "pass": 14,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 1031.769958,
+      "testPaths": [
+        "test/integration/customerOperationalGuards.integration.test.js",
+        "test/integration/customerBank.integration.test.js",
+        "test/integration/customerBankMigration.integration.test.js",
+        "test/integration/customerAttachment.integration.test.js"
+      ],
+      "invocation": {
+        "cwd": "/private/tmp/erp-customer-operations-readiness/server",
+        "argv": [
+          "node",
+          "--test",
+          "--test-concurrency=1",
+          "--import",
+          "./test-support/testEnv.js",
+          "test/integration/customerOperationalGuards.integration.test.js",
+          "test/integration/customerBank.integration.test.js",
+          "test/integration/customerBankMigration.integration.test.js",
+          "test/integration/customerAttachment.integration.test.js"
+        ],
+        "env": {
+          "DB_HOST": "127.0.0.1",
+          "DB_PORT": "13369",
+          "DB_USER": "root",
+          "DB_PASSWORD": "<ephemeral credential redacted>",
+          "DB_ADMIN_USER": "root",
+          "DB_ADMIN_PASSWORD": "<ephemeral credential redacted>",
+          "DB_NAME": "erp_customer_ops_local_20261016",
+          "DB_INTEGRATION_TESTS": "1"
+        }
+      }
+    },
+    {
+      "name": "actual isolated dump/restore integrity with safety guards",
+      "files": 1,
+      "tests": 3,
+      "pass": 3,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 1507.635375,
+      "testPaths": [
+        "test/recovery/customerLocalRestore.test.js"
+      ],
+      "invocation": {
+        "cwd": "/private/tmp/erp-customer-operations-readiness/server",
+        "argv": [
+          "node",
+          "--test",
+          "--import",
+          "./test-support/testEnv.js",
+          "test/recovery/customerLocalRestore.test.js"
+        ],
+        "env": {
+          "DB_HOST": "127.0.0.1",
+          "DB_PORT": "13369",
+          "DB_USER": "root",
+          "DB_PASSWORD": "<ephemeral credential redacted>",
+          "DB_ADMIN_USER": "root",
+          "DB_ADMIN_PASSWORD": "<ephemeral credential redacted>",
+          "DB_NAME": "erp_customer_local_dr_source_20261016_ops",
+          "CUSTOMER_RESTORE_DB_NAME": "erp_customer_local_dr_restore_20261016_ops",
+          "CUSTOMER_LOCAL_RUNTIME_ROOT": "/private/tmp/erp-customer-local-runtime.vvrvRm",
+          "CUSTOMER_LOCAL_RESTORE_TESTS": "1",
+          "CUSTOMER_MYSQLDUMP_BIN": "/usr/local/mysql/bin/mysqldump",
+          "CUSTOMER_MYSQL_BIN": "/usr/local/mysql/bin/mysql"
+        }
+      }
+    },
+    {
+      "name": "actual scanner outage/private event pipeline/Currency privilege characterization",
+      "files": 1,
+      "tests": 3,
+      "pass": 3,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 289.183458,
+      "testPaths": [
+        "/private/tmp/erp-customer-local-runtime.vvrvRm/local-boundaries.test.mjs"
+      ],
+      "invocation": {
+        "cwd": "/private/tmp/erp-customer-operations-readiness/server",
+        "argv": [
+          "node",
+          "--test",
+          "--test-concurrency=1",
+          "--import",
+          "./test-support/testEnv.js",
+          "/private/tmp/erp-customer-local-runtime.vvrvRm/local-boundaries.test.mjs"
+        ],
+        "env": {
+          "DB_HOST": "127.0.0.1",
+          "DB_PORT": "13369",
+          "DB_USER": "root",
+          "DB_PASSWORD": "<ephemeral credential redacted>",
+          "DB_ADMIN_USER": "root",
+          "DB_ADMIN_PASSWORD": "<ephemeral credential redacted>",
+          "DB_NAME": "erp_customer_ops_local_20261016",
+          "LOCAL_RUNTIME_ROOT": "/private/tmp/erp-customer-local-runtime.vvrvRm"
+        }
+      }
+    }
+  ],
+  "uniqueExecutedNodes": 57,
+  "failedNodes": 0,
+  "skippedNodes": 0,
+  "earlierDiagnosticRun": {
+    "tests": 2,
+    "pass": 2,
+    "durationMs": 303.996875,
+    "notAddedToUniqueTotal": true
+  },
+  "observations": {
+    "realBankSecurity": "exact named SQL fixture grants, fresh actor permission denial, failed audit INSERT prevents plaintext, corrupted DB GCM tag gives422, real SQL-account/live-session revocation; NULL bank currency only",
+    "realSystemLogPipeline": {
+      "path": "CustomerBankService -> SystemLogger -> Logger -> FileLogWriter -> private JSONL",
+      "events": 1,
+      "reason": "BANK_INTEGRITY_FAILED",
+      "correlation": true,
+      "accountAndKeyMarkersAbsent": true,
+      "fileMode": "0600",
+      "directoryMode": "0700",
+      "failedRevealAuditCount": 0,
+      "restoredRevealAuditCount": 1,
+      "successAddsUnreadableEvent": false,
+      "authorizeAndAuditMocked": false,
+      "sqlAccount": "isolated administrator; not a deployed role certification"
+    },
+    "realScannerOutage": {
+      "injectedScanner": false,
+      "endpoint": "127.0.0.1:3310",
+      "actualCode": "ECONNREFUSED",
+      "stagedOrFinalFiles": 0,
+      "directoryModes": "0700",
+      "cleanAndInfectedActualClamAvAcceptance": "BLOCKED"
+    },
+    "currencyPrivilege": {
+      "provider": "BusinessMasterProvider.assertCurrencyUsableInTransaction",
+      "sqlAccount": "new random SELECT-only Currency fixture",
+      "normalSelect": "PASS",
+      "lockingRead": "DENIED",
+      "errno": 1142,
+      "sqlState": "42000",
+      "currencyDataUnchanged": true,
+      "extraWriteGrantAdded": false,
+      "fullNonNullCurrencyBankApprovalLeastPrivilege": "BLOCKED"
+    },
+    "restore": {
+      "tableCountHashes": 20,
+      "migrationInventory": 87,
+      "manifestMembers": 6,
+      "rejectedDamagedSets": 4,
+      "wrongMissingKeyDenials": 6,
+      "attachmentObjects": 2,
+      "importObjects": 2,
+      "auditRows": 5,
+      "sampleCustomer": true,
+      "addressAndContactDefaults": true,
+      "historicalApproval": true,
+      "productionOrDownstreamAcceptance": false,
+      "localTiming": "Incidental output from unchanged integrity script; not renewed RPO/RTO acceptance.",
+      "dumpSha256": "e61f4d85582b937f90d1700b5f3136fbfc131f08e38dfc858b3f96383d64772b",
+      "manifestSha256": "9d88e661e2ed7bc79561acd88fd24062da364f92cc5a434a6d2195b34e2e7338"
+    }
+  },
+  "limits": [
+    "Real ClamAV daemon/clean/infected scan not available; protocol fixture tests are not real malware acceptance.",
+    "No approved real monitoring/alert receiver or fire/reset delivery integration tested.",
+    "Attachment/restore scanner and some existing authorization fixtures remain explicit; not promoted to external-dependency acceptance.",
+    "No actual deployment old/new release pair or mixed-window rollback tested.",
+    "Temporary local keys and filesystem backup verified, not production secret-store/off-host retention sign-off.",
+    "HD014 contract drift remains unresolved; no contract pin or canonical DESIGN/PLAN adoption.",
+    "Full downstream integration BLOCKED; no whole-module Technical Acceptance/UAT/business/release/OpsSecurity sign-off.",
+    "RPO/RTO acceptance waived underHD013; objectives remainNOT_PROVEN."
+  ],
+  "cleanup": {
+    "beforeDrop": {
+      "opsCustomers": 0,
+      "guardSqlAccounts": 0,
+      "guardSqlSessions": 0,
+      "pipelineActors": 0,
+      "pipelineRoles": 0,
+      "restoreSourceCustomers": 2,
+      "restoreDestinationCustomers": 1
+    },
+    "status": "COMPLETE: exact3schemas removed; server82988 exited0; listener13369 and PID file absent; stopped owned datadir removed; secret command stores cleared; no shared service touched."
+  },
+  "diagnosticScript": {
+    "path": "/private/tmp/erp-customer-local-runtime.vvrvRm/local-boundaries.test.mjs",
+    "sha256": "e64d6dc55142cca441966976ac61e5994253505791bcb6c90b0e0b882baceb28",
+    "credentialLiterals": false,
+    "retainedPrivately": true
+  },
+  "sourceTestManifest": [
+    {
+      "path": "test/logger.test.js",
+      "sha256": "9873893c88afe3fb728927a425d2b3a0c4504521e45f7f85b9208a2f67d01d2a"
+    },
+    {
+      "path": "test/systemLogger.test.js",
+      "sha256": "e37c93549e50b36f81a0cf0b7d0af02cc62cd557b0ad42f78058a3049fbaa29c"
+    },
+    {
+      "path": "test/customerAttachmentStorage.test.js",
+      "sha256": "7af868507748079054af5bcbc7a9093fa33cb5dd2faa0851134c16cac7e75d14"
+    },
+    {
+      "path": "test/customerBankCrypto.test.js",
+      "sha256": "af93ba08a42bdd2b75a41cad7c0fece435cf617f75da3063022da781e95a9f52"
+    },
+    {
+      "path": "test/customerBankService.test.js",
+      "sha256": "824f55208ab08fcf7b43007052d2877fea275cff631ce67db7b83f516c31deff"
+    },
+    {
+      "path": "test/customerBankMaintenance.test.js",
+      "sha256": "8336790cbc371b0d6ccdb4bfb5ab8ef3f9bd2aba5e6f8784c19c74e227f079a5"
+    },
+    {
+      "path": "test/customerConfig.test.js",
+      "sha256": "bc149ed7b681bc6dc20767a817c52cf1803c443c4c8a19766a2d7f64f02bbdbf"
+    },
+    {
+      "path": "test/customerClamdScanner.test.js",
+      "sha256": "9ec17cf4419d4524827c872fbc1f7333b22828b19f9b5db2226d08fd2128f49a"
+    },
+    {
+      "path": "test/integration/customerOperationalGuards.integration.test.js",
+      "sha256": "60e4111cf64457d7dad03df6c2342d4b7e2f8efa2f9f068b344db66785b5560d"
+    },
+    {
+      "path": "test/integration/customerBank.integration.test.js",
+      "sha256": "86e791030e1f47d426ab0e1d49704f2b023c87f858114b851765f81f0e5f5ff7"
+    },
+    {
+      "path": "test/integration/customerBankMigration.integration.test.js",
+      "sha256": "1dfdd7f6dff1a258dc7da6b40bcd960a752b964a83bd07faf6017dbac166a59b"
+    },
+    {
+      "path": "test/integration/customerAttachment.integration.test.js",
+      "sha256": "e26a3baaef586003f72ecdedfad3c41a45deed72243d56cbd2991006d838c435"
+    },
+    {
+      "path": "test/recovery/customerLocalRestore.test.js",
+      "sha256": "593d17f4262cc1dc65ff9138ca2e626f9147032b0c779038ffd0d02e50dc5423"
+    }
+  ],
+  "outputArtifact": {
+    "path": "implementation/local-operations-20261016-output.txt",
+    "sha256": "f695c6b7cece2262a961efb85fee5c3c774cd0c67b35c0361f16c04a4b490161",
+    "sourceToolChunks": [
+      "b918e5",
+      "89e3a1",
+      "48ef1c",
+      "b2275d",
+      "3c20a3"
+    ],
+    "capture": "Selected original tool-return stdout excerpts transcribed after execution/cleanup, not a complete raw stdout archive or a rerun. Exact node names/counts/elapsed values preserved."
+  }
+}

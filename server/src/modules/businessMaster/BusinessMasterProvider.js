@@ -46,7 +46,7 @@ export class BusinessMasterProvider {
   async assertCurrencyUsableInTransaction(connection, { code, expectedVersion, purpose = "new_assignment" }) {
     requireConnection(connection);
     requirePurpose(purpose);
-    const currency = await this.repository.getCurrency(connection, code, { forUpdate: true });
+    const currency = await this.repository.getCurrency(connection, code, { forShare: true });
     if (!currency || (purpose === "new_assignment" && currency.status !== "ACTIVE")) {
       throw businessMasterConflict("CURRENCY_NOT_ACTIVE", "貨幣目前不可用", { code });
     }
@@ -59,7 +59,7 @@ export class BusinessMasterProvider {
   async assertPaymentTermUsableInTransaction(connection, { id, expectedVersion, purpose = "new_assignment" }) {
     requireConnection(connection);
     requirePurpose(purpose);
-    const term = await this.repository.getPaymentTerm(connection, id, { forUpdate: true });
+    const term = await this.repository.getPaymentTerm(connection, id, { forShare: true });
     if (!term || (purpose === "new_assignment" && term.status !== "ACTIVE")) {
       throw businessMasterConflict("PAYMENT_TERM_NOT_ACTIVE", "付款條款目前不可用", { id });
     }

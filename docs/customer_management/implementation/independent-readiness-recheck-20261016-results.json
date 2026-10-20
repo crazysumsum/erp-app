@@ -1,0 +1,683 @@
+{
+  "kind": "LOCAL_DEVELOPER_ONLY",
+  "recordedAt": "2026-10-16T06:18:14Z",
+  "codeCommit": "2d1e49565f8e74b2a65434545a81ae5342820965",
+  "sourceFingerprint": "a8939571af7415b62b307d40d4080570cd86b7b5c18dea546ae2e23bb9b32a4d",
+  "designBaseline": "13a77ed225d0253eaac097b5e3bb13f60c6078d1019500b95e976dd6617af721",
+  "planBaseline": "b390c588a323b3c3677bb031f287cebefe2cb284571e901d56aa3f14814f44db",
+  "environment": {
+    "runtime": "/private/tmp/erp-customer-local-runtime.jevRrC",
+    "host": "127.0.0.1",
+    "port": 13369,
+    "node": "26.6.0",
+    "mysql": "26.7.0",
+    "syntheticOnly": true,
+    "shared3306Touched": false
+  },
+  "total": {
+    "tests": 40,
+    "pass": 40,
+    "fail": 0,
+    "skip": 0
+  },
+  "runs": [
+    {
+      "file": "capacity.log",
+      "sha256": "ca7b4336a90ba0b5a6b99288f706fa17f56c764cefb2b52a36cea633addfdb75",
+      "tests": 17,
+      "pass": 17,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 33995.728667
+    },
+    {
+      "file": "restore.log",
+      "sha256": "7bfd95dfc29ae710ad9b4f58b0dc143b7362d74b60a2c203dda086c08303e5ac",
+      "tests": 3,
+      "pass": 3,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 1158.8515
+    },
+    {
+      "file": "storage-audit.log",
+      "sha256": "0687ef11761bdd3d6e93aa967e699baa574af2ba1d5f223ae7bb67db30e06737",
+      "tests": 20,
+      "pass": 20,
+      "fail": 0,
+      "skip": 0,
+      "durationMs": 282.50875
+    }
+  ],
+  "sourceFiles": [
+    {
+      "path": "server/test/recovery/customerLocalRestore.test.js",
+      "sha256": "593d17f4262cc1dc65ff9138ca2e626f9147032b0c779038ffd0d02e50dc5423"
+    },
+    {
+      "path": "server/test/performance/customerManagement.performance.test.js",
+      "sha256": "ff387f5da5a28df3e667d69fdde1a50f64504a2c7e6c3f50e6d04b6b8d36f4a2"
+    },
+    {
+      "path": "server/test/customerBankCrypto.test.js",
+      "sha256": "af93ba08a42bdd2b75a41cad7c0fece435cf617f75da3063022da781e95a9f52"
+    },
+    {
+      "path": "server/test/customerAttachmentStorage.test.js",
+      "sha256": "7af868507748079054af5bcbc7a9093fa33cb5dd2faa0851134c16cac7e75d14"
+    },
+    {
+      "path": "server/test/customerImportStorage.test.js",
+      "sha256": "06b0ef56429ce53b5b1b05178c5cd1b12816fae587c5ea1536ce025cfae472b1"
+    },
+    {
+      "path": "server/test/customerAuditLog.test.js",
+      "sha256": "9ab7a7d3eef4c1cbb5ac11b0a40a36df33c611f0c92a68523112bbe0d584ca61"
+    }
+  ],
+  "capacity": {
+    "tc": "TC-028",
+    "fixtureVersion": "customer-hd011-indexed-search-50k-20-v3",
+    "data": {
+      "customers": 50000,
+      "addresses": 5000,
+      "contacts": 5000
+    },
+    "load": {
+      "concurrency": 20,
+      "warmListMs": 2.6081669999998667,
+      "p95BudgetMs": 5000,
+      "requestedDurationMs": 30000,
+      "elapsedMs": 30007.347791,
+      "errors": 0,
+      "operationsPerSecond": 10029.143598297691
+    },
+    "environment": {
+      "node": "v26.6.0",
+      "mysql": "26.7.0",
+      "logicalCpu": 15,
+      "memoryBytes": 25769803776
+    },
+    "resources": {
+      "heapPeakBytes": 264407880,
+      "rssBytes": 314081280,
+      "cpuMicroseconds": {
+        "user": 26553880,
+        "system": 3074013
+      },
+      "mysqlBefore": {
+        "Innodb_row_lock_current_waits": 0,
+        "Innodb_row_lock_waits": 0,
+        "Threads_connected": 1
+      },
+      "mysqlAfter": {
+        "Innodb_row_lock_current_waits": 0,
+        "Innodb_row_lock_waits": 0,
+        "Threads_connected": 10
+      }
+    },
+    "latencyMs": {
+      "list": {
+        "count": 75237,
+        "p50": 4.080583000000843,
+        "p95": 6.955249999999069,
+        "p99": 9.102208000000246
+      },
+      "exactLookup": {
+        "count": 75237,
+        "p50": 0.9114999999983411,
+        "p95": 2.173791999997775,
+        "p99": 3.486000000000786
+      },
+      "addressLookup": {
+        "count": 75237,
+        "p50": 1.0190419999998994,
+        "p95": 2.654458999997587,
+        "p99": 3.5829999999987194
+      },
+      "contactLookup": {
+        "count": 75237,
+        "p50": 1.0019580000007409,
+        "p95": 2.676917000000685,
+        "p99": 3.581833000000188
+      }
+    },
+    "gateFailures": [],
+    "actualListPlans": [
+      [
+        {
+          "table": "<derived2>",
+          "type": "ALL",
+          "key": null,
+          "Extra": null
+        },
+        {
+          "table": "customers",
+          "type": "eq_ref",
+          "key": "PRIMARY",
+          "Extra": "Using where"
+        },
+        {
+          "table": "customers",
+          "type": "range",
+          "key": "uq_customers_code_key",
+          "Extra": "Using where; Using index"
+        },
+        {
+          "table": "customers",
+          "type": "range",
+          "key": "uq_customers_legal_name_key",
+          "Extra": "Using where; Using index"
+        },
+        {
+          "table": "customers",
+          "type": "range",
+          "key": "idx_customers_trading_name",
+          "Extra": "Using where; Using index"
+        },
+        {
+          "table": "customers",
+          "type": "range",
+          "key": "idx_customers_search_phone",
+          "Extra": "Using where; Using index"
+        },
+        {
+          "table": "customers",
+          "type": "range",
+          "key": "idx_customers_search_email",
+          "Extra": "Using where; Using index"
+        },
+        {
+          "table": "customer_identifiers",
+          "type": "index",
+          "key": "idx_customer_identifiers_search_value",
+          "Extra": "Using where; Using index"
+        },
+        {
+          "table": "customer_contacts",
+          "type": "range",
+          "key": "idx_customer_contacts_search_name",
+          "Extra": "Using where; Using index"
+        },
+        {
+          "table": "customer_contacts",
+          "type": "range",
+          "key": "idx_customer_contacts_email",
+          "Extra": "Using index condition; Using where"
+        },
+        {
+          "table": "customer_contacts",
+          "type": "range",
+          "key": "idx_customer_contacts_search_phone",
+          "Extra": "Using where; Using index"
+        },
+        {
+          "table": "customer_contacts",
+          "type": "range",
+          "key": "idx_customer_contacts_search_mobile",
+          "Extra": "Using where; Using index"
+        },
+        {
+          "table": "customer_addresses",
+          "type": "range",
+          "key": "idx_customer_addresses_search_label",
+          "Extra": "Using where; Using index"
+        },
+        {
+          "table": "customer_addresses",
+          "type": "range",
+          "key": "idx_customer_addresses_search_address_line1",
+          "Extra": "Using where; Using index"
+        },
+        {
+          "table": "customer_addresses",
+          "type": "range",
+          "key": "idx_customer_addresses_search_city",
+          "Extra": "Using where; Using index"
+        },
+        {
+          "table": "customer_addresses",
+          "type": "range",
+          "key": "idx_customer_addresses_search_postal_code",
+          "Extra": "Using where; Using index"
+        },
+        {
+          "table": "<union2,3,4,5,6,7,8,9,10,11,12,13,14,15>",
+          "type": "ALL",
+          "key": null,
+          "Extra": "Using temporary"
+        }
+      ],
+      [
+        {
+          "table": "<derived2>",
+          "type": "ALL",
+          "key": null,
+          "Extra": "Using temporary; Using filesort"
+        },
+        {
+          "table": "customers",
+          "type": "eq_ref",
+          "key": "PRIMARY",
+          "Extra": "Using where"
+        },
+        {
+          "table": "customers",
+          "type": "range",
+          "key": "uq_customers_code_key",
+          "Extra": "Using where; Using index"
+        },
+        {
+          "table": "customers",
+          "type": "range",
+          "key": "uq_customers_legal_name_key",
+          "Extra": "Using where; Using index"
+        },
+        {
+          "table": "customers",
+          "type": "range",
+          "key": "idx_customers_trading_name",
+          "Extra": "Using where; Using index"
+        },
+        {
+          "table": "customers",
+          "type": "range",
+          "key": "idx_customers_search_phone",
+          "Extra": "Using where; Using index"
+        },
+        {
+          "table": "customers",
+          "type": "range",
+          "key": "idx_customers_search_email",
+          "Extra": "Using where; Using index"
+        },
+        {
+          "table": "customer_identifiers",
+          "type": "index",
+          "key": "idx_customer_identifiers_search_value",
+          "Extra": "Using where; Using index"
+        },
+        {
+          "table": "customer_contacts",
+          "type": "range",
+          "key": "idx_customer_contacts_search_name",
+          "Extra": "Using where; Using index"
+        },
+        {
+          "table": "customer_contacts",
+          "type": "range",
+          "key": "idx_customer_contacts_email",
+          "Extra": "Using index condition; Using where"
+        },
+        {
+          "table": "customer_contacts",
+          "type": "range",
+          "key": "idx_customer_contacts_search_phone",
+          "Extra": "Using where; Using index"
+        },
+        {
+          "table": "customer_contacts",
+          "type": "range",
+          "key": "idx_customer_contacts_search_mobile",
+          "Extra": "Using where; Using index"
+        },
+        {
+          "table": "customer_addresses",
+          "type": "range",
+          "key": "idx_customer_addresses_search_label",
+          "Extra": "Using where; Using index"
+        },
+        {
+          "table": "customer_addresses",
+          "type": "range",
+          "key": "idx_customer_addresses_search_address_line1",
+          "Extra": "Using where; Using index"
+        },
+        {
+          "table": "customer_addresses",
+          "type": "range",
+          "key": "idx_customer_addresses_search_city",
+          "Extra": "Using where; Using index"
+        },
+        {
+          "table": "customer_addresses",
+          "type": "range",
+          "key": "idx_customer_addresses_search_postal_code",
+          "Extra": "Using where; Using index"
+        },
+        {
+          "table": "<union2,3,4,5,6,7,8,9,10,11,12,13,14,15>",
+          "type": "ALL",
+          "key": null,
+          "Extra": "Using temporary"
+        }
+      ],
+      [
+        {
+          "table": "customers",
+          "type": "range",
+          "key": "PRIMARY",
+          "Extra": "Using where"
+        },
+        {
+          "table": "cp",
+          "type": "eq_ref",
+          "key": "PRIMARY",
+          "Extra": null
+        }
+      ]
+    ],
+    "branchProofs": [
+      {
+        "field": "code",
+        "expectedKeys": [
+          "uq_customers_code_key"
+        ],
+        "type": "range",
+        "key": "uq_customers_code_key"
+      },
+      {
+        "field": "legalName",
+        "expectedKeys": [
+          "uq_customers_legal_name_key",
+          "idx_customers_legal_name"
+        ],
+        "type": "range",
+        "key": "uq_customers_legal_name_key"
+      },
+      {
+        "field": "trading",
+        "expectedKeys": [
+          "idx_customers_trading_name"
+        ],
+        "type": "range",
+        "key": "idx_customers_trading_name"
+      },
+      {
+        "field": "phone",
+        "expectedKeys": [
+          "idx_customers_search_phone"
+        ],
+        "type": "range",
+        "key": "idx_customers_search_phone"
+      },
+      {
+        "field": "email",
+        "expectedKeys": [
+          "idx_customers_search_email"
+        ],
+        "type": "range",
+        "key": "idx_customers_search_email"
+      },
+      {
+        "field": "identifier",
+        "expectedKeys": [
+          "idx_customer_identifiers_search_value"
+        ],
+        "type": "range",
+        "key": "idx_customer_identifiers_search_value"
+      },
+      {
+        "field": "contact.name",
+        "expectedKeys": [
+          "idx_customer_contacts_search_name"
+        ],
+        "type": "range",
+        "key": "idx_customer_contacts_search_name"
+      },
+      {
+        "field": "contact.email",
+        "expectedKeys": [
+          "idx_customer_contacts_email"
+        ],
+        "type": "range",
+        "key": "idx_customer_contacts_email"
+      },
+      {
+        "field": "contact.phone",
+        "expectedKeys": [
+          "idx_customer_contacts_search_phone"
+        ],
+        "type": "range",
+        "key": "idx_customer_contacts_search_phone"
+      },
+      {
+        "field": "contact.mobile",
+        "expectedKeys": [
+          "idx_customer_contacts_search_mobile"
+        ],
+        "type": "range",
+        "key": "idx_customer_contacts_search_mobile"
+      },
+      {
+        "field": "address.label",
+        "expectedKeys": [
+          "idx_customer_addresses_search_label"
+        ],
+        "type": "range",
+        "key": "idx_customer_addresses_search_label"
+      },
+      {
+        "field": "address.address_line1",
+        "expectedKeys": [
+          "idx_customer_addresses_search_address_line1"
+        ],
+        "type": "range",
+        "key": "idx_customer_addresses_search_address_line1"
+      },
+      {
+        "field": "address.city",
+        "expectedKeys": [
+          "idx_customer_addresses_search_city"
+        ],
+        "type": "range",
+        "key": "idx_customer_addresses_search_city"
+      },
+      {
+        "field": "address.postal_code",
+        "expectedKeys": [
+          "idx_customer_addresses_search_postal_code"
+        ],
+        "type": "range",
+        "key": "idx_customer_addresses_search_postal_code"
+      }
+    ],
+    "branchSummary": {
+      "tc": "TC-028-search-branches",
+      "phase": "POST_LOAD_NOT_LATENCY_MEASUREMENT",
+      "fields": 14,
+      "diagnosticData": {
+        "identifiers": 5000,
+        "creditProfiles": 1
+      },
+      "failures": []
+    }
+  },
+  "restore": {
+    "mysql": "26.7.0",
+    "manifestMembers": 6,
+    "schemaVersionCount": 87,
+    "rejectedBackupSets": 4,
+    "representativeSamples": [
+      "customer",
+      "address_default",
+      "contact_default",
+      "approval_decision",
+      "bank",
+      "general_attachment",
+      "bank_sensitive_attachment",
+      "import",
+      "audit"
+    ],
+    "tables": {
+      "customer_activation_requests": {
+        "count": 1,
+        "sha256": "0c74dedff484367818b1faf37e5d788146d2f953930d1676b0ff27c917c3b003"
+      },
+      "customer_address_purposes": {
+        "count": 1,
+        "sha256": "3bfb90ebd6bf6641824b8493ea55353280b208b892cb15a5b688e81e6cd1a0de"
+      },
+      "customer_addresses": {
+        "count": 1,
+        "sha256": "4b9a176deae12873fe6887d6c32609338eafa417ddb22658f0881aa5ebe2413d"
+      },
+      "customer_attachment_stages": {
+        "count": 0,
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "customer_attachments": {
+        "count": 2,
+        "sha256": "53f2cc2edee2b19f2575f39f21ba6ecc55f9d7061ace19932058a3e336fbe040"
+      },
+      "customer_audit_logs": {
+        "count": 5,
+        "sha256": "07062d5636863a318d3300e1e8ed1a48a42f89b23de497132459b635a1890be0"
+      },
+      "customer_bank_accounts": {
+        "count": 1,
+        "sha256": "115eff670de96201ef2577ed99f64799be416bd4394697283db722612d10270a"
+      },
+      "customer_categories": {
+        "count": 0,
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "customer_contact_purposes": {
+        "count": 1,
+        "sha256": "2d649448dabf6ddcace42d9d9fbf051cda7dcfd2cfa2eca59656d61c009ed401"
+      },
+      "customer_contacts": {
+        "count": 1,
+        "sha256": "9d5805cea483198d6b325843ef0be9d3b3691ad71db53adc23e1ea07707d036a"
+      },
+      "customer_credit_profiles": {
+        "count": 0,
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "customer_export_jobs": {
+        "count": 0,
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "customer_identifiers": {
+        "count": 0,
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "customer_import_jobs": {
+        "count": 1,
+        "sha256": "60037d5a723688e29b9c9073bbd0b7a214733776a2d48d1b5652b67c818ed641"
+      },
+      "customer_import_rows": {
+        "count": 1,
+        "sha256": "e2ba3a8b5a205978b9091b551c2b947941960789a5f986988bf3da84f54bf927"
+      },
+      "customer_industries": {
+        "count": 0,
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "customer_operation_requests": {
+        "count": 3,
+        "sha256": "cd028949a0dd69714d39c772756fd0f24e8edff7a241edd2d43e4708fec50b97"
+      },
+      "customer_settings": {
+        "count": 1,
+        "sha256": "2b25b86c4f34f6c651a9cf29026be4cd6adb06df1bc9ede4db46927fc49239e5"
+      },
+      "customer_territories": {
+        "count": 0,
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "customers": {
+        "count": 1,
+        "sha256": "ab776d6ceebedf0ab3bd42f4a4df66c9b386fc55711a3766aee06ff48fb7700d"
+      }
+    },
+    "attachmentObjects": 2,
+    "importObjects": 2,
+    "failClosedChecks": 6,
+    "dumpSha256": "548842185157626f25efb7862227768c4aa40e5a24359ed27a6d5a7e0951e3d9",
+    "manifestSha256": "2e512abe7735ffa2194f60bf62fbfd3ddadd56dd451aa7d819bece0de4de3d6a"
+  },
+  "commands": [
+    {
+      "cwd": "/private/tmp/erp-customer-operations-readiness",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "server/test/recovery/customerLocalRestore.test.js"
+      ],
+      "env": {
+        "CUSTOMER_LOCAL_RESTORE_TESTS": "1",
+        "DB_HOST": "127.0.0.1",
+        "DB_PORT": "13369",
+        "DB_USER": "root",
+        "DB_NAME": "erp_customer_local_dr_source_20261016_independent",
+        "CUSTOMER_RESTORE_DB_NAME": "erp_customer_local_dr_restore_20261016_independent",
+        "CUSTOMER_LOCAL_RUNTIME_ROOT": "/private/tmp/erp-customer-local-runtime.jevRrC",
+        "CUSTOMER_MYSQL_BIN": "/usr/local/mysql/bin/mysql",
+        "CUSTOMER_MYSQLDUMP_BIN": "/usr/local/mysql/bin/mysqldump"
+      },
+      "credentialPolicy": "Disposable loopback-only owned instance, empty-root initialized solely for synthetic test; no shared password used."
+    },
+    {
+      "cwd": "/private/tmp/erp-customer-operations-readiness",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "server/test/customerBankCrypto.test.js",
+        "server/test/customerAttachmentStorage.test.js",
+        "server/test/customerImportStorage.test.js",
+        "server/test/customerAuditLog.test.js"
+      ]
+    },
+    {
+      "cwd": "/private/tmp/erp-customer-operations-readiness",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "/private/tmp/erp-customer-local-runtime.jevRrC/ephemeral-key-preload.mjs",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "server/test/performance/customerManagement.performance.test.js"
+      ],
+      "env": {
+        "CUSTOMER_PERFORMANCE_TESTS": "1",
+        "DB_HOST": "127.0.0.1",
+        "DB_PORT": "13369",
+        "DB_USER": "root",
+        "DB_NAME": "erp_customer_local_capacity_20261016_independent"
+      },
+      "keyPolicy": "Customer/Supplier matching startup encryption/lookup keys generated only in memory; no key values exported."
+    }
+  ],
+  "cleanup": {
+    "status": "CONFIRMED",
+    "sourceCustomersBeforeDrop": 2,
+    "restoredCustomersBeforeDrop": 1,
+    "capacityCustomersAfterFixtureCleanup": 0,
+    "otherActiveSessions": 0,
+    "ownedSchemasDropped": 3,
+    "mysqlShutdownAt": "2026-10-16T06:18:40Z",
+    "shutdownSessionsExit": 0,
+    "socketAbsent": true,
+    "exactStoppedDatadirRemoved": true,
+    "logsRetained": true
+  },
+  "limitations": [
+    "Existing clean scanner and bank authorization fixtures are not actual ClamAV/deployed IAM acceptance.",
+    "One synthetic quiescent recovery set; no production-volume/off-host backup/secret custody/PITR claim.",
+    "RPO/RTO timing acceptance remains WAIVED_BY_HUMAN, not technical proof; unchanged script timing output is incidental.",
+    "Capacity is fixed four-operation service-only code-prefix workload, not browser/HTTP/mixed-write/Sales/full-downstream capacity; host not exclusively reserved from unrelated project activity.",
+    "No own build/browser/other local test job overlapped timed capacity; keys generated before app startup, other own checks completed first.",
+    "TASK029/033/035 stay IN_PROGRESS,030/031/032/034 BLOCKED,036PENDING; no full task or module acceptance.",
+    "PR244 stays Draft/BLOCKED on actual HIGH Sales DEF033001; no Sales source/test fix or failure waiver.",
+    "This is not current full server coverage/CI/manual UAT/independent final review; prior genuine full-suite failure retained."
+  ]
+}
