@@ -1,13 +1,13 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1274,
+  "revision": 1275,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
-  "status": "IMPLEMENTING",
-  "resume_status": null,
+  "status": "BLOCKED",
+  "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-005",
-  "current_task": "TASK-066",
+  "current_task": "TASK-064",
   "baseline": {
     "design": "ef5e7624f64ce0e819a85cadf0d3a43c15104421c1ef068549ef63d5189d13cd",
     "plan": "b791cec4ed059697c859b00b49c94d8d8b35c13ca031c8a8ab16ff633a642ba1",
@@ -86,7 +86,7 @@
     "TASK-055": "DONE",
     "TASK-056": "DONE",
     "TASK-057": "BLOCKED",
-    "TASK-064": "DONE",
+    "TASK-064": "BLOCKED",
     "TASK-065": "BLOCKED",
     "TASK-066": "BLOCKED",
     "TASK-067": "PENDING",
@@ -10929,6 +10929,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-HD009-SALES0088-OWNER-SOURCE-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "b6eeecb12fd08e3f4a6129c8448b1c9346c4f55ca73bda458653b93d7a410946",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/hd009-sales0088-owner-contribution-review-r1.json SHA256850b37632bc75e9dd68173bb718266d00f9ce20d1e69b3ef6ffd66fe64b41d6b; actual exacttwo-table sourcehandoffreview,0requiredfindings. Onlysourceacceptance/localSalesnative; notP0/P4Gate.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -14297,6 +14309,17 @@
       "source_ref": "docs/sales_order_management/implementation/112_hd008_fulfillment_p0_coordination.md#actual-hd009-a1-approval-and-sales-acknowledgement; actual private foundationnative log and inventoryreceiptfe62ca8a. Sourceauthority direction and mapping only; noNewP0qualification/CI/P4merge claim.",
       "actor": "Codex /root",
       "observed_at": "2026-10-20T09:36:18.780179Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "HD009 source handoff accepted850b3763, inventory agreed; affected P4 qualification waits actual ownerP0 artifact and canonical reconciliation, no human question pending",
+      "code_commit": "fc2d90ba70ba09d7336013eb3f1bb5f63c00aa57",
+      "spec_baseline": "b791cec4ed059697c859b00b49c94d8d8b35c13ca031c8a8ab16ff633a642ba1",
+      "source_fingerprint": "31fad2c9af4d16135ea115d613136e38f827196036d167431576b91995ce5b95",
+      "status": "BLOCKED",
+      "source_ref": "docs/sales_order_management/implementation/112_hd008_fulfillment_p0_coordination.md#exact-sales-owner-source-acceptance-completed; ownerobservedrevision22/TASK002. Source0088+helpers reviewedexact; local13native is2directfoundation+11relatedSales, cannottransplanttoP0. No migration/credentialtransfer/ownerworktreewrite/merge.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-20T09:41:06.507020Z"
     }
   ],
   "pending_decisions": [
@@ -18331,5 +18354,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "HD008/HD009 A1 actuallyAPPROVED, see implementation112 finalSalesACK: exactSales0088 contribution in completeP0PR;0089/90 staySales; old0091–93withdrawn asfinalinstallers, P0solewriter91–99. No furtherhuman decision pending for exacthandoff. Owner P0mustcomplete own0B/fullnative/currentCI/review/Gate; source39/95componentresults historical againstoldquantityrules. Await actualownerartifact/contract beforeoverlapwrites; reconcilebothcanonicalhistories/newSalesD/Pbindings thenintegrateactualP0main andfinishoriginalP4tasks/all45checks/currentCI/fullreview/unchangedMERGE_READY. No duplicateproviders/tables, no runtimecredentialtransfer orliveDBauthority. Do not infer thischatoutboundmessaging authority."
+  "next_safe_action": "BLOCKED onlyonactualownerP0 artifact, nothumanapproval: HD008/009A1 verified andsingleinventory/sourcehandoffapproved850b3763. CoordinatorP0 observedTASK002. Read implementation112 exactSalesACK:0088exactb6ee contribution in completeP0PR,0089/90staySales,old0091–93referenceonly/exitfinalinstallers,P0sole91–99. Owner mustsatisfy own0B/fullnative/currentCI/review/merge; noprototypePASS=newquantityruleproof. OnactualP0artifact/contract availability, reconcilebothcanonicalhistories/newD/Pbindings andresumeIMPLEMENTING, integratefreshactualP0main, retireduplicateinstaller/sourcecontributions safely, adaptcumulativeallocation/fullshortpickedline andrealparticipant/coordinator, executealloriginal39+6/fullcapacity/currentCI/fullreview/unchangedMERGE_READY thenmergeunderexistingSamapproval. No furtherdecisionpendingforexacthandoff; nootherchatoutboundauthority inferred. Allhistory/raw/typedrefs retained."
 }

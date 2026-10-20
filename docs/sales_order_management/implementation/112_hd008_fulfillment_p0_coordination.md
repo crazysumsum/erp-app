@@ -24,7 +24,8 @@ Prior DEC029 remains genuine historical dual-owner approval of proposal107 SHA83
 1. Current `chk_ful_line_quantity` includes `allocated_base_quantity <= planned_base_quantity`; P0 permits cumulative historical allocated/released amounts above planned after reallocation. Removing that clamp also requires independently preserving `picked <= planned`, `short <= planned`, shipped membership `{0,picked}` and reversed membership `{0,shipped}`. Parent-state and allocation SUM equalities need native integration under the fixed parent lock; there is no invented Line release column.
 2. OpenMatter prototype currently treats a SHIPPED Line with picked=0, and a REVERSED Line with shipped=0, as inconsistent. New P0 explicitly permits a fully short-picked Line within an aggregate whose total picked is positive. Its CLOSED/inconsistency rules must use the new parent-state and cumulative release equations; existing39PASS cannot qualify these rules.
 3. Owner P0 must have one actual `fulfillmentOpenMatter` service registration, not duplicate auto-discovered adapters. Prototype `FulfillmentOpenMatterRuntimeService.js` is reusable scaffolding only until the owner accepts its semantics, source path and dependency/version contract.
-4. Contract10 exact Archive ABI was approved by DEC029 but is not present in PR256's planning baseline. P0 owner must explicitly reconcile rather than silently overwrite its provenance, guards, null-EXPORT routing, full12 mirror/hash manifest and same-transaction participant requirements. Sales Archive remains fail-closed until that real contract/provider is ready.
+4. The prototype hard-codes the withdrawn0091–0093 migration identities. P0 must replace this check with the actual agreed version/schema installation probe; old prototype version PASS is not evidence for new0091–0099.
+5. Contract10 exact Archive ABI was approved by DEC029 but is not present in PR256's planning baseline. P0 owner must explicitly reconcile rather than silently overwrite its provenance, guards, null-EXPORT routing, full12 mirror/hash manifest and same-transaction participant requirements. Sales Archive remains fail-closed until that real contract/provider is ready.
 
 ## Migration inventory and installation facts
 
@@ -41,7 +42,7 @@ Fresh origin/main highest applied-source prefix remains0087. This report **does 
 
 The new owned socket-only MySQL26.7 instance remains available with nice10 and only synthetic data. Persistent core/focused had91 framework+through0090 ledger records at the confirmed preparation receipt; no P0 runtime access/credentials or SQL grant is transferred by this document. Live deployment/cutover and full owner business-writer activation remain separately unauthorized.
 
-## Proposed handoff and merge order — requires concrete owner agreement
+## Historical proposed handoff — resolved by the actual HD009 agreement below
 
 1. Fulfillment P0 becomes sole final writer/reviewer for active schema, quantity/operation invariants and minimum lifecycle provider. It may adapt the preserved source/tests only after its approved Checkpoint0B and exact compatibility review; it must not count this Sales95PASS as completing its own45 tasks/Checkpoints.
 2. Sales retains its six-table copy/hash/coordinator and participant/consumer adaptation work. The real participant continues as an explicitly named Fulfillment-owned contribution, with one accepted ABI and fixed transaction authority; no fabricated CLOSED or bearer actor payload.
@@ -93,3 +94,15 @@ The approved eight logical P0 slices split permissions and operations into physi
 Sales owner focused check executed after the handoff on its own approved isolated runtime: `salesArchiveMigrations.integration.test.js` **13PASS/0FAIL/0SKIP**, including real batch/manifest uniqueness/check/FK/rerun and Sales mirror regressions. This is current acceptance of unchanged0088 plus related Sales persistence only, not P0 Checkpoint0B or candidate CI. Private `hd009-sales-foundation-native-r1.log` and `hd009-observed-migration-inventory.json` (SHA fe62ca8a…) retain actual outputs. No P0 runtime/schema or another worktree was modified.
 
 P0 can now reconcile its exact scope/contract/trace/bindings from actual A1 and complete TASK001, then follow its approved TASK002/003/providers/Checkpoint0B before schema execution. It must provide its own native/CI/review evidence. Sales remains responsible for matching its canonical plan/history to the actual P0 predecessor and completing original057–063/067–068/all45 suites/currentCI/fullP4Gate after the owner artifact is available. Existing R4 qualification and39/95 local results remain historical components, not new P0 correctness claims.
+
+
+## Current execution boundary after agreement
+
+Ownership, the exact0088 two-table contribution and the numbered inventory are now agreed. Earlier pending/proposal text is preserved history, superseded by the actual HD009 section. Sales has no further permission question for that agreement. The remaining dependency is real P0 implementation/Checkpoint0B/native qualification/fullCI/review/merge, followed by P4 adaptation and its full Gate. Sales does not continue competing owner schema/provider writes, treat elapsed time as a provider, or merge its prototype in advance.
+
+
+## Exact Sales owner source acceptance completed
+
+Actual independent source handoff review `hd009-sales0088-owner-contribution-review-r1.json`, SHA `850b37632bc75e9dd68173bb718266d00f9ce20d1e69b3ef6ffd66fe64b41d6b`, APPROVED, zero required findings. It independently verified exact0088 b6eeecb1, both main0070/0083 helper byte identities, constraints/indexes/FK/inspection/rerun and the observed inventory agreement. The13-case current Sales native result comprises **2 direct foundation cases plus11 related Sales persistence cases**; its source imports0089 and cannot be copied as a P0-only qualification run.
+
+Sales accepts source transfer of only the exact two-table0088 contribution under HD009A1. The remaining item is delivery, not another permission request: P0 was actually observed at revision22/TASK002, no numbered new file yet at that observation, and must finish its own approved foundation. Sales current affected064/065/066 qualification waits that actual owner artifact; all historical DONE/reviews/evidence remain preserved, and new bindings/retests follow actual P0 integration. No product task or Phase Gate is closed by this handoff review.
