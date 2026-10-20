@@ -234,6 +234,7 @@ jobs:
           path: server/coverage/shard
           if-no-files-found: error
           retention-days: 1
+          overwrite: true
 
   client-tests:
     name: Client coverage
