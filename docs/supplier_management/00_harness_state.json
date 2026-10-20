@@ -1,11 +1,11 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 381,
+  "revision": 382,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
-  "status": "BLOCKED",
-  "resume_status": "IMPLEMENTING",
+  "status": "IMPLEMENTING",
+  "resume_status": null,
   "current_phase": "PHASE-004",
   "current_task": "TASK-051",
   "baseline": {
@@ -6082,8 +6082,8 @@
         "TC-003",
         "TASK-051"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-20: 'HD-115 A，CI 過就 merge' — retry the identifier create/update transaction once on ER_LOCK_DEADLOCK, and Supplier create as a precaution, so the loser answers 409; Supplier-local, no contract change, with a deterministic test."
     }
   ],
   "external_actions": [
@@ -7212,5 +7212,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "HD-115 (DEF-031 identifier deadlock returns 500) awaits the Product Owner; it does not touch this PR's tests. PR for claude/supplier-task-051-races (TC-003, PR #244 lock test): merge per 'review 完 CI 過就 merge' once every check is SUCCESS."
+  "next_safe_action": "DEF-031 fix (HD-115 A) on claude/supplier-def031-deadlock-retry: independent review, then a PR once #257 has merged; merge per 'CI 過就 merge'. Then TC-006 / T51 rehearsal."
 }
