@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1209,
+  "revision": 1249,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "eb7302ca9d76ffb9994ac6d6ff0e1a34a7c07d52c97fb98adf559f82691ab1d8",
     "plan": "990d537763fcd261e760da9cbb804a682786971fbfefd8f0ff0709497405b08f",
-    "code_commit": "b3beee3dceda96bef21e85fb3cce7ee9fdda7dfb",
-    "source_fingerprint": "f30a9a2c70376330d7f7e9f07b32fbc8f9c309622f576166458812cf5108a26b",
+    "code_commit": "705e5afdb889eaf6e409c5cf68431d13d14ceeb2",
+    "source_fingerprint": "135709323ac68c89c16b544bd49a4be3dc63e0b868fa85ec9f51b343a3505c3b",
     "worktree": "/Users/sam/.codex/worktrees/sales-def016-hotfix/erp-app",
-    "default_commit": "2f8f7b78600ee5c7b7eddedf8cd83326078f2d91",
+    "default_commit": "9c4000920d31427fbc98511f00dae435616880bc",
     "mode_entry_commit": "7f4fa5b5740797a6b8c5aacd4625a43f273d8df4"
   },
   "runtime": {
@@ -12111,6 +12111,17 @@
       "source_ref": "/Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/main2f8-original33-aggregate.json SHA25673ccad54cce8aa4194fe9c17ff785078839997a7f50628e3e824574266277511; actualdriver32866joinedexit0, all33standardevidence_issues empty,35realbrowser0skip,10Inventory15PASS0skip, fullcoverage3327PASS0FAIL133unchangedconditionalSKIP independentlyreviewede5236afa,38floorsPASS; dedicated4PASS0skipP9592.265ms. Exactcoveragegrantrevoked afterall33, originalfullrightsrestored.",
       "actor": "Codex /root actual execution observation",
       "observed_at": "2026-10-20T04:40:03.686963+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "HD018 main9c4 integrated original33 DEVELOPER_VERIFIED",
+      "code_commit": "705e5afdb889eaf6e409c5cf68431d13d14ceeb2",
+      "spec_baseline": "990d537763fcd261e760da9cbb804a682786971fbfefd8f0ff0709497405b08f",
+      "source_fingerprint": "135709323ac68c89c16b544bd49a4be3dc63e0b868fa85ec9f51b343a3505c3b",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/main9c4-original33-aggregate.json SHA256d03325efab6f89c34c28c39ff08c0691da1785fdb7a04e7d8abd33504bfadc9f; actualdriver18263joinedexit0 all33standardevidence_issues empty,35realbrowser0skip,10Inventory15PASS0skip, fullcoverage3327PASS0FAIL133unchangedconditionalSKIP independentlyreviewedc7d5abea,38floorsPASS. Dedicated4PASS0skipTC042P9586.440ms/0excluded. Exactcoveragegrantrevoked afterall33, alloriginalrightsrestored.",
+      "actor": "Codex /root actual execution observation",
+      "observed_at": "2026-10-20T05:32:56.838763+00:00"
     }
   ],
   "pending_decisions": [
@@ -14868,6 +14879,46 @@
       "idempotency_key": "runtime-hd018-main2f8-coverage-revoke",
       "status": "CONFIRMED",
       "source_ref": "Actual driver32866 joinedexit0 ALL_SELECTED_PASS33; standardaggregate73ccad54cce8aa4194fe9c17ff785078839997a7f50628e3e824574266277511 all33evidence_issues empty. Existing synthetic cleanup authority; actual independent prospectiveproof428312aa5682958a8f27062593e0f7da9e22c97d0df3e82a0dd9ac27eb23363b, exacthelper05c9f77e. No schema/data/account/globalprivilege deletion. Actualhelperjoinedexit0; /Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/main2f8-coverage-revoke-confirmed.json SHA2564daa1a65743681232944e99b5f8b3d14f4de81933ea4578e6ecd453808a0e798"
+    },
+    {
+      "id": "PRESERVE-HD018-PR250-MAIN2F8-EVIDENCE",
+      "kind": "LOCAL_EVIDENCE_PRESERVATION",
+      "target": "Protected existing local vault; append all755 active raw refs and distinct immutable main2f8 snapshot/manifest",
+      "idempotency_key": "preserve-hd018-pr250-main2f8-evidence",
+      "status": "CONFIRMED",
+      "source_ref": "Existing authorized local-only evidence retention/recovery and safe worktreecleanup. All33actualjoined0 aggregate73ccad54, exactgrantrestored. Actual independent prospectiveproof320d951aff7701d3eea6eec815d637a4198a2550b2cd703d2bab2d9ff3ef82ca exacthelper2039df2b. Freeze state/report/evidence writers untilcopyjoined. No deletion/upload/liveDBcopy; preserve all originals and earlier manifests. Actualhelperjoinedexit0;3018files hashmatched/135new; /Users/sam/.codex/recovery-evidence/sales-def016-pr250-facf0aab/main2f8-premerge-preservation-manifest.json SHA256c062feefd121864a9004822648bb8906a4c26017089b5d68df4c012b9b3a5ae8. All755refs preserved; original/oldmanifests retained."
+    },
+    {
+      "id": "INTEGRATE-HD018-MAIN-9c400092",
+      "kind": "GIT_INTEGRATE",
+      "target": "origin/main9c4000920d31427fbc98511f00dae435616880bc into codex/sales-def016-hotfix",
+      "idempotency_key": "integrate-hd018-main-9c400092",
+      "status": "CONFIRMED",
+      "source_ref": "Existing human freshmain/normalCI/33/review/merge authority; newlyfetched PR253 changes servercoverageCI sharding/mergednativefloors and adds2CI packagecommands; original localtest:coverage command/producttests/dependencies unchanged. Preserve currentf30actualall33/755refs as historical; no oldPASS rebind/installedHarnesschange/Gatewaiver. NewCI actual13jobs/4rawshards+mergedfloors andTC042 scope=true2PASS0skip required. Actualcleanortmergejoinedexit0 at705e5afdb889eaf6e409c5cf68431d13d14ceeb2, FP135709323ac68c89c16b544bd49a4be3dc63e0b868fa85ec9f51b343a3505c3b; D/Punchanged, original33membership/localargv unchanged."
+    },
+    {
+      "id": "RUNTIME-HD018-MAIN9C4-COVERAGE-GRANT",
+      "kind": "LOCAL_SYNTHETIC_DB_GRANT",
+      "target": "Only original exact escaped isolated coverage grant",
+      "idempotency_key": "runtime-hd018-main9c4-coverage-grant",
+      "status": "CONFIRMED",
+      "source_ref": "Existing authenticated synthetic isolated testing/SQL authority. Actual independent prospectiveproof /Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/main9c4-guarded-runtime-driver-cleanup-verification-r1-reviewer-proof.json SHA256df2827b0e6d686b5cca2d600a442d01548dd53bfa97b3e7d1a0ff179a6bb8d18; exactgrantc3357a82/fresh047e5bf7/driver7d90e02b. Onlynewnonces/originalgrant; preservealloldschemas/data/accounts/globalrights. No blindreplay afterpartialoutcome. Revokeexacttemporarygrantafteractualcurrent33. Actualhelperjoinedexit0; /Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/main9c4-coverage-grant-confirmed.json SHA2563c78f0c16340cfd7536bd60cf79df66cec221841025136e840d88d045759cbe8"
+    },
+    {
+      "id": "RUNTIME-HD018-MAIN9C4-FRESH-INVENTORY",
+      "kind": "LOCAL_SYNTHETIC_DB_NAMESPACES",
+      "target": "Ten fresh *_main9c4r1 synthetic schemas on sameownedUUIDs;025 original87migrations",
+      "idempotency_key": "runtime-hd018-main9c4-fresh-inventory",
+      "status": "CONFIRMED",
+      "source_ref": "Existing authenticated synthetic isolated testing/SQL authority. Actual independent prospectiveproof /Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/main9c4-guarded-runtime-driver-cleanup-verification-r1-reviewer-proof.json SHA256df2827b0e6d686b5cca2d600a442d01548dd53bfa97b3e7d1a0ff179a6bb8d18; exactgrantc3357a82/fresh047e5bf7/driver7d90e02b. Onlynewnonces/originalgrant; preservealloldschemas/data/accounts/globalrights. No blindreplay afterpartialoutcome. Revokeexacttemporarygrantafteractualcurrent33. Actualhelperjoinedexit0; /Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/main9c4-runtime-ready.json SHA25604a8b04f5b4af3cf9792b94f6a863e91c9811a66c93a2860ff21e82baff587bd"
+    },
+    {
+      "id": "RUNTIME-HD018-MAIN9C4-COVERAGE-REVOKE",
+      "kind": "LOCAL_SYNTHETIC_DB_REVOKE",
+      "target": "Only exact temporary isolated coverage grant; restore entire original fixture rights",
+      "idempotency_key": "runtime-hd018-main9c4-coverage-revoke",
+      "status": "CONFIRMED",
+      "source_ref": "Actual driver18263 joinedexit0 ALL33; standardaggregated03325efab6f89c34c28c39ff08c0691da1785fdb7a04e7d8abd33504bfadc9f all33evidence_issues empty. Actual independent prospectiveproofdf2827b0e6d686b5cca2d600a442d01548dd53bfa97b3e7d1a0ff179a6bb8d18 exacthelper85eb555df8886aae8dbf703d2f74a79a60fa67f705092cf440d8d3f8d8de4963. Existing authorized synthetic cleanup; no schema/data/account/globalrights deletion. Actualhelperjoinedexit0; /Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/main9c4-coverage-revoke-confirmed.json SHA2564daa1a65743681232944e99b5f8b3d14f4de81933ea4578e6ecd453808a0e798"
     }
   ],
   "evidence_files": [
@@ -15625,7 +15676,40 @@
     "evidence/20261020T042247-630486814c66/run.json",
     "evidence/20261020T042333-408f12a56c13/run.json",
     "evidence/20261020T042336-28f2d5a76109/run.json",
-    "evidence/20261020T042408-99de228a36cc/run.json"
+    "evidence/20261020T042408-99de228a36cc/run.json",
+    "evidence/20261020T044701-e46ecce62b68/run.json",
+    "evidence/20261020T044708-5aae8d9addd8/run.json",
+    "evidence/20261020T044710-c9a2bf2f8f84/run.json",
+    "evidence/20261020T044715-16795f6fd26c/run.json",
+    "evidence/20261020T044726-b731b373a9bb/run.json",
+    "evidence/20261020T044728-9af28fb2f6e9/run.json",
+    "evidence/20261020T044740-f3f7d523d7af/run.json",
+    "evidence/20261020T044807-bdd482757c95/run.json",
+    "evidence/20261020T044810-38f443726a2f/run.json",
+    "evidence/20261020T044813-fdf024c53f4e/run.json",
+    "evidence/20261020T044815-946d1064aece/run.json",
+    "evidence/20261020T044817-eab9e126f64e/run.json",
+    "evidence/20261020T044819-3b1fb04b46a6/run.json",
+    "evidence/20261020T044821-f7b09cc2fbca/run.json",
+    "evidence/20261020T044824-741af5eb2185/run.json",
+    "evidence/20261020T044826-f35a43b8b649/run.json",
+    "evidence/20261020T044828-300c5d45f33a/run.json",
+    "evidence/20261020T044831-d296a742dfc5/run.json",
+    "evidence/20261020T044834-d9f4863921de/run.json",
+    "evidence/20261020T044851-8d264fed723b/run.json",
+    "evidence/20261020T044858-a0fc61fa9648/run.json",
+    "evidence/20261020T044922-4f8419f5031a/run.json",
+    "evidence/20261020T051316-432531fefe58/run.json",
+    "evidence/20261020T051348-38c586892707/run.json",
+    "evidence/20261020T051350-a40ca6871ab7/run.json",
+    "evidence/20261020T051441-e28633455dab/run.json",
+    "evidence/20261020T051445-a525bd3b33cf/run.json",
+    "evidence/20261020T051515-98ce0e4c3d52/run.json",
+    "evidence/20261020T051525-13ea0c6493cf/run.json",
+    "evidence/20261020T051532-35d35a5a7da6/run.json",
+    "evidence/20261020T051616-fa0859a6360d/run.json",
+    "evidence/20261020T051619-2e79046e5ac6/run.json",
+    "evidence/20261020T051651-dbe669b96ca8/run.json"
   ],
   "defects": [
     {
@@ -15867,7 +15951,8 @@
         "Required integrated check nonPASS: evidence/20261020T022050-2582cdb25882/run.json; root cause needs triage; local closure is no full-Gate waiver.",
         "2026-10-20 main72 ENV017 independentlyclassifiedoldInventoryfixturecollisionbeforelockassertion, not Sales productregression; freshnamespaces actualREADY. SameSalesproduct/testblobs mechanicallyverified facf->b0eb; existingactualRED/111+original33/productreview prove localDEF016closure. Preserve autoOPEN/failure evidence; this does NOT qualify newFP/all33/TC042/CI/Gate. Real review proof64aaebd36c4e7e8671e6bdb3808f24cb647c88194f8a138cec5908b456934188; ENV017 staysOPENpendingactual007+all10native. Tasks030/049 remainIN_PROGRESS.",
         "/Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/main72-original33-aggregate.json SHA256b1c79876bf869196c4999f60682c05b9477bede6c9e6c76d5819a50c03e530cf; actualcurrentb0eb/d46c all33 DEVELOPER_VERIFIED incl35realbrowser/TC042originalbounds; noCustomer/fullP4/formalacceptance claim.",
-        "/Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/main2f8-original33-aggregate.json SHA25673ccad54cce8aa4194fe9c17ff785078839997a7f50628e3e824574266277511; actualb3be/f30 all33standardPASS,35realbrowser, dedicated4PASS0skip TC042P9592.265ms/0excluded. No fullP4/Customer/formalUAT/CI/mergeclaim."
+        "/Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/main2f8-original33-aggregate.json SHA25673ccad54cce8aa4194fe9c17ff785078839997a7f50628e3e824574266277511; actualb3be/f30 all33standardPASS,35realbrowser, dedicated4PASS0skip TC042P9592.265ms/0excluded. No fullP4/Customer/formalUAT/CI/mergeclaim.",
+        "/Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/main9c4-original33-aggregate.json SHA256d03325efab6f89c34c28c39ff08c0691da1785fdb7a04e7d8abd33504bfadc9f; actual705e/1357 all33standardPASS incl35realbrowser,15Inventory, dedicated4PASS0skip TC042P9586.440ms/0excluded. No fullP4/Customer/formalUAT/CI/mergeclaim."
       ],
       "risk_approval_id": null
     },
@@ -15885,5 +15970,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Publish same-f30 documentation/state-only currentcandidate after freshmain check; require new exactSHA normal8CI SUCCESS including scope=true andTC0422PASS0skip, actual independent publishedreview and unmodified MERGE_READY before authorized normalPR250merge. Preserve all old records; fullP4/provider/Customer separate."
+  "next_safe_action": "Freshfetchmain thenpublish same1357 documentation/state-only currentcandidate. Require actual13normalCI SUCCESS inclscope=true/4serverrawshards+nativeoriginalfloors/TC0422PASS0skip, actualindependentpublishedreview and unmodifiedMERGE_READY before authorized normalPR250merge. No oldCIreuse or fullP4/Customer/formalacceptanceclaim."
 }
