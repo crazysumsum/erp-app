@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import test from "node:test";
-import { SalesOrderService, readSalesOrderDetail } from "../../src/modules/sales/SalesOrderService.js";
+import { SalesOrderService, readSalesOrderDetail, lockSalesOrderLines } from "../../src/modules/sales/SalesOrderService.js";
 import { InventoryReservationService } from "../../src/modules/inventory/InventoryReservationService.js";
 import { formatDateForFile } from "../../src/services/time/timeFormat.js";
 import { createOrder, newOrderInsideInventory, secondCustomer, setup, stock } from "../sales/phase2/fixtures.js";
@@ -258,4 +258,24 @@ integrationTest("TC-021 confirmation never deadlocks with another Customer's new
   const order = await readSalesOrderDetail(f.db, f.request.id);
   assert.deepEqual([order.status, order.lines[0].reservedBaseQuantity], ["CONFIRMED", "10"]);
   assert.equal((await probe.state.draft).salesOrder.status, "DRAFT");
+});
+
+// DEF-016 / customer-management:DEF-033001: optimizer choice at100lines must not widen record locks.
+integrationTest("TC-021 DEF-016 100-line confirmation never blocks an unrelated Customer Draft insert",async t=>{
+ const f=await setup(t);await stock(f,20);
+ const [[uom]]=await f.db.query("SELECT uom_id FROM item_sku_uoms WHERE id=?",[f.skuUomId]);
+ const lines=[{skuId:f.skuId,skuUomId:f.skuUomId,quantity:"1.000000",unitSellingPrice:"1.0000"}];
+ for(let i=1;i<100;i++){
+  const code="line-lock-"+randomUUID(),skuId=await f.insert("item_skus",{item_id:f.itemId,sku_code:code,sku_name:code,status:"active",sellable:1,inventory_tracked:1,created_at:f.now,updated_at:f.now});
+  const skuUomId=await f.insert("item_sku_uoms",{sku_id:skuId,uom_id:Number(uom.uom_id),to_base_factor:1,is_base:1,is_default_sale:1,created_at:f.now,updated_at:f.now});
+  lines.push({skuId,skuUomId,quantity:"1.000000",unitSellingPrice:"1.0000"});
+ }
+ const created=await new SalesOrderService(f).create({claims:f.claims,input:{eventId:randomUUID(),customerId:f.customerId,currencyCode:f.currency,fulfillmentWarehouseId:f.warehouseId,orderDate:f.time.fileDate(),lines}}),id=created.salesOrder.id;
+ await lockSalesOrderLines({async query(sql,args){const [plan]=await f.db.query("EXPLAIN "+sql,args);t.diagnostic(JSON.stringify({lineCount:100,plan}));}},id,100);
+ const other=await secondCustomer(f),real=new InventoryReservationService(f),probe=newOrderInsideInventory(f,real,"reserveAvailableForSalesBatchInTransaction",database=>createOrder(f,database,other));
+ const service=f.service({inventory:probe.inventory}),intent=await service.startConfirmation({claims:f.claims,id,input:{eventId:randomUUID(),version:1}});
+ try{await service.completeConfirmation({eventId:intent.eventId,claims:f.claims,leaseOwner:intent.leaseOwner});}finally{await probe.settle();}
+ assert.equal(probe.state.inserted,true,"new Order insert must not wait on unrelated100-line confirmation");
+ const order=await readSalesOrderDetail(f.db,id);assert.equal(order.status,"CONFIRMED");assert.equal(order.lines.length,100);assert.equal(order.lines[0].reservedBaseQuantity,"1");assert.equal(order.backorderLineCount,99);
+ assert.equal((await probe.state.draft).salesOrder.status,"DRAFT");
 });

@@ -28,12 +28,12 @@ export function toSalesOrderDetail(row, lines) {
       reservedBaseQuantity: String(line.reserved_outstanding_base_quantity), backorderedBaseQuantity: String(line.backordered_base_quantity),
       fulfilledBaseQuantity: String(line.fulfilled_base_quantity), cancelledBaseQuantity: String(line.cancelled_base_quantity), lineNote: line.line_note, version: Number(line.version) })) };
 }
-// Lock an Order's Lines (line_no 1..lineCount) by full uq_sales_order_line_number keys: record locks only. A FOR UPDATE search on
+// Pin full line-number lookups: the optimizer otherwise may choose a SKU/UOM order-range scan at100lines. A FOR UPDATE search on
 // sales_order_id alone also gap-locks up to the next Order's first line, which a new Order inserts into while its header FK check
 // holds the Warehouse share lock; a holder that then enters Inventory for the Warehouse lock deadlocks with it.
 export async function lockSalesOrderLines(tx, id, lineCount) {
   const lineNumbers = Array.from({ length: Number(lineCount) }, (_, index) => index + 1);
-  await tx.query(`SELECT id FROM sales_order_lines WHERE sales_order_id=? AND line_no IN (${lineNumbers.map(() => "?").join(",")}) ORDER BY id FOR UPDATE`, [id, ...lineNumbers]);
+  await tx.query(`SELECT id FROM sales_order_lines FORCE INDEX (uq_sales_order_line_number) WHERE sales_order_id=? AND line_no IN (${lineNumbers.map(() => "?").join(",")}) ORDER BY id FOR UPDATE`, [id, ...lineNumbers]);
 }
 export async function readSalesOrderDetail(tx, id, { lock = false } = {}) {
   const [[row]] = await tx.query(`SELECT id,sales_order_number,status,source_type,source_quotation_id,channel_code_snapshot,external_order_id_snapshot,
