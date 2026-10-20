@@ -248,7 +248,7 @@ client 目前只有一個煙霧測試，覆蓋率沒有設門檻——第一段�
 
 ## CI
 
-[.github/workflows/ci.yml](.github/workflows/ci.yml) 的依賴掃描、lint、前端建置、Playwright 與 MySQL coverage 並行執行。Sales Import TC-042 的兩個原始容量案例拆到另一個獨立 MySQL job，不帶 coverage 插樁；資料量、併發、期限及斷言不變。原全域及高風險檔案 coverage 門檻維持不變。
+[.github/workflows/ci.yml](.github/workflows/ci.yml) 的依賴掃描、lint、前端建置、Playwright 與 MySQL coverage 並行執行。Sales Import TC-042 的兩個容量案例使用另一個獨立 MySQL job，不帶 coverage 插樁。2026-10-20 依 Sam 指示將 CI 測試規模降至原來 1/5：2,000 張／10,000 行、10 位使用者及 10 個客戶；獨立 parser 案例為 1MiB／200 張預熱及 10MiB／2,000 張上限樣本。原有 1／100 行互動訂單分布、P95≤3 秒、每階段至少 50 個確認樣本、30 分鐘期限、worker／連線池設定、零失敗及完整庫存對帳均保留；GC 後記憶體增長門檻仍為 16／32／64MiB。較短負載透過既有手動喚醒接口觸發註冊的缺貨分配 job，保留排程租約與結果斷言。此 CI 規模不代表原 10,000 張／50 人或 50MiB 全量驗收通過，也不修改產品匯入上限。原全域及高風險檔案 coverage 門檻維持不變。
 
 Server 使用 Node 原生 `--test-shard=1/4` 至 `4/4` 分配原本的完整測試集合；每組各有獨立 MySQL，組內仍以 `--test-concurrency=1` 串行執行。Client coverage 獨立執行，不再等待 Server。既有兩組無插樁容量測試只在 Server 第一組執行一次。
 
