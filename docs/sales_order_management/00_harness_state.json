@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1082,
+  "revision": 1085,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "af176fea5409aadc193a2f397750344b9c4cc217ea77b10bffeebda1265e5fdb",
     "plan": "99a048fd69847b62c6345836baf431f33a20b4c137fa3702e0c8a2d8c430be03",
-    "code_commit": "a4d472c43c3e534ab95fa2ae0628031b78bad631",
-    "source_fingerprint": "26baa91c1262799a341a6bcb75c3ce7d9acbad70127fe257f1eec514287c3ac5",
+    "code_commit": "2a6a6441de89a4ca68c3df8a8eea57829531c1ed",
+    "source_fingerprint": "2861dd72c7bdf2539388d3f6b4eb9ec9cc6342308c2fc5efa5803ffe040cf052",
     "worktree": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app",
     "default_commit": "4439014e9a9d03f233e858e56f93617e787ecb8c",
     "mode_entry_commit": "4439014e9a9d03f233e858e56f93617e787ecb8c"
@@ -23,7 +23,7 @@
     "resources": {
       "workspace": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app",
       "temp-directory": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private",
-      "mysql-instance": "READY sameownedpid16287/socket, two synthetic schemasthrough0089;90migrationrecords each, old88names/timestamps exact, originalgrants unchanged; no businessArchive effects.",
+      "mysql-instance": "Historical READY record superseded by actual PID16287 absent observation task057-runtime-pid-observation-r1.json; old data/socket ownership/outcome not yet reconciled. No SQL/reset/reuse/cleanup authorized by this observation.",
       "database": "erp_sales_p4_c6b1e4326668_core,erp_sales_p4_c6b1e4326668_focused"
     },
     "lease_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/runtime-continuation-r2.json SHA256e82a01289f5a154b2230e51c20db252b179f54b267aa5a8f9bfcf2e2b2eaf6f6"
@@ -9553,6 +9553,30 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-DEC029-PROPOSAL-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "83cffc9f27a87f1552f77d373b367e3d13db9708d0f4f37cacb8aa7324dce38c",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-fulfillment-prerequisite-proposal-r1-reviewer-proof.json SHA25652a6fac3fa7ccab72e92bf1558c705812d69135380ea406d8294e690d61e5a86; prospective proposal approval only, not human/implementation/merge approval.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK057-LOCAL-ELIGIBILITY-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "54a5aa98222ad2d6e903d9d1b97ab98dac4c2b131f4e851b92b164766700db15",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/task057-local-eligibility-r1-reviewer-proof.json SHA25654ba5c446689b4689e775c33688ac77e54751b5e5680d1b49aa88743292e904b; scoped pure policy only; TASK057 remains BLOCKED.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -12536,6 +12560,28 @@
       "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/task057-provider-dependency-observation.json SHA256eebe1d03460dee5007a72d57f0d125d70480f5c08c8dde8099f631bfb0a154ff; report96 existing approved conditional implementation, no Archive exception and no new permission required.",
       "actor": "Codex /root",
       "observed_at": "2026-10-16T10:13:47.436651+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK057 local eligibility37/focused regression47 PASS, no fail/skip; real owner dependency still BLOCKED and DEC029 pending",
+      "code_commit": "2a6a6441de89a4ca68c3df8a8eea57829531c1ed",
+      "spec_baseline": "99a048fd69847b62c6345836baf431f33a20b4c137fa3702e0c8a2d8c430be03",
+      "source_fingerprint": "2861dd72c7bdf2539388d3f6b4eb9ec9cc6342308c2fc5efa5803ffe040cf052",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/108_task057_local_eligibility_partial.md; local RED/GREEN/focused logs retained. Not fullPhase/formal/merge readiness.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-20T08:02:34.038657Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Historical P4 MySQL PID16287 no longer present; no data-loss inference or runtime mutation; fresh owned runtime requires prior resource reconciliation",
+      "code_commit": "2a6a6441de89a4ca68c3df8a8eea57829531c1ed",
+      "spec_baseline": "99a048fd69847b62c6345836baf431f33a20b4c137fa3702e0c8a2d8c430be03",
+      "source_fingerprint": "2861dd72c7bdf2539388d3f6b4eb9ec9cc6342308c2fc5efa5803ffe040cf052",
+      "status": "BLOCKED",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/task057-runtime-pid-observation-r1.json",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-20T08:04:17.449354Z"
     }
   ],
   "pending_decisions": [
@@ -12902,6 +12948,19 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Actual direct Sam current chat reply to DEC028: 批准 DEC-028 單一共享頁首補正（建議）. Exact patch828a6b6d/prospective onefile scope7e0466d4. Adds only AppTopbar.vue, presentation ellipsis preserving full accessible name; all tests, invariants, business/permissions and Phase boundaries unchanged. New bindings mechanically derived from this specific human answer; not a new human hash inspection. Old approvals retained. UAT014015 applicability unchanged, only reference rebinding causes prospective PLAN change. No Fulfillment/defect waiver or formal UAT/release authority."
+    },
+    {
+      "id": "DEC-029",
+      "impact": "MAJOR",
+      "status": "ANSWERED",
+      "affected_ids": [
+        "PHASE-005",
+        "TASK-057",
+        "TASK-058",
+        "TASK-063"
+      ],
+      "question": "Adopt exact proposal107 SHA83cffc9f27a87f1552f77d373b367e3d13db9708d0f4f37cacb8aa7324dce38c: Sam dual-owner named shared/provider contribution governed by Sales IMPLEMENT execution unit; real owner12active/12mirror/operations/forwardmigrations/OpenMatter/transactionparticipant, specifiedprovider/test/docs paths; new064-068 and057->066/058->067/063->068; ownerrecords frozen before sourcechecks; retain all original39 Sales suites/fullcapacity/fullPhase/currentCI plus added mandatory owner suites. One completeP4 PR; no partialmerge or Fulfillment45task/12TC/120UAT completion claim. Actual separate prospective review52a6fac3fa7ccab72e92bf1558c705812d69135380ea406d8294e690d61e5a86. Alternative wait original wholeFulfillment prerequisites. Existing Git/ownedruntime authority preserved. Await actualhuman before new cross-module implementation.",
+      "answer_ref": "Actual direct Sam current Codex chat reply to exact DEC029 request: 批准 DEC-029 正式依賴切片及交付順序（建議）. Adopts proposal107 SHA83cffc9f27a87f1552f77d373b367e3d13db9708d0f4f37cacb8aa7324dce38c / actual independentreview52a6fac3; dual-owner precise shared/provider persistence/OpenMatter/transactionparticipant/migrations/test/docs scope, Sales IMPLEMENT singleexecutionunit/new064-068/dependency order/frozenownerrecords/addmandatorysuites/fulljointP4PR. Original39/fullcapacity/normalCI/allPhase/formal/UAT/owner45task obligations retained. Existing Git/isolatedruntime authority persists; no production/fullFulfillmentcompletion/acceptance waiver. New canonical D/P/SCOPE bindings must be derived transparently, not rewrite old approvals."
     }
   ],
   "external_actions": [
@@ -15200,6 +15259,14 @@
       "idempotency_key": "task055-system-audit-cleanup-acbde246",
       "status": "CONFIRMED",
       "source_ref": "/private/tmp/p4-task055-system-audit-cleanup.mjs SHA256acbde246bdda62dd1a9b034cd455324e3c55fe7672d0fb69b58aa64034f7bad7; actualseparateprospectiveproof /Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/task055-system-audit-cleanup-r1-reviewer-proof.json SHA256c1c020e0a8f9b5def880529370557a9e5ee66e20560959c1b34b9db37298359a; actualR4joined27PASS, fullpinJSONpreserved856e8519. Executeonce, unknownCOMMITmustreconcile. FutureownedjobJOINcleanup fixed. Actualexit0 /Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/task055-system-audit-cleanup-confirmed.json SHA256585cd19d8ed61d9975098470b6f30e290e4765c81864a1943f7ddf6d0d3b88a4"
+    },
+    {
+      "id": "P4-DEC029-INTEGRATE-MAIN-64BEE",
+      "kind": "GIT_MERGE",
+      "target": "codex/sales-order-phase-4-archive <- origin/main64bee2e00dfae71131c7cfa54049cac0941d6f85",
+      "idempotency_key": "p4-dec029-integrate-64bee",
+      "status": "PLANNED",
+      "source_ref": "Actual DEC029 human approval and fetchedorigin/main64bee. Preserve and reconcile histories, not blind ours/theirs."
     }
   ],
   "evidence_files": [
@@ -15850,7 +15917,15 @@
     "evidence/20261015T093503-c0d3c96bfee3/run.json",
     "evidence/20261015T093558-dc6189567e53/run.json",
     "evidence/20261015T093602-1708005edb98/run.json",
-    "evidence/20261015T093638-a7d6f5e8db47/run.json"
+    "evidence/20261015T093638-a7d6f5e8db47/run.json",
+    "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/task057-local-policy-red.log",
+    "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/task057-local-policy-red-r2.log",
+    "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/task057-local-policy-green.log",
+    "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/task057-focused-regression.log",
+    "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-fulfillment-dependency-currentmain-r1-reviewer-proof.json",
+    "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-fulfillment-prerequisite-proposal-r1-reviewer-proof.json",
+    "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/task057-local-eligibility-r1-reviewer-proof.json",
+    "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/task057-runtime-pid-observation-r1.json"
   ],
   "defects": [
     {
@@ -16086,5 +16161,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Resume TASK057 when real FulfillmentOpenMatterService.getOrderArchiveStatus and same-transaction FulfillmentArchiveParticipant.archiveOrderInTransaction owner contracts/provider are available. TASK050-056 done; strict dependencies block058-063. Preserve existing implementation/commit/PR/main-merge authority, all39/currentCI/wholePhase/freshmain Gates and raw memory observations. No partial main merge or fake CLOSED/participant; existing P2 exception does not enableArchive."
+  "next_safe_action": "DEC029 actually approved. Preserve local checkpoint and both canonical histories; integrate fresh origin/main64bee2e0, then install exact sharedscope/new064-068/mandatorysuitecontracts/ownerpins and derivedhumanD/P/SCOPE bindings, independentreview/unchangedPLAN_READY andboundary before cross-module productwrites. Continue actual P4 allGates then merge."
 }
