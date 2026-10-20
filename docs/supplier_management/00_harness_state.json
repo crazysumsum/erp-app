@@ -1,11 +1,11 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 376,
+  "revision": 377,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
-  "status": "BLOCKED",
-  "resume_status": "IMPLEMENTING",
+  "status": "IMPLEMENTING",
+  "resume_status": null,
   "current_phase": "PHASE-004",
   "current_task": "TASK-051",
   "baseline": {
@@ -6002,8 +6002,8 @@
         "HD-113",
         "TASK-051"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-20: 'HD-114 A，CI 過就 merge' — accept the 0087 procedure after REV-100 H-1: keep the foreign key and reorder the indexes in one INPLACE statement; resulting schema as approved in HD-113 A (APPROVAL-HD-113-SCOPE covers the same migration path)."
     }
   ],
   "external_actions": [
@@ -7112,5 +7112,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "HD-114 (0087 procedure after REV-100 H-1) awaits the Product Owner. PR for claude/supplier-task-051-tests-6 open; merge needs HD-114 answered, every check SUCCESS and the user's word. Then MIG-001..006 carriers."
+  "next_safe_action": "PR #251: merge when every check is SUCCESS (Product Owner, 'CI 過就 merge'), gated in code; record the merge as the first commit of the next change PR. Then MIG-001..006 carriers."
 }
