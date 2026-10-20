@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1267,
+  "revision": 1268,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "ef5e7624f64ce0e819a85cadf0d3a43c15104421c1ef068549ef63d5189d13cd",
     "plan": "b791cec4ed059697c859b00b49c94d8d8b35c13ca031c8a8ab16ff633a642ba1",
-    "code_commit": "7fdb6877afbb55dd646133ffe46f193dadebbb5e",
-    "source_fingerprint": "11148002e2502f914c460dd7be3b9bd1f6e9ece619821eefb28a0dcd6ef48722",
+    "code_commit": "d4a1c701618f1041cb3375f510d9e268e9c4bedc",
+    "source_fingerprint": "503973d7356f0e61003ce911d3f52953f3fec1bca1fe9af9db18b774f0ab7e56",
     "worktree": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app",
     "default_commit": "64bee2e00dfae71131c7cfa54049cac0941d6f85",
     "mode_entry_commit": "4439014e9a9d03f233e858e56f93617e787ecb8c"
@@ -14159,6 +14159,17 @@
       "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/dec029-main-history-reconciliation-audit.json; immutable original states in commit6a2a57f7, main64bee and snapshotb78c; all788 actual runner refs retained. The8 raw proof/log references remain observations only. Custody oldprefix resolution uses vault final-delivery-receipt.json.",
       "actor": "Codex /root",
       "observed_at": "2026-10-20T08:18:21.117579Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEC029 original PLAN_READY/boundary zeroissues; TASK065 partial ownerhash18+eligibility37+migrations7=62PASS0FAIL0SKIP and scopedlintPASS, native/providers/fullPhase pending",
+      "code_commit": "d4a1c701618f1041cb3375f510d9e268e9c4bedc",
+      "spec_baseline": "b791cec4ed059697c859b00b49c94d8d8b35c13ca031c8a8ab16ff633a642ba1",
+      "source_fingerprint": "503973d7356f0e61003ce911d3f52953f3fec1bca1fe9af9db18b774f0ab7e56",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/109_dec029_plan_activation_and_owner_hash_partial.md; actual raw logs private, not indexed as typed suite evidence. No taskDONE/currentCI/fullPhase/merge claim.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-20T08:40:27.989565Z"
     }
   ],
   "pending_decisions": [
@@ -18168,5 +18179,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Sales IMPLEMENT executes exact DEC029 shared contribution and original completeP4 Gate. Owner45task/fullPhase/formalTC/UAT readiness is not asserted; keep canonical owner records frozen before final Sales source verification."
+  "next_safe_action": "Native runtime exactreview+bind+PLANNEDaction, then freeze source/canonical during one setup. Do not include unreviewed owner0091+ in setup inventory. Native upgrade0090 and owner schema/provider/participant/coordinator still incomplete. All45 developer/currentCI/review/unchangedGate before fullP4 merge."
 }
