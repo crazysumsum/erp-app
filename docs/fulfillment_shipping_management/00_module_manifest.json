@@ -106,9 +106,9 @@
     "provided": [
       {
         "id": "fulfillment-shipment-and-reversal-contract",
-        "version": "proposed-planning-v2-NOT_APPROVED_NOT_IMPLEMENTED",
+        "version": "planning-v2-DECISIONS_ADOPTED-BASELINE_REVIEW_PENDING",
         "source": "docs/fulfillment_shipping_management/03_design_spec.md",
-        "sha256": "cd1456c10357455f31f701d54219d75026fd545eed5f454caf51e6d34de06649",
+        "sha256": "052db6484abc9a47824baf006dcfb62fd50cfe5413b1a6fde5b2479e5acfb89a",
         "consumers": [
           "sales-order-management",
           "inventory-management",

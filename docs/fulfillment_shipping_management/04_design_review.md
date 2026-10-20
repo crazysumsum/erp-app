@@ -1,6 +1,6 @@
 # Fulfillment & Shipping Management Design Review
 
-> 2026-10-20 readiness requalification: current candidate is `PROPOSED / BLOCKED`, pending HD-006 / HD-007 and independent review. The 2026-09-14 approvals below are historical and do not approve this candidate. See [current readiness and decisions](10_implementation_readiness.md).
+> 2026-10-20: Sam selected A+A for HD-006 (P0 contract checkpoint sequence) and HD-007 (MySQL 26.7.0). These decisions are adopted; full current-baseline approval and independent review remain outstanding. Historical approvals below retain their original scope. See [decision adoption and readiness](10_implementation_readiness.md#decision-adoption--2026-10-20).
 
 ## Review result
 

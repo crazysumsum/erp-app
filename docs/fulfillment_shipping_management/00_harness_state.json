@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 9,
+  "revision": 11,
   "mode": "REVIEW_AND_ALIGN",
   "active_mode": "REVIEW_AND_ALIGN",
   "status": "BLOCKED",
@@ -9,9 +9,9 @@
   "current_phase": null,
   "current_task": null,
   "baseline": {
-    "design": "683abcc2192073c57df58023bd876f03904e868d27181a3cd1d438df1c452e27",
-    "plan": "234867a700205bacd60800173655bfbc391de18dfa241d07477dd20bd8415a96",
-    "code_commit": "1811e2fcd170126773fc4c56e63e10855cbb16a1",
+    "design": "329d29496802aa2d6405a3aabb743a4b80ab8182748e82824a8bb688811965dc",
+    "plan": "83a958c6bab1eff0ab81ae6cb73c508f016aaecbe6defd39ab87c9c403e0824c",
+    "code_commit": "e911c5ef5b777d4e997e4f401d5ea4381ebdf481",
     "source_fingerprint": "70eed2ff3e806da18ce44c0711712425806ffde3dbfaf3412457cf3e39fc4143",
     "worktree": "/private/tmp/erp-fulfillment-readiness",
     "default_commit": "64bee2e00dfae71131c7cfa54049cac0941d6f85",
@@ -190,6 +190,24 @@
         "Unchanged decision re-bound to plan baseline d9e729935b8a3094241f5c9f438a4bda7d576468a7c4ed74063e7814b6b5657a; supersedes HD-003."
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-005-DECISIONS-AA",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner), direct user in this chat",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/10_implementation_readiness.md#decision-adoption--2026-10-20",
+      "recorded_at": "2026-10-20T08:49:34+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "83a958c6bab1eff0ab81ae6cb73c508f016aaecbe6defd39ab87c9c403e0824c",
+      "code_commit": "64bee2e00dfae71131c7cfa54049cac0941d6f85",
+      "scope": [
+        "HD-006 option A: existing provider cores at P0 entry; provider extensions and Checkpoint0B gate TASK007 persistence; four phases, single P0 PR and full original exit gates preserved",
+        "HD-007 option A: MySQL26.7.0 development/test support target, no8.0 support claim or production upgrade",
+        "Derived baseline reflects only adopting the presented decisions/status normalization and provided-source repin; not full DESIGN/PLAN approval, independent review, shared-path write approval, NFR023 renewal, IMPLEMENT, GitHub push, PR or merge permission"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -304,8 +322,8 @@
         "TASK-007",
         "TC-010"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "docs/fulfillment_shipping_management/10_implementation_readiness.md#decision-adoption--2026-10-20; actual user reply A＋A in this chat adopts option A."
     },
     {
       "id": "HD-007",
@@ -319,8 +337,8 @@
         "TC-009",
         "NFR-025"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "docs/fulfillment_shipping_management/10_implementation_readiness.md#decision-adoption--2026-10-20; actual user reply A＋A in this chat adopts option A."
     }
   ],
   "external_actions": [
@@ -407,5 +425,5 @@
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Local candidate only. Read10_implementation_readiness.md: await HD006A/B, HD007A/B and actual independent DESIGN/PLAN/NFR023 review. Automatic approval review rejected git push before execution for missing explicit internal-document egress authorization to github.com/crazysumsum/erp-app; no push or PR occurred. Do not use another connector or retry until actual user publication permission. If authorized, first inspect/fetch remote state, publish documentation-only branch and draft PR, record receipts and retain branch until PR resolution. No IMPLEMENT/upstream code/schema/migration/deploy/merge/other-chat messaging authority; all45TasksPENDING. Candidate source baseline64bee2e0; local metadata commits do not imply new product code/test authority."
+  "next_safe_action": "HD006A and HD007A were expressly adopted by Sam reply A＋A; do not re-ask either choice. Decisions and derived hashes are recorded in10_implementation_readiness.md. Remain BLOCKED on actual independent current-baseline review, full DESIGN/PLAN approval and unchanged NFR023 UAT_NA renewal; exact provider contract/shared-path decisions before relevant implementation, IMPLEMENT scope and isolated runtime remain separate. GitHub publication was not authorized by A＋A: preserve prior auto-review push rejection, no retry/connector workaround until explicit user egress permission. All45tasksPENDING; no new product/native/browser/formal acceptance claim."
 }

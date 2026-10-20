@@ -1,6 +1,6 @@
 # Fulfillment & Shipping Management 系統設計規格（Harness Aligned）
 
-> 2026-10-20 readiness requalification: current candidate is `PROPOSED / BLOCKED`, pending HD-006 / HD-007 and independent review. The 2026-09-14 approvals below are historical and do not approve this candidate. See [current readiness and decisions](10_implementation_readiness.md).
+> 2026-10-20: Sam selected A+A for HD-006 (P0 contract checkpoint sequence) and HD-007 (MySQL 26.7.0). These decisions are adopted; full current-baseline approval and independent review remain outstanding. Historical approvals below retain their original scope. See [decision adoption and readiness](10_implementation_readiness.md#decision-adoption--2026-10-20).
 
 ## 0. 文件資訊、決策及設計門檻
 
@@ -9,9 +9,9 @@
 | 文件名稱 | Fulfillment & Shipping Management 系統設計規格 |
 | 對應需求 | `docs/fulfillment_shipping_management/01_requirement_spec.md` 0.2 Approved Planning Baseline |
 | 目標版本 | Phase 1（中小企核心履約及出貨） |
-| 技術棧 | Node.js ES Modules、Express 5、AJV、MySQL 26.7.0（HD-007候選，未批准）、Vue 3、Quasar 2、Pinia、Vitest／Node Test Runner |
+| 技術棧 | Node.js ES Modules、Express 5、AJV、MySQL 26.7.0（HD-007已採納A）、Vue 3、Quasar 2、Pinia、Vitest／Node Test Runner |
 | 容量基線 | 每日約10,000張SO、最多5個Warehouse、24個月最少730萬張Active Fulfillment及Shipment |
-| 文件狀態 | PROPOSED／BLOCKED：HD-006／HD-007待批准；2026-09-14批准只適用歷史基線，尚未授權IMPLEMENT |
+| 文件狀態 | DECISIONS_ADOPTED／BLOCKED：HD-006／HD-007已採納A＋A；完整當前基線審批及獨立review待完成，尚未授權IMPLEMENT |
 | 版本 | 0.2 Approved Planning Baseline |
 
 ### 0.1 已鎖定架構決策
@@ -368,7 +368,7 @@ Shipment Reversal後保持Ordered、Backorder及Cancelled不變，把該Shipment
 - Quantity使用`BIGINT UNSIGNED` Base UOM；不可用JavaScript浮點運算。
 - Current aggregate使用`version INT UNSIGNED NOT NULL DEFAULT 1`作CAS。
 - Active master FK採`ON DELETE RESTRICT`；aggregate children可在受控archive transaction使用CASCADE。
-- 候選MySQL 26.7.0（HD-007未批准）保留強制執行`CHECK`的設計要求，單行數量／狀態守衛可使用CHECK；跨行、跨aggregate及狀態機規則仍由service＋BEFORE trigger＋integration test三層保護。（2026-09-14 對齊更正：原文為「MySQL 5.7不可靠執行CHECK」；專案CI實際執行`mysql:8.0`，且Inventory與Purchasing已批准基線同為MySQL 8.0，決策 HD-001。）
+- MySQL 26.7.0（HD-007已採納A）保留強制執行`CHECK`的設計要求，單行數量／狀態守衛可使用CHECK；跨行、跨aggregate及狀態機規則仍由service＋BEFORE trigger＋integration test三層保護。（2026-09-14 對齊更正：原文為「MySQL 5.7不可靠執行CHECK」；專案CI實際執行`mysql:8.0`，且Inventory與Purchasing已批准基線同為MySQL 8.0，決策 HD-001。）
 - History、Issue details、Reversal details及Archive tables無一般update／delete repository；trigger拒絕非archive maintenance變更。
 - Migration不在本文件硬編序號；依§9.3切片並於實作時使用main下一個可用值。
 

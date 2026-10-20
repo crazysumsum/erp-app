@@ -2,7 +2,7 @@
 
 ## Outcome and authority
 
-`BLOCKED / PROPOSED` — documentation preparation only, `REVIEW_AND_ALIGN`, observed on 2026-10-20 (Asia/Hong_Kong). The user requested the readiness review and then instructed「按建議進行」; that authorizes this concrete preparation, not approval of an unseen compatibility/contract change or entry into implementation. No product source, migration, shared config, other module, deployed service or database is changed.
+`DECISIONS_ADOPTED / BLOCKED` — HD-006/HD-007 A+A adopted; documentation preparation only, `REVIEW_AND_ALIGN`, observed on 2026-10-20 (Asia/Hong_Kong). The user requested the readiness review and then instructed「按建議進行」; the subsequent direct user reply「A＋A」adopts the two presented recommendations. It does not authorize entry into implementation or GitHub publication. No product source, migration, shared config, other module, deployed service or database is changed.
 
 Fetched `origin/main` and observed local main equal to `64bee2e00dfae71131c7cfa54049cac0941d6f85`, then created branch `codex/fulfillment-readiness-alignment` in `/private/tmp/erp-fulfillment-readiness`. Recovery is that immutable commit. All observations below apply to it, not to unmerged neighboring worktrees. Source fingerprint: `70eed2ff3e806da18ce44c0711712425806ffde3dbfaf3412457cf3e39fc4143`.
 
@@ -31,7 +31,7 @@ Decision required: the old entry gate required the very extensions that TASK-004
 - **A — Recommended:** retain the same four Phases and single P0 PR. Require merged provider cores at entry; TASK-001 inventories extension gaps; TASK-002/003 do permissions/pure rules; provider owners complete TASK-004–006; Checkpoint 0B blocks TASK-007–010 until every contract proof passes. This resolves the circular start without weakening the P0 exit gate. It requires explicit current-plan SCOPE approval for shared/upstream paths before implementation and exact cutover authority before any live schema activation.
 - **B — Preserve the old all-contracts-before-P0 gate:** upstream owners deliver and merge missing contracts in separate scoped PRs first; revise TASK-004–006 to consumer integration only before starting P0. This preserves strict upstream-before-consumer delivery, but changes PR sequencing and requires a further plan revision.
 
-Default recommendation is A; no answer is inferred. Neither option authorizes source changes, migrations, deployment, messaging other chats, merging this planning PR or bypassing owner/CI/review gates.
+Sam adopted A through the direct reply「A＋A」; B is retained as the unselected alternative. Neither option authorizes source changes, migrations, deployment, messaging other chats, merging this planning PR or bypassing owner/CI/review gates.
 
 ## HD-007 — Database compatibility candidate
 
@@ -40,9 +40,9 @@ Historical HD-001 approved MySQL 8.0. Current `.github/workflows/ci.yml` pins `m
 - **A — Recommended:** approve 26.7.0 as Fulfillment's development/test support baseline, matching the shared Inventory/Sales runtime and current CI. Candidate target statements are already marked HD-007/PROPOSED in design §0/§4.1, plan §1.2/§1.4/PHASE-001 and TC-001/TC-009 prerequisites. Preserve service/trigger/enforced-CHECK protections, same schema/transaction semantics, capacity/coverage and all acceptance cases. No production upgrade or claimed 8.0 support is included.
 - **B — Retain 8.0:** revert only this candidate's target-version edits, then supply a separate verified 8.0 runtime/CI path and prove upstream/migration compatibility on it. This keeps historical platform support but adds validation cost and may expose current upstream incompatibilities; 26.7 runs never count as 8.0 evidence.
 
-Default recommendation is A; no answer is inferred. After either choice, execute true MySQL migration, FK/trigger, concurrency/rollback and recovery proofs in the authorized implementation stage.
+Sam adopted A through the direct reply「A＋A」; B is retained as the unselected alternative. Following that decision, execute true MySQL migration, FK/trigger, concurrency/rollback and recovery proofs in the authorized implementation stage.
 
-## Candidate hashes and review disposition
+## Historical candidate hashes and review disposition
 
 The candidate uses observed hashes for one provided and six consumed contract sources, all labeled `REVIEW_PENDING` / `NOT_APPROVED_NOT_IMPLEMENTED`; this repairs stale references without declaring compatibility. Previous approvals/reviews remain immutable historical records, not rebound signatures.
 
@@ -68,16 +68,29 @@ These use injected test executors and do not prove real MySQL, Fulfillment consu
 - Traceability: `STRUCTURE_PASS`; matrix regenerated deterministically. 145 requirements / 14 designs / 4 Phases / 45 Tasks / 12 TC / 120 UAT retained.
 - Contract pins: all seven match observed files; not semantic adoption.
 - Approval-aware traceability: BLOCKED on stale NFR-023 N/A approval until renewed.
-- PLAN_READY: BLOCKED on HD-006/HD-007, current DESIGN/PLAN approval and independent review; resolving hashes is not readiness.
+- PLAN_READY: HD-006/HD-007 are now answered A+A; current DESIGN/PLAN approval, NFR-023 renewal and independent review remain blocking; resolving hashes is not readiness.
 - Boundary / whitespace / local links: checked before the planning commit; scope limited to this documentation directory.
 - Migration inventory: 84 JavaScript files, highest prefix 0087, no duplicate numeric prefix at the observed baseline. No sequence reserved; re-inventory on actual implementation start.
 - Browser: root Playwright pin and CI job exist. Current CI runs `e2e:mocked` for other modules; Fulfillment suite/profile/CI coverage remains a PHASE-002 delivery obligation, not a reason to claim no browser tooling exists.
 - External freshness: fetched main before branch creation; re-fetch and inspect target changes before future merge. Publication is blocked pending explicit user egress approval; no remote branch or PR was created, and no merge authorization is implied.
 
-Next safe action: obtain HD-006/HD-007 and independent baseline review; resolve any exact provider contract/scope and installation choices; record current DESIGN/PLAN/NFR-023 decisions; only then assess PLAN_READY and request/record the intended IMPLEMENT scope. Business acceptance and release sign-off remain open by design.
+Next safe action: HD-006/HD-007 are answered; obtain independent baseline review; resolve any exact provider contract/scope and installation choices; record current DESIGN/PLAN/NFR-023 decisions; only then assess PLAN_READY and request/record the intended IMPLEMENT scope. Business acceptance and release sign-off remain open by design.
 
 ## Publication disposition
 
 Local planning commit `1811e2fc` preserves the substantive candidate; the following local metadata commit records this disposition. Automatic approval review rejected `git push -u origin codex/fulfillment-readiness-alignment` before execution: the user authorized local preparation but had not specifically authorized egress of potentially sensitive internal readiness documentation to `https://github.com/crazysumsum/erp-app`. No alternate connector or indirect push was used. No remote branch, pull request or merge was created by this work. The intended draft PR remains PLANNED pending explicit user permission to publish these exact documents to that repository.
 
 Local worktree/branch are intentionally retained for review. Before any authorized retry, inspect actual remote state and fetch main; do not replay an unknown external action. Publishing permission alone does not decide HD-006/HD-007 or authorize product implementation.
+
+## Decision adoption — 2026-10-20
+
+Actual source: Sam's direct reply「A＋A」in this Codex chat, following the two-row decision summary and linked candidate report. HD-006 option A and HD-007 option A are ANSWERED/ADOPTED. The presented candidate was DESIGN `683abcc2192073c57df58023bd876f03904e868d27181a3cd1d438df1c452e27`, PLAN `234867a700205bacd60800173655bfbc391de18dfa241d07477dd20bd8415a96`.
+
+P0 now requires existing provider cores at entry, TASK-004–006 completion and Checkpoint 0B before persistence/schema; all original exit gates and source ownership remain. The development/test platform target is MySQL 26.7.0; enforced CHECK/service/trigger protections, existing requirements and all acceptance criteria remain. 8.0 support or a production database upgrade is not adopted.
+
+Only decision-status wording and the resulting provided-source pin changed after the presented candidate. Codex computed the resulting hashes under that scoped decision; Sam is not claimed to have separately inspected these derived hashes. This is a scoped decision approval, not a fabricated full DESIGN/PLAN approval, independent review, UAT N/A renewal or IMPLEMENT authorization. Historical approvals and reviews remain unchanged.
+
+- Derived DESIGN: `329d29496802aa2d6405a3aabb743a4b80ab8182748e82824a8bb688811965dc`
+- Derived PLAN: `83a958c6bab1eff0ab81ae6cb73c508f016aaecbe6defd39ab87c9c403e0824c`
+
+Remaining gates: actual independent current-baseline review, full DESIGN/PLAN approval and renewal of unchanged NFR-023 UAT N/A; provider-owner exact contract/shared-path decisions before relevant implementation; explicit IMPLEMENT scope and isolated runtime. A+A does not address the separate publication-permission request. The previous automatic push rejection remains effective; do not retry or switch connector without explicit GitHub egress permission.
