@@ -163,8 +163,9 @@ export class SupplierContactService {
         [contact.name, contact.jobTitle, contact.department, contact.email, contact.phone, contact.mobile,
           contact.preferredLanguage, contact.notes, nowMs, input.actorId, input.contactId, input.supplierId, input.version]
       );
+      // 鎖住讀：其他請求可能喺我哋等 Supplier 鎖嗰陣改過用途；普通 SELECT 會讀到舊 snapshot（REV-099 F-2）。
       const [beforePurposes] = await connection.query(
-        "SELECT purpose_code, is_primary FROM supplier_contact_purposes WHERE contact_id = ? AND supplier_id = ? ORDER BY purpose_code", [input.contactId, input.supplierId]);
+        "SELECT purpose_code, is_primary FROM supplier_contact_purposes WHERE contact_id = ? AND supplier_id = ? ORDER BY purpose_code FOR UPDATE", [input.contactId, input.supplierId]);
       await this.#replacePurposes(connection, { supplierId: input.supplierId, contactId: input.contactId, purposes: contact.purposes, actorId: input.actorId, nowMs, replace: true });
       const projected = await this.#project(connection, input.supplierId, input.contactId);
       await this.audit.record(connection, {

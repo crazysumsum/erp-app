@@ -149,17 +149,28 @@ integrationTest("TC-103 (AUD-001): every state-changing or sensitive Supplier ac
     exercised.add(`supplier.${kind}.create`);
     return { id: childId, version: response.json.data.version };
   };
-  const address = await child("address", { label: "HQ", purposes: [] }, "HQ");
-  const addressUpdated = await step("address update", mgmt, () => send(mgmt, "POST /api/v1/suppliers/:supplierId/addresses/:addressId/update",
-    { ids: { supplierId: id, addressId: address.id }, body: { version: address.version, label: "HQ2", purposes: [] } }),
+  // 用途有內容：淨係排次序唔同唔算改；primary 改咗要按 code 排好記前後（HD-112 A，REV-099 F-3）。
+  const address = await child("address", { label: "HQ", purposes: [{ purposeCode: "ordering", isPrimary: true }, { purposeCode: "office", isPrimary: false }] }, "HQ");
+  const addressRenamed = await step("address update", mgmt, () => send(mgmt, "POST /api/v1/suppliers/:supplierId/addresses/:addressId/update",
+    { ids: { supplierId: id, addressId: address.id }, body: { version: address.version, label: "HQ2",
+      purposes: [{ purposeCode: "office", isPrimary: false }, { purposeCode: "ordering", isPrimary: true }] } }),
   { "supplier.address.update": ["address", address.id, "HQ2"] }, { supplierId: id, details: { "supplier.address.update": (detail) =>
-    assert.deepEqual(detail, { before: { label: "HQ" }, after: { label: "HQ2" } }, "only the changed field (HD-112 A)") } });
+    assert.deepEqual(detail, { before: { label: "HQ" }, after: { label: "HQ2" } }, "only the changed field; a reorder is no change") } });
+  const addressUpdated = await step("address update purposes", mgmt, () => send(mgmt, "POST /api/v1/suppliers/:supplierId/addresses/:addressId/update",
+    { ids: { supplierId: id, addressId: address.id }, body: { version: addressRenamed.json.data.version, label: "HQ2",
+      purposes: [{ purposeCode: "ordering", isPrimary: false }, { purposeCode: "office", isPrimary: true }] } }),
+  { "supplier.address.update": ["address", address.id, "HQ2"] }, { supplierId: id, details: { "supplier.address.update": (detail) =>
+    assert.deepEqual(detail, {
+      before: { purposes: [{ purposeCode: "office", isPrimary: false }, { purposeCode: "ordering", isPrimary: true }] },
+      after: { purposes: [{ purposeCode: "office", isPrimary: true }, { purposeCode: "ordering", isPrimary: false }] }
+    }, "primary change, sorted by code") } });
   await step("address deactivate", mgmt, () => send(mgmt, "POST /api/v1/suppliers/:supplierId/addresses/:addressId/deactivate",
     { ids: { supplierId: id, addressId: address.id }, body: { version: addressUpdated.json.data.version } }),
   { "supplier.address.deactivate": ["address", address.id, "HQ2"] }, { supplierId: id });
-  const contact = await child("contact", { name: "Amy", purposes: [] }, "Amy");
+  const contact = await child("contact", { name: "Amy", purposes: [{ purposeCode: "sales", isPrimary: false }, { purposeCode: "orders", isPrimary: true }] }, "Amy");
   const contactUpdated = await step("contact update", mgmt, () => send(mgmt, "POST /api/v1/suppliers/:supplierId/contacts/:contactId/update",
-    { ids: { supplierId: id, contactId: contact.id }, body: { version: contact.version, name: "Amy Two", purposes: [] } }),
+    { ids: { supplierId: id, contactId: contact.id }, body: { version: contact.version, name: "Amy Two",
+      purposes: [{ purposeCode: "orders", isPrimary: true }, { purposeCode: "sales", isPrimary: false }] } }),
   { "supplier.contact.update": ["contact", contact.id, "Amy Two"] }, { supplierId: id, details: { "supplier.contact.update": (detail) =>
     assert.deepEqual(detail, { before: { name: "Amy" }, after: { name: "Amy Two" } }, "only the changed field (HD-112 A)") } });
   await step("contact deactivate", mgmt, () => send(mgmt, "POST /api/v1/suppliers/:supplierId/contacts/:contactId/deactivate",
@@ -169,7 +180,9 @@ integrationTest("TC-103 (AUD-001): every state-changing or sensitive Supplier ac
   const identifierUpdated = await step("identifier update", mgmt, () => send(mgmt, "POST /api/v1/suppliers/:supplierId/identifiers/:identifierId/update",
     { ids: { supplierId: id, identifierId: identifier.id }, body: { version: identifier.version, identifierType: "business_registration",
       issuerCountryCode: "HK", identifierValue: `AV${t}`, reason: REASON } }),
-  { "supplier.identifier.update": ["identifier", identifier.id, "business_registration:HK"] }, { reason: REASON, supplierId: id });
+  { "supplier.identifier.update": ["identifier", identifier.id, "business_registration:HK"] }, { reason: REASON, supplierId: id, details: {
+    "supplier.identifier.update": (detail) => assert.deepEqual(detail, { before: { identifierValue: `AU${t}` }, after: { identifierValue: `AV${t}` } },
+      "only the changed field (REV-099 F-4)") } });
   await step("identifier delete", mgmt, () => send(mgmt, "POST /api/v1/suppliers/:supplierId/identifiers/:identifierId/delete",
     { ids: { supplierId: id, identifierId: identifier.id }, body: { version: identifierUpdated.json.data.version, reason: REASON } }),
   { "supplier.identifier.delete": ["identifier", identifier.id, "business_registration:HK"] }, { reason: REASON, supplierId: id });
@@ -367,7 +380,8 @@ integrationTest("TC-106 (AUD-004): detail up to 8192 bytes is stored whole, a la
   assert.equal(made.status, 201, made.text);
   h.supplierIds.push(made.json.data.id);
   let version = made.json.data.version;
-  const notes = ["甲".repeat(2000), "乙".repeat(2000)];
+  const notes = ["甲".repeat(2000), "😀".repeat(2000)];
+  let previous = "";
   for (const [index, text] of notes.entries()) {
     const saved = await h.send(h.users.mgmt, h.route("POST /api/v1/suppliers/:id/update"), { ids: { id: made.json.data.id }, body: { version,
       supplierName: `供應商${"新".repeat(150)}${index}`, displayName: "顯".repeat(190), defaultCurrencyCode: "HKD", defaultPaymentTermId: null,
@@ -377,9 +391,69 @@ integrationTest("TC-106 (AUD-004): detail up to 8192 bytes is stored whole, a la
     const [[row]] = await h.db.query("SELECT CAST(detail AS CHAR) AS detail FROM supplier_audit_logs WHERE request_id = ?", [saved.json.meta.requestId]);
     assert.ok(Buffer.byteLength(row.detail) <= 8192, `${Buffer.byteLength(row.detail)} bytes`);
     const detail = JSON.parse(row.detail);
-    assert.ok(!row.detail.includes(text.slice(0, 20)), "the notes text is not stored");
-    assert.deepEqual(detail.after.notes, { length: 2000, sha256: createHash("sha256").update(text, "utf8").digest("hex") });
+    assert.ok(!row.detail.includes(text.slice(0, 20)) && (!previous || !row.detail.includes(previous.slice(0, 20))), "neither notes text is stored");
+    const digest = (value) => ({ changed: true, length: Array.from(value).length, sha256: createHash("sha256").update(value, "utf8").digest("hex") });
+    assert.deepEqual([detail.before.notes, detail.after.notes], [digest(previous), digest(text)]);
+    previous = text;
   }
+
+  // REV-099 F-1：每個欄位都用 4-byte 字元填到最長（地址再加控制字元），合法更新照樣成功，audit 唔超限。
+  const max = (character, length) => character.repeat(length);
+  const supplierBody = (c, v) => ({ version: v, supplierName: max(c, 190), displayName: max(c, 190), defaultCurrencyCode: "HKD", defaultPaymentTermId: null,
+    website: "", generalPhone: max(c, 50), generalEmail: "", notes: max(c, 2000) });
+  for (const c of ["😀", "😁"]) {
+    const saved = await h.send(h.users.mgmt, h.route("POST /api/v1/suppliers/:id/update"), { ids: { id: made.json.data.id }, body: supplierBody(c, version) });
+    assert.equal(saved.status, 200, `supplier ${c}: ${saved.text}`);
+    version = saved.json.data.version;
+    const [[row]] = await h.db.query("SELECT CAST(detail AS CHAR) AS detail FROM supplier_audit_logs WHERE request_id = ?", [saved.json.meta.requestId]);
+    assert.ok(Buffer.byteLength(row.detail) <= 8192, `supplier ${c}: ${Buffer.byteLength(row.detail)} bytes`);
+  }
+  const addressBody = (c) => ({ label: max(c, 100), addressLine1: max(c, 190), addressLine2: max(c, 190), addressLine3: max(c, 190), city: max(c, 100),
+    stateRegion: max(c, 100), postalCode: max(c, 100), phone: max(c, 50), notes: max(c, 500), purposes: [] });
+  const address = await h.send(h.users.mgmt, h.route("POST /api/v1/suppliers/:supplierId/addresses/create"), { ids: { supplierId: made.json.data.id },
+    body: addressBody("😀") });
+  assert.equal(address.status, 201, address.text);
+  let addressVersion = address.json.data.version;
+  for (const c of ["😁", "\u0001", "\u0002"]) {
+    const saved = await h.send(h.users.mgmt, h.route("POST /api/v1/suppliers/:supplierId/addresses/:addressId/update"),
+      { ids: { supplierId: made.json.data.id, addressId: address.json.data.id }, body: { version: addressVersion, ...addressBody(c) } });
+    assert.equal(saved.status, 200, `address ${JSON.stringify(c)}: ${saved.text}`);
+    addressVersion = saved.json.data.version;
+  }
+});
+
+integrationTest("REV-099 F-2: a child update reads its previous purposes under the lock, so a change committed while it waited is not reported as its own", async () => {
+  const t = tag();
+  const made = await create({ supplierCode: `RACE-${t}`, supplierName: `Race ${t}` });
+  const supplierId = made.json.data.id;
+  const address = await h.send(h.users.mgmt, h.route("POST /api/v1/suppliers/:supplierId/addresses/create"),
+    { ids: { supplierId }, body: { label: "A", purposes: [{ purposeCode: "office", isPrimary: true }] } });
+  assert.equal(address.status, 201, address.text);
+  let release;
+  const released = new Promise((resolve) => { release = resolve; });
+  let locked;
+  const isLocked = new Promise((resolve) => { locked = resolve; });
+  // 另一個請求（例如另一個地址搶 office primary）揸住 Supplier 鎖，改咗 A 嘅 primary。
+  const other = h.db.withTransaction(async (connection) => {
+    await connection.query("SELECT id FROM suppliers WHERE id = ? FOR UPDATE", [supplierId]);
+    await connection.execute("UPDATE supplier_address_purposes SET is_primary = 0 WHERE address_id = ?", [address.json.data.id]);
+    locked();
+    await released;
+  });
+  let update;
+  try {
+    await isLocked;
+    update = h.send(h.users.mgmt, h.route("POST /api/v1/suppliers/:supplierId/addresses/:addressId/update"), { ids: { supplierId, addressId: address.json.data.id },
+      body: { version: address.json.data.version, label: "A2", purposes: [{ purposeCode: "office", isPrimary: false }] } });
+    await new Promise((resolve) => { setTimeout(resolve, 400); });
+  } finally {
+    release();
+    await other.catch(() => {});
+  }
+  const saved = await update;
+  assert.equal(saved.status, 200, saved.text);
+  const [[row]] = await h.db.query("SELECT CAST(detail AS CHAR) AS detail FROM supplier_audit_logs WHERE request_id = ?", [saved.json.meta.requestId]);
+  assert.deepEqual(JSON.parse(row.detail), { before: { label: "A" }, after: { label: "A2" } }, "office was already non-primary when this update got the lock");
 });
 
 integrationTest("TC-107 (AUD-005): audit search returns only matching rows, newest first with a stable id tie-break, with exact totals and edges, and Bank detail stays masked", async () => {

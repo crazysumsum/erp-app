@@ -147,8 +147,9 @@ export class SupplierAddressService {
           address.stateRegion, address.postalCode, address.countryCode, address.phone, address.notes,
           nowMs, input.actorId, input.addressId, input.supplierId, input.version]
       );
+      // 鎖住讀：其他請求可能喺我哋等 Supplier 鎖嗰陣改過用途；普通 SELECT 會讀到舊 snapshot（REV-099 F-2）。
       const [beforePurposes] = await connection.query(
-        "SELECT purpose_code, is_primary FROM supplier_address_purposes WHERE address_id = ? AND supplier_id = ? ORDER BY purpose_code", [input.addressId, input.supplierId]);
+        "SELECT purpose_code, is_primary FROM supplier_address_purposes WHERE address_id = ? AND supplier_id = ? ORDER BY purpose_code FOR UPDATE", [input.addressId, input.supplierId]);
       await this.#replacePurposes(connection, { supplierId: input.supplierId, addressId: input.addressId, purposes: address.purposes, actorId: input.actorId, nowMs, replace: true });
       const projected = await this.#project(connection, input.supplierId, input.addressId);
       await this.audit.record(connection, {
