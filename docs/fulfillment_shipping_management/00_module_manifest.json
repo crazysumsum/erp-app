@@ -106,9 +106,9 @@
     "provided": [
       {
         "id": "fulfillment-shipment-and-reversal-contract",
-        "version": "approved-planning-v1-SPECIFIED_NOT_IMPLEMENTED",
+        "version": "planning-v2-DECISIONS_ADOPTED-NOT_IMPLEMENTED",
         "source": "docs/fulfillment_shipping_management/03_design_spec.md",
-        "sha256": "7c0101e85f9651b8588fe3b09508cc7961238a69d9903c33d7a8f8bd8e2de4ec",
+        "sha256": "e1c620178d59a56d6723a4534bd24936ffa75c75ad8b85922648fd4fcdbfbad3",
         "consumers": [
           "sales-order-management",
           "inventory-management",
@@ -120,9 +120,9 @@
       {
         "module_id": "sales-order-management",
         "id": "sales-fulfillment-projection-and-lifecycle-contract",
-        "version": "planning-only-NOT_IMPLEMENTED",
+        "version": "observed-main-35af2ab7-OWNER_SEMANTIC_REVIEW_REQUIRED",
         "source": "docs/sales_order_management/03_design_spec.md",
-        "sha256": "f68844a0bf8238fdd90ce3be6392fc489fd5d44973f87a77780880f0e1275107",
+        "sha256": "5f82a24962a4f8e853acba56a83dedb7ceec94513497895f29966024100cbfdc",
         "regression_suites": [
           "fulfillment-technical"
         ]
@@ -130,9 +130,9 @@
       {
         "module_id": "inventory-management",
         "id": "inventory-allocation-issue-and-dedicated-reversal-contract",
-        "version": "planning-only-NOT_IMPLEMENTED",
+        "version": "observed-main-35af2ab7-OWNER_SEMANTIC_REVIEW_REQUIRED",
         "source": "docs/inventory_management/03_design_spec.md",
-        "sha256": "ffbffdf71a6b2cd639ba41f68c5bfe1965310d920387023908ef1070d881790f",
+        "sha256": "2fb61cce8ee4ff9f32cd9c6d0e2a9fc8f87c08d34823be7fb622908610b1ac53",
         "regression_suites": [
           "fulfillment-technical"
         ]
@@ -140,9 +140,9 @@
       {
         "module_id": "customer-management",
         "id": "customer-shipping-address-and-contact-contract",
-        "version": "planning-only-NOT_IMPLEMENTED",
+        "version": "observed-main-35af2ab7-OWNER_SEMANTIC_REVIEW_REQUIRED",
         "source": "docs/customer_management/03_design_spec.md",
-        "sha256": "f132bb6122586508153b0356c5a6c29c8d79a55bb5f0afbe6f8c2b699d445776",
+        "sha256": "7b56997a4f33d64793739faa888c1a8d882015892750cce59532d9818ab53972",
         "regression_suites": [
           "fulfillment-technical"
         ]
@@ -150,9 +150,9 @@
       {
         "module_id": "item-management",
         "id": "item-lookup-service",
-        "version": "observed-origin-main-b6f0321-PARTIAL",
+        "version": "observed-main-35af2ab7-OWNER_SEMANTIC_REVIEW_REQUIRED",
         "source": "server/src/modules/item/ItemLookupService.js",
-        "sha256": "6aff6504eb3cae4347c05a7deaba1c4c7eb1e2de3142f9a7de1eb4587c2f8d90",
+        "sha256": "a09d5baf602f44199cd218a2b3139edcdb2abad039a6f08a21b48162900562b5",
         "regression_suites": [
           "fulfillment-technical"
         ]
@@ -160,9 +160,9 @@
       {
         "module_id": "authorization",
         "id": "permission-catalogue",
-        "version": "observed-origin-main-b6f0321",
+        "version": "observed-main-35af2ab7-OWNER_SEMANTIC_REVIEW_REQUIRED",
         "source": "server/src/modules/authorization/permissionCatalogue.js",
-        "sha256": "bc0828b5052be1cad23ac6db941f23fde802d482db1c64aa8dadccee87e21fdf",
+        "sha256": "e6363b8928b0f86d8c3ebba0a25695e9879dbb05d0bf9992fcdd175aa389cc0e",
         "regression_suites": [
           "fulfillment-technical"
         ]
@@ -170,9 +170,9 @@
       {
         "module_id": "framework",
         "id": "idempotency-service",
-        "version": "observed-origin-main-b6f0321",
+        "version": "observed-main-35af2ab7-OWNER_SEMANTIC_REVIEW_REQUIRED",
         "source": "server/src/services/idempotency/IdempotencyService.js",
-        "sha256": "6f0f61e8507c206d3d47d93cbf0d099dc916bb95e3de02f163c4283bd7c17925",
+        "sha256": "b574dd69c4fd006a550421d9bb1e550c94f8f39d22837eecd61f7cf079c6da9d",
         "regression_suites": [
           "fulfillment-technical"
         ]
