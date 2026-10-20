@@ -1,5 +1,7 @@
 # Fulfillment & Shipping Management Existing Artifact Inventory and Consolidation Dry Run
 
+> Current observation: [2026-10-20 readiness requalification](10_implementation_readiness.md) supersedes the implementation/readiness conclusions below. The original alignment observations are retained as dated history, not current repository facts.
+
 ## Scope and recoverable baseline
 
 - Module: `fulfillment-shipping-management`
@@ -56,3 +58,7 @@ A repository-wide search for `fulfillment_shipping_management` outside the selec
 | `docs/invoicing_accounts_receivable_management/00_artifact_inventory.md` line 24 | Names the legacy filenames inside another module's historical inventory record. | Left as written. An artifact inventory is a dated audit record of what was observed at that time, not a live link; rewriting it would falsify that record. |
 
 `REVIEW_AND_ALIGN` write scope is limited to `docs/fulfillment_shipping_management`, so no other module directory was modified.
+
+## 2026-10-20 requalification disposition
+
+The current contract inventory, ownership, proposed P0 dependency correction, HD-006/HD-007 alternatives, exact candidate hashes and verification limits are recorded in [10_implementation_readiness.md](10_implementation_readiness.md). No legacy narrative is deleted. Seven source pins are refreshed as observations with review-pending versions; historical approval records are preserved. Product implementation remains BLOCKED.

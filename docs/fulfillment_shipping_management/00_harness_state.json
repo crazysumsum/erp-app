@@ -1,27 +1,27 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 6,
+  "revision": 16,
   "mode": "REVIEW_AND_ALIGN",
   "active_mode": "REVIEW_AND_ALIGN",
-  "status": "BLOCKED",
-  "resume_status": "PLANNED",
+  "status": "PLANNED",
+  "resume_status": null,
   "current_phase": null,
   "current_task": null,
   "baseline": {
-    "design": "cba0d670c928af3443c6ce6794c955004ee6243a44f4b33bdd2bc3957947b758",
-    "plan": "d9e729935b8a3094241f5c9f438a4bda7d576468a7c4ed74063e7814b6b5657a",
-    "code_commit": "c88b479a02744b8be654398d0dafb811ddf599c3",
-    "source_fingerprint": "34707d3beb85552d7e1ef44092f56fe5d8bb962b200290d7dc18e860b30f180d",
-    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/fulfillment-gap-correct",
-    "default_commit": "c88b479a02744b8be654398d0dafb811ddf599c3",
+    "design": "feef0869d0d3d1814ce5ab9a08e885ef84c49e578bfbf24269ff106b0aa69ce8",
+    "plan": "a229fd571382e42dbc0e88c896bd06aeed12bf4e5e3b4622a58bc69197aead38",
+    "code_commit": "bae225bb6172433f93b9627fd53dea8adb8582ae",
+    "source_fingerprint": "46f38a6759a89848336a2e42c4b267e9f00c76b39d9a7767021ec5ba245ba9a9",
+    "worktree": "/private/tmp/erp-fulfillment-readiness",
+    "default_commit": "35af2ab7010d8a42cdbc3ca55d23c9c9ce95856c",
     "mode_entry_commit": "b6f03219259129de6735263a4d369de2b15a5f9f"
   },
   "runtime": {
     "instance_id": "DOCUMENT-ONLY-NO-RUNTIME",
-    "owner": "Primary Harness agent",
+    "owner": "Codex fulfillment readiness author",
     "resources": {
-      "workspace": "fulfillment-shipping-alignment"
+      "workspace": "/private/tmp/erp-fulfillment-readiness"
     },
     "lease_ref": null
   },
@@ -190,6 +190,75 @@
         "Unchanged decision re-bound to plan baseline d9e729935b8a3094241f5c9f438a4bda7d576468a7c4ed74063e7814b6b5657a; supersedes HD-003."
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-005-DECISIONS-AA",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner), direct user in this chat",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/10_implementation_readiness.md#decision-adoption--2026-10-20",
+      "recorded_at": "2026-10-20T08:49:34+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "83a958c6bab1eff0ab81ae6cb73c508f016aaecbe6defd39ab87c9c403e0824c",
+      "code_commit": "64bee2e00dfae71131c7cfa54049cac0941d6f85",
+      "scope": [
+        "HD-006 option A: existing provider cores at P0 entry; provider extensions and Checkpoint0B gate TASK007 persistence; four phases, single P0 PR and full original exit gates preserved",
+        "HD-007 option A: MySQL26.7.0 development/test support target, no8.0 support claim or production upgrade",
+        "Derived baseline reflects only adopting the presented decisions/status normalization and provided-source repin; not full DESIGN/PLAN approval, independent review, shared-path write approval, NFR023 renewal, IMPLEMENT, GitHub push, PR or merge permission"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-006-DESIGN-20261020",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner), direct user instruction in this chat",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/10_implementation_readiness.md#human-planning-approval-and-publication-authority",
+      "recorded_at": "2026-10-20T08:58:17+00:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "feef0869d0d3d1814ce5ab9a08e885ef84c49e578bfbf24269ff106b0aa69ce8",
+      "code_commit": null,
+      "scope": [
+        "fulfillment-shipping-management",
+        "HD-006A / HD-007A and independently reviewed existing-requirement consistency remedies IR001-004; planning only"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-007-PLAN-20261020",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner), direct user instruction in this chat",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/10_implementation_readiness.md#human-planning-approval-and-publication-authority",
+      "recorded_at": "2026-10-20T08:58:17+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a229fd571382e42dbc0e88c896bd06aeed12bf4e5e3b4622a58bc69197aead38",
+      "code_commit": null,
+      "scope": [
+        "fulfillment-shipping-management",
+        "PHASE-001 through PHASE-004; TASK-001 through TASK-045; TC-001 through TC-012; UAT-001 through UAT-120; all execution evidence still required"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-008-UATNA-20261020",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner), direct user instruction in this chat",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/10_implementation_readiness.md#human-planning-approval-and-publication-authority",
+      "recorded_at": "2026-10-20T08:58:17+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a229fd571382e42dbc0e88c896bd06aeed12bf4e5e3b4622a58bc69197aead38",
+      "code_commit": null,
+      "scope": [
+        "NFR-023",
+        "Exact existing business-UAT N/A reason unchanged; TC-010 remains mandatory and blocking; no other exemption"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -215,6 +284,42 @@
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-003",
+      "method": "SELF_REVIEW",
+      "author": "Codex fulfillment readiness author",
+      "reviewer": "Codex fulfillment readiness author (same agent; not independent)",
+      "reviewed_baseline": "683abcc2192073c57df58023bd876f03904e868d27181a3cd1d438df1c452e27",
+      "source_ref": "docs/fulfillment_shipping_management/10_implementation_readiness.md#candidate-hashes-and-review-disposition",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 2,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-004-INDEPENDENT-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "/root (fulfillment documentation author)",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "329d29496802aa2d6405a3aabb743a4b80ab8182748e82824a8bb688811965dc",
+      "source_ref": "docs/fulfillment_shipping_management/04_design_review.md#2026-10-20-independent-requalification",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 3,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-005-INDEPENDENT-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "/root (fulfillment documentation author)",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "feef0869d0d3d1814ce5ab9a08e885ef84c49e578bfbf24269ff106b0aa69ce8",
+      "source_ref": "docs/fulfillment_shipping_management/04_design_review.md#r2-final-independent-disposition",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
       "risk_approval_id": null
     }
   ],
@@ -266,8 +371,8 @@
         "PHASE-002",
         "PHASE-003"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "docs/fulfillment_shipping_management/10_implementation_readiness.md#validation-and-remaining-entry-checklist: resolved by observed repository implementation, not a new human decision; .github/workflows/ci.yml Browser tests (Playwright) executes e2e:mocked; Fulfillment UI coverage remains planned."
     },
     {
       "id": "HD-005",
@@ -278,6 +383,37 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "CLOSED. docs/customer_management/00_module_manifest.json was repointed to docs/fulfillment_shipping_management/03_design_spec.md, sha256 7c0101e85f9651b8588fe3b09508cc7961238a69d9903c33d7a8f8bd8e2de4ec, by PR #97 (merge commit 34563b6), delivered as a Customer-module-scoped change because validate_module_boundary.py returned MODE_WRITE_DENIED when it was bundled into a REVIEW_AND_ALIGN change. The pointer now verifies as MATCH. GAP-TR-002 is closed."
+    },
+    {
+      "id": "HD-006",
+      "impact": "MAJOR",
+      "question": "Adopt candidate A in 10_implementation_readiness.md: existing provider cores at P0 entry, TASK-004/005/006 complete owner-approved extensions, Checkpoint 0B blocks TASK-007 persistence; same P0 PR and full exit gates, exact shared-path/cutover authorization still required; or retain upstream-before-P0 sequencing?",
+      "affected_ids": [
+        "PHASE-001",
+        "TASK-001",
+        "TASK-004",
+        "TASK-005",
+        "TASK-006",
+        "TASK-007",
+        "TC-010"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "docs/fulfillment_shipping_management/10_implementation_readiness.md#decision-adoption--2026-10-20; actual user reply A＋A in this chat adopts option A."
+    },
+    {
+      "id": "HD-007",
+      "impact": "MAJOR",
+      "question": "Adopt candidate MySQL26.7.0 compatibility baseline matching current CI without 8.0 support/production upgrade claims, preserving all integrity/coverage/capacity gates; or keep8.0 and fund separate native compatibility evidence?",
+      "affected_ids": [
+        "DES-009",
+        "DES-014",
+        "PHASE-001",
+        "TC-001",
+        "TC-009",
+        "NFR-025"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "docs/fulfillment_shipping_management/10_implementation_readiness.md#decision-adoption--2026-10-20; actual user reply A＋A in this chat adopts option A."
     }
   ],
   "external_actions": [
@@ -344,9 +480,41 @@
       "idempotency_key": "fulfillment-closeout-cleanup-20260914",
       "status": "CONFIRMED",
       "source_ref": "git merge-base --is-ancestor confirmed each branch tip was contained in origin/main before deletion; worktrees verified clean; remote branches deleted, local branches deleted with -d after fast-forwarding main. No fulfillment branch or worktree remains."
+    },
+    {
+      "id": "READINESS-PUSH-20261020",
+      "kind": "PUSH",
+      "target": "origin/codex/fulfillment-readiness-alignment",
+      "idempotency_key": "fulfillment-readiness-push-20261020",
+      "status": "FAILED",
+      "source_ref": "docs/fulfillment_shipping_management/10_implementation_readiness.md#publication-disposition: automatic approval review rejected before execution; no push occurred; explicit GitHub egress approval required."
+    },
+    {
+      "id": "READINESS-PR-20261020",
+      "kind": "DRAFT_PR_CREATE",
+      "target": "crazysumsum/erp-app:codex/fulfillment-readiness-alignment -> main",
+      "idempotency_key": "fulfillment-readiness-draft-pr-20261020",
+      "status": "FAILED",
+      "source_ref": "GitHub connector create_pull_request returned403 Resource not accessible by integration on2026-10-20; no PR returned. Preserve this failure; user explicitly authorized draft PR creation."
+    },
+    {
+      "id": "READINESS-PUSH-20261020-AUTHORIZED",
+      "kind": "PUSH",
+      "target": "origin/codex/fulfillment-readiness-alignment (fulfillment docs only)",
+      "idempotency_key": "fulfillment-readiness-push-20261020-explicit-user-authority",
+      "status": "CONFIRMED",
+      "source_ref": "Observed successful new-branch git push to https://github.com/crazysumsum/erp-app.git at bae225bb6172433f93b9627fd53dea8adb8582ae on2026-10-20; no force push or merge."
+    },
+    {
+      "id": "READINESS-PR-CLI-20261020",
+      "kind": "DRAFT_PR_CREATE",
+      "target": "crazysumsum/erp-app:codex/fulfillment-readiness-alignment -> main",
+      "idempotency_key": "fulfillment-readiness-draft-pr-local-git-auth-20261020",
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/256; observed GitHub REST create response number256,draft=true,headbae225bb6172433f93b9627fd53dea8adb8582ae; existing-PR lookup empty before create; attached to this Codex chat."
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Design and planning for this module are complete. All artifacts are on origin/main at c88b479a02744b8be654398d0dafb811ddf599c3; no fulfillment branch, worktree or open pull request remains apart from the documentation correction being delivered now. This revision corrects GAP-TC-001 and DR-04: the earlier claim that no Playwright tool chain existed was wrong — it was observed at 5b62be1 and PR #93 landed seconds later, pinning \"@playwright/test\": \"1.63.0\" in the root package.json and bringing a per-module e2e convention with it. HD-004 is narrowed to one item: add a CI job that runs the Playwright suites, which is blocked until the Business Master browser suite (14 failed, 1 passed on main) is repaired by its owner. Baselines are untouched by this correction because 00_gap_analysis.md, 04_design_review.md and 09_final_alignment_review.md are records, not specification files; design cba0d670 and plan d9e72993 stand, as do APR-001, APR-002, APR-004 and HD-003-R2. Status stays BLOCKED on HD-004 and on GAP-IMP-001 through GAP-IMP-005 (the Sales, Inventory and Customer modules, the transaction-aware Item assert and the three Fulfillment permissions, none of which exist at c88b479a02744b8be654398d0dafb811ddf599c3). Do not enter IMPLEMENT without an explicit mode authorization recorded with --mode-change-ref. Business acceptance and release sign-off remain open by design (GAP-RQ-002)."
+  "next_safe_action": "PLANNED; independent R2 PASS, current DESIGN/PLAN approvals and unchanged NFR023 UAT_NA renewal valid; PLAN_READY and approval-aware traceability PASS. Authorized docs branch published and draftPR256 created/attached; firstconnector403 and earlierauto-review rejection remain historical. Preserve openPR branch/worktree; do not merge or begin IMPLEMENT. On resume inspect PR/currentmain and hashes; actual product/provider/shared-path/runtime/cutover/native/browser/capacity/CI/UAT gates remain future obligations. All45TasksPENDING. Receipt-only metadata update publishes under the same explicit user authority and preserves approved spec hashes."
 }

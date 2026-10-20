@@ -225,7 +225,8 @@
       "Dependency audit",
       "Lint",
       "Test (server + client, MySQL integration)",
-      "Build frontend"
+      "Build frontend",
+      "Browser tests (Playwright)"
     ]
   },
   "acceptance": {
