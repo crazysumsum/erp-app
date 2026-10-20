@@ -1,11 +1,11 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 373,
+  "revision": 374,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
-  "status": "BLOCKED",
-  "resume_status": "IMPLEMENTING",
+  "status": "IMPLEMENTING",
+  "resume_status": null,
   "current_phase": "PHASE-004",
   "current_task": "TASK-051",
   "baseline": {
@@ -1183,6 +1183,23 @@
       "baseline_kind": "PLAN",
       "baseline_sha256": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
       "source_ref": "HD-105 'A': plan 6cb156c3, the REV-091 follow-ups and env additions after HD-103 '1A' (APPROVAL-HD-103-PLAN-1A, 7232d2ec)."
+    },
+    {
+      "id": "APPROVAL-HD-113-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "HD-113 A. Authorises TASK-051 to add server/database/migrations/0087_fix_supplier_sku_refs_sku_foreign_key.js with the change proposed in chat on 2026-10-20 (orphan check, drop and re-add fk_supplier_sku_refs_sku and idx_supplier_sku_refs_sku_status_supplied around a new idx_supplier_sku_refs_sku (sku_id)).",
+      "recorded_at": "2026-10-20T10:23:38+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
+      "code_commit": "36e1291d61caf4b9883029b9dde49015af450212",
+      "scope": [
+        "supplier-management",
+        "server/database/migrations/0087_fix_supplier_sku_refs_sku_foreign_key.js"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -5227,8 +5244,8 @@
         "TASK-051",
         "HD-055"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-20: 'HD-113 A，HD-057 A' — an offline similar-name report script over the legacy CSV and existing Suppliers, using the same similarity rules as UI create, with a test, run in the T51 rehearsal."
     },
     {
       "id": "HD-058",
@@ -5916,8 +5933,8 @@
         "DEF-029",
         "TASK-051"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-20: 'HD-113 A，HD-057 A' — Supplier migration 0087 rebuilds the sku_id index order so fk_supplier_sku_refs_sku is enforced (refuse with a report on orphan rows; down restores the original definition), a test pins enforcement, and the Item finding is handed to the Item owner."
     }
   ],
   "external_actions": [
@@ -7012,5 +7029,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Await HD-113 (schema fix for DEF-029) and HD-057; meanwhile MIG-001..006 carriers that do not depend on it."
+  "next_safe_action": "Write migration 0087 (HD-113 A) with an enforcement test and restore the TC-082 carrier; Item FK handoff; then the HD-057 A similar-name report script."
 }
