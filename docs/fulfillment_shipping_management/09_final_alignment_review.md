@@ -1,6 +1,10 @@
 # Fulfillment & Shipping Management Final Alignment Review
 
-> 2026-10-20: Sam selected A+A for HD-006 (P0 contract checkpoint sequence) and HD-007 (MySQL 26.7.0). These decisions are adopted; full current-baseline approval and independent review remain outstanding. Historical approvals below retain their original scope. See [decision adoption and readiness](10_implementation_readiness.md#decision-adoption--2026-10-20).
+## Current 2026-10-20 planning gate
+
+Independent R2 review PASS, 0 open CRITICAL/HIGH/MEDIUM; HD-006 A / HD-007 A adopted; current design/plan approvals and unchanged NFR-023 renewal recorded under the user's explicit completion authority. DESIGN `feef0869d0d3d1814ce5ab9a08e885ef84c49e578bfbf24269ff106b0aa69ce8`; PLAN `a229fd571382e42dbc0e88c896bd06aeed12bf4e5e3b4622a58bc69197aead38`. PLAN_READY and approval-aware traceability are checked on this candidate before publication. Current status/receipts are in [10_implementation_readiness.md](10_implementation_readiness.md). The earlier alignment below is retained as historical evidence; all 45 implementation Tasks remain PENDING.
+
+> Sam adopted HD-006 A (P0 contract checkpoint sequence) and HD-007 A (MySQL 26.7.0). Current baseline approval, independent-review provenance and publication receipts are recorded in [the readiness report](10_implementation_readiness.md); historical approvals below retain their original scope. Planning approval does not itself authorize IMPLEMENT or deployment.
 
 ## Result
 

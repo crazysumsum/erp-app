@@ -1,5 +1,21 @@
 # Fulfillment implementation readiness requalification
 
+## Current disposition after independent review
+
+`PLANNED / PLAN_READY` — HD-006 A and HD-007 A adopted; independent R2 review PASS, 0 open CRITICAL/HIGH/MEDIUM; design/plan decisions and unchanged NFR-023 UAT N/A renewed under the explicit user authority below. This is planning readiness, with all 45 product Tasks still PENDING; implementation, migration, deployment, merge, Technical Acceptance and business UAT have not occurred.
+
+The final integrated source is main `35af2ab7010d8a42cdbc3ca55d23c9c9ce95856c`, reviewed at integrated HEAD `46b390e772f08a759d0f383096c87eef347a3f1f`, source fingerprint `46f38a6759a89848336a2e42c4b267e9f00c76b39d9a7767021ec5ba245ba9a9`. Latest Customer changes add nonlocking precheck/version2.2 and readonly catalog locks; its shipping assertion bodies are unchanged. Current source pins were rechecked; provider-owner exact wire/adaptor scope remains an implementation checkpoint.
+
+- Approved DESIGN: `feef0869d0d3d1814ce5ab9a08e885ef84c49e578bfbf24269ff106b0aa69ce8`
+- Approved PLAN: `a229fd571382e42dbc0e88c896bd06aeed12bf4e5e3b4622a58bc69197aead38`
+- Independent reviewer: `/root/fulfillment_independent_review`, method `SEPARATE_AGENT`, actual R1→R2 findings and closure in `04_design_review.md`.
+- Latest provider unit check: 76 PASS / 0 FAIL / 0 SKIP, after latest-main integration. The earlier 75-case observation below is historical; neither run is formal Fulfillment TC/UAT execution.
+- NFR-023 retains its exact reason and TC-010 mandatory/blocking coverage; only its renewal reference changes to `APR-008-UATNA-20261020`. No additional exemption or technical PASS is created.
+
+The following sections preserve earlier observations/decisions and the initial publication rejection as history. Current user authorization supersedes the earlier missing-egress-authority condition. Draft PR publication is authorized, while merge and IMPLEMENT remain separate.
+
+## Historical readiness observations
+
 ## Outcome and authority
 
 `DECISIONS_ADOPTED / BLOCKED` — HD-006/HD-007 A+A adopted; documentation preparation only, `REVIEW_AND_ALIGN`, observed on 2026-10-20 (Asia/Hong_Kong). The user requested the readiness review and then instructed「按建議進行」; the subsequent direct user reply「A＋A」adopts the two presented recommendations. It does not authorize entry into implementation or GitHub publication. No product source, migration, shared config, other module, deployed service or database is changed.
@@ -94,3 +110,15 @@ Only decision-status wording and the resulting provided-source pin changed after
 - Derived PLAN: `83a958c6bab1eff0ab81ae6cb73c508f016aaecbe6defd39ab87c9c403e0824c`
 
 Remaining gates: actual independent current-baseline review, full DESIGN/PLAN approval and renewal of unchanged NFR-023 UAT N/A; provider-owner exact contract/shared-path decisions before relevant implementation; explicit IMPLEMENT scope and isolated runtime. A+A does not address the separate publication-permission request. The previous automatic push rejection remains effective; do not retry or switch connector without explicit GitHub egress permission.
+
+## Human planning approval and publication authority
+
+Actual user authority in this chat on 2026-10-20:「安排獨立覆核，完成設計／計劃審批及 NFR-023 豁免更新；授權將 fulfillment 文件推送到 crazysumsum/erp-app 並建立 draft PR。」This explicitly authorizes completing the previously presented planning approval and existing NFR-023 renewal after actual independent review, and sending the fulfillment documentation to that named GitHub repository to create a draft PR.
+
+Codex performed only consistency remedies against existing approved requirements: state-conditioned quantity equations and legal zero-picked lines; P0 delivery of the minimum lifecycle guard before live installation/resume with safe rollback; full Phase B rollback then fenced terminal failure; and consistent lock ordering. These did not add business scope, lower acceptance criteria, authorize shared-path product writes or accept a new material trade-off. The independent reviewer actually rechecked the resulting exact DESIGN/PLAN hashes and resolved all R1 findings.
+
+Records APR-006-DESIGN-20261020 and APR-007-PLAN-20261020 bind the completed planning approval to the exact hashes above. APR-008-UATNA-20261020 binds only NFR-023's unchanged business-UAT applicability decision to that PLAN; TC-010 remains required. The human authority is the actual instruction, not the agent-authored JSON; Sam is not claimed to have separately inspected the mechanically derived hashes or personally performed the separate agent review. Original approvals/reviews and the initial failed publication attempt are retained.
+
+Publication scope is the changes under `docs/fulfillment_shipping_management/**` only, to `crazysumsum/erp-app`, branch `codex/fulfillment-readiness-alignment`, draft PR targeting main. No credentials, environment files, raw browser traces, raw database extracts or other module's new changes are included in this branch's PR diff. No reviewer requests/comments/messages to others or merge are included. The old rejected push is not silently retried: a new explicit-authority publication action is journalled and remote state inspected first.
+
+Before actual implementation, confirm fresh main, named P0 owner and exact shared-file/provider scope, allocate the isolated MySQL26.7 runtime and migration sequence, and record IMPLEMENT authorization. Provider extensions and native/browser/capacity/CI evidence must then satisfy their existing delivery gates. Before live schema activation, require the exact owner-approved Sales quiesce/install/register/probe/resume runbook. Planning approval is not formal system acceptance or release approval.

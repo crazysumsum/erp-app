@@ -1,20 +1,20 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 11,
+  "revision": 12,
   "mode": "REVIEW_AND_ALIGN",
   "active_mode": "REVIEW_AND_ALIGN",
-  "status": "BLOCKED",
-  "resume_status": "PLANNED",
+  "status": "PLANNED",
+  "resume_status": null,
   "current_phase": null,
   "current_task": null,
   "baseline": {
-    "design": "329d29496802aa2d6405a3aabb743a4b80ab8182748e82824a8bb688811965dc",
-    "plan": "83a958c6bab1eff0ab81ae6cb73c508f016aaecbe6defd39ab87c9c403e0824c",
-    "code_commit": "e911c5ef5b777d4e997e4f401d5ea4381ebdf481",
-    "source_fingerprint": "70eed2ff3e806da18ce44c0711712425806ffde3dbfaf3412457cf3e39fc4143",
+    "design": "feef0869d0d3d1814ce5ab9a08e885ef84c49e578bfbf24269ff106b0aa69ce8",
+    "plan": "a229fd571382e42dbc0e88c896bd06aeed12bf4e5e3b4622a58bc69197aead38",
+    "code_commit": "46b390e772f08a759d0f383096c87eef347a3f1f",
+    "source_fingerprint": "46f38a6759a89848336a2e42c4b267e9f00c76b39d9a7767021ec5ba245ba9a9",
     "worktree": "/private/tmp/erp-fulfillment-readiness",
-    "default_commit": "64bee2e00dfae71131c7cfa54049cac0941d6f85",
+    "default_commit": "35af2ab7010d8a42cdbc3ca55d23c9c9ce95856c",
     "mode_entry_commit": "b6f03219259129de6735263a4d369de2b15a5f9f"
   },
   "runtime": {
@@ -208,6 +208,57 @@
         "Derived baseline reflects only adopting the presented decisions/status normalization and provided-source repin; not full DESIGN/PLAN approval, independent review, shared-path write approval, NFR023 renewal, IMPLEMENT, GitHub push, PR or merge permission"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-006-DESIGN-20261020",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner), direct user instruction in this chat",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/10_implementation_readiness.md#human-planning-approval-and-publication-authority",
+      "recorded_at": "2026-10-20T08:58:17+00:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "feef0869d0d3d1814ce5ab9a08e885ef84c49e578bfbf24269ff106b0aa69ce8",
+      "code_commit": null,
+      "scope": [
+        "fulfillment-shipping-management",
+        "HD-006A / HD-007A and independently reviewed existing-requirement consistency remedies IR001-004; planning only"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-007-PLAN-20261020",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner), direct user instruction in this chat",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/10_implementation_readiness.md#human-planning-approval-and-publication-authority",
+      "recorded_at": "2026-10-20T08:58:17+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a229fd571382e42dbc0e88c896bd06aeed12bf4e5e3b4622a58bc69197aead38",
+      "code_commit": null,
+      "scope": [
+        "fulfillment-shipping-management",
+        "PHASE-001 through PHASE-004; TASK-001 through TASK-045; TC-001 through TC-012; UAT-001 through UAT-120; all execution evidence still required"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-008-UATNA-20261020",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner), direct user instruction in this chat",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/10_implementation_readiness.md#human-planning-approval-and-publication-authority",
+      "recorded_at": "2026-10-20T08:58:17+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a229fd571382e42dbc0e88c896bd06aeed12bf4e5e3b4622a58bc69197aead38",
+      "code_commit": null,
+      "scope": [
+        "NFR-023",
+        "Exact existing business-UAT N/A reason unchanged; TC-010 remains mandatory and blocking; no other exemption"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -245,6 +296,30 @@
       "status": "CHANGES_REQUESTED",
       "open_critical": 0,
       "open_high": 2,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-004-INDEPENDENT-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "/root (fulfillment documentation author)",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "329d29496802aa2d6405a3aabb743a4b80ab8182748e82824a8bb688811965dc",
+      "source_ref": "docs/fulfillment_shipping_management/04_design_review.md#2026-10-20-independent-requalification",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 3,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-005-INDEPENDENT-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "/root (fulfillment documentation author)",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "feef0869d0d3d1814ce5ab9a08e885ef84c49e578bfbf24269ff106b0aa69ce8",
+      "source_ref": "docs/fulfillment_shipping_management/04_design_review.md#r2-final-independent-disposition",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
       "risk_approval_id": null
     }
   ],
@@ -421,9 +496,17 @@
       "idempotency_key": "fulfillment-readiness-draft-pr-20261020",
       "status": "PLANNED",
       "source_ref": null
+    },
+    {
+      "id": "READINESS-PUSH-20261020-AUTHORIZED",
+      "kind": "PUSH",
+      "target": "origin/codex/fulfillment-readiness-alignment (fulfillment docs only)",
+      "idempotency_key": "fulfillment-readiness-push-20261020-explicit-user-authority",
+      "status": "PLANNED",
+      "source_ref": "docs/fulfillment_shipping_management/10_implementation_readiness.md#human-planning-approval-and-publication-authority"
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "HD006A and HD007A were expressly adopted by Sam reply A＋A; do not re-ask either choice. Decisions and derived hashes are recorded in10_implementation_readiness.md. Remain BLOCKED on actual independent current-baseline review, full DESIGN/PLAN approval and unchanged NFR023 UAT_NA renewal; exact provider contract/shared-path decisions before relevant implementation, IMPLEMENT scope and isolated runtime remain separate. GitHub publication was not authorized by A＋A: preserve prior auto-review push rejection, no retry/connector workaround until explicit user egress permission. All45tasksPENDING; no new product/native/browser/formal acceptance claim."
+  "next_safe_action": "PLANNED: actual independent R2 PASS (allIR001-004resolved), current DESIGN/PLAN human-authorized approvals and unchanged NFR023 UAT_NA renewed. Publish docs-only codex/fulfillment-readiness-alignment to crazysumsum/erp-app and create draft PR under explicit user authority recorded in report10; prior missing-egress-authority rejection is historical. Remote inspected: branch/PR absent, latestmain35af2ab7 integrated; inspect again after interruption, no blind replay. Do not merge or enter IMPLEMENT. All45TasksPENDING; source/provider native/browser/capacity/CI/UAT evidence and exact shared-path/cutover/runtime authorities remain their original future gates. Retain open-PR branch/worktree pending resolution."
 }

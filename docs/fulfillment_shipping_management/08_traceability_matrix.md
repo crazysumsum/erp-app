@@ -134,7 +134,7 @@ This is a structural planning view, not execution evidence or approval.
 | NFR-019 | DES-012, DES-014 | PHASE-004 | TASK-044 | TC-012 | UAT-117 | APPLICABLE |
 | NFR-020 | DES-012, DES-014 | PHASE-004 | TASK-044 | TC-012 | UAT-117 | APPLICABLE |
 | NFR-021 | DES-012, DES-014 | PHASE-004 | TASK-044 | TC-012 | UAT-117 | APPLICABLE |
-| NFR-022 | DES-001, DES-013, DES-014 | PHASE-001 | TASK-001, TASK-004, TASK-005, TASK-006 | TC-010 | UAT-021 | APPLICABLE |
+| NFR-022 | DES-001, DES-013, DES-014 | PHASE-001 | TASK-001, TASK-004, TASK-005, TASK-006, TASK-011 | TC-010 | UAT-021 | APPLICABLE |
 | NFR-023 | DES-001, DES-013, DES-014 | PHASE-001 | TASK-001, TASK-004, TASK-005, TASK-006 | TC-010 | — | NOT_APPLICABLE |
 | NFR-024 | DES-001, DES-009, DES-013, DES-014 | PHASE-001 | TASK-010 | TC-009 | UAT-120 | APPLICABLE |
 | NFR-025 | DES-001, DES-009, DES-013, DES-014 | PHASE-001 | TASK-003, TASK-008, TASK-009, TASK-010 | TC-002, TC-009 | UAT-038 | APPLICABLE |
@@ -291,4 +291,4 @@ This is a structural planning view, not execution evidence or approval.
 
 ## N/A decisions
 
-- NFR-023: Provider 契約版本化與破壞性改動的遷移／兼容計劃不是業務使用者在 UAT 環境可觀察的行為；其驗證屬 provider／consumer contract test 責任，由 TC-010 承載並在每個 Phase Gate 執行。本判定不降低需求本身，亦不免除 TC-010 的 mandatory／blocking 要求。 (approval reference: HD-003-R2; verify authority separately).
+- NFR-023: Provider 契約版本化與破壞性改動的遷移／兼容計劃不是業務使用者在 UAT 環境可觀察的行為；其驗證屬 provider／consumer contract test 責任，由 TC-010 承載並在每個 Phase Gate 執行。本判定不降低需求本身，亦不免除 TC-010 的 mandatory／blocking 要求。 (approval reference: APR-008-UATNA-20261020; verify authority separately).

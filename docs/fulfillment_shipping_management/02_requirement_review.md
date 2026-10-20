@@ -1,6 +1,6 @@
 # Fulfillment & Shipping Management Requirement Review
 
-> 2026-10-20: Sam selected A+A for HD-006 (P0 contract checkpoint sequence) and HD-007 (MySQL 26.7.0). These decisions are adopted; full current-baseline approval and independent review remain outstanding. Historical approvals below retain their original scope. See [decision adoption and readiness](10_implementation_readiness.md#decision-adoption--2026-10-20).
+> Sam adopted HD-006 A (P0 contract checkpoint sequence) and HD-007 A (MySQL 26.7.0). Current baseline approval, independent-review provenance and publication receipts are recorded in [the readiness report](10_implementation_readiness.md); historical approvals below retain their original scope. Planning approval does not itself authorize IMPLEMENT or deployment.
 
 ## Review result
 

@@ -52,7 +52,7 @@ Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：
 不讀 DB 的純函式測試夾具：全部合法與非法 Fulfillment／Shipment／Reversal 轉換、各狀態應有的數量組合、邊界值（0、上限、非整數、負數）及固定 key 排序的 canonical payload 樣本。
 
 ### Steps
-逐一驗證 §3.1～§3.4 的狀態轉換表、`planned = picked + short`、`allocated = picked + released`、`shipped ∈ (0, picked)`、`reversed ∈ (0, shipped)`、Claim 的 `original = active + released + consumed` 與 `reversed <= consumed`，以及 canonical hash 的 key 排序、decimal normalization 及 UTF-8 bytes 穩定性。
+逐一驗證§3.1～§3.4狀態表：DRAFT／PICKING不套用Pick完成等式；PICKED／SHIPPED／REVERSED才驗`planned = picked + short`及`allocated = picked + derived released`，允許一行picked=0而整張SUM(picked)>0；Reallocation累計allocated與released、DRAFT／PICKING／PICKED取消保留歷史並釋放全部未耗用Allocation；`shipped ∈ {0, picked}`、`reversed ∈ {0, shipped}`、Claim的 `original = active + released + consumed` 與 `reversed <= consumed`，以及 canonical hash 的 key 排序、decimal normalization 及 UTF-8 bytes 穩定性。
 
 ### Expected result
 每個狀態轉換、數量不變量及 hash 分支至少一正一反全部符合規格；Base UOM 數量一律正整數且不出現 binary float 誤差；同內容不同欄位順序的 payload 得到相同 hash，內容不同必得到不同 hash。
@@ -147,10 +147,10 @@ Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：
 最多 100 行、跨多個 Bin／Lot 的合法 DRAFT Shipment，穩定 event ID 及同 ID 同／異 payload 版本，可在 Inventory、Sales、快照保存及 COMMIT 各邊界注入失敗的測試替身，可控制的 worker 重啟與回應遺失，以及與 Confirm 並發的 Cancel／Reallocate／Inventory adjustment。
 
 ### Steps
-執行成功確認、雙擊與重送、異 payload 衝突、逾時後以原 event 安全重試、Phase A 後 process crash 再由 Recovery Job 以原 event 完成，以及在各邊界注入永久業務失敗與暫時技術失敗。
+執行成功確認、雙擊與重送、異 payload 衝突、逾時後以原 event 安全重試、Phase A 後 process crash 再由 Recovery Job 以原 event 完成，以及在各邊界注入永久業務失敗與暫時技術失敗。特別驗Inventory寫入後Sales永久拒絕時先完整rollback，再同event／hash／lease CAS終結；失敗記錄中斷可恢復，CAS不能覆寫已成功結果；Confirm Phase A／Cancel／Create競爭均遵守Fulfillment → Shipment鎖序。
 
 ### Expected result
-一個 source event 最多產生一次完整效果；Issue line 集合與全部 picked Allocation 集合完全相等；永久業務失敗令 Shipment 回 DRAFT 且零 Inventory／Sales 效果；技術不明保留 SHIPPING 並可由原 event 查回唯一結果，不出現顯示 SHIPPED 而 Inventory 未 Issue 的假成功；成功時 On Hand、Reservation consumed、SO Fulfilled 與 Shipment／Fulfillment 狀態在同一 commit 內一致。
+一個 source event 最多產生一次完整效果；Issue line 集合與全部 picked Allocation 集合完全相等；永久業務失敗先確認完整rollback再以受event／lease fencing保護的新transaction令Shipment回DRAFT且零Inventory／Sales效果，不能因provider永久拒絕而無限SHIPPING；技術不明保留 SHIPPING 並可由原 event 查回唯一結果，不出現顯示 SHIPPED 而 Inventory 未 Issue 的假成功；成功時 On Hand、Reservation consumed、SO Fulfilled 與 Shipment／Fulfillment 狀態在同一 commit 內一致。
 
 ### Acceptance criteria
 Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`fulfillment-technical`。
@@ -205,6 +205,8 @@ Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：
 
 ### Steps
 驗證每個 route 的 auth、permission、strict schema、response schema、分頁與穩定錯誤；state-changing endpoint 真正遵守 `Idempotency-Key`；IN_PROGRESS 回 202＋status URL；literal route 不被 `/:id` 攔截；print／download header、安全 filename 與 owner check；provider projection 欄位、狀態、version 與 confirm／reverse result 完全匹配；以及 route permission、URL state、衝突保留輸入、processing banner 不建立新 event、鍵盤可達性、heading 結構、`aria-busy` 與文字狀態 badge。
+
+P0 TASK-011另驗最小真實fulfillmentOpenMatter註冊：無open matter允許Sales release、active claim／operation阻止、缺provider／UNKNOWN fail closed；schema安裝／app rollback不能解除guard或提前恢復writers。
 
 ### Expected result
 契約語意與雙方設計一致，provider 能力未落地時契約測試明確 BLOCKED 而非 PASS；provider 回傳異常時 fail closed 並發出 critical 訊號；前端 `allowedActions` 不取代 route authorization；瀏覽器層行為以實際瀏覽器自動化驗證，工具未具備時記為 BLOCKED，不得以程式碼檢視或 jsdom 結果偽裝瀏覽器證據。

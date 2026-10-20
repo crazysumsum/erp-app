@@ -54,3 +54,7 @@ All documentation gaps found in this run are closed. `GAP-TR-002` was delivered 
 ## 2026-10-20 requalification disposition
 
 The current contract inventory, ownership, proposed P0 dependency correction, HD-006/HD-007 alternatives, exact candidate hashes and verification limits are recorded in [10_implementation_readiness.md](10_implementation_readiness.md). No legacy narrative is deleted. Seven source pins are refreshed as observations with review-pending versions; historical approval records are preserved. Product implementation remains BLOCKED.
+
+## Independent review correction scope
+
+The independent 2026-10-20 R1 found IR-001/002/003 (HIGH) and IR-004 (MEDIUM); their original evidence, narrow design/plan/test-spec corrections and actual follow-up disposition are recorded in `04_design_review.md`. These correct contradictions against existing requirements, not exceptions to quantity, atomicity, locking or acceptance requirements. Current planning approval and publication status are recorded in `10_implementation_readiness.md`; the previous push rejection remains historical and is not retried without the user's later explicit publication authority.
