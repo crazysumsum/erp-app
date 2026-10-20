@@ -7,8 +7,8 @@ import { SUPPLIER_CSV_STRINGIFY_OPTIONS, SUPPLIER_IMPORT_COLUMN_NAMES } from "..
 import { createSupplierHarness } from "./supplierHttpHarness.js";
 
 /**
- * TASK-051 step 2b：IMP-008（匯入 upload／confirm 冪等），真 app、真 HTTP、真 MySQL，並發請求同時發出。
- * SKU-005 嘅 carrier 等 HD-113（supplier_sku_refs 嘅 SKU FK 冇強制執行）處理完先加。
+ * TASK-051 step 2b：SKU-005（relation 唯一性同 FK）同 IMP-008（匯入 upload／confirm 冪等），真 app、真 HTTP、真 MySQL，
+ * 並發請求同時發出，再喺 DB 直接試錯誤資料。
  */
 const integrationTest = process.env.DB_INTEGRATION_TESTS === "1" ? test : test.skip;
 const h = Object.assign(createSupplierHarness("con51"), { users: {} });
@@ -22,6 +22,84 @@ before(async () => {
 after(() => h.stop());
 
 const tag = () => randomUUID().slice(0, 8).toUpperCase();
+
+async function purchasableSku(code, uoms = 1) {
+  const now = Date.now();
+  const [item] = await h.db.execute("INSERT INTO items (name, status, created_at, updated_at) VALUES (?, 'active', ?, ?)", [code, now, now]);
+  h.cleanup.push(["DELETE FROM items WHERE id = ?", [item.insertId]]);
+  const [sku] = await h.db.execute(
+    "INSERT INTO item_skus (item_id, sku_code, sku_name, status, purchasable, created_at, updated_at) VALUES (?, ?, ?, 'active', 1, ?, ?)",
+    [item.insertId, code, code, now, now]);
+  h.cleanup.push(["DELETE FROM item_skus WHERE id = ?", [sku.insertId]]);
+  const mappings = [];
+  for (let index = 0; index < uoms; index += 1) {
+    const [uom] = await h.db.execute("INSERT INTO item_uoms (code, name, created_at, updated_at) VALUES (?, 'Each', ?, ?)", [`${code}-${index}`, now, now]);
+    h.cleanup.push(["DELETE FROM item_uoms WHERE id = ?", [uom.insertId]]);
+    const [mapping] = await h.db.execute(
+      "INSERT INTO item_sku_uoms (sku_id, uom_id, to_base_factor, is_base, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
+      [sku.insertId, uom.insertId, index === 0 ? 1 : 12, index === 0 ? 1 : 0, now, now]);
+    h.cleanup.push(["DELETE FROM item_sku_uoms WHERE id = ?", [mapping.insertId]]);
+    mappings.push(Number(mapping.insertId));
+  }
+  return { id: Number(sku.insertId), uoms: mappings };
+}
+
+integrationTest("TC-082 (SKU-005): concurrent creates keep one relation per Supplier and SKU and one Supplier item code per Supplier, and the database itself refuses duplicates and a UOM of another SKU, keyed by IDs only", async () => {
+  const t = tag();
+  const supplierId = await h.seedSupplier(`REL-${t}`, `Relation ${t}`);
+  const skuA = await purchasableSku(`RA-${t}`);
+  const skuB = await purchasableSku(`RB-${t}`);
+  const create = (body) => h.send(h.users.mgmt, h.route("POST /api/v1/suppliers/:id/sku-relations/create"), { ids: { id: supplierId }, body });
+
+  // 同一個 Supplier＋SKU 同時建立：一個成功，其餘 409，DB 只得一行。
+  const sameSku = await Promise.all(Array.from({ length: 5 }, () => create({ skuId: skuA.id, purchaseSkuUomId: skuA.uoms[0] })));
+  assert.equal(sameSku.filter((r) => r.status === 201).length, 1, sameSku.map((r) => `${r.status} ${r.code}`).join(","));
+  assert.ok(sameSku.every((r) => r.status === 201 || (r.status === 409 && r.code === "SUPPLIER_SKU_RELATION_EXISTS")),
+    sameSku.map((r) => `${r.status} ${r.code}`).join(","));
+  // 同一個 Supplier 商品代碼同時用喺兩個 SKU：一個成功，另一個 409。
+  const skuC = await purchasableSku(`RC-${t}`);
+  const sameCode = await Promise.all([skuB, skuC].map((sku) => create({ skuId: sku.id, purchaseSkuUomId: sku.uoms[0], supplierItemCode: `ITEM-${t}` })));
+  assert.deepEqual(sameCode.map((r) => r.status).sort(), [201, 409], sameCode.map((r) => r.text).join(" | "));
+  assert.equal(sameCode.find((r) => r.status === 409).code, "SUPPLIER_ITEM_CODE_TAKEN");
+  // 另一個 SKU 嘅採購單位：400。
+  const freeSku = await purchasableSku(`RD-${t}`);
+  const foreignUom = await create({ skuId: freeSku.id, purchaseSkuUomId: skuA.uoms[0] });
+  assert.deepEqual([foreignUom.status, foreignUom.code], [400, "SUPPLIER_SKU_UOM_INVALID"], foreignUom.text);
+  const [rows] = await h.db.query("SELECT sku_id, supplier_item_code FROM supplier_sku_refs WHERE supplier_id = ? ORDER BY sku_id", [supplierId]);
+  assert.equal(rows.filter((row) => Number(row.sku_id) === skuA.id).length, 1);
+  assert.equal(rows.filter((row) => row.supplier_item_code === `ITEM-${t}`).length, 1);
+
+  // 直接喺 DB 試：約束本身擋，唔係靠 service。
+  const now = Date.now();
+  const insert = (fields) => h.db.execute(
+    `INSERT INTO supplier_sku_refs (supplier_id, sku_id, purchase_sku_uom_id, supplier_item_code, supplier_item_code_key, relationship_status,
+       created_at, updated_at) VALUES (?, ?, ?, ?, ?, 'alternative', ?, ?)`,
+    [fields.supplierId ?? supplierId, fields.skuId, fields.uomId ?? null, fields.code ?? "", fields.code ? fields.code.toLowerCase() : null, now, now]);
+  const refused = async (fields, codeName) => {
+    await assert.rejects(insert(fields), (error) => [error, error.cause].some((link) => link?.code === codeName), JSON.stringify(fields));
+  };
+  await refused({ skuId: skuA.id }, "ER_DUP_ENTRY");
+  const losingSku = [skuB, skuC][sameCode.findIndex((r) => r.status === 409)];
+  await refused({ skuId: losingSku.id, code: `ITEM-${t}` }, "ER_DUP_ENTRY");
+  await refused({ skuId: freeSku.id, uomId: skuA.uoms[0] }, "ER_NO_REFERENCED_ROW_2");
+  await refused({ skuId: freeSku.id, supplierId: 999_999_999 }, "ER_NO_REFERENCED_ROW_2");
+  // DEF-029：0087 之前呢行會入到（FK 冇檢查）。
+  await refused({ skuId: 999_999_999 }, "ER_NO_REFERENCED_ROW_2");
+
+  // 關係只靠 ID：每條 FK 都指向 id 欄，冇一條用 code 或 name。
+  const [foreignKeys] = await h.db.query(
+    `SELECT constraint_name AS name, column_name AS columnName, referenced_table_name AS referencedTable, referenced_column_name AS referencedColumn
+       FROM information_schema.key_column_usage
+      WHERE table_schema = DATABASE() AND table_name = 'supplier_sku_refs' AND referenced_table_name IS NOT NULL ORDER BY name, ordinal_position`);
+  assert.deepEqual(foreignKeys.map((key) => [key.name, key.columnName, key.referencedTable, key.referencedColumn]), [
+    ["fk_supplier_sku_refs_created_by", "created_by", "users", "id"],
+    ["fk_supplier_sku_refs_purchase_uom", "purchase_sku_uom_id", "item_sku_uoms", "id"],
+    ["fk_supplier_sku_refs_purchase_uom", "sku_id", "item_sku_uoms", "sku_id"],
+    ["fk_supplier_sku_refs_sku", "sku_id", "item_skus", "id"],
+    ["fk_supplier_sku_refs_supplier", "supplier_id", "suppliers", "id"],
+    ["fk_supplier_sku_refs_updated_by", "updated_by", "users", "id"]
+  ]);
+});
 
 async function upload(content, key) {
   const form = new FormData();
