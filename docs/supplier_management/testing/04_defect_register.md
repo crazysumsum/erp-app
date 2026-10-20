@@ -100,10 +100,13 @@ together. Decision: HD-115.
 
 Fix, per HD-115 A:
 
-- **The change.** Identifier create, identifier update and Supplier create run their whole transaction again once when it fails with `ER_LOCK_DEADLOCK`. The helper is `retryOnceOnDeadlock` in `supplierErrors.js`, following the retry in `SupplierRelationService`. By the time the retry runs, the winner has committed, so the retry hits the unique key and returns the normal 409.
-- **Supplier create.** It turned out to be affected as well. The HTTP probe with a reused code had not shown this, but the forced test returns 500 on every run without the fix.
-- **The tests.** `supplierDeadlockRetry.integration.test.js` forces the deadlock deterministically:
+- **What changed.** Four writes now run their whole transaction again, once, when it fails with `ER_LOCK_DEADLOCK`: identifier create, identifier update, Supplier create, and Supplier Code change. The helper is `retryOnceOnDeadlock` in `supplierErrors.js`, following the retry in `SupplierRelationService`.
+- **Why the retry answers 409.** The retry either sees the winner's committed row or queues behind it, so it hits the unique key and returns the normal 409. If the winner rolled back instead, the retry succeeds.
+- **Logging.** Each retry logs `supplier.write.deadlock_retried` with the operation and request ID, so deadlocks stay visible.
+- **Coverage beyond HD-115.** Supplier create turned out to be affected too: the forced test returns 500 on every run without the fix. REV-104 found Supplier Code change exposed in the same way (M-1). It is fixed under the same rule. CSV import already maps a deadlock to `SUPPLIER_IMPORT_ROW_BUSY`.
+- **The test.** `supplierDeadlockRetry.integration.test.js` forces the deadlock deterministically:
   - A third transaction inserts the same value and does not commit.
   - Once performance_schema shows both requests queued behind it, it rolls back.
-  - InnoDB's `lock_deadlocks` counter must rise by exactly one.
-  - The two responses must be 201/200 and 409.
+  - The test checks that InnoDB's latest deadlock happened after the test started and on the expected unique index.
+  - The two responses must be 201/200 and 409, and the retry must be logged.
+  - The two requests come from two different users. Requests from one user queue on that user's row first.
