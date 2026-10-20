@@ -250,6 +250,10 @@ client 目前只有一個煙霧測試，覆蓋率沒有設門檻——第一段�
 
 [.github/workflows/ci.yml](.github/workflows/ci.yml) 的依賴掃描、lint、前端建置、Playwright 與 MySQL coverage 並行執行。Sales Import TC-042 的兩個原始容量案例拆到另一個獨立 MySQL job，不帶 coverage 插樁；資料量、併發、期限及斷言不變。原全域及高風險檔案 coverage 門檻維持不變。
 
+Server 使用 Node 原生 `--test-shard=1/4` 至 `4/4` 分配原本的完整測試集合；每組各有獨立 MySQL，組內仍以 `--test-concurrency=1` 串行執行。Client coverage 獨立執行，不再等待 Server。既有兩組無插樁容量測試只在 Server 第一組執行一次。
+
+四組 Server 必須全部成功，才下載同輪 raw V8 coverage，由 Node 原生引擎合併後執行原有 92% lines／83% branches／90% functions 及全部高風險檔案門檻。缺組、檔案損壞、報告數量不符，或 commit／Node 版本／checkout 路徑不同都會失敗；不平均各組百分比。Raw artifacts 保留一天。合併命令保留 Node 原有測試檔案排除規則，另只排除新增的 CI 報告組裝程式；原有應用程式檔案不增加排除。規則測試以真實互補分支，確認合併的 LCOV 與未拆分報告一致，且未覆蓋函式仍會令原生門檻失敗。本機 `npm run test:coverage --workspace server` 的完整執行方式維持不變。
+
 PR 以 base/head 的 merge-base 差異判斷是否需要 TC-042，包含刪除與改名前路徑。Sales、Customer／Item／Inventory／Business Master、共用服務、認證、交易、排程、migration、依賴及 CI 變更均須執行；未知路徑、空差異或無法取得差異亦須執行。只有已知無關的 Markdown、非 Sales／共用框架的 client 檔案，以及 Supplier 專屬程式／測試可略過這組容量測試；其他回歸照常執行。規則及自動化測試位於 [.github/scripts](.github/scripts/sales-import-capacity.mjs)。main push、既有每週排程及手動執行均跑完整容量驗證。
 
 `Test (server + client, MySQL integration)` 保留為固定彙總檢查：所有一般檢查須成功；TC-042 須通過，或由成功的範圍判斷明確列為不適用。失敗、取消、遺失結果及意外跳過都會報紅。
