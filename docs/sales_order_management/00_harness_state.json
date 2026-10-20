@@ -1,32 +1,33 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1060,
+  "revision": 1249,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-004",
-  "current_task": null,
+  "current_task": "TASK-049",
   "baseline": {
-    "design": "d9a2f33ff66c59ba71aa6825d5fb01a67cf714f8a83217aa99d2f6e25b8a989d",
-    "plan": "9eb937529cb5ff3be6f45de047ab03f15d3b9c6b4cb76c99f5f3fb4777bfc8bd",
-    "code_commit": "0fa41eef54fd01bb163f1ceaf57f46b5acada1a7",
-    "source_fingerprint": "e51ce39ec74c5131202b3bfff4530523506d81423cc2a915a3d1c4bebe28d1fd",
-    "worktree": "/private/tmp/erp-sales-p3-postmerge-docs",
-    "default_commit": "0fa41eef54fd01bb163f1ceaf57f46b5acada1a7",
-    "mode_entry_commit": "6936736ba1fb98f4fcb8365377f59f0a0f7a4897"
+    "design": "eb7302ca9d76ffb9994ac6d6ff0e1a34a7c07d52c97fb98adf559f82691ab1d8",
+    "plan": "990d537763fcd261e760da9cbb804a682786971fbfefd8f0ff0709497405b08f",
+    "code_commit": "705e5afdb889eaf6e409c5cf68431d13d14ceeb2",
+    "source_fingerprint": "135709323ac68c89c16b544bd49a4be3dc63e0b868fa85ec9f51b343a3505c3b",
+    "worktree": "/Users/sam/.codex/worktrees/sales-def016-hotfix/erp-app",
+    "default_commit": "9c4000920d31427fbc98511f00dae435616880bc",
+    "mode_entry_commit": "7f4fa5b5740797a6b8c5aacd4625a43f273d8df4"
   },
   "runtime": {
-    "instance_id": "sales-p3-recovery-726a0baa1fa1",
+    "instance_id": "sales-def016-d630a2a151aa",
     "owner": "Codex /root",
     "resources": {
-      "workspace": "/private/tmp/erp-sales-p3-postmerge-docs",
-      "temp-directory": "/Users/sam/.codex/recovery-evidence/sales-p3-726a0baa1fa1",
-      "mysql-instance": "All four original synthetic instances NORMAL STOPPED. Immutable data/evidence retained under verified private vault; no active SQL lease.",
-      "evidence-custody": "/Users/sam/.codex/recovery-evidence/sales-p3-726a0baa1fa1/VERIFIED.json SHA256e4e0baa6323c5e3bda884e5947caca28647f625ab5cbc399ba10f539d215c9b3"
+      "workspace": "/Users/sam/.codex/worktrees/sales-def016-hotfix/erp-app",
+      "mysql-instance": "Owned26.7 primary UUID67728b8c loopback127.0.0.1:52307 strongrootpassword, originalprivate socket; secondary UUID88d27118 private0700socket-only skip_networking1/rootblank; both exactprocess records actual. Two new87 ledgers and original3 fullledgers verified. Onlyoneexactcoveragefixturegrant pendingrevoke.; Afterall33, exact temporarycoveragegrant revoked and entireoriginalfixturegrantlist restored; instances unchanged and owned.; main72 all33 completed and only temporarycoveragegrant revoked; entireoriginalfixturegrantlist restored again.",
+      "temp-directory": "/Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private",
+      "evidence-vault": "/Users/sam/.codex/recovery-evidence/sales-def016-pr250-facf0aab protected0700; original688premerge manifest retained; current722 refs exact main72-premerge-preservation-manifest.json SHA2560f3d3335627d6de9013b2de6c5bc450730bee827e2e6f854ef5b2c3f73263d91; privatefinal/ignored preservation pendingactualmerge.",
+      "inventory-rerun-namespaces": "Same owned twoUUIDs/sockets; ten new *_main72r2 schemas preserve prior DDL;025 exact87; private main72-r2-runtime-bindings.json/ready receipt"
     },
-    "lease_ref": "/Users/sam/.codex/recovery-evidence/sales-p3-726a0baa1fa1/MANAGED_ARCHIVE.json SHA256171e20d45dcaa8dee640f6fa4d9210ef51ec3cae6bba7b86a1d8bb6d19e2b8dd; original owned runtime stopped and worktree archived; docs-only followup."
+    "lease_ref": "/Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/runtime-extension-ready.json SHA256a406a22bea99d83e2dd8c5aeb85e2828a93fd1436b9519bb6146ac36a7f3eeee"
   },
   "tasks": {
     "TASK-001": "DONE",
@@ -5370,6 +5371,157 @@
         "DEC-027"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-HD018-DEF016-DESIGN",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Verified direct Sam user message in Customer chat01a09d60-e0f0-7c53-a064-eeb58fb83c2f turn01a1443b-4991-7fd0-99e5-405de41e8f44 / userMessage01a1443b-49fe-7360-9dc1-0a136faf2f1d: 批准 HD-018，請通知 Sales 將死鎖修復及直接相關測試拆成獨立 PR，通過正常 CI／審查後先合 main；之後自動整合驗證 Customer，所有 Gate 通過後合併 PR #244，不擴大 Customer 修復範圍，完整下游整合驗收保持阻塞。 Actual read_thread authenticated human evidence observed2026-10-16; deliveryscope explicitly approved, Codex computed resulting hashes, no claim Sam inspected unseen hashes. Existing adopted DEC025 narrow mechanical owner-source pin/reference authority preserves unchanged business contracts/UAT-NA reasons and every prior approval. DESIGN is mechanical current-main Item byte pin only; PLAN is exact HD018 delivery/resource-only mapping, original33/checks/floors intact.",
+      "recorded_at": "2026-10-16T10:33:17.097002+00:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "eb7302ca9d76ffb9994ac6d6ff0e1a34a7c07d52c97fb98adf559f82691ab1d8",
+      "code_commit": null,
+      "scope": [
+        "PHASE-003",
+        "PHASE-004",
+        "TASK-030",
+        "TASK-049",
+        "DEF-016",
+        "server/src/modules/sales/SalesOrderService.js",
+        "server/test/integration/salesConfirmation.integration.test.js",
+        "docs/sales_order_management/**"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-HD018-DEF016-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Verified direct Sam user message in Customer chat01a09d60-e0f0-7c53-a064-eeb58fb83c2f turn01a1443b-4991-7fd0-99e5-405de41e8f44 / userMessage01a1443b-49fe-7360-9dc1-0a136faf2f1d: 批准 HD-018，請通知 Sales 將死鎖修復及直接相關測試拆成獨立 PR，通過正常 CI／審查後先合 main；之後自動整合驗證 Customer，所有 Gate 通過後合併 PR #244，不擴大 Customer 修復範圍，完整下游整合驗收保持阻塞。 Actual read_thread authenticated human evidence observed2026-10-16; deliveryscope explicitly approved, Codex computed resulting hashes, no claim Sam inspected unseen hashes. Existing adopted DEC025 narrow mechanical owner-source pin/reference authority preserves unchanged business contracts/UAT-NA reasons and every prior approval. DESIGN is mechanical current-main Item byte pin only; PLAN is exact HD018 delivery/resource-only mapping, original33/checks/floors intact.",
+      "recorded_at": "2026-10-16T10:33:17.097002+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "990d537763fcd261e760da9cbb804a682786971fbfefd8f0ff0709497405b08f",
+      "code_commit": null,
+      "scope": [
+        "PHASE-003",
+        "PHASE-004",
+        "TASK-030",
+        "TASK-049",
+        "DEF-016",
+        "server/src/modules/sales/SalesOrderService.js",
+        "server/test/integration/salesConfirmation.integration.test.js",
+        "docs/sales_order_management/**"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-HD018-DEF016-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Verified direct Sam user message in Customer chat01a09d60-e0f0-7c53-a064-eeb58fb83c2f turn01a1443b-4991-7fd0-99e5-405de41e8f44 / userMessage01a1443b-49fe-7360-9dc1-0a136faf2f1d: 批准 HD-018，請通知 Sales 將死鎖修復及直接相關測試拆成獨立 PR，通過正常 CI／審查後先合 main；之後自動整合驗證 Customer，所有 Gate 通過後合併 PR #244，不擴大 Customer 修復範圍，完整下游整合驗收保持阻塞。 Actual read_thread authenticated human evidence observed2026-10-16; deliveryscope explicitly approved, Codex computed resulting hashes, no claim Sam inspected unseen hashes. Existing adopted DEC025 narrow mechanical owner-source pin/reference authority preserves unchanged business contracts/UAT-NA reasons and every prior approval. DESIGN is mechanical current-main Item byte pin only; PLAN is exact HD018 delivery/resource-only mapping, original33/checks/floors intact.",
+      "recorded_at": "2026-10-16T10:33:17.097002+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "990d537763fcd261e760da9cbb804a682786971fbfefd8f0ff0709497405b08f",
+      "code_commit": null,
+      "scope": [
+        "PHASE-003",
+        "PHASE-004",
+        "TASK-030",
+        "TASK-049",
+        "DEF-016",
+        "server/src/modules/sales/SalesOrderService.js",
+        "server/test/integration/salesConfirmation.integration.test.js",
+        "docs/sales_order_management/**"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-HD018-DERIVED-UATNA-NFR-014",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Verified direct Sam user message in Customer chat01a09d60-e0f0-7c53-a064-eeb58fb83c2f turn01a1443b-4991-7fd0-99e5-405de41e8f44 / userMessage01a1443b-49fe-7360-9dc1-0a136faf2f1d: 批准 HD-018，請通知 Sales 將死鎖修復及直接相關測試拆成獨立 PR，通過正常 CI／審查後先合 main；之後自動整合驗證 Customer，所有 Gate 通過後合併 PR #244，不擴大 Customer 修復範圍，完整下游整合驗收保持阻塞。 Actual read_thread authenticated human evidence observed2026-10-16; deliveryscope explicitly approved, Codex computed resulting hashes, no claim Sam inspected unseen hashes. Existing adopted DEC025 narrow mechanical owner-source pin/reference authority preserves unchanged business contracts/UAT-NA reasons and every prior approval. DERIVED unchanged NFR-014 N/A condition; original approval APR-P3-POSTMERGE-CUSTOMERPIN-DERIVED-UATNA remains verbatim. Original source: DERIVED mechanical postmerge document binding under Sam-adopted DEC-025 implementation/68_phase3_activation_decision.md:27,49, and direct user no-impact/retest instruction. Codex computed Customer document-only pin, D/P, two unchanged NFR UAT-NA references and matrix; no fresh Sam hash inspection or new business/security/acceptance authority. Original scopes, expiry, authority and code_commit unchanged; Customer HD013 timing waiver NOT adopted; original750 implementation/run/CI/Gate bindings preserved. DEC027 once-only retirement and276 unavailable historical raw references unchanged. Prior source_ref (verbatim): DERIVED under actual adopted DEC025 packet68 line27 narrow source-pin/hash/matrix/reference authority; Codex computed these baselines, no fresh Sam hash inspection. Origin APR-PHASE3-UATNA-MAINd69b-MECHANICAL remains unchanged. Only Customer HD012 design-document consumed pin/currentversion and two unchanged NFR014015 UAT-NA references/matrix; no sharedDataTable/Customer UI implementation or new Sales behavior adopted. All original33/live35/fiveCI/50users/P95<=3s/10korders50klines<=30m/worker30s/parser180s/coverage/memory/wholeReview/unmodifiedGate preserved. DEC027 exact276 retirement already completed once at0104/source675a receipt ed8491a640fa071f32f29562ad4042df5eb7e225a2556a83a398ced5833f386a; retain originalqualifier/history/retiredindex, no secondretirement or readding/filtering276. Exactprospective patch/derived records require actual independent review before application.",
+      "recorded_at": "2026-10-16T10:33:17.097002+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "990d537763fcd261e760da9cbb804a682786971fbfefd8f0ff0709497405b08f",
+      "code_commit": null,
+      "scope": [
+        "NFR-014",
+        "NFR-015"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-HD018-DERIVED-UATNA-NFR-015",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Verified direct Sam user message in Customer chat01a09d60-e0f0-7c53-a064-eeb58fb83c2f turn01a1443b-4991-7fd0-99e5-405de41e8f44 / userMessage01a1443b-49fe-7360-9dc1-0a136faf2f1d: 批准 HD-018，請通知 Sales 將死鎖修復及直接相關測試拆成獨立 PR，通過正常 CI／審查後先合 main；之後自動整合驗證 Customer，所有 Gate 通過後合併 PR #244，不擴大 Customer 修復範圍，完整下游整合驗收保持阻塞。 Actual read_thread authenticated human evidence observed2026-10-16; deliveryscope explicitly approved, Codex computed resulting hashes, no claim Sam inspected unseen hashes. Existing adopted DEC025 narrow mechanical owner-source pin/reference authority preserves unchanged business contracts/UAT-NA reasons and every prior approval. DERIVED unchanged NFR-015 N/A condition; original approval APR-P3-POSTMERGE-CUSTOMERPIN-DERIVED-UATNA remains verbatim. Original source: DERIVED mechanical postmerge document binding under Sam-adopted DEC-025 implementation/68_phase3_activation_decision.md:27,49, and direct user no-impact/retest instruction. Codex computed Customer document-only pin, D/P, two unchanged NFR UAT-NA references and matrix; no fresh Sam hash inspection or new business/security/acceptance authority. Original scopes, expiry, authority and code_commit unchanged; Customer HD013 timing waiver NOT adopted; original750 implementation/run/CI/Gate bindings preserved. DEC027 once-only retirement and276 unavailable historical raw references unchanged. Prior source_ref (verbatim): DERIVED under actual adopted DEC025 packet68 line27 narrow source-pin/hash/matrix/reference authority; Codex computed these baselines, no fresh Sam hash inspection. Origin APR-PHASE3-UATNA-MAINd69b-MECHANICAL remains unchanged. Only Customer HD012 design-document consumed pin/currentversion and two unchanged NFR014015 UAT-NA references/matrix; no sharedDataTable/Customer UI implementation or new Sales behavior adopted. All original33/live35/fiveCI/50users/P95<=3s/10korders50klines<=30m/worker30s/parser180s/coverage/memory/wholeReview/unmodifiedGate preserved. DEC027 exact276 retirement already completed once at0104/source675a receipt ed8491a640fa071f32f29562ad4042df5eb7e225a2556a83a398ced5833f386a; retain originalqualifier/history/retiredindex, no secondretirement or readding/filtering276. Exactprospective patch/derived records require actual independent review before application.",
+      "recorded_at": "2026-10-16T10:33:17.097002+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "990d537763fcd261e760da9cbb804a682786971fbfefd8f0ff0709497405b08f",
+      "code_commit": null,
+      "scope": [
+        "NFR-014",
+        "NFR-015"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-HD018-DEF016-DESIGN-MODULE-ANCHOR",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Verified direct Sam user message in Customer chat01a09d60-e0f0-7c53-a064-eeb58fb83c2f turn01a1443b-4991-7fd0-99e5-405de41e8f44 / userMessage01a1443b-49fe-7360-9dc1-0a136faf2f1d: 批准 HD-018，請通知 Sales 將死鎖修復及直接相關測試拆成獨立 PR，通過正常 CI／審查後先合 main；之後自動整合驗證 Customer，所有 Gate 通過後合併 PR #244，不擴大 Customer 修復範圍，完整下游整合驗收保持阻塞。 Actual read_thread authenticated human evidence observed2026-10-16; deliveryscope explicitly approved, Codex computed resulting hashes, no claim Sam inspected unseen hashes. Existing adopted DEC025 narrow mechanical owner-source pin/reference authority preserves unchanged business contracts/UAT-NA reasons and every prior approval. DESIGN is mechanical current-main Item byte pin only; PLAN is exact HD018 delivery/resource-only mapping, original33/checks/floors intact. Mechanical artifact-level module identity required by installed has_approval(subject=module_id); retains explicit HD018 corrective delivery limitation, no expansion of implementation scope/P4 authority. Original narrow record remains unchanged.",
+      "recorded_at": "2026-10-16T10:33:17.097002+00:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "eb7302ca9d76ffb9994ac6d6ff0e1a34a7c07d52c97fb98adf559f82691ab1d8",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management",
+        "PHASE-003",
+        "PHASE-004",
+        "TASK-030",
+        "TASK-049",
+        "DEF-016",
+        "server/src/modules/sales/SalesOrderService.js",
+        "server/test/integration/salesConfirmation.integration.test.js",
+        "docs/sales_order_management/**"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-HD018-DEF016-PLAN-MODULE-ANCHOR",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Verified direct Sam user message in Customer chat01a09d60-e0f0-7c53-a064-eeb58fb83c2f turn01a1443b-4991-7fd0-99e5-405de41e8f44 / userMessage01a1443b-49fe-7360-9dc1-0a136faf2f1d: 批准 HD-018，請通知 Sales 將死鎖修復及直接相關測試拆成獨立 PR，通過正常 CI／審查後先合 main；之後自動整合驗證 Customer，所有 Gate 通過後合併 PR #244，不擴大 Customer 修復範圍，完整下游整合驗收保持阻塞。 Actual read_thread authenticated human evidence observed2026-10-16; deliveryscope explicitly approved, Codex computed resulting hashes, no claim Sam inspected unseen hashes. Existing adopted DEC025 narrow mechanical owner-source pin/reference authority preserves unchanged business contracts/UAT-NA reasons and every prior approval. DESIGN is mechanical current-main Item byte pin only; PLAN is exact HD018 delivery/resource-only mapping, original33/checks/floors intact. Mechanical artifact-level module identity required by installed has_approval(subject=module_id); retains explicit HD018 corrective delivery limitation, no expansion of implementation scope/P4 authority. Original narrow record remains unchanged.",
+      "recorded_at": "2026-10-16T10:33:17.097002+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "990d537763fcd261e760da9cbb804a682786971fbfefd8f0ff0709497405b08f",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management",
+        "PHASE-003",
+        "PHASE-004",
+        "TASK-030",
+        "TASK-049",
+        "DEF-016",
+        "server/src/modules/sales/SalesOrderService.js",
+        "server/test/integration/salesConfirmation.integration.test.js",
+        "docs/sales_order_management/**"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -8960,6 +9112,66 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-HD018-DEF016-LOCAL-ACTIVATION-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_def016_lock_review",
+      "reviewed_baseline": "eb7302ca9d76ffb9994ac6d6ff0e1a34a7c07d52c97fb98adf559f82691ab1d8",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/def016-candidate-local-activation-r1-reviewer-proof.json SHA2566f5986d6a09fe9987a8a6be922167997552435c47df1cad3d056d7a0b620cd0c; actual newsource/RED29/111caller PASS and exactmetadata reviewed; localclosure only, no TC042/33/CI/wholePhase/Customer/mergeclaim.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-HD018-INTEGRATED-CODE-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "eb7302ca9d76ffb9994ac6d6ff0e1a34a7c07d52c97fb98adf559f82691ab1d8",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/def016-integrated-product-artifact-r1-reviewer-proof.json SHA256c8ce83c430b0894294b0a50163cb6c5bd3a2bbcab03035c3488adf215aa2d51a; actual scoped code/artifact or originalskipprovenance review, zero required findings. CurrentpublishedCI/finalPRreview/mergeGate separate pending.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-HD018-COVERAGE-SKIP-PROVENANCE-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "eb7302ca9d76ffb9994ac6d6ff0e1a34a7c07d52c97fb98adf559f82691ab1d8",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/server-coverage-133-skip-provenance-r1-reviewer-proof.json SHA256e174cd43d1ad54306123c5115a6c8be7b36d52339d7013e66b343dac4ed97677; actual scoped code/artifact or originalskipprovenance review, zero required findings. CurrentpublishedCI/finalPRreview/mergeGate separate pending.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-HD018-PR250-PUBLISHED-facf-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "eb7302ca9d76ffb9994ac6d6ff0e1a34a7c07d52c97fb98adf559f82691ab1d8",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/pr250-facf-published-final-review-r1-proof.json SHA2563466dc66731029bc585af9d2c693349a61ec894b39d3ad5492b541924354013a; actual independent published PR250 exactfacf code/artifact/selftest approval, all33 standardchecks and94 artifacts verified; zero required findings. CI stillseparatepending, no Gate/mergeclaim.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-HD018-PR250-PUBLISHED-b59-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "eb7302ca9d76ffb9994ac6d6ff0e1a34a7c07d52c97fb98adf559f82691ab1d8",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/pr250-b59-published-final-review-r2-proof.json SHA256dd2daed9b1afbcf46d52a2e2bf2c8584b6077ba51a468d29377251a67c0d6a39; actual independent exactpublishedb59/9Salespaths/currentbody/code/all33/94artifacts/35browser/133conditionalSKIP/ENV017/exactrights review APPROVED, zero required findings. CI separatepending; no mergeGatewaiver.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -11778,6 +11990,138 @@
       "source_ref": "/Users/sam/.codex/recovery-evidence/sales-p3-726a0baa1fa1/post-merge-docs-alignment/root-static-audit.json SHA256ffefc8fc226bb5ca431542bf61cc9221281babfc7884ebf40c135972ae66e8b1; /Users/sam/.codex/recovery-evidence/sales-p3-726a0baa1fa1/post-merge-docs-alignment/trace-validation.json SHA256a66c27c18427403838e8b8a59cfc2af171964b98ef8dba34c92ff6812eb30129; independent proof /Users/sam/.codex/recovery-evidence/sales-p3-726a0baa1fa1/post-merge-docs-alignment/p3-postmerge-five-file-actual-r1-reviewer-proof.json SHA256d9027f3784acad4487fee194c1b7f9ed92961059947ef3b1d76829ce99c58181; PASS applies only static graph/approvals/schema/matrix/pins/diff/history checks. Currentmain not reexecuted; original750 implementation qualification unchanged.",
       "actor": "Codex /root",
       "observed_at": "2026-10-16T00:44:59.958824+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "HD018 actualnewmainRED28PASS1FAIL then72native+39unit111PASS0FAIL0SKIP, realscopedreview supports localDEF016closure only; PHASE003/004 correctivequalification remainsREOPENED",
+      "code_commit": "7f4fa5b5740797a6b8c5aacd4625a43f273d8df4",
+      "spec_baseline": "9eb937529cb5ff3be6f45de047ab03f15d3b9c6b4cb76c99f5f3fb4777bfc8bd",
+      "source_fingerprint": "3e8230623cb4e0195302479ea84468947e8cc855f0d6c23c4687461acd842be4",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/def016-candidate-local-activation-r1-reviewer-proof.json SHA2566f5986d6a09fe9987a8a6be922167997552435c47df1cad3d056d7a0b620cd0c; localrunsbeforemetadata D/P retained exactly; no raw evidence relabel. Report106/currentbinding full33stillpending.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-16T10:40:26.196127+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "HD018 integrated original33 DEVELOPER_VERIFIED; independent code and raw133 conditional coverage skip provenance reviewed;35realbrowsercasesPASS; noformalacceptance",
+      "code_commit": "134e06ebedb0a61a492bcb3c033c5f4a9d9775b2",
+      "spec_baseline": "990d537763fcd261e760da9cbb804a682786971fbfefd8f0ff0709497405b08f",
+      "source_fingerprint": "7eabff9895d96119643891372ddae44f7e67bc3924ebb5f5a510f877b18906a5",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/integrated-original33-aggregate.json SHA25657e484fd670a09402056d0b412b3ba1e2afae8f313b6c60d5e0354cebc5244f2; actual unifiedsession92650 joinedexit0; originalall33 run evidence retained and standard evidence_issues each empty.",
+      "actor": "Codex /root actual local execution observation",
+      "observed_at": "2026-10-20T01:54:06.519876+00:00"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "PR250 publishedfacf independentcode/artifact/selftestreview",
+      "code_commit": "facf0aabfbd0b898a93fe037fefd08f8bc0bda30",
+      "spec_baseline": "990d537763fcd261e760da9cbb804a682786971fbfefd8f0ff0709497405b08f",
+      "source_fingerprint": "7eabff9895d96119643891372ddae44f7e67bc3924ebb5f5a510f877b18906a5",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/250; /Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/pr250-facf-published-final-review-r1-proof.json SHA2563466dc66731029bc585af9d2c693349a61ec894b39d3ad5492b541924354013a; actual independent published PR250 exactfacf code/artifact/selftest approval, all33 standardchecks and94 artifacts verified; zero required findings. CI stillseparatepending, no Gate/mergeclaim.",
+      "actor": "Codex /root/def016_runtime_recovery_review (actual SEPARATE_AGENT)",
+      "observed_at": "2026-10-20T01:58:58.510092+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Dependency audit",
+      "code_commit": "facf0aabfbd0b898a93fe037fefd08f8bc0bda30",
+      "spec_baseline": "990d537763fcd261e760da9cbb804a682786971fbfefd8f0ff0709497405b08f",
+      "source_fingerprint": "7eabff9895d96119643891372ddae44f7e67bc3924ebb5f5a510f877b18906a5",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/39356136797/job/118411225782; actual GitHubActions completedSUCCESS; privateci-facf-final-run.json SHA25669372f0036716d7df062e8a1609616788021fae55ab1b6d5ae4ea7eb38834d01. Historicalfacf only, notnewmain72/finalcandidatequalification.",
+      "actor": "GitHub Actions (actual gh service observation by Codex /root)",
+      "observed_at": "2026-10-20T02:54:40.104977+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Build frontend",
+      "code_commit": "facf0aabfbd0b898a93fe037fefd08f8bc0bda30",
+      "spec_baseline": "990d537763fcd261e760da9cbb804a682786971fbfefd8f0ff0709497405b08f",
+      "source_fingerprint": "7eabff9895d96119643891372ddae44f7e67bc3924ebb5f5a510f877b18906a5",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/39356136797/job/118411225995; actual GitHubActions completedSUCCESS; privateci-facf-final-run.json SHA25669372f0036716d7df062e8a1609616788021fae55ab1b6d5ae4ea7eb38834d01. Historicalfacf only, notnewmain72/finalcandidatequalification.",
+      "actor": "GitHub Actions (actual gh service observation by Codex /root)",
+      "observed_at": "2026-10-20T02:54:40.104977+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Test (server + client, MySQL integration)",
+      "code_commit": "facf0aabfbd0b898a93fe037fefd08f8bc0bda30",
+      "spec_baseline": "990d537763fcd261e760da9cbb804a682786971fbfefd8f0ff0709497405b08f",
+      "source_fingerprint": "7eabff9895d96119643891372ddae44f7e67bc3924ebb5f5a510f877b18906a5",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/39356136797/job/118411226057; actual GitHubActions completedSUCCESS; privateci-facf-final-run.json SHA25669372f0036716d7df062e8a1609616788021fae55ab1b6d5ae4ea7eb38834d01. Historicalfacf only, notnewmain72/finalcandidatequalification.",
+      "actor": "GitHub Actions (actual gh service observation by Codex /root)",
+      "observed_at": "2026-10-20T02:54:40.104977+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Lint",
+      "code_commit": "facf0aabfbd0b898a93fe037fefd08f8bc0bda30",
+      "spec_baseline": "990d537763fcd261e760da9cbb804a682786971fbfefd8f0ff0709497405b08f",
+      "source_fingerprint": "7eabff9895d96119643891372ddae44f7e67bc3924ebb5f5a510f877b18906a5",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/39356136797/job/118411226090; actual GitHubActions completedSUCCESS; privateci-facf-final-run.json SHA25669372f0036716d7df062e8a1609616788021fae55ab1b6d5ae4ea7eb38834d01. Historicalfacf only, notnewmain72/finalcandidatequalification.",
+      "actor": "GitHub Actions (actual gh service observation by Codex /root)",
+      "observed_at": "2026-10-20T02:54:40.104977+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Browser tests (Playwright)",
+      "code_commit": "facf0aabfbd0b898a93fe037fefd08f8bc0bda30",
+      "spec_baseline": "990d537763fcd261e760da9cbb804a682786971fbfefd8f0ff0709497405b08f",
+      "source_fingerprint": "7eabff9895d96119643891372ddae44f7e67bc3924ebb5f5a510f877b18906a5",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/39356136797/job/118411226480; actual GitHubActions completedSUCCESS; privateci-facf-final-run.json SHA25669372f0036716d7df062e8a1609616788021fae55ab1b6d5ae4ea7eb38834d01. Historicalfacf only, notnewmain72/finalcandidatequalification.",
+      "actor": "GitHub Actions (actual gh service observation by Codex /root)",
+      "observed_at": "2026-10-20T02:54:40.104977+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "HD018 main72 integrated original33 DEVELOPER_VERIFIED",
+      "code_commit": "b0ebc3e0211a0823b355b22ab5f96bf798ed56cb",
+      "spec_baseline": "990d537763fcd261e760da9cbb804a682786971fbfefd8f0ff0709497405b08f",
+      "source_fingerprint": "d46c012bd911a27db22f33812e54dab88d3fa83521a51d1c1814855d592e9965",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/main72-original33-aggregate.json SHA256b1c79876bf869196c4999f60682c05b9477bede6c9e6c76d5819a50c03e530cf; actualsession80405 joined0 plusfirst7sameHEAD/FP; all33 standardissues empty, mandatorycasecontracts unchanged. Rawcoverage3327PASS/0FAIL/133unchangedconditionalSKIP independentlyreviewed723d3517, required10Inventory15PASS0skip; all35realbrowsercasesPASS; dedicated4PASS0skip TC042P95 93.622ms zeroexcluded.",
+      "actor": "Codex /root actual execution observation",
+      "observed_at": "2026-10-20T03:08:52.544135+00:00"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "PR250 publishedb59 independentcode/artifact/selftestreview",
+      "code_commit": "b59c3af453d28f8402ce3c0d93e0c428703c6f24",
+      "spec_baseline": "990d537763fcd261e760da9cbb804a682786971fbfefd8f0ff0709497405b08f",
+      "source_fingerprint": "d46c012bd911a27db22f33812e54dab88d3fa83521a51d1c1814855d592e9965",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/250; /Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/pr250-b59-published-final-review-r2-proof.json SHA256dd2daed9b1afbcf46d52a2e2bf2c8584b6077ba51a468d29377251a67c0d6a39; actual independent exactpublishedb59/9Salespaths/currentbody/code/all33/94artifacts/35browser/133conditionalSKIP/ENV017/exactrights review APPROVED, zero required findings. CI separatepending; no mergeGatewaiver.",
+      "actor": "Codex /root/def016_runtime_recovery_review (actual SEPARATE_AGENT)",
+      "observed_at": "2026-10-20T03:13:22.605995+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "HD018 main2f8 integrated original33 DEVELOPER_VERIFIED",
+      "code_commit": "b3beee3dceda96bef21e85fb3cce7ee9fdda7dfb",
+      "spec_baseline": "990d537763fcd261e760da9cbb804a682786971fbfefd8f0ff0709497405b08f",
+      "source_fingerprint": "f30a9a2c70376330d7f7e9f07b32fbc8f9c309622f576166458812cf5108a26b",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/main2f8-original33-aggregate.json SHA25673ccad54cce8aa4194fe9c17ff785078839997a7f50628e3e824574266277511; actualdriver32866joinedexit0, all33standardevidence_issues empty,35realbrowser0skip,10Inventory15PASS0skip, fullcoverage3327PASS0FAIL133unchangedconditionalSKIP independentlyreviewede5236afa,38floorsPASS; dedicated4PASS0skipP9592.265ms. Exactcoveragegrantrevoked afterall33, originalfullrightsrestored.",
+      "actor": "Codex /root actual execution observation",
+      "observed_at": "2026-10-20T04:40:03.686963+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "HD018 main9c4 integrated original33 DEVELOPER_VERIFIED",
+      "code_commit": "705e5afdb889eaf6e409c5cf68431d13d14ceeb2",
+      "spec_baseline": "990d537763fcd261e760da9cbb804a682786971fbfefd8f0ff0709497405b08f",
+      "source_fingerprint": "135709323ac68c89c16b544bd49a4be3dc63e0b868fa85ec9f51b343a3505c3b",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/main9c4-original33-aggregate.json SHA256d03325efab6f89c34c28c39ff08c0691da1785fdb7a04e7d8abd33504bfadc9f; actualdriver18263joinedexit0 all33standardevidence_issues empty,35realbrowser0skip,10Inventory15PASS0skip, fullcoverage3327PASS0FAIL133unchangedconditionalSKIP independentlyreviewedc7d5abea,38floorsPASS. Dedicated4PASS0skipTC042P9586.440ms/0excluded. Exactcoveragegrantrevoked afterall33, alloriginalrightsrestored.",
+      "actor": "Codex /root actual execution observation",
+      "observed_at": "2026-10-20T05:32:56.838763+00:00"
     }
   ],
   "pending_decisions": [
@@ -14359,6 +14703,222 @@
       "idempotency_key": "sales-p3-726a0baa1fa1-act-p3-verified-managed-worktree-archive",
       "status": "CONFIRMED",
       "source_ref": "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/cold-custody-plan.json SHA2565ddad7862a2de731e5b79ff326554669232dc826782802055c8ac854db8e4cd8; /Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/verify_cold_custody.py SHA256fdfb09513c4abfce8956480c3671d484f00f22faf00ca5d174ee886ab66760ac; existing user merge and safe-cleanup authority; no uncertain outcome replay.; actual /Users/sam/.codex/recovery-evidence/sales-p3-726a0baa1fa1/MANAGED_ARCHIVE.json SHA256171e20d45dcaa8dee640f6fa4d9210ef51ec3cae6bba7b86a1d8bb6d19e2b8dd"
+    },
+    {
+      "id": "ACT-HD018-OWNED-MYSQL-PREP",
+      "kind": "ISOLATED_RUNTIME",
+      "target": "Only fresh /private/tmp/sales-def016-d630a2a151aa socket and three synthetic schemas on owned MySQL",
+      "idempotency_key": "hd018-def016-d630a2a151aa-runtime",
+      "status": "CONFIRMED",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/runtime-ready.json; actual joined setup exit0, fixed helper prospective proof4a519d30d783f1e050cefa30fec7d008614e019ac1e96217d20d121e9b43fff1, durable STARTED/process/ready receipts; initial fixture keyring mismatch retained and private test-env corrected, no reinitialization/reset/grant changes."
+    },
+    {
+      "id": "MODE-CHANGE-1061",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-1061",
+      "status": "CONFIRMED",
+      "source_ref": "Authenticated Sam HD018 corrective fresh-main delivery, Customer userturn01a1443b-4991-7fd0-99e5-405de41e8f44 verified through read_thread"
+    },
+    {
+      "id": "ACT-HD018-OWNED-RUNTIME-EXTEND",
+      "kind": "ISOLATED_RUNTIME",
+      "target": "Only owned DEF016 primary same-data/UUID normal restart loopback52307 and fresh private socket-only Inventory instance;10unique schemas+owncoverage87migration+one scoped coverage grant",
+      "idempotency_key": "hd018-def016-d630a2a151aa-native-coverage-extension",
+      "status": "FAILED",
+      "source_ref": "Authenticated HD018 existing isolated testing authority; actual separate reviewer /root/sales_def016_lock_review APPROVED_SCOPED_PROSPECTIVE finalhelper1f32f885de81f1e907327f5b3d5275cbc96ab45837951e39c1acd8abe892f144 and driver201d704bf1bb229efc3c806d159e858fb2d17eab4eeb2089a447d5a06997581c in delivered agent message; plan /Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/runtime-extension-plan.json SHA2566795574630a8314a23409177ff0d4d4c3e802b902e301acb40bcfbd6f443a52a; durable exact once STARTED/STOPPED/process/ready receipts required. No P4/old/shared DB/global privilege or source/test/contract changes. First7 suites actualjoined0; no active suite before restart.; Reconciled 2026-10-20: actual runtime-extension-execute.log traceback assertion at line68 after coverage GRANT. Existing durable STARTED/STOPPED/process receipts retained. Both owned datadirs preserved; mysql.log records normal SHUTDOWN 2026-10-16T10:53:34Z. Actual recorded PIDs absent/socket paths absent today. No setup replay; grant semantics not yet classified, no qualification claimed."
+    },
+    {
+      "id": "ACT-HD018-OWNED-RESTART-20261020",
+      "kind": "ISOLATED_RUNTIME",
+      "target": "Only exact owned primary67728b8c and inventory88d27118 datadirs: same-data restart then read-only facts/grants/HEX",
+      "idempotency_key": "hd018-def016-d630a2a151aa-restart-20261020",
+      "status": "CONFIRMED",
+      "source_ref": "Existing human HD018 isolated testing authority plus current user original33/normalCI/review/hotfix merge instruction; exact separately reviewed restart-only helper d1632930, proof b806764b. No initialization/schema/grant/migration/alias effects. Prior extension failure retained; durable new exclusive receipts required.; Actual helper joined exit0, runtime-resume-ready.json SHA256 a92321266f45998f2f61307842c462270e171131829217226f09e38f0de52ad8; raw SHOW GRANTS and mysql.db HEX establish exact escaped coverage schema only, original full batch grants subset unchanged. No migration/grant mutation. Suite-ready not claimed."
+    },
+    {
+      "id": "ACT-HD018-FINISH-UNEXECUTED-20261020",
+      "kind": "ISOLATED_RUNTIME",
+      "target": "Only existing empty own coverage and Inventory025 schemas migrate87; private legacysocket aliases/realmysql shims/bindings",
+      "idempotency_key": "hd018-def016-d630a2a151aa-finish-unexecuted-20261020",
+      "status": "CONFIRMED",
+      "source_ref": "Existing isolated HD018 authority. Actual independent runtime-finish-unexecuted-r1-reviewer-proof.json SHAe5ef846affd31511fa38cd0f15db4ca0a25e9d791be3225170db5b78169b764b; helper6fdd574a/common dab248a3 pinned. No CREATE/DROP/GRANT/reset or P4 effects. Preserve previous failedextension and separate restart evidence.; Actual helper joined exit0. Both new87 migration-name ledgers confirmed, original3 fulltimestamp ledgers and allfixturegrants unchanged. runtime-extension-ready.json SHA256 a406a22bea99d83e2dd8c5aeb85e2828a93fd1436b9519bb6146ac36a7f3eeee. Coverage grant still requires exact revoke aftercoverage."
+    },
+    {
+      "id": "ACT-HD018-INTEGRATE-MAIN-37a8bb99",
+      "kind": "GIT_INTEGRATION",
+      "target": "Only codex/sales-def016-hotfix merge verified origin/main37a8bb997f87e3ce3cc1d7fbd1858a001205f90a after local checkpoint commit",
+      "idempotency_key": "hd018-integrate-main-37a8bb99",
+      "status": "CONFIRMED",
+      "source_ref": "Actual fresh fetch observed PR248 Supplier audit product/tests/docs only; no Sales/provider/migration/config/dependency changes. Existing user mainintegration authority. Independent reviewer confirms completeoriginal33 qualification onnewintegratedFP; prior7PASS retained as history.; Actual local repair63e338e2 then clean ort merge produced134e06ebedb0a61a492bcb3c033c5f4a9d9775b2, sourceFP 7eabff9895d96119643891372ddae44f7e67bc3924ebb5f5a510f877b18906a5. No conflicts; exact Sales source diff unchanged. No remote push/PR/merge yet."
+    },
+    {
+      "id": "ACT-HD018-REVOKE-COVERAGE-GRANT",
+      "kind": "ISOLATED_RUNTIME",
+      "target": "Only previously added exact erp_sales_def016_d630a2a151aa_coverage schema grant on sales_def016_fixture@localhost; restore full original grant list",
+      "idempotency_key": "hd018-def016-d630a2a151aa-exact-coverage-revoke",
+      "status": "CONFIRMED",
+      "source_ref": "Original scoped runtime cleanup authority; actual all33 joined exit0 with finalALL_SELECTED_PASS33. Independent cleanup proof9554c552, helper9005223f. No schema/data/user/global rights deletion.; Actual helper joinedexit0, runtime-coverage-revoke-confirmed.json SHA2564daa1a65743681232944e99b5f8b3d14f4de81933ea4578e6ecd453808a0e798. Entire original fixture grant list restored exactly; no othergrant/data effects."
+    },
+    {
+      "id": "PUSH-HD018-DEF016-facf0aab",
+      "kind": "PUSH",
+      "target": "origin/codex/sales-def016-hotfix at facf0aabfbd0b898a93fe037fefd08f8bc0bda30",
+      "idempotency_key": "push-hd018-def016-facf0aab",
+      "status": "CONFIRMED",
+      "source_ref": "Actual human currentchat: completeoriginal33/normalCI/reviewthen independenthotfixmainmerge; existing publiccommit/PR authority preserved. All33 actualPASS and necessary state/report stagedsecretcheckPASS.; actualgitpushjoinedexit0."
+    },
+    {
+      "id": "PR-HD018-DEF016-facf0aab",
+      "kind": "PR_CREATE",
+      "target": "crazysumsum/erp-app main <- codex/sales-def016-hotfix",
+      "idempotency_key": "pr-hd018-def016-facf0aab",
+      "status": "CONFIRMED",
+      "source_ref": "Same actualhumancreatePR/normalCI/mainmergeauthority; exactpublishedheadfacf0aabfbd0b898a93fe037fefd08f8bc0bda30; concretebody privatehotfix-pr-body.md, no raw evidence/secrets.; actualghprcreate/view observed https://github.com/crazysumsum/erp-app/pull/250 OPEN exactfacf0aab, normalCIpending."
+    },
+    {
+      "id": "PRESERVE-HD018-PR250-EVIDENCE",
+      "kind": "LOCAL_EVIDENCE_PRESERVATION",
+      "target": "/Users/sam/.codex/recovery-evidence/sales-def016-pr250-facf0aab protected0700 local-only evidence and private control snapshot; no live DB files copied",
+      "idempotency_key": "preserve-hd018-pr250-facf-evidence",
+      "status": "CONFIRMED",
+      "source_ref": "Existing approved local evidence-loss recovery/retention authority and safe postmerge worktree cleanup; copy allactive688 evidence references and artifacts exactly, preserve originals. Synthetic test data/testcredentials local-only protected, no upload/publication.; actual 2918 files content-hash matched; manifest /Users/sam/.codex/recovery-evidence/sales-def016-pr250-facf0aab/premerge-preservation-manifest.json SHA256c7fcc330e740bbd3458f15f27b4cb790ddf3d16ff74673dcbd704e6c646d93ba. Local-only PREMERGE snapshot; no deletion/noDBbackup/no mergeclaim."
+    },
+    {
+      "id": "INTEGRATE-HD018-MAIN-72e205ef",
+      "kind": "GIT_INTEGRATE",
+      "target": "origin/main72e205efe8601f848f7492dc8df8d2b9335d3c72 into codex/sales-def016-hotfix",
+      "idempotency_key": "integrate-hd018-main-72e205ef",
+      "status": "CONFIRMED",
+      "source_ref": "Actual authenticated user fresh-main integration and normalchecks/merge authority; actual git fetch confirms PR249 Supplier-only audit source/tests/docs. Preserve originalall33 at7eab and all earlier records. No Gatewaiver; new source requires current evidence.; actual clean ort merge exit0 at b0ebc3e0211a0823b355b22ab5f96bf798ed56cb. No source merge conflicts; D/P unchanged."
+    },
+    {
+      "id": "RUNTIME-HD018-MAIN72-COVERAGE-GRANT",
+      "kind": "LOCAL_SYNTHETIC_DB_GRANT",
+      "target": "Only exact escaped erp_sales_def016_d630a2a151aa_coverage.* to existing sales_def016_fixture@localhost in owned primary UUID67728b8c",
+      "idempotency_key": "runtime-hd018-main72-coverage-grant",
+      "status": "FAILED",
+      "source_ref": "Existing authenticated isolated synthetic SQL testing authority; actual independent /root/def016_runtime_recovery_review delivered prospective approval of exacthelper b85ad9e9f265bf70f42c102a186d690c704eabab58745a9614002f6557b2f1b1 and driver a390e0e2854a5a0c2c2bc2438dccd0d4be1ca668a7ae2358c099545e841a18c4. Re-add only previously authorized exactgrant for freshmain72 full33, revoke using thisround33 evidence after alljoined. No reset/newaccount/globalrights/migration.; actualhelperexit1 at idleprocessguard before STARTED receipt/anygrant; intrinsic empty event_schedulerDaemon only. Originalfullrights actuallyunchanged. Durable main72-coverage-grant-r1-failure-observed.json. Preserve r1; r2 exactpredicate correction independentlyreviewed before newaction."
+    },
+    {
+      "id": "RUNTIME-HD018-MAIN72-COVERAGE-GRANT-R2",
+      "kind": "LOCAL_SYNTHETIC_DB_GRANT",
+      "target": "Only same exact escaped isolated coverage schema grant; original rights preserved",
+      "idempotency_key": "runtime-hd018-main72-coverage-grant-r2",
+      "status": "CONFIRMED",
+      "source_ref": "Existing isolatedsyntheticSQL authority; actualseparatereview /Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/main72-coverage-regrant-idle-correction-r2-reviewer-proof.json SHA256e7ac3ae1c0a43f4af27663cad8007384d3d2a5349bcb5bacad3903bf79701c12; exactfinalhelpera2477d434e3cb07d38ce3c47b3af07c2389760c4a1a960c2abe2b8bca09c11c4. OnlynormalemptybackgroundDaemon excluded nullsafely from idleguard; previousattempt FAILED_BEFORE_MUTATION. No grantcontract/scope change.; actualhelperjoinedexit0; /Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/main72-coverage-grant-confirmed.json SHA2563c78f0c16340cfd7536bd60cf79df66cec221841025136e840d88d045759cbe8"
+    },
+    {
+      "id": "RUNTIME-HD018-MAIN72-FRESH-INVENTORY",
+      "kind": "LOCAL_SYNTHETIC_DB_NAMESPACES",
+      "target": "Ten fixed nonce Inventory namespaces *_def016_d630a2a151aa_main72r2 on same owned primary/secondary; only025 original87migrations",
+      "idempotency_key": "runtime-hd018-main72-fresh-inventory",
+      "status": "CONFIRMED",
+      "source_ref": "Existing actual authenticated isolatedsyntheticSQL/runtime authority; actualseparatereviewer proof /Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/main72-r2-fresh-inventory-and-driver-r1-reviewer-proof.json SHA25664aaebd36c4e7e8671e6bdb3808f24cb647c88194f8a138cec5908b456934188; helper9bb634cfba94e37ee3787325ebb96aa98e6ddc2013378ee1d719a3dfa38fb6ee. CorrectENV017 fixturelifecyclewithoutoldtable/datareset/privilege/product/testcontractchanges.; actualhelperjoinedexit0, /Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/main72-r2-runtime-ready.json SHA256f595cea81de11cf0c0eba2e9f8402da4b9111dd53969b97095fb7a09697f2a1a"
+    },
+    {
+      "id": "RUNTIME-HD018-MAIN72-COVERAGE-REVOKE",
+      "kind": "LOCAL_SYNTHETIC_DB_REVOKE",
+      "target": "Only temporary exact escaped coverage schema grant; restore entire original fixture rights",
+      "idempotency_key": "runtime-hd018-main72-coverage-revoke",
+      "status": "CONFIRMED",
+      "source_ref": "Actual unifiedsession80405 joinedexit0; freshmain72 original33 aggregate b1c79876bf869196c4999f60682c05b9477bede6c9e6c76d5819a50c03e530cf all33 standardevidence_issues empty. Actualindependentreview mixedmapping cleanup proof9a89b7e7c9c92c3e10373631f2dc9b28188136ded7bcad35d1fc17abde366f7e; exacthelper7fc9da699538376b98a97a899939745ae63b456d58453c708e654462917d3c1c. Existing synthetic runtime cleanup authority; no schema/data/account/globalprivilege drop.; actualhelperjoinedexit0; /Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/main72-coverage-revoke-confirmed.json SHA2564daa1a65743681232944e99b5f8b3d14f4de81933ea4578e6ecd453808a0e798"
+    },
+    {
+      "id": "PUSH-HD018-PR250-b59c3af4",
+      "kind": "PUSH",
+      "target": "origin/codex/sales-def016-hotfix exact b59c3af453d28f8402ce3c0d93e0c428703c6f24",
+      "idempotency_key": "push-hd018-pr250-b59c3af4",
+      "status": "CONFIRMED",
+      "source_ref": "Actual currenthumaninstruction completesoriginal33/normalCI/reviewthen independentdeadlockPR mainmerge; existing commit/push authority. Newmain72 actualall33source d46c/unchangedD/P aggregateb1c79876; finalcommit state/report only, exact9Sales paths, no raw evidence/testcredentials. Original5CI oldfacf retainednotreused.; actual gitpush joinedexit0; GitHub PR250 exacthead b59c3af453d28f8402ce3c0d93e0c428703c6f24 verified; /Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/pr250-main72-published.json SHA2569250b84443f9996649d905e5704d7aefa3bc66e33cf94b5fd4796d983709bb9f"
+    },
+    {
+      "id": "PR250-MAIN72-BODY-UPDATE",
+      "kind": "PR_UPDATE",
+      "target": "PR250 description currentcandidateb59/full33 evidence summary",
+      "idempotency_key": "pr250-main72-body-update",
+      "status": "CONFIRMED",
+      "source_ref": "Existing createPR/update/merge authority; concrete privatehotfix-pr-body-main72.md contains only verified synthetic-test summary/publiccode scope, no rawlogs/credentials. ExactcandidateCI/review remainseparate pending.; actualghpredit/view joinedexit0, bodybytes exactlymatched andheadb59verified."
+    },
+    {
+      "id": "PRESERVE-HD018-PR250-MAIN72-EVIDENCE",
+      "kind": "LOCAL_EVIDENCE_PRESERVATION",
+      "target": "/Users/sam/.codex/recovery-evidence/sales-def016-pr250-facf0aab all722 active evidence refs; append new immutable files and separate main72 module snapshot, retain earlier manifest/files",
+      "idempotency_key": "preserve-hd018-pr250-main72-evidence",
+      "status": "CONFIRMED",
+      "source_ref": "Existing authorized local-only evidence retention and safe postmerge cleanup; preserve all originals, no upload/deletion/liveDBcopy. Finalprivate control tree remains protected in active managedroot until postmerge same-filesystem relocation.; actual 2885 files hashmatched, 139 newfiles copied; /Users/sam/.codex/recovery-evidence/sales-def016-pr250-facf0aab/main72-premerge-preservation-manifest.json SHA2560f3d3335627d6de9013b2de6c5bc450730bee827e2e6f854ef5b2c3f73263d91. All722 declared refs/artifacts source hashverified. Originals/old688manifest retained."
+    },
+    {
+      "id": "INTEGRATE-HD018-MAIN-2f8f7b78",
+      "kind": "GIT_INTEGRATE",
+      "target": "origin/main2f8f7b78600ee5c7b7eddedf8cd83326078f2d91 into codex/sales-def016-hotfix",
+      "idempotency_key": "integrate-hd018-main-2f8f7b78",
+      "status": "CONFIRMED",
+      "source_ref": "Actualfreshfetch mainPR252 splitTC042 intoimpact-selectedparallelCI withsameoriginalcases/deadlines andstableTestaggregate; directSalesvalidation-pathimpact, soexistinguserfreshmain/normalCI/33 authority requiresintegration/requalification. Preserveallb59/d46 current33/review/CIobservationsashistorical; no waivers/oldPASSrelabel/installedHarnesschange. NewfiveCIstableaggregate andadditional3jobsmustauthenticallysucceedforSalesdiff.; actualcleanortmergejoinedexit0 at b3beee3dceda96bef21e85fb3cce7ee9fdda7dfb, FPf30a9a2c70376330d7f7e9f07b32fbc8f9c309622f576166458812cf5108a26b; D/P unchanged and original33contracts/CI5stable names retained."
+    },
+    {
+      "id": "RUNTIME-HD018-MAIN2F8-COVERAGE-GRANT",
+      "kind": "LOCAL_SYNTHETIC_DB_GRANT",
+      "target": "Only previously authorized exact escaped owned coverage schema grant",
+      "idempotency_key": "runtime-hd018-main2f8-coverage-grant",
+      "status": "CONFIRMED",
+      "source_ref": "Existing actual human isolated synthetic SQL/runtime authority; actual independent proof /Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/main2f8-guarded-runtime-and-original33-r1-reviewer-proof.json SHA25647cdbb69c051c138c91722cf5bc8a1201d3c4eba6258c5e7629d4f647acdb9f4. Exact reviewed helpers7ed09944/a4c1df84; preserve all old data/schema/account/global privileges, revoke exact temporary coverage grant after fresh original33. No replay after unknown outcome. Actual helper joined exit0; /Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/main2f8-coverage-grant-confirmed.json SHA2563c78f0c16340cfd7536bd60cf79df66cec221841025136e840d88d045759cbe8"
+    },
+    {
+      "id": "RUNTIME-HD018-MAIN2F8-FRESH-INVENTORY",
+      "kind": "LOCAL_SYNTHETIC_DB_NAMESPACES",
+      "target": "Ten new *_main2f8r1 schemas on same two owned UUIDs, original87 migration only025",
+      "idempotency_key": "runtime-hd018-main2f8-fresh-inventory",
+      "status": "CONFIRMED",
+      "source_ref": "Existing actual human isolated synthetic SQL/runtime authority; actual independent proof /Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/main2f8-guarded-runtime-and-original33-r1-reviewer-proof.json SHA25647cdbb69c051c138c91722cf5bc8a1201d3c4eba6258c5e7629d4f647acdb9f4. Exact reviewed helpers7ed09944/a4c1df84; preserve all old data/schema/account/global privileges, revoke exact temporary coverage grant after fresh original33. No replay after unknown outcome. Actual helper joined exit0; /Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/main2f8-runtime-ready.json SHA256b0ad02447c1ed098b3185d2b9e25552ca7c4bc862ea2e031899623250a52099b"
+    },
+    {
+      "id": "RUNTIME-HD018-MAIN2F8-COVERAGE-REVOKE",
+      "kind": "LOCAL_SYNTHETIC_DB_REVOKE",
+      "target": "Only exact temporary isolated coverage grant; entire original fixture rights restored",
+      "idempotency_key": "runtime-hd018-main2f8-coverage-revoke",
+      "status": "CONFIRMED",
+      "source_ref": "Actual driver32866 joinedexit0 ALL_SELECTED_PASS33; standardaggregate73ccad54cce8aa4194fe9c17ff785078839997a7f50628e3e824574266277511 all33evidence_issues empty. Existing synthetic cleanup authority; actual independent prospectiveproof428312aa5682958a8f27062593e0f7da9e22c97d0df3e82a0dd9ac27eb23363b, exacthelper05c9f77e. No schema/data/account/globalprivilege deletion. Actualhelperjoinedexit0; /Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/main2f8-coverage-revoke-confirmed.json SHA2564daa1a65743681232944e99b5f8b3d14f4de81933ea4578e6ecd453808a0e798"
+    },
+    {
+      "id": "PRESERVE-HD018-PR250-MAIN2F8-EVIDENCE",
+      "kind": "LOCAL_EVIDENCE_PRESERVATION",
+      "target": "Protected existing local vault; append all755 active raw refs and distinct immutable main2f8 snapshot/manifest",
+      "idempotency_key": "preserve-hd018-pr250-main2f8-evidence",
+      "status": "CONFIRMED",
+      "source_ref": "Existing authorized local-only evidence retention/recovery and safe worktreecleanup. All33actualjoined0 aggregate73ccad54, exactgrantrestored. Actual independent prospectiveproof320d951aff7701d3eea6eec815d637a4198a2550b2cd703d2bab2d9ff3ef82ca exacthelper2039df2b. Freeze state/report/evidence writers untilcopyjoined. No deletion/upload/liveDBcopy; preserve all originals and earlier manifests. Actualhelperjoinedexit0;3018files hashmatched/135new; /Users/sam/.codex/recovery-evidence/sales-def016-pr250-facf0aab/main2f8-premerge-preservation-manifest.json SHA256c062feefd121864a9004822648bb8906a4c26017089b5d68df4c012b9b3a5ae8. All755refs preserved; original/oldmanifests retained."
+    },
+    {
+      "id": "INTEGRATE-HD018-MAIN-9c400092",
+      "kind": "GIT_INTEGRATE",
+      "target": "origin/main9c4000920d31427fbc98511f00dae435616880bc into codex/sales-def016-hotfix",
+      "idempotency_key": "integrate-hd018-main-9c400092",
+      "status": "CONFIRMED",
+      "source_ref": "Existing human freshmain/normalCI/33/review/merge authority; newlyfetched PR253 changes servercoverageCI sharding/mergednativefloors and adds2CI packagecommands; original localtest:coverage command/producttests/dependencies unchanged. Preserve currentf30actualall33/755refs as historical; no oldPASS rebind/installedHarnesschange/Gatewaiver. NewCI actual13jobs/4rawshards+mergedfloors andTC042 scope=true2PASS0skip required. Actualcleanortmergejoinedexit0 at705e5afdb889eaf6e409c5cf68431d13d14ceeb2, FP135709323ac68c89c16b544bd49a4be3dc63e0b868fa85ec9f51b343a3505c3b; D/Punchanged, original33membership/localargv unchanged."
+    },
+    {
+      "id": "RUNTIME-HD018-MAIN9C4-COVERAGE-GRANT",
+      "kind": "LOCAL_SYNTHETIC_DB_GRANT",
+      "target": "Only original exact escaped isolated coverage grant",
+      "idempotency_key": "runtime-hd018-main9c4-coverage-grant",
+      "status": "CONFIRMED",
+      "source_ref": "Existing authenticated synthetic isolated testing/SQL authority. Actual independent prospectiveproof /Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/main9c4-guarded-runtime-driver-cleanup-verification-r1-reviewer-proof.json SHA256df2827b0e6d686b5cca2d600a442d01548dd53bfa97b3e7d1a0ff179a6bb8d18; exactgrantc3357a82/fresh047e5bf7/driver7d90e02b. Onlynewnonces/originalgrant; preservealloldschemas/data/accounts/globalrights. No blindreplay afterpartialoutcome. Revokeexacttemporarygrantafteractualcurrent33. Actualhelperjoinedexit0; /Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/main9c4-coverage-grant-confirmed.json SHA2563c78f0c16340cfd7536bd60cf79df66cec221841025136e840d88d045759cbe8"
+    },
+    {
+      "id": "RUNTIME-HD018-MAIN9C4-FRESH-INVENTORY",
+      "kind": "LOCAL_SYNTHETIC_DB_NAMESPACES",
+      "target": "Ten fresh *_main9c4r1 synthetic schemas on sameownedUUIDs;025 original87migrations",
+      "idempotency_key": "runtime-hd018-main9c4-fresh-inventory",
+      "status": "CONFIRMED",
+      "source_ref": "Existing authenticated synthetic isolated testing/SQL authority. Actual independent prospectiveproof /Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/main9c4-guarded-runtime-driver-cleanup-verification-r1-reviewer-proof.json SHA256df2827b0e6d686b5cca2d600a442d01548dd53bfa97b3e7d1a0ff179a6bb8d18; exactgrantc3357a82/fresh047e5bf7/driver7d90e02b. Onlynewnonces/originalgrant; preservealloldschemas/data/accounts/globalrights. No blindreplay afterpartialoutcome. Revokeexacttemporarygrantafteractualcurrent33. Actualhelperjoinedexit0; /Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/main9c4-runtime-ready.json SHA25604a8b04f5b4af3cf9792b94f6a863e91c9811a66c93a2860ff21e82baff587bd"
+    },
+    {
+      "id": "RUNTIME-HD018-MAIN9C4-COVERAGE-REVOKE",
+      "kind": "LOCAL_SYNTHETIC_DB_REVOKE",
+      "target": "Only exact temporary isolated coverage grant; restore entire original fixture rights",
+      "idempotency_key": "runtime-hd018-main9c4-coverage-revoke",
+      "status": "CONFIRMED",
+      "source_ref": "Actual driver18263 joinedexit0 ALL33; standardaggregated03325efab6f89c34c28c39ff08c0691da1785fdb7a04e7d8abd33504bfadc9f all33evidence_issues empty. Actual independent prospectiveproofdf2827b0e6d686b5cca2d600a442d01548dd53bfa97b3e7d1a0ff179a6bb8d18 exacthelper85eb555df8886aae8dbf703d2f74a79a60fa67f705092cf440d8d3f8d8de4963. Existing authorized synthetic cleanup; no schema/data/account/globalrights deletion. Actualhelperjoinedexit0; /Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/main9c4-coverage-revoke-confirmed.json SHA2564daa1a65743681232944e99b5f8b3d14f4de81933ea4578e6ecd453808a0e798"
     }
   ],
   "evidence_files": [
@@ -15009,7 +15569,147 @@
     "evidence/20261015T093503-c0d3c96bfee3/run.json",
     "evidence/20261015T093558-dc6189567e53/run.json",
     "evidence/20261015T093602-1708005edb98/run.json",
-    "evidence/20261015T093638-a7d6f5e8db47/run.json"
+    "evidence/20261015T093638-a7d6f5e8db47/run.json",
+    "evidence/20261016T104151-e7fd279e9339/run.json",
+    "evidence/20261016T104159-a18e18ca28c5/run.json",
+    "evidence/20261016T104204-2234b127ad2e/run.json",
+    "evidence/20261016T104208-56248ae80d71/run.json",
+    "evidence/20261016T104219-bef47156954f/run.json",
+    "evidence/20261016T104222-61d16182af35/run.json",
+    "evidence/20261016T104233-feea12eaacf5/run.json",
+    "evidence/20261020T010721-2dcebc0ff4ca/run.json",
+    "evidence/20261020T010727-45abd42da2dc/run.json",
+    "evidence/20261020T010730-d20b0581b119/run.json",
+    "evidence/20261020T010736-c4587317782b/run.json",
+    "evidence/20261020T010747-7223d8d86112/run.json",
+    "evidence/20261020T010750-e0c6c1152ebc/run.json",
+    "evidence/20261020T010801-015d11abc797/run.json",
+    "evidence/20261020T010830-0f9cd5dd1b1f/run.json",
+    "evidence/20261020T010833-182d08be490b/run.json",
+    "evidence/20261020T010835-6c077b898eec/run.json",
+    "evidence/20261020T010838-e9494e4da51d/run.json",
+    "evidence/20261020T010840-da9b4f4208ed/run.json",
+    "evidence/20261020T010842-37895e0dabe8/run.json",
+    "evidence/20261020T010844-8bd713156f52/run.json",
+    "evidence/20261020T010847-844d5316b82e/run.json",
+    "evidence/20261020T010849-34874f418c91/run.json",
+    "evidence/20261020T010851-dc6579fe281e/run.json",
+    "evidence/20261020T010854-3adb3c417e56/run.json",
+    "evidence/20261020T010857-f39b62a53190/run.json",
+    "evidence/20261020T010916-32ad398f6efe/run.json",
+    "evidence/20261020T010923-85e2480ca3e3/run.json",
+    "evidence/20261020T010949-787d921ec99f/run.json",
+    "evidence/20261020T013429-9a4df6c8b06b/run.json",
+    "evidence/20261020T013503-3dd7b6e1fd0a/run.json",
+    "evidence/20261020T013506-ae4dbd41f045/run.json",
+    "evidence/20261020T013559-d179cb5118d9/run.json",
+    "evidence/20261020T013603-8e2eaa5e0369/run.json",
+    "evidence/20261020T013634-2391607cb602/run.json",
+    "evidence/20261020T013645-977c54fa7359/run.json",
+    "evidence/20261020T013652-4cb61f3eb961/run.json",
+    "evidence/20261020T013737-dffdfd87a118/run.json",
+    "evidence/20261020T013740-23aa1efd953e/run.json",
+    "evidence/20261020T013815-aec6d91228cb/run.json",
+    "evidence/20261020T021944-5c6f9824f458/run.json",
+    "evidence/20261020T021950-c75833818b5a/run.json",
+    "evidence/20261020T021953-4a39ead333f7/run.json",
+    "evidence/20261020T021957-2c7c65fe772b/run.json",
+    "evidence/20261020T022009-55868676c30d/run.json",
+    "evidence/20261020T022012-e40455ada6d9/run.json",
+    "evidence/20261020T022023-5dd17eb7a96d/run.json",
+    "evidence/20261020T022050-2582cdb25882/run.json",
+    "evidence/20261020T022438-881cef2b7df6/run.json",
+    "evidence/20261020T022441-9c1cafeec3c9/run.json",
+    "evidence/20261020T022443-138f5ab0c55b/run.json",
+    "evidence/20261020T022445-94591b278b9e/run.json",
+    "evidence/20261020T022447-d36f5ae0af27/run.json",
+    "evidence/20261020T022449-4dae16a48ac7/run.json",
+    "evidence/20261020T022452-f93f1502c8f7/run.json",
+    "evidence/20261020T022454-de70f54a9305/run.json",
+    "evidence/20261020T022456-447f51de971d/run.json",
+    "evidence/20261020T022458-e3d63a6aaef2/run.json",
+    "evidence/20261020T022501-70cf759209b8/run.json",
+    "evidence/20261020T022504-285b6c972494/run.json",
+    "evidence/20261020T022523-a76973a98f2d/run.json",
+    "evidence/20261020T022530-c3b00b30f36a/run.json",
+    "evidence/20261020T022555-4aa8b89f7dfb/run.json",
+    "evidence/20261020T025011-83dcb96d815e/run.json",
+    "evidence/20261020T025043-f5dd9226bed6/run.json",
+    "evidence/20261020T025046-ccc6694abbf5/run.json",
+    "evidence/20261020T025137-f8ed627923f0/run.json",
+    "evidence/20261020T025141-d74ad6ec508b/run.json",
+    "evidence/20261020T025213-4a50dbc7aece/run.json",
+    "evidence/20261020T025224-cfcfa6ebdfe1/run.json",
+    "evidence/20261020T025231-f01624bd6f95/run.json",
+    "evidence/20261020T025318-b6062ee2a823/run.json",
+    "evidence/20261020T025321-84387f4fac90/run.json",
+    "evidence/20261020T025353-af3eb116d0b1/run.json",
+    "evidence/20261020T035317-2b85a223868b/run.json",
+    "evidence/20261020T035324-09d2e44299a0/run.json",
+    "evidence/20261020T035327-1452ee6f0e84/run.json",
+    "evidence/20261020T035331-48b283b69b41/run.json",
+    "evidence/20261020T035343-c08cdbfd66a8/run.json",
+    "evidence/20261020T035346-0a5a73f936fb/run.json",
+    "evidence/20261020T035358-17676b8342fd/run.json",
+    "evidence/20261020T035426-27a2d7d784a1/run.json",
+    "evidence/20261020T035429-523d62ddb60d/run.json",
+    "evidence/20261020T035431-2898faf73966/run.json",
+    "evidence/20261020T035433-837d3b1f24f6/run.json",
+    "evidence/20261020T035436-1cdabdd1b238/run.json",
+    "evidence/20261020T035438-b181bb9d71fb/run.json",
+    "evidence/20261020T035441-814a848c6ad1/run.json",
+    "evidence/20261020T035443-1a9a30176e52/run.json",
+    "evidence/20261020T035445-4129f8989a00/run.json",
+    "evidence/20261020T035448-9cfa460dfa48/run.json",
+    "evidence/20261020T035450-70844fcae1da/run.json",
+    "evidence/20261020T035453-88ecb74fbaf4/run.json",
+    "evidence/20261020T035514-436fd3054888/run.json",
+    "evidence/20261020T035521-793f6ffc9a60/run.json",
+    "evidence/20261020T035547-45183a2123fd/run.json",
+    "evidence/20261020T042027-706e801e919b/run.json",
+    "evidence/20261020T042059-a7f86ce72366/run.json",
+    "evidence/20261020T042102-25f28f7d5fbf/run.json",
+    "evidence/20261020T042154-2edd17d65b70/run.json",
+    "evidence/20261020T042158-44b9420c2fef/run.json",
+    "evidence/20261020T042229-7ff537a367fd/run.json",
+    "evidence/20261020T042240-6380404f3fcb/run.json",
+    "evidence/20261020T042247-630486814c66/run.json",
+    "evidence/20261020T042333-408f12a56c13/run.json",
+    "evidence/20261020T042336-28f2d5a76109/run.json",
+    "evidence/20261020T042408-99de228a36cc/run.json",
+    "evidence/20261020T044701-e46ecce62b68/run.json",
+    "evidence/20261020T044708-5aae8d9addd8/run.json",
+    "evidence/20261020T044710-c9a2bf2f8f84/run.json",
+    "evidence/20261020T044715-16795f6fd26c/run.json",
+    "evidence/20261020T044726-b731b373a9bb/run.json",
+    "evidence/20261020T044728-9af28fb2f6e9/run.json",
+    "evidence/20261020T044740-f3f7d523d7af/run.json",
+    "evidence/20261020T044807-bdd482757c95/run.json",
+    "evidence/20261020T044810-38f443726a2f/run.json",
+    "evidence/20261020T044813-fdf024c53f4e/run.json",
+    "evidence/20261020T044815-946d1064aece/run.json",
+    "evidence/20261020T044817-eab9e126f64e/run.json",
+    "evidence/20261020T044819-3b1fb04b46a6/run.json",
+    "evidence/20261020T044821-f7b09cc2fbca/run.json",
+    "evidence/20261020T044824-741af5eb2185/run.json",
+    "evidence/20261020T044826-f35a43b8b649/run.json",
+    "evidence/20261020T044828-300c5d45f33a/run.json",
+    "evidence/20261020T044831-d296a742dfc5/run.json",
+    "evidence/20261020T044834-d9f4863921de/run.json",
+    "evidence/20261020T044851-8d264fed723b/run.json",
+    "evidence/20261020T044858-a0fc61fa9648/run.json",
+    "evidence/20261020T044922-4f8419f5031a/run.json",
+    "evidence/20261020T051316-432531fefe58/run.json",
+    "evidence/20261020T051348-38c586892707/run.json",
+    "evidence/20261020T051350-a40ca6871ab7/run.json",
+    "evidence/20261020T051441-e28633455dab/run.json",
+    "evidence/20261020T051445-a525bd3b33cf/run.json",
+    "evidence/20261020T051515-98ce0e4c3d52/run.json",
+    "evidence/20261020T051525-13ea0c6493cf/run.json",
+    "evidence/20261020T051532-35d35a5a7da6/run.json",
+    "evidence/20261020T051616-fa0859a6360d/run.json",
+    "evidence/20261020T051619-2e79046e5ac6/run.json",
+    "evidence/20261020T051651-dbe669b96ca8/run.json"
   ],
   "defects": [
     {
@@ -15230,7 +15930,45 @@
         "/Users/sam/.codex/worktrees/sales-p3-recovery/recovery-private/d020-metadata-restore-root-actual-joined-observation.json SHA256f6fa4343303acbb3ef48db3905f929b59be4c9d1b00c9f18503891be29f20ec6"
       ],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-016",
+      "severity": "HIGH",
+      "status": "CLOSED",
+      "source_ids": [
+        "TC-021",
+        "TC-042",
+        "TASK-030",
+        "TASK-049"
+      ],
+      "closure_evidence": [
+        "/Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/def016-candidate-local-activation-r1-reviewer-proof.json SHA2566f5986d6a09fe9987a8a6be922167997552435c47df1cad3d056d7a0b620cd0c",
+        "/Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/def016-candidate-red-r2.log SHA256bd3f582cdf391dbae5fa92f901c3ce1a272f6167c84371fc5c9b96f00626fbfe",
+        "/Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/def016-candidate-callers-green-r1.log SHA25628114415a042f74861b360ff3b3896973f87fecaa8e1837814b431b7ed63db0e",
+        "/Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/def016-candidate-callers-unit-green-r1.log SHA25626d22f2b9fabd3bae999259a2c05a55139311e4fa90307cddd354c58ebc564e1",
+        "LOCAL_IMPLEMENTATION_DEFECT_ONLY: HEAD7f4fa5b5/source3e823062, actualRED->100lineGREEN+72native39unit; PHASE003/004 correctiveREOPENED, TASK030/049IN_PROGRESS, original33/TC042/CI/merge stillpending. Reopen immediately if any required regression fails; CustomerDEF033001 remainsopen.",
+        "/Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/integrated-original33-aggregate.json SHA25657e484fd670a09402056d0b412b3ba1e2afae8f313b6c60d5e0354cebc5244f2; all33 currentintegratedDEVELOPER_VERIFIED includingdedicatedTC042; noCustomer/fullP4/formalUAT/CI/mergeclaim.",
+        "Required integrated check nonPASS: evidence/20261020T022050-2582cdb25882/run.json; root cause needs triage; local closure is no full-Gate waiver.",
+        "2026-10-20 main72 ENV017 independentlyclassifiedoldInventoryfixturecollisionbeforelockassertion, not Sales productregression; freshnamespaces actualREADY. SameSalesproduct/testblobs mechanicallyverified facf->b0eb; existingactualRED/111+original33/productreview prove localDEF016closure. Preserve autoOPEN/failure evidence; this does NOT qualify newFP/all33/TC042/CI/Gate. Real review proof64aaebd36c4e7e8671e6bdb3808f24cb647c88194f8a138cec5908b456934188; ENV017 staysOPENpendingactual007+all10native. Tasks030/049 remainIN_PROGRESS.",
+        "/Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/main72-original33-aggregate.json SHA256b1c79876bf869196c4999f60682c05b9477bede6c9e6c76d5819a50c03e530cf; actualcurrentb0eb/d46c all33 DEVELOPER_VERIFIED incl35realbrowser/TC042originalbounds; noCustomer/fullP4/formalacceptance claim.",
+        "/Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/main2f8-original33-aggregate.json SHA25673ccad54cce8aa4194fe9c17ff785078839997a7f50628e3e824574266277511; actualb3be/f30 all33standardPASS,35realbrowser, dedicated4PASS0skip TC042P9592.265ms/0excluded. No fullP4/Customer/formalUAT/CI/mergeclaim.",
+        "/Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/main9c4-original33-aggregate.json SHA256d03325efab6f89c34c28c39ff08c0691da1785fdb7a04e7d8abd33504bfadc9f; actual705e/1357 all33standardPASS incl35realbrowser,15Inventory, dedicated4PASS0skip TC042P9586.440ms/0excluded. No fullP4/Customer/formalUAT/CI/mergeclaim."
+      ],
+      "risk_approval_id": null
+    },
+    {
+      "id": "DEF-017",
+      "severity": "MEDIUM",
+      "status": "CLOSED",
+      "source_ids": [
+        "TASK-049"
+      ],
+      "closure_evidence": [
+        "/Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/main72-inventory-schema-collision-triage.json SHA25673950aa8235dc65061bbdf1225ffdd38b29171535b511b7eafcae112ac8bcd5d",
+        "/Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/main72-r2-coverage-and-env017-closure-r1-reviewer-proof.json SHA256723d3517a1d9019049eff1de2faf0935b1e8ddc499a8a65fb44fe369afd9072d; actualtargeted0071PASS plusall10Inventory15PASS0skip, freshownednamespaces/noolddatareset. OriginalFAIL/autoOPEN/triage retained. LocalENVrepaironly; lastperformance/whole33/newCI/Gate pending."
+      ],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "P3 PR193/d784 merged; rights restored, four synthetic DBs normallySTOPPED; verified private custody and managed archive complete; own P3 local/remote branches/worktrees removed, historical stash/private fixtures retained. This five-file postmerge document reconciliation passed static graph/approval/schema/matrix/pin/diff/history checks and genuine independent review; normal documentation PR commit/push/merge then own newworktree cleanup under existing authority. No currentmain implementation reexecution or formalUAT/P4/deployment claim. Before future Harness execution restore648 relative raw references from verified vault/module-snapshot/evidence by exact hashes and acquire required actual new-candidate evidence."
+  "next_safe_action": "Freshfetchmain thenpublish same1357 documentation/state-only currentcandidate. Require actual13normalCI SUCCESS inclscope=true/4serverrawshards+nativeoriginalfloors/TC0422PASS0skip, actualindependentpublishedreview and unmodifiedMERGE_READY before authorized normalPR250merge. No oldCIreuse or fullP4/Customer/formalacceptanceclaim."
 }

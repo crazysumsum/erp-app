@@ -1,4 +1,5 @@
 import { assertActorFresh } from "../authorization/directoryLookups.js";
+import { changedFieldsDetail, purposeList, sortedPurposes } from "./auditChanges.js";
 import { SupplierAuditLogService } from "./SupplierAuditLogService.js";
 import { invalidSupplierInput, supplierChildNotFound, supplierConflict, supplierNotFound } from "./supplierErrors.js";
 import { toAddressResponse } from "./supplierProjections.js";
@@ -146,12 +147,24 @@ export class SupplierAddressService {
           address.stateRegion, address.postalCode, address.countryCode, address.phone, address.notes,
           nowMs, input.actorId, input.addressId, input.supplierId, input.version]
       );
+      // 鎖住讀：其他請求可能喺我哋等 Supplier 鎖嗰陣改過用途；普通 SELECT 會讀到舊 snapshot（REV-099 F-2）。
+      const [beforePurposes] = await connection.query(
+        "SELECT purpose_code, is_primary FROM supplier_address_purposes WHERE address_id = ? AND supplier_id = ? ORDER BY purpose_code FOR UPDATE", [input.addressId, input.supplierId]);
       await this.#replacePurposes(connection, { supplierId: input.supplierId, addressId: input.addressId, purposes: address.purposes, actorId: input.actorId, nowMs, replace: true });
       const projected = await this.#project(connection, input.supplierId, input.addressId);
       await this.audit.record(connection, {
         actorUserId: input.actorId, actorUsername: actor?.username ?? "", action: "supplier.address.update",
         targetType: "address", targetId: input.addressId, supplierId: input.supplierId, targetLabel: address.label,
-        detail: { changes: { purposes: address.purposes } }, requestId: input.requestId, ip: input.ip
+        // HD-112 A：只記錄改咗嘅欄位同用途嘅前後值。
+        detail: changedFieldsDetail({
+          label: current.label, addressLine1: current.address_line1, addressLine2: current.address_line2, addressLine3: current.address_line3,
+          city: current.city, stateRegion: current.state_region, postalCode: current.postal_code, countryCode: current.country_code,
+          phone: current.phone, notes: current.notes, purposes: purposeList(beforePurposes)
+        }, {
+          label: address.label, addressLine1: address.addressLine1, addressLine2: address.addressLine2, addressLine3: address.addressLine3,
+          city: address.city, stateRegion: address.stateRegion, postalCode: address.postalCode, countryCode: address.countryCode,
+          phone: address.phone, notes: address.notes, purposes: sortedPurposes(address.purposes)
+        }), requestId: input.requestId, ip: input.ip
       });
       return projected;
     });

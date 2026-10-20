@@ -1,5 +1,6 @@
 import { assertActorFresh } from "../authorization/directoryLookups.js";
 import { SupplierApprovalService } from "./SupplierApprovalService.js";
+import { changedFieldsDetail } from "./auditChanges.js";
 import { SupplierAuditLogService } from "./SupplierAuditLogService.js";
 import { invalidSupplierInput, supplierChildNotFound, supplierConflict, supplierNotFound } from "./supplierErrors.js";
 import { normalizeIdentifier } from "./supplierNormalization.js";
@@ -179,10 +180,11 @@ export class SupplierIdentifierService {
           targetType: "identifier", targetId: input.identifierId, supplierId: input.supplierId,
           targetLabel: `${identifier.type}:${identifier.issuerCountryCode}`,
           reason,
-          detail: {
-            before: { identifierType: current.identifier_type, issuerCountryCode: current.issuer_country_code, identifierValue: current.identifier_value },
-            after: { identifierType: identifier.type, issuerCountryCode: identifier.issuerCountryCode, identifierValue: identifier.value }
-          },
+          // HD-112 A：只記錄改咗嘅欄位；notes 記 digest（REV-099 F-4）。
+          detail: changedFieldsDetail(
+            { identifierType: current.identifier_type, issuerCountryCode: current.issuer_country_code, identifierValue: current.identifier_value, notes: current.notes },
+            { identifierType: identifier.type, issuerCountryCode: identifier.issuerCountryCode, identifierValue: identifier.value, notes: identifier.notes }
+          ),
           requestId: input.requestId, ip: input.ip
         });
         return { ...projected, approvalInvalidated };
