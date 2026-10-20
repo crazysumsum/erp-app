@@ -18,8 +18,27 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # 五個 job 互相沒有 needs 依賴，並行跑：依賴掃描、lint、前端建置、瀏覽器測試
-  # 都不需要資料庫，沒理由跟著需要 MySQL 的 test job 排隊。
+  changes:
+    name: Sales import capacity scope
+    runs-on: ubuntu-latest
+    outputs:
+      required: ${{ steps.scope.outputs.required }}
+    steps:
+      - name: Check out repository and PR history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 26
+      - name: Verify scope and aggregate-check rules
+        run: node --test .github/scripts/sales-import-capacity.test.mjs .github/scripts/coverage-shards-rules.test.mjs
+      - name: Determine capacity impact (unknown changes require it)
+        id: scope
+        run: node .github/scripts/sales-import-capacity.mjs
+
+  # Independent checks and coverage start immediately; capacity gets its own DB.
   audit:
     name: Dependency audit
     runs-on: ubuntu-latest
@@ -90,10 +109,14 @@ jobs:
       - name: Run browser tests (network-mocked suites)
         run: npm run e2e:mocked
 
-  test:
-    name: Test (server + client, MySQL integration)
+  server-tests:
+    name: Server coverage shard (${{ matrix.shard }}/4)
     runs-on: ubuntu-latest
-    services:
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    services: &mysql_services
       mysql:
         image: mysql:26.7.0
         env:
@@ -114,7 +137,7 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=10
-    env:
+    env: &database_env
       DB_HOST: 127.0.0.1
       DB_PORT: 3306
       DB_USER: erp_user
@@ -167,14 +190,20 @@ jobs:
           DB_PASSWORD: root
         run: npm run migrate --workspace server
 
-      - name: Run tests with coverage thresholds
-        # TC-032 量的是 NFR-003 的延遲；V8 coverage 插樁會把 P95 推高到 3–5s，
-        # 量到的是插樁而不是系統，所以這一輪跳過它，交給下一步。
+      - name: Collect native server coverage for this shard
+        # Each shard stays serial on its own DB; the merged report enforces the original floors.
         env:
           SALES_CAPACITY_SEPARATE_STEP: "1"
-        run: npm run test:coverage
+          SALES_IMPORT_CAPACITY_SEPARATE_STEP: "1"
+          NODE_V8_COVERAGE: ${{ github.workspace }}/server/coverage/shard/raw
+        run: npm run test:coverage:shard --workspace server -- --test-shard=${{ matrix.shard }}/4
+
+      - name: Record candidate and shard identity
+        working-directory: server
+        run: node ../.github/scripts/merge-server-coverage.test.mjs record ${{ matrix.shard }} 4
 
       - name: Run Sales capacity test without coverage instrumentation
+        if: matrix.shard == 1
         working-directory: server
         # 全部被 skip 時 node --test 一樣 exit 0；要求兩個場景都真的 pass。
         run: |
@@ -185,6 +214,7 @@ jobs:
           grep -qx "# pass 2" capacity.tap
 
       - name: Run Sales import capacity test without coverage instrumentation
+        if: matrix.shard == 1
         working-directory: server
         # Both original 50MiB cases must pass their unchanged 30-second worker deadline.
         run: |
@@ -196,6 +226,111 @@ jobs:
           grep -qx "# pass 3" import-capacity.tap
           grep -qx "# fail 0" import-capacity.tap
           grep -qx "# skipped 0" import-capacity.tap
+
+      - name: Upload this shard's raw coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-coverage-${{ matrix.shard }}
+          path: server/coverage/shard
+          if-no-files-found: error
+          retention-days: 1
+          overwrite: true
+
+  client-tests:
+    name: Client coverage
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 26
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Run client coverage with existing thresholds
+        run: npm run test:coverage --workspace client
+
+  regression:
+    name: Test coverage (server + client, MySQL integration)
+    needs: [server-tests, client-tests]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 26
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Download every coverage shard from this run
+        uses: actions/download-artifact@v4
+        with:
+          pattern: server-coverage-*
+          path: server/coverage/shards
+          merge-multiple: false
+      - name: Merge native coverage and enforce unchanged global and per-file floors
+        env:
+          COVERAGE_SHARD_ROOT: ${{ github.workspace }}/server/coverage/shards
+          COVERAGE_SHARD_TOTAL: "4"
+        run: npm run test:coverage:merge --workspace server
+
+  sales-import-capacity:
+    name: Sales import mixed-load capacity (TC-042)
+    needs: changes
+    if: needs.changes.outputs.required == 'true'
+    runs-on: ubuntu-latest
+    services: *mysql_services
+    env: *database_env
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 26
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Verify exact MySQL server version
+        run: test "$(docker exec "${{ job.services.mysql.id }}" mysql -uroot -proot --batch --skip-column-names -e "SELECT VERSION();")" = "26.7.0"
+      - name: Apply database migrations
+        env:
+          DB_USER: root
+          DB_PASSWORD: root
+        run: npm run migrate --workspace server
+      - name: Run both TC-042 business-baseline scenarios without coverage instrumentation
+        working-directory: server
+        run: |
+          status=0
+          node --test --test-concurrency=1 --import ./test-support/testEnv.js --test-reporter=tap test/integration/salesImportCapacity.integration.test.js > mixed-load-capacity.tap || status=$?
+          cat mixed-load-capacity.tap
+          test "$status" -eq 0
+          grep -qx "# tests 2" mixed-load-capacity.tap
+          grep -qx "# pass 2" mixed-load-capacity.tap
+          grep -qx "# fail 0" mixed-load-capacity.tap
+          grep -qx "# skipped 0" mixed-load-capacity.tap
+
+  # Keep the original check name stable; required failures/skips cannot turn green.
+  test:
+    name: Test (server + client, MySQL integration)
+    if: always()
+    needs: [changes, regression, sales-import-capacity, audit, lint, build, e2e]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 26
+      - name: Require all checks and the selected capacity result
+        env:
+          CI_RESULTS: ${{ toJSON(needs) }}
+        run: node .github/scripts/sales-import-capacity.mjs check
 
   build:
     name: Build frontend

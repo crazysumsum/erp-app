@@ -354,9 +354,9 @@
       {
         "module_id": "item-management",
         "id": "item-lookup-service",
-        "version": "integrated-main-7c927e26-Item-purchase-lookup; Sales named contracts unchanged, current33/currentCI pending",
+        "version": "integrated-main-7c927e26-Item-purchase-lookup; Sales named contracts unchanged, current33/currentCI pending; HD018 mechanical current-main pin only, unchanged Sales methods; Item committed-receipt addition not adopted as Sales behavior",
         "source": "server/src/modules/item/ItemLookupService.js",
-        "sha256": "1b58448ce97d48da19ab8fd47d6bacab48cec7878ffdbb76bb68af252cc60be6",
+        "sha256": "a09d5baf602f44199cd218a2b3139edcdb2abad039a6f08a21b48162900562b5",
         "regression_suites": [
           "sales-technical"
         ]

@@ -248,13 +248,21 @@ client 目前只有一個煙霧測試，覆蓋率沒有設門檻——第一段�
 
 ## CI
 
-[.github/workflows/ci.yml](.github/workflows/ci.yml) 四個 job 並行跑，互相沒有依賴：依賴掃描、lint、前端建置、以及帶 MySQL service 的測試。
+[.github/workflows/ci.yml](.github/workflows/ci.yml) 的依賴掃描、lint、前端建置、Playwright 與 MySQL coverage 並行執行。Sales Import TC-042 的兩個容量案例使用另一個獨立 MySQL job，不帶 coverage 插樁。2026-10-20 依 Sam 指示將 CI 測試規模降至原來 1/5：2,000 張／10,000 行、10 位使用者及 10 個客戶；獨立 parser 案例為 1MiB／200 張預熱及 10MiB／2,000 張上限樣本。原有 1／100 行互動訂單分布、P95≤3 秒、每階段至少 50 個確認樣本、30 分鐘期限、worker／連線池設定、零失敗及完整庫存對帳均保留；GC 後記憶體增長門檻仍為 16／32／64MiB。較短負載透過既有手動喚醒接口觸發註冊的缺貨分配 job，保留排程租約與結果斷言。此 CI 規模不代表原 10,000 張／50 人或 50MiB 全量驗收通過，也不修改產品匯入上限。原全域及高風險檔案 coverage 門檻維持不變。
+
+Server 使用 Node 原生 `--test-shard=1/4` 至 `4/4` 分配原本的完整測試集合；每組各有獨立 MySQL，組內仍以 `--test-concurrency=1` 串行執行。Client coverage 獨立執行，不再等待 Server。既有兩組無插樁容量測試只在 Server 第一組執行一次。
+
+四組 Server 必須全部成功，才下載同輪 raw V8 coverage，由 Node 原生引擎合併後執行原有 92% lines／83% branches／90% functions 及全部高風險檔案門檻。缺組、檔案損壞、報告數量不符，或 commit／Node 版本／checkout 路徑不同都會失敗；不平均各組百分比。Raw artifacts 保留一天。合併命令保留 Node 原有測試檔案排除規則，另只排除新增的 CI 報告組裝程式；原有應用程式檔案不增加排除。規則測試以真實互補分支，確認合併的 LCOV 與未拆分報告一致，且未覆蓋函式仍會令原生門檻失敗。本機 `npm run test:coverage --workspace server` 的完整執行方式維持不變。
+
+PR 以 base/head 的 merge-base 差異判斷是否需要 TC-042，包含刪除與改名前路徑。Sales、Customer／Item／Inventory／Business Master、共用服務、認證、交易、排程、migration、依賴及 CI 變更均須執行；未知路徑、空差異或無法取得差異亦須執行。只有已知無關的 Markdown、非 Sales／共用框架的 client 檔案，以及 Supplier 專屬程式／測試可略過這組容量測試；其他回歸照常執行。規則及自動化測試位於 [.github/scripts](.github/scripts/sales-import-capacity.mjs)。main push、既有每週排程及手動執行均跑完整容量驗證。
+
+`Test (server + client, MySQL integration)` 保留為固定彙總檢查：所有一般檢查須成功；TC-042 須通過，或由成功的範圍判斷明確列為不適用。失敗、取消、遺失結果及意外跳過都會報紅。
 
 **CI 不是強制關卡。** 這個 repo 目前是私有的免費方案，GitHub 分支保護要求 Pro 或轉 public，兩者都還沒做，所以檢查紅了照樣 merge 得到——`main` 完全靠自律守住。Merge 前務必看 `gh pr checks` 或 PR 頁面的檢查結果，不要假設「開了 PR 就有人幫忙擋」。
 
 ### 為什麼要真的接 MySQL
 
-`test` job 起一個 MySQL service，跑 `npm run migrate` 建表，再連真資料庫跑測試——這是刻意的，不是排場。`server/test/` 底下所有單元測試都用假 pool（`test-support/fakeMySqlPool.js`），比對的是「SQL 字串有沒有包含 `FROM roles r`」這類片段；表名、欄名、join 條件打錯字，假 pool 照樣通過。`server/database/migrations/0003_add_auth_tables.js` 那個會 `DROP TABLE users` 的守衛邏輯，在這之前也從來沒有真的執行過一次。
+`regression` 及需要執行時的 `sales-import-capacity` job 各起獨立 MySQL service，跑 `npm run migrate` 建表，再連真資料庫跑測試——這是刻意的，不是排場。`server/test/` 底下所有單元測試都用假 pool（`test-support/fakeMySqlPool.js`），比對的是「SQL 字串有沒有包含 `FROM roles r`」這類片段；表名、欄名、join 條件打錯字，假 pool 照樣通過。`server/database/migrations/0003_add_auth_tables.js` 那個會 `DROP TABLE users` 的守衛邏輯，在這之前也從來沒有真的執行過一次。
 
 [test/integration/authFlow.integration.test.js](server/test/integration/authFlow.integration.test.js) 補這個缺口：起一個真的 `application`、打真 HTTP 請求，讓 `UserService` 的 join、`tokenRevocation` 的版本號比對、JWT 簽發驗證全部真的跑一次。
 
@@ -264,4 +272,4 @@ client 目前只有一個煙霧測試，覆蓋率沒有設門檻——第一段�
 DB_INTEGRATION_TESTS=1 npm test --workspace server
 ```
 
-CI 的 `test` job 一定會設這個變數——那裡的 MySQL 是特地起的，連不上就該讓 build 紅，不該被當成「這個環境沒有資料庫」而悄悄跳過。
+CI 的 `regression` 及 `sales-import-capacity` job 一定會設這個變數——那裡的 MySQL 是特地起的，連不上就該讓 build 紅，不該被當成「這個環境沒有資料庫」而悄悄跳過。

@@ -228,4 +228,20 @@ describe("pages/suppliers/SuppliersPage.vue", () => {
     expect(body.text()).toContain("<b>bold</b>");
     expect(wrapper.element.querySelector("script, img[onerror], b")).toBeNull();
   });
+
+  it("shows updated times in Hong Kong time whatever the browser's zone, across a year boundary (AUD-008 UI)", async () => {
+    supplierService.list.mockResolvedValue({ rows: [{ ...ROW, updatedAt: Date.parse("2025-12-31T16:30:00Z") }], rowsNumber: 1 });
+    const router = createRouter({ history: createMemoryHistory(), routes: [{ path: page.path, component: SuppliersPage }] });
+    await router.push("/suppliers");
+    await router.isReady();
+    useSessionStore().user = { id: 1, permissions: ["supplier.view"], roles: [] };
+    mount(SuppliersPage, { global: { plugins: [Quasar, router] }, attachTo: document.body });
+    await flushPromises();
+    // 測試以 UTC 跑：UTC 仲係 2025-12-31 16:30，香港已經係 2026-01-01 00:30。
+    const text = new DOMWrapper(document.body).text();
+    expect(text).toMatch(/2026/u);
+    expect(text).toMatch(/12:30|00:30|0:30/u);
+    expect(text).not.toMatch(/2025/u);
+  });
 });
+

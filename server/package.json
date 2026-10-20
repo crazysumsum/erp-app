@@ -15,7 +15,9 @@
     "supplier:bank:reindex-lookup": "node scripts/reindexSupplierBankBlindIndexes.js",
     "test": "node --test --import ./test-support/testEnv.js",
     "pretest:coverage": "node -e \"require('node:fs').mkdirSync('coverage',{recursive:true})\"",
-    "test:coverage": "node --test --test-concurrency=1 --import ./test-support/testEnv.js --experimental-test-coverage --test-coverage-lines=92 --test-coverage-branches=83 --test-coverage-functions=90 --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info && node scripts/checkCoverageFloors.js"
+    "test:coverage": "node --test --test-concurrency=1 --import ./test-support/testEnv.js --experimental-test-coverage --test-coverage-lines=92 --test-coverage-branches=83 --test-coverage-functions=90 --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info && node scripts/checkCoverageFloors.js",
+    "test:coverage:shard": "node --test --test-concurrency=1 --import ./test-support/testEnv.js --experimental-test-coverage",
+    "test:coverage:merge": "node --test --experimental-test-coverage --test-coverage-exclude='**/{test,test/**/*,test-*,*[._-]test}.{js,mjs,cjs,ts,mts,cts}' --test-coverage-exclude=../.github/scripts/merge-server-coverage.test.mjs --test-coverage-lines=92 --test-coverage-branches=83 --test-coverage-functions=90 --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info ../.github/scripts/merge-server-coverage.test.mjs && node scripts/checkCoverageFloors.js"
   },
   "dependencies": {
     "ajv": "^8.20.0",

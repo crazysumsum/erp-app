@@ -1837,6 +1837,40 @@ This design is required by FR-014, FR-030, FR-031, FR-034, FR-037, FR-038, FR-04
 ### Failure behavior
 Boundary validation, authorization, optimistic concurrency, transaction/audit coupling and dependency readiness fail closed as applicable. Partial or unknown outcomes remain explicit and block acceptance until reconciled.
 
+## DES-022 — Dedicated committed-receipt current-facts provider
+
+### Decision
+PROPOSED / HUMAN APPROVAL PENDING. Add only `ItemLookupService.findManyForCommittedReceipt(skuIds, { atMs } = {})`; do not add `committed_receipt` to `ITEM_LOOKUP_PURPOSES` or enable a flag on generic/purchase/inventory reads. Source: Purchasing §2.4, §3.6 and P0-T05; Item GR handoff §5. This provider does not prove an existing commitment or completed GR.
+
+Input: array of positive safe-integer SKU IDs; deduplicate, numeric ascending order, maximum 100 unique IDs (the installed Sales batch bound). Reject invalid array/elements/101 unique IDs with TypeError before SQL. `atMs` is optional; only omitted/undefined uses one captured `time.nowMs()`. Explicit null, negative, fractional, nonfinite or unsafe time fails TypeError before SQL. Empty valid input returns an empty Map without SQL. No strings/coercion, barcode lookup, pagination, optional purpose or eligibility bypass parameter.
+
+Output: `Promise<Map<number, CommittedReceiptSku>>`, numeric ascending keys; each requested ID must exist. A missing SKU/Item join throws existing `skuNotFound(lowestMissingId)` / `SKU_NOT_FOUND` (404) and returns no partial Map. If any returned SKU has current `trackingPolicy === "serial"`, throw existing `skuNotUsable(lowestSerialId, "committed_receipt", ["SERIAL_NOT_SUPPORTED"])` / `SKU_NOT_USABLE` (409); this method-specific error label is not a new generic purpose. Missing identity takes precedence over serial rejection. Invalid inputs take precedence over all reads; SQL failures propagate, never empty-success fallback.
+
+`CommittedReceiptSku` uses the existing lookup current-facts fields and types: `skuId, skuCode, skuName, skuStatus, itemId, itemName, productType, itemStatus, purchasable, sellable, inventoryTracked, trackingPolicy, shelfLifeDays, minimumReceiptLifeDays, minimumSaleLifeDays, effectiveFrom, effectiveTo, uoms`. It **omits** `usable` and `reasons`, and adds `warnings: string[]`. Null dates/life limits remain null; flags are booleans, IDs and factors numbers; no price, PO, audit, customer/Supplier or claim data. Current facts are not transaction-time historical snapshots.
+
+Each UOM has exactly `skuUomId, uomId, uomCode, uomName, status, toBaseFactor, isBase, isDefaultPurchase, isDefaultSale`, using the installed purchase projection metadata. `skuUomId` is association ID, `status` is master-UOM status; include inactive/archived mappings for identity/history, sorted by numeric `skuUomId`. Return current mapping facts, never PO conversion snapshots or active-choice permission. No automatic default selection, factor change, catalogue activation or relation backfill. The consumer must match its committed mapping/ownership and use its approved snapshot/Inventory policy; missing/current-different mapping is not silently substituted.
+
+Proposed finite current-state warning allowlist, returned once each in this exact order:
+
+| Code | Predicate at the captured time |
+| --- | --- |
+| `STATUS_NOT_ACTIVE` | Item or SKU status is not `active`; original statuses remain separately available. |
+| `NOT_PURCHASABLE` | Current SKU `purchasable` is false. |
+| `NOT_INVENTORY_TRACKED` | Current SKU `inventoryTracked` is false. |
+| `OUTSIDE_EFFECTIVE_RANGE` | Captured time is before non-null effectiveFrom or after non-null effectiveTo; equality is included. |
+
+These reuse installed Item reason vocabulary as a dedicated warning contract, not a new purchase rule. They describe current facts, **not changes since PO confirmation**. Only Receiving has the snapshot needed to detect e.g. tracking change or false-to-true flag change, map domain warnings such as `TRACKING_CHANGED`/`SKU_ARCHIVED` and require `skuExceptionReason`; this provider cannot generate those diffs. Draft or other non-active current states are not hidden: they warn, but a caller cannot invent a Confirmed PO for them. Serial remains a hard rejection per Purchasing P0-T05. UOM eligibility/Expired Lot/location/quantity/lot consistency is not waived by these four warnings.
+
+### Rationale
+FR-067 needs an explicit read surface rather than relaxed generic purchase/inventory policy. Reuse joined SKU/Item batch loading and the installed batched UOM loader; at most two parameterized SELECTs for a successful non-empty batch (zero for empty, one if identity/serial rejection occurs before UOM load), independent of SKU count. Do not loop over findById or introduce cache, schema, endpoint, container registration, dependency, frontend or broad refactor. Add an Item warning constant only if it is actually used by the implementation/tests. Existing callers/exports are unchanged; only a separately approved Receiving consumer may adopt this named method.
+
+The read uses the service's injected database/query executor for both SELECTs; it does not open a second pool connection, start/commit/rollback a transaction or acquire locks. Normal pool reads are advisory and can change between SELECTs. A Receiving caller needing one consistent view must inject its existing transaction query executor when constructing the provider; it still owns lock ordering/current locked revalidation before posting. A transaction read view is not automatic FOR SHARE/FOR UPDATE freshness and this method is not the future Inventory posting contract. Plan actual-MySQL tests for transaction executor isolation and concurrent master edits; no coherent multi-query snapshot claim for ordinary pool reads.
+
+Rejected alternatives: `includeInactive`/new generic purpose (broadens installed consumers); `usable:true`/`canReceive:true` (misstates authorization); passing PO snapshot/reason into Item (cross-module ownership); return partial Map for missing identity (caller may accidentally omit a receipt line). Proposed return shape/allowlist/missing/serial/time behavior require owner approval before implementation and consumer adoption. Existing provider pin must be refreshed only to this reviewed document, without changing other module pins.
+
+### Failure behavior
+Read-only/all-or-error; unavailable database is not source authority or success. No new logs/audits/writes, retries, runtime/DDL execution or evidence export during planning. Caller permissions and existing purchase/inventory assertions are unchanged. Tests/CI certify only this provider slice; GR-01/02/03 remain BLOCKED, DEF-107 HIGH/OPEN and TASK-043 IN_PROGRESS. Formal TC-004/TC-005, UAT-005/013/017 and business/release acceptance remain independent. See PHASE-010/TASK-048/TC-019/UAT-018; proposed design approval is not implementation or acceptance authority.
+
 ## DES-021 — Additive purchase provider discovery contract
 
 ### Decision

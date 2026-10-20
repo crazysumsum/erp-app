@@ -26,7 +26,8 @@ function contact(id) {
 
 const DETAIL = {
   ...ROW, website: "", generalPhone: "", generalEmail: "", notes: "", createdAt: 100,
-  addresses: [], contacts: Array.from({ length: 100 }, (_, index) => contact(1000 + index)), identifiers: [], bankAccounts: [], warnings: []
+  addresses: [], contacts: Array.from({ length: 100 }, (_, index) => contact(1000 + index)), identifiers: [], bankAccounts: [],
+  warnings: [{ field: "addresses", code: "ORDERING_ADDRESS_MISSING", message: "尚未設定採購用途地址" }]
 };
 
 async function installApi(page, { user = MANAGER } = {}) {
@@ -56,7 +57,7 @@ async function installApi(page, { user = MANAGER } = {}) {
       return ok({ items: [ROW], total: 1, page: 1, pageSize: 20 });
     }
     if (get && url.pathname === "/api/v1/suppliers/7") return ok(DETAIL);
-    if (get && url.pathname === "/api/v1/suppliers/7/completeness") return ok({ supplierId: 7, issues: [], warnings: [] });
+    if (get && url.pathname === "/api/v1/suppliers/7/completeness") return ok({ supplierId: 7, issues: [], warnings: DETAIL.warnings });
     if (get && url.pathname === "/api/v1/suppliers/7/contacts") {
       state.contactPages.push(Object.fromEntries(url.searchParams));
       return ok({ items: Array.from({ length: 5 }, (_, index) => contact(2000 + index)), total: 105, page: 2, pageSize: 100 });
@@ -165,6 +166,9 @@ test("@technical a detail with 100 contacts says so and loads the rest a page at
   const problems = collectProblems(page);
   const state = await installApi(page);
   await page.goto("/suppliers/7");
+  // PARTY-007：缺選填資料係非阻擋提示，以 status 宣告，唔係 alert（REV-097 L-2）。
+  await expect(page.getByRole("status", { name: "非阻擋完整度提示" })).toContainText("不影響啟用");
+  await expect(page.getByRole("alert")).toHaveCount(0);
   await page.getByRole("tab", { name: "聯絡人 (100+)" }).click();
   await expect(page.getByText("已顯示 100 個聯絡人，可能還有更多")).toBeVisible();
 

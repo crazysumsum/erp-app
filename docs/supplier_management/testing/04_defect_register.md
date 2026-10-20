@@ -46,3 +46,39 @@ Design §5.8 masks short accounts with `*`; the projection used `•`. Fixed per
 rather than the design (a design edit would move the DESIGN hash and strand 36 reviews): every mask now
 uses `*`. Client unit-test fixtures still carry the old character as mock strings; they do not depend on
 the server.
+
+## DEF-029 — HIGH
+
+`fk_supplier_sku_refs_sku` (`supplier_sku_refs.sku_id` → `item_skus.id`) is not enforced for child INSERT or UPDATE on MySQL 26.7.0, the version CI and the target use. A relation row with a `sku_id` that does not exist is accepted; deleting a referenced SKU is still refused.
+
+Found while writing the SKU-005 carrier (TC-082). Reproduced in the MySQL CLI and in a scratch schema: InnoDB serves the key with the first index that starts with `sku_id`, here `idx_supplier_sku_refs_sku_status_supplied (sku_id, relationship_status, last_supplied_at)`. When that index carries a nullable column, the child-side check is skipped. A plain key, or one served by `(sku_id, relationship_status)`, is enforced.
+
+What fixes it, verified on a populated table: drop the foreign key and that index, add `KEY (sku_id)`, then re-add the composite index and the foreign key. It survives `FLUSH TABLES`. The re-add fails if orphan rows exist. Adding the single-column index after the composite one, or only dropping and re-adding the key, does not fix it.
+
+The service checks the SKU before inserting, so today only direct writes are exposed.
+
+A scan of all 250 foreign keys found the same fault on `item_skus.item_id` and `item_media.item_id`, which belong to Item. Decision: HD-113.
+
+Fix, per HD-113 A, with the procedure changed after REV-100 H-1 (HD-114): migration
+`0087_fix_supplier_sku_refs_sku_foreign_key.js` stops and lists orphan rows if there are any. Otherwise one
+`ALGORITHM=INPLACE, LOCK=NONE` statement adds `idx_supplier_sku_refs_sku (sku_id)`, then drops and re-adds the
+composite index, so the single-column index comes first. The foreign key is never dropped: deletes stay refused
+throughout, and writes are never blocked by a table rebuild. Orphan rows are checked again afterwards, and so is
+which index serves the key; a UNIQUE index starting with `sku_id` would sort first and is reported. A connection
+with `foreign_key_checks=0` is refused. A rerun only checks. A manual `down` drops the single-column index, which
+is the 0081 definition again. `supplierSkuForeignKeyMigration.integration.test.js` exercises it on a copy of the
+table, with the 0081 definition as a control; the TC-082 carrier's direct orphan insert is now refused. The Item
+finding is handed over in `item_handoff_foreign_keys.md`; for `item_skus` the same procedure does not work
+(REV-100 M-2), and the document says what does.
+
+## DEF-030 — LOW
+
+`SUPPLIER_DUPLICATE_NAME_THRESHOLD` has no effect. `config/supplier.js` reads it, `normalizeSupplierConfig` validates
+it, and design §12.1 lists it, but no `SupplierAdminService` is given a checker built from it: every construction site
+uses the class default, 0.85. Setting the variable to another value changes nothing in UI create or update.
+
+Found by REV-101 (M-1) while reviewing the HD-057 A similar-name report. The report uses the same default checker as
+UI create, so the two agree. A test pins this, and it will turn red when this defect is fixed, so the report follows
+the setting.
+
+Not fixed here. Wiring the setting changes UI behaviour for any non-default value, which is outside HD-057.
