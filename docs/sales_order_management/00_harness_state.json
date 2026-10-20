@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1273,
+  "revision": 1274,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -10905,6 +10905,30 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-HD008-HD009-COORDINATION-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "a0d5da186f2637d7e77b2d59d72715752ff4c9ba2ef991a7db90389d1016e9d6",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/hd008-sales-p0-coordination-r1-reviewer-proof.json; actual scoped coordination/authority review; exactdocument/file hashes inproof, no productorPhaseGate approval.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-HD009-ACTUAL-APPROVAL-ADDENDUM",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "ecfb6c8f75319f4c72a5f61a120904822f4cf852151419c63018eb32e339270d",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/hd008-sales-p0-coordination-r1-approval-addendum.json; actual scoped coordination/authority review; exactdocument/file hashes inproof, no productorPhaseGate approval.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -14262,6 +14286,17 @@
       "source_ref": "docs/sales_order_management/implementation/112_hd008_fulfillment_p0_coordination.md; actual Sam direct async approval A read in source chat01a15862-9933-7e50-8e10-4015cf35d078. Immutable13file private receipt9f3bef53 retained; sourcefdd93a50 preserved, no overlapping product edits or merge after direction. Latest observedmain76223f4 not yet integrated.",
       "actor": "Codex /root",
       "observed_at": "2026-10-20T09:30:52.531785Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Actual HD009 A1 verified and single0088–0099 mapping acknowledged; Sales0088 owner native13PASS0FAIL0SKIP; ownerP0 implementation/0B/fullGate stillpending",
+      "code_commit": "797c18696add9d4de1e068defd0a139fa6924617",
+      "spec_baseline": "b791cec4ed059697c859b00b49c94d8d8b35c13ca031c8a8ab16ff633a642ba1",
+      "source_fingerprint": "31fad2c9af4d16135ea115d613136e38f827196036d167431576b91995ce5b95",
+      "status": "PASS",
+      "source_ref": "docs/sales_order_management/implementation/112_hd008_fulfillment_p0_coordination.md#actual-hd009-a1-approval-and-sales-acknowledgement; actual private foundationnative log and inventoryreceiptfe62ca8a. Sourceauthority direction and mapping only; noNewP0qualification/CI/P4merge claim.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-20T09:36:18.780179Z"
     }
   ],
   "pending_decisions": [
@@ -14641,6 +14676,23 @@
       ],
       "question": "Adopt exact proposal107 SHA83cffc9f27a87f1552f77d373b367e3d13db9708d0f4f37cacb8aa7324dce38c: Sam dual-owner named shared/provider contribution governed by Sales IMPLEMENT execution unit; real owner12active/12mirror/operations/forwardmigrations/OpenMatter/transactionparticipant, specifiedprovider/test/docs paths; new064-068 and057->066/058->067/063->068; ownerrecords frozen before sourcechecks; retain all original39 Sales suites/fullcapacity/fullPhase/currentCI plus added mandatory owner suites. One completeP4 PR; no partialmerge or Fulfillment45task/12TC/120UAT completion claim. Actual separate prospective review52a6fac3fa7ccab72e92bf1558c705812d69135380ea406d8294e690d61e5a86. Alternative wait original wholeFulfillment prerequisites. Existing Git/ownedruntime authority preserved. Await actualhuman before new cross-module implementation.",
       "answer_ref": "Actual direct Sam current Codex chat reply to exact DEC029 request: 批准 DEC-029 正式依賴切片及交付順序（建議）. Adopts proposal107 SHA83cffc9f27a87f1552f77d373b367e3d13db9708d0f4f37cacb8aa7324dce38c / actual independentreview52a6fac3; dual-owner precise shared/provider persistence/OpenMatter/transactionparticipant/migrations/test/docs scope, Sales IMPLEMENT singleexecutionunit/new064-068/dependency order/frozenownerrecords/addmandatorysuites/fulljointP4PR. Original39/fullcapacity/normalCI/allPhase/formal/UAT/owner45task obligations retained. Existing Git/isolatedruntime authority persists; no production/fullFulfillmentcompletion/acceptance waiver. New canonical D/P/SCOPE bindings must be derived transparently, not rewrite old approvals."
+    },
+    {
+      "id": "DEC-030-HD008-HD009",
+      "impact": "MAJOR",
+      "status": "ANSWERED",
+      "affected_ids": [
+        "PHASE-005",
+        "TASK-057",
+        "TASK-058",
+        "TASK-063",
+        "TASK-065",
+        "TASK-066",
+        "TASK-067",
+        "TASK-068"
+      ],
+      "question": "Adopt actual HD008 P0 active-schema/quantity/lifecycle authority and HD009 A1 exact Sales0088 batch/manifest two-table contribution in complete P0 PR; preserve Sales0089/0090 and complete remaining P4; withdraw duplicate old0091-93 installers; unique mappedP00091-99, actualCheckpoint0B/allPhaseGates/CI/reviews unchanged.",
+      "answer_ref": "Actual Sam source chat01a15862-9933-7e50-8e10-4015cf35d078 direct user async A forHD008 and userMessage01a158a7-0436-7711-b27b-8e0784bb4b0f HD009 A1. ProposaldecisionSHA babf2e13ff29f7f108b0473e8bafc8a44d571ab17143857eb38eeefdc60dcd95; exact0088 SHA b6eeecb12fd08e3f4a6129c8448b1c9346c4f55ca73bda458653b93d7a410946. Actual direct parent reread plus independentaddendumecfb6c8f; nooldapproval/hash rewrite or P0/P4 Gate waiver."
     }
   ],
   "external_actions": [
@@ -18279,5 +18331,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Read implementation/112_hd008_fulfillment_p0_coordination.md. Actual Sam HD008 makes approved FulfillmentP0 authoritative for active schema/quantities/lifecycle. Existing0091-0093 paused and exit final SalesP4 as duplicate installers;0088-0090 Salesowned. Preserve d011/fdd93/oldreviews/13filecustody; nooverlapwrites/SQLmigration/merge untilonecontract+numbering+ownershiprecorded. OwnerP0Task010mirrors requiresSales0088batch/manifest absentmain: exact narrowdependency/mergepolicy contribution needs concrete disposition, not duplicate tables or blind oldhash rebinding. Independentcoordinationreviewpending. BothP0fullGate andalloriginalSales39+6/currentCI/review/unchangedP4Gate remain. Nooutboundotherchatmessaging inferred."
+  "next_safe_action": "HD008/HD009 A1 actuallyAPPROVED, see implementation112 finalSalesACK: exactSales0088 contribution in completeP0PR;0089/90 staySales; old0091–93withdrawn asfinalinstallers, P0solewriter91–99. No furtherhuman decision pending for exacthandoff. Owner P0mustcomplete own0B/fullnative/currentCI/review/Gate; source39/95componentresults historical againstoldquantityrules. Await actualownerartifact/contract beforeoverlapwrites; reconcilebothcanonicalhistories/newSalesD/Pbindings thenintegrateactualP0main andfinishoriginalP4tasks/all45checks/currentCI/fullreview/unchangedMERGE_READY. No duplicateproviders/tables, no runtimecredentialtransfer orliveDBauthority. Do not infer thischatoutboundmessaging authority."
 }

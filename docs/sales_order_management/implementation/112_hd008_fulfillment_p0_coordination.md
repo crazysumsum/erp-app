@@ -1,6 +1,6 @@
 # HD-008 — Sales P4 / Fulfillment P0 ownership coordination
 
-Status: overlap preserved and paused; ownership direction confirmed, concrete migration/contract handoff not yet agreed. This is a coordination proposal, not a migration reservation, new acceptance result or merge exception.
+Status: HD008 ownership and actual HD009 A1 prerequisite contribution approved; Sales acknowledges the single numbered handoff below. Overlapping owner source remains preserved for P0 adaptation; no new product/Phase acceptance or live migration is claimed.
 
 ## Actual authority and observed baseline
 
@@ -45,7 +45,7 @@ The new owned socket-only MySQL26.7 instance remains available with nice10 and o
 
 1. Fulfillment P0 becomes sole final writer/reviewer for active schema, quantity/operation invariants and minimum lifecycle provider. It may adapt the preserved source/tests only after its approved Checkpoint0B and exact compatibility review; it must not count this Sales95PASS as completing its own45 tasks/Checkpoints.
 2. Sales retains its six-table copy/hash/coordinator and participant/consumer adaptation work. The real participant continues as an explicitly named Fulfillment-owned contribution, with one accepted ABI and fixed transaction authority; no fabricated CLOSED or bearer actor payload.
-3. Resolve a real predecessor issue before allocating numbers: P0 TASK010 includes owner Archive mirrors, whose FK references **Sales0088 batch/manifest tables absent from main**. A strict 'P0 first, complete P4 later' sequence otherwise leaves a cycle. The smallest candidate is to accept only the required Sales0088 batch/manifest foundation as a named Sales-owned contribution in the complete P0 PR, with its actual native acceptance/owner review and explicit scope/trace/merge-policy disposition; keep unrelated0089/0090 and full P4 delivery in Sales. This is a proposal, **not approval to split the existing P4 merge group or cherry-pick it now**. If existing HD008 scope/merge authority does not cover that exact prerequisite contribution, present this concrete supplement to Sam once, retaining all original Gates. An alternative is a genuinely joint complete P0+P4 candidate satisfying both complete Gates; it is larger and keeps coupled delivery.
+3. Resolve a real predecessor issue before allocating numbers: P0 TASK010 includes owner Archive mirrors, whose FK references **Sales0088 batch/manifest tables absent from main**. A strict 'P0 first, complete P4 later' sequence otherwise leaves a cycle. The smallest candidate is to accept only the required Sales0088 batch/manifest foundation as a named Sales-owned contribution in the complete P0 PR, with its actual native acceptance/owner review and explicit scope/trace/merge-policy disposition; keep unrelated0089/0090 and full P4 delivery in Sales. This is a proposal, **not approval to split the existing P4 merge group or cherry-pick it now**. If existing HD008 scope/merge authority does not cover that exact prerequisite contribution, present this concrete supplement to Sam once, retaining all original Gates. An alternative is a genuinely joint complete P0+P4 candidate, but it requires a separately reviewed feasible Gate/baseline design before it can be offered as executable: the installed fingerprint excludes only the selected module documents, so changing either other canonical state can invalidate the other qualification, and a stacked P0 branch is not the approved DEFAULT main-only path. No existing dual-Gate adapter or baseline exception is assumed. It is larger and keeps coupled delivery.
 4. After that decision/agreement, choose the exact complete forward migration inventory once from fresh main; map existing0088–0093 source identities/content to final ownership and order, including P0's eight logical slices. Do not execute or publish a duplicate number. Reconcile both authoritative document/state histories with an actual separate review; neither stream overwrites the other's state or rewrites old approvals/hashes.
 5. Requalify cumulative allocation/reallocation, zero-picked Line states, real FK/constraint/immutable guards, normal/partial/rerun migrations, minimum lifecycle release/block/UNKNOWN, all original39+6 Sales suites, P0 requirements, current candidate CI and actual reviews. Observe unchanged required Gates before each authorized merge. No current P4 merge readiness is claimed.
 
@@ -58,3 +58,38 @@ Sales accepts the HD008 ownership direction: **0091–0093 are paused and will e
 **0088–0090 remain Sales-owned identities.** 0089 and0090 remain in the later complete Sales P4 delivery. 0088 contains the predecessor batch/manifest schema actually required by owner mirror FKs; it is not silently donated, duplicated under another migration, deleted, or declared merged. Its narrow contribution/merge-policy disposition is the concrete remaining sequencing question described above. Until resolved, the coordinator can inventory/review/reconcile non-persistence foundation work but cannot claim its full TASK001 migration allocation or TASK010/Fulfillment P0 Gate has been satisfied.
 
 Reusable paths: canonical12-column/hash module; schema/index/FK/trigger model and23 native cases as a changeable reference; real socket-only fixture and actual transaction/RequestContext test support; OpenMatter service/adapter/unit/native cases as a prototype requiring new cumulative/short-pick rules and owner review. The genuine archive participant is still to be implemented; no source file or PASS is being handed off for a nonexistent participant. Nothing grants P0 access to this private MySQL or transfers credentials.
+
+
+## HD009 coordination observation
+
+The authorized coordinator has now presented the precise predecessor supplement as **HD009** in the Fulfillment chat, with A1 (Sales-owned0088 two-table foundation as a named contribution in the complete P0 PR; all remaining P4 work and full Gates retained) versus a separately designed joint candidate. Sales read that actual current attention item using the app thread status. It was pending at that observation; the direct answer was subsequently verified below, so no duplicate question is required. Exact source file SHA is recorded below for owner review. HD008 alone does not approve this new delivery grouping, and the independent coordination review agrees.
+
+`server/database/migrations/0088_create_sales_archive_batches.js` SHA256 `b6eeecb12fd08e3f4a6129c8448b1c9346c4f55ca73bda458653b93d7a410946`. Sales keeps data ownership and review responsibility; P0 may not silently extend the approved0088 identity/content or infer Sales P4 completion.
+
+
+## Actual HD009 A1 approval and Sales acknowledgement
+
+Sales independently read actual direct Sam userMessage `01a158a7-0436-7711-b27b-8e0784bb4b0f`, replying to `call_7195f5d208b1467bb2c40c5bd6d7e4f0`: **A1：批准兩表基礎切片納入完整 P0 PR（建議）**. Decision-time owner proposal SHA `babf2e13ff29f7f108b0473e8bafc8a44d571ab17143857eb38eeefdc60dcd95`; actual independent R7 is retained by the coordinator. Separate Sales impact review `a0d5da18` and actual-approval addendum `ecfb6c8f` preserve the earlier need-for-supplement reasoning and bind the later direct answer. HD008/HD009 are adopted; no further human decision is currently pending for this exact ownership/two-table delivery supplement.
+
+**Sales ACKNOWLEDGES this one forward inventory** after fresh main76223f4, local-branch and registered-worktree inventory. The old Sales0091–0093 entries are withdrawn future installers, retained only as immutable Git/private evidence references. Fulfillment P0 is the sole coordinator/writer for the following replacement prefixes; Sales will not create another0091–0099 file. This is observed coordination, not an acquired distributed number lock or assurance about unseen/future external work. Recheck fresh main before actual file creation and merge.
+
+| Prefix | Final contribution / carrier |
+| --- | --- |
+|0088|Exact Sales-owned batch/order-manifest foundation SHA b6eeecb1…; carrier complete Fulfillment P0 PR under actual HD009 A1. Sales reviews; never implies P4 completion.|
+|0089|Sales six Archive mirrors; remains complete Sales P4.|
+|0090|Sales Export persistence; remains complete Sales P4; legacy0087 identity/body evidence retained.|
+|0091|P0 permission seed.|
+|0092|P0 sequences and durable operation persistence.|
+|0093|P0 Fulfillment headers/lines/claims/history.|
+|0094|P0 Inventory sequence extension; actual Inventory owner review and compatibility required.|
+|0095|P0 allocation projection and cross-module FKs.|
+|0096|P0 Shipment schema.|
+|0097|P0 Issue/Reversal schema.|
+|0098|P0 Audit/Export schema.|
+|0099|P0 full Archive mirrors/guards.|
+
+The approved eight logical P0 slices split permissions and operations into physical0091/0092; no business/quality boundary is weakened. The P0 normal runner will first have0088 and0091–0099 with0089/0090 intentionally absent; later Sales integrates actual P0 main and adds0089/0090 using the existing missing-name ledger mechanism. Both this order and upgrade over a preexisting private through0090 schema require actual native acceptance; no old PASS is relabeled.
+
+Sales owner focused check executed after the handoff on its own approved isolated runtime: `salesArchiveMigrations.integration.test.js` **13PASS/0FAIL/0SKIP**, including real batch/manifest uniqueness/check/FK/rerun and Sales mirror regressions. This is current acceptance of unchanged0088 plus related Sales persistence only, not P0 Checkpoint0B or candidate CI. Private `hd009-sales-foundation-native-r1.log` and `hd009-observed-migration-inventory.json` (SHA fe62ca8a…) retain actual outputs. No P0 runtime/schema or another worktree was modified.
+
+P0 can now reconcile its exact scope/contract/trace/bindings from actual A1 and complete TASK001, then follow its approved TASK002/003/providers/Checkpoint0B before schema execution. It must provide its own native/CI/review evidence. Sales remains responsible for matching its canonical plan/history to the actual P0 predecessor and completing original057–063/067–068/all45 suites/currentCI/fullP4Gate after the owner artifact is available. Existing R4 qualification and39/95 local results remain historical components, not new P0 correctness claims.
