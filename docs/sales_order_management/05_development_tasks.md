@@ -3825,3 +3825,98 @@ Shared writes are limited to the eight semantic Sales migration names in the man
 P1 handler destinations follow Design §9.3: six exact Sales Order/lookup files in server/src/handlers/sales (manifest lists each), plus the existing sales-quotations scope. TASK-021 runtime and expiry job follow Design §9.2/§12.2 under server/src/services/salesJobs with two exact manifest paths; no framework scheduler rewrite. The environment authorization reference is explicitly PENDING DEC-015. NFR-014/015 retain their reasons and use prospective approval ID APR-PHASE1-UATNA-DEC015; only an actual human decision may create that approval record.
 
 DEC-015 also proposes one explicit dependency correction: move only External Key parent table creation from TASK-038/P3-T01 into TASK-013/P1-T02, matching Design §4.22 and preserving the required RESTRICT FK from initial Sales Order creation. TASK-038 consumes and verifies the existing schema; all CSV/Channel APIs, intake, claims/dedupe and formal acceptance remain in P3. No staged weakening or omitted FK is authorized.
+
+
+## DEC-029 — Approved dependency delivery tasks
+
+Original001–063 and all39 developer contracts remain. Owner contribution is scoped by proposal107 and contract10; new suites are additional mandatory checks. No original fullFulfillmentPhase/acceptance claim.
+
+## TASK-064 — Formal dependency scope and integrated baseline
+
+### Goal
+
+Review owner contracts, exact human scope and baseline bindings; integrate fresh main preserving both histories and all evidence; resolve migration numbering collision without altering applied schema bytes/old ledgers; verify unmodified planning/boundary gates.
+
+### Approach
+
+DEC-029 exact approved provider/test/migration/docs scope. Dependencies: TASK-056. Preserve ownership and established contracts; serial low-priority test execution.
+
+### Acceptance criteria
+
+Review owner contracts, exact human scope and baseline bindings; integrate fresh main preserving both histories and all evidence; resolve migration numbering collision without altering applied schema bytes/old ledgers; verify unmodified planning/boundary gates. All relevant positive/negative/native tests pass with zero skips; original thresholds remain.
+
+### Definition of Done
+
+Real focused checks and affected regression, actual independent review, updated typed traceability, atomic commit and original §1.1 DoD. Task-local results do not replace all original39+additional owner suites/currentCI/fullPhase review/unchanged merge Gate.
+
+## TASK-065 — Fulfillment canonical persistence and archive mirrors
+
+### Goal
+
+Forward-only real owner schema with all designed columns/FKs/constraints, operations routing and12 mirrors; fresh/upgrade/rerun/partial-install/native constraint tests; no shadow schema.
+
+### Approach
+
+DEC-029 exact approved provider/test/migration/docs scope. Dependencies: TASK-064. Preserve ownership and established contracts; serial low-priority test execution.
+
+### Acceptance criteria
+
+Forward-only real owner schema with all designed columns/FKs/constraints, operations routing and12 mirrors; fresh/upgrade/rerun/partial-install/native constraint tests; no shadow schema. All relevant positive/negative/native tests pass with zero skips; original thresholds remain.
+
+### Definition of Done
+
+Real focused checks and affected regression, actual independent review, updated typed traceability, atomic commit and original §1.1 DoD. Task-local results do not replace all original39+additional owner suites/currentCI/fullPhase review/unchanged merge Gate.
+
+## TASK-066 — Formal Open Matter and lifecycle provider
+
+### Goal
+
+Real bounded CLOSED/OPEN/UNKNOWN queries, current schema/parity/version verification, native EXPLAIN and transaction lock/race tests; installed lifecycle service never uses absent-provider fallback.
+
+### Approach
+
+DEC-029 exact approved provider/test/migration/docs scope. Dependencies: TASK-065. Preserve ownership and established contracts; serial low-priority test execution.
+
+### Acceptance criteria
+
+Real bounded CLOSED/OPEN/UNKNOWN queries, current schema/parity/version verification, native EXPLAIN and transaction lock/race tests; installed lifecycle service never uses absent-provider fallback. All relevant positive/negative/native tests pass with zero skips; original thresholds remain.
+
+### Definition of Done
+
+Real focused checks and affected regression, actual independent review, updated typed traceability, atomic commit and original §1.1 DoD. Task-local results do not replace all original39+additional owner suites/currentCI/fullPhase review/unchanged merge Gate.
+
+## TASK-067 — Formal caller-transaction Archive participant
+
+### Goal
+
+Trusted Sales coordinator identity and real transaction fixture ABI; canonical hash/count/readback/immutable/copy-delete ordering, conflict/rollback/unknown outcome; no dependency on already-DONE058.
+
+### Approach
+
+DEC-029 exact approved provider/test/migration/docs scope. Dependencies: TASK-065, TASK-066. Preserve ownership and established contracts; serial low-priority test execution.
+
+### Acceptance criteria
+
+Trusted Sales coordinator identity and real transaction fixture ABI; canonical hash/count/readback/immutable/copy-delete ordering, conflict/rollback/unknown outcome; no dependency on already-DONE058. All relevant positive/negative/native tests pass with zero skips; original thresholds remain.
+
+### Definition of Done
+
+Real focused checks and affected regression, actual independent review, updated typed traceability, atomic commit and original §1.1 DoD. Task-local results do not replace all original39+additional owner suites/currentCI/fullPhase review/unchanged merge Gate.
+
+## TASK-068 — Joint Sales and owner Archive integration
+
+### Goal
+
+Real Sales coordinator and owner participant on same connection/transaction; no mocks as final integration proof; rollback/recovery/no-other-aggregate mutation; full joint P4 merge only.
+
+### Approach
+
+DEC-029 exact approved provider/test/migration/docs scope. Dependencies: TASK-058, TASK-067. Preserve ownership and established contracts; serial low-priority test execution.
+
+### Acceptance criteria
+
+Real Sales coordinator and owner participant on same connection/transaction; no mocks as final integration proof; rollback/recovery/no-other-aggregate mutation; full joint P4 merge only. All relevant positive/negative/native tests pass with zero skips; original thresholds remain.
+
+### Definition of Done
+
+Real focused checks and affected regression, actual independent review, updated typed traceability, atomic commit and original §1.1 DoD. Task-local results do not replace all original39+additional owner suites/currentCI/fullPhase review/unchanged merge Gate.

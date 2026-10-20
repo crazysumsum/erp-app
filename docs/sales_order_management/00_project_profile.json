@@ -4,8 +4,8 @@
   "environment": {
     "id": "sales-isolated-test",
     "kind": "LOCAL_ISOLATED",
-    "data_reference": "Synthetic sales quotation/order/intake/archive fixtures defined in 06_technical_test_cases.md and 07_uat_test_cases.md \u00a72.2; no production data, no real customer address, phone, email or bank data",
-    "authorization_ref": "Sam direct current chat: confirm remaining PR245 CI then start P4; after all Gates pass merge main. Sam subsequently agreed proceed independent P4 tasks while real Fulfillment OpenMatter/ArchiveParticipant absent and archive disabled/failclosed. Existing owned synthetic MySQL26.7, migrations, browser/load/crash/restore and Git authority persists; no production/shared DB, real notifications/adapters, evidence export or new provider fake. Active effects and fullPhase merge remain blocked until actual required provider+sameTX participant ready. Apply only after authenticated PR245 fiveCI SUCCESS."
+    "data_reference": "Synthetic sales quotation/order/intake/archive fixtures defined in 06_technical_test_cases.md and 07_uat_test_cases.md §2.2; no production data, no real customer address, phone, email or bank data",
+    "authorization_ref": "Sam direct current chat: confirm remaining PR245 CI then start P4; after all Gates pass merge main. Sam subsequently agreed proceed independent P4 tasks while real Fulfillment OpenMatter/ArchiveParticipant absent and archive disabled/failclosed. Existing owned synthetic MySQL26.7, migrations, browser/load/crash/restore and Git authority persists; no production/shared DB, real notifications/adapters, evidence export or new provider fake. Active effects and fullPhase merge remain blocked until actual required provider+sameTX participant ready. Apply only after authenticated PR245 fiveCI SUCCESS.; Actual direct Sam current Codex chat reply: 批准 DEC-029 正式依賴切片及交付順序（建議）. Adopts exact proposal107 SHA83cffc9f27a87f1552f77d373b367e3d13db9708d0f4f37cacb8aa7324dce38c, actual independent proposal review52a6fac3. Dual-owner named shared/provider contribution governed by Sales IMPLEMENT; real owner persistence/OpenMatter/participant, forward migrations/tests/docs; new064-068 and dependencies; complete jointP4PR only. Original39 Sales suites/fullcapacity/formalTC/UAT/owner45task obligations retained plus newmandatoryownersuites; no fullFulfillmentPhase completion/production/deployment/acceptance exception. Derived canonical D/P/SCOPE and unchanged prior UAT_NA bindings from this concrete approval; old approvals preserved, not rewritten or presented as fresh human hash inspection."
   },
   "permissions": {
     "product_write": [
@@ -2526,7 +2526,8 @@
         "./server/test-support/testEnv.js",
         "--test-reporter=junit",
         "--test-reporter-destination={run_dir}/tests.xml",
-        "server/test/sales/phase4/*.test.js"
+        "server/test/sales/phase4/*.test.js",
+        "server/test/salesArchiveEligibility.test.js"
       ],
       "cwd": ".",
       "timeout_seconds": 1800,
@@ -2922,6 +2923,468 @@
         "TC-057",
         "TC-058",
         "TC-059"
+      ],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v(2[6-9]|[3-9]\\d)\\."
+        },
+        {
+          "argv": [
+            "/usr/local/mysql/bin/mysql",
+            "--version"
+          ],
+          "version_pattern": "Ver 26\\.7\\.0 "
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_HOST",
+        "DB_PORT",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_NAME",
+        "DB_SOCKET",
+        "DB_SOCKET_PATH",
+        "DB_INTEGRATION_TESTS",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "JWT_SECRET",
+        "DB_ADMIN_USER",
+        "DB_ADMIN_PASSWORD"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD",
+        "JWT_SECRET",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "DB_ADMIN_USER",
+        "DB_ADMIN_PASSWORD"
+      ]
+    },
+    {
+      "id": "sales-fulfillment-schema-native",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/tests.xml",
+        "server/test/integration/fulfillmentArchiveMigrations.integration.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 2400,
+      "result_adapter": "JUNIT",
+      "result_path": "tests.xml",
+      "min_tests": 12,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER",
+        "REGRESSION"
+      ],
+      "required_case_ids": [
+        "TC-047",
+        "TC-048"
+      ],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v(2[6-9]|[3-9]\\d)\\."
+        },
+        {
+          "argv": [
+            "/usr/local/mysql/bin/mysql",
+            "--version"
+          ],
+          "version_pattern": "Ver 26\\.7\\.0 "
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_HOST",
+        "DB_PORT",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_NAME",
+        "DB_SOCKET",
+        "DB_SOCKET_PATH",
+        "DB_INTEGRATION_TESTS",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "JWT_SECRET",
+        "DB_ADMIN_USER",
+        "DB_ADMIN_PASSWORD"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD",
+        "JWT_SECRET",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "DB_ADMIN_USER",
+        "DB_ADMIN_PASSWORD"
+      ]
+    },
+    {
+      "id": "sales-fulfillment-openmatter-unit",
+      "kind": "UNIT",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/tests.xml",
+        "server/test/fulfillmentOpenMatter.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "tests.xml",
+      "min_tests": 12,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER",
+        "REGRESSION"
+      ],
+      "required_case_ids": [
+        "TC-045",
+        "TC-047"
+      ],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v(2[6-9]|[3-9]\\d)\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "JWT_SECRET"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD",
+        "JWT_SECRET",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
+      ]
+    },
+    {
+      "id": "sales-fulfillment-openmatter-native",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/tests.xml",
+        "server/test/integration/fulfillmentOpenMatter.integration.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 2400,
+      "result_adapter": "JUNIT",
+      "result_path": "tests.xml",
+      "min_tests": 12,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER",
+        "REGRESSION"
+      ],
+      "required_case_ids": [
+        "TC-045",
+        "TC-047"
+      ],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v(2[6-9]|[3-9]\\d)\\."
+        },
+        {
+          "argv": [
+            "/usr/local/mysql/bin/mysql",
+            "--version"
+          ],
+          "version_pattern": "Ver 26\\.7\\.0 "
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_HOST",
+        "DB_PORT",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_NAME",
+        "DB_SOCKET",
+        "DB_SOCKET_PATH",
+        "DB_INTEGRATION_TESTS",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "JWT_SECRET",
+        "DB_ADMIN_USER",
+        "DB_ADMIN_PASSWORD"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD",
+        "JWT_SECRET",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "DB_ADMIN_USER",
+        "DB_ADMIN_PASSWORD"
+      ]
+    },
+    {
+      "id": "sales-fulfillment-participant-unit",
+      "kind": "UNIT",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/tests.xml",
+        "server/test/fulfillmentArchiveParticipant.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "tests.xml",
+      "min_tests": 12,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER",
+        "REGRESSION"
+      ],
+      "required_case_ids": [
+        "TC-047",
+        "TC-048",
+        "TC-049"
+      ],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v(2[6-9]|[3-9]\\d)\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "JWT_SECRET"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD",
+        "JWT_SECRET",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
+      ]
+    },
+    {
+      "id": "sales-fulfillment-participant-native",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/tests.xml",
+        "server/test/integration/fulfillmentArchiveParticipant.integration.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 2400,
+      "result_adapter": "JUNIT",
+      "result_path": "tests.xml",
+      "min_tests": 12,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER",
+        "REGRESSION"
+      ],
+      "required_case_ids": [
+        "TC-047",
+        "TC-048",
+        "TC-049"
+      ],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v(2[6-9]|[3-9]\\d)\\."
+        },
+        {
+          "argv": [
+            "/usr/local/mysql/bin/mysql",
+            "--version"
+          ],
+          "version_pattern": "Ver 26\\.7\\.0 "
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_HOST",
+        "DB_PORT",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_NAME",
+        "DB_SOCKET",
+        "DB_SOCKET_PATH",
+        "DB_INTEGRATION_TESTS",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "JWT_SECRET",
+        "DB_ADMIN_USER",
+        "DB_ADMIN_PASSWORD"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD",
+        "JWT_SECRET",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "DB_ADMIN_USER",
+        "DB_ADMIN_PASSWORD"
+      ]
+    },
+    {
+      "id": "sales-archive-joint-native",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/tests.xml",
+        "server/test/integration/salesArchiveJoint.integration.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 2400,
+      "result_adapter": "JUNIT",
+      "result_path": "tests.xml",
+      "min_tests": 12,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER",
+        "REGRESSION"
+      ],
+      "required_case_ids": [
+        "TC-047",
+        "TC-048",
+        "TC-049",
+        "TC-052"
       ],
       "tool_probes": [
         {

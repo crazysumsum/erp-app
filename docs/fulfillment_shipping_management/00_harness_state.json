@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 6,
+  "revision": 11,
   "mode": "REVIEW_AND_ALIGN",
   "active_mode": "REVIEW_AND_ALIGN",
   "status": "BLOCKED",
@@ -9,11 +9,11 @@
   "current_phase": null,
   "current_task": null,
   "baseline": {
-    "design": "cba0d670c928af3443c6ce6794c955004ee6243a44f4b33bdd2bc3957947b758",
-    "plan": "d9e729935b8a3094241f5c9f438a4bda7d576468a7c4ed74063e7814b6b5657a",
-    "code_commit": "c88b479a02744b8be654398d0dafb811ddf599c3",
-    "source_fingerprint": "34707d3beb85552d7e1ef44092f56fe5d8bb962b200290d7dc18e860b30f180d",
-    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/fulfillment-gap-correct",
+    "design": "e0e07513ce2de23f2907b8d77898358fb223b50e7348d8b6667a672e0836c81c",
+    "plan": "a911f65dd53e2f6af317eac95656aefb485d280184c88a5fd8ef89485b3889c7",
+    "code_commit": "7fdb6877afbb55dd646133ffe46f193dadebbb5e",
+    "source_fingerprint": "6f141a431cc76256e4178df8bede65643b95a6904cc7ed056c1f69b2a163e6ef",
+    "worktree": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app",
     "default_commit": "c88b479a02744b8be654398d0dafb811ddf599c3",
     "mode_entry_commit": "b6f03219259129de6735263a4d369de2b15a5f9f"
   },
@@ -190,6 +190,262 @@
         "Unchanged decision re-bound to plan baseline d9e729935b8a3094241f5c9f438a4bda7d576468a7c4ed74063e7814b6b5657a; supersedes HD-003."
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-DEC029-OWNER-DESIGN",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Actual direct Sam current Codex chat reply: 批准 DEC-029 正式依賴切片及交付順序（建議）. Adopts exact proposal107 SHA83cffc9f27a87f1552f77d373b367e3d13db9708d0f4f37cacb8aa7324dce38c, actual independent proposal review52a6fac3. Dual-owner named shared/provider contribution governed by Sales IMPLEMENT; real owner persistence/OpenMatter/participant, forward migrations/tests/docs; new064-068 and dependencies; complete jointP4PR only. Original39 Sales suites/fullcapacity/formalTC/UAT/owner45task obligations retained plus newmandatoryownersuites; no fullFulfillmentPhase completion/production/deployment/acceptance exception. Derived canonical D/P/SCOPE and unchanged prior UAT_NA bindings from this concrete approval; old approvals preserved, not rewritten or presented as fresh human hash inspection.",
+      "recorded_at": "2026-10-20T08:19:57.707909Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "0b7e380296e538343ef38babe03b93c6f21c34d54e8be738a0b282a324fc0ee5",
+      "code_commit": null,
+      "scope": [
+        "fulfillment-shipping-management"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-DEC029-OWNER-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Actual direct Sam current Codex chat reply: 批准 DEC-029 正式依賴切片及交付順序（建議）. Adopts exact proposal107 SHA83cffc9f27a87f1552f77d373b367e3d13db9708d0f4f37cacb8aa7324dce38c, actual independent proposal review52a6fac3. Dual-owner named shared/provider contribution governed by Sales IMPLEMENT; real owner persistence/OpenMatter/participant, forward migrations/tests/docs; new064-068 and dependencies; complete jointP4PR only. Original39 Sales suites/fullcapacity/formalTC/UAT/owner45task obligations retained plus newmandatoryownersuites; no fullFulfillmentPhase completion/production/deployment/acceptance exception. Derived canonical D/P/SCOPE and unchanged prior UAT_NA bindings from this concrete approval; old approvals preserved, not rewritten or presented as fresh human hash inspection.",
+      "recorded_at": "2026-10-20T08:19:57.708081Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "0fab6b6175200c0c5f236111640180c59cc10caeabfb4c124a60e1fe16398040",
+      "code_commit": null,
+      "scope": [
+        "fulfillment-shipping-management"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-DEC029-OWNER-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Actual direct Sam current Codex chat reply: 批准 DEC-029 正式依賴切片及交付順序（建議）. Adopts exact proposal107 SHA83cffc9f27a87f1552f77d373b367e3d13db9708d0f4f37cacb8aa7324dce38c, actual independent proposal review52a6fac3. Dual-owner named shared/provider contribution governed by Sales IMPLEMENT; real owner persistence/OpenMatter/participant, forward migrations/tests/docs; new064-068 and dependencies; complete jointP4PR only. Original39 Sales suites/fullcapacity/formalTC/UAT/owner45task obligations retained plus newmandatoryownersuites; no fullFulfillmentPhase completion/production/deployment/acceptance exception. Derived canonical D/P/SCOPE and unchanged prior UAT_NA bindings from this concrete approval; old approvals preserved, not rewritten or presented as fresh human hash inspection.",
+      "recorded_at": "2026-10-20T08:19:57.708093Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "0fab6b6175200c0c5f236111640180c59cc10caeabfb4c124a60e1fe16398040",
+      "code_commit": null,
+      "scope": [
+        "docs/fulfillment_shipping_management/**"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-DEC029-UATNA-NFR-023",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Actual direct Sam current Codex chat reply: 批准 DEC-029 正式依賴切片及交付順序（建議）. Adopts exact proposal107 SHA83cffc9f27a87f1552f77d373b367e3d13db9708d0f4f37cacb8aa7324dce38c, actual independent proposal review52a6fac3. Dual-owner named shared/provider contribution governed by Sales IMPLEMENT; real owner persistence/OpenMatter/participant, forward migrations/tests/docs; new064-068 and dependencies; complete jointP4PR only. Original39 Sales suites/fullcapacity/formalTC/UAT/owner45task obligations retained plus newmandatoryownersuites; no fullFulfillmentPhase completion/production/deployment/acceptance exception. Derived canonical D/P/SCOPE and unchanged prior UAT_NA bindings from this concrete approval; old approvals preserved, not rewritten or presented as fresh human hash inspection.",
+      "recorded_at": "2026-10-20T08:19:57.708100Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "0fab6b6175200c0c5f236111640180c59cc10caeabfb4c124a60e1fe16398040",
+      "code_commit": null,
+      "scope": [
+        "NFR-023"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-DEC029-R2-OWNER-DESIGN",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Actual direct Sam current Codex chat reply: 批准 DEC-029 正式依賴切片及交付順序（建議）. Adopts exact proposal107 SHA83cffc9f27a87f1552f77d373b367e3d13db9708d0f4f37cacb8aa7324dce38c, actual independent proposal review52a6fac3. Dual-owner named shared/provider contribution governed by Sales IMPLEMENT; real owner persistence/OpenMatter/participant, forward migrations/tests/docs; new064-068 and dependencies; complete jointP4PR only. Original39 Sales suites/fullcapacity/formalTC/UAT/owner45task obligations retained plus newmandatoryownersuites; no fullFulfillmentPhase completion/production/deployment/acceptance exception. Derived canonical D/P/SCOPE and unchanged prior UAT_NA bindings from this concrete approval; old approvals preserved, not rewritten or presented as fresh human hash inspection.",
+      "recorded_at": "2026-10-20T08:24:18.474811Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "f0b805e6d6b329900517731ce6864bd774d6003b7d30972ed7309579a6db31e6",
+      "code_commit": null,
+      "scope": [
+        "fulfillment-shipping-management"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-DEC029-R2-OWNER-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Actual direct Sam current Codex chat reply: 批准 DEC-029 正式依賴切片及交付順序（建議）. Adopts exact proposal107 SHA83cffc9f27a87f1552f77d373b367e3d13db9708d0f4f37cacb8aa7324dce38c, actual independent proposal review52a6fac3. Dual-owner named shared/provider contribution governed by Sales IMPLEMENT; real owner persistence/OpenMatter/participant, forward migrations/tests/docs; new064-068 and dependencies; complete jointP4PR only. Original39 Sales suites/fullcapacity/formalTC/UAT/owner45task obligations retained plus newmandatoryownersuites; no fullFulfillmentPhase completion/production/deployment/acceptance exception. Derived canonical D/P/SCOPE and unchanged prior UAT_NA bindings from this concrete approval; old approvals preserved, not rewritten or presented as fresh human hash inspection.",
+      "recorded_at": "2026-10-20T08:24:18.474931Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "b67bdc244bde5659c2daf42bc44c0987acce0037bc2dcaf5fd640033e44a4ea8",
+      "code_commit": null,
+      "scope": [
+        "fulfillment-shipping-management"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-DEC029-R2-OWNER-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Actual direct Sam current Codex chat reply: 批准 DEC-029 正式依賴切片及交付順序（建議）. Adopts exact proposal107 SHA83cffc9f27a87f1552f77d373b367e3d13db9708d0f4f37cacb8aa7324dce38c, actual independent proposal review52a6fac3. Dual-owner named shared/provider contribution governed by Sales IMPLEMENT; real owner persistence/OpenMatter/participant, forward migrations/tests/docs; new064-068 and dependencies; complete jointP4PR only. Original39 Sales suites/fullcapacity/formalTC/UAT/owner45task obligations retained plus newmandatoryownersuites; no fullFulfillmentPhase completion/production/deployment/acceptance exception. Derived canonical D/P/SCOPE and unchanged prior UAT_NA bindings from this concrete approval; old approvals preserved, not rewritten or presented as fresh human hash inspection.",
+      "recorded_at": "2026-10-20T08:24:18.474934Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "b67bdc244bde5659c2daf42bc44c0987acce0037bc2dcaf5fd640033e44a4ea8",
+      "code_commit": null,
+      "scope": [
+        "docs/fulfillment_shipping_management/**"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-DEC029-R2-UATNA-NFR-023",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Actual direct Sam current Codex chat reply: 批准 DEC-029 正式依賴切片及交付順序（建議）. Adopts exact proposal107 SHA83cffc9f27a87f1552f77d373b367e3d13db9708d0f4f37cacb8aa7324dce38c, actual independent proposal review52a6fac3. Dual-owner named shared/provider contribution governed by Sales IMPLEMENT; real owner persistence/OpenMatter/participant, forward migrations/tests/docs; new064-068 and dependencies; complete jointP4PR only. Original39 Sales suites/fullcapacity/formalTC/UAT/owner45task obligations retained plus newmandatoryownersuites; no fullFulfillmentPhase completion/production/deployment/acceptance exception. Derived canonical D/P/SCOPE and unchanged prior UAT_NA bindings from this concrete approval; old approvals preserved, not rewritten or presented as fresh human hash inspection.",
+      "recorded_at": "2026-10-20T08:24:18.474939Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "b67bdc244bde5659c2daf42bc44c0987acce0037bc2dcaf5fd640033e44a4ea8",
+      "code_commit": null,
+      "scope": [
+        "NFR-023"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-DEC029-R3-OWNER-DESIGN",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Actual direct Sam current Codex chat reply: 批准 DEC-029 正式依賴切片及交付順序（建議）. Adopts exact proposal107 SHA83cffc9f27a87f1552f77d373b367e3d13db9708d0f4f37cacb8aa7324dce38c, actual independent proposal review52a6fac3. Dual-owner named shared/provider contribution governed by Sales IMPLEMENT; real owner persistence/OpenMatter/participant, forward migrations/tests/docs; new064-068 and dependencies; complete jointP4PR only. Original39 Sales suites/fullcapacity/formalTC/UAT/owner45task obligations retained plus newmandatoryownersuites; no fullFulfillmentPhase completion/production/deployment/acceptance exception. Derived canonical D/P/SCOPE and unchanged prior UAT_NA bindings from this concrete approval; old approvals preserved, not rewritten or presented as fresh human hash inspection.",
+      "recorded_at": "2026-10-20T08:27:28.994475Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "e73f066362a5c3eb179df86cb65ea88406f499499fac2f85760036ef3576deb4",
+      "code_commit": null,
+      "scope": [
+        "fulfillment-shipping-management"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-DEC029-R3-OWNER-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Actual direct Sam current Codex chat reply: 批准 DEC-029 正式依賴切片及交付順序（建議）. Adopts exact proposal107 SHA83cffc9f27a87f1552f77d373b367e3d13db9708d0f4f37cacb8aa7324dce38c, actual independent proposal review52a6fac3. Dual-owner named shared/provider contribution governed by Sales IMPLEMENT; real owner persistence/OpenMatter/participant, forward migrations/tests/docs; new064-068 and dependencies; complete jointP4PR only. Original39 Sales suites/fullcapacity/formalTC/UAT/owner45task obligations retained plus newmandatoryownersuites; no fullFulfillmentPhase completion/production/deployment/acceptance exception. Derived canonical D/P/SCOPE and unchanged prior UAT_NA bindings from this concrete approval; old approvals preserved, not rewritten or presented as fresh human hash inspection.",
+      "recorded_at": "2026-10-20T08:27:28.994586Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "2704e208618cf80567109124b61abd92f35ed8e0a24989c67b5a2cb5ee48f64b",
+      "code_commit": null,
+      "scope": [
+        "fulfillment-shipping-management"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-DEC029-R3-OWNER-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Actual direct Sam current Codex chat reply: 批准 DEC-029 正式依賴切片及交付順序（建議）. Adopts exact proposal107 SHA83cffc9f27a87f1552f77d373b367e3d13db9708d0f4f37cacb8aa7324dce38c, actual independent proposal review52a6fac3. Dual-owner named shared/provider contribution governed by Sales IMPLEMENT; real owner persistence/OpenMatter/participant, forward migrations/tests/docs; new064-068 and dependencies; complete jointP4PR only. Original39 Sales suites/fullcapacity/formalTC/UAT/owner45task obligations retained plus newmandatoryownersuites; no fullFulfillmentPhase completion/production/deployment/acceptance exception. Derived canonical D/P/SCOPE and unchanged prior UAT_NA bindings from this concrete approval; old approvals preserved, not rewritten or presented as fresh human hash inspection.",
+      "recorded_at": "2026-10-20T08:27:28.994590Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "2704e208618cf80567109124b61abd92f35ed8e0a24989c67b5a2cb5ee48f64b",
+      "code_commit": null,
+      "scope": [
+        "docs/fulfillment_shipping_management/**"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-DEC029-R3-UATNA-NFR-023",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Actual direct Sam current Codex chat reply: 批准 DEC-029 正式依賴切片及交付順序（建議）. Adopts exact proposal107 SHA83cffc9f27a87f1552f77d373b367e3d13db9708d0f4f37cacb8aa7324dce38c, actual independent proposal review52a6fac3. Dual-owner named shared/provider contribution governed by Sales IMPLEMENT; real owner persistence/OpenMatter/participant, forward migrations/tests/docs; new064-068 and dependencies; complete jointP4PR only. Original39 Sales suites/fullcapacity/formalTC/UAT/owner45task obligations retained plus newmandatoryownersuites; no fullFulfillmentPhase completion/production/deployment/acceptance exception. Derived canonical D/P/SCOPE and unchanged prior UAT_NA bindings from this concrete approval; old approvals preserved, not rewritten or presented as fresh human hash inspection.",
+      "recorded_at": "2026-10-20T08:27:28.994596Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "2704e208618cf80567109124b61abd92f35ed8e0a24989c67b5a2cb5ee48f64b",
+      "code_commit": null,
+      "scope": [
+        "NFR-023"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-DEC029-R4-OWNER-DESIGN",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Actual direct Sam current Codex chat reply: 批准 DEC-029 正式依賴切片及交付順序（建議）. Adopts exact proposal107 SHA83cffc9f27a87f1552f77d373b367e3d13db9708d0f4f37cacb8aa7324dce38c, actual independent proposal review52a6fac3. Dual-owner named shared/provider contribution governed by Sales IMPLEMENT; real owner persistence/OpenMatter/participant, forward migrations/tests/docs; new064-068 and dependencies; complete jointP4PR only. Original39 Sales suites/fullcapacity/formalTC/UAT/owner45task obligations retained plus newmandatoryownersuites; no fullFulfillmentPhase completion/production/deployment/acceptance exception. Derived canonical D/P/SCOPE and unchanged prior UAT_NA bindings from this concrete approval; old approvals preserved, not rewritten or presented as fresh human hash inspection.",
+      "recorded_at": "2026-10-20T08:29:46.660414Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "e0e07513ce2de23f2907b8d77898358fb223b50e7348d8b6667a672e0836c81c",
+      "code_commit": null,
+      "scope": [
+        "fulfillment-shipping-management"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-DEC029-R4-OWNER-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Actual direct Sam current Codex chat reply: 批准 DEC-029 正式依賴切片及交付順序（建議）. Adopts exact proposal107 SHA83cffc9f27a87f1552f77d373b367e3d13db9708d0f4f37cacb8aa7324dce38c, actual independent proposal review52a6fac3. Dual-owner named shared/provider contribution governed by Sales IMPLEMENT; real owner persistence/OpenMatter/participant, forward migrations/tests/docs; new064-068 and dependencies; complete jointP4PR only. Original39 Sales suites/fullcapacity/formalTC/UAT/owner45task obligations retained plus newmandatoryownersuites; no fullFulfillmentPhase completion/production/deployment/acceptance exception. Derived canonical D/P/SCOPE and unchanged prior UAT_NA bindings from this concrete approval; old approvals preserved, not rewritten or presented as fresh human hash inspection.",
+      "recorded_at": "2026-10-20T08:29:46.660605Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a911f65dd53e2f6af317eac95656aefb485d280184c88a5fd8ef89485b3889c7",
+      "code_commit": null,
+      "scope": [
+        "fulfillment-shipping-management"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-DEC029-R4-OWNER-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Actual direct Sam current Codex chat reply: 批准 DEC-029 正式依賴切片及交付順序（建議）. Adopts exact proposal107 SHA83cffc9f27a87f1552f77d373b367e3d13db9708d0f4f37cacb8aa7324dce38c, actual independent proposal review52a6fac3. Dual-owner named shared/provider contribution governed by Sales IMPLEMENT; real owner persistence/OpenMatter/participant, forward migrations/tests/docs; new064-068 and dependencies; complete jointP4PR only. Original39 Sales suites/fullcapacity/formalTC/UAT/owner45task obligations retained plus newmandatoryownersuites; no fullFulfillmentPhase completion/production/deployment/acceptance exception. Derived canonical D/P/SCOPE and unchanged prior UAT_NA bindings from this concrete approval; old approvals preserved, not rewritten or presented as fresh human hash inspection.",
+      "recorded_at": "2026-10-20T08:29:46.660613Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a911f65dd53e2f6af317eac95656aefb485d280184c88a5fd8ef89485b3889c7",
+      "code_commit": null,
+      "scope": [
+        "docs/fulfillment_shipping_management/**"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-DEC029-R4-UATNA-NFR-023",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Actual direct Sam current Codex chat reply: 批准 DEC-029 正式依賴切片及交付順序（建議）. Adopts exact proposal107 SHA83cffc9f27a87f1552f77d373b367e3d13db9708d0f4f37cacb8aa7324dce38c, actual independent proposal review52a6fac3. Dual-owner named shared/provider contribution governed by Sales IMPLEMENT; real owner persistence/OpenMatter/participant, forward migrations/tests/docs; new064-068 and dependencies; complete jointP4PR only. Original39 Sales suites/fullcapacity/formalTC/UAT/owner45task obligations retained plus newmandatoryownersuites; no fullFulfillmentPhase completion/production/deployment/acceptance exception. Derived canonical D/P/SCOPE and unchanged prior UAT_NA bindings from this concrete approval; old approvals preserved, not rewritten or presented as fresh human hash inspection.",
+      "recorded_at": "2026-10-20T08:29:46.660624Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a911f65dd53e2f6af317eac95656aefb485d280184c88a5fd8ef89485b3889c7",
+      "code_commit": null,
+      "scope": [
+        "NFR-023"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -215,6 +471,18 @@
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-DEC029-R4-OWNER-DESIGN-PLAN",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "e0e07513ce2de23f2907b8d77898358fb223b50e7348d8b6667a672e0836c81c",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-dec029-current-r4-design-plan-boundary-r1-reviewer-proof.json SHA256c368ad9bc844df16d12db420262e03a636e38f21f4f161bf50bfd7f70f3ef3c8; actual exact currentR4 DESIGN e0e07513ce2de23f2907b8d77898358fb223b50e7348d8b6667a672e0836c81c PLAN a911f65dd53e2f6af317eac95656aefb485d280184c88a5fd8ef89485b3889c7 independent contents/ABI/ownership/compatibility/trace/45suites/boundaryreview, zero requiredfindings. Not suitePASS/wholeownerPhase/CI/mergeapproval.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
       "risk_approval_id": null
     }
   ],
@@ -278,6 +546,19 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "CLOSED. docs/customer_management/00_module_manifest.json was repointed to docs/fulfillment_shipping_management/03_design_spec.md, sha256 7c0101e85f9651b8588fe3b09508cc7961238a69d9903c33d7a8f8bd8e2de4ec, by PR #97 (merge commit 34563b6), delivered as a Customer-module-scoped change because validate_module_boundary.py returned MODE_WRITE_DENIED when it was bundled into a REVIEW_AND_ALIGN change. The pointer now verifies as MATCH. GAP-TR-002 is closed."
+    },
+    {
+      "id": "DEC-029-SHARED-CONTRIBUTION",
+      "impact": "MAJOR",
+      "status": "ANSWERED",
+      "affected_ids": [
+        "DES-015",
+        "TASK-010",
+        "TASK-041",
+        "TASK-042"
+      ],
+      "question": "Named Archive prerequisite shared contribution governed by Sales IMPLEMENT only; original owner45tasks and fullPhase gates remain.",
+      "answer_ref": "Actual direct Sam current Codex chat reply: 批准 DEC-029 正式依賴切片及交付順序（建議）. Adopts exact proposal107 SHA83cffc9f27a87f1552f77d373b367e3d13db9708d0f4f37cacb8aa7324dce38c, actual independent proposal review52a6fac3. Dual-owner named shared/provider contribution governed by Sales IMPLEMENT; real owner persistence/OpenMatter/participant, forward migrations/tests/docs; new064-068 and dependencies; complete jointP4PR only. Original39 Sales suites/fullcapacity/formalTC/UAT/owner45task obligations retained plus newmandatoryownersuites; no fullFulfillmentPhase completion/production/deployment/acceptance exception. Derived canonical D/P/SCOPE and unchanged prior UAT_NA bindings from this concrete approval; old approvals preserved, not rewritten or presented as fresh human hash inspection."
     }
   ],
   "external_actions": [
@@ -348,5 +629,5 @@
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Design and planning for this module are complete. All artifacts are on origin/main at c88b479a02744b8be654398d0dafb811ddf599c3; no fulfillment branch, worktree or open pull request remains apart from the documentation correction being delivered now. This revision corrects GAP-TC-001 and DR-04: the earlier claim that no Playwright tool chain existed was wrong — it was observed at 5b62be1 and PR #93 landed seconds later, pinning \"@playwright/test\": \"1.63.0\" in the root package.json and bringing a per-module e2e convention with it. HD-004 is narrowed to one item: add a CI job that runs the Playwright suites, which is blocked until the Business Master browser suite (14 failed, 1 passed on main) is repaired by its owner. Baselines are untouched by this correction because 00_gap_analysis.md, 04_design_review.md and 09_final_alignment_review.md are records, not specification files; design cba0d670 and plan d9e72993 stand, as do APR-001, APR-002, APR-004 and HD-003-R2. Status stays BLOCKED on HD-004 and on GAP-IMP-001 through GAP-IMP-005 (the Sales, Inventory and Customer modules, the transaction-aware Item assert and the three Fulfillment permissions, none of which exist at c88b479a02744b8be654398d0dafb811ddf599c3). Do not enter IMPLEMENT without an explicit mode authorization recorded with --mode-change-ref. Business acceptance and release sign-off remain open by design (GAP-RQ-002)."
+  "next_safe_action": "Sales IMPLEMENT executes exact DEC029 shared contribution and original completeP4 Gate. Owner45task/fullPhase/formalTC/UAT readiness is not asserted; keep canonical owner records frozen before final Sales source verification."
 }

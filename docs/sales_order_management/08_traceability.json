@@ -1231,7 +1231,7 @@
       "uat": {
         "status": "NOT_APPLICABLE",
         "reason": "Objective disaster-recovery exercise measured by timed restore and reconciliation evidence, not by a business-user observable UAT case (08 matrix row NFR-014/015).",
-        "approval_id": "APR-DEC028-UATNA-DERIVED"
+        "approval_id": "APR-DEC029-R4-UATNA-NFR-014"
       }
     },
     {
@@ -1239,7 +1239,7 @@
       "uat": {
         "status": "NOT_APPLICABLE",
         "reason": "Objective disaster-recovery exercise measured by timed restore and reconciliation evidence, not by a business-user observable UAT case (08 matrix row NFR-014/015).",
-        "approval_id": "APR-DEC028-UATNA-DERIVED"
+        "approval_id": "APR-DEC029-R4-UATNA-NFR-015"
       }
     },
     {
@@ -3072,7 +3072,12 @@
         "TASK-060",
         "TASK-061",
         "TASK-062",
-        "TASK-063"
+        "TASK-063",
+        "TASK-064",
+        "TASK-065",
+        "TASK-066",
+        "TASK-067",
+        "TASK-068"
       ],
       "depends_on": [
         "PHASE-004"
@@ -3120,7 +3125,13 @@
         "sales-phase005-client",
         "sales-phase005-browser",
         "sales-phase005-performance",
-        "sales-phase005-restore"
+        "sales-phase005-restore",
+        "sales-fulfillment-schema-native",
+        "sales-fulfillment-openmatter-unit",
+        "sales-fulfillment-openmatter-native",
+        "sales-fulfillment-participant-unit",
+        "sales-fulfillment-participant-native",
+        "sales-archive-joint-native"
       ]
     }
   ],
@@ -4951,7 +4962,9 @@
       "task_ids": [
         "TASK-054",
         "TASK-055",
-        "TASK-056"
+        "TASK-056",
+        "TASK-064",
+        "TASK-066"
       ],
       "mandatory": true,
       "blocking": true,
@@ -5007,7 +5020,12 @@
         "DES-017"
       ],
       "task_ids": [
-        "TASK-057"
+        "TASK-057",
+        "TASK-064",
+        "TASK-065",
+        "TASK-066",
+        "TASK-067",
+        "TASK-068"
       ],
       "mandatory": true,
       "blocking": true,
@@ -5031,7 +5049,10 @@
         "DES-017"
       ],
       "task_ids": [
-        "TASK-058"
+        "TASK-058",
+        "TASK-065",
+        "TASK-067",
+        "TASK-068"
       ],
       "mandatory": true,
       "blocking": true,
@@ -5057,7 +5078,9 @@
       ],
       "task_ids": [
         "TASK-058",
-        "TASK-059"
+        "TASK-059",
+        "TASK-067",
+        "TASK-068"
       ],
       "mandatory": true,
       "blocking": true,
@@ -5150,7 +5173,8 @@
       "task_ids": [
         "TASK-054",
         "TASK-059",
-        "TASK-062"
+        "TASK-062",
+        "TASK-068"
       ],
       "mandatory": true,
       "blocking": true,
@@ -11349,7 +11373,8 @@
         "DES-020"
       ],
       "depends_on": [
-        "TASK-056"
+        "TASK-056",
+        "TASK-066"
       ],
       "technical_test_ids": [
         "TC-047",
@@ -11430,7 +11455,8 @@
         "DES-020"
       ],
       "depends_on": [
-        "TASK-057"
+        "TASK-057",
+        "TASK-067"
       ],
       "technical_test_ids": [
         "TC-048",
@@ -11896,7 +11922,8 @@
         "DES-020"
       ],
       "depends_on": [
-        "TASK-062"
+        "TASK-062",
+        "TASK-068"
       ],
       "technical_test_ids": [
         "TC-053",
@@ -11907,6 +11934,416 @@
         "TC-058",
         "TC-059",
         "TC-060"
+      ]
+    },
+    {
+      "id": "TASK-064",
+      "phase_id": "PHASE-005",
+      "requirement_ids": [
+        "FR-121",
+        "FR-122",
+        "FR-123",
+        "FR-124",
+        "FR-125",
+        "FR-126",
+        "FR-127",
+        "FR-128",
+        "FR-129",
+        "FR-130",
+        "FR-131",
+        "FR-132",
+        "FR-133",
+        "FR-134",
+        "FR-135",
+        "FR-136",
+        "FR-137",
+        "FR-138",
+        "FR-139",
+        "FR-140",
+        "NFR-001",
+        "NFR-002",
+        "NFR-003",
+        "NFR-004",
+        "NFR-005",
+        "NFR-006",
+        "NFR-007",
+        "NFR-008",
+        "NFR-009",
+        "NFR-010",
+        "NFR-011",
+        "NFR-012",
+        "NFR-013",
+        "NFR-016",
+        "SEC-001",
+        "SEC-002",
+        "SEC-003",
+        "SEC-004",
+        "SEC-005",
+        "SEC-006",
+        "SEC-007",
+        "SEC-008",
+        "SEC-009",
+        "SEC-010",
+        "SEC-011",
+        "SEC-012",
+        "SEC-013",
+        "SEC-014",
+        "SEC-015"
+      ],
+      "design_ids": [
+        "DES-002",
+        "DES-003",
+        "DES-004",
+        "DES-007",
+        "DES-008",
+        "DES-009",
+        "DES-010",
+        "DES-011",
+        "DES-012",
+        "DES-013",
+        "DES-014",
+        "DES-015",
+        "DES-016",
+        "DES-017",
+        "DES-018",
+        "DES-019",
+        "DES-020"
+      ],
+      "depends_on": [
+        "TASK-056"
+      ],
+      "technical_test_ids": [
+        "TC-045",
+        "TC-047"
+      ]
+    },
+    {
+      "id": "TASK-065",
+      "phase_id": "PHASE-005",
+      "requirement_ids": [
+        "FR-121",
+        "FR-122",
+        "FR-123",
+        "FR-124",
+        "FR-125",
+        "FR-126",
+        "FR-127",
+        "FR-128",
+        "FR-129",
+        "FR-130",
+        "FR-131",
+        "FR-132",
+        "FR-133",
+        "FR-134",
+        "FR-135",
+        "FR-136",
+        "FR-137",
+        "FR-138",
+        "FR-139",
+        "FR-140",
+        "NFR-001",
+        "NFR-002",
+        "NFR-003",
+        "NFR-004",
+        "NFR-005",
+        "NFR-006",
+        "NFR-007",
+        "NFR-008",
+        "NFR-009",
+        "NFR-010",
+        "NFR-011",
+        "NFR-012",
+        "NFR-013",
+        "NFR-016",
+        "SEC-001",
+        "SEC-002",
+        "SEC-003",
+        "SEC-004",
+        "SEC-005",
+        "SEC-006",
+        "SEC-007",
+        "SEC-008",
+        "SEC-009",
+        "SEC-010",
+        "SEC-011",
+        "SEC-012",
+        "SEC-013",
+        "SEC-014",
+        "SEC-015"
+      ],
+      "design_ids": [
+        "DES-002",
+        "DES-003",
+        "DES-004",
+        "DES-007",
+        "DES-008",
+        "DES-009",
+        "DES-010",
+        "DES-011",
+        "DES-012",
+        "DES-013",
+        "DES-014",
+        "DES-015",
+        "DES-016",
+        "DES-017",
+        "DES-018",
+        "DES-019",
+        "DES-020"
+      ],
+      "depends_on": [
+        "TASK-064"
+      ],
+      "technical_test_ids": [
+        "TC-047",
+        "TC-048"
+      ]
+    },
+    {
+      "id": "TASK-066",
+      "phase_id": "PHASE-005",
+      "requirement_ids": [
+        "FR-121",
+        "FR-122",
+        "FR-123",
+        "FR-124",
+        "FR-125",
+        "FR-126",
+        "FR-127",
+        "FR-128",
+        "FR-129",
+        "FR-130",
+        "FR-131",
+        "FR-132",
+        "FR-133",
+        "FR-134",
+        "FR-135",
+        "FR-136",
+        "FR-137",
+        "FR-138",
+        "FR-139",
+        "FR-140",
+        "NFR-001",
+        "NFR-002",
+        "NFR-003",
+        "NFR-004",
+        "NFR-005",
+        "NFR-006",
+        "NFR-007",
+        "NFR-008",
+        "NFR-009",
+        "NFR-010",
+        "NFR-011",
+        "NFR-012",
+        "NFR-013",
+        "NFR-016",
+        "SEC-001",
+        "SEC-002",
+        "SEC-003",
+        "SEC-004",
+        "SEC-005",
+        "SEC-006",
+        "SEC-007",
+        "SEC-008",
+        "SEC-009",
+        "SEC-010",
+        "SEC-011",
+        "SEC-012",
+        "SEC-013",
+        "SEC-014",
+        "SEC-015"
+      ],
+      "design_ids": [
+        "DES-002",
+        "DES-003",
+        "DES-004",
+        "DES-007",
+        "DES-008",
+        "DES-009",
+        "DES-010",
+        "DES-011",
+        "DES-012",
+        "DES-013",
+        "DES-014",
+        "DES-015",
+        "DES-016",
+        "DES-017",
+        "DES-018",
+        "DES-019",
+        "DES-020"
+      ],
+      "depends_on": [
+        "TASK-065"
+      ],
+      "technical_test_ids": [
+        "TC-045",
+        "TC-047"
+      ]
+    },
+    {
+      "id": "TASK-067",
+      "phase_id": "PHASE-005",
+      "requirement_ids": [
+        "FR-121",
+        "FR-122",
+        "FR-123",
+        "FR-124",
+        "FR-125",
+        "FR-126",
+        "FR-127",
+        "FR-128",
+        "FR-129",
+        "FR-130",
+        "FR-131",
+        "FR-132",
+        "FR-133",
+        "FR-134",
+        "FR-135",
+        "FR-136",
+        "FR-137",
+        "FR-138",
+        "FR-139",
+        "FR-140",
+        "NFR-001",
+        "NFR-002",
+        "NFR-003",
+        "NFR-004",
+        "NFR-005",
+        "NFR-006",
+        "NFR-007",
+        "NFR-008",
+        "NFR-009",
+        "NFR-010",
+        "NFR-011",
+        "NFR-012",
+        "NFR-013",
+        "NFR-016",
+        "SEC-001",
+        "SEC-002",
+        "SEC-003",
+        "SEC-004",
+        "SEC-005",
+        "SEC-006",
+        "SEC-007",
+        "SEC-008",
+        "SEC-009",
+        "SEC-010",
+        "SEC-011",
+        "SEC-012",
+        "SEC-013",
+        "SEC-014",
+        "SEC-015"
+      ],
+      "design_ids": [
+        "DES-002",
+        "DES-003",
+        "DES-004",
+        "DES-007",
+        "DES-008",
+        "DES-009",
+        "DES-010",
+        "DES-011",
+        "DES-012",
+        "DES-013",
+        "DES-014",
+        "DES-015",
+        "DES-016",
+        "DES-017",
+        "DES-018",
+        "DES-019",
+        "DES-020"
+      ],
+      "depends_on": [
+        "TASK-065",
+        "TASK-066"
+      ],
+      "technical_test_ids": [
+        "TC-047",
+        "TC-048",
+        "TC-049"
+      ]
+    },
+    {
+      "id": "TASK-068",
+      "phase_id": "PHASE-005",
+      "requirement_ids": [
+        "FR-121",
+        "FR-122",
+        "FR-123",
+        "FR-124",
+        "FR-125",
+        "FR-126",
+        "FR-127",
+        "FR-128",
+        "FR-129",
+        "FR-130",
+        "FR-131",
+        "FR-132",
+        "FR-133",
+        "FR-134",
+        "FR-135",
+        "FR-136",
+        "FR-137",
+        "FR-138",
+        "FR-139",
+        "FR-140",
+        "NFR-001",
+        "NFR-002",
+        "NFR-003",
+        "NFR-004",
+        "NFR-005",
+        "NFR-006",
+        "NFR-007",
+        "NFR-008",
+        "NFR-009",
+        "NFR-010",
+        "NFR-011",
+        "NFR-012",
+        "NFR-013",
+        "NFR-016",
+        "SEC-001",
+        "SEC-002",
+        "SEC-003",
+        "SEC-004",
+        "SEC-005",
+        "SEC-006",
+        "SEC-007",
+        "SEC-008",
+        "SEC-009",
+        "SEC-010",
+        "SEC-011",
+        "SEC-012",
+        "SEC-013",
+        "SEC-014",
+        "SEC-015"
+      ],
+      "design_ids": [
+        "DES-002",
+        "DES-003",
+        "DES-004",
+        "DES-007",
+        "DES-008",
+        "DES-009",
+        "DES-010",
+        "DES-011",
+        "DES-012",
+        "DES-013",
+        "DES-014",
+        "DES-015",
+        "DES-016",
+        "DES-017",
+        "DES-018",
+        "DES-019",
+        "DES-020"
+      ],
+      "depends_on": [
+        "TASK-058",
+        "TASK-067"
+      ],
+      "technical_test_ids": [
+        "TC-047",
+        "TC-048",
+        "TC-049",
+        "TC-052"
       ]
     }
   ],

@@ -2808,3 +2808,7 @@ Commit：`test: add fulfillment release qualification evidence`。
 - [ ] 沒有skip、suppressions、降低coverage／資料量／效能門檻或未批准的自動修復。
 
 另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；新 API 具 strict schema、後端 permission、stable public error、CAS version 及適用的 idempotency／IDOR 防護；DB unique／FK／trigger／transaction／lock／archive 行為以專用真 MySQL integration test 驗證；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression 或 production fake；log／audit／error／test evidence 不含 token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json` 與 Phase evidence。
+
+## DEC-029 — Named prerequisite delivery under Sales execution unit
+
+Sam explicitly approves a dual-owner shared/provider contribution: real persistence portions of TASK010 and OpenMatter/Archive portions of TASK041/042 are delivered in Sales PHASE-005 TASK064–068, with real owner review/native suites and the original full Sales P4 Gate. The original45 owner tasks and their full dependencies/DoD remain unchanged and not DONE; later real Queue/Allocation/Pick/Shipment/Reversal writer activation must revalidate these installed contracts, all-node lifecycle cutover, schema rollout/quiesce and full owner phase regression. Owner canonical records/contract pins freeze before Sales final source verification; changes afterward require new actual source qualification.

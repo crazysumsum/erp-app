@@ -1816,3 +1816,22 @@ Archive 相同 ID 且 hash 相同視為 unknown-outcome recovery，hash 不同�
 
 ### Failure behavior
 業務驗證失敗不無限 retry，暫時失敗採 exponential backoff ＋ jitter，commit 不明先 lookup source outcome；效能結果必須附 EXPLAIN、rows examined、lock wait、pool usage 及 heap 證據，不得以縮小資料集通過；有正式資料後只用 forward migration 修正，不 drop 或改寫 ledger／history。
+
+## DES-015 — DEC-029 shared Archive prerequisite contribution
+
+### Decision
+
+Sam approved exact Sales proposal107 SHA83cffc9f: deliver the real Fulfillment-owned Archive persistence, OpenMatter and caller-transaction participant as a named shared contribution governed by Sales IMPLEMENT PHASE-005 TASK064–068. Contract10 defines the ABI; full canonical field/FK/quantity/immutable semantics in §4 and §8.10 remain unchanged. Transaction-aware OpenMatter rechecks use the existing Sales-root-locked transaction. No missing-schema CLOSED or fake participant is allowed.
+
+### Rationale
+
+Sales057/058 and owner041/042 had a delivery cycle, and owner mirrors require Sales0088/0089 parents. An ordered prerequisite slice in one complete P4 PR resolves this without activating all45 owner business tasks. Sales057 depends on066,058 on057/067,068 on058/067,063 on062/068;067 needs reviewed real caller ABI/transaction fixture rather than058 completion. Original owner task dependencies/DoD remain for full business activation and are not marked DONE by this contribution.
+
+### Failure behavior
+
+Absent/unavailable/partial/inconsistent owner state returns UNKNOWN and blocks Archive. Participant accepts only trusted Sales coordinator identity and caller transaction; hashes/counts must verify before active deletion, conflict or any failure rolls back. Owner records are frozen before final Sales source checks. Original45 tasks/12TC/120UAT and all fullPhase Gates remain outstanding; this contribution is not whole-module acceptance or production deployment authority.
+
+
+### DEC029 operation source routing
+
+The prerequisite operation schema adds immutable `sales_order_id BIGINT UNSIGNED NULL` and `(sales_order_id,status,id)` index, retained across Archive. A CHECK requires FULFILLMENT/SHIPMENT target types to carry a positive non-null Sales identity even for target_id=NULL intents; EXPORT keeps NULL and remains a read-only potentially multi-order job intent. No FK targets deletable Active SO. OpenMatter considers order-scoped business intents only; malformed unscoped business rows fail schema/invariant checks rather than implying CLOSED. Existing Export semantics remain unchanged. Sales Archive coordinator uses existing context.storage.run before withTransaction so the actual executor is bound even for a Scheduler invocation without HTTP context; the transaction-aware provider never creates a replacement scope/connection.

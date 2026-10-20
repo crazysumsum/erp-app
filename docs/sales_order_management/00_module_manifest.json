@@ -50,7 +50,9 @@
       "server/src/services/salesJobs/jobs/SalesExportJob.js",
       "server/src/services/salesJobs/jobs/SalesArchiveJob.js",
       "docs/runbooks/sales-order-management.md",
-      "client/src/framework/layout/AppTopbar.vue"
+      "client/src/framework/layout/AppTopbar.vue",
+      "server/src/modules/fulfillment/**",
+      "server/src/services/fulfillmentArchive/**"
     ],
     "test_paths": [
       "server/test/sales/**",
@@ -95,7 +97,13 @@
       "server/test/integration/itemRecoveryAcceptance.integration.test.js",
       "server/test/sales/phase3/**",
       "server/test-support/salesProcessingCrashChild.js",
-      "server/test-capacity/sales/phase4/**"
+      "server/test-capacity/sales/phase4/**",
+      "server/test/salesArchiveEligibility.test.js",
+      "server/test/fulfillmentArchive*.test.js",
+      "server/test/fulfillmentOpenMatter*.test.js",
+      "server/test/integration/fulfillmentArchive*.integration.test.js",
+      "server/test/integration/fulfillmentOpenMatter*.integration.test.js",
+      "server/test/integration/salesArchiveJoint.integration.test.js"
     ],
     "allowed_write_paths": [
       "docs/sales_order_management/**",
@@ -191,7 +199,19 @@
       "server/database/migrations/*_create_sales_archive_tables.js",
       "server/database/migrations/*_protect_sales_archive_immutability.js",
       "server/test-capacity/sales/phase4/**",
-      "client/src/framework/layout/AppTopbar.vue"
+      "client/src/framework/layout/AppTopbar.vue",
+      "server/src/modules/fulfillment/**",
+      "server/src/services/fulfillmentArchive/**",
+      "server/test/salesArchiveEligibility.test.js",
+      "server/test/fulfillmentArchive*.test.js",
+      "server/test/fulfillmentOpenMatter*.test.js",
+      "server/test/integration/fulfillmentArchive*.integration.test.js",
+      "server/test/integration/fulfillmentOpenMatter*.integration.test.js",
+      "server/test/integration/salesArchiveJoint.integration.test.js",
+      "server/database/migrations/*_create_fulfillment_archive_prerequisites.js",
+      "server/database/migrations/*_create_fulfillment_archive_mirrors.js",
+      "server/database/migrations/*_protect_fulfillment_archive_contracts.js",
+      "docs/fulfillment_shipping_management/**"
     ],
     "approval_required_paths": [
       "server/database/migrations/**",
@@ -268,7 +288,11 @@
       "server/database/migrations/*_create_sales_export_jobs.js",
       "server/database/migrations/*_create_sales_archive_batches.js",
       "server/database/migrations/*_create_sales_archive_tables.js",
-      "server/database/migrations/*_protect_sales_archive_immutability.js"
+      "server/database/migrations/*_protect_sales_archive_immutability.js",
+      "server/src/services/fulfillmentArchive/**",
+      "server/database/migrations/*_create_fulfillment_archive_prerequisites.js",
+      "server/database/migrations/*_create_fulfillment_archive_mirrors.js",
+      "server/database/migrations/*_protect_fulfillment_archive_contracts.js"
     ],
     "forbidden_paths": [
       ".env",
@@ -322,7 +346,7 @@
         "id": "sales-fulfillment-projection-and-lifecycle-contract",
         "version": "planning-only-NOT_IMPLEMENTED; TASK009-010 source pins reconciled, Sales additions CI pending",
         "source": "docs/sales_order_management/03_design_spec.md",
-        "sha256": "5f82a24962a4f8e853acba56a83dedb7ceec94513497895f29966024100cbfdc",
+        "sha256": "fc41522e833e8929d305b48abbe08e39be3017cd163a0689eec02f23e5b30817",
         "consumers": [
           "fulfillment-shipping-management",
           "inventory-management",
@@ -379,6 +403,21 @@
         "sha256": "b574dd69c4fd006a550421d9bb1e550c94f8f39d22837eecd61f7cf079c6da9d",
         "regression_suites": [
           "sales-technical"
+        ]
+      },
+      {
+        "id": "fulfillment-sales-archive-prerequisite",
+        "version": "1-APPROVED-ARCHIVE-CONTRACT",
+        "source": "docs/fulfillment_shipping_management/10_archive_prerequisite_contract.json",
+        "sha256": "c95d1ae04317f2e62090c4818203cade6c9248a09c32956efa20408c868b4db0",
+        "module_id": "fulfillment-shipping-management",
+        "regression_suites": [
+          "sales-fulfillment-schema-native",
+          "sales-fulfillment-openmatter-unit",
+          "sales-fulfillment-openmatter-native",
+          "sales-fulfillment-participant-unit",
+          "sales-fulfillment-participant-native",
+          "sales-archive-joint-native"
         ]
       }
     ],
@@ -437,7 +476,13 @@
       "sales-technical"
     ],
     "regression": [
-      "sales-technical"
+      "sales-technical",
+      "sales-fulfillment-schema-native",
+      "sales-fulfillment-openmatter-unit",
+      "sales-fulfillment-openmatter-native",
+      "sales-fulfillment-participant-unit",
+      "sales-fulfillment-participant-native",
+      "sales-archive-joint-native"
     ],
     "uat": []
   },
