@@ -1,0 +1,84 @@
+{
+  "testScript": "server/test/integration/salesImportCapacity.integration.test.js",
+  "testScriptSha256": "58f848ba623dadc3be28553dbf37cea12faa5c978f3b4bec3fd097c4a17ac924",
+  "orders": 10000,
+  "lines": 50000,
+  "readyMs": 403997.308583,
+  "durationMs": 806271.523125,
+  "foreground": {
+    "users": 50,
+    "samples": 4045,
+    "p95Ms": 86.79129099997226,
+    "excludedFailures": 0
+  },
+  "scheduler": [
+    {
+      "name": "sales.importWorker",
+      "runs": 406,
+      "failures": 0,
+      "timeouts": 0
+    },
+    {
+      "name": "sales.confirmationRecovery",
+      "runs": 27,
+      "failures": 0,
+      "timeouts": 0
+    },
+    {
+      "name": "sales.backorderAllocate",
+      "runs": 2,
+      "failures": 0,
+      "timeouts": 0
+    }
+  ],
+  "reconciliation": {
+    "orders": 14048,
+    "lines": 93647,
+    "mappings": 93647,
+    "mismatches": {
+      "conservation": 0,
+      "mappings": 0,
+      "queue": 0,
+      "flags": 0,
+      "reservations": 0,
+      "controls": 0
+    }
+  },
+  "hardware": {
+    "cpu": "Apple M5 Pro",
+    "cpuCount": 15,
+    "memoryBytes": 25769803776
+  },
+  "node": "v26.6.0",
+  "mysql": "26.7.0",
+  "execution": {
+    "stage": "DEVELOPER_REGRESSION",
+    "codeCommit": "defed40858265ee58bc0c4002c9d8f3786fdafde",
+    "sourceFingerprint": "1dbed0971bf4d0ac0d4a6c5d2ad0e1b7f97e4f0010f5f04263ff3760642b6c22",
+    "plan": "b390c588a323b3c3677bb031f287cebefe2cb284571e901d56aa3f14814f44db",
+    "argv": [
+      "node",
+      "/private/tmp/customer-hd016.qWNdul/run.mjs",
+      "node",
+      "--test",
+      "--test-concurrency=1",
+      "--import",
+      "./server/test-support/testEnv.js",
+      "--test-name-pattern=TC-042 actual10000",
+      "server/test/integration/salesImportCapacity.integration.test.js"
+    ],
+    "cwd": "/private/tmp/erp-customer-operations-readiness",
+    "tests": 1,
+    "pass": 1,
+    "fail": 0,
+    "skipped": 0,
+    "durationMs": 829888.401416,
+    "rawLogSha256": "ab36b8fb2e867bf8dd74936a7047840b2ba4f50d38b3017847d8f18c831103c9",
+    "rawLogLocation": "Private owned runtime/shared-load.log; synthetic output; no full export",
+    "limits": [
+      "No claim that first non-isolated failing run passed or sole cause proven",
+      "Not a new Customer capacity baseline, full downstream acceptance or formal UAT",
+      "Fresh-main integrated baseline verification and exact-head CI remain separate gates"
+    ]
+  }
+}
