@@ -122,6 +122,52 @@ Measured on 2026-10-09 (regenerated after REV-081):
   - `supplier.import.purged`: a summary of every retention run.
 - **Queues:** jobs sitting in `queued` or `uploaded` for more than a few minutes mean a worker is not running.
 
+## Before a legacy import: similar-name exception list
+
+Requirement §16.2 says the system must not merge Suppliers whose names are only similar. Instead it produces an
+exception list for the business to decide. The CSV import itself warns only on identical names (HD-052). So before
+each go-live import, and in every rehearsal, run this report on the file you are about to upload (HD-057 A):
+
+```bash
+node src/modules/supplier/similarNameReport.js --database=<DB_NAME> --input <legacy.csv> --output <report.csv>
+```
+
+Run it from `server/`, with `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD` and `DB_NAME` set in the environment.
+`--database` must repeat `DB_NAME`.
+
+**What it reads.** The script opens a read-only transaction and writes nothing to the database. It refuses to write
+over an existing output file.
+
+**The input file.** It must pass the same header checks as an upload. Template description rows, example rows and
+blank rows are skipped, as they are by the import, so `row` matches the row number in the import result.
+
+**How rows are matched.**
+
+- Each row is compared with the existing Suppliers using the check that warns on create: the same normalisation,
+  `SUPPLIER_DUPLICATE_NAME_THRESHOLD`, and at most 10 matches per row.
+- Each row is also compared with every other row in the file, using the same score. Each pair is listed once.
+- Rows whose name the import would reject are not compared. They are only counted.
+
+**The output.** One CSV line per pair:
+
+| Column | Content |
+| --- | --- |
+| `row` | Row number in the file |
+| `supplierCode`, `supplierName` | Code and name from that row |
+| `matchKind` | `existing` or `file` |
+| `matchRow` | The other row in the file, for a `file` match |
+| `matchSupplierId`, `matchSupplierCode`, `matchSupplierName` | The other Supplier or row |
+| `score` | Similarity score |
+| `exact` | Whether the names are identical |
+
+Cells are guarded against spreadsheet formulas, as on export. The command prints the counts and the threshold it used.
+
+The script only lists pairs; the business decides what to do with each one. Merge or rename in the source file, or
+keep both Suppliers, then run the report again on the corrected file.
+
+A 10,000-row file in which every row shares 「貿易有限公司」 takes about 2 seconds for the in-file part. The
+comparison with existing Suppliers adds one indexed query per row.
+
 ## Recovery
 
 - **A worker process dies mid-job.** Rows already written stay written. Another instance, or the restarted process,

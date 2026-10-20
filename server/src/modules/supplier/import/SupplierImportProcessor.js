@@ -151,7 +151,7 @@ function headerError(headers) {
   return null;
 }
 
-function isTemplateRow(firstCell) {
+export function isTemplateRow(firstCell) {
   return firstCell.startsWith(SUPPLIER_IMPORT_TEMPLATE_DESCRIPTION_MARKER) || firstCell === SUPPLIER_IMPORT_TEMPLATE_EXAMPLE_MARKER;
 }
 
