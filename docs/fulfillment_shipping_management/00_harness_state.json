@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 17,
+  "revision": 19,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -9,19 +9,19 @@
   "current_phase": "PHASE-001",
   "current_task": "TASK-001",
   "baseline": {
-    "design": "feef0869d0d3d1814ce5ab9a08e885ef84c49e578bfbf24269ff106b0aa69ce8",
-    "plan": "a229fd571382e42dbc0e88c896bd06aeed12bf4e5e3b4622a58bc69197aead38",
-    "code_commit": "76223f40480d94a1d3a2ae6e0e7b91292bd98b82",
+    "design": "8618ff250af0b61d64f5beac528e529bb2224964f8986a02f4c4d8f6043c66ff",
+    "plan": "8c9bfbd7760e46c7ea831511d2d1f7edefa8699506b17d60190bb84cb3195727",
+    "code_commit": "dc53e52d543651c38d9b3dbfeb4804019f91edf8",
     "source_fingerprint": "aa361a2af16fd72193d829b5fa354e9b4cbd396423eac7264261ecfed86db73c",
     "worktree": "/private/tmp/erp-fulfillment-p0",
     "default_commit": "76223f40480d94a1d3a2ae6e0e7b91292bd98b82",
     "mode_entry_commit": "76223f40480d94a1d3a2ae6e0e7b91292bd98b82"
   },
   "runtime": {
-    "instance_id": "DOCUMENT-ONLY-NO-RUNTIME",
-    "owner": "Codex fulfillment readiness author",
+    "instance_id": "fulfillment-p0-files-20261020",
+    "owner": "/root fulfillment P0 implementer, authorized by Sam",
     "resources": {
-      "workspace": "/private/tmp/erp-fulfillment-readiness"
+      "workspace": "/private/tmp/erp-fulfillment-p0"
     },
     "lease_ref": null
   },
@@ -259,6 +259,82 @@
         "Exact existing business-UAT N/A reason unchanged; TC-010 remains mandatory and blocking; no other exemption"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-009-P0-SCOPE-DESIGN-20261020",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam, actual direct choice A in this chat; derived scope binding, no hash-inspection claim",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/00_implementation_readiness.md#scoped-entry-amendment-and-r5",
+      "recorded_at": "2026-10-20T09:28:01.641703Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "8618ff250af0b61d64f5beac528e529bb2224964f8986a02f4c4d8f6043c66ff",
+      "code_commit": null,
+      "scope": [
+        "fulfillment-shipping-management",
+        "Necessary P0 config/startup/shared-test path amendment only; unchanged approved business rules."
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-010-P0-SCOPE-PLAN-20261020",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam, actual direct choice A in this chat; derived scope binding, no hash-inspection claim",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/00_implementation_readiness.md#scoped-entry-amendment-and-r5",
+      "recorded_at": "2026-10-20T09:28:01.641778Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "8c9bfbd7760e46c7ea831511d2d1f7edefa8699506b17d60190bb84cb3195727",
+      "code_commit": null,
+      "scope": [
+        "fulfillment-shipping-management",
+        "PHASE-001; TASK-001..011; task/checkpoint/test semantics unchanged."
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-011-P0-SCOPE-20261020",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam, actual direct choice A in this chat; derived scope binding, no hash-inspection claim",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/00_implementation_readiness.md#scoped-entry-amendment-and-r5",
+      "recorded_at": "2026-10-20T09:28:01.641780Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "8c9bfbd7760e46c7ea831511d2d1f7edefa8699506b17d60190bb84cb3195727",
+      "code_commit": null,
+      "scope": [
+        "server/src/framework/configuration/applicationConfiguration.js",
+        "server/test/configuration.test.js",
+        "server/test/permissionCatalogueConventions.test.js",
+        "server/src/modules/authorization/permissionCatalogue.js",
+        "client/src/framework/http/errorMessages.js",
+        "server/database/migrations/*fulfillment*.js",
+        "server/src/modules/sales/**",
+        "server/src/modules/inventory/**",
+        "server/src/modules/customer/CustomerLookupService.js",
+        "server/src/modules/item/ItemLookupService.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-012-P0-SCOPE-UATNA-20261020",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam, actual direct choice A in this chat; derived scope binding, no hash-inspection claim",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/00_implementation_readiness.md#scoped-entry-amendment-and-r5",
+      "recorded_at": "2026-10-20T09:28:01.641781Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "8c9bfbd7760e46c7ea831511d2d1f7edefa8699506b17d60190bb84cb3195727",
+      "code_commit": null,
+      "scope": [
+        "NFR-023",
+        "Existing exact N/A reason unchanged; TC010 mandatory/blocking unchanged; metadata scope amendment only."
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -341,6 +417,30 @@
       "reviewer": "/root/fulfillment_independent_review",
       "reviewed_baseline": "feef0869d0d3d1814ce5ab9a08e885ef84c49e578bfbf24269ff106b0aa69ce8",
       "source_ref": "docs/fulfillment_shipping_management/implementation/00_implementation_readiness.md#pr-256-merge-evidence-and-process-deviation",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-008-INDEPENDENT-R5",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "feef0869d0d3d1814ce5ab9a08e885ef84c49e578bfbf24269ff106b0aa69ce8",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/00_implementation_readiness.md#scoped-entry-amendment-and-r5",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-009-INDEPENDENT-R6",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "8618ff250af0b61d64f5beac528e529bb2224964f8986a02f4c4d8f6043c66ff",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/00_implementation_readiness.md#scoped-entry-amendment-and-r5",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -584,9 +684,17 @@
       "idempotency_key": "mode-change-17",
       "status": "CONFIRMED",
       "source_ref": "docs/fulfillment_shipping_management/implementation/00_implementation_readiness.md#execution-authority"
+    },
+    {
+      "id": "PR256-POSTMERGE-CI-20261020",
+      "kind": "CI_OBSERVATION",
+      "target": "https://github.com/crazysumsum/erp-app/actions/runs/39399562600",
+      "idempotency_key": "observe-merged76223-ci39399562600",
+      "status": "CONFIRMED",
+      "source_ref": "Native GitHub API run39399562600 actual head76223f4 completed success; all13jobs completed success, zero skips; postmerge R4 independent content approval. This does not erase premerge freshness process deviation."
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "IMPLEMENT P0 entry authorized; TASK001 core76/76 zero-skip checks passed; no task DONE or product writes yet. Confirm mergedSHA CI; observe Sales P4 HD008 coordination, settle unique schema ownership/migration sequence and scoped manifest amendment before TASK002. Checkpoint0B still blocks TASK007-010; live cutover separately gated. Do not repeat merged PR256 actions; old branch/worktree safely cleaned."
+  "next_safe_action": "P0IMPLEMENT scoped amendment actual R6APPROVED (R5issuesresolved), merged76223CI13/13SUCCESS. Await observed Sales P4 handoff/migration allocation; TASK001 notDONE and no productwrite yet. Once allocated implement TASK002 slices under exactSCOPE; 0B/livecutover/formalUAT gates unchanged."
 }

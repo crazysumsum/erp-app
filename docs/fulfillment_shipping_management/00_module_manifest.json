@@ -31,7 +31,9 @@
       "server/test-support/fakeFulfillmentDatabase.js",
       "client/test/**/fulfillment*.test.js",
       "client/test/**/shipment*.test.js",
-      "client/e2e/fulfillment-shipping-management/**"
+      "client/e2e/fulfillment-shipping-management/**",
+      "server/test/permissionCatalogueConventions.test.js",
+      "server/test/configuration.test.js"
     ],
     "allowed_write_paths": [
       "docs/fulfillment_shipping_management/**",
@@ -78,7 +80,10 @@
       "docs/sales_order_management/**",
       "docs/inventory_management/**",
       "docs/customer_management/**",
-      "docs/items_management/**"
+      "docs/items_management/**",
+      "server/src/framework/configuration/applicationConfiguration.js",
+      "server/test/permissionCatalogueConventions.test.js",
+      "server/test/configuration.test.js"
     ],
     "forbidden_paths": [
       ".env",
