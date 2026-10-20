@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 225,
+  "revision": 226,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,21 +11,21 @@
   "baseline": {
     "design": "13a77ed225d0253eaac097b5e3bb13f60c6078d1019500b95e976dd6617af721",
     "plan": "b390c588a323b3c3677bb031f287cebefe2cb284571e901d56aa3f14814f44db",
-    "code_commit": "e6af9ecfed373d8bc0806a4e941882fe87ad727c",
-    "source_fingerprint": "a8939571af7415b62b307d40d4080570cd86b7b5c18dea546ae2e23bb9b32a4d",
+    "code_commit": "e7bbe6b714bb7c0abc1c5cabd4ecee372310581f",
+    "source_fingerprint": "48c132eecf07a4a3621c70e06161985c3f31d913987bc3fe6b10da8ca5ea3972",
     "worktree": "/private/tmp/erp-customer-operations-readiness",
-    "default_commit": "089dd45b6ca5558511ae6396a88f732d5df43927",
+    "default_commit": "64bee2e00dfae71131c7cfa54049cac0941d6f85",
     "mode_entry_commit": "392b9f9db0f36f5a3bbabf2854bf3ee20a7bf227"
   },
   "runtime": {
-    "instance_id": "customer-independent-jevRrC-cleaned",
-    "owner": "/root Customer independent readiness recheck",
+    "instance_id": "customer-pr244-integrated-KPWDDe-active",
+    "owner": "/root Customer PR250 integration",
     "resources": {
       "workspace": "/private/tmp/erp-customer-operations-readiness",
-      "mysql-schema": "CLEANED: ownedjevRrC/mysql13369 and3syntheticschemas;DROP/SHUTDOWN06:18:40/socketabsent/exactdatadirremoved verified;shared3306untouched",
-      "customer-file-root": "Test-owned restore roots/backupkeys/files cleaned byunchangedtest;smallcredentialfree logs retained",
-      "customer-import-root": "Restorefixture-only source/result objects cleaned;no runningworkers",
-      "web-port": "No server/browserstarted;appcreatedonlyforcapacity andshutdowncomplete"
+      "mysql-schema": "ownedKPWDDe/mysql loopback13369;erp_customer_pr244_integrated;ephemeralfixtureadminprivateadmin.json;87+new0087 migrations actually88 records expectedverify",
+      "customer-file-root": "Existingtests ownedsyntheticroots,fixtures only",
+      "customer-import-root": "OriginalTC042ownedspool underthisworktree managedroot; cleanuprequired aftertest",
+      "web-port": "ActualCustomerPlaywright5204ended;currentTC042ephemeralapplication/proxy ports owned"
     },
     "lease_ref": null
   },
@@ -3931,6 +3931,17 @@
       "subject": "Current-candidate local restore integrity,crypto/storage/audit and50k20worker capacity only",
       "status": "PASS",
       "source_ref": "implementation/independent-readiness-recheck-20261016.md +results.json;40PASS0FAIL0SKIP=3realrestore+20support+17capacity/guards.20Customer tables/87migrations/6manifestmembers/4damagedsetrefusals/6badkeydenials.50kCustomers5kchildren20workers30s,300948ops0errors/listp956.95525ms/otherlookup2.17-2.68ms<=5000,14branchranges/physicalscanchecksPASS. Scanner/authfixtures explicit; no actualIAM/ClamAV/alerts/rollback/RPOproof orSalesfullintegration. SalesDEF033001HIGHOPEN andfullsuiteoriginalFAILretained. Onlydocs/evidence changes;localchecks don'tcloseTASK034or036."
+    },
+    {
+      "code_commit": "e7bbe6b714bb7c0abc1c5cabd4ecee372310581f",
+      "spec_baseline": "13a77ed225d0253eaac097b5e3bb13f60c6078d1019500b95e976dd6617af721",
+      "source_fingerprint": "48c132eecf07a4a3621c70e06161985c3f31d913987bc3fe6b10da8ca5ea3972",
+      "actor": "/root Customer merged-main integration",
+      "observed_at": "2026-10-20T07:54:00Z",
+      "kind": "MANUAL_TEST",
+      "subject": "Integrated preliminary scoped developer checks; remaining full gates pending",
+      "status": "PASS",
+      "source_ref": "implementation/pr250-integration-report.md;83native0skip/26units0skip/112clientfiles905tests/20actualPlaywright0skip PASS; lint/build/highseverityaudit gatePASS1existingLOW. No formal downstreamacceptance. CurrentTC042private replay preservesoriginal10k50/50MiB via62706bed^ moduledironlyrelocation; exactcomparisonPASS SHAoriginaleffe7785/replayf2e4bf3a,active91931 noCPUheavyparallel. Fullservercoverage/finalCI/review notPASSyet."
     }
   ],
   "pending_decisions": [
@@ -5390,6 +5401,22 @@
       "idempotency_key": "customer-hd018-heartbeat-update126",
       "status": "CONFIRMED",
       "source_ref": "Actualautomation_updatemodesuccess ACTIVE; preservedexistingname/target/cadence/prompt andappendedSamHD018approval+actualnotificationdone. AvoidoldOPENcache/repeatedquestions/notifications. ObserveactualstandaloneSalesPRmainmerge thenCustomerallgates/normalmerge/ownedcleanup; fullDownstreamBLOCKED."
+    },
+    {
+      "id": "EXT-LOCAL-127",
+      "kind": "WORKTREE_RUNTIME_INTEGRATION",
+      "target": "restoredpublishedCustomerworktree79c2c9aa;actualmain64bee2e0 mergee7bbe6b;freshownedMySQLKPWDDe13369",
+      "idempotency_key": "customer-pr250-integrated-runtime127",
+      "status": "CONFIRMED",
+      "source_ref": "Originaltmpcheckoutabsent, publishedbranch/PRheadverified79c2c9aa andpreserved;restoreviaexistingbranch,cleanmergedmain,CustomerD/P unchanged. Primarycleanmainwasff-onlyupdatedtofreshmain asnormalfreshness, no userchangesdiscarded. Ownnewdatadirverifiedbeforeprivateadmin/schema/migrations; no shared3306. ExistingpartialchecksactualPASS,loadACTIVE,no cleanupclaim. Oldtmprawlogsabsent,minimizedhistoryretained,nofabricatedrestore."
+    },
+    {
+      "id": "EXT-PUSH-128",
+      "kind": "GIT_PUSH",
+      "target": "existingDraftPR244 codex/customer-operations-readiness integratedcandidate",
+      "idempotency_key": "customer-pr250-integrated-publication128",
+      "status": "PLANNED",
+      "source_ref": "Publishpreliminarydeveloperpassed integratedcandidate/docs checkpoint,notmerge-ready untilactual10k50load/fullservercoverage/exactheadnormalCI/independentreview/freshmain pass. No newsource/test/CI/canonbaseline changes. Finalimmutablegates/merge/cleanupreceiptsPR244timeline."
     }
   ],
   "evidence_files": [
@@ -5418,7 +5445,8 @@
     "implementation/hd016-implementation-report.md",
     "implementation/hd016-isolated-load-results.json",
     "implementation/independent-readiness-recheck-20261016.md",
-    "implementation/independent-readiness-recheck-20261016-results.json"
+    "implementation/independent-readiness-recheck-20261016-results.json",
+    "implementation/pr250-integration-report.md"
   ],
   "defects": [
     {
@@ -5476,7 +5504,7 @@
     {
       "id": "DEF-033001",
       "severity": "HIGH",
-      "status": "OPEN",
+      "status": "RETEST",
       "source_ids": [
         "TASK-033",
         "DES-017",
@@ -5485,10 +5513,11 @@
       "closure_evidence": [
         "Actual full server coverage mixed-load Sales-module TC042 failure CONCURRENT_OPERATION ~35s; may be existing load/deadlock behavior, cause not established. OwnMySQL printall-deadlock diagnostic + unchanged uninstru scenario running. No Sales product remediation inferred, no Customer/sharedfix acceptance/merge while blocker unresolved.",
         "Independent /root/customer_task011_review classifies initial TC042 measurement INVALID_NON_ISOLATED_TEST_PROFILE: simultaneous client coverage outside fixed workload. Original FAIL retained; no established sole cause/product defect resolution. Schema has no invalid-profile status, RETEST preserves pending final gates. Isolated unchanged scenario actual1PASS0FAIL0SKIP at defed/source1dbed, p95 86.791291ms, all scheduler failures/timeouts/reconciliation differences0. Integrated source397 full serial coverage and final exact-head CI pending; no CLOSED/waived failure.",
-        "Superseding actual serial integrated full run:3441tests3304PASS1FAIL136existingSKIP,0cancelled585928.640416ms; onlyTC042 failsCONCURRENT_OPERATION34722ms withoutparallelheavyjobs. NativewarehouseS/lineindexXsupremum/warehouseX deadlock captured.100line/differentCustomerCurrency diagnostic twiceFAIL; MySQLplanchoosesuq_sales_order_line_sku_uom range,not intendedunique line_number points. Independent CHANGES_REQUESTED confirmsHIGH validblocker; not invalidprofile/waived/resolved. Repair SalesOrderService.lockSalesOrderLines+directtests requiresnewHD017scopeapproval."
+        "Superseding actual serial integrated full run:3441tests3304PASS1FAIL136existingSKIP,0cancelled585928.640416ms; onlyTC042 failsCONCURRENT_OPERATION34722ms withoutparallelheavyjobs. NativewarehouseS/lineindexXsupremum/warehouseX deadlock captured.100line/differentCustomerCurrency diagnostic twiceFAIL; MySQLplanchoosesuq_sales_order_line_sku_uom range,not intendedunique line_number points. Independent CHANGES_REQUESTED confirmsHIGH validblocker; not invalidprofile/waived/resolved. Repair SalesOrderService.lockSalesOrderLines+directtests requiresnewHD017scopeapproval.",
+        "ActualPR250merged220d376c6e9c21f9149b7a2a3f01e0752fbfa76d06:03:39Z,exact195fc2aall13CI success. CurrentCustomermergedmain64bee2e0 at e7bbe6b/source48c132ee; actual83native/26contractunits/905client/20CustomerPlaywright PASS. Original10k50TC042privateexactreplayACTIVE,fullservercoverage/finalheadCIreviewpending,RETESTnotCLOSED. SmallerupstreamTC042CI2000/10doesnotreplaceoriginalCustomerloadgate."
       ],
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "HD018 ANSWERED/APPROVED andactualSalesnotificationconfirmed125; no decisionrequired now. Active15min heartbeat sales-customer-pr244 observesSalesstandaloneDEF016fixPR/directtests/normalCIreview/freshmainmerge. Do notdriveSalesproduct, repeatapprovedquestion/notification, cherry-pickunmergedfix orretestbeforemain. Onceactualmergedfixavailable, reconcile currentclean/dirtyCustomerstate andscope/contractbaselines, integratefreshmain, real100line+Customerleastpriv/default/non-nullBank/credit/approval/mutablebatchregressions,originalTC042/fullcoverage/lint/build/security/Playwright/normalexactheadCI+actualindependentreview. Freshmainbeforemerge; allgatesPASSthenready/normalmergePR244 andverifiedownedcleanup. No adminbypass; completeDownstream030031032+wholemoduleUATreleaseBLOCKED. Ifgenuine newmajorissue stoponlyaffectedpath andconsolidateddecision. Preserveallpreviousfailures/evidence."
+  "next_safe_action": "Continueactive91931 historicaloriginalTC042exact10korders50usersreplayalone againstintegratedproducts,then fullservercoveragewithunchangedapprovedtransferflags andseparatecapacitycases. No ownCPU-heavyjobsduringload. PublishDraftcheckpointfornormalexactheadCI; actualindependentreviewerreviewrequired. SchedulerMUSTremainPAUSEDperSamcurrentrequest;manualcontinuationauthorized. PreserveD13a/Pb390/RISK007waiverprovenanceandgenericNAvalidatorlimit; no newscope. DEF033001RETEST,notcloseduntilvalidcurrentfullproof; allgates/freshmainthenSamapprovednormalmerge244 andobservedownedcleanup. Full030031032/downstreamacceptance/UATreleaseBLOCKED."
 }
