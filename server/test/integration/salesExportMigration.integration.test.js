@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import test from "node:test";
 import { migrationFixture } from "../sales/phase1/fixtures.js";
-import { up, inspectSalesExportJobSchema } from "../../database/migrations/0087_create_sales_export_jobs.js";
+import { up, inspectSalesExportJobSchema } from "../../database/migrations/0090_create_sales_export_jobs.js";
 
 const integrationTest=process.env.DB_INTEGRATION_TESTS==="1"?test:test.skip;
 async function setup(t) {
