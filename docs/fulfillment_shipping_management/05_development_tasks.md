@@ -8,7 +8,7 @@
 | --- | --- |
 | 依據 | `docs/fulfillment_shipping_management/01_requirement_spec.md` 0.2、`docs/fulfillment_shipping_management/03_design_spec.md` 0.2 |
 | 產生日期 | 2026-09-09 |
-| 任務狀態 | ERP Product Owner（Sam）已於 2026-09-14 批准 Phase P0～P3 計劃為 planning baseline；尚未授權執行任何 Task，本文件不代表已開始功能開發 |
+| 任務狀態 | Sam 已於 2026-10-20 授權 P0 IMPLEMENT；入口、協調與實際 Task 完成狀態以 harness state 及 implementation 報告為準；歷史 planning 批准保留 |
 | Task List target | 本文件（`05_development_tasks.md`）；依使用者指定，不另建 `tasks/plan.md` 或 `tasks/todo.md` |
 | 交付模式 | Phase P0～P3；每個 Phase 一個獨立 worktree／分支、一個 PR、一次完整測試週期 |
 | Commit 模式 | 每個 Task 完成並通過 focused verification 後形成一個 atomic commit；Checkpoint 不建立功能 commit |
@@ -60,6 +60,10 @@
 - Fulfillment／Shipment schema 或 migration history 出現前，另須具體核准 Sales 啟用協調：停止 Sales release writers → migrations → 註冊並驗證真實 `fulfillmentOpenMatter` provider 及所有節點 → 證明 Sales → Fulfillment → Inventory 鎖序 → 恢復 writers。現有 `NOT_REQUIRED` 只適用完全未安裝狀態；不得在有 schema 後繼續依賴它。本文件不授權部署或操作共用資料庫。
 - P0 Gate：全部 11 個 Task、provider integration、fresh／upgrade migration、並發／rollback／recovery、原 coverage／CI／人工審查全部完成才可交付單一 P0 PR；不開啟業務 route、menu 或 scheduler。後續 P1 UI 另需本模塊真實 Playwright flow、profile suite 及 CI coverage。
 - 每次執行前 fetch 最新 main、盤點並分配當時 migration 序號；測試僅用已確認可清除的專用 schema。HD-007已選擇MySQL 26.7.0為開發／測試相容基線；保留歷史8.0批准，不宣告8.0支援或任何production升級。
+
+### HD-009 — Archive foundation predecessor（2026-10-20，A1 已批准）
+
+Sam 已批准將 Sales 擁有的 `0088_create_sales_archive_batches.js` 兩表基礎（`sales_archive_batches`／`sales_archive_order_manifests`）作為正式 owner contribution 納入完整 P0 PR，以解除 TASK-010 mirror FK 與完整 Sales P4 的交付循環。其餘 Sales P4 留在原完整 PR，於 P0 合併後整合；不省略 FK、Checkpoint 0B、獨立 owner review、原生 fresh／upgrade／partial／rerun migration 或任何 Phase Gate。唯一編號及舊新 installer 對照須在 TASK-001 完成，source／執行證據依本候選重驗。具體決策與來源見 [HD-009](implementation/01_archive_foundation_dependency.md)。
 
 ### 1.5 依賴圖
 

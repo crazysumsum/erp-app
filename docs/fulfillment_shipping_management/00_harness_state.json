@@ -1,17 +1,17 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 19,
+  "revision": 22,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-001",
-  "current_task": "TASK-001",
+  "current_task": "TASK-002",
   "baseline": {
     "design": "8618ff250af0b61d64f5beac528e529bb2224964f8986a02f4c4d8f6043c66ff",
-    "plan": "8c9bfbd7760e46c7ea831511d2d1f7edefa8699506b17d60190bb84cb3195727",
-    "code_commit": "dc53e52d543651c38d9b3dbfeb4804019f91edf8",
+    "plan": "6a954bdfa3361e6e21a244c7ebb0109c512ec40230ffc4285fa8320d13ce88ed",
+    "code_commit": "722e18752a11c033658df7141ed82da301a4893a",
     "source_fingerprint": "aa361a2af16fd72193d829b5fa354e9b4cbd396423eac7264261ecfed86db73c",
     "worktree": "/private/tmp/erp-fulfillment-p0",
     "default_commit": "76223f40480d94a1d3a2ae6e0e7b91292bd98b82",
@@ -26,8 +26,8 @@
     "lease_ref": null
   },
   "tasks": {
-    "TASK-001": "PENDING",
-    "TASK-002": "PENDING",
+    "TASK-001": "DONE",
+    "TASK-002": "IN_PROGRESS",
     "TASK-003": "PENDING",
     "TASK-004": "PENDING",
     "TASK-005": "PENDING",
@@ -335,6 +335,66 @@
         "Existing exact N/A reason unchanged; TC010 mandatory/blocking unchanged; metadata scope amendment only."
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-013-HD009-PLAN-20261020",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam, actual direct HD009 A1 selection; derived baseline binding, no personal hash-inspection claim",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/01_archive_foundation_dependency.md#actual-approval-and-independent-proposal-review",
+      "recorded_at": "2026-10-20T09:33:00.647513Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "6a954bdfa3361e6e21a244c7ebb0109c512ec40230ffc4285fa8320d13ce88ed",
+      "code_commit": null,
+      "scope": [
+        "fulfillment-shipping-management",
+        "Exact approved HD009 A1 two-table Sales-owned predecessor contribution in completeP0PR; all original P0/P4 gates unchanged."
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-014-HD009-SCOPE-20261020",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam, actual direct HD009 A1 selection; derived baseline binding, no personal hash-inspection claim",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/01_archive_foundation_dependency.md#actual-approval-and-independent-proposal-review",
+      "recorded_at": "2026-10-20T09:33:00.647577Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "6a954bdfa3361e6e21a244c7ebb0109c512ec40230ffc4285fa8320d13ce88ed",
+      "code_commit": null,
+      "scope": [
+        "server/src/framework/configuration/applicationConfiguration.js",
+        "server/test/configuration.test.js",
+        "server/test/permissionCatalogueConventions.test.js",
+        "server/src/modules/authorization/permissionCatalogue.js",
+        "client/src/framework/http/errorMessages.js",
+        "server/database/migrations/*fulfillment*.js",
+        "server/src/modules/sales/**",
+        "server/src/modules/inventory/**",
+        "server/src/modules/customer/CustomerLookupService.js",
+        "server/src/modules/item/ItemLookupService.js",
+        "server/database/migrations/0088_create_sales_archive_batches.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-015-HD009-UATNA-20261020",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam, actual direct HD009 A1 selection; derived baseline binding, no personal hash-inspection claim",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/01_archive_foundation_dependency.md#actual-approval-and-independent-proposal-review",
+      "recorded_at": "2026-10-20T09:33:00.647579Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "6a954bdfa3361e6e21a244c7ebb0109c512ec40230ffc4285fa8320d13ce88ed",
+      "code_commit": null,
+      "scope": [
+        "NFR-023",
+        "Exact unchanged business-UAT N/A reason and TC010 mandatory/blocking retained; delivery dependency amendment only."
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -441,6 +501,18 @@
       "reviewer": "/root/fulfillment_independent_review",
       "reviewed_baseline": "8618ff250af0b61d64f5beac528e529bb2224964f8986a02f4c4d8f6043c66ff",
       "source_ref": "docs/fulfillment_shipping_management/implementation/00_implementation_readiness.md#scoped-entry-amendment-and-r5",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-010-INDEPENDENT-R8",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "8618ff250af0b61d64f5beac528e529bb2224964f8986a02f4c4d8f6043c66ff",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/02_task001_baseline_and_allocation.md",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -554,6 +626,21 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "docs/fulfillment_shipping_management/implementation/00_implementation_readiness.md#coordinated-scope--a-adopted: actual direct human selection A in this chat; implementation coordination remains pending observation."
+    },
+    {
+      "id": "HD-009",
+      "impact": "MAJOR",
+      "question": "Move exact Sales-owned0088 two-table Archive batch/manifest foundation into complete P0 PR to resolve P0 mirror FK versus fullP4 Fulfillment dependency cycle, or approve a joint complete P0+P4 merge group?",
+      "affected_ids": [
+        "PHASE-001",
+        "TASK-001",
+        "TASK-010",
+        "DES-009",
+        "TC-009",
+        "TC-010"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "docs/fulfillment_shipping_management/implementation/01_archive_foundation_dependency.md#actual-approval-and-independent-proposal-review: actual direct Sam choice A1 in this chat."
     }
   ],
   "external_actions": [
@@ -696,5 +783,5 @@
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "P0IMPLEMENT scoped amendment actual R6APPROVED (R5issuesresolved), merged76223CI13/13SUCCESS. Await observed Sales P4 handoff/migration allocation; TASK001 notDONE and no productwrite yet. Once allocated implement TASK002 slices under exactSCOPE; 0B/livecutover/formalUAT gates unchanged."
+  "next_safe_action": "TASK001 developer inventoryDONE after actualR8; TASK0022A config/startup/test TDD may proceed. 0088source/newmigration wait exacthandoffack as recorded; permissionseed/source notexecuted; 0B before owner persistence and fullP0Gate stillrequired."
 }
