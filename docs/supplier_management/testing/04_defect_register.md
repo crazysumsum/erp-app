@@ -46,3 +46,15 @@ Design §5.8 masks short accounts with `*`; the projection used `•`. Fixed per
 rather than the design (a design edit would move the DESIGN hash and strand 36 reviews): every mask now
 uses `*`. Client unit-test fixtures still carry the old character as mock strings; they do not depend on
 the server.
+
+## DEF-029 — HIGH
+
+`fk_supplier_sku_refs_sku` (`supplier_sku_refs.sku_id` → `item_skus.id`) is not enforced for child INSERT or UPDATE on MySQL 26.7.0, the version CI and the target use. A relation row with a `sku_id` that does not exist is accepted; deleting a referenced SKU is still refused.
+
+Found while writing the SKU-005 carrier (TC-082). Reproduced in the MySQL CLI and in a scratch schema: InnoDB serves the key with the first index that starts with `sku_id`, here `idx_supplier_sku_refs_sku_status_supplied (sku_id, relationship_status, last_supplied_at)`. When that index carries a nullable column, the child-side check is skipped. A plain key, or one served by `(sku_id, relationship_status)`, is enforced.
+
+What fixes it, verified on a populated table: drop the foreign key and that index, add `KEY (sku_id)`, then re-add the composite index and the foreign key. It survives `FLUSH TABLES`. The re-add fails if orphan rows exist. Adding the single-column index after the composite one, or only dropping and re-adding the key, does not fix it.
+
+The service checks the SKU before inserting, so today only direct writes are exposed.
+
+A scan of all 250 foreign keys found the same fault on `item_skus.item_id` and `item_media.item_id`, which belong to Item. Decision: HD-113.
