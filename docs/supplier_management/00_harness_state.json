@@ -1,11 +1,11 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 374,
+  "revision": 375,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
-  "status": "IMPLEMENTING",
-  "resume_status": null,
+  "status": "BLOCKED",
+  "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-004",
   "current_task": "TASK-051",
   "baseline": {
@@ -2318,6 +2318,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-100",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (HD-113 A, migration 0087; TC-082 and TC-093 carriers)",
+      "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-task-051-tests-6 at 2dccb15c (git diff 72e205ef..HEAD)",
+      "reviewed_baseline": "29a0615a61808b3747cd8feb522d051ba5a312da6fb0fccf36e7cf9746286775",
+      "source_ref": "docs/supplier_management/implementation/103_rev_100_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -4476,6 +4488,28 @@
       "source_ref": "Local, not CI, on erp_t51. New server/test/integration/supplierConcurrencyAcceptance.integration.test.js carries TC-093 (IMP-008): same-key upload replay and race give one job, a different file under the key is IDEMPOTENCY_CONFLICT, two concurrent confirms give 200 and 409 with one import.confirm audit, the same file under a second key never duplicates a Supplier after both execute. The TC-082 carrier failed its direct-DB negative: an INSERT with a non-existent sku_id was accepted. Reproduced in MySQL CLI and in a scratch schema (fkprobe, dropped): the FK served by a multi-column index whose trailing column is nullable is not checked on child writes; a plain FK or one served by (sku_id, status) is. A scan of all 250 FKs in erp_t51 plus rolled-back insert probes: not enforced on supplier_sku_refs.sku_id, item_skus.item_id, item_media.item_id; enforced on the activation-request FKs and on the controls. The TC-082 test is kept aside until HD-113 is answered.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-20T10:19:27+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "0087 after REV-100 (DEF-029, HD-114 option A) and the TC-082/TC-093 carriers",
+      "code_commit": "b44fb43fe235eca9961c20b753fe9996e93505a9",
+      "spec_baseline": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
+      "source_fingerprint": "087578837ceb8b2a84851947c3e1e80fadb2b481a6dc88f9ef403e0e2b6594bc",
+      "status": "PASS",
+      "source_ref": "Local, not CI, on erp_t51 (MySQL 26.7.0). supplierSkuForeignKeyMigration.integration.test.js 4/4 on copy tables: 0081 shape accepts an orphan (control); up issues one INPLACE ALTER with no FOREIGN KEY clause and the orphan is refused; a rerun issues no ALTER; a misplaced (sku_id) index is repaired; down restores the 0081 behaviour with the FK present; orphans refused and listed (also on a fixed table after a foreign_key_checks=0 write); a same-named index, a missing FK and a UNIQUE (sku_id, id) are refused; a lock-wait timeout leaves the FK in place. Six mutations each failed the file (serving-index check, separate misplaced-index drop, foreign_key_checks guard, missing-FK guard, both orphan checks, down as a no-op); the post-ALTER orphan check is not mutated alone. Real table: the single-ALTER reorder verified enforced after FLUSH TABLES on a copy. Copies of item_skus and item_media: the reorder fixes item_media, not item_skus; UNIQUE (item_id, id) fixes item_skus (REV-100 M-2). supplierConcurrencyAcceptance.integration.test.js passes 3 of 3 runs. 0087 has not run through scripts/migrate.js locally (the earlier probe ran up() directly); CI runs it on a fresh database.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-20T10:41:29+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Correction: the 2026-10-20T10:19:27+08:00 IMP-008 record (REV-100 L-4)",
+      "code_commit": "b44fb43fe235eca9961c20b753fe9996e93505a9",
+      "spec_baseline": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
+      "source_fingerprint": "087578837ceb8b2a84851947c3e1e80fadb2b481a6dc88f9ef403e0e2b6594bc",
+      "status": "PASS",
+      "source_ref": "That observation said the same file under a second key 'never duplicates a Supplier after both execute'. Only the first job executed: the second job ends precheck as ready_with_errors with SUPPLIER_CODE_TAKEN on both rows, so the confirm branch never ran, and the duplicate is prevented at precheck (and by uq_suppliers_code_key). The test now asserts exactly that.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-20T10:41:29+08:00"
     }
   ],
   "pending_decisions": [
@@ -5935,6 +5969,18 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-20: 'HD-113 A，HD-057 A' — Supplier migration 0087 rebuilds the sku_id index order so fk_supplier_sku_refs_sku is enforced (refuse with a report on orphan rows; down restores the original definition), a test pins enforcement, and the Item finding is handed to the Item owner."
+    },
+    {
+      "id": "HD-114",
+      "impact": "MAJOR",
+      "question": "REV-100 H-1: the 0087 procedure approved in HD-113 A (drop the FK, rebuild the indexes, re-add the FK with a COPY rebuild) leaves the table with no SKU foreign key if the second ALTER times out on its lock wait (deletes of referenced SKUs then accepted; the rerun refuses on orphans), and the COPY rebuild blocks writes for the whole copy. Verified alternative, now on the branch: keep the FK and reorder in one ALGORITHM=INPLACE, LOCK=NONE statement (ADD INDEX idx_supplier_sku_refs_sku (sku_id), DROP and re-ADD the composite index); orphans checked before and after; the index serving the key must be the new one; down only drops (sku_id). The resulting schema is identical to what HD-113 A approved; only the steps differ. (A) Accept the new procedure (recommended: no FK-absent window, no write-blocking rebuild); (B) Revert to the approved procedure and document the window; (C) Other.",
+      "affected_ids": [
+        "DEF-029",
+        "HD-113",
+        "TASK-051"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
     }
   ],
   "external_actions": [
@@ -7029,5 +7075,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Write migration 0087 (HD-113 A) with an enforcement test and restore the TC-082 carrier; Item FK handoff; then the HD-057 A similar-name report script."
+  "next_safe_action": "HD-114 (0087 procedure after REV-100 H-1) awaits the Product Owner; meanwhile REV-101 reviews the HD-057 A similar-name report, then PR for the branch (merge needs HD-114 answered, CI green and the user's word)."
 }
