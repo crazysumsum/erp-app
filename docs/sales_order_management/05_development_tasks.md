@@ -40,6 +40,14 @@
 - [ ] 合併前fetch最新`main`；若目標已移動，先在Phase分支整合最新main並重跑Phase Gate。
 - [ ] PR批准及合併後移除該Phase worktree與branch；下一Phase才由更新後main建立新worktree。
 
+### 1.2.1 HD-018 — DEF-016 獨立修復交付
+
+2026-10-16 Sam 在 Customer chat 的直接批准（turn `01a1443b-4991-7fd0-99e5-405de41e8f44`）允許本次唯一例外：`sales-order-management:DEF-016`／`customer-management:DEF-033001` 的最小 line-lock 修復與直接相關測試、必要證據，從安全核對的最新 main 建立獨立 worktree／PR，正常 CI／審查／Gate 全通過後先合 main。不得帶入尚未完成的 P4 Inquiry／Export／Archive／frontend 或其他功能。
+
+這是已交付 PHASE-003／004 的 TASK-030／049 corrective requalification；重開相關 Task 並保留原 DONE／merge／失敗歷史，不新增假 Phase。此獨立交付沿用 PHASE-004 原33 developer suites（含未放寬的 TC-042）、當前 published candidate 五項必要 CI、真實獨立修復 PR 覆核及未修改的 `MERGE_READY --phase PHASE-004`；局部 RED→GREEN／caller 回歸不代替完整 Gate。Client Vitest worker 上限2、整組序列及低排程優先權只限制資源使用，原案例／coverage／memory／timeout 門檻不變。
+
+除這項明確批准的拆分外，其餘 P4 順序、真實 Fulfillment provider／同交易 Archive participant、完整 Phase 及下游整合驗收全部保持原 Gate。Customer PR #244 仍由 Customer owner 在修復實際合入 main 後整合並獨立驗證，本交付不宣告其缺陷／驗收解除。
+
 ### 1.3 分支與發佈策略
 
 ```text

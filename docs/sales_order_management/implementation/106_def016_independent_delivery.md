@@ -1,0 +1,43 @@
+# DEF-016 — HD-018 independent corrective delivery
+
+IMPLEMENT, corrective requalification of delivered PHASE-003/004 TASK-030/049. Fresh authoritative main `7f4fa5b5740797a6b8c5aacd4625a43f273d8df4`; dedicated branch `codex/sales-def016-hotfix`, separate managed worktree. P4 worktree/source/evidence remains intact at `2a6a6441`; no P4 Inquiry/Export/Archive/frontend change is included.
+
+## Authenticated delivery authority
+
+Sam's actual human message was observed with read_thread in Customer chat `01a09d60-e0f0-7c53-a064-eeb58fb83c2f`, turn `01a1443b-4991-7fd0-99e5-405de41e8f44`, userMessage `01a1443b-49fe-7360-9dc1-0a136faf2f1d`: 「批准 HD-018，請通知 Sales 將死鎖修復及直接相關測試拆成獨立 PR，通過正常 CI／審查後先合 main；之後自動整合驗證 Customer，所有 Gate 通過後合併 PR #244，不擴大 Customer 修復範圍，完整下游整合驗收保持阻塞。」
+
+This explicitly changes only the deadlock-fix delivery boundary. Canonical plan §1.2.1 records the narrow group, original33 developer suites, exact five candidate CI checks, real independent PR review, fresh-main integration and unmodified MERGE_READY. No new Phase, requirement, provider, test waiver or acceptance claim. Existing scopes/approvals/failures remain historical, without rewriting an old hash. New records distinguish Sam's approved scope from Codex's mechanically computed hashes; no unseen-hash inspection by Sam is asserted.
+
+## Minimum product scope and root cause
+
+Only `SalesOrderService.js` and the existing `salesConfirmation.integration.test.js` are brought from the reviewed repair, by exact path diffs rather than cherry-picking the P4 commit. The optimizer can choose an order-range SKU/UOM secondary index for100 line numbers. Its gap lock blocks an unrelated Customer's new Draft insert, whose Warehouse FK share lock completes the cycle when confirmation enters Inventory. Pinning the existing complete `(sales_order_id,line_no)` unique index prevents that widened access path. Owner serialization, predicates/parameters, ordering, isolation,5s barrier, permissions and Inventory lock order remain unchanged; no migration or retry/timeout workaround.
+
+The original single-line case remains. The additional100-line test uses100 distinct real SKU/UOM pairs, actual concurrent Draft creation inside the Inventory barrier, actual lock EXPLAIN and final100-line CONFIRMED/first-SKU reservation/99-backorder/unrelated-Draft assertions.
+
+## New-candidate local observations
+
+All originals are private under `/Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/`. Existing P4's111/TC042 results are historical and are not relabelled for this candidate.
+
+- Initial `def016-candidate-red.log` failed during synthetic environment configuration before exercising the bug: Customer/Supplier test key rings differed. Preserve that failure and original environment; a separate private test-env uses the required same rings. No product configuration/validation was relaxed and no database was reinitialized.
+- `def016-candidate-red-r2.log`, SHA256 `bd3f582cdf391dbae5fa92f901c3ce1a272f6167c84371fc5c9b96f00626fbfe`: actual joined exit1,29tests/28PASS/1FAIL/0SKIP on unrepaired fresh main plus new test. Only the new100-line barrier failed at5538ms.
+- `def016-candidate-callers-green-r1.log`, SHA256 `28114415a042f74861b360ff3b3896973f87fecaa8e1837814b431b7ed63db0e`: actual joined exit0,72PASS/0FAIL/0SKIP,38915ms; complete existing confirmation/lifecycle/backorder native files including original single-line and new100-line case.
+- `def016-candidate-callers-unit-green-r1.log`, SHA256 `26d22f2b9fabd3bae999259a2c05a55139311e4fa90307cddd354c58ebc564e1`: actual joined exit0,39PASS/0FAIL/0SKIP,746ms; all phase2 units. Together these are the original111 affected caller checks on the new isolated source.
+- Product source fingerprint `3e8230623cb4e0195302479ea84468947e8cc855f0d6c23c4687461acd842be4`, pre-commit HEAD7f4fa5b5. Local runs occurred before the mechanical delivery-doc/profile/pin update and retain their original D/P; all source bytes remain identical. Original33 will execute against the new binding, not rewritten local evidence.
+
+## Isolation and mechanical binding
+
+New MySQL26.7.0 UUID `67728b8c-c94c-11f1-87c6-8d046e1c43fa`, socket `/private/tmp/sales-def016-d630a2a151aa/mysql.sock`, PID54315; socket-only/mysqlxOFF/256MiB, low priority. Three nonce schemas satisfy the unchanged original browser guards. Each has the exact current-main migration set through0086: **87 records**, not the earlier estimated88. Full names/timestamps and exact fixture grants are saved in `post-setup-full-ledger-and-grants.json`, SHA256 `db784302b6c089d0b494ead2198e604ac44901554280cd59b4fc76ab923af284`. No P4/old/shared3306 schema/data/grants touched; no use of the incompatible P4 Archive schema. Prospective actual separate runtime review SHA256 `4a519d30d783f1e050cefa30fec7d008614e019ac1e96217d20d121e9b43fff1`; durable STARTED/process/ready receipts retained.
+
+All648 active historical runs/1836 artifacts were restored as exact bytes from the independently verified P3 vault,40,819,839bytes; the retired276 missing references remain retired and unavailable. No fabricated recovery or second DEC027 migration.
+
+Only four existing client test argv gain --maxWorkers=2. Original33 membership/cases/count/coverage/memory/timeout contracts remain unchanged; no server floor-reader argument changes. Consumed Item source pin follows the actual new-main32-line committed-receipt method addition; existing Sales methods/helpers are unchanged. Prior adopted DEC025 mechanical pin/reference authority and HD018 delivery approval are explicitly sourced; two unchanged NFR014/015 UAT-NA references and the generated matrix follow the new binding. DESIGN `eb7302ca9d76ffb9994ac6d6ff0e1a34a7c07d52c97fb98adf559f82691ab1d8`, PLAN `990d537763fcd261e760da9cbb804a682786971fbfefd8f0ff0709497405b08f`.
+
+## Gate status
+
+Actual scoped independent source/artifact review `def016-candidate-local-activation-r1-reviewer-proof.json` SHA256 `6f5986d6a09fe9987a8a6be922167997552435c47df1cad3d056d7a0b620cd0c` verified the exact new source, RED→GREEN/111, original contract membership and metadata mapping. Local DEF016 is CLOSED on those actual targeted/impact results; it means the local implementation defect is fixed, not Phase/TC042/CI/Customer completion. Any later required failure reopens the defect. Original33 (including unmodified TC042), current-candidate five CI, independent final PR review, fresh main and unchanged MERGE_READY are pending. Customer DEF-033001/PR244 and full downstream integration remain blocked until Customer owner observes the actual merge and performs its own gates. Full P4 still waits for its real Fulfillment provider/participant and complete Phase gates. No formal/UAT/release claim.
+
+## Resumption and target integration observation (2026-10-20)
+
+Original seven standard suites passed on source3e823062 and remain historical. The first runtime extension failed after its one scoped coverage grant because batch output doubles backslashes; raw SHOW GRANTS and mysql.db Db/HEX confirm the exact escaped schema, with all original grants preserved. Both instances subsequently shut down normally on2026-10-16; data and evidence survived while temporary scripts did not. The failed action is retained; no setup replay or reinitialization. Separately reviewed same-data restarts actually completed, followed by only the two still-empty schema migrations and private aliases/real client shims/bindings. Both new schemas have87 exact migration names; original three full names/timestamps and fixture grants remain unchanged. Coverage grant cleanup is still pending after coverage. Private proofs b806764b… / e5ef846a… are prospective reviews, actual joined executions both exit0; none qualifies33/TC042/CI.
+
+Fresh fetched main37a8bb99 adds PR248 Supplier audit changes and direct tests/docs. No Sales lock/provider/migration contract changes, but source fingerprint and full coverage are affected. Integrate it before the long run and execute all original33 against the integrated candidate; the prior seven will not be represented as new-candidate evidence. No P4 Inquiry/Export/Archive/frontend content is imported.
