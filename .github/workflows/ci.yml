@@ -302,7 +302,7 @@ jobs:
           DB_USER: root
           DB_PASSWORD: root
         run: npm run migrate --workspace server
-      - name: Run both original TC-042 scenarios without coverage instrumentation
+      - name: Run both TC-042 business-baseline scenarios without coverage instrumentation
         working-directory: server
         run: |
           status=0
