@@ -1,4 +1,5 @@
 import { assertActorFresh } from "../authorization/directoryLookups.js";
+import { changedFieldsDetail } from "./auditChanges.js";
 import { APPROVAL_SIGNIFICANT_COLUMNS, SupplierApprovalService, buildApprovalSummary } from "./SupplierApprovalService.js";
 import { SupplierAuditLogService } from "./SupplierAuditLogService.js";
 import { SupplierDuplicateCandidates, replaceSupplierNameGrams } from "./supplierDuplicateCandidates.js";
@@ -534,19 +535,16 @@ export class SupplierAdminService {
       supplierId: input.id,
       targetLabel: current.supplier_code,
       reason,
-      detail: {
-        before: {
-          supplierName: current.supplier_name,
-          displayName: current.display_name,
-          defaultCurrencyCode: current.default_currency_code,
-          defaultPaymentTermId: current.default_payment_term_id,
-          website: current.website,
-          generalPhone: current.general_phone,
-          generalEmail: current.general_email,
-          notes: current.notes
-        },
-        after: next
-      },
+      detail: changedFieldsDetail({
+        supplierName: current.supplier_name,
+        displayName: current.display_name,
+        defaultCurrencyCode: current.default_currency_code,
+        defaultPaymentTermId: current.default_payment_term_id === null ? null : Number(current.default_payment_term_id),
+        website: current.website,
+        generalPhone: current.general_phone,
+        generalEmail: current.general_email,
+        notes: current.notes
+      }, next),
       requestId: input.requestId,
       ip: input.ip
     });
