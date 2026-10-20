@@ -97,3 +97,13 @@ Found by REV-103 (M-2) in raw SQL, and reproduced over HTTP: 1 of 150 deliberate
 same probe on Supplier create (a reused code) gave 150 of 150 clean 201/409 pairs. Address, contact, Bank and
 approval writes lock the Supplier row first, so two of them for the same Supplier cannot reach the unique key
 together. Decision: HD-115.
+
+Fix, per HD-115 A:
+
+- **The change.** Identifier create, identifier update and Supplier create run their whole transaction again once when it fails with `ER_LOCK_DEADLOCK`. The helper is `retryOnceOnDeadlock` in `supplierErrors.js`, following the retry in `SupplierRelationService`. By the time the retry runs, the winner has committed, so the retry hits the unique key and returns the normal 409.
+- **Supplier create.** It turned out to be affected as well. The HTTP probe with a reused code had not shown this, but the forced test returns 500 on every run without the fix.
+- **The tests.** `supplierDeadlockRetry.integration.test.js` forces the deadlock deterministically:
+  - A third transaction inserts the same value and does not commit.
+  - Once performance_schema shows both requests queued behind it, it rolls back.
+  - InnoDB's `lock_deadlocks` counter must rise by exactly one.
+  - The two responses must be 201/200 and 409.
