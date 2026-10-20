@@ -41,10 +41,14 @@ PARTIAL means existing tests cover part of the Expected Result. The gap column s
 
 Generated from the test titles. Each carrier's assertions, not only its title, cover the case's **main** Expected Result: the stated outcome, and any real-database or concurrency condition its Steps require. A case can have several carriers; the harness takes the worst result. Smaller clauses a carrier does not assert are listed under Notes and are accepted as partial. Review REV-092 removed 26 tags that did not meet this bar.
 
-Coverage: supplier-bank-security 15/15, supplier-server-integration 83/89, supplier-security 10/10.
+Coverage: supplier-bank-security 15/15, supplier-server-integration 87/89, supplier-security 10/10.
 
 | TC | Carriers (file:line — title) | Notes |
 | --- | --- | --- |
+| TC-001 | `integration/supplierMigrationAcceptance.integration.test.js:145` — the runner deploys every migration on an empty database, Supplier creates no Currency or Payment Term schema of its own, and the server starts with both Supplier providers ready |  |
+| TC-002 | `integration/supplierMigrationAcceptance.integration.test.js:201` — every Supplier migration stopped before any one of its writes converges on rerun to the same schema and data as a clean run, and a rerun of a finished one changes nothing | Half-applied means stopped before any one write of a migration (design §797); every such state of the 15 Supplier migrations converges to a clean run's schema and data. A hand-divergent table is refused (fail closed), as the design requires. |
+| TC-004 | `integration/supplierMigrationAcceptance.integration.test.js:244` — the six Supplier permissions and their system-admin grants exist once, approval starts OFF, Supplier seeds no Currency or Payment Term, and reruns keep it that way |  |
+| TC-005 | `integration/supplierMigrationAcceptance.integration.test.js:295` — each bad Supplier security or limit setting stops the server before it serves anything, and the error names the setting without its value |  |
 | TC-007 | `integration/supplierSkuRelations.integration.test.js:108` — TASK-038 (MIG-007): without the Item SKU/UOM tables the migration refuses and creates nothing<br>`integration/supplierSkuRelations.integration.test.js:239` — TASK-038: a rerun accepts the real tables but refuses a hand-made one whose foreign keys differ |  |
 | TC-008 | `integration/supplierListAcceptance.integration.test.js:176` — the list pages 20 by default and at most 100, refuses other bounds, and hides Archived unless asked |  |
 | TC-009 | `integration/supplierListAcceptance.integration.test.js:203` — every searchable field matches in full and in part, Code and Name ignore case and edge spaces, with no duplicate rows |  |
@@ -158,11 +162,7 @@ Coverage: supplier-bank-security 15/15, supplier-server-integration 83/89, suppl
 
 | TC | Case | Why not |
 | --- | --- | --- |
-| TC-001 | MIG-001 | no Supplier test asserts the absence of a Currency/Payment Term shadow schema; providers resolve only against a fake DB |
-| TC-002 | MIG-002 | reruns converge, but a half-applied schema is refused, not converged; needs investigation against the design |
 | TC-003 | MIG-003 | one-pending is DB-enforced; no barrier race across primary/default/pending in one place |
-| TC-004 | MIG-004 | fake DB; approval default OFF and no Currency seed not asserted in this suite (REV-092 Low) |
-| TC-005 | MIG-005 | config validation only; no server start per bad config |
 | TC-006 | MIG-006 | upgrade from main and rollback rehearsal (T51 rehearsal) |
 
 ## supplier-server-integration (94)
