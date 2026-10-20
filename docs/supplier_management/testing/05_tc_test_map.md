@@ -41,7 +41,7 @@ PARTIAL means existing tests cover part of the Expected Result. The gap column s
 
 Generated from the test titles. Each carrier's assertions, not only its title, cover the case's **main** Expected Result: the stated outcome, and any real-database or concurrency condition its Steps require. A case can have several carriers; the harness takes the worst result. Smaller clauses a carrier does not assert are listed under Notes and are accepted as partial. Review REV-092 removed 26 tags that did not meet this bar.
 
-Coverage: supplier-bank-security 15/15, supplier-server-integration 81/89, supplier-security 10/10.
+Coverage: supplier-bank-security 15/15, supplier-server-integration 82/89, supplier-security 10/10.
 
 | TC | Carriers (file:line — title) | Notes |
 | --- | --- | --- |
@@ -125,6 +125,7 @@ Coverage: supplier-bank-security 15/15, supplier-server-integration 81/89, suppl
 | TC-090 | `integration/supplierImport.integration.test.js:607` — TASK-044: detail pages the rows by row number, filters by status, and serves none before precheck finishes<br>`supplierImportHandlers.test.js:91` — the summary projects every public field and says whether the files are gone |  |
 | TC-091 | `integration/supplierImport.integration.test.js:1528` — TASK-049 (SUP-CAP-05): one mixed file end to end — counts agree everywhere, and nothing leaks | Partial: the mixed rows carry no Address, Contact or Identifier, and no per-row audit is checked; row atomicity is carried by TC-092 and TC-094 |
 | TC-092 | `integration/supplierImport.integration.test.js:1083` — TASK-045 (HD-048 4): a failure after the real Supplier write leaves no Supplier, child, name gram or audit behind |  |
+| TC-093 | `integration/supplierConcurrencyAcceptance.integration.test.js:54` — one key makes one job whether repeated or raced, a different file under it is refused, a double confirm queues once, and the same file under two keys never creates a Supplier twice |  |
 | TC-094 | `integration/supplierImport.integration.test.js:1141` — TASK-045 fault injection: a worker killed before or after a row's commit leaves both or neither, and the next worker finishes once |  |
 | TC-095 | `integration/supplierImport.integration.test.js:1171` — TASK-045: two workers never apply a row twice — one claim wins, and a worker that lost its lease writes nothing<br>`integration/supplierImportExecution.integration.test.js:301` — TASK-042: a row applied before a crash is not applied again, and the job resumes after the lease expires |  |
 | TC-096 | `integration/supplierImport.integration.test.js:1050` — TASK-045: execution re-checks what precheck saw — a Code or Identifier taken since, an archived target, a moved version, a retired currency<br>`supplierImportPrecheck.test.js:154` — upsert matches by supplierId first and cross-checks the code; code alone also matches (IMP-011) |  |
@@ -163,7 +164,6 @@ Coverage: supplier-bank-security 15/15, supplier-server-integration 81/89, suppl
 | TC-005 | MIG-005 | config validation only; no server start per bad config |
 | TC-006 | MIG-006 | upgrade from main and rollback rehearsal (T51 rehearsal) |
 | TC-082 | SKU-005 | sequential only; Steps require concurrent creates and direct-DB negatives (REV-092 Low) |
-| TC-093 | IMP-008 | no barrier-synchronised same-key submit |
 
 ## supplier-server-integration (94)
 
