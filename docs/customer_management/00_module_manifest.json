@@ -9,6 +9,8 @@
     "source_paths": [
       "server/src/modules/customer/**",
       "server/src/modules/businessMaster/businessMasterFactory.js",
+      "server/src/modules/businessMaster/BusinessMasterProvider.js",
+      "server/src/modules/businessMaster/BusinessMasterRepository.js",
       "server/src/modules/authorization/adminGuard.js",
       "server/src/modules/role/RoleAdminService.js",
       "server/src/modules/user/UserAdminService.js",
@@ -46,6 +48,8 @@
     ],
     "allowed_write_paths": [
       "docs/customer_management/**",
+      "server/src/modules/businessMaster/BusinessMasterProvider.js",
+      "server/src/modules/businessMaster/BusinessMasterRepository.js",
       "server/src/modules/customer/**",
       "server/src/modules/businessMaster/businessMasterFactory.js",
       "server/src/modules/authorization/adminGuard.js",
@@ -82,6 +86,8 @@
       "client/src/framework/ui/DataTable.vue"
     ],
     "approval_required_paths": [
+      "server/src/modules/businessMaster/BusinessMasterProvider.js",
+      "server/src/modules/businessMaster/BusinessMasterRepository.js",
       "server/database/migrations/**",
       "server/src/modules/businessMaster/businessMasterFactory.js",
       "server/src/modules/authorization/permissionCatalogue.js",
@@ -141,9 +147,9 @@
       },
       {
         "id": "customer-purpose-provider-contracts",
-        "version": "aligned-design-2.1; Sales consumer merged and TC-070 verified; later consumers blocked",
+        "version": "HD-014 proposal: additive aligned-design-2.2; runtime2.1 until approved implementation; later consumers blocked",
         "source": "docs/customer_management/03_design_spec.md",
-        "sha256": "0c70e3d5a619e02f4c7ae24d415a08f1276fe81101b57df0b2bf3d28303f96c9",
+        "sha256": "7b56997a4f33d64793739faa888c1a8d882015892750cce59532d9818ab53972",
         "consumers": [
           "sales-order-management",
           "fulfillment-shipping-management",
@@ -167,9 +173,9 @@
       {
         "module_id": "sales-order-management",
         "id": "customer-consumer-contract",
-        "version": "implemented-main; Customer provider 2.1 and Sales consumer verified",
+        "version": "HD-014 proposal: merged Sales P3 batch precheck; Customer provider2.2 adoption pending exact-baseline approval",
         "source": "docs/sales_order_management/03_design_spec.md",
-        "sha256": "a1a468ff6b91366f3e5328da5691ce61d3ae798a3265ed43196a4fe5a93a3577",
+        "sha256": "5f82a24962a4f8e853acba56a83dedb7ceec94513497895f29966024100cbfdc",
         "regression_suites": [
           "customer-server-technical"
         ]

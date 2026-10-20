@@ -6668,12 +6668,12 @@
       "task_ids": [
         "TASK-036"
       ],
-      "mandatory": true,
-      "blocking": true,
+      "mandatory": false,
+      "blocking": false,
       "applicability": {
-        "status": "APPLICABLE",
-        "reason": "",
-        "approval_id": null
+        "status": "NOT_APPLICABLE",
+        "reason": "HD-015: Sam explicitly waived item3 compatible deployment/rollback acceptance drill. Required execution waived, not technical PASS or operating-control removal. CI, integrity, least privilege and downstream blockers remain.",
+        "approval_id": "APPROVAL-RISK-006"
       },
       "suite_id": "customer-server-technical"
     },
