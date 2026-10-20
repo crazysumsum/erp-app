@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 12,
+  "revision": 16,
   "mode": "REVIEW_AND_ALIGN",
   "active_mode": "REVIEW_AND_ALIGN",
   "status": "PLANNED",
@@ -11,7 +11,7 @@
   "baseline": {
     "design": "feef0869d0d3d1814ce5ab9a08e885ef84c49e578bfbf24269ff106b0aa69ce8",
     "plan": "a229fd571382e42dbc0e88c896bd06aeed12bf4e5e3b4622a58bc69197aead38",
-    "code_commit": "46b390e772f08a759d0f383096c87eef347a3f1f",
+    "code_commit": "bae225bb6172433f93b9627fd53dea8adb8582ae",
     "source_fingerprint": "46f38a6759a89848336a2e42c4b267e9f00c76b39d9a7767021ec5ba245ba9a9",
     "worktree": "/private/tmp/erp-fulfillment-readiness",
     "default_commit": "35af2ab7010d8a42cdbc3ca55d23c9c9ce95856c",
@@ -494,19 +494,27 @@
       "kind": "DRAFT_PR_CREATE",
       "target": "crazysumsum/erp-app:codex/fulfillment-readiness-alignment -> main",
       "idempotency_key": "fulfillment-readiness-draft-pr-20261020",
-      "status": "PLANNED",
-      "source_ref": null
+      "status": "FAILED",
+      "source_ref": "GitHub connector create_pull_request returned403 Resource not accessible by integration on2026-10-20; no PR returned. Preserve this failure; user explicitly authorized draft PR creation."
     },
     {
       "id": "READINESS-PUSH-20261020-AUTHORIZED",
       "kind": "PUSH",
       "target": "origin/codex/fulfillment-readiness-alignment (fulfillment docs only)",
       "idempotency_key": "fulfillment-readiness-push-20261020-explicit-user-authority",
-      "status": "PLANNED",
-      "source_ref": "docs/fulfillment_shipping_management/10_implementation_readiness.md#human-planning-approval-and-publication-authority"
+      "status": "CONFIRMED",
+      "source_ref": "Observed successful new-branch git push to https://github.com/crazysumsum/erp-app.git at bae225bb6172433f93b9627fd53dea8adb8582ae on2026-10-20; no force push or merge."
+    },
+    {
+      "id": "READINESS-PR-CLI-20261020",
+      "kind": "DRAFT_PR_CREATE",
+      "target": "crazysumsum/erp-app:codex/fulfillment-readiness-alignment -> main",
+      "idempotency_key": "fulfillment-readiness-draft-pr-local-git-auth-20261020",
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/256; observed GitHub REST create response number256,draft=true,headbae225bb6172433f93b9627fd53dea8adb8582ae; existing-PR lookup empty before create; attached to this Codex chat."
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "PLANNED: actual independent R2 PASS (allIR001-004resolved), current DESIGN/PLAN human-authorized approvals and unchanged NFR023 UAT_NA renewed. Publish docs-only codex/fulfillment-readiness-alignment to crazysumsum/erp-app and create draft PR under explicit user authority recorded in report10; prior missing-egress-authority rejection is historical. Remote inspected: branch/PR absent, latestmain35af2ab7 integrated; inspect again after interruption, no blind replay. Do not merge or enter IMPLEMENT. All45TasksPENDING; source/provider native/browser/capacity/CI/UAT evidence and exact shared-path/cutover/runtime authorities remain their original future gates. Retain open-PR branch/worktree pending resolution."
+  "next_safe_action": "PLANNED; independent R2 PASS, current DESIGN/PLAN approvals and unchanged NFR023 UAT_NA renewal valid; PLAN_READY and approval-aware traceability PASS. Authorized docs branch published and draftPR256 created/attached; firstconnector403 and earlierauto-review rejection remain historical. Preserve openPR branch/worktree; do not merge or begin IMPLEMENT. On resume inspect PR/currentmain and hashes; actual product/provider/shared-path/runtime/cutover/native/browser/capacity/CI/UAT gates remain future obligations. All45TasksPENDING. Receipt-only metadata update publishes under the same explicit user authority and preserves approved spec hashes."
 }

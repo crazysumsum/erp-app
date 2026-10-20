@@ -93,3 +93,7 @@ Yes, for planning purposes. No two active documents claim authority over the sam
 ## 2026-10-20 requalification disposition
 
 The current contract inventory, ownership, proposed P0 dependency correction, HD-006/HD-007 alternatives, exact candidate hashes and verification limits are recorded in [10_implementation_readiness.md](10_implementation_readiness.md). No legacy narrative is deleted. Seven source pins are refreshed as observations with review-pending versions; historical approval records are preserved. Product implementation remains BLOCKED.
+
+## Publication closeout
+
+Draft PR [#256](https://github.com/crazysumsum/erp-app/pull/256) created under explicit user authority and attached to the chat; the documentation branch is retained pending PR resolution. Independent R2 and PLAN_READY passed against the approved hashes above. Current receipts and verification limits are in `10_implementation_readiness.md`. No merge, product implementation or acceptance execution follows from this planning closeout.

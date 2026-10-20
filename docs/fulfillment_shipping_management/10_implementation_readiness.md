@@ -12,7 +12,7 @@ The final integrated source is main `35af2ab7010d8a42cdbc3ca55d23c9c9ce95856c`, 
 - Latest provider unit check: 76 PASS / 0 FAIL / 0 SKIP, after latest-main integration. The earlier 75-case observation below is historical; neither run is formal Fulfillment TC/UAT execution.
 - NFR-023 retains its exact reason and TC-010 mandatory/blocking coverage; only its renewal reference changes to `APR-008-UATNA-20261020`. No additional exemption or technical PASS is created.
 
-The following sections preserve earlier observations/decisions and the initial publication rejection as history. Current user authorization supersedes the earlier missing-egress-authority condition. Draft PR publication is authorized, while merge and IMPLEMENT remain separate.
+The following sections preserve earlier observations/decisions and the initial publication rejection as history. Current user authorization supersedes the earlier missing-egress-authority condition. Draft PR publication is complete: [#256](https://github.com/crazysumsum/erp-app/pull/256) was created as draft, head branch `codex/fulfillment-readiness-alignment`, targeting main. Merge and IMPLEMENT remain separate.
 
 ## Historical readiness observations
 
@@ -122,3 +122,13 @@ Records APR-006-DESIGN-20261020 and APR-007-PLAN-20261020 bind the completed pla
 Publication scope is the changes under `docs/fulfillment_shipping_management/**` only, to `crazysumsum/erp-app`, branch `codex/fulfillment-readiness-alignment`, draft PR targeting main. No credentials, environment files, raw browser traces, raw database extracts or other module's new changes are included in this branch's PR diff. No reviewer requests/comments/messages to others or merge are included. The old rejected push is not silently retried: a new explicit-authority publication action is journalled and remote state inspected first.
 
 Before actual implementation, confirm fresh main, named P0 owner and exact shared-file/provider scope, allocate the isolated MySQL26.7 runtime and migration sequence, and record IMPLEMENT authorization. Provider extensions and native/browser/capacity/CI evidence must then satisfy their existing delivery gates. Before live schema activation, require the exact owner-approved Sales quiesce/install/register/probe/resume runbook. Planning approval is not formal system acceptance or release approval.
+
+## Confirmed publication receipts
+
+The explicitly authorized new-branch push succeeded at `bae225bb6172433f93b9627fd53dea8adb8582ae`; remote was `https://github.com/crazysumsum/erp-app.git`, with no force push or merge. GitHub connector PR creation returned HTTP403 `Resource not accessible by integration`; that failure is retained separately. The same user-authorized request then used existing local GitHub authentication, with credentials confined to process memory and never logged or persisted, and checked for an existing PR before creation.
+
+Actual GitHub REST response confirmed draft PR [#256](https://github.com/crazysumsum/erp-app/pull/256), `draft=true`, source `codex/fulfillment-readiness-alignment`, target main and initial head `bae225bb6172433f93b9627fd53dea8adb8582ae`. The PR was attached to this Codex chat. This receipt-only follow-up updates the same authorized documentation branch and does not alter any approved specification hash. The final remote head is verified separately rather than embedding a self-referential commit hash in its own contents.
+
+Final local results: approval-aware traceability STRUCTURE_PASS; PLAN_READY LOCAL_CHECKS_PASS; module-boundary, whitespace, local-link, seven contract-source pins, stable ID/count and unchanged mandatory/blocking/NFR-023 reason checks passed. The integrated provider unit observation is 76/76 PASS with zero skips. CI may run automatically after push; no design-stage CI result is invented or awaited.
+
+Retain the branch and worktree while the draft PR is open. No product Task is DONE, no schema migration or live effect was executed, no UAT/business/release acceptance was granted, and no PR merge was performed. Next: review the published planning PR, then separately select/authorize the intended IMPLEMENT scope and exact shared/provider/runtime/cutover gates.
