@@ -129,24 +129,36 @@ exception list for the business to decide. The CSV import itself warns only on i
 each go-live import, and in every rehearsal, run this report on the file you are about to upload (HD-057 A):
 
 ```bash
-node src/modules/supplier/similarNameReport.js --database=<DB_NAME> --input <legacy.csv> --output <report.csv>
+node src/modules/supplier/similarNameReport.js --database <DB_NAME> --mode create_only --input legacy.csv --output report.csv
 ```
 
-Run it from `server/`, with `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD` and `DB_NAME` set in the environment.
-`--database` must repeat `DB_NAME`.
+Run it from `server/`. Set `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD` and `DB_NAME` in the environment; `--database`
+must repeat `DB_NAME`. Use `--mode` to give the mode you will import with: `create_only` or `upsert`. Arguments may be
+written as `--name value` or `--name=value`.
 
-**What it reads.** The script opens a read-only transaction and writes nothing to the database. It refuses to write
-over an existing output file.
+**What it reads.** The session is set to read-only before anything runs, and the script only runs `SELECT`s. Each
+statement sees its own snapshot; there is no single snapshot across the run. The script refuses to write over an
+existing output file.
 
-**The input file.** It must pass the same header checks as an upload. Template description rows, example rows and
+**The input file.** It must pass the same header checks and CSV parsing as an upload. A malformed file is refused with
+`SUPPLIER_IMPORT_CSV_MALFORMED`, and the error never echoes cell content. Template description rows, example rows and
 blank rows are skipped, as they are by the import, so `row` matches the row number in the import result.
 
 **How rows are matched.**
 
-- Each row is compared with the existing Suppliers using the check that warns on create: the same normalisation,
-  `SUPPLIER_DUPLICATE_NAME_THRESHOLD`, and at most 10 matches per row.
-- Each row is also compared with every other row in the file, using the same score. Each pair is listed once.
-- Rows whose name the import would reject are not compared. They are only counted.
+- **Existing Suppliers.** Each row is compared using the check that warns on UI create: the same normalisation, the same
+  threshold, and at most 10 matches per row.
+  - UI create does not read `SUPPLIER_DUPLICATE_NAME_THRESHOLD` (DEF-030), so neither does this script. The threshold
+    it used is printed.
+  - In `upsert` mode a row is never compared with its own Supplier. That Supplier is found by `supplierId`, or by code
+    when there is no ID, as the import does. A blank name on such a row means "keep the name"; the row is counted and
+    not compared.
+- **Other rows in the file.**
+  - Rows whose names are identical after normalisation form a group, and each row points to the first row of its group.
+  - Rows with different names are compared using the same score and threshold. Each row lists at most 10 pairs, the
+    highest scores first. The rest are only counted, so a file of placeholder names such as "TBC" still finishes with a
+    bounded report.
+- **Invalid names.** Rows whose name the import would reject are not compared. They are only counted.
 
 **The output.** One CSV line per pair:
 
@@ -160,13 +172,29 @@ blank rows are skipped, as they are by the import, so `row` matches the row numb
 | `score` | Similarity score |
 | `exact` | Whether the names are identical |
 
-Cells are guarded against spreadsheet formulas, as on export. The command prints the counts and the threshold it used.
+Cells are guarded against spreadsheet formulas, as on export. The command prints the threshold, the mode and these
+counts:
+
+| Count | Meaning |
+| --- | --- |
+| `rows` | Rows read |
+| `invalidNames` | Rows whose name the import would reject |
+| `keptNames` | `upsert` rows that keep their name |
+| `existingMatches` | Matches with existing Suppliers |
+| `identicalRows` | Rows identical to an earlier row |
+| `fileMatches` | All in-file matches |
+| `fileMatchesNotListed` | In-file matches beyond the 10 per row |
 
 The script only lists pairs; the business decides what to do with each one. Merge or rename in the source file, or
 keep both Suppliers, then run the report again on the corrected file.
 
-A 10,000-row file in which every row shares 「貿易有限公司」 takes about 2 seconds for the in-file part. The
-comparison with existing Suppliers adds one indexed query per row.
+**Run time.**
+
+- **The in-file part**, measured locally on 10,000 rows:
+  - Rows sharing 「貿易有限公司」 took under 2 seconds. In one such file they matched each other 42,255 times:
+    about 0.9 seconds, with 18,549 report lines because of the per-row limit.
+  - Rows all named "TBC" took 52 ms, with 9,999 lines.
+- **The comparison with existing Suppliers** runs up to three queries per distinct name, one after another.
 
 ## Recovery
 

@@ -70,3 +70,15 @@ is the 0081 definition again. `supplierSkuForeignKeyMigration.integration.test.j
 table, with the 0081 definition as a control; the TC-082 carrier's direct orphan insert is now refused. The Item
 finding is handed over in `item_handoff_foreign_keys.md`; for `item_skus` the same procedure does not work
 (REV-100 M-2), and the document says what does.
+
+## DEF-030 — LOW
+
+`SUPPLIER_DUPLICATE_NAME_THRESHOLD` has no effect. `config/supplier.js` reads it, `normalizeSupplierConfig` validates
+it, and design §12.1 lists it, but no `SupplierAdminService` is given a checker built from it: every construction site
+uses the class default, 0.85. Setting the variable to another value changes nothing in UI create or update.
+
+Found by REV-101 (M-1) while reviewing the HD-057 A similar-name report. The report uses the same default checker as
+UI create, so the two agree. A test pins this, and it will turn red when this defect is fixed, so the report follows
+the setting.
+
+Not fixed here. Wiring the setting changes UI behaviour for any non-default value, which is outside HD-057.
