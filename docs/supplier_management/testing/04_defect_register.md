@@ -82,3 +82,31 @@ UI create, so the two agree. A test pins this, and it will turn red when this de
 the setting.
 
 Not fixed here. Wiring the setting changes UI behaviour for any non-default value, which is outside HD-057.
+
+## DEF-031 — MEDIUM
+
+When two requests add the same identifier to two different Suppliers at the same moment, one of them can get
+`500 INTERNAL_SERVER_ERROR` instead of `409 SUPPLIER_IDENTIFIER_TAKEN`.
+
+The duplicate check takes a shared lock on `uq_supplier_identifier_value`. When both inserts are waiting for their
+insert-intention lock, InnoDB detects a deadlock and rolls one of them back (seen in `SHOW ENGINE INNODB STATUS`).
+`SupplierIdentifierService` maps only `ER_DUP_ENTRY`, and nothing retries a deadlock, so the rollback surfaces as a
+500. The identifier is still unique and no data is wrong; only the response is.
+
+Found by REV-103 (M-2) in raw SQL, and reproduced over HTTP: 1 of 150 deliberate simultaneous rounds returned 500. The
+same probe on Supplier create (a reused code) gave 150 of 150 clean 201/409 pairs. Address, contact, Bank and
+approval writes lock the Supplier row first, so two of them for the same Supplier cannot reach the unique key
+together. Decision: HD-115.
+
+Fix, per HD-115 A:
+
+- **What changed.** Four writes now run their whole transaction again, once, when it fails with `ER_LOCK_DEADLOCK`: identifier create, identifier update, Supplier create, and Supplier Code change. The helper is `retryOnceOnDeadlock` in `supplierErrors.js`, following the retry in `SupplierRelationService`.
+- **Why the retry answers 409.** The retry either sees the winner's committed row or queues behind it, so it hits the unique key and returns the normal 409. If the winner rolled back instead, the retry succeeds.
+- **Logging.** Each retry logs `supplier.write.deadlock_retried` with the operation and request ID, so deadlocks stay visible.
+- **Coverage beyond HD-115.** Supplier create turned out to be affected too: the forced test returns 500 on every run without the fix. REV-104 found Supplier Code change exposed in the same way (M-1). It is fixed under the same rule. CSV import already maps a deadlock to `SUPPLIER_IMPORT_ROW_BUSY`.
+- **The test.** `supplierDeadlockRetry.integration.test.js` forces the deadlock deterministically:
+  - A third transaction inserts the same value and does not commit.
+  - Once performance_schema shows both requests queued behind it, it rolls back.
+  - The test checks that InnoDB's latest deadlock happened after the test started and on the expected unique index.
+  - The two responses must be 201/200 and 409, and the retry must be logged.
+  - The two requests come from two different users. Requests from one user queue on that user's row first.
