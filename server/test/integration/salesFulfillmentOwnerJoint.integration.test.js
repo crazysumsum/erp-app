@@ -161,3 +161,25 @@ nativeTest("strict Sales CLAIM last-sync and real Inventory locked current-state
     await f.sales.lockLinesForFulfillmentInTransaction(tx,claim);
   }),{code:"SALES_FULFILLMENT_CONTRACT_MISMATCH"});assert.deepEqual(await stateOf(f),before);
 });
+
+nativeTest("real Reverse accepts a fresh reverse-only principal and consumed Reservation with historical inactive Item/SKU",async t=>{
+  const f=await jointFixture(t),confirmed=await confirm(f),member=confirmed.inventoryResult.lines[0].reservations[0],leg=member.allocations[0];
+  const roleName=f.label+"_reverse",userId=await f.s.insert("users",{username:roleName,password_hash:"synthetic-only",display_name:"Reverse only",created_at:f.s.now,updated_at:f.s.now}),roleId=await f.s.insert("roles",{name:roleName,created_at:f.s.now});
+  await f.db.execute("INSERT INTO user_roles(user_id,role_id) VALUES (?,?)",[userId,roleId]);
+  await f.db.execute("INSERT INTO role_permissions(role_id,permission_id) SELECT ?,id FROM permissions WHERE name IN ('fulfillment.view','fulfillment.reverse')",[roleId]);
+  const claims={sub:String(userId),roles:[roleName],permissions:["fulfillment.reverse","fulfillment.view"]},actor={userId,serviceName:"",claimedRoles:claims.roles,claimedPermissions:claims.permissions};
+  assert.equal(claims.permissions.includes("fulfillment.operation"),false);
+  await f.db.execute("UPDATE item_skus SET status='inactive' WHERE id=?",[f.s.skuId]);
+  await f.db.execute("UPDATE items SET status='inactive' WHERE id=(SELECT item_id FROM item_skus WHERE id=?)",[f.s.skuId]);
+  assert.equal((await f.db.query("SELECT status FROM inventory_reservations WHERE id=?",[f.reservationId]))[0][0].status,"CONSUMED");
+  const eventId=randomUUID(),command={actor,source:{documentId:"1",eventId},correlationId:"",payload:{fulfillmentId:"1",shipmentId:"1",lines:[{fulfillmentLineId:"1",salesOrderLineId:String(f.s.lineId),baseQuantity:"1",reservations:[{claimId:"1",inventoryReservationId:String(f.reservationId),expectedVersion:member.version,baseQuantity:"1",originalInventoryOperationId:member.inventoryOperationId,allocations:[{shipmentIssueId:"1",originalMovementId:leg.movementId,inventoryAllocationId:leg.inventoryAllocationId,expectedBalanceVersion:leg.balanceVersion,baseQuantity:"1"}]}]}]}};
+  const result=await f.run({claims},async tx=>{
+    const proof=await f.inventory.claimFulfillmentBatchInTransaction(tx,{action:"REVERSE",command});
+    const intent=f.command();Object.assign(intent,{actor:{...actor,userId:String(userId)},purpose:"SHIPMENT_REVERSED",eventId,originalConfirmationEventId:confirmed.intent.eventId,expectedOrderVersion:2,inventoryRequestHash:proof.requestHash});intent.lines[0].expectedVersion=2;Object.assign(intent.lines[0].reservations[0],{expectedVersion:member.version,originalInventoryOperationId:member.inventoryOperationId});
+    await f.sales.lockLinesForFulfillmentInTransaction(tx,intent);
+    const inventoryResult=await f.inventory.reverseFulfillmentIssueAndRestoreReservationBatchInTransaction(tx,command,proof);
+    return f.sales.applyFulfillmentResultInTransaction(tx,{intent,inventoryResult});
+  });
+  assert.equal(result.status,"CONFIRMED");assert.equal(result.version,3);
+  assert.equal((await f.db.query("SELECT outstanding_quantity FROM inventory_reservations WHERE id=?",[f.reservationId]))[0][0].outstanding_quantity,1);
+});

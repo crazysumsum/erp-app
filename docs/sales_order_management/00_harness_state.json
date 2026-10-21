@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1283,
+  "revision": 1284,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11119,6 +11119,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-SALES-REVERSE-ONLY-JOINT-TEST-R3",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "6639b04de34641cd16fc239a3cf339af354261b889460b80a5320e3a8ef732db",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/sales-owner-joint-reverse-only-r3-test-reviewer-proof.json SHA25601caf2bb4cdf0456387b18f36b3a38a8f33d0fd297e4c11fc03496ff1c7e77f9; append eighthtrueReverseeffects only; original7 andsourceunchanged, actualraw8PASS0skip, consumerapplycheck0; no newgetter/F2/activeClaims/ownerfull/0B/P4Gateapproval.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -14641,6 +14653,17 @@
       "subject": "ExactHD011fourpathadoptionverified; ownerreportslatest7realjointPASS while reverse-only currentstate reader remains WIP",
       "status": "PASS",
       "source_ref": "implementation/117_hd011_sales_real_provider_joint_checkpoint.md subsequentobservation; private deliveryreceipt storesactual4afterhashesmatchpatch7f81a437. Owner9a3a/main3c0c+npmci reported7joint/30native/294FILES+lintPASS viaactualinlineoutputs15420/92008, not separate rawlogsSHA orSales-observed currentcandidate qualification. ExactreviewedReverseadvisorygetterABI/shape/native rerun awaitowner; nofoperation permissionexpansion or0B/P4Gateclaim."
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "67c8fc989a3a6824609a68365de4ca4ae4cd12dd",
+      "spec_baseline": "6370daf21488bfd77472532abf89be2c3e66e0ecdbe8010ac7ed8408e21061b9",
+      "source_fingerprint": "2e50ed9537276fbdf7dd0613d9f2faa01690b8d7e78e9dabc5ca8099a6c8e895",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-21T02:31:10.876673Z",
+      "subject": "Eighth realReverseeffects case uses fresh reverse-only actor,CONSUMEDReservation,historicalinactiveItem/SKU; scopedtestreview+patchdelivered",
+      "status": "PASS",
+      "source_ref": "implementation/117_hd011_sales_real_provider_joint_checkpoint.md; private native-r1 raw89843212 actual8PASS0skip with retainedsourcepinnedownerWIP; newtestafterf5cb0b7e prior7dd2fd9e9 immutable; R3proof01caf2bb andonefilepatch6639b04d applycheck0 sentauthorizedP0owner. Ownercurrentrerun andnewadvisoryprep/F2/versionrace stillpending; no formalTC/0B/P4Gate claim."
     }
   ],
   "pending_decisions": [
@@ -18688,5 +18711,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "ExactHD011fourpathpatch7f81a437 hasbeen owneradopted and all4actualafterSHAverified; do not reapply. Ownerreportscurrent7joint/30native/294FILESlintPASS onlyinline, await exact captured rerun logs+finalreviewedsource. Obtain frozen reverse-only InventoryLookup getFulfillmentReversalPreparationInTransaction actualABI/returnshape/qualification, then addrealview+reverse-only/CONSUMED/inactiveSKU/F2neutralversionlag/staleadvisoryrace/origexactset tests inSales-ownednewjoint via exactprivate source snapshot; nooperationpermissionexpansion, noadvisory-as-proof, effectsstillprivatepreclaim/actualCAS/qty/source/oldmapCAS. Fullprovider/Checkpoint0B/actualTASK008/011Claimsaggregate/fullP0CIreviewmain stillpending. P4keeps existingCustomerpin/fullfreshmaincanonicalreconciliation/withdrawduplicate0091–0093/realArchiveparticipant-coordinator/all45/fullcapacity/Playwright/currentCI/wholephasereview/unchangedMERGE_READY beforealready-authorizeddirectmainmerge. No newhuman decisionpending."
+  "next_safe_action": "HD011fourpathpatch7f81 adoptedactual4hashes; ownerreportedcurrent7/30/294FILESlintinline, rawrerunpending. Append eighthrealReverseeffects test nowindependentreviewedR3prooff01caf2bb anddeliveredonefilepatch6639b04d before7dd2fd9e9→after8f5cb0b7e; confirmadoption/current8rerun, do not reapplyblindly. Await exactreviewed InventoryLookup reverse-onlyadvisoryprep ABI/bytes, then addrealpreclaim-before-domain/advisory-not-proof/F2quantityneutralCASlag/staleadvisoryrace tests usinggenuinebaseQuantity2fixture (no manualmap/version sync). CompleteP0source/capacity/races/Checkpoint0B/realTASK008/011Claimsaggregate/currentCIreviewmain stillpending; P4freshmainCustomerpin/canonicalreconcile/withdrawduplicate0091–0093/realArchiveparticipant-coordinator/all45/fullcapacity/Playwright/currentCI/wholephasereview/unchangedMERGE_READY beforealready-authorizeddirectmainmerge. No newhuman decisionpending."
 }
