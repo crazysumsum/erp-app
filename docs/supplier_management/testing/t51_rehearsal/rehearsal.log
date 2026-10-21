@@ -1,36 +1,37 @@
 
-=== 1. Previous release 72e205ef: its own runner on an empty database
-applied migrations/0086_extend_sales_reservation_intake_projection.js
+=== A. Adding Supplier to a deployment without it: pre-Supplier main (b3e5aa90^1) -> current release, real runners
 Migrations complete.
-87	migrations/0086_extend_sales_reservation_intake_projection.js
+pre-Supplier ledger: 30 files
+applied by the current runner, in main's order: 58 files
+every pre-existing table's data, counter, columns, indexes, keys and triggers unchanged (29 tables), plus every existing permission and grant
+objects added by the upgrade, all modules: 2099 lines, of which Supplier tables: 15
+Supplier permissions added: 6
+current-on-upgraded-pre server: started, health 200, stopped (port closed)
 
-=== 2. Business data under the previous release
-2 1 (suppliers, sku refs)
-DEF-029 on the previous release (an orphan SKU relation is accepted):
-accepted
-
-=== 3. Backup and restore
-dump exit=0 bytes=  233095
-restore exit=0
-restore matches the source:       50 tables, equal CHECKSUM TABLE
-
-=== 4. Upgrade with the current main's runner
+=== B. Previous release 72e205ef with business data: backup/restore, upgrade, rollback
+Migrations complete.
+previous release: an orphan SKU relation is accepted (DEF-029, control)
+previous reads the Supplier rows over HTTP: list 200 (RH-001 listed), detail 200 (香港貿易有限公司), sku-relations 200 (1 row)
+backup restored exactly: tables 94; data, counters, columns, indexes, keys, triggers, routines, views and events equal
+control: one changed row in the restore is detected
 applied migrations/0087_fix_supplier_sku_refs_sku_foreign_key.js
-Migrations complete.
-tables whose checksum changed in the upgrade: 1
-< fr_schema_migrations 2358444850
-> fr_schema_migrations 4285588784
-DEF-029 after the upgrade (the orphan is refused):
-  ERROR 1452 (23000) at line 1: Cannot add or update a child row: a foreign key constraint fails (`erp_t51_rh_old`.`supplier_sku_refs`, CONSTRAINT `fk_supplier_sku_refs_sku` FOREIGN KEY (`sku_id`) REFERENCES `item_skus` (`id`) ON DELETE RESTRICT)
+objects changed by the upgrade (< before, > after):
+  26c26
+  < data fr_schema_migrations 767207484
+  ---
+  > data fr_schema_migrations 2487039678
+  2428a2429
+  > index supplier_sku_refs idx_supplier_sku_refs_sku 1 1 sku_id
+after the upgrade: the orphan SKU relation is refused (DEF-029 fixed); no business data changed
+current server: started, health 200, stopped (port closed)
+current reads the Supplier rows over HTTP: list 200 (RH-001 listed), detail 200 (香港貿易有限公司), sku-relations 200 (1 row)
+previous-rolled-back server: started, health 200, stopped (port closed)
+previous-rolled-back reads the Supplier rows over HTTP: list 200 (RH-001 listed), detail 200 (香港貿易有限公司), sku-relations 200 (1 row)
 
-=== 5. Server: current main, then rolled back to the previous release, on the upgraded schema
-current server: 1 listening; health 200
-previous server: 1 listening; health 200
-
-=== 6. Similar-name exception list (HD-057 A) on a sample legacy file
+=== C. Similar-name exception list (HD-057 A), current release, on a sample legacy file
 {"threshold":0.85,"mode":"create_only","rows":4,"invalidNames":0,"keptNames":0,"existingMatches":1,"identicalRows":0,"fileMatches":1,"fileMatchesNotListed":0,"output":"$SCRATCH/t51/similar.csv"}
 ﻿row,supplierCode,supplierName,matchKind,matchRow,matchSupplierId,matchSupplierCode,matchSupplierName,score,exact
 1,L-001,香港貿易有限公司,existing,,1,RH-001,香港貿易有限公司,1.0000,true
 3,L-003,Contoso Trading,file,4,,L-004,Contoso Trading Ltd,0.8750,false
 
-=== done; scratch databases dropped
+=== all checks passed; the scratch databases are dropped on exit
