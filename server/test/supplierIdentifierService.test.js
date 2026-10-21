@@ -11,7 +11,8 @@ function identifierRow(overrides = {}) {
   };
 }
 
-function harness({ identifier = identifierRow(), referenceCount = 0, duplicateOnWrite = false, supplierStatus = "draft", openRequest = { id: 11, supplier_id: 7 } } = {}) {
+function harness({ identifier = identifierRow(), referenceCount = 0, duplicateOnWrite = false, supplierStatus = "draft", openRequest = { id: 11, supplier_id: 7 },
+  writesMatchNothing = false } = {}) {
   const events = [];
   let current = identifier;
   const connection = {
@@ -34,6 +35,9 @@ function harness({ identifier = identifierRow(), referenceCount = 0, duplicateOn
       }
       if (sql.includes("UPDATE supplier_identifiers")) {
         current = { ...current, identifier_type: params[0], issuer_country_code: params[1], identifier_value: params[2], identifier_value_key: params[3], notes: params[4], version: current.version + 1, updated_at: 200 };
+      }
+      if (writesMatchNothing && (sql.includes("UPDATE supplier_identifiers") || sql.includes("DELETE FROM supplier_identifiers"))) {
+        return [{ affectedRows: 0 }];
       }
       if (sql.includes("DELETE FROM supplier_identifiers")) current = null;
       return [{ affectedRows: 1 }];
@@ -145,4 +149,16 @@ test("an identifier write on a Supplier that is not pending leaves the approval 
   assert.equal(result.approvalInvalidated, false);
   assert.equal(events.some(([kind, sql]) => (kind === "query" || kind === "execute") &&
     String(sql).includes("supplier_activation_requests")), false);
+});
+
+test("DEF-006 (HD-116 A): an identifier update or delete that matches no row is a version conflict, not a silent success", async () => {
+  for (const [label, call] of [
+    ["update", (service) => service.update({ ...actor, supplierId: 7, identifierId: 31, version: 1, identifierType: "business_registration",
+      issuerCountryCode: "HK", identifierValue: "AB-124", reason: "fix" })],
+    ["delete", (service) => service.delete({ ...actor, supplierId: 7, identifierId: 31, version: 1, reason: "remove" })]
+  ]) {
+    const { service, events } = harness({ writesMatchNothing: true });
+    await assert.rejects(() => call(service), (error) => error.publicCode === "VERSION_CONFLICT", label);
+    assert.equal(events.some(([kind]) => kind === "audit"), false, `${label}: nothing is audited`);
+  }
 });

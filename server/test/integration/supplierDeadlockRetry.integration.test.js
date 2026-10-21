@@ -5,6 +5,8 @@ import path from "node:path";
 import { after, before, test } from "node:test";
 import mysql from "mysql2/promise";
 
+import { SupplierBankCrypto } from "../../src/modules/supplier/SupplierBankCrypto.js";
+import { SupplierBankService } from "../../src/modules/supplier/SupplierBankService.js";
 import { normalizeIdentifier } from "../../src/modules/supplier/supplierNormalization.js";
 import { createSupplierHarness } from "./supplierHttpHarness.js";
 import { ADMIN, ADMIN_CONFIG } from "./supplierScratchDatabase.js";
@@ -185,4 +187,52 @@ integrationTest("DEF-031 (HD-115 A, REV-104 M-1): two Suppliers changing to the 
   assert.equal(await retryLogged("supplier.code.change"), true, "the retry is logged");
   assert.deepEqual(responses.map((response) => `${response.status} ${response.code ?? ""}`.trim()).sort(), ["200", "409 SUPPLIER_CODE_TAKEN"],
     responses.map((response) => response.text).join(" | "));
+});
+
+integrationTest("DEF-024 (HD-116 A, REV-106 M-1): two new Suppliers getting their first default bank account at the same moment both succeed, even when InnoDB picks one as a deadlock victim", async () => {
+  // 兩個相鄰嘅新 Supplier 都未有帳戶：`#activeRowsForUpdate` 喺同一段空範圍攞 gap lock，之後兩邊嘅 INSERT 互相等。
+  const t = tag();
+  const suppliers = [await h.seedSupplier(`DLB-A-${t}`, `Deadlock Bank A ${t}`, "draft"), await h.seedSupplier(`DLB-B-${t}`, `Deadlock Bank B ${t}`, "draft")];
+  // 兩個交易都鎖完「呢個 Supplier 嘅 active 帳戶」先放行（只係第一次；重試唔再等）。
+  let arrived = 0;
+  let release;
+  const bothLocked = new Promise((resolve) => { release = resolve; });
+  const database = {
+    query: (...args) => h.db.query(...args),
+    withTransaction: (work) => h.db.withTransaction((connection) => work(new Proxy(connection, {
+      get(target, property) {
+        const value = target[property];
+        if (property !== "query" || typeof value !== "function") return typeof value === "function" ? value.bind(target) : value;
+        return async (sql, ...rest) => {
+          const result = await value.call(target, sql, ...rest);
+          if (/FROM supplier_bank_accounts\s+WHERE supplier_id = \? AND status = \? ORDER BY id FOR UPDATE/u.test(String(sql)) && arrived < 2) {
+            arrived += 1;
+            if (arrived === 2) release();
+            await bothLocked;
+          }
+          return result;
+        };
+      }
+    })))
+  };
+  const warnings = [];
+  const service = new SupplierBankService({
+    database, time: { nowMs: () => Date.now() },
+    logger: { warn: (event, message, context) => warnings.push([event, context]), info() {}, error() {} },
+    crypto: new SupplierBankCrypto({ encryption: h.application.services.config.supplier.bankEncryption,
+      lookup: h.application.services.config.supplier.bankLookup }),
+    authorize: async () => ({ id: null, username: "dlk31-bank", permissions: ["supplier.view", "supplier.bank.view", "supplier.bank.mgmt"] }),
+    audit: { async record() {} }
+  });
+  const [[before]] = await admin.query("SELECT COUNT AS n FROM information_schema.innodb_metrics WHERE NAME = 'lock_deadlocks'");
+  const results = await Promise.allSettled(suppliers.map((supplierId, index) => service.create({ actorId: null, claimedRoles: [], claimedPermissions: [],
+    supplierId, accountHolderName: `Holder ${index}`, bankName: "Bank", accountNumber: `5${t.replace(/\D/gu, "1").padEnd(8, "1")}${index}`,
+    isDefault: true, reason: "DEF-024 race", requestId: `dlb-${index}` })));
+  const [[afterwards]] = await admin.query("SELECT COUNT AS n FROM information_schema.innodb_metrics WHERE NAME = 'lock_deadlocks'");
+  assert.ok(Number(afterwards.n) > Number(before.n), "control: InnoDB really rolled one create back as a deadlock");
+  assert.deepEqual(results.map((result) => result.status), ["fulfilled", "fulfilled"], results.map((result) => result.reason?.message ?? "ok").join(" | "));
+  assert.equal(warnings.filter(([event, context]) => event === "supplier.write.deadlock_retried" && context.operation === "supplier.bank.create").length, 1,
+    "the retry is logged");
+  const [rows] = await h.db.query("SELECT supplier_id, is_default FROM supplier_bank_accounts WHERE supplier_id IN (?) ORDER BY supplier_id", [suppliers]);
+  assert.deepEqual(rows.map((row) => [Number(row.supplier_id), Number(row.is_default)]), suppliers.map((id) => [id, 1]), "each Supplier has its one default account");
 });

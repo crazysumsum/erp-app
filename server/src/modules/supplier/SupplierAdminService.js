@@ -260,6 +260,7 @@ export class SupplierAdminService {
     businessMaster,
     authorize = assertActorFresh,
     duplicates,
+    duplicateNameThreshold,
     replaceNameGrams = replaceSupplierNameGrams,
     audit,
     references,
@@ -273,7 +274,8 @@ export class SupplierAdminService {
     this.database = database;
     this.businessMaster = businessMaster;
     this.authorize = authorize;
-    this.duplicates = duplicates ?? new SupplierDuplicateCandidates();
+    // 相似名稱門檻跟設定 SUPPLIER_DUPLICATE_NAME_THRESHOLD（DEF-030，HD-116 A）；冇提供就係類別預設 0.85。
+    this.duplicates = duplicates ?? new SupplierDuplicateCandidates(duplicateNameThreshold === undefined ? {} : { threshold: duplicateNameThreshold });
     this.replaceNameGrams = replaceNameGrams;
     this.logger = logger;
     this.audit = audit ?? new SupplierAuditLogService({ database, logger, time });
@@ -308,7 +310,8 @@ export class SupplierAdminService {
 
     const [[row]] = await this.database.query("SELECT * FROM suppliers WHERE id = ?", [created.id]);
     if (!row) throw supplierNotFound(created.id);
-    const warnings = supplierCompletenessWarnings({ defaultPaymentTermId: row.default_payment_term_id });
+    // 啱啱新增：仲未有任何地址、聯絡人、識別資料或銀行帳戶，所以全部提示。
+    const warnings = supplierCompletenessWarnings({ defaultPaymentTermId: row.default_payment_term_id, hasBankAccount: false });
     return { ...toSupplierDetailResponse(row, { warnings }), duplicateCandidates };
   }
 
@@ -910,6 +913,13 @@ export class SupplierAdminService {
     return { hasOrderingAddress: Boolean(Number(flags.has_ordering_address)), hasOrdersContact: Boolean(Number(flags.has_orders_contact)) };
   }
 
+  /** 有冇有效銀行帳戶：同列表 `missingBank` 篩選一樣嘅定義，只睇存在，唔讀任何帳戶內容。 */
+  async #hasActiveBankAccount(id) {
+    const [[bank]] = await this.database.query(
+      "SELECT 1 AS present FROM supplier_bank_accounts WHERE supplier_id = ? AND status = 'active' LIMIT 1", [id]);
+    return Boolean(bank);
+  }
+
   async getSupplier({ actorId, claimedRoles, claimedPermissions, id }) {
     await this.authorize(this.database, { actorId, claimedRoles, claimedPermissions });
     const [[row]] = await this.database.query("SELECT * FROM suppliers WHERE id = ?", [id]);
@@ -935,7 +945,8 @@ export class SupplierAdminService {
         defaultPaymentTermId: row.default_payment_term_id,
         hasOrderingAddress,
         hasOrdersContact,
-        hasIdentifier: identifiers.length > 0
+        hasIdentifier: identifiers.length > 0,
+        hasBankAccount: await this.#hasActiveBankAccount(id)
       })
     });
   }
@@ -964,10 +975,8 @@ export class SupplierAdminService {
       "SELECT 1 AS present FROM supplier_identifiers WHERE supplier_id = ? LIMIT 1",
       [id]
     );
-    const [[currency]] = await this.database.query(
-      "SELECT code, status FROM currencies WHERE code = ? LIMIT 1",
-      [row.default_currency_code]
-    );
+    // 經 Business Master 嘅 provider 讀，唔直接讀佢嘅表（DEF-003，HD-116 A）。
+    const currency = await this.businessMaster.getCurrencyHistory(row.default_currency_code);
     const issues = supplierActivatabilityIssues({
       supplierCode: row.supplier_code,
       supplierName: row.supplier_name,
@@ -981,7 +990,8 @@ export class SupplierAdminService {
         defaultPaymentTermId: row.default_payment_term_id,
         hasOrderingAddress: Boolean(orderingAddress),
         hasOrdersContact: Boolean(ordersContact),
-        hasIdentifier: Boolean(identifier)
+        hasIdentifier: Boolean(identifier),
+        hasBankAccount: await this.#hasActiveBankAccount(id)
       })
     };
   }

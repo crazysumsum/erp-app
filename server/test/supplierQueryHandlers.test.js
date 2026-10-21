@@ -30,8 +30,9 @@ function row(overrides = {}) {
   };
 }
 
-function harness({ rows = [row()], duplicateRows = [] } = {}) {
+function harness({ rows = [row()], duplicateRows = [], currency = { code: "HKD", status: "ACTIVE" } } = {}) {
   const queries = [];
+  const currencyReads = [];
   const database = {
     async query(sql, params) {
       queries.push([sql, params]);
@@ -50,10 +51,10 @@ function harness({ rows = [row()], duplicateRows = [] } = {}) {
     logger: { warn() {} },
     time: { nowMs: () => 300 },
     authorize: async () => { events.push("authorize"); return { id: 1, username: "sam" }; },
-    businessMaster: {},
+    businessMaster: { async getCurrencyHistory(code) { currencyReads.push(code); return currency; } },
     duplicates: { async find(_connection, input) { events.push(["duplicates", input]); return duplicateRows; } }
   });
-  return { service, queries, events };
+  return { service, queries, events, currencyReads };
 }
 
 test("list applies bounded paging, escaped search, allowlisted stable sort and excludes archived by default", async () => {
@@ -106,6 +107,16 @@ test("detail and completeness return projected fields without internal keys or b
   });
   assert.deepEqual(completeness.issues, []);
   assert.ok(completeness.warnings.some((warning) => warning.code === "PAYMENT_TERM_MISSING"));
+});
+
+test("DEF-003 (HD-116 A): completeness reads the default currency through the Business Master provider, never its table", async () => {
+  for (const [currency, expected] of [[{ code: "HKD", status: "ACTIVE" }, []], [{ code: "HKD", status: "INACTIVE" }, ["CURRENCY_NOT_ACTIVE"]], [null, ["CURRENCY_NOT_ACTIVE"]]]) {
+    const { service, queries, currencyReads } = harness({ currency });
+    const completeness = await service.getSupplierCompleteness({ actorId: 1, claimedRoles: [], claimedPermissions: ["supplier.view"], id: 7 });
+    assert.deepEqual(completeness.issues.map((issue) => issue.code), expected, JSON.stringify(currency));
+    assert.deepEqual(currencyReads, ["HKD"]);
+    assert.equal(queries.some(([sql]) => /\bcurrencies\b/u.test(sql)), false, "no raw read of the currencies table");
+  }
 });
 
 test("duplicate check reports a hard Code conflict separately from warning-only name candidates", async () => {
