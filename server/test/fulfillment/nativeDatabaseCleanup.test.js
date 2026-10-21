@@ -32,10 +32,10 @@ test("scratch close and drop failures are both retained and do not skip admin cl
   }, end: async () => { closed++; } };
   const scratch = { end: async () => { throw new Error("synthetic scratch close failure"); } };
   t.mock.method(mysql, "createConnection", async () => ++calls === 1 ? admin : scratch);
-  await nativeDatabase({ after: hook => hooks.push(hook) });
+  await nativeDatabase({ after: hook => hooks.push(hook) }, { beforeClose: async () => { throw new Error("synthetic pool close failure"); } });
   await assert.rejects(hooks[0], error => {
     assert.ok(error instanceof AggregateError);
-    assert.deepEqual(error.errors.map(item => item.message), ["synthetic scratch close failure", "synthetic drop failure"]);
+    assert.deepEqual(error.errors.map(item => item.message), ["synthetic pool close failure", "synthetic scratch close failure", "synthetic drop failure"]);
     return true;
   });
   assert.equal(dropped, 1); assert.equal(closed, 1);

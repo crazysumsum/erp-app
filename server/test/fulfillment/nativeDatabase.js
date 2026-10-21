@@ -1,7 +1,7 @@
 import mysql from "mysql2/promise";
 import { randomUUID } from "node:crypto";
 
-export async function nativeDatabase(t, { migrateAuth = false } = {}) {
+export async function nativeDatabase(t, { migrateAuth = false, beforeClose } = {}) {
   const socketPath = process.env.DB_SOCKET_PATH;
   if (process.env.GITHUB_ACTIONS !== "true" &&
       (!socketPath?.includes("erp-fulfillment-p0-mysql-") || !/^fulfillment_p0_[a-z0-9_]+$/.test(process.env.DB_NAME ?? ""))) {
@@ -15,6 +15,7 @@ export async function nativeDatabase(t, { migrateAuth = false } = {}) {
   let db = null;
   t.after(async () => {
     const failures = [];
+    try { await beforeClose?.(); } catch (error) { failures.push(error); }
     try { if (db) await db.end(); } catch (error) { failures.push(error); }
     try { await admin.query(`DROP DATABASE IF EXISTS \`${name}\``); } catch (error) { failures.push(error); }
     try { await admin.end(); } catch (error) { failures.push(error); }
