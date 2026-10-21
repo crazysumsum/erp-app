@@ -8,6 +8,13 @@ const ISOLATION_LEVELS = new Set([
   "SERIALIZABLE"
 ]);
 
+const ACTIVE_TRANSACTIONS = new WeakMap();
+
+export function getActiveTransactionIsolation(executor) {
+  const active = ACTIVE_TRANSACTIONS.get(executor);
+  return active && !active.signal.aborted ? active.isolationLevel : null;
+}
+
 // 這兩個不是伺服器故障，是負載：連線池滿了、等連線等太久。客戶端該收到的是
 // 可重試的 503，而不是一個看起來像 bug 的 500——監控上的意義也完全不同。
 const OVERLOADED_CODES = new Set([
@@ -453,6 +460,7 @@ export class MySqlDatabaseService extends MySqlDatabaseExecutor {
     // 一個沒有 commit 也沒有 rollback 的交易，還回池子等於把它交給下一個
     // 使用者，那是正確性問題，沒有「可以接受的較慢版本」。
     const onTransactionAbort = () => {
+      ACTIVE_TRANSACTIONS.delete(transaction);
       // 不確定的 COMMIT 也會走進來收連線，而那時 abort 可能已經 destroy 過了。
       if (connectionDestroyed || typeof connection.destroy !== "function") {
         return;
@@ -501,6 +509,7 @@ export class MySqlDatabaseService extends MySqlDatabaseExecutor {
       );
       await raceWithSignal(connection.beginTransaction(), controller.signal);
       transactionStarted = true;
+      ACTIVE_TRANSACTIONS.set(transaction, { isolationLevel: normalizedIsolation, signal: controller.signal });
       this.updateContext({ databaseTransaction: transaction });
       const result = await raceWithSignal(
         Promise.resolve(work(transaction, { signal: controller.signal })),
@@ -510,11 +519,13 @@ export class MySqlDatabaseService extends MySqlDatabaseExecutor {
       // 的 COMMIT 沒有任何東西中斷得了——連 route 的 signal 都被解掉了。實測
       // timeoutMs=10 的交易在 50ms 後仍未結束，而且 finally 跑不到，連線既沒還
       // 也沒毀，直接從池子裡消失。
+      ACTIVE_TRANSACTIONS.delete(transaction);
       commitAttempted = true;
       await raceWithSignal(connection.commit(), controller.signal);
       transactionStarted = false;
       return result;
     } catch (error) {
+      ACTIVE_TRANSACTIONS.delete(transaction);
       // COMMIT 一旦送出去就不能再 rollback：伺服器可能已經提交了。在一條剛剛
       // commit 失敗的連線上再送 rollback，好一點是 no-op，差一點是第二次卡死。
       if (transactionStarted && !commitAttempted && !connectionDestroyed) {
@@ -556,6 +567,7 @@ export class MySqlDatabaseService extends MySqlDatabaseExecutor {
         cause: error
       });
     } finally {
+      ACTIVE_TRANSACTIONS.delete(transaction);
       clearTimeout(timer);
       controller.signal.removeEventListener("abort", onTransactionAbort);
       parentSignal?.removeEventListener?.("abort", onParentAbort);
