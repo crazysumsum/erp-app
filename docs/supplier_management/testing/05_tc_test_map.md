@@ -291,7 +291,7 @@ Left out on purpose: `client/test/framework/routing/authorizationRefresh.test.js
 
 | TC | Case | Tagged tests | Status | Gap |
 | --- | --- | --- | --- | --- |
-| TC-013 | LIST-006 | `list.test` (loading, empty and failed reads, retry); `coreFlow.test` (view-only projection to detail) | PARTIAL | The shared `DataTable` also shows 「冇資料」 while loading and under the error banner, so a sighted user cannot tell the three states apart by the text (DEF-032); the no-permission state and the U-BANK-R / U-NONE projections are not tested here |
+| TC-013 | LIST-006 | `list.test` (loading, empty and failed reads by text and `aria-busy`, retry); `coreFlow.test` (view-only projection to detail) | PARTIAL | The no-permission state and the U-BANK-R / U-NONE projections are not tested here. The loading, empty and failed texts are distinct since DEF-032 (also checked in a real browser by `supplier-list-filters.spec`) |
 | TC-015 | LIST-008 | `list.test` (restore from URL, HD-107 filters, malformed values dropped) | PARTIAL | Back/forward and refresh in a real browser; no assertion that the URL holds no sensitive value |
 | TC-029 | CORE-013 | `editor.test` (dirty editor prompts before leaving) | PARTIAL | The "stay" choice (asserted in `detail.test`, tagged TC-123); saving the new Supplier value; existing purchase snapshots unchanged, which needs the purchasing module |
 | TC-075 | BANK-014 | `bank.test` (nine reveal and clearing tests, including the write dialog and the create form) | COVERED | |
