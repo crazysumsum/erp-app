@@ -283,17 +283,23 @@ TC-062 … TC-077 already carry their IDs in `supplierBank*.integration`, `suppl
 | TC-119 | AUTH-009 | `supplierNormalization` (control characters) | PARTIAL | Script rendering and prototype pollution |
 | TC-120 | AUTH-010 | Code race non-disclosure; Bank 409; import fixed error pair | COVERED | |
 
-## supplier-client-ui (7)
+## supplier-client-ui (11)
 
-| TC | Case | Candidate tests | Status | Gap |
+Runner: `npm test --workspace client -- --config test/supplier-management.vitest.config.js` (HD-117 A). It runs the 19 Supplier page and service test files in jsdom; each test title carries at most one TC ID. Local run on 2026-10-21: 164 passed, 0 failed, 0 skipped; every required ID PASS through the harness JUnit adapter. Keyboard, focus, viewport and visual checks need a real browser and are left to the Playwright specs and UAT.
+
+| TC | Case | Tagged tests | Status | Gap |
 | --- | --- | --- | --- | --- |
-| TC-121 | UI-001 | `list.test` (menu entry); `create.test` (direct URL guard) | COVERED | |
-| TC-122 | UI-002 | `create.test` | PARTIAL | Error focus on summary or first field |
-| TC-123 | UI-003 | `editor.test` (dirty prompt, draft kept on 409) | COVERED | |
-| TC-124 | UI-004 | settings and approvals e2e (keyboard) | PARTIAL | Status text + icon, wording across pages |
-| TC-125 | UI-005 | `bank.test`; `approvals.test` (stale) | COVERED | |
-| TC-126 | UI-006 | `import.test`; `supplier-imports.spec` | COVERED | |
-| TC-127 | UI-007 | — | NONE | Tokens, no inline brand hex, keyboard and focus on every page |
+| TC-013 | LIST-006 | `list.test` (loading, empty and failed reads told apart, retry); `coreFlow.test` (view-only projection to detail) | COVERED | Screenshots are UAT evidence |
+| TC-015 | LIST-008 | `list.test` (restore from URL, HD-107 filters, malformed values dropped) | PARTIAL | Back/forward in a real browser |
+| TC-029 | CORE-013 | `editor.test` (dirty editor prompts before leaving) | PARTIAL | Existing purchase snapshots unchanged: needs the purchasing module |
+| TC-075 | BANK-014 | `bank.test` (six reveal and clearing tests) | COVERED | |
+| TC-121 | UI-001 | `pageGuards.test`; `list.test` (menu entry); `create.test` (direct URL); `settings.test`; `approvals.test` | COVERED | |
+| TC-122 | UI-002 | `create.test` (draft with three fields, approver on and off) | PARTIAL | Error focus on summary or first field |
+| TC-123 | UI-003 | `create.test` (dirty prompt); `editor.test` (draft kept on 409); `detail.test` (refusing to discard keeps the page) | COVERED | |
+| TC-124 | UI-004 | `lifecycle.test` (four tests) | PARTIAL | Keyboard completion; status icon beside the text |
+| TC-125 | UI-005 | `approvals.test` (snapshot diff, stale refused, password, reason, reassign); Bank side is TC-075 | COVERED | |
+| TC-126 | UI-006 | `import.test` (refresh reopens the job, approver rule, stopped job and expired result, row filter) | COVERED | |
+| TC-127 | UI-007 | `list.test` (markup as text, Hong Kong time, date-range error); `contact.test` (accessible validation) | PARTIAL | Tokens, no inline brand hex, keyboard and focus on every page, widths |
 
 ## Performance, resilience, recovery, release (9)
 
