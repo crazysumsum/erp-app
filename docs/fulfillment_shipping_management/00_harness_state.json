@@ -1,37 +1,40 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 23,
+  "revision": 26,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-001",
-  "current_task": "TASK-002",
+  "current_task": "TASK-005",
   "baseline": {
     "design": "8618ff250af0b61d64f5beac528e529bb2224964f8986a02f4c4d8f6043c66ff",
     "plan": "6a954bdfa3361e6e21a244c7ebb0109c512ec40230ffc4285fa8320d13ce88ed",
-    "code_commit": "b0f05c40ece885925cf6938bf7457407ff12e366",
-    "source_fingerprint": "05112382dd94124fd6f2c28492c68ca2e24dfc6a7c77bc35e750681dd1e413ed",
+    "code_commit": "6804458bf8e30b8ba3f0629f2318b0d3ea7f1366",
+    "source_fingerprint": "5a9fee2bab254afb33af1bcbfd7d74eb77a49649a6426ab4e18629c149a065df",
     "worktree": "/private/tmp/erp-fulfillment-p0",
     "default_commit": "76223f40480d94a1d3a2ae6e0e7b91292bd98b82",
     "mode_entry_commit": "76223f40480d94a1d3a2ae6e0e7b91292bd98b82"
   },
   "runtime": {
-    "instance_id": "fulfillment-p0-files-20261020",
-    "owner": "/root fulfillment P0 implementer, authorized by Sam",
+    "instance_id": "fulfillment-p0-mysql-ton56on7",
+    "owner": "/root fulfillment P0 implementer, actual Sam complete-P0/full-verification authority",
     "resources": {
-      "workspace": "/private/tmp/erp-fulfillment-p0"
+      "workspace": "/private/tmp/erp-fulfillment-p0",
+      "mysql-schema": "fulfillment_p0_core",
+      "mysql-socket": "/var/folders/gk/rdtb5_px4z9gm7m1cm2q3xg40000gn/T/erp-fulfillment-p0-mysql-ton56on7/mysql.sock",
+      "web-port": "Playwright own API49905/client49906 completed and released; no persistent listener"
     },
     "lease_ref": null
   },
   "tasks": {
     "TASK-001": "DONE",
-    "TASK-002": "IN_PROGRESS",
-    "TASK-003": "PENDING",
-    "TASK-004": "PENDING",
+    "TASK-002": "DONE",
+    "TASK-003": "DONE",
+    "TASK-004": "IN_PROGRESS",
     "TASK-005": "PENDING",
-    "TASK-006": "PENDING",
+    "TASK-006": "IN_PROGRESS",
     "TASK-007": "PENDING",
     "TASK-008": "PENDING",
     "TASK-009": "PENDING",
@@ -529,6 +532,42 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-012-INDEPENDENT-R10",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "8618ff250af0b61d64f5beac528e529bb2224964f8986a02f4c4d8f6043c66ff",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/05_task002_completion.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-013-INDEPENDENT-R11",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "8618ff250af0b61d64f5beac528e529bb2224964f8986a02f4c4d8f6043c66ff",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/06_task003_pure_rules.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-014-INDEPENDENT-R12",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "8618ff250af0b61d64f5beac528e529bb2224964f8986a02f4c4d8f6043c66ff",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/06_task003_pure_rules.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [],
@@ -795,5 +834,5 @@
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "P0 started: TASK001DONE; TASK002IN_PROGRESS with2A config/startup increment developerverified72PASS0skip, normalizer100/100/100coverage, lint/boundaryPASS andactualR9APPROVED. Commit receipt/sourcefingerprint in report03; reconcile resultingHEAD onresume. ContinueTASK0022B/2C andfullDoD beforeTASK003. Source/native/runtime/0B/fullP0CI/PR/merge gates stillpending; no liveDB/deploy. ActualSales112 acknowledges exactmigrationinventory andunchanged0088ownernative13PASS, notP0acceptance."
+  "next_safe_action": "TASK003 DONE commits092d3b67/6804458b R12approved8PASS; 0A complete. TASK004 actualSalesowner preparing, TASK006 local74FILES/3nativePASS awaitingR13, TASK005 Inventorybatch root/member/leg ABI R11feasible ownerverifierhelper pending sourceproof. No0B and noaggregateDDL. ContinueallP0 thenfullcandidate independentreview/verification beforeonePR. Nativeinitialcleanupfailurefixed, ownedruntimehealthy, no sharedDB."
 }
