@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1285,
+  "revision": 1286,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -14687,6 +14687,17 @@
       "subject": "Reviewed real F2 neutralCAS/advisory versionrace and original Reverse replay; exact two-file consumer contribution prepared",
       "status": "PASS",
       "source_ref": "implementation/117_hd011_sales_real_provider_joint_checkpoint.md advisory/F2 section; private source snapshot d36da41b, raw10PASS1f750492 and separate21PASS495cb57d, owned schema cleanup0. Actual read-only consumer8 adoption verified; new r6 pending owner apply/rerun. No full source/0B/P0/P4 Gate claim."
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "7566dc04ad8b2f798fcb1bc515bd12003cc2efc0",
+      "spec_baseline": "6370daf21488bfd77472532abf89be2c3e66e0ecdbe8010ac7ed8408e21061b9",
+      "source_fingerprint": "271b146372682bb871319c1479a047ab8323ef5b484cacdb174a6768dacb0114",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-21T02:51:01.833319Z",
+      "subject": "Exact r6 two-file adoption and actual current owner35 native rerun verified",
+      "status": "PASS",
+      "source_ref": "implementation/117_hd011_sales_real_provider_joint_checkpoint.md actualr6adoption; owner0bb84ec0 bothafterhashesmatch; actual raw91e595b7 has35PASS0FAIL0SKIP split10genuinejoint+4master+21oldnative(includes7doublecomponents). Private adoptionreceipt-r2; does not closewholeprovider/capacity/0B/P0/P4/CI."
     }
   ],
   "pending_decisions": [
@@ -18734,5 +18745,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Deliver reviewed two-file r6 patchc4afbc59/manifest094985bb/proof15d75889 to authorized P0 owner, verify actual2afterhashes and current native rerun. Owner source/Checkpoint0B/fullcapacity/activeClaimsTASK008-011/minimumlifecycle/Archive/currentCIreview/main remain pending. Then integrate actualP0main intoSalesP4, reconcileexistingCustomerpin/canonicalbaseline and withdrawduplicate0091-0093, implementrealArchiveparticipant/coordinator, completeall45/capacity/Playwright/currentCI/wholephasereview/unchangedMERGE_READY before authorized main merge. No new human decision pending."
+  "next_safe_action": "ReviewedSalesprovider r6 contribution adoptedactual2hashes at owner0bb84ec0, currentowner35native raw91e595b7 verified. Await owner fullsource/capacity/Checkpoint0B and actualTASK008-011activeClaimsaggregate/minimumlifecycle/Archive/fullP0CIreview/main; no newhuman decisionpending. Then integrate actualP0main intoSalesP4, reconcileexistingCustomerpin/canonicalbaseline and withdrawduplicate0091-0093, implementrealArchiveparticipant/coordinator and all45/fullcapacity/Playwright/currentCI/wholephasereview/unchangedMERGE_READY before already-authorized main merge. Do not reapplydeliveredpatch or relabelnarrowPASS as phasecompletion."
 }
