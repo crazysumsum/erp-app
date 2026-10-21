@@ -41,7 +41,7 @@ PARTIAL means existing tests cover part of the Expected Result. The gap column s
 
 Generated from the test titles. Each carrier's assertions, not only its title, cover the case's **main** Expected Result: the stated outcome, and any real-database or concurrency condition its Steps require. A case can have several carriers; the harness takes the worst result. Smaller clauses a carrier does not assert are listed under Notes and are accepted as partial. Review REV-092 removed 26 tags that did not meet this bar.
 
-Coverage: supplier-bank-security 15/15, supplier-server-integration 88/89, supplier-security 10/10.
+Coverage: supplier-bank-security 15/15, supplier-server-integration 89/89, supplier-security 10/10.
 
 | TC | Carriers (file:line — title) | Notes |
 | --- | --- | --- |
@@ -50,6 +50,7 @@ Coverage: supplier-bank-security 15/15, supplier-server-integration 88/89, suppl
 | TC-003 | `integration/supplierConstraintRaces.integration.test.js:147` — two transactions creating the same Supplier Code, one of them archived: the database lets exactly one through<br>`integration/supplierConstraintRaces.integration.test.js:158` — two Suppliers taking the same identifier at once: exactly one keeps it<br>`integration/supplierConstraintRaces.integration.test.js:189` — two addresses made primary for the same purpose at once: exactly one is primary<br>`integration/supplierConstraintRaces.integration.test.js:192` — two contacts made primary for the same purpose at once: exactly one is primary<br>`integration/supplierConstraintRaces.integration.test.js:195` — two Bank accounts made default at once: exactly one active default<br>`integration/supplierConstraintRaces.integration.test.js:213` — two activation requests for one Supplier at once: exactly one is pending | Races are on the database itself, over two connections. With a forced overlap the second transaction always fails with ER_DUP_ENTRY. On a simultaneous start the loser is occasionally rolled back as a deadlock instead, and there is never a second winner. Over HTTP, address, contact, Bank and approval writes lock the Supplier row first. Two simultaneous identical identifiers on different Suppliers returned 500 once in 150 rounds (DEF-031); Supplier create did not, in 150 rounds. |
 | TC-004 | `integration/supplierMigrationAcceptance.integration.test.js:283` — the six Supplier permissions and their system-admin grants exist once, approval starts OFF, Supplier seeds no Currency or Payment Term, and reruns keep it that way | The provider startup log is not inspected. |
 | TC-005 | `integration/supplierMigrationAcceptance.integration.test.js:334` — each bad Supplier security or limit setting stops the server before it ever listens, including no Bank keys at all once the Bank table is deployed, and the error names the setting without its value | With the Bank table deployed, no keys at all is refused too (design §1700). |
+| TC-006 | `integration/supplierMigrationAcceptance.integration.test.js:378` — adding Supplier to an existing deployment changes no existing table or row, writes only Supplier tables and its permission seed, drops nothing it does not own, and the server starts on the upgraded schema | The automated carrier adds Supplier to a deployment without it. The server/client rollback and an upgrade from a previous release are rehearsed in testing/t51_rehearsal.md. |
 | TC-007 | `integration/supplierSkuRelations.integration.test.js:108` — TASK-038 (MIG-007): without the Item SKU/UOM tables the migration refuses and creates nothing<br>`integration/supplierSkuRelations.integration.test.js:239` — TASK-038: a rerun accepts the real tables but refuses a hand-made one whose foreign keys differ |  |
 | TC-008 | `integration/supplierListAcceptance.integration.test.js:176` — the list pages 20 by default and at most 100, refuses other bounds, and hides Archived unless asked |  |
 | TC-009 | `integration/supplierListAcceptance.integration.test.js:203` — every searchable field matches in full and in part, Code and Name ignore case and edge spaces, with no duplicate rows |  |
@@ -163,7 +164,6 @@ Coverage: supplier-bank-security 15/15, supplier-server-integration 88/89, suppl
 
 | TC | Case | Why not |
 | --- | --- | --- |
-| TC-006 | MIG-006 | upgrade from main and rollback rehearsal (T51 rehearsal) |
 
 ## supplier-server-integration (94)
 
