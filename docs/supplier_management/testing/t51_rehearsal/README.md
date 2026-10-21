@@ -1,42 +1,72 @@
-# T51 rehearsal: upgrade, backup/restore, rollback and the similar-name list
+# T51 rehearsal: upgrade paths, backup/restore, rollback and the similar-name list
 
 - **Date:** 2026-10-21
 - **Environment:** local, on a throwaway MySQL 26.7.0. This is not CI and not a production-like environment.
-- **Releases:** the previous release is `72e205ef` (main at PR #249, before migration 0087). The current release is main at `3c0c3370` (PR #258), plus this branch, which changes no runtime code.
-- **Script:** [`rehearsal.sh`](rehearsal.sh). Run it with `SCRATCH`, `OLD_WORKTREE` and `NEW_WORKTREE` set. It creates and drops its own databases.
-- **Output:** [`rehearsal.log`](rehearsal.log).
+- **Script:** [`rehearsal.sh`](rehearsal.sh), with the helper [`read_through.mjs`](read_through.mjs).
+  - It needs three checkouts, an output directory, and the throwaway instance's socket, port and credentials, all from environment variables. The script's header lists them.
+  - It refuses to run against any server whose port is not the throwaway one.
+  - It only creates and drops `erp_t51_rh_*` databases.
+  - It exits non-zero on the first failed check.
+- **Output:** [`rehearsal.log`](rehearsal.log). The scratch path is shown as `$SCRATCH`.
 
-This record covers the parts of MIG-006 (TC-006) and design §14 that an automated test in CI cannot do: running an older release, and taking a real backup. The CI carrier for TC-006, in `supplierMigrationAcceptance.integration.test.js`, covers adding Supplier to a deployment that has none.
+This record covers the parts of MIG-006 (TC-006) and design §14 that an automated test in CI cannot do: running older releases with their own runners, taking a real backup, and rolling a server back. The CI carrier for TC-006 is in `supplierMigrationAcceptance.integration.test.js`. It builds the non-Supplier schema with an in-test runner, then checks that adding Supplier changes no existing table or row.
+
+## Releases used
+
+| Name | Commit | Why |
+| --- | --- | --- |
+| pre-Supplier | `b3e5aa90^1` (`e4aed631`) | main just before Supplier's first migration (0028). Its 0001–0027 are byte-identical to today's. |
+| previous | `72e205ef` | main at PR #249, the last release before migration 0087. Upgrading it exercises exactly one Supplier migration. |
+| current | main at `3c0c3370`, plus this branch (no runtime change) | |
 
 ## What was done and what happened
 
+How each comparison works:
+
+- Each one uses a fingerprint of every base table: its data (`CHECKSUM TABLE`, one table per query, where a NULL checksum fails), AUTO_INCREMENT, columns, indexes, foreign keys, triggers, routines, views and events.
+- A control proves the comparison can fail: one changed row in the restored database must be detected, and it is.
+
+### A. Adding Supplier to a deployment that has none (real runners, real order)
+
+1. The pre-Supplier release's runner builds an empty database: 30 ledger files. Core data is then added: a user, a user-audit row and an Item.
+2. The current runner applies the remaining 58 files in main's own interleaved order (0028–0087, every module).
+3. **Every object that existed before is unchanged.** That covers all 29 pre-existing tables: their data with time columns, counters, columns, indexes, keys and triggers. Every pre-existing permission and grant row also still exists unchanged. The upgrade only added objects (2,099 fingerprint lines across all modules, 15 of them Supplier tables) and the 6 Supplier permissions.
+4. The current server starts on the result: health 200, then stopped with its port closed.
+
+### B. From the previous release, with Supplier data
+
 | Step | Result |
 | --- | --- |
-| 1. Previous release, its own runner, on an empty database | 87 migrations applied (latest 0086) |
-| 2. Business data under the previous release: 2 Suppliers (one with a Chinese name), an identifier, an Item, a SKU and a Supplier–SKU relation | Inserted. On this release an orphan Supplier–SKU relation is still **accepted** (DEF-029 as it was) |
-| 3. Backup with `mysqldump --single-transaction`, then restore into a second database | Dump and restore exit 0. All 50 tables have equal `CHECKSUM TABLE` in source and restore |
-| 4. Upgrade with the current runner | Only `0087` is applied. The only table whose checksum changed is `fr_schema_migrations`, so business data is untouched. The orphan relation is now **refused** (`ER_NO_REFERENCED_ROW_2`, `fk_supplier_sku_refs_sku`) |
-| 5. Server on the upgraded schema: current release, then rolled back to the previous release | Both start, print "API listening", and `/api/v1/health` returns 200 |
-| 6. Similar-name exception list (HD-057 A), current release, on a 4-row legacy file | 1 exact match with an existing Supplier (`香港貿易有限公司`, score 1.0000). 1 in-file pair: Contoso Trading vs Contoso Trading Ltd, 0.8750. "Northwind Paper Co" vs the existing "Northwind Paper Company" is below the 0.85 threshold, so it is not listed |
+| Previous release's runner on an empty database, then business data: 2 Suppliers (one with a Chinese name), an identifier, an Item, a SKU and a Supplier–SKU relation | An orphan Supplier–SKU relation is still **accepted** on this release (DEF-029, control) |
+| Previous release reads the rows over its own HTTP stack (a real user and device) | Supplier list 200 with RH-001 listed, detail 200 (`香港貿易有限公司`), SKU relations 200 (1 row) |
+| `mysqldump --single-transaction --routines --triggers --events`, then restore into a second database | **94 tables**. Data, counters, columns, indexes, keys, triggers, routines, views and events are all equal. The changed-row control is detected |
+| Upgrade with the current runner | Only `0087` is applied. The whole fingerprint diff is: the migration ledger's data, plus the new `idx_supplier_sku_refs_sku` index. The orphan relation is now **refused** (`ER_NO_REFERENCED_ROW_2`) |
+| Current server on the upgraded schema | Starts, health 200, stops with its port closed; reads the rows over HTTP (list, detail, SKU relations) |
+| **Server rolled back** to the previous release on the upgraded schema | Starts, health 200, stops with its port closed; **reads the same rows over HTTP**: list, detail and SKU relations, all 200 |
+
+### C. Similar-name exception list (HD-057 A)
+
+Run on a 4-row legacy file against the step-B database:
+
+- **Match with an existing Supplier:** 1 exact match, `香港貿易有限公司`, score 1.0000.
+- **Pair within the file:** 1, Contoso Trading vs Contoso Trading Ltd, score 0.8750.
+- **Not listed:** "Northwind Paper Co" vs the existing "Northwind Paper Company" scores below the 0.85 threshold.
 
 ## Rollback boundaries, against design §14.3
 
-- **Server:** the previous release runs on the schema the current release migrated. 0087 is backward compatible: it only adds an index and reorders one, and the previous code does not inspect it at startup.
-- **Client:** nothing that defines the Supplier API contract changed between `72e205ef` and main. `git diff --name-only 72e205ef HEAD` shows:
-  - no file under `server/src/handlers` and no file under `client/src`;
-  - only these Supplier server changes:
-    - the deadlock retry (DEF-031);
-    - two helpers that are now exported;
-    - corrected comments;
-    - the new offline similar-name script.
-
-  None of these changes a request or a response. The previous client therefore talks to the current server with the same contract, and the other way round. No old client was run in a browser.
-- **Database:** forward-only, as §14.3 requires. Nothing is dropped or downgraded. Going back to before an upgrade means restoring the backup, and step 3 shows the backup restores exactly.
-- **Migration files:** each of the 15 Supplier migrations has exactly one commit on main's first-parent history. None was edited after it merged. Checked with `git log --first-parent origin/main -- <file>`.
+- **Server:** the previous release starts on the schema the current release migrated, and reads Supplier data through it.
+  - 0087 is backward compatible: it adds one index and reorders another, and the previous code does not inspect it at startup.
+  - After the rollback, the SKU foreign key is enforced. The previous release checks the SKU before inserting a relation, so it only meets the foreign key in a race, and then the insert is refused rather than writing an orphan.
+  - A server rollback also reverts non-Supplier code that changed in the meantime. This includes Business Master reading currencies with a shared lock (PR #244) and a Sales index hint. No Supplier response depends on either.
+- **Client:** nothing that defines the Supplier API contract changed between `72e205ef` and main. `git diff --name-only 72e205ef HEAD` shows no file under `server/src/handlers`, `server/src/framework` (middleware) or `client/src`.
+  - The only Supplier server changes are: the deadlock retry (DEF-031), which returns the existing 409 codes; three symbols that are now exported (`CSV_OPTIONS`, `isTemplateRow`, `uniqueBigrams`); corrected comments; and the new offline similar-name script.
+  - So the previous client talks to the current server with the same contract, and the other way round. No old client was run in a browser.
+- **Database:** forward-only, as §14.3 requires; nothing is dropped or downgraded. Going back to before an upgrade means restoring the backup, and step B shows the backup restores exactly.
+- **Migration files:** each of the 15 Supplier migrations has exactly one commit on main's first-parent history, so none was edited after it merged. Checked with `git log --first-parent origin/main -- <file>`.
 
 ## Not covered here
 
 - A production-like host, real secrets, and the real backup tooling and retention.
 - Driving the old client against the new server in a browser; only the API contract was compared.
-- The release smoke in §14.4 as a whole, for example Bank reveal and approval ON. Those belong to the TEST_AND_VERIFY stage and the UAT runs.
-- A rehearsal that keeps live traffic running during the upgrade.
+- The full release smoke in §14.4, for example Bank reveal and approval ON. That belongs to TEST_AND_VERIFY and the UAT runs.
+- An upgrade under live traffic.
