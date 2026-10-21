@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 41,
+  "revision": 43,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-001",
-  "current_task": "TASK-009",
+  "current_task": "TASK-010",
   "baseline": {
     "design": "60dbcbae939d41b9218e1a3b6f96b9d5716ce7e00a10496db8f37e55f761612d",
     "plan": "1751ba25360a9988dcc3c2af70287aa09753f643bd363bf4a2b5a1558282cfbf",
-    "code_commit": "a71bd1cbc385e9857f20362de65f32baa4636170",
-    "source_fingerprint": "d8ac3576fd7b6f4e4ac3121113586e085c29866b5e1cef55b61cf07e0f74fa55",
+    "code_commit": "699d3c5cb8af4e007befdeb2ad35d755e1819e6f",
+    "source_fingerprint": "b3fad2bbe7042e2ad223e90caeb0d9f326f988643a50339ed0b11c73f98d4cc2",
     "worktree": "/private/tmp/erp-fulfillment-p0",
     "default_commit": "6a9b86bd999bc310d71dadf321319f6e8e117f57",
     "mode_entry_commit": "76223f40480d94a1d3a2ae6e0e7b91292bd98b82"
@@ -37,8 +37,8 @@
     "TASK-006": "DONE",
     "TASK-007": "DONE",
     "TASK-008": "DONE",
-    "TASK-009": "IN_PROGRESS",
-    "TASK-010": "PENDING",
+    "TASK-009": "DONE",
+    "TASK-010": "IN_PROGRESS",
     "TASK-011": "PENDING",
     "TASK-012": "PENDING",
     "TASK-013": "PENDING",
@@ -798,6 +798,23 @@
         "Existing exact N/A reason unchanged; TC010 remainsmandatory/blocking"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-036-TASK009-EXACT-MIGRATION-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam, actual complete approvedP0/TASK009 authority; derived exact filename binding only, not a new decision",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/15_task009_shipment_reversal_schema.md#exact-migration-scope-binding",
+      "recorded_at": "2026-10-21T03:53:14.132876+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "1751ba25360a9988dcc3c2af70287aa09753f643bd363bf4a2b5a1558282cfbf",
+      "code_commit": null,
+      "scope": [
+        "server/database/migrations/0096_create_shipments.js",
+        "server/database/migrations/0097_create_shipment_issues_and_reversals.js"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -1108,6 +1125,18 @@
       "reviewer": "/root/fulfillment_independent_review",
       "reviewed_baseline": "df865c78bf9bb8616caa7e939b1bb89f97785dd3c1feb6de72a27e16e7adc221",
       "source_ref": "docs/fulfillment_shipping_management/implementation/14_task008_claim_allocation_schema.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-027-TASK009-FINAL",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "dbf330bdc28d8433e5a94472cd39d476083f0724e5ced6de8bb841e0616e6960",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/15_task009_shipment_reversal_schema.md",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -1438,11 +1467,19 @@
       "kind": "OWNED_NATIVE_MIGRATION_TEST",
       "target": "owned private MySQL26.7.0 disposable schema;0096/0097 following historical and P0 prerequisites",
       "idempotency_key": "task009-native-first-main6a9b86",
+      "status": "CONFIRMED",
+      "source_ref": "Report15: actual root33 affectednativePASS0skip, disposable owned schema executions/cleanup; independent final12 underway. No shared/live install."
+    },
+    {
+      "id": "P0-TASK010-NATIVE-R1",
+      "kind": "OWNED_NATIVE_MIGRATION_TEST",
+      "target": "owned private MySQL26.7.0 disposable schema; exactSales0088 +0098/0099 afterapprovedP0 prerequisites",
+      "idempotency_key": "task010-native-first-main6a9b86",
       "status": "PLANNED",
-      "source_ref": "TASK008 actual independent approval before next slice; actual fresh fetch unchanged6a9b86. TASK009 exact approvedscope only; no live install."
+      "source_ref": "ActualTask009separateapproval androot33PASS; exact0088ownerSHA b6eeecb12fd08e3f4a6129c8448b1c9346c4f55ca73bda458653b93d7a410946 matches approvedHD009contribution. No shared/live install."
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Atomic commit reviewed TASK008 exact6 source; implement TASK009 0096/0097 Shipment/Issue/Reversal/history/circularFK and actual native races/immutability, then010–011/full P0 verification and one PR. All approvedgates retained; no formalacceptance or CI yet."
+  "next_safe_action": "Atomic commit reviewedTask009 exact3 source plus evidence; freshfetch beforeTask010new0098/0099, adopt exactreviewedSales0088 foundation, implement audit/export/archive parity/appaccount nativeproof. ThenTask011/fullP0gates/onePR. No formalTC010/CI/UAT/liveacceptance."
 }
