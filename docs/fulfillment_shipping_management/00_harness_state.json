@@ -1,20 +1,20 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 38,
+  "revision": 41,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-001",
-  "current_task": "TASK-008",
+  "current_task": "TASK-009",
   "baseline": {
     "design": "60dbcbae939d41b9218e1a3b6f96b9d5716ce7e00a10496db8f37e55f761612d",
     "plan": "1751ba25360a9988dcc3c2af70287aa09753f643bd363bf4a2b5a1558282cfbf",
-    "code_commit": "bb96423f56cf2e9fe223490fe3b9f1b67aa896e6",
-    "source_fingerprint": "c4f24ef220ab1e5dfad2e42f65b632f9a390fa85a78afa23ef49447b2c5a5697",
+    "code_commit": "a71bd1cbc385e9857f20362de65f32baa4636170",
+    "source_fingerprint": "d8ac3576fd7b6f4e4ac3121113586e085c29866b5e1cef55b61cf07e0f74fa55",
     "worktree": "/private/tmp/erp-fulfillment-p0",
-    "default_commit": "3c0c33705aa76c1ad97decd395a9e3fc52c16792",
+    "default_commit": "6a9b86bd999bc310d71dadf321319f6e8e117f57",
     "mode_entry_commit": "76223f40480d94a1d3a2ae6e0e7b91292bd98b82"
   },
   "runtime": {
@@ -36,8 +36,8 @@
     "TASK-005": "DONE",
     "TASK-006": "DONE",
     "TASK-007": "DONE",
-    "TASK-008": "PENDING",
-    "TASK-009": "PENDING",
+    "TASK-008": "DONE",
+    "TASK-009": "IN_PROGRESS",
     "TASK-010": "PENDING",
     "TASK-011": "PENDING",
     "TASK-012": "PENDING",
@@ -1100,6 +1100,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-026-TASK008-FINAL",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "df865c78bf9bb8616caa7e939b1bb89f97785dd3c1feb6de72a27e16e7adc221",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/14_task008_claim_allocation_schema.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [],
@@ -1404,9 +1416,33 @@
       "idempotency_key": "task007-native-first-0bb84ec0-wip",
       "status": "CONFIRMED",
       "source_ref": "TASK007 ownedschema native11PASS/0skip; actual root and separate-agent tests applied0092 and historical prerequisites and completed fixture cleanup. Root r8log1eb3c7d183ffc32e373e32caee52a1b4f3cbf0a81c02652b69f62dc3a579f3b7; report13. No shared/live database."
+    },
+    {
+      "id": "P0-MAIN-INTEGRATION-PR259",
+      "kind": "BASELINE_INTEGRATION",
+      "target": "origin/main@6a9b86bd999bc310d71dadf321319f6e8e117f57",
+      "idempotency_key": "integrate-main6a9b86-into-p0ff22efc9",
+      "status": "CONFIRMED",
+      "source_ref": "Actual clean ort merge of main6a9b86bd999bc310d71dadf321319f6e8e117f57 into ff22efc9;8 inheritedSupplierdocs/test paths, no source/schema/migration overlap; no push/remote merge."
+    },
+    {
+      "id": "P0-TASK008-NATIVE-R1",
+      "kind": "OWNED_NATIVE_MIGRATION_TEST",
+      "target": "owned MySQL26.7.0 disposable Sales fixture schemas;0092→0093→0095 after historical core",
+      "idempotency_key": "task008-native-first-main6a9b86",
+      "status": "CONFIRMED",
+      "source_ref": "Report14: actual root10native and separate reviewer10nativePASS0skip; owned disposable schemas cleaned. All6 original findings closed, no live/shared install."
+    },
+    {
+      "id": "P0-TASK009-NATIVE-R1",
+      "kind": "OWNED_NATIVE_MIGRATION_TEST",
+      "target": "owned private MySQL26.7.0 disposable schema;0096/0097 following historical and P0 prerequisites",
+      "idempotency_key": "task009-native-first-main6a9b86",
+      "status": "PLANNED",
+      "source_ref": "TASK008 actual independent approval before next slice; actual fresh fetch unchanged6a9b86. TASK009 exact approvedscope only; no live install."
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "TASK007 actual independent APPROVED and native11/lint/trace/boundaryPASS, sourcecommit recorded; TASK001–007 DONE. Begin TASK008 actual Fulfillment/Claim/Allocation/history schema and concurrency under approvedP0 plan, then009–011 and fullP0 gates before one PR. Latestmain3c0c unchanged before0092; recheck before new numberedfiles. All prior source-subset evidence/reviews retained; no formalTC010/CI/PR/UAT/liveinstall acceptance."
+  "next_safe_action": "Atomic commit reviewed TASK008 exact6 source; implement TASK009 0096/0097 Shipment/Issue/Reversal/history/circularFK and actual native races/immutability, then010–011/full P0 verification and one PR. All approvedgates retained; no formalacceptance or CI yet."
 }
