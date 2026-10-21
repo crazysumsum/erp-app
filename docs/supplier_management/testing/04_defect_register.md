@@ -115,6 +115,8 @@ Fix, per HD-115 A:
 
 Found by REV-107 M-1 (TC-013, LIST-006). The shared `client/src/framework/ui/DataTable.vue` replaces Quasar's no-data slot with a fixed 「冇資料」 and ignores the slot's `message`, which Quasar sets to the loading label while loading. On a failed read it empties the rows, so 「冇資料」 also appears under the error banner. A sighted user therefore sees "no data" while the Supplier list is loading, when it is empty, and when the read failed. Only `aria-busy` and the error banner tell the states apart, against FR-LIST-010. The component is shared framework code outside the Supplier module, used by every list page, so the fix needs its own decision. REPORT_ONLY: no product change made. The TC-013 test asserts what is distinguishable today and the map marks TC-013 PARTIAL.
 
+**Fixed under HD-118 A (APPROVAL-HD-118-SCOPE).** `DataTable` now owns the `#no-data` slot. While loading it says 「載入緊…」; after a failed read it shows nothing there and leaves the message to the error banner; only a successful empty read shows the empty-state text, whether it is the default 「冇資料」 or the page's own slot. The text is the app's own rather than Quasar's `loadingLabel`, because no Quasar language pack is installed and that label would read "Loading...". This also changes the pages of other modules that pass their own `#no-data` (Sales import, orders and quotations): their empty text no longer appears while loading or under an error. Tests: `DataTable.test.js` (both slot kinds, server and client mode), the TC-013 list test, and a Playwright test in `supplier-list-filters.spec.js`. The original component turns all of them red.
+
 ## HD-116 A: dispositions (2026-10-21)
 
 Fixed in this change:

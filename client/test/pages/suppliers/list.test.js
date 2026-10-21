@@ -64,6 +64,8 @@ describe("pages/suppliers/SuppliersPage.vue", () => {
     supplierService.list.mockReturnValueOnce(new Promise((done) => { resolve = done; }));
     let result = await mountPage();
     expect(result.body.find('[aria-busy="true"]').exists()).toBe(true);
+    expect(result.body.text()).toContain("載入緊…");
+    expect(result.body.text()).not.toContain("冇資料");
     resolve({ rows: [], rowsNumber: 0 });
     await flushPromises();
     expect(result.body.find('[aria-busy="true"]').exists()).toBe(false);
@@ -75,6 +77,7 @@ describe("pages/suppliers/SuppliersPage.vue", () => {
     supplierService.list.mockRejectedValueOnce(new Error("暫時未能讀取供應商"));
     result = await mountPage();
     expect(result.body.find(".q-banner").text()).toContain("暫時未能讀取供應商");
+    expect(result.body.text()).not.toContain("冇資料");
     await result.body.find('button[aria-label="重試"]').trigger("click");
     await flushPromises();
     expect(result.body.find(".q-banner").exists()).toBe(false);

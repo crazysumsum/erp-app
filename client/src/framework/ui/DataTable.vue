@@ -142,14 +142,21 @@ onMounted(() => {
         將 DataTable 收到嘅所有 slot（例如 body-cell-actions、
         body-cell-<欄位名>）原樣轉發俾內部嘅 QTable——頁面要自訂儲存格
         render（操作按鈕、格式化數值）就靠呢啲 slot，DataTable 唔可以
-        淨係得返自己嗰個 #no-data 就算。
+        淨係得返自己嗰個 #no-data 就算。#no-data 例外，喺下面另外處理。
       -->
-      <template v-for="(_, slotName) in $slots" #[slotName]="slotProps" :key="slotName">
+      <template v-for="slotName in Object.keys($slots).filter((name) => name !== 'no-data')" #[slotName]="slotProps" :key="slotName">
         <slot :name="slotName" v-bind="slotProps" />
       </template>
 
-      <template v-if="!$slots['no-data']" #no-data>
-        <div class="full-width text-center text-grey-7 q-pa-lg">冇資料</div>
+      <!-- QTable 冇 row 就出 #no-data，連載入緊同讀取失敗都係（DEF-032）：載入緊講載入緊，
+           失敗交俾上面個 banner，兩樣都唔係先出空狀態（頁面自己嘅或者預設嘅）。 -->
+      <template #no-data="slotProps">
+        <div v-if="displayLoading" class="full-width text-center text-grey-7 q-pa-lg">載入緊…</div>
+        <template v-else-if="!error">
+          <slot name="no-data" v-bind="slotProps">
+            <div class="full-width text-center text-grey-7 q-pa-lg">冇資料</div>
+          </slot>
+        </template>
       </template>
     </q-table>
   </div>
