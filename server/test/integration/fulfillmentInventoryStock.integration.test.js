@@ -3,6 +3,7 @@ import test from "node:test";
 import { inventoryNativeFixture } from "../fulfillment/inventoryNativeFixture.js";
 import { assertOwnedOperationWait,gate } from "../fulfillment/inventoryConcurrency.js";
 import { InventoryFulfillmentService } from "../../src/modules/inventory/InventoryFulfillmentService.js";
+import { InventoryLookupService } from "../../src/modules/inventory/InventoryLookupService.js";
 const nativeTest=process.env.DB_INTEGRATION_TESTS==="1"?test:test.skip;
 const EVENT="00000000-0000-4000-8000-000000000002",REVERSE="00000000-0000-4000-8000-000000000003";
 const reverseInput=issued=>({fulfillmentId:"1",shipmentId:"2",lines:issued.lines.map(line=>({...line,reservations:line.reservations.map(member=>({claimId:member.claimId,inventoryReservationId:member.inventoryReservationId,expectedVersion:3,baseQuantity:member.baseQuantity,originalInventoryOperationId:member.inventoryOperationId,
@@ -216,4 +217,59 @@ nativeTest("P0 one private preparation refuses overlapping effect execution but 
     assert.deepEqual(await f.service.postFulfillmentIssueBatchInTransaction(tx,command,proof),result.value);
   },{isolationLevel:"READ COMMITTED"});
   assert.equal(Number((await f.db.query("SELECT COUNT(*) AS n FROM inventory_movements"))[0][0].n),2);
+});
+
+nativeTest("P0 Reverse-only advisory preparation reads current CAS after another Fulfillment allocates the same Reservation",async t=>{
+  const f=await inventoryNativeFixture(t),reservationId=await f.reservation("4","10"),service=new InventoryFulfillmentService({database:f.database,time:f.time,logger:f.logger});
+  const lookup=new InventoryLookupService({...f,fulfillment:service});
+  const invoke=(action,payload,event)=>f.withActor(async tx=>{
+    const command={actor:f.actor,source:{documentId:payload.shipmentId??payload.fulfillmentId,eventId:`00000000-0000-4000-8000-${String(event).padStart(12,"0")}`},correlationId:"",payload};
+    const proof=await service.claimFulfillmentBatchInTransaction(tx,{action,command});
+    return service[{ALLOCATE:"allocateForFulfillmentBatchInTransaction",ISSUE:"postFulfillmentIssueBatchInTransaction",REVERSE:"reverseFulfillmentIssueAndRestoreReservationBatchInTransaction"}[action]](tx,command,proof);
+  },{isolationLevel:"READ COMMITTED"});
+  const payload={fulfillmentId:"1",lines:[{fulfillmentLineId:"3",salesOrderLineId:"4",baseQuantity:"5",reservations:[{claimId:"5",inventoryReservationId:reservationId,expectedVersion:1,baseQuantity:"5",overrideReason:"",allocations:[{inventoryBalanceId:f.balanceId,expectedBalanceVersion:1,baseQuantity:"5"}]}]}]};
+  const allocated=await invoke("ALLOCATE",payload,1),a=allocated.lines[0].reservations[0].allocations[0];
+  const issue={fulfillmentId:"1",shipmentId:"2",lines:[{fulfillmentLineId:"3",salesOrderLineId:"4",baseQuantity:"5",reservations:[{claimId:"5",inventoryReservationId:reservationId,expectedVersion:2,baseQuantity:"5",allocations:[{inventoryAllocationId:a.inventoryAllocationId,inventoryBalanceId:f.balanceId,expectedVersion:1,expectedBalanceVersion:2,baseQuantity:"5"}]}]}]};
+  const issued=await invoke("ISSUE",issue,2),original=issued.lines[0].reservations[0];
+  const second=structuredClone(payload);second.fulfillmentId="2";second.lines[0].fulfillmentLineId="6";second.lines[0].reservations[0].claimId="7";second.lines[0].reservations[0].expectedVersion=3;second.lines[0].reservations[0].allocations[0].expectedBalanceVersion=3;
+  await invoke("ALLOCATE",second,3);
+  await f.db.execute("UPDATE item_skus SET status='archived' WHERE id=?",[f.skuId]);
+  await f.db.execute("DELETE rp FROM role_permissions rp JOIN permissions p ON p.id=rp.permission_id WHERE p.name='fulfillment.operation'");f.actor.claimedPermissions.splice(f.actor.claimedPermissions.indexOf("fulfillment.operation"),1);
+  let preparation;
+  await f.withActor(async tx=>{
+    const statements=[],query=tx.query.bind(tx);tx.query=(sql,args)=>{statements.push(sql);return query(sql,args);};
+    preparation=await lookup.getFulfillmentReversalPreparationInTransaction(tx,{shipmentId:"2",originalInventoryOperationIds:[original.inventoryOperationId]});
+    assert.ok(statements.every(sql=>!/(FOR UPDATE|FOR SHARE|LOCK IN SHARE MODE)/u.test(sql)),"preflight must not acquire domain or operation locks before claims");
+  },{isolationLevel:"READ COMMITTED"});
+  const member=preparation.lines[0].reservations[0];assert.equal(member.expectedVersion,4);assert.equal(member.currentState.consumedQuantity,"5");assert.equal(member.allocations[0].expectedBalanceVersion,4);
+  const reverse={fulfillmentId:"1",shipmentId:"2",lines:preparation.lines.map(line=>({...line,reservations:line.reservations.map(m=>({claimId:m.claimId,inventoryReservationId:m.inventoryReservationId,expectedVersion:m.expectedVersion,baseQuantity:m.baseQuantity,originalInventoryOperationId:m.originalInventoryOperationId,allocations:m.allocations.map(leg=>({inventoryAllocationId:leg.inventoryAllocationId,originalMovementId:leg.originalMovementId,shipmentIssueId:"1",expectedBalanceVersion:leg.expectedBalanceVersion,baseQuantity:leg.baseQuantity}))}))}))};
+  const result=await invoke("REVERSE",reverse,4);assert.equal(result.lines[0].reservations[0].version,5);
+  const [[row]]=await f.db.query("SELECT consumed_quantity,outstanding_quantity FROM inventory_reservations WHERE id=?",[reservationId]);assert.deepEqual([Number(row.consumed_quantity),Number(row.outstanding_quantity)],[0,10]);
+});
+
+nativeTest("P0 Reverse advisory supports CONSUMED with reverse-only permission and rejects bad original sets or a later CAS race",async t=>{
+  const f=await fixture(t);let issued;
+  await f.withActor(async tx=>{issued=await f.invoke(tx,f.command(f.issue));},{isolationLevel:"READ COMMITTED"});
+  const lookup=new InventoryLookupService({...f,fulfillment:f.service}),ids=issued.lines.flatMap(l=>l.reservations.map(m=>m.inventoryOperationId));
+  await f.db.execute("UPDATE item_skus SET status='archived' WHERE id=?",[f.skuId]);
+  await f.db.execute("DELETE rp FROM role_permissions rp JOIN permissions p ON p.id=rp.permission_id WHERE p.name='fulfillment.operation'");f.actor.claimedPermissions.splice(f.actor.claimedPermissions.indexOf("fulfillment.operation"),1);
+  const query={shipmentId:"2",originalInventoryOperationIds:ids};
+  await assert.rejects(f.withActor(tx=>lookup.getFulfillmentReversalPreparationInTransaction(tx,query)));
+  const preparation=await f.withActor(async tx=>{
+    const statements=[],read=tx.query.bind(tx);tx.query=(sql,args)=>{statements.push(sql);return read(sql,args);};
+    tx.execute=async()=>{throw new Error("advisory must never mutate or claim");};
+    const result=await lookup.getFulfillmentReversalPreparationInTransaction(tx,query);
+    assert.ok(statements.every(sql=>!/(FOR UPDATE|FOR SHARE|LOCK IN SHARE MODE)/u.test(sql)));
+    for(const bad of [{...query,shipmentId:"999"},{...query,originalInventoryOperationIds:ids.slice(0,1)},{...query,originalInventoryOperationIds:[ids[0],ids[0]]},{...query,originalInventoryOperationIds:["1"]}])await assert.rejects(lookup.getFulfillmentReversalPreparationInTransaction(tx,bad));
+    return result;
+  },{isolationLevel:"READ COMMITTED"});
+  assert.ok(preparation.lines.flatMap(l=>l.reservations).every(m=>m.currentState.status==="CONSUMED"&&m.currentState.outstandingQuantity==="0"&&m.expectedVersion===3));
+  const input=reverseInput(issued);
+  await assert.rejects(f.withActor(tx=>f.service.reverseFulfillmentIssueAndRestoreReservationBatchInTransaction(tx,f.command(input,REVERSE),preparation),{isolationLevel:"READ COMMITTED"}),{code:"INVENTORY_SOURCE_CONFLICT"});
+  await f.db.execute("UPDATE inventory_stock_balances SET version=version+1 WHERE id=?",[f.balanceId]); // A controlled native competing CAS change after advisory read.
+  const [[before]]=await f.db.query("SELECT (SELECT COUNT(*) FROM inventory_operation_requests) AS operations,(SELECT COUNT(*) FROM inventory_movements) AS movements");
+  await assert.rejects(f.withActor(tx=>f.invoke(tx,f.command(input,REVERSE),"REVERSE"),{isolationLevel:"READ COMMITTED"}),{code:"VERSION_CONFLICT"});
+  assert.deepEqual((await f.db.query("SELECT (SELECT COUNT(*) FROM inventory_operation_requests) AS operations,(SELECT COUNT(*) FROM inventory_movements) AS movements"))[0][0],before);
+  await f.db.execute("DELETE rp FROM role_permissions rp JOIN permissions p ON p.id=rp.permission_id WHERE p.name='fulfillment.reverse'");f.actor.claimedPermissions.splice(f.actor.claimedPermissions.indexOf("fulfillment.reverse"),1);
+  await assert.rejects(f.withActor(tx=>lookup.getFulfillmentReversalPreparationInTransaction(tx,query),{isolationLevel:"READ COMMITTED"}),{code:"PERMISSION_STALE"});
 });

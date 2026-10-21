@@ -168,6 +168,35 @@ nativeTest("P0 locked Inventory current-state projection proves native quantitie
   },{isolationLevel:"READ COMMITTED"});
 });
 
+nativeTest("P0 completed allocation replay rejects impossible or internally contradictory owner snapshots",async t=>{
+  const f=await fixture(t),payload={fulfillmentId:"1",lines:f.lines};await f.invoke("ALLOCATE",payload,19);
+  const [[row]]=await f.db.query("SELECT id,result_summary FROM inventory_operation_requests WHERE source_document_type='PICK_LEG' ORDER BY id LIMIT 1");
+  const original=typeof row.result_summary==="string"?JSON.parse(row.result_summary):row.result_summary;
+  for(const mutate of [
+    v=>{const b=JSON.parse(v.bucketSnapshot);Object.assign(b,{lotId:"999",lotNumber:"LOT",expiryDate:"2030-02-30"});v.bucketSnapshot=JSON.stringify(b);v.selectionStrategy="FEFO";},
+    v=>{const b=JSON.parse(v.bucketSnapshot);b.expiryDate="2030-01-01";v.bucketSnapshot=JSON.stringify(b);v.selectionStrategy="FEFO";},
+    v=>{v.isSequenceOverride=true;v.recommendedSummary=JSON.stringify({recommendedBalanceId:f.balanceId,recommendedExpiryDate:null,selectedBalanceId:f.balanceId,selectedExpiryDate:"2030-01-01"});},
+    v=>{v.isSequenceOverride=true;v.recommendedSummary=JSON.stringify({recommendedBalanceId:f.balanceId,recommendedExpiryDate:"2030-02-30",selectedBalanceId:f.balanceId,selectedExpiryDate:null});}
+  ]) {
+    const changed=structuredClone(original);mutate(changed);
+    await f.db.execute("UPDATE inventory_operation_requests SET result_summary=? WHERE id=?",[JSON.stringify(changed),row.id]);
+    try{await assert.rejects(f.invoke("ALLOCATE",payload,19),{code:"INVENTORY_SOURCE_CONFLICT"});}
+    finally{await f.db.execute("UPDATE inventory_operation_requests SET result_summary=? WHERE id=?",[JSON.stringify(original),row.id]);}
+  }
+});
+
+nativeTest("P0 completed release replay rejects impossible released/outstanding/status facts",async t=>{
+  const f=await fixture(t),allocated=await f.invoke("ALLOCATE",{fulfillmentId:"1",lines:f.lines},20),line=allocated.lines[0],member=line.reservations[0],leg=member.allocations[0];
+  const payload={fulfillmentId:"1",lines:[{fulfillmentLineId:line.fulfillmentLineId,salesOrderLineId:line.salesOrderLineId,baseQuantity:"2",reservations:[{claimId:member.claimId,inventoryReservationId:member.inventoryReservationId,expectedVersion:2,baseQuantity:"2",allocations:[{inventoryAllocationId:leg.inventoryAllocationId,inventoryBalanceId:leg.inventoryBalanceId,expectedVersion:1,expectedBalanceVersion:3,baseQuantity:"2"}]}]}]};
+  await f.invoke("RELEASE",payload,21);
+  const [[row]]=await f.db.query("SELECT id,result_summary FROM inventory_operation_requests WHERE source_document_type='PICK_LEG' AND source_event_id=?",["00000000-0000-4000-8000-000000000021"]),original=typeof row.result_summary==="string"?JSON.parse(row.result_summary):row.result_summary;
+  for(const change of [{releasedQuantity:"0"},{status:"RELEASED",outstandingQuantity:"3"},{status:"ACTIVE",outstandingQuantity:"0"}]) {
+    await f.db.execute("UPDATE inventory_operation_requests SET result_summary=? WHERE id=?",[JSON.stringify({...original,...change}),row.id]);
+    try{await assert.rejects(f.invoke("RELEASE",payload,21),{code:"INVENTORY_SOURCE_CONFLICT"});}
+    finally{await f.db.execute("UPDATE inventory_operation_requests SET result_summary=? WHERE id=?",[JSON.stringify(original),row.id]);}
+  }
+});
+
 nativeTest("P0 legal5000-Reservation membership does not narrow100-line/5000-leg capacity",{timeout:90000},async t=>{
   const f=await fixture(t),balances=[],lines=[];
   await f.db.execute("UPDATE inventory_stock_balances SET on_hand_quantity=0,fifo_anchor_date=NULL WHERE id=?",[f.balanceId]);

@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { inventoryOperationHash } from "./InventoryOperationService.js";
 import { FULFILLMENT_INVENTORY_COMMANDS } from "./inventoryFulfillmentConstants.js";
 import { inventoryError } from "./inventoryErrors.js";
+import { getActiveTransactionIsolation } from "../../services/mysqldatabase/MySqlDatabaseService.js";
 
 export function fulfillmentInventoryDigest(rows) {
   return createHash("sha256").update(rows.join("\n"),"utf8").digest("hex");
@@ -115,6 +116,11 @@ function snapshot(movement,leg) {
     baseUomId:identity(leg.baseUomId),baseUomCode:leg.baseUomCode,postedAt:Number(movement.posted_at)};
 }
 
+function calendarDate(value) {
+  if(typeof value!=="string"||!/^\d{4}-\d{2}-\d{2}$/u.test(value))return false;
+  const epoch=Date.parse(value+"T00:00:00.000Z");
+  return Number.isFinite(epoch)&&new Date(epoch).toISOString().slice(0,10)===value;
+}
 function allocationSnapshot(value) {
   let bucket;
   try {bucket=JSON.parse(value);}catch {receiptFailure();}
@@ -124,19 +130,20 @@ function allocationSnapshot(value) {
   if(bucket.lotId!==null&&identity(bucket.lotId)!==bucket.lotId)receiptFailure();
   for(const key of ["warehouseCode","binCode","skuCode","skuName","baseUomCode"])if(typeof bucket[key]!=="string"||!bucket[key]||[...bucket[key]].length>190||/[\p{Cc}]/u.test(bucket[key]))receiptFailure();
   if(bucket.lotId===null?bucket.lotNumber!==null:typeof bucket.lotNumber!=="string"||!bucket.lotNumber||[...bucket.lotNumber].length>100||/[\p{Cc}]/u.test(bucket.lotNumber))receiptFailure();
-  if(bucket.expiryDate!==null&&!/^\d{4}-\d{2}-\d{2}$/u.test(bucket.expiryDate))receiptFailure();
+  if(bucket.expiryDate!==null&&(!calendarDate(bucket.expiryDate)||bucket.lotId===null))receiptFailure();
   if(bucket.stockStatus!=="AVAILABLE"||!Number.isSafeInteger(bucket.postedAt)||bucket.postedAt<0)receiptFailure();
   return bucket;
 }
 
-function allocationRecommendation(value,balanceId,overridden) {
+function allocationRecommendation(value,balanceId,overridden,bucket) {
   if(!overridden){if(value!==null)receiptFailure();return null;}
   let result;
   try{result=JSON.parse(value);}catch{receiptFailure();}
   const fields=["recommendedBalanceId","recommendedExpiryDate","selectedBalanceId","selectedExpiryDate"];
   if(!result||typeof result!=="object"||Array.isArray(result)||Object.keys(result).length!==4||Object.keys(result).some(k=>!fields.includes(k))||identity(result.selectedBalanceId)!==balanceId)receiptFailure();
   identity(result.recommendedBalanceId);
-  for(const key of ["recommendedExpiryDate","selectedExpiryDate"])if(result[key]!==null&&!/^\d{4}-\d{2}-\d{2}$/u.test(result[key]))receiptFailure();
+  for(const key of ["recommendedExpiryDate","selectedExpiryDate"])if(result[key]!==null&&!calendarDate(result[key]))receiptFailure();
+  if(result.selectedExpiryDate!==bucket.expiryDate||result.recommendedBalanceId===balanceId&&result.recommendedExpiryDate!==result.selectedExpiryDate)receiptFailure();
   return result;
 }
 
@@ -176,8 +183,9 @@ export async function readFulfillmentInventoryBatch(tx,{action,operationId,docum
   }
   const movementIds=aux.flatMap(row=>{const id=summary(row).movementId;return id===undefined?[]:[identity(id)];});
   if (new Set(movementIds).size!==movementIds.length) receiptFailure();
+  const movementLock=locking||getActiveTransactionIsolation(tx)!=="READ COMMITTED";
   const [movementRows]=movementIds.length?await tx.query(`SELECT m.*, DATE_FORMAT(m.expiry_date_snapshot,'%Y-%m-%d') AS expiry_date_snapshot
-      FROM inventory_movements m WHERE m.id IN (${movementIds.map(()=>"?").join(",")}) ORDER BY m.id FOR SHARE OF m`,movementIds):[[]];
+      FROM inventory_movements m WHERE m.id IN (${movementIds.map(()=>"?").join(",")}) ORDER BY m.id ${movementLock?'FOR SHARE OF m':''}`,movementIds):[[]];
   const movements=new Map(movementRows.map(m=>[identity(m.id),m]));
   const claims=new Set(),reservations=new Set();let seenLegs=0;
   for (const {row,value} of members) {
@@ -214,12 +222,14 @@ export async function readFulfillmentInventoryBatch(tx,{action,operationId,docum
       } else {
         if(v.legKind==="ALLOCATE") {
           if(!["FEFO","FIFO"].includes(v.selectionStrategy)||typeof v.isSequenceOverride!=="boolean"||!Number.isSafeInteger(v.recommendedRank)||v.recommendedRank<1)receiptFailure();
+          const bucket=allocationSnapshot(v.bucketSnapshot);
           Object.assign(output,{selectionStrategy:v.selectionStrategy,isSequenceOverride:v.isSequenceOverride,recommendedRank:v.recommendedRank,
-            bucketSnapshot:allocationSnapshot(v.bucketSnapshot),recommendedSummary:allocationRecommendation(v.recommendedSummary,balanceId,v.isSequenceOverride)});
+            bucketSnapshot:bucket,recommendedSummary:allocationRecommendation(v.recommendedSummary,balanceId,v.isSequenceOverride,bucket)});
           if((output.bucketSnapshot.expiryDate!==null)!==(v.selectionStrategy==="FEFO"))receiptFailure();
         } else {
           if(!["ACTIVE","PARTIALLY_CONSUMED","RELEASED"].includes(v.status))receiptFailure();
           Object.assign(output,{status:v.status,releasedQuantity:identity(v.releasedQuantity,true),outstandingQuantity:identity(v.outstandingQuantity,true)});
+          if(BigInt(output.releasedQuantity)<BigInt(quantity)||(output.status==="RELEASED")!==(output.outstandingQuantity==="0"))receiptFailure();
         }
       }
       if (action==="REALLOCATE"&&v.legKind==="RELEASE") result.releases.push(output);

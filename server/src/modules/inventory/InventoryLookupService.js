@@ -4,18 +4,45 @@ import { loadInventoryCandidates } from "./InventoryPickSequenceService.js";
 import { inventoryError } from "./inventoryErrors.js";
 import { fulfillmentInventoryFields,fulfillmentInventoryId } from "./inventoryFulfillmentValidation.js";
 import { number } from "./inventoryFulfillmentStock.js";
+import { readOriginalFulfillmentIssueBatch } from "./inventoryFulfillmentReceipts.js";
 
 export class InventoryLookupService {
   constructor(options={}) {
     this.fulfillment=options.fulfillment??new InventoryFulfillmentService(options);
     this.time=options.time;
   }
-  async #authorize(tx) {
+  async #authorize(tx,permission="fulfillment.operation") {
     const current=this.fulfillment.assertTransaction(tx),claims=current.auth?.claims,actorId=Number(claims?.sub);
     if(!claims||!Number.isSafeInteger(actorId)||actorId<1||!Array.isArray(claims.roles)||!Array.isArray(claims.permissions))throw inventoryError("PERMISSION_STALE");
     const actor=await assertActorFresh(tx,{actorId,claimedRoles:claims.roles,claimedPermissions:claims.permissions});
-    if(!actor.username||!["fulfillment.view","fulfillment.operation"].every(p=>actor.permissions.includes(p)))throw inventoryError("PERMISSION_STALE");
+    if(!actor.username||!["fulfillment.view",permission].every(p=>actor.permissions.includes(p)))throw inventoryError("PERMISSION_STALE");
     return actor;
+  }
+  async getFulfillmentReversalPreparationInTransaction(tx,query) {
+    await this.#authorize(tx,"fulfillment.reverse");
+    fulfillmentInventoryFields(query,["shipmentId","originalInventoryOperationIds"]);
+    const shipmentId=fulfillmentInventoryId(query.shipmentId),ids=query.originalInventoryOperationIds;
+    if(!Array.isArray(ids)||ids.length<1||ids.length>5000)throw inventoryError("INVENTORY_INPUT_INVALID");
+    const operations=ids.map(id=>fulfillmentInventoryId(id));
+    if(new Set(operations).size!==operations.length)throw inventoryError("INVENTORY_INPUT_INVALID");
+    const original=await readOriginalFulfillmentIssueBatch(tx,{shipmentId,members:operations.map(originalInventoryOperationId=>({originalInventoryOperationId}))});
+    const members=original.result.lines.flatMap(line=>line.reservations),expected=new Set(operations);
+    if(members.length!==expected.size||members.some(m=>!expected.has(m.inventoryOperationId)))throw inventoryError("INVENTORY_SOURCE_CONFLICT");
+    const reservationIds=members.map(m=>m.inventoryReservationId),balanceIds=[...new Set(members.flatMap(m=>m.allocations.map(a=>a.inventoryBalanceId)))];
+    const [reservations]=await tx.query(`SELECT * FROM inventory_reservations WHERE id IN (${reservationIds.map(()=>"?").join(",")}) ORDER BY id`,reservationIds);
+    const [balances]=await tx.query(`SELECT * FROM inventory_stock_balances WHERE id IN (${balanceIds.map(()=>"?").join(",")}) ORDER BY id`,balanceIds);
+    const byReservation=new Map(reservations.map(r=>[String(r.id),r])),byBalance=new Map(balances.map(b=>[String(b.id),b]));
+    if(reservations.length!==reservationIds.length||balances.length!==balanceIds.length)throw inventoryError("REVERSAL_NOT_ALLOWED");
+    // Advisory current CAS only: no preclaim/domain locks; the actual reverse must revalidate under its owner locks.
+    const lines=original.result.lines.map(line=>({fulfillmentLineId:line.fulfillmentLineId,salesOrderLineId:line.salesOrderLineId,baseQuantity:line.baseQuantity,reservations:line.reservations.map(member=>{
+      const r=byReservation.get(member.inventoryReservationId),currentState={originalQuantity:String(number(r.original_quantity)),consumedQuantity:String(number(r.consumed_quantity)),releasedQuantity:String(number(r.released_quantity)),outstandingQuantity:String(number(r.outstanding_quantity)),status:r.status,version:number(r.version)};
+      if(!["CONSUMED","PARTIALLY_CONSUMED"].includes(r.status)||BigInt(currentState.originalQuantity)!==BigInt(currentState.consumedQuantity)+BigInt(currentState.releasedQuantity)+BigInt(currentState.outstandingQuantity)||BigInt(currentState.consumedQuantity)<BigInt(member.baseQuantity))throw inventoryError("REVERSAL_NOT_ALLOWED");
+      return {claimId:member.claimId,inventoryReservationId:member.inventoryReservationId,baseQuantity:member.baseQuantity,originalInventoryOperationId:member.inventoryOperationId,expectedVersion:currentState.version,currentState,
+        allocations:member.allocations.map(a=>{const b=byBalance.get(a.inventoryBalanceId),bucket=a.bucketSnapshot;
+          if(String(r.warehouse_id)!==bucket.warehouseId||String(r.sku_id)!==bucket.skuId||String(b.warehouse_id)!==bucket.warehouseId||String(b.bin_id)!==bucket.binId||(b.lot_id===null?null:String(b.lot_id))!==bucket.lotId||String(b.sku_id)!==bucket.skuId||b.stock_status!==bucket.stockStatus)throw inventoryError("REVERSAL_NOT_ALLOWED");
+          return {inventoryAllocationId:a.inventoryAllocationId,originalMovementId:a.movementId,baseQuantity:a.baseQuantity,expectedBalanceVersion:number(b.version),bucketSnapshot:bucket};})};
+    })}));
+    return {fulfillmentId:original.fulfillmentId,shipmentId,originalOperationId:original.result.operationId,lines};
   }
   async lockFulfillmentReservationStatesInTransaction(tx,query) {
     await this.#authorize(tx);
