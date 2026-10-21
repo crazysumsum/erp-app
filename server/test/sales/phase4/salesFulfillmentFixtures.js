@@ -30,7 +30,7 @@ async function createSalesProviderDatabase(t){
   return {db,name,connectionOptions,cleanup};
 }
 
-async function seedFulfillmentSalesOrder(db) {
+async function seedFulfillmentSalesOrder(db,baseQuantity) {
   const label="fa_"+randomUUID().slice(0,12),now=1700000000000;
   const insert=async(table,row)=>Number((await db.query(`INSERT INTO ${table} SET ?`,row))[0].insertId);
   const currency=await createTestCurrency(db,[],now);
@@ -41,20 +41,20 @@ async function seedFulfillmentSalesOrder(db) {
   const skuId=await insert("item_skus",{item_id:itemId,sku_code:label,sku_name:label,status:"active",created_at:now,updated_at:now});
   const skuUomId=await insert("item_sku_uoms",{sku_id:skuId,uom_id:uomId,to_base_factor:1,is_base:1,is_default_sale:1,created_at:now,updated_at:now});
   const addressId=await insert("customer_addresses",{customer_id:customerId,label:"Synthetic",address_line1:"Synthetic only",created_at:now,updated_at:now});
-  const orderId=await insert("sales_orders",{sales_order_number:label,status:"CANCELLED",source_type:"MANUAL",customer_id:customerId,customer_code_snapshot:label,customer_name_snapshot:label,currency_code:currency,fulfillment_warehouse_id:warehouseId,warehouse_code_snapshot:label,warehouse_name_snapshot:label,order_date:"2023-11-14",line_count:1,total_amount:"1.0000",created_at:now,updated_at:now,last_business_updated_at:now});
-  const lineId=await insert("sales_order_lines",{sales_order_id:orderId,line_no:1,sku_id:skuId,sku_uom_id:skuUomId,item_name_snapshot:label,sku_code_snapshot:label,sku_name_snapshot:label,uom_code_snapshot:"EA",uom_name_snapshot:"Each",to_base_factor_snapshot:1,tracking_policy_snapshot:"none",ordered_quantity:"1.000000",ordered_base_quantity:1,unit_selling_price:"1.0000",price_source:"MANUAL",line_amount:"1.0000",cancelled_base_quantity:1,created_at:now,updated_at:now});
+  const orderId=await insert("sales_orders",{sales_order_number:label,status:"CANCELLED",source_type:"MANUAL",customer_id:customerId,customer_code_snapshot:label,customer_name_snapshot:label,currency_code:currency,fulfillment_warehouse_id:warehouseId,warehouse_code_snapshot:label,warehouse_name_snapshot:label,order_date:"2023-11-14",line_count:1,total_amount:baseQuantity.toFixed(4),created_at:now,updated_at:now,last_business_updated_at:now});
+  const lineId=await insert("sales_order_lines",{sales_order_id:orderId,line_no:1,sku_id:skuId,sku_uom_id:skuUomId,item_name_snapshot:label,sku_code_snapshot:label,sku_name_snapshot:label,uom_code_snapshot:"EA",uom_name_snapshot:"Each",to_base_factor_snapshot:1,tracking_policy_snapshot:"none",ordered_quantity:baseQuantity.toFixed(6),ordered_base_quantity:baseQuantity,unit_selling_price:"1.0000",price_source:"MANUAL",line_amount:baseQuantity.toFixed(4),cancelled_base_quantity:baseQuantity,created_at:now,updated_at:now});
   return {orderId,lineId,customerId,warehouseId,uomId,skuId,skuUomId,addressId,now,insert};
 }
 
-export async function salesFulfillmentFixture(t){
-  const f=await createSalesProviderDatabase(t),db=f.db,s=await seedFulfillmentSalesOrder(db),label="sf_"+randomUUID().slice(0,12),time={nowMs:()=>s.now+1,timestamp:()=>s.now+1};
+export async function salesFulfillmentFixture(t,baseQuantity=1){
+  const f=await createSalesProviderDatabase(t),db=f.db,s=await seedFulfillmentSalesOrder(db,baseQuantity),label="sf_"+randomUUID().slice(0,12),time={nowMs:()=>s.now+1,timestamp:()=>s.now+1};
   const userId=await s.insert("users",{username:label,password_hash:"synthetic-only",display_name:"Synthetic",created_at:s.now,updated_at:s.now}),roleId=await s.insert("roles",{name:label,created_at:s.now});
   await db.query("INSERT INTO user_roles(user_id,role_id) VALUES (?,?)",[userId,roleId]);
   for(const name of ["fulfillment.view","fulfillment.operation","fulfillment.reverse"]){const [[permission]]=await db.query("SELECT id FROM permissions WHERE name=?",[name]);const id=permission?.id??await s.insert("permissions",{name,created_at:s.now});await db.query("INSERT INTO role_permissions(role_id,permission_id) VALUES (?,?)",[roleId,id]);}
   const reserveEvent=randomUUID(),root=await s.insert("inventory_operation_requests",{command_type:"SALES_BATCH_RESERVE",source_module:"SALES",source_document_type:"SALES_ORDER",source_document_id:String(s.orderId),source_event_id:reserveEvent,request_hash:"a".repeat(64),actor_label:label,created_at:s.now}),child=await s.insert("inventory_operation_requests",{command_type:"SALES_LINE_RESERVE",source_module:"SALES",source_document_type:"SALES_ORDER",source_document_id:String(s.orderId),source_line_id:String(s.lineId),source_event_id:reserveEvent,request_hash:"a".repeat(64),actor_label:label,created_at:s.now});
-  const reservationId=await s.insert("inventory_reservations",{create_operation_id:child,warehouse_id:s.warehouseId,sku_id:s.skuId,original_quantity:1,outstanding_quantity:1,purpose:"SALE",status:"ACTIVE",created_at:s.now,updated_at:s.now});
-  const mappingId=await s.insert("sales_order_line_reservations",{sales_order_line_id:s.lineId,inventory_reservation_id:reservationId,inventory_operation_id:root,source_event_id:reserveEvent,original_base_quantity:1,outstanding_base_quantity:1,status:"ACTIVE",inventory_version:1,created_at:s.now,updated_at:s.now});
-  await db.query("UPDATE sales_orders SET status='CONFIRMED' WHERE id=?",[s.orderId]);await db.query("UPDATE sales_order_lines SET cancelled_base_quantity=0,reserved_outstanding_base_quantity=1 WHERE id=?",[s.lineId]);
+  const reservationId=await s.insert("inventory_reservations",{create_operation_id:child,warehouse_id:s.warehouseId,sku_id:s.skuId,original_quantity:baseQuantity,outstanding_quantity:baseQuantity,purpose:"SALE",status:"ACTIVE",created_at:s.now,updated_at:s.now});
+  const mappingId=await s.insert("sales_order_line_reservations",{sales_order_line_id:s.lineId,inventory_reservation_id:reservationId,inventory_operation_id:root,source_event_id:reserveEvent,original_base_quantity:baseQuantity,outstanding_base_quantity:baseQuantity,status:"ACTIVE",inventory_version:1,created_at:s.now,updated_at:s.now});
+  await db.query("UPDATE sales_orders SET status='CONFIRMED' WHERE id=?",[s.orderId]);await db.query("UPDATE sales_order_lines SET cancelled_base_quantity=0,reserved_outstanding_base_quantity=? WHERE id=?",[baseQuantity,s.lineId]);
   const context=new RequestContextService({services:{require:()=>time}}),pool=mysql.createPool({...f.connectionOptions,database:f.name,multipleStatements:false,connectionLimit:2});
   const database=new MySqlDatabaseService({pool,context,logger:{},config:{queryTimeoutMs:5000,transactionTimeoutMs:10000,acquireTimeoutMs:5000,abandonedConnectionAction:"destroy"}});f.cleanup.shutdown=()=>database.shutdown();
   const createService=options=>new SalesFulfillmentService({database,context,time,logger:{error(){}},...options});
