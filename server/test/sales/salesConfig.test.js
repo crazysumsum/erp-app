@@ -23,7 +23,8 @@ test("TC-009 Sales error catalogue exposes stable codes and only safe field meta
   assert.equal(SALES_ERROR_STATUS.INVENTORY_CONTRACT_MISMATCH, 503);
   assert.equal(SALES_ERROR_STATUS.SALES_LINE_MERGE_CONFLICT, 409);
   assert.equal(SALES_ERROR_STATUS.SALES_FULFILLMENT_CONTRACT_MISMATCH, 503);
-  assert.equal(Object.keys(SALES_ERROR_STATUS).length, 40);
+  assert.equal(SALES_ERROR_STATUS.FULFILLMENT_HISTORY_BLOCKS_WITHDRAWAL, 409);
+  assert.equal(Object.keys(SALES_ERROR_STATUS).length, 41);
   for (const [code, statusCode] of Object.entries(SALES_ERROR_STATUS)) {
     const error = salesError(code, { field: "lines[0].quantity" });
     assert.equal(error.publicCode, code); assert.equal(error.statusCode, statusCode);

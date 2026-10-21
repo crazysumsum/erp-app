@@ -1,3 +1,4 @@
+import { getActiveTransactionIsolation } from "../../services/mysqldatabase/MySqlDatabaseService.js";
 import { normalizeSalesFulfillmentIntent } from "../sales/SalesFulfillmentService.js";
 import { requireFulfillmentActor } from "./fulfillmentAuthorization.js";
 import { fulfillmentInteger } from "./fulfillmentValidation.js";
@@ -26,11 +27,23 @@ function normalize(input){
   for(const line of lines){const selected=salesIntent.lines.find(l=>l.salesOrderLineId===line.salesOrderLineId);if(!selected||selected.baseQuantity!==line.baseQuantity||selected.reservations.length!==line.reservations.length||line.reservations.some(m=>!selected.reservations.some(s=>s.inventoryReservationId===m.inventoryReservationId&&s.baseQuantity===m.baseQuantity)))conflict();}
   return {salesIntent,fulfillmentId:id(input.fulfillmentId),expectedVersion:input.expectedVersion,lines};
 }
-async function lockIds(tx,table,ids){
-  const sorted=[...new Set(ids.map(String))].sort((a,b)=>Number(a)-Number(b)),rows=[];
-  for(let start=0;start<sorted.length;start+=500){const batch=sorted.slice(start,start+500),[locked]=await tx.query(`SELECT * FROM ${table} WHERE id IN (${placeholders(batch)}) ORDER BY id FOR UPDATE`,batch);if(locked.length!==batch.length)conflict();rows.push(...locked);}
+const lockRanks=Object.freeze({fulfillments:1,fulfillment_lines:2,fulfillment_line_reservation_claims:3,fulfillment_allocations:4,shipments:5,shipment_lines:6,shipment_reversals:7});
+const heldLocks=new WeakMap();
+export function sortedFulfillmentIds(ids){
+  if(!Array.isArray(ids))throw new TypeError("IDs required");
+  return [...new Set(ids.map(value=>{const key=String(value);fulfillmentInteger(key);return key;}))].sort((a,b)=>BigInt(a)<BigInt(b)?-1:1);
+}
+export async function lockFulfillmentRowsInTransaction(tx,table,ids){
+  if(tx?.context?.get()?.databaseTransaction!==tx||!Object.hasOwn(lockRanks,table)||!["READ COMMITTED","REPEATABLE READ"].includes(getActiveTransactionIsolation(tx)))throw new TypeError("Active transaction and fixed lock scope required");
+  const sorted=sortedFulfillmentIds(ids),rank=lockRanks[table],state=heldLocks.get(tx)??{rank:0,last:new Map(),ids:new Map()};
+  const prior=state.ids.get(table)??new Set(),last=state.last.get(table);
+  if(rank<state.rank||sorted.some(key=>!prior.has(key)&&last&&BigInt(key)<BigInt(last)))throw new TypeError("Fulfillment lock order inversion");
+  state.rank=rank;for(const key of sorted)prior.add(key);state.ids.set(table,prior);if(sorted.length&&(!last||BigInt(sorted.at(-1))>BigInt(last)))state.last.set(table,sorted.at(-1));heldLocks.set(tx,state);
+  const rows=[];
+  for(let start=0;start<sorted.length;start+=500){const batch=sorted.slice(start,start+500),[locked]=await tx.query(`SELECT * FROM ${table} FORCE INDEX (PRIMARY) WHERE id IN (${placeholders(batch)}) ORDER BY id FOR UPDATE`,batch);if(locked.length!==batch.length)conflict();rows.push(...locked);}
   return rows;
 }
+const lockIds=lockFulfillmentRowsInTransaction;
 export class FulfillmentLockService {
   constructor({database,sales,inventoryLookup,itemLookup,time}){this.database=database;this.sales=sales;this.inventoryLookup=inventoryLookup;this.itemLookup=itemLookup;this.time=time;}
   // Returns validated owner DTOs under held roots. DRAFT callers persist exactly these requested quantities in the same transaction.

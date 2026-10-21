@@ -490,9 +490,9 @@ Backorder 是行級數量狀態，不另設與 Header 狀態互相衝突的 `BAC
 
 | ID | 需求 |
 |---|---|
-| FR-LIFE-001 | 未有任何 Fulfilled Quantity 的 `CONFIRMED` SO 可撤回為 Draft，以便更正商業資料。 |
+| FR-LIFE-001 | 未有任何 Fulfilled Quantity 且沒有任何 Fulfillment active／archive 歷史的 `CONFIRMED` SO 可撤回為 Draft，以便更正商業資料；已有履約歷史時依 HD-014 在 Inventory release 前回明確 `409 FULFILLMENT_HISTORY_BLOCKS_WITHDRAWAL`，保留歷史及 FK，取消／關閉剩餘數量規則不變。 |
 | FR-LIFE-002 | 撤回前必須成功釋放所有未消耗 Reservation；釋放失敗時不得進入 Draft。 |
-| FR-LIFE-003 | 撤回後原有 Reservation／Backorder 結果失效；再次確認時按最新資料重新建立。 |
+| FR-LIFE-003 | 符合 HD-014 無 Fulfillment 歷史資格而撤回後，原有 Reservation／Backorder 結果失效；可編輯 Draft，再次確認時按最新資料重新建立。 |
 | FR-LIFE-004 | 已有任何 Fulfilled Quantity 後，Customer、Currency、Warehouse、已履約 SKU、已履約數量及歷史價格快照不可直接修改。 |
 | FR-LIFE-005 | `DRAFT` 可取消且不需庫存操作。 |
 | FR-LIFE-006 | `CONFIRMED` 且 Fulfilled Quantity 全為 0 時，可整張取消；必須輸入取消原因。 |
@@ -2019,7 +2019,7 @@ Inventory 回傳的 Reservation 狀態為庫存承諾真相；SO 保存可查詢
 
 ### Statement
 
-未有任何 Fulfilled Quantity 的 `CONFIRMED` SO 可撤回為 Draft，以便更正商業資料。 （Legacy identity：`FR-LIFE-001`。）
+未有任何 Fulfilled Quantity 且沒有任何 Fulfillment active／archive 歷史的 `CONFIRMED` SO 可撤回為 Draft，以便更正商業資料；已有履約歷史時依 HD-014 在 Inventory release 前回明確 `409 FULFILLMENT_HISTORY_BLOCKS_WITHDRAWAL`，保留歷史及 FK，取消／關閉剩餘數量規則不變。 （Legacy identity：`FR-LIFE-001`。）
 
 ### Acceptance criteria
 
@@ -2047,7 +2047,7 @@ Inventory 回傳的 Reservation 狀態為庫存承諾真相；SO 保存可查詢
 
 ### Statement
 
-撤回後原有 Reservation／Backorder 結果失效；再次確認時按最新資料重新建立。 （Legacy identity：`FR-LIFE-003`。）
+符合 HD-014 無 Fulfillment 歷史資格而撤回後，原有 Reservation／Backorder 結果失效；可編輯 Draft，再次確認時按最新資料重新建立。 （Legacy identity：`FR-LIFE-003`。）
 
 ### Acceptance criteria
 

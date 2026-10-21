@@ -57,8 +57,8 @@ export class SalesOrderLifecycleService {
       if (Number(header.version) !== input.version) throw salesError("VERSION_CONFLICT",{ currentVersion: Number(header.version) });
       await lockSalesOrderLines(tx,id,header.line_count);
       const order = await readSalesOrderDetail(tx,id);
-      // The read view opened at the actor read, before the Order lock. Every writer of this Order's lines, mappings and queue bumps
-      // the version under that lock, so an equal snapshot version proves the plain reads below see this Order's current rows.
+      // HD013: RC reads current committed projections after the Order lock. Compliant writers hold that parent
+      // and bump its version; reconcile the locked header and projection before using the complete member sets.
       if (order.version !== Number(header.version)) throw salesError("CONCURRENT_OPERATION");
       const fulfilled = order.lines.reduce((sum,l) => sum+BigInt(l.fulfilledBaseQuantity),0n), ordered = order.lines.reduce((sum,l) => sum+BigInt(l.orderedBaseQuantity),0n);
       // State machine uses per-line safe integers; totals need only distinguish zero/partial/all.
@@ -119,6 +119,6 @@ export class SalesOrderLifecycleService {
       if (Number(updated.affectedRows) !== 1) throw salesError("CONCURRENT_OPERATION");
       const result = { id,number: order.number,status,version };await this.order.operations.succeed(tx,{ operationId: claim.operationId,result,nowMs });
       return { salesOrder: await readSalesOrderDetail(tx,id),operation: result };
-    },{ signal,timeoutMs: this.config.transactionTimeoutMs });
+    },{ signal,timeoutMs: this.config.transactionTimeoutMs,isolationLevel: "READ COMMITTED" });
   }
 }

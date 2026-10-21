@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 44,
+  "revision": 54,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -9,10 +9,10 @@
   "current_phase": "PHASE-001",
   "current_task": "TASK-011",
   "baseline": {
-    "design": "60dbcbae939d41b9218e1a3b6f96b9d5716ce7e00a10496db8f37e55f761612d",
-    "plan": "1751ba25360a9988dcc3c2af70287aa09753f643bd363bf4a2b5a1558282cfbf",
-    "code_commit": "9cd31440a2dc51b4aa2d8bfcffd9ae8cecf5dd34",
-    "source_fingerprint": "08e09ddb6c336b22a36c9818ebb133877f95e2e714cf8a85fbc4562690b4cd25",
+    "design": "42e25d8bcda6d434bb5a1e8eee8eda2dbb85c128fd326bc97f2542b5091d8f8c",
+    "plan": "81bdad5deefe189898251c76cbbf997885d83c72cc42ed1dde802f28da5e3242",
+    "code_commit": "9174f39b800c16f7a4bc6e39ba7c36f0ea162a76",
+    "source_fingerprint": "3befac0a0ff11ee64fa639a38e2fc9a5fe942b1dede0a73f30b1d74ec3b64ec8",
     "worktree": "/private/tmp/erp-fulfillment-p0",
     "default_commit": "6a9b86bd999bc310d71dadf321319f6e8e117f57",
     "mode_entry_commit": "76223f40480d94a1d3a2ae6e0e7b91292bd98b82"
@@ -24,7 +24,8 @@
       "workspace": "/private/tmp/erp-fulfillment-p0",
       "mysql-schema": "fulfillment_p0_core",
       "mysql-socket": "/var/folders/gk/rdtb5_px4z9gm7m1cm2q3xg40000gn/T/erp-fulfillment-p0-mysql-ton56on7/mysql.sock",
-      "web-port": "Playwright own API49905/client49906 completed and released; no persistent listener"
+      "web-port": "Playwright own API49905/client49906 completed and released; no persistent listener",
+      "mysql-native-full-core": "Owned additional fullP0 core receipt/private/tmp/fulfillment-p0-legacy.json; createdlegacy85thenforward9, fullnativeflagtrue; nohistorydeleted"
     },
     "lease_ref": null
   },
@@ -815,6 +816,570 @@
         "server/database/migrations/0097_create_shipment_issues_and_reversals.js"
       ],
       "expires_at": null
+    },
+    {
+      "authority_kind": "HUMAN",
+      "actor": "Sam, actual complete approvedP0/TASK011 authority; necessary mechanical registration/coverage scope binding, not a new human decision",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/17_task011_lock_context_lifecycle.md#necessary-exact-scope-alignment",
+      "recorded_at": "2026-10-21T04:09:40.941979+00:00",
+      "code_commit": null,
+      "expires_at": null,
+      "id": "APR-037-TASK011-DESIGN",
+      "kind": "DESIGN",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "3bb89cb8e96858b1e5f02c9660574bf99b2c0bb6792405d481ec05d6419175de",
+      "scope": [
+        "fulfillment-shipping-management",
+        "Existing P0 requirements/business semantics/HD010/HD011 unchanged; Task011 exactregistration and approvedrecommended coveragefloor only"
+      ]
+    },
+    {
+      "authority_kind": "HUMAN",
+      "actor": "Sam, actual complete approvedP0/TASK011 authority; necessary mechanical registration/coverage scope binding, not a new human decision",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/17_task011_lock_context_lifecycle.md#necessary-exact-scope-alignment",
+      "recorded_at": "2026-10-21T04:09:40.941979+00:00",
+      "code_commit": null,
+      "expires_at": null,
+      "id": "APR-038-TASK011-PLAN",
+      "kind": "PLAN",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a1cbf8dfe35d6113ced323f76f97038320e1e932478d76856a70b88d90c6fde8",
+      "scope": [
+        "fulfillment-shipping-management",
+        "PHASE-001 TASK001..011, same fullP0 gates/singlePR; necessary exact wrapper/checker paths only"
+      ]
+    },
+    {
+      "authority_kind": "HUMAN",
+      "actor": "Sam, actual complete approvedP0/TASK011 authority; necessary mechanical registration/coverage scope binding, not a new human decision",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/17_task011_lock_context_lifecycle.md#necessary-exact-scope-alignment",
+      "recorded_at": "2026-10-21T04:09:40.941979+00:00",
+      "code_commit": null,
+      "expires_at": null,
+      "id": "APR-039-TASK011-SCOPE",
+      "kind": "SCOPE",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a1cbf8dfe35d6113ced323f76f97038320e1e932478d76856a70b88d90c6fde8",
+      "scope": [
+        "server/src/framework/configuration/applicationConfiguration.js",
+        "server/test/configuration.test.js",
+        "server/test/permissionCatalogueConventions.test.js",
+        "server/src/modules/authorization/permissionCatalogue.js",
+        "client/src/framework/http/errorMessages.js",
+        "server/database/migrations/*fulfillment*.js",
+        "server/src/modules/sales/**",
+        "server/src/modules/inventory/**",
+        "server/src/modules/customer/CustomerLookupService.js",
+        "server/src/modules/item/ItemLookupService.js",
+        "server/database/migrations/0088_create_sales_archive_batches.js",
+        "server/src/services/mysqldatabase/MySqlDatabaseService.js",
+        "server/test/salesFulfillmentQuantities.test.js",
+        "server/test/salesFulfillmentService.test.js",
+        "server/test/integration/salesFulfillmentService.integration.test.js",
+        "server/test/integration/salesFulfillmentTransactionComponent.integration.test.js",
+        "server/test/sales/phase4/salesFulfillmentFixtures.js",
+        "server/test/sales/salesConfig.test.js",
+        "docs/sales_order_management/03_design_spec.md",
+        "docs/sales_order_management/00_module_manifest.json",
+        "server/database/migrations/0096_create_shipments.js",
+        "server/database/migrations/0097_create_shipment_issues_and_reversals.js",
+        "server/src/services/fulfillment/FulfillmentOpenMatterService.js",
+        "server/scripts/checkCoverageFloors.js"
+      ]
+    },
+    {
+      "authority_kind": "HUMAN",
+      "actor": "Sam, actual complete approvedP0/TASK011 authority; necessary mechanical registration/coverage scope binding, not a new human decision",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/17_task011_lock_context_lifecycle.md#necessary-exact-scope-alignment",
+      "recorded_at": "2026-10-21T04:09:40.941979+00:00",
+      "code_commit": null,
+      "expires_at": null,
+      "id": "APR-040-TASK011-UATNA",
+      "kind": "UAT_NA",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a1cbf8dfe35d6113ced323f76f97038320e1e932478d76856a70b88d90c6fde8",
+      "scope": [
+        "NFR-023",
+        "Existing exact N/A reason unchanged; TC010 remainsmandatory/blocking"
+      ]
+    },
+    {
+      "authority_kind": "HUMAN",
+      "actor": "Sam, actual HD012 A answer in this chat plus existing completeP0 scope; necessary canonical binding, not final source approval",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/18_lifecycle_operation_read_consistency.md#actual-adoption--2026-10-21",
+      "recorded_at": "2026-10-21T06:02:44.754440+00:00",
+      "code_commit": null,
+      "expires_at": null,
+      "id": "APR-041-HD012-DESIGN",
+      "kind": "DESIGN",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "000444765c4dff0a29d5be68566299aa434cac0bd89065801a34eb2c29e004fb",
+      "scope": [
+        "fulfillment-shipping-management",
+        "Existing P0 requirements/business semantics/HD010/HD011 unchanged; Task011 exactregistration and approvedrecommended coveragefloor only"
+      ]
+    },
+    {
+      "authority_kind": "HUMAN",
+      "actor": "Sam, actual HD012 A answer in this chat plus existing completeP0 scope; necessary canonical binding, not final source approval",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/18_lifecycle_operation_read_consistency.md#actual-adoption--2026-10-21",
+      "recorded_at": "2026-10-21T06:02:44.754440+00:00",
+      "code_commit": null,
+      "expires_at": null,
+      "id": "APR-042-HD012-PLAN",
+      "kind": "PLAN",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a3d2ea2d58b6a29ae02f4249de683412123d9ffb6f979859bdaa0ce6741aa09a",
+      "scope": [
+        "fulfillment-shipping-management",
+        "PHASE-001 TASK001..011, same fullP0 gates/singlePR; necessary exact wrapper/checker paths only"
+      ]
+    },
+    {
+      "authority_kind": "HUMAN",
+      "actor": "Sam, actual HD012 A answer in this chat plus existing completeP0 scope; necessary canonical binding, not final source approval",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/18_lifecycle_operation_read_consistency.md#actual-adoption--2026-10-21",
+      "recorded_at": "2026-10-21T06:02:44.754440+00:00",
+      "code_commit": null,
+      "expires_at": null,
+      "id": "APR-043-HD012-SCOPE",
+      "kind": "SCOPE",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a3d2ea2d58b6a29ae02f4249de683412123d9ffb6f979859bdaa0ce6741aa09a",
+      "scope": [
+        "server/src/framework/configuration/applicationConfiguration.js",
+        "server/test/configuration.test.js",
+        "server/test/permissionCatalogueConventions.test.js",
+        "server/src/modules/authorization/permissionCatalogue.js",
+        "client/src/framework/http/errorMessages.js",
+        "server/database/migrations/*fulfillment*.js",
+        "server/src/modules/sales/**",
+        "server/src/modules/inventory/**",
+        "server/src/modules/customer/CustomerLookupService.js",
+        "server/src/modules/item/ItemLookupService.js",
+        "server/database/migrations/0088_create_sales_archive_batches.js",
+        "server/src/services/mysqldatabase/MySqlDatabaseService.js",
+        "server/test/salesFulfillmentQuantities.test.js",
+        "server/test/salesFulfillmentService.test.js",
+        "server/test/integration/salesFulfillmentService.integration.test.js",
+        "server/test/integration/salesFulfillmentTransactionComponent.integration.test.js",
+        "server/test/sales/phase4/salesFulfillmentFixtures.js",
+        "server/test/sales/salesConfig.test.js",
+        "docs/sales_order_management/03_design_spec.md",
+        "docs/sales_order_management/00_module_manifest.json",
+        "server/database/migrations/0096_create_shipments.js",
+        "server/database/migrations/0097_create_shipment_issues_and_reversals.js",
+        "server/src/services/fulfillment/FulfillmentOpenMatterService.js",
+        "server/scripts/checkCoverageFloors.js"
+      ]
+    },
+    {
+      "authority_kind": "HUMAN",
+      "actor": "Sam, actual HD012 A answer in this chat plus existing completeP0 scope; necessary canonical binding, not final source approval",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/18_lifecycle_operation_read_consistency.md#actual-adoption--2026-10-21",
+      "recorded_at": "2026-10-21T06:02:44.754440+00:00",
+      "code_commit": null,
+      "expires_at": null,
+      "id": "APR-044-HD012-UAT_NA",
+      "kind": "UAT_NA",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a3d2ea2d58b6a29ae02f4249de683412123d9ffb6f979859bdaa0ce6741aa09a",
+      "scope": [
+        "NFR-023",
+        "Existing exact N/A reason unchanged; TC010 remainsmandatory/blocking"
+      ]
+    },
+    {
+      "authority_kind": "HUMAN",
+      "actor": "Sam, actual HD013 A approval in this chat; exact threeSaleslifecycleRC plus necessary canonical binding, no final source approval",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/19_lifecycle_root_read_consistency.md#actual-adoption--2026-10-21",
+      "recorded_at": "2026-10-21T06:35:25.038009+00:00",
+      "code_commit": null,
+      "expires_at": null,
+      "id": "APR-045-HD013-DESIGN",
+      "kind": "DESIGN",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "30b603fa7a9e5b56d5ee876734bde5f905d2577bddccbe5150ae61a012d6ba83",
+      "scope": [
+        "fulfillment-shipping-management",
+        "Existing P0 requirements/business semantics/HD010/HD011 unchanged; Task011 exactregistration and approvedrecommended coveragefloor only"
+      ]
+    },
+    {
+      "authority_kind": "HUMAN",
+      "actor": "Sam, actual HD013 A approval in this chat; exact threeSaleslifecycleRC plus necessary canonical binding, no final source approval",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/19_lifecycle_root_read_consistency.md#actual-adoption--2026-10-21",
+      "recorded_at": "2026-10-21T06:35:25.038069+00:00",
+      "code_commit": null,
+      "expires_at": null,
+      "id": "APR-046-HD013-PLAN",
+      "kind": "PLAN",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "070d6de1db7b4563ef4f3185fc638bad96d726be460ab56f020097152152edd4",
+      "scope": [
+        "fulfillment-shipping-management",
+        "PHASE-001 TASK001..011, same fullP0 gates/singlePR; necessary exact wrapper/checker paths only"
+      ]
+    },
+    {
+      "authority_kind": "HUMAN",
+      "actor": "Sam, actual HD013 A approval in this chat; exact threeSaleslifecycleRC plus necessary canonical binding, no final source approval",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/19_lifecycle_root_read_consistency.md#actual-adoption--2026-10-21",
+      "recorded_at": "2026-10-21T06:35:25.038071+00:00",
+      "code_commit": null,
+      "expires_at": null,
+      "id": "APR-047-HD013-SCOPE",
+      "kind": "SCOPE",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "070d6de1db7b4563ef4f3185fc638bad96d726be460ab56f020097152152edd4",
+      "scope": [
+        "server/src/framework/configuration/applicationConfiguration.js",
+        "server/test/configuration.test.js",
+        "server/test/permissionCatalogueConventions.test.js",
+        "server/src/modules/authorization/permissionCatalogue.js",
+        "client/src/framework/http/errorMessages.js",
+        "server/database/migrations/*fulfillment*.js",
+        "server/src/modules/sales/**",
+        "server/src/modules/inventory/**",
+        "server/src/modules/customer/CustomerLookupService.js",
+        "server/src/modules/item/ItemLookupService.js",
+        "server/database/migrations/0088_create_sales_archive_batches.js",
+        "server/src/services/mysqldatabase/MySqlDatabaseService.js",
+        "server/test/salesFulfillmentQuantities.test.js",
+        "server/test/salesFulfillmentService.test.js",
+        "server/test/integration/salesFulfillmentService.integration.test.js",
+        "server/test/integration/salesFulfillmentTransactionComponent.integration.test.js",
+        "server/test/sales/phase4/salesFulfillmentFixtures.js",
+        "server/test/sales/salesConfig.test.js",
+        "docs/sales_order_management/03_design_spec.md",
+        "docs/sales_order_management/00_module_manifest.json",
+        "server/database/migrations/0096_create_shipments.js",
+        "server/database/migrations/0097_create_shipment_issues_and_reversals.js",
+        "server/src/services/fulfillment/FulfillmentOpenMatterService.js",
+        "server/scripts/checkCoverageFloors.js",
+        "docs/sales_order_management/01_requirement_spec.md",
+        "server/test/integration/salesLifecycle.integration.test.js"
+      ]
+    },
+    {
+      "authority_kind": "HUMAN",
+      "actor": "Sam, actual HD013 A approval in this chat; exact threeSaleslifecycleRC plus necessary canonical binding, no final source approval",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/19_lifecycle_root_read_consistency.md#actual-adoption--2026-10-21",
+      "recorded_at": "2026-10-21T06:35:25.038073+00:00",
+      "code_commit": null,
+      "expires_at": null,
+      "id": "APR-048-HD013-UAT_NA",
+      "kind": "UAT_NA",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "070d6de1db7b4563ef4f3185fc638bad96d726be460ab56f020097152152edd4",
+      "scope": [
+        "NFR-023",
+        "Existing exact N/A reason unchanged; TC010 remainsmandatory/blocking"
+      ]
+    },
+    {
+      "authority_kind": "HUMAN",
+      "actor": "Sam, actual HD014 A in this chat; narrowWITHDRAW history409, actual priorHD013threeflowRC; necessary canonical binding only",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/20_withdrawal_fulfillment_history.md#actual-adoption--2026-10-21",
+      "recorded_at": "2026-10-21T06:47:40.726952+00:00",
+      "code_commit": null,
+      "expires_at": null,
+      "id": "APR-049-HD014-DESIGN",
+      "kind": "DESIGN",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "befe72bfcc12299bb2a875f86473614a48353ed58c9a81dc7569403d8adf9a59",
+      "scope": [
+        "fulfillment-shipping-management",
+        "Existing P0 requirements/business semantics/HD010/HD011 unchanged; Task011 exactregistration and approvedrecommended coveragefloor only"
+      ]
+    },
+    {
+      "authority_kind": "HUMAN",
+      "actor": "Sam, actual HD014 A in this chat; narrowWITHDRAW history409, actual priorHD013threeflowRC; necessary canonical binding only",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/20_withdrawal_fulfillment_history.md#actual-adoption--2026-10-21",
+      "recorded_at": "2026-10-21T06:47:40.727007+00:00",
+      "code_commit": null,
+      "expires_at": null,
+      "id": "APR-050-HD014-PLAN",
+      "kind": "PLAN",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "f1088e364c88259355306aff6dacb933327ed0291d2599576aa0b9a31e558a50",
+      "scope": [
+        "fulfillment-shipping-management",
+        "PHASE-001 TASK001..011, same fullP0 gates/singlePR; necessary exact wrapper/checker paths only"
+      ]
+    },
+    {
+      "authority_kind": "HUMAN",
+      "actor": "Sam, actual HD014 A in this chat; narrowWITHDRAW history409, actual priorHD013threeflowRC; necessary canonical binding only",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/20_withdrawal_fulfillment_history.md#actual-adoption--2026-10-21",
+      "recorded_at": "2026-10-21T06:47:40.727009+00:00",
+      "code_commit": null,
+      "expires_at": null,
+      "id": "APR-051-HD014-SCOPE",
+      "kind": "SCOPE",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "f1088e364c88259355306aff6dacb933327ed0291d2599576aa0b9a31e558a50",
+      "scope": [
+        "server/src/framework/configuration/applicationConfiguration.js",
+        "server/test/configuration.test.js",
+        "server/test/permissionCatalogueConventions.test.js",
+        "server/src/modules/authorization/permissionCatalogue.js",
+        "client/src/framework/http/errorMessages.js",
+        "server/database/migrations/*fulfillment*.js",
+        "server/src/modules/sales/**",
+        "server/src/modules/inventory/**",
+        "server/src/modules/customer/CustomerLookupService.js",
+        "server/src/modules/item/ItemLookupService.js",
+        "server/database/migrations/0088_create_sales_archive_batches.js",
+        "server/src/services/mysqldatabase/MySqlDatabaseService.js",
+        "server/test/salesFulfillmentQuantities.test.js",
+        "server/test/salesFulfillmentService.test.js",
+        "server/test/integration/salesFulfillmentService.integration.test.js",
+        "server/test/integration/salesFulfillmentTransactionComponent.integration.test.js",
+        "server/test/sales/phase4/salesFulfillmentFixtures.js",
+        "server/test/sales/salesConfig.test.js",
+        "docs/sales_order_management/03_design_spec.md",
+        "docs/sales_order_management/00_module_manifest.json",
+        "server/database/migrations/0096_create_shipments.js",
+        "server/database/migrations/0097_create_shipment_issues_and_reversals.js",
+        "server/src/services/fulfillment/FulfillmentOpenMatterService.js",
+        "server/scripts/checkCoverageFloors.js",
+        "docs/sales_order_management/01_requirement_spec.md",
+        "server/test/integration/salesLifecycle.integration.test.js",
+        ".github/workflows/ci.yml",
+        "server/test/sales/phase2/fixtures.js"
+      ]
+    },
+    {
+      "authority_kind": "HUMAN",
+      "actor": "Sam, actual HD014 A in this chat; narrowWITHDRAW history409, actual priorHD013threeflowRC; necessary canonical binding only",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/20_withdrawal_fulfillment_history.md#actual-adoption--2026-10-21",
+      "recorded_at": "2026-10-21T06:47:40.727012+00:00",
+      "code_commit": null,
+      "expires_at": null,
+      "id": "APR-052-HD014-UAT_NA",
+      "kind": "UAT_NA",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "f1088e364c88259355306aff6dacb933327ed0291d2599576aa0b9a31e558a50",
+      "scope": [
+        "NFR-023",
+        "Existing exact N/A reason unchanged; TC010 remainsmandatory/blocking"
+      ]
+    },
+    {
+      "authority_kind": "HUMAN",
+      "actor": "Sam actualcompleteP0/Task011 registration/fullverification authority, HD013/14adopted; necessary native-onlyCI/requestfixture binding, not a newhumanbusinessdecision",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/17_task011_lock_context_lifecycle.md#current-approved-implementation-and-native-ci-profile",
+      "recorded_at": "2026-10-21T07:03:55.035687+00:00",
+      "code_commit": null,
+      "expires_at": null,
+      "id": "APR-053-TASK011-NATIVE-DESIGN",
+      "kind": "DESIGN",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "5422898c8f8496365d552931cf71d44b57dbc8bc28855458fe1944919054618b",
+      "scope": [
+        "fulfillment-shipping-management",
+        "Existing P0 requirements/business semantics/HD010/HD011 unchanged; Task011 exactregistration and approvedrecommended coveragefloor only"
+      ]
+    },
+    {
+      "authority_kind": "HUMAN",
+      "actor": "Sam actualcompleteP0/Task011 registration/fullverification authority, HD013/14adopted; necessary native-onlyCI/requestfixture binding, not a newhumanbusinessdecision",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/17_task011_lock_context_lifecycle.md#current-approved-implementation-and-native-ci-profile",
+      "recorded_at": "2026-10-21T07:03:55.036022+00:00",
+      "code_commit": null,
+      "expires_at": null,
+      "id": "APR-054-TASK011-NATIVE-PLAN",
+      "kind": "PLAN",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a6de01efe34a547510661d872e0229a30451e3a45fc65ccf9b1218f8405c67e8",
+      "scope": [
+        "fulfillment-shipping-management",
+        "PHASE-001 TASK001..011, same fullP0 gates/singlePR; necessary exact wrapper/checker paths only"
+      ]
+    },
+    {
+      "authority_kind": "HUMAN",
+      "actor": "Sam actualcompleteP0/Task011 registration/fullverification authority, HD013/14adopted; necessary native-onlyCI/requestfixture binding, not a newhumanbusinessdecision",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/17_task011_lock_context_lifecycle.md#current-approved-implementation-and-native-ci-profile",
+      "recorded_at": "2026-10-21T07:03:55.036025+00:00",
+      "code_commit": null,
+      "expires_at": null,
+      "id": "APR-055-TASK011-NATIVE-SCOPE",
+      "kind": "SCOPE",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a6de01efe34a547510661d872e0229a30451e3a45fc65ccf9b1218f8405c67e8",
+      "scope": [
+        "server/src/framework/configuration/applicationConfiguration.js",
+        "server/test/configuration.test.js",
+        "server/test/permissionCatalogueConventions.test.js",
+        "server/src/modules/authorization/permissionCatalogue.js",
+        "client/src/framework/http/errorMessages.js",
+        "server/database/migrations/*fulfillment*.js",
+        "server/src/modules/sales/**",
+        "server/src/modules/inventory/**",
+        "server/src/modules/customer/CustomerLookupService.js",
+        "server/src/modules/item/ItemLookupService.js",
+        "server/database/migrations/0088_create_sales_archive_batches.js",
+        "server/src/services/mysqldatabase/MySqlDatabaseService.js",
+        "server/test/salesFulfillmentQuantities.test.js",
+        "server/test/salesFulfillmentService.test.js",
+        "server/test/integration/salesFulfillmentService.integration.test.js",
+        "server/test/integration/salesFulfillmentTransactionComponent.integration.test.js",
+        "server/test/sales/phase4/salesFulfillmentFixtures.js",
+        "server/test/sales/salesConfig.test.js",
+        "docs/sales_order_management/03_design_spec.md",
+        "docs/sales_order_management/00_module_manifest.json",
+        "server/database/migrations/0096_create_shipments.js",
+        "server/database/migrations/0097_create_shipment_issues_and_reversals.js",
+        "server/src/services/fulfillment/FulfillmentOpenMatterService.js",
+        "server/scripts/checkCoverageFloors.js",
+        "docs/sales_order_management/01_requirement_spec.md",
+        "server/test/integration/salesLifecycle.integration.test.js",
+        ".github/workflows/ci.yml",
+        "server/test/sales/phase2/fixtures.js",
+        "client/src/composables/sales/useSalesCommandEvent.js",
+        "client/src/pages/sales/SalesOrderDetailPage.vue",
+        "client/test/composables/sales/salesCommandEvent.test.js",
+        "server/test/serviceContainer.test.js",
+        "server/test/requestLimiterOptional.test.js"
+      ]
+    },
+    {
+      "authority_kind": "HUMAN",
+      "actor": "Sam actualcompleteP0/Task011 registration/fullverification authority, HD013/14adopted; necessary native-onlyCI/requestfixture binding, not a newhumanbusinessdecision",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/17_task011_lock_context_lifecycle.md#current-approved-implementation-and-native-ci-profile",
+      "recorded_at": "2026-10-21T07:03:55.036027+00:00",
+      "code_commit": null,
+      "expires_at": null,
+      "id": "APR-056-TASK011-NATIVE-UATNA",
+      "kind": "UAT_NA",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a6de01efe34a547510661d872e0229a30451e3a45fc65ccf9b1218f8405c67e8",
+      "scope": [
+        "NFR-023",
+        "Existing exact N/A reason unchanged; TC010 remainsmandatory/blocking"
+      ]
+    },
+    {
+      "authority_kind": "HUMAN",
+      "actor": "Sam actualHD014clear409andfullP0authority; necessary UIconsumer/contractpin/testmetadata binding, no newbusinessdecision or finalsourceapproval",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/17_task011_lock_context_lifecycle.md#final-r1-review-and-narrow-closure-work",
+      "recorded_at": "2026-10-21T07:16:13.639304+00:00",
+      "code_commit": null,
+      "expires_at": null,
+      "id": "APR-057-HD014-UI-DESIGN",
+      "kind": "DESIGN",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "42e25d8bcda6d434bb5a1e8eee8eda2dbb85c128fd326bc97f2542b5091d8f8c",
+      "scope": [
+        "fulfillment-shipping-management",
+        "Existing P0 requirements/business semantics/HD010/HD011 unchanged; Task011 exactregistration and approvedrecommended coveragefloor only"
+      ]
+    },
+    {
+      "authority_kind": "HUMAN",
+      "actor": "Sam actualHD014clear409andfullP0authority; necessary UIconsumer/contractpin/testmetadata binding, no newbusinessdecision or finalsourceapproval",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/17_task011_lock_context_lifecycle.md#final-r1-review-and-narrow-closure-work",
+      "recorded_at": "2026-10-21T07:16:13.639360+00:00",
+      "code_commit": null,
+      "expires_at": null,
+      "id": "APR-058-HD014-UI-PLAN",
+      "kind": "PLAN",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "81bdad5deefe189898251c76cbbf997885d83c72cc42ed1dde802f28da5e3242",
+      "scope": [
+        "fulfillment-shipping-management",
+        "PHASE-001 TASK001..011, same fullP0 gates/singlePR; necessary exact wrapper/checker paths only"
+      ]
+    },
+    {
+      "authority_kind": "HUMAN",
+      "actor": "Sam actualHD014clear409andfullP0authority; necessary UIconsumer/contractpin/testmetadata binding, no newbusinessdecision or finalsourceapproval",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/17_task011_lock_context_lifecycle.md#final-r1-review-and-narrow-closure-work",
+      "recorded_at": "2026-10-21T07:16:13.639362+00:00",
+      "code_commit": null,
+      "expires_at": null,
+      "id": "APR-059-HD014-UI-SCOPE",
+      "kind": "SCOPE",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "81bdad5deefe189898251c76cbbf997885d83c72cc42ed1dde802f28da5e3242",
+      "scope": [
+        "server/src/framework/configuration/applicationConfiguration.js",
+        "server/test/configuration.test.js",
+        "server/test/permissionCatalogueConventions.test.js",
+        "server/src/modules/authorization/permissionCatalogue.js",
+        "client/src/framework/http/errorMessages.js",
+        "server/database/migrations/*fulfillment*.js",
+        "server/src/modules/sales/**",
+        "server/src/modules/inventory/**",
+        "server/src/modules/customer/CustomerLookupService.js",
+        "server/src/modules/item/ItemLookupService.js",
+        "server/database/migrations/0088_create_sales_archive_batches.js",
+        "server/src/services/mysqldatabase/MySqlDatabaseService.js",
+        "server/test/salesFulfillmentQuantities.test.js",
+        "server/test/salesFulfillmentService.test.js",
+        "server/test/integration/salesFulfillmentService.integration.test.js",
+        "server/test/integration/salesFulfillmentTransactionComponent.integration.test.js",
+        "server/test/sales/phase4/salesFulfillmentFixtures.js",
+        "server/test/sales/salesConfig.test.js",
+        "docs/sales_order_management/03_design_spec.md",
+        "docs/sales_order_management/00_module_manifest.json",
+        "server/database/migrations/0096_create_shipments.js",
+        "server/database/migrations/0097_create_shipment_issues_and_reversals.js",
+        "server/src/services/fulfillment/FulfillmentOpenMatterService.js",
+        "server/scripts/checkCoverageFloors.js",
+        "docs/sales_order_management/01_requirement_spec.md",
+        "server/test/integration/salesLifecycle.integration.test.js",
+        ".github/workflows/ci.yml",
+        "server/test/sales/phase2/fixtures.js",
+        "client/src/composables/sales/useSalesCommandEvent.js",
+        "client/src/pages/sales/SalesOrderDetailPage.vue",
+        "client/test/composables/sales/salesCommandEvent.test.js",
+        "server/test/serviceContainer.test.js",
+        "server/test/requestLimiterOptional.test.js"
+      ]
+    },
+    {
+      "authority_kind": "HUMAN",
+      "actor": "Sam actualHD014clear409andfullP0authority; necessary UIconsumer/contractpin/testmetadata binding, no newbusinessdecision or finalsourceapproval",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/17_task011_lock_context_lifecycle.md#final-r1-review-and-narrow-closure-work",
+      "recorded_at": "2026-10-21T07:16:13.639365+00:00",
+      "code_commit": null,
+      "expires_at": null,
+      "id": "APR-060-HD014-UI-UATNA",
+      "kind": "UAT_NA",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "81bdad5deefe189898251c76cbbf997885d83c72cc42ed1dde802f28da5e3242",
+      "scope": [
+        "NFR-023",
+        "Existing exact N/A reason unchanged; TC010 remainsmandatory/blocking"
+      ]
     }
   ],
   "reviews": [
@@ -1153,6 +1718,78 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-029-HD012-PROPOSAL",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "2ab3f806b1178508c9b41ae3c61150bb9f20e8650eaf9e8c39388a6dd3dceb68",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/18_lifecycle_operation_read_consistency.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-030-TASK011-PREPARATION",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "b11c79caef09d25ea0367d2243b6ceef6233d12ac0d6fc4efaf05fe2ba833177",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/17_task011_lock_context_lifecycle.md#reviewed-unaffected-preparation",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-031-HD013-PROPOSAL",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "e735ff34f19916d1cb5e57829c9d672b14a3b521687de87b13ea4f6544734513",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/19_lifecycle_root_read_consistency.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-032-HD014-PROPOSAL",
+      "method": "SEPARATE_AGENT",
+      "author": "/root and named Sales owner read-only analysis",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "2373fadbb5af426cdc2db7daab67bb56e6a9053f46497d4df7e3b8ab92884072",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/20_withdrawal_fulfillment_history.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-033-TASK011-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "f21a99daa5124af5eb62e7e1675b17a6e03c5c549530ba1c83953455773454b3",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/17_task011_lock_context_lifecycle.md#final-r1-review-and-narrow-closure-work",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-034-TASK011-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "b762307073b66277fa845a6404a87582d776ad6fc4868b94257c873176c13143",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/17_task011_lock_context_lifecycle.md#final-r2-independent-closure--2026-10-21",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [],
@@ -1303,6 +1940,43 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "docs/fulfillment_shipping_management/implementation/10_reservation_version_alignment.md#actual-adoption"
+    },
+    {
+      "id": "HD-012",
+      "impact": "MAJOR",
+      "question": "Approve exact lifecycle readiness-only operation FOR SHARE NOWAIT after Sales/document locks, failclosed UNKNOWN/wholeSales503rollback without Inventory release; or redesign broader Sales preflight retaining strict general lockorder. Proposal2ab3f806, report18; no production exception before actual human A.",
+      "affected_ids": [
+        "DES-007",
+        "TASK-011",
+        "TC-010"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "docs/fulfillment_shipping_management/implementation/18_lifecycle_operation_read_consistency.md#actual-adoption--2026-10-21"
+    },
+    {
+      "id": "HD-013",
+      "impact": "MAJOR",
+      "question": "Observed actual RR root-range/WarehouseFK deadlock. Exact reviewed proposal e735ff34: A only existingSalesWITHDRAW/CANCEL/CLOSE_REMAINING localizedRC plus parent-then-currentPK guard, B Inventoryowner scopedWarehouseNOWAIT. Await actualhuman; no isolation or Inventory lock correction adopted.",
+      "affected_ids": [
+        "DES-007",
+        "DES-014",
+        "TASK-011",
+        "TC-010"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "docs/fulfillment_shipping_management/implementation/19_lifecycle_root_read_consistency.md#actual-adoption--2026-10-21"
+    },
+    {
+      "id": "HD-014",
+      "impact": "MAJOR",
+      "question": "Withdraw versus immutable Fulfillment mapping/line history FK; actualSam selectedA narrow WITHDRAW-only history409 before release, nohistoryedit/reconfirm andCancel/Close unchanged.",
+      "affected_ids": [
+        "DES-007",
+        "TASK-011",
+        "TC-010"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "docs/fulfillment_shipping_management/implementation/20_withdrawal_fulfillment_history.md#actual-adoption--2026-10-21"
     }
   ],
   "external_actions": [
@@ -1489,9 +2163,38 @@
       "idempotency_key": "task010-native-first-main6a9b86",
       "status": "CONFIRMED",
       "source_ref": "Report16 actual exact0088+0098/0099, root7/separate7 andwholeaffected40nativePASS0skip; ownedDMLaccount+schema cleaned. No shared/liveinstall."
+    },
+    {
+      "id": "P0-TASK011-NATIVE-R1",
+      "kind": "OWNED_NATIVE_TRANSACTION_TEST",
+      "target": "owned private MySQL26.7.0 disposable fullP0schema; realDI/lifecycle/locks/faults; no liveinstall",
+      "idempotency_key": "task011-native-first-9174f39b",
+      "status": "CONFIRMED",
+      "source_ref": "Report17: actual context/Claim13nativePASS, basiclifecycle3PASS, RRroot/FK1RED (deadlock), separateRC3candidateprobes; owned disposable schemas cleaned. Does not meanTask011/fullP0PASS."
+    },
+    {
+      "id": "P0-LEGACY-NATIVE-BASELINE",
+      "kind": "OWNED_NATIVE_MIGRATION_TEST",
+      "target": "new owned fulfillment_p0_legacy UUID schema through0087, noP0 schema/history; originalcore0091 preserved",
+      "idempotency_key": "legacy-baseline-hd013-hd014-r1",
+      "status": "CONFIRMED",
+      "source_ref": "Report17 actual85historicalbaselinecreated/currentcataloguestartupfails; then9genuineP0forwardmigrationsunder existingTask011nativeauthority, all94historypreserved; fullenablednativeSales21PASS; receipt/private/tmp/fulfillment-p0-legacy.json. No live/productionchange."
+    },
+    {
+      "id": "P0-FINAL-BROWSER-HD014-R1",
+      "kind": "OWNED_BROWSER_TEST",
+      "target": "ownedcompleteP0nativecore andlocalhost49905/49906; no liveactivation",
+      "idempotency_key": "p0-browser-foundation-hd014-r1",
+      "status": "CONFIRMED",
+      "source_ref": "Report17 actual root2PlaywrightPASS0FAIL; final-playwright-r1.log; owned49905/49906 released. Independent r2 also2PASS, separate execution."
     }
   ],
-  "evidence_files": [],
+  "evidence_files": [
+    "docs/fulfillment_shipping_management/implementation/17_task011_lock_context_lifecycle.md",
+    "docs/fulfillment_shipping_management/implementation/18_lifecycle_operation_read_consistency.md",
+    "docs/fulfillment_shipping_management/implementation/19_lifecycle_root_read_consistency.md",
+    "docs/fulfillment_shipping_management/implementation/20_withdrawal_fulfillment_history.md"
+  ],
   "defects": [],
-  "next_safe_action": "Commit exactindependentlyapprovedTask0104files/evidence, then Task011 mechanicalscopealignment for realDIwrapper/Operation coveragefloor and safe fixedorder/current lifecycle inspection. OriginalTask001–010DONE; no fullP0/CI/formalTC010/UAT acceptance."
+  "next_safe_action": "Preserve independently reviewed Task011 source in atomic commit while IN_PROGRESS; integrate freshly fetched main6a9132b; rerun complete native/globalcoverage, standaloneFILES, client/build/lint/audit/browser as applicable; finalwholeP0review. Only then markall11DONE and createone draftPR; no formalTC/UAT/liveactivation."
 }

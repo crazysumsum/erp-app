@@ -195,6 +195,8 @@ jobs:
         env:
           SALES_CAPACITY_SEPARATE_STEP: "1"
           SALES_IMPORT_CAPACITY_SEPARATE_STEP: "1"
+          # This native-only lane has applied the complete P0 schema; keep deployment default off.
+          FULFILLMENT_LIFECYCLE_ENABLED: "true"
           NODE_V8_COVERAGE: ${{ github.workspace }}/server/coverage/shard/raw
         run: npm run test:coverage:shard --workspace server -- --test-shard=${{ matrix.shard }}/4
 

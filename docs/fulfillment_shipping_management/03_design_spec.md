@@ -250,6 +250,10 @@ Archive由Sales Job協調；每張SO一個transaction，先鎖Sales root，再�
 6. Inventory Operation → Warehouse → Stock Controls → Bins／Bin Locks → Lots → Balances → Reservations → Allocations。
 7. Current projections、History、Audit append。
 
+HD-013已批准：只限Sales WITHDRAW／CANCEL／CLOSE_REMAINING transaction明確使用READ COMMITTED，其餘Sales及DB全域預設保持不變。Lifecycle guard必須驗可信active-RC metadata；在各層直接父鎖下plain current discovery完整IDs，再依主鍵升序鎖定並重驗owner／目前狀態及數量。不得使用RR snapshot、owner-range locking discovery或未實作的parent-version witness推斷無工作。
+
+HD-012已批准的唯一readiness例外：Sales lifecycle在Sales／文件根鎖後，只可用`FOR SHARE NOWAIT` current read檢查既有Fulfillment／Shipment operation；不能claim、插入、接管、升鎖、等待或重試。IN_PROGRESS回OPEN；鎖衝突、缺schema及任何未知依賴回UNKNOWN，由Sales整個transaction以503 rollback，在此之前不得release Inventory。此例外不改業務writer鎖序；隔離範圍依HD-013的三條lifecycle例外。
+
 Archive不呼叫Inventory；只按Sales root → Fulfillment roots → archive rows順序。Deadlock及lock timeout映射`409 CONCURRENT_OPERATION`，原event先查operation outcome。
 
 ### 2.9 冪等三層責任
@@ -1086,6 +1090,8 @@ FulfillmentDownstreamMatterService.assertShipmentReversibleInTransaction(transac
 PICKING、PICKED、SHIPPING、REVERSING、active Claim、outstanding Allocation、IN_PROGRESS operation均回OPEN；provider故障回UNKNOWN。`archiveOrderInTransaction()`只可由Sales Archive Service使用，接收order ID、archive batch、cutoff及expected manifest；回逐tablecount/hash及routing refs。
 
 最小lifecycle method及真實`fulfillmentOpenMatter`註冊由P0 TASK-011交付；P3 TASK-041只擴展archive eligibility。P0測試先於隔離schema完成，任何live install必須先有已驗證provider artifact及核准cutover，再按§1.4停writer／安裝／註冊／驗證／恢復；不是等到P3才解除Sales fail-closed。
+
+HD-014：固定 WITHDRAW purpose 只要存在任何本模組 active／archive history，就以已知 OPEN／CLOSED 結果的 bounded `reasonCodes:["FULFILLMENT_HISTORY_BLOCKS_WITHDRAWAL"]` 告知 Sales guard，在任何 Inventory release 前回專用409。terminal history 的 readiness 仍如實 CLOSED；UNKNOWN 優先503。不刪 FK 或歷史；CANCEL／CLOSE_REMAINING 仍只判真正 active work／Claim／Allocation／operation。無歷史的撤回→Draft編輯→重新確認仍可用；原已完成事件 replay 優先。
 
 `assertSalesLifecycleAllowedInTransaction()`由已鎖Sales Order／Lines的withdraw／cancel／close remaining流程呼叫；它按Fulfillment ID鎖相關非terminal工作及Claims。任何active工作回`OPEN_FULFILLMENT_EXISTS`，依賴失效回UNKNOWN／503，不能讓Sales先行release Reservation。固定lock order仍為Sales → Fulfillment → Inventory。
 

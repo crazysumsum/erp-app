@@ -21,7 +21,8 @@
       "client/src/services/fulfillment.js",
       "client/src/services/shipment.js",
       "client/src/pages/fulfillment/**",
-      "client/src/components/fulfillment/**"
+      "client/src/components/fulfillment/**",
+      "server/src/services/fulfillment/FulfillmentOpenMatterService.js"
     ],
     "test_paths": [
       "server/test/fulfillment/**",
@@ -39,7 +40,14 @@
       "server/test/integration/salesFulfillmentService.integration.test.js",
       "server/test/integration/salesFulfillmentTransactionComponent.integration.test.js",
       "server/test/sales/phase4/salesFulfillmentFixtures.js",
-      "server/test/sales/salesConfig.test.js"
+      "server/test/sales/salesConfig.test.js",
+      "server/scripts/checkCoverageFloors.js",
+      "server/test/integration/salesLifecycle.integration.test.js",
+      ".github/workflows/ci.yml",
+      "server/test/sales/phase2/fixtures.js",
+      "client/test/composables/sales/salesCommandEvent.test.js",
+      "server/test/serviceContainer.test.js",
+      "server/test/requestLimiterOptional.test.js"
     ],
     "allowed_write_paths": [
       "docs/fulfillment_shipping_management/**",
@@ -65,7 +73,8 @@
       "server/test-support/fakeFulfillmentDatabase.js",
       "client/test/**/fulfillment*.test.js",
       "client/test/**/shipment*.test.js",
-      "client/e2e/fulfillment-shipping-management/**"
+      "client/e2e/fulfillment-shipping-management/**",
+      "server/src/services/fulfillment/FulfillmentOpenMatterService.js"
     ],
     "approval_required_paths": [
       "server/database/migrations/**",
@@ -96,7 +105,17 @@
       "server/test/integration/salesFulfillmentService.integration.test.js",
       "server/test/integration/salesFulfillmentTransactionComponent.integration.test.js",
       "server/test/sales/phase4/salesFulfillmentFixtures.js",
-      "server/test/sales/salesConfig.test.js"
+      "server/test/sales/salesConfig.test.js",
+      "server/scripts/checkCoverageFloors.js",
+      "docs/sales_order_management/01_requirement_spec.md",
+      "server/test/integration/salesLifecycle.integration.test.js",
+      ".github/workflows/ci.yml",
+      "server/test/sales/phase2/fixtures.js",
+      "client/src/composables/sales/useSalesCommandEvent.js",
+      "client/src/pages/sales/SalesOrderDetailPage.vue",
+      "client/test/composables/sales/salesCommandEvent.test.js",
+      "server/test/serviceContainer.test.js",
+      "server/test/requestLimiterOptional.test.js"
     ],
     "forbidden_paths": [
       ".env",
@@ -126,7 +145,7 @@
         "id": "fulfillment-shipment-and-reversal-contract",
         "version": "P0-HD011-ADOPTED-IMPLEMENTATION_IN_PROGRESS",
         "source": "docs/fulfillment_shipping_management/03_design_spec.md",
-        "sha256": "f145f4eae7b0960408c244433fa3aa60f21060e9f94ca8e9955b44e08dbc6f7f",
+        "sha256": "29d1f8f4b602645dcbcf2d2516f32965b8a1a1505429a1229f7f083dc5e7727f",
         "consumers": [
           "sales-order-management",
           "inventory-management",
@@ -140,7 +159,7 @@
         "id": "sales-fulfillment-projection-and-lifecycle-contract",
         "version": "P0-TASK004-HD011-reviewed-owner-contribution-r4-CURRENT_JOINT_PENDING",
         "source": "docs/sales_order_management/03_design_spec.md",
-        "sha256": "0af345f43911a4a6f7f908f6b47b7681cf77bc73894a917db438c0e993910665",
+        "sha256": "cd680c79a59b80a61e245edce54cc47e867bff4d1f61a6a6b6244ad36e981a19",
         "regression_suites": [
           "fulfillment-technical"
         ]

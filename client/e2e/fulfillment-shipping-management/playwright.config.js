@@ -12,7 +12,7 @@ if (![apiPort, clientPort].every(port => Number.isInteger(port) && port > 0 && p
 }
 const output = process.env.HARNESS_RUN_DIR || path.join(os.tmpdir(), "fulfillment-p0-playwright");
 export default defineConfig({
-  testDir: ".", testMatch: "foundation.spec.js", workers: 1, fullyParallel: false,
+  testDir: ".", testMatch: ["foundation.spec.js", "lifecycle.spec.js"], workers: 1, fullyParallel: false,
   timeout: 60000, expect: { timeout: 10000 }, outputDir: path.join(output, "artifacts"),
   reporter: [["line"], ["junit", { outputFile: path.join(output, "foundation.xml") }]],
   use: { ...devices["Desktop Chrome"], baseURL: `http://127.0.0.1:${clientPort}`, trace: "retain-on-failure", screenshot: "only-on-failure" },

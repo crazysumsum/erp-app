@@ -54,7 +54,8 @@ export function useSalesCommandEvent({ userId,onTerminal,commandType="confirm" }
       else throw new Error("Unknown confirmation outcome");
     }catch(e){
       if(!active(signal))return;
-      if(e.code==="VERSION_CONFLICT")await finish({status:"REJECTED",errorCode:e.code},signal);
+      if(commandType==="lifecycle"&&intent?.action==="withdraw"&&e.status===409&&e.code==="FULFILLMENT_HISTORY_BLOCKS_WITHDRAWAL")await finish({status:"REJECTED",errorCode:e.code,message:e.message||"此訂單已有履約歷史，不能撤回草稿；請處理未完成履約後取消並另建訂單。"},signal);
+      else if(e.code==="VERSION_CONFLICT")await finish({status:"REJECTED",errorCode:e.code},signal);
       else if(e.status===401||e.status===403)error.value=e.message||"權限已失效，請重新登入並核對權限。";
       else{error.value=e.status&&e.status<500?e.message||"操作遭拒，正在核對原操作。":"操作結果未確定，正在查詢原操作。";schedule(signal);}
     }finally{if(active(signal))busy.value=false;}

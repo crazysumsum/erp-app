@@ -431,7 +431,7 @@ Focused verification可使用`npm test --workspace server -- <test-file>`及`npm
 - [ ] Helper對IDs去重排序並禁止逆序或nested transaction；缺transaction executor／可信actor／固定purpose立即失敗。
 - [ ] 測試支援可在operation、provider result、snapshot、history及commit邊界注入失敗，並可同步兩條真connection競爭。
 - [ ] 雙人Claim、mixed Expiry sequence及Serial rejection proof不出現deadlock、overclaim或部分寫入。
-- [ ] 交付最小`FulfillmentOpenMatterService.assertSalesLifecycleAllowedInTransaction`及`fulfillmentOpenMatter`真實註冊／全節點探測，沿Sales → Fulfillment鎖序回CLOSED／OPEN／UNKNOWN；在隔離schema證明無open matter可release、active claim／operation阻止release、缺provider／UNKNOWN fail closed。P3只擴展archive能力；live install／writer恢復前必須已完成本P0 artifact與核准cutover，不能等到P3。
+- [ ] 交付最小`FulfillmentOpenMatterService.assertSalesLifecycleAllowedInTransaction`及`fulfillmentOpenMatter`真實註冊／全節點探測，沿Sales → Fulfillment鎖序及Design§2.8 HD-012限定operation NOWAIT readiness及HD-013三條Sales lifecycle RC例外回CLOSED／OPEN／UNKNOWN；在隔離schema證明無open matter可release、active claim／operation阻止release、缺provider／UNKNOWN fail closed。P3只擴展archive能力；live install／writer恢復前必須已完成本P0 artifact與核准cutover，不能等到P3。
 
 **Verification：** lock-order unit、transaction context contract、fault injection smoke、Sales最小lifecycle provider／註冊／release integration及真MySQL two-connection tests。
 
@@ -1874,7 +1874,7 @@ Commit：`feat: add fulfillment audit export and archive schema`。
 - Helper對IDs去重排序並禁止逆序或nested transaction；缺transaction executor／可信actor／固定purpose立即失敗。
 - 測試支援可在operation、provider result、snapshot、history及commit邊界注入失敗，並可同步兩條真connection競爭。
 - 雙人Claim、mixed Expiry sequence及Serial rejection proof不出現deadlock、overclaim或部分寫入。
-- 交付最小`FulfillmentOpenMatterService.assertSalesLifecycleAllowedInTransaction`及`fulfillmentOpenMatter`真實註冊／全節點探測，沿Sales → Fulfillment鎖序回CLOSED／OPEN／UNKNOWN；在隔離schema證明無open matter可release、active claim／operation阻止release、缺provider／UNKNOWN fail closed。P3只擴展archive能力；live install／writer恢復前必須已完成本P0 artifact與核准cutover，不能等到P3。
+- 交付最小`FulfillmentOpenMatterService.assertSalesLifecycleAllowedInTransaction`及`fulfillmentOpenMatter`真實註冊／全節點探測，沿Sales → Fulfillment鎖序及Design§2.8 HD-012限定operation NOWAIT readiness及HD-013三條Sales lifecycle RC例外回CLOSED／OPEN／UNKNOWN；在隔離schema證明無open matter可release、active claim／operation阻止release、缺provider／UNKNOWN fail closed。P3只擴展archive能力；live install／writer恢復前必須已完成本P0 artifact與核准cutover，不能等到P3。
 
 ### Definition of Done
 驗證方式：lock-order unit、transaction context contract、fault injection smoke、Sales最小lifecycle provider／註冊／release integration及真MySQL two-connection tests。
