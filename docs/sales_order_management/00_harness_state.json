@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1280,
+  "revision": 1281,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -14481,6 +14481,17 @@
       "subject": "P4 real provider/Archive and complete P0 predecessor still await owner qualification",
       "status": "BLOCKED",
       "source_ref": "Owner actuallyapplied r1fc24110e and reported30focusedPASS; r2 delivered only, ownerapplication unobserved. Inventory Issue/Restore ownerreports3nativePASS but allocation/candidate/operationpreclaims-before-domain/fullcapacity/realSalesjoint stillpending. NoexistingSalesP4PR observed ghprlist[]; no exactcandidateCI/wholephaseGate/merge. AlloriginalP0/P4Gates preserved; no new human decision required."
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "0372532ef693c6125ccecb408a81e777a4cb9be5",
+      "spec_baseline": "b791cec4ed059697c859b00b49c94d8d8b35c13ca031c8a8ab16ff633a642ba1",
+      "source_fingerprint": "e2a06a366ee83c826d4df59ada6826b185a11fc2949c4ff07f5c6d762049a113",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-21T01:41:02.117130Z",
+      "subject": "P0 exact four-file Sales RC supplement adoption independently verified; owner real joint qualification still pending",
+      "status": "PASS",
+      "source_ref": "implementation/116_sales_provider_active_transaction_alignment.md subsequent observation; private sales-provider-rc-supplement-r2-delivery-receipt.json preserves previous delivered status and actual4file afterhashes matching33bda6b7 manifest. Owner actualACK exactadoption, WIPHEADc50ce02e. R17 Issue fixes ownerreportednativeRED→GREEN only; private transactionpreclaim/consume API stillWIP, noP0/0B/P4Gate claim."
     }
   ],
   "pending_decisions": [
@@ -18515,5 +18526,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Await exact owner adoption of reviewed4file Sales RC supplement33bda6b7/R4proof36ff631a, execute actualInventory+Sales+Item callerchain with alloperationclaims-before-domainroots, allocation/candidate/concurrency/replay/rollback/fullcapacity, currentCI/review/fullP0main first. No Task004/0B orP4Gate closed by15/124/21component results; sevennativecases useexplicitInventorydouble. Then reconcile bothcanonicalhistories/newbindings usingactualHD008/009/010 approvals, integratefreshP0main and withdrawduplicateSales0091–0093, completeactualArchiveparticipant/coordinator/original45suites+fullcapacity+Playwright/currentCI/wholephase review/unchangedMERGE_READY, directlymergeunderSamstandingauthority. Preserve originalsource/evidence/failures/hashapprovals. No newhuman decision pending."
+  "next_safe_action": "Exact4file Sales RC supplement33bda6b7 already owner-adopted and actual4hashes verified; do not reapply. Await reviewed realInventory transactionbound preclaim/consume ensuring alloperationclaims-before-domainroots, then actualInventory+Sales+Item callerchain, allocation/candidate/concurrency/replay/rollback/fullcapacity/currentCI/review/fullP0main first. OwnerreportsR17Issue omissions/substitution nativeRED→GREEN but not Sales-observed jointPASS. Preserve allhistorical approvals/evidence. After actualP0main reconcilebothcanonicalhistories/newbindings, integratefreshmain andwithdrawduplicate0091–0093, completeArchiveparticipant/coordinator/original45suites/fullcapacity/Playwright/currentCI/wholephasereview/unchangedMERGE_READY, directlymergeunderSamauthority. No newhuman decision pending."
 }
