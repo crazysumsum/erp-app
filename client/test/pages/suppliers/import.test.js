@@ -84,7 +84,7 @@ describe("supplier import page (T46)", () => {
     click.mockRestore();
   });
 
-  it("reopens the job named in the URL after a refresh, and records the open job in the URL", async () => {
+  it("TC-126 (UI-006): reopens the job named in the URL after a refresh, and records the open job in the URL", async () => {
     let router;
     ({ wrapper, router } = await mountPage({ job: "7" }));
     expect(supplierImportService.getJob).toHaveBeenCalledWith(7, expect.objectContaining({ page: 1 }));
@@ -104,7 +104,7 @@ describe("supplier import page (T46)", () => {
     expect(supplierImportService.confirmJob).toHaveBeenCalledWith(7, { version: 3, activationMode: "draft", approverUserId: null, password: "pw" });
   });
 
-  it("with approval on, activating needs an approver chosen from the eligible list, excluding the user", async () => {
+  it("TC-126 (UI-006): with approval on, activating needs an approver chosen from the eligible list, excluding the user", async () => {
     supplierApprovalService.activationPolicy.mockResolvedValue({ requireActivationApproval: true });
     promptPassword.mockResolvedValue("pw");
     ({ wrapper } = await mountPage({ job: "7" }));
@@ -124,7 +124,7 @@ describe("supplier import page (T46)", () => {
     expect(supplierImportService.confirmJob).toHaveBeenCalledWith(7, { version: 3, activationMode: "activate", approverUserId: 5, password: "pw" });
   });
 
-  it("shows a stopped job, retryable rows and the result download; an expired result says the summary stays", async () => {
+  it("TC-126 (UI-006): shows a stopped job, retryable rows and the result download; an expired result says the summary stays", async () => {
     detail({ status: "failed", confirmedAt: 200, appliedCount: 1, failedCount: 1, lastErrorCode: "SUPPLIER_IMPORT_AUTHORIZATION_REVOKED",
       errorSummary: "確認人的供應商管理權限已失效" }, [
       { rowNumber: 1, operation: "create", status: "applied", errors: [], warnings: [] },
@@ -150,7 +150,7 @@ describe("supplier import page (T46)", () => {
     expect(text()).not.toContain("結果已過保留期限");
   });
 
-  it("filters rows by status and row number", async () => {
+  it("TC-126 (UI-006): filters rows by status and row number", async () => {
     ({ wrapper } = await mountPage({ job: "7" }));
     const vm = wrapper.findComponent(SupplierImportsPage).vm;
     vm.$.setupState.rowStatus = "invalid";

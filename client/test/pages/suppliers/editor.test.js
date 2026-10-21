@@ -84,7 +84,7 @@ describe("Supplier general editor", () => {
     expect(body.text()).toContain("版本 3");
   });
 
-  it("keeps the user's draft visible when a stale update reloads the latest Supplier", async () => {
+  it("TC-123 (UI-003): keeps the user's draft visible when a stale update reloads the latest Supplier", async () => {
     supplierService.update.mockRejectedValue(Object.assign(new Error("版本衝突"), { code: "VERSION_CONFLICT" }));
     const { body } = await mountPage();
     supplierService.getById.mockResolvedValue({ ...DETAIL, supplierName: "Other User Value", version: 3 });
@@ -112,7 +112,7 @@ describe("Supplier general editor", () => {
     expect(body.text()).toContain("SUP-NEW");
   });
 
-  it("prompts before leaving a dirty general editor", async () => {
+  it("TC-029 (CORE-013): prompts before leaving a dirty general editor", async () => {
     const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
     const { body, router } = await mountPage();
     await body.findAll("button").find((button) => button.text().includes("編輯一般資料")).trigger("click");

@@ -59,7 +59,7 @@ function toggle(wrapper) {
 describe("pages/suppliers/SupplierSettingsPage.vue", () => {
   beforeEach(() => { setActivePinia(createPinia()); document.body.innerHTML = ""; vi.clearAllMocks(); });
 
-  it("is gated on supplier.settings alone and sits in the supplier menu", () => {
+  it("TC-121 (UI-001): is gated on supplier.settings alone and sits in the supplier menu", () => {
     // AC：只有 supplier.settings 睇到／入到。router guard 用嘅就係呢個 metadata。
     expect(page.requires.permissions).toEqual(["supplier.settings"]);
     expect(page.menu.group).toBe("suppliers");
