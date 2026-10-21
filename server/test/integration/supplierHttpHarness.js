@@ -57,7 +57,11 @@ export function createSupplierHarness(prefix, { database = {}, importRoot = null
   };
 
   h.stop = async () => {
-    if (!h.db) return;
+    if (!h.db) {
+      // start() 喺 app 起好之前失敗：冇資料要清，但 log 目錄已經開咗。
+      if (h.logRoot) fs.rmSync(h.logRoot, { recursive: true, force: true });
+      return;
+    }
     try {
       await removeFixtures();
     } finally {

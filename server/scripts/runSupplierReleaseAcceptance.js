@@ -1,5 +1,8 @@
+// 第一個 import：config/jwt.js 冇預設 JWT_SECRET，而 harness 只傳 profile 嘅 env_keys（REV-109 H-1）。
+import "../test-support/testEnv.js";
 import { execFile } from "node:child_process";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
+import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
@@ -8,7 +11,7 @@ import { stringify } from "csv-stringify/sync";
 import { SUPPLIER_CSV_STRINGIFY_OPTIONS, SUPPLIER_IMPORT_COLUMN_NAMES } from "../src/modules/supplier/import/supplierCsvSchema.js";
 import { createSupplierHarness } from "../test/integration/supplierHttpHarness.js";
 import {
-  adminConnection, adminCredentials, checklist, errorText, outputPath, scratchName, tableChecksums, writeReport
+  adminConnection, adminCredentials, checklist, errorText, outputPath, schemaObjects, scratchName, tableChecksums, writeReport
 } from "../test/integration/supplierAcceptanceRunner.js";
 
 /**
@@ -26,11 +29,14 @@ const reportPath = outputPath();
 const SERVER = fileURLToPath(new URL("../", import.meta.url));
 const REASON = "TC-134/135 release rehearsal";
 const tag = randomUUID().slice(0, 8).toUpperCase();
-const NOT_RUN = {
-  "TC-134 production worker rollback and restart timeline": "Needs a deployed server, its process manager and the runbook timeline; client rollback is static assets and cannot delete data, which only a real rollback shows.",
-  "TC-135 production staged capability deployment and break-glass accounts": "Needs the real environment: deploying capabilities in §14 order, and showing that only approved break-glass accounts hold system-admin, with their use audited. The client menu inventory is covered by the supplier-client-ui suite (TC-121).",
-  "TC-136 release regression and evidence gate": "The release gate is the harness verify_gate over the candidate's CI and suite evidence, the open P0/P1 cases and defects, and the Product Owner's GO; a runner cannot decide it."
-};
+const NOT_RUN = [
+  { id: "TC-134", name: "TC-134 production worker rollback and restart timeline",
+    reason: "Needs a deployed server, its process manager and the runbook timeline. Here the restart is a second app in the same process and lease expiry is set in the database; that client rollback leaves data in place is not shown here." },
+  { id: "TC-135", name: "TC-135 production staged capability deployment and break-glass accounts",
+    reason: "Needs the real environment: deploying capabilities in §14 order, and showing that only approved break-glass accounts hold system-admin, with their use audited. The client menu inventory is covered by the supplier-client-ui suite (TC-121)." },
+  { id: "TC-136", name: "TC-136 release regression and evidence gate",
+    reason: "The release gate is the harness verify_gate over the candidate's CI and suite evidence, the open P0/P1 cases and defects, and the Product Owner's GO; a runner cannot decide it." }
+];
 const results = {};
 const evidence = {};
 
@@ -39,11 +45,11 @@ async function expectOk(name, response) {
   return response.json?.data;
 }
 
-async function uploadImport(h, user, codes) {
+async function uploadImport(h, user, codes, mode) {
   const rows = codes.map((code) => SUPPLIER_IMPORT_COLUMN_NAMES.map((name) =>
     ({ supplierCode: code, supplierName: `Imported ${code}`, defaultCurrencyCode: "HKD" })[name] ?? ""));
   const form = new FormData();
-  form.append("mode", "create_only");
+  form.append("mode", mode);
   form.append("file", new Blob([stringify([SUPPLIER_IMPORT_COLUMN_NAMES, ...rows], SUPPLIER_CSV_STRINGIFY_OPTIONS)], { type: "text/csv" }), "release.csv");
   const response = await fetch(`${h.url}/api/v1/supplier-imports/upload`, { method: "POST", body: form,
     headers: { authorization: `Bearer ${user.token}`, "idempotency-key": randomUUID() } });
@@ -64,8 +70,11 @@ async function workerRollback() {
       "SELECT COUNT(*) AS n FROM supplier_import_jobs WHERE status IN ('uploaded', 'validating', 'queued', 'running')");
     if (!check("precondition.no_other_open_jobs", Number(busy.n) === 0, { open: Number(busy.n) })) return "FAIL";
     const mgmt = await first.makeUser("mgmt", ["supplier.view", "supplier.mgmt"]);
-    const codes = [1, 2, 3].map((n) => `RLS-${tag}-${n}`);
-    const job = await uploadImport(first, mgmt, codes);
+    // 第一列更新一個現有 Supplier，另外兩列新增：重做一列新增會撞 Code 唯一，但重做一列更新可以靜靜雞再寫一次（REV-109 L-3）。
+    const codes = [0, 2, 3].map((n) => `RLS-${tag}-${n}`);
+    const existing = await expectOk("existing", await first.send(mgmt, first.route("POST /api/v1/suppliers/create"),
+      { body: { supplierCode: codes[0], supplierName: `Existing ${codes[0]}`, defaultCurrencyCode: "HKD" } }));
+    const job = await uploadImport(first, mgmt, codes, "upsert");
     await first.worker.runPrecheck(new AbortController().signal);
     const ready = (await first.send(mgmt, first.route("GET /api/v1/supplier-imports/:id"), { ids: { id: job.id } })).json.data.job;
     await expectOk("confirm", await first.send(mgmt, first.route("POST /api/v1/supplier-imports/:id/confirm"),
@@ -94,10 +103,13 @@ async function workerRollback() {
       && resumed.applied === 2, resumed);
     const [suppliers] = await first.db.query("SELECT id, supplier_code FROM suppliers WHERE supplier_code IN (?, ?, ?)", codes);
     const [rows] = await first.db.query("SELECT status FROM supplier_import_rows WHERE job_id = ? ORDER BY `row_number`", [job.id]);
-    const [[creates]] = await first.db.query(
-      "SELECT COUNT(*) AS n FROM supplier_audit_logs WHERE action = 'supplier.create' AND target_label = ?", [codes[0]]);
-    check("restart.no_redo", suppliers.length === 3 && rows.every((row) => row.status === "applied") && Number(creates.n) === 1,
-      { suppliers: suppliers.length, rows: rows.map((row) => row.status), firstRowCreates: Number(creates.n) });
+    const [[updates]] = await first.db.query(
+      "SELECT COUNT(*) AS n FROM supplier_audit_logs WHERE action = 'supplier.update' AND supplier_id = ?", [existing.id]);
+    const [[updated]] = await first.db.query("SELECT version, supplier_name FROM suppliers WHERE id = ?", [existing.id]);
+    check("restart.no_redo", suppliers.length === 3 && rows.every((row) => row.status === "applied") && Number(updates.n) === 1
+      && Number(updated.version) === Number(existing.version) + 1 && updated.supplier_name === `Imported ${codes[0]}`,
+    { suppliers: suppliers.length, rows: rows.map((row) => row.status), updates: Number(updates.n),
+      versionBefore: Number(existing.version), versionAfter: Number(updated.version) });
 
     // 完成咗嘅 job 唔會再做。
     const before = await tableChecksums(first.db, process.env.DB_NAME);
@@ -151,6 +163,14 @@ async function capabilityDeployment() {
     const applied = await count();
     await migrate();
     check("deploy.migrations_rerun_is_noop", applied > 0 && (await count()) === applied, { applied });
+    // 每個 migration 檔都入咗 ledger（§14.4「Migration count」）；schema 嘅 digest 記低做證據，未有 release baseline 可以比。
+    const files = fs.readdirSync(path.join(SERVER, "database/migrations")).filter((name) => /\.(js|sql)$/u.test(name)).map((name) => `migrations/${name}`);
+    const [ledger] = await admin.query(`SELECT name FROM \`${fresh}\`.fr_schema_migrations`);
+    const recorded = new Set(ledger.map((row) => row.name));
+    check("deploy.every_migration_applied", files.length > 0 && files.every((name) => recorded.has(name)),
+      { files: files.length, missing: files.filter((name) => !recorded.has(name)) });
+    const objects = await schemaObjects(admin, fresh);
+    evidence.schemaDigest = createHash("sha256").update(JSON.stringify(Object.entries(objects).sort())).digest("hex");
 
     // §14.4 核對。
     const [permissions] = await admin.query(`SELECT name FROM \`${fresh}\`.permissions WHERE name LIKE 'supplier.%' ORDER BY name`);
@@ -241,8 +261,11 @@ async function capabilityDeployment() {
       && !listed.text.includes(account));
     const [stored] = await app.db.query("SELECT * FROM supplier_bank_accounts WHERE id = ?", [created.id]);
     const [audited] = await app.db.query("SELECT CAST(detail AS CHAR) AS detail FROM supplier_audit_logs WHERE supplier_id = ?", [third.id]);
-    check("smoke.no_plaintext_stored", !JSON.stringify(stored).includes(account) && !Buffer.from(JSON.stringify(stored)).includes(account)
-      && audited.every((row) => !String(row.detail).includes(account)));
+    // VARBINARY 欄係 Buffer：JSON.stringify 會變成數字陣列，要逐欄喺 bytes 入面搵（REV-109 M-1）。
+    const holds = (value) => (Buffer.isBuffer(value) ? value.includes(account) : String(value ?? "").includes(account));
+    check("smoke.no_plaintext_stored", stored.length === 1 && !Object.values(stored[0]).some(holds)
+      && Buffer.isBuffer(stored[0].account_ciphertext) && !stored[0].account_ciphertext.equals(Buffer.from(account))
+      && audited.every((row) => !holds(row.detail)));
     const revealRoute = "POST /api/v1/suppliers/:id/bank-accounts/:bankAccountId/reveal";
     const revealIds = { id: third.id, bankAccountId: created.id };
     check("roles.manager_cannot_reveal", (await send(mgmt, revealRoute, { ids: revealIds, body: { reason: REASON } })).status === 403);
@@ -277,8 +300,9 @@ try {
 const tests = [
   { name: "TC-134 local worker stop-claim, lease expiry, restart takeover and no redo", id: "TC-134", status: results["TC-134"] ?? "FAIL" },
   { name: "TC-135 local fresh deployment, route and permission inventory, separated-role smoke", id: "TC-135", status: results["TC-135"] ?? "FAIL" },
-  ...Object.keys(NOT_RUN).map((name) => ({ name, id: name.slice(0, 6), status: "NOT_RUN" }))
+  ...NOT_RUN.map(({ id, name }) => ({ name, id, status: "NOT_RUN" }))
 ];
-console.log(JSON.stringify({ database: process.env.DB_NAME, evidence, notRun: NOT_RUN }, null, 2));
+console.log(JSON.stringify({ database: process.env.DB_NAME, evidence,
+  notRun: Object.fromEntries(NOT_RUN.map(({ name, reason }) => [name, reason])) }, null, 2));
 await writeReport(reportPath, tests);
 if (tests.some((test) => test.status === "FAIL")) process.exitCode = 1;

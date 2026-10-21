@@ -1,3 +1,5 @@
+// 第一個 import：config/jwt.js 冇預設 JWT_SECRET，而 harness 只傳 profile 嘅 env_keys（REV-109 H-1）。
+import "../test-support/testEnv.js";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
@@ -10,7 +12,7 @@ import { SupplierBankService } from "../src/modules/supplier/SupplierBankService
 import { SUPPLIER_CSV_STRINGIFY_OPTIONS, SUPPLIER_IMPORT_COLUMN_NAMES } from "../src/modules/supplier/import/supplierCsvSchema.js";
 import { createSupplierHarness } from "../test/integration/supplierHttpHarness.js";
 import {
-  adminConnection, adminCredentials, checklist, errorText, mysqlClient, outputPath, scratchName, tableChecksums, writeReport
+  adminConnection, adminCredentials, checklist, errorText, mysqlClient, outputPath, schemaObjects, scratchName, tableChecksums, writeReport
 } from "../test/integration/supplierAcceptanceRunner.js";
 
 /**
@@ -93,6 +95,10 @@ function bankServiceWith(database, { encryption, lookup }) {
 try {
   // ---- 種資料（真 HTTP、真 MySQL）----
   await source.start();
+  // 共用 DB 入面有人哋嘅 open job，下面嘅 worker 迴圈就會順手做埋，對賬亦會因為有人寫而唔準。
+  const [[open]] = await source.db.query(
+    "SELECT COUNT(*) AS n FROM supplier_import_jobs WHERE status IN ('uploaded', 'validating', 'queued', 'running')");
+  if (!check("precondition.no_other_open_jobs", Number(open.n) === 0, { open: Number(open.n) })) throw new Error("other import jobs are open");
   const mgmt = await source.makeUser("mgmt", ["supplier.view", "supplier.mgmt"]);
   const approver = await source.makeUser("apr", ["supplier.view", "supplier.approval"]);
   const bank = await source.makeUser("bank", ["supplier.view", "supplier.bank.view", "supplier.bank.mgmt"]);
@@ -149,25 +155,35 @@ try {
   const database = process.env.DB_NAME;
   const dumpFile = path.join(work, "backup.sql");
   let started = Date.now();
-  const fd = fs.openSync(dumpFile, "w");
+  admin = await adminConnection();
+  const before = await tableChecksums(admin, database);
+  const out = fs.openSync(dumpFile, "w");
   try {
-    mysqlClient("mysqldump", ["--set-gtid-purged=OFF", "--hex-blob", "--single-transaction", "--routines", "--triggers", "--events", database],
-      { stdoutFile: fd });
+    mysqlClient("mysqldump", ["--set-gtid-purged=OFF", "--hex-blob", "--single-transaction", "--no-tablespaces", "--routines", "--triggers",
+      "--events", database], { stdout: out });
   } finally {
-    fs.closeSync(fd);
+    fs.closeSync(out);
   }
   fs.cpSync(path.join(work, "source-imports"), path.join(work, "backup-files"), { recursive: true });
   metrics.backupMs = Date.now() - started;
   metrics.backupBytes = fs.statSync(dumpFile).size;
-  admin = await adminConnection();
   const sourceSums = await tableChecksums(admin, database);
+  // dump 前後一樣先知 dump 嘅 snapshot 就係而家嘅資料；有人同時寫就唔係還原嘅錯（REV-109 L-6）。
+  const moved = Object.keys(sourceSums).filter((table) => before[table] !== sourceSums[table]);
+  if (!check("backup.source_quiet", moved.length === 0, { moved })) throw new Error("the source changed while it was being dumped");
+  const sourceObjects = await schemaObjects(admin, database);
   const sourceFiles = fileManifest(path.join(work, "source-imports"));
 
   // ---- 還原去獨立 schema ----
   restoreName = scratchName();
   started = Date.now();
   await admin.query(`CREATE DATABASE \`${restoreName}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci`);
-  mysqlClient("mysql", [restoreName], { input: fs.readFileSync(dumpFile, "utf8") });
+  const input = fs.openSync(dumpFile, "r");
+  try {
+    mysqlClient("mysql", [restoreName], { stdin: input });
+  } finally {
+    fs.closeSync(input);
+  }
   fs.cpSync(path.join(work, "backup-files"), path.join(work, "restored-imports"), { recursive: true });
   metrics.restoreMs = Date.now() - started;
 
@@ -176,11 +192,28 @@ try {
   const differing = Object.keys({ ...sourceSums, ...restoredSums }).filter((table) => sourceSums[table] !== restoredSums[table]);
   check("reconcile.tables", Object.keys(sourceSums).length > 0 && differing.length === 0,
     { tables: Object.keys(sourceSums).length, differing });
+  const restoredObjects = await schemaObjects(admin, restoreName);
+  const objectDiff = Object.keys({ ...sourceObjects, ...restoredObjects }).filter((name) => sourceObjects[name] !== restoredObjects[name]);
+  check("reconcile.schema_objects", Object.keys(sourceObjects).some((name) => name.startsWith("trigger:")) && objectDiff.length === 0,
+    { objects: Object.keys(sourceObjects).length, differing: objectDiff });
   const supplierTables = Object.keys(sourceSums).filter((table) => table.startsWith("supplier"));
   check("reconcile.supplier_tables_present", supplierTables.length >= 15, { supplierTables: supplierTables.length });
   const restoredFiles = fileManifest(path.join(work, "restored-imports"));
   check("reconcile.files", Object.keys(sourceFiles).length > 0 && JSON.stringify(sourceFiles) === JSON.stringify(restoredFiles),
     { files: Object.keys(sourceFiles).length });
+  // 資料同檔案要對得上：還原咗嘅 job 指住嘅檔案，喺還原咗嘅檔案目錄度存在，SHA-256 同 job 記低嗰個一樣（REV-109 L-1）。
+  const [jobFiles] = await admin.query(`SELECT id, source_stored_name AS source, HEX(source_sha256) AS sourceSha, result_stored_name AS result,
+    HEX(result_sha256) AS resultSha FROM \`${restoreName}\`.supplier_import_jobs WHERE files_purged_at IS NULL`);
+  const fileProblems = [];
+  for (const row of jobFiles) {
+    for (const [kind, name, expected] of [["source", row.source, row.sourceSha], ["result", row.result, row.resultSha]]) {
+      if (!name) continue;
+      const file = path.join(work, "restored-imports", kind, name);
+      if (!fs.existsSync(file) || sha256(file).toUpperCase() !== String(expected).toUpperCase()) fileProblems.push(`${row.id}:${kind}`);
+    }
+  }
+  check("reconcile.job_files_match_rows", jobFiles.some((row) => Number(row.id) === job.id) && fileProblems.length === 0,
+    { jobs: jobFiles.length, problems: fileProblems });
   const [[markerRow]] = await admin.query(`SELECT notes FROM \`${restoreName}\`.suppliers WHERE id = ?`, [supplier.id]);
   check("reconcile.transaction_marker", markerRow?.notes === marker, { markerAt });
 
@@ -216,14 +249,17 @@ try {
     ["wrong", { [keyId]: randomBytes(32).toString("base64") }]]) {
     const service = bankServiceWith(restored.db, { encryption, lookup: { [`look-${tag}`]: randomBytes(32).toString("base64") } });
     let leaked = null;
-    let failedClosed = false;
+    let code = null;
     try {
       leaked = await service.reveal({ actorId: null, claimedRoles: [], claimedPermissions: ["supplier.view", "supplier.bank.view"],
         supplierId: supplier.id, bankAccountId: bankAccount.id, reason: REASON, requestId: `rh133-${name}`, ip: "127.0.0.1" });
     } catch (error) {
-      failedClosed = !String(error?.message ?? "").includes(account);
+      // 內部 code：完整性失敗對外刻意講 INTERNAL_SERVER_ERROR。
+      code = error?.code ?? null;
     }
-    check(`keyring.${name}_key_fails_closed`, failedClosed && leaked === null);
+    // 要係 key 嘅錯，唔係隨便一個錯（REV-109 L-4）：缺 key 係 BANK_KEY_UNAVAILABLE，錯 key 係完整性檢查失敗。
+    const expected = name === "missing" ? "BANK_KEY_UNAVAILABLE" : "BANK_ACCOUNT_INTEGRITY_FAILED";
+    check(`keyring.${name}_key_fails_closed`, leaked === null && code === expected, { code });
   }
 
   localStatus = passed() ? "PASS" : "FAIL";

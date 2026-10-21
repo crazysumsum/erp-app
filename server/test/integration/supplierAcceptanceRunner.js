@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { writeFile } from "node:fs/promises";
 import path from "node:path";
 import mysql from "mysql2/promise";
@@ -48,17 +48,20 @@ export function scratchName() {
   return `${process.env.DB_NAME}_rh_${randomUUID().replace(/-/gu, "").slice(0, 8)}`;
 }
 
-/** 呼叫 mysql／mysqldump。密碼經 MYSQL_PWD，唔放 argv（ps 睇得到）。 */
-export function mysqlClient(binary, args, { input, stdoutFile } = {}) {
+/**
+ * 呼叫 mysql／mysqldump。密碼經 MYSQL_PWD，唔放 argv（ps 睇得到）。`stdin`／`stdout` 係 file descriptor：成份 dump
+ * 唔使變一條 JS 字串，mysql 中途退出亦唔會變 EPIPE 蓋住真正原因。exit 0 但 stderr 有 Error（例如權限不足）都當失敗。
+ */
+export function mysqlClient(binary, args, { stdin = "pipe", stdout = "pipe" } = {}) {
   const { user, password } = adminCredentials();
   const bin = process.env.MYSQL_BIN ? path.join(process.env.MYSQL_BIN, binary) : binary;
   const result = spawnSync(bin, [`--host=${process.env.DB_HOST}`, `--port=${process.env.DB_PORT}`, `--user=${user}`,
     "--default-character-set=utf8mb4", ...args], {
-    input, encoding: "utf8", maxBuffer: 1024 * 1024 * 1024, env: { ...process.env, MYSQL_PWD: password ?? "" },
-    ...(stdoutFile ? { stdio: ["pipe", stdoutFile, "pipe"] } : {})
+    encoding: "utf8", maxBuffer: 64 * 1024 * 1024, env: { ...process.env, MYSQL_PWD: password ?? "" }, stdio: [stdin, stdout, "pipe"]
   });
-  if (result.error) throw result.error;
-  if (result.status !== 0) throw new Error(`${binary} exited ${result.status}: ${String(result.stderr).trim().slice(0, 500)}`);
+  const stderr = String(result.stderr ?? "").trim().slice(0, 500);
+  if (result.error) throw new Error(`${binary}: ${result.error.message}${stderr ? `: ${stderr}` : ""}`);
+  if (result.status !== 0 || /\berror\b/iu.test(stderr)) throw new Error(`${binary} exited ${result.status}: ${stderr}`);
   return result.stdout;
 }
 
@@ -72,3 +75,30 @@ export async function tableChecksums(connection, database) {
 }
 
 export const errorText = (error) => (error instanceof Error ? error.message : String(error));
+
+const hash = (value) => createHash("sha256").update(value).digest("hex");
+
+/**
+ * CHECKSUM 只計資料。Schema 物件另外比：每張 table 嘅 `SHOW CREATE TABLE`（去咗 AUTO_INCREMENT 計數）、trigger、
+ * routine 同 event 嘅定義。Schema 名唔計，因為還原嘅 schema 名一定唔同。
+ */
+export async function schemaObjects(connection, database) {
+  const objects = {};
+  const [tables] = await connection.query(
+    "SELECT table_name AS name FROM information_schema.tables WHERE table_schema = ? AND table_type = 'BASE TABLE' ORDER BY table_name", [database]);
+  for (const { name } of tables) {
+    const [[row]] = await connection.query(`SHOW CREATE TABLE \`${database}\`.\`${name}\``);
+    // 還原之後 column 會明寫 `CHARACTER SET x COLLATE y`，原本只寫 `COLLATE y`：collation 已經決定 charset，所以拎走前者。
+    objects[`table:${name}`] = hash(row["Create Table"].replace(/ AUTO_INCREMENT=\d+/u, "").replace(/CHARACTER SET \w+ (?=COLLATE )/gu, ""));
+  }
+  const [triggers] = await connection.query(`SELECT trigger_name AS name, event_manipulation AS event, event_object_table AS tbl,
+    action_timing AS timing, action_statement AS body FROM information_schema.triggers WHERE trigger_schema = ?`, [database]);
+  for (const row of triggers) objects[`trigger:${row.name}`] = hash(JSON.stringify([row.event, row.tbl, row.timing, row.body]));
+  const [routines] = await connection.query(`SELECT routine_name AS name, routine_type AS type, routine_definition AS body
+    FROM information_schema.routines WHERE routine_schema = ?`, [database]);
+  for (const row of routines) objects[`${row.type.toLowerCase()}:${row.name}`] = hash(String(row.body));
+  const [events] = await connection.query(`SELECT event_name AS name, event_definition AS body, interval_value AS every, interval_field AS unit
+    FROM information_schema.events WHERE event_schema = ?`, [database]);
+  for (const row of events) objects[`event:${row.name}`] = hash(JSON.stringify([row.body, row.every, row.unit]));
+  return objects;
+}
