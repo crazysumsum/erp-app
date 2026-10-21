@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 396,
+  "revision": 397,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -2507,6 +2507,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-109",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (HD-117 A PR 2, recovery and release runners)",
+      "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-task-051-recovery-release at 4c434b32 (git diff origin/main..HEAD)",
+      "reviewed_baseline": "29a0615a61808b3747cd8feb522d051ba5a312da6fb0fccf36e7cf9746286775",
+      "source_ref": "docs/supplier_management/implementation/112_rev_109_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -4874,6 +4886,17 @@
       "source_ref": "PR #263 merged as b1897840981a877bd519a453f27ae4bc4e896f0e at 2026-10-21T08:07:53Z on the Product Owner's word ('DEF-032 A', then 'CI已通過'), with --match-head-commit, after a gate that refused unless the latest run of every check was SUCCESS and main was an ancestor of HEAD: head bf89b800 green on all 13 checks (PR run 39563474338). Review REV-108 APPROVED, Low follow-ups applied. Recorded as the first commit of the next change PR.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-21T16:09:20+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Recovery (TC-133) and release (TC-134..136) runners after REV-109",
+      "code_commit": "e8150ccedacb9ff2f5d0783ce26e97b0ca89d768",
+      "spec_baseline": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
+      "source_fingerprint": "a5dcb2b4170cc560254b0e3b9a7a06af26d26b307249f9866120c04dd76f95a8",
+      "status": "PASS",
+      "source_ref": "Local, not CI, MySQL 26.7.0 with admin credentials, DB_NAME erp_t51. runSupplierRecoveryAcceptance.js: 17/17 checks PASS (all-table CHECKSUM over 94 tables, 107 schema objects incl. 13 triggers, job rows tied to files by SHA-256, transaction marker, smoke and reveal on the restored copy, missing key BANK_KEY_UNAVAILABLE, wrong key BANK_ACCOUNT_INTEGRITY_FAILED). runSupplierReleaseAcceptance.js: 26/26 checks PASS. harness_runner.parse_results: recovery {passed 1, not_run 1}, release {passed 2, not_run 3}: both BLOCKED by design (HD-119 A). Eleven mutants each fail the intended check. Harness-based integration tests 35/35 (--test-concurrency=1); lint exit 0; no schema, fixture or temp directory left. Under a harness-style environment (profile env_keys only) the run fails on mysqldump privileges: REV-109 H-1, profile part deferred by HD-120 B.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-21T17:34:54+08:00"
     }
   ],
   "pending_decisions": [
@@ -6431,6 +6454,23 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-21, in reply to the PR 2 scope decision sent after PR #263 merged: 'A，review 完 CI 過就 merge'."
+    },
+    {
+      "id": "HD-120",
+      "impact": "MAJOR",
+      "question": "REV-109 H-1: under run_check the recovery and release suites receive only their profile env_keys, which lack DB_ADMIN_USER, DB_ADMIN_PASSWORD and MYSQL_BIN, so they FAIL on privileges; the release suite also has 2 executable tests against min_tests 3. Fixing it edits 00_project_profile.json, which is in the plan digest: six approvals on plan baseline 6cb156c3 (HD-105-PLAN, HD-113-SCOPE, VITE-ADVISORY-LOCK-SCOPE, HD-116-RISK, HD-117-SCOPE, HD-118-SCOPE) and 47 observations would be stranded. (A) Edit the profile in this PR and re-affirm the six approvals. (B) Leave the profile; make one combined profile change for all runners after the last runner PR, with one re-affirmation. (C) Leave it to TEST_AND_VERIFY.",
+      "affected_ids": [
+        "supplier-recovery",
+        "supplier-release-operations",
+        "00_project_profile.json",
+        "REV-109",
+        "TC-133",
+        "TC-134",
+        "TC-135",
+        "TC-136"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-21, in reply to the HD-120 decision after REV-109: 'HD-120 B，review 完 CI 過就 merge'."
     }
   ],
   "external_actions": [
@@ -7614,5 +7654,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "HD-119 A: write runSupplierRecoveryAcceptance.js (TC-133) and runSupplierReleaseAcceptance.js (TC-134..136) on claude/supplier-task-051-recovery-release; review, PR, merge per 'review 完 CI 過就 merge'."
+  "next_safe_action": "PR for claude/supplier-task-051-recovery-release (HD-117 A PR 2); merge per 'review 完 CI 過就 merge'. Then PR 3 (resilience) and PR 4 (performance), then one combined profile change (HD-120 B), then UAT IDs."
 }
