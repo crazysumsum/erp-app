@@ -181,9 +181,9 @@ Coverage: supplier-bank-security 15/15, supplier-server-integration 89/89, suppl
 | TC-010 | LIST-003 | — | NONE | Filter combinations, missing primary/address/bank, updated range |
 | TC-011 | LIST-004 | `supplierQueryHandlers` (allowlisted stable sort) | PARTIAL | No cross-page stability test on MySQL |
 | TC-012 | LIST-005 | `supplierQueryHandlers` | COVERED | |
-| TC-013 | LIST-006 | `client list.test`; `coreFlow.test` | PARTIAL | Empty, loading and error states not distinguished in a test |
+| TC-013 | LIST-006 | moved to `supplier-client-ui` | — | See that section |
 | TC-014 | LIST-007 | `client detail.test`; `supplierQueryHandlers` (detail) | PARTIAL | Non-Active "not purchasable" hint |
-| TC-015 | LIST-008 | `client list.test` (URL restore, shareable) | COVERED | |
+| TC-015 | LIST-008 | moved to `supplier-client-ui` | — | See that section |
 | TC-016 | LIST-009 | `supplierSkuLookup.integration` | COVERED | API side; no Purchasing UI exists |
 | TC-017 | CORE-001 | `supplierManagement.integration` (create atomic) | COVERED | |
 | TC-018 | CORE-002 | `supplierLifecycleService` (activate, one audit); `supplierAdminService` | COVERED | |
@@ -197,7 +197,7 @@ Coverage: supplier-bank-security 15/15, supplier-server-integration 89/89, suppl
 | TC-026 | CORE-010 | `supplierManagement.integration` (Code correction); `supplierAdminService` | COVERED | |
 | TC-027 | CORE-011 | `supplierAdminService` (stale version); `supplierManagement.integration` (CAS) | COVERED | |
 | TC-028 | CORE-012 | `supplierManagement.integration` (audit failure leaves nothing) | COVERED | |
-| TC-029 | CORE-013 | `client create.test`, `editor.test` (dirty prompt) | PARTIAL | "Existing transaction snapshot unchanged": no transaction module consumes Supplier yet |
+| TC-029 | CORE-013 | moved to `supplier-client-ui` | — | See that section |
 | TC-030 | STATE-001 | `supplierManagement.integration` (lookup history); `supplierLookupService` | COVERED | |
 | TC-031 | STATE-002 | `supplierLifecycleService` (reactivate) | COVERED | |
 | TC-032 | STATE-003 | `supplierLifecycleHandlers`; `supplierLifecycleService` (block matrix) | COVERED | |
@@ -285,21 +285,23 @@ TC-062 … TC-077 already carry their IDs in `supplierBank*.integration`, `suppl
 
 ## supplier-client-ui (11)
 
-Runner: `npm test --workspace client -- --config test/supplier-management.vitest.config.js` (HD-117 A). It runs the 19 Supplier page and service test files in jsdom; each test title carries at most one TC ID. Local run on 2026-10-21: 164 passed, 0 failed, 0 skipped; every required ID PASS through the harness JUnit adapter. Keyboard, focus, viewport and visual checks need a real browser and are left to the Playwright specs and UAT.
+Runner: `npm test --workspace client -- --config test/supplier-management.vitest.config.js` (HD-117 A). It runs the 19 Supplier page and service test files in jsdom; each test title carries at most one TC ID. Local run after REV-107: 168 passed, 0 failed, 0 skipped; every required ID PASS through the harness JUnit adapter. Keyboard, focus, viewport, browser back and visual checks need a real browser and are left to the Playwright specs and UAT.
+
+Left out on purpose: `client/test/framework/routing/authorizationRefresh.test.js`. Its `同 SupplierBankPanel 夾埋` block checks that Bank plaintext is cleared and that losing `supplier.view` sends the user to 403, but the file is a framework routing test and the rest of it is not Supplier's. It runs in the main client suite. The profile's `min_tests` is 11 while 168 tests run, so a shrunken file list is caught only through the required IDs; raising the floor changes the profile and needs its own decision (REV-107 I-2).
 
 | TC | Case | Tagged tests | Status | Gap |
 | --- | --- | --- | --- | --- |
-| TC-013 | LIST-006 | `list.test` (loading, empty and failed reads told apart, retry); `coreFlow.test` (view-only projection to detail) | COVERED | Screenshots are UAT evidence |
-| TC-015 | LIST-008 | `list.test` (restore from URL, HD-107 filters, malformed values dropped) | PARTIAL | Back/forward in a real browser |
-| TC-029 | CORE-013 | `editor.test` (dirty editor prompts before leaving) | PARTIAL | Existing purchase snapshots unchanged: needs the purchasing module |
-| TC-075 | BANK-014 | `bank.test` (six reveal and clearing tests) | COVERED | |
-| TC-121 | UI-001 | `pageGuards.test`; `list.test` (menu entry); `create.test` (direct URL); `settings.test`; `approvals.test` | COVERED | |
+| TC-013 | LIST-006 | `list.test` (loading, empty and failed reads, retry); `coreFlow.test` (view-only projection to detail) | PARTIAL | The shared `DataTable` also shows 「冇資料」 while loading and under the error banner, so a sighted user cannot tell the three states apart by the text (DEF-032); the no-permission state and the U-BANK-R / U-NONE projections are not tested here |
+| TC-015 | LIST-008 | `list.test` (restore from URL, HD-107 filters, malformed values dropped) | PARTIAL | Back/forward and refresh in a real browser; no assertion that the URL holds no sensitive value |
+| TC-029 | CORE-013 | `editor.test` (dirty editor prompts before leaving) | PARTIAL | The "stay" choice (asserted in `detail.test`, tagged TC-123); saving the new Supplier value; existing purchase snapshots unchanged, which needs the purchasing module |
+| TC-075 | BANK-014 | `bank.test` (nine reveal and clearing tests, including the write dialog and the create form) | COVERED | |
+| TC-121 | UI-001 | `pageGuards.test`; `list.test` (menu entry); `create.test` (direct URL); `settings.test`; `approvals.test` | PARTIAL | Tests check page metadata only. Menu order is not asserted; the 403 redirect is asserted only in `authorizationRefresh.test.js`, outside this suite |
 | TC-122 | UI-002 | `create.test` (draft with three fields, approver on and off) | PARTIAL | Error focus on summary or first field |
-| TC-123 | UI-003 | `create.test` (dirty prompt); `editor.test` (draft kept on 409); `detail.test` (refusing to discard keeps the page) | COVERED | |
-| TC-124 | UI-004 | `lifecycle.test` (four tests) | PARTIAL | Keyboard completion; status icon beside the text |
+| TC-123 | UI-003 | `create.test` and `editor.test` (dirty prompt on route leave and on closing the tab); `editor.test` (draft kept on 409); `detail.test` (refusing to discard keeps the page) | PARTIAL | Browser back, and two real sessions (the 409 is mocked) |
+| TC-124 | UI-004 | `lifecycle.test` (state-valid actions, Block, conflict, activation, archive and delete dialogs with Code, end state, kept history and password rule) | PARTIAL | Keyboard completion; status icon beside the text; suspend wording is not asserted |
 | TC-125 | UI-005 | `approvals.test` (snapshot diff, stale refused, password, reason, reassign); Bank side is TC-075 | COVERED | |
-| TC-126 | UI-006 | `import.test` (refresh reopens the job, approver rule, stopped job and expired result, row filter) | COVERED | |
-| TC-127 | UI-007 | `list.test` (markup as text, Hong Kong time, date-range error); `contact.test` (accessible validation) | PARTIAL | Tokens, no inline brand hex, keyboard and focus on every page, widths |
+| TC-126 | UI-006 | `import.test` (refresh reopens the job, error rows not written, approver rule, stopped job and expired result, row filter) | COVERED | |
+| TC-127 | UI-007 | `list.test` (Hong Kong time, date-range error); `contact.test` (accessible validation) | PARTIAL | Tokens and no inline brand hex (could be checked statically, not done); keyboard and focus on every page; widths |
 
 ## Performance, resilience, recovery, release (9)
 

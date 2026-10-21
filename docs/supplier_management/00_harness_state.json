@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 391,
+  "revision": 392,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -2466,6 +2466,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-107",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (HD-117 A PR 1, supplier-client-ui runner)",
+      "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-task-051-client-ui at ebaccd56 (git diff origin/main..HEAD)",
+      "reviewed_baseline": "29a0615a61808b3747cd8feb522d051ba5a312da6fb0fccf36e7cf9746286775",
+      "source_ref": "docs/supplier_management/implementation/110_rev_107_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -4789,6 +4801,17 @@
       "source_ref": "PR #261 merged as c2237293e8f97198339085254136916d22938cc4 at 2026-10-21T05:58:33Z on the Product Owner's word ('A，review 完 CI 過就 merge', then 'CI過了'), with --match-head-commit, after a gate that refused unless the latest run of every check was SUCCESS and main was an ancestor of HEAD: head a371f144 green on all 13 checks (PR run 39543444313). Review REV-106 CHANGES_REQUESTED (0 Critical, 0 High), follow-ups applied; not re-reviewed. Recorded as the first commit of the next change PR.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-21T14:41:51+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "supplier-client-ui suite after REV-107 (TC-013, 015, 029, 075, 121..127)",
+      "code_commit": "950ae8933c80d9c3880f13eef33d86cc39e571c7",
+      "spec_baseline": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
+      "source_fingerprint": "07bacef4c009a255da0798944c3558fd7abf3e08f8b7e7d2602774640148862b",
+      "status": "PASS",
+      "source_ref": "Local, not CI. The profile command (npm test --workspace client -- --config test/supplier-management.vitest.config.js --reporter=junit) exits 0; harness_runner.parse_results reads 168 tests, 168 passed, 0 skipped, no duplicate names, no title with two IDs, and all 11 required IDs PASS. run_check.py --execute refused (BLOCKED) only because the state baseline is still pinned to 186a660 (COMMIT_CHANGED, SOURCE_CHANGED, CONTRACT_DRIFT), as before this branch, so this is not a harness run record. Whole client suite 910/910, lint exit 0. Negative controls: six DataTable/list mutants turn the TC-013 test red (REV-107); removing preventDefault() or the dirty check from the create or detail page turns the unload tests red; dropping the delete device flag, the kept-history wording, or archive's password turns the TC-124 dialog test red. jsdom only: keyboard, focus, widths and browser back are not covered (map gaps).",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-21T14:56:19+08:00"
     }
   ],
   "pending_decisions": [
@@ -6315,7 +6338,7 @@
         "server/scripts/"
       ],
       "status": "ANSWERED",
-      "answer_ref": "Product Owner, 2026-10-21: 'A，review 完 CI 過就 merge'."
+      "answer_ref": "Product Owner, 2026-10-21, in reply to the HD-117 message offering options A/B/C for the five runners (sent after PR #261 merged): 'A，review 完 CI 過就 merge'."
     }
   ],
   "external_actions": [
@@ -7477,7 +7500,22 @@
         "supplierDeadlockRetry.integration.test.js: four forced deadlocks answer 409, 25 consecutive local runs"
       ],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-032",
+      "severity": "LOW",
+      "status": "OPEN",
+      "source_ids": [
+        "REV-107",
+        "TC-013",
+        "LIST-006",
+        "FR-LIST-010",
+        "client/src/framework/ui/DataTable.vue",
+        "docs/supplier_management/testing/04_defect_register.md"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "HD-117 A PR 1: supplier-client-ui runner (client/test/supplier-management.vitest.config.js plus TC tags) on claude/supplier-task-051-client-ui; review, PR, merge per 'review 完 CI 過就 merge'. Then recovery+release, resilience, performance runners, and UAT IDs."
+  "next_safe_action": "PR for claude/supplier-task-051-client-ui (HD-117 A PR 1); merge per 'review 完 CI 過就 merge' once every check is SUCCESS. DEF-032 (shared DataTable no-data text) needs a decision. Then recovery+release, resilience, performance runners, and UAT IDs."
 }
