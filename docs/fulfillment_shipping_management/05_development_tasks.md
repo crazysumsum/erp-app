@@ -1711,6 +1711,7 @@ Commit：`feat: add sales fulfillment transaction contracts`。
 - Candidate對有Expiry採FEFO、其後無Expiry採First Receipt FIFO並回rank、strategy、eligibility及versions；Fulfillment不自行重算資格。
 - Batch allocate／release／issue具exact-set、ownership、version及全有或全無語意；FIFO偏離需原因，FEFO偏離另驗fresh override權限。
 - 專用Reversal只接受原Issue refs，回原bucket並恢復Reservation；原Allocation保持Consumed且每個Issue最多一個reversal movement。
+- HD011已採納A：Sales CLAIM使用last-sync CAS，Inventory命令及Fulfillment Claim保存owner current CAS；數量不變的Allocation／Release／Reallocate可延後同步Sales版本。0B須真實provider反覆CLAIM／allocation／release／reallocate／Issue／Reverse聯測，Create／Update仍以鎖定native counters驗active Claims上限；所有counter／source／current+1／舊mapping CAS、trigger及replay保障不變，見implementation/10_reservation_version_alignment.md#actual-adoption。
 
 ### Definition of Done
 驗證方式：Inventory provider contract、mixed-expiry排序、batch rollback、concurrent allocation／issue及specialized reversal真MySQL tests。
@@ -2814,3 +2815,8 @@ Commit：`test: add fulfillment release qualification evidence`。
 - [ ] 沒有skip、suppressions、降低coverage／資料量／效能門檻或未批准的自動修復。
 
 另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；新 API 具 strict schema、後端 permission、stable public error、CAS version 及適用的 idempotency／IDOR 防護；DB unique／FK／trigger／transaction／lock／archive 行為以專用真 MySQL integration test 驗證；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression 或 production fake；log／audit／error／test evidence 不含 token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json` 與 Phase evidence。
+
+
+### HD-010 implementation refinement — adopted2026-10-21
+
+TASK005/TASK011 implement the localized RC caller transaction and trusted DB-owner active-executor metadata described in Design HD010. Exact additional shared source is server/src/services/mysqldatabase/MySqlDatabaseService.js; tests remain in Fulfillment allowlisted paths and existing DB framework regressions run unchanged. Before0B prove actual isolation, fail-before-claim wrong/closed/foreign executors, metadata lifetime/abort/rollback, fresh bounded recommendation after competing Receipt/Bin changes, and parent/root/exact-set protection without RR gap locks. No Task/Phase/PR boundary, business quantity/permission rule, mandatory suite/coverage floor or native/full-P0 gate is removed. Actual decision reference: implementation/08_allocation_read_consistency.md#actual-adoption.

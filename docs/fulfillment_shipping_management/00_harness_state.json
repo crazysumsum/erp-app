@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 26,
+  "revision": 34,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -9,12 +9,12 @@
   "current_phase": "PHASE-001",
   "current_task": "TASK-005",
   "baseline": {
-    "design": "8618ff250af0b61d64f5beac528e529bb2224964f8986a02f4c4d8f6043c66ff",
-    "plan": "6a954bdfa3361e6e21a244c7ebb0109c512ec40230ffc4285fa8320d13ce88ed",
-    "code_commit": "6804458bf8e30b8ba3f0629f2318b0d3ea7f1366",
-    "source_fingerprint": "5a9fee2bab254afb33af1bcbfd7d74eb77a49649a6426ab4e18629c149a065df",
+    "design": "60dbcbae939d41b9218e1a3b6f96b9d5716ce7e00a10496db8f37e55f761612d",
+    "plan": "1751ba25360a9988dcc3c2af70287aa09753f643bd363bf4a2b5a1558282cfbf",
+    "code_commit": "f211c76593f4fec333a4124910bca0bf5859907c",
+    "source_fingerprint": "19c656d2d7f47cb6c88715c1825e65f8580d6c0f08850f839020c25bace49273",
     "worktree": "/private/tmp/erp-fulfillment-p0",
-    "default_commit": "76223f40480d94a1d3a2ae6e0e7b91292bd98b82",
+    "default_commit": "3c0c33705aa76c1ad97decd395a9e3fc52c16792",
     "mode_entry_commit": "76223f40480d94a1d3a2ae6e0e7b91292bd98b82"
   },
   "runtime": {
@@ -33,7 +33,7 @@
     "TASK-002": "DONE",
     "TASK-003": "DONE",
     "TASK-004": "IN_PROGRESS",
-    "TASK-005": "PENDING",
+    "TASK-005": "IN_PROGRESS",
     "TASK-006": "IN_PROGRESS",
     "TASK-007": "PENDING",
     "TASK-008": "PENDING",
@@ -398,6 +398,406 @@
         "Exact unchanged business-UAT N/A reason and TC010 mandatory/blocking retained; delivery dependency amendment only."
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-016-HD010-DESIGN-20261021",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam, actual direct HD010 A choice; derived necessary baseline binding, no personal composite-hash inspection claim",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/08_allocation_read_consistency.md#actual-adoption",
+      "recorded_at": "2026-10-21T01:21:56.424065+00:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "00d1622eecba16f7eef7f0d5d82913d5b400ef4b4e34f9b3ccbe4731afb9ee02",
+      "code_commit": null,
+      "scope": [
+        "fulfillment-shipping-management",
+        "HD010 A localizedRC+DB owner active metadata only"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-017-HD010-PLAN-20261021",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam, actual direct HD010 A choice; derived necessary baseline binding, no personal composite-hash inspection claim",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/08_allocation_read_consistency.md#actual-adoption",
+      "recorded_at": "2026-10-21T01:21:56.424158+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "32a6b621427c1e52ee667f87c25794dbc95e6f2f30e47493ca7e62dd3bf089ce",
+      "code_commit": null,
+      "scope": [
+        "PHASE-001 TASK001..011",
+        "All original gates preserved; HD010 A refinement and actual owned runtime reference only"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-018-HD010-SCOPE-20261021",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam, actual direct HD010 A choice; derived necessary baseline binding, no personal composite-hash inspection claim",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/08_allocation_read_consistency.md#actual-adoption",
+      "recorded_at": "2026-10-21T01:21:56.424161+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "32a6b621427c1e52ee667f87c25794dbc95e6f2f30e47493ca7e62dd3bf089ce",
+      "code_commit": null,
+      "scope": [
+        "server/src/framework/configuration/applicationConfiguration.js",
+        "server/test/configuration.test.js",
+        "server/test/permissionCatalogueConventions.test.js",
+        "server/src/modules/authorization/permissionCatalogue.js",
+        "client/src/framework/http/errorMessages.js",
+        "server/database/migrations/*fulfillment*.js",
+        "server/src/modules/sales/**",
+        "server/src/modules/inventory/**",
+        "server/src/modules/customer/CustomerLookupService.js",
+        "server/src/modules/item/ItemLookupService.js",
+        "server/database/migrations/0088_create_sales_archive_batches.js",
+        "server/src/services/mysqldatabase/MySqlDatabaseService.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-019-HD010-UATNA-20261021",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam, actual direct HD010 A choice; derived necessary baseline binding, no personal composite-hash inspection claim",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/08_allocation_read_consistency.md#actual-adoption",
+      "recorded_at": "2026-10-21T01:21:56.424162+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "32a6b621427c1e52ee667f87c25794dbc95e6f2f30e47493ca7e62dd3bf089ce",
+      "code_commit": null,
+      "scope": [
+        "NFR-023",
+        "Existing exact N/A reason unchanged; TC010 remainsmandatory/blocking"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-020-HD010-REPINS-DESIGN",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam, actual direct HD010 A choice; derived necessary baseline binding, no personal composite-hash inspection claim",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/08_allocation_read_consistency.md#actual-adoption",
+      "recorded_at": "2026-10-21T01:22:42.580873+00:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "4f6adb16696a50bdf46b49d527428bb7d0681a79ec0cb57436ded7239df96705",
+      "code_commit": null,
+      "scope": [
+        "fulfillment-shipping-management",
+        "HD010 A localizedRC+DB owner active metadata only"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-021-HD010-REPINS-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam, actual direct HD010 A choice; derived necessary baseline binding, no personal composite-hash inspection claim",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/08_allocation_read_consistency.md#actual-adoption",
+      "recorded_at": "2026-10-21T01:22:42.580983+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "6fd204df61df16f742bb55810b5fbd9b94b0e0f829a251418156d5eabecef92c",
+      "code_commit": null,
+      "scope": [
+        "PHASE-001 TASK001..011",
+        "All original gates preserved; HD010 A refinement and actual owned runtime reference only"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-022-HD010-REPINS-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam, actual direct HD010 A choice; derived necessary baseline binding, no personal composite-hash inspection claim",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/08_allocation_read_consistency.md#actual-adoption",
+      "recorded_at": "2026-10-21T01:22:42.580986+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "6fd204df61df16f742bb55810b5fbd9b94b0e0f829a251418156d5eabecef92c",
+      "code_commit": null,
+      "scope": [
+        "server/src/framework/configuration/applicationConfiguration.js",
+        "server/test/configuration.test.js",
+        "server/test/permissionCatalogueConventions.test.js",
+        "server/src/modules/authorization/permissionCatalogue.js",
+        "client/src/framework/http/errorMessages.js",
+        "server/database/migrations/*fulfillment*.js",
+        "server/src/modules/sales/**",
+        "server/src/modules/inventory/**",
+        "server/src/modules/customer/CustomerLookupService.js",
+        "server/src/modules/item/ItemLookupService.js",
+        "server/database/migrations/0088_create_sales_archive_batches.js",
+        "server/src/services/mysqldatabase/MySqlDatabaseService.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-023-HD010-REPINS-UATNA",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam, actual direct HD010 A choice; derived necessary baseline binding, no personal composite-hash inspection claim",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/08_allocation_read_consistency.md#actual-adoption",
+      "recorded_at": "2026-10-21T01:22:42.580988+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "6fd204df61df16f742bb55810b5fbd9b94b0e0f829a251418156d5eabecef92c",
+      "code_commit": null,
+      "scope": [
+        "NFR-023",
+        "Existing exact N/A reason unchanged; TC010 remainsmandatory/blocking"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-024-HD011-DESIGN",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam, actual direct HD011 A choice; derived necessary baseline binding, no personal composite-hash inspection claim",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/10_reservation_version_alignment.md#actual-adoption",
+      "recorded_at": "2026-10-21T02:05:35.957205+00:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "0134645bb76d6d0833aaeeeb6b102ae1d0d67456f111de2870805c574759ee36",
+      "code_commit": null,
+      "scope": [
+        "Exact adopted HD011 last-sync/current CAS and quantity-neutral sync cadence refinement; prior authorized P0/shared providers unchanged",
+        "NFR023 exact N/A unchanged, TC010 mandatory/blocking, all native/currentcandidate gates retained"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-025-HD011-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam, actual direct HD011 A choice; derived necessary baseline binding, no personal composite-hash inspection claim",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/10_reservation_version_alignment.md#actual-adoption",
+      "recorded_at": "2026-10-21T02:05:35.957321+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "1b5ed2b0a981deca9cd24eaa59e0071ba8014b3515b3cdb23f1b37da44049507",
+      "code_commit": null,
+      "scope": [
+        "Exact adopted HD011 last-sync/current CAS and quantity-neutral sync cadence refinement; prior authorized P0/shared providers unchanged",
+        "NFR023 exact N/A unchanged, TC010 mandatory/blocking, all native/currentcandidate gates retained"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-026-HD011-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam, actual direct HD011 A choice; derived necessary baseline binding, no personal composite-hash inspection claim",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/10_reservation_version_alignment.md#actual-adoption",
+      "recorded_at": "2026-10-21T02:05:35.957331+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "1b5ed2b0a981deca9cd24eaa59e0071ba8014b3515b3cdb23f1b37da44049507",
+      "code_commit": null,
+      "scope": [
+        "Exact adopted HD011 last-sync/current CAS and quantity-neutral sync cadence refinement; prior authorized P0/shared providers unchanged",
+        "NFR023 exact N/A unchanged, TC010 mandatory/blocking, all native/currentcandidate gates retained"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-027-HD011-UATNA",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam, actual direct HD011 A choice; derived necessary baseline binding, no personal composite-hash inspection claim",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/10_reservation_version_alignment.md#actual-adoption",
+      "recorded_at": "2026-10-21T02:05:35.957339+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "1b5ed2b0a981deca9cd24eaa59e0071ba8014b3515b3cdb23f1b37da44049507",
+      "code_commit": null,
+      "scope": [
+        "Exact adopted HD011 last-sync/current CAS and quantity-neutral sync cadence refinement; prior authorized P0/shared providers unchanged",
+        "NFR023 exact N/A unchanged, TC010 mandatory/blocking, all native/currentcandidate gates retained"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-028-HD011-ALIGNED-DESIGN",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam, actual direct HD011 A and existing completeP0 owner-contribution authority; derived necessary binding only",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/10_reservation_version_alignment.md#actual-adoption",
+      "recorded_at": "2026-10-21T02:13:19.968752+00:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "dced6a7da9cb250060ad6b1139e158f0dbe80ee41b59f929d0b4ebfe4cfceb8c",
+      "code_commit": null,
+      "scope": [
+        "fulfillment-shipping-management",
+        "HD010 A localizedRC+DB owner active metadata only",
+        "HD011 A last-sync/currentCAS narrow cadence; originalP0 scope/gates unchanged"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-029-HD011-ALIGNED-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam, actual direct HD011 A and existing completeP0 owner-contribution authority; derived necessary binding only",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/10_reservation_version_alignment.md#actual-adoption",
+      "recorded_at": "2026-10-21T02:13:19.968870+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "9649d1cdbdd22e49e0922ec1c8919d590039d9410b3d18f6af344909b574b12f",
+      "code_commit": null,
+      "scope": [
+        "fulfillment-shipping-management",
+        "PHASE-001 TASK001..011",
+        "All original gates preserved; HD010 A refinement and actual owned runtime reference only",
+        "HD011 A last-sync/currentCAS narrow cadence; originalP0 scope/gates unchanged"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-030-HD011-ALIGNED-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam, actual direct HD011 A and existing completeP0 owner-contribution authority; derived necessary binding only",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/10_reservation_version_alignment.md#actual-adoption",
+      "recorded_at": "2026-10-21T02:13:19.968880+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "9649d1cdbdd22e49e0922ec1c8919d590039d9410b3d18f6af344909b574b12f",
+      "code_commit": null,
+      "scope": [
+        "server/src/framework/configuration/applicationConfiguration.js",
+        "server/test/configuration.test.js",
+        "server/test/permissionCatalogueConventions.test.js",
+        "server/src/modules/authorization/permissionCatalogue.js",
+        "client/src/framework/http/errorMessages.js",
+        "server/database/migrations/*fulfillment*.js",
+        "server/src/modules/sales/**",
+        "server/src/modules/inventory/**",
+        "server/src/modules/customer/CustomerLookupService.js",
+        "server/src/modules/item/ItemLookupService.js",
+        "server/database/migrations/0088_create_sales_archive_batches.js",
+        "server/src/services/mysqldatabase/MySqlDatabaseService.js",
+        "server/test/salesFulfillmentQuantities.test.js",
+        "server/test/salesFulfillmentService.test.js",
+        "server/test/integration/salesFulfillmentService.integration.test.js",
+        "server/test/integration/salesFulfillmentTransactionComponent.integration.test.js",
+        "server/test/sales/phase4/salesFulfillmentFixtures.js",
+        "server/test/sales/salesConfig.test.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-031-HD011-ALIGNED-UATNA",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam, actual direct HD011 A and existing completeP0 owner-contribution authority; derived necessary binding only",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/10_reservation_version_alignment.md#actual-adoption",
+      "recorded_at": "2026-10-21T02:13:19.968888+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "9649d1cdbdd22e49e0922ec1c8919d590039d9410b3d18f6af344909b574b12f",
+      "code_commit": null,
+      "scope": [
+        "NFR-023",
+        "Existing exact N/A reason unchanged; TC010 remainsmandatory/blocking"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-032-HD011-SALES-PIN-DESIGN",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam, actual direct HD011 A and existing completeP0 owner-contribution authority; derived necessary binding only",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/10_reservation_version_alignment.md#actual-adoption",
+      "recorded_at": "2026-10-21T02:20:36.830638+00:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "60dbcbae939d41b9218e1a3b6f96b9d5716ce7e00a10496db8f37e55f761612d",
+      "code_commit": null,
+      "scope": [
+        "fulfillment-shipping-management",
+        "HD010 A localizedRC+DB owner active metadata only",
+        "HD011 A last-sync/currentCAS narrow cadence; originalP0 scope/gates unchanged"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-033-HD011-SALES-PIN-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam, actual direct HD011 A and existing completeP0 owner-contribution authority; derived necessary binding only",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/10_reservation_version_alignment.md#actual-adoption",
+      "recorded_at": "2026-10-21T02:20:36.830749+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "1751ba25360a9988dcc3c2af70287aa09753f643bd363bf4a2b5a1558282cfbf",
+      "code_commit": null,
+      "scope": [
+        "fulfillment-shipping-management",
+        "PHASE-001 TASK001..011",
+        "All original gates preserved; HD010 A refinement and actual owned runtime reference only",
+        "HD011 A last-sync/currentCAS narrow cadence; originalP0 scope/gates unchanged"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-034-HD011-SALES-PIN-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam, actual direct HD011 A and existing completeP0 owner-contribution authority; derived necessary binding only",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/10_reservation_version_alignment.md#actual-adoption",
+      "recorded_at": "2026-10-21T02:20:36.830759+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "1751ba25360a9988dcc3c2af70287aa09753f643bd363bf4a2b5a1558282cfbf",
+      "code_commit": null,
+      "scope": [
+        "server/src/framework/configuration/applicationConfiguration.js",
+        "server/test/configuration.test.js",
+        "server/test/permissionCatalogueConventions.test.js",
+        "server/src/modules/authorization/permissionCatalogue.js",
+        "client/src/framework/http/errorMessages.js",
+        "server/database/migrations/*fulfillment*.js",
+        "server/src/modules/sales/**",
+        "server/src/modules/inventory/**",
+        "server/src/modules/customer/CustomerLookupService.js",
+        "server/src/modules/item/ItemLookupService.js",
+        "server/database/migrations/0088_create_sales_archive_batches.js",
+        "server/src/services/mysqldatabase/MySqlDatabaseService.js",
+        "server/test/salesFulfillmentQuantities.test.js",
+        "server/test/salesFulfillmentService.test.js",
+        "server/test/integration/salesFulfillmentService.integration.test.js",
+        "server/test/integration/salesFulfillmentTransactionComponent.integration.test.js",
+        "server/test/sales/phase4/salesFulfillmentFixtures.js",
+        "server/test/sales/salesConfig.test.js",
+        "docs/sales_order_management/03_design_spec.md",
+        "docs/sales_order_management/00_module_manifest.json"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-035-HD011-SALES-PIN-UATNA",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam, actual direct HD011 A and existing completeP0 owner-contribution authority; derived necessary binding only",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/10_reservation_version_alignment.md#actual-adoption",
+      "recorded_at": "2026-10-21T02:20:36.830768+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "1751ba25360a9988dcc3c2af70287aa09753f643bd363bf4a2b5a1558282cfbf",
+      "code_commit": null,
+      "scope": [
+        "NFR-023",
+        "Existing exact N/A reason unchanged; TC010 remainsmandatory/blocking"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -568,6 +968,102 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-015-INDEPENDENT-R13",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "8618ff250af0b61d64f5beac528e529bb2224964f8986a02f4c4d8f6043c66ff",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/07_task006_master_data.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-016-INDEPENDENT-R14-CURRENTREAD",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "8618ff250af0b61d64f5beac528e529bb2224964f8986a02f4c4d8f6043c66ff",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/08_allocation_read_consistency.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-017-INDEPENDENT-HD010-PROPOSAL",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "500126d7b7a70ac3a4d8131806b6235bd235d98be0b5d7b77f50648bdd32ecb7",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/08_allocation_read_consistency.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-018-HD010-SOURCE-R16",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "4f0228ae451a3c1e73aa50335d3f0846c212bccbe1ec39cd8d4cc888fce8e403",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/08_allocation_read_consistency.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-019-ISSUE-R17",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "6891cd7624c6d15c83f65599fe7fdc927c5f51b3e52d5198962c2c9443ec5d9a",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/09_inventory_batch_remediation.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-020-HD011-PROPOSAL",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "b908c56a08ece0a68c483f8a5f96e49a24fe7becd452c3901759fa8d0b90c3b3",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/10_reservation_version_alignment.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-021-INVENTORY-CODEC-CLOSURE",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "bbe6cf8d8a8de79aa94d1ab9a1136fd541f1444dc4284b45574c49429fe74356",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/09_inventory_batch_remediation.md#reviewed-receiptreversal-closure-and-current-evidence",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-022-REVERSE-ADVISORY",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "936a289ce7196306370a9dc0bcff58ac5c680452986f529afea3657898ff4c04",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/09_inventory_batch_remediation.md#reviewed-receiptreversal-closure-and-current-evidence",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [],
@@ -692,6 +1188,32 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "docs/fulfillment_shipping_management/implementation/01_archive_foundation_dependency.md#actual-approval-and-independent-proposal-review: actual direct Sam choice A1 in this chat."
+    },
+    {
+      "id": "HD-010",
+      "impact": "MAJOR",
+      "question": "Fresh bounded Inventory allocation recommendation versus RR snapshot and approved lock order; localizedRC+trustedDBmetadata or cross-writer epoch",
+      "affected_ids": [
+        "DES-014",
+        "TASK-005",
+        "TASK-011",
+        "TC-010"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "docs/fulfillment_shipping_management/implementation/08_allocation_read_consistency.md#actual-adoption"
+    },
+    {
+      "id": "HD-011",
+      "impact": "MAJOR",
+      "question": "Reconcile Sales last-sync/current Inventory CAS and quantity-neutral allocation projection-sync cadence; approved-proposal A versus new Sales synchronization provider B.",
+      "affected_ids": [
+        "TASK-004",
+        "TASK-005",
+        "TASK-006",
+        "TC-010"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "docs/fulfillment_shipping_management/implementation/10_reservation_version_alignment.md#actual-adoption"
     }
   ],
   "external_actions": [
@@ -830,9 +1352,17 @@
       "idempotency_key": "observe-merged76223-ci39399562600",
       "status": "CONFIRMED",
       "source_ref": "Native GitHub API run39399562600 actual head76223f4 completed success; all13jobs completed success, zero skips; postmerge R4 independent content approval. This does not erase premerge freshness process deviation."
+    },
+    {
+      "id": "P0-MAIN-INTEGRATION-PR258",
+      "kind": "BASELINE_INTEGRATION",
+      "target": "origin/main@3c0c33705aa76c1ad97decd395a9e3fc52c16792",
+      "idempotency_key": "integrate-main3c0c-into-p0dce291",
+      "status": "CONFIRMED",
+      "source_ref": "Actual git fetch origin --prune; checked13changedpaths/noInventorySalesmigrationoverlap; localortmerge9a3a6b16afe222301fe22e212cde1cd555858a7a. This records observed local integration after execution, not a fabricated prior ledger. No push/PR/remote merge. npmci currentlockfile completed."
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "TASK003 DONE commits092d3b67/6804458b R12approved8PASS; 0A complete. TASK004 actualSalesowner preparing, TASK006 local74FILES/3nativePASS awaitingR13, TASK005 Inventorybatch root/member/leg ABI R11feasible ownerverifierhelper pending sourceproof. No0B and noaggregateDDL. ContinueallP0 thenfullcandidate independentreview/verification beforeonePR. Nativeinitialcleanupfailurefixed, ownedruntimehealthy, no sharedDB."
+  "next_safe_action": "Complete current 8th Sales joint rerun and owner-reviewed getter/F2 neutral-CAS/race supplement, then actual independent four-provider/wire Checkpoint0B review before TASK007–010 aggregate DDL. Current Inventory codec/getter source committedf211c765,390FILES/63native plus actual isolation+permissions3 PASS; current source includes only reviewed eighth test append beyond that native63 baseline. All historical failures retained; no overall0B/fullP0/PR/CI acceptance."
 }

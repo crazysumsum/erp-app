@@ -1,0 +1,39 @@
+# HD-010 — Fresh bounded allocation recommendations
+
+Status: DECISION_REQUIRED proposal, not adopted. Current authority DESIGN8618ff250af0b61d64f5beac528e529bb2224964f8986a02f4c4d8f6043c66ff /PLAN6a954bdfa3361e6e21a244c7ebb0109c512ec40230ffc4285fa8320d13ce88ed; origin/main76223f40480d94a1d3a2ae6e0e7b91292bd98b82. No global isolation change, epoch migration, early stock lock or allocation-effect implementation has been made to evade this decision.
+
+## Observed conflict
+
+Current InventoryReservationService #allocateWithClaim obtains Warehouse/StockControl, then loadInventoryCandidates(locking:true), which takes Balance SHARE before later Bin/Lot locks. P0 requires complete sorted operation→master→Warehouse→StockControl→Bin→Lot→Balance→Reservation→Allocation classes. Reusing that single-Reservation primitive in a batch is invalid.
+
+A plain bounded candidate query preserves lock order but is not fresh under an already-open REPEATABLE READ view. Authorization, Sales or Item discovery can establish that view before Warehouse is locked. Warehouse X serialization does not advance it; current StockControl.version is not an epoch for every Receipt/Bin/eligibility change. Selective FOR SHARE OF an early joined table does not refresh an unlocked Balance.
+
+Independent reviewer /root/fulfillment_independent_review actually reproduced this on owned native MySQL26.7.0 UUID scratch schemas: view sees1, another connection commits2, selective early-anchor SHARE still sees1, full Balance SHARE sees2. A second proof confirmed SET TRANSACTION READ COMMITTED affects the next active transaction while @@session.transaction_isolation remainsREPEATABLE-READ; active information_schema.innodb_trx showedREAD COMMITTED. Both owned scratch resources were cleaned. No production/runtime access is inferred. Official MySQL references: [consistent reads](https://dev.mysql.com/doc/refman/8.4/en/innodb-consistent-read.html), [locking reads](https://dev.mysql.com/doc/refman/8.4/en/innodb-locking-reads.html).
+
+## A — Localized RC and trusted DB transaction metadata (recommended)
+
+Use the existing MySqlDatabaseService.withTransaction(work,{isolationLevel:"READ COMMITTED"}) option for **new Fulfillment write transactions only**. Keep the database/global/session defaults and existing Inventory/Sales/other workflows unchanged. All complete-set locks, CAS, ownership, exact-set checks, operation preclaims, fresh actor checks and atomic rollback remain mandatory. After complete sorted Warehouse/StockControl X locks, bounded plain owner candidate reads obtain a fresh statement view; those same anchors serialize relevant stock and Bin writers while owner Item/SKU/UOM locks freeze master policy. Acquire selected Bin/Lot/Balance/Reservation/Allocation locks afterward in the approved order and revalidate all facts.
+
+Add a private active-executor WeakMap in server/src/services/mysqldatabase/MySqlDatabaseService.js. The database owner records the normalized isolation only after its BEGIN succeeds, and removes it in finally. An exported read-only function returns the isolation for that actual active transaction executor, otherwise null. New Fulfillment/Inventory batch boundaries reject an unmarked, completed, foreign or non-RC executor before any claim/effect. No command field, serviceName, session default or caller-supplied Boolean can assert this capability. The wrapper does not start a hidden transaction inside a provider; the caller owns the one transaction. Recovery later uses that same explicit wrapper/actor policy.
+
+Exact added shared source scope: server/src/services/mysqldatabase/MySqlDatabaseService.js (active transaction metadata only). New tests stay in approved server/test/fulfillment/** and server/test/integration/fulfillment*.integration.test.js; run the existing DB framework tests without weakening them. Source contribution and full P0 independent review must inspect the actual metadata lifetime/abort/rollback behavior. Existing profile commands are unchanged apart from necessary developer-test mapping/runtime authorization metadata; approval binding may be derived from the actual HD010 choice, with all old approvals retained. P0 Tasks/Phase/PR grouping, schema ownership, limits, NFR023 exact exemption and TC010 remain unchanged.
+
+Required native proof before0B: actual effective RC through production DB executor; Warehouse-serialized candidate visibility after a pre-existing earlier read and a competing Receipt/Bin change; full FEFO/FIFO sequence and override permission matrix; same/shared-balance batches, two-connection races, rollback and exact replay;100×50 allocation and old/new5000/combined10000 reallocate capacity within configured transaction budget. Explicitly test that RR/default, closed, fabricated or cross-context executors fail before operation claims, and metadata is removed on every exit. RC also removes reliance on RR gap locks: prove every aggregate/exact-set invariant through the required Sales/Fulfillment/Shipment/Warehouse parent locks, FK/unique constraints and version CAS; repeated plain reads must not be assumed stable. RC does not replace locks or grant permission to change shared/live databases.
+
+## B — Candidate epoch across all Inventory writers
+
+Retain RR and introduce an owner monotonic epoch covering every Receipt/Issue/Allocation/Release/Reverse/Bin/Lot/status eligibility change. Compare snapshot/current epochs under the Warehouse anchors, rollback/retry on mismatch. This can be correct, but requires broader source/schema ownership, more migrations, every-writer regression and migration/cutover review; a missed writer makes the check unsound. It is more change than A and delays P0.
+
+## Default and blocked scope
+
+Absent another constraint the recommendation is A. It is not automatically selected by elapsed time. Allocation and final Task005/Checkpoint0B remain blocked until the actual human decision; Issue/Reverse receipt validation and other independent P0 work can continue. No permission is requested again for previously approved P0 development, native owned testing, Sales coordination or eventual PR creation.
+
+
+## Actual adoption
+
+Sam directly selected **A：批准局部 RC 與可信交易 metadata（建議）** in this chat on2026-10-21 (Asia/Hong_Kong). The presented proposal SHA was500126d7b7a70ac3a4d8131806b6235bd235d98be0b5d7b77f50648bdd32ecb7, independently APPROVED FOR HUMAN DECISION by /root/fulfillment_independent_review with0 C/H/M. This is actual permission for the localized RC strategy and the one additional DB owner source file, with the safeguards and all gates above. It is not a claim Sam personally inspected derived composite hashes. Previous P0/owned-native/coordination/PR authorizations continue; no production access, shared DB cutover or merge exception is granted.
+
+Necessary canonical DESIGN/PLAN/SCOPE bindings are renewed solely for this exact adoption and the existing explicit owned-test runtime reference. NFR023's exact business-UAT N/A reason is unchanged, TC010 remains mandatory/blocking, original approvals and failed tests remain recorded. Task005 and0B stay in progress until actual implementation/native/consumer evidence passes.
+
+
+Canonical binding reconciliation: validation initially reported stale contract pins after the authorized Task002 permission source, R13 Task006 Item source and HD010 design appendix changed. Only those three observed sources were repinned; no other owner's design content was changed. The first derived HD010 bindings remain as history; corrected derived bindings cover the same actual A choice and observed contract bytes. R13/R14 records retain their actual pre-HD010 reviewed design8618ff25 and exact source/report fingerprints; the proposal review remains tied to the presented500126d7 document, not misrepresented as source acceptance of a later composite. Full current P0 review is still pending.

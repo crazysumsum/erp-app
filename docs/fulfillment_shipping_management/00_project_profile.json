@@ -5,7 +5,7 @@
     "id": "fulfillment-isolated-test",
     "kind": "LOCAL_ISOLATED",
     "data_reference": "Synthetic fulfillment/shipping fixtures defined in 06_technical_test_cases.md and 07_uat_test_cases.md §2.2; no production data, no real customer address, phone, email or bank data",
-    "authorization_ref": null
+    "authorization_ref": "docs/fulfillment_shipping_management/implementation/08_allocation_read_consistency.md#actual-adoption"
   },
   "permissions": {
     "product_write": [
