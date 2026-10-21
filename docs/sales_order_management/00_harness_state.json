@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1290,
+  "revision": 1291,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11269,6 +11269,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": "APR-HD013-HD014-SALES-SCOPE"
+    },
+    {
+      "id": "REV-SALES-ARCHIVE-CONTRACT-PREPARATION-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "51f9ffd587dc083c790a47875242ffcb67e5efd656071c9f5a4711a7a83e75a0",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/sales-archive-contract-r1-reviewer-proof.json SHA25651dd1878bf24670749fe1c84863764cd404b604149e62bcf2b1002a0df82b9c6; pure preparation sourceonly, finaltest91f38a27/contractc95d/r2raw6b417afe; required0. Not TASK/Phase/CI/Gate or schema/isolation authority.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -14868,6 +14880,17 @@
       "subject": "PartialSalesHD013/14adoption8backend17client/build/lint; currentDIRECTSamHD012/13confirmation resolves authority registry blocker",
       "status": "PASS",
       "source_ref": "implementation/118_hd013_hd014_narrow_sales_adoption.md; actualownlogs98eca398/f86dacb0/adea4958/e3b0; exactfreeze00484eb/prooffffe0a87. Prior2auto-reviewrejections madeNOmutations; currentDIRECThumanconfirmation01a15d80 nowauthorizes same narrowrecord. No ownerraw rebinding; Customerpin/wholehistoryboundary/native/browser/currentCI remainpending."
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "c85adc4971252c0cbe4184c54a4f800f146ce0e2",
+      "spec_baseline": "070531ee21f510969c679c281a6705eb3e0094cbb9b01a68cfe3164679e187b5",
+      "source_fingerprint": "e66022906e658ab73b3d436fed5eab3b0279abc79a6e4925cb905fd2a835bfb4",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-21T08:43:37.721399Z",
+      "subject": "Partial Archive contract validation 74 developer PASS and two real P0 prerequisite diagnostics; no enabled participant or Gate completion",
+      "status": "PASS",
+      "source_ref": "implementation/119_archive_contract_preparation.md; actualfinalsource51f9ffd5/test91f38a27/r2raw6b417afe; scopedESLint0; diagnosticraw62b73bed with frozen WIPsnapshotmanifest8ca13f57. DiagnosticPASS confirms missing route/guard prerequisites only, notArchiveeffect. FormalP0main/currentP4native/browser/CI/fullPhase/Customerpin pending. HD012/13 scope unchanged; no task/baseline/approval rewrite."
     }
   ],
   "pending_decisions": [
