@@ -78,6 +78,9 @@ test("DEF-005 (HD-116 A): each address text field is limited to its column lengt
       assert.throws(() => normalizeAddress({ [field]: value }),
         (error) => error.publicCode === "SUPPLIER_ADDRESS_INVALID" && error.details?.field === field, `${field}: ${JSON.stringify(value).slice(0, 20)}`);
     }
+    // 訊息講明欄位同原因（REV-106 M-2）。
+    assert.throws(() => normalizeAddress({ [field]: "a".repeat(maxLength + 1) }), (error) => new RegExp(`不可超過 ${maxLength} 個字元$`, "u").test(error.publicMessage ?? error.message));
   }
+  assert.throws(() => normalizeAddress({ notes: "first\nsecond" }), (error) => (error.publicMessage ?? error.message) === "備註不可包含換行或其他控制字元");
   assert.equal(normalizeAddress({ label: "  Office  " }).label, "Office", "control: surrounding spaces are still trimmed");
 });
