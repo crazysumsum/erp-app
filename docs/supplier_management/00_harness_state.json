@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 384,
+  "revision": 385,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -14,7 +14,7 @@
     "code_commit": "186a660ec0ef3037ffc9ef92adcd31b20f1e072d",
     "source_fingerprint": "43f7f525f708bb08a1cb3994bd6ed7a36548794d3eaf9e7e06f18ae5caa911ad",
     "worktree": "/Users/sam/Documents/workspace/erp-supplier-t51d",
-    "default_commit": "a01cf438bf281a1a356fd76cca0b73c72e0d7a89",
+    "default_commit": "ea933e874395e10f3a918142b3203994a1359900",
     "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
   },
   "runtime": {
@@ -1198,6 +1198,22 @@
       "scope": [
         "supplier-management",
         "server/database/migrations/0087_fix_supplier_sku_refs_sku_foreign_key.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-VITE-ADVISORY-LOCK-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Product Owner, 2026-10-21: 'A，批准改 package-lock.json，CI 過就 merge'. Authorises a lockfile-only change resolving vite 8.2.4 (within client/package.json's ^8.2.1) after new launch-editor advisories (GHSA-587h-7wmj-h5pm high; GHSA-698v-4r3x-3vcv, GHSA-r825-w8mm-5pxw moderate) failed the Dependency audit check on every branch, blocking PR #258. Delivered as PR #259.",
+      "recorded_at": "2026-10-21T09:51:27+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
+      "code_commit": "ea933e874395e10f3a918142b3203994a1359900",
+      "scope": [
+        "package-lock.json"
       ],
       "expires_at": null
     }
@@ -4635,6 +4651,17 @@
       "source_ref": "PR #257 merged as a01cf438bf281a1a356fd76cca0b73c72e0d7a89 at 2026-10-21T01:11:28Z on the Product Owner's word ('HD-115 A，CI 過就 merge', then 'CI已通過'), with --match-head-commit, after a gate that refused unless the latest run of every check was SUCCESS and main was an ancestor of HEAD: head 6020536e green on all 13 checks (PR run 39403567949). Main had moved only by PR #256 (another module's docs), merged in before push. Review REV-103 APPROVED with follow-ups applied. Recorded on the DEF-031 branch, which was built on #257's branch before it merged; this is the first ledger commit after the merge, not the branch's first commit.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-21T09:12:04+08:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "vite 8.2.4 lockfile change for the launch-editor advisories (PR #259) merged to main",
+      "code_commit": "ea933e874395e10f3a918142b3203994a1359900",
+      "spec_baseline": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
+      "source_fingerprint": "02135066db040a42d1ea9da4310ce0130433a0f88ed2180cde69843bc7b144ff",
+      "status": "PASS",
+      "source_ref": "PR #259 merged as ea933e874395e10f3a918142b3203994a1359900 at 2026-10-21T01:50:59Z on the Product Owner's word ('A，批准改 package-lock.json，CI 過就 merge', then 'CI已通過'), with --match-head-commit, after a gate that refused unless the latest run of every check was SUCCESS and main was an ancestor of HEAD: head 4d6e5e70 green on all 13 checks (PR run 39527899807). package-lock.json only: vite 8.2.1 -> 8.2.4, postcss 8.5.25 -> 8.5.31, nanoid 3.3.18 -> 3.3.20. Local and reviewer checks: npm ci, security:audit 0 high/critical, client build byte-identical to main's, client unit 905/905, Playwright mocked 15 + 47. Independent review (separate agent) APPROVED with three Low findings, all about the PR description, corrected. Outside the Supplier module; recorded here because the approval was given in this module's flow.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-21T09:51:27+08:00"
     }
   ],
   "pending_decisions": [
