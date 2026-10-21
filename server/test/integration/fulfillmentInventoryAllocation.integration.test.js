@@ -225,3 +225,33 @@ nativeTest("P0 legal5000-Reservation membership does not narrow100-line/5000-leg
   assert.ok(reallocated.lines.every(l=>l.reservations.every(m=>m.version===3)));
   t.diagnostic(`5000 members: allocate=${Math.round(elapsed)}ms, reallocate=${Math.round(reallocateMs)}ms, txQueries=${metrics.queries}, sampledMaxHeap=${metrics.heap}, configured transactionTimeoutMs=20000`);
 });
+
+nativeTest("P0 mixed expiry candidates allocate FEFO before no-expiry first-receipt FIFO in the real owner transaction",async t=>{
+  const f=await fixture(t),balances=[];
+  await f.db.execute("UPDATE item_skus SET tracking_policy='batch' WHERE id=?",[f.skuId]);
+  await f.db.execute("UPDATE inventory_stock_balances SET on_hand_quantity=0,fifo_anchor_date=NULL WHERE id=?",[f.balanceId]);
+  for(const [index,expiry,firstReceipt] of [[0,null,"2026-10-02"],[1,"2026-11-05","2026-10-01"],[2,null,"2026-10-01"],[3,"2026-11-01","2026-10-05"]]){
+    const lot=await f.insert("INSERT INTO inventory_lots(sku_id,lot_number,normalized_lot_number,expiry_date,first_receipt_date,sku_code_snapshot,created_at) VALUES(?,?,?,?,?,'SYN',1)",[f.skuId,`MIX${index}`,`mix${index}`,expiry,firstReceipt]);
+    balances.push(await f.insert("INSERT INTO inventory_stock_balances(warehouse_id,bin_id,sku_id,lot_id,stock_status,on_hand_quantity,fifo_anchor_date,created_at,updated_at) VALUES(?,?,?,?,'AVAILABLE',2,'2026-10-20',1,1)",[f.warehouseId,f.binId,f.skuId,lot]));
+  }
+  const lookup=new InventoryLookupService({...f,fulfillment:f.service}),line=structuredClone(f.lines[0]);
+  await f.withActor(async tx=>{
+    const result=await lookup.listAllocationCandidates(tx,{warehouseId:f.warehouseId,asOf:f.time.nowMs(),demands:[{inventoryReservationId:line.reservations[0].inventoryReservationId,skuId:f.skuId,minimumRemainingDays:0,requestedQuantity:"5"}]});
+    const candidates=result.demands[0].candidates;
+    assert.deepEqual(candidates.map(c=>c.inventoryBalanceId),[balances[3],balances[1],balances[2],balances[0]]);
+    assert.deepEqual(candidates.map(c=>c.recommendedQuantity),["2","2","1","0"]);
+  },{isolationLevel:"READ COMMITTED"});
+  line.reservations[0].allocations=[{inventoryBalanceId:balances[3],expectedBalanceVersion:1,baseQuantity:"2"},{inventoryBalanceId:balances[1],expectedBalanceVersion:1,baseQuantity:"2"},{inventoryBalanceId:balances[2],expectedBalanceVersion:1,baseQuantity:"1"}];
+  line.reservations[0].allocations.sort((a,b)=>Number(a.inventoryBalanceId)-Number(b.inventoryBalanceId));
+  const result=await f.invoke("ALLOCATE",{fulfillmentId:"1",lines:[line]},40),legs=result.lines[0].reservations[0].allocations;
+  assert.deepEqual([...legs].sort((a,b)=>a.recommendedRank-b.recommendedRank).map(a=>[a.recommendedRank,a.selectionStrategy,a.isSequenceOverride]),[[1,"FEFO",false],[2,"FEFO",false],[3,"FIFO",false]]);
+});
+
+nativeTest("P0 actual batch allocator rejects Serial policy and rolls back its complete preclaims before stock effects",async t=>{
+  const f=await fixture(t);
+  await f.db.execute("UPDATE item_skus SET tracking_policy='serial' WHERE id=?",[f.skuId]);
+  const snapshot=async()=>{const result={};for(const table of ["inventory_operation_requests","inventory_stock_balances","inventory_stock_controls","inventory_reservations","inventory_allocations","inventory_audit_logs"])result[table]=(await f.db.query(`SELECT * FROM ${table} ORDER BY id`))[0];return result;};
+  const before=await snapshot();
+  await assert.rejects(f.invoke("ALLOCATE",{fulfillmentId:"1",lines:f.lines},41),{code:"SERIAL_TRACKING_UNSUPPORTED"});
+  assert.deepEqual(await snapshot(),before);
+});

@@ -116,3 +116,52 @@ nativeTest("P0 master-data native Customer shipping lists and caller transaction
     await assert.rejects(lookup[method](null,customer,id,{purpose:"shipping",expectedVersion:1}),TypeError);
   }
 });
+
+nativeTest("P0 four real providers share the caller transaction in Sales, Customer, Item, Inventory order and reject stale shipping data atomically",async t=>{
+  const [{salesFulfillmentFixture},{InventoryFulfillmentService}]=await Promise.all([
+    import("../sales/phase4/salesFulfillmentFixtures.js"),import("../../src/modules/inventory/InventoryFulfillmentService.js")]);
+  const f=await salesFulfillmentFixture(t),time={...f.time,fileDate:()=>"2023-11-14"},s=f.s;
+  await f.db.execute("INSERT INTO customer_address_purposes(address_id,customer_id,purpose_code,is_default,created_at,updated_at) VALUES (?,?,'shipping',1,?,?)",[s.addressId,s.customerId,s.now,s.now]);
+  const contactId=await s.insert("customer_contacts",{customer_id:s.customerId,name:"Synthetic",created_at:s.now,updated_at:s.now});
+  await f.db.execute("INSERT INTO customer_contact_purposes(contact_id,customer_id,purpose_code,is_default,created_at,updated_at) VALUES (?,?,'shipping',1,?,?)",[contactId,s.customerId,s.now,s.now]);
+  await f.db.execute("UPDATE item_skus SET inventory_tracked=1 WHERE id=?",[s.skuId]);
+  const binId=await s.insert("inventory_bins",{warehouse_id:s.warehouseId,bin_code:"MASTER",normalized_code:"master",status:"ACTIVE",created_at:s.now,updated_at:s.now});
+  const balanceId=String(await s.insert("inventory_stock_balances",{warehouse_id:s.warehouseId,bin_id:binId,sku_id:s.skuId,stock_status:"AVAILABLE",on_hand_quantity:10,fifo_anchor_date:"2023-11-13",created_at:s.now,updated_at:s.now}));
+  await s.insert("inventory_stock_controls",{warehouse_id:s.warehouseId,sku_id:s.skuId,reserved_quantity:1,created_at:s.now,updated_at:s.now});
+  const inventory=new InventoryFulfillmentService({database:f.database,time,logger:{error(){}}}),sales=f.createService({inventoryFulfillment:inventory}),customer=new CustomerLookupService({database:f.database}),item=new ItemLookupService({database:f.database,time,logger:{error(){}}});
+  const actor={...f.command().actor,userId:f.userId};
+  const allocate={actor,source:{documentId:"1",eventId:crypto.randomUUID()},correlationId:"",payload:{fulfillmentId:"1",lines:[{fulfillmentLineId:"1",salesOrderLineId:String(s.lineId),baseQuantity:"1",reservations:[{claimId:"1",inventoryReservationId:String(f.reservationId),expectedVersion:1,baseQuantity:"1",overrideReason:"",allocations:[{inventoryBalanceId:balanceId,expectedBalanceVersion:1,baseQuantity:"1"}]}]}]}};
+  const allocation=await f.run({claims:f.claims},async tx=>{
+    const proof=await inventory.claimFulfillmentBatchInTransaction(tx,{action:"ALLOCATE",command:allocate});
+    const claim=f.command();claim.purpose="CLAIM";for(const key of ["eventId","shipmentId","inventoryRequestHash"])delete claim[key];
+    await sales.lockLinesForFulfillmentInTransaction(tx,claim);
+    await item.getFulfillmentInventoryProfilesInTransaction(tx,[String(s.skuId)],{atMs:time.nowMs()});
+    return inventory.allocateForFulfillmentBatchInTransaction(tx,allocate,proof);
+  });
+  const member=allocation.lines[0].reservations[0],leg=member.allocations[0];
+  const issue={actor,source:{documentId:"1",eventId:crypto.randomUUID()},correlationId:"",payload:{fulfillmentId:"1",shipmentId:"1",lines:[{fulfillmentLineId:"1",salesOrderLineId:String(s.lineId),baseQuantity:"1",reservations:[{claimId:"1",inventoryReservationId:String(f.reservationId),expectedVersion:member.version,baseQuantity:"1",allocations:[{inventoryAllocationId:leg.inventoryAllocationId,inventoryBalanceId:balanceId,expectedVersion:leg.allocationVersion,expectedBalanceVersion:leg.balanceVersion,baseQuantity:"1"}]}]}]}};
+  const snapshot=async()=>{
+    const result={};for(const table of ["sales_orders","sales_order_lines","sales_order_line_reservations","sales_operation_requests","inventory_operation_requests","inventory_stock_controls","inventory_stock_balances","inventory_reservations","inventory_allocations","inventory_movements","inventory_audit_logs"]){result[table]=(await f.db.query(`SELECT * FROM ${table} ORDER BY id`))[0];}return result;
+  };
+  const run=addressVersion=>f.run({claims:f.claims},async tx=>{
+    const sql=[],query=tx.query.bind(tx),execute=tx.execute.bind(tx);
+    tx.query=(statement,args)=>{sql.push(statement);return query(statement,args);};
+    tx.execute=(statement,args)=>{sql.push(statement);return execute(statement,args);};
+    const proof=await inventory.claimFulfillmentBatchInTransaction(tx,{action:"ISSUE",command:issue});
+    const intent=f.command();intent.eventId=issue.source.eventId;intent.inventoryRequestHash=proof.requestHash;intent.lines[0].reservations[0].expectedVersion=member.version;
+    await sales.lockLinesForFulfillmentInTransaction(tx,intent);
+    const address=await customer.assertAddressUsableInTransaction(tx,s.customerId,s.addressId,{purpose:"shipping",expectedVersion:addressVersion});
+    const contact=await customer.assertContactUsableInTransaction(tx,s.customerId,contactId,{purpose:"shipping",expectedVersion:1});
+    assert.equal(address.customerId,s.customerId);assert.equal(contact.customerId,s.customerId);
+    await item.getFulfillmentInventoryProfilesInTransaction(tx,[String(s.skuId)],{atMs:time.nowMs()});
+    const inventoryResult=await inventory.postFulfillmentIssueBatchInTransaction(tx,issue,proof);
+    const result=await sales.applyFulfillmentResultInTransaction(tx,{intent,inventoryResult});
+    const index=pattern=>sql.findIndex(statement=>pattern.test(statement));
+    const positions=[index(/FROM sales_orders WHERE id=\? FOR UPDATE/u),index(/JOIN customer_addresses a/u),index(/JOIN customer_contacts c/u),index(/FROM item_uoms/u),index(/FROM inventory_warehouses/u)];
+    assert.ok(positions.every((position,i)=>position>=0&&(i===0||position>positions[i-1])),"real owner SQL follows Sales → Address → Contact → Item → Inventory locks");
+    assert.ok(sql.every((statement,i)=>!/INSERT INTO inventory_operation_requests/u.test(statement)||i<positions[0]),"all operation preclaims precede Sales roots");
+    return result;
+  });
+  const before=await snapshot();await assert.rejects(()=>run(2),{code:"VERSION_CONFLICT"});assert.deepEqual(await snapshot(),before);
+  assert.equal((await run(1)).status,"COMPLETED");
+});
