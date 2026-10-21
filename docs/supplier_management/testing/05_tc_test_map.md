@@ -312,10 +312,12 @@ Left out on purpose: `client/test/framework/routing/authorizationRefresh.test.js
 | TC-130 | OPS-003 | — | NONE | Dependency timeout, reset and 503 |
 | TC-131 | OPS-004 | `businessMasterSupplierContract` (fails closed when not READY) | PARTIAL | Health not ready, then recovers after repair |
 | TC-132 | OPS-005 | `supplierObservability` (unit, integration) | COVERED | Runner missing |
-| TC-133 | OPS-006 | `supplierBankRestore.integration` (Bank only) | PARTIAL | Full restore, reconciliation, RTO/RPO: T51 work |
-| TC-134 | OPS-007 | — | NONE | Rollback rehearsal: T51 work |
-| TC-135 | OPS-008 | — | NONE | Deployment-order smoke: T51 work |
-| TC-136 | OPS-009 | — | NONE | Full regression summary: T51 release evidence |
+| TC-133 | OPS-006 | `runSupplierRecoveryAcceptance.js`: every Supplier capability seeded over HTTP, `mysqldump`, isolated restore, all-table CHECKSUM and import-file SHA-256 reconciliation, transaction marker, smoke and reveal on the restored copy, missing and wrong key fail closed | PARTIAL | Production RTO ≤ 4 h and RPO ≤ 15 min drill (NOT_RUN by design, HD-119 A) |
+| TC-134 | OPS-007 | `runSupplierReleaseAcceptance.js`: stop-claim, a worker dying after one row, a restarted app that waits for the live lease and takes over after expiry, no redo, completed job not rerun | PARTIAL | Production rollback timeline (NOT_RUN by design) |
+| TC-135 | OPS-008 | `runSupplierReleaseAcceptance.js`: fresh schema from migrations (rerun no-op), six permissions and system-admin, settings default OFF, every Supplier route guarded by supplier.* permissions, separated-role smoke (Draft, direct activation, approval, suspend, block, purchase lookup, masked Bank, reveal, audit) | PARTIAL | Staged deployment in §14 order and break-glass accounts (NOT_RUN by design); client menu is TC-121 |
+| TC-136 | OPS-009 | — (runner reports NOT_RUN) | NONE | The release gate is the harness verify_gate over CI and suite evidence plus the Product Owner's GO |
+
+Recovery and release runners (HD-117 A, HD-119 A). Each TC has a local test and a separate NOT_RUN test for the production-only part, so `supplier-recovery` and `supplier-release-operations` report BLOCKED until production evidence or a risk approval exists. Local run on 2026-10-21 against MySQL 26.7.0: every local check PASS. Seven mutants (worker ignores stop, claim ignores a live lease, lookup shows suspended and blocked Suppliers, an audit route guarded by a non-Supplier permission, a restore that loses a row, import files not restored, the missing-key check given the real key) each fail the intended check. The runners need `DB_ADMIN_USER`/`DB_ADMIN_PASSWORD` (or a `DB_USER` that may create databases) to create and drop `${DB_NAME}_rh_*`, and `mysqldump`/`mysql` on `PATH` or in `MYSQL_BIN`. They clean up their own fixtures, found by a run tag, even after a failure.
 
 ## UAT (52)
 
