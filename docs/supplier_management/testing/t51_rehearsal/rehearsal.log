@@ -1,0 +1,37 @@
+
+=== A. Adding Supplier to a deployment without it: pre-Supplier main (b3e5aa90^1) -> current release, real runners
+Migrations complete.
+pre-Supplier ledger: 30 files
+applied by the current runner, in main's order: 58 files
+every pre-existing table's data, counter, columns, indexes, keys and triggers unchanged (29 tables), plus every existing permission and grant
+objects added by the upgrade, all modules: 2099 lines, of which Supplier tables: 15
+Supplier permissions added: 6
+current-on-upgraded-pre server: started, health 200, stopped (port closed)
+
+=== B. Previous release 72e205ef with business data: backup/restore, upgrade, rollback
+Migrations complete.
+previous release: an orphan SKU relation is accepted (DEF-029, control)
+previous reads the Supplier rows over HTTP: list 200 (RH-001 listed), detail 200 (香港貿易有限公司), sku-relations 200 (1 row)
+backup restored exactly: tables 94; data, counters, columns, indexes, keys, triggers, routines, views and events equal
+control: one changed row in the restore is detected
+applied migrations/0087_fix_supplier_sku_refs_sku_foreign_key.js
+objects changed by the upgrade (< before, > after):
+  26c26
+  < data fr_schema_migrations 767207484
+  ---
+  > data fr_schema_migrations 2487039678
+  2428a2429
+  > index supplier_sku_refs idx_supplier_sku_refs_sku 1 1 sku_id
+after the upgrade: the orphan SKU relation is refused (DEF-029 fixed); no business data changed
+current server: started, health 200, stopped (port closed)
+current reads the Supplier rows over HTTP: list 200 (RH-001 listed), detail 200 (香港貿易有限公司), sku-relations 200 (1 row)
+previous-rolled-back server: started, health 200, stopped (port closed)
+previous-rolled-back reads the Supplier rows over HTTP: list 200 (RH-001 listed), detail 200 (香港貿易有限公司), sku-relations 200 (1 row)
+
+=== C. Similar-name exception list (HD-057 A), current release, on a sample legacy file
+{"threshold":0.85,"mode":"create_only","rows":4,"invalidNames":0,"keptNames":0,"existingMatches":1,"identicalRows":0,"fileMatches":1,"fileMatchesNotListed":0,"output":"$SCRATCH/t51/similar.csv"}
+﻿row,supplierCode,supplierName,matchKind,matchRow,matchSupplierId,matchSupplierCode,matchSupplierName,score,exact
+1,L-001,香港貿易有限公司,existing,,1,RH-001,香港貿易有限公司,1.0000,true
+3,L-003,Contoso Trading,file,4,,L-004,Contoso Trading Ltd,0.8750,false
+
+=== all checks passed; the scratch databases are dropped on exit
