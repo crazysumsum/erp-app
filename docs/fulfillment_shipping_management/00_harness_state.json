@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 34,
+  "revision": 38,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-001",
-  "current_task": "TASK-005",
+  "current_task": "TASK-008",
   "baseline": {
     "design": "60dbcbae939d41b9218e1a3b6f96b9d5716ce7e00a10496db8f37e55f761612d",
     "plan": "1751ba25360a9988dcc3c2af70287aa09753f643bd363bf4a2b5a1558282cfbf",
-    "code_commit": "f211c76593f4fec333a4124910bca0bf5859907c",
-    "source_fingerprint": "19c656d2d7f47cb6c88715c1825e65f8580d6c0f08850f839020c25bace49273",
+    "code_commit": "bb96423f56cf2e9fe223490fe3b9f1b67aa896e6",
+    "source_fingerprint": "c4f24ef220ab1e5dfad2e42f65b632f9a390fa85a78afa23ef49447b2c5a5697",
     "worktree": "/private/tmp/erp-fulfillment-p0",
     "default_commit": "3c0c33705aa76c1ad97decd395a9e3fc52c16792",
     "mode_entry_commit": "76223f40480d94a1d3a2ae6e0e7b91292bd98b82"
@@ -32,10 +32,10 @@
     "TASK-001": "DONE",
     "TASK-002": "DONE",
     "TASK-003": "DONE",
-    "TASK-004": "IN_PROGRESS",
-    "TASK-005": "IN_PROGRESS",
-    "TASK-006": "IN_PROGRESS",
-    "TASK-007": "PENDING",
+    "TASK-004": "DONE",
+    "TASK-005": "DONE",
+    "TASK-006": "DONE",
+    "TASK-007": "DONE",
     "TASK-008": "PENDING",
     "TASK-009": "PENDING",
     "TASK-010": "PENDING",
@@ -1064,6 +1064,42 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-023-UPSTREAM-NATIVE-SUPPLEMENTS",
+      "method": "SEPARATE_AGENT",
+      "author": "/root and named Sales owner contribution",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "d92693a9aac505e0d28683924c72d670f60fd5e8a59bffcec0c87ac7c94e37ca",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/11_sales_provider_joint_adoption.md#eighth-real-effects-case-and-four-provider-caller-supplement",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-024-PROVIDER-CHECKPOINT-0B",
+      "method": "SEPARATE_AGENT",
+      "author": "/root and named Sales owner contribution",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "606fc169ffabf67614f9ab9fbe251e77ae872526a75d87c53b2bfc249105f4ea",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/12_provider_checkpoint_0b.md#gate-boundaries",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-025-TASK007-FINAL",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "cf4f76f87378dbe4c9bce35916f7e30d617303ff4ff8c4ec1334ae872eb73f27",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/13_task007_operations_sequences.md#evidence-and-scope",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [],
@@ -1360,9 +1396,17 @@
       "idempotency_key": "integrate-main3c0c-into-p0dce291",
       "status": "CONFIRMED",
       "source_ref": "Actual git fetch origin --prune; checked13changedpaths/noInventorySalesmigrationoverlap; localortmerge9a3a6b16afe222301fe22e212cde1cd555858a7a. This records observed local integration after execution, not a fabricated prior ledger. No push/PR/remote merge. npmci currentlockfile completed."
+    },
+    {
+      "id": "P0-TASK007-NATIVE-R1",
+      "kind": "OWNED_NATIVE_MIGRATION_TEST",
+      "target": "owned private MySQL26.7.0, disposable fulfillment_p0_UUID schemas;0092 only plus historical fixture prerequisites",
+      "idempotency_key": "task007-native-first-0bb84ec0-wip",
+      "status": "CONFIRMED",
+      "source_ref": "TASK007 ownedschema native11PASS/0skip; actual root and separate-agent tests applied0092 and historical prerequisites and completed fixture cleanup. Root r8log1eb3c7d183ffc32e373e32caee52a1b4f3cbf0a81c02652b69f62dc3a579f3b7; report13. No shared/live database."
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Complete current 8th Sales joint rerun and owner-reviewed getter/F2 neutral-CAS/race supplement, then actual independent four-provider/wire Checkpoint0B review before TASK007–010 aggregate DDL. Current Inventory codec/getter source committedf211c765,390FILES/63native plus actual isolation+permissions3 PASS; current source includes only reviewed eighth test append beyond that native63 baseline. All historical failures retained; no overall0B/fullP0/PR/CI acceptance."
+  "next_safe_action": "TASK007 actual independent APPROVED and native11/lint/trace/boundaryPASS, sourcecommit recorded; TASK001–007 DONE. Begin TASK008 actual Fulfillment/Claim/Allocation/history schema and concurrency under approvedP0 plan, then009–011 and fullP0 gates before one PR. Latestmain3c0c unchanged before0092; recheck before new numberedfiles. All prior source-subset evidence/reviews retained; no formalTC010/CI/PR/UAT/liveinstall acceptance."
 }
