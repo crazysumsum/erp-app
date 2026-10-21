@@ -27,6 +27,11 @@ function boundedString(value, field, max, { empty = false, ascii = false } = {})
   return value;
 }
 
+function boundedReason(value) {
+  if(typeof value!=="string"||[...value].length>500||inventoryStringHasInvalidCharacters(value))throw new TypeError("Invalid Inventory audit reason text");
+  return value;
+}
+
 function positiveId(value, field, { nullable = false } = {}) {
   if (nullable && (value === null || value === undefined)) return null;
   if ((typeof value === "number" && Number.isSafeInteger(value) && value > 0) ||
@@ -84,7 +89,7 @@ export class InventoryAuditService {
         boundedString(input.targetLabel, "target label", 190),
         outcome,
         boundedString(input.reasonCategory ?? "", "reason category", 40, { empty: true, ascii: true }),
-        boundedString(input.reasonText ?? "", "reason text", 500, { empty: true }),
+        boundedReason(input.reasonText ?? ""),
         serializeInventorySummary(input.beforeSummary, SUMMARY_FIELDS, "Inventory audit summary"),
         succeeded
           ? serializeInventorySummary(input.afterSummary, SUMMARY_FIELDS, "Inventory audit summary")

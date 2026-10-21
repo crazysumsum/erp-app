@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 
 import { INVENTORY_COMMAND_TYPES } from "./inventoryConstants.js";
+import { FULFILLMENT_INVENTORY_SUMMARY_FIELDS } from "./inventoryFulfillmentConstants.js";
 import { inventoryError } from "./inventoryErrors.js";
 import {
   inventoryStringHasInvalidCharacters,
@@ -11,6 +12,7 @@ import {
 
 const COMMAND_TYPES = new Set(INVENTORY_COMMAND_TYPES);
 const RESULT_SUMMARY_FIELDS = new Set([
+  ...FULFILLMENT_INVENTORY_SUMMARY_FIELDS,
   "id", "status", "version", "quantity", "rowCount", "movementGroupId",
   "movementId", "operationId", "balanceId", "balanceVersion", "skuId", "skuCode", "skuName",
   "warehouseId", "warehouseCode", "binId", "binCode", "lotId", "lotNumber", "expiryDate",

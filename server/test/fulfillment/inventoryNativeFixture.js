@@ -33,8 +33,8 @@ export async function inventoryNativeFixture(t) {
   const actor={userId:actorId,serviceName:"",claimedRoles:["synthetic-fulfillment"],claimedPermissions:permissions};
   const withActor=(work,options={})=>context.storage.run({auth:{claims:{sub:String(actorId),roles:actor.claimedRoles,permissions}},databaseTransaction:null},()=>database.withTransaction(work,options));
   const operations=new InventoryOperationService();
-  const reservation=async(lineId,quantity="5")=>{
-    const claim=await operations.claim(f.db,{commandType:"SALES_LINE_RESERVE",source:{module:"SALES",documentType:"SALES_ORDER",documentId:"1",lineId,eventId:`seed-${lineId}`},payload:{lineId,quantity},actorUserId:actorId,actorLabel:"Synthetic",createdAt:1});
+  const reservation=async(lineId,quantity="5",eventId=`seed-${lineId}`)=>{
+    const claim=await operations.claim(f.db,{commandType:"SALES_LINE_RESERVE",source:{module:"SALES",documentType:"SALES_ORDER",documentId:"1",lineId,eventId},payload:{lineId,quantity},actorUserId:actorId,actorLabel:"Synthetic",createdAt:1});
     const id=await insert("INSERT INTO inventory_reservations(create_operation_id,warehouse_id,sku_id,original_quantity,outstanding_quantity,purpose,status,created_at,updated_at) VALUES(?,?,?,?,?,'SALE','ACTIVE',1,1)",[claim.operationId,warehouseId,skuId,quantity,quantity]);
     await f.db.execute("UPDATE inventory_stock_controls SET reserved_quantity=reserved_quantity+? WHERE warehouse_id=? AND sku_id=?",[quantity,warehouseId,skuId]);
     await operations.complete(f.db,{operationId:claim.operationId,resultType:"RESERVATION",resultId:id,resultSummary:{reservationId:id},completedAt:1});
