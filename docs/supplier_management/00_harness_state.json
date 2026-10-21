@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 394,
+  "revision": 395,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -13,8 +13,8 @@
     "plan": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
     "code_commit": "186a660ec0ef3037ffc9ef92adcd31b20f1e072d",
     "source_fingerprint": "43f7f525f708bb08a1cb3994bd6ed7a36548794d3eaf9e7e06f18ae5caa911ad",
-    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t51d",
-    "default_commit": "6a9132b217d1170ab67663fcfee0a2cc764371be",
+    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t51e",
+    "default_commit": "b1897840981a877bd519a453f27ae4bc4e896f0e",
     "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
   },
   "runtime": {
@@ -4863,6 +4863,17 @@
       "source_ref": "Local, not CI. Client unit 914/914, lint exit 0, client build exit 0, e2e:mocked business-master 15/15 and supplier 48/48 (including the new DEF-032 Playwright test, which holds the list request, then answers empty, then 500, then retries). Negative controls: the original DataTable turns 4 unit tests and the Playwright test red; dropping the error guard, the loading branch, the no-data exclusion from forwarding, or the page slot's scope each turns a test red. The reviewer additionally checked Sales import/orders and Roles pages in a real browser against base. Other modules' real-backend e2e suites were not run.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-21T15:38:40+08:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "DEF-032 DataTable states (PR #263) merged to main",
+      "code_commit": "b1897840981a877bd519a453f27ae4bc4e896f0e",
+      "spec_baseline": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
+      "source_fingerprint": "2d8d4507699dc2915ef0af415b864d266050e13833db8d4f52ce57a0f60c679a",
+      "status": "PASS",
+      "source_ref": "PR #263 merged as b1897840981a877bd519a453f27ae4bc4e896f0e at 2026-10-21T08:07:53Z on the Product Owner's word ('DEF-032 A', then 'CI已通過'), with --match-head-commit, after a gate that refused unless the latest run of every check was SUCCESS and main was an ancestor of HEAD: head bf89b800 green on all 13 checks (PR run 39563474338). Review REV-108 APPROVED, Low follow-ups applied. Recorded as the first commit of the next change PR.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-21T16:09:20+08:00"
     }
   ],
   "pending_decisions": [
@@ -7569,7 +7580,7 @@
     {
       "id": "DEF-032",
       "severity": "LOW",
-      "status": "IN_PROGRESS",
+      "status": "CLOSED",
       "source_ids": [
         "REV-107",
         "TC-013",
@@ -7578,9 +7589,14 @@
         "client/src/framework/ui/DataTable.vue",
         "docs/supplier_management/testing/04_defect_register.md"
       ],
-      "closure_evidence": [],
+      "closure_evidence": [
+        "PR #263 merge commit b1897840981a877bd519a453f27ae4bc4e896f0e",
+        "PR CI run 39563474338 on head bf89b800: all 13 checks success",
+        "REV-108 APPROVED (docs/supplier_management/implementation/111_rev_108_independent_review.md)",
+        "DataTable.test.js, the TC-013 list test and the DEF-032 Playwright test in supplier-list-filters.spec.js; the original component turns each red"
+      ],
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "PR for claude/supplier-def032-datatable-states (HD-118 A); merge on the Product Owner's word once every check is SUCCESS. Then HD-117 PR 2 (recovery+release runners), resilience, performance, and UAT IDs."
+  "next_safe_action": "HD-117 A PR 2: recovery (TC-133) and release (TC-134..136) runners on claude/supplier-task-051-recovery-release; per-TC scope to be confirmed with the Product Owner."
 }
