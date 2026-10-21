@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1281,
+  "revision": 1282,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -9,8 +9,8 @@
   "current_phase": "PHASE-005",
   "current_task": "TASK-058",
   "baseline": {
-    "design": "ef5e7624f64ce0e819a85cadf0d3a43c15104421c1ef068549ef63d5189d13cd",
-    "plan": "b791cec4ed059697c859b00b49c94d8d8b35c13ca031c8a8ab16ff633a642ba1",
+    "design": "07325c789d3de583c5a7c85de549d243eec46fd0d29755e763798e51bc9caf04",
+    "plan": "6370daf21488bfd77472532abf89be2c3e66e0ecdbe8010ac7ed8408e21061b9",
     "code_commit": "d01162f6159ec40981453d00936fb713296f35a3",
     "source_fingerprint": "d8075b361e3c93662ac824c58d93e41327363bc2404e742366ee742ac7d39234",
     "worktree": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app",
@@ -7040,6 +7040,87 @@
         "NFR-015"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-HD011-SALES-DESIGN",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam HD011 A userMessage01a15c33-caa1-7ac1-a2b7-d7c2eac3052e / call91c09b99cc944d41913efaee3ca1d4fe in ownerchat01a15862-9933-7e50-8e10-4015cf35d078, exactproposalSHAb908c56a08ece0a68c483f8a5f96e49a24fe7becd452c3901759fa8d0b90c3b3. Author+actualseparatereviewer directlyreadhumanadoption; f24b797d proof verifies exactlocalHD011delta/providedpin/newD/P. Derivedbinding fromunchanged priorDEC029R4 D/P plus actual approvedHD011delta only; not a claim Sam inspected compositehashes, not renewal of unrelated UAT_NA/fullPhase qualification ornewCI/mergeexception. Original allapprovals/failures preserved.",
+      "recorded_at": "2026-10-21T02:20:01.229488Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "07325c789d3de583c5a7c85de549d243eec46fd0d29755e763798e51bc9caf04",
+      "code_commit": null,
+      "scope": [
+        "HD-011",
+        "PHASE-005",
+        "TASK-058",
+        "TASK-064",
+        "TASK-068",
+        "server/src/modules/sales/SalesFulfillmentService.js",
+        "server/test/integration/salesFulfillmentOwnerJoint.integration.test.js",
+        "server/test/integration/fulfillmentSalesInventoryJoint.integration.test.js",
+        "docs/sales_order_management/03_design_spec.md",
+        "docs/sales_order_management/00_module_manifest.json",
+        "docs/sales_order_management/implementation/113_p0_sales_provider_handoff.md",
+        "docs/sales_order_management/implementation/117_hd011_sales_real_provider_joint_checkpoint.md"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-HD011-SALES-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam HD011 A userMessage01a15c33-caa1-7ac1-a2b7-d7c2eac3052e / call91c09b99cc944d41913efaee3ca1d4fe in ownerchat01a15862-9933-7e50-8e10-4015cf35d078, exactproposalSHAb908c56a08ece0a68c483f8a5f96e49a24fe7becd452c3901759fa8d0b90c3b3. Author+actualseparatereviewer directlyreadhumanadoption; f24b797d proof verifies exactlocalHD011delta/providedpin/newD/P. Derivedbinding fromunchanged priorDEC029R4 D/P plus actual approvedHD011delta only; not a claim Sam inspected compositehashes, not renewal of unrelated UAT_NA/fullPhase qualification ornewCI/mergeexception. Original allapprovals/failures preserved.",
+      "recorded_at": "2026-10-21T02:20:01.229628Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "6370daf21488bfd77472532abf89be2c3e66e0ecdbe8010ac7ed8408e21061b9",
+      "code_commit": null,
+      "scope": [
+        "HD-011",
+        "PHASE-005",
+        "TASK-058",
+        "TASK-064",
+        "TASK-068",
+        "server/src/modules/sales/SalesFulfillmentService.js",
+        "server/test/integration/salesFulfillmentOwnerJoint.integration.test.js",
+        "server/test/integration/fulfillmentSalesInventoryJoint.integration.test.js",
+        "docs/sales_order_management/03_design_spec.md",
+        "docs/sales_order_management/00_module_manifest.json",
+        "docs/sales_order_management/implementation/113_p0_sales_provider_handoff.md",
+        "docs/sales_order_management/implementation/117_hd011_sales_real_provider_joint_checkpoint.md"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-HD011-SALES-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam HD011 A userMessage01a15c33-caa1-7ac1-a2b7-d7c2eac3052e / call91c09b99cc944d41913efaee3ca1d4fe in ownerchat01a15862-9933-7e50-8e10-4015cf35d078, exactproposalSHAb908c56a08ece0a68c483f8a5f96e49a24fe7becd452c3901759fa8d0b90c3b3. Author+actualseparatereviewer directlyreadhumanadoption; f24b797d proof verifies exactlocalHD011delta/providedpin/newD/P. Derivedbinding fromunchanged priorDEC029R4 D/P plus actual approvedHD011delta only; not a claim Sam inspected compositehashes, not renewal of unrelated UAT_NA/fullPhase qualification ornewCI/mergeexception. Original allapprovals/failures preserved.",
+      "recorded_at": "2026-10-21T02:20:01.229630Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "6370daf21488bfd77472532abf89be2c3e66e0ecdbe8010ac7ed8408e21061b9",
+      "code_commit": null,
+      "scope": [
+        "HD-011",
+        "PHASE-005",
+        "TASK-058",
+        "TASK-064",
+        "TASK-068",
+        "server/src/modules/sales/SalesFulfillmentService.js",
+        "server/test/integration/salesFulfillmentOwnerJoint.integration.test.js",
+        "server/test/integration/fulfillmentSalesInventoryJoint.integration.test.js",
+        "docs/sales_order_management/03_design_spec.md",
+        "docs/sales_order_management/00_module_manifest.json",
+        "docs/sales_order_management/implementation/113_p0_sales_provider_handoff.md",
+        "docs/sales_order_management/implementation/117_hd011_sales_real_provider_joint_checkpoint.md"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -11014,6 +11095,30 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-SALES-HD011-SOURCE-TRANSPLANT-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "7f81a437f5006c41487f7b25561f489841b92138669cec0d57c3fbe60a4e091f",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/sales-owner-joint-r2-source-transplant-reviewer-proof.json SHA256f24b797d2db8a79df84bace7b01c410b021f711f48e59c306e48db9c20ad3943; exactHD011 source/canonical/pin +7realWIPnative / consumer4path scopedapproval only; no allowner/activeClaimsaggregate/0B/P4/currentCI/Gate approval; Customer preexistingdrift retained.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-SALES-HD011-CANONICAL-DELTA-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "07325c789d3de583c5a7c85de549d243eec46fd0d29755e763798e51bc9caf04",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/sales-owner-joint-r2-source-transplant-reviewer-proof.json SHA256f24b797d2db8a79df84bace7b01c410b021f711f48e59c306e48db9c20ad3943; exactHD011 source/canonical/pin +7realWIPnative / consumer4path scopedapproval only; no allowner/activeClaimsaggregate/0B/P4/currentCI/Gate approval; Customer preexistingdrift retained.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -14492,6 +14597,39 @@
       "subject": "P0 exact four-file Sales RC supplement adoption independently verified; owner real joint qualification still pending",
       "status": "PASS",
       "source_ref": "implementation/116_sales_provider_active_transaction_alignment.md subsequent observation; private sales-provider-rc-supplement-r2-delivery-receipt.json preserves previous delivered status and actual4file afterhashes matching33bda6b7 manifest. Owner actualACK exactadoption, WIPHEADc50ce02e. R17 Issue fixes ownerreportednativeRED→GREEN only; private transactionpreclaim/consume API stillWIP, noP0/0B/P4Gate claim."
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "9ceb29ff60ff06f3fe0bfc346a916a2fa0850443",
+      "spec_baseline": "6370daf21488bfd77472532abf89be2c3e66e0ecdbe8010ac7ed8408e21061b9",
+      "source_fingerprint": "6399a001a490a7e3b3f4401e006e944706ee4d0e054d25de07c3ae942ca4082a",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-21T02:20:02.010686Z",
+      "subject": "HD011 actualhumanadoption, exactSalescanonicalalignment and reviewed localShipmentpreconditionfix complete; currentP0contributiondelivered",
+      "status": "PASS",
+      "source_ref": "implementation/117_hd011_sales_real_provider_joint_checkpoint.md; actualSamA b908proposal retained, newD07325c78/P6370daf2 derived, originalapprovalhistoryunchanged. Related124unit+prior21native0skip, latter7doubleexplicit. exactsource+4pathconsumerpatch7f81a437/manifest07f9d6e3 actualindependentreviewf24b797d/dryrun0; actualsendtoolsuccess ownerauthorizedchat; owneradoptionnotyetobserved."
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "9ceb29ff60ff06f3fe0bfc346a916a2fa0850443",
+      "spec_baseline": "6370daf21488bfd77472532abf89be2c3e66e0ecdbe8010ac7ed8408e21061b9",
+      "source_fingerprint": "6399a001a490a7e3b3f4401e006e944706ee4d0e054d25de07c3ae942ca4082a",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-21T02:20:02.010699Z",
+      "subject": "Genuine7caseSalesItemInventoryjointdiagnosticpassed in sourcepinnedunqualifiedownerWIPsnapshot afterHD011; not currentowner/full0B qualification",
+      "status": "PASS",
+      "source_ref": "private sales-owner-joint-native-green-r5.log7PASS0skip withsnapshot-r5 exactsource/InventoryLookup currentAPI, actualrealpost+rollback/replay/reverse/multiAllocation/quantitydrift+stale/futureCAS/CLAIMcurrentstate separation. NoInventoryverifierdoubleinnew7. Ownerinstallednode_moduleslinknotfrozenlockqualification; priorRED/source snapshotsretained. Ownernew9a3a Supplier/package-lock integrationrequireslatestcandidate rerun; noWIPInventorysourceadoptedtoP4."
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "9ceb29ff60ff06f3fe0bfc346a916a2fa0850443",
+      "spec_baseline": "6370daf21488bfd77472532abf89be2c3e66e0ecdbe8010ac7ed8408e21061b9",
+      "source_fingerprint": "6399a001a490a7e3b3f4401e006e944706ee4d0e054d25de07c3ae942ca4082a",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-21T02:20:02.010701Z",
+      "subject": "P4 trace/predecessor/currentCI/fullGate remain blocked; no newhumananswerpendingHD011",
+      "status": "BLOCKED",
+      "source_ref": "Trace-r5 onlyCONTRACT_DRIFT Customer oldpin0c70e3d5 vsunchangedHEADdoc7b56997a; notsilentlyrebound. Provider/activeClaimsaggregate/fullcapacity/Checkpoint0B/completeP0currentCIreviewmain stillpending. FullP4source/canonicalreconciliation,45suites/fullcapacity/Playwright/wholephasereview/currentCI/standardGate remainmandatory; scopedsourceAPPROVEDisnotTask004/0B/P4DONE."
     }
   ],
   "pending_decisions": [
@@ -14888,6 +15026,19 @@
       ],
       "question": "Adopt actual HD008 P0 active-schema/quantity/lifecycle authority and HD009 A1 exact Sales0088 batch/manifest two-table contribution in complete P0 PR; preserve Sales0089/0090 and complete remaining P4; withdraw duplicate old0091-93 installers; unique mappedP00091-99, actualCheckpoint0B/allPhaseGates/CI/reviews unchanged.",
       "answer_ref": "Actual Sam source chat01a15862-9933-7e50-8e10-4015cf35d078 direct user async A forHD008 and userMessage01a158a7-0436-7711-b27b-8e0784bb4b0f HD009 A1. ProposaldecisionSHA babf2e13ff29f7f108b0473e8bafc8a44d571ab17143857eb38eeefdc60dcd95; exact0088 SHA b6eeecb12fd08e3f4a6129c8448b1c9346c4f55ca73bda458653b93d7a410946. Actual direct parent reread plus independentaddendumecfb6c8f; nooldapproval/hash rewrite or P0/P4 Gate waiver."
+    },
+    {
+      "id": "DEC-031-HD011",
+      "impact": "MAJOR",
+      "status": "ANSWERED",
+      "affected_ids": [
+        "PHASE-005",
+        "TASK-058",
+        "TASK-064",
+        "TASK-068"
+      ],
+      "question": "HD011 exactA explicit last-sync/currentInventoryCAS distinction and deferred Sales version sync only for quantity/status-unchanged Allocation/Release/Reallocate; all real owner current-state/activeclaim/receipt/counter/CAS/trigger/replay/rollback/Gates retained.",
+      "answer_ref": "Actual Sam direct userMessage01a15c33-caa1-7ac1-a2b7-d7c2eac3052e in authorizedownerchat01a15862-9933-7e50-8e10-4015cf35d078, questioncall91c09b99cc944d41913efaee3ca1d4fe; answer A：批准區分 last-sync／current CAS，僅數量不變事件延後同步（建議）. Exactproposalb908c56a verified beforeadoption, independentlyreadbyR2reviewer; nooldhashrewrite orGatewaiver."
     }
   ],
   "external_actions": [
@@ -18526,5 +18677,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Exact4file Sales RC supplement33bda6b7 already owner-adopted and actual4hashes verified; do not reapply. Await reviewed realInventory transactionbound preclaim/consume ensuring alloperationclaims-before-domainroots, then actualInventory+Sales+Item callerchain, allocation/candidate/concurrency/replay/rollback/fullcapacity/currentCI/review/fullP0main first. OwnerreportsR17Issue omissions/substitution nativeRED→GREEN but not Sales-observed jointPASS. Preserve allhistorical approvals/evidence. After actualP0main reconcilebothcanonicalhistories/newbindings, integratefreshmain andwithdrawduplicate0091–0093, completeArchiveparticipant/coordinator/original45suites/fullcapacity/Playwright/currentCI/wholephasereview/unchangedMERGE_READY, directlymergeunderSamauthority. No newhuman decision pending."
+  "next_safe_action": "HD011AactualSamapproved+canonicalSalesDES/providedpin aligned newD07325c78/P6370daf2; oldapprovals/historyretained. Deliveredadversariallyreviewed4pathpatch7f81a437/manifest07f9d6e3/prooff24b797d toP0owner: confirmactualadoption then current9a3a+ dependencies real7joint+allprovider/native/capacity/concurrency/Checkpoint0B/fullP0CIreviewmain. Old7trueWIPdiagnostic/124unit/old21native(7double) notnewcandidatequalification. CompleteactiveFulfillmentClaims currenttruth/quantitycap inactualTASK008/011, notinvented. SalesP4stillblocked; reconcileexistingCustomerpin0c70vs7b56 viarealownerfreshmainimpactreview (no blindpinrefresh), bothcanonicalhistories/finalbindings andwithdrawduplicate0091–0093 whenactualP0mainready, thenrealArchiveparticipant/coordinator/original45/fullcapacity/Playwright/currentCI/wholephasereview/unchangedMERGE_READY; directlymergeunderSamstandingauthority. No newhuman decisionpendingHD011."
 }
