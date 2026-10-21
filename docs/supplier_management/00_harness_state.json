@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 387,
+  "revision": 388,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -13,8 +13,8 @@
     "plan": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
     "code_commit": "186a660ec0ef3037ffc9ef92adcd31b20f1e072d",
     "source_fingerprint": "43f7f525f708bb08a1cb3994bd6ed7a36548794d3eaf9e7e06f18ae5caa911ad",
-    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t51u",
-    "default_commit": "3c0c33705aa76c1ad97decd395a9e3fc52c16792",
+    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t51f",
+    "default_commit": "6a9b86bd999bc310d71dadf321319f6e8e117f57",
     "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
   },
   "runtime": {
@@ -4696,6 +4696,17 @@
       "source_ref": "Local, not CI, MySQL 26.7.0 throwaway instance. supplierMigrationAcceptance.integration.test.js 5/5; TC-006 adds the 15 Supplier migrations to a non-Supplier schema with core data: existing tables and rows (time columns included) unchanged, only the six supplier.* permissions and their system-admin grants added, writes only to Supplier tables or the permission seed, no drop except 0087's reorder, multi-statement queries refused, real server starts; seven mutants each fail for the intended reason. T51 rehearsal (docs/supplier_management/testing/t51_rehearsal/, exits non-zero on any failed check): (A) pre-Supplier main e4aed631 with its own runner plus core data, then the current runner's 58 files in main's order: every pre-existing object of 29 tables and every permission/grant row unchanged; current server starts. (B) previous release 72e205ef with Supplier data: orphan SKU relation accepted (control); mysqldump/restore of 94 tables equal on data, counters, columns, indexes, keys, triggers, routines, views and events, with a changed-row control detected; current runner applies only 0087 and changes only the ledger plus one index; orphan refused after; the current and the rolled-back previous server both start and read Supplier list, detail and SKU relations over HTTP with a real user and device. (C) similar-name report: one exact existing match, one in-file pair. Servers stopped (port closed), scratch databases dropped. The six orphaned servers from earlier rehearsal runs (REV-105 H-2) were stopped by exact PID.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-21T10:42:47+08:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "TC-006 carrier and the T51 rehearsal (PR #260) merged to main",
+      "code_commit": "6a9b86bd999bc310d71dadf321319f6e8e117f57",
+      "spec_baseline": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
+      "source_fingerprint": "e4e8941fde2ecd0463e5c64cd5cd39ff0bd56704f6f4712bc3f547bce9141206",
+      "status": "PASS",
+      "source_ref": "PR #260 merged as 6a9b86bd999bc310d71dadf321319f6e8e117f57 at 2026-10-21T02:53:40Z on the Product Owner's word ('review 完 CI 過就 merge', then 'CI已通過'), with --match-head-commit, after a gate that refused unless the latest run of every check was SUCCESS and main was an ancestor of HEAD: head 16857bdd green on all 13 checks (PR run 39534576526). Review REV-105 CHANGES_REQUESTED (0 Critical; both Highs fixed), follow-ups applied; not re-reviewed. Recorded as the first commit of the next change PR.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-21T11:35:07+08:00"
     }
   ],
   "pending_decisions": [
