@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 383,
+  "revision": 384,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -13,8 +13,8 @@
     "plan": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
     "code_commit": "186a660ec0ef3037ffc9ef92adcd31b20f1e072d",
     "source_fingerprint": "43f7f525f708bb08a1cb3994bd6ed7a36548794d3eaf9e7e06f18ae5caa911ad",
-    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t51r",
-    "default_commit": "cb70aacc18d5c825f2af990079ef5e1f61996e9f",
+    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t51d",
+    "default_commit": "a01cf438bf281a1a356fd76cca0b73c72e0d7a89",
     "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
   },
   "runtime": {
@@ -4624,6 +4624,17 @@
       "source_ref": "Local, not CI, on erp_t51 (MySQL 26.7.0). supplierDeadlockRetry.integration.test.js 4/4 over real HTTP, 25 consecutive runs green: identifier create, identifier update, Supplier create and Supplier Code change each forced into a duplicate-check deadlock (uncommitted third insert, both requests from two users queued on the unique key per performance_schema, then rollback); InnoDB's latest deadlock is after the blocker and on the expected unique index; responses are 201/200 plus 409 SUPPLIER_IDENTIFIER_TAKEN or SUPPLIER_CODE_TAKEN; supplier.write.deadlock_retried is logged per operation. Before the fix every case returned 500 on every run (also seen by REV-104). Five mutations each failed the intended cases (retry removed per operation, log removed). Supplier Code change was added under HD-115 A's rule after REV-104 M-1 reproduced the same 500. Full Supplier suite 692/692; lint exit 0.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-21T08:58:12+08:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "MIG-003 race carriers and the PR #244 lock test (PR #257) merged to main",
+      "code_commit": "a01cf438bf281a1a356fd76cca0b73c72e0d7a89",
+      "spec_baseline": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
+      "source_fingerprint": "7fe05d691f7a87252e2ec786242f5bd91f5fafa28e79bf18fb8400f291676fa0",
+      "status": "PASS",
+      "source_ref": "PR #257 merged as a01cf438bf281a1a356fd76cca0b73c72e0d7a89 at 2026-10-21T01:11:28Z on the Product Owner's word ('HD-115 A，CI 過就 merge', then 'CI已通過'), with --match-head-commit, after a gate that refused unless the latest run of every check was SUCCESS and main was an ancestor of HEAD: head 6020536e green on all 13 checks (PR run 39403567949). Main had moved only by PR #256 (another module's docs), merged in before push. Review REV-103 APPROVED with follow-ups applied. Recorded on the DEF-031 branch, which was built on #257's branch before it merged; this is the first ledger commit after the merge, not the branch's first commit.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-21T09:12:04+08:00"
     }
   ],
   "pending_decisions": [
@@ -7235,5 +7246,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "After PR #257 merges: open the DEF-031 PR (record #257's merge first), merge per 'HD-115 A，CI 過就 merge'. Then TC-006 / T51 rehearsal."
+  "next_safe_action": "PR for claude/supplier-def031-deadlock-retry (DEF-031, HD-115 A); merge per 'HD-115 A，CI 過就 merge' once every check is SUCCESS. Then TC-006 / T51 rehearsal."
 }
