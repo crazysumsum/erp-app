@@ -12,8 +12,12 @@ async function createSalesProviderDatabase(t){
   if(process.env.DB_INTEGRATION_TESTS!=="1"||typeof process.env.DB_NAME!=="string"||! /^[A-Za-z0-9_]{1,30}$/u.test(process.env.DB_NAME))throw new Error("Explicit isolated Sales provider environment required");
   const name=`${process.env.DB_NAME}_sf_${randomUUID().replaceAll("-","").slice(0,12)}`;
   const connectionOptions={host:process.env.DB_HOST,port:Number(process.env.DB_PORT||3306),socketPath:process.env.DB_SOCKET_PATH,user:process.env.DB_ADMIN_USER??process.env.DB_USER,password:process.env.DB_ADMIN_PASSWORD??process.env.DB_PASSWORD,multipleStatements:true};
-  const admin=await mysql.createConnection(connectionOptions);let db=null,created=false;
-  t.after(async()=>{try{if(db)await db.end();if(created)await admin.query(`DROP DATABASE \`${name}\``);}finally{await admin.end();}});
+  const admin=await mysql.createConnection(connectionOptions),cleanup={shutdown:null};let db=null,created=false;
+  t.after(async()=>{
+    const errors=[];
+    for(const close of [()=>cleanup.shutdown?.(),()=>db?.end(),()=>created&&admin.query(`DROP DATABASE \`${name}\``),()=>admin.end()]){try{await close();}catch(error){errors.push(error);}}
+    if(errors.length)throw new AggregateError(errors,"Sales provider owned resource cleanup failed");
+  });
   await admin.query(`CREATE DATABASE \`${name}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);created=true;db=await mysql.createConnection({...connectionOptions,database:name});
   await db.query("CREATE TABLE fr_schema_migrations(name VARCHAR(190) PRIMARY KEY,applied_at BIGINT UNSIGNED NOT NULL)");
   const directory=fileURLToPath(new URL("../../../database/",import.meta.url));
@@ -23,7 +27,7 @@ async function createSalesProviderDatabase(t){
     if(name.endsWith(".js"))await (await import(pathToFileURL(path.join(directory,name)).href)).up(db);else await db.query(await readFile(path.join(directory,name),"utf8"));
     await db.execute("INSERT INTO fr_schema_migrations(name,applied_at) VALUES (?,?)",[name,Date.now()]);
   }
-  return {db,name,connectionOptions};
+  return {db,name,connectionOptions,cleanup};
 }
 
 async function seedFulfillmentSalesOrder(db) {
@@ -52,10 +56,10 @@ export async function salesFulfillmentFixture(t){
   const mappingId=await s.insert("sales_order_line_reservations",{sales_order_line_id:s.lineId,inventory_reservation_id:reservationId,inventory_operation_id:root,source_event_id:reserveEvent,original_base_quantity:1,outstanding_base_quantity:1,status:"ACTIVE",inventory_version:1,created_at:s.now,updated_at:s.now});
   await db.query("UPDATE sales_orders SET status='CONFIRMED' WHERE id=?",[s.orderId]);await db.query("UPDATE sales_order_lines SET cancelled_base_quantity=0,reserved_outstanding_base_quantity=1 WHERE id=?",[s.lineId]);
   const context=new RequestContextService({services:{require:()=>time}}),pool=mysql.createPool({...f.connectionOptions,database:f.name,multipleStatements:false,connectionLimit:2});
-  const database=new MySqlDatabaseService({pool,context,logger:{},config:{queryTimeoutMs:5000,transactionTimeoutMs:10000,acquireTimeoutMs:5000,abandonedConnectionAction:"destroy"}});t.after(()=>database.shutdown());
+  const database=new MySqlDatabaseService({pool,context,logger:{},config:{queryTimeoutMs:5000,transactionTimeoutMs:10000,acquireTimeoutMs:5000,abandonedConnectionAction:"destroy"}});f.cleanup.shutdown=()=>database.shutdown();
   const createService=options=>new SalesFulfillmentService({database,context,time,logger:{error(){}},...options});
   const service=createService(),permissions=["fulfillment.operation","fulfillment.reverse","fulfillment.view"],claims={sub:String(userId),roles:[label],permissions};
-  const run=(auth,work)=>context.storage.run({databaseTransaction:null,signal:null,auth,startedAt:time.nowMs()},()=>database.withTransaction(work));
+  const run=(auth,work,options={isolationLevel:"READ COMMITTED"})=>context.storage.run({databaseTransaction:null,signal:null,auth,startedAt:time.nowMs()},()=>database.withTransaction(work,options));
   const command=()=>({actor:{userId:String(userId),serviceName:"",claimedRoles:[label],claimedPermissions:permissions},purpose:"SHIPMENT_CONFIRMED",salesOrderId:String(s.orderId),expectedOrderVersion:1,shipmentId:"1",eventId:randomUUID(),inventoryRequestHash:"b".repeat(64),lines:[{salesOrderLineId:String(s.lineId),expectedVersion:1,baseQuantity:"1",reservations:[{claimId:"1",inventoryReservationId:String(reservationId),expectedVersion:1,baseQuantity:"1"}]}]});
   const before={order:(await db.query("SELECT * FROM sales_orders WHERE id=?",[s.orderId]))[0][0],line:(await db.query("SELECT * FROM sales_order_lines WHERE id=?",[s.lineId]))[0][0],mapping:(await db.query("SELECT * FROM sales_order_line_reservations WHERE id=?",[mappingId]))[0][0]};
   return {f,db,s,label,time,userId,roleId,reservationId,mappingId,root,reserveEvent,context,database,service,createService,permissions,claims,run,command,before};

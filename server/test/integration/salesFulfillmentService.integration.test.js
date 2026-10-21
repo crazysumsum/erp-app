@@ -14,9 +14,22 @@ nativeTest("Sales provider real transaction rejects unauthorized/stale/uninstall
     assert.equal(projection.orderId,String(s.orderId));assert.equal(projection.lines[0].baseUomId,String(s.uomId));assert.equal(projection.lines[0].reservationMappings[0].inventoryReservationId,String(reservationId));
     assert.doesNotMatch(JSON.stringify(projection),/unitSellingPrice|totalAmount|notes|paymentTerm|password|source_event_id/);
   });
-  await t.test("CLAIM acquires actual Sales rows without creating a result journal",async()=>{
+  await t.test("CLAIM remains compatible with actual default RR and creates no result journal",async()=>{
     const c=command();c.purpose="CLAIM";for(const key of ["eventId","shipmentId","inventoryRequestHash"])delete c[key];
-    await run({claims},async tx=>{const result=await service.lockLinesForFulfillmentInTransaction(tx,c);assert.equal(result.replay,false);assert.equal(result.order.version,1);assert.equal((await tx.query("SELECT COUNT(*) AS n FROM sales_operation_requests WHERE target_type='FULFILLMENT_SOURCE'"))[0][0].n,0);});
+    await run({claims},async tx=>{const result=await service.lockLinesForFulfillmentInTransaction(tx,c);assert.equal(result.replay,false);assert.equal(result.order.version,1);assert.equal((await tx.query("SELECT COUNT(*) AS n FROM sales_operation_requests WHERE target_type='FULFILLMENT_SOURCE'"))[0][0].n,0);},{});
+  });
+  await t.test("actual RR Shipment lock is refused before authentication and leaves no source claim",async()=>{
+    const c=command();await assert.rejects(()=>run(null,tx=>service.lockLinesForFulfillmentInTransaction(tx,c),{}),{code:"SALES_FULFILLMENT_CONTRACT_MISMATCH"});
+    assert.equal((await db.query("SELECT COUNT(*) AS n FROM sales_operation_requests WHERE event_id=?",[c.eventId]))[0][0].n,0);
+  });
+  await t.test("completed RC executor cannot reuse its private lock receipt for apply or a new lock",async()=>{
+    const c=command();let closed;
+    await assert.rejects(()=>run({claims},async tx=>{closed=tx;await service.lockLinesForFulfillmentInTransaction(tx,c);throw new Error("synthetic scope rollback");}),error=>error.cause?.message==="synthetic scope rollback");
+    await context.storage.run({databaseTransaction:closed,signal:null,auth:{claims},startedAt:time.nowMs()},async()=>{
+      await assert.rejects(()=>service.applyFulfillmentResultInTransaction(closed,{intent:c,inventoryResult:{operationId:"1",lines:[]}}),{code:"SALES_FULFILLMENT_CONTRACT_MISMATCH"});
+      await assert.rejects(()=>service.lockLinesForFulfillmentInTransaction(closed,c),{code:"SALES_FULFILLMENT_CONTRACT_MISMATCH"});
+    });
+    assert.equal((await db.query("SELECT COUNT(*) AS n FROM sales_operation_requests WHERE event_id=?",[c.eventId]))[0][0].n,0);
   });
   await t.test("real Shipment lock creates IN_PROGRESS first and caller rollback removes it",async()=>{
     const c=command();await assert.rejects(()=>run({claims},async tx=>{const result=await service.lockLinesForFulfillmentInTransaction(tx,c);assert.equal(result.replay,false);assert.equal((await tx.query("SELECT status FROM sales_operation_requests WHERE event_id=?",[c.eventId]))[0][0].status,"IN_PROGRESS");throw new Error("Synthetic caller rollback");}),error=>error.cause?.message==="Synthetic caller rollback");

@@ -1,5 +1,6 @@
 import { assertActorFresh } from "../authorization/directoryLookups.js";
 import { ItemLookupService } from "../item/ItemLookupService.js";
+import { getActiveTransactionIsolation } from "../../services/mysqldatabase/MySqlDatabaseService.js";
 import { ApplicationError } from "../../framework/errors/ApplicationError.js";
 import { SalesAuditService } from "./SalesAuditService.js";
 import { salesPayloadHash } from "./salesCanonicalHash.js";
@@ -136,7 +137,9 @@ export class SalesFulfillmentService {
     for(const line of intent.lines)for(const member of line.reservations){const old=completed.payload.inventoryMembers?.find(m=>m.claimId===member.claimId);if(!old||old.inventoryReservationId!==member.inventoryReservationId||old.baseQuantity!==member.baseQuantity||old.inventoryOperationId!==member.originalInventoryOperationId)mismatch();}
   }
   async lockLinesForFulfillmentInTransaction(tx,command){
-    this.#transaction(tx);const intent=normalizeSalesFulfillmentIntent(command),actor=await this.#actor(tx,intent),intentHash=salesFulfillmentIntentHash(intent),existing=this.#receipts.get(tx);
+    this.#transaction(tx);const intent=normalizeSalesFulfillmentIntent(command);
+    if(intent.purpose!=="CLAIM"&&getActiveTransactionIsolation(tx)!=="READ COMMITTED")mismatch();
+    const actor=await this.#actor(tx,intent),intentHash=salesFulfillmentIntentHash(intent),existing=this.#receipts.get(tx);
     if(existing){if(existing.intentHash!==intentHash)mismatch();return structuredClone(existing.replay?{replay:true,result:existing.result}:{replay:false,order:existing.projection});}
     const nowMs=epoch(this.time.nowMs());let operationId=null;
     if(intent.purpose==="SHIPMENT_REVERSED")await this.#original(tx,intent);
@@ -153,7 +156,8 @@ export class SalesFulfillmentService {
     this.#receipts.set(tx,{intentHash,intent,actor,operationId,data,projection,replay:false});return {replay:false,order:structuredClone(projection)};
   }
   async applyFulfillmentResultInTransaction(tx,command){
-    this.#transaction(tx);fields(command,"intent,inventoryResult");const intent=normalizeSalesFulfillmentIntent(command.intent),bound=this.#receipts.get(tx),intentHash=salesFulfillmentIntentHash(intent);
+    this.#transaction(tx);if(getActiveTransactionIsolation(tx)!=="READ COMMITTED")mismatch();
+    fields(command,"intent,inventoryResult");const intent=normalizeSalesFulfillmentIntent(command.intent),bound=this.#receipts.get(tx),intentHash=salesFulfillmentIntentHash(intent);
     if(!bound||bound.intentHash!==intentHash||intent.purpose==="CLAIM")mismatch();
     if(!object(command.inventoryResult)||!Array.isArray(command.inventoryResult.lines))mismatch();
     const applyHash=salesPayloadHash(command.inventoryResult);

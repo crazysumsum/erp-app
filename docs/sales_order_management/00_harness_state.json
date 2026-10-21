@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1279,
+  "revision": 1280,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11002,6 +11002,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-SALES-FULFILLMENT-RC-R4",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "33bda6b7db27fc474d643d3e6d2f8164819295b10d57c3e754525b3db4e6c449",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/sales-provider-rc-r4-reviewer-proof.json SHA25636ff631a3065e4c7505fa6be08ea5f81cfc199e8f8ef201a1672e17ced91e188; exact4file RC supplement and ownerc50 metadata source only; noTask004/0B/realInventoryjoint/P4Gate approval.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -14447,6 +14459,28 @@
       "subject": "P4 and (fulfillment-shipping-management,TASK-004) realconsumer/native/Checkpoint0B stillawaitactualInventoryTask005 source+readiness; ItemTask006b5afe3ca ready butnotwholesalecopied",
       "status": "BLOCKED",
       "source_ref": "ActualauthorizedP0chat handoff: Task005actualInventoryhelper beingimplemented; sourcehandoffonly cannotqualify0B. P0mustapplyreviewednamedpatch, locallyretestbaseline40catalog andactualInventoryroot/member/leg receipts/reversal/sharedbalance/rollback/fullcapacity. NoCIrunorPR/merge claimed; all45/fullcapacity/Playwright/phase review/unchangedstandardGate preserved."
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "4faaef61e663d1654b9df21e1f6e0090e9e3173b",
+      "spec_baseline": "b791cec4ed059697c859b00b49c94d8d8b35c13ca031c8a8ab16ff633a642ba1",
+      "source_fingerprint": "e2a06a366ee83c826d4df59ada6826b185a11fc2949c4ff07f5c6d762049a113",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-21T01:37:44.664219Z",
+      "subject": "Actual HD010 owner metadata adoption and independently reviewed Sales RC adapter; named P0 supplement delivered",
+      "status": "PASS",
+      "source_ref": "implementation/116_sales_provider_active_transaction_alignment.md. Actual Sam owner-chat userMessage01a15c0b-ac09-7b83-9eaf-5a0cb09df591 verified by author/reviewer; c50ce02e owner file SHA9d01e01f exactadoption, no framework authored. targeted15 /related124(89Sales+35DB)/native21(14actualSales+7explicitInventorydouble) 0skip; lintPASS; nonce schema0. supplement33bda6b7 manifestce7cf44c dryrun0, actualsend_message_to_thread success toauthorizedP0owner. Newcomponent affects qualification; historicDES/PLAN/approvals retained pending finalP0integration, no gate reuse."
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "4faaef61e663d1654b9df21e1f6e0090e9e3173b",
+      "spec_baseline": "b791cec4ed059697c859b00b49c94d8d8b35c13ca031c8a8ab16ff633a642ba1",
+      "source_fingerprint": "e2a06a366ee83c826d4df59ada6826b185a11fc2949c4ff07f5c6d762049a113",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-21T01:37:44.664363Z",
+      "subject": "P4 real provider/Archive and complete P0 predecessor still await owner qualification",
+      "status": "BLOCKED",
+      "source_ref": "Owner actuallyapplied r1fc24110e and reported30focusedPASS; r2 delivered only, ownerapplication unobserved. Inventory Issue/Restore ownerreports3nativePASS but allocation/candidate/operationpreclaims-before-domain/fullcapacity/realSalesjoint stillpending. NoexistingSalesP4PR observed ghprlist[]; no exactcandidateCI/wholephaseGate/merge. AlloriginalP0/P4Gates preserved; no new human decision required."
     }
   ],
   "pending_decisions": [
@@ -18481,5 +18515,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "DelivercommittedexactnamedSalesproviderpatchfc24110e+manifest015b8fe6+transplantreviewa72b6c4d toauthorizedP0owner, nowholecommit/filecopy ofP4Export. P0applies10paths includingminimalAudit/Error/Config40, executesowncurrentunit+actualInventoryhelper consumer/native/0B/fullcapacity/currentCI/review/fullP0merge. AwaitactualTask005source; Salescomponent85+19withtestdoublesnotfullTask004/0B/P4PASS. OnceformalP0mainready reconcilecanonicalhistory/designplanbindings, integratefreshmainandwithdrawold91–93duplicateinstallers, implementrealArchiveparticipant/coordinator/fullP4original39+6+fullcapacity+Playwright/currentCI/phase review/unchangedMERGE_READY thenmergeunderSamstandingauthority. No newhuman decisionpending; preserveallpriorrefs/failures/raw/evidence."
+  "next_safe_action": "Await exact owner adoption of reviewed4file Sales RC supplement33bda6b7/R4proof36ff631a, execute actualInventory+Sales+Item callerchain with alloperationclaims-before-domainroots, allocation/candidate/concurrency/replay/rollback/fullcapacity, currentCI/review/fullP0main first. No Task004/0B orP4Gate closed by15/124/21component results; sevennativecases useexplicitInventorydouble. Then reconcile bothcanonicalhistories/newbindings usingactualHD008/009/010 approvals, integratefreshP0main and withdrawduplicateSales0091–0093, completeactualArchiveparticipant/coordinator/original45suites+fullcapacity+Playwright/currentCI/wholephase review/unchangedMERGE_READY, directlymergeunderSamstandingauthority. Preserve originalsource/evidence/failures/hashapprovals. No newhuman decision pending."
 }
