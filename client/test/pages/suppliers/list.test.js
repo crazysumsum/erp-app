@@ -240,7 +240,7 @@ describe("pages/suppliers/SuppliersPage.vue", () => {
     expect(supplierService.list).toHaveBeenLastCalledWith(expect.objectContaining({ createdFrom: Date.parse("2028-02-28T16:00:00Z") }));
   });
 
-  it("TC-127 (UI-007): renders markup in Supplier fields as text, never as elements (AUTH-009 client side)", async () => {
+  it("renders markup in Supplier fields as text, never as elements (AUTH-009 client side)", async () => {
     const { body, wrapper } = await mountPage();
     supplierService.list.mockResolvedValue({ rows: [{ ...ROW, supplierName: "<script>window.__xss = 1</script>",
       displayName: "<img src=x onerror=\"window.__xss = 2\">", primaryContactName: "<b>bold</b>" }], rowsNumber: 1 });

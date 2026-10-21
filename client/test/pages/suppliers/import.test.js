@@ -93,7 +93,7 @@ describe("supplier import page (T46)", () => {
     expect(supplierImportService.confirmJob).not.toHaveBeenCalled();
   });
 
-  it("confirms as draft with the password and no approver when approval is off", async () => {
+  it("TC-126 (UI-006): confirms as draft with the password and no approver when approval is off", async () => {
     promptPassword.mockResolvedValue("pw");
     supplierImportService.confirmJob.mockResolvedValue({});
     ({ wrapper } = await mountPage({ job: "7" }));

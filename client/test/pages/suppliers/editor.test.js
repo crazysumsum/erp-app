@@ -122,4 +122,20 @@ describe("Supplier general editor", () => {
     expect(confirm).toHaveBeenCalledWith(expect.stringContaining("未儲存"));
     confirm.mockRestore();
   });
+
+  it("TC-123 (UI-003): asks the browser to confirm closing the tab only while the general editor is dirty", async () => {
+    const { body } = await mountPage();
+    // jsdom 冇 BeforeUnloadEvent：普通 Event 嘅 returnValue = "" 會當取消，令冇 preventDefault() 都過關。
+    // 遮住佢，淨係量 preventDefault()——瀏覽器係靠呢個彈確認。
+    const unload = () => {
+      const event = new Event("beforeunload", { cancelable: true });
+      Object.defineProperty(event, "returnValue", { value: undefined, writable: true });
+      window.dispatchEvent(event);
+      return event.defaultPrevented;
+    };
+    expect(unload()).toBe(false);
+    await body.findAll("button").find((button) => button.text().includes("編輯一般資料")).trigger("click");
+    await field(body, "Supplier Name *").setValue("Dirty Supplier");
+    expect(unload()).toBe(true);
+  });
 });

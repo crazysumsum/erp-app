@@ -147,6 +147,21 @@ describe("pages/suppliers/SupplierCreatePage.vue", () => {
     confirm.mockRestore();
   });
 
+  it("TC-123 (UI-003): asks the browser to confirm closing the tab only while the form is dirty", async () => {
+    const { body } = await mountPage();
+    // jsdom 冇 BeforeUnloadEvent：普通 Event 嘅 returnValue = "" 會當取消，令冇 preventDefault() 都過關。
+    // 遮住佢，淨係量 preventDefault()——瀏覽器係靠呢個彈確認。
+    const unload = () => {
+      const event = new Event("beforeunload", { cancelable: true });
+      Object.defineProperty(event, "returnValue", { value: undefined, writable: true });
+      window.dispatchEvent(event);
+      return event.defaultPrevented;
+    };
+    expect(unload()).toBe(false);
+    await input(body, "Supplier Name *").setValue("Evergreen Trading");
+    expect(unload()).toBe(true);
+  });
+
   // ---- T30 AC 1: the approver selector ------------------------------------
 
   it("TC-122 (UI-002): does not offer an approver, or send one, when the policy is off", async () => {
