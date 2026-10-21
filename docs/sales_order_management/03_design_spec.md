@@ -38,7 +38,7 @@
 | SAD-005 | 庫存競爭時在 Inventory lock 內重新讀取 ATP，能保留多少便保留多少，餘額成為 Backorder，不因不足拒絕 SO。 |
 | SAD-006 | Inventory 結果不確定時不得重開新意圖；以原 eventId 查詢及安全恢復 `CONFIRMING`。 |
 | SAD-007 | Backorder 按同一 Warehouse＋SKU 的 SO 確認時間 FIFO 自動補配；可手動觸發重跑，不支援插隊或客戶優先級。 |
-| SAD-008 | 未有 Fulfilled Quantity 的 Confirmed SO 可輸入原因撤回 Draft，先釋放 Reservation；已有履約後不可撤回。 |
+| SAD-008 | 未有 Fulfilled Quantity 且沒有 Fulfillment active／archive 歷史的 Confirmed SO 可輸入原因撤回 Draft，先釋放 Reservation；已有履約或履約歷史時不可撤回（HD-014），取消／關閉剩餘數量規則不變。 |
 | SAD-009 | Quotation 轉換建立 Draft SO；只有 SO 確認才保留庫存。 |
 | SAD-010 | 每月以小批次把合資格 Order Aggregate 搬至 Archive Tables；Archive 唯讀且第一階段不自動永久刪除。 |
 
@@ -1667,10 +1667,12 @@ return results in sourceLineId order
 
 ### 7.6 `SalesOrderLifecycleService`
 
+HD-013：只限 WITHDRAW／CANCEL／CLOSE_REMAINING 明確使用 READ COMMITTED；其他 Sales／DB 全域預設不變。各層持直接父鎖後讀目前完整 membership，依主鍵升序取鎖；HD-012 operation readiness 只可 FOR SHARE NOWAIT，未知依賴503整筆rollback。
+
 `withdrawConfirmation()`：
 
-- 鎖 Order／Lines，狀態必須 Confirmed、Fulfilled 全 0、event/version 符合。
-- 在任何 Reservation release 前呼叫 Fulfillment lifecycle guard；`OPEN`／`UNKNOWN` 均 fail closed。
+- 鎖 Order／Lines，狀態必須 Confirmed、Fulfilled 全 0、event/version 符合；HD-014 另要求沒有任何 Fulfillment active／archive 歷史。已有歷史時在任何 Inventory release 前回 `409 FULFILLMENT_HISTORY_BLOCKS_WITHDRAWAL` 及取消後另建訂單的指引，不刪／改歷史 FK。
+- 在任何 Reservation release 前呼叫 Fulfillment lifecycle guard；`OPEN`／`UNKNOWN` 均 fail closed。固定 WITHDRAW 的已知 OPEN／CLOSED 結果可帶 bounded reasonCodes 的 HD-014 history reason，由 Sales guard 明確穿透為專用409；terminal history 不假裝 active OPEN，UNKNOWN 仍優先503。既有完成事件 replay 在新的 mutable history 檢查前回原結果。
 - 呼叫 `releaseSalesBatchInTransaction()` 釋放所有 outstanding reservations；驗證每個 mapping result。
 - Lines 回到 Draft semantics：Reserved／Backorder／Fulfilled／Cancelled 全 0；刪除 terminal Backorder queue rows及 mappings之前先保留 History／Audit summary。
 - 清 confirmation snapshots中只在 confirm產生的 credit／warehouse display結果；Customer／SKU current Draft display重新取 provider。

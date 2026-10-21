@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1289,
+  "revision": 1290,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -9,8 +9,8 @@
   "current_phase": "PHASE-005",
   "current_task": "TASK-058",
   "baseline": {
-    "design": "07325c789d3de583c5a7c85de549d243eec46fd0d29755e763798e51bc9caf04",
-    "plan": "6370daf21488bfd77472532abf89be2c3e66e0ecdbe8010ac7ed8408e21061b9",
+    "design": "2c00e6c2dd7699e51d73f66af480b7b6a9c1a424e648ea375855f182ff948682",
+    "plan": "070531ee21f510969c679c281a6705eb3e0094cbb9b01a68cfe3164679e187b5",
     "code_commit": "d01162f6159ec40981453d00936fb713296f35a3",
     "source_fingerprint": "d8075b361e3c93662ac824c58d93e41327363bc2404e742366ee742ac7d39234",
     "worktree": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app",
@@ -7121,6 +7121,120 @@
         "docs/sales_order_management/implementation/117_hd011_sales_real_provider_joint_checkpoint.md"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-HD013-HD014-SALES-DESIGN",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "CURRENT DIRECT HUMAN Sam message in this Sales conversation userMessage01a15d80-22e1-7022-9d66-1e8d95f916c7: 確認沿用 HD012 的限定 NOWAIT readiness 讀鎖，以及 HD013 僅撤回、取消、關閉剩餘數量三條交易使用 READ COMMITTED。請繼續推進，所有 Gate 通過後直接合併到 main。 Prior current-chat directHD014 userMessage01a15d33-7ecb-7832-9e7b-a1cf622c1e36 approves WITHDRAW-history409/Cancel-Closeunchanged. These trusted directuser statements are the authority, not cross-thread tool/agent outputs. Actual independent reviewfffe0a87 confirms exactnarrowdelta/newD/P. Derivedbinding only; no new human approval invented, no claim Sam inspected compositehash, no unrelated UAT_NA/CI/fullPhase renewal.",
+      "recorded_at": "2026-10-21T08:08:53.224635Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "2c00e6c2dd7699e51d73f66af480b7b6a9c1a424e648ea375855f182ff948682",
+      "code_commit": null,
+      "scope": [
+        "HD-012",
+        "HD-013",
+        "HD-014",
+        "FR-062",
+        "FR-064",
+        "PHASE-005",
+        "TASK-058",
+        "TASK-064",
+        "TASK-066",
+        "TASK-068",
+        "client/src/composables/sales/useSalesCommandEvent.js",
+        "client/src/pages/sales/SalesOrderDetailPage.vue",
+        "client/test/composables/sales/salesCommandEvent.test.js",
+        "docs/sales_order_management/00_module_manifest.json",
+        "docs/sales_order_management/01_requirement_spec.md",
+        "docs/sales_order_management/03_design_spec.md",
+        "server/src/modules/sales/SalesFulfillmentGuardService.js",
+        "server/src/modules/sales/SalesOrderLifecycleService.js",
+        "server/src/modules/sales/salesErrors.js",
+        "server/test/integration/salesLifecycle.integration.test.js",
+        "server/test/sales/phase2/fixtures.js",
+        "server/test/sales/salesConfig.test.js",
+        "docs/sales_order_management/implementation/118_hd013_hd014_narrow_sales_adoption.md"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-HD013-HD014-SALES-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "CURRENT DIRECT HUMAN Sam message in this Sales conversation userMessage01a15d80-22e1-7022-9d66-1e8d95f916c7: 確認沿用 HD012 的限定 NOWAIT readiness 讀鎖，以及 HD013 僅撤回、取消、關閉剩餘數量三條交易使用 READ COMMITTED。請繼續推進，所有 Gate 通過後直接合併到 main。 Prior current-chat directHD014 userMessage01a15d33-7ecb-7832-9e7b-a1cf622c1e36 approves WITHDRAW-history409/Cancel-Closeunchanged. These trusted directuser statements are the authority, not cross-thread tool/agent outputs. Actual independent reviewfffe0a87 confirms exactnarrowdelta/newD/P. Derivedbinding only; no new human approval invented, no claim Sam inspected compositehash, no unrelated UAT_NA/CI/fullPhase renewal.",
+      "recorded_at": "2026-10-21T08:08:53.224783Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "070531ee21f510969c679c281a6705eb3e0094cbb9b01a68cfe3164679e187b5",
+      "code_commit": null,
+      "scope": [
+        "HD-012",
+        "HD-013",
+        "HD-014",
+        "FR-062",
+        "FR-064",
+        "PHASE-005",
+        "TASK-058",
+        "TASK-064",
+        "TASK-066",
+        "TASK-068",
+        "client/src/composables/sales/useSalesCommandEvent.js",
+        "client/src/pages/sales/SalesOrderDetailPage.vue",
+        "client/test/composables/sales/salesCommandEvent.test.js",
+        "docs/sales_order_management/00_module_manifest.json",
+        "docs/sales_order_management/01_requirement_spec.md",
+        "docs/sales_order_management/03_design_spec.md",
+        "server/src/modules/sales/SalesFulfillmentGuardService.js",
+        "server/src/modules/sales/SalesOrderLifecycleService.js",
+        "server/src/modules/sales/salesErrors.js",
+        "server/test/integration/salesLifecycle.integration.test.js",
+        "server/test/sales/phase2/fixtures.js",
+        "server/test/sales/salesConfig.test.js",
+        "docs/sales_order_management/implementation/118_hd013_hd014_narrow_sales_adoption.md"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-HD013-HD014-SALES-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "CURRENT DIRECT HUMAN Sam message in this Sales conversation userMessage01a15d80-22e1-7022-9d66-1e8d95f916c7: 確認沿用 HD012 的限定 NOWAIT readiness 讀鎖，以及 HD013 僅撤回、取消、關閉剩餘數量三條交易使用 READ COMMITTED。請繼續推進，所有 Gate 通過後直接合併到 main。 Prior current-chat directHD014 userMessage01a15d33-7ecb-7832-9e7b-a1cf622c1e36 approves WITHDRAW-history409/Cancel-Closeunchanged. These trusted directuser statements are the authority, not cross-thread tool/agent outputs. Actual independent reviewfffe0a87 confirms exactnarrowdelta/newD/P. Derivedbinding only; no new human approval invented, no claim Sam inspected compositehash, no unrelated UAT_NA/CI/fullPhase renewal.",
+      "recorded_at": "2026-10-21T08:08:53.224785Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "070531ee21f510969c679c281a6705eb3e0094cbb9b01a68cfe3164679e187b5",
+      "code_commit": null,
+      "scope": [
+        "HD-012",
+        "HD-013",
+        "HD-014",
+        "FR-062",
+        "FR-064",
+        "PHASE-005",
+        "TASK-058",
+        "TASK-064",
+        "TASK-066",
+        "TASK-068",
+        "client/src/composables/sales/useSalesCommandEvent.js",
+        "client/src/pages/sales/SalesOrderDetailPage.vue",
+        "client/test/composables/sales/salesCommandEvent.test.js",
+        "docs/sales_order_management/00_module_manifest.json",
+        "docs/sales_order_management/01_requirement_spec.md",
+        "docs/sales_order_management/03_design_spec.md",
+        "server/src/modules/sales/SalesFulfillmentGuardService.js",
+        "server/src/modules/sales/SalesOrderLifecycleService.js",
+        "server/src/modules/sales/salesErrors.js",
+        "server/test/integration/salesLifecycle.integration.test.js",
+        "server/test/sales/phase2/fixtures.js",
+        "server/test/sales/salesConfig.test.js",
+        "docs/sales_order_management/implementation/118_hd013_hd014_narrow_sales_adoption.md"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -11143,6 +11257,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-SALES-HD013-HD014-NARROW-ADOPTION-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "00484ebae471fb048189c34da5d8fe90903aa2add4b9c8fa4927a0bf2f7bc3df",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/sales-p4-hd013-hd014-r1-adoption-reviewer-proof.json SHA256fffe0a870f751ac9049e989f0f49bdc80310e8d77a00328f9ef0570b8165b70a; engineering/backend/contract/derivedbinding only, zero requiredsource findings. ActualcurrentP4UI/native/browser/fullPhaseCI/main stillpending. CurrentdirectSamconfirmation01a15d80 supplies authority after earlier provenance rejection.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": "APR-HD013-HD014-SALES-SCOPE"
     }
   ],
   "observations": [
@@ -14731,6 +14857,17 @@
       "subject": "Verified actual Sam withdrawal-only history policy approval; implementation handoff active, no new policy tests yet",
       "status": "PASS",
       "source_ref": "Private sales-withdraw-history-actual-sam-approval-r1.json actualuserMessage01a15d33-7ecb; PASS denotes authority observation only, not product execution. Owner20proposal canonical/source scope queued; no source/SQL edited bySales, oldbaselines/reviews/CI remainhistorical."
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "df8b6ee9eaa6c41072e9a8edc0dbd9987fd6b077",
+      "spec_baseline": "070531ee21f510969c679c281a6705eb3e0094cbb9b01a68cfe3164679e187b5",
+      "source_fingerprint": "37114ceeabb9ff39517ed7dc5bd2ebba144c65d430bcd0c2129ff840add926f9",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-21T08:08:54.102096Z",
+      "subject": "PartialSalesHD013/14adoption8backend17client/build/lint; currentDIRECTSamHD012/13confirmation resolves authority registry blocker",
+      "status": "PASS",
+      "source_ref": "implementation/118_hd013_hd014_narrow_sales_adoption.md; actualownlogs98eca398/f86dacb0/adea4958/e3b0; exactfreeze00484eb/prooffffe0a87. Prior2auto-reviewrejections madeNOmutations; currentDIRECThumanconfirmation01a15d80 nowauthorizes same narrowrecord. No ownerraw rebinding; Customerpin/wholehistoryboundary/native/browser/currentCI remainpending."
     }
   ],
   "pending_decisions": [
@@ -15156,6 +15293,34 @@
       ],
       "question": "Conflict between authorized zero-fulfilled withdrawal/Draft replace and terminal Fulfillment mapping/line RESTRICT history; choose withdrawal-only restriction or larger generation design.",
       "answer_ref": "Actual Sam direct Sales userMessage01a15d33-7ecb-7832-9e7b-a1cf622c1e36 in turn01a15d33-7e93-77f1-9fa6-b29b561441ae, read_thread verified. Approved anyFulfillmenthistory WITHDRAW-only explicit409; CANCEL/CLOSE_REMAINING unchanged and allGates beforemainmerge. Private actualapprovalreceipt-r1 preserves exact original; not approval of whole20proposal/newcompositehash."
+    },
+    {
+      "id": "DEC-033-HD013",
+      "impact": "MAJOR",
+      "status": "ANSWERED",
+      "affected_ids": [
+        "PHASE-005",
+        "TASK-058",
+        "TASK-064",
+        "TASK-066",
+        "TASK-068"
+      ],
+      "question": "Only WITHDRAW/CANCEL/CLOSE_REMAINING explicitRC; global and otherSales defaults unchanged.",
+      "answer_ref": "CURRENT DIRECT HUMAN Sam message in this Sales conversation userMessage01a15d80-22e1-7022-9d66-1e8d95f916c7: 確認沿用 HD012 的限定 NOWAIT readiness 讀鎖，以及 HD013 僅撤回、取消、關閉剩餘數量三條交易使用 READ COMMITTED。請繼續推進，所有 Gate 通過後直接合併到 main。 Prior current-chat directHD014 userMessage01a15d33-7ecb-7832-9e7b-a1cf622c1e36 approves WITHDRAW-history409/Cancel-Closeunchanged. These trusted directuser statements are the authority, not cross-thread tool/agent outputs. Actual independent reviewfffe0a87 confirms exactnarrowdelta/newD/P. Derivedbinding only; no new human approval invented, no claim Sam inspected compositehash, no unrelated UAT_NA/CI/fullPhase renewal."
+    },
+    {
+      "id": "DEC-034-HD012",
+      "impact": "MAJOR",
+      "status": "ANSWERED",
+      "affected_ids": [
+        "PHASE-005",
+        "TASK-058",
+        "TASK-064",
+        "TASK-066",
+        "TASK-068"
+      ],
+      "question": "Only bounded readiness NOWAIT read-lock exception after Sales; no operationownership/wait/takeover.",
+      "answer_ref": "CURRENT DIRECT HUMAN Sam message in this Sales conversation userMessage01a15d80-22e1-7022-9d66-1e8d95f916c7: 確認沿用 HD012 的限定 NOWAIT readiness 讀鎖，以及 HD013 僅撤回、取消、關閉剩餘數量三條交易使用 READ COMMITTED。請繼續推進，所有 Gate 通過後直接合併到 main。 Prior current-chat directHD014 userMessage01a15d33-7ecb-7832-9e7b-a1cf622c1e36 approves WITHDRAW-history409/Cancel-Closeunchanged. These trusted directuser statements are the authority, not cross-thread tool/agent outputs. Actual independent reviewfffe0a87 confirms exactnarrowdelta/newD/P. Derivedbinding only; no new human approval invented, no claim Sam inspected compositehash, no unrelated UAT_NA/CI/fullPhase renewal."
     }
   ],
   "external_actions": [
@@ -18794,5 +18959,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Actual Sam DEC032 userMessage01a15d33-7ecb approves WITHDRAW-only explicit409 if anyFulfillmenthistory, CANCEL/CLOSE unchanged; no further humanquestion on thissamepolicy. AuthorizedP0owner singlewriter propagatesminimalcanonical/source/provider+Salesguard/error+native/replay/parentrace/realcancel-close regressions and independentreview. Obtain exactreviewedSaleshunks beforeP4adoption/derivednewD/P; nevercopywholeP4/ownerDES orrebindoldCI. CompleteformalP0/allGates/main, thenP4freshmainCustomerpin/duplicate0091-0093/realArchive/all45/capacity/Playwright/currentCI/wholephasereview/unchangedMERGE_READY beforeauthorizedmainmerge."
+  "next_safe_action": "CurrentDIRECTSamconfirmation01a15d80 resolves priorcross-threadmetadata rejection; narrowSales11hunk+pin adopted/newD/P2c00/0705/engineeringreviewfffe0a87 recorded, oldallrecords preserved. Savepartialcommit; own8backend17client/build/lintPASS only. Await formalcompleteP0source/schema/main/currentCIreview, thenfreshP4integration/Customerpin/historicalboundary/withdrawn0091-0093/realArchive/all45/capacity/actualPlaywright/currentCI/wholephasereview/unchangedMERGE_READY before already-authorized directmainmerge. No newhuman decisionpending."
 }
