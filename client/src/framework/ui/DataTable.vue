@@ -151,7 +151,7 @@ onMounted(() => {
       <!-- QTable 冇 row 就出 #no-data，連載入緊同讀取失敗都係（DEF-032）：載入緊講載入緊，
            失敗交俾上面個 banner，兩樣都唔係先出空狀態（頁面自己嘅或者預設嘅）。 -->
       <template #no-data="slotProps">
-        <div v-if="displayLoading" class="full-width text-center text-grey-7 q-pa-lg">載入緊…</div>
+        <div v-if="displayLoading" class="full-width text-center text-grey-7 q-pa-lg">載入中…</div>
         <template v-else-if="!error">
           <slot name="no-data" v-bind="slotProps">
             <div class="full-width text-center text-grey-7 q-pa-lg">冇資料</div>

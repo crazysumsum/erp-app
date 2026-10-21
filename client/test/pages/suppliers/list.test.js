@@ -64,7 +64,7 @@ describe("pages/suppliers/SuppliersPage.vue", () => {
     supplierService.list.mockReturnValueOnce(new Promise((done) => { resolve = done; }));
     let result = await mountPage();
     expect(result.body.find('[aria-busy="true"]').exists()).toBe(true);
-    expect(result.body.text()).toContain("載入緊…");
+    expect(result.body.text()).toContain("載入中…");
     expect(result.body.text()).not.toContain("冇資料");
     resolve({ rows: [], rowsNumber: 0 });
     await flushPromises();

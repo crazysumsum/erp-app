@@ -219,17 +219,17 @@ test("@technical the list tells loading, empty and failed apart by its text (DEF
 
   replies.push("held");
   await page.goto("/suppliers");
-  await expect(page.getByText("載入緊…")).toBeVisible();
+  await expect(page.getByText("載入中…")).toBeVisible();
   await expect(page.getByText("冇資料")).toHaveCount(0);
   release();
   await expect(page.getByText("冇資料")).toBeVisible();
-  await expect(page.getByText("載入緊…")).toHaveCount(0);
+  await expect(page.getByText("載入中…")).toHaveCount(0);
 
   replies.push("fail");
   await page.reload();
   await expect(page.getByRole("button", { name: "重試" })).toBeVisible();
   await expect(page.getByText("冇資料")).toHaveCount(0);
-  await expect(page.getByText("載入緊…")).toHaveCount(0);
+  await expect(page.getByText("載入中…")).toHaveCount(0);
 
   await page.getByRole("button", { name: "重試" }).click();
   await expect(page.getByText("SUP-007")).toBeVisible();
