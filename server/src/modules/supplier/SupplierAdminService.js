@@ -286,7 +286,7 @@ export class SupplierAdminService {
   async createSupplier(input) {
     // 喺開 transaction 之前驗輸入，錯咗唔使掂資料庫；helper 入面會再做一次。
     const { name } = createFields(input);
-    // 相似名稱只係提示：喺 transaction 之外做，唔好令 currencies 嘅 X 鎖揸住成個查詢（T50，HD-084）。
+    // 相似名稱只係提示：喺 transaction 之外做，唔好令 currencies 嘅鎖揸住成個查詢（T50，HD-084）。
     const duplicateCandidates = await this.duplicates.find(this.database, { nameKey: name.key });
     let created;
     try {
@@ -324,10 +324,10 @@ export class SupplierAdminService {
   async createSupplierInTransaction(connection, { actor, input, approvalRequired = this.approvalRequired, addChildren = null,
     findDuplicates = true }) {
     const { code, name, displayName, website, email, generalPhone, notes } = createFields(input);
-    // 設計 2.6 嘅鎖序由 settings 行先。Business Master 會攞 currencies 嘅 X 鎖，
-    // 所以政策讀取（settings 嘅 S 鎖）一定要喺佢之前 —— 否則 createSupplier 係
-    // currencies -> settings，而 #changeStatus 係 settings -> currencies，夾埋一個
-    // 等緊 settings X 嘅 updateSettings 就砌成三方循環，實測會 ER_LOCK_DEADLOCK。
+    // 設計 2.6 嘅鎖序由 settings 行先，政策讀取（settings 嘅 S 鎖）喺 Business Master 鎖 currencies 之前。
+    // 當時 currencies 係 X 鎖：createSupplier 係 currencies -> settings、#changeStatus 係 settings -> currencies，
+    // 夾埋一個等緊 settings X 嘅 updateSettings 就砌成三方循環，實測會 ER_LOCK_DEADLOCK（REV-023）。
+    // PR #244 之後 Business Master 改用 S 鎖，呢個循環未重新量度過，所以次序照舊。
     const activationRequested = Boolean(input.activate);
     const needsApproval = activationRequested && await approvalRequired(connection);
     const defaults = await this.businessMaster.assertSupplierDefaultsInTransaction(connection, {

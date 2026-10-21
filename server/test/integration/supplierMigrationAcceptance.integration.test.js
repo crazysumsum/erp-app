@@ -1,28 +1,22 @@
 import assert from "node:assert/strict";
-import { execFile, spawn } from "node:child_process";
-import { randomUUID } from "node:crypto";
+import { spawn } from "node:child_process";
 import { readdir, readFile } from "node:fs/promises";
 import fs from "node:fs";
 import net from "node:net";
 import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
-import { fileURLToPath, pathToFileURL } from "node:url";
-import { promisify } from "node:util";
+import { pathToFileURL } from "node:url";
 import mysql from "mysql2/promise";
+
+import { ADMIN, ADMIN_CONFIG, childDatabaseEnv, runRunner, scratchDatabase, SERVER } from "./supplierScratchDatabase.js";
 
 /**
  * TASK-051 step 2b：MIG-001／002／004／005，真 MySQL、真 migration runner、真 server process。
  *
- * 每個 case 用自己一個空白 database（admin 帳號開，用完即刪），唔郁 DB_NAME。CI 上 erp_user 只有 erp_dev
- * 嘅權限，所以 runner、server 同檢查都用 admin 帳號連 scratch database（同 supplierBankRestore 一樣）。
+ * 每個 case 用自己一個 scratch database（supplierScratchDatabase.js）。
  */
 const integrationTest = process.env.DB_INTEGRATION_TESTS === "1" ? test : test.skip;
-const githubActions = process.env.GITHUB_ACTIONS === "true";
-const ADMIN = { user: process.env.DB_ADMIN_USER ?? (githubActions ? "root" : undefined),
-  password: process.env.DB_ADMIN_PASSWORD ?? (githubActions ? "root" : undefined) };
-const ADMIN_CONFIG = () => ({ host: process.env.DB_HOST, port: Number(process.env.DB_PORT), ...ADMIN, multipleStatements: true });
-const SERVER = fileURLToPath(new URL("../../", import.meta.url));
 const DATABASE_DIRECTORY = path.join(SERVER, "database");
 const FRAMEWORK_SQL_FILES = ["framework/idempotency.sql", "framework/jwt.sql", "framework/scheduler.sql"];
 const SUPPLIER_PERMISSIONS = ["supplier.approval", "supplier.bank.mgmt", "supplier.bank.view", "supplier.mgmt", "supplier.settings", "supplier.view"];
@@ -33,26 +27,6 @@ async function allMigrations() {
 }
 /** Supplier 擁有嘅 migration：檔名有 supplier（0028 係 Supplier 權限 seed）。 */
 const isSupplierMigration = (name) => /supplier/u.test(name);
-
-/** 一個空白 database，test 完即刪。回傳 admin 連線（multipleStatements，已 USE 咗佢）。 */
-async function scratchDatabase(t) {
-  assert.ok(ADMIN.user, "DB_ADMIN_USER is required: these cases create and drop their own databases");
-  const name = `${process.env.DB_NAME}_mig_${randomUUID().slice(0, 8)}`;
-  const connection = await mysql.createConnection(ADMIN_CONFIG());
-  // 用自己一條連線刪：測試中途可能已經關咗 `connection`（REV-102 M-3）。
-  t.after(async () => {
-    await connection.end().catch(() => {});
-    const admin = await mysql.createConnection(ADMIN_CONFIG());
-    try {
-      await admin.query(`DROP DATABASE IF EXISTS \`${name}\``);
-    } finally {
-      await admin.end();
-    }
-  });
-  await connection.query(`CREATE DATABASE \`${name}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci`);
-  await connection.query(`USE \`${name}\``);
-  return { name, connection };
-}
 
 /** 同 scripts/migrate.js 一樣嘅次序同做法（SQL 檔成個送、JS 叫 up），但唔寫 ledger：俾 MIG-002 停喺任何一支之前。 */
 async function apply(connection, name) {
@@ -116,18 +90,6 @@ async function snapshot(connection, database) {
     [database]);
   result["#triggers"] = triggers;
   return result;
-}
-
-/**
- * 子程序嘅資料庫設定全部明確俾：`scripts/migrate.js` 同 `src/index.js` 都會讀 server/.env，dotenv 只補未設嘅 key，
- * 所以開發者本機嘅 DB_SOCKET_PATH／APP_HOST 等等唔可以漏網（REV-102 L-2）。
- */
-const childDatabaseEnv = (database) => ({ DB_HOST: process.env.DB_HOST, DB_PORT: process.env.DB_PORT, DB_USER: ADMIN.user,
-  DB_PASSWORD: ADMIN.password, DB_NAME: database, DB_SOCKET_PATH: "", DB_SSL_ENABLED: "false" });
-
-function runRunner(database) {
-  return promisify(execFile)(process.execPath, [path.join(SERVER, "scripts/migrate.js")], { cwd: SERVER,
-    env: { ...process.env, ...childDatabaseEnv(database) } });
 }
 
 const freePort = () => new Promise((resolve) => {

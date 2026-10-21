@@ -82,3 +82,18 @@ UI create, so the two agree. A test pins this, and it will turn red when this de
 the setting.
 
 Not fixed here. Wiring the setting changes UI behaviour for any non-default value, which is outside HD-057.
+
+## DEF-031 — MEDIUM
+
+When two requests add the same identifier to two different Suppliers at the same moment, one of them can get
+`500 INTERNAL_SERVER_ERROR` instead of `409 SUPPLIER_IDENTIFIER_TAKEN`.
+
+The duplicate check takes a shared lock on `uq_supplier_identifier_value`. When both inserts are waiting for their
+insert-intention lock, InnoDB detects a deadlock and rolls one of them back (seen in `SHOW ENGINE INNODB STATUS`).
+`SupplierIdentifierService` maps only `ER_DUP_ENTRY`, and nothing retries a deadlock, so the rollback surfaces as a
+500. The identifier is still unique and no data is wrong; only the response is.
+
+Found by REV-103 (M-2) in raw SQL, and reproduced over HTTP: 1 of 150 deliberate simultaneous rounds returned 500. The
+same probe on Supplier create (a reused code) gave 150 of 150 clean 201/409 pairs. Address, contact, Bank and
+approval writes lock the Supplier row first, so two of them for the same Supplier cannot reach the unique key
+together. Decision: HD-115.

@@ -1,11 +1,11 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 379,
+  "revision": 381,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
-  "status": "IMPLEMENTING",
-  "resume_status": null,
+  "status": "BLOCKED",
+  "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-004",
   "current_task": "TASK-051",
   "baseline": {
@@ -13,8 +13,8 @@
     "plan": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
     "code_commit": "186a660ec0ef3037ffc9ef92adcd31b20f1e072d",
     "source_fingerprint": "43f7f525f708bb08a1cb3994bd6ed7a36548794d3eaf9e7e06f18ae5caa911ad",
-    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t51m",
-    "default_commit": "64bee2e00dfae71131c7cfa54049cac0941d6f85",
+    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t51r",
+    "default_commit": "cb70aacc18d5c825f2af990079ef5e1f61996e9f",
     "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
   },
   "runtime": {
@@ -2354,6 +2354,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-103",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (MIG-003 race carriers, PR #244 lock test)",
+      "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-task-051-races at 2e9068e8 (git diff origin/main..HEAD)",
+      "reviewed_baseline": "29a0615a61808b3747cd8feb522d051ba5a312da6fb0fccf36e7cf9746286775",
+      "source_ref": "docs/supplier_management/implementation/106_rev_103_independent_review.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -4567,6 +4579,28 @@
       "source_ref": "Local, not CI, on erp_t51's MySQL 26.7.0 with scratch databases created and dropped by the tests. supplierMigrationAcceptance.integration.test.js 4/4 (~25 s). TC-001: real runner on an empty database (ledger lists every file; a second run skips every file and leaves the ledger unchanged), Supplier table list, no Supplier Currency/Payment Term table, Supplier FKs to Business Master only, real server process (node src/index.js) starts with fake Bank keys and /api/v1/health is 200, container resolves supplierCoreProvider (READY, contract) and supplierBusinessMasterImpactChecker (check returns READY with zero counts for HKD and Payment Term 1). TC-002: 15 Supplier migrations, 31 runs stopped before each write (16 after at least one write) converge to a clean run's schema and data; a rerun of each finished migration runs no DDL and changes no row; rerunning all 15 over business rows changes nothing. TC-004: six permissions and six system-admin grants once, no other role, settings id=1 approval OFF, HKD active before the first Supplier migration, no Supplier write to currencies/payment_terms, reruns of 0028/0036 keep counts and the operator's approval setting. TC-005: eleven bad configurations (including no Bank keys for either owner, per design §1700) never print 'API listening on' and exit 1; messages name the setting; no key material or raw value in the output; the good configuration starts. Mutations: ten in all failed the file (migration guards, seeds, config leak, relative import root, early 'listening', impact checker table, approval reset on rerun, runner ledger check); one equivalent mutant (0030 IF NOT EXISTS alone) explained. No scratch database left after failing runs. Lint exit 0.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-20T16:10:57+08:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "MIG-001/002/004/005 carriers (PR #255) merged to main",
+      "code_commit": "cb70aacc18d5c825f2af990079ef5e1f61996e9f",
+      "spec_baseline": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
+      "source_fingerprint": "0c35ed1f12e82717372712c8dea624b7308c064169eaafdda5f2897ff00243c7",
+      "status": "PASS",
+      "source_ref": "PR #255 merged as cb70aacc18d5c825f2af990079ef5e1f61996e9f at 2026-10-20T09:04:16Z on the Product Owner's word ('review 完 CI 過就 merge', then 'CI已通過'), with --match-head-commit, after a gate that refused unless the latest run of every check was SUCCESS and main was an ancestor of HEAD: head d9bf0e99 green on all 13 checks (PR run 39396357244). Earlier head 8a77eee7 failed once on Sales TC-032 (P95 3005.2 ms over 3000 ms in the separate shard-1 capacity step; this PR's tests ran in shard 2); the failed jobs were re-run and passed. Main then moved by PR #244 (Business Master source: currency/payment-term reads now LOCK IN SHARE MODE; Customer source; and a Supplier test, supplierApproval.integration, edited by the Customer change), not eligible under rule B: main merged in, all 681 Supplier tests passed locally, CI re-ran. Review REV-102 CHANGES_REQUESTED (0 Critical/High), follow-ups applied; not re-reviewed. Recorded as the first commit of the next change PR.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-20T17:14:25+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "MIG-003 race carriers (TC-003) and the PR #244 lock test after REV-103",
+      "code_commit": "4c8ce29086116a04ba2edb56b9fc46d88d5fb7b8",
+      "spec_baseline": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
+      "source_fingerprint": "ec353584d54b795b85572f4e7eb8a08c671bfea8f55c4d7a1adab9121a40ca03",
+      "status": "PASS",
+      "source_ref": "Local, not CI, on erp_t51's MySQL 26.7.0 with a runner-migrated scratch database. supplierConstraintRaces.integration.test.js 7/7, three runs (~1.5 s): for Supplier Code (holder archived), identifier, address primary, contact primary, Bank default and pending approval, the waiter's lock wait is on the intended unique index (performance_schema), it fails with ER_DUP_ENTRY once the holder commits and succeeds once the holder rolls back; 25 simultaneous starts each give exactly one winner, the loser ER_DUP_ENTRY or (0-2 of 25) ER_LOCK_DEADLOCK. PR #244: real SupplierAdminService.createSupplier paused before INSERT INTO suppliers and real BusinessMasterAdminService currency/payment-term deactivation: the deactivation waits on the row (PRIMARY), then is refused IMPACT_CHANGED and the value stays ACTIVE. Ten mutations each failed the intended test (six unique keys, forUpdate removed from two admin status changes, shared lock removed from two provider reads). HTTP probes (temporary file, removed): Supplier create with a reused code 150/150 clean; identical identifier on two Suppliers 1/150 returned 500, SHOW ENGINE INNODB STATUS showed the S plus insert-intention deadlock on uq_supplier_identifier_value (DEF-031). supplierMigrationAcceptance and supplierApproval 21/21 after the helper move. Lint exit 0.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-20T17:49:37+08:00"
     }
   ],
   "pending_decisions": [
@@ -6038,6 +6072,18 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-20: 'HD-114 A，CI 過就 merge' — accept the 0087 procedure after REV-100 H-1: keep the foreign key and reorder the indexes in one INPLACE statement; resulting schema as approved in HD-113 A (APPROVAL-HD-113-SCOPE covers the same migration path)."
+    },
+    {
+      "id": "HD-115",
+      "impact": "MAJOR",
+      "question": "DEF-031: two requests adding the same identifier to two different Suppliers at the same moment can deadlock on uq_supplier_identifier_value (duplicate-key S lock plus insert intention); the rolled-back one returns 500 INTERNAL_SERVER_ERROR instead of 409 SUPPLIER_IDENTIFIER_TAKEN (1 in 150 deliberate HTTP rounds; data stays correct). Supplier create with a reused code gave 0 in 150; address, contact, Bank and approval writes lock the Supplier row first. (A) Retry the Supplier identifier create/update transaction once when it fails with ER_LOCK_DEADLOCK (and the same for Supplier create, as a precaution), so the retry sees the committed duplicate and returns 409; Supplier-local, no contract change, with a deterministic test. (B) Map ER_LOCK_DEADLOCK on these writes to a new 409 (retryable) error without retrying: adds a public error code. (C) Accept and record as a known limitation.",
+      "affected_ids": [
+        "DEF-031",
+        "TC-003",
+        "TASK-051"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
     }
   ],
   "external_actions": [
@@ -7149,7 +7195,22 @@
       ],
       "closure_evidence": [],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-031",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "source_ids": [
+        "REV-103",
+        "TC-003",
+        "MIG-003",
+        "SupplierIdentifierService",
+        "uq_supplier_identifier_value",
+        "docs/supplier_management/testing/04_defect_register.md"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "PR for claude/supplier-task-051-mig (TC-001/002/004/005); merge per the Product Owner's 'review 完 CI 過就 merge' once every check is SUCCESS. Then TC-003 (MIG-003 races)."
+  "next_safe_action": "HD-115 (DEF-031 identifier deadlock returns 500) awaits the Product Owner; it does not touch this PR's tests. PR for claude/supplier-task-051-races (TC-003, PR #244 lock test): merge per 'review 完 CI 過就 merge' once every check is SUCCESS."
 }
