@@ -38,7 +38,8 @@ async function apply(connection, name) {
   await module.up(connection);
 }
 
-const READ_ONLY = /^\s*(SELECT|SHOW|SET|DESCRIBE|EXPLAIN|WITH)\b/iu;
+// `WITH` 唔算讀：`WITH … UPDATE` 係寫入（REV-105 M-1）。
+const READ_ONLY = /^\s*(SELECT|SHOW|SET|DESCRIBE|EXPLAIN)\b/iu;
 /**
  * 記低（同可以喺第 `failAt` 句寫入之前中斷）一個 migration 送出嘅寫入。DDL 喺 MySQL 會 implicit commit，
  * 所以「做咗頭 n 句就斷」就係真實嘅半套用狀態。
@@ -48,6 +49,8 @@ function recording(connection, failAt = Infinity) {
   const affected = [];
   const wrap = (method) => async (sql, ...rest) => {
     const text = typeof sql === "string" ? sql : sql.sql;
+    // scratch 連線開咗 multipleStatements：第二句會避過分類同表名檢查，所以一律拒絕（REV-105 M-1）。
+    if (/;\s*\S/u.test(text.replace(/'(?:[^'\\]|\\.)*'/gu, "''"))) throw new Error(`a migration sent more than one statement: ${text.slice(0, 120)}`);
     if (READ_ONLY.test(text)) return connection[method](sql, ...rest);
     if (writes.length + 1 === failAt) throw new Error(`injected fault before write ${failAt}`);
     writes.push(text.replace(/\s+/gu, " ").trim());
@@ -72,15 +75,18 @@ function assertNoOp(recorder, label) {
   assert.deepEqual(recorder.affected.filter((rows) => rows !== 0), [], `${label}: no row changed on a rerun (${recorder.writes.join(" | ")})`);
 }
 
-/** 成個 database 嘅 schema 同資料（時間欄除外：seed 用 Date.now()）。 */
-async function snapshot(connection, database) {
+/**
+ * 成個 database 嘅 schema 同資料。預設唔計 `*_at`：TC-002 比較兩次獨立運行，seed 用 Date.now()。
+ * TC-006 比較同一批原有資料，就要連時間欄一齊比（`keepTimes`，REV-105 M-1）。
+ */
+async function snapshot(connection, database, { keepTimes = false } = {}) {
   const [tables] = await connection.query(
     "SELECT table_name AS name FROM information_schema.tables WHERE table_schema = ? ORDER BY table_name", [database]);
   const result = {};
   for (const { name } of tables) {
     const [[created]] = await connection.query(`SHOW CREATE TABLE \`${database}\`.\`${name}\``);
     const [rows] = await connection.query(`SELECT * FROM \`${database}\`.\`${name}\``);
-    const data = rows.map((row) => JSON.stringify(Object.entries(row).filter(([column]) => !/_at$/u.test(column))))
+    const data = rows.map((row) => JSON.stringify(Object.entries(row).filter(([column]) => keepTimes || !/_at$/u.test(column))))
       .sort();
     result[name] = { schema: created["Create Table"].replace(/ AUTO_INCREMENT=\d+/u, ""), data };
   }
@@ -373,4 +379,84 @@ integrationTest("TC-005 (MIG-005): each bad Supplier security or limit setting s
       assert.equal(output.includes(secret), false, `${label}: leaks ${secret === raw ? "the raw value" : "key material"}`);
     }
   }
+});
+
+integrationTest("TC-006 (MIG-006): adding Supplier to an existing deployment changes no existing table or row, writes only Supplier tables and its permission seed, drops nothing it does not own, and the server starts on the upgraded schema", async (t) => {
+  const { name, connection } = await scratchDatabase(t);
+  const migrations = await allMigrations();
+  // 未有 Supplier 嘅部署：其他模組嘅 migration 全部做咗，再加啲核心資料（用戶、角色、用戶 audit）。
+  for (const migration of migrations.filter((file) => !isSupplierMigration(file))) await apply(connection, migration);
+  const [user] = await connection.query(
+    "INSERT INTO users (username, password_hash, created_at, updated_at) VALUES ('mig006-operator', 'not-a-real-hash', 1, 1)");
+  const [[role]] = await connection.query("SELECT id FROM roles WHERE name = 'system-admin'");
+  await connection.query("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)", [user.insertId, role.id]);
+  await connection.query(
+    `INSERT INTO user_audit_logs (action, actor_username, occurred_at, target_label, target_type)
+     VALUES ('user.create', 'mig006-operator', 1, 'mig006-operator', 'user')`);
+  const before = await snapshot(connection, name, { keepTimes: true });
+  assert.ok(before.users.data.length > 0 && before.user_audit_logs.data.length > 0, "control: the existing data is in the snapshot");
+  assert.ok(before.users.data.some((row) => row.includes('"created_at",1')), "control: time columns are compared too");
+
+  const supplierMigrations = migrations.filter(isSupplierMigration);
+  assert.deepEqual(supplierMigrations.map((file) => file.slice("migrations/".length, "migrations/0000".length)),
+    ["0028", "0029", "0030", "0031", "0032", "0033", "0034", "0035", "0036", "0037", "0061", "0062", "0080", "0081", "0087"]);
+  const recorder = recording(connection);
+  for (const migration of supplierMigrations) await apply(recorder.connection, migration);
+  const after = await snapshot(connection, name, { keepTimes: true });
+
+  // 1. 原有嘅表：schema 唔變；資料唔變，除咗權限 seed 加嘅行（只可以加，唔可以改或者刪）。
+  const supplierTable = (table) => table === "suppliers" || table.startsWith("supplier_");
+  for (const [table, previous] of Object.entries(before)) {
+    if (table === "#triggers") {
+      assert.deepEqual(after[table], previous, "triggers unchanged");
+      continue;
+    }
+    assert.equal(after[table]?.schema, previous.schema, `${table}: schema unchanged`);
+    if (table === "permissions" || table === "role_permissions") {
+      const kept = new Set(after[table].data);
+      assert.deepEqual(previous.data.filter((row) => !kept.has(row)), [], `${table}: every existing row kept as it was`);
+      continue;
+    }
+    assert.deepEqual(after[table].data, previous.data, `${table}: rows unchanged`);
+  }
+  const [added] = await connection.query(
+    `SELECT p.name AS name FROM permissions p WHERE p.name LIKE 'supplier.%' ORDER BY p.name`);
+  assert.deepEqual(added.map((row) => row.name), SUPPLIER_PERMISSIONS);
+  assert.equal(after.permissions.data.length - before.permissions.data.length, SUPPLIER_PERMISSIONS.length, "only the six Supplier permissions are new");
+  assert.equal(after.role_permissions.data.length - before.role_permissions.data.length, SUPPLIER_PERMISSIONS.length,
+    "only their six system-admin grants are new");
+  const [grantees] = await connection.query(
+    `SELECT DISTINCT r.name AS name FROM role_permissions rp JOIN roles r ON r.id = rp.role_id JOIN permissions p ON p.id = rp.permission_id
+      WHERE p.name LIKE 'supplier.%'`);
+  assert.deepEqual(grantees.map((row) => row.name), ["system-admin"]);
+  const newTables = Object.keys(after).filter((table) => !(table in before));
+  assert.ok(newTables.length > 0 && newTables.every(supplierTable), `only Supplier tables are new: ${newTables.join(", ")}`);
+
+  // 2. 寫入：Supplier 自己嘅表，加權限 seed 嘅 INSERT；冇 drop table、冇 drop column、冇 TRUNCATE；
+  //    唯一嘅 DROP INDEX 係 0087 重排自己嘅 index（HD-114 A）。
+  const target = (sql) => /^(?:CREATE TABLE(?: IF NOT EXISTS)?|ALTER TABLE|INSERT(?: IGNORE)? INTO|UPDATE|DELETE FROM|REPLACE INTO|DROP TABLE(?: IF EXISTS)?|TRUNCATE(?: TABLE)?)\s+`?(\w+)`?/iu.exec(sql)?.[1];
+  const outside = recorder.writes.filter((sql) => {
+    const table = target(sql);
+    if (supplierTable(table ?? "")) return false;
+    return !(/^INSERT INTO (permissions|role_permissions)\b/iu.test(sql));
+  });
+  assert.deepEqual(outside, [], "no Supplier migration writes another module's table, except inserting its permission seed");
+  assert.ok(recorder.writes.every((sql) => target(sql)), `every write names its table: ${recorder.writes.filter((sql) => !target(sql)).join(" | ")}`);
+  // 任何 DROP（table、column、key、constraint、check、primary key）同 TRUNCATE：只准 0087 重排自己嘅 index（REV-105 L-3）。
+  const drops = recorder.writes.filter((sql) => /\b(DROP|TRUNCATE)\b/iu.test(sql));
+  assert.ok(drops.length > 0, "control: 0087's own drop is recorded");
+  assert.deepEqual(drops.filter((sql) => !(target(sql) === "supplier_sku_refs" && /^ALTER TABLE `?supplier_sku_refs`? (DROP INDEX idx_supplier_sku_refs_sku_status_supplied|ADD INDEX idx_supplier_sku_refs_sku \(sku_id\), DROP INDEX)/iu.test(sql))),
+    [], "nothing dropped or truncated except 0087's index reorder");
+
+  // 3. 新 schema 讀得：真 server 用升級咗嘅 database 起得到（SupplierCoreProvider 係 eager，唔 READY 就起唔到）。
+  const server = await startServer(name, bankEnv());
+  let stopped;
+  try {
+    assert.equal(server.listening, true, `the server must start on the upgraded schema: ${server.code} ${server.output.stderr}`);
+    const health = await fetch(`http://127.0.0.1:${server.port}/api/v1/health`);
+    assert.equal(health.status, 200);
+  } finally {
+    stopped = await server.stop();
+  }
+  assert.equal(stopped, 0, "a clean shutdown");
 });
