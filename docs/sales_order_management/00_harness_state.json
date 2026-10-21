@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1284,
+  "revision": 1285,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11131,6 +11131,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-SALES-ADVISORY-F2-JOINT-TEST-R4",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "c4afbc596138b88b8ba96b157a33aa013b03a99916a554377f7fc95faa6d3645",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/sales-joint-advisory-f2-r4-test-reviewer-proof.json SHA25615d758893729efadda624f0d94b4bbed1e70c5368d754ca150744be72abb0756; exact2testpaths/default1preserved/real10diagnostic/native21/623sourcehashes/consumerapplycheck0; no newInventoryfullsource/activeClaims/0B/P4approval.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -14664,6 +14676,17 @@
       "subject": "Eighth realReverseeffects case uses fresh reverse-only actor,CONSUMEDReservation,historicalinactiveItem/SKU; scopedtestreview+patchdelivered",
       "status": "PASS",
       "source_ref": "implementation/117_hd011_sales_real_provider_joint_checkpoint.md; private native-r1 raw89843212 actual8PASS0skip with retainedsourcepinnedownerWIP; newtestafterf5cb0b7e prior7dd2fd9e9 immutable; R3proof01caf2bb andonefilepatch6639b04d applycheck0 sentauthorizedP0owner. Ownercurrentrerun andnewadvisoryprep/F2/versionrace stillpending; no formalTC/0B/P4Gate claim."
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "5b9403d27df7aef1959f9795f5f07ea00a4a08d1",
+      "spec_baseline": "6370daf21488bfd77472532abf89be2c3e66e0ecdbe8010ac7ed8408e21061b9",
+      "source_fingerprint": "271b146372682bb871319c1479a047ab8323ef5b484cacdb174a6768dacb0114",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-21T02:48:08.363969Z",
+      "subject": "Reviewed real F2 neutralCAS/advisory versionrace and original Reverse replay; exact two-file consumer contribution prepared",
+      "status": "PASS",
+      "source_ref": "implementation/117_hd011_sales_real_provider_joint_checkpoint.md advisory/F2 section; private source snapshot d36da41b, raw10PASS1f750492 and separate21PASS495cb57d, owned schema cleanup0. Actual read-only consumer8 adoption verified; new r6 pending owner apply/rerun. No full source/0B/P0/P4 Gate claim."
     }
   ],
   "pending_decisions": [
@@ -18711,5 +18734,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "HD011fourpathpatch7f81 adoptedactual4hashes; ownerreportedcurrent7/30/294FILESlintinline, rawrerunpending. Append eighthrealReverseeffects test nowindependentreviewedR3prooff01caf2bb anddeliveredonefilepatch6639b04d before7dd2fd9e9→after8f5cb0b7e; confirmadoption/current8rerun, do not reapplyblindly. Await exactreviewed InventoryLookup reverse-onlyadvisoryprep ABI/bytes, then addrealpreclaim-before-domain/advisory-not-proof/F2quantityneutralCASlag/staleadvisoryrace tests usinggenuinebaseQuantity2fixture (no manualmap/version sync). CompleteP0source/capacity/races/Checkpoint0B/realTASK008/011Claimsaggregate/currentCIreviewmain stillpending; P4freshmainCustomerpin/canonicalreconcile/withdrawduplicate0091–0093/realArchiveparticipant-coordinator/all45/fullcapacity/Playwright/currentCI/wholephasereview/unchangedMERGE_READY beforealready-authorizeddirectmainmerge. No newhuman decisionpending."
+  "next_safe_action": "Deliver reviewed two-file r6 patchc4afbc59/manifest094985bb/proof15d75889 to authorized P0 owner, verify actual2afterhashes and current native rerun. Owner source/Checkpoint0B/fullcapacity/activeClaimsTASK008-011/minimumlifecycle/Archive/currentCIreview/main remain pending. Then integrate actualP0main intoSalesP4, reconcileexistingCustomerpin/canonicalbaseline and withdrawduplicate0091-0093, implementrealArchiveparticipant/coordinator, completeall45/capacity/Playwright/currentCI/wholephasereview/unchangedMERGE_READY before authorized main merge. No new human decision pending."
 }
