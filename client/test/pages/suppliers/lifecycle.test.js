@@ -32,7 +32,7 @@ function field(body, label) {
 describe("Supplier lifecycle actions", () => {
   beforeEach(() => { vi.clearAllMocks(); document.body.innerHTML = ""; });
 
-  it("shows only state-valid actions allowed by management and approval permissions", async () => {
+  it("TC-124 (UI-004): shows only state-valid actions allowed by management and approval permissions", async () => {
     let result = mountActions();
     expect(result.body.text()).toContain("暫停");
     expect(result.body.text()).toContain("封鎖");
@@ -49,7 +49,7 @@ describe("Supplier lifecycle actions", () => {
     expect(result.body.text()).not.toContain("啟用");
   });
 
-  it("requires reason and password for Block and explains the approved-device requirement", async () => {
+  it("TC-124 (UI-004): requires reason and password for Block and explains the approved-device requirement", async () => {
     supplierService.block.mockResolvedValue({ ...ACTIVE, status: "blocked", version: 3 });
     const { wrapper, body } = mountActions();
     await body.findAll("button").find((button) => button.text().includes("封鎖")).trigger("click");
@@ -63,7 +63,7 @@ describe("Supplier lifecycle actions", () => {
     expect(wrapper.emitted("updated")[0][0].status).toBe("blocked");
   });
 
-  it("keeps a lifecycle dialog open and requests refresh after VERSION_CONFLICT", async () => {
+  it("TC-124 (UI-004): keeps a lifecycle dialog open and requests refresh after VERSION_CONFLICT", async () => {
     supplierService.suspend.mockRejectedValue(Object.assign(new Error("版本衝突"), { code: "VERSION_CONFLICT" }));
     const { wrapper, body } = mountActions({ canApprove: false });
     await body.findAll("button").find((button) => button.text().includes("暫停")).trigger("click");
@@ -77,11 +77,28 @@ describe("Supplier lifecycle actions", () => {
     expect(field(body, "目前密碼 *").element.value).toBe("");
   });
 
-  it("Draft activation needs confirmation but no password and controlled delete does", async () => {
+  it("TC-124 (UI-004): Draft activation needs confirmation but no password", async () => {
     supplierService.activate.mockResolvedValue({ ...ACTIVE, status: "active", version: 3 });
     const { body } = mountActions({ supplier: { ...ACTIVE, status: "draft" }, canApprove: false });
     await body.findAll("button").find((button) => button.text() === "啟用").trigger("click");
     expect(body.text()).toContain("確認啟用");
     expect(body.text()).not.toContain("目前密碼 *");
+  });
+
+  it.each([
+    ["封存", "已封存", ACTIVE, false],
+    ["永久刪除", "永久刪除", { ...ACTIVE, status: "draft" }, true]
+  ])("TC-124 (UI-004): the %s dialog names the Supplier, the end state, the kept history and its password rule", async (label, target, supplier, device) => {
+    const { body } = mountActions({ supplier, canApprove: false });
+    await body.findAll("button").find((button) => button.text() === label).trigger("click");
+    const dialog = body.find(".q-dialog");
+    expect(dialog.text()).toContain("SUP-007 — Evergreen");
+    expect(dialog.text()).toContain(`完成後狀態：${target}`);
+    expect(dialog.text()).toContain("現有交易及稽核歷史會保留");
+    expect(dialog.text()).toContain("永久刪除只允許從未引用的 Draft");
+    expect(dialog.text().includes("已核准裝置")).toBe(device);
+    expect(field(body, "原因 *").exists()).toBe(true);
+    expect(field(body, "目前密碼 *").exists()).toBe(true);
+    expect(body.findAll("button").find((button) => button.text().includes(`確認${label}`)).attributes("disabled")).toBeDefined();
   });
 });

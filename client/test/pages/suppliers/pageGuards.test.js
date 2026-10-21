@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 const pages = import.meta.glob("@/pages/suppliers/*.vue", { eager: true });
 
 describe("Supplier page guards", () => {
-  it("every Supplier page requires permissions and none is public", () => {
+  it("TC-121 (UI-001): every Supplier page requires permissions and none is public", () => {
     const entries = Object.entries(pages);
     expect(entries.length).toBeGreaterThanOrEqual(6);
     for (const [file, module] of entries) {

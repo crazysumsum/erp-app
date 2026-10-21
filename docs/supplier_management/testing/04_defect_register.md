@@ -111,6 +111,10 @@ Fix, per HD-115 A:
   - The two responses must be 201/200 and 409, and the retry must be logged.
   - The two requests come from two different users. Requests from one user queue on that user's row first.
 
+## DEF-032 — LOW
+
+Found by REV-107 M-1 (TC-013, LIST-006). The shared `client/src/framework/ui/DataTable.vue` replaces Quasar's no-data slot with a fixed 「冇資料」 and ignores the slot's `message`, which Quasar sets to the loading label while loading. On a failed read it empties the rows, so 「冇資料」 also appears under the error banner. A sighted user therefore sees "no data" while the Supplier list is loading, when it is empty, and when the read failed. Only `aria-busy` and the error banner tell the states apart, against FR-LIST-010. The component is shared framework code outside the Supplier module, used by every list page, so the fix needs its own decision. REPORT_ONLY: no product change made. The TC-013 test asserts what is distinguishable today and the map marks TC-013 PARTIAL.
+
 ## HD-116 A: dispositions (2026-10-21)
 
 Fixed in this change:
