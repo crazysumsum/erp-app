@@ -102,7 +102,6 @@ try {
 
   const supplier = await expectOk("create", await send(mgmt, "POST /api/v1/suppliers/create",
     { body: { supplierCode: `RCV-${tag}`, supplierName: `Recovery ${tag}`, defaultCurrencyCode: "HKD" } }));
-  source.supplierIds.push(supplier.id);
   const ids = { id: supplier.id, supplierId: supplier.id };
   await expectOk("activate", await send(mgmt, "POST /api/v1/suppliers/:id/activate", { ids, body: { version: supplier.version } }));
   await expectOk("address", await send(mgmt, "POST /api/v1/suppliers/:supplierId/addresses/create",
@@ -118,7 +117,6 @@ try {
   await setApproval(source, settings, true);
   const pending = await expectOk("pending create", await send(mgmt, "POST /api/v1/suppliers/create", { body: { supplierCode: `RCP-${tag}`,
     supplierName: `Recovery pending ${tag}`, defaultCurrencyCode: "HKD", activate: true, approverUserId: approver.userId } }));
-  source.supplierIds.push(pending.id);
   await setApproval(source, settings, false);
 
   const job = await uploadImport(source, mgmt, `RCI-${tag}`);
@@ -134,7 +132,6 @@ try {
     if (!result.claimed || result.jobId === job.id) break;
   }
   const [[imported]] = await source.db.query("SELECT id FROM suppliers WHERE supplier_code = ?", [`RCI-${tag}`]);
-  if (imported) source.supplierIds.push(Number(imported.id));
   const finished = (await send(mgmt, "GET /api/v1/supplier-imports/:id", { ids: { id: job.id } })).json.data.job;
   const sourceResult = await send(mgmt, "GET /api/v1/supplier-imports/:id/result", { ids: { id: job.id } });
   check("seed.import_completed", finished.status === "completed" && sourceResult.status === 200 && Boolean(imported),
@@ -239,6 +236,12 @@ try {
   await admin?.end().catch(() => {});
   if (settings && originalApproval !== null) {
     await setApproval(source, settings, originalApproval).catch((error) => check("cleanup.settings", false, errorText(error)));
+  }
+  // 中途失敗都要清：今次建立嘅 Supplier 由 tag 搵返，唔靠中途有冇行到登記嗰步。
+  if (source.db) {
+    const [made] = await source.db.query("SELECT id FROM suppliers WHERE supplier_code IN (?, ?, ?)",
+      [`RCV-${tag}`, `RCP-${tag}`, `RCI-${tag}`]).catch(() => [[]]);
+    source.supplierIds.push(...made.map((row) => Number(row.id)));
   }
   await source.stop().catch((error) => check("cleanup.source_fixtures", false, errorText(error)));
   fs.rmSync(work, { recursive: true, force: true });

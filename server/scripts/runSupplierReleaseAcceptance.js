@@ -93,7 +93,6 @@ async function workerRollback() {
     check("restart.takes_over_after_expiry", resumed.claimed === true && resumed.jobId === job.id && resumed.status === "completed"
       && resumed.applied === 2, resumed);
     const [suppliers] = await first.db.query("SELECT id, supplier_code FROM suppliers WHERE supplier_code IN (?, ?, ?)", codes);
-    first.supplierIds.push(...suppliers.map((row) => Number(row.id)));
     const [rows] = await first.db.query("SELECT status FROM supplier_import_rows WHERE job_id = ? ORDER BY `row_number`", [job.id]);
     const [[creates]] = await first.db.query(
       "SELECT COUNT(*) AS n FROM supplier_audit_logs WHERE action = 'supplier.create' AND target_label = ?", [codes[0]]);
@@ -111,6 +110,11 @@ async function workerRollback() {
     check("runner.completed", false, errorText(error));
     return "FAIL";
   } finally {
+    // 中途失敗都要清：import 建立嘅 Supplier 由今次嘅 tag 搵返，唔靠上面有冇行到登記嗰步。
+    if (first.db) {
+      const [made] = await first.db.query("SELECT id FROM suppliers WHERE supplier_code LIKE ?", [`RLS-${tag}-%`]).catch(() => [[]]);
+      first.supplierIds.push(...made.map((row) => Number(row.id)));
+    }
     await second.stop().catch((error) => check("cleanup.second", false, errorText(error)));
     await first.stop().catch((error) => check("cleanup.first", false, errorText(error)));
   }
