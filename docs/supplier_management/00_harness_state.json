@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 388,
+  "revision": 389,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -1214,6 +1214,34 @@
       "code_commit": "ea933e874395e10f3a918142b3203994a1359900",
       "scope": [
         "package-lock.json"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-116-RISK",
+      "kind": "RISK",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "HD-116 A ('A，review 完 CI 過就 merge', 2026-10-21). Defers DEF-004, DEF-007 and DEF-016 to release as recorded known limitations; records DEF-008, DEF-012, DEF-013, DEF-015, DEF-017, DEF-018, DEF-019 and DEF-023 as handed to their owners (docs/supplier_management/testing/defect_handoffs.md) and DEF-014 as accepted. Supersedes APPROVAL-HD-017-RISK and APPROVAL-HD-017-RISK-DEF012 for these defects.",
+      "recorded_at": "2026-10-21T11:35:23+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
+      "code_commit": "0ea31768ea98ef66af6cfe5639887a3209c7884e",
+      "scope": [
+        "supplier-management",
+        "DEF-004",
+        "DEF-007",
+        "DEF-016",
+        "DEF-008",
+        "DEF-012",
+        "DEF-013",
+        "DEF-015",
+        "DEF-017",
+        "DEF-018",
+        "DEF-019",
+        "DEF-023",
+        "DEF-014"
       ],
       "expires_at": null
     }
@@ -6190,6 +6218,34 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-20: 'HD-115 A，CI 過就 merge' — retry the identifier create/update transaction once on ER_LOCK_DEADLOCK, and Supplier create as a precaution, so the loser answers 409; Supplier-local, no contract change, with a deterministic test."
+    },
+    {
+      "id": "HD-116",
+      "impact": "MAJOR",
+      "question": "Disposition of the 18 unclosed Supplier defects before TEST_AND_VERIFY. (A) Fix the Supplier-local ones now in one PR: DEF-005 address length/control-character validation (a previously accepted address input can now be refused with 400), DEF-003 activatability check through the Business Master provider, DEF-030 wire SUPPLIER_DUPLICATE_NAME_THRESHOLD, DEF-010 bank flag absent-key convention, DEF-006 identifier affectedRows, DEF-024 bank deadlock in bank_operations.md; defer DEF-004 (reference checkers need downstream modules), DEF-016 (transitions outside #changeStatus) and DEF-007 (purpose provenance) to release as known limitations under a new risk approval; hand DEF-008, 012, 013, 015, 017, 018, 019, 023 to their owners and accept DEF-014. (B) A plus fixing DEF-004/007/016 now. (C) Defer everything as known limitations.",
+      "affected_ids": [
+        "DEF-003",
+        "DEF-005",
+        "DEF-006",
+        "DEF-010",
+        "DEF-024",
+        "DEF-030",
+        "DEF-004",
+        "DEF-007",
+        "DEF-016",
+        "DEF-008",
+        "DEF-012",
+        "DEF-013",
+        "DEF-015",
+        "DEF-017",
+        "DEF-018",
+        "DEF-019",
+        "DEF-023",
+        "DEF-014",
+        "TASK-051"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-21: 'A，review 完 CI 過就 merge'. Choosing A also approves the DEF-005 validation change."
     }
   ],
   "external_actions": [
@@ -6893,7 +6949,7 @@
     {
       "id": "DEF-003",
       "severity": "MEDIUM",
-      "status": "DEFERRED",
+      "status": "IN_PROGRESS",
       "source_ids": [
         "TASK-024",
         "DES-001",
@@ -6914,12 +6970,12 @@
         "REV-006"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-017-RISK"
+      "risk_approval_id": "APPROVAL-HD-116-RISK"
     },
     {
       "id": "DEF-005",
       "severity": "MEDIUM",
-      "status": "DEFERRED",
+      "status": "IN_PROGRESS",
       "source_ids": [
         "TASK-014",
         "SEC-004",
@@ -6932,7 +6988,7 @@
     {
       "id": "DEF-006",
       "severity": "LOW",
-      "status": "DEFERRED",
+      "status": "IN_PROGRESS",
       "source_ids": [
         "TASK-018",
         "SupplierIdentifierService.js:126",
@@ -6951,7 +7007,7 @@
         "REV-006"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-017-RISK"
+      "risk_approval_id": "APPROVAL-HD-116-RISK"
     },
     {
       "id": "DEF-008",
@@ -6963,7 +7019,7 @@
         "REV-006"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-017-RISK"
+      "risk_approval_id": "APPROVAL-HD-116-RISK"
     },
     {
       "id": "DEF-009",
@@ -6983,7 +7039,7 @@
     {
       "id": "DEF-010",
       "severity": "LOW",
-      "status": "DEFERRED",
+      "status": "IN_PROGRESS",
       "source_ids": [
         "REV-007",
         "server/src/modules/supplier/supplierValidation.js:68",
@@ -7022,12 +7078,12 @@
         "server/src/services/idempotency/IdempotencyService.js:233"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-017-RISK-DEF012"
+      "risk_approval_id": "APPROVAL-HD-116-RISK"
     },
     {
       "id": "DEF-013",
       "severity": "MEDIUM",
-      "status": "OPEN",
+      "status": "DEFERRED",
       "source_ids": [
         "HD-014",
         "REV-009",
@@ -7038,36 +7094,36 @@
         "TASK-038"
       ],
       "closure_evidence": [],
-      "risk_approval_id": null
+      "risk_approval_id": "APPROVAL-HD-116-RISK"
     },
     {
       "id": "DEF-014",
       "severity": "LOW",
-      "status": "OPEN",
+      "status": "DEFERRED",
       "source_ids": [
         "REV-011",
         "docs/supplier_management/00_project_profile.json#suites",
         "docs/supplier_management/evidence"
       ],
       "closure_evidence": [],
-      "risk_approval_id": null
+      "risk_approval_id": "APPROVAL-HD-116-RISK"
     },
     {
       "id": "DEF-015",
       "severity": "LOW",
-      "status": "OPEN",
+      "status": "DEFERRED",
       "source_ids": [
         "REV-011",
         "docs/supplier_management/00_module_manifest.json#scope.approval_required_paths",
         ".gitignore"
       ],
       "closure_evidence": [],
-      "risk_approval_id": null
+      "risk_approval_id": "APPROVAL-HD-116-RISK"
     },
     {
       "id": "DEF-016",
       "severity": "MEDIUM",
-      "status": "OPEN",
+      "status": "DEFERRED",
       "source_ids": [
         "REV-014",
         "REV-015",
@@ -7077,12 +7133,12 @@
         "server/test/integration/supplierCoreMigrations.integration.test.js#supplier_settings-lock-window"
       ],
       "closure_evidence": [],
-      "risk_approval_id": null
+      "risk_approval_id": "APPROVAL-HD-116-RISK"
     },
     {
       "id": "DEF-017",
       "severity": "MEDIUM",
-      "status": "OPEN",
+      "status": "DEFERRED",
       "source_ids": [
         "server/test/integration/itemConcurrency.integration.test.js:406",
         "server/src/handlers/skus/skuStatusHandlers.js",
@@ -7090,24 +7146,24 @@
         "item-management"
       ],
       "closure_evidence": [],
-      "risk_approval_id": null
+      "risk_approval_id": "APPROVAL-HD-116-RISK"
     },
     {
       "id": "DEF-018",
       "severity": "LOW",
-      "status": "OPEN",
+      "status": "DEFERRED",
       "source_ids": [
         "client/src/framework/ui/PasswordReasonDialog.vue",
         "TASK-027",
         "client/e2e/supplier-management/supplier-settings.spec.js"
       ],
       "closure_evidence": [],
-      "risk_approval_id": null
+      "risk_approval_id": "APPROVAL-HD-116-RISK"
     },
     {
       "id": "DEF-019",
       "severity": "MEDIUM",
-      "status": "OPEN",
+      "status": "DEFERRED",
       "source_ids": [
         "server/test/integration/itemMigrationIdempotency.integration.test.js:67",
         "server/test/integration/itemMigrationIdempotency.integration.test.js:93",
@@ -7115,7 +7171,7 @@
         "item-management"
       ],
       "closure_evidence": [],
-      "risk_approval_id": null
+      "risk_approval_id": "APPROVAL-HD-116-RISK"
     },
     {
       "id": "DEF-020",
@@ -7173,7 +7229,7 @@
     {
       "id": "DEF-023",
       "severity": "LOW",
-      "status": "OPEN",
+      "status": "DEFERRED",
       "source_ids": [
         "TC-074",
         "BANK-013",
@@ -7182,12 +7238,12 @@
         "docs/supplier_management/testing/04_defect_register.md"
       ],
       "closure_evidence": [],
-      "risk_approval_id": null
+      "risk_approval_id": "APPROVAL-HD-116-RISK"
     },
     {
       "id": "DEF-024",
       "severity": "LOW",
-      "status": "OPEN",
+      "status": "IN_PROGRESS",
       "source_ids": [
         "TC-077",
         "BANK-016",
@@ -7291,7 +7347,7 @@
     {
       "id": "DEF-030",
       "severity": "LOW",
-      "status": "OPEN",
+      "status": "IN_PROGRESS",
       "source_ids": [
         "REV-101",
         "HD-057",
@@ -7323,5 +7379,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "PR for claude/supplier-task-051-upgrade (TC-006, T51 rehearsal); merge per 'review 完 CI 過就 merge'. Then the five runners (client-ui, performance, resilience, recovery, release), UAT IDs, and the open-defect decision (DEF-005, DEF-023, DEF-030)."
+  "next_safe_action": "HD-116 A: fix DEF-003, 005, 006, 010, 024, 030 on claude/supplier-task-051-defects with the handoff document; review, PR, merge per 'review 完 CI 過就 merge'. Then the five runners and UAT IDs."
 }
