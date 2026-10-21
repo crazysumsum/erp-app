@@ -390,6 +390,38 @@ export class ItemLookupService {
     return projection;
   }
 
+  async getFulfillmentInventoryProfilesInTransaction(transaction, skuIds, { atMs } = {}) {
+    this.#assertExecutor(transaction);
+    const nowMs = this.#saleTime(atMs);
+    if (!Array.isArray(skuIds)) throw new TypeError("Fulfillment SKU IDs must be an array");
+    const ids = saleIds(skuIds.map(value => {
+      if (typeof value !== "string" || !/^[1-9][0-9]*$/.test(value)) throw new TypeError("Fulfillment SKU IDs must be decimal strings");
+      return positiveId(Number(value));
+    }));
+    if (!ids.length) return Object.freeze([]);
+    const { items, skus, mappings } = await this.#lockSkuProfiles(transaction, ids);
+    return Object.freeze(ids.map(id => {
+      const sku = skus.find(row => Number(row.id) === id);
+      const item = items.find(row => Number(row.id) === Number(sku?.item_id));
+      if (!sku || !item) throw skuNotFound(id);
+      const ownMappings = mappings.filter(row => Number(row.sku_id) === id);
+      const projection = this.#toProjection({ ...sku, item_name: item.name, item_status: item.status,
+        product_type: item.product_type }, ownMappings, { purpose: "inventory", atMs: nowMs });
+      const bases = ownMappings.filter(row => row.is_base);
+      if (bases.length !== 1 || Number(bases[0].to_base_factor) !== 1 || bases[0].uom_status !== "active") {
+        throw uomConversionInvalid("Fulfillment inventory profile requires one active Base UOM with factor 1");
+      }
+      return Object.freeze({ skuId: String(id), skuVersion: positiveId(Number(sku.sku_version)),
+        itemId: String(positiveId(Number(item.id))), itemVersion: positiveId(Number(item.version)),
+        skuCode: projection.skuCode, skuName: projection.skuName, skuStatus: projection.skuStatus,
+        itemStatus: projection.itemStatus, inventoryTracked: projection.inventoryTracked,
+        trackingPolicy: projection.trackingPolicy, minimumSaleLifeDays: projection.minimumSaleLifeDays ?? 0,
+        baseUom: Object.freeze({ uomId: String(positiveId(Number(bases[0].uom_id))), uomCode: bases[0].uom_code,
+          version: positiveId(Number(bases[0].uom_version)) }),
+        usable: projection.usable, reasons: Object.freeze(projection.reasons) });
+    }));
+  }
+
   async getInventoryProfileInTransaction(transaction, skuId) {
     this.#assertExecutor(transaction);
     const { items, skus, mappings } = await this.#lockSkuProfiles(transaction, [skuId]);
