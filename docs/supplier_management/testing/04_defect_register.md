@@ -110,3 +110,25 @@ Fix, per HD-115 A:
   - The test checks that InnoDB's latest deadlock happened after the test started and on the expected unique index.
   - The two responses must be 201/200 and 409, and the retry must be logged.
   - The two requests come from two different users. Requests from one user queue on that user's row first.
+
+## DEF-032 — LOW
+
+Found by REV-107 M-1 (TC-013, LIST-006). The shared `client/src/framework/ui/DataTable.vue` replaces Quasar's no-data slot with a fixed 「冇資料」 and ignores the slot's `message`, which Quasar sets to the loading label while loading. On a failed read it empties the rows, so 「冇資料」 also appears under the error banner. A sighted user therefore sees "no data" while the Supplier list is loading, when it is empty, and when the read failed. Only `aria-busy` and the error banner tell the states apart, against FR-LIST-010. The component is shared framework code outside the Supplier module, used by every list page, so the fix needs its own decision. REPORT_ONLY: no product change made. The TC-013 test asserts what is distinguishable today and the map marks TC-013 PARTIAL.
+
+## HD-116 A: dispositions (2026-10-21)
+
+Fixed in this change:
+
+- **DEF-003.** Supplier completeness reads the default currency through the Business Master provider (`getCurrencyHistory`) instead of querying `currencies`. The query handler now builds a real provider, and a unit test pins that no raw `currencies` query remains. `getCurrencyHistory` does not check Business Master readiness, so when Business Master is NOT_READY the completeness check still reports `CURRENCY_NOT_ACTIVE` rather than 503. A readiness gate on this read path is not part of this fix (REV-106 L-1).
+- **DEF-005.** Address text fields are limited to their column lengths, counted in characters, and refuse C0/C1 control characters (newlines included), like contacts and identifiers.
+  - **Error.** `400 SUPPLIER_ADDRESS_INVALID` with `details.field`, and a message that names the field and the reason, for example 「備註不可包含換行或其他控制字元」 (REV-106 M-2). The UI shows that message.
+  - **Paths.** HTTP already limited length. The CSV import already refused these values earlier, with its own row errors (REV-106 L-2, verified), so the new check is the service's own guard. Its field names are now mapped to the CSV columns in case it is ever reached.
+  - **Existing rows** are not changed. But an existing address that contains a control character can no longer be saved until that field is corrected, even when the user edits another field. The message names the field.
+  - **Release note.** Before release, count the affected rows: `SELECT COUNT(*) FROM supplier_addresses WHERE CONCAT_WS('', label, address_line1, address_line2, address_line3, city, state_region, postal_code, phone, notes) REGEXP '[[:cntrl:]]'`. Any clean-up of those rows is a data change that needs its own explanation and approval.
+  - **Test change.** The HD-112 audit test that sent control characters in an address now expects this refusal.
+- **DEF-006.** Identifier update and delete check `affectedRows` and answer `VERSION_CONFLICT` when no row matched.
+- **DEF-010.** `BANK_ACCOUNT_MISSING` follows the sibling convention: an absent flag means missing. Bank is deployed, so the create response, the detail and the completeness check all evaluate it. Detail and completeness test for an active bank account, using the same definition as the list's `missingBank` filter. CORE-006 lists Bank among the warning-only data.
+- **DEF-024.** Online Bank API writes (create, update, set default, deactivate) now retry once on `ER_LOCK_DEADLOCK`, like DEF-031. REV-106 M-1 showed that two *different* Suppliers can deadlock when each adds its first default account at the same moment: both take a gap lock on the same empty range before inserting. The test forces exactly that. Both creates succeed, the retry is logged, and without the retry one of them fails. `bank_operations.md` §6.3 explains this to operators.
+- **DEF-030.** `SUPPLIER_DUPLICATE_NAME_THRESHOLD` now reaches every handler that runs the similar-name check, and the offline similar-name report reads it too, with the server's validation. The import worker is wired as well, but imports do not run the similar-name check (`findDuplicates: false`), so the setting has no effect there (REV-106 L-4).
+
+Deferred to release, handed to their owners, or accepted: see `defect_handoffs.md`.

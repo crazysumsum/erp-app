@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 387,
+  "revision": 392,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -13,8 +13,8 @@
     "plan": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
     "code_commit": "186a660ec0ef3037ffc9ef92adcd31b20f1e072d",
     "source_fingerprint": "43f7f525f708bb08a1cb3994bd6ed7a36548794d3eaf9e7e06f18ae5caa911ad",
-    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t51u",
-    "default_commit": "3c0c33705aa76c1ad97decd395a9e3fc52c16792",
+    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t51c",
+    "default_commit": "c2237293e8f97198339085254136916d22938cc4",
     "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
   },
   "runtime": {
@@ -1216,6 +1216,54 @@
         "package-lock.json"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-116-RISK",
+      "kind": "RISK",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "HD-116 A ('A，review 完 CI 過就 merge', 2026-10-21). Defers DEF-004, DEF-007 and DEF-016 to release as recorded known limitations; records DEF-008, DEF-012, DEF-013, DEF-015, DEF-017, DEF-018, DEF-019 and DEF-023 as handed to their owners (docs/supplier_management/testing/defect_handoffs.md) and DEF-014 as accepted. Supersedes APPROVAL-HD-017-RISK and APPROVAL-HD-017-RISK-DEF012 for these defects.",
+      "recorded_at": "2026-10-21T11:35:23+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
+      "code_commit": "0ea31768ea98ef66af6cfe5639887a3209c7884e",
+      "scope": [
+        "supplier-management",
+        "DEF-004",
+        "DEF-007",
+        "DEF-016",
+        "DEF-008",
+        "DEF-012",
+        "DEF-013",
+        "DEF-015",
+        "DEF-017",
+        "DEF-018",
+        "DEF-019",
+        "DEF-023",
+        "DEF-014"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-117-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "HD-117 A ('A，review 完 CI 過就 merge', 2026-10-21). Authorises the four acceptance runners named by 00_project_profile.json at their profile paths in server/scripts/, following the HD-034/HD-035 convention: server/scripts/ is not declared in approval_required_paths and reports OUTSIDE_MODULE; this approval covers exactly these four files. Parts that need production-like infrastructure must report BLOCKED with the reason, never PASS. The client-ui config lives under client/test/**, already an allowed write path.",
+      "recorded_at": "2026-10-21T14:41:51+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
+      "code_commit": "c2237293e8f97198339085254136916d22938cc4",
+      "scope": [
+        "supplier-management",
+        "server/scripts/runSupplierPerformanceAcceptance.js",
+        "server/scripts/runSupplierResilienceAcceptance.js",
+        "server/scripts/runSupplierRecoveryAcceptance.js",
+        "server/scripts/runSupplierReleaseAcceptance.js"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -2402,6 +2450,30 @@
       "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-task-051-upgrade at e09c61a8 (git diff origin/main..HEAD)",
       "reviewed_baseline": "29a0615a61808b3747cd8feb522d051ba5a312da6fb0fccf36e7cf9746286775",
       "source_ref": "docs/supplier_management/implementation/108_rev_105_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-106",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (HD-116 A defect dispositions)",
+      "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-task-051-defects at db1b10fb (git diff origin/main..HEAD)",
+      "reviewed_baseline": "29a0615a61808b3747cd8feb522d051ba5a312da6fb0fccf36e7cf9746286775",
+      "source_ref": "docs/supplier_management/implementation/109_rev_106_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-107",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (HD-117 A PR 1, supplier-client-ui runner)",
+      "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-task-051-client-ui at ebaccd56 (git diff origin/main..HEAD)",
+      "reviewed_baseline": "29a0615a61808b3747cd8feb522d051ba5a312da6fb0fccf36e7cf9746286775",
+      "source_ref": "docs/supplier_management/implementation/110_rev_107_independent_review.md",
       "status": "CHANGES_REQUESTED",
       "open_critical": 0,
       "open_high": 0,
@@ -4696,6 +4768,50 @@
       "source_ref": "Local, not CI, MySQL 26.7.0 throwaway instance. supplierMigrationAcceptance.integration.test.js 5/5; TC-006 adds the 15 Supplier migrations to a non-Supplier schema with core data: existing tables and rows (time columns included) unchanged, only the six supplier.* permissions and their system-admin grants added, writes only to Supplier tables or the permission seed, no drop except 0087's reorder, multi-statement queries refused, real server starts; seven mutants each fail for the intended reason. T51 rehearsal (docs/supplier_management/testing/t51_rehearsal/, exits non-zero on any failed check): (A) pre-Supplier main e4aed631 with its own runner plus core data, then the current runner's 58 files in main's order: every pre-existing object of 29 tables and every permission/grant row unchanged; current server starts. (B) previous release 72e205ef with Supplier data: orphan SKU relation accepted (control); mysqldump/restore of 94 tables equal on data, counters, columns, indexes, keys, triggers, routines, views and events, with a changed-row control detected; current runner applies only 0087 and changes only the ledger plus one index; orphan refused after; the current and the rolled-back previous server both start and read Supplier list, detail and SKU relations over HTTP with a real user and device. (C) similar-name report: one exact existing match, one in-file pair. Servers stopped (port closed), scratch databases dropped. The six orphaned servers from earlier rehearsal runs (REV-105 H-2) were stopped by exact PID.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-21T10:42:47+08:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "TC-006 carrier and the T51 rehearsal (PR #260) merged to main",
+      "code_commit": "6a9b86bd999bc310d71dadf321319f6e8e117f57",
+      "spec_baseline": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
+      "source_fingerprint": "e4e8941fde2ecd0463e5c64cd5cd39ff0bd56704f6f4712bc3f547bce9141206",
+      "status": "PASS",
+      "source_ref": "PR #260 merged as 6a9b86bd999bc310d71dadf321319f6e8e117f57 at 2026-10-21T02:53:40Z on the Product Owner's word ('review 完 CI 過就 merge', then 'CI已通過'), with --match-head-commit, after a gate that refused unless the latest run of every check was SUCCESS and main was an ancestor of HEAD: head 16857bdd green on all 13 checks (PR run 39534576526). Review REV-105 CHANGES_REQUESTED (0 Critical; both Highs fixed), follow-ups applied; not re-reviewed. Recorded as the first commit of the next change PR.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-21T11:35:07+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "HD-116 A defect fixes after REV-106 (DEF-003, 005, 006, 010, 024, 030)",
+      "code_commit": "04b6c983776f25bcbd5ec4528bbe054af364e947",
+      "spec_baseline": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
+      "source_fingerprint": "11a5174bf2247028ce47b7a4d806e9ef153955cffae46413ccf8b7e6dc3acf05",
+      "status": "PASS",
+      "source_ref": "Local, not CI, on erp_t51 (MySQL 26.7.0). Supplier suite 699/699, lint exit 0, mocked Playwright supplier suite 47 passed; the reviewer additionally ran 4 real-browser scenarios (real server, login and device) 4/4. DEF-005: address fields length-limited and control characters refused with a field-named message, unit-pinned; release-note SQL verified. DEF-003: completeness reads the currency through the Business Master provider, no raw currencies query. DEF-006: identifier update/delete VERSION_CONFLICT on no matched row. DEF-010: bank warning evaluated in create, detail and completeness; cleared by an active account and back after deactivating it. DEF-024: Bank writes retry once on deadlock; a forced two-Supplier first-default deadlock lets both creates succeed with one logged retry (5/5), and fails without the retry. DEF-030: threshold setting in 5 handlers and the offline report (CLI changes output, refuses 0.3). Fifteen mutations each failed the intended test; two equivalent or untestable ones are explained in REV-106.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-21T12:19:45+08:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "HD-116 A defect fixes (PR #261) merged to main",
+      "code_commit": "c2237293e8f97198339085254136916d22938cc4",
+      "spec_baseline": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
+      "source_fingerprint": "11a5174bf2247028ce47b7a4d806e9ef153955cffae46413ccf8b7e6dc3acf05",
+      "status": "PASS",
+      "source_ref": "PR #261 merged as c2237293e8f97198339085254136916d22938cc4 at 2026-10-21T05:58:33Z on the Product Owner's word ('A，review 完 CI 過就 merge', then 'CI過了'), with --match-head-commit, after a gate that refused unless the latest run of every check was SUCCESS and main was an ancestor of HEAD: head a371f144 green on all 13 checks (PR run 39543444313). Review REV-106 CHANGES_REQUESTED (0 Critical, 0 High), follow-ups applied; not re-reviewed. Recorded as the first commit of the next change PR.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-21T14:41:51+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "supplier-client-ui suite after REV-107 (TC-013, 015, 029, 075, 121..127)",
+      "code_commit": "950ae8933c80d9c3880f13eef33d86cc39e571c7",
+      "spec_baseline": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
+      "source_fingerprint": "07bacef4c009a255da0798944c3558fd7abf3e08f8b7e7d2602774640148862b",
+      "status": "PASS",
+      "source_ref": "Local, not CI. The profile command (npm test --workspace client -- --config test/supplier-management.vitest.config.js --reporter=junit) exits 0; harness_runner.parse_results reads 168 tests, 168 passed, 0 skipped, no duplicate names, no title with two IDs, and all 11 required IDs PASS. run_check.py --execute refused (BLOCKED) only because the state baseline is still pinned to 186a660 (COMMIT_CHANGED, SOURCE_CHANGED, CONTRACT_DRIFT), as before this branch, so this is not a harness run record. Whole client suite 910/910, lint exit 0. Negative controls: six DataTable/list mutants turn the TC-013 test red (REV-107); removing preventDefault() or the dirty check from the create or detail page turns the unload tests red; dropping the delete device flag, the kept-history wording, or archive's password turns the TC-124 dialog test red. jsdom only: keyboard, focus, widths and browser back are not covered (map gaps).",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-21T14:56:19+08:00"
     }
   ],
   "pending_decisions": [
@@ -6179,6 +6295,50 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-20: 'HD-115 A，CI 過就 merge' — retry the identifier create/update transaction once on ER_LOCK_DEADLOCK, and Supplier create as a precaution, so the loser answers 409; Supplier-local, no contract change, with a deterministic test."
+    },
+    {
+      "id": "HD-116",
+      "impact": "MAJOR",
+      "question": "Disposition of the 18 unclosed Supplier defects before TEST_AND_VERIFY. (A) Fix the Supplier-local ones now in one PR: DEF-005 address length/control-character validation (a previously accepted address input can now be refused with 400), DEF-003 activatability check through the Business Master provider, DEF-030 wire SUPPLIER_DUPLICATE_NAME_THRESHOLD, DEF-010 bank flag absent-key convention, DEF-006 identifier affectedRows, DEF-024 bank deadlock in bank_operations.md; defer DEF-004 (reference checkers need downstream modules), DEF-016 (transitions outside #changeStatus) and DEF-007 (purpose provenance) to release as known limitations under a new risk approval; hand DEF-008, 012, 013, 015, 017, 018, 019, 023 to their owners and accept DEF-014. (B) A plus fixing DEF-004/007/016 now. (C) Defer everything as known limitations.",
+      "affected_ids": [
+        "DEF-003",
+        "DEF-005",
+        "DEF-006",
+        "DEF-010",
+        "DEF-024",
+        "DEF-030",
+        "DEF-004",
+        "DEF-007",
+        "DEF-016",
+        "DEF-008",
+        "DEF-012",
+        "DEF-013",
+        "DEF-015",
+        "DEF-017",
+        "DEF-018",
+        "DEF-019",
+        "DEF-023",
+        "DEF-014",
+        "TASK-051"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-21: 'A，review 完 CI 過就 merge'. Choosing A also approves the DEF-005 validation change."
+    },
+    {
+      "id": "HD-117",
+      "impact": "MAJOR",
+      "question": "How to build the five acceptance runners the project profile names (supplier-client-ui, -performance, -resilience, -recovery, -release; 22 TCs). (A) Write all five at the profile's paths, using the Business Master and Item runners as templates; approve the four server/scripts/ files like HD-035; run for real what a local MySQL can run and have the runner report BLOCKED with the reason for parts that need production-like infrastructure (metric/alert delivery, real RTO/RPO); four PRs in the order client-ui, recovery+release, resilience, performance. (B) Move the runners into the module and change the profile paths, which re-baselines records bound to the profile. (C) Leave the runners to TEST_AND_VERIFY and finish IMPLEMENT with the UAT IDs only.",
+      "affected_ids": [
+        "TASK-051",
+        "supplier-client-ui",
+        "supplier-performance",
+        "supplier-resilience",
+        "supplier-recovery",
+        "supplier-release-operations",
+        "server/scripts/"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-21, in reply to the HD-117 message offering options A/B/C for the five runners (sent after PR #261 merged): 'A，review 完 CI 過就 merge'."
     }
   ],
   "external_actions": [
@@ -6882,15 +7042,20 @@
     {
       "id": "DEF-003",
       "severity": "MEDIUM",
-      "status": "DEFERRED",
+      "status": "CLOSED",
       "source_ids": [
         "TASK-024",
         "DES-001",
         "SupplierAdminService.js:657",
         "REV-006"
       ],
-      "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-017-RISK"
+      "closure_evidence": [
+        "PR #261 merge commit c2237293e8f97198339085254136916d22938cc4",
+        "PR CI run 39543444313 on head a371f144: all 13 checks success",
+        "REV-106 (docs/supplier_management/implementation/109_rev_106_independent_review.md), follow-ups applied",
+        "docs/supplier_management/testing/04_defect_register.md, section 'HD-116 A: dispositions'"
+      ],
+      "risk_approval_id": null
     },
     {
       "id": "DEF-004",
@@ -6903,32 +7068,42 @@
         "REV-006"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-017-RISK"
+      "risk_approval_id": "APPROVAL-HD-116-RISK"
     },
     {
       "id": "DEF-005",
       "severity": "MEDIUM",
-      "status": "DEFERRED",
+      "status": "CLOSED",
       "source_ids": [
         "TASK-014",
         "SEC-004",
         "SupplierAddressService.js:9",
         "REV-006"
       ],
-      "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-017-RISK"
+      "closure_evidence": [
+        "PR #261 merge commit c2237293e8f97198339085254136916d22938cc4",
+        "PR CI run 39543444313 on head a371f144: all 13 checks success",
+        "REV-106 (docs/supplier_management/implementation/109_rev_106_independent_review.md), follow-ups applied",
+        "docs/supplier_management/testing/04_defect_register.md, section 'HD-116 A: dispositions'"
+      ],
+      "risk_approval_id": null
     },
     {
       "id": "DEF-006",
       "severity": "LOW",
-      "status": "DEFERRED",
+      "status": "CLOSED",
       "source_ids": [
         "TASK-018",
         "SupplierIdentifierService.js:126",
         "REV-006"
       ],
-      "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-017-RISK"
+      "closure_evidence": [
+        "PR #261 merge commit c2237293e8f97198339085254136916d22938cc4",
+        "PR CI run 39543444313 on head a371f144: all 13 checks success",
+        "REV-106 (docs/supplier_management/implementation/109_rev_106_independent_review.md), follow-ups applied",
+        "docs/supplier_management/testing/04_defect_register.md, section 'HD-116 A: dispositions'"
+      ],
+      "risk_approval_id": null
     },
     {
       "id": "DEF-007",
@@ -6940,7 +7115,7 @@
         "REV-006"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-017-RISK"
+      "risk_approval_id": "APPROVAL-HD-116-RISK"
     },
     {
       "id": "DEF-008",
@@ -6952,7 +7127,7 @@
         "REV-006"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-017-RISK"
+      "risk_approval_id": "APPROVAL-HD-116-RISK"
     },
     {
       "id": "DEF-009",
@@ -6972,14 +7147,19 @@
     {
       "id": "DEF-010",
       "severity": "LOW",
-      "status": "DEFERRED",
+      "status": "CLOSED",
       "source_ids": [
         "REV-007",
         "server/src/modules/supplier/supplierValidation.js:68",
         "DEF-001"
       ],
-      "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-017-RISK"
+      "closure_evidence": [
+        "PR #261 merge commit c2237293e8f97198339085254136916d22938cc4",
+        "PR CI run 39543444313 on head a371f144: all 13 checks success",
+        "REV-106 (docs/supplier_management/implementation/109_rev_106_independent_review.md), follow-ups applied",
+        "docs/supplier_management/testing/04_defect_register.md, section 'HD-116 A: dispositions'"
+      ],
+      "risk_approval_id": null
     },
     {
       "id": "DEF-011",
@@ -7011,12 +7191,12 @@
         "server/src/services/idempotency/IdempotencyService.js:233"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-017-RISK-DEF012"
+      "risk_approval_id": "APPROVAL-HD-116-RISK"
     },
     {
       "id": "DEF-013",
       "severity": "MEDIUM",
-      "status": "OPEN",
+      "status": "DEFERRED",
       "source_ids": [
         "HD-014",
         "REV-009",
@@ -7027,36 +7207,36 @@
         "TASK-038"
       ],
       "closure_evidence": [],
-      "risk_approval_id": null
+      "risk_approval_id": "APPROVAL-HD-116-RISK"
     },
     {
       "id": "DEF-014",
       "severity": "LOW",
-      "status": "OPEN",
+      "status": "DEFERRED",
       "source_ids": [
         "REV-011",
         "docs/supplier_management/00_project_profile.json#suites",
         "docs/supplier_management/evidence"
       ],
       "closure_evidence": [],
-      "risk_approval_id": null
+      "risk_approval_id": "APPROVAL-HD-116-RISK"
     },
     {
       "id": "DEF-015",
       "severity": "LOW",
-      "status": "OPEN",
+      "status": "DEFERRED",
       "source_ids": [
         "REV-011",
         "docs/supplier_management/00_module_manifest.json#scope.approval_required_paths",
         ".gitignore"
       ],
       "closure_evidence": [],
-      "risk_approval_id": null
+      "risk_approval_id": "APPROVAL-HD-116-RISK"
     },
     {
       "id": "DEF-016",
       "severity": "MEDIUM",
-      "status": "OPEN",
+      "status": "DEFERRED",
       "source_ids": [
         "REV-014",
         "REV-015",
@@ -7066,12 +7246,12 @@
         "server/test/integration/supplierCoreMigrations.integration.test.js#supplier_settings-lock-window"
       ],
       "closure_evidence": [],
-      "risk_approval_id": null
+      "risk_approval_id": "APPROVAL-HD-116-RISK"
     },
     {
       "id": "DEF-017",
       "severity": "MEDIUM",
-      "status": "OPEN",
+      "status": "DEFERRED",
       "source_ids": [
         "server/test/integration/itemConcurrency.integration.test.js:406",
         "server/src/handlers/skus/skuStatusHandlers.js",
@@ -7079,24 +7259,24 @@
         "item-management"
       ],
       "closure_evidence": [],
-      "risk_approval_id": null
+      "risk_approval_id": "APPROVAL-HD-116-RISK"
     },
     {
       "id": "DEF-018",
       "severity": "LOW",
-      "status": "OPEN",
+      "status": "DEFERRED",
       "source_ids": [
         "client/src/framework/ui/PasswordReasonDialog.vue",
         "TASK-027",
         "client/e2e/supplier-management/supplier-settings.spec.js"
       ],
       "closure_evidence": [],
-      "risk_approval_id": null
+      "risk_approval_id": "APPROVAL-HD-116-RISK"
     },
     {
       "id": "DEF-019",
       "severity": "MEDIUM",
-      "status": "OPEN",
+      "status": "DEFERRED",
       "source_ids": [
         "server/test/integration/itemMigrationIdempotency.integration.test.js:67",
         "server/test/integration/itemMigrationIdempotency.integration.test.js:93",
@@ -7104,7 +7284,7 @@
         "item-management"
       ],
       "closure_evidence": [],
-      "risk_approval_id": null
+      "risk_approval_id": "APPROVAL-HD-116-RISK"
     },
     {
       "id": "DEF-020",
@@ -7162,7 +7342,7 @@
     {
       "id": "DEF-023",
       "severity": "LOW",
-      "status": "OPEN",
+      "status": "DEFERRED",
       "source_ids": [
         "TC-074",
         "BANK-013",
@@ -7171,12 +7351,12 @@
         "docs/supplier_management/testing/04_defect_register.md"
       ],
       "closure_evidence": [],
-      "risk_approval_id": null
+      "risk_approval_id": "APPROVAL-HD-116-RISK"
     },
     {
       "id": "DEF-024",
       "severity": "LOW",
-      "status": "OPEN",
+      "status": "CLOSED",
       "source_ids": [
         "TC-077",
         "BANK-016",
@@ -7184,7 +7364,12 @@
         "TASK-037",
         "docs/supplier_management/testing/04_defect_register.md"
       ],
-      "closure_evidence": [],
+      "closure_evidence": [
+        "PR #261 merge commit c2237293e8f97198339085254136916d22938cc4",
+        "PR CI run 39543444313 on head a371f144: all 13 checks success",
+        "REV-106 (docs/supplier_management/implementation/109_rev_106_independent_review.md), follow-ups applied",
+        "docs/supplier_management/testing/04_defect_register.md, section 'HD-116 A: dispositions'"
+      ],
       "risk_approval_id": null
     },
     {
@@ -7280,7 +7465,7 @@
     {
       "id": "DEF-030",
       "severity": "LOW",
-      "status": "OPEN",
+      "status": "CLOSED",
       "source_ids": [
         "REV-101",
         "HD-057",
@@ -7288,7 +7473,12 @@
         "SupplierAdminService",
         "docs/supplier_management/testing/04_defect_register.md"
       ],
-      "closure_evidence": [],
+      "closure_evidence": [
+        "PR #261 merge commit c2237293e8f97198339085254136916d22938cc4",
+        "PR CI run 39543444313 on head a371f144: all 13 checks success",
+        "REV-106 (docs/supplier_management/implementation/109_rev_106_independent_review.md), follow-ups applied",
+        "docs/supplier_management/testing/04_defect_register.md, section 'HD-116 A: dispositions'"
+      ],
       "risk_approval_id": null
     },
     {
@@ -7310,7 +7500,22 @@
         "supplierDeadlockRetry.integration.test.js: four forced deadlocks answer 409, 25 consecutive local runs"
       ],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-032",
+      "severity": "LOW",
+      "status": "OPEN",
+      "source_ids": [
+        "REV-107",
+        "TC-013",
+        "LIST-006",
+        "FR-LIST-010",
+        "client/src/framework/ui/DataTable.vue",
+        "docs/supplier_management/testing/04_defect_register.md"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "PR for claude/supplier-task-051-upgrade (TC-006, T51 rehearsal); merge per 'review 完 CI 過就 merge'. Then the five runners (client-ui, performance, resilience, recovery, release), UAT IDs, and the open-defect decision (DEF-005, DEF-023, DEF-030)."
+  "next_safe_action": "PR for claude/supplier-task-051-client-ui (HD-117 A PR 1); merge per 'review 完 CI 過就 merge' once every check is SUCCESS. DEF-032 (shared DataTable no-data text) needs a decision. Then recovery+release, resilience, performance runners, and UAT IDs."
 }

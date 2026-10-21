@@ -49,7 +49,7 @@ async function mountPage({ permissions = ["supplier.view", "supplier.mgmt"], ini
 describe("pages/suppliers/SuppliersPage.vue", () => {
   beforeEach(() => { setActivePinia(createPinia()); document.body.innerHTML = ""; vi.clearAllMocks(); });
 
-  it("is the permission-filtered Supplier menu entry and renders explicit status text", async () => {
+  it("TC-121 (UI-001): is the permission-filtered Supplier menu entry and renders explicit status text", async () => {
     expect(page.menu.group).toBe("suppliers");
     expect(page.requires.permissions).toEqual(["supplier.view"]);
     const { body } = await mountPage();
@@ -57,6 +57,28 @@ describe("pages/suppliers/SuppliersPage.vue", () => {
     expect(body.text()).toContain("Amy Chan");
     expect(body.text()).toContain("啟用");
     expect(body.find('a[href="/suppliers/7"]').exists()).toBe(true);
+  });
+
+  it("TC-013 (LIST-006): tells a loading, an empty and a failed list apart, and retries a failed read", async () => {
+    let resolve;
+    supplierService.list.mockReturnValueOnce(new Promise((done) => { resolve = done; }));
+    let result = await mountPage();
+    expect(result.body.find('[aria-busy="true"]').exists()).toBe(true);
+    resolve({ rows: [], rowsNumber: 0 });
+    await flushPromises();
+    expect(result.body.find('[aria-busy="true"]').exists()).toBe(false);
+    expect(result.body.text()).toContain("冇資料");
+    expect(result.body.find(".q-banner").exists()).toBe(false);
+    result.wrapper.unmount();
+    document.body.innerHTML = "";
+
+    supplierService.list.mockRejectedValueOnce(new Error("暫時未能讀取供應商"));
+    result = await mountPage();
+    expect(result.body.find(".q-banner").text()).toContain("暫時未能讀取供應商");
+    await result.body.find('button[aria-label="重試"]').trigger("click");
+    await flushPromises();
+    expect(result.body.find(".q-banner").exists()).toBe(false);
+    expect(result.body.text()).toContain("SUP-007");
   });
 
   it("shows create only to supplier.mgmt users", async () => {
@@ -111,7 +133,7 @@ describe("pages/suppliers/SuppliersPage.vue", () => {
     expect(notifyError).toHaveBeenCalledWith("一次最多匯出 10000 個供應商，請收窄篩選條件");
   });
 
-  it("restores filters and paging from URL and keeps the query shareable", async () => {
+  it("TC-015 (LIST-008): restores filters and paging from URL and keeps the query shareable", async () => {
     const { router } = await mountPage({ initialRoute: "/suppliers?page=2&q=evergreen&status=active&sortBy=supplierName&descending=false" });
     expect(supplierService.list).toHaveBeenCalledWith(expect.objectContaining({
       page: 2, filter: "evergreen", status: "active", sortBy: "supplierName", descending: false
@@ -119,7 +141,7 @@ describe("pages/suppliers/SuppliersPage.vue", () => {
     expect(router.currentRoute.value.query.q).toBe("evergreen");
   });
 
-  it("restores the HD-107 filters from the URL and sends them to the list and the export as Hong Kong day bounds", async () => {
+  it("TC-015 (LIST-008): restores the HD-107 filters from the URL and sends them to the list and the export as Hong Kong day bounds", async () => {
     URL.createObjectURL = vi.fn(() => "blob:x");
     URL.revokeObjectURL = vi.fn();
     const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
@@ -144,7 +166,7 @@ describe("pages/suppliers/SuppliersPage.vue", () => {
     click.mockRestore();
   });
 
-  it("ignores malformed filter values in the URL", async () => {
+  it("TC-015 (LIST-008): ignores malformed filter values in the URL", async () => {
     await mountPage({ initialRoute: "/suppliers?currencyCode=usd&paymentTermId=-1&missingBank=1&createdFrom=yesterday" });
     expect(supplierService.list).toHaveBeenLastCalledWith(expect.objectContaining({
       currencyCode: null, paymentTermId: null, missingBank: false, createdFrom: undefined
@@ -160,7 +182,7 @@ describe("pages/suppliers/SuppliersPage.vue", () => {
     expect(router.currentRoute.value.query.missingBank).toBe("true");
   });
 
-  it("flags a date range that ends before it starts", async () => {
+  it("TC-127 (UI-007): flags a date range that ends before it starts", async () => {
     const { body } = await mountPage({ initialRoute: "/suppliers?updatedFrom=2026-10-15&updatedTo=2026-10-01" });
     expect(body.text()).toContain("結束日期不可早於開始日期");
   });
@@ -229,7 +251,7 @@ describe("pages/suppliers/SuppliersPage.vue", () => {
     expect(wrapper.element.querySelector("script, img[onerror], b")).toBeNull();
   });
 
-  it("shows updated times in Hong Kong time whatever the browser's zone, across a year boundary (AUD-008 UI)", async () => {
+  it("TC-127 (UI-007): shows updated times in Hong Kong time whatever the browser's zone, across a year boundary (AUD-008 UI)", async () => {
     supplierService.list.mockResolvedValue({ rows: [{ ...ROW, updatedAt: Date.parse("2025-12-31T16:30:00Z") }], rowsNumber: 1 });
     const router = createRouter({ history: createMemoryHistory(), routes: [{ path: page.path, component: SuppliersPage }] });
     await router.push("/suppliers");

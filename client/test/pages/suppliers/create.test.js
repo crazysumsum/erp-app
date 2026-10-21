@@ -88,12 +88,12 @@ describe("pages/suppliers/SupplierCreatePage.vue", () => {
     currentWrapper = null;
   });
 
-  it("requires supplier.mgmt even when opened by direct URL", () => {
+  it("TC-121 (UI-001): requires supplier.mgmt even when opened by direct URL", () => {
     expect(page.requires).toEqual({ permissions: ["supplier.mgmt"] });
     expect(page.menu).toBeUndefined();
   });
 
-  it("saves a draft with only Code, Name and an active Currency", async () => {
+  it("TC-122 (UI-002): saves a draft with only Code, Name and an active Currency", async () => {
     supplierService.create.mockResolvedValue({
       id: 41, supplierCode: "SUP-041", status: "draft", warnings: [{ message: "尚未設定地址" }]
     });
@@ -135,7 +135,7 @@ describe("pages/suppliers/SupplierCreatePage.vue", () => {
     expect(supplierService.create).toHaveBeenCalledWith(expect.objectContaining({ activate: true }));
   });
 
-  it("prompts before leaving a dirty form", async () => {
+  it("TC-123 (UI-003): prompts before leaving a dirty form", async () => {
     const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
     const { body, router } = await mountPage();
     await input(body, "Supplier Name *").setValue("Evergreen Trading");
@@ -147,9 +147,24 @@ describe("pages/suppliers/SupplierCreatePage.vue", () => {
     confirm.mockRestore();
   });
 
+  it("TC-123 (UI-003): asks the browser to confirm closing the tab only while the form is dirty", async () => {
+    const { body } = await mountPage();
+    // jsdom 冇 BeforeUnloadEvent：普通 Event 嘅 returnValue = "" 會當取消，令冇 preventDefault() 都過關。
+    // 遮住佢，淨係量 preventDefault()——瀏覽器係靠呢個彈確認。
+    const unload = () => {
+      const event = new Event("beforeunload", { cancelable: true });
+      Object.defineProperty(event, "returnValue", { value: undefined, writable: true });
+      window.dispatchEvent(event);
+      return event.defaultPrevented;
+    };
+    expect(unload()).toBe(false);
+    await input(body, "Supplier Name *").setValue("Evergreen Trading");
+    expect(unload()).toBe(true);
+  });
+
   // ---- T30 AC 1: the approver selector ------------------------------------
 
-  it("does not offer an approver, or send one, when the policy is off", async () => {
+  it("TC-122 (UI-002): does not offer an approver, or send one, when the policy is off", async () => {
     // 設計 §6.2：政策關閉時帶 approverUserId 會 400 APPROVER_NOT_REQUIRED。
     supplierService.create.mockResolvedValue({ id: 41, supplierCode: "SUP-041", status: "active" });
     const { wrapper, body } = await mountPage({ requireActivationApproval: false });
@@ -181,7 +196,7 @@ describe("pages/suppliers/SupplierCreatePage.vue", () => {
     expect(body.text()).not.toContain("直接啟用");
   });
 
-  it("sends the chosen approver, and refuses to submit without one", async () => {
+  it("TC-122 (UI-002): sends the chosen approver, and refuses to submit without one", async () => {
     supplierService.create.mockResolvedValue({ id: 41, supplierCode: "SUP-041", status: "pending_approval" });
     const { wrapper, body } = await mountPage({
       requireActivationApproval: true,

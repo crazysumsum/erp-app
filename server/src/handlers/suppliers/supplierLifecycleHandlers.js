@@ -38,6 +38,7 @@ class SupplierLifecycleHandler extends BaseRequestHandler {
     const database = services.require("mysqldatabase");
     const provider = new BusinessMasterProvider({ database, repository: new BusinessMasterRepository() });
     this.suppliers = new SupplierAdminService({
+      duplicateNameThreshold: services.config?.supplier?.duplicateNameThreshold,
       database,
       logger: services.require("logging").logger,
       time: services.require("time"),

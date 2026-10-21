@@ -57,7 +57,7 @@ Coverage: supplier-bank-security 15/15, supplier-server-integration 89/89, suppl
 | TC-010 | `integration/supplierListAcceptance.integration.test.js:246` — filters return only their intersection, with missing contact, address and Bank and both date ranges exact at the edges |  |
 | TC-011 | `integration/supplierListAcceptance.integration.test.js:295` — each allowed sort orders the set, ties fall back to ID in the same direction, and pages neither skip nor repeat |  |
 | TC-012 | `integration/supplierListAcceptance.integration.test.js:333` — LIKE wildcards are searched literally, an unknown sort is 400, and nothing in the database moves |  |
-| TC-014 | `integration/supplierAuditAcceptance.integration.test.js:599` — detail returns the general data, children, payment term and masked Bank for every status, computes no transactions, and the provider marks every non-Active Supplier not purchasable | no downstream summaries exist yet (Purchasing is not built); the UI hint is carried by client detail.test for the suspended status only |
+| TC-014 | `integration/supplierAuditAcceptance.integration.test.js:603` — detail returns the general data, children, payment term and masked Bank for every status, computes no transactions, and the provider marks every non-Active Supplier not purchasable | no downstream summaries exist yet (Purchasing is not built); the UI hint is carried by client detail.test for the suspended status only |
 | TC-016 | `integration/supplierSkuLookup.integration.test.js:197` — TASK-040 (HD-094 1A): over HTTP the for-SKU lookup needs a fresh supplier.view and returns no Bank data | carrier mostly checks auth; reasons and searchability are carried by TC-078/079 |
 | TC-017 | `integration/supplierCoreAcceptance.integration.test.js:59` — create makes a Draft at version 1 with its audit and name index, readable at once, and a refused create leaves nothing | create takes no children (its schema has none; children use their own routes); atomicity is not asserted here: the duplicate is refused by the pre-insert check before any write; rollback after an audit failure is carried by TC-028 |
 | TC-018 | `supplierAdminService.test.js:77` — create Supplier revalidates actor and Business Master inside one transaction and atomically writes root, grams and audit<br>`supplierLifecycleService.test.js:94` — activate and reactivate revalidate activation data and write one atomic audit |  |
@@ -84,11 +84,11 @@ Coverage: supplier-bank-security 15/15, supplier-server-integration 89/89, suppl
 | TC-040 | `supplierAddressService.test.js:44` — create switches each requested primary and writes address, purposes and audit in one transaction |  |
 | TC-041 | `supplierContactService.test.js:64` — create normalizes contact fields, switches the requested primary and audits atomically |  |
 | TC-042 | `integration/supplierParty.integration.test.js:54` — Address ownership, primary switching, concurrency and deactivation are enforced by service and MySQL<br>`integration/supplierParty.integration.test.js:121` — Contact ownership, primary switching, concurrency and deactivation are enforced by service and MySQL |  |
-| TC-043 | `supplierAddressService.test.js:64` — address deactivate clears primary flags and preserves purpose mappings<br>`supplierContactService.test.js:99` — contact deactivate clears primary flags and preserves purpose mappings<br>`supplierIdentifierService.test.js:106` — delete rejects referenced identifiers and audits an allowed versioned deletion |  |
-| TC-044 | `integration/supplierParty.integration.test.js:191` — Identifier normalization, global uniqueness, ownership and deletion are enforced by service and MySQL<br>`supplierIdentifierService.test.js:53` — create normalizes identifier type, country and separator-insensitive key before auditing |  |
+| TC-043 | `supplierAddressService.test.js:64` — address deactivate clears primary flags and preserves purpose mappings<br>`supplierContactService.test.js:99` — contact deactivate clears primary flags and preserves purpose mappings<br>`supplierIdentifierService.test.js:110` — delete rejects referenced identifiers and audits an allowed versioned deletion |  |
+| TC-044 | `integration/supplierParty.integration.test.js:191` — Identifier normalization, global uniqueness, ownership and deletion are enforced by service and MySQL<br>`supplierIdentifierService.test.js:57` — create normalizes identifier type, country and separator-insensitive key before auditing |  |
 | TC-045 | `integration/supplierCoreAcceptance.integration.test.js:346` — another Supplier's route cannot read, update, deactivate or delete a child, answers as for a missing one, and changes nothing | address, contact and identifier; Bank ownership is TC-114 |
 | TC-046 | `integration/supplierCoreAcceptance.integration.test.js:391` — a Draft with only the three minimum fields gets warnings but no issues, and activates | the UI's non-blocking label is carried by client detail.test |
-| TC-047 | `supplierContactService.test.js:79` — create rejects malformed optional email and phone values<br>`supplierIdentifierService.test.js:82` — create rejects oversized notes at the domain boundary |  |
+| TC-047 | `supplierContactService.test.js:79` — create rejects malformed optional email and phone values<br>`supplierIdentifierService.test.js:86` — create rejects oversized notes at the domain boundary |  |
 | TC-048 | `integration/supplierListAcceptance.integration.test.js:356` — detail carries at most 100 contacts and addresses; the dedicated lists page the rest exactly |  |
 | TC-049 | `integration/supplierCoreMigrations.integration.test.js:151` — 0036 seeds the settings singleton once and a rerun neither duplicates nor resets it<br>`supplierSettingsService.test.js:59` — reading settings returns the typed singleton with its version |  |
 | TC-050 | `supplierSettingsHandlers.test.js:9` — both settings routes require supplier.settings and nothing weaker |  |
@@ -145,10 +145,10 @@ Coverage: supplier-bank-security 15/15, supplier-server-integration 89/89, suppl
 | TC-104 | `supplierAuditLogService.test.js:35` — audit writer rejects unknown actions, unknown detail keys and Bank-sensitive fields<br>`supplierBankService.test.js:152` — create encrypts, indexes and audits, and no plaintext reaches the audit entry |  |
 | TC-105 | `integration/supplierAudit.integration.test.js:13` — Supplier audit follows its caller transaction and committed rows remain queryable<br>`supplierBankService.test.js:380` — a reveal whose audit fails returns no account at all<br>`supplierExportService.test.js:55` — the audit names the actor, the filters and the count, and a failed audit means no file |  |
 | TC-106 | `integration/supplierAuditAcceptance.integration.test.js:331` — detail up to 8192 bytes is stored whole, a larger list is summarised to count/sample/truncated, and anything still too large fails the whole transaction with an alert | the alert is a system-log error event; no external alerting exists. Notes are audited as length and SHA-256 (HD-112 A), so two 2000-character multi-byte notes update cleanly |
-| TC-107 | `integration/supplierAuditAcceptance.integration.test.js:459` — audit search returns only matching rows, newest first with a stable id tie-break, with exact totals and edges, and Bank detail stays masked | the Code filter is the target-label search |
-| TC-108 | `integration/supplierAuditAcceptance.integration.test.js:512` — there is no way to change or delete audit: only a GET route exists, guessed write routes are refused, the service has no write method, and no source writes it | the database user can UPDATE and DELETE; immutability rests on the API and the code, not on grants |
-| TC-109 | `integration/supplierAuditAcceptance.integration.test.js:543` — audit survives the deletion of its Supplier and of its actor, keeping the target IDs and the actor's username |  |
-| TC-110 | `integration/supplierAuditAcceptance.integration.test.js:572` — times are epoch milliseconds in the DB and the API, and one requestId joins the response, the request log and the audit row | Supplier CSVs carry no time columns, so the ISO 8601 offset clause has nothing to check; the UI time zone is carried by client list.test; no controllable clock is used |
+| TC-107 | `integration/supplierAuditAcceptance.integration.test.js:463` — audit search returns only matching rows, newest first with a stable id tie-break, with exact totals and edges, and Bank detail stays masked | the Code filter is the target-label search |
+| TC-108 | `integration/supplierAuditAcceptance.integration.test.js:516` — there is no way to change or delete audit: only a GET route exists, guessed write routes are refused, the service has no write method, and no source writes it | the database user can UPDATE and DELETE; immutability rests on the API and the code, not on grants |
+| TC-109 | `integration/supplierAuditAcceptance.integration.test.js:547` — audit survives the deletion of its Supplier and of its actor, keeping the target IDs and the actor's username |  |
+| TC-110 | `integration/supplierAuditAcceptance.integration.test.js:576` — times are epoch milliseconds in the DB and the API, and one requestId joins the response, the request log and the audit row | Supplier CSVs carry no time columns, so the ISO 8601 offset clause has nothing to check; the UI time zone is carried by client list.test; no controllable clock is used |
 | TC-111 | `integration/supplierSecurityAcceptance.integration.test.js:153` — every registered Supplier route refuses an anonymous or forged caller, writes nothing, and answers alike for existing and missing IDs | Supplier pages: client pageGuards.test checks every page declares permissions and none is public |
 | TC-112 | `integration/supplierSecurityAcceptance.integration.test.js:171` — the route-by-role matrix grants exactly the specified permission combinations | allowed combinations are checked at the route policy with missing IDs, so they stop at 400/404; the service's fresh DB check is carried by TC-115; U-SYS Bank masking, audit and alert are not asserted (TC-116 covers its re-authentication) |
 | TC-113 | `integration/supplierSecurityAcceptance.integration.test.js:197` — a Purchasing caller gets only the minimal provider projection and no Supplier admin, reveal or Settings access | Purchasing has no permission yet (HD-094 1A), so U-PO holds an unrelated one; there is no Finance Bank provider (design §8.4 defers it) |
@@ -181,9 +181,9 @@ Coverage: supplier-bank-security 15/15, supplier-server-integration 89/89, suppl
 | TC-010 | LIST-003 | — | NONE | Filter combinations, missing primary/address/bank, updated range |
 | TC-011 | LIST-004 | `supplierQueryHandlers` (allowlisted stable sort) | PARTIAL | No cross-page stability test on MySQL |
 | TC-012 | LIST-005 | `supplierQueryHandlers` | COVERED | |
-| TC-013 | LIST-006 | `client list.test`; `coreFlow.test` | PARTIAL | Empty, loading and error states not distinguished in a test |
+| TC-013 | LIST-006 | moved to `supplier-client-ui` | — | See that section |
 | TC-014 | LIST-007 | `client detail.test`; `supplierQueryHandlers` (detail) | PARTIAL | Non-Active "not purchasable" hint |
-| TC-015 | LIST-008 | `client list.test` (URL restore, shareable) | COVERED | |
+| TC-015 | LIST-008 | moved to `supplier-client-ui` | — | See that section |
 | TC-016 | LIST-009 | `supplierSkuLookup.integration` | COVERED | API side; no Purchasing UI exists |
 | TC-017 | CORE-001 | `supplierManagement.integration` (create atomic) | COVERED | |
 | TC-018 | CORE-002 | `supplierLifecycleService` (activate, one audit); `supplierAdminService` | COVERED | |
@@ -197,7 +197,7 @@ Coverage: supplier-bank-security 15/15, supplier-server-integration 89/89, suppl
 | TC-026 | CORE-010 | `supplierManagement.integration` (Code correction); `supplierAdminService` | COVERED | |
 | TC-027 | CORE-011 | `supplierAdminService` (stale version); `supplierManagement.integration` (CAS) | COVERED | |
 | TC-028 | CORE-012 | `supplierManagement.integration` (audit failure leaves nothing) | COVERED | |
-| TC-029 | CORE-013 | `client create.test`, `editor.test` (dirty prompt) | PARTIAL | "Existing transaction snapshot unchanged": no transaction module consumes Supplier yet |
+| TC-029 | CORE-013 | moved to `supplier-client-ui` | — | See that section |
 | TC-030 | STATE-001 | `supplierManagement.integration` (lookup history); `supplierLookupService` | COVERED | |
 | TC-031 | STATE-002 | `supplierLifecycleService` (reactivate) | COVERED | |
 | TC-032 | STATE-003 | `supplierLifecycleHandlers`; `supplierLifecycleService` (block matrix) | COVERED | |
@@ -283,17 +283,25 @@ TC-062 … TC-077 already carry their IDs in `supplierBank*.integration`, `suppl
 | TC-119 | AUTH-009 | `supplierNormalization` (control characters) | PARTIAL | Script rendering and prototype pollution |
 | TC-120 | AUTH-010 | Code race non-disclosure; Bank 409; import fixed error pair | COVERED | |
 
-## supplier-client-ui (7)
+## supplier-client-ui (11)
 
-| TC | Case | Candidate tests | Status | Gap |
+Runner: `npm test --workspace client -- --config test/supplier-management.vitest.config.js` (HD-117 A). It runs the 19 Supplier page and service test files in jsdom; each test title carries at most one TC ID. Local run after REV-107: 168 passed, 0 failed, 0 skipped; every required ID PASS through the harness JUnit adapter. Keyboard, focus, viewport, browser back and visual checks need a real browser and are left to the Playwright specs and UAT.
+
+Left out on purpose: `client/test/framework/routing/authorizationRefresh.test.js`. Its `同 SupplierBankPanel 夾埋` block checks that Bank plaintext is cleared and that losing `supplier.view` sends the user to 403, but the file is a framework routing test and the rest of it is not Supplier's. It runs in the main client suite. The profile's `min_tests` is 11 while 168 tests run, so a shrunken file list is caught only through the required IDs; raising the floor changes the profile and needs its own decision (REV-107 I-2).
+
+| TC | Case | Tagged tests | Status | Gap |
 | --- | --- | --- | --- | --- |
-| TC-121 | UI-001 | `list.test` (menu entry); `create.test` (direct URL guard) | COVERED | |
-| TC-122 | UI-002 | `create.test` | PARTIAL | Error focus on summary or first field |
-| TC-123 | UI-003 | `editor.test` (dirty prompt, draft kept on 409) | COVERED | |
-| TC-124 | UI-004 | settings and approvals e2e (keyboard) | PARTIAL | Status text + icon, wording across pages |
-| TC-125 | UI-005 | `bank.test`; `approvals.test` (stale) | COVERED | |
-| TC-126 | UI-006 | `import.test`; `supplier-imports.spec` | COVERED | |
-| TC-127 | UI-007 | — | NONE | Tokens, no inline brand hex, keyboard and focus on every page |
+| TC-013 | LIST-006 | `list.test` (loading, empty and failed reads, retry); `coreFlow.test` (view-only projection to detail) | PARTIAL | The shared `DataTable` also shows 「冇資料」 while loading and under the error banner, so a sighted user cannot tell the three states apart by the text (DEF-032); the no-permission state and the U-BANK-R / U-NONE projections are not tested here |
+| TC-015 | LIST-008 | `list.test` (restore from URL, HD-107 filters, malformed values dropped) | PARTIAL | Back/forward and refresh in a real browser; no assertion that the URL holds no sensitive value |
+| TC-029 | CORE-013 | `editor.test` (dirty editor prompts before leaving) | PARTIAL | The "stay" choice (asserted in `detail.test`, tagged TC-123); saving the new Supplier value; existing purchase snapshots unchanged, which needs the purchasing module |
+| TC-075 | BANK-014 | `bank.test` (nine reveal and clearing tests, including the write dialog and the create form) | COVERED | |
+| TC-121 | UI-001 | `pageGuards.test`; `list.test` (menu entry); `create.test` (direct URL); `settings.test`; `approvals.test` | PARTIAL | Tests check page metadata only. Menu order is not asserted; the 403 redirect is asserted only in `authorizationRefresh.test.js`, outside this suite |
+| TC-122 | UI-002 | `create.test` (draft with three fields, approver on and off) | PARTIAL | Error focus on summary or first field |
+| TC-123 | UI-003 | `create.test` and `editor.test` (dirty prompt on route leave and on closing the tab); `editor.test` (draft kept on 409); `detail.test` (refusing to discard keeps the page) | PARTIAL | Browser back, and two real sessions (the 409 is mocked) |
+| TC-124 | UI-004 | `lifecycle.test` (state-valid actions, Block, conflict, activation, archive and delete dialogs with Code, end state, kept history and password rule) | PARTIAL | Keyboard completion; status icon beside the text; suspend wording is not asserted |
+| TC-125 | UI-005 | `approvals.test` (snapshot diff, stale refused, password, reason, reassign); Bank side is TC-075 | COVERED | |
+| TC-126 | UI-006 | `import.test` (refresh reopens the job, error rows not written, approver rule, stopped job and expired result, row filter) | COVERED | |
+| TC-127 | UI-007 | `list.test` (Hong Kong time, date-range error); `contact.test` (accessible validation) | PARTIAL | Tokens and no inline brand hex (could be checked statically, not done); keyboard and focus on every page; widths |
 
 ## Performance, resilience, recovery, release (9)
 

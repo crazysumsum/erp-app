@@ -133,9 +133,9 @@ integrationTest("TC-028 (CORE-012): Supplier create atomically persists root, gr
   const detail = await service.getSupplier({ actorId, claimedRoles: [], claimedPermissions: [], id: created.id });
   assert.equal(detail.id, created.id);
   assert.deepEqual(detail.bankAccounts, []);
-  // DEF-001: bank completeness is not evaluated until PHASE-003 supplies the flag,
-  // so a supplier must not carry a warning no user action could clear.
-  assert.equal(detail.warnings.some((warning) => warning.code === "BANK_ACCOUNT_MISSING"), false);
+  // DEF-010 (HD-116 A): Bank is deployed, so a Supplier without an active bank account carries the warning,
+  // like the other optional data (design §456). Before PHASE-003 it was suppressed (DEF-001).
+  assert.equal(detail.warnings.some((warning) => warning.code === "BANK_ACCOUNT_MISSING"), true);
   assert.ok(detail.warnings.some((warning) => warning.code === "ORDERING_ADDRESS_MISSING"));
 
   const duplicateCheck = await service.findSupplierDuplicateCandidates({
