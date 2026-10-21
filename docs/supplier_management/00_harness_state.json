@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 395,
+  "revision": 396,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -6415,6 +6415,22 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-21, in reply to the DEF-032 decision in the PR #262 report: 'DEF-032 A，CI已通過'."
+    },
+    {
+      "id": "HD-119",
+      "impact": "MAJOR",
+      "question": "What the recovery and release runners (TC-133..136) may report as PASS locally. HARNESS_JSON has no BLOCKED status; NOT_RUN on any part of a TC makes the suite BLOCKED. (A) Run the locally feasible parts for real (TC-133: seed every Supplier capability, mysqldump, isolated restore, table and file reconciliation, smoke and reveal on the restored copy, fail closed without the key ring; TC-134: real worker stop-claim, lease expiry, restart takeover, no redo; TC-135: fresh migrated database, route and permission inventory, settings default, separated-role smoke) and emit a separate NOT_RUN test per TC for the production-only part (RTO/RPO drill, real rollback timeline, staged deployment and break-glass accounts; TC-136 entirely), so both suites stay BLOCKED until TEST_AND_VERIFY evidence or a risk approval. (B) Count the local parts as PASS. (C) Emit NOT_RUN only.",
+      "affected_ids": [
+        "TC-133",
+        "TC-134",
+        "TC-135",
+        "TC-136",
+        "supplier-recovery",
+        "supplier-release-operations",
+        "TASK-051"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-21, in reply to the PR 2 scope decision sent after PR #263 merged: 'A，review 完 CI 過就 merge'."
     }
   ],
   "external_actions": [
@@ -7598,5 +7614,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "HD-117 A PR 2: recovery (TC-133) and release (TC-134..136) runners on claude/supplier-task-051-recovery-release; per-TC scope to be confirmed with the Product Owner."
+  "next_safe_action": "HD-119 A: write runSupplierRecoveryAcceptance.js (TC-133) and runSupplierReleaseAcceptance.js (TC-134..136) on claude/supplier-task-051-recovery-release; review, PR, merge per 'review 完 CI 過就 merge'."
 }
