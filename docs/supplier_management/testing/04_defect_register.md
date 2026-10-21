@@ -97,3 +97,16 @@ Found by REV-103 (M-2) in raw SQL, and reproduced over HTTP: 1 of 150 deliberate
 same probe on Supplier create (a reused code) gave 150 of 150 clean 201/409 pairs. Address, contact, Bank and
 approval writes lock the Supplier row first, so two of them for the same Supplier cannot reach the unique key
 together. Decision: HD-115.
+
+Fix, per HD-115 A:
+
+- **What changed.** Four writes now run their whole transaction again, once, when it fails with `ER_LOCK_DEADLOCK`: identifier create, identifier update, Supplier create, and Supplier Code change. The helper is `retryOnceOnDeadlock` in `supplierErrors.js`, following the retry in `SupplierRelationService`.
+- **Why the retry answers 409.** The retry either sees the winner's committed row or queues behind it, so it hits the unique key and returns the normal 409. If the winner rolled back instead, the retry succeeds.
+- **Logging.** Each retry logs `supplier.write.deadlock_retried` with the operation and request ID, so deadlocks stay visible.
+- **Coverage beyond HD-115.** Supplier create turned out to be affected too: the forced test returns 500 on every run without the fix. REV-104 found Supplier Code change exposed in the same way (M-1). It is fixed under the same rule. CSV import already maps a deadlock to `SUPPLIER_IMPORT_ROW_BUSY`.
+- **The test.** `supplierDeadlockRetry.integration.test.js` forces the deadlock deterministically:
+  - A third transaction inserts the same value and does not commit.
+  - Once performance_schema shows both requests queued behind it, it rolls back.
+  - The test checks that InnoDB's latest deadlock happened after the test started and on the expected unique index.
+  - The two responses must be 201/200 and 409, and the retry must be logged.
+  - The two requests come from two different users. Requests from one user queue on that user's row first.

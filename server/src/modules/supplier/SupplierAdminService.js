@@ -4,7 +4,7 @@ import { APPROVAL_SIGNIFICANT_COLUMNS, SupplierApprovalService, buildApprovalSum
 import { SupplierAuditLogService } from "./SupplierAuditLogService.js";
 import { SupplierDuplicateCandidates, replaceSupplierNameGrams } from "./supplierDuplicateCandidates.js";
 import { SupplierReferenceService } from "./SupplierReferenceService.js";
-import { invalidSupplierInput, supplierConflict, supplierNotFound } from "./supplierErrors.js";
+import { invalidSupplierInput, retryOnceOnDeadlock, supplierConflict, supplierNotFound } from "./supplierErrors.js";
 import {
   escapeLikeTerm,
   normalizeContactEmail,
@@ -275,6 +275,7 @@ export class SupplierAdminService {
     this.authorize = authorize;
     this.duplicates = duplicates ?? new SupplierDuplicateCandidates();
     this.replaceNameGrams = replaceNameGrams;
+    this.logger = logger;
     this.audit = audit ?? new SupplierAuditLogService({ database, logger, time });
     this.references = references ?? new SupplierReferenceService();
     this.openFlows = openFlows ?? new SupplierReferenceService();
@@ -290,14 +291,14 @@ export class SupplierAdminService {
     const duplicateCandidates = await this.duplicates.find(this.database, { nameKey: name.key });
     let created;
     try {
-      created = await this.database.withTransaction(async (connection) => {
+      created = await retryOnceOnDeadlock(() => this.database.withTransaction(async (connection) => {
         const actor = await this.authorize(connection, {
           actorId: input.actorId,
           claimedRoles: input.claimedRoles,
           claimedPermissions: input.claimedPermissions
         });
         return this.createSupplierInTransaction(connection, { actor, input, findDuplicates: false });
-      });
+      }), { logger: this.logger, operation: "supplier.create", requestId: input.requestId });
     } catch (error) {
       if (duplicateEntry(error)) {
         throw supplierConflict("SUPPLIER_CODE_TAKEN", "這個 Supplier Code 已被使用", { supplierCode: normalizeSupplierCode(input.supplierCode).value });
@@ -556,7 +557,9 @@ export class SupplierAdminService {
     const reason = requireReason(input.reason, "修正 Supplier Code 必須填寫原因");
     let codeApprovalInvalidated = false;
     try {
-      await this.database.withTransaction(async (connection) => {
+      await retryOnceOnDeadlock(() => this.database.withTransaction(async (connection) => {
+        // 重做嗰次由頭計（REV-104 M-1）。
+        codeApprovalInvalidated = false;
         const actor = await this.authorize(connection, {
           actorId: input.actorId,
           claimedRoles: input.claimedRoles,
@@ -609,7 +612,7 @@ export class SupplierAdminService {
           });
           codeApprovalInvalidated = true;
         }
-      });
+      }), { logger: this.logger, operation: "supplier.code.change", requestId: input.requestId });
     } catch (error) {
       if (duplicateEntry(error)) {
         throw supplierConflict("SUPPLIER_CODE_TAKEN", "這個 Supplier Code 已被使用", { supplierCode: code.value });

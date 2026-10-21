@@ -2,7 +2,7 @@ import { assertActorFresh } from "../authorization/directoryLookups.js";
 import { SupplierApprovalService } from "./SupplierApprovalService.js";
 import { changedFieldsDetail } from "./auditChanges.js";
 import { SupplierAuditLogService } from "./SupplierAuditLogService.js";
-import { invalidSupplierInput, supplierChildNotFound, supplierConflict, supplierNotFound } from "./supplierErrors.js";
+import { invalidSupplierInput, retryOnceOnDeadlock, supplierChildNotFound, supplierConflict, supplierNotFound } from "./supplierErrors.js";
 import { normalizeIdentifier } from "./supplierNormalization.js";
 import { toIdentifierResponse } from "./supplierProjections.js";
 
@@ -56,6 +56,7 @@ export class SupplierIdentifierService {
     this.database = database;
     this.time = time;
     this.authorize = authorize;
+    this.logger = logger;
     this.audit = audit ?? new SupplierAuditLogService({ database, logger, time });
     this.countReferences = countReferences;
     this.approvals = approvals ?? new SupplierApprovalService({ database, logger, time, audit: this.audit });
@@ -109,10 +110,10 @@ export class SupplierIdentifierService {
   async create(input) {
     const identifier = normalizedInput(input);
     try {
-      return await this.database.withTransaction(async (connection) => {
+      return await retryOnceOnDeadlock(() => this.database.withTransaction(async (connection) => {
         const actor = await this.authorize(connection, input);
         return this.createInTransaction(connection, { actor, input });
-      });
+      }), { logger: this.logger, operation: "supplier.identifier.create", requestId: input.requestId });
     } catch (error) {
       if (duplicateEntry(error)) throw taken(identifier);
       throw error;
@@ -160,7 +161,7 @@ export class SupplierIdentifierService {
     const identifier = normalizedInput(input);
     const reason = requiredReason(input.reason);
     try {
-      return await this.database.withTransaction(async (connection) => {
+      return await retryOnceOnDeadlock(() => this.database.withTransaction(async (connection) => {
         const actor = await this.authorize(connection, input);
         const supplier = await this.#supplierForUpdate(connection, input.supplierId);
         approvalInvalidated = await this.#invalidateApprovalIfPending(connection, supplier, { ...input, actorUsername: actor.username }, "identifiers");
@@ -188,7 +189,7 @@ export class SupplierIdentifierService {
           requestId: input.requestId, ip: input.ip
         });
         return { ...projected, approvalInvalidated };
-      });
+      }), { logger: this.logger, operation: "supplier.identifier.update", requestId: input.requestId });
     } catch (error) {
       if (duplicateEntry(error)) throw taken(identifier);
       throw error;
