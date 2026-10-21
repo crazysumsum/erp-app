@@ -20,14 +20,14 @@ Sales' actual coordination document112 explicitly accepts P0 as sole active/sche
 |0091_seed_fulfillment_permissions.js|P0 TASK-002|Logical1 permissions only; existing0063 owns fulfillment.operation.|
 |0092_create_fulfillment_operations_and_sequences.js|P0 TASK-007|Remainder of logical1; Checkpoint0B prerequisite.|
 |0093_create_fulfillment_documents.js|P0 TASK-008|Logical2 headers/lines/claims/history; Sales/Inventory/master tables precede FKs.|
-|0094_extend_inventory_fulfillment_sequence.js|Inventory owner contribution / P0 TASK-005/008|Logical3 anchor/index extension; existing data semantics and backfill require owner-reviewed proof.|
+|0094 reserved — no new file|P0 TASK-005/008 reconciliation|Logical3 is already satisfied by historical0059/0063; no redundant migration or no-op.|
 |0095_create_fulfillment_allocations.js|P0 TASK-008|Logical4; document/Inventory dependencies first.|
-|0096_create_fulfillment_shipments.js|P0 TASK-009|Logical5 Shipment, circular FK and history.|
-|0097_create_fulfillment_issue_and_reversals.js|P0 TASK-009|Logical6 Issue/Reversal details and immutable guards.|
+|0096_create_shipments.js|P0 TASK-009|Logical5 Shipment, circular FK and history.|
+|0097_create_shipment_issues_and_reversals.js|P0 TASK-009|Logical6 Issue/Reversal details and immutable guards.|
 |0098_create_fulfillment_audit_and_exports.js|P0 TASK-010|Logical7 audit/export.|
-|0099_create_fulfillment_archive_mirrors.js|P0 TASK-010|Logical8 mirrors/hash/guards;0088 batch FK predecessor required.|
+|0099_create_fulfillment_archives.js|P0 TASK-010|Logical8 mirrors/hash/guards;0088 batch FK predecessor required.|
 
-P0 logical slices use contiguous0091–0099; logical1 is physically split so TASK-002 permission seed can be developed separately from operation persistence. 0089/0090 gaps in the P0 candidate are intentional reserved Sales ownership, not missing P0 prerequisites. Existing unpublished Sales0091–0093 source identities are withdrawn/replaced from that stream's final candidate; this table does not install their old bodies or run both sets. Their prior native results remain historical reference only.
+P0 physical allocation spans0091–0099;0094 requires no new file because historical0059/0063 already supply FIFO/override. logical1 is physically split so TASK-002 permission seed can be developed separately from operation persistence. 0089/0090 gaps in the P0 candidate are intentional reserved Sales ownership, not missing P0 prerequisites. Existing unpublished Sales0091–0093 source identities are withdrawn/replaced from that stream's final candidate; this table does not install their old bodies or run both sets. Their prior native results remain historical reference only.
 
 Freshness must be rechecked before each new migration file and before the complete P0 PR; any new observed collision pauses the affected path. No deployed migration is renumbered or edited. No new migration or schema has been executed. The actual0088 source transfer is deferred until its planned owner contribution slice; the file remains byte-identified in the Sales handoff.
 
