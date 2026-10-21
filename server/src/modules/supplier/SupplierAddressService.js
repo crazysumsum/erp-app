@@ -2,10 +2,20 @@ import { assertActorFresh } from "../authorization/directoryLookups.js";
 import { changedFieldsDetail, purposeList, sortedPurposes } from "./auditChanges.js";
 import { SupplierAuditLogService } from "./SupplierAuditLogService.js";
 import { invalidSupplierInput, supplierChildNotFound, supplierConflict, supplierNotFound } from "./supplierErrors.js";
+import { containsControl } from "./supplierNormalization.js";
 import { toAddressResponse } from "./supplierProjections.js";
 
 export const SUPPLIER_ADDRESS_PURPOSES = Object.freeze(["registered", "office", "ordering", "return", "remittance", "other"]);
 const PURPOSE_SET = new Set(SUPPLIER_ADDRESS_PURPOSES);
+
+/** 同 contact、識別資料一樣：限長度（同 DB 欄位），拒絕控制字元（DEF-005，HD-116 A）。HTTP schema 已經限長度，但 CSV 匯入唔經佢。 */
+function text(value, field, maxLength) {
+  const normalized = String(value ?? "").trim();
+  if (Array.from(normalized).length > maxLength || containsControl(normalized)) {
+    throw invalidSupplierInput("SUPPLIER_ADDRESS_INVALID", "地址資料不正確", { field });
+  }
+  return normalized;
+}
 
 export function normalizeAddress(input) {
   const purposes = input.purposes ?? [];
@@ -22,16 +32,16 @@ export function normalizeAddress(input) {
     throw invalidSupplierInput("SUPPLIER_ADDRESS_COUNTRY_INVALID", "國家／地區代碼必須是兩個英文字母");
   }
   return {
-    label: String(input.label ?? "").trim(),
-    addressLine1: String(input.addressLine1 ?? "").trim(),
-    addressLine2: String(input.addressLine2 ?? "").trim(),
-    addressLine3: String(input.addressLine3 ?? "").trim(),
-    city: String(input.city ?? "").trim(),
-    stateRegion: String(input.stateRegion ?? "").trim(),
-    postalCode: String(input.postalCode ?? "").trim(),
+    label: text(input.label, "label", 100),
+    addressLine1: text(input.addressLine1, "addressLine1", 190),
+    addressLine2: text(input.addressLine2, "addressLine2", 190),
+    addressLine3: text(input.addressLine3, "addressLine3", 190),
+    city: text(input.city, "city", 100),
+    stateRegion: text(input.stateRegion, "stateRegion", 100),
+    postalCode: text(input.postalCode, "postalCode", 100),
     countryCode: countryCode || null,
-    phone: String(input.phone ?? "").trim(),
-    notes: String(input.notes ?? "").trim(),
+    phone: text(input.phone, "phone", 50),
+    notes: text(input.notes, "notes", 500),
     purposes: purposes.map((purpose) => ({ purposeCode: purpose.purposeCode, isPrimary: Boolean(purpose.isPrimary) }))
   };
 }

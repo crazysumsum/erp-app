@@ -26,7 +26,8 @@ export class CreateSupplierHandler extends BaseRequestHandler {
       provider,
       readiness: new BusinessMasterReadinessService({ database, checkerIds: ["supplier"] })
     });
-    this.suppliers = new SupplierAdminService({ database, logger, time, businessMaster, approvalRequired: getActivationPolicy });
+    this.suppliers = new SupplierAdminService({ database, logger, time, businessMaster, approvalRequired: getActivationPolicy,
+      duplicateNameThreshold: services.config?.supplier?.duplicateNameThreshold });
   }
 
   async execute(req) {

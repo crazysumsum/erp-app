@@ -396,7 +396,15 @@ integrationTest("TC-046 (PARTY-007): a Draft with only the three minimum fields 
   assert.equal(completeness.status, 200, completeness.text);
   assert.deepEqual(completeness.json.data.issues, []);
   assert.deepEqual(completeness.json.data.warnings.map((w) => w.code).sort(),
-    ["IDENTIFIER_MISSING", "ORDERING_ADDRESS_MISSING", "ORDERS_CONTACT_MISSING", "PAYMENT_TERM_MISSING"]);
+    ["BANK_ACCOUNT_MISSING", "IDENTIFIER_MISSING", "ORDERING_ADDRESS_MISSING", "ORDERS_CONTACT_MISSING", "PAYMENT_TERM_MISSING"]);
+  assert.ok(made.json.data.warnings.some((w) => w.code === "BANK_ACCOUNT_MISSING"), "the create response warns too");
+  // DEF-010：有一個有效銀行帳戶，提示就消失（completeness 同 detail 都係）。
+  await h.bankService().create({ actorId: null, claimedRoles: [], claimedPermissions: [], supplierId: id, accountHolderName: "Holder",
+    bankName: "Bank", accountNumber: `4${String(Date.now()).slice(-11)}`, isDefault: true, reason: "DEF-010 completeness" });
+  for (const route of ["GET /api/v1/suppliers/:id/completeness", "GET /api/v1/suppliers/:id"]) {
+    const read = await h.send(h.users.mgmt, h.route(route), { ids: { id } });
+    assert.equal(read.json.data.warnings.some((w) => w.code === "BANK_ACCOUNT_MISSING"), false, `${route}: ${read.text.slice(0, 200)}`);
+  }
   const activated = await lifecycle("activate", id, { version: 1 });
   assert.equal(activated.status, 200, activated.text);
   assert.equal((await row(id)).status, "active");

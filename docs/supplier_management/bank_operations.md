@@ -278,6 +278,12 @@ InnoDB 的 `ER_LOCK_DEADLOCK` 會原樣傳回呼叫端，應用程式不會自�
 `declined`，線上寫入保留。
 建議在寫入量低的時段執行，並用 `--batch-size` 控制每批大小。
 
+**線上 Bank API 寫入**（新增、修改、設為預設、停用）也不會自動重試（DEF-024，HD-116 A）：
+
+- **同一個 Supplier 的 Bank 寫入不會互相 deadlock。** 每次寫入都先鎖該 Supplier 那一行，所以會排隊進行。Bank 的唯一鍵（blind index、預設帳戶）都包含 `supplier_id`，不同 Supplier 之間不會爭同一個值。這點和 DEF-031 的 Supplier Code、識別資料不同，那兩者會在唯一鍵上 deadlock，所以要重試一次。
+- **與其他類型的寫入撞上時仍可能 deadlock。** 那個請求會回 `500 INTERNAL_SERVER_ERROR`，整個 transaction 都會 rollback：沒有寫入帳戶，也沒有 audit。請用戶重試即可。
+- **5xx 會記在 request log。** 帳號欄位 `accountNumber` 會被遮蔽（DEF-023）。如果同一位用戶反覆遇到，用 `SHOW ENGINE INNODB STATUS` 的 `LATEST DETECTED DEADLOCK` 看兩邊的語句，再交由開發處理。
+
 ---
 
 ## 7. 備份

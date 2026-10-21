@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { SupplierAddressService } from "../src/modules/supplier/SupplierAddressService.js";
+import { normalizeAddress, SupplierAddressService } from "../src/modules/supplier/SupplierAddressService.js";
 
 function addressRow(overrides = {}) {
   return {
@@ -67,4 +67,17 @@ test("TC-043 (PARTY-004): address deactivate clears primary flags and preserves 
   assert.equal(result.status, "inactive");
   assert.ok(events.some(([, sql]) => sql?.includes("SET is_primary = 0") && sql?.includes("address_id = ?")));
   assert.equal(events.some(([, sql]) => sql?.includes("DELETE FROM supplier_address_purposes")), false);
+});
+
+test("DEF-005 (HD-116 A): each address text field is limited to its column length and refuses control characters, as contacts and identifiers do", () => {
+  const limits = { label: 100, addressLine1: 190, addressLine2: 190, addressLine3: 190, city: 100, stateRegion: 100, postalCode: 100, phone: 50, notes: 500 };
+  for (const [field, maxLength] of Object.entries(limits)) {
+    // 4-byte 字元按字元計，唔係按 UTF-16 code unit。
+    assert.equal(normalizeAddress({ [field]: "😀".repeat(maxLength) })[field], "😀".repeat(maxLength), `${field}: the maximum is accepted`);
+    for (const value of ["a".repeat(maxLength + 1), "line\nbreak", "tab\there", "x\u0000", "x\u007f", "x\u0085"]) {
+      assert.throws(() => normalizeAddress({ [field]: value }),
+        (error) => error.publicCode === "SUPPLIER_ADDRESS_INVALID" && error.details?.field === field, `${field}: ${JSON.stringify(value).slice(0, 20)}`);
+    }
+  }
+  assert.equal(normalizeAddress({ label: "  Office  " }).label, "Office", "control: surrounding spaces are still trimmed");
 });

@@ -110,3 +110,16 @@ Fix, per HD-115 A:
   - The test checks that InnoDB's latest deadlock happened after the test started and on the expected unique index.
   - The two responses must be 201/200 and 409, and the retry must be logged.
   - The two requests come from two different users. Requests from one user queue on that user's row first.
+
+## HD-116 A: dispositions (2026-10-21)
+
+Fixed in this change:
+
+- **DEF-003.** Supplier completeness reads the default currency through the Business Master provider (`getCurrencyHistory`) instead of querying `currencies`. The query handler now builds a real provider, and a unit test pins that no raw `currencies` query remains.
+- **DEF-005.** Address text fields are limited to their column lengths, counted in characters, and refuse C0/C1 control characters, like contacts and identifiers. The error is `400 SUPPLIER_ADDRESS_INVALID` with `details.field`. HTTP already limited length, but the CSV import path did not. Existing rows are not touched. The HD-112 audit test that sent control characters in an address now expects this refusal.
+- **DEF-006.** Identifier update and delete check `affectedRows` and answer `VERSION_CONFLICT` when no row matched.
+- **DEF-010.** `BANK_ACCOUNT_MISSING` follows the sibling convention: an absent flag means missing. Bank is deployed, so the create response, the detail and the completeness check all evaluate it. Detail and completeness test for an active bank account, using the same definition as the list's `missingBank` filter. CORE-006 lists Bank among the warning-only data.
+- **DEF-024.** `bank_operations.md` §6.3 now covers online Bank API writes as well as the rotation tools.
+- **DEF-030.** `SUPPLIER_DUPLICATE_NAME_THRESHOLD` now reaches every handler that runs the similar-name check, and the import worker. The offline similar-name report reads it too, with the server's validation.
+
+Deferred to release, handed to their owners, or accepted: see `defect_handoffs.md`.
