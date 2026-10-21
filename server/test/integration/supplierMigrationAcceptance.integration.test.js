@@ -374,3 +374,73 @@ integrationTest("TC-005 (MIG-005): each bad Supplier security or limit setting s
     }
   }
 });
+
+integrationTest("TC-006 (MIG-006): adding Supplier to an existing deployment changes no existing table or row, writes only Supplier tables and its permission seed, drops nothing it does not own, and the server starts on the upgraded schema", async (t) => {
+  const { name, connection } = await scratchDatabase(t);
+  const migrations = await allMigrations();
+  // 未有 Supplier 嘅部署：其他模組嘅 migration 全部做咗，再加啲核心資料（用戶、角色、用戶 audit）。
+  for (const migration of migrations.filter((file) => !isSupplierMigration(file))) await apply(connection, migration);
+  const [user] = await connection.query(
+    "INSERT INTO users (username, password_hash, created_at, updated_at) VALUES ('mig006-operator', 'not-a-real-hash', 1, 1)");
+  const [[role]] = await connection.query("SELECT id FROM roles WHERE name = 'system-admin'");
+  await connection.query("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)", [user.insertId, role.id]);
+  await connection.query(
+    `INSERT INTO user_audit_logs (action, actor_username, occurred_at, target_label, target_type)
+     VALUES ('user.create', 'mig006-operator', 1, 'mig006-operator', 'user')`);
+  const before = await snapshot(connection, name);
+  assert.ok(before.users.data.length > 0 && before.user_audit_logs.data.length > 0, "control: the existing data is in the snapshot");
+
+  const recorder = recording(connection);
+  for (const migration of migrations.filter(isSupplierMigration)) await apply(recorder.connection, migration);
+  const after = await snapshot(connection, name);
+
+  // 1. 原有嘅表：schema 唔變；資料唔變，除咗權限 seed 加嘅行（只可以加，唔可以改或者刪）。
+  const supplierTable = (table) => table === "suppliers" || table.startsWith("supplier_");
+  for (const [table, previous] of Object.entries(before)) {
+    if (table === "#triggers") {
+      assert.deepEqual(after[table], previous, "triggers unchanged");
+      continue;
+    }
+    assert.equal(after[table]?.schema, previous.schema, `${table}: schema unchanged`);
+    if (table === "permissions" || table === "role_permissions") {
+      const kept = new Set(after[table].data);
+      assert.deepEqual(previous.data.filter((row) => !kept.has(row)), [], `${table}: every existing row kept as it was`);
+      continue;
+    }
+    assert.deepEqual(after[table].data, previous.data, `${table}: rows unchanged`);
+  }
+  const [added] = await connection.query(
+    `SELECT p.name AS name FROM permissions p WHERE p.name LIKE 'supplier.%' ORDER BY p.name`);
+  assert.deepEqual(added.map((row) => row.name), SUPPLIER_PERMISSIONS);
+  assert.equal(after.permissions.data.length - before.permissions.data.length, SUPPLIER_PERMISSIONS.length, "only the six Supplier permissions are new");
+  assert.equal(after.role_permissions.data.length - before.role_permissions.data.length, SUPPLIER_PERMISSIONS.length,
+    "only their six system-admin grants are new");
+  const newTables = Object.keys(after).filter((table) => !(table in before));
+  assert.ok(newTables.length > 0 && newTables.every(supplierTable), `only Supplier tables are new: ${newTables.join(", ")}`);
+
+  // 2. 寫入：Supplier 自己嘅表，加權限 seed 嘅 INSERT；冇 drop table、冇 drop column、冇 TRUNCATE；
+  //    唯一嘅 DROP INDEX 係 0087 重排自己嘅 index（HD-114 A）。
+  const target = (sql) => /^(?:CREATE TABLE(?: IF NOT EXISTS)?|ALTER TABLE|INSERT(?: IGNORE)? INTO|UPDATE|DELETE FROM|REPLACE INTO|DROP TABLE(?: IF EXISTS)?|TRUNCATE(?: TABLE)?)\s+`?(\w+)`?/iu.exec(sql)?.[1];
+  const outside = recorder.writes.filter((sql) => {
+    const table = target(sql);
+    if (supplierTable(table ?? "")) return false;
+    return !(/^INSERT INTO (permissions|role_permissions)\b/iu.test(sql));
+  });
+  assert.deepEqual(outside, [], "no Supplier migration writes another module's table, except inserting its permission seed");
+  assert.ok(recorder.writes.every((sql) => target(sql)), `every write names its table: ${recorder.writes.filter((sql) => !target(sql)).join(" | ")}`);
+  assert.deepEqual(recorder.writes.filter((sql) => /\b(DROP TABLE|DROP COLUMN|TRUNCATE)\b/iu.test(sql)), [], "nothing dropped or truncated");
+  assert.deepEqual(recorder.writes.filter((sql) => /\bDROP (INDEX|FOREIGN KEY)\b/iu.test(sql)).map(target), ["supplier_sku_refs"],
+    "the only index drop is 0087's reorder of its own table");
+
+  // 3. 新 schema 讀得：真 server 用升級咗嘅 database 起得到（SupplierCoreProvider 係 eager，唔 READY 就起唔到）。
+  const server = await startServer(name, bankEnv());
+  let stopped;
+  try {
+    assert.equal(server.listening, true, `the server must start on the upgraded schema: ${server.code} ${server.output.stderr}`);
+    const health = await fetch(`http://127.0.0.1:${server.port}/api/v1/health`);
+    assert.equal(health.status, 200);
+  } finally {
+    stopped = await server.stop();
+  }
+  assert.equal(stopped, 0, "a clean shutdown");
+});
