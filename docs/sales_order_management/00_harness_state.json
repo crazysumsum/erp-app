@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1277,
+  "revision": 1279,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -10954,6 +10954,54 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-SALES-FULFILLMENT-QUANTITY-COMPONENT-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "997d2c6795249b13ef3a317afa47c56e42b647e7aea6f27536abb516034f2010",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/sales-fulfillment-quantity-component-r1-reviewer-proof.json SHA256f31162252270da12125dab0964363b0ecab71abfa542472b76e9ca9d39e85f47; Purequantitycomponent16PASS only, notactualprovider/native.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-SALES-FULFILLMENT-SOURCE-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "59d4212c29ec050e959b365d9427c1c5ffa24f418660c142ec7bd4fb06b1c14a",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/sales-fulfillment-service-r2-reviewer-proof.json SHA2568143b094ec86336b77f158eaa31e3162ffe93f8a2909e30fe48730bc38252821; SF-R2-1 malformedownerDTO guards required; preserve actualfindings/oldsourcebaseline. NoGatequalification.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-SALES-FULFILLMENT-SOURCE-R3",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "0bbf566b4faaae95ac0b0c2891be5541e4fc74503de1eae97e220459eee194c9",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/sales-fulfillment-service-r3-reviewer-proof.json SHA2560a23f0126ecb34c924bfbbd0f9795cc00b83468c9ec0e9c7e614ebd2c387f676; Exact10files source+SalescomponentONLY; 85unit/19native0skip, native12actualread/claim/refusals+7InventorydoubleSalesSQL. SF-R2-1 closedRED-r5/GREEN-r8. NotTask004DoD/0B/actualInventoryjoint/P4CI/Gate.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P0-SALES-PROVIDER-TRANSPLANT-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "fc24110e462eae09e3c8ae409c01eefb54793f2a0d01fd470bf19ab47ca310c2",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p0-sales-provider-source-contribution-r1-transplant-reviewer-proof.json SHA256a72b6c4d17c27a84f01155e0509face8966965c0fcf04c52fc2641d4c1023f89; ExactP0b5afe3ca patch7samebytes+3minimalbaselinehunks:Audit2actions/new503/Config40, noP4Export/41. Independentapply--check0 only; noownerWwrites/apply/nativeTask004/0B/CI/Gate.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -14366,6 +14414,39 @@
       "subject": "ActualauthorizedP0coordination: namedSalesTASK004provider contribution requested byowner, feasibility reviewed; requiredtwo-stage/Inventoryreverse/zeroLine/ItemBaseUOM ABI stillunfrozen; no competingownerwrites",
       "status": "BLOCKED",
       "source_ref": "docs/sales_order_management/implementation/113_p0_sales_provider_handoff.md; actualmessages toexistinghuman-authorized fulfillment and shipping chat01a15862-9933-7e50-8e10-4015cf35d078, observedP0eb44ea5b+Task003WIP. Independentfeasibilityproofa2b0b184 no productapproval; askownerABI, notnewhuman decision."
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Resume authorized named Sales provider contribution after actual P0 DTO/codec handoff and renewed Sam instruction; implementation under independent source review, no Task004/0B/P4 completion",
+      "code_commit": "93088d83b3e556a3ea6651b2e275cb141212df0f",
+      "spec_baseline": "b791cec4ed059697c859b00b49c94d8d8b35c13ca031c8a8ab16ff633a642ba1",
+      "source_fingerprint": "a30fb6d8f0c250f897c9b9444088e809dd4241fc3d2a31c858f6043da27a1bcb",
+      "status": "BLOCKED",
+      "source_ref": "Actual Sam latest: 請繼續完成 Sales provider，與 Fulfillment P0 對齊並完成 P4 聯合驗證、CI 及所有 Gate，通過後直接合併到 main。 P0 explicitowner04wire/receipt helper ACK inclresult+reservationStates, R11/R2 history retained. Item namedsource b5afe3ca SHA5ed3f26f ready underownerR13; InventoryTask005actualsource notready. NewSalesService hash59d4212c independentR2review ongoing; unit26 + nativeR1sixnegativePASS are onlycomponents, notTaskDoD; nativeR2failedframeworkcauseassertion retained, r3running. Ownedmysql71339/version26.7/socketowned37e933 readonlyreconciled, no reset/ownerWwrites.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-21T01:03:56.483288Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "93088d83b3e556a3ea6651b2e275cb141212df0f",
+      "spec_baseline": "b791cec4ed059697c859b00b49c94d8d8b35c13ca031c8a8ab16ff633a642ba1",
+      "source_fingerprint": "f661c7b80452d9fc2e7d02b1c13762c9d1cf95d287057683a35fa37f16268ba3",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-21T01:17:50.921914Z",
+      "subject": "Named Sales provider source/component implementation complete and independentlyreviewed; exactP0baseline10filepatch separatelyreviewed; no fullownerqualification",
+      "status": "PASS",
+      "source_ref": "implementation/115_sales_provider_source_contribution.md. private relatedunit-r3 85PASS0skip; nativegreen-r8 19PASS0skip split12actualSales+Itemread/claim/refusals vs7InventorydoubleSQLcomponent. Actualowned26.7/socket/pid71339 reconciled; exclusive-sf schemascleaned. Source0bbf566b unchanged; lintPASS. NativeR2assertion/RED-r4fixtureerrors/RED-r5twoDTOTypeErrors retained; no test/evidence deletion. P0patchfc24110e manifest015b8fe6 basedb5afe3ca apply--check0 noowner mutation."
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "93088d83b3e556a3ea6651b2e275cb141212df0f",
+      "spec_baseline": "b791cec4ed059697c859b00b49c94d8d8b35c13ca031c8a8ab16ff633a642ba1",
+      "source_fingerprint": "f661c7b80452d9fc2e7d02b1c13762c9d1cf95d287057683a35fa37f16268ba3",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-21T01:17:50.921914Z",
+      "subject": "P4 and (fulfillment-shipping-management,TASK-004) realconsumer/native/Checkpoint0B stillawaitactualInventoryTask005 source+readiness; ItemTask006b5afe3ca ready butnotwholesalecopied",
+      "status": "BLOCKED",
+      "source_ref": "ActualauthorizedP0chat handoff: Task005actualInventoryhelper beingimplemented; sourcehandoffonly cannotqualify0B. P0mustapplyreviewednamedpatch, locallyretestbaseline40catalog andactualInventoryroot/member/leg receipts/reversal/sharedbalance/rollback/fullcapacity. NoCIrunorPR/merge claimed; all45/fullcapacity/Playwright/phase review/unchangedstandardGate preserved."
     }
   ],
   "pending_decisions": [
@@ -18400,5 +18481,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "AwaitactualP0Task005/006ABI response andfinishnamedSalesTask004contributioninthisworktree underexistinghuman-authorizedcoordination; implementation113 listsimmutablemappingroots/twostagejournal/exactzeroLines/currentreads/ItemBaseUOM. SourcecontributionadoptedonlyincompleteP0PR; noearlyprovidermerge. Saleshashpartialcomponent reviewed78186699/native17+relatedunit65PASS0skip,Task058stillBLOCKED,notphaseCI/Gate. PreserveHD008/009singleinventory:0088exactinP0,0089/90Sales,P0sole91–99,withdrawnold91–93exitfinalcandidate. OnceactualfullP0mainready,reconcileownerhistoriesandcanonicalbindings,integratefreshmain,finishcoordinator/participant/original39+6/fullcapacity/Playwright/currentCI/independentphase/unchangedMERGE_READY thenmergeunderexistingSamauthority. No additionalhuman decision pending; no fullGatePASS claimed."
+  "next_safe_action": "DelivercommittedexactnamedSalesproviderpatchfc24110e+manifest015b8fe6+transplantreviewa72b6c4d toauthorizedP0owner, nowholecommit/filecopy ofP4Export. P0applies10paths includingminimalAudit/Error/Config40, executesowncurrentunit+actualInventoryhelper consumer/native/0B/fullcapacity/currentCI/review/fullP0merge. AwaitactualTask005source; Salescomponent85+19withtestdoublesnotfullTask004/0B/P4PASS. OnceformalP0mainready reconcilecanonicalhistory/designplanbindings, integratefreshmainandwithdrawold91–93duplicateinstallers, implementrealArchiveparticipant/coordinator/fullP4original39+6+fullcapacity+Playwright/currentCI/phase review/unchangedMERGE_READY thenmergeunderSamstandingauthority. No newhuman decisionpending; preserveallpriorrefs/failures/raw/evidence."
 }

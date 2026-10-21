@@ -9,6 +9,7 @@ const BUILDERS = Object.freeze({ "sales_quotation.created": DOCUMENT, "sales_quo
   "sales_order.created": DOCUMENT, "sales_order.updated": DOCUMENT, "sales_quotation.issued": TRANSITION,
   "sales_quotation.expired": TRANSITION, "sales_quotation.cancelled": TRANSITION, "sales_quotation.converted": CONVERSION,
   "sales_order.withdrawn": [...TRANSITION,"commitmentHash"], "sales_order.cancelled": [...TRANSITION,"commitmentHash"], "sales_order.remaining_closed": [...TRANSITION,"commitmentHash"],
+  "sales_order.fulfillment_confirmed": [...TRANSITION,"commitmentHash"], "sales_order.fulfillment_reversed": [...TRANSITION,"commitmentHash"],
   "sales_order.backorder_allocated": [...TRANSITION,"commitmentHash"], "sales_order.backorder_deferred": [...TRANSITION,"commitmentHash"], "sales_order.backorder_stale": [...TRANSITION,"commitmentHash"],
   "sales_order.confirm_started": TRANSITION, "sales_order.confirmed": TRANSITION, "sales_order.confirm_failed": TRANSITION,
   "sales_import.uploaded": ["version"], "sales_import.confirmed": TRANSITION, "sales_import.cancelled": TRANSITION,

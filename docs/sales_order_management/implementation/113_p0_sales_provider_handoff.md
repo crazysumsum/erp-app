@@ -40,3 +40,73 @@ These are engineering ABI coordination within the approved provider-owner scope;
 ## Validation boundary
 
 Independent feasibility review: `/root/def016_runtime_recovery_review` examined actual 0069/0078, Sales serializers, existing Inventory methods and the approved P0 design. Private proof `phase4-private/p0-task004-sales-provider-feasibility-r1-reviewer-proof.json`, SHA256 `a2b0b184738bd81dfcb40ac3540df44377123e4396e2e91d488813a23749ba83`. This is feasibility feedback, not approval of unimplemented source. Required completion remains source-frozen independent review, real consumer contract tests, native Issue/Restore, exact-set failure rollback, concurrent replay and lock-order evidence in the complete P0 candidate.
+
+## 2026-10-20 concrete Sales-side wire (R2 engineering proposal)
+
+Owner wire source: P0 `implementation/04_provider_wire_coordination.md`. The proposed common rules are adopted: canonical safe decimal-string IDs/quantities, positive safe integer Number versions, explicit zero selected Lines with empty reservations, and the Item batch profile method named there. This supersedes the earlier open questions only when both owner reviews are recorded; it is not implemented-source acceptance.
+
+### Lock / intent
+
+```js
+{
+  actor: {userId:"9", serviceName:"", claimedRoles:["operator"],
+          claimedPermissions:["fulfillment.view","fulfillment.operation"]},
+  purpose:"SHIPMENT_CONFIRMED", // or SHIPMENT_REVERSED / CLAIM
+  salesOrderId:"801", expectedOrderVersion:3,
+  // Shipment intents only; CLAIM has none of these three fields:
+  eventId:"00000000-0000-4000-8000-000000000001", shipmentId:"201",
+  inventoryRequestHash:"a".repeat(64), // owner hash of the complete native Inventory payload
+  // SHIPMENT_REVERSED only, original confirmation event from Phase-A intent / nonlocking discovery:
+  // originalConfirmationEventId:"...",
+  lines:[
+    {salesOrderLineId:"901", expectedVersion:2, baseQuantity:"6", reservations:[
+      {claimId:"121",inventoryReservationId:"301",expectedVersion:4,baseQuantity:"6"}
+    ]},
+    {salesOrderLineId:"902",expectedVersion:2,baseQuantity:"0",reservations:[]}
+  ]
+}
+```
+
+The CLAIM variant uses the same selected Line/Reservation precondition shape to bind allocation/claim intent but writes no result journal. An empty source event cannot authorize apply. For Reversal each positive member also carries the original Inventory operation and original Issue/movement references from the owner's original immutable Issue references, exactly as defined in P0 wire04. Include those immutable references in the Sales intent hash; do not hash only Line IDs.
+
+Actor user ID must match actual authenticated request context; re-read current active user/roles/permissions. No service-name bearer or caller-selected permission. All methods require `fulfillment.view`; CLAIM/Confirm additionally require `fulfillment.operation`, Reversal requires `fulfillment.reverse`. Recovery must supply an explicitly trusted internal adapter bound to the original fresh actor rather than manufacture HTTP authentication or caller capabilities.
+
+Lock result:
+
+```js
+{replay:false, order:{/* exact §6.1 projection, with Line.version */}}
+// or, completed original intent, before repeated Inventory work:
+{replay:true, result:{orderId:"801",status:"PARTIALLY_FULFILLED",version:4,
+  lines:[/* exact original quantity projections */]}}
+```
+
+No token is serialized. The provider privately binds the full normalized intent, actor, claimed operation, current locked Sales rows, and transaction identity. The caller retains the lock command as the apply `intent` below. A second distinct intent in the same bound scope is rejected, and a completed replay must not post Inventory again.
+
+### Apply and result
+
+```js
+{
+  intent: {/* exact normalized Shipment lock command above */},
+  inventoryResult: {/* complete native root + lines/member result from P0 wire04 */}
+}
+// Successful original or exact replay:
+{orderId:"801",status:"PARTIALLY_FULFILLED",version:4,lines:[
+  {salesOrderLineId:"901",version:3,orderedBaseQuantity:"10",
+   reservedOutstandingBaseQuantity:"4",backorderedBaseQuantity:"0",
+   fulfilledBaseQuantity:"6",cancelledBaseQuantity:"0"},
+  {salesOrderLineId:"902",version:2,orderedBaseQuantity:"2",
+   reservedOutstandingBaseQuantity:"2",backorderedBaseQuantity:"0",
+   fulfilledBaseQuantity:"0",cancelledBaseQuantity:"0"}
+]}
+```
+
+Return precisely the selected Line set, including unchanged zero Lines; derive Order state from the complete locked Sales Line set. Increment business Line versions only for changed positive Lines; increment the Order once. The result is authoritative; the consumer records it without independently incrementing any versions. Exact replay returns the stored result even if later unrelated shipments changed the Order.
+
+The first request hash binds normalized full intent (fixed FULFILLMENT/SHIPMENT source, actor, action, source event, shipment, order/Line versions, zero Lines and complete member quantities/versions/original references). The final hash additionally binds the complete validated Inventory receipt. Store both in existing0069 JSON fields and keep a dedicated `FULFILLMENT_SOURCE` target outside public operation lookup. No mapping original reserve provenance is overwritten. Reversal compares its original Sales confirm journal and original Issue quantities before Sales/Inventory effects. A mismatched input, missing member, unsafe ID or unverified native receipt cannot produce a successful apply.
+
+GET keeps the approved `(orderId,{atMs})` signature and uses real context authentication/fixed read purpose. It returns only the §6.1 allowlist and Item-owned Base UOM profile; the Sales sale-UOM mapping never substitutes for Base UOM.
+
+Remaining engineering freeze: persist Inventory `source_module` as existing `FULFILLMENT` uppercase; owner must name the new root/member command types and exact completed receipt shape for native verification. This request was sent to P0 alongside the Sales-only original confirmation event field. No change to migration inventory or approved quantity rules is proposed.
+
+
+R2 review `p0-task004-provider-wire-r2-engineering-review.json` SHA256 `ccc6fc34a24a3123a1eca4e4f3b6c412dc52dd7048bed32dee07fda33ae1df39` preserved the original findings. P0 subsequently specified bounded per-leg0056 receipts and atomic Reallocate under one source identity, independently reviewed by its R11. The Inventory-owned replay verifier (`inventoryFulfillment.verifyFulfillmentBatchReceiptInTransaction`) will perform actual native root/member/leg verification; Sales compares its exact returned receipt with the supplied result and verifies only Sales quantities/mapping ownership. No parallel Sales codec or raw Inventory table implementation is introduced. Reversal must use its own allowed states; GET/CLAIM positive-outstanding eligibility must not reject a valid COMPLETED/CLOSED reversal or a zero selected Line. Phase-B takes Sales locks before Fulfillment/Shipment locks, then revalidates any Phase-A/discovered original event.
