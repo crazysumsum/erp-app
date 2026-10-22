@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 83,
+  "revision": 87,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "eed2eb831ce50d0717992bcc25f04318dd652b16b7f662b3b5f81f9797b5a545",
     "plan": "f3b9dacf3b513916e6f7f349e15c0fcc035be2bc2995761624e7adb7b6238b05",
-    "code_commit": "25fc3e4b68f92d535790360c769e906d5bf46c4a",
-    "source_fingerprint": "c3694909a3a1beaf56ba1c97622eb78d1cee2c537b3791ff4eff2487d2dd089e",
+    "code_commit": "d787e03465d644c79eb2e62400575c4033719ca6",
+    "source_fingerprint": "4461a1c86d8c504ba9d51b069f3696728d8d586002858eaf80d76bccd3963648",
     "worktree": "/private/tmp/erp-fulfillment-p0",
-    "default_commit": "81a873fc941d54c634772c46641db95b552bf298",
+    "default_commit": "94d5297260c4fe460cd9e1b84cfbfe14743a6f1f",
     "mode_entry_commit": "76223f40480d94a1d3a2ae6e0e7b91292bd98b82"
   },
   "runtime": {
@@ -22,7 +22,7 @@
     "owner": "/root fulfillment P0 implementer, actual Sam complete-P0/full-verification authority",
     "resources": {
       "workspace": "/private/tmp/erp-fulfillment-p0",
-      "mysql-schema": "fulfillment_p0_legacy_13a2e9ea",
+      "mysql-schema": "fulfillment_p0_legacy_47511b0a",
       "mysql-socket": "/var/folders/gk/rdtb5_px4z9gm7m1cm2q3xg40000gn/T/erp-fulfillment-p0-mysql-ton56on7/mysql.sock",
       "web-port": "Owned fresh P0 Playwright API49925/client49926; reuseExistingServer=false; released by configured webServer teardown",
       "mysql-native-full-core": "Currentresume-core receipt/private/tmp/fulfillment-p0-resume-core.json; same97registrymigrationbaseline/zeroSalesBackorderFulfillpreflight; usedonlyremainingTC042r2; earlieractualevidencekeepsoriginalschemaidentity.",
@@ -31,7 +31,9 @@
       "mysql-interrupted-core": "fulfillment_p0_legacy_5bc05842; originalfinal-core receipt and all data retained; completedtyped/fullR8tests ran here before TC042 interruption.",
       "capacity-workspace": "/private/tmp/erp-fulfillment-p0-capacity-runtime; detachedce4/sourceFPf9de; freshignoredstorage; dependencylinksread-onlyreuse",
       "capacity-mysql-schema": "fulfillment_p0_legacy_1e977cca",
-      "capacity-control-mysql-schema": "fulfillment_p0_legacy_46b4819e"
+      "capacity-control-mysql-schema": "fulfillment_p0_legacy_46b4819e",
+      "mysql-current-regression": "Fresh same-source/PLAN paired detachedruntime /private/tmp/erp-fulfillment-p0-regression-runtime; sourceFP4461; new97-registry/zero-business-row preflight; prior5bc witholdaborted2000orderjob preserved.",
+      "mysql-stale-import-core": "Original5bc retained: job217 created01:06:13/processstarted01:07:34/terminal02:16:21 duringnewfailedfullrun; previouscapacityinterruption. No deletion, reset or selector change."
     },
     "lease_ref": null
   },
@@ -2260,6 +2262,42 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-048-CI-REMEDIATION-DIRECTION",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "c3694909a3a1beaf56ba1c97622eb78d1cee2c537b3791ff4eff2487d2dd089e",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/22_p0_completion.md#first-current-candidate-ci-failure--def-002",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-049-FINAL-SOURCE-INTEGRATION",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "4461a1c86d8c504ba9d51b069f3696728d8d586002858eaf80d76bccd3963648",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/22_p0_completion.md#integrated-remediation-candidate",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-050-FRESH-TYPED-EVIDENCE",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "4461a1c86d8c504ba9d51b069f3696728d8d586002858eaf80d76bccd3963648",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/22_p0_completion.md#integrated-remediation-candidate",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -2864,6 +2902,22 @@
       "idempotency_key": "p0-ci-25fc3e4b-20261022",
       "status": "CONFIRMED",
       "source_ref": "Actualdispatch204 and authenticatedGitHubrun39706733648 queued/head25fc3e4b68f92d535790360c769e906d5bf46c4a; https://github.com/crazysumsum/erp-app/actions/runs/39706733648; dispatched execution only, notCI PASS."
+    },
+    {
+      "id": "P0-FRESH-REGRESSION-RUNTIME",
+      "kind": "MIGRATION",
+      "target": "New owned UUID schema + detached same-source runtime at d787; preserve all prior DB/files",
+      "idempotency_key": "p0-regression-core-r1-d787-fresh",
+      "status": "CONFIRMED",
+      "source_ref": "/private/tmp/fulfillment-p0-regression-core.json; /private/tmp/fulfillment-p0-regression-preflight.json; actual97registry/zero6businessgroups; runtimeHEADd787/FP4461; all earlierDB/filespreserved"
+    },
+    {
+      "id": "P0-PUBLISH-CI-REMEDIATION",
+      "kind": "PUSH",
+      "target": "refs/heads/codex/fulfillment-p0-foundation frozen source4461 candidate; GitHub fullCI inparallelwithownedfreshlocalregression",
+      "idempotency_key": "p0-source4461-ci-remediation-publish-r1",
+      "status": "PLANNED",
+      "source_ref": "Sam explicit push/draftP0 authority; strict184/browser2/lint/build/auditPASS+actual0C/H/Msource/evidence reviews; noPRunlessfullregression+allTASK+currentCIpass"
     }
   ],
   "evidence_files": [
@@ -2871,7 +2925,13 @@
     "evidence/20261022T005157-39ce2d24de86/run.json",
     "evidence/20261022T005238-ff2fd52fdacf/run.json",
     "evidence/20261022T005244-0b4173163621/run.json",
-    "evidence/20261022T005246-a77af95d69e5/run.json"
+    "evidence/20261022T005246-a77af95d69e5/run.json",
+    "evidence/20261022T015538-508816fdf155/run.json",
+    "evidence/20261022T015905-d43fce202286/run.json",
+    "evidence/20261022T020152-23c3efa24a39/run.json",
+    "evidence/20261022T020208-17688f35a688/run.json",
+    "evidence/20261022T020217-8f6efd9e50bc/run.json",
+    "evidence/20261022T020220-b89524408b3b/run.json"
   ],
   "defects": [
     {
@@ -2900,7 +2960,18 @@
       ],
       "closure_evidence": [],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-003",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "source_ids": [
+        "PHASE-001",
+        "TASK-011"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Execute fresh typedP0/browser and all full gates on CI fixture/transport+equivalentMaps remediation; DEF002 remainsOPEN until actual exactnewcandidateCI passes. Preserve old25fcCI FAIL and all history; noPR yet."
+  "next_safe_action": "Freeze source4461 candidate with truthful failed/current-pending evidence; push+dispatch fullCI while freshpairedlocalfullregressionruns. No draftPR until actualfreshfullgates/independentclosure/allTASK/currentCI PASS; preserve DEF002/003 and failures."
 }

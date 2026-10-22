@@ -2,7 +2,9 @@
 
 ## Current candidate and scope
 
-IMPLEMENT, PHASE-001 / TASK001–011. All P0 TASK001–011 DONE after actual developer verification and final independent closure review. Frozen-candidate CI remains required before draft PR. Source HEADce4a2c438a1baa6fc5a14d63eab05ec763ad67ef / main81a873fc941d54c634772c46641db95b552bf298 / FPf9de149c2841b0d40b56e36a9135c27a5786d5db0542f4593a708022a85b247f. DESIGN eed2eb831ce50d0717992bcc25f04318dd652b16b7f662b3b5f81f9797b5a545; PLAN f3b9dacf3b513916e6f7f349e15c0fcc035be2bc2995761624e7adb7b6238b05.
+IMPLEMENT, PHASE-001 / TASK001–011. TASK011 reopened for DEF-002 after first published candidate25fc failed mandatory CI. Current integrated source HEADd787e03465d644c79eb2e62400575c4033719ca6 / main94d52972 / FP4461a1c86d8c504ba9d51b069f3696728d8d586002858eaf80d76bccd3963648. Strict developer184/browser2/lint/build/auditPASS are complete; full local regression and newcandidateCI remain required. TASK011/DEF002/DEF003 stay open; no draftPR yet. DESIGN eed2eb831ce50d0717992bcc25f04318dd652b16b7f662b3b5f81f9797b5a545; PLAN f3b9dacf3b513916e6f7f349e15c0fcc035be2bc2995761624e7adb7b6238b05 remain unchanged.
+
+The local completion/evidence sections below preserve the earlier f9de baseline and its recovery history. They do not establish PASS for the new integrated source. The final DEF-002 section records actual failedCI and ongoing remediation.
 
 P0 delivers permissions/public errors, deterministic decimal/quantity rules, durable idempotent operations, owner-verified Sales/Inventory/Customer/Item contracts, active/archive schema, and trusted transaction/ordered-lock/lifecycle integration. Nine new migrations: Sales-owned two-table0088 foundation and Fulfillment0091/0092/0093/0095–0099. Existing85migrationfiles unchanged; no0094no-op or Sales0089/0090. Sales Archive coordinator/participant remains outside P0; canonical participant TASK042/P3-T09 is pending. No fulfillment business route/menu/job is introduced by this foundation.
 
@@ -94,3 +96,40 @@ Authorizedpush createdthebranch and actualremotehead matched25fc. Workflowdispat
 Exact published25fc3e4b, GitHub run39706733648 completed FAILURE. Audit/lint/frontendbuild/clientcoverage/Playwright/TC042 passed; coverage shards1/2/4 failed and strict Test aggregate failed, mergedcoverage skipped. No draftPR created. Actual logs are private `/private/tmp/fulfillment-p0-ci-job-{119588418637,119588418683,119588418725}.log`; original failedrun remains authoritative. Shard1 actual ER_ACCESS_DENIED_ERROR: low-privilege fixture created account@localhost while Docker peer is172.18.0.1. Shard4 child exited1; independent source inspection identified child DB_USER=erp_user versus admin-created UUIDfixture schema (exact error code not in original log). Shard2 legal5000Reservation test hit unchanged20000ms transaction abort; existing100member/5000legcase passed allocate10211ms/reallocate19480ms undercoverage. Local socket baseline had allocate7549/reallocate10236ms with135425transactionqueries. No threshold/skip/retry exemption is adopted.
 
 Surgical fixture corrections select exact MySQL-observed client host (never wildcard) for the temporary SELECT/INSERT/UPDATE/DELETE-only app account and use ownedfixture credentials in registration children. All8 affected native tests passed zero skips locally (r2). Initial sandbox-restricted r1 was EPERM before DB access, retained as infrastructure failure. Registration diagnostics expose only a bounded error code, never child env/full stderr. Two existing row lookups in5000member paths use equivalent ID maps to remove quadratic scans; unchanged capacity case passed locally allocate7316/reallocate9740ms, same135425queries and20000ms budget. A separate diagnostic TCP attempt was rejected by the owned-runtime socket guard before fixture creation, not a capacity pass. An isolated10000 SELECT1 transport diagnostic observed socket335ms versus loopbackTCP489ms; it is diagnostic only, not full capacity or CI proof. Current candidate remains NOT_READY pending root-cause correction, full new-source verification, independent review and exact newcandidateCI.
+
+
+## Integrated remediation candidate
+
+Fresh fetch advanced main81a873fc→94d52972 (Supplier PR265,9paths); clean ort integration atd787e034 retained all unchanged historical migrations. New Supplier startup schema/index/settings checks are included in full actual application/browser/native regression; no Fulfillment business/API/schema/quantity/transaction contract changed. Independent five-file remediation review0C/H/M had one LOW: `_` in MySQL Host can be a wildcard. Exact-host regex now excludes it; localhost/IP continue supported. Original review FPc369 and typed184PASS run20261022T015538-508816fdf155 are preserved as pre-final correction/integration evidence, not re-labelled as currentFP4461 evidence.
+
+Only native coverage uses the mounted CI service socket; existing TCP port, all test commands/cases/floors/deadlines and the TC042 TCP runtime stay unchanged. Preflight asserts actual @@socket and same configured DB_USER plus localhost peer. Actual26.7 container logs identify `/var/run/mysqld/mysqld.sock`; finalCI must verify selected account and all gates, with no TCP fallback. Service bind-mount mechanism follows [GitHub official services.volumes syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idservicesservice_idvolumes). This is an isolated CI runtime change, no deployment default change or proof that transport alone fixes capacity.
+
+
+## Fresh integrated typed results
+
+Actual separate reviewer sourceintegration+LOWclosure and5freshtypedruns APPROVED0C/H/M (source review also0LOW). Native184PASS/0FAIL/0SKIP and realPlaywright2PASS/0FAIL/0SKIP, lint/build/auditPASS bind HEADd787/FP4461/PLANf3b9. Fullregression/capacity/currentCI stillpending. Registered all5actualrunrefs; previousfailures and oldrecords preserved.
+
+- `fulfillment-p0-developer`: `evidence/20261022T015905-d43fce202286/run.json`, runSHA256 `e5bd523308924fd2f529200cdf69bce80c871f5e3d6c50f4458241e75c266512`.
+
+- `fulfillment-p0-browser`: `evidence/20261022T020152-23c3efa24a39/run.json`, runSHA256 `f3ea83fa97b04f904d89699cd0486b6fffe5205168bd33d7e36228aa98594e79`.
+
+- `lint`: `evidence/20261022T020208-17688f35a688/run.json`, runSHA256 `daddea552159c8f8381a3be87b965d37dc6687c1dc8618dd47c0bed0ac54376f`.
+
+- `client-build`: `evidence/20261022T020217-8f6efd9e50bc/run.json`, runSHA256 `ac299fc6b927665d5720a5c7a4687ce7f48021ffb7ca369bcff9c7b0af50373e`.
+
+- `security-audit`: `evidence/20261022T020220-b89524408b3b/run.json`, runSHA256 `c0483f820dcc515bc8309e2d4b38c00092ef71fea490b747e90195ca140ae19a`.
+
+New actual audit result is4vulnerablepackages:1low QuasarGHSA-89vp-x45c-52cq and3moderate through @vitest/mocker/vitest/@vitest/coverage-v8 (GHSA-qxg6-89mg-rqv8, GHSA-xp26-3454-mjgp). Existing --audit-level=high gatePASS, zerohigh/critical. Earlieronlylow results remain historical; no dependencychange or implicitwaiver.
+
+
+## DEF-003 — full-regression runtime reuse
+
+First integratedFP4461 fullservercoverage actual3728tests/3578PASS/12FAIL/138SKIP,1099569ms; mandatoryfullgateFAIL, per-filechecker was not reached. Raw `/private/tmp/fulfillment-p0-ci-fixed-server-coverage-r1.log` retained. Failures are SalesImportPrecheck processing expectations left QUEUED and absent currentfixture result, not P0capacity or the newSupplier self-check. StrictP0/currentbrowser evidence above remains actual but does not replace this failedfullgate.
+
+Read-only oldcore5bc probe found import217 with2000sourceorders, created2026-10-22T01:06:13.330Z, processing_started01:07:34.694Z, and finalPARTIAL_SUCCESS/completionaudit02:16:21.665Z during thisfullrun (1527success/473failed). This is durable work from the earlier interrupted capacity execution, predating currentfullrun02:02. Global worker selects the oldest claimable job across theschema, while these fixtures use privatefile roots; stalejob/clusterlease interference must not be solved by limiting productselectors or clearing data. Timeline `/private/tmp/fulfillment-p0-ci-fixed-queue-timeline-r1.json` preserves minimized facts. We did not capture every failedworker's selectedjob/lease outcome, so precise per-failure attribution is qualified.
+
+SameDB focusedcase subsequently3PASS/0SKIP; wholeunchangedtestfile with samecoverage/flags57tests/56PASS/0FAIL/1approvedcapacitySKIP,45729ms. These diagnostics do not erase fullFAIL. A completely new owned schema and clean detachedstorage at d787/FP4461/PLANf3b9 now rerun the unchangedcompletecommand. Actualpreflight97registry and zero Sales/import/intake/Salesoperations/Inventoryreservations/Fulfillments; alloldDB/filesretained. Newownedreceipt `/private/tmp/fulfillment-p0-regression-core.json`, preflight `/private/tmp/fulfillment-p0-regression-preflight.json`, runtime `/private/tmp/erp-fulfillment-p0-regression-runtime`. No product/test/assertion/threshold/skipchange.
+
+## Frozen CI verification candidate
+
+The source is frozen atFP4461, integrated main94d, unchangedDESIGN/PLAN. Strictdeveloper checks and source/evidence independentreviewsPASS permit publication for fullCI verification; localfullregression is running in a separate ownedruntime. The twoisolated verification lanes may run concurrently. This record does not mark fullverification, Task011, eitheropenDEF, CI or PR ready. Actualfullresults, exactcurrentCI and finalclosure must allPASS before the authorizedsingle draftPR. Subsequent CI/closure/PR observations are kept in local revisionedHarness state and the PR body, avoiding a documentation-only candidate loop; originalfailedruns remain linked.
