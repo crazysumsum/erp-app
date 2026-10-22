@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 406,
+  "revision": 407,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -6839,6 +6839,20 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-22, in reply to the HD-124 decision after PR #270 merged: 'A'. The options stated that each PR under A is merged after review and green CI."
+    },
+    {
+      "id": "HD-125",
+      "impact": "MAJOR",
+      "question": "DEF-035, found while preparing UAT: design §7.2 lists SupplierAuditPage.vue (/suppliers/audit, menu 變更紀錄, audit filter and masked detail) and an Audit tab on the detail page (SupplierAuditTimeline.vue), but neither exists; no task in 05_development_tasks.md covers them (T09 built only the service and GET /api/v1/supplier-audit/logs). At least ten UAT cases (001, 006, 009, 012, 020, 026, 030, 041, 043, 055) need the Audit page, because UAT accepts only user-observable evidence. (A) Fix it as a defect inside the Supplier module without changing the plan: the audit page with date, actor, action and target filters, paging and masked detail, plus the detail Audit tab, on the existing API, with unit tests and a Playwright check; a separate PR before UAT PHASE-001. (B) Leave it as a known limitation and mark the audit parts of those UAT cases test.fixme. (C) Add a task to the plan, moving the plan baseline again.",
+      "affected_ids": [
+        "DEF-035",
+        "SupplierAuditPage.vue",
+        "SupplierAuditTimeline.vue",
+        "UAT-001",
+        "UAT-055"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-22, in reply to the HD-125 decision: 'A。照之前做法，review 完、CI 過就 merge。'"
     }
   ],
   "external_actions": [
@@ -8053,7 +8067,21 @@
       ],
       "closure_evidence": [],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-035",
+      "severity": "MEDIUM",
+      "status": "IN_PROGRESS",
+      "source_ids": [
+        "03_design_spec.md §7.2",
+        "SupplierAuditPage.vue",
+        "SupplierAuditTimeline.vue",
+        "UAT-055",
+        "docs/supplier_management/testing/04_defect_register.md"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "HD-124 A PR 1 (PHASE-001 UAT plus the UAT suite profile change) on claude/supplier-task-051-uat-phase1."
+  "next_safe_action": "HD-125 A: build the Supplier audit page and detail Audit tab (DEF-035) on claude/supplier-def035-audit-ui; review, PR, merge per 'review 完、CI 過就 merge'. Then HD-124 A UAT PHASE-001."
 }

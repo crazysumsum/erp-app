@@ -129,6 +129,10 @@ Found while preparing the TC-131 (OPS-004) runner. On a freshly migrated scratch
 
 The first run of the performance runner (2026-10-22, TC-101) found a 10,000-row import, run alongside a 50-user load on 100k seeded Suppliers, that applied 9,999 rows. One row ended not applied. The job's counts stayed consistent, so the row was reported as failed rather than lost silently, but every row in that file is a valid create. The cause is unknown: that first runner version deleted the tools' reports. The next three runs applied 10,000 of 10,000, and T50's earlier runs did too. The runner now keeps the tools' reports. While the import runs, it also polls for failed rows and records their stored errors (`evidence.importFailedRows`), because the import tool deletes its job and rows when it finishes. A recurrence will therefore show the reason. REPORT_ONLY: no product change.
 
+## DEF-035 — MEDIUM
+
+Found while preparing the UAT browser tests (HD-124 A). Design §7.2 lists seven Supplier pages, including `SupplierAuditPage.vue` (`/suppliers/audit`, menu 「變更紀錄」, audit filter and masked detail). It also gives the detail page an Audit tab, `SupplierAuditTimeline.vue`. Neither exists. No task in `05_development_tasks.md` covers them: T09 built only the audit service and `GET /api/v1/supplier-audit/logs`. UAT accepts only user-observable evidence, and at least ten cases read the Audit page (UAT-001, 006, 009, 012, 020, 026, 030, 041, 043 and 055). Fix approved as HD-125 A, without changing the plan.
+
 ## HD-116 A: dispositions (2026-10-21)
 
 Fixed in this change:
