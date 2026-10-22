@@ -253,7 +253,7 @@ Coverage: supplier-bank-security 15/15, supplier-server-integration 89/89, suppl
 | TC-098 | IMP-013 | `supplierImport.integration` (cancel); `supplierImportService` (counts rebuilt) | COVERED | |
 | TC-099 | IMP-014 | `supplierImport.integration` (already tagged) | COVERED | |
 | TC-100 | IMP-015 | `supplierImport.integration` (IMP-015); `supplierImportRetention.integration` (410) | COVERED | |
-| TC-101 | IMP-016 | `runSupplierPerformanceAcceptance.js` (supplier-performance suite): a 10,000-row import started after the warm-up of a 50-user load; precheck plus execution ≤ 10 min, every row applied exactly once with consistent counts, online p95 < 2 s; `supplierImport.integration` (10,000 rows within the timeout) | PARTIAL | One of four runs applied 9,999 of 10,000 rows (DEF-034, cause unknown); the import is all creates, not the create/update/invalid mix |
+| TC-101 | IMP-016 | `runSupplierPerformanceAcceptance.js` (supplier-performance suite): a 10,000-row import started after the warm-up of a 50-user load; precheck plus execution ≤ 10 min, every row applied exactly once with consistent counts, online p95 < 2 s; `supplierImport.integration` (10,000 rows within the timeout) | PARTIAL | One of five runs applied 9,999 of 10,000 rows (DEF-034, cause unknown); the import is all creates, not the create/update/invalid mix |
 | TC-102 | IMP-017 | `supplierExport.integration` | COVERED | |
 | TC-103 | AUD-001 | `supplierAuditLogService`; service tests | PARTIAL | requestId and IP on each action |
 | TC-104 | AUD-002 | `supplierBank.integration` (no plaintext in audit); `supplierAuditLogService` | COVERED | |
@@ -327,11 +327,12 @@ Resilience runner (HD-117 A, HD-121 A). All three cases run on a freshly migrate
 
 Performance runner (HD-117 A). It runs on a freshly migrated `${DB_NAME}_rh_*` schema seeded with the T50 100k data (about 1 minute), and uses the T50 tools for about 12 minutes of load. The tools' full reports are kept next to the output in `supplier-performance-details/`. TC-128 adds a NOT_RUN test for the production-like environment, so `supplier-performance` reports BLOCKED. The verdicts are a pure module (`supplierPerformanceVerdicts.js`); its unit test breaks each of the 17 checks in turn and expects that check to fail.
 
-The figures depend on the machine. On 2026-10-22 four runs were made:
+The figures depend on the machine. On 2026-10-22 five runs were made:
 1. The first applied 9,999 of 10,000 import rows (DEF-034) and found the performance_schema digest table full, so no plans were visible.
 2. The second ran while another session's inventory benchmark was loading the machine (load average about 11): exact Code p95 was 1,154 ms, update 2,617 ms, and the for-SKU worst case was over 2 s.
 3. The third started on a quiet machine: every check PASS, exact Code p95 248 ms.
-4. The fourth was the final runner (see the ledger).
+4. The fourth was stopped with SIGTERM because it was running superseded code. It left nothing behind.
+5. The fifth, with the final runner, passed every check. Overall p95 under mixed load was 259 ms, and the for-SKU worst case was 1,635 ms. The 10,000-row import took 85 s and applied every row once, with no failed rows recorded.
 
 Run it on an otherwise idle machine, with room in `performance_schema`'s digest table. The runner fails rather than reporting "no full scan" when no plans are visible.
 
