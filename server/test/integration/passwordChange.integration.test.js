@@ -111,7 +111,8 @@ async function signedAuthed(device, token, { path, body }) {
 const ADMIN_PERMISSIONS = PERMISSION_CATALOGUE
   .map(({ name }) => name)
   .filter((name) => !name.startsWith("customer.bank.") && !name.startsWith("inventory.") &&
-    !name.startsWith("sales.") && !name.startsWith("fulfillment."));
+    !name.startsWith("sales.") && !name.startsWith("purchasing.") &&
+    !name.startsWith("receiving.") && !name.startsWith("fulfillment."));
 
 test("create -> forced login -> blocked management action -> change password -> old token dead -> fresh login -> unblocked", { skip }, async (t) => {
   const application = await startApplication();
