@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 400,
+  "revision": 401,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -1279,6 +1279,24 @@
       "scope": [
         "supplier-management",
         "client/src/framework/ui/DataTable.vue"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-122-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "HD-122 A (2026-10-22). Authorises small changes to two T50 tools in server/scripts/: benchmarkSupplierManagement.js keeps the full statement digest and reports its measured window; benchmarkSupplierImport.js records up to 20 not-applied rows with their errors before cleanup. server/scripts/ is not declared in approval_required_paths (HD-034) and reports OUTSIDE_MODULE; this approval covers exactly these two files.",
+      "recorded_at": "2026-10-22T13:53:15+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
+      "code_commit": "94d5297260c4fe460cd9e1b84cfbfe14743a6f1f",
+      "scope": [
+        "supplier-management",
+        "server/scripts/benchmarkSupplierManagement.js",
+        "server/scripts/benchmarkSupplierImport.js"
       ],
       "expires_at": null
     }
@@ -6530,6 +6548,22 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-22, in reply to the HD-121 decision after PR #264 merged: 'HD-121 A，review 完 CI 過就 merge'."
+    },
+    {
+      "id": "HD-122",
+      "impact": "MAJOR",
+      "question": "REV-111 H-1, M-4 and L-3 need two T50 tools changed, which HD-117's scope approval does not cover: benchmarkSupplierManagement.js truncates statement digests to 400 characters (so HD-088's text-search exemption cannot see LIKE) and does not report its measured window; benchmarkSupplierImport.js deletes its rows before failed rows can be read (DEF-034). (A) Change both tools by a few lines: keep the full digest and report the measured window; write up to 20 not-applied rows with their errors into the import report before cleanup; then use them in the runner, drop the polling watcher, raise the local MySQL's performance_schema text lengths, rerun, review and PR. (B) Leave the tools; TC-085 and TC-129 stay PARTIAL with failing plan checks. (C) Defer to the HD-120 B profile change.",
+      "affected_ids": [
+        "TC-085",
+        "TC-101",
+        "TC-129",
+        "DEF-034",
+        "REV-111",
+        "server/scripts/benchmarkSupplierManagement.js",
+        "server/scripts/benchmarkSupplierImport.js"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-22, in reply to the HD-122 decision after REV-111: 'A，review 完、CI 過就 merge。'"
     }
   ],
   "external_actions": [
@@ -7731,7 +7765,20 @@
         "supplierStartupSelfCheck.integration.test.js: six removal cases refused, database unchanged, start after restore; a no-op check fails it"
       ],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-034",
+      "severity": "LOW",
+      "status": "OPEN",
+      "source_ids": [
+        "TC-101",
+        "IMP-016",
+        "runSupplierPerformanceAcceptance.js",
+        "docs/supplier_management/testing/04_defect_register.md"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "HD-117 A PR 4: runSupplierPerformanceAcceptance.js (TC-085, 101, 128, 129) on claude/supplier-task-051-performance; review, PR, merge per 'review 完 CI 過就 merge'. Then the combined profile change (HD-120 B) and UAT IDs."
+  "next_safe_action": "HD-122 A: change the two T50 tools, use them in runSupplierPerformanceAcceptance.js, rerun on a quiet machine with larger performance_schema text lengths; PR and merge per 'review 完、CI 過就 merge'. Then the combined profile change (HD-120 B) and UAT IDs."
 }
