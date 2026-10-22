@@ -15,9 +15,10 @@ export const MISSING = 999_999_999;
  * 自動補密碼同設備簽名。Route 清單由 app 啟動時寫落 system log 嘅 `api.registration.completed` 讀，唔係抄落嚟。
  *
  * 用法：`const h = createSupplierHarness("sec51")`，`before(h.start)`、`after(h.stop)`。
+ * `database` 蓋過 config/database.js 嘅欄位（例如連去一個還原咗嘅 scratch database）；`importRoot` 換走匯入檔目錄。
  * `h.supplierIds`／`h.jobIds` 入面嘅會喺 stop 清走（連 child、audit、審批申請）。
  */
-export function createSupplierHarness(prefix) {
+export function createSupplierHarness(prefix, { database = {}, importRoot = null } = {}) {
   const h = {
     application: null, url: "", db: null, jwt: null, binding: null, worker: null, logRoot: "", routes: [],
     supplierIds: [], roleIds: [], userIds: [], jobIds: [],
@@ -34,7 +35,7 @@ export function createSupplierHarness(prefix) {
     // 背景工作會改 supplier_* 表，令「冇副作用」嘅 checksum 唔可靠；淨係留 tokenRevocation.refresh（設定要求）。
     const jobs = (await discoverServiceDefinitions()).flatMap((definition) => (definition.ServiceClass?.jobs ?? []).map((job) => job.name));
     h.application = await createApplication({
-      configurationSource: { ...source, application: { ...source.application, port: 0 },
+      configurationSource: { ...source, application: { ...source.application, port: 0 }, database: { ...source.database, ...database },
         requestLimiter: { ...source.requestLimiter, maxRequestsPerIpPerWindow: 100_000 },
         scheduler: { ...source.scheduler, jobs: Object.fromEntries(jobs.map((name) => [name,
           { ...(source.scheduler.jobs?.[name] ?? {}), enabled: name === "tokenRevocation.refresh" }])) },
@@ -42,7 +43,7 @@ export function createSupplierHarness(prefix) {
           request: { ...source.logging.loggers.request, directory: path.join(h.logRoot, "requests") },
           system: { ...source.logging.loggers.system, directory: path.join(h.logRoot, "system") } } },
         // 匯入檔案放喺 log 目錄入面，stop 一齊刪；precheck／execute 工作同其他背景工作一樣停咗，由測試直接叫 h.worker。
-        supplier: { ...source.supplier, import: { ...source.supplier.import, root: path.join(h.logRoot, "imports") } } },
+        supplier: { ...source.supplier, import: { ...source.supplier.import, root: importRoot ?? path.join(h.logRoot, "imports") } } },
       serviceDiscoveryOptions: { additionalModuleUrls: [
         new URL("../../src/modules/businessMaster/BusinessMasterService.js", import.meta.url).href,
         new URL("../../src/modules/supplier/SupplierProviderServices.js", import.meta.url).href] }
@@ -56,7 +57,11 @@ export function createSupplierHarness(prefix) {
   };
 
   h.stop = async () => {
-    if (!h.db) return;
+    if (!h.db) {
+      // start() 喺 app 起好之前失敗：冇資料要清，但 log 目錄已經開咗。
+      if (h.logRoot) fs.rmSync(h.logRoot, { recursive: true, force: true });
+      return;
+    }
     try {
       await removeFixtures();
     } finally {
