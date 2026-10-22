@@ -257,3 +257,21 @@ nativeTest("P0 actual batch allocator rejects Serial policy and rolls back its c
   await assert.rejects(f.invoke("ALLOCATE",{fulfillmentId:"1",lines:f.lines},41),{code:"SERIAL_TRACKING_UNSUPPORTED"});
   assert.deepEqual(await snapshot(),before);
 });
+
+nativeTest("P0 Reallocate final audit tail failure rolls all stock, versions, operations and earlier audit batches back",async t=>{
+  const f=await fixture(t),lines=[];
+  await f.db.execute("UPDATE inventory_stock_balances SET on_hand_quantity=100 WHERE id=?",[f.balanceId]);
+  for(let i=0;i<51;i++)lines.push({fulfillmentLineId:String(100+i),salesOrderLineId:String(200+i),baseQuantity:"1",reservations:[{claimId:String(300+i),inventoryReservationId:await f.reservation(String(200+i),"1"),expectedVersion:1,baseQuantity:"1",overrideReason:"",allocations:[{inventoryBalanceId:f.balanceId,expectedBalanceVersion:1,baseQuantity:"1"}]}]});
+  const allocated=await f.invoke("ALLOCATE",{fulfillmentId:"1",lines},51);
+  const moved={fulfillmentId:"1",lines:allocated.lines.map(line=>({...line,reservations:line.reservations.map(m=>({claimId:m.claimId,inventoryReservationId:m.inventoryReservationId,expectedVersion:2,baseQuantity:"1",overrideReason:"",releases:m.allocations.map(a=>({inventoryAllocationId:a.inventoryAllocationId,inventoryBalanceId:a.inventoryBalanceId,expectedVersion:1,expectedBalanceVersion:52,baseQuantity:"1"})),allocations:[{inventoryBalanceId:f.balanceId,expectedBalanceVersion:52,baseQuantity:"1"}]}))}))};
+  const snapshot=async()=>{const result={};for(const table of ["inventory_operation_requests","inventory_stock_balances","inventory_stock_controls","inventory_reservations","inventory_allocations","inventory_audit_logs"])result[table]=(await f.db.query(`SELECT * FROM ${table} ORDER BY id`))[0];return result;};
+  const before=await snapshot();let writes=0,rows=0,rootCompletions=0;
+  await assert.rejects(f.invoke("REALLOCATE",moved,52,tx=>{const execute=tx.execute.bind(tx);tx.execute=async(sql,args)=>{
+    if(/UPDATE inventory_operation_requests/u.test(sql)&&args.includes("FULFILLMENT_BATCH_REALLOCATE"))rootCompletions++;
+    const result=await execute(sql,args);
+    if(/INSERT INTO inventory_audit_logs/u.test(sql)){writes++;rows+=args.length/16;if(writes===2)throw Error("synthetic last audit tail failure after write");}
+    return result;
+  };}),error=>error.cause?.message==="synthetic last audit tail failure after write");
+  assert.deepEqual({writes,rows,rootCompletions},{writes:2,rows:102,rootCompletions:0});assert.deepEqual(await snapshot(),before);
+  await f.invoke("REALLOCATE",moved,52);const [[count]]=await f.db.query("SELECT COUNT(*) AS n FROM inventory_audit_logs");assert.equal(count.n,153);
+});

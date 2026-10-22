@@ -150,3 +150,8 @@ Sam authorized stage timing/SQL counts only after the human pause. [Allocation t
 ## Approved Allocation optimization candidate (2026-10-22)
 
 [Transaction-local schema proof reuse](24_allocation_candidate_schema_optimization.md) implements Sam's bounded optimization authorization. Same-transaction repeated missing-table/absence checks now occur once, while candidates remain fresh and partial-schema rejection/default20sec limits remain. SourceFPf458: five current typed developer checksPASS (196strictP0cases/2realPlaywrightcases, zeroSKIP), independent source0C/H/M; three-run A4.920s/R7.314s,35237/55442SQL. Alloldfailuresretained. Exact newcandidateCI remainspending; no draftPR ormerge performed.
+
+
+## Exact Allocation optimization CI observed green (2026-10-22)
+
+Commit1cb2a7b37386f9d24b7c12d405d16aca9fbeed8f/FPf458 actual [CI39719857793](https://github.com/crazysumsum/erp-app/actions/runs/39719857793) completedSUCCESS, all13underlyingjobsSUCCESS, global96.08L/87.11B/94.39F andall39filefloorsPASS. Previouslytimedout5000Reservationcase nowPASS: Allocate12641ms/Reallocate18363ms/90679SQL, unchanged20sec. Original100member/5000legcase+latechunkrollbackPASS6295/11969ms. CurrentFILES2637PASS/0FAIL/1010qualifiedskips; typedP0developer196testcasesPASS0SKIP/browser2PASS0SKIP. [Report24](24_allocation_candidate_schema_optimization.md) retainsraw/typedfailurehistory, scopedsource/evidence reviews andstable-schema invariant. Reallocateheadroom1637ms is an explicit remaining risk; no fabricated CIbefore-per-action timing or stabilityclaim. This fulfills only the approved boundedoptimization/reprofile/CI step; broaderTASK011/DEF003 closure remains unclaimed, no draftPR/merge/liveactivation.

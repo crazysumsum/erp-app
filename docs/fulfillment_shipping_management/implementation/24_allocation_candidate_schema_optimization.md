@@ -20,7 +20,7 @@ Separate reviewer `/root/fulfillment_independent_review` actually reviewed the p
 
 Native red `/private/tmp/fulfillment-p0-cache-red-r1.log`: two failures reproduced repeated checks before the fix, with other initial safety cases passing. Green `/private/tmp/fulfillment-p0-cache-green-r2.log`: **18 PASS, 0 FAIL, 0 SKIP**, comprising six existing PickSequence tests, seven new native schema-cache regressions, and five preserved bounded-receipt completion tests. Cases cover live quantity/version changes within a transaction, fresh transaction proof, autocommit/forged metadata, both partial-schema variants after a prior transaction's proof, complete schema with a newly active Bin lock, failed inspection, failed fallback, and a closed executor. Existing twenty-second transaction configuration is unchanged.
 
-Current candidate source fingerprint before measurements: `f458a9df067f92f06762f9ac0061379e46f225c056b035b7a817746bf7a2572b`, HEAD `d5e8c33cea19b280bed116be8cfc1b1f7456b7cc`. DESIGN/PLAN remain unchanged. Full strict native developer suite, repeated profiling, independent final-source review and new exact-candidate CI are pending; no PASS is inferred from the focused result.
+Historical candidate source fingerprint before measurements: `f458a9df067f92f06762f9ac0061379e46f225c056b035b7a817746bf7a2572b`, HEAD `d5e8c33cea19b280bed116be8cfc1b1f7456b7cc`. DESIGN/PLAN remain unchanged. **Historical checkpoint before subsequent verification:** full strict developer suite, repeated profiling, independent final-source review and new exact-candidate CI were pending; no PASS is inferred from the focused result.
 
 ## Independent source review
 
@@ -49,4 +49,24 @@ A deliberate in-memory mutation reversing the cache-read active-transaction cond
 
 First typed lint (`20261022T035333-8f8266704f0d`) failed solely because repository eslint scans private ignored `.mjs` probes under docs with non-Node globals. Executed probe bytes were preserved verbatim as `profile.executed.mjs.txt`, with original summary archived and artifact mapping updated; no lint configuration/suppression/threshold/product change was made. Subsequent typed lint passed. All measurement evidence and original bootstrap failures remain retained. This operational correction leaves sourceFP unchanged.
 
-No current-candidate CI result is yet available. Previous d5 CI FAIL remains authoritative for that previous commit. Full CI and any remaining full-regression closure are required before the previously authorized draft PR; no merge or live activation is authorized.
+**Historical checkpoint before CI dispatch:** no new-candidate CI result was then available. Previous d5 CI FAIL remains authoritative for that previous commit. Full CI and any remaining full-regression closure are required before the previously authorized draft PR; no merge or live activation is authorized.
+
+## Exact candidate CI result
+
+Commit `1cb2a7b37386f9d24b7c12d405d16aca9fbeed8f`, sourceFPf458, [GitHub run39719857793](https://github.com/crazysumsum/erp-app/actions/runs/39719857793), actual workflow_dispatch: **SUCCESS**, all13 underlying jobs success, including four native server coverage shards, merged coverage/file floors, client coverage, Playwright, TC-042 mixed load and the strict Test aggregate. Run identity/status is preserved at `/private/tmp/fulfillment-p0-ci-39719857793.json`; old failed runs remain unchanged.
+
+The actual capacity case moved to server shard3 after new test-file discovery; logs `/private/tmp/fulfillment-p0-ci-job-119630586515.log` show:
+
+- 5,000 Reservations: **PASS**, Allocate12,641ms, Reallocate18,363ms, combined90,679transaction SQL, sampledMaxHeap194,729,904bytes, configured transactionTimeoutMs20,000 unchanged. Whole test43,595.862ms includes setup and both transactions; it is not a single43-second transaction.
+- Original100-member/5,000-leg allocation plus10,000old/new reallocation legs and injected final-chunk rollback: **PASS**, Allocate6,295ms, Reallocate11,969ms, actual auxiliary legs15,000, zero skips.
+- New schema-proof native cases passed in shard2; bounded receipt completion/late chunk rollback passed in shard4. No timeout/skip/permission/schema/quantity exception was added.
+
+The CI result verifies the combined previously preserved receipt-batching plus new schema-proof candidate. The local before/after comparison isolates the new schema-proof change; there is no historical per-action timing for the old failed CI case, so no invented per-action CI speedup is claimed. A single CI success does not prove timing stability under all runner loads. Reallocate has **1,637ms** headroom under20sec in this run; retain this explicit residual performance risk rather than increasing the deadline or asserting a large safety margin.
+
+Additional current-source server FILES/default-provider-off regression: **3,647 discovered /2,637PASS /0FAIL /1,010 qualified native/opt-in skips**, `/private/tmp/fulfillment-p0-cache-server-files-r2.log`. The mandatory P0 developer suite separately passed196testcases/0SKIP, including its unit and native cases; current native CI also passed. The first same-command local attempt was blocked by sandbox localhost `listen EPERM` (93failed tests); it is retained as `/private/tmp/fulfillment-p0-cache-server-files.log`, then the unchanged command passed with authorized local socket permission. No product/test/gate alteration addressed that environment restriction.
+
+This completes the bounded optimization/remeasure/current-CI request. It does not constitute formal TC/UAT, complete broader P0 closure, a PR review/merge approval, live deployment or provider activation. No draft PR was created in this bounded resumed step.
+
+## Independent bounded closure
+
+Actual separate reviewer `/root/fulfillment_independent_review` independently confirmed GitHub run39719857793 through its GitHub connector: checkout1cb2a7b3, all13jobsSUCCESS, realcapacity/partial-schema/receiptregressionlogs, global96.08/87.11/94.39 and39filefloors. Verdict **APPROVED,0C/H/M**, sourceFPf458; current CI receiptSHAd62dfed708ad25202c1af25f45dbcc28ffa0ad947322930cc6f8bd86fda9d4da. Reviewer validated all updated artifact hashes and exact prior reviewedsummary preservation. DEF-002 may close with this currentCI evidence; DEF-003/overallTASK011/formalacceptance/PR/merge remain outside this bounded closure. The1637ms Reallocate headroom remains an explicit residualrisk, not a deadline exception.

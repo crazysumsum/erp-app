@@ -102,14 +102,14 @@ async function lockAllocationSet(service,tx,batch,context) {
   }
 }
 
-function audit(service,tx,batch,context,member,leg,action,beforeSummary,afterSummary,reasonText="") {
-  return service.audit.recordSucceeded(tx,{actorUserId:context.actor.userId,actorLabel:context.actorLabel,action,targetType:"allocation",targetId:leg.result.inventoryAllocationId,targetLabel:leg.result.inventoryAllocationId,
+function audit(audits,batch,context,member,leg,action,beforeSummary,afterSummary,reasonText="") {
+  return audits.record({actorUserId:context.actor.userId,actorLabel:context.actorLabel,action,targetType:"allocation",targetId:leg.result.inventoryAllocationId,targetLabel:leg.result.inventoryAllocationId,
     beforeSummary,afterSummary,reasonText,operationRequestId:member.operationId,requestId:context.correlationId,correlationId:context.correlationId,ip:""});
 }
 
 export async function postFulfillmentAllocationBatch(service,tx,batch,context) {
   await lockAllocationSet(service,tx,batch,context);
-  const members=[...batch.members].sort(memberOrder);
+  const members=[...batch.members].sort(memberOrder),audits=service.audit.createSucceededBatch(tx);
   for(const member of members)for(const leg of member.legs.filter(l=>l.kind==="RELEASE")) {
     const b=leg.balance,a=leg.allocation,q=number(leg.input.baseQuantity),before=number(b.allocated_quantity),after=before-q;
     if(after<0)fail("ALLOCATION_INSUFFICIENT");
@@ -118,7 +118,7 @@ export async function postFulfillmentAllocationBatch(service,tx,batch,context) {
     await cas(tx,"UPDATE inventory_allocations SET released_quantity=?,outstanding_quantity=?,status=?,version=version+1,updated_at=?,updated_by=? WHERE id=? AND version=?",[released,outstanding,status,batch.timestamp,context.actor.userId,a.id,a.version]);
     leg.result={inventoryAllocationId:String(a.id),inventoryBalanceId:String(b.id),baseQuantity:leg.input.baseQuantity,allocationVersion:number(a.version)+1,balanceVersion:number(b.version)+1,status,releasedQuantity:String(released),outstandingQuantity:String(outstanding)};
     Object.assign(b,{allocated_quantity:after,version:number(b.version)+1});Object.assign(a,{released_quantity:released,outstanding_quantity:outstanding,status,version:number(a.version)+1});
-    await audit(service,tx,batch,context,member,leg,batch.action==="REALLOCATE"?"allocation.reallocate":"allocation.release",{allocatedQuantity:before},{allocatedQuantity:after,releasedQuantity:released,outstandingQuantity:outstanding,status,version:number(a.version)});
+    await audit(audits,batch,context,member,leg,batch.action==="REALLOCATE"?"allocation.reallocate":"allocation.release",{allocatedQuantity:before},{allocatedQuantity:after,releasedQuantity:released,outstandingQuantity:outstanding,status,version:number(a.version)});
   }
   for(const member of members) {
     if(batch.action!=="RELEASE") {
@@ -138,11 +138,12 @@ export async function postFulfillmentAllocationBatch(service,tx,batch,context) {
         leg.result={inventoryAllocationId:String(inserted.insertId),inventoryBalanceId:String(b.id),baseQuantity:leg.input.baseQuantity,allocationVersion:1,balanceVersion:number(b.version)+1,
           selectionStrategy:strategy,isSequenceOverride:recommendation.differs,recommendedRank:rank,bucketSnapshot:JSON.stringify(bucket),recommendedSummary:summary?JSON.stringify(summary):null};
         Object.assign(b,{allocated_quantity:after,version:number(b.version)+1});
-        await audit(service,tx,batch,context,member,leg,batch.action==="REALLOCATE"?"allocation.reallocate":"allocation.create",{allocatedQuantity:before},{allocatedQuantity:after,selectionStrategy:strategy,isSequenceOverride:recommendation.differs,...(summary??{})},member.input.overrideReason);
-        if(recommendation.fefo)await audit(service,tx,batch,context,member,leg,"fefo.override",{recommendedBalanceId:summary.recommendedBalanceId},{...summary,quantity:q},member.input.overrideReason);
+        await audit(audits,batch,context,member,leg,batch.action==="REALLOCATE"?"allocation.reallocate":"allocation.create",{allocatedQuantity:before},{allocatedQuantity:after,selectionStrategy:strategy,isSequenceOverride:recommendation.differs,...(summary??{})},member.input.overrideReason);
+        if(recommendation.fefo)await audit(audits,batch,context,member,leg,"fefo.override",{recommendedBalanceId:summary.recommendedBalanceId},{...summary,quantity:q},member.input.overrideReason);
       }
     }
     await cas(tx,"UPDATE inventory_reservations SET version=version+1,updated_at=?,updated_by=? WHERE id=? AND version=?",[batch.timestamp,context.actor.userId,member.reservation.id,member.reservation.version]);
     member.version=number(member.reservation.version)+1;
   }
+  await audits.flush();
 }

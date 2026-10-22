@@ -1,5 +1,7 @@
 # P0 Allocation transaction profiling — 2026-10-22
 
+Historical diagnostic checkpoint. Subsequent approved optimization and current CI results are recorded in [report24](24_allocation_candidate_schema_optimization.md); original measurements and limitations below are retained.
+
 ## Scope and current conclusion
 
 Actual Sam resumed **diagnostics only**:「先恢復做 Allocation 交易的分階段計時，找出最耗時的步驟及 SQL 次數，確認瓶頸後再決定怎樣優化。」No new optimization, product behavior, deadline, schema, CI or publication change was made. Existing receipt-batching WIP remains preserved and unapproved as a complete candidate. TASK-011/DEF-002 and the full P0 gates remain open.
