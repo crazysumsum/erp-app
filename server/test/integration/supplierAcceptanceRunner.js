@@ -33,9 +33,22 @@ export function checklist() {
   };
 }
 
-/** 開／剷 scratch database 要 admin；冇 DB_ADMIN_USER 就用 DB_USER（harness 只傳 profile 嘅 env_keys）。 */
+/**
+ * 開／剷 scratch database、還原有 definer 嘅 trigger、跑 migration 都要 admin（HD-123 A 起 profile 會傳 DB_ADMIN_*）。
+ * 一對一齊用，唔逐個欄位退返去 DB_USER：嗰樣會變成用 erp_user 加 admin 密碼登入（REV-112 L-2）。
+ */
 export function adminCredentials() {
-  return { user: process.env.DB_ADMIN_USER ?? process.env.DB_USER, password: process.env.DB_ADMIN_PASSWORD ?? process.env.DB_PASSWORD };
+  return { user: process.env.DB_ADMIN_USER, password: process.env.DB_ADMIN_PASSWORD ?? "" };
+}
+
+/**
+ * 冇 admin 帳號係環境前提唔齊，唔係測試失敗：每個 TC 報 NOT_RUN（suite 係 BLOCKED）就收工，唔郁任何資料庫（REV-112 L-2）。
+ */
+export async function exitUnlessAdmin(file, ids) {
+  if (process.env.DB_ADMIN_USER) return;
+  console.error("DB_ADMIN_USER is not set: these runners create and drop scratch databases, restore triggers and run migrations");
+  await writeReport(file, ids.map((id) => ({ name: `${id} not run: DB_ADMIN_USER is not set`, id, status: "NOT_RUN" })));
+  process.exit(0);
 }
 
 export function adminConnection(database = undefined) {

@@ -11,7 +11,7 @@ import { stringify } from "csv-stringify/sync";
 import { SUPPLIER_CSV_STRINGIFY_OPTIONS, SUPPLIER_IMPORT_COLUMN_NAMES } from "../src/modules/supplier/import/supplierCsvSchema.js";
 import { createSupplierHarness } from "../test/integration/supplierHttpHarness.js";
 import {
-  adminConnection, adminCredentials, checklist, errorText, outputPath, schemaObjects, scratchName, tableChecksums, writeReport
+  adminConnection, adminCredentials, exitUnlessAdmin, checklist, errorText, outputPath, schemaObjects, scratchName, tableChecksums, writeReport
 } from "../test/integration/supplierAcceptanceRunner.js";
 
 /**
@@ -26,6 +26,7 @@ import {
  * - Production 先做到嘅部分（真部署時間線、按 §14 逐步部署、break-glass 帳號）同成個 TC-136 都係 NOT_RUN。
  */
 const reportPath = outputPath();
+await exitUnlessAdmin(reportPath, ["TC-134", "TC-135", "TC-136"]);
 const SERVER = fileURLToPath(new URL("../", import.meta.url));
 const REASON = "TC-134/135 release rehearsal";
 const tag = randomUUID().slice(0, 8).toUpperCase();

@@ -21,8 +21,20 @@ export const plansSeen = (report) => (report?.topStatements?.length ?? 0) > 0 &&
  * 係 HD-088 決定嘅掃描，唔計。
  */
 export function fullScans(report) {
-  return (report?.topStatements ?? []).filter((row) => !/\bLIKE\b/iu.test(row.digest) && Array.isArray(row.plan)
-    && row.plan.some((step) => step.type === "ALL" && !String(step.table).startsWith("<"))).map((row) => row.digest.slice(0, 160));
+  return (report?.topStatements ?? []).filter((row) => Array.isArray(row.plan) && row.plan.some((step) => step.type === "ALL"
+    && !String(step.table).startsWith("<") && !likeTables(row.digest).has(step.table))).map((row) => row.digest.slice(0, 160));
+}
+
+/**
+ * HD-088 豁免只限文字搜尋本身掃嘅 table（REV-112 L-3）：`alias`.`col` LIKE 嘅 alias；冇 qualifier 嘅 LIKE 就係冇 alias 嘅
+ * FROM／JOIN table。同一句入面另一張 table 全表掃描照計。
+ */
+export function likeTables(digest) {
+  const tables = new Set([...String(digest).matchAll(/`(\w+)` \. `\w+` LIKE\b/gu)].map((match) => match[1]));
+  if (/(?<!` \. )`\w+` LIKE\b/u.test(String(digest))) {
+    for (const match of String(digest).matchAll(/\b(?:FROM|JOIN) `(\w+)`(?! `)/gu)) tables.add(match[1]);
+  }
+  return tables;
 }
 
 /**

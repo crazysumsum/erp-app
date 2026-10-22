@@ -12,7 +12,7 @@ import { SupplierBankService } from "../src/modules/supplier/SupplierBankService
 import { SUPPLIER_CSV_STRINGIFY_OPTIONS, SUPPLIER_IMPORT_COLUMN_NAMES } from "../src/modules/supplier/import/supplierCsvSchema.js";
 import { createSupplierHarness } from "../test/integration/supplierHttpHarness.js";
 import {
-  adminConnection, adminCredentials, checklist, errorText, mysqlClient, outputPath, schemaObjects, scratchName, tableChecksums, writeReport
+  adminConnection, adminCredentials, exitUnlessAdmin, checklist, errorText, mysqlClient, outputPath, schemaObjects, scratchName, tableChecksums, writeReport
 } from "../test/integration/supplierAcceptanceRunner.js";
 
 /**
@@ -27,6 +27,7 @@ import {
  * 本機量到嘅秒數同 RPO 0 唔代表佢哋，所以另開一項 NOT_RUN。
  */
 const reportPath = outputPath();
+await exitUnlessAdmin(reportPath, ["TC-133"]);
 const LOCAL = "TC-133 local full-module backup and isolated restore: table and file reconciliation, smoke, key ring";
 const PRODUCTION = "TC-133 production restore drill: RTO within 4 hours and RPO within 15 minutes";
 const NOT_RUN_REASON = "Needs the production backup schedule, binlog retention and an isolated restore environment; a local logical copy cannot show RTO or RPO.";
