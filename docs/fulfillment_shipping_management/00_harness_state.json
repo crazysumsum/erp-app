@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 67,
+  "revision": 78,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "eed2eb831ce50d0717992bcc25f04318dd652b16b7f662b3b5f81f9797b5a545",
     "plan": "f3b9dacf3b513916e6f7f349e15c0fcc035be2bc2995761624e7adb7b6238b05",
-    "code_commit": "15fc996fe872011b306bf91d581b85b205894ff4",
-    "source_fingerprint": "41f5f069491169a2576d97fbaa12cca223bed2336c56981fe8c9cdc80a2be2bc",
+    "code_commit": "ce4a2c438a1baa6fc5a14d63eab05ec763ad67ef",
+    "source_fingerprint": "f9de149c2841b0d40b56e36a9135c27a5786d5db0542f4593a708022a85b247f",
     "worktree": "/private/tmp/erp-fulfillment-p0",
-    "default_commit": "6a9132b217d1170ab67663fcfee0a2cc764371be",
+    "default_commit": "81a873fc941d54c634772c46641db95b552bf298",
     "mode_entry_commit": "76223f40480d94a1d3a2ae6e0e7b91292bd98b82"
   },
   "runtime": {
@@ -22,12 +22,16 @@
     "owner": "/root fulfillment P0 implementer, actual Sam complete-P0/full-verification authority",
     "resources": {
       "workspace": "/private/tmp/erp-fulfillment-p0",
-      "mysql-schema": "fulfillment_p0_legacy_5bc05842",
+      "mysql-schema": "fulfillment_p0_legacy_13a2e9ea",
       "mysql-socket": "/var/folders/gk/rdtb5_px4z9gm7m1cm2q3xg40000gn/T/erp-fulfillment-p0-mysql-ton56on7/mysql.sock",
-      "web-port": "Playwright own API49905/client49906 completed and released; no persistent listener",
-      "mysql-native-full-core": "Currentpristinecore receipt/private/tmp/fulfillment-p0-final-core.json;85historical+3framework+9P0=97registryrows; preR6zeroSalesOrder/Backorder/Fulfill; priorfullcorepreserved",
+      "web-port": "Owned fresh P0 Playwright API49925/client49926; reuseExistingServer=false; released by configured webServer teardown",
+      "mysql-native-full-core": "Currentresume-core receipt/private/tmp/fulfillment-p0-resume-core.json; same97registrymigrationbaseline/zeroSalesBackorderFulfillpreflight; usedonlyremainingTC042r2; earlieractualevidencekeepsoriginalschemaidentity.",
       "mysql-original-core": "fulfillment_p0_core; original0091historyretained, partialinstalledprofilecorrectly503",
-      "mysql-loopback": "SameownedMySQL127.0.0.1:50655;socketretained/mysqlx0;ephemeralfixtureadminsecretprivate0600; relayremoved"
+      "mysql-loopback": "SameownedMySQL127.0.0.1:50655;socketretained/mysqlx0;ephemeralfixtureadminsecretprivate0600; relayremoved",
+      "mysql-interrupted-core": "fulfillment_p0_legacy_5bc05842; originalfinal-core receipt and all data retained; completedtyped/fullR8tests ran here before TC042 interruption.",
+      "capacity-workspace": "/private/tmp/erp-fulfillment-p0-capacity-runtime; detachedce4/sourceFPf9de; freshignoredstorage; dependencylinksread-onlyreuse",
+      "capacity-mysql-schema": "fulfillment_p0_legacy_1e977cca",
+      "capacity-control-mysql-schema": "fulfillment_p0_legacy_46b4819e"
     },
     "lease_ref": null
   },
@@ -42,7 +46,7 @@
     "TASK-008": "DONE",
     "TASK-009": "DONE",
     "TASK-010": "DONE",
-    "TASK-011": "IN_PROGRESS",
+    "TASK-011": "DONE",
     "TASK-012": "PENDING",
     "TASK-013": "PENDING",
     "TASK-014": "PENDING",
@@ -2184,6 +2188,66 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-042-HD015-POST-ADOPTION",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "f9de149c2841b0d40b56e36a9135c27a5786d5db0542f4593a708022a85b247f",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/21_p0_verification_contract_alignment.md#actual-post-adoption-independent-review",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-043-HD015-POST-ADOPTION-DESIGN-INDEX",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "eed2eb831ce50d0717992bcc25f04318dd652b16b7f662b3b5f81f9797b5a545",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/21_p0_verification_contract_alignment.md#actual-post-adoption-independent-review",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-044-HD015-TYPED-EVIDENCE",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "f9de149c2841b0d40b56e36a9135c27a5786d5db0542f4593a708022a85b247f",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/22_p0_completion.md#independent-evidence-review",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-045-PAIRED-RUNTIME-PROOF",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "f9de149c2841b0d40b56e36a9135c27a5786d5db0542f4593a708022a85b247f",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/22_p0_completion.md#def-001-localized-to-test-runtime-namespace-isolation",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-046-P0-FINAL-LOCAL-CLOSURE",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "f9de149c2841b0d40b56e36a9135c27a5786d5db0542f4593a708022a85b247f",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/22_p0_completion.md#final-independent-local-closure",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [],
@@ -2626,9 +2690,64 @@
       "idempotency_key": "p0-reviewed-fixture-source-41f5-commit",
       "status": "CONFIRMED",
       "source_ref": "Actual git commit5fixtures/7insertions6deletions, sourceFPunchanged41f5; report17 records current R7 coverage3587PASS0FAIL138qualifiedSKIP+39floors; all7dedicatedcapacityPASSzeroSKIP; FILES2635PASS0FAIL997native-laneSKIP; client911PASS/build/lint/auditPASS. No remote write or HD015 adoption."
+    },
+    {
+      "id": "P0-MAIN-INTEGRATION-PR264",
+      "kind": "BASELINE_INTEGRATION",
+      "target": "81a873fc941d54c634772c46641db95b552bf298",
+      "idempotency_key": "p0-integrate-main81a873fc-after-hd015",
+      "status": "CONFIRMED",
+      "source_ref": "Actual fresh fetch/13SupplierDataTablepaths/cleanortmerge; same P0businesssource, complete current local+CI reruns required. No foreign changes authored."
+    },
+    {
+      "id": "P0-RESUME-CORE-AFTER-INTERRUPTION",
+      "kind": "OWNED_NATIVE_MIGRATION_TEST",
+      "target": "sameownedMySQL; newUUIDschema; newreceipt/private/tmp/fulfillment-p0-resume-core.json; existingcore/data retained",
+      "idempotency_key": "p0-resume-current-tc042-after-exec-abort-20261022",
+      "status": "CONFIRMED",
+      "source_ref": "ActualcreatednewownedUUID fulfillment_p0_legacy_13a2e9ea; sameMySQL26.7.0/97registryrows/zeroSalesOrderBackorderFulfillpreflight; receipt/private/tmp/fulfillment-p0-resume-core.json; originalfullcore/data/receipt preserved. Execution only, remaining capacity not yet PASS."
+    },
+    {
+      "id": "P0-CAPACITY-PAIRED-ISOLATION",
+      "kind": "OWNED_RUNTIME_FIXTURE",
+      "target": "ownedcontrol+capacityUUIDschemas; detachedce4runtimeworktree/private/tmp/erp-fulfillment-p0-capacity-runtime; oldDB/files preserved",
+      "idempotency_key": "p0-paired-db-filesystem-runtime-20261022",
+      "status": "CONFIRMED",
+      "source_ref": "ActualcontrololdFS/freshDBreproduces400 SALES_IMPORT_FILE_INVALID; normalcanonicalfullTC042 cleanpairedruntime/currentce4/F9de2PASS0FAIL0SKIP in166923ms, originalREADYfileSHAunchanged; FILES2636PASS0FAIL997native-laneSKIP. report22 records bothoriginalfailure andcontrolledproof. No product/source/security/threshold changed."
+    },
+    {
+      "id": "P0-PUBLISH-FROZEN-CANDIDATE",
+      "kind": "GIT_PUSH",
+      "target": "crazysumsum/erp-app refs/heads/codex/fulfillment-p0-foundation; sourceFPf9de149c/PLANf3b9dacf",
+      "idempotency_key": "p0-publish-after-all-local-gates-20261022",
+      "status": "PLANNED",
+      "source_ref": "Actualhuman draftPR/push authority; allP0TASK001..011DONE/localfullvalidation and independentfinalclosure0CHM. Freeze bookkeeping commit, record exactSHA before push. No CI or PR result claimed."
     }
   ],
-  "evidence_files": [],
-  "defects": [],
-  "next_safe_action": "HD015A actual approved; integrate fresh main81a873fc, independent post-adoption review then current strict typed native/browser and full regression/CI before draftPR."
+  "evidence_files": [
+    "evidence/20261022T004929-3d69d93d2dac/run.json",
+    "evidence/20261022T005157-39ce2d24de86/run.json",
+    "evidence/20261022T005238-ff2fd52fdacf/run.json",
+    "evidence/20261022T005244-0b4173163621/run.json",
+    "evidence/20261022T005246-a77af95d69e5/run.json"
+  ],
+  "defects": [
+    {
+      "id": "DEF-001",
+      "severity": "MEDIUM",
+      "status": "CLOSED",
+      "source_ids": [
+        "PHASE-001",
+        "TASK-011"
+      ],
+      "closure_evidence": [
+        "docs/fulfillment_shipping_management/implementation/22_p0_completion.md#local-verification-complete",
+        "/private/tmp/fulfillment-p0-upload-collision-control-r1.log",
+        "/private/tmp/fulfillment-p0-current-import-capacity-isolated-r7.log",
+        "/private/tmp/fulfillment-p0-current-server-files-r1.log"
+      ],
+      "risk_approval_id": null
+    }
+  ],
+  "next_safe_action": "All P0 TASK001..011DONE and allcurrentlocalchecks plus finalindependentreview0CHM passed. Freeze docs-only bookkeepingcandidate (productFPf9de/PLANf3b9unchanged), checkpoint exactnewSHA, pushauthorizedbranch then workflow_dispatch fullCI. Require actualcurrentcandidate CI success and independent prePRcandidate review before draftPR. P1–P3/formalTC/UAT/liveactivation/merge remain pending."
 }
