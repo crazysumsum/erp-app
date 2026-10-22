@@ -119,6 +119,12 @@ Found by REV-107 M-1 (TC-013, LIST-006). The shared `client/src/framework/ui/Dat
 
 Known limitation (REV-108 L-2): in client mode (`rows` and `loading` props) DataTable has no error input. A page that catches its own read failure and leaves its rows empty, such as `UomsPage`, still shows 「冇資料」 beside its own error notice. The Supplier list uses server mode and is not affected. Fixing those pages belongs to their owners.
 
+## DEF-033 — MEDIUM
+
+Found while preparing the TC-131 (OPS-004) runner. On a freshly migrated scratch schema, the server starts and `/api/v1/health` answers `ok` when a non-core Supplier table (`supplier_contacts`), a column (`suppliers.website`) or the `supplier_settings` singleton row is missing. Startup checks only that `suppliers`, `supplier_addresses` and `supplier_address_purposes` exist. A missing Supplier permission (framework permission catalogue) and a missing Bank key ring (configuration validation) are already refused. Design §14.1 step 4 requires the startup self-check to cover schema, permissions, the settings singleton and the key ring. Fix approved as HD-121 A.
+
+**Fixed under HD-121 A.** A new eager service, `supplierSchemaCheck`, runs at startup. It checks every Supplier table against its own migration contract (`inspect*Schema`). Every inspector requires the full column set; how much more it checks varies: most also check types, NULL, collation, indexes and foreign keys, but the contacts and settings inspectors compare column names only (REV-110 L-1). It also checks the 0080 list indexes and that 0087's `(sku_id)` index serves the SKU foreign key (REV-110 M-2), and requires the `supplier_settings` row `id = 1`. Anything missing or not matching refuses startup with a message that names the table, index or row (a missing column is reported against its table, because the inspector compares the column count first) and says nothing was changed. Health is never reached, because the server does not listen. Database errors other than a contract mismatch are rethrown as they are. Tests: `supplierStartupSelfCheck.integration.test.js` (CI) and TC-131 in the resilience runner remove a table, a column, a 0080 index, the 0087 index, the settings row and a permission on a freshly migrated schema. Each expects refusal and an unchanged database, restores the original definition, and expects a clean start. Control: making the check a no-op lets a schema without `supplier_contacts` start, and the test fails.
+
 ## HD-116 A: dispositions (2026-10-21)
 
 Fixed in this change:
