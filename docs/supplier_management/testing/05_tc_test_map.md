@@ -285,9 +285,9 @@ TC-062 … TC-077 already carry their IDs in `supplierBank*.integration`, `suppl
 
 ## supplier-client-ui (11)
 
-Runner: `npm test --workspace client -- --config test/supplier-management.vitest.config.js` (HD-117 A). It runs the 19 Supplier page and service test files in jsdom; each test title carries at most one TC ID. Local run after REV-107: 168 passed, 0 failed, 0 skipped; every required ID PASS through the harness JUnit adapter. Keyboard, focus, viewport, browser back and visual checks need a real browser and are left to the Playwright specs and UAT.
+Runner: `npm test --workspace client -- --config test/supplier-management.vitest.config.js` (HD-117 A). It runs the 21 Supplier page and service test files in jsdom; each test title carries at most one TC ID. Local run after REV-107: 168 passed, 0 failed, 0 skipped; after DEF-035 (audit page and tab, 2026-10-22): 176 passed; every required ID PASS through the harness JUnit adapter. Keyboard, focus, viewport, browser back and visual checks need a real browser and are left to the Playwright specs and UAT.
 
-Left out on purpose: `client/test/framework/routing/authorizationRefresh.test.js`. Its `同 SupplierBankPanel 夾埋` block checks that Bank plaintext is cleared and that losing `supplier.view` sends the user to 403, but the file is a framework routing test and the rest of it is not Supplier's. It runs in the main client suite. The profile's `min_tests` is 11 while 168 tests run, so a shrunken file list is caught only through the required IDs; raising the floor changes the profile and needs its own decision (REV-107 I-2).
+Left out on purpose: `client/test/framework/routing/authorizationRefresh.test.js`. Its `同 SupplierBankPanel 夾埋` block checks that Bank plaintext is cleared and that losing `supplier.view` sends the user to 403, but the file is a framework routing test and the rest of it is not Supplier's. It runs in the main client suite. The profile's `min_tests` is 11 while 176 tests run, so a shrunken file list is caught only through the required IDs; raising the floor changes the profile and needs its own decision (REV-107 I-2).
 
 | TC | Case | Tagged tests | Status | Gap |
 | --- | --- | --- | --- | --- |
@@ -295,7 +295,7 @@ Left out on purpose: `client/test/framework/routing/authorizationRefresh.test.js
 | TC-015 | LIST-008 | `list.test` (restore from URL, HD-107 filters, malformed values dropped) | PARTIAL | Back/forward and refresh in a real browser; no assertion that the URL holds no sensitive value |
 | TC-029 | CORE-013 | `editor.test` (dirty editor prompts before leaving) | PARTIAL | The "stay" choice (asserted in `detail.test`, tagged TC-123); saving the new Supplier value; existing purchase snapshots unchanged, which needs the purchasing module |
 | TC-075 | BANK-014 | `bank.test` (nine reveal and clearing tests, including the write dialog and the create form) | COVERED | |
-| TC-121 | UI-001 | `pageGuards.test`; `list.test` (menu entry); `create.test` (direct URL); `settings.test`; `approvals.test` | PARTIAL | Tests check page metadata only. Menu order is not asserted; the 403 redirect is asserted only in `authorizationRefresh.test.js`, outside this suite |
+| TC-121 | UI-001 | `pageGuards.test`; `list.test` (menu entry); `create.test` (direct URL); `settings.test`; `approvals.test`; `audit.test` (變更紀錄 menu entry) | PARTIAL | Tests check page metadata only. Menu order is not asserted; the 403 redirect is asserted only in `authorizationRefresh.test.js`, outside this suite |
 | TC-122 | UI-002 | `create.test` (draft with three fields, approver on and off) | PARTIAL | Error focus on summary or first field |
 | TC-123 | UI-003 | `create.test` and `editor.test` (dirty prompt on route leave and on closing the tab); `editor.test` (draft kept on 409); `detail.test` (refusing to discard keeps the page) | PARTIAL | Browser back, and two real sessions (the 409 is mocked) |
 | TC-124 | UI-004 | `lifecycle.test` (state-valid actions, Block, conflict, activation, archive and delete dialogs with Code, end state, kept history and password rule) | PARTIAL | Keyboard completion; status icon beside the text; suspend wording is not asserted |

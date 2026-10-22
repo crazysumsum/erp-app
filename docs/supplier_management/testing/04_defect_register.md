@@ -133,6 +133,22 @@ The first run of the performance runner (2026-10-22, TC-101) found a 10,000-row 
 
 Found while preparing the UAT browser tests (HD-124 A). Design §7.2 lists seven Supplier pages, including `SupplierAuditPage.vue` (`/suppliers/audit`, menu 「變更紀錄」, audit filter and masked detail). It also gives the detail page an Audit tab, `SupplierAuditTimeline.vue`. Neither exists. No task in `05_development_tasks.md` covers them: T09 built only the audit service and `GET /api/v1/supplier-audit/logs`. UAT accepts only user-observable evidence, and at least ten cases read the Audit page (UAT-001, 006, 009, 012, 020, 026, 030, 041, 043 and 055). Fix approved as HD-125 A, without changing the plan.
 
+**Fixed under HD-125 A.**
+- **What was built:**
+  - `SupplierAuditPage.vue` (`/suppliers/audit`, menu 「變更紀錄」, `supplier.view`).
+  - A shared `SupplierAuditTimeline.vue`, which is also used by a new 「變更紀錄」 tab on the detail page.
+  - Both read the existing `GET /api/v1/supplier-audit/logs`.
+- **What the page does:**
+  - Filters by Hong Kong day bounds (a reversed range is shown as an error and not queried), actor, target, action and target type.
+  - Shows time in Hong Kong time, the action, the target, before → after for each field, the reason and the request ID.
+  - The detail is shown exactly as the server masked it.
+  - The tab asks only for its Supplier.
+- **Bug found by the unit test:** the first version reloaded before the new filters reached the timeline, so it queried the previous filters. It now waits a tick, and the test fails without that wait.
+- **Tests:**
+  - `audit.test.js` and `supplierAudit.test.js`.
+  - Two Playwright tests in `supplier-audit.spec.js` (network mocked).
+  - UAT (UAT-001, 055 and others) exercises the page against a real backend.
+
 ## HD-116 A: dispositions (2026-10-21)
 
 Fixed in this change:
