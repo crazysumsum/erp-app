@@ -88,7 +88,8 @@ function runScript(script, args, { output, onLine } = {}) {
       } catch (error) {
         stderr += `\nreport unreadable: ${errorText(error)}`;
       }
-      resolve({ code: report === null && code === 0 ? 1 : code, report, stdout, stderr: stderr.slice(-2_000) });
+      // 有指定報告但讀唔到（冇寫或者壞咗）就當失敗；冇報告嘅工具（seed）睇 exit code。
+      resolve({ code: output && report === null && code === 0 ? 1 : code, report, stdout, stderr: stderr.slice(-2_000) });
     });
   });
 }
