@@ -291,7 +291,7 @@ Left out on purpose: `client/test/framework/routing/authorizationRefresh.test.js
 
 | TC | Case | Tagged tests | Status | Gap |
 | --- | --- | --- | --- | --- |
-| TC-013 | LIST-006 | `list.test` (loading, empty and failed reads, retry); `coreFlow.test` (view-only projection to detail) | PARTIAL | The shared `DataTable` also shows 「冇資料」 while loading and under the error banner, so a sighted user cannot tell the three states apart by the text (DEF-032); the no-permission state and the U-BANK-R / U-NONE projections are not tested here |
+| TC-013 | LIST-006 | `list.test` (loading, empty and failed reads by text and `aria-busy`, retry); `coreFlow.test` (view-only projection to detail) | PARTIAL | The no-permission state and the U-BANK-R / U-NONE projections are not tested here. The loading, empty and failed texts are distinct since DEF-032 (also checked in a real browser by `supplier-list-filters.spec`) |
 | TC-015 | LIST-008 | `list.test` (restore from URL, HD-107 filters, malformed values dropped) | PARTIAL | Back/forward and refresh in a real browser; no assertion that the URL holds no sensitive value |
 | TC-029 | CORE-013 | `editor.test` (dirty editor prompts before leaving) | PARTIAL | The "stay" choice (asserted in `detail.test`, tagged TC-123); saving the new Supplier value; existing purchase snapshots unchanged, which needs the purchasing module |
 | TC-075 | BANK-014 | `bank.test` (nine reveal and clearing tests, including the write dialog and the create form) | COVERED | |
@@ -312,10 +312,16 @@ Left out on purpose: `client/test/framework/routing/authorizationRefresh.test.js
 | TC-130 | OPS-003 | — | NONE | Dependency timeout, reset and 503 |
 | TC-131 | OPS-004 | `businessMasterSupplierContract` (fails closed when not READY) | PARTIAL | Health not ready, then recovers after repair |
 | TC-132 | OPS-005 | `supplierObservability` (unit, integration) | COVERED | Runner missing |
-| TC-133 | OPS-006 | `supplierBankRestore.integration` (Bank only) | PARTIAL | Full restore, reconciliation, RTO/RPO: T51 work |
-| TC-134 | OPS-007 | — | NONE | Rollback rehearsal: T51 work |
-| TC-135 | OPS-008 | — | NONE | Deployment-order smoke: T51 work |
-| TC-136 | OPS-009 | — | NONE | Full regression summary: T51 release evidence |
+| TC-133 | OPS-006 | `runSupplierRecoveryAcceptance.js`: core, address, contact, identifier, Bank (real encryption), settings, a pending approval, an import job with its file, and audit seeded over HTTP (SKU relations and supply events are not); `mysqldump`, isolated restore; all-table CHECKSUM, table/trigger/routine/event definitions, job rows tied to their files by SHA-256, transaction marker; smoke and reveal on the restored copy; missing key `BANK_KEY_UNAVAILABLE` and wrong key `BANK_ACCOUNT_INTEGRITY_FAILED` | PARTIAL | Production RTO ≤ 4 h and RPO ≤ 15 min drill (NOT_RUN by design, HD-119 A) |
+| TC-134 | OPS-007 | `runSupplierReleaseAcceptance.js`: stop-claim, a worker dying after an update row, a restarted app (second app in the same process) that waits for the live lease and takes over after expiry (set in the database), the update applied exactly once, completed job not rerun | PARTIAL | Production rollback timeline (NOT_RUN by design) |
+| TC-135 | OPS-008 | `runSupplierReleaseAcceptance.js`: fresh schema from migrations (every migration file applied, rerun no-op, schema digest recorded but no release baseline to compare it with), six permissions and system-admin, settings default OFF, every Supplier route guarded by supplier.* permissions, separated-role smoke (Draft, direct activation, approval, suspend, block, purchase lookup, masked Bank, no plaintext in any stored byte, reveal, audit) | PARTIAL | Staged deployment in §14 order and break-glass accounts (NOT_RUN by design); client menu is TC-121 |
+| TC-136 | OPS-009 | — (runner reports NOT_RUN) | NONE | The release gate is the harness verify_gate over CI and suite evidence plus the Product Owner's GO |
+
+Recovery and release runners (HD-117 A, HD-119 A). Each TC has a local test and a separate NOT_RUN test for the production-only part, so `supplier-recovery` and `supplier-release-operations` report BLOCKED. Rerunning cannot change that: they close only through a risk approval, or a profile change once production evidence exists. The release suite also has two executable tests against `min_tests` 3.
+
+Local run on 2026-10-21 against MySQL 26.7.0 with admin credentials: every local check PASS. Eleven mutants each fail the intended check: worker ignores stop; claim ignores a live lease; lookup shows suspended and blocked Suppliers; an audit route guarded by a non-Supplier permission; a restore that loses a row; import files not restored; a restored job that loses its source file; a dump without triggers; the missing-key check given the real key; an identity cipher; a takeover that redoes the update row.
+
+The runners need an account that may create databases, restore triggers with a definer and run migrations (`DB_ADMIN_USER`/`DB_ADMIN_PASSWORD`, falling back to `DB_USER`), and `mysqldump`/`mysql` on `PATH` or in `MYSQL_BIN`. The harness passes a suite only its profile `env_keys`, and these two suites do not list `DB_ADMIN_*` or `MYSQL_BIN` yet (REV-109 H-1). Under `run_check` they therefore fail on privileges until the profile is changed. They clean up their own fixtures, found by a run tag, even after a failure.
 
 ## UAT (52)
 
