@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 87,
+  "revision": 99,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
-  "status": "IMPLEMENTING",
-  "resume_status": null,
+  "status": "NOT_READY",
+  "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-001",
   "current_task": "TASK-011",
   "baseline": {
     "design": "eed2eb831ce50d0717992bcc25f04318dd652b16b7f662b3b5f81f9797b5a545",
     "plan": "f3b9dacf3b513916e6f7f349e15c0fcc035be2bc2995761624e7adb7b6238b05",
-    "code_commit": "d787e03465d644c79eb2e62400575c4033719ca6",
-    "source_fingerprint": "4461a1c86d8c504ba9d51b069f3696728d8d586002858eaf80d76bccd3963648",
+    "code_commit": "d5e8c33cea19b280bed116be8cfc1b1f7456b7cc",
+    "source_fingerprint": "f458a9df067f92f06762f9ac0061379e46f225c056b035b7a817746bf7a2572b",
     "worktree": "/private/tmp/erp-fulfillment-p0",
     "default_commit": "94d5297260c4fe460cd9e1b84cfbfe14743a6f1f",
     "mode_entry_commit": "76223f40480d94a1d3a2ae6e0e7b91292bd98b82"
@@ -33,7 +33,8 @@
       "capacity-mysql-schema": "fulfillment_p0_legacy_1e977cca",
       "capacity-control-mysql-schema": "fulfillment_p0_legacy_46b4819e",
       "mysql-current-regression": "Fresh same-source/PLAN paired detachedruntime /private/tmp/erp-fulfillment-p0-regression-runtime; sourceFP4461; new97-registry/zero-business-row preflight; prior5bc witholdaborted2000orderjob preserved.",
-      "mysql-stale-import-core": "Original5bc retained: job217 created01:06:13/processstarted01:07:34/terminal02:16:21 duringnewfailedfullrun; previouscapacityinterruption. No deletion, reset or selector change."
+      "mysql-stale-import-core": "Original5bc retained: job217 created01:06:13/processstarted01:07:34/terminal02:16:21 duringnewfailedfullrun; previouscapacityinterruption. No deletion, reset or selector change.",
+      "allocation-profile-evidence": "docs/fulfillment_shipping_management/evidence/allocation-profile-20261022/summary.json; 3 published +3 WIP profiled tests +2 no-probe controls, all8 targetedPASS0FAIL0SKIP; diagnostic only, same sourceFPdff20777 before/after; no full-gate/CI assertion."
     },
     "lease_ref": null
   },
@@ -2298,6 +2299,54 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-051-FRESH-RUNTIME-REMEDIATION",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "4461a1c86d8c504ba9d51b069f3696728d8d586002858eaf80d76bccd3963648",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/22_p0_completion.md#def-003--full-regression-runtime-reuse",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-052-EXACT-D5-CI-CANDIDATE",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "4461a1c86d8c504ba9d51b069f3696728d8d586002858eaf80d76bccd3963648",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/22_p0_completion.md#def-003--full-regression-runtime-reuse",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-053-FRESH-SIX-FULL-GATES",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "4461a1c86d8c504ba9d51b069f3696728d8d586002858eaf80d76bccd3963648",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/22_p0_completion.md#def-003--full-regression-runtime-reuse",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-054-TRANSACTION-SCHEMA-PROOF-SOURCE",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "f458a9df067f92f06762f9ac0061379e46f225c056b035b7a817746bf7a2572b",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/24_allocation_candidate_schema_optimization.md#independent-source-review",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -2421,6 +2470,116 @@
       "status": "FAIL",
       "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/39706733648/job/119591487100",
       "actor": "GitHub Actions API actual completed exact-head run39706733648; history retained"
+    },
+    {
+      "code_commit": "d5e8c33cea19b280bed116be8cfc1b1f7456b7cc",
+      "spec_baseline": "f3b9dacf3b513916e6f7f349e15c0fcc035be2bc2995761624e7adb7b6238b05",
+      "source_fingerprint": "4461a1c86d8c504ba9d51b069f3696728d8d586002858eaf80d76bccd3963648",
+      "observed_at": "2026-10-22T02:30:49.402811+00:00",
+      "kind": "CI",
+      "subject": "Dependency audit",
+      "status": "PENDING",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/39711724388",
+      "actor": "GitHubActions API actual exact-head queuedrun39711724388"
+    },
+    {
+      "code_commit": "d5e8c33cea19b280bed116be8cfc1b1f7456b7cc",
+      "spec_baseline": "f3b9dacf3b513916e6f7f349e15c0fcc035be2bc2995761624e7adb7b6238b05",
+      "source_fingerprint": "4461a1c86d8c504ba9d51b069f3696728d8d586002858eaf80d76bccd3963648",
+      "observed_at": "2026-10-22T02:30:49.402811+00:00",
+      "kind": "CI",
+      "subject": "Lint",
+      "status": "PENDING",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/39711724388",
+      "actor": "GitHubActions API actual exact-head queuedrun39711724388"
+    },
+    {
+      "code_commit": "d5e8c33cea19b280bed116be8cfc1b1f7456b7cc",
+      "spec_baseline": "f3b9dacf3b513916e6f7f349e15c0fcc035be2bc2995761624e7adb7b6238b05",
+      "source_fingerprint": "4461a1c86d8c504ba9d51b069f3696728d8d586002858eaf80d76bccd3963648",
+      "observed_at": "2026-10-22T02:30:49.402811+00:00",
+      "kind": "CI",
+      "subject": "Test (server + client, MySQL integration)",
+      "status": "PENDING",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/39711724388",
+      "actor": "GitHubActions API actual exact-head queuedrun39711724388"
+    },
+    {
+      "code_commit": "d5e8c33cea19b280bed116be8cfc1b1f7456b7cc",
+      "spec_baseline": "f3b9dacf3b513916e6f7f349e15c0fcc035be2bc2995761624e7adb7b6238b05",
+      "source_fingerprint": "4461a1c86d8c504ba9d51b069f3696728d8d586002858eaf80d76bccd3963648",
+      "observed_at": "2026-10-22T02:30:49.402811+00:00",
+      "kind": "CI",
+      "subject": "Build frontend",
+      "status": "PENDING",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/39711724388",
+      "actor": "GitHubActions API actual exact-head queuedrun39711724388"
+    },
+    {
+      "code_commit": "d5e8c33cea19b280bed116be8cfc1b1f7456b7cc",
+      "spec_baseline": "f3b9dacf3b513916e6f7f349e15c0fcc035be2bc2995761624e7adb7b6238b05",
+      "source_fingerprint": "4461a1c86d8c504ba9d51b069f3696728d8d586002858eaf80d76bccd3963648",
+      "observed_at": "2026-10-22T02:30:49.402811+00:00",
+      "kind": "CI",
+      "subject": "Browser tests (Playwright)",
+      "status": "PENDING",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/39711724388",
+      "actor": "GitHubActions API actual exact-head queuedrun39711724388"
+    },
+    {
+      "code_commit": "d5e8c33cea19b280bed116be8cfc1b1f7456b7cc",
+      "spec_baseline": "f3b9dacf3b513916e6f7f349e15c0fcc035be2bc2995761624e7adb7b6238b05",
+      "source_fingerprint": "4461a1c86d8c504ba9d51b069f3696728d8d586002858eaf80d76bccd3963648",
+      "observed_at": "2026-10-22T02:49:00.862011+00:00",
+      "kind": "CI",
+      "subject": "Build frontend",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/39711724388/job/119604378370",
+      "actor": "GitHubActions actual completed exact-head run39711724388; last20sec5000membershipFAIL retained"
+    },
+    {
+      "code_commit": "d5e8c33cea19b280bed116be8cfc1b1f7456b7cc",
+      "spec_baseline": "f3b9dacf3b513916e6f7f349e15c0fcc035be2bc2995761624e7adb7b6238b05",
+      "source_fingerprint": "4461a1c86d8c504ba9d51b069f3696728d8d586002858eaf80d76bccd3963648",
+      "observed_at": "2026-10-22T02:49:00.862011+00:00",
+      "kind": "CI",
+      "subject": "Lint",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/39711724388/job/119604378612",
+      "actor": "GitHubActions actual completed exact-head run39711724388; last20sec5000membershipFAIL retained"
+    },
+    {
+      "code_commit": "d5e8c33cea19b280bed116be8cfc1b1f7456b7cc",
+      "spec_baseline": "f3b9dacf3b513916e6f7f349e15c0fcc035be2bc2995761624e7adb7b6238b05",
+      "source_fingerprint": "4461a1c86d8c504ba9d51b069f3696728d8d586002858eaf80d76bccd3963648",
+      "observed_at": "2026-10-22T02:49:00.862011+00:00",
+      "kind": "CI",
+      "subject": "Dependency audit",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/39711724388/job/119604378622",
+      "actor": "GitHubActions actual completed exact-head run39711724388; last20sec5000membershipFAIL retained"
+    },
+    {
+      "code_commit": "d5e8c33cea19b280bed116be8cfc1b1f7456b7cc",
+      "spec_baseline": "f3b9dacf3b513916e6f7f349e15c0fcc035be2bc2995761624e7adb7b6238b05",
+      "source_fingerprint": "4461a1c86d8c504ba9d51b069f3696728d8d586002858eaf80d76bccd3963648",
+      "observed_at": "2026-10-22T02:49:00.862011+00:00",
+      "kind": "CI",
+      "subject": "Browser tests (Playwright)",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/39711724388/job/119604378702",
+      "actor": "GitHubActions actual completed exact-head run39711724388; last20sec5000membershipFAIL retained"
+    },
+    {
+      "code_commit": "d5e8c33cea19b280bed116be8cfc1b1f7456b7cc",
+      "spec_baseline": "f3b9dacf3b513916e6f7f349e15c0fcc035be2bc2995761624e7adb7b6238b05",
+      "source_fingerprint": "4461a1c86d8c504ba9d51b069f3696728d8d586002858eaf80d76bccd3963648",
+      "observed_at": "2026-10-22T02:49:00.862011+00:00",
+      "kind": "CI",
+      "subject": "Test (server + client, MySQL integration)",
+      "status": "FAIL",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/39711724388/job/119608666585",
+      "actor": "GitHubActions actual completed exact-head run39711724388; last20sec5000membershipFAIL retained"
     }
   ],
   "pending_decisions": [
@@ -2916,8 +3075,48 @@
       "kind": "PUSH",
       "target": "refs/heads/codex/fulfillment-p0-foundation frozen source4461 candidate; GitHub fullCI inparallelwithownedfreshlocalregression",
       "idempotency_key": "p0-source4461-ci-remediation-publish-r1",
+      "status": "CONFIRMED",
+      "source_ref": "git push actualSUCCESS25fc→d5e8c33cea19b280bed116be8cfc1b1f7456b7cc; noPRcreated"
+    },
+    {
+      "id": "P0-CORRECTED-CI-DISPATCH",
+      "kind": "WORKFLOW_DISPATCH",
+      "target": "ci.yml refcodex/fulfillment-p0-foundation exactd5e8c33c",
+      "idempotency_key": "p0-d5e8-ci-dispatch-r1",
+      "status": "CONFIRMED",
+      "source_ref": "Actualdispatch204/run39711724388/head d5e8c33cea19b280bed116be8cfc1b1f7456b7cc queued; https://github.com/crazysumsum/erp-app/actions/runs/39711724388"
+    },
+    {
+      "id": "P0-HUMAN-PAUSE-20261022",
+      "kind": "HUMAN_PAUSE",
+      "target": "FulfillmentP0 implementation/test/review/push/PR",
+      "idempotency_key": "sam-human-pause-20261022-r1",
+      "status": "CONFIRMED",
+      "source_ref": "Actualhuman chat: 暫停; subsequent 解釋下現在有什麼問題卡住 asksstatusonly, notresume. Independentreviewerinterrupted; ownedcapacityprocessinventory0 atstopcheck. PreserveWIP/oldCI/localresults."
+    },
+    {
+      "id": "P0-ALLOCATION-PROFILE-RESUME-20261022",
+      "kind": "HUMAN_RESUME",
+      "target": "Allocation stage timing and SQL counts only; no new optimization/push/PR",
+      "idempotency_key": "sam-allocation-profile-resume-20261022-r1",
+      "status": "CONFIRMED",
+      "source_ref": "Actual human: 先恢復做 Allocation 交易的分階段計時，找出最耗時的步驟及 SQL 次數，確認瓶頸後再決定怎樣優化。 Supersedes pause only for bounded diagnostics; preserve existing WIP."
+    },
+    {
+      "id": "P0-CANDIDATE-SCHEMA-OPTIMIZATION-20261022",
+      "kind": "HUMAN_RESUME",
+      "target": "Bounded transaction-local missing-table proof reuse, remeasure and exact candidate CI; no merge/live activation",
+      "idempotency_key": "sam-candidate-schema-optimization-20261022-r1",
+      "status": "CONFIRMED",
+      "source_ref": "Actual Sam: 按建議，先優化同一交易內重複的缺表查驗，保留不完整 schema 的拒絕檢查及原有 20 秒限制，再重新量測及跑 CI，確認改善效果。 Preserved batching WIP included in candidate verification; no deadline/schema/permission weakening."
+    },
+    {
+      "id": "P0-CACHE-CANDIDATE-PUSH-F458",
+      "kind": "GIT_PUSH",
+      "target": "origin codex/fulfillment-p0-foundation, expected remote d5e8c33cea19b280bed116be8cfc1b1f7456b7cc, sourceFPf458a9df067f92f06762f9ac0061379e46f225c056b035b7a817746bf7a2572b",
+      "idempotency_key": "p0-schema-proof-f458-push-20261022",
       "status": "PLANNED",
-      "source_ref": "Sam explicit push/draftP0 authority; strict184/browser2/lint/build/auditPASS+actual0C/H/Msource/evidence reviews; noPRunlessfullregression+allTASK+currentCIpass"
+      "source_ref": "Actual Sam explicitly requests remeasure and runCI; existing authorization to push Fulfillment candidate. Native196/browser2/lint/build/auditPASS and separate source0C/H/M; no PR or merge planned by this action."
     }
   ],
   "evidence_files": [
@@ -2931,7 +3130,13 @@
     "evidence/20261022T020152-23c3efa24a39/run.json",
     "evidence/20261022T020208-17688f35a688/run.json",
     "evidence/20261022T020217-8f6efd9e50bc/run.json",
-    "evidence/20261022T020220-b89524408b3b/run.json"
+    "evidence/20261022T020220-b89524408b3b/run.json",
+    "evidence/20261022T035331-636d325dd2f2/run.json",
+    "evidence/20261022T035601-3faa6d3fcc24/run.json",
+    "evidence/20261022T035513-b9ddb16f6054/run.json",
+    "evidence/20261022T035519-7dac1a34d73f/run.json",
+    "evidence/20261022T035522-eede12bf234b/run.json",
+    "evidence/20261022T035333-8f8266704f0d/run.json"
   ],
   "defects": [
     {
@@ -2973,5 +3178,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Freeze source4461 candidate with truthful failed/current-pending evidence; push+dispatch fullCI while freshpairedlocalfullregressionruns. No draftPR until actualfreshfullgates/independentclosure/allTASK/currentCI PASS; preserve DEF002/003 and failures."
+  "next_safe_action": "Current FPf458 exact five typed developer checks PASS (native196casePASS0SKIP/browser2PASS0SKIP/lint/build/audit), source independently reviewed0C/H/M; new schema-proof profile3runs improves A26.38%/R18.53%. Verify typed evidence review, freeze/push candidate and observe exact-head full CI. OldfailedCI+private-probe lintFAIL preserved; no PR/merge/liveactivation until all originally required gates."
 }

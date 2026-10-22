@@ -1,5 +1,9 @@
 import { inventoryError } from "./inventoryErrors.js";
 import { inventoryPositiveInteger } from "./inventoryValidation.js";
+import { getActiveTransactionIsolation } from "../../services/mysqldatabase/MySqlDatabaseService.js";
+
+// Schema installation drains Inventory transactions; never cache candidate rows or reuse proof across transactions.
+const preStocktakeTransactions = new WeakSet();
 
 function compare(left, right) {
   if(typeof left==="string"&&typeof right==="string")return Buffer.compare(Buffer.from(left,"utf8"),Buffer.from(right,"utf8"));
@@ -116,7 +120,8 @@ export async function loadInventoryCandidates(transaction, {
   );
   let rows;
   try {
-    [rows] = await query(true);
+    const absent = getActiveTransactionIsolation(transaction) !== null && preStocktakeTransactions.has(transaction);
+    [rows] = await query(!absent);
   } catch (error) {
     if ((error?.cause?.code ?? error?.code) !== "ER_NO_SUCH_TABLE") throw error;
     const [tables] = await transaction.query(
@@ -125,6 +130,7 @@ export async function loadInventoryCandidates(transaction, {
     );
     if (tables.length !== 0) throw error;
     [rows] = await query(false);
+    if (getActiveTransactionIsolation(transaction) !== null) preStocktakeTransactions.add(transaction);
   }
   return rankInventoryCandidates(rows.map(rowCandidate).filter((row) =>
     (row.expiryDate === null || row.expiryDate >= cutoff) &&

@@ -99,12 +99,14 @@ nativeTest("P0 native100x50 allocation and old/new5000 reallocation complete wit
     releases:m.allocations.map(a=>({inventoryAllocationId:a.inventoryAllocationId,inventoryBalanceId:a.inventoryBalanceId,expectedVersion:1,expectedBalanceVersion:101,baseQuantity:"1"})),
     allocations:balanceIds.map(id=>({inventoryBalanceId:id,expectedBalanceVersion:101,baseQuantity:"1"}))}))}))};
   let completedLegs=0;
-  await assert.rejects(f.invoke("REALLOCATE",moved,6,tx=>{
-    const execute=tx.execute.bind(tx);tx.execute=(sql,args)=>{
-      if(sql.includes("UPDATE inventory_operation_requests")&&args[0]==="FULFILLMENT_LEG"&&++completedLegs===10000)throw new Error("synthetic last full-capacity receipt failure");
-      return execute(sql,args);
-    };
-  }));
+  const completeBatch=f.service.operations.completeBatch.bind(f.service.operations);
+  f.service.operations.completeBatch=async(tx,entries)=>{
+    const result=await completeBatch(tx,entries);completedLegs+=entries.filter(entry=>entry.resultType==="FULFILLMENT_LEG").length;
+    if(completedLegs===10000)throw new Error("synthetic last full-capacity receipt failure");
+    return result;
+  };
+  try{await assert.rejects(f.invoke("REALLOCATE",moved,6),error=>error.cause?.message==="synthetic last full-capacity receipt failure");}
+  finally{f.service.operations.completeBatch=completeBatch;}
   assert.equal(completedLegs,10000);
   const [[rolledBack]]=await f.db.query("SELECT (SELECT COUNT(*) FROM inventory_allocations) AS allocations,(SELECT COUNT(*) FROM inventory_audit_logs) AS audits,(SELECT COUNT(*) FROM inventory_operation_requests WHERE command_type='FULFILLMENT_BATCH_REALLOCATE') AS reallocate");
   assert.deepEqual([Number(rolledBack.allocations),Number(rolledBack.audits),Number(rolledBack.reallocate)],[5000,5000,0]);

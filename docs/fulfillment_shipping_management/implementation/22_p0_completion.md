@@ -133,3 +133,20 @@ SameDB focusedcase subsequently3PASS/0SKIP; wholeunchangedtestfile with samecove
 ## Frozen CI verification candidate
 
 The source is frozen atFP4461, integrated main94d, unchangedDESIGN/PLAN. Strictdeveloper checks and source/evidence independentreviewsPASS permit publication for fullCI verification; localfullregression is running in a separate ownedruntime. The twoisolated verification lanes may run concurrently. This record does not mark fullverification, Task011, eitheropenDEF, CI or PR ready. Actualfullresults, exactcurrentCI and finalclosure must allPASS before the authorizedsingle draftPR. Subsequent CI/closure/PR observations are kept in local revisionedHarness state and the PR body, avoiding a documentation-only candidate loop; originalfailedruns remain linked.
+
+
+## Source4461 full local success and remaining CI timeout
+
+Unchanged fresh completecommand actually3728tests/3590PASS/0FAIL/138qualifiedSKIP,918039ms;96.08L/87.13B/94.38F and all39originalfloorsPASS. Raw `/private/tmp/fulfillment-p0-fresh-server-coverage-r2.log`, SHAdaa69ec5dccf6ae6327c841acf3e345872b195d2032816af10e40153c6d74f0f. Samefreshpair Salescapacity2PASS/TC0353PASS zeroSKIP; FILES3635/2637PASS/0FAIL/998native-laneSKIP. Clientunit/coverageboth915PASS112files,77.86L/69.13B/69.00F/74.60statements. Actualsix-result separate review0C/H/M verifiedsource/runtime/skipqualification. FinalpairedTC0422PASS/0SKIP also completed; immutablecoordinatorresults `/private/tmp/fulfillment-p0-fresh-full-results.json`. Originalstale-core12FAIL retained, not relabelled.
+
+Exactd5e8 currentCI39711724388 completedFAIL: all jobs exceptcoverage shard2/strictaggregatepassed; mergedcoverage skipped. Actualsocketaccount preflight is erp_user@% / localhost with correctUnixsocket. Lowprivilege andregistration previouslyfailedcasesPASS. Onlylegal5000Reservation20sec timeoutremains (49585ms total);100member/5000legcasePASS allocate6822/reallocate13035ms. This establishestransportaloneinsufficient. Localfullandfocusedresults cannot override remoteFAIL. Newboundedinternalreceiptwrite optimization is underindependentreview; no deadline/skip/business/schema/transaction/API/receiptshape change is adopted. No draftPR exists.
+
+
+## Allocation diagnostic-only resume (2026-10-22)
+
+Sam authorized stage timing/SQL counts only after the human pause. [Allocation transaction profiling](23_allocation_transaction_profile.md) records three alternating published/WIP runs each, two uninstrumented controls, exact local source equality, exclusive phase timing and SQL count reconciliation. Eight targeted tests passed; published Allocate/Reallocate medians7.149s/9.784s and55,135/80,290SQL; selection is the largest stage, including repeated pre-Stocktake fallback. Zero observed row-lock wait deltas. This is not fresh full P0/CI or independent closure evidence; old CI FAIL and existing WIP review/verification gaps remain. No new optimization/source/CI/push/PR action was taken. Await Sam's direction before optimization or broader P0 work.
+
+
+## Approved Allocation optimization candidate (2026-10-22)
+
+[Transaction-local schema proof reuse](24_allocation_candidate_schema_optimization.md) implements Sam's bounded optimization authorization. Same-transaction repeated missing-table/absence checks now occur once, while candidates remain fresh and partial-schema rejection/default20sec limits remain. SourceFPf458: five current typed developer checksPASS (196strictP0cases/2realPlaywrightcases, zeroSKIP), independent source0C/H/M; three-run A4.920s/R7.314s,35237/55442SQL. Alloldfailuresretained. Exact newcandidateCI remainspending; no draftPR ormerge performed.

@@ -50,8 +50,11 @@ export async function claimFulfillmentInventoryBatch(transaction, input) {
 }
 
 export async function completeFulfillmentInventoryBatch(transaction,batch) {
-  const complete=(operationId,resultType,resultId,resultSummary)=>batch.operations.complete(transaction,
-    {operationId,resultType,resultId,resultSummary,completedAt:batch.timestamp});
+  let pending=[];
+  const complete=async(operationId,resultType,resultId,resultSummary)=>{
+    pending.push({operationId,resultType,resultId,resultSummary,completedAt:batch.timestamp});
+    if(pending.length===100){await batch.operations.completeBatch(transaction,pending);pending=[];}
+  };
   for (const member of batch.members) {
     for (const leg of member.legs) {
       if (!leg.result) throw inventoryError("INVENTORY_DEPENDENCY_UNAVAILABLE");
@@ -68,9 +71,10 @@ export async function completeFulfillmentInventoryBatch(transaction,batch) {
         ...(member.input.originalInventoryOperationId?{originalInventoryOperationId:member.input.originalInventoryOperationId}:{}),
         legCount:member.legs.length,legDigest:legDigest(member.legs)});
   }
-  await complete(batch.operationId,batch.contract.root,batch.source.documentId,
-    {fulfillmentId:batch.payload.fulfillmentId,memberCount:batch.members.length,membershipDigest:memberDigest(batch.members),
-      lineSnapshot:JSON.stringify(batch.payload.lines.map(line=>[line.fulfillmentLineId,line.salesOrderLineId,line.baseQuantity]))});
+  for(const entry of pending)await batch.operations.complete(transaction,entry);
+  await batch.operations.complete(transaction,{operationId:batch.operationId,resultType:batch.contract.root,resultId:batch.source.documentId,
+    resultSummary:{fulfillmentId:batch.payload.fulfillmentId,memberCount:batch.members.length,membershipDigest:memberDigest(batch.members),
+      lineSnapshot:JSON.stringify(batch.payload.lines.map(line=>[line.fulfillmentLineId,line.salesOrderLineId,line.baseQuantity]))},completedAt:batch.timestamp});
 }
 
 const receiptFailure=()=>{throw inventoryError("INVENTORY_SOURCE_CONFLICT");};
