@@ -2,6 +2,7 @@
 import "../test-support/testEnv.js";
 import { execFile, spawn } from "node:child_process";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
@@ -79,10 +80,13 @@ const summary = (report) => (report ? { ok: report.ok, overall: report.overall, 
 const plansSeen = (report) => (report?.topStatements?.length ?? 0) > 0 && !(report?.digestTable?.lostDuringRun > 0);
 const LOAD_ARGS = ["--users=50", "--seconds=120", "--warmup-seconds=20", "--think-ms=1000"];
 
-/** 有冇全表掃描：文字搜尋（LIKE）係 HD-088 決定嘅掃描，唔計。 */
+/**
+ * 有冇真 table 嘅全表掃描：`<derived2>`、`<union2,3>` 呢類係 MySQL 自己嘅臨時結果，唔係掃 table；文字搜尋（LIKE）
+ * 係 HD-088 決定嘅掃描，唔計。
+ */
 function fullScans(report, pick = () => true) {
   return (report?.topStatements ?? []).filter((row) => pick(row) && !/\bLIKE\b/iu.test(row.digest) && Array.isArray(row.plan)
-    && row.plan.some((step) => step.type === "ALL")).map((row) => row.digest.slice(0, 160));
+    && row.plan.some((step) => step.type === "ALL" && !String(step.table).startsWith("<"))).map((row) => row.digest.slice(0, 160));
 }
 
 async function totals(view) {
@@ -195,6 +199,7 @@ const tests = [
   { name: "TC-129 local duplicate cap, query plans and counts", id: "TC-129", status: results["TC-129"] ?? "FAIL" },
   ...NOT_RUN.map(({ id, name }) => ({ name, id, status: "NOT_RUN" }))
 ];
+evidence.loadAverage = os.loadavg().map((value) => Math.round(value * 10) / 10);
 console.log(JSON.stringify({ database: process.env.DB_NAME, schema, evidence,
   notRun: Object.fromEntries(NOT_RUN.map(({ name, reason }) => [name, reason])) }, null, 2));
 await writeReport(reportPath, tests);
