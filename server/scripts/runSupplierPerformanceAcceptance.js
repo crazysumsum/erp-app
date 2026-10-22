@@ -9,7 +9,7 @@ import { promisify } from "node:util";
 
 import { createSupplierHarness } from "../test/integration/supplierHttpHarness.js";
 import {
-  adminConnection, adminCredentials, errorText, outputPath, scratchName, writeReport
+  adminConnection, adminCredentials, exitUnlessAdmin, errorText, outputPath, scratchName, writeReport
 } from "../test/integration/supplierAcceptanceRunner.js";
 import { performanceVerdicts } from "../test/integration/supplierPerformanceVerdicts.js";
 
@@ -26,6 +26,7 @@ import { performanceVerdicts } from "../test/integration/supplierPerformanceVerd
  * TC-128 嘅 production-like 環境（OPS-001 寫明）係 NOT_RUN。完咗成個 schema 剷走；SIGINT／SIGTERM 一樣。
  */
 const reportPath = outputPath();
+await exitUnlessAdmin(reportPath, ["TC-085", "TC-101", "TC-128", "TC-129"]);
 const SERVER = fileURLToPath(new URL("../", import.meta.url));
 const SCRIPTS = path.join(SERVER, "scripts");
 const NOT_RUN = [

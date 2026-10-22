@@ -69,6 +69,8 @@ test("HD-117 A: every condition of every performance check fails on its own brok
     ["plans.no_full_scan_outside_text_search", (input) => { input.mixed.report.topStatements[0].plan[0].type = "ALL"; }],
     ["plans.no_full_scan_outside_text_search", (input) => { input.mixed.report.topStatements[2].noIndexUsed = 10; }],
     ["plans.no_full_scan_outside_text_search", (input) => { input.mixed.code = 1; }],
+    // 文字搜尋句入面，LIKE 以外嘅 table 全表掃描唔豁免（REV-112 L-3）。
+    ["plans.no_full_scan_outside_text_search", (input) => { input.mixed.report.topStatements[1].plan.push({ table: "contacts", type: "ALL", key: null, rows: 1_000_000 }); }],
     ["list.count_not_inflated", (input) => { input.counted.listSearch.api = 904; }],
     ["list.count_not_inflated", (input) => { input.counted.listSearch.joined = 452; }],
     ["list.count_not_inflated", (input) => { input.counted.listSearch.status = 500; }],

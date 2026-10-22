@@ -10,7 +10,7 @@ import { promisify } from "node:util";
 import { SUPPLIER_IMPORT_COLUMN_NAMES } from "../src/modules/supplier/import/supplierCsvSchema.js";
 import { createSupplierHarness } from "../test/integration/supplierHttpHarness.js";
 import {
-  adminConnection, adminCredentials, checklist, errorText, outputPath, scratchName, writeReport
+  adminConnection, adminCredentials, exitUnlessAdmin, checklist, errorText, outputPath, scratchName, writeReport
 } from "../test/integration/supplierAcceptanceRunner.js";
 import { databaseState, runStartupCases, tryStart } from "../test/integration/supplierStartupCases.js";
 
@@ -37,6 +37,7 @@ if (process.argv[2] === "--probe-start") {
 }
 
 const reportPath = outputPath();
+await exitUnlessAdmin(reportPath, ["TC-130", "TC-131", "TC-132"]);
 const REASON = "TC-130/132 resilience rehearsal";
 const tag = randomUUID().slice(0, 8).toUpperCase();
 const NOT_RUN = [
