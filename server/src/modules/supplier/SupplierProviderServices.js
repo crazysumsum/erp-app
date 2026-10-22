@@ -3,6 +3,7 @@ import { ItemLookupService } from "../item/ItemLookupService.js";
 import { BusinessMasterLookupProvider } from "./providers/BusinessMasterLookupProvider.js";
 import { SupplierBusinessMasterImpactChecker } from "./SupplierBusinessMasterImpactChecker.js";
 import { SupplierLookupService } from "./SupplierLookupService.js";
+import { assertSupplierSchema } from "./supplierSchemaCheck.js";
 
 const REQUIRED_CORE_TABLES = Object.freeze([
   "supplier_addresses",
@@ -76,6 +77,23 @@ export class SupplierCoreProviderService extends SupplierLookupService {
     if (readiness.status !== "READY") {
       throw new Error(`Supplier Core provider readiness failed: ${JSON.stringify(readiness)}`);
     }
+  }
+}
+
+/**
+ * 開機自我檢查（DEF-033、HD-121 A）：每張 Supplier table 嘅 migration contract 同 settings singleton。
+ * 有缺或者唔相容就拒絕開機，唔寫 DB。
+ */
+export class SupplierSchemaCheckService extends BaseService {
+  static service = Object.freeze({
+    name: "supplierSchemaCheck",
+    lifecycle: "singleton",
+    dependencies: ["mysqldatabase"],
+    eager: true
+  });
+
+  async initialize() {
+    await assertSupplierSchema(this.services.require("mysqldatabase"));
   }
 }
 
