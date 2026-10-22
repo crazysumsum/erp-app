@@ -168,6 +168,7 @@ async function dependencyFailures(app, users, fixture, admin, schema) {
     const tableHolder = await adminConnection(schema);
     let victim = null;
     let reset = null;
+    let killedAt = null;
     try {
       await tableHolder.query("LOCK TABLES suppliers WRITE");
       const inFlight = send(users.view, "GET /api/v1/suppliers");
@@ -176,15 +177,21 @@ async function dependencyFailures(app, users, fixture, admin, schema) {
         victim = waiting[0]?.id ?? null;
         if (victim === null) await sleep(100);
       }
-      if (victim !== null) await q(`KILL CONNECTION ${Number(victim)}`);
+      if (victim !== null) {
+        killedAt = Date.now();
+        await q(`KILL CONNECTION ${Number(victim)}`);
+      }
       reset = await inFlight;
+      evidence.resetAnsweredMs = killedAt === null ? null : Date.now() - killedAt;
     } finally {
       await tableHolder.query("UNLOCK TABLES").catch(() => {});
       await tableHolder.end().catch(() => {});
     }
     const [[gone]] = await q("SELECT COUNT(*) AS n FROM information_schema.processlist WHERE id = ?", [victim ?? 0]);
+    // 幾秒內答：係個 KILL 令佢失敗，唔係等到超時（REV-110 M-1 嘅對照：冇真係 KILL 嘅話要等成個 transaction timeout）。
     check("connection_reset.in_flight_request_fails_cleanly", victim !== null && Number(gone.n) === 0 && reset.status >= 500
-      && Boolean(reset.json?.error?.code) && !reset.text.includes(account), { killed: victim, status: reset?.status, code: reset?.code });
+      && evidence.resetAnsweredMs < 3_000 && Boolean(reset.json?.error?.code) && !reset.text.includes(account),
+    { killed: victim, status: reset?.status, code: reset?.code, answeredMs: evidence.resetAnsweredMs });
     const after = [];
     for (let attempt = 0; attempt < 3; attempt += 1) after.push((await send(users.view, "GET /api/v1/suppliers")).status);
     check("connection_reset.recovers", after.every((status) => status === 200), { statuses: after });
