@@ -1,20 +1,20 @@
 {
   "schema_version": "2.0",
   "module_id": "purchasing-receiving-management",
-  "revision": 4,
-  "mode": "REVIEW_AND_ALIGN",
-  "active_mode": "REVIEW_AND_ALIGN",
+  "revision": 8,
+  "mode": "FULL_LIFECYCLE",
+  "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
-  "resume_status": "PLANNED",
-  "current_phase": null,
-  "current_task": null,
+  "resume_status": "IMPLEMENTING",
+  "current_phase": "PHASE-001",
+  "current_task": "TASK-008",
   "baseline": {
     "design": "5db990ab6967fbfaf1813dbf17382802f1362c77fde2c9e51b57e6ac2cbbe9fd",
     "plan": "54e2b1cb2fa8058d5b96bbcfc2885a96ca7b23d6a1d5e32f6c82691caf4031c7",
-    "code_commit": "a3040c96e1aa92902df964d44a1ad0b83f37f844",
-    "source_fingerprint": "76c9851b4916df526e986d89cead282d1a8afab0d1c4f6e3c332ed3a0752d78e",
-    "worktree": "/Users/sam/Documents/workspace/erp-app",
-    "default_commit": "a3040c96e1aa92902df964d44a1ad0b83f37f844",
+    "code_commit": "81a873fc941d54c634772c46641db95b552bf298",
+    "source_fingerprint": "95b181c03bbef52334c436979b81b0db448c6020bd63f18eb629bd4369ff39d5",
+    "worktree": "/Users/sam/Documents/workspace/erp-purchasing-p0",
+    "default_commit": "94d5297260c4fe460cd9e1b84cfbfe14743a6f1f",
     "mode_entry_commit": "a3040c96e1aa92902df964d44a1ad0b83f37f844"
   },
   "runtime": {
@@ -26,13 +26,13 @@
     "lease_ref": null
   },
   "tasks": {
-    "TASK-001": "PENDING",
-    "TASK-002": "PENDING",
-    "TASK-003": "PENDING",
-    "TASK-004": "PENDING",
-    "TASK-005": "PENDING",
-    "TASK-006": "PENDING",
-    "TASK-007": "PENDING",
+    "TASK-001": "DONE",
+    "TASK-002": "DONE",
+    "TASK-003": "DONE",
+    "TASK-004": "IN_PROGRESS",
+    "TASK-005": "IN_PROGRESS",
+    "TASK-006": "BLOCKED",
+    "TASK-007": "BLOCKED",
     "TASK-008": "PENDING",
     "TASK-009": "PENDING",
     "TASK-010": "PENDING",
@@ -130,6 +130,26 @@
         "TASK-001 through TASK-044",
         "TC-001 through TC-012",
         "UAT-001 through UAT-106"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-004",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "docs/purchasing_receiving_management/implementation/P0_provider_readiness.md#task-003-authorized-write-scope",
+      "recorded_at": "2026-10-22T12:00:00+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "54e2b1cb2fa8058d5b96bbcfc2885a96ca7b23d6a1d5e32f6c82691caf4031c7",
+      "code_commit": null,
+      "scope": [
+        "TASK-003",
+        "server/src/modules/authorization/permissionCatalogue.js (approval_required_path)",
+        "server/database/migrations/0100_seed_purchasing_permissions.js (approval_required_path)",
+        "server/test/permissionCatalogueConventions.test.js (shared, outside module: the three-step process requires registering the seed migration there)",
+        "server/test/integration/{roleManagement,userManagement,passwordChange,migrations}.integration.test.js (shared, outside module: six ungranted catalogue entries made their admin claim denylists stale)"
       ],
       "expires_at": null
     }
@@ -244,6 +264,23 @@
       ],
       "status": "OPEN",
       "answer_ref": null
+    },
+    {
+      "id": "HD-007",
+      "impact": "MAJOR",
+      "question": "TASK-006 and TASK-007 implement the Inventory purchase-receipt batch and partial-reversal contracts under server/src/modules/inventory/**, which is in neither allowed_write_paths nor approval_required_paths for this module. Should Purchasing implement them in the Inventory module under an agreed contract, or should the Inventory module owner deliver them as a provider task?",
+      "affected_ids": [
+        "TASK-006",
+        "TASK-007",
+        "TASK-008",
+        "PHASE-001",
+        "PHASE-004",
+        "PHASE-005",
+        "DES-001",
+        "DES-002"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "docs/purchasing_receiving_management/implementation/P0_provider_readiness.md#hd-007--inventory-contract-ownership"
     }
   ],
   "external_actions": [
@@ -282,5 +319,5 @@
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Alignment is complete and merged (PR #90, merge commit bd97e1c); branch and worktree are cleaned up. Do not re-run the push, PR or merge. Status remains BLOCKED on HD-006 (OPEN-006 cutover data, dates and reconciliation owner), which blocks Go-Live and TASK-044 only. The Supplier manifest pointer recorded as GAP-TR-002 is owned by the Supplier module owner and is not this module's work. Do not enter IMPLEMENT without an explicit authorization: PHASE-001 also requires the Supplier and Inventory provider implementations (GAP-IMP-001, GAP-IMP-002), which do not exist at the observed baseline."
+  "next_safe_action": "TASK-001 and TASK-003 are DONE. TASK-006 and TASK-007 are handed to the Inventory module owner by HD-007 and stay BLOCKED here; Purchasing's remaining job for them is the consumer contract side of TASK-008. TASK-004 and TASK-005 stay IN_PROGRESS until TASK-008 pins their acceptance bullets from this module. PHASE-001 cannot close until the two Inventory contracts land. Five pre-existing CONTRACT_DRIFT issues still block validate_traceability.py; re-pinning them would strand APR-001/002/003 and needs an explicit decision. HD-006 (OPEN-006 cutover) remains open and blocks Go-Live only."
 }
