@@ -2,7 +2,6 @@
 import "../test-support/testEnv.js";
 import { execFile, spawn } from "node:child_process";
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
@@ -34,7 +33,9 @@ const NOT_RUN = [
 ];
 const evidence = {};
 const results = {};
-const work = fs.mkdtempSync(path.join(os.tmpdir(), "supplier-perf-acceptance-"));
+// T50 工具嘅完整報告留喺 output 隔籬（harness 嘅 run_dir），唔係 temp：FAIL 要睇得返細節。
+const work = path.join(path.dirname(path.resolve(reportPath)), "supplier-performance-details");
+fs.mkdirSync(work, { recursive: true });
 const admin = await adminConnection();
 const schema = scratchName();
 const { user, password } = adminCredentials();
@@ -49,7 +50,6 @@ const cleanup = () => (cleaned ??= (async () => {
   await app?.stop().catch(() => {});
   await admin.query(`DROP DATABASE IF EXISTS \`${schema}\``).catch((error) => { evidence.cleanup = errorText(error); });
   await admin.end().catch(() => {});
-  fs.rmSync(work, { recursive: true, force: true });
 })());
 for (const signal of ["SIGINT", "SIGTERM"]) process.once(signal, () => { void cleanup().finally(() => process.exit(130)); });
 
@@ -74,7 +74,9 @@ function runScript(script, args, { output } = {}) {
 
 const p95 = (report, name) => report?.operations?.[name]?.p95 ?? null;
 const summary = (report) => (report ? { ok: report.ok, overall: report.overall, nfr001: report.nfr001, nfr005: report.nfr005, error: report.error,
-  resources: report.resources } : null);
+  resources: report.resources, statements: report.topStatements?.length ?? 0, digestTable: report.digestTable } : null);
+/** 查詢計劃要有得睇：digest 表滿咗或者冇記錄，就唔可以話「冇全表掃描」（空集合唔算證據）。 */
+const plansSeen = (report) => (report?.topStatements?.length ?? 0) > 0 && !(report?.digestTable?.lostDuringRun > 0);
 const LOAD_ARGS = ["--users=50", "--seconds=120", "--warmup-seconds=20", "--think-ms=1000"];
 
 /** 有冇全表掃描：文字搜尋（LIKE）係 HD-088 決定嘅掃描，唔計。 */
@@ -86,12 +88,12 @@ function fullScans(report, pick = () => true) {
 async function totals(view) {
   const [[active]] = await admin.query(`SELECT COUNT(*) AS n FROM \`${schema}\`.suppliers WHERE status = 'active'`);
   const listed = await app.send(view, { ...app.route("GET /api/v1/suppliers"), path: "/api/v1/suppliers?status=active&pageSize=1" });
-  const [[hot]] = await admin.query(`SELECT k.id, COUNT(*) AS n FROM \`${schema}\`.item_skus k JOIN \`${schema}\`.supplier_sku_refs y ON y.sku_id = k.id
-    JOIN \`${schema}\`.suppliers s ON s.id = y.supplier_id AND s.status = 'active' WHERE k.sku_code = 'PERF-SKU-HOT' GROUP BY k.id`);
+  // for-SKU lookup 列晒所有 Active Supplier，有 relation 嘅排前（設計 §8.7）：熱門 SKU 有 20,000 條 relation，總數膨脹嘅話會多過 Active 數。
+  const [[hot]] = await admin.query(`SELECT id FROM \`${schema}\`.item_skus WHERE sku_code = 'PERF-SKU-HOT'`);
   const lookup = await app.send(view, { ...app.route("GET /api/v1/supplier-lookups/for-sku/:skuId"),
     path: `/api/v1/supplier-lookups/for-sku/${hot.id}?pageSize=1` });
   return { list: { api: listed.json?.data?.total ?? null, sql: Number(active.n), status: listed.status },
-    forSku: { api: lookup.json?.data?.total ?? null, sql: Number(hot.n), status: lookup.status } };
+    forSku: { api: lookup.json?.data?.total ?? null, sql: Number(active.n), status: lookup.status } };
 }
 
 try {
@@ -132,7 +134,8 @@ try {
     check("for_sku.completed", forSku.code === 0 && forSku.report?.ok === true, { code: forSku.code, error: forSku.report?.error });
     check("for_sku.p95_under_2s", forSku.report?.nfr005?.pass === true, forSku.report?.nfr005);
     check("for_sku.count_not_inflated", counted.forSku.status === 200 && counted.forSku.api === counted.forSku.sql, counted.forSku);
-    check("for_sku.no_full_scan", fullScans(forSku.report).length === 0, { scans: fullScans(forSku.report) });
+    check("for_sku.no_full_scan", plansSeen(forSku.report) && fullScans(forSku.report).length === 0,
+      { statements: forSku.report?.topStatements?.length ?? 0, digestTable: forSku.report?.digestTable, scans: fullScans(forSku.report) });
     results["TC-085"] = passed() ? "PASS" : "FAIL";
   }
 
@@ -149,8 +152,8 @@ try {
     check("duplicates.recall_within_two_points", capped !== undefined && uncapped.recall - capped.recall <= 0.02, { capped: capped?.recall, uncapped: uncapped?.recall });
     check("duplicates.check_p95_under_2s", p95(mixed.report, "duplicates.check") !== null && p95(mixed.report, "duplicates.check") < LIMIT_MS,
       { p95: p95(mixed.report, "duplicates.check") });
-    check("plans.no_full_scan_outside_text_search", (mixed.report?.topStatements?.length ?? 0) > 0 && fullScans(mixed.report).length === 0,
-      { statements: mixed.report?.topStatements?.length ?? 0, scans: fullScans(mixed.report) });
+    check("plans.no_full_scan_outside_text_search", plansSeen(mixed.report) && fullScans(mixed.report).length === 0,
+      { statements: mixed.report?.topStatements?.length ?? 0, digestTable: mixed.report?.digestTable, scans: fullScans(mixed.report) });
     check("list.count_not_inflated", counted.list.status === 200 && counted.list.api === counted.list.sql, counted.list);
     results["TC-129"] = passed() ? "PASS" : "FAIL";
   }
