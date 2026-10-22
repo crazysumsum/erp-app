@@ -1,19 +1,19 @@
 {
   "schema_version": "2.0",
   "module_id": "purchasing-receiving-management",
-  "revision": 4,
-  "mode": "REVIEW_AND_ALIGN",
-  "active_mode": "REVIEW_AND_ALIGN",
+  "revision": 5,
+  "mode": "FULL_LIFECYCLE",
+  "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
-  "resume_status": "PLANNED",
-  "current_phase": null,
-  "current_task": null,
+  "resume_status": "IMPLEMENTING",
+  "current_phase": "PHASE-001",
+  "current_task": "TASK-003",
   "baseline": {
     "design": "5db990ab6967fbfaf1813dbf17382802f1362c77fde2c9e51b57e6ac2cbbe9fd",
     "plan": "54e2b1cb2fa8058d5b96bbcfc2885a96ca7b23d6a1d5e32f6c82691caf4031c7",
-    "code_commit": "a3040c96e1aa92902df964d44a1ad0b83f37f844",
-    "source_fingerprint": "76c9851b4916df526e986d89cead282d1a8afab0d1c4f6e3c332ed3a0752d78e",
-    "worktree": "/Users/sam/Documents/workspace/erp-app",
+    "code_commit": "81a873fc941d54c634772c46641db95b552bf298",
+    "source_fingerprint": "77e23559e014501d92f283cad0b884125b339591d9b602d6c8a4b27f2e56abe5",
+    "worktree": "/Users/sam/Documents/workspace/erp-purchasing-p0",
     "default_commit": "a3040c96e1aa92902df964d44a1ad0b83f37f844",
     "mode_entry_commit": "a3040c96e1aa92902df964d44a1ad0b83f37f844"
   },
@@ -26,13 +26,13 @@
     "lease_ref": null
   },
   "tasks": {
-    "TASK-001": "PENDING",
-    "TASK-002": "PENDING",
+    "TASK-001": "DONE",
+    "TASK-002": "DONE",
     "TASK-003": "PENDING",
-    "TASK-004": "PENDING",
-    "TASK-005": "PENDING",
-    "TASK-006": "PENDING",
-    "TASK-007": "PENDING",
+    "TASK-004": "IN_PROGRESS",
+    "TASK-005": "IN_PROGRESS",
+    "TASK-006": "BLOCKED",
+    "TASK-007": "BLOCKED",
     "TASK-008": "PENDING",
     "TASK-009": "PENDING",
     "TASK-010": "PENDING",
@@ -244,6 +244,23 @@
       ],
       "status": "OPEN",
       "answer_ref": null
+    },
+    {
+      "id": "HD-007",
+      "impact": "MAJOR",
+      "question": "TASK-006 and TASK-007 implement the Inventory purchase-receipt batch and partial-reversal contracts under server/src/modules/inventory/**, which is in neither allowed_write_paths nor approval_required_paths for this module. Should Purchasing implement them in the Inventory module under an agreed contract, or should the Inventory module owner deliver them as a provider task?",
+      "affected_ids": [
+        "TASK-006",
+        "TASK-007",
+        "TASK-008",
+        "PHASE-001",
+        "PHASE-004",
+        "PHASE-005",
+        "DES-001",
+        "DES-002"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
     }
   ],
   "external_actions": [
@@ -282,5 +299,5 @@
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Alignment is complete and merged (PR #90, merge commit bd97e1c); branch and worktree are cleaned up. Do not re-run the push, PR or merge. Status remains BLOCKED on HD-006 (OPEN-006 cutover data, dates and reconciliation owner), which blocks Go-Live and TASK-044 only. The Supplier manifest pointer recorded as GAP-TR-002 is owned by the Supplier module owner and is not this module's work. Do not enter IMPLEMENT without an explicit authorization: PHASE-001 also requires the Supplier and Inventory provider implementations (GAP-IMP-001, GAP-IMP-002), which do not exist at the observed baseline."
+  "next_safe_action": "TASK-001 is recorded in implementation/P0_provider_readiness.md. TASK-002 is DONE: its implementation and guarding tests were verified directly against its acceptance criteria. TASK-004 and TASK-005 are IN_PROGRESS — the Supplier and Item contracts exist and their own suites pass, but their remaining acceptance bullets (bank-field projection, recordSupply replay, committed-receipt warning codes) are not yet pinned by a purchasing consumer contract test; that is TASK-008's job. Proceed with TASK-003 (purchasing/receiving permission catalogue entries plus an additive migration), which is inside this module's approval_required_paths and also fixes a dangling permission reference that makes Inventory's receiving provider unreachable. TASK-006 and TASK-007 are blocked on HD-007 (write scope in server/src/modules/inventory/**). HD-006 (OPEN-006 cutover) remains open and blocks Go-Live only."
 }
