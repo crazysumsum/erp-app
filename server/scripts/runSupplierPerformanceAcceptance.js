@@ -48,14 +48,25 @@ let cleaned = null;
 
 const cleanup = () => (cleaned ??= (async () => {
   for (const child of children) child.kill("SIGTERM");
+  children.clear();
   await app?.stop().catch(() => {});
   await admin.query(`DROP DATABASE IF EXISTS \`${schema}\``).catch((error) => { evidence.cleanup = errorText(error); });
   await admin.end().catch(() => {});
 })());
-for (const signal of ["SIGINT", "SIGTERM"]) process.once(signal, () => { void cleanup().finally(() => process.exit(130)); });
+// 俾人停：清理、寫一份 FAIL 報告，用 128 加訊號號碼退出（REV-111 L-1）。
+for (const [signal, number] of [["SIGINT", 2], ["SIGTERM", 15]]) {
+  process.once(signal, () => {
+    void cleanup()
+      .then(() => writeReport(reportPath, ["TC-085", "TC-101", "TC-128", "TC-129"].map((id) => ({ name: `${id} interrupted by ${signal}`, id, status: "FAIL" }))))
+      .finally(() => process.exit(128 + number));
+  });
+}
 
 /** 跑一個 T50 script；佢自己寫報告（--output），我哋讀返。 */
 function runScript(script, args, { output } = {}) {
+  // 已經喺度清理就唔好再開新工具（REV-111 L-1）；舊報告先剷，唔好判斷到上一次嘅結果（L-2）。
+  if (cleaned) return Promise.reject(new Error(`interrupted before ${script}`));
+  if (output) fs.rmSync(output, { force: true });
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, [path.join(SCRIPTS, script), `--database=${schema}`, ...args, ...(output ? [`--output=${output}`] : [])],
       { cwd: SERVER, env: childEnv, stdio: ["ignore", "pipe", "pipe"] });
@@ -67,8 +78,13 @@ function runScript(script, args, { output } = {}) {
     child.on("error", reject);
     child.on("close", (code) => {
       children.delete(child);
-      const report = output && fs.existsSync(output) && fs.statSync(output).size > 0 ? JSON.parse(fs.readFileSync(output, "utf8")) : null;
-      resolve({ code, report, stdout, stderr: stderr.slice(-2_000) });
+      let report = null;
+      try {
+        report = output && fs.existsSync(output) && fs.statSync(output).size > 0 ? JSON.parse(fs.readFileSync(output, "utf8")) : null;
+      } catch (error) {
+        stderr += `\nreport unreadable: ${errorText(error)}`;
+      }
+      resolve({ code: report === null && code === 0 ? 1 : code, report, stdout, stderr: stderr.slice(-2_000) });
     });
   });
 }
@@ -80,14 +96,24 @@ const LOAD_ARGS = ["--users=50", "--seconds=120", "--warmup-seconds=20", "--thin
 async function totals(view) {
   const [[active]] = await admin.query(`SELECT COUNT(*) AS n FROM \`${schema}\`.suppliers WHERE status = 'active'`);
   const listed = await app.send(view, { ...app.route("GET /api/v1/suppliers"), path: "/api/v1/suppliers?status=active&pageSize=1" });
-  // for-SKU lookup 列晒所有 Active Supplier，有 relation 嘅排前（設計 §8.7）：熱門 SKU 有 20,000 條 relation，總數膨脹嘅話會多過 Active 數。
+  // for-SKU lookup 列晒所有 Active Supplier，有 relation 嘅排前（設計 §8.7；LEFT JOIN、數 Supplier 行）。Relation 有
+  // (supplier_id, sku_id) unique，按 SKU 篩嘅 JOIN 本身唔會膨脹；呢個比較捉到嘅係漏咗 SKU 條件或者 JOIN 錯 child 表（REV-111 L-4）。
   const [[hot]] = await admin.query(`SELECT id FROM \`${schema}\`.item_skus WHERE sku_code = 'PERF-SKU-HOT'`);
   const lookup = await app.send(view, { ...app.route("GET /api/v1/supplier-lookups/for-sku/:skuId"),
     path: `/api/v1/supplier-lookups/for-sku/${hot.id}?pageSize=1` });
+  // 搜尋「123」：中嘅 Supplier 兩個識別號（BR<id>、TX-<id>）通常一齊中，JOIN 會數兩次；API 要等於 distinct（REV-111 M-1）。
+  const term = "123";
+  const searched = await app.send(view, { ...app.route("GET /api/v1/suppliers"), path: `/api/v1/suppliers?q=${term}&pageSize=1` });
+  const [[joined]] = await admin.query(`SELECT COUNT(*) AS joined, COUNT(DISTINCT s.id) AS \`distinct\` FROM \`${schema}\`.suppliers s
+    LEFT JOIN \`${schema}\`.supplier_identifiers i ON i.supplier_id = s.id AND i.identifier_value_key LIKE ?
+    WHERE s.status <> 'archived' AND (s.supplier_code_key LIKE ? OR s.supplier_name LIKE ? OR s.display_name LIKE ? OR s.general_phone LIKE ?
+      OR s.general_email LIKE ? OR i.id IS NOT NULL)`, [`%${term}%`, `${term}%`, `%${term}%`, `%${term}%`, `%${term}%`, `%${term}%`]);
   return { list: { api: listed.json?.data?.total ?? null, sql: Number(active.n), status: listed.status },
+    listSearch: { term, api: searched.json?.data?.total ?? null, distinct: Number(joined.distinct), joined: Number(joined.joined), status: searched.status },
     forSku: { api: lookup.json?.data?.total ?? null, sql: Number(active.n), status: lookup.status } };
 }
 
+evidence.loadAverageAtStart = os.loadavg().map((value) => Math.round(value * 10) / 10);
 try {
   // ---- 準備：全新 schema、migrate、seed 100k ----
   await admin.query(`CREATE DATABASE \`${schema}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci`);
@@ -117,9 +143,13 @@ try {
       await new Promise((resolve) => { setTimeout(resolve, 2_000); });
     }
   })();
-  const imported = await runScript("benchmarkSupplierImport.js", ["--rows=10000"], { output: path.join(work, "import.json") });
-  importDone.abort();
-  await watcher;
+  let imported;
+  try {
+    imported = await runScript("benchmarkSupplierImport.js", ["--rows=10000"], { output: path.join(work, "import.json") });
+  } finally {
+    importDone.abort();
+    await watcher;
+  }
   evidence.importFailedRows = [...failedRows.values()];
   const during = await online;
   evidence.import = imported.report ? { ok: imported.report.ok, precheck: imported.report.precheck, execute: imported.report.execute,
@@ -153,7 +183,7 @@ const tests = [
   { name: "TC-129 local duplicate cap, query plans and counts", id: "TC-129", status: results["TC-129"] ?? "FAIL" },
   ...NOT_RUN.map(({ id, name }) => ({ name, id, status: "NOT_RUN" }))
 ];
-evidence.loadAverage = os.loadavg().map((value) => Math.round(value * 10) / 10);
+evidence.loadAverageAtEnd = os.loadavg().map((value) => Math.round(value * 10) / 10);
 console.log(JSON.stringify({ database: process.env.DB_NAME, schema, evidence,
   notRun: Object.fromEntries(NOT_RUN.map(({ name, reason }) => [name, reason])) }, null, 2));
 await writeReport(reportPath, tests);
