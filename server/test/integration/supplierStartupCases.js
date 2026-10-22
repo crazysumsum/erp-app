@@ -1,3 +1,4 @@
+import { up as reorderSkuIndex } from "../../database/migrations/0087_fix_supplier_sku_refs_sku_foreign_key.js";
 import { createSupplierHarness } from "./supplierHttpHarness.js";
 import { schemaObjects, tableChecksums } from "./supplierAcceptanceRunner.js";
 
@@ -36,6 +37,28 @@ export function startupCases(admin, schema) {
       },
       async restore() {
         await q(`ALTER TABLE $$.suppliers ADD COLUMN ${saved.website} AFTER \`${saved.after}\``);
+      }
+    },
+    {
+      name: "missing list index suppliers.idx_suppliers_name_id (0080)",
+      refusal: /suppliers\.idx_suppliers_name_id must be \(supplier_name,id\)/u,
+      async remove() {
+        await q("ALTER TABLE $$.suppliers DROP INDEX idx_suppliers_name_id");
+      },
+      async restore() {
+        await q("ALTER TABLE $$.suppliers ADD INDEX idx_suppliers_name_id (supplier_name, id)");
+      }
+    },
+    {
+      // 冇咗呢個 index，FK 就由複合 index 撐住，DEF-029 嘅情況返嚟（0087）。還原用 0087 自己嘅 up()。
+      name: "missing SKU index serving the foreign key (0087)",
+      refusal: /idx_supplier_sku_refs_sku must serve fk_supplier_sku_refs_sku/u,
+      async remove() {
+        await q("ALTER TABLE $$.supplier_sku_refs DROP INDEX idx_supplier_sku_refs_sku");
+      },
+      async restore() {
+        await q("USE $$");
+        await reorderSkuIndex(admin);
       }
     },
     {

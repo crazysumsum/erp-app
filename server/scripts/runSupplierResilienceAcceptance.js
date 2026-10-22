@@ -41,12 +41,13 @@ const REASON = "TC-130/132 resilience rehearsal";
 const tag = randomUUID().slice(0, 8).toUpperCase();
 const NOT_RUN = [
   { id: "TC-130", name: "TC-130 production network faults between the app and its dependencies",
-    reason: "Timeouts and connection resets at the network layer (proxy, load balancer, MySQL failover) need the deployed environment; here faults are injected inside one MySQL instance." },
+    reason: "Timeouts and resets at the network layer (proxy, load balancer, MySQL failover) need the deployed environment. An in-flight reset of the app's MySQL connection and a lock wait are tested here." },
   { id: "TC-132", name: "TC-132 production alert delivery",
     reason: "Delivering error-level events and alerts to the on-call channel needs the production log pipeline; here the events are read from the log files." }
 ];
 const evidence = {};
 const results = {};
+const sleep = (ms) => new Promise((resolve) => { setTimeout(resolve, ms); });
 
 async function expectOk(name, response) {
   if (response.status < 200 || response.status > 299) throw new Error(`${name}: ${response.status} ${String(response.text).slice(0, 300)}`);
@@ -149,36 +150,49 @@ async function dependencyFailures(app, users, fixture, admin, schema) {
     const recovered = await reveal();
     check("bank_unavailable.recovers", recovered.status === 200 && recovered.json.data.accountNumber === account);
 
-    // 2. Business Master 未 ready：新增明確失敗，讀取同 lookup 照用。
+    // 2. 預設貨幣停用（業務規則拒絕，唔係 BUSINESS_MASTER_NOT_READY 嗰條依賴路徑，REV-110 L-4）：新增明確失敗，讀取同 lookup 照用。
     await q("UPDATE $$.currencies SET status = 'INACTIVE' WHERE code = 'HKD'");
     const blocked = await send(users.mgmt, "POST /api/v1/suppliers/create",
       { body: { supplierCode: `RSB-${tag}`, supplierName: `Resilience blocked ${tag}`, defaultCurrencyCode: "HKD" } });
     const list = await send(users.view, "GET /api/v1/suppliers");
-    check("business_master_not_ready.create_fails_explicitly", blocked.status >= 400 && blocked.status < 600 && blocked.status !== 500 && Boolean(blocked.code),
+    check("currency_inactive.create_fails_explicitly", blocked.status >= 400 && blocked.status < 600 && blocked.status !== 500 && Boolean(blocked.code),
       { status: blocked.status, code: blocked.code });
-    check("business_master_not_ready.reads_still_work", list.status === 200 && (await lookup()).ok, { list: list.status });
+    check("currency_inactive.reads_still_work", list.status === 200 && (await lookup()).ok, { list: list.status });
     await q("UPDATE $$.currencies SET status = 'ACTIVE' WHERE code = 'HKD'");
     const created = await send(users.mgmt, "POST /api/v1/suppliers/create",
       { body: { supplierCode: `RSB-${tag}`, supplierName: `Resilience recovered ${tag}`, defaultCurrencyCode: "HKD" } });
-    check("business_master_not_ready.recovers", created.status >= 200 && created.status < 300, { status: created.status });
+    check("currency_inactive.recovers", created.status >= 200 && created.status < 300, { status: created.status });
 
-    // 3. App 嘅 DB 連線俾人斷（connection reset）：失敗要係乾淨嘅錯誤，之後自己恢復。
-    const [connections] = await q("SELECT id FROM information_schema.processlist WHERE db = ? AND id <> CONNECTION_ID()", [schema]);
-    for (const { id } of connections) await q(`KILL CONNECTION ${Number(id)}`).catch(() => {});
-    const after = [];
-    for (let attempt = 0; attempt < 5; attempt += 1) {
-      const response = await send(users.view, "GET /api/v1/suppliers");
-      after.push(response.status);
-      if (response.status !== 200 && (response.status < 500 || !response.json?.error?.code || response.text.includes(account))) after.push("unclean");
+    // 3. Request 做緊嘅時候條 DB 連線俾人斷（REV-110 M-1）：鎖住 suppliers，等 app 嘅 thread 喺 metadata lock 度等，
+    //    KILL 佢。回應要係乾淨嘅錯誤（有 code、冇帳號），條 thread 真係冇咗，之後自己恢復。
+    const tableHolder = await adminConnection(schema);
+    let victim = null;
+    let reset = null;
+    try {
+      await tableHolder.query("LOCK TABLES suppliers WRITE");
+      const inFlight = send(users.view, "GET /api/v1/suppliers");
+      for (let attempt = 0; attempt < 100 && victim === null; attempt += 1) {
+        const [waiting] = await q("SELECT id FROM information_schema.processlist WHERE db = ? AND state = 'Waiting for table metadata lock'", [schema]);
+        victim = waiting[0]?.id ?? null;
+        if (victim === null) await sleep(100);
+      }
+      if (victim !== null) await q(`KILL CONNECTION ${Number(victim)}`);
+      reset = await inFlight;
+    } finally {
+      await tableHolder.query("UNLOCK TABLES").catch(() => {});
+      await tableHolder.end().catch(() => {});
     }
-    check("connection_reset.no_unclean_response_and_recovers", connections.length > 0 && after.at(-1) === 200 && !after.includes("unclean"),
-      { killed: connections.length, statuses: after });
+    const [[gone]] = await q("SELECT COUNT(*) AS n FROM information_schema.processlist WHERE id = ?", [victim ?? 0]);
+    check("connection_reset.in_flight_request_fails_cleanly", victim !== null && Number(gone.n) === 0 && reset.status >= 500
+      && Boolean(reset.json?.error?.code) && !reset.text.includes(account), { killed: victim, status: reset?.status, code: reset?.code });
+    const after = [];
+    for (let attempt = 0; attempt < 3; attempt += 1) after.push((await send(users.view, "GET /api/v1/suppliers")).status);
+    check("connection_reset.recovers", after.every((status) => status === 200), { statuses: after });
     check("connection_reset.lookup_active_only", (await lookup()).ok);
 
     // 4. 一行俾人鎖住：狀態變更要明確失敗（唔係靜靜雞遲啲先寫），lookup 照答；放鎖之後正常。
     const holder = await adminConnection(schema);
     try {
-      await holder.query("SET SESSION innodb_lock_wait_timeout = 120");
       await holder.beginTransaction();
       await holder.query("SELECT id FROM suppliers WHERE id = ? FOR UPDATE", [active.id]);
       const version = (await send(users.mgmt, "GET /api/v1/suppliers/:id", { ids: { id: active.id } })).json.data.version;
@@ -188,9 +202,16 @@ async function dependencyFailures(app, users, fixture, admin, schema) {
       const locked = await pending;
       evidence.lockWaitMs = Date.now() - started;
       await holder.rollback();
-      await new Promise((resolve) => { setTimeout(resolve, 1_000); });
+      // App 放棄咗嘅 thread 可能仲喺度：等佢走晒先睇有冇遲咗先寫（REV-110 L-3）。
+      for (let attempt = 0; attempt < 100; attempt += 1) {
+        const [busy] = await q("SELECT id FROM information_schema.processlist WHERE db = ? AND command <> 'Sleep' AND id <> CONNECTION_ID()", [schema]);
+        if (busy.length === 0) break;
+        await sleep(100);
+      }
       const [[state]] = await q("SELECT status FROM $$.suppliers WHERE id = ?", [active.id]);
-      check("lock_timeout.fails_explicitly", locked.status >= 400 && Boolean(locked.code) && state.status === "active",
+      const timeoutMs = app.application.services.config.database.transactionTimeoutMs;
+      check("lock_timeout.fails_explicitly_after_the_transaction_timeout", locked.status >= 500 && Boolean(locked.code)
+        && evidence.lockWaitMs >= timeoutMs - 1_000 && state.status === "active",
         { status: locked.status, code: locked.code, statusAfterRelease: state.status, waitedMs: evidence.lockWaitMs });
       check("lock_timeout.lookup_answers_meanwhile", during.ok, during);
     } finally {
@@ -278,6 +299,8 @@ async function observability(app, users, fixture, admin, schema) {
     const event = (name) => system.find((line) => JSON.stringify(line).includes(`"${name}"`));
     check("log.metrics_and_alerts", Boolean(event("supplier.metrics") && event("supplier.alert.approval_overdue") && event("supplier.alert.import_stalled")),
       { found: ["supplier.metrics", "supplier.alert.approval_overdue", "supplier.alert.import_stalled"].map((name) => Boolean(event(name))) });
+    const keyError = event("supplier.bank.key_unavailable");
+    check("log.key_unavailable_is_error_level", keyError?.level === "error", { level: keyError?.level ?? null });
     const integrity = event("supplier.bank.integrity_failed");
     check("log.integrity_is_error_level", /error/iu.test(String(integrity?.level ?? integrity?.severity ?? "")), { line: integrity ? Object.keys(integrity) : null,
       level: integrity?.level ?? integrity?.severity ?? null });
@@ -299,6 +322,16 @@ async function observability(app, users, fixture, admin, schema) {
 const admin = await adminConnection();
 const schema = scratchName();
 let app = null;
+let cleaned = null;
+// 一次過清：正常完、出錯、或者俾人 SIGINT／SIGTERM 都行（REV-110 L-5）。
+const cleanup = () => (cleaned ??= (async () => {
+  await app?.stop().catch(() => {});
+  await admin.query(`DROP DATABASE IF EXISTS \`${schema}\``).catch((error) => { evidence.cleanup = errorText(error); });
+  await admin.end().catch(() => {});
+})());
+for (const signal of ["SIGINT", "SIGTERM"]) {
+  process.once(signal, () => { void cleanup().finally(() => process.exit(130)); });
+}
 try {
   await migratedSchema(admin, schema);
   results["TC-131"] = await startupReadiness(admin, schema);
@@ -319,12 +352,10 @@ try {
   console.error(`Supplier resilience acceptance failed: ${errorText(error)}`);
   evidence.setup = errorText(error);
 } finally {
-  await app?.stop().catch(() => {});
-  await admin.query(`DROP DATABASE IF EXISTS \`${schema}\``).catch((error) => { evidence.cleanup = errorText(error); });
-  await admin.end().catch(() => {});
+  await cleanup();
 }
 const tests = [
-  { name: "TC-130 local dependency failures: Bank key, Business Master, connection reset, lock wait", id: "TC-130", status: results["TC-130"] ?? "FAIL" },
+  { name: "TC-130 local dependency failures: Bank key, inactive currency, in-flight connection reset, lock wait", id: "TC-130", status: results["TC-130"] ?? "FAIL" },
   { name: "TC-131 local startup refuses a missing table, column, settings row, permission or key ring", id: "TC-131", status: results["TC-131"] ?? "FAIL" },
   { name: "TC-132 local logs and metrics for success, 4xx, conflict, 5xx, approval backlog and stalled import", id: "TC-132", status: results["TC-132"] ?? "FAIL" },
   ...NOT_RUN.map(({ id, name }) => ({ name, id, status: "NOT_RUN" }))
