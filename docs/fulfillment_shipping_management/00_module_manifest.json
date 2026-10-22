@@ -47,7 +47,12 @@
       "server/test/sales/phase2/fixtures.js",
       "client/test/composables/sales/salesCommandEvent.test.js",
       "server/test/serviceContainer.test.js",
-      "server/test/requestLimiterOptional.test.js"
+      "server/test/requestLimiterOptional.test.js",
+      "server/test/integration/salesBackorder.integration.test.js",
+      "server/test/integration/migrations.integration.test.js",
+      "server/test/integration/passwordChange.integration.test.js",
+      "server/test/integration/roleManagement.integration.test.js",
+      "server/test/integration/userManagement.integration.test.js"
     ],
     "allowed_write_paths": [
       "docs/fulfillment_shipping_management/**",
@@ -115,7 +120,12 @@
       "client/src/pages/sales/SalesOrderDetailPage.vue",
       "client/test/composables/sales/salesCommandEvent.test.js",
       "server/test/serviceContainer.test.js",
-      "server/test/requestLimiterOptional.test.js"
+      "server/test/requestLimiterOptional.test.js",
+      "server/test/integration/salesBackorder.integration.test.js",
+      "server/test/integration/migrations.integration.test.js",
+      "server/test/integration/passwordChange.integration.test.js",
+      "server/test/integration/roleManagement.integration.test.js",
+      "server/test/integration/userManagement.integration.test.js"
     ],
     "forbidden_paths": [
       ".env",
@@ -265,7 +275,7 @@
       "lint",
       "client-build",
       "security-audit",
-      "fulfillment-technical"
+      "fulfillment-p0-developer"
     ],
     "technical": [
       "fulfillment-technical"
