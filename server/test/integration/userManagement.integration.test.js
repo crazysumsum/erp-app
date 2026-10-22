@@ -130,7 +130,8 @@ function tokenIssuer(application) {
 const ADMIN_PERMISSIONS = PERMISSION_CATALOGUE
   .map(({ name }) => name)
   .filter((name) => !name.startsWith("customer.bank.") && !name.startsWith("inventory.") &&
-    !name.startsWith("sales.") && name !== "fulfillment.operation");
+    !name.startsWith("sales.") && !name.startsWith("purchasing.") &&
+    !name.startsWith("receiving.") && name !== "fulfillment.operation");
 
 function authed(token, body) {
   return {
