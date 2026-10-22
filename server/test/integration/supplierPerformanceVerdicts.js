@@ -80,6 +80,14 @@ export function performanceVerdicts({ mixed, forSku, recall, imported, during, c
     && imported.report?.verification?.countsConsistent === true, imported.report?.verification);
   tc101.check("import.report_ok", imported.code === 0 && imported.report?.ok === true, { code: imported.code, error: imported.report?.error });
   tc101.check("online.p95_under_2s_during_import", during.code === 0 && during.report?.nfr001?.pass === true, during.report?.nfr001);
+  // 匯入要喺負載嘅量度窗口入面（REV-111 M-4）：由上載開始，到執行完（上載＋預檢＋執行嘅時間），唔計之後嘅核對同匯出。
+  const window = during.report?.window;
+  const importStart = Date.parse(imported.report?.startedAt ?? "");
+  const importEnd = importStart + Number(imported.report?.uploadMs ?? NaN) + Number(imported.report?.precheck?.ms ?? NaN)
+    + Number(imported.report?.execute?.ms ?? NaN);
+  tc101.check("import.inside_measured_window", Number.isFinite(importEnd) && importStart >= Date.parse(window?.measureFrom ?? "")
+    && importEnd <= Date.parse(window?.measureTo ?? ""), { window, importStart: imported.report?.startedAt,
+    importEnd: Number.isFinite(importEnd) ? new Date(importEnd).toISOString() : null });
   const connections = imported.report?.dbConnectionsPeak?.userConnections;
   tc101.check("import.resources_bounded", Number.isFinite(connections) && connections <= 3 * POOL + 3
     && Number.isFinite(imported.report?.workerPeakRssMiB) && imported.report.workerPeakRssMiB <= RSS_LIMIT_MIB,

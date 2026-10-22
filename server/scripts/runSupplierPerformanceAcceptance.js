@@ -63,7 +63,7 @@ for (const [signal, number] of [["SIGINT", 2], ["SIGTERM", 15]]) {
 }
 
 /** 跑一個 T50 script；佢自己寫報告（--output），我哋讀返。 */
-function runScript(script, args, { output } = {}) {
+function runScript(script, args, { output, onLine } = {}) {
   // 已經喺度清理就唔好再開新工具（REV-111 L-1）；舊報告先剷，唔好判斷到上一次嘅結果（L-2）。
   if (cleaned) return Promise.reject(new Error(`interrupted before ${script}`));
   if (output) fs.rmSync(output, { force: true });
@@ -73,7 +73,11 @@ function runScript(script, args, { output } = {}) {
     children.add(child);
     let stdout = "";
     let stderr = "";
-    child.stdout.on("data", (chunk) => { stdout += chunk; });
+    child.stdout.on("data", (chunk) => {
+      const before = stdout.length;
+      stdout += chunk;
+      if (onLine) for (const line of stdout.slice(stdout.lastIndexOf("\n", before) + 1).split("\n").slice(0, -1)) onLine(line);
+    });
     child.stderr.on("data", (chunk) => { stderr += chunk; });
     child.on("error", reject);
     child.on("close", (code) => {
@@ -129,31 +133,20 @@ try {
   evidence.forSku = summary(forSku.report);
   const recall = await runScript("measureSupplierDuplicateRecall.js", ["--queries=200", "--seed=50"], { output: path.join(work, "recall.json") });
   evidence.recall = recall.report?.variants ?? { code: recall.code, stderr: recall.stderr };
-  // 匯入喺負載量度開始之後（暖身 20 秒）先開始，同 T50 一樣。
-  const online = runScript("benchmarkSupplierManagement.js", LOAD_ARGS, { output: path.join(work, "load-during-import.json") });
-  await new Promise((resolve) => { setTimeout(resolve, 21_000); });
-  // 匯入工具完咗會刪自己嘅 job 同 row，所以做緊嘅時候就要讀低失敗嘅列同原因（DEF-034）。
-  const failedRows = new Map();
-  const importDone = new AbortController();
-  const watcher = (async () => {
-    while (!importDone.signal.aborted) {
-      const [rows] = await admin.query(`SELECT job_id AS jobId, \`row_number\` AS rowNumber, CAST(errors AS CHAR) AS errors
-        FROM \`${schema}\`.supplier_import_rows WHERE status = 'failed' LIMIT 20`).catch(() => [[]]);
-      for (const row of rows) failedRows.set(`${row.jobId}:${row.rowNumber}`, row);
-      await new Promise((resolve) => { setTimeout(resolve, 2_000); });
-    }
-  })();
-  let imported;
-  try {
-    imported = await runScript("benchmarkSupplierImport.js", ["--rows=10000"], { output: path.join(work, "import.json") });
-  } finally {
-    importDone.abort();
-    await watcher;
-  }
-  evidence.importFailedRows = [...failedRows.values()];
+  // 匯入喺負載工具報出嘅量度窗口開始之後先起步（HD-122 A；REV-111 M-4），唔再靠固定延遲。
+  let windowStart;
+  const windowSeen = new Promise((resolve) => { windowStart = resolve; });
+  const online = runScript("benchmarkSupplierManagement.js", LOAD_ARGS, { output: path.join(work, "load-during-import.json"), onLine: (line) => {
+    if (line.includes('"supplier.benchmark.window"')) windowStart(JSON.parse(line));
+  } });
+  const loadWindow = await Promise.race([windowSeen, online.then(() => null)]);
+  if (!loadWindow) throw new Error("the load benchmark ended before reporting its measured window");
+  await new Promise((resolve) => { setTimeout(resolve, Math.max(0, Date.parse(loadWindow.measureFrom) - Date.now()) + 1_000); });
+  const imported = await runScript("benchmarkSupplierImport.js", ["--rows=10000"], { output: path.join(work, "import.json") });
   const during = await online;
   evidence.import = imported.report ? { ok: imported.report.ok, precheck: imported.report.precheck, execute: imported.report.execute,
-    nfr004: imported.report.nfr004, verification: imported.report.verification, error: imported.report.error } : { code: imported.code, stderr: imported.stderr };
+    nfr004: imported.report.nfr004, verification: imported.report.verification, notApplied: imported.report.notApplied, error: imported.report.error }
+    : { code: imported.code, stderr: imported.stderr };
   evidence.loadDuringImport = summary(during.report);
 
   // 總數同「負載之後仲答到」用一個真 app。

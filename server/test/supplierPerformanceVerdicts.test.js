@@ -21,9 +21,9 @@ function passing() {
     forSku: { code: 0, report: { ok: true, nfr005: verdict(), topStatements: statements(), digestTable: digestTable() } },
     recall: { code: 0, report: { variants: { capped: { candidateCap: 3_000, recall: 0.966, p95Ms: 93 },
       uncapped: { candidateCap: Number.MAX_SAFE_INTEGER, recall: 0.977, p95Ms: 950 } } } },
-    imported: { code: 0, report: { ok: true, nfr004: { precheckPlusExecuteMs: 82_766, limitMs: 600_000, pass: true },
+    imported: { code: 0, report: { ok: true, startedAt: "2026-10-22T02:55:33.000Z", uploadMs: 900, precheck: { ms: 6_307 }, execute: { ms: 78_714 }, nfr004: { precheckPlusExecuteMs: 82_766, limitMs: 600_000, pass: true },
       verification: { exactlyOnce: true, countsConsistent: true }, dbConnectionsPeak: { userConnections: 16 }, workerPeakRssMiB: 253 } },
-    during: { code: 0, report: { ok: true, nfr001: verdict() } },
+    during: { code: 0, report: { ok: true, nfr001: verdict(), window: { measureFrom: "2026-10-22T02:55:32.800Z", measureTo: "2026-10-22T02:57:32.800Z" } } },
     counted: { list: { api: 80_225, sql: 80_225, status: 200 }, listSearch: { term: "123", api: 452, distinct: 452, joined: 904, status: 200 },
       forSku: { api: 80_225, sql: 80_225, status: 200 } }
   };
@@ -35,7 +35,7 @@ test("HD-117 A: a passing set of T50 reports passes every performance check, LIK
   const verdicts = performanceVerdicts(passing());
   assert.deepEqual(failing(verdicts), []);
   assert.deepEqual(Object.keys(verdicts).sort(), ["TC-085", "TC-101", "TC-128", "TC-129"]);
-  assert.equal(Object.values(verdicts).flat().length, 18);
+  assert.equal(Object.values(verdicts).flat().length, 19);
 });
 
 test("HD-117 A: every condition of every performance check fails on its own broken input (REV-111 M-3)", () => {
@@ -80,7 +80,10 @@ test("HD-117 A: every condition of every performance check fails on its own brok
     ["online.p95_under_2s_during_import", (input) => { input.during.report.nfr001.pass = false; }],
     ["online.p95_under_2s_during_import", (input) => { input.during.code = 1; }],
     ["import.resources_bounded", (input) => { input.imported.report.dbConnectionsPeak.userConnections = 34; }],
-    ["import.resources_bounded", (input) => { input.imported.report.workerPeakRssMiB = 1_025; }]
+    ["import.resources_bounded", (input) => { input.imported.report.workerPeakRssMiB = 1_025; }],
+    ["import.inside_measured_window", (input) => { input.imported.report.startedAt = "2026-10-22T02:55:32.300Z"; }],
+    ["import.inside_measured_window", (input) => { input.imported.report.execute.ms = 120_000; }],
+    ["import.inside_measured_window", (input) => { delete input.during.report.window; }]
   ];
   for (const [id, breakIt] of cases) {
     const input = passing();
