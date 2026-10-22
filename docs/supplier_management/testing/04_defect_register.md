@@ -123,6 +123,8 @@ Known limitation (REV-108 L-2): in client mode (`rows` and `loading` props) Data
 
 Found while preparing the TC-131 (OPS-004) runner. On a freshly migrated scratch schema, the server starts and `/api/v1/health` answers `ok` when a non-core Supplier table (`supplier_contacts`), a column (`suppliers.website`) or the `supplier_settings` singleton row is missing. Startup checks only that `suppliers`, `supplier_addresses` and `supplier_address_purposes` exist. A missing Supplier permission (framework permission catalogue) and a missing Bank key ring (configuration validation) are already refused. Design §14.1 step 4 requires the startup self-check to cover schema, permissions, the settings singleton and the key ring. Fix approved as HD-121 A.
 
+**Fixed under HD-121 A.** A new eager service, `supplierSchemaCheck`, runs at startup. It checks every Supplier table against its own migration contract (`inspect*Schema`: columns, types, NULL, collation, indexes, foreign keys) and requires the `supplier_settings` row `id = 1`. Anything missing or incompatible refuses startup with a message that names it and says nothing was changed. Health is never reached, because the server does not listen. Tests: `supplierStartupSelfCheck.integration.test.js` (CI) and TC-131 in the resilience runner. Each removes a table, a column, the settings row and a permission on a freshly migrated schema, expects refusal and an unchanged database, restores the original definition, and expects a clean start. Control: making the check a no-op lets a schema without `supplier_contacts` start, and the test fails.
+
 ## HD-116 A: dispositions (2026-10-21)
 
 Fixed in this change:
