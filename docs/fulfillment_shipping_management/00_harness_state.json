@@ -1,20 +1,20 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 111,
+  "revision": 123,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
-  "status": "NOT_READY",
-  "resume_status": "IMPLEMENTING",
+  "status": "IMPLEMENTING",
+  "resume_status": null,
   "current_phase": "PHASE-001",
   "current_task": "TASK-011",
   "baseline": {
-    "design": "eed2eb831ce50d0717992bcc25f04318dd652b16b7f662b3b5f81f9797b5a545",
-    "plan": "f3b9dacf3b513916e6f7f349e15c0fcc035be2bc2995761624e7adb7b6238b05",
-    "code_commit": "ea17fecd0da563ba46d0be850f57e8d9172db513",
-    "source_fingerprint": "ec5e3f476a38a9702cb4705eab5fbff6c2276b76ac00c66d48b442239d5fc88e",
+    "design": "3cf1162c3cd78421101639d5cf0f077a1434bd534d1df779ea22e6a85f83ce62",
+    "plan": "4cc3628347eb79f3afc1308180d546c49f2cb0c7f95a6480591c1e06abedd288",
+    "code_commit": "fa9a4fffc867b312aaedbf6f4b05364abf69991a",
+    "source_fingerprint": "d3481eaa14fc31a30aae75bb650c02268f047ebb4f07207d732c87437afde383",
     "worktree": "/private/tmp/erp-fulfillment-p0",
-    "default_commit": "94d5297260c4fe460cd9e1b84cfbfe14743a6f1f",
+    "default_commit": "5a315640d9f8d3adc41f11e6b8bd919e33b42edc",
     "mode_entry_commit": "76223f40480d94a1d3a2ae6e0e7b91292bd98b82"
   },
   "runtime": {
@@ -34,7 +34,9 @@
       "capacity-control-mysql-schema": "fulfillment_p0_legacy_46b4819e",
       "mysql-current-regression": "Fresh same-source/PLAN paired detachedruntime /private/tmp/erp-fulfillment-p0-regression-runtime; sourceFP4461; new97-registry/zero-business-row preflight; prior5bc witholdaborted2000orderjob preserved.",
       "mysql-stale-import-core": "Original5bc retained: job217 created01:06:13/processstarted01:07:34/terminal02:16:21 duringnewfailedfullrun; previouscapacityinterruption. No deletion, reset or selector change.",
-      "allocation-profile-evidence": "evidence/allocation-cache-20261022/summary.json +ci-final.json; FPf458 atHEAD1cb2a7b3, exactCI39719857793 all13PASS, legal5000A12641/R18363ms with20sec. Three-run localA4919.629/R7314.199ms; older before/source evidence retained. ReallocateCIheadroom1637ms remains explicit risk."
+      "allocation-profile-evidence": "evidence/allocation-cache-20261022/summary.json +ci-final.json; FPf458 atHEAD1cb2a7b3, exactCI39719857793 all13PASS, legal5000A12641/R18363ms with20sec. Three-run localA4919.629/R7314.199ms; older before/source evidence retained. ReallocateCIheadroom1637ms remains explicit risk.",
+      "mysql-current-publish-regression": "Ownedfreshd30a0bdc/regression-r2 same78087/source8f, all7fullPASS; oldfailedcore85a retained; receipt/private/tmp/fulfillment-p0-publish-regression-r2-core.json; mappingd348onlyE2Eselector+foreignPurchasingdocs.",
+      "mysql-current-publish-capacity": "Ownedfresh4644a6d2/pairedcapacitystorage;TC042normal2PASS0skip; zeroactivepreflight; receipt/private/tmp/fulfillment-p0-publish-capacity-core.json"
     },
     "lease_ref": null
   },
@@ -49,7 +51,7 @@
     "TASK-008": "DONE",
     "TASK-009": "DONE",
     "TASK-010": "DONE",
-    "TASK-011": "IN_PROGRESS",
+    "TASK-011": "DONE",
     "TASK-012": "PENDING",
     "TASK-013": "PENDING",
     "TASK-014": "PENDING",
@@ -1697,6 +1699,110 @@
         "NFR-023",
         "Existing exact N/A reason unchanged; TC010 remainsmandatory/blocking"
       ]
+    },
+    {
+      "authority_kind": "HUMAN",
+      "actor": "Sam original approved P0/HD008–015 plus actual 2026-10-22 full completion resume; mechanical fresh-main pin lineage independently reviewed, not a newly presented human hash decision",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/26_p0_final_verification_and_pr.md#latest-main-integration-and-approval-lineage",
+      "recorded_at": "2026-10-22T06:48:37.852948+00:00",
+      "code_commit": "e69ee9d4147ce9160a23bc7d4bee8a99118795f3",
+      "expires_at": null,
+      "id": "APR-073-MAIN6CB-LINEAGE-DESIGN",
+      "kind": "DESIGN",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "3cf1162c3cd78421101639d5cf0f077a1434bd534d1df779ea22e6a85f83ce62",
+      "scope": [
+        "fulfillment-shipping-management",
+        "Existing P0 requirements/business semantics/HD010/HD011 unchanged; Task011 exactregistration and approvedrecommended coveragefloor only"
+      ]
+    },
+    {
+      "authority_kind": "HUMAN",
+      "actor": "Sam original approved P0/HD008–015 plus actual 2026-10-22 full completion resume; mechanical fresh-main pin lineage independently reviewed, not a newly presented human hash decision",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/26_p0_final_verification_and_pr.md#latest-main-integration-and-approval-lineage",
+      "recorded_at": "2026-10-22T06:48:37.853022+00:00",
+      "code_commit": "e69ee9d4147ce9160a23bc7d4bee8a99118795f3",
+      "expires_at": null,
+      "id": "APR-074-MAIN6CB-LINEAGE-PLAN",
+      "kind": "PLAN",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "4cc3628347eb79f3afc1308180d546c49f2cb0c7f95a6480591c1e06abedd288",
+      "scope": [
+        "fulfillment-shipping-management",
+        "PHASE-001 TASK001..011, same fullP0 gates/singlePR; necessary exact wrapper/checker paths only"
+      ]
+    },
+    {
+      "authority_kind": "HUMAN",
+      "actor": "Sam original approved P0/HD008–015 plus actual 2026-10-22 full completion resume; mechanical fresh-main pin lineage independently reviewed, not a newly presented human hash decision",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/26_p0_final_verification_and_pr.md#latest-main-integration-and-approval-lineage",
+      "recorded_at": "2026-10-22T06:48:37.853024+00:00",
+      "code_commit": "e69ee9d4147ce9160a23bc7d4bee8a99118795f3",
+      "expires_at": null,
+      "id": "APR-075-MAIN6CB-LINEAGE-SCOPE",
+      "kind": "SCOPE",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "4cc3628347eb79f3afc1308180d546c49f2cb0c7f95a6480591c1e06abedd288",
+      "scope": [
+        "server/src/framework/configuration/applicationConfiguration.js",
+        "server/test/configuration.test.js",
+        "server/test/permissionCatalogueConventions.test.js",
+        "server/src/modules/authorization/permissionCatalogue.js",
+        "client/src/framework/http/errorMessages.js",
+        "server/database/migrations/*fulfillment*.js",
+        "server/src/modules/sales/**",
+        "server/src/modules/inventory/**",
+        "server/src/modules/customer/CustomerLookupService.js",
+        "server/src/modules/item/ItemLookupService.js",
+        "server/database/migrations/0088_create_sales_archive_batches.js",
+        "server/src/services/mysqldatabase/MySqlDatabaseService.js",
+        "server/test/salesFulfillmentQuantities.test.js",
+        "server/test/salesFulfillmentService.test.js",
+        "server/test/integration/salesFulfillmentService.integration.test.js",
+        "server/test/integration/salesFulfillmentTransactionComponent.integration.test.js",
+        "server/test/sales/phase4/salesFulfillmentFixtures.js",
+        "server/test/sales/salesConfig.test.js",
+        "docs/sales_order_management/03_design_spec.md",
+        "docs/sales_order_management/00_module_manifest.json",
+        "server/database/migrations/0096_create_shipments.js",
+        "server/database/migrations/0097_create_shipment_issues_and_reversals.js",
+        "server/src/services/fulfillment/FulfillmentOpenMatterService.js",
+        "server/scripts/checkCoverageFloors.js",
+        "docs/sales_order_management/01_requirement_spec.md",
+        "server/test/integration/salesLifecycle.integration.test.js",
+        ".github/workflows/ci.yml",
+        "server/test/sales/phase2/fixtures.js",
+        "client/src/composables/sales/useSalesCommandEvent.js",
+        "client/src/pages/sales/SalesOrderDetailPage.vue",
+        "client/test/composables/sales/salesCommandEvent.test.js",
+        "server/test/serviceContainer.test.js",
+        "server/test/requestLimiterOptional.test.js",
+        "server/test/integration/salesBackorder.integration.test.js",
+        "server/test/integration/migrations.integration.test.js",
+        "server/test/integration/passwordChange.integration.test.js",
+        "server/test/integration/roleManagement.integration.test.js",
+        "server/test/integration/userManagement.integration.test.js"
+      ]
+    },
+    {
+      "authority_kind": "HUMAN",
+      "actor": "Sam original approved P0/HD008–015 plus actual 2026-10-22 full completion resume; mechanical fresh-main pin lineage independently reviewed, not a newly presented human hash decision",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/26_p0_final_verification_and_pr.md#latest-main-integration-and-approval-lineage",
+      "recorded_at": "2026-10-22T06:48:37.853026+00:00",
+      "code_commit": "e69ee9d4147ce9160a23bc7d4bee8a99118795f3",
+      "expires_at": null,
+      "id": "APR-076-MAIN6CB-LINEAGE-UATNA",
+      "kind": "UAT_NA",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "4cc3628347eb79f3afc1308180d546c49f2cb0c7f95a6480591c1e06abedd288",
+      "scope": [
+        "NFR-023",
+        "Existing exact N/A reason unchanged; TC010 remainsmandatory/blocking"
+      ]
     }
   ],
   "reviews": [
@@ -2415,6 +2521,126 @@
       "reviewer": "/root/fulfillment_independent_review",
       "reviewed_baseline": "ec5e3f476a38a9702cb4705eab5fbff6c2276b76ac00c66d48b442239d5fc88e",
       "source_ref": "docs/fulfillment_shipping_management/implementation/25_successful_audit_batch_optimization.md#independent-bounded-closure; independentGitHubconnector all13PASS exactea17fecd; actualR16480ms/headroom3520; tailrollbackPASS; coverage96.08/87.17/94.39+39floors;receiptSHAe207e218de473dc4a3898f9bf890630f5b8d7c62ae31a4b6b5ee9bdb75db2e68;0C/H/M;no broaderP0/PR/mergeapproval",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-061-MAIN6CB-SEMANTIC-UNION-LINEAGE",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "ae04545db66005d81b071d2024b662fb340faf1ba728ca7b4c1828a46845f04b",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/26_p0_final_verification_and_pr.md; actualsixconflictunionreview, old85migration/0088bytespreserved, additivepermissionpinroutineintegrationunderhumanresume;fullP0validation/CIpending",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-062-MAIN-LINEAGE-AND-REGISTRATION-FIXTURE",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "8f56da0204abbac41656f2d825c634e42e83a44931442c4bf4a0dfcd63ffccf8",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/26_p0_final_verification_and_pr.md; originalapprovalsreasonTC010scopeprefixunchanged; actualregistrationRED1FAIL/GREEN1PASS3probes; onlyrealupstream0100seedfixturecorrection;0C/H/M;fullgatepending",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-063-MAIN6CB-DESIGN-LINEAGE",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "3cf1162c3cd78421101639d5cf0f077a1434bd534d1df779ea22e6a85f83ce62",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/26_p0_final_verification_and_pr.md; actualindependentAPPROVEDlineage/scopeverdict verifyingDES3cf/PLAN4cc, oldapprovalsprefix, equalprofile/TC010/NFRreason/scope;0C/H/M. Design/planlineageonly,notfullimplementationgateapproval.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-064-MAIN6CB-PLAN-LINEAGE",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "4cc3628347eb79f3afc1308180d546c49f2cb0c7f95a6480591c1e06abedd288",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/26_p0_final_verification_and_pr.md; actualindependentAPPROVEDlineage/scopeverdict verifyingDES3cf/PLAN4cc, oldapprovalsprefix, equalprofile/TC010/NFRreason/scope;0C/H/M. Design/planlineageonly,notfullimplementationgateapproval.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-065-CURRENT-MAIN-INSTALLER-UPGRADE",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "8f56da0204abbac41656f2d825c634e42e83a44931442c4bf4a0dfcd63ffccf8",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/26_p0_final_verification_and_pr.md; actualinstaller89→98/apply9skip89/skip98/direct9rerun, oldregistry/6permissionIDs/grantspreserved,614column/250keycolumn/56triggermetadataequal; proofSHA73b375bdf170ae1f1f3c79757e97285b6293ba2b09b4277e18d47490467f6a75;0C/H/M",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-066-FULL-SEVEN-CURRENT-MAIN",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "8f56da0204abbac41656f2d825c634e42e83a44931442c4bf4a0dfcd63ffccf8",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/26_p0_final_verification_and_pr.md; actual7exit0/retestedoriginalDEF003cases/DEF004probes; originalskipqualification; resultreceiptSHAbb4960cff8ca7df7f3898ea89bfc8a0c81b7b0db30c864c35095f35377d11dbe;0C/H/M",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-067-SELECTOR-AND-EVIDENCE-IMPACT",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "565b3248856c6014a716263ff4f71750b6b50ca2701841ef9308c331c3e8e78b",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/26_p0_final_verification_and_pr.md; actualRED1FAIL/GREEN2PASS0skip;exactlabelonly;all7unchangedtestedinputsmappingAPPROVED, oldFP8fidentitypreserved;0C/H/M",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-068-LOCAL-WHOLE-P0-565B",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "565b3248856c6014a716263ff4f71750b6b50ca2701841ef9308c331c3e8e78b",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/26_p0_final_verification_and_pr.md; actualwholeP0TASK001-011/DEF003004005closureeligibility;5typed202mixedunitnative+2browserPASS0skip;full7/installerimpactvalid; noCI/formal/GitHubapproval;0C/H/M",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-069-MAIN269-DOCS-INTEGRATION",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "d3481eaa14fc31a30aae75bb650c02268f047ebb4f07207d732c87437afde383",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/26_p0_final_verification_and_pr.md; actual3foreignPurchasingdocs-onlycleanmergefa9a4fff; no product/test/config/schema/runtimeinputchange; ownD/Punchanged,full7/installerimpactmappingvalid;wait5typed;0C/H/M",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-070-FINAL-D348-WHOLE-P0-LOCAL-CLOSURE",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "d3481eaa14fc31a30aae75bb650c02268f047ebb4f07207d732c87437afde383",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/26_p0_final_verification_and_pr.md#independent-local-p0-closure; actualfinalD348verdictAPPROVED0C/H/M,202mixedunit/native+2realbrowserzeroSKIP,5typedbinding/artifacthashes,full7/installerunchangedinputsmapping, state/trace/boundary;noformal/CI/mergeapproval",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -3570,6 +3796,30 @@
       "idempotency_key": "p0-full-completion-resume-20261022",
       "status": "CONFIRMED",
       "source_ref": "Sam directhumanmessage: 繼續按已批准計劃完成 fulfillment P0，確認其餘 TASK、獨立覆核、完整驗證及當前候選 CI 全部通過後，建立 draft PR。"
+    },
+    {
+      "id": "P0-FINAL-PUBLISH-565B-PUSH",
+      "kind": "GIT_PUSH",
+      "target": "crazysumsum/erp-app refs/heads/codex/fulfillment-p0-foundation final publication commit/source565b; final reviewedsourceD348/DES3cf/PLAN4cc aftermain269; exactpublicationSHA tobeobserved",
+      "idempotency_key": "p0-final-565b-push-20261022",
+      "status": "PLANNED",
+      "source_ref": "Samactualfullcompletion/draftPRauthority; report26; executepushafterlocalindependentclosure, exactCIthenactualdraftPR;inspectremote foridempotencebeforeeffect."
+    },
+    {
+      "id": "P0-FINAL-PUBLISH-565B-CI",
+      "kind": "WORKFLOW_DISPATCH",
+      "target": "GitHubci.yml exact final publicationSHA; final reviewedsourceD348/DES3cf/PLAN4cc aftermain269; exactpublicationSHA tobeobserved",
+      "idempotency_key": "p0-final-565b-ci-20261022",
+      "status": "PLANNED",
+      "source_ref": "Samactualfullcompletion/draftPRauthority; report26; executepushafterlocalindependentclosure, exactCIthenactualdraftPR;inspectremote foridempotencebeforeeffect."
+    },
+    {
+      "id": "P0-FINAL-PUBLISH-565B-DRAFTPR",
+      "kind": "DRAFT_PULL_REQUEST",
+      "target": "crazysumsum/erp-app headcodex/fulfillment-p0-foundation basemain drafttrue only afterallgates; final reviewedsourceD348/DES3cf/PLAN4cc aftermain269; exactpublicationSHA tobeobserved",
+      "idempotency_key": "p0-final-565b-draftpr-20261022",
+      "status": "PLANNED",
+      "source_ref": "Samactualfullcompletion/draftPRauthority; report26; executepushafterlocalindependentclosure, exactCIthenactualdraftPR;inspectremote foridempotencebeforeeffect."
     }
   ],
   "evidence_files": [
@@ -3595,7 +3845,23 @@
     "evidence/20261022T060912-e1692c31a38b/run.json",
     "evidence/20261022T060912-c490f1bd6e6e/run.json",
     "evidence/20261022T061055-31122f1f6873/run.json",
-    "evidence/20261022T060912-e351112aa043/run.json"
+    "evidence/20261022T060912-e351112aa043/run.json",
+    "evidence/20261022T070703-7e191395c442/run.json",
+    "evidence/20261022T070703-d1a89ef81b91/run.json",
+    "evidence/20261022T070705-ca0f67f34900/run.json",
+    "evidence/20261022T072010-a0b71e879d51/run.json",
+    "evidence/20261022T072302-ea202ef4cc07/run.json",
+    "evidence/20261022T072853-b1f92e2ebf46/run.json",
+    "evidence/20261022T072909-d0d8dfdc822f/run.json",
+    "evidence/20261022T072917-71190399f9a0/run.json",
+    "evidence/20261022T072920-a7d49a6f06fe/run.json",
+    "evidence/20261022T072925-5629128f36ef/run.json",
+    "evidence/20261022T073428-6b980ba6a39f/run.json",
+    "evidence/20261022T073434-24ecad8e7508/run.json",
+    "evidence/20261022T073436-c6cacb463295/run.json",
+    "evidence/20261022T073625-87d6edf44044/run.json",
+    "evidence/20261022T073630-d7d613d5c9b6/run.json",
+    "evidence/20261022T073642-015968d2c6b3/run.json"
   ],
   "defects": [
     {
@@ -3633,14 +3899,51 @@
     {
       "id": "DEF-003",
       "severity": "MEDIUM",
-      "status": "OPEN",
+      "status": "CLOSED",
       "source_ids": [
         "PHASE-001",
         "TASK-011"
       ],
-      "closure_evidence": [],
+      "closure_evidence": [
+        "docs/fulfillment_shipping_management/implementation/26_p0_final_verification_and_pr.md#independent-local-p0-closure",
+        "/private/tmp/fulfillment-p0-publish-full-r2-results.json",
+        "evidence/20261022T073642-015968d2c6b3/run.json",
+        "evidence/20261022T073630-d7d613d5c9b6/run.json"
+      ],
+      "risk_approval_id": null
+    },
+    {
+      "id": "DEF-004",
+      "severity": "MEDIUM",
+      "status": "CLOSED",
+      "source_ids": [
+        "PHASE-001",
+        "TASK-011"
+      ],
+      "closure_evidence": [
+        "docs/fulfillment_shipping_management/implementation/26_p0_final_verification_and_pr.md#independent-local-p0-closure",
+        "/private/tmp/fulfillment-p0-publish-full-r2-results.json",
+        "evidence/20261022T073642-015968d2c6b3/run.json",
+        "evidence/20261022T073630-d7d613d5c9b6/run.json"
+      ],
+      "risk_approval_id": null
+    },
+    {
+      "id": "DEF-005",
+      "severity": "MEDIUM",
+      "status": "CLOSED",
+      "source_ids": [
+        "PHASE-001",
+        "TASK-011"
+      ],
+      "closure_evidence": [
+        "docs/fulfillment_shipping_management/implementation/26_p0_final_verification_and_pr.md#independent-local-p0-closure",
+        "/private/tmp/fulfillment-p0-publish-full-r2-results.json",
+        "evidence/20261022T073642-015968d2c6b3/run.json",
+        "evidence/20261022T073630-d7d613d5c9b6/run.json"
+      ],
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "FULLP0resumeauthorized; latestmain6cb8310c advancedfrom94d withpurchasingpermissions0100 andsupplierperformance tooling. Preserve postCIclosure docs thenintegratelatestmain before pristinecurrentfullregression+separatecapacityruntime. Existingea17CI/202+2remainhistoricalifsourcechanges. IndependentfullP0reviewrunning. TASK011/DEF003needcurrentfullclosure; draftPRonlyafterallgates;nomerge/liveactivation."
+  "next_safe_action": "All11P0TASKDONE/DEF003004005CLOSED afteractualfinalindependent0C/H/M; all5typedD348PASS andfull7/installerimpactqualified. Freezepublicationcommit(sourceD348/DES3cf/PLAN4cc), FFpushauthorizedbranch, runexactcandidatefullCI/all13SUCCESS, actualindependentCI/prePRreview, thencreateandattachDRAFTPR. NoformalTC/UAT/P1-P3/merge/liveactivation."
 }

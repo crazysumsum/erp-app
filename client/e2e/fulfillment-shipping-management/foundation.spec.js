@@ -45,7 +45,7 @@ test("P0 permissions remain independent in the real role UI and new public error
     await expect(dialog.getByRole("checkbox", { name: /fulfillment.operation/ })).not.toBeChecked();
     await expect(dialog.getByRole("checkbox", { name: /fulfillment.reverse/ })).not.toBeChecked();
     await dialog.getByRole("checkbox", { name: /fulfillment.reverse/ }).check();
-    await dialog.getByLabel("原因").fill("Synthetic P0 permission proof");
+    await dialog.getByLabel("原因", { exact: true }).fill("Synthetic P0 permission proof");
     await dialog.getByLabel("你的密碼").fill(password);
     await dialog.getByRole("button", { name: "儲存", exact: true }).click();
     await expect(dialog).not.toBeVisible();

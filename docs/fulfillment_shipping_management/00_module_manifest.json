@@ -207,9 +207,9 @@
       {
         "module_id": "authorization",
         "id": "permission-catalogue",
-        "version": "P0-TASK002-9fd7d007-R10-APPROVED",
+        "version": "P0-main6cb8310c-additive-permission-union-INDEPENDENTLY_REVIEWED",
         "source": "server/src/modules/authorization/permissionCatalogue.js",
-        "sha256": "13d2bb959b75c9a78894d71124cf52d0ad695a16cb057cf44e214c6031d57e9b",
+        "sha256": "6f6e14b642573f9e16ffcb13abe411ead9b5e2c95739100c188c51dd00207743",
         "regression_suites": [
           "fulfillment-technical"
         ]
