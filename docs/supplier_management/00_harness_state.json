@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 402,
+  "revision": 403,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -13,8 +13,8 @@
     "plan": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
     "code_commit": "186a660ec0ef3037ffc9ef92adcd31b20f1e072d",
     "source_fingerprint": "43f7f525f708bb08a1cb3994bd6ed7a36548794d3eaf9e7e06f18ae5caa911ad",
-    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t51h",
-    "default_commit": "94d5297260c4fe460cd9e1b84cfbfe14743a6f1f",
+    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t51i",
+    "default_commit": "6cb8310c94756485abcea84a06a1e545045b1c31",
     "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
   },
   "runtime": {
@@ -4983,6 +4983,17 @@
       "source_ref": "Local, not CI, MySQL 26.7.0 restarted with performance_schema_max_sql_text_length, performance_schema_max_digest_length and max_digest_length 16384; developer machine, load average 2.9 at the start. Freshly migrated erp_t51_rh_* schema seeded with 100k Suppliers (dropped afterwards). runSupplierPerformanceAcceptance.js: TC-085 4/4, TC-101 6/6, TC-128 5/5, TC-129 5/5 checks PASS; 12 of 12 top-statement plans visible in both load reports, base-table scans only the HD-088 text searches; mixed overall p95 231 ms, for-SKU worst case 1,546 ms; 10,000-row import inside the measured window, every row applied once, no rows not applied. Report BLOCKED by the TC-128 NOT_RUN part (HD-117 A). Verdict unit test 2/2 with 44 failing cases; lint exit 0. Earlier runs the same day: one applied 9,999 rows (DEF-034), one was slowed by another session's benchmark (load average 11) and failed p95.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-22T14:09:41+08:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "Performance runner and T50 tool changes (PR #268) merged to main",
+      "code_commit": "6cb8310c94756485abcea84a06a1e545045b1c31",
+      "spec_baseline": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
+      "source_fingerprint": "483705d33b5f83ee4f89931a364d5d5ee800aed4fec73bceabd7616cdb4a5e09",
+      "status": "PASS",
+      "source_ref": "PR #268 merged as 6cb8310c94756485abcea84a06a1e545045b1c31 at 2026-10-22T06:39:34Z on the Product Owner's word ('A，review 完、CI 過就 merge。' for HD-122, then 'CI已通過'), with --match-head-commit, after a gate that refused unless the latest run of every check was SUCCESS and main was an ancestor of HEAD: head 107bcbba (main 09281b0a merged in, purchasing PR #266) green on all 13 checks (PR run 39732325250). Review REV-111 CHANGES_REQUESTED (0 Critical, 1 High), follow-ups applied; not re-reviewed. Recorded as the first commit of the next change PR.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-22T14:49:59+08:00"
     }
   ],
   "pending_decisions": [
@@ -6587,6 +6598,23 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-22, in reply to the HD-122 decision after REV-111: 'A，review 完、CI 過就 merge。'"
+    },
+    {
+      "id": "HD-123",
+      "impact": "MAJOR",
+      "question": "HD-120 B's combined profile change. In 00_project_profile.json: add DB_ADMIN_USER, DB_ADMIN_PASSWORD and MYSQL_BIN to the env_keys of supplier-recovery, supplier-release-operations, supplier-resilience and supplier-performance, and DB_ADMIN_PASSWORD to their redaction_env_keys; add a mysqldump --version tool probe to supplier-recovery; set supplier-release-operations min_tests from 3 to 2. The plan baseline moves from 6cb156c3; seven approvals bound to it (APPROVAL-HD-105-PLAN, HD-113-SCOPE, VITE-ADVISORY-LOCK-SCOPE, HD-116-RISK, HD-117-SCOPE, HD-118-SCOPE, HD-122-SCOPE) and 52 observations would be stranded. (A) One PR: change the profile, record APPROVAL-HD-123-PLAN on the new baseline, re-affirm the seven approvals as new records on it (originals kept), run the four suites with the harness's own environment, and have a reviewer confirm whether REV-109 H-1 and REV-111 H-1 are resolved, recorded as superseding reviews. (B) Profile and plan approval only. (C) Defer to TEST_AND_VERIFY.",
+      "affected_ids": [
+        "00_project_profile.json",
+        "supplier-recovery",
+        "supplier-release-operations",
+        "supplier-resilience",
+        "supplier-performance",
+        "REV-109",
+        "REV-111",
+        "HD-120"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-22, in reply to the HD-123 decision after PR #268 merged: 'HD-123 A，review 完 CI 過就 merge'. Choosing A re-affirms the seven approvals unchanged."
     }
   ],
   "external_actions": [
@@ -7803,5 +7831,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "PR for claude/supplier-task-051-performance (HD-117 A PR 4, HD-122 A); merge per 'review 完、CI 過就 merge'. Then the combined profile change (HD-120 B) and UAT IDs."
+  "next_safe_action": "HD-123 A on claude/supplier-task-051-profile: change the profile, record the new plan approval and the seven re-affirmed approvals, run the four suites in the harness environment, re-review the open Highs; PR and merge per 'review 完 CI 過就 merge'. Then UAT IDs."
 }
