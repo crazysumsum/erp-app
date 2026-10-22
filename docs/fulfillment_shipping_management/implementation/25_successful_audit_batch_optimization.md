@@ -69,3 +69,29 @@ All five configured DEVELOPER contracts PASS at unchanged source FP `ec5e3f476a3
 Independent measurement review APPROVED, 0 C/H/M, summary SHA `095712a625064727d20674c44fdbeb0e841ec43e83f5f1806f33b8c989be5a8e`. Exact-current CI remains pending; previous commit green is historical evidence only.
 
 Additional complete server FILES regression `/private/tmp/fulfillment-p0-audit-server-files.log`: 3653 discovered, 2637 PASS, 0 FAIL, 1016 qualified native/opt-in SKIP with original DB_INTEGRATION_TESTS=0/default provider-off configuration. The separate native-enabled 202-case contract above has zero skips. Structural traceability, module boundary against approved frozen target `94d5297`, state inspection and diff checks PASS. These developer checks do not constitute formal acceptance/UAT or complete P0 closure.
+
+Independent five-contract evidence/binding review APPROVED, 0 C/H/M: schema, evidence_issues, exact command contracts, artifact hashes and actual testcase nodes verified. Logs retain execution-time HEAD 1cb2a7b3 and source FP ec5e3f…; they apply to committed ea17fecd through unchanged source, not a fabricated rerun at the new commit. FILES log SHA `048354c9559d91e4aaaab8aa5f85ada6cd0a03a02b9d6717bd737b35064c7ace`.
+
+Current CI: [run 39732764714](https://github.com/crazysumsum/erp-app/actions/runs/39732764714), exact candidate `ea17fecd0da563ba46d0be850f57e8d9172db513`; dispatched after local checks and source/measurement review, pending actual completion. Post-commit observations remain local documentation/state so the checked source is not replaced by a documentation-only new candidate SHA.
+
+## Actual current-candidate CI result
+
+[Run 39732764714](https://github.com/crazysumsum/erp-app/actions/runs/39732764714) completed SUCCESS on exact `ea17fecd0da563ba46d0be850f57e8d9172db513`, all **13/13 jobs SUCCESS**, including all four server coverage shards, client coverage, real Playwright, lint, dependency audit, frontend build, TC-042, merged coverage and strict aggregate gate. Merged server coverage is 96.08% lines / 87.17% branches / 94.39% functions, all 39 per-file floors met. No threshold/skip/timeout/config exception was introduced.
+
+Actual legal-5000 diagnostics in shard 4 job119671361386: Allocate **11628 ms**, Reallocate **16480 ms**, combined txQueries **75829**, sampledMaxHeap **187111264 bytes**, original transactionTimeoutMs **20000**. The complete testcase took 41745.018364 ms including fixture seeding and both transactions; that is not a transaction duration. The other 100-member×50-leg capacity shape also PASS, A5407/R9850 ms; actual final-tail after-write Reallocate rollback PASS. Shard2 job119671361408 passed all new owner audit tests.
+
+| CI observation | Prior candidate 1cb2a7b3/run39719857793 | Current ea17fecd/run39732764714 |
+| --- | ---: | ---: |
+| Legal-5000 Reallocate | 18363 ms | 16480 ms |
+| Remaining within 20000 ms | 1637 ms | 3520 ms |
+| Legal-5000 combined A/R SQL calls | 90679 | 75829 |
+
+Observed Reallocate improvement is 1883 ms (10.25%); remaining budget increased by 1883 ms. This is one observed CI pair, not a p95/all-runner-load stability guarantee. Candidate adds 4950 fewer Allocate calls and 9900 fewer Reallocate calls; every audit row remains. Keep the fixed 20-second gate. No Reservation/Balance/candidate/claim optimizations were added.
+
+Private `ci-final.json` and exact raw-log hashes are retained in the profile summary. The independently reviewed pre-CI summary bytes/SHA095712a6… remain verbatim in `summary.reviewed-before-ci.json`; the current summary adds actual CI observations and is not relabeled as the older reviewed artifact. Historical pending paragraphs above describe their original point in time. Final bounded closure still requires independent actual-CI review.
+
+## Independent bounded closure
+
+`/root/fulfillment_independent_review` independently used the GitHub connector to verify exact ea17fecd checkout, all13 successful jobs, actual legal-5000 timings, new native audit and real final-tail rollback, merged coverage and all39 floors. APPROVED, 0 CRITICAL/HIGH/MEDIUM. Receipt SHA `e207e218de473dc4a3898f9bf890630f5b8d7c62ae31a4b6b5ee9bdb75db2e68`.
+
+The authorized bounded task is COMPLETE. Preserve all records/checks and original20sec limit; observed CI Reallocate headroom is now3520ms, subject to runner/load variation. This does not close broader P0 TASK-011/DEF-003, formal acceptance/UAT, PR, merge or live activation. Product source remains exact green-CI ea17fecd/ec5e3f; post-CI closure updates are local documentation/state. Await further human direction for broader previously paused P0 work.

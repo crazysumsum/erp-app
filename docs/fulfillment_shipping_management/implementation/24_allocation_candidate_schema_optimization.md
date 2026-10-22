@@ -70,3 +70,5 @@ This completes the bounded optimization/remeasure/current-CI request. It does no
 ## Independent bounded closure
 
 Actual separate reviewer `/root/fulfillment_independent_review` independently confirmed GitHub run39719857793 through its GitHub connector: checkout1cb2a7b3, all13jobsSUCCESS, realcapacity/partial-schema/receiptregressionlogs, global96.08/87.11/94.39 and39filefloors. Verdict **APPROVED,0C/H/M**, sourceFPf458; current CI receiptSHAd62dfed708ad25202c1af25f45dbcc28ffa0ad947322930cc6f8bd86fda9d4da. Reviewer validated all updated artifact hashes and exact prior reviewedsummary preservation. DEF-002 may close with this currentCI evidence; DEF-003/overallTASK011/formalacceptance/PR/merge remain outside this bounded closure. The1637ms Reallocate headroom remains an explicit residualrisk, not a deadline exception.
+
+Subsequent bounded audit optimization is documented in report25 at ea17fecd/sourceec5e3f, CI39732764714 all13PASS. This report's 1cb/f458 measurements and closure remain historical; do not substitute the newer audit candidate for this report's original schema-proof-only comparison.
