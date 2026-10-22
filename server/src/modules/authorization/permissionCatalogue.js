@@ -47,7 +47,19 @@ export const PERMISSION_CATALOGUE = Object.freeze([
   Object.freeze({ name: "sales.view", description: "查看報價、銷售訂單及匯出" }),
   Object.freeze({ name: "sales.mgmt", description: "管理報價、銷售訂單與確認操作" }),
   Object.freeze({ name: "sales.import", description: "匯入銷售訂單及管理外部接單" }),
-  Object.freeze({ name: "fulfillment.operation", description: "執行履約庫存分配及出庫" })
+  Object.freeze({ name: "fulfillment.operation", description: "執行履約庫存分配及出庫" }),
+  // receiving.operation 與 receiving.expiry.override 早已被 InventoryPostingService
+  // 的收貨 provider 路徑要求（RECEIVING_RECEIPT.requiredCallerPermission 與
+  // OVERRIDE_PERMISSION），但一直不在目錄裡——沒有角色配得上不存在的權限，所以那條
+  // 路徑在正式環境是走不通的。啟動自檢比對目錄與資料庫，不會抓到「程式要求一個
+  // 目錄裡沒有的權限」，所以今天沒有任何東西報錯。設計見
+  // docs/purchasing_receiving_management/03_design_spec.md §6.1。
+  Object.freeze({ name: "purchasing.view", description: "查看採購單、收貨單、數量、金額及來源歷史" }),
+  Object.freeze({ name: "purchasing.mgmt", description: "管理採購單草稿、提交、撤回、取消及關閉未收數量" }),
+  Object.freeze({ name: "purchasing.approval", description: "審批指定給自己的採購單" }),
+  Object.freeze({ name: "purchasing.settings", description: "管理採購模組參數" }),
+  Object.freeze({ name: "receiving.operation", description: "建立及確認收貨單" }),
+  Object.freeze({ name: "receiving.expiry.override", description: "在剩餘效期不足時以原因批准收貨例外" })
 ]);
 
 /** 目錄裡所有權限的名字，供比對用。 */

@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "purchasing-receiving-management",
-  "revision": 5,
+  "revision": 6,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
   "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-001",
-  "current_task": "TASK-003",
+  "current_task": "TASK-008",
   "baseline": {
     "design": "5db990ab6967fbfaf1813dbf17382802f1362c77fde2c9e51b57e6ac2cbbe9fd",
     "plan": "54e2b1cb2fa8058d5b96bbcfc2885a96ca7b23d6a1d5e32f6c82691caf4031c7",
     "code_commit": "81a873fc941d54c634772c46641db95b552bf298",
-    "source_fingerprint": "77e23559e014501d92f283cad0b884125b339591d9b602d6c8a4b27f2e56abe5",
+    "source_fingerprint": "31bd212955e0123dddf7d9dbbc379515e6dbc8582672ecb7000d7409bceee080",
     "worktree": "/Users/sam/Documents/workspace/erp-purchasing-p0",
     "default_commit": "a3040c96e1aa92902df964d44a1ad0b83f37f844",
     "mode_entry_commit": "a3040c96e1aa92902df964d44a1ad0b83f37f844"
@@ -28,7 +28,7 @@
   "tasks": {
     "TASK-001": "DONE",
     "TASK-002": "DONE",
-    "TASK-003": "PENDING",
+    "TASK-003": "DONE",
     "TASK-004": "IN_PROGRESS",
     "TASK-005": "IN_PROGRESS",
     "TASK-006": "BLOCKED",
@@ -130,6 +130,25 @@
         "TASK-001 through TASK-044",
         "TC-001 through TC-012",
         "UAT-001 through UAT-106"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-004",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "docs/purchasing_receiving_management/implementation/P0_provider_readiness.md#task-003-authorized-write-scope",
+      "recorded_at": "2026-10-22T12:00:00+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "54e2b1cb2fa8058d5b96bbcfc2885a96ca7b23d6a1d5e32f6c82691caf4031c7",
+      "code_commit": null,
+      "scope": [
+        "TASK-003",
+        "server/src/modules/authorization/permissionCatalogue.js (approval_required_path)",
+        "server/database/migrations/0100_seed_purchasing_permissions.js (approval_required_path)",
+        "server/test/permissionCatalogueConventions.test.js (shared, outside module: the three-step process requires registering the seed migration there)"
       ],
       "expires_at": null
     }
@@ -259,8 +278,8 @@
         "DES-001",
         "DES-002"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "docs/purchasing_receiving_management/implementation/P0_provider_readiness.md#hd-007--inventory-contract-ownership"
     }
   ],
   "external_actions": [
@@ -299,5 +318,5 @@
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "TASK-001 is recorded in implementation/P0_provider_readiness.md. TASK-002 is DONE: its implementation and guarding tests were verified directly against its acceptance criteria. TASK-004 and TASK-005 are IN_PROGRESS — the Supplier and Item contracts exist and their own suites pass, but their remaining acceptance bullets (bank-field projection, recordSupply replay, committed-receipt warning codes) are not yet pinned by a purchasing consumer contract test; that is TASK-008's job. Proceed with TASK-003 (purchasing/receiving permission catalogue entries plus an additive migration), which is inside this module's approval_required_paths and also fixes a dangling permission reference that makes Inventory's receiving provider unreachable. TASK-006 and TASK-007 are blocked on HD-007 (write scope in server/src/modules/inventory/**). HD-006 (OPEN-006 cutover) remains open and blocks Go-Live only."
+  "next_safe_action": "TASK-001 and TASK-003 are DONE. TASK-006 and TASK-007 are handed to the Inventory module owner by HD-007 and stay BLOCKED here; Purchasing's remaining job for them is the consumer contract side of TASK-008. TASK-004 and TASK-005 stay IN_PROGRESS until TASK-008 pins their acceptance bullets from this module. PHASE-001 cannot close until the two Inventory contracts land. Five pre-existing CONTRACT_DRIFT issues still block validate_traceability.py; re-pinning them would strand APR-001/002/003 and needs an explicit decision. HD-006 (OPEN-006 cutover) remains open and blocks Go-Live only."
 }
