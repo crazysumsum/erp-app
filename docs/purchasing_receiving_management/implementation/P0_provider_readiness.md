@@ -82,3 +82,40 @@ Today `InventoryPostingService.postReceivingReceiptInTransaction:333` is single-
 The manifest was deliberately **not** widened to cover the conventions test. Editing `contracts` or `scope` changes the design and plan composite digests, which would strand `APR-001`, `APR-002`, `APR-003` and `REV-002`. Recording the authorized exception costs one approval entry; re-pinning would cost three approvals and a re-review.
 
 Migration number `0100`: `0088`–`0099` are already claimed by the in-flight `codex/fulfillment-p0-foundation` and `codex/sales-order-phase-4-archive` branches, which collide with each other on `0088` and `0091`–`0093`. The runner keys applied state by full filename and a permission seed is order-independent, so the gap is free.
+
+
+## TASK-003 broke four integration tests, and why the local run could not see it
+
+Adding six catalogue entries that no migration grants to system-admin turned four hand-maintained admin-claim sets stale. Every affected test failed with `PERMISSION_STALE`:
+
+| File | Failing cases in CI |
+| --- | --- |
+| `server/test/integration/roleManagement.integration.test.js` | 5 |
+| `server/test/integration/userManagement.integration.test.js` | 5 |
+| `server/test/integration/passwordChange.integration.test.js` | 2 |
+| `server/test/integration/migrations.integration.test.js` | 1 |
+
+Each builds its admin claim set as "every catalogue permission except the ones migrations deliberately do not grant", as a literal prefix denylist:
+
+```js
+.filter((name) => !name.startsWith("customer.bank.") && !name.startsWith("inventory.") &&
+  !name.startsWith("sales.") && name !== "fulfillment.operation");
+```
+
+`purchasing.` and `receiving.` were added to all four. The accretion of `customer.bank.`, `inventory.`, `sales.` and `fulfillment.operation` shows this has broken at least four previous modules' first PR the same way. A denylist derived from what the migrations actually grant would stop it recurring; that is four other modules' test files and was not changed here.
+
+**The local run could not catch this.** `npm test --workspace server` without `DB_INTEGRATION_TESTS=1` and a live MySQL skips 872 tests, including all four of these files, and still exits 0. A green local run on this repo is not evidence about anything MySQL-backed.
+
+Re-verified against a real isolated MySQL 26.7.0 (`--skip-log-bin`, needed because `0057_create_inventory_audit.js` creates triggers and the default binlog config refuses that without SUPER):
+
+| Check | Result |
+| --- | --- |
+| `npm run migrate` from empty schema | all 86 migrations applied, including `0100` |
+| Seeded rows | 6 permissions, correct UTF-8 descriptions, `role_permissions` grants = 0 |
+| Re-run `migrate` | `0100` skipped, still exactly 6 rows |
+| The four repaired files | 35 tests, 35 pass, 0 skipped |
+| Negative control: fix reverted | RED — the fix is what makes them pass |
+
+Three other local integration failures (`customerCatalogLocks`, `customerOperationalGuards`, `itemRecoveryAcceptance`) are **pre-existing**: they fail identically on unmodified `origin/main` against the same database. `salesImportCapacity` TC-042 passes alone on both `origin/main` and this branch; it failed only inside the full single-process suite run, which is contention, and is why CI shards the suite.
+
+The CI version note in `GAP-ENV-001` is now wrong in one detail: CI's `mysql:8.0` service image reports `Version: '26.7.0'`, the same build as the local client. Local and CI are not on different major versions.

@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "purchasing-receiving-management",
-  "revision": 7,
+  "revision": 8,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -12,7 +12,7 @@
     "design": "5db990ab6967fbfaf1813dbf17382802f1362c77fde2c9e51b57e6ac2cbbe9fd",
     "plan": "54e2b1cb2fa8058d5b96bbcfc2885a96ca7b23d6a1d5e32f6c82691caf4031c7",
     "code_commit": "81a873fc941d54c634772c46641db95b552bf298",
-    "source_fingerprint": "aa9e5d665d404f824593c61d0d2e5c90fc57e943b00337284127cbd4512137c6",
+    "source_fingerprint": "95b181c03bbef52334c436979b81b0db448c6020bd63f18eb629bd4369ff39d5",
     "worktree": "/Users/sam/Documents/workspace/erp-purchasing-p0",
     "default_commit": "94d5297260c4fe460cd9e1b84cfbfe14743a6f1f",
     "mode_entry_commit": "a3040c96e1aa92902df964d44a1ad0b83f37f844"
@@ -148,7 +148,8 @@
         "TASK-003",
         "server/src/modules/authorization/permissionCatalogue.js (approval_required_path)",
         "server/database/migrations/0100_seed_purchasing_permissions.js (approval_required_path)",
-        "server/test/permissionCatalogueConventions.test.js (shared, outside module: the three-step process requires registering the seed migration there)"
+        "server/test/permissionCatalogueConventions.test.js (shared, outside module: the three-step process requires registering the seed migration there)",
+        "server/test/integration/{roleManagement,userManagement,passwordChange,migrations}.integration.test.js (shared, outside module: six ungranted catalogue entries made their admin claim denylists stale)"
       ],
       "expires_at": null
     }
