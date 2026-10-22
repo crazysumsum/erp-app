@@ -128,6 +128,8 @@ jobs:
           MYSQL_USER: erp_user
           MYSQL_PASSWORD: erp_password
           MYSQL_ROOT_PASSWORD: root
+        volumes:
+          - /tmp/erp-ci-mysql-socket:/var/run/mysqld
         ports:
           - 3306:3306
         # GitHub Actions 會等 service 的健康檢查通過才開始跑這個 job 的 steps，
@@ -197,8 +199,23 @@ jobs:
           SALES_IMPORT_CAPACITY_SEPARATE_STEP: "1"
           # This native-only lane has applied the complete P0 schema; keep deployment default off.
           FULFILLMENT_LIFECYCLE_ENABLED: "true"
+          # Match the owned native runtime transport; keep all transaction deadlines unchanged.
+          DB_SOCKET_PATH: /tmp/erp-ci-mysql-socket/mysqld.sock
           NODE_V8_COVERAGE: ${{ github.workspace }}/server/coverage/shard/raw
-        run: npm run test:coverage:shard --workspace server -- --test-shard=${{ matrix.shard }}/4
+        run: |
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import mysql from 'mysql2/promise';
+          const db=await mysql.createConnection({socketPath:process.env.DB_SOCKET_PATH,user:process.env.DB_USER,password:process.env.DB_PASSWORD,database:process.env.DB_NAME});
+          try {
+            const [[identity]]=await db.query('SELECT @@socket AS socket, CURRENT_USER() AS account, USER() AS peer');
+            assert.equal(identity.socket,'/var/run/mysqld/mysqld.sock');
+            assert.ok(identity.account.startsWith(process.env.DB_USER+'@'));
+            assert.ok(identity.peer.endsWith('@localhost'));
+            console.log('Native CI transport verified:',JSON.stringify(identity));
+          } finally {await db.end();}
+          NODE
+          npm run test:coverage:shard --workspace server -- --test-shard=${{ matrix.shard }}/4
 
       - name: Record candidate and shard identity
         working-directory: server

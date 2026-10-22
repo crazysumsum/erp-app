@@ -21,9 +21,9 @@ function historicalRow(contract,batch,now){
   }row.row_hash=createHash("sha256").update(JSON.stringify(row)).digest("hex");return row;
 }
 nativeTest("P0 actual low-privilege DML account cannot mutate Audit or any12 mirrors and cannot alter/drop schema",async t=>{
-  const f=await archiveFixture(t),username="fp0_"+randomUUID().replaceAll("-","").slice(0,16),password=randomUUID();let app=null,created=false;const prior=f.f.cleanup.shutdown;
-  f.f.cleanup.shutdown=async()=>{const errors=[];for(const close of [()=>app?.end(),()=>created&&f.db.query("DROP USER ?@'localhost'",[username]),()=>prior()])try{await close();}catch(e){errors.push(e);}if(errors.length)throw new AggregateError(errors,"Owned app-account cleanup failed");};
-  await f.db.query("CREATE USER ?@'localhost' IDENTIFIED BY ?",[username,password]);created=true;await f.db.query(`GRANT SELECT,INSERT,UPDATE,DELETE ON \`${f.f.name}\`.* TO ?@'localhost'`,[username]);app=await mysql.createConnection({...f.f.connectionOptions,database:f.f.name,user:username,password,multipleStatements:false});
+  const f=await archiveFixture(t),username="fp0_"+randomUUID().replaceAll("-","").slice(0,16),password=randomUUID(),[[{clientHost}]]=await f.db.query("SELECT SUBSTRING_INDEX(USER(),'@',-1) AS clientHost");assert.match(clientHost,/^[A-Za-z0-9.:-]+$/u);let app=null,created=false;const prior=f.f.cleanup.shutdown;
+  f.f.cleanup.shutdown=async()=>{const errors=[];for(const close of [()=>app?.end(),()=>created&&f.db.query("DROP USER ?@?",[username,clientHost]),()=>prior()])try{await close();}catch(e){errors.push(e);}if(errors.length)throw new AggregateError(errors,"Owned app-account cleanup failed");};
+  await f.db.query("CREATE USER ?@? IDENTIFIED BY ?",[username,clientHost,password]);created=true;await f.db.query(`GRANT SELECT,INSERT,UPDATE,DELETE ON \`${f.f.name}\`.* TO ?@?`,[username,clientHost]);app=await mysql.createConnection({...f.f.connectionOptions,database:f.f.name,user:username,password,multipleStatements:false});
   const counts={},hashes={};
   for(const c of FULFILLMENT_ARCHIVE_TABLES){const row=historicalRow(c,f.batch,f.s.now);await app.query(`INSERT INTO ${c.table} SET ?`,row);counts[c.table]=1;hashes[c.table]=row.row_hash;
     await assert.rejects(app.execute(`UPDATE ${c.table} SET archived_at=archived_at+1 WHERE id=?`,[row.id]),e=>e.code==="ER_SIGNAL_EXCEPTION");await assert.rejects(app.execute(`DELETE FROM ${c.table} WHERE id=?`,[row.id]),e=>e.code==="ER_SIGNAL_EXCEPTION");

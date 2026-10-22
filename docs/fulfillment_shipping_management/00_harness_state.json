@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 78,
+  "revision": 83,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "eed2eb831ce50d0717992bcc25f04318dd652b16b7f662b3b5f81f9797b5a545",
     "plan": "f3b9dacf3b513916e6f7f349e15c0fcc035be2bc2995761624e7adb7b6238b05",
-    "code_commit": "ce4a2c438a1baa6fc5a14d63eab05ec763ad67ef",
-    "source_fingerprint": "f9de149c2841b0d40b56e36a9135c27a5786d5db0542f4593a708022a85b247f",
+    "code_commit": "25fc3e4b68f92d535790360c769e906d5bf46c4a",
+    "source_fingerprint": "c3694909a3a1beaf56ba1c97622eb78d1cee2c537b3791ff4eff2487d2dd089e",
     "worktree": "/private/tmp/erp-fulfillment-p0",
     "default_commit": "81a873fc941d54c634772c46641db95b552bf298",
     "mode_entry_commit": "76223f40480d94a1d3a2ae6e0e7b91292bd98b82"
@@ -46,7 +46,7 @@
     "TASK-008": "DONE",
     "TASK-009": "DONE",
     "TASK-010": "DONE",
-    "TASK-011": "DONE",
+    "TASK-011": "IN_PROGRESS",
     "TASK-012": "PENDING",
     "TASK-013": "PENDING",
     "TASK-014": "PENDING",
@@ -2248,9 +2248,143 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-047-EXACT-25FC-PRE-PR",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "f9de149c2841b0d40b56e36a9135c27a5786d5db0542f4593a708022a85b247f",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/22_p0_completion.md#exact-publication-candidate-review",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
-  "observations": [],
+  "observations": [
+    {
+      "code_commit": "25fc3e4b68f92d535790360c769e906d5bf46c4a",
+      "spec_baseline": "f3b9dacf3b513916e6f7f349e15c0fcc035be2bc2995761624e7adb7b6238b05",
+      "source_fingerprint": "f9de149c2841b0d40b56e36a9135c27a5786d5db0542f4593a708022a85b247f",
+      "observed_at": "2026-10-22T01:38:34.720598+00:00",
+      "kind": "PR_REVIEW",
+      "subject": "fulfillment-p0 publication candidate",
+      "status": "PASS",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/22_p0_completion.md#exact-publication-candidate-review",
+      "actor": "/root/fulfillment_independent_review; actual SEPARATE_AGENT pre-PR code review, not a GitHub approval or merge authorization"
+    },
+    {
+      "code_commit": "25fc3e4b68f92d535790360c769e906d5bf46c4a",
+      "spec_baseline": "f3b9dacf3b513916e6f7f349e15c0fcc035be2bc2995761624e7adb7b6238b05",
+      "source_fingerprint": "f9de149c2841b0d40b56e36a9135c27a5786d5db0542f4593a708022a85b247f",
+      "observed_at": "2026-10-22T01:38:34.720598+00:00",
+      "kind": "CI",
+      "subject": "Dependency audit",
+      "status": "PENDING",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/39706733648",
+      "actor": "GitHub Actions API; actual exact-head queued workflow observation"
+    },
+    {
+      "code_commit": "25fc3e4b68f92d535790360c769e906d5bf46c4a",
+      "spec_baseline": "f3b9dacf3b513916e6f7f349e15c0fcc035be2bc2995761624e7adb7b6238b05",
+      "source_fingerprint": "f9de149c2841b0d40b56e36a9135c27a5786d5db0542f4593a708022a85b247f",
+      "observed_at": "2026-10-22T01:38:34.720598+00:00",
+      "kind": "CI",
+      "subject": "Lint",
+      "status": "PENDING",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/39706733648",
+      "actor": "GitHub Actions API; actual exact-head queued workflow observation"
+    },
+    {
+      "code_commit": "25fc3e4b68f92d535790360c769e906d5bf46c4a",
+      "spec_baseline": "f3b9dacf3b513916e6f7f349e15c0fcc035be2bc2995761624e7adb7b6238b05",
+      "source_fingerprint": "f9de149c2841b0d40b56e36a9135c27a5786d5db0542f4593a708022a85b247f",
+      "observed_at": "2026-10-22T01:38:34.720598+00:00",
+      "kind": "CI",
+      "subject": "Test (server + client, MySQL integration)",
+      "status": "PENDING",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/39706733648",
+      "actor": "GitHub Actions API; actual exact-head queued workflow observation"
+    },
+    {
+      "code_commit": "25fc3e4b68f92d535790360c769e906d5bf46c4a",
+      "spec_baseline": "f3b9dacf3b513916e6f7f349e15c0fcc035be2bc2995761624e7adb7b6238b05",
+      "source_fingerprint": "f9de149c2841b0d40b56e36a9135c27a5786d5db0542f4593a708022a85b247f",
+      "observed_at": "2026-10-22T01:38:34.720598+00:00",
+      "kind": "CI",
+      "subject": "Build frontend",
+      "status": "PENDING",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/39706733648",
+      "actor": "GitHub Actions API; actual exact-head queued workflow observation"
+    },
+    {
+      "code_commit": "25fc3e4b68f92d535790360c769e906d5bf46c4a",
+      "spec_baseline": "f3b9dacf3b513916e6f7f349e15c0fcc035be2bc2995761624e7adb7b6238b05",
+      "source_fingerprint": "f9de149c2841b0d40b56e36a9135c27a5786d5db0542f4593a708022a85b247f",
+      "observed_at": "2026-10-22T01:38:34.720598+00:00",
+      "kind": "CI",
+      "subject": "Browser tests (Playwright)",
+      "status": "PENDING",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/39706733648",
+      "actor": "GitHub Actions API; actual exact-head queued workflow observation"
+    },
+    {
+      "code_commit": "25fc3e4b68f92d535790360c769e906d5bf46c4a",
+      "spec_baseline": "f3b9dacf3b513916e6f7f349e15c0fcc035be2bc2995761624e7adb7b6238b05",
+      "source_fingerprint": "f9de149c2841b0d40b56e36a9135c27a5786d5db0542f4593a708022a85b247f",
+      "observed_at": "2026-10-22T01:50:59.155633+00:00",
+      "kind": "CI",
+      "subject": "Browser tests (Playwright)",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/39706733648/job/119588418613",
+      "actor": "GitHub Actions API actual completed exact-head run39706733648; history retained"
+    },
+    {
+      "code_commit": "25fc3e4b68f92d535790360c769e906d5bf46c4a",
+      "spec_baseline": "f3b9dacf3b513916e6f7f349e15c0fcc035be2bc2995761624e7adb7b6238b05",
+      "source_fingerprint": "f9de149c2841b0d40b56e36a9135c27a5786d5db0542f4593a708022a85b247f",
+      "observed_at": "2026-10-22T01:50:59.155633+00:00",
+      "kind": "CI",
+      "subject": "Dependency audit",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/39706733648/job/119588418678",
+      "actor": "GitHub Actions API actual completed exact-head run39706733648; history retained"
+    },
+    {
+      "code_commit": "25fc3e4b68f92d535790360c769e906d5bf46c4a",
+      "spec_baseline": "f3b9dacf3b513916e6f7f349e15c0fcc035be2bc2995761624e7adb7b6238b05",
+      "source_fingerprint": "f9de149c2841b0d40b56e36a9135c27a5786d5db0542f4593a708022a85b247f",
+      "observed_at": "2026-10-22T01:50:59.155633+00:00",
+      "kind": "CI",
+      "subject": "Build frontend",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/39706733648/job/119588418722",
+      "actor": "GitHub Actions API actual completed exact-head run39706733648; history retained"
+    },
+    {
+      "code_commit": "25fc3e4b68f92d535790360c769e906d5bf46c4a",
+      "spec_baseline": "f3b9dacf3b513916e6f7f349e15c0fcc035be2bc2995761624e7adb7b6238b05",
+      "source_fingerprint": "f9de149c2841b0d40b56e36a9135c27a5786d5db0542f4593a708022a85b247f",
+      "observed_at": "2026-10-22T01:50:59.155633+00:00",
+      "kind": "CI",
+      "subject": "Lint",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/39706733648/job/119588418749",
+      "actor": "GitHub Actions API actual completed exact-head run39706733648; history retained"
+    },
+    {
+      "code_commit": "25fc3e4b68f92d535790360c769e906d5bf46c4a",
+      "spec_baseline": "f3b9dacf3b513916e6f7f349e15c0fcc035be2bc2995761624e7adb7b6238b05",
+      "source_fingerprint": "f9de149c2841b0d40b56e36a9135c27a5786d5db0542f4593a708022a85b247f",
+      "observed_at": "2026-10-22T01:50:59.155633+00:00",
+      "kind": "CI",
+      "subject": "Test (server + client, MySQL integration)",
+      "status": "FAIL",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/39706733648/job/119591487100",
+      "actor": "GitHub Actions API actual completed exact-head run39706733648; history retained"
+    }
+  ],
   "pending_decisions": [
     {
       "id": "HD-001",
@@ -2718,10 +2852,18 @@
     {
       "id": "P0-PUBLISH-FROZEN-CANDIDATE",
       "kind": "GIT_PUSH",
-      "target": "crazysumsum/erp-app refs/heads/codex/fulfillment-p0-foundation; sourceFPf9de149c/PLANf3b9dacf",
+      "target": "crazysumsum/erp-app refs/heads/codex/fulfillment-p0-foundation@25fc3e4b68f92d535790360c769e906d5bf46c4a",
       "idempotency_key": "p0-publish-after-all-local-gates-20261022",
-      "status": "PLANNED",
-      "source_ref": "Actualhuman draftPR/push authority; allP0TASK001..011DONE/localfullvalidation and independentfinalclosure0CHM. Freeze bookkeeping commit, record exactSHA before push. No CI or PR result claimed."
+      "status": "CONFIRMED",
+      "source_ref": "Actualgitpush exit0/newbranch and observedremote25fc3e4b68f92d535790360c769e906d5bf46c4a; noPRcreated. ProductFPf9de/PLANf3b9 unchanged."
+    },
+    {
+      "id": "P0-CURRENT-CI-DISPATCH",
+      "kind": "CI_WORKFLOW_DISPATCH",
+      "target": "crazysumsum/erp-app ci.yml refcodex/fulfillment-p0-foundation exact25fc3e4b68f92d535790360c769e906d5bf46c4a",
+      "idempotency_key": "p0-ci-25fc3e4b-20261022",
+      "status": "CONFIRMED",
+      "source_ref": "Actualdispatch204 and authenticatedGitHubrun39706733648 queued/head25fc3e4b68f92d535790360c769e906d5bf46c4a; https://github.com/crazysumsum/erp-app/actions/runs/39706733648; dispatched execution only, notCI PASS."
     }
   ],
   "evidence_files": [
@@ -2747,7 +2889,18 @@
         "/private/tmp/fulfillment-p0-current-server-files-r1.log"
       ],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-002",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "source_ids": [
+        "PHASE-001",
+        "TASK-011"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "All P0 TASK001..011DONE and allcurrentlocalchecks plus finalindependentreview0CHM passed. Freeze docs-only bookkeepingcandidate (productFPf9de/PLANf3b9unchanged), checkpoint exactnewSHA, pushauthorizedbranch then workflow_dispatch fullCI. Require actualcurrentcandidate CI success and independent prePRcandidate review before draftPR. P1–P3/formalTC/UAT/liveactivation/merge remain pending."
+  "next_safe_action": "Execute fresh typedP0/browser and all full gates on CI fixture/transport+equivalentMaps remediation; DEF002 remainsOPEN until actual exactnewcandidateCI passes. Preserve old25fcCI FAIL and all history; noPR yet."
 }

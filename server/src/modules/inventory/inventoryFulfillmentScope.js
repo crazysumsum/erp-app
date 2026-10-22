@@ -11,9 +11,10 @@ export async function claimFulfillmentInventoryScope(tx,{operations,payload,acto
     JOIN inventory_operation_requests o ON o.id=r.create_operation_id
     WHERE r.id IN (${ids.map(()=>"?").join(",")}) ORDER BY r.id`,ids);
   if (rows.length!==ids.length) fail();
+  const byId=new Map(rows.map(row=>[String(row.id),row]));
   let scope=null;
   for (const {line,member} of members) {
-    const row=rows.find(row=>String(row.id)===member.inventoryReservationId);
+    const row=byId.get(member.inventoryReservationId);
     if (!row||row.purpose!=="SALE"||row.source_module!=="SALES"||row.source_document_type!=="SALES_ORDER"||row.source_line_id!==line.salesOrderLineId) fail();
     const next={warehouseId:String(row.warehouse_id),salesOrderId:row.source_document_id};
     if (scope&&(scope.warehouseId!==next.warehouseId||scope.salesOrderId!==next.salesOrderId)) fail();

@@ -71,7 +71,7 @@ async function lockAllocationSet(service,tx,batch,context) {
     FROM inventory_lots l WHERE l.id IN (SELECT lot_id FROM inventory_stock_balances WHERE id IN (${marks(balanceIds)}))`,balanceIds);
   const lots=keyed(lotRows),controlTotals=new Map();
   for(const member of batch.members) {
-    const r=reservations.get(member.input.inventoryReservationId),scope=scopes.find(row=>String(row.id)===member.input.inventoryReservationId);
+    const r=reservations.get(member.input.inventoryReservationId),scope=scopeById.get(member.input.inventoryReservationId);
     if(!r||String(r.warehouse_id)!==String(scope.warehouse_id)||String(r.sku_id)!==String(scope.sku_id)||number(r.version)!==member.input.expectedVersion)fail("VERSION_CONFLICT");
     for(const key of ["original_quantity","consumed_quantity","released_quantity","outstanding_quantity"])number(r[key]);
     if(!["ACTIVE","PARTIALLY_CONSUMED"].includes(r.status)||BigInt(r.original_quantity)!==BigInt(r.consumed_quantity)+BigInt(r.released_quantity)+BigInt(r.outstanding_quantity))fail("RESERVATION_STATE_CONFLICT");
