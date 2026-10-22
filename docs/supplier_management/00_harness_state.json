@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 402,
+  "revision": 405,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -10,11 +10,11 @@
   "current_task": "TASK-051",
   "baseline": {
     "design": "29a0615a61808b3747cd8feb522d051ba5a312da6fb0fccf36e7cf9746286775",
-    "plan": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
+    "plan": "6c885dbaabfb3a3541f5c354ac03c2c1b21bb2b1bca4fa634b4803ac0f489215",
     "code_commit": "186a660ec0ef3037ffc9ef92adcd31b20f1e072d",
     "source_fingerprint": "43f7f525f708bb08a1cb3994bd6ed7a36548794d3eaf9e7e06f18ae5caa911ad",
-    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t51h",
-    "default_commit": "94d5297260c4fe460cd9e1b84cfbfe14743a6f1f",
+    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t51i",
+    "default_commit": "6cb8310c94756485abcea84a06a1e545045b1c31",
     "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
   },
   "runtime": {
@@ -1299,6 +1299,158 @@
         "server/scripts/benchmarkSupplierImport.js"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-123-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "HD-123 A ('HD-123 A，review 完 CI 過就 merge', 2026-10-22). Only 00_project_profile.json changed: DB_ADMIN_USER, DB_ADMIN_PASSWORD and MYSQL_BIN added to the env_keys of supplier-recovery, supplier-release-operations, supplier-resilience and supplier-performance, DB_ADMIN_PASSWORD to their redaction_env_keys; a mysqldump --version tool probe on supplier-recovery; supplier-release-operations min_tests 3 -> 2. Design baseline 29a0615a unchanged; plan baseline 6cb156c3 -> 6c885dba.",
+      "recorded_at": "2026-10-22T14:50:38+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "6c885dbaabfb3a3541f5c354ac03c2c1b21bb2b1bca4fa634b4803ac0f489215",
+      "code_commit": "6cb8310c94756485abcea84a06a1e545045b1c31",
+      "scope": [
+        "supplier-management",
+        "supplier-management project profile: runner env_keys, redaction keys, mysqldump probe, release min_tests",
+        "TASK-051"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-105-PLAN-HD123",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "recorded_at": "2026-10-22T14:50:38+08:00",
+      "code_commit": "f2de51289522eca9b419c5d331ff522efe33e9a6",
+      "scope": [
+        "supplier-management",
+        "supplier-management project profile env_keys, phase-001-server runner, min_tests",
+        "TASK-051"
+      ],
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "6c885dbaabfb3a3541f5c354ac03c2c1b21bb2b1bca4fa634b4803ac0f489215",
+      "source_ref": "Re-affirmed unchanged on plan baseline 6c885dba by HD-123 A ('HD-123 A，review 完 CI 過就 merge', 2026-10-22), because the profile change moved the plan baseline from 6cb156c3. Original APPROVAL-HD-105-PLAN is kept. Original text: HD-105 'A': plan 6cb156c3, the REV-091 follow-ups and env additions after HD-103 '1A' (APPROVAL-HD-103-PLAN-1A, 7232d2ec)."
+    },
+    {
+      "id": "APPROVAL-HD-113-SCOPE-HD123",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline 6c885dba by HD-123 A ('HD-123 A，review 完 CI 過就 merge', 2026-10-22), because the profile change moved the plan baseline from 6cb156c3. Original APPROVAL-HD-113-SCOPE is kept. Original text: HD-113 A. Authorises TASK-051 to add server/database/migrations/0087_fix_supplier_sku_refs_sku_foreign_key.js with the change proposed in chat on 2026-10-20 (orphan check, drop and re-add fk_supplier_sku_refs_sku and idx_supplier_sku_refs_sku_status_supplied around a new idx_supplier_sku_refs_sku (sku_id)).",
+      "recorded_at": "2026-10-22T14:50:38+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "6c885dbaabfb3a3541f5c354ac03c2c1b21bb2b1bca4fa634b4803ac0f489215",
+      "code_commit": "36e1291d61caf4b9883029b9dde49015af450212",
+      "scope": [
+        "supplier-management",
+        "server/database/migrations/0087_fix_supplier_sku_refs_sku_foreign_key.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-VITE-ADVISORY-LOCK-SCOPE-HD123",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline 6c885dba by HD-123 A ('HD-123 A，review 完 CI 過就 merge', 2026-10-22), because the profile change moved the plan baseline from 6cb156c3. Original APPROVAL-VITE-ADVISORY-LOCK-SCOPE is kept. Original text: Product Owner, 2026-10-21: 'A，批准改 package-lock.json，CI 過就 merge'. Authorises a lockfile-only change resolving vite 8.2.4 (within client/package.json's ^8.2.1) after new launch-editor advisories (GHSA-587h-7wmj-h5pm high; GHSA-698v-4r3x-3vcv, GHSA-r825-w8mm-5pxw moderate) failed the Dependency audit check on every branch, blocking PR #258. Delivered as PR #259.",
+      "recorded_at": "2026-10-22T14:50:38+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "6c885dbaabfb3a3541f5c354ac03c2c1b21bb2b1bca4fa634b4803ac0f489215",
+      "code_commit": "ea933e874395e10f3a918142b3203994a1359900",
+      "scope": [
+        "package-lock.json"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-116-RISK-HD123",
+      "kind": "RISK",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline 6c885dba by HD-123 A ('HD-123 A，review 完 CI 過就 merge', 2026-10-22), because the profile change moved the plan baseline from 6cb156c3. Original APPROVAL-HD-116-RISK is kept. Original text: HD-116 A ('A，review 完 CI 過就 merge', 2026-10-21). Defers DEF-004, DEF-007 and DEF-016 to release as recorded known limitations; records DEF-008, DEF-012, DEF-013, DEF-015, DEF-017, DEF-018, DEF-019 and DEF-023 as handed to their owners (docs/supplier_management/testing/defect_handoffs.md) and DEF-014 as accepted. Supersedes APPROVAL-HD-017-RISK and APPROVAL-HD-017-RISK-DEF012 for these defects.",
+      "recorded_at": "2026-10-22T14:50:38+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "6c885dbaabfb3a3541f5c354ac03c2c1b21bb2b1bca4fa634b4803ac0f489215",
+      "code_commit": "0ea31768ea98ef66af6cfe5639887a3209c7884e",
+      "scope": [
+        "supplier-management",
+        "DEF-004",
+        "DEF-007",
+        "DEF-016",
+        "DEF-008",
+        "DEF-012",
+        "DEF-013",
+        "DEF-015",
+        "DEF-017",
+        "DEF-018",
+        "DEF-019",
+        "DEF-023",
+        "DEF-014"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-117-SCOPE-HD123",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline 6c885dba by HD-123 A ('HD-123 A，review 完 CI 過就 merge', 2026-10-22), because the profile change moved the plan baseline from 6cb156c3. Original APPROVAL-HD-117-SCOPE is kept. Original text: HD-117 A ('A，review 完 CI 過就 merge', 2026-10-21). Authorises the four acceptance runners named by 00_project_profile.json at their profile paths in server/scripts/, following the HD-034/HD-035 convention: server/scripts/ is not declared in approval_required_paths and reports OUTSIDE_MODULE; this approval covers exactly these four files. Parts that need production-like infrastructure must report BLOCKED with the reason, never PASS. The client-ui config lives under client/test/**, already an allowed write path.",
+      "recorded_at": "2026-10-22T14:50:38+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "6c885dbaabfb3a3541f5c354ac03c2c1b21bb2b1bca4fa634b4803ac0f489215",
+      "code_commit": "c2237293e8f97198339085254136916d22938cc4",
+      "scope": [
+        "supplier-management",
+        "server/scripts/runSupplierPerformanceAcceptance.js",
+        "server/scripts/runSupplierResilienceAcceptance.js",
+        "server/scripts/runSupplierRecoveryAcceptance.js",
+        "server/scripts/runSupplierReleaseAcceptance.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-118-SCOPE-HD123",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline 6c885dba by HD-123 A ('HD-123 A，review 完 CI 過就 merge', 2026-10-22), because the profile change moved the plan baseline from 6cb156c3. Original APPROVAL-HD-118-SCOPE is kept. Original text: HD-118 A ('DEF-032 A', 2026-10-21). Authorises a change to the shared client/src/framework/ui/DataTable.vue so that the empty-state text is not shown while loading or on a failed read. The file is not declared in the module manifest and reports OUTSIDE_MODULE; this approval covers exactly that file. Its tests live under client/test/**, already an allowed write path.",
+      "recorded_at": "2026-10-22T14:50:38+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "6c885dbaabfb3a3541f5c354ac03c2c1b21bb2b1bca4fa634b4803ac0f489215",
+      "code_commit": "6a9132b217d1170ab67663fcfee0a2cc764371be",
+      "scope": [
+        "supplier-management",
+        "client/src/framework/ui/DataTable.vue"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-122-SCOPE-HD123",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline 6c885dba by HD-123 A ('HD-123 A，review 完 CI 過就 merge', 2026-10-22), because the profile change moved the plan baseline from 6cb156c3. Original APPROVAL-HD-122-SCOPE is kept. Original text: HD-122 A (2026-10-22). Authorises small changes to two T50 tools in server/scripts/: benchmarkSupplierManagement.js keeps the full statement digest and reports its measured window; benchmarkSupplierImport.js records up to 20 not-applied rows with their errors before cleanup. server/scripts/ is not declared in approval_required_paths (HD-034) and reports OUTSIDE_MODULE; this approval covers exactly these two files.",
+      "recorded_at": "2026-10-22T14:50:38+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "6c885dbaabfb3a3541f5c354ac03c2c1b21bb2b1bca4fa634b4803ac0f489215",
+      "code_commit": "94d5297260c4fe460cd9e1b84cfbfe14743a6f1f",
+      "scope": [
+        "supplier-management",
+        "server/scripts/benchmarkSupplierManagement.js",
+        "server/scripts/benchmarkSupplierImport.js"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -2560,6 +2712,42 @@
       "status": "CHANGES_REQUESTED",
       "open_critical": 0,
       "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-112",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (HD-123 A profile change)",
+      "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-task-051-profile at 45645330 (git diff origin/main..HEAD)",
+      "reviewed_baseline": "29a0615a61808b3747cd8feb522d051ba5a312da6fb0fccf36e7cf9746286775",
+      "source_ref": "docs/supplier_management/implementation/115_rev_112_independent_review.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-109-S",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (recovery and release runners, PR #264)",
+      "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-task-051-profile at 45645330 (git diff origin/main..HEAD)",
+      "reviewed_baseline": "29a0615a61808b3747cd8feb522d051ba5a312da6fb0fccf36e7cf9746286775",
+      "source_ref": "Superseding confirmation by REV-112 (docs/supplier_management/implementation/115_rev_112_independent_review.md): REV-109 H-1 RESOLVED on claude/supplier-task-051-profile (profile env_keys, mysqldump probe, release min_tests, testEnv JWT). REV-109's other findings were dispositioned in 112_rev_109_independent_review.md and are not re-reviewed here. REV-109 itself is unchanged.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-111-S",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (performance runner, PR #268)",
+      "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-task-051-profile at 45645330 (git diff origin/main..HEAD)",
+      "reviewed_baseline": "29a0615a61808b3747cd8feb522d051ba5a312da6fb0fccf36e7cf9746286775",
+      "source_ref": "Superseding confirmation by REV-112 (docs/supplier_management/implementation/115_rev_112_independent_review.md): REV-111 H-1 RESOLVED (12 of 12 plans visible in every performance report, only HD-088 text-search scans). REV-111's other findings were dispositioned in 114_rev_111_independent_review.md and are not re-reviewed here. REV-111 itself is unchanged.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
       "risk_approval_id": null
     }
   ],
@@ -4983,6 +5171,28 @@
       "source_ref": "Local, not CI, MySQL 26.7.0 restarted with performance_schema_max_sql_text_length, performance_schema_max_digest_length and max_digest_length 16384; developer machine, load average 2.9 at the start. Freshly migrated erp_t51_rh_* schema seeded with 100k Suppliers (dropped afterwards). runSupplierPerformanceAcceptance.js: TC-085 4/4, TC-101 6/6, TC-128 5/5, TC-129 5/5 checks PASS; 12 of 12 top-statement plans visible in both load reports, base-table scans only the HD-088 text searches; mixed overall p95 231 ms, for-SKU worst case 1,546 ms; 10,000-row import inside the measured window, every row applied once, no rows not applied. Report BLOCKED by the TC-128 NOT_RUN part (HD-117 A). Verdict unit test 2/2 with 44 failing cases; lint exit 0. Earlier runs the same day: one applied 9,999 rows (DEF-034), one was slowed by another session's benchmark (load average 11) and failed p95.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-22T14:09:41+08:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "Performance runner and T50 tool changes (PR #268) merged to main",
+      "code_commit": "6cb8310c94756485abcea84a06a1e545045b1c31",
+      "spec_baseline": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
+      "source_fingerprint": "483705d33b5f83ee4f89931a364d5d5ee800aed4fec73bceabd7616cdb4a5e09",
+      "status": "PASS",
+      "source_ref": "PR #268 merged as 6cb8310c94756485abcea84a06a1e545045b1c31 at 2026-10-22T06:39:34Z on the Product Owner's word ('A，review 完、CI 過就 merge。' for HD-122, then 'CI已通過'), with --match-head-commit, after a gate that refused unless the latest run of every check was SUCCESS and main was an ancestor of HEAD: head 107bcbba (main 09281b0a merged in, purchasing PR #266) green on all 13 checks (PR run 39732325250). Review REV-111 CHANGES_REQUESTED (0 Critical, 1 High), follow-ups applied; not re-reviewed. Recorded as the first commit of the next change PR.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-22T14:49:59+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Runner suites in the harness environment after HD-123 A and REV-112",
+      "code_commit": "1a719077b0b7edc83ad7ad3d5b84ce89aaa17c17",
+      "spec_baseline": "6c885dbaabfb3a3541f5c354ac03c2c1b21bb2b1bca4fa634b4803ac0f489215",
+      "source_fingerprint": "a4b7b38bd6ead3feb3558d6d8f02d9721bd192f2ab5e2220d5661f97ebf0252e",
+      "status": "PASS",
+      "source_ref": "Local, not CI, MySQL 26.7.0 (performance_schema text lengths 16384), erp_t51 migrated to the latest. run_check refuses formal stages in IMPLEMENT, so a scratch driver repeated harness_runner.run_suite after its preflight (same env allow-list plus env_keys, probes, process, redaction, parsing, status rules, unchanged plan/source/HEAD check). With admin credentials: supplier-resilience, supplier-recovery, supplier-release-operations and supplier-performance each BLOCKED with exit 0, only the designed NOT_RUN parts missing (TC-131, TC-085, TC-101, TC-129 PASS; probes matched incl. mysqldump; no secret in logs). Without DB_ADMIN_*: supplier-release-operations BLOCKED, every case NOT_RUN. Verdict unit test 2/2 (45 cases); lint exit 0.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-22T15:30:44+08:00"
     }
   ],
   "pending_decisions": [
@@ -6587,6 +6797,23 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-22, in reply to the HD-122 decision after REV-111: 'A，review 完、CI 過就 merge。'"
+    },
+    {
+      "id": "HD-123",
+      "impact": "MAJOR",
+      "question": "HD-120 B's combined profile change. In 00_project_profile.json: add DB_ADMIN_USER, DB_ADMIN_PASSWORD and MYSQL_BIN to the env_keys of supplier-recovery, supplier-release-operations, supplier-resilience and supplier-performance, and DB_ADMIN_PASSWORD to their redaction_env_keys; add a mysqldump --version tool probe to supplier-recovery; set supplier-release-operations min_tests from 3 to 2. The plan baseline moves from 6cb156c3; seven approvals bound to it (APPROVAL-HD-105-PLAN, HD-113-SCOPE, VITE-ADVISORY-LOCK-SCOPE, HD-116-RISK, HD-117-SCOPE, HD-118-SCOPE, HD-122-SCOPE) and 52 observations would be stranded. (A) One PR: change the profile, record APPROVAL-HD-123-PLAN on the new baseline, re-affirm the seven approvals as new records on it (originals kept), run the four suites with the harness's own environment, and have a reviewer confirm whether REV-109 H-1 and REV-111 H-1 are resolved, recorded as superseding reviews. (B) Profile and plan approval only. (C) Defer to TEST_AND_VERIFY.",
+      "affected_ids": [
+        "00_project_profile.json",
+        "supplier-recovery",
+        "supplier-release-operations",
+        "supplier-resilience",
+        "supplier-performance",
+        "REV-109",
+        "REV-111",
+        "HD-120"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-22, in reply to the HD-123 decision after PR #268 merged: 'HD-123 A，review 完 CI 過就 merge'. Choosing A re-affirms the seven approvals unchanged."
     }
   ],
   "external_actions": [
@@ -7316,7 +7543,7 @@
         "REV-006"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-116-RISK"
+      "risk_approval_id": "APPROVAL-HD-116-RISK-HD123"
     },
     {
       "id": "DEF-005",
@@ -7363,7 +7590,7 @@
         "REV-006"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-116-RISK"
+      "risk_approval_id": "APPROVAL-HD-116-RISK-HD123"
     },
     {
       "id": "DEF-008",
@@ -7375,7 +7602,7 @@
         "REV-006"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-116-RISK"
+      "risk_approval_id": "APPROVAL-HD-116-RISK-HD123"
     },
     {
       "id": "DEF-009",
@@ -7439,7 +7666,7 @@
         "server/src/services/idempotency/IdempotencyService.js:233"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-116-RISK"
+      "risk_approval_id": "APPROVAL-HD-116-RISK-HD123"
     },
     {
       "id": "DEF-013",
@@ -7455,7 +7682,7 @@
         "TASK-038"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-116-RISK"
+      "risk_approval_id": "APPROVAL-HD-116-RISK-HD123"
     },
     {
       "id": "DEF-014",
@@ -7467,7 +7694,7 @@
         "docs/supplier_management/evidence"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-116-RISK"
+      "risk_approval_id": "APPROVAL-HD-116-RISK-HD123"
     },
     {
       "id": "DEF-015",
@@ -7479,7 +7706,7 @@
         ".gitignore"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-116-RISK"
+      "risk_approval_id": "APPROVAL-HD-116-RISK-HD123"
     },
     {
       "id": "DEF-016",
@@ -7494,7 +7721,7 @@
         "server/test/integration/supplierCoreMigrations.integration.test.js#supplier_settings-lock-window"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-116-RISK"
+      "risk_approval_id": "APPROVAL-HD-116-RISK-HD123"
     },
     {
       "id": "DEF-017",
@@ -7507,7 +7734,7 @@
         "item-management"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-116-RISK"
+      "risk_approval_id": "APPROVAL-HD-116-RISK-HD123"
     },
     {
       "id": "DEF-018",
@@ -7519,7 +7746,7 @@
         "client/e2e/supplier-management/supplier-settings.spec.js"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-116-RISK"
+      "risk_approval_id": "APPROVAL-HD-116-RISK-HD123"
     },
     {
       "id": "DEF-019",
@@ -7532,7 +7759,7 @@
         "item-management"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-116-RISK"
+      "risk_approval_id": "APPROVAL-HD-116-RISK-HD123"
     },
     {
       "id": "DEF-020",
@@ -7599,7 +7826,7 @@
         "docs/supplier_management/testing/04_defect_register.md"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-116-RISK"
+      "risk_approval_id": "APPROVAL-HD-116-RISK-HD123"
     },
     {
       "id": "DEF-024",
@@ -7803,5 +8030,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "PR for claude/supplier-task-051-performance (HD-117 A PR 4, HD-122 A); merge per 'review 完、CI 過就 merge'. Then the combined profile change (HD-120 B) and UAT IDs."
+  "next_safe_action": "PR for claude/supplier-task-051-profile (HD-123 A); merge per 'review 完 CI 過就 merge'. Then UAT IDs (supplier-uat-browser)."
 }
