@@ -6,7 +6,8 @@ Acceptance record for `TASK-001` (`P0-T01`). No production code is changed by th
 
 | Item | Observed value |
 | --- | --- |
-| Entry commit | `81a873fc` (`origin/main` after `git fetch origin --prune`) |
+| Entry commit | `81a873fc` (`origin/main` at `TASK-001` scoring time) |
+| Re-verified against | `94d52972` — `main` moved during `TASK-003` (PR #265, Supplier resilience, touching `SupplierProviderServices.js` and `supplierSchemaCheck.js`). Merged in and every gate re-run: provider focused tests still `140 pass / 0 fail`. |
 | Branch / worktree | `claude/purchasing-p0-foundation` / `/Users/sam/Documents/workspace/erp-purchasing-p0` |
 | Last migration | `0087_fix_supplier_sku_refs_sku_foreign_key.js` (85 files) |
 | Next available migration number | `0088`, assigned at use time. Globally shared — re-check immediately before writing one. |
