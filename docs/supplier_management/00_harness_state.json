@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 399,
+  "revision": 402,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -13,8 +13,8 @@
     "plan": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
     "code_commit": "186a660ec0ef3037ffc9ef92adcd31b20f1e072d",
     "source_fingerprint": "43f7f525f708bb08a1cb3994bd6ed7a36548794d3eaf9e7e06f18ae5caa911ad",
-    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t51g",
-    "default_commit": "81a873fc941d54c634772c46641db95b552bf298",
+    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t51h",
+    "default_commit": "94d5297260c4fe460cd9e1b84cfbfe14743a6f1f",
     "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
   },
   "runtime": {
@@ -1281,6 +1281,24 @@
         "client/src/framework/ui/DataTable.vue"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-122-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "HD-122 A (2026-10-22). Authorises small changes to two T50 tools in server/scripts/: benchmarkSupplierManagement.js keeps the full statement digest and reports its measured window; benchmarkSupplierImport.js records up to 20 not-applied rows with their errors before cleanup. server/scripts/ is not declared in approval_required_paths (HD-034) and reports OUTSIDE_MODULE; this approval covers exactly these two files.",
+      "recorded_at": "2026-10-22T13:53:15+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
+      "code_commit": "94d5297260c4fe460cd9e1b84cfbfe14743a6f1f",
+      "scope": [
+        "supplier-management",
+        "server/scripts/benchmarkSupplierManagement.js",
+        "server/scripts/benchmarkSupplierImport.js"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -2530,6 +2548,18 @@
       "status": "CHANGES_REQUESTED",
       "open_critical": 0,
       "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-111",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (HD-117 A PR 4, performance runner)",
+      "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-task-051-performance at 9fa31b9d (git diff origin/main..HEAD)",
+      "reviewed_baseline": "29a0615a61808b3747cd8feb522d051ba5a312da6fb0fccf36e7cf9746286775",
+      "source_ref": "docs/supplier_management/implementation/114_rev_111_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
       "risk_approval_id": null
     }
   ],
@@ -4931,6 +4961,28 @@
       "source_ref": "Local, not CI, MySQL 26.7.0 with admin credentials, on a freshly migrated erp_t51_rh_* schema dropped afterwards. runSupplierResilienceAcceptance.js: TC-131 9/9, TC-130 14/14, TC-132 7/7 checks PASS; report has TC-130 and TC-132 NOT_RUN parts (BLOCKED by design). Eight mutants each fail the intended check; SIGTERM mid-run leaves nothing. supplierStartupSelfCheck.integration (six removal cases plus control), supplierProviderServices, harness-based Supplier and Business Master HTTP integration tests: 42/42. Before the REV-110 follow-ups the full server suite passed 3506 tests, 0 failed, 133 skipped (erp_t51 migrated to 0087 first). Lint exit 0.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-22T09:44:43+08:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "Startup self-check (DEF-033) and the resilience runner (PR #265) merged to main",
+      "code_commit": "94d5297260c4fe460cd9e1b84cfbfe14743a6f1f",
+      "spec_baseline": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
+      "source_fingerprint": "18ef9eaf995936837e86cb21acde76c81bc481bf77600c288cec389fb8edf200",
+      "status": "PASS",
+      "source_ref": "PR #265 merged as 94d5297260c4fe460cd9e1b84cfbfe14743a6f1f at 2026-10-22T01:57:12Z on the Product Owner's word ('HD-121 A，review 完 CI 過就 merge', then 'CI已通過'), with --match-head-commit, after a gate that refused unless the latest run of every check was SUCCESS and main was an ancestor of HEAD: head 1b8c9fa8 green on all 13 checks (PR run 39707483652). Review REV-110 CHANGES_REQUESTED (0 Critical, 0 High), follow-ups applied; not re-reviewed. Recorded as the first commit of the next change PR.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-22T10:00:10+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Performance runner (TC-085, 101, 128, 129) after REV-111 and HD-122 A",
+      "code_commit": "1da29b13f0aa5ae9b9c36232fd7b8e0d2bf6318b",
+      "spec_baseline": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
+      "source_fingerprint": "59e4dcf9d47cd5b148e88b56ced64e3345ba76444d3b0d21eb1dc0af2237a17c",
+      "status": "PASS",
+      "source_ref": "Local, not CI, MySQL 26.7.0 restarted with performance_schema_max_sql_text_length, performance_schema_max_digest_length and max_digest_length 16384; developer machine, load average 2.9 at the start. Freshly migrated erp_t51_rh_* schema seeded with 100k Suppliers (dropped afterwards). runSupplierPerformanceAcceptance.js: TC-085 4/4, TC-101 6/6, TC-128 5/5, TC-129 5/5 checks PASS; 12 of 12 top-statement plans visible in both load reports, base-table scans only the HD-088 text searches; mixed overall p95 231 ms, for-SKU worst case 1,546 ms; 10,000-row import inside the measured window, every row applied once, no rows not applied. Report BLOCKED by the TC-128 NOT_RUN part (HD-117 A). Verdict unit test 2/2 with 44 failing cases; lint exit 0. Earlier runs the same day: one applied 9,999 rows (DEF-034), one was slowed by another session's benchmark (load average 11) and failed p95.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-22T14:09:41+08:00"
     }
   ],
   "pending_decisions": [
@@ -6519,6 +6571,22 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-22, in reply to the HD-121 decision after PR #264 merged: 'HD-121 A，review 完 CI 過就 merge'."
+    },
+    {
+      "id": "HD-122",
+      "impact": "MAJOR",
+      "question": "REV-111 H-1, M-4 and L-3 need two T50 tools changed, which HD-117's scope approval does not cover: benchmarkSupplierManagement.js truncates statement digests to 400 characters (so HD-088's text-search exemption cannot see LIKE) and does not report its measured window; benchmarkSupplierImport.js deletes its rows before failed rows can be read (DEF-034). (A) Change both tools by a few lines: keep the full digest and report the measured window; write up to 20 not-applied rows with their errors into the import report before cleanup; then use them in the runner, drop the polling watcher, raise the local MySQL's performance_schema text lengths, rerun, review and PR. (B) Leave the tools; TC-085 and TC-129 stay PARTIAL with failing plan checks. (C) Defer to the HD-120 B profile change.",
+      "affected_ids": [
+        "TC-085",
+        "TC-101",
+        "TC-129",
+        "DEF-034",
+        "REV-111",
+        "server/scripts/benchmarkSupplierManagement.js",
+        "server/scripts/benchmarkSupplierImport.js"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-22, in reply to the HD-122 decision after REV-111: 'A，review 完、CI 過就 merge。'"
     }
   ],
   "external_actions": [
@@ -7704,7 +7772,7 @@
     {
       "id": "DEF-033",
       "severity": "MEDIUM",
-      "status": "IN_PROGRESS",
+      "status": "CLOSED",
       "source_ids": [
         "TC-131",
         "OPS-004",
@@ -7713,9 +7781,27 @@
         "docs/supplier_management/testing/04_defect_register.md",
         "SupplierSchemaCheckService"
       ],
+      "closure_evidence": [
+        "PR #265 merge commit 94d5297260c4fe460cd9e1b84cfbfe14743a6f1f",
+        "PR CI run 39707483652 on head 1b8c9fa8: all 13 checks success (includes supplierStartupSelfCheck.integration)",
+        "REV-110 (docs/supplier_management/implementation/113_rev_110_independent_review.md), follow-ups applied",
+        "supplierStartupSelfCheck.integration.test.js: six removal cases refused, database unchanged, start after restore; a no-op check fails it"
+      ],
+      "risk_approval_id": null
+    },
+    {
+      "id": "DEF-034",
+      "severity": "LOW",
+      "status": "OPEN",
+      "source_ids": [
+        "TC-101",
+        "IMP-016",
+        "runSupplierPerformanceAcceptance.js",
+        "docs/supplier_management/testing/04_defect_register.md"
+      ],
       "closure_evidence": [],
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "PR for claude/supplier-task-051-resilience (HD-117 A PR 3, HD-121 A); merge per 'review 完 CI 過就 merge'. Then PR 4 (performance), the combined profile change (HD-120 B), and UAT IDs."
+  "next_safe_action": "PR for claude/supplier-task-051-performance (HD-117 A PR 4, HD-122 A); merge per 'review 完、CI 過就 merge'. Then the combined profile change (HD-120 B) and UAT IDs."
 }
