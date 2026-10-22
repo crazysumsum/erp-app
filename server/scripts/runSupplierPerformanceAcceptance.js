@@ -9,8 +9,9 @@ import { promisify } from "node:util";
 
 import { createSupplierHarness } from "../test/integration/supplierHttpHarness.js";
 import {
-  adminConnection, adminCredentials, checklist, errorText, outputPath, scratchName, writeReport
+  adminConnection, adminCredentials, errorText, outputPath, scratchName, writeReport
 } from "../test/integration/supplierAcceptanceRunner.js";
+import { performanceVerdicts } from "../test/integration/supplierPerformanceVerdicts.js";
 
 /**
  * TC-085、TC-101、TC-128、TC-129（SKU-008、IMP-016、OPS-001、OPS-002）：Supplier 效能（HD-117 A）。
@@ -27,7 +28,6 @@ import {
 const reportPath = outputPath();
 const SERVER = fileURLToPath(new URL("../", import.meta.url));
 const SCRIPTS = path.join(SERVER, "scripts");
-const LIMIT_MS = 2_000;
 const NOT_RUN = [
   { id: "TC-128", name: "TC-128 production-like MySQL and hardware",
     reason: "OPS-001 asks for a production-like MySQL. This run uses a local MySQL 26.7.0 on the developer machine with the app's default pool; the figures show the design holds at 100k rows, not production capacity." }
@@ -73,21 +73,9 @@ function runScript(script, args, { output } = {}) {
   });
 }
 
-const p95 = (report, name) => report?.operations?.[name]?.p95 ?? null;
 const summary = (report) => (report ? { ok: report.ok, overall: report.overall, nfr001: report.nfr001, nfr005: report.nfr005, error: report.error,
   resources: report.resources, statements: report.topStatements?.length ?? 0, digestTable: report.digestTable } : null);
-/** 查詢計劃要有得睇：digest 表滿咗或者冇記錄，就唔可以話「冇全表掃描」（空集合唔算證據）。 */
-const plansSeen = (report) => (report?.topStatements?.length ?? 0) > 0 && !(report?.digestTable?.lostDuringRun > 0);
 const LOAD_ARGS = ["--users=50", "--seconds=120", "--warmup-seconds=20", "--think-ms=1000"];
-
-/**
- * 有冇真 table 嘅全表掃描：`<derived2>`、`<union2,3>` 呢類係 MySQL 自己嘅臨時結果，唔係掃 table；文字搜尋（LIKE）
- * 係 HD-088 決定嘅掃描，唔計。
- */
-function fullScans(report, pick = () => true) {
-  return (report?.topStatements ?? []).filter((row) => pick(row) && !/\bLIKE\b/iu.test(row.digest) && Array.isArray(row.plan)
-    && row.plan.some((step) => step.type === "ALL" && !String(step.table).startsWith("<"))).map((row) => row.digest.slice(0, 160));
-}
 
 async function totals(view) {
   const [[active]] = await admin.query(`SELECT COUNT(*) AS n FROM \`${schema}\`.suppliers WHERE status = 'active'`);
@@ -108,84 +96,36 @@ try {
   evidence.seed = seeded.code === 0 ? JSON.parse(seeded.stdout.slice(seeded.stdout.indexOf("{"))) : { code: seeded.code, stderr: seeded.stderr };
   if (seeded.code !== 0) throw new Error("seed failed");
 
-  // ---- TC-128：混合負載 ----
+  // ---- 量度：混合負載（TC-128、TC-129）、for-SKU 最差情況（TC-085）、相似名稱（TC-129）、匯入加負載（TC-101）----
   const mixed = await runScript("benchmarkSupplierManagement.js", LOAD_ARGS, { output: path.join(work, "load.json") });
   evidence.load = summary(mixed.report);
-  {
-    const { checks, check, passed } = checklist();
-    evidence["TC-128"] = checks;
-    check("load.completed", mixed.code === 0 && mixed.report?.ok === true && !mixed.report?.error, { code: mixed.code, error: mixed.report?.error });
-    check("load.list_and_exact_code_p95_under_2s", ["list.default", "list.codeExact"].every((name) => p95(mixed.report, name) !== null && p95(mixed.report, name) < LIMIT_MS),
-      { listDefault: p95(mixed.report, "list.default"), codeExact: p95(mixed.report, "list.codeExact") });
-    check("load.every_general_operation_within_limits", mixed.report?.nfr001?.pass === true, mixed.report?.nfr001);
-    check("load.resources_recorded", Boolean(mixed.report?.resources?.dbThreadsConnected?.max), mixed.report?.resources);
-    results["TC-128"] = passed() ? "PASS" : "FAIL";
-  }
-
-  // ---- TC-085：for-SKU 最差情況 ----
   const forSku = await runScript("benchmarkSupplierManagement.js", [...LOAD_ARGS, "--only=forSku"], { output: path.join(work, "for-sku.json") });
   evidence.forSku = summary(forSku.report);
+  const recall = await runScript("measureSupplierDuplicateRecall.js", ["--queries=200", "--seed=50"], { output: path.join(work, "recall.json") });
+  evidence.recall = recall.report?.variants ?? { code: recall.code, stderr: recall.stderr };
+  // 匯入喺負載量度開始之後（暖身 20 秒）先開始，同 T50 一樣。
+  const online = runScript("benchmarkSupplierManagement.js", LOAD_ARGS, { output: path.join(work, "load-during-import.json") });
+  await new Promise((resolve) => { setTimeout(resolve, 21_000); });
+  const imported = await runScript("benchmarkSupplierImport.js", ["--rows=10000"], { output: path.join(work, "import.json") });
+  const during = await online;
+  evidence.import = imported.report ? { ok: imported.report.ok, precheck: imported.report.precheck, execute: imported.report.execute,
+    nfr004: imported.report.nfr004, verification: imported.report.verification, error: imported.report.error } : { code: imported.code, stderr: imported.stderr };
+  evidence.loadDuringImport = summary(during.report);
 
-  // 之後嘅總數檢查同「負載後仲答到」用一個真 app。
+  // 總數同「負載之後仲答到」用一個真 app。
   app = createSupplierHarness("rh128", { database: { database: schema, user, password: password ?? "" } });
   await app.start();
   const view = await app.makeUser("view", ["supplier.view"]);
   const counted = await totals(view);
   evidence.totals = counted;
-  {
-    const { checks, check, passed } = checklist();
-    evidence["TC-085"] = checks;
-    check("for_sku.completed", forSku.code === 0 && forSku.report?.ok === true, { code: forSku.code, error: forSku.report?.error });
-    check("for_sku.p95_under_2s", forSku.report?.nfr005?.pass === true, forSku.report?.nfr005);
-    check("for_sku.count_not_inflated", counted.forSku.status === 200 && counted.forSku.api === counted.forSku.sql, counted.forSku);
-    check("for_sku.no_full_scan", plansSeen(forSku.report) && fullScans(forSku.report).length === 0,
-      { statements: forSku.report?.topStatements?.length ?? 0, digestTable: forSku.report?.digestTable, scans: fullScans(forSku.report) });
-    results["TC-085"] = passed() ? "PASS" : "FAIL";
-  }
-
-  // ---- TC-129：相似名稱有上限、常用 query 用 index、總數唔膨脹 ----
-  const recall = await runScript("measureSupplierDuplicateRecall.js", ["--queries=200", "--seed=50"], { output: path.join(work, "recall.json") });
-  evidence.recall = recall.report?.variants ?? { code: recall.code, stderr: recall.stderr };
-  {
-    const { checks, check, passed } = checklist();
-    evidence["TC-129"] = checks;
-    const capped = recall.report?.variants?.capped;
-    const uncapped = recall.report?.variants?.uncapped;
-    check("duplicates.bounded_by_the_candidate_cap", recall.code === 0 && capped?.candidateCap === 3_000 && capped.p95Ms < uncapped.p95Ms
-      && capped.p95Ms < LIMIT_MS, { capped, uncapped });
-    check("duplicates.recall_within_two_points", capped !== undefined && uncapped.recall - capped.recall <= 0.02, { capped: capped?.recall, uncapped: uncapped?.recall });
-    check("duplicates.check_p95_under_2s", p95(mixed.report, "duplicates.check") !== null && p95(mixed.report, "duplicates.check") < LIMIT_MS,
-      { p95: p95(mixed.report, "duplicates.check") });
-    check("plans.no_full_scan_outside_text_search", plansSeen(mixed.report) && fullScans(mixed.report).length === 0,
-      { statements: mixed.report?.topStatements?.length ?? 0, digestTable: mixed.report?.digestTable, scans: fullScans(mixed.report) });
-    check("list.count_not_inflated", counted.list.status === 200 && counted.list.api === counted.list.sql, counted.list);
-    results["TC-129"] = passed() ? "PASS" : "FAIL";
-  }
-
-  // ---- TC-101：10,000 列匯入同 50 個用戶負載同時跑 ----
-  {
-    const { checks, check, passed } = checklist();
-    evidence["TC-101"] = checks;
-    const online = runScript("benchmarkSupplierManagement.js", LOAD_ARGS, { output: path.join(work, "load-during-import.json") });
-    await new Promise((resolve) => { setTimeout(resolve, 21_000); });
-    const imported = await runScript("benchmarkSupplierImport.js", ["--rows=10000"], { output: path.join(work, "import.json") });
-    const during = await online;
-    evidence.import = imported.report ? { ok: imported.report.ok, precheck: imported.report.precheck, execute: imported.report.execute,
-      nfr004: imported.report.nfr004, verification: imported.report.verification, error: imported.report.error } : { code: imported.code, stderr: imported.stderr };
-    evidence.loadDuringImport = summary(during.report);
-    check("import.within_10_minutes", imported.report?.nfr004?.pass === true, imported.report?.nfr004);
-    check("import.exactly_once_and_counts_consistent", imported.report?.verification?.exactlyOnce === true
-      && imported.report?.verification?.countsConsistent === true, imported.report?.verification);
-    check("import.report_ok", imported.code === 0 && imported.report?.ok === true, { code: imported.code, error: imported.report?.error });
-    check("online.p95_under_2s_during_import", during.code === 0 && during.report?.nfr001?.pass === true, during.report?.nfr001);
-    results["TC-101"] = passed() ? "PASS" : "FAIL";
-  }
-
-  // 負載之後仲答到（TC-128「冇不可恢復嘅飽和」）。
   const after = await app.send(view, app.route("GET /api/v1/suppliers"));
-  const recovered = after.status === 200;
-  evidence["TC-128"].push({ id: "load.answers_after_all_runs", status: recovered ? "PASS" : "FAIL", detail: { status: after.status } });
-  if (!recovered) results["TC-128"] = "FAIL";
+
+  Object.assign(evidence, performanceVerdicts({ mixed, forSku, recall, imported, during, counted }));
+  // TC-128「冇不可恢復嘅飽和」：全部量度之後仲答到。
+  evidence["TC-128"].push({ id: "load.answers_after_all_runs", status: after.status === 200 ? "PASS" : "FAIL", detail: { status: after.status } });
+  for (const id of ["TC-085", "TC-101", "TC-128", "TC-129"]) {
+    results[id] = evidence[id].length > 0 && evidence[id].every(({ status }) => status === "PASS") ? "PASS" : "FAIL";
+  }
 } catch (error) {
   console.error(`Supplier performance acceptance failed: ${errorText(error)}`);
   evidence.setup = errorText(error);
