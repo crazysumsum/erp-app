@@ -106,7 +106,21 @@ try {
   // 匯入喺負載量度開始之後（暖身 20 秒）先開始，同 T50 一樣。
   const online = runScript("benchmarkSupplierManagement.js", LOAD_ARGS, { output: path.join(work, "load-during-import.json") });
   await new Promise((resolve) => { setTimeout(resolve, 21_000); });
+  // 匯入工具完咗會刪自己嘅 job 同 row，所以做緊嘅時候就要讀低失敗嘅列同原因（DEF-034）。
+  const failedRows = new Map();
+  const importDone = new AbortController();
+  const watcher = (async () => {
+    while (!importDone.signal.aborted) {
+      const [rows] = await admin.query(`SELECT job_id AS jobId, \`row_number\` AS rowNumber, CAST(errors AS CHAR) AS errors
+        FROM \`${schema}\`.supplier_import_rows WHERE status = 'failed' LIMIT 20`).catch(() => [[]]);
+      for (const row of rows) failedRows.set(`${row.jobId}:${row.rowNumber}`, row);
+      await new Promise((resolve) => { setTimeout(resolve, 2_000); });
+    }
+  })();
   const imported = await runScript("benchmarkSupplierImport.js", ["--rows=10000"], { output: path.join(work, "import.json") });
+  importDone.abort();
+  await watcher;
+  evidence.importFailedRows = [...failedRows.values()];
   const during = await online;
   evidence.import = imported.report ? { ok: imported.report.ok, precheck: imported.report.precheck, execute: imported.report.execute,
     nfr004: imported.report.nfr004, verification: imported.report.verification, error: imported.report.error } : { code: imported.code, stderr: imported.stderr };
