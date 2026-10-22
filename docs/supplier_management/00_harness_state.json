@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 397,
+  "revision": 398,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -13,8 +13,8 @@
     "plan": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
     "code_commit": "186a660ec0ef3037ffc9ef92adcd31b20f1e072d",
     "source_fingerprint": "43f7f525f708bb08a1cb3994bd6ed7a36548794d3eaf9e7e06f18ae5caa911ad",
-    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t51e",
-    "default_commit": "b1897840981a877bd519a453f27ae4bc4e896f0e",
+    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t51g",
+    "default_commit": "81a873fc941d54c634772c46641db95b552bf298",
     "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
   },
   "runtime": {
@@ -4897,6 +4897,17 @@
       "source_ref": "Local, not CI, MySQL 26.7.0 with admin credentials, DB_NAME erp_t51. runSupplierRecoveryAcceptance.js: 17/17 checks PASS (all-table CHECKSUM over 94 tables, 107 schema objects incl. 13 triggers, job rows tied to files by SHA-256, transaction marker, smoke and reveal on the restored copy, missing key BANK_KEY_UNAVAILABLE, wrong key BANK_ACCOUNT_INTEGRITY_FAILED). runSupplierReleaseAcceptance.js: 26/26 checks PASS. harness_runner.parse_results: recovery {passed 1, not_run 1}, release {passed 2, not_run 3}: both BLOCKED by design (HD-119 A). Eleven mutants each fail the intended check. Harness-based integration tests 35/35 (--test-concurrency=1); lint exit 0; no schema, fixture or temp directory left. Under a harness-style environment (profile env_keys only) the run fails on mysqldump privileges: REV-109 H-1, profile part deferred by HD-120 B.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-21T17:34:54+08:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "Recovery and release runners (PR #264) merged to main",
+      "code_commit": "81a873fc941d54c634772c46641db95b552bf298",
+      "spec_baseline": "6cb156c37d5b48a07ebe9edaa1269996f98f8c5393d5018ffffe8d88d15460ff",
+      "source_fingerprint": "a5dcb2b4170cc560254b0e3b9a7a06af26d26b307249f9866120c04dd76f95a8",
+      "status": "PASS",
+      "source_ref": "PR #264 merged as 81a873fc941d54c634772c46641db95b552bf298 at 2026-10-22T00:47:13Z on the Product Owner's word ('HD-120 B，review 完 CI 過就 merge', then 'CI已通過'), with --match-head-commit, after a gate that refused unless the latest run of every check was SUCCESS and main was an ancestor of HEAD: head 84203f98 green on all 13 checks (PR run 39578133908). Review REV-109 CHANGES_REQUESTED (0 Critical, 1 High whose profile part is deferred by HD-120 B), other follow-ups applied; not re-reviewed. Recorded as the first commit of the next change PR.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-22T08:53:07+08:00"
     }
   ],
   "pending_decisions": [
@@ -6471,6 +6482,20 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-21, in reply to the HD-120 decision after REV-109: 'HD-120 B，review 完 CI 過就 merge'."
+    },
+    {
+      "id": "HD-121",
+      "impact": "MAJOR",
+      "question": "DEF-033, found while preparing the TC-131 (OPS-004) runner: on a freshly migrated schema the server starts and /api/v1/health answers ok when a non-core Supplier table (supplier_contacts), a column (suppliers.website) or the supplier_settings singleton row is missing; only the three core tables are checked at startup (a missing permission and a missing Bank key ring are already refused). Design §14.1 step 4 and OPS-004 require fail closed. (A) Fix it in this PR inside the Supplier module: at startup run the existing migration inspect*Schema contracts for every Supplier table and require the settings singleton, refusing to start with a message naming what is missing and without writing to the database; the runner checks refusal, an unchanged database and a start after repair. (B) Record DEF-033 and let the runner report FAIL until a separate fix. (C) Accept it under a risk approval.",
+      "affected_ids": [
+        "DEF-033",
+        "TC-131",
+        "OPS-004",
+        "SupplierCoreProviderService",
+        "TASK-051"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-22, in reply to the HD-121 decision after PR #264 merged: 'HD-121 A，review 完 CI 過就 merge'."
     }
   ],
   "external_actions": [
@@ -7652,7 +7677,21 @@
         "DataTable.test.js, the TC-013 list test and the DEF-032 Playwright test in supplier-list-filters.spec.js; the original component turns each red"
       ],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-033",
+      "severity": "MEDIUM",
+      "status": "IN_PROGRESS",
+      "source_ids": [
+        "TC-131",
+        "OPS-004",
+        "03_design_spec.md §14.1",
+        "SupplierCoreProviderService",
+        "docs/supplier_management/testing/04_defect_register.md"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "PR for claude/supplier-task-051-recovery-release (HD-117 A PR 2); merge per 'review 完 CI 過就 merge'. Then PR 3 (resilience) and PR 4 (performance), then one combined profile change (HD-120 B), then UAT IDs."
+  "next_safe_action": "HD-117 A PR 3 with HD-121 A: fix DEF-033 (startup self-check) and write runSupplierResilienceAcceptance.js (TC-130..132) on claude/supplier-task-051-resilience; review, PR, merge per 'review 完 CI 過就 merge'."
 }
