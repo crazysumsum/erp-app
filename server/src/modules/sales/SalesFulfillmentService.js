@@ -24,9 +24,10 @@ const placeholders=values=>values.map(()=>"?").join(",");
 const json=value=>{try{return typeof value==="string"?JSON.parse(value):value;}catch{mismatch();}};
 
 export function normalizeSalesFulfillmentIntent(command){
-  const purpose=command?.purpose,shipment=purpose!=="CLAIM",reverse=purpose==="SHIPMENT_REVERSED";
+  const purpose=command?.purpose,shipment=purpose!=="CLAIM",reverse=purpose==="SHIPMENT_REVERSED",pending=purpose==="CLAIM"&&Object.hasOwn(command,"claimMode");
   if(!["CLAIM","SHIPMENT_CONFIRMED","SHIPMENT_REVERSED"].includes(purpose))mismatch();
-  fields(command,"actor,purpose,salesOrderId,expectedOrderVersion,lines"+(shipment?",eventId,shipmentId,inventoryRequestHash":"")+(reverse?",originalConfirmationEventId":""));
+  if(pending&&command.claimMode!=="PENDING_CREATE")mismatch();
+  fields(command,"actor,purpose,salesOrderId,expectedOrderVersion,lines"+(pending?",claimMode":"")+(shipment?",eventId,shipmentId,inventoryRequestHash":"")+(reverse?",originalConfirmationEventId":""));
   fields(command.actor,"userId,serviceName,claimedRoles,claimedPermissions");if(command.actor.serviceName!=="")mismatch();
   const actor={userId:integer(command.actor.userId),serviceName:"",claimedRoles:strings(command.actor.claimedRoles),claimedPermissions:strings(command.actor.claimedPermissions)};
   if(!Array.isArray(command.lines)||!command.lines.length||command.lines.length>100)mismatch();
@@ -38,15 +39,15 @@ export function normalizeSalesFulfillmentIntent(command){
     let previousReservation=0n,sum=0n;
     const members=line.reservations.map(member=>{
       fields(member,"claimId,inventoryReservationId,expectedVersion,baseQuantity"+(reverse?",originalInventoryOperationId":""));
-      const claimId=integer(member.claimId),inventoryReservationId=integer(member.inventoryReservationId),baseQuantity=integer(member.baseQuantity);
-      if(BigInt(inventoryReservationId)<=previousReservation||reservations.has(inventoryReservationId)||claims.has(claimId))mismatch();
-      previousReservation=BigInt(inventoryReservationId);reservations.add(inventoryReservationId);claims.add(claimId);sum+=BigInt(baseQuantity);
+      const claimId=pending?(member.claimId===null?null:mismatch()):integer(member.claimId),inventoryReservationId=integer(member.inventoryReservationId),baseQuantity=integer(member.baseQuantity);
+      if(BigInt(inventoryReservationId)<=previousReservation||reservations.has(inventoryReservationId)||!pending&&claims.has(claimId))mismatch();
+      previousReservation=BigInt(inventoryReservationId);reservations.add(inventoryReservationId);if(!pending)claims.add(claimId);sum+=BigInt(baseQuantity);
       return {claimId,inventoryReservationId,expectedVersion:version(member.expectedVersion),baseQuantity,...(reverse?{originalInventoryOperationId:integer(member.originalInventoryOperationId)}:{})};
     });
     if(sum!==BigInt(q))mismatch();return {salesOrderLineId:id,expectedVersion:version(line.expectedVersion),baseQuantity:q,reservations:members};
   });
   if(total===0n)mismatch();
-  const result={actor,purpose,salesOrderId:integer(command.salesOrderId),expectedOrderVersion:version(command.expectedOrderVersion),...(shipment?{eventId:event(command.eventId),shipmentId:integer(command.shipmentId),inventoryRequestHash:hash(command.inventoryRequestHash)}:{}),...(reverse?{originalConfirmationEventId:event(command.originalConfirmationEventId)}:{}),lines};
+  const result={actor,purpose,...(pending?{claimMode:"PENDING_CREATE"}:{}),salesOrderId:integer(command.salesOrderId),expectedOrderVersion:version(command.expectedOrderVersion),...(shipment?{eventId:event(command.eventId),shipmentId:integer(command.shipmentId),inventoryRequestHash:hash(command.inventoryRequestHash)}:{}),...(reverse?{originalConfirmationEventId:event(command.originalConfirmationEventId)}:{}),lines};
   if(reverse&&result.originalConfirmationEventId===result.eventId)mismatch();return freeze(result);
 }
 export function salesFulfillmentIntentHash(intent){return salesPayloadHash({...intent,actor:{userId:intent.actor.userId},source:{module:"FULFILLMENT",documentType:"SHIPMENT"}});}
@@ -138,7 +139,7 @@ export class SalesFulfillmentService {
   }
   async lockLinesForFulfillmentInTransaction(tx,command){
     this.#transaction(tx);const intent=normalizeSalesFulfillmentIntent(command);
-    if(intent.purpose!=="CLAIM"&&getActiveTransactionIsolation(tx)!=="READ COMMITTED")mismatch();
+    if((intent.purpose!=="CLAIM"||intent.claimMode==="PENDING_CREATE")&&getActiveTransactionIsolation(tx)!=="READ COMMITTED")mismatch();
     const actor=await this.#actor(tx,intent),intentHash=salesFulfillmentIntentHash(intent),existing=this.#receipts.get(tx);
     if(existing){if(existing.intentHash!==intentHash)mismatch();return structuredClone(existing.replay?{replay:true,result:existing.result}:{replay:false,order:existing.projection});}
     const nowMs=epoch(this.time.nowMs());let operationId=null;
@@ -154,6 +155,13 @@ export class SalesFulfillmentService {
     for(const line of intent.lines){const row=data.lines.find(row=>dbInteger(row.id)===line.salesOrderLineId);if(!row||Number(row.version)!==line.expectedVersion)mismatch();for(const member of line.reservations){const m=mappingByReservation.get(member.inventoryReservationId);if(!m||dbInteger(m.sales_order_line_id)!==line.salesOrderLineId||(intent.purpose==="CLAIM"?Number(m.inventory_version)!==member.expectedVersion:Number(m.inventory_version)>member.expectedVersion)||BigInt(dbInteger(m[intent.purpose==="SHIPMENT_REVERSED"?"consumed_base_quantity":"outstanding_base_quantity"],false))<BigInt(member.baseQuantity))mismatch();}}
     if(intent.purpose!=="CLAIM")planSalesFulfillmentQuantities({orderId:intent.salesOrderId,status:data.header.status,version:intent.expectedOrderVersion,lines:data.lines.map(quantities)},{action:intent.purpose,lines:intent.lines});
     const projection=await this.#projection(tx,data,nowMs,false,intent.lines.map(l=>l.salesOrderLineId));
+    if(intent.claimMode==="PENDING_CREATE"){
+      const byMapping=new Map(data.mappings.map(row=>[dbInteger(row.id),row]));
+      for(const line of projection.lines)for(const mapping of line.reservationMappings){
+        const row=byMapping.get(mapping.salesReservationMappingId);if(!row)mismatch();
+        Object.assign(mapping,{originalBaseQuantity:dbInteger(row.original_base_quantity),consumedBaseQuantity:dbInteger(row.consumed_base_quantity,false),releasedBaseQuantity:dbInteger(row.released_base_quantity,false),sourceEventId:row.source_event_id});
+      }
+    }
     this.#receipts.set(tx,{intentHash,intent,actor,operationId,data,projection,replay:false});return {replay:false,order:structuredClone(projection)};
   }
   async applyFulfillmentResultInTransaction(tx,command){

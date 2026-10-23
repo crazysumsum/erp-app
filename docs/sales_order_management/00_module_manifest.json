@@ -52,7 +52,8 @@
       "docs/runbooks/sales-order-management.md",
       "client/src/framework/layout/AppTopbar.vue",
       "server/src/modules/fulfillment/**",
-      "server/src/services/fulfillmentArchive/**"
+      "server/src/services/fulfillmentArchive/**",
+      "server/src/modules/inventory/InventoryLookupService.js"
     ],
     "test_paths": [
       "server/test/sales/**",
@@ -107,7 +108,9 @@
       "server/test/fulfillment/archiveFactsFixture.js",
       "server/test/fulfillment/shipmentFixture.js",
       "server/test/integration/fulfillmentOperationRouting.integration.test.js",
-      "server/test/integration/shipmentMigrations.integration.test.js"
+      "server/test/integration/shipmentMigrations.integration.test.js",
+      "server/test/salesFulfillmentService.test.js",
+      "server/test/integration/fulfillmentPendingClaims.integration.test.js"
     ],
     "allowed_write_paths": [
       "docs/sales_order_management/**",
@@ -220,7 +223,10 @@
       "server/test/fulfillment/archiveFactsFixture.js",
       "server/test/fulfillment/shipmentFixture.js",
       "server/test/integration/fulfillmentOperationRouting.integration.test.js",
-      "server/test/integration/shipmentMigrations.integration.test.js"
+      "server/test/integration/shipmentMigrations.integration.test.js",
+      "server/src/modules/inventory/InventoryLookupService.js",
+      "server/test/salesFulfillmentService.test.js",
+      "server/test/integration/fulfillmentPendingClaims.integration.test.js"
     ],
     "approval_required_paths": [
       "server/database/migrations/**",
@@ -354,9 +360,9 @@
     "provided": [
       {
         "id": "sales-fulfillment-projection-and-lifecycle-contract",
-        "version": "HD011/HD013/HD014 actual adopted narrow Sales contribution; lifecycle-only RC and WITHDRAW-history409; full P0/P4 integration/CI/Gates pending",
+        "version": "HD011/013/014 plus approved HD016A pending-only provider; original lifecycle/Shipment/replay unchanged; full P4 Gates pending",
         "source": "docs/sales_order_management/03_design_spec.md",
-        "sha256": "8031aef8a0cba72f191474fcd965be564ca7f4b182aa6c634dd2115d256d6b39",
+        "sha256": "f37b74b2f23bf904513aef8b3c216d9f39c35574400f266764bac4751f5119ef",
         "consumers": [
           "fulfillment-shipping-management",
           "inventory-management",
@@ -492,7 +498,8 @@
       "sales-fulfillment-openmatter-native",
       "sales-fulfillment-participant-unit",
       "sales-fulfillment-participant-native",
-      "sales-archive-joint-native"
+      "sales-archive-joint-native",
+      "sales-fulfillment-pending-provider-native"
     ],
     "uat": []
   },

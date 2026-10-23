@@ -166,7 +166,7 @@
         "id": "fulfillment-shipment-and-reversal-contract",
         "version": "P0-HD011-ADOPTED-IMPLEMENTATION_IN_PROGRESS",
         "source": "docs/fulfillment_shipping_management/03_design_spec.md",
-        "sha256": "9fd868537b2a8e6220b5877077fa1a5f43164c1990dc70c1340c78955528aa3e",
+        "sha256": "17489c61d02e2a376c6169f69ed3384e7aabf2a66bc44eceac7e709be093d24b",
         "consumers": [
           "sales-order-management",
           "inventory-management",
@@ -187,9 +187,9 @@
       {
         "module_id": "sales-order-management",
         "id": "sales-fulfillment-projection-and-lifecycle-contract",
-        "version": "P0-TASK004-HD011-reviewed-owner-contribution-r4-CURRENT_JOINT_PENDING",
+        "version": "HD016A pending-only provider plus unchanged HD011/013/014; increment only, no full P1 qualification",
         "source": "docs/sales_order_management/03_design_spec.md",
-        "sha256": "8031aef8a0cba72f191474fcd965be564ca7f4b182aa6c634dd2115d256d6b39",
+        "sha256": "f37b74b2f23bf904513aef8b3c216d9f39c35574400f266764bac4751f5119ef",
         "regression_suites": [
           "fulfillment-technical"
         ]

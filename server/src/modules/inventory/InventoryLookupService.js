@@ -45,35 +45,49 @@ export class InventoryLookupService {
     return {fulfillmentId:original.fulfillmentId,shipmentId,originalOperationId:original.result.operationId,lines};
   }
   async lockFulfillmentReservationStatesInTransaction(tx,query) {
+    return this.#lockFulfillmentReservationStates(tx,query,false);
+  }
+  // A source influence set can exceed the 5000 selected-command limit. All master/control anchors precede PK-ordered batches.
+  // This read/lock proof does not authorize any later Inventory allocation or posting in the same transaction.
+  async lockFulfillmentReservationScopeInTransaction(tx,query) {
+    return this.#lockFulfillmentReservationStates(tx,query,true);
+  }
+  async #lockFulfillmentReservationStates(tx,query,completeScope) {
     await this.#authorize(tx);
     fulfillmentInventoryFields(query,["warehouseId","salesOrderId","members"]);
     const warehouseId=fulfillmentInventoryId(query.warehouseId),salesOrderId=fulfillmentInventoryId(query.salesOrderId);
-    if(!Array.isArray(query.members)||query.members.length<1||query.members.length>5000)throw inventoryError("INVENTORY_INPUT_INVALID");
+    if(!Array.isArray(query.members)||query.members.length<1||!completeScope&&query.members.length>5000)throw inventoryError("INVENTORY_INPUT_INVALID");
     const seen=new Set(),members=query.members.map(member=>{
       fulfillmentInventoryFields(member,["inventoryReservationId","salesOrderLineId","skuId"]);
       const value={inventoryReservationId:fulfillmentInventoryId(member.inventoryReservationId),salesOrderLineId:fulfillmentInventoryId(member.salesOrderLineId),skuId:fulfillmentInventoryId(member.skuId)};
       if(seen.has(value.inventoryReservationId))throw inventoryError("INVENTORY_INPUT_INVALID");seen.add(value.inventoryReservationId);return value;
     }).sort((a,b)=>Number(a.inventoryReservationId)-Number(b.inventoryReservationId));
-    const ids=members.map(m=>m.inventoryReservationId),read=()=>tx.query(`SELECT r.*,o.source_module,o.source_document_type,o.source_document_id,o.source_line_id,o.source_event_id
+    const ids=members.map(m=>m.inventoryReservationId),read=batch=>tx.query(`SELECT r.*,o.source_module,o.source_document_type,o.source_document_id,o.source_line_id,o.source_event_id
       FROM inventory_reservations r JOIN inventory_operation_requests o ON o.id=r.create_operation_id
-      WHERE r.id IN (${ids.map(()=>"?").join(",")}) ORDER BY r.id`,ids);
-    const validate=rows=>{
-      if(rows.length!==members.length)throw inventoryError("INVENTORY_RESOURCE_NOT_FOUND");
+      WHERE r.id IN (${batch.map(()=>"?").join(",")}) ORDER BY r.id`,batch.map(member=>member.inventoryReservationId));
+    const validate=(rows,batch)=>{
+      if(rows.length!==batch.length)throw inventoryError("INVENTORY_RESOURCE_NOT_FOUND");
       const byId=new Map(rows.map(row=>[String(row.id),row]));
-      for(const member of members) {
+      for(const member of batch) {
         const r=byId.get(member.inventoryReservationId);
         if(!r||String(r.warehouse_id)!==warehouseId||String(r.sku_id)!==member.skuId||r.purpose!=="SALE"||r.source_module!=="SALES"||r.source_document_type!=="SALES_ORDER"||r.source_document_id!==salesOrderId||r.source_line_id!==member.salesOrderLineId)throw inventoryError("INVENTORY_SOURCE_CONFLICT");
         for(const key of ["original_quantity","consumed_quantity","released_quantity","outstanding_quantity"])number(r[key]);
         if(!["ACTIVE","PARTIALLY_CONSUMED"].includes(r.status)||number(r.outstanding_quantity)===0||BigInt(r.original_quantity)!==BigInt(r.consumed_quantity)+BigInt(r.released_quantity)+BigInt(r.outstanding_quantity))throw inventoryError("RESERVATION_STATE_CONFLICT");
       }
     };
-    const [before]=await read();validate(before);
+    const batchSize=completeScope?500:members.length;
+    for(let start=0;start<members.length;start+=batchSize){const batch=members.slice(start,start+batchSize),[before]=await read(batch);validate(before,batch);}
     const skuIds=[...new Set(members.map(m=>m.skuId))];
     const profiles=await this.fulfillment.itemLookup.getFulfillmentInventoryProfilesInTransaction(tx,skuIds,{atMs:this.time.nowMs()});
     if(profiles.some(p=>!p.usable||!p.inventoryTracked||p.trackingPolicy==="serial"))throw inventoryError("INVENTORY_RESOURCE_NOT_FOUND");
-    const locked=await this.fulfillment.locks.lockForCommand(tx,{warehouseIds:[number(warehouseId)],stockControls:skuIds.map(skuId=>({warehouseId:number(warehouseId),skuId:number(skuId)})),reservationIds:ids.map(Number),now:this.time.nowMs()});
+    const locked=await this.fulfillment.locks.lockForCommand(tx,{warehouseIds:[number(warehouseId)],stockControls:skuIds.map(skuId=>({warehouseId:number(warehouseId),skuId:number(skuId)})),reservationIds:completeScope?[]:ids.map(Number),now:this.time.nowMs()});
     if(locked.warehouses.length!==1||locked.warehouses[0].status!=="ACTIVE")throw inventoryError("WAREHOUSE_INVALID");
-    const [current]=await read();validate(current);
+    const current=[];
+    for(let start=0;start<members.length;start+=batchSize){
+      const batch=members.slice(start,start+batchSize);
+      if(completeScope)await this.fulfillment.locks.lockForCommand(tx,{reservationIds:batch.map(member=>number(member.inventoryReservationId)),now:this.time.nowMs()});
+      const [rows]=await read(batch);validate(rows,batch);current.push(...rows);
+    }
     return Object.freeze(current.map(r=>Object.freeze({inventoryReservationId:String(r.id),warehouseId,skuId:String(r.sku_id),salesOrderId,salesOrderLineId:r.source_line_id,
       originalInventoryOperationId:String(r.create_operation_id),originalSourceEventId:r.source_event_id,originalQuantity:String(r.original_quantity),consumedQuantity:String(r.consumed_quantity),
       releasedQuantity:String(r.released_quantity),outstandingQuantity:String(r.outstanding_quantity),status:r.status,version:number(r.version),minimumRemainingDays:number(r.minimum_remaining_days)})));

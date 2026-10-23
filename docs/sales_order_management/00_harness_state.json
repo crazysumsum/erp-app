@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1300,
+  "revision": 1305,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -9,10 +9,10 @@
   "current_phase": "PHASE-005",
   "current_task": "TASK-058",
   "baseline": {
-    "design": "67e3ac2c0ddb51b1620237186db76ecf9bc78a28b2de750cc2589dd3a6f7364a",
-    "plan": "377cd0b6b08f0368a47ef2629a74c0c4ac292858fe9b53fea3f8690c73c7cdb6",
-    "code_commit": "c2b8d2ec75dd0b1ca1962c4a6cc8503c3037628f",
-    "source_fingerprint": "0eed900a426f6e07af7b23adc82433d9c846abb762c4355b2d25bf47ca216f92",
+    "design": "64b0e1d51fe2a5163e8e33c93277e0a7d3464abff52684a0b57b6c636821622a",
+    "plan": "ec0fae970beca595f863eed95f752984c424ae0080342f99a70fc281880e30a6",
+    "code_commit": "0f6abe8c2f8bb32bcf7e3c11a855a7985a6296b9",
+    "source_fingerprint": "aff49c57cf0f434d3e64a11734b8901eb553bb90c32c2c43161dfbe22d9cee8d",
     "worktree": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app",
     "default_commit": "e272f5d3ce05d0ca50be42e6d8764f0ef20d3dd1",
     "mode_entry_commit": "e272f5d3ce05d0ca50be42e6d8764f0ef20d3dd1"
@@ -7433,6 +7433,202 @@
         "NFR-015"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-P4-HD016-DESIGN",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner); mechanically derived binding by Codex",
+      "decision": "APPROVED",
+      "source_ref": "Actual direct Sam Fulfillment HD016A approval userMessage01a166ab-3d76-7ad0-9b41-81a00099f643/turn01a166ab-3d5e-7323-beb3-0380b198e6ca, independently observed by Sales; exact named Sales provider/contract coordination. Existing direct Sales P4 continuation01a16658-f41f-7af1-a486-6439bd92f3aa and DEC029 remain. Mechanically derived binding for approved pending-only contract/three exact extra paths, not a claim Sam inspected computed hashes or approved new waivers. Old approval hashes/history preserved; HD012/013/014 bounds and all mandatory tests/CI/merge Gates unchanged. UAT_NA only retains existing business-user applicability; timed restore/RTO/RPO/TC058059 remain blocking.",
+      "recorded_at": "2026-10-23T03:50:10.862806Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "64b0e1d51fe2a5163e8e33c93277e0a7d3464abff52684a0b57b6c636821622a",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-P4-HD016-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner); mechanically derived binding by Codex",
+      "decision": "APPROVED",
+      "source_ref": "Actual direct Sam Fulfillment HD016A approval userMessage01a166ab-3d76-7ad0-9b41-81a00099f643/turn01a166ab-3d5e-7323-beb3-0380b198e6ca, independently observed by Sales; exact named Sales provider/contract coordination. Existing direct Sales P4 continuation01a16658-f41f-7af1-a486-6439bd92f3aa and DEC029 remain. Mechanically derived binding for approved pending-only contract/three exact extra paths, not a claim Sam inspected computed hashes or approved new waivers. Old approval hashes/history preserved; HD012/013/014 bounds and all mandatory tests/CI/merge Gates unchanged. UAT_NA only retains existing business-user applicability; timed restore/RTO/RPO/TC058059 remain blocking.",
+      "recorded_at": "2026-10-23T03:50:10.862962Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "ec0fae970beca595f863eed95f752984c424ae0080342f99a70fc281880e30a6",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-P4-HD016-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner); mechanically derived binding by Codex",
+      "decision": "APPROVED",
+      "source_ref": "Actual direct Sam Fulfillment HD016A approval userMessage01a166ab-3d76-7ad0-9b41-81a00099f643/turn01a166ab-3d5e-7323-beb3-0380b198e6ca, independently observed by Sales; exact named Sales provider/contract coordination. Existing direct Sales P4 continuation01a16658-f41f-7af1-a486-6439bd92f3aa and DEC029 remain. Mechanically derived binding for approved pending-only contract/three exact extra paths, not a claim Sam inspected computed hashes or approved new waivers. Old approval hashes/history preserved; HD012/013/014 bounds and all mandatory tests/CI/merge Gates unchanged. UAT_NA only retains existing business-user applicability; timed restore/RTO/RPO/TC058059 remain blocking.",
+      "recorded_at": "2026-10-23T03:50:10.862967Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "ec0fae970beca595f863eed95f752984c424ae0080342f99a70fc281880e30a6",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management",
+        "PHASE-005",
+        "TASK-058",
+        "docs/sales_order_management/**",
+        "server/config/sales.js",
+        "server/src/modules/sales/**",
+        "server/src/handlers/sales-quotations/**",
+        "server/src/handlers/sales-orders/**",
+        "server/src/handlers/sales-imports/**",
+        "server/src/handlers/sales-intake/**",
+        "server/src/handlers/sales-operations/**",
+        "server/src/handlers/sales-exports/**",
+        "server/src/handlers/archived-sales-orders/**",
+        "server/src/services/scheduler/jobs/Sales*.js",
+        "client/src/services/salesQuotation.js",
+        "client/src/services/salesOrder.js",
+        "client/src/pages/sales/**",
+        "client/src/components/sales/**",
+        "server/test/sales/**",
+        "server/test/integration/sales*.integration.test.js",
+        "server/test-support/fakeSalesDatabase.js",
+        "client/test/**/sales*.test.js",
+        "client/e2e/sales-order-management/**",
+        "server/test-support/salesProviderReport.py",
+        "client/src/services/sales.js",
+        "client/test/pages/sales/**",
+        "client/test/components/sales/**",
+        "client/test/services/sales.test.js",
+        "server/test/migrate.test.js",
+        "server/config/scheduler.js",
+        "client/config/menu.js",
+        "server/database/migrations/*_create_sales_quotations.js",
+        "server/database/migrations/*_create_sales_quotation_lines.js",
+        "server/database/migrations/*_create_sales_orders.js",
+        "server/database/migrations/*_create_sales_order_lines.js",
+        "server/database/migrations/*_create_sales_order_status_history.js",
+        "server/database/migrations/*_create_sales_audit_logs.js",
+        "server/database/migrations/*_create_sales_quotation_conversions.js",
+        "server/src/services/salesJobs/SalesJobRuntimeService.js",
+        "server/src/services/salesJobs/jobs/SalesQuotationExpiryJob.js",
+        "server/src/handlers/sales/salesSchemas.js",
+        "server/src/handlers/sales/salesLookupHandlers.js",
+        "server/database/migrations/*_create_sales_external_order_keys.js",
+        "server/src/handlers/sales-lookups/salesLookupHandlers.js",
+        "server/src/modules/item/ItemLookupService.js",
+        "server/test/serviceContainer.test.js",
+        "README.md",
+        "server/src/modules/businessMaster/businessMasterFactory.js",
+        "server/test/business-master/http.integration.test.js",
+        ".github/workflows/ci.yml",
+        "server/src/services/salesJobs/jobs/SalesConfirmationRecoveryJob.js",
+        "server/src/services/salesJobs/jobs/SalesBackorderAllocationJob.js",
+        "server/src/handlers/sales-backorders/**",
+        "client/src/composables/sales/**",
+        "server/src/modules/inventory/InventoryReservationService.js",
+        "server/test/inventorySalesWorkerContracts.test.js",
+        "client/test/composables/sales/**",
+        "server/database/migrations/*_create_sales_order_line_reservations.js",
+        "server/database/migrations/*_create_sales_backorder_entries.js",
+        "server/scripts/checkCoverageFloors.js",
+        "server/test/inventoryProviderContracts.test.js",
+        "docs/inventory_management/03_design_spec.md",
+        "docs/fulfillment_shipping_management/03_design_spec.md",
+        "server/src/modules/inventory/inventoryConstants.js",
+        "server/src/services/idempotency/IdempotencyService.js",
+        "server/test/idempotencyService.test.js",
+        "server/test/integration/itemRecoveryAcceptance.integration.test.js",
+        "server/src/services/salesJobs/jobs/SalesImportJob.js",
+        "server/src/services/salesJobs/jobs/SalesFileRetentionJob.js",
+        "server/src/handlers/sales-import-templates/**",
+        "server/src/modules/customer/CustomerLookupService.js",
+        "server/test/sales/phase3/**",
+        "server/database/migrations/*_create_sales_import_jobs.js",
+        "server/database/migrations/*_create_sales_intake_orders.js",
+        "server/database/migrations/*_create_sales_intake_errors.js",
+        "server/database/migrations/*_extend_sales_reservation_intake_projection.js",
+        "server/test/itemLookupService.test.js",
+        "server/test/customerLookupService.test.js",
+        "server/test/configNormalizers.test.js",
+        "server/test/configuration.test.js",
+        "docs/customer_management/03_design_spec.md",
+        "docs/items_management/03_design_spec.md",
+        "server/config/api.js",
+        "server/src/framework/middleware/bodyReceiveTimeout.js",
+        "server/test-support/salesProcessingCrashChild.js",
+        "server/src/handlers/outstanding-sales-orders/**",
+        "server/src/handlers/sales-audit-logs/**",
+        "server/src/handlers/sales-archive-batches/**",
+        "server/src/services/salesJobs/jobs/SalesExportJob.js",
+        "server/src/services/salesJobs/jobs/SalesArchiveJob.js",
+        "docs/runbooks/sales-order-management.md",
+        "server/database/migrations/*_create_sales_export_jobs.js",
+        "server/database/migrations/*_create_sales_archive_batches.js",
+        "server/database/migrations/*_create_sales_archive_tables.js",
+        "server/database/migrations/*_protect_sales_archive_immutability.js",
+        "server/test-capacity/sales/phase4/**",
+        "client/src/framework/layout/AppTopbar.vue",
+        "server/src/modules/fulfillment/**",
+        "server/src/services/fulfillmentArchive/**",
+        "server/test/salesArchiveEligibility.test.js",
+        "server/test/fulfillmentArchive*.test.js",
+        "server/test/fulfillmentOpenMatter*.test.js",
+        "server/test/integration/fulfillmentArchive*.integration.test.js",
+        "server/test/integration/fulfillmentOpenMatter*.integration.test.js",
+        "server/test/integration/salesArchiveJoint.integration.test.js",
+        "server/database/migrations/*_create_fulfillment_archive_prerequisites.js",
+        "server/database/migrations/*_create_fulfillment_archive_mirrors.js",
+        "server/database/migrations/*_protect_fulfillment_archive_contracts.js",
+        "docs/fulfillment_shipping_management/**",
+        "server/database/migrations/0101_add_fulfillment_archive_routing.js",
+        "server/test/fulfillment/archiveFactsFixture.js",
+        "server/test/fulfillment/shipmentFixture.js",
+        "server/test/integration/fulfillmentOperationRouting.integration.test.js",
+        "server/test/integration/shipmentMigrations.integration.test.js",
+        "server/src/modules/inventory/InventoryLookupService.js",
+        "server/test/salesFulfillmentService.test.js",
+        "server/test/integration/fulfillmentPendingClaims.integration.test.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-P4-HD016-UATNA-NFR-014",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner); mechanically derived binding by Codex",
+      "decision": "APPROVED",
+      "source_ref": "Actual direct Sam Fulfillment HD016A approval userMessage01a166ab-3d76-7ad0-9b41-81a00099f643/turn01a166ab-3d5e-7323-beb3-0380b198e6ca, independently observed by Sales; exact named Sales provider/contract coordination. Existing direct Sales P4 continuation01a16658-f41f-7af1-a486-6439bd92f3aa and DEC029 remain. Mechanically derived binding for approved pending-only contract/three exact extra paths, not a claim Sam inspected computed hashes or approved new waivers. Old approval hashes/history preserved; HD012/013/014 bounds and all mandatory tests/CI/merge Gates unchanged. UAT_NA only retains existing business-user applicability; timed restore/RTO/RPO/TC058059 remain blocking.",
+      "recorded_at": "2026-10-23T03:50:10.862970Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "ec0fae970beca595f863eed95f752984c424ae0080342f99a70fc281880e30a6",
+      "code_commit": null,
+      "scope": [
+        "NFR-014"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-P4-HD016-UATNA-NFR-015",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner); mechanically derived binding by Codex",
+      "decision": "APPROVED",
+      "source_ref": "Actual direct Sam Fulfillment HD016A approval userMessage01a166ab-3d76-7ad0-9b41-81a00099f643/turn01a166ab-3d5e-7323-beb3-0380b198e6ca, independently observed by Sales; exact named Sales provider/contract coordination. Existing direct Sales P4 continuation01a16658-f41f-7af1-a486-6439bd92f3aa and DEC029 remain. Mechanically derived binding for approved pending-only contract/three exact extra paths, not a claim Sam inspected computed hashes or approved new waivers. Old approval hashes/history preserved; HD012/013/014 bounds and all mandatory tests/CI/merge Gates unchanged. UAT_NA only retains existing business-user applicability; timed restore/RTO/RPO/TC058059 remain blocking.",
+      "recorded_at": "2026-10-23T03:50:10.862971Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "ec0fae970beca595f863eed95f752984c424ae0080342f99a70fc281880e30a6",
+      "code_commit": null,
+      "scope": [
+        "NFR-015"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -11539,6 +11735,42 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-P4-HD016-COMPLETE-ADOPTION-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "64b0e1d51fe2a5163e8e33c93277e0a7d3464abff52684a0b57b6c636821622a",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-hd016-adoption-r2-package-reviewer-proof.json SHA256a040f44abf67fe2ee0568ae5ebe2f082a1f0ee9038f7db653d9623b7f38c8c19; prospective complete package PLAN ec0fae970beca595f863eed95f752984c424ae0080342f99a70fc281880e30a6; no full product/Phase/CI/Gate qualification.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P4-SALES-OPERATION-FENCES-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "cfb096560ccdeda9d260687e4de53d48cb47fa99989eb0d88e8816486d08e361",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-sales-operation-fences-r1-source-reviewer-proof.json SHA25684d1768efaa0bc999f12f0d54ed6537a912efa07c0e8dcc17cf2a5719c95f0dd; exact helper7ec61ff0/test3f8ee690/native5c5ba4c3f; no complete actualwriter/freshview/privateauthority/Task/Gate qualification.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P4-DEF019-JUNIT-LEAF-CLOSURE-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "aff49c57cf0f434d3e64a11734b8901eb553bb90c32c2c43161dfbe22d9cee8d",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-def019-junit-leaf-contract-r1-closing-reviewer-proof.json SHA256a2d0a1b368fdeaa431de54c2808fa03908d21b04d03f31d2f62875fa403a01a4",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -15204,6 +15436,61 @@
       "subject": "DEF018 final47nativePASS and actual independent narrow closing review; reproduced mutable-status deadlock closed only",
       "status": "PASS",
       "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-def018-immutable-operation-fence-r1-closing-reviewer-proof.json SHA2569ec21e2508976249ec4b616cca4768cd7187ac57ee791030afb09d551506431c; raw92c3299f, advisoryRED6b682e49; no fullTask/Phase/currentCI/Gate completion."
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "0f6abe8c2f8bb32bcf7e3c11a855a7985a6296b9",
+      "spec_baseline": "ec0fae970beca595f863eed95f752984c424ae0080342f99a70fc281880e30a6",
+      "source_fingerprint": "0eed900a426f6e07af7b23adc82433d9c846abb762c4355b2d25bf47ca216f92",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-23T03:50:10.872907Z",
+      "subject": "Prospective HD016A narrow provider adoption; prior canonical baseline preserved",
+      "status": "PASS",
+      "source_ref": "Actual direct Sam Fulfillment HD016A approval userMessage01a166ab-3d76-7ad0-9b41-81a00099f643/turn01a166ab-3d5e-7323-beb3-0380b198e6ca, independently observed by Sales; exact named Sales provider/contract coordination. Existing direct Sales P4 continuation01a16658-f41f-7af1-a486-6439bd92f3aa and DEC029 remain. Mechanically derived binding for approved pending-only contract/three exact extra paths, not a claim Sam inspected computed hashes or approved new waivers. Old approval hashes/history preserved; HD012/013/014 bounds and all mandatory tests/CI/merge Gates unchanged. UAT_NA only retains existing business-user applicability; timed restore/RTO/RPO/TC058059 remain blocking. PRIOR_BASELINE {\"code_commit\": \"c2b8d2ec75dd0b1ca1962c4a6cc8503c3037628f\", \"default_commit\": \"e272f5d3ce05d0ca50be42e6d8764f0ef20d3dd1\", \"design\": \"67e3ac2c0ddb51b1620237186db76ecf9bc78a28b2de750cc2589dd3a6f7364a\", \"mode_entry_commit\": \"e272f5d3ce05d0ca50be42e6d8764f0ef20d3dd1\", \"plan\": \"377cd0b6b08f0368a47ef2629a74c0c4ac292858fe9b53fea3f8690c73c7cdb6\", \"source_fingerprint\": \"0eed900a426f6e07af7b23adc82433d9c846abb762c4355b2d25bf47ca216f92\", \"worktree\": \"/Users/sam/.codex/worktrees/sales-p4-archive/erp-app\"}; frozen389 independent64 rawf3f344ef/proofe30994bc. Integrated W qualification pending; provenance/planning observation only."
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "0f6abe8c2f8bb32bcf7e3c11a855a7985a6296b9",
+      "spec_baseline": "ec0fae970beca595f863eed95f752984c424ae0080342f99a70fc281880e30a6",
+      "source_fingerprint": "5686481acdcf41470e2e14d0b7085dcdfe1b55818b94f2cffddc621e73c85055",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-23T04:00:22.679528Z",
+      "subject": "Exact HD016A reviewed source/canonical/pin adoption observed before integrated test qualification",
+      "status": "PASS",
+      "source_ref": "Private packagefa5d7657 / actual separate reviewa040f44a; installed CAS1301 before source/spec/trace writes. No new failure/skip waiver; source fingerprint is current uncommitted candidate; fullTask/Phase/currentCI/Gate remains pending."
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "0f6abe8c2f8bb32bcf7e3c11a855a7985a6296b9",
+      "spec_baseline": "ec0fae970beca595f863eed95f752984c424ae0080342f99a70fc281880e30a6",
+      "source_fingerprint": "5686481acdcf41470e2e14d0b7085dcdfe1b55818b94f2cffddc621e73c85055",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-23T04:05:25.955552Z",
+      "subject": "Actual standard provider JUnit62 is below mandatory64; blocked result retained; no minimum reduction",
+      "status": "BLOCKED",
+      "source_ref": "evidence/20261023T040326-12a641edeba0/run.json; exit0/no SQL/test failures, TAP parent-vs-leaf discovery mismatch. Historical integrated150 raw3bd89d88/source5686481a remains valid for its exact prior bytes, not relabeled to test-augmented source."
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "0f6abe8c2f8bb32bcf7e3c11a855a7985a6296b9",
+      "spec_baseline": "ec0fae970beca595f863eed95f752984c424ae0080342f99a70fc281880e30a6",
+      "source_fingerprint": "aff49c57cf0f434d3e64a11734b8901eb553bb90c32c2c43161dfbe22d9cee8d",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-23T04:08:39.273055Z",
+      "subject": "Actual standard pending-provider64 JUnit leaf PASS with unchanged minimum/source/spec; DEF019 narrow closure",
+      "status": "PASS",
+      "source_ref": "evidence/20261023T040549-abe8d8170836/run.json SHA256310d474e627d77c22ffb8a9c7708ddad623950f7a4807376ae1b50638f9e910b; actual separate closingproofa2d0a1b3. No fullCreate/Archive/Task/Phase/CI/Gate claim."
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "0f6abe8c2f8bb32bcf7e3c11a855a7985a6296b9",
+      "spec_baseline": "ec0fae970beca595f863eed95f752984c424ae0080342f99a70fc281880e30a6",
+      "source_fingerprint": "aff49c57cf0f434d3e64a11734b8901eb553bb90c32c2c43161dfbe22d9cee8d",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-23T04:09:53.472834Z",
+      "subject": "Frozen current HD016A and Archive foundation component matrix Node152PASS0FAIL0SKIP; actual standard provider64leaf alsoPASS",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-hd016-integrated152-native-unit-r2.json; raw006bee5841ae2d84563a6ff446362b0b7733b0a0c652e4293b233c495f66f7ce, source/spec unchanged; exact source/augmentation independent proofsa040f44a/84d1768e/a2d0a1b3, scopedlint0. Node152 includes2 parent nodes, not152JUnitleaves. FullTC047048/privateauthority/participant/Task/Phase/currentCI/Gate pending."
     }
   ],
   "pending_decisions": [
@@ -18273,8 +18560,24 @@
       "kind": "GIT_COMMIT",
       "target": "codex/sales-order-phase-4-archive local-only immutable operation fence fix",
       "idempotency_key": "p4-def018-final47-20261023",
+      "status": "CONFIRMED",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-def018-immutable-operation-fence-r1-closing-reviewer-proof.json SHA2569ec21e2508976249ec4b616cca4768cd7187ac57ee791030afb09d551506431c; exact reviewed4files47PASS/scopedlint0; no push or main merge.; actual localcommit0f6abe8c observed; old raw/DEF018 scope preserved."
+    },
+    {
+      "id": "ACT-P4-HD016-PROVIDER-INTEGRATION-20261023",
+      "kind": "SOURCE_INTEGRATION",
+      "target": "exact frozen389cc2f three provider sources/two tests plus approved narrow reciprocal canonical contract bindings",
+      "idempotency_key": "p4-hd016-provider-389cc2f-20261023",
+      "status": "CONFIRMED",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-hd016-adoption-r2-package-reviewer-proof.json SHA256a040f44abf67fe2ee0568ae5ebe2f082a1f0ee9038f7db653d9623b7f38c8c19; actual Sam HD016A01a166ab-3d76; root own64f3f344ef plus frozen upstreamproofe30994bc. Exact hashes in private package; no full Create/Phase qualification.; exact7source/test bytes applied after CAS1301, canonical D64b0e1d5/Pec0fae97 independently recomputed; matrix --write observed; actual integrated qualification pending."
+    },
+    {
+      "id": "ACT-P4-HD016-AND-SALES-FENCE-COMMIT-20261023",
+      "kind": "GIT_COMMIT",
+      "target": "local Sales P4 exact reviewed HD016A provider/canonical binding and Sales operation fence components",
+      "idempotency_key": "p4-hd016-a-and-sales-fence-20261023",
       "status": "STARTED",
-      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-def018-immutable-operation-fence-r1-closing-reviewer-proof.json SHA2569ec21e2508976249ec4b616cca4768cd7187ac57ee791030afb09d551506431c; exact reviewed4files47PASS/scopedlint0; no push or main merge."
+      "source_ref": "Exact packagea040f44a / Salesfence84d1768e / two-test augmentation and standard64leaf closurea2d0a1b3. Broad current-source rerun still pending; only commit after observation. No push/PR/mainmerge."
     }
   ],
   "evidence_files": [
@@ -19066,7 +19369,9 @@
     "evidence/20261020T051616-fa0859a6360d/run.json",
     "evidence/20261020T051619-2e79046e5ac6/run.json",
     "evidence/20261020T051651-dbe669b96ca8/run.json",
-    "evidence/20261023T025425-2afe5efe357e/run.json"
+    "evidence/20261023T025425-2afe5efe357e/run.json",
+    "evidence/20261023T040326-12a641edeba0/run.json",
+    "evidence/20261023T040549-abe8d8170836/run.json"
   ],
   "defects": [
     {
@@ -19342,7 +19647,20 @@
         "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-def018-immutable-operation-fence-r1-closing-reviewer-proof.json SHA2569ec21e2508976249ec4b616cca4768cd7187ac57ee791030afb09d551506431c; actual final47PASS0FAIL0SKIP raw92c3299f; specific mutable-status1213 regression only. Entire writer protocol/fresh-view/private-authority/Phase/CI/Gate unqualified; priorRED/RETEST retained in Git and observations."
       ],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-019",
+      "severity": "MEDIUM",
+      "status": "CLOSED",
+      "source_ids": [
+        "TASK-058"
+      ],
+      "closure_evidence": [
+        "evidence/20261023T040326-12a641edeba0/run.json; actualJUnit62PASS0FAIL0SKIP but min64 unmet; TAP64 includes2 parent nodes, no source test failure. Preserve mandatory minimum64, not a waiver. Added two meaningful pending-only selected5000/5001 and cloned/closed RC executor regressions; actual new standard result and narrow independent review pending.",
+        "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-def019-junit-leaf-contract-r1-closing-reviewer-proof.json SHA256a2d0a1b368fdeaa431de54c2808fa03908d21b04d03f31d2f62875fa403a01a4; original min64 retained; actualstandard64leafPASS0FAIL0SKIP raw310d474e, exact finaltest/product source; original62BLOCKED retained. Execution-contract discovery repair only, no wholeP4 qualification."
+      ],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Commit independently reviewed DEF018 narrow fix; adopt exact qualified HD016A provider increment under actual owner approval, then implement full Archive authority/fencing/participant/coordinator and all unchanged P4 Gates."
+  "next_safe_action": "Observe frozen current-source broad rerun, preserve all results; commit HD016A/fence component checkpoint and send exact owner handoff. Continue actual Archive coordinator/authority/provider/participant/UI and all unchanged P4 Gates; no further human decision currently required."
 }
