@@ -11,10 +11,12 @@ const props = defineProps({
 });
 const currencyOptions = ref([]);
 const activePaymentTerms = ref([]);
+// 唔喺 Active 清單入面（載入緊、載入失敗、或者唔喺頭 100 個）都照樣顯示名稱；停用與否睇伺服器嘅 status，唔係睇喺唔喺清單（REV-116 M-1）。
 const paymentTermOptions = computed(() => {
   const current = props.currentPaymentTerm;
   if (!current || activePaymentTerms.value.some((item) => item.value === current.id)) return activePaymentTerms.value;
-  return [...activePaymentTerms.value, { label: `${current.code} — ${current.name}（已停用）`, value: current.id, disable: true }];
+  const inactive = current.status === "INACTIVE";
+  return [...activePaymentTerms.value, { label: `${current.code} — ${current.name}${inactive ? "（已停用）" : ""}`, value: current.id, disable: inactive }];
 });
 const loading = ref(false);
 
