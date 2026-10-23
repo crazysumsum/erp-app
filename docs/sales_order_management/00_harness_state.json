@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1322,
+  "revision": 1324,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,7 +11,7 @@
   "baseline": {
     "design": "b302bb83c8f90d5c6c041763b5c33148c7d3bd40ef4800ba687cf23b99a56555",
     "plan": "cbb4cbf16d7bd189a35d9031b9db6b9bfba050a967afef50fd58be35ba947ecb",
-    "code_commit": "585f9b3a0a20c701c397dec6df585472666a3f44",
+    "code_commit": "d1066c567283207f2a7f08e1e61954f619277391",
     "source_fingerprint": "07838f76e36b03c33331b461a0193bb58bb33b3df0cec3910d928667606e495d",
     "worktree": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app",
     "default_commit": "e272f5d3ce05d0ca50be42e6d8764f0ef20d3dd1",
@@ -12228,6 +12228,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-P4-ARCHIVE-SCOPE-ACTUAL-R2-ADDENDUM",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "e6ef48cfc48b3f69c936da02d7e59c618847ce333217a615d7286c2a6a3c70df",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-sales-archive-def024-r2-scope-actual-addendum.json; actualCAS1321/boundary0issues and exact14files unchanged; original closing proof retained; report127 subsequentclosingappend is factualstatus only, not sourceapproval.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -19191,8 +19203,16 @@
       "kind": "GIT_COMMIT",
       "target": "local-only actual Archive coordinator developer increment; noTaskDONE/push/PR/merge",
       "idempotency_key": "p4-real-archive-coordinator16-shared131-20261023",
+      "status": "CONFIRMED",
+      "source_ref": "Actual git commit d1066c567283207f2a7f08e1e61954f619277391 observed; sourceFP 07838f76e36b03c33331b461a0193bb58bb33b3df0cec3910d928667606e495d unchanged aftercommit; private raw evidence untracked/notstaged. No push/PR/mainmerge, fullP4BLOCKED."
+    },
+    {
+      "id": "ACT-P4-MAIN58322-INTEGRATION-20261023",
+      "kind": "GIT_MERGE",
+      "target": "origin/main 58322ba3d5b77aa1a6250be4b5055651c682a371 into current isolated P4 branch only",
+      "idempotency_key": "p4-integrate-main58322-d1066c56",
       "status": "STARTED",
-      "source_ref": "Existing Sam development/commit authority; actual narrow closing2f6de477c2e37038de88484dbd447a806d391317dbb35754550df3e9d3fbd599; native16/latestregistered7/shared131 and independent5native24unit; fullP4 Gate remainsBLOCKED; exact oldapprovedfactoryscope carried under unchangedD/P. No raw evidence export."
+      "source_ref": "Fresh actualfetch observed Supplier PR273 only: owner-specific UI/lookups/tests/docs; no Sales/Fulfillment/Inventory/migrations/coreServices/config code changes. Existing Sam impact-based revalidation instruction and AGENTS latest-target integration. Preserve scope/currentCI/allP4Gate. No remote/mainmerge."
     }
   ],
   "evidence_files": [
@@ -20363,5 +20383,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Create only the exact separately reviewed local Archive coordinator commit, observe commit thenCASCONFIRMED; preserve fullP4BLOCKED/noTaskDONE. Freshmainreconcile beforefulltesting, finish generalRuntime recovery/fullnativecases/ArchiveAPI/consumerUI/reconciliation/capacity/restore/original33/currentCI/wholephaseGate before alreadyauthorized directmainmerge."
+  "next_safe_action": "Commit only current authoritative state checkpoint to clear ownedtrackedstate for local latest-main merge, integrate58322 without touching raw evidence; observe actualmerge thenCASCONFIRMED/defaultbaseline/newFP. Supplierlookup delta needs route/startup check, no gratuitous repeat of unrelated expensive perf. FullremainingP4 mandatoryGate stillrequired before remote mainmerge."
 }
