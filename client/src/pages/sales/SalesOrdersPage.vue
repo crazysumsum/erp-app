@@ -35,7 +35,7 @@ function reset(){router.replace({query:{}});}
 function acceptId(value,done){if(/^[1-9]\d*$/u.test(value)&&Number.isSafeInteger(Number(value)))done(value,"add-unique");}
 function timestamp(value){return new Intl.DateTimeFormat("zh-HK",{timeZone:"Asia/Hong_Kong",dateStyle:"short",timeStyle:"short"}).format(new Date(value));}
 </script>
-<template><div><PageHeader :title="outstanding?'未完成銷售訂單':'銷售訂單'" :subtitle="outstanding?'已確認且尚有未履約數量；數量按 Base 單位顯示。':'Active 訂單；查詢不會自動搜尋 Archive。'"><template #actions><SalesExportButton v-if="!outstanding" scope="ACTIVE" :filters="exportFilters" /><q-btn flat :label="outstanding?'全部訂單':'未完成訂單'" :to="outstanding?'/sales/orders':'/sales/orders/outstanding'" /><q-btn v-if="manage" color="primary" label="新增銷售訂單" to="/sales/orders/new" /></template></PageHeader>
+<template><div><PageHeader :title="outstanding?'未完成銷售訂單':'銷售訂單'" :subtitle="outstanding?'已確認且尚有未履約數量；數量按 Base 單位顯示。':'Active 訂單；查詢不會自動搜尋 Archive。'"><template #actions><q-btn flat label="Archive 歷史訂單" to="/sales/archive" /><SalesExportButton v-if="!outstanding" scope="ACTIVE" :filters="exportFilters" /><q-btn flat :label="outstanding?'全部訂單':'未完成訂單'" :to="outstanding?'/sales/orders':'/sales/orders/outstanding'" /><q-btn v-if="manage" color="primary" label="新增銷售訂單" to="/sales/orders/new" /></template></PageHeader>
  <div class="q-px-md q-pb-md"><div class="row q-col-gutter-md">
   <div class="col-12 col-md-3"><q-select v-model="filters.view" label="常用檢視" :options="outstanding?viewOptions.slice(0,2):viewOptions" emit-value map-options outlined dense /></div>
   <div class="col-12 col-md-4"><q-input v-model="filters.q" label="客戶代碼／名稱／PO" aria-label="客戶代碼／名稱／PO" maxlength="190" outlined dense @keyup.enter="apply" /></div>
@@ -58,5 +58,5 @@ function timestamp(value){return new Intl.DateTimeFormat("zh-HK",{timeZone:"Asia
   <template #body-cell-hasBackorder="{row}"><q-td><q-badge v-if="row.hasBackorder" color="warning" text-color="dark" :label="`有 Backorder（${row.backorderLineCount} 行）`" /><span v-else>沒有</span></q-td></template>
   <template #body-cell-updatedAt="{row}"><q-td>{{ timestamp(row.updatedAt) }}</q-td></template>
   <template #body-cell-actions="{row}"><q-td class="text-right"><q-btn flat :label="`查看 ${row.number}`" :to="`/sales/orders/${row.id}`" /></q-td></template>
-  <template #no-data><p role="status">{{ outstanding?'沒有符合條件的未完成銷售訂單；請調整搜尋條件。':'沒有符合條件的 Active 銷售訂單；請調整搜尋條件。Archive 查詢將由後續階段提供。' }}</p></template>
+  <template #no-data><p role="status">{{ outstanding?'沒有符合條件的未完成銷售訂單；請調整搜尋條件。':'沒有符合條件的 Active 銷售訂單；請調整搜尋條件。可前往 Archive 歷史訂單另行查詢。' }}</p></template>
  </DataTable></div></div></template>

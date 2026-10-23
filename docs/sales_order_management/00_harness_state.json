@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1329,
+  "revision": 1331,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "b302bb83c8f90d5c6c041763b5c33148c7d3bd40ef4800ba687cf23b99a56555",
     "plan": "cbb4cbf16d7bd189a35d9031b9db6b9bfba050a967afef50fd58be35ba947ecb",
-    "code_commit": "61a2346811db93b0e31417a5e108995f870c996f",
-    "source_fingerprint": "650b5d83e62d05a7a527608767546c9b57a8f13415aab161f2df3abdd5659cfe",
+    "code_commit": "321d44bf7ada5cbfdf76ff95129e78dd402f482a",
+    "source_fingerprint": "7d98051566e9976193f706ffa6ca27c256ff5b30531ee7214590793733766d74",
     "worktree": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app",
     "default_commit": "58322ba3d5b77aa1a6250be4b5055651c682a371",
     "mode_entry_commit": "e272f5d3ce05d0ca50be42e6d8764f0ef20d3dd1"
@@ -12276,6 +12276,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-P4-ARCHIVE-UI-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "162c6f321286a8cabc4e7296977ab796ccc54bfc5729edacad9c6432c86b411e",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-archive-ui-r2-closing-reviewer-proof.json",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -16139,6 +16151,17 @@
       "subject": "Bounded Archive API scoped developer checks and separate review; nofullTask/PhaseCI/Gate",
       "status": "PASS",
       "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/130_archive_inquiry_developer_increment.md; currentFP is path-move observation; previous21 retains originalfrozenreceipt."
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "321d44bf7ada5cbfdf76ff95129e78dd402f482a",
+      "spec_baseline": "cbb4cbf16d7bd189a35d9031b9db6b9bfba050a967afef50fd58be35ba947ecb",
+      "source_fingerprint": "7d98051566e9976193f706ffa6ca27c256ff5b30531ee7214590793733766d74",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-23T08:25:16.129463Z",
+      "subject": "Archive UI scoped developer checks and distinct actual browser closing review; fullP4 incomplete",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/131_archive_ui_developer_increment.md"
     }
   ],
   "pending_decisions": [
@@ -19296,8 +19319,16 @@
       "kind": "GIT_COMMIT",
       "target": "local-only reviewed bounded Archive inquiries developer increment",
       "idempotency_key": "p4-archive-inquiry-bounded500-20261023",
+      "status": "CONFIRMED",
+      "source_ref": "Actual local commit 321d44bf7ada5cbfdf76ff95129e78dd402f482a; currentFP650b5d83e62d05a7a527608767546c9b57a8f13415aab161f2df3abdd5659cfe unchanged aftercommit. Private raw evidence notstaged. No push/PR/mainmerge; fullP4BLOCKED."
+    },
+    {
+      "id": "ACT-P4-ARCHIVE-UI-COMMIT-20261023",
+      "kind": "GIT_COMMIT",
+      "target": "local-only reviewed Archive UI increment",
+      "idempotency_key": "p4-archive-ui-readonly-20261023",
       "status": "STARTED",
-      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/130_archive_inquiry_developer_increment.md; currentFP650b5d83e62d05a7a527608767546c9b57a8f13415aab161f2df3abdd5659cfe; no push/PR/mainmerge."
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/131_archive_ui_developer_increment.md; exactFP7d98051566e9976193f706ffa6ca27c256ff5b30531ee7214590793733766d74; no push/PR/mainmerge."
     }
   ],
   "evidence_files": [
@@ -20495,7 +20526,21 @@
         "Actual501 native RED097f60d7→bounded GREENfa3ea267; final21/shared131/source receipt; separate narrow reviewerfce475ff and moved-test exactequivalenceaddendumf79a26eb. FullTask/TC050/Phase notcomplete."
       ],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-027",
+      "severity": "MEDIUM",
+      "status": "CLOSED",
+      "source_ids": [
+        "TASK-061",
+        "TC-050"
+      ],
+      "closure_evidence": [
+        "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/131_archive_ui_developer_increment.md",
+        "AU-R1-1 actual focused2RED; finalauthor5PASS; finalreviewer2PASS plus current40unit/build/fullLint/boundary. Quasar role assertion corrected separately. Narrow UI focus only."
+      ],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Commit reviewed bounded Archive inquiry increment; implement TASK061 Archive pages with real Playwright, complete consumer routing and remaining full P4 eligibility/joint/metrics/capacity/restore/currentCI/review/standard merge Gate before authorized main merge."
+  "next_safe_action": "Commit independently reviewed Archive UI slice, complete all-source consumer routing and remaining original P4 joint/eligibility/metrics/capacity/restore/checks/currentCI/wholephase review/standard merge Gate before authorized main merge."
 }

@@ -33,6 +33,9 @@ export default {
     const params=Object.fromEntries(Object.entries({...query,pageSize:rowsPerPage??query.pageSize}).filter(([,value])=>value!==undefined&&value!==null&&value!==""));
     return httpClient.get("/api/v1/sales-audit-logs",{params,signal}).then(({items,total})=>({rows:items,rowsNumber:total}));
   },
+  listArchivedOrders({rowsPerPage,filter:_filter,signal,...query}={}) {const params=Object.fromEntries(Object.entries({...query,pageSize:rowsPerPage??query.pageSize}).filter(([,v])=>v!==undefined&&v!==null&&v!==""));return httpClient.get("/api/v1/archived-sales-orders",{params,signal}).then(({items,total})=>({rows:items,rowsNumber:total}));},
+  getArchivedOrder(id,{signal}={}) {return httpClient.get(`/api/v1/archived-sales-orders/${id}`,{signal});},
+  listArchivedAudit(id,{rowsPerPage,filter:_filter,signal,...query}={}) {const params=Object.fromEntries(Object.entries({...query,pageSize:rowsPerPage??query.pageSize}).filter(([,v])=>v!==undefined&&v!==null&&v!==""));return httpClient.get(`/api/v1/archived-sales-orders/${id}/audit`,{params,signal}).then(({items,total})=>({rows:items,rowsNumber:total}));},
   createOrder(payload) { return write("/api/v1/sales-orders/create", payload); },
   updateOrder(id, payload) { return write(`/api/v1/sales-orders/${id}/update`, payload); },
   confirmOrder(id,payload,{signal}={}) { return write(`/api/v1/sales-orders/${id}/confirm`,payload,{signal}); },
