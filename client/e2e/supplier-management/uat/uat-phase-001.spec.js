@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { activateViaApi, api, auditRow, closeDb, createDraft, db, loginAs, serviceCall, setStatus, statusAction, statusBadge, unique, watchProblems } from "./uatSupport.js";
+import { activateViaApi, api, auditRow, closeDb, createDraft, db, loginAs, moduleCall, serviceCall, setStatus, statusAction, statusBadge, unique, watchProblems } from "./uatSupport.js";
 
 /**
  * Supplier UAT PHASE-001（07_uat_test_cases.md §4；HD-124 A）。真 server、真 MySQL scratch database，冇 mock。
@@ -239,5 +239,151 @@ test("@uat UAT-022 a Supplier with only the three minimum fields shows completen
   await statusAction(page, "啟用");
   await expect(statusBadge(page)).toHaveText("啟用");
   await evidence(page, testInfo, "active");
+  expect(problems).toEqual([]);
+});
+
+test("@uat UAT-003 a same-name Supplier with another Code is warned about first, can be confirmed, and is not merged", async ({ page }, testInfo) => {
+  await loginAs(page, "CLERK");
+  const name = `UAT-003 Harbour Trading ${unique("N")}`;
+  const first = await createDraft(page, { name });
+  const problems = watchProblems(page);
+  const code = unique("UAT003");
+
+  await page.goto("/suppliers/new");
+  await page.getByLabel("Supplier Code *").fill(code);
+  await page.getByLabel("Supplier Name *").fill(name);
+  await page.getByRole("combobox", { name: "Default Currency *" }).click();
+  await page.getByRole("option", { name: /^HKD/u }).click();
+  await page.getByRole("button", { name: "儲存 Draft" }).click();
+  await expect(page.getByText("找到名稱近似的供應商，請確認這不是重複建檔")).toBeVisible();
+  await expect(page.getByText(`${first.supplierCode} — ${name}`)).toBeVisible();
+  await expect(page.getByText("已建立")).toHaveCount(0);
+  await evidence(page, testInfo, "warning");
+
+  await page.getByRole("button", { name: "確認重複提示並繼續" }).click();
+  await expect(page.getByText(`供應商 ${code} 已建立`)).toBeVisible();
+  await evidence(page, testInfo, "created");
+
+  await page.goto("/suppliers");
+  await page.getByPlaceholder("搜尋 Code、名稱、電話或電郵").fill(name);
+  await expect(page.locator("tbody tr", { hasText: name })).toHaveCount(2);
+  await page.goto(`/suppliers/audit?target=${code}`);
+  await expect(page.locator("tbody tr", { hasText: "新增供應商" })).toHaveCount(1);
+  expect(problems).toEqual([]);
+});
+
+test("@uat UAT-004 the same identifier in another format is refused without revealing the other Supplier", async ({ page }, testInfo) => {
+  await loginAs(page, "CLERK");
+  const owner = await createDraft(page);
+  const value = String(Date.now()).slice(-8);
+  await api(page, "POST", `/api/v1/suppliers/${owner.id}/identifiers/create`, { identifierType: "business_registration", issuerCountryCode: "HK", identifierValue: value });
+  const other = await createDraft(page);
+  const problems = watchProblems(page, { allow: [{ status: 409, path: "/identifiers/create" }] });
+
+  await page.goto(`/suppliers/${other.id}`);
+  await page.getByRole("tab", { name: /^識別資料/u }).click();
+  await page.getByRole("button", { name: "新增識別資料" }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("combobox", { name: "識別類型 *" }).click();
+  await page.getByRole("option", { name: "商業登記" }).click();
+  await dialog.getByLabel("發證國家／地區 *").fill("hk");
+  await dialog.getByLabel("識別值 *").fill(` ${value.slice(0, 4)}-${value.slice(4)} `);
+  await dialog.getByRole("button", { name: "儲存" }).click();
+  const error = dialog.locator(".q-banner.bg-negative");
+  await expect(error).toBeVisible();
+  await expect(error).not.toContainText(owner.supplierCode);
+  await expect(error).not.toContainText(owner.supplierName);
+  await evidence(page, testInfo, "refused");
+
+  await page.goto(`/suppliers/${owner.id}`);
+  await page.getByRole("tab", { name: /^識別資料/u }).click();
+  await expect(page.getByText(value)).toHaveCount(1);
+  expect(problems).toEqual([]);
+});
+
+test("@uat UAT-007 a VIEWER searches, filters, sorts and pages accurately, without Archived by default and without bank plaintext", async ({ browser, page }, testInfo) => {
+  const tag = unique("U7");
+  const clerkPage = await (await browser.newContext()).newPage();
+  await loginAs(clerkPage, "CLERK");
+  const suppliers = [];
+  for (let index = 0; index < 23; index += 1) {
+    // 伺服器每個 IP 每秒 20 個請求（config/requestLimiter.js）：前置資料慢慢開。
+    await clerkPage.waitForTimeout(60);
+    suppliers.push(await createDraft(clerkPage, { code: `${tag}-${String(index).padStart(2, "0")}`, name: `UAT-007 ${tag} Supplier ${index}` }));
+  }
+  const phone = `+852 ${String(Date.now()).slice(-8)}`;
+  // 列表搜嘅聯絡資料係 Supplier 嘅一般電話同電郵（FR-LIST-002、HD-094 4A），唔係個別聯絡人。
+  const target = await api(clerkPage, "GET", `/api/v1/suppliers/${suppliers[5].id}`);
+  await api(clerkPage, "POST", `/api/v1/suppliers/${target.id}/update`, { version: target.version, supplierName: target.supplierName, displayName: "",
+    defaultCurrencyCode: "HKD", defaultPaymentTermId: null, website: "", generalPhone: phone, generalEmail: "", notes: "" });
+  await setStatus(suppliers[22].id, "archived");
+  const bankPage = await (await browser.newContext()).newPage();
+  const officer = await loginAs(bankPage, "BANK-OFFICER");
+  const account = `88${String(Date.now()).slice(-10)}`;
+  expect(await moduleCall(bankPage, "/src/services/supplierBank.js", "create", suppliers[5].id,
+    { accountHolderName: "UAT Holder", bankName: "UAT Bank", accountNumber: account, isDefault: true, reason: "UAT-007 fixture", password: officer.password }))
+    .toMatch(/^ok/u);
+
+  await loginAs(page, "VIEWER");
+  const problems = watchProblems(page);
+  await page.goto("/suppliers");
+  await page.getByPlaceholder("搜尋 Code、名稱、電話或電郵").fill(tag);
+  await expect(page).toHaveURL(new RegExp(`q=${tag}`, "u"));
+  await expect(page.getByText(/of 22/u)).toBeVisible();
+  await expect(page.getByText(`${tag}-22`)).toHaveCount(0);
+  await evidence(page, testInfo, "search");
+
+  await page.getByRole("checkbox", { name: "包括已封存" }).click();
+  await expect(page.getByText(/of 23/u)).toBeVisible();
+  await page.getByRole("checkbox", { name: "包括已封存" }).click();
+
+  await page.getByRole("columnheader", { name: /Code/u }).first().click();
+  await page.getByRole("columnheader", { name: /Code/u }).first().click();
+  await expect(page.locator("tbody tr").first()).toContainText(`${tag}-21`);
+  await page.getByRole("button", { name: /next page|下一頁/iu }).or(page.locator("button[aria-label*='next' i]")).first().click();
+  await expect(page.locator("tbody tr").first()).toContainText(`${tag}-01`);
+  await evidence(page, testInfo, "sorted-page-2");
+
+  await page.goto("/suppliers");
+  await page.getByPlaceholder("搜尋 Code、名稱、電話或電郵").fill(phone);
+  await expect(page.locator("tbody tr")).toHaveCount(1);
+  await expect(page.locator("tbody tr")).toContainText(`${tag}-05`);
+  await page.getByRole("link", { name: `查看 ${tag}-05 詳情` }).click();
+  await expect(page.getByText(`UAT-007 ${tag} Supplier 5`).first()).toBeVisible();
+  expect(await page.content()).not.toContain(account);
+  await page.getByRole("tab", { name: "銀行資料" }).click();
+  await page.waitForLoadState("networkidle");
+  expect(await page.content()).not.toContain(account);
+  expect(await page.content()).not.toContain(account.slice(0, -4));
+  await evidence(page, testInfo, "detail");
+  expect(problems).toEqual([]);
+});
+
+test("@uat UAT-008 two browsers save the same version: the second gets a conflict, keeps its input and overwrites nothing", async ({ browser, page }, testInfo) => {
+  await loginAs(page, "CLERK");
+  const supplier = await createDraft(page);
+  const other = await (await browser.newContext()).newPage();
+  await loginAs(other, "CLERK");
+  const problems = watchProblems(other, { allow: [{ status: 409, path: "/update" }] });
+
+  for (const tab of [page, other]) {
+    await tab.goto(`/suppliers/${supplier.id}`);
+    await tab.getByRole("button", { name: "編輯一般資料" }).click();
+  }
+  await page.getByLabel("Supplier Name *").fill("UAT-008 saved by A");
+  await page.getByRole("button", { name: "儲存一般資料" }).click();
+  await expect(page.getByText("版本 2")).toBeVisible();
+
+  await other.getByLabel("Supplier Name *").fill("UAT-008 typed by B");
+  await other.getByRole("button", { name: "儲存一般資料" }).click();
+  await expect(other.getByText(/供應商已被其他人修改（最新版本 2）/u)).toBeVisible();
+  await expect(other.getByLabel("Supplier Name *")).toHaveValue("UAT-008 typed by B");
+  await evidence(other, testInfo, "conflict-b");
+
+  await other.reload();
+  await expect(other.getByText("UAT-008 saved by A").first()).toBeVisible();
+  await expect(other.getByText("UAT-008 typed by B")).toHaveCount(0);
+  await expect(await auditRow(other, "編輯供應商")).toHaveCount(1);
+  await evidence(other, testInfo, "final");
   expect(problems).toEqual([]);
 });

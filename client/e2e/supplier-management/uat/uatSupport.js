@@ -115,17 +115,19 @@ export async function auditRow(page, actionLabel) {
 }
 
 /**
- * 喺頁面入面直接叫 client 嘅 supplier service：同 UI 一樣用登入設備簽名，所以伺服器係以權限或者規則拒絕，
- * 唔係因為冇簽名。回 `ok` 或者 `<HTTP status> <error code>`。
+ * 喺頁面入面直接叫 client 嘅 service：同 UI 一樣用登入設備簽名，所以伺服器係以權限或者規則拒絕，
+ * 唔係因為冇簽名。回 `ok`、`ok:<JSON>` 或者 `<HTTP status> <error code>`。
  */
-export function serviceCall(page, method, ...args) {
-  return page.evaluate(async ({ method: name, args: values }) => {
-    const { default: supplierService } = await import("/src/services/supplier.js");
+export function moduleCall(page, modulePath, method, ...args) {
+  return page.evaluate(async ({ modulePath: path, method: name, args: values }) => {
+    const { default: service } = await import(path);
     try {
-      await supplierService[name](...values);
-      return "ok";
+      const result = await service[name](...values);
+      return result === undefined ? "ok" : `ok:${JSON.stringify(result)}`;
     } catch (error) {
       return `${error.status} ${error.code}`;
     }
-  }, { method, args });
+  }, { modulePath, method, args });
 }
+
+export const serviceCall = async (page, method, ...args) => (await moduleCall(page, "/src/services/supplier.js", method, ...args)).replace(/^ok:.*/su, "ok");
