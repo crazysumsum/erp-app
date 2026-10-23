@@ -1430,6 +1430,54 @@
         "NFR-013",
         "NFR-014"
       ]
+    },
+    {
+      "id": "DES-011",
+      "requirement_ids": [
+        "FR-031",
+        "FR-032",
+        "FR-033",
+        "FR-035",
+        "FR-037",
+        "FR-038",
+        "FR-039",
+        "FR-040",
+        "FR-041",
+        "FR-042",
+        "NFR-006",
+        "NFR-007",
+        "NFR-008",
+        "NFR-009",
+        "SEC-007",
+        "SEC-008",
+        "SEC-009",
+        "SEC-010",
+        "SEC-013"
+      ]
+    },
+    {
+      "id": "DES-012",
+      "requirement_ids": [
+        "FR-031",
+        "FR-032",
+        "FR-033",
+        "FR-035",
+        "FR-037",
+        "FR-038",
+        "FR-039",
+        "FR-040",
+        "FR-041",
+        "FR-042",
+        "NFR-006",
+        "NFR-007",
+        "NFR-008",
+        "NFR-009",
+        "SEC-007",
+        "SEC-008",
+        "SEC-009",
+        "SEC-010",
+        "SEC-013"
+      ]
     }
   ],
   "phases": [
@@ -2110,6 +2158,131 @@
         "lint",
         "client-build",
         "inventory-technical"
+      ]
+    },
+    {
+      "id": "PHASE-007",
+      "requirement_ids": [
+        "FR-031",
+        "FR-032",
+        "FR-033",
+        "FR-035",
+        "FR-037",
+        "FR-038",
+        "FR-039",
+        "FR-040",
+        "FR-041",
+        "FR-042",
+        "NFR-006",
+        "NFR-007",
+        "NFR-008",
+        "NFR-009",
+        "SEC-007",
+        "SEC-008",
+        "SEC-009",
+        "SEC-010",
+        "SEC-013"
+      ],
+      "design_ids": [
+        "DES-011"
+      ],
+      "task_ids": [
+        "TASK-052"
+      ],
+      "depends_on": [
+        "PHASE-004"
+      ],
+      "branch_strategy": "DEFAULT",
+      "parent_commit": null,
+      "exception_approval_id": null,
+      "merge_group": "inventory-purchase-receipt",
+      "developer_suites": [
+        "lint",
+        "client-build",
+        "inventory-developer",
+        "inventory-p2-database",
+        "inventory-p2-api",
+        "inventory-p3-movement-database",
+        "inventory-p3-transfer-database",
+        "inventory-p3-api",
+        "inventory-p3-server-coverage",
+        "inventory-p3-coverage-floors",
+        "inventory-p3-client-coverage",
+        "inventory-p3-dependency-audit",
+        "inventory-p3-browser",
+        "inventory-p3-browser-regression",
+        "inventory-p3-sales-compatibility",
+        "inventory-purchase-existing-receipt",
+        "inventory-purchase-existing-reservation",
+        "inventory-purchase-existing-lock",
+        "inventory-purchase-receipt-unit",
+        "inventory-purchase-receipt-database",
+        "inventory-purchase-receipt-auth",
+        "inventory-purchase-contract"
+      ]
+    },
+    {
+      "id": "PHASE-008",
+      "requirement_ids": [
+        "FR-031",
+        "FR-032",
+        "FR-033",
+        "FR-035",
+        "FR-037",
+        "FR-038",
+        "FR-039",
+        "FR-040",
+        "FR-041",
+        "FR-042",
+        "NFR-006",
+        "NFR-007",
+        "NFR-008",
+        "NFR-009",
+        "SEC-007",
+        "SEC-008",
+        "SEC-009",
+        "SEC-010",
+        "SEC-013"
+      ],
+      "design_ids": [
+        "DES-012"
+      ],
+      "task_ids": [
+        "TASK-053"
+      ],
+      "depends_on": [
+        "PHASE-007"
+      ],
+      "branch_strategy": "DEFAULT",
+      "parent_commit": null,
+      "exception_approval_id": null,
+      "merge_group": "inventory-purchase-reversal",
+      "developer_suites": [
+        "lint",
+        "client-build",
+        "inventory-developer",
+        "inventory-p2-database",
+        "inventory-p2-api",
+        "inventory-p3-movement-database",
+        "inventory-p3-transfer-database",
+        "inventory-p3-api",
+        "inventory-p3-server-coverage",
+        "inventory-p3-coverage-floors",
+        "inventory-p3-client-coverage",
+        "inventory-p3-dependency-audit",
+        "inventory-p3-browser",
+        "inventory-p3-browser-regression",
+        "inventory-p3-sales-compatibility",
+        "inventory-purchase-existing-receipt",
+        "inventory-purchase-existing-reservation",
+        "inventory-purchase-existing-lock",
+        "inventory-purchase-receipt-unit",
+        "inventory-purchase-receipt-database",
+        "inventory-purchase-receipt-auth",
+        "inventory-purchase-contract",
+        "inventory-purchase-reversal-unit",
+        "inventory-purchase-reversal-database",
+        "inventory-purchase-reversal-auth"
       ]
     }
   ],
@@ -3744,6 +3917,72 @@
         "TC-009",
         "TC-010"
       ]
+    },
+    {
+      "id": "TASK-052",
+      "phase_id": "PHASE-007",
+      "requirement_ids": [
+        "FR-031",
+        "FR-032",
+        "FR-033",
+        "FR-035",
+        "FR-037",
+        "FR-038",
+        "FR-039",
+        "FR-040",
+        "FR-041",
+        "FR-042",
+        "NFR-006",
+        "NFR-007",
+        "NFR-008",
+        "NFR-009",
+        "SEC-007",
+        "SEC-008",
+        "SEC-009",
+        "SEC-010",
+        "SEC-013"
+      ],
+      "design_ids": [
+        "DES-011"
+      ],
+      "depends_on": [],
+      "technical_test_ids": [
+        "TC-011"
+      ]
+    },
+    {
+      "id": "TASK-053",
+      "phase_id": "PHASE-008",
+      "requirement_ids": [
+        "FR-031",
+        "FR-032",
+        "FR-033",
+        "FR-035",
+        "FR-037",
+        "FR-038",
+        "FR-039",
+        "FR-040",
+        "FR-041",
+        "FR-042",
+        "NFR-006",
+        "NFR-007",
+        "NFR-008",
+        "NFR-009",
+        "SEC-007",
+        "SEC-008",
+        "SEC-009",
+        "SEC-010",
+        "SEC-013"
+      ],
+      "design_ids": [
+        "DES-012"
+      ],
+      "depends_on": [
+        "TASK-052"
+      ],
+      "technical_test_ids": [
+        "TC-012"
+      ]
     }
   ],
   "technical_tests": [
@@ -4166,6 +4405,82 @@
         "approval_id": null
       },
       "suite_id": "inventory-technical"
+    },
+    {
+      "id": "TC-011",
+      "requirement_ids": [
+        "FR-031",
+        "FR-032",
+        "FR-033",
+        "FR-035",
+        "FR-037",
+        "FR-038",
+        "FR-039",
+        "FR-040",
+        "FR-041",
+        "FR-042",
+        "NFR-006",
+        "NFR-007",
+        "NFR-008",
+        "NFR-009",
+        "SEC-007",
+        "SEC-008",
+        "SEC-009",
+        "SEC-010",
+        "SEC-013"
+      ],
+      "design_ids": [
+        "DES-011"
+      ],
+      "task_ids": [
+        "TASK-052"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "inventory-technical"
+    },
+    {
+      "id": "TC-012",
+      "requirement_ids": [
+        "FR-031",
+        "FR-032",
+        "FR-033",
+        "FR-035",
+        "FR-037",
+        "FR-038",
+        "FR-039",
+        "FR-040",
+        "FR-041",
+        "FR-042",
+        "NFR-006",
+        "NFR-007",
+        "NFR-008",
+        "NFR-009",
+        "SEC-007",
+        "SEC-008",
+        "SEC-009",
+        "SEC-010",
+        "SEC-013"
+      ],
+      "design_ids": [
+        "DES-012"
+      ],
+      "task_ids": [
+        "TASK-053"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "inventory-technical"
     }
   ],
   "uat_tests": [
@@ -4202,7 +4517,9 @@
         "NFR-014"
       ],
       "technical_test_ids": [
-        "TC-001"
+        "TC-001",
+        "TC-011",
+        "TC-012"
       ],
       "mandatory": true,
       "blocking": true,
@@ -4285,7 +4602,9 @@
         "SEC-007"
       ],
       "technical_test_ids": [
-        "TC-001"
+        "TC-001",
+        "TC-011",
+        "TC-012"
       ],
       "mandatory": true,
       "blocking": true,
@@ -4304,7 +4623,9 @@
         "SEC-013"
       ],
       "technical_test_ids": [
-        "TC-001"
+        "TC-001",
+        "TC-011",
+        "TC-012"
       ],
       "mandatory": true,
       "blocking": true,
@@ -4345,7 +4666,9 @@
         "SEC-011"
       ],
       "technical_test_ids": [
-        "TC-001"
+        "TC-001",
+        "TC-011",
+        "TC-012"
       ],
       "mandatory": true,
       "blocking": true,
@@ -4830,7 +5153,9 @@
         "FR-125"
       ],
       "technical_test_ids": [
-        "TC-004"
+        "TC-004",
+        "TC-011",
+        "TC-012"
       ],
       "mandatory": true,
       "blocking": true,
@@ -4889,7 +5214,9 @@
         "FR-032"
       ],
       "technical_test_ids": [
-        "TC-004"
+        "TC-004",
+        "TC-011",
+        "TC-012"
       ],
       "mandatory": true,
       "blocking": true,
@@ -4927,7 +5254,9 @@
         "FR-035"
       ],
       "technical_test_ids": [
-        "TC-004"
+        "TC-004",
+        "TC-011",
+        "TC-012"
       ],
       "mandatory": true,
       "blocking": true,
@@ -4946,7 +5275,9 @@
         "FR-039"
       ],
       "technical_test_ids": [
-        "TC-004"
+        "TC-004",
+        "TC-011",
+        "TC-012"
       ],
       "mandatory": true,
       "blocking": true,
@@ -4965,7 +5296,9 @@
         "FR-037"
       ],
       "technical_test_ids": [
-        "TC-004"
+        "TC-004",
+        "TC-011",
+        "TC-012"
       ],
       "mandatory": true,
       "blocking": true,
@@ -4984,7 +5317,9 @@
         "FR-038"
       ],
       "technical_test_ids": [
-        "TC-004"
+        "TC-004",
+        "TC-011",
+        "TC-012"
       ],
       "mandatory": true,
       "blocking": true,
@@ -5041,7 +5376,9 @@
         "NFR-009"
       ],
       "technical_test_ids": [
-        "TC-001"
+        "TC-001",
+        "TC-011",
+        "TC-012"
       ],
       "mandatory": true,
       "blocking": true,
@@ -5060,7 +5397,9 @@
         "NFR-006"
       ],
       "technical_test_ids": [
-        "TC-001"
+        "TC-001",
+        "TC-011",
+        "TC-012"
       ],
       "mandatory": true,
       "blocking": true,
@@ -6214,7 +6553,9 @@
         "NFR-009"
       ],
       "technical_test_ids": [
-        "TC-001"
+        "TC-001",
+        "TC-011",
+        "TC-012"
       ],
       "mandatory": true,
       "blocking": true,
@@ -6340,7 +6681,9 @@
       ],
       "technical_test_ids": [
         "TC-001",
-        "TC-010"
+        "TC-010",
+        "TC-011",
+        "TC-012"
       ],
       "mandatory": true,
       "blocking": true,
@@ -6456,7 +6799,9 @@
         "NFR-009"
       ],
       "technical_test_ids": [
-        "TC-001"
+        "TC-001",
+        "TC-011",
+        "TC-012"
       ],
       "mandatory": true,
       "blocking": true,

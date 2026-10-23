@@ -90,9 +90,9 @@
     "provided": [
       {
         "id": "purchasing-receiving-document-contract",
-        "version": "approved-planning-v1-SPECIFIED_NOT_IMPLEMENTED",
+        "version": "candidate-v2-purchase-provider-ABI; NOT_IMPLEMENTED",
         "source": "docs/purchasing_receiving_management/03_design_spec.md",
-        "sha256": "a29fb66d0e5ad10c638e5c556e40cf16c534cfce7c7283077a8f922a8fd0ee70",
+        "sha256": "9db654b1dc2f9382a78a31366cd3c2a36eccce9b1adcea4a31966e1c73ca870b",
         "consumers": [
           "accounts-payable",
           "reporting"
@@ -142,10 +142,10 @@
       },
       {
         "module_id": "inventory-management",
-        "id": "inventory-purchase-receipt-batch-and-partial-reversal",
-        "version": "planning-only-NOT_SPECIFIED_BY_PROVIDER-issue-267",
-        "source": "docs/inventory_management/03_design_spec.md",
-        "sha256": "2fb61cce8ee4ff9f32cd9c6d0e2a9fc8f87c08d34823be7fb622908610b1ac53",
+        "id": "inventory-purchase-provider",
+        "version": "1.0-candidate-NOT_IMPLEMENTED-issue-267",
+        "source": "docs/inventory_management/implementation/purchase-provider-contract-v1.md",
+        "sha256": "fb1c9c2705949150e77e943630e2cae90b410f4bd2f0022dff33ec728df19f72",
         "regression_suites": [
           "purchasing-technical"
         ]

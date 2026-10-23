@@ -1,0 +1,1734 @@
+diff --git a/docs/inventory_management/00_module_manifest.json b/docs/inventory_management/00_module_manifest.json
+index d1b50851..00dc2380 100644
+--- a/docs/inventory_management/00_module_manifest.json
++++ b/docs/inventory_management/00_module_manifest.json
+@@ -21,7 +21,8 @@
+       "server/test/integration/migrations.integration.test.js",
+       "server/test/integration/passwordChange.integration.test.js",
+       "server/test/integration/roleManagement.integration.test.js",
+-      "server/test/integration/userManagement.integration.test.js"
++      "server/test/integration/userManagement.integration.test.js",
++      "server/test-support/inventoryPurchaseFixtures.js"
+     ],
+     "allowed_write_paths": [
+       "docs/inventory_management/**",
+@@ -35,7 +36,8 @@
+       "server/test-support/inventoryFixtures.js",
+       "server/test/**/inventory*.test.js",
+       "client/test/**/inventory*.test.js",
+-      "client/e2e/inventory-management/**"
++      "client/e2e/inventory-management/**",
++      "server/test-support/inventoryPurchaseFixtures.js"
+     ],
+     "approval_required_paths": [
+       "server/database/migrations/**",
+@@ -93,22 +95,31 @@
+         "id": "inventory-domain-contract",
+         "version": "planning-v16; P3 fresh-main reserve-only fenced Sales Backorder owner contract; manual and P3 semantics preserved",
+         "source": "docs/inventory_management/03_design_spec.md",
+-        "sha256": "2fb61cce8ee4ff9f32cd9c6d0e2a9fc8f87c08d34823be7fb622908610b1ac53",
++        "sha256": "7ee4e5f4b897663e276a966959843417e2e787a8adb30bc47fdd7820d3196193",
+         "consumers": [
+           "purchasing-receiving",
+           "sales-order",
+           "fulfillment-shipping",
+           "returns"
+         ]
++      },
++      {
++        "id": "inventory-purchase-provider",
++        "version": "1.0-candidate",
++        "source": "docs/inventory_management/implementation/purchase-provider-contract-v1.md",
++        "sha256": "fb1c9c2705949150e77e943630e2cae90b410f4bd2f0022dff33ec728df19f72",
++        "consumers": [
++          "purchasing-receiving"
++        ]
+       }
+     ],
+     "consumed": [
+       {
+         "module_id": "item-management",
+         "id": "item-lookup-service",
+-        "version": "transaction-v1; fresh-main additive searchForSale consumed-source pin; existing Inventory methods unchanged",
++        "version": "transaction-v1; fresh-main findManyForCommittedReceipt; existing Inventory behavior preserved",
+         "source": "server/src/modules/item/ItemLookupService.js",
+-        "sha256": "30d6807978b27252fde194cc821c8fef5de000f27fa7eed404ed204abab2764a",
++        "sha256": "5ed3f26ff4271cc6bd533a417fd09fcde446f1682d662c3c465216e9ea08d558",
+         "regression_suites": [
+           "inventory-technical"
+         ]
+diff --git a/docs/inventory_management/00_project_profile.json b/docs/inventory_management/00_project_profile.json
+index ba9c28d2..51aff2fa 100644
+--- a/docs/inventory_management/00_project_profile.json
++++ b/docs/inventory_management/00_project_profile.json
+@@ -277,7 +277,9 @@
+         "TC-007",
+         "TC-008",
+         "TC-009",
+-        "TC-010"
++        "TC-010",
++        "TC-011",
++        "TC-012"
+       ],
+       "tool_probes": [
+         {
+@@ -1225,6 +1227,608 @@
+       "redaction_env_keys": [
+         "DB_PASSWORD"
+       ]
++    },
++    {
++      "id": "inventory-purchase-receipt-unit",
++      "kind": "UNIT",
++      "argv": [
++        "node",
++        "--test",
++        "--test-concurrency=1",
++        "--import",
++        "./server/test-support/testEnv.js",
++        "--test-reporter=junit",
++        "--test-reporter-destination={run_dir}/inventory-purchase-receipt-unit.xml",
++        "server/test/inventoryPurchaseReceipt.test.js",
++        "server/test/inventoryPurchaseContext.test.js"
++      ],
++      "cwd": ".",
++      "timeout_seconds": 600,
++      "result_adapter": "JUNIT",
++      "result_path": "inventory-purchase-receipt-unit.xml",
++      "min_tests": 24,
++      "max_skipped": 0,
++      "stages": [
++        "DEVELOPER"
++      ],
++      "required_case_ids": [],
++      "tool_probes": [
++        {
++          "argv": [
++            "node",
++            "--version"
++          ],
++          "version_pattern": "^v26\\."
++        }
++      ],
++      "side_effects": [
++        "FILES"
++      ],
++      "env_keys": [],
++      "redaction_env_keys": []
++    },
++    {
++      "id": "inventory-purchase-receipt-database",
++      "kind": "INTEGRATION",
++      "argv": [
++        "node",
++        "--test",
++        "--test-concurrency=1",
++        "--import",
++        "./server/test-support/testEnv.js",
++        "--test-reporter=junit",
++        "--test-reporter-destination={run_dir}/inventory-purchase-receipt-database.xml",
++        "server/test/integration/inventoryPurchaseReceipt.integration.test.js"
++      ],
++      "cwd": ".",
++      "timeout_seconds": 1200,
++      "result_adapter": "JUNIT",
++      "result_path": "inventory-purchase-receipt-database.xml",
++      "min_tests": 20,
++      "max_skipped": 0,
++      "stages": [
++        "DEVELOPER"
++      ],
++      "required_case_ids": [],
++      "tool_probes": [
++        {
++          "argv": [
++            "node",
++            "--version"
++          ],
++          "version_pattern": "^v26\\."
++        },
++        {
++          "argv": [
++            "mysql",
++            "--version"
++          ],
++          "version_pattern": "(?i)(mysql.*26\\.7\\.0|26\\.7\\.0.*mysql)"
++        }
++      ],
++      "side_effects": [
++        "FILES",
++        "ISOLATED_DATA"
++      ],
++      "env_keys": [
++        "DB_HOST",
++        "DB_PORT",
++        "DB_USER",
++        "DB_PASSWORD",
++        "DB_NAME",
++        "DB_SOCKET_PATH",
++        "DB_INTEGRATION_TESTS",
++        "INVENTORY_PURCHASE_TESTS",
++        "SUPPLIER_BANK_ACTIVE_KEY_ID",
++        "SUPPLIER_BANK_ENCRYPTION_KEYS",
++        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
++        "SUPPLIER_BANK_LOOKUP_KEYS",
++        "CUSTOMER_BANK_ACTIVE_KEY_ID",
++        "CUSTOMER_BANK_ENCRYPTION_KEYS",
++        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
++        "CUSTOMER_BANK_LOOKUP_KEYS"
++      ],
++      "redaction_env_keys": [
++        "DB_PASSWORD",
++        "SUPPLIER_BANK_ENCRYPTION_KEYS",
++        "SUPPLIER_BANK_LOOKUP_KEYS",
++        "CUSTOMER_BANK_ENCRYPTION_KEYS",
++        "CUSTOMER_BANK_LOOKUP_KEYS"
++      ]
++    },
++    {
++      "id": "inventory-purchase-receipt-auth",
++      "kind": "INTEGRATION",
++      "argv": [
++        "node",
++        "--test",
++        "--test-concurrency=1",
++        "--import",
++        "./server/test-support/testEnv.js",
++        "--test-reporter=junit",
++        "--test-reporter-destination={run_dir}/inventory-purchase-receipt-auth.xml",
++        "server/test/integration/inventoryPurchaseAuth.integration.test.js"
++      ],
++      "cwd": ".",
++      "timeout_seconds": 1200,
++      "result_adapter": "JUNIT",
++      "result_path": "inventory-purchase-receipt-auth.xml",
++      "min_tests": 8,
++      "max_skipped": 0,
++      "stages": [
++        "DEVELOPER"
++      ],
++      "required_case_ids": [],
++      "tool_probes": [
++        {
++          "argv": [
++            "node",
++            "--version"
++          ],
++          "version_pattern": "^v26\\."
++        },
++        {
++          "argv": [
++            "mysql",
++            "--version"
++          ],
++          "version_pattern": "(?i)(mysql.*26\\.7\\.0|26\\.7\\.0.*mysql)"
++        }
++      ],
++      "side_effects": [
++        "FILES",
++        "ISOLATED_DATA"
++      ],
++      "env_keys": [
++        "DB_HOST",
++        "DB_PORT",
++        "DB_USER",
++        "DB_PASSWORD",
++        "DB_NAME",
++        "DB_SOCKET_PATH",
++        "DB_INTEGRATION_TESTS",
++        "INVENTORY_PURCHASE_TESTS",
++        "SUPPLIER_BANK_ACTIVE_KEY_ID",
++        "SUPPLIER_BANK_ENCRYPTION_KEYS",
++        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
++        "SUPPLIER_BANK_LOOKUP_KEYS",
++        "CUSTOMER_BANK_ACTIVE_KEY_ID",
++        "CUSTOMER_BANK_ENCRYPTION_KEYS",
++        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
++        "CUSTOMER_BANK_LOOKUP_KEYS"
++      ],
++      "redaction_env_keys": [
++        "DB_PASSWORD",
++        "SUPPLIER_BANK_ENCRYPTION_KEYS",
++        "SUPPLIER_BANK_LOOKUP_KEYS",
++        "CUSTOMER_BANK_ENCRYPTION_KEYS",
++        "CUSTOMER_BANK_LOOKUP_KEYS"
++      ]
++    },
++    {
++      "id": "inventory-purchase-contract",
++      "kind": "UNIT",
++      "argv": [
++        "node",
++        "--test",
++        "--test-concurrency=1",
++        "--import",
++        "./server/test-support/testEnv.js",
++        "--test-reporter=junit",
++        "--test-reporter-destination={run_dir}/inventory-purchase-contract.xml",
++        "server/test/inventoryPurchaseContract.test.js"
++      ],
++      "cwd": ".",
++      "timeout_seconds": 600,
++      "result_adapter": "JUNIT",
++      "result_path": "inventory-purchase-contract.xml",
++      "min_tests": 8,
++      "max_skipped": 0,
++      "stages": [
++        "DEVELOPER"
++      ],
++      "required_case_ids": [],
++      "tool_probes": [
++        {
++          "argv": [
++            "node",
++            "--version"
++          ],
++          "version_pattern": "^v26\\."
++        }
++      ],
++      "side_effects": [
++        "FILES"
++      ],
++      "env_keys": [],
++      "redaction_env_keys": []
++    },
++    {
++      "id": "inventory-purchase-reversal-unit",
++      "kind": "UNIT",
++      "argv": [
++        "node",
++        "--test",
++        "--test-concurrency=1",
++        "--import",
++        "./server/test-support/testEnv.js",
++        "--test-reporter=junit",
++        "--test-reporter-destination={run_dir}/inventory-purchase-reversal-unit.xml",
++        "server/test/inventoryPurchaseReversal.test.js"
++      ],
++      "cwd": ".",
++      "timeout_seconds": 600,
++      "result_adapter": "JUNIT",
++      "result_path": "inventory-purchase-reversal-unit.xml",
++      "min_tests": 24,
++      "max_skipped": 0,
++      "stages": [
++        "DEVELOPER"
++      ],
++      "required_case_ids": [],
++      "tool_probes": [
++        {
++          "argv": [
++            "node",
++            "--version"
++          ],
++          "version_pattern": "^v26\\."
++        }
++      ],
++      "side_effects": [
++        "FILES"
++      ],
++      "env_keys": [],
++      "redaction_env_keys": []
++    },
++    {
++      "id": "inventory-purchase-reversal-database",
++      "kind": "INTEGRATION",
++      "argv": [
++        "node",
++        "--test",
++        "--test-concurrency=1",
++        "--import",
++        "./server/test-support/testEnv.js",
++        "--test-reporter=junit",
++        "--test-reporter-destination={run_dir}/inventory-purchase-reversal-database.xml",
++        "server/test/integration/inventoryPurchaseReversal.integration.test.js"
++      ],
++      "cwd": ".",
++      "timeout_seconds": 1200,
++      "result_adapter": "JUNIT",
++      "result_path": "inventory-purchase-reversal-database.xml",
++      "min_tests": 24,
++      "max_skipped": 0,
++      "stages": [
++        "DEVELOPER"
++      ],
++      "required_case_ids": [],
++      "tool_probes": [
++        {
++          "argv": [
++            "node",
++            "--version"
++          ],
++          "version_pattern": "^v26\\."
++        },
++        {
++          "argv": [
++            "mysql",
++            "--version"
++          ],
++          "version_pattern": "(?i)(mysql.*26\\.7\\.0|26\\.7\\.0.*mysql)"
++        }
++      ],
++      "side_effects": [
++        "FILES",
++        "ISOLATED_DATA"
++      ],
++      "env_keys": [
++        "DB_HOST",
++        "DB_PORT",
++        "DB_USER",
++        "DB_PASSWORD",
++        "DB_NAME",
++        "DB_SOCKET_PATH",
++        "DB_INTEGRATION_TESTS",
++        "INVENTORY_PURCHASE_TESTS",
++        "SUPPLIER_BANK_ACTIVE_KEY_ID",
++        "SUPPLIER_BANK_ENCRYPTION_KEYS",
++        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
++        "SUPPLIER_BANK_LOOKUP_KEYS",
++        "CUSTOMER_BANK_ACTIVE_KEY_ID",
++        "CUSTOMER_BANK_ENCRYPTION_KEYS",
++        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
++        "CUSTOMER_BANK_LOOKUP_KEYS"
++      ],
++      "redaction_env_keys": [
++        "DB_PASSWORD",
++        "SUPPLIER_BANK_ENCRYPTION_KEYS",
++        "SUPPLIER_BANK_LOOKUP_KEYS",
++        "CUSTOMER_BANK_ENCRYPTION_KEYS",
++        "CUSTOMER_BANK_LOOKUP_KEYS"
++      ]
++    },
++    {
++      "id": "inventory-purchase-reversal-auth",
++      "kind": "INTEGRATION",
++      "argv": [
++        "node",
++        "--test",
++        "--test-concurrency=1",
++        "--import",
++        "./server/test-support/testEnv.js",
++        "--test-reporter=junit",
++        "--test-reporter-destination={run_dir}/inventory-purchase-reversal-auth.xml",
++        "server/test/integration/inventoryPurchaseAuth.integration.test.js"
++      ],
++      "cwd": ".",
++      "timeout_seconds": 1200,
++      "result_adapter": "JUNIT",
++      "result_path": "inventory-purchase-reversal-auth.xml",
++      "min_tests": 12,
++      "max_skipped": 0,
++      "stages": [
++        "DEVELOPER"
++      ],
++      "required_case_ids": [],
++      "tool_probes": [
++        {
++          "argv": [
++            "node",
++            "--version"
++          ],
++          "version_pattern": "^v26\\."
++        },
++        {
++          "argv": [
++            "mysql",
++            "--version"
++          ],
++          "version_pattern": "(?i)(mysql.*26\\.7\\.0|26\\.7\\.0.*mysql)"
++        }
++      ],
++      "side_effects": [
++        "FILES",
++        "ISOLATED_DATA"
++      ],
++      "env_keys": [
++        "DB_HOST",
++        "DB_PORT",
++        "DB_USER",
++        "DB_PASSWORD",
++        "DB_NAME",
++        "DB_SOCKET_PATH",
++        "DB_INTEGRATION_TESTS",
++        "INVENTORY_PURCHASE_TESTS",
++        "SUPPLIER_BANK_ACTIVE_KEY_ID",
++        "SUPPLIER_BANK_ENCRYPTION_KEYS",
++        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
++        "SUPPLIER_BANK_LOOKUP_KEYS",
++        "CUSTOMER_BANK_ACTIVE_KEY_ID",
++        "CUSTOMER_BANK_ENCRYPTION_KEYS",
++        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
++        "CUSTOMER_BANK_LOOKUP_KEYS",
++        "INVENTORY_PURCHASE_REVERSAL_TESTS"
++      ],
++      "redaction_env_keys": [
++        "DB_PASSWORD",
++        "SUPPLIER_BANK_ENCRYPTION_KEYS",
++        "SUPPLIER_BANK_LOOKUP_KEYS",
++        "CUSTOMER_BANK_ENCRYPTION_KEYS",
++        "CUSTOMER_BANK_LOOKUP_KEYS"
++      ]
++    },
++    {
++      "id": "inventory-purchase-existing-receipt",
++      "kind": "INTEGRATION",
++      "argv": [
++        "node",
++        "--test",
++        "--test-concurrency=1",
++        "--import",
++        "./server/test-support/testEnv.js",
++        "--test-reporter=junit",
++        "--test-reporter-destination={run_dir}/inventory-purchase-existing-receipt.xml",
++        "server/test/integration/inventoryPosting.integration.test.js"
++      ],
++      "cwd": ".",
++      "timeout_seconds": 1200,
++      "result_adapter": "JUNIT",
++      "result_path": "inventory-purchase-existing-receipt.xml",
++      "min_tests": 1,
++      "max_skipped": 0,
++      "stages": [
++        "DEVELOPER"
++      ],
++      "required_case_ids": [],
++      "tool_probes": [
++        {
++          "argv": [
++            "node",
++            "--version"
++          ],
++          "version_pattern": "^v26\\."
++        },
++        {
++          "argv": [
++            "mysql",
++            "--version"
++          ],
++          "version_pattern": "(?i)(mysql.*26\\.7\\.0|26\\.7\\.0.*mysql)"
++        }
++      ],
++      "side_effects": [
++        "FILES",
++        "ISOLATED_DATA"
++      ],
++      "env_keys": [
++        "DB_HOST",
++        "DB_PORT",
++        "DB_USER",
++        "DB_PASSWORD",
++        "DB_NAME",
++        "DB_SOCKET_PATH",
++        "DB_INTEGRATION_TESTS",
++        "INVENTORY_PURCHASE_TESTS",
++        "SUPPLIER_BANK_ACTIVE_KEY_ID",
++        "SUPPLIER_BANK_ENCRYPTION_KEYS",
++        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
++        "SUPPLIER_BANK_LOOKUP_KEYS",
++        "CUSTOMER_BANK_ACTIVE_KEY_ID",
++        "CUSTOMER_BANK_ENCRYPTION_KEYS",
++        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
++        "CUSTOMER_BANK_LOOKUP_KEYS",
++        "INVENTORY_POSTING_TESTS"
++      ],
++      "redaction_env_keys": [
++        "DB_PASSWORD",
++        "SUPPLIER_BANK_ENCRYPTION_KEYS",
++        "SUPPLIER_BANK_LOOKUP_KEYS",
++        "CUSTOMER_BANK_ENCRYPTION_KEYS",
++        "CUSTOMER_BANK_LOOKUP_KEYS"
++      ]
++    },
++    {
++      "id": "inventory-purchase-existing-reservation",
++      "kind": "INTEGRATION",
++      "argv": [
++        "node",
++        "--test",
++        "--test-concurrency=1",
++        "--import",
++        "./server/test-support/testEnv.js",
++        "--test-reporter=junit",
++        "--test-reporter-destination={run_dir}/inventory-purchase-existing-reservation.xml",
++        "server/test/integration/inventoryReservation.integration.test.js"
++      ],
++      "cwd": ".",
++      "timeout_seconds": 1200,
++      "result_adapter": "JUNIT",
++      "result_path": "inventory-purchase-existing-reservation.xml",
++      "min_tests": 1,
++      "max_skipped": 0,
++      "stages": [
++        "DEVELOPER"
++      ],
++      "required_case_ids": [],
++      "tool_probes": [
++        {
++          "argv": [
++            "node",
++            "--version"
++          ],
++          "version_pattern": "^v26\\."
++        },
++        {
++          "argv": [
++            "mysql",
++            "--version"
++          ],
++          "version_pattern": "(?i)(mysql.*26\\.7\\.0|26\\.7\\.0.*mysql)"
++        }
++      ],
++      "side_effects": [
++        "FILES",
++        "ISOLATED_DATA"
++      ],
++      "env_keys": [
++        "DB_HOST",
++        "DB_PORT",
++        "DB_USER",
++        "DB_PASSWORD",
++        "DB_NAME",
++        "DB_SOCKET_PATH",
++        "DB_INTEGRATION_TESTS",
++        "INVENTORY_PURCHASE_TESTS",
++        "SUPPLIER_BANK_ACTIVE_KEY_ID",
++        "SUPPLIER_BANK_ENCRYPTION_KEYS",
++        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
++        "SUPPLIER_BANK_LOOKUP_KEYS",
++        "CUSTOMER_BANK_ACTIVE_KEY_ID",
++        "CUSTOMER_BANK_ENCRYPTION_KEYS",
++        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
++        "CUSTOMER_BANK_LOOKUP_KEYS",
++        "INVENTORY_RESERVATION_TESTS"
++      ],
++      "redaction_env_keys": [
++        "DB_PASSWORD",
++        "SUPPLIER_BANK_ENCRYPTION_KEYS",
++        "SUPPLIER_BANK_LOOKUP_KEYS",
++        "CUSTOMER_BANK_ENCRYPTION_KEYS",
++        "CUSTOMER_BANK_LOOKUP_KEYS"
++      ]
++    },
++    {
++      "id": "inventory-purchase-existing-lock",
++      "kind": "INTEGRATION",
++      "argv": [
++        "node",
++        "--test",
++        "--test-concurrency=1",
++        "--import",
++        "./server/test-support/testEnv.js",
++        "--test-reporter=junit",
++        "--test-reporter-destination={run_dir}/inventory-purchase-existing-lock.xml",
++        "server/test/integration/inventoryLockService.integration.test.js"
++      ],
++      "cwd": ".",
++      "timeout_seconds": 1200,
++      "result_adapter": "JUNIT",
++      "result_path": "inventory-purchase-existing-lock.xml",
++      "min_tests": 1,
++      "max_skipped": 0,
++      "stages": [
++        "DEVELOPER"
++      ],
++      "required_case_ids": [],
++      "tool_probes": [
++        {
++          "argv": [
++            "node",
++            "--version"
++          ],
++          "version_pattern": "^v26\\."
++        },
++        {
++          "argv": [
++            "mysql",
++            "--version"
++          ],
++          "version_pattern": "(?i)(mysql.*26\\.7\\.0|26\\.7\\.0.*mysql)"
++        }
++      ],
++      "side_effects": [
++        "FILES",
++        "ISOLATED_DATA"
++      ],
++      "env_keys": [
++        "DB_HOST",
++        "DB_PORT",
++        "DB_USER",
++        "DB_PASSWORD",
++        "DB_NAME",
++        "DB_SOCKET_PATH",
++        "DB_INTEGRATION_TESTS",
++        "INVENTORY_PURCHASE_TESTS",
++        "SUPPLIER_BANK_ACTIVE_KEY_ID",
++        "SUPPLIER_BANK_ENCRYPTION_KEYS",
++        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
++        "SUPPLIER_BANK_LOOKUP_KEYS",
++        "CUSTOMER_BANK_ACTIVE_KEY_ID",
++        "CUSTOMER_BANK_ENCRYPTION_KEYS",
++        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
++        "CUSTOMER_BANK_LOOKUP_KEYS",
++        "INVENTORY_LOCK_SMOKE_TESTS"
++      ],
++      "redaction_env_keys": [
++        "DB_PASSWORD",
++        "SUPPLIER_BANK_ENCRYPTION_KEYS",
++        "SUPPLIER_BANK_LOOKUP_KEYS",
++        "CUSTOMER_BANK_ENCRYPTION_KEYS",
++        "CUSTOMER_BANK_LOOKUP_KEYS"
++      ]
+     }
+   ],
+   "ci": {
+diff --git a/docs/inventory_management/03_design_spec.md b/docs/inventory_management/03_design_spec.md
+index e6c168bd..008b6301 100644
+--- a/docs/inventory_management/03_design_spec.md
++++ b/docs/inventory_management/03_design_spec.md
+@@ -2074,3 +2074,25 @@ Inventory quantity and audit are high-risk shared data requiring least privilege
+ 
+ ### Failure behavior
+ Authentication, authorization, concurrency, performance, retention or recovery failures block the affected command or release gate.
++
++## DES-011 — Purchasing batch receipt provider
++
++### Decision
++PROPOSED，待Sam精確候選批准。正式ABI、可信context、transaction與來源結果協定定義於 [provider v1](implementation/purchase-provider-contract-v1.md) §1–3、5–6；以manifest另行pin該權威addendum。只供Purchasing已鎖定Confirmed PO的批次接入。
++
++### Rationale
++整批claims及全域鎖序避免逐行單筆posting的跨明細死鎖／部分效果；分開交易意圖hash與可持久重建的membershipDigest。獨立PHASE007，不以P4完整容量或P5為前置。
++
++### Failure behavior
++任一驗證／DB／Audit／caller故障整批rollback，未知commit保留原event查詢；NOT_FOUND不是失敗或另建event的證明。舊入口語義保持。
++
++## DES-012 — Purchasing partial reversal provider
++
++### Decision
++PROPOSED，待Sam精確候選批准。[provider v1](implementation/purchase-provider-contract-v1.md) §2–6定義專用partial reversal及link migration；保留舊generic reversal unique，不遷移歷史來源。
++
++### Rationale
++原Movement鎖序列化累計反向；獨立append-only link同交易留存原量關聯。PHASE008只依賴已合併PHASE007。
++
++### Failure behavior
++超額、allocated／Reserved不足、來源或認證錯誤全rollback。新purchase來源不能fallback generic，舊generic一次完整反向不變。
+diff --git a/docs/inventory_management/05_development_tasks.md b/docs/inventory_management/05_development_tasks.md
+index 20fb1ca8..0409823b 100644
+--- a/docs/inventory_management/05_development_tasks.md
++++ b/docs/inventory_management/05_development_tasks.md
+@@ -2616,3 +2616,82 @@ New runs use the generic runner's actual private `evidence/<run-id>` paths, nati
+ Only after actual human adoption and scoped implementation authority: preserve the dirty P3 work in a local savepoint, integrate freshly checked main in the dedicated worktree, apply only the reviewed resolutions/rebinding, run the new-baseline developer cycle, then commit/push and open the single P3 PR under publication authority. A preparatory savepoint is not a verified publication candidate. Classify exportable evidence and exclude secrets/raw credential captures before staging.
+ 
+ The exact final candidate needs all five mandatory CI checks and independent Sam source review, plus generic MERGE_READY and an unchanged/reconciled main target. Candidate or target changes invalidate dependent evidence/review; do not infer final-head approval from adoption of this proposal. Final merge requires separate exact-head Sam approval. Clean the owned runtime, merged branch and worktree only after observable successful merge and dependency checks. No P4 implementation, formal Technical/UAT/business acceptance or deployment is included.
++
++# Purchasing provider independent delivery — PROPOSED
++
++本增量不關閉TASK041／TASK048／P4／P5；詳細案例與範圍見 [provider plan](implementation/purchase-provider-plan-v1.md)。
++詳細計劃內容 SHA256：`d7106522cba405482c9e93bd662b196f7bd36e594220f7b72825255111978b8d`；此pin將案例與精確執行說明綁定本PLAN，不能只改addendum而沿用批准。
++
++## PHASE-007 — Purchasing receipt
++
++### Outcome
++交付provider v1的receipt，保持caller原子交易。
++
++### Entry criteria
++精確DESIGN／PLAN獲Sam批准；以最新main建立獨立worktree。
++
++### Acceptance criteria
++[詳細計劃](implementation/purchase-provider-plan-v1.md)中TASK-052全部必需案例實際通過、零skip；原資料量／期限／最低權限不放寬。
++
++### Integration and regression
++08_traceability.json的本phase developer_suites、當前CI及相關transaction／rollback／200行回歸必需；P4未合併能力聯合驗證另追蹤，不以fixture偽稱完成。
++
++### Git and merge plan
++DEFAULT分支，PR-A；Sam精確來源審閱、實際獨立review、當前CI及最新main整合檢查通過後，依既有授權合併並精確清理已合併branch/worktree。
++
++### Rollback
++關閉新consumer寫入，保留持久Operation／Movement／Audit及原結果查詢；不drop歷史資料或fallback generic。
++
++### Exit criteria
++實際merge SHA、ABI／migration／證據交接。未有consumer真實接入測試前不宣稱Purchasing已解鎖；不等於正式TC/UAT或部署。
++
++## TASK-052 — Purchasing receipt implementation
++
++### Goal
++實作provider v1精確範圍，不引入P4依賴。
++
++### Approach
++確定性TDD→最小真MySQL／auth→完整200行／並發→最終gate；每次先記影響與重驗理由。
++
++### Acceptance criteria
++[詳細計劃](implementation/purchase-provider-plan-v1.md)的TASK-052條件及profile精確suite全部成立，任何缺證保留NOT_RUN／FAIL。
++
++### Definition of Done
++實際來源審閱、專用測試零skip、原coverage／CI／回歸通過、合併與consumer交接可追溯。正式TC/UAT另行執行。
++
++## PHASE-008 — Purchasing partial reversal
++
++### Outcome
++交付provider v1的partial reversal，保持caller原子交易。
++
++### Entry criteria
++精確DESIGN／PLAN獲Sam批准；PHASE007已合併，再從最新main建立獨立worktree。
++
++### Acceptance criteria
++[詳細計劃](implementation/purchase-provider-plan-v1.md)中TASK-053全部必需案例實際通過、零skip；原資料量／期限／最低權限不放寬。
++
++### Integration and regression
++08_traceability.json的本phase developer_suites、當前CI及相關transaction／rollback／200行回歸必需；P4未合併能力聯合驗證另追蹤，不以fixture偽稱完成。
++
++### Git and merge plan
++DEFAULT分支，PR-B依賴已合併A；Sam精確來源審閱、實際獨立review、當前CI及最新main整合檢查通過後，依既有授權合併並精確清理已合併branch/worktree。
++
++### Rollback
++關閉新consumer寫入，保留持久Operation／Movement／Audit／links及原結果查詢；不drop歷史資料或fallback generic。
++
++### Exit criteria
++實際merge SHA、ABI／migration／證據交接。未有consumer真實接入測試前不宣稱Purchasing已解鎖；不等於正式TC/UAT或部署。
++
++## TASK-053 — Purchasing partial reversal implementation
++
++### Goal
++實作provider v1精確範圍，不引入P4依賴。
++
++### Approach
++確定性TDD→最小真MySQL／auth→完整200行／並發→最終gate；每次先記影響與重驗理由。
++
++### Acceptance criteria
++[詳細計劃](implementation/purchase-provider-plan-v1.md)的TASK-053條件及profile精確suite全部成立，任何缺證保留NOT_RUN／FAIL。
++
++### Definition of Done
++實際來源審閱、專用測試零skip、原coverage／CI／回歸通過、合併與consumer交接可追溯。正式TC/UAT另行執行。
+diff --git a/docs/inventory_management/06_technical_test_cases.md b/docs/inventory_management/06_technical_test_cases.md
+index d5375c74..d00d57d4 100644
+--- a/docs/inventory_management/06_technical_test_cases.md
++++ b/docs/inventory_management/06_technical_test_cases.md
+@@ -313,3 +313,37 @@ Supplement the existing TC-001/004/007 design/security coverage without renumber
+ | Capacity | Complete existing Customer10k and Core100k/500k/2M wrapper assertions with exact budgets, concurrency/EXPLAIN/rollback and native measured output; no shortened fixture. |
+ 
+ Native worker/Confirmation/Backorder tests are supporting consumer evidence, not definitions of Inventory TC-022/031 or business acceptance. All current-source guarded skips require matching independently executed non-skip evidence. Schema, runtime or parsing problems stay BLOCKED; they are not converted to PASS by this appendix.
++
++## TC-011 — Purchase receipt provider
++
++### Preconditions and data
++APPLICABLE／mandatory／blocking；正式驗收尚NOT_RUN。使用合成Confirmed PO、1／200 GR details、跨倉多Bucket及真MySQL26.7；部署來源必須不可變、實際auth可用。
++
++### Steps
++依[驗證計劃](implementation/purchase-provider-plan-v1.md) TASK-052的逐項場景執行，完整檢查claim、lock、Movement／Audit、caller projections、replay及失敗rollback。
++
++### Expected result
++整批全有或全無；結果逐detail一一對應；並發不超量、最低權限及generic舊語義保持。
++
++### Acceptance criteria
++計劃所有適用案例與現有相關回歸通過；真實零skip；developer suite結果不能直接冒充正式TC/UAT。ledger suite_id沿用inventory-technical，正式執行前仍需精確驗收adapter readiness，不能以全庫placeholder宣稱此TC通過。
++
++### Cleanup
++僅精確清理本次owned schema／daemon／port／目錄，保留失敗與原始證據；未知SQL terminal不得稱正常清理。
++
++## TC-012 — Purchase partial reversal provider
++
++### Preconditions and data
++APPLICABLE／mandatory／blocking；正式驗收尚NOT_RUN。使用合成Confirmed PO、1／200 GR details、跨倉多Bucket及真MySQL26.7；部署來源必須不可變、實際auth可用。
++
++### Steps
++依[驗證計劃](implementation/purchase-provider-plan-v1.md) TASK-053的逐項場景執行，完整檢查claim、lock、Movement／Audit／links、caller projections、replay及失敗rollback。
++
++### Expected result
++整批全有或全無；結果逐detail一一對應；並發不超量、最低權限及generic舊語義保持。
++
++### Acceptance criteria
++計劃所有適用案例與現有相關回歸通過；真實零skip；developer suite結果不能直接冒充正式TC/UAT。ledger suite_id沿用inventory-technical，正式執行前仍需精確驗收adapter readiness，不能以全庫placeholder宣稱此TC通過。
++
++### Cleanup
++僅精確清理本次owned schema／daemon／port／目錄，保留失敗與原始證據；未知SQL terminal不得稱正常清理。
+diff --git a/docs/inventory_management/08_traceability.json b/docs/inventory_management/08_traceability.json
+index 12cafde7..853e58d0 100644
+--- a/docs/inventory_management/08_traceability.json
++++ b/docs/inventory_management/08_traceability.json
+@@ -1430,6 +1430,54 @@
+         "NFR-013",
+         "NFR-014"
+       ]
++    },
++    {
++      "id": "DES-011",
++      "requirement_ids": [
++        "FR-031",
++        "FR-032",
++        "FR-033",
++        "FR-035",
++        "FR-037",
++        "FR-038",
++        "FR-039",
++        "FR-040",
++        "FR-041",
++        "FR-042",
++        "NFR-006",
++        "NFR-007",
++        "NFR-008",
++        "NFR-009",
++        "SEC-007",
++        "SEC-008",
++        "SEC-009",
++        "SEC-010",
++        "SEC-013"
++      ]
++    },
++    {
++      "id": "DES-012",
++      "requirement_ids": [
++        "FR-031",
++        "FR-032",
++        "FR-033",
++        "FR-035",
++        "FR-037",
++        "FR-038",
++        "FR-039",
++        "FR-040",
++        "FR-041",
++        "FR-042",
++        "NFR-006",
++        "NFR-007",
++        "NFR-008",
++        "NFR-009",
++        "SEC-007",
++        "SEC-008",
++        "SEC-009",
++        "SEC-010",
++        "SEC-013"
++      ]
+     }
+   ],
+   "phases": [
+@@ -2111,6 +2159,131 @@
+         "client-build",
+         "inventory-technical"
+       ]
++    },
++    {
++      "id": "PHASE-007",
++      "requirement_ids": [
++        "FR-031",
++        "FR-032",
++        "FR-033",
++        "FR-035",
++        "FR-037",
++        "FR-038",
++        "FR-039",
++        "FR-040",
++        "FR-041",
++        "FR-042",
++        "NFR-006",
++        "NFR-007",
++        "NFR-008",
++        "NFR-009",
++        "SEC-007",
++        "SEC-008",
++        "SEC-009",
++        "SEC-010",
++        "SEC-013"
++      ],
++      "design_ids": [
++        "DES-011"
++      ],
++      "task_ids": [
++        "TASK-052"
++      ],
++      "depends_on": [
++        "PHASE-004"
++      ],
++      "branch_strategy": "DEFAULT",
++      "parent_commit": null,
++      "exception_approval_id": null,
++      "merge_group": "inventory-purchase-receipt",
++      "developer_suites": [
++        "lint",
++        "client-build",
++        "inventory-developer",
++        "inventory-p2-database",
++        "inventory-p2-api",
++        "inventory-p3-movement-database",
++        "inventory-p3-transfer-database",
++        "inventory-p3-api",
++        "inventory-p3-server-coverage",
++        "inventory-p3-coverage-floors",
++        "inventory-p3-client-coverage",
++        "inventory-p3-dependency-audit",
++        "inventory-p3-browser",
++        "inventory-p3-browser-regression",
++        "inventory-p3-sales-compatibility",
++        "inventory-purchase-existing-receipt",
++        "inventory-purchase-existing-reservation",
++        "inventory-purchase-existing-lock",
++        "inventory-purchase-receipt-unit",
++        "inventory-purchase-receipt-database",
++        "inventory-purchase-receipt-auth",
++        "inventory-purchase-contract"
++      ]
++    },
++    {
++      "id": "PHASE-008",
++      "requirement_ids": [
++        "FR-031",
++        "FR-032",
++        "FR-033",
++        "FR-035",
++        "FR-037",
++        "FR-038",
++        "FR-039",
++        "FR-040",
++        "FR-041",
++        "FR-042",
++        "NFR-006",
++        "NFR-007",
++        "NFR-008",
++        "NFR-009",
++        "SEC-007",
++        "SEC-008",
++        "SEC-009",
++        "SEC-010",
++        "SEC-013"
++      ],
++      "design_ids": [
++        "DES-012"
++      ],
++      "task_ids": [
++        "TASK-053"
++      ],
++      "depends_on": [
++        "PHASE-007"
++      ],
++      "branch_strategy": "DEFAULT",
++      "parent_commit": null,
++      "exception_approval_id": null,
++      "merge_group": "inventory-purchase-reversal",
++      "developer_suites": [
++        "lint",
++        "client-build",
++        "inventory-developer",
++        "inventory-p2-database",
++        "inventory-p2-api",
++        "inventory-p3-movement-database",
++        "inventory-p3-transfer-database",
++        "inventory-p3-api",
++        "inventory-p3-server-coverage",
++        "inventory-p3-coverage-floors",
++        "inventory-p3-client-coverage",
++        "inventory-p3-dependency-audit",
++        "inventory-p3-browser",
++        "inventory-p3-browser-regression",
++        "inventory-p3-sales-compatibility",
++        "inventory-purchase-existing-receipt",
++        "inventory-purchase-existing-reservation",
++        "inventory-purchase-existing-lock",
++        "inventory-purchase-receipt-unit",
++        "inventory-purchase-receipt-database",
++        "inventory-purchase-receipt-auth",
++        "inventory-purchase-contract",
++        "inventory-purchase-reversal-unit",
++        "inventory-purchase-reversal-database",
++        "inventory-purchase-reversal-auth"
++      ]
+     }
+   ],
+   "tasks": [
+@@ -3744,6 +3917,72 @@
+         "TC-009",
+         "TC-010"
+       ]
++    },
++    {
++      "id": "TASK-052",
++      "phase_id": "PHASE-007",
++      "requirement_ids": [
++        "FR-031",
++        "FR-032",
++        "FR-033",
++        "FR-035",
++        "FR-037",
++        "FR-038",
++        "FR-039",
++        "FR-040",
++        "FR-041",
++        "FR-042",
++        "NFR-006",
++        "NFR-007",
++        "NFR-008",
++        "NFR-009",
++        "SEC-007",
++        "SEC-008",
++        "SEC-009",
++        "SEC-010",
++        "SEC-013"
++      ],
++      "design_ids": [
++        "DES-011"
++      ],
++      "depends_on": [],
++      "technical_test_ids": [
++        "TC-011"
++      ]
++    },
++    {
++      "id": "TASK-053",
++      "phase_id": "PHASE-008",
++      "requirement_ids": [
++        "FR-031",
++        "FR-032",
++        "FR-033",
++        "FR-035",
++        "FR-037",
++        "FR-038",
++        "FR-039",
++        "FR-040",
++        "FR-041",
++        "FR-042",
++        "NFR-006",
++        "NFR-007",
++        "NFR-008",
++        "NFR-009",
++        "SEC-007",
++        "SEC-008",
++        "SEC-009",
++        "SEC-010",
++        "SEC-013"
++      ],
++      "design_ids": [
++        "DES-012"
++      ],
++      "depends_on": [
++        "TASK-052"
++      ],
++      "technical_test_ids": [
++        "TC-012"
++      ]
+     }
+   ],
+   "technical_tests": [
+@@ -4166,6 +4405,82 @@
+         "approval_id": null
+       },
+       "suite_id": "inventory-technical"
++    },
++    {
++      "id": "TC-011",
++      "requirement_ids": [
++        "FR-031",
++        "FR-032",
++        "FR-033",
++        "FR-035",
++        "FR-037",
++        "FR-038",
++        "FR-039",
++        "FR-040",
++        "FR-041",
++        "FR-042",
++        "NFR-006",
++        "NFR-007",
++        "NFR-008",
++        "NFR-009",
++        "SEC-007",
++        "SEC-008",
++        "SEC-009",
++        "SEC-010",
++        "SEC-013"
++      ],
++      "design_ids": [
++        "DES-011"
++      ],
++      "task_ids": [
++        "TASK-052"
++      ],
++      "mandatory": true,
++      "blocking": true,
++      "applicability": {
++        "status": "APPLICABLE",
++        "reason": "",
++        "approval_id": null
++      },
++      "suite_id": "inventory-technical"
++    },
++    {
++      "id": "TC-012",
++      "requirement_ids": [
++        "FR-031",
++        "FR-032",
++        "FR-033",
++        "FR-035",
++        "FR-037",
++        "FR-038",
++        "FR-039",
++        "FR-040",
++        "FR-041",
++        "FR-042",
++        "NFR-006",
++        "NFR-007",
++        "NFR-008",
++        "NFR-009",
++        "SEC-007",
++        "SEC-008",
++        "SEC-009",
++        "SEC-010",
++        "SEC-013"
++      ],
++      "design_ids": [
++        "DES-012"
++      ],
++      "task_ids": [
++        "TASK-053"
++      ],
++      "mandatory": true,
++      "blocking": true,
++      "applicability": {
++        "status": "APPLICABLE",
++        "reason": "",
++        "approval_id": null
++      },
++      "suite_id": "inventory-technical"
+     }
+   ],
+   "uat_tests": [
+@@ -4202,7 +4517,9 @@
+         "NFR-014"
+       ],
+       "technical_test_ids": [
+-        "TC-001"
++        "TC-001",
++        "TC-011",
++        "TC-012"
+       ],
+       "mandatory": true,
+       "blocking": true,
+@@ -4285,7 +4602,9 @@
+         "SEC-007"
+       ],
+       "technical_test_ids": [
+-        "TC-001"
++        "TC-001",
++        "TC-011",
++        "TC-012"
+       ],
+       "mandatory": true,
+       "blocking": true,
+@@ -4304,7 +4623,9 @@
+         "SEC-013"
+       ],
+       "technical_test_ids": [
+-        "TC-001"
++        "TC-001",
++        "TC-011",
++        "TC-012"
+       ],
+       "mandatory": true,
+       "blocking": true,
+@@ -4345,7 +4666,9 @@
+         "SEC-011"
+       ],
+       "technical_test_ids": [
+-        "TC-001"
++        "TC-001",
++        "TC-011",
++        "TC-012"
+       ],
+       "mandatory": true,
+       "blocking": true,
+@@ -4830,7 +5153,9 @@
+         "FR-125"
+       ],
+       "technical_test_ids": [
+-        "TC-004"
++        "TC-004",
++        "TC-011",
++        "TC-012"
+       ],
+       "mandatory": true,
+       "blocking": true,
+@@ -4889,7 +5214,9 @@
+         "FR-032"
+       ],
+       "technical_test_ids": [
+-        "TC-004"
++        "TC-004",
++        "TC-011",
++        "TC-012"
+       ],
+       "mandatory": true,
+       "blocking": true,
+@@ -4927,7 +5254,9 @@
+         "FR-035"
+       ],
+       "technical_test_ids": [
+-        "TC-004"
++        "TC-004",
++        "TC-011",
++        "TC-012"
+       ],
+       "mandatory": true,
+       "blocking": true,
+@@ -4946,7 +5275,9 @@
+         "FR-039"
+       ],
+       "technical_test_ids": [
+-        "TC-004"
++        "TC-004",
++        "TC-011",
++        "TC-012"
+       ],
+       "mandatory": true,
+       "blocking": true,
+@@ -4965,7 +5296,9 @@
+         "FR-037"
+       ],
+       "technical_test_ids": [
+-        "TC-004"
++        "TC-004",
++        "TC-011",
++        "TC-012"
+       ],
+       "mandatory": true,
+       "blocking": true,
+@@ -4984,7 +5317,9 @@
+         "FR-038"
+       ],
+       "technical_test_ids": [
+-        "TC-004"
++        "TC-004",
++        "TC-011",
++        "TC-012"
+       ],
+       "mandatory": true,
+       "blocking": true,
+@@ -5041,7 +5376,9 @@
+         "NFR-009"
+       ],
+       "technical_test_ids": [
+-        "TC-001"
++        "TC-001",
++        "TC-011",
++        "TC-012"
+       ],
+       "mandatory": true,
+       "blocking": true,
+@@ -5060,7 +5397,9 @@
+         "NFR-006"
+       ],
+       "technical_test_ids": [
+-        "TC-001"
++        "TC-001",
++        "TC-011",
++        "TC-012"
+       ],
+       "mandatory": true,
+       "blocking": true,
+@@ -6214,7 +6553,9 @@
+         "NFR-009"
+       ],
+       "technical_test_ids": [
+-        "TC-001"
++        "TC-001",
++        "TC-011",
++        "TC-012"
+       ],
+       "mandatory": true,
+       "blocking": true,
+@@ -6340,7 +6681,9 @@
+       ],
+       "technical_test_ids": [
+         "TC-001",
+-        "TC-010"
++        "TC-010",
++        "TC-011",
++        "TC-012"
+       ],
+       "mandatory": true,
+       "blocking": true,
+@@ -6456,7 +6799,9 @@
+         "NFR-009"
+       ],
+       "technical_test_ids": [
+-        "TC-001"
++        "TC-001",
++        "TC-011",
++        "TC-012"
+       ],
+       "mandatory": true,
+       "blocking": true,
+diff --git a/docs/inventory_management/08_traceability_matrix.md b/docs/inventory_management/08_traceability_matrix.md
+index 70fb0829..2222341f 100644
+--- a/docs/inventory_management/08_traceability_matrix.md
++++ b/docs/inventory_management/08_traceability_matrix.md
+@@ -36,18 +36,18 @@ This is a structural planning view, not execution evidence or approval.
+ | FR-028 | DES-002 | PHASE-001, PHASE-002, PHASE-006 | TASK-004, TASK-013, TASK-051 | TC-003 | UAT-019 | APPLICABLE |
+ | FR-029 | DES-002 | PHASE-001, PHASE-002, PHASE-006 | TASK-004, TASK-013, TASK-051 | TC-003 | UAT-019, UAT-028 | APPLICABLE |
+ | FR-030 | DES-002 | PHASE-002, PHASE-006 | TASK-013, TASK-016, TASK-051 | TC-003 | UAT-019 | APPLICABLE |
+-| FR-031 | DES-003 | PHASE-001, PHASE-002, PHASE-003, PHASE-006 | TASK-001, TASK-014, TASK-015, TASK-019, TASK-048, TASK-051 | TC-004 | UAT-031 | APPLICABLE |
+-| FR-032 | DES-003 | PHASE-001, PHASE-002, PHASE-003, PHASE-006 | TASK-001, TASK-014, TASK-015, TASK-019, TASK-048, TASK-051 | TC-004 | UAT-031, UAT-034 | APPLICABLE |
+-| FR-033 | DES-003 | PHASE-001, PHASE-002, PHASE-003, PHASE-006 | TASK-006, TASK-012, TASK-014, TASK-015, TASK-019, TASK-048, TASK-051 | TC-004 | UAT-031 | APPLICABLE |
++| FR-031 | DES-003, DES-011, DES-012 | PHASE-001, PHASE-002, PHASE-003, PHASE-006, PHASE-007, PHASE-008 | TASK-001, TASK-014, TASK-015, TASK-019, TASK-048, TASK-051, TASK-052, TASK-053 | TC-004, TC-011, TC-012 | UAT-031 | APPLICABLE |
++| FR-032 | DES-003, DES-011, DES-012 | PHASE-001, PHASE-002, PHASE-003, PHASE-006, PHASE-007, PHASE-008 | TASK-001, TASK-014, TASK-015, TASK-019, TASK-048, TASK-051, TASK-052, TASK-053 | TC-004, TC-011, TC-012 | UAT-031, UAT-034 | APPLICABLE |
++| FR-033 | DES-003, DES-011, DES-012 | PHASE-001, PHASE-002, PHASE-003, PHASE-006, PHASE-007, PHASE-008 | TASK-006, TASK-012, TASK-014, TASK-015, TASK-019, TASK-048, TASK-051, TASK-052, TASK-053 | TC-004, TC-011, TC-012 | UAT-031 | APPLICABLE |
+ | FR-034 | DES-003 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-006 | TASK-006, TASK-012, TASK-014, TASK-015, TASK-022, TASK-034, TASK-048, TASK-051 | TC-004 | UAT-031, UAT-040, UAT-041 | APPLICABLE |
+-| FR-035 | DES-003 | PHASE-001, PHASE-002, PHASE-003, PHASE-006 | TASK-006, TASK-012, TASK-014, TASK-015, TASK-019, TASK-048, TASK-051 | TC-004 | UAT-031, UAT-036 | APPLICABLE |
++| FR-035 | DES-003, DES-011, DES-012 | PHASE-001, PHASE-002, PHASE-003, PHASE-006, PHASE-007, PHASE-008 | TASK-006, TASK-012, TASK-014, TASK-015, TASK-019, TASK-048, TASK-051, TASK-052, TASK-053 | TC-004, TC-011, TC-012 | UAT-031, UAT-036 | APPLICABLE |
+ | FR-036 | DES-003 | PHASE-001, PHASE-002, PHASE-003, PHASE-006 | TASK-006, TASK-012, TASK-014, TASK-015, TASK-019, TASK-048, TASK-051 | TC-004 | UAT-031 | APPLICABLE |
+-| FR-037 | DES-003 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-006 | TASK-002, TASK-006, TASK-012, TASK-014, TASK-015, TASK-019, TASK-034, TASK-048, TASK-051 | TC-004 | UAT-031, UAT-038 | APPLICABLE |
+-| FR-038 | DES-003 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-006 | TASK-002, TASK-006, TASK-012, TASK-014, TASK-015, TASK-019, TASK-034, TASK-048, TASK-051 | TC-004 | UAT-031, UAT-039 | APPLICABLE |
+-| FR-039 | DES-003 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-006 | TASK-006, TASK-012, TASK-014, TASK-015, TASK-019, TASK-034, TASK-048, TASK-051 | TC-004 | UAT-031, UAT-037 | APPLICABLE |
+-| FR-040 | DES-003 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-006 | TASK-001, TASK-012, TASK-014, TASK-019, TASK-034, TASK-048, TASK-051 | TC-004 | UAT-031 | APPLICABLE |
+-| FR-041 | DES-003 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-006 | TASK-001, TASK-012, TASK-019, TASK-032, TASK-034, TASK-048, TASK-051 | TC-004 | UAT-031 | APPLICABLE |
+-| FR-042 | DES-003 | PHASE-001, PHASE-002, PHASE-003, PHASE-006 | TASK-001, TASK-008, TASK-019, TASK-048, TASK-051 | TC-004 | UAT-031 | APPLICABLE |
++| FR-037 | DES-003, DES-011, DES-012 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-006, PHASE-007, PHASE-008 | TASK-002, TASK-006, TASK-012, TASK-014, TASK-015, TASK-019, TASK-034, TASK-048, TASK-051, TASK-052, TASK-053 | TC-004, TC-011, TC-012 | UAT-031, UAT-038 | APPLICABLE |
++| FR-038 | DES-003, DES-011, DES-012 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-006, PHASE-007, PHASE-008 | TASK-002, TASK-006, TASK-012, TASK-014, TASK-015, TASK-019, TASK-034, TASK-048, TASK-051, TASK-052, TASK-053 | TC-004, TC-011, TC-012 | UAT-031, UAT-039 | APPLICABLE |
++| FR-039 | DES-003, DES-011, DES-012 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-006, PHASE-007, PHASE-008 | TASK-006, TASK-012, TASK-014, TASK-015, TASK-019, TASK-034, TASK-048, TASK-051, TASK-052, TASK-053 | TC-004, TC-011, TC-012 | UAT-031, UAT-037 | APPLICABLE |
++| FR-040 | DES-003, DES-011, DES-012 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-006, PHASE-007, PHASE-008 | TASK-001, TASK-012, TASK-014, TASK-019, TASK-034, TASK-048, TASK-051, TASK-052, TASK-053 | TC-004, TC-011, TC-012 | UAT-031 | APPLICABLE |
++| FR-041 | DES-003, DES-011, DES-012 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-006, PHASE-007, PHASE-008 | TASK-001, TASK-012, TASK-019, TASK-032, TASK-034, TASK-048, TASK-051, TASK-052, TASK-053 | TC-004, TC-011, TC-012 | UAT-031 | APPLICABLE |
++| FR-042 | DES-003, DES-011, DES-012 | PHASE-001, PHASE-002, PHASE-003, PHASE-006, PHASE-007, PHASE-008 | TASK-001, TASK-008, TASK-019, TASK-048, TASK-051, TASK-052, TASK-053 | TC-004, TC-011, TC-012 | UAT-031 | APPLICABLE |
+ | FR-043 | DES-004 | PHASE-003, PHASE-006 | TASK-019, TASK-020, TASK-025, TASK-051 | TC-005 | UAT-044 | APPLICABLE |
+ | FR-044 | DES-004 | PHASE-003, PHASE-006 | TASK-019, TASK-020, TASK-051 | TC-005 | UAT-044, UAT-045 | APPLICABLE |
+ | FR-045 | DES-004 | PHASE-003, PHASE-006 | TASK-019, TASK-020, TASK-051 | TC-005 | UAT-044, UAT-047 | APPLICABLE |
+@@ -136,10 +136,10 @@ This is a structural planning view, not execution evidence or approval.
+ | NFR-003 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-001, TASK-008, TASK-019, TASK-026, TASK-035, TASK-050, TASK-051 | TC-001 | UAT-001 | APPLICABLE |
+ | NFR-004 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-001, TASK-008, TASK-019, TASK-026, TASK-035, TASK-050, TASK-051 | TC-001 | UAT-001, UAT-096 | APPLICABLE |
+ | NFR-005 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-001, TASK-008, TASK-019, TASK-026, TASK-035, TASK-050, TASK-051 | TC-001 | UAT-001 | APPLICABLE |
+-| NFR-006 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-007, TASK-008, TASK-019, TASK-026, TASK-035, TASK-044, TASK-050, TASK-051 | TC-001 | UAT-001, UAT-043 | APPLICABLE |
+-| NFR-007 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-007, TASK-008, TASK-019, TASK-026, TASK-035, TASK-044, TASK-049, TASK-050, TASK-051 | TC-001 | UAT-001 | APPLICABLE |
+-| NFR-008 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-005, TASK-007, TASK-008, TASK-019, TASK-026, TASK-035, TASK-044, TASK-049, TASK-050, TASK-051 | TC-001 | UAT-001 | APPLICABLE |
+-| NFR-009 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-001, TASK-007, TASK-008, TASK-019, TASK-026, TASK-035, TASK-044, TASK-049, TASK-050, TASK-051 | TC-001 | UAT-001, UAT-042, UAT-100, UAT-112 | APPLICABLE |
++| NFR-006 | DES-010, DES-011, DES-012 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006, PHASE-007, PHASE-008 | TASK-007, TASK-008, TASK-019, TASK-026, TASK-035, TASK-044, TASK-050, TASK-051, TASK-052, TASK-053 | TC-001, TC-011, TC-012 | UAT-001, UAT-043 | APPLICABLE |
++| NFR-007 | DES-010, DES-011, DES-012 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006, PHASE-007, PHASE-008 | TASK-007, TASK-008, TASK-019, TASK-026, TASK-035, TASK-044, TASK-049, TASK-050, TASK-051, TASK-052, TASK-053 | TC-001, TC-011, TC-012 | UAT-001 | APPLICABLE |
++| NFR-008 | DES-010, DES-011, DES-012 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006, PHASE-007, PHASE-008 | TASK-005, TASK-007, TASK-008, TASK-019, TASK-026, TASK-035, TASK-044, TASK-049, TASK-050, TASK-051, TASK-052, TASK-053 | TC-001, TC-011, TC-012 | UAT-001 | APPLICABLE |
++| NFR-009 | DES-010, DES-011, DES-012 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006, PHASE-007, PHASE-008 | TASK-001, TASK-007, TASK-008, TASK-019, TASK-026, TASK-035, TASK-044, TASK-049, TASK-050, TASK-051, TASK-052, TASK-053 | TC-001, TC-011, TC-012 | UAT-001, UAT-042, UAT-100, UAT-112 | APPLICABLE |
+ | NFR-010 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-007, TASK-008, TASK-019, TASK-026, TASK-035, TASK-044, TASK-049, TASK-050, TASK-051 | TC-001 | UAT-001, UAT-113 | APPLICABLE |
+ | NFR-011 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-001, TASK-008, TASK-019, TASK-026, TASK-035, TASK-050, TASK-051 | TC-001 | UAT-001 | APPLICABLE |
+ | NFR-012 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-005, TASK-008, TASK-019, TASK-026, TASK-035, TASK-050, TASK-051 | TC-001 | UAT-001, UAT-109 | APPLICABLE |
+@@ -151,13 +151,13 @@ This is a structural planning view, not execution evidence or approval.
+ | SEC-004 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-003, TASK-010, TASK-019, TASK-026, TASK-034, TASK-035, TASK-045, TASK-050, TASK-051 | TC-001 | UAT-001, UAT-002, UAT-004, UAT-097 | APPLICABLE |
+ | SEC-005 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-003, TASK-010, TASK-019, TASK-033, TASK-034, TASK-035, TASK-045, TASK-050, TASK-051 | TC-001 | UAT-001, UAT-002, UAT-004, UAT-007 | APPLICABLE |
+ | SEC-006 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-003, TASK-008, TASK-023, TASK-026, TASK-034, TASK-035, TASK-050, TASK-051 | TC-001 | UAT-001, UAT-002, UAT-004, UAT-054 | APPLICABLE |
+-| SEC-007 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-001, TASK-008, TASK-023, TASK-026, TASK-034, TASK-035, TASK-048, TASK-050, TASK-051 | TC-001 | UAT-001, UAT-005 | APPLICABLE |
+-| SEC-008 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-001, TASK-010, TASK-023, TASK-026, TASK-034, TASK-035, TASK-050, TASK-051 | TC-001 | UAT-001, UAT-008 | APPLICABLE |
+-| SEC-009 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-003, TASK-010, TASK-019, TASK-026, TASK-034, TASK-035, TASK-043, TASK-047, TASK-050, TASK-051 | TC-001 | UAT-001, UAT-008, UAT-106 | APPLICABLE |
+-| SEC-010 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-002, TASK-003, TASK-010, TASK-019, TASK-033, TASK-034, TASK-035, TASK-050, TASK-051 | TC-001 | UAT-001, UAT-008 | APPLICABLE |
++| SEC-007 | DES-010, DES-011, DES-012 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006, PHASE-007, PHASE-008 | TASK-001, TASK-008, TASK-023, TASK-026, TASK-034, TASK-035, TASK-048, TASK-050, TASK-051, TASK-052, TASK-053 | TC-001, TC-011, TC-012 | UAT-001, UAT-005 | APPLICABLE |
++| SEC-008 | DES-010, DES-011, DES-012 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006, PHASE-007, PHASE-008 | TASK-001, TASK-010, TASK-023, TASK-026, TASK-034, TASK-035, TASK-050, TASK-051, TASK-052, TASK-053 | TC-001, TC-011, TC-012 | UAT-001, UAT-008 | APPLICABLE |
++| SEC-009 | DES-010, DES-011, DES-012 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006, PHASE-007, PHASE-008 | TASK-003, TASK-010, TASK-019, TASK-026, TASK-034, TASK-035, TASK-043, TASK-047, TASK-050, TASK-051, TASK-052, TASK-053 | TC-001, TC-011, TC-012 | UAT-001, UAT-008, UAT-106 | APPLICABLE |
++| SEC-010 | DES-010, DES-011, DES-012 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006, PHASE-007, PHASE-008 | TASK-002, TASK-003, TASK-010, TASK-019, TASK-033, TASK-034, TASK-035, TASK-050, TASK-051, TASK-052, TASK-053 | TC-001, TC-011, TC-012 | UAT-001, UAT-008 | APPLICABLE |
+ | SEC-011 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-003, TASK-008, TASK-019, TASK-033, TASK-034, TASK-035, TASK-043, TASK-047, TASK-050, TASK-051 | TC-001 | UAT-001, UAT-008 | APPLICABLE |
+ | SEC-012 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-003, TASK-008, TASK-019, TASK-033, TASK-034, TASK-035, TASK-047, TASK-050, TASK-051 | TC-001 | UAT-001 | APPLICABLE |
+-| SEC-013 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-003, TASK-008, TASK-019, TASK-026, TASK-034, TASK-035, TASK-050, TASK-051 | TC-001 | UAT-001, UAT-006 | APPLICABLE |
++| SEC-013 | DES-010, DES-011, DES-012 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006, PHASE-007, PHASE-008 | TASK-003, TASK-008, TASK-019, TASK-026, TASK-034, TASK-035, TASK-050, TASK-051, TASK-052, TASK-053 | TC-001, TC-011, TC-012 | UAT-001, UAT-006 | APPLICABLE |
+ | SEC-014 | DES-010 | PHASE-001, PHASE-002, PHASE-003, PHASE-004, PHASE-005, PHASE-006 | TASK-001, TASK-008, TASK-019, TASK-026, TASK-035, TASK-050, TASK-051 | TC-001 | UAT-001 | APPLICABLE |
+ 
+ ## Case execution contracts
+@@ -174,6 +174,8 @@ This is a structural planning view, not execution evidence or approval.
+ | TC-008 | true | true | APPLICABLE | inventory-technical | TECHNICAL | PROFILE_SUITE |
+ | TC-009 | true | true | APPLICABLE | inventory-technical | TECHNICAL | PROFILE_SUITE |
+ | TC-010 | true | true | APPLICABLE | inventory-technical | TECHNICAL | PROFILE_SUITE |
++| TC-011 | true | true | APPLICABLE | inventory-technical | TECHNICAL | PROFILE_SUITE |
++| TC-012 | true | true | APPLICABLE | inventory-technical | TECHNICAL | PROFILE_SUITE |
+ | UAT-001 | true | true | APPLICABLE | MANUAL | UI_BROWSER | MANUAL_REQUIRED |
+ | UAT-002 | true | true | APPLICABLE | MANUAL | UI_BROWSER | MANUAL_REQUIRED |
+ | UAT-003 | true | true | APPLICABLE | MANUAL | UI_BROWSER | MANUAL_REQUIRED |
+diff --git a/docs/purchasing_receiving_management/00_module_manifest.json b/docs/purchasing_receiving_management/00_module_manifest.json
+index 6840a274..cc9e297b 100644
+--- a/docs/purchasing_receiving_management/00_module_manifest.json
++++ b/docs/purchasing_receiving_management/00_module_manifest.json
+@@ -90,9 +90,9 @@
+     "provided": [
+       {
+         "id": "purchasing-receiving-document-contract",
+-        "version": "approved-planning-v1-SPECIFIED_NOT_IMPLEMENTED",
++        "version": "candidate-v2-purchase-provider-ABI; NOT_IMPLEMENTED",
+         "source": "docs/purchasing_receiving_management/03_design_spec.md",
+-        "sha256": "a29fb66d0e5ad10c638e5c556e40cf16c534cfce7c7283077a8f922a8fd0ee70",
++        "sha256": "9db654b1dc2f9382a78a31366cd3c2a36eccce9b1adcea4a31966e1c73ca870b",
+         "consumers": [
+           "accounts-payable",
+           "reporting"
+@@ -142,10 +142,10 @@
+       },
+       {
+         "module_id": "inventory-management",
+-        "id": "inventory-purchase-receipt-batch-and-partial-reversal",
+-        "version": "planning-only-NOT_SPECIFIED_BY_PROVIDER-issue-267",
+-        "source": "docs/inventory_management/03_design_spec.md",
+-        "sha256": "2fb61cce8ee4ff9f32cd9c6d0e2a9fc8f87c08d34823be7fb622908610b1ac53",
++        "id": "inventory-purchase-provider",
++        "version": "1.0-candidate-NOT_IMPLEMENTED-issue-267",
++        "source": "docs/inventory_management/implementation/purchase-provider-contract-v1.md",
++        "sha256": "fb1c9c2705949150e77e943630e2cae90b410f4bd2f0022dff33ec728df19f72",
+         "regression_suites": [
+           "purchasing-technical"
+         ]
+diff --git a/docs/purchasing_receiving_management/03_design_spec.md b/docs/purchasing_receiving_management/03_design_spec.md
+index 7a9766ce..bec7b53c 100644
+--- a/docs/purchasing_receiving_management/03_design_spec.md
++++ b/docs/purchasing_receiving_management/03_design_spec.md
+@@ -269,7 +269,7 @@ ItemLookupService.findManyForCommittedReceipt(skuIds, { atMs })
+ 
+ #### Inventory provider
+ 
+-Purchasing需要在Inventory設計上增加兩個具名、只供內部同步呼叫的batch contracts：
++Purchasing的Inventory provider正式ABI候選為 [inventory-purchase-provider/1.0](../inventory_management/implementation/purchase-provider-contract-v1.md)，待Sam批准及兩個provider PR實際合併；本節與§8.7以該精確欄位／context／查詢語義為準，不接受caller自報permission。兩個具名同步batch及來源查詢：
+ 
+ ```js
+ InventoryPostingService.postPurchaseReceiptBatchInTransaction(transaction, command)
+@@ -404,7 +404,7 @@ GR狀態：`DRAFT → CONFIRMED → PARTIALLY_REVERSED → REVERSED`，另有`DR
+ 
+ 1. Route驗證`purchasing.view`＋`receiving.operation`，schema及HTTP idempotency。
+ 2. Transaction內重讀actor並claim domain event。
+-3. 鎖GR、PO、所有PO Lines及GR children；驗證GR仍DRAFT、version一致、PO仍CONFIRMED／PARTIALLY_RECEIVED。
++3. 按§2.6依序鎖PO、所有PO Lines、GR及GR children；驗證GR仍DRAFT、version一致、PO仍CONFIRMED／PARTIALLY_RECEIVED。
+ 4. 批量取得Supplier現在狀態、SKU committed-receipt projection及Warehouse／Bin資料。
+ 5. 依PO確認快照驗證SKU identity、Purchase／Base UOM、tracking baseline；依現在資料產生warning及reason要求。
+ 6. 驗證數量、duplicate dimension、Lot／Expiry／Manufacture、Minimum Receipt Life、Stock Status、超收與Blocked Supplier規則。
+@@ -792,7 +792,7 @@ Draft可更新／刪除details；Parent轉CONFIRMED後trigger拒絕除`reversed_
+ 
+ Composite FK `(goods_receipt_detail_id,goods_receipt_id)`確保owner；`UNIQUE(reversal_id,goods_receipt_detail_id)`避免同一command重複列；indexes為`(goods_receipt_detail_id,id)`及`(purchase_order_line_id,id)`。只准INSERT／SELECT。
+ 
+-Inventory schema配合部分反向時，`inventory_movements.reversal_of_movement_id`不可再有「一個原Movement只能一個Reversal」unique constraint；改為普通index，transaction鎖原Movement並以reversal rows合計驗證上限。若Inventory尚未建立，直接在首次migration採正確設計；不可先建立衝突constraint再以未評審migration移除。
++Inventory provider v1保留既有`inventory_movements.reversal_of_movement_id` unique，舊generic full reversal語義不變。新purchase partial reversal使用獨立append-only `inventory_purchase_reversal_links`，新Movement的reversal_of_movement_id為NULL；同transaction鎖原Movement後以links current SUM核對累計上限。僅接管v1 purchase來源、不遷移legacy，正式schema／安全重跑／回滾限制以Inventory契約§4為準。此候選明確取代舊「移除unique」要求，採用仍須Sam批准。
+ 
+ ### 4.14 `purchasing_operation_requests`
+ 
+@@ -1357,46 +1357,14 @@ Confirm實作要點：
+ - 依`purchase_order_line_id`排序鎖Lines；先以當前net與closed計算outstanding，再判超收。
+ - 所有details先完成policy validation，然後一次呼叫Inventory batch；不得在部分Inventory成功後才驗下一Detail。
+ - `overReceived=0`時server把`overReceiptReason`正規化為空字串，不建立虛假的超收Audit；只有提交時重新計算為正數的Line才保存原因及risk flag。
+-- Inventory command使用內部ID作source：
+-
+-```js
+-{
+-  actor,
+-  authorization: {
+-    purpose: "PURCHASE_RECEIPT",
+-    requiredCallerPermission: "receiving.operation"
+-  },
+-  source: {
+-    module: "PURCHASING_RECEIVING",
+-    documentType: "GOODS_RECEIPT",
+-    documentId: String(goodsReceiptId),
+-    eventId
+-  },
+-  lines: [
+-    {
+-      sourceLineId: String(goodsReceiptDetailId),
+-      skuId,
+-      baseQuantity,
+-      warehouseId,
+-      binId,
+-      trackingPolicy: poTrackingSnapshot,
+-      lotNumber,
+-      expiryDate,
+-      manufactureDate,
+-      stockStatus,
+-      minimumLifeEvidence
+-    }
+-  ]
+-}
+-```
+-
+-- Inventory response為`{operationId,movementId,movementGroupId,baseQuantity}` per sourceLineId；集合必須與request details完全相等，否則視為provider contract breach並rollback。
++- Inventory command／result精確欄位以 [provider v1 §2–3](../inventory_management/implementation/purchase-provider-contract-v1.md)為唯一ABI：source只含documentId／eventId；每line帶已鎖定PO commitment；issuer以同request／transaction及locked rows產生opaque context，不使用authorization.purpose／requiredCallerPermission自報物件。
++- 回傳root operationId及逐sourceLineId的lines；集合、數量及原receipt必須完全相符，缺漏／多列視為contract breach並rollback。未知commit維持原event；findOperationsBySource使用新只讀transaction的一致快照，NOT_FOUND不證明未提交或允許新event，COMPLETED須驗完整membership。
+ - 寫PO progress時使用BigInt／DB integer，不以client或Inventory aggregate猜測。GR與PO updated version各加1。
+ - 成功response在transaction內存最小result summary，回應遺失可按event查回。
+ 
+ ### 8.8 `ReceiptReversalService`
+ 
+-- 鎖GR→PO→Receipt Details→PO Lines→既有Reversal Details；驗證GR已Confirmed或Partially Reversed。
++- 按§2.6鎖PO→PO Lines→GR→GR children→reversal header／details，最後才進Inventory；驗證GR已Confirmed或Partially Reversed。
+ - 對每Detail計算`reversible=received-reversed`，server不信client顯示值。
+ - 呼叫Inventory batch partial reversal，source document為`GOODS_RECEIPT_REVERSAL`，sourceLineId使用新Reversal Detail ID。
+ - Inventory鎖原Movement及current buckets，累計反向不超原Movement；OUT效果不可令On Hand／free quantity等違規。
+diff --git a/docs/inventory_management/implementation/purchase-provider-contract-v1.md b/docs/inventory_management/implementation/purchase-provider-contract-v1.md
+new file mode 100644
+index 00000000..d1bba37d
+--- /dev/null
++++ b/docs/inventory_management/implementation/purchase-provider-contract-v1.md
+@@ -0,0 +1,102 @@
++# Inventory Purchasing provider v1 — 精確契約候選
++
++Status: PROPOSED / NOT_IMPLEMENTED。Issue #267；owner Inventory / Sam。基線 `e272f5d3ce05d0ca50be42e6d8764f0ef20d3dd1`。
++權威需求：Purchasing design §2.4–2.8、§3.5–3.7、§8.7–8.8；Inventory FR031–033／035／037–042、NFR006–009、SEC007–010／013。
++
++## 1. 邊界及交付順序
++
++1. PR-A：`postPurchaseReceiptBatchInTransaction()`、可信提交 context、批次冪等／結果映射、專用測試及 ABI。
++2. PR-B：A 合併後從最新 main 建新 worktree；`reversePurchaseReceiptBatchInTransaction()`、獨立 reversal-link migration、專用測試。依賴已合併 A，不依賴 TASK041／P4。
++
++不新增 HTTP route／UI。不修改 Item／Supplier 或 Purchasing 資料；Purchasing 持有 PO／GR 的驗證及 projection 寫入。provider 只寫 Inventory 表並沿用同一 caller transaction。其失敗必須傳播至最外層 withTransaction rollback；不能吞錯後 commit，不在 provider 自行 commit／另開交易／逐行重試。
++
++這兩個方法不以逐行呼叫舊單筆 posting／generic reversal 實作。一般 Inventory／Returns／Fulfillment 入口不增加 existing-commitment 開關。
++
++## 2. ABI 與可信來源
++
++方法回傳 Promise；第一參數必須是同一 request context 中實際 active `REPEATABLE READ` transaction，非只有 query／execute 的物件。兩個方法均為 `(transaction, command)`。
++
++Receipt command 的精確欄位：
++
++```js
++{
++  context, // server-issued opaque object; excluded from serialization/hash
++  actor: { userId, serviceName: "", claimedRoles, claimedPermissions },
++  correlationId,
++  source: { documentId, eventId }, // GR id string / canonical lowercase UUID
++  lines: [{
++    sourceLineId, // GR detail id string, unique in batch
++    skuId, baseQuantity, warehouseId, binId,
++    lotNumber, expiryDate, manufactureDate, stockStatus,
++    commitment: {
++      purchaseOrderId, purchaseOrderLineId, confirmedVersion,
++      skuId, inventoryTrackedSnapshot: true, trackingPolicySnapshot,
++      baseUomIdSnapshot, baseUomCodeSnapshot,
++      minimumReceiptLifeDaysSnapshot, skuExceptionReason
++    },
++    minimumLifeEvidence: null // or { reason, minimumLifeDaysApplied, actualRemainingLifeDays }
++  }]
++}
++```
++
++Reversal command：相同 context／actor／correlationId／source（documentId 為新 reversal header ID），新增 `goodsReceiptId`、`reasonText`，lines 精確為 `{ sourceLineId, originalSourceLineId, originalMovementId, baseQuantity }`；sourceLineId 是新 reversal detail ID。每次1–200行；本次同 originalMovementId 只一行。receipt 同一 physical bucket 可由不同 PO line 收入，必須按 bucket 合計及逐行結果更新；同一 PO line＋physical dimension 重複拒絕。
++
++所有物件拒絕額外欄位；provider 固定 module=`PURCHASING_RECEIVING`，documentType=`GOODS_RECEIPT`／`GOODS_RECEIPT_REVERSAL`，purpose／permission 不能由 command 提供。數量和數值 ID 為正 safe integer；來源 ID 為非零十進位字串且須可安全轉換；不把不安全 BIGINT 轉 Number。qty 合計、balance、version 溢位 fail closed。tracking 只接受 none／batch／batch_expiry；serial 維持不支援。
++
++回傳 `{ status: "POSTED", operationId, lines }`；root operationId 及每行 `{ sourceLineId, operationId, movementId, movementGroupId, baseQuantity }` 全部必要。Reversal 行另含 `originalMovementId`。結果行與輸入 sourceLineId 集合完全相等，依輸入順序回傳，不能 missing／extra／重複。相同已完成事件 replay 從原 per-line scalar summaries 解碼，不能用現在 Balance 重建。
++
++### Context 介面及責任
++
++新增 Inventory-owned `InventoryPurchaseContext.js`，提供 `issuePurchaseReceiptContext(req, transaction, command, confirmedLines, options)`／`issuePurchaseReversalContext(req, transaction, command, options)`。它們在實際已認證 handler 路徑發行一次性 WeakMap capsule；command.context 不納入 intent hash，其餘完整標準化意圖、actor、來源、transaction、request及 deadline 綁定。consume 後只可在同次 provider call 使用，重送需新 request 認證及 capsule。JSON仿造／跨 actor／跨transaction／變更任一行或快照均拒絕。
++
++Receipt 固定 POST `/api/v1/goods-receipts/:id/confirm`、jwt、`purchasing.view`＋`receiving.operation`，`req.input.params.id` 必須精確等於 source.documentId。Reversal 固定 POST `/api/v1/goods-receipts/:id/reversals/create`、jwt-device-password、`purchasing.view`＋`inventory.adjust`，params.id 必須精確等於 goodsReceiptId，保持現有密碼及 device 驗證流程。一般 receiving／purchasing role 無調整權限不能反向。不賦予 inventory.view。
++
++issuer 必須對上 server request context 的 auth／apiRoute／transaction，不能只檢查 caller boolean。Receipt 的 confirmedLines 由 Purchasing 在同 transaction 已鎖定的 Confirmed PO／PO Lines 提供（與 GR detail ownership核對後）；issuer 核對每個 sku／PO／line／version／snapshot與command一致。Reversal issuer 的 options.ownerProof 必須是consumer由同transaction鎖定的GR／新reversal header／detail rows投影，核對source.documentId所屬goodsReceiptId及原detail映射，不能取request body自報關係。它不能證明任意同process惡意程式誠實：Purchasing 是受信任的業務 owner，browser不能提供這些參數；consumer contract test必須證明採用 locked rows 而非 request body。Inventory 不反向鎖 PO／GR，不讀寫其raw tables。
++
++provider 入場、等待後寫入前、cached replay返回前均重新檢查使用者／角色／權限／JWT token version及時效；最後 current locking read 使用原transaction。Reversal另核對相同 device binding／key／簽章時間及已驗證 password策略；使用既有 request signal／JWT／session／signature限額，不建立較長有效時間。密碼／token不進 command hash、summary、Audit 或日誌。
++
++## 3. Receipt 交易與冪等
++
++先固定整批正規化（行按 sourceLineId 排序作 identity；輸入順序只控制回應）。root 用 source.lineId=""，command `PURCHASE_RECEIPT_BATCH`；每行用 sourceLineId，command `PURCHASE_RECEIPT_LINE`，其 request hash 包含 root 的完整業務 request hash及本行標準化內容。先 claim root，再按明確數字 ID 順序 claim 全部 lines，全部 claim 完才可進 Warehouse 鎖。任一 payload／membership 衝突整批拒絕；不接受 fresh/replay 混合、未完成root或不完整既有行集。結果的 membershipDigest 與業務hash分開：固定以sourceLineId數字升序的 `[sourceLineId, operationId, request_hash]` tuples作canonical JSON的SHA256，全部欄位都可從持久化Operation重算；另逐筆核對rootOperationId／來源／command／status。不得把無法由持久化回執重建的完整command hash當成結果membershipDigest。
++
++root claim 與所有行同一 caller transaction，root summary為 scalar `{status,operationId,rowCount,membershipDigest}`，每行scalar summary儲存原結果、rootOperationId/sourceLineId、skuId及已驗證PO原始 `trackingPolicy`／`baseUomId`／`baseUomCode`。這三個policy欄位是後續反向的持久snapshot；request digest不能代替它們。PR-A僅新增Operation白名單 `trackingPolicy`，其餘已存在。沿用 Operation 8192-byte/scalar限制，不塞200行nestedJSON。claim／complete失敗與所有效果一起回滾。replay不增加Movement／Audit；權限仍須現在有效。
++
++Receipt root hash包含固定purpose／source／排序後業務lines（含commitment及minimumLifeEvidence）；Reversal root hash包含固定purpose／source／goodsReceiptId／reasonText／排序後業務lines。兩者均不含context、actor、correlationId、輸入排列或重新查出的動態Item值。顯式null與預設null先正規化。context的安全intent另包含actor／correlationId／transaction等，不與業務event hash混用。同event換requestId或合法新actor可以在fresh auth後得到同原結果；調整membership、數量、快照、goodsReceiptId或reason則衝突。
++
++補齊既有Purchasing §2.4要求的 `InventoryLookupService.findOperationsBySource(transaction, query)`：query精確 `{documentType,documentId,eventId}`，documentType僅本provider兩種。使用實際request context／active transaction及fresh `purchasing.view`；consumer必須以新獨立只讀transaction呼叫，不得沿用先前業務快照或持有PO／Inventory鎖。以單一非鎖定SELECT的一致快照讀精確source，LIMIT 202（root＋200line外多一列只用來偵測超額並拒絕）；回 `{status:"NOT_FOUND"}` 或 `{status:"COMPLETED",result}`，COMPLETED的result與原batch receipt相同、lines按sourceLineId數字升序。核對rowCount／可重算membershipDigest／root IDs及每列completed狀態；可見的未完成root、missing／extra／corrupt列均是完整性錯誤，不能回IN_PROGRESS或部分結果。
++
++尚未commit的batch對此查詢不可見，因此NOT_FOUND只表示本次快照沒有已提交結果，不證明從未送出／失敗／可另建event；consumer只能保留原event再查或以相同意圖重試。查詢期間commit可能在下一個新transaction才可見；rollback後仍NOT_FOUND，測試必須涵蓋兩種並發時序。不輪詢、不自行延長期限、不增加Inventory寫入；不取代consumer的GR ownership檢查。PR-A交付receipt查詢，PR-B擴充reversal kind。
++
++全批 lock order：Inventory claims → Warehouse ID → Stock Control(warehouse,sku) → Bin ID／active Bin lock → Lot(sku,normalized lot key) → Balance(warehouse,sku,bin,lot_scope,status)。新Lot先全部 resolve，再取任何 Balance 鎖；同批共用Lot的輸入日期先核對一致。字串比較及existing Lot身份以DB現有collation／唯一鍵判斷，不能用JS大小寫去重改變DB語義。主 warehouse serialization與現有lock helpers保留，deadlock／lock timeout拋錯令整批rollback。
++
++在同一transaction，以既有 `ItemLookupService.findManyForCommittedReceipt` 讀目前 facts，每批≤100 SKU，使用綁定原tx的query adapter及必要 current `FOR SHARE`；不改Item contract。SKU必須存在；既有PO承諾的lifecycle／inventoryTracked／purchase flags差異需reason但不直接拒絕；tracking／base UOM採已驗證PO快照。provider明確比較目前tracking及唯一base UOM的ID／code與快照，差異同樣必須有5–500字節skuExceptionReason；Purchasing驗證purchase UOM/factor漂移及原因，不能只看Item warning codes。現在serial仍為既有Item provider不支援情況，fail closed，不靜默改Item。minimum life取snapshot/current兩者較嚴格非空值；expired永遠拒絕；低剩餘效期需 fresh `receiving.expiry.override`及5–500字節reason，日期／實際天數由server重算，不能信caller數字。
++
++位置須active且Bin屬Warehouse；持久盤點鎖拒絕。blocked Supplier必須QUARANTINED、outstanding／超收／source-document ownership由Purchasing鎖內驗證。所有Inventory條件成功才變更 Balance；每detail一筆RECEIPT IN Movement、一筆 `receipt.post` scalar Audit、原結果complete。相同Bucket多行依sourceLineId順序產生連續before/after/version，任何後段故障全rollback。新receipt的每行使用自己的movementGroupId，避免將跨operation的200行偽作generic group。
++
++## 4. Partial reversal 與 migration
++
++PR-B 新增 `0101_create_inventory_purchase_reversal_links.js`（目前main最高0100；實作／合併前重新檢查占用，不覆寫碰撞）。新 `inventory_purchase_reversal_links`：id PK；original_movement_id／reversal_movement_id／operation_request_id BIGINT UNSIGNED NOT NULL；quantity BIGINT UNSIGNED CHECK>0；created_at BIGINT UNSIGNED NOT NULL。三個reference均FK RESTRICT；UNIQUE(reversal_movement_id)、UNIQUE(operation_request_id)、INDEX(original_movement_id,id)。UPDATE／DELETE trigger拒絕，與ledger同保留期。migration可安全重跑且驗完整欄位／constraint／index／trigger；無schema破壞式down或歷史backfill。
++
++**保留 `inventory_movements.uq_inventory_movement_reversal` 和 generic reverse來源原bytes。** 新partial reversal Movement type=REVERSAL／direction=OUT，reversal_of_movement_id=NULL，以新link table作正式關聯。它只接受本provider v1成功完成的 PURCHASE_RECEIPT_LINE 原Movement，並驗root/membership/GR/detail/quantity/IN/BIN完整一致；不接管既有單筆receipt或任意genericMovement。這避免兩套ownership同時反向同一原量。新purchase receipt由新commands識別，generic existing `assertCompletedGroup`會拒絕；舊generic receipts仍維持原完整一次反向行為。既有歷史資料不重新解釋。
++
++同樣先claim整批 `PURCHASE_REVERSE_BATCH`／`PURCHASE_REVERSE_LINE`，replay仍走fresh auth，原結果有originalMovementId。發現原Movement維度後，先依Inventory全域順序鎖所有warehouse/control/bin/lot/balance，再鎖original Movement IDs升序及各original的links升序，全部current read。相同original之並發由原Movement鎖序列化；amount ≤ original.quantity − SUM(links.quantity)，安全整數相加；不使用最初discovery快照判定累計。
++
++逐Bucket合計OUT後 `onHand >= allocated`；同倉SKU在整批最終效果下 uncoveredReserved不得增加。保留original Bin／Lot／Status，原Lot日期不能改，On Hand降至0才清FIFO anchor；不新增匿名Balance或替換SKU。用目前SKU可用性計算Reserved coverage，但既有承諾撤銷不以lifecycle變更單獨拒絕；原receipt snapshot的tracking身份必須與Lot一致。跨多行、重複Bucket、邊界safe integer均先驗再寫。
++
++每行新增OUT Movement、link及 `movement.reverse` Audit（`beforeSummary.movementId`指原Movement、`afterSummary.movementId`指新Movement、`afterSummary.baseQuantity`指反向量），與operationcomplete、Purchasing projections同交易；沿用現有Audit白名單，不新增originalMovementId/resultMovementId Audit欄位。第二行／第二Audit／link／completion／caller commit故障全rollback。資料庫未知commit回既有indeterminate錯誤，由consumer按原event查事實，不換event重試。
++
++## 5. 變更範圍
++
++PR-A產品：既有 `InventoryPostingService.js` 只加factory/delegation；`InventoryLookupService.js`增量委派上述read-only查詢；`inventoryConstants.js` 加四個purchase commands（B使用的兩個可延至B）；新增 `InventoryPurchaseService.js`、`InventoryPurchaseContext.js`、`inventoryPurchaseValidation.js`、`inventoryPurchaseReceipts.js`。`InventoryOperationService.js`僅增量允許 `trackingPolicy` scalar欄位；`originalMovementId`已經由Fulfillment白名單提供，不重複加入；不改既有hash/serializer/claim語義。batch都使用既有lock／Lot resolver，範圍不包含LockService、Item或框架修改。
++
++PR-B新增 `inventoryPurchaseReversal.js`、0101 migration，增量PurchaseService/context及上述scalar欄位。若實作需改範圍外產品或business policy，集中具體差異供審閱。
++
++測試：新增 `server/test/inventoryPurchaseReceipt.test.js`、`inventoryPurchaseContext.test.js`、`inventoryPurchaseReversal.test.js`、`server/test/integration/inventoryPurchaseReceipt.integration.test.js`、`inventoryPurchaseReversal.integration.test.js`、`inventoryPurchaseAuth.integration.test.js`、`server/test-support/inventoryPurchaseFixtures.js`、consumer-facing `server/test/inventoryPurchaseContract.test.js`。既有unit／native regression不刪改assertions。
++
++文件：本契約及plan／handoff；採用後把本正式addendum連到Inventory canonical design／plan、provided contract pin、typed trace／matrix及profile（新的獨立merge groups），不把TASK048或P5標成全部完成。Purchasing對齊§2.4／§8.7 ABI及§4.13：明確以本契約的獨立link取代「移除舊reversal unique」要求；§3.5／§8.8鎖序統一服從既有§2.6的PO→PO Lines→GR→GR children→reversal children→Inventory，避免反向鎖序。業務consumer實作由其owner負責。
++
++## 6. 風險與待批准選擇
++
++新增 opaque context補齊原Purchasing示例缺少的server可信邊界；消費端需要接issuer。新receipt只走專用partial reversal，不提供generic對新來源的另一入口；legacy generic資料不遷移。額外root claim與links是可追溯／並發保護成本，200行仍受原10s SQL／20s交易／30sHTTP期限。正式兩個provider交付不意味Purchasing端已完成UI或整體上線。
++
++本候選需Sam集中批准新ABI／context邊界／link資料模型及獨立PR Gate後才能實作。單模型獨立review按實際報告記錄；跨模型沿用Sam全面略過。最終每個實作候選仍需實際review、當前CI與最新main整合；不宣稱測試已PASS。
+diff --git a/docs/inventory_management/implementation/purchase-provider-plan-v1.md b/docs/inventory_management/implementation/purchase-provider-plan-v1.md
+new file mode 100644
+index 00000000..ec3cff4a
+--- /dev/null
++++ b/docs/inventory_management/implementation/purchase-provider-plan-v1.md
+@@ -0,0 +1,78 @@
++# Inventory Purchasing provider v1 — 驗證與交付計劃候選
++
++與 `purchase-provider-contract-v1.md` 一併審閱。所有新案例 NOT_RUN；這是獨立交付，不是 P4／正式TC-UAT完成。
++
++## PHASE-007 — 採購整張收貨 provider（PR-A）
++
++### Objective
++交付可由Purchasing caller同交易呼叫的200行batch receipt；依賴main既有Inventory P1–P3及Item committed receipt contract，不依賴PHASE005／TASK041。
++
++### Entry criteria
++Sam批准精確契約及本計劃；新main隔離worktree；consumer提供confirmed-row proof責任已明確。新source及migration scope按契約§5，不更動P4未合併來源。
++
++### Acceptance criteria
++所有source先claim，所有庫存鎖全批排序，同transaction中逐行結果一一對應；錯誤、重送、撤權及caller後段故障都由真DB證據證明。沒有inventory.view授權擴張或generic existing-commitment開關。
++
++### Verification / merge trigger
++TASK052全部檢查與consumer ABI檢查通過；現有Inventory receipt／generic reversal／Reservation native回歸及main既有coverage全部通過。當前候選所有mandatory CI、實際獨立review及Sam精確來源審閱，合併前fetch最新main並整合所有移動。依既有合併授權合併；保留實際merge SHA才宣稱provider A已交付。清除已合併分支及worktree。P4完整容量／soak不在此merge group。
++
++### Rollback
++尚無新schema；停用consumer接入／正常revert代碼。已寫Inventory Operation／Movement／Audit永不刪除。存在已提交新來源時不能令replay失去支援，故優先關閉新寫入、保留查詢／回執讀取，回滾須列明consumer影響。
++
++## TASK-052 — 原子 purchase receipt 與可信 context
++
++### Approach
++先確定性單元RED→GREEN，再1–4明細真MySQL／真auth fixture；完成後跑200明細最大規模。每次變更先記影響範圍與測試理由。同一天本機隔離資源沿用Sam授權；版本須實測26.7.0，敏感資料不匯出。
++
++### 必需案例
++單元最少24例：strict schema／200上限／重複source／safe integer；none、batch、expiry；日期矛盾／expired／minimum life max；override reason／權限；PO snapshot binding／actor／tx／route／intent；所有claim先於lock；全域排序；重複Bucket順序；membership conflict／all-replay／mixed replay；scalar receipt／結果集合；generic caller拒絕。
++
++真MySQL最少20例：1與200行成功；跨倉／多Bucket／相同Bucket不同PO行；共用Lot及DB collation等價Lot；第二行無效；Lot／Balance／Movement／第二Audit／completion故障；caller寫入後失敗；exact replay及改payload／membership衝突；並發相同event；反向行序並發／實際鎖等待；等待後撤權／位置變更；inactive或flag改變＋合法承諾；無效快照；真實allocator／Reservation回歸。每例查完整受影響表及original immutable rows，不能只查status/count。
++
++context／真認證專用suite：PR-A至少8個receipt案例；PR-B擴充後總計至少12例。真JWT有效／失效／revoked／過期；wrong route／URL resource ID／actor／tx／intent／fake capsule；receipt權限等待後撤銷；真password＋device策略成功、bad password／device拒絕（reversal組在PR-B啟用）；尚未有consumer route時使用測試專用app route掛既有真auth middleware，明示不是已完成Purchasing正式HTTP/UI。
++
++### Definition of Done
++上述PR-A適用案例全部零skip、native26.7、ABI套件最少8例、lint／build／audit／coverage／現有native regression通過；來源hash與原始證據可追溯。不得用未執行reversal案例填A測試數，A auth suite至少8個實際receipt案例；B補齊至少12總案例。不是正式驗收。
++
++## PHASE-008 — 採購多次部分反向 provider（PR-B）
++
++### Objective / dependencies
++依賴已合併PHASE007；自最新main建立新分支。一次transaction支援1–200行，並發累計不超原量，generic full reversal舊語義保持。
++
++### Entry criteria
++PR-A實際merge SHA；0101號碼與shared migration ownership重新核對；Sam已批准link schema／新receipt專屬反向ownership。若migration號碼被其他已合併工作占用，以新main下一空號作機械調整並記錄精確檔案／來源，不覆寫別人檔案。
++
++### Verification / merge trigger
++TASK053、A回歸、現有generic full reversal／Reservation／收貨測試通過；當前mandatory CI／review及最新main整合通過後依授權合併。Purchasing consumer以實際ABI／migration／tests／merge SHA交接，不以本機未合併代碼解鎖。
++
++### Rollback
++新表是additive且不可變，運維回滾保留資料／舊唯一鍵；不自動drop已使用table。關閉consumer新反向寫入，保留結果與link查詢。已寫partial來源只能由相容provider處理，不能fallback到generic。
++
++## TASK-053 — partial reversal links 與並發保護
++
++### Approach
++先單元、最小真DB、再200明細／競爭；沿用same transaction及原10/20/30秒期限。每original先有current lock才算SUM links；所有受影響Bucket／Reserved以整批最終值檢查。
++
++### 必需案例
++單元至少24例：strict schema；來源／owner／receipt membership；同original重複；超量／safe integer；無足夠onHand／allocated底線／Reserved覆蓋；多Bucket；replay／不同quantity衝突；fresh auth／strongauth／device；完整global lock order；第二行／Audit／link rollback propagation；generic來源拒絕與result mapping。
++
++真MySQL至少24例：schema fresh／rerun／FK／positive quantity／unique／immutability；連續部分3+2再剩餘；兩連線競爭各自可行但總和超量，只一勝；同event重送；不同payload；交叉多original順序；多行任一失敗全rollback；第二Movement／link／Audit／complete／caller故障；allocation和Reservation競爭；原Movement不變；現在lifecycle／tracking／baseUOM變更後仍按持久receipt policy驗證反向；不存在Balance拒絕；sameBucket累計；partial資料不影響舊generic一次完整反向；newreceipt不能generic反向；200行成功與結果逐項一致。
++
++ABI最少8例包括獨立query的NOT_FOUND／COMPLETED精確映射、未知commit用同event找回、query撤權與corrupt／missing／extra member拒絕、以持久tuple重算membershipDigest；changed request correlation／輸入行序不改business replay，changed snapshot／membership／goodsReceiptId／reason拒絕。原生套件另含未提交時查詢NOT_FOUND、commit後新transaction取得完整結果、rollback後仍NOT_FOUND、可見未完成root拒絕；不把NOT_FOUND當新event重送許可。結果解碼使用real serializer/parser，不以fake operation繞過白名單。
++
++### Definition of Done
++上述新組零skip；原A、generic reversal、Receipt、Reservation及全repository必要CI／coverage通過。reversal auth suite在真JWT／password／device上驗證；依原操作最低權限而非fake trust欄位。實際merged SHA及可觀察consumer handoff完成，並確認consumer是否採用；不是P4或Purchasing整體DONE。
++
++## Commands / evidence contract
++
++精確argv／min／env／side effects已列在本候選的 `00_project_profile.json` 新增suite，cwd均為repo root，Node26；`{run_dir}`僅是Harness建立的本次私有報告目錄，不是任意shell字串。新native設 `DB_INTEGRATION_TESTS=1`及 `INVENTORY_PURCHASE_TESTS=1`，reversal auth另設 `INVENTORY_PURCHASE_REVERSAL_TESTS=1`，A不註冊B未實作案例、不以skip填數。各組少測試／任何skip失敗。新fixture只接受 `erp_inventory_purchase_*` owned schema；既有三組native維持各自原schema／flag／環境限制，不改舊測試。允許同一owned daemon建立各組隔離schema，工具除錯不得藉此啟動P4大型fixture。password及合成crypto keys不記argv或明文報告。單元coordinator600秒、native1200秒；不改product timeout。
++
++PR-A四個新專用suite：receipt-unit≥24、receipt-database≥20、receipt-auth≥8、contract≥8；PR-B增加reversal-unit≥24、reversal-database≥24及reversal-auth≥12（包含A認證）。另新增三個既有native測試的精確runner，receipt／Reservation／lock各至少1個既有top-level測試，內含原子子案例不可刪改；並保留既有movement12及P2／P3 API／transfer／Sales回歸。正式TC011／012只增加既有formal suite case mapping，不改其命令或把developer結果當正式驗收。
++
++每phase必要suite完整列在 `08_traceability.json`；包含原server/client coverage、floors、audit及實際Playwright回歸。現有suite的argv／minimum／timeout／env／stage均保持；formal suite只追加TC011／012 required IDs。現有profile的server coverage原命令未包含global thresholds，因此另要求現有 `npm run test:coverage --workspace server` 或相同當前CI的merged coverage gate實際通過（92/83/90及所有當前floors），不能只跑lcov就稱coverage達標。CI以workflow及branch protection確認，不只相信舊五項名稱；當前PR所有mandatory checks都須通過。
++
++對現有main未合併的Stocktake：先驗既有Bin-lock reader的fail-closed路徑及main可用的native回歸；這類受控測試行需標明fixture。真正Start→receipt/reversal互斥聯合測試另記在P4整合清單，使用實際盤點程式及schema，不聲稱已執行、不作本兩PR前置。provider的實際庫存鎖／atomicity／Reservation／generic regression仍是各PR前置。
++
++## Consumer handoff
++
++以Issue #267與可追蹤文件交接：版本 `inventory-purchase-provider/1.0`、完整command/result/error ABI、caller-owned tx／proof及rollback責任、migration號碼、真測試case/result與實際合併commit。Purchasing TASK006／007以provider合併成果完成其依賴；TASK008仍要由consumer驗證projection／txpassing／dependency unavailable、禁止production fake及raw表fallback。未採用／未測試consumer前，狀態只能PROVIDER_DELIVERED，不能說Purchasing已實際解鎖。僅文件／Issue交接，不向其他chat發訊息。

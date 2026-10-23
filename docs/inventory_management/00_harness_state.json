@@ -1,34 +1,29 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 1876,
+  "revision": 1879,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
-  "current_phase": "PHASE-004",
-  "current_task": "TASK-034",
+  "current_phase": "PHASE-007",
+  "current_task": "TASK-052",
   "baseline": {
-    "design": "b4720b69f67be272b7f605fa8bd83401792629ebd7ae16d1014aac2efcbf58ee",
-    "plan": "c145c025eae94a1570d1bd05a872da53335b931f9ea0f695595d02ddef258908",
-    "code_commit": "f51175e7b62623e50429232cf0aaf580a49461d9",
-    "source_fingerprint": "3cdc51c462840f24f5a221218a928e795600de865f35042f2a087622cee9679e",
-    "worktree": "/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app",
-    "default_commit": "0feb9d712072048adb20afc470eb87abc8911475",
-    "mode_entry_commit": "5402118617442d4d0651a3245a7b57bf1e30cc43"
+    "design": "7f09c816390b1d129bdb905566121b2000d04efca9c72e030f7772b1f1e10ded",
+    "plan": "ceb152c51c6a9cc4528d6ac8ef707902cdca7bd9c99989bf6679452f213283d9",
+    "code_commit": "e272f5d3ce05d0ca50be42e6d8764f0ef20d3dd1",
+    "source_fingerprint": null,
+    "worktree": "/private/tmp/erp-inventory-purchase-provider",
+    "default_commit": "58322ba3d5b77aa1a6250be4b5055651c682a371",
+    "mode_entry_commit": "e272f5d3ce05d0ca50be42e6d8764f0ef20d3dd1"
   },
   "runtime": {
-    "instance_id": "erp-inventory-p3-hd140-rd02hhpl",
-    "owner": "Codex /root HD137–HD140",
+    "instance_id": "inventory-purchase-provider-a",
+    "owner": "Codex /root",
     "resources": {
-      "workspace": "/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app",
-      "mysql-schema": "erp_inventory_p3_integration_62f8aad44166",
-      "mysql-socket": "/private/tmp/erp-inventory-p3-hd140-rd02hhpl/tcp/mysql.sock",
-      "mysql-port": "51758",
-      "web-port": "5205",
-      "opening-file-root": "/private/tmp/erp-inventory-p3-hd140-rd02hhpl/opening"
+      "workspace": "/private/tmp/erp-inventory-purchase-provider"
     },
-    "lease_ref": "Actual owned coordinator/PID/datadir/socket/TCP verification and exclusive loopback5205 reservation; child socket resources recorded in /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/hd140-coordinator-5cc09bbba981/observation.json"
+    "lease_ref": "Dedicated Git worktree observed; no MySQL/app resources started. Historic P3 resources are not this run."
   },
   "tasks": {
     "TASK-001": "DONE",
@@ -81,7 +76,9 @@
     "TASK-048": "PENDING",
     "TASK-049": "PENDING",
     "TASK-050": "PENDING",
-    "TASK-051": "PENDING"
+    "TASK-051": "PENDING",
+    "TASK-052": "IN_PROGRESS",
+    "TASK-053": "PENDING"
   },
   "approvals": [
     {
@@ -4221,6 +4218,128 @@
         "server/test/supplierBankCrypto.test.js"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-PURCHASE-DESIGN",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam user message in this thread: A：已審閱，批准採購 provider 精確候選與範圍，請開始 PR-A，合併後推進 PR-B；TASK-041 分開追蹤，沒有需要我決定的問題前不要停下來。 Approves purchase-provider-decision.md exact DESIGN/PLAN and patch820be2a2fb3c641d7994176abdbc7dca5e8b3aac25bddc54d06b58c59ae41148; not unseen implementation source approval. Standing current-CI/latest-main/review/merge and local synthetic resource permissions apply.",
+      "recorded_at": "2026-10-23T02:58:27.638Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "7f09c816390b1d129bdb905566121b2000d04efca9c72e030f7772b1f1e10ded",
+      "code_commit": null,
+      "scope": [
+        "inventory-management",
+        "PHASE-007",
+        "TASK-052",
+        "PHASE-008",
+        "TASK-053",
+        "docs/inventory_management/**",
+        "docs/purchasing_receiving_management/00_module_manifest.json",
+        "docs/purchasing_receiving_management/03_design_spec.md",
+        "server/src/modules/inventory/InventoryPostingService.js",
+        "server/src/modules/inventory/InventoryLookupService.js",
+        "server/src/modules/inventory/inventoryConstants.js",
+        "server/src/modules/inventory/InventoryOperationService.js",
+        "server/src/modules/inventory/InventoryPurchaseService.js",
+        "server/src/modules/inventory/InventoryPurchaseContext.js",
+        "server/src/modules/inventory/inventoryPurchaseValidation.js",
+        "server/src/modules/inventory/inventoryPurchaseReceipts.js",
+        "server/src/modules/inventory/inventoryPurchaseReversal.js",
+        "server/database/migrations/0101_create_inventory_purchase_reversal_links.js",
+        "server/test/inventoryPurchaseReceipt.test.js",
+        "server/test/inventoryPurchaseContext.test.js",
+        "server/test/inventoryPurchaseReversal.test.js",
+        "server/test/inventoryPurchaseContract.test.js",
+        "server/test/integration/inventoryPurchaseReceipt.integration.test.js",
+        "server/test/integration/inventoryPurchaseReversal.integration.test.js",
+        "server/test/integration/inventoryPurchaseAuth.integration.test.js",
+        "server/test-support/inventoryPurchaseFixtures.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PURCHASE-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam user message in this thread: A：已審閱，批准採購 provider 精確候選與範圍，請開始 PR-A，合併後推進 PR-B；TASK-041 分開追蹤，沒有需要我決定的問題前不要停下來。 Approves purchase-provider-decision.md exact DESIGN/PLAN and patch820be2a2fb3c641d7994176abdbc7dca5e8b3aac25bddc54d06b58c59ae41148; not unseen implementation source approval. Standing current-CI/latest-main/review/merge and local synthetic resource permissions apply.",
+      "recorded_at": "2026-10-23T02:58:27.639Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "ceb152c51c6a9cc4528d6ac8ef707902cdca7bd9c99989bf6679452f213283d9",
+      "code_commit": null,
+      "scope": [
+        "inventory-management",
+        "PHASE-007",
+        "TASK-052",
+        "PHASE-008",
+        "TASK-053",
+        "docs/inventory_management/**",
+        "docs/purchasing_receiving_management/00_module_manifest.json",
+        "docs/purchasing_receiving_management/03_design_spec.md",
+        "server/src/modules/inventory/InventoryPostingService.js",
+        "server/src/modules/inventory/InventoryLookupService.js",
+        "server/src/modules/inventory/inventoryConstants.js",
+        "server/src/modules/inventory/InventoryOperationService.js",
+        "server/src/modules/inventory/InventoryPurchaseService.js",
+        "server/src/modules/inventory/InventoryPurchaseContext.js",
+        "server/src/modules/inventory/inventoryPurchaseValidation.js",
+        "server/src/modules/inventory/inventoryPurchaseReceipts.js",
+        "server/src/modules/inventory/inventoryPurchaseReversal.js",
+        "server/database/migrations/0101_create_inventory_purchase_reversal_links.js",
+        "server/test/inventoryPurchaseReceipt.test.js",
+        "server/test/inventoryPurchaseContext.test.js",
+        "server/test/inventoryPurchaseReversal.test.js",
+        "server/test/inventoryPurchaseContract.test.js",
+        "server/test/integration/inventoryPurchaseReceipt.integration.test.js",
+        "server/test/integration/inventoryPurchaseReversal.integration.test.js",
+        "server/test/integration/inventoryPurchaseAuth.integration.test.js",
+        "server/test-support/inventoryPurchaseFixtures.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PURCHASE-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam user message in this thread: A：已審閱，批准採購 provider 精確候選與範圍，請開始 PR-A，合併後推進 PR-B；TASK-041 分開追蹤，沒有需要我決定的問題前不要停下來。 Approves purchase-provider-decision.md exact DESIGN/PLAN and patch820be2a2fb3c641d7994176abdbc7dca5e8b3aac25bddc54d06b58c59ae41148; not unseen implementation source approval. Standing current-CI/latest-main/review/merge and local synthetic resource permissions apply.",
+      "recorded_at": "2026-10-23T02:58:27.639Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "ceb152c51c6a9cc4528d6ac8ef707902cdca7bd9c99989bf6679452f213283d9",
+      "code_commit": null,
+      "scope": [
+        "PHASE-007",
+        "TASK-052",
+        "PHASE-008",
+        "TASK-053",
+        "docs/inventory_management/**",
+        "docs/purchasing_receiving_management/00_module_manifest.json",
+        "docs/purchasing_receiving_management/03_design_spec.md",
+        "server/src/modules/inventory/InventoryPostingService.js",
+        "server/src/modules/inventory/InventoryLookupService.js",
+        "server/src/modules/inventory/inventoryConstants.js",
+        "server/src/modules/inventory/InventoryOperationService.js",
+        "server/src/modules/inventory/InventoryPurchaseService.js",
+        "server/src/modules/inventory/InventoryPurchaseContext.js",
+        "server/src/modules/inventory/inventoryPurchaseValidation.js",
+        "server/src/modules/inventory/inventoryPurchaseReceipts.js",
+        "server/src/modules/inventory/inventoryPurchaseReversal.js",
+        "server/database/migrations/0101_create_inventory_purchase_reversal_links.js",
+        "server/test/inventoryPurchaseReceipt.test.js",
+        "server/test/inventoryPurchaseContext.test.js",
+        "server/test/inventoryPurchaseReversal.test.js",
+        "server/test/inventoryPurchaseContract.test.js",
+        "server/test/integration/inventoryPurchaseReceipt.integration.test.js",
+        "server/test/integration/inventoryPurchaseReversal.integration.test.js",
+        "server/test/integration/inventoryPurchaseAuth.integration.test.js",
+        "server/test-support/inventoryPurchaseFixtures.js"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -5431,6 +5550,18 @@
       "reviewer": "Sam",
       "reviewed_baseline": "b4720b69f67be272b7f605fa8bd83401792629ebd7ae16d1014aac2efcbf58ee",
       "source_ref": "Actual latest Sam user reply A in this thread answers the immediately preceding HD139 exact two-file candidate/options. Approve patch 800a6102648b628a9acceb839d833302e0a526e962096611d3d31cdbb2063459 / DESIGN b4720b69f67be272b7f605fa8bd83401792629ebd7ae16d1014aac2efcbf58ee / PLAN 151cf5757a465b4df8a64f34e1f876ca6759a3bcc438ec721fb22bf7ab965a44. Only Supplier malformed-row fixture copied authTag XOR1 plus added difference assertion, and one Inventory manifest approval-required path. Production crypto/randomness/existing assertions/counts/skips/commands/coverage/security unchanged. Rebind HD138 exact shared scope byte-identical/no-write, except this precise approved fixture. Integrate observed main 0feb9d712072048adb20afc470eb87abc8911475 Item documentation handoff only; no Item TASK043 implementation. Rerun all mandatory developer/native/Sales/capacity/real Playwright gates and exact owned cleanup. HD137 conditional commit/push/open one P3 PR remains only after mandatory developer PASS and evidence classification. Final exact-head Sam source/merge review, five current CI, MERGE_READY and fresh main remain separate. All396 historical report refs/failures retained unchanged; no final source/head approval, P4/formal acceptance/UAT/deployment or waiver inferred. Candidate design/scope review only; no detailed findings supplied and no final implemented-source approval inferred.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-PURCHASE-DESIGN",
+      "method": "HUMAN",
+      "author": "Codex /root",
+      "reviewer": "Sam",
+      "reviewed_baseline": "7f09c816390b1d129bdb905566121b2000d04efca9c72e030f7772b1f1e10ded",
+      "source_ref": "Actual Sam user message in this thread: A：已審閱，批准採購 provider 精確候選與範圍，請開始 PR-A，合併後推進 PR-B；TASK-041 分開追蹤，沒有需要我決定的問題前不要停下來。 Approves purchase-provider-decision.md exact DESIGN/PLAN and patch820be2a2fb3c641d7994176abdbc7dca5e8b3aac25bddc54d06b58c59ae41148; not unseen implementation source approval. Standing current-CI/latest-main/review/merge and local synthetic resource permissions apply.",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -13282,6 +13413,14 @@
       "idempotency_key": "erp-inventory-p3-hd140-rd02hhpl-672b67e035d44c4dbdfdf6d18071522d",
       "status": "CONFIRMED",
       "source_ref": "Actual migration exit0; exact current ledger matched=True; proof /Users/sam/.codex/worktrees/inventory-p3-operations/erp-app/docs/inventory_management/evidence/hd140-coordinator-5cc09bbba981/migrate-erp_inventory_p3_1fbc191bd424"
+    },
+    {
+      "id": "MODE-CHANGE-1878",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-1878",
+      "status": "CONFIRMED",
+      "source_ref": "Sam actual approval: PR-A then PR-B; TASK041 separate"
     }
   ],
   "evidence_files": [
@@ -13899,5 +14038,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "P3 all mandatory integrated developer checksPASS and evidence classified; prepare/publish exact authorized onePR. Await Sam precise-head source/merge review and five currentCI; genericMERGE_READY/freshmain separate, no merge/P4/formal acceptance."
+  "next_safe_action": "PR-A receipt TDD under approved provider v1; commit approved planning and integrate observed main Supplier-only changes, no P4 full-load rerun; native resources must be newly reserved. PR-B only after A merged."
 }

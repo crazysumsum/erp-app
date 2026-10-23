@@ -21,7 +21,8 @@
       "server/test/integration/migrations.integration.test.js",
       "server/test/integration/passwordChange.integration.test.js",
       "server/test/integration/roleManagement.integration.test.js",
-      "server/test/integration/userManagement.integration.test.js"
+      "server/test/integration/userManagement.integration.test.js",
+      "server/test-support/inventoryPurchaseFixtures.js"
     ],
     "allowed_write_paths": [
       "docs/inventory_management/**",
@@ -35,7 +36,8 @@
       "server/test-support/inventoryFixtures.js",
       "server/test/**/inventory*.test.js",
       "client/test/**/inventory*.test.js",
-      "client/e2e/inventory-management/**"
+      "client/e2e/inventory-management/**",
+      "server/test-support/inventoryPurchaseFixtures.js"
     ],
     "approval_required_paths": [
       "server/database/migrations/**",
@@ -93,12 +95,21 @@
         "id": "inventory-domain-contract",
         "version": "planning-v16; P3 fresh-main reserve-only fenced Sales Backorder owner contract; manual and P3 semantics preserved",
         "source": "docs/inventory_management/03_design_spec.md",
-        "sha256": "2fb61cce8ee4ff9f32cd9c6d0e2a9fc8f87c08d34823be7fb622908610b1ac53",
+        "sha256": "7ee4e5f4b897663e276a966959843417e2e787a8adb30bc47fdd7820d3196193",
         "consumers": [
           "purchasing-receiving",
           "sales-order",
           "fulfillment-shipping",
           "returns"
+        ]
+      },
+      {
+        "id": "inventory-purchase-provider",
+        "version": "1.0-candidate",
+        "source": "docs/inventory_management/implementation/purchase-provider-contract-v1.md",
+        "sha256": "fb1c9c2705949150e77e943630e2cae90b410f4bd2f0022dff33ec728df19f72",
+        "consumers": [
+          "purchasing-receiving"
         ]
       }
     ],
@@ -106,9 +117,9 @@
       {
         "module_id": "item-management",
         "id": "item-lookup-service",
-        "version": "transaction-v1; fresh-main additive searchForSale consumed-source pin; existing Inventory methods unchanged",
+        "version": "transaction-v1; fresh-main findManyForCommittedReceipt; existing Inventory behavior preserved",
         "source": "server/src/modules/item/ItemLookupService.js",
-        "sha256": "30d6807978b27252fde194cc821c8fef5de000f27fa7eed404ed204abab2764a",
+        "sha256": "5ed3f26ff4271cc6bd533a417fd09fcde446f1682d662c3c465216e9ea08d558",
         "regression_suites": [
           "inventory-technical"
         ]

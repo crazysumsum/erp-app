@@ -313,3 +313,37 @@ Supplement the existing TC-001/004/007 design/security coverage without renumber
 | Capacity | Complete existing Customer10k and Core100k/500k/2M wrapper assertions with exact budgets, concurrency/EXPLAIN/rollback and native measured output; no shortened fixture. |
 
 Native worker/Confirmation/Backorder tests are supporting consumer evidence, not definitions of Inventory TC-022/031 or business acceptance. All current-source guarded skips require matching independently executed non-skip evidence. Schema, runtime or parsing problems stay BLOCKED; they are not converted to PASS by this appendix.
+
+## TC-011 — Purchase receipt provider
+
+### Preconditions and data
+APPLICABLE／mandatory／blocking；正式驗收尚NOT_RUN。使用合成Confirmed PO、1／200 GR details、跨倉多Bucket及真MySQL26.7；部署來源必須不可變、實際auth可用。
+
+### Steps
+依[驗證計劃](implementation/purchase-provider-plan-v1.md) TASK-052的逐項場景執行，完整檢查claim、lock、Movement／Audit、caller projections、replay及失敗rollback。
+
+### Expected result
+整批全有或全無；結果逐detail一一對應；並發不超量、最低權限及generic舊語義保持。
+
+### Acceptance criteria
+計劃所有適用案例與現有相關回歸通過；真實零skip；developer suite結果不能直接冒充正式TC/UAT。ledger suite_id沿用inventory-technical，正式執行前仍需精確驗收adapter readiness，不能以全庫placeholder宣稱此TC通過。
+
+### Cleanup
+僅精確清理本次owned schema／daemon／port／目錄，保留失敗與原始證據；未知SQL terminal不得稱正常清理。
+
+## TC-012 — Purchase partial reversal provider
+
+### Preconditions and data
+APPLICABLE／mandatory／blocking；正式驗收尚NOT_RUN。使用合成Confirmed PO、1／200 GR details、跨倉多Bucket及真MySQL26.7；部署來源必須不可變、實際auth可用。
+
+### Steps
+依[驗證計劃](implementation/purchase-provider-plan-v1.md) TASK-053的逐項場景執行，完整檢查claim、lock、Movement／Audit／links、caller projections、replay及失敗rollback。
+
+### Expected result
+整批全有或全無；結果逐detail一一對應；並發不超量、最低權限及generic舊語義保持。
+
+### Acceptance criteria
+計劃所有適用案例與現有相關回歸通過；真實零skip；developer suite結果不能直接冒充正式TC/UAT。ledger suite_id沿用inventory-technical，正式執行前仍需精確驗收adapter readiness，不能以全庫placeholder宣稱此TC通過。
+
+### Cleanup
+僅精確清理本次owned schema／daemon／port／目錄，保留失敗與原始證據；未知SQL terminal不得稱正常清理。
