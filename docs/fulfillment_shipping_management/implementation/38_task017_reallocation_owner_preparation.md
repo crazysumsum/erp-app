@@ -82,3 +82,8 @@ Root verified actual raw files and SHA256:
 No unreviewed skip/threshold change or weakened guard. Atomic commit remains pending actual final scoped disposition; final entire P1, candidate CI, browser validation and draft PR remain later gates.
 
 Actual final scoped disposition received: TASK017 APPROVED0C/0H/0M for the exact fingerprint/subset above. Ready for atomic commit and DoD bookkeeping; no full-P1/CI/formal approval implied.
+
+
+## Atomic task completion
+
+Actual atomic commit `99e801559a626aaaac4e9d99c602284bcad74f72` created after root187native/133pure/lint/structural checks and actual independent scoped APPROVED0C/H/M with independently executed19+1native and15pure. Postcommit source fingerprint unchanged `015e303788312166d202bc9b9407e044b7805e0329fec251b5141f6d8891caef`. TASK017 is DONE; dependent Cancel/Reallocate race is retained for TASK019, not removed. TASK018 now starts. Full P1/currentcandidateCI/final-review gates still precede draft PR.

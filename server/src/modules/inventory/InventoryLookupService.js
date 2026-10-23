@@ -1,4 +1,4 @@
-import { prepareFulfillmentAllocation,prepareFulfillmentReallocation,readFulfillmentReallocationStates } from "./inventoryFulfillmentAllocationPreparation.js";
+import { prepareFulfillmentAllocation,prepareFulfillmentReallocation,readFulfillmentReallocationStates,readFulfillmentAllocationScope,lockFulfillmentPickScope,normalizeFulfillmentAllocationScopeQuery } from "./inventoryFulfillmentAllocationPreparation.js";
 import { readFulfillmentBatchCandidates } from "./inventoryFulfillmentCandidateAdvisory.js";
 import { assertActorFresh } from "../authorization/directoryLookups.js";
 import { InventoryFulfillmentService } from "./InventoryFulfillmentService.js";
@@ -132,6 +132,16 @@ export class InventoryLookupService {
   async readFulfillmentReallocationStatesInTransaction(tx,query) {
     await this.#authorize(tx);
     try{return await readFulfillmentReallocationStates(tx,query);}
+    catch(error){if(["ER_NO_SUCH_TABLE","ER_BAD_FIELD_ERROR"].includes(error.cause?.code??error.code))throw inventoryError("INVENTORY_DEPENDENCY_UNAVAILABLE");throw error;}
+  }
+  async readFulfillmentAllocationScopeInTransaction(tx,input) {
+    const query=normalizeFulfillmentAllocationScopeQuery(input);await this.#authorize(tx);
+    try{return await readFulfillmentAllocationScope(tx,query);}
+    catch(error){if(["ER_NO_SUCH_TABLE","ER_BAD_FIELD_ERROR"].includes(error.cause?.code??error.code))throw inventoryError("INVENTORY_DEPENDENCY_UNAVAILABLE");throw error;}
+  }
+  async lockFulfillmentPickScopeInTransaction(tx,input) {
+    const query=normalizeFulfillmentAllocationScopeQuery(input);await this.#authorize(tx);
+    try{return await lockFulfillmentPickScope(tx,query,{inventory:this.fulfillment,time:this.time});}
     catch(error){if(["ER_NO_SUCH_TABLE","ER_BAD_FIELD_ERROR"].includes(error.cause?.code??error.code))throw inventoryError("INVENTORY_DEPENDENCY_UNAVAILABLE");throw error;}
   }
   async listFulfillmentBatchAllocationCandidates(tx,query) {

@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 164,
+  "revision": 169,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-002",
-  "current_task": "TASK-017",
+  "current_task": "TASK-018",
   "baseline": {
-    "design": "f7a02f32d645b419198d1676a2d5fae4ab7280e25e6046b5cf11247ca7ee55d0",
-    "plan": "37c2d0867c0be9f8bc8a378d163f42976b7772f5b3c0b291ac9f09db656d0172",
-    "code_commit": "ca776e932ebc01913cc198bd7393e7b2e21512ff",
-    "source_fingerprint": "015e303788312166d202bc9b9407e044b7805e0329fec251b5141f6d8891caef",
+    "design": "ed029da1aa6ff52bd6676896b5b2d7b3fe68283c78c08e85abb5e848d7d4d5f8",
+    "plan": "b81402af2d9f20ceac68aefa2029f32b280351909dc9cb0d6bfe2bb3b0cfe7a2",
+    "code_commit": "99e801559a626aaaac4e9d99c602284bcad74f72",
+    "source_fingerprint": "1aa72011fc06879833235498bd78bb3cf06a16219c4577730f7ac32c251977d1",
     "worktree": "/private/tmp/erp-fulfillment-p1",
     "default_commit": "fd32762f4fa17a5e77aaa7118a9ded2d3ac81e9e",
     "mode_entry_commit": "fd32762f4fa17a5e77aaa7118a9ded2d3ac81e9e"
@@ -47,8 +47,8 @@
     "TASK-014": "DONE",
     "TASK-015": "DONE",
     "TASK-016": "DONE",
-    "TASK-017": "IN_PROGRESS",
-    "TASK-018": "PENDING",
+    "TASK-017": "DONE",
+    "TASK-018": "IN_PROGRESS",
     "TASK-019": "PENDING",
     "TASK-020": "PENDING",
     "TASK-021": "PENDING",
@@ -2615,6 +2615,89 @@
         "NFR-023",
         "Exact original NA reason unchanged; TC010 mandatory/blocking"
       ]
+    },
+    {
+      "id": "APR-121-TASK018-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam original full P1/TASK018 authority; actual separate direction review612d2d4c; necessary implementation lineage, not human inspection of unseen hashes",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/39_task018_pick_confirmation_increment.md",
+      "recorded_at": "2026-10-23T08:49:45.419697+00:00",
+      "code_commit": "99e801559a626aaaac4e9d99c602284bcad74f72",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "b81402af2d9f20ceac68aefa2029f32b280351909dc9cb0d6bfe2bb3b0cfe7a2",
+      "scope": [
+        "server/src/modules/inventory/InventoryLookupService.js",
+        "server/src/modules/inventory/inventoryFulfillmentCandidateAdvisory.js",
+        "server/src/modules/sales/SalesFulfillmentService.js",
+        "server/test/salesFulfillmentService.test.js",
+        "docs/inventory_management/03_design_spec.md",
+        "docs/inventory_management/00_module_manifest.json",
+        "docs/sales_order_management/03_design_spec.md",
+        "docs/sales_order_management/00_module_manifest.json",
+        "HD018 A, necessary receipt-bound readonly Sales facts within existing approved shared scope; owner review still required; no P4 routing",
+        "server/src/modules/inventory/inventoryFulfillmentAllocation.js",
+        "server/src/modules/inventory/inventoryFulfillmentAllocationPreparation.js",
+        "TASK016 planned owner readonly preparation/shared assessor; existing writer physical-reader enforcement and ABI unchanged",
+        "server/src/modules/inventory/InventoryPickSequenceService.js",
+        "TASK017 necessary owner-only release-aware preparation/shared eligibility reader; original APIs and all safety/20s gates retained",
+        "TASK018 necessary owner readonly complete Allocation/Reservation source/CAS facts and full existing-row Pick anchors; same InventoryLookup/AllocationPreparation named shared paths, no new write policy"
+      ]
+    },
+    {
+      "id": "APR-122-TASK018-DESIGN",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam original full P1/TASK018 authority; actual separate direction review612d2d4c; necessary implementation lineage, not human inspection of unseen hashes",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/39_task018_pick_confirmation_increment.md",
+      "recorded_at": "2026-10-23T08:49:45.419697+00:00",
+      "code_commit": "99e801559a626aaaac4e9d99c602284bcad74f72",
+      "expires_at": null,
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "ed029da1aa6ff52bd6676896b5b2d7b3fe68283c78c08e85abb5e848d7d4d5f8",
+      "scope": [
+        "PHASE-002",
+        "TASK-018",
+        "Original Pick/Short RELEASE semantics and exact positive-release-before-root/full-anchor order; no threshold waiver"
+      ]
+    },
+    {
+      "id": "APR-123-TASK018-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam original full P1/TASK018 authority; actual separate direction review612d2d4c; necessary implementation lineage, not human inspection of unseen hashes",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/39_task018_pick_confirmation_increment.md",
+      "recorded_at": "2026-10-23T08:49:45.419697+00:00",
+      "code_commit": "99e801559a626aaaac4e9d99c602284bcad74f72",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "b81402af2d9f20ceac68aefa2029f32b280351909dc9cb0d6bfe2bb3b0cfe7a2",
+      "scope": [
+        "PHASE-002",
+        "TASK-012–023",
+        "Full original gates/currentCI then draft PR"
+      ]
+    },
+    {
+      "id": "APR-124-TASK018-NFR023-LINEAGE",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam original full P1/TASK018 authority; actual separate direction review612d2d4c; necessary implementation lineage, not human inspection of unseen hashes",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/39_task018_pick_confirmation_increment.md",
+      "recorded_at": "2026-10-23T08:49:45.419697+00:00",
+      "code_commit": "99e801559a626aaaac4e9d99c602284bcad74f72",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "b81402af2d9f20ceac68aefa2029f32b280351909dc9cb0d6bfe2bb3b0cfe7a2",
+      "scope": [
+        "NFR-023",
+        "Exact original NA reason unchanged; TC010 mandatory/blocking"
+      ]
     }
   ],
   "reviews": [
@@ -3777,6 +3860,42 @@
       "reviewer": "/root/fulfillment_independent_review",
       "reviewed_baseline": "65e0badb660713cc8250a5feff0035277d9121a21711c9d01a4d310bad9be17f",
       "source_ref": "implementation/38_task017_reallocation_owner_preparation.md#actual-independent-closing-execution",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-098-TASK018-DIRECTION",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "612d2d4ca40dc3e0f4ca04136e0b16052aea049c4f7ca3fdb4df9f28499218df",
+      "source_ref": "implementation/39_task018_pick_confirmation_increment.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-099-TASK018-STATIC-CLOSURE",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "8fb5bb2bf7171ac46986927a8fe1ef14cd947aea9d05bdd0d7891854d03aa75d",
+      "source_ref": "implementation/39_task018_pick_confirmation_increment.md#independent-frozen-review-in-progress",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-100-TASK018-CLOSING",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "8fb5bb2bf7171ac46986927a8fe1ef14cd947aea9d05bdd0d7891854d03aa75d",
+      "source_ref": "implementation/39_task018_pick_confirmation_increment.md#actual-independent-closing-execution",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -5461,7 +5580,8 @@
     "implementation/35_batch_candidate_shared_stock.md",
     "implementation/36_task015_batch_candidates_developer_increment.md",
     "implementation/37_task016_allocate_developer_increment.md",
-    "implementation/38_task017_reallocation_owner_preparation.md"
+    "implementation/38_task017_reallocation_owner_preparation.md",
+    "implementation/39_task018_pick_confirmation_increment.md"
   ],
   "defects": [
     {
@@ -5558,7 +5678,22 @@
         "/private/tmp/fulfillment-p1-reallocate-reader-green.log"
       ],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-007",
+      "severity": "MEDIUM",
+      "status": "CLOSED",
+      "source_ids": [
+        "PHASE-002",
+        "TASK-018"
+      ],
+      "closure_evidence": [
+        "implementation/39_task018_pick_confirmation_increment.md#failures-retained-and-corrected",
+        "/private/tmp/fulfillment-p1-task018-owner-mutation-red.log",
+        "/private/tmp/fulfillment-p1-task018-owner-mutation-green.log"
+      ],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK017 exactsource015e3037 qualified root187native/133unit/lint/trace/boundary/whitespacePASS and actual separate closingAPPROVED0C/H/M with independently executed19Realloc+1concurrentAllocate+15purePASS, no skips. Create atomic TASK017 commit, verify source fingerprint unchanged, then markDONE/advanceTASK018. Preserve dependent Cancel/Reallocate race forTASK019 and all original safety/20s/P1/currenttarget/currentCI/browser/fullvalidation gates before draftPR. No currentP1CI/PR yet."
+  "next_safe_action": "TASK018 final independent scopedAPPROVED0CHM actual33native+6pure, FP1aa unchanged; root220native+139pure/lint/trace/boundary complete. Atomic commit TASK018, reconcile commit/source then markDONE and enterTASK019 Cancel/races. TASK020–023/full browser/coverage/security/build/currentcandidateCI pending beforedraftPR. NoP1push/PR/merge."
 }
