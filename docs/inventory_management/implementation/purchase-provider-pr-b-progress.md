@@ -23,3 +23,11 @@ B在 `/private/tmp/erp-inventory-purchase-reversal`／`codex/inventory-purchase-
 ## 下一個增量及完成條件
 
 先TDD不可變reversal-link migration／replay ledger與強認證context，再同交易部分反向／allocated及Reserved保護。依批准計劃先最小真MySQL，再200行／並發超量／跨明細全回滾及既有generic reversal／Receipt／Reservation／Bin-lock回歸；不改原10／20／30秒期限、數量或門檻。Purchasing仍NOT_UNLOCKED，B provider合併及consumer實際採用分開追蹤。
+
+## 增量二：不可變 links schema
+
+修改前範圍：已批准且未占用的0101 migration、新reversal unit及native檔；不改通用Movement reversal唯一鍵或既有產品。重驗理由：DDL必須先證明完整約束、安全重跑及不覆寫不相容schema，才能讓B交易使用其累計資料。schema3例先RED（migration未存在），實作後unit28 PASS。獨立唯讀審查指出P2工具缺證，已增加三個FK／lookup index的DDL斷言及九種不相容metadata的「拒絕前不改DDL」案例；unit37 PASS，第二輪未發現剩餘可操作問題，未聲稱fake transport是真DB證據。
+
+固定來源最小真MySQL26.7.0的R01–R03為3/3 PASS、零skip：fresh/rerun、generic舊唯一鍵、positive／unique／FK與不可變UPDATE／DELETE。R02／03使用明示schema-only FK fixture，不宣稱B provider過帳已完成。原始XML `/private/tmp/purchase-provider-diagnostics/pr-b-schema-minimal-02.xml` SHA256 `4f3e9c07bbb5a3e153ca18e2df8645b7859cd999776a6c4b0f356301b0f8106c`。第一次診斷命令少一個reporter destination，在Node參數解析即FAIL、零案例執行；修正命令後才有上述真DB結果，不覆蓋歷史。
+
+本次socket-only runtime `/private/tmp/erp-inventory-purchase-b-mysql.QdV8f3`已確認無test schema殘留／連線／交易，精確刪除bootstrap schema、正常shutdown且daemon session exit0，socket/pid/process均不存在。MySQL原始日誌保留於私有diagnostics，最後只移除這次datadir與合成0600 credential檔。完整reversal native最低24例及auth最低12例仍未完成，這3例不代表完整Gate PASS。

@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 1895,
+  "revision": 1897,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "7f09c816390b1d129bdb905566121b2000d04efca9c72e030f7772b1f1e10ded",
     "plan": "74cd59d2b4e2ee79518406ef85d31c610f4dca75a17adff6baa4db8ba058c79e",
-    "code_commit": "5c055d79e94c74e58ccb27afe0fc3e0bd3edf151",
-    "source_fingerprint": "30da274196b449aacc7dc039aaf241e62be819a67291dbb6685468881abfcbf3",
+    "code_commit": "794f487da01ab81731da826e78337c9a07d99626",
+    "source_fingerprint": "62e3fb69909006f576066cdfa6e844ef80751d17b3e40aa8633965e79f2c84cd",
     "worktree": "/private/tmp/erp-inventory-purchase-reversal",
     "default_commit": "5c055d79e94c74e58ccb27afe0fc3e0bd3edf151",
     "mode_entry_commit": "e272f5d3ce05d0ca50be42e6d8764f0ef20d3dd1"
@@ -22,7 +22,7 @@
     "owner": "Codex /root",
     "resources": {
       "workspace": "/private/tmp/erp-inventory-purchase-reversal",
-      "mysql-schema": "NOT_STARTED: PR-B owned synthetic MySQL26.7 runtime will be allocated after deterministic unit TDD; all A runtimes already precisely cleaned.",
+      "mysql-schema": "CLEANED exact QdV8f3: three fixtureUUID schemas absent; zero DBconnections and innodb_trx; bootstrap erp_inventory_purchase_prb dropped, mysqladmin normalshutdown; session68537 exit0, no socket/pid/process. Raw XML/MySQLlogs retained privately; exact datadir including synthetic0600credentials removed. No sharedDB touched.",
       "web-port": "NOT_STARTED: no PR-B app/API/browser listener allocated",
       "opening-file-root": "NOT_USED: PR-A does not run Opening or P4; no Opening files allocated"
     },
@@ -5726,6 +5726,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-PURCHASE-B-SCHEMA-CYCLE2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/purchase_b_migration_review",
+      "reviewed_baseline": "62e3fb69909006f576066cdfa6e844ef80751d17b3e40aa8633965e79f2c84cd",
+      "source_ref": "Actual read-only migrationcycle1 noDDLcorrectnessdefect, P2fake-metadataevidencegap accepted; added3FK+lookupDDLassertions and9badmetadata pre-mutationrejections. Actualcycle2 no newactionablefinding inthese additions; originalmigrationbytesunchangedSHA dc2fa1b8a18bed192d35d039f542f5f6354319935bf3c9fe11d9f5cf74e15325. Rootactualminimalnative3PASS separate, notagentreview/native24completion. TargetedDDLindexremovalmutationfails namedassertion, exactproductSHArestored. Crossmodel skipped perAPR291.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -6762,6 +6774,17 @@
       "source_ref": "Authenticated gh pr view275 observed stateMERGED at2026-10-23T07:14:03Z, mergeCommit5c055d79e94c74e58ccb27afe0fc3e0bd3edf151, approvedheadcf202bb9dac0d410e58115867d2a04fe67862e46; gitfetch origin/main independently confirmed5c055d79 includeshead and dc0f. Normal gh pr merge --merge --match-head-commitcf202 exit0; no admin/CI/protection bypass. Current13CI allSUCCESS39914810858; actual merged native95.78/87.26/94.27 and39floors. Generic identityBLOCKED retained per actual Sam candidate-scoped evidence-applicability approval; no relabelled historical evidence.",
       "actor": "GitHub actual mergedPR independently observed by Codex /root",
       "observed_at": "2026-10-23T07:15:22.812Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "SUPPORTING_ONLY_PRB_SCHEMA_R01_R03_NOT_FULL_NATIVE24_GATE",
+      "code_commit": "794f487da01ab81731da826e78337c9a07d99626",
+      "spec_baseline": "74cd59d2b4e2ee79518406ef85d31c610f4dca75a17adff6baa4db8ba058c79e",
+      "source_fingerprint": "62e3fb69909006f576066cdfa6e844ef80751d17b3e40aa8633965e79f2c84cd",
+      "status": "PASS",
+      "source_ref": "Fixed-source actual minimalR01–03 3PASS/0FAIL/0SKIP in0.714seconds on privatelyverifiedMySQL26.7; native XML /private/tmp/purchase-provider-diagnostics/pr-b-schema-minimal-02.xml SHA4f3e9c07bbb5a3e153ca18e2df8645b7859cd999776a6c4b0f356301b0f8106c. FirstCLI invocation failed beforetestdispatch (unpairedreporterdestination), preservedhistory notPASS. Exactcleanup verified/normaldaemonexit0; fullnative24/auth12 stillpending.",
+      "actor": "Actual native Node test/MySQL26.7 execution observed by Codex /root, notformalTC/UAT",
+      "observed_at": "2026-10-23T07:36:28.051Z"
     }
   ],
   "pending_decisions": [
@@ -14008,6 +14031,14 @@
       "idempotency_key": "purchase-a-delivered-275-5c055d79",
       "status": "CONFIRMED",
       "source_ref": "Actual gh issuecomment returned https://github.com/crazysumsum/erp-app/issues/267#issuecomment-6359719713. Formal A ABI/version/actualmerge5c055d79/realtestsummary handedoff; T06 mayintegrate; T07/BandT08consumerremainpending, issueopen/PurchasingNOT_UNLOCKED. No otherchatmessage/rawlogs."
+    },
+    {
+      "id": "EXT-PURCHASE-B-SCHEMA-MINIMAL",
+      "kind": "MIGRATION",
+      "target": "owned MySQL runtime QdV8f3 / minimalR01–03 / migration0101",
+      "idempotency_key": "purchase-b-schema-minimal-QdV8f3",
+      "status": "CONFIRMED",
+      "source_ref": "Fixed-source actual minimalR01–03 3PASS/0FAIL/0SKIP in0.714seconds on privatelyverifiedMySQL26.7; native XML /private/tmp/purchase-provider-diagnostics/pr-b-schema-minimal-02.xml SHA4f3e9c07bbb5a3e153ca18e2df8645b7859cd999776a6c4b0f356301b0f8106c. FirstCLI invocation failed beforetestdispatch (unpairedreporterdestination), preservedhistory notPASS. Exactcleanup verified/normaldaemonexit0; fullnative24/auth12 stillpending."
     }
   ],
   "evidence_files": [
@@ -14522,7 +14553,9 @@
     "evidence/20261023T055439-8d2e3f47e64f/run.json",
     "evidence/20261023T055936-2bb53fe4a920/run.json",
     "evidence/20261023T065942-2adc8aafcf7f/run.json",
-    "evidence/20261023T072118-241f6d62f71b/run.json"
+    "evidence/20261023T072118-241f6d62f71b/run.json",
+    "evidence/20261023T072513-d3ff39a703bc/run.json",
+    "evidence/20261023T073519-5a8645067443/run.json"
   ],
   "defects": [
     {
@@ -14691,5 +14724,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "B firstvalidation slice25new+37existing=62PASS, noDBclaim, targetedduplicateguardmutationcaught/restored, lintPASS, two-cycleactualindependentreviewclosed. Recordcurrent Harness25 thencommitnarrowinput/hash increment. Next TDDschema0101/reversalledger/context thenminimalrealMySQL; no deadline/data/gate changes, BfinalsourceSamreviewpending. Aactuallydelivered and cleaned/recoverable; Issue267handoff confirmed; TASK041 separate/PurchasingNOT_UNLOCKED."
+  "next_safe_action": "B schema increment unit37PASS/Harnessrun073519 registered, realminimal3schema casesPASS/zeroSKIP, independent2-cycle findingsclosed, targetedindexmutationcaught/exactrestored; allownedruntimepreciselycleaned. Commitadditive0101 + tests/docs only, then TDDreversal scalarledger/context/fulltransaction. Fullnative24/auth12/Aregression/currentCI/finalSamreview stillpending; no productPostorpartialreversecompletionclaim. TASK041separate; AactualmergehandoffIssue267confirmed/PurchasingNOT_UNLOCKED."
 }
