@@ -4,8 +4,10 @@ const sorted=rows=>rows.sort((a,b)=>BigInt(a.id)<BigInt(b.id)?-1:BigInt(a.id)>Bi
 const ids=rows=>rows.map(row=>String(row.id));
 // Fixed owner catalogue only. Each statement and each primary-key lock batch is bounded to 500 rows.
 // Locking use requires the coordinator's earlier complete operation fences and fresh view; this helper grants neither.
-export async function readFulfillmentArchiveState(tx,orderId,{lock=false,archived=false}={}){
+export async function readFulfillmentArchiveState(tx,orderId,{lock=false,archived=false,sourceIdentities=null}={}){
  if(typeof archived!=="boolean"||archived&&lock)throw new TypeError("Invalid Archive read mode");
+ if(sourceIdentities!==null&&(!archived||sourceIdentities.orderId!==orderId))throw new TypeError("Invalid Archive identity hints");
+ const parentIds=(table,rows)=>[...new Set([...ids(rows),...ids(sourceIdentities?.[table]??[])])];
  const projection=table=>Object.entries(FULFILLMENT_ARCHIVE_CONTRACTS.find(c=>c.table===table).columns).map(([name,c])=>c.type==="date"?`DATE_FORMAT(${name},'%Y-%m-%d') AS ${name}`:name).join(",")+(archived?",archive_batch_id,archived_at,row_hash":"");
  const state=Object.fromEntries(FULFILLMENT_ARCHIVE_CONTRACTS.map(c=>[c.table,[]]));
  async function lockRows(table,rows){
@@ -30,18 +32,18 @@ export async function readFulfillmentArchiveState(tx,orderId,{lock=false,archive
   if(lock&&table!=="fulfillment_audit_logs")await lockRows(table,rows);
   state[table].push(...rows);return rows;
  }
- const roots=await read("fulfillments","sales_order_id",[orderId]),rootIds=ids(roots);
+ const roots=await read("fulfillments","sales_order_id",[orderId]),rootIds=parentIds("fulfillments",roots);
  await read("fulfillment_lines","fulfillment_id",rootIds);
  await read("fulfillment_line_reservation_claims","fulfillment_id",rootIds);
  await read("fulfillment_allocations","fulfillment_id",rootIds);
  await read("fulfillment_status_history","fulfillment_id",rootIds);
- const shipments=await read("shipments","sales_order_id",[orderId]),shipmentIds=ids(shipments);
+ const shipments=await read("shipments","sales_order_id",[orderId]),shipmentIds=parentIds("shipments",shipments);
  await read("shipment_lines","shipment_id",shipmentIds);
  await read("shipment_issue_details","shipment_id",shipmentIds);
  await read("shipment_status_history","shipment_id",shipmentIds);
  const reversals=await read("shipment_reversals","shipment_id",shipmentIds);
- await read("shipment_reversal_details","reversal_id",ids(reversals));
- for(const [type,parents]of [["FULFILLMENT",rootIds],["SHIPMENT",shipmentIds],["REVERSAL",ids(reversals)]])await read("fulfillment_audit_logs","target_id",parents," AND target_type=?",[type]);
+ await read("shipment_reversal_details","reversal_id",parentIds("shipment_reversals",reversals));
+ for(const [type,parents]of [["FULFILLMENT",rootIds],["SHIPMENT",shipmentIds],["REVERSAL",parentIds("shipment_reversals",reversals)]])await read("fulfillment_audit_logs","target_id",parents," AND target_type=?",[type]);
  sorted(state.fulfillment_audit_logs);
  if(lock)await lockRows("fulfillment_audit_logs",state.fulfillment_audit_logs);
  state.operations=[];let after="0";

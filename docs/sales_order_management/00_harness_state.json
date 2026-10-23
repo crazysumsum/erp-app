@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1324,
+  "revision": 1327,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "b302bb83c8f90d5c6c041763b5c33148c7d3bd40ef4800ba687cf23b99a56555",
     "plan": "cbb4cbf16d7bd189a35d9031b9db6b9bfba050a967afef50fd58be35ba947ecb",
-    "code_commit": "d1066c567283207f2a7f08e1e61954f619277391",
-    "source_fingerprint": "07838f76e36b03c33331b461a0193bb58bb33b3df0cec3910d928667606e495d",
+    "code_commit": "5bd8396f30f22eaf09e0b719e8b2912f13155ea4",
+    "source_fingerprint": "2d77fdeeead7770938f542a4d5a2773585fc94aae66c3421af08007306cf382c",
     "worktree": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app",
-    "default_commit": "e272f5d3ce05d0ca50be42e6d8764f0ef20d3dd1",
+    "default_commit": "58322ba3d5b77aa1a6250be4b5055651c682a371",
     "mode_entry_commit": "e272f5d3ce05d0ca50be42e6d8764f0ef20d3dd1"
   },
   "runtime": {
@@ -12240,6 +12240,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-P4-HISTORICAL-MIRROR-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "7eee9cdef216d571e8e925f64c7332c96c4cf10ec2f7c5921ab43901083e6ba0",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-historical-partial-time-r2-closing-reviewer-proof.json",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -16070,6 +16082,28 @@
       "subject": "Actual HD018 frozen owner735e56a2 scoped source/canonical approved and63NodePASS; P4 W notadopted",
       "status": "PASS",
       "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-hd018-frozen-owner-source-review-r1.json SHA51fbedc7390c51fd1f1bb1788f4679ce0cf65d7242d1204aa09c7c487ea957e3; existingownerchat exacthandshake sent and observedtoolconfirmation. No wholeP1/Archive/currentCI approval."
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "5bd8396f30f22eaf09e0b719e8b2912f13155ea4",
+      "spec_baseline": "cbb4cbf16d7bd189a35d9031b9db6b9bfba050a967afef50fd58be35ba947ecb",
+      "source_fingerprint": "fe81e210abd16f52a227d497fc69db63576c9c111d67e99b5404ff8bb9c7a3bb",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-23T06:58:30.289520Z",
+      "subject": "Full18 COPY/VERIFY/REMOVE54 plus original9 native63PASS; scoped distinct reviewer approves two tests only",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/128_archive_full18_failure_matrix.md; raw130748d6; reviewc7a9a397. Full P4 remains BLOCKED; later historical test edits excluded from this approval."
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "5bd8396f30f22eaf09e0b719e8b2912f13155ea4",
+      "spec_baseline": "cbb4cbf16d7bd189a35d9031b9db6b9bfba050a967afef50fd58be35ba947ecb",
+      "source_fingerprint": "2d77fdeeead7770938f542a4d5a2773585fc94aae66c3421af08007306cf382c",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-23T07:12:55.753591Z",
+      "subject": "Current complete-Active historical recovery20, component12, full66matrix, shared131 PASS; no wholeP4 or CI approval",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/129_archive_historical_mirror_recovery.md"
     }
   ],
   "pending_decisions": [
@@ -19211,8 +19245,16 @@
       "kind": "GIT_MERGE",
       "target": "origin/main 58322ba3d5b77aa1a6250be4b5055651c682a371 into current isolated P4 branch only",
       "idempotency_key": "p4-integrate-main58322-d1066c56",
+      "status": "CONFIRMED",
+      "source_ref": "Actual local merge 5bd8396f30f22eaf09e0b719e8b2912f13155ea4 containsfreshmain 58322ba3d5b77aa1a6250be4b5055651c682a371; no conflicts, changed19Supplier paths only. Reviewed Sales/owner source untouched. No remote mainmerge/push/PR. PreviousbroadFP results historical; affected startup/route checks and fullremainingP4 obligations retained."
+    },
+    {
+      "id": "ACT-P4-HISTORICAL-MIRROR-COMMIT-20261023",
+      "kind": "GIT_COMMIT",
+      "target": "local-only reviewed historical mirror recovery and full18 fault matrix developer increment",
+      "idempotency_key": "p4-historical-mirror-20-12-66-shared131-20261023",
       "status": "STARTED",
-      "source_ref": "Fresh actualfetch observed Supplier PR273 only: owner-specific UI/lookups/tests/docs; no Sales/Fulfillment/Inventory/migrations/coreServices/config code changes. Existing Sam impact-based revalidation instruction and AGENTS latest-target integration. Preserve scope/currentCI/allP4Gate. No remote/mainmerge."
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/129_archive_historical_mirror_recovery.md; sourceFP2d77fdeeead7770938f542a4d5a2773585fc94aae66c3421af08007306cf382c; no push/PR/mainmerge."
     }
   ],
   "evidence_files": [
@@ -20381,7 +20423,22 @@
         "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-sales-archive-def024-r2-closing-reviewer-proof.json SHA2562f6de477c2e37038de88484dbd447a806d391317dbb35754550df3e9d3fbd599; actual distinct scoped closing0required14paths, independent5native+24unit with own environment failedattempt preserved. Canonical prelock/routing replay fixes qualified only. Generalinflight/partialmirror/TC050 consumers/wholeP4 remainNOTREADY; no waiver."
       ],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-025",
+      "severity": "HIGH",
+      "status": "CLOSED",
+      "source_ids": [
+        "TASK-058",
+        "TASK-059",
+        "TC-049"
+      ],
+      "closure_evidence": [
+        "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/129_archive_historical_mirror_recovery.md",
+        "Actual historical RED2FAIL a768fb26; current registered20PASS4f6e496a; transaction12PASS889f3fe0; full54+12 matrix66PASS2a32dc1a; shared131PASS6eb3531a; distinct exactsource scoped reviewer7eee9cde. Inflight/fullP4 pending."
+      ],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Commit only current authoritative state checkpoint to clear ownedtrackedstate for local latest-main merge, integrate58322 without touching raw evidence; observe actualmerge thenCASCONFIRMED/defaultbaseline/newFP. Supplierlookup delta needs route/startup check, no gratuitous repeat of unrelated expensive perf. FullremainingP4 mandatoryGate stillrequired before remote mainmerge."
+  "next_safe_action": "Complete historical partial-mirror recovery under current private job/read scope, full P4 joint/API/UI/metrics/capacity/restore checks, current CI/review and unchanged merge Gate before authorized main merge."
 }

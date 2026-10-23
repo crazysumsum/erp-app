@@ -1,3 +1,5 @@
+import {readFulfillmentArchiveState} from "./fulfillmentArchiveState.js";
+import {FULFILLMENT_ARCHIVE_CONTRACTS} from "./fulfillmentArchiveSchema.js";
 import {getActiveTransactionIsolation} from "../../services/mysqldatabase/MySqlDatabaseService.js";
 const batchSize=500;
 function identity(value){if(typeof value!=="string"||value.length>16||!/^[1-9][0-9]*$/u.test(value)||BigInt(value)>9007199254740991n)throw new TypeError("Invalid Archive order identity");return value;}
@@ -25,6 +27,11 @@ export class FulfillmentArchiveLockService{
   return members(this.database,identity(orderId));
  }
  readOrderMembershipInTransaction(tx,orderId){this.#transaction(tx);return members(tx,identity(orderId));}
+ async readOrderMirrorMetadataInTransaction(tx,orderId){
+  this.#transaction(tx);orderId=identity(orderId);
+  const active=await readFulfillmentArchiveState(tx,orderId),mirrors=await readFulfillmentArchiveState(tx,orderId,{archived:true,sourceIdentities:active});
+  return FULFILLMENT_ARCHIVE_CONTRACTS.flatMap(({table})=>mirrors[table].map(row=>({archiveBatchId:String(row.archive_batch_id),archivedAtMs:Number(row.archived_at)})));
+ }
  async lockOrderOperationsInTransaction(tx,orderId){
   this.#transaction(tx);orderId=identity(orderId);
   const operationIds=[];let after="0",hasInProgress=false;

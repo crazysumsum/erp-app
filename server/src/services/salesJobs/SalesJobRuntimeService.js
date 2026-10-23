@@ -113,7 +113,7 @@ export class SalesJobRuntimeService extends BaseService {
     return await this.#liveArchiveScope(tx)!==null;
   }
   async authorizeArchiveReadInTransaction(tx,command){
-    const scope=this.#archiveScopes.get(tx);if(!scope||!command||Reflect.ownKeys(command).sort().join(",")!=="atMs,orderId"||Object.getOwnPropertyDescriptor(command,"orderId")?.value!==scope.orderId||Object.getOwnPropertyDescriptor(command,"atMs")?.value!==scope.archivedAtMs)return false;
+    const scope=this.#archiveScopes.get(tx);if(!scope||!command||Reflect.ownKeys(command).sort().join(",")!=="atMs,orderId"||Object.getOwnPropertyDescriptor(command,"orderId")?.value!==scope.orderId||Object.getOwnPropertyDescriptor(command,"atMs")?.value!==scope.readAtMs)return false;
     return await this.#liveArchiveScope(tx)!==null;
   }
   async #executeLockedArchive(tx,scope){
@@ -130,7 +130,7 @@ export class SalesJobRuntimeService extends BaseService {
     if(!this.#archiveBatch){
       const database=this.services.require("mysqldatabase"),time=this.services.require("time");
       const resolveParticipant=async()=>{try{return await this.services.resolve("fulfillmentArchive");}catch{throw Object.assign(new Error("OPEN_MATTER_UNKNOWN"),{code:"OPEN_MATTER_UNKNOWN"});}};
-      this.#archiveSource=new SalesArchiveService({database,authorizeArchive:(tx,scope)=>this.authorizeArchiveInTransaction(tx,scope),openMatter:{getOrderArchiveStatusInTransaction:async(tx,scope)=>{try{return await(await this.services.resolve("fulfillmentOpenMatter")).getOrderArchiveStatusInTransaction(tx,scope);}catch{return {version:"1",status:"UNKNOWN",reasonCodes:["PROVIDER_UNAVAILABLE"]};}}},participant:{prepareOrderInTransaction:async(tx,command)=>(await resolveParticipant()).prepareOrderInTransaction(tx,command),archiveOrderInTransaction:async(tx,command)=>(await resolveParticipant()).archiveOrderInTransaction(tx,command)}});
+      this.#archiveSource=new SalesArchiveService({database,authorizeArchive:(tx,scope)=>this.authorizeArchiveInTransaction(tx,scope),getArchiveReadTime:async tx=>(await this.#liveArchiveScope(tx))?.readAtMs,openMatter:{getOrderArchiveStatusInTransaction:async(tx,scope)=>{try{return await(await this.services.resolve("fulfillmentOpenMatter")).getOrderArchiveStatusInTransaction(tx,scope);}catch{return {version:"1",status:"UNKNOWN",reasonCodes:["PROVIDER_UNAVAILABLE"]};}}},participant:{prepareOrderInTransaction:async(tx,command)=>(await resolveParticipant()).prepareOrderInTransaction(tx,command),archiveOrderInTransaction:async(tx,command)=>(await resolveParticipant()).archiveOrderInTransaction(tx,command)}});
       this.#archiveBatch=new SalesArchiveBatchService({database,time,config:this.config?.sales,authorizeJob:()=>this.#archivePrincipal(),executeLockedArchive:(tx,scope)=>this.#executeLockedArchive(tx,scope)});
     }
     const result=await this.#archiveBatch.runBatch({signal});

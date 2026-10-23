@@ -1,3 +1,4 @@
+import {SALES_ARCHIVE_COLUMNS} from "./salesArchiveHash.js";
 import {lockSalesOrderLines} from "./SalesOrderService.js";
 import {getActiveTransactionIsolation} from "../../services/mysqldatabase/MySqlDatabaseService.js";
 
@@ -28,6 +29,14 @@ export class SalesArchiveLockService{
   if(hints.quotationId!==null){const [[quote]]=await tx.query("SELECT id FROM sales_quotations WHERE id=? FOR UPDATE",[hints.quotationId]),[[conversion]]=await tx.query("SELECT quotation_id,sales_order_id FROM sales_quotation_conversions WHERE id=? FOR UPDATE",[hints.conversionId]);if(!quote||String(conversion?.quotation_id)!==hints.quotationId||String(conversion?.sales_order_id)!==hints.orderId)throw new TypeError("Archive conversion changed");}
  }
  assertOrderRouting(header,hints){if(String(header.id)!==hints.orderId||String(header.external_order_key_id)!==String(hints.externalKeyId)||String(header.source_quotation_id)!==String(hints.quotationId))throw new TypeError("Archive routing membership changed");}
+ async readOrderMirrorMetadataInTransaction(tx,orderId){
+  this.#transaction(tx);orderId=integer(orderId);const metadata=[];
+  for(const table of Object.keys(SALES_ARCHIVE_COLUMNS)){
+   const where=table==="sales_orders"?"id=?":table==="sales_audit_logs"?"target_type='ORDER' AND target_id=?":table==="sales_order_line_reservations"?"sales_order_line_id IN (SELECT id FROM sales_order_lines WHERE sales_order_id=? UNION SELECT id FROM sales_order_lines_archive WHERE sales_order_id=?)":"sales_order_id=?";
+   let after="0";for(;;){const [rows]=await tx.query(`SELECT id,archive_batch_id,archived_at FROM ${table}_archive WHERE ${where} AND id>? ORDER BY id LIMIT 500`,[orderId,...(table==="sales_order_line_reservations"?[orderId]:[]),after]);for(const row of rows){metadata.push({archiveBatchId:String(row.archive_batch_id),archivedAtMs:Number(row.archived_at)});after=String(row.id);}if(rows.length<500)break;}
+  }
+  return metadata;
+ }
  async lockOrderOperationsInTransaction(tx,scope){
   this.#transaction(tx);
   if(!scope||![Object.prototype,null].includes(Object.getPrototypeOf(scope))||Reflect.ownKeys(scope).sort().join(",")!=="orderId,shipmentIds"||!Array.isArray(scope.shipmentIds))throw new TypeError("Invalid Sales Archive operation scope");

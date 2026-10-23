@@ -55,7 +55,11 @@ export class SalesArchiveBatchService{
    await this.salesLocks.lockOrderRoutingInTransaction(tx,routing);
    const [[active]]=await tx.query("SELECT id FROM sales_orders WHERE id=? FOR UPDATE",[candidate.id]);if(active){const locked=await this.salesLocks.lockOrderRowsInTransaction(tx,candidate.id);this.salesLocks.assertOrderRouting(locked.header,routing);}
    if(JSON.stringify(await this.ownerLocks.readOrderMembershipInTransaction(tx,candidate.id))!==JSON.stringify(hints))fail("ARCHIVE_MEMBERSHIP_CHANGED");
-   const scope=Object.freeze({orderId:candidate.id,archiveBatchId:id,cutoffMs:Number(batch.row.cutoff_at),archivedAtMs:batch.nowMs,leaseOwner:batch.principal.leaseOwner,leaseToken:token,signal});
+   // Fresh observation clock follows all possible operation/routing/root lock waits. Historical mirror time is metadata only.
+   const [[clock]]=await tx.query("SELECT CAST(UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3))*1000 AS UNSIGNED) AS now_ms"),readAtMs=Number(clock.now_ms),cutoffMs=Number(batch.row.cutoff_at);
+   const metadata=[...await this.salesLocks.readOrderMirrorMetadataInTransaction(tx,candidate.id),...await this.ownerLocks.readOrderMirrorMetadataInTransaction(tx,candidate.id)],times=new Set(metadata.map(row=>row.archivedAtMs));
+   if(!Number.isSafeInteger(readAtMs)||readAtMs<cutoffMs||times.size>1||metadata.some(row=>row.archiveBatchId!==id||!Number.isSafeInteger(row.archivedAtMs)||row.archivedAtMs<cutoffMs||row.archivedAtMs>readAtMs))fail("ARCHIVE_DATA_CONFLICT");
+   const scope=Object.freeze({orderId:candidate.id,archiveBatchId:id,cutoffMs,readAtMs,archivedAtMs:metadata.length?metadata[0].archivedAtMs:readAtMs,leaseOwner:batch.principal.leaseOwner,leaseToken:token,signal});
    const result=await this.#executeLockedArchive(tx,scope);await this.#record(tx,batch,candidate,"ARCHIVED","",result);return {outcome:"ARCHIVED",reconciled:reconcile};
   });}catch(error){
    if(codeOf(error)==="DATABASE_TRANSACTION_INDETERMINATE"){if(reconcile)throw error;return this.#order(id,token,candidate,signal,{reconcile:true});}

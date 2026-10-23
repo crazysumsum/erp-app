@@ -35,7 +35,7 @@ export class FulfillmentArchiveParticipant{
  async archiveOrderInTransaction(tx,input){
   validateFulfillmentArchiveCommand(input);const command=structuredClone(input),scope=scopeOf(command),expected=command.expectedManifest;
   await this.#authorize(tx,scope);await this.#ready(tx);
-  const active=await this.#active(tx,scope),archived=await readFulfillmentArchiveState(tx,scope.orderId,{archived:true});
+  const active=await this.#active(tx,scope),archived=await readFulfillmentArchiveState(tx,scope.orderId,{archived:true,sourceIdentities:active});
   const [[durable]]=await tx.query("SELECT archive_batch_id,fulfillment_table_counts,fulfillment_hash_summary,participant_versions,archived_at FROM sales_archive_order_manifests WHERE sales_order_id=? LIMIT 1",[scope.orderId]);
   if(durable){
    const counts=json(durable.fulfillment_table_counts),hashes=json(durable.fulfillment_hash_summary),versions=json(durable.participant_versions);

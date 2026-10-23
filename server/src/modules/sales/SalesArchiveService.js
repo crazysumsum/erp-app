@@ -39,8 +39,8 @@ function archiveCommand(input){
 // Fixed Sales-owned aggregate only. The runtime supplies a read-only private-scope lookup;
 // this component never begins/commits a transaction or grants authority from caller fields.
 export class SalesArchiveService{
- #authorizeArchive;#openMatter;#participant;
- constructor({database,authorizeArchive,openMatter,participant}={}){this.database=database;this.#authorizeArchive=authorizeArchive;this.#openMatter=openMatter;this.#participant=participant;}
+ #authorizeArchive;#openMatter;#participant;#getArchiveReadTime;
+ constructor({database,authorizeArchive,openMatter,participant,getArchiveReadTime}={}){this.database=database;this.#authorizeArchive=authorizeArchive;this.#openMatter=openMatter;this.#participant=participant;this.#getArchiveReadTime=getArchiveReadTime;}
  async #authorize(tx,command){
   if(this.database?.context?.get()?.databaseTransaction!==tx||getActiveTransactionIsolation(tx)!=="REPEATABLE READ"||typeof this.#authorizeArchive!=="function"||await this.#authorizeArchive(tx,{orderId:command.orderId,archiveBatchId:command.archiveBatchId,cutoffMs:command.cutoffMs})!==true)archiveFailure("SALES_ARCHIVE_FORBIDDEN");
  }
@@ -49,10 +49,10 @@ export class SalesArchiveService{
   for(const [table,columns]of Object.entries(SALES_ARCHIVE_COLUMNS)){
    const physical=table+(archived?"_archive":""),lines="sales_order_lines"+(archived?"_archive":"");
    const projection=columns.map(name=>["order_date","requested_delivery_date"].includes(name)?`DATE_FORMAT(${name},'%Y-%m-%d') AS ${name}`:name).join(",")+(archived?",archive_batch_id,archived_at,row_hash":"");
-   const where=table==="sales_orders"?"id=?":table==="sales_audit_logs"?"target_type='ORDER' AND target_id=?":table==="sales_order_line_reservations"?`sales_order_line_id IN (SELECT id FROM ${lines} WHERE sales_order_id=?)`:"sales_order_id=?";
+   const where=table==="sales_orders"?"id=?":table==="sales_audit_logs"?"target_type='ORDER' AND target_id=?":table==="sales_order_line_reservations"?archived?"sales_order_line_id IN (SELECT id FROM sales_order_lines_archive WHERE sales_order_id=? UNION SELECT id FROM sales_order_lines WHERE sales_order_id=?)":`sales_order_line_id IN (SELECT id FROM ${lines} WHERE sales_order_id=?)`:"sales_order_id=?";
    const rows=[];let after="0";
    for(;;){
-    const [page]=await tx.query(`SELECT ${projection} FROM ${physical} WHERE ${where} AND id>? ORDER BY id LIMIT 500`,[orderId,after]);
+    const [page]=await tx.query(`SELECT ${projection} FROM ${physical} WHERE ${where} AND id>? ORDER BY id LIMIT 500`,[orderId,...(archived&&table==="sales_order_line_reservations"?[orderId]:[]),after]);
     if(page.some((row,i)=>BigInt(row.id)<=BigInt(i?page[i-1].id:after)))archiveFailure("ARCHIVE_DATA_CONFLICT");
     if(lock&&page.length){const [current]=await tx.query(`SELECT ${projection} FROM ${physical} FORCE INDEX (PRIMARY) WHERE id IN (${marks(page)}) ORDER BY id FOR UPDATE`,page.map(r=>String(r.id)));if(current.length!==page.length||current.some((row,i)=>hashSalesArchiveRow(table,row)!==hashSalesArchiveRow(table,page[i])))archiveFailure("ARCHIVE_DATA_CONFLICT");}
     rows.push(...page);if(page.length<500)break;after=String(page.at(-1).id);
@@ -100,7 +100,9 @@ export class SalesArchiveService{
   const source=await this.#read(tx,command.orderId,{lock:true}),header=source.sales_orders[0];
   if(source.sales_orders.length!==1||source.sales_order_lines.length!==Number(header.line_count))archiveFailure("ARCHIVE_DATA_CONFLICT");
   const [[operation]]=await tx.query("SELECT COUNT(*) AS n FROM sales_operation_requests WHERE target_type='SALES_ORDER' AND target_id=? AND status='IN_PROGRESS'",[command.orderId]);
-  const fulfillment=await this.#openMatter.getOrderArchiveStatusInTransaction(tx,{orderId:command.orderId,atMs:command.archivedAtMs});
+  const readAtMs=await this.#getArchiveReadTime?.(tx);
+  if(!Number.isSafeInteger(readAtMs)||readAtMs<command.archivedAtMs)archiveFailure("SALES_ARCHIVE_FORBIDDEN");
+  const fulfillment=await this.#openMatter.getOrderArchiveStatusInTransaction(tx,{orderId:command.orderId,atMs:readAtMs});
   if(fulfillment?.version!=="1"||fulfillment.status==="UNKNOWN")archiveFailure("OPEN_MATTER_UNKNOWN");
   const eligibility=evaluateSalesArchiveEligibility({status:header.status,lastBusinessUpdatedAt:Number(header.last_business_updated_at),cutoffMs:command.cutoffMs,hasBackorder:Number(header.has_backorder)!==0||source.sales_backorder_entries.some(row=>row.status==="OPEN"||BigInt(row.outstanding_base_quantity)>0n)||source.sales_order_lines.some(row=>BigInt(row.backordered_base_quantity)>0n),outstandingReservationCount:source.sales_order_line_reservations.filter(row=>BigInt(row.outstanding_base_quantity)>0n).length,inProgressOperationCount:Number(operation.n),fulfillment});
   if(!eligibility.eligible)archiveFailure(eligibility.reasonCodes[0]);
