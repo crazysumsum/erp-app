@@ -1,8 +1,8 @@
 # Purchasing consumer handoff — inventory-purchase-provider/1.0
 
-Status: NOT_DELIVERED / consumer NOT_UNLOCKED。PR-A尚未提交／推送／合併；PR-B尚未啟動。實際merge commit：PENDING。Issue267內容已核對（2026-10-23）：Purchasing TASK006／007等待Inventory owner交付，TASK008負責consumer contract tests。
+Status: RECEIPT_PROVIDER_DELIVERED / partial reversal IN_PROGRESS / consumer NOT_UNLOCKED。PR-A [#275](https://github.com/crazysumsum/erp-app/pull/275)已於2026-10-23合併，實際merge commit `5c055d79e94c74e58ccb27afe0fc3e0bd3edf151`；PR-B自該fresh main的獨立worktree啟動。Purchasing TASK006可接入已合併receipt ABI；TASK007仍待PR-B，TASK008仍須consumer真實接入驗證。
 
-正式command/result及安全語義以[provider v1契約](purchase-provider-contract-v1.md)為準。下列接入細節對應目前PR-A候選，需以最終Sam審閱來源及實際merge SHA固定後才可採用。
+正式command/result及安全語義以[provider v1契約](purchase-provider-contract-v1.md)為準。下列PR-A接入細節已固定於上述實際merge SHA；不表示consumer已採用或Purchasing已整體解鎖。
 
 ## PR-A接入
 
