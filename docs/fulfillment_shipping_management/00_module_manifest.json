@@ -155,7 +155,7 @@
         "id": "fulfillment-shipment-and-reversal-contract",
         "version": "P0-HD011-ADOPTED-IMPLEMENTATION_IN_PROGRESS",
         "source": "docs/fulfillment_shipping_management/03_design_spec.md",
-        "sha256": "29d1f8f4b602645dcbcf2d2516f32965b8a1a1505429a1229f7f083dc5e7727f",
+        "sha256": "6b84cf233a9ff9e78ffad64263724e92144929f2f62657cdfd9410f124821962",
         "consumers": [
           "sales-order-management",
           "inventory-management",

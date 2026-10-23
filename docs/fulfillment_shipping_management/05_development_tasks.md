@@ -490,7 +490,7 @@ Focused verification可使用`npm test --workspace server -- <test-file>`及`npm
 
 ### Task P1-T02：交付DRAFT Fulfillment建立及Reservation Claim
 
-**Description：** 實作`POST /api/v1/fulfillments`，在單一transaction鎖Sales mappings、分配單號、建立header／lines／Claims／history／audit及operation result；同event重送返回原結果。
+**Description：** 實作`POST /api/v1/fulfillments/create`，在單一transaction鎖Sales mappings、分配單號、建立header／lines／Claims／history／audit及operation result；同event重送返回原結果。
 
 **Acceptance criteria：**
 
@@ -1910,7 +1910,7 @@ Commit：`feat: add bounded fulfillment queue inquiry`。
 ## TASK-013 — 交付DRAFT Fulfillment建立及Reservation Claim
 
 ### Goal
-實作`POST /api/v1/fulfillments`，在單一transaction鎖Sales mappings、分配單號、建立header／lines／Claims／history／audit及operation result；同event重送返回原結果。 （Legacy identity：`P1-T02`；規模估算：M。）
+實作`POST /api/v1/fulfillments/create`，在單一transaction鎖Sales mappings、分配單號、建立header／lines／Claims／history／audit及operation result；同event重送返回原結果。 （Legacy identity：`P1-T02`；規模估算：M。）
 
 ### Approach
 預計變更範圍：`FulfillmentService.js`、create handler/schema、`fulfillmentService.test.js`、create API test、create integration test。

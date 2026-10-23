@@ -762,6 +762,13 @@ Archive header indexes支援唯一number、SO、Customer＋date、Warehouse＋da
 
 Queue filters：`q,customerId,warehouseId,salesOrderStatus,hasBackorder,hasActiveWork,requestedDateFrom,requestedDateTo,sortBy,descending,page,pageSize`。預設排序`requestedDeliveryDate ASC,orderDate ASC,salesOrderNumber ASC,id ASC`；number exact優先，不做unbounded `%contains%`。
 
+P1 keyset wire clarification（既有TASK-012／TC-003的例行落實）：`q`匹配SO number exact或escaped Customer code prefix；有exact匹配時該結果固定排在prefix結果之前，其他結果沿用選定排序。該exact優先值可由q與cursor中的SO number推導，不新增cursor欄位。Queue另接受`cursor`。首頁`page=1`不可帶cursor；後續頁只能沿用server回傳的`nextCursor`及相同normalized filters／sort／pageSize，`page>1`沒有有效對應cursor回400，不回退OFFSET。回應為`{items,page,pageSize,hasMore,nextCursor}`，無後頁時cursor為null；pageSize預設20、範圍1–100。`sortBy`限`requestedDeliveryDate|orderDate|salesOrderNumber`，預設ascending；orderDate排序以SO number、id打破同值，SO number排序以id打破同值。日期採MySQL DATE字串；ASC NULL先、DESC NULL後，seek比較與實際欄位collation相同。
+
+Cursor是最多2048字元的canonical base64url JSON：exact keys `{version:1,binding,page,after}`；`binding`是依固定欄位順序對normalized filters＋sortBy＋descending＋pageSize作SHA256，`page`為下一頁序號，`after` exact keys為`{requestedDeliveryDate,orderDate,salesOrderNumber,id}`（nullable delivery date、ISO date、number字串、canonical正整數ID字串）。嚴格拒絕unknown欄位、無效日期／ID／頁序／binding及noncanonical encoding。Cursor只提供seek位置，不是權限或SQL；每次重驗fresh view權限及全部filters，不新增server cursor cache。頁間是各自一致的目前快照，並發修改可能改變後續集合；Create仍依owner鎖重驗。
+
+Queue以自行新建的RR讀取交易保持各批plain SELECT一致，不接受既有交易／舊快照。先bounded符合可用量的order IDs，再兩批header及lines／mapping／Inventory current／active Claims投影，無逐SO查詢；來源或負數差異在discovery及projection均不得被fully-claimed Sales快照隱藏。錯誤回既有source-conflict且記錄不含業務payload的critical診斷；此唯讀advisory projection不能作寫入容量證明。
+
+
 Create body：
 
 ```json

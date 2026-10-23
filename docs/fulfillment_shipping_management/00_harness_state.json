@@ -1,42 +1,32 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 137,
+  "revision": 140,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
-  "status": "IMPLEMENTING",
-  "resume_status": null,
-  "current_phase": "PHASE-001",
-  "current_task": "TASK-011",
+  "status": "BLOCKED",
+  "resume_status": "IMPLEMENTING",
+  "current_phase": "PHASE-002",
+  "current_task": "TASK-012",
   "baseline": {
-    "design": "3cf1162c3cd78421101639d5cf0f077a1434bd534d1df779ea22e6a85f83ce62",
-    "plan": "4cc3628347eb79f3afc1308180d546c49f2cb0c7f95a6480591c1e06abedd288",
-    "code_commit": "cc23de9d4d3f693b6734d51e8872733d28070443",
-    "source_fingerprint": "165351d8f5aa05fc3c8b19ca78f9fd45ac948a06c542d9d461ec3ac1d86961f4",
-    "worktree": "/private/tmp/erp-fulfillment-p0",
-    "default_commit": "19e37a130a19c371e224054dacbf6031bac96d0a",
-    "mode_entry_commit": "76223f40480d94a1d3a2ae6e0e7b91292bd98b82"
+    "design": "0f4ca289a3b7edc534826a9393736e05544031543e9ee23d67a3debb96a9f173",
+    "plan": "339fa385ec7c18f060d21f3c26a5bf35fb8f0cdaa46e9c1b0e66893415ddfcfe",
+    "code_commit": "fd32762f4fa17a5e77aaa7118a9ded2d3ac81e9e",
+    "source_fingerprint": "ba923df001b026f2f03ad8be62064599f5dd4adba944d35f8d376bd4b0af9784",
+    "worktree": "/private/tmp/erp-fulfillment-p1",
+    "default_commit": "fd32762f4fa17a5e77aaa7118a9ded2d3ac81e9e",
+    "mode_entry_commit": "fd32762f4fa17a5e77aaa7118a9ded2d3ac81e9e"
   },
   "runtime": {
-    "instance_id": "fulfillment-p0-mysql-ton56on7",
-    "owner": "/root fulfillment P0 implementer, actual Sam complete-P0/full-verification authority",
+    "instance_id": "fulfillment-p1-queue-picking",
+    "owner": "/root; Sam actual P1 development and isolated developer verification authorization",
     "resources": {
-      "workspace": "/private/tmp/erp-fulfillment-p0",
-      "mysql-schema": "fulfillment_p0_legacy_47511b0a",
-      "mysql-socket": "/var/folders/gk/rdtb5_px4z9gm7m1cm2q3xg40000gn/T/erp-fulfillment-p0-mysql-ton56on7/mysql.sock",
-      "web-port": "Owned fresh P0 Playwright API49925/client49926; reuseExistingServer=false; released by configured webServer teardown",
-      "mysql-native-full-core": "Currentresume-core receipt/private/tmp/fulfillment-p0-resume-core.json; same97registrymigrationbaseline/zeroSalesBackorderFulfillpreflight; usedonlyremainingTC042r2; earlieractualevidencekeepsoriginalschemaidentity.",
-      "mysql-original-core": "fulfillment_p0_core; original0091historyretained, partialinstalledprofilecorrectly503",
-      "mysql-loopback": "SameownedMySQL127.0.0.1:50655;socketretained/mysqlx0;ephemeralfixtureadminsecretprivate0600; relayremoved",
-      "mysql-interrupted-core": "fulfillment_p0_legacy_5bc05842; originalfinal-core receipt and all data retained; completedtyped/fullR8tests ran here before TC042 interruption.",
-      "capacity-workspace": "/private/tmp/erp-fulfillment-p0-capacity-runtime; detachedce4/sourceFPf9de; freshignoredstorage; dependencylinksread-onlyreuse",
-      "capacity-mysql-schema": "fulfillment_p0_legacy_1e977cca",
-      "capacity-control-mysql-schema": "fulfillment_p0_legacy_46b4819e",
-      "mysql-current-regression": "Fresh same-source/PLAN paired detachedruntime /private/tmp/erp-fulfillment-p0-regression-runtime; sourceFP4461; new97-registry/zero-business-row preflight; prior5bc witholdaborted2000orderjob preserved.",
-      "mysql-stale-import-core": "Original5bc retained: job217 created01:06:13/processstarted01:07:34/terminal02:16:21 duringnewfailedfullrun; previouscapacityinterruption. No deletion, reset or selector change.",
-      "allocation-profile-evidence": "evidence/allocation-cache-20261022/summary.json +ci-final.json; FPf458 atHEAD1cb2a7b3, exactCI39719857793 all13PASS, legal5000A12641/R18363ms with20sec. Three-run localA4919.629/R7314.199ms; older before/source evidence retained. ReallocateCIheadroom1637ms remains explicit risk.",
-      "mysql-current-publish-regression": "Ownedfreshd30a0bdc/regression-r2 same78087/source8f, all7fullPASS; oldfailedcore85a retained; receipt/private/tmp/fulfillment-p0-publish-regression-r2-core.json; mappingd348onlyE2Eselector+foreignPurchasingdocs.",
-      "mysql-current-publish-capacity": "Ownedfresh4644a6d2/pairedcapacitystorage;TC042normal2PASS0skip; zeroactivepreflight; receipt/private/tmp/fulfillment-p0-publish-capacity-core.json"
+      "workspace": "/private/tmp/erp-fulfillment-p1",
+      "web-port": "Actual HTTP test localhost OS ephemeral port, app.shutdown registered and observed testPASS; no persistent web service",
+      "mysql-socket": "/var/folders/gk/rdtb5_px4z9gm7m1cm2q3xg40000gn/T/erp-fulfillment-p0-mysql-ton56on7/mysql.sock; existing owned synthetic daemon; no existing schema reset",
+      "mysql-queue-lane": "Own fulfillment_p1_q_4f105f0b_sf_UUID schemas; per-test create/cleanup observed11PASS; /private/tmp/fulfillment-p1-native-queue-runtime.json",
+      "mysql-capacity-lane": "Separate own fulfillment_p1_q_8728652f_sf_UUID schema; create/cleanup observed1PASS; /private/tmp/fulfillment-p1-native-capacity-runtime.json",
+      "dependencies": "Locked offline npm ci installed429packages; original shared main node_modules empty; no package/lockfile changes"
     },
     "lease_ref": null
   },
@@ -52,7 +42,7 @@
     "TASK-009": "DONE",
     "TASK-010": "DONE",
     "TASK-011": "DONE",
-    "TASK-012": "PENDING",
+    "TASK-012": "IN_PROGRESS",
     "TASK-013": "PENDING",
     "TASK-014": "PENDING",
     "TASK-015": "PENDING",
@@ -1803,6 +1793,76 @@
         "NFR-023",
         "Existing exact N/A reason unchanged; TC010 remainsmandatory/blocking"
       ]
+    },
+    {
+      "authority_kind": "HUMAN",
+      "actor": "Sam original approved P1 design/plan and actual current P1 development instruction; separate reviewer accepted routine keyset/route/adapter/pin lineage; no claim of a newly presented human hash decision or HD016 adoption",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/30_task012_queue_developer_completion.md#actual-authority-and-mechanical-baseline-lineage",
+      "recorded_at": "2026-10-23T01:47:51.104996+00:00",
+      "code_commit": "fd32762f4fa17a5e77aaa7118a9ded2d3ac81e9e",
+      "expires_at": null,
+      "id": "APR-077-P1-ENTRY-DESIGN",
+      "kind": "DESIGN",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "0f4ca289a3b7edc534826a9393736e05544031543e9ee23d67a3debb96a9f173",
+      "scope": [
+        "fulfillment-shipping-management",
+        "PHASE-002/TASK-012–023 approved P1 semantics; routine keyset wire and exact route clarification only; HD016 remains OPEN"
+      ]
+    },
+    {
+      "authority_kind": "HUMAN",
+      "actor": "Sam original approved P1 design/plan and actual current P1 development instruction; separate reviewer accepted routine keyset/route/adapter/pin lineage; no claim of a newly presented human hash decision or HD016 adoption",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/30_task012_queue_developer_completion.md#actual-authority-and-mechanical-baseline-lineage",
+      "recorded_at": "2026-10-23T01:47:51.104996+00:00",
+      "code_commit": "fd32762f4fa17a5e77aaa7118a9ded2d3ac81e9e",
+      "expires_at": null,
+      "id": "APR-078-P1-ENTRY-PLAN",
+      "kind": "PLAN",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "339fa385ec7c18f060d21f3c26a5bf35fb8f0cdaa46e9c1b0e66893415ddfcfe",
+      "scope": [
+        "PHASE-002",
+        "TASK-012–023; new230-min developer adapter and P0 browser regression; full P1 UI/browser adapter plus all original phase gates still required; draft PR only after all gates"
+      ]
+    },
+    {
+      "authority_kind": "HUMAN",
+      "actor": "Sam original approved P1 design/plan and actual current P1 development instruction; separate reviewer accepted routine keyset/route/adapter/pin lineage; no claim of a newly presented human hash decision or HD016 adoption",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/30_task012_queue_developer_completion.md#actual-authority-and-mechanical-baseline-lineage",
+      "recorded_at": "2026-10-23T01:47:51.104996+00:00",
+      "code_commit": "fd32762f4fa17a5e77aaa7118a9ded2d3ac81e9e",
+      "expires_at": null,
+      "id": "APR-079-P1-PLANNED-SCOPE",
+      "kind": "SCOPE",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "339fa385ec7c18f060d21f3c26a5bf35fb8f0cdaa46e9c1b0e66893415ddfcfe",
+      "scope": [
+        "client/config/menu.js",
+        "client/src/framework/http/errorMessages.js",
+        ".github/workflows/ci.yml",
+        "Already planned P1 menu/error/CI integration only; no new Sales pending-create protocol authorization"
+      ]
+    },
+    {
+      "authority_kind": "HUMAN",
+      "actor": "Sam original approved P1 design/plan and actual current P1 development instruction; separate reviewer accepted routine keyset/route/adapter/pin lineage; no claim of a newly presented human hash decision or HD016 adoption",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/30_task012_queue_developer_completion.md#actual-authority-and-mechanical-baseline-lineage",
+      "recorded_at": "2026-10-23T01:47:51.104996+00:00",
+      "code_commit": "fd32762f4fa17a5e77aaa7118a9ded2d3ac81e9e",
+      "expires_at": null,
+      "id": "APR-080-P1-UNCHANGED-UATNA-LINEAGE",
+      "kind": "UAT_NA",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "339fa385ec7c18f060d21f3c26a5bf35fb8f0cdaa46e9c1b0e66893415ddfcfe",
+      "scope": [
+        "NFR-023",
+        "Original exact N/A reason unchanged; only new PLAN approval reference; TC-010 remains mandatory/blocking"
+      ]
     }
   ],
   "reviews": [
@@ -2693,6 +2753,78 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-075-EXACT-4AF-SOURCE-METADATA",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "165351d8f5aa05fc3c8b19ca78f9fd45ac948a06c542d9d461ec3ac1d86961f4",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/27_p0_merge_readiness.md; Exact4afpublicationmetadata/sourceactualAPPROVED0C/H/M,3ownbookkeeping+11upstreamSupplieronly;FP/D/Punchanged;noP0sourcechange",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-076-EXACT-4AF-FINAL-MERGE",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "165351d8f5aa05fc3c8b19ca78f9fd45ac948a06c542d9d461ec3ac1d86961f4",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/27_p0_merge_readiness.md; ActualindependentfinalMERGEAPPROVED0C/H/M;GitHuball13SUCCESS/synthetic447dparents19+4af/treeb9f2equalshead,39floors/metrics/rollback;newfinalfreshness/CASrequired;COMMENT5622666353actualpublished;nohumanAPPROVE/formal/liveauthority",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-077-P1-ENTRY",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "165351d8f5aa05fc3c8b19ca78f9fd45ac948a06c542d9d461ec3ac1d86961f4",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/28_p1_implementation_readiness.md; actual independent entry messages",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-078-HD016-PROPOSAL",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "597fbf5763db4731cbd85266775d434fb1f94aaef93bdf2e779977f5c406084d",
+      "source_ref": "implementation/29_pending_create_claim_contract.md; actual separate reviewer APPROVED FOR HUMAN DECISION 0C/H/M, not adoption",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-079-TASK012-FINAL",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "ba923df001b026f2f03ad8be62064599f5dd4adba944d35f8d376bd4b0af9784",
+      "source_ref": "implementation/30_task012_queue_developer_completion.md; actual ACCEPTED9file subset9852a8441a7d57504d38c06f117ec277143d8daa8c82069d6672c234987a353c, 0C/H/M; focused16 independently rerun; full P1/UI/global/CI not approved",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-080-TASK012-PRECOMMIT-LINEAGE",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "339fa385ec7c18f060d21f3c26a5bf35fb8f0cdaa46e9c1b0e66893415ddfcfe",
+      "source_ref": "Actual separate reviewer precommit audit state139/DES0f4c/PLAN339f/sourceba923; all old approvals exact prefix/NFRreason+TC010 unchanged; report30 SHA5ff649b85a7ca01ef8b4ca6bd4ed6b3a569025f2c071eada5f13ee2c2033dfcb; APPROVED0C/H/M for local atomiccommit only",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -3421,6 +3553,171 @@
       "status": "PASS",
       "source_ref": "docs/fulfillment_shipping_management/implementation/26_p0_final_verification_and_pr.md#exact-publication-ci-and-independent-pre-pr-closure",
       "actor": "Actual separate-agent/root/fulfillment_independent_review finalAPPROVED0C/H/M, independentGitHubconnectorall13/remotecheckout/logs; NOTGitHubhumanreviewapproval/formalacceptance/merge."
+    },
+    {
+      "code_commit": "4af6719da8981b915f210862d436cfaeae321d6d",
+      "spec_baseline": "4cc3628347eb79f3afc1308180d546c49f2cb0c7f95a6480591c1e06abedd288",
+      "source_fingerprint": "165351d8f5aa05fc3c8b19ca78f9fd45ac948a06c542d9d461ec3ac1d86961f4",
+      "observed_at": "2026-10-23T00:50:08.476116+00:00",
+      "kind": "CI",
+      "subject": "Server coverage shard (2/4)",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/39750244210/job/119728710140",
+      "actor": "ActualfreshGitHubread/all13SUCCESS;independentconnectorconfirmed;synthetic447dparents19e37+4af/treeidentical;96.08/87.17/94.39+39floors;5000R16784/original20sec."
+    },
+    {
+      "code_commit": "4af6719da8981b915f210862d436cfaeae321d6d",
+      "spec_baseline": "4cc3628347eb79f3afc1308180d546c49f2cb0c7f95a6480591c1e06abedd288",
+      "source_fingerprint": "165351d8f5aa05fc3c8b19ca78f9fd45ac948a06c542d9d461ec3ac1d86961f4",
+      "observed_at": "2026-10-23T00:50:08.476116+00:00",
+      "kind": "CI",
+      "subject": "Sales import capacity scope",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/39750244210/job/119728710490",
+      "actor": "ActualfreshGitHubread/all13SUCCESS;independentconnectorconfirmed;synthetic447dparents19e37+4af/treeidentical;96.08/87.17/94.39+39floors;5000R16784/original20sec."
+    },
+    {
+      "code_commit": "4af6719da8981b915f210862d436cfaeae321d6d",
+      "spec_baseline": "4cc3628347eb79f3afc1308180d546c49f2cb0c7f95a6480591c1e06abedd288",
+      "source_fingerprint": "165351d8f5aa05fc3c8b19ca78f9fd45ac948a06c542d9d461ec3ac1d86961f4",
+      "observed_at": "2026-10-23T00:50:08.476116+00:00",
+      "kind": "CI",
+      "subject": "Server coverage shard (4/4)",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/39750244210/job/119728710564",
+      "actor": "ActualfreshGitHubread/all13SUCCESS;independentconnectorconfirmed;synthetic447dparents19e37+4af/treeidentical;96.08/87.17/94.39+39floors;5000R16784/original20sec."
+    },
+    {
+      "code_commit": "4af6719da8981b915f210862d436cfaeae321d6d",
+      "spec_baseline": "4cc3628347eb79f3afc1308180d546c49f2cb0c7f95a6480591c1e06abedd288",
+      "source_fingerprint": "165351d8f5aa05fc3c8b19ca78f9fd45ac948a06c542d9d461ec3ac1d86961f4",
+      "observed_at": "2026-10-23T00:50:08.476116+00:00",
+      "kind": "CI",
+      "subject": "Client coverage",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/39750244210/job/119728710579",
+      "actor": "ActualfreshGitHubread/all13SUCCESS;independentconnectorconfirmed;synthetic447dparents19e37+4af/treeidentical;96.08/87.17/94.39+39floors;5000R16784/original20sec."
+    },
+    {
+      "code_commit": "4af6719da8981b915f210862d436cfaeae321d6d",
+      "spec_baseline": "4cc3628347eb79f3afc1308180d546c49f2cb0c7f95a6480591c1e06abedd288",
+      "source_fingerprint": "165351d8f5aa05fc3c8b19ca78f9fd45ac948a06c542d9d461ec3ac1d86961f4",
+      "observed_at": "2026-10-23T00:50:08.476116+00:00",
+      "kind": "CI",
+      "subject": "Server coverage shard (3/4)",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/39750244210/job/119728710628",
+      "actor": "ActualfreshGitHubread/all13SUCCESS;independentconnectorconfirmed;synthetic447dparents19e37+4af/treeidentical;96.08/87.17/94.39+39floors;5000R16784/original20sec."
+    },
+    {
+      "code_commit": "4af6719da8981b915f210862d436cfaeae321d6d",
+      "spec_baseline": "4cc3628347eb79f3afc1308180d546c49f2cb0c7f95a6480591c1e06abedd288",
+      "source_fingerprint": "165351d8f5aa05fc3c8b19ca78f9fd45ac948a06c542d9d461ec3ac1d86961f4",
+      "observed_at": "2026-10-23T00:50:08.476116+00:00",
+      "kind": "CI",
+      "subject": "Lint",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/39750244210/job/119728710661",
+      "actor": "ActualfreshGitHubread/all13SUCCESS;independentconnectorconfirmed;synthetic447dparents19e37+4af/treeidentical;96.08/87.17/94.39+39floors;5000R16784/original20sec."
+    },
+    {
+      "code_commit": "4af6719da8981b915f210862d436cfaeae321d6d",
+      "spec_baseline": "4cc3628347eb79f3afc1308180d546c49f2cb0c7f95a6480591c1e06abedd288",
+      "source_fingerprint": "165351d8f5aa05fc3c8b19ca78f9fd45ac948a06c542d9d461ec3ac1d86961f4",
+      "observed_at": "2026-10-23T00:50:08.476116+00:00",
+      "kind": "CI",
+      "subject": "Server coverage shard (1/4)",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/39750244210/job/119728710678",
+      "actor": "ActualfreshGitHubread/all13SUCCESS;independentconnectorconfirmed;synthetic447dparents19e37+4af/treeidentical;96.08/87.17/94.39+39floors;5000R16784/original20sec."
+    },
+    {
+      "code_commit": "4af6719da8981b915f210862d436cfaeae321d6d",
+      "spec_baseline": "4cc3628347eb79f3afc1308180d546c49f2cb0c7f95a6480591c1e06abedd288",
+      "source_fingerprint": "165351d8f5aa05fc3c8b19ca78f9fd45ac948a06c542d9d461ec3ac1d86961f4",
+      "observed_at": "2026-10-23T00:50:08.476116+00:00",
+      "kind": "CI",
+      "subject": "Browser tests (Playwright)",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/39750244210/job/119728710701",
+      "actor": "ActualfreshGitHubread/all13SUCCESS;independentconnectorconfirmed;synthetic447dparents19e37+4af/treeidentical;96.08/87.17/94.39+39floors;5000R16784/original20sec."
+    },
+    {
+      "code_commit": "4af6719da8981b915f210862d436cfaeae321d6d",
+      "spec_baseline": "4cc3628347eb79f3afc1308180d546c49f2cb0c7f95a6480591c1e06abedd288",
+      "source_fingerprint": "165351d8f5aa05fc3c8b19ca78f9fd45ac948a06c542d9d461ec3ac1d86961f4",
+      "observed_at": "2026-10-23T00:50:08.476116+00:00",
+      "kind": "CI",
+      "subject": "Build frontend",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/39750244210/job/119728710796",
+      "actor": "ActualfreshGitHubread/all13SUCCESS;independentconnectorconfirmed;synthetic447dparents19e37+4af/treeidentical;96.08/87.17/94.39+39floors;5000R16784/original20sec."
+    },
+    {
+      "code_commit": "4af6719da8981b915f210862d436cfaeae321d6d",
+      "spec_baseline": "4cc3628347eb79f3afc1308180d546c49f2cb0c7f95a6480591c1e06abedd288",
+      "source_fingerprint": "165351d8f5aa05fc3c8b19ca78f9fd45ac948a06c542d9d461ec3ac1d86961f4",
+      "observed_at": "2026-10-23T00:50:08.476116+00:00",
+      "kind": "CI",
+      "subject": "Dependency audit",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/39750244210/job/119728711104",
+      "actor": "ActualfreshGitHubread/all13SUCCESS;independentconnectorconfirmed;synthetic447dparents19e37+4af/treeidentical;96.08/87.17/94.39+39floors;5000R16784/original20sec."
+    },
+    {
+      "code_commit": "4af6719da8981b915f210862d436cfaeae321d6d",
+      "spec_baseline": "4cc3628347eb79f3afc1308180d546c49f2cb0c7f95a6480591c1e06abedd288",
+      "source_fingerprint": "165351d8f5aa05fc3c8b19ca78f9fd45ac948a06c542d9d461ec3ac1d86961f4",
+      "observed_at": "2026-10-23T00:50:08.476116+00:00",
+      "kind": "CI",
+      "subject": "Sales import mixed-load capacity (TC-042)",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/39750244210/job/119728875531",
+      "actor": "ActualfreshGitHubread/all13SUCCESS;independentconnectorconfirmed;synthetic447dparents19e37+4af/treeidentical;96.08/87.17/94.39+39floors;5000R16784/original20sec."
+    },
+    {
+      "code_commit": "4af6719da8981b915f210862d436cfaeae321d6d",
+      "spec_baseline": "4cc3628347eb79f3afc1308180d546c49f2cb0c7f95a6480591c1e06abedd288",
+      "source_fingerprint": "165351d8f5aa05fc3c8b19ca78f9fd45ac948a06c542d9d461ec3ac1d86961f4",
+      "observed_at": "2026-10-23T00:50:08.476116+00:00",
+      "kind": "CI",
+      "subject": "Test coverage (server + client, MySQL integration)",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/39750244210/job/119733526336",
+      "actor": "ActualfreshGitHubread/all13SUCCESS;independentconnectorconfirmed;synthetic447dparents19e37+4af/treeidentical;96.08/87.17/94.39+39floors;5000R16784/original20sec."
+    },
+    {
+      "code_commit": "4af6719da8981b915f210862d436cfaeae321d6d",
+      "spec_baseline": "4cc3628347eb79f3afc1308180d546c49f2cb0c7f95a6480591c1e06abedd288",
+      "source_fingerprint": "165351d8f5aa05fc3c8b19ca78f9fd45ac948a06c542d9d461ec3ac1d86961f4",
+      "observed_at": "2026-10-23T00:50:08.476116+00:00",
+      "kind": "CI",
+      "subject": "Test (server + client, MySQL integration)",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/39750244210/job/119733735342",
+      "actor": "ActualfreshGitHubread/all13SUCCESS;independentconnectorconfirmed;synthetic447dparents19e37+4af/treeidentical;96.08/87.17/94.39+39floors;5000R16784/original20sec."
+    },
+    {
+      "code_commit": "4af6719da8981b915f210862d436cfaeae321d6d",
+      "spec_baseline": "4cc3628347eb79f3afc1308180d546c49f2cb0c7f95a6480591c1e06abedd288",
+      "source_fingerprint": "165351d8f5aa05fc3c8b19ca78f9fd45ac948a06c542d9d461ec3ac1d86961f4",
+      "observed_at": "2026-10-23T00:50:08.476116+00:00",
+      "kind": "PR_REVIEW",
+      "subject": "Actual independent AI final merge review recorded COMMENT",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/271#pullrequestreview-5622666353",
+      "actor": "Actualseparateagent/root/fulfillment_independent_review finalMERGEAPPROVED0C/H/M;actualGitHubCOMMENTanchored4af,notself/humanAPPROVE;humanSamnormalmergeauthorizationactualchat."
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "P1 entry independent review / actual human phase authority",
+      "status": "PASS",
+      "code_commit": "fd32762f4fa17a5e77aaa7118a9ded2d3ac81e9e",
+      "spec_baseline": "4cc3628347eb79f3afc1308180d546c49f2cb0c7f95a6480591c1e06abedd288",
+      "source_fingerprint": "165351d8f5aa05fc3c8b19ca78f9fd45ac948a06c542d9d461ec3ac1d86961f4",
+      "observed_at": "2026-10-23T01:17:00.082004+00:00",
+      "source_ref": "Current Sam chat: 按已批准計劃開始 fulfillment P1 開發，完成所有 TASK、獨立覆核及完整驗證，確認當前候選 CI 通過後建立 draft PR。; P0 merged receipt /private/tmp/fulfillment-p0-merge-final-receipt.json",
+      "actor": "Sam actual direct user; P1 implementation/developer verification/draft PR only, no merge/formal acceptance"
     }
   ],
   "pending_decisions": [
@@ -3620,6 +3917,19 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "docs/fulfillment_shipping_management/implementation/21_p0_verification_contract_alignment.md#actual-adoption"
+    },
+    {
+      "id": "HD-016",
+      "impact": "MAJOR",
+      "question": "Pending-create CLAIM identity contract: explicit CLAIM-only pending variant versus distinct Sales pre-create locking API",
+      "affected_ids": [
+        "TASK-013",
+        "TASK-014",
+        "DES-006",
+        "TC-010"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
     }
   ],
   "external_actions": [
@@ -4058,34 +4368,58 @@
     {
       "id": "P0-PR271-INTEGRATED-PUSH",
       "kind": "GIT_PUSH",
-      "target": "codex/fulfillment-p0-foundation finalintegratedpublicationcommit",
+      "target": "codex/fulfillment-p0-foundation@4af6719da8981b915f210862d436cfaeae321d6d",
       "idempotency_key": "p0-pr271-integrated-push-20261022",
-      "status": "PLANNED",
-      "source_ref": "ActualSamready/review/currentCI/mergeauthorization; report27; executeonlyafterappropriateactualgates,inspectremoteafterunknownresults."
+      "status": "CONFIRMED",
+      "source_ref": "ActualFFpush1c95..4af6719da8981b915f210862d436cfaeae321d6d;source1653unchanged; PRautomaticCI39750244210 head4af6719d in_progress https://github.com/crazysumsum/erp-app/actions/runs/39750244210; notPASSyet."
     },
     {
       "id": "P0-PR271-INTEGRATED-REVIEW",
       "kind": "GITHUB_REVIEW_COMMENT",
       "target": "PR271 actualseparateagentprovenancereviewCOMMENT",
       "idempotency_key": "p0-pr271-integrated-review-20261022",
-      "status": "PLANNED",
-      "source_ref": "ActualSamready/review/currentCI/mergeauthorization; report27; executeonlyafterappropriateactualgates,inspectremoteafterunknownresults."
+      "status": "CONFIRMED",
+      "source_ref": "ActualGitHubCOMMENT5622666353/commit4af/commented; https://github.com/crazysumsum/erp-app/pull/271#pullrequestreview-5622666353;actualAIseparateagentnotself/humanAPPROVE; formalPRbodyupdatedactualCI/qualification."
     },
     {
       "id": "P0-PR271-INTEGRATED-MERGE",
       "kind": "NORMAL_PR_MERGE",
-      "target": "PR271 basemain exactheadCAS mergecommitmethod noadminbypass",
+      "target": "fd32762f4fa17a5e77aaa7118a9ded2d3ac81e9e",
       "idempotency_key": "p0-pr271-integrated-merge-20261022",
-      "status": "PLANNED",
-      "source_ref": "ActualSamready/review/currentCI/mergeauthorization; report27; executeonlyafterappropriateactualgates,inspectremoteafterunknownresults."
+      "status": "CONFIRMED",
+      "source_ref": "ActualGitHubmerge201/mergedtrue/PR271closed/merged_at2026-10-23T00:51:03Z; actualparents19e37+4af/treeb9f2equalsCIsyntheticandhead; https://github.com/crazysumsum/erp-app/commit/fd32762f4fa17a5e77aaa7118a9ded2d3ac81e9e"
     },
     {
       "id": "P0-PR271-INTEGRATED-CLEANUP",
       "kind": "SAFE_GIT_CLEANUP",
       "target": "MergedP0ownedtopic/testworktreesandbranchesonly afterevidencearchive/dependencychecks",
       "idempotency_key": "p0-pr271-integrated-cleanup-20261022",
+      "status": "CONFIRMED",
+      "source_ref": "/private/tmp/fulfillment-p0-preserved-fd32762f/cleanup-result.json; dirty detached capacity-runtime retained unchanged"
+    },
+    {
+      "id": "P1-WORKTREE-CREATE",
+      "kind": "WORKTREE_CREATE",
+      "target": "codex/fulfillment-p1-queue-picking at fd32762f; /private/tmp/erp-fulfillment-p1",
+      "idempotency_key": "fulfillment-p1-from-fd32762f",
+      "status": "CONFIRMED",
+      "source_ref": "/private/tmp/fulfillment-p1-bootstrap.json; actual clean git HEAD observed"
+    },
+    {
+      "id": "MODE-CHANGE-138",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-138",
+      "status": "CONFIRMED",
+      "source_ref": "Actual Sam P1 instruction in current chat; implementation/28_p1_implementation_readiness.md"
+    },
+    {
+      "id": "P1-TASK012-ATOMIC-COMMIT",
+      "kind": "GIT_COMMIT",
+      "target": "codex/fulfillment-p1-queue-picking local TASK012 increment only",
+      "idempotency_key": "p1-task012-source-ba923df0",
       "status": "PLANNED",
-      "source_ref": "ActualSamready/review/currentCI/mergeauthorization; report27; executeonlyafterappropriateactualgates,inspectremoteafterunknownresults."
+      "source_ref": "Task012 DoD/report30; local atomic commit only now. Full P1 candidate may be pushed/dispatched under existing authority to obtain current CI after task/local gates; draft PR only after all gates including CI; no partial Task push or merge now."
     }
   ],
   "evidence_files": [
@@ -4132,7 +4466,10 @@
     "evidence/20261022T084102-b36b1686494c/run.json",
     "evidence/20261022T084103-47aaf8ab4027/run.json",
     "evidence/20261022T084110-9243cb376529/run.json",
-    "evidence/20261022T084123-ee11b72dbedd/run.json"
+    "evidence/20261022T084123-ee11b72dbedd/run.json",
+    "implementation/28_p1_implementation_readiness.md",
+    "implementation/29_pending_create_claim_contract.md",
+    "implementation/30_task012_queue_developer_completion.md"
   ],
   "defects": [
     {
@@ -4216,5 +4553,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "LocalfreezeAPPROVED0C/H/M current1653,all5typedPASS; commitbookkeepingthenFFpush/newexact13CI/actualseparateagentfinalreviewCOMMENT/currentmainheadfreshness/CASnormalmerge. Preservefullprivateevidence/uniquelocalobservationsbeforecleanup. Noformalacceptance/liveactivation."
+  "next_safe_action": "Observe/reconcile atomic local TASK012 commit after final structural/boundary checks; then mark TASK012 developer DONE and TASK013 BLOCKED. Await actual HD016 A/B before new Sales provider or dependent Create writes. All remaining P1 tasks, P1 browser/full regression/current CI must pass before draft PR; no push/PR/merge yet."
 }
