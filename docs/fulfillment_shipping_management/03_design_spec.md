@@ -783,7 +783,7 @@ Create body：
 }
 ```
 
-Response回Fulfillment detail及最新SO quantity summary；不可回其他Customer／Warehouse不可見資料。
+Response exact envelope: `{outcome,fulfillment,salesOrder}`. `outcome` is the original durable `{id,number,status:"DRAFT",version:1}`; the other sections are current detail and SO quantities, read together in a fresh RR transaction after the business commit. Replay checks fresh actor, operation ownership and payload hash, then reads the current projections without requiring the SO to remain eligible for a new Create. Current fields never overwrite the original outcome. Projection failure preserves SUCCEEDED and returns 503 with correlationId; retain the original event and retry the same Create. P1 does not advertise the P2 operation-status route. Fresh permission denial remains 403. Detail uses explicit public fields and separate child batches. Allocation/history pages each contain at most 100 entries with hasMore/nextCursor. No invisible Customer/Warehouse data may be returned.
 
 Allocate body：
 
@@ -1028,6 +1028,8 @@ SalesFulfillmentService.applyFulfillmentResultInTransaction(transaction, command
 HD-016 A（2026-10-23 actual Sam批准）：新建履約單使用CLAIM-only exact `claimMode:"PENDING_CREATE"` 變體，每個Reservation member的`claimId`必須為null且不可混入persisted IDs；其餘actor、SO／line／mapping last-sync CAS、數量及來源驗證不變。只有pending變體的normalized intent/hash帶claimMode；原無claimMode的CLAIM及全部Shipment／Reverse exact schema、正整數Claim IDs、hash／receipt／replay保持不變。Pending只取得Sales目前鎖定projection及容量scope，不是persisted Claim或Shipment apply證明。 Pending-only mapping projection另回傳已鎖定的`originalBaseQuantity,consumedBaseQuantity,releasedBaseQuantity,sourceEventId`，連同既有outstanding及last-sync version，逐一對帳Inventory四counter、原source event及currentVersion≥lastSync；不得僅以outstanding相同或version較大推定數量不變。
 
 Fulfillment另設pending-create容量路徑，operation preclaim之後依序鎖Sales、既有Fulfillment／Lines／Claims、Item及Inventory Warehouse／controls／Reservations；實際Claims依鎖內目前mapping ID順序及active Claims計算，逐一驗實際Inventory source／目前version／counter，不以Queue或preflight代替。全部容量、型態及base UOM驗證成立後才insert新Header／Lines／真正Claims／History／Audit，與operation result同交易提交；不得在Warehouse鎖前先insert帶Warehouse FK的新Header。原DRAFT persisted-capacity路徑保留；此Claim-only讀鎖後不得再進行Inventory allocation/post。 來源影響集並非selected command集合：同SO Line的歷次Sales mappings可能超過5,000，planned僅1仍須可建立。Inventory owner新增`lockFulfillmentReservationScopeInTransaction` complete-source讀鎖入口，先鎖完整Item／Warehouse／StockControl anchors，再以Reservation PK升序、每批500取鎖及重讀；原`lockFulfillmentReservationStatesInTransaction`的5,000 selected-member上限、DTO及舊呼叫行為保留，不接受caller flag偽造complete-proof。所有會影響分配及已有active Claims的來源均納入native數量驗證，不能僅驗最後選中的member。
+
+The pending Sales lock probe selects the largest outstanding capacities first (mapping ID breaks ties), then normalizes Reservation IDs. This minimizes tentative members and avoids rejecting a legal final distribution hidden behind fully claimed earlier mappings. If the largest 50 cannot cover planned, no final distribution of at most 50 can cover it after subtracting active Claims. This probe never authorizes the final Claim selection: complete locked current proof still assigns actual Claims in mapping ID order, with the original per-line/global bounds.
 
 ### 6.2 Inventory Contracts
 

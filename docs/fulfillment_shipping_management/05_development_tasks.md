@@ -1910,7 +1910,7 @@ Commit：`feat: add bounded fulfillment queue inquiry`。
 ## TASK-013 — 交付DRAFT Fulfillment建立及Reservation Claim
 
 ### Goal
-實作`POST /api/v1/fulfillments/create`，在單一transaction鎖Sales mappings、分配單號、建立header／lines／Claims／history／audit及operation result；同event重送返回原結果。 （Legacy identity：`P1-T02`；規模估算：M。）
+實作`POST /api/v1/fulfillments/create`：先以已批准Sequence短交易保留單號，再於單一business transaction鎖Sales mappings及建立header／lines／Claims／history／audit／operation result。Same-event replay保存原outcome；目前detail及SO quantity summary另以fresh一致快照讀取。 （Legacy identity：`P1-T02`；規模估算：M。）
 
 ### Approach
 預計變更範圍：`FulfillmentService.js`、create handler/schema、`fulfillmentService.test.js`、create API test、create integration test。
