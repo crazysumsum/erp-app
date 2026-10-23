@@ -1,20 +1,20 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 417,
+  "revision": 418,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
-  "status": "BLOCKED",
-  "resume_status": "IMPLEMENTING",
+  "status": "IMPLEMENTING",
+  "resume_status": null,
   "current_phase": "PHASE-004",
   "current_task": "TASK-051",
   "baseline": {
     "design": "29a0615a61808b3747cd8feb522d051ba5a312da6fb0fccf36e7cf9746286775",
     "plan": "bfb0af4fb322aa2e25ffcc2300dddd4655778ba26850caf39da9e508ccbd04e8",
-    "code_commit": "eb2abcd5fd60cf11693b30cd83ef5affc5e242e9",
+    "code_commit": "1e57380e9df8fb7c0563a176921b86fb6e81682b",
     "source_fingerprint": "27085ed4eac6f97bba715c835031cf89130014741ae57456ab70efa0f97dd728",
-    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t51w",
-    "default_commit": "bb48cb3eabd98e050306969191859b410ba61dd2",
+    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t51x",
+    "default_commit": "1e57380e9df8fb7c0563a176921b86fb6e81682b",
     "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
   },
   "runtime": {
@@ -5533,6 +5533,17 @@
       "source_ref": "Local, not CI. Supplier server suite 714 passed, 0 skipped; client Supplier suite 193 passed; technical Playwright 50 passed; eslint and client build exit 0. UAT PHASE-001 on the real backend: 19 passed (UAT-003 now passes), UAT-048 fails at its DEF-037 ordering step, 5 test.fixme. REV-117 survivors S7, S9, S11, S12, C2 now red; files restored and checked with cmp.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-23T16:17:00+08:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "DEF-039, DEF-040, DEF-041 fixes (PR #277) merged to main",
+      "code_commit": "1e57380e9df8fb7c0563a176921b86fb6e81682b",
+      "spec_baseline": "bfb0af4fb322aa2e25ffcc2300dddd4655778ba26850caf39da9e508ccbd04e8",
+      "source_fingerprint": "27085ed4eac6f97bba715c835031cf89130014741ae57456ab70efa0f97dd728",
+      "status": "PASS",
+      "source_ref": "PR #277 merged as 1e57380e9df8fb7c0563a176921b86fb6e81682b at 2026-10-23T08:31:21Z on the Product Owner's word ('HD-132 B，HD-133 A，HD-134 A', then 'HD-135 A，CI已通過'), with --match-head-commit, after a gate that refused unless the latest run of every check was SUCCESS and main was an ancestor of HEAD: head e998a76d green on all 13 checks (PR run 39923668961). Review REV-117 CHANGES_REQUESTED, 0 Critical/High; findings fixed, M-1 deviation accepted as HD-135 A (not re-reviewed). Recorded as the first commit of the next change PR.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-23T16:32:00+08:00"
     }
   ],
   "pending_decisions": [
@@ -7304,8 +7315,22 @@
         "TC-101",
         "paymentTermLabels.js"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-23: 'HD-135 A，CI已通過'. The deviation is accepted as is."
+    },
+    {
+      "id": "HD-136",
+      "impact": "MAJOR",
+      "question": "DEF-037 migration under HD-129 A: supplier_addresses and supplier_contacts each gain sort_order INT NOT NULL DEFAULT 0 (display order within a Supplier, smaller first); existing rows backfilled per Supplier in today's display order (addresses by status, id; contacts by status, name, id); new rows take max+1; no new index and no unique constraint (moves swap two rows in one transaction); INSTANT DDL, no data loss, rollback drops the columns. The startup schema check's inspect functions exported by 0032/0033 are changed to accept the new column (up() untouched). API: POST /api/v1/suppliers/:id/addresses/:addressId/move and /contacts/:contactId/move {direction: up|down, version}, supplier.mgmt, jwt, swapping with the adjacent active row, audited as supplier.address.reorder / supplier.contact.reorder; list and detail responses gain sortOrder; UI move-up/move-down. Design §5.5, §5.6 and §6 updated, moving the design baseline.",
+      "affected_ids": [
+        "DEF-037",
+        "supplier_addresses",
+        "supplier_contacts",
+        "FR-PARTY-001",
+        "UAT-048"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-23, in reply to the DEF-037 migration explanation: '批准 migration，照建議做'."
     }
   ],
   "external_actions": [
@@ -8565,7 +8590,7 @@
     {
       "id": "DEF-037",
       "severity": "MEDIUM",
-      "status": "OPEN",
+      "status": "IN_PROGRESS",
       "source_ids": [
         "FR-PARTY-001",
         "03_design_spec.md §5.5-§5.6",
@@ -8596,7 +8621,7 @@
     {
       "id": "DEF-039",
       "severity": "LOW",
-      "status": "IN_PROGRESS",
+      "status": "CLOSED",
       "source_ids": [
         "AC-003",
         "UAT-003",
@@ -8604,35 +8629,48 @@
         "REV-115 M-2",
         "docs/supplier_management/testing/04_defect_register.md"
       ],
-      "closure_evidence": [],
+      "closure_evidence": [
+        "PR #277 merge commit 1e57380e9df8fb7c0563a176921b86fb6e81682b",
+        "PR CI run 39923668961 on head e998a76d: all 13 checks success",
+        "REV-117 (docs/supplier_management/implementation/120_rev_117_independent_review.md), findings fixed"
+      ],
       "risk_approval_id": null
     },
     {
       "id": "DEF-040",
       "severity": "MEDIUM",
-      "status": "IN_PROGRESS",
+      "status": "CLOSED",
       "source_ids": [
         "REV-116 M-2",
         "SuppliersPage.vue",
         "SupplierApprovalsPage.vue",
         "docs/supplier_management/testing/04_defect_register.md"
       ],
-      "closure_evidence": [],
+      "closure_evidence": [
+        "PR #277 merge commit 1e57380e9df8fb7c0563a176921b86fb6e81682b",
+        "PR CI run 39923668961 on head e998a76d: all 13 checks success",
+        "REV-117 (docs/supplier_management/implementation/120_rev_117_independent_review.md), findings fixed",
+        "DEF-040 read deviation accepted: HD-135 A"
+      ],
       "risk_approval_id": null
     },
     {
       "id": "DEF-041",
       "severity": "LOW",
-      "status": "IN_PROGRESS",
+      "status": "CLOSED",
       "source_ids": [
         "REV-116 I-1",
         "FR-EDIT-003",
         "SupplierAdminService.updateSupplierInTransaction",
         "docs/supplier_management/testing/04_defect_register.md"
       ],
-      "closure_evidence": [],
+      "closure_evidence": [
+        "PR #277 merge commit 1e57380e9df8fb7c0563a176921b86fb6e81682b",
+        "PR CI run 39923668961 on head e998a76d: all 13 checks success",
+        "REV-117 (docs/supplier_management/implementation/120_rev_117_independent_review.md), findings fixed"
+      ],
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "DEF-039..041 PR: merge on the Product Owner's word. Await HD-135 (REV-117 M-1 deviation). Then DEF-037 (HD-129 A, migration approved)."
+  "next_safe_action": "DEF-037 (HD-129 A, HD-136) on claude/supplier-def037-ordering: design §5.5/§5.6/§6 with re-affirmation, migration 0103, API, UI, tests, review, PR."
 }
