@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 1897,
+  "revision": 1899,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
-  "status": "IMPLEMENTING",
-  "resume_status": null,
+  "status": "BLOCKED",
+  "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-008",
   "current_task": "TASK-053",
   "baseline": {
     "design": "7f09c816390b1d129bdb905566121b2000d04efca9c72e030f7772b1f1e10ded",
     "plan": "74cd59d2b4e2ee79518406ef85d31c610f4dca75a17adff6baa4db8ba058c79e",
-    "code_commit": "794f487da01ab81731da826e78337c9a07d99626",
-    "source_fingerprint": "62e3fb69909006f576066cdfa6e844ef80751d17b3e40aa8633965e79f2c84cd",
+    "code_commit": "ae49deffb51404b3efef0546fab224bea3e3a306",
+    "source_fingerprint": "affee93ef087cd1c8dd5d055b531da1fa3149dd745dc4112d0374c775bd11ea1",
     "worktree": "/private/tmp/erp-inventory-purchase-reversal",
     "default_commit": "5c055d79e94c74e58ccb27afe0fc3e0bd3edf151",
     "mode_entry_commit": "e272f5d3ce05d0ca50be42e6d8764f0ef20d3dd1"
@@ -26,7 +26,7 @@
       "web-port": "NOT_STARTED: no PR-B app/API/browser listener allocated",
       "opening-file-root": "NOT_USED: PR-A does not run Opening or P4; no Opening files allocated"
     },
-    "lease_ref": "All fixed-source runs complete; source6022 unchanged after product-only commits8d25b2af and4b9802e4. Twenty-two final developer suites PASS on source6022/PLAN74cd; full native support3563PASS/74FAIL/171guardedSKIP (31char fixture environment) remains FAIL despite95.59/87.11/93.58 numeric coverage and39 original-current floors PASS. Corrected short-schema minimal native1/1 is support only. Final actual CI merged native coverage remains required per existing approved plan; no waiver/no old result relabelling."
+    "lease_ref": "All PR-B fixed-source runs finished; owned schema/daemon/data/credential precisely cleaned. No app/MySQL/load active. Ledger-only units use real Operation serializer and fake SQL transport; no native transaction or auth claim. Full B execution affected by pending strict owner-proof/source identity contract decision."
   },
   "tasks": {
     "TASK-001": "DONE",
@@ -5738,6 +5738,30 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-PURCHASE-B-LEDGER-CYCLE1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/purchase_b_ledger_review",
+      "reviewed_baseline": "affee93ef087cd1c8dd5d055b531da1fa3149dd745dc4112d0374c775bd11ea1",
+      "source_ref": "Actual bounded read-only ledger review in this chat: no actionable P0-P3 in additive fixed document-type claim/complete/read/replay ledger and tests. Real scalar serializer/parser with fake SQL transport, not native atomicity/auth. OriginalMovementId validation mutation caught by named corrupt-ID case, exact product restored SHA7aa09c1f85f17f320a17fda2c7ac2f863ef34e41058e31edcfd137ef332e152d. A unsupported-kind fixture changed only GOODS_RECEIPT_REVERSAL -> CUSTOMER_RETURN because approved B supports former; all rejection assertions retained. Cross-model globally skipped by actual Sam.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-PURCHASE-B-OWNER-PROOF-CANDIDATE-CYCLE2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/purchase_b_owner_proof_contract_review",
+      "reviewed_baseline": "92441af3f95e459e0d8bf3b045e146b5434271c419d67c557566c2c27444bf79",
+      "source_ref": "Actual firstcycle foundP2 Purchasing8.9 newPK reconciliation mismatch; root verified/actionable, fixed event-scoped originalGR+event+Detail join and persistedIDs/quantity. Actual secondcycle onlydelta+Purchasingprovidedpin/patch mapping no remainingP0-P3, unchanged artifact retains firstcycle. implementation/purchase-provider-reversal-owner-proof-reviews.json records reviewedhashes. Structural patch applicability/hash verified, not runtime or Sam approval. Crossmodel skip APR291.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -9109,6 +9133,17 @@
         "TASK-052"
       ],
       "question": "implementation/purchase-provider-pr-a-integration-disposition-proposal.md exact cf202 Supplier-only integration and reviewed original-evidence applicability. Generic global fingerprint rejects old evidence; explicit candidate-scoped human disposition plus all actual currentCI/freshmain/review, not relabelled genericPASS. B alternatively rerun all22. Actual Sam selected A."
+    },
+    {
+      "id": "HD-PURCHASE-B-OWNER-PROOF",
+      "impact": "MAJOR",
+      "status": "OPEN",
+      "answer_ref": null,
+      "affected_ids": [
+        "PHASE-008",
+        "TASK-053"
+      ],
+      "question": "Actual Decision Required being presented in current reply: implementation/purchase-provider-reversal-owner-proof-proposal.md / exact4-file v2patch SHA92441af3f95e459e0d8bf3b045e146b5434271c419d67c557566c2c27444bf79, candidateDESIGNa0e8e789cdbf9431c24fcc859b20a39cb1ba6a924aca2d51363349e058860687 / PLAN1e9cdb380f31153173dab9b4959dcd274665107b3d0435dad37a2ddcdc09b7c7. A recommended adopt unshipped reversal1.1 original GR/Detail IDs+event, exact strict original locked GR ownerProof, same-tx post-result consumer header/detail INSERT and event-scoped reconciliation; Receipt1.0/A unchanged. B retain new Reversal PK source and prepare broader staging/ID architecture, affected context/provider blocked. Genuine existing NOTNULL FK/result circularity, cannot fake proof/IDs or weaken schema. Same approved implementation scope/migration0101/current gates preserved; new semantics NOT_RUN, old evidence original scope preserved. Two actual bounded read-only candidate cycles, actionableP2 fixed, delta no remaining findings, crossmodel globally skipped. No application or human approval inferred; no final source/DONE/merge claim."
     }
   ],
   "external_actions": [
@@ -14555,7 +14590,11 @@
     "evidence/20261023T065942-2adc8aafcf7f/run.json",
     "evidence/20261023T072118-241f6d62f71b/run.json",
     "evidence/20261023T072513-d3ff39a703bc/run.json",
-    "evidence/20261023T073519-5a8645067443/run.json"
+    "evidence/20261023T073519-5a8645067443/run.json",
+    "evidence/20261023T075451-20f9077203f6/run.json",
+    "evidence/20261023T075452-6d2b95877d80/run.json",
+    "evidence/20261023T075505-a67880308251/run.json",
+    "evidence/20261023T075542-ab1f3d8ad9f1/run.json"
   ],
   "defects": [
     {
@@ -14724,5 +14763,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "B schema increment unit37PASS/Harnessrun073519 registered, realminimal3schema casesPASS/zeroSKIP, independent2-cycle findingsclosed, targetedindexmutationcaught/exactrestored; allownedruntimepreciselycleaned. Commitadditive0101 + tests/docs only, then TDDreversal scalarledger/context/fulltransaction. Fullnative24/auth12/Aregression/currentCI/finalSamreview stillpending; no productPostorpartialreversecompletionclaim. TASK041separate; AactualmergehandoffIssue267confirmed/PurchasingNOT_UNLOCKED."
+  "next_safe_action": "BLOCKED affected PR-B context/source semantics pending actual Sam precise owner-proof/source1.1 candidate decision. Canonical still old approved DESIGN7f09/PLAN74cd, no implicit adoption. Current ledger unit43+contract9+receipt28/lint realPASS registered; schema-only minimal3 realPASS remains old source scope, fullBnative24/auth12/CI/Sam source not complete. Candidate four-doc patch v2 SHA92441a and original preserved, Receipt1.0/A deliveredmerge5c055d79 unchanged, Issue267 A-only handoff confirmed; Purchasing NOT_ACTUALLY_UNLOCKED. No runtime active; TASK041 separate. Save private ledger checkpoint, do not push/PR/merge unseen B implementation."
 }

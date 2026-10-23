@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import * as validation from "../src/modules/inventory/inventoryPurchaseValidation.js";
+import { InventoryOperationService } from "../src/modules/inventory/InventoryOperationService.js";
+import * as receipts from "../src/modules/inventory/inventoryPurchaseReceipts.js";
 
 function command() {
   return { actor: { userId: 7, serviceName: "", claimedRoles: ["adjuster"],
@@ -154,4 +156,92 @@ for (const [name, part, corrupt] of [
   tx.query = async sql => { const [rows] = await query(sql); return [sql.includes(`information_schema.${part}`) ? corrupt(rows) : rows]; };
   await assert.rejects(up(tx), /Incompatible/);
   assert.ok(tx.statements.every(sql => !/CREATE |DROP |ALTER /u.test(sql)));
+});
+
+function reversalLedger() {
+  const rows = [], statements = [];
+  return { rows, statements, async execute(sql, p) {
+    statements.push(sql);
+    if (sql.startsWith("INSERT INTO inventory_operation_requests")) {
+      if (rows.some(r => [r.source_module, r.source_document_type, r.source_document_id, r.source_line_id, r.source_event_id]
+        .every((v, i) => v === p[i + 1]))) throw Object.assign(new Error("duplicate"), { code: "ER_DUP_ENTRY" });
+      rows.push({ ...Object.fromEntries(["command_type", "source_module", "source_document_type", "source_document_id", "source_line_id",
+        "source_event_id", "request_hash", "actor_user_id", "actor_label", "request_id", "correlation_id", "created_at"].map((k, i) => [k, p[i]])),
+      id: rows.length + 1, completed_at: null });
+      return [{ insertId: rows.length }];
+    }
+    assert.match(sql, /UPDATE inventory_operation_requests/);
+    Object.assign(rows.find(r => r.id === p[4]), { result_type: p[0], result_id: p[1], result_summary: p[2], completed_at: p[3] });
+    return [{ affectedRows: 1 }];
+  }, async query(sql, p) {
+    statements.push(sql);
+    return [rows.filter(r => p.length === 5 ?
+      [r.source_module, r.source_document_type, r.source_document_id, r.source_line_id, r.source_event_id].every((v, i) => v === p[i]) :
+      r.source_document_type === p[0] && r.source_document_id === p[1] && r.source_event_id === p[2])];
+  } };
+}
+const reversalQuery = input => ({ documentType: "GOODS_RECEIPT_REVERSAL", ...input.source });
+async function claimReversal(tx, input = command()) {
+  return receipts.claimPurchaseReversal(tx, { command: validation.normalizePurchaseReversal(input), actorLabel: "sam", requestId: "reverse-test",
+    timestamp: 1_800_000_000_000, operations: new InventoryOperationService() });
+}
+function reversalResults(batch) {
+  return batch.members.map((m, i) => ({ sourceLineId: m.sourceLineId, operationId: m.operationId,
+    movementId: 300 + i, originalMovementId: m.line.originalMovementId, baseQuantity: m.line.baseQuantity,
+    movementGroupId: `11111111-1111-4111-8111-${String(i + 1).padStart(12, "0")}` }));
+}
+
+test("Purchase reversal ledger claims the complete numeric-sorted batch before any stock work", async () => {
+  const tx = reversalLedger(), input = command();
+  input.lines.push({ sourceLineId: "9", originalSourceLineId: "82", originalMovementId: 101, baseQuantity: 1 });
+  const batch = await claimReversal(tx, input);
+  assert.equal(batch.replay, false);
+  assert.deepEqual(tx.rows.map(r => [r.command_type, r.source_line_id]),
+    [["PURCHASE_REVERSE_BATCH", ""], ["PURCHASE_REVERSE_LINE", "9"], ["PURCHASE_REVERSE_LINE", "91"]]);
+  assert.ok(tx.statements.every(sql => sql.startsWith("INSERT INTO inventory_operation_requests")));
+});
+
+test("Purchase reversal ledger uses real scalar serialization and independently decodes the exact source receipt", async () => {
+  const tx = reversalLedger(), input = command(), batch = await claimReversal(tx, input), results = reversalResults(batch);
+  await receipts.completePurchaseReversal(tx, batch, results);
+  const row = JSON.parse(tx.rows[1].result_summary);
+  assert.equal(row.originalMovementId, 100); assert.equal(row.rootOperationId, batch.operationId);
+  assert.ok(tx.rows.every(r => Buffer.byteLength(r.result_summary) < 8192));
+  assert.deepEqual(await receipts.readPurchaseReceipt(tx, reversalQuery(input)),
+    { status: "COMPLETED", result: { status: "POSTED", operationId: batch.operationId, lines: results } });
+});
+
+test("Purchase reversal ledger replay preserves original IDs and conflicts on changed quantity", async () => {
+  const tx = reversalLedger(), input = command(), batch = await claimReversal(tx, input), results = reversalResults(batch);
+  await receipts.completePurchaseReversal(tx, batch, results);
+  input.actor.userId = 8; input.correlationId = "new-attempt";
+  const replay = await claimReversal(tx, input); assert.equal(replay.replay, true); assert.equal(tx.rows.length, 2);
+  assert.deepEqual((await receipts.readPurchaseReceipt(tx, reversalQuery(input), { expectedBatch: replay })).result.lines, results);
+  input.lines[0].baseQuantity++;
+  await assert.rejects(claimReversal(tx, input), e => e.code === "INVENTORY_SOURCE_CONFLICT");
+});
+
+test("Purchase reversal ledger fails closed on mixed replay or an uncompleted visible root", async () => {
+  const tx = reversalLedger(), input = command(), batch = await claimReversal(tx, input);
+  await assert.rejects(receipts.readPurchaseReceipt(tx, reversalQuery(input)), e => e.code === "INVENTORY_SOURCE_CONFLICT");
+  await receipts.completePurchaseReversal(tx, batch, reversalResults(batch));
+  tx.rows.shift(); await assert.rejects(claimReversal(tx, input), e => e.code === "INVENTORY_SOURCE_CONFLICT");
+});
+
+test("Purchase reversal ledger rejects corrupt original ID, membership and persistent quantity", async () => {
+  for (const corrupt of [rows => { rows.pop(); }, rows => { rows[1].request_hash = "a".repeat(64); }, rows => {
+    const v = JSON.parse(rows[1].result_summary); v.originalMovementId = 0; rows[1].result_summary = JSON.stringify(v);
+  }, rows => { const v = JSON.parse(rows[1].result_summary); v.baseQuantity = "2"; rows[1].result_summary = JSON.stringify(v); }]) {
+    const tx = reversalLedger(), input = command(), batch = await claimReversal(tx, input);
+    await receipts.completePurchaseReversal(tx, batch, reversalResults(batch)); corrupt(tx.rows);
+    await assert.rejects(receipts.readPurchaseReceipt(tx, reversalQuery(input)), e => e.code === "INVENTORY_SOURCE_CONFLICT");
+  }
+});
+
+test("Purchase reversal ledger does not complete a root with a missing or mismatched result", async () => {
+  for (const change of [rows => rows.pop(), rows => { rows[0].originalMovementId++; }, rows => { rows[0].movementId = rows[0].originalMovementId; }]) {
+    const tx = reversalLedger(), batch = await claimReversal(tx), results = reversalResults(batch); change(results);
+    await assert.rejects(receipts.completePurchaseReversal(tx, batch, results), e => e.code === "INVENTORY_SOURCE_CONFLICT");
+    assert.ok(tx.rows.every(r => r.completed_at === null));
+  }
 });
