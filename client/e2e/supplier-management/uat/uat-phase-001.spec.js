@@ -72,7 +72,7 @@ test("@uat UAT-002 a CLERK cannot create a second Supplier whose Code differs on
 test("@uat UAT-006 a CLERK corrects an unreferenced Draft's Code after re-authentication, and Audit keeps before, after and reason", async ({ as }, testInfo) => {
   const { page, account: clerk } = await as("CLERK");
   const draft = await createDraft(page);
-  const problems = watchProblems(page);
+  const problems = watchProblems(page, { allow: [{ status: 403, path: "/code/change" }] });
   const next = unique("UAT006");
 
   await page.goto(`/suppliers/${draft.id}`);
@@ -80,6 +80,12 @@ test("@uat UAT-006 a CLERK corrects an unreferenced Draft's Code after re-authen
   const dialog = page.getByRole("dialog");
   await dialog.getByLabel("新 Supplier Code *").fill(next);
   await dialog.getByLabel("修正原因 *").fill("UAT-006 typo in the code");
+  // 重新認證係真嘅：錯密碼唔改（REV-115 L-4）。
+  await dialog.getByLabel("目前密碼 *").fill(`${clerk.password}-wrong`);
+  await dialog.getByRole("button", { name: "確認修正" }).click();
+  await expect(dialog.getByRole("alert").filter({ hasText: "請確認你目前的密碼" })).toBeVisible();
+  await expect(dialog).toBeVisible();
+  expect((await api(page, "GET", `/api/v1/suppliers/${draft.id}`)).supplierCode).toBe(draft.supplierCode);
   await dialog.getByLabel("目前密碼 *").fill(clerk.password);
   await dialog.getByRole("button", { name: "確認修正" }).click();
   await expect(dialog).toBeHidden();
@@ -136,17 +142,14 @@ test("@uat UAT-017 a CLERK without approval cannot unblock a Blocked Supplier, i
 });
 
 test("@uat UAT-018 an APPROVER unblocks with a reason and the Supplier becomes Suspended, not Active", async ({ as }, testInfo) => {
+  const { page: clerkPage } = await as("CLERK");
+  const supplier = await createDraft(clerkPage);
+  await activateViaApi(clerkPage, supplier.id);
+  await setStatus(supplier.id, "blocked");
   const { page, account: approver } = await as("APPROVER-A");
-  const [[row]] = await (await db()).query("SELECT id FROM users WHERE username = 'uat-clerk'");
-  const code = unique("UAT018");
-  const now = Date.now();
-  const [inserted] = await (await db()).execute(
-    `INSERT INTO suppliers (supplier_code, supplier_code_key, supplier_name, supplier_name_key, display_name, default_currency_code, status, version,
-       created_at, updated_at, created_by, updated_by, website, general_phone, general_email, notes)
-     VALUES (?, ?, ?, ?, '', 'HKD', 'blocked', 1, ?, ?, ?, ?, '', '', '', '')`, [code, code, `UAT-018 ${code}`, `uat-018 ${code}`.toLowerCase(), now, now, row.id, row.id]);
   const problems = watchProblems(page);
 
-  await page.goto(`/suppliers/${inserted.insertId}`);
+  await page.goto(`/suppliers/${supplier.id}`);
   await expect(statusBadge(page)).toHaveText("已封鎖");
   await statusAction(page, "解除封鎖", { reason: "UAT-018 dispute resolved", password: approver.password });
   await expect(statusBadge(page)).toHaveText("已暫停");
@@ -184,14 +187,19 @@ test("@uat UAT-019 a CLERK restores an Archived Supplier to Suspended, and only 
 test("@uat UAT-020 a CLERK permanently deletes a never-activated Draft after re-authentication, and the delete stays traceable", async ({ as }, testInfo) => {
   const { page, account: clerk } = await as("CLERK");
   const draft = await createDraft(page);
-  const problems = watchProblems(page);
+  const problems = watchProblems(page, { allow: [{ status: 404, path: `/api/v1/suppliers/${draft.id}` }, { status: 404, path: `/api/v1/suppliers/${draft.id}/completeness` }] });
 
   await page.goto(`/suppliers/${draft.id}`);
   await statusAction(page, "永久刪除", { reason: "UAT-020 created by mistake", password: clerk.password });
   await expect(page.getByText(`供應商 ${draft.supplierCode} 已永久刪除`)).toBeVisible();
   await evidence(page, testInfo, "deleted");
 
+  // 真係刪咗，唔係封存咗：詳情搵唔到，連「包括已封存」都冇（REV-115 M-1）。
+  await page.goto(`/suppliers/${draft.id}`);
+  await expect(page.getByText("找不到這個供應商")).toBeVisible();
+  await expect(page.getByRole("link", { name: "返回供應商列表" }).or(page.getByRole("button", { name: "返回供應商列表" }))).toBeVisible();
   await page.goto("/suppliers");
+  await page.getByRole("checkbox", { name: "包括已封存" }).click();
   await page.getByPlaceholder("搜尋 Code、名稱、電話或電郵").fill(draft.supplierCode);
   await expect(page.getByText("冇資料")).toBeVisible();
 
@@ -266,8 +274,11 @@ test("@uat UAT-003 a same-name Supplier with another Code is warned about first,
   await page.getByPlaceholder("搜尋 Code、名稱、電話或電郵").fill(name);
   await expect(page.locator("tbody tr", { hasText: name })).toHaveCount(2);
   await page.goto(`/suppliers/audit?target=${code}`);
-  await expect(page.locator("tbody tr", { hasText: "新增供應商" })).toHaveCount(1);
+  const created = page.locator("tbody tr", { hasText: "新增供應商" });
+  await expect(created).toHaveCount(1);
   expect(problems).toEqual([]);
+  // AC-003「確認合理原因後繼續」：Audit 要講明使用者見過邊個重複候選、以咩原因繼續。而家冇原因亦冇記錄（DEF-039，REV-115 M-2）。
+  await expect(created).toContainText(first.supplierCode);
 });
 
 test("@uat UAT-004 the same identifier in another format is refused without revealing the other Supplier", async ({ as }, testInfo) => {
@@ -498,6 +509,7 @@ test("@uat UAT-054 the Supplier list tells loading, empty, failed and no-permiss
       body: JSON.stringify({ success: false, error: { code: "SERVICE_UNAVAILABLE", message: "供應商資料暫時無法載入" }, meta: { requestId: "uat-054" } }) });
     return route.continue();
   });
+  const problems = watchProblems(page, { allow: [{ status: 503, path: "/api/v1/suppliers" }] });
   await page.goto("/suppliers");
   await expect(page.getByText("載入中…")).toBeVisible();
   await evidence(page, testInfo, "loading");
@@ -516,11 +528,15 @@ test("@uat UAT-054 the Supplier list tells loading, empty, failed and no-permiss
   mode = "live";
   await page.getByRole("button", { name: "重試" }).click();
   await expect(page.getByRole("alert").filter({ hasText: "服務暫時無法使用，請稍後再試" })).toBeHidden();
+  expect(problems).toEqual([]);
 
   const { page: outsider } = await as("NOACCESS");
+  const outsiderProblems = watchProblems(outsider);
   await outsider.goto("/suppliers");
   await expect(outsider).toHaveURL(/\/403$/u);
+  await expect(outsider.getByText("你冇權限查看呢一頁。")).toBeVisible();
   await evidence(outsider, testInfo, "no-permission");
+  expect(outsiderProblems).toEqual([]);
 });
 
 test("@uat UAT-031 forms offer only Active currencies and terms, an old inactive value still shows, and Supplier Settings cannot write the catalogue", async ({ as }, testInfo) => {
@@ -564,6 +580,7 @@ test("@uat UAT-031 forms offer only Active currencies and terms, an old inactive
   expect(problems).toEqual([]);
 
   const { page: admin } = await as("SETTINGS-ADMIN");
+  const adminProblems = watchProblems(admin);
   const writes = [];
   admin.on("request", (request) => { if (request.method() !== "GET" && request.url().includes("/api/v1/business-master")) writes.push(request.url()); });
   await admin.goto("/suppliers/settings");
@@ -573,6 +590,7 @@ test("@uat UAT-031 forms offer only Active currencies and terms, an old inactive
   await expect(catalogue.getByRole("button", { name: /新增|停用|啟用|儲存|刪除/u })).toHaveCount(0);
   await evidence(admin, testInfo, "settings");
   expect(writes).toEqual([]);
+  expect(adminProblems).toEqual([]);
 
   // 舊嘅 inactive 付款條件要以使用者睇得明嘅方式顯示（DEF-038：而家詳情同編輯表單都只顯示內部 ID）。
   await page.goto(`/suppliers/${supplier.id}`);

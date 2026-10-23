@@ -192,6 +192,14 @@ Found by UAT-031. The Supplier detail shows the default payment term as its inte
 - **Effect:** UAT-031 fails at its last step. Every step before it passes, including the check that Supplier Settings has no catalogue write controls.
 - **Decision:** HD-130 A. The Supplier detail response gains `defaultPaymentTerm { id, code, name, status }`, read through the provider's history so an Inactive term is included. The UI shows 「code — name」 and marks an inactive term. The response only gains a field, so existing callers are not affected.
 
+## DEF-039 — LOW
+
+Found by REV-115 (M-2) on UAT-003. AC-003 says 「允許使用者確認合理原因後繼續」, and UAT-003 asks the user to 「確認原因」 and lists Audit as evidence. The create page offers only 「確認並繼續」, with no reason. The create Audit records neither that a duplicate warning was shown nor which candidates were overridden. Design §4 never had a reason either: the requirement did not reach the design, the same pattern as DEF-037.
+
+- **Wording is ambiguous:** AC-003 can also mean "the user confirms there is a valid reason", which the current button does.
+- **Effect:** UAT-003 now fails at its Audit step. Every earlier step passes.
+- **Decision required (HD-132):** the Product Owner interprets AC-003, or asks for a reason field and an Audit record.
+
 ## HD-116 A: dispositions (2026-10-21)
 
 Fixed in this change:

@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -22,8 +23,24 @@ export const API_URL = `http://127.0.0.1:${API_PORT}`;
 export const CLIENT_URL = `http://127.0.0.1:${CLIENT_PORT}`;
 
 export const runDirectory = path.resolve(process.cwd(), process.env.HARNESS_RUN_DIR || path.join(os.tmpdir(), "supplier-management-uat"));
+// 每次 run 一個 ID：config 喺主 process 載入時定，webServer 同 worker 都係佢嘅子 process，承繼同一個值。
+// 兩個 run 同時跑都唔會共用 fixture，teardown 亦唔會剷咗另一個 run 嘅 database（REV-115 L-6）。
+process.env.SUPPLIER_UAT_RUN ??= randomUUID().replace(/-/gu, "").slice(0, 8);
 /** uatServer 寫、測試同 teardown 讀：scratch database 名同 UAT 帳號（密碼係每次隨機生成，唔入 repo）。 */
-export const fixturePath = path.join(runDirectory, "uat-fixture.json");
+export const fixturePath = path.join(runDirectory, `uat-fixture-${process.env.SUPPLIER_UAT_RUN}.json`);
+/**
+ * Trace 會記低 fill 落去嘅密碼：放喺 evidence 目錄（HARNESS_RUN_DIR）以外，唔會跟 evidence 入 repo（REV-115 L-2）。
+ */
+export const artifactsDirectory = path.join(os.tmpdir(), "supplier-management-uat-artifacts", process.env.SUPPLIER_UAT_RUN);
+
+/**
+ * 冇 DB_NAME／DB_ADMIN_USER 係環境前提唔齊，唔係測試失敗：config 載入時就拋，Playwright 唔寫報告，harness 記 BLOCKED，
+ * 同 REV-112 L-2 嘅 runner 一致（REV-115 M-4）。
+ */
+export function assertUatEnvironment() {
+  const missing = ["DB_NAME", "DB_ADMIN_USER"].filter((name) => !process.env[name]);
+  if (missing.length) throw new Error(`Supplier UAT needs ${missing.join(" and ")}: it creates, migrates and drops a scratch database`);
+}
 
 export function adminConfig(database = undefined) {
   return {
