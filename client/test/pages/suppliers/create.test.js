@@ -6,12 +6,8 @@ import { h } from "vue";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/services/supplier.js", () => ({
-  default: { create: vi.fn(), checkDuplicates: vi.fn() },
+  default: { create: vi.fn(), checkDuplicates: vi.fn(), currencyOptions: vi.fn(), paymentTermOptions: vi.fn() },
   service: { name: "supplier" }
-}));
-vi.mock("@/services/businessMaster.js", () => ({
-  default: { currencyList: vi.fn(), paymentTermList: vi.fn() },
-  service: { name: "businessMaster" }
 }));
 vi.mock("@/services/supplierApproval.js", () => ({
   default: { activationPolicy: vi.fn(), eligibleApprovers: vi.fn() },
@@ -22,7 +18,6 @@ vi.mock("@/framework/ui/notify.js", () => ({
   notifySuccess: vi.fn()
 }));
 
-import businessMasterService from "@/services/businessMaster.js";
 import supplierApprovalService from "@/services/supplierApproval.js";
 import supplierService from "@/services/supplier.js";
 import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
@@ -37,11 +32,8 @@ async function mountPage({ requireActivationApproval = false, approvers = [], po
   else supplierApprovalService.activationPolicy.mockResolvedValue({ requireActivationApproval });
   if (approversError) supplierApprovalService.eligibleApprovers.mockRejectedValue(approversError);
   else supplierApprovalService.eligibleApprovers.mockResolvedValue({ items: approvers });
-  businessMasterService.currencyList.mockResolvedValue({
-    rows: [{ code: "HKD", name: "Hong Kong Dollar", version: 3 }],
-    rowsNumber: 1
-  });
-  businessMasterService.paymentTermList.mockResolvedValue({ rows: [], rowsNumber: 0 });
+  supplierService.currencyOptions.mockResolvedValue([{ code: "HKD", name: "Hong Kong Dollar", version: 3 }]);
+  supplierService.paymentTermOptions.mockResolvedValue([]);
   supplierService.checkDuplicates.mockResolvedValue({ duplicateCandidates: [] });
 
   const router = createRouter({

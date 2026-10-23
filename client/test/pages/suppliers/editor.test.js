@@ -1,21 +1,16 @@
 import { DOMWrapper, flushPromises, mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
-import { Quasar } from "quasar";
+import { QSelect, Quasar } from "quasar";
 import { RouterView, createMemoryHistory, createRouter } from "vue-router";
 import { h } from "vue";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/services/supplier.js", () => ({
-  default: { getById: vi.fn(), completeness: vi.fn(), update: vi.fn(), changeCode: vi.fn() },
+  default: { getById: vi.fn(), completeness: vi.fn(), update: vi.fn(), changeCode: vi.fn(), currencyOptions: vi.fn(), paymentTermOptions: vi.fn() },
   service: { name: "supplier" }
-}));
-vi.mock("@/services/businessMaster.js", () => ({
-  default: { currencyList: vi.fn(), paymentTermList: vi.fn() },
-  service: { name: "businessMaster" }
 }));
 vi.mock("@/framework/ui/notify.js", () => ({ notifyError: vi.fn(), notifySuccess: vi.fn() }));
 
-import businessMasterService from "@/services/businessMaster.js";
 import supplierService from "@/services/supplier.js";
 import SupplierDetailPage, { page } from "@/pages/suppliers/SupplierDetailPage.vue";
 import { useSessionStore } from "@/stores/session.js";
@@ -36,13 +31,13 @@ async function mountPage() {
     issues: [],
     warnings: [{ field: "addresses", code: "ORDERING_ADDRESS_MISSING", message: "尚未設定採購用途地址" }]
   });
-  businessMasterService.currencyList.mockResolvedValue({ rows: [
+  supplierService.currencyOptions.mockResolvedValue([
     { code: "HKD", name: "Hong Kong Dollar", version: 3 },
     { code: "USD", name: "US Dollar", version: 4 }
-  ], rowsNumber: 2 });
-  businessMasterService.paymentTermList.mockResolvedValue({ rows: [
+  ]);
+  supplierService.paymentTermOptions.mockResolvedValue([
     { id: 9, code: "NET30", name: "Net 30", version: 2 }
-  ], rowsNumber: 1 });
+  ]);
   const router = createRouter({
     history: createMemoryHistory(),
     routes: [
@@ -82,6 +77,18 @@ describe("Supplier general editor", () => {
     }));
     expect(supplierService.update.mock.calls[0][1]).not.toHaveProperty("supplierCode");
     expect(body.text()).toContain("版本 3");
+  });
+
+  it("offers the Active currencies and payment terms from the Supplier lookups, not Business Master (DEF-036)", async () => {
+    const { body } = await mountPage();
+    await body.findAll("button").find((button) => button.text().includes("編輯一般資料")).trigger("click");
+    await flushPromises();
+    expect(supplierService.currencyOptions).toHaveBeenCalled();
+    expect(supplierService.paymentTermOptions).toHaveBeenCalled();
+    const options = (label) => currentWrapper.findAllComponents(QSelect).find((select) => select.props("label") === label)
+      .props("options").map(({ label: text, value }) => ({ text, value }));
+    expect(options("Default Currency *")).toEqual([{ text: "HKD — Hong Kong Dollar", value: "HKD" }, { text: "USD — US Dollar", value: "USD" }]);
+    expect(options("預設付款條件（選填）")).toEqual([{ text: "NET30 — Net 30", value: 9 }]);
   });
 
   it("TC-123 (UI-003): keeps the user's draft visible when a stale update reloads the latest Supplier", async () => {

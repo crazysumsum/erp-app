@@ -54,7 +54,7 @@ async function installApi(page, { user = MANAGER, status = "active", relations =
     if (path === "/api/v1/user/me") return ok(user);
     if (path === "/api/v1/suppliers/7") return ok(supplier(status));
     if (path === "/api/v1/suppliers/7/completeness") return ok({ supplierId: 7, issues: [], warnings: [] });
-    if (path.startsWith("/api/v1/business-master/")) return ok({ items: [], total: 0 });
+    if (path === "/api/v1/supplier-lookups/currencies" || path === "/api/v1/supplier-lookups/payment-terms") return ok({ items: [] });
     if (path === "/api/v1/supplier-lookups/skus") {
       const skuId = url.searchParams.get("skuId");
       if (skuId) {

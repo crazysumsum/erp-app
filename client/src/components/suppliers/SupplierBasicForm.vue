@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted, ref } from "vue";
-import businessMasterService from "@/services/businessMaster.js";
+import supplierService from "@/services/supplier.js";
 import { notifyError } from "@/framework/ui/notify.js";
 
 const model = defineModel({ required: true });
@@ -21,15 +21,15 @@ async function loadOptions() {
   loadingOptions.value = true;
   try {
     const [currencies, paymentTerms] = await Promise.all([
-      businessMasterService.currencyList({ page: 1, rowsPerPage: 100, status: "ACTIVE", sortBy: "code" }),
-      businessMasterService.paymentTermList({ page: 1, rowsPerPage: 100, status: "ACTIVE", sortBy: "code" })
+      supplierService.currencyOptions(),
+      supplierService.paymentTermOptions()
     ]);
-    currencyOptions.value = currencies.rows.map((currency) => ({
+    currencyOptions.value = currencies.map((currency) => ({
       label: `${currency.code} — ${currency.name}`,
       value: currency.code,
       version: currency.version
     }));
-    paymentTermOptions.value = paymentTerms.rows.map((term) => ({
+    paymentTermOptions.value = paymentTerms.map((term) => ({
       label: `${term.code} — ${term.name}`,
       value: term.id,
       version: term.version

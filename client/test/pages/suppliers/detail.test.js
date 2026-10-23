@@ -6,15 +6,12 @@ import { h } from "vue";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/services/supplier.js", () => ({
-  default: { getById: vi.fn(), completeness: vi.fn() }, service: { name: "supplier" }
+  default: { getById: vi.fn(), completeness: vi.fn(), currencyOptions: vi.fn().mockResolvedValue([]), paymentTermOptions: vi.fn().mockResolvedValue([]) },
+  service: { name: "supplier" }
 }));
 vi.mock("@/services/supplierBank.js", () => ({
   default: { list: vi.fn(), create: vi.fn(), update: vi.fn(), setDefault: vi.fn(), deactivate: vi.fn(), reveal: vi.fn() },
   service: { name: "supplierBank" }
-}));
-vi.mock("@/services/businessMaster.js", () => ({
-  default: { currencyList: vi.fn().mockResolvedValue({ rows: [] }), paymentTermList: vi.fn().mockResolvedValue({ rows: [] }) },
-  service: { name: "businessMaster" }
 }));
 vi.mock("@/framework/ui/notify.js", () => ({ notifyError: vi.fn(), notifySuccess: vi.fn() }));
 

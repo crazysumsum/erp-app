@@ -159,6 +159,25 @@ Found during the DEF-035 real-backend check. The Supplier create and edit forms 
 - **Effect:** a CLERK cannot choose a default currency, so cannot create a Supplier in the UI. This blocks UAT-001 and every UAT case that starts from a new Supplier.
 - **Owner:** the endpoints belong to Business Master, which is not Supplier code. **Decision required (HD-126).**
 
+**Fixed under HD-126 A.**
+- **What was built:** two Supplier-owned lookups, `GET /api/v1/supplier-lookups/currencies` and `/payment-terms`.
+  - Permission: `supplier.view` only, `jwt`, no password. Request and response schemas are closed.
+  - They read through the shared Business Master provider, so they return only Active values and only the provider's projection (no audit fields, timestamps or description).
+  - They run the Business Master readiness check first. When Business Master is not ready the answer is `503 BUSINESS_MASTER_NOT_READY`, never an empty list.
+  - At most the first 100 Active values, the same as the forms asked for before.
+- **Client:** the create form (`SupplierBasicForm.vue`) and the payment defaults on the detail editor (`SupplierPaymentDefaults.vue`) use them.
+- **Not changed:**
+  - Business Master's own lists still require `business_master.view`, and still refuse a CLERK (pinned by an integration test).
+  - The Supplier list filters (`SuppliersPage.vue`) still use the Business Master lists and stay hidden without `business_master.view`. They need Inactive values to filter older Suppliers, which the new lookups do not return.
+- **Design §6:** the endpoint table still names the Business Master routes. This is an approved deviation recorded here and in HD-126; the design text is not edited, because that would move the design baseline (REV-114 L-2).
+- **Review:** REV-114 (`implementation/117_rev_114_independent_review.md`); findings fixed as recommended.
+- **Tests:**
+  - Handler unit tests (permission, closed schemas, readiness before listing, real readiness wiring).
+  - An integration test: a CLERK gets Active values only, and the Business Master lists still answer 403.
+  - The route contract in `supplierSecurityAcceptance`.
+  - Client unit tests for the service and the edit-form options.
+  - A real-backend browser check: a CLERK created a Draft Supplier in HKD through the UI, with no call to `/api/v1/business-master/*`.
+
 ## HD-116 A: dispositions (2026-10-21)
 
 Fixed in this change:

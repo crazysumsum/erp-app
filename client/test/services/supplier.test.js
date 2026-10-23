@@ -203,6 +203,13 @@ describe("supplier service: SKU relations (TASK-039)", () => {
     ]);
   });
 
+  it("form options come from the Supplier lookups, with no parameters, as bare item arrays (DEF-036)", async () => {
+    httpClient.get.mockImplementation(async (path) => ({ items: [path] }));
+    expect(await supplierService.currencyOptions()).toEqual(["/api/v1/supplier-lookups/currencies"]);
+    expect(await supplierService.paymentTermOptions()).toEqual(["/api/v1/supplier-lookups/payment-terms"]);
+    expect(httpClient.get.mock.calls).toEqual([["/api/v1/supplier-lookups/currencies"], ["/api/v1/supplier-lookups/payment-terms"]]);
+  });
+
   it("searchPurchasableSkus() asks the Supplier lookup, by text or by exact SKU ID, and passes the abort signal", async () => {
     const signal = new AbortController().signal;
     httpClient.get.mockResolvedValue({ items: [], total: 0 });

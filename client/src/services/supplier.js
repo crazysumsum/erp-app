@@ -154,5 +154,14 @@ export default {
   /** 只列而家可以採購嘅 SKU 同佢哋嘅單位（Item searchForPurchase）；帶 `skuId` 就精確攞嗰一隻。 */
   searchPurchasableSkus({ q, skuId, pageSize = 20, signal } = {}) {
     return httpClient.get("/api/v1/supplier-lookups/skus", { params: { q: q || undefined, skuId, pageSize }, signal });
+  },
+
+  /** 表單揀嘅 Active 幣別同付款條件：Supplier 自己嘅 lookup，supplier.view 就讀到（DEF-036、HD-126 A）。 */
+  async currencyOptions() {
+    return (await httpClient.get("/api/v1/supplier-lookups/currencies")).items;
+  },
+
+  async paymentTermOptions() {
+    return (await httpClient.get("/api/v1/supplier-lookups/payment-terms")).items;
   }
 };

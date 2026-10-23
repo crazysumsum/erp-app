@@ -70,7 +70,7 @@ async function installApi(page) {
     if (detail) return ok(SUPPLIERS[detail[1]]);
 
     // 編輯面板會載貨幣／付款條件；這一份不驗那些選項，給空清單就夠。
-    if (path.startsWith("/api/v1/business-master/")) return ok({ items: [], total: 0 });
+    if (path === "/api/v1/supplier-lookups/currencies" || path === "/api/v1/supplier-lookups/payment-terms") return ok({ items: [] });
 
     return route.fulfill({
       status: 404, headers,
