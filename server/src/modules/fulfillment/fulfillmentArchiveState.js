@@ -4,21 +4,23 @@ const sorted=rows=>rows.sort((a,b)=>BigInt(a.id)<BigInt(b.id)?-1:BigInt(a.id)>Bi
 const ids=rows=>rows.map(row=>String(row.id));
 // Fixed owner catalogue only. Each statement and each primary-key lock batch is bounded to 500 rows.
 // Locking use requires the coordinator's earlier complete operation fences and fresh view; this helper grants neither.
-export async function readFulfillmentArchiveState(tx,orderId,{lock=false}={}){
+export async function readFulfillmentArchiveState(tx,orderId,{lock=false,archived=false}={}){
+ if(typeof archived!=="boolean"||archived&&lock)throw new TypeError("Invalid Archive read mode");
+ const projection=table=>Object.entries(FULFILLMENT_ARCHIVE_CONTRACTS.find(c=>c.table===table).columns).map(([name,c])=>c.type==="date"?`DATE_FORMAT(${name},'%Y-%m-%d') AS ${name}`:name).join(",")+(archived?",archive_batch_id,archived_at,row_hash":"");
  const state=Object.fromEntries(FULFILLMENT_ARCHIVE_CONTRACTS.map(c=>[c.table,[]]));
  async function lockRows(table,rows){
-  const columns=Object.keys(FULFILLMENT_ARCHIVE_CONTRACTS.find(c=>c.table===table).columns).join(",");
+  const columns=projection(table);
   for(let start=0;start<rows.length;start+=500){
    const batch=rows.slice(start,start+500),[current]=await tx.query(`SELECT ${columns} FROM ${table} FORCE INDEX (PRIMARY) WHERE id IN (${marks(batch)}) ORDER BY id FOR UPDATE`,ids(batch));
    if(current.length!==batch.length||current.some((row,i)=>hashFulfillmentArchiveRow(table,row)!==hashFulfillmentArchiveRow(table,batch[i])))throw new TypeError("Archive membership changed");
   }
  }
  async function read(table,column,parents,extra="",extraArgs=[]){
-  const contract=FULFILLMENT_ARCHIVE_CONTRACTS.find(c=>c.table===table),columns=Object.keys(contract.columns).join(","),rows=[];
+  const columns=projection(table),physical=table+(archived?"_archive":""),rows=[];
   for(let start=0;start<parents.length;start+=500){
    const batch=parents.slice(start,start+500);let after="0";
    for(;;){
-    const [page]=await tx.query(`SELECT ${columns} FROM ${table} WHERE ${column} IN (${marks(batch)})${extra} AND id>? ORDER BY id LIMIT 500`,[...batch,...extraArgs,after]);
+    const [page]=await tx.query(`SELECT ${columns} FROM ${physical} WHERE ${column} IN (${marks(batch)})${extra} AND id>? ORDER BY id LIMIT 500`,[...batch,...extraArgs,after]);
     for(const row of page){if(BigInt(row.id)<=BigInt(after))throw new TypeError("Invalid Archive row ordering");after=String(row.id);rows.push(row);}
     if(page.length<500)break;
    }

@@ -6,8 +6,8 @@ import {FulfillmentOpenMatterService} from "../../src/modules/fulfillment/Fulfil
 import {SalesOrderLifecycleService} from "../../src/modules/sales/SalesOrderLifecycleService.js";
 
 // Real Inventory Allocate/Issue/Reverse and Sales synchronization; owner projections are native fixture writes, not a shipped Fulfillment HTTP flow.
-export async function archiveFactsFixture(t){
- const f=await issueFixture(t);await auditUp(f.db);await archiveUp(f.db);
+export async function archiveFactsFixture(t,options={}){
+ const f=await issueFixture(t,options);await auditUp(f.db);await archiveUp(f.db);
  const issue=await f.s.insert("shipment_issue_details",f.row),event=randomUUID(),reversal=await f.s.insert("shipment_reversals",{reversal_number:"REV-202610-000001",shipment_id:f.shipment,status:"REVERSING",event_id:event,correlation_id:randomUUID(),reason:"Synthetic controlled reversal",goods_under_company_control:1,goods_returned_to_original_bins:1,created_at:f.s.now});
  const result=await f.run({claims:f.claims},async tx=>{
   const original=await f.lookup.getFulfillmentReversalPreparationInTransaction(tx,{shipmentId:String(f.shipment),originalInventoryOperationIds:[f.row.inventory_operation_id]});

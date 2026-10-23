@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1314,
+  "revision": 1318,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "64b0e1d51fe2a5163e8e33c93277e0a7d3464abff52684a0b57b6c636821622a",
     "plan": "ec0fae970beca595f863eed95f752984c424ae0080342f99a70fc281880e30a6",
-    "code_commit": "5e8796a8dacb5fd7f372224f29a63450574041ff",
-    "source_fingerprint": "c098e253c070ffea1c7096b5bad47f99f557c7cb6287a8e9fc8fdacb588625cc",
+    "code_commit": "21b791601e48aad9cacc52f239ea962be91ee8ad",
+    "source_fingerprint": "2f053efb77442aa190d61c7d05eea76fe856f350f13c54379f1041082a448bac",
     "worktree": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app",
     "default_commit": "e272f5d3ce05d0ca50be42e6d8764f0ef20d3dd1",
     "mode_entry_commit": "e272f5d3ce05d0ca50be42e6d8764f0ef20d3dd1"
@@ -11819,6 +11819,30 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-P4-PARTICIPANT-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "2ff04deeabf299b57ae014cd241c5e9da61ff55857e7755dc37f8847f30ae8da",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-participant-r1-source-reviewer-proof.json SHA2565e67c78b58f3d08d60f3f7eef114950062f9c352a67ef6033719c87f56f8ed7f; actual captured intermediate file SHAs in proof; later corrective bytes require closing review.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P4-PARTICIPANT-DEF022023-R2-CLOSING",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "2f053efb77442aa190d61c7d05eea76fe856f350f13c54379f1041082a448bac",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-participant-def022023-r2-closing-reviewer-proof.json SHA25623151008739e5a67b7dafc54dfd8da2a3b510ff53c77a29105201156fa8a27a7; exact6 finalfile bindings, actual19NodePASS(18DB+1shapeunit)/0FAIL0SKIP and fixedCurrent22PASS. Only owner participant component; runtime/privateMap/fullwriter audit fencing/Task/P4/currentCI/Gates unqualified.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -15594,6 +15618,17 @@
       "subject": "Read-only formal Archive schema/version readiness17 nativePASS0FAIL0SKIP with separate source review",
       "status": "PASS",
       "source_ref": "p4-archive-readiness-native-r1.log SHA2568b07832d340c3f64fabf64b88162e7723ae890df2232b4c5e3baf1bcf440db11; actual genuine missingmoduleREDe1aa234f old7 prefix remains; lint0. Published P0 migrations unchanged. Component only; all fullP4 gates pending."
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "21b791601e48aad9cacc52f239ea962be91ee8ad",
+      "spec_baseline": "ec0fae970beca595f863eed95f752984c424ae0080342f99a70fc281880e30a6",
+      "source_fingerprint": "2f053efb77442aa190d61c7d05eea76fe856f350f13c54379f1041082a448bac",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-23T05:32:20.964966Z",
+      "subject": "Mandatory participant developer suite actual19PASS0fail0skip, remainsBLOCKED absent complete TC047/048/049 evidence",
+      "status": "BLOCKED",
+      "source_ref": "evidence/20261023T052945-9dca4fe42cc3/run.json SHA256b28970e3e45b9b2f80a4cf29da9c257f35540f4d1b0ce9b1fa4085aae3145f5d; no fake TC tags or Gate waiver. Owner component is separately reviewed; real runtime/joint fullcases still required."
     }
   ],
   "pending_decisions": [
@@ -18711,8 +18746,16 @@
       "kind": "GIT_COMMIT",
       "target": "local-only current-schema advisory OpenMatter and DEF021 narrow fixes",
       "idempotency_key": "p4-openmatter-current21-20261023",
+      "status": "CONFIRMED",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-openmatter-current-r2-closing-reviewer-proof.json SHA2565b4826289d97811779de590db1468cd4b35b8a7dc25dd80dc456c823a5095eff; exact final4 source bindings, actual21native/20unit0fail0skip; previous changes and async scope mutation corrected. Only advisory/fail-closed transaction read component; real private runtime/participant/fullP4 Gates pending. No push/PR/main merge. Observed actual localcommit 21b791601e48aad9cacc52f239ea962be91ee8ad."
+    },
+    {
+      "id": "ACT-P4-PARTICIPANT-COMMIT-20261023",
+      "kind": "GIT_COMMIT",
+      "target": "local-only real owner participant and DATE fix, DEF022/023 narrow repairs",
+      "idempotency_key": "p4-owner-participant19-20261023",
       "status": "STARTED",
-      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-openmatter-current-r2-closing-reviewer-proof.json SHA2565b4826289d97811779de590db1468cd4b35b8a7dc25dd80dc456c823a5095eff; exact final4 source bindings, actual21native/20unit0fail0skip; previous changes and async scope mutation corrected. Only advisory/fail-closed transaction read component; real private runtime/participant/fullP4 Gates pending. No push/PR/main merge."
+      "source_ref": "Actual separate exact6file review23151008; native19 and Current22/lint0; standardrun19PASS but BLOCKED fullcase obligations. No push/PR/mainmerge."
     }
   ],
   "evidence_files": [
@@ -19506,7 +19549,8 @@
     "evidence/20261020T051651-dbe669b96ca8/run.json",
     "evidence/20261023T025425-2afe5efe357e/run.json",
     "evidence/20261023T040326-12a641edeba0/run.json",
-    "evidence/20261023T040549-abe8d8170836/run.json"
+    "evidence/20261023T040549-abe8d8170836/run.json",
+    "evidence/20261023T052945-9dca4fe42cc3/run.json"
   ],
   "defects": [
     {
@@ -19828,7 +19872,41 @@
         "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-openmatter-mutation-red-r1.log SHA256a4530c0d84666128218f404aa53339d41766880251b7bd8a88dcdfc4c63421ad; two genuine mutable-scope failures and parentFAIL retained; final r9 corrected."
       ],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-022",
+      "severity": "MEDIUM",
+      "status": "CLOSED",
+      "source_ids": [
+        "TASK-066",
+        "TC-047"
+      ],
+      "closure_evidence": [
+        "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-openmatter-date-old-source-red-r1.log SHA256e480d40998d6ee16e11e52296198bff8d0a3d249e53aafde54e868a54d8f51db; actual21PASS1FAIL0SKIP using immutable21b7916 product snapshot plus new test/fixture only. Non-null DATE returned a driver Date object; canonical hash contract intentionally disallows locale/timezone coercion.",
+        "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-openmatter-date-fixed-native-r1.log SHA256d2b5094c6e40fd0a8442fa56203bbe1f9919a6aead3c02677b1ff2f96c60b1b3; fixed reader explicit DATE_FORMAT projection22PASS0fail0skip, no driver/hash contract change. Separate closing review pending.",
+        "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-participant-def022023-r2-closing-reviewer-proof.json SHA25623151008739e5a67b7dafc54dfd8da2a3b510ff53c77a29105201156fa8a27a7; exact6 finalfile bindings, actual19NodePASS(18DB+1shapeunit)/0FAIL0SKIP and fixedCurrent22PASS. Only owner participant component; runtime/privateMap/fullwriter audit fencing/Task/P4/currentCI/Gates unqualified."
+      ],
+      "risk_approval_id": null
+    },
+    {
+      "id": "DEF-023",
+      "severity": "HIGH",
+      "status": "CLOSED",
+      "source_ids": [
+        "TASK-067",
+        "TC-047",
+        "TC-048",
+        "TC-049"
+      ],
+      "closure_evidence": [
+        "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-participant-r1-source-reviewer-proof.json SHA2565e67c78b58f3d08d60f3f7eef114950062f9c352a67ef6033719c87f56f8ed7f; actual distinct reviewer changesrequired identical same-scope mirrors recovery, owner cutoff, destructive500-page native proof, mirror-derived Active replay residue absence. No enabled runtime or production incident.",
+        "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-participant-recovery-cutoff-red-r1.log SHA256a380d26713cec0102e2785478bb3cf8bee1fd2ba27c04e0614d25761e8306cf3; actual13PASS4FAIL0SKIP.",
+        "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-participant-residual-audit-red-r1.log SHA256fbb55809ec0c7cd85f683eb7ea47dd506473ccebef21aca3da8002b9f760d8a8; actual13PASS5FAIL0SKIP incl residualAudit false replay. Prior12/8/7 componentPASS evidence historical, no Gate approval. Corrections implemented, r6 native/closing pending.",
+        "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-participant-def022023-r2-closing-reviewer-proof.json SHA25623151008739e5a67b7dafc54dfd8da2a3b510ff53c77a29105201156fa8a27a7; exact6 finalfile bindings, actual19NodePASS(18DB+1shapeunit)/0FAIL0SKIP and fixedCurrent22PASS. Only owner participant component; runtime/privateMap/fullwriter audit fencing/Task/P4/currentCI/Gates unqualified.",
+        "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-participant-foreign-order-red-r1.log SHA256b8246e4914cdff9735bfb7094c7ea43169a90efbdb9616b68dce8885af6a1310; true18PASS1FAIL0SKIP same original mirrorID foreignSOcollision, final onlyINSERT ER_DUP_ENTRY mapped to stable ARCHIVE_DATA_CONFLICT, othererrors propagate; no overwrite."
+      ],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Observe local OpenMatter component commit; finish actual HD017 canonical owner handoff then implement full participant plus fixed Sales coordinator/private live tx scope. Run unchanged fullP4 joint/native/Playwright/capacity/restore/currentCI/whole review/Gates before already-authorized main merge. No user decision currently needed."
+  "next_safe_action": "Register actual mandatory participant developer run (fullcase Gate still pending), local reviewed component commit; align actual P0 wrapper exact path with reviewed truthful baseline package BEFORE wrapper edits; implement fixed runtime/private live scope and complete real Sales business coordinator, all original joint/CI/whole-phase/merge Gates. No further user decision currently needed."
 }

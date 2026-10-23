@@ -114,3 +114,8 @@ nativeTest("DEC029 mixed-target Audit pagination locks complete global primary I
   const state=await readFulfillmentArchiveState({query(sql,args){if(sql.includes("fulfillment_audit_logs FORCE INDEX"))trace.push(...args.map(String));return tx.query(sql,args);}},String(f.s.orderId),{lock:true});assert.equal(state.fulfillment_audit_logs.length,504);assert.deepEqual(trace,state.fulfillment_audit_logs.map(row=>String(row.id)));assert.equal(new Set(trace).size,504);assert.equal(archiveStateFacts(state,Date.now()).inconsistent,false);
  },{isolationLevel:"REPEATABLE READ"});
 });
+
+nativeTest("DEC029 non-null native Shipment DATE is observed without locale or Date coercion",async t=>{
+ const f=await issueFixture(t,{shipmentDate:"2023-11-14"}),file=fileURLToPath(new URL("../../scripts/migrate.js",import.meta.url));await promisify(execFile)(process.execPath,[file],{env:{...process.env,DB_NAME:f.f.name,DB_USER:f.f.connectionOptions.user,DB_PASSWORD:f.f.connectionOptions.password},timeout:180000,maxBuffer:1024*1024});
+ const state=await readFulfillmentArchiveState(f.db,String(f.s.orderId));assert.equal(state.shipments[0].shipment_date,"2023-11-14");assert.equal(archiveStateFacts(state,Date.now()).inconsistent,false);const service=new FulfillmentOpenMatterService({database:f.database});assert.equal((await service.getOrderArchiveStatus(String(f.s.orderId),{atMs:Date.now()})).status,"OPEN");
+});
