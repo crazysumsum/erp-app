@@ -377,9 +377,9 @@
       {
         "module_id": "inventory-management",
         "id": "inventory-batch-reserve-release-contract",
-        "version": "observed-main-f7ddcfd-Inventory-P3; compatible Sales consumption, full integrated original33/currentCI required",
+        "version": "observed-main-1e57380e; original Inventory P3 Sales contract preserved byte-for-byte; appended Purchasing DES011/012 not adopted; full original33/currentCI required",
         "source": "docs/inventory_management/03_design_spec.md",
-        "sha256": "2fb61cce8ee4ff9f32cd9c6d0e2a9fc8f87c08d34823be7fb622908610b1ac53",
+        "sha256": "7ee4e5f4b897663e276a966959843417e2e787a8adb30bc47fdd7820d3196193",
         "regression_suites": [
           "sales-technical"
         ]

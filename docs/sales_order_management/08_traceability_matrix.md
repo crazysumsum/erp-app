@@ -374,5 +374,5 @@ This is a structural planning view, not execution evidence or approval.
 
 ## N/A decisions
 
-- NFR-014: Objective disaster-recovery exercise measured by timed restore and reconciliation evidence, not by a business-user observable UAT case (08 matrix row NFR-014/015). (approval reference: APR-P4-REAL-WRAPPER-UATNA-NFR-014; verify authority separately).
-- NFR-015: Objective disaster-recovery exercise measured by timed restore and reconciliation evidence, not by a business-user observable UAT case (08 matrix row NFR-014/015). (approval reference: APR-P4-REAL-WRAPPER-UATNA-NFR-015; verify authority separately).
+- NFR-014: Objective disaster-recovery exercise measured by timed restore and reconciliation evidence, not by a business-user observable UAT case (08 matrix row NFR-014/015). (approval reference: APR-P4-MAIN1E57380E-UATNA-NFR-014; verify authority separately).
+- NFR-015: Objective disaster-recovery exercise measured by timed restore and reconciliation evidence, not by a business-user observable UAT case (08 matrix row NFR-014/015). (approval reference: APR-P4-MAIN1E57380E-UATNA-NFR-015; verify authority separately).
