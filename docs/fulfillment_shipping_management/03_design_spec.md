@@ -250,6 +250,10 @@ Archive由Sales Job協調；每張SO一個transaction，先鎖Sales root，再�
 6. Inventory Operation → Warehouse → Stock Controls → Bins／Bin Locks → Lots → Balances → Reservations → Allocations。
 7. Current projections、History、Audit append。
 
+HD-013已批准：只限Sales WITHDRAW／CANCEL／CLOSE_REMAINING transaction明確使用READ COMMITTED，其餘Sales及DB全域預設保持不變。Lifecycle guard必須驗可信active-RC metadata；在各層直接父鎖下plain current discovery完整IDs，再依主鍵升序鎖定並重驗owner／目前狀態及數量。不得使用RR snapshot、owner-range locking discovery或未實作的parent-version witness推斷無工作。
+
+HD-012已批准的唯一readiness例外：Sales lifecycle在Sales／文件根鎖後，只可用`FOR SHARE NOWAIT` current read檢查既有Fulfillment／Shipment operation；不能claim、插入、接管、升鎖、等待或重試。IN_PROGRESS回OPEN；鎖衝突、缺schema及任何未知依賴回UNKNOWN，由Sales整個transaction以503 rollback，在此之前不得release Inventory。此例外不改業務writer鎖序；隔離範圍依HD-013的三條lifecycle例外。
+
 Archive不呼叫Inventory；只按Sales root → Fulfillment roots → archive rows順序。Deadlock及lock timeout映射`409 CONCURRENT_OPERATION`，原event先查operation outcome。
 
 ### 2.9 冪等三層責任
@@ -1087,6 +1091,8 @@ PICKING、PICKED、SHIPPING、REVERSING、active Claim、outstanding Allocation�
 
 最小lifecycle method及真實`fulfillmentOpenMatter`註冊由P0 TASK-011交付；P3 TASK-041只擴展archive eligibility。P0測試先於隔離schema完成，任何live install必須先有已驗證provider artifact及核准cutover，再按§1.4停writer／安裝／註冊／驗證／恢復；不是等到P3才解除Sales fail-closed。
 
+HD-014：固定 WITHDRAW purpose 只要存在任何本模組 active／archive history，就以已知 OPEN／CLOSED 結果的 bounded `reasonCodes:["FULFILLMENT_HISTORY_BLOCKS_WITHDRAWAL"]` 告知 Sales guard，在任何 Inventory release 前回專用409。terminal history 的 readiness 仍如實 CLOSED；UNKNOWN 優先503。不刪 FK 或歷史；CANCEL／CLOSE_REMAINING 仍只判真正 active work／Claim／Allocation／operation。無歷史的撤回→Draft編輯→重新確認仍可用；原已完成事件 replay 優先。
+
 `assertSalesLifecycleAllowedInTransaction()`由已鎖Sales Order／Lines的withdraw／cancel／close remaining流程呼叫；它按Fulfillment ID鎖相關非terminal工作及Claims。任何active工作回`OPEN_FULFILLMENT_EXISTS`，依賴失效回UNKNOWN／503，不能讓Sales先行release Reservation。固定lock order仍為Sales → Fulfillment → Inventory。
 
 Sales P2 DEC-021 proposes an explicit UNINSTALLED_FULFILLMENT_V1 / NO_PROVIDER_REQUIRED deployment boundary only before any Fulfillment/Shipment schema or migration history and with no registered active provider. Sales returns distinct NOT_REQUIRED, not CLOSED, after a current check in its locked transaction. Any schema/history/provider presence, partial/archive installation or UNKNOWN requires the real lifecycle provider. Activation quiesces Sales release, migrates first, removes this exception, registers/verifies all nodes and proves Sales -> Fulfillment -> Inventory writer locks before resuming. Metadata alone does not prove live rollout safety; no negative cache or drop-to-reenable policy. Archive remains required and unchanged. Human/owner adoption remains pending.
@@ -1822,3 +1828,12 @@ Archive 相同 ID 且 hash 相同視為 unknown-outcome recovery，hash 不同�
 
 ### Failure behavior
 業務驗證失敗不無限 retry，暫時失敗採 exponential backoff ＋ jitter，commit 不明先 lookup source outcome；效能結果必須附 EXPLAIN、rows examined、lock wait、pool usage 及 heap 證據，不得以縮小資料集通過；有正式資料後只用 forward migration 修正，不 drop 或改寫 ledger／history。
+
+
+### HD-010 — Localized Fulfillment transaction isolation (adopted2026-10-21)
+
+New Fulfillment write transactions use the existing database owner's READ COMMITTED option. A private active-executor registry in MySqlDatabaseService records the actual normalized transaction isolation after BEGIN and removes it on exit/abort; batch providers additionally require the current caller-context executor and reject missing/incorrect capability before claims. No command field or session-default variable asserts isolation. Other module workflows and database/global/session defaults remain unchanged. Full parent/root locks, complete sorted lock sets, FK/unique, version CAS and atomic rollback enforce exact-set/aggregate invariants; do not rely on RR gap locks or stable repeated plain reads. After complete Warehouse/StockControl serialization anchors and locked Item policy, Inventory's bounded plain candidate queries are current statement reads, followed by the approved Bin/Lot/Balance/Reservation/Allocation order and revalidation. Native races/capacity/rollback and provider source review remain Checkpoint0B prerequisites. Actual decision, reviewed proposal and alternatives: implementation/08_allocation_read_consistency.md#actual-adoption.
+
+### HD011 adopted Reservation version and synchronization clarification
+
+Sam adopted A in implementation/10_reservation_version_alignment.md#actual-adoption. Sales CLAIM.expectedVersion is the mapping's strict last-sync CAS; Inventory command expectedVersion and Fulfillment Claim.inventory_version come from the Inventory owner's actual current locked state, with scope/source/status/counter validation and active Claim sum≤native outstanding. Quantity-neutral Allocation/Release/Reallocate may advance Inventory CAS without immediately rewriting Sales last-sync. Quantity-changing events still synchronize Sales atomically from actual owner result. Shipment intents bind actual current Inventory CAS, never infer neutral drift from a larger version, and Sales apply requires an unforgeable same-transaction exact receipt, current+1, complete native counter/source checks and old mapping CAS before syncing to actual current version. Original reserve identity,0078/0086 triggers, exact replay, Reverse and all gates remain unchanged. This precise cadence refinement supersedes earlier same-version shorthand; no new sync API, schema or permission is introduced. Owner canonical alignment and actual joint/repeated-CLAIM/native tests remain required before0B.

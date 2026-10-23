@@ -1,9 +1,15 @@
+import { getActiveTransactionIsolation } from "../../services/mysqldatabase/MySqlDatabaseService.js";
 import { reportInternalFailure } from "../../framework/diagnostics/reportInternalFailure.js";
 import { INVENTORY_AUDIT_ACTIONS } from "./inventoryConstants.js";
 import {
   inventoryStringHasInvalidCharacters,
   serializeInventorySummary
 } from "./inventorySafeJson.js";
+
+const AUDIT_INSERT = `INSERT INTO inventory_audit_logs
+         (occurred_at, actor_user_id, actor_label, action, target_type, target_id,
+          target_label, outcome, reason_category, reason_text, before_summary,
+          after_summary, operation_request_id, request_id, correlation_id, ip)`;
 
 const ACTIONS = new Set(INVENTORY_AUDIT_ACTIONS);
 const SUMMARY_FIELDS = new Set([
@@ -24,6 +30,11 @@ function boundedString(value, field, max, { empty = false, ascii = false } = {})
       Buffer.byteLength(value, "utf8") > max || inventoryStringHasInvalidCharacters(value, ascii)) {
     throw new TypeError(`Invalid Inventory audit ${field}`);
   }
+  return value;
+}
+
+function boundedReason(value) {
+  if(typeof value!=="string"||[...value].length>500||inventoryStringHasInvalidCharacters(value))throw new TypeError("Invalid Inventory audit reason text");
   return value;
 }
 
@@ -65,16 +76,16 @@ export class InventoryAuditService {
     if (!connection || typeof connection.execute !== "function") {
       throw new TypeError("Inventory audit requires a caller-owned transaction connection");
     }
-    if (!ACTIONS.has(input.action)) throw new TypeError(`Unsupported Inventory audit action ${input.action}`);
-
-    const succeeded = outcome === "SUCCEEDED";
     await connection.execute(
-      `INSERT INTO inventory_audit_logs
-         (occurred_at, actor_user_id, actor_label, action, target_type, target_id,
-          target_label, outcome, reason_category, reason_text, before_summary,
-          after_summary, operation_request_id, request_id, correlation_id, ip)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
+      AUDIT_INSERT + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      this.#values(input, outcome)
+    );
+  }
+
+  #values(input, outcome) {
+    if (!ACTIONS.has(input.action)) throw new TypeError(`Unsupported Inventory audit action ${input.action}`);
+    const succeeded = outcome === "SUCCEEDED";
+    return [
         this.time.nowMs(),
         positiveId(input.actorUserId, "actor user id", { nullable: true }),
         boundedString(input.actorLabel, "actor label", 190),
@@ -84,7 +95,7 @@ export class InventoryAuditService {
         boundedString(input.targetLabel, "target label", 190),
         outcome,
         boundedString(input.reasonCategory ?? "", "reason category", 40, { empty: true, ascii: true }),
-        boundedString(input.reasonText ?? "", "reason text", 500, { empty: true }),
+        boundedReason(input.reasonText ?? ""),
         serializeInventorySummary(input.beforeSummary, SUMMARY_FIELDS, "Inventory audit summary"),
         succeeded
           ? serializeInventorySummary(input.afterSummary, SUMMARY_FIELDS, "Inventory audit summary")
@@ -93,8 +104,40 @@ export class InventoryAuditService {
         boundedString(input.requestId ?? "", "request id", 64, { empty: true, ascii: true }),
         boundedString(input.correlationId ?? "", "correlation id", 64, { empty: true, ascii: true }),
         boundedString(input.ip ?? "", "ip", 45, { empty: true, ascii: true })
-      ]
-    );
+      ];
+  }
+
+  // Bound to one caller-owned command; capture validated event values before mutable stock advances.
+  createSucceededBatch(connection) {
+    const active = () => {
+      if (getActiveTransactionIsolation(connection) === null) throw new TypeError("Inventory audit batch requires an actual active transaction");
+    };
+    active();
+    let pending = [], failed = false, flushing = false;
+    const ready = () => {
+      active();
+      if (flushing) { failed = true; throw new TypeError("Inventory audit batch is already flushing"); }
+      if (failed) throw new TypeError("Inventory audit batch has failed");
+    };
+    const flush = async () => {
+      ready();
+      if (!pending.length) return;
+      flushing = true;
+      try {
+        await connection.execute(AUDIT_INSERT + " VALUES " + pending.map(() => "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)").join(", "), pending.flat());
+        pending = [];
+      } catch (error) { failed = true; throw error; }
+      finally { flushing = false; }
+    };
+    return Object.freeze({
+      record: async input => {
+        ready();
+        try { pending.push(this.#values(input, "SUCCEEDED")); }
+        catch (error) { failed = true; throw error; }
+        if (pending.length === 100) await flush();
+      },
+      flush
+    });
   }
 
   async #recordIndependent(input, outcome) {

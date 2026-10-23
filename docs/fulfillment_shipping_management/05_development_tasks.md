@@ -8,7 +8,7 @@
 | --- | --- |
 | 依據 | `docs/fulfillment_shipping_management/01_requirement_spec.md` 0.2、`docs/fulfillment_shipping_management/03_design_spec.md` 0.2 |
 | 產生日期 | 2026-09-09 |
-| 任務狀態 | ERP Product Owner（Sam）已於 2026-09-14 批准 Phase P0～P3 計劃為 planning baseline；尚未授權執行任何 Task，本文件不代表已開始功能開發 |
+| 任務狀態 | Sam 已於 2026-10-20 授權 P0 IMPLEMENT；入口、協調與實際 Task 完成狀態以 harness state 及 implementation 報告為準；歷史 planning 批准保留 |
 | Task List target | 本文件（`05_development_tasks.md`）；依使用者指定，不另建 `tasks/plan.md` 或 `tasks/todo.md` |
 | 交付模式 | Phase P0～P3；每個 Phase 一個獨立 worktree／分支、一個 PR、一次完整測試週期 |
 | Commit 模式 | 每個 Task 完成並通過 focused verification 後形成一個 atomic commit；Checkpoint 不建立功能 commit |
@@ -60,6 +60,10 @@
 - Fulfillment／Shipment schema 或 migration history 出現前，另須具體核准 Sales 啟用協調：停止 Sales release writers → migrations → 註冊並驗證真實 `fulfillmentOpenMatter` provider 及所有節點 → 證明 Sales → Fulfillment → Inventory 鎖序 → 恢復 writers。現有 `NOT_REQUIRED` 只適用完全未安裝狀態；不得在有 schema 後繼續依賴它。本文件不授權部署或操作共用資料庫。
 - P0 Gate：全部 11 個 Task、provider integration、fresh／upgrade migration、並發／rollback／recovery、原 coverage／CI／人工審查全部完成才可交付單一 P0 PR；不開啟業務 route、menu 或 scheduler。後續 P1 UI 另需本模塊真實 Playwright flow、profile suite 及 CI coverage。
 - 每次執行前 fetch 最新 main、盤點並分配當時 migration 序號；測試僅用已確認可清除的專用 schema。HD-007已選擇MySQL 26.7.0為開發／測試相容基線；保留歷史8.0批准，不宣告8.0支援或任何production升級。
+
+### HD-009 — Archive foundation predecessor（2026-10-20，A1 已批准）
+
+Sam 已批准將 Sales 擁有的 `0088_create_sales_archive_batches.js` 兩表基礎（`sales_archive_batches`／`sales_archive_order_manifests`）作為正式 owner contribution 納入完整 P0 PR，以解除 TASK-010 mirror FK 與完整 Sales P4 的交付循環。其餘 Sales P4 留在原完整 PR，於 P0 合併後整合；不省略 FK、Checkpoint 0B、獨立 owner review、原生 fresh／upgrade／partial／rerun migration 或任何 Phase Gate。唯一編號及舊新 installer 對照須在 TASK-001 完成，source／執行證據依本候選重驗。具體決策與來源見 [HD-009](implementation/01_archive_foundation_dependency.md)。
 
 ### 1.5 依賴圖
 
@@ -427,7 +431,7 @@ Focused verification可使用`npm test --workspace server -- <test-file>`及`npm
 - [ ] Helper對IDs去重排序並禁止逆序或nested transaction；缺transaction executor／可信actor／固定purpose立即失敗。
 - [ ] 測試支援可在operation、provider result、snapshot、history及commit邊界注入失敗，並可同步兩條真connection競爭。
 - [ ] 雙人Claim、mixed Expiry sequence及Serial rejection proof不出現deadlock、overclaim或部分寫入。
-- [ ] 交付最小`FulfillmentOpenMatterService.assertSalesLifecycleAllowedInTransaction`及`fulfillmentOpenMatter`真實註冊／全節點探測，沿Sales → Fulfillment鎖序回CLOSED／OPEN／UNKNOWN；在隔離schema證明無open matter可release、active claim／operation阻止release、缺provider／UNKNOWN fail closed。P3只擴展archive能力；live install／writer恢復前必須已完成本P0 artifact與核准cutover，不能等到P3。
+- [ ] 交付最小`FulfillmentOpenMatterService.assertSalesLifecycleAllowedInTransaction`及`fulfillmentOpenMatter`真實註冊／全節點探測，沿Sales → Fulfillment鎖序及Design§2.8 HD-012限定operation NOWAIT readiness及HD-013三條Sales lifecycle RC例外回CLOSED／OPEN／UNKNOWN；在隔離schema證明無open matter可release、active claim／operation阻止release、缺provider／UNKNOWN fail closed。P3只擴展archive能力；live install／writer恢復前必須已完成本P0 artifact與核准cutover，不能等到P3。
 
 **Verification：** lock-order unit、transaction context contract、fault injection smoke、Sales最小lifecycle provider／註冊／release integration及真MySQL two-connection tests。
 
@@ -1707,6 +1711,7 @@ Commit：`feat: add sales fulfillment transaction contracts`。
 - Candidate對有Expiry採FEFO、其後無Expiry採First Receipt FIFO並回rank、strategy、eligibility及versions；Fulfillment不自行重算資格。
 - Batch allocate／release／issue具exact-set、ownership、version及全有或全無語意；FIFO偏離需原因，FEFO偏離另驗fresh override權限。
 - 專用Reversal只接受原Issue refs，回原bucket並恢復Reservation；原Allocation保持Consumed且每個Issue最多一個reversal movement。
+- HD011已採納A：Sales CLAIM使用last-sync CAS，Inventory命令及Fulfillment Claim保存owner current CAS；數量不變的Allocation／Release／Reallocate可延後同步Sales版本。0B須真實provider反覆CLAIM／allocation／release／reallocate／Issue／Reverse聯測，Create／Update仍以鎖定native counters驗active Claims上限；所有counter／source／current+1／舊mapping CAS、trigger及replay保障不變，見implementation/10_reservation_version_alignment.md#actual-adoption。
 
 ### Definition of Done
 驗證方式：Inventory provider contract、mixed-expiry排序、batch rollback、concurrent allocation／issue及specialized reversal真MySQL tests。
@@ -1869,7 +1874,7 @@ Commit：`feat: add fulfillment audit export and archive schema`。
 - Helper對IDs去重排序並禁止逆序或nested transaction；缺transaction executor／可信actor／固定purpose立即失敗。
 - 測試支援可在operation、provider result、snapshot、history及commit邊界注入失敗，並可同步兩條真connection競爭。
 - 雙人Claim、mixed Expiry sequence及Serial rejection proof不出現deadlock、overclaim或部分寫入。
-- 交付最小`FulfillmentOpenMatterService.assertSalesLifecycleAllowedInTransaction`及`fulfillmentOpenMatter`真實註冊／全節點探測，沿Sales → Fulfillment鎖序回CLOSED／OPEN／UNKNOWN；在隔離schema證明無open matter可release、active claim／operation阻止release、缺provider／UNKNOWN fail closed。P3只擴展archive能力；live install／writer恢復前必須已完成本P0 artifact與核准cutover，不能等到P3。
+- 交付最小`FulfillmentOpenMatterService.assertSalesLifecycleAllowedInTransaction`及`fulfillmentOpenMatter`真實註冊／全節點探測，沿Sales → Fulfillment鎖序及Design§2.8 HD-012限定operation NOWAIT readiness及HD-013三條Sales lifecycle RC例外回CLOSED／OPEN／UNKNOWN；在隔離schema證明無open matter可release、active claim／operation阻止release、缺provider／UNKNOWN fail closed。P3只擴展archive能力；live install／writer恢復前必須已完成本P0 artifact與核准cutover，不能等到P3。
 
 ### Definition of Done
 驗證方式：lock-order unit、transaction context contract、fault injection smoke、Sales最小lifecycle provider／註冊／release integration及真MySQL two-connection tests。
@@ -2810,3 +2815,8 @@ Commit：`test: add fulfillment release qualification evidence`。
 - [ ] 沒有skip、suppressions、降低coverage／資料量／效能門檻或未批准的自動修復。
 
 另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；新 API 具 strict schema、後端 permission、stable public error、CAS version 及適用的 idempotency／IDOR 防護；DB unique／FK／trigger／transaction／lock／archive 行為以專用真 MySQL integration test 驗證；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression 或 production fake；log／audit／error／test evidence 不含 token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json` 與 Phase evidence。
+
+
+### HD-010 implementation refinement — adopted2026-10-21
+
+TASK005/TASK011 implement the localized RC caller transaction and trusted DB-owner active-executor metadata described in Design HD010. Exact additional shared source is server/src/services/mysqldatabase/MySqlDatabaseService.js; tests remain in Fulfillment allowlisted paths and existing DB framework regressions run unchanged. Before0B prove actual isolation, fail-before-claim wrong/closed/foreign executors, metadata lifetime/abort/rollback, fresh bounded recommendation after competing Receipt/Bin changes, and parent/root/exact-set protection without RR gap locks. No Task/Phase/PR boundary, business quantity/permission rule, mandatory suite/coverage floor or native/full-P0 gate is removed. Actual decision reference: implementation/08_allocation_read_consistency.md#actual-adoption.

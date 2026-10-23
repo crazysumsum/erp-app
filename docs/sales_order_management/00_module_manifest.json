@@ -292,9 +292,9 @@
     "provided": [
       {
         "id": "sales-fulfillment-projection-and-lifecycle-contract",
-        "version": "planning-only-NOT_IMPLEMENTED; TASK009-010 source pins reconciled, Sales additions CI pending",
+        "version": "HD011-A-adopted-last-sync-current-CAS; scoped Sales implementation and WIP diagnostic only; full P0/P4 provider, CI and Gates pending",
         "source": "docs/sales_order_management/03_design_spec.md",
-        "sha256": "5f82a24962a4f8e853acba56a83dedb7ceec94513497895f29966024100cbfdc",
+        "sha256": "0af345f43911a4a6f7f908f6b47b7681cf77bc73894a917db438c0e993910665",
         "consumers": [
           "fulfillment-shipping-management",
           "inventory-management",

@@ -1,6 +1,6 @@
 import { effectScope } from "vue";
 import { afterEach,beforeEach,describe,expect,it,vi } from "vitest";
-vi.mock("@/services/sales.js",()=>({default:{confirmOrder:vi.fn(),getOperation:vi.fn(),getOrder:vi.fn()}}));
+vi.mock("@/services/sales.js",()=>({default:{confirmOrder:vi.fn(),getOperation:vi.fn(),getOrder:vi.fn(),withdrawOrder:vi.fn(),cancelOrder:vi.fn()}}));
 import sales from "@/services/sales.js";
 import { useSalesCommandEvent } from "@/composables/sales/useSalesCommandEvent.js";
 const uuid="11111111-1111-4111-8111-111111111111",key="sales.confirm:7:8";
@@ -74,4 +74,8 @@ describe("TC-022 durable confirmation intent",()=>{
   let reject;terminal.mockImplementation(()=>new Promise((_done,fail)=>{reject=fail;}));sales.confirmOrder.mockResolvedValue({outcome:"CONFIRMED",warnings:[]});const work=command.start(8,3);await Promise.resolve();
   actor=9;await command.resume(9);reject(new Error("old detail refresh failed"));await work;expect(command.error.value).toBe("");expect(command.pending.value).toBe(false);
  });
+});
+
+it("HD014 known withdrawal-history409 ends the original intent with actionable guidance instead of polling a nonexistent operation",async()=>{
+ scope=effectScope();terminal=vi.fn();command=scope.run(()=>useSalesCommandEvent({userId:()=>7,onTerminal:terminal,commandType:"lifecycle"}));sales.withdrawOrder.mockRejectedValue({code:"FULFILLMENT_HISTORY_BLOCKS_WITHDRAWAL",status:409,message:"此訂單已有履約歷史，不能撤回草稿"});await command.start(8,3,{action:"withdraw",reason:"需要修改訂單資料"});expect(command.pending.value).toBe(false);expect(sessionStorage.getItem("sales.lifecycle:7:8")).toBeNull();expect(terminal).toHaveBeenCalledWith({status:"REJECTED",errorCode:"FULFILLMENT_HISTORY_BLOCKS_WITHDRAWAL",message:"此訂單已有履約歷史，不能撤回草稿"});await vi.advanceTimersByTimeAsync(10000);expect(sales.getOperation).not.toHaveBeenCalled();
 });
