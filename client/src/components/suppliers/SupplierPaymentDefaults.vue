@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted, ref } from "vue";
-import businessMasterService from "@/services/businessMaster.js";
+import supplierService from "@/services/supplier.js";
 import { notifyError } from "@/framework/ui/notify.js";
 
 const model = defineModel({ required: true });
@@ -13,11 +13,11 @@ async function loadOptions() {
   loading.value = true;
   try {
     const [currencies, paymentTerms] = await Promise.all([
-      businessMasterService.currencyList({ page: 1, rowsPerPage: 100, status: "ACTIVE", sortBy: "code" }),
-      businessMasterService.paymentTermList({ page: 1, rowsPerPage: 100, status: "ACTIVE", sortBy: "code" })
+      supplierService.currencyOptions(),
+      supplierService.paymentTermOptions()
     ]);
-    currencyOptions.value = currencies.rows.map((item) => ({ label: `${item.code} — ${item.name}`, value: item.code, version: item.version }));
-    paymentTermOptions.value = paymentTerms.rows.map((item) => ({ label: `${item.code} — ${item.name}`, value: item.id, version: item.version }));
+    currencyOptions.value = currencies.map((item) => ({ label: `${item.code} — ${item.name}`, value: item.code, version: item.version }));
+    paymentTermOptions.value = paymentTerms.map((item) => ({ label: `${item.code} — ${item.name}`, value: item.id, version: item.version }));
   } catch (error) {
     notifyError(error.message || "載入貨幣／付款條件失敗");
   } finally {

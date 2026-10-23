@@ -68,10 +68,10 @@ async function installApi(page, options = {}) {
 
     if (path === "/api/v1/user/me") return ok(state.user);
     if (path === "/api/v1/supplier-lookups/activation-policy") return ok({ requireActivationApproval: state.policy });
-    if (path === "/api/v1/business-master/currencies") {
-      return ok({ items: [{ code: "HKD", name: "Hong Kong Dollar", decimalPlaces: 2, status: "ACTIVE", version: 1 }], total: 1, page: 1, pageSize: 100 });
+    if (path === "/api/v1/supplier-lookups/currencies") {
+      return ok({ items: [{ code: "HKD", name: "Hong Kong Dollar", decimalPlaces: 2, status: "ACTIVE", version: 1 }] });
     }
-    if (path === "/api/v1/business-master/payment-terms") return ok({ items: [], total: 0, page: 1, pageSize: 100 });
+    if (path === "/api/v1/supplier-lookups/payment-terms") return ok({ items: [] });
     if (method === "POST" && path === "/api/v1/suppliers/duplicates/check") return ok({ codeConflict: null, duplicateCandidates: [] });
     if (method === "POST" && path === "/api/v1/suppliers/create") {
       return ok({ id: 41, supplierCode: body.supplierCode, status: body.approverUserId ? "pending_approval" : "active", warnings: [] });

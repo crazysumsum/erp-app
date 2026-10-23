@@ -4,6 +4,7 @@ import test from "node:test";
 import { GetSupplierBusinessMasterReadinessHandler } from "../src/handlers/supplier-lookups/businessMasterReadinessHandler.js";
 import { GetSupplierActivationPolicyHandler } from "../src/handlers/supplier-lookups/activationPolicyHandler.js";
 import { GetSupplierSettingsHandler } from "../src/handlers/supplier-settings/settingsHandlers.js";
+import { ListSupplierCurrencyOptionsHandler, ListSupplierPaymentTermOptionsHandler } from "../src/handlers/supplier-lookups/businessMasterOptionsHandlers.js";
 
 const services = { require: () => ({ logger: { warn() {} }, nowMs: () => 1 }) };
 
@@ -188,4 +189,49 @@ test("a missing settings row is an error, never a silent no-approval-needed", as
     () => policyHandler(() => [[]]).execute(),
     (error) => error.publicCode === "SUPPLIER_SETTINGS_MISSING"
   );
+});
+
+function optionsHandler(HandlerClass, status = "READY") {
+  const calls = [];
+  const handler = new HandlerClass(services);
+  handler.businessMaster = {
+    async assertReady() { calls.push("ready"); if (status !== "READY") throw Object.assign(new Error("not ready"), { statusCode: 503, publicCode: "BUSINESS_MASTER_NOT_READY" }); },
+    async listCurrencies(input) { calls.push(["currencies", input]); return [{ code: "HKD", name: "Hong Kong Dollar", decimalPlaces: 2, status: "ACTIVE", version: 1 }]; },
+    async listPaymentTerms(input) { calls.push(["terms", input]); return [{ id: 8, code: "NET30", name: "Net 30", calculationType: "NET_DAYS", dueDays: 30, status: "ACTIVE", version: 2 }]; }
+  };
+  return { handler, calls };
+}
+
+test("the form option lookups need exactly supplier.view, not business_master.view (DEF-036)", () => {
+  for (const [HandlerClass, path] of [[ListSupplierCurrencyOptionsHandler, "/api/v1/supplier-lookups/currencies"],
+    [ListSupplierPaymentTermOptionsHandler, "/api/v1/supplier-lookups/payment-terms"]]) {
+    const { api } = HandlerClass;
+    assert.equal(api.method, "GET");
+    assert.equal(api.path, path);
+    assert.equal(api.authType, undefined);
+    assert.equal(api.authorizationPolicies.length, 1);
+    assert.equal(api.authorizationPolicies[0].name, "hasPermission");
+    assert.deepEqual(api.authorizationPolicies[0].options.permissions, ["supplier.view"]);
+    for (const schema of Object.values(api.requestSchema)) assert.equal(schema.additionalProperties, false);
+    assert.equal(api.responseSchema[200].additionalProperties, false);
+    assert.equal(api.responseSchema[200].properties.items.items.additionalProperties, false);
+    assert.deepEqual(api.responseSchema[200].properties.items.items.properties.status.enum, ["ACTIVE"]);
+  }
+});
+
+test("the option lookups check Business Master readiness before reading, and read the first 100 Active values", async () => {
+  const currencies = optionsHandler(ListSupplierCurrencyOptionsHandler);
+  assert.equal((await currencies.handler.execute()).data.items[0].code, "HKD");
+  assert.deepEqual(currencies.calls, ["ready", ["currencies", { page: 1, pageSize: 100 }]]);
+  const terms = optionsHandler(ListSupplierPaymentTermOptionsHandler);
+  assert.equal((await terms.handler.execute()).data.items[0].code, "NET30");
+  assert.deepEqual(terms.calls, ["ready", ["terms", { page: 1, pageSize: 100 }]]);
+});
+
+test("a Business Master that is not ready is a 503, never an empty list of options", async () => {
+  for (const HandlerClass of [ListSupplierCurrencyOptionsHandler, ListSupplierPaymentTermOptionsHandler]) {
+    const { handler, calls } = optionsHandler(HandlerClass, "NOT_READY");
+    await assert.rejects(handler.execute(), { publicCode: "BUSINESS_MASTER_NOT_READY" });
+    assert.deepEqual(calls, ["ready"]);
+  }
 });

@@ -6,16 +6,11 @@ import { h } from "vue";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/services/supplier.js", () => ({
-  default: { getById: vi.fn(), completeness: vi.fn(), update: vi.fn(), changeCode: vi.fn() },
+  default: { getById: vi.fn(), completeness: vi.fn(), update: vi.fn(), changeCode: vi.fn(), currencyOptions: vi.fn(), paymentTermOptions: vi.fn() },
   service: { name: "supplier" }
-}));
-vi.mock("@/services/businessMaster.js", () => ({
-  default: { currencyList: vi.fn(), paymentTermList: vi.fn() },
-  service: { name: "businessMaster" }
 }));
 vi.mock("@/framework/ui/notify.js", () => ({ notifyError: vi.fn(), notifySuccess: vi.fn() }));
 
-import businessMasterService from "@/services/businessMaster.js";
 import supplierService from "@/services/supplier.js";
 import SupplierDetailPage, { page } from "@/pages/suppliers/SupplierDetailPage.vue";
 import { useSessionStore } from "@/stores/session.js";
@@ -36,13 +31,13 @@ async function mountPage() {
     issues: [],
     warnings: [{ field: "addresses", code: "ORDERING_ADDRESS_MISSING", message: "尚未設定採購用途地址" }]
   });
-  businessMasterService.currencyList.mockResolvedValue({ rows: [
+  supplierService.currencyOptions.mockResolvedValue([
     { code: "HKD", name: "Hong Kong Dollar", version: 3 },
     { code: "USD", name: "US Dollar", version: 4 }
-  ], rowsNumber: 2 });
-  businessMasterService.paymentTermList.mockResolvedValue({ rows: [
+  ]);
+  supplierService.paymentTermOptions.mockResolvedValue([
     { id: 9, code: "NET30", name: "Net 30", version: 2 }
-  ], rowsNumber: 1 });
+  ]);
   const router = createRouter({
     history: createMemoryHistory(),
     routes: [
