@@ -24,8 +24,8 @@ const DETAIL = {
 
 let currentWrapper;
 
-async function mountPage() {
-  supplierService.getById.mockResolvedValue(DETAIL);
+async function mountPage(detail = DETAIL) {
+  supplierService.getById.mockResolvedValue(detail);
   supplierService.completeness.mockResolvedValue({
     supplierId: 7,
     issues: [],
@@ -89,6 +89,26 @@ describe("Supplier general editor", () => {
       .props("options").map(({ label: text, value }) => ({ text, value }));
     expect(options("Default Currency *")).toEqual([{ text: "HKD — Hong Kong Dollar", value: "HKD" }, { text: "USD — US Dollar", value: "USD" }]);
     expect(options("預設付款條件（選填）")).toEqual([{ text: "NET30 — Net 30", value: 9 }]);
+  });
+
+  it("names the payment term by code and name, and keeps a deactivated one readable in the editor without offering it (DEF-038)", async () => {
+    const { body } = await mountPage({ ...DETAIL, defaultPaymentTermId: 5, defaultPaymentTerm: { id: 5, code: "OLD45", name: "Old Net 45", status: "INACTIVE" } });
+    const overview = body.findAll(".q-item").find((item) => item.text().includes("付款條件"));
+    expect(overview.text()).toContain("OLD45 — Old Net 45（已停用）");
+    expect(overview.text()).not.toMatch(/付款條件\s*5$/u);
+    await body.findAll("button").find((button) => button.text().includes("編輯一般資料")).trigger("click");
+    await flushPromises();
+    const select = currentWrapper.findAllComponents(QSelect).find((item) => item.props("label") === "預設付款條件（選填）");
+    expect(select.props("options").map(({ label, value, disable }) => ({ label, value, disable: Boolean(disable) }))).toEqual([
+      { label: "NET30 — Net 30", value: 9, disable: false },
+      { label: "OLD45 — Old Net 45（已停用）", value: 5, disable: true }
+    ]);
+    expect(body.findAll(".q-field").find((field) => field.text().includes("預設付款條件（選填）")).text()).toContain("OLD45 — Old Net 45（已停用）");
+  });
+
+  it("says 未設定 when there is no payment term (DEF-038)", async () => {
+    const { body } = await mountPage({ ...DETAIL, defaultPaymentTermId: null, defaultPaymentTerm: null });
+    expect(body.findAll(".q-item").find((item) => item.text().includes("付款條件")).text()).toContain("未設定");
   });
 
   it("TC-123 (UI-003): keeps the user's draft visible when a stale update reloads the latest Supplier", async () => {

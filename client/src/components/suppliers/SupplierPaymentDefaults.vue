@@ -1,12 +1,21 @@
 <script setup>
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import supplierService from "@/services/supplier.js";
 import { notifyError } from "@/framework/ui/notify.js";
 
 const model = defineModel({ required: true });
-const props = defineProps({ fieldError: { type: Function, default: () => "" } });
+const props = defineProps({
+  fieldError: { type: Function, default: () => "" },
+  // 而家儲存咗嘅付款條件（詳情回應嘅 defaultPaymentTerm）。停用咗就唔喺 Active 選項入面，照樣要顯示佢嘅名稱（DEF-038）。
+  currentPaymentTerm: { type: Object, default: null }
+});
 const currencyOptions = ref([]);
-const paymentTermOptions = ref([]);
+const activePaymentTerms = ref([]);
+const paymentTermOptions = computed(() => {
+  const current = props.currentPaymentTerm;
+  if (!current || activePaymentTerms.value.some((item) => item.value === current.id)) return activePaymentTerms.value;
+  return [...activePaymentTerms.value, { label: `${current.code} — ${current.name}（已停用）`, value: current.id, disable: true }];
+});
 const loading = ref(false);
 
 async function loadOptions() {
@@ -17,7 +26,7 @@ async function loadOptions() {
       supplierService.paymentTermOptions()
     ]);
     currencyOptions.value = currencies.map((item) => ({ label: `${item.code} — ${item.name}`, value: item.code, version: item.version }));
-    paymentTermOptions.value = paymentTerms.map((item) => ({ label: `${item.code} — ${item.name}`, value: item.id, version: item.version }));
+    activePaymentTerms.value = paymentTerms.map((item) => ({ label: `${item.code} — ${item.name}`, value: item.id, version: item.version }));
   } catch (error) {
     notifyError(error.message || "載入貨幣／付款條件失敗");
   } finally {
@@ -30,7 +39,7 @@ function selectCurrency(code) {
 }
 
 function selectPaymentTerm(id) {
-  model.value.defaultPaymentTermVersion = paymentTermOptions.value.find((item) => item.value === id)?.version;
+  model.value.defaultPaymentTermVersion = activePaymentTerms.value.find((item) => item.value === id)?.version;
 }
 
 onMounted(loadOptions);

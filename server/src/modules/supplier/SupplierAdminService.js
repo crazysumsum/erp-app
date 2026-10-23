@@ -937,7 +937,10 @@ export class SupplierAdminService {
       [id]
     );
     const identifiers = identifierRows.map(toIdentifierResponse);
+    // 經 provider 嘅 history 讀（包括已停用），唔直接讀 Business Master 嘅表（DEF-038、HD-130 A）。
+    const term = row.default_payment_term_id === null ? null : await this.businessMaster.getPaymentTermHistory(Number(row.default_payment_term_id));
     return toSupplierDetailResponse(row, {
+      defaultPaymentTerm: term ? { id: Number(term.id), code: term.code, name: term.name, status: term.status } : null,
       addresses,
       contacts,
       identifiers,
