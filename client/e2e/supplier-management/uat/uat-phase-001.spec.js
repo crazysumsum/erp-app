@@ -277,7 +277,7 @@ test("@uat UAT-003 a same-name Supplier with another Code is warned about first,
   const created = page.locator("tbody tr", { hasText: "新增供應商" });
   await expect(created).toHaveCount(1);
   expect(problems).toEqual([]);
-  // AC-003「確認合理原因後繼續」：Audit 要講明使用者見過邊個重複候選、以咩原因繼續。而家冇原因亦冇記錄（DEF-039，REV-115 M-2）。
+  // AC-003：Audit 記低使用者確認咗嘅相似名稱候選（DEF-039；HD-132 B 當 AC-003 係純確認，唔使填原因）。
   await expect(created).toContainText(first.supplierCode);
 });
 

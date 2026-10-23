@@ -92,6 +92,19 @@ describe("Supplier general editor", () => {
     expect(options("預設付款條件（選填）")).toEqual([{ text: "NET30 — Net 30", value: 9 }]);
   });
 
+  it("marks the payment-term field when the stored term is no longer active, instead of a bare banner (DEF-041, HD-134 A)", async () => {
+    supplierService.update.mockRejectedValue(Object.assign(new Error("付款條款目前不可用"), { code: "PAYMENT_TERM_NOT_ACTIVE", status: 409, details: { id: 5 } }));
+    const { body } = await mountPage();
+    await body.findAll("button").find((button) => button.text().includes("編輯一般資料")).trigger("click");
+    await field(body, "Supplier Name *").setValue("Renamed Supplier");
+    await body.findAll("button").find((button) => button.text().includes("儲存一般資料")).trigger("click");
+    await flushPromises();
+    const term = body.findAll(".q-field").find((item) => item.text().includes("預設付款條件（選填）"));
+    expect(term.classes()).toContain("q-field--error");
+    expect(term.text()).toContain("付款條款已停用，請改選或清除");
+    expect(body.text()).toContain("付款條款已停用，請改選或清除後再儲存。");
+  });
+
   it("names the payment term by code and name, and keeps a deactivated one readable in the editor without offering it (DEF-038)", async () => {
     const { body } = await mountPage({ ...DETAIL, defaultPaymentTermId: 5, defaultPaymentTerm: { id: 5, code: "OLD45", name: "Old Net 45", status: "INACTIVE" } });
     const overview = body.findAll(".q-item").find((item) => item.text().includes("付款條件"));

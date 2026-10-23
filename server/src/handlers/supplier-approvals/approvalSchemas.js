@@ -1,4 +1,5 @@
 import { SUPPLIER_STATUSES } from "../../modules/supplier/supplierConstants.js";
+import { PAYMENT_TERM_REF_SCHEMA } from "../suppliers/supplierSchemas.js";
 import { APPROVAL_REQUEST_STATUSES, APPROVAL_QUEUE_SCOPES } from "../../modules/supplier/SupplierApprovalService.js";
 
 export const EMPTY_APPROVAL_SCHEMA = Object.freeze({ type: "object", properties: {}, additionalProperties: false });
@@ -135,7 +136,8 @@ export const APPROVAL_DETAIL_SCHEMA = Object.freeze({
     stale: { type: "boolean" },
     submitted: APPROVAL_SNAPSHOT_SCHEMA,
     current: APPROVAL_SNAPSHOT_SCHEMA,
-    changedFields: { type: "array", items: { type: "string" } }
+    changedFields: { type: "array", items: { type: "string" } },
+    paymentTerms: { type: "array", items: { ...PAYMENT_TERM_REF_SCHEMA, type: "object" } }
   }
 });
 

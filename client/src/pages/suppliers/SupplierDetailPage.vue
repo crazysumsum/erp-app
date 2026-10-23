@@ -26,6 +26,7 @@ import { mapValidationDetailsToFieldErrors, unmatchedFieldErrors } from "@/frame
 import supplierService from "@/services/supplier.js";
 import { useSessionStore } from "@/stores/session.js";
 import { DETAIL_CHILD_LIMIT } from "@/components/suppliers/useMoreChildRows.js";
+import { paymentTermLabel } from "@/components/suppliers/paymentTermLabel.js";
 
 const STATUS_LABEL = Object.freeze({
   draft: "草稿", pending_approval: "待審批", active: "啟用", suspended: "已暫停",
@@ -94,11 +95,7 @@ function loadForm(data) {
 
 const dirty = computed(() => editing.value && JSON.stringify(formValues()) !== savedSnapshot.value);
 // 付款條件顯示 code 同名稱，唔顯示內部 ID；已停用就講明（DEF-038、HD-130 A）。
-const paymentTermText = computed(() => {
-  const term = supplier.value?.defaultPaymentTerm;
-  if (!term) return supplier.value?.defaultPaymentTermId == null ? "未設定" : "—";
-  return `${term.code} — ${term.name}${term.status === "INACTIVE" ? "（已停用）" : ""}`;
-});
+const paymentTermText = computed(() => paymentTermLabel(supplier.value?.defaultPaymentTerm, supplier.value?.defaultPaymentTermId));
 const currencyChanged = computed(() => form.defaultCurrencyCode !== supplier.value?.defaultCurrencyCode);
 const editValid = computed(() => {
   if (!form.supplierName.trim() || !form.defaultCurrencyCode) return false;
@@ -232,6 +229,10 @@ async function saveEdit() {
         // Keep the last known version and, most importantly, the user's draft.
       }
       editError.value = `供應商已被其他人修改（最新版本 ${supplier.value.version}）；你的輸入仍然保留，請先複製所需內容再載入最新資料。`;
+    } else if (saveError.code === "PAYMENT_TERM_NOT_ACTIVE") {
+      // FR-EDIT-003：儲存時重新檢查付款條件。已停用就喺嗰個欄位講明要點做（DEF-041、HD-134 A）。
+      fieldErrors.value = { defaultPaymentTermId: "付款條款已停用，請改選或清除" };
+      editError.value = "付款條款已停用，請改選或清除後再儲存。";
     } else {
       fieldErrors.value = mapValidationDetailsToFieldErrors(saveError.details);
       const summary = unmatchedFieldErrors(fieldErrors.value, knownFields);
