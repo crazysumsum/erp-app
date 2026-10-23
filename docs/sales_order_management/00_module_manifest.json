@@ -292,9 +292,9 @@
     "provided": [
       {
         "id": "sales-fulfillment-projection-and-lifecycle-contract",
-        "version": "HD011-A-adopted-last-sync-current-CAS; scoped Sales implementation and WIP diagnostic only; full P0/P4 provider, CI and Gates pending",
+        "version": "HD016+HD017-A-exact-minimal-owner-contribution-on-Fulfillment-P1; source and canonical independently reviewed; full P1/currentCI pending, no P4 routing adoption",
         "source": "docs/sales_order_management/03_design_spec.md",
-        "sha256": "0af345f43911a4a6f7f908f6b47b7681cf77bc73894a917db438c0e993910665",
+        "sha256": "b7d81eb92b092c36c5a3800ba7f50fcf3ce30728f6c2cdd29ba6cbb920b0c0bf",
         "consumers": [
           "fulfillment-shipping-management",
           "inventory-management",

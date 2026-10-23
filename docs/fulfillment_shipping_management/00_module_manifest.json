@@ -167,9 +167,9 @@
       {
         "module_id": "sales-order-management",
         "id": "sales-fulfillment-projection-and-lifecycle-contract",
-        "version": "P0-TASK004-HD011-reviewed-owner-contribution-r4-CURRENT_JOINT_PENDING",
+        "version": "HD016+HD017-A-exact-minimal-owner-contribution-on-Fulfillment-P1; source and canonical independently reviewed; full P1/currentCI pending, no P4 routing adoption",
         "source": "docs/sales_order_management/03_design_spec.md",
-        "sha256": "cd680c79a59b80a61e245edce54cc47e867bff4d1f61a6a6b6244ad36e981a19",
+        "sha256": "b7d81eb92b092c36c5a3800ba7f50fcf3ce30728f6c2cdd29ba6cbb920b0c0bf",
         "regression_suites": [
           "fulfillment-technical"
         ]

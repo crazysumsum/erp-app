@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 148,
+  "revision": 151,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
-  "status": "IMPLEMENTING",
-  "resume_status": null,
+  "status": "BLOCKED",
+  "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-002",
-  "current_task": "TASK-014",
+  "current_task": "TASK-015",
   "baseline": {
-    "design": "3ac280da39e802e2c7f0d583f465c79c329404920ae398a1a1e869b3b4753c36",
-    "plan": "ea2dc4415cabd3283448089a3c40d167b59548b2aa6470d2d0d6c196b9a3dc8c",
-    "code_commit": "687b4db9e1a9f7ffc4124cb9efab740869c758ca",
-    "source_fingerprint": "e02e82e0002c1464341576334ce43ff6f90d318ff57b5052222111a9e4ad3289",
+    "design": "5072aa6949cb70ee0fa404040281545c97bbfc2c303f3cfefebb1d4f7b1e69f3",
+    "plan": "7abc634146f7d588df5fadc706d48197105db40601b63e5a215de6200021d0cf",
+    "code_commit": "dff54d03f0e38543dbbcc95314fc76e35958d93e",
+    "source_fingerprint": "437a01ae23004bea746f5d54a1d6aabc53a8a0573f4dd75da09b87fd9c9118ef",
     "worktree": "/private/tmp/erp-fulfillment-p1",
     "default_commit": "fd32762f4fa17a5e77aaa7118a9ded2d3ac81e9e",
     "mode_entry_commit": "fd32762f4fa17a5e77aaa7118a9ded2d3ac81e9e"
@@ -44,8 +44,8 @@
     "TASK-011": "DONE",
     "TASK-012": "DONE",
     "TASK-013": "DONE",
-    "TASK-014": "IN_PROGRESS",
-    "TASK-015": "PENDING",
+    "TASK-014": "DONE",
+    "TASK-015": "IN_PROGRESS",
     "TASK-016": "PENDING",
     "TASK-017": "PENDING",
     "TASK-018": "PENDING",
@@ -2227,6 +2227,79 @@
         "NFR-023",
         "Exact original NA reason unchanged; TC010 mandatory/blocking"
       ]
+    },
+    {
+      "id": "APR-101-TASK014-OWNER-HANDOFF-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam actual HD016/HD017 A plus original P1 authority; actual Sales owner and separate reviewer approve exact derived canonical contribution, no new human approval claimed",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/34_task014_draft_update_developer_completion.md#exact-canonical-handoff-installed",
+      "recorded_at": "2026-10-23T05:04:32.787477+00:00",
+      "code_commit": "dff54d03f0e38543dbbcc95314fc76e35958d93e",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "7abc634146f7d588df5fadc706d48197105db40601b63e5a215de6200021d0cf",
+      "scope": [
+        "server/src/modules/inventory/InventoryLookupService.js",
+        "server/src/modules/sales/SalesFulfillmentService.js",
+        "server/test/salesFulfillmentService.test.js",
+        "docs/sales_order_management/03_design_spec.md",
+        "docs/sales_order_management/00_module_manifest.json",
+        "Exact minimal HD016/HD017 owner contribution; no P4 routing"
+      ]
+    },
+    {
+      "id": "APR-102-TASK014-OWNER-HANDOFF-DESIGN",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam actual HD016/HD017 A plus original P1 authority; actual Sales owner and separate reviewer approve exact derived canonical contribution, no new human approval claimed",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/34_task014_draft_update_developer_completion.md#exact-canonical-handoff-installed",
+      "recorded_at": "2026-10-23T05:04:32.787477+00:00",
+      "code_commit": "dff54d03f0e38543dbbcc95314fc76e35958d93e",
+      "expires_at": null,
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "5072aa6949cb70ee0fa404040281545c97bbfc2c303f3cfefebb1d4f7b1e69f3",
+      "scope": [
+        "PHASE-002",
+        "Actual HD016/HD017 A, exact owner-approved3paragraph canonical contribution and named pins"
+      ]
+    },
+    {
+      "id": "APR-103-TASK014-OWNER-HANDOFF-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam actual HD016/HD017 A plus original P1 authority; actual Sales owner and separate reviewer approve exact derived canonical contribution, no new human approval claimed",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/34_task014_draft_update_developer_completion.md#exact-canonical-handoff-installed",
+      "recorded_at": "2026-10-23T05:04:32.787477+00:00",
+      "code_commit": "dff54d03f0e38543dbbcc95314fc76e35958d93e",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "7abc634146f7d588df5fadc706d48197105db40601b63e5a215de6200021d0cf",
+      "scope": [
+        "PHASE-002",
+        "TASK-012–023",
+        "All original full checks and currentCI before draft PR"
+      ]
+    },
+    {
+      "id": "APR-104-TASK014-OWNER-HANDOFF-UATNA-LINEAGE",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam actual HD016/HD017 A plus original P1 authority; actual Sales owner and separate reviewer approve exact derived canonical contribution, no new human approval claimed",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/34_task014_draft_update_developer_completion.md#exact-canonical-handoff-installed",
+      "recorded_at": "2026-10-23T05:04:32.787477+00:00",
+      "code_commit": "dff54d03f0e38543dbbcc95314fc76e35958d93e",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "7abc634146f7d588df5fadc706d48197105db40601b63e5a215de6200021d0cf",
+      "scope": [
+        "NFR-023",
+        "Exact original NA reason unchanged; TC010 mandatory/blocking"
+      ]
     }
   ],
   "reviews": [
@@ -3245,6 +3318,42 @@
       "reviewer": "/root/fulfillment_independent_review",
       "reviewed_baseline": "f3858c2bcbbacda8c9824cbb46b12bb6598d7d8f6d08c5e369d1fe3d3879a8fa",
       "source_ref": "docs/fulfillment_shipping_management/implementation/34_task014_draft_update_developer_completion.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-086-HD018-FOR-HUMAN-DECISION",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "b16f4803c9dd8e2598236c2df1db7b6c0716644733097b25157e0c29b4ff2687",
+      "source_ref": "implementation/35_batch_candidate_shared_stock.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-087-HD017-SALES-OWNER",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "Sales owner chat01a0f0e2-2647-7dc2-a1d4-a7cefa29d0f6",
+      "reviewed_baseline": "8857af19a7f971f31d1457384c094aa19f31207da0d094b1dbd8986eca5c6032",
+      "source_ref": "implementation/34_task014_draft_update_developer_completion.md#subsequent-actual-sales-owner-source-review",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-088-HD017-SALES-CANONICAL-HANDOFF",
+      "method": "SEPARATE_AGENT",
+      "author": "Sales owner chat01a0f0e2-2647-7dc2-a1d4-a7cefa29d0f6",
+      "reviewer": "Sales independent /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "c5926519056a83468fd111e807682fe93cd35c518dce0a5d23e4ba00821bd15f",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/34_task014_draft_update_developer_completion.md#exact-canonical-handoff-installed",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -4367,6 +4476,21 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "docs/fulfillment_shipping_management/implementation/33_pending_update_claim_contract.md#actual-adoption; actual direct user selected A in current chat"
+    },
+    {
+      "id": "HD-018",
+      "impact": "MAJOR",
+      "question": "Shared-stock batch advisory requires explicit Inventory owner method with actual writer memberOrder and shared virtual Balance budget A versus explicit independent-only candidate UX B; original safety/capacity/timeouts/gates unchanged",
+      "affected_ids": [
+        "TASK-015",
+        "TASK-016",
+        "TASK-017",
+        "DES-003",
+        "DES-010",
+        "TC-004"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
     }
   ],
   "external_actions": [
@@ -4910,7 +5034,8 @@
     "implementation/31_hd016_pending_capacity_increment.md",
     "implementation/32_task013_create_developer_completion.md",
     "implementation/33_pending_update_claim_contract.md",
-    "implementation/34_task014_draft_update_developer_completion.md"
+    "implementation/34_task014_draft_update_developer_completion.md",
+    "implementation/35_batch_candidate_shared_stock.md"
   ],
   "defects": [
     {
@@ -4994,5 +5119,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Commit frozen reviewed TASK014 contribution; obtain exact-source Sales owner HD017 review and narrow canonical handoff before TASK014 DONE. Read/implement TASK015 onward, full original checks/currentCI before draft PR; no P1 merge."
+  "next_safe_action": "Commit exact reviewed canonical handoff; HD018 OPEN blocks TASK015 new batch advisory interface until actual Sam choice. TASK014 DONE with source/owner/canonical review and developer checks. Remaining TASK015–023/full P1 gates/current-target integration/currentCI then draft PR only; no merge."
 }
