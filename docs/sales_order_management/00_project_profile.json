@@ -2991,7 +2991,12 @@
         "./server/test-support/testEnv.js",
         "--test-reporter=junit",
         "--test-reporter-destination={run_dir}/tests.xml",
-        "server/test/integration/fulfillmentArchiveMigrations.integration.test.js"
+        "server/test/integration/fulfillmentArchiveMigrations.integration.test.js",
+        "server/test/integration/fulfillmentArchiveRouting.integration.test.js",
+        "server/test/integration/fulfillmentArchiveGuards.integration.test.js",
+        "server/test/integration/fulfillmentOperationRouting.integration.test.js",
+        "server/test/integration/fulfillmentOperationMigrations.integration.test.js",
+        "server/test/integration/shipmentMigrations.integration.test.js"
       ],
       "cwd": ".",
       "timeout_seconds": 2400,

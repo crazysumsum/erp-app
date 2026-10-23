@@ -12,12 +12,19 @@ function fields(value,required,optional=[]){
   if(!value||Object.getPrototypeOf(value)!==Object.prototype||Object.keys(value).some(k=>![...required,...optional].includes(k))||required.some(k=>!Object.hasOwn(value,k)))throw new TypeError("Invalid Fulfillment operation fields");
 }
 function normalize(input){
-  fields(input,["eventId","operationType","target","payload","leaseOwner","correlationId"]);fields(input.target,["type","id"]);
+  fields(input,["eventId","operationType","target","payload","leaseOwner","correlationId"],["salesOrderId"]);fields(input.target,["type","id"]);
   const request={eventId:input.eventId,operationType:input.operationType,target:{type:input.target.type,id:input.target.id},leaseOwner:input.leaseOwner,correlationId:input.correlationId};
   if(!uuid(request.eventId)||!uuid(request.correlationId)||!FULFILLMENT_OPERATION_TYPES.includes(request.operationType)||request.target.type!==targetType(request.operationType)||
     typeof request.leaseOwner!=="string"||!/^[\x21-\x7e]{1,190}$/u.test(request.leaseOwner))throw new TypeError("Invalid Fulfillment operation identity");
   if(createTypes.has(request.operationType)?request.target.id!==null:request.target.id===null)throw new TypeError("Invalid Fulfillment operation target");
   if(request.target.id!==null)fulfillmentInteger(request.target.id);
+  if(Object.hasOwn(input,"salesOrderId")){
+    const route=Object.getOwnPropertyDescriptor(input,"salesOrderId");
+    if(!Object.hasOwn(route,"value"))throw new TypeError("Invalid Fulfillment order route");
+    if(request.target.type==="EXPORT"){if(route.value!==null)throw new TypeError("Export has no order route");}
+    else fulfillmentInteger(route.value);
+    request.salesOrderId=route.value;
+  }
   return {...request,hash:fulfillmentOperationHash({operationType:request.operationType,target:request.target,payload:input.payload})};
 }
 
@@ -49,6 +56,10 @@ export class FulfillmentOperationService {
     const [[row]]=await tx.query(`SELECT * FROM fulfillment_operation_requests WHERE event_id=?${locking?" FOR UPDATE":""}`,[request.eventId]);
     if(!row||row.payload_hash!==request.hash||row.operation_type!==request.operationType||row.target_type!==request.target.type||String(row.initiated_by)!==String(actor.id)||
       (request.target.id!==null&&String(row.target_id)!==request.target.id))conflict();
+    // Actual selected row identifies schema capability; never let an omitted new-schema route bypass takeover/completion.
+    if(Object.hasOwn(row,"sales_order_id")){
+      if(row.target_type==="EXPORT"?row.sales_order_id!==null:!Object.hasOwn(request,"salesOrderId")||String(row.sales_order_id)!==request.salesOrderId)conflict();
+    }else if(Object.hasOwn(request,"salesOrderId"))conflict();
     return row;
   }
   #decode(row){
@@ -68,8 +79,10 @@ export class FulfillmentOperationService {
   async claimInTransaction(tx,input){
     const request=normalize(input),actor=await this.#actor(tx,request.operationType),now=await clock(tx);
     try{
-      const [row]=await tx.execute(`INSERT INTO fulfillment_operation_requests(event_id,operation_type,target_type,target_id,payload_hash,status,lease_owner,lease_expires_at,attempt_count,correlation_id,initiated_by,created_at,updated_at)
-        VALUES (?,?,?,?,?,'IN_PROGRESS',?,?,1,?,?,?,?)`,[request.eventId,request.operationType,request.target.type,request.target.id,request.hash,request.leaseOwner,now+this.leaseMs,request.correlationId,actor.id,now,now]);
+      const routed=Object.hasOwn(request,"salesOrderId");
+      // Pre0101 callers retain their original SQL. Installed0101 requires routing for every business INSERT, including NULL targets.
+      const [row]=await tx.execute(`INSERT INTO fulfillment_operation_requests(event_id,operation_type,target_type,target_id,${routed?"sales_order_id,":""}payload_hash,status,lease_owner,lease_expires_at,attempt_count,correlation_id,initiated_by,created_at,updated_at)
+        VALUES (?,?,?,?,${routed?"?,":""}?,'IN_PROGRESS',?,?,1,?,?,?,?)`,[request.eventId,request.operationType,request.target.type,request.target.id,...(routed?[request.salesOrderId]:[]),request.hash,request.leaseOwner,now+this.leaseMs,request.correlationId,actor.id,now,now]);
       fulfillmentInteger(String(row.insertId));
       return {operationId:String(row.insertId),eventId:request.eventId,status:"IN_PROGRESS",created:true,replay:false,leaseOwner:request.leaseOwner,correlationId:request.correlationId};
     }catch(error){if((error.cause?.code??error.code)!=="ER_DUP_ENTRY")throw error;}

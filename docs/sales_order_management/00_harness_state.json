@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1293,
+  "revision": 1297,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -9,13 +9,13 @@
   "current_phase": "PHASE-005",
   "current_task": "TASK-058",
   "baseline": {
-    "design": "2c00e6c2dd7699e51d73f66af480b7b6a9c1a424e648ea375855f182ff948682",
-    "plan": "070531ee21f510969c679c281a6705eb3e0094cbb9b01a68cfe3164679e187b5",
-    "code_commit": "d01162f6159ec40981453d00936fb713296f35a3",
-    "source_fingerprint": "d8075b361e3c93662ac824c58d93e41327363bc2404e742366ee742ac7d39234",
+    "design": "67e3ac2c0ddb51b1620237186db76ecf9bc78a28b2de750cc2589dd3a6f7364a",
+    "plan": "377cd0b6b08f0368a47ef2629a74c0c4ac292858fe9b53fea3f8690c73c7cdb6",
+    "code_commit": "463c07c32190baa4c84684524e1f21ae34896fcb",
+    "source_fingerprint": "0eed900a426f6e07af7b23adc82433d9c846abb762c4355b2d25bf47ca216f92",
     "worktree": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app",
-    "default_commit": "35af2ab7010d8a42cdbc3ca55d23c9c9ce95856c",
-    "mode_entry_commit": "4439014e9a9d03f233e858e56f93617e787ecb8c"
+    "default_commit": "e272f5d3ce05d0ca50be42e6d8764f0ef20d3dd1",
+    "mode_entry_commit": "e272f5d3ce05d0ca50be42e6d8764f0ef20d3dd1"
   },
   "runtime": {
     "instance_id": "sales-p4-37e933d0a9db",
@@ -7235,6 +7235,204 @@
         "docs/sales_order_management/implementation/118_hd013_hd014_narrow_sales_adoption.md"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-P4-P0MAIN-DESIGN",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner); mechanically derived binding by Codex",
+      "decision": "APPROVED",
+      "source_ref": "Actual direct Sam Sales userMessage01a16658-f41f-7af1-a486-6439bd92f3aa, 2026-10-23: Fulfillment P0 現在合併了嗎？請確認並繼續推進 P4，完成聯合驗證、CI 及所有 Gate 後直接合併到 main。 New continuation plus prior exact DEC029 formal owner contribution and HD012/013/014. Mechanically derived current-main integration binding, not a claim Sam inspected computed hashes. Unchanged canonical requirement/design/task/TC/UAT bodies; exact formal0101 route scope, three observed compatible source pins and additive native argv only. Old approvals/hashes/failures preserved. NFR014/015 business-user UAT applicability alone unchanged; timed restore/RTO/RPO/reconcile TC058/059 remain mandatory/blocking; no waiver. No product/Phase/CI/merge Gate PASS. Four individually named already-reviewed native fixture/test paths are explicitly declared; no broad test allowance.",
+      "recorded_at": "2026-10-23T02:45:12.128140Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "67e3ac2c0ddb51b1620237186db76ecf9bc78a28b2de750cc2589dd3a6f7364a",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-P4-P0MAIN-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner); mechanically derived binding by Codex",
+      "decision": "APPROVED",
+      "source_ref": "Actual direct Sam Sales userMessage01a16658-f41f-7af1-a486-6439bd92f3aa, 2026-10-23: Fulfillment P0 現在合併了嗎？請確認並繼續推進 P4，完成聯合驗證、CI 及所有 Gate 後直接合併到 main。 New continuation plus prior exact DEC029 formal owner contribution and HD012/013/014. Mechanically derived current-main integration binding, not a claim Sam inspected computed hashes. Unchanged canonical requirement/design/task/TC/UAT bodies; exact formal0101 route scope, three observed compatible source pins and additive native argv only. Old approvals/hashes/failures preserved. NFR014/015 business-user UAT applicability alone unchanged; timed restore/RTO/RPO/reconcile TC058/059 remain mandatory/blocking; no waiver. No product/Phase/CI/merge Gate PASS. Four individually named already-reviewed native fixture/test paths are explicitly declared; no broad test allowance.",
+      "recorded_at": "2026-10-23T02:45:12.128206Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "377cd0b6b08f0368a47ef2629a74c0c4ac292858fe9b53fea3f8690c73c7cdb6",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-P4-P0MAIN-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner); mechanically derived binding by Codex",
+      "decision": "APPROVED",
+      "source_ref": "Actual direct Sam Sales userMessage01a16658-f41f-7af1-a486-6439bd92f3aa, 2026-10-23: Fulfillment P0 現在合併了嗎？請確認並繼續推進 P4，完成聯合驗證、CI 及所有 Gate 後直接合併到 main。 New continuation plus prior exact DEC029 formal owner contribution and HD012/013/014. Mechanically derived current-main integration binding, not a claim Sam inspected computed hashes. Unchanged canonical requirement/design/task/TC/UAT bodies; exact formal0101 route scope, three observed compatible source pins and additive native argv only. Old approvals/hashes/failures preserved. NFR014/015 business-user UAT applicability alone unchanged; timed restore/RTO/RPO/reconcile TC058/059 remain mandatory/blocking; no waiver. No product/Phase/CI/merge Gate PASS. Exact path/glob scope is copied only from the existing approved module allowed_write_paths, not unrelated main imports or a new broad repository allowlist. Four individually named already-reviewed native fixture/test paths are explicitly declared; no broad test allowance.",
+      "recorded_at": "2026-10-23T02:45:12.128212Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "377cd0b6b08f0368a47ef2629a74c0c4ac292858fe9b53fea3f8690c73c7cdb6",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management",
+        "PHASE-005",
+        "TASK-058",
+        "TASK-064",
+        "TASK-065",
+        "TASK-066",
+        "TASK-067",
+        "TASK-068",
+        "docs/sales_order_management/**",
+        "server/config/sales.js",
+        "server/src/modules/sales/**",
+        "server/src/handlers/sales-quotations/**",
+        "server/src/handlers/sales-orders/**",
+        "server/src/handlers/sales-imports/**",
+        "server/src/handlers/sales-intake/**",
+        "server/src/handlers/sales-operations/**",
+        "server/src/handlers/sales-exports/**",
+        "server/src/handlers/archived-sales-orders/**",
+        "server/src/services/scheduler/jobs/Sales*.js",
+        "client/src/services/salesQuotation.js",
+        "client/src/services/salesOrder.js",
+        "client/src/pages/sales/**",
+        "client/src/components/sales/**",
+        "server/test/sales/**",
+        "server/test/integration/sales*.integration.test.js",
+        "server/test-support/fakeSalesDatabase.js",
+        "client/test/**/sales*.test.js",
+        "client/e2e/sales-order-management/**",
+        "server/test-support/salesProviderReport.py",
+        "client/src/services/sales.js",
+        "client/test/pages/sales/**",
+        "client/test/components/sales/**",
+        "client/test/services/sales.test.js",
+        "server/test/migrate.test.js",
+        "server/config/scheduler.js",
+        "client/config/menu.js",
+        "server/database/migrations/*_create_sales_quotations.js",
+        "server/database/migrations/*_create_sales_quotation_lines.js",
+        "server/database/migrations/*_create_sales_orders.js",
+        "server/database/migrations/*_create_sales_order_lines.js",
+        "server/database/migrations/*_create_sales_order_status_history.js",
+        "server/database/migrations/*_create_sales_audit_logs.js",
+        "server/database/migrations/*_create_sales_quotation_conversions.js",
+        "server/src/services/salesJobs/SalesJobRuntimeService.js",
+        "server/src/services/salesJobs/jobs/SalesQuotationExpiryJob.js",
+        "server/src/handlers/sales/salesSchemas.js",
+        "server/src/handlers/sales/salesLookupHandlers.js",
+        "server/database/migrations/*_create_sales_external_order_keys.js",
+        "server/src/handlers/sales-lookups/salesLookupHandlers.js",
+        "server/src/modules/item/ItemLookupService.js",
+        "server/test/serviceContainer.test.js",
+        "README.md",
+        "server/src/modules/businessMaster/businessMasterFactory.js",
+        "server/test/business-master/http.integration.test.js",
+        ".github/workflows/ci.yml",
+        "server/src/services/salesJobs/jobs/SalesConfirmationRecoveryJob.js",
+        "server/src/services/salesJobs/jobs/SalesBackorderAllocationJob.js",
+        "server/src/handlers/sales-backorders/**",
+        "client/src/composables/sales/**",
+        "server/src/modules/inventory/InventoryReservationService.js",
+        "server/test/inventorySalesWorkerContracts.test.js",
+        "client/test/composables/sales/**",
+        "server/database/migrations/*_create_sales_order_line_reservations.js",
+        "server/database/migrations/*_create_sales_backorder_entries.js",
+        "server/scripts/checkCoverageFloors.js",
+        "server/test/inventoryProviderContracts.test.js",
+        "docs/inventory_management/03_design_spec.md",
+        "docs/fulfillment_shipping_management/03_design_spec.md",
+        "server/src/modules/inventory/inventoryConstants.js",
+        "server/src/services/idempotency/IdempotencyService.js",
+        "server/test/idempotencyService.test.js",
+        "server/test/integration/itemRecoveryAcceptance.integration.test.js",
+        "server/src/services/salesJobs/jobs/SalesImportJob.js",
+        "server/src/services/salesJobs/jobs/SalesFileRetentionJob.js",
+        "server/src/handlers/sales-import-templates/**",
+        "server/src/modules/customer/CustomerLookupService.js",
+        "server/test/sales/phase3/**",
+        "server/database/migrations/*_create_sales_import_jobs.js",
+        "server/database/migrations/*_create_sales_intake_orders.js",
+        "server/database/migrations/*_create_sales_intake_errors.js",
+        "server/database/migrations/*_extend_sales_reservation_intake_projection.js",
+        "server/test/itemLookupService.test.js",
+        "server/test/customerLookupService.test.js",
+        "server/test/configNormalizers.test.js",
+        "server/test/configuration.test.js",
+        "docs/customer_management/03_design_spec.md",
+        "docs/items_management/03_design_spec.md",
+        "server/config/api.js",
+        "server/src/framework/middleware/bodyReceiveTimeout.js",
+        "server/test-support/salesProcessingCrashChild.js",
+        "server/src/handlers/outstanding-sales-orders/**",
+        "server/src/handlers/sales-audit-logs/**",
+        "server/src/handlers/sales-archive-batches/**",
+        "server/src/services/salesJobs/jobs/SalesExportJob.js",
+        "server/src/services/salesJobs/jobs/SalesArchiveJob.js",
+        "docs/runbooks/sales-order-management.md",
+        "server/database/migrations/*_create_sales_export_jobs.js",
+        "server/database/migrations/*_create_sales_archive_batches.js",
+        "server/database/migrations/*_create_sales_archive_tables.js",
+        "server/database/migrations/*_protect_sales_archive_immutability.js",
+        "server/test-capacity/sales/phase4/**",
+        "client/src/framework/layout/AppTopbar.vue",
+        "server/src/modules/fulfillment/**",
+        "server/src/services/fulfillmentArchive/**",
+        "server/test/salesArchiveEligibility.test.js",
+        "server/test/fulfillmentArchive*.test.js",
+        "server/test/fulfillmentOpenMatter*.test.js",
+        "server/test/integration/fulfillmentArchive*.integration.test.js",
+        "server/test/integration/fulfillmentOpenMatter*.integration.test.js",
+        "server/test/integration/salesArchiveJoint.integration.test.js",
+        "server/database/migrations/*_create_fulfillment_archive_prerequisites.js",
+        "server/database/migrations/*_create_fulfillment_archive_mirrors.js",
+        "server/database/migrations/*_protect_fulfillment_archive_contracts.js",
+        "docs/fulfillment_shipping_management/**",
+        "server/database/migrations/0101_add_fulfillment_archive_routing.js",
+        "server/test/fulfillment/archiveFactsFixture.js",
+        "server/test/fulfillment/shipmentFixture.js",
+        "server/test/integration/fulfillmentOperationRouting.integration.test.js",
+        "server/test/integration/shipmentMigrations.integration.test.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-P4-P0MAIN-UATNA-NFR-014",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner); mechanically derived binding by Codex",
+      "decision": "APPROVED",
+      "source_ref": "Actual direct Sam Sales userMessage01a16658-f41f-7af1-a486-6439bd92f3aa, 2026-10-23: Fulfillment P0 現在合併了嗎？請確認並繼續推進 P4，完成聯合驗證、CI 及所有 Gate 後直接合併到 main。 New continuation plus prior exact DEC029 formal owner contribution and HD012/013/014. Mechanically derived current-main integration binding, not a claim Sam inspected computed hashes. Unchanged canonical requirement/design/task/TC/UAT bodies; exact formal0101 route scope, three observed compatible source pins and additive native argv only. Old approvals/hashes/failures preserved. NFR014/015 business-user UAT applicability alone unchanged; timed restore/RTO/RPO/reconcile TC058/059 remain mandatory/blocking; no waiver. No product/Phase/CI/merge Gate PASS. Four individually named already-reviewed native fixture/test paths are explicitly declared; no broad test allowance.",
+      "recorded_at": "2026-10-23T02:45:12.128217Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "377cd0b6b08f0368a47ef2629a74c0c4ac292858fe9b53fea3f8690c73c7cdb6",
+      "code_commit": null,
+      "scope": [
+        "NFR-014"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-P4-P0MAIN-UATNA-NFR-015",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner); mechanically derived binding by Codex",
+      "decision": "APPROVED",
+      "source_ref": "Actual direct Sam Sales userMessage01a16658-f41f-7af1-a486-6439bd92f3aa, 2026-10-23: Fulfillment P0 現在合併了嗎？請確認並繼續推進 P4，完成聯合驗證、CI 及所有 Gate 後直接合併到 main。 New continuation plus prior exact DEC029 formal owner contribution and HD012/013/014. Mechanically derived current-main integration binding, not a claim Sam inspected computed hashes. Unchanged canonical requirement/design/task/TC/UAT bodies; exact formal0101 route scope, three observed compatible source pins and additive native argv only. Old approvals/hashes/failures preserved. NFR014/015 business-user UAT applicability alone unchanged; timed restore/RTO/RPO/reconcile TC058/059 remain mandatory/blocking; no waiver. No product/Phase/CI/merge Gate PASS. Four individually named already-reviewed native fixture/test paths are explicitly declared; no broad test allowance.",
+      "recorded_at": "2026-10-23T02:45:12.128223Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "377cd0b6b08f0368a47ef2629a74c0c4ac292858fe9b53fea3f8690c73c7cdb6",
+      "code_commit": null,
+      "scope": [
+        "NFR-015"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -11305,6 +11503,30 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-P4-P0MAIN-INTEGRATED-DESIGN-PLAN-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "67e3ac2c0ddb51b1620237186db76ecf9bc78a28b2de750cc2589dd3a6f7364a",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-p0main-binding-r2-design-plan-reviewer-proof.json SHA256 ac45acb25ed1d5f9802db5335870f29c5b0f52b857655598c3b052615ae5a2f6; exact PLAN 377cd0b6b08f0368a47ef2629a74c0c4ac292858fe9b53fea3f8690c73c7cdb6; actual direct human provenance40413f57. Prospective canonical integration specification only; not full product/Phase/CI/Gate review.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P4-OPERATION-ROUTE-API-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "3f4a16842244fd84630194961941a4f496eeb948f95460c79a6fb1dc3f68b66d",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-operation-route-api-r1-source-reviewer-proof.json SHA256 fd2db4e6aa78bd4de6709168500b04840aee1694b3f753158fa7eb3f2162e1d9; exacttestcfafd176/rawdf93f724. Narrow current-schema journal21PASS and source only; no actualbusiness parent-lock or Archive coordinator approval.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -14926,6 +15148,28 @@
       "subject": "Formal merged P0 adoption and narrow forward Archive storage foundation; routing15 native and guards15 plus originalShipment12 PASS",
       "status": "PASS",
       "source_ref": "implementation/120_formal_p0_integration_and_archive_storage.md; actual separate routing23a718ff/storage492ee182 proofs; rawrouting6e0e4989/guardsa898d026. Partial IMPLEMENT only; old approvals/baselines/evidence unchanged; no participant/Phase/Gate completion."
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "463c07c32190baa4c84684524e1f21ae34896fcb",
+      "spec_baseline": "377cd0b6b08f0368a47ef2629a74c0c4ac292858fe9b53fea3f8690c73c7cdb6",
+      "source_fingerprint": "0eed900a426f6e07af7b23adc82433d9c846abb762c4355b2d25bf47ca216f92",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-23T02:45:12.861372Z",
+      "subject": "Mechanical P0-main integration baseline transition proposal; preserves prior baseline in immutable observation",
+      "status": "PASS",
+      "source_ref": "Actual local integration463c07c3 includes main e272; PRIOR_BASELINE {\"code_commit\": \"d01162f6159ec40981453d00936fb713296f35a3\", \"default_commit\": \"35af2ab7010d8a42cdbc3ca55d23c9c9ce95856c\", \"design\": \"2c00e6c2dd7699e51d73f66af480b7b6a9c1a424e648ea375855f182ff948682\", \"mode_entry_commit\": \"4439014e9a9d03f233e858e56f93617e787ecb8c\", \"plan\": \"070531ee21f510969c679c281a6705eb3e0094cbb9b01a68cfe3164679e187b5\", \"source_fingerprint\": \"d8075b361e3c93662ac824c58d93e41327363bc2404e742366ee742ac7d39234\", \"worktree\": \"/Users/sam/.codex/worktrees/sales-p4-archive/erp-app\"}; PASS denotes observed integration/provenance only, no product execution or full Gate."
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "463c07c32190baa4c84684524e1f21ae34896fcb",
+      "spec_baseline": "377cd0b6b08f0368a47ef2629a74c0c4ac292858fe9b53fea3f8690c73c7cdb6",
+      "source_fingerprint": "0eed900a426f6e07af7b23adc82433d9c846abb762c4355b2d25bf47ca216f92",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-23T02:57:05.403224Z",
+      "subject": "Actual standard foundation native suite:70 componentPASS but fullTC047/048 coverage absent, suite remainsBLOCKED",
+      "status": "BLOCKED",
+      "source_ref": "evidence/20261023T025425-2afe5efe357e/run.json SHA256452fd7daeccadb0b153830e556732f142580bbe5f39e6986f441f574552d4426; exit0/70PASS0FAIL0SKIP; source/spec unchanged. Actual untouched PLAN_READY and boundary LOCAL_CHECKS_PASS after complete separately reviewed CAS-first integration binding. Not fullfunctional/Phase/CI/mergeGate."
     }
   ],
   "pending_decisions": [
@@ -17971,8 +18215,24 @@
       "kind": "GIT_INTEGRATION",
       "target": "e272f5d3ce05d0ca50be42e6d8764f0ef20d3dd1",
       "idempotency_key": "p4-formal-p0-main-e272f5d3",
+      "status": "CONFIRMED",
+      "source_ref": "Direct Sam current Sales request20261023: confirmP0 andcontinueP4/allGates/directmain; actualghPR271MERGEDfd32762f/2026-10-23T00:51:03Z/currenthead4af6719d13CI_SUCCESS. LocalP4merge only, no finalmainmerge/waiver; preserveours575ec4c9 andfullrawhistory. Expected10conflicts, formalowner sourcewins withuniqueDEC029contributionreconciliation.; observed actual local merge commit 463c07c32190baa4c84684524e1f21ae34896fcb includes target main ancestry. No P4 PR/main merge or full Gate claim."
+    },
+    {
+      "id": "MODE-CHANGE-1295",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-1295",
+      "status": "CONFIRMED",
+      "source_ref": "Actual current direct Sam Sales userMessage01a16658-f41f-7af1-a486-6439bd92f3aa, turn01a16658-ef16-7890-9336-dbf119303ee0: confirm merged P0 and continue P4 joint validation/CI/allGates/directmain. Exact existing DEC029 forward contribution preserved; actual independent provenance40413f57 and complete exact package reviewac45acb2. This new main integration entry records no business/DR/merge waiver; old mode-entry retained in appended prior-baseline observation."
+    },
+    {
+      "id": "ACT-P4-ROUTE-API-FOUNDATION-COMMIT-20261023",
+      "kind": "GIT_COMMIT",
+      "target": "codex/sales-order-phase-4-archive local-only routed-journal and integration-baseline checkpoint",
+      "idempotency_key": "p4-route-api-foundation70-20261023",
       "status": "STARTED",
-      "source_ref": "Direct Sam current Sales request20261023: confirmP0 andcontinueP4/allGates/directmain; actualghPR271MERGEDfd32762f/2026-10-23T00:51:03Z/currenthead4af6719d13CI_SUCCESS. LocalP4merge only, no finalmainmerge/waiver; preserveours575ec4c9 andfullrawhistory. Expected10conflicts, formalowner sourcewins withuniqueDEC029contributionreconciliation."
+      "source_ref": "Existing direct Sam commit/development authority. Source3f4a1684/testcfafd176/prooffd2db4e6; actual21nativePASS and standard70componentsPASS with fullsuiteBLOCKEDTC047/048. Exact approved integrationbaselineac45acb2; no push/PR/PhaseDONE/mainmerge."
     }
   ],
   "evidence_files": [
@@ -18763,7 +19023,8 @@
     "evidence/20261020T051532-35d35a5a7da6/run.json",
     "evidence/20261020T051616-fa0859a6360d/run.json",
     "evidence/20261020T051619-2e79046e5ac6/run.json",
-    "evidence/20261020T051651-dbe669b96ca8/run.json"
+    "evidence/20261020T051651-dbe669b96ca8/run.json",
+    "evidence/20261023T025425-2afe5efe357e/run.json"
   ],
   "defects": [
     {
@@ -19025,5 +19286,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Finish observed local main integration commit preserving all history; qualify new routed operation caller and actual ownership/lock order; implement private RR Archive capability/provider/participant/coordinator, then all original P4 Gates. P0 #271 already merged; no external P0 wait."
+  "next_safe_action": "Save reviewed route/provider-baseline checkpoint; implement actual private live-scheduler RR Archive transaction capability, operation-first fencing/fresh snapshot and formal OpenMatter/participant/coordinator. TC047/048 and wholeP4/fullcapacity/browser/currentCI/wholephase/merge Gates remain required. Fulfillment P0 is merged, no external P0 wait; coordinate actual HD016 P1 contribution without concurrent samefile writes."
 }
