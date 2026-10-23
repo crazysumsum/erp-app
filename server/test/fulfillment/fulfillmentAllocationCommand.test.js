@@ -13,3 +13,8 @@ test("Allocate retains exact per-Line50/total5000 leg limits and rejects duplica
  const count=length=>({...body(),lines:[{fulfillmentLineId:2,allocations:Array.from({length},(_,index)=>({inventoryReservationId:index+1,inventoryBalanceId:4,balanceVersion:1,baseQuantity:"1"}))}]});assert.equal(normalizeFulfillmentAllocation(count(50)).lines[0].allocations.length,50);assert.throws(()=>normalizeFulfillmentAllocation(count(51)),{code:"FULFILLMENT_INPUT_INVALID"});
  const inconsistent=count(2);inconsistent.lines[0].allocations[1].balanceVersion=2;assert.throws(()=>normalizeFulfillmentAllocation(inconsistent),{code:"FULFILLMENT_INPUT_INVALID"});
 });
+
+test("Allocation retains indeterminate commit and unknown database errors without classifying them as safe retries",async()=>{
+ const {FulfillmentAllocationService}=await import("../../src/modules/fulfillment/FulfillmentAllocationService.js"),service=new FulfillmentAllocationService({database:{withTransaction(){}},time:{nowMs:()=>1},logger:{error(){}}});
+ for(const code of ["DATABASE_TRANSACTION_INDETERMINATE","DATABASE_TRANSACTION_FAILED","DATABASE_CONNECTION_TIMEOUT"]){const error=Object.assign(new Error("Synthetic unknown outcome"),{code,cause:{code:"ER_LOCK_DEADLOCK"}});service.transactions.withTransaction=async()=>{throw error;};await assert.rejects(()=>service.allocate("1",body()),actual=>actual===error);}
+});

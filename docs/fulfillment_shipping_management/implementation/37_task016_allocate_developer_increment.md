@@ -1,6 +1,6 @@
 # TASK-016 — Atomic Allocate developer increment
 
-Status: DEVELOPER_VERIFIED / READY_FOR_ATOMIC_COMMIT. HD018 A and TASK015 are qualified at735e56a2; this increment is a separate uncommitted source candidate. No whole P1/current CI/formal Technical Acceptance/UAT or PR readiness is claimed.
+Status: DONE (developer task increment only). HD018 A and TASK015 are qualified at735e56a2; this increment is a separate uncommitted source candidate. No whole P1/current CI/formal Technical Acceptance/UAT or PR readiness is claimed.
 
 ## Implemented behavior and ownership
 
@@ -74,3 +74,7 @@ The earlier145/1 fixture setup failure remains preserved. Previous independent26
 Actual separate reviewer /root/fulfillment_independent_review final TASK016 APPROVED0C/H/M at11-file subset bddac9ca37540aea183745d544faf42dfd2719e1727b556f8cfd5daa070d934c and current whole fingerprint5bee289d53bd273032eb737444ce5c038211fc4ae4116c40c75e59e6079ff031. Its independent current official schema case1PASS/0FAIL/0SKIP1761.67ms covers missing required table AND column, zero surviving effects, restoration and same-event success. Raw /private/tmp/fulfillment-p1-independent-task016-schema-closing-native.log SHA127ba335c35cad9153ca0c8c0520c91b4639cfe5b0c69526f497e25e4ee05cf7; own runtime receipt SHA60d5a5aa37fab4e5503667cfc9b59f65af9c8d4f22cfaf57b0425b966170f5f3. Root verified these actual file hashes. Its earlier26nativePASS remains at e6de4170...; its latest10purePASS includes unchanged historical Stocktake fallback. The targeted one eligible case does not waive the other26; root current146 executed all27Allocate nodes plus prior119 on the fixed source. All three actual MEDIUM findings are closed, with original failures retained.
 
 Root refreshed current128unitPASS/0FAIL/0SKIP940.59ms (/private/tmp/fulfillment-p1-task016-qualified-unit.log), ESLint (-qualified-lint.log), diff whitespace, traceability STRUCTURE_PASS and boundary LOCAL_CHECKS_PASS against fd32762f4fa17a5e77aaa7118a9ded2d3ac81e9e. D/P remain9903d2839d2e7156ed8c2080e1f7632f0865f5892ce8a96a93ccf53ec1afd3e4 /975659ddc3ccd1b8098bb8a56dbf02f7bf33b403590fa97504eb3d0e0d9fbfe9. These are developer/task-local qualifications only. Atomic commit remains the immediate final Task DoD step before TASK017; no P1 push/PR/currentCI/fullphase or formal acceptance is claimed.
+
+## Atomic task completion
+
+Actual atomic commit ca776e932ebc01913cc198bd7393e7b2e21512ff created after all above checks and actual separate closing. Postcommit source fingerprint is unchanged5bee289d53bd273032eb737444ce5c038211fc4ae4116c40c75e59e6079ff031. TASK016 is DONE; TASK017 now begins. All remaining full-P1/current-target/current-CI/final-review gates still precede draft PR.

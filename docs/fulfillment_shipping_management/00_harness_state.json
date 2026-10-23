@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 159,
+  "revision": 164,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-002",
-  "current_task": "TASK-016",
+  "current_task": "TASK-017",
   "baseline": {
-    "design": "9903d2839d2e7156ed8c2080e1f7632f0865f5892ce8a96a93ccf53ec1afd3e4",
-    "plan": "975659ddc3ccd1b8098bb8a56dbf02f7bf33b403590fa97504eb3d0e0d9fbfe9",
-    "code_commit": "735e56a245f04f16a79ae2aaf529992db4e0c50a",
-    "source_fingerprint": "5bee289d53bd273032eb737444ce5c038211fc4ae4116c40c75e59e6079ff031",
+    "design": "f7a02f32d645b419198d1676a2d5fae4ab7280e25e6046b5cf11247ca7ee55d0",
+    "plan": "37c2d0867c0be9f8bc8a378d163f42976b7772f5b3c0b291ac9f09db656d0172",
+    "code_commit": "ca776e932ebc01913cc198bd7393e7b2e21512ff",
+    "source_fingerprint": "015e303788312166d202bc9b9407e044b7805e0329fec251b5141f6d8891caef",
     "worktree": "/private/tmp/erp-fulfillment-p1",
     "default_commit": "fd32762f4fa17a5e77aaa7118a9ded2d3ac81e9e",
     "mode_entry_commit": "fd32762f4fa17a5e77aaa7118a9ded2d3ac81e9e"
@@ -46,8 +46,8 @@
     "TASK-013": "DONE",
     "TASK-014": "DONE",
     "TASK-015": "DONE",
-    "TASK-016": "IN_PROGRESS",
-    "TASK-017": "PENDING",
+    "TASK-016": "DONE",
+    "TASK-017": "IN_PROGRESS",
     "TASK-018": "PENDING",
     "TASK-019": "PENDING",
     "TASK-020": "PENDING",
@@ -2533,6 +2533,88 @@
         "NFR-023",
         "Exact original NA reason unchanged; TC010 mandatory/blocking"
       ]
+    },
+    {
+      "id": "APR-117-TASK017-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam original full P1/TASK017 authority; separate reviewer actual direction/scope review4373d4f6; necessary implementation lineage, no claim human approved unseen hash",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/38_task017_reallocation_owner_preparation.md",
+      "recorded_at": "2026-10-23T07:24:26.069716+00:00",
+      "code_commit": "ca776e932ebc01913cc198bd7393e7b2e21512ff",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "37c2d0867c0be9f8bc8a378d163f42976b7772f5b3c0b291ac9f09db656d0172",
+      "scope": [
+        "server/src/modules/inventory/InventoryLookupService.js",
+        "server/src/modules/inventory/inventoryFulfillmentCandidateAdvisory.js",
+        "server/src/modules/sales/SalesFulfillmentService.js",
+        "server/test/salesFulfillmentService.test.js",
+        "docs/inventory_management/03_design_spec.md",
+        "docs/inventory_management/00_module_manifest.json",
+        "docs/sales_order_management/03_design_spec.md",
+        "docs/sales_order_management/00_module_manifest.json",
+        "HD018 A, necessary receipt-bound readonly Sales facts within existing approved shared scope; owner review still required; no P4 routing",
+        "server/src/modules/inventory/inventoryFulfillmentAllocation.js",
+        "server/src/modules/inventory/inventoryFulfillmentAllocationPreparation.js",
+        "TASK016 planned owner readonly preparation/shared assessor; existing writer physical-reader enforcement and ABI unchanged",
+        "server/src/modules/inventory/InventoryPickSequenceService.js",
+        "TASK017 necessary owner-only release-aware preparation/shared eligibility reader; original APIs and all safety/20s gates retained"
+      ]
+    },
+    {
+      "id": "APR-118-TASK017-DESIGN",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam original full P1/TASK017 authority; separate reviewer actual direction/scope review4373d4f6; necessary implementation lineage, no claim human approved unseen hash",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/38_task017_reallocation_owner_preparation.md",
+      "recorded_at": "2026-10-23T07:24:26.069716+00:00",
+      "code_commit": "ca776e932ebc01913cc198bd7393e7b2e21512ff",
+      "expires_at": null,
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "f7a02f32d645b419198d1676a2d5fae4ab7280e25e6046b5cf11247ca7ee55d0",
+      "scope": [
+        "PHASE-002",
+        "TASK-016",
+        "Original public Allocate intent; necessary owner CAS/member-reason preparation, exact same writer rule"
+      ]
+    },
+    {
+      "id": "APR-119-TASK017-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam original full P1/TASK017 authority; separate reviewer actual direction/scope review4373d4f6; necessary implementation lineage, no claim human approved unseen hash",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/38_task017_reallocation_owner_preparation.md",
+      "recorded_at": "2026-10-23T07:24:26.069716+00:00",
+      "code_commit": "ca776e932ebc01913cc198bd7393e7b2e21512ff",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "37c2d0867c0be9f8bc8a378d163f42976b7772f5b3c0b291ac9f09db656d0172",
+      "scope": [
+        "PHASE-002",
+        "TASK-012–023",
+        "Full original gates/currentCI then draft PR"
+      ]
+    },
+    {
+      "id": "APR-120-TASK017-NFR023-LINEAGE",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam original full P1/TASK017 authority; separate reviewer actual direction/scope review4373d4f6; necessary implementation lineage, no claim human approved unseen hash",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/38_task017_reallocation_owner_preparation.md",
+      "recorded_at": "2026-10-23T07:24:26.069716+00:00",
+      "code_commit": "ca776e932ebc01913cc198bd7393e7b2e21512ff",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "37c2d0867c0be9f8bc8a378d163f42976b7772f5b3c0b291ac9f09db656d0172",
+      "scope": [
+        "NFR-023",
+        "Exact original NA reason unchanged; TC010 mandatory/blocking"
+      ]
     }
   ],
   "reviews": [
@@ -3647,6 +3729,54 @@
       "reviewer": "/root/fulfillment_independent_review",
       "reviewed_baseline": "bddac9ca37540aea183745d544faf42dfd2719e1727b556f8cfd5daa070d934c",
       "source_ref": "implementation/37_task016_allocate_developer_increment.md#actual-independent-closing",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-094-TASK017-DIRECTION",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "4373d4f6a783cfe2b8210b867ece15a83b23c5ca22b0ea4aebddd8d613a4d09b",
+      "source_ref": "implementation/38_task017_reallocation_owner_preparation.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-095-TASK017-POST-READER",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "0a8fffbd712181206da5c01090a812720fd02fb778b5d777575d005f2e7cb509",
+      "source_ref": "implementation/38_task017_reallocation_owner_preparation.md#root-implementation-and-actual-review-correction-developer-increment",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-096-TASK017-STATIC-CLOSURE",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "65e0badb660713cc8250a5feff0035277d9121a21711c9d01a4d310bad9be17f",
+      "source_ref": "implementation/38_task017_reallocation_owner_preparation.md#pool2-concurrency-and-current-remeasurement",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-097-TASK017-CLOSING",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "65e0badb660713cc8250a5feff0035277d9121a21711c9d01a4d310bad9be17f",
+      "source_ref": "implementation/38_task017_reallocation_owner_preparation.md#actual-independent-closing-execution",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -5330,7 +5460,8 @@
     "implementation/34_task014_draft_update_developer_completion.md",
     "implementation/35_batch_candidate_shared_stock.md",
     "implementation/36_task015_batch_candidates_developer_increment.md",
-    "implementation/37_task016_allocate_developer_increment.md"
+    "implementation/37_task016_allocate_developer_increment.md",
+    "implementation/38_task017_reallocation_owner_preparation.md"
   ],
   "defects": [
     {
@@ -5412,7 +5543,22 @@
         "evidence/20261022T073630-d7d613d5c9b6/run.json"
       ],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-006",
+      "severity": "MEDIUM",
+      "status": "CLOSED",
+      "source_ids": [
+        "PHASE-002",
+        "TASK-017"
+      ],
+      "closure_evidence": [
+        "implementation/38_task017_reallocation_owner_preparation.md",
+        "/private/tmp/fulfillment-p1-reallocate-reader-red.log",
+        "/private/tmp/fulfillment-p1-reallocate-reader-green.log"
+      ],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK016 developer qualification complete: current146native/128unit/lint/trace/boundaryPASS, actual separate closing0C/H/M with independent26prior+1current-schema+10purePASS. Make scoped atomic commit, then record TASK016 DONE and begin TASK017; preserve all remaining P1/fullcurrentCI/finalreview gates before draft PR only."
+  "next_safe_action": "TASK017 exactsource015e3037 qualified root187native/133unit/lint/trace/boundary/whitespacePASS and actual separate closingAPPROVED0C/H/M with independently executed19Realloc+1concurrentAllocate+15purePASS, no skips. Create atomic TASK017 commit, verify source fingerprint unchanged, then markDONE/advanceTASK018. Preserve dependent Cancel/Reallocate race forTASK019 and all original safety/20s/P1/currenttarget/currentCI/browser/fullvalidation gates before draftPR. No currentP1CI/PR yet."
 }

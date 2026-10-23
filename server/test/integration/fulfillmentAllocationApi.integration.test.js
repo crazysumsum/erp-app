@@ -159,3 +159,10 @@ nativeTest("P1 Allocate missing required candidate table or column returns stabl
  }
  assert.equal((await f.allocate(body)).outcome.status,"PICKING");
 });
+
+nativeTest("P1 concurrent Allocate reuses existing pool2 transaction connections and leaves one complete winner",async t=>{
+ const f=await fixture(t),bodies=[f.allocationBody(),f.allocationBody()],original=f.allocations.inventoryLookup.prepareFulfillmentAllocationInTransaction.bind(f.allocations.inventoryLookup);let ready=0,release;const barrier=new Promise(resolve=>{release=resolve;});
+ f.allocations.inventoryLookup.prepareFulfillmentAllocationInTransaction=async(...args)=>{const result=await original(...args);if(++ready===2)release();await barrier;return result;};
+ const results=await Promise.allSettled(bodies.map(body=>f.allocate(body)));assert.equal(results.filter(result=>result.status==="fulfilled").length,1,JSON.stringify(results.map(result=>({status:result.status,code:result.reason?.code}))));const loser=results.find(result=>result.status==="rejected");assert.ok(["VERSION_CONFLICT","ALLOCATION_CANDIDATE_CHANGED","CONCURRENT_OPERATION"].includes(loser.reason.code),loser.reason.code);
+ assert.equal(Number((await f.db.query("SELECT COUNT(*) AS n FROM fulfillment_allocations"))[0][0].n),1);assert.equal(Number((await f.db.query("SELECT COUNT(*) AS n FROM inventory_allocations"))[0][0].n),1);assert.equal(Number((await f.db.query("SELECT COUNT(*) AS n FROM fulfillment_operation_requests WHERE operation_type='ALLOCATE'"))[0][0].n),1);assert.equal(Number((await f.db.query("SELECT allocated_quantity FROM inventory_stock_balances WHERE id=?",[f.balance]))[0][0].allocated_quantity),5);
+});

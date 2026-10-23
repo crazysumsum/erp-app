@@ -57,26 +57,29 @@ function positiveId(value, field) {
   return normalized;
 }
 
-function rowCandidate(row) {
+function rowCandidate(row, credits = null) {
   const onHand = Number(row.on_hand_quantity);
   const allocated = Number(row.allocated_quantity);
-  if (!Number.isSafeInteger(onHand) || !Number.isSafeInteger(allocated) ||
-      allocated < 0 || onHand <= allocated) throw inventoryError("INVENTORY_DEPENDENCY_UNAVAILABLE");
+  const release=credits===null?0:Number(row.own_release_credit),physical=onHand-allocated,available=physical+release;
+  if (!Number.isSafeInteger(onHand) || !Number.isSafeInteger(allocated) || allocated<0 || onHand<allocated ||
+      !Number.isSafeInteger(release)||release<0||release>allocated||credits!==null&&release!==(credits.get(String(row.id))??0)||
+      !Number.isSafeInteger(available)||available<=0)throw inventoryError("INVENTORY_DEPENDENCY_UNAVAILABLE");
   return {
     id: positiveId(row.id, "balanceId"), binId: positiveId(row.bin_id, "binId"),
     lotId: row.lot_id === null ? null : positiveId(row.lot_id, "lotId"),
     version: positiveId(row.version, "balanceVersion"),
-    freeQuantity: onHand - allocated,
+    freeQuantity: available,
+    ...(credits===null?{}:{physicalFreeQuantity:physical,ownReleaseCredit:release,availableAfterOwnRelease:available}),
     binCode: row.bin_code, lotKey: row.normalized_lot_number,
     expiryDate: row.expiry_date, firstReceiptDate: row.first_receipt_date,
     fifoAnchorDate: row.fifo_anchor_date
   };
 }
 
-export async function loadInventoryCandidates(transaction, {
+async function loadCandidates(transaction, {
   warehouseId, skuId, currentDate, minimumRemainingDays, trackingPolicy,
   limit, offset = 0, locking = false
-}) {
+}, credits = null) {
   const warehouse = positiveId(warehouseId, "warehouseId");
   const sku = positiveId(skuId, "skuId");
   if (limit !== undefined && (!Number.isSafeInteger(limit) || limit <= 0 || limit > 101)) {
@@ -91,18 +94,20 @@ export async function loadInventoryCandidates(transaction, {
     batch_expiry: "b.lot_id IS NOT NULL AND l.expiry_date IS NOT NULL"
   }[trackingPolicy];
   if (!trackingCondition) throw inventoryError("INVENTORY_INPUT_INVALID", { field: "trackingPolicy" });
-  const cutoff = cutoffDate(currentDate, minimumRemainingDays);
+  const cutoff = cutoffDate(currentDate, minimumRemainingDays),entries=credits===null?[]:[...credits];
+  const creditJoin=entries.length?`\n       LEFT JOIN (${entries.map((_,index)=>index===0?"SELECT ? AS balance_id,? AS release_quantity":"SELECT ?,?").join(" UNION ALL ")}) own_release ON own_release.balance_id=b.id`:"";
+  const creditExpression=entries.length?"COALESCE(own_release.release_quantity,0)":"0";
   const query = async (checkLocks) => transaction.query(
     `SELECT b.id, b.bin_id, b.lot_id, b.version, b.on_hand_quantity, b.allocated_quantity,
             bn.bin_code, l.normalized_lot_number,
             DATE_FORMAT(l.expiry_date, '%Y-%m-%d') AS expiry_date,
             DATE_FORMAT(l.first_receipt_date, '%Y-%m-%d') AS first_receipt_date,
-            DATE_FORMAT(b.fifo_anchor_date, '%Y-%m-%d') AS fifo_anchor_date
-       FROM inventory_stock_balances b
+            DATE_FORMAT(b.fifo_anchor_date, '%Y-%m-%d') AS fifo_anchor_date${credits===null?"":`, ${creditExpression} AS own_release_credit`}
+       FROM inventory_stock_balances b${creditJoin}
        JOIN inventory_bins bn ON bn.id = b.bin_id AND bn.warehouse_id = b.warehouse_id
        LEFT JOIN inventory_lots l ON l.id = b.lot_id AND l.sku_id = b.sku_id
       WHERE b.warehouse_id = ? AND b.sku_id = ? AND b.stock_status = 'AVAILABLE'
-        AND b.on_hand_quantity > b.allocated_quantity AND bn.status = 'ACTIVE'
+        AND ${credits===null?"b.on_hand_quantity > b.allocated_quantity":`b.on_hand_quantity >= b.allocated_quantity AND (b.on_hand_quantity-b.allocated_quantity+${creditExpression})>0`} AND bn.status = 'ACTIVE'
         AND ${trackingCondition}
         AND (l.expiry_date IS NULL OR l.expiry_date >= ?)
         ${checkLocks ? `AND NOT EXISTS (SELECT 1 FROM inventory_bin_locks k
@@ -116,7 +121,7 @@ export async function loadInventoryCandidates(transaction, {
       ${limit === undefined ? "" : "LIMIT ?"}
       ${offset === 0 ? "" : "OFFSET ?"}
       ${locking ? "FOR SHARE OF b" : ""}`,
-    [warehouse, sku, cutoff, ...(limit === undefined ? [] : [limit]), ...(offset === 0 ? [] : [offset])]
+    [...entries.flatMap(([id,credit])=>[Number(id),credit]), warehouse, sku, cutoff, ...(limit === undefined ? [] : [limit]), ...(offset === 0 ? [] : [offset])]
   );
   let rows;
   try {
@@ -132,8 +137,18 @@ export async function loadInventoryCandidates(transaction, {
     [rows] = await query(false);
     if (getActiveTransactionIsolation(transaction) !== null) preStocktakeTransactions.add(transaction);
   }
-  return rankInventoryCandidates(rows.map(rowCandidate).filter((row) =>
+  return rankInventoryCandidates(rows.map(row=>rowCandidate(row,credits)).filter((row) =>
     (row.expiryDate === null || row.expiryDate >= cutoff) &&
     (trackingPolicy === "none" ? row.lotId === null : row.lotId !== null) &&
     (trackingPolicy !== "batch_expiry" || row.expiryDate !== null)));
+}
+
+// The physical reader keeps its existing SQL, parameters and DTO when no credits exist.
+export function loadInventoryCandidates(transaction,query){return loadCandidates(transaction,query);}
+
+// Internal owner reader: callers must independently prove complete current own Allocation credits.
+export function loadFulfillmentReallocationCandidates(transaction,query,credits){
+ if(!(credits instanceof Map)||credits.size>5000)throw inventoryError("INVENTORY_INPUT_INVALID");
+ for(const [id,quantity]of credits)if(typeof id!=="string"||!/^[1-9][0-9]{0,15}$/u.test(id)||BigInt(id)>BigInt(Number.MAX_SAFE_INTEGER)||!Number.isSafeInteger(quantity)||quantity<1)throw inventoryError("INVENTORY_INPUT_INVALID");
+ return loadCandidates(transaction,query,credits);
 }
