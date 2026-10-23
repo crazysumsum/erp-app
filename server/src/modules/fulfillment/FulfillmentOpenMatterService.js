@@ -2,6 +2,8 @@ import {getActiveTransactionIsolation} from "../../services/mysqldatabase/MySqlD
 import {requireSalesWriteActor} from "../sales/salesAuthorization.js";
 import {salesEventId} from "../sales/salesValidation.js";
 import {lockFulfillmentRowsInTransaction,sortedFulfillmentIds} from "./FulfillmentLockService.js";
+import {inspectFulfillmentArchiveReadiness} from "./fulfillmentArchiveReadiness.js";
+import {readFulfillmentArchiveState,archiveStateFacts} from "./fulfillmentArchiveState.js";
 const marks=ids=>ids.map(()=>"?").join(",");
 const unknown=()=>({status:"UNKNOWN"});
 async function lockChildren(tx,table,column,owners){
@@ -16,7 +18,35 @@ async function lockChildren(tx,table,column,owners){
 // HD013: active RC and held direct parents make membership discovery current and stable.
 // Discovery is nonlocking; sorted primary-key current locks avoid cross-order range gaps.
 export class FulfillmentOpenMatterService {
-  constructor({database}){this.database=database;}
+  #authorizeArchiveRead;
+  constructor({database,authorizeArchiveRead}={}){this.database=database;this.#authorizeArchiveRead=authorizeArchiveRead;}
+  async getOrderArchiveStatus(orderId,options){
+    if(!ownArchiveData(options,["atMs"]))throw new TypeError("Invalid Archive read options");
+    const scope=Object.freeze({orderId,atMs:options.atMs});archiveReadCommand(scope);
+    const context=this.database?.context;
+    // Advisory inspection owns a fresh read view. Never reuse an outer transaction's older snapshot.
+    if(context?.get()?.databaseTransaction)return archiveUnknown("PROVIDER_UNAVAILABLE");
+    if(!context?.storage?.run||typeof this.database?.withTransaction!=="function")return archiveUnknown("PROVIDER_UNAVAILABLE");
+    const inspect=()=>this.database.withTransaction(async tx=>{
+      const readiness=await inspectFulfillmentArchiveReadiness(tx);
+      if(!readiness.ready)return archiveUnknown(readiness.reasonCode);
+      return evaluateFulfillmentOpenMatter(archiveStateFacts(await readFulfillmentArchiveState(tx,scope.orderId),scope.atMs));
+    });
+    try{return await context.storage.run({databaseTransaction:null,auth:null,signal:null,startedAt:Date.now()},inspect);}
+    catch{return archiveUnknown("PROVIDER_UNAVAILABLE");}
+  }
+  async getOrderArchiveStatusInTransaction(tx,command){
+    archiveReadCommand(command);
+    const scope=Object.freeze({orderId:command.orderId,atMs:command.atMs});
+    if(this.database?.context?.get()?.databaseTransaction!==tx||getActiveTransactionIsolation(tx)!=="REPEATABLE READ")throw new TypeError("Actual Archive RR transaction required");
+    // Only the real fixed job adapter may attest its private live scope; context equality alone proves no fresh read view.
+    try{
+      if(typeof this.#authorizeArchiveRead!=="function"||await this.#authorizeArchiveRead(tx,scope)!==true)return archiveUnknown("PROVIDER_UNAVAILABLE");
+      const readiness=await inspectFulfillmentArchiveReadiness(tx);
+      if(!readiness.ready)return archiveUnknown(readiness.reasonCode);
+      return evaluateFulfillmentOpenMatter(archiveStateFacts(await readFulfillmentArchiveState(tx,scope.orderId,{lock:true}),scope.atMs));
+    }catch{return archiveUnknown("PROVIDER_UNAVAILABLE");}
+  }
   async assertSalesLifecycleAllowedInTransaction(tx,command){
     try{
       if(this.database.context?.get()?.databaseTransaction!==tx||getActiveTransactionIsolation(tx)!=="READ COMMITTED")return unknown();
@@ -61,4 +91,17 @@ export class FulfillmentOpenMatterService {
       return known("CLOSED");
     }catch{return unknown();}
   }
+}
+
+const openReasons=Object.freeze({nonterminalFulfillments:"FULFILLMENT_NONTERMINAL",nonterminalShipments:"SHIPMENT_NONTERMINAL",reversing:"REVERSAL_IN_PROGRESS",activeClaims:"CLAIM_ACTIVE",outstandingAllocations:"ALLOCATION_OUTSTANDING",inProgressOperations:"OPERATION_IN_PROGRESS"});
+const archiveUnknown=reason=>({version:"1",status:"UNKNOWN",reasonCodes:[reason]});
+const ownArchiveData=(value,keys)=>value&&Object.getPrototypeOf(value)===Object.prototype&&Reflect.ownKeys(value).length===keys.length&&keys.every(key=>{const d=Object.getOwnPropertyDescriptor(value,key);return d&&Object.hasOwn(d,"value")&&d.enumerable;});
+function archiveReadCommand(command){
+  if(!ownArchiveData(command,["orderId","atMs"])||typeof command.orderId!=="string"||!/^[1-9][0-9]{0,15}$/u.test(command.orderId)||BigInt(command.orderId)>9007199254740991n||!Number.isSafeInteger(command.atMs)||command.atMs<0||command.atMs>8640000000000000)throw new TypeError("Invalid Archive read scope");
+}
+export function evaluateFulfillmentOpenMatter(facts){
+  const keys=["inconsistent",...Object.keys(openReasons)];
+  if(!facts||typeof facts!=="object"||Array.isArray(facts)||Object.keys(facts).length!==keys.length||keys.some(key=>typeof facts[key]!=="boolean")||facts.inconsistent)return archiveUnknown("OWNER_STATE_INCONSISTENT");
+  const reasonCodes=Object.entries(openReasons).filter(([key])=>facts[key]).map(([,reason])=>reason);
+  return {version:"1",status:reasonCodes.length?"OPEN":"CLOSED",reasonCodes};
 }

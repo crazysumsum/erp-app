@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1311,
+  "revision": 1314,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "64b0e1d51fe2a5163e8e33c93277e0a7d3464abff52684a0b57b6c636821622a",
     "plan": "ec0fae970beca595f863eed95f752984c424ae0080342f99a70fc281880e30a6",
-    "code_commit": "6f49aa6a98f9a73127195fc68c446d21fde6a54f",
-    "source_fingerprint": "2da52b3625c0f24646be6ddb3642e4f81285fdc0bb64d990a57a4e80f56c38f7",
+    "code_commit": "5e8796a8dacb5fd7f372224f29a63450574041ff",
+    "source_fingerprint": "c098e253c070ffea1c7096b5bad47f99f557c7cb6287a8e9fc8fdacb588625cc",
     "worktree": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app",
     "default_commit": "e272f5d3ce05d0ca50be42e6d8764f0ef20d3dd1",
     "mode_entry_commit": "e272f5d3ce05d0ca50be42e6d8764f0ef20d3dd1"
@@ -11795,6 +11795,30 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-P4-OPENMATTER-CURRENT-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "ad8e3e290c583ce5a4f9c55bf48deb8666fbda9a487c0f0a0d1920637155bd75",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-openmatter-current-r1-source-reviewer-proof.json SHA2565a5dd660664c86dc674a8c06801ef40374831a850a71d74746ce49a02c747d02; actual examined intermediate file SHAs are in proof; source has since been corrected, no final approval inferred.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P4-OPENMATTER-CURRENT-R2-CLOSING",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "c098e253c070ffea1c7096b5bad47f99f557c7cb6287a8e9fc8fdacb588625cc",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-openmatter-current-r2-closing-reviewer-proof.json SHA2565b4826289d97811779de590db1468cd4b35b8a7dc25dd80dc456c823a5095eff; exact final4 source bindings, actual21native/20unit0fail0skip; previous changes and async scope mutation corrected. Only advisory/fail-closed transaction read component; real private runtime/participant/fullP4 Gates pending.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -18679,8 +18703,16 @@
       "kind": "GIT_COMMIT",
       "target": "local-only immutable formal Archive readiness metadata probe and10 appended schema cases",
       "idempotency_key": "p4-archive-readiness17-20261023",
+      "status": "CONFIRMED",
+      "source_ref": "Separateproofa82b42d0, actual17nativePASS0skip/scopedlint0. No originalmigration rewrite, provideractivation, push/PR/mainmerge. Observed actual local commit 5e8796a8dacb5fd7f372224f29a63450574041ff. No push/PR/main merge."
+    },
+    {
+      "id": "ACT-P4-OPENMATTER-CURRENT-COMMIT-20261023",
+      "kind": "GIT_COMMIT",
+      "target": "local-only current-schema advisory OpenMatter and DEF021 narrow fixes",
+      "idempotency_key": "p4-openmatter-current21-20261023",
       "status": "STARTED",
-      "source_ref": "Separateproofa82b42d0, actual17nativePASS0skip/scopedlint0. No originalmigration rewrite, provideractivation, push/PR/mainmerge."
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-openmatter-current-r2-closing-reviewer-proof.json SHA2565b4826289d97811779de590db1468cd4b35b8a7dc25dd80dc456c823a5095eff; exact final4 source bindings, actual21native/20unit0fail0skip; previous changes and async scope mutation corrected. Only advisory/fail-closed transaction read component; real private runtime/participant/fullP4 Gates pending. No push/PR/main merge."
     }
   ],
   "evidence_files": [
@@ -19779,7 +19811,24 @@
         "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-sales-domain-shared-confirmation-native-r3.log SHA2569c1b7ce2a5bac6c66e5d022bbae1db98a344bdf05b96683e09ddf9c909975639; additional originalcaller29PASS0FAIL0SKIP incl100line deadlock andHTTP; nonceallcurrentmigrations and actualcleanup. No Task/Phase/privateauthority/CI/Gate closure."
       ],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-021",
+      "severity": "MEDIUM",
+      "status": "CLOSED",
+      "source_ids": [
+        "TASK-058",
+        "TC-047"
+      ],
+      "closure_evidence": [
+        "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-openmatter-current-r1-source-reviewer-proof.json SHA2565a5dd660664c86dc674a8c06801ef40374831a850a71d74746ce49a02c747d02; actual separate review required routed target ownership, adapter safe UNKNOWN, accessor prevalidation and paged/real OPEN Audit native cases; unpublished advisory component, no enabled Archive incident.",
+        "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-openmatter-accessor-red-r1.log actual19PASS1FAIL0SKIP before accessor correction; no synthetic RED claim for other findings.",
+        "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-openmatter-current-native-r8.log SHA2569f1a4d2e84158ccd124903b3f4c9a486b86390808ccdfb9fb0e637fc6dfb3201; final19 nativePASS0skip, awaiting separate exact closing review. Preserve r1 fixture constraint failures and r6/r7 missing current index fixture setup failures; no weakening.",
+        "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-openmatter-current-r2-closing-reviewer-proof.json SHA2565b4826289d97811779de590db1468cd4b35b8a7dc25dd80dc456c823a5095eff; exact final4 source bindings, actual21native/20unit0fail0skip; previous changes and async scope mutation corrected. Only advisory/fail-closed transaction read component; real private runtime/participant/fullP4 Gates pending.",
+        "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-openmatter-mutation-red-r1.log SHA256a4530c0d84666128218f404aa53339d41766880251b7bd8a88dcdfc4c63421ad; two genuine mutable-scope failures and parentFAIL retained; final r9 corrected."
+      ],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Commit reviewed read-only readiness; implement real owner business state/participant plus fixed Sales coordinator and private live transaction scope, then original wholeP4 developer/Playwright/capacity/restore/currentCI/review/merge Gates. No further user decision currently needed."
+  "next_safe_action": "Observe local OpenMatter component commit; finish actual HD017 canonical owner handoff then implement full participant plus fixed Sales coordinator/private live tx scope. Run unchanged fullP4 joint/native/Playwright/capacity/restore/currentCI/whole review/Gates before already-authorized main merge. No user decision currently needed."
 }
