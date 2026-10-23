@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 412,
+  "revision": 413,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
-  "status": "IMPLEMENTING",
-  "resume_status": null,
+  "status": "BLOCKED",
+  "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-004",
   "current_task": "TASK-051",
   "baseline": {
     "design": "29a0615a61808b3747cd8feb522d051ba5a312da6fb0fccf36e7cf9746286775",
     "plan": "bfb0af4fb322aa2e25ffcc2300dddd4655778ba26850caf39da9e508ccbd04e8",
-    "code_commit": "45cc3d6fcfd3b97a82d9fcf74ba01220d1e23948",
-    "source_fingerprint": "25e0f04b494871a45045716f7e2f8044bf89c01f18e2ad6ebe63c8a4c7362c4d",
+    "code_commit": "36893493043dff1c7863cbf4a238c3930b9977f9",
+    "source_fingerprint": "61f9ba7a09e195aa81234b3bb0cad4d4753e1105489e44ddcf85f3cfea45d558",
     "worktree": "/Users/sam/Documents/workspace/erp-supplier-t51u",
     "default_commit": "58322ba3d5b77aa1a6250be4b5055651c682a371",
     "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
@@ -2943,6 +2943,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-115",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (HD-124 A, UAT harness and PHASE-001 cases)",
+      "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-uat-phase-001 at ab000108 (git diff origin/main..HEAD)",
+      "reviewed_baseline": "29a0615a61808b3747cd8feb522d051ba5a312da6fb0fccf36e7cf9746286775",
+      "source_ref": "docs/supplier_management/implementation/118_rev_115_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -5442,6 +5454,17 @@
       "source_ref": "PR #273 merged as 58322ba3d5b77aa1a6250be4b5055651c682a371 (parents e272f5d3 and head 5061108b) at 2026-10-23T02:51:50Z by crazysumsum through GitHub, after the Product Owner's 'HD-126 A，review 完 CI 過就 merge' and 'L-2 A，L-3 A，CI已通過'; the head branch was deleted at 02:51:56Z. The agent did not run this merge: its own gate on head 5061108b (latest run of all 13 checks SUCCESS, PR run 39886265953; main an ancestor of HEAD) passed, and on the next step the PR was already merged with that same head. Review REV-114 CHANGES_REQUESTED, 0 Critical/High; code and test findings fixed (not re-reviewed). Recorded as the first commit of the next change PR.",
       "actor": "Harness agent (Claude Opus 5.5), observing a merge made by the Product Owner",
       "observed_at": "2026-10-23T10:53:00+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Supplier UAT PHASE-001 browser run after REV-115 follow-ups (developer run, not formal UAT)",
+      "code_commit": "36893493043dff1c7863cbf4a238c3930b9977f9",
+      "spec_baseline": "bfb0af4fb322aa2e25ffcc2300dddd4655778ba26850caf39da9e508ccbd04e8",
+      "source_fingerprint": "61f9ba7a09e195aa81234b3bb0cad4d4753e1105489e44ddcf85f3cfea45d558",
+      "status": "FAIL",
+      "source_ref": "Local, not CI. npx playwright test --config client/e2e/supplier-management/playwright.uat.config.js on erp_t51_rh_uat* scratch databases (MySQL 26.7.0): 17 passed (UAT-001, 002, 004, 006, 007, 008, 009, 017, 018, 019, 020, 021, 022, 023, 042, 049, 054), 3 failed at recorded defect steps (UAT-003 DEF-039, UAT-031 DEF-038, UAT-048 DEF-037), 5 test.fixme waiting on downstream modules (UAT-005, 016, 024, 050, 051; HD-124 A, HD-131 A); no scratch database left. With only the profile env_keys the suite runs; without DB_ADMIN_USER the scratch runner (aligned with run_suite) reports BLOCKED. Port 3021 held: startup failed and the scratch database and fixture were removed. Fixture 0600 in a 0700 directory. REV-115 survivors M08 and M13 now red. Technical suite 50 passed; eslint exit 0.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-23T12:17:00+08:00"
     }
   ],
   "pending_decisions": [
@@ -7166,6 +7189,18 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-23, in reply to the UAT PHASE-001 decisions: 'DEF-037 A，DEF-038 A，3 A'."
+    },
+    {
+      "id": "HD-132",
+      "impact": "MAJOR",
+      "question": "DEF-039: AC-003 says 「允許使用者確認合理原因後繼續」 and UAT-003 lists Audit as evidence; the create page only offers 確認並繼續 and the create Audit records neither the warning nor the overridden candidates. (A) Add a required reason when continuing past a duplicate-name warning and record the reason and candidate codes in the create Audit (create API gains an optional duplicateOverride {reason}; design text changes). (B) Interpret AC-003 as a plain confirmation; record the overridden candidate codes in the create Audit only. (C) Interpret AC-003 as a plain confirmation and accept the current behaviour; UAT-003's Audit step is removed.",
+      "affected_ids": [
+        "DEF-039",
+        "UAT-003",
+        "AC-003"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
     }
   ],
   "external_actions": [
@@ -8447,7 +8482,21 @@
       ],
       "closure_evidence": [],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-039",
+      "severity": "LOW",
+      "status": "OPEN",
+      "source_ids": [
+        "AC-003",
+        "UAT-003",
+        "SupplierCreatePage.vue",
+        "REV-115 M-2",
+        "docs/supplier_management/testing/04_defect_register.md"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "UAT PHASE-001 PR (claude/supplier-uat-phase-001): review, PR, merge per HD-124 A. Then DEF-038 (HD-130 A) and DEF-037 (HD-129 A, migration explained for approval first). Then UAT PHASE-002."
+  "next_safe_action": "UAT PHASE-001 PR: merge per HD-124 A on the Product Owner's word. Await HD-132 (DEF-039). Then DEF-038 PR (branch claude/supplier-def038-payment-term ready), then DEF-037 (migration approved)."
 }

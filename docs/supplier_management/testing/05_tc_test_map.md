@@ -344,7 +344,8 @@ Runner (HD-124 A): `npx playwright test --config client/e2e/supplier-management/
 - **Environment:** a real server and real MySQL, with no network mock.
   - `uat/uatServer.mjs` creates `${DB_NAME}_rh_uat…` with the admin credentials, migrates it, seeds the 07 §2 roles with random passwords, and starts the server on :3021. Vite runs on :5216.
   - `globalTeardown` drops the database.
-- **Logins:** each role logs in once per worker, because the login throttle allows 20 attempts per IP in 10 minutes. New devices are approved in the database, as in Item UAT.
+- **Logins:** each role keeps a persistent browser profile and logs in once per run, because the login throttle allows 20 attempts per IP in 10 minutes. New devices are approved in the database, as in Item UAT. Artifacts and profiles are written outside the evidence directory, because traces record typed passwords.
+- **Missing `DB_NAME` or `DB_ADMIN_USER`:** the config throws, so no report is written and the harness records BLOCKED.
 - **Test names:** each test title carries one UAT ID.
 - **The technical specs** (`playwright.config.js`) still mock the network and are not UAT evidence.
 
@@ -352,8 +353,8 @@ PHASE-001 (`uat/uat-phase-001.spec.js`, 25 cases). Local developer run on 2026-1
 
 | Result | Cases |
 | --- | --- |
-| Pass | UAT-001, 002, 003, 004, 006, 007, 008, 009, 017, 018, 019, 020, 021, 022, 023, 042, 049, 054 |
-| Fail on a recorded defect | UAT-031 (DEF-038: payment term shown as its ID), UAT-048 (DEF-037: no ordering). Every earlier step passes. |
+| Pass | UAT-001, 002, 004, 006, 007, 008, 009, 017, 018, 019, 020, 021, 022, 023, 042, 049, 054 |
+| Fail on a recorded defect | UAT-003 (DEF-039: no reason or Audit record when a duplicate warning is overridden), UAT-031 (DEF-038: payment term shown as its ID), UAT-048 (DEF-037: no ordering). Every earlier step passes. |
 | `test.fixme`, waiting on downstream modules (HD-124 A, HD-131 A) | UAT-005; the Supplier steps of UAT-016, 024, 050 and 051 run first. |
 
 Phases 002, 003, 004 and the cross-phase cases are not written yet. UAT-054 is the only case that intercepts a request in the browser: a slow response and a 503 cannot be produced safely on a real server.
