@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1297,
+  "revision": 1300,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,7 +11,7 @@
   "baseline": {
     "design": "67e3ac2c0ddb51b1620237186db76ecf9bc78a28b2de750cc2589dd3a6f7364a",
     "plan": "377cd0b6b08f0368a47ef2629a74c0c4ac292858fe9b53fea3f8690c73c7cdb6",
-    "code_commit": "463c07c32190baa4c84684524e1f21ae34896fcb",
+    "code_commit": "c2b8d2ec75dd0b1ca1962c4a6cc8503c3037628f",
     "source_fingerprint": "0eed900a426f6e07af7b23adc82433d9c846abb762c4355b2d25bf47ca216f92",
     "worktree": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app",
     "default_commit": "e272f5d3ce05d0ca50be42e6d8764f0ef20d3dd1",
@@ -11527,6 +11527,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-P4-DEF018-IMMUTABLE-FENCE-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "8fbe8c1582e4605e97795a1abc2032fc4b08dd09a2b9f7845661676d60de32fa",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-def018-immutable-operation-fence-r1-closing-reviewer-proof.json SHA2569ec21e2508976249ec4b616cca4768cd7187ac57ee791030afb09d551506431c",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -15170,6 +15182,28 @@
       "subject": "Actual standard foundation native suite:70 componentPASS but fullTC047/048 coverage absent, suite remainsBLOCKED",
       "status": "BLOCKED",
       "source_ref": "evidence/20261023T025425-2afe5efe357e/run.json SHA256452fd7daeccadb0b153830e556732f142580bbe5f39e6986f441f574552d4426; exit0/70PASS0FAIL0SKIP; source/spec unchanged. Actual untouched PLAN_READY and boundary LOCAL_CHECKS_PASS after complete separately reviewed CAS-first integration binding. Not fullfunctional/Phase/CI/mergeGate."
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "c2b8d2ec75dd0b1ca1962c4a6cc8503c3037628f",
+      "spec_baseline": "377cd0b6b08f0368a47ef2629a74c0c4ac292858fe9b53fea3f8690c73c7cdb6",
+      "source_fingerprint": "bdca25d60e6843d2d855388ba45f994a2dae8591f3cd77a7ee98250124b30572",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-23T03:25:46.102133Z",
+      "subject": "DEF018 real mutable-status cursor deadlock reproduced then immutable-prefix fix final46nativePASS; sourceclosure pending",
+      "status": "PASS",
+      "source_ref": "implementation/120_formal_p0_integration_and_archive_storage.md; actualfinalrawf7c403c8/earlierGREEN35c4c1ec/RED873ab9c7/InnoDBnativewaitproof. Passlimited46componentchecks, notfullwriter/RRfresh/privateauthority/Archive/Phase/CI/Gate."
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "c2b8d2ec75dd0b1ca1962c4a6cc8503c3037628f",
+      "spec_baseline": "377cd0b6b08f0368a47ef2629a74c0c4ac292858fe9b53fea3f8690c73c7cdb6",
+      "source_fingerprint": "8fbe8c1582e4605e97795a1abc2032fc4b08dd09a2b9f7845661676d60de32fa",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-23T03:46:56.067333Z",
+      "subject": "DEF018 final47nativePASS and actual independent narrow closing review; reproduced mutable-status deadlock closed only",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-def018-immutable-operation-fence-r1-closing-reviewer-proof.json SHA2569ec21e2508976249ec4b616cca4768cd7187ac57ee791030afb09d551506431c; raw92c3299f, advisoryRED6b682e49; no fullTask/Phase/currentCI/Gate completion."
     }
   ],
   "pending_decisions": [
@@ -18231,8 +18265,16 @@
       "kind": "GIT_COMMIT",
       "target": "codex/sales-order-phase-4-archive local-only routed-journal and integration-baseline checkpoint",
       "idempotency_key": "p4-route-api-foundation70-20261023",
+      "status": "CONFIRMED",
+      "source_ref": "Existing direct Sam commit/development authority. Source3f4a1684/testcfafd176/prooffd2db4e6; actual21nativePASS and standard70componentsPASS with fullsuiteBLOCKEDTC047/048. Exact approved integrationbaselineac45acb2; no push/PR/PhaseDONE/mainmerge. Actual observed local commit c2b8d2ec75dd0b1ca1962c4a6cc8503c3037628f; source_fingerprint 0eed900a426f6e07af7b23adc82433d9c846abb762c4355b2d25bf47ca216f92. Current-candidate CI still pending; original prior code-bound observations remain historical."
+    },
+    {
+      "id": "ACT-P4-DEF018-FENCE-COMMIT-20261023",
+      "kind": "GIT_COMMIT",
+      "target": "codex/sales-order-phase-4-archive local-only immutable operation fence fix",
+      "idempotency_key": "p4-def018-final47-20261023",
       "status": "STARTED",
-      "source_ref": "Existing direct Sam commit/development authority. Source3f4a1684/testcfafd176/prooffd2db4e6; actual21nativePASS and standard70componentsPASS with fullsuiteBLOCKEDTC047/048. Exact approved integrationbaselineac45acb2; no push/PR/PhaseDONE/mainmerge."
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-def018-immutable-operation-fence-r1-closing-reviewer-proof.json SHA2569ec21e2508976249ec4b616cca4768cd7187ac57ee791030afb09d551506431c; exact reviewed4files47PASS/scopedlint0; no push or main merge."
     }
   ],
   "evidence_files": [
@@ -19284,7 +19326,23 @@
         "/Users/sam/.codex/worktrees/sales-def016-hotfix/hotfix-private/main72-r2-coverage-and-env017-closure-r1-reviewer-proof.json SHA256723d3517a1d9019049eff1de2faf0935b1e8ddc499a8a65fb44fe369afd9072d; actualtargeted0071PASS plusall10Inventory15PASS0skip, freshownednamespaces/noolddatareset. OriginalFAIL/autoOPEN/triage retained. LocalENVrepaironly; lastperformance/whole33/newCI/Gate pending."
       ],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-018",
+      "severity": "HIGH",
+      "status": "CLOSED",
+      "source_ids": [
+        "TASK-058",
+        "TASK-067",
+        "TC-048"
+      ],
+      "closure_evidence": [
+        "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-archive-locks-cursor-race-red-r1.log SHA256873ab9c7bd43507da891e4a3cb1fd0a0f3cdb680839c28b5b55c390dda2a4b85; actual1213 mutable-status cursor race. /Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-status-cursor-native-deadlock-r1.log actualInnoDBwaitbothidx_ful_operation_order; pendingindependentsourceclosure.",
+        "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-immutable-operation-fence-native-r2.log SHA256f7c403c8c28f51c06a9b44bc300524b6df344eefa5decf5a4d0a57724e05ae49; final46PASS0skip andscopedlint0; RETEST untilactualclosingreview, noPhasequalification.",
+        "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-def018-immutable-operation-fence-r1-closing-reviewer-proof.json SHA2569ec21e2508976249ec4b616cca4768cd7187ac57ee791030afb09d551506431c; actual final47PASS0FAIL0SKIP raw92c3299f; specific mutable-status1213 regression only. Entire writer protocol/fresh-view/private-authority/Phase/CI/Gate unqualified; priorRED/RETEST retained in Git and observations."
+      ],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Save reviewed route/provider-baseline checkpoint; implement actual private live-scheduler RR Archive transaction capability, operation-first fencing/fresh snapshot and formal OpenMatter/participant/coordinator. TC047/048 and wholeP4/fullcapacity/browser/currentCI/wholephase/merge Gates remain required. Fulfillment P0 is merged, no external P0 wait; coordinate actual HD016 P1 contribution without concurrent samefile writes."
+  "next_safe_action": "Commit independently reviewed DEF018 narrow fix; adopt exact qualified HD016A provider increment under actual owner approval, then implement full Archive authority/fencing/participant/coordinator and all unchanged P4 Gates."
 }
