@@ -167,6 +167,13 @@ integrationTest("TC-103 (AUD-001): every state-changing or sensitive Supplier ac
   await step("address deactivate", mgmt, () => send(mgmt, "POST /api/v1/suppliers/:supplierId/addresses/:addressId/deactivate",
     { ids: { supplierId: id, addressId: address.id }, body: { version: addressUpdated.json.data.version } }),
   { "supplier.address.deactivate": ["address", address.id, "HQ2"] }, { supplierId: id });
+  // DEF-037：上移同相鄰有效地址交換次序；Audit 記低前後次序（HD-136）。
+  await child("address", { label: "Depot", purposes: [] }, "Depot");
+  const branch = await child("address", { label: "Branch", purposes: [] }, "Branch");
+  await step("address move", mgmt, () => send(mgmt, "POST /api/v1/suppliers/:supplierId/addresses/:addressId/move",
+    { ids: { supplierId: id, addressId: branch.id }, body: { direction: "up", version: branch.version } }),
+  { "supplier.address.reorder": ["address", branch.id, "Branch"] }, { supplierId: id, details: { "supplier.address.reorder": (detail) =>
+    assert.deepEqual(detail, { before: { sortOrder: 3 }, after: { sortOrder: 2 } }, "address order before and after") } });
   const contact = await child("contact", { name: "Amy", purposes: [{ purposeCode: "sales", isPrimary: false }, { purposeCode: "orders", isPrimary: true }] }, "Amy");
   const contactUpdated = await step("contact update", mgmt, () => send(mgmt, "POST /api/v1/suppliers/:supplierId/contacts/:contactId/update",
     { ids: { supplierId: id, contactId: contact.id }, body: { version: contact.version, name: "Amy Two",
@@ -176,6 +183,12 @@ integrationTest("TC-103 (AUD-001): every state-changing or sensitive Supplier ac
   await step("contact deactivate", mgmt, () => send(mgmt, "POST /api/v1/suppliers/:supplierId/contacts/:contactId/deactivate",
     { ids: { supplierId: id, contactId: contact.id }, body: { version: contactUpdated.json.data.version } }),
   { "supplier.contact.deactivate": ["contact", contact.id, "Amy Two"] }, { supplierId: id });
+  await child("contact", { name: "Ben", purposes: [] }, "Ben");
+  const cara = await child("contact", { name: "Cara", purposes: [] }, "Cara");
+  await step("contact move", mgmt, () => send(mgmt, "POST /api/v1/suppliers/:supplierId/contacts/:contactId/move",
+    { ids: { supplierId: id, contactId: cara.id }, body: { direction: "up", version: cara.version } }),
+  { "supplier.contact.reorder": ["contact", cara.id, "Cara"] }, { supplierId: id, details: { "supplier.contact.reorder": (detail) =>
+    assert.deepEqual(detail, { before: { sortOrder: 3 }, after: { sortOrder: 2 } }, "contact order before and after") } });
   const identifier = await child("identifier", { identifierType: "business_registration", issuerCountryCode: "HK", identifierValue: `AU${t}` }, "business_registration:HK");
   const identifierUpdated = await step("identifier update", mgmt, () => send(mgmt, "POST /api/v1/suppliers/:supplierId/identifiers/:identifierId/update",
     { ids: { supplierId: id, identifierId: identifier.id }, body: { version: identifier.version, identifierType: "business_registration",

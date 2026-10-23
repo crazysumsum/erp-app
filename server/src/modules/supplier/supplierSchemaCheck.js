@@ -10,6 +10,7 @@ import { inspectSupplierBankAccountSchema } from "../../../database/migrations/0
 import { inspectSupplierImportJobSchema } from "../../../database/migrations/0061_create_supplier_import_jobs.js";
 import { inspectSupplierImportRowSchema } from "../../../database/migrations/0062_create_supplier_import_rows.js";
 import { inspectSupplierSkuRelationSchema } from "../../../database/migrations/0081_create_supplier_sku_refs.js";
+import { inspectSupplierPartySortOrder } from "../../../database/migrations/0103_add_supplier_party_sort_order.js";
 
 /**
  * 開機自我檢查（設計 §14.1 第 4 步；DEF-033、HD-121 A）。每張 Supplier table 都用佢 migration 自己嘅 contract
@@ -33,7 +34,9 @@ const CONTRACTS = Object.freeze([
   ["supplier_import_jobs", inspectSupplierImportJobSchema],
   ["supplier_import_rows", inspectSupplierImportRowSchema],
   ["supplier_sku_refs", (database) => inspectSupplierSkuRelationSchema(database, "supplier_sku_refs")],
-  ["supplier_supply_events", (database) => inspectSupplierSkuRelationSchema(database, "supplier_supply_events")]
+  ["supplier_supply_events", (database) => inspectSupplierSkuRelationSchema(database, "supplier_supply_events")],
+  // DEF-037：0103 加嘅排序欄位。
+  ["supplier_addresses.sort_order, supplier_contacts.sort_order", inspectSupplierPartySortOrder]
 ]);
 
 const LIST_INDEXES = Object.freeze({ idx_suppliers_updated_id: "updated_at,id", idx_suppliers_name_id: "supplier_name,id" });

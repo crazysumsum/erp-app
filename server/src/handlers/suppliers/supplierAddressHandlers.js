@@ -41,14 +41,20 @@ const DEACTIVATE_BODY = Object.freeze({
   type: "object", required: ["version"], additionalProperties: false,
   properties: { version: { type: "integer", minimum: 1 } }
 });
+// DEF-037（HD-136）：上移／下移，同相鄰有效地址交換顯示次序。
+const MOVE_BODY = Object.freeze({
+  type: "object", required: ["direction", "version"], additionalProperties: false,
+  properties: { direction: { type: "string", enum: ["up", "down"] }, version: { type: "integer", minimum: 1 } }
+});
+
 export const ADDRESS_RESPONSE = Object.freeze({
   type: "object", additionalProperties: false,
-  required: ["id", "supplierId", "label", "addressLine1", "addressLine2", "addressLine3", "city", "stateRegion", "postalCode", "countryCode", "phone", "notes", "status", "purposes", "version", "updatedAt"],
+  required: ["id", "supplierId", "label", "addressLine1", "addressLine2", "addressLine3", "city", "stateRegion", "postalCode", "countryCode", "phone", "notes", "status", "sortOrder", "purposes", "version", "updatedAt"],
   properties: {
     id: { type: "integer" }, supplierId: { type: "integer" }, label: { type: "string" }, addressLine1: { type: "string" },
     addressLine2: { type: "string" }, addressLine3: { type: "string" }, city: { type: "string" }, stateRegion: { type: "string" },
     postalCode: { type: "string" }, countryCode: { type: ["string", "null"] }, phone: { type: "string" }, notes: { type: "string" },
-    status: { type: "string", enum: ["active", "inactive"] }, purposes: { type: "array", items: PURPOSE_SCHEMA },
+    status: { type: "string", enum: ["active", "inactive"] }, sortOrder: { type: "integer" }, purposes: { type: "array", items: PURPOSE_SCHEMA },
     version: { type: "integer" }, updatedAt: { type: "integer" }
   }
 });
@@ -101,5 +107,17 @@ export class DeactivateSupplierAddressHandler extends SupplierAddressHandler {
   };
   async execute(req) {
     return this.response(await this.addresses.deactivate({ ...context(req), addressId: Number(req.input.params.addressId), ...req.input.body }));
+  }
+}
+
+export class MoveSupplierAddressHandler extends SupplierAddressHandler {
+  static handlerName = "moveSupplierAddress";
+  static api = {
+    method: "POST", inputCoercion: false, path: "/api/v1/suppliers/:supplierId/addresses/:addressId/move", description: "上移或下移供應商地址的顯示次序。",
+    authorizationPolicies: SUPPLIER_MGMT_POLICY,
+    requestSchema: { params: CHILD_PARAMS, query: EMPTY_SUPPLIER_SCHEMA, body: MOVE_BODY }, responseSchema: { 200: ADDRESS_RESPONSE }
+  };
+  async execute(req) {
+    return this.response(await this.addresses.move({ ...context(req), addressId: Number(req.input.params.addressId), ...req.input.body }));
   }
 }
