@@ -1,20 +1,20 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 405,
+  "revision": 408,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
-  "status": "IMPLEMENTING",
-  "resume_status": null,
+  "status": "BLOCKED",
+  "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-004",
   "current_task": "TASK-051",
   "baseline": {
     "design": "29a0615a61808b3747cd8feb522d051ba5a312da6fb0fccf36e7cf9746286775",
     "plan": "6c885dbaabfb3a3541f5c354ac03c2c1b21bb2b1bca4fa634b4803ac0f489215",
-    "code_commit": "186a660ec0ef3037ffc9ef92adcd31b20f1e072d",
-    "source_fingerprint": "43f7f525f708bb08a1cb3994bd6ed7a36548794d3eaf9e7e06f18ae5caa911ad",
-    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t51i",
-    "default_commit": "6cb8310c94756485abcea84a06a1e545045b1c31",
+    "code_commit": "8cb4bf3f67d6339d96556462190fe50c5fba65b9",
+    "source_fingerprint": "5cb0ea8fec2e2db5b8f9b4408345d3df7c71a688464fec643d386dd5a59f553f",
+    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t51j",
+    "default_commit": "19e37a130a19c371e224054dacbf6031bac96d0a",
     "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
   },
   "runtime": {
@@ -2749,6 +2749,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-113",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (HD-125 A, DEF-035 audit page and tab)",
+      "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-def035-audit-ui at cffa3459 (git diff origin/main..HEAD)",
+      "reviewed_baseline": "29a0615a61808b3747cd8feb522d051ba5a312da6fb0fccf36e7cf9746286775",
+      "source_ref": "docs/supplier_management/implementation/116_rev_113_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -5193,6 +5205,28 @@
       "source_ref": "Local, not CI, MySQL 26.7.0 (performance_schema text lengths 16384), erp_t51 migrated to the latest. run_check refuses formal stages in IMPLEMENT, so a scratch driver repeated harness_runner.run_suite after its preflight (same env allow-list plus env_keys, probes, process, redaction, parsing, status rules, unchanged plan/source/HEAD check). With admin credentials: supplier-resilience, supplier-recovery, supplier-release-operations and supplier-performance each BLOCKED with exit 0, only the designed NOT_RUN parts missing (TC-131, TC-085, TC-101, TC-129 PASS; probes matched incl. mysqldump; no secret in logs). Without DB_ADMIN_*: supplier-release-operations BLOCKED, every case NOT_RUN. Verdict unit test 2/2 (45 cases); lint exit 0.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-22T15:30:44+08:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "Runner env profile change (PR #270) merged to main",
+      "code_commit": "19e37a130a19c371e224054dacbf6031bac96d0a",
+      "spec_baseline": "6c885dbaabfb3a3541f5c354ac03c2c1b21bb2b1bca4fa634b4803ac0f489215",
+      "source_fingerprint": "a4b7b38bd6ead3feb3558d6d8f02d9721bd192f2ab5e2220d5661f97ebf0252e",
+      "status": "PASS",
+      "source_ref": "PR #270 merged as 19e37a130a19c371e224054dacbf6031bac96d0a at 2026-10-22T07:50:00Z on the Product Owner's word ('HD-123 A，review 完 CI 過就 merge', then 'CI通過'), with --match-head-commit, after a gate that refused unless the latest run of every check was SUCCESS and main was an ancestor of HEAD: head c4e688f8 green on all 13 checks (PR run 39741049785). Review REV-112 APPROVED (Lows applied; not re-reviewed). Recorded as the first commit of the next change PR.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-22T15:59:48+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEF-035 audit page and tab after REV-113 fixes",
+      "code_commit": "8cb4bf3f67d6339d96556462190fe50c5fba65b9",
+      "spec_baseline": "6c885dbaabfb3a3541f5c354ac03c2c1b21bb2b1bca4fa634b4803ac0f489215",
+      "source_fingerprint": "5cb0ea8fec2e2db5b8f9b4408345d3df7c71a688464fec643d386dd5a59f553f",
+      "status": "PASS",
+      "source_ref": "Local, not CI. Client Supplier suite 21 files 182 passed; eslint exit 0; client build exit 0; Playwright supplier-audit.spec.js 2 passed (network mocked). Real backend (erp_t51, in-process server, vite :5213, supplier.view user logged in through the UI): request ID on screen at 1440px, no account plaintext, notes shown as a length, markup inert, filter in URL and restored after reload, detail tab shows the reveal record without plaintext; no console errors or failed requests. 13-mutant sweep over REV-113's survivors: all red.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-23T08:55:00+08:00"
     }
   ],
   "pending_decisions": [
@@ -6814,6 +6848,47 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-22, in reply to the HD-123 decision after PR #268 merged: 'HD-123 A，review 完 CI 過就 merge'. Choosing A re-affirms the seven approvals unchanged."
+    },
+    {
+      "id": "HD-124",
+      "impact": "MAJOR",
+      "question": "How to make the 52 required UAT cases executable browser tests for supplier-uat-browser. The existing Supplier Playwright specs mock the network, which cannot show backend refusals, audit or unchanged data; the UAT suite has no env_keys, so a real server and database cannot start under the harness; eight cases (UAT-016's Purchasing search, 024, 029, 032-036) need Purchasing screens or orders that do not exist yet. (A) Real-backend Playwright UAT tests, one per UAT ID tagged '@uat UAT-0xx', against a real server and a freshly migrated scratch database seeded with the UAT roles; Purchasing-dependent cases as test.fixme with the reason, so the suite stays BLOCKED until Purchasing ships; the first PR also changes the UAT suite's profile (env_keys, possibly argv) with another re-affirmation; four PRs by phase (PHASE-001, 002, 003, 004 plus cross-phase), each merged on 'review 完、CI 過'. (B) Network-mocked UAT tests, UI-level only. (C) Close IMPLEMENT and leave UAT tests to TEST_AND_VERIFY/UAT.",
+      "affected_ids": [
+        "supplier-uat-browser",
+        "UAT-001",
+        "UAT-055",
+        "TASK-051",
+        "T51"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-22, in reply to the HD-124 decision after PR #270 merged: 'A'. The options stated that each PR under A is merged after review and green CI."
+    },
+    {
+      "id": "HD-125",
+      "impact": "MAJOR",
+      "question": "DEF-035, found while preparing UAT: design §7.2 lists SupplierAuditPage.vue (/suppliers/audit, menu 變更紀錄, audit filter and masked detail) and an Audit tab on the detail page (SupplierAuditTimeline.vue), but neither exists; no task in 05_development_tasks.md covers them (T09 built only the service and GET /api/v1/supplier-audit/logs). At least ten UAT cases (001, 006, 009, 012, 020, 026, 030, 041, 043, 055) need the Audit page, because UAT accepts only user-observable evidence. (A) Fix it as a defect inside the Supplier module without changing the plan: the audit page with date, actor, action and target filters, paging and masked detail, plus the detail Audit tab, on the existing API, with unit tests and a Playwright check; a separate PR before UAT PHASE-001. (B) Leave it as a known limitation and mark the audit parts of those UAT cases test.fixme. (C) Add a task to the plan, moving the plan baseline again.",
+      "affected_ids": [
+        "DEF-035",
+        "SupplierAuditPage.vue",
+        "SupplierAuditTimeline.vue",
+        "UAT-001",
+        "UAT-055"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-22, in reply to the HD-125 decision: 'A。照之前做法，review 完、CI 過就 merge。'"
+    },
+    {
+      "id": "HD-126",
+      "impact": "MAJOR",
+      "question": "DEF-036: GET /api/v1/business-master/currencies and /payment-terms require business_master.view, so a CLERK (supplier.view + supplier.mgmt) gets 403 and cannot pick a currency or create a Supplier in the UI (measured on erp_t51). Design §6 says they accept supplier.view or the consumer permission. The endpoints are Business Master's. (A) A Supplier-owned read-only lookup (e.g. GET /api/v1/supplier-lookups/currencies and /payment-terms, supplier.view, Active only, through the shared Business Master provider) and the Supplier forms switch to it; no Business Master change. (B) Business Master's owner widens its list policy to accept supplier.view (or a consumer permission); Supplier waits. (C) Grant business_master.view to Supplier roles in the UAT seed and the role guide; no code change, but Supplier users see Business Master pages.",
+      "affected_ids": [
+        "DEF-036",
+        "UAT-001",
+        "SupplierBasicForm.vue",
+        "SupplierPaymentDefaults.vue"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
     }
   ],
   "external_actions": [
@@ -8028,7 +8103,36 @@
       ],
       "closure_evidence": [],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-035",
+      "severity": "MEDIUM",
+      "status": "IN_PROGRESS",
+      "source_ids": [
+        "03_design_spec.md §7.2",
+        "SupplierAuditPage.vue",
+        "SupplierAuditTimeline.vue",
+        "UAT-055",
+        "docs/supplier_management/testing/04_defect_register.md"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": null
+    },
+    {
+      "id": "DEF-036",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "source_ids": [
+        "03_design_spec.md §6 endpoint table",
+        "server/src/handlers/business-master/businessMasterSchemas.js VIEW_POLICY",
+        "SupplierBasicForm.vue",
+        "SupplierPaymentDefaults.vue",
+        "UAT-001",
+        "docs/supplier_management/testing/04_defect_register.md"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "PR for claude/supplier-task-051-profile (HD-123 A); merge per 'review 完 CI 過就 merge'. Then UAT IDs (supplier-uat-browser)."
+  "next_safe_action": "Merge the DEF-035 PR on the Product Owner's word. Await HD-126 (DEF-036). Then HD-124 A UAT PHASE-001."
 }
