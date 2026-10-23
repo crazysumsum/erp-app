@@ -62,11 +62,12 @@ async function fixtureCopySalesAndManifest(tx,f,owner){
  const counts={},hashes={},rowsByTable={};
  for(const [table,columns]of Object.entries(SALES_ARCHIVE_COLUMNS)){
   const select=columns.map(name=>["order_date","requested_delivery_date"].includes(name)?`DATE_FORMAT(${name},'%Y-%m-%d') AS ${name}`:name).join(",");
-  const where=table==="sales_orders"?"id=?":table==="sales_audit_logs"?"target_type='SALES_ORDER' AND target_id=?":table==="sales_order_line_reservations"?"sales_order_line_id IN (SELECT id FROM sales_order_lines WHERE sales_order_id=?)":"sales_order_id=?";
+  const where=table==="sales_orders"?"id=?":table==="sales_audit_logs"?"target_type='ORDER' AND target_id=?":table==="sales_order_line_reservations"?"sales_order_line_id IN (SELECT id FROM sales_order_lines WHERE sales_order_id=?)":"sales_order_id=?";
   const [rows]=await tx.query(`SELECT ${select} FROM ${table} WHERE ${where} ORDER BY id LIMIT 500`,[f.s.orderId]);rowsByTable[table]=rows;const digest=await hashSalesArchiveRows(table,rows);counts[table]=digest.count;hashes[table]=digest.hash;
   for(const row of rows)await tx.execute(`INSERT INTO ${table}_archive (${columns.join(",")},archive_batch_id,archived_at,row_hash) SELECT ${columns.join(",")},?,?,? FROM ${table} WHERE id=?`,[f.scope.archiveBatchId,f.now,hashSalesArchiveRow(table,row),row.id]);
  }
  for(const table of Object.keys(SALES_ARCHIVE_COLUMNS).reverse())for(const row of rowsByTable[table])await tx.execute(`DELETE FROM ${table} WHERE id=?`,[row.id]);
+ assert.ok(counts.sales_audit_logs>0,"Native fixture must copy its real lifecycle ORDER audit");assert.equal(Number((await tx.query("SELECT COUNT(*) AS n FROM sales_audit_logs WHERE target_type='ORDER' AND target_id=?",[f.s.orderId]))[0][0].n),0);
  await tx.execute("INSERT INTO sales_archive_order_manifests(archive_batch_id,sales_order_id,sales_order_number,sales_table_counts,sales_hash_summary,fulfillment_table_counts,fulfillment_hash_summary,participant_versions,archived_at) VALUES (?,?,?,?,?,?,?,?,?)",[f.scope.archiveBatchId,f.s.orderId,rowsByTable.sales_orders[0].sales_order_number,JSON.stringify(counts),JSON.stringify(hashes),JSON.stringify(owner.tableCounts),JSON.stringify(owner.hashSummary),JSON.stringify({sales:"1",fulfillment:"1"}),f.now]);
 }
 nativeTest("DEC029 complete owner and Sales persisted facts replay without another write or Inventory effect",async t=>{

@@ -12,6 +12,8 @@ import {archiveFactsFixture} from "../fulfillment/archiveFactsFixture.js";
 import {FulfillmentOpenMatterService} from "../../src/modules/fulfillment/FulfillmentOpenMatterService.js";
 import {readFulfillmentArchiveState,archiveStateFacts} from "../../src/modules/fulfillment/fulfillmentArchiveState.js";
 import {FULFILLMENT_ARCHIVE_CONTRACTS,hashFulfillmentArchiveRow} from "../../src/modules/fulfillment/fulfillmentArchiveSchema.js";
+import {FulfillmentOpenMatterService as OpenMatterAdapter} from "../../src/services/fulfillment/FulfillmentOpenMatterService.js";
+import {FulfillmentArchiveService as ArchiveAdapter} from "../../src/services/fulfillmentArchive/FulfillmentArchiveService.js";
 import {MySqlDatabaseService} from "../../src/services/mysqldatabase/MySqlDatabaseService.js";
 import {RequestContextService} from "../../src/services/context/RequestContextService.js";
 const nativeTest=process.env.DB_INTEGRATION_TESTS==="1"?test:test.skip;
@@ -118,4 +120,10 @@ nativeTest("DEC029 mixed-target Audit pagination locks complete global primary I
 nativeTest("DEC029 non-null native Shipment DATE is observed without locale or Date coercion",async t=>{
  const f=await issueFixture(t,{shipmentDate:"2023-11-14"}),file=fileURLToPath(new URL("../../scripts/migrate.js",import.meta.url));await promisify(execFile)(process.execPath,[file],{env:{...process.env,DB_NAME:f.f.name,DB_USER:f.f.connectionOptions.user,DB_PASSWORD:f.f.connectionOptions.password},timeout:180000,maxBuffer:1024*1024});
  const state=await readFulfillmentArchiveState(f.db,String(f.s.orderId));assert.equal(state.shipments[0].shipment_date,"2023-11-14");assert.equal(archiveStateFacts(state,Date.now()).inconsistent,false);const service=new FulfillmentOpenMatterService({database:f.database});assert.equal((await service.getOrderArchiveStatus(String(f.s.orderId),{atMs:Date.now()})).status,"OPEN");
+});
+
+nativeTest("DEC029 fixed lazy adapters use the actual executor but unavailable real job scope cannot authorize mutation",async t=>{
+ const f=await createFulfillmentArchiveDatabase(t,{baseOnly:false}),r=runtime(t,f),calls=[],services={require:name=>name==="mysqldatabase"?r.database:{nowMs:()=>Date.now()},async resolve(name){calls.push(name);assert.equal(name,"salesJobs");return {authorizeArchiveReadInTransaction:()=>false,authorizeArchiveInTransaction:()=>false};}};
+ const open=new OpenMatterAdapter({services}),archive=new ArchiveAdapter({services});assert.deepEqual(calls,[]);assert.equal((await open.getOrderArchiveStatus("1",{atMs:Date.now()})).status,"CLOSED");assert.deepEqual(calls,[]);
+ await r.transaction(async tx=>{assert.deepEqual(await open.getOrderArchiveStatusInTransaction(tx,{orderId:"1",atMs:Date.now()}),{version:"1",status:"UNKNOWN",reasonCodes:["PROVIDER_UNAVAILABLE"]});await assert.rejects(()=>archive.prepareOrderInTransaction(tx,{orderId:"1",archiveBatchId:"1",cutoffMs:1}),{code:"FULFILLMENT_ARCHIVE_FORBIDDEN"});});assert.deepEqual(calls,["salesJobs","salesJobs"]);assert.equal(Number((await f.db.query("SELECT COUNT(*) AS n FROM fulfillments_archive"))[0][0].n),0);
 });

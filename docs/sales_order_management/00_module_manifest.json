@@ -53,7 +53,8 @@
       "client/src/framework/layout/AppTopbar.vue",
       "server/src/modules/fulfillment/**",
       "server/src/services/fulfillmentArchive/**",
-      "server/src/modules/inventory/InventoryLookupService.js"
+      "server/src/modules/inventory/InventoryLookupService.js",
+      "server/src/services/fulfillment/FulfillmentOpenMatterService.js"
     ],
     "test_paths": [
       "server/test/sales/**",
@@ -226,7 +227,8 @@
       "server/test/integration/shipmentMigrations.integration.test.js",
       "server/src/modules/inventory/InventoryLookupService.js",
       "server/test/salesFulfillmentService.test.js",
-      "server/test/integration/fulfillmentPendingClaims.integration.test.js"
+      "server/test/integration/fulfillmentPendingClaims.integration.test.js",
+      "server/src/services/fulfillment/FulfillmentOpenMatterService.js"
     ],
     "approval_required_paths": [
       "server/database/migrations/**",
@@ -307,7 +309,8 @@
       "server/src/services/fulfillmentArchive/**",
       "server/database/migrations/*_create_fulfillment_archive_prerequisites.js",
       "server/database/migrations/*_create_fulfillment_archive_mirrors.js",
-      "server/database/migrations/*_protect_fulfillment_archive_contracts.js"
+      "server/database/migrations/*_protect_fulfillment_archive_contracts.js",
+      "server/src/services/fulfillment/FulfillmentOpenMatterService.js"
     ],
     "forbidden_paths": [
       ".env",

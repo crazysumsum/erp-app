@@ -226,6 +226,7 @@ test("service discovery finds the built-in public services", async () => {
       dependencies: []
     },
     { name: "fulfillmentOpenMatter", lifecycle: "singleton", dependencies: ["mysqldatabase"] },
+    { name: "fulfillmentArchive", lifecycle: "singleton", dependencies: ["mysqldatabase", "time"] },
     {
       // 共享 store 需要注入 mysqldatabase——那正是它必須是 service 的原因。
       name: "idempotency",
@@ -303,6 +304,11 @@ test("service discovery finds the built-in public services", async () => {
       name: "salesJobs",
       lifecycle: "singleton",
       dependencies: ["mysqldatabase", "time", "logging"]
+    },
+    {
+      name: "job.salesArchive",
+      lifecycle: "singleton",
+      dependencies: ["scheduler", "salesJobs"]
     },
     {
       name: "job.salesBackorderAllocation",

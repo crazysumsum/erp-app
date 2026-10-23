@@ -3144,7 +3144,8 @@
         "./server/test-support/testEnv.js",
         "--test-reporter=junit",
         "--test-reporter-destination={run_dir}/tests.xml",
-        "server/test/integration/fulfillmentOpenMatter.integration.test.js"
+        "server/test/integration/fulfillmentOpenMatter.integration.test.js",
+        "server/test/integration/fulfillmentOpenMatterCurrent.integration.test.js"
       ],
       "cwd": ".",
       "timeout_seconds": 2400,

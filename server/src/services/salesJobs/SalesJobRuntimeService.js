@@ -1,3 +1,7 @@
+import {SalesArchiveService} from "../../modules/sales/SalesArchiveService.js";
+import {SalesArchiveBatchService} from "../../modules/sales/SalesArchiveBatchService.js";
+import {SchedulerService} from "../scheduler/SchedulerService.js";
+import {getActiveTransactionIsolation} from "../mysqldatabase/MySqlDatabaseService.js";
 import {SalesExportService} from "../../modules/sales/SalesExportService.js";
 import {SalesImportService} from "../../modules/sales/SalesImportService.js";
 import { BaseService } from "../../framework/services/BaseService.js";
@@ -7,6 +11,7 @@ import { SalesBackorderService } from "../../modules/sales/SalesBackorderService
 import { salesError } from "../../modules/sales/salesErrors.js";
 
 export class SalesJobRuntimeService extends BaseService {
+  #archiveScopes=new WeakMap();#archiveScheduler;#archiveJob;#archiveSource;#archiveBatch;
   static service = Object.freeze({ name: "salesJobs", lifecycle: "singleton", dependencies: ["mysqldatabase", "time", "logging"], eager: true });
   constructor({ config, services, options = {} } = {}) {
     super({ config, services, options });
@@ -82,4 +87,56 @@ export class SalesJobRuntimeService extends BaseService {
     void this.scheduler.execute(job).catch(()=>this.logger.error("sales.backorder_wake_failed","Backorder wake failed",{deferred:1}));
     return result;
   }
+  async bindArchiveScheduler(scheduler){
+    const job=scheduler?.jobs?.get("sales.archive");
+    if(!(scheduler instanceof SchedulerService)||scheduler!==await this.services.resolve("scheduler")||job?.serviceName!=="job.salesArchive"||job.scope!=="cluster"||job.method!=="run")throw new Error("Sales Archive job registration invalid");
+    if(this.#archiveScheduler&&(this.#archiveScheduler!==scheduler||this.#archiveJob!==job))throw new Error("Sales Archive job already registered");
+    this.#archiveScheduler=scheduler;this.#archiveJob=job;
+  }
+  #archivePrincipal(){
+    if(this.config?.scheduler?.jobs?.["sales.archive"]?.enabled!==true)return null;
+    const scheduler=this.#archiveScheduler,job=this.#archiveJob;
+    if(scheduler?.started!==true||scheduler.stopped!==false||scheduler.schedulerConfig.enabled!==true||job?.enabled!==true||scheduler.jobs.get("sales.archive")!==job)return null;
+    const signal=scheduler.running.get(job.name)?.controller.signal;
+    return signal?.aborted===false?{leaseOwner:scheduler.owner,signal}:null;
+  }
+  async #liveArchiveScope(tx){
+    const scope=this.#archiveScopes.get(tx),principal=this.#archivePrincipal(),database=this.services.require("mysqldatabase");
+    if(!scope||!principal||scope.signal!==principal.signal||scope.leaseOwner!==principal.leaseOwner||database.context?.get()?.databaseTransaction!==tx||getActiveTransactionIsolation(tx)!=="REPEATABLE READ")return null;
+    // These exact rows were locked before all operation/domain locks; rechecking them takes no new lock rank.
+    const [[lease]]=await tx.query("SELECT owner,expires_at FROM fr_job_leases WHERE job_name='sales.archive' FOR UPDATE"),[[batch]]=await tx.query("SELECT status,cutoff_at,lease_owner,lease_until FROM sales_archive_batches WHERE id=? FOR UPDATE",[scope.archiveBatchId]),[[clock]]=await tx.query("SELECT UNIX_TIMESTAMP() AS now,CAST(UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3))*1000 AS UNSIGNED) AS now_ms");
+    if(lease?.owner!==scope.leaseOwner||Number(lease.expires_at)<=Number(clock.now)||!batch||!["RUNNING","PARTIAL"].includes(batch.status)||batch.lease_owner!==scope.leaseToken||Number(batch.lease_until)<=Number(clock.now_ms)||Number(batch.cutoff_at)!==scope.cutoffMs||this.#archivePrincipal()?.signal!==scope.signal||scope.signal.aborted)return null;
+    return scope;
+  }
+  async authorizeArchiveInTransaction(tx,command){
+    const scope=this.#archiveScopes.get(tx);if(!scope||!command||Reflect.ownKeys(command).sort().join(",")!=="archiveBatchId,cutoffMs,orderId"||["orderId","archiveBatchId","cutoffMs"].some(k=>Object.getOwnPropertyDescriptor(command,k)?.value!==scope[k]))return false;
+    return await this.#liveArchiveScope(tx)!==null;
+  }
+  async authorizeArchiveReadInTransaction(tx,command){
+    const scope=this.#archiveScopes.get(tx);if(!scope||!command||Reflect.ownKeys(command).sort().join(",")!=="atMs,orderId"||Object.getOwnPropertyDescriptor(command,"orderId")?.value!==scope.orderId||Object.getOwnPropertyDescriptor(command,"atMs")?.value!==scope.archivedAtMs)return false;
+    return await this.#liveArchiveScope(tx)!==null;
+  }
+  async #executeLockedArchive(tx,scope){
+    const principal=this.#archivePrincipal();
+    if(!principal||principal.signal!==scope.signal||principal.leaseOwner!==scope.leaseOwner||this.#archiveScopes.has(tx))throw new Error("Sales Archive worker unavailable");
+    this.#archiveScopes.set(tx,scope);
+    try{
+      if(await this.#liveArchiveScope(tx)===null)throw new Error("Sales Archive worker unavailable");
+      return await this.#archiveSource.archiveOrderInTransaction(tx,{orderId:scope.orderId,archiveBatchId:scope.archiveBatchId,cutoffMs:scope.cutoffMs,archivedAtMs:scope.archivedAtMs});
+    }finally{this.#archiveScopes.delete(tx);}
+  }
+  async processArchives(signal){
+    if(signal!==this.#archivePrincipal()?.signal)throw new Error("Sales Archive worker unavailable");
+    if(!this.#archiveBatch){
+      const database=this.services.require("mysqldatabase"),time=this.services.require("time");
+      const resolveParticipant=async()=>{try{return await this.services.resolve("fulfillmentArchive");}catch{throw Object.assign(new Error("OPEN_MATTER_UNKNOWN"),{code:"OPEN_MATTER_UNKNOWN"});}};
+      this.#archiveSource=new SalesArchiveService({database,authorizeArchive:(tx,scope)=>this.authorizeArchiveInTransaction(tx,scope),openMatter:{getOrderArchiveStatusInTransaction:async(tx,scope)=>{try{return await(await this.services.resolve("fulfillmentOpenMatter")).getOrderArchiveStatusInTransaction(tx,scope);}catch{return {version:"1",status:"UNKNOWN",reasonCodes:["PROVIDER_UNAVAILABLE"]};}}},participant:{prepareOrderInTransaction:async(tx,command)=>(await resolveParticipant()).prepareOrderInTransaction(tx,command),archiveOrderInTransaction:async(tx,command)=>(await resolveParticipant()).archiveOrderInTransaction(tx,command)}});
+      this.#archiveBatch=new SalesArchiveBatchService({database,time,config:this.config?.sales,authorizeJob:()=>this.#archivePrincipal(),executeLockedArchive:(tx,scope)=>this.#executeLockedArchive(tx,scope)});
+    }
+    const result=await this.#archiveBatch.runBatch({signal});
+    await this.logger.info("sales_archive.completed","Sales Archive worker batch completed",result);
+    if(result.failed||result.stopped){await this.logger.error("sales_archive.failed","Sales Archive has unresolved orders",result);throw new Error("Sales Archive processing incomplete");}
+    return result;
+  }
+
 }

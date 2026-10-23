@@ -9,6 +9,25 @@ function integer(value,positive=true){
 export class SalesArchiveLockService{
  constructor({database}){this.database=database;}
  #transaction(tx){if(this.database.context?.get()?.databaseTransaction!==tx||getActiveTransactionIsolation(tx)!=="REPEATABLE READ")throw new TypeError("Actual Sales Archive RR transaction required");}
+ async discoverOrderRouting(orderId){
+  orderId=integer(orderId);if(this.database.context?.get()?.databaseTransaction)throw new TypeError("Archive routing discovery must precede mutation");
+  const [[active]]=await this.database.query("SELECT external_order_key_id,source_quotation_id FROM sales_orders WHERE id=?",[orderId]),[[archived]]=await this.database.query("SELECT external_order_key_id,source_quotation_id FROM sales_orders_archive WHERE id=?",[orderId]),header=active??archived;
+  if(!header||active&&archived&&["external_order_key_id","source_quotation_id"].some(k=>String(active[k])!==String(archived[k])))throw new TypeError("Inconsistent Archive route hints");
+  const [conversions]=await this.database.query("SELECT id,quotation_id FROM sales_quotation_conversions WHERE sales_order_id=?",[orderId]);
+  if(conversions.length!==(header.source_quotation_id===null?0:1)||conversions.some(row=>String(row.quotation_id)!==String(header.source_quotation_id)))throw new TypeError("Inconsistent Archive conversion hints");
+  return Object.freeze({orderId,externalKeyId:header.external_order_key_id===null?null:integer(String(header.external_order_key_id)),quotationId:header.source_quotation_id===null?null:integer(String(header.source_quotation_id)),conversionId:conversions.length?integer(String(conversions[0].id)):null});
+ }
+ async lockOrderRoutingInTransaction(tx,hints){
+  this.#transaction(tx);
+  const keys=["orderId","externalKeyId","quotationId","conversionId"];
+  if(!hints||Reflect.ownKeys(hints).sort().join(",")!==keys.sort().join(",")||keys.some(k=>!Object.hasOwn(Object.getOwnPropertyDescriptor(hints,k)??{},"value")))throw new TypeError("Invalid Archive route hints");
+  integer(hints.orderId);if((hints.quotationId===null)!==(hints.conversionId===null))throw new TypeError("Invalid Archive conversion hints");
+  for(const key of keys)if(hints[key]!==null)integer(hints[key]);
+  // Earlier route ranks precede Sales Order even on replay. Never discover and acquire them after its root lock.
+  if(hints.externalKeyId!==null){const [[row]]=await tx.query("SELECT id,sales_order_id FROM sales_external_order_keys WHERE id=? FOR UPDATE",[hints.externalKeyId]);if(String(row?.sales_order_id)!==hints.orderId)throw new TypeError("Archive external route changed");}
+  if(hints.quotationId!==null){const [[quote]]=await tx.query("SELECT id FROM sales_quotations WHERE id=? FOR UPDATE",[hints.quotationId]),[[conversion]]=await tx.query("SELECT quotation_id,sales_order_id FROM sales_quotation_conversions WHERE id=? FOR UPDATE",[hints.conversionId]);if(!quote||String(conversion?.quotation_id)!==hints.quotationId||String(conversion?.sales_order_id)!==hints.orderId)throw new TypeError("Archive conversion changed");}
+ }
+ assertOrderRouting(header,hints){if(String(header.id)!==hints.orderId||String(header.external_order_key_id)!==String(hints.externalKeyId)||String(header.source_quotation_id)!==String(hints.quotationId))throw new TypeError("Archive routing membership changed");}
  async lockOrderOperationsInTransaction(tx,scope){
   this.#transaction(tx);
   if(!scope||![Object.prototype,null].includes(Object.getPrototypeOf(scope))||Reflect.ownKeys(scope).sort().join(",")!=="orderId,shipmentIds"||!Array.isArray(scope.shipmentIds))throw new TypeError("Invalid Sales Archive operation scope");

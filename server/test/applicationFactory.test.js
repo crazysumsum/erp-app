@@ -297,7 +297,9 @@ test("the application factory does not itself require the scheduler", async (t) 
         // 失敗（見 apiDispatcher.js 的 validateApiConfig）——不是靜默失去
         // idempotency 保證，是應用開不起來，同上面幾個 auth strategy 同一個
         // 理由。
-        new URL("../src/services/idempotency/IdempotencyService.js", import.meta.url).href
+        new URL("../src/services/idempotency/IdempotencyService.js", import.meta.url).href,
+        // Sales Export handlers use the Runtime even when no Scheduler or job services are installed.
+        new URL("../src/services/salesJobs/SalesJobRuntimeService.js", import.meta.url).href
       ]
     },
     serviceOptions: {
