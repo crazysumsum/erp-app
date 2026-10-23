@@ -9,6 +9,8 @@ import { createApplication } from "../../../server/src/framework/application/cre
 import { defaultConfigurationSource } from "../../../server/src/framework/configuration/applicationConfiguration.js";
 import { SalesOrderConfirmationService } from "../../../server/src/modules/sales/SalesOrderConfirmationService.js";
 import { SalesOrderService } from "../../../server/src/modules/sales/SalesOrderService.js";
+import {validateSalesExportInput} from "../../../server/src/modules/sales/SalesExportService.js";
+import {salesPayloadHash} from "../../../server/src/modules/sales/salesCanonicalHash.js";
 import {rm,readFile} from "node:fs/promises";
 import path from "node:path";
 import assert from "node:assert/strict";
@@ -19,7 +21,7 @@ const exportStoreKeys=new Set(),exportActors=[];
 const callbacks=[];
 let outstanding,draft;
 test.beforeAll(async()=>{
- if(process.env.DB_INTEGRATION_TESTS!=="1"||process.env.DB_NAME!=="erp_sales_p4_c6b1e4326668_focused"||process.env.DB_SOCKET_PATH!=="/private/tmp/sales-p4-c6b1e4326668/mysql.sock")throw new Error("P4 browser tests require the owned synthetic focused schema and socket");
+ if(process.env.DB_INTEGRATION_TESTS!=="1"||process.env.DB_NAME!=="erp_p4_37e933d0a9db_full"||process.env.DB_SOCKET_PATH!=="/private/tmp/erp-fulfillment-p0-mysql-sales-p4-37e933d0a9db/mysql.sock")throw new Error("P4 browser tests require the owned synthetic focused schema and socket");
  f=await migrationFixture({after(fn){callbacks.push(fn);}},[]);
  const source=defaultConfigurationSource(),port=randomInt(32000,59000);origin=`http://127.0.0.1:${port}`;
  app=await createApplication({configurationSource:{...source,application:{...source.application,port:0},sales:{...source.sales,manualConfirmationWaitMs:100},scheduler:{...source.scheduler,jobs:{...source.scheduler.jobs,"sales.confirmationRecovery":{enabled:false},"sales.backorderAllocate":{enabled:false},"sales.importWorker":{enabled:false}}},security:{...source.security,cors:{...source.security.cors,allowedOrigins:origin}}}});
@@ -80,4 +82,15 @@ test("TC-045 Export actual permission revocation has visible retry and no privat
 test("TC-045 Export and Archive remain usable at320px through1440px",async({page})=>{const check=monitor(page);await authenticate(page,viewerToken);for(const route of ["/sales/exports","/sales/archive"]){await page.goto(origin+route);await expect(page.getByRole("heading",{name:route.endsWith("exports")?"我的匯出工作":"封存銷售訂單",exact:true})).toBeVisible();for(const width of [320,375,768,1024,1440]){await page.setViewportSize({width,height:900});await usableLayout(page,width);await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);if([320,1440].includes(width))await page.screenshot({path:`${process.env.HARNESS_RUN_DIR}/${route.endsWith("exports")?"export-jobs":"archive-export"}-${width}.png`,animations:"disabled"});}}check.verify();});
 
 test("TC-045 cancelling a snapshot uses the newly applied Active filters",async({page})=>{const check=monitor(page);await authenticate(page,viewerToken);await page.goto(origin+`/sales/orders?number=${draft.number}`);await expect(page.getByRole("link",{name:`查看 ${draft.number}`,exact:true})).toBeVisible();await page.getByRole("button",{name:"建立 CSV 匯出",exact:true}).click();await page.getByRole("dialog",{name:"確認匯出篩選",exact:true}).getByRole("button",{name:"返回",exact:true}).click();await page.getByLabel("訂單編號（精確）",{exact:true}).fill(outstanding.number);await page.getByRole("button",{name:"搜尋",exact:true}).click();await expect(page.getByRole("link",{name:`查看 ${outstanding.number}`,exact:true})).toBeVisible();await page.setViewportSize({width:320,height:900});await usableLayout(page,320);await page.getByRole("button",{name:"建立 CSV 匯出",exact:true}).click();await expect(page.getByRole("dialog",{name:"確認匯出篩選",exact:true})).toContainText(outstanding.number);await expect(page.getByRole("dialog",{name:"確認匯出篩選",exact:true})).not.toContainText(draft.number);await expect(page.getByRole("dialog",{name:"確認匯出篩選",exact:true})).toBeVisible();await page.getByRole("dialog",{name:"確認匯出篩選",exact:true}).locator(".q-card").screenshot({path:`${process.env.HARNESS_RUN_DIR}/export-confirm-dialog-320.png`,animations:"disabled"});const job=await createExport(page);expect(job.filters.number).toBe(outstanding.number);check.verify();});
-test("TC-045 leaving Jobs cancels actual scheduled polling",async({page})=>{const check=monitor(page);await authenticate(page,viewerToken);await page.goto(origin+"/sales/exports");await expect(page.getByRole("heading",{name:"我的匯出工作",exact:true})).toBeVisible();await page.clock.install();let reads=0;page.on("request",r=>{if(new URL(r.url()).pathname==="/api/v1/sales-exports")reads++;});const polled=page.waitForResponse(r=>new URL(r.url()).pathname==="/api/v1/sales-exports");await page.clock.runFor(2100);await polled;expect(reads).toBeGreaterThan(0);await page.getByRole("link",{name:"Active 訂單",exact:true}).click();await expect(page.getByRole("heading",{name:"銷售訂單",exact:true})).toBeVisible();const before=reads;await page.clock.runFor(10000);expect(reads).toBe(before);check.verify();});
+test("TC-045 leaving Jobs cancels actual scheduled polling",async({page})=>{
+ const check=monitor(page);await authenticate(page,viewerToken);
+ // Own the polling precondition: another case's QUEUED job may already be completed by the real worker.
+ const now=Date.now(),snapshot=validateSalesExportInput({scope:"ACTIVE",filters:{number:draft.number}});
+ // A single synthetic technical claim avoids racing the background worker between QUEUED creation and leasing.
+ const job={id:await f.insert("sales_export_jobs",{scope:snapshot.scope,filters:JSON.stringify(snapshot.filters),filters_hash:salesPayloadHash(snapshot),status:"PROCESSING",lease_owner:randomUUID(),lease_until:now+60000,created_by:viewerClaims.actorId,created_at:now,started_at:now})};
+ // Install before the page creates its timers; use a real HTTP response and rendered PROCESSING state as the barrier.
+ await page.clock.install();let reads=0;page.on("request",request=>{if(new URL(request.url()).pathname==="/api/v1/sales-exports")reads++;});
+ await page.goto(origin+"/sales/exports");await expect(page.getByRole("heading",{name:"我的匯出工作",exact:true})).toBeVisible();await expect(page.locator(".q-card").filter({has:page.getByRole("heading",{name:`匯出 #${job.id} — ACTIVE`,exact:true})})).toContainText("處理中");
+ const initialReads=reads,polled=page.waitForResponse(response=>new URL(response.url()).pathname==="/api/v1/sales-exports");await page.clock.runFor(2100);expect((await polled).status()).toBe(200);expect(reads).toBeGreaterThan(initialReads);
+ await page.getByRole("link",{name:"Active 訂單",exact:true}).click();await expect(page.getByRole("heading",{name:"銷售訂單",exact:true})).toBeVisible();const before=reads;await page.clock.runFor(10000);expect(reads).toBe(before);check.verify();
+});
