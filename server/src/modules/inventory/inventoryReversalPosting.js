@@ -183,9 +183,8 @@ async function post(service, tx, command, guard) {
   if (reversals.length) throw inventoryError("MOVEMENT_ALREADY_REVERSED");
   for (const row of balances) if (expected.get(Number(row.id)) !== Number(row.version)) throw inventoryError("VERSION_CONFLICT");
   const profiles = new Map();
-  const currentItem = { query: (sql, params) => tx.query(sql + " FOR SHARE", params) };
   for (const skuId of [...new Set(buckets.map(row => row.skuId))].sort((a, b) => a - b)) {
-    const profile = await service.itemLookup.getInventoryProfileInTransaction(currentItem, skuId);
+    const profile = await service.itemLookup.getInventoryProfileInTransaction(tx, skuId);
     if (!profile || Number(profile.skuId) !== skuId || !profile.inventoryTracked || !profile.usable ||
         !["none", "batch", "batch_expiry"].includes(profile.trackingPolicy)) throw denied();
     profiles.set(skuId, profile);
