@@ -1,5 +1,4 @@
 import { randomUUID } from "node:crypto";
-import { expect } from "@playwright/test";
 import { API_URL, connect, readFixture } from "./uatEnvironment.mjs";
 
 /**
@@ -72,7 +71,11 @@ export async function createDraft(page, { code = unique("UAT"), name = `UAT Supp
 /** 收集 console error 同 4xx／5xx；`allow` 列出預期會出現嘅拒絕。登入之後先開始收：新設備登入嗰下嘅 403 係環境準備。 */
 export function watchProblems(page, { allow = [] } = {}) {
   const problems = [];
-  page.on("console", (message) => { if (message.type() === "error") problems.push(`console: ${message.text()}`); });
+  // 瀏覽器會為每個 4xx 再印一句「Failed to load resource」：預期嘅拒絕唔當問題。
+  const expectedLoadFailure = (text) => allow.some((rule) => text.includes(`status of ${rule.status} `));
+  page.on("console", (message) => {
+    if (message.type() === "error" && !expectedLoadFailure(message.text())) problems.push(`console: ${message.text()}`);
+  });
   page.on("pageerror", (error) => problems.push(`pageerror: ${error.message}`));
   page.on("response", (response) => {
     if (response.status() < 400) return;
@@ -82,10 +85,47 @@ export function watchProblems(page, { allow = [] } = {}) {
   return problems;
 }
 
-/** 喺 Audit 頁用「對象」篩選，回第一行嘅文字。 */
-export async function auditRows(page, target) {
-  await page.goto(`/suppliers/audit?target=${encodeURIComponent(target)}`);
-  const rows = page.locator("tbody tr");
-  await expect(rows.first()).toBeVisible();
-  return rows;
+/** 經 API 啟用（Approval OFF）：07 §2 嘅 S-ACTIVE 前置，亦令佢「曾啟用」。 */
+export async function activateViaApi(page, id) {
+  const current = await api(page, "GET", `/api/v1/suppliers/${id}`);
+  return api(page, "POST", `/api/v1/suppliers/${id}/activate`, { version: current.version });
+}
+
+/** 07 §2 各狀態 Supplier 嘅前置資料：直接改狀態（Supplier 冇其他狀態欄位）。唔經使用者步驟，亦唔寫 Audit。 */
+export async function setStatus(id, status) {
+  await (await db()).execute("UPDATE suppliers SET status = ?, version = version + 1 WHERE id = ?", [status, id]);
+}
+
+export const statusBadge = (page) => page.locator("div.row.items-center", { hasText: "版本" }).locator(".q-badge").first();
+
+/** 詳情頁狀態操作：撳按鈕、填原因／密碼、確認。 */
+export async function statusAction(page, label, { reason, password } = {}) {
+  await page.getByRole("button", { name: label, exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  if (reason !== undefined) await dialog.getByLabel("原因 *").fill(reason);
+  if (password !== undefined) await dialog.getByLabel("目前密碼 *").fill(password);
+  await dialog.getByRole("button", { name: `確認${label}` }).click();
+  return dialog;
+}
+
+/** 詳情頁「變更紀錄」tab 入面某個動作嗰行。 */
+export async function auditRow(page, actionLabel) {
+  await page.getByRole("tab", { name: "變更紀錄" }).click();
+  return page.locator("tbody tr", { hasText: actionLabel });
+}
+
+/**
+ * 喺頁面入面直接叫 client 嘅 supplier service：同 UI 一樣用登入設備簽名，所以伺服器係以權限或者規則拒絕，
+ * 唔係因為冇簽名。回 `ok` 或者 `<HTTP status> <error code>`。
+ */
+export function serviceCall(page, method, ...args) {
+  return page.evaluate(async ({ method: name, args: values }) => {
+    const { default: supplierService } = await import("/src/services/supplier.js");
+    try {
+      await supplierService[name](...values);
+      return "ok";
+    } catch (error) {
+      return `${error.status} ${error.code}`;
+    }
+  }, { method, args });
 }
