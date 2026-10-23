@@ -285,9 +285,9 @@ TC-062 … TC-077 already carry their IDs in `supplierBank*.integration`, `suppl
 
 ## supplier-client-ui (11)
 
-Runner: `npm test --workspace client -- --config test/supplier-management.vitest.config.js` (HD-117 A). It runs the 21 Supplier page and service test files in jsdom; each test title carries at most one TC ID. Local run after REV-107: 168 passed, 0 failed, 0 skipped; after DEF-035 (audit page and tab, 2026-10-22): 176 passed; every required ID PASS through the harness JUnit adapter. Keyboard, focus, viewport, browser back and visual checks need a real browser and are left to the Playwright specs and UAT.
+Runner: `npm test --workspace client -- --config test/supplier-management.vitest.config.js` (HD-117 A). It runs the 21 Supplier page and service test files in jsdom; each test title carries at most one TC ID. Local run after REV-107: 168 passed, 0 failed, 0 skipped; after DEF-035 (audit page and tab, 2026-10-22): 176 passed; after REV-113 (2026-10-23): 182 passed; every required ID PASS through the harness JUnit adapter. Keyboard, focus, viewport, browser back and visual checks need a real browser and are left to the Playwright specs and UAT.
 
-Left out on purpose: `client/test/framework/routing/authorizationRefresh.test.js`. Its `同 SupplierBankPanel 夾埋` block checks that Bank plaintext is cleared and that losing `supplier.view` sends the user to 403, but the file is a framework routing test and the rest of it is not Supplier's. It runs in the main client suite. The profile's `min_tests` is 11 while 176 tests run, so a shrunken file list is caught only through the required IDs; raising the floor changes the profile and needs its own decision (REV-107 I-2).
+Left out on purpose: `client/test/framework/routing/authorizationRefresh.test.js`. Its `同 SupplierBankPanel 夾埋` block checks that Bank plaintext is cleared and that losing `supplier.view` sends the user to 403, but the file is a framework routing test and the rest of it is not Supplier's. It runs in the main client suite. The profile's `min_tests` is 11 while 182 tests run, so a shrunken file list is caught only through the required IDs; raising the floor changes the profile and needs its own decision (REV-107 I-2).
 
 | TC | Case | Tagged tests | Status | Gap |
 | --- | --- | --- | --- | --- |

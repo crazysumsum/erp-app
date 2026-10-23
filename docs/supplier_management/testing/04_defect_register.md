@@ -139,15 +139,25 @@ Found while preparing the UAT browser tests (HD-124 A). Design §7.2 lists seven
   - A shared `SupplierAuditTimeline.vue`, which is also used by a new 「變更紀錄」 tab on the detail page.
   - Both read the existing `GET /api/v1/supplier-audit/logs`.
 - **What the page does:**
-  - Filters by Hong Kong day bounds (a reversed range is shown as an error and not queried), actor, target, action and target type.
-  - Shows time in Hong Kong time, the action, the target, before → after for each field, the reason and the request ID.
-  - The detail is shown exactly as the server masked it.
+  - Filters by Hong Kong day bounds, actor, target, action and target type. A reversed range is shown as an error and not queried; a half-typed date is not queried either.
+  - Any filter change starts again from page 1. Filters and paging are kept in the URL, so a refresh or a shared link restores them.
+  - Shows time in Hong Kong time, the action, the target, the request ID in full, the reason, and before → after for each field.
+  - The detail is shown as the server masked it. A notes digest is shown as a length (「notes：0 字 → 10 字」), never the hash, and a list the server summarised is shown as a count and a sample.
   - The tab asks only for its Supplier.
-- **Bug found by the unit test:** the first version reloaded before the new filters reached the timeline, so it queried the previous filters. It now waits a tick, and the test fails without that wait.
+- **Review:** REV-113 (`implementation/116_rev_113_independent_review.md`); every finding fixed as recommended.
 - **Tests:**
-  - `audit.test.js` and `supplierAudit.test.js`.
+  - `audit.test.js` and `supplierAudit.test.js`. A 13-mutant sweep covering the review's surviving mutants turns every one red.
   - Two Playwright tests in `supplier-audit.spec.js` (network mocked).
-  - UAT (UAT-001, 055 and others) exercises the page against a real backend.
+  - A real-backend browser check (local, not CI): a viewer saw the request ID on screen, no account plaintext, inert markup, the notes length, and the filters restored after a reload.
+  - UAT (UAT-001, 055 and others) will exercise the page against a real backend under HD-124 A.
+
+## DEF-036 — HIGH
+
+Found during the DEF-035 real-backend check. The Supplier create and edit forms (`SupplierBasicForm.vue`, `SupplierPaymentDefaults.vue`) and the list filters (`SuppliersPage.vue`) load currencies and payment terms from `GET /api/v1/business-master/currencies` and `/payment-terms`. Both endpoints require `business_master.view` (`VIEW_POLICY` in `server/src/handlers/business-master/businessMasterSchemas.js`). Design §6 (the endpoint table) says they should accept `supplier.view` or the matching consumer permission.
+
+- **Measured** (local, erp_t51): a user with `supplier.view` and `supplier.mgmt`, the UAT CLERK role, gets 403 on both lists. With `business_master.view` added, both return 200.
+- **Effect:** a CLERK cannot choose a default currency, so cannot create a Supplier in the UI. This blocks UAT-001 and every UAT case that starts from a new Supplier.
+- **Owner:** the endpoints belong to Business Master, which is not Supplier code. **Decision required (HD-126).**
 
 ## HD-116 A: dispositions (2026-10-21)
 
