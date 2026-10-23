@@ -277,7 +277,7 @@ test("@uat UAT-003 a same-name Supplier with another Code is warned about first,
   const created = page.locator("tbody tr", { hasText: "新增供應商" });
   await expect(created).toHaveCount(1);
   expect(problems).toEqual([]);
-  // AC-003「確認合理原因後繼續」：Audit 要講明使用者見過邊個重複候選、以咩原因繼續。而家冇原因亦冇記錄（DEF-039，REV-115 M-2）。
+  // AC-003：Audit 記低使用者確認咗嘅相似名稱候選（DEF-039；HD-132 B 當 AC-003 係純確認，唔使填原因）。
   await expect(created).toContainText(first.supplierCode);
 });
 
@@ -594,9 +594,9 @@ test("@uat UAT-031 forms offer only Active currencies and terms, an old inactive
 
   // 舊嘅 inactive 付款條件要以使用者睇得明嘅方式顯示（DEF-038：而家詳情同編輯表單都只顯示內部 ID）。
   await page.goto(`/suppliers/${supplier.id}`);
-  await expect(page.locator(".q-item", { hasText: "付款條件" })).toContainText(`${tag}-OLD`);
+  await expect(page.locator(".q-item", { hasText: "付款條件" })).toContainText(`${tag}-OLD — UAT-031 ${tag}-OLD（已停用）`);
   await page.getByRole("button", { name: "編輯一般資料" }).click();
-  await expect(page.locator(".q-field", { hasText: "預設付款條件（選填）" })).toContainText(`${tag}-OLD`);
+  await expect(page.locator(".q-field", { hasText: "預設付款條件（選填）" })).toContainText(`${tag}-OLD — UAT-031 ${tag}-OLD（已停用）`);
 });
 
 /** 下游模組（Purchasing／Receiving／AP）未上線：而家冇任何引用檢查或者 open-flow provider，呢啲步驟做唔到（HD-124 A、HD-131 A）。 */

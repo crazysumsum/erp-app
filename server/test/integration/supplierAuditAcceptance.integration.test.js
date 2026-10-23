@@ -636,3 +636,41 @@ integrationTest("TC-014 (LIST-007): detail returns the general data, children, p
   }
   assert.equal((await h.send(h.users.view, h.route("GET /api/v1/suppliers/:id"), { ids: { id: MISSING } })).status, 404);
 });
+
+integrationTest("a create that went past a similar-name warning records the warned candidates in its Audit, and a plain create records none (DEF-039, HD-132 B)", async () => {
+  const t = tag();
+  const create = async (code, supplierName) => {
+    const response = await h.send(h.users.mgmt, h.route("POST /api/v1/suppliers/create"),
+      { body: { supplierCode: code, supplierName, defaultCurrencyCode: "HKD" } });
+    assert.equal(response.status, 201, response.text);
+    h.supplierIds.push(response.json.data.id);
+    const [[row]] = await h.db.query("SELECT detail FROM supplier_audit_logs WHERE action = 'supplier.create' AND supplier_id = ?", [response.json.data.id]);
+    return typeof row.detail === "string" ? JSON.parse(row.detail) : row.detail;
+  };
+  const first = await create(`DUPA-${t}`, `Harbour Duplicate Trading ${t}`);
+  assert.equal(Object.hasOwn(first, "warnings"), false, "no candidate, no record");
+  // 相似但唔完全相同嘅名稱都要記低（REV-117 L-1）。
+  const second = await create(`DUPB-${t}`, `Harbour Duplicate Trading Co ${t}`);
+  assert.deepEqual(second.warnings, { duplicateCandidates: [`DUPA-${t}`] });
+  assert.equal(second.after.status, "draft");
+});
+
+integrationTest("detail names the default payment term by code and name, still after the term is deactivated, and null without one (DEF-038)", async () => {
+  const t = tag();
+  const now = Date.now();
+  const [term] = await h.db.execute(`INSERT INTO payment_terms (code, code_key, name, calculation_type, due_days, status, version, created_at, updated_at)
+    VALUES (?, ?, 'Net 45', 'NET_DAYS', 45, 'ACTIVE', 1, ?, ?)`, [`PT-${t}`, `PT-${t}`.toUpperCase(), now, now]);
+  const termId = Number(term.insertId);
+  h.cleanup.push(["DELETE FROM payment_terms WHERE id = ?", [termId]]);
+  const withTerm = await h.seedSupplier(`PT-${t}`, `Payment term ${t}`, "active");
+  await h.db.execute("UPDATE suppliers SET default_payment_term_id = ? WHERE id = ?", [termId, withTerm]);
+  const withoutTerm = await h.seedSupplier(`NT-${t}`, `No term ${t}`, "draft");
+  const detail = async (id) => (await h.send(h.users.view, h.route("GET /api/v1/suppliers/:id"), { ids: { id } })).json.data;
+
+  assert.deepEqual((await detail(withTerm)).defaultPaymentTerm, { id: termId, code: `PT-${t}`, name: "Net 45", status: "ACTIVE" });
+  await h.db.execute("UPDATE payment_terms SET status = 'INACTIVE', version = version + 1 WHERE id = ?", [termId]);
+  const inactive = await detail(withTerm);
+  assert.deepEqual(inactive.defaultPaymentTerm, { id: termId, code: `PT-${t}`, name: "Net 45", status: "INACTIVE" });
+  assert.equal(inactive.defaultPaymentTermId, termId);
+  assert.equal((await detail(withoutTerm)).defaultPaymentTerm, null);
+});
