@@ -59,33 +59,34 @@ export const SUPPLIER_AUDIT_TARGET_TYPES = Object.freeze({
 </script>
 
 <script setup>
-import { ref } from "vue";
 import DataTable from "@/framework/ui/DataTable.vue";
-import EllipsisCell from "@/framework/ui/EllipsisCell.vue";
 import supplierAuditService from "@/services/supplierAudit.js";
 
 /**
- * Supplier 變更紀錄表（設計 §7.4 `SupplierAuditTimeline`；DEF-035、HD-125 A）。Audit 頁傳篩選，詳情頁嘅 Audit tab
- * 只傳 `supplierId`。時間一律用香港時間；detail 由後端遮罩（銀行帳號只有尾四位），呢度唔會再加料。
+ * Supplier 變更紀錄表（設計 §7.4 `SupplierAuditTimeline`；DEF-035、HD-125 A）。Audit 頁傳篩選同頁數，詳情頁嘅 Audit tab
+ * 只傳 `supplierId`。篩選一改，頁面會用 `key` 重新掛載呢個元件，由第 1 頁再查（REV-113 L-4）。時間一律用香港時間；
+ * detail 由後端遮罩（銀行帳號只有尾四位），呢度唔會再加料。
  */
 const props = defineProps({
   supplierId: { type: Number, default: null },
-  filters: { type: Object, default: () => ({}) }
+  filters: { type: Object, default: () => ({}) },
+  initialPagination: { type: Object, default: null }
 });
+const emit = defineEmits(["request"]);
 
+// Request ID 放喺內容之前、完整顯示：UAT-055 要每行都睇到，唔可以收埋喺捲軸後面或者 tooltip 入面（REV-113 M-1）。
 const columns = [
   { name: "occurredAt", label: "時間", field: "occurredAt", align: "left" },
   { name: "actorUsername", label: "操作者", field: "actorUsername", align: "left" },
   { name: "action", label: "動作", field: "action", align: "left" },
   { name: "target", label: "對象", field: "targetLabel", align: "left" },
-  { name: "detail", label: "內容", field: "detail", align: "left" },
+  { name: "requestId", label: "Request ID", field: "requestId", align: "left" },
   { name: "reason", label: "原因", field: "reason", align: "left" },
-  { name: "requestId", label: "Request ID", field: "requestId", align: "left" }
+  { name: "detail", label: "內容", field: "detail", align: "left" }
 ];
 
-const table = ref(null);
-
 function fetchLogs({ page, rowsPerPage }) {
+  emit("request", { page, rowsPerPage });
   return supplierAuditService.list({ page, rowsPerPage, ...props.filters, supplierId: props.supplierId ?? props.filters.supplierId });
 }
 
@@ -93,41 +94,55 @@ function formatTime(value) {
   return new Date(value).toLocaleString("zh-HK", { timeZone: "Asia/Hong_Kong" });
 }
 
-const shown = (value) => (value === null || value === undefined || value === "" ? "（空）"
-  : typeof value === "object" ? JSON.stringify(value) : String(value));
+const empty = (value) => value === null || value === undefined || value === "";
+/** 長文字（notes）只記 `{ changed, length, sha256 }`（HD-112 A）：講長度，唔印 hash。 */
+const isDigest = (value) => Boolean(value) && typeof value === "object" && "sha256" in value && "length" in value;
+/** 太長嘅陣列由後端摘要成 `{ count, sample, truncated }`（SupplierAuditLogService.boundedDetail）。 */
+const isSummary = (value) => Boolean(value) && typeof value === "object" && value.truncated === true && "count" in value;
 
-/** `{ before, after }` 逐個欄位講「前 → 後」；其餘欄位照原樣列出。 */
+function shown(value) {
+  if (empty(value)) return "（空）";
+  if (isDigest(value)) return `已修改（${value.length} 字）`;
+  if (isSummary(value)) return `共 ${value.count} 項，只列頭 ${value.sample?.length ?? 0} 項：${JSON.stringify(value.sample ?? [])}`;
+  return typeof value === "object" ? JSON.stringify(value) : String(value);
+}
+
+/** `{ before, after }` 逐個欄位講「前 → 後」，兩邊都空就唔列（REV-113 L-2）；其餘欄位照列。 */
 function detailLines(detail) {
   if (!detail) return [];
-  if (detail.truncated) return ["內容過長，已截斷"];
   const before = detail.before && typeof detail.before === "object" ? detail.before : {};
   const after = detail.after && typeof detail.after === "object" ? detail.after : {};
   const lines = [...new Set([...Object.keys(before), ...Object.keys(after)])]
-    .map((key) => `${key}：${shown(before[key])} → ${shown(after[key])}`);
+    .filter((key) => !(empty(before[key]) && empty(after[key])))
+    .map((key) => (isDigest(after[key]) && empty(before[key]) ? `${key}：${shown(after[key])}` : `${key}：${shown(before[key])} → ${shown(after[key])}`));
   for (const [key, value] of Object.entries(detail)) {
     if (key !== "before" && key !== "after") lines.push(`${key}：${shown(value)}`);
   }
   return lines;
 }
-
-defineExpose({ reload: () => table.value?.reload() });
 </script>
 
 <template>
-  <DataTable ref="table" :fetch="fetchLogs" :columns="columns" row-key="id">
+  <DataTable :fetch="fetchLogs" :columns="columns" row-key="id" :initial-pagination="initialPagination">
     <template #body-cell-occurredAt="{ value }"><q-td class="text-left">{{ formatTime(value) }}</q-td></template>
-    <template #body-cell-actorUsername="{ value }"><EllipsisCell :text="value || '—'" max-width="160px" /></template>
+    <template #body-cell-actorUsername="{ value }"><q-td class="text-left audit-wrap">{{ value || "—" }}</q-td></template>
     <template #body-cell-action="{ value }"><q-td class="text-left">{{ SUPPLIER_AUDIT_ACTIONS[value] ?? value }}</q-td></template>
     <template #body-cell-target="{ row }">
-      <EllipsisCell :text="`${SUPPLIER_AUDIT_TARGET_TYPES[row.targetType] ?? row.targetType}／${row.targetLabel || '—'}`" max-width="220px" />
+      <q-td class="text-left audit-wrap">{{ SUPPLIER_AUDIT_TARGET_TYPES[row.targetType] ?? row.targetType }}／{{ row.targetLabel || "—" }}</q-td>
     </template>
+    <template #body-cell-requestId="{ value }"><q-td class="text-left audit-request-id">{{ value || "—" }}</q-td></template>
+    <template #body-cell-reason="{ value }"><q-td class="text-left audit-wrap">{{ value || "—" }}</q-td></template>
     <template #body-cell-detail="{ value }">
-      <q-td class="text-left">
+      <q-td class="text-left audit-wrap audit-detail">
         <span v-if="detailLines(value).length === 0" class="text-grey-7">—</span>
         <div v-for="(line, index) in detailLines(value)" :key="index" class="text-caption">{{ line }}</div>
       </q-td>
     </template>
-    <template #body-cell-reason="{ value }"><EllipsisCell :text="value || '—'" :tooltip="value || null" max-width="200px" /></template>
-    <template #body-cell-requestId="{ value }"><EllipsisCell :text="value || '—'" max-width="140px" /></template>
   </DataTable>
 </template>
+
+<style scoped>
+.audit-wrap { white-space: normal; overflow-wrap: anywhere; max-width: 220px; }
+.audit-detail { max-width: 420px; min-width: 240px; }
+.audit-request-id { font-family: monospace; white-space: nowrap; }
+</style>

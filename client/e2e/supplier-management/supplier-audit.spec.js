@@ -10,7 +10,8 @@ const VIEWER = {
 const ROWS = [
   { id: 2, occurredAt: Date.parse("2026-12-31T16:30:00Z"), actorUserId: 5, actorUsername: "clerk-a", action: "supplier.update",
     targetType: "supplier", targetId: 7, supplierId: 7, targetLabel: "SUP-007", reason: "",
-    detail: { before: { supplierName: "Old Name" }, after: { supplierName: "New Name" } }, requestId: "req-update", ip: "127.0.0.1" },
+    detail: { before: { supplierName: "Old Name", notes: "" }, after: { supplierName: "New Name", notes: { changed: true, length: 10, sha256: "a".repeat(64) },
+      website: `https://example.com/${"long-path-segment-".repeat(12)}` } }, requestId: "6f1c2a9e-0d4b-4c1e-9f3a-2b7d5e8c1a00", ip: "127.0.0.1" },
   { id: 1, occurredAt: Date.parse("2026-10-01T02:00:00Z"), actorUserId: 6, actorUsername: "bank-officer", action: "supplier.bank.create",
     targetType: "bank", targetId: 3, supplierId: 7, targetLabel: "Bank A", reason: "新增收款帳戶",
     detail: { after: { maskedAccountNumber: "**** 1234" } }, requestId: "req-bank", ip: "127.0.0.1" }
@@ -61,7 +62,12 @@ test("@technical the 變更紀錄 page lists Supplier audit records in Hong Kong
   await page.goto("/suppliers/audit");
   await expect(page.getByText("supplierName：Old Name → New Name")).toBeVisible();
   await expect(page.getByText("maskedAccountNumber：（空） → **** 1234")).toBeVisible();
-  await expect(page.getByText("req-update")).toBeVisible();
+  // UAT-055：每行嘅 Request ID 要完整、喺畫面入面睇到，唔使橫向捲動（REV-113 M-1）。
+  const requestId = page.getByText("6f1c2a9e-0d4b-4c1e-9f3a-2b7d5e8c1a00", { exact: true });
+  await expect(requestId).toBeVisible();
+  const box = await requestId.boundingBox();
+  expect(box.x + box.width).toBeLessThanOrEqual(page.viewportSize().width);
+  await expect(page.getByText("notes：已修改（10 字）")).toBeVisible();
   await expect(page.getByText("編輯供應商")).toBeVisible();
   await expect(page.getByText(/1\/1\/2027\s*上午12:30/u)).toBeVisible();
 
@@ -70,6 +76,14 @@ test("@technical the 變更紀錄 page lists Supplier audit records in Hong Kong
   await expect.poll(() => audits.at(-1)).toMatchObject({ from: String(Date.parse("2026-09-30T16:00:00Z")), to: String(Date.parse("2026-10-02T15:59:59.999Z")) });
   await page.getByLabel("操作者").fill("clerk-a");
   await expect.poll(() => audits.at(-1)).toMatchObject({ actor: "clerk-a" });
+  // 篩選喺 URL：重新整理之後照樣還原同照樣查（REV-113 M-2）。
+  await expect(page).toHaveURL(/actor=clerk-a/u);
+  await expect(page).toHaveURL(/from=2026-10-01/u);
+  const before = audits.length;
+  await page.reload();
+  await expect(page.getByLabel("操作者")).toHaveValue("clerk-a");
+  await expect.poll(() => audits.length).toBeGreaterThan(before);
+  expect(audits.at(-1)).toMatchObject({ actor: "clerk-a", from: String(Date.parse("2026-09-30T16:00:00Z")) });
 
   await page.getByLabel("由").fill("2026-10-05");
   await expect(page.getByText("結束日期不可早於開始日期")).toBeVisible();
