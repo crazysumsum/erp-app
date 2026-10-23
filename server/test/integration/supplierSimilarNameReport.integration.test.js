@@ -12,7 +12,6 @@ import mysql from "mysql2/promise";
 
 import { precheckSupplierCsv } from "../../src/modules/supplier/import/SupplierImportProcessor.js";
 import { buildSupplierImportTemplate, SUPPLIER_IMPORT_COLUMN_NAMES } from "../../src/modules/supplier/import/supplierCsvSchema.js";
-import { SupplierAdminService } from "../../src/modules/supplier/SupplierAdminService.js";
 import { buildSimilarNameReport, FILE_MATCHES_PER_ROW, formatSimilarNameReport, main, REPORT_HEADER }
   from "../../src/modules/supplier/similarNameReport.js";
 import { bigramDiceScore, replaceSupplierNameGrams, SupplierDuplicateCandidates } from "../../src/modules/supplier/supplierDuplicateCandidates.js";
@@ -196,8 +195,16 @@ integrationTest("HD-057 A: the command runs in a read-only session with the docu
   }
 });
 
-integrationTest("HD-057 A (DEF-030): UI create's checker ignores SUPPLIER_DUPLICATE_NAME_THRESHOLD, so the report does too", () => {
-  // DEF-030 修好嗰陣呢個測試會轉紅：到時報告要跟住讀同一個設定。
-  const service = new SupplierAdminService({ database: {}, logger: {}, time: {}, businessMaster: {} });
-  assert.equal(service.duplicates.threshold, new SupplierDuplicateCandidates().threshold);
+integrationTest("HD-057 A (DEF-030): the command uses SUPPLIER_DUPLICATE_NAME_THRESHOLD like the server, and refuses a value the server would refuse", async () => {
+  const input = path.join(state.dir, "threshold.csv");
+  await fs.writeFile(input, legacyCsv([["T1", `Threshold Trading Company ${t}`], ["T2", `Threshold Trading Compan ${t}`]]));
+  const entry = new URL("../../src/modules/supplier/similarNameReport.js", import.meta.url).pathname;
+  const run = (threshold, output) => promisify(execFile)(process.execPath,
+    [entry, `--database=${process.env.DB_NAME}`, "--mode=create_only", `--input=${input}`, `--output=${output}`],
+    { env: { ...process.env, SUPPLIER_DUPLICATE_NAME_THRESHOLD: threshold } });
+  const loose = JSON.parse((await run("0.85", path.join(state.dir, "loose.csv"))).stdout);
+  const strict = JSON.parse((await run("0.99", path.join(state.dir, "strict.csv"))).stdout);
+  assert.deepEqual([loose.threshold, loose.fileMatches], [0.85, 1]);
+  assert.deepEqual([strict.threshold, strict.fileMatches], [0.99, 0], "the setting changes what is listed");
+  await assert.rejects(run("0.3", path.join(state.dir, "bad.csv")), /duplicateNameThreshold" must be between 0\.5 and 1/u);
 });

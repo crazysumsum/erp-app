@@ -27,6 +27,7 @@ function supplierService(services) {
   const database = services.require("mysqldatabase");
   const provider = new BusinessMasterProvider({ database, repository: new BusinessMasterRepository() });
   return new SupplierAdminService({
+    duplicateNameThreshold: services.config?.supplier?.duplicateNameThreshold,
     database,
     logger: services.require("logging").logger,
     time: services.require("time"),

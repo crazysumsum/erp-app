@@ -18,6 +18,7 @@ test("global configuration validation normalizes every configuration section", (
     "customer",
     "database",
     "deviceBinding",
+    "fulfillment",
     // idempotency 也是一個 service，設定自己一個區塊、自己一個檔案。
     "idempotency",
     "inventory",

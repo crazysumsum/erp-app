@@ -1,5 +1,7 @@
 # Fulfillment & Shipping Management Requirement Review
 
+> Sam adopted HD-006 A (P0 contract checkpoint sequence) and HD-007 A (MySQL 26.7.0). Current baseline approval, independent-review provenance and publication receipts are recorded in [the readiness report](10_implementation_readiness.md); historical approvals below retain their original scope. Planning approval does not itself authorize IMPLEMENT or deployment.
+
 ## Review result
 
 `APPROVED PLANNING BASELINE` — Sam, as ERP Product Owner and named human independent reviewer, approved the aligned requirement baseline on 2026-09-14 together with the design and the Phase P0–P3 plan. This approval does not authorize `IMPLEMENT`, test execution, UAT, Go-Live or release, and it is not business acceptance: the sign-off table in `01_requirement_spec.md` §19.2 remains empty by design (`GAP-RQ-002`).

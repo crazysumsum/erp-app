@@ -1,5 +1,7 @@
 # Fulfillment & Shipping Management 系統設計規格（Harness Aligned）
 
+> Sam adopted HD-006 A (P0 contract checkpoint sequence) and HD-007 A (MySQL 26.7.0). Current baseline approval, independent-review provenance and publication receipts are recorded in [the readiness report](10_implementation_readiness.md); historical approvals below retain their original scope. Planning approval does not itself authorize IMPLEMENT or deployment.
+
 ## 0. 文件資訊、決策及設計門檻
 
 | 項目 | 內容 |
@@ -7,9 +9,9 @@
 | 文件名稱 | Fulfillment & Shipping Management 系統設計規格 |
 | 對應需求 | `docs/fulfillment_shipping_management/01_requirement_spec.md` 0.2 Approved Planning Baseline |
 | 目標版本 | Phase 1（中小企核心履約及出貨） |
-| 技術棧 | Node.js ES Modules、Express 5、AJV、MySQL 8.0、Vue 3、Quasar 2、Pinia、Vitest／Node Test Runner |
+| 技術棧 | Node.js ES Modules、Express 5、AJV、MySQL 26.7.0（HD-007已採納A）、Vue 3、Quasar 2、Pinia、Vitest／Node Test Runner |
 | 容量基線 | 每日約10,000張SO、最多5個Warehouse、24個月最少730萬張Active Fulfillment及Shipment |
-| 文件狀態 | ERP Product Owner（Sam）已於 2026-09-14 批准為 planning baseline；尚未授權進入 IMPLEMENT，實作前仍須按最新main分配Migration序號 |
+| 文件狀態 | HD-006／HD-007已採納A＋A；當前基線批准與獨立review以04／09／10文件及state記錄為準；尚未授權IMPLEMENT |
 | 版本 | 0.2 Approved Planning Baseline |
 
 ### 0.1 已鎖定架構決策
@@ -195,7 +197,8 @@ Pick Confirm：
 Phase A — claim intent
 BEGIN
   atomic claim fulfillment_operation_requests(eventId, payloadHash)
-  lock Shipment + Fulfillment
+  discover parent IDs without locking; lock Fulfillment + Shipment in global order
+  revalidate parent ownership + active pointer under those locks
   validate DRAFT/PICKED/version/active pointer
   Shipment DRAFT -> SHIPPING
   operation IN_PROGRESS + lease + correlation
@@ -216,7 +219,7 @@ BEGIN
 COMMIT
 ```
 
-- Phase B業務驗證失敗：同transaction把Shipment退回`DRAFT`、清除confirmation event、operation=`FAILED`並保存stable public error；沒有Inventory／Sales效果。
+- Phase B任何步驟的已分類永久業務失敗：先完整rollback本次Phase B，確認零Inventory／Sales／snapshot效果；再按§8.6的同event／lease CAS失敗交易把Shipment退回`DRAFT`、清除confirmation event、operation=`FAILED`並保存stable public error。若rollback／commit結果不明，不得terminalize。
 - DB deadlock／lock timeout：回可重試狀態；Recovery沿用原event。
 - COMMIT connection lost／request deadline：Shipment保持`SHIPPING`，API回202或indeterminate error；不得用新event重做。
 - Recovery Job只接管lease過期operation；以同一event／payload hash執行Phase B。
@@ -246,6 +249,10 @@ Archive由Sales Job協調；每張SO一個transaction，先鎖Sales root，再�
 5. Customer／Address／Contact驗證鎖；它們不反向取得Sales／Fulfillment lock。
 6. Inventory Operation → Warehouse → Stock Controls → Bins／Bin Locks → Lots → Balances → Reservations → Allocations。
 7. Current projections、History、Audit append。
+
+HD-013已批准：只限Sales WITHDRAW／CANCEL／CLOSE_REMAINING transaction明確使用READ COMMITTED，其餘Sales及DB全域預設保持不變。Lifecycle guard必須驗可信active-RC metadata；在各層直接父鎖下plain current discovery完整IDs，再依主鍵升序鎖定並重驗owner／目前狀態及數量。不得使用RR snapshot、owner-range locking discovery或未實作的parent-version witness推斷無工作。
+
+HD-012已批准的唯一readiness例外：Sales lifecycle在Sales／文件根鎖後，只可用`FOR SHARE NOWAIT` current read檢查既有Fulfillment／Shipment operation；不能claim、插入、接管、升鎖、等待或重試。IN_PROGRESS回OPEN；鎖衝突、缺schema及任何未知依賴回UNKNOWN，由Sales整個transaction以503 rollback，在此之前不得release Inventory。此例外不改業務writer鎖序；隔離範圍依HD-013的三條lifecycle例外。
 
 Archive不呼叫Inventory；只按Sales root → Fulfillment roots → archive rows順序。Deadlock及lock timeout映射`409 CONCURRENT_OPERATION`，原event先查operation outcome。
 
@@ -294,20 +301,20 @@ Reversal attempt: REVERSING -> REVERSED / FAILED
 
 ### 3.3 Fulfillment數量不變量
 
-對每個Fulfillment Line：
+逐Line的`planned`固定為本次工作原計劃正數，其他quantity為非負整數；`0 <= picked <= planned`、`0 <= short <= planned`、`shipped ∈ {0, picked}`、`reversed ∈ {0, shipped}`。以下等式按狀態套用，不在DRAFT／PICKING誤用已完成Pick的等式。
 
-```text
-planned_base_quantity = picked_base_quantity + short_base_quantity
-allocated_base_quantity = picked_base_quantity + allocation_released_base_quantity
-shipped_base_quantity IN (0, picked_base_quantity)
-reversed_base_quantity IN (0, shipped_base_quantity)
-```
+Line `allocated`是本Line全部歷史Allocation的`allocated_base_quantity`總和（包括Reallocation已釋放的舊Allocation）；`released`由同Line全部`fulfillment_allocations.released_base_quantity`彙總，沒有另建Line欄位。畫面的未釋放Allocation為`allocated - released`；不得把歷史累計誤認為目前可揀量。
 
-- DRAFT：Allocated／Picked／Short／Shipped／Reversed全0。
-- PICKING：Allocated=Planned，Picked／Short／Shipped=0。
-- PICKED：Picked>0、Short=Planned-Picked、Shipped=0。
-- SHIPPED：Shipped=Picked、Reversed=0。
-- REVERSED：Shipped保留歷史，Reversed=Shipped。
+| Fulfillment狀態 | 每Line條件 |
+| --- | --- |
+| DRAFT | allocated／released／picked／short／shipped／reversed全部0；planned可為正數。 |
+| PICKING | allocated - released = planned；picked／short／shipped／reversed全部0。Reallocation可增加歷史allocated與released，但未釋放量仍等於planned。 |
+| PICKED | planned = picked + short；allocated = picked + released；shipped／reversed=0；每Line允許picked=0，整張SUM(picked)>0。 |
+| SHIPPED | 保留PICKED的兩個等式；shipped=picked、reversed=0。全短揀Line的picked／shipped可為0。 |
+| REVERSED | 保留PICKED等式及歷史picked／shipped；reversed=shipped；原Allocation保持Consumed。 |
+| CANCELLED | 未釋放Allocation=0（allocated=released）、shipped／reversed=0；保留取消前已確認的picked／short歷史，未曾Pick的Line可仍為0，不製造短揀事實。 |
+
+取消與Reversal不改寫已發生的Pick／Issue歷史；Claim另遵守§3.4守恆。Row-level guards驗本row可判定的非負／上界；依父狀態及跨Allocation彙總的等式由固定parent lock下的service與transaction integration tests驗證，不能引用未定義的Line release欄位。
 
 ### 3.4 Reservation Claim不變量
 
@@ -366,7 +373,7 @@ Shipment Reversal後保持Ordered、Backorder及Cancelled不變，把該Shipment
 - Quantity使用`BIGINT UNSIGNED` Base UOM；不可用JavaScript浮點運算。
 - Current aggregate使用`version INT UNSIGNED NOT NULL DEFAULT 1`作CAS。
 - Active master FK採`ON DELETE RESTRICT`；aggregate children可在受控archive transaction使用CASCADE。
-- MySQL 8.0可強制執行`CHECK`，單行數量／狀態守衛可使用CHECK；跨行、跨aggregate及狀態機規則仍由service＋BEFORE trigger＋integration test三層保護。（2026-09-14 對齊更正：原文為「MySQL 5.7不可靠執行CHECK」；專案CI實際執行`mysql:8.0`，且Inventory與Purchasing已批准基線同為MySQL 8.0，決策 HD-001。）
+- MySQL 26.7.0（HD-007已採納A）保留強制執行`CHECK`的設計要求，單行數量／狀態守衛可使用CHECK；跨行、跨aggregate及狀態機規則仍由service＋BEFORE trigger＋integration test三層保護。（2026-09-14 對齊更正：原文為「MySQL 5.7不可靠執行CHECK」；專案CI實際執行`mysql:8.0`，且Inventory與Purchasing已批准基線同為MySQL 8.0，決策 HD-001。）
 - History、Issue details、Reversal details及Archive tables無一般update／delete repository；trigger拒絕非archive maintenance變更。
 - Migration不在本文件硬編序號；依§9.3切片並於實作時使用main下一個可用值。
 
@@ -433,9 +440,9 @@ Shipment Reversal後保持Ordered、Backorder及Cancelled不變，把該Shipment
 | `tracking_policy_snapshot` | VARCHAR(30) ASCII | NOT NULL | `none/batch/batch_expiry`；Serial拒絕。 |
 | `minimum_sale_life_days_snapshot` | INT UNSIGNED | NOT NULL／0 | 建立時提示，提交由Item／Inventory重驗。 |
 | `planned_base_quantity` | BIGINT UNSIGNED | NOT NULL | 本工作原計劃。 |
-| `allocated_base_quantity` | BIGINT UNSIGNED | NOT NULL／0 | Inventory成功Allocation總和。 |
+| `allocated_base_quantity` | BIGINT UNSIGNED | NOT NULL／0 | 全部歷史Inventory成功Allocation總和；未釋放量須減§3.3 derived released。 |
 | `picked_base_quantity` | BIGINT UNSIGNED | NOT NULL／0 | 實際確認。 |
-| `short_base_quantity` | BIGINT UNSIGNED | NOT NULL／0 | Planned-Picked。 |
+| `short_base_quantity` | BIGINT UNSIGNED | NOT NULL／0 | Pick Confirm後為Planned-Picked；DRAFT／PICKING為0。 |
 | `shipped_base_quantity` | BIGINT UNSIGNED | NOT NULL／0 | 成功Issue；0或Picked。 |
 | `reversed_base_quantity` | BIGINT UNSIGNED | NOT NULL／0 | 0或Shipped。 |
 | `short_pick_reason` | VARCHAR(500) | NOT NULL／`''` | 有Short時必填。 |
@@ -1060,11 +1067,10 @@ List只供UI；Confirm必須在Phase B transaction重做assert並驗expected ver
 ### 6.4 Item Contracts
 
 ```js
-ItemLookupService.findManyByIds(skuIds, { purpose: "inventory", atMs })
-ItemLookupService.assertUsable(skuId, { purpose: "inventory", atMs })
+ItemLookupService.getInventoryProfileInTransaction(transaction, skuId)
 ```
 
-Projection包含SKU／Item status、code／name、Base UOM、inventoryTracked、trackingPolicy及minimumSaleLifeDays。建立Fulfillment、Allocation及Confirm都拒絕`serial`、Archived、非inventory tracked或不符合Inventory規則的SKU；歷史detail使用snapshot，不因現在Inactive而消失。
+使用現有caller-transaction profile；多SKU依provider-owner批准的排序／批次鎖策略處理，不以pool-based assertUsable取代交易內重驗。Projection包含SKU／Item status、code／name、Base UOM、inventoryTracked、trackingPolicy及minimumSaleLifeDays。建立Fulfillment、Allocation及Confirm都拒絕`serial`、Archived、非inventory tracked或不符合Inventory規則的SKU；歷史detail使用snapshot，不因現在Inactive而消失。
 
 ### 6.5 Archive及Downstream Matter Contracts
 
@@ -1082,6 +1088,10 @@ FulfillmentDownstreamMatterService.assertShipmentReversibleInTransaction(transac
 ```
 
 PICKING、PICKED、SHIPPING、REVERSING、active Claim、outstanding Allocation、IN_PROGRESS operation均回OPEN；provider故障回UNKNOWN。`archiveOrderInTransaction()`只可由Sales Archive Service使用，接收order ID、archive batch、cutoff及expected manifest；回逐tablecount/hash及routing refs。
+
+最小lifecycle method及真實`fulfillmentOpenMatter`註冊由P0 TASK-011交付；P3 TASK-041只擴展archive eligibility。P0測試先於隔離schema完成，任何live install必須先有已驗證provider artifact及核准cutover，再按§1.4停writer／安裝／註冊／驗證／恢復；不是等到P3才解除Sales fail-closed。
+
+HD-014：固定 WITHDRAW purpose 只要存在任何本模組 active／archive history，就以已知 OPEN／CLOSED 結果的 bounded `reasonCodes:["FULFILLMENT_HISTORY_BLOCKS_WITHDRAWAL"]` 告知 Sales guard，在任何 Inventory release 前回專用409。terminal history 的 readiness 仍如實 CLOSED；UNKNOWN 優先503。不刪 FK 或歷史；CANCEL／CLOSE_REMAINING 仍只判真正 active work／Claim／Allocation／operation。無歷史的撤回→Draft編輯→重新確認仍可用；原已完成事件 replay 優先。
 
 `assertSalesLifecycleAllowedInTransaction()`由已鎖Sales Order／Lines的withdraw／cancel／close remaining流程呼叫；它按Fulfillment ID鎖相關非terminal工作及Claims。任何active工作回`OPEN_FULFILLMENT_EXISTS`，依賴失效回UNKNOWN／503，不能讓Sales先行release Reservation。固定lock order仍為Sales → Fulfillment → Inventory。
 
@@ -1170,7 +1180,7 @@ Returns／Invoicing未上線時，Downstream Matter registry顯式註冊`NO_PROV
 - `createDraft()`鎖Fulfillment；若active pointer存在，same create intent replay原結果，其他event回existing Shipment summary。
 - 使用Customer list contract預設唯一有效default address／contact；沒有address不建空地址Shipment，UI可留在PICKED並連Customer維護。
 - `updateDraft()`重驗child ownership及version；不提前保存address snapshot。
-- `cancelDraft()`鎖Shipment＋Fulfillment，status轉Cancelled並清active pointer；Picked data／Allocations不變。
+- `cancelDraft()`先以不加鎖lookup取得parent IDs，再按Fulfillment → Shipment取鎖並重驗ownership／active pointer，status轉Cancelled並清active pointer；Picked data／Allocations不變。Phase A及Cancel不得反向取得Shipment → Fulfillment鎖；與Create／Confirm的race由同一全域鎖序測試。
 
 ### 8.6 `ShipmentConfirmationService`
 
@@ -1186,11 +1196,13 @@ Returns／Invoicing未上線時，Downstream Matter registry顯式註冊`NO_PROV
 8. 保存Shipment／Line／Issue snapshots及histories；Claim active→consumed；Fulfillment／Shipment→SHIPPED。
 9. Operation SUCCEEDED保存bounded replay result並commit。
 
-若步驟3～5是永久business error，同transaction寫operation FAILED並Shipment回DRAFT；步驟6～9throw則整個Phase B rollback，保留Phase A SHIPPING供Recovery。只有可以證明未commit的deadlock／validation可安全返回；connection lost一律indeterminate。
+步驟3～9的已分類永久business error（包括Inventory或Sales的業務拒絕）先完整rollback Phase B，確認未commit，不能捕捉錯誤後提交已有provider writes。之後以新的失敗記錄transaction按operation → Sales（若需）→ Fulfillment → Shipment鎖序重讀，僅當event／payloadHash／lease token及target仍匹配、operation仍IN_PROGRESS、Shipment仍SHIPPING且confirmation event相同，才CAS寫FAILED／stable public error並回DRAFT。已SUCCEEDED／FAILED則replay；lease失效或target不符不覆寫，交由原event lookup／Recovery收斂。失敗記錄transaction中斷也保留原SHIPPING intent，Recovery重做同一失敗判定；不得換新event。
+
+只有已確認rollback的deadlock／lock timeout／暫時依賴錯誤保留SHIPPING供有界重試；未分類錯誤不假設永久業務失敗。COMMIT／rollback connection lost或逾時一律indeterminate，先lookup原event outcome，不得把可能已commit的成功改成FAILED。
 
 ### 8.7 `ShipmentReversalService`
 
-`startReversal()`先驗body、fresh permission及兩項confirmation，Phase A插入Reversal row、claim operation並令Shipment REVERSING。`completeReversal(eventId)`：
+`startReversal()`先驗body、fresh permission及兩項confirmation，Phase A沿§2.6／§2.8先claim operation，再按Fulfillment → Shipment → Reversal取鎖／建立intent並令Shipment REVERSING；routing IDs可先非鎖定讀取，取鎖後重驗owner。`completeReversal(eventId)`：
 
 1. Lock operation、Sales、Fulfillment、Shipment、Reversal及全部Issue details。
 2. 重驗未歸檔、未Reversed、goods flags、Downstream Matter=CLOSED及原Issue完整。
@@ -1199,7 +1211,7 @@ Returns／Invoicing未上線時，Downstream Matter registry顯式註冊`NO_PROV
 5. Claims保留consumed並設定reversed；Issue details只填一次reversal movement；寫Reversal details。
 6. Shipment／Fulfillment／Reversal→REVERSED；Operation SUCCEEDED及Audit。
 
-Business failure在同transaction令Reversal FAILED、Shipment回SHIPPED並保存safe reason；失敗attempt的number不重用。Technical unknown保留REVERSING及同event lease。
+Business failure沿用§8.6的完整rollback後同event／payloadHash／lease／target CAS失敗記錄交易，令Reversal FAILED、Shipment回SHIPPED並保存safe reason；失敗attempt的number不重用。Technical unknown保留REVERSING及同event lease，不把可能已commit的回補改成FAILED。
 
 ### 8.8 `FulfillmentOperationService`
 
@@ -1716,7 +1728,7 @@ Confirm 採 Phase A durable intent ＋ Phase B 原子執行（FSD-002）。Phase
 設計規格 §2.6、§8.6，實現需求 §5 原則 11～12、FR-CONF 系列及 AC-032～038。永久業務失敗與技術不明必須可區分：前者可安全回到可修正的 `DRAFT`，後者只能保留 `SHIPPING` 由原 event 收斂，否則會出現 Shipment 顯示成功而 Inventory 未 Issue 的假成功。
 
 ### Failure behavior
-Phase B 業務驗證失敗在同 transaction 令 Shipment 回 `DRAFT`、operation `FAILED` 並保存 stable public error，零 Inventory／Sales 效果；deadlock／lock timeout 回可重試狀態；COMMIT connection lost 或逾時保持 `SHIPPING`，API 回 202 或 `DATABASE_TRANSACTION_INDETERMINATE` 並附 status URL 及 correlation ID，不得以新 event 重做。Recovery Job 只接管 lease 過期 operation，且不得改 payload／actor。
+Phase B任一步驟的永久業務失敗先完整rollback，確認未commit後才依§8.6以新的同event／lease CAS失敗記錄transaction令Shipment回`DRAFT`、operation `FAILED`並保存stable public error，零Inventory／Sales效果；deadlock／lock timeout 回可重試狀態；COMMIT connection lost 或逾時保持 `SHIPPING`，API 回 202 或 `DATABASE_TRANSACTION_INDETERMINATE` 並附 status URL 及 correlation ID，不得以新 event 重做。Recovery Job 只接管 lease 過期 operation，且不得改 payload／actor。
 
 ## DES-006 — Shipment Reversal 與 Sales 狀態重算
 
@@ -1743,7 +1755,7 @@ Deadlock 及 lock timeout 映射 `409 CONCURRENT_OPERATION`，原 event 必須�
 ## DES-008 — Domain 狀態機與數量不變量
 
 ### Decision
-Fulfillment 狀態為 `DRAFT/PICKING/PICKED/SHIPPED/CANCELLED/REVERSED`，Shipment 為 `DRAFT/SHIPPING/SHIPPED/CANCELLED/REVERSING/REVERSED`，Reversal attempt 為 `REVERSING/REVERSED/FAILED`。逐 Line 不變量：`planned = picked + short`、`allocated = picked + allocation_released`、`shipped ∈ (0, picked)`、`reversed ∈ (0, shipped)`，並按狀態固定各欄位應有值。`SHIPPING／REVERSING` 禁止 update、cancel 或另一個新 event。
+Fulfillment 狀態為 `DRAFT/PICKING/PICKED/SHIPPED/CANCELLED/REVERSED`，Shipment 為 `DRAFT/SHIPPING/SHIPPED/CANCELLED/REVERSING/REVERSED`，Reversal attempt 為 `REVERSING/REVERSED/FAILED`。逐Line依§3.3按狀態驗數量：DRAFT／PICKING不套用Pick完成等式；PICKED／SHIPPED／REVERSED才驗`planned = picked + short`、`allocated = picked + derived released`，允許一Line全短揀但整張SUM(picked)>0；`shipped ∈ {0, picked}`、`reversed ∈ {0, shipped}`。CANCELLED釋放全部未耗用Allocation並保留既有Pick歷史；derived released來自Allocation彙總，沒有新增Line欄位。`SHIPPING／REVERSING` 禁止 update、cancel 或另一個新 event。
 
 ### Rationale
 設計規格 §3.1、§3.3，實現需求 §7 狀態表、BR-004～BR-005 及 BR-022。狀態由事實推導而非人工設定，令 SO、Reservation、Allocation、Fulfillment、Shipment 及 Reversal 數量在任一時點可完整解釋（BR-011、KPI-04）。
@@ -1817,6 +1829,15 @@ Archive 相同 ID 且 hash 相同視為 unknown-outcome recovery，hash 不同�
 ### Failure behavior
 業務驗證失敗不無限 retry，暫時失敗採 exponential backoff ＋ jitter，commit 不明先 lookup source outcome；效能結果必須附 EXPLAIN、rows examined、lock wait、pool usage 及 heap 證據，不得以縮小資料集通過；有正式資料後只用 forward migration 修正，不 drop 或改寫 ledger／history。
 
+
+### HD-010 — Localized Fulfillment transaction isolation (adopted2026-10-21)
+
+New Fulfillment write transactions use the existing database owner's READ COMMITTED option. A private active-executor registry in MySqlDatabaseService records the actual normalized transaction isolation after BEGIN and removes it on exit/abort; batch providers additionally require the current caller-context executor and reject missing/incorrect capability before claims. No command field or session-default variable asserts isolation. Other module workflows and database/global/session defaults remain unchanged. Full parent/root locks, complete sorted lock sets, FK/unique, version CAS and atomic rollback enforce exact-set/aggregate invariants; do not rely on RR gap locks or stable repeated plain reads. After complete Warehouse/StockControl serialization anchors and locked Item policy, Inventory's bounded plain candidate queries are current statement reads, followed by the approved Bin/Lot/Balance/Reservation/Allocation order and revalidation. Native races/capacity/rollback and provider source review remain Checkpoint0B prerequisites. Actual decision, reviewed proposal and alternatives: implementation/08_allocation_read_consistency.md#actual-adoption.
+
+### HD011 adopted Reservation version and synchronization clarification
+
+Sam adopted A in implementation/10_reservation_version_alignment.md#actual-adoption. Sales CLAIM.expectedVersion is the mapping's strict last-sync CAS; Inventory command expectedVersion and Fulfillment Claim.inventory_version come from the Inventory owner's actual current locked state, with scope/source/status/counter validation and active Claim sum≤native outstanding. Quantity-neutral Allocation/Release/Reallocate may advance Inventory CAS without immediately rewriting Sales last-sync. Quantity-changing events still synchronize Sales atomically from actual owner result. Shipment intents bind actual current Inventory CAS, never infer neutral drift from a larger version, and Sales apply requires an unforgeable same-transaction exact receipt, current+1, complete native counter/source checks and old mapping CAS before syncing to actual current version. Original reserve identity,0078/0086 triggers, exact replay, Reverse and all gates remain unchanged. This precise cadence refinement supersedes earlier same-version shorthand; no new sync API, schema or permission is introduced. Owner canonical alignment and actual joint/repeated-CLAIM/native tests remain required before0B.
+
 ## DES-015 — DEC-029 shared Archive prerequisite contribution
 
 ### Decision
@@ -1829,7 +1850,7 @@ Sales057/058 and owner041/042 had a delivery cycle, and owner mirrors require Sa
 
 ### Failure behavior
 
-Absent/unavailable/partial/inconsistent owner state returns UNKNOWN and blocks Archive. Participant accepts only trusted Sales coordinator identity and caller transaction; hashes/counts must verify before active deletion, conflict or any failure rolls back. Owner records are frozen before final Sales source checks. Original45 tasks/12TC/120UAT and all fullPhase Gates remain outstanding; this contribution is not whole-module acceptance or production deployment authority.
+Absent/unavailable/partial/inconsistent owner state returns UNKNOWN and blocks Archive. Participant accepts only trusted Sales coordinator identity and caller transaction; hashes/counts must verify before active deletion, conflict or any failure rolls back. Owner records are frozen before final Sales source checks. Historical DEC-029 planning statement: full45-task/12TC/120UAT obligations were then outstanding. Formal P0 PR271 has since delivered TASK001–011; that completed scope remains intact. Remaining owner phases, formal acceptance and deployment authority are not supplied by this contribution.
 
 
 ### DEC029 operation source routing

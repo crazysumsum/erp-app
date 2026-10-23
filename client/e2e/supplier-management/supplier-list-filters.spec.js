@@ -197,3 +197,43 @@ test("@technical ticking a filter on a later page goes back to page 1 (REV-095 M
   await expect(page).toHaveURL(/[?&]page=1(&|$)/u);
   expect(problems).toEqual([]);
 });
+
+test("@technical the list tells loading, empty and failed apart by its text (DEF-032)", async ({ page }) => {
+  const problems = collectProblems(page);
+  await installApi(page);
+  let release;
+  const held = new Promise((done) => { release = done; });
+  const replies = [];
+  // 後註冊嘅 route 先食：淨係接管列表本身，其他照用 installApi。
+  await page.route((url) => url.pathname === "/api/v1/suppliers", async (route) => {
+    const headers = { "content-type": "application/json", "access-control-allow-origin": "http://127.0.0.1:5203" };
+    const next = replies.shift() ?? "row";
+    if (next === "held") await held;
+    if (next === "fail") {
+      return route.fulfill({ status: 500, headers,
+        body: JSON.stringify({ success: false, error: { code: "INTERNAL_ERROR", message: "伺服器暫時出錯" }, meta: { requestId: "pw" } }) });
+    }
+    const items = next === "row" ? [ROW] : [];
+    return route.fulfill({ status: 200, headers, body: JSON.stringify({ success: true, data: { items, total: items.length, page: 1, pageSize: 20 }, meta: { requestId: "pw" } }) });
+  });
+
+  replies.push("held");
+  await page.goto("/suppliers");
+  await expect(page.getByText("載入中…")).toBeVisible();
+  await expect(page.getByText("冇資料")).toHaveCount(0);
+  release();
+  await expect(page.getByText("冇資料")).toBeVisible();
+  await expect(page.getByText("載入中…")).toHaveCount(0);
+
+  replies.push("fail");
+  await page.reload();
+  await expect(page.getByRole("button", { name: "重試" })).toBeVisible();
+  await expect(page.getByText("冇資料")).toHaveCount(0);
+  await expect(page.getByText("載入中…")).toHaveCount(0);
+
+  await page.getByRole("button", { name: "重試" }).click();
+  await expect(page.getByText("SUP-007")).toBeVisible();
+  await expect(page.getByRole("button", { name: "重試" })).toHaveCount(0);
+  expect(problems.filter((problem) => !/500 http:\/\/localhost:3000\/api\/v1\/suppliers\b/u.test(problem)
+    && !/Failed to load resource: the server responded with a status of 500/u.test(problem))).toEqual([]);
+});

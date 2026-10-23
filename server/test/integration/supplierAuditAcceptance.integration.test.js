@@ -414,11 +414,15 @@ integrationTest("TC-106 (AUD-004): detail up to 8192 bytes is stored whole, a la
     body: addressBody("😀") });
   assert.equal(address.status, 201, address.text);
   let addressVersion = address.json.data.version;
-  for (const c of ["😁", "\u0001", "\u0002"]) {
-    const saved = await h.send(h.users.mgmt, h.route("POST /api/v1/suppliers/:supplierId/addresses/:addressId/update"),
+  const saved = await h.send(h.users.mgmt, h.route("POST /api/v1/suppliers/:supplierId/addresses/:addressId/update"),
+    { ids: { supplierId: made.json.data.id, addressId: address.json.data.id }, body: { version: addressVersion, ...addressBody("😁") } });
+  assert.equal(saved.status, 200, `address: ${saved.text}`);
+  addressVersion = saved.json.data.version;
+  // DEF-005（HD-116 A）：地址同其他實體一樣拒絕控制字元，所以呢個 audit 大小情況而家喺驗證就擋咗。
+  for (const c of ["\u0001", "\u0002"]) {
+    const refused = await h.send(h.users.mgmt, h.route("POST /api/v1/suppliers/:supplierId/addresses/:addressId/update"),
       { ids: { supplierId: made.json.data.id, addressId: address.json.data.id }, body: { version: addressVersion, ...addressBody(c) } });
-    assert.equal(saved.status, 200, `address ${JSON.stringify(c)}: ${saved.text}`);
-    addressVersion = saved.json.data.version;
+    assert.deepEqual([refused.status, refused.code, refused.json.error?.details?.field], [400, "SUPPLIER_ADDRESS_INVALID", "label"], refused.text);
   }
 });
 

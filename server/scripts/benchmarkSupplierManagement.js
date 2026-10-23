@@ -205,6 +205,9 @@ try {
   const startedAt = Date.now();
   const measureFrom = startedAt + WARMUP_SECONDS * 1000;
   const endAt = measureFrom + SECONDS * 1000;
+  // 量度窗口（HD-122 A）：報告記低，亦即刻印一行，等同時跑嘅工具（例如匯入）可以喺量度開始之後先起步。
+  report.window = { measureFrom: new Date(measureFrom).toISOString(), measureTo: new Date(endAt).toISOString() };
+  console.log(JSON.stringify({ event: "supplier.benchmark.window", ...report.window }));
   // Digest 表滿咗嘅話，新 SQL 唔會有自己一行：用 Performance_schema_digest_lost 喺量度期間嘅增加量講明（REV-089 L-3）。
   const digestLost = async () => Number((await admin.query("SHOW GLOBAL STATUS LIKE 'Performance_schema_digest_lost'"))[0][0]?.Value ?? 0);
   const digestsAtStart = sleep(WARMUP_SECONDS * 1000).then(async () => ({ digests: await readDigests(), lost: await digestLost() }));
@@ -289,7 +292,8 @@ try {
         plan = `EXPLAIN failed: ${error.code ?? error.message}`;
       }
     }
-    report.topStatements.push({ digest: row.digest.slice(0, 400), count: Number(row.count), totalMs: Number(row.totalMs),
+    // 完整 digest（HD-122 A）：截短咗就睇唔到排喺後面嘅 LIKE，文字搜尋嘅掃描就會被當成意外。
+    report.topStatements.push({ digest: row.digest, count: Number(row.count), totalMs: Number(row.totalMs),
       avgMs: Number(row.avgMs), maxMs: Number(row.maxMs), rowsExaminedPerCall: Math.round(Number(row.rowsExamined) / Number(row.count)),
       rowsSentPerCall: Math.round(Number(row.rowsSent) / Number(row.count)), noIndexUsed: Number(row.noIndexUsed), plan });
   }

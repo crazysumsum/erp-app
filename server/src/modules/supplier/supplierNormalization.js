@@ -1,7 +1,7 @@
 import { SUPPLIER_IDENTIFIER_TYPES } from "./supplierConstants.js";
 import { invalidSupplierInput } from "./supplierErrors.js";
 
-function containsControl(value) {
+export function containsControl(value) {
   return Array.from(value).some((character) => {
     const code = character.codePointAt(0);
     return code <= 31 || (code >= 127 && code <= 159);

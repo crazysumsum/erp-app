@@ -1,5 +1,7 @@
 # Fulfillment & Shipping Management Design Review
 
+> Sam adopted HD-006 A (P0 contract checkpoint sequence) and HD-007 A (MySQL 26.7.0). Current baseline approval, independent-review provenance and publication receipts are recorded in [the readiness report](10_implementation_readiness.md); historical approvals below retain their original scope. Planning approval does not itself authorize IMPLEMENT or deployment.
+
 ## Review result
 
 `APPROVED` as a planning baseline by human independent reviewer Sam on 2026-09-14. The MySQL 8.0 compatibility baseline and the Phase P0 → P3 order are confirmed. This review does not authorize entry to `IMPLEMENT`, test execution, UAT, Go-Live or release.
@@ -40,3 +42,24 @@
 ## Decision
 
 The aligned design and the Phase P0 → P3 plan are approved planning baselines with zero open CRITICAL findings and zero open HIGH findings. One open LOW finding (`DR-04`, browser tooling) remains: Playwright is pinned in the repository and a per-module convention exists, but no CI job runs any browser suite yet, and the one existing suite is red on `main`. This module has no UI until `PHASE-002`, so nothing is blocked today; the module's e2e config, profile suite and CI coverage must be in place before `PHASE-002` opens any UI route. All implementation gaps remain unstarted Tasks, all tests remain `NOT_RUN`, and `IMPLEMENT` authorization has not been given.
+
+## 2026-10-20 independent requalification
+
+Reviewer `/root/fulfillment_independent_review` is a separately spawned, read-only agent; the document author is `/root`. The user explicitly requested independent review and completion of the design/plan approvals and NFR-023 renewal. No reviewer identity or result is inferred from a role prompt.
+
+R1 reviewed commit `2fee0339f15ecfb6e7c1970a9c9d25496de8ea77`, DESIGN `329d29496802aa2d6405a3aabb743a4b80ab8182748e82824a8bb688811965dc`, PLAN `83a958c6bab1eff0ab81ae6cb73c508f016aaecbe6defd39ab87c9c403e0824c`. Actual disposition was `CHANGES_REQUESTED`, 0 CRITICAL / 3 HIGH / 1 MEDIUM. The original finding and failure history are preserved here; closure requires actual R2 review of the changed baseline.
+
+| Finding | Severity / related definitions | R1 evidence and impact | Narrow correction submitted to R2 |
+| --- | --- | --- | --- |
+| IR-001 | HIGH; DES-008, TASK-003, TC-002 | Design §3.3 imposed Pick-complete equations on DRAFT/PICKING, disallowed a legal wholly short line, and referenced an undeclared Line released column. | State-conditioned invariants; document-level positive Pick rule; historical Allocation/release sums from existing projection rows; cancellation preserves confirmed history; column descriptions, DES-008, task acceptance and TC-002 agree. |
+| IR-002 | HIGH; DES-001, TASK-011/041, TC-010 | Sales guard denies release as soon as Fulfillment schema/history exists, but the real lifecycle provider was only scheduled at P3; P0 rollback's no-user-impact claim was false. | P0 TASK-011 delivers/proves minimum real lifecycle provider and registration in isolated schema; live activation waits the completed P0 artifact and approved quiesce/install/register/probe/resume runbook. P3 extends archive; rollback preserves guard or keeps release writers quiesced. |
+| IR-003 | HIGH; DES-005, TC-007 | Design §8.6 kept all later provider failures SHIPPING, including permanent business rejection. | Fully rollback Phase B, then terminalize only matching event/hash/lease/target under CAS in a fresh failure transaction. Never overwrite a completed outcome or terminalize an indeterminate commit; failure-record interruption is recoverable. Reversal uses the same failure-safety rule. |
+| IR-004 | MEDIUM; DES-007, TC-007 | Phase A/cancel lock descriptions reversed the global Fulfillment→Shipment order. | Nonlocking routing discovery, canonical sorted Fulfillment→Shipment locks and ownership recheck; Confirm/Cancel/Create race obligations explicit; Reversal Phase A follows the same ordering. |
+
+Item §6.4 was also aligned to the existing transaction-aware profile method; batch lock/validation strategy remains a provider-owner implementation obligation. No business rule, acceptance threshold, requirement ID or product implementation was added by these consistency corrections. NFR-023's unchanged UAT N/A rationale was independently found sound; TC-010 remains mandatory and blocking.
+
+### R2 final independent disposition
+
+Actual reviewer `/root/fulfillment_independent_review` returned PASS after independently recomputing DESIGN `feef0869d0d3d1814ce5ab9a08e885ef84c49e578bfbf24269ff106b0aa69ce8`, PLAN `a229fd571382e42dbc0e88c896bd06aeed12bf4e5e3b4622a58bc69197aead38`, source fingerprint `46f38a6759a89848336a2e42c4b267e9f00c76b39d9a7767021ec5ba245ba9a9` at integrated HEAD `46b390e772f08a759d0f383096c87eef347a3f1f`. IR-001/002/003/004 are RESOLVED at specification level; 0 open CRITICAL / HIGH / MEDIUM and no new planning blockers. Actual review covered canonical requirements, design, P0–P3 plan, technical/UAT specifications, typed ledger/profile/manifest, relevant provider/guard/CI source and the final corrective diff. The reviewer did not mutate files or execute product/native/browser tests.
+
+The unchanged NFR-023 UAT N/A reason was independently found appropriate with TC-010 still mandatory/blocking. Existing provider implementation, native MySQL, module-specific Playwright/profile/CI, shared-path scope and live-cutover proof remain task/entry obligations. Human planning authority and versioned approvals are recorded in `10_implementation_readiness.md`; the independent agent does not impersonate a human approval.

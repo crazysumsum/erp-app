@@ -187,7 +187,7 @@ describe("pages/suppliers/SupplierDetailPage.vue", () => {
     expect(editNameInput(body, "Evergreen Trading (draft)")).toBeUndefined();
   });
 
-  it("keeps the user on the current supplier when they refuse to discard the draft", async () => {
+  it("TC-123 (UI-003): keeps the user on the current supplier when they refuse to discard the draft", async () => {
     const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
     const { router, body } = await mountPage({ permissions: ["supplier.view", "supplier.mgmt"] });
     await clickButton(body, "編輯一般資料");

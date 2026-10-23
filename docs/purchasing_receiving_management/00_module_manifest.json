@@ -103,9 +103,9 @@
       {
         "module_id": "item-management",
         "id": "item-lookup-service",
-        "version": "observed-origin-main-a3040c9-PARTIAL",
+        "version": "observed-main-09281b0a",
         "source": "server/src/modules/item/ItemLookupService.js",
-        "sha256": "6aff6504eb3cae4347c05a7deaba1c4c7eb1e2de3142f9a7de1eb4587c2f8d90",
+        "sha256": "a09d5baf602f44199cd218a2b3139edcdb2abad039a6f08a21b48162900562b5",
         "regression_suites": [
           "purchasing-technical"
         ]
@@ -113,9 +113,9 @@
       {
         "module_id": "authorization",
         "id": "permission-catalogue",
-        "version": "observed-origin-main-a3040c9",
+        "version": "observed-main-09281b0a",
         "source": "server/src/modules/authorization/permissionCatalogue.js",
-        "sha256": "bc0828b5052be1cad23ac6db941f23fde802d482db1c64aa8dadccee87e21fdf",
+        "sha256": "32db8366598b206e41d14e66882f3d9ee63d5a825dc149eef4bf715e1e6cf282",
         "regression_suites": [
           "purchasing-technical"
         ]
@@ -123,9 +123,9 @@
       {
         "module_id": "framework",
         "id": "idempotency-service",
-        "version": "observed-origin-main-a3040c9",
+        "version": "observed-main-09281b0a",
         "source": "server/src/services/idempotency/IdempotencyService.js",
-        "sha256": "6f0f61e8507c206d3d47d93cbf0d099dc916bb95e3de02f163c4283bd7c17925",
+        "sha256": "b574dd69c4fd006a550421d9bb1e550c94f8f39d22837eecd61f7cf079c6da9d",
         "regression_suites": [
           "purchasing-technical"
         ]
@@ -133,9 +133,9 @@
       {
         "module_id": "supplier-management",
         "id": "supplier-purchasing-contract",
-        "version": "planning-only-NOT_IMPLEMENTED",
+        "version": "observed-main-09281b0a",
         "source": "docs/supplier_management/03_design_spec.md",
-        "sha256": "983f351f027732516cb126722bf97db85d4c5548dd572ccd6f00badfbad5cbbb",
+        "sha256": "a9f644939616f70c1099c2a9d9b82847394abfcc29de64730ec5247ad46697bc",
         "regression_suites": [
           "purchasing-technical"
         ]
@@ -143,9 +143,9 @@
       {
         "module_id": "inventory-management",
         "id": "inventory-purchase-receipt-batch-and-partial-reversal",
-        "version": "planning-only-NOT_IMPLEMENTED",
+        "version": "planning-only-NOT_SPECIFIED_BY_PROVIDER-issue-267",
         "source": "docs/inventory_management/03_design_spec.md",
-        "sha256": "ffbffdf71a6b2cd639ba41f68c5bfe1965310d920387023908ef1070d881790f",
+        "sha256": "2fb61cce8ee4ff9f32cd9c6d0e2a9fc8f87c08d34823be7fb622908610b1ac53",
         "regression_suites": [
           "purchasing-technical"
         ]

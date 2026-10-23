@@ -6,6 +6,7 @@ import customerConfig from "../../../config/customer.js";
 import apiConfig from "../../../config/api.js";
 import databaseConfig from "../../../config/database.js";
 import deviceBindingConfig from "../../../config/deviceBinding.js";
+import fulfillmentConfig from "../../../config/fulfillment.js";
 import idempotencyConfig from "../../../config/idempotency.js";
 import inventoryConfig from "../../../config/inventory.js";
 import itemConfig from "../../../config/item.js";
@@ -27,6 +28,7 @@ import { normalizeDatabaseConfig } from "./normalizeDatabaseConfig.js";
 import { normalizeDeviceBindingConfig } from "../../services/deviceBinding/normalizeDeviceBindingConfig.js";
 import { normalizeIdempotencyConfig } from "../../services/idempotency/normalizeIdempotencyConfig.js";
 import { normalizeInventoryConfig } from "../../modules/inventory/normalizeInventoryConfig.js";
+import { normalizeFulfillmentConfig } from "../../modules/fulfillment/normalizeFulfillmentConfig.js";
 import { normalizeItemConfig } from "../../modules/item/normalizeItemConfig.js";
 import { normalizeSalesConfig } from "../../modules/sales/normalizeSalesConfig.js";
 import { normalizeCustomerConfig } from "../../modules/customer/normalizeCustomerConfig.js";
@@ -46,6 +48,7 @@ export function defaultConfigurationSource() {
     api: apiConfig,
     database: databaseConfig,
     deviceBinding: deviceBindingConfig,
+    fulfillment: fulfillmentConfig,
     idempotency: idempotencyConfig,
     inventory: inventoryConfig,
     item: itemConfig,
@@ -106,6 +109,7 @@ export function validateApplicationConfiguration(
   validateSection("idempotency", () =>
     normalizeIdempotencyConfig(source?.idempotency)
   );
+  validateSection("fulfillment", () => normalizeFulfillmentConfig(source?.fulfillment, { requestTimeoutMs: normalized.application?.requestTimeoutMs }));
   validateSection("inventory", () => normalizeInventoryConfig(source?.inventory));
   validateSection("item", () => normalizeItemConfig(source?.item));
   validateSection("jwt", () => normalizeJwtConfig(source?.jwt));

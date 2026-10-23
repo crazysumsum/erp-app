@@ -1,0 +1,13 @@
+# TASK-003 developer completion and Checkpoint0A
+
+DONE at source commits092d3b67 and6804458b. Five pure modules implement explicit Fulfillment/Shipment/Reversal transition graphs, exact BigInt conservation from strict decimal-string wire quantities, state-conditioned cumulative Allocation/Release history, full-short-picked lines with positive document total, Claim conservation, canonical UTF-8 operation hashes and equality against owner recommendations. No business route/menu was added. Selection comparison does not rank candidates or infer override authority.
+
+Developer cases DEV-P0-003-STATE, QUANTITY, CLAIM, WIRE, HASH and SELECTION are the eight executable tests in fulfillmentStateAndQuantity.test.js and fulfillmentCanonicalRules.test.js. Both suites were initially RED for absent modules, then GREEN. Focused8PASS/0FAIL/0SKIP; observed five-module coverage100% lines/branches/functions. Subsequent R12 fixes reran8PASS; complete P0 coverage remains a later gate.
+
+Independent R12 `/root/fulfillment_independent_review` (SEPARATE_AGENT) APPROVED the seven source/test files at parent9f503240 plus increment; compact file-hash-list digest478c55f7d37018175d31d960318b6bb94fa8f1a780379f982128bc1d12d92b2b. Three MEDIUM findings were repaired and independently retested: nullable shippingContactId hash; cancellation preserves one legal whole-document DRAFT/PICKING/PICKED history; post-Pick cumulative allocated quantity cannot be below planned. Zero open CRITICAL/HIGH/MEDIUM. Checkpoint0A is developer-complete with TASK001 inventory and TASK002 evidence; no claim of provider readiness/Checkpoint0B.
+
+# Provider coordination review R11
+
+Wire04 proposal SHA6d03207620ab49afde4cf0fd222fa70969ea1a562062ccdba5c7e15ad6cc5cf9 was independently APPROVED for DTO/lock feasibility, 0 open CRITICAL/HIGH/MEDIUM. Sales113 reviewed SHA483d1bd52f12055d1f9b29a2ef97771d9a0414843902e43a8a1b06f8fa526ed5. Closed findings require Issue bucket snapshots, dedicated completed-root/member provenance (generic caller-labelled sources excluded), immutable actual replay versions, and old/new Reallocate sets independently bounded5000 (combined10000 legs). Native capacity/budget/rollback/concurrency remain required, not observed PASS. Subsequent narrow verifier-helper and phase-A/discovery-event wording will receive source-level owner/consumer review before0B.
+
+Task004 is being prepared by the actual Sales owner chat. Task006 master-data extension is implemented locally and awaiting R13 review; Task005 Inventory batch implementation remains outstanding. No TASK007–010 Fulfillment aggregate DDL has run. Full P0 remains IMPLEMENTING, no PR opened and no formal acceptance claimed.

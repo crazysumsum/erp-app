@@ -82,3 +82,97 @@ UI create, so the two agree. A test pins this, and it will turn red when this de
 the setting.
 
 Not fixed here. Wiring the setting changes UI behaviour for any non-default value, which is outside HD-057.
+
+## DEF-031 — MEDIUM
+
+When two requests add the same identifier to two different Suppliers at the same moment, one of them can get
+`500 INTERNAL_SERVER_ERROR` instead of `409 SUPPLIER_IDENTIFIER_TAKEN`.
+
+The duplicate check takes a shared lock on `uq_supplier_identifier_value`. When both inserts are waiting for their
+insert-intention lock, InnoDB detects a deadlock and rolls one of them back (seen in `SHOW ENGINE INNODB STATUS`).
+`SupplierIdentifierService` maps only `ER_DUP_ENTRY`, and nothing retries a deadlock, so the rollback surfaces as a
+500. The identifier is still unique and no data is wrong; only the response is.
+
+Found by REV-103 (M-2) in raw SQL, and reproduced over HTTP: 1 of 150 deliberate simultaneous rounds returned 500. The
+same probe on Supplier create (a reused code) gave 150 of 150 clean 201/409 pairs. Address, contact, Bank and
+approval writes lock the Supplier row first, so two of them for the same Supplier cannot reach the unique key
+together. Decision: HD-115.
+
+Fix, per HD-115 A:
+
+- **What changed.** Four writes now run their whole transaction again, once, when it fails with `ER_LOCK_DEADLOCK`: identifier create, identifier update, Supplier create, and Supplier Code change. The helper is `retryOnceOnDeadlock` in `supplierErrors.js`, following the retry in `SupplierRelationService`.
+- **Why the retry answers 409.** The retry either sees the winner's committed row or queues behind it, so it hits the unique key and returns the normal 409. If the winner rolled back instead, the retry succeeds.
+- **Logging.** Each retry logs `supplier.write.deadlock_retried` with the operation and request ID, so deadlocks stay visible.
+- **Coverage beyond HD-115.** Supplier create turned out to be affected too: the forced test returns 500 on every run without the fix. REV-104 found Supplier Code change exposed in the same way (M-1). It is fixed under the same rule. CSV import already maps a deadlock to `SUPPLIER_IMPORT_ROW_BUSY`.
+- **The test.** `supplierDeadlockRetry.integration.test.js` forces the deadlock deterministically:
+  - A third transaction inserts the same value and does not commit.
+  - Once performance_schema shows both requests queued behind it, it rolls back.
+  - The test checks that InnoDB's latest deadlock happened after the test started and on the expected unique index.
+  - The two responses must be 201/200 and 409, and the retry must be logged.
+  - The two requests come from two different users. Requests from one user queue on that user's row first.
+
+## DEF-032 — LOW
+
+Found by REV-107 M-1 (TC-013, LIST-006). The shared `client/src/framework/ui/DataTable.vue` replaces Quasar's no-data slot with a fixed 「冇資料」 and ignores the slot's `message`, which Quasar sets to the loading label while loading. On a failed read it empties the rows, so 「冇資料」 also appears under the error banner. A sighted user therefore sees "no data" while the Supplier list is loading, when it is empty, and when the read failed. Only `aria-busy` and the error banner tell the states apart, against FR-LIST-010. The component is shared framework code outside the Supplier module, used by every list page, so the fix needs its own decision. REPORT_ONLY: no product change made. The TC-013 test asserts what is distinguishable today and the map marks TC-013 PARTIAL.
+
+**Fixed under HD-118 A (APPROVAL-HD-118-SCOPE).** `DataTable` now owns the `#no-data` slot. While loading it says 「載入中…」. In server mode (`fetch`), after a failed read it shows nothing there and leaves the message to the error banner, and only a successful empty read shows the empty-state text, whether it is the default 「冇資料」 or the page's own slot. The text is the app's own rather than Quasar's `loadingLabel`, because no Quasar language pack is installed and that label would read "Loading...". This also changes the pages of other modules that pass their own `#no-data` (Sales import, orders and quotations): their empty text no longer appears while loading or under an error. Tests: `DataTable.test.js` (both slot kinds, server and client mode), the TC-013 list test, and a Playwright test in `supplier-list-filters.spec.js`. The original component turns all of them red.
+
+Known limitation (REV-108 L-2): in client mode (`rows` and `loading` props) DataTable has no error input. A page that catches its own read failure and leaves its rows empty, such as `UomsPage`, still shows 「冇資料」 beside its own error notice. The Supplier list uses server mode and is not affected. Fixing those pages belongs to their owners.
+
+## DEF-033 — MEDIUM
+
+Found while preparing the TC-131 (OPS-004) runner. On a freshly migrated scratch schema, the server starts and `/api/v1/health` answers `ok` when a non-core Supplier table (`supplier_contacts`), a column (`suppliers.website`) or the `supplier_settings` singleton row is missing. Startup checks only that `suppliers`, `supplier_addresses` and `supplier_address_purposes` exist. A missing Supplier permission (framework permission catalogue) and a missing Bank key ring (configuration validation) are already refused. Design §14.1 step 4 requires the startup self-check to cover schema, permissions, the settings singleton and the key ring. Fix approved as HD-121 A.
+
+**Fixed under HD-121 A.** A new eager service, `supplierSchemaCheck`, runs at startup. It checks every Supplier table against its own migration contract (`inspect*Schema`). Every inspector requires the full column set; how much more it checks varies: most also check types, NULL, collation, indexes and foreign keys, but the contacts and settings inspectors compare column names only (REV-110 L-1). It also checks the 0080 list indexes and that 0087's `(sku_id)` index serves the SKU foreign key (REV-110 M-2), and requires the `supplier_settings` row `id = 1`. Anything missing or not matching refuses startup with a message that names the table, index or row (a missing column is reported against its table, because the inspector compares the column count first) and says nothing was changed. Health is never reached, because the server does not listen. Database errors other than a contract mismatch are rethrown as they are. Tests: `supplierStartupSelfCheck.integration.test.js` (CI) and TC-131 in the resilience runner remove a table, a column, a 0080 index, the 0087 index, the settings row and a permission on a freshly migrated schema. Each expects refusal and an unchanged database, restores the original definition, and expects a clean start. Control: making the check a no-op lets a schema without `supplier_contacts` start, and the test fails.
+
+## DEF-034 — LOW
+
+The first run of the performance runner (2026-10-22, TC-101) found a 10,000-row import, run alongside a 50-user load on 100k seeded Suppliers, that applied 9,999 rows. One row ended not applied. The job's counts stayed consistent, so the row was reported as failed rather than lost silently, but every row in that file is a valid create. The cause is unknown: that first runner version deleted the tools' reports. The next three runs applied 10,000 of 10,000, and T50's earlier runs did too. The runner now keeps the tools' reports. While the import runs, it also polls for failed rows and records their stored errors (`evidence.importFailedRows`), because the import tool deletes its job and rows when it finishes. A recurrence will therefore show the reason. REPORT_ONLY: no product change.
+
+## DEF-035 — MEDIUM
+
+Found while preparing the UAT browser tests (HD-124 A). Design §7.2 lists seven Supplier pages, including `SupplierAuditPage.vue` (`/suppliers/audit`, menu 「變更紀錄」, audit filter and masked detail). It also gives the detail page an Audit tab, `SupplierAuditTimeline.vue`. Neither exists. No task in `05_development_tasks.md` covers them: T09 built only the audit service and `GET /api/v1/supplier-audit/logs`. UAT accepts only user-observable evidence, and at least ten cases read the Audit page (UAT-001, 006, 009, 012, 020, 026, 030, 041, 043 and 055). Fix approved as HD-125 A, without changing the plan.
+
+**Fixed under HD-125 A.**
+- **What was built:**
+  - `SupplierAuditPage.vue` (`/suppliers/audit`, menu 「變更紀錄」, `supplier.view`).
+  - A shared `SupplierAuditTimeline.vue`, which is also used by a new 「變更紀錄」 tab on the detail page.
+  - Both read the existing `GET /api/v1/supplier-audit/logs`.
+- **What the page does:**
+  - Filters by Hong Kong day bounds, actor, target, action and target type. A reversed range is shown as an error and not queried; a half-typed date is not queried either.
+  - Any filter change starts again from page 1. Filters and paging are kept in the URL, so a refresh or a shared link restores them.
+  - Shows time in Hong Kong time, the action, the target, the request ID in full, the reason, and before → after for each field.
+  - The detail is shown as the server masked it. A notes digest is shown as a length (「notes：0 字 → 10 字」), never the hash, and a list the server summarised is shown as a count and a sample.
+  - The tab asks only for its Supplier.
+- **Review:** REV-113 (`implementation/116_rev_113_independent_review.md`); every finding fixed as recommended.
+- **Tests:**
+  - `audit.test.js` and `supplierAudit.test.js`. A 13-mutant sweep covering the review's surviving mutants turns every one red.
+  - Two Playwright tests in `supplier-audit.spec.js` (network mocked).
+  - A real-backend browser check (local, not CI): a viewer saw the request ID on screen, no account plaintext, inert markup, the notes length, and the filters restored after a reload.
+  - UAT (UAT-001, 055 and others) will exercise the page against a real backend under HD-124 A.
+
+## DEF-036 — HIGH
+
+Found during the DEF-035 real-backend check. The Supplier create and edit forms (`SupplierBasicForm.vue`, `SupplierPaymentDefaults.vue`) and the list filters (`SuppliersPage.vue`) load currencies and payment terms from `GET /api/v1/business-master/currencies` and `/payment-terms`. Both endpoints require `business_master.view` (`VIEW_POLICY` in `server/src/handlers/business-master/businessMasterSchemas.js`). Design §6 (the endpoint table) says they should accept `supplier.view` or the matching consumer permission.
+
+- **Measured** (local, erp_t51): a user with `supplier.view` and `supplier.mgmt`, the UAT CLERK role, gets 403 on both lists. With `business_master.view` added, both return 200.
+- **Effect:** a CLERK cannot choose a default currency, so cannot create a Supplier in the UI. This blocks UAT-001 and every UAT case that starts from a new Supplier.
+- **Owner:** the endpoints belong to Business Master, which is not Supplier code. **Decision required (HD-126).**
+
+## HD-116 A: dispositions (2026-10-21)
+
+Fixed in this change:
+
+- **DEF-003.** Supplier completeness reads the default currency through the Business Master provider (`getCurrencyHistory`) instead of querying `currencies`. The query handler now builds a real provider, and a unit test pins that no raw `currencies` query remains. `getCurrencyHistory` does not check Business Master readiness, so when Business Master is NOT_READY the completeness check still reports `CURRENCY_NOT_ACTIVE` rather than 503. A readiness gate on this read path is not part of this fix (REV-106 L-1).
+- **DEF-005.** Address text fields are limited to their column lengths, counted in characters, and refuse C0/C1 control characters (newlines included), like contacts and identifiers.
+  - **Error.** `400 SUPPLIER_ADDRESS_INVALID` with `details.field`, and a message that names the field and the reason, for example 「備註不可包含換行或其他控制字元」 (REV-106 M-2). The UI shows that message.
+  - **Paths.** HTTP already limited length. The CSV import already refused these values earlier, with its own row errors (REV-106 L-2, verified), so the new check is the service's own guard. Its field names are now mapped to the CSV columns in case it is ever reached.
+  - **Existing rows** are not changed. But an existing address that contains a control character can no longer be saved until that field is corrected, even when the user edits another field. The message names the field.
+  - **Release note.** Before release, count the affected rows: `SELECT COUNT(*) FROM supplier_addresses WHERE CONCAT_WS('', label, address_line1, address_line2, address_line3, city, state_region, postal_code, phone, notes) REGEXP '[[:cntrl:]]'`. Any clean-up of those rows is a data change that needs its own explanation and approval.
+  - **Test change.** The HD-112 audit test that sent control characters in an address now expects this refusal.
+- **DEF-006.** Identifier update and delete check `affectedRows` and answer `VERSION_CONFLICT` when no row matched.
+- **DEF-010.** `BANK_ACCOUNT_MISSING` follows the sibling convention: an absent flag means missing. Bank is deployed, so the create response, the detail and the completeness check all evaluate it. Detail and completeness test for an active bank account, using the same definition as the list's `missingBank` filter. CORE-006 lists Bank among the warning-only data.
+- **DEF-024.** Online Bank API writes (create, update, set default, deactivate) now retry once on `ER_LOCK_DEADLOCK`, like DEF-031. REV-106 M-1 showed that two *different* Suppliers can deadlock when each adds its first default account at the same moment: both take a gap lock on the same empty range before inserting. The test forces exactly that. Both creates succeed, the retry is logged, and without the retry one of them fails. `bank_operations.md` §6.3 explains this to operators.
+- **DEF-030.** `SUPPLIER_DUPLICATE_NAME_THRESHOLD` now reaches every handler that runs the similar-name check, and the offline similar-name report reads it too, with the server's validation. The import worker is wired as well, but imports do not run the similar-name check (`findDuplicates: false`), so the setting has no effect there (REV-106 L-4).
+
+Deferred to release, handed to their owners, or accepted: see `defect_handoffs.md`.

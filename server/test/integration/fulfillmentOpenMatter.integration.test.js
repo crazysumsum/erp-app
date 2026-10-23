@@ -7,7 +7,7 @@ import { seedCancelledFulfillment, seedFulfillmentSalesOrder, seedFulfillmentCla
 import { FulfillmentOpenMatterService } from "../../src/modules/fulfillment/FulfillmentOpenMatterService.js";
 import { MySqlDatabaseService } from "../../src/services/mysqldatabase/MySqlDatabaseService.js";
 import { RequestContextService } from "../../src/services/context/RequestContextService.js";
-import { FulfillmentOpenMatterRuntimeService } from "../../src/services/fulfillmentArchive/FulfillmentOpenMatterRuntimeService.js";
+import { FulfillmentOpenMatterService as FulfillmentOpenMatterRuntimeService } from "../../src/services/fulfillment/FulfillmentOpenMatterService.js";
 import { createApplication } from "../../src/framework/application/createApplication.js";
 import { defaultConfigurationSource } from "../../src/framework/configuration/applicationConfiguration.js";
 import { SalesOrderLifecycleService } from "../../src/modules/sales/SalesOrderLifecycleService.js";

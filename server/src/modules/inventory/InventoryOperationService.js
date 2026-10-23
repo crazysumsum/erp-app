@@ -1,6 +1,8 @@
 import { createHash } from "node:crypto";
+import { getActiveTransactionIsolation } from "../../services/mysqldatabase/MySqlDatabaseService.js";
 
 import { INVENTORY_COMMAND_TYPES } from "./inventoryConstants.js";
+import { FULFILLMENT_INVENTORY_SUMMARY_FIELDS } from "./inventoryFulfillmentConstants.js";
 import { inventoryError } from "./inventoryErrors.js";
 import {
   inventoryStringHasInvalidCharacters,
@@ -11,6 +13,7 @@ import {
 
 const COMMAND_TYPES = new Set(INVENTORY_COMMAND_TYPES);
 const RESULT_SUMMARY_FIELDS = new Set([
+  ...FULFILLMENT_INVENTORY_SUMMARY_FIELDS,
   "id", "status", "version", "quantity", "rowCount", "movementGroupId",
   "movementId", "operationId", "balanceId", "balanceVersion", "skuId", "skuCode", "skuName",
   "warehouseId", "warehouseCode", "binId", "binCode", "lotId", "lotNumber", "expiryDate",
@@ -98,6 +101,16 @@ function resultFromRow(row) {
   };
 }
 
+function completion({ operationId, resultType, resultId, resultSummary = null, completedAt }) {
+  return {
+    id: positiveId(operationId, "operation id"),
+    type: boundedString(resultType, "result type", 40, { ascii: true }),
+    resultIdentifier: boundedString(resultId, "result id", 100),
+    summary: serializeInventorySummary(resultSummary, RESULT_SUMMARY_FIELDS, "Inventory result summary"),
+    at: timestamp(completedAt, "completed at")
+  };
+}
+
 export class InventoryOperationService {
   async claim(connection, input) {
     assertExecutor(connection);
@@ -145,17 +158,34 @@ export class InventoryOperationService {
 
   async complete(connection, { operationId, resultType, resultId, resultSummary = null, completedAt }) {
     assertExecutor(connection);
-    const id = positiveId(operationId, "operation id");
-    const type = boundedString(resultType, "result type", 40, { ascii: true });
-    const resultIdentifier = boundedString(resultId, "result id", 100);
-    const summary = serializeInventorySummary(resultSummary, RESULT_SUMMARY_FIELDS, "Inventory result summary");
+    const { id, type, resultIdentifier, summary, at } = completion({ operationId, resultType, resultId, resultSummary, completedAt });
     const [result] = await connection.execute(
       `UPDATE inventory_operation_requests
           SET result_type = ?, result_id = ?, result_summary = ?, completed_at = ?
         WHERE id = ? AND completed_at IS NULL`,
-      [type, resultIdentifier, summary, timestamp(completedAt, "completed at"), id]
+      [type, resultIdentifier, summary, at, id]
     );
     if (Number(result.affectedRows) !== 1) throw inventoryError("CONCURRENT_OPERATION");
+  }
+
+  // Internal bounded write: callers retain the same transaction and must roll it back on any failed CAS.
+  async completeBatch(connection, inputs) {
+    assertExecutor(connection);
+    if (getActiveTransactionIsolation(connection) === null) throw new TypeError("Inventory completion batch requires an actual active transaction");
+    if (!Array.isArray(inputs) || inputs.length === 0 || inputs.length > 100) throw new TypeError("Inventory completion batch must contain 1..100 entries");
+    const rows = inputs.map(completion);
+    if (new Set(rows.map(row => String(row.id))).size !== rows.length) throw new TypeError("Inventory completion IDs must be unique");
+    const fields = [["result_type", "type"], ["result_id", "resultIdentifier"], ["result_summary", "summary"], ["completed_at", "at"]];
+    const params = [];
+    const assignments = fields.map(([column, field]) => {
+      const cases = rows.map(row => { params.push(row.id, row[field]); return "WHEN ? THEN ?"; }).join(" ");
+      const expression = `CASE id ${cases} END`;
+      return `${column} = ${column === "result_summary" ? `CAST(${expression} AS JSON)` : expression}`;
+    });
+    params.push(...rows.map(row => row.id));
+    const [result] = await connection.execute(`UPDATE inventory_operation_requests SET ${assignments.join(", ")}
+      WHERE id IN (${rows.map(() => "?").join(", ")}) AND completed_at IS NULL ORDER BY id`, params);
+    if (Number(result.affectedRows) !== rows.length) throw inventoryError("CONCURRENT_OPERATION");
   }
 
   async stageSalesBatchMember(connection, { operationId, resultSummary }) {

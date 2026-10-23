@@ -69,7 +69,7 @@ describe("SupplierContactPanel", () => {
     expect(name.element.value).toBe("Amy Updated");
   });
 
-  it("surfaces server validation accessibly and deactivates only after confirmation", async () => {
+  it("TC-127 (UI-007): surfaces server validation accessibly and deactivates only after confirmation", async () => {
     supplierService.createContact.mockRejectedValue(Object.assign(new Error("Email 格式不正確"), { code: "EMAIL_INVALID" }));
     confirm.mockResolvedValue(true);
     supplierService.deactivateContact.mockResolvedValue({ ...CONTACTS[0], status: "inactive", version: 2 });

@@ -173,6 +173,49 @@ describe("DataTable", () => {
     expect(wrapper.text()).toContain("冇資料");
   });
 
+  // DEF-032：QTable 喺冇 row 嘅時候一律出 #no-data，連載入緊同讀取失敗都係，
+  // 用家單睇文字分唔到「載入緊」「真係冇」「讀唔到」。
+  it.each([
+    ["DataTable 預設", undefined],
+    ["頁面自己", { "no-data": `<p class="my-empty">搵唔到任何訂單</p>` }]
+  ])("載入緊同讀取失敗都唔會出%s嘅空狀態文案", async (_, slots) => {
+    let reject;
+    const fetchFn = vi.fn().mockReturnValueOnce(new Promise((_resolve, fail) => { reject = fail; }));
+    const wrapper = mount(DataTable, { props: { fetch: fetchFn, columns }, slots, global: { plugins: [Quasar] } });
+    await flushPromises();
+    expect(wrapper.text()).toContain("載入中…");
+    expect(wrapper.text()).not.toMatch(/冇資料|搵唔到任何訂單/);
+
+    reject(new Error("讀取失敗"));
+    await flushPromises();
+    expect(wrapper.text()).toContain("讀取失敗");
+    expect(wrapper.text()).not.toMatch(/冇資料|搵唔到任何訂單|載入中/);
+
+    fetchFn.mockResolvedValueOnce({ rows: [], rowsNumber: 0 });
+    await wrapper.find('button[aria-label="重試"]').trigger("click");
+    await flushPromises();
+    expect(wrapper.text()).toMatch(slots ? /搵唔到任何訂單/ : /冇資料/);
+    expect(wrapper.text()).not.toContain("載入中");
+  });
+
+  it("客戶端模式跟 loading prop：載入緊唔出空狀態文案", async () => {
+    const wrapper = mountDataTable({ columns, rows: [], loading: true });
+    expect(wrapper.text()).toContain("載入中…");
+    expect(wrapper.text()).not.toContain("冇資料");
+    await wrapper.setProps({ loading: false });
+    expect(wrapper.text()).toContain("冇資料");
+  });
+
+  it("頁面自己嘅 #no-data 照樣收到 QTable 嘅 scope（filter、message）", async () => {
+    const wrapper = mount(DataTable, {
+      props: { fetch: vi.fn().mockResolvedValue({ rows: [], rowsNumber: 0 }), columns, filter: "zzz" },
+      slots: { "no-data": `<template #no-data="{ filter, message }"><p class="my-empty">{{ filter }}|{{ message }}</p></template>` },
+      global: { plugins: [Quasar] }
+    });
+    await flushPromises();
+    expect(wrapper.find(".my-empty").text()).toBe("zzz|No matching records found");
+  });
+
   it("頁面有傳 #no-data 就用返頁面自己嘅版本，唔會兩個一齊出", async () => {
     const fetchFn = vi.fn().mockResolvedValue({ rows: [], rowsNumber: 0 });
     const wrapper = mount(DataTable, {

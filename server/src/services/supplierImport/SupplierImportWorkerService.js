@@ -68,7 +68,8 @@ export class SupplierImportWorkerService extends BaseService {
     });
     const writers = { database: this.database, logger: this.logger, time };
     this.applyRow = options.applyRow ?? createSupplierImportApplier({
-      suppliers: new SupplierAdminService({ ...writers, businessMaster: this.businessMaster }),
+      suppliers: new SupplierAdminService({ ...writers, businessMaster: this.businessMaster,
+        duplicateNameThreshold: config?.supplier?.duplicateNameThreshold }),
       addresses: new SupplierAddressService(writers),
       contacts: new SupplierContactService(writers),
       identifiers: new SupplierIdentifierService(writers)

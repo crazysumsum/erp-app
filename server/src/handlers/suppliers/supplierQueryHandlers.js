@@ -1,5 +1,9 @@
 import { BaseRequestHandler } from "../../framework/api/BaseRequestHandler.js";
+import { BusinessMasterProvider } from "../../modules/businessMaster/BusinessMasterProvider.js";
+import { BusinessMasterReadinessService } from "../../modules/businessMaster/BusinessMasterReadinessService.js";
+import { BusinessMasterRepository } from "../../modules/businessMaster/BusinessMasterRepository.js";
 import { SupplierAdminService } from "../../modules/supplier/SupplierAdminService.js";
+import { BusinessMasterLookupProvider } from "../../modules/supplier/providers/BusinessMasterLookupProvider.js";
 import {
   EMPTY_SUPPLIER_SCHEMA,
   SUPPLIER_COMPLETENESS_SCHEMA,
@@ -26,12 +30,17 @@ function actor(req) {
 class SupplierQueryHandler extends BaseRequestHandler {
   constructor(services = {}) {
     super(services);
+    const database = services.require("mysqldatabase");
     this.suppliers = new SupplierAdminService({
-      database: services.require("mysqldatabase"),
+      duplicateNameThreshold: services.config?.supplier?.duplicateNameThreshold,
+      database,
       logger: services.require("logging").logger,
       time: services.require("time"),
-      // These read paths do not assign Business Master values.
-      businessMaster: {}
+      // These read paths assign no Business Master value; completeness reads the currency through the provider (DEF-003).
+      businessMaster: new BusinessMasterLookupProvider({
+        provider: new BusinessMasterProvider({ database, repository: new BusinessMasterRepository() }),
+        readiness: new BusinessMasterReadinessService({ database, checkerIds: ["supplier"] })
+      })
     });
   }
 }

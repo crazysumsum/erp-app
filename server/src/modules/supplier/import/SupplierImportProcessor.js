@@ -309,7 +309,9 @@ function childPayload(record, errors, bad) {
     if (!record.addressLabel) issue(errors, "addressLabel", "SUPPLIER_IMPORT_REQUIRED_FIELD", "填寫地址時必須填寫 addressLabel");
     if (!record.addressPurpose) issue(errors, "addressPurpose", "SUPPLIER_IMPORT_REQUIRED_FIELD", "填寫地址時必須填寫 addressPurpose");
     if (record.addressLabel && record.addressPurpose && clean(ADDRESS_COLUMNS)) {
-      const address = domain(errors, {}, (code) => (code.includes("COUNTRY") ? "countryCode" : "addressPurpose"), () => normalizeAddress({
+      // normalizeAddress 用自己嘅欄位名；label、phone 喺 CSV 叫 addressLabel、addressPhone（REV-106 L-2）。
+      const address = domain(errors, { label: "addressLabel", phone: "addressPhone" },
+        (code) => (code.includes("COUNTRY") ? "countryCode" : "addressPurpose"), () => normalizeAddress({
         label: record.addressLabel, addressLine1: record.addressLine1, addressLine2: record.addressLine2,
         addressLine3: record.addressLine3, city: record.city, stateRegion: record.stateRegion,
         postalCode: record.postalCode, countryCode: record.countryCode, phone: record.addressPhone,

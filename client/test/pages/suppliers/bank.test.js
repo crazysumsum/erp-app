@@ -250,7 +250,7 @@ describe("components/suppliers/SupplierBankPanel.vue", () => {
    *
    * 呢條就係我當時話「寫唔出」嗰條測試。
    */
-  it("clears the plaintext when only the :id changes and the panel is reused", async () => {
+  it("TC-075 (BANK-014): clears the plaintext when only the :id changes and the panel is reused", async () => {
     supplierBankService.reveal.mockResolvedValue({ id: 41, accountNumber: SECRET, revealedAt: 1000 });
     const { router, body } = await mountPanel({ permissions: VIEW_BANK });
     await revealRow(body);
@@ -319,7 +319,7 @@ describe("components/suppliers/SupplierBankPanel.vue", () => {
    * 明文，而 route change 同 session 失效之前兩個都冇清 —— 個 dialog 會繼續開住、
    * 繼續 render 喺新嗰個 URL 底下。
    */
-  it("wipes a half-typed write dialog on a Supplier change and on session expiry", async () => {
+  it("TC-075 (BANK-014): wipes a half-typed write dialog on a Supplier change and on session expiry", async () => {
     const { wrapper, router, body } = await mountPanel();
     await byText(body, "新增銀行帳戶").trigger("click");
     await flushPromises();
@@ -575,7 +575,7 @@ describe("components/suppliers/SupplierBankPanel.vue", () => {
   });
 
   // 設計 §7.5：提交成功之後 form state 入面個帳號要即刻清空，password 一樣。
-  it("clears the account number and password fields after a successful create", async () => {
+  it("TC-075 (BANK-014): clears the account number and password fields after a successful create", async () => {
     supplierBankService.create.mockResolvedValue({ id: 43, bankName: "New Bank", maskedAccountNumber: "•••• 9999", warnings: [] });
     const { wrapper, body } = await mountPanel();
     await byText(body, "新增銀行帳戶").trigger("click");

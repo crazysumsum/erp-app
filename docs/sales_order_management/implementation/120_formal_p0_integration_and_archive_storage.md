@@ -1,0 +1,30 @@
+# Formal P0 integration and Archive storage foundation
+
+Partial IMPLEMENT checkpoint under existing DEC-029/HD008 and Sam's 2026-10-23 instruction. No Task/Phase completion, technical acceptance or P4 merge readiness is asserted.
+
+## Actual upstream and reconciliation
+
+GitHub PR #271 is MERGED at 2026-10-23T00:51:03Z, merge fd32762f4fa17a5e77aaa7118a9ded2d3ac81e9e; all thirteen actual CI checks succeeded. This P4 branch integrates fetched main e272f5d3ce05d0ca50be42e6d8764f0ef20d3dd1, which also includes Supplier work. Formal P0 provides applied owner migrations0091/0092/0093/0095–0099 and its lifecycle provider. Its state137 TASK001–011 completion is preserved; unique DEC-029 Archive contribution narrative remains, linked to future owner tasks rather than relabeling completed P0 tasks.
+
+The three unpublished Sales prototype installers and duplicate runtime/schema adapter are retired from this branch, with original bytes recoverable at575ec4c9 and private conflict-stage snapshots. No applied formal migration is rewritten. Formal lifecycle HD012/HD013/HD014 behavior is adopted without expanding its NOWAIT or READ COMMITTED bounds. Archive retains default REPEATABLE READ.
+
+Observed Customer design, Item provider and permission catalogue pins were reconciled against actual historical pinned bytes and current main by a separate reviewer. Existing Sales methods and all four Sales permission definitions remain unchanged; Customer pending2.2/shared-lock behavior and acceptance waivers are not adopted. Compatibility proof p4-main-three-contract-pins-r1-compatibility-reviewer-proof.json SHA256 3ae91be3c1a78fc44afb49476f3539737944aad8be0c47843780542d3c5e510c. Original approvals/hashes remain historical and are not rewritten to assert current-candidate approval.
+
+## Forward storage foundation
+
+Allocated0101 adds immutable Sales-order routing to durable Fulfillment business intents, including future NULL-target Create intents. Export remains unscoped. Quiesced legacy backfill requires one actual Active/archive target proof; ambiguous, orphan or NULL-target legacy records fail before DDL. Partial installs resume only compatible metadata; grouping and quoted-literal comparisons are exact. Unknown drift and conflicting saved routes fail closed. Existing non-Export callers without the route are not compatible with the installed new schema; internal caller qualification remains unfinished.
+
+Allocated0102 adds exact native business-byte mirror requirements to all twelve Active DELETE paths, bounded current child reads on actual CASCADE edges, owner-internal composite mirror FKs and an exact technical pointer-clear branch while retaining all original business version/state checks and all24 mirror immutability guards. New full guards are installed before exact-known old guards are retired. Unknown metadata is never overwritten. These storage guards grant no job/transaction authority and do not themselves establish eligibility, same-batch membership, complete manifests or genuine Archive completion.
+
+## Actual developer proof and separate review
+
+- Routing final native run:15 PASS/0 FAIL/0 SKIP, p4-routing-native-r4.log SHA256 6e0e498932672ec59b097fa06bf0a1b4a0733afde5ff930fd2af6d05a4b559a5. Earlier grouping/positive-hint source findings, RED reproductions and fixture failures remain preserved. Final narrow review approved0 required: p4-formal-p0-routing-r2-source-reviewer-proof.json SHA256 23a718ff006e098b6ab33699e2234f647cea9da354c7849896853db99db8cb61.
+- Guards final native run:27 PASS/0 FAIL/0 SKIP, p4-guards-native-r4.log SHA256 a898d02663d58fb1d7ce24c369ef43a0ab925276290592a86d497c88720ae0ee. Fifteen new storage cases exercise all twelve real Inventory-backed owner tables, unchanged Inventory facts, typed negative mirrors,24 immutable mirror checks, exact pointer exception, ordinary version+1 updates, older-RR snapshot/current-child refusal, deep rollback and forward-DDL faults. Twelve original Shipment cases retain their bodies/assertions and run their original schema stage; they are not claimed as twelve post0102 regressions. Fixture extraction adds only a valid synthetic Sales number needed by actual lifecycle result validation.
+- Separate narrow storage review approved0 required: p4-formal-p0-guards-r2-storage-reviewer-proof.json SHA256 492ee182bca19aae4e7e1086541a194a2be80e3f2becf8534d6a03c6015a9762. This is neither participant/coordinator approval nor a complete Phase review.
+- Formal owner schema plus withdrawal-history adoption14 PASS; original registration separately1 PASS after supplying the same synthetic Supplier/Customer key-ring shape as CI. Initial fixture-admin/config failures are retained. Pure integration80 PASS, client17 PASS and current-lockfile frontend build PASS. Scoped final foundation ESLint exit0. No current full P4 browser run or current P4 CI is claimed.
+
+All runs use owned synthetic nonce schemas on the approved socket-only MySQL, serial test workers and nice10. Private credentials, original raw evidence and review proofs remain outside Git.
+
+## Remaining work and gates
+
+Implement and qualify internal routed operation claim/replay/takeover/completion and actual Sales/domain verification before durable-intent commit, then private live scheduler/transaction authority, operation-before-domain fencing, fresh RR first read, full formal provider/participant and single-order atomic Sales plus twelve-owner-table copy/readback/route/delete. Port the preserved prototype-era Open Matter native requirements to real formal schema and authoritative capability; do not skip them. Prove final manifest/lease failure after all twelve deletes rolls everything back, actual operation/membership races, schema/metadata drift and recovery. Then complete all original P4 native/capacity/real Playwright/current CI/independent whole-phase/standard merge Gates. Existing suite minimums and zero-skip rules remain unchanged. The profile schema suite must add the real forward native suites rather than lower its old minimum when adopting the formal seven-case schema file. No deployment or business acceptance is authorized by this checkpoint.

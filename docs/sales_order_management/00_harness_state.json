@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1291,
+  "revision": 1293,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11281,6 +11281,30 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-P4-FORMAL-P0-ROUTING-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "23a718ff006e098b6ab33699e2234f647cea9da354c7849896853db99db8cb61",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-formal-p0-routing-r2-source-reviewer-proof.json SHA256 23a718ff006e098b6ab33699e2234f647cea9da354c7849896853db99db8cb61; exact reviewed source/test/raw hashes inside proof. Narrow foundation source only; no Phase/CI/Gate approval.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P4-FORMAL-P0-GUARDS-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "492ee182bca19aae4e7e1086541a194a2be80e3f2becf8534d6a03c6015a9762",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-formal-p0-guards-r2-storage-reviewer-proof.json SHA256 492ee182bca19aae4e7e1086541a194a2be80e3f2becf8534d6a03c6015a9762; exact reviewed source/test/raw hashes inside proof. Narrow foundation source only; no Phase/CI/Gate approval.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -14891,6 +14915,17 @@
       "subject": "Partial Archive contract validation 74 developer PASS and two real P0 prerequisite diagnostics; no enabled participant or Gate completion",
       "status": "PASS",
       "source_ref": "implementation/119_archive_contract_preparation.md; actualfinalsource51f9ffd5/test91f38a27/r2raw6b417afe; scopedESLint0; diagnosticraw62b73bed with frozen WIPsnapshotmanifest8ca13f57. DiagnosticPASS confirms missing route/guard prerequisites only, notArchiveeffect. FormalP0main/currentP4native/browser/CI/fullPhase/Customerpin pending. HD012/13 scope unchanged; no task/baseline/approval rewrite."
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "575ec4c907391c1fd30338a8ab4f4c1ce84992c2",
+      "spec_baseline": "c97caedf6893b424f8942abf782ac5fb5d247ad9d6cddd749321dab56a8a57b8",
+      "source_fingerprint": "cb557d771654a6c256a187adf9aba08dfcf85d4b3324409b47d9b5559ab7ed02",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-23T02:32:23.241017Z",
+      "subject": "Formal merged P0 adoption and narrow forward Archive storage foundation; routing15 native and guards15 plus originalShipment12 PASS",
+      "status": "PASS",
+      "source_ref": "implementation/120_formal_p0_integration_and_archive_storage.md; actual separate routing23a718ff/storage492ee182 proofs; rawrouting6e0e4989/guardsa898d026. Partial IMPLEMENT only; old approvals/baselines/evidence unchanged; no participant/Phase/Gate completion."
     }
   ],
   "pending_decisions": [
@@ -17930,6 +17965,14 @@
       "idempotency_key": "p4-dec029-owned-mysql-prep-37e933d0a9db",
       "status": "CONFIRMED",
       "source_ref": "Actual Sam DEC029 approval + runtime separate reviewdc1c8e4f; final planSHA256 6d877d0de2ca280675fcd5b50e9bb3b170629800b523707b50c14f73c773d4a0 helperSHA256 4c8e9f6fe7a2c29c1b7d3f237d83fde2b560341f1d4cc4e770f5475a384a77dd; exactcurrent91migrations through0090, sourcefreeze during setup, nice10 inheritedchildren. Exclusive STARTED/receipts; no retry/reset/drop/production.; Actual newruntime preparation receiptCONFIRMED, metadataREADY, both91ledgers and unchanged original grants verified, actualmysqld PID71339 UID501/nice10/socket-only. No owner0091+ applied; old P4 untouched."
+    },
+    {
+      "id": "ACT-P4-FORMAL-P0-MAIN-INTEGRATION-20261023",
+      "kind": "GIT_INTEGRATION",
+      "target": "e272f5d3ce05d0ca50be42e6d8764f0ef20d3dd1",
+      "idempotency_key": "p4-formal-p0-main-e272f5d3",
+      "status": "STARTED",
+      "source_ref": "Direct Sam current Sales request20261023: confirmP0 andcontinueP4/allGates/directmain; actualghPR271MERGEDfd32762f/2026-10-23T00:51:03Z/currenthead4af6719d13CI_SUCCESS. LocalP4merge only, no finalmainmerge/waiver; preserveours575ec4c9 andfullrawhistory. Expected10conflicts, formalowner sourcewins withuniqueDEC029contributionreconciliation."
     }
   ],
   "evidence_files": [
@@ -18982,5 +19025,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "CurrentDIRECTSamconfirmation01a15d80 resolves priorcross-threadmetadata rejection; narrowSales11hunk+pin adopted/newD/P2c00/0705/engineeringreviewfffe0a87 recorded, oldallrecords preserved. Savepartialcommit; own8backend17client/build/lintPASS only. Await formalcompleteP0source/schema/main/currentCIreview, thenfreshP4integration/Customerpin/historicalboundary/withdrawn0091-0093/realArchive/all45/capacity/actualPlaywright/currentCI/wholephasereview/unchangedMERGE_READY before already-authorized directmainmerge. No newhuman decisionpending."
+  "next_safe_action": "Finish observed local main integration commit preserving all history; qualify new routed operation caller and actual ownership/lock order; implement private RR Archive capability/provider/participant/coordinator, then all original P4 Gates. P0 #271 already merged; no external P0 wait."
 }

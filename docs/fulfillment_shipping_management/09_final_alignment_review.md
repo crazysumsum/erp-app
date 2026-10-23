@@ -1,5 +1,11 @@
 # Fulfillment & Shipping Management Final Alignment Review
 
+## Current 2026-10-20 planning gate
+
+Independent R2 review PASS, 0 open CRITICAL/HIGH/MEDIUM; HD-006 A / HD-007 A adopted; current design/plan approvals and unchanged NFR-023 renewal recorded under the user's explicit completion authority. DESIGN `feef0869d0d3d1814ce5ab9a08e885ef84c49e578bfbf24269ff106b0aa69ce8`; PLAN `a229fd571382e42dbc0e88c896bd06aeed12bf4e5e3b4622a58bc69197aead38`. PLAN_READY and approval-aware traceability are checked on this candidate before publication. Current status/receipts are in [10_implementation_readiness.md](10_implementation_readiness.md). The earlier alignment below is retained as historical evidence; all 45 implementation Tasks remain PENDING.
+
+> Sam adopted HD-006 A (P0 contract checkpoint sequence) and HD-007 A (MySQL 26.7.0). Current baseline approval, independent-review provenance and publication receipts are recorded in [the readiness report](10_implementation_readiness.md); historical approvals below retain their original scope. Planning approval does not itself authorize IMPLEMENT or deployment.
+
 ## Result
 
 `ALIGNED` — `docs/fulfillment_shipping_management` is now a single consistent source of truth in the Harness 2.0 canonical layout. `validate_traceability.py` reports `STRUCTURE_PASS`. The module state is `BLOCKED` with `resume_status` `PLANNED`: the design and plan are approved planning baselines, but `IMPLEMENT` is not authorized and four upstream providers do not exist.
@@ -83,3 +89,11 @@ Both legacy sign-off tables were empty, so no separate reviewer existed. Sam ide
 ## Is this documentation now a single consistent source of truth?
 
 Yes, for planning purposes. No two active documents claim authority over the same harness artifact, no superseded duplicate remains, the typed ledger and the generated matrix agree, and every implementation gap is represented as planned work rather than rewritten history. The module is ready for the next selected lifecycle stage — `IMPLEMENT` — only after the four provider dependencies land and an explicit mode authorization is given. No product code was changed, no command was executed against product code, no test was run and no case was marked PASS in this run.
+
+## 2026-10-20 requalification disposition
+
+The current contract inventory, ownership, proposed P0 dependency correction, HD-006/HD-007 alternatives, exact candidate hashes and verification limits are recorded in [10_implementation_readiness.md](10_implementation_readiness.md). No legacy narrative is deleted. Seven source pins are refreshed as observations with review-pending versions; historical approval records are preserved. Product implementation remains BLOCKED.
+
+## Publication closeout
+
+Draft PR [#256](https://github.com/crazysumsum/erp-app/pull/256) created under explicit user authority and attached to the chat; the documentation branch is retained pending PR resolution. Independent R2 and PLAN_READY passed against the approved hashes above. Current receipts and verification limits are in `10_implementation_readiness.md`. No merge, product implementation or acceptance execution follows from this planning closeout.

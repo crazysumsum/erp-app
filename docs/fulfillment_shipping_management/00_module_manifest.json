@@ -22,6 +22,7 @@
       "client/src/services/shipment.js",
       "client/src/pages/fulfillment/**",
       "client/src/components/fulfillment/**",
+      "server/src/services/fulfillment/FulfillmentOpenMatterService.js",
       "server/src/services/fulfillmentArchive/**"
     ],
     "test_paths": [
@@ -33,6 +34,26 @@
       "client/test/**/fulfillment*.test.js",
       "client/test/**/shipment*.test.js",
       "client/e2e/fulfillment-shipping-management/**",
+      "server/test/permissionCatalogueConventions.test.js",
+      "server/test/configuration.test.js",
+      "server/test/salesFulfillmentQuantities.test.js",
+      "server/test/salesFulfillmentService.test.js",
+      "server/test/integration/salesFulfillmentService.integration.test.js",
+      "server/test/integration/salesFulfillmentTransactionComponent.integration.test.js",
+      "server/test/sales/phase4/salesFulfillmentFixtures.js",
+      "server/test/sales/salesConfig.test.js",
+      "server/scripts/checkCoverageFloors.js",
+      "server/test/integration/salesLifecycle.integration.test.js",
+      ".github/workflows/ci.yml",
+      "server/test/sales/phase2/fixtures.js",
+      "client/test/composables/sales/salesCommandEvent.test.js",
+      "server/test/serviceContainer.test.js",
+      "server/test/requestLimiterOptional.test.js",
+      "server/test/integration/salesBackorder.integration.test.js",
+      "server/test/integration/migrations.integration.test.js",
+      "server/test/integration/passwordChange.integration.test.js",
+      "server/test/integration/roleManagement.integration.test.js",
+      "server/test/integration/userManagement.integration.test.js",
       "server/test/fulfillmentArchive*.test.js",
       "server/test/fulfillmentOpenMatter*.test.js",
       "server/test/integration/fulfillmentArchive*.integration.test.js",
@@ -62,7 +83,9 @@
       "server/test-support/fakeFulfillmentDatabase.js",
       "client/test/**/fulfillment*.test.js",
       "client/test/**/shipment*.test.js",
-      "client/e2e/fulfillment-shipping-management/**"
+      "client/e2e/fulfillment-shipping-management/**",
+      "server/src/services/fulfillment/FulfillmentOpenMatterService.js",
+      "server/database/migrations/0101_add_fulfillment_archive_routing.js"
     ],
     "approval_required_paths": [
       "server/database/migrations/**",
@@ -83,7 +106,32 @@
       "docs/sales_order_management/**",
       "docs/inventory_management/**",
       "docs/customer_management/**",
-      "docs/items_management/**"
+      "docs/items_management/**",
+      "server/src/framework/configuration/applicationConfiguration.js",
+      "server/test/permissionCatalogueConventions.test.js",
+      "server/test/configuration.test.js",
+      "server/src/services/mysqldatabase/MySqlDatabaseService.js",
+      "server/test/salesFulfillmentQuantities.test.js",
+      "server/test/salesFulfillmentService.test.js",
+      "server/test/integration/salesFulfillmentService.integration.test.js",
+      "server/test/integration/salesFulfillmentTransactionComponent.integration.test.js",
+      "server/test/sales/phase4/salesFulfillmentFixtures.js",
+      "server/test/sales/salesConfig.test.js",
+      "server/scripts/checkCoverageFloors.js",
+      "docs/sales_order_management/01_requirement_spec.md",
+      "server/test/integration/salesLifecycle.integration.test.js",
+      ".github/workflows/ci.yml",
+      "server/test/sales/phase2/fixtures.js",
+      "client/src/composables/sales/useSalesCommandEvent.js",
+      "client/src/pages/sales/SalesOrderDetailPage.vue",
+      "client/test/composables/sales/salesCommandEvent.test.js",
+      "server/test/serviceContainer.test.js",
+      "server/test/requestLimiterOptional.test.js",
+      "server/test/integration/salesBackorder.integration.test.js",
+      "server/test/integration/migrations.integration.test.js",
+      "server/test/integration/passwordChange.integration.test.js",
+      "server/test/integration/roleManagement.integration.test.js",
+      "server/test/integration/userManagement.integration.test.js"
     ],
     "forbidden_paths": [
       ".env",
@@ -97,7 +145,8 @@
     "schema_paths": [
       "server/database/migrations/*_create_fulfillment_archive_prerequisites.js",
       "server/database/migrations/*_create_fulfillment_archive_mirrors.js",
-      "server/database/migrations/*_protect_fulfillment_archive_contracts.js"
+      "server/database/migrations/*_protect_fulfillment_archive_contracts.js",
+      "server/database/migrations/0101_add_fulfillment_archive_routing.js"
     ],
     "shared_resources": [
       "global-migration-sequence",
@@ -115,9 +164,9 @@
     "provided": [
       {
         "id": "fulfillment-shipment-and-reversal-contract",
-        "version": "approved-planning-v1-SPECIFIED_NOT_IMPLEMENTED",
+        "version": "P0-HD011-ADOPTED-IMPLEMENTATION_IN_PROGRESS",
         "source": "docs/fulfillment_shipping_management/03_design_spec.md",
-        "sha256": "8d6d7795420a61cf0a6d2dd726a22b6ebc7779ed0df15f18aea0c0fd09a7153b",
+        "sha256": "9fd868537b2a8e6220b5877077fa1a5f43164c1990dc70c1340c78955528aa3e",
         "consumers": [
           "sales-order-management",
           "inventory-management",
@@ -138,9 +187,9 @@
       {
         "module_id": "sales-order-management",
         "id": "sales-fulfillment-projection-and-lifecycle-contract",
-        "version": "planning-only-NOT_IMPLEMENTED",
+        "version": "P0-TASK004-HD011-reviewed-owner-contribution-r4-CURRENT_JOINT_PENDING",
         "source": "docs/sales_order_management/03_design_spec.md",
-        "sha256": "fc41522e833e8929d305b48abbe08e39be3017cd163a0689eec02f23e5b30817",
+        "sha256": "8031aef8a0cba72f191474fcd965be564ca7f4b182aa6c634dd2115d256d6b39",
         "regression_suites": [
           "fulfillment-technical"
         ]
@@ -148,7 +197,7 @@
       {
         "module_id": "inventory-management",
         "id": "inventory-allocation-issue-and-dedicated-reversal-contract",
-        "version": "planning-only-NOT_IMPLEMENTED",
+        "version": "observed-main-35af2ab7-OWNER_SEMANTIC_REVIEW_REQUIRED",
         "source": "docs/inventory_management/03_design_spec.md",
         "sha256": "2fb61cce8ee4ff9f32cd9c6d0e2a9fc8f87c08d34823be7fb622908610b1ac53",
         "regression_suites": [
@@ -158,9 +207,9 @@
       {
         "module_id": "customer-management",
         "id": "customer-shipping-address-and-contact-contract",
-        "version": "planning-only-NOT_IMPLEMENTED",
+        "version": "observed-main-35af2ab7-OWNER_SEMANTIC_REVIEW_REQUIRED",
         "source": "docs/customer_management/03_design_spec.md",
-        "sha256": "0c70e3d5a619e02f4c7ae24d415a08f1276fe81101b57df0b2bf3d28303f96c9",
+        "sha256": "7b56997a4f33d64793739faa888c1a8d882015892750cce59532d9818ab53972",
         "regression_suites": [
           "fulfillment-technical"
         ]
@@ -168,9 +217,9 @@
       {
         "module_id": "item-management",
         "id": "item-lookup-service",
-        "version": "observed-origin-main-b6f0321-PARTIAL",
+        "version": "P0-TASK006-b5afe3ca-R13-JOINT_PENDING",
         "source": "server/src/modules/item/ItemLookupService.js",
-        "sha256": "a09d5baf602f44199cd218a2b3139edcdb2abad039a6f08a21b48162900562b5",
+        "sha256": "5ed3f26ff4271cc6bd533a417fd09fcde446f1682d662c3c465216e9ea08d558",
         "regression_suites": [
           "fulfillment-technical"
         ]
@@ -178,9 +227,9 @@
       {
         "module_id": "authorization",
         "id": "permission-catalogue",
-        "version": "observed-origin-main-b6f0321",
+        "version": "P0-main6cb8310c-additive-permission-union-INDEPENDENTLY_REVIEWED",
         "source": "server/src/modules/authorization/permissionCatalogue.js",
-        "sha256": "e6363b8928b0f86d8c3ebba0a25695e9879dbb05d0bf9992fcdd175aa389cc0e",
+        "sha256": "6f6e14b642573f9e16ffcb13abe411ead9b5e2c95739100c188c51dd00207743",
         "regression_suites": [
           "fulfillment-technical"
         ]
@@ -188,7 +237,7 @@
       {
         "module_id": "framework",
         "id": "idempotency-service",
-        "version": "observed-origin-main-b6f0321",
+        "version": "observed-main-35af2ab7-OWNER_SEMANTIC_REVIEW_REQUIRED",
         "source": "server/src/services/idempotency/IdempotencyService.js",
         "sha256": "b574dd69c4fd006a550421d9bb1e550c94f8f39d22837eecd61f7cf079c6da9d",
         "regression_suites": [
@@ -246,7 +295,7 @@
       "lint",
       "client-build",
       "security-audit",
-      "fulfillment-technical"
+      "fulfillment-p0-developer"
     ],
     "technical": [
       "fulfillment-technical"

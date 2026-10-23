@@ -2,10 +2,27 @@ import { assertActorFresh } from "../authorization/directoryLookups.js";
 import { changedFieldsDetail, purposeList, sortedPurposes } from "./auditChanges.js";
 import { SupplierAuditLogService } from "./SupplierAuditLogService.js";
 import { invalidSupplierInput, supplierChildNotFound, supplierConflict, supplierNotFound } from "./supplierErrors.js";
+import { containsControl } from "./supplierNormalization.js";
 import { toAddressResponse } from "./supplierProjections.js";
 
 export const SUPPLIER_ADDRESS_PURPOSES = Object.freeze(["registered", "office", "ordering", "return", "remittance", "other"]);
 const PURPOSE_SET = new Set(SUPPLIER_ADDRESS_PURPOSES);
+
+/** UI 上嘅欄位名：錯誤訊息要講明係邊個欄位、點解錯，舊資料（例如備註有換行）先知點改（REV-106 M-2）。 */
+const FIELD_LABELS = Object.freeze({ label: "地址標籤", addressLine1: "地址行 1", addressLine2: "地址行 2", addressLine3: "地址行 3",
+  city: "城市", stateRegion: "州／地區", postalCode: "郵政編碼", phone: "電話", notes: "備註" });
+
+/** 同 contact、識別資料一樣：限長度（同 DB 欄位），拒絕控制字元，包括換行（DEF-005，HD-116 A）。 */
+function text(value, field, maxLength) {
+  const normalized = String(value ?? "").trim();
+  if (containsControl(normalized)) {
+    throw invalidSupplierInput("SUPPLIER_ADDRESS_INVALID", `${FIELD_LABELS[field]}不可包含換行或其他控制字元`, { field });
+  }
+  if (Array.from(normalized).length > maxLength) {
+    throw invalidSupplierInput("SUPPLIER_ADDRESS_INVALID", `${FIELD_LABELS[field]}不可超過 ${maxLength} 個字元`, { field });
+  }
+  return normalized;
+}
 
 export function normalizeAddress(input) {
   const purposes = input.purposes ?? [];
@@ -22,16 +39,16 @@ export function normalizeAddress(input) {
     throw invalidSupplierInput("SUPPLIER_ADDRESS_COUNTRY_INVALID", "國家／地區代碼必須是兩個英文字母");
   }
   return {
-    label: String(input.label ?? "").trim(),
-    addressLine1: String(input.addressLine1 ?? "").trim(),
-    addressLine2: String(input.addressLine2 ?? "").trim(),
-    addressLine3: String(input.addressLine3 ?? "").trim(),
-    city: String(input.city ?? "").trim(),
-    stateRegion: String(input.stateRegion ?? "").trim(),
-    postalCode: String(input.postalCode ?? "").trim(),
+    label: text(input.label, "label", 100),
+    addressLine1: text(input.addressLine1, "addressLine1", 190),
+    addressLine2: text(input.addressLine2, "addressLine2", 190),
+    addressLine3: text(input.addressLine3, "addressLine3", 190),
+    city: text(input.city, "city", 100),
+    stateRegion: text(input.stateRegion, "stateRegion", 100),
+    postalCode: text(input.postalCode, "postalCode", 100),
     countryCode: countryCode || null,
-    phone: String(input.phone ?? "").trim(),
-    notes: String(input.notes ?? "").trim(),
+    phone: text(input.phone, "phone", 50),
+    notes: text(input.notes, "notes", 500),
     purposes: purposes.map((purpose) => ({ purposeCode: purpose.purposeCode, isPrimary: Boolean(purpose.isPrimary) }))
   };
 }

@@ -179,6 +179,10 @@ async function cleanup() {
     await db.query("DELETE FROM suppliers WHERE id IN (?)", [chunk]);
   }
   if (created.jobId !== null) {
+    // 刪之前記低未套用嘅列同原因（HD-122 A、DEF-034）：清理之後就冇得查。
+    const [notApplied] = await db.query(`SELECT \`row_number\` AS rowNumber, status, CAST(errors AS CHAR) AS errors
+      FROM supplier_import_rows WHERE job_id = ? AND status <> 'applied' ORDER BY \`row_number\` LIMIT 20`, [created.jobId]);
+    report.notApplied = notApplied;
     await db.execute("DELETE FROM supplier_import_rows WHERE job_id = ?", [created.jobId]);
     await db.execute("DELETE FROM supplier_audit_logs WHERE target_type = 'import' AND target_id = ?", [created.jobId]);
     await db.execute("DELETE FROM supplier_import_jobs WHERE id = ?", [created.jobId]);

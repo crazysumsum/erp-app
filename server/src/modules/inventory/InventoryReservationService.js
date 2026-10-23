@@ -5,6 +5,7 @@ import { ItemLookupService } from "../item/ItemLookupService.js";
 import { InventoryAuditService } from "./InventoryAuditService.js";
 import { InventoryLockService } from "./InventoryLockService.js";
 import { InventoryOperationService, inventoryOperationHash } from "./InventoryOperationService.js";
+import { InventoryFulfillmentService } from "./InventoryFulfillmentService.js";
 import { loadInventoryCandidates, recommendInventoryCandidates } from "./InventoryPickSequenceService.js";
 import { inventoryError } from "./inventoryErrors.js";
 import {
@@ -183,7 +184,7 @@ function allocationReleaseFromSummary(summary, lines) {
 }
 
 export class InventoryReservationService {
-  constructor({ database, logger, time, itemLookup, authorize = assertActorFresh, authorizeSalesBackorder, authorizeSalesIntake, audit, operations, locks } = {}) {
+  constructor({ database, logger, time, itemLookup, authorize = assertActorFresh, authorizeSalesBackorder, authorizeSalesIntake, audit, operations, locks, fulfillment } = {}) {
     if (!database || typeof database.withTransaction !== "function" || !time ||
         typeof time.nowMs !== "function" || typeof time.fileDate !== "function" ||
         typeof authorize !== "function") {
@@ -198,7 +199,13 @@ export class InventoryReservationService {
     this.audit = audit ?? new InventoryAuditService({ database, logger, time });
     this.operations = operations ?? new InventoryOperationService();
     this.locks = locks ?? new InventoryLockService();
+    this.fulfillment = fulfillment ?? new InventoryFulfillmentService({database,logger,time,itemLookup:this.itemLookup,audit:this.audit,operations:this.operations,locks:this.locks});
   }
+
+  claimFulfillmentBatchInTransaction(tx,input) { return this.fulfillment.claimFulfillmentBatchInTransaction(tx,input); }
+  allocateForFulfillmentBatchInTransaction(tx,command,preparation) { return this.fulfillment.allocateForFulfillmentBatchInTransaction(tx,command,preparation); }
+  releaseFulfillmentAllocationsInTransaction(tx,command,preparation) { return this.fulfillment.releaseFulfillmentAllocationsInTransaction(tx,command,preparation); }
+  reallocateFulfillmentBatchInTransaction(tx,command,preparation) { return this.fulfillment.reallocateFulfillmentBatchInTransaction(tx,command,preparation); }
 
   async #salesBatchContext(transaction, command, action, worker = false) {
     const raw = command?.payload;

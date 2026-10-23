@@ -5,6 +5,7 @@ import { ItemLookupService } from "../item/ItemLookupService.js";
 import { InventoryAuditService } from "./InventoryAuditService.js";
 import { InventoryLockService } from "./InventoryLockService.js";
 import { InventoryOperationService } from "./InventoryOperationService.js";
+import { InventoryFulfillmentService } from "./InventoryFulfillmentService.js";
 import { inventoryError } from "./inventoryErrors.js";
 import { postBinMoveInTransaction } from "./inventoryBinMovePosting.js";
 import { postAdjustmentInTransaction } from "./inventoryAdjustmentPosting.js";
@@ -273,7 +274,7 @@ function resultFromSummary(summary) {
 export class InventoryPostingService {
   constructor({
     database, logger, time, itemLookup, authorize = assertActorFresh, audit, operations, locks,
-    createMovementGroupId = randomUUID
+    createMovementGroupId = randomUUID, fulfillment
   } = {}) {
     if (!database || typeof database.withTransaction !== "function" || !time ||
         typeof time.nowMs !== "function" || typeof time.fileDate !== "function" ||
@@ -288,7 +289,13 @@ export class InventoryPostingService {
     this.operations = operations ?? new InventoryOperationService();
     this.locks = locks ?? new InventoryLockService();
     this.createMovementGroupId = createMovementGroupId;
+    this.fulfillment = fulfillment ?? new InventoryFulfillmentService({database,logger,time,itemLookup:this.itemLookup,audit:this.audit,operations:this.operations,locks:this.locks});
   }
+
+  claimFulfillmentBatchInTransaction(tx,input) { return this.fulfillment.claimFulfillmentBatchInTransaction(tx,input); }
+  postFulfillmentIssueBatchInTransaction(tx,command,preparation) { return this.fulfillment.postFulfillmentIssueBatchInTransaction(tx,command,preparation); }
+  reverseFulfillmentIssueAndRestoreReservationBatchInTransaction(tx,command,preparation) { return this.fulfillment.reverseFulfillmentIssueAndRestoreReservationBatchInTransaction(tx,command,preparation); }
+  verifyFulfillmentBatchReceiptInTransaction(tx,input) { return this.fulfillment.verifyFulfillmentBatchReceiptInTransaction(tx,input); }
 
   postReceipt(command) {
     return this.database.withTransaction((transaction) => this.postReceiptInTransaction(transaction, command));

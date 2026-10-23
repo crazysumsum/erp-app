@@ -95,3 +95,18 @@ export function supplierChildNotFound(childType) {
     publicMessage: `找不到這項供應商${labels[childType] ?? "子資料"}`
   });
 }
+
+/**
+ * 兩個交易同時寫同一個 unique 值（Supplier Code、識別資料），InnoDB 偶然會 deadlock，rollback 其中一個（DEF-031）。
+ * 成個交易重做一次（HD-115 A）：重做嗰陣要麼見到贏家已 commit 嘅行，要麼排隊等贏家，結果都係撞 unique，轉成 409；
+ * 贏家 rollback 嘅話，重做就成功。每次重做記一條 warn，咁 deadlock 嘅次數唔會因為重試而睇唔到（REV-104 L-3）。
+ */
+export async function retryOnceOnDeadlock(work, { logger, operation, requestId } = {}) {
+  try {
+    return await work();
+  } catch (error) {
+    if ((error?.cause?.code ?? error?.code) !== "ER_LOCK_DEADLOCK") throw error;
+    void logger?.warn?.("supplier.write.deadlock_retried", "Supplier write retried once after a deadlock", { operation, requestId: requestId ?? null });
+    return work();
+  }
+}

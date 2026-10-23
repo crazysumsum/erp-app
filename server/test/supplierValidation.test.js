@@ -34,7 +34,9 @@ test("TC-022 (CORE-006): missing optional data produces bounded warnings and nev
     { field: "defaultPaymentTermId", code: "PAYMENT_TERM_MISSING", message: "尚未設定預設付款條款" },
     { field: "addresses", code: "ORDERING_ADDRESS_MISSING", message: "尚未設定採購用途地址" },
     { field: "contacts", code: "ORDERS_CONTACT_MISSING", message: "尚未設定訂單用途主要聯絡人" },
-    { field: "identifiers", code: "IDENTIFIER_MISSING", message: "尚未設定供應商識別資料" }
+    { field: "identifiers", code: "IDENTIFIER_MISSING", message: "尚未設定供應商識別資料" },
+    // CORE-006 列明缺 Bank 都只係 warning（DEF-010）。
+    { field: "bankAccounts", code: "BANK_ACCOUNT_MISSING", message: "尚未設定銀行帳戶" }
   ]);
   assert.deepEqual(supplierCompletenessWarnings({
     defaultPaymentTermId: 2,
@@ -45,14 +47,12 @@ test("TC-022 (CORE-006): missing optional data produces bounded warnings and nev
   }), []);
 });
 
-test("bank completeness is only evaluated once a caller can answer it", () => {
-  // DEF-001: Bank accounts arrive in PHASE-003. While no caller supplies the
-  // flag, emitting the warning produced one no user action could ever clear.
+test("DEF-010 (HD-116 A): a missing bank flag warns like the three sibling flags, now that Bank is deployed", () => {
   const everythingElseSatisfied = { defaultPaymentTermId: 2, hasOrderingAddress: true, hasOrdersContact: true, hasIdentifier: true };
-  assert.deepEqual(supplierCompletenessWarnings(everythingElseSatisfied), []);
-  assert.deepEqual(supplierCompletenessWarnings({ ...everythingElseSatisfied, hasBankAccount: false }), [
-    { field: "bankAccounts", code: "BANK_ACCOUNT_MISSING", message: "尚未設定銀行帳戶" }
-  ]);
+  const bankMissing = [{ field: "bankAccounts", code: "BANK_ACCOUNT_MISSING", message: "尚未設定銀行帳戶" }];
+  assert.deepEqual(supplierCompletenessWarnings(everythingElseSatisfied), bankMissing, "an absent flag counts as missing");
+  assert.deepEqual(supplierCompletenessWarnings({ ...everythingElseSatisfied, hasBankAccount: false }), bankMissing);
+  assert.deepEqual(supplierCompletenessWarnings({ ...everythingElseSatisfied, hasBankAccount: true }), []);
 });
 
 test("activation issues can be projected separately from non-blocking completeness warnings", () => {

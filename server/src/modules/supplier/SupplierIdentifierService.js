@@ -2,7 +2,7 @@ import { assertActorFresh } from "../authorization/directoryLookups.js";
 import { SupplierApprovalService } from "./SupplierApprovalService.js";
 import { changedFieldsDetail } from "./auditChanges.js";
 import { SupplierAuditLogService } from "./SupplierAuditLogService.js";
-import { invalidSupplierInput, supplierChildNotFound, supplierConflict, supplierNotFound } from "./supplierErrors.js";
+import { invalidSupplierInput, retryOnceOnDeadlock, supplierChildNotFound, supplierConflict, supplierNotFound } from "./supplierErrors.js";
 import { normalizeIdentifier } from "./supplierNormalization.js";
 import { toIdentifierResponse } from "./supplierProjections.js";
 
@@ -56,6 +56,7 @@ export class SupplierIdentifierService {
     this.database = database;
     this.time = time;
     this.authorize = authorize;
+    this.logger = logger;
     this.audit = audit ?? new SupplierAuditLogService({ database, logger, time });
     this.countReferences = countReferences;
     this.approvals = approvals ?? new SupplierApprovalService({ database, logger, time, audit: this.audit });
@@ -109,10 +110,10 @@ export class SupplierIdentifierService {
   async create(input) {
     const identifier = normalizedInput(input);
     try {
-      return await this.database.withTransaction(async (connection) => {
+      return await retryOnceOnDeadlock(() => this.database.withTransaction(async (connection) => {
         const actor = await this.authorize(connection, input);
         return this.createInTransaction(connection, { actor, input });
-      });
+      }), { logger: this.logger, operation: "supplier.identifier.create", requestId: input.requestId });
     } catch (error) {
       if (duplicateEntry(error)) throw taken(identifier);
       throw error;
@@ -160,20 +161,22 @@ export class SupplierIdentifierService {
     const identifier = normalizedInput(input);
     const reason = requiredReason(input.reason);
     try {
-      return await this.database.withTransaction(async (connection) => {
+      return await retryOnceOnDeadlock(() => this.database.withTransaction(async (connection) => {
         const actor = await this.authorize(connection, input);
         const supplier = await this.#supplierForUpdate(connection, input.supplierId);
         approvalInvalidated = await this.#invalidateApprovalIfPending(connection, supplier, { ...input, actorUsername: actor.username }, "identifiers");
         const current = await this.#identifierForUpdate(connection, input.supplierId, input.identifierId);
         if (Number(current.version) !== input.version) throw supplierConflict("VERSION_CONFLICT", "識別資料已被其他人修改，請重新載入");
         const nowMs = this.time.nowMs();
-        await connection.execute(
+        // 行已經鎖住、版本亦驗過，所以而家唔會 0 行；但同 Supplier 嘅寫入一樣照查，唔靠鎖嘅前提（DEF-006，HD-116 A）。
+        const [updated] = await connection.execute(
           `UPDATE supplier_identifiers SET identifier_type = ?, issuer_country_code = ?, identifier_value = ?,
             identifier_value_key = ?, notes = ?, version = version + 1, updated_at = ?, updated_by = ?
             WHERE id = ? AND supplier_id = ? AND version = ?`,
           [identifier.type, identifier.issuerCountryCode, identifier.value, identifier.key, identifier.notes,
             nowMs, input.actorId, input.identifierId, input.supplierId, input.version]
         );
+        if (updated.affectedRows === 0) throw supplierConflict("VERSION_CONFLICT", "識別資料已被其他人修改，請重新載入");
         const projected = await this.#project(connection, input.supplierId, input.identifierId);
         await this.audit.record(connection, {
           actorUserId: input.actorId, actorUsername: actor?.username ?? "", action: "supplier.identifier.update",
@@ -188,7 +191,7 @@ export class SupplierIdentifierService {
           requestId: input.requestId, ip: input.ip
         });
         return { ...projected, approvalInvalidated };
-      });
+      }), { logger: this.logger, operation: "supplier.identifier.update", requestId: input.requestId });
     } catch (error) {
       if (duplicateEntry(error)) throw taken(identifier);
       throw error;
@@ -215,10 +218,11 @@ export class SupplierIdentifierService {
         if (referenceCount > 0) {
           throw supplierConflict("SUPPLIER_IDENTIFIER_REFERENCED", "這項識別資料已有引用，只可保留歷史", { referenceCount });
         }
-        await connection.execute(
+        const [deleted] = await connection.execute(
           "DELETE FROM supplier_identifiers WHERE id = ? AND supplier_id = ? AND version = ?",
           [input.identifierId, input.supplierId, input.version]
         );
+        if (deleted.affectedRows === 0) throw supplierConflict("VERSION_CONFLICT", "識別資料已被其他人修改，請重新載入");
         await this.audit.record(connection, {
           actorUserId: input.actorId, actorUsername: actor?.username ?? "", action: "supplier.identifier.delete",
           targetType: "identifier", targetId: input.identifierId, supplierId: input.supplierId,

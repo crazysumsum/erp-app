@@ -34,7 +34,7 @@ describe("Supplier Core client smoke flow", () => {
     vi.clearAllMocks();
   });
 
-  it("lets a view-only user move from the bounded list projection to detail without exposing write actions", async () => {
+  it("TC-013 (LIST-006): lets a view-only user move from the bounded list projection to detail without exposing write actions", async () => {
     supplierService.list.mockResolvedValue({ rows: [SUPPLIER], rowsNumber: 1 });
     supplierService.getById.mockResolvedValue(SUPPLIER);
     supplierService.completeness.mockResolvedValue({ supplierId: 7, issues: [], warnings: [] });

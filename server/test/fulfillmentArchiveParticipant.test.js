@@ -76,3 +76,14 @@ test("TC-048 finite fractional JSON values retain their value",()=>{
  const row={...audit(),details:{durationMs:1.5}};
  assert.match(hashFulfillmentArchiveRow("fulfillment_audit_logs",row),/^[0-9a-f]{64}$/u);
 });
+
+test("owner hash catalogue matches all twelve formal P0 mirror business columns and types",async()=>{
+ const {FULFILLMENT_ARCHIVE_TABLES}=await import("../database/migrations/0099_create_fulfillment_archives.js");
+ assert.equal(FULFILLMENT_ARCHIVE_TABLES.length,FULFILLMENT_ARCHIVE_CONTRACTS.length);
+ for(const mirror of FULFILLMENT_ARCHIVE_TABLES){
+  const table=mirror.table.replace(/_archive$/u,""),hashContract=FULFILLMENT_ARCHIVE_CONTRACTS.find(c=>c.table===table);
+  const columns=Object.entries(mirror.columns).filter(([name])=>!["archive_batch_id","archived_at","row_hash"].includes(name));
+  assert.deepEqual(Object.keys(hashContract.columns),columns.map(([name])=>name));
+  for(const [name,[type,nullable=false]]of columns){assert.equal(hashContract.columns[name].type,type,table+"."+name);assert.equal(hashContract.columns[name].nullable,nullable,table+"."+name);}
+ }
+});

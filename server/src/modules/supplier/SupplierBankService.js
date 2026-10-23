@@ -4,7 +4,7 @@ import {
   BANK_ACCOUNT_EMPTY, BANK_ACCOUNT_TOO_LONG, BANK_ACCOUNT_UNREPRESENTABLE,
   bankAccountRejection, SupplierBankCrypto
 } from "./SupplierBankCrypto.js";
-import { invalidSupplierInput, supplierBankIntegrityFailure, supplierBankKeyUnavailable, supplierChildNotFound, supplierConflict, supplierForbidden, supplierNotFound } from "./supplierErrors.js";
+import { invalidSupplierInput, retryOnceOnDeadlock, supplierBankIntegrityFailure, supplierBankKeyUnavailable, supplierChildNotFound, supplierConflict, supplierForbidden, supplierNotFound } from "./supplierErrors.js";
 import { toMaskedBankResponse } from "./supplierProjections.js";
 
 /**
@@ -327,7 +327,7 @@ export class SupplierBankService {
     const reason = requireReason(input.reason, "新增銀行帳戶必須填寫原因");
     // 明文喺呢度入嚟，喺呢個 method 結束之前唔再出現喺任何地方。
     const cryptoContext = this.crypto.newCryptoContext();
-    return this.database.withTransaction(async (connection) => {
+    return retryOnceOnDeadlock(() => this.database.withTransaction(async (connection) => {
       const actor = await this.authorize(connection, input);
       this.#assertMay(actor, BANK_WRITE_PERMISSION, "你目前沒有銀行資料管理權限");
       await this.#supplierForUpdate(connection, input.supplierId);
@@ -379,7 +379,7 @@ export class SupplierBankService {
         requestId: input.requestId, ip: input.ip
       });
       return { ...projected, warnings };
-    });
+    }), { logger: this.logger, operation: "supplier.bank.create", requestId: input.requestId });
   }
 
   /**
@@ -391,7 +391,7 @@ export class SupplierBankService {
     const details = normalizeBankInput(input, { accountNumberRequired: false });
     const reason = requireReason(input.reason, "修改銀行帳戶必須填寫原因");
     const changingAccount = input.accountNumber !== undefined && input.accountNumber !== null;
-    return this.database.withTransaction(async (connection) => {
+    return retryOnceOnDeadlock(() => this.database.withTransaction(async (connection) => {
       const actor = await this.authorize(connection, input);
       this.#assertMay(actor, BANK_WRITE_PERMISSION, "你目前沒有銀行資料管理權限");
       await this.#supplierForUpdate(connection, input.supplierId);
@@ -451,7 +451,7 @@ export class SupplierBankService {
         requestId: input.requestId, ip: input.ip
       });
       return { ...projected, warnings };
-    });
+    }), { logger: this.logger, operation: "supplier.bank.update", requestId: input.requestId });
   }
 
   /**
@@ -460,7 +460,7 @@ export class SupplierBankService {
    */
   async setDefault(input) {
     const reason = requireReason(input.reason, "更改預設銀行帳戶必須填寫原因");
-    return this.database.withTransaction(async (connection) => {
+    return retryOnceOnDeadlock(() => this.database.withTransaction(async (connection) => {
       const actor = await this.authorize(connection, input);
       this.#assertMay(actor, BANK_WRITE_PERMISSION, "你目前沒有銀行資料管理權限");
       await this.#supplierForUpdate(connection, input.supplierId);
@@ -496,7 +496,7 @@ export class SupplierBankService {
         requestId: input.requestId, ip: input.ip
       });
       return projected;
-    });
+    }), { logger: this.logger, operation: "supplier.bank.setDefault", requestId: input.requestId });
   }
 
   /**
@@ -506,7 +506,7 @@ export class SupplierBankService {
    */
   async deactivate(input) {
     const reason = requireReason(input.reason, "停用銀行帳戶必須填寫原因");
-    return this.database.withTransaction(async (connection) => {
+    return retryOnceOnDeadlock(() => this.database.withTransaction(async (connection) => {
       const actor = await this.authorize(connection, input);
       this.#assertMay(actor, BANK_WRITE_PERMISSION, "你目前沒有銀行資料管理權限");
       await this.#supplierForUpdate(connection, input.supplierId);
@@ -542,7 +542,7 @@ export class SupplierBankService {
         requestId: input.requestId, ip: input.ip
       });
       return projected;
-    });
+    }), { logger: this.logger, operation: "supplier.bank.deactivate", requestId: input.requestId });
   }
 
   /**

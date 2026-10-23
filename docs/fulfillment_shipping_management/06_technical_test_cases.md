@@ -4,8 +4,9 @@
 
 所有案例均為規格，狀態一律 `NOT_RUN`。`REVIEW_AND_ALIGN` 不授權任何產品實作、測試執行、Technical Acceptance 或 UAT 簽核。本規格由 `03_design_spec.md` §11（測試設計）及 `05_development_tasks.md` §7（Phase 完整測試週期）整理而成，作為 `08_traceability.json` 的 `TC` 節點；§11 與 §7 的逐項測試清單仍是細節來源。實際執行必須綁定不可變基線，並在 `TEST_AND_VERIFY` 模式下進行。
 
-所有案例的 suite 為 `fulfillment-technical`，在專案的隔離測試環境及專用測試 MySQL 8.0 執行。`TC-010` 的瀏覽器層驗證可使用本機已安裝並實測可用的 Playwright CLI（1.63.0＋chromium-1243），但該工具尚未固定進 repo 依賴、設定檔、`client/e2e` 或 CI，因此其結果目前只是本機觀察，不構成 Phase Gate 可consume 的執行契約證據；缺口記錄於 `00_gap_analysis.md` `GAP-TC-001`，必須在 `PHASE-002` 開放前補齊，且任何情況下不得以程式碼檢視或 jsdom 結果偽裝瀏覽器證據。
+所有案例的 suite 為 `fulfillment-technical`；專用 MySQL 8.0 是歷史批准基線，當前 CI 設定釘選並檢查 26.7.0，Sam已以A＋A採納26.7.0為開發／測試基線（HD-007），不宣告8.0兼容或production升級。這個 suite 的 argv 只執行 `node --test server/test`，不包含瀏覽器步驟。Playwright 1.63.0 已固定於 root package.json，CI 的 `Browser tests (Playwright)` 執行 `e2e:mocked`（Business Master／Supplier），不等於 Fulfillment 瀏覽器覆蓋。本模塊於 PHASE-002 交付 UI 前須新增 module e2e config、可被 harness 消費的 profile suite 及適用 CI 執行；必須以真實應用驗證 happy path、相關 error／edge、navigation／refresh、console 及 network，不以 mocked suites、jsdom 或靜態檢視代替。
 
+TASK-004～006／TC-010 的 consumer 證據必須包含：完整跨行集合及錯行／重複／遺漏拒絕、decimal-string 對 safe-integer provider 的受控驗證邊界、trusted permission／source、owner／version、caller transaction、全批 rollback 與並發鎖序；TC-008 另驗原 bucket 回補、原 Reservation 恢復及 Allocation 保持 Consumed。現有 provider 單元測試通過只證明既有介面，不把本模塊 TC 或 UAT 標為 PASS。
 
 ## 案例索引
 
@@ -29,7 +30,7 @@
 ## TC-001 — Authentication、授權、最小權限與 IDOR
 
 ### Preconditions and data
-九個 UAT 角色對應的測試帳戶（只讀、無權限、System Administrator、已撤權、FEFO 例外、Reversal 專責），兩個 Customer 與兩個 Warehouse 的完整 SO → Fulfillment → Shipment → Movement 樹，以及惡意邊界輸入，全部在隔離測試環境的測試 MySQL 8.0。
+九個 UAT 角色對應的測試帳戶（只讀、無權限、System Administrator、已撤權、FEFO 例外、Reversal 專責），兩個 Customer 與兩個 Warehouse 的完整 SO → Fulfillment → Shipment → Movement 樹，以及惡意邊界輸入，全部在隔離測試環境的測試 MySQL 26.7.0（HD-007已採納A）。
 
 ### Steps
 驗證未登入拒絕、權限不因角色名稱取得、三項 Fulfillment 權限與 `inventory.fefo.override` 互不包含、提交點 actor freshness 重驗、替換 SO／Line／Claim／Allocation／Shipment／Address／Movement／Archive ID 的水平與垂直越權、strict schema 拒絕未知欄位、注入／XSS／CSV 公式 payload，以及專用 Inventory Reversal command 沒有 HTTP 入口。
@@ -51,7 +52,7 @@ Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：
 不讀 DB 的純函式測試夾具：全部合法與非法 Fulfillment／Shipment／Reversal 轉換、各狀態應有的數量組合、邊界值（0、上限、非整數、負數）及固定 key 排序的 canonical payload 樣本。
 
 ### Steps
-逐一驗證 §3.1～§3.4 的狀態轉換表、`planned = picked + short`、`allocated = picked + released`、`shipped ∈ (0, picked)`、`reversed ∈ (0, shipped)`、Claim 的 `original = active + released + consumed` 與 `reversed <= consumed`，以及 canonical hash 的 key 排序、decimal normalization 及 UTF-8 bytes 穩定性。
+逐一驗證§3.1～§3.4狀態表：DRAFT／PICKING不套用Pick完成等式；PICKED／SHIPPED／REVERSED才驗`planned = picked + short`及`allocated = picked + derived released`，允許一行picked=0而整張SUM(picked)>0；Reallocation累計allocated與released、DRAFT／PICKING／PICKED取消保留歷史並釋放全部未耗用Allocation；`shipped ∈ {0, picked}`、`reversed ∈ {0, shipped}`、Claim的 `original = active + released + consumed` 與 `reversed <= consumed`，以及 canonical hash 的 key 排序、decimal normalization 及 UTF-8 bytes 穩定性。
 
 ### Expected result
 每個狀態轉換、數量不變量及 hash 分支至少一正一反全部符合規格；Base UOM 數量一律正整數且不出現 binary float 誤差；同內容不同欄位順序的 payload 得到相同 hash，內容不同必得到不同 hash。
@@ -146,10 +147,10 @@ Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：
 最多 100 行、跨多個 Bin／Lot 的合法 DRAFT Shipment，穩定 event ID 及同 ID 同／異 payload 版本，可在 Inventory、Sales、快照保存及 COMMIT 各邊界注入失敗的測試替身，可控制的 worker 重啟與回應遺失，以及與 Confirm 並發的 Cancel／Reallocate／Inventory adjustment。
 
 ### Steps
-執行成功確認、雙擊與重送、異 payload 衝突、逾時後以原 event 安全重試、Phase A 後 process crash 再由 Recovery Job 以原 event 完成，以及在各邊界注入永久業務失敗與暫時技術失敗。
+執行成功確認、雙擊與重送、異 payload 衝突、逾時後以原 event 安全重試、Phase A 後 process crash 再由 Recovery Job 以原 event 完成，以及在各邊界注入永久業務失敗與暫時技術失敗。特別驗Inventory寫入後Sales永久拒絕時先完整rollback，再同event／hash／lease CAS終結；失敗記錄中斷可恢復，CAS不能覆寫已成功結果；Confirm Phase A／Cancel／Create競爭均遵守Fulfillment → Shipment鎖序。
 
 ### Expected result
-一個 source event 最多產生一次完整效果；Issue line 集合與全部 picked Allocation 集合完全相等；永久業務失敗令 Shipment 回 DRAFT 且零 Inventory／Sales 效果；技術不明保留 SHIPPING 並可由原 event 查回唯一結果，不出現顯示 SHIPPED 而 Inventory 未 Issue 的假成功；成功時 On Hand、Reservation consumed、SO Fulfilled 與 Shipment／Fulfillment 狀態在同一 commit 內一致。
+一個 source event 最多產生一次完整效果；Issue line 集合與全部 picked Allocation 集合完全相等；永久業務失敗先確認完整rollback再以受event／lease fencing保護的新transaction令Shipment回DRAFT且零Inventory／Sales效果，不能因provider永久拒絕而無限SHIPPING；技術不明保留 SHIPPING 並可由原 event 查回唯一結果，不出現顯示 SHIPPED 而 Inventory 未 Issue 的假成功；成功時 On Hand、Reservation consumed、SO Fulfilled 與 Shipment／Fulfillment 狀態在同一 commit 內一致。
 
 ### Acceptance criteria
 Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`fulfillment-technical`。
@@ -181,13 +182,13 @@ Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：
 ## TC-009 — Migration、約束、trigger 與不可變保護
 
 ### Preconditions and data
-專用測試 MySQL 8.0 資料庫、空 schema 與已有資料的 schema、最新 pre-feature schema，以及對 History、Issue details、Reversal details 與 Archive tables 嘗試 UPDATE／DELETE 的語句。
+專用測試 MySQL 26.7.0 資料庫（HD-007已採納A）、空 schema 與已有資料的 schema、最新 pre-feature schema，以及對 History、Issue details、Reversal details 與 Archive tables 嘗試 UPDATE／DELETE 的語句。
 
 ### Steps
 在真資料庫依 §9.3 的八個切片 forward migrate、重跑及 upgrade；驗證 FK、UNIQUE、NOT NULL、generated column、index、circular composite FK 的建立次序、數量與狀態 trigger、append-only 保護、`reversal_movement_id` 只可 NULL→value，以及 7 年保留設計與 rollback 影響。
 
 ### Expected result
-所有 migration 可在 MySQL 8.0 順序執行且可重跑；不可變歷史無法由一般路徑改寫；約束在應用層失效時仍構成第二層防護；跨模組 FK 在依賴 table 未存在時明確 BLOCKED 而非以無 FK 的 service guard 通過。
+所有 migration 可在MySQL 26.7.0（HD-007已採納A）順序執行且可重跑；不可變歷史無法由一般路徑改寫；約束在應用層失效時仍構成第二層防護；跨模組 FK 在依賴 table 未存在時明確 BLOCKED 而非以無 FK 的 service guard 通過。
 
 ### Acceptance criteria
 Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`fulfillment-technical`。
@@ -204,6 +205,8 @@ Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：
 
 ### Steps
 驗證每個 route 的 auth、permission、strict schema、response schema、分頁與穩定錯誤；state-changing endpoint 真正遵守 `Idempotency-Key`；IN_PROGRESS 回 202＋status URL；literal route 不被 `/:id` 攔截；print／download header、安全 filename 與 owner check；provider projection 欄位、狀態、version 與 confirm／reverse result 完全匹配；以及 route permission、URL state、衝突保留輸入、processing banner 不建立新 event、鍵盤可達性、heading 結構、`aria-busy` 與文字狀態 badge。
+
+P0 TASK-011另驗最小真實fulfillmentOpenMatter註冊：無open matter允許Sales release、active claim／operation阻止、缺provider／UNKNOWN fail closed；schema安裝／app rollback不能解除guard或提前恢復writers。
 
 ### Expected result
 契約語意與雙方設計一致，provider 能力未落地時契約測試明確 BLOCKED 而非 PASS；provider 回傳異常時 fail closed 並發出 critical 訊號；前端 `allowedActions` 不取代 route authorization；瀏覽器層行為以實際瀏覽器自動化驗證，工具未具備時記為 BLOCKED，不得以程式碼檢視或 jsdom 結果偽裝瀏覽器證據。

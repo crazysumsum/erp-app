@@ -6,7 +6,7 @@
  * 輸入係準備匯入嘅 CSV（範本 v1）：header 規則、CSV 解析、範本說明列、全空白列同行號都同匯入一樣，所以 `row` 對得返
  * 匯入結果嘅行號。每行名稱：
  *   - 同現有 Supplier 比：用 UI 新增時同一個 `SupplierDuplicateCandidates`（同一個門檻同正規化，每行最多 10 個）。
- *     UI 用類別預設門檻，冇讀 `SUPPLIER_DUPLICATE_NAME_THRESHOLD`（DEF-030），所以呢度都唔讀。
+ *     門檻同 UI 一樣讀 `SUPPLIER_DUPLICATE_NAME_THRESHOLD`（DEF-030 修好之後，HD-116 A），冇設就係 0.85。
  *     upsert 模式下，行本身指向嘅 Supplier（按 supplierId，冇就按 Code，同匯入一樣）唔同自己比；名稱留空即係唔改名，唔比較。
  *   - 同檔案入面其他行比：同一條 Dice 公式同門檻。名稱 key 完全一樣嘅行歸做一組，每行指向組入面第一行；
  *     唔同 key 之間每行最多列 10 對（分數高嘅先），超出嘅只計數，咁成千行同名或者近似名都唔會撐爆記憶體。
@@ -20,6 +20,7 @@ import { stringify } from "csv-stringify/sync";
 
 import { CSV_OPTIONS, isTemplateRow, uploadHeaderError } from "./import/SupplierImportProcessor.js";
 import { guardSpreadsheetCell, SUPPLIER_CSV_STRINGIFY_OPTIONS, unguardSpreadsheetCell } from "./import/supplierCsvSchema.js";
+import { normalizeSupplierConfig } from "./normalizeSupplierConfig.js";
 import { SupplierDuplicateCandidates, uniqueBigrams } from "./supplierDuplicateCandidates.js";
 import { normalizeSupplierCode, normalizeSupplierName } from "./supplierNormalization.js";
 
@@ -46,7 +47,7 @@ async function upsertTarget(connection, idText, codeText) {
 }
 
 /**
- * `csv`：Buffer。`duplicates` 預設就係 UI 新增用嗰個。
+ * `csv`：Buffer。`duplicates` 預設用類別預設門檻；CLI 傳入讀咗設定嘅（同 UI 一樣，DEF-030）。
  * 回傳 `{ rows: [...REPORT_HEADER 次序嘅陣列], counts }`。
  */
 export async function buildSimilarNameReport({ connection, csv, mode, duplicates = new SupplierDuplicateCandidates() }) {
@@ -179,7 +180,10 @@ export async function main(argv, env) {
   try {
     // 之後每句都喺唯讀交易入面跑（autocommit，逐句各自一個 snapshot）；腳本本身只有 SELECT。
     await connection.query("SET SESSION TRANSACTION READ ONLY");
-    const { rows, counts, threshold } = await buildSimilarNameReport({ connection, csv: fs.readFileSync(input), mode });
+    // 同 server 一樣驗證同讀設定：超出範圍就失敗，唔會靜靜雞用另一個門檻。
+    const { duplicateNameThreshold } = normalizeSupplierConfig({ duplicateNameThreshold: env.SUPPLIER_DUPLICATE_NAME_THRESHOLD || undefined });
+    const { rows, counts, threshold } = await buildSimilarNameReport({ connection, csv: fs.readFileSync(input), mode,
+      duplicates: new SupplierDuplicateCandidates({ threshold: duplicateNameThreshold }) });
     fs.writeFileSync(output, formatSimilarNameReport(rows), { flag: "wx" });
     return { threshold, mode, ...counts, output };
   } finally {

@@ -211,7 +211,8 @@
       "server/database/migrations/*_create_fulfillment_archive_prerequisites.js",
       "server/database/migrations/*_create_fulfillment_archive_mirrors.js",
       "server/database/migrations/*_protect_fulfillment_archive_contracts.js",
-      "docs/fulfillment_shipping_management/**"
+      "docs/fulfillment_shipping_management/**",
+      "server/database/migrations/0101_add_fulfillment_archive_routing.js"
     ],
     "approval_required_paths": [
       "server/database/migrations/**",
@@ -325,7 +326,8 @@
       "server/database/migrations/*_create_sales_export_jobs.js",
       "server/database/migrations/*_create_sales_archive_batches.js",
       "server/database/migrations/*_create_sales_archive_tables.js",
-      "server/database/migrations/*_protect_sales_archive_immutability.js"
+      "server/database/migrations/*_protect_sales_archive_immutability.js",
+      "server/database/migrations/0101_add_fulfillment_archive_routing.js"
     ],
     "shared_resources": [
       "global-migration-sequence",
@@ -368,9 +370,9 @@
       {
         "module_id": "customer-management",
         "id": "customer-snapshot-and-credit-contract",
-        "version": "postmerge-Customer-HD013-document-pin; Sales snapshot/credit/provider contracts unchanged; Customer timing waiver not adopted; P3 implementation qualified at750 and merged193; current main not reexecuted",
+        "version": "observed-main-P0-integration; unchanged Sales single-Customer runtime2.1; no Customer waiver or pending2.2/shared-lock adoption",
         "source": "docs/customer_management/03_design_spec.md",
-        "sha256": "0c70e3d5a619e02f4c7ae24d415a08f1276fe81101b57df0b2bf3d28303f96c9",
+        "sha256": "7b56997a4f33d64793739faa888c1a8d882015892750cce59532d9818ab53972",
         "regression_suites": [
           "sales-technical"
         ]
@@ -378,9 +380,9 @@
       {
         "module_id": "item-management",
         "id": "item-lookup-service",
-        "version": "integrated-main-7c927e26-Item-purchase-lookup; Sales named contracts unchanged, current33/currentCI pending; HD018 mechanical current-main pin only, unchanged Sales methods; Item committed-receipt addition not adopted as Sales behavior",
+        "version": "observed-main-P0-additive-Fulfillment-profile; exact unchanged existing Item/Sales methods",
         "source": "server/src/modules/item/ItemLookupService.js",
-        "sha256": "a09d5baf602f44199cd218a2b3139edcdb2abad039a6f08a21b48162900562b5",
+        "sha256": "5ed3f26ff4271cc6bd533a417fd09fcde446f1682d662c3c465216e9ea08d558",
         "regression_suites": [
           "sales-technical"
         ]
@@ -388,9 +390,9 @@
       {
         "module_id": "authorization",
         "id": "permission-catalogue",
-        "version": "observed-sales-foundation-0067-source-only",
+        "version": "observed-main-P0-and-Purchasing-additions; all four existing Sales permissions unchanged",
         "source": "server/src/modules/authorization/permissionCatalogue.js",
-        "sha256": "e6363b8928b0f86d8c3ebba0a25695e9879dbb05d0bf9992fcdd175aa389cc0e",
+        "sha256": "6f6e14b642573f9e16ffcb13abe411ead9b5e2c95739100c188c51dd00207743",
         "regression_suites": [
           "sales-technical"
         ]

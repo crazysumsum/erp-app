@@ -4,7 +4,7 @@ import { APPROVAL_SIGNIFICANT_COLUMNS, SupplierApprovalService, buildApprovalSum
 import { SupplierAuditLogService } from "./SupplierAuditLogService.js";
 import { SupplierDuplicateCandidates, replaceSupplierNameGrams } from "./supplierDuplicateCandidates.js";
 import { SupplierReferenceService } from "./SupplierReferenceService.js";
-import { invalidSupplierInput, supplierConflict, supplierNotFound } from "./supplierErrors.js";
+import { invalidSupplierInput, retryOnceOnDeadlock, supplierConflict, supplierNotFound } from "./supplierErrors.js";
 import {
   escapeLikeTerm,
   normalizeContactEmail,
@@ -260,6 +260,7 @@ export class SupplierAdminService {
     businessMaster,
     authorize = assertActorFresh,
     duplicates,
+    duplicateNameThreshold,
     replaceNameGrams = replaceSupplierNameGrams,
     audit,
     references,
@@ -273,8 +274,10 @@ export class SupplierAdminService {
     this.database = database;
     this.businessMaster = businessMaster;
     this.authorize = authorize;
-    this.duplicates = duplicates ?? new SupplierDuplicateCandidates();
+    // 相似名稱門檻跟設定 SUPPLIER_DUPLICATE_NAME_THRESHOLD（DEF-030，HD-116 A）；冇提供就係類別預設 0.85。
+    this.duplicates = duplicates ?? new SupplierDuplicateCandidates(duplicateNameThreshold === undefined ? {} : { threshold: duplicateNameThreshold });
     this.replaceNameGrams = replaceNameGrams;
+    this.logger = logger;
     this.audit = audit ?? new SupplierAuditLogService({ database, logger, time });
     this.references = references ?? new SupplierReferenceService();
     this.openFlows = openFlows ?? new SupplierReferenceService();
@@ -286,18 +289,18 @@ export class SupplierAdminService {
   async createSupplier(input) {
     // 喺開 transaction 之前驗輸入，錯咗唔使掂資料庫；helper 入面會再做一次。
     const { name } = createFields(input);
-    // 相似名稱只係提示：喺 transaction 之外做，唔好令 currencies 嘅 X 鎖揸住成個查詢（T50，HD-084）。
+    // 相似名稱只係提示：喺 transaction 之外做，唔好令 currencies 嘅鎖揸住成個查詢（T50，HD-084）。
     const duplicateCandidates = await this.duplicates.find(this.database, { nameKey: name.key });
     let created;
     try {
-      created = await this.database.withTransaction(async (connection) => {
+      created = await retryOnceOnDeadlock(() => this.database.withTransaction(async (connection) => {
         const actor = await this.authorize(connection, {
           actorId: input.actorId,
           claimedRoles: input.claimedRoles,
           claimedPermissions: input.claimedPermissions
         });
         return this.createSupplierInTransaction(connection, { actor, input, findDuplicates: false });
-      });
+      }), { logger: this.logger, operation: "supplier.create", requestId: input.requestId });
     } catch (error) {
       if (duplicateEntry(error)) {
         throw supplierConflict("SUPPLIER_CODE_TAKEN", "這個 Supplier Code 已被使用", { supplierCode: normalizeSupplierCode(input.supplierCode).value });
@@ -307,7 +310,8 @@ export class SupplierAdminService {
 
     const [[row]] = await this.database.query("SELECT * FROM suppliers WHERE id = ?", [created.id]);
     if (!row) throw supplierNotFound(created.id);
-    const warnings = supplierCompletenessWarnings({ defaultPaymentTermId: row.default_payment_term_id });
+    // 啱啱新增：仲未有任何地址、聯絡人、識別資料或銀行帳戶，所以全部提示。
+    const warnings = supplierCompletenessWarnings({ defaultPaymentTermId: row.default_payment_term_id, hasBankAccount: false });
     return { ...toSupplierDetailResponse(row, { warnings }), duplicateCandidates };
   }
 
@@ -324,10 +328,10 @@ export class SupplierAdminService {
   async createSupplierInTransaction(connection, { actor, input, approvalRequired = this.approvalRequired, addChildren = null,
     findDuplicates = true }) {
     const { code, name, displayName, website, email, generalPhone, notes } = createFields(input);
-    // 設計 2.6 嘅鎖序由 settings 行先。Business Master 會攞 currencies 嘅 X 鎖，
-    // 所以政策讀取（settings 嘅 S 鎖）一定要喺佢之前 —— 否則 createSupplier 係
-    // currencies -> settings，而 #changeStatus 係 settings -> currencies，夾埋一個
-    // 等緊 settings X 嘅 updateSettings 就砌成三方循環，實測會 ER_LOCK_DEADLOCK。
+    // 設計 2.6 嘅鎖序由 settings 行先，政策讀取（settings 嘅 S 鎖）喺 Business Master 鎖 currencies 之前。
+    // 當時 currencies 係 X 鎖：createSupplier 係 currencies -> settings、#changeStatus 係 settings -> currencies，
+    // 夾埋一個等緊 settings X 嘅 updateSettings 就砌成三方循環，實測會 ER_LOCK_DEADLOCK（REV-023）。
+    // PR #244 之後 Business Master 改用 S 鎖，呢個循環未重新量度過，所以次序照舊。
     const activationRequested = Boolean(input.activate);
     const needsApproval = activationRequested && await approvalRequired(connection);
     const defaults = await this.businessMaster.assertSupplierDefaultsInTransaction(connection, {
@@ -556,7 +560,9 @@ export class SupplierAdminService {
     const reason = requireReason(input.reason, "修正 Supplier Code 必須填寫原因");
     let codeApprovalInvalidated = false;
     try {
-      await this.database.withTransaction(async (connection) => {
+      await retryOnceOnDeadlock(() => this.database.withTransaction(async (connection) => {
+        // 重做嗰次由頭計（REV-104 M-1）。
+        codeApprovalInvalidated = false;
         const actor = await this.authorize(connection, {
           actorId: input.actorId,
           claimedRoles: input.claimedRoles,
@@ -609,7 +615,7 @@ export class SupplierAdminService {
           });
           codeApprovalInvalidated = true;
         }
-      });
+      }), { logger: this.logger, operation: "supplier.code.change", requestId: input.requestId });
     } catch (error) {
       if (duplicateEntry(error)) {
         throw supplierConflict("SUPPLIER_CODE_TAKEN", "這個 Supplier Code 已被使用", { supplierCode: code.value });
@@ -907,6 +913,13 @@ export class SupplierAdminService {
     return { hasOrderingAddress: Boolean(Number(flags.has_ordering_address)), hasOrdersContact: Boolean(Number(flags.has_orders_contact)) };
   }
 
+  /** 有冇有效銀行帳戶：同列表 `missingBank` 篩選一樣嘅定義，只睇存在，唔讀任何帳戶內容。 */
+  async #hasActiveBankAccount(id) {
+    const [[bank]] = await this.database.query(
+      "SELECT 1 AS present FROM supplier_bank_accounts WHERE supplier_id = ? AND status = 'active' LIMIT 1", [id]);
+    return Boolean(bank);
+  }
+
   async getSupplier({ actorId, claimedRoles, claimedPermissions, id }) {
     await this.authorize(this.database, { actorId, claimedRoles, claimedPermissions });
     const [[row]] = await this.database.query("SELECT * FROM suppliers WHERE id = ?", [id]);
@@ -932,7 +945,8 @@ export class SupplierAdminService {
         defaultPaymentTermId: row.default_payment_term_id,
         hasOrderingAddress,
         hasOrdersContact,
-        hasIdentifier: identifiers.length > 0
+        hasIdentifier: identifiers.length > 0,
+        hasBankAccount: await this.#hasActiveBankAccount(id)
       })
     });
   }
@@ -961,10 +975,8 @@ export class SupplierAdminService {
       "SELECT 1 AS present FROM supplier_identifiers WHERE supplier_id = ? LIMIT 1",
       [id]
     );
-    const [[currency]] = await this.database.query(
-      "SELECT code, status FROM currencies WHERE code = ? LIMIT 1",
-      [row.default_currency_code]
-    );
+    // 經 Business Master 嘅 provider 讀，唔直接讀佢嘅表（DEF-003，HD-116 A）。
+    const currency = await this.businessMaster.getCurrencyHistory(row.default_currency_code);
     const issues = supplierActivatabilityIssues({
       supplierCode: row.supplier_code,
       supplierName: row.supplier_name,
@@ -978,7 +990,8 @@ export class SupplierAdminService {
         defaultPaymentTermId: row.default_payment_term_id,
         hasOrderingAddress: Boolean(orderingAddress),
         hasOrdersContact: Boolean(ordersContact),
-        hasIdentifier: Boolean(identifier)
+        hasIdentifier: Boolean(identifier),
+        hasBankAccount: await this.#hasActiveBankAccount(id)
       })
     };
   }

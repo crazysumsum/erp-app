@@ -64,7 +64,7 @@ function button(body, label) {
 describe("pages/suppliers/SupplierApprovalsPage.vue", () => {
   beforeEach(() => { setActivePinia(createPinia()); document.body.innerHTML = ""; vi.clearAllMocks(); });
 
-  it("guards on the same pair of permissions the API demands", () => {
+  it("TC-121 (UI-001): guards on the same pair of permissions the API demands", () => {
     // 只守 supplier.approval 會令使用者入到頁，但每個請求都 403（設計 §6.4）。
     expect(page.requires.permissions).toEqual(["supplier.view", "supplier.approval"]);
     expect(page.path).toBe("/suppliers/approvals");
@@ -87,7 +87,7 @@ describe("pages/suppliers/SupplierApprovalsPage.vue", () => {
     }
   });
 
-  it("shows the submitted snapshot beside the current Supplier and marks what changed", async () => {
+  it("TC-125 (UI-005): shows the submitted snapshot beside the current Supplier and marks what changed", async () => {
     supplierApprovalService.get.mockResolvedValue(detail({
       current: { ...SNAPSHOT, supplierName: "Evergreen Trading" },
       changedFields: ["supplierName"], stale: true, currentSupplierVersion: 6
@@ -109,7 +109,7 @@ describe("pages/suppliers/SupplierApprovalsPage.vue", () => {
     expect(coded.text()).not.toContain("已變更");
   });
 
-  it("refuses to approve a stale request, which is the same rule the service enforces", async () => {
+  it("TC-125 (UI-005): refuses to approve a stale request, which is the same rule the service enforces", async () => {
     // AC-012：提交後 Supplier 改過就唔可以批舊申請。UI 禁用嘅嘢，服務層唔會突然又批得。
     supplierApprovalService.get.mockResolvedValue(detail({ stale: true, currentSupplierVersion: 6 }));
     const { body } = await mountPage();
@@ -132,7 +132,7 @@ describe("pages/suppliers/SupplierApprovalsPage.vue", () => {
     expect(button(body, "批准").attributes("disabled")).toBeDefined();
   });
 
-  it("approving asks for the password and sends the request version", async () => {
+  it("TC-125 (UI-005): approving asks for the password and sends the request version", async () => {
     supplierApprovalService.get.mockResolvedValue(detail({ version: 3 }));
     supplierApprovalService.approve.mockResolvedValue({ id: 11, status: "approved", supplierStatus: "active" });
     promptPassword.mockResolvedValue("pw");
@@ -150,7 +150,7 @@ describe("pages/suppliers/SupplierApprovalsPage.vue", () => {
     expect(notifySuccess).toHaveBeenCalledWith(expect.stringContaining("啟用"));
   });
 
-  it("rejecting demands a reason as well as the password", async () => {
+  it("TC-125 (UI-005): rejecting demands a reason as well as the password", async () => {
     supplierApprovalService.get.mockResolvedValue(detail());
     supplierApprovalService.reject.mockResolvedValue({ id: 11, status: "rejected", supplierStatus: "draft" });
     promptPassword.mockResolvedValue({ reason: "資料不足以啟用", password: "pw" });
@@ -219,7 +219,7 @@ describe("pages/suppliers/SupplierApprovalsPage.vue", () => {
     expect(supplierApprovalService.get).toHaveBeenCalledTimes(1);
   });
 
-  it("reassigning excludes the requester and demands a reason", async () => {
+  it("TC-125 (UI-005): reassigning excludes the requester and demands a reason", async () => {
     supplierApprovalService.get.mockResolvedValue(detail());
     supplierApprovalService.eligibleApprovers.mockResolvedValue({ items: [{ id: 3, username: "other", displayName: "Other" }] });
     supplierApprovalService.reassign.mockResolvedValue({ id: 11, assignedApproverId: 3, version: 2 });
