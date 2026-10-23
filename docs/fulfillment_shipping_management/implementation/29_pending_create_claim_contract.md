@@ -1,6 +1,6 @@
 # HD-016 — P1 pending-create Claim identity contract
 
-Status: PROPOSED / DECISION_REQUIRED. No production contract change adopted.
+Status: ADOPTED A by actual Sam instruction on 2026-10-23. Implementation and validation in progress; no completion claimed.
 
 ## Observed baseline and defect
 
@@ -31,3 +31,7 @@ RED contract probe for pending input against current implementation; old valid i
 ## Decision and authority
 
 Await actual human selection. Proposed default only if approved: A. This is a new delivered provider identity/sequencing mismatch, not a repeat request for P1 development or draft PR authority. Harness instruction: “Major impact means ask a human before choosing.” Source: `/Users/sam/.agents/skills/software-engineering-harness/SKILL.md`. TASK-013 dependent writes are blocked; TASK-012 bounded coherent Queue reads and pure tests may proceed.
+
+## Actual adoption — 2026-10-23
+
+Actual direct human instruction: 「批准 HD-016 方案 A，繼續按已批准計劃完成 fulfillment P1；待所有 TASK、獨立覆核、完整驗證及當前候選 CI 通過後建立 draft PR。」 This adopts exactly A above and authorizes the named Sales provider/contract coordination and tests, while retaining all original gates and draft-only scope. Original proposal before this adoption was independently APPROVED FOR HUMAN DECISION 0C/H/M at SHA256 `597fbf5763db4731cbd85266775d434fb1f94aaef93bdf2e779977f5c406084d`. Old decision/proposal history remains; this is the actual human answer, not inferred from the earlier “繼續”. Sales owner has been notified and reserved the provider file for this contribution; actual owner implementation review remains required. No new OperationService routing or Sales P4 migration is adopted here.

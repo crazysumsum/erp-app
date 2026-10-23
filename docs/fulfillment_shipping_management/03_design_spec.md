@@ -1025,6 +1025,10 @@ SalesFulfillmentService.applyFulfillmentResultInTransaction(transaction, command
 - Provider驗line set、mapping ownership、quantity及Inventory versions；缺漏或超額回`SALES_FULFILLMENT_CONTRACT_MISMATCH`並rollback。
 - 回`{orderId,status,version,lines:[quantity projections]}`；Fulfillment用result保存before／after，不自行推算。
 
+HD-016 A（2026-10-23 actual Sam批准）：新建履約單使用CLAIM-only exact `claimMode:"PENDING_CREATE"` 變體，每個Reservation member的`claimId`必須為null且不可混入persisted IDs；其餘actor、SO／line／mapping last-sync CAS、數量及來源驗證不變。只有pending變體的normalized intent/hash帶claimMode；原無claimMode的CLAIM及全部Shipment／Reverse exact schema、正整數Claim IDs、hash／receipt／replay保持不變。Pending只取得Sales目前鎖定projection及容量scope，不是persisted Claim或Shipment apply證明。 Pending-only mapping projection另回傳已鎖定的`originalBaseQuantity,consumedBaseQuantity,releasedBaseQuantity,sourceEventId`，連同既有outstanding及last-sync version，逐一對帳Inventory四counter、原source event及currentVersion≥lastSync；不得僅以outstanding相同或version較大推定數量不變。
+
+Fulfillment另設pending-create容量路徑，operation preclaim之後依序鎖Sales、既有Fulfillment／Lines／Claims、Item及Inventory Warehouse／controls／Reservations；實際Claims依鎖內目前mapping ID順序及active Claims計算，逐一驗實際Inventory source／目前version／counter，不以Queue或preflight代替。全部容量、型態及base UOM驗證成立後才insert新Header／Lines／真正Claims／History／Audit，與operation result同交易提交；不得在Warehouse鎖前先insert帶Warehouse FK的新Header。原DRAFT persisted-capacity路徑保留；此Claim-only讀鎖後不得再進行Inventory allocation/post。 來源影響集並非selected command集合：同SO Line的歷次Sales mappings可能超過5,000，planned僅1仍須可建立。Inventory owner新增`lockFulfillmentReservationScopeInTransaction` complete-source讀鎖入口，先鎖完整Item／Warehouse／StockControl anchors，再以Reservation PK升序、每批500取鎖及重讀；原`lockFulfillmentReservationStatesInTransaction`的5,000 selected-member上限、DTO及舊呼叫行為保留，不接受caller flag偽造complete-proof。所有會影響分配及已有active Claims的來源均納入native數量驗證，不能僅驗最後選中的member。
+
 ### 6.2 Inventory Contracts
 
 ```js

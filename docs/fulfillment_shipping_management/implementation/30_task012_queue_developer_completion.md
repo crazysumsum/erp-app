@@ -37,3 +37,7 @@ The NFR-023 UAT NOT_APPLICABLE reason is unchanged byte-for-byte; only its appro
 ## Remaining dependency and coordination
 
 HD-016 proposal29 is unchanged at SHA256 `597fbf5763db4731cbd85266775d434fb1f94aaef93bdf2e779977f5c406084d`, independently approved for human decision only. No Sales provider/write protocol has changed. TASK-013 and dependent writes wait for actual A/B selection. P4 owner reports reserving forward migrations0101/0102 for Archive routing/guards; P1 has allocated no migration, operation routing or Archive change. The target may advance during parallel owner work; fetch/integrate and reverify the current candidate before any PR as required.
+
+## Observed local commit
+
+Actual Git commit `6f455930390d735a5a652379230dc470cab8da0f` completed with parent `fd32762f4fa17a5e77aaa7118a9ded2d3ac81e9e`; source fingerprint remains unchanged. TASK-012 is developer DONE. Post-commit canonical state/checkpoint records this observed outcome; TASK-013 and phase remain BLOCKED pending HD-016. No push, PR or CI has occurred.

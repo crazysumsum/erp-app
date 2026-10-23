@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 140,
+  "revision": 143,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
-  "status": "BLOCKED",
-  "resume_status": "IMPLEMENTING",
+  "status": "IMPLEMENTING",
+  "resume_status": null,
   "current_phase": "PHASE-002",
-  "current_task": "TASK-012",
+  "current_task": "TASK-013",
   "baseline": {
-    "design": "0f4ca289a3b7edc534826a9393736e05544031543e9ee23d67a3debb96a9f173",
-    "plan": "339fa385ec7c18f060d21f3c26a5bf35fb8f0cdaa46e9c1b0e66893415ddfcfe",
-    "code_commit": "fd32762f4fa17a5e77aaa7118a9ded2d3ac81e9e",
-    "source_fingerprint": "ba923df001b026f2f03ad8be62064599f5dd4adba944d35f8d376bd4b0af9784",
+    "design": "a06c313761485a6a56be160005b911fe4d190b9e48da359c5ed923aab9f522e0",
+    "plan": "20bba06abbfddb1a2ba3208ff4240ab2805f68028517f66b29db468f8e33256c",
+    "code_commit": "6f455930390d735a5a652379230dc470cab8da0f",
+    "source_fingerprint": "e4555bfdc3232bf9ee6623c718bfd2041b820cd088c4bbfefd3e433c6d141493",
     "worktree": "/private/tmp/erp-fulfillment-p1",
     "default_commit": "fd32762f4fa17a5e77aaa7118a9ded2d3ac81e9e",
     "mode_entry_commit": "fd32762f4fa17a5e77aaa7118a9ded2d3ac81e9e"
@@ -42,8 +42,8 @@
     "TASK-009": "DONE",
     "TASK-010": "DONE",
     "TASK-011": "DONE",
-    "TASK-012": "IN_PROGRESS",
-    "TASK-013": "PENDING",
+    "TASK-012": "DONE",
+    "TASK-013": "IN_PROGRESS",
     "TASK-014": "PENDING",
     "TASK-015": "PENDING",
     "TASK-016": "PENDING",
@@ -1862,6 +1862,152 @@
       "scope": [
         "NFR-023",
         "Original exact N/A reason unchanged; only new PLAN approval reference; TC-010 remains mandatory/blocking"
+      ]
+    },
+    {
+      "authority_kind": "HUMAN",
+      "actor": "Sam actual direct HD016 A approval and full P1 continuation; NFR NA reason unchanged from original approval, no merge/formal/live authorization",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/29_pending_create_claim_contract.md#actual-adoption--2026-10-23",
+      "recorded_at": "2026-10-23T02:57:44.246315+00:00",
+      "code_commit": "6f455930390d735a5a652379230dc470cab8da0f",
+      "expires_at": null,
+      "id": "APR-081-HD016-SCOPE",
+      "kind": "SCOPE",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "0017487d457d55aeb0960aca9a3ab9dbebebc5822507bb66ddc8be875247e11d",
+      "scope": [
+        "server/src/modules/sales/SalesFulfillmentService.js",
+        "server/test/salesFulfillmentService.test.js",
+        "server/test/integration/salesFulfillmentService.integration.test.js",
+        "docs/sales_order_management/03_design_spec.md",
+        "docs/sales_order_management/00_module_manifest.json",
+        "Exact approved pending-create owner contribution and review only; no P4 operation routing adoption"
+      ]
+    },
+    {
+      "authority_kind": "HUMAN",
+      "actor": "Sam actual direct HD016 A approval and full P1 continuation; NFR NA reason unchanged from original approval, no merge/formal/live authorization",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/29_pending_create_claim_contract.md#actual-adoption--2026-10-23",
+      "recorded_at": "2026-10-23T02:57:44.246315+00:00",
+      "code_commit": "6f455930390d735a5a652379230dc470cab8da0f",
+      "expires_at": null,
+      "id": "APR-082-HD016-DESIGN",
+      "kind": "DESIGN",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "35b6c84580cc02bafaed8a22fd99bb61a2d806c2d01b67df4b5fec78f5bb964a",
+      "scope": [
+        "fulfillment-shipping-management",
+        "PHASE-002",
+        "HD-016 option A only; preserve all legacy wire/hash/CAS/locks and original NFR"
+      ]
+    },
+    {
+      "authority_kind": "HUMAN",
+      "actor": "Sam actual direct HD016 A approval and full P1 continuation; NFR NA reason unchanged from original approval, no merge/formal/live authorization",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/29_pending_create_claim_contract.md#actual-adoption--2026-10-23",
+      "recorded_at": "2026-10-23T02:57:44.246315+00:00",
+      "code_commit": "6f455930390d735a5a652379230dc470cab8da0f",
+      "expires_at": null,
+      "id": "APR-083-HD016-PLAN",
+      "kind": "PLAN",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "0017487d457d55aeb0960aca9a3ab9dbebebc5822507bb66ddc8be875247e11d",
+      "scope": [
+        "PHASE-002",
+        "TASK-012–023",
+        "All tasks/review/full original checks/currentCI before draft; no P1 merge"
+      ]
+    },
+    {
+      "authority_kind": "HUMAN",
+      "actor": "Sam actual direct HD016 A approval and full P1 continuation; NFR NA reason unchanged from original approval, no merge/formal/live authorization",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/29_pending_create_claim_contract.md#actual-adoption--2026-10-23",
+      "recorded_at": "2026-10-23T02:57:44.246315+00:00",
+      "code_commit": "6f455930390d735a5a652379230dc470cab8da0f",
+      "expires_at": null,
+      "id": "APR-084-HD016-UNCHANGED-UATNA-LINEAGE",
+      "kind": "UAT_NA",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "0017487d457d55aeb0960aca9a3ab9dbebebc5822507bb66ddc8be875247e11d",
+      "scope": [
+        "NFR-023",
+        "Exact reason unchanged; TC010 remains mandatory/blocking"
+      ]
+    },
+    {
+      "id": "APR-085-HD016-PROOF-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam actual HD016 A authority, narrowly derived implementation scope and baseline lineage independently approved by /root/fulfillment_independent_review; no newly requested human choice",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/31_hd016_pending_capacity_increment.md#exact-derived-shared-scope",
+      "recorded_at": "2026-10-23T03:26:51.713094+00:00",
+      "code_commit": "6f455930390d735a5a652379230dc470cab8da0f",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "20bba06abbfddb1a2ba3208ff4240ab2805f68028517f66b29db468f8e33256c",
+      "scope": [
+        "server/src/modules/inventory/InventoryLookupService.js",
+        "server/src/modules/sales/SalesFulfillmentService.js",
+        "server/test/salesFulfillmentService.test.js",
+        "Exact pending identity and read-only complete capacity proof; no P4 routing"
+      ]
+    },
+    {
+      "id": "APR-086-HD016-PROOF-DESIGN",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam actual HD016 A authority, narrowly derived implementation scope and baseline lineage independently approved by /root/fulfillment_independent_review; no newly requested human choice",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/31_hd016_pending_capacity_increment.md#exact-derived-shared-scope",
+      "recorded_at": "2026-10-23T03:26:51.713094+00:00",
+      "code_commit": "6f455930390d735a5a652379230dc470cab8da0f",
+      "expires_at": null,
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "a06c313761485a6a56be160005b911fe4d190b9e48da359c5ed923aab9f522e0",
+      "scope": [
+        "fulfillment-shipping-management",
+        "PHASE-002",
+        "HD-016 A complete owner proof only"
+      ]
+    },
+    {
+      "id": "APR-087-HD016-PROOF-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam actual HD016 A authority, narrowly derived implementation scope and baseline lineage independently approved by /root/fulfillment_independent_review; no newly requested human choice",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/31_hd016_pending_capacity_increment.md#exact-derived-shared-scope",
+      "recorded_at": "2026-10-23T03:26:51.713094+00:00",
+      "code_commit": "6f455930390d735a5a652379230dc470cab8da0f",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "20bba06abbfddb1a2ba3208ff4240ab2805f68028517f66b29db468f8e33256c",
+      "scope": [
+        "PHASE-002",
+        "TASK-012–023",
+        "Original full gates and draft-only boundary"
+      ]
+    },
+    {
+      "id": "APR-088-HD016-PROOF-UNCHANGED-UATNA-LINEAGE",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam actual HD016 A authority, narrowly derived implementation scope and baseline lineage independently approved by /root/fulfillment_independent_review; no newly requested human choice",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/31_hd016_pending_capacity_increment.md#exact-derived-shared-scope",
+      "recorded_at": "2026-10-23T03:26:51.713094+00:00",
+      "code_commit": "6f455930390d735a5a652379230dc470cab8da0f",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "20bba06abbfddb1a2ba3208ff4240ab2805f68028517f66b29db468f8e33256c",
+      "scope": [
+        "NFR-023",
+        "Exact original N/A reason unchanged; TC010 mandatory/blocking"
       ]
     }
   ],
@@ -3928,8 +4074,8 @@
         "DES-006",
         "TC-010"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "docs/fulfillment_shipping_management/implementation/29_pending_create_claim_contract.md#actual-adoption--2026-10-23; actual direct Sam choice A in current chat"
     }
   ],
   "external_actions": [
@@ -4418,8 +4564,8 @@
       "kind": "GIT_COMMIT",
       "target": "codex/fulfillment-p1-queue-picking local TASK012 increment only",
       "idempotency_key": "p1-task012-source-ba923df0",
-      "status": "PLANNED",
-      "source_ref": "Task012 DoD/report30; local atomic commit only now. Full P1 candidate may be pushed/dispatched under existing authority to obtain current CI after task/local gates; draft PR only after all gates including CI; no partial Task push or merge now."
+      "status": "CONFIRMED",
+      "source_ref": "Actual git commit 6f455930390d735a5a652379230dc470cab8da0f; parentfd32762f; exact sourceFPba923 unchanged. Local only; no push/draft/CI/merge. Existing full-P1 candidate push/CI authority retained for later complete candidate."
     }
   ],
   "evidence_files": [
@@ -4469,7 +4615,8 @@
     "evidence/20261022T084123-ee11b72dbedd/run.json",
     "implementation/28_p1_implementation_readiness.md",
     "implementation/29_pending_create_claim_contract.md",
-    "implementation/30_task012_queue_developer_completion.md"
+    "implementation/30_task012_queue_developer_completion.md",
+    "implementation/31_hd016_pending_capacity_increment.md"
   ],
   "defects": [
     {
@@ -4553,5 +4700,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Observe/reconcile atomic local TASK012 commit after final structural/boundary checks; then mark TASK012 developer DONE and TASK013 BLOCKED. Await actual HD016 A/B before new Sales provider or dependent Create writes. All remaining P1 tasks, P1 browser/full regression/current CI must pass before draft PR; no push/PR/merge yet."
+  "next_safe_action": "Finish native P0/provider regression then commit narrowly reviewed HD016 capacity increment for actual Sales owner review. TASK013 remains in progress: implement actual Create/native concurrency and audit rollback, then TASK014–023 and full original gates/currentCI before draft PR."
 }

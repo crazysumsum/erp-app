@@ -63,3 +63,33 @@ test("copied, fabricated, closed and aborted executors cannot gain Shipment auth
  await refused(actual);f.context.update({databaseTransaction:null});const controller=new AbortController();
  await assert.rejects(()=>f.database.withTransaction(async tx=>{controller.abort(new Error("synthetic abort"));await refused(tx);},{isolationLevel:"READ COMMITTED",signal:controller.signal}));assert.deepEqual(f.queries,[]);
 });
+
+function pendingCreateIntent(){
+ const c=fixture();c.purpose="CLAIM";for(const key of ["eventId","shipmentId","inventoryRequestHash"])delete c[key];c.claimMode="PENDING_CREATE";
+ for(const line of c.lines)for(const member of line.reservations)member.claimId=null;
+ return c;
+}
+test("HD016 strict pending-create CLAIM carries explicit null identities without mutating or changing legacy fields",()=>{
+ const c=pendingCreateIntent(),actual=normalizeSalesFulfillmentIntent(c);assert.deepEqual(actual,c);assert.ok(Object.isFrozen(actual.lines[0].reservations[0]));assert.equal(actual.claimMode,"PENDING_CREATE");
+ c.lines[0].reservations[0].claimId="31";assert.equal(actual.lines[0].reservations[0].claimId,null);
+});
+test("HD016 pending identity cannot be mixed, omitted, used by Shipment or smuggled into legacy CLAIM",()=>{
+ const mutations=[c=>c.claimMode="OTHER",c=>c.claimMode=null,c=>delete c.claimMode,c=>delete c.lines[0].reservations[0].claimId,c=>c.lines[0].reservations[0].claimId="31",c=>c.lines[0].reservations.push({...c.lines[0].reservations[0]}),c=>c.extra=true];
+ for(const mutate of mutations){const c=pendingCreateIntent();mutate(c);mismatch(()=>normalizeSalesFulfillmentIntent(c));}
+ const mixed=pendingCreateIntent();mixed.lines[0].baseQuantity="7";mixed.lines[0].reservations.push({claimId:"32",inventoryReservationId:"42",expectedVersion:1,baseQuantity:"1"});mismatch(()=>normalizeSalesFulfillmentIntent(mixed));
+ for(const purpose of ["SHIPMENT_CONFIRMED","SHIPMENT_REVERSED"]){const c=purpose==="SHIPMENT_REVERSED"?reverseIntent():fixture();c.claimMode="PENDING_CREATE";mismatch(()=>normalizeSalesFulfillmentIntent(c));}
+});
+test("HD016 pending hash includes mode and cannot collide with the unchanged persisted CLAIM",()=>{
+ const pending=pendingCreateIntent(),legacy=structuredClone(pending);delete legacy.claimMode;legacy.lines[0].reservations[0].claimId="31";
+ assert.notEqual(salesFulfillmentIntentHash(normalizeSalesFulfillmentIntent(pending)),salesFulfillmentIntentHash(normalizeSalesFulfillmentIntent(legacy)));
+ assert.deepEqual(normalizeSalesFulfillmentIntent(legacy),legacy);
+ assert.equal(salesFulfillmentIntentHash(normalizeSalesFulfillmentIntent(legacy)),"cfaeaaae9e23c351588072b4e20723454cef0eabe1db7e7e489586757da9a3fe");
+});
+test("HD016 pending-create refuses actual RR before fresh authorization or domain reads",async()=>{
+ const f=transactionFixture();await f.database.withTransaction(async tx=>{await assert.rejects(()=>f.service.lockLinesForFulfillmentInTransaction(tx,pendingCreateIntent()),{code:"SALES_FULFILLMENT_CONTRACT_MISMATCH"});});assert.deepEqual(f.queries,[]);
+});
+
+test("HD016 multiple distinct pending Reservations may all use null identities",()=>{
+ const c=pendingCreateIntent();c.lines[0].baseQuantity="7";c.lines[0].reservations.push({claimId:null,inventoryReservationId:"42",expectedVersion:1,baseQuantity:"1"});
+ assert.equal(normalizeSalesFulfillmentIntent(c).lines[0].reservations.length,2);
+});
