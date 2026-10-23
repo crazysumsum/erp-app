@@ -636,3 +636,23 @@ integrationTest("TC-014 (LIST-007): detail returns the general data, children, p
   }
   assert.equal((await h.send(h.users.view, h.route("GET /api/v1/suppliers/:id"), { ids: { id: MISSING } })).status, 404);
 });
+
+integrationTest("detail names the default payment term by code and name, still after the term is deactivated, and null without one (DEF-038)", async () => {
+  const t = tag();
+  const now = Date.now();
+  const [term] = await h.db.execute(`INSERT INTO payment_terms (code, code_key, name, calculation_type, due_days, status, version, created_at, updated_at)
+    VALUES (?, ?, 'Net 45', 'NET_DAYS', 45, 'ACTIVE', 1, ?, ?)`, [`PT-${t}`, `PT-${t}`.toUpperCase(), now, now]);
+  const termId = Number(term.insertId);
+  h.cleanup.push(["DELETE FROM payment_terms WHERE id = ?", [termId]]);
+  const withTerm = await h.seedSupplier(`PT-${t}`, `Payment term ${t}`, "active");
+  await h.db.execute("UPDATE suppliers SET default_payment_term_id = ? WHERE id = ?", [termId, withTerm]);
+  const withoutTerm = await h.seedSupplier(`NT-${t}`, `No term ${t}`, "draft");
+  const detail = async (id) => (await h.send(h.users.view, h.route("GET /api/v1/suppliers/:id"), { ids: { id } })).json.data;
+
+  assert.deepEqual((await detail(withTerm)).defaultPaymentTerm, { id: termId, code: `PT-${t}`, name: "Net 45", status: "ACTIVE" });
+  await h.db.execute("UPDATE payment_terms SET status = 'INACTIVE', version = version + 1 WHERE id = ?", [termId]);
+  const inactive = await detail(withTerm);
+  assert.deepEqual(inactive.defaultPaymentTerm, { id: termId, code: `PT-${t}`, name: "Net 45", status: "INACTIVE" });
+  assert.equal(inactive.defaultPaymentTermId, termId);
+  assert.equal((await detail(withoutTerm)).defaultPaymentTerm, null);
+});

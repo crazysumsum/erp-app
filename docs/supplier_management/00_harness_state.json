@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 413,
+  "revision": 415,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "29a0615a61808b3747cd8feb522d051ba5a312da6fb0fccf36e7cf9746286775",
     "plan": "bfb0af4fb322aa2e25ffcc2300dddd4655778ba26850caf39da9e508ccbd04e8",
-    "code_commit": "36893493043dff1c7863cbf4a238c3930b9977f9",
-    "source_fingerprint": "61f9ba7a09e195aa81234b3bb0cad4d4753e1105489e44ddcf85f3cfea45d558",
-    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t51u",
-    "default_commit": "58322ba3d5b77aa1a6250be4b5055651c682a371",
+    "code_commit": "43900c17391a6ff4473424fbdaeb8bce59bdc48a",
+    "source_fingerprint": "8913b83f56bdbbdb2505847172a2dad6609dd706cf055e0310c178ea1c5eedb9",
+    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t51v",
+    "default_commit": "dc0f3f3ea744ed5e48cbeab4266db4e2530bb8d9",
     "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
   },
   "runtime": {
@@ -2955,6 +2955,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-116",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (HD-130 A, DEF-038 payment-term display)",
+      "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-def038-payment-term at ea4e93a3 (git diff origin/main..HEAD)",
+      "reviewed_baseline": "29a0615a61808b3747cd8feb522d051ba5a312da6fb0fccf36e7cf9746286775",
+      "source_ref": "docs/supplier_management/implementation/119_rev_116_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -5465,6 +5477,28 @@
       "source_ref": "Local, not CI. npx playwright test --config client/e2e/supplier-management/playwright.uat.config.js on erp_t51_rh_uat* scratch databases (MySQL 26.7.0): 17 passed (UAT-001, 002, 004, 006, 007, 008, 009, 017, 018, 019, 020, 021, 022, 023, 042, 049, 054), 3 failed at recorded defect steps (UAT-003 DEF-039, UAT-031 DEF-038, UAT-048 DEF-037), 5 test.fixme waiting on downstream modules (UAT-005, 016, 024, 050, 051; HD-124 A, HD-131 A); no scratch database left. With only the profile env_keys the suite runs; without DB_ADMIN_USER the scratch runner (aligned with run_suite) reports BLOCKED. Port 3021 held: startup failed and the scratch database and fixture were removed. Fixture 0600 in a 0700 directory. REV-115 survivors M08 and M13 now red. Technical suite 50 passed; eslint exit 0.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-23T12:17:00+08:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "Real-backend UAT harness and PHASE-001 cases (PR #274) merged to main",
+      "code_commit": "dc0f3f3ea744ed5e48cbeab4266db4e2530bb8d9",
+      "spec_baseline": "bfb0af4fb322aa2e25ffcc2300dddd4655778ba26850caf39da9e508ccbd04e8",
+      "source_fingerprint": "bd6e8c38bac7233067d49a1115c2515b09d041f38499c387ccbe830acd708466",
+      "status": "PASS",
+      "source_ref": "PR #274 merged as dc0f3f3ea744ed5e48cbeab4266db4e2530bb8d9 at 2026-10-23T06:52:50Z on the Product Owner's word ('A。照之前做法，review 完、CI 過就 merge。' for HD-124 A, then 'CI己通過'), with --match-head-commit, after a gate that refused unless the latest run of every check was SUCCESS and main was an ancestor of HEAD: head 0f939f25 green on all 13 checks (PR run 39899544697). CI does not run the UAT suite. Review REV-115 CHANGES_REQUESTED, 0 Critical/High; every finding fixed as recommended (not re-reviewed). Recorded as the first commit of the next change PR.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-23T14:53:00+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEF-038 payment-term display after REV-116 follow-ups",
+      "code_commit": "43900c17391a6ff4473424fbdaeb8bce59bdc48a",
+      "spec_baseline": "bfb0af4fb322aa2e25ffcc2300dddd4655778ba26850caf39da9e508ccbd04e8",
+      "source_fingerprint": "8913b83f56bdbbdb2505847172a2dad6609dd706cf055e0310c178ea1c5eedb9",
+      "status": "PASS",
+      "source_ref": "Local, not CI. Client Supplier suite 21 files 189 passed; Supplier server suite 709 passed, 0 skipped (before the client-only follow-up); technical Playwright 50 passed; eslint and client build exit 0. UAT PHASE-001 on the real backend: 18 passed incl. UAT-031 (which now checks the 已停用 mark), 2 failed at recorded defect steps (UAT-003 DEF-039, UAT-048 DEF-037), 5 test.fixme. REV-116 client survivors C3, C4 (UAT-031), C5, C6, C9 and the M-1 regression all red; files restored and checked with cmp.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-23T15:12:00+08:00"
     }
   ],
   "pending_decisions": [
@@ -7201,6 +7235,30 @@
       ],
       "status": "OPEN",
       "answer_ref": null
+    },
+    {
+      "id": "HD-133",
+      "impact": "MAJOR",
+      "question": "DEF-040: the Supplier list column 付款條件 and the approval diff row 預設付款條款 still print the payment term's internal ID. (A) Fix both in one Supplier PR: the list response gains defaultPaymentTermCode/Name through one batched provider read per page, and the approval diff resolves the before/after term IDs through the provider history; both additive. (B) Fix the approval diff only and leave the list column. (C) Accept for now.",
+      "affected_ids": [
+        "DEF-040",
+        "SuppliersPage.vue",
+        "SupplierApprovalsPage.vue"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
+    },
+    {
+      "id": "HD-134",
+      "impact": "MAJOR",
+      "question": "DEF-041: a Supplier whose payment term was later deactivated cannot be saved even when only another field changes (409 PAYMENT_TERM_NOT_ACTIVE, purpose new_assignment), and the term field is not marked. (A) Keep the refusal (FR-EDIT-003) but map PAYMENT_TERM_NOT_ACTIVE to the term field with a 請改選或清除 hint; client only. (B) Let an unchanged inactive term pass on update (purpose history), still refusing a newly chosen inactive term and still refusing activation. (C) Accept as is.",
+      "affected_ids": [
+        "DEF-041",
+        "FR-EDIT-003",
+        "SupplierDetailPage.vue"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
     }
   ],
   "external_actions": [
@@ -8473,7 +8531,7 @@
     {
       "id": "DEF-038",
       "severity": "MEDIUM",
-      "status": "OPEN",
+      "status": "IN_PROGRESS",
       "source_ids": [
         "UAT-031",
         "SupplierDetailPage.vue",
@@ -8496,7 +8554,33 @@
       ],
       "closure_evidence": [],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-040",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "source_ids": [
+        "REV-116 M-2",
+        "SuppliersPage.vue",
+        "SupplierApprovalsPage.vue",
+        "docs/supplier_management/testing/04_defect_register.md"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": null
+    },
+    {
+      "id": "DEF-041",
+      "severity": "LOW",
+      "status": "OPEN",
+      "source_ids": [
+        "REV-116 I-1",
+        "FR-EDIT-003",
+        "SupplierAdminService.updateSupplierInTransaction",
+        "docs/supplier_management/testing/04_defect_register.md"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "UAT PHASE-001 PR: merge per HD-124 A on the Product Owner's word. Await HD-132 (DEF-039). Then DEF-038 PR (branch claude/supplier-def038-payment-term ready), then DEF-037 (migration approved)."
+  "next_safe_action": "DEF-038 PR: merge on the Product Owner's word. Await HD-132 (DEF-039), HD-133 (DEF-040), HD-134 (DEF-041). Then DEF-037 (HD-129 A, migration approved)."
 }

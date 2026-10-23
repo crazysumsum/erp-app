@@ -160,6 +160,11 @@ export const SUPPLIER_DETAIL_SCHEMA = Object.freeze({
     generalEmail: { type: "string" }, notes: { type: "string" }, createdAt: { type: "integer" },
     addresses: { type: "array" }, contacts: { type: "array" }, identifiers: { type: "array" }, bankAccounts: { type: "array" },
     warnings: { type: "array", items: WARNING }, duplicateCandidates: { type: "array", items: DUPLICATE },
+    // 詳情先有（DEF-038、HD-130 A）：付款條件嘅 code 同名稱，已停用嘅都會回，等畫面唔使顯示內部 ID。
+    defaultPaymentTerm: {
+      type: ["object", "null"], additionalProperties: false, required: ["id", "code", "name", "status"],
+      properties: { id: { type: "integer" }, code: { type: "string" }, name: { type: "string" }, status: { type: "string", enum: ["ACTIVE", "INACTIVE"] } }
+    },
     // 設計 4.5 要求關鍵資料變更令原申請失效之後回 approvalInvalidated: true。
     approvalInvalidated: { type: "boolean" }
   }

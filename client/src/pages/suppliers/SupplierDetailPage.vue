@@ -93,6 +93,12 @@ function loadForm(data) {
 }
 
 const dirty = computed(() => editing.value && JSON.stringify(formValues()) !== savedSnapshot.value);
+// 付款條件顯示 code 同名稱，唔顯示內部 ID；已停用就講明（DEF-038、HD-130 A）。
+const paymentTermText = computed(() => {
+  const term = supplier.value?.defaultPaymentTerm;
+  if (!term) return supplier.value?.defaultPaymentTermId == null ? "未設定" : "—";
+  return `${term.code} — ${term.name}${term.status === "INACTIVE" ? "（已停用）" : ""}`;
+});
 const currencyChanged = computed(() => form.defaultCurrencyCode !== supplier.value?.defaultCurrencyCode);
 const editValid = computed(() => {
   if (!form.supplierName.trim() || !form.defaultCurrencyCode) return false;
@@ -376,7 +382,7 @@ function childCount(rows) {
             <q-list v-if="!editing" bordered separator>
               <q-item><q-item-section><q-item-label caption>顯示名稱</q-item-label><q-item-label>{{ supplier.displayName || "—" }}</q-item-label></q-item-section></q-item>
               <q-item><q-item-section><q-item-label caption>預設貨幣</q-item-label><q-item-label>{{ supplier.defaultCurrencyCode }}</q-item-label></q-item-section></q-item>
-              <q-item><q-item-section><q-item-label caption>付款條件</q-item-label><q-item-label>{{ supplier.defaultPaymentTermId ?? "未設定" }}</q-item-label></q-item-section></q-item>
+              <q-item><q-item-section><q-item-label caption>付款條件</q-item-label><q-item-label>{{ paymentTermText }}</q-item-label></q-item-section></q-item>
               <q-item><q-item-section><q-item-label caption>網站</q-item-label><q-item-label>{{ supplier.website || "—" }}</q-item-label></q-item-section></q-item>
               <q-item><q-item-section><q-item-label caption>電話／電郵</q-item-label><q-item-label>{{ supplier.generalPhone || "—" }}／{{ supplier.generalEmail || "—" }}</q-item-label></q-item-section></q-item>
               <q-item><q-item-section><q-item-label caption>備註</q-item-label><q-item-label class="pre-line">{{ supplier.notes || "—" }}</q-item-label></q-item-section></q-item>
@@ -411,7 +417,7 @@ function childCount(rows) {
                 </div>
 
                 <div class="text-subtitle2 q-mt-lg q-mb-sm">付款預設</div>
-                <SupplierPaymentDefaults v-model="form" :field-error="fieldError" />
+                <SupplierPaymentDefaults v-model="form" :field-error="fieldError" :current-payment-term="supplier.defaultPaymentTerm" />
                 <q-input
                   v-if="currencyChanged" v-model="form.reason" class="q-mt-sm"
                   label="修改預設幣別原因 *" type="textarea" outlined dense maxlength="500"
