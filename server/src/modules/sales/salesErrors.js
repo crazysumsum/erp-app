@@ -26,6 +26,7 @@ export const SALES_ERROR_STATUS = Object.freeze({
   ORDER_ALREADY_FULFILLED: 409,
   RESERVATION_RELEASE_FAILED: 409,
   OPEN_FULFILLMENT_EXISTS: 409,
+  FULFILLMENT_HISTORY_BLOCKS_WITHDRAWAL: 409,
   EXTERNAL_ORDER_DUPLICATE: 409,
   SALES_SOURCE_HASH_COLLISION: 409,
   CONCURRENT_OPERATION: 409,
@@ -38,6 +39,7 @@ export const SALES_ERROR_STATUS = Object.freeze({
   ARCHIVE_DATA_CONFLICT: 409,
   SALES_DEPENDENCY_UNAVAILABLE: 503,
   INVENTORY_CONTRACT_MISMATCH: 503,
+  SALES_FULFILLMENT_CONTRACT_MISMATCH: 503,
   TRANSACTION_OUTCOME_UNKNOWN: 500,
   SALES_LINE_MERGE_CONFLICT: 409,
 });
@@ -47,5 +49,5 @@ export function salesError(code, { field, currentVersion } = {}) {
   if (field !== undefined && (typeof field !== "string" || !/^[a-zA-Z][a-zA-Z0-9.[\]]{0,99}$/.test(field))) throw new TypeError("Invalid Sales error field");
   if (currentVersion !== undefined && (code !== "VERSION_CONFLICT" || !Number.isSafeInteger(currentVersion) || currentVersion < 1)) throw new TypeError("Invalid Sales conflict version");
   return new ApplicationError(code, { code, statusCode: SALES_ERROR_STATUS[code],
-    publicMessage: "銷售操作未能完成，請檢查輸入或重新讀取資料", publicDetails: currentVersion !== undefined ? { currentVersion } : field ? { field } : undefined });
+    publicMessage: code === "FULFILLMENT_HISTORY_BLOCKS_WITHDRAWAL" ? "此訂單已有履約歷史，不能撤回草稿；請先處理未完成履約，再取消未履約訂單並另建正確訂單" : "銷售操作未能完成，請檢查輸入或重新讀取資料", publicDetails: currentVersion !== undefined ? { currentVersion } : field ? { field } : undefined });
 }

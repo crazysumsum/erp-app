@@ -160,7 +160,7 @@ test("the application starts and serves requests with the limiter disabled", asy
   );
   assert.deepEqual(
     registration.context.disabledServices.map(({ name }) => name).sort(),
-    ["job.rateLimitPurge", "requestLimiter"]
+    [...(process.env.FULFILLMENT_LIFECYCLE_ENABLED === "true" ? [] : ["fulfillmentOpenMatter"]), "job.rateLimitPurge", "requestLimiter"]
   );
 });
 

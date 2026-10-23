@@ -21,7 +21,8 @@
       "client/src/services/fulfillment.js",
       "client/src/services/shipment.js",
       "client/src/pages/fulfillment/**",
-      "client/src/components/fulfillment/**"
+      "client/src/components/fulfillment/**",
+      "server/src/services/fulfillment/FulfillmentOpenMatterService.js"
     ],
     "test_paths": [
       "server/test/fulfillment/**",
@@ -31,7 +32,27 @@
       "server/test-support/fakeFulfillmentDatabase.js",
       "client/test/**/fulfillment*.test.js",
       "client/test/**/shipment*.test.js",
-      "client/e2e/fulfillment-shipping-management/**"
+      "client/e2e/fulfillment-shipping-management/**",
+      "server/test/permissionCatalogueConventions.test.js",
+      "server/test/configuration.test.js",
+      "server/test/salesFulfillmentQuantities.test.js",
+      "server/test/salesFulfillmentService.test.js",
+      "server/test/integration/salesFulfillmentService.integration.test.js",
+      "server/test/integration/salesFulfillmentTransactionComponent.integration.test.js",
+      "server/test/sales/phase4/salesFulfillmentFixtures.js",
+      "server/test/sales/salesConfig.test.js",
+      "server/scripts/checkCoverageFloors.js",
+      "server/test/integration/salesLifecycle.integration.test.js",
+      ".github/workflows/ci.yml",
+      "server/test/sales/phase2/fixtures.js",
+      "client/test/composables/sales/salesCommandEvent.test.js",
+      "server/test/serviceContainer.test.js",
+      "server/test/requestLimiterOptional.test.js",
+      "server/test/integration/salesBackorder.integration.test.js",
+      "server/test/integration/migrations.integration.test.js",
+      "server/test/integration/passwordChange.integration.test.js",
+      "server/test/integration/roleManagement.integration.test.js",
+      "server/test/integration/userManagement.integration.test.js"
     ],
     "allowed_write_paths": [
       "docs/fulfillment_shipping_management/**",
@@ -57,7 +78,8 @@
       "server/test-support/fakeFulfillmentDatabase.js",
       "client/test/**/fulfillment*.test.js",
       "client/test/**/shipment*.test.js",
-      "client/e2e/fulfillment-shipping-management/**"
+      "client/e2e/fulfillment-shipping-management/**",
+      "server/src/services/fulfillment/FulfillmentOpenMatterService.js"
     ],
     "approval_required_paths": [
       "server/database/migrations/**",
@@ -78,7 +100,32 @@
       "docs/sales_order_management/**",
       "docs/inventory_management/**",
       "docs/customer_management/**",
-      "docs/items_management/**"
+      "docs/items_management/**",
+      "server/src/framework/configuration/applicationConfiguration.js",
+      "server/test/permissionCatalogueConventions.test.js",
+      "server/test/configuration.test.js",
+      "server/src/services/mysqldatabase/MySqlDatabaseService.js",
+      "server/test/salesFulfillmentQuantities.test.js",
+      "server/test/salesFulfillmentService.test.js",
+      "server/test/integration/salesFulfillmentService.integration.test.js",
+      "server/test/integration/salesFulfillmentTransactionComponent.integration.test.js",
+      "server/test/sales/phase4/salesFulfillmentFixtures.js",
+      "server/test/sales/salesConfig.test.js",
+      "server/scripts/checkCoverageFloors.js",
+      "docs/sales_order_management/01_requirement_spec.md",
+      "server/test/integration/salesLifecycle.integration.test.js",
+      ".github/workflows/ci.yml",
+      "server/test/sales/phase2/fixtures.js",
+      "client/src/composables/sales/useSalesCommandEvent.js",
+      "client/src/pages/sales/SalesOrderDetailPage.vue",
+      "client/test/composables/sales/salesCommandEvent.test.js",
+      "server/test/serviceContainer.test.js",
+      "server/test/requestLimiterOptional.test.js",
+      "server/test/integration/salesBackorder.integration.test.js",
+      "server/test/integration/migrations.integration.test.js",
+      "server/test/integration/passwordChange.integration.test.js",
+      "server/test/integration/roleManagement.integration.test.js",
+      "server/test/integration/userManagement.integration.test.js"
     ],
     "forbidden_paths": [
       ".env",
@@ -106,9 +153,9 @@
     "provided": [
       {
         "id": "fulfillment-shipment-and-reversal-contract",
-        "version": "planning-v2-DECISIONS_ADOPTED-NOT_IMPLEMENTED",
+        "version": "P0-HD011-ADOPTED-IMPLEMENTATION_IN_PROGRESS",
         "source": "docs/fulfillment_shipping_management/03_design_spec.md",
-        "sha256": "e1c620178d59a56d6723a4534bd24936ffa75c75ad8b85922648fd4fcdbfbad3",
+        "sha256": "29d1f8f4b602645dcbcf2d2516f32965b8a1a1505429a1229f7f083dc5e7727f",
         "consumers": [
           "sales-order-management",
           "inventory-management",
@@ -120,9 +167,9 @@
       {
         "module_id": "sales-order-management",
         "id": "sales-fulfillment-projection-and-lifecycle-contract",
-        "version": "observed-main-35af2ab7-OWNER_SEMANTIC_REVIEW_REQUIRED",
+        "version": "P0-TASK004-HD011-reviewed-owner-contribution-r4-CURRENT_JOINT_PENDING",
         "source": "docs/sales_order_management/03_design_spec.md",
-        "sha256": "5f82a24962a4f8e853acba56a83dedb7ceec94513497895f29966024100cbfdc",
+        "sha256": "cd680c79a59b80a61e245edce54cc47e867bff4d1f61a6a6b6244ad36e981a19",
         "regression_suites": [
           "fulfillment-technical"
         ]
@@ -150,9 +197,9 @@
       {
         "module_id": "item-management",
         "id": "item-lookup-service",
-        "version": "observed-main-35af2ab7-OWNER_SEMANTIC_REVIEW_REQUIRED",
+        "version": "P0-TASK006-b5afe3ca-R13-JOINT_PENDING",
         "source": "server/src/modules/item/ItemLookupService.js",
-        "sha256": "a09d5baf602f44199cd218a2b3139edcdb2abad039a6f08a21b48162900562b5",
+        "sha256": "5ed3f26ff4271cc6bd533a417fd09fcde446f1682d662c3c465216e9ea08d558",
         "regression_suites": [
           "fulfillment-technical"
         ]
@@ -160,9 +207,9 @@
       {
         "module_id": "authorization",
         "id": "permission-catalogue",
-        "version": "observed-main-35af2ab7-OWNER_SEMANTIC_REVIEW_REQUIRED",
+        "version": "P0-main6cb8310c-additive-permission-union-INDEPENDENTLY_REVIEWED",
         "source": "server/src/modules/authorization/permissionCatalogue.js",
-        "sha256": "e6363b8928b0f86d8c3ebba0a25695e9879dbb05d0bf9992fcdd175aa389cc0e",
+        "sha256": "6f6e14b642573f9e16ffcb13abe411ead9b5e2c95739100c188c51dd00207743",
         "regression_suites": [
           "fulfillment-technical"
         ]
@@ -228,7 +275,7 @@
       "lint",
       "client-build",
       "security-audit",
-      "fulfillment-technical"
+      "fulfillment-p0-developer"
     ],
     "technical": [
       "fulfillment-technical"

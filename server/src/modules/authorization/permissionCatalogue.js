@@ -47,6 +47,8 @@ export const PERMISSION_CATALOGUE = Object.freeze([
   Object.freeze({ name: "sales.view", description: "查看報價、銷售訂單及匯出" }),
   Object.freeze({ name: "sales.mgmt", description: "管理報價、銷售訂單與確認操作" }),
   Object.freeze({ name: "sales.import", description: "匯入銷售訂單及管理外部接單" }),
+  Object.freeze({ name: "fulfillment.view", description: "查看履約、出貨及歷史資料" }),
+  Object.freeze({ name: "fulfillment.reverse", description: "沖銷已確認出貨" }),
   Object.freeze({ name: "fulfillment.operation", description: "執行履約庫存分配及出庫" }),
   // receiving.operation 與 receiving.expiry.override 早已被 InventoryPostingService
   // 的收貨 provider 路徑要求（RECEIVING_RECEIPT.requiredCallerPermission 與
@@ -60,6 +62,7 @@ export const PERMISSION_CATALOGUE = Object.freeze([
   Object.freeze({ name: "purchasing.settings", description: "管理採購模組參數" }),
   Object.freeze({ name: "receiving.operation", description: "建立及確認收貨單" }),
   Object.freeze({ name: "receiving.expiry.override", description: "在剩餘效期不足時以原因批准收貨例外" })
+
 ]);
 
 /** 目錄裡所有權限的名字，供比對用。 */

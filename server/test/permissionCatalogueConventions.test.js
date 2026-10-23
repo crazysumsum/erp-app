@@ -132,6 +132,7 @@ const PERMISSION_SEED_MIGRATIONS = [
   "../database/migrations/0055_seed_inventory_permissions.js",
   "../database/migrations/0063_create_inventory_reservations.js",
   "../database/migrations/0067_seed_sales_permissions.js",
+  "../database/migrations/0091_seed_fulfillment_permissions.js",
   "../database/migrations/0100_seed_purchasing_permissions.js"
 ];
 

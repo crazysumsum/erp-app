@@ -25,7 +25,7 @@ const {pending,busy,error:commandError,retryable}=command;
 const lifecycleDialog=ref(false),lifecycleAction=ref(""),reason=ref("");
 const lifecycleLabels={withdraw:"撤回確認",cancel:"取消訂單",closeRemaining:"關閉剩餘數量"};
 const lifecycle=useSalesCommandEvent({userId:()=>session.user?.id,commandType:"lifecycle",onTerminal:async operation=>{
- failed.value=["FAILED","REJECTED"].includes(operation.status);notice.value=failed.value?`操作未完成：${operation.errorCode}`:"訂單操作已完成。";await load();}});
+ failed.value=["FAILED","REJECTED"].includes(operation.status);notice.value=failed.value?(operation.message??`操作未完成：${operation.errorCode}`):"訂單操作已完成。";await load();}});
 const {pending:lifecyclePending,busy:lifecycleBusy,error:lifecycleError,retryable:lifecycleRetryable}=lifecycle;
 const allocationDialog=ref(false);
 const canWake=computed(()=>session.permissions.includes("sales.mgmt")&&!pending.value&&!lifecyclePending.value&&document.value?.hasBackorder&&["CONFIRMED","PARTIALLY_FULFILLED"].includes(document.value?.status));

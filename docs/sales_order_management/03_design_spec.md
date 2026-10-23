@@ -38,7 +38,7 @@
 | SAD-005 | 庫存競爭時在 Inventory lock 內重新讀取 ATP，能保留多少便保留多少，餘額成為 Backorder，不因不足拒絕 SO。 |
 | SAD-006 | Inventory 結果不確定時不得重開新意圖；以原 eventId 查詢及安全恢復 `CONFIRMING`。 |
 | SAD-007 | Backorder 按同一 Warehouse＋SKU 的 SO 確認時間 FIFO 自動補配；可手動觸發重跑，不支援插隊或客戶優先級。 |
-| SAD-008 | 未有 Fulfilled Quantity 的 Confirmed SO 可輸入原因撤回 Draft，先釋放 Reservation；已有履約後不可撤回。 |
+| SAD-008 | 未有 Fulfilled Quantity 且沒有 Fulfillment active／archive 歷史的 Confirmed SO 可輸入原因撤回 Draft，先釋放 Reservation；已有履約或履約歷史時不可撤回（HD-014），取消／關閉剩餘數量規則不變。 |
 | SAD-009 | Quotation 轉換建立 Draft SO；只有 SO 確認才保留庫存。 |
 | SAD-010 | 每月以小批次把合資格 Order Aggregate 搬至 Archive Tables；Archive 唯讀且第一階段不自動永久刪除。 |
 
@@ -865,6 +865,17 @@ sales_orders_archive 1 ── * archive child tables
 
 `UNIQUE(inventory_reservation_id)`、`UNIQUE(sales_order_line_id,source_event_id)`、`INDEX(sales_order_line_id,status,id)`。每次 Sales／Fulfillment 同 transaction 更新 Inventory 後，以 provider result 覆蓋 projection；不得用 Sales 自己加減猜測 Inventory outcome。
 
+#### HD-011 — Sales last-sync 與 Inventory current CAS
+
+Sam 已在 Fulfillment 協調 chat 實際批准方案 A（userMessage `01a15c33-caa1-7ac1-a2b7-d7c2eac3052e`，question `call_91c09b99cc944d41913efaee3ca1d4fe`；具體提案 SHA256 `b908c56a08ece0a68c483f8a5f96e49a24fe7becd452c3901759fa8d0b90c3b3`）。本節保留前述「每次更新 Inventory 後覆蓋 projection」的原文與歷史，明列其唯一窄例外及版本語意；不把原批准 hash 改寫成新批准。
+
+- `sales_order_line_reservations.inventory_version` 與 Sales GET／lock projection 的 `inventoryVersion` 是最後同步版本，不保證等於當下 Inventory Reservation CAS。`purpose: CLAIM` 的 member `expectedVersion` 仍取該 Sales last-sync 值並嚴格相等；它不證明 Inventory 當下數量、狀態或版本。
+- Fulfillment 對 Inventory 的獨立 command `expectedVersion`，以及 Fulfillment Claim 的 `inventory_version`，必須來自同交易、Inventory 擁有並依既定鎖序鎖定／重新驗證的 current-state projection。Create／Update 必須驗實際 Reservation counters、source、scope、status／current version，以及所有 active Fulfillment Claims 的合計不超過 actual outstanding；不能用 Sales cached quantity、caller flag 或舊 projection 取代。
+- 唯一可延後 Sales 版本同步的事件，是 Allocation／Release／Reallocate 只改 Allocation／Balance holds 及 Reservation CAS，而不改 Reservation 的 original／consumed／released／outstanding quantities 與 status。這是對前句同步頻率的明示窄修訂；不是所有 Inventory 更新的豁免。所有改變數量的 Sales／Fulfillment 事件仍須在同一交易依已驗證 provider outcome 原子同步 projection；其他無法解釋的數量漂移須拒絕／對帳。
+- `SHIPMENT_CONFIRMED`／`SHIPMENT_REVERSED` intent member `expectedVersion` 取 Inventory current CAS。Sales lock 拒絕它小於 mapping last-sync；大於 last-sync 只是前置界限，不是「中間只有數量不變事件」的證據。Inventory 真正 effects 必須做 current-version 精確 CAS；Sales apply 必須消耗同一 active RC 交易的不可偽造 owner receipt，驗 action／event／shipment／request hash／完整 members、result expectedVersion 等於 intent current、actual result version 等於 current+1，並對實際 Reservation 四個 counters 與 locked mapping before±精確 Issue／Restore quantity 完整對帳。任一不明差異都拒絕並 rollback 兩個 owner。
+- Sales UPDATE 保留 `WHERE inventory_version=old mapping last-sync` 的 CAS，再以已驗證 actual new version 覆蓋 projection。原 reserve operation／event 身份、0078／0086 triggers、權限、operation-preclaims-before-domain lock order 及原子 rollback 不變。Fulfillment／Inventory 仍不得直接寫 Sales mapping，亦不新增 Sales sync endpoint。
+- 精確 replay 回已持久化的原結果，不能因後來的 current version 改寫原結果或再做 effects；Reverse 仍須原完整 Issue／confirmation refs 與目前 native Reservation version。完整 provider／Checkpoint0B／P4 Gate 還須真 repeated allocation／release／reallocate、current-state／active-claim 數量證明、錯誤版本／來源／狀態／counters／receipt／mapping CAS、replay／reverse／late failure rollback、原生並發及既有全部驗證，不以 diagnostic snapshot 或此設計採納宣告通過。
+
 ### 4.11 `sales_backorder_entries`
 
 | Column | Type | Null／Default | 說明 |
@@ -1656,10 +1667,12 @@ return results in sourceLineId order
 
 ### 7.6 `SalesOrderLifecycleService`
 
+HD-013：只限 WITHDRAW／CANCEL／CLOSE_REMAINING 明確使用 READ COMMITTED；其他 Sales／DB 全域預設不變。各層持直接父鎖後讀目前完整 membership，依主鍵升序取鎖；HD-012 operation readiness 只可 FOR SHARE NOWAIT，未知依賴503整筆rollback。
+
 `withdrawConfirmation()`：
 
-- 鎖 Order／Lines，狀態必須 Confirmed、Fulfilled 全 0、event/version 符合。
-- 在任何 Reservation release 前呼叫 Fulfillment lifecycle guard；`OPEN`／`UNKNOWN` 均 fail closed。
+- 鎖 Order／Lines，狀態必須 Confirmed、Fulfilled 全 0、event/version 符合；HD-014 另要求沒有任何 Fulfillment active／archive 歷史。已有歷史時在任何 Inventory release 前回 `409 FULFILLMENT_HISTORY_BLOCKS_WITHDRAWAL` 及取消後另建訂單的指引，不刪／改歷史 FK。
+- 在任何 Reservation release 前呼叫 Fulfillment lifecycle guard；`OPEN`／`UNKNOWN` 均 fail closed。固定 WITHDRAW 的已知 OPEN／CLOSED 結果可帶 bounded reasonCodes 的 HD-014 history reason，由 Sales guard 明確穿透為專用409；terminal history 不假裝 active OPEN，UNKNOWN 仍優先503。既有完成事件 replay 在新的 mutable history 檢查前回原結果。
 - 呼叫 `releaseSalesBatchInTransaction()` 釋放所有 outstanding reservations；驗證每個 mapping result。
 - Lines 回到 Draft semantics：Reserved／Backorder／Fulfilled／Cancelled 全 0；刪除 terminal Backorder queue rows及 mappings之前先保留 History／Audit summary。
 - 清 confirmation snapshots中只在 confirm產生的 credit／warehouse display結果；Customer／SKU current Draft display重新取 provider。

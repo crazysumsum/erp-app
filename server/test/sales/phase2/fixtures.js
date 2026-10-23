@@ -36,7 +36,9 @@ export async function setup(t, { waitMs = 2500, backorderEnabled = false } = {})
     lines: [{ skuId: f.skuId,skuUomId: f.skuUomId,quantity: "10.000000",unitSellingPrice: "1.0000" }] } });
   const service = options => new SalesOrderConfirmationService({ database,time,logger,...options });
   const request = { claims,id: created.salesOrder.id,input: { eventId: randomUUID(),version: 1 } };
-  return { ...f,app,database,time,logger,claims,userId,roleId,service,request };
+  // Explicit test request entry only; no database/global fallback or worker principal is installed.
+  const runAsFixtureRequest=(actorClaims,work)=>app.services.require("context").storage.run({databaseTransaction:null,signal:null,auth:{claims:{sub:String(actorClaims.actorId),roles:actorClaims.claimedRoles,permissions:actorClaims.claimedPermissions}}},work);
+  return { ...f,app,database,time,logger,claims,userId,roleId,service,request,runAsFixtureRequest };
 }
 
 export async function stock(f, quantity, skuId = f.skuId) {
@@ -63,8 +65,8 @@ export async function secondCustomer(f) {
 }
 
 export function createOrder(f, database, { customerId = f.customerId, currencyCode = f.currency } = {}) {
-  return new SalesOrderService({ ...f, database }).create({ claims: f.claims, input: { eventId: randomUUID(), customerId, currencyCode,
-    fulfillmentWarehouseId: f.warehouseId, orderDate: f.time.fileDate(), lines: [{ skuId: f.skuId, skuUomId: f.skuUomId, quantity: "1.000000", unitSellingPrice: "1.0000" }] } });
+  return f.runAsFixtureRequest(f.claims,()=>new SalesOrderService({ ...f, database }).create({ claims: f.claims, input: { eventId: randomUUID(), customerId, currencyCode,
+    fulfillmentWarehouseId: f.warehouseId, orderDate: f.time.fileDate(), lines: [{ skuId: f.skuId, skuUomId: f.skuUomId, quantity: "1.000000", unitSellingPrice: "1.0000" }] } }));
 }
 
 // Wraps one Inventory method of a Sales lock holder. On entry, a new Order (`write` gets a database whose transactions pause before

@@ -3,6 +3,7 @@ import { salesError } from "./salesErrors.js";
 export class SalesFulfillmentGuardService {
   constructor({ services } = {}) { this.services = services; }
   async assertAllowed(tx, command) {
+    let historyConflict = null;
     try {
       if (typeof this.services?.names !== "function" || typeof this.services.resolve !== "function") throw salesError("SALES_DEPENDENCY_UNAVAILABLE");
       const names = this.services.names();
@@ -11,6 +12,10 @@ export class SalesFulfillmentGuardService {
         const provider = await this.services.resolve("fulfillmentOpenMatter");
         if (typeof provider?.assertSalesLifecycleAllowedInTransaction !== "function") throw salesError("SALES_DEPENDENCY_UNAVAILABLE");
         const result = await provider.assertSalesLifecycleAllowedInTransaction(tx, command);
+        if (Object.hasOwn(result ?? {}, "reasonCodes")) {
+          if (!Array.isArray(result.reasonCodes) || result.reasonCodes.length > 1 || result.reasonCodes.length === 1 && (result.reasonCodes[0] !== "FULFILLMENT_HISTORY_BLOCKS_WITHDRAWAL" || command.action !== "WITHDRAW")) throw salesError("SALES_DEPENDENCY_UNAVAILABLE");
+          if (result.reasonCodes.length === 1 && ["OPEN","CLOSED"].includes(result.status)) { historyConflict = salesError("FULFILLMENT_HISTORY_BLOCKS_WITHDRAWAL"); throw historyConflict; }
+        }
         if (result?.status === "OPEN") throw salesError("OPEN_FULFILLMENT_EXISTS");
         if (result !== undefined && result?.status !== "CLOSED") throw salesError("SALES_DEPENDENCY_UNAVAILABLE");
         return "ALLOWED";
@@ -22,7 +27,7 @@ export class SalesFulfillmentGuardService {
       if (!Number.isSafeInteger(Number(tables?.owned_count)) || Number(tables.owned_count) !== 0 || history.length) throw salesError("SALES_DEPENDENCY_UNAVAILABLE");
       return "NOT_REQUIRED";
     } catch (error) {
-      if (error.code === "OPEN_FULFILLMENT_EXISTS") throw error;
+      if (error?.code === "OPEN_FULFILLMENT_EXISTS" || historyConflict && error === historyConflict) throw error;
       throw salesError("SALES_DEPENDENCY_UNAVAILABLE");
     }
   }
