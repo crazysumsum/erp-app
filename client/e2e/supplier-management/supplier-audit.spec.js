@@ -10,7 +10,7 @@ const VIEWER = {
 const ROWS = [
   { id: 2, occurredAt: Date.parse("2026-12-31T16:30:00Z"), actorUserId: 5, actorUsername: "clerk-a", action: "supplier.update",
     targetType: "supplier", targetId: 7, supplierId: 7, targetLabel: "SUP-007", reason: "",
-    detail: { before: { supplierName: "Old Name", notes: "" }, after: { supplierName: "New Name", notes: { changed: true, length: 10, sha256: "a".repeat(64) },
+    detail: { before: { supplierName: "Old Name", notes: { changed: true, length: 0, sha256: "b".repeat(64) } }, after: { supplierName: "New Name", notes: { changed: true, length: 10, sha256: "a".repeat(64) },
       website: `https://example.com/${"long-path-segment-".repeat(12)}` } }, requestId: "6f1c2a9e-0d4b-4c1e-9f3a-2b7d5e8c1a00", ip: "127.0.0.1" },
   { id: 1, occurredAt: Date.parse("2026-10-01T02:00:00Z"), actorUserId: 6, actorUsername: "bank-officer", action: "supplier.bank.create",
     targetType: "bank", targetId: 3, supplierId: 7, targetLabel: "Bank A", reason: "新增收款帳戶",
@@ -67,7 +67,7 @@ test("@technical the 變更紀錄 page lists Supplier audit records in Hong Kong
   await expect(requestId).toBeVisible();
   const box = await requestId.boundingBox();
   expect(box.x + box.width).toBeLessThanOrEqual(page.viewportSize().width);
-  await expect(page.getByText("notes：已修改（10 字）")).toBeVisible();
+  await expect(page.getByText("notes：0 字 → 10 字")).toBeVisible();
   await expect(page.getByText("編輯供應商")).toBeVisible();
   await expect(page.getByText(/1\/1\/2027\s*上午12:30/u)).toBeVisible();
 

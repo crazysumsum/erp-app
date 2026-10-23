@@ -7,6 +7,9 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 
+// jsdom 下 import.meta.url 唔係 file:，讀伺服器原始碼要用 vitest 提供嘅 __dirname。
+/* global __dirname */
+
 vi.mock("@/services/supplierAudit.js", () => ({ default: { list: vi.fn() }, service: { name: "supplierAudit" } }));
 
 import supplierAuditService from "@/services/supplierAudit.js";
@@ -19,7 +22,7 @@ process.env.TZ = "UTC";
 const ROWS = [
   { id: 2, occurredAt: Date.parse("2026-12-31T16:30:00Z"), actorUserId: 5, actorUsername: "clerk-a", action: "supplier.update",
     targetType: "supplier", targetId: 7, supplierId: 7, targetLabel: "SUP-007", reason: "",
-    detail: { before: { supplierName: "Old Name", notes: "" }, after: { supplierName: "New Name", notes: { changed: true, length: 10, sha256: "a".repeat(64) } } },
+    detail: { before: { supplierName: "Old Name", notes: { changed: true, length: 0, sha256: "b".repeat(64) } }, after: { supplierName: "New Name", notes: { changed: true, length: 10, sha256: "a".repeat(64) } } },
     requestId: "6f1c2a9e-0d4b-4c1e-9f3a-2b7d5e8c1a00", ip: "127.0.0.1" },
   { id: 1, occurredAt: Date.parse("2026-10-01T02:00:00Z"), actorUserId: 6, actorUsername: "bank-officer", action: "supplier.bank.create",
     targetType: "bank", targetId: 3, supplierId: 7, targetLabel: "Bank A", reason: "新增收款帳戶",
@@ -74,11 +77,12 @@ describe("pages/suppliers/SupplierAuditPage.vue (DEF-035)", () => {
     expect(text).toMatch(/1\/1\/2027\s*上午12:30/u);
   });
 
-  it("shows a notes digest as its length, never the hash, and skips fields empty on both sides (REV-113 L-2)", async () => {
+  it("shows notes digests (before and after, as the server writes them) as lengths, never the hash, and skips fields empty on both sides (REV-113 L-2)", async () => {
     const { body } = await mountPage();
     const text = body.text();
-    expect(text).toContain("notes：已修改（10 字）");
+    expect(text).toContain("notes：0 字 → 10 字");
     expect(text).not.toContain("a".repeat(64));
+    expect(text).not.toContain("b".repeat(64));
     expect(text).not.toContain("paymentTermId");
   });
 

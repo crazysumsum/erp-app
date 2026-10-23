@@ -95,14 +95,14 @@ function formatTime(value) {
 }
 
 const empty = (value) => value === null || value === undefined || value === "";
-/** 長文字（notes）只記 `{ changed, length, sha256 }`（HD-112 A）：講長度，唔印 hash。 */
+/** 長文字（notes）前後都只記 `{ changed, length, sha256 }`（HD-112 A，auditChanges.textDigest）：講字數，唔印 hash。 */
 const isDigest = (value) => Boolean(value) && typeof value === "object" && "sha256" in value && "length" in value;
 /** 太長嘅陣列由後端摘要成 `{ count, sample, truncated }`（SupplierAuditLogService.boundedDetail）。 */
 const isSummary = (value) => Boolean(value) && typeof value === "object" && value.truncated === true && "count" in value;
 
 function shown(value) {
   if (empty(value)) return "（空）";
-  if (isDigest(value)) return `已修改（${value.length} 字）`;
+  if (isDigest(value)) return `${value.length} 字`;
   if (isSummary(value)) return `共 ${value.count} 項，只列頭 ${value.sample?.length ?? 0} 項：${JSON.stringify(value.sample ?? [])}`;
   return typeof value === "object" ? JSON.stringify(value) : String(value);
 }
@@ -114,7 +114,7 @@ function detailLines(detail) {
   const after = detail.after && typeof detail.after === "object" ? detail.after : {};
   const lines = [...new Set([...Object.keys(before), ...Object.keys(after)])]
     .filter((key) => !(empty(before[key]) && empty(after[key])))
-    .map((key) => (isDigest(after[key]) && empty(before[key]) ? `${key}：${shown(after[key])}` : `${key}：${shown(before[key])} → ${shown(after[key])}`));
+    .map((key) => `${key}：${shown(before[key])} → ${shown(after[key])}`);
   for (const [key, value] of Object.entries(detail)) {
     if (key !== "before" && key !== "after") lines.push(`${key}：${shown(value)}`);
   }
