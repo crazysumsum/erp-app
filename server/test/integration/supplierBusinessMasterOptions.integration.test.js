@@ -13,6 +13,7 @@ const h = createSupplierHarness("d036");
 const tag = randomUUID().replace(/[^a-z]/gu, "").slice(0, 3).toUpperCase().padEnd(3, "Q");
 const inactiveCurrency = `Z${tag.slice(0, 2)}`;
 const inactiveTerm = `D036-${tag}`;
+const activeTerm = `D036A-${tag}`;
 let clerk;
 
 const get = (path) => h.send(clerk, { key: `GET ${path}`, method: "GET", path, authType: "jwt", idempotent: false });
@@ -28,6 +29,9 @@ before(async () => {
   await h.db.execute(`INSERT INTO payment_terms (code, code_key, name, calculation_type, due_days, status, version, created_at, updated_at)
     VALUES (?, ?, 'DEF-036 inactive', 'NET_DAYS', 30, 'INACTIVE', 1, ?, ?)`, [inactiveTerm, inactiveTerm, now, now]);
   h.cleanup.push(["DELETE FROM payment_terms WHERE code_key = ?", [inactiveTerm]]);
+  await h.db.execute(`INSERT INTO payment_terms (code, code_key, name, calculation_type, due_days, status, version, created_at, updated_at)
+    VALUES (?, ?, 'DEF-036 active', 'NET_DAYS', 30, 'ACTIVE', 1, ?, ?)`, [activeTerm, activeTerm, now, now]);
+  h.cleanup.push(["DELETE FROM payment_terms WHERE code_key = ?", [activeTerm]]);
 });
 
 after(async () => {
@@ -46,6 +50,8 @@ integrationTest("a CLERK reads the Active currencies and payment terms the Suppl
   assert.equal(terms.status, 200, terms.text);
   assert.ok(terms.json.data.items.every((item) => item.status === "ACTIVE"));
   assert.equal(terms.json.data.items.some((item) => item.code === inactiveTerm), false, "an Inactive payment term is not offered");
+  assert.ok(terms.json.data.items.some((item) => item.code === activeTerm), "an Active payment term is offered");
+  assert.deepEqual(Object.keys(terms.json.data.items[0]).sort(), ["calculationType", "code", "dueDays", "id", "name", "status", "version"]);
 });
 
 integrationTest("the Business Master lists themselves still refuse the same CLERK", async () => {
