@@ -131,13 +131,18 @@ const DUPLICATE = Object.freeze({
     score: { type: "number" }, exact: { type: "boolean" }, warningOnly: { const: true }
   }
 });
+/** 付款條件嘅顯示資料（DEF-038、DEF-040）：已停用嘅都會回，等畫面唔使顯示內部 ID。 */
+export const PAYMENT_TERM_REF_SCHEMA = Object.freeze({
+  type: ["object", "null"], additionalProperties: false, required: ["id", "code", "name", "status"],
+  properties: { id: { type: "integer" }, code: { type: "string" }, name: { type: "string" }, status: { type: "string", enum: ["ACTIVE", "INACTIVE"] } }
+});
 export const SUPPLIER_SUMMARY_SCHEMA = Object.freeze({
   type: "object", additionalProperties: false,
   required: ["id", "supplierCode", "supplierName", "displayName", "defaultCurrencyCode", "defaultPaymentTermId", "primaryContactName", "status", "version", "updatedAt"],
   properties: {
     id: { type: "integer", minimum: 1 }, supplierCode: { type: "string" }, supplierName: { type: "string" },
     displayName: { type: "string" }, defaultCurrencyCode: { type: "string" }, defaultPaymentTermId: { type: ["integer", "null"] },
-    primaryContactName: { type: "string" },
+    primaryContactName: { type: "string" }, defaultPaymentTerm: PAYMENT_TERM_REF_SCHEMA,
     status: { type: "string", enum: [...SUPPLIER_STATUSES] }, version: { type: "integer", minimum: 1 }, updatedAt: { type: "integer", minimum: 0 }
   }
 });

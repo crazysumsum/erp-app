@@ -28,8 +28,8 @@ const ROW = {
   status: "active", version: 2, updatedAt: 1700000000000
 };
 
-async function mountPage({ permissions = ["supplier.view", "supplier.mgmt"], initialRoute = "/suppliers" } = {}) {
-  supplierService.list.mockResolvedValue({ rows: [ROW], rowsNumber: 1 });
+async function mountPage({ permissions = ["supplier.view", "supplier.mgmt"], initialRoute = "/suppliers", rows = [ROW] } = {}) {
+  supplierService.list.mockResolvedValue({ rows, rowsNumber: rows.length });
   const router = createRouter({
     history: createMemoryHistory(),
     routes: [
@@ -82,6 +82,20 @@ describe("pages/suppliers/SuppliersPage.vue", () => {
     await flushPromises();
     expect(result.body.find(".q-banner").exists()).toBe(false);
     expect(result.body.text()).toContain("SUP-007");
+  });
+
+  it("names the payment term by code and name, marks an inactive one, and never shows its ID (DEF-040)", async () => {
+    const { body } = await mountPage({ rows: [
+      { ...ROW, id: 7, supplierCode: "SUP-007", defaultPaymentTermId: 31, defaultPaymentTerm: { id: 31, code: "NET30", name: "Net 30", status: "ACTIVE" } },
+      { ...ROW, id: 8, supplierCode: "SUP-008", defaultPaymentTermId: 32, defaultPaymentTerm: { id: 32, code: "OLD60", name: "Old 60", status: "INACTIVE" } },
+      { ...ROW, id: 9, supplierCode: "SUP-009", defaultPaymentTermId: null, defaultPaymentTerm: null }
+    ] });
+    const rowText = (code) => body.findAll("tbody tr").find((row) => row.text().includes(code)).text();
+    expect(rowText("SUP-007")).toContain("NET30 — Net 30");
+    expect(rowText("SUP-007")).not.toContain("已停用");
+    expect(rowText("SUP-008")).toContain("OLD60 — Old 60（已停用）");
+    expect(rowText("SUP-009")).toContain("未設定");
+    expect(rowText("SUP-007")).not.toMatch(/\b31\b/u);
   });
 
   it("shows create only to supplier.mgmt users", async () => {

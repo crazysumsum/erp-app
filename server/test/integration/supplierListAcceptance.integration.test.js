@@ -420,3 +420,20 @@ integrationTest("REV-094 L-4: export lets only a supplier.view holder filter on 
   assert.equal(allowed.status, 200);
   assert.ok(allowed.text.includes(`${tag}-EXP`), "the Supplier without a Bank account is exported");
 });
+
+integrationTest("the list names each Supplier's payment term by code and name, an inactive one included, and null without one (DEF-040, HD-133 A)", async () => {
+  const viewer = await makeUser("viewer", ["supplier.view"]);
+  const tag = randomUUID().replace(/-/gu, "").slice(0, 8).toUpperCase();
+  const active = await seedPaymentTerm(`LA${tag}`);
+  const retired = await seedPaymentTerm(`LR${tag}`);
+  await h.db.execute("UPDATE payment_terms SET status = 'INACTIVE', version = version + 1 WHERE id = ?", [retired]);
+  const withActive = await seedSupplier({ code: `PL${tag}-A`, name: `Payment list ${tag} A`, paymentTermId: active });
+  const withRetired = await seedSupplier({ code: `PL${tag}-R`, name: `Payment list ${tag} R`, paymentTermId: retired });
+  const without = await seedSupplier({ code: `PL${tag}-N`, name: `Payment list ${tag} N` });
+  const result = await list(viewer, { q: `PL${tag}`, pageSize: "100" });
+  assert.equal(result.status, 200);
+  const byId = Object.fromEntries(result.data.items.map((item) => [item.id, item.defaultPaymentTerm]));
+  assert.deepEqual(byId[withActive], { id: active, code: `LA${tag}`, name: `Term LA${tag}`, status: "ACTIVE" });
+  assert.deepEqual(byId[withRetired], { id: retired, code: `LR${tag}`, name: `Term LR${tag}`, status: "INACTIVE" });
+  assert.equal(byId[without], null);
+});

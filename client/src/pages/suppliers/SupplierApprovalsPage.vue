@@ -18,6 +18,7 @@ import { promptPassword } from "@/framework/ui/confirm.js";
 import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
 import { useSessionStore } from "@/stores/session.js";
 import supplierApprovalService from "@/services/supplierApproval.js";
+import { paymentTermLabel } from "@/components/suppliers/paymentTermLabel.js";
 
 /**
  * 設計 §7.6。Queue 預設只顯示指定俾自己嘅 Pending，另有「全部待處理」同「未指派」。
@@ -72,6 +73,10 @@ function formatDate(value) {
 function formatValue(field, value) {
   if (field === "identifiers") {
     return (value ?? []).map((row) => `${row.identifierType}／${row.issuerCountryCode}／${row.identifierValueMasked}`).join("、") || "（無）";
+  }
+  // 付款條件顯示 code 同名稱，唔顯示內部 ID（DEF-040、HD-133 A）。
+  if (field === "defaultPaymentTermId" && value !== null && value !== undefined) {
+    return paymentTermLabel((detail.value?.paymentTerms ?? []).find((term) => term.id === value), value);
   }
   return value === null || value === undefined || value === "" ? "（無）" : String(value);
 }

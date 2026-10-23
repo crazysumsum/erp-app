@@ -14,6 +14,7 @@ import {
   normalizeSupplierUrl
 } from "./supplierNormalization.js";
 import { toAddressResponse, toContactResponse, toIdentifierResponse, toSupplierDetailResponse, toSupplierSummaryResponse } from "./supplierProjections.js";
+import { paymentTermsById } from "./paymentTermLabels.js";
 import { assertSupplierDeletable, transitionSupplierStatus } from "./supplierStateMachine.js";
 import {
   assertKnownSupplierFields,
@@ -857,7 +858,11 @@ export class SupplierAdminService {
         LIMIT ? OFFSET ?`,
       listParams
     );
-    return { items: rows.map(toSupplierSummaryResponse), total: Number(countRows[0].total), page, pageSize };
+    // 列表顯示付款條件 code 同名稱，唔顯示內部 ID（DEF-040、HD-133 A）。
+    const terms = await paymentTermsById(this.businessMaster, rows.map((row) => row.default_payment_term_id));
+    const items = rows.map((row) => ({ ...toSupplierSummaryResponse(row),
+      defaultPaymentTerm: row.default_payment_term_id === null ? null : terms.get(Number(row.default_payment_term_id)) ?? null }));
+    return { items, total: Number(countRows[0].total), page, pageSize };
   }
 
   /** detail 最多帶 100 筆地址同聯絡人；再多就用呢兩個分頁讀（design：GET .../contacts／addresses，PARTY-009，HD-107）。 */

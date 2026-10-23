@@ -995,3 +995,36 @@ integrationTest("an unassigned request refuses every decision until a reassignme
   assert.equal(await countAudit(connection, supplierId, "approval.reassign"), 1);
   assert.equal(await countAudit(connection, supplierId, "approval.approve"), 1);
 });
+
+integrationTest("the detail names the payment terms in its difference, an inactive one included (DEF-040, HD-133 A)", async (t) => {
+  const connection = await mysql.createConnection(config());
+  let who = null;
+  let seeded = null;
+  let termId = null;
+  t.after(async () => {
+    if (seeded) await cleanup(connection, seeded.supplierId);
+    if (termId) await connection.execute("DELETE FROM payment_terms WHERE id = ?", [termId]);
+    await cleanupActors(connection, who);
+    await connection.end();
+  });
+  const suffix = randomUUID().slice(0, 8);
+  who = await seedActors(connection, suffix);
+  seeded = await seed(connection, suffix, who);
+  const now = Date.now();
+  const [term] = await connection.execute(`INSERT INTO payment_terms (code, code_key, name, calculation_type, due_days, status, version, created_at, updated_at)
+    VALUES (?, ?, 'Retired Net 60', 'NET_DAYS', 60, 'INACTIVE', 1, ?, ?)`, [`RT-${suffix}`, `RT-${suffix}`.toUpperCase(), now, now]);
+  termId = Number(term.insertId);
+  await connection.execute("UPDATE suppliers SET default_payment_term_id = ?, version = version + 1 WHERE id = ?", [termId, seeded.supplierId]);
+  const service = serviceOn(connection, { actorId: who.approverId });
+  // 真 provider：已停用嘅條款唔喺 Active 清單，要經 history 讀。
+  const provider = new BusinessMasterProvider({ database: { query: (sql, params) => connection.query(sql, params) }, repository: new BusinessMasterRepository() });
+  service.businessMaster = {
+    listPaymentTerms: (input) => provider.listActivePaymentTerms(input),
+    getPaymentTermHistory: (id) => provider.getPaymentTermHistory(id)
+  };
+
+  const detail = await service.getRequest({ actorId: who.approverId, claimedRoles: [], claimedPermissions: ["supplier.approval"], id: seeded.requestId });
+  assert.ok(detail.changedFields.includes("defaultPaymentTermId"));
+  assert.equal(detail.current.defaultPaymentTermId, termId);
+  assert.deepEqual(detail.paymentTerms, [{ id: termId, code: `RT-${suffix}`, name: "Retired Net 60", status: "INACTIVE" }]);
+});

@@ -2,6 +2,7 @@ import { assertActorFresh, loadPermissionNamesForUser } from "../authorization/d
 import { SupplierAuditLogService } from "./SupplierAuditLogService.js";
 import { invalidSupplierInput, supplierApprovalRequestNotFound, supplierConflict, supplierNotActivatable, supplierNotFound } from "./supplierErrors.js";
 import { escapeLikeTerm } from "./supplierNormalization.js";
+import { paymentTermsById } from "./paymentTermLabels.js";
 import { supplierActivatabilityIssues } from "./supplierValidation.js";
 
 /**
@@ -278,7 +279,9 @@ export class SupplierApprovalService {
       stale: Number(row.supplier_version) !== Number(row.current_supplier_version),
       submitted,
       current,
-      changedFields: approvalSummaryChanges(submitted, current)
+      changedFields: approvalSummaryChanges(submitted, current),
+      // 差異入面嘅付款條件 ID 要講得出 code 同名稱，包括已停用嘅（DEF-040、HD-133 A）。
+      paymentTerms: [...(await paymentTermsById(this.businessMaster, [submitted.defaultPaymentTermId, current.defaultPaymentTermId])).values()]
     };
   }
 

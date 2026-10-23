@@ -22,6 +22,7 @@ import { notifyError } from "@/framework/ui/notify.js";
 import { useSessionStore } from "@/stores/session.js";
 import businessMasterService from "@/services/businessMaster.js";
 import supplierService from "@/services/supplier.js";
+import { paymentTermLabel } from "@/components/suppliers/paymentTermLabel.js";
 
 const STATUS_LABEL = Object.freeze({
   draft: "草稿", pending_approval: "待審批", active: "啟用", suspended: "已暫停",
@@ -251,7 +252,7 @@ async function exportSuppliers() {
       >
         <template #body-cell-supplierName="{ value }"><EllipsisCell :text="value" max-width="240px" /></template>
         <template #body-cell-displayName="{ value }"><EllipsisCell :text="value || '—'" max-width="180px" /></template>
-        <template #body-cell-defaultPaymentTermId="{ value }"><q-td class="text-left">{{ value ?? "未設定" }}</q-td></template>
+        <template #body-cell-defaultPaymentTermId="{ row }"><q-td class="text-left">{{ paymentTermLabel(row.defaultPaymentTerm, row.defaultPaymentTermId) }}</q-td></template>
         <template #body-cell-primaryContactName="{ value }"><EllipsisCell :text="value || '未設定'" max-width="160px" /></template>
         <template #body-cell-status="{ value }">
           <q-td class="text-left"><q-badge :color="STATUS_COLOR[value]" :label="STATUS_LABEL[value] ?? value" /></q-td>
