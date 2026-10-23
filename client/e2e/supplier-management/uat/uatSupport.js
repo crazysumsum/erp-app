@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { test as base } from "@playwright/test";
 import { API_URL, connect, readFixture } from "./uatEnvironment.mjs";
 
 /**
@@ -131,3 +132,39 @@ export function moduleCall(page, modulePath, method, ...args) {
 }
 
 export const serviceCall = async (page, method, ...args) => (await moduleCall(page, "/src/services/supplier.js", method, ...args)).replace(/^ok:.*/su, "ok");
+
+/**
+ * 登入有每 IP 每 10 分鐘 20 次嘅限流（loginHandler LOGIN_IP_LIMIT），而設備 key 係唔可匯出、擺喺 IndexedDB 嘅 CryptoKey，
+ * 存唔到落 storageState。所以每個角色喺成個 worker 只開一個 browser context、登入一次，之後每個 test 喺入面開新分頁。
+ * `as(role)` 回 `{ page, account }`；`{ session: 2 }` 係同一個人嘅第二個 browser（UAT-008）。
+ */
+export const test = base.extend({
+  sessions: [async ({ browser }, use) => {
+    const sessions = { browser, byRole: new Map() };
+    await use(sessions);
+    for (const session of sessions.byRole.values()) await (await session).context.close();
+    await closeDb();
+  }, { scope: "worker" }],
+  as: async ({ sessions }, use) => {
+    const pages = [];
+    await use(async (role, { session = 1 } = {}) => {
+      const key = `${role}#${session}`;
+      if (!sessions.byRole.has(key)) {
+        sessions.byRole.set(key, (async () => {
+          const context = await sessions.browser.newContext();
+          const page = await context.newPage();
+          const account = await loginAs(page, role);
+          await page.close();
+          return { context, account };
+        })());
+      }
+      const { context, account } = await sessions.byRole.get(key);
+      const page = await context.newPage();
+      pages.push(page);
+      // 新分頁係 about:blank，讀唔到 app 嘅 localStorage（token）：先開 app。
+      await page.goto("/");
+      return { page, account };
+    });
+    for (const page of pages) await page.close();
+  }
+});
