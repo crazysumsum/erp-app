@@ -136,3 +136,51 @@ export function purchaseReceiptBusinessPayload(command) {
 export function purchaseReceiptBusinessHash(command) {
   return inventoryOperationHash({ commandType: "PURCHASE_RECEIPT_BATCH", payload: purchaseReceiptBusinessPayload(command) });
 }
+
+export function normalizePurchaseReversal(input) {
+  fields(input, ["context", "actor", "correlationId", "source", "goodsReceiptId", "reasonText", "lines"], "command");
+  fields(input.actor, ["userId", "serviceName", "claimedRoles", "claimedPermissions"], "actor");
+  fields(input.source, ["documentId", "eventId"], "source");
+  const actor = { userId: inventoryPositiveInteger(input.actor.userId, "actor.userId"),
+    serviceName: text(input.actor.serviceName, "serviceName", 0, 0),
+    claimedRoles: claims(input.actor.claimedRoles, "claimedRoles"),
+    claimedPermissions: claims(input.actor.claimedPermissions, "claimedPermissions") };
+  if (!["purchasing.view", "inventory.adjust"].every(permission => actor.claimedPermissions.includes(permission))) {
+    throw inventoryError("PERMISSION_STALE");
+  }
+  if (typeof input.source.eventId !== "string" ||
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/u.test(input.source.eventId)) {
+    throw inventoryError("INVENTORY_INPUT_INVALID", { field: "eventId" });
+  }
+  if (!Array.isArray(input.lines) || input.lines.length < 1 || input.lines.length > 200) {
+    throw inventoryError("INVENTORY_INPUT_INVALID", { field: "lines" });
+  }
+  const details = new Set(), originals = new Set();
+  const lines = Array.from(input.lines, line => {
+    fields(line, ["sourceLineId", "originalSourceLineId", "originalMovementId", "baseQuantity"], "line");
+    const result = { sourceLineId: purchaseSourceId(line.sourceLineId, "sourceLineId"),
+      originalSourceLineId: purchaseSourceId(line.originalSourceLineId, "originalSourceLineId"),
+      originalMovementId: inventoryPositiveInteger(line.originalMovementId, "originalMovementId"),
+      baseQuantity: inventoryPositiveInteger(line.baseQuantity, "baseQuantity") };
+    if (result.sourceLineId !== result.originalSourceLineId || details.has(result.sourceLineId) || originals.has(result.originalMovementId)) {
+      throw inventoryError("INVENTORY_INPUT_INVALID", { field: "lines" });
+    }
+    details.add(result.sourceLineId); originals.add(result.originalMovementId);
+    return result;
+  });
+  const goodsReceiptId = purchaseSourceId(input.goodsReceiptId, "goodsReceiptId");
+  if (input.source.documentId !== goodsReceiptId) throw inventoryError("INVENTORY_INPUT_INVALID", { field: "source.documentId" });
+  return { actor, correlationId: text(input.correlationId, "correlationId", 0, 64, true),
+    source: { documentId: purchaseSourceId(input.source.documentId, "documentId"), eventId: input.source.eventId },
+    goodsReceiptId,
+    reasonText: text(typeof input.reasonText === "string" ? input.reasonText.trim() : input.reasonText, "reasonText", 5, 500), lines };
+}
+
+export function purchaseReversalBusinessPayload(command) {
+  return { purpose: "purchase.reverse", source: command.source, goodsReceiptId: command.goodsReceiptId,
+    reasonText: command.reasonText, lines: [...command.lines].sort((a, b) => Number(a.sourceLineId) - Number(b.sourceLineId)) };
+}
+
+export function purchaseReversalBusinessHash(command) {
+  return inventoryOperationHash({ commandType: "PURCHASE_REVERSE_BATCH", payload: purchaseReversalBusinessPayload(command) });
+}

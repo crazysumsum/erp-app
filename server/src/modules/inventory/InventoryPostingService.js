@@ -299,6 +299,10 @@ export class InventoryPostingService {
     return this.purchase.postPurchaseReceiptBatchInTransaction(tx, command);
   }
 
+  reversePurchaseReceiptBatchInTransaction(tx, command) {
+    return this.purchase.reversePurchaseReceiptBatchInTransaction(tx, command);
+  }
+
   claimFulfillmentBatchInTransaction(tx,input) { return this.fulfillment.claimFulfillmentBatchInTransaction(tx,input); }
   postFulfillmentIssueBatchInTransaction(tx,command,preparation) { return this.fulfillment.postFulfillmentIssueBatchInTransaction(tx,command,preparation); }
   reverseFulfillmentIssueAndRestoreReservationBatchInTransaction(tx,command,preparation) { return this.fulfillment.reverseFulfillmentIssueAndRestoreReservationBatchInTransaction(tx,command,preparation); }
