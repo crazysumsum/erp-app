@@ -1,4 +1,5 @@
 import {randomUUID} from "node:crypto";
+import {salesSourceHash} from "../../../src/modules/sales/salesImportPrecheck.js";
 import {salesPayloadHash} from "../../../src/modules/sales/salesCanonicalHash.js";
 
 // Synthetic retained Quotation/conversion projection; Inventory/Fulfillment history remains the native fixture's actual history.
@@ -13,4 +14,17 @@ export async function seedConvertedQuotation(f){
  await f.s.insert("sales_quotation_conversions",{quotation_id:id,sales_order_id:f.s.orderId,sales_order_number_snapshot:order.sales_order_number,difference_summary:JSON.stringify(difference),difference_hash:salesPayloadHash(difference),event_id:randomUUID(),converted_at:order.created_at,converted_by:f.userId});
  await f.db.execute("UPDATE sales_orders SET source_type='QUOTATION',source_quotation_id=? WHERE id=?",[id,f.s.orderId]);
  return {id,input:{eventId:randomUUID(),version:2,order:{customerId:Number(order.customer_id),currencyCode:order.currency_code,fulfillmentWarehouseId:Number(order.fulfillment_warehouse_id),orderDate:"2023-11-14",lines:lines.map(line=>({skuId:Number(line.sku_id),skuUomId:Number(line.sku_uom_id),quantity:String(line.ordered_quantity),unitSellingPrice:String(line.unit_selling_price)}))}}};
+}
+
+// Synthetic completed CSV/source projection for read routing; no upload/worker execution is claimed.
+export async function seedRetainedCsvOrder(f){
+ const [[original]]=await f.db.query("SELECT * FROM sales_orders WHERE id=?",[f.s.orderId]),header=Object.fromEntries(Object.entries(original).filter(([key])=>key!=="id"));
+ const orderId=await f.s.insert("sales_orders",{...header,sales_order_number:"SO-202311-999998",source_type:"CSV",source_quotation_id:null,source_intake_order_id:null,external_order_key_id:null,channel_code_snapshot:"ARCHIVE_CSV",external_order_id_snapshot:"Synthetic-CSV-Archive",confirmation_event_id:null});
+ const [lines]=await f.db.query("SELECT * FROM sales_order_lines WHERE sales_order_id=? ORDER BY line_no",[f.s.orderId]);
+ for(const originalLine of lines){const line=Object.fromEntries(Object.entries(originalLine).filter(([key])=>key!=="id"));await f.s.insert("sales_order_lines",{...line,sales_order_id:orderId,reserved_outstanding_base_quantity:0,backordered_base_quantity:0,fulfilled_base_quantity:0,cancelled_base_quantity:line.ordered_base_quantity});}
+ const now=Date.now(),jobId=await f.s.insert("sales_import_jobs",{batch_number:"SI-202311-999998",template_version:"1.0",original_file_name:"synthetic-retained.csv",file_sha256:Buffer.alloc(32,1),file_size_bytes:1,status:"COMPLETED",total_row_count:1,source_order_count:1,valid_count:1,success_count:1,created_by:f.userId,created_at:now,updated_at:now,completed_at:now,files_purged_at:now});
+ const external="Synthetic-CSV-Archive",hash=salesSourceHash(external),payload="b".repeat(64),keyId=await f.s.insert("sales_external_order_keys",{channel_code:"ARCHIVE_CSV",external_order_id:external,external_order_id_hash:hash,source_type:"CSV",payload_hash:payload,status:"SUCCEEDED",sales_order_id:orderId,sales_order_number:"SO-202311-999998",claimed_at:now,updated_at:now});
+ const intakeId=await f.s.insert("sales_intake_orders",{import_job_id:jobId,source_type:"CSV",source_order_key:external,source_order_key_hash:hash,channel_code:"ARCHIVE_CSV",external_order_id:external,external_order_id_hash:hash,schema_version:"1.0",payload_hash:payload,first_row_no:1,last_row_no:1,line_count:lines.length,status:"SUCCEEDED",processing_event_id:randomUUID(),external_order_key_id:keyId,sales_order_id:orderId,sales_order_number:"SO-202311-999998",created_at:now,updated_at:now,completed_at:now});
+ await f.db.execute("UPDATE sales_orders SET source_intake_order_id=?,external_order_key_id=? WHERE id=?",[intakeId,keyId,orderId]);
+ return {orderId,jobId,intakeId,number:"SO-202311-999998",external};
 }

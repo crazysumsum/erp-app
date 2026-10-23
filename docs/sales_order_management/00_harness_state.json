@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1333,
+  "revision": 1335,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "b302bb83c8f90d5c6c041763b5c33148c7d3bd40ef4800ba687cf23b99a56555",
     "plan": "cbb4cbf16d7bd189a35d9031b9db6b9bfba050a967afef50fd58be35ba947ecb",
-    "code_commit": "ac78c6158f72f158f5fd8d1fc3ed69e8bd876720",
-    "source_fingerprint": "62dae799fce394ceca9f8c7407bf54ef3a810a541df6ec836e7cdddb5bc6eb10",
+    "code_commit": "9ba5f103b683c4585c945655f956a7b8045de22a",
+    "source_fingerprint": "5836e431aa91bbe594844490acde13a0e2eb4a02d4ba0c9cc720035383e882ac",
     "worktree": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app",
     "default_commit": "58322ba3d5b77aa1a6250be4b5055651c682a371",
     "mode_entry_commit": "e272f5d3ce05d0ca50be42e6d8764f0ef20d3dd1"
@@ -12300,6 +12300,30 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-P4-QUOTATION-ARCHIVE-ROUTING-VALIDATION-ADDENDUM",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "ef92650ca8e7c03d84941803a017c10c764dad74a4325d139cec513894ddb18c",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-archive-quotation-routing-r2-validation-addendum.json",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P4-CSV-ARCHIVE-LINKS-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "7c5e5268600e3224d6627a37f5155438c50503b291a650c13ab479fe4e50f447",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-archive-csv-routing-r1-reviewer-proof.json",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -16185,6 +16209,17 @@
       "subject": "Quotation Archive routing scoped developer/native/RR/browser and independent review; fullP4 incomplete",
       "status": "PASS",
       "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/132_quotation_archive_routing_developer_increment.md"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "9ba5f103b683c4585c945655f956a7b8045de22a",
+      "spec_baseline": "cbb4cbf16d7bd189a35d9031b9db6b9bfba050a967afef50fd58be35ba947ecb",
+      "source_fingerprint": "5836e431aa91bbe594844490acde13a0e2eb4a02d4ba0c9cc720035383e882ac",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-23T09:04:44.831515Z",
+      "subject": "CSV Archive source links scoped developer/browser and independent review; fullP4 incomplete",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/133_csv_archive_links_developer_increment.md"
     }
   ],
   "pending_decisions": [
@@ -19358,8 +19393,16 @@
       "kind": "GIT_COMMIT",
       "target": "local-only reviewed Quotation Archive routing/replay increment",
       "idempotency_key": "p4-quotation-routing-rr-manifest-20261023",
+      "status": "CONFIRMED",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/132_quotation_archive_routing_developer_increment.md; exactFP62dae799fce394ceca9f8c7407bf54ef3a810a541df6ec836e7cdddb5bc6eb10; no push/PR/mainmerge. Observed actual local commit 9ba5f103b683c4585c945655f956a7b8045de22a"
+    },
+    {
+      "id": "ACT-P4-CSV-ARCHIVE-LINKS-COMMIT-20261023",
+      "kind": "GIT_COMMIT",
+      "target": "local-only reviewed CSV Archive link increment",
+      "idempotency_key": "p4-csv-archive-links-20261023",
       "status": "STARTED",
-      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/132_quotation_archive_routing_developer_increment.md; exactFP62dae799fce394ceca9f8c7407bf54ef3a810a541df6ec836e7cdddb5bc6eb10; no push/PR/mainmerge."
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/133_csv_archive_links_developer_increment.md; exactFP5836e431aa91bbe594844490acde13a0e2eb4a02d4ba0c9cc720035383e882ac; no push/PR/mainmerge."
     }
   ],
   "evidence_files": [
@@ -20616,7 +20659,22 @@
         "QR-R1-2 real RR/auth-before-Archive-commit mixed read; trueRED/green, scoped independent actualnative/browser/unit proof e472eb44c9bc249fce6f9e1dac8b8984697f55fb8cdc698b451c57dfed633638. Not wholeTC050/Phase completion."
       ],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-031",
+      "severity": "MEDIUM",
+      "status": "CLOSED",
+      "source_ids": [
+        "TASK-060",
+        "TASK-061",
+        "TC-050"
+      ],
+      "closure_evidence": [
+        "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/133_csv_archive_links_developer_increment.md",
+        "ActualmissingCSVlinkRED d4de6636; final7browser/98server/66client/build/lint/boundary; separate actual1browser and scopedproof7c5e5268. Not wholeTC050/Phase."
+      ],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Commit reviewed Quotation routing increment; complete CSV/Channel/Manual source links plus remaining original P4 eligibility/joint/recovery/metrics/capacity/restore/33checks/currentCI/review/standard merge Gate before authorized main merge."
+  "next_safe_action": "Commit CSV historical links, then retain all original native/browser cases and exact owned-runtime guard while binding fresh synthetic schema and adding Archive cases to standard browser discovery; execute original full suites, complete remaining P4 source/eligibility/recovery/metrics/capacity/restore/33checks/currentCI/wholephase review/standard merge Gate before authorized main merge."
 }
