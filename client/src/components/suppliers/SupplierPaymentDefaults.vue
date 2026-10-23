@@ -55,6 +55,8 @@ onMounted(loadOptions);
         :options="paymentTermOptions"
         emit-value map-options clearable outlined dense :loading="loading"
         label="預設付款條件（選填）" aria-label="預設付款條件（選填）"
+        :error="!!props.fieldError('defaultPaymentTermId')"
+        :error-message="props.fieldError('defaultPaymentTermId')"
         @update:model-value="selectPaymentTerm"
       />
     </div>

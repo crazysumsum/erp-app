@@ -91,6 +91,19 @@ describe("Supplier general editor", () => {
     expect(options("預設付款條件（選填）")).toEqual([{ text: "NET30 — Net 30", value: 9 }]);
   });
 
+  it("marks the payment-term field when the stored term is no longer active, instead of a bare banner (DEF-041, HD-134 A)", async () => {
+    supplierService.update.mockRejectedValue(Object.assign(new Error("付款條款目前不可用"), { code: "PAYMENT_TERM_NOT_ACTIVE", status: 409, details: { id: 5 } }));
+    const { body } = await mountPage();
+    await body.findAll("button").find((button) => button.text().includes("編輯一般資料")).trigger("click");
+    await field(body, "Supplier Name *").setValue("Renamed Supplier");
+    await body.findAll("button").find((button) => button.text().includes("儲存一般資料")).trigger("click");
+    await flushPromises();
+    const term = body.findAll(".q-field").find((item) => item.text().includes("預設付款條件（選填）"));
+    expect(term.classes()).toContain("q-field--error");
+    expect(term.text()).toContain("付款條款已停用，請改選或清除");
+    expect(body.text()).toContain("付款條款已停用，請改選或清除後再儲存。");
+  });
+
   it("TC-123 (UI-003): keeps the user's draft visible when a stale update reloads the latest Supplier", async () => {
     supplierService.update.mockRejectedValue(Object.assign(new Error("版本衝突"), { code: "VERSION_CONFLICT" }));
     const { body } = await mountPage();

@@ -226,6 +226,10 @@ async function saveEdit() {
         // Keep the last known version and, most importantly, the user's draft.
       }
       editError.value = `供應商已被其他人修改（最新版本 ${supplier.value.version}）；你的輸入仍然保留，請先複製所需內容再載入最新資料。`;
+    } else if (saveError.code === "PAYMENT_TERM_NOT_ACTIVE") {
+      // FR-EDIT-003：儲存時重新檢查付款條件。已停用就喺嗰個欄位講明要點做（DEF-041、HD-134 A）。
+      fieldErrors.value = { defaultPaymentTermId: "付款條款已停用，請改選或清除" };
+      editError.value = "付款條款已停用，請改選或清除後再儲存。";
     } else {
       fieldErrors.value = mapValidationDetailsToFieldErrors(saveError.details);
       const summary = unmatchedFieldErrors(fieldErrors.value, knownFields);
