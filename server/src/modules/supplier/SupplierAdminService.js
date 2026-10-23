@@ -299,7 +299,8 @@ export class SupplierAdminService {
           claimedRoles: input.claimedRoles,
           claimedPermissions: input.claimedPermissions
         });
-        return this.createSupplierInTransaction(connection, { actor, input, findDuplicates: false });
+        return this.createSupplierInTransaction(connection, { actor, input, findDuplicates: false,
+          warnedDuplicates: duplicateCandidates });
       }), { logger: this.logger, operation: "supplier.create", requestId: input.requestId });
     } catch (error) {
       if (duplicateEntry(error)) {
@@ -326,7 +327,7 @@ export class SupplierAdminService {
    * 回 `{ id, duplicateCandidates }`。
    */
   async createSupplierInTransaction(connection, { actor, input, approvalRequired = this.approvalRequired, addChildren = null,
-    findDuplicates = true }) {
+    findDuplicates = true, warnedDuplicates = null }) {
     const { code, name, displayName, website, email, generalPhone, notes } = createFields(input);
     // 設計 2.6 嘅鎖序由 settings 行先，政策讀取（settings 嘅 S 鎖）喺 Business Master 鎖 currencies 之前。
     // 當時 currencies 係 X 鎖：createSupplier 係 currencies -> settings、#changeStatus 係 settings -> currencies，
@@ -350,6 +351,7 @@ export class SupplierAdminService {
     }
     // 匯入唔用相似名稱（HD-052：只警告完全相同；HD-075）：佢嘅成本隨 Supplier 數目上升，一個 10,000 列嘅檔做唔完。
     const duplicateCandidates = findDuplicates ? await this.duplicates.find(connection, { nameKey: name.key }) : [];
+    const duplicateCodes = (warnedDuplicates ?? duplicateCandidates).map((candidate) => candidate.supplierCode);
     // 設計 4.4：設定開啟時 draft -> pending_approval，關閉時 draft -> active。
     // 政策喺提交嗰一刻讀一次並且 snapshot 落 request，所以之後改設定唔追溯。
     if (!needsApproval && input.approverUserId !== undefined && input.approverUserId !== null) {
@@ -416,7 +418,11 @@ export class SupplierAdminService {
       targetId: id,
       supplierId: id,
       targetLabel: code.value,
-      detail: { after: { status, currencyCode: defaults.currency.code, paymentTermId: defaults.paymentTerm?.id ?? null } },
+      detail: {
+        after: { status, currencyCode: defaults.currency.code, paymentTermId: defaults.paymentTerm?.id ?? null },
+        // AC-003：建立時有相似名稱候選，使用者確認咗先繼續；Audit 記低係邊幾個（DEF-039、HD-132 B）。
+        ...(duplicateCodes.length ? { warnings: { duplicateCandidates: duplicateCodes } } : {})
+      },
       requestId: input.requestId,
       ip: input.ip
     });
