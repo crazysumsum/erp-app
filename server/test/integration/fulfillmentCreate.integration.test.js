@@ -107,6 +107,7 @@ nativeTest("Discovered Create HTTP endpoint enforces strict body, fresh permissi
   assert.deepEqual((await post(body,token,key)).body.data,first.body.data);assert.deepEqual((await post(body)).body.data,first.body.data);
   assert.equal((await post({...body,notes:"Changed payload"})).status,409);
   await f.db.execute("DELETE rp FROM role_permissions rp JOIN permissions p ON p.id=rp.permission_id WHERE rp.role_id=? AND p.name='fulfillment.operation'",[f.roleId]);
+  const cachedStale=await post(body,token,key);assert.equal(cachedStale.status,403);assert.equal(cachedStale.body.error.code,"PERMISSION_STALE");
   const stale=await post(body);assert.equal(stale.status,403);assert.equal(stale.body.error.code,"PERMISSION_STALE");
 });
 

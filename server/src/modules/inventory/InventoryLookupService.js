@@ -18,6 +18,16 @@ export class InventoryLookupService {
     if(!actor.username||!["fulfillment.view",permission].every(p=>actor.permissions.includes(p)))throw inventoryError("PERMISSION_STALE");
     return actor;
   }
+  async hasFulfillmentAllocationHistoryInTransaction(tx,query) {
+    await this.#authorize(tx);
+    fulfillmentInventoryFields(query,["fulfillmentId"]);
+    const fulfillmentId=fulfillmentInventoryId(query.fulfillmentId);
+    let row;
+    try { [[row]]=await tx.query("SELECT EXISTS(SELECT 1 FROM inventory_operation_requests o JOIN inventory_allocations a ON a.create_operation_id=o.id WHERE o.source_module='FULFILLMENT' AND o.source_document_type='PICK' AND o.source_document_id=?) AS present",[fulfillmentId]); }
+    catch(error){if(["ER_NO_SUCH_TABLE","ER_BAD_FIELD_ERROR"].includes(error.cause?.code??error.code))throw inventoryError("INVENTORY_DEPENDENCY_UNAVAILABLE");throw error;}
+    if(!row||![0,1].includes(Number(row.present)))throw inventoryError("INVENTORY_DEPENDENCY_UNAVAILABLE");
+    return Number(row.present)===1;
+  }
   async getFulfillmentReversalPreparationInTransaction(tx,query) {
     await this.#authorize(tx,"fulfillment.reverse");
     fulfillmentInventoryFields(query,["shipmentId","originalInventoryOperationIds"]);

@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 144,
+  "revision": 148,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -9,10 +9,10 @@
   "current_phase": "PHASE-002",
   "current_task": "TASK-014",
   "baseline": {
-    "design": "f59c669d63c6fd8e4b47730f25dd004600a8d24bc3b83c70e2224cb2d637224f",
-    "plan": "6b624ee0f7c95540965e30af83077e8287bfd78c6e95c21c06e48637b30d2932",
-    "code_commit": "389cc2f966ee9e857ce6d82801baa2876c61b9ab",
-    "source_fingerprint": "a551ffb482ee0c4d0c906bfd7b226557ff4889454a49fc787acdae062a10bf2a",
+    "design": "3ac280da39e802e2c7f0d583f465c79c329404920ae398a1a1e869b3b4753c36",
+    "plan": "ea2dc4415cabd3283448089a3c40d167b59548b2aa6470d2d0d6c196b9a3dc8c",
+    "code_commit": "687b4db9e1a9f7ffc4124cb9efab740869c758ca",
+    "source_fingerprint": "e02e82e0002c1464341576334ce43ff6f90d318ff57b5052222111a9e4ad3289",
     "worktree": "/private/tmp/erp-fulfillment-p1",
     "default_commit": "fd32762f4fa17a5e77aaa7118a9ded2d3ac81e9e",
     "mode_entry_commit": "fd32762f4fa17a5e77aaa7118a9ded2d3ac81e9e"
@@ -2081,6 +2081,152 @@
         "NFR-023",
         "Exact original NA reason unchanged; TC010 mandatory/blocking"
       ]
+    },
+    {
+      "id": "APR-093-HD017-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam actual direct HD017 A answer, preserving original HD016 and P1 authority/gates; NFR NA unchanged lineage",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/33_pending_update_claim_contract.md#actual-adoption",
+      "recorded_at": "2026-10-23T04:01:53.730030+00:00",
+      "code_commit": "687b4db9e1a9f7ffc4124cb9efab740869c758ca",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "eccf3a1df981ae7b74f40794a3b2a0bc36b3393a006a5b456c36bea321437d79",
+      "scope": [
+        "server/src/modules/sales/SalesFulfillmentService.js",
+        "server/test/salesFulfillmentService.test.js",
+        "server/test/integration/salesFulfillmentService.integration.test.js",
+        "server/src/modules/inventory/InventoryLookupService.js",
+        "docs/sales_order_management/03_design_spec.md",
+        "docs/sales_order_management/00_module_manifest.json",
+        "HD017 pending-update read/lock owner protocol plus existing approved HD016 scope only; no P4 routing"
+      ]
+    },
+    {
+      "id": "APR-094-HD017-DESIGN",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam actual direct HD017 A answer, preserving original HD016 and P1 authority/gates; NFR NA unchanged lineage",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/33_pending_update_claim_contract.md#actual-adoption",
+      "recorded_at": "2026-10-23T04:01:53.730030+00:00",
+      "code_commit": "687b4db9e1a9f7ffc4124cb9efab740869c758ca",
+      "expires_at": null,
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "a7ba7b595f8e5a4e6d761d0371c806fd960b3271ffdff5dafc9e381777c73a0e",
+      "scope": [
+        "fulfillment-shipping-management",
+        "PHASE-002",
+        "HD017 strict pending-update A; no schema, business or quantity rule changes"
+      ]
+    },
+    {
+      "id": "APR-095-HD017-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam actual direct HD017 A answer, preserving original HD016 and P1 authority/gates; NFR NA unchanged lineage",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/33_pending_update_claim_contract.md#actual-adoption",
+      "recorded_at": "2026-10-23T04:01:53.730030+00:00",
+      "code_commit": "687b4db9e1a9f7ffc4124cb9efab740869c758ca",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "eccf3a1df981ae7b74f40794a3b2a0bc36b3393a006a5b456c36bea321437d79",
+      "scope": [
+        "PHASE-002",
+        "TASK-012–023",
+        "Original full checks and currentCI before draft PR; no merge"
+      ]
+    },
+    {
+      "id": "APR-096-HD017-UNCHANGED-UATNA-LINEAGE",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam actual direct HD017 A answer, preserving original HD016 and P1 authority/gates; NFR NA unchanged lineage",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/33_pending_update_claim_contract.md#actual-adoption",
+      "recorded_at": "2026-10-23T04:01:53.730030+00:00",
+      "code_commit": "687b4db9e1a9f7ffc4124cb9efab740869c758ca",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "eccf3a1df981ae7b74f40794a3b2a0bc36b3393a006a5b456c36bea321437d79",
+      "scope": [
+        "NFR-023",
+        "Exact original NA reason unchanged; TC010 mandatory/blocking"
+      ]
+    },
+    {
+      "id": "APR-097-TASK014-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam actual HD017 A and original P1 authority; separate reviewer approved routine baseline lineage, no new human decision claimed",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/34_task014_draft_update_developer_completion.md",
+      "recorded_at": "2026-10-23T04:48:57.912218+00:00",
+      "code_commit": "687b4db9e1a9f7ffc4124cb9efab740869c758ca",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "ea2dc4415cabd3283448089a3c40d167b59548b2aa6470d2d0d6c196b9a3dc8c",
+      "scope": [
+        "server/src/modules/inventory/InventoryLookupService.js",
+        "server/src/modules/sales/SalesFulfillmentService.js",
+        "server/test/salesFulfillmentService.test.js",
+        "HD017 actual A with original approved scope, readonly owner history proof; no P4 routing"
+      ]
+    },
+    {
+      "id": "APR-098-TASK014-DESIGN",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam actual HD017 A and original P1 authority; separate reviewer approved routine baseline lineage, no new human decision claimed",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/34_task014_draft_update_developer_completion.md",
+      "recorded_at": "2026-10-23T04:48:57.912218+00:00",
+      "code_commit": "687b4db9e1a9f7ffc4124cb9efab740869c758ca",
+      "expires_at": null,
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "3ac280da39e802e2c7f0d583f465c79c329404920ae398a1a1e869b3b4753c36",
+      "scope": [
+        "PHASE-002",
+        "HD017 actual A; reviewed derived no-effect owner proof and approved list wire"
+      ]
+    },
+    {
+      "id": "APR-099-TASK014-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam actual HD017 A and original P1 authority; separate reviewer approved routine baseline lineage, no new human decision claimed",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/34_task014_draft_update_developer_completion.md",
+      "recorded_at": "2026-10-23T04:48:57.912218+00:00",
+      "code_commit": "687b4db9e1a9f7ffc4124cb9efab740869c758ca",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "ea2dc4415cabd3283448089a3c40d167b59548b2aa6470d2d0d6c196b9a3dc8c",
+      "scope": [
+        "PHASE-002",
+        "TASK-012–023",
+        "All original gates before draft PR"
+      ]
+    },
+    {
+      "id": "APR-100-TASK014-UNCHANGED-UATNA-LINEAGE",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam actual HD017 A and original P1 authority; separate reviewer approved routine baseline lineage, no new human decision claimed",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/34_task014_draft_update_developer_completion.md",
+      "recorded_at": "2026-10-23T04:48:57.912218+00:00",
+      "code_commit": "687b4db9e1a9f7ffc4124cb9efab740869c758ca",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "ea2dc4415cabd3283448089a3c40d167b59548b2aa6470d2d0d6c196b9a3dc8c",
+      "scope": [
+        "NFR-023",
+        "Exact original NA reason unchanged; TC010 mandatory/blocking"
+      ]
     }
   ],
   "reviews": [
@@ -3075,6 +3221,30 @@
       "reviewer": "/root/fulfillment_independent_review",
       "reviewed_baseline": "05ead6440a2f1664a21e2de9d103cfb069c15af976dbd5dfd2c34974d810bd18",
       "source_ref": "implementation/32_task013_create_developer_completion.md#actual-verification-and-review",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-084-HD017-FOR-HUMAN-DECISION",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "b9be2eefece315143b9c52264a42b99ff69ae8ae48af4f32575558348b4d9121",
+      "source_ref": "implementation/33_pending_update_claim_contract.md; APPROVED FOR HUMAN DECISION 0C/H/M, not adoption/implementation authority",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-085-TASK014-CLOSING",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "f3858c2bcbbacda8c9824cbb46b12bb6598d7d8f6d08c5e369d1fe3d3879a8fa",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/34_task014_draft_update_developer_completion.md",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -4184,6 +4354,19 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "docs/fulfillment_shipping_management/implementation/29_pending_create_claim_contract.md#actual-adoption--2026-10-23; actual direct Sam choice A in current chat"
+    },
+    {
+      "id": "HD-017",
+      "impact": "MAJOR",
+      "question": "Full DRAFT replace requires explicit pending-update desired-capacity owner variant A versus separate source-scope locking API B; unchanged original scope/NFR/timeouts/gates",
+      "affected_ids": [
+        "TASK-014",
+        "DES-002",
+        "DES-006",
+        "TC-003"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "docs/fulfillment_shipping_management/implementation/33_pending_update_claim_contract.md#actual-adoption; actual direct user selected A in current chat"
     }
   ],
   "external_actions": [
@@ -4725,7 +4908,9 @@
     "implementation/29_pending_create_claim_contract.md",
     "implementation/30_task012_queue_developer_completion.md",
     "implementation/31_hd016_pending_capacity_increment.md",
-    "implementation/32_task013_create_developer_completion.md"
+    "implementation/32_task013_create_developer_completion.md",
+    "implementation/33_pending_update_claim_contract.md",
+    "implementation/34_task014_draft_update_developer_completion.md"
   ],
   "defects": [
     {
@@ -4809,5 +4994,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Atomic commit reviewed TASK013, then finish TASK014 inquiry/list and inspect full-replace Claim identity contract before dependent update writes. Continue TASK014-023, original full checks/currentCI and final review before draft PR; no P1 merge."
+  "next_safe_action": "Commit frozen reviewed TASK014 contribution; obtain exact-source Sales owner HD017 review and narrow canonical handoff before TASK014 DONE. Read/implement TASK015 onward, full original checks/currentCI before draft PR; no P1 merge."
 }

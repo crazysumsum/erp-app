@@ -93,3 +93,33 @@ test("HD016 multiple distinct pending Reservations may all use null identities",
  const c=pendingCreateIntent();c.lines[0].baseQuantity="7";c.lines[0].reservations.push({claimId:null,inventoryReservationId:"42",expectedVersion:1,baseQuantity:"1"});
  assert.equal(normalizeSalesFulfillmentIntent(c).lines[0].reservations.length,2);
 });
+
+test("HD017 pending-update is a distinct null-only desired scope including removed zero lines",()=>{
+ const c={...pendingCreateIntent(),claimMode:"PENDING_UPDATE"},actual=normalizeSalesFulfillmentIntent(c);
+ assert.deepEqual(actual,c);assert.ok(Object.isFrozen(actual.lines[0].reservations[0]));assert.equal(actual.lines[1].baseQuantity,"0");
+ assert.notEqual(salesFulfillmentIntentHash(actual),salesFulfillmentIntentHash(normalizeSalesFulfillmentIntent(pendingCreateIntent())));
+});
+test("HD017 rejects persisted or mixed desired identity and never grants Shipment apply shape",()=>{
+ for(const change of [c=>c.lines[0].reservations[0].claimId="31",c=>delete c.lines[0].reservations[0].claimId,c=>c.extra=true,c=>c.claimMode="PENDING_OTHER"]){const c={...pendingCreateIntent(),claimMode:"PENDING_UPDATE"};change(c);mismatch(()=>normalizeSalesFulfillmentIntent(c));}
+ for(const c of [fixture(),reverseIntent()])mismatch(()=>normalizeSalesFulfillmentIntent({...c,claimMode:"PENDING_UPDATE"}));
+});
+test("HD017 pending-update rejects actual RR before authorization and permits only trusted RC to reach fresh actor",async()=>{
+ const c={...pendingCreateIntent(),claimMode:"PENDING_UPDATE"},rr=transactionFixture();
+ await rr.database.withTransaction(async tx=>{await assert.rejects(()=>rr.service.lockLinesForFulfillmentInTransaction(tx,c),{code:"SALES_FULFILLMENT_CONTRACT_MISMATCH"});});assert.deepEqual(rr.queries,[]);
+ const rc=transactionFixture();await rc.database.withTransaction(async tx=>{await assert.rejects(()=>rc.service.lockLinesForFulfillmentInTransaction(tx,c),error=>error.cause?.message==="fresh authentication boundary");},{isolationLevel:"READ COMMITTED"});assert.equal(rc.queries.length,1);
+});
+
+test("HD017 preserves the frozen HD016 pending-create golden hash",()=>{
+ assert.equal(salesFulfillmentIntentHash(normalizeSalesFulfillmentIntent(pendingCreateIntent())),"75f69ffa8c7d45d66feebf79636762e1a7f926e9d19f025868f99e8219fc88bb");
+});
+
+test("HD016 pending complete-source capacity never relaxes the selected command 5000-member limit",()=>{
+ const c=pendingCreateIntent();c.lines=[{salesOrderLineId:"2",expectedVersion:2,baseQuantity:"5000",reservations:Array.from({length:5000},(_,i)=>({claimId:null,inventoryReservationId:String(i+1),expectedVersion:1,baseQuantity:"1"}))}];
+ assert.equal(normalizeSalesFulfillmentIntent(c).lines[0].reservations.length,5000);c.lines[0].baseQuantity="5001";c.lines[0].reservations.push({claimId:null,inventoryReservationId:"5001",expectedVersion:1,baseQuantity:"1"});mismatch(()=>normalizeSalesFulfillmentIntent(c));
+});
+test("HD016 context substitution cannot give a cloned or completed RC executor pending-create authority",async()=>{
+ const f=transactionFixture();let actual;
+ const refused=async tx=>{f.context.update({databaseTransaction:tx});await assert.rejects(()=>f.service.lockLinesForFulfillmentInTransaction(tx,pendingCreateIntent()),{code:"SALES_FULFILLMENT_CONTRACT_MISMATCH"});};
+ await f.database.withTransaction(async tx=>{actual=tx;await refused({...tx});f.context.update({databaseTransaction:tx});},{isolationLevel:"READ COMMITTED"});
+ await refused(actual);assert.deepEqual(f.queries,[]);
+});

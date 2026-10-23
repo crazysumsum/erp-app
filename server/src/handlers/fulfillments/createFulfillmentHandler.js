@@ -8,5 +8,6 @@ export class CreateFulfillmentHandler extends BaseRequestHandler {
     super(services);
     this.fulfillments = new FulfillmentService({database:services.require("mysqldatabase"),time:services.require("time"),logger:this.logger});
   }
+  authorizeRequest() { return this.fulfillments.authorizeWrite(); }
   async execute(req) { return this.response(await this.fulfillments.create(fulfillmentCreateRequest(req)), {statusCode:201}); }
 }

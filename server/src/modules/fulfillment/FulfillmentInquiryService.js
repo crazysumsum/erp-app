@@ -1,3 +1,4 @@
+import { normalizeFulfillmentListQuery, encodeFulfillmentListCursor, fulfillmentListPageQuery } from "./fulfillmentListQuery.js";
 import { assertActorFresh } from "../authorization/directoryLookups.js";
 import { getActiveTransactionIsolation } from "../../services/mysqldatabase/MySqlDatabaseService.js";
 import { fulfillmentInteger } from "./fulfillmentValidation.js";
@@ -23,6 +24,16 @@ export class FulfillmentInquiryService {
     if(typeof claims?.sub!=="string"||!/^[1-9][0-9]*$/u.test(claims.sub)||!Number.isSafeInteger(Number(claims.sub)))throw fulfillmentError("FULFILLMENT_PERMISSION_DENIED");
     const actor=await assertActorFresh(tx,{actorId:Number(claims.sub),claimedRoles:claims.roles,claimedPermissions:claims.permissions});
     if(!actor.permissions.includes("fulfillment.view"))throw fulfillmentError("FULFILLMENT_PERMISSION_DENIED");return actor;
+  }
+  list(input={}) {
+    const query=normalizeFulfillmentListQuery(input);
+    if(this.database.context?.get()?.databaseTransaction)throw new TypeError("List requires a fresh read transaction");
+    return this.database.withTransaction(async tx=>{
+      const actor=await this.#actor(tx);
+      const [sourceOrders]=query.q?await tx.query("SELECT id FROM sales_orders WHERE sales_order_number=?",[query.q]):[[]];
+      const {sql,values}=fulfillmentListPageQuery(query,actor.id,sourceOrders.length?String(sourceOrders[0].id):null),[rows]=await tx.query(sql,values),page=rows.slice(0,query.pageSize),hasMore=rows.length>query.pageSize;
+      return {items:page.map(row=>({id:identifier(row.id),number:row.fulfillment_number,status:row.status,version:Number(row.version),salesOrderId:identifier(row.sales_order_id),salesOrderNumber:row.sales_order_number_snapshot,customer:{id:identifier(row.customer_id),code:row.customer_code_snapshot,name:row.customer_name_snapshot},warehouse:{id:identifier(row.warehouse_id),code:row.warehouse_code_snapshot,name:row.warehouse_name_snapshot},lineCount:Number(row.line_count),hasShortPick:Boolean(row.has_short_pick),createdAt:Number(row.created_at),updatedAt:Number(row.updated_at),pickedAt:row.picked_at===null?null:Number(row.picked_at),lastBusinessUpdatedAt:Number(row.last_business_updated_at)})),page:query.page,pageSize:query.pageSize,hasMore,nextCursor:hasMore?encodeFulfillmentListCursor(query,page.at(-1)):null};
+    },{isolationLevel:"REPEATABLE READ"});
   }
   detail(id, options = {}) {
     identifier(id);

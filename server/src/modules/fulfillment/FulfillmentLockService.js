@@ -3,7 +3,7 @@ import { normalizeSalesFulfillmentIntent } from "../sales/SalesFulfillmentServic
 import { requireFulfillmentActor } from "./fulfillmentAuthorization.js";
 import { fulfillmentInteger } from "./fulfillmentValidation.js";
 import { fulfillmentError } from "./fulfillmentErrors.js";
-import { assertFulfillmentQuantities } from "./fulfillmentQuantityMath.js";
+import { assertClaimQuantities, assertFulfillmentQuantities } from "./fulfillmentQuantityMath.js";
 const placeholders=ids=>ids.map(()=>"?").join(",");
 const conflict=()=>{throw fulfillmentError("RESERVATION_CLAIM_CONFLICT");};
 const id=value=>{fulfillmentInteger(value);return value;};
@@ -52,6 +52,15 @@ export class FulfillmentLockService {
     if(!input||Object.getPrototypeOf(input)!==Object.prototype||Object.keys(input).join(",")!=="salesIntent")throw new TypeError("Invalid pending Claim scope");
     const intent=normalizeSalesFulfillmentIntent(input.salesIntent);
     if(intent.purpose!=="CLAIM"||intent.claimMode!=="PENDING_CREATE"||intent.lines.some(line=>line.baseQuantity==="0"))throw new TypeError("Pending CREATE Claim required");
+    return this.#lockPendingCapacity(tx,intent,null);
+  }
+  async lockPendingUpdateCapacityInTransaction(tx,input){
+    if(!input||Object.getPrototypeOf(input)!==Object.prototype||Object.keys(input).sort().join(",")!=="expectedVersion,fulfillmentId,salesIntent"||!Number.isSafeInteger(input.expectedVersion)||input.expectedVersion<1||input.expectedVersion>4294967295)throw new TypeError("Invalid pending update scope");
+    const intent=normalizeSalesFulfillmentIntent(input.salesIntent),fulfillmentId=id(input.fulfillmentId);
+    if(intent.purpose!=="CLAIM"||intent.claimMode!=="PENDING_UPDATE")throw new TypeError("Pending UPDATE Claim required");
+    return this.#lockPendingCapacity(tx,intent,{fulfillmentId,expectedVersion:input.expectedVersion});
+  }
+  async #lockPendingCapacity(tx,intent,target){
     await requireFulfillmentActor(this.database,tx,"fulfillment.operation");
     const locked=await this.sales.lockLinesForFulfillmentInTransaction(tx,intent);
     if(locked?.replay!==false||!locked.order)conflict();
@@ -59,13 +68,37 @@ export class FulfillmentLockService {
     const [rootIds]=await tx.query("SELECT id FROM fulfillments WHERE sales_order_id=? ORDER BY id",[sales.orderId]);
     const roots=await lockIds(tx,"fulfillments",rootIds.map(row=>row.id)),rootKeys=roots.map(row=>String(row.id));
     const [lineIds]=rootKeys.length?await tx.query(`SELECT id FROM fulfillment_lines WHERE fulfillment_id IN (${placeholders(rootKeys)}) ORDER BY id`,rootKeys):[[]];
-    await lockIds(tx,"fulfillment_lines",lineIds.map(row=>row.id));
+    const persistedLines=await lockIds(tx,"fulfillment_lines",lineIds.map(row=>row.id));
     const [claimIds]=rootKeys.length?await tx.query(`SELECT id FROM fulfillment_line_reservation_claims WHERE fulfillment_id IN (${placeholders(rootKeys)}) ORDER BY id`,rootKeys):[[]];
     const claims=await lockIds(tx,"fulfillment_line_reservation_claims",claimIds.map(row=>row.id));
-    const active=new Map();
+    let targetRoot=null,ownLines=[],ownClaims=[];
+    if(target){
+      targetRoot=roots.find(root=>String(root.id)===target.fulfillmentId);
+      if(!targetRoot)throw fulfillmentError("FULFILLMENT_NOT_FOUND");
+      if(targetRoot.status!=="DRAFT")throw fulfillmentError("FULFILLMENT_STATE_CONFLICT");
+      if(Number(targetRoot.version)!==target.expectedVersion)throw fulfillmentError("VERSION_CONFLICT");
+      if(String(targetRoot.sales_order_id)!==sales.orderId||String(targetRoot.customer_id)!==sales.customer.id||String(targetRoot.warehouse_id)!==sales.warehouse.id)conflict();
+      ownLines=persistedLines.filter(line=>String(line.fulfillment_id)===target.fulfillmentId);
+      ownClaims=claims.filter(claim=>String(claim.fulfillment_id)===target.fulfillmentId);
+      if(ownLines.length!==Number(targetRoot.line_count)||ownLines.some(line=>!intent.lines.some(selected=>selected.salesOrderLineId===String(line.sales_order_line_id))))conflict();
+      if(intent.lines.some(selected=>selected.baseQuantity==="0"&&!ownLines.some(line=>String(line.sales_order_line_id)===selected.salesOrderLineId)))conflict();
+      assertFulfillmentQuantities("DRAFT",ownLines.map(line=>({planned:String(line.planned_base_quantity),allocated:String(line.allocated_base_quantity),released:"0",picked:String(line.picked_base_quantity),short:String(line.short_base_quantity),shipped:String(line.shipped_base_quantity),reversed:String(line.reversed_base_quantity)})));
+      const [[effects]]=await tx.query("SELECT EXISTS(SELECT 1 FROM fulfillment_allocations WHERE fulfillment_id=?) AS allocations,EXISTS(SELECT 1 FROM shipments WHERE fulfillment_id=?) AS shipments,EXISTS(SELECT 1 FROM fulfillment_status_history WHERE fulfillment_id=? AND action<>'CREATE') AS history",[target.fulfillmentId,target.fulfillmentId,target.fulfillmentId]);
+      if(Number(effects.allocations)||Number(effects.shipments)||Number(effects.history)||["allocated_at","picked_at","shipped_at","reversed_at","active_shipment_id"].some(key=>targetRoot[key]!==null))throw fulfillmentError("FULFILLMENT_STATE_CONFLICT");
+      for(const claim of ownClaims){
+        assertClaimQuantities({original:String(claim.original_claimed_quantity),active:String(claim.active_claimed_quantity),released:String(claim.released_quantity),consumed:String(claim.consumed_quantity),reversed:String(claim.reversed_quantity)});
+        if(claim.status!=="ACTIVE"||BigInt(claim.released_quantity)!==0n||BigInt(claim.consumed_quantity)!==0n||BigInt(claim.reversed_quantity)!==0n)conflict();
+      }
+      for(const line of ownLines){
+        const source=sales.lines.find(row=>row.lineId===String(line.sales_order_line_id));
+        if(!source||source.skuId!==String(line.sku_id)||source.baseUomId!==String(line.base_uom_id)||ownClaims.filter(claim=>String(claim.fulfillment_line_id)===String(line.id)).reduce((sum,claim)=>sum+BigInt(claim.active_claimed_quantity),0n)!==BigInt(line.planned_base_quantity))conflict();
+      }
+    }
+    const active=new Map(),ownActive=new Map();
     for(const claim of claims)if(claim.status==="ACTIVE"){
       const key=String(claim.inventory_reservation_id),quantity=fulfillmentInteger(String(claim.active_claimed_quantity));
       active.set(key,(active.get(key)??0n)+quantity);
+      if(target&&String(claim.fulfillment_id)===target.fulfillmentId)ownActive.set(key,(ownActive.get(key)??0n)+quantity);
     }
     if(sales.lines.length!==intent.lines.length)conflict();
     const candidates=[],seen=new Set();
@@ -99,18 +132,24 @@ export class FulfillmentLockService {
       const state=byReservation.get(mapping.inventoryReservationId);
       if(!state||state.originalQuantity!==mapping.originalBaseQuantity||state.consumedQuantity!==mapping.consumedBaseQuantity||state.releasedQuantity!==mapping.releasedBaseQuantity||state.outstandingQuantity!==mapping.outstandingBaseQuantity||state.originalSourceEventId!==mapping.sourceEventId||state.version<mapping.inventoryVersion||claimed>fulfillmentInteger(state.outstandingQuantity,{positive:false}))throw fulfillmentError("FULFILLABLE_QUANTITY_CHANGED");
     }
-    const lines=intent.lines.map(selected=>{
+    for(const claim of ownClaims){
+      const state=byReservation.get(String(claim.inventory_reservation_id));
+      if(!state||state.version<Number(claim.inventory_version))throw fulfillmentError("FULFILLABLE_QUANTITY_CHANGED");
+    }
+    // Read actual owner history after current Warehouse/Reservation locks; a missing local projection is not absence of effects.
+    if(target&&await this.inventoryLookup.hasFulfillmentAllocationHistoryInTransaction(tx,{fulfillmentId:target.fulfillmentId}))throw fulfillmentError("FULFILLMENT_STATE_CONFLICT");
+    const lines=intent.lines.filter(selected=>selected.baseQuantity!=="0").map(selected=>{
       const source=sales.lines.find(line=>line.lineId===selected.salesOrderLineId);let remaining=fulfillmentInteger(selected.baseQuantity);
       const allocated=[];
       for(const {mapping,claimed} of candidates.filter(member=>member.line.lineId===source.lineId).sort((a,b)=>BigInt(a.mapping.salesReservationMappingId)<BigInt(b.mapping.salesReservationMappingId)?-1:1)){
-        const state=byReservation.get(mapping.inventoryReservationId),free=BigInt(state.outstandingQuantity)-claimed,quantity=free<remaining?free:remaining;
+        const state=byReservation.get(mapping.inventoryReservationId),others=claimed-(ownActive.get(mapping.inventoryReservationId)??0n),free=BigInt(state.outstandingQuantity)-others,quantity=free<remaining?free:remaining;
         if(quantity>0n){allocated.push(Object.freeze({salesReservationMappingId:mapping.salesReservationMappingId,inventoryReservationId:mapping.inventoryReservationId,inventoryVersion:state.version,baseQuantity:quantity.toString()}));remaining-=quantity;}
         if(remaining===0n)break;
       }
       if(remaining!==0n||allocated.length>50)throw fulfillmentError("RESERVATION_CLAIM_CONFLICT");
       return Object.freeze({salesOrderLineId:source.lineId,baseQuantity:selected.baseQuantity,claims:Object.freeze(allocated)});
     });
-    return Object.freeze({sales,profiles,lines:Object.freeze(lines)});
+    return Object.freeze({sales,profiles,lines:Object.freeze(lines),...(target?{fulfillmentId:target.fulfillmentId,version:target.expectedVersion,number:targetRoot.fulfillment_number,notes:targetRoot.notes,previousLineCount:ownLines.length,previousClaimCount:ownClaims.length}:{})});
   }
   // Returns validated owner DTOs under held roots. DRAFT callers persist exactly these requested quantities in the same transaction.
   // No Inventory allocation/post method may follow this CLAIM-only read; stock commands use their own full-set owner lock path.
