@@ -1,6 +1,6 @@
 import { DOMWrapper, flushPromises, mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
-import { Quasar } from "quasar";
+import { QSelect, Quasar } from "quasar";
 import { RouterView, createMemoryHistory, createRouter } from "vue-router";
 import { h } from "vue";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -77,6 +77,18 @@ describe("Supplier general editor", () => {
     }));
     expect(supplierService.update.mock.calls[0][1]).not.toHaveProperty("supplierCode");
     expect(body.text()).toContain("版本 3");
+  });
+
+  it("offers the Active currencies and payment terms from the Supplier lookups, not Business Master (DEF-036)", async () => {
+    const { body } = await mountPage();
+    await body.findAll("button").find((button) => button.text().includes("編輯一般資料")).trigger("click");
+    await flushPromises();
+    expect(supplierService.currencyOptions).toHaveBeenCalled();
+    expect(supplierService.paymentTermOptions).toHaveBeenCalled();
+    const options = (label) => currentWrapper.findAllComponents(QSelect).find((select) => select.props("label") === label)
+      .props("options").map(({ label: text, value }) => ({ text, value }));
+    expect(options("Default Currency *")).toEqual([{ text: "HKD — Hong Kong Dollar", value: "HKD" }, { text: "USD — US Dollar", value: "USD" }]);
+    expect(options("預設付款條件（選填）")).toEqual([{ text: "NET30 — Net 30", value: 9 }]);
   });
 
   it("TC-123 (UI-003): keeps the user's draft visible when a stale update reloads the latest Supplier", async () => {

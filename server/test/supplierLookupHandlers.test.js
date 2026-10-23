@@ -235,3 +235,21 @@ test("a Business Master that is not ready is a 503, never an empty list of optio
     assert.deepEqual(calls, ["ready"]);
   }
 });
+
+test("the option lookups are wired to the real Business Master readiness check: without HKD nothing is listed (REV-114 L-1)", async () => {
+  for (const HandlerClass of [ListSupplierCurrencyOptionsHandler, ListSupplierPaymentTermOptionsHandler]) {
+    const statements = [];
+    const database = {
+      async query(sql) {
+        statements.push(sql);
+        if (sql.includes("information_schema")) return [[{ table_name: "business_master_audit_logs" }, { table_name: "currencies" }, { table_name: "payment_terms" }]];
+        if (sql.includes("permissions")) return [[{ name: "business_master.mgmt" }, { name: "business_master.view" }]];
+        if (sql.includes("COUNT")) return [[{ total: 0 }]];
+        return [[]];
+      }
+    };
+    const handler = new HandlerClass({ require: () => database });
+    await assert.rejects(handler.execute(), { statusCode: 503, publicCode: "BUSINESS_MASTER_NOT_READY" });
+    assert.equal(statements.some((sql) => /SELECT (code, name, decimal_places|id, code, name, description)/u.test(sql)), false, "no option list was read");
+  }
+});
