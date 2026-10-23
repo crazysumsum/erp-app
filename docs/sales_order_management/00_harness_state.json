@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1309,
+  "revision": 1311,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "64b0e1d51fe2a5163e8e33c93277e0a7d3464abff52684a0b57b6c636821622a",
     "plan": "ec0fae970beca595f863eed95f752984c424ae0080342f99a70fc281880e30a6",
-    "code_commit": "43b7d86899cf9a4afd7eaa2643b38655efbebebf",
-    "source_fingerprint": "e192e62d434acbd3ca5aa2198dd20331957e5e81f4a4571812242affb9a049a3",
+    "code_commit": "6f49aa6a98f9a73127195fc68c446d21fde6a54f",
+    "source_fingerprint": "2da52b3625c0f24646be6ddb3642e4f81285fdc0bb64d990a57a4e80f56c38f7",
     "worktree": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app",
     "default_commit": "e272f5d3ce05d0ca50be42e6d8764f0ef20d3dd1",
     "mode_entry_commit": "e272f5d3ce05d0ca50be42e6d8764f0ef20d3dd1"
@@ -11783,6 +11783,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-P4-ARCHIVE-READINESS-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "2da52b3625c0f24646be6ddb3642e4f81285fdc0bb64d990a57a4e80f56c38f7",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-archive-readiness-r1-source-reviewer-proof.json SHA256a82b42d0dec074fed9c94bfe2f6033d39a11888c4acc862f0b09c5bd98527d55; exact module693e85f8/test2a5d80a9; actual17native8b07832d source/read-only status only. No business/privateauthority/Task/Phase/Gate qualification.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -15547,6 +15559,17 @@
       "subject": "Sales root/complete-line/mapping lock component final14 and originalcaller29 developerPASS; DEF020 narrow independentclosure",
       "status": "PASS",
       "source_ref": "proofbb5fb460/nativef0c3d77e/additional9c1b7ce2/scopedlint0; undercount/discovery errors and original8/RED preserved. Complete freshTX/privatejob/participant/Archive/fullP4CI/Gate stillpending."
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "6f49aa6a98f9a73127195fc68c446d21fde6a54f",
+      "spec_baseline": "ec0fae970beca595f863eed95f752984c424ae0080342f99a70fc281880e30a6",
+      "source_fingerprint": "2da52b3625c0f24646be6ddb3642e4f81285fdc0bb64d990a57a4e80f56c38f7",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-23T04:43:03.054159Z",
+      "subject": "Read-only formal Archive schema/version readiness17 nativePASS0FAIL0SKIP with separate source review",
+      "status": "PASS",
+      "source_ref": "p4-archive-readiness-native-r1.log SHA2568b07832d340c3f64fabf64b88162e7723ae890df2232b4c5e3baf1bcf440db11; actual genuine missingmoduleREDe1aa234f old7 prefix remains; lint0. Published P0 migrations unchanged. Component only; all fullP4 gates pending."
     }
   ],
   "pending_decisions": [
@@ -18648,8 +18671,16 @@
       "kind": "GIT_COMMIT",
       "target": "local-only Sales Archive domain lock component and DEF020 narrow fix",
       "idempotency_key": "p4-sales-domain-def020-20261023",
+      "status": "CONFIRMED",
+      "source_ref": "exact separateproofbb5fb460, native14+originalcaller29/scopedlint0; all fullP4 obligations pending. No push/PR/mainmerge.; actual localcommit6f49aa6a98f9a73127195fc68c446d21fde6a54f sourcee192e62d434acbd3ca5aa2198dd20331957e5e81f4a4571812242affb9a049a3 observed. No currentP4CI/PR/mainmerge."
+    },
+    {
+      "id": "ACT-P4-ARCHIVE-READINESS-COMMIT-20261023",
+      "kind": "GIT_COMMIT",
+      "target": "local-only immutable formal Archive readiness metadata probe and10 appended schema cases",
+      "idempotency_key": "p4-archive-readiness17-20261023",
       "status": "STARTED",
-      "source_ref": "exact separateproofbb5fb460, native14+originalcaller29/scopedlint0; all fullP4 obligations pending. No push/PR/mainmerge."
+      "source_ref": "Separateproofa82b42d0, actual17nativePASS0skip/scopedlint0. No originalmigration rewrite, provideractivation, push/PR/mainmerge."
     }
   ],
   "evidence_files": [
@@ -19750,5 +19781,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Commit exact approved Sales domain-lock component; implement the real fixed Archive coordinator/private live-tx scope plus owner provider/participant and single-order atomic copy/readback/routing/delete, then unchanged whole P4 developer/browser/performance/restore/currentCI/review/merge Gates. No human decision pending."
+  "next_safe_action": "Commit reviewed read-only readiness; implement real owner business state/participant plus fixed Sales coordinator and private live transaction scope, then original wholeP4 developer/Playwright/capacity/restore/currentCI/review/merge Gates. No further user decision currently needed."
 }
