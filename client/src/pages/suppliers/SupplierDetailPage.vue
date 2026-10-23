@@ -12,6 +12,7 @@ import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from "vue-router";
 import PageHeader from "@/framework/layout/PageHeader.vue";
 import SupplierAddressPanel from "@/components/suppliers/SupplierAddressPanel.vue";
+import SupplierAuditTimeline from "@/components/suppliers/SupplierAuditTimeline.vue";
 import SupplierBankPanel from "@/components/suppliers/SupplierBankPanel.vue";
 import SupplierCompletenessBanner from "@/components/suppliers/SupplierCompletenessBanner.vue";
 import SupplierContactPanel from "@/components/suppliers/SupplierContactPanel.vue";
@@ -361,6 +362,7 @@ function childCount(rows) {
           -->
           <q-tab name="bank" label="銀行資料" />
           <q-tab name="skuRelations" label="供貨關係" />
+          <q-tab name="audit" label="變更紀錄" />
         </q-tabs>
 
         <!-- 轉 tab 唔好丟咗「載入更多」載入咗嘅地址／聯絡人（REV-095 L-2）；其他 panel 照舊每次重新掛載。 -->
@@ -454,6 +456,10 @@ function childCount(rows) {
             <SupplierSkuRelationsPanel
               :supplier-id="supplier.id" :supplier-code="supplier.supplierCode" :supplier-status="supplier.status" :can-manage="canManage"
             />
+          </q-tab-panel>
+          <!-- 呢個 Supplier 嘅變更紀錄（設計 §7.2 Audit tab；DEF-035）。 -->
+          <q-tab-panel name="audit">
+            <SupplierAuditTimeline :supplier-id="supplier.id" />
           </q-tab-panel>
         </q-tab-panels>
       </template>
