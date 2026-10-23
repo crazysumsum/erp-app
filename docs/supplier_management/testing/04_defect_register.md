@@ -178,6 +178,28 @@ Found during the DEF-035 real-backend check. The Supplier create and edit forms 
   - Client unit tests for the service and the edit-form options.
   - A real-backend browser check: a CLERK created a Draft Supplier in HKD through the UI, with no call to `/api/v1/business-master/*`.
 
+## DEF-037 — MEDIUM
+
+Found while writing the UAT PHASE-001 browser tests (HD-124 A). FR-PARTY-001 (Must) says addresses and contacts can be added, edited, deactivated **and ordered**, and UAT-048 asks the user to change the order and see it saved. Design §5.5 and §5.6 have no ordering column, and neither the server nor the UI can order them: lists are sorted by status, name and id. The requirement reached neither the design nor the plan.
+
+- **Effect:** UAT-048 fails at its ordering step. Every other step of UAT-048 passes.
+- **Decision:** HD-129 A, fix it. This adds a `sort_order` column to `supplier_addresses` and `supplier_contacts`, an API to change the order, and move-up and move-down controls in the UI. The migration needs its own explanation and approval before it is written. The design text changes too, which moves the design baseline.
+
+## DEF-038 — MEDIUM
+
+Found by UAT-031. The Supplier detail shows the default payment term as its internal ID (for example 「付款條件 2」), whether or not the term is Active, because the page prints `defaultPaymentTermId`. The edit form shows the same ID when the Supplier's term has since been deactivated, because the Active-only options cannot label it. UAT-031 expects an old inactive value to stay readable. Currencies are not affected, because their code is the identifier.
+
+- **Effect:** UAT-031 fails at its last step. Every step before it passes, including the check that Supplier Settings has no catalogue write controls.
+- **Decision:** HD-130 A. The Supplier detail response gains `defaultPaymentTerm { id, code, name, status }`, read through the provider's history so an Inactive term is included. The UI shows 「code — name」 and marks an inactive term. The response only gains a field, so existing callers are not affected.
+
+## DEF-039 — LOW
+
+Found by REV-115 (M-2) on UAT-003. AC-003 says 「允許使用者確認合理原因後繼續」, and UAT-003 asks the user to 「確認原因」 and lists Audit as evidence. The create page offers only 「確認並繼續」, with no reason. The create Audit records neither that a duplicate warning was shown nor which candidates were overridden. Design §4 never had a reason either: the requirement did not reach the design, the same pattern as DEF-037.
+
+- **Wording is ambiguous:** AC-003 can also mean "the user confirms there is a valid reason", which the current button does.
+- **Effect:** UAT-003 now fails at its Audit step. Every earlier step passes.
+- **Decision required (HD-132):** the Product Owner interprets AC-003, or asks for a reason field and an Audit record.
+
 ## HD-116 A: dispositions (2026-10-21)
 
 Fixed in this change:
