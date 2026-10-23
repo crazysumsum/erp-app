@@ -2616,3 +2616,82 @@ New runs use the generic runner's actual private `evidence/<run-id>` paths, nati
 Only after actual human adoption and scoped implementation authority: preserve the dirty P3 work in a local savepoint, integrate freshly checked main in the dedicated worktree, apply only the reviewed resolutions/rebinding, run the new-baseline developer cycle, then commit/push and open the single P3 PR under publication authority. A preparatory savepoint is not a verified publication candidate. Classify exportable evidence and exclude secrets/raw credential captures before staging.
 
 The exact final candidate needs all five mandatory CI checks and independent Sam source review, plus generic MERGE_READY and an unchanged/reconciled main target. Candidate or target changes invalidate dependent evidence/review; do not infer final-head approval from adoption of this proposal. Final merge requires separate exact-head Sam approval. Clean the owned runtime, merged branch and worktree only after observable successful merge and dependency checks. No P4 implementation, formal Technical/UAT/business acceptance or deployment is included.
+
+# Purchasing provider independent delivery — PROPOSED
+
+本增量不關閉TASK041／TASK048／P4／P5；詳細案例與範圍見 [provider plan](implementation/purchase-provider-plan-v1.md)。
+詳細計劃內容 SHA256：`d7106522cba405482c9e93bd662b196f7bd36e594220f7b72825255111978b8d`；此pin將案例與精確執行說明綁定本PLAN，不能只改addendum而沿用批准。
+
+## PHASE-007 — Purchasing receipt
+
+### Outcome
+交付provider v1的receipt，保持caller原子交易。
+
+### Entry criteria
+精確DESIGN／PLAN獲Sam批准；以最新main建立獨立worktree。
+
+### Acceptance criteria
+[詳細計劃](implementation/purchase-provider-plan-v1.md)中TASK-052全部必需案例實際通過、零skip；原資料量／期限／最低權限不放寬。
+
+### Integration and regression
+08_traceability.json的本phase developer_suites、當前CI及相關transaction／rollback／200行回歸必需；P4未合併能力聯合驗證另追蹤，不以fixture偽稱完成。
+
+### Git and merge plan
+DEFAULT分支，PR-A；Sam精確來源審閱、實際獨立review、當前CI及最新main整合檢查通過後，依既有授權合併並精確清理已合併branch/worktree。
+
+### Rollback
+關閉新consumer寫入，保留持久Operation／Movement／Audit及原結果查詢；不drop歷史資料或fallback generic。
+
+### Exit criteria
+實際merge SHA、ABI／migration／證據交接。未有consumer真實接入測試前不宣稱Purchasing已解鎖；不等於正式TC/UAT或部署。
+
+## TASK-052 — Purchasing receipt implementation
+
+### Goal
+實作provider v1精確範圍，不引入P4依賴。
+
+### Approach
+確定性TDD→最小真MySQL／auth→完整200行／並發→最終gate；每次先記影響與重驗理由。
+
+### Acceptance criteria
+[詳細計劃](implementation/purchase-provider-plan-v1.md)的TASK-052條件及profile精確suite全部成立，任何缺證保留NOT_RUN／FAIL。
+
+### Definition of Done
+實際來源審閱、專用測試零skip、原coverage／CI／回歸通過、合併與consumer交接可追溯。正式TC/UAT另行執行。
+
+## PHASE-008 — Purchasing partial reversal
+
+### Outcome
+交付provider v1的partial reversal，保持caller原子交易。
+
+### Entry criteria
+精確DESIGN／PLAN獲Sam批准；PHASE007已合併，再從最新main建立獨立worktree。
+
+### Acceptance criteria
+[詳細計劃](implementation/purchase-provider-plan-v1.md)中TASK-053全部必需案例實際通過、零skip；原資料量／期限／最低權限不放寬。
+
+### Integration and regression
+08_traceability.json的本phase developer_suites、當前CI及相關transaction／rollback／200行回歸必需；P4未合併能力聯合驗證另追蹤，不以fixture偽稱完成。
+
+### Git and merge plan
+DEFAULT分支，PR-B依賴已合併A；Sam精確來源審閱、實際獨立review、當前CI及最新main整合檢查通過後，依既有授權合併並精確清理已合併branch/worktree。
+
+### Rollback
+關閉新consumer寫入，保留持久Operation／Movement／Audit／links及原結果查詢；不drop歷史資料或fallback generic。
+
+### Exit criteria
+實際merge SHA、ABI／migration／證據交接。未有consumer真實接入測試前不宣稱Purchasing已解鎖；不等於正式TC/UAT或部署。
+
+## TASK-053 — Purchasing partial reversal implementation
+
+### Goal
+實作provider v1精確範圍，不引入P4依賴。
+
+### Approach
+確定性TDD→最小真MySQL／auth→完整200行／並發→最終gate；每次先記影響與重驗理由。
+
+### Acceptance criteria
+[詳細計劃](implementation/purchase-provider-plan-v1.md)的TASK-053條件及profile精確suite全部成立，任何缺證保留NOT_RUN／FAIL。
+
+### Definition of Done
+實際來源審閱、專用測試零skip、原coverage／CI／回歸通過、合併與consumer交接可追溯。正式TC/UAT另行執行。
