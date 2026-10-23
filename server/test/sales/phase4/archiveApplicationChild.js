@@ -19,6 +19,16 @@ try{
  const inventory={};for(const table of ["inventory_reservations","inventory_stock_balances","inventory_movements"])inventory[table]=(await database.query(`SELECT * FROM ${table} ORDER BY id`))[0];
  await context.storage.run({databaseTransaction:null,auth:null,signal:null},()=>database.withTransaction(async tx=>{await tx.query("SELECT id FROM sales_orders WHERE id=?",[orderId]);assert.equal(await jobs.authorizeArchiveInTransaction(tx,command),false);assert.deepEqual(await owner.getOrderArchiveStatusInTransaction(tx,{orderId,atMs:Date.now()}),{version:"1",status:"UNKNOWN",reasonCodes:["PROVIDER_UNAVAILABLE"]});}));
  let faulted=false;
+ if(mode==="OWNER_DISCOVERY_UNAVAILABLE"){
+  const query=database.query.bind(database);database.query=async(sql,...args)=>{
+   if(!faulted&&typeof sql==="string"&&sql.startsWith("SELECT id FROM fulfillments FORCE INDEX")){
+    faulted=true;
+    // Real native schema-unavailable error in this owned schema only; no shared table is dropped.
+    return query("SELECT id FROM synthetic_absent_archive_owner_discovery");
+   }
+   return query(sql,...args);
+  };
+ }
  if(["RETRY_FAILED","LEASE_REVOKED","SIGNAL_REVOKED"].includes(mode)){
   const acquire=database.pool.getConnection.bind(database.pool),seen=new WeakSet();database.pool.getConnection=async()=>{const connection=await acquire();if(!seen.has(connection)){seen.add(connection);const execute=connection.execute.bind(connection);connection.execute=async(sql,...args)=>{if(!faulted&&(typeof sql==="string"?sql:sql.sql).startsWith("INSERT INTO sales_archive_order_manifests")){faulted=true;if(mode==="RETRY_FAILED")throw Object.assign(new Error("Synthetic late Sales manifest failure"),{code:"ER_SIGNAL_EXCEPTION"});if(mode==="LEASE_REVOKED")await execute("UPDATE fr_job_leases SET expires_at=0 WHERE job_name='sales.archive'");if(mode==="SIGNAL_REVOKED")scheduler.running.get("sales.archive").controller.abort(new Error("Synthetic Archive job cancelled"));}return execute(sql,...args);};}return connection;};
  }
@@ -54,6 +64,16 @@ try{
   await scheduler.execute(scheduler.jobs.get("sales.archive"));assert.equal(scheduler.stats.get("sales.archive").lastOutcome,"failed");for(const table of tables)assert.equal(Number((await database.query(`SELECT COUNT(*) AS n FROM ${table}`))[0][0].n),before[table],table);assert.equal(Number((await database.query("SELECT COUNT(*) AS n FROM sales_archive_order_manifests"))[0][0].n),0);assert.equal(Number((await database.query("SELECT candidate_count FROM sales_archive_batches WHERE id=?",[String(batch.id)]))[0][0].candidate_count),0);process.stdout.write("P4 actual valid omitted override denies Archive admission; Inventory preservation PASS\n");
  }else{
  const job=scheduler.jobs.get("sales.archive");assert.equal(job.serviceName,"job.salesArchive");assert.equal(job.enabled,true);await scheduler.execute(job);
+ if(mode==="OWNER_DISCOVERY_UNAVAILABLE"){
+  assert.equal(faulted,true,"Actual owner discovery query must fail on native MySQL");
+  const [[pending]]=await database.query("SELECT * FROM sales_archive_batches WHERE id=?",[String(batch.id)]);
+  assert.equal(pending.status,"PARTIAL");assert.equal(Number(pending.candidate_count),1);assert.equal(Number(pending.skipped_count),1);assert.equal(Number(pending.failed_count),0);assert.equal(Number(pending.archived_count),0);
+  assert.equal(pending.checksum_summary.pending.length,1);assert.equal(pending.checksum_summary.pending[0].code,"OPEN_MATTER_UNKNOWN");assert.equal(pending.checksum_summary.pending[0].candidate.id,orderId);
+  for(const table of tables){assert.equal(Number((await database.query(`SELECT COUNT(*) AS n FROM ${table}`))[0][0].n),before[table],table);assert.equal(Number((await database.query(`SELECT COUNT(*) AS n FROM ${table}_archive`))[0][0].n),0,table);}
+  assert.equal(Number((await database.query("SELECT COUNT(*) AS n FROM sales_archive_order_manifests"))[0][0].n),0);
+  for(const [table,rows]of Object.entries(inventory))assert.deepEqual((await database.query(`SELECT * FROM ${table} ORDER BY id`))[0],rows,table);
+  await scheduler.execute(job);
+ }
  if(["RETRY_FAILED","LEASE_REVOKED","SIGNAL_REVOKED"].includes(mode)){
   assert.equal(faulted,true);assert.notEqual(scheduler.stats.get(job.name).lastOutcome,"succeeded");for(const table of tables){assert.equal(Number((await database.query(`SELECT COUNT(*) AS n FROM ${table}`))[0][0].n),before[table],table);assert.equal(Number((await database.query(`SELECT COUNT(*) AS n FROM ${table}_archive`))[0][0].n),0,table);}assert.equal(Number((await database.query("SELECT COUNT(*) AS n FROM sales_archive_order_manifests"))[0][0].n),0);
   const [[failed]]=await database.query("SELECT * FROM sales_archive_batches WHERE id=?",[String(batch.id)]);assert.equal(Number(failed.archived_count),0);
@@ -85,7 +105,7 @@ try{
   assert.equal((await http("/api/v1/archived-sales-orders")).status,400);assert.equal((await http("/api/v1/archived-sales-orders?orderDateFrom=2020-01-01&orderDateTo=2025-01-01")).status,400);assert.equal((await http(`/api/v1/archived-sales-orders/${orderId}/audit?targetType=QUOTATION`)).status,400);assert.equal((await http(`/api/v1/archived-sales-orders/${orderId}`,{method:"POST"})).status,401);assert.equal((await http(`/api/v1/archived-sales-orders/${orderId}`,{authenticated:false})).status,401);
   const [[permission]]=await database.query("SELECT id FROM permissions WHERE name='sales.view'");await database.execute("DELETE rp FROM role_permissions rp JOIN user_roles ur ON ur.role_id=rp.role_id WHERE ur.user_id=? AND rp.permission_id=?",[Number(process.env.ARCHIVE_TEST_ACTOR_ID),permission.id]);assert.equal((await http("/api/v1/archived-sales-orders?number="+encodeURIComponent(header.sales_order_number))).status,403);
  }
- const [[done]]=await database.query("SELECT * FROM sales_archive_batches WHERE id=?",[String(batch.id)]);assert.equal(done.status,"COMPLETED");assert.equal(Number(done.candidate_count),1);assert.equal(Number(done.archived_count),1);assert.equal(Number(done.failed_count),0);assert.equal(done.lease_owner,null);assert.equal(done.checksum_summary.pending.length,0);assert.equal(done.checksum_summary.amountTotal,"10000");assert.equal(Number((await database.query("SELECT COUNT(*) AS n FROM sales_archive_order_manifests"))[0][0].n),1);
+ const [[done]]=await database.query("SELECT * FROM sales_archive_batches WHERE id=?",[String(batch.id)]);assert.equal(done.status,"COMPLETED");assert.equal(Number(done.candidate_count),1);assert.equal(Number(done.archived_count),1);assert.equal(Number(done.failed_count),0);assert.equal(Number(done.skipped_count),0);assert.equal(done.lease_owner,null);assert.equal(done.checksum_summary.pending.length,0);assert.equal(done.checksum_summary.amountTotal,"10000");assert.equal(Number((await database.query("SELECT COUNT(*) AS n FROM sales_archive_order_manifests"))[0][0].n),1);
  for(const [table,rows]of Object.entries(inventory))assert.deepEqual((await database.query(`SELECT * FROM ${table} ORDER BY id`))[0],rows,table);
  await scheduler.execute(job);assert.equal(Number((await database.query("SELECT archived_count FROM sales_archive_batches WHERE id=?",[String(batch.id)]))[0][0].archived_count),1);assert.equal(await jobs.authorizeArchiveInTransaction({},command),false);assert.equal(scheduler.running.size,0);
  if(historical!==null){for(const table of tables)assert.equal(Number((await database.query(`SELECT COUNT(*) AS n FROM ${table}_archive WHERE archived_at<>?`,[historical]))[0][0].n),0,table);for(const [table,rows]of Object.entries(existing)){const [actual]=await database.query(`SELECT * FROM ${table}_archive ORDER BY id`);for(const row of rows)assert.deepEqual(actual.find(r=>String(r.id)===String(row.id)),row,table);}}

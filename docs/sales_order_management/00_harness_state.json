@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1340,
+  "revision": 1342,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "b302bb83c8f90d5c6c041763b5c33148c7d3bd40ef4800ba687cf23b99a56555",
     "plan": "cbb4cbf16d7bd189a35d9031b9db6b9bfba050a967afef50fd58be35ba947ecb",
-    "code_commit": "4cd8b9dca3fdaba56090e451819b7b1e733e3ef5",
-    "source_fingerprint": "735af853cc84e15e2451e0fb9a1b46c2dda8678cbc0e11061f900e8bdc2d1dab",
+    "code_commit": "552f90d9a19c5c5a29226e2778a76b89db57ad70",
+    "source_fingerprint": "6f8650992a7bd52de31b3dc4442eebc4d0af782c0698917bad8cdba3a4d588ca",
     "worktree": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app",
     "default_commit": "58322ba3d5b77aa1a6250be4b5055651c682a371",
     "mode_entry_commit": "e272f5d3ce05d0ca50be42e6d8764f0ef20d3dd1"
@@ -12336,6 +12336,30 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-P4-OWNER-DISCOVERY-UNAVAILABLE-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "87a929ab9925b2aeda6065042c06107c3c6b578a761f711ce690c922fd7eac3c",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-owner-discovery-unavailable-r2-closing-reviewer-proof.json",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P4-OWNER-DISCOVERY-VALIDATION-ADDENDUM",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "d1316012e9761245c7c0662c675679ed3d5e2c14eaee3a6f4c7ebfd31a64e56c",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-owner-discovery-r2-validation-addendum.json",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -16265,6 +16289,17 @@
       "subject": "Standard complete browser26 and native Node49/JUnit47 developer verification; no memory or wholePhase Gate approval",
       "status": "PASS",
       "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/134_standard_phase4_suite_runtime_and_browser_wiring.md"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "552f90d9a19c5c5a29226e2778a76b89db57ad70",
+      "spec_baseline": "cbb4cbf16d7bd189a35d9031b9db6b9bfba050a967afef50fd58be35ba947ecb",
+      "source_fingerprint": "6f8650992a7bd52de31b3dc4442eebc4d0af782c0698917bad8cdba3a4d588ca",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-23T09:40:34.817576Z",
+      "subject": "Native required owner discovery UNKNOWN skip and real retry correction; scoped regressions only",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/135_archive_owner_discovery_unavailable_correction.md"
     }
   ],
   "pending_decisions": [
@@ -19470,8 +19505,16 @@
       "kind": "GIT_COMMIT",
       "target": "local-only reviewed standard P4 test wiring",
       "idempotency_key": "p4-standard-suite-wiring-20261023",
+      "status": "CONFIRMED",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/134_standard_phase4_suite_runtime_and_browser_wiring.md; FP735af853cc84e15e2451e0fb9a1b46c2dda8678cbc0e11061f900e8bdc2d1dab; no push/PR/mainmerge Observed local commit 552f90d9a19c5c5a29226e2778a76b89db57ad70"
+    },
+    {
+      "id": "ACT-P4-OWNER-DISCOVERY-COMMIT-20261023",
+      "kind": "GIT_COMMIT",
+      "target": "local-only reviewed Archive unavailable-owner correction",
+      "idempotency_key": "p4-owner-discovery-20261023",
       "status": "STARTED",
-      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/134_standard_phase4_suite_runtime_and_browser_wiring.md; FP735af853cc84e15e2451e0fb9a1b46c2dda8678cbc0e11061f900e8bdc2d1dab; no push/PR/mainmerge"
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/135_archive_owner_discovery_unavailable_correction.md; FP6f8650992a7bd52de31b3dc4442eebc4d0af782c0698917bad8cdba3a4d588ca; no push/PR/mainmerge"
     }
   ],
   "evidence_files": [
@@ -20743,7 +20786,22 @@
         "ActualmissingCSVlinkRED d4de6636; final7browser/98server/66client/build/lint/boundary; separate actual1browser and scopedproof7c5e5268. Not wholeTC050/Phase."
       ],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-032",
+      "severity": "MEDIUM",
+      "status": "CLOSED",
+      "source_ids": [
+        "TASK-057",
+        "TASK-058",
+        "TC-047"
+      ],
+      "closure_evidence": [
+        "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/135_archive_owner_discovery_unavailable_correction.md",
+        "ActualnativeRED8ac077e0; firstfixFAIL9f3287dc; green1/full22/server98/browser26; separatefocused1 and scopedproof87a929ab. Not fullTC047/Phase."
+      ],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Commit reviewed standard-suite wiring; reproduce owner discovery unavailable behavior against TC047 UNKNOWN skip contract; preserve all outstanding fullPhase evidence, memory/capacity/recovery/restore/33checks/currentCI/wholephase review before authorized main merge."
+  "next_safe_action": "Finish current full-native GC/warning diagnostic, commit reviewed owner discovery correction, integrate latest main shared Inventory changes and regress actual Sales/Fulfillment consumers; continue fullP4 eligibility/recovery/source/reconciliation/observability/capacity/restore/33checks/currentCI/wholephase review and unchanged merge Gate before authorized main merge."
 }

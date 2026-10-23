@@ -48,8 +48,11 @@ export class SalesArchiveBatchService{
   const [updated]=await tx.execute("UPDATE sales_archive_batches SET candidate_count=candidate_count+?,archived_count=archived_count+?,skipped_count=skipped_count+?,failed_count=failed_count+?,last_scanned_order_id=?,checksum_summary=?,updated_at=? WHERE id=? AND lease_owner=?",[delta.candidate,delta.archived,delta.skipped,delta.failed,s.cursor?.id??"0",JSON.stringify(s),batch.nowMs,String(batch.row.id),batch.row.lease_owner]);if(Number(updated.affectedRows)!==1)fail("SALES_ARCHIVE_FORBIDDEN");
  }
  async #order(id,token,candidate,signal,{reconcile=false}={}){
-  const hints=await this.ownerLocks.discoverOrder(candidate.id),routing=await this.salesLocks.discoverOrderRouting(candidate.id);
-  try{return await this.#transaction(signal,async tx=>{
+  try{
+   let hints;
+   try{hints=await this.ownerLocks.discoverOrder(candidate.id);}catch{fail("OPEN_MATTER_UNKNOWN");}
+   const routing=await this.salesLocks.discoverOrderRouting(candidate.id);
+   return await this.#transaction(signal,async tx=>{
    const batch=await this.#batch(tx,id,token,signal),owner=await this.ownerLocks.lockOrderOperationsInTransaction(tx,candidate.id),sales=await this.salesLocks.lockOrderOperationsInTransaction(tx,{orderId:candidate.id,shipmentIds:hints.shipments.map(s=>s.id)});
    if(owner.hasInProgress||sales.hasInProgress)fail("OPERATION_IN_PROGRESS");
    await this.salesLocks.lockOrderRoutingInTransaction(tx,routing);
