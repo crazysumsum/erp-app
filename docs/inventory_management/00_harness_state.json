@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 1879,
+  "revision": 1892,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -10,9 +10,9 @@
   "current_task": "TASK-052",
   "baseline": {
     "design": "7f09c816390b1d129bdb905566121b2000d04efca9c72e030f7772b1f1e10ded",
-    "plan": "ceb152c51c6a9cc4528d6ac8ef707902cdca7bd9c99989bf6679452f213283d9",
-    "code_commit": "e272f5d3ce05d0ca50be42e6d8764f0ef20d3dd1",
-    "source_fingerprint": null,
+    "plan": "74cd59d2b4e2ee79518406ef85d31c610f4dca75a17adff6baa4db8ba058c79e",
+    "code_commit": "4b9802e4483f41c3b4bb28bce35295428417a7b1",
+    "source_fingerprint": "6022ff1a2dfb888c39d7a32642c8723ab587217d277f19ce2f2052216a3e4453",
     "worktree": "/private/tmp/erp-inventory-purchase-provider",
     "default_commit": "58322ba3d5b77aa1a6250be4b5055651c682a371",
     "mode_entry_commit": "e272f5d3ce05d0ca50be42e6d8764f0ef20d3dd1"
@@ -21,9 +21,12 @@
     "instance_id": "inventory-purchase-provider-a",
     "owner": "Codex /root",
     "resources": {
-      "workspace": "/private/tmp/erp-inventory-purchase-provider"
+      "workspace": "/private/tmp/erp-inventory-purchase-provider",
+      "mysql-schema": "CLEANED: all final P3 daVY0T/P2 lp03mr/Purchase am7n33/coverage N3fInv instances. Nine explicit Gate schemas and two coverage schemas dropped after zero connections/transactions; auto-generated native UUID schemas verified absent. Four daemons normal shutdown, sessions32429/63239/45362/21623 exit0, no processes/socket/pid; logs preserved privately and exact roots including synthetic credentials removed. All six earlier runtimes also cleaned. No shared database touched.",
+      "web-port": "CLEANED: final browser/API/DB5205/58671/58679 listeners absent; coverage58677 daemon normally exited. No active runtime lease.",
+      "opening-file-root": "NOT_USED: PR-A does not run Opening or P4; no Opening files allocated"
     },
-    "lease_ref": "Dedicated Git worktree observed; no MySQL/app resources started. Historic P3 resources are not this run."
+    "lease_ref": "All fixed-source runs complete; source6022 unchanged after product-only commits8d25b2af and4b9802e4. Twenty-two final developer suites PASS on source6022/PLAN74cd; full native support3563PASS/74FAIL/171guardedSKIP (31char fixture environment) remains FAIL despite95.59/87.11/93.58 numeric coverage and39 original-current floors PASS. Corrected short-schema minimal native1/1 is support only. Final actual CI merged native coverage remains required per existing approved plan; no waiver/no old result relabelling."
   },
   "tasks": {
     "TASK-001": "DONE",
@@ -4340,6 +4343,92 @@
         "server/test-support/inventoryPurchaseFixtures.js"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-PURCHASE-COMPAT",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam reply to final request_user_input_async call_4ec31b829779495b9ab85f0c675978f2: A：批准最終五檔例外及SELF修訂，納入PR-A（建議）. Final patch691874a5450edfcca5c149afec620e35cdd77d20ed9fa7e719e829d31719a870 supersedes withdrawn four-file question; both answers received together, final five-file is controlling. Approves precise scope/unit/fixture exception and last root SELF named INSERT correction, not final full PR-A implementation source approval. All Gates, deadlines, data and assertions preserved; no fourth agent/cross-model review.",
+      "recorded_at": "2026-10-23T05:32:37.305Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "ceb152c51c6a9cc4528d6ac8ef707902cdca7bd9c99989bf6679452f213283d9",
+      "code_commit": "74186436397468496e7d0d0608c94856310c3c10",
+      "scope": [
+        "server/src/modules/inventory/inventoryAdjustmentPosting.js",
+        "server/src/modules/inventory/inventoryReversalPosting.js",
+        "server/src/handlers/inventory/skuLookupHandlers.js",
+        "server/test/inventoryTransferHandlers.test.js",
+        "server/test/integration/inventoryMovement.integration.test.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PURCHASE-SALES-ENV-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam answer to request_user_input_async call_8a5c134a323a4e3da00dc816d065e185: A：批准精確環境候選及新PLAN，繼續驗證（建議）. Exact single-file patch8fff655c4f09bdaefbad2b6fcbd1ad20dd7a9780ded2436b00df91eb04cb37af/newPLAN74cd59d2b4e2ee79518406ef85d31c610f4dca75a17adff6baa4db8ba058c79e. DESIGN/business/source scope/previous approved five-file exception/thresholds unchanged. Original old approvals and reports retained, not relabelled. Actual final full implementation Sam review still pending; no CI waiver/publication/merge inferred beyond standing authority.",
+      "recorded_at": "2026-10-23T05:45:18.778Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "74cd59d2b4e2ee79518406ef85d31c610f4dca75a17adff6baa4db8ba058c79e",
+      "code_commit": null,
+      "scope": [
+        "inventory-management",
+        "PHASE-007",
+        "TASK-052",
+        "PHASE-008",
+        "TASK-053",
+        "docs/inventory_management/**"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PURCHASE-SALES-ENV-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam answer to request_user_input_async call_8a5c134a323a4e3da00dc816d065e185: A：批准精確環境候選及新PLAN，繼續驗證（建議）. Exact single-file patch8fff655c4f09bdaefbad2b6fcbd1ad20dd7a9780ded2436b00df91eb04cb37af/newPLAN74cd59d2b4e2ee79518406ef85d31c610f4dca75a17adff6baa4db8ba058c79e. DESIGN/business/source scope/previous approved five-file exception/thresholds unchanged. Original old approvals and reports retained, not relabelled. Actual final full implementation Sam review still pending; no CI waiver/publication/merge inferred beyond standing authority.",
+      "recorded_at": "2026-10-23T05:45:18.779Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "74cd59d2b4e2ee79518406ef85d31c610f4dca75a17adff6baa4db8ba058c79e",
+      "code_commit": null,
+      "scope": [
+        "PHASE-007",
+        "TASK-052",
+        "PHASE-008",
+        "TASK-053",
+        "docs/inventory_management/**",
+        "docs/purchasing_receiving_management/00_module_manifest.json",
+        "docs/purchasing_receiving_management/03_design_spec.md",
+        "server/src/modules/inventory/InventoryPostingService.js",
+        "server/src/modules/inventory/InventoryLookupService.js",
+        "server/src/modules/inventory/inventoryConstants.js",
+        "server/src/modules/inventory/InventoryOperationService.js",
+        "server/src/modules/inventory/InventoryPurchaseService.js",
+        "server/src/modules/inventory/InventoryPurchaseContext.js",
+        "server/src/modules/inventory/inventoryPurchaseValidation.js",
+        "server/src/modules/inventory/inventoryPurchaseReceipts.js",
+        "server/src/modules/inventory/inventoryPurchaseReversal.js",
+        "server/database/migrations/0101_create_inventory_purchase_reversal_links.js",
+        "server/test/inventoryPurchaseReceipt.test.js",
+        "server/test/inventoryPurchaseContext.test.js",
+        "server/test/inventoryPurchaseReversal.test.js",
+        "server/test/inventoryPurchaseContract.test.js",
+        "server/test/integration/inventoryPurchaseReceipt.integration.test.js",
+        "server/test/integration/inventoryPurchaseReversal.integration.test.js",
+        "server/test/integration/inventoryPurchaseAuth.integration.test.js",
+        "server/test-support/inventoryPurchaseFixtures.js",
+        "server/src/modules/inventory/inventoryAdjustmentPosting.js",
+        "server/src/modules/inventory/inventoryReversalPosting.js",
+        "server/src/handlers/inventory/skuLookupHandlers.js",
+        "server/test/inventoryTransferHandlers.test.js",
+        "server/test/integration/inventoryMovement.integration.test.js"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -8563,6 +8652,28 @@
         "TASK-034"
       ],
       "question": "HD140 DECISION_REQUIRED: HD139 exact Supplier fixture adopted and main0feb Item docs integrated; root2237PASS, full native2931PASS/0FAIL/132guardedSKIP with unchanged93.68/85.40/92.15 global coverage and per-file floors. Sales31, Customer10k, Core100kSKU/500kBucket/2MMovement, eight native guards and socket/API groups PASS. Actual real Playwright16FAIL/0PASS/0SKIP; mandatory browser regression not run. Root cause positively observed: owned worker6882 API63975 OPTIONS /api/v1/user/me at2026-10-09T09:32:46Z with actual browser Origin http://127.0.0.1:5205 returns403 CORS_ORIGIN_DENIED/no allow-origin header. Existing security config defaults only5173 and supports CLIENT_URL; generic browser suite env_keys omit CLIENT_URL, so it correctly rejects5205. This is the coordinator/profile omission, not evidence that production CORS/auth is broken; no origin/security workaround adopted. A recommended: approve exact one-file profile patch 5e5b837bec09e5c6c30158f365d3d3940cd8df105269bcc008dba07b3e8c31e5 / new PLAN c145c025eae94a1570d1bd05a872da53335b931f9ea0f695595d02ddef258908; DESIGN b4720b69f67be272b7f605fa8bd83401792629ebd7ae16d1014aac2efcbf58ee / source 3cdc51c462840f24f5a221218a928e795600de865f35042f2a087622cee9679e unchanged. Add only CLIENT_URL to inventory-p3-browser env allowlist and set CLIENT_URL=http://127.0.0.1:5205 solely in its owned local fixture process. No wildcard, production default/shared/source/test/fixture/assertion/timeout/min16/skip/coverage/tool/parser/gate change. Rebind exact HD139 shared scopes byte-identical/no-write, rerun full fresh currentPLAN generic/native/Sales/capacity/socket/API/realPlaywright checks with original gates, classify evidence and precisely clean own resources. Preserve420 original refs and original failed browser artifacts; no old PASS relabelling. HD137 conditional onePR publication only after mandatoryPASS/classification; final exacthead Sam/fiveCI/genericMERGE_READY/freshmain remain separate. B keep current canonical profile/source intact and publication blocked until browser environment contract is separately resolved. Default hold until actual Sam answer. No P4, Item TASK043 implementation, formal/UAT/deploy or waiver. All owned runtime databases/accounts/daemons/roots precisely removed; synthetic data unrecoverable, original evidence retained; no foreign runtime touched."
+    },
+    {
+      "id": "HD-PURCHASE-COMPAT",
+      "impact": "MAJOR",
+      "status": "ANSWERED",
+      "answer_ref": "Actual Sam reply to final request_user_input_async call_4ec31b829779495b9ab85f0c675978f2: A：批准最終五檔例外及SELF修訂，納入PR-A（建議）. Final patch691874a5450edfcca5c149afec620e35cdd77d20ed9fa7e719e829d31719a870 supersedes withdrawn four-file question; both answers received together, final five-file is controlling. Approves precise scope/unit/fixture exception and last root SELF named INSERT correction, not final full PR-A implementation source approval. All Gates, deadlines, data and assertions preserved; no fourth agent/cross-model review.",
+      "affected_ids": [
+        "PHASE-007",
+        "TASK-052"
+      ],
+      "question": "Final Sam question requested via request_user_input_async: implementation/purchase-provider-compatibility-review.md, final five-file patch691874a5450edfcca5c149afec620e35cdd77d20ed9fa7e719e829d31719a870. Previous four-file question/patch0f259b32 and pre-final five-file patch752b43de were withdrawn before any actual Sam answer; no approval inferred. A approve three existing Inventory consumer files, explicit unit query-count/index/no-FOR-SHARE exception, minimal movement fixture two version columns plus named INSERT, and final root SELF mechanical correction in PR-A; B same fix in separate prerequisite PR. No business/native/UI assertions, Item source/pin, auth, migration/production schema, quantities, timeouts or Gates changed. Three actual static cycles; final named INSERT root SELF, minimal MySQL probe passes/default1/schema cleaned; no fourth review or candidate runtime PASS. Canonical NOT_APPLIED. Pending actual answer and fixed-source test finish/exact cleanup. No TASK041 dependency or Purchasing unlock claimed."
+    },
+    {
+      "id": "HD-PURCHASE-SALES-ENV",
+      "impact": "MAJOR",
+      "status": "ANSWERED",
+      "answer_ref": "Actual Sam answer to request_user_input_async call_8a5c134a323a4e3da00dc816d065e185: A：批准精確環境候選及新PLAN，繼續驗證（建議）. Exact single-file patch8fff655c4f09bdaefbad2b6fcbd1ad20dd7a9780ded2436b00df91eb04cb37af/newPLAN74cd59d2b4e2ee79518406ef85d31c610f4dca75a17adff6baa4db8ba058c79e. DESIGN/business/source scope/previous approved five-file exception/thresholds unchanged. Original old approvals and reports retained, not relabelled. Actual final full implementation Sam review still pending; no CI waiver/publication/merge inferred beyond standing authority.",
+      "affected_ids": [
+        "PHASE-007",
+        "TASK-052"
+      ],
+      "question": "Actual request_user_input_async final one-file environmental candidate: implementation/purchase-provider-sales-environment-proposal.md; patch8fff655c4f09bdaefbad2b6fcbd1ad20dd7a9780ded2436b00df91eb04cb37af, candidate PLAN74cd59d2b4e2ee79518406ef85d31c610f4dca75a17adff6baa4db8ba058c79e, unchanged DESIGN7f09c816... . Only Sales suite env_keys adds FULFILLMENT_LIFECYCLE_ENABLED, actual native invocation true as currentCI. Authoritative old Gate47/48; support true-provider diagnostic48/48 zero skip, not relabelled Gate. Fresh read-only agent no actionable finding. Canonical NOT_APPLIED; await actual Sam. No cross-model question per standing skip, no fake provider/table deletion/GITHUB_ACTIONS spoof/threshold change. Complete native coverage/floors/currentCI/freshmain/fullSamsource still required."
     }
   ],
   "external_actions": [
@@ -13421,6 +13532,22 @@
       "idempotency_key": "mode-change-1878",
       "status": "CONFIRMED",
       "source_ref": "Sam actual approval: PR-A then PR-B; TASK041 separate"
+    },
+    {
+      "id": "EXT-PURCHASE-A-PUSH",
+      "kind": "PUSH",
+      "target": "origin/codex/inventory-purchase-provider",
+      "idempotency_key": "inventory-purchase-a-push-6022-plan74cd",
+      "status": "PLANNED",
+      "source_ref": "Standing actual Sam PR-A publication/currentCI/latestmain/review authority. gh pr list observed no existing PR for branch; final Sam source review and actual currentCI still required before merge. Raw evidence/credentials/traces LOCAL_ONLY; publish source/canonical contracts/minimized synthetic summary only."
+    },
+    {
+      "id": "EXT-PURCHASE-A-PR",
+      "kind": "CREATE_PR",
+      "target": "crazysumsum/erp-app main <- codex/inventory-purchase-provider",
+      "idempotency_key": "inventory-purchase-a-pr-6022-plan74cd",
+      "status": "PLANNED",
+      "source_ref": "Standing actual Sam PR-A publication/currentCI/latestmain/review authority. gh pr list observed no existing PR for branch; final Sam source review and actual currentCI still required before merge. Raw evidence/credentials/traces LOCAL_ONLY; publish source/canonical contracts/minimized synthetic summary only."
     }
   ],
   "evidence_files": [
@@ -13869,7 +13996,71 @@
     "evidence/20261012T011116-63e252264837/run.json",
     "evidence/20261012T011118-e9d9d2fd0e91/run.json",
     "evidence/20261012T011120-a437acc8f799/run.json",
-    "evidence/20261012T011127-1c37f44ac082/run.json"
+    "evidence/20261012T011127-1c37f44ac082/run.json",
+    "evidence/20261023T033734-440c1c883d7c/run.json",
+    "evidence/20261023T033957-399bf29b6ebe/run.json",
+    "evidence/20261023T033958-469f705a1a13/run.json",
+    "evidence/20261023T033959-998d864819de/run.json",
+    "evidence/20261023T034000-8ac69eccfea4/run.json",
+    "evidence/20261023T034132-4f0958360036/run.json",
+    "evidence/20261023T034135-9d0ba743434c/run.json",
+    "evidence/20261023T034138-6406821f72d8/run.json",
+    "evidence/20261023T034159-db53fc6e3abb/run.json",
+    "evidence/20261023T034201-ef5a8a46fbca/run.json",
+    "evidence/20261023T034335-dbb64e21cbab/run.json",
+    "evidence/20261023T034341-62c87c5af463/run.json",
+    "evidence/20261023T034344-d0ad64741c4c/run.json",
+    "evidence/20261023T034347-016c0c9dd30e/run.json",
+    "evidence/20261023T034351-2284666ff464/run.json",
+    "evidence/20261023T034636-28185802b3d2/run.json",
+    "evidence/20261023T034658-c8a43bd11a3d/run.json",
+    "evidence/20261023T034731-27f2d8eb2cb8/run.json",
+    "evidence/20261023T034856-2bcb5165e168/run.json",
+    "evidence/20261023T034933-8cd8fa42828f/run.json",
+    "evidence/20261023T035036-f3660df71d3c/run.json",
+    "evidence/20261023T040155-515c0bea3607/run.json",
+    "evidence/20261023T040158-677bc28e6bdb/run.json",
+    "evidence/20261023T034656-5188eb96ac20/run.json",
+    "evidence/20261023T053255-2435d7fa9b17/run.json",
+    "evidence/20261023T053344-d2a383ce317b/run.json",
+    "evidence/20261023T053417-fbc48feb472a/run.json",
+    "evidence/20261023T053436-14dd906673b5/run.json",
+    "evidence/20261023T053437-31722a11cd2a/run.json",
+    "evidence/20261023T053438-dc734f1980a2/run.json",
+    "evidence/20261023T053549-5ea11581fc83/run.json",
+    "evidence/20261023T053645-1209a61187d6/run.json",
+    "evidence/20261023T053648-3bf2989baf06/run.json",
+    "evidence/20261023T053651-992a45fca587/run.json",
+    "evidence/20261023T053653-6f37424773b4/run.json",
+    "evidence/20261023T053732-ad87d0115a52/run.json",
+    "evidence/20261023T053803-afdeaff8de04/run.json",
+    "evidence/20261023T053804-c57d7e8fe2b5/run.json",
+    "evidence/20261023T053805-a14f28cdcdaf/run.json",
+    "evidence/20261023T053807-6cd415a061dd/run.json",
+    "evidence/20261023T054542-a615e530745a/run.json",
+    "evidence/20261023T054545-2f0c84e1b5b5/run.json",
+    "evidence/20261023T054730-4b6a0ab09d37/run.json",
+    "evidence/20261023T054731-01002dcdb065/run.json",
+    "evidence/20261023T054732-f945232cc4d2/run.json",
+    "evidence/20261023T054806-6c184b1c226b/run.json",
+    "evidence/20261023T054809-c3d319db7db1/run.json",
+    "evidence/20261023T054910-3abd8f2e0370/run.json",
+    "evidence/20261023T054911-a8db296f6745/run.json",
+    "evidence/20261023T054912-19898177e19c/run.json",
+    "evidence/20261023T055037-f236e2c31132/run.json",
+    "evidence/20261023T055140-d6781d2e250f/run.json",
+    "evidence/20261023T055311-d550e9908a13/run.json",
+    "evidence/20261023T055314-79ba5415d636/run.json",
+    "evidence/20261023T055342-7cebd73802b4/run.json",
+    "evidence/20261023T055345-7c6ccd6aa675/run.json",
+    "evidence/20261023T055348-477c499e9976/run.json",
+    "evidence/20261023T055351-bc05b7027176/run.json",
+    "evidence/20261023T055355-08695592544d/run.json",
+    "evidence/20261023T055358-d68a17746f53/run.json",
+    "evidence/20261023T055432-38e7cb7d4bd0/run.json",
+    "evidence/20261023T055434-d8b642d96129/run.json",
+    "evidence/20261023T055439-8d2e3f47e64f/run.json",
+    "evidence/20261023T055936-2bb53fe4a920/run.json"
   ],
   "defects": [
     {
@@ -14038,5 +14229,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "PR-A receipt TDD under approved provider v1; commit approved planning and integrate observed main Supplier-only changes, no P4 full-load rerun; native resources must be newly reserved. PR-B only after A merged."
+  "next_safe_action": "Publish approved PR-A source/contracts/minimized validation summary on existing branch, inspect actual PR CI to satisfy approved current merged native coverage requirement (not local FAIL waiver). main58322 freshly fetched unchanged; source6022/PLAN74cd fixed. No final Sam full implementation approval yet: wait currentCI, prepare exact PR head/source review, never merge until actual approval and all Gates. PR-B after A merge; TASK041 separate/Purchasing NOT_UNLOCKED."
 }

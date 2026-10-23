@@ -1,0 +1,22 @@
+{
+  "method": "SEPARATE_AGENT",
+  "reviewer": "/root/purchase_sales_env_contract_review",
+  "author": "Codex /root",
+  "artifact": "One-key UNAPPLIED Sales suite env allowlist candidate only",
+  "profile_sha256": "84057d49277fa4188f39dcc0301040933532d09a0dc84fbd4e6ce1184abc421d",
+  "canonical_profile_sha256": "ed3e5bb17cc85f704436e1113768e6ece80fba142f85c5d1f18576755bb7879a",
+  "design": "7f09c816390b1d129bdb905566121b2000d04efca9c72e030f7772b1f1e10ded",
+  "old_plan": "ceb152c51c6a9cc4528d6ac8ef707902cdca7bd9c99989bf6679452f213283d9",
+  "candidate_plan": "74cd59d2b4e2ee79518406ef85d31c610f4dca75a17adff6baa4db8ba058c79e",
+  "findings": [],
+  "observed_source_chain": [
+    "harness_runner.py145-146 forwards only suite.env_keys",
+    "FulfillmentOpenMatterService.js3/7 enables actual registered provider only for literal true",
+    "SalesFulfillmentGuardService.js11/24-27 resolves provider, otherwise rejects present tables/history",
+    ".github/workflows/ci.yml201 sets same native flag"
+  ],
+  "old_gate_xml": {"sha256": "32aa3afa8b07969d1f234f864c3dc9f4c831534457e54635d9c85586f66a0e41", "cases": 48, "failures": 1, "skipped": 0},
+  "support_xml": {"sha256": "c2690031969f9b42ee6b592c8821dc0d75c19cc2979978f1bcf92ed9182ea09e", "cases": 48, "failures": 0, "skipped": 0},
+  "disposition": "No actionable findings; sufficient environmental correction conditional on true invocation and actual Sam newPLAN approval. Fresh authoritative Harness execution remains required. Whole coverage and CI excluded.",
+  "cross_model": "SKIPPED per actual Sam standing all-subsequent skip instruction"
+}
