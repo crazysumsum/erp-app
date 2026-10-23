@@ -7,9 +7,9 @@ import * as receipts from "../src/modules/inventory/inventoryPurchaseReceipts.js
 function command() {
   return { actor: { userId: 7, serviceName: "", claimedRoles: ["adjuster"],
     claimedPermissions: ["purchasing.view", "inventory.adjust"] }, correlationId: "reverse-test-1",
-  source: { documentId: "51", eventId: "11111111-1111-4111-8111-111111111111" },
+  source: { documentId: "42", eventId: "11111111-1111-4111-8111-111111111111" },
   goodsReceiptId: "42", reasonText: "Correct received quantity",
-  lines: [{ sourceLineId: "91", originalSourceLineId: "81", originalMovementId: 100, baseQuantity: 2 }] };
+  lines: [{ sourceLineId: "81", originalSourceLineId: "81", originalMovementId: 100, baseQuantity: 2 }] };
 }
 
 test("Purchase reversal accepts the exact partial-reversal ABI without mutating its input", () => {
@@ -21,6 +21,8 @@ test("Purchase reversal accepts the exact partial-reversal ABI without mutating 
 for (const [name, change] of [
   ["caller-selected permission", c => { c.permission = "inventory.operation"; }],
   ["caller-selected source module", c => { c.source.module = "RETURNS"; }],
+  ["new reversal header instead of original GR", c => { c.source.documentId = "51"; }],
+  ["new reversal detail instead of original detail", c => { c.lines[0].sourceLineId = "91"; }],
   ["unsafe original movement", c => { c.lines[0].originalMovementId = Number.MAX_SAFE_INTEGER + 1; }],
   ["zero quantity", c => { c.lines[0].baseQuantity = 0; }],
   ["negative quantity", c => { c.lines[0].baseQuantity = -1; }],
@@ -30,8 +32,8 @@ for (const [name, change] of [
   ["numeric original detail ID", c => { c.lines[0].originalSourceLineId = 81; }],
   ["unsafe receipt ID", c => { c.goodsReceiptId = "9007199254740992"; }],
   ["extra physical dimension", c => { c.lines[0].binId = 1; }],
-  ["duplicate original movement", c => { c.lines.push({ ...c.lines[0], sourceLineId: "92" }); }],
-  ["duplicate reversal detail", c => { c.lines.push({ ...c.lines[0], originalMovementId: 101, originalSourceLineId: "82" }); }],
+  ["duplicate original movement", c => { c.lines.push({ ...c.lines[0], sourceLineId: "92", originalSourceLineId: "92" }); }],
+  ["duplicate reversal detail", c => { c.lines.push({ ...c.lines[0], originalMovementId: 101 }); }],
   ["empty batch", c => { c.lines = []; }],
   ["sparse batch", c => { c.lines = new Array(1); }],
   ["201-line batch", c => { c.lines = Array.from({ length: 201 }, (_, i) => ({ sourceLineId: String(i + 1),
@@ -49,24 +51,24 @@ for (const [name, change] of [
 
 test("Purchase reversal accepts all200 unique details and preserves response ordering input", () => {
   const input = command(); input.lines = Array.from({ length: 200 }, (_, i) => ({ sourceLineId: String(200 - i),
-    originalSourceLineId: String(i + 1), originalMovementId: i + 1, baseQuantity: 1 }));
+    originalSourceLineId: String(200 - i), originalMovementId: i + 1, baseQuantity: 1 }));
   const normalized = validation.normalizePurchaseReversal(input);
   assert.equal(normalized.lines.length, 200); assert.equal(normalized.lines[0].sourceLineId, "200");
 });
 
 test("Purchase reversal business hash excludes new actor, correlation, context and input permutation", () => {
-  const a = command(); a.lines.push({ sourceLineId: "9", originalSourceLineId: "82", originalMovementId: 101, baseQuantity: 1 });
+  const a = command(); a.lines.push({ sourceLineId: "9", originalSourceLineId: "9", originalMovementId: 101, baseQuantity: 1 });
   const b = structuredClone(a); b.actor.userId = 8; b.correlationId = "different-attempt"; b.context = {}; b.lines.reverse();
   assert.equal(validation.purchaseReversalBusinessHash(validation.normalizePurchaseReversal(a)),
     validation.purchaseReversalBusinessHash(validation.normalizePurchaseReversal(b)));
-  assert.deepEqual(validation.purchaseReversalBusinessPayload(validation.normalizePurchaseReversal(b)).lines.map(l => l.sourceLineId), ["9", "91"]);
+  assert.deepEqual(validation.purchaseReversalBusinessPayload(validation.normalizePurchaseReversal(b)).lines.map(l => l.sourceLineId), ["9", "81"]);
 });
 
 test("Purchase reversal business hash binds receipt, event, membership, original and quantity", () => {
   const original = command(), hash = validation.purchaseReversalBusinessHash(validation.normalizePurchaseReversal(original));
-  for (const change of [c => { c.goodsReceiptId = "43"; }, c => { c.reasonText = "Different valid reason"; },
-    c => { c.source.documentId = "52"; }, c => { c.lines[0].originalMovementId++; },
-    c => { c.lines[0].originalSourceLineId = "82"; }, c => { c.lines[0].baseQuantity++; }]) {
+  for (const change of [c => { c.goodsReceiptId = "43"; c.source.documentId = "43"; }, c => { c.reasonText = "Different valid reason"; },
+    c => { c.source.eventId = "22222222-1111-4111-8111-111111111111"; }, c => { c.lines[0].originalMovementId++; },
+    c => { c.lines[0].originalSourceLineId = "82"; c.lines[0].sourceLineId = "82"; }, c => { c.lines[0].baseQuantity++; }]) {
     const input = structuredClone(original); change(input);
     assert.notEqual(validation.purchaseReversalBusinessHash(validation.normalizePurchaseReversal(input)), hash);
   }
@@ -193,11 +195,11 @@ function reversalResults(batch) {
 
 test("Purchase reversal ledger claims the complete numeric-sorted batch before any stock work", async () => {
   const tx = reversalLedger(), input = command();
-  input.lines.push({ sourceLineId: "9", originalSourceLineId: "82", originalMovementId: 101, baseQuantity: 1 });
+  input.lines.push({ sourceLineId: "9", originalSourceLineId: "9", originalMovementId: 101, baseQuantity: 1 });
   const batch = await claimReversal(tx, input);
   assert.equal(batch.replay, false);
   assert.deepEqual(tx.rows.map(r => [r.command_type, r.source_line_id]),
-    [["PURCHASE_REVERSE_BATCH", ""], ["PURCHASE_REVERSE_LINE", "9"], ["PURCHASE_REVERSE_LINE", "91"]]);
+    [["PURCHASE_REVERSE_BATCH", ""], ["PURCHASE_REVERSE_LINE", "9"], ["PURCHASE_REVERSE_LINE", "81"]]);
   assert.ok(tx.statements.every(sql => sql.startsWith("INSERT INTO inventory_operation_requests")));
 });
 

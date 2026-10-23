@@ -1,6 +1,6 @@
 # Inventory Purchasing provider v1 — 精確契約候選
 
-Status: PROPOSED / NOT_IMPLEMENTED。Issue #267；owner Inventory / Sam。基線 `e272f5d3ce05d0ca50be42e6d8764f0ef20d3dd1`。
+Status: RECEIPT_1.0_DELIVERED / REVERSAL_1.1_PROPOSED。Issue #267；owner Inventory / Sam。Receipt 1.0已合併於 `5c055d79e94c74e58ccb27afe0fc3e0bd3edf151`；本候選只修訂尚未交付的Reversal ABI，不變更已合併Receipt介面或歷史資料。
 權威需求：Purchasing design §2.4–2.8、§3.5–3.7、§8.7–8.8；Inventory FR031–033／035／037–042、NFR006–009、SEC007–010／013。
 
 ## 1. 邊界及交付順序
@@ -39,7 +39,7 @@ Receipt command 的精確欄位：
 }
 ```
 
-Reversal command：相同 context／actor／correlationId／source（documentId 為新 reversal header ID），新增 `goodsReceiptId`、`reasonText`，lines 精確為 `{ sourceLineId, originalSourceLineId, originalMovementId, baseQuantity }`；sourceLineId 是新 reversal detail ID。每次1–200行；本次同 originalMovementId 只一行。receipt 同一 physical bucket 可由不同 PO line 收入，必須按 bucket 合計及逐行結果更新；同一 PO line＋physical dimension 重複拒絕。
+Reversal 1.1 command：相同 context／actor／correlationId／source，但 `source.documentId` 固定為原GR ID且必須等於 `goodsReceiptId`；`source.eventId`識別本次反向意圖。新增 `goodsReceiptId`、`reasonText`，lines 精確為 `{ sourceLineId, originalSourceLineId, originalMovementId, baseQuantity }`；`sourceLineId`及`originalSourceLineId`必須相等，均為原GR Detail ID，不是尚不存在的新Reversal Detail ID。每次1–200行；本次同 originalMovementId 只一行。不同部分反向用新event，同意圖重試保持原event；root及member仍依完整source tuple永久唯一。Receipt 1.0所有ID及語義不變：同一physical bucket可由不同PO line收入，按bucket合計及逐行結果更新；同一PO line＋physical dimension重複拒絕。
 
 所有物件拒絕額外欄位；provider 固定 module=`PURCHASING_RECEIVING`，documentType=`GOODS_RECEIPT`／`GOODS_RECEIPT_REVERSAL`，purpose／permission 不能由 command 提供。數量和數值 ID 為正 safe integer；來源 ID 為非零十進位字串且須可安全轉換；不把不安全 BIGINT 轉 Number。qty 合計、balance、version 溢位 fail closed。tracking 只接受 none／batch／batch_expiry；serial 維持不支援。
 
@@ -51,7 +51,9 @@ Reversal command：相同 context／actor／correlationId／source（documentId 
 
 Receipt 固定 POST `/api/v1/goods-receipts/:id/confirm`、jwt、`purchasing.view`＋`receiving.operation`，`req.input.params.id` 必須精確等於 source.documentId。Reversal 固定 POST `/api/v1/goods-receipts/:id/reversals/create`、jwt-device-password、`purchasing.view`＋`inventory.adjust`，params.id 必須精確等於 goodsReceiptId，保持現有密碼及 device 驗證流程。一般 receiving／purchasing role 無調整權限不能反向。不賦予 inventory.view。
 
-issuer 必須對上 server request context 的 auth／apiRoute／transaction，不能只檢查 caller boolean。Receipt 的 confirmedLines 由 Purchasing 在同 transaction 已鎖定的 Confirmed PO／PO Lines 提供（與 GR detail ownership核對後）；issuer 核對每個 sku／PO／line／version／snapshot與command一致。Reversal issuer 的 options.ownerProof 必須是consumer由同transaction鎖定的GR／新reversal header／detail rows投影，核對source.documentId所屬goodsReceiptId及原detail映射，不能取request body自報關係。它不能證明任意同process惡意程式誠實：Purchasing 是受信任的業務 owner，browser不能提供這些參數；consumer contract test必須證明採用 locked rows 而非 request body。Inventory 不反向鎖 PO／GR，不讀寫其raw tables。
+issuer 必須對上 server request context 的 auth／apiRoute／transaction，不能只檢查 caller boolean。Receipt 的 confirmedLines 由 Purchasing 在同 transaction 已鎖定的 Confirmed PO／PO Lines 提供（與 GR detail ownership核對後）；issuer 核對每個 sku／PO／line／version／snapshot與command一致。Reversal 1.1的 `options.ownerProof` 只接受以下strict server projection：`{goodsReceiptId,status,details:[{sourceLineId,goodsReceiptId,originalMovementId}]}`。兩層goodsReceiptId及每個sourceLineId為canonical positive safe decimal字串，originalMovementId為positive safe integer；status只接受原GR的CONFIRMED／PARTIALLY_REVERSED／REVERSED。details與command行集合一一相等，逐項核對原GR、原Detail及原Inventory Movement映射，拒絕extra／missing／duplicate／額外欄位。投影必須來自同transaction已鎖定的既有GR及原Details，不能來自request body；不再要求先存在依賴本次Inventory結果的新反向rows。REVERSED僅允許進行fresh-auth exact replay核對，不授予新數量；new execution仍以原Movement鎖內current links SUM判斷剩餘量。它不能證明任意同process惡意程式誠實：Purchasing是受信任業務owner，browser不能提供options，consumer contract test須證明採用locked rows。Inventory不反向鎖PO／GR或讀寫其raw tables。
+
+Reversal成功回傳後，Purchasing才在同一caller transaction INSERT正式new reversal header/details，把真實Movement／Operation IDs填入既有NOT NULL FK，再更新GR／PO projection及完成domain operation。新header/detail PK由Purchasing自行生成，不作Inventory source identity；以原Detail ID映射結果至新rows。任一INSERT／Audit／projection／commit故障仍全交易回滾，禁止假ID、NULL FK、空回執placeholder、獨立預提交或跨交易ID預留。未知commit先按原GR＋原event查Purchasing domain fact及Inventory結果；Inventory query的GOODS_RECEIPT_REVERSAL.documentId固定原GR ID。版本1.1只新增此未交付Reversal規則，無既有Reversal資料需遷移。
 
 provider 入場、等待後寫入前、cached replay返回前均重新檢查使用者／角色／權限／JWT token version及時效；最後 current locking read 使用原transaction。Reversal另核對相同 device binding／key／簽章時間及已驗證 password策略；使用既有 request signal／JWT／session／signature限額，不建立較長有效時間。密碼／token不進 command hash、summary、Audit 或日誌。
 

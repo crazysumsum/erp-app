@@ -162,15 +162,17 @@ export function normalizePurchaseReversal(input) {
       originalSourceLineId: purchaseSourceId(line.originalSourceLineId, "originalSourceLineId"),
       originalMovementId: inventoryPositiveInteger(line.originalMovementId, "originalMovementId"),
       baseQuantity: inventoryPositiveInteger(line.baseQuantity, "baseQuantity") };
-    if (details.has(result.sourceLineId) || originals.has(result.originalMovementId)) {
+    if (result.sourceLineId !== result.originalSourceLineId || details.has(result.sourceLineId) || originals.has(result.originalMovementId)) {
       throw inventoryError("INVENTORY_INPUT_INVALID", { field: "lines" });
     }
     details.add(result.sourceLineId); originals.add(result.originalMovementId);
     return result;
   });
+  const goodsReceiptId = purchaseSourceId(input.goodsReceiptId, "goodsReceiptId");
+  if (input.source.documentId !== goodsReceiptId) throw inventoryError("INVENTORY_INPUT_INVALID", { field: "source.documentId" });
   return { actor, correlationId: text(input.correlationId, "correlationId", 0, 64, true),
     source: { documentId: purchaseSourceId(input.source.documentId, "documentId"), eventId: input.source.eventId },
-    goodsReceiptId: purchaseSourceId(input.goodsReceiptId, "goodsReceiptId"),
+    goodsReceiptId,
     reasonText: text(typeof input.reasonText === "string" ? input.reasonText.trim() : input.reasonText, "reasonText", 5, 500), lines };
 }
 

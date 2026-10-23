@@ -47,3 +47,21 @@ B在 `/private/tmp/erp-inventory-purchase-reversal`／`codex/inventory-purchase-
 準備context時，原正式候選要求已鎖定「新Reversal header/details」發行proof，但其正式NOT NULL FK／result欄位又必須先有Inventory執行結果，形成真實循環；未使用fake IDs／NULL FK／空回執／獨立預提交化解。已將必要source／proof／consumer INSERT順序及對賬修訂集中為一份 [精確四檔候選](purchase-provider-reversal-owner-proof-proposal.md)，只變更尚未交付Reversal1.1；Receipt1.0及已交付PR-A不變。首輪P2對賬缺口已修，第二輪限定delta無剩餘可操作發現；新語義全部NOT_RUN、canonical未採用。
 
 待實際Sam對精確候選作一次決定；保留上述原來源報告，不用其PASS代替新1.1來源驗證。批准後依既定範圍繼續TDD／最小真MySQL，再完整原子／rollback／並發／認證／容量及既有回歸，固定最終候選後完成全部Gate／coverage／Playwright／當前CI／最新main與Sam來源審閱。TASK-041分開追蹤；下一個可合併交付是PR-B，但目前不可合併。Purchasing尚未實際解鎖，A-only正式交接不代表consumer採用或B交付。
+
+## 原GR proof候選已批准／增量四
+
+Sam實際回覆「A：已審閱，批准 PR-B 精確四檔候選與範圍，請繼續 TDD／原生驗證，全部通過後準備精確來源讓我審閱；TASK-041 分開追蹤，沒有需要我決定的問題前不要停下來。」已按原patch92441a精確採用四檔，DESIGN a0e8e789cdbf9431c24fcc859b20a39cb1ba6a924aca2d51363349e058860687／PLAN 1e9cdb380f31153173dab9b4959dcd274665107b3d0435dad37a2ddcdc09b7c7。上述「待決策」為保留的歷史快照，不再是OPEN阻塞；沒有因此取得未見實作來源批准。
+
+修改前範圍及理由：只在已批准normalizer／PurchaseContext／專用tests實作original GR/detail等值、strict locked-row proof、一次性RR/request/intent/device/password context及fresh auth。兩個新source identity案例先RED再45unit PASS。Context新函式未存在時5例RED；實作後與A回歸共89unit PASS。獨立review發現P2：duplicate fixture先被ID不等拒絕及proof length先拒絕，已補正有效ID／相同長度重複集合，第二輪限定delta無剩餘發現，90unit PASS；所有SQL fake transport明示，不冒充真認證。
+
+增量五修改前範圍：新inventoryPurchaseReversal.js及兩個既有Purchase/Posting delegation；不改generic reverse、Item、LockService、auth framework、serializer或0101。最小真MySQL先RED（method缺失）；第一版7/7原生通過但非最終來源。獨立product軸無發現；lock軸指出joined FOR UPDATE額外X鎖original Operation及coverage FOR SHARE額外S鎖其他Lot，均以真P_S記錄鎖實測確認。最小兩句改為OF m／OF b後9/9通過。這是額外鎖觀察，不宣稱真deadlock已重現。
+
+再以真Warehouse等待、並發commit新Lot的最小案例確認一個產品缺陷：current Balance＋舊RR看不見Lot時，NULL expiry曾造成Reserved錯判且回POSTED。原11/12 FAIL保留。現在在資格／數量計算前驗實體lot_id與可見Lot身份，缺完整facts回CONCURRENT_OPERATION整批回滾，保持原event重新交易取得facts；不把未知Lot當無效期，不新增晚到Lot鎖或改isolation。真MySQL12/12重驗通過，同event再試正確拒絕Reserved缺口。lock第三輪僅審此增量及oracle無發現，未開第四輪；其他段落保留各自實際評審。
+
+後續新增及補強原生24例，包含200明細逐行結果與持久Movement/link/Operation映射、真鎖等待撤權、allocated／Reserved／效期／低效期／inactive facts、fresh只讀query來源隔離及未提交／commit／rollback時序。原生test review首輪三個P2已修，第二輪發現R07外層rejects會吞visibility assertion，改成精確sentinel Error／cause斷言；第三輪限定此修訂無發現。所有原始FAIL、fixture狀態碼錯配、lint錯誤保留。
+
+真HTTP新B13個子案例使用原JWT／P256／scrypt策略，server-owned測試consumer從同交易鎖定的原rows投影ownerProof；正式Purchasing tables未改，非consumer已採用。NOT NULL/FK測試schema在真Inventory結果回傳後才INSERT新header/details。獨立auth review指出P2計數不能證明無變動、缺consumer實際失敗oracle：已改完整Inventory／owner row snapshots，加入真BEFORE INSERT把必填Movement設NULL的故障；HTTP500時Inventory和consumer同時全回滾，移除trigger後原event成功，fresh password replay無額外effect。第二輪限定修訂無發現。
+
+最新合成原生／真HTTP直接執行：24/24 native＋原A8及新B13＝21個HTTP子案例皆PASS／零skip（Node包含兩個父test總計47，不以父test充業務案例）。XML私有 `/private/tmp/purchase-provider-diagnostics/pr-b-auth-fk.xml`；此為增量支持性驗證，最終正式Harness套件及全部必需案例對照／回歸仍待完成，不僅憑最低24數量聲稱TASK053 DONE。所有本輪socket-only MySQL、app、schema、連線及交易均已清理、正常exit0；日誌/XML保留，僅移除本次datadir／合成credential。首個sandbox initialize SIGSEGV在任何schema前發生，保留環境失敗後改用既有授權的scoped本機執行，沒有放寬安全設定。
+
+最新main已觀察Supplier-only PR276／277前進至1e57380e；將先保留本機增量savepoint並整合，再固定最終候選做完整Gate／coverage／Playwright／CI。原結果仍綁原來源，不當作整合候選已PASS；沒有P4／TASK041耦合或Purchasing解鎖宣稱。
