@@ -1001,9 +1001,10 @@ integrationTest("the detail names the payment terms in its difference, an inacti
   let who = null;
   let seeded = null;
   let termId = null;
+  const otherTerms = [];
   t.after(async () => {
     if (seeded) await cleanup(connection, seeded.supplierId);
-    if (termId) await connection.execute("DELETE FROM payment_terms WHERE id = ?", [termId]);
+    for (const id of [termId, ...otherTerms].filter(Boolean)) await connection.execute("DELETE FROM payment_terms WHERE id = ?", [id]);
     await cleanupActors(connection, who);
     await connection.end();
   });
@@ -1014,6 +1015,15 @@ integrationTest("the detail names the payment terms in its difference, an inacti
   const [term] = await connection.execute(`INSERT INTO payment_terms (code, code_key, name, calculation_type, due_days, status, version, created_at, updated_at)
     VALUES (?, ?, 'Retired Net 60', 'NET_DAYS', 60, 'INACTIVE', 1, ?, ?)`, [`RT-${suffix}`, `RT-${suffix}`.toUpperCase(), now, now]);
   termId = Number(term.insertId);
+  // 提交時係 Active 嘅 A；而家係已停用嘅 B；另外一個無關嘅 Active C 唔應該出現（REV-117 L-1）。
+  for (const code of [`SA-${suffix}`, `UC-${suffix}`]) {
+    const [inserted] = await connection.execute(`INSERT INTO payment_terms (code, code_key, name, calculation_type, due_days, status, version, created_at, updated_at)
+      VALUES (?, ?, ?, 'NET_DAYS', 30, 'ACTIVE', 1, ?, ?)`, [code, code.toUpperCase(), `Term ${code}`, now, now]);
+    otherTerms.push(Number(inserted.insertId));
+  }
+  const [submittedTerm] = otherTerms;
+  await connection.execute("UPDATE supplier_activation_requests SET summary = JSON_SET(summary, '$.defaultPaymentTermId', ?) WHERE id = ?",
+    [submittedTerm, seeded.requestId]);
   await connection.execute("UPDATE suppliers SET default_payment_term_id = ?, version = version + 1 WHERE id = ?", [termId, seeded.supplierId]);
   const service = serviceOn(connection, { actorId: who.approverId });
   // 真 provider：已停用嘅條款唔喺 Active 清單，要經 history 讀。
@@ -1026,5 +1036,9 @@ integrationTest("the detail names the payment terms in its difference, an inacti
   const detail = await service.getRequest({ actorId: who.approverId, claimedRoles: [], claimedPermissions: ["supplier.approval"], id: seeded.requestId });
   assert.ok(detail.changedFields.includes("defaultPaymentTermId"));
   assert.equal(detail.current.defaultPaymentTermId, termId);
-  assert.deepEqual(detail.paymentTerms, [{ id: termId, code: `RT-${suffix}`, name: "Retired Net 60", status: "INACTIVE" }]);
+  assert.equal(detail.submitted.defaultPaymentTermId, submittedTerm);
+  assert.deepEqual(detail.paymentTerms, [
+    { id: submittedTerm, code: `SA-${suffix}`, name: `Term SA-${suffix}`, status: "ACTIVE" },
+    { id: termId, code: `RT-${suffix}`, name: "Retired Net 60", status: "INACTIVE" }
+  ]);
 });

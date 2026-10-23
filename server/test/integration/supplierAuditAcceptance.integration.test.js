@@ -639,17 +639,18 @@ integrationTest("TC-014 (LIST-007): detail returns the general data, children, p
 
 integrationTest("a create that went past a similar-name warning records the warned candidates in its Audit, and a plain create records none (DEF-039, HD-132 B)", async () => {
   const t = tag();
-  const create = async (code) => {
+  const create = async (code, supplierName) => {
     const response = await h.send(h.users.mgmt, h.route("POST /api/v1/suppliers/create"),
-      { body: { supplierCode: code, supplierName: `Harbour Duplicate ${t}`, defaultCurrencyCode: "HKD" } });
+      { body: { supplierCode: code, supplierName, defaultCurrencyCode: "HKD" } });
     assert.equal(response.status, 201, response.text);
     h.supplierIds.push(response.json.data.id);
     const [[row]] = await h.db.query("SELECT detail FROM supplier_audit_logs WHERE action = 'supplier.create' AND supplier_id = ?", [response.json.data.id]);
     return typeof row.detail === "string" ? JSON.parse(row.detail) : row.detail;
   };
-  const first = await create(`DUPA-${t}`);
+  const first = await create(`DUPA-${t}`, `Harbour Duplicate Trading ${t}`);
   assert.equal(Object.hasOwn(first, "warnings"), false, "no candidate, no record");
-  const second = await create(`DUPB-${t}`);
+  // 相似但唔完全相同嘅名稱都要記低（REV-117 L-1）。
+  const second = await create(`DUPB-${t}`, `Harbour Duplicate Trading Co ${t}`);
   assert.deepEqual(second.warnings, { duplicateCandidates: [`DUPA-${t}`] });
   assert.equal(second.after.status, "draft");
 });

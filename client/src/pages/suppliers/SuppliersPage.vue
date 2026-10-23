@@ -252,7 +252,7 @@ async function exportSuppliers() {
       >
         <template #body-cell-supplierName="{ value }"><EllipsisCell :text="value" max-width="240px" /></template>
         <template #body-cell-displayName="{ value }"><EllipsisCell :text="value || '—'" max-width="180px" /></template>
-        <template #body-cell-defaultPaymentTermId="{ row }"><q-td class="text-left">{{ paymentTermLabel(row.defaultPaymentTerm, row.defaultPaymentTermId) }}</q-td></template>
+        <template #body-cell-defaultPaymentTermId="{ row }"><EllipsisCell :text="paymentTermLabel(row.defaultPaymentTerm, row.defaultPaymentTermId)" max-width="200px" /></template>
         <template #body-cell-primaryContactName="{ value }"><EllipsisCell :text="value || '未設定'" max-width="160px" /></template>
         <template #body-cell-status="{ value }">
           <q-td class="text-left"><q-badge :color="STATUS_COLOR[value]" :label="STATUS_LABEL[value] ?? value" /></q-td>

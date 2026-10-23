@@ -281,7 +281,10 @@ export class SupplierApprovalService {
       current,
       changedFields: approvalSummaryChanges(submitted, current),
       // 差異入面嘅付款條件 ID 要講得出 code 同名稱，包括已停用嘅（DEF-040、HD-133 A）。
-      paymentTerms: [...(await paymentTermsById(this.businessMaster, [submitted.defaultPaymentTermId, current.defaultPaymentTermId])).values()]
+      // 冇接 Business Master 嘅 service（例如 withdraw、approver lookup）就唔講名稱，唔好 500（REV-117 L-4）。
+      paymentTerms: this.businessMaster
+        ? [...(await paymentTermsById(this.businessMaster, [submitted.defaultPaymentTermId, current.defaultPaymentTermId])).values()]
+        : []
     };
   }
 

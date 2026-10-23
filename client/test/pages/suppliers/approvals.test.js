@@ -125,6 +125,18 @@ describe("pages/suppliers/SupplierApprovalsPage.vue", () => {
     expect(row.text()).not.toMatch(/\b3[12]\b/u);
   });
 
+  it("shows — rather than the ID when the server did not name a term (REV-117 L-1)", async () => {
+    supplierApprovalService.get.mockResolvedValue(detail({
+      submitted: { ...SNAPSHOT, defaultPaymentTermId: 31 }, current: { ...SNAPSHOT, defaultPaymentTermId: 31 }, paymentTerms: []
+    }));
+    const { body } = await mountPage();
+    await body.findAll("button").find((candidate) => candidate.attributes("aria-label")?.includes("審批詳情")).trigger("click");
+    await flushPromises();
+    const row = body.find('[data-field="defaultPaymentTermId"]');
+    expect(row.text()).toContain("—");
+    expect(row.text()).not.toMatch(/\b31\b/u);
+  });
+
   it("TC-125 (UI-005): refuses to approve a stale request, which is the same rule the service enforces", async () => {
     // AC-012：提交後 Supplier 改過就唔可以批舊申請。UI 禁用嘅嘢，服務層唔會突然又批得。
     supplierApprovalService.get.mockResolvedValue(detail({ stale: true, currentSupplierVersion: 6 }));

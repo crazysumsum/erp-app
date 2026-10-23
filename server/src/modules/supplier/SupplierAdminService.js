@@ -324,6 +324,7 @@ export class SupplierAdminService {
    * - `approvalRequired(connection)`：預設讀設定（`FOR SHARE`）；匯入用 confirm 嗰陣嘅 snapshot（AC-013）。
    * - `addChildren(supplierId)`：Supplier 插入之後、開審批申請之前寫子資料，所以申請嘅 snapshot 包括
    *   同一次建立嘅 Identifier。
+   * - `warnedDuplicates`：transaction 之前已經警告過嘅相似名稱候選；寫入 create Audit（DEF-039、HD-132 B）。
    *
    * 回 `{ id, duplicateCandidates }`。
    */
