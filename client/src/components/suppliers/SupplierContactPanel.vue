@@ -1,5 +1,5 @@
 <script setup>
-import { nextTick, reactive, ref } from "vue";
+import { computed, nextTick, reactive, ref } from "vue";
 import { confirm } from "@/framework/ui/confirm.js";
 import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
 import supplierService from "@/services/supplier.js";
@@ -92,6 +92,26 @@ async function deactivate(contact) {
   }
 }
 
+// DEF-037：同相鄰嘅有效聯絡人交換次序；第一個唔可以再上移，最後一個唔可以再下移（伺服器都會拒絕）。
+const activeIds = computed(() => rows.value.filter((row) => row.status === "active").map((row) => row.id));
+const canMove = (row, direction) => {
+  const index = activeIds.value.indexOf(row.id);
+  return index >= 0 && (direction === "up" ? index > 0 : index < activeIds.value.length - 1);
+};
+const moving = ref(false);
+async function move(row, direction) {
+  if (moving.value) return;
+  moving.value = true;
+  try {
+    await supplierService.moveContact(props.supplierId, row.id, { direction, version: row.version });
+    emit("refresh");
+  } catch (error) {
+    notifyError(error.message || "調整次序失敗");
+  } finally {
+    moving.value = false;
+  }
+}
+
 function purposeText(contact) {
   return contact.purposes.map((purpose) => `${PURPOSE_LABEL[purpose.purposeCode] ?? purpose.purposeCode}${purpose.isPrimary ? "（主要）" : ""}`).join("、") || "未指定用途";
 }
@@ -122,6 +142,8 @@ function contactText(contact) {
           <q-item-label caption>{{ purposeText(contact) }}</q-item-label>
         </q-item-section>
         <q-item-section v-if="canManage && contact.status === 'active'" side top class="row">
+          <q-btn flat dense icon="arrow_upward" :aria-label="`上移聯絡人 ${contact.name}`" :disable="moving || !canMove(contact, 'up')" @click="move(contact, 'up')" />
+          <q-btn flat dense icon="arrow_downward" :aria-label="`下移聯絡人 ${contact.name}`" :disable="moving || !canMove(contact, 'down')" @click="move(contact, 'down')" />
           <q-btn flat dense icon="edit" :aria-label="`編輯聯絡人 ${contact.name}`" @click="openEdit(contact)" />
           <q-btn flat dense color="negative" icon="block" :aria-label="`停用聯絡人 ${contact.name}`" @click="deactivate(contact)" />
         </q-item-section>

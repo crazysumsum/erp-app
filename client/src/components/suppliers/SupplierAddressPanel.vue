@@ -1,5 +1,5 @@
 <script setup>
-import { nextTick, reactive, ref } from "vue";
+import { computed, nextTick, reactive, ref } from "vue";
 import { confirm } from "@/framework/ui/confirm.js";
 import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
 import supplierService from "@/services/supplier.js";
@@ -95,6 +95,26 @@ async function deactivate(address) {
   }
 }
 
+// DEF-037：同相鄰嘅有效地址交換次序；第一個唔可以再上移，最後一個唔可以再下移（伺服器都會拒絕）。
+const activeIds = computed(() => rows.value.filter((row) => row.status === "active").map((row) => row.id));
+const canMove = (row, direction) => {
+  const index = activeIds.value.indexOf(row.id);
+  return index >= 0 && (direction === "up" ? index > 0 : index < activeIds.value.length - 1);
+};
+const moving = ref(false);
+async function move(row, direction) {
+  if (moving.value) return;
+  moving.value = true;
+  try {
+    await supplierService.moveAddress(props.supplierId, row.id, { direction, version: row.version });
+    emit("refresh");
+  } catch (error) {
+    notifyError(error.message || "調整次序失敗");
+  } finally {
+    moving.value = false;
+  }
+}
+
 function purposeText(address) {
   return address.purposes.map((purpose) => `${PURPOSE_LABEL[purpose.purposeCode] ?? purpose.purposeCode}${purpose.isPrimary ? "（主要）" : ""}`).join("、") || "未指定用途";
 }
@@ -115,6 +135,8 @@ function purposeText(address) {
           <q-item-label caption>{{ purposeText(address) }}</q-item-label>
         </q-item-section>
         <q-item-section v-if="canManage && address.status === 'active'" side top class="row">
+          <q-btn flat dense icon="arrow_upward" :aria-label="`上移地址 ${address.label}`" :disable="moving || !canMove(address, 'up')" @click="move(address, 'up')" />
+          <q-btn flat dense icon="arrow_downward" :aria-label="`下移地址 ${address.label}`" :disable="moving || !canMove(address, 'down')" @click="move(address, 'down')" />
           <q-btn flat dense icon="edit" :aria-label="`編輯地址 ${address.label}`" @click="openEdit(address)" />
           <q-btn flat dense color="negative" icon="block" :aria-label="`停用地址 ${address.label}`" @click="deactivate(address)" />
         </q-item-section>

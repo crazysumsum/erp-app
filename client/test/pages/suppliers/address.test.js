@@ -4,7 +4,7 @@ import { Quasar } from "quasar";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/services/supplier.js", () => ({
-  default: { createAddress: vi.fn(), listAddresses: vi.fn(), updateAddress: vi.fn(), deactivateAddress: vi.fn() }, service: { name: "supplier" }
+  default: { createAddress: vi.fn(), listAddresses: vi.fn(), updateAddress: vi.fn(), deactivateAddress: vi.fn(), moveAddress: vi.fn() }, service: { name: "supplier" }
 }));
 vi.mock("@/framework/ui/confirm.js", () => ({ confirm: vi.fn() }));
 vi.mock("@/framework/ui/notify.js", () => ({ notifySuccess: vi.fn(), notifyError: vi.fn() }));
@@ -91,6 +91,22 @@ describe("SupplierAddressPanel", () => {
     expect(body.text()).toContain("已顯示 105 個地址，共 105 個");
     expect(body.text()).toContain("Address 2004");
     expect(body.findAll(".q-btn").some((button) => button.text().includes("載入更多地址"))).toBe(false);
+  });
+
+  it("moves an active address up or down, never past the ends or over an inactive one, and refreshes (DEF-037)", async () => {
+    supplierService.moveAddress.mockResolvedValue({});
+    const rows = [{ ...ADDRESSES[0], id: 31, label: "First", sortOrder: 1, version: 4 },
+      { ...ADDRESSES[0], id: 32, label: "Second", sortOrder: 2, version: 6, purposes: [] }, ADDRESSES[1]];
+    const { wrapper, body } = mountPanel({ addresses: rows });
+    const button = (name) => body.find(`button[aria-label="${name}"]`);
+    expect(button("上移地址 First").attributes("disabled")).toBeDefined();
+    expect(button("下移地址 Second").attributes("disabled")).toBeDefined();
+    expect(button("下移地址 First").attributes("disabled")).toBeUndefined();
+    expect(button("上移地址 舊址").exists()).toBe(false);
+    await button("上移地址 Second").trigger("click");
+    await flushPromises();
+    expect(supplierService.moveAddress).toHaveBeenCalledWith(7, 32, { direction: "up", version: 6 });
+    expect(wrapper.emitted("refresh")).toBeTruthy();
   });
 
   it("offers no load-more below the detail's 100", () => {
