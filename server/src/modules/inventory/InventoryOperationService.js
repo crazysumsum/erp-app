@@ -24,7 +24,7 @@ const RESULT_SUMMARY_FIELDS = new Set([
   "outstandingQuantity", "eligibleOnHand", "reserved", "rawAtp", "atp", "uncoveredReserved",
   "allocationSnapshot", "sourceLineId", "rootOperationId", "rootRequestHash", "expectedOrderVersion",
   "orderedBaseQuantity", "reservedBaseQuantity", "uncoveredBaseQuantity", "membershipDigest",
-  "expectedVersion", "releaseQuantity", "lineCount"
+  "expectedVersion", "releaseQuantity", "lineCount", "trackingPolicy"
 ]);
 
 function assertExecutor(executor, method = "execute") {

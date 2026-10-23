@@ -1,0 +1,316 @@
+{
+  "classification": "Synthetic minimized summary only; raw logs,XML,trace,video and private credentials remain LOCAL_ONLY, not publication artifacts",
+  "source_fingerprint": "6022ff1a2dfb888c39d7a32642c8723ab587217d277f19ce2f2052216a3e4453",
+  "design": "7f09c816390b1d129bdb905566121b2000d04efca9c72e030f7772b1f1e10ded",
+  "plan": "74cd59d2b4e2ee79518406ef85d31c610f4dca75a17adff6baa4db8ba058c79e",
+  "observed_main": "58322ba3d5b77aa1a6250be4b5055651c682a371",
+  "developer_suites": [
+    {
+      "suite": "lint",
+      "result": "PASS",
+      "counts": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "run_id": "20261023T054542-a615e530745a",
+      "command_contract_sha256": "d9b002f5b56a257ac2f45384ae4c8a35adf99e52ecc80d9bc2a9d8c6460b8e07"
+    },
+    {
+      "suite": "client-build",
+      "result": "PASS",
+      "counts": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "run_id": "20261023T054910-3abd8f2e0370",
+      "command_contract_sha256": "6c93f2b0ad4edee06fbef51a3028f476695c6716f11bdd4a85edeae6b1a4fb09"
+    },
+    {
+      "suite": "inventory-developer",
+      "result": "PASS",
+      "counts": {
+        "total": 207,
+        "passed": 207,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "run_id": "20261023T054806-6c184b1c226b",
+      "command_contract_sha256": "686dc74b83313908108e7b5824dcc5c0c791c764e714f2d0f3c84c7f12541664"
+    },
+    {
+      "suite": "inventory-p2-database",
+      "result": "PASS",
+      "counts": {
+        "total": 7,
+        "passed": 7,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "run_id": "20261023T055348-477c499e9976",
+      "command_contract_sha256": "f5a596e528a9c3a2f39a6d5233cb89a59e06a1419c126eaebc29bdf36a8c2470"
+    },
+    {
+      "suite": "inventory-p2-api",
+      "result": "PASS",
+      "counts": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "run_id": "20261023T055434-d8b642d96129",
+      "command_contract_sha256": "c020a0c94e7b989652c2dab1bbfe7cfec433cbfcf8a59306bfdea139a1e58841"
+    },
+    {
+      "suite": "inventory-p3-movement-database",
+      "result": "PASS",
+      "counts": {
+        "total": 48,
+        "passed": 48,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "run_id": "20261023T055342-7cebd73802b4",
+      "command_contract_sha256": "e8764d522a1389ca1dece0166e17e7963857fda7ed370b091ef6b48d5d8a9fea"
+    },
+    {
+      "suite": "inventory-p3-transfer-database",
+      "result": "PASS",
+      "counts": {
+        "total": 32,
+        "passed": 32,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "run_id": "20261023T055345-7c6ccd6aa675",
+      "command_contract_sha256": "f720085118d02b29eee210ff8bddd457c95a063eed49815b1be356ea255a6eea"
+    },
+    {
+      "suite": "inventory-p3-api",
+      "result": "PASS",
+      "counts": {
+        "total": 31,
+        "passed": 31,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "run_id": "20261023T055432-38e7cb7d4bd0",
+      "command_contract_sha256": "896aadb85a338a357c5fd053b009b6b95502bb9c83d91a2ae4f5ae863e84892c"
+    },
+    {
+      "suite": "inventory-p3-server-coverage",
+      "result": "PASS",
+      "counts": {
+        "total": 2371,
+        "passed": 2371,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "run_id": "20261023T054809-c3d319db7db1",
+      "command_contract_sha256": "18b44ef38ceaee6ea85e2c3fd34fb22ab3710cf96ddc10b9964b86fae80e8b4e"
+    },
+    {
+      "suite": "inventory-p3-coverage-floors",
+      "result": "PASS",
+      "counts": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "run_id": "20261023T055936-2bb53fe4a920",
+      "command_contract_sha256": "574fbfac171f28c692cf3325f411a67e6338b7953dd89adc68395b02cf6058e2"
+    },
+    {
+      "suite": "inventory-p3-client-coverage",
+      "result": "PASS",
+      "counts": {
+        "total": 931,
+        "passed": 931,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "run_id": "20261023T054911-a8db296f6745",
+      "command_contract_sha256": "e22db846f42b44773957383bc79c36efcad805a780815679b0de73c084573b3d"
+    },
+    {
+      "suite": "inventory-p3-dependency-audit",
+      "result": "PASS",
+      "counts": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "run_id": "20261023T055037-f236e2c31132",
+      "command_contract_sha256": "f2ddb885b3ce2c2545acaee4768430eea744cd2c404f8b7ecd37bd80a06cfc7d"
+    },
+    {
+      "suite": "inventory-p3-browser",
+      "result": "PASS",
+      "counts": {
+        "total": 16,
+        "passed": 16,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "run_id": "20261023T055439-8d2e3f47e64f",
+      "command_contract_sha256": "66e4f615e4482daf0cf352df2c00248d01ee7d85e2147a8cc2729f84eea9d1f0"
+    },
+    {
+      "suite": "inventory-p3-browser-regression",
+      "result": "PASS",
+      "counts": {
+        "total": 18,
+        "passed": 18,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "run_id": "20261023T055140-d6781d2e250f",
+      "command_contract_sha256": "70dd10f9ccf457a4b9dca4dce36170de081519d4c521a6abf268a5c0470c1c3f"
+    },
+    {
+      "suite": "inventory-p3-sales-compatibility",
+      "result": "PASS",
+      "counts": {
+        "total": 48,
+        "passed": 48,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "run_id": "20261023T054730-4b6a0ab09d37",
+      "command_contract_sha256": "9e171b058f3a1040be05e9ff2a066d7de498d30ee260f5011627e02ddb6aae42"
+    },
+    {
+      "suite": "inventory-purchase-existing-receipt",
+      "result": "PASS",
+      "counts": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "run_id": "20261023T055351-bc05b7027176",
+      "command_contract_sha256": "4343b19959f2f3b7c0b417b99c1734efbc5a0eec4ccf5d73b878674313adfe62"
+    },
+    {
+      "suite": "inventory-purchase-existing-reservation",
+      "result": "PASS",
+      "counts": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "run_id": "20261023T055355-08695592544d",
+      "command_contract_sha256": "a0e727d7ab2987c98bd079d6f608132547ae2be18555b2e7ce38d475dd9070b2"
+    },
+    {
+      "suite": "inventory-purchase-existing-lock",
+      "result": "PASS",
+      "counts": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "run_id": "20261023T055358-d68a17746f53",
+      "command_contract_sha256": "52605e56c4de35a3c96b13af6a8260b9f521a61268140bbf7660c29081c6ba97"
+    },
+    {
+      "suite": "inventory-purchase-receipt-unit",
+      "result": "PASS",
+      "counts": {
+        "total": 28,
+        "passed": 28,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "run_id": "20261023T054731-01002dcdb065",
+      "command_contract_sha256": "9f73e666df383793e00b8a9f3e32b3a0159dc13c78ee45a57c9cf6225ae9a048"
+    },
+    {
+      "suite": "inventory-purchase-receipt-database",
+      "result": "PASS",
+      "counts": {
+        "total": 32,
+        "passed": 32,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "run_id": "20261023T055311-d550e9908a13",
+      "command_contract_sha256": "049fcfa4d63b4dd6fb8cd68e16a943e54d47fcc9ad99ea3e891b43d7f0713946"
+    },
+    {
+      "suite": "inventory-purchase-receipt-auth",
+      "result": "PASS",
+      "counts": {
+        "total": 8,
+        "passed": 8,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "run_id": "20261023T055314-79ba5415d636",
+      "command_contract_sha256": "731be254bfdb7581113e8ed4493c001ccbc2b6465e067c0c74292c860ccdc496"
+    },
+    {
+      "suite": "inventory-purchase-contract",
+      "result": "PASS",
+      "counts": {
+        "total": 9,
+        "passed": 9,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "run_id": "20261023T054732-f945232cc4d2",
+      "command_contract_sha256": "f8c906ba87cd978e0a812cf1cca3663764cf692e6e376435a76e42ecd9bd0827"
+    }
+  ],
+  "full_native_support": {
+    "result": "FAIL",
+    "passed": 3563,
+    "failed": 74,
+    "skipped": 171,
+    "total": 3808,
+    "duration_seconds": 679.833,
+    "lines": 95.59,
+    "branches": 87.11,
+    "functions": 93.58,
+    "per_file_floors": {
+      "result": "PASS",
+      "files": 39
+    },
+    "limitation": "31-char owned schema rejected by Sales provider fixture30-char limit;73 explicit setup rejections plus parent failure. Same short-schema minimal actual owner probe1/1. Not full native/global Gate PASS; actual current CI merged native coverage still mandatory per approved plan."
+  },
+  "runtime": "All current owned schemas/daemons/ports precisely cleaned; synthetic data removed, source and original reports retained",
+  "ci": "NOT_RUN",
+  "sam_final_source_review": "REQUIRED",
+  "purchasing": "NOT_UNLOCKED",
+  "task041": "SEPARATE_UNCHANGED"
+}

@@ -106,6 +106,7 @@ export class SupplierDuplicateCandidates {
         right.score - left.score ||
         left.supplierId - right.supplierId
       )
+      // 上限 10：create Audit 會記低呢啲 code（DEF-039），boundedDetail 唔會摘要巢狀陣列；提高上限前先睇 8192 bytes 上限。
       .slice(0, 10);
   }
 

@@ -285,9 +285,9 @@ TC-062 … TC-077 already carry their IDs in `supplierBank*.integration`, `suppl
 
 ## supplier-client-ui (11)
 
-Runner: `npm test --workspace client -- --config test/supplier-management.vitest.config.js` (HD-117 A). It runs the 21 Supplier page and service test files in jsdom; each test title carries at most one TC ID. Local run after REV-107: 168 passed, 0 failed, 0 skipped; after DEF-035 (audit page and tab, 2026-10-22): 176 passed; after REV-113 (2026-10-23): 182 passed; after DEF-036 (REV-114): 184 passed; every required ID PASS through the harness JUnit adapter. Keyboard, focus, viewport, browser back and visual checks need a real browser and are left to the Playwright specs and UAT.
+Runner: `npm test --workspace client -- --config test/supplier-management.vitest.config.js` (HD-117 A). It runs the 21 Supplier page and service test files in jsdom; each test title carries at most one TC ID. Local run after REV-107: 168 passed, 0 failed, 0 skipped; after DEF-035 (audit page and tab, 2026-10-22): 176 passed; after REV-113 (2026-10-23): 182 passed; after DEF-036 (REV-114): 184 passed; after DEF-038 (REV-116): 189 passed; after DEF-039..041 (REV-117): 193 passed; every required ID PASS through the harness JUnit adapter. Keyboard, focus, viewport, browser back and visual checks need a real browser and are left to the Playwright specs and UAT.
 
-Left out on purpose: `client/test/framework/routing/authorizationRefresh.test.js`. Its `同 SupplierBankPanel 夾埋` block checks that Bank plaintext is cleared and that losing `supplier.view` sends the user to 403, but the file is a framework routing test and the rest of it is not Supplier's. It runs in the main client suite. The profile's `min_tests` is 11 while 184 tests run, so a shrunken file list is caught only through the required IDs; raising the floor changes the profile and needs its own decision (REV-107 I-2).
+Left out on purpose: `client/test/framework/routing/authorizationRefresh.test.js`. Its `同 SupplierBankPanel 夾埋` block checks that Bank plaintext is cleared and that losing `supplier.view` sends the user to 403, but the file is a framework routing test and the rest of it is not Supplier's. It runs in the main client suite. The profile's `min_tests` is 11 while 193 tests run, so a shrunken file list is caught only through the required IDs; raising the floor changes the profile and needs its own decision (REV-107 I-2).
 
 | TC | Case | Tagged tests | Status | Gap |
 | --- | --- | --- | --- | --- |
@@ -340,4 +340,21 @@ Run it on an otherwise idle machine, with room in `performance_schema`'s digest 
 
 ## UAT (52)
 
-Not mapped yet. 42 Playwright tests exist across seven specs, none tagged with a UAT ID.
+Runner (HD-124 A): `npx playwright test --config client/e2e/supplier-management/playwright.uat.config.js`.
+- **Environment:** a real server and real MySQL, with no network mock.
+  - `uat/uatServer.mjs` creates `${DB_NAME}_rh_uat…` with the admin credentials, migrates it, seeds the 07 §2 roles with random passwords, and starts the server on :3021. Vite runs on :5216.
+  - `globalTeardown` drops the database.
+- **Logins:** each role keeps a persistent browser profile and logs in once per run, because the login throttle allows 20 attempts per IP in 10 minutes. New devices are approved in the database, as in Item UAT. Artifacts and profiles are written outside the evidence directory, because traces record typed passwords.
+- **Missing `DB_NAME` or `DB_ADMIN_USER`:** the config throws, so no report is written and the harness records BLOCKED.
+- **Test names:** each test title carries one UAT ID.
+- **The technical specs** (`playwright.config.js`) still mock the network and are not UAT evidence.
+
+PHASE-001 (`uat/uat-phase-001.spec.js`, 25 cases). Local developer run on 2026-10-23, which is not a formal UAT execution:
+
+| Result | Cases |
+| --- | --- |
+| Pass | UAT-001, 002, 003, 004, 006, 007, 008, 009, 017, 018, 019, 020, 021, 022, 023, 031, 042, 049, 054 |
+| Fail on a recorded defect | UAT-048 (DEF-037: no ordering). Every earlier step passes. UAT-031 passes since DEF-038, UAT-003 since DEF-039. |
+| `test.fixme`, waiting on downstream modules (HD-124 A, HD-131 A) | UAT-005; the Supplier steps of UAT-016, 024, 050 and 051 run first. |
+
+Phases 002, 003, 004 and the cross-phase cases are not written yet. UAT-054 is the only case that intercepts a request in the browser: a slow response and a 503 cannot be produced safely on a real server.

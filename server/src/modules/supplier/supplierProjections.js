@@ -18,10 +18,13 @@ export function toSupplierDetailResponse(row, {
   contacts = [],
   identifiers = [],
   bankAccounts = [],
-  warnings = []
+  warnings = [],
+  defaultPaymentTerm
 } = {}) {
   return {
     ...toSupplierSummaryResponse(row),
+    // 詳情先有：付款條件喺 Business Master，停用咗都要讀得返 code 同名稱（DEF-038、HD-130 A）。
+    ...(defaultPaymentTerm === undefined ? {} : { defaultPaymentTerm }),
     website: row.website,
     generalPhone: row.general_phone,
     generalEmail: row.general_email,

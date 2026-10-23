@@ -6,6 +6,7 @@ import { InventoryAuditService } from "./InventoryAuditService.js";
 import { InventoryLockService } from "./InventoryLockService.js";
 import { InventoryOperationService } from "./InventoryOperationService.js";
 import { InventoryFulfillmentService } from "./InventoryFulfillmentService.js";
+import { InventoryPurchaseService } from "./InventoryPurchaseService.js";
 import { inventoryError } from "./inventoryErrors.js";
 import { postBinMoveInTransaction } from "./inventoryBinMovePosting.js";
 import { postAdjustmentInTransaction } from "./inventoryAdjustmentPosting.js";
@@ -290,6 +291,12 @@ export class InventoryPostingService {
     this.locks = locks ?? new InventoryLockService();
     this.createMovementGroupId = createMovementGroupId;
     this.fulfillment = fulfillment ?? new InventoryFulfillmentService({database,logger,time,itemLookup:this.itemLookup,audit:this.audit,operations:this.operations,locks:this.locks});
+    this.purchase = new InventoryPurchaseService({ database, logger, time, audit: this.audit, operations: this.operations,
+      locks: this.locks, createMovementGroupId, resolveLot: this.resolveReceiptLotInTransaction.bind(this) });
+  }
+
+  postPurchaseReceiptBatchInTransaction(tx, command) {
+    return this.purchase.postPurchaseReceiptBatchInTransaction(tx, command);
   }
 
   claimFulfillmentBatchInTransaction(tx,input) { return this.fulfillment.claimFulfillmentBatchInTransaction(tx,input); }

@@ -2074,3 +2074,25 @@ Inventory quantity and audit are high-risk shared data requiring least privilege
 
 ### Failure behavior
 Authentication, authorization, concurrency, performance, retention or recovery failures block the affected command or release gate.
+
+## DES-011 — Purchasing batch receipt provider
+
+### Decision
+PROPOSED，待Sam精確候選批准。正式ABI、可信context、transaction與來源結果協定定義於 [provider v1](implementation/purchase-provider-contract-v1.md) §1–3、5–6；以manifest另行pin該權威addendum。只供Purchasing已鎖定Confirmed PO的批次接入。
+
+### Rationale
+整批claims及全域鎖序避免逐行單筆posting的跨明細死鎖／部分效果；分開交易意圖hash與可持久重建的membershipDigest。獨立PHASE007，不以P4完整容量或P5為前置。
+
+### Failure behavior
+任一驗證／DB／Audit／caller故障整批rollback，未知commit保留原event查詢；NOT_FOUND不是失敗或另建event的證明。舊入口語義保持。
+
+## DES-012 — Purchasing partial reversal provider
+
+### Decision
+PROPOSED，待Sam精確候選批准。[provider v1](implementation/purchase-provider-contract-v1.md) §2–6定義專用partial reversal及link migration；保留舊generic reversal unique，不遷移歷史來源。
+
+### Rationale
+原Movement鎖序列化累計反向；獨立append-only link同交易留存原量關聯。PHASE008只依賴已合併PHASE007。
+
+### Failure behavior
+超額、allocated／Reserved不足、來源或認證錯誤全rollback。新purchase來源不能fallback generic，舊generic一次完整反向不變。

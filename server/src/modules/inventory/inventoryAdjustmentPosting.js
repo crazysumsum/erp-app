@@ -181,8 +181,7 @@ async function post(service, tx, command, guard, action) {
   }
   const balances = await service.locks.lockBalancesAfterLot(tx, { balances: ordered, now: service.time.nowMs() });
   // Only existing Item-owned SELECTs run through this current-read executor; no Item rules or SQL are copied.
-  const currentItem = { query: (sql, params) => tx.query(`${sql} FOR SHARE`, params) };
-  const profile = await service.itemLookup.getInventoryProfileInTransaction(currentItem, skuId);
+  const profile = await service.itemLookup.getInventoryProfileInTransaction(tx, skuId);
   assertProfile(profile);
   for (const field of ["skuId", "skuCode", "skuName", "skuStatus", "itemStatus", "inventoryTracked", "trackingPolicy",
     "minimumReceiptLifeDays", "minimumSaleLifeDays"]) {
@@ -191,7 +190,7 @@ async function post(service, tx, command, guard, action) {
   if (profile.baseUom.uomId !== initialProfile.baseUom.uomId || profile.baseUom.uomCode !== initialProfile.baseUom.uomCode) {
     throw inventoryError("CONCURRENT_OPERATION");
   }
-  const uom = await service.itemLookup.resolveUomInTransaction(currentItem, skuId, payload.uomId);
+  const uom = await service.itemLookup.resolveUomInTransaction(tx, skuId, payload.uomId);
   if (!uom) throw inventoryError("INVENTORY_INPUT_INVALID", { field: "uomId" });
   const baseQuantity = toBaseQuantity(payload.quantity, uom.toBaseFactor);
   const date = service.time.fileDate();

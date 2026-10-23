@@ -940,7 +940,7 @@
         "playwright",
         "test",
         "--config",
-        "client/e2e/supplier-management/playwright.config.js"
+        "client/e2e/supplier-management/playwright.uat.config.js"
       ],
       "cwd": ".",
       "timeout_seconds": 7200,
@@ -1017,11 +1017,28 @@
       "side_effects": [
         "FILES"
       ],
-      "env_keys": [],
+      "env_keys": [
+        "DB_HOST",
+        "DB_PORT",
+        "DB_NAME",
+        "DB_ADMIN_USER",
+        "DB_ADMIN_PASSWORD",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
+      ],
       "redaction_env_keys": [
         "DB_PASSWORD",
         "SUPPLIER_BANK_ENCRYPTION_KEYS",
-        "SUPPLIER_BANK_LOOKUP_KEYS"
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "DB_ADMIN_PASSWORD"
       ]
     }
   ],

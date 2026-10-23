@@ -49,11 +49,12 @@ before(async () => {
     "CREATE TABLE fr_token_versions (subject VARCHAR(190) PRIMARY KEY, version BIGINT UNSIGNED) ENGINE=InnoDB",
     `CREATE TABLE permissions (id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, name VARCHAR(190) UNIQUE,
       description VARCHAR(255) DEFAULT '', created_at BIGINT UNSIGNED) ENGINE=InnoDB`,
-    "CREATE TABLE items (id BIGINT UNSIGNED PRIMARY KEY, name VARCHAR(190), product_type VARCHAR(20), status VARCHAR(20)) ENGINE=InnoDB",
+    "CREATE TABLE items (id BIGINT UNSIGNED PRIMARY KEY, name VARCHAR(190), product_type VARCHAR(20), status VARCHAR(20), version INT UNSIGNED NOT NULL DEFAULT 1) ENGINE=InnoDB",
     `CREATE TABLE item_skus (id BIGINT UNSIGNED PRIMARY KEY, item_id BIGINT UNSIGNED, sku_code VARCHAR(190),
       sku_name VARCHAR(190), status VARCHAR(20), purchasable BOOLEAN DEFAULT 1, sellable BOOLEAN DEFAULT 1,
       inventory_tracked BOOLEAN DEFAULT 1, tracking_policy VARCHAR(20), shelf_life_days INT,
-      min_receipt_life_days INT, min_sale_life_days INT, effective_from DATE, effective_to DATE) ENGINE=InnoDB`,
+      min_receipt_life_days INT, min_sale_life_days INT, effective_from DATE, effective_to DATE,
+      version INT UNSIGNED NOT NULL DEFAULT 1) ENGINE=InnoDB`,
     `CREATE TABLE item_uoms (id BIGINT UNSIGNED PRIMARY KEY, code VARCHAR(20), name VARCHAR(100) NOT NULL,
       status VARCHAR(20) NOT NULL DEFAULT 'active', version INT UNSIGNED NOT NULL DEFAULT 1) ENGINE=InnoDB`,
     `CREATE TABLE item_sku_uoms (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -71,7 +72,7 @@ before(async () => {
   await pool.query("INSERT INTO user_roles VALUES (8, 2)");
   await pool.query("INSERT INTO role_permissions SELECT 2, id FROM permissions WHERE name IN ('inventory.view','inventory.adjust')");
   await pool.execute("INSERT INTO user_devices VALUES (1, 8, ?, ?, 'approved')", ["a".repeat(64), Buffer.from("synthetic-public-key")]);
-  await pool.query("INSERT INTO items VALUES (1, 'Synthetic', 'physical', 'active')");
+  await pool.query("INSERT INTO items (id,name,product_type,status) VALUES (1, 'Synthetic', 'physical', 'active')");
   await pool.query(`INSERT INTO item_skus (id, item_id, sku_code, sku_name, status, tracking_policy)
     VALUES (12, 1, 'SKU-12', 'Synthetic plain', 'active', 'none'),
            (13, 1, 'SKU-13', 'Synthetic expiry', 'active', 'batch_expiry'),
