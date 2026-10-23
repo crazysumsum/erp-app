@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1305,
+  "revision": 1309,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "64b0e1d51fe2a5163e8e33c93277e0a7d3464abff52684a0b57b6c636821622a",
     "plan": "ec0fae970beca595f863eed95f752984c424ae0080342f99a70fc281880e30a6",
-    "code_commit": "0f6abe8c2f8bb32bcf7e3c11a855a7985a6296b9",
-    "source_fingerprint": "aff49c57cf0f434d3e64a11734b8901eb553bb90c32c2c43161dfbe22d9cee8d",
+    "code_commit": "43b7d86899cf9a4afd7eaa2643b38655efbebebf",
+    "source_fingerprint": "e192e62d434acbd3ca5aa2198dd20331957e5e81f4a4571812242affb9a049a3",
     "worktree": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app",
     "default_commit": "e272f5d3ce05d0ca50be42e6d8764f0ef20d3dd1",
     "mode_entry_commit": "e272f5d3ce05d0ca50be42e6d8764f0ef20d3dd1"
@@ -11771,6 +11771,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-P4-DEF020-SALES-DOMAIN-CLOSURE-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "e192e62d434acbd3ca5aa2198dd20331957e5e81f4a4571812242affb9a049a3",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-def020-sales-domain-locks-r2-closing-reviewer-proof.json SHA256bb5fb4608c3534de64be08a8f67cbeba2d129d539b1845e296f3404efab1f205; original changes-requested879632e8 and realREDe5aa521e preserved. Native14 inspected byreviewer; additional29 executed/observed byroot separately.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -15491,6 +15503,50 @@
       "subject": "Frozen current HD016A and Archive foundation component matrix Node152PASS0FAIL0SKIP; actual standard provider64leaf alsoPASS",
       "status": "PASS",
       "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-hd016-integrated152-native-unit-r2.json; raw006bee5841ae2d84563a6ff446362b0b7733b0a0c652e4293b233c495f66f7ce, source/spec unchanged; exact source/augmentation independent proofsa040f44a/84d1768e/a2d0a1b3, scopedlint0. Node152 includes2 parent nodes, not152JUnitleaves. FullTC047048/privateauthority/participant/Task/Phase/currentCI/Gate pending."
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "43b7d86899cf9a4afd7eaa2643b38655efbebebf",
+      "spec_baseline": "ec0fae970beca595f863eed95f752984c424ae0080342f99a70fc281880e30a6",
+      "source_fingerprint": "aff49c57cf0f434d3e64a11734b8901eb553bb90c32c2c43161dfbe22d9cee8d",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-23T04:10:27.137888Z",
+      "subject": "Local reviewed HD016A/fence checkpoint commit observed; source fingerprint identical to actual qualifying component runs",
+      "status": "PASS",
+      "source_ref": "implementation/121_hd016_provider_and_sales_operation_fences.md; actualgitcommit43b7d868. Existing oldcandidateCI remains historical; no push/PR/mainmerge/TaskDONE."
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "43b7d86899cf9a4afd7eaa2643b38655efbebebf",
+      "spec_baseline": "ec0fae970beca595f863eed95f752984c424ae0080342f99a70fc281880e30a6",
+      "source_fingerprint": "e192e62d434acbd3ca5aa2198dd20331957e5e81f4a4571812242affb9a049a3",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-23T04:18:49.758851Z",
+      "subject": "DEF020 undercount omission reproduced in unreleased Archive helper; narrow fix and native boundary retest underway",
+      "status": "BLOCKED",
+      "source_ref": "Actual RED e5aa521e + distinct changes-requested879632e8. Original8PASS/b270d257 and earlier missingmethodRED53849667/DBenvskipdiagnostic preserved. Remaining privatefreshTX/runtime/participant/fullP4/currentCI not qualified."
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "43b7d86899cf9a4afd7eaa2643b38655efbebebf",
+      "spec_baseline": "ec0fae970beca595f863eed95f752984c424ae0080342f99a70fc281880e30a6",
+      "source_fingerprint": "e192e62d434acbd3ca5aa2198dd20331957e5e81f4a4571812242affb9a049a3",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-23T04:22:08.928952Z",
+      "subject": "Additional original-caller confirmation regression blocked before business assertions by wrong fixture namespace then old-core catalogue; fresh full nonce next",
+      "status": "BLOCKED",
+      "source_ref": "p4-sales-domain-shared-confirmation-native-r1.log af148082 and r2c8e4aece retained; no helper or privatecap correctness failure inferred. DEF020 local14 and reviewbb5fb460 actual, broadcurrentGate stillpending."
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "43b7d86899cf9a4afd7eaa2643b38655efbebebf",
+      "spec_baseline": "ec0fae970beca595f863eed95f752984c424ae0080342f99a70fc281880e30a6",
+      "source_fingerprint": "e192e62d434acbd3ca5aa2198dd20331957e5e81f4a4571812242affb9a049a3",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-23T04:25:58.751207Z",
+      "subject": "Sales root/complete-line/mapping lock component final14 and originalcaller29 developerPASS; DEF020 narrow independentclosure",
+      "status": "PASS",
+      "source_ref": "proofbb5fb460/nativef0c3d77e/additional9c1b7ce2/scopedlint0; undercount/discovery errors and original8/RED preserved. Complete freshTX/privatejob/participant/Archive/fullP4CI/Gate stillpending."
     }
   ],
   "pending_decisions": [
@@ -18576,8 +18632,24 @@
       "kind": "GIT_COMMIT",
       "target": "local Sales P4 exact reviewed HD016A provider/canonical binding and Sales operation fence components",
       "idempotency_key": "p4-hd016-a-and-sales-fence-20261023",
+      "status": "CONFIRMED",
+      "source_ref": "Exact packagea040f44a / Salesfence84d1768e / two-test augmentation and standard64leaf closurea2d0a1b3. Broad current-source rerun still pending; only commit after observation. No push/PR/mainmerge.; actual observed local commit 43b7d86899cf9a4afd7eaa2643b38655efbebebf and unchanged sourceaff49c57cf0f434d3e64a11734b8901eb553bb90c32c2c43161dfbe22d9cee8d. Standard64leaf/broad152Node/scopedlint0 are actual; no currentP4CI/merge qualification."
+    },
+    {
+      "id": "ACT-P4-SDL-FULL-NONCE-CONFIRMATION-20261023",
+      "kind": "ISOLATED_MIGRATION_AND_REGRESSION",
+      "target": "fresh exclusively generated nonce database by existing createFulfillmentArchiveDatabase(baseOnly:false) on approved37e933 owned daemon; cleanup only nonce via originalfactory",
+      "idempotency_key": "p4-sdl-fullnonce-confirmation-r3-20261023",
+      "status": "CONFIRMED",
+      "source_ref": "Actual originalfullconfirmation29NodePASS0FAIL0SKIP raw9c1b7ce2; current allmigrations applied byoriginalfactory, ownedexclusive noncefulfillment_p0_sales_fa_5b163058a8b3. Actual cleanup read p4-sales-domain-full-nonce-cleanup-r3.json confirms absent. Both original wrongnamespace/catalogue errors preserved; no reset/manualpermissionseed/grants/source changes. No fullP4Gate claim."
+    },
+    {
+      "id": "ACT-P4-SALES-DOMAIN-LOCKS-COMMIT-20261023",
+      "kind": "GIT_COMMIT",
+      "target": "local-only Sales Archive domain lock component and DEF020 narrow fix",
+      "idempotency_key": "p4-sales-domain-def020-20261023",
       "status": "STARTED",
-      "source_ref": "Exact packagea040f44a / Salesfence84d1768e / two-test augmentation and standard64leaf closurea2d0a1b3. Broad current-source rerun still pending; only commit after observation. No push/PR/mainmerge."
+      "source_ref": "exact separateproofbb5fb460, native14+originalcaller29/scopedlint0; all fullP4 obligations pending. No push/PR/mainmerge."
     }
   ],
   "evidence_files": [
@@ -19660,7 +19732,23 @@
         "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-def019-junit-leaf-contract-r1-closing-reviewer-proof.json SHA256a2d0a1b368fdeaa431de54c2808fa03908d21b04d03f31d2f62875fa403a01a4; original min64 retained; actualstandard64leafPASS0FAIL0SKIP raw310d474e, exact finaltest/product source; original62BLOCKED retained. Execution-contract discovery repair only, no wholeP4 qualification."
       ],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-020",
+      "severity": "HIGH",
+      "status": "CLOSED",
+      "source_ids": [
+        "TASK-058",
+        "TC-048"
+      ],
+      "closure_evidence": [
+        "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-sales-domain-locks-r1-source-reviewer-proof.json SHA256879632e8383dffb77fe6f0f587d4971649a7ba3830e5c4ed1e8e793b966c1df8; actual distinct reviewer CHANGES_REQUESTED undercount/missing nativeedges. Unreleased internal helper, not activeArchive/data-lossincident.",
+        "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-sales-domain-undercount-red-r1.log SHA256e5aa521eacf5b250a4281716690463b1c8ddddde9e3ee97778b81535c68c3676; actual13PASS/1FAIL0SKIP, understated line_count silently accepted extra actual line. Narrow bounded ordinarymembership fix applied; final14 retest/independentclosingreview pending; no Gate waiver.",
+        "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-def020-sales-domain-locks-r2-closing-reviewer-proof.json SHA256bb5fb4608c3534de64be08a8f67cbeba2d129d539b1845e296f3404efab1f205; exact helper9e185b2e/test72a502fa/sharedreturnf0e8d4e4. Actual final14PASS0FAIL0SKIP rawf0c3d77e; same realunderstatementRED nowrefuses. Fixed controlled fresh-runtime stillrequired; arbitrary oldRR notcertified.",
+        "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-sales-domain-shared-confirmation-native-r3.log SHA2569c1b7ce2a5bac6c66e5d022bbae1db98a344bdf05b96683e09ddf9c909975639; additional originalcaller29PASS0FAIL0SKIP incl100line deadlock andHTTP; nonceallcurrentmigrations and actualcleanup. No Task/Phase/privateauthority/CI/Gate closure."
+      ],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Observe frozen current-source broad rerun, preserve all results; commit HD016A/fence component checkpoint and send exact owner handoff. Continue actual Archive coordinator/authority/provider/participant/UI and all unchanged P4 Gates; no further human decision currently required."
+  "next_safe_action": "Commit exact approved Sales domain-lock component; implement the real fixed Archive coordinator/private live-tx scope plus owner provider/participant and single-order atomic copy/readback/routing/delete, then unchanged whole P4 developer/browser/performance/restore/currentCI/review/merge Gates. No human decision pending."
 }

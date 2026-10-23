@@ -33,7 +33,7 @@ export function toSalesOrderDetail(row, lines) {
 // holds the Warehouse share lock; a holder that then enters Inventory for the Warehouse lock deadlocks with it.
 export async function lockSalesOrderLines(tx, id, lineCount) {
   const lineNumbers = Array.from({ length: Number(lineCount) }, (_, index) => index + 1);
-  await tx.query(`SELECT id FROM sales_order_lines FORCE INDEX (uq_sales_order_line_number) WHERE sales_order_id=? AND line_no IN (${lineNumbers.map(() => "?").join(",")}) ORDER BY id FOR UPDATE`, [id, ...lineNumbers]);
+  return tx.query(`SELECT id FROM sales_order_lines FORCE INDEX (uq_sales_order_line_number) WHERE sales_order_id=? AND line_no IN (${lineNumbers.map(() => "?").join(",")}) ORDER BY id FOR UPDATE`, [id, ...lineNumbers]);
 }
 export async function readSalesOrderDetail(tx, id, { lock = false } = {}) {
   const [[row]] = await tx.query(`SELECT id,sales_order_number,status,source_type,source_quotation_id,channel_code_snapshot,external_order_id_snapshot,
