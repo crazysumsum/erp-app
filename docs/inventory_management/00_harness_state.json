@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 1913,
+  "revision": 1926,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "a0e8e789cdbf9431c24fcc859b20a39cb1ba6a924aca2d51363349e058860687",
     "plan": "1e9cdb380f31153173dab9b4959dcd274665107b3d0435dad37a2ddcdc09b7c7",
-    "code_commit": "dbfe648fb55c258b0c0a6bfc91b22916b30e8d6e",
-    "source_fingerprint": "b79ce71534ddd9d14ebb61b67303b2c6e46d69ccf2547746f014be9ff0cab3b0",
+    "code_commit": "01780e8dc54cc9a77051ab3d074211158206e96b",
+    "source_fingerprint": "b77b0468e6d9b3f2239490c7be8e0e3fb5f14f9e2af4bc747361cfb6bd418273",
     "worktree": "/private/tmp/erp-inventory-purchase-reversal",
-    "default_commit": "5c055d79e94c74e58ccb27afe0fc3e0bd3edf151",
+    "default_commit": "1e57380e9df8fb7c0563a176921b86fb6e81682b",
     "mode_entry_commit": "e272f5d3ce05d0ca50be42e6d8764f0ef20d3dd1"
   },
   "runtime": {
@@ -22,11 +22,11 @@
     "owner": "Codex /root",
     "resources": {
       "workspace": "/private/tmp/erp-inventory-purchase-reversal",
-      "mysql-schema": "CLEANED all owned native/schema/auth instances through61TtIL; zero schemas/connections/transactions, normaldaemonexit0; no active MySQL/runtime/credentials. Originallogs/XML retained privately; no P4/sharedDB touched.",
-      "web-port": "CLEANED test-only loopback app after HTTP proof; application.shutdown awaited before pool/schema cleanup; no live owned web/API process.",
+      "mysql-schema": "CLEANED allown purchase/TCP/P2/P3/browser/nativecoverage/probe/shard instances; actualSQL/schema/trx terminal, daemonsnormalexit0, exactdatadirs/generatedcredentials removed. Rawcoverage andoriginalreports retainedLOCAL_ONLY.",
+      "web-port": "CLEANED actualtest apps/Vite/API/loopback listeners, originalbrowser16+mock18PASS and10imagesviewed.",
       "opening-file-root": "NOT_USED: PR-A does not run Opening or P4; no Opening files allocated"
     },
-    "lease_ref": "No active native/browser/load. Fixed-source supporting native24 + HTTP21childcases PASS; originalfailures retained. Remaining approved mandatory-case gaps, finalHarness/fullregression/coverage/browser/currentCI/latestmain/Sam source remain pending."
+    "lease_ref": "No owned runtime active. 25/25 currentrequiredHarnessgroups PASS, fullnativeglobal+39floorsPASS; sourceb77 unchanged, plan1e9unchanged. CurrentcandidateCI andactualSam source review stillpending."
   },
   "tasks": {
     "TASK-001": "DONE",
@@ -4556,6 +4556,98 @@
       "expires_at": null
     },
     {
+      "id": "APR-PURCHASE-B-OWNER-PROOF-DESIGN-MODULE-ID-RECORD",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam current user message: A：已審閱，批准 PR-B 精確四檔候選與範圍，請繼續 TDD／原生驗證，全部通過後準備精確來源讓我審閱；TASK-041 分開追蹤，沒有需要我決定的問題前不要停下來。 Exact v2 four-file patch92441af3f95e459e0d8bf3b045e146b5434271c419d67c557566c2c27444bf79. Approves candidate DESIGN/PLAN and same implementation scope, not unseen final source/DONE/merge. Old evidence preserved with original identities. Administrative correction: original record omitted the module-qualified inventory-management subject required by has_approval despite recording the exact module DESIGN/PLAN. Preserve the original record; this derived record maps the same actual Sam decision to its explicit module ID only. No new design, plan, files, authority, source approval, CI waiver or merge approval is inferred.",
+      "recorded_at": "2026-10-23T08:10:48.312Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "a0e8e789cdbf9431c24fcc859b20a39cb1ba6a924aca2d51363349e058860687",
+      "code_commit": null,
+      "scope": [
+        "inventory-management",
+        "PHASE-007",
+        "TASK-052",
+        "PHASE-008",
+        "TASK-053",
+        "docs/inventory_management/**",
+        "docs/purchasing_receiving_management/00_module_manifest.json",
+        "docs/purchasing_receiving_management/03_design_spec.md",
+        "server/src/modules/inventory/InventoryPostingService.js",
+        "server/src/modules/inventory/InventoryLookupService.js",
+        "server/src/modules/inventory/inventoryConstants.js",
+        "server/src/modules/inventory/InventoryOperationService.js",
+        "server/src/modules/inventory/InventoryPurchaseService.js",
+        "server/src/modules/inventory/InventoryPurchaseContext.js",
+        "server/src/modules/inventory/inventoryPurchaseValidation.js",
+        "server/src/modules/inventory/inventoryPurchaseReceipts.js",
+        "server/src/modules/inventory/inventoryPurchaseReversal.js",
+        "server/database/migrations/0101_create_inventory_purchase_reversal_links.js",
+        "server/test/inventoryPurchaseReceipt.test.js",
+        "server/test/inventoryPurchaseContext.test.js",
+        "server/test/inventoryPurchaseReversal.test.js",
+        "server/test/inventoryPurchaseContract.test.js",
+        "server/test/integration/inventoryPurchaseReceipt.integration.test.js",
+        "server/test/integration/inventoryPurchaseReversal.integration.test.js",
+        "server/test/integration/inventoryPurchaseAuth.integration.test.js",
+        "server/test-support/inventoryPurchaseFixtures.js",
+        "server/src/modules/inventory/inventoryAdjustmentPosting.js",
+        "server/src/modules/inventory/inventoryReversalPosting.js",
+        "server/src/handlers/inventory/skuLookupHandlers.js",
+        "server/test/inventoryTransferHandlers.test.js",
+        "server/test/integration/inventoryMovement.integration.test.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PURCHASE-B-OWNER-PROOF-PLAN-MODULE-ID-RECORD",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam current user message: A：已審閱，批准 PR-B 精確四檔候選與範圍，請繼續 TDD／原生驗證，全部通過後準備精確來源讓我審閱；TASK-041 分開追蹤，沒有需要我決定的問題前不要停下來。 Exact v2 four-file patch92441af3f95e459e0d8bf3b045e146b5434271c419d67c557566c2c27444bf79. Approves candidate DESIGN/PLAN and same implementation scope, not unseen final source/DONE/merge. Old evidence preserved with original identities. Administrative correction: original record omitted the module-qualified inventory-management subject required by has_approval despite recording the exact module DESIGN/PLAN. Preserve the original record; this derived record maps the same actual Sam decision to its explicit module ID only. No new design, plan, files, authority, source approval, CI waiver or merge approval is inferred.",
+      "recorded_at": "2026-10-23T08:10:48.312Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "1e9cdb380f31153173dab9b4959dcd274665107b3d0435dad37a2ddcdc09b7c7",
+      "code_commit": null,
+      "scope": [
+        "inventory-management",
+        "PHASE-007",
+        "TASK-052",
+        "PHASE-008",
+        "TASK-053",
+        "docs/inventory_management/**",
+        "docs/purchasing_receiving_management/00_module_manifest.json",
+        "docs/purchasing_receiving_management/03_design_spec.md",
+        "server/src/modules/inventory/InventoryPostingService.js",
+        "server/src/modules/inventory/InventoryLookupService.js",
+        "server/src/modules/inventory/inventoryConstants.js",
+        "server/src/modules/inventory/InventoryOperationService.js",
+        "server/src/modules/inventory/InventoryPurchaseService.js",
+        "server/src/modules/inventory/InventoryPurchaseContext.js",
+        "server/src/modules/inventory/inventoryPurchaseValidation.js",
+        "server/src/modules/inventory/inventoryPurchaseReceipts.js",
+        "server/src/modules/inventory/inventoryPurchaseReversal.js",
+        "server/database/migrations/0101_create_inventory_purchase_reversal_links.js",
+        "server/test/inventoryPurchaseReceipt.test.js",
+        "server/test/inventoryPurchaseContext.test.js",
+        "server/test/inventoryPurchaseReversal.test.js",
+        "server/test/inventoryPurchaseContract.test.js",
+        "server/test/integration/inventoryPurchaseReceipt.integration.test.js",
+        "server/test/integration/inventoryPurchaseReversal.integration.test.js",
+        "server/test/integration/inventoryPurchaseAuth.integration.test.js",
+        "server/test-support/inventoryPurchaseFixtures.js",
+        "server/src/modules/inventory/inventoryAdjustmentPosting.js",
+        "server/src/modules/inventory/inventoryReversalPosting.js",
+        "server/src/handlers/inventory/skuLookupHandlers.js",
+        "server/test/inventoryTransferHandlers.test.js",
+        "server/test/integration/inventoryMovement.integration.test.js"
+      ],
+      "expires_at": null
+    },
+    {
       "id": "APR-PURCHASE-B-OWNER-PROOF-SCOPE",
       "kind": "SCOPE",
       "authority_kind": "HUMAN",
@@ -5969,6 +6061,42 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-PURCHASE-B-MANDATORY-R25-R32",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/purchase_b_native_mandatory_review",
+      "reviewed_baseline": "0bfe23a27b7997155a319d38025d694ac962aa82c50f428f6a839aec16e68fe1",
+      "source_ref": "Actual bounded review newR25-R32/helper/imports no actionablefindings; excludesappendedR33-R35. Crossmodel globallyskipped byactualSam APR291.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-PURCHASE-B-MANDATORY-R33-R35-CYCLE2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/purchase_b_native_mandatory_review",
+      "reviewed_baseline": "7b467d250ee29dd8f9e7341d612785fd3ac344e47d0419198cb5bcd451a0f6bd",
+      "source_ref": "Actual firstcycleP2 Reservedmaskingallocated floor accepted; R33 realextraBinreceipt isolatesfloor, secondcyclelimiteddelta noactionablefindings. Runtime35PASS + separatemutation supportsoracles, notfinalsourceapproval. Crossmodel globallyskipped byactualSam APR291.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-PURCHASE-B-FINAL-ROOT-FIVE-AXIS",
+      "method": "SELF_REVIEW",
+      "author": "Codex /root",
+      "reviewer": "Codex /root",
+      "reviewed_baseline": "b77b0468e6d9b3f2239490c7be8e0e3fb5f14f9e2af4bc747361cfb6bd418273",
+      "source_ref": "Actual root review correctness/readability/architecture/security/performance of final18file sourcepatch32da2f839a93d15e625786b3f4f1342d7bc50c721a636c5ec52a3aca634c5dfe, sourceb77. Bounded separateagent histories retained, no newfourth or fullsourceagentgreenclaim; lastdocs/adminmoduleIDmapping/recorderartifactclassification disclosedSELF in finalreviewdocument. ActualSam source disposition STILL_PENDING. Crossmodel globallyskipped bySam APR291.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -7027,6 +7155,17 @@
       "source_ref": "Sam approved PR-B precise candidate/scope. Fixed source minimal native; preserve errors/oracles, no edit until exactresult+SQL/schema/daemon cleanup. No auth12/fullnative24/finalGate claim from partial increment. Actual final supporting native24/24 plus A8+B13HTTP childcases PASS/0SKIP (Node47 includes2parents). XML /private/tmp/purchase-provider-diagnostics/pr-b-auth-fk.xml SHAc723fcf7f0667a1ba1093a76360011a66776909df00c6fb8aa6c1e8ba473f1c2. All app/SQL/schema/trx cleaned, daemon exit0, exact61TtIL datadir/credential removed after logs copied. NotfinalHarness/allcasecoverage gate.",
       "actor": "Actual local Node47/nativeMySQL26.7/app execution observed by Codex /root; 2parents notcounted asbusinesscases",
       "observed_at": "2026-10-23T08:55:31.255Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "PR_B_CURRENT_FULL_NATIVE_COVERAGE_ORIGINAL_GLOBAL_AND39_FLOORS",
+      "code_commit": "01780e8dc54cc9a77051ab3d074211158206e96b",
+      "spec_baseline": "1e9cdb380f31153173dab9b4959dcd274665107b3d0435dad37a2ddcdc09b7c7",
+      "source_fingerprint": "b77b0468e6d9b3f2239490c7be8e0e3fb5f14f9e2af4bc747361cfb6bd418273",
+      "status": "PASS",
+      "source_ref": "Actual4 repository test:coverage:shard runs: native3715PASS/0FAIL/207guardedskip, all4exit0; official npm run test:coverage:merge --workspace server exit0. Global95.59/87.34/94.17,39floorsPASS; LCOV SHA32a25d25e2a428a0eac1a5221276359b4e249bd2be3c717f629f2ac55a456367, private originalmergelogSHA08af3358cd2e5ad7d0fa4798c878b59f279f66c47d87e826224a31cc61ff64a0. Originalwrong-prefix72FAIL staysFAIL, unitfloorfail staysFAIL. OriginalHarnessfloor rerun evidence20261023T094636-06e01671bc68 PASS. Local actualGitSHA/node/cwd identity, NOT externalCI. Guardedskips notformalacceptance; 25/25dedicatedrequired groupszeroSkip.",
+      "actor": "Actual local Node/MySQL execution observed by Codex /root",
+      "observed_at": "2026-10-23T09:51:38.645Z"
     }
   ],
   "pending_decisions": [
@@ -14394,8 +14533,144 @@
       "kind": "MERGE",
       "target": "origin/main1e57380e9df8fb7c0563a176921b86fb6e81682b into codex/inventory-purchase-reversal after localsavepoint",
       "idempotency_key": "purchase-b-integrate-main-1e57380e",
+      "status": "CONFIRMED",
+      "source_ref": "Standing actual Sam latestmain integration policy. Authenticated fetch confirmed origin/main1e57380e Supplier-only26paths. Local validated increment saved as31324ff1; normal git merge completed without conflict as01780e8dc54cc9a77051ab3d074211158206e96b. Approved DESIGN/PLAN and Inventory/Purchasing/Item source unchanged by main integration. Historical PASS remains its original source; integrated final Gate/currentCI/Sam source review still pending. No push or PR merge occurred."
+    },
+    {
+      "id": "EXT-PURCHASE-B-NATIVE-PR-B-MANDATORY32",
+      "kind": "MIGRATION",
+      "target": "PLANNED fresh owned socket-only /private/tmp/erp-inventory-purchase-b-native.awgU1L; isolated minimal PR-B native, bootstrap erp_inventory_purchase_prb+fixtureUUIDschemas; no P4/largefixture/sharedDB.",
+      "idempotency_key": "pr-b-mandatory32-awgU1L",
+      "status": "CONFIRMED",
+      "source_ref": "Sam approved PR-B precise candidate/scope. Fixed source minimal native; preserve errors/oracles, no edit until exactresult+SQL/schema/daemon cleanup. No auth12/fullnative24/finalGate claim from partial increment. Actual fixedsource result: 32PASS-0FAIL-0SKIP-SHA07dcb80b61f6bc2b7c3d1096a3f6137ea4b21f9889c250f7dded906f76685410-cleaned-awgU1L; SQL/schema/transaction terminal verified, daemon normalexit0, logs/XML private retained, exactdatadir/generatedcredentials removed. Original result not relabelled."
+    },
+    {
+      "id": "EXT-PURCHASE-B-NATIVE-PR-B-MANDATORY35",
+      "kind": "MIGRATION",
+      "target": "PLANNED fresh owned socket-only /private/tmp/erp-inventory-purchase-b-native.1MNJjS; isolated minimal PR-B native, bootstrap erp_inventory_purchase_prb+fixtureUUIDschemas; no P4/largefixture/sharedDB.",
+      "idempotency_key": "pr-b-mandatory35-1MNJjS",
+      "status": "CONFIRMED",
+      "source_ref": "Sam approved PR-B precise candidate/scope. Fixed source minimal native; preserve errors/oracles, no edit until exactresult+SQL/schema/daemon cleanup. No auth12/fullnative24/finalGate claim from partial increment. Actual fixedsource result: 35PASS-0FAIL-0SKIP-before-R33-isolation-SHA1f2a532b981bb8d6d3edc5c1fa7efe350af58221599100e8f2bf1a56528dea93-cleaned1MNJjS; SQL/schema/transaction terminal verified, daemon normalexit0, logs/XML private retained, exactdatadir/generatedcredentials removed. Original result not relabelled."
+    },
+    {
+      "id": "EXT-PURCHASE-B-NATIVE-PR-B-ALLOCATION-ISOLATED",
+      "kind": "MIGRATION",
+      "target": "PLANNED fresh owned socket-only /private/tmp/erp-inventory-purchase-b-native.kf8LcX; isolated minimal PR-B native, bootstrap erp_inventory_purchase_prb+fixtureUUIDschemas; no P4/largefixture/sharedDB.",
+      "idempotency_key": "pr-b-allocation-isolated-kf8LcX",
+      "status": "CONFIRMED",
+      "source_ref": "Sam approved PR-B precise candidate/scope. Fixed source minimal native; preserve errors/oracles, no edit until exactresult+SQL/schema/daemon cleanup. No auth12/fullnative24/finalGate claim from partial increment. Actual35PASS/0FAIL/0SKIP afterR33extraBin isolation, XML private SH A44b9caa3c4b61782f5847f592fbeae1e17a4eb3e2ac372f90b573bce98818309. SQL/schema/trx terminal, daemonexit0, logs retained, exactkf8LcXdatadir/credential removed. NotfinalGate."
+    },
+    {
+      "id": "EXT-PURCHASE-B-NATIVE-PR-B-ALLOCATION-MUTATION",
+      "kind": "MIGRATION",
+      "target": "PLANNED fresh owned socket-only /private/tmp/erp-inventory-purchase-b-native.QZlg1y; isolated minimal PR-B native, bootstrap erp_inventory_purchase_prb+fixtureUUIDschemas; no P4/largefixture/sharedDB.",
+      "idempotency_key": "pr-b-allocation-mutation-QZlg1y",
+      "status": "CONFIRMED",
+      "source_ref": "Sam approved PR-B precise candidate/scope. Fixed source minimal native; preserve errors/oracles, no edit until exactresult+SQL/schema/daemon cleanup. No auth12/fullnative24/finalGate claim from partial increment. Supporting mutation only: removeallocated guard ->33PASS/2FAIL atR15/R33, exactwrong DATABASE_OPERATION_FAILED vs REVERSAL_NOT_ALLOWED caught; DBconstraint stilldefendsallocated. Original source restored byte-identical e9b82df36dffd7da9decb133b77ce500625b73746f4742036523214749f29f10. Actual SQL/schema/trx terminal, daemonexit0, exactQZlg1ydatadir/credential removed, XML/logs localretained. Not a finalcandidate FAIL/PASS."
+    },
+    {
+      "id": "EXT-PURCHASE-B-FINAL-PURCHASE-GATES",
+      "kind": "MIGRATION",
+      "target": "/private/tmp/erp-inventory-purchase-b-gate.y6AKro owned socket-only daemon; bootstrap erp_inventory_purchase_prb_gate plus fixture UUID schemas; actual approved receipt/reversal native/auth Harness suites, no P4",
+      "idempotency_key": "prb-final-purchase-gates-y6AKro",
+      "status": "CONFIRMED",
+      "source_ref": "Standing Sam localresources + approvedPRBscope. Execute unchanged profile commands after frozen-source checkpoint; record source/currentPLAN, originalresults and exactcleanup. No rawexport/unseenfinalsourceapproval. Actual originalHarness receipt32/reversal35/auth21/auth21 allPASS0SKIP; allfixtures/bootstrap/SQL/trx cleaned, daemonexit0; exacty6AKrodatadir/generatedenvironment removed after private logs retained. Historicalreports remain originalsource, no finalGate/CI approval inferred."
+    },
+    {
+      "id": "EXT-PURCHASE-B-FINAL-TCP",
+      "kind": "MIGRATION",
+      "target": "/private/tmp/erp-inventory-purchase-b-gate.RTsjRq owned daemon, disposable per-suite schemas, exact approved PHASE008 tcp native/API regressions; TCP onlybound127.0.0.1 withfreshcredential, p2/p3socket-only privatepath",
+      "idempotency_key": "prb-final-tcp-RTsjRq",
+      "status": "CONFIRMED",
+      "source_ref": "Sam standing scopedlocalresource authority and approvedcandidate. Same source/profile/fixtures/timeouts; no P4/largefixture/sharedDB. Original Harness argv, zero skip and exactSQL/schema/daemon cleanup required; no exportedrawdata. Actual fixedsource originalHarness groups PASS/zeroSkip, allowned app/SQL/schema/trx terminal and MySQLnormalexit0; logs retainedprivate, exactdatadir/generatedenvironment removed. Realbrowser16 vs explicitmock18 distinguished; no consumeradoption/P4claim."
+    },
+    {
+      "id": "EXT-PURCHASE-B-FINAL-P2",
+      "kind": "MIGRATION",
+      "target": "/private/tmp/erp-inventory-task025-mysql-2670.9hUMt5 owned daemon, disposable per-suite schemas, exact approved PHASE008 p2 native/API regressions; TCP onlybound127.0.0.1 withfreshcredential, p2/p3socket-only privatepath",
+      "idempotency_key": "prb-final-p2-9hUMt5",
+      "status": "CONFIRMED",
+      "source_ref": "Sam standing scopedlocalresource authority and approvedcandidate. Same source/profile/fixtures/timeouts; no P4/largefixture/sharedDB. Original Harness argv, zero skip and exactSQL/schema/daemon cleanup required; no exportedrawdata. Actual fixedsource originalHarness groups PASS/zeroSkip, allowned app/SQL/schema/trx terminal and MySQLnormalexit0; logs retainedprivate, exactdatadir/generatedenvironment removed. Realbrowser16 vs explicitmock18 distinguished; no consumeradoption/P4claim."
+    },
+    {
+      "id": "EXT-PURCHASE-B-FINAL-P3",
+      "kind": "MIGRATION",
+      "target": "/private/tmp/erp-inventory-p3-mysql-2670.eydI4b owned daemon, disposable per-suite schemas, exact approved PHASE008 p3 native/API regressions; TCP onlybound127.0.0.1 withfreshcredential, p2/p3socket-only privatepath",
+      "idempotency_key": "prb-final-p3-eydI4b",
+      "status": "CONFIRMED",
+      "source_ref": "Sam standing scopedlocalresource authority and approvedcandidate. Same source/profile/fixtures/timeouts; no P4/largefixture/sharedDB. Original Harness argv, zero skip and exactSQL/schema/daemon cleanup required; no exportedrawdata. Actual fixedsource originalHarness groups PASS/zeroSkip, allowned app/SQL/schema/trx terminal and MySQLnormalexit0; logs retainedprivate, exactdatadir/generatedenvironment removed. Realbrowser16 vs explicitmock18 distinguished; no consumeradoption/P4claim."
+    },
+    {
+      "id": "EXT-PURCHASE-B-FINAL-BROWSER",
+      "kind": "MIGRATION",
+      "target": "/private/tmp/erp-inventory-p3-mysql-2670.FOnzgR socket-only fullschema erp_inventory_p3_prbbrowser; original realPlaywright16 and explicitmockregression18. ActualAPI ephemeralloopback, ownVite5205 observedfree beforestart.",
+      "idempotency_key": "prb-final-browser-FOnzgR",
+      "status": "CONFIRMED",
+      "source_ref": "Sam approved originalPHASE008 browserregression, localresourceauthority. Playwrightskill actual CLI standard, originalcommands/profile/timeouts preserved. Browserfixtures ownstart/shutdownactualAPI; no P4/fakePASS/production. Raw traces/screens remainLOCAL_ONLY. Actual fixedsource originalHarness groups PASS/zeroSkip, allowned app/SQL/schema/trx terminal and MySQLnormalexit0; logs retainedprivate, exactdatadir/generatedenvironment removed. Realbrowser16 vs explicitmock18 distinguished; no consumeradoption/P4claim."
+    },
+    {
+      "id": "EXT-PURCHASE-B-FULL-NATIVE-COVERAGE",
+      "kind": "MIGRATION",
+      "target": "/private/tmp/erp-inventory-purchase-b-gate.eTCWdv ownedMySQL26.7 localhostTCP freshpassword; fulfillment_p0_prbcov fullschema; original npm run test:coverage --workspace server with currentCI nativeFulfillment=true and separatelygatedcapacityflags, no P4/Inventoryspecialload",
+      "idempotency_key": "prb-full-native-coverage-eTCWdv",
+      "status": "CONFIRMED",
+      "source_ref": "Approved providerplan expressly requires fullnativeglobalcoverage92/83/90+39floors or actualcurrentCImergedcoverage. Supporting serverunit2426 andclient940 PASS do notsatisfy Sales/Fulfillment nativefloors: preserve missingfileenvironmentFAIL and actualunitonlyfloorFAIL. Execute exactprojectscript at1200scoordinator bound, no productdeadline/data/threshold changes. Nativeguardedskips notformalacceptance; dedicatedprovider/generic/APIgroups alreadyzeroSkip. Original fullnative3643PASS/72FAIL/207guardedskip, 826.5s; all72 errors are existingFulfillment nativeDatabase ownedruntime guard. OriginallogSHA6f50d50d0981b827944f775ced9a2c7df9de5a3658e4b59f7808b5674a6caa14 retainedFAIL. SQL/schema/trx terminal, daemonexit0, exacteTCWdvdatadir/environment removed."
+    },
+    {
+      "id": "EXT-PURCHASE-B-NATIVE-PREFIX-PROBE",
+      "kind": "MIGRATION",
+      "target": "/private/tmp/erp-fulfillment-p0-mysql-purchaseb.JhYmYx owned26.7 daemon, fulfillment_p0_prbcov bootstrap plus one owned Fulfillment minimal fixture",
+      "idempotency_key": "prb-prefix-probe-JhYmYx",
+      "status": "CONFIRMED",
+      "source_ref": "Observed fullnative fixedsource stillrunning, existing Fulfillment nativeDatabase.js safetyguard requires socketpath includes erp-fulfillment-p0-mysql-. Do not edit guard/setGITHUB_ACTIONS/fakeidentity. Same approvedlocalresources, actual minimal HD010 test first in independent namespace before any necessaryfullrerun. No product/source/schema/threshold/deadlinechange; no P4/largefixture. Actualcorrect-prefix minimumHD0101/1PASS/zeroSkip, completeownedsetup/SQL/normalshutdown/cleanup. Private originalprobe logretained, exactJhYmYxremoved. Purchase35/auth21separateownnamespacePASS, prefixesmutuallyexclusive andnotrelaxed."
+    },
+    {
+      "id": "EXT-PURCHASE-B-NATIVE-SHARD-1",
+      "kind": "MIGRATION",
+      "target": "/private/tmp/erp-fulfillment-p0-mysql-purchaseb.hEHGCC ownedMySQL26.7 localhost freshcredential; ownfulfillment_p0_prbcov andUUIDfixture schemas; existingrepository test:coverage:shard --test-shard=1/4",
+      "idempotency_key": "prb-native-shard-1-hEHGCC",
+      "status": "CONFIRMED",
+      "source_ref": "Same approved fullnativecoverage scope/fixtures/source andunchanged92/83/90+39floors. Use repository existing4shard+officialV8merge path, notLCOVaveraging, no file/skip/threshold/SQL/transaction/HTTPlimit change. Original24unimpactedHarnessgroups retained. Local15CPU/24GiB read-onlyobservation, fourownednamespaces, currentsourcefrozen01780/b77; actualGitSHA used onlylocal artifactidentity, notGITHUB_ACTIONS/CIimpersonation. Originalfailedrun retained; minimalcorrectFulfillment preflightPASS beforethese. Exactcleanup required, rawcoverage/logsLOCAL_ONLY. Actual originalshard exit0, native0FAIL, allown SQL/schema/trx terminal, daemonexit0; logs/rawretainedLOCAL, exactinstance/datadir/generatedenvironment removed. Official4wayV8merge validated original native reportcounts and matchedactualGitSHA01780/node26.6/cwd; originalglobal95.59/87.34/94.17 and39floorsPASS. Metadatarecorder-only post-manifest V8 extra preservedbyte-identical with recovery map outside native input; no native report/manifest edited."
+    },
+    {
+      "id": "EXT-PURCHASE-B-NATIVE-SHARD-2",
+      "kind": "MIGRATION",
+      "target": "/private/tmp/erp-fulfillment-p0-mysql-purchaseb.lgZ7xc ownedMySQL26.7 localhost freshcredential; ownfulfillment_p0_prbcov andUUIDfixture schemas; existingrepository test:coverage:shard --test-shard=2/4",
+      "idempotency_key": "prb-native-shard-2-lgZ7xc",
+      "status": "CONFIRMED",
+      "source_ref": "Same approved fullnativecoverage scope/fixtures/source andunchanged92/83/90+39floors. Use repository existing4shard+officialV8merge path, notLCOVaveraging, no file/skip/threshold/SQL/transaction/HTTPlimit change. Original24unimpactedHarnessgroups retained. Local15CPU/24GiB read-onlyobservation, fourownednamespaces, currentsourcefrozen01780/b77; actualGitSHA used onlylocal artifactidentity, notGITHUB_ACTIONS/CIimpersonation. Originalfailedrun retained; minimalcorrectFulfillment preflightPASS beforethese. Exactcleanup required, rawcoverage/logsLOCAL_ONLY. Actual originalshard exit0, native0FAIL, allown SQL/schema/trx terminal, daemonexit0; logs/rawretainedLOCAL, exactinstance/datadir/generatedenvironment removed. Official4wayV8merge validated original native reportcounts and matchedactualGitSHA01780/node26.6/cwd; originalglobal95.59/87.34/94.17 and39floorsPASS. Metadatarecorder-only post-manifest V8 extra preservedbyte-identical with recovery map outside native input; no native report/manifest edited."
+    },
+    {
+      "id": "EXT-PURCHASE-B-NATIVE-SHARD-3",
+      "kind": "MIGRATION",
+      "target": "/private/tmp/erp-fulfillment-p0-mysql-purchaseb.X35teP ownedMySQL26.7 localhost freshcredential; ownfulfillment_p0_prbcov andUUIDfixture schemas; existingrepository test:coverage:shard --test-shard=3/4",
+      "idempotency_key": "prb-native-shard-3-X35teP",
+      "status": "CONFIRMED",
+      "source_ref": "Same approved fullnativecoverage scope/fixtures/source andunchanged92/83/90+39floors. Use repository existing4shard+officialV8merge path, notLCOVaveraging, no file/skip/threshold/SQL/transaction/HTTPlimit change. Original24unimpactedHarnessgroups retained. Local15CPU/24GiB read-onlyobservation, fourownednamespaces, currentsourcefrozen01780/b77; actualGitSHA used onlylocal artifactidentity, notGITHUB_ACTIONS/CIimpersonation. Originalfailedrun retained; minimalcorrectFulfillment preflightPASS beforethese. Exactcleanup required, rawcoverage/logsLOCAL_ONLY. Actual originalshard exit0, native0FAIL, allown SQL/schema/trx terminal, daemonexit0; logs/rawretainedLOCAL, exactinstance/datadir/generatedenvironment removed. Official4wayV8merge validated original native reportcounts and matchedactualGitSHA01780/node26.6/cwd; originalglobal95.59/87.34/94.17 and39floorsPASS. Metadatarecorder-only post-manifest V8 extra preservedbyte-identical with recovery map outside native input; no native report/manifest edited."
+    },
+    {
+      "id": "EXT-PURCHASE-B-NATIVE-SHARD-4",
+      "kind": "MIGRATION",
+      "target": "/private/tmp/erp-fulfillment-p0-mysql-purchaseb.DVaiPp ownedMySQL26.7 localhost freshcredential; ownfulfillment_p0_prbcov andUUIDfixture schemas; existingrepository test:coverage:shard --test-shard=4/4",
+      "idempotency_key": "prb-native-shard-4-DVaiPp",
+      "status": "CONFIRMED",
+      "source_ref": "Same approved fullnativecoverage scope/fixtures/source andunchanged92/83/90+39floors. Use repository existing4shard+officialV8merge path, notLCOVaveraging, no file/skip/threshold/SQL/transaction/HTTPlimit change. Original24unimpactedHarnessgroups retained. Local15CPU/24GiB read-onlyobservation, fourownednamespaces, currentsourcefrozen01780/b77; actualGitSHA used onlylocal artifactidentity, notGITHUB_ACTIONS/CIimpersonation. Originalfailedrun retained; minimalcorrectFulfillment preflightPASS beforethese. Exactcleanup required, rawcoverage/logsLOCAL_ONLY. Actual originalshard exit0, native0FAIL, allown SQL/schema/trx terminal, daemonexit0; logs/rawretainedLOCAL, exactinstance/datadir/generatedenvironment removed. Official4wayV8merge validated original native reportcounts and matchedactualGitSHA01780/node26.6/cwd; originalglobal95.59/87.34/94.17 and39floorsPASS. Metadatarecorder-only post-manifest V8 extra preservedbyte-identical with recovery map outside native input; no native report/manifest edited."
+    },
+    {
+      "id": "EXT-PURCHASE-B-PUSH",
+      "kind": "PUSH",
+      "target": "origin/codex/inventory-purchase-reversal from exact local finalsourcecommit, createonly/unforced",
+      "idempotency_key": "ext-purchase-b-push-b77-32da2f",
       "status": "PLANNED",
-      "source_ref": "Standing actual Sam latestmain integration policy; authenticatedgitfetch observed Supplier-only26paths PR276/277, no Inventory/Purchasing/moduleplan/Item changes. Commit validated additive B increment locally then merge remote main; no push/PR-Bfinalsource/mergeapproval inferred. Final necessary fullGate/currentCI/Sam review on integratedsource; oldPASS notrelabeled."
+      "source_ref": "Standing actualSam PR-A thenPR-B normaldelivery authorization; currentPRB candidateDesign/Plan approved, all25localnecessarygroups/nativecoverage/browser/review passed. Fresh main1e573 confirmed aftertests, no remoteBbranch or priorPR. Publication only, NOT finalSam unseen-source approval/DONE/merge. Rawproofexportnotauthorized: only approved source/contracts and minimizedsynthetictechnicalmetadata published; rawlogs/XML/keys/coverage/screens remainLOCAL."
+    },
+    {
+      "id": "EXT-PURCHASE-B-PR",
+      "kind": "PR",
+      "target": "crazysumsum/erp-app base main head codex/inventory-purchase-reversal; verify no duplicate open/closedheadPR beforecreate",
+      "idempotency_key": "ext-purchase-b-pr-b77-32da2f",
+      "status": "PLANNED",
+      "source_ref": "Standing actualSam PR-A thenPR-B normaldelivery authorization; currentPRB candidateDesign/Plan approved, all25localnecessarygroups/nativecoverage/browser/review passed. Fresh main1e573 confirmed aftertests, no remoteBbranch or priorPR. Publication only, NOT finalSam unseen-source approval/DONE/merge. Rawproofexportnotauthorized: only approved source/contracts and minimizedsynthetictechnicalmetadata published; rawlogs/XML/keys/coverage/screens remainLOCAL."
     }
   ],
   "evidence_files": [
@@ -14916,7 +15191,34 @@
     "evidence/20261023T075451-20f9077203f6/run.json",
     "evidence/20261023T075452-6d2b95877d80/run.json",
     "evidence/20261023T075505-a67880308251/run.json",
-    "evidence/20261023T075542-ab1f3d8ad9f1/run.json"
+    "evidence/20261023T075542-ab1f3d8ad9f1/run.json",
+    "evidence/20261023T090934-e5b23061fda5/run.json",
+    "evidence/20261023T090941-80b23b1dceaa/run.json",
+    "evidence/20261023T090945-47c63f6f29b6/run.json",
+    "evidence/20261023T090947-6f37317b6313/run.json",
+    "evidence/20261023T090948-f1519143e8f7/run.json",
+    "evidence/20261023T090949-7e7c0337c6b2/run.json",
+    "evidence/20261023T090950-87c9415b74df/run.json",
+    "evidence/20261023T091330-81e9a99f46be/run.json",
+    "evidence/20261023T091433-d250628c217f/run.json",
+    "evidence/20261023T091439-1a0bc73893b4/run.json",
+    "evidence/20261023T091449-191d43bc971d/run.json",
+    "evidence/20261023T091457-c99620a84bae/run.json",
+    "evidence/20261023T091503-a140ee61852c/run.json",
+    "evidence/20261023T091631-51c62af15e9a/run.json",
+    "evidence/20261023T091632-de5e0ecc4a77/run.json",
+    "evidence/20261023T091634-11f0dd6691fa/run.json",
+    "evidence/20261023T091634-755622f65a18/run.json",
+    "evidence/20261023T091637-cf4dcf70481d/run.json",
+    "evidence/20261023T091638-3199583c7e68/run.json",
+    "evidence/20261023T091638-c9c9f24b8513/run.json",
+    "evidence/20261023T091643-bb3bc1b23baa/run.json",
+    "evidence/20261023T091648-a00967d8d8bb/run.json",
+    "evidence/20261023T091816-2da52fcda513/run.json",
+    "evidence/20261023T091822-7a37b470d265/run.json",
+    "evidence/20261023T091902-56a484991254/run.json",
+    "evidence/20261023T091947-1fc520c36abe/run.json",
+    "evidence/20261023T094636-06e01671bc68/run.json"
   ],
   "defects": [
     {
@@ -15085,5 +15387,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Savepoint validated PR-B context/partialservice+approvedfourdocs/state. Merge freshlyfetched Supplier-onlymain1e573 in isolatedB; resolveonlysafeobservedconflicts, recordactualresult. Complete all explicit TASK053 required cases beyond minimum24, truegeneric/Receipt/Reservation/binlock regressions, finalsourceHarness suites/coverage/Playwright/currentCI and actual Sam source review. No runtime active; TASK041 separate; Purchasing NOT_ACTUALLY_UNLOCKED."
+  "next_safe_action": "Validateboundary/trace/hygiene; stage ONLY exact source+approvedfourdocs+minimizedreview/proposals/gzipmetadata (no raw evidence), localcommit, recordactualHEAD/fingerprint. Pushunforced, createPR-B andattachartifact, obtainallcurrentmandatoryCI andfreshmain, thenactualSam finalsource review. TASK053 staysIN_PROGRESS untilhumanDoD, no merge beforeSam exactsourceapproval. TASK041 separate, Purchasing NOT_ACTUALLY_UNLOCKED."
 }

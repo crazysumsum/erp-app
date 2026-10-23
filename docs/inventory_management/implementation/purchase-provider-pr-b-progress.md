@@ -65,3 +65,27 @@ Sam實際回覆「A：已審閱，批准 PR-B 精確四檔候選與範圍，請�
 最新合成原生／真HTTP直接執行：24/24 native＋原A8及新B13＝21個HTTP子案例皆PASS／零skip（Node包含兩個父test總計47，不以父test充業務案例）。XML私有 `/private/tmp/purchase-provider-diagnostics/pr-b-auth-fk.xml`；此為增量支持性驗證，最終正式Harness套件及全部必需案例對照／回歸仍待完成，不僅憑最低24數量聲稱TASK053 DONE。所有本輪socket-only MySQL、app、schema、連線及交易均已清理、正常exit0；日誌/XML保留，僅移除本次datadir／合成credential。首個sandbox initialize SIGSEGV在任何schema前發生，保留環境失敗後改用既有授權的scoped本機執行，沒有放寬安全設定。
 
 最新main已觀察Supplier-only PR276／277前進至1e57380e；將先保留本機增量savepoint並整合，再固定最終候選做完整Gate／coverage／Playwright／CI。原結果仍綁原來源，不當作整合候選已PASS；沒有P4／TASK041耦合或Purchasing解鎖宣稱。
+
+## 整合候選與必要案例收斂
+
+已保存增量31324ff1，再從authenticated fetch確認main1e57380e只有Supplier26檔；正常merge至本機01780e8d，無衝突。DESIGN／PLAN及Inventory／Purchasing／Item來源未因main整合改動。原native24／HTTP21結果保留原適用來源，不當作整合候選的正式Gate。
+
+修改前範圍：只在同一已批准native測試檔追加R25–R35，不修改產品、原案例、profile、DDL、認證或期限。必要理由是最低24例並未等同TASK053明列案例全部覆蓋；補入真第二Movement／link INSERT故障、來源quantity/reason/membership衝突、缺Balance不重建、generic雙向ownership隔離、持久tracking/UOM及原事實不變、跨倉反向行序、真Reservation／Allocation等待後current保護與明示Bin-lock reader fixture。R25–R32限定獨立評審無發現；R33–R35首輪P2指出Reserved會遮蔽allocated oracle，已用真Receipt在第二Bin增加獨立eligible stock，第二輪限定修訂無發現。
+
+真MySQL35/35、零skip；刻意移除allocated guard的mutation為33 PASS／2 FAIL，R15／R33精確拒絕錯誤的DATABASE_OPERATION_FAILED（DB check仍有最後保護），並非誤稱錯誤變體成功過帳。產品逐byte還原e9b82df3；原mutation／工具失敗與XML保留，不混入正式候選PASS。
+
+正式候選source `b77b0468e6d9b3f2239490c7be8e0e3fb5f14f9e2af4bc747361cfb6bd418273`／原PLAN：25必需組目前24組PASS，專用組全部零skip。包含A32／B35真native、兩個真auth runner各21子案例、Inventory207、Purchase90、原Receipt／Reservation／lock／Sales、Movement／Transfer／P2及P3 API、server單元2426／client940、真Playwright16與明示mock18、lint/build/audit。十張當前browser圖片已實際檢視，console/network oracle均按原測試核對；圖片與raw trace仍LOCAL_ONLY。
+
+唯一待通過項是coverage floors／完整native全局coverage：首次報告檔目錄尚未建立的環境FAIL保留；第二次使用單元LCOV的FAIL保留，確實缺Sales／Fulfillment原生覆蓋，不降低39個floors。現在依原計劃在新owned MySQL執行原完整native coverage指令（92/83/90、39floors），結果未出前不宣稱PASS。新native若成功，才以其當前LCOV重跑原Harness floors。七組fast Gate初次因本機approval record漏module-qualified subject而BLOCKED／未執行，已保留原記錄並從同一實際Sam批准新增明確module-ID對照，沒有新授權或改DESIGN／PLAN；原命令重跑才取得上述PASS。
+
+TASK053仍IN_PROGRESS；全局coverage、當前候選CI、最新main、精確來源Sam審閱及實際consumer接入尚未完成。TASK041／P4、未合併真Stocktake Start聯合驗證分開追蹤，未用fixture補PASS。下一個可合併交付仍是PR-B；Purchasing尚未實際解鎖。
+
+## 當前本機驗證收束：25/25 PASS
+
+上述pending coverage為保留的先前快照。原全庫run已完整結束為3643 PASS／72 FAIL／207 guarded skips，72個錯誤逐一確認來自同一Fulfillment owned-runtime前綴guard；原FAIL及log雜湊保留。先用正確namespace完成最小真MySQL HD010 1/1及正常關閉／精確清理，並核對Purchase與Fulfillment guard互斥、須分開隔離，不放寬任何guard。
+
+同一固定source b77改用倉庫現有四分片及官方Node V8 merge，合計3715 PASS／0 FAIL／207 guarded skips；不是四次全量，也未重跑無受影響的24個Harness組。官方merge檢查四片實際GitSHA／Node／cwd及原native物料數，95.59／87.34／94.17高於92／83／90，39floors通過。再跑原Harness floors為PASS（`evidence/20261023T094636-06e01671bc68/run.json`）；至此25/25原必需開發組全數PASS，專用組零skip。guarded skips不是正式驗收，原容量仍由其必需CI處理，未聲稱本機完整容量PASS。
+
+四份native manifest之後、metadata recorder自身多產生的V8物料只含recorder與官方merge腳本兩個file URL，已以三個確定性斷言分類，原byte保存到私有recovery map；沒有刪改任何native test report、原manifest、案例或門檻。此物料處置及最後文件屬root SELF_REVIEW，最終Sam來源文件明示，不假造新agent或第四輪。所有本次owned runtimes／schemas／SQL／交易／app／daemon／合成憑證已清理，raw logs/XML/coverage及十張已檢視圖片保留LOCAL_ONLY。
+
+發布前fresh fetch再確認main仍1e57380e，未有遠端B branch或既有同head PR。最小化摘要／十八檔source patch與精確來源審閱文件已準備；接著保存提交、開PR取得當前全部CI，再交Sam審閱實際head。TASK053仍IN_PROGRESS，沒有未見來源批准、實際merge SHA或consumer已採用證據。
