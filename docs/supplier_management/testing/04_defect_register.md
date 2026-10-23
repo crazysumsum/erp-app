@@ -192,6 +192,14 @@ Found by UAT-031. The Supplier detail shows the default payment term as its inte
 - **Effect:** UAT-031 fails at its last step. Every step before it passes, including the check that Supplier Settings has no catalogue write controls.
 - **Decision:** HD-130 A. The Supplier detail response gains `defaultPaymentTerm { id, code, name, status }`, read through the provider's history so an Inactive term is included. The UI shows 「code — name」 and marks an inactive term. The response only gains a field, so existing callers are not affected.
 
+**Fixed under HD-130 A.**
+- **Server:** `getSupplier`, which every detail path uses (GET, update, code change, lifecycle actions), adds `defaultPaymentTerm` from `getPaymentTermHistory`. The response schema allows an object or null and is closed. Create returns no such field and shows no term.
+- **Client:**
+  - The overview shows 「code — name」, adds 「（已停用）」 for an Inactive term, and shows 「未設定」 without a term.
+  - The editor shows a term that is missing from the Active options as an extra option. That option is marked and disabled only when the server says the term is Inactive, so an Active term that is still loading, failed to load, or is not on the first page is never called inactive (REV-116 M-1).
+- **Review:** REV-116 (`implementation/119_rev_116_independent_review.md`). Its findings are fixed, except two raised as their own defects: DEF-040 and DEF-041.
+- **Tests:** an integration test (Active, then deactivated, then none) and vitest cases (inactive, Active, loading or failed options, unnamed term). UAT-031 now passes, and checks the 「（已停用）」 mark.
+
 ## DEF-039 — LOW
 
 Found by REV-115 (M-2) on UAT-003. AC-003 says 「允許使用者確認合理原因後繼續」, and UAT-003 asks the user to 「確認原因」 and lists Audit as evidence. The create page offers only 「確認並繼續」, with no reason. The create Audit records neither that a duplicate warning was shown nor which candidates were overridden. Design §4 never had a reason either: the requirement did not reach the design, the same pattern as DEF-037.
@@ -199,6 +207,21 @@ Found by REV-115 (M-2) on UAT-003. AC-003 says 「允許使用者確認合理原
 - **Wording is ambiguous:** AC-003 can also mean "the user confirms there is a valid reason", which the current button does.
 - **Effect:** UAT-003 now fails at its Audit step. Every earlier step passes.
 - **Decision required (HD-132):** the Product Owner interprets AC-003, or asks for a reason field and an Audit record.
+
+## DEF-040 — MEDIUM
+
+Found by REV-116 (M-2), the same class as DEF-038. Two more screens print the payment term's internal ID:
+- The Supplier list column 付款條件 renders `defaultPaymentTermId`.
+- The approval diff row 預設付款條款 renders the raw ID.
+
+DEF-038 covered only the detail page and the edit form, and UAT-031 does not cover these two screens. The list would need one batched read by ID, not one provider read per row. **Decision required (HD-133).**
+
+## DEF-041 — LOW
+
+Found by REV-116 (I-1). A Supplier whose payment term has since been deactivated cannot be saved, even when the user changes only another field.
+- **Effect:** the update re-checks the term with `purpose: "new_assignment"` and answers `409 PAYMENT_TERM_NOT_ACTIVE` 「付款條款目前不可用」. Activating such a Supplier is refused the same way.
+- **What the user sees:** the general edit banner shows the message, but the term field itself is not marked. The user has to clear the term or pick an Active one first.
+- **Requirement:** FR-EDIT-003 asks for statuses to be re-checked on edit, so the refusal may be intended, and the missing field hint is the defect. **Decision required (HD-134).**
 
 ## HD-116 A: dispositions (2026-10-21)
 
