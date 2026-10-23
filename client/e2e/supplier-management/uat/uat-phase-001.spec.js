@@ -387,3 +387,146 @@ test("@uat UAT-008 two browsers save the same version: the second gets a conflic
   await evidence(other, testInfo, "final");
   expect(problems).toEqual([]);
 });
+
+/** 聯絡人／地址清單入面某一項（以名稱或標籤搵）。 */
+const listItem = (page, text) => page.locator(".q-item", { hasText: text });
+
+test("@uat UAT-023 setting another contact as primary for a purpose leaves exactly one primary", async ({ page }, testInfo) => {
+  await loginAs(page, "CLERK");
+  const supplier = await createDraft(page);
+  await api(page, "POST", `/api/v1/suppliers/${supplier.id}/contacts/create`, { name: "UAT-023 Old Primary", purposes: [{ purposeCode: "orders", isPrimary: true }] });
+  const problems = watchProblems(page);
+
+  await page.goto(`/suppliers/${supplier.id}`);
+  await page.getByRole("tab", { name: /^聯絡人/u }).click();
+  await expect(listItem(page, "UAT-023 Old Primary")).toContainText("訂單聯絡（主要）");
+  await page.getByRole("button", { name: "新增聯絡人" }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByLabel("姓名 *").fill("UAT-023 New Primary");
+  await dialog.getByRole("checkbox", { name: "訂單聯絡" }).click();
+  await dialog.locator(".row", { hasText: "訂單聯絡" }).getByRole("switch", { name: "主要" }).click();
+  await dialog.getByRole("button", { name: "儲存" }).click();
+  await expect(dialog).toBeHidden();
+
+  await expect(listItem(page, "UAT-023 New Primary")).toContainText("訂單聯絡（主要）");
+  await expect(listItem(page, "UAT-023 Old Primary")).toContainText("訂單聯絡");
+  await expect(listItem(page, "UAT-023 Old Primary")).not.toContainText("（主要）");
+  await expect(page.getByText("訂單聯絡（主要）")).toHaveCount(1);
+  await evidence(page, testInfo, "contacts");
+  await expect(await auditRow(page, "新增聯絡人")).toHaveCount(2);
+  expect(problems).toEqual([]);
+});
+
+test("@uat UAT-049 a purpose holds several contacts, primary switches cleanly, and a deactivated contact stays as history", async ({ page }, testInfo) => {
+  await loginAs(page, "CLERK");
+  const supplier = await createDraft(page);
+  await activateViaApi(page, supplier.id);
+  await api(page, "POST", `/api/v1/suppliers/${supplier.id}/contacts/create`, { name: "UAT-049 Buyer One", purposes: [{ purposeCode: "orders", isPrimary: true }] });
+  const problems = watchProblems(page);
+
+  await page.goto(`/suppliers/${supplier.id}`);
+  await page.getByRole("tab", { name: /^聯絡人/u }).click();
+  await page.getByRole("button", { name: "新增聯絡人" }).click();
+  let dialog = page.getByRole("dialog");
+  await dialog.getByLabel("姓名 *").fill("UAT-049 Buyer Two");
+  await dialog.getByRole("checkbox", { name: "訂單聯絡" }).click();
+  await dialog.getByRole("button", { name: "儲存" }).click();
+  await expect(dialog).toBeHidden();
+  await expect(listItem(page, "UAT-049 Buyer Two")).toContainText("訂單聯絡");
+  await expect(listItem(page, "UAT-049 Buyer One")).toContainText("訂單聯絡（主要）");
+
+  await page.getByRole("button", { name: "編輯聯絡人 UAT-049 Buyer Two" }).click();
+  dialog = page.getByRole("dialog");
+  await dialog.locator(".row", { hasText: "訂單聯絡" }).getByRole("switch", { name: "主要" }).click();
+  await dialog.getByRole("button", { name: "儲存" }).click();
+  await expect(dialog).toBeHidden();
+  await expect(listItem(page, "UAT-049 Buyer Two")).toContainText("訂單聯絡（主要）");
+  await expect(page.getByText("訂單聯絡（主要）")).toHaveCount(1);
+
+  await page.getByRole("button", { name: "停用聯絡人 UAT-049 Buyer One" }).click();
+  const confirm = page.getByRole("dialog");
+  if (await confirm.isVisible()) await confirm.getByRole("button", { name: /確認|停用/u }).last().click();
+  await expect(listItem(page, "UAT-049 Buyer One")).toContainText("已停用");
+  await expect(page.getByRole("button", { name: "編輯聯絡人 UAT-049 Buyer One" })).toHaveCount(0);
+  await evidence(page, testInfo, "contacts");
+  await expect(await auditRow(page, "停用聯絡人")).toHaveCount(1);
+  expect(problems).toEqual([]);
+});
+
+test("@uat UAT-042 a VIEWER cannot write from the UI, by URL or by request, and a user without Supplier access learns nothing", async ({ browser, page }, testInfo) => {
+  await loginAs(page, "CLERK");
+  const supplier = await createDraft(page);
+  const viewerPage = await (await browser.newContext()).newPage();
+  const viewer = await loginAs(viewerPage, "VIEWER");
+  const problems = watchProblems(viewerPage, { allow: [{ status: 403, path: "/update" }, { status: 403, path: "/create" }] });
+
+  await viewerPage.goto("/suppliers");
+  await expect(viewerPage.getByRole("button", { name: "新增供應商" }).or(viewerPage.getByRole("link", { name: "新增供應商" }))).toHaveCount(0);
+  await viewerPage.goto(`/suppliers/${supplier.id}`);
+  await expect(viewerPage.getByText(supplier.supplierCode).first()).toBeVisible();
+  for (const label of ["編輯一般資料", "受控修正 Supplier Code", "啟用", "永久刪除", "封存"]) {
+    await expect(viewerPage.getByRole("button", { name: label, exact: true })).toHaveCount(0);
+  }
+  await evidence(viewerPage, testInfo, "viewer-detail");
+  await viewerPage.goto("/suppliers/new");
+  await expect(viewerPage).toHaveURL(/\/403$/u);
+
+  const before = await api(page, "GET", `/api/v1/suppliers/${supplier.id}`);
+  expect(await serviceCall(viewerPage, "update", supplier.id, { version: before.version, supplierName: "UAT-042 hijack", displayName: "", defaultCurrencyCode: "HKD",
+    defaultPaymentTermId: null, website: "", generalPhone: "", generalEmail: "", notes: "" })).toBe("403 Forbidden");
+  expect(await serviceCall(viewerPage, "create", { supplierCode: unique("UAT042"), supplierName: "UAT-042 forbidden", defaultCurrencyCode: "HKD" })).toBe("403 Forbidden");
+  const after = await api(page, "GET", `/api/v1/suppliers/${supplier.id}`);
+  expect(after.version).toBe(before.version);
+  expect(after.supplierName).toBe(before.supplierName);
+  const [[{ writes }]] = await (await db()).query("SELECT COUNT(*) AS writes FROM supplier_audit_logs WHERE actor_user_id = ?", [viewer.id]);
+  expect(writes).toBe(0);
+  expect(problems).toEqual([]);
+
+  const outsider = await (await browser.newContext()).newPage();
+  await loginAs(outsider, "NOACCESS");
+  for (const path of [`/suppliers/${supplier.id}`, "/suppliers/999999999", "/suppliers"]) {
+    await outsider.goto(path);
+    await expect(outsider).toHaveURL(/\/403$/u);
+  }
+  await evidence(outsider, testInfo, "no-access");
+  const existing = await moduleCall(outsider, "/src/services/supplier.js", "getById", supplier.id);
+  const missing = await moduleCall(outsider, "/src/services/supplier.js", "getById", 999999999);
+  expect(existing).toBe("403 Forbidden");
+  expect(missing).toBe(existing);
+});
+
+test("@uat UAT-054 the Supplier list tells loading, empty, failed and no-permission apart, and a failed load can be retried", async ({ browser, page }, testInfo) => {
+  await loginAs(page, "VIEWER");
+  // 慢回應同依賴錯誤喺真環境無法安全觸發：只有呢個 case 喺瀏覽器攔截列表請求，延遲或者回 503，其餘照行真 server。
+  let mode = "slow";
+  await page.route("**/api/v1/suppliers?**", async (route) => {
+    if (mode === "slow") { await new Promise((resolve) => { setTimeout(resolve, 2_500); }); return route.continue(); }
+    if (mode === "fail") return route.fulfill({ status: 503, contentType: "application/json",
+      body: JSON.stringify({ success: false, error: { code: "SERVICE_UNAVAILABLE", message: "供應商資料暫時無法載入" }, meta: { requestId: "uat-054" } }) });
+    return route.continue();
+  });
+  await page.goto("/suppliers");
+  await expect(page.getByText("載入中…")).toBeVisible();
+  await evidence(page, testInfo, "loading");
+  await expect(page.getByText("載入中…")).toBeHidden({ timeout: 15_000 });
+
+  mode = "live";
+  await page.getByPlaceholder("搜尋 Code、名稱、電話或電郵").fill(`no-such-supplier-${Date.now()}`);
+  await expect(page.getByText("冇資料")).toBeVisible();
+  await evidence(page, testInfo, "empty");
+
+  mode = "fail";
+  await page.getByPlaceholder("搜尋 Code、名稱、電話或電郵").fill("UAT");
+  await expect(page.getByRole("alert").filter({ hasText: "服務暫時無法使用，請稍後再試" })).toBeVisible();
+  await expect(page.getByText("冇資料")).toHaveCount(0);
+  await evidence(page, testInfo, "error");
+  mode = "live";
+  await page.getByRole("button", { name: "重試" }).click();
+  await expect(page.getByRole("alert").filter({ hasText: "服務暫時無法使用，請稍後再試" })).toBeHidden();
+
+  const outsider = await (await browser.newContext()).newPage();
+  await loginAs(outsider, "NOACCESS");
+  await outsider.goto("/suppliers");
+  await expect(outsider).toHaveURL(/\/403$/u);
+  await evidence(outsider, testInfo, "no-permission");
+});
