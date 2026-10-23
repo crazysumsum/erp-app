@@ -108,7 +108,7 @@ export class SalesQuotationService {
         detail.status === "ISSUED" ? management ? ["print", "convert", "cancel"] : ["print"] :
           ["EXPIRED", "CONVERTED"].includes(detail.status) ? ["print"] : [];
       return { ...detail, allowedActions, conversion: conversion ? { salesOrderId: conversion.salesOrder.id,
-        salesOrderNumber: conversion.salesOrder.number, differenceSummary: conversion.differenceSummary } : null };
+        salesOrderNumber: conversion.salesOrder.number, isArchived: conversion.salesOrder.isArchived, differenceSummary: conversion.differenceSummary } : null };
     });
   }
   async list({ claims, input = {} }) {
@@ -215,11 +215,15 @@ export class SalesQuotationService {
   }
 
   async #conversion(tx, id, lock = true) {
-    const [[row]] = await tx.query(`SELECT sales_order_id,sales_order_number_snapshot,difference_summary FROM sales_quotation_conversions WHERE quotation_id=?${lock ? " FOR UPDATE" : ""}`, [id]);
+    const [[row]] = await tx.query(`SELECT sales_order_id,sales_order_number_snapshot,is_order_archived,difference_summary FROM sales_quotation_conversions WHERE quotation_id=?${lock ? " FOR UPDATE" : ""}`, [id]);
     if (!row) return null;
-    const [[order]] = await tx.query(`SELECT id,sales_order_number,status,version FROM sales_orders WHERE id=?${lock ? " LOCK IN SHARE MODE" : ""}`, [row.sales_order_id]);
+    const archived = Number(row.is_order_archived) === 1;
+    const table = archived ? "sales_orders_archive" : "sales_orders";
+    const completed = archived ? " JOIN sales_archive_order_manifests m ON m.sales_order_id=o.id AND m.archive_batch_id=o.archive_batch_id" : "";
+    // Keep header and completion proof in the same read: current for conversion, snapshot for inquiry.
+    const [[order]] = await tx.query(`SELECT o.id,o.sales_order_number,o.status,o.version FROM ${table} o${completed} WHERE o.id=?${lock ? " LOCK IN SHARE MODE" : ""}`, [row.sales_order_id]);
     if (!order) throw salesError("SALES_ORDER_NOT_FOUND");
-    return { salesOrder: { id: Number(order.id), number: order.sales_order_number, status: order.status, version: Number(order.version) },
+    return { salesOrder: { id: Number(order.id), number: order.sales_order_number, status: order.status, version: Number(order.version), isArchived: archived },
       differenceSummary: typeof row.difference_summary === "string" ? JSON.parse(row.difference_summary) : row.difference_summary };
   }
   async convert({ claims, input, id, trace = {} }) {
@@ -240,8 +244,9 @@ export class SalesQuotationService {
       const before = await this.#lockQuotation(tx, id), existing = await this.#conversion(tx, id);
       if (existing) {
         await tx.query("ROLLBACK TO SAVEPOINT sales_conversion_number");
-        await this.operations.succeed(tx, { operationId: claim.operationId, result: existing.salesOrder, nowMs });
-        return { quotation: before, ...existing, operation: existing.salesOrder, warnings: [] };
+        const operation = { id: existing.salesOrder.id, number: existing.salesOrder.number, status: existing.salesOrder.status, version: existing.salesOrder.version };
+        await this.operations.succeed(tx, { operationId: claim.operationId, result: operation, nowMs });
+        return { quotation: before, ...existing, operation, warnings: [] };
       }
       if (exhausted) throw exhausted;
       if (before.version !== command.version) throw salesError("VERSION_CONFLICT", { currentVersion: before.version });
@@ -281,7 +286,7 @@ export class SalesQuotationService {
       const result = { id: orderId, number, status: "DRAFT", version: 1 };
       await this.operations.succeed(tx, { operationId: claim.operationId, result, nowMs });
       if (document.currencyCode !== prepared.customer.defaultCurrencyCode) warnings.push({ code: "CUSTOMER_CURRENCY_DIFFERENT", field: "currencyCode" });
-      return { quotation: await this.#detail(tx, id), salesOrder: result, differenceSummary: difference, operation: result, warnings };
+      return { quotation: await this.#detail(tx, id), salesOrder: { ...result, isArchived: false }, differenceSummary: difference, operation: result, warnings };
     });
   }
 

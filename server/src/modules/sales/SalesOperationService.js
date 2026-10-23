@@ -27,7 +27,7 @@ export function safeSalesOperationResult(value, commandType) {
   }
   if (!result || Object.keys(result).sort().join(",") !== "id,number,status,version" ||
       typeof result.number !== "string" || !/^(SO|QT|SI)-\d{6}-\d{6}$/u.test(result.number) ||
-      !(result.number.startsWith("SI-") ? commandType === "UPLOAD_IMPORT" ? ["UPLOADED"] : ["QUEUED","CANCELLED"] : STATUSES).includes(result.status)) throw new TypeError("Invalid Sales operation result");
+      !(result.number.startsWith("SI-") ? commandType === "UPLOAD_IMPORT" ? ["UPLOADED"] : ["QUEUED","CANCELLED"] : result.number.startsWith("SO-") ? [...STATUSES,"CONFIRMING","PARTIALLY_FULFILLED","COMPLETED"] : STATUSES).includes(result.status)) throw new TypeError("Invalid Sales operation result");
   identifier(result.id); identifier(result.version);
   return { id: result.id, number: result.number, status: result.status, version: result.version };
 }

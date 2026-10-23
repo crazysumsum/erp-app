@@ -64,7 +64,8 @@ export function quotationLifecycleRequest(req, event) {
   return { claims: quotationActorClaims(req), id: Number(req.input.params.id), input: req.input.body,
     trace: { requestId: req.requestId ?? "", correlationId: req.correlationId ?? "", ipAddress: req.ip ?? "" } };
 }
-const ORDER_RESULT = { ...RESULT, properties: { ...RESULT.properties, number: { type: "string", pattern: "^SO-\\d{6}-\\d{6}$" }, status: { const: "DRAFT" } } };
+const ORDER_RESULT = { ...RESULT, properties: { ...RESULT.properties, number: { type: "string", pattern: "^SO-\\d{6}-\\d{6}$" }, status: { enum: ["DRAFT", "CONFIRMING", "CONFIRMED", "PARTIALLY_FULFILLED", "COMPLETED", "CLOSED", "CANCELLED"] } } };
+const ORDER_TARGET = { ...ORDER_RESULT, required: [...ORDER_RESULT.required, "isArchived"], properties: { ...ORDER_RESULT.properties, isArchived: { type: "boolean" } } };
 const differenceFields = { skuId: ID, skuUomId: ID, fromLineNo: ID, toLineNo: ID, beforeQuantity: QUANTITY, afterQuantity: QUANTITY, beforePrice: MONEY, afterPrice: MONEY };
 const differenceGroup = fields => ({ type: "array", maxItems: 100, items: { type: "object", additionalProperties: false, required: fields,
   properties: Object.fromEntries(fields.map(field => [field, differenceFields[field]])) } });
@@ -72,7 +73,7 @@ export const QUOTATION_DIFFERENCE = { type: "object", additionalProperties: fals
   added: differenceGroup(["skuId", "skuUomId", "toLineNo", "afterQuantity", "afterPrice"]), removed: differenceGroup(["skuId", "skuUomId", "fromLineNo", "beforeQuantity", "beforePrice"]),
   quantityChanged: differenceGroup(["skuId", "skuUomId", "fromLineNo", "toLineNo", "beforeQuantity", "afterQuantity"]), priceChanged: differenceGroup(["skuId", "skuUomId", "fromLineNo", "toLineNo", "beforePrice", "afterPrice"]) } };
 export const QUOTATION_CONVERT_RESPONSE = { type: "object", additionalProperties: false, required: ["quotation", "salesOrder", "differenceSummary", "operation", "warnings"],
-  properties: { ...QUOTATION_COMMAND_RESPONSE.properties, salesOrder: ORDER_RESULT, operation: ORDER_RESULT, differenceSummary: QUOTATION_DIFFERENCE } };
+  properties: { ...QUOTATION_COMMAND_RESPONSE.properties, salesOrder: ORDER_TARGET, operation: ORDER_RESULT, differenceSummary: QUOTATION_DIFFERENCE } };
 
 export const SALES_READ_POLICY = { name: "hasPermission", options: { permissions: ["sales.view"] } };
 export const QUOTATION_LIST_QUERY = { type: "object", additionalProperties: false, properties: {
@@ -96,5 +97,5 @@ export const QUOTATION_LIST_RESPONSE = { type: "object", additionalProperties: f
   properties: { items: { type: "array", maxItems: 100, items: summary }, total: { type: "integer", minimum: 0 }, page: ID, pageSize: { type: "integer", minimum: 1, maximum: 100 } } };
 export const QUOTATION_READ_RESPONSE = { ...QUOTATION_DETAIL, required: [...QUOTATION_DETAIL.required, "allowedActions", "conversion"], properties: {
   ...QUOTATION_DETAIL.properties, allowedActions: { type: "array", uniqueItems: true, items: { enum: ["edit", "issue", "cancel", "convert", "print"] } },
-  conversion: { anyOf: [{ type: "null" }, { type: "object", additionalProperties: false, required: ["salesOrderId", "salesOrderNumber", "differenceSummary"],
-    properties: { salesOrderId: ID, salesOrderNumber: ORDER_RESULT.properties.number, differenceSummary: QUOTATION_DIFFERENCE } }] } } };
+  conversion: { anyOf: [{ type: "null" }, { type: "object", additionalProperties: false, required: ["salesOrderId", "salesOrderNumber", "isArchived", "differenceSummary"],
+    properties: { salesOrderId: ID, salesOrderNumber: ORDER_RESULT.properties.number, isArchived: { type: "boolean" }, differenceSummary: QUOTATION_DIFFERENCE } }] } } };
