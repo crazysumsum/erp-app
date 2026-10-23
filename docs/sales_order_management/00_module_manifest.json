@@ -292,9 +292,9 @@
     "provided": [
       {
         "id": "sales-fulfillment-projection-and-lifecycle-contract",
-        "version": "HD016+HD017-A-exact-minimal-owner-contribution-on-Fulfillment-P1; source and canonical independently reviewed; full P1/currentCI pending, no P4 routing adoption",
+        "version": "HD018-A-scoped-candidate-source-proof-implementation; exact closing owner review and full P1 gates pending",
         "source": "docs/sales_order_management/03_design_spec.md",
-        "sha256": "b7d81eb92b092c36c5a3800ba7f50fcf3ce30728f6c2cdd29ba6cbb920b0c0bf",
+        "sha256": "06585e0b2c793997c675c7ba7d934f7bffeb66936dd9c89052e0f8cf34153edd",
         "consumers": [
           "fulfillment-shipping-management",
           "inventory-management",

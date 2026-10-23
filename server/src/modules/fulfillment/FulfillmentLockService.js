@@ -158,6 +158,8 @@ export class FulfillmentLockService {
     const lockedSales=await this.sales.lockLinesForFulfillmentInTransaction(tx,command.salesIntent);
     if(lockedSales?.replay!==false||!lockedSales.order)conflict();
     const sales=lockedSales.order;
+    const sourceFacts=await this.sales.readLockedFulfillmentClaimSourceFactsInTransaction(tx,command.salesIntent);
+    if(sourceFacts.orderId!==sales.orderId)conflict();
     const [rootIds]=await tx.query("SELECT id FROM fulfillments WHERE sales_order_id=? ORDER BY id",[sales.orderId]);
     const roots=await lockIds(tx,"fulfillments",rootIds.map(r=>r.id)),root=roots.find(r=>String(r.id)===command.fulfillmentId);
     if(!root||root.status!=="DRAFT"||String(root.sales_order_id)!==sales.orderId||String(root.customer_id)!==sales.customer.id||String(root.warehouse_id)!==sales.warehouse.id||Number(root.version)!==command.expectedVersion)throw fulfillmentError("VERSION_CONFLICT");
@@ -178,6 +180,8 @@ export class FulfillmentLockService {
     const current=await this.inventoryLookup.lockFulfillmentReservationStatesInTransaction(tx,{warehouseId:sales.warehouse.id,salesOrderId:sales.orderId,members:desired.map(m=>({inventoryReservationId:m.inventoryReservationId,salesOrderLineId:m.salesOrderLineId,skuId:m.skuId}))});
     const validated=desired.map(member=>{
       const state=current.find(s=>s.inventoryReservationId===member.inventoryReservationId);if(!state)conflict();
+      const source=sourceFacts.lines.find(line=>line.salesOrderLineId===member.salesOrderLineId)?.reservations.find(row=>row.inventoryReservationId===member.inventoryReservationId);
+      if(!source||source.originalBaseQuantity!==state.originalQuantity||source.consumedBaseQuantity!==state.consumedQuantity||source.releasedBaseQuantity!==state.releasedQuantity||source.outstandingBaseQuantity!==state.outstandingQuantity||source.sourceEventId!==state.originalSourceEventId||state.version<source.inventoryVersion)throw fulfillmentError("FULFILLABLE_QUANTITY_CHANGED");
       const active=claims.filter(c=>String(c.inventory_reservation_id)===member.inventoryReservationId&&c.status==="ACTIVE");
       const total=active.reduce((sum,c)=>sum+fulfillmentInteger(String(c.active_claimed_quantity),{positive:false}),0n),others=active.filter(c=>String(c.fulfillment_id)!==command.fulfillmentId).reduce((sum,c)=>sum+BigInt(c.active_claimed_quantity),0n);
       const outstanding=BigInt(state.outstandingQuantity);if(total>outstanding)throw fulfillmentError("FULFILLABLE_QUANTITY_CHANGED");

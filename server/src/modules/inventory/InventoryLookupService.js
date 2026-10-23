@@ -1,3 +1,4 @@
+import { readFulfillmentBatchCandidates } from "./inventoryFulfillmentCandidateAdvisory.js";
 import { assertActorFresh } from "../authorization/directoryLookups.js";
 import { InventoryFulfillmentService } from "./InventoryFulfillmentService.js";
 import { loadInventoryCandidates } from "./InventoryPickSequenceService.js";
@@ -17,6 +18,20 @@ export class InventoryLookupService {
     const actor=await assertActorFresh(tx,{actorId,claimedRoles:claims.roles,claimedPermissions:claims.permissions});
     if(!actor.username||!["fulfillment.view",permission].every(p=>actor.permissions.includes(p)))throw inventoryError("PERMISSION_STALE");
     return actor;
+  }
+  async #lockReadAnchors(tx,warehouseId,inputSkuIds) {
+    const skuIds=[...new Set(inputSkuIds)].sort((a,b)=>Number(a)-Number(b));
+    const locked=await this.fulfillment.locks.lockForCommand(tx,{warehouseIds:[Number(warehouseId)]});
+    if(locked.warehouses.length!==1||locked.warehouses[0].status!=="ACTIVE")throw inventoryError("WAREHOUSE_INVALID");
+    // Read proofs must not use the writer's StockControl upsert, even as a no-op.
+    const [rows]=await tx.query(`SELECT * FROM inventory_stock_controls WHERE warehouse_id=? AND sku_id IN (${skuIds.map(()=>"?").join(",")}) ORDER BY warehouse_id,sku_id FOR UPDATE`,[warehouseId,...skuIds]);
+    const controls=new Map(rows.map(row=>[String(row.sku_id),row]));
+    if(rows.length!==skuIds.length||controls.size!==skuIds.length||skuIds.some(skuId=>!controls.has(skuId)))throw inventoryError("INVENTORY_DEPENDENCY_UNAVAILABLE");
+    return controls;
+  }
+  #assertReadControlCoverage(controls,reservations) {
+    const totals=new Map();for(const row of reservations){const skuId=String(row.sku_id);totals.set(skuId,(totals.get(skuId)??0n)+BigInt(number(row.outstanding_quantity)));}
+    for(const [skuId,total]of totals)if(!controls.has(skuId)||BigInt(number(controls.get(skuId).reserved_quantity))<total)throw inventoryError("INVENTORY_DEPENDENCY_UNAVAILABLE");
   }
   async hasFulfillmentAllocationHistoryInTransaction(tx,query) {
     await this.#authorize(tx);
@@ -90,17 +105,44 @@ export class InventoryLookupService {
     const skuIds=[...new Set(members.map(m=>m.skuId))];
     const profiles=await this.fulfillment.itemLookup.getFulfillmentInventoryProfilesInTransaction(tx,skuIds,{atMs:this.time.nowMs()});
     if(profiles.some(p=>!p.usable||!p.inventoryTracked||p.trackingPolicy==="serial"))throw inventoryError("INVENTORY_RESOURCE_NOT_FOUND");
-    const locked=await this.fulfillment.locks.lockForCommand(tx,{warehouseIds:[number(warehouseId)],stockControls:skuIds.map(skuId=>({warehouseId:number(warehouseId),skuId:number(skuId)})),reservationIds:completeScope?[]:ids.map(Number),now:this.time.nowMs()});
-    if(locked.warehouses.length!==1||locked.warehouses[0].status!=="ACTIVE")throw inventoryError("WAREHOUSE_INVALID");
+    const controls=await this.#lockReadAnchors(tx,warehouseId,skuIds);
+    if(!completeScope)await this.fulfillment.locks.lockForCommand(tx,{reservationIds:ids.map(Number)});
     const current=[];
     for(let start=0;start<members.length;start+=batchSize){
       const batch=members.slice(start,start+batchSize);
       if(completeScope)await this.fulfillment.locks.lockForCommand(tx,{reservationIds:batch.map(member=>number(member.inventoryReservationId)),now:this.time.nowMs()});
       const [rows]=await read(batch);validate(rows,batch);current.push(...rows);
     }
+    this.#assertReadControlCoverage(controls,current);
     return Object.freeze(current.map(r=>Object.freeze({inventoryReservationId:String(r.id),warehouseId,skuId:String(r.sku_id),salesOrderId,salesOrderLineId:r.source_line_id,
       originalInventoryOperationId:String(r.create_operation_id),originalSourceEventId:r.source_event_id,originalQuantity:String(r.original_quantity),consumedQuantity:String(r.consumed_quantity),
       releasedQuantity:String(r.released_quantity),outstandingQuantity:String(r.outstanding_quantity),status:r.status,version:number(r.version),minimumRemainingDays:number(r.minimum_remaining_days)})));
+  }
+  async listFulfillmentBatchAllocationCandidates(tx,query) {
+    await this.#authorize(tx);
+    fulfillmentInventoryFields(query,["warehouseId","demands","asOf"]);
+    const warehouseId=fulfillmentInventoryId(query.warehouseId);
+    if(!Number.isSafeInteger(query.asOf)||query.asOf<0||!Array.isArray(query.demands)||!query.demands.length||query.demands.length>5000)throw inventoryError("INVENTORY_INPUT_INVALID");
+    const seen=new Set(),claimIds=new Set(),lineCounts=new Map();
+    const demands=query.demands.map(demand=>{
+      fulfillmentInventoryFields(demand,["fulfillmentLineId","claimId","inventoryReservationId","skuId","requestedQuantity","page"]);
+      const result=Object.fromEntries(["fulfillmentLineId","claimId","inventoryReservationId","skuId","requestedQuantity"].map(key=>[key,fulfillmentInventoryId(demand[key])]));
+      const page=demand.page??1,count=(lineCounts.get(result.fulfillmentLineId)??0)+1;lineCounts.set(result.fulfillmentLineId,count);
+      if(seen.has(result.inventoryReservationId)||claimIds.has(result.claimId)||count>50||lineCounts.size>100||!Number.isSafeInteger(page)||page<1||!Number.isSafeInteger(page*100))throw inventoryError("INVENTORY_INPUT_INVALID");
+      seen.add(result.inventoryReservationId);claimIds.add(result.claimId);return {...result,page};
+    }).sort((a,b)=>Number(a.fulfillmentLineId)-Number(b.fulfillmentLineId)||Number(a.inventoryReservationId)-Number(b.inventoryReservationId));
+    const ids=[...seen].sort((a,b)=>Number(a)-Number(b)),[before]=await tx.query(`SELECT * FROM inventory_reservations WHERE id IN (${ids.map(()=>"?").join(",")}) ORDER BY id`,ids);
+    if(before.length!==ids.length)throw inventoryError("INVENTORY_RESOURCE_NOT_FOUND");
+    const profiles=await this.fulfillment.itemLookup.getFulfillmentInventoryProfilesInTransaction(tx,[...new Set(demands.map(demand=>demand.skuId))],{atMs:this.time.nowMs()});
+    const bySku=new Map(profiles.map(profile=>[profile.skuId,profile]));
+    if(bySku.size!==profiles.length||bySku.size!==new Set(demands.map(demand=>demand.skuId)).size||demands.some(demand=>!bySku.has(demand.skuId))||profiles.some(profile=>!profile.usable||!profile.inventoryTracked||profile.trackingPolicy==="serial"))throw inventoryError("INVENTORY_RESOURCE_NOT_FOUND");
+    const controls=await this.#lockReadAnchors(tx,warehouseId,demands.map(demand=>demand.skuId));
+    const locked=await this.fulfillment.locks.lockForCommand(tx,{reservationIds:ids.map(Number)});
+    const reservations=new Map(locked.reservations.map(row=>[String(row.id),row]));
+    if(reservations.size!==ids.length)throw inventoryError("CONCURRENT_OPERATION");
+    for(const demand of demands){const row=reservations.get(demand.inventoryReservationId);if(!row||String(row.warehouse_id)!==warehouseId||String(row.sku_id)!==demand.skuId||row.purpose!=="SALE"||!["ACTIVE","PARTIALLY_CONSUMED"].includes(row.status)||BigInt(row.outstanding_quantity)<BigInt(demand.requestedQuantity)||!Number.isSafeInteger(Number(row.minimum_remaining_days))||Number(row.minimum_remaining_days)<0||Number(row.minimum_remaining_days)>36500)throw inventoryError("RESERVATION_STATE_CONFLICT");}
+    this.#assertReadControlCoverage(controls,locked.reservations);
+    return readFulfillmentBatchCandidates(tx,{warehouseId,demands,profiles:bySku,reservations,time:this.time});
   }
   async listAllocationCandidates(tx,query) {
     await this.#authorize(tx);

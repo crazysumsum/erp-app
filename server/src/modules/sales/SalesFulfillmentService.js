@@ -137,6 +137,18 @@ export class SalesFulfillmentService {
     if(original.purpose!=="SHIPMENT_CONFIRMED"||original.salesOrderId!==intent.salesOrderId||original.shipmentId!==intent.shipmentId||salesPayloadHash(memberIdentity(original))!==salesPayloadHash(memberIdentity(intent)))mismatch();
     for(const line of intent.lines)for(const member of line.reservations){const old=completed.payload.inventoryMembers?.find(m=>m.claimId===member.claimId);if(!old||old.inventoryReservationId!==member.inventoryReservationId||old.baseQuantity!==member.baseQuantity||old.inventoryOperationId!==member.originalInventoryOperationId)mismatch();}
   }
+  async readLockedFulfillmentClaimSourceFactsInTransaction(tx,command){
+    this.#transaction(tx);
+    const intent=normalizeSalesFulfillmentIntent(command),receipt=this.#receipts.get(tx);
+    if(getActiveTransactionIsolation(tx)!=="READ COMMITTED"||intent.purpose!=="CLAIM"||intent.claimMode!==undefined||!receipt||receipt.replay||receipt.intentHash!==salesFulfillmentIntentHash(intent)||salesPayloadHash(receipt.intent.actor)!==salesPayloadHash(intent.actor))mismatch();
+    await this.#actor(tx,intent);
+    const mappings=new Map(receipt.data.mappings.map(row=>[dbInteger(row.inventory_reservation_id),row]));
+    return Object.freeze({orderId:intent.salesOrderId,lines:Object.freeze(intent.lines.map(line=>Object.freeze({salesOrderLineId:line.salesOrderLineId,reservations:Object.freeze(line.reservations.map(member=>{
+      const row=mappings.get(member.inventoryReservationId);
+      if(!row||dbInteger(row.sales_order_line_id)!==line.salesOrderLineId)mismatch();
+      return Object.freeze({claimId:member.claimId,salesReservationMappingId:dbInteger(row.id),inventoryReservationId:member.inventoryReservationId,originalBaseQuantity:dbInteger(row.original_base_quantity),consumedBaseQuantity:dbInteger(row.consumed_base_quantity,false),releasedBaseQuantity:dbInteger(row.released_base_quantity,false),outstandingBaseQuantity:dbInteger(row.outstanding_base_quantity,false),sourceEventId:row.source_event_id,inventoryVersion:version(Number(row.inventory_version))});
+    }))})))});
+  }
   async lockLinesForFulfillmentInTransaction(tx,command){
     this.#transaction(tx);const intent=normalizeSalesFulfillmentIntent(command);
     if((intent.purpose!=="CLAIM"||intent.claimMode!==undefined)&&getActiveTransactionIsolation(tx)!=="READ COMMITTED")mismatch();

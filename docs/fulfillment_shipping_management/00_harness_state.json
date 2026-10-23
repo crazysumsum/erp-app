@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 151,
+  "revision": 155,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
-  "status": "BLOCKED",
-  "resume_status": "IMPLEMENTING",
+  "status": "IMPLEMENTING",
+  "resume_status": null,
   "current_phase": "PHASE-002",
   "current_task": "TASK-015",
   "baseline": {
-    "design": "5072aa6949cb70ee0fa404040281545c97bbfc2c303f3cfefebb1d4f7b1e69f3",
-    "plan": "7abc634146f7d588df5fadc706d48197105db40601b63e5a215de6200021d0cf",
-    "code_commit": "dff54d03f0e38543dbbcc95314fc76e35958d93e",
-    "source_fingerprint": "437a01ae23004bea746f5d54a1d6aabc53a8a0573f4dd75da09b87fd9c9118ef",
+    "design": "836a909cf318b400f3df9265154722485241305061b37eb92ce4b777772a544f",
+    "plan": "ec07c00744606dc87aa265383c73bea76a56c4a5ce6108b13d1c4aa8bf97d321",
+    "code_commit": "050d5934879e009b0debd66b4e31937ad0df31ea",
+    "source_fingerprint": "33b0c0b055e01f0a0f8dda579c7cc23d1bc585398d7ddb265d3a6cde14017991",
     "worktree": "/private/tmp/erp-fulfillment-p1",
     "default_commit": "fd32762f4fa17a5e77aaa7118a9ded2d3ac81e9e",
     "mode_entry_commit": "fd32762f4fa17a5e77aaa7118a9ded2d3ac81e9e"
@@ -2300,6 +2300,159 @@
         "NFR-023",
         "Exact original NA reason unchanged; TC010 mandatory/blocking"
       ]
+    },
+    {
+      "id": "APR-105-HD018-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam actual direct HD018 A plus original P1 authority; necessary readonly source-proof getter reviewed as routine scope alignment, no new human approval of unseen hashes claimed",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/35_batch_candidate_shared_stock.md#actual-adoption",
+      "recorded_at": "2026-10-23T05:42:29.750673+00:00",
+      "code_commit": "050d5934879e009b0debd66b4e31937ad0df31ea",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "fba3bb2d59bb8629f57ea48a4acc423c625952850a94b0c6cd1351d9a07a15a7",
+      "scope": [
+        "server/src/modules/inventory/InventoryLookupService.js",
+        "server/src/modules/inventory/inventoryFulfillmentCandidateAdvisory.js",
+        "server/src/modules/sales/SalesFulfillmentService.js",
+        "server/test/salesFulfillmentService.test.js",
+        "docs/inventory_management/03_design_spec.md",
+        "docs/inventory_management/00_module_manifest.json",
+        "docs/sales_order_management/03_design_spec.md",
+        "docs/sales_order_management/00_module_manifest.json",
+        "HD018 A, necessary receipt-bound readonly Sales facts within existing approved shared scope; owner review still required; no P4 routing"
+      ]
+    },
+    {
+      "id": "APR-106-HD018-DESIGN",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam actual direct HD018 A plus original P1 authority; necessary readonly source-proof getter reviewed as routine scope alignment, no new human approval of unseen hashes claimed",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/35_batch_candidate_shared_stock.md#actual-adoption",
+      "recorded_at": "2026-10-23T05:42:29.750673+00:00",
+      "code_commit": "050d5934879e009b0debd66b4e31937ad0df31ea",
+      "expires_at": null,
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "d3a7bd64daf63389c869f428577b1f5bca7abefea188c1cf537d92d5851a1807",
+      "scope": [
+        "PHASE-002",
+        "TASK-015",
+        "HD018 actual A and reviewed full source-proof necessity; no changed legacy DTO/hash"
+      ]
+    },
+    {
+      "id": "APR-107-HD018-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam actual direct HD018 A plus original P1 authority; necessary readonly source-proof getter reviewed as routine scope alignment, no new human approval of unseen hashes claimed",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/35_batch_candidate_shared_stock.md#actual-adoption",
+      "recorded_at": "2026-10-23T05:42:29.750673+00:00",
+      "code_commit": "050d5934879e009b0debd66b4e31937ad0df31ea",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "fba3bb2d59bb8629f57ea48a4acc423c625952850a94b0c6cd1351d9a07a15a7",
+      "scope": [
+        "PHASE-002",
+        "TASK-012–023",
+        "Original full developer/review/currentCI gates before draft PR"
+      ]
+    },
+    {
+      "id": "APR-108-HD018-UNCHANGED-UATNA-LINEAGE",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam actual direct HD018 A plus original P1 authority; necessary readonly source-proof getter reviewed as routine scope alignment, no new human approval of unseen hashes claimed",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/35_batch_candidate_shared_stock.md#actual-adoption",
+      "recorded_at": "2026-10-23T05:42:29.750673+00:00",
+      "code_commit": "050d5934879e009b0debd66b4e31937ad0df31ea",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "fba3bb2d59bb8629f57ea48a4acc423c625952850a94b0c6cd1351d9a07a15a7",
+      "scope": [
+        "NFR-023",
+        "Exact original NA reason unchanged; TC010 mandatory/blocking"
+      ]
+    },
+    {
+      "id": "APR-109-HD018-READ-ANCHORS-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam actual HD018 A, existing full source/read-only requirement; separate reviewer confirms necessary source-proof bug fix within same scope, no new human approval of unseen hashes claimed",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/36_task015_batch_candidates_developer_increment.md#subsequent-readonly-anchor-defect-and-requalification",
+      "recorded_at": "2026-10-23T05:57:18.567602+00:00",
+      "code_commit": "050d5934879e009b0debd66b4e31937ad0df31ea",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "ec07c00744606dc87aa265383c73bea76a56c4a5ce6108b13d1c4aa8bf97d321",
+      "scope": [
+        "server/src/modules/inventory/InventoryLookupService.js",
+        "server/src/modules/inventory/inventoryFulfillmentCandidateAdvisory.js",
+        "server/src/modules/sales/SalesFulfillmentService.js",
+        "server/test/salesFulfillmentService.test.js",
+        "docs/inventory_management/03_design_spec.md",
+        "docs/inventory_management/00_module_manifest.json",
+        "docs/sales_order_management/03_design_spec.md",
+        "docs/sales_order_management/00_module_manifest.json",
+        "HD018 A, necessary receipt-bound readonly Sales facts within existing approved shared scope; owner review still required; no P4 routing"
+      ]
+    },
+    {
+      "id": "APR-110-HD018-READ-ANCHORS-DESIGN",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam actual HD018 A, existing full source/read-only requirement; separate reviewer confirms necessary source-proof bug fix within same scope, no new human approval of unseen hashes claimed",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/36_task015_batch_candidates_developer_increment.md#subsequent-readonly-anchor-defect-and-requalification",
+      "recorded_at": "2026-10-23T05:57:18.567602+00:00",
+      "code_commit": "050d5934879e009b0debd66b4e31937ad0df31ea",
+      "expires_at": null,
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "836a909cf318b400f3df9265154722485241305061b37eb92ce4b777772a544f",
+      "scope": [
+        "PHASE-002",
+        "HD018 actual A; necessary existing-anchor zero-DML read proof; no new business choice"
+      ]
+    },
+    {
+      "id": "APR-111-HD018-READ-ANCHORS-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam actual HD018 A, existing full source/read-only requirement; separate reviewer confirms necessary source-proof bug fix within same scope, no new human approval of unseen hashes claimed",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/36_task015_batch_candidates_developer_increment.md#subsequent-readonly-anchor-defect-and-requalification",
+      "recorded_at": "2026-10-23T05:57:18.567602+00:00",
+      "code_commit": "050d5934879e009b0debd66b4e31937ad0df31ea",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "ec07c00744606dc87aa265383c73bea76a56c4a5ce6108b13d1c4aa8bf97d321",
+      "scope": [
+        "PHASE-002",
+        "TASK-012–023",
+        "All original full gates and currentCI before draft PR"
+      ]
+    },
+    {
+      "id": "APR-112-HD018-READ-ANCHORS-UATNA-LINEAGE",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam actual HD018 A, existing full source/read-only requirement; separate reviewer confirms necessary source-proof bug fix within same scope, no new human approval of unseen hashes claimed",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/36_task015_batch_candidates_developer_increment.md#subsequent-readonly-anchor-defect-and-requalification",
+      "recorded_at": "2026-10-23T05:57:18.567602+00:00",
+      "code_commit": "050d5934879e009b0debd66b4e31937ad0df31ea",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "ec07c00744606dc87aa265383c73bea76a56c4a5ce6108b13d1c4aa8bf97d321",
+      "scope": [
+        "NFR-023",
+        "Exact original NA reason unchanged; TC010 mandatory/blocking"
+      ]
     }
   ],
   "reviews": [
@@ -3354,6 +3507,18 @@
       "reviewer": "Sales independent /root/def016_runtime_recovery_review",
       "reviewed_baseline": "c5926519056a83468fd111e807682fe93cd35c518dce0a5d23e4ba00821bd15f",
       "source_ref": "docs/fulfillment_shipping_management/implementation/34_task014_draft_update_developer_completion.md#exact-canonical-handoff-installed",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-089-TASK015-CLOSING",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "83c30b8d43f052e64441ca916a135a617b62b97edb990dfe7f8121805f23f500",
+      "source_ref": "implementation/36_task015_batch_candidates_developer_increment.md#corrected-frozen-developer-qualification",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -4489,8 +4654,8 @@
         "DES-010",
         "TC-004"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "docs/fulfillment_shipping_management/implementation/35_batch_candidate_shared_stock.md#actual-adoption; actual direct Sam selected A in current chat"
     }
   ],
   "external_actions": [
@@ -5035,7 +5200,8 @@
     "implementation/32_task013_create_developer_completion.md",
     "implementation/33_pending_update_claim_contract.md",
     "implementation/34_task014_draft_update_developer_completion.md",
-    "implementation/35_batch_candidate_shared_stock.md"
+    "implementation/35_batch_candidate_shared_stock.md",
+    "implementation/36_task015_batch_candidates_developer_increment.md"
   ],
   "defects": [
     {
@@ -5119,5 +5285,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Commit exact reviewed canonical handoff; HD018 OPEN blocks TASK015 new batch advisory interface until actual Sam choice. TASK014 DONE with source/owner/canonical review and developer checks. Remaining TASK015–023/full P1 gates/current-target integration/currentCI then draft PR only; no merge."
+  "next_safe_action": "Atomic commit corrected reviewed TASK015 candidate; obtain actual exact Sales owner receipt-fact source/canonical review before TASK015 DONE. Developer119native/102unit/lint verified at33b0c0..., separate4native/10pure latest83c30...; no wholeP1/currentCI qualification."
 }

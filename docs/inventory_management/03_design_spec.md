@@ -1215,6 +1215,7 @@ Internal `command`必須包括：
 - Inventory在提交點重讀actor、SKU及位置狀態。若必要依賴不可用，整個來源transaction rollback。
 - Query contract可用database service非transaction執行；任何數量寫入只能走command contract。
 - Fulfillment batch allocation由Inventory計算完整推薦序列及`FEFO／FIFO`偏離類型；caller不可自報`selectionStrategy`以降低權限。
+- Fulfillment HD018 A (actual Sam approval,2026-10-23) adds explicit read-only `InventoryLookupService.listFulfillmentBatchAllocationCandidates(tx,{warehouseId,asOf,demands})` while preserving the original independent `listAllocationCandidates` ABI/behavior. Demands bind real persisted Fulfillment Line/Claim/Reservation/SKU IDs, requestedQuantity and page; Inventory derives current Reservation minimum remaining days and follows actual writer Line-ID/Reservation-ID order. A transaction-local shared Balance budget accounts for all preceding members and prefix pages, including different eligibility sets; exhausted buckets disappear from later virtual rank. Physical freeQuantity and initial expectedBalanceVersion remain actual owner facts; batchAvailableQuantity is explicitly virtual. Quantity summary distinguishes proven insufficient stock from incomplete source/result/prefix proof, which always fails closed. Actual RC/fresh permission, all owner membership/eligibility locks and bounds, original20sec/full P1 gates remain. No Inventory writes or allocation receipt are produced, and no existing writer, schema, global isolation or Archive contract is changed.
 - `reverseFulfillmentIssueAndRestoreReservationBatchInTransaction()`只接受已成功且未沖銷的Fulfillment Shipment Issue references，整批回補原bucket及原Reservation；它不修改或重開原Allocation，generic HTTP reversal endpoint亦不可呼叫此能力。
 
 ### 5.7.1 Manual Sales batch（2026-10-02採納；source candidate）
@@ -2074,3 +2075,5 @@ Inventory quantity and audit are high-risk shared data requiring least privilege
 
 ### Failure behavior
 Authentication, authorization, concurrency, performance, retention or recovery failures block the affected command or release gate.
+
+HD018 read-anchor implementation: named Fulfillment Inventory state/candidate reads lock Warehouse first, then SELECT existing StockControls by ordered owner keys, then Reservations (complete influence retains PK batches500). They never invoke the writer upsert or repair missing controls; missing controls or reserved_quantity below the scoped locked Reservation outstanding total fail503. This proves the requested scope only, not an unmeasured warehouse-global total. No-op DML is excluded as well as quantity-changing writes; the original independent candidate API and all writer APIs remain unchanged.

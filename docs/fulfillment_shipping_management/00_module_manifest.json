@@ -155,7 +155,7 @@
         "id": "fulfillment-shipment-and-reversal-contract",
         "version": "P0-HD011-ADOPTED-IMPLEMENTATION_IN_PROGRESS",
         "source": "docs/fulfillment_shipping_management/03_design_spec.md",
-        "sha256": "4f45b8ba651de87c7af5fed761147d7f00ebcb696dfd76f16d8dbe0333b8f117",
+        "sha256": "46acdde0f174e323b5ca6da5f84da9b3f064a2e323eb75c0ef33d04a8dd20935",
         "consumers": [
           "sales-order-management",
           "inventory-management",
@@ -167,9 +167,9 @@
       {
         "module_id": "sales-order-management",
         "id": "sales-fulfillment-projection-and-lifecycle-contract",
-        "version": "HD016+HD017-A-exact-minimal-owner-contribution-on-Fulfillment-P1; source and canonical independently reviewed; full P1/currentCI pending, no P4 routing adoption",
+        "version": "HD018-A-scoped-candidate-source-proof-implementation; exact closing owner review and full P1 gates pending",
         "source": "docs/sales_order_management/03_design_spec.md",
-        "sha256": "b7d81eb92b092c36c5a3800ba7f50fcf3ce30728f6c2cdd29ba6cbb920b0c0bf",
+        "sha256": "06585e0b2c793997c675c7ba7d934f7bffeb66936dd9c89052e0f8cf34153edd",
         "regression_suites": [
           "fulfillment-technical"
         ]
@@ -177,9 +177,9 @@
       {
         "module_id": "inventory-management",
         "id": "inventory-allocation-issue-and-dedicated-reversal-contract",
-        "version": "observed-main-35af2ab7-OWNER_SEMANTIC_REVIEW_REQUIRED",
+        "version": "HD018-A-scoped-candidate-source-proof-implementation; exact closing owner review and full P1 gates pending",
         "source": "docs/inventory_management/03_design_spec.md",
-        "sha256": "2fb61cce8ee4ff9f32cd9c6d0e2a9fc8f87c08d34823be7fb622908610b1ac53",
+        "sha256": "4cf84a3c646b33252ace459b8a7c96c2016a56416f32dfed1075482024a1105c",
         "regression_suites": [
           "fulfillment-technical"
         ]

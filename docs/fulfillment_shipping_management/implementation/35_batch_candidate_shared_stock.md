@@ -35,3 +35,7 @@ Required RED/GREEN/native matrix: shared SKU2Claims5+3 stock; reverse Reservatio
 ## Authority boundary
 
 This introduces an explicit cross-owner batch advisory interface and semantics absent from the current strict query ABI. The software-engineering-harness rule “Major impact means ask a human before choosing” applies to public owner contracts and data semantics. Existing P1 and HD016/017 authority do not silently authorize an implicit new ordering convention. Actual human decision and separate proposal review must be recorded; unrelated TASK014 owner handoff can continue.
+
+## Actual adoption
+
+Actual Sam reply selected A: approve Inventory owner batch candidate interface (recommended). This adopts the independently reviewed proposal b16f4803c9dd8e2598236c2df1db7b6c0716644733097b25157e0c29b4ff2687, retaining old ABI, trusted owner-derived member order/current policy, shared virtual budget, complete source/result/prefix proof and initial physical CAS versions. Original limits/20sec/full P1 gates/draft-only authority remain. No other alternative is adopted.
