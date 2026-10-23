@@ -6,11 +6,11 @@ const fail=(code="ALLOCATION_STATE_CONFLICT")=>{throw inventoryError(code);};
 const marks=values=>values.map(()=>"?").join(",");
 const keyed=rows=>new Map(rows.map(row=>[String(row.id),row]));
 
-async function selection(tx,service,member,profile) {
+export async function assessFulfillmentAllocationSelection(tx,service,member,profile,readPage=loadInventoryCandidates) {
   const requested=new Map(member.legs.filter(leg=>leg.kind==="ALLOCATE").map(leg=>[leg.input.inventoryBalanceId,number(leg.input.baseQuantity)]));
   const selected=new Map();let remaining=number(member.input.baseQuantity),offset=0,rank=0,first=null,differs=false,fefo=false;
   while (true) {
-    const page=await loadInventoryCandidates(tx,{warehouseId:number(member.reservation.warehouse_id),skuId:number(member.reservation.sku_id),
+    const page=await readPage(tx,{warehouseId:number(member.reservation.warehouse_id),skuId:number(member.reservation.sku_id),
       currentDate:service.time.fileDate(),minimumRemainingDays:number(member.reservation.minimum_remaining_days),trackingPolicy:profile.trackingPolicy,limit:100,offset});
     for (const candidate of page) {
       rank++;
@@ -25,12 +25,18 @@ async function selection(tx,service,member,profile) {
     offset+=page.length;
     if(!Number.isSafeInteger(offset))fail("INVENTORY_DEPENDENCY_UNAVAILABLE");
   }
+  return {selected,first,differs,fefo};
+}
+
+async function selection(tx,service,member,profile) {
+  const recommendation=await assessFulfillmentAllocationSelection(tx,service,member,profile);
+  const {differs,fefo}=recommendation;
   const reason=member.input.overrideReason;
   if(differs) {
     if([...reason].length<5)fail(fefo?"FEFO_OVERRIDE_REQUIRED":"PICK_SEQUENCE_REASON_REQUIRED");
     if(fefo&&!member.permissions.includes("inventory.fefo.override"))fail("FEFO_OVERRIDE_DENIED");
   } else if(reason!=="")fail("INVENTORY_INPUT_INVALID");
-  return {selected,first,differs,fefo};
+  return recommendation;
 }
 
 async function lockAllocationSet(service,tx,batch,context) {

@@ -1,3 +1,4 @@
+import { prepareFulfillmentAllocation } from "./inventoryFulfillmentAllocationPreparation.js";
 import { readFulfillmentBatchCandidates } from "./inventoryFulfillmentCandidateAdvisory.js";
 import { assertActorFresh } from "../authorization/directoryLookups.js";
 import { InventoryFulfillmentService } from "./InventoryFulfillmentService.js";
@@ -117,6 +118,11 @@ export class InventoryLookupService {
     return Object.freeze(current.map(r=>Object.freeze({inventoryReservationId:String(r.id),warehouseId,skuId:String(r.sku_id),salesOrderId,salesOrderLineId:r.source_line_id,
       originalInventoryOperationId:String(r.create_operation_id),originalSourceEventId:r.source_event_id,originalQuantity:String(r.original_quantity),consumedQuantity:String(r.consumed_quantity),
       releasedQuantity:String(r.released_quantity),outstandingQuantity:String(r.outstanding_quantity),status:r.status,version:number(r.version),minimumRemainingDays:number(r.minimum_remaining_days)})));
+  }
+  async prepareFulfillmentAllocationInTransaction(tx,query) {
+    const actor=await this.#authorize(tx);
+    try{return await prepareFulfillmentAllocation(tx,query,{inventory:this.fulfillment,time:this.time,actor});}
+    catch(error){if(["ER_NO_SUCH_TABLE","ER_BAD_FIELD_ERROR"].includes(error.cause?.code??error.code))throw inventoryError("INVENTORY_DEPENDENCY_UNAVAILABLE");throw error;}
   }
   async listFulfillmentBatchAllocationCandidates(tx,query) {
     await this.#authorize(tx);

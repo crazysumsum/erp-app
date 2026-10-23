@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 155,
+  "revision": 159,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-002",
-  "current_task": "TASK-015",
+  "current_task": "TASK-016",
   "baseline": {
-    "design": "836a909cf318b400f3df9265154722485241305061b37eb92ce4b777772a544f",
-    "plan": "ec07c00744606dc87aa265383c73bea76a56c4a5ce6108b13d1c4aa8bf97d321",
-    "code_commit": "050d5934879e009b0debd66b4e31937ad0df31ea",
-    "source_fingerprint": "33b0c0b055e01f0a0f8dda579c7cc23d1bc585398d7ddb265d3a6cde14017991",
+    "design": "9903d2839d2e7156ed8c2080e1f7632f0865f5892ce8a96a93ccf53ec1afd3e4",
+    "plan": "975659ddc3ccd1b8098bb8a56dbf02f7bf33b403590fa97504eb3d0e0d9fbfe9",
+    "code_commit": "735e56a245f04f16a79ae2aaf529992db4e0c50a",
+    "source_fingerprint": "5bee289d53bd273032eb737444ce5c038211fc4ae4116c40c75e59e6079ff031",
     "worktree": "/private/tmp/erp-fulfillment-p1",
     "default_commit": "fd32762f4fa17a5e77aaa7118a9ded2d3ac81e9e",
     "mode_entry_commit": "fd32762f4fa17a5e77aaa7118a9ded2d3ac81e9e"
@@ -45,8 +45,8 @@
     "TASK-012": "DONE",
     "TASK-013": "DONE",
     "TASK-014": "DONE",
-    "TASK-015": "IN_PROGRESS",
-    "TASK-016": "PENDING",
+    "TASK-015": "DONE",
+    "TASK-016": "IN_PROGRESS",
     "TASK-017": "PENDING",
     "TASK-018": "PENDING",
     "TASK-019": "PENDING",
@@ -2453,6 +2453,86 @@
         "NFR-023",
         "Exact original NA reason unchanged; TC010 mandatory/blocking"
       ]
+    },
+    {
+      "id": "APR-113-TASK016-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam original approved full P1/TASK016 write contract and HD018 A; separate reviewer confirms necessary implementation/scope alignment, no claim human approved unseen hashes",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/03_design_spec.md",
+      "recorded_at": "2026-10-23T06:17:37.776019+00:00",
+      "code_commit": "735e56a245f04f16a79ae2aaf529992db4e0c50a",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "975659ddc3ccd1b8098bb8a56dbf02f7bf33b403590fa97504eb3d0e0d9fbfe9",
+      "scope": [
+        "server/src/modules/inventory/InventoryLookupService.js",
+        "server/src/modules/inventory/inventoryFulfillmentCandidateAdvisory.js",
+        "server/src/modules/sales/SalesFulfillmentService.js",
+        "server/test/salesFulfillmentService.test.js",
+        "docs/inventory_management/03_design_spec.md",
+        "docs/inventory_management/00_module_manifest.json",
+        "docs/sales_order_management/03_design_spec.md",
+        "docs/sales_order_management/00_module_manifest.json",
+        "HD018 A, necessary receipt-bound readonly Sales facts within existing approved shared scope; owner review still required; no P4 routing",
+        "server/src/modules/inventory/inventoryFulfillmentAllocation.js",
+        "server/src/modules/inventory/inventoryFulfillmentAllocationPreparation.js",
+        "TASK016 planned owner readonly preparation/shared assessor; existing writer physical-reader enforcement and ABI unchanged"
+      ]
+    },
+    {
+      "id": "APR-114-TASK016-DESIGN",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam original approved full P1/TASK016 write contract and HD018 A; separate reviewer confirms necessary implementation/scope alignment, no claim human approved unseen hashes",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/03_design_spec.md",
+      "recorded_at": "2026-10-23T06:17:37.776019+00:00",
+      "code_commit": "735e56a245f04f16a79ae2aaf529992db4e0c50a",
+      "expires_at": null,
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "9903d2839d2e7156ed8c2080e1f7632f0865f5892ce8a96a93ccf53ec1afd3e4",
+      "scope": [
+        "PHASE-002",
+        "TASK-016",
+        "Original public Allocate intent; necessary owner CAS/member-reason preparation, exact same writer rule"
+      ]
+    },
+    {
+      "id": "APR-115-TASK016-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam original approved full P1/TASK016 write contract and HD018 A; separate reviewer confirms necessary implementation/scope alignment, no claim human approved unseen hashes",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/03_design_spec.md",
+      "recorded_at": "2026-10-23T06:17:37.776019+00:00",
+      "code_commit": "735e56a245f04f16a79ae2aaf529992db4e0c50a",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "975659ddc3ccd1b8098bb8a56dbf02f7bf33b403590fa97504eb3d0e0d9fbfe9",
+      "scope": [
+        "PHASE-002",
+        "TASK-012–023",
+        "Full original gates/currentCI then draft PR"
+      ]
+    },
+    {
+      "id": "APR-116-TASK016-UNCHANGED-UATNA-LINEAGE",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam original approved full P1/TASK016 write contract and HD018 A; separate reviewer confirms necessary implementation/scope alignment, no claim human approved unseen hashes",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/03_design_spec.md",
+      "recorded_at": "2026-10-23T06:17:37.776019+00:00",
+      "code_commit": "735e56a245f04f16a79ae2aaf529992db4e0c50a",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "975659ddc3ccd1b8098bb8a56dbf02f7bf33b403590fa97504eb3d0e0d9fbfe9",
+      "scope": [
+        "NFR-023",
+        "Exact original NA reason unchanged; TC010 mandatory/blocking"
+      ]
     }
   ],
   "reviews": [
@@ -3519,6 +3599,54 @@
       "reviewer": "/root/fulfillment_independent_review",
       "reviewed_baseline": "83c30b8d43f052e64441ca916a135a617b62b97edb990dfe7f8121805f23f500",
       "source_ref": "implementation/36_task015_batch_candidates_developer_increment.md#corrected-frozen-developer-qualification",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-090-HD018-SALES-OWNER",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "Sales owner chat01a0f0e2-2647-7dc2-a1d4-a7cefa29d0f6",
+      "reviewed_baseline": "51fbedc7390c51fd1f1bb1788f4679ce0cf65d7242d1204aa09c7c487ea957e3",
+      "source_ref": "implementation/36_task015_batch_candidates_developer_increment.md#actual-sales-owner-closure-and-task015-completion",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-091-TASK016-INCREMENT",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "dec35de6b0926bf4900cddc641c6ffd88f3f0f9feb0caccc3776a62f96b2f921",
+      "source_ref": "implementation/37_task016_allocate_developer_increment.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-092-TASK016-DIAGNOSTIC-CLOSURE",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "1eee2021c42af708a76ab20b6b1723a5a1f0e5c61d723dda31abfde51caac2c4",
+      "source_ref": "implementation/37_task016_allocate_developer_increment.md#independent-focused-runtime-and-required-schema-finding",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-093-TASK016-CLOSING",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "bddac9ca37540aea183745d544faf42dfd2719e1727b556f8cfd5daa070d934c",
+      "source_ref": "implementation/37_task016_allocate_developer_increment.md#actual-independent-closing",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -5201,7 +5329,8 @@
     "implementation/33_pending_update_claim_contract.md",
     "implementation/34_task014_draft_update_developer_completion.md",
     "implementation/35_batch_candidate_shared_stock.md",
-    "implementation/36_task015_batch_candidates_developer_increment.md"
+    "implementation/36_task015_batch_candidates_developer_increment.md",
+    "implementation/37_task016_allocate_developer_increment.md"
   ],
   "defects": [
     {
@@ -5285,5 +5414,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Atomic commit corrected reviewed TASK015 candidate; obtain actual exact Sales owner receipt-fact source/canonical review before TASK015 DONE. Developer119native/102unit/lint verified at33b0c0..., separate4native/10pure latest83c30...; no wholeP1/currentCI qualification."
+  "next_safe_action": "TASK016 developer qualification complete: current146native/128unit/lint/trace/boundaryPASS, actual separate closing0C/H/M with independent26prior+1current-schema+10purePASS. Make scoped atomic commit, then record TASK016 DONE and begin TASK017; preserve all remaining P1/fullcurrentCI/finalreview gates before draft PR only."
 }
