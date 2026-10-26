@@ -350,6 +350,45 @@ test("DEF-047 (HD-142 A): every bank reveal and write by a system-admin is repor
   }
 });
 
+test("DEF-047: a COMMIT that fails reports nothing, and one retried after a deadlock reports once (REV-124 R4)", async () => {
+  // 失敗喺語句度（下面嗰個 test）同失敗喺 commit 度係兩回事：報告放咗入 transaction 入面，前者捉到、後者捉唔到。
+  const crypto = realCrypto();
+  const sealed = crypto.encryptAccountNumber({ supplierId: 7, cryptoContext: "ctx-41", accountNumber: ACCOUNT });
+  const sealRow = { account_ciphertext: sealed.ciphertext, account_iv: sealed.iv, account_auth_tag: sealed.authTag, encryption_key_id: sealed.encryptionKeyId };
+  const calls = {
+    create: (s) => s.create({ ...actor, ...bankDetails, supplierId: 7, accountNumber: ACCOUNT, reason: "commit 失敗新增原因" }),
+    update: (s) => s.update({ ...actor, ...bankDetails, supplierId: 7, bankAccountId: 41, version: 1, reason: "commit 失敗修改原因" }),
+    setDefault: (s) => s.setDefault({ ...actor, supplierId: 7, bankAccountId: 41, version: 1, reason: "commit 失敗預設原因" }),
+    deactivate: (s) => s.deactivate({ ...actor, supplierId: 7, bankAccountId: 41, version: 1, reason: "commit 失敗停用原因" }),
+    reveal: (s) => s.reveal({ ...actor, supplierId: 7, bankAccountId: 41, reason: "commit 失敗查看原因" })
+  };
+  for (const [name, call] of Object.entries(calls)) {
+    for (const mode of ["deadlock-once", "always-fail"]) {
+      const { service } = harness({ crypto, sealRow, roles: ["system-admin"] });
+      const warned = [];
+      service.logger = { warn: (...args) => warned.push(args), error() {} };
+      let commits = 0;
+      const transaction = service.database.withTransaction.bind(service.database);
+      // 工作做完，跟住 COMMIT 失敗（第一次，或者次次）。
+      service.database = { ...service.database, async withTransaction(work) {
+        const result = await transaction(work);
+        commits += 1;
+        if (mode === "always-fail" || commits === 1) throw Object.assign(new Error("deadlock at commit"), { code: "ER_LOCK_DEADLOCK" });
+        return result;
+      } };
+      const reports = () => warned.filter(([event]) => event === "supplier.bank.privileged_use").length;
+      // Reveal 唔會重試（佢唔喺 retryOnceOnDeadlock 入面），所以一次失敗就係失敗。
+      if (mode === "always-fail" || name === "reveal") {
+        await assert.rejects(() => call(service));
+        assert.equal(reports(), 0, `${name} ${mode}: nothing is reported`);
+      } else {
+        await call(service);
+        assert.equal(reports(), 1, `${name} ${mode}: exactly one report after the retry commits`);
+      }
+    }
+  }
+});
+
 test("DEF-047: a system-admin bank operation that fails is not reported", async () => {
   const { service } = harness({ roles: ["system-admin"], statementFails: { on: "INSERT INTO supplier_bank_accounts", constraint: "uq_supplier_bank_blind_index" } });
   const warned = [];

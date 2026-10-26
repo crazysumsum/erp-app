@@ -18,7 +18,12 @@ export const SUPPLIER_ALERT_THRESHOLDS = Object.freeze({
   importStalledMs: 15 * MINUTE_MS
 });
 
-/** Bank 次數嘅窗口：同 metrics job 嘅間隔一樣，每條 `supplier.metrics` 計上一段時間（DEF-047、HD-142 A）。 */
+/**
+ * Bank 次數嘅時間桶（DEF-047、HD-142 A）：對齊 epoch 嘅 5 分鐘，每次 run 報**上一個完整嘅桶**，context 帶 `bucketStart`。
+ * Job 係 cluster mutex 唔係每段時間一次：幾個 instance 各自計時，同一個桶可能報幾次（用 `bucketStart` 去重），
+ * 重啟之後亦可能有桶冇人報（REV-124 R2）。所以呢個係摘要；權威紀錄係逐次嘅 `supplier.bank.privileged_use`
+ * warn log 同 Audit。
+ */
 export const BANK_METRICS_WINDOW_MS = 5 * MINUTE_MS;
 const BANK_CHANGE_ACTIONS = Object.freeze(["supplier.bank.create", "supplier.bank.update", "supplier.bank.default", "supplier.bank.deactivate"]);
 
@@ -42,16 +47,19 @@ export async function collectSupplierMetrics(database, nowMs, { stalledMs = SUPP
       GROUP BY status`,
     [nowMs - stalledMs]
   );
-  // 設計 §12.4 Bank reveal／change 次數，同埋 system-admin 用咗幾多次（SEC-014）。由 Audit 計：用 `(action, occurred_at)`
-  // index；system-admin 以而家嘅角色判斷。
+  // 設計 §12.4 Bank reveal／change 次數，同埋 system-admin 用咗幾多次（SEC-014）。由 Audit 計，範圍由 occurred_at 嘅
+  // index 限住。System-admin 以 actor **而家**嘅角色判斷：之後先撤銷嘅會少計、之後先授予嘅會多計，user 刪咗
+  // （actor_user_id SET NULL）就唔計 —— 逐次嘅 warn log 喺操作嗰刻判斷，冇呢個偏差。
+  const bucketEnd = Math.floor(nowMs / bankWindowMs) * bankWindowMs;
+  const bucketStart = bucketEnd - bankWindowMs;
   const [bank] = await database.query(
     `SELECT a.action, COUNT(*) AS n,
             SUM(EXISTS (SELECT 1 FROM user_roles ur JOIN roles r ON r.id = ur.role_id
                          WHERE ur.user_id = a.actor_user_id AND r.name = ?)) AS privileged
        FROM supplier_audit_logs a
-      WHERE a.action IN (?) AND a.occurred_at >= ?
+      WHERE a.action IN (?) AND a.occurred_at >= ? AND a.occurred_at < ?
       GROUP BY a.action`,
-    [SYSTEM_ADMIN_ROLE, ["supplier.bank.reveal", ...BANK_CHANGE_ACTIONS], nowMs - bankWindowMs]
+    [SYSTEM_ADMIN_ROLE, ["supplier.bank.reveal", ...BANK_CHANGE_ACTIONS], bucketStart, bucketEnd]
   );
   const byStatus = Object.fromEntries(imports.map((row) => [row.status, row]));
   const waiting = ["uploaded", "queued"].map((status) => byStatus[status]?.oldest).filter((value) => value !== null && value !== undefined);
@@ -64,6 +72,7 @@ export async function collectSupplierMetrics(database, nowMs, { stalledMs = SUPP
       stalled: imports.reduce((sum, row) => sum + Number(row.stalled ?? 0), 0)
     },
     bank: {
+      bucketStart,
       windowMs: bankWindowMs,
       reveals: bank.filter((row) => row.action === "supplier.bank.reveal").reduce((sum, row) => sum + Number(row.n), 0),
       changes: bank.filter((row) => BANK_CHANGE_ACTIONS.includes(row.action)).reduce((sum, row) => sum + Number(row.n), 0),
@@ -84,7 +93,8 @@ export function supplierAlerts(metrics, thresholds = SUPPLIER_ALERT_THRESHOLDS) 
     alerts.push({ event: "supplier.alert.import_stalled", level: "error", context: { ...metrics.imports,
       waitingThresholdMs: thresholds.importWaitingMs, stalledThresholdMs: thresholds.importStalledMs } });
   }
-  // SEC-014：system-admin 係 break-glass，冇門檻，用過就報（DEF-047、HD-142 A）。
+  // SEC-014：system-admin 係 break-glass，冇門檻，用過就報（DEF-047、HD-142 A）。Page 應該跟逐次嘅
+  // `supplier.bank.privileged_use`；呢個係每個桶嘅摘要，幾個 instance 會各報一次（同一個 bucketStart）。
   if (metrics.bank.privilegedUses > 0) {
     alerts.push({ event: "supplier.alert.bank_privileged_use", level: "warn", context: metrics.bank });
   }

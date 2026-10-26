@@ -49,7 +49,7 @@ integrationTest("TASK-050 (HD-083): the metrics read pending approvals, waiting 
   assert.equal(after.imports.oldestWaitingMs, Math.max(before.imports.oldestWaitingMs ?? 0, 60 * MINUTE));
 });
 
-integrationTest("DEF-047 (HD-142 A): the bank counts read the audit window and count a system-admin actor by the role it holds now", async (t) => {
+integrationTest("DEF-047 (HD-142 A): the bank counts read the last whole bucket and count a system-admin actor by the role it holds now", async (t) => {
   const connection = await mysql.createConnection({ host: process.env.DB_HOST, port: Number(process.env.DB_PORT),
     user: process.env.DB_USER, password: process.env.DB_PASSWORD, database: process.env.DB_NAME });
   await connection.beginTransaction();
@@ -63,19 +63,28 @@ integrationTest("DEF-047 (HD-142 A): the bank counts read the audit window and c
   const admin = await user("met-admin");
   const officer = await user("met-officer");
   await connection.execute("INSERT INTO user_roles (user_id, role_id) SELECT ?, id FROM roles WHERE name = 'system-admin'", [admin]);
+  // Officer 都有角色，只係唔係 system-admin：「有任何角色」同「係 system-admin」要分得出（REV-124 R3）。
+  const [role] = await connection.execute("INSERT INTO roles (name, created_at) VALUES (?, ?)", [`met-officer-${now}`, now]);
+  await connection.execute("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)", [officer, role.insertId]);
   const audit = (actor, action, occurredAt) => connection.execute(
     `INSERT INTO supplier_audit_logs (occurred_at, actor_user_id, actor_username, action, target_type, target_id, supplier_id, target_label, detail)
      VALUES (?, ?, 'metrics', ?, 'bank', 1, NULL, 'Metrics Bank', JSON_OBJECT())`, [occurredAt, actor, action]);
-  await audit(admin, "supplier.bank.reveal", now - MINUTE);
-  await audit(admin, "supplier.bank.update", now - MINUTE);
-  await audit(officer, "supplier.bank.reveal", now - MINUTE);
-  await audit(officer, "supplier.bank.deactivate", now - 2 * MINUTE);
-  // 窗口外、同唔係 bank 嘅動作都唔計。
-  await audit(admin, "supplier.bank.reveal", now - 6 * MINUTE);
-  await audit(admin, "supplier.update", now - MINUTE);
+  // 報嘅係上一個完整嘅 5 分鐘桶 [start, end)：兩邊邊界都要釘住（REV-124 N1）。
+  const end = Math.floor(now / (5 * MINUTE)) * 5 * MINUTE;
+  const start = end - 5 * MINUTE;
+  await audit(admin, "supplier.bank.reveal", start);
+  await audit(admin, "supplier.bank.update", end - 1);
+  await audit(officer, "supplier.bank.reveal", start + MINUTE);
+  await audit(officer, "supplier.bank.deactivate", end - MINUTE);
+  // 桶外（前一毫秒、桶尾本身、而家）同唔係 bank 嘅動作都唔計。
+  await audit(admin, "supplier.bank.reveal", start - 1);
+  await audit(admin, "supplier.bank.reveal", end);
+  await audit(admin, "supplier.bank.update", now);
+  await audit(admin, "supplier.update", start + MINUTE);
 
   const after = await collectSupplierMetrics(connection, now);
   assert.equal(after.bank.reveals - before.bank.reveals, 2);
   assert.equal(after.bank.changes - before.bank.changes, 2);
   assert.equal(after.bank.privilegedUses - before.bank.privilegedUses, 2, "the admin's reveal and update, not the officer's");
+  assert.equal(after.bank.bucketStart, start);
 });

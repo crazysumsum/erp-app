@@ -6,7 +6,7 @@ import { SupplierMetricsJob } from "../src/services/supplierMetrics/SupplierMetr
 
 const quiet = { approvals: { pending: 0, oldestAgeMs: null },
   imports: { uploaded: 0, validating: 0, queued: 0, running: 0, oldestWaitingMs: null, stalled: 0 },
-  bank: { windowMs: BANK_METRICS_WINDOW_MS, reveals: 0, changes: 0, privilegedUses: 0 } };
+  bank: { bucketStart: 0, windowMs: BANK_METRICS_WINDOW_MS, reveals: 0, changes: 0, privilegedUses: 0 } };
 const HOUR = 3_600_000;
 
 test("TASK-050 (HD-083): alerts fire only past their thresholds", () => {
@@ -38,13 +38,14 @@ test("TASK-050 (HD-083): the job logs one supplier.metrics line and each alert a
   const services = { require: (name) => ({ scheduler: { register() {} }, mysqldatabase: { query: async () => rows.shift() },
     logging: { logger }, time: { nowMs: () => 25 * HOUR } })[name] };
   assert.deepEqual(SupplierMetricsJob.jobs.map(({ name, scope, intervalMs }) => [name, scope, intervalMs]), [["supplier.metrics", "cluster", 300_000]]);
-  assert.equal(BANK_METRICS_WINDOW_MS, SupplierMetricsJob.jobs[0].intervalMs, "each metrics line counts bank use since the previous one");
+  assert.equal(BANK_METRICS_WINDOW_MS, SupplierMetricsJob.jobs[0].intervalMs, "one bank bucket per run interval");
   const metrics = await new SupplierMetricsJob({ services }).report();
   assert.deepEqual(logged.map(({ level, event }) => [level, event]), [
     ["info", "supplier.metrics"], ["warn", "supplier.alert.approval_overdue"], ["error", "supplier.alert.import_stalled"],
     ["warn", "supplier.alert.bank_privileged_use"]]);
   assert.deepEqual(metrics.approvals, { pending: 2, oldestAgeMs: 25 * HOUR });
-  assert.deepEqual(metrics.bank, { windowMs: BANK_METRICS_WINDOW_MS, reveals: 2, changes: 1, privilegedUses: 1 });
+  // 25 小時正好係桶邊：報嘅係前一個完整嘅 5 分鐘。
+  assert.deepEqual(metrics.bank, { bucketStart: 25 * HOUR - BANK_METRICS_WINDOW_MS, windowMs: BANK_METRICS_WINDOW_MS, reveals: 2, changes: 1, privilegedUses: 1 });
   // 只有數字：冇名稱、冇檔名、冇帳號。
   assert.ok(logged.every(({ context }) => Object.values(flat(context)).every((value) => value === null || typeof value === "number")));
 });
