@@ -5,7 +5,7 @@ import {InventoryReservationService} from "../../src/modules/inventory/Inventory
 import {SalesReconciliationService} from "../../src/modules/sales/SalesReconciliationService.js";
 import {setup,stock} from "../sales/phase2/fixtures.js";
 const nativeTest=process.env.DB_INTEGRATION_TESTS==="1"?test:test.skip;
-nativeTest("TC-051 readonly reconciliation uses real Inventory truth for Draft and partial confirmation",async t=>{
+nativeTest("TASK-062 developer readonly reconciliation uses real Inventory truth for Draft and partial confirmation",async t=>{
  const f=await setup(t),service=new SalesReconciliationService(f),read=()=>f.runAsFixtureRequest(f.claims,()=>service.reconcileOrder({claims:f.claims,orderId:String(f.request.id)}));
  assert.equal((await read()).status,"CONSISTENT");await stock(f,4);const confirmer=f.service(),intent=await confirmer.startConfirmation(f.request);await confirmer.completeConfirmation({eventId:intent.eventId,claims:f.claims,leaseOwner:intent.leaseOwner});
  const tables=["sales_orders","sales_order_lines","sales_order_line_reservations","sales_backorder_entries","sales_operation_requests","sales_audit_logs","inventory_reservations","inventory_movements","inventory_stock_balances"],before={};for(const table of tables)before[table]=(await f.db.query(`SELECT * FROM ${table} ORDER BY id`))[0];
@@ -30,7 +30,7 @@ import {loadRoleNamesForUser,loadPermissionNamesForUser} from "../../src/modules
 import {SALES_ARCHIVE_COLUMNS,hashSalesArchiveRow} from "../../src/modules/sales/salesArchiveHash.js";
 import {FulfillmentOperationService} from "../../src/modules/fulfillment/FulfillmentOperationService.js";
 import {FULFILLMENT_ARCHIVE_CONTRACTS} from "../../src/modules/fulfillment/fulfillmentArchiveSchema.js";
-nativeTest("TC-051 actual registered Archive reconciles all eighteen mirrors and retains Inventory and permanent facts",async t=>{
+nativeTest("TASK-062 developer actual registered Archive reconciles all eighteen mirrors and retains Inventory and permanent facts",async t=>{
  const cleanup=[];let app=null;t.after(async()=>{await app?.shutdown("reconciliation_archive_done");for(const action of cleanup.reverse())await action();});
  const f=await archiveFactsFixture({after:fn=>cleanup.push(fn)},{shipmentDate:"2023-11-14"});
  await promisify(execFile)(process.execPath,[fileURLToPath(new URL("../../scripts/migrate.js",import.meta.url))],{env:{...process.env,DB_NAME:f.f.name,DB_USER:f.f.connectionOptions.user,DB_PASSWORD:f.f.connectionOptions.password},timeout:180000,maxBuffer:1024*1024});
@@ -68,7 +68,7 @@ nativeTest("TC-051 actual registered Archive reconciles all eighteen mirrors and
 
 });
 
-nativeTest("TC-051 actual Backorder stale cleanup between RR snapshot and root fence does not invent mismatch",async t=>{
+nativeTest("TASK-062 developer actual Backorder stale cleanup between RR snapshot and root fence does not invent mismatch",async t=>{
  const f=await setup(t,{backorderEnabled:true}),controlledScheduler=f.app.services.require("scheduler");controlledScheduler.setTimer=()=>({unref(){}});controlledScheduler.clearTimer=()=>{};await f.app.start();await stock(f,0);const confirmer=f.service(),intent=await confirmer.startConfirmation(f.request);await confirmer.completeConfirmation({eventId:intent.eventId,claims:f.claims,leaseOwner:intent.leaseOwner});
  // Explicit synthetic stale queue projection, matching the existing native worker regression; cleanup itself uses the real registered Scheduler.
  await f.db.execute("UPDATE sales_order_lines SET backordered_base_quantity=0,cancelled_base_quantity=10 WHERE sales_order_id=?",[f.request.id]);await f.db.execute("UPDATE sales_orders SET status='CANCELLED',has_backorder=0,backorder_line_count=0 WHERE id=?",[f.request.id]);
@@ -78,7 +78,7 @@ nativeTest("TC-051 actual Backorder stale cleanup between RR snapshot and root f
  try{await Promise.race([entered.promise,work.then(()=>{throw Error("Reconciliation missed snapshot barrier");}),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error("Snapshot barrier timeout")),5000);})]);const scheduler=f.app.services.require("scheduler");await scheduler.execute(scheduler.jobs.get("sales.backorderAllocate"));assert.equal(scheduler.stats.get("sales.backorderAllocate").lastOutcome,"succeeded");assert.deepEqual((await f.db.query("SELECT * FROM sales_orders WHERE id=?",[f.request.id]))[0][0],headerBefore);const [[queue]]=await f.db.query("SELECT status,outstanding_base_quantity FROM sales_backorder_entries WHERE sales_order_id=?",[f.request.id]);assert.equal(queue.status,"CANCELLED");assert.equal(queue.outstanding_base_quantity,0);assert.ok(snapshotThread&&writerThread&&snapshotThread!==writerThread);release.resolve();const result=await work;assert.equal(result.status,"CONSISTENT",JSON.stringify(result));}finally{clearTimeout(timer);release.resolve();await work;database.pool.getConnection=acquire;}
 });
 
-nativeTest("TC-051 permanent key reconciliation finds orphan/null/hash/wrong-store facts without repair",async t=>{
+nativeTest("TASK-062 developer permanent key reconciliation finds orphan/null/hash/wrong-store facts without repair",async t=>{
  const f=await setup(t),service=new SalesReconciliationService(f),external="synthetic-"+randomUUID(),channel="RECON-"+randomUUID().slice(0,8).toUpperCase(),[[header]]=await f.db.query("SELECT sales_order_number FROM sales_orders WHERE id=?",[f.request.id]);
  // Synthetic retained Channel routing projection only, not a claimed Channel writer lifecycle.
  const keyId=await f.insert("sales_external_order_keys",{channel_code:channel,external_order_id:external,external_order_id_hash:createHash("sha256").update(external).digest(),source_type:"CHANNEL",payload_hash:"a".repeat(64),status:"SUCCEEDED",sales_order_id:f.request.id,sales_order_number:header.sales_order_number,claimed_at:f.now,updated_at:f.now});
@@ -90,7 +90,7 @@ nativeTest("TC-051 permanent key reconciliation finds orphan/null/hash/wrong-sto
  await f.db.execute("UPDATE sales_external_order_keys SET status='PROCESSING',external_order_id_hash=? WHERE id=?",[createHash("sha256").update(external).digest(),keyId]);assert.equal((await read()).status,"INCONCLUSIVE");
 });
 
-nativeTest("TC-051 a concurrent native root CAS after the RR snapshot is inconclusive without repair",async t=>{
+nativeTest("TASK-062 developer a concurrent native root CAS after the RR snapshot is inconclusive without repair",async t=>{
  const f=await setup(t),entered=Promise.withResolvers(),release=Promise.withResolvers(),acquire=f.database.pool.getConnection.bind(f.database.pool),restores=[];let paused=false,timer;
  f.database.pool.getConnection=async()=>{const connection=await acquire(),original=connection.query,query=original.bind(connection);restores.push(()=>{connection.query=original;});connection.query=async(sql,...args)=>{const result=await query(sql,...args),text=typeof sql==="string"?sql:sql.sql;if(!paused&&text.includes(" FROM sales_orders WHERE id=?")&&!text.includes("FOR SHARE")){paused=true;entered.resolve();await release.promise;}return result;};return connection;};
  const service=new SalesReconciliationService(f),work=f.runAsFixtureRequest(f.claims,()=>service.reconcileOrder({claims:f.claims,orderId:f.request.id}));

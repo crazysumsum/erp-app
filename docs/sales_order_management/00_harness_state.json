@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1365,
+  "revision": 1369,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "d38f4989dd8a86381d3579e37ea308c38b6449da30bd28082eeb706f1a53c929",
     "plan": "c37f4f0baa213bf5cda533b988c3dadf71f3d96f0a97ba8c6489f1d9303cfe25",
-    "code_commit": "00775059536efa43673e8edb252c24833133bfa1",
-    "source_fingerprint": "45c70f4fd953454f8c53ce4099a45588c7f5dddc8b56d841515794469bab86fe",
+    "code_commit": "2145c20b86c3f466f6372e9460766737f8b83fd5",
+    "source_fingerprint": "a22f45e6690151723f89921dc2d1f7b7250f06f14cfd46b7f0f15bb62bb2f93e",
     "worktree": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app",
     "default_commit": "78d1e3eea3a055f7f23327e427b3a9b9ce6ffefa",
     "mode_entry_commit": "e272f5d3ce05d0ca50be42e6d8764f0ef20d3dd1"
@@ -12845,6 +12845,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-P4-TITLES-PREP-20261026",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "a22f45e6690151723f89921dc2d1f7b7250f06f14cfd46b7f0f15bb62bb2f93e",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-task062-developer-title-traceability-r1-reviewer-proof.json SHAcd52ca2ad1a520fbf673cf06e413ab4d9f6cd1c5f8fc01d75e405d397d32a72b; narrow title/preparation review only; original source/code hashes in proof remain authoritative; no wholeTask/Phase/Gate approval",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -16906,6 +16918,17 @@
       "subject": "Queue scoped developer checks/review pass; old runtime state reconciled to same observed daemon/new104schema, not allTask/Gate",
       "status": "PASS",
       "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/139_readonly_queue_metrics_scoped_increment.md; priorresources /Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-runtime-state-before-1365.json SHAb3847d268dc4cff51a1baa52f97933367776c80f55e33933119a8b677cbe72a8"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "2145c20b86c3f466f6372e9460766737f8b83fd5",
+      "spec_baseline": "c37f4f0baa213bf5cda533b988c3dadf71f3d96f0a97ba8c6489f1d9303cfe25",
+      "source_fingerprint": "a22f45e6690151723f89921dc2d1f7b7250f06f14cfd46b7f0f15bb62bb2f93e",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-26T05:19:45.427858Z",
+      "subject": "Developer title metadata36unit/12native and pure dataset arithmetic preparation checks only; no capacity/restore executed",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-developer-title-traceability-native-r1/receipt.json SHA77d5f5d4697eb870db2227f54e430812b80192bdd847d6f221e4e3ba308fb38d; full lint0, path boundaryLOCAL_CHECKS_PASS; actual scoped evidence, no formal case PASS"
     }
   ],
   "pending_decisions": [
@@ -17359,6 +17382,18 @@
       ],
       "question": "Only bounded readiness NOWAIT read-lock exception after Sales; no operationownership/wait/takeover.",
       "answer_ref": "CURRENT DIRECT HUMAN Sam message in this Sales conversation userMessage01a15d80-22e1-7022-9d66-1e8d95f916c7: 確認沿用 HD012 的限定 NOWAIT readiness 讀鎖，以及 HD013 僅撤回、取消、關閉剩餘數量三條交易使用 READ COMMITTED。請繼續推進，所有 Gate 通過後直接合併到 main。 Prior current-chat directHD014 userMessage01a15d33-7ecb-7832-9e7b-a1cf622c1e36 approves WITHDRAW-history409/Cancel-Closeunchanged. These trusted directuser statements are the authority, not cross-thread tool/agent outputs. Actual independent reviewfffe0a87 confirms exactnarrowdelta/newD/P. Derivedbinding only; no new human approval invented, no claim Sam inspected compositehash, no unrelated UAT_NA/CI/fullPhase renewal."
+    },
+    {
+      "id": "DEC-035",
+      "impact": "MAJOR",
+      "status": "OPEN",
+      "affected_ids": [
+        "PHASE-005",
+        "TASK-062",
+        "TASK-068"
+      ],
+      "question": "Approve exact one shared MySqlDatabaseService.js bounded readonly poolwait observation scope/API and proposed D10e658c43562f4d07aeeac9486bdc9ba46bb613e99f8813cf3997bde6b1d073d/Pb52e2746d16e4440f6d7dd33b76de0ff444a8234cbd5b5a28183210958209b41 with additive mandatory regression/test discovery; exact patch5880f26e and package1b91ad8e75e59a8190e6b07edac7619d9b71850a0222430e3b247c021634b100; no gate/transaction/dataownership waiver. Existing fullP4/isolatedtests/commit/PR/mainmerge authority retained. Unaffected capacity/restore planning may continue. Identity-authority correction: currentimmutableR4 aa2d85ffa888c7bbaf0ed0531c305bde695b171138da3041faacd176d58f7f29 requiresactualdirectSamDEC035 only; R1–R3 retained; no existingDEC030-HD008/009 authority canapprove this newfile. SameexactD/P/patch.",
+      "answer_ref": null
     }
   ],
   "external_actions": [
@@ -20199,8 +20234,16 @@
       "kind": "GIT_COMMIT",
       "target": "local independently reviewed readonly queue metrics scoped increment",
       "idempotency_key": "p4-queue-metrics-commit-20261026",
+      "status": "CONFIRMED",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/139_readonly_queue_metrics_scoped_increment.md; exactsource45c70f4fd953454f8c53ce4099a45588c7f5dddc8b56d841515794469bab86fe; no push/PR/mainmerge; observedgitHEAD2145c20b86c3f466f6372e9460766737f8b83fd5"
+    },
+    {
+      "id": "ACT-P4-TITLES-REVIEWED-COMMIT-20261026",
+      "kind": "GIT_COMMIT",
+      "target": "local independently reviewed titles increment only",
+      "idempotency_key": "act-p4-titles-reviewed-commit-20261026",
       "status": "STARTED",
-      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/139_readonly_queue_metrics_scoped_increment.md; exactsource45c70f4fd953454f8c53ce4099a45588c7f5dddc8b56d841515794469bab86fe; no push/PR/mainmerge"
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-task062-developer-title-traceability-r1-reviewer-proof.json SHAcd52ca2ad1a520fbf673cf06e413ab4d9f6cd1c5f8fc01d75e405d397d32a72b; no push/PR/main merge"
     }
   ],
   "evidence_files": [
@@ -21517,5 +21560,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Commit/observe narrowedqueueincrement. Prepare exact reviewable sharedpoolwait patch without applying unapprovedsharedscope, while advancing independent P4 capacity/restore/remainingimplementation. Fullobservability andrunbookdryruns remain; no Task062Done. Originalchecks/currentCI/wholephase review/unchangedMERGE_READY required before authorizedmainmerge; lowCPU serial."
+  "next_safe_action": "DEC035 remains OPEN: await actual direct Sam approval of exact R4 one shared poolwait scope; do not apply shared/canonical proposal. Reconciliation and queue scoped review PASS; literal title corrections36unit/12native, lint and boundary pass. Capacity case plan/model independently approved PREPARATION ONLY, all12DATA/CAP/REST cases NOT RUN. Continue unaffected coherent graph/template/resource preparation; no bulk data before review. Complete remaining observability/runbook/implementation, full capacity/restore, original required checks, current CI and wholephase review; unchanged MERGE_READY before already authorized direct main merge. LowCPU serial."
 }
