@@ -23,7 +23,7 @@ CONFIRMING 超過5分鐘、Intake 等待超過10分鐘、10,000張標準 Import 
 
 Scheduler 最新 instance stats 會清理，不是完整24小時歷史。Recovery 讀值須在實際 statsFlush interval × staleAfterRuns 的更新期限內；過期、未來或缺列均回報未知。Publisher 的 updated_at 是資料庫時鐘秒，不能與 instance completion 的毫秒直接相比；TTL 沿用資料庫秒級過期規則。若只見舊成功或缺列，Backorder 回報 history unknown；只有可驗證完整歷史才能判定24小時完全無成功。近期實際成功可證明該時段曾成功，不能推導所有 instance 或所有 FIFO 項目正常。
 
-尚待補齊的觀測來源包括真實 pool wait、引擎 ROWS_EXAMINED／lock wait、可驗證24小時 job log window，以及 stock-present-oldest 的正式 provider 證據。查詢 P95 必須有固定 operation、時間窗、sample count 與 unmatched／丟失覆蓋率；不能拿 SQL 總時間當 pool wait、回傳筆數當掃描筆數、HTTP202 當確認終態成功。這些缺口未補齊前不宣告 TASK062／完整 Phase Gate 完成。
+實際 pool acquisition 邊界與窗口／累計計數已接入下方的 instance 觀測。尚待補齊的觀測來源包括引擎 ROWS_EXAMINED／lock wait、可驗證24小時 job log window，以及 stock-present-oldest 的正式 provider 證據。查詢 P95 必須有固定 operation、時間窗、sample count 與 unmatched／丟失覆蓋率；不能拿 SQL 總時間當 pool wait、回傳筆數當掃描筆數、HTTP202 當確認終態成功。這些缺口未補齊前不宣告 TASK062／完整 Phase Gate 完成。
 
 ## 1. Confirmation Recovery
 
@@ -88,3 +88,11 @@ Scheduler 最新 instance stats 會清理，不是完整24小時歷史。Recover
 3. 計時還原並核對所有預期類別與 metadata，再以只讀 Service 對所有 Order、所有永久鍵及18類 Archive 對帳；缺件或 UNKNOWN 不能當成零 mismatch。
 4. 重播已成功來源與原 Operation，證明沒有第二張單／重複 reservation／重複出庫；確認 retained CSV／Quotation 到 Archive 的實際路由與檔案可用性。
 5. Gate 保持 RTO≤4小時、RPO≤15分鐘，含時間／資料範圍／覆蓋率與失敗證據；NFR014／015 的 business UAT_NA 不豁免這些技術驗證。完整結果與獨立覆核完成前，不把這份程序本身列作 Restore PASS。
+
+### Pool acquisition observations
+
+The instance metrics job reports poolWait from actual connection acquisition snapshots. BASELINE and RESET provide no healthy-window claim; zero samples leaves latencynull. WINDOW elapsedMs is the actual interval between successful collections, not guaranteed five minutes. The histogram P95 is an upper bound; the final overflow bucket is censored/null. Count acquired/timeout/aborted/rejected and threshold exceedances together with samples. An abort alone is not overload. inFlight counts waiting callers, not residual mysql2 queue entries after cancellation. Monitoring acquisitions are included; transaction-bound SQL time is not pool wait. No per-query SQL/user/business labels are emitted. Follow capacity/recovery procedures for repeated timeout/rejection; never increase pool limits or bypass admission merely to clear alerts. Request/query/terminal P95, engine rows/locks and full capacity remain separate evidence.
+
+For throw-capable publishers, the prior sample advances only after all publication calls resolve; this is a local attempt boundary, not a delivery ACK. A partial failed report may have emitted an overlapping window. Use windowStartAtMs/windowEndAtMs and instance identity to recognize that coverage; do not sum overlapping or retried windows as disjoint counters. A logger rejection preserves the prior sample and fails the Scheduler run. Production SystemLogger may instead catch writer errors or filter/drop entries while resolving; observe logging.system_write_failed / entries_lost and the underlying stderr/sink independently.
+
+Every snapshot also carries fixed lifetime observations/outcomes/aboveThreshold for this executor, plus deliveryCoverage=UNKNOWN. After a filtered, dropped or failed write, a later recovered snapshot still exposes earlier lifetime failures; do not confuse them with new-window failures or sum repeated lifetime gauges. Process replacement resets these counters and cannot recover unpublished history. The standard logger does not embed an instance ID in its five-field format: associate records with their trusted per-process log stream externally; without that identity, reset/order/delivery remain unknown and no cross-instance completeness is claimed. Actual durable sink acknowledgement/full24h history remains separate.

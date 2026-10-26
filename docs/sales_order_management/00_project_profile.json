@@ -2527,7 +2527,10 @@
         "--test-reporter=junit",
         "--test-reporter-destination={run_dir}/tests.xml",
         "server/test/sales/phase4/*.test.js",
-        "server/test/salesArchiveEligibility.test.js"
+        "server/test/salesArchiveEligibility.test.js",
+        "server/test/mysqlDatabaseService.test.js",
+        "server/test/mysqlDatabaseFailureModes.test.js",
+        "server/test/databasePoolPressure.test.js"
       ],
       "cwd": ".",
       "timeout_seconds": 1800,
@@ -2536,7 +2539,8 @@
       "min_tests": 24,
       "max_skipped": 0,
       "stages": [
-        "DEVELOPER"
+        "DEVELOPER",
+        "REGRESSION"
       ],
       "required_case_ids": [
         "TC-044",
@@ -2598,7 +2602,10 @@
         "--test-reporter-destination={run_dir}/tests.xml",
         "server/test/integration/salesExportMigration.integration.test.js",
         "server/test/integration/salesArchiveMigrations.integration.test.js",
-        "server/test/integration/salesPhase4.integration.test.js"
+        "server/test/integration/salesPhase4.integration.test.js",
+        "server/test/integration/salesPoolWaitMetrics.integration.test.js",
+        "server/test/integration/salesMetrics.integration.test.js",
+        "server/test/integration/salesReconciliation.integration.test.js"
       ],
       "cwd": ".",
       "timeout_seconds": 2400,
@@ -2607,7 +2614,8 @@
       "min_tests": 18,
       "max_skipped": 0,
       "stages": [
-        "DEVELOPER"
+        "DEVELOPER",
+        "REGRESSION"
       ],
       "required_case_ids": [
         "TC-044",

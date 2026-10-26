@@ -9,6 +9,19 @@ const ISOLATION_LEVELS = new Set([
 ]);
 
 const ACTIVE_TRANSACTIONS = new WeakMap();
+const CONNECTION_WAITS = new WeakMap();
+const WAIT_BOUNDS_MS = Object.freeze([1, 5, 10, 25, 50, 100, 250, 500, 1000, 5000, 10000, 30000]);
+
+function connectionWaits(executor) {
+  let metrics = CONNECTION_WAITS.get(executor);
+  if (!metrics) {
+    metrics = { inFlight: 0, observations: 0, durationSumMs: 0, maxDurationMs: 0, aboveThreshold: 0,
+      outcomes: { acquired: 0, timeout: 0, aborted: 0, rejected: 0 }, buckets: Array(WAIT_BOUNDS_MS.length + 1).fill(0) };
+    CONNECTION_WAITS.set(executor, metrics);
+  }
+  return metrics;
+}
+
 
 export function getActiveTransactionIsolation(executor) {
   const active = ACTIVE_TRANSACTIONS.get(executor);
@@ -288,31 +301,59 @@ class MySqlDatabaseExecutor {
    * 設 200ms 的查詢，它們在 5708ms「成功」，那 200ms 從頭到尾沒有作用過。
    */
   async acquireConnection(signal) {
-    const pending = this.pool.getConnection();
-    let timer = null;
-    const expired = new Promise((_, reject) => {
-      timer = setTimeout(() => {
-        reject(
-          new MySqlDatabaseOperationError(
-            "Timed out waiting for a MySQL connection",
-            { code: "DATABASE_CONNECTION_TIMEOUT" }
-          )
-        );
-      }, this.config.acquireTimeoutMs);
-      timer.unref?.();
-    });
-
+    const metrics = connectionWaits(this);
+    const startedAt = process.hrtime.bigint();
+    let outcome = "rejected";
+    metrics.inFlight += 1;
     try {
-      return await raceWithSignal(Promise.race([pending, expired]), signal);
-    } catch (error) {
-      // 我們不等了，但這個等待者還在 mysql2 的隊列裡。將來輪到它時一定要把
-      // 連線還回去，否則每一次 acquire 逾時就永久少一條連線——池子會一路縮到
-      // 零，而症狀只是「越來越慢」。
-      void pending.then((connection) => connection.release()).catch(() => {});
-      throw poolRejection(error);
+      const pending = this.pool.getConnection();
+      let timer = null;
+      let expiredWaiting = false;
+      const expired = new Promise((_, reject) => {
+        timer = setTimeout(() => {
+          expiredWaiting = true;
+          reject(
+            new MySqlDatabaseOperationError(
+              "Timed out waiting for a MySQL connection",
+              { code: "DATABASE_CONNECTION_TIMEOUT" }
+            )
+          );
+        }, this.config.acquireTimeoutMs);
+        timer.unref?.();
+      });
+
+      try {
+        const connection = await raceWithSignal(Promise.race([pending, expired]), signal);
+        outcome = "acquired";
+        return connection;
+      } catch (error) {
+        outcome = expiredWaiting ? "timeout" : signal?.aborted ? "aborted" : "rejected";
+        // 我們不等了，但這個等待者還在 mysql2 的隊列裡。將來輪到它時一定要把
+        // 連線還回去，否則每一次 acquire 逾時就永久少一條連線——池子會一路縮到
+        // 零，而症狀只是「越來越慢」。
+        void pending.then((connection) => connection.release()).catch(() => {});
+        throw poolRejection(error);
+      } finally {
+        clearTimeout(timer);
+      }
     } finally {
-      clearTimeout(timer);
+      const elapsedMs = Number(process.hrtime.bigint() - startedAt) / 1_000_000;
+      metrics.inFlight -= 1;
+      metrics.observations += 1;
+      metrics.durationSumMs += elapsedMs;
+      metrics.maxDurationMs = Math.max(metrics.maxDurationMs, elapsedMs);
+      metrics.outcomes[outcome] += 1;
+      const bucket = WAIT_BOUNDS_MS.findIndex(bound => elapsedMs <= bound);
+      metrics.buckets[bucket < 0 ? WAIT_BOUNDS_MS.length : bucket] += 1;
+      if (elapsedMs > Number(this.config.acquireTimeoutMs)) metrics.aboveThreshold += 1;
     }
+  }
+
+  getConnectionWaitMetrics() {
+    const metrics = connectionWaits(this);
+    const configured = Number(this.config.acquireTimeoutMs);
+    return { ...metrics, outcomes: { ...metrics.outcomes }, buckets: [...metrics.buckets],
+      boundsMs: [...WAIT_BOUNDS_MS, null], thresholdMs: Number.isFinite(configured) && configured > 0 ? configured : null };
   }
 }
 

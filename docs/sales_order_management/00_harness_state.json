@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1371,
+  "revision": 1376,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
-  "status": "BLOCKED",
-  "resume_status": "IMPLEMENTING",
+  "status": "IMPLEMENTING",
+  "resume_status": null,
   "current_phase": "PHASE-005",
   "current_task": "TASK-062",
   "baseline": {
-    "design": "d38f4989dd8a86381d3579e37ea308c38b6449da30bd28082eeb706f1a53c929",
-    "plan": "c37f4f0baa213bf5cda533b988c3dadf71f3d96f0a97ba8c6489f1d9303cfe25",
-    "code_commit": "5fc3e82869d6cad81aaed16e37c786c32f8aa463",
-    "source_fingerprint": "a22f45e6690151723f89921dc2d1f7b7250f06f14cfd46b7f0f15bb62bb2f93e",
+    "design": "10e658c43562f4d07aeeac9486bdc9ba46bb613e99f8813cf3997bde6b1d073d",
+    "plan": "b52e2746d16e4440f6d7dd33b76de0ff444a8234cbd5b5a28183210958209b41",
+    "code_commit": "0b66d82bb9c979aac7028fe4dfa8802a1c4877b2",
+    "source_fingerprint": "3127243c2afe0e5dead8cd5aa99d4c97f564ae35522dfb70ca771734820e65ad",
     "worktree": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app",
     "default_commit": "78d1e3eea3a055f7f23327e427b3a9b9ce6ffefa",
     "mode_entry_commit": "e272f5d3ce05d0ca50be42e6d8764f0ef20d3dd1"
@@ -8367,6 +8367,208 @@
       "scope": [
         "NFR-015"
       ]
+    },
+    {
+      "id": "APR-P4-POOLWAIT-SCOPE-DESIGN",
+      "kind": "DESIGN",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "10e658c43562f4d07aeeac9486bdc9ba46bb613e99f8813cf3997bde6b1d073d",
+      "scope": [
+        "sales-order-management",
+        "PHASE-005"
+      ],
+      "authority_kind": "HUMAN",
+      "actor": "Sam",
+      "decision": "APPROVED",
+      "source_ref": "Direct human Sam response in current Sales conversation, request_user_input_async call_868e7e282add4309a90c94d6ca5cc5bb question0: 批准 DEC-035 單一共享觀測 scope（建議）. Approves exact R4 package aa2d85ff and patch5880f26e/proposed D10e658c4/Pb52e2746. Existing commit/PR/mainmerge authority retained; all original Gates and timed recovery retained. No production/deployment/formal acceptance grant. Original two business UAT_NA reasons retained only; no timedRTO/RPO waiver.",
+      "recorded_at": "2026-10-26T05:58:12.490466Z",
+      "code_commit": "0b66d82bb9c979aac7028fe4dfa8802a1c4877b2",
+      "expires_at": null
+    },
+    {
+      "id": "APR-P4-POOLWAIT-SCOPE-PLAN",
+      "kind": "PLAN",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "b52e2746d16e4440f6d7dd33b76de0ff444a8234cbd5b5a28183210958209b41",
+      "scope": [
+        "sales-order-management",
+        "PHASE-005"
+      ],
+      "authority_kind": "HUMAN",
+      "actor": "Sam",
+      "decision": "APPROVED",
+      "source_ref": "Direct human Sam response in current Sales conversation, request_user_input_async call_868e7e282add4309a90c94d6ca5cc5bb question0: 批准 DEC-035 單一共享觀測 scope（建議）. Approves exact R4 package aa2d85ff and patch5880f26e/proposed D10e658c4/Pb52e2746. Existing commit/PR/mainmerge authority retained; all original Gates and timed recovery retained. No production/deployment/formal acceptance grant. Original two business UAT_NA reasons retained only; no timedRTO/RPO waiver.",
+      "recorded_at": "2026-10-26T05:58:12.490603Z",
+      "code_commit": "0b66d82bb9c979aac7028fe4dfa8802a1c4877b2",
+      "expires_at": null
+    },
+    {
+      "id": "APR-P4-POOLWAIT-SCOPE",
+      "kind": "SCOPE",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "b52e2746d16e4440f6d7dd33b76de0ff444a8234cbd5b5a28183210958209b41",
+      "scope": [
+        "sales-order-management",
+        "PHASE-005",
+        "TASK-058",
+        "docs/sales_order_management/**",
+        "server/config/sales.js",
+        "server/src/modules/sales/**",
+        "server/src/handlers/sales-quotations/**",
+        "server/src/handlers/sales-orders/**",
+        "server/src/handlers/sales-imports/**",
+        "server/src/handlers/sales-intake/**",
+        "server/src/handlers/sales-operations/**",
+        "server/src/handlers/sales-exports/**",
+        "server/src/handlers/archived-sales-orders/**",
+        "server/src/services/scheduler/jobs/Sales*.js",
+        "client/src/services/salesQuotation.js",
+        "client/src/services/salesOrder.js",
+        "client/src/pages/sales/**",
+        "client/src/components/sales/**",
+        "server/test/sales/**",
+        "server/test/integration/sales*.integration.test.js",
+        "server/test-support/fakeSalesDatabase.js",
+        "client/test/**/sales*.test.js",
+        "client/e2e/sales-order-management/**",
+        "server/test-support/salesProviderReport.py",
+        "client/src/services/sales.js",
+        "client/test/pages/sales/**",
+        "client/test/components/sales/**",
+        "client/test/services/sales.test.js",
+        "server/test/migrate.test.js",
+        "server/config/scheduler.js",
+        "client/config/menu.js",
+        "server/database/migrations/*_create_sales_quotations.js",
+        "server/database/migrations/*_create_sales_quotation_lines.js",
+        "server/database/migrations/*_create_sales_orders.js",
+        "server/database/migrations/*_create_sales_order_lines.js",
+        "server/database/migrations/*_create_sales_order_status_history.js",
+        "server/database/migrations/*_create_sales_audit_logs.js",
+        "server/database/migrations/*_create_sales_quotation_conversions.js",
+        "server/src/services/salesJobs/SalesJobRuntimeService.js",
+        "server/src/services/salesJobs/jobs/SalesQuotationExpiryJob.js",
+        "server/src/handlers/sales/salesSchemas.js",
+        "server/src/handlers/sales/salesLookupHandlers.js",
+        "server/database/migrations/*_create_sales_external_order_keys.js",
+        "server/src/handlers/sales-lookups/salesLookupHandlers.js",
+        "server/src/modules/item/ItemLookupService.js",
+        "server/test/serviceContainer.test.js",
+        "README.md",
+        "server/src/modules/businessMaster/businessMasterFactory.js",
+        "server/test/business-master/http.integration.test.js",
+        ".github/workflows/ci.yml",
+        "server/src/services/salesJobs/jobs/SalesConfirmationRecoveryJob.js",
+        "server/src/services/salesJobs/jobs/SalesBackorderAllocationJob.js",
+        "server/src/handlers/sales-backorders/**",
+        "client/src/composables/sales/**",
+        "server/src/modules/inventory/InventoryReservationService.js",
+        "server/test/inventorySalesWorkerContracts.test.js",
+        "client/test/composables/sales/**",
+        "server/database/migrations/*_create_sales_order_line_reservations.js",
+        "server/database/migrations/*_create_sales_backorder_entries.js",
+        "server/scripts/checkCoverageFloors.js",
+        "server/test/inventoryProviderContracts.test.js",
+        "docs/inventory_management/03_design_spec.md",
+        "docs/fulfillment_shipping_management/03_design_spec.md",
+        "server/src/modules/inventory/inventoryConstants.js",
+        "server/src/services/idempotency/IdempotencyService.js",
+        "server/test/idempotencyService.test.js",
+        "server/test/integration/itemRecoveryAcceptance.integration.test.js",
+        "server/src/services/salesJobs/jobs/SalesImportJob.js",
+        "server/src/services/salesJobs/jobs/SalesFileRetentionJob.js",
+        "server/src/handlers/sales-import-templates/**",
+        "server/src/modules/customer/CustomerLookupService.js",
+        "server/test/sales/phase3/**",
+        "server/database/migrations/*_create_sales_import_jobs.js",
+        "server/database/migrations/*_create_sales_intake_orders.js",
+        "server/database/migrations/*_create_sales_intake_errors.js",
+        "server/database/migrations/*_extend_sales_reservation_intake_projection.js",
+        "server/test/itemLookupService.test.js",
+        "server/test/customerLookupService.test.js",
+        "server/test/configNormalizers.test.js",
+        "server/test/configuration.test.js",
+        "docs/customer_management/03_design_spec.md",
+        "docs/items_management/03_design_spec.md",
+        "server/config/api.js",
+        "server/src/framework/middleware/bodyReceiveTimeout.js",
+        "server/test-support/salesProcessingCrashChild.js",
+        "server/src/handlers/outstanding-sales-orders/**",
+        "server/src/handlers/sales-audit-logs/**",
+        "server/src/handlers/sales-archive-batches/**",
+        "server/src/services/salesJobs/jobs/SalesExportJob.js",
+        "server/src/services/salesJobs/jobs/SalesArchiveJob.js",
+        "docs/runbooks/sales-order-management.md",
+        "server/database/migrations/*_create_sales_export_jobs.js",
+        "server/database/migrations/*_create_sales_archive_batches.js",
+        "server/database/migrations/*_create_sales_archive_tables.js",
+        "server/database/migrations/*_protect_sales_archive_immutability.js",
+        "server/test-capacity/sales/phase4/**",
+        "client/src/framework/layout/AppTopbar.vue",
+        "server/src/modules/fulfillment/**",
+        "server/src/services/fulfillmentArchive/**",
+        "server/test/salesArchiveEligibility.test.js",
+        "server/test/fulfillmentArchive*.test.js",
+        "server/test/fulfillmentOpenMatter*.test.js",
+        "server/test/integration/fulfillmentArchive*.integration.test.js",
+        "server/test/integration/fulfillmentOpenMatter*.integration.test.js",
+        "server/test/integration/salesArchiveJoint.integration.test.js",
+        "server/database/migrations/*_create_fulfillment_archive_prerequisites.js",
+        "server/database/migrations/*_create_fulfillment_archive_mirrors.js",
+        "server/database/migrations/*_protect_fulfillment_archive_contracts.js",
+        "docs/fulfillment_shipping_management/**",
+        "server/database/migrations/0101_add_fulfillment_archive_routing.js",
+        "server/test/fulfillment/archiveFactsFixture.js",
+        "server/test/fulfillment/shipmentFixture.js",
+        "server/test/integration/fulfillmentOperationRouting.integration.test.js",
+        "server/test/integration/shipmentMigrations.integration.test.js",
+        "server/src/modules/inventory/InventoryLookupService.js",
+        "server/test/salesFulfillmentService.test.js",
+        "server/test/integration/fulfillmentPendingClaims.integration.test.js",
+        "server/src/services/fulfillment/FulfillmentOpenMatterService.js",
+        "server/test/applicationFactory.test.js",
+        "server/database/migrations/0105_add_fulfillment_archive_routing.js",
+        "server/src/services/mysqldatabase/MySqlDatabaseService.js"
+      ],
+      "authority_kind": "HUMAN",
+      "actor": "Sam",
+      "decision": "APPROVED",
+      "source_ref": "Direct human Sam response in current Sales conversation, request_user_input_async call_868e7e282add4309a90c94d6ca5cc5bb question0: 批准 DEC-035 單一共享觀測 scope（建議）. Approves exact R4 package aa2d85ff and patch5880f26e/proposed D10e658c4/Pb52e2746. Existing commit/PR/mainmerge authority retained; all original Gates and timed recovery retained. No production/deployment/formal acceptance grant. Original two business UAT_NA reasons retained only; no timedRTO/RPO waiver.",
+      "recorded_at": "2026-10-26T05:58:12.490611Z",
+      "code_commit": "0b66d82bb9c979aac7028fe4dfa8802a1c4877b2",
+      "expires_at": null
+    },
+    {
+      "id": "APR-P4-POOLWAIT-SCOPE-UATNA-NFR-014",
+      "kind": "UAT_NA",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "b52e2746d16e4440f6d7dd33b76de0ff444a8234cbd5b5a28183210958209b41",
+      "scope": [
+        "NFR-014"
+      ],
+      "authority_kind": "HUMAN",
+      "actor": "Sam",
+      "decision": "APPROVED",
+      "source_ref": "Direct human Sam response in current Sales conversation, request_user_input_async call_868e7e282add4309a90c94d6ca5cc5bb question0: 批准 DEC-035 單一共享觀測 scope（建議）. Approves exact R4 package aa2d85ff and patch5880f26e/proposed D10e658c4/Pb52e2746. Existing commit/PR/mainmerge authority retained; all original Gates and timed recovery retained. No production/deployment/formal acceptance grant. Original two business UAT_NA reasons retained only; no timedRTO/RPO waiver.",
+      "recorded_at": "2026-10-26T05:58:12.490617Z",
+      "code_commit": "0b66d82bb9c979aac7028fe4dfa8802a1c4877b2",
+      "expires_at": null
+    },
+    {
+      "id": "APR-P4-POOLWAIT-SCOPE-UATNA-NFR-015",
+      "kind": "UAT_NA",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "b52e2746d16e4440f6d7dd33b76de0ff444a8234cbd5b5a28183210958209b41",
+      "scope": [
+        "NFR-015"
+      ],
+      "authority_kind": "HUMAN",
+      "actor": "Sam",
+      "decision": "APPROVED",
+      "source_ref": "Direct human Sam response in current Sales conversation, request_user_input_async call_868e7e282add4309a90c94d6ca5cc5bb question0: 批准 DEC-035 單一共享觀測 scope（建議）. Approves exact R4 package aa2d85ff and patch5880f26e/proposed D10e658c4/Pb52e2746. Existing commit/PR/mainmerge authority retained; all original Gates and timed recovery retained. No production/deployment/formal acceptance grant. Original two business UAT_NA reasons retained only; no timedRTO/RPO waiver.",
+      "recorded_at": "2026-10-26T05:58:12.490622Z",
+      "code_commit": "0b66d82bb9c979aac7028fe4dfa8802a1c4877b2",
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -12869,6 +13071,42 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-P4-DEC035-APPLIED-DESIGN",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/dec035_installed_collector_review",
+      "reviewed_baseline": "10e658c43562f4d07aeeac9486bdc9ba46bb613e99f8813cf3997bde6b1d073d",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-dec035-approved-application-r1-reviewer-proof.json SHA9b0853f246d34b849fcc451ea12fdc2ba688ac8d27572d844ca9feed224f32c6; actual exactR4/sharedfb31/humananswer/userMessage01a176c8-9267-7fe3-b3c2-d99a48df88cb; application and newdesignbinding only, not new collector/fullPhase",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P4-DEC035-APPLIED-PLAN",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/dec035_installed_collector_review",
+      "reviewed_baseline": "b52e2746d16e4440f6d7dd33b76de0ff444a8234cbd5b5a28183210958209b41",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-dec035-approved-application-r1-reviewer-proof.json SHA9b0853f246d34b849fcc451ea12fdc2ba688ac8d27572d844ca9feed224f32c6; actual exactR4/sharedfb31/humananswer/userMessage01a176c8-9267-7fe3-b3c2-d99a48df88cb; application and newplanbinding only, not new collector/fullPhase",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P4-DEC035-OBSERVER-COLLECTOR-R3",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/dec035_installed_collector_review",
+      "reviewed_baseline": "3127243c2afe0e5dead8cd5aa99d4c97f564ae35522dfb70ca771734820e65ad",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-dec035-collector-r3-closing-reviewer-proof.json SHA9a4faecabc94a9050de692b7870034c1aa2761bb2cceb7cd6e006a2637557444; actual50pure/10native, scoped observer/collector only",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -16952,6 +17190,28 @@
       "subject": "Developer title metadata36unit/12native and pure dataset arithmetic preparation checks only; no capacity/restore executed",
       "status": "PASS",
       "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-developer-title-traceability-native-r1/receipt.json SHA77d5f5d4697eb870db2227f54e430812b80192bdd847d6f221e4e3ba308fb38d; full lint0, path boundaryLOCAL_CHECKS_PASS; actual scoped evidence, no formal case PASS"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "0b66d82bb9c979aac7028fe4dfa8802a1c4877b2",
+      "spec_baseline": "b52e2746d16e4440f6d7dd33b76de0ff444a8234cbd5b5a28183210958209b41",
+      "source_fingerprint": "4c7581931bbe7f1f0d5ebdde11371a4db7d6da952bd7185e1817d9bf0f76de3b",
+      "actor": "Codex /root/dec035_installed_collector_review",
+      "observed_at": "2026-10-26T06:16:33.527593Z",
+      "subject": "Actual Job publisher info/alert failure discards timeout window: separate reviewer2tests0PASS2FAIL. Scoped remediation now in developer regression, not closed.",
+      "status": "FAIL",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-dec035-publication-reviewer-red-r1/receipt.json; raw7e1a4d646947d8178a3dc22187c6ba9e9876a2c4fa6ef83d9d6bb7227721dc3e; no SQL/source mutation by reviewer"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "0b66d82bb9c979aac7028fe4dfa8802a1c4877b2",
+      "spec_baseline": "b52e2746d16e4440f6d7dd33b76de0ff444a8234cbd5b5a28183210958209b41",
+      "source_fingerprint": "3127243c2afe0e5dead8cd5aa99d4c97f564ae35522dfb70ca771734820e65ad",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-26T06:42:53.689132Z",
+      "subject": "DEC035 exact applied observer and owned collector237unit/15native/lint plus independent50/10; scope only",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/142_dec035_installed_pool_wait_increment.md"
     }
   ],
   "pending_decisions": [
@@ -17409,14 +17669,14 @@
     {
       "id": "DEC-035",
       "impact": "MAJOR",
-      "status": "OPEN",
+      "status": "ANSWERED",
       "affected_ids": [
         "PHASE-005",
         "TASK-062",
         "TASK-068"
       ],
       "question": "Approve exact one shared MySqlDatabaseService.js bounded readonly poolwait observation scope/API and proposed D10e658c43562f4d07aeeac9486bdc9ba46bb613e99f8813cf3997bde6b1d073d/Pb52e2746d16e4440f6d7dd33b76de0ff444a8234cbd5b5a28183210958209b41 with additive mandatory regression/test discovery; exact patch5880f26e and package1b91ad8e75e59a8190e6b07edac7619d9b71850a0222430e3b247c021634b100; no gate/transaction/dataownership waiver. Existing fullP4/isolatedtests/commit/PR/mainmerge authority retained. Unaffected capacity/restore planning may continue. Identity-authority correction: currentimmutableR4 aa2d85ffa888c7bbaf0ed0531c305bde695b171138da3041faacd176d58f7f29 requiresactualdirectSamDEC035 only; R1–R3 retained; no existingDEC030-HD008/009 authority canapprove this newfile. SameexactD/P/patch.",
-      "answer_ref": null
+      "answer_ref": "Direct human Sam response in current Sales conversation, request_user_input_async call_868e7e282add4309a90c94d6ca5cc5bb question0: 批准 DEC-035 單一共享觀測 scope（建議）. Approves exact R4 package aa2d85ff and patch5880f26e/proposed D10e658c4/Pb52e2746. Existing commit/PR/mainmerge authority retained; all original Gates and timed recovery retained. No production/deployment/formal acceptance grant."
     }
   ],
   "external_actions": [
@@ -20273,8 +20533,24 @@
       "kind": "GIT_COMMIT",
       "target": "local independently reviewed preparation increment only",
       "idempotency_key": "act-p4-preparation-reviewed-commit-20261026",
+      "status": "CONFIRMED",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-capacity-case-plan-cadence-r2-reviewer-addendum.json SHA55350521d0cc54855f810f289b1c47aab196bc97c7df7567a569e5b52f8b87e6; no push/PR/main merge; observed local commit 0b66d82bb9c979aac7028fe4dfa8802a1c4877b2"
+    },
+    {
+      "id": "ACT-P4-DEC035-EXACT-APPLICATION-20261026",
+      "kind": "FILES",
+      "target": "exact approved one shared source, two owned tests and canonical manifest/profile/trace bindings",
+      "idempotency_key": "p4-dec035-exact-approved-application-r1",
+      "status": "CONFIRMED",
+      "source_ref": "Direct human Sam response in current Sales conversation, request_user_input_async call_868e7e282add4309a90c94d6ca5cc5bb question0: 批准 DEC-035 單一共享觀測 scope（建議）. Approves exact R4 package aa2d85ff and patch5880f26e/proposed D10e658c4/Pb52e2746. Existing commit/PR/mainmerge authority retained; all original Gates and timed recovery retained. No production/deployment/formal acceptance grant.; observed exact shared afterfb31b789, two exact owned tests, canonical newD/P. No SQL/migration/network executed."
+    },
+    {
+      "id": "ACT-P4-DEC035-OBSERVER-COLLECTOR-COMMIT-20261026",
+      "kind": "GIT_COMMIT",
+      "target": "local approved shared observer and reviewed owned collector increment",
+      "idempotency_key": "p4-dec035-observer-collector-commit-r1",
       "status": "STARTED",
-      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-capacity-case-plan-cadence-r2-reviewer-addendum.json SHA55350521d0cc54855f810f289b1c47aab196bc97c7df7567a569e5b52f8b87e6; no push/PR/main merge"
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/142_dec035_installed_pool_wait_increment.md; FP3127243c2afe0e5dead8cd5aa99d4c97f564ae35522dfb70ca771734820e65ad; no push/PR/mainmerge"
     }
   ],
   "evidence_files": [
@@ -21589,7 +21865,20 @@
         "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-queue-metrics-def034-r3-closing-reviewer-proof.json SHA514a93ccbd0c1aae2d43a6825419702168f9708c9ce4044b55152d0dae3f022a; narrowqueueincrementonly, Task062 incomplete"
       ],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-035",
+      "severity": "HIGH",
+      "status": "CLOSED",
+      "source_ids": [
+        "TASK-062"
+      ],
+      "closure_evidence": [
+        "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/142_dec035_installed_pool_wait_increment.md",
+        "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-dec035-collector-r3-closing-reviewer-proof.json SHA9a4faecabc94a9050de692b7870034c1aa2761bb2cceb7cd6e006a2637557444; PUB001/PUB002 only; no completeTask/Phase/Gate approval"
+      ],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "DEC035 remains OPEN: await actual direct Sam approval of exact R4 one shared poolwait scope; do not apply shared/canonical proposal. Reconciliation and queue scoped review PASS; literal title corrections36unit/12native, lint and boundary pass. Capacity case plan/model independently approved PREPARATION ONLY, all12DATA/CAP/REST cases NOT RUN. Continue unaffected coherent graph/template/resource preparation; no bulk data before review. Complete remaining observability/runbook/implementation, full capacity/restore, original required checks, current CI and wholephase review; unchanged MERGE_READY before already authorized direct main merge. LowCPU serial."
+  "next_safe_action": "Commit and observe reviewedDEC035 increment. Fetch/inspect latestmain observed44d7f836 (onlySupplier-owned13paths since78d, no migrations/sharedDB/Salespaths); integrate after owncommit, retain unaffected scopedruns with honest lineage. Complete plannedSalesArchiveimmutableguards/TC051 and realworkerfailureisolationTC052, remainingTask062metrics/runbooks, fullcapacity/restore/33checks/currentCI/wholePhaseReview/allGates before alreadyauthorizedmainmerge. LowCPUserial."
 }

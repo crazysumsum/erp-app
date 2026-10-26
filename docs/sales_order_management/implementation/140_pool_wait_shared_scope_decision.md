@@ -1,6 +1,6 @@
 # DEC-035 — Proposed shared connection-wait observation scope
 
-Status: DECISION_REQUIRED. No shared product patch or canonical baseline change is applied. Current P4 continuation/isolated synthetic SQL/commit/PR/main-merge authority remains; this decision concerns one additional shared framework source file and its baseline bindings.
+Proposal status at issuance: DECISION_REQUIRED. No shared product patch or canonical baseline change is applied. Current P4 continuation/isolated synthetic SQL/commit/PR/main-merge authority remains; this decision concerns one additional shared framework source file and its baseline bindings.
 
 ## Context and exact proposal
 
@@ -43,3 +43,7 @@ R1 was not approved: independent canonical review52bd3626523888dc46b1ba4442e75cd
 Use new DEC035: existing authoritative DEC030-HD008-HD009 and DEC031–034 are retained. Only the unissued private proposal label changes; canonical prospective D/P and source/test payload are byte-identical to R2 full-package technical closing8e8fefb72a8acd12a76dd5ea52e3f72c8b907738d71cee9be467153fde2c9aa3. R1/R2 artifacts remain historical. Actual human answer is still required.
 
 R4 also corrects the unissued proposal required_before_application string to require actual direct Sam DEC035 approval; no earlier DEC030/HD approval can satisfy this new scope. R3 remains historical; canonical payload/source/D/P are unchanged.
+
+## Actual human disposition — 2026-10-26
+
+APPROVED by direct Sam response in this Sales conversation to request_user_input_async call_868e7e282add4309a90c94d6ca5cc5bb question0: 批准 DEC-035 單一共享觀測 scope（建議）. Exact immutable R4 aa2d85ffa888c7bbaf0ed0531c305bde695b171138da3041faacd176d58f7f29 adopted. CAS1373 records new append-only DESIGN/PLAN/SCOPE and existing-reason UATNA bindings; CAS1374 observes exact sharedfb31b789 and canonical new D/P application. Original decisions/hashes/proposal failures retained. Two owned test Promise executor braces subsequently corrected following actual installed lint failures, with product patch unchanged. Installed-candidate tests and collector integration recorded separately in report142. This actual approval removes the scope blocker; it grants no fullTask/Gate PASS or waiver of remaining work.

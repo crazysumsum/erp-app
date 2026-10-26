@@ -25,9 +25,10 @@ nativeTest("TASK-062 developer real registered instance metrics job publishes sa
  t.after(()=>{logger.info=info;});
  const tables=["sales_orders","sales_order_lines","sales_operation_requests","sales_audit_logs","sales_backorder_entries","sales_intake_orders","sales_archive_batches"],before={};for(const table of tables)before[table]=(await f.db.query(`SELECT * FROM ${table}`))[0];
  await scheduler.execute(job);assert.equal(scheduler.stats.get(job.name).lastOutcome,"succeeded");assert.equal(entries.length,1);
+ assert.equal(entries[0].poolWait.coverage,"BASELINE");await scheduler.execute(job);assert.equal(entries.length,2);assert.equal(entries[1].poolWait.coverage,"WINDOW");assert.ok(entries[1].poolWait.samples>0);assert.ok(entries[1].poolWait.elapsedMs>0);assert.ok(entries[1].poolWait.outcomes.acquired>0);
  for(const table of tables)assert.deepEqual((await f.db.query(`SELECT * FROM ${table}`))[0],before[table],table);
  const original=f.database.withTransaction;let injected=false;f.database.withTransaction=function(work,options){return original.call(this,async tx=>work(new Proxy(tx,{get(target,key){if(key!=="query")return Reflect.get(target,key);return (sql,...args)=>{if(!injected&&sql.includes("SELECT COUNT(*) AS pending")){injected=true;return target.query("SELECT * FROM synthetic_absent_sales_metrics_dependency");}return target.query(sql,...args);};}})),options);};
- try{await scheduler.execute(job);assert.equal(injected,true);assert.equal(scheduler.stats.get(job.name).lastOutcome,"failed");assert.match(scheduler.stats.get(job.name).lastError,/Sales operational metrics unavailable/u);assert.ok(!scheduler.stats.get(job.name).lastError.includes("SELECT"));assert.equal(entries.length,1,"Failure must not publish an all-zero healthy snapshot");}finally{f.database.withTransaction=original;}
+ try{await scheduler.execute(job);assert.equal(injected,true);assert.equal(scheduler.stats.get(job.name).lastOutcome,"failed");assert.match(scheduler.stats.get(job.name).lastError,/Sales operational metrics unavailable/u);assert.ok(!scheduler.stats.get(job.name).lastError.includes("SELECT"));assert.equal(entries.length,2,"Failure must not publish an all-zero healthy snapshot");}finally{f.database.withTransaction=original;}
  for(const table of tables)assert.deepEqual((await f.db.query(`SELECT * FROM ${table}`))[0],before[table],table);
 });
 

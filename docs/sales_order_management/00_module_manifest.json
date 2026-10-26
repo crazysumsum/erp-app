@@ -54,7 +54,8 @@
       "server/src/modules/fulfillment/**",
       "server/src/services/fulfillmentArchive/**",
       "server/src/modules/inventory/InventoryLookupService.js",
-      "server/src/services/fulfillment/FulfillmentOpenMatterService.js"
+      "server/src/services/fulfillment/FulfillmentOpenMatterService.js",
+      "server/src/services/mysqldatabase/MySqlDatabaseService.js"
     ],
     "test_paths": [
       "server/test/sales/**",
@@ -228,7 +229,8 @@
       "server/src/modules/inventory/InventoryLookupService.js",
       "server/test/salesFulfillmentService.test.js",
       "server/test/integration/fulfillmentPendingClaims.integration.test.js",
-      "server/src/services/fulfillment/FulfillmentOpenMatterService.js"
+      "server/src/services/fulfillment/FulfillmentOpenMatterService.js",
+      "server/src/services/mysqldatabase/MySqlDatabaseService.js"
     ],
     "approval_required_paths": [
       "server/database/migrations/**",
@@ -310,7 +312,8 @@
       "server/database/migrations/*_create_fulfillment_archive_prerequisites.js",
       "server/database/migrations/*_create_fulfillment_archive_mirrors.js",
       "server/database/migrations/*_protect_fulfillment_archive_contracts.js",
-      "server/src/services/fulfillment/FulfillmentOpenMatterService.js"
+      "server/src/services/fulfillment/FulfillmentOpenMatterService.js",
+      "server/src/services/mysqldatabase/MySqlDatabaseService.js"
     ],
     "forbidden_paths": [
       ".env",
@@ -438,6 +441,17 @@
           "sales-fulfillment-participant-native",
           "sales-archive-joint-native"
         ]
+      },
+      {
+        "id": "framework-connection-wait-observations",
+        "module_id": "framework",
+        "version": "1-PROPOSED-readonly-bounded-cumulative-metrics; existing transaction and timeout contract retained",
+        "source": "server/src/services/mysqldatabase/MySqlDatabaseService.js",
+        "sha256": "fb31b7896ab65424ce577c0e76b1fb0c2cd44fffde6fa7646113018c3483d550",
+        "regression_suites": [
+          "sales-phase005-unit",
+          "sales-phase005-native"
+        ]
       }
     ],
     "data_ownership": {
@@ -502,7 +516,9 @@
       "sales-fulfillment-participant-unit",
       "sales-fulfillment-participant-native",
       "sales-archive-joint-native",
-      "sales-fulfillment-pending-provider-native"
+      "sales-fulfillment-pending-provider-native",
+      "sales-phase005-unit",
+      "sales-phase005-native"
     ],
     "uat": []
   },
