@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1362,
+  "revision": 1365,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "d38f4989dd8a86381d3579e37ea308c38b6449da30bd28082eeb706f1a53c929",
     "plan": "c37f4f0baa213bf5cda533b988c3dadf71f3d96f0a97ba8c6489f1d9303cfe25",
-    "code_commit": "8c3e05df8c39ace8da47fd2f4bb97553c7587e17",
-    "source_fingerprint": "d91be2177d7991fdeae9a7baa0bb0c81ddc35fb031b6e5ffdff2d47d664c2687",
+    "code_commit": "00775059536efa43673e8edb252c24833133bfa1",
+    "source_fingerprint": "45c70f4fd953454f8c53ce4099a45588c7f5dddc8b56d841515794469bab86fe",
     "worktree": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app",
     "default_commit": "78d1e3eea3a055f7f23327e427b3a9b9ce6ffefa",
     "mode_entry_commit": "e272f5d3ce05d0ca50be42e6d8764f0ef20d3dd1"
@@ -23,8 +23,8 @@
     "resources": {
       "workspace": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app",
       "temp-directory": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/dec029-runtime-37e933d0a9db",
-      "mysql-instance": "READY own PID71339 UID501/nice10/socket-only /private/tmp/sales-p4-37e933d0a9db/mysql.sock; two synthetic schemas91migrations each through0090; originalgrants unchanged; no owner0091+ yet.",
-      "database": "erp_sales_p4_37e933d0a9db_core,erp_sales_p4_37e933d0a9db_focused"
+      "mysql-instance": "READY same owned MySQL26.7 UUID154b50c8-cc62-11f1-83e8-d4284b001f9c UID501/nice10/socket-only PID7295 /private/tmp/sales-p4-37e933d0a9db/mysql.sock; fresh current schema104 exact migrations twice; old schemas/ledgers/grants preserved; observed in latest reviewer7native UUID preflight.",
+      "database": "erp_p4_78d105_20261026; per-test nonce schemas on same owned daemon only; current private binding p4-main78d-fresh-env-r1.json; old schemas retained, not remigrated"
     },
     "lease_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/dec029-runtime-37e933d0a9db/runtime.json; actual owned PID/socket/auto.cnf verified by reviewed helper and fresh process/nice check."
   },
@@ -12833,6 +12833,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-P4-QUEUE-METRICS-DEF034-R3",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "45c70f4fd953454f8c53ce4099a45588c7f5dddc8b56d841515794469bab86fe",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-queue-metrics-def034-r3-closing-reviewer-proof.json SHA514a93ccbd0c1aae2d43a6825419702168f9708c9ce4044b55152d0dae3f022a; exact6paths; independent13unit/7native on0edc and11descriptor on45c; fullTask/Phase approval not granted",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -16872,6 +16884,28 @@
       "subject": "Actual complete26browser currentfreshschema/newdeps, sourceunchanged",
       "status": "PASS",
       "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-main78d105106-browser-r2/receipt.json SHA7a5dab03cc5f2e27b7be17bd44bf2daa766c854ea3706265e0d1d3c1026fd929; scoped developer evidence, no PhaseGate/fullCI"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "00775059536efa43673e8edb252c24833133bfa1",
+      "spec_baseline": "c37f4f0baa213bf5cda533b988c3dadf71f3d96f0a97ba8c6489f1d9303cfe25",
+      "source_fingerprint": "90fe268e7e3df7139a14b37c3e137c70b65732ae47e2a5c80e3a8850c4288093",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-26T03:44:06.962145Z",
+      "subject": "DEF034 independent owned queue metrics review SM-R1-1/2/3: Archive crossperiod, Import unknown start, stale Scheduler diagnostics; real native5 tests2PASS3FAIL0SKIP, existing12unit previouslyPASS not fullTask",
+      "status": "FAIL",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-queue-metrics-r1-source-reviewer-proof.json SHAda012dd9194d13d0ad63685a4a8746c97ddbbba4b0d036252c248f4c01db5b44; /Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-queue-metrics-review-r1-red/receipt.json raw7cf94e4616efe1adda45fd4282522ed4b4e56411d44d54cd4c4b2126ee0e70b0"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "00775059536efa43673e8edb252c24833133bfa1",
+      "spec_baseline": "c37f4f0baa213bf5cda533b988c3dadf71f3d96f0a97ba8c6489f1d9303cfe25",
+      "source_fingerprint": "45c70f4fd953454f8c53ce4099a45588c7f5dddc8b56d841515794469bab86fe",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-26T04:05:35.921321Z",
+      "subject": "Queue scoped developer checks/review pass; old runtime state reconciled to same observed daemon/new104schema, not allTask/Gate",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/139_readonly_queue_metrics_scoped_increment.md; priorresources /Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-runtime-state-before-1365.json SHAb3847d268dc4cff51a1baa52f97933367776c80f55e33933119a8b677cbe72a8"
     }
   ],
   "pending_decisions": [
@@ -20157,8 +20191,16 @@
       "kind": "GIT_COMMIT",
       "target": "local-only reviewed mechanical migration namespace/currentmain adaptation",
       "idempotency_key": "p4-main78d105106-commit-r1",
+      "status": "CONFIRMED",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/138_main78d_migration_namespace_and_fresh_schema.md; exact latestsourced91be2177d7991fdeae9a7baa0bb0c81ddc35fb031b6e5ffdff2d47d664c2687; no push/PR/mainmerge; observed localHEAD00775059536efa43673e8edb252c24833133bfa1"
+    },
+    {
+      "id": "ACT-P4-QUEUE-METRICS-COMMIT-20261026",
+      "kind": "GIT_COMMIT",
+      "target": "local independently reviewed readonly queue metrics scoped increment",
+      "idempotency_key": "p4-queue-metrics-commit-20261026",
       "status": "STARTED",
-      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/138_main78d_migration_namespace_and_fresh_schema.md; exact latestsourced91be2177d7991fdeae9a7baa0bb0c81ddc35fb031b6e5ffdff2d47d664c2687; no push/PR/mainmerge"
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/139_readonly_queue_metrics_scoped_increment.md; exactsource45c70f4fd953454f8c53ce4099a45588c7f5dddc8b56d841515794469bab86fe; no push/PR/mainmerge"
     }
   ],
   "evidence_files": [
@@ -21459,7 +21501,21 @@
         "R1/R2 actual false-consistency findings, native queue/route RED mutations, final116server/5native/lint/boundary with exact source; separate R3 actual18/5 closing. No fullTask/Phase approval."
       ],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-034",
+      "severity": "HIGH",
+      "status": "CLOSED",
+      "source_ids": [
+        "TASK-062",
+        "TC-051"
+      ],
+      "closure_evidence": [
+        "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/139_readonly_queue_metrics_scoped_increment.md",
+        "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-queue-metrics-def034-r3-closing-reviewer-proof.json SHA514a93ccbd0c1aae2d43a6825419702168f9708c9ce4044b55152d0dae3f022a; narrowqueueincrementonly, Task062 incomplete"
+      ],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Commit reviewed currentmain105106/freshschema adaptation then observe result. Continue TASK062 ops metrics/alerts/runbooks and remaining P4 eligibility/recovery/capacity/restore/originalchecks/currentCI/wholephase review; directmainmerge only after unchangedGate, lowCPU serial. Owner104/HD019 remains separately pending; no partialPhasePASS."
+  "next_safe_action": "Commit/observe narrowedqueueincrement. Prepare exact reviewable sharedpoolwait patch without applying unapprovedsharedscope, while advancing independent P4 capacity/restore/remainingimplementation. Fullobservability andrunbookdryruns remain; no Task062Done. Originalchecks/currentCI/wholephase review/unchangedMERGE_READY required before authorizedmainmerge; lowCPU serial."
 }
