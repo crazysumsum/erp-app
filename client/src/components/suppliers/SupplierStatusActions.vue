@@ -2,6 +2,7 @@
 import { computed, reactive, ref } from "vue";
 import supplierService from "@/services/supplier.js";
 import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
+import SupplierApprovalPanel from "./SupplierApprovalPanel.vue";
 
 const props = defineProps({
   supplier: { type: Object, required: true },
@@ -34,8 +35,14 @@ const submitting = ref(false);
 const errorMessage = ref("");
 const blockers = ref([]);
 const form = reactive({ reason: "", password: "" });
+// DEF-042（HD-138 A）：審批開咗嘅時候，「啟用」其實係提交審批，要喺度揀審批人（設計 §7.4，同新增頁同一個 panel）。
+const approval = ref({ approverUserId: null, requestNote: "" });
+const requireApproval = ref(false);
+const submitsForApproval = computed(() => selected.value?.key === "activate" && requireApproval.value);
+const shown = computed(() => (submitsForApproval.value ? { ...selected.value, label: "提交審批", target: "待審批" } : selected.value));
 const valid = computed(() => {
   if (!selected.value) return false;
+  if (submitsForApproval.value && !approval.value.approverUserId) return false;
   if (selected.value.reason && (form.reason.trim().length < 5 || form.reason.trim().length > 500)) return false;
   if (selected.value.password && !form.password) return false;
   return true;
@@ -45,6 +52,8 @@ function open(action) {
   selected.value = action;
   form.reason = "";
   form.password = "";
+  approval.value = { approverUserId: null, requestNote: "" };
+  requireApproval.value = false;
   errorMessage.value = "";
   blockers.value = [];
   showDialog.value = true;
@@ -60,6 +69,11 @@ async function submit() {
     const payload = { version: props.supplier.version };
     if (action.reason) payload.reason = form.reason.trim();
     if (action.password) payload.password = form.password;
+    const submitted = submitsForApproval.value;
+    if (submitted) {
+      payload.approverUserId = approval.value.approverUserId;
+      if (approval.value.requestNote) payload.requestNote = approval.value.requestNote;
+    }
     const result = await supplierService[action.service](props.supplier.id, payload);
     showDialog.value = false;
     if (action.service === "deleteSupplier") {
@@ -67,7 +81,7 @@ async function submit() {
       notifySuccess(`供應商 ${props.supplier.supplierCode} 已永久刪除`);
     } else {
       emit("updated", result);
-      notifySuccess(`供應商 ${props.supplier.supplierCode} 已${action.target}`);
+      notifySuccess(submitted ? `供應商 ${props.supplier.supplierCode} 已提交審批` : `供應商 ${props.supplier.supplierCode} 已${action.target}`);
     }
   } catch (error) {
     form.password = "";
@@ -106,10 +120,10 @@ async function submit() {
       <q-card style="width: min(560px, 94vw)">
         <q-form @submit.prevent="submit">
           <input class="reauth-username" type="text" autocomplete="username" :value="username" tabindex="-1" aria-hidden="true">
-          <q-card-section><div class="text-h6">{{ selected?.label }}供應商</div></q-card-section>
+          <q-card-section><div class="text-h6">{{ shown?.label }}供應商</div></q-card-section>
           <q-card-section class="q-pt-none">
             <q-banner class="bg-warning text-dark q-mb-md" rounded>
-              供應商：{{ supplier.supplierCode }} — {{ supplier.supplierName }}。完成後狀態：{{ selected?.target }}。
+              供應商：{{ supplier.supplierCode }} — {{ supplier.supplierName }}。完成後狀態：{{ shown?.target }}。
               現有交易及稽核歷史會保留；永久刪除只允許從未引用的 Draft。
               <span v-if="selected?.device">此操作還要求已核准裝置。</span>
             </q-banner>
@@ -119,6 +133,10 @@ async function submit() {
                 <li v-for="blocker in blockers" :key="blocker.name">{{ blocker.name }}：{{ blocker.count }}</li>
               </ul>
             </q-banner>
+            <SupplierApprovalPanel
+              v-if="selected?.key === 'activate'" v-model="approval" :disable="submitting"
+              @policy="(value) => { requireApproval = value; }"
+            />
             <q-input v-if="selected?.reason" v-model="form.reason" label="原因 *" type="textarea" outlined dense maxlength="500" hint="最少 5 個字元" />
             <q-input v-if="selected?.password" v-model="form.password" label="目前密碼 *" type="password" outlined dense maxlength="1024" class="q-mt-md" autocomplete="current-password" />
           </q-card-section>
@@ -126,7 +144,7 @@ async function submit() {
             <q-btn flat label="取消" v-close-popup />
             <q-btn
               :color="selected?.destructive || selected?.key === 'block' ? 'negative' : 'primary'"
-              :label="`確認${selected?.label ?? ''}`" type="submit" :disable="!valid" :loading="submitting"
+              :label="`確認${shown?.label ?? ''}`" type="submit" :disable="!valid" :loading="submitting"
             />
           </q-card-actions>
         </q-form>
