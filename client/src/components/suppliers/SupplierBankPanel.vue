@@ -513,7 +513,7 @@ async function submitConfirm() {
         <q-card-section class="q-pt-none">
           <!-- 設計 §7.5：切換預設要明講舊 default 會被取消。 -->
           <p v-if="confirm.kind === 'default'" class="text-grey-8">
-            將「{{ confirm.row?.bankName }}」設為預設之後，原本嘅預設銀行帳戶會**同時被取消**，之後嘅付款會用新嘅預設。
+            將「{{ confirm.row?.bankName }}」設為預設之後，原本嘅預設銀行帳戶會<strong>同時被取消</strong>，之後嘅付款會用新嘅預設。
           </p>
           <p v-else class="text-grey-8">
             停用「{{ confirm.row?.bankName }}」之後就唔會再揀得到；已經引用咗佢嘅單據仍然保留。停用係唯一嘅退役方式，冇得刪除。

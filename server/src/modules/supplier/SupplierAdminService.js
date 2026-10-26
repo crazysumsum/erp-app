@@ -85,7 +85,16 @@ const SIGNIFICANT_UPDATE_FIELDS = Object.freeze(
     .filter((column) => column !== "supplier_code")
     .map((column) => [column, COLUMN_TO_INPUT_FIELD[column]])
 );
-const NEXT_FIELD_NAMES = Object.freeze(Object.fromEntries(SIGNIFICANT_UPDATE_FIELDS));
+
+/**
+ * 一般更新會改到邊啲 approval-significant 欄位（Code 除外，佢有自己嘅路）：`current` 係 suppliers 嘅 row，
+ * `next` 用 input 欄位名。回 input 欄位名。匯入預檢用同一條規則判斷會唔會令 Pending 申請失效（DEF-045）。
+ */
+export function changedApprovalFields(current, next) {
+  return SIGNIFICANT_UPDATE_FIELDS
+    .filter(([column, field]) => String(current[column] ?? "") !== String(next[field] ?? ""))
+    .map(([, field]) => field);
+}
 
 const SUPPLIER_SORT_COLUMNS = Object.freeze({
   supplierCode: "s.supplier_code_key",
@@ -514,9 +523,7 @@ export class SupplierAdminService {
     // Supplier 回 draft，全部喺同一個交易入面，再回 approvalInvalidated: true。
     // Address／Contact／Notes／Bank 唔喺內，所以佢哋改動唔會令申請失效。
     if (current.status === "pending_approval") {
-      const changedSignificant = SIGNIFICANT_UPDATE_FIELDS
-        .filter(([field]) => String(current[field] ?? "") !== String(next[NEXT_FIELD_NAMES[field]] ?? ""))
-        .map(([, name_]) => name_);
+      const changedSignificant = changedApprovalFields(current, next);
       if (changedSignificant.length > 0) {
         // 有冇真係失效，以佢嘅回傳值為準：冇開放中嘅申請就唔好話人知已經失效（REV-121 I-2）。
         approvalInvalidated = await this.approvals.invalidateForSignificantChange(connection, {

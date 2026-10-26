@@ -3,7 +3,8 @@ import { collectSupplierMetrics, supplierAlerts } from "../../modules/supplier/s
 
 /**
  * 每 5 分鐘寫一條 `supplier.metrics`，過咗門檻就寫告警 event（TASK-050；設計 §12.4；HD-083 A）。
- * Cluster scope：成個 cluster 一個實例報就夠，唔會重複告警。
+ * Cluster scope 係互斥鎖，唔係「每段時間只行一次」：每個 instance 各自計時，所以 N 個 instance 會各寫一條
+ * （REV-124 R2）。Bank 次數因此用對齊嘅時間桶，同一個桶可以靠 `bank.bucketStart` 去重。
  */
 export class SupplierMetricsJob extends BaseService {
   static service = Object.freeze({

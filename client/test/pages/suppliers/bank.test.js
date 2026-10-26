@@ -661,7 +661,11 @@ describe("components/suppliers/SupplierBankPanel.vue", () => {
     const { body } = await mountPanel();
     await body.find('[aria-label="設為預設 Other Bank"]').trigger("click");
     await flushPromises();
-    expect(body.text()).toMatch(/原本嘅預設|取消/u);
+    // DEF-046（HD-141 A）：之前只對「原本嘅預設｜取消」其中一個，所以 template 入面嘅 Markdown `**` 原樣顯示都過關。
+    const dialog = body.findAll(".q-dialog").at(-1);
+    expect(dialog.text()).toContain("原本嘅預設銀行帳戶會同時被取消");
+    expect(dialog.text()).not.toContain("**");
+    expect(dialog.find("strong").text()).toBe("同時被取消");
     await field(body, "密碼").find("input").setValue("Correct-Horse-1!");
     await field(body, "原因").find("textarea").setValue("轉出糧戶口");
     await byText(body, "確認").trigger("click");

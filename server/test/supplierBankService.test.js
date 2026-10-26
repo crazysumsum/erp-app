@@ -60,7 +60,7 @@ function wrappedDuplicate(constraint) {
   return new MySqlDatabaseOperationError("MySQL database execute failed", { cause: driver });
 }
 
-function harness({ row = bankRow(), duplicates = [], outsideRing = [], statementFails = null, permissions = ["supplier.view", "supplier.bank.view", "supplier.bank.mgmt"], crypto = realCrypto(), sealRow = null } = {}) {
+function harness({ row = bankRow(), duplicates = [], outsideRing = [], statementFails = null, permissions = ["supplier.view", "supplier.bank.view", "supplier.bank.mgmt"], crypto = realCrypto(), sealRow = null, roles = [] } = {}) {
   const events = [];
   const current = row;
   const connection = {
@@ -108,7 +108,7 @@ function harness({ row = bankRow(), duplicates = [], outsideRing = [], statement
     logger: { warn() {} },
     time: { nowMs: () => 200 },
     crypto,
-    authorize: async () => ({ id: 1, username: "tester", permissions }),
+    authorize: async () => ({ id: 1, username: "tester", permissions, roles }),
     audit: { async record(txn, entry) { audited.push(entry); events.push(["audit", entry.action]); } }
   });
   return { service, events, audited, connection, crypto };
@@ -317,6 +317,84 @@ test("deactivating clears the default so a later reactivation cannot silently re
   const update = events.find(([kind, sql]) => kind === "execute" && sql.includes("UPDATE supplier_bank_accounts"));
   assert.ok(update[1].includes("is_default = 0") && update[1].includes("status = ?"));
   assert.deepEqual(audited.at(-1).detail.after, { status: "inactive", isDefault: false });
+});
+
+test("DEF-047 (HD-142 A): every bank reveal and write by a system-admin is reported once it commits, with ids only", async () => {
+  const crypto = realCrypto();
+  const sealed = crypto.encryptAccountNumber({ supplierId: 7, cryptoContext: "ctx-41", accountNumber: ACCOUNT });
+  const sealRow = { account_ciphertext: sealed.ciphertext, account_iv: sealed.iv, account_auth_tag: sealed.authTag, encryption_key_id: sealed.encryptionKeyId };
+  const run = async (roles, call) => {
+    const { service } = harness({ crypto, sealRow, roles });
+    const warned = [];
+    service.logger = { warn: (...args) => warned.push(args), error() {} };
+    await call(service);
+    return warned;
+  };
+  const calls = {
+    "supplier.bank.create": (service) => service.create({ ...actor, ...bankDetails, supplierId: 7, accountNumber: ACCOUNT, reason: "break-glass 新增帳戶原因" }),
+    "supplier.bank.update": (service) => service.update({ ...actor, ...bankDetails, supplierId: 7, bankAccountId: 41, version: 1, reason: "break-glass 修改帳戶原因" }),
+    "supplier.bank.default": (service) => service.setDefault({ ...actor, supplierId: 7, bankAccountId: 41, version: 1, reason: "break-glass 預設帳戶原因" }),
+    "supplier.bank.deactivate": (service) => service.deactivate({ ...actor, supplierId: 7, bankAccountId: 41, version: 1, reason: "break-glass 停用帳戶原因" }),
+    "supplier.bank.reveal": (service) => service.reveal({ ...actor, supplierId: 7, bankAccountId: 41, reason: "break-glass 查看帳號原因" })
+  };
+  for (const [action, call] of Object.entries(calls)) {
+    const warned = await run(["system-admin"], call);
+    assert.equal(warned.length, 1, `${action} by a system-admin is reported`);
+    const [event, , context] = warned[0];
+    assert.equal(event, "supplier.bank.privileged_use");
+    assert.deepEqual(context, { action, supplierId: 7, bankAccountId: 41, actorUserId: 1, requestId: "req-1" });
+    assert.deepEqual(await run(["supplier-bank-officer"], call), [], `${action} by an ordinary role is not`);
+  }
+  for (const value of [ACCOUNT, NORMALIZED]) {
+    assert.ok(!JSON.stringify(await run(["system-admin"], calls["supplier.bank.reveal"])).includes(value), "no account data in the report");
+  }
+});
+
+test("DEF-047: a COMMIT that fails reports nothing, and one retried after a deadlock reports once (REV-124 R4)", async () => {
+  // 失敗喺語句度（下面嗰個 test）同失敗喺 commit 度係兩回事：報告放咗入 transaction 入面，前者捉到、後者捉唔到。
+  const crypto = realCrypto();
+  const sealed = crypto.encryptAccountNumber({ supplierId: 7, cryptoContext: "ctx-41", accountNumber: ACCOUNT });
+  const sealRow = { account_ciphertext: sealed.ciphertext, account_iv: sealed.iv, account_auth_tag: sealed.authTag, encryption_key_id: sealed.encryptionKeyId };
+  const calls = {
+    create: (s) => s.create({ ...actor, ...bankDetails, supplierId: 7, accountNumber: ACCOUNT, reason: "commit 失敗新增原因" }),
+    update: (s) => s.update({ ...actor, ...bankDetails, supplierId: 7, bankAccountId: 41, version: 1, reason: "commit 失敗修改原因" }),
+    setDefault: (s) => s.setDefault({ ...actor, supplierId: 7, bankAccountId: 41, version: 1, reason: "commit 失敗預設原因" }),
+    deactivate: (s) => s.deactivate({ ...actor, supplierId: 7, bankAccountId: 41, version: 1, reason: "commit 失敗停用原因" }),
+    reveal: (s) => s.reveal({ ...actor, supplierId: 7, bankAccountId: 41, reason: "commit 失敗查看原因" })
+  };
+  for (const [name, call] of Object.entries(calls)) {
+    for (const mode of ["deadlock-once", "always-fail"]) {
+      const { service } = harness({ crypto, sealRow, roles: ["system-admin"] });
+      const warned = [];
+      service.logger = { warn: (...args) => warned.push(args), error() {} };
+      let commits = 0;
+      const transaction = service.database.withTransaction.bind(service.database);
+      // 工作做完，跟住 COMMIT 失敗（第一次，或者次次）。
+      service.database = { ...service.database, async withTransaction(work) {
+        const result = await transaction(work);
+        commits += 1;
+        if (mode === "always-fail" || commits === 1) throw Object.assign(new Error("deadlock at commit"), { code: "ER_LOCK_DEADLOCK" });
+        return result;
+      } };
+      const reports = () => warned.filter(([event]) => event === "supplier.bank.privileged_use").length;
+      // Reveal 唔會重試（佢唔喺 retryOnceOnDeadlock 入面），所以一次失敗就係失敗。
+      if (mode === "always-fail" || name === "reveal") {
+        await assert.rejects(() => call(service));
+        assert.equal(reports(), 0, `${name} ${mode}: nothing is reported`);
+      } else {
+        await call(service);
+        assert.equal(reports(), 1, `${name} ${mode}: exactly one report after the retry commits`);
+      }
+    }
+  }
+});
+
+test("DEF-047: a system-admin bank operation that fails is not reported", async () => {
+  const { service } = harness({ roles: ["system-admin"], statementFails: { on: "INSERT INTO supplier_bank_accounts", constraint: "uq_supplier_bank_blind_index" } });
+  const warned = [];
+  service.logger = { warn: (...args) => warned.push(args), error() {} };
+  await assert.rejects(() => service.create({ ...actor, ...bankDetails, supplierId: 7, accountNumber: ACCOUNT, reason: "break-glass 新增帳戶原因" }));
+  assert.deepEqual(warned.filter(([event]) => event === "supplier.bank.privileged_use"), []);
 });
 
 test("a bank account belonging to another Supplier is not found rather than refused", async () => {

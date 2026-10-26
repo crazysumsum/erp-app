@@ -3,6 +3,7 @@ import { CsvError, parse } from "csv-parse";
 import { parse as parseSync } from "csv-parse/sync";
 
 import { normalizeAddress } from "../SupplierAddressService.js";
+import { changedApprovalFields } from "../SupplierAdminService.js";
 import { normalizeContact } from "../SupplierContactService.js";
 import {
   normalizeContactEmail, normalizeIdentifier, normalizeSupplierCode, normalizeSupplierName,
@@ -180,7 +181,7 @@ async function loadBatchLookups(connection, records) {
   if (codeKeys.size) { conditions.push("supplier_code_key IN (?)"); params.push([...codeKeys]); }
   const [suppliers] = conditions.length
     ? await connection.query(
-      `SELECT id, supplier_code_key, status, version, default_currency_code, default_payment_term_id FROM suppliers
+      `SELECT id, supplier_code_key, status, version, supplier_name, display_name, default_currency_code, default_payment_term_id FROM suppliers
         WHERE ${conditions.join(" OR ")}`, params)
     : [[]];
   const [identifiers] = identifierKeys.size
@@ -341,6 +342,25 @@ function childPayload(record, errors, bad) {
   return payload;
 }
 
+// 匯入更新列唔改狀態（設計 §6.9），但改 approval-significant 欄位會令 Pending 申請失效、Supplier 回草稿（§4.5）。
+// 所以喺預檢就拒絕成列（DEF-045、HD-140 A），每個改咗嘅欄位報一個錯；冇改呢啲欄位嘅列照常更新。預檢之後先變
+// Pending 嘅話，啟用會 bump version，執行時 expected version 對唔上，成列失敗，唔會靜靜令申請失效。
+const CSV_COLUMN = Object.freeze({ defaultPaymentTermId: "paymentTermCode" });
+function pendingApprovalErrors(root, target, errors) {
+  const next = {
+    supplierName: root.supplierName ?? target.supplier_name,
+    displayName: root.displayName ?? target.display_name,
+    defaultCurrencyCode: root.defaultCurrencyCode ?? target.default_currency_code,
+    defaultPaymentTermId: root.defaultPaymentTermId ?? target.default_payment_term_id
+  };
+  for (const field of changedApprovalFields(target, next)) {
+    const column = CSV_COLUMN[field] ?? field;
+    // 結果 CSV 只有 code 同 message，冇欄位名，所以 message 自己講明係邊欄（REV-122 I-3）。
+    issue(errors, column, "SUPPLIER_IMPORT_PENDING_APPROVAL",
+      `供應商正在審批中，修改 ${column} 會令原申請失效；請先撤回審批或待審批完成後再匯入`);
+  }
+}
+
 async function checkRow(record, rowNumber, context) {
   const { mode, catalog, lookups, seen } = context;
   const errors = [];
@@ -349,6 +369,7 @@ async function checkRow(record, rowNumber, context) {
   const { operation, code, target } = match(record, mode, lookups, errors, bad);
   const root = rootPayload(record, operation, code, target, catalog, errors, bad);
   let children = {};
+  if (operation === "update" && target?.status === "pending_approval") pendingApprovalErrors(root, target, errors);
   if (operation === "update") {
     if (SUPPLIER_IMPORT_CHILD_COLUMNS.some((name) => record[name])) {
       issue(errors, "children", "IMPORT_CHILD_UPDATE_UNSUPPORTED", "更新供應商時不支援修改地址、聯絡人或識別資料，請使用供應商頁面");
