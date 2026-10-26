@@ -518,7 +518,8 @@ export class SupplierAdminService {
         .filter(([field]) => String(current[field] ?? "") !== String(next[NEXT_FIELD_NAMES[field]] ?? ""))
         .map(([, name_]) => name_);
       if (changedSignificant.length > 0) {
-        await this.approvals.invalidateForSignificantChange(connection, {
+        // 有冇真係失效，以佢嘅回傳值為準：冇開放中嘅申請就唔好話人知已經失效（REV-121 I-2）。
+        approvalInvalidated = await this.approvals.invalidateForSignificantChange(connection, {
           supplierId: input.id,
           actorId: input.actorId,
           actorUsername: actor.username,
@@ -528,7 +529,6 @@ export class SupplierAdminService {
           requestId: input.requestId,
           ip: input.ip
         });
-        approvalInvalidated = true;
       } else {
         // 唔顯著嘅改動唔會令申請失效，但 version 已經 bump 咗，所以要同步返
         // request 記住嗰個 version，否則佢會永遠 stale。
@@ -611,7 +611,7 @@ export class SupplierAdminService {
         // 之後個申請會卡死：snapshot 對唔上所以批唔到，Supplier 仲留喺
         // pending_approval 所以又重新提交唔到。
         if (current.status === "pending_approval") {
-          await this.approvals.invalidateForSignificantChange(connection, {
+          codeApprovalInvalidated = await this.approvals.invalidateForSignificantChange(connection, {
             supplierId: input.id,
             actorId: input.actorId,
             actorUsername: actor.username,
@@ -621,7 +621,6 @@ export class SupplierAdminService {
             requestId: input.requestId,
             ip: input.ip
           });
-          codeApprovalInvalidated = true;
         }
       }), { logger: this.logger, operation: "supplier.code.change", requestId: input.requestId });
     } catch (error) {
@@ -952,6 +951,7 @@ export class SupplierAdminService {
     // 經 provider 嘅 history 讀（包括已停用），唔直接讀 Business Master 嘅表（DEF-038、HD-130 A）。
     const term = row.default_payment_term_id === null ? null : await this.businessMaster.getPaymentTermHistory(Number(row.default_payment_term_id));
     return toSupplierDetailResponse(row, {
+      pendingApproval: row.status === "pending_approval" ? await this.#pendingApproval(id) : null,
       defaultPaymentTerm: term ? { id: Number(term.id), code: term.code, name: term.name, status: term.status } : null,
       addresses,
       contacts,
@@ -964,6 +964,31 @@ export class SupplierAdminService {
         hasBankAccount: await this.#hasActiveBankAccount(id)
       })
     });
+  }
+
+  /** DEF-043（HD-138 A）：提交人喺詳情就撤回得，要知申請 id、version 同提交人；審批人只係顯示。 */
+  async #pendingApproval(supplierId) {
+    const [[request]] = await this.database.query(
+      `SELECT r.id, r.version, r.requested_at, r.requested_by, requester.username AS requester_username,
+              requester.display_name AS requester_display_name, r.assigned_approver_id,
+              approver.username AS approver_username, approver.display_name AS approver_display_name
+         FROM supplier_activation_requests r
+         LEFT JOIN users requester ON requester.id = r.requested_by
+         LEFT JOIN users approver ON approver.id = r.assigned_approver_id
+        WHERE r.supplier_id = ? AND r.status = 'pending'
+        ORDER BY r.id DESC LIMIT 1`,
+      [supplierId]
+    );
+    if (!request) return null;
+    const user = (userId, username, displayName) => (userId === null || userId === undefined ? null
+      : { id: Number(userId), username: String(username ?? ""), displayName: String(displayName ?? "") });
+    return {
+      requestId: Number(request.id),
+      version: Number(request.version),
+      requestedAt: Number(request.requested_at),
+      requester: user(request.requested_by, request.requester_username, request.requester_display_name),
+      assignedApprover: user(request.assigned_approver_id, request.approver_username, request.approver_display_name)
+    };
   }
 
   async getSupplierCompleteness({ actorId, claimedRoles, claimedPermissions, id }) {

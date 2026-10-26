@@ -689,3 +689,43 @@ integrationTest("detail names the default payment term by code and name, still a
   assert.equal(inactive.defaultPaymentTermId, termId);
   assert.equal((await detail(withoutTerm)).defaultPaymentTerm, null);
 });
+
+integrationTest("a pending Supplier's detail names its request, requester and approver, so the requester can withdraw from the detail; other statuses carry null (DEF-043, HD-138 A)", async () => {
+  const t = tag();
+  await h.db.execute("UPDATE supplier_settings SET require_activation_approval = 1, version = version + 1 WHERE id = 1");
+  try {
+    const created = await h.send(h.users.mgmt, h.route("POST /api/v1/suppliers/create"),
+      { body: { supplierCode: `PEND-${t}`, supplierName: `Pending ${t}`, defaultCurrencyCode: "HKD", activate: true, approverUserId: h.users.approver.userId } });
+    assert.equal(created.status, 201, created.text);
+    const id = created.json.data.id;
+    h.supplierIds.push(id);
+    const detail = async () => (await h.send(h.users.view, h.route("GET /api/v1/suppliers/:id"), { ids: { id } })).json.data;
+    const pending = (await detail()).pendingApproval;
+    const [[request]] = await h.db.query("SELECT id, version FROM supplier_activation_requests WHERE supplier_id = ? AND status = 'pending'", [id]);
+    assert.equal(pending.requestId, Number(request.id));
+    assert.equal(pending.version, Number(request.version));
+    assert.deepEqual([pending.requester.id, pending.requester.username], [h.users.mgmt.userId, h.users.mgmt.username]);
+    assert.deepEqual([pending.assignedApprover.id, pending.assignedApprover.username], [h.users.approver.userId, h.users.approver.username]);
+    assert.ok(pending.requestedAt > 0);
+
+    const withdraw = (open) => h.send(h.users.mgmt, h.route("POST /api/v1/suppliers/:id/approval/withdraw"),
+      { ids: { id }, body: { requestId: open.requestId, version: open.version } });
+    assert.equal((await withdraw(pending)).status, 200);
+    const after = await detail();
+    assert.deepEqual([after.status, after.pendingApproval], ["draft", null]);
+
+    // 撤回再提交：詳情要帶新嗰個申請，唔係已撤回嗰個；用佢再撤回一次一樣成功（REV-119 M-1）。
+    const resubmitted = await h.send(h.users.mgmt, h.route("POST /api/v1/suppliers/:id/activate"),
+      { ids: { id }, body: { version: after.version, approverUserId: h.users.approver2.userId } });
+    assert.equal(resubmitted.status, 200, resubmitted.text);
+    const second = (await detail()).pendingApproval;
+    const [[open]] = await h.db.query("SELECT id, version FROM supplier_activation_requests WHERE supplier_id = ? AND status = 'pending'", [id]);
+    assert.equal(second.requestId, Number(open.id));
+    assert.notEqual(second.requestId, pending.requestId);
+    assert.equal(second.assignedApprover.id, h.users.approver2.userId);
+    assert.equal((await withdraw(second)).status, 200);
+    assert.equal((await detail()).status, "draft");
+  } finally {
+    await h.db.execute("UPDATE supplier_settings SET require_activation_approval = 0, version = version + 1 WHERE id = 1");
+  }
+});

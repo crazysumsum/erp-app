@@ -19,12 +19,15 @@ export function toSupplierDetailResponse(row, {
   identifiers = [],
   bankAccounts = [],
   warnings = [],
-  defaultPaymentTerm
+  defaultPaymentTerm,
+  pendingApproval
 } = {}) {
   return {
     ...toSupplierSummaryResponse(row),
     // 詳情先有：付款條件喺 Business Master，停用咗都要讀得返 code 同名稱（DEF-038、HD-130 A）。
     ...(defaultPaymentTerm === undefined ? {} : { defaultPaymentTerm }),
+    // 詳情先有：待審批時嘅申請、提交人同審批人（DEF-043、HD-138 A）；其他狀態係 null。
+    ...(pendingApproval === undefined ? {} : { pendingApproval }),
     website: row.website,
     generalPhone: row.general_phone,
     generalEmail: row.general_email,

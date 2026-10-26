@@ -271,6 +271,53 @@ Found by REV-116 (I-1). A Supplier whose payment term has since been deactivated
 - **Behaviour:** the refusal stays. On the Supplier editor, a 409 `PAYMENT_TERM_NOT_ACTIVE` now marks the payment-term field with 「付款條款已停用，請改選或清除」. Clearing the term and saving again succeeds (REV-117 real-browser check).
 - **Not changed:** the create page and activation still show only the generic message. HD-134 A named only the editor.
 
+## DEF-042 — HIGH
+
+Found while writing the UAT PHASE-002 browser tests (UAT-014). With approval on, an existing Draft cannot be submitted from the Supplier detail page.
+- **What the user sees:** the detail page's 「啟用」 dialog sends only the version. It even says 「完成後狀態：啟用」.
+- **What the server answers:** `400 APPROVER_REQUIRED` 「目前設定需要指定審批人」. The Supplier stays Draft.
+- **Where the selector is:** only on the create page (`SupplierApprovalPanel`). Design §7.4 says the Create／Detail editor shows the approver selector when approval is on.
+- **Effect:** a Supplier that was rejected, withdrawn, or whose request was invalidated by an edit cannot be resubmitted in the UI. Nor can any Draft created while approval was off. This blocks UAT-014 (「需重新提交」) and UAT-052 (resubmission).
+- **Measured:** local, real backend, CLERK, approval on. **Decision required (HD-138).**
+
+**Fixed under HD-138 A.** With approval on, the detail page's 「啟用」 dialog now shows the same approver selector and note as the create page. It reads 「提交審批」 and 「完成後狀態：待審批」, cannot be confirmed without an approver, and sends `approverUserId`. With approval off nothing changes.
+- Client only.
+- Tests: component tests (approval on and off). On the real backend, UAT-014 resubmits through it.
+
+## DEF-043 — MEDIUM
+
+Found by UAT-052. Only the requester can withdraw a Pending request, and the 「撤回」 button exists only on the approvals page (`/suppliers/approvals`).
+- **Why the requester cannot reach it:** that page requires `supplier.view` and `supplier.approval`. A CLERK (`supplier.view` and `supplier.mgmt`) who submitted is sent to /403.
+- **The API is not the problem:** `POST /api/v1/suppliers/:id/approval/withdraw` needs only `supplier.mgmt`. The requester simply has no screen to call it from.
+- **Effect:** UAT-052 fails at its first step. **Decision required (HD-138).**
+
+**Fixed under HD-138 A, extended by the Product Owner's 'DEF-043 A'.** A client-only fix was not possible, because nothing a CLERK can read returns the request ID and version.
+- **Server:** the Supplier detail response gains `pendingApproval { requestId, version, requestedAt, requester, assignedApprover }` while the Supplier is `pending_approval`, and `null` otherwise. The field is additive and readable with `supplier.view`.
+  - It is on the responses that go through `getSupplier`: GET detail, update, code change and the status actions. The create response does not carry it.
+- **Detail page:** it shows 「待 X 審批（Y 提交）」. Only the requester gets 「撤回審批」, which calls the existing withdraw API; the server still checks that the caller is the requester.
+- **Tests:** an integration test (fields, withdraw from those values, then `null`) and a component test (shown to the requester only). On the real backend, UAT-052 runs end to end: withdraw, resubmit, reassign with a reason, the old approver blocked, the new approver approves.
+
+## DEF-044 — MEDIUM
+
+Found by REV-120 (H-2) on UAT-014. Design §7.4 says 「Pending 進行 approval-significant 修改前提示原申請會失效」, and UAT-014's Required Evidence includes 「失效提示」. The UI shows neither:
+- **Before the save:** editing a Pending Supplier gives no warning.
+- **After the save:** the save shows only 「…的一般資料已更新」, while the Supplier silently returns to Draft. The server already returns `approvalInvalidated: true`, but the client never reads it.
+- **Significant fields:** Code, name, display name, currency and payment term (`APPROVAL_SIGNIFICANT_COLUMNS`), and identifier changes.
+- **Effect:** UAT-014 now fails at its warning step. **Decision required (HD-139).**
+
+**Fixed under HD-139 A (client only).** No server, schema or API change: the server already returned `approvalInvalidated`.
+- **Before the edit:** while the Supplier is `pending_approval`, the general editor, the Supplier Code dialog and the identifier create, edit and delete dialogs show 「此供應商正在審批中，修改 Code、名稱、顯示名稱、幣別、付款條件或識別資料會令原申請失效」.
+- **After the save:** when the response carries `approvalInvalidated: true`, a yellow notice that stays until 關閉 is pressed says 「…。原審批申請已失效，供應商回到草稿，需要重新提交審批」 (REV-121 L-2; it was first a five-second success toast). A save that invalidated nothing keeps the plain success message.
+- **Server flag (REV-121 I-2):** `updateSupplier` and `changeSupplierCode` now report `approvalInvalidated` from what `invalidateForSignificantChange` returns, as the identifier service already did, so the notice never claims an invalidation that did not happen.
+- **Tests:** component tests in `editor.test.js`, `identifier.test.js` and `detail.test.js` fail on main's components and pass on the fix; they cover create, edit and delete of identifiers (REV-121 L-1). REV-121 ran 13 mutants; its two survivors (identifier edit notice, identifier edit warning) are now killed. On the real backend UAT PHASE-002 passes 9 of 9, UAT-014 included.
+
+## DEF-045 — MEDIUM
+
+Found by REV-121 (I-1); pre-existing, not caused by DEF-044's fix. A CSV import update row for a Pending Supplier that changes the name, display name, currency or payment term goes through `updateSupplierInTransaction`, which invalidates the request and returns the Supplier to Draft (`applySupplierImportRow.js:57` discards the `approvalInvalidated` it returns).
+- **Design conflict:** §4.5 says significant edits invalidate a Pending request, while the import section says 「Update row 不藉匯入修改 Supplier Code、Bank 或狀態」.
+- **Effect:** neither the preview nor the row results say the request was invalidated or the status changed.
+- **Decision required (HD-140).**
+
 ## HD-116 A: dispositions (2026-10-21)
 
 Fixed in this change:

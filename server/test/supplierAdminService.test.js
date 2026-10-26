@@ -280,6 +280,19 @@ test("an insignificant edit while pending keeps the request and re-pins its Supp
   assert.deepEqual(repin[2], [3, 7, "pending"], "re-pinned to the version the UPDATE produced");
 });
 
+test("a significant edit or Code change while pending but with no open request does not claim an invalidation (REV-121 I-2)", async () => {
+  // The client now tells the user 「原審批申請已失效，供應商回到草稿」 on this flag, so it must
+  // mean that a request was really invalidated, as the identifier service already reports it.
+  let { service, events } = updateHarness({ status: "pending_approval", openRequest: null });
+  const updated = await service.updateSupplier({ ...updateInput, supplierName: "A Completely Different Name", reason: "更正供應商名稱" });
+  assert.equal(updated.approvalInvalidated, false);
+  assert.equal(events.some(([kind, entry]) => kind === "audit" && entry.action === "approval.invalidate"), false);
+  ({ service, events } = updateHarness({ status: "pending_approval", openRequest: null }));
+  const changed = await service.changeSupplierCode({ ...updateInput, supplierCode: "SUP-NEW", reason: "更正舊有編碼" });
+  assert.equal(changed.approvalInvalidated, false);
+  assert.equal(events.some(([kind, entry]) => kind === "audit" && entry.action === "approval.invalidate"), false);
+});
+
 test("an edit while not pending leaves the approval domain untouched", async () => {
   const { service, events } = updateHarness({ status: "draft" });
   await service.updateSupplier({ ...updateInput, supplierName: "Another Name", reason: "更正供應商名稱" });
