@@ -320,12 +320,12 @@ Found by REV-121 (I-1); pre-existing, not caused by DEF-044's fix. A CSV import 
 
 **Fixed under HD-140 A.** Precheck now refuses such a row:
 - **Error:** an update row for a `pending_approval` Supplier that would change the name, display name, currency or payment term gets one `SUPPLIER_IMPORT_PENDING_APPROVAL` error per changed column. The error is shown in the import page's row results, and the row is skipped at execution, so an import never changes a Supplier's status.
-- **What still passes:** other columns, and significant columns filled with their current values (for example an exported file re-imported), are still accepted.
+- **What still passes:** the whole row is refused, not just the significant columns. A row that changes no significant field still updates, and so does one that fills significant columns with their current values (for example an exported file re-imported). Each error message names its column, because the result CSV carries no field name (REV-122 I-3).
 - **Shared comparison:** the check uses the comparison `updateSupplier` already uses, now exported as `changedApprovalFields`.
 - **Timing:** a Supplier that becomes Pending after precheck has a new version, so its row fails at execution on the expected version instead.
 - **What this supersedes:** REV-064 I-4 had made such rows invalidate the request. That was a review recommendation, not a human decision, and HD-140 A replaces it. The integration test that asserted the old behaviour now asserts the refusal.
 - **Tests:** unit tests in `supplierImportPrecheck.test.js` and the import integration test fail on main's processor. Four mutants are killed:
-  - a SELECT without the names (caught only on real MySQL);
+  - a SELECT without `supplier_name` or without `display_name` (caught only on real MySQL; the `display_name` mutant survived REV-122 until the integration row re-sent the current display name);
   - the guard turned off;
   - only the first changed column reported;
   - the payment-term column misnamed.

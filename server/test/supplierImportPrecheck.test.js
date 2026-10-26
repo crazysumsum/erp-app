@@ -283,6 +283,8 @@ test("DEF-045 (HD-140 A): an update row may not change a significant field of a 
   assert.deepEqual(pendingCodes(rows[0]), ["supplierName"]);
   assert.deepEqual(pendingCodes(rows[1]), ["displayName", "defaultCurrencyCode", "paymentTermCode"], "each changed column is named");
   assert.equal(rows[1].status, "invalid");
+  assert.match(rows[1].errors.find(({ field }) => field === "paymentTermCode").message, /修改 paymentTermCode 會令原申請失效/u,
+    "the result CSV carries no column, so the message names it (REV-122 I-3)");
   assert.deepEqual([rows[2].status, rows[3].status], ["valid", "valid"], "unchanged significant values and other fields pass");
   assert.deepEqual(pendingCodes(rows[4]), ["paymentTermCode"], "a term set where there was none is a change");
   assert.deepEqual([rows[5].status, pendingCodes(rows[5])], ["valid", []], "only a pending Supplier is guarded");

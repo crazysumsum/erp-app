@@ -1015,7 +1015,7 @@ integrationTest("TASK-045: update rows change root fields only, keep blank cells
   const other = await testCurrency("T45 test currency");
   // 兩個 pending（各有申請）同一個 active Supplier，經匯入整出嚟。
   const seed = await readyJob(owner, [
-    { supplierCode: `U1-${tag}`, supplierName: `Update One ${tag}`, defaultCurrencyCode: "HKD", notes: "keep me" },
+    { supplierCode: `U1-${tag}`, supplierName: `Update One ${tag}`, defaultCurrencyCode: "HKD", displayName: "One", notes: "keep me" },
     { supplierCode: `U2-${tag}`, supplierName: `Update Two ${tag}`, defaultCurrencyCode: "HKD" }
   ]);
   await confirmWithApprovalOn(owner, seed.id, { version: seed.version, activationMode: "activate", approverUserId: approver.userId });
@@ -1026,7 +1026,7 @@ integrationTest("TASK-045: update rows change root fields only, keep blank cells
 
   const update = await readyJob(owner, [
     // 唔顯著：申請保留。顯著欄位照填返原值（好似重新匯入匯出檔）都唔算改，要靠真 MySQL 讀到名稱先判斷得到。
-    { supplierCode: `U1-${tag}`, supplierName: `Update One ${tag}`, defaultCurrencyCode: "HKD", generalPhone: "+852 2000 0001" },
+    { supplierCode: `U1-${tag}`, supplierName: `Update One ${tag}`, displayName: "One", defaultCurrencyCode: "HKD", generalPhone: "+852 2000 0001" },
     { supplierCode: `U2-${tag}`, supplierName: `Update Two Renamed ${tag}` },       // 顯著：預檢拒絕，申請保留（HD-140 A）
     { supplierCode: `U3-${tag}`, defaultCurrencyCode: other }                      // 改幣別：要原因
   ], { mode: "upsert" });
