@@ -83,7 +83,7 @@ export class FulfillmentQueueService {
       const [headers] = await tx.query(`SELECT o.id,o.sales_order_number,o.status,o.version,o.customer_id,o.customer_code_snapshot,o.customer_name_snapshot,
         o.fulfillment_warehouse_id,o.warehouse_code_snapshot,o.warehouse_name_snapshot,DATE_FORMAT(o.order_date,'%Y-%m-%d') AS order_date,DATE_FORMAT(o.requested_delivery_date,'%Y-%m-%d') AS requested_delivery_date,o.line_count,o.has_backorder,o.updated_at,${activeWork} AS has_active_work
         FROM sales_orders o WHERE o.id IN (${placeholders(ids)})`, ids);
-      const [rows] = await tx.query(`SELECT l.id,l.sales_order_id,l.line_no,l.sku_id,l.sku_code_snapshot,l.sku_name_snapshot,l.reserved_outstanding_base_quantity,l.backordered_base_quantity,l.fulfilled_base_quantity,
+      const [rows] = await tx.query(`SELECT l.id,l.sales_order_id,l.line_no,l.sku_id,l.sku_code_snapshot,l.sku_name_snapshot,l.ordered_base_quantity,l.reserved_outstanding_base_quantity,l.backordered_base_quantity,l.fulfilled_base_quantity,
         COALESCE(r.inventory_outstanding,0) AS inventory_outstanding,COALESCE(c.active_claimed,0) AS active_claimed,COALESCE(r.invalid_source,0) AS invalid_source
         FROM sales_order_lines l
         LEFT JOIN (SELECT m.sales_order_line_id,SUM(r.outstanding_quantity) AS inventory_outstanding,
@@ -98,7 +98,7 @@ export class FulfillmentQueueService {
         WHERE l.sales_order_id IN (${placeholders(ids)}) ORDER BY l.sales_order_id,l.line_no,l.id`, [...ids, ...ids, ...ids]);
       try {
         if (rows.some(row => Number(row.invalid_source) !== 0)) throw fulfillmentError("FULFILLMENT_SOURCE_CONFLICT");
-        const lines = rows.map(row => projectFulfillmentQueueLine({ ...row, id: String(row.id), sales_order_id: String(row.sales_order_id), sku_id: String(row.sku_id), inventory_outstanding: String(row.inventory_outstanding), active_claimed: String(row.active_claimed), reserved_outstanding_base_quantity: String(row.reserved_outstanding_base_quantity), backordered_base_quantity: String(row.backordered_base_quantity), fulfilled_base_quantity: String(row.fulfilled_base_quantity) }));
+        const lines = rows.map(row => projectFulfillmentQueueLine({ ...row, id: String(row.id), sales_order_id: String(row.sales_order_id), sku_id: String(row.sku_id), ordered_base_quantity: String(row.ordered_base_quantity), inventory_outstanding: String(row.inventory_outstanding), active_claimed: String(row.active_claimed), reserved_outstanding_base_quantity: String(row.reserved_outstanding_base_quantity), backordered_base_quantity: String(row.backordered_base_quantity), fulfilled_base_quantity: String(row.fulfilled_base_quantity) }));
         const byId = new Map(headers.map(row => [String(row.id), row]));
         const items = ids.map(id => {
           const row = byId.get(id), owned = lines.filter(line => line.salesOrderId === id);

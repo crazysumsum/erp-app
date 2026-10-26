@@ -27,10 +27,10 @@ test("Queue cursor roundtrips NULL and binds filters, sort, page size and next-p
 test("Queue refuses oversized, malformed, noncanonical and unknown-field cursors", () => {
   for (const cursor of ["x".repeat(2049), "not+base64", Buffer.from(JSON.stringify({ version: 1, sql: "DROP TABLE sales_orders" })).toString("base64url")]) invalid(() => normalizeFulfillmentQueueQuery({ page: 2, cursor }));
 });
-const line = () => ({ id: "11", sales_order_id: "1", line_no: 1, sku_id: "7", sku_code_snapshot: "SKU-7", sku_name_snapshot: "產品", reserved_outstanding_base_quantity: "20", inventory_outstanding: "20", active_claimed: "8", backordered_base_quantity: "5", fulfilled_base_quantity: "2" });
+const line = () => ({ id: "11", sales_order_id: "1", line_no: 1, sku_id: "7", sku_code_snapshot: "SKU-7", sku_name_snapshot: "產品", ordered_base_quantity: "27", reserved_outstanding_base_quantity: "20", inventory_outstanding: "20", active_claimed: "8", backordered_base_quantity: "5", fulfilled_base_quantity: "2" });
 test("Queue uses actual Reservation less active Claims and allowlists public line fields", () => {
   const source = { ...line(), price: "999", contact: "private" };
-  assert.deepEqual(projectFulfillmentQueueLine(source), { id: "11", salesOrderId: "1", lineNo: 1, skuId: "7", skuCode: "SKU-7", skuName: "產品", reservedOutstandingBaseQuantity: "20", activeClaimedBaseQuantity: "8", fulfillableBaseQuantity: "12", backorderedBaseQuantity: "5", fulfilledBaseQuantity: "2" });
+  assert.deepEqual(projectFulfillmentQueueLine(source), { id: "11", salesOrderId: "1", lineNo: 1, skuId: "7", skuCode: "SKU-7", skuName: "產品", orderedBaseQuantity: "27", reservedOutstandingBaseQuantity: "20", activeClaimedBaseQuantity: "8", fulfillableBaseQuantity: "12", backorderedBaseQuantity: "5", fulfilledBaseQuantity: "2" });
   assert.equal(source.active_claimed, "8");
 });
 test("Queue preserves zero availability for fully claimed and pure backorder lines", () => {

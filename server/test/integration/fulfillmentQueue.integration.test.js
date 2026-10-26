@@ -12,6 +12,7 @@ nativeTest("P1 Queue native projection is bounded, safe and read-only with an ex
   const result = await read(f);
   assert.equal(result.items.length, 1); assert.equal(result.items[0].id, String(f.s.orderId));
   assert.equal(result.items[0].lines[0].fulfillableBaseQuantity, "1");
+  assert.equal(result.items[0].lines[0].orderedBaseQuantity, "1");
   assert.equal(result.items[0].lines[0].fulfilledBaseQuantity, "0");
   assert.equal(result.items[0].orderDate, "2023-11-14"); assert.equal(result.hasMore, false);
   assert.equal(JSON.stringify(result).includes("totalAmount"), false);

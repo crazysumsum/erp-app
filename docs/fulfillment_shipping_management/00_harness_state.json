@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 176,
+  "revision": 179,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-002",
-  "current_task": "TASK-021",
+  "current_task": "TASK-022",
   "baseline": {
     "design": "4b4d1695fa6b0ea55cd76952159c686b350a169105d501af4439cdbcdf0da99e",
     "plan": "72cb47409cb93d1139475c72471143658facfb76844b41d9cfeb9740f1a09d4f",
-    "code_commit": "71dc12f30a6fcc8f209186ee77e5901fe9dbcb1d",
-    "source_fingerprint": "4c113db1ae6c9f049b5e3f040fafc0f91495c82383ad656e6bcec917e8f21e13",
+    "code_commit": "f661e3ac310a0d9b192b6952f9656a070a0c9cc8",
+    "source_fingerprint": "ffa76b964977179721fbd3ab8f99a48b01746195645c57ed56bce1da0d378c6a",
     "worktree": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1",
     "default_commit": "fd32762f4fa17a5e77aaa7118a9ded2d3ac81e9e",
     "mode_entry_commit": "fd32762f4fa17a5e77aaa7118a9ded2d3ac81e9e"
@@ -26,7 +26,7 @@
       "runtime-and-private-evidence": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime",
       "runtime-policy": "New owned synthetic MySQL26.7.0 socket-only daemon, per-test fresh UUID schemas; no shared/live DB; old tmp runtime absent",
       "dependencies": "Locked offline npm ci --ignore-scripts; package/lock unchanged; generated test-only crypto rings outside source",
-      "browser-runtime": "Own private sibling browser-server.log / browser-info.json / browser-auth.json (private synthetic token never print); loopback Vite41583/API59594, namespacefulfillment_p0_p1_592180d4_sf_1d102c3562e9; session95136 runtimeprocess, rootPTY2020; closeown runtime afterUI checks."
+      "browser-runtime": "Own runtime98141;loopbackVite48019/API62218;namespacefulfillment_p0_p1_7bfb6b1d_sf_c87881ca0ad6;allreviewer/rootbrowsersclosed/runtimefree/grantsrestored;privateauthneverprint;refresh-browser-auth.mjs actualJwtService/default15min/version0/ownAPIcheck;SIGUSR2cleanup onlyexactownedprocess. Priorbrowsernamespacescleaned."
     },
     "lease_ref": null
   },
@@ -51,8 +51,8 @@
     "TASK-018": "DONE",
     "TASK-019": "DONE",
     "TASK-020": "DONE",
-    "TASK-021": "IN_PROGRESS",
-    "TASK-022": "PENDING",
+    "TASK-021": "DONE",
+    "TASK-022": "IN_PROGRESS",
     "TASK-023": "PENDING",
     "TASK-024": "PENDING",
     "TASK-025": "PENDING",
@@ -2870,6 +2870,23 @@
         "NFR-023",
         "Exact original NA reason retained, TC010 mandatory/blocking unchanged"
       ]
+    },
+    {
+      "id": "APR-133-P1-PLANNED-MENU-SCOPE-LINEAGE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam original approved P1 plan and actual continued P1 instruction; existing TASK021 menu path/permission unchanged; bookkeeping lineage from APR079 only, not new human code/hash inspection",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/43_task021_queue_list_create_ui.md#implemented-scope-and-remaining-checks",
+      "recorded_at": "2026-10-26T04:15:37.562421+00:00",
+      "code_commit": "f661e3ac310a0d9b192b6952f9656a070a0c9cc8",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "72cb47409cb93d1139475c72471143658facfb76844b41d9cfeb9740f1a09d4f",
+      "scope": [
+        "client/config/menu.js",
+        "Only original TASK021 Fulfillment menu group with existing fulfillment.view; no new permission or framework path"
+      ]
     }
   ],
   "reviews": [
@@ -4128,6 +4145,18 @@
       "reviewer": "/root/fulfillment_independent_review",
       "reviewed_baseline": "4c113db1ae6c9f049b5e3f040fafc0f91495c82383ad656e6bcec917e8f21e13",
       "source_ref": "implementation/42_task020_client_contracts.md#actual-separate-closing-review",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-106-TASK021-CLOSING",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "ffa76b964977179721fbd3ab8f99a48b01746195645c57ed56bce1da0d378c6a",
+      "source_ref": "implementation/43_task021_queue_list_create_ui.md#actual-independent-closing-disposition",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -5841,7 +5870,8 @@
     "implementation/39_task018_pick_confirmation_increment.md",
     "implementation/40_task019_cancel_increment.md",
     "implementation/41_cancel_pick_history_constraint.md",
-    "implementation/42_task020_client_contracts.md"
+    "implementation/42_task020_client_contracts.md",
+    "implementation/43_task021_queue_list_create_ui.md"
   ],
   "defects": [
     {
@@ -6001,7 +6031,49 @@
         "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-review-cancel-native.log"
       ],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-011",
+      "severity": "HIGH",
+      "status": "CLOSED",
+      "source_ids": [
+        "PHASE-002",
+        "TASK-021"
+      ],
+      "closure_evidence": [
+        "implementation/43_task021_queue_list_create_ui.md#actual-independent-closing-disposition",
+        "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-task021-closing-review.json"
+      ],
+      "risk_approval_id": null
+    },
+    {
+      "id": "DEF-012",
+      "severity": "MEDIUM",
+      "status": "CLOSED",
+      "source_ids": [
+        "PHASE-002",
+        "TASK-021"
+      ],
+      "closure_evidence": [
+        "implementation/43_task021_queue_list_create_ui.md#actual-independent-closing-disposition",
+        "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-task021-closing-review.json"
+      ],
+      "risk_approval_id": null
+    },
+    {
+      "id": "DEF-013",
+      "severity": "MEDIUM",
+      "status": "CLOSED",
+      "source_ids": [
+        "PHASE-002",
+        "TASK-021"
+      ],
+      "closure_evidence": [
+        "implementation/43_task021_queue_list_create_ui.md#actual-independent-closing-disposition",
+        "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-task021-closing-review.json"
+      ],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK020actualindependent8units/build/lint/realPlaywrightAPIflows0CHM;atomic020commit thenTASK021Queue/Create/ListactualUI+nativeOrderedprojectionnecessaryderivation+opaqueURLkeyset/realPlaywright. Continue022/023/allP1fullcoverage/security/latesttarget/exactCIbeforeDRAFTPR. Original20s/allguards retained;noP1merge/formal/liveDB. Ownedbrowserruntime retainedfornextUIstage."
+  "next_safe_action": "ActualTASK021independentclosing0CHM/DEF011–013closed/frozenffa76, finalizeatomic021thenTASK022Detail/Allocation/Reallocate/Pick/Cancel/DRAFTEdit andTASK023Print. Preserveallguards20s; ownerreadinessreviewreleaseawareReallocatecandidatebeforechoosingnewcrossmoduleinterface; no unapprovedmodeflag/clientFEFO math. CompletewholeP1coverage/security/latesttarget/finalreview/exactCIbeforeDRAFTPR;noP1merge/formal/liveDB."
 }

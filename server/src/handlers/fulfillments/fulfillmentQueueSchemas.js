@@ -23,7 +23,7 @@ export function fulfillmentQueueRequest(req) {
   return request.input.query;
 }
 const line = object({ id: stringId, salesOrderId: stringId, lineNo: { ...id, maximum: 100 }, skuId: stringId, skuCode: text, skuName: text,
-  reservedOutstandingBaseQuantity: quantity, activeClaimedBaseQuantity: quantity, fulfillableBaseQuantity: quantity, backorderedBaseQuantity: quantity, fulfilledBaseQuantity: quantity });
+  orderedBaseQuantity: quantity, reservedOutstandingBaseQuantity: quantity, activeClaimedBaseQuantity: quantity, fulfillableBaseQuantity: quantity, backorderedBaseQuantity: quantity, fulfilledBaseQuantity: quantity });
 const header = object({ id: stringId, salesOrderNumber: text, salesOrderStatus: { enum: ["CONFIRMED", "PARTIALLY_FULFILLED"] }, version: { ...id, maximum: 4294967295 },
   customerId: stringId, customerCode: text, customerName: text, warehouseId: stringId, warehouseCode: text, warehouseName: text,
   orderDate: date, requestedDeliveryDate: { type: ["string", "null"], format: "date" }, updatedAt: { type: "integer", minimum: 0, maximum: Number.MAX_SAFE_INTEGER },

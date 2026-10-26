@@ -63,9 +63,10 @@ export function projectFulfillmentQueueLine(row) {
   const outstanding = fulfillmentInteger(row.inventory_outstanding, { positive: false });
   const sales = fulfillmentInteger(row.reserved_outstanding_base_quantity, { positive: false });
   const claimed = fulfillmentInteger(row.active_claimed, { positive: false });
+  const ordered = fulfillmentInteger(row.ordered_base_quantity, { positive: false });
   const fulfilled = fulfillmentInteger(row.fulfilled_base_quantity, { positive: false });
   const backordered = fulfillmentInteger(row.backordered_base_quantity, { positive: false });
   if (sales !== outstanding || claimed > outstanding) throw fulfillmentError("FULFILLMENT_SOURCE_CONFLICT");
   return { id: row.id, salesOrderId: row.sales_order_id, lineNo: row.line_no, skuId: row.sku_id, skuCode: row.sku_code_snapshot, skuName: row.sku_name_snapshot,
-    reservedOutstandingBaseQuantity: outstanding.toString(), activeClaimedBaseQuantity: claimed.toString(), fulfillableBaseQuantity: (outstanding - claimed).toString(), backorderedBaseQuantity: backordered.toString(), fulfilledBaseQuantity: fulfilled.toString() };
+    orderedBaseQuantity: ordered.toString(), reservedOutstandingBaseQuantity: outstanding.toString(), activeClaimedBaseQuantity: claimed.toString(), fulfillableBaseQuantity: (outstanding - claimed).toString(), backorderedBaseQuantity: backordered.toString(), fulfilledBaseQuantity: fulfilled.toString() };
 }
