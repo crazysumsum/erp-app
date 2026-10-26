@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1383,
+  "revision": 1385,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "10e658c43562f4d07aeeac9486bdc9ba46bb613e99f8813cf3997bde6b1d073d",
     "plan": "b52e2746d16e4440f6d7dd33b76de0ff444a8234cbd5b5a28183210958209b41",
-    "code_commit": "72d5dbfa50cfd10bbf094531937f9928dfec7ab4",
-    "source_fingerprint": "6c2341986b7499beac78fbefa1df888acc2707ca503d8f0c20b645e83c98fdb1",
+    "code_commit": "becefdb41fb73d736a31caebb4f76b8b2f1e2a56",
+    "source_fingerprint": "6fa02776cfcf7ebe227efef7320cde809cd3abf4daa1b4b455f55113ec6525b9",
     "worktree": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app",
     "default_commit": "206484f4a4bbf902a03d8a17ddccac55bcbfff84",
     "mode_entry_commit": "e272f5d3ce05d0ca50be42e6d8764f0ef20d3dd1"
@@ -13143,6 +13143,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-P4-ARCHIVE-READINESS-SCOPED-R3",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_archive_guard_review",
+      "reviewed_baseline": "6fa02776cfcf7ebe227efef7320cde809cd3abf4daa1b4b455f55113ec6525b9",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-archive-worker-readiness-r3-scoped-closing-reviewer-proof.json SHA f66c0b22563888481a2b3bb9b57c0fb21bada6e4674af077a701175b88dedaf7",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -17281,6 +17293,17 @@
       "subject": "Guard scoped developer checks241unit/native72node70leaf/22registeredworker/26browser/private1probe/lint/build and actualseparatereview; overlappingcounts notsummed",
       "status": "PASS",
       "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/143_archive_immutable_guard_cases.md; fullcapacity/restore/currentCI/allGates remain, listenerwarningretained"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "becefdb41fb73d736a31caebb4f76b8b2f1e2a56",
+      "spec_baseline": "b52e2746d16e4440f6d7dd33b76de0ff444a8234cbd5b5a28183210958209b41",
+      "source_fingerprint": "6fa02776cfcf7ebe227efef7320cde809cd3abf4daa1b4b455f55113ec6525b9",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-26T09:02:07.154002Z",
+      "subject": "Archive readiness and zeroSQL private admission scoped developer checks;242unit/lint0;22registeredworker;26browser; separate5native+6pure; historical75leaf retained at5e1b",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/144_archive_worker_schema_readiness.md; no fullTask/Phase/currentCI/merge approval; warning retained"
     }
   ],
   "pending_decisions": [
@@ -20650,8 +20673,16 @@
       "kind": "GIT_COMMIT",
       "target": "local reviewedimmutableguard slice only",
       "idempotency_key": "p4-archive-immutable-guard-commit-r1",
+      "status": "CONFIRMED",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/143_archive_immutable_guard_cases.md; actualsource6c2341986b7499beac78fbefa1df888acc2707ca503d8f0c20b645e83c98fdb1; no push/PR/mainmerge; observedactualcommitbecefdb41fb73d736a31caebb4f76b8b2f1e2a56"
+    },
+    {
+      "id": "ACT-P4-ARCHIVE-READINESS-COMMIT-20261026",
+      "kind": "GIT_COMMIT",
+      "target": "local reviewed readiness increment only",
+      "idempotency_key": "p4-archive-readiness-commit-r1",
       "status": "STARTED",
-      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/143_archive_immutable_guard_cases.md; actualsource6c2341986b7499beac78fbefa1df888acc2707ca503d8f0c20b645e83c98fdb1; no push/PR/mainmerge"
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/144_archive_worker_schema_readiness.md; no push/PR/main merge"
     }
   ],
   "evidence_files": [
@@ -21979,7 +22010,20 @@
         "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-dec035-collector-r3-closing-reviewer-proof.json SHA9a4faecabc94a9050de692b7870034c1aa2761bb2cceb7cd6e006a2637557444; PUB001/PUB002 only; no completeTask/Phase/Gate approval"
       ],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-036",
+      "severity": "HIGH",
+      "status": "CLOSED",
+      "source_ids": [
+        "TASK-059"
+      ],
+      "closure_evidence": [
+        "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/144_archive_worker_schema_readiness.md",
+        "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-archive-worker-readiness-r3-scoped-closing-reviewer-proof.json SHA f66c0b22563888481a2b3bb9b57c0fb21bada6e4674af077a701175b88dedaf7"
+      ],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Commit/observe reviewedimmutableguardslice. Then add actualregisteredworker missing/drift ownSchema readiness and forward-repair tests on newlybuiltlegacy104nonce (no guardDROP/oldledger mutation), runvalidRED beforeminimumprivatepreflight; multiorder/TC052/remainingTask062/capacity/restore/currentCI/wholephase/allGates follow. Existing6cproofs preserved, no retag. LowCPUserial."
+  "next_safe_action": "Observe local readiness commit then continue TASK059 multi-order isolation, TC052 and TASK062/063 fullcapacity/restore/current CI/wholephase gates; no formalacceptance or mainmerge before allGate PASS."
 }

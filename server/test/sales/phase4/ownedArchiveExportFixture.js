@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import {randomUUID} from "node:crypto";
 import {execFile} from "node:child_process";
 import {promisify} from "node:util";
-import {fileURLToPath} from "node:url";
-import {rm} from "node:fs/promises";
+import {fileURLToPath,pathToFileURL} from "node:url";
+import {rm,readdir,readFile} from "node:fs/promises";
 import path from "node:path";
 import {archiveFactsFixture} from "../../fulfillment/archiveFactsFixture.js";
 import {createApplication} from "../../../src/framework/application/createApplication.js";
@@ -12,12 +12,16 @@ import {prepareDiskTempDirectory} from "../../../src/framework/upload/normalizeU
 import {SalesSequenceService} from "../../../src/modules/sales/SalesSequenceService.js";
 import {SalesOrderService} from "../../../src/modules/sales/SalesOrderService.js";
 // Permanent mirrors survive row teardown; only this exact owned nonce schema is discarded after all pools close.
-export async function ownedArchiveExportFixture(t){
+export async function ownedArchiveExportFixture(t,{archiveEnabled=false,unguardedLegacySchema=false}={}){
  const owned=await archiveFactsFixture(t,{shipmentDate:"2023-11-14"});
- await promisify(execFile)(process.execPath,[fileURLToPath(new URL("../../../scripts/migrate.js",import.meta.url))],{env:{...process.env,DB_NAME:owned.f.name,DB_USER:owned.f.connectionOptions.user,DB_PASSWORD:owned.f.connectionOptions.password},timeout:180000,maxBuffer:1024*1024});
+ if(unguardedLegacySchema){
+  const directory=fileURLToPath(new URL("../../../database/migrations/",import.meta.url)),names=(await readdir(directory)).filter(name=>/^[0-9]{4}_.*\.(?:js|sql)$/u.test(name)&&Number(name.slice(0,4))>88&&name!=="0107_protect_sales_archive_immutability.js").sort();
+  for(const name of names){const file=path.join(directory,name);if(name.endsWith(".js"))await (await import(pathToFileURL(file).href)).up(owned.db);else await owned.db.query(await readFile(file,"utf8"));await owned.db.execute("INSERT INTO fr_schema_migrations(name,applied_at) VALUES(?,?)",["migrations/"+name,Date.now()]);}
+  const [[count]]=await owned.db.query("SELECT COUNT(*) AS n FROM fr_schema_migrations");assert.equal(Number(count.n),104);
+ }else await promisify(execFile)(process.execPath,[fileURLToPath(new URL("../../../scripts/migrate.js",import.meta.url))],{env:{...process.env,DB_NAME:owned.f.name,DB_USER:owned.f.connectionOptions.user,DB_PASSWORD:owned.f.connectionOptions.password},timeout:180000,maxBuffer:1024*1024});
  const root=prepareDiskTempDirectory("storage/sales-export-test-"+randomUUID()),previousShutdown=owned.f.cleanup.shutdown,application={current:null};
  owned.f.cleanup.shutdown=async()=>{const errors=[];for(const work of [()=>application.current?.shutdown("guarded_archive_export_complete"),()=>previousShutdown?.(),async()=>{assert.match(path.basename(root),/^sales-export-test-[a-f0-9-]+$/u);await rm(root,{recursive:true});}])try{await work();}catch(error){errors.push(error);}if(errors.length)throw new AggregateError(errors,"Owned Archive Export cleanup failed");};
- const source=defaultConfigurationSource(),app=await createApplication({configurationSource:{...source,database:{...source.database,database:owned.f.name,user:owned.f.connectionOptions.user,password:owned.f.connectionOptions.password,socketPath:owned.f.connectionOptions.socketPath},application:{...source.application,host:"127.0.0.1",port:0}},serviceOptions:{scheduler:{setTimer:()=>({unref(){}}),clearTimer(){}}}});
+ const source=defaultConfigurationSource(),app=await createApplication({configurationSource:{...source,database:{...source.database,database:owned.f.name,user:owned.f.connectionOptions.user,password:owned.f.connectionOptions.password,socketPath:owned.f.connectionOptions.socketPath},application:{...source.application,host:"127.0.0.1",port:0},scheduler:{...source.scheduler,jobs:{...source.scheduler.jobs,"sales.archive":{enabled:archiveEnabled}}}},serviceOptions:{scheduler:{setTimer:()=>({unref(){}}),clearTimer(){}}}});
  application.current=app;
  const database=app.services.require("mysqldatabase"),time=app.services.require("time"),logger=app.services.require("logging").logger,exports=app.services.require("salesJobs").exports,scheduler=app.services.require("scheduler");exports.root=root;
  const [[parent]]=await owned.db.query("SELECT currency_code,sales_order_number FROM sales_orders WHERE id=?",[owned.s.orderId]),claims={actorId:owned.userId,claimedRoles:[owned.label],claimedPermissions:[...owned.permissions,"sales.view","sales.mgmt"]};

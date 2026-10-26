@@ -1,3 +1,4 @@
+import {inspectSalesArchiveProtection} from "../../modules/sales/salesArchiveProtectionSchema.js";
 import {SalesArchiveService} from "../../modules/sales/SalesArchiveService.js";
 import {SalesArchiveBatchService} from "../../modules/sales/SalesArchiveBatchService.js";
 import {SchedulerService} from "../scheduler/SchedulerService.js";
@@ -126,9 +127,17 @@ export class SalesJobRuntimeService extends BaseService {
     }finally{this.#archiveScopes.delete(tx);}
   }
   async processArchives(signal){
-    if(signal!==this.#archivePrincipal()?.signal)throw new Error("Sales Archive worker unavailable");
+    const principal=this.#archivePrincipal();
+    if(!principal||signal!==principal.signal)throw new Error("Sales Archive worker unavailable");
+    const database=this.services.require("mysqldatabase");
+    try{
+      if(!await inspectSalesArchiveProtection({query:(sql,args)=>database.query(sql,args,{signal})}))throw new Error("Incomplete Archive protection");
+    }catch{
+      signal.throwIfAborted();
+      throw new Error("Sales Archive schema protection unavailable");
+    }
     if(!this.#archiveBatch){
-      const database=this.services.require("mysqldatabase"),time=this.services.require("time");
+      const time=this.services.require("time");
       const resolveParticipant=async()=>{try{return await this.services.resolve("fulfillmentArchive");}catch{throw Object.assign(new Error("OPEN_MATTER_UNKNOWN"),{code:"OPEN_MATTER_UNKNOWN"});}};
       this.#archiveSource=new SalesArchiveService({database,authorizeArchive:(tx,scope)=>this.authorizeArchiveInTransaction(tx,scope),getArchiveReadTime:async tx=>(await this.#liveArchiveScope(tx))?.readAtMs,openMatter:{getOrderArchiveStatusInTransaction:async(tx,scope)=>{try{return await(await this.services.resolve("fulfillmentOpenMatter")).getOrderArchiveStatusInTransaction(tx,scope);}catch{return {version:"1",status:"UNKNOWN",reasonCodes:["PROVIDER_UNAVAILABLE"]};}}},participant:{prepareOrderInTransaction:async(tx,command)=>(await resolveParticipant()).prepareOrderInTransaction(tx,command),archiveOrderInTransaction:async(tx,command)=>(await resolveParticipant()).archiveOrderInTransaction(tx,command)}});
       this.#archiveBatch=new SalesArchiveBatchService({database,time,config:this.config?.sales,authorizeJob:()=>this.#archivePrincipal(),executeLockedArchive:(tx,scope)=>this.#executeLockedArchive(tx,scope)});
