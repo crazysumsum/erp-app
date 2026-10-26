@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 430,
+  "revision": 431,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -5971,6 +5971,17 @@
       "source_ref": "Local, not CI. Full UAT config on the real backend: 29 passed, 5 skipped (the PHASE-001 test.fixme cases, HD-124 A / HD-131 A); PHASE-002 9/9 with UAT-014 included. REV-120 H-1 and H-2 dispositioned: H-1 fixed in the spec, H-2 became DEF-044, fixed by PR #283. The REV-120 survivors M06, M10, M13, M16, M19, M20 and M21 were killed after the follow-ups; M05 is a recorded known limit.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-26T14:40:00+08:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "UAT PHASE-002 approval and settings cases (PR #284) merged to main",
+      "code_commit": "6ad60848c00fa881619d6e28db4023c856c4db79",
+      "spec_baseline": "3c683c4ea46984b476c96add5e9280b5d395c6cce9e996efa3ec36b683d4f784",
+      "source_fingerprint": "c556567503927ec64036d62e857e6c24977b8b8b7fc4d119069bf824208f2bb5",
+      "status": "PASS",
+      "source_ref": "PR #284 merged as 6ad60848c00fa881619d6e28db4023c856c4db79 at 2026-10-26T06:50:55Z on the Product Owner's word ('#284 同 DEF-045 都係 review 完 CI 過就 merge', then 'CI已通過'), with --match-head-commit c179294d, after a gate that refused unless the latest run of every check was SUCCESS (13 checks, PR run 40281207977), main was an ancestor of HEAD and the local, remote and PR heads were equal. Review REV-120 CHANGES_REQUESTED, every finding dispositioned (report 123).",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-26T06:50:55+00:00"
     }
   ],
   "pending_decisions": [
@@ -9226,5 +9237,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "UAT PHASE-002 PR on claude/supplier-uat-phase-002 (rebuilt on main 206484f4). Then DEF-045 (HD-140 A) PR on claude/supplier-def045-import-pending, rebased on main."
+  "next_safe_action": "DEF-045 (HD-140 A) PR on claude/supplier-def045-import-pending: independent review, PR, merge on CI green. Then UAT PHASE-003."
 }
