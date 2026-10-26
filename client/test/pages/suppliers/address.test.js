@@ -109,6 +109,15 @@ describe("SupplierAddressPanel", () => {
     expect(wrapper.emitted("refresh")).toBeTruthy();
   });
 
+  it("reloads after a refused move instead of keeping a stale order (REV-118 I-1)", async () => {
+    supplierService.moveAddress.mockRejectedValue(Object.assign(new Error("資料已被修改"), { code: "VERSION_CONFLICT" }));
+    const rows = [{ ...ADDRESSES[0], id: 31, label: "First", sortOrder: 1 }, { ...ADDRESSES[0], id: 32, label: "Second", sortOrder: 2, purposes: [] }];
+    const { wrapper, body } = mountPanel({ addresses: rows });
+    await body.find('button[aria-label="上移地址 Second"]').trigger("click");
+    await flushPromises();
+    expect(wrapper.emitted("refresh")).toBeTruthy();
+  });
+
   it("offers no load-more below the detail's 100", () => {
     const { body } = mountPanel();
     expect(body.text()).not.toContain("已顯示");

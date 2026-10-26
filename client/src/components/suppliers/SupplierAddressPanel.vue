@@ -110,6 +110,8 @@ async function move(row, direction) {
     emit("refresh");
   } catch (error) {
     notifyError(error.message || "調整次序失敗");
+    // 次序或者版本已經變咗：重新載入，唔好停喺過時嘅列表（REV-118 I-1）。
+    emit("refresh");
   } finally {
     moving.value = false;
   }
