@@ -88,6 +88,11 @@ jobs:
   e2e:
     name: Browser tests (Playwright)
     runs-on: ubuntu-latest
+    # 與 package-lock.json 的 Playwright 1.63.0 一致；預裝瀏覽器、系統依賴及字型，
+    # 避免每輪 apt 下載受 Ubuntu mirror 波動影響。setup-node 仍固定 Node 26。
+    container:
+      image: mcr.microsoft.com/playwright:v1.63.0-noble@sha256:eff16c30e6f3f4af0a03fa4b706120d5e9b0891c344a27d64559aff5900a4a27
+      options: --init --ipc=host
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -100,11 +105,6 @@ jobs:
 
       - name: Install locked dependencies
         run: npm ci
-
-      # 只裝 chromium：兩份 config 都用 devices["Desktop Chrome"]，裝齊三個瀏覽器
-      # 是白等。--with-deps 補上 Linux runner 缺的系統函式庫。
-      - name: Install Playwright browser
-        run: npx playwright install --with-deps chromium
 
       - name: Run browser tests (network-mocked suites)
         run: npm run e2e:mocked
