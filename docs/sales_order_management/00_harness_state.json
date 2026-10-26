@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1369,
+  "revision": 1371,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,7 +11,7 @@
   "baseline": {
     "design": "d38f4989dd8a86381d3579e37ea308c38b6449da30bd28082eeb706f1a53c929",
     "plan": "c37f4f0baa213bf5cda533b988c3dadf71f3d96f0a97ba8c6489f1d9303cfe25",
-    "code_commit": "2145c20b86c3f466f6372e9460766737f8b83fd5",
+    "code_commit": "5fc3e82869d6cad81aaed16e37c786c32f8aa463",
     "source_fingerprint": "a22f45e6690151723f89921dc2d1f7b7250f06f14cfd46b7f0f15bb62bb2f93e",
     "worktree": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app",
     "default_commit": "78d1e3eea3a055f7f23327e427b3a9b9ce6ffefa",
@@ -12857,6 +12857,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-P4-PREPARATION-PREP-20261026",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "a22f45e6690151723f89921dc2d1f7b7250f06f14cfd46b7f0f15bb62bb2f93e",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-capacity-case-plan-cadence-r2-reviewer-addendum.json SHA55350521d0cc54855f810f289b1c47aab196bc97c7df7567a569e5b52f8b87e6; narrow title/preparation review only; original source/code hashes in proof remain authoritative; no wholeTask/Phase/Gate approval",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -16929,6 +16941,17 @@
       "subject": "Developer title metadata36unit/12native and pure dataset arithmetic preparation checks only; no capacity/restore executed",
       "status": "PASS",
       "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-developer-title-traceability-native-r1/receipt.json SHA77d5f5d4697eb870db2227f54e430812b80192bdd847d6f221e4e3ba308fb38d; full lint0, path boundaryLOCAL_CHECKS_PASS; actual scoped evidence, no formal case PASS"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "5fc3e82869d6cad81aaed16e37c786c32f8aa463",
+      "spec_baseline": "c37f4f0baa213bf5cda533b988c3dadf71f3d96f0a97ba8c6489f1d9303cfe25",
+      "source_fingerprint": "a22f45e6690151723f89921dc2d1f7b7250f06f14cfd46b7f0f15bb62bb2f93e",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-26T05:19:59.327150Z",
+      "subject": "Developer title metadata36unit/12native and pure dataset arithmetic preparation checks only; no capacity/restore executed",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-developer-title-traceability-native-r1/receipt.json SHA77d5f5d4697eb870db2227f54e430812b80192bdd847d6f221e4e3ba308fb38d; full lint0, path boundaryLOCAL_CHECKS_PASS; actual scoped evidence, no formal case PASS"
     }
   ],
   "pending_decisions": [
@@ -20242,8 +20265,16 @@
       "kind": "GIT_COMMIT",
       "target": "local independently reviewed titles increment only",
       "idempotency_key": "act-p4-titles-reviewed-commit-20261026",
+      "status": "CONFIRMED",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-task062-developer-title-traceability-r1-reviewer-proof.json SHAcd52ca2ad1a520fbf673cf06e413ab4d9f6cd1c5f8fc01d75e405d397d32a72b; no push/PR/main merge; observed local commit 5fc3e82869d6cad81aaed16e37c786c32f8aa463"
+    },
+    {
+      "id": "ACT-P4-PREPARATION-REVIEWED-COMMIT-20261026",
+      "kind": "GIT_COMMIT",
+      "target": "local independently reviewed preparation increment only",
+      "idempotency_key": "act-p4-preparation-reviewed-commit-20261026",
       "status": "STARTED",
-      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-task062-developer-title-traceability-r1-reviewer-proof.json SHAcd52ca2ad1a520fbf673cf06e413ab4d9f6cd1c5f8fc01d75e405d397d32a72b; no push/PR/main merge"
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-capacity-case-plan-cadence-r2-reviewer-addendum.json SHA55350521d0cc54855f810f289b1c47aab196bc97c7df7567a569e5b52f8b87e6; no push/PR/main merge"
     }
   ],
   "evidence_files": [
