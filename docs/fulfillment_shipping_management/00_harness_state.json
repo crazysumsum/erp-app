@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 175,
+  "revision": 176,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-002",
-  "current_task": "TASK-020",
+  "current_task": "TASK-021",
   "baseline": {
     "design": "4b4d1695fa6b0ea55cd76952159c686b350a169105d501af4439cdbcdf0da99e",
     "plan": "72cb47409cb93d1139475c72471143658facfb76844b41d9cfeb9740f1a09d4f",
-    "code_commit": "f02bbfe581ad373c38f2fbd18a0693a448d05ae9",
-    "source_fingerprint": "5f9526fa1fb67c47dce7fd98cdf8f799b74780251ede645fec6fb29cb2cfba1e",
+    "code_commit": "71dc12f30a6fcc8f209186ee77e5901fe9dbcb1d",
+    "source_fingerprint": "4c113db1ae6c9f049b5e3f040fafc0f91495c82383ad656e6bcec917e8f21e13",
     "worktree": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1",
     "default_commit": "fd32762f4fa17a5e77aaa7118a9ded2d3ac81e9e",
     "mode_entry_commit": "fd32762f4fa17a5e77aaa7118a9ded2d3ac81e9e"
@@ -25,7 +25,8 @@
       "mysql-socket": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/erp-fulfillment-p0-mysql-r",
       "runtime-and-private-evidence": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime",
       "runtime-policy": "New owned synthetic MySQL26.7.0 socket-only daemon, per-test fresh UUID schemas; no shared/live DB; old tmp runtime absent",
-      "dependencies": "Locked offline npm ci --ignore-scripts; package/lock unchanged; generated test-only crypto rings outside source"
+      "dependencies": "Locked offline npm ci --ignore-scripts; package/lock unchanged; generated test-only crypto rings outside source",
+      "browser-runtime": "Own private sibling browser-server.log / browser-info.json / browser-auth.json (private synthetic token never print); loopback Vite41583/API59594, namespacefulfillment_p0_p1_592180d4_sf_1d102c3562e9; session95136 runtimeprocess, rootPTY2020; closeown runtime afterUI checks."
     },
     "lease_ref": null
   },
@@ -49,8 +50,8 @@
     "TASK-017": "DONE",
     "TASK-018": "DONE",
     "TASK-019": "DONE",
-    "TASK-020": "IN_PROGRESS",
-    "TASK-021": "PENDING",
+    "TASK-020": "DONE",
+    "TASK-021": "IN_PROGRESS",
     "TASK-022": "PENDING",
     "TASK-023": "PENDING",
     "TASK-024": "PENDING",
@@ -4119,6 +4120,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-105-TASK020-CLOSING",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "4c113db1ae6c9f049b5e3f040fafc0f91495c82383ad656e6bcec917e8f21e13",
+      "source_ref": "implementation/42_task020_client_contracts.md#actual-separate-closing-review",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -5827,7 +5840,8 @@
     "implementation/38_task017_reallocation_owner_preparation.md",
     "implementation/39_task018_pick_confirmation_increment.md",
     "implementation/40_task019_cancel_increment.md",
-    "implementation/41_cancel_pick_history_constraint.md"
+    "implementation/41_cancel_pick_history_constraint.md",
+    "implementation/42_task020_client_contracts.md"
   ],
   "defects": [
     {
@@ -5989,5 +6003,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK019developerDONEactualindependent61native+6pure0CHM/frozen5f952;recordatomiccommit. ContinueTASK020clientcontracts/TDD/exactservererrorsandURLcursors thenTASK021–023actualPlaywright/build/fullcoverage/security/latesttargetintegration/exactcandidateCIbeforeDRAFTPR. Preserveallguards/original20s;noP1merge/formalacceptance/liveDB."
+  "next_safe_action": "TASK020actualindependent8units/build/lint/realPlaywrightAPIflows0CHM;atomic020commit thenTASK021Queue/Create/ListactualUI+nativeOrderedprojectionnecessaryderivation+opaqueURLkeyset/realPlaywright. Continue022/023/allP1fullcoverage/security/latesttarget/exactCIbeforeDRAFTPR. Original20s/allguards retained;noP1merge/formal/liveDB. Ownedbrowserruntime retainedfornextUIstage."
 }
