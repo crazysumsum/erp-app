@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1347,
+  "revision": 1353,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
   "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-005",
-  "current_task": "TASK-058",
+  "current_task": "TASK-062",
   "baseline": {
     "design": "17f14331ed4d663663d3f4a8f494df64b8c2799812ad4c91d1e28ac457cf7e29",
     "plan": "b2bf8918cef186d95812c066a2f2a7fbc492f2c7e2b6f4b06256724b1682538c",
-    "code_commit": "26a869f525b91bd16e5e904eb2fd95aa47a49da6",
-    "source_fingerprint": "c990878aa3919706f215afb18a1c64ef85279194e97b7fefd3c4c46c1acb1374",
+    "code_commit": "e9b1bf8add3223347fd78d766d6b7a748d0b993b",
+    "source_fingerprint": "2383feb9f8754c9e6f6f5369edc0855ca159092c1d1564cd07be29553bb61aec",
     "worktree": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app",
     "default_commit": "1e57380e9df8fb7c0563a176921b86fb6e81682b",
     "mode_entry_commit": "e272f5d3ce05d0ca50be42e6d8764f0ef20d3dd1"
@@ -12584,6 +12584,30 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-P4-MAIN1E57380E-INTEGRATION-IMPACT",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "f463f6b673e24e79044aeaab71a4209b07d99f749db7165fbff81dc42504a0ff",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-main1e57380e-r1-integration-impact-reviewer-proof.json; scope connected upstream compatibility/observed native evidence only, no current wholePhase/CI/Gate approval",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P4-RECONCILIATION-READONLY-R3",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/def016_runtime_recovery_review",
+      "reviewed_baseline": "2383feb9f8754c9e6f6f5369edc0855ca159092c1d1564cd07be29553bb61aec",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-task062-reconciliation-r3-closing-reviewer-proof.json SHA6c1e9b3f05bd8a5f4a8da9b6faf304533d20456780856929db34b87c68a7e30a; actual independent18unit/5native, four exact files; scoped only, no fullTask/Phase/Gate approval",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -16568,6 +16592,17 @@
       "subject": "Current planning/path alignment passes; actual full P4 MERGE_READY remains BLOCKED on missing tasks/runs/currentCI/review",
       "status": "FAIL",
       "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/136_main_inventory_integration_and_contract_pin.md; audit SHAac89b835dd30d5d6011f2fa7a45f001c654b9a0869d7193e80169834dc27355c"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "e9b1bf8add3223347fd78d766d6b7a748d0b993b",
+      "spec_baseline": "b2bf8918cef186d95812c066a2f2a7fbc492f2c7e2b6f4b06256724b1682538c",
+      "source_fingerprint": "2383feb9f8754c9e6f6f5369edc0855ca159092c1d1564cd07be29553bb61aec",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-26T02:37:46.794253Z",
+      "subject": "Readonly reconciliation scoped developer verification and actual independent review; metrics/alerts/runbook and fullP4 remain",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/137_readonly_reconciliation_developer_increment.md"
     }
   ],
   "pending_decisions": [
@@ -19797,8 +19832,32 @@
       "kind": "GIT_COMMIT",
       "target": "local-only compatible upstream pin/derived baseline documentation",
       "idempotency_key": "p4-main1e57380e-pin-20261023",
+      "status": "CONFIRMED",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/136_main_inventory_integration_and_contract_pin.md; actual prospective package independentproofa6ce475d; no push/PR/mainmerge Observed actual local commit e9b1bf8add3223347fd78d766d6b7a748d0b993b"
+    },
+    {
+      "id": "ACT-P4-RESTART-OWNED-MYSQL-20261026",
+      "kind": "RUNTIME_START",
+      "target": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/dec029-runtime-37e933d0a9db/mysql-main/data UUID154b50c8-cc62-11f1-83e8-d4284b001f9c socket-only",
+      "idempotency_key": "p4-restart-owned-mysql-20261026-r1",
+      "status": "FAILED",
+      "source_ref": "Actual daemon71339 absent; socket/pidfile absent; original auto.cnf and binary pins verified. Reuse existing data without initialize, schema reset, grants or init-file. Current Sam continueP4/isolatedtest authority. Actual first daemon7113 exited; raw mysql.log identifies missing owned socket directory. Receipt/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-mysql-restart-20261026-r1.json SHAc1d16e39d365f0b51acaabb7007960be3519c02e0e4ed5c255085d4ad797f4ab. Preserve failed outcome; recreate only exact owned socket roots then explicit new attempt."
+    },
+    {
+      "id": "ACT-P4-RESTART-OWNED-MYSQL-20261026-R2",
+      "kind": "RUNTIME_START",
+      "target": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/dec029-runtime-37e933d0a9db/mysql-main/data UUID154b50c8-cc62-11f1-83e8-d4284b001f9c socket-only",
+      "idempotency_key": "p4-restart-owned-mysql-20261026-r2",
+      "status": "CONFIRMED",
+      "source_ref": "Actual daemon71339 absent; socket/pidfile absent; original auto.cnf and binary pins verified. Reuse existing data without initialize, schema reset, grants or init-file. Current Sam continueP4/isolatedtest authority. Actual verified same UUID/MySQL26.7/socket-only after restart, PID7295; /Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-mysql-restart-20261026-r2.json SHAc08f78719328328fe4a1742a992eaf54ed5f422e020dca4d70a45a4ac6ba5ed7"
+    },
+    {
+      "id": "ACT-P4-READONLY-RECONCILIATION-COMMIT-20261026",
+      "kind": "GIT_COMMIT",
+      "target": "local-only independently reviewed readonly reconciliation slice",
+      "idempotency_key": "p4-readonly-reconciliation-20261026",
       "status": "STARTED",
-      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/136_main_inventory_integration_and_contract_pin.md; actual prospective package independentproofa6ce475d; no push/PR/mainmerge"
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/137_readonly_reconciliation_developer_increment.md; exactFP2383feb9f8754c9e6f6f5369edc0855ca159092c1d1564cd07be29553bb61aec; no push/PR/mainmerge"
     }
   ],
   "evidence_files": [
@@ -21085,7 +21144,21 @@
         "ActualnativeRED8ac077e0; firstfixFAIL9f3287dc; green1/full22/server98/browser26; separatefocused1 and scopedproof87a929ab. Not fullTC047/Phase."
       ],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-033",
+      "severity": "HIGH",
+      "status": "CLOSED",
+      "source_ids": [
+        "TASK-062",
+        "TC-051"
+      ],
+      "closure_evidence": [
+        "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/137_readonly_reconciliation_developer_increment.md",
+        "R1/R2 actual false-consistency findings, native queue/route RED mutations, final116server/5native/lint/boundary with exact source; separate R3 actual18/5 closing. No fullTask/Phase approval."
+      ],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Commit reviewed compatible Inventory pin package/report; complete actual outstanding P4 native eligibility/recovery/source and readonly reconciliation/ops. Prepare fresh owned verified TCP/socket namespaces for original Inventory10 (never ambient3306); current required46 developer runs/capacity/restore/currentCI/wholePhase review/unchanged MERGE_READY remain mandatory before authorized main merge."
+  "next_safe_action": "Commit reviewed readonly reconciliation slice. Coordinate unique owner104/Sales105106 unpublished migration names, preserve old applied test ledgers and create fresh schemas, integrate actual latest main and mechanical bindings. Complete TASK062 metrics/alerts/runbook, original P4 remaining implementation/capacity/restore/required checks/currentCI/wholephase independent review and unchanged MERGE_READY before authorized direct main merge; lowCPU serial tests."
 }
