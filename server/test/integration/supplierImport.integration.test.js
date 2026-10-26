@@ -1008,14 +1008,14 @@ integrationTest("TASK-045 (HD-060 3A): an approver who lost the permission after
   assert.equal(await supplierByCode(`G-${tag}`), undefined);
 });
 
-integrationTest("TASK-045: update rows change root fields only, keep blank cells, and treat a pending Supplier as the UI does", async () => {
+integrationTest("TASK-045: update rows change root fields only, keep blank cells, and refuse a significant change to a pending Supplier (DEF-045, HD-140 A)", async () => {
   const owner = await makeUser("up", ["supplier.mgmt"], { withPassword: true });
   const approver = await makeUser("uq", ["supplier.view", "supplier.approval"]);
   const tag = randomUUID().slice(0, 6).toUpperCase();
   const other = await testCurrency("T45 test currency");
   // 兩個 pending（各有申請）同一個 active Supplier，經匯入整出嚟。
   const seed = await readyJob(owner, [
-    { supplierCode: `U1-${tag}`, supplierName: `Update One ${tag}`, defaultCurrencyCode: "HKD", notes: "keep me" },
+    { supplierCode: `U1-${tag}`, supplierName: `Update One ${tag}`, defaultCurrencyCode: "HKD", displayName: "One", notes: "keep me" },
     { supplierCode: `U2-${tag}`, supplierName: `Update Two ${tag}`, defaultCurrencyCode: "HKD" }
   ]);
   await confirmWithApprovalOn(owner, seed.id, { version: seed.version, activationMode: "activate", approverUserId: approver.userId });
@@ -1025,22 +1025,26 @@ integrationTest("TASK-045: update rows change root fields only, keep blank cells
   await execute(active.id);
 
   const update = await readyJob(owner, [
-    { supplierCode: `U1-${tag}`, generalPhone: "+852 2000 0001" },                  // 唔顯著：申請保留
-    { supplierCode: `U2-${tag}`, supplierName: `Update Two Renamed ${tag}` },       // 顯著：申請失效、回 draft
+    // 唔顯著：申請保留。顯著欄位照填返原值（好似重新匯入匯出檔）都唔算改，要靠真 MySQL 讀到名稱先判斷得到。
+    { supplierCode: `U1-${tag}`, supplierName: `Update One ${tag}`, displayName: "One", defaultCurrencyCode: "HKD", generalPhone: "+852 2000 0001" },
+    { supplierCode: `U2-${tag}`, supplierName: `Update Two Renamed ${tag}` },       // 顯著：預檢拒絕，申請保留（HD-140 A）
     { supplierCode: `U3-${tag}`, defaultCurrencyCode: other }                      // 改幣別：要原因
   ], { mode: "upsert" });
   assert.equal((await confirmJob(owner, update.id, { version: update.version, activationMode: "activate" })).status, 200);
   const result = await execute(update.id);
-  assert.equal(result.status, "completed", JSON.stringify(await rowOutcomes(update.id)));
+  assert.equal(result.status, "completed_with_errors", JSON.stringify(await rowOutcomes(update.id)));
+  assert.deepEqual(await rowOutcomes(update.id), [[1, "applied", null], [2, "skipped", "SUPPLIER_IMPORT_PENDING_APPROVAL"], [3, "applied", null]]);
 
   const one = await supplierByCode(`U1-${tag}`);
   assert.deepEqual([one.status, one.general_phone, one.notes, one.supplier_name], ["pending_approval", "+852 2000 0001", "keep me", `Update One ${tag}`],
     "blank cells keep their values; an update never changes the status");
   const [[kept]] = await h.db.query("SELECT status, supplier_version FROM supplier_activation_requests WHERE supplier_id = ?", [one.id]);
   assert.deepEqual([kept.status, Number(kept.supplier_version)], ["pending", Number(one.version)], "the request follows the new version");
+  // 之前（REV-064 I-4）呢列會令申請失效、Supplier 回 draft，而設計話匯入唔改狀態；HD-140 A 改為預檢拒絕。
   const two = await supplierByCode(`U2-${tag}`);
-  const [[invalidated]] = await h.db.query("SELECT status FROM supplier_activation_requests WHERE supplier_id = ?", [two.id]);
-  assert.deepEqual([two.status, invalidated.status], ["draft", "invalidated"], "a significant change invalidates the request (REV-064 I-4)");
+  const [[request]] = await h.db.query("SELECT status FROM supplier_activation_requests WHERE supplier_id = ?", [two.id]);
+  assert.deepEqual([two.status, two.supplier_name, request.status], ["pending_approval", `Update Two ${tag}`, "pending"],
+    "a significant change to a pending Supplier is refused, so its request survives");
   const three = await supplierByCode(`U3-${tag}`);
   assert.deepEqual([three.status, three.default_currency_code, three.display_name], ["active", other, "Three"]);
   const [[audit]] = await h.db.query("SELECT reason FROM supplier_audit_logs WHERE supplier_id = ? AND action = 'supplier.update'", [three.id]);
