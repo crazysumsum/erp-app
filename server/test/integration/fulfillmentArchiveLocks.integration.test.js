@@ -5,7 +5,7 @@ import {setTimeout as delay} from "node:timers/promises";
 import {shipmentFixture} from "../fulfillment/shipmentFixture.js";
 import {up as auditUp} from "../../database/migrations/0098_create_fulfillment_audit_and_exports.js";
 import {up as archiveUp} from "../../database/migrations/0099_create_fulfillment_archives.js";
-import {up as routingUp} from "../../database/migrations/0101_add_fulfillment_archive_routing.js";
+import {up as routingUp} from "../../database/migrations/0105_add_fulfillment_archive_routing.js";
 import {FulfillmentOperationService} from "../../src/modules/fulfillment/FulfillmentOperationService.js";
 import {FulfillmentArchiveLockService} from "../../src/modules/fulfillment/FulfillmentArchiveLockService.js";
 const native=process.env.DB_INTEGRATION_TESTS==="1"?test:test.skip;

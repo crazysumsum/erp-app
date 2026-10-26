@@ -220,7 +220,7 @@
       "server/database/migrations/*_create_fulfillment_archive_mirrors.js",
       "server/database/migrations/*_protect_fulfillment_archive_contracts.js",
       "docs/fulfillment_shipping_management/**",
-      "server/database/migrations/0101_add_fulfillment_archive_routing.js",
+      "server/database/migrations/0105_add_fulfillment_archive_routing.js",
       "server/test/fulfillment/archiveFactsFixture.js",
       "server/test/fulfillment/shipmentFixture.js",
       "server/test/integration/fulfillmentOperationRouting.integration.test.js",
@@ -344,7 +344,7 @@
       "server/database/migrations/*_create_sales_archive_batches.js",
       "server/database/migrations/*_create_sales_archive_tables.js",
       "server/database/migrations/*_protect_sales_archive_immutability.js",
-      "server/database/migrations/0101_add_fulfillment_archive_routing.js"
+      "server/database/migrations/0105_add_fulfillment_archive_routing.js"
     ],
     "shared_resources": [
       "global-migration-sequence",
@@ -377,7 +377,7 @@
       {
         "module_id": "inventory-management",
         "id": "inventory-batch-reserve-release-contract",
-        "version": "observed-main-1e57380e; original Inventory P3 Sales contract preserved byte-for-byte; appended Purchasing DES011/012 not adopted; full original33/currentCI required",
+        "version": "observed-main-78d1e3ee; unchanged Inventory P3 Sales contract; additive Purchasing reversal not adopted; full original33/currentCI and shared consumer regressions required",
         "source": "docs/inventory_management/03_design_spec.md",
         "sha256": "7ee4e5f4b897663e276a966959843417e2e787a8adb30bc47fdd7820d3196193",
         "regression_suites": [

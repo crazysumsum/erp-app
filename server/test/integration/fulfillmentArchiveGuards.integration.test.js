@@ -7,7 +7,7 @@ import {up as shipmentUp} from "../../database/migrations/0096_create_shipments.
 import {up as factsUp} from "../../database/migrations/0097_create_shipment_issues_and_reversals.js";
 import {up as auditUp} from "../../database/migrations/0098_create_fulfillment_audit_and_exports.js";
 import {up as archiveUp,FULFILLMENT_ARCHIVE_TABLES} from "../../database/migrations/0099_create_fulfillment_archives.js";
-import {up as guardsUp} from "../../database/migrations/0102_protect_fulfillment_archive_contracts.js";
+import {up as guardsUp} from "../../database/migrations/0106_protect_fulfillment_archive_contracts.js";
 import {inspectFulfillmentArchiveProtection} from "../../src/modules/fulfillment/fulfillmentArchiveProtectionSchema.js";
 import {hashFulfillmentArchiveRow} from "../../src/modules/fulfillment/fulfillmentArchiveSchema.js";
 const native=process.env.DB_INTEGRATION_TESTS==="1"?test:test.skip;

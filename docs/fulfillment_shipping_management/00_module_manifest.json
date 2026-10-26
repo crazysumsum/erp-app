@@ -85,7 +85,7 @@
       "client/test/**/shipment*.test.js",
       "client/e2e/fulfillment-shipping-management/**",
       "server/src/services/fulfillment/FulfillmentOpenMatterService.js",
-      "server/database/migrations/0101_add_fulfillment_archive_routing.js"
+      "server/database/migrations/0105_add_fulfillment_archive_routing.js"
     ],
     "approval_required_paths": [
       "server/database/migrations/**",
@@ -146,7 +146,7 @@
       "server/database/migrations/*_create_fulfillment_archive_prerequisites.js",
       "server/database/migrations/*_create_fulfillment_archive_mirrors.js",
       "server/database/migrations/*_protect_fulfillment_archive_contracts.js",
-      "server/database/migrations/0101_add_fulfillment_archive_routing.js"
+      "server/database/migrations/0105_add_fulfillment_archive_routing.js"
     ],
     "shared_resources": [
       "global-migration-sequence",

@@ -54,8 +54,8 @@ const requiredVersions=Object.freeze([
  "migrations/0097_create_shipment_issues_and_reversals.js",
  "migrations/0098_create_fulfillment_audit_and_exports.js",
  "migrations/0099_create_fulfillment_archives.js",
- "migrations/0101_add_fulfillment_archive_routing.js",
- "migrations/0102_protect_fulfillment_archive_contracts.js"
+ "migrations/0105_add_fulfillment_archive_routing.js",
+ "migrations/0106_protect_fulfillment_archive_contracts.js"
 ]);
 const refused=reasonCode=>({ready:false,reasonCode});
 export async function inspectFulfillmentArchiveReadiness(tx){

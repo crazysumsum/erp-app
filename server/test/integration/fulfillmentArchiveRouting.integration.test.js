@@ -6,7 +6,7 @@ import {up as shipmentUp} from "../../database/migrations/0096_create_shipments.
 import {up as factsUp} from "../../database/migrations/0097_create_shipment_issues_and_reversals.js";
 import {up as auditUp} from "../../database/migrations/0098_create_fulfillment_audit_and_exports.js";
 import {up as archiveUp,FULFILLMENT_ARCHIVE_TABLES} from "../../database/migrations/0099_create_fulfillment_archives.js";
-import {up as routingUp} from "../../database/migrations/0101_add_fulfillment_archive_routing.js";
+import {up as routingUp} from "../../database/migrations/0105_add_fulfillment_archive_routing.js";
 const native=process.env.DB_INTEGRATION_TESTS==="1"?test:test.skip;
 async function setup(t){const f=await fixture(t);for(const up of [shipmentUp,factsUp,auditUp,archiveUp])await up(f.db);return f;}
 function operation(f,extra={}){return {event_id:randomUUID(),operation_type:"CREATE",target_type:"FULFILLMENT",target_id:null,payload_hash:"a".repeat(64),status:"IN_PROGRESS",lease_owner:"owned-route-test",lease_expires_at:f.s.now+60000,attempt_count:1,correlation_id:randomUUID(),created_at:f.s.now,updated_at:f.s.now,...extra};}
