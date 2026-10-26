@@ -358,8 +358,11 @@ PHASE-001 (`uat/uat-phase-001.spec.js`, 25 cases). Local developer run on 2026-1
 | `test.fixme`, waiting on downstream modules (HD-124 A, HD-131 A) | UAT-005; the Supplier steps of UAT-016, 024, 050 and 051 run first. |
 
 PHASE-002 (`uat/uat-phase-002.spec.js`, 9 cases): approval and Supplier settings. Local developer run on 2026-10-26, which is not a formal UAT execution:
-- **Result:** all 9 pass: UAT-010, 011, 012, 013, 014, 015, 040, 041 and 052.
+- **Result:** all 9 pass: UAT-010, 011, 012, 013, 014, 015, 040, 041 and 052. The full UAT config gives 29 passed and the 5 PHASE-001 `test.fixme` cases skipped.
+- **UAT-014 and DEF-044:** before PR #283, UAT-014 failed at the invalidation warning (DEF-044, found by REV-120). It passes on main after that fix.
+- **Where the rejection reason shows:** UAT-013 reads it in the detail's 變更紀錄 (Audit) tab, the only place it is shown.
+- **Known limit:** a requester who also holds `supplier.approval` would be needed to prove that the approver list leaves out the requester. The 07 §2 roles have no such user. The server still refuses self-approval, which UAT-011 checks (`APPROVER_MUST_DIFFER`).
 - **Approval policy setup:** the policy is a global setting. The cases set it in the database as a precondition and turn it off after each test, so PHASE-001 is unaffected. UAT-015 and UAT-041 change it through the Settings page, because that change is what they verify.
-- **Defects found here:** writing these cases found DEF-042 (no way to submit an existing Draft from the detail) and DEF-043 (the requester could not withdraw). Both were fixed in PR #282 before this run.
+- **Defects found here:** writing these cases found DEF-042 (no way to submit an existing Draft from the detail) and DEF-043 (the requester could not withdraw), fixed in PR #282. REV-120 found DEF-044 (no invalidation warning or notice), fixed in PR #283.
 
 Phases 003, 004 and the cross-phase cases are not written yet. UAT-054 is the only case that intercepts a request in the browser: a slow response and a 503 cannot be produced safely on a real server.

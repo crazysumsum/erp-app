@@ -168,7 +168,7 @@ test("@uat UAT-014 an approval-significant edit invalidates the Pending request;
   await clerkPage.goto(`/suppliers/${supplier.id}`);
   await clerkPage.getByRole("button", { name: "編輯一般資料" }).click();
   // 設計 §7.4：修改待審批嘅 Supplier 之前講明原申請會失效；儲存之後講明已經失效（DEF-044）。
-  await expect(clerkPage.getByText("此供應商正在審批中，修改名稱、Code、幣別或付款條件會令原申請失效")).toBeVisible();
+  await expect(clerkPage.getByText("此供應商正在審批中，修改 Code、名稱、顯示名稱、幣別、付款條件或識別資料會令原申請失效")).toBeVisible();
   await clerkPage.getByLabel("Supplier Name *").fill(`${supplier.supplierName} renamed`);
   await clerkPage.getByRole("button", { name: "儲存一般資料" }).click();
   await expect(clerkPage.getByText("原審批申請已失效，供應商回到草稿，需要重新提交審批")).toBeVisible();
