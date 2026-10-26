@@ -14,9 +14,16 @@ vi.mock("@/services/supplierBank.js", () => ({
   service: { name: "supplierBank" }
 }));
 vi.mock("@/framework/ui/notify.js", () => ({ notifyError: vi.fn(), notifySuccess: vi.fn() }));
+vi.mock("@/services/supplierApproval.js", () => ({
+  default: { withdraw: vi.fn(), activationPolicy: vi.fn().mockResolvedValue({ requireActivationApproval: false }), eligibleApprovers: vi.fn() },
+  service: { name: "supplierApproval" }
+}));
+vi.mock("@/framework/ui/confirm.js", () => ({ confirm: vi.fn() }));
 
 import supplierService from "@/services/supplier.js";
 import supplierBankService from "@/services/supplierBank.js";
+import supplierApprovalService from "@/services/supplierApproval.js";
+import { confirm } from "@/framework/ui/confirm.js";
 import SupplierDetailPage, { page } from "@/pages/suppliers/SupplierDetailPage.vue";
 import { useSessionStore } from "@/stores/session.js";
 
@@ -74,6 +81,26 @@ describe("pages/suppliers/SupplierDetailPage.vue", () => {
   // restoreAllMocks 唔止清紀錄：下面有 test spy 住 window.confirm，唔還原嘅話會漏去
   // 後面嘅 test，令佢哋喺一個唔係自己設定嘅環境跑。
   beforeEach(() => { setActivePinia(createPinia()); document.body.innerHTML = ""; vi.clearAllMocks(); vi.restoreAllMocks(); });
+
+  it("a pending Supplier names its approver, and only its requester can withdraw from the detail (DEF-043, HD-138 A)", async () => {
+    const pending = { ...DETAIL, status: "pending_approval", pendingApproval: { requestId: 31, version: 4, requestedAt: 100,
+      requester: { id: 1, username: "clerk", displayName: "Clerk One" }, assignedApprover: { id: 2, username: "appr", displayName: "Approver A" } } };
+    const mine = await mountPage({ permissions: ["supplier.view", "supplier.mgmt"], detail: pending });
+    expect(mine.body.find('[data-testid="pending-approval"]').text()).toContain("待 Approver A 審批（Clerk One 提交）");
+    confirm.mockResolvedValue(true);
+    supplierApprovalService.withdraw.mockResolvedValue({ supplierStatus: "draft" });
+    await mine.body.findAll("button").find((button) => button.text() === "撤回審批").trigger("click");
+    await flushPromises();
+    expect(supplierApprovalService.withdraw).toHaveBeenCalledWith(7, { requestId: 31, version: 4 });
+    expect(supplierService.getById.mock.calls.length).toBeGreaterThan(1);
+    mine.wrapper.unmount();
+    document.body.innerHTML = "";
+
+    const someoneElse = { ...pending, pendingApproval: { ...pending.pendingApproval, requester: { id: 9, username: "other", displayName: "Other" } } };
+    const theirs = await mountPage({ permissions: ["supplier.view", "supplier.mgmt"], detail: someoneElse });
+    expect(theirs.body.findAll("button").some((button) => button.text() === "撤回審批")).toBe(false);
+    expect(theirs.body.find('[data-testid="pending-approval"]').exists()).toBe(true);
+  });
 
   it("requires supplier.view and shows status, completeness and masked bank data", async () => {
     expect(page.requires.permissions).toEqual(["supplier.view"]);

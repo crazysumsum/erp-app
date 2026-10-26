@@ -952,6 +952,7 @@ export class SupplierAdminService {
     // 經 provider 嘅 history 讀（包括已停用），唔直接讀 Business Master 嘅表（DEF-038、HD-130 A）。
     const term = row.default_payment_term_id === null ? null : await this.businessMaster.getPaymentTermHistory(Number(row.default_payment_term_id));
     return toSupplierDetailResponse(row, {
+      pendingApproval: row.status === "pending_approval" ? await this.#pendingApproval(id) : null,
       defaultPaymentTerm: term ? { id: Number(term.id), code: term.code, name: term.name, status: term.status } : null,
       addresses,
       contacts,
@@ -964,6 +965,31 @@ export class SupplierAdminService {
         hasBankAccount: await this.#hasActiveBankAccount(id)
       })
     });
+  }
+
+  /** DEF-043（HD-138 A）：提交人喺詳情就撤回得，要知申請 id、version 同提交人；審批人只係顯示。 */
+  async #pendingApproval(supplierId) {
+    const [[request]] = await this.database.query(
+      `SELECT r.id, r.version, r.requested_at, r.requested_by, requester.username AS requester_username,
+              requester.display_name AS requester_display_name, r.assigned_approver_id,
+              approver.username AS approver_username, approver.display_name AS approver_display_name
+         FROM supplier_activation_requests r
+         LEFT JOIN users requester ON requester.id = r.requested_by
+         LEFT JOIN users approver ON approver.id = r.assigned_approver_id
+        WHERE r.supplier_id = ? AND r.status = 'pending'
+        ORDER BY r.id DESC LIMIT 1`,
+      [supplierId]
+    );
+    if (!request) return null;
+    const user = (userId, username, displayName) => (userId === null || userId === undefined ? null
+      : { id: Number(userId), username: String(username ?? ""), displayName: String(displayName ?? "") });
+    return {
+      requestId: Number(request.id),
+      version: Number(request.version),
+      requestedAt: Number(request.requested_at),
+      requester: user(request.requested_by, request.requester_username, request.requester_display_name),
+      assignedApprover: user(request.assigned_approver_id, request.approver_username, request.approver_display_name)
+    };
   }
 
   async getSupplierCompleteness({ actorId, claimedRoles, claimedPermissions, id }) {

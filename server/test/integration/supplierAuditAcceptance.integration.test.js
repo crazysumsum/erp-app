@@ -689,3 +689,31 @@ integrationTest("detail names the default payment term by code and name, still a
   assert.equal(inactive.defaultPaymentTermId, termId);
   assert.equal((await detail(withoutTerm)).defaultPaymentTerm, null);
 });
+
+integrationTest("a pending Supplier's detail names its request, requester and approver, so the requester can withdraw from the detail; other statuses carry null (DEF-043, HD-138 A)", async () => {
+  const t = tag();
+  await h.db.execute("UPDATE supplier_settings SET require_activation_approval = 1, version = version + 1 WHERE id = 1");
+  try {
+    const created = await h.send(h.users.mgmt, h.route("POST /api/v1/suppliers/create"),
+      { body: { supplierCode: `PEND-${t}`, supplierName: `Pending ${t}`, defaultCurrencyCode: "HKD", activate: true, approverUserId: h.users.approver.userId } });
+    assert.equal(created.status, 201, created.text);
+    const id = created.json.data.id;
+    h.supplierIds.push(id);
+    const detail = async () => (await h.send(h.users.view, h.route("GET /api/v1/suppliers/:id"), { ids: { id } })).json.data;
+    const pending = (await detail()).pendingApproval;
+    const [[request]] = await h.db.query("SELECT id, version FROM supplier_activation_requests WHERE supplier_id = ? AND status = 'pending'", [id]);
+    assert.equal(pending.requestId, Number(request.id));
+    assert.equal(pending.version, Number(request.version));
+    assert.deepEqual([pending.requester.id, pending.requester.username], [h.users.mgmt.userId, h.users.mgmt.username]);
+    assert.deepEqual([pending.assignedApprover.id, pending.assignedApprover.username], [h.users.approver.userId, h.users.approver.username]);
+    assert.ok(pending.requestedAt > 0);
+
+    const withdrawn = await h.send(h.users.mgmt, h.route("POST /api/v1/suppliers/:id/approval/withdraw"),
+      { ids: { id }, body: { requestId: pending.requestId, version: pending.version } });
+    assert.equal(withdrawn.status, 200, withdrawn.text);
+    const after = await detail();
+    assert.deepEqual([after.status, after.pendingApproval], ["draft", null]);
+  } finally {
+    await h.db.execute("UPDATE supplier_settings SET require_activation_approval = 0, version = version + 1 WHERE id = 1");
+  }
+});
