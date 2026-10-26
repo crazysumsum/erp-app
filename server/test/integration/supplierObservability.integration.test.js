@@ -48,3 +48,34 @@ integrationTest("TASK-050 (HD-083): the metrics read pending approvals, waiting 
   assert.equal(after.imports.stalled - before.imports.stalled, 2, "the expired running lease and the released validating job");
   assert.equal(after.imports.oldestWaitingMs, Math.max(before.imports.oldestWaitingMs ?? 0, 60 * MINUTE));
 });
+
+integrationTest("DEF-047 (HD-142 A): the bank counts read the audit window and count a system-admin actor by the role it holds now", async (t) => {
+  const connection = await mysql.createConnection({ host: process.env.DB_HOST, port: Number(process.env.DB_PORT),
+    user: process.env.DB_USER, password: process.env.DB_PASSWORD, database: process.env.DB_NAME });
+  await connection.beginTransaction();
+  t.after(async () => { await connection.rollback(); await connection.end(); });
+  const now = Date.now();
+  const before = await collectSupplierMetrics(connection, now);
+
+  const user = async (name) => (await connection.execute(
+    "INSERT INTO users (username, password_hash, display_name, created_at, updated_at) VALUES (?, 'x', ?, ?, ?)",
+    [`${name}-${now}`, name, now, now]))[0].insertId;
+  const admin = await user("met-admin");
+  const officer = await user("met-officer");
+  await connection.execute("INSERT INTO user_roles (user_id, role_id) SELECT ?, id FROM roles WHERE name = 'system-admin'", [admin]);
+  const audit = (actor, action, occurredAt) => connection.execute(
+    `INSERT INTO supplier_audit_logs (occurred_at, actor_user_id, actor_username, action, target_type, target_id, supplier_id, target_label, detail)
+     VALUES (?, ?, 'metrics', ?, 'bank', 1, NULL, 'Metrics Bank', JSON_OBJECT())`, [occurredAt, actor, action]);
+  await audit(admin, "supplier.bank.reveal", now - MINUTE);
+  await audit(admin, "supplier.bank.update", now - MINUTE);
+  await audit(officer, "supplier.bank.reveal", now - MINUTE);
+  await audit(officer, "supplier.bank.deactivate", now - 2 * MINUTE);
+  // 窗口外、同唔係 bank 嘅動作都唔計。
+  await audit(admin, "supplier.bank.reveal", now - 6 * MINUTE);
+  await audit(admin, "supplier.update", now - MINUTE);
+
+  const after = await collectSupplierMetrics(connection, now);
+  assert.equal(after.bank.reveals - before.bank.reveals, 2);
+  assert.equal(after.bank.changes - before.bank.changes, 2);
+  assert.equal(after.bank.privilegedUses - before.bank.privilegedUses, 2, "the admin's reveal and update, not the officer's");
+});

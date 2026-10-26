@@ -1,3 +1,4 @@
+import { SYSTEM_ADMIN_ROLE } from "../authorization/adminGuard.js";
 import { assertActorFresh } from "../authorization/directoryLookups.js";
 import { SupplierAuditLogService } from "./SupplierAuditLogService.js";
 import {
@@ -130,6 +131,18 @@ export class SupplierBankService {
     this.crypto = crypto;
     this.authorize = authorize;
     this.audit = audit ?? new SupplierAuditLogService({ database, logger, time });
+  }
+
+  /**
+   * SEC-014、設計 §4（system-admin）、§12.4（DEF-047、HD-142 A）：break-glass 帳號每次查看或者改銀行資料都要告警。
+   * Commit 咗先報，失敗咗嘅唔算；角色係 `authorize` 啱啱由資料庫讀返嚟嘅，唔係 token 入面嘅聲稱。
+   * Context 只有 ID 同動作，冇任何帳號資料（SEC-011）。
+   */
+  #reportPrivilegedUse(actor, action, input, bankAccountId) {
+    if (!actor?.roles?.includes(SYSTEM_ADMIN_ROLE)) return;
+    void this.logger?.warn?.("supplier.bank.privileged_use", "System administrator used Supplier bank data", {
+      action, supplierId: Number(input.supplierId), bankAccountId: Number(bankAccountId), actorUserId: Number(actor.id), requestId: input.requestId ?? null
+    });
   }
 
   // REV-035 L：403 唔係 409。一個從來冇擁有過呢個權限嘅 caller 唔係撞到一個衝突，
@@ -327,8 +340,9 @@ export class SupplierBankService {
     const reason = requireReason(input.reason, "新增銀行帳戶必須填寫原因");
     // 明文喺呢度入嚟，喺呢個 method 結束之前唔再出現喺任何地方。
     const cryptoContext = this.crypto.newCryptoContext();
-    return retryOnceOnDeadlock(() => this.database.withTransaction(async (connection) => {
-      const actor = await this.authorize(connection, input);
+    let actor;
+    const result = await retryOnceOnDeadlock(() => this.database.withTransaction(async (connection) => {
+      actor = await this.authorize(connection, input);
       this.#assertMay(actor, BANK_WRITE_PERMISSION, "你目前沒有銀行資料管理權限");
       await this.#supplierForUpdate(connection, input.supplierId);
 
@@ -380,6 +394,8 @@ export class SupplierBankService {
       });
       return { ...projected, warnings };
     }), { logger: this.logger, operation: "supplier.bank.create", requestId: input.requestId });
+    this.#reportPrivilegedUse(actor, "supplier.bank.create", input, result.id);
+    return result;
   }
 
   /**
@@ -391,8 +407,9 @@ export class SupplierBankService {
     const details = normalizeBankInput(input, { accountNumberRequired: false });
     const reason = requireReason(input.reason, "修改銀行帳戶必須填寫原因");
     const changingAccount = input.accountNumber !== undefined && input.accountNumber !== null;
-    return retryOnceOnDeadlock(() => this.database.withTransaction(async (connection) => {
-      const actor = await this.authorize(connection, input);
+    let actor;
+    const result = await retryOnceOnDeadlock(() => this.database.withTransaction(async (connection) => {
+      actor = await this.authorize(connection, input);
       this.#assertMay(actor, BANK_WRITE_PERMISSION, "你目前沒有銀行資料管理權限");
       await this.#supplierForUpdate(connection, input.supplierId);
       const current = await this.#rowForUpdate(connection, input.supplierId, input.bankAccountId);
@@ -452,6 +469,8 @@ export class SupplierBankService {
       });
       return { ...projected, warnings };
     }), { logger: this.logger, operation: "supplier.bank.update", requestId: input.requestId });
+    this.#reportPrivilegedUse(actor, "supplier.bank.update", input, result.id);
+    return result;
   }
 
   /**
@@ -460,8 +479,9 @@ export class SupplierBankService {
    */
   async setDefault(input) {
     const reason = requireReason(input.reason, "更改預設銀行帳戶必須填寫原因");
-    return retryOnceOnDeadlock(() => this.database.withTransaction(async (connection) => {
-      const actor = await this.authorize(connection, input);
+    let actor;
+    const result = await retryOnceOnDeadlock(() => this.database.withTransaction(async (connection) => {
+      actor = await this.authorize(connection, input);
       this.#assertMay(actor, BANK_WRITE_PERMISSION, "你目前沒有銀行資料管理權限");
       await this.#supplierForUpdate(connection, input.supplierId);
       await this.#activeRowsForUpdate(connection, input.supplierId);
@@ -497,6 +517,8 @@ export class SupplierBankService {
       });
       return projected;
     }), { logger: this.logger, operation: "supplier.bank.setDefault", requestId: input.requestId });
+    this.#reportPrivilegedUse(actor, "supplier.bank.default", input, result.id);
+    return result;
   }
 
   /**
@@ -506,8 +528,9 @@ export class SupplierBankService {
    */
   async deactivate(input) {
     const reason = requireReason(input.reason, "停用銀行帳戶必須填寫原因");
-    return retryOnceOnDeadlock(() => this.database.withTransaction(async (connection) => {
-      const actor = await this.authorize(connection, input);
+    let actor;
+    const result = await retryOnceOnDeadlock(() => this.database.withTransaction(async (connection) => {
+      actor = await this.authorize(connection, input);
       this.#assertMay(actor, BANK_WRITE_PERMISSION, "你目前沒有銀行資料管理權限");
       await this.#supplierForUpdate(connection, input.supplierId);
       const current = await this.#rowForUpdate(connection, input.supplierId, input.bankAccountId);
@@ -543,6 +566,8 @@ export class SupplierBankService {
       });
       return projected;
     }), { logger: this.logger, operation: "supplier.bank.deactivate", requestId: input.requestId });
+    this.#reportPrivilegedUse(actor, "supplier.bank.deactivate", input, result.id);
+    return result;
   }
 
   /**
@@ -556,8 +581,9 @@ export class SupplierBankService {
   async reveal(input) {
     const reason = requireReason(input.reason, "查看完整帳號必須填寫原因");
     let plaintext = null;
+    let actor;
     await this.database.withTransaction(async (connection) => {
-      const actor = await this.authorize(connection, input);
+      actor = await this.authorize(connection, input);
       this.#assertMay(actor, BANK_VIEW_PERMISSION, "你目前沒有銀行資料查看權限");
       const [[row]] = await connection.query(
         `SELECT id, supplier_id, bank_name, crypto_context, account_ciphertext, account_iv,
@@ -609,6 +635,7 @@ export class SupplierBankService {
       plaintext = revealed;
     });
     // 只有喺 withTransaction resolve 之後先到呢度 —— 即係 audit 已經 commit。
+    this.#reportPrivilegedUse(actor, "supplier.bank.reveal", input, Number(input.bankAccountId));
     return { id: Number(input.bankAccountId), accountNumber: plaintext, revealedAt: this.time.nowMs() };
   }
 }

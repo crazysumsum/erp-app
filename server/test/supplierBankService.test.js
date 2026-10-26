@@ -60,7 +60,7 @@ function wrappedDuplicate(constraint) {
   return new MySqlDatabaseOperationError("MySQL database execute failed", { cause: driver });
 }
 
-function harness({ row = bankRow(), duplicates = [], outsideRing = [], statementFails = null, permissions = ["supplier.view", "supplier.bank.view", "supplier.bank.mgmt"], crypto = realCrypto(), sealRow = null } = {}) {
+function harness({ row = bankRow(), duplicates = [], outsideRing = [], statementFails = null, permissions = ["supplier.view", "supplier.bank.view", "supplier.bank.mgmt"], crypto = realCrypto(), sealRow = null, roles = [] } = {}) {
   const events = [];
   const current = row;
   const connection = {
@@ -108,7 +108,7 @@ function harness({ row = bankRow(), duplicates = [], outsideRing = [], statement
     logger: { warn() {} },
     time: { nowMs: () => 200 },
     crypto,
-    authorize: async () => ({ id: 1, username: "tester", permissions }),
+    authorize: async () => ({ id: 1, username: "tester", permissions, roles }),
     audit: { async record(txn, entry) { audited.push(entry); events.push(["audit", entry.action]); } }
   });
   return { service, events, audited, connection, crypto };
@@ -317,6 +317,45 @@ test("deactivating clears the default so a later reactivation cannot silently re
   const update = events.find(([kind, sql]) => kind === "execute" && sql.includes("UPDATE supplier_bank_accounts"));
   assert.ok(update[1].includes("is_default = 0") && update[1].includes("status = ?"));
   assert.deepEqual(audited.at(-1).detail.after, { status: "inactive", isDefault: false });
+});
+
+test("DEF-047 (HD-142 A): every bank reveal and write by a system-admin is reported once it commits, with ids only", async () => {
+  const crypto = realCrypto();
+  const sealed = crypto.encryptAccountNumber({ supplierId: 7, cryptoContext: "ctx-41", accountNumber: ACCOUNT });
+  const sealRow = { account_ciphertext: sealed.ciphertext, account_iv: sealed.iv, account_auth_tag: sealed.authTag, encryption_key_id: sealed.encryptionKeyId };
+  const run = async (roles, call) => {
+    const { service } = harness({ crypto, sealRow, roles });
+    const warned = [];
+    service.logger = { warn: (...args) => warned.push(args), error() {} };
+    await call(service);
+    return warned;
+  };
+  const calls = {
+    "supplier.bank.create": (service) => service.create({ ...actor, ...bankDetails, supplierId: 7, accountNumber: ACCOUNT, reason: "break-glass 新增帳戶原因" }),
+    "supplier.bank.update": (service) => service.update({ ...actor, ...bankDetails, supplierId: 7, bankAccountId: 41, version: 1, reason: "break-glass 修改帳戶原因" }),
+    "supplier.bank.default": (service) => service.setDefault({ ...actor, supplierId: 7, bankAccountId: 41, version: 1, reason: "break-glass 預設帳戶原因" }),
+    "supplier.bank.deactivate": (service) => service.deactivate({ ...actor, supplierId: 7, bankAccountId: 41, version: 1, reason: "break-glass 停用帳戶原因" }),
+    "supplier.bank.reveal": (service) => service.reveal({ ...actor, supplierId: 7, bankAccountId: 41, reason: "break-glass 查看帳號原因" })
+  };
+  for (const [action, call] of Object.entries(calls)) {
+    const warned = await run(["system-admin"], call);
+    assert.equal(warned.length, 1, `${action} by a system-admin is reported`);
+    const [event, , context] = warned[0];
+    assert.equal(event, "supplier.bank.privileged_use");
+    assert.deepEqual(context, { action, supplierId: 7, bankAccountId: 41, actorUserId: 1, requestId: "req-1" });
+    assert.deepEqual(await run(["supplier-bank-officer"], call), [], `${action} by an ordinary role is not`);
+  }
+  for (const value of [ACCOUNT, NORMALIZED]) {
+    assert.ok(!JSON.stringify(await run(["system-admin"], calls["supplier.bank.reveal"])).includes(value), "no account data in the report");
+  }
+});
+
+test("DEF-047: a system-admin bank operation that fails is not reported", async () => {
+  const { service } = harness({ roles: ["system-admin"], statementFails: { on: "INSERT INTO supplier_bank_accounts", constraint: "uq_supplier_bank_blind_index" } });
+  const warned = [];
+  service.logger = { warn: (...args) => warned.push(args), error() {} };
+  await assert.rejects(() => service.create({ ...actor, ...bankDetails, supplierId: 7, accountNumber: ACCOUNT, reason: "break-glass 新增帳戶原因" }));
+  assert.deepEqual(warned.filter(([event]) => event === "supplier.bank.privileged_use"), []);
 });
 
 test("a bank account belonging to another Supplier is not found rather than refused", async () => {
