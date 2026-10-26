@@ -297,6 +297,19 @@ Found by UAT-052. Only the requester can withdraw a Pending request, and the 「
 - **Detail page:** it shows 「待 X 審批（Y 提交）」. Only the requester gets 「撤回審批」, which calls the existing withdraw API; the server still checks that the caller is the requester.
 - **Tests:** an integration test (fields, withdraw from those values, then `null`) and a component test (shown to the requester only). On the real backend, UAT-052 runs end to end: withdraw, resubmit, reassign with a reason, the old approver blocked, the new approver approves.
 
+## DEF-044 — MEDIUM
+
+Found by REV-120 (H-2) on UAT-014. Design §7.4 says 「Pending 進行 approval-significant 修改前提示原申請會失效」, and UAT-014's Required Evidence includes 「失效提示」. The UI shows neither:
+- **Before the save:** editing a Pending Supplier gives no warning.
+- **After the save:** the save shows only 「…的一般資料已更新」, while the Supplier silently returns to Draft. The server already returns `approvalInvalidated: true`, but the client never reads it.
+- **Significant fields:** Code, name, display name, currency and payment term (`APPROVAL_SIGNIFICANT_COLUMNS`), and identifier changes.
+- **Effect:** UAT-014 now fails at its warning step. **Decision required (HD-139).**
+
+**Fixed under HD-139 A (client only).** No server, schema or API change: the server already returned `approvalInvalidated`.
+- **Before the edit:** while the Supplier is `pending_approval`, the general editor, the Supplier Code dialog and the identifier create, edit and delete dialogs show 「此供應商正在審批中，修改 Code、名稱、顯示名稱、幣別、付款條件或識別資料會令原申請失效」.
+- **After the save:** when the response carries `approvalInvalidated: true`, the success message adds 「原審批申請已失效，供應商回到草稿，需要重新提交審批」. A save that invalidated nothing keeps the plain message.
+- **Tests:** component tests in `editor.test.js`, `identifier.test.js` and `detail.test.js` fail on main's components and pass on the fix; four mutants (wiring dropped, flag ignored, warning always on, panel warning off) are each killed. On the real backend UAT PHASE-002 passes 9 of 9, UAT-014 included.
+
 ## HD-116 A: dispositions (2026-10-21)
 
 Fixed in this change:
