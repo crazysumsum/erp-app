@@ -202,6 +202,13 @@ Found while writing the UAT PHASE-001 browser tests (HD-124 A). FR-PARTY-001 (Mu
   - The migration convergence and adding-Supplier cases (TC-002, TC-006) and Audit coverage (TC-103).
   - Panel vitest.
   - UAT-048 now passes on the real backend.
+- **REV-118 follow-ups:**
+  - Locking reads, so two creates at the same time cannot share an order.
+  - Tied rows are renumbered before a move.
+  - Only the moved row's version changes; the neighbour is recorded in the Audit metadata.
+  - A startup case refuses a deployment without 0103.
+  - The manual rollback is written in 0103's header.
+  - The list reloads after a refused move.
 
 ## DEF-038 — MEDIUM
 
