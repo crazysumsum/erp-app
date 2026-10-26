@@ -330,6 +330,38 @@ Found by REV-121 (I-1); pre-existing, not caused by DEF-044's fix. A CSV import 
   - only the first changed column reported;
   - the payment-term column misnamed.
 
+## DEF-046 — LOW
+
+Found by UAT-028. Design §7.5 asks that the default-switch wording state that the old default is cancelled. The confirmation in `SupplierBankPanel.vue` writes 「原本嘅預設銀行帳戶會**同時被取消**」 inside a Vue template, and Vue does not render Markdown. The user therefore sees the literal asterisks.
+- **Effect:** UAT-028 fails at the wording step. The switch itself works: exactly one active default remains, and the change is audited.
+- **Decision required (HD-141).**
+
+**Fixed under HD-141 A.**
+- **Fix:** the phrase is rendered as `<strong>同時被取消</strong>`.
+- **Test:** the component test in `bank.test.js` now asserts the full sentence, no `**`, and the emphasised phrase. Before the fix it accepted either 「原本嘅預設」 or 「取消」, which is how the asterisks got through.
+- **Result:** on the real backend, UAT-028 passes.
+
+## DEF-047 — MEDIUM
+
+Found while writing UAT-030. SEC-014 and design §4 (system-admin) say that a `system-admin` bank reveal or write still goes through the same re-authentication, audit **and alert** controls. UAT-030 asks for alert evidence.
+- **Design §12.4** lists bank reveal and change counts and unauthorized attempts as metrics, with critical alerts for integrity or key errors. Only the integrity and key-error logs exist (`supplier.bank.integrity_failed` and `supplier.bank.key_unavailable`). `supplierMetrics.js` reports approvals and imports only.
+- **Effect:** no alert or metric signals a break-glass bank reveal or change. The Audit row records it. The request log records each bank route and status code, without the actor, so §12.4's counts could be derived from it, but nothing derives them. UAT-030 fails at its alert step; its other steps pass.
+- **Decision required (HD-142).**
+
+**Fixed under HD-142 A.**
+- **Log event:** every committed bank reveal, create, update, default switch or deactivation by an actor holding `system-admin` writes a warn-level `supplier.bank.privileged_use` system log event.
+  - Its context is `action`, `supplierId`, `bankAccountId`, `actorUserId` and `requestId`, and nothing else.
+  - The role check uses the roles that `authorize` has just read from the database, not the token's claim.
+  - A failed operation is not reported.
+- **Metrics:** the Supplier metrics job's `supplier.metrics` line gains a `bank` section: `windowMs`, `reveals`, `changes` and `privilegedUses`.
+  - The counts cover the job's five-minute window. They are read from the Audit log through its `(action, occurred_at)` index, and system-admin is judged by the role the actor holds now.
+  - Any privileged use raises `supplier.alert.bank_privileged_use` at warn level.
+- **Denied attempts** are the bank routes' 403s in the request log, like the module's other API error counts.
+- **Tests:**
+  - Unit tests cover each of the five operations by a system-admin, the same calls by an ordinary role, a failed operation, the alert, and the job's log lines. An integration test on real MySQL covers the window, the actions counted and the role join.
+  - Seven mutants are killed, among them: no report on update or on reveal, everyone reported, reporting inside the transaction, no alert, the role join inverted, and the window widened.
+  - On the real backend, UAT-030 passes, including its alert step.
+
 ## HD-116 A: dispositions (2026-10-21)
 
 Fixed in this change:
