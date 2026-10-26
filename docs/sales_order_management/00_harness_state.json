@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1387,
+  "revision": 1389,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "10e658c43562f4d07aeeac9486bdc9ba46bb613e99f8813cf3997bde6b1d073d",
     "plan": "b52e2746d16e4440f6d7dd33b76de0ff444a8234cbd5b5a28183210958209b41",
-    "code_commit": "68dd377e847ea2db00a34f50296344284597a968",
-    "source_fingerprint": "cedb124877bc545c535b4332fef9ced3865aa6935435d6ccd307880280c1fadb",
+    "code_commit": "478471c0ff0a20668dc1b3f734dd56132e6b8033",
+    "source_fingerprint": "b81c64e7e5d736bfea8c52d3721b2ff0ff439153b3ba236ff0ebedcf3277ab4a",
     "worktree": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app",
     "default_commit": "206484f4a4bbf902a03d8a17ddccac55bcbfff84",
     "mode_entry_commit": "e272f5d3ce05d0ca50be42e6d8764f0ef20d3dd1"
@@ -13167,6 +13167,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-P4-MANUAL-PROTOTYPES-SCOPED-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_archive_guard_review",
+      "reviewed_baseline": "b81c64e7e5d736bfea8c52d3721b2ff0ff439153b3ba236ff0ebedcf3277ab4a",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-capacity-manual-prototypes-r1-separate-scoped-reviewer-proof.json SHA52e9c0048c258680a701a36d4d291650d7480d4c3df92569806f04777266576a",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -17327,6 +17339,17 @@
       "subject": "TC052 developer actual4job native fault isolation, peerjobs/terminalHTTP/overlap/lease/pool/healthyretry; independent4PASS;242unit/lint0",
       "status": "PASS",
       "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/145_job_failure_isolation_cases.md; no fullphase/CI/merge approval"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "478471c0ff0a20668dc1b3f734dd56132e6b8033",
+      "spec_baseline": "b52e2746d16e4440f6d7dd33b76de0ff444a8234cbd5b5a28183210958209b41",
+      "source_fingerprint": "b81c64e7e5d736bfea8c52d3721b2ff0ff439153b3ba236ff0ebedcf3277ab4a",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-26T09:19:37.978672Z",
+      "subject": "DATA001 manual developer prototype1/5/20/100 actualwriters andthree-stage reconciliation; author4PASS andindependent4PASS; focusedlint0; no replay/fullcapacity claim",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/147_capacity_manual_writer_prototypes.md; no fullphase/CI/merge approval"
     }
   ],
   "pending_decisions": [
@@ -20712,8 +20735,16 @@
       "kind": "GIT_COMMIT",
       "target": "local reviewed TC052 test increment",
       "idempotency_key": "p4-tc052-isolation-commit-r1",
+      "status": "CONFIRMED",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/145_job_failure_isolation_cases.md; no push/PR/mainmerge; actualcommit478471c0ff0a20668dc1b3f734dd56132e6b8033"
+    },
+    {
+      "id": "ACT-P4-MANUAL-PROTOTYPES-COMMIT-20261026",
+      "kind": "GIT_COMMIT",
+      "target": "local reviewed manual writer prototype andwarningreport increment",
+      "idempotency_key": "p4-manual-prototypes-commit-r1",
       "status": "STARTED",
-      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/145_job_failure_isolation_cases.md; no push/PR/mainmerge"
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/147_capacity_manual_writer_prototypes.md; no push/PR/mainmerge"
     }
   ],
   "evidence_files": [
@@ -22056,5 +22087,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Observe TC052 localcommit, continue Archive keyset/multiorder, metrics/runbook, capacity/restore and latestmain reconciliation; allcurrentCI/wholephase gates remain."
+  "next_safe_action": "Observe manualprototype localcommit, continue Archive keyset/multiorder, remaining dataset templates/diskpilot/metrics/restore and latestmain integration; allcurrentCI/wholephase gates remain."
 }
