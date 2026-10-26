@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1393,
+  "revision": 1395,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-005",
-  "current_task": "TASK-059",
+  "current_task": "TASK-062",
   "baseline": {
     "design": "10e658c43562f4d07aeeac9486bdc9ba46bb613e99f8813cf3997bde6b1d073d",
     "plan": "b52e2746d16e4440f6d7dd33b76de0ff444a8234cbd5b5a28183210958209b41",
-    "code_commit": "bdb4ce02969e85d02b6ab7cc50e9180eef2e97e2",
-    "source_fingerprint": "c490e83de0fdacddcd6f9f1d837093fce11b8bc859ac5b5808262e9e26cbe340",
+    "code_commit": "d9301324bae2604b09a3d1e1e889d6eddabbc558",
+    "source_fingerprint": "32c4c0d9af824440529341bb0a23e69bc6dccba4b1fd81b42d85a0a02ef09f64",
     "worktree": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app",
     "default_commit": "206484f4a4bbf902a03d8a17ddccac55bcbfff84",
     "mode_entry_commit": "e272f5d3ce05d0ca50be42e6d8764f0ef20d3dd1"
@@ -13203,6 +13203,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-P4-QUERY-OBSERVATIONS-SCOPED-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_archive_guard_review",
+      "reviewed_baseline": "32c4c0d9af824440529341bb0a23e69bc6dccba4b1fd81b42d85a0a02ef09f64",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-query-observation-r2-scoped-closing-reviewer-proof.json SHA805bae03bde856540cdbbdf5a4e230c7a23523954dde7d308b81b47a34597ac7; initialQ05gap proofe669bfb9... retained and resolved byactual4native+11pure",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -17396,6 +17408,17 @@
       "subject": "TC049 developer500cap/501actualterminalroots, full501Saleshashes/manifests,4reconciliationsamples,500+1cursor/counters,endpointInventory/replay; author1PASS andindependent1PASS lint0; no monthly300k/fullcapacity claim",
       "status": "PASS",
       "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/149_archive_keyset_resume_cases.md; no fullphase/CI/merge approval"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "d9301324bae2604b09a3d1e1e889d6eddabbc558",
+      "spec_baseline": "b52e2746d16e4440f6d7dd33b76de0ff444a8234cbd5b5a28183210958209b41",
+      "source_fingerprint": "32c4c0d9af824440529341bb0a23e69bc6dccba4b1fd81b42d85a0a02ef09f64",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-26T09:57:44.488059Z",
+      "subject": "Bounded queryoperation completion metrics; author250unit/lint0/89nativeleaf/26browser/securityaudit0/pathcheck; independent4native+11pure Q05closure; no fullSLO/Task/Phase/CI approval",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/150_query_operation_observation_cases.md; securitylowerseverity5 andlistenerwarningretained; allrawprivate"
     }
   ],
   "pending_decisions": [
@@ -20805,8 +20828,16 @@
       "kind": "GIT_COMMIT",
       "target": "local reviewed500cap/501keyset test increment",
       "idempotency_key": "p4-keyset501-commit-r1",
+      "status": "CONFIRMED",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/149_archive_keyset_resume_cases.md; no push/PR/mainmerge; actualcommitd9301324bae2604b09a3d1e1e889d6eddabbc558"
+    },
+    {
+      "id": "ACT-P4-QUERY-OBSERVATIONS-COMMIT-20261026",
+      "kind": "GIT_COMMIT",
+      "target": "local reviewed queryobservation increment",
+      "idempotency_key": "p4-query-observations-commit-r1",
       "status": "STARTED",
-      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/149_archive_keyset_resume_cases.md; no push/PR/mainmerge"
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/150_query_operation_observation_cases.md; no push/PR/mainmerge"
     }
   ],
   "evidence_files": [
@@ -22149,5 +22180,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Observe501keysetcommit then continue querymetrics/remaining dataset anddiskpilot/fullcapacity/restore/original33checks/currentCI andwholephase gates."
+  "next_safe_action": "Observe querymetricscommit; continue engine/lock/history/provider/runbook work, Archive SQL profile before fullvolume, remaining coherenttemplates/diskpilot, fullcapacity/restore/original33checks/latestmain/currentCI/wholephase gates; no mainmerge untilallPASS."
 }

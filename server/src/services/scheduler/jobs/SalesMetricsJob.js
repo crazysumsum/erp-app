@@ -1,3 +1,4 @@
+import {getSalesQueryObservations,salesQueryObservationWindow,salesQueryObservationAlerts} from "../../../modules/sales/salesQueryObservations.js";
 import {salesPoolWaitWindow,salesPoolWaitAlerts} from "../../../modules/sales/salesPoolWaitMetrics.js";
 import {BaseService} from "../../../framework/services/BaseService.js";
 import {collectSalesQueueMetrics,salesQueueAlerts} from "../../../modules/sales/salesMetrics.js";
@@ -6,7 +7,7 @@ import {collectSalesQueueMetrics,salesQueueAlerts} from "../../../modules/sales/
 export class SalesMetricsJob extends BaseService{
  static service=Object.freeze({name:"job.salesMetrics",lifecycle:"singleton",dependencies:["scheduler","mysqldatabase","time","logging"],eager:true});
  static jobs=Object.freeze([{name:"sales.metrics",method:"report",scope:"instance",intervalMs:300000,timeoutMs:30000}]);
- constructor({config,services,options={}}={}){super({config,services,options});this.scheduler=services.require("scheduler");this.database=services.require("mysqldatabase");this.time=services.require("time");this.logger=services.require("logging").logger;this.poolWaitSample=null;}
+ constructor({config,services,options={}}={}){super({config,services,options});this.scheduler=services.require("scheduler");this.database=services.require("mysqldatabase");this.time=services.require("time");this.logger=services.require("logging").logger;this.poolWaitSample=null;this.querySample=null;}
  async initialize(){this.scheduler.register(this);}
  async report(signal){
   try{
@@ -15,9 +16,11 @@ export class SalesMetricsJob extends BaseService{
    const metrics=await collectSalesQueueMetrics({database:this.database,nowMs:this.time.nowMs(),archiveEnabled:this.config?.scheduler?.jobs?.["sales.archive"]?.enabled===true,config:this.config?.sales,statsFreshnessMs,signal});
    const sample={atMs:this.time.nowMs(),metrics:this.database.getConnectionWaitMetrics()};
    metrics.poolWait=salesPoolWaitWindow(this.poolWaitSample,sample);
+   const querySample={atMs:sample.atMs,metrics:getSalesQueryObservations(this.database)};
+   metrics.queryOperations=salesQueryObservationWindow(this.querySample,querySample);
    await this.logger.info("sales.metrics","Readonly Sales operational queue observations",metrics);
-   for(const alert of [...salesQueueAlerts(metrics),...salesPoolWaitAlerts(metrics.poolWait)])await this.logger[alert.level](alert.event,"Sales operational queue alert",alert.context);
-   this.poolWaitSample=sample;
+   for(const alert of [...salesQueueAlerts(metrics),...salesPoolWaitAlerts(metrics.poolWait),...salesQueryObservationAlerts(metrics.queryOperations)])await this.logger[alert.level](alert.event,"Sales operational queue alert",alert.context);
+   this.poolWaitSample=sample;this.querySample=querySample;
    return metrics;
   }catch{throw new Error("Sales operational metrics unavailable");}
  }

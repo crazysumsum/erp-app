@@ -1,3 +1,4 @@
+import {observeSalesQuery} from "./salesQueryObservations.js";
 import { createHash } from "node:crypto";
 import { CustomerLookupService } from "../customer/CustomerLookupService.js";
 import { ItemLookupService } from "../item/ItemLookupService.js";
@@ -53,14 +54,14 @@ export function toSalesOrderSummary(row){return {id:Number(row.id),number:row.sa
 export class SalesInquiryService{
  constructor({database,time,logger}={}){this.database=database;this.time=time;this.logger=logger;}
  async list({claims,input={},outstanding=false}){const query=validateSalesOrderQuery(input),includeQuantities=outstanding;
-  return this.database.withTransaction(async tx=>{const actor=await requireSalesActor(tx,claims,"sales.view"),{where,values}=salesOrderWhere(query,{actorId:actor.id,outstanding});
+  return observeSalesQuery(this.database,outstanding?"outstanding_list":"active_list",()=>this.database.withTransaction(async tx=>{const actor=await requireSalesActor(tx,claims,"sales.view"),{where,values}=salesOrderWhere(query,{actorId:actor.id,outstanding});
    const [[count]]=await tx.query(`SELECT COUNT(*) AS total FROM sales_orders${where}`,values);
    const [page]=await tx.query(`SELECT id FROM sales_orders${where} ORDER BY ${sort[query.sortBy]} ${query.descending?"DESC":"ASC"},id ${query.descending?"DESC":"ASC"} LIMIT ? OFFSET ?`,[...values,query.pageSize,(query.page-1)*query.pageSize]);
    const [rows]=page.length?await tx.query(`SELECT ${summarySelect} FROM sales_orders WHERE id IN (${page.map(()=>"?").join(",")})`,page.map(row=>row.id)):[[]];
    const byId=new Map(rows.map(row=>[String(row.id),row]));
    const [totals]=includeQuantities&&page.length?await tx.query(`SELECT sales_order_id,SUM(ordered_base_quantity) AS ordered,SUM(reserved_outstanding_base_quantity) AS reserved,SUM(backordered_base_quantity) AS backordered,SUM(fulfilled_base_quantity) AS fulfilled,SUM(cancelled_base_quantity) AS cancelled,SUM(ordered_base_quantity-fulfilled_base_quantity-cancelled_base_quantity) AS outstanding FROM sales_order_lines WHERE sales_order_id IN (${page.map(()=>"?").join(",")}) GROUP BY sales_order_id`,page.map(row=>row.id)):[[]];
    const quantities=new Map(totals.map(row=>[String(row.sales_order_id),Object.fromEntries(["ordered","reserved","backordered","fulfilled","cancelled","outstanding"].map(key=>[key+"BaseQuantity",String(row[key])]))]));
-   return {items:page.map(row=>({...toSalesOrderSummary(byId.get(String(row.id))),...(includeQuantities?{quantities:quantities.get(String(row.id))}:{})})),total:Number(count.total),page:query.page,pageSize:query.pageSize};});
+   return {items:page.map(row=>({...toSalesOrderSummary(byId.get(String(row.id))),...(includeQuantities?{quantities:quantities.get(String(row.id))}:{})})),total:Number(count.total),page:query.page,pageSize:query.pageSize};}));
  }
  listOutstanding(request){return this.list({...request,outstanding:true});}
  async listAudit({claims,input={}}) {
@@ -75,7 +76,7 @@ export class SalesInquiryService{
   });
  }
  async get({claims,id}){if(!Number.isSafeInteger(id)||id<1)throw salesError("SALES_INPUT_INVALID",{field:"id"});
-  return this.database.withTransaction(async tx=>{const actor=await requireSalesActor(tx,claims,"sales.view"),detail=await readSalesOrderDetail(tx,id);
+  return observeSalesQuery(this.database,"active_detail",()=>this.database.withTransaction(async tx=>{const actor=await requireSalesActor(tx,claims,"sales.view"),detail=await readSalesOrderDetail(tx,id);
    const [rows]=await tx.query("SELECT id,sequence_no,from_status,to_status,action,reason,order_version_after,actor_label,occurred_at FROM sales_order_status_history WHERE sales_order_id=? ORDER BY sequence_no DESC LIMIT 101",[id]);
    const customer=await new CustomerLookupService({database:tx}).findById(detail.customerId,{purpose:"history"});
    const skus=await new ItemLookupService({database:tx,time:this.time,logger:this.logger}).findManyByIds(detail.lines.map(line=>line.skuId),{includeInactive:true});
@@ -83,6 +84,6 @@ export class SalesInquiryService{
     history:rows.slice(0,100).reverse().map(row=>({id:Number(row.id),sequence:Number(row.sequence_no),fromStatus:row.from_status,toStatus:row.to_status,action:row.action,reason:row.reason,version:Number(row.order_version_after),actorLabel:row.actor_label,occurredAt:Number(row.occurred_at)})),
     currentMaster:{customer:customer?{customerCode:customer.customerCode,customerName:customer.legalName,status:customer.status}:null,
      skus:[...skus.values()].map(sku=>({skuId:sku.skuId,skuCode:sku.skuCode,skuName:sku.skuName,itemName:sku.itemName,skuStatus:sku.skuStatus,itemStatus:sku.itemStatus}))}};
-  });
+  }));
  }
 }

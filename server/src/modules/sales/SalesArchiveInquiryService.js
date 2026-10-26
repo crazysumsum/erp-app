@@ -1,3 +1,4 @@
+import {observeSalesQuery} from "./salesQueryObservations.js";
 import {createHash} from "node:crypto";
 import {validateSalesOrderQuery,validateSalesAuditQuery,salesOrderWhere,SALES_ORDER_SORT_COLUMNS,toSalesOrderSummary} from "./SalesInquiryService.js";
 import {validateSalesExportInput,validateSalesExportJobsQuery} from "./SalesExportService.js";
@@ -17,7 +18,7 @@ export class SalesArchiveInquiryService{
  constructor({database}={}){this.database=database;}
  async list({claims,input={}}){
   const query=validateSalesArchiveQuery(input);
-  return this.database.withTransaction(async tx=>{
+  return observeSalesQuery(this.database,query.number||query.externalOrderId?"archive_exact":"archive_range",()=>this.database.withTransaction(async tx=>{
    const actor=await requireSalesActor(tx,claims,"sales.view"),{where:base,values}=salesOrderWhere({...query,externalOrderId:undefined},{actorId:actor.id,archived:true});let where=base+(base?" AND ":" WHERE ")+completed;
    if(query.externalOrderId){
     const condition="external_order_id_hash=? AND BINARY external_order_id=BINARY ? AND status='SUCCEEDED' AND is_order_archived=1"+(query.channelCode?" AND channel_code=?":""),args=[createHash("sha256").update(query.externalOrderId).digest(),query.externalOrderId,...(query.channelCode?[query.channelCode]:[])];
@@ -30,11 +31,11 @@ export class SalesArchiveInquiryService{
    const [page]=await tx.query(`SELECT id FROM sales_orders_archive${where} ORDER BY ${SALES_ORDER_SORT_COLUMNS[query.sortBy]} ${direction},id ${direction} LIMIT ? OFFSET ?`,[...values,query.pageSize,(query.page-1)*query.pageSize]);
    const [rows]=page.length?await tx.query(`SELECT ${dateProjection} FROM sales_orders_archive WHERE id IN (${page.map(()=>"?").join(",")})`,page.map(row=>row.id)):[[]],byId=new Map(rows.map(row=>[String(row.id),row]));
    return {items:page.map(row=>{const snapshot=byId.get(String(row.id));return {...toSalesOrderSummary(snapshot),isArchived:true,archivedAt:Number(snapshot.archived_at),archiveBatchId:Number(snapshot.archive_batch_id)};}),total:Number(count.total),page:query.page,pageSize:query.pageSize};
-  });
+  }));
  }
  async #header(tx,orderId){const [[row]]=await tx.query(`SELECT ${dateProjection} FROM sales_orders_archive WHERE id=? AND ${completed}`,[orderId]);if(!row)throw salesError("SALES_ORDER_NOT_FOUND");return row;}
  async get({claims,id:orderId}){
-  id(orderId);return this.database.withTransaction(async tx=>{
+  id(orderId);return observeSalesQuery(this.database,"archive_detail",()=>this.database.withTransaction(async tx=>{
    await requireSalesActor(tx,claims,"sales.view");const row=await this.#header(tx,orderId),[lines]=await tx.query("SELECT * FROM sales_order_lines_archive WHERE sales_order_id=? ORDER BY line_no LIMIT 100",[orderId]),[history]=await tx.query("SELECT id,sequence_no,from_status,to_status,action,reason,order_version_after,actor_label,occurred_at FROM sales_order_status_history_archive WHERE sales_order_id=? ORDER BY sequence_no DESC LIMIT 101",[orderId]);
    const [totals]=await tx.query("SELECT sales_order_line_id,COUNT(*) AS total,CAST(SUM(released_base_quantity) AS CHAR) AS released FROM sales_order_line_reservations_archive WHERE sales_order_line_id IN (SELECT id FROM sales_order_lines_archive WHERE sales_order_id=?) GROUP BY sales_order_line_id",[orderId]),byLine=new Map(totals.map(total=>[String(total.sales_order_line_id),total]));
    // One stable bounded window for the whole SO; cumulative release history is independently complete.
@@ -42,7 +43,7 @@ export class SalesArchiveInquiryService{
    for(const mapping of window)references.get(String(mapping.sales_order_line_id)).push({id:Number(mapping.id),inventoryReservationId:Number(mapping.inventory_reservation_id),status:mapping.status,originalBaseQuantity:String(mapping.original_base_quantity),consumedBaseQuantity:String(mapping.consumed_base_quantity),releasedBaseQuantity:String(mapping.released_base_quantity),outstandingBaseQuantity:String(mapping.outstanding_base_quantity)});
    const detail=toSalesOrderDetail(row,lines);detail.lines=detail.lines.map(line=>{const reservations=references.get(String(line.id)),total=byLine.get(String(line.id));return {...line,reservations,reservationsTotal:Number(total?.total??0),reservationsTruncated:Number(total?.total??0)>reservations.length,releasedBaseQuantity:String(total?.released??"0")};});
    return {...detail,isArchived:true,allowedActions:[],archivedAt:Number(row.archived_at),archiveBatchId:Number(row.archive_batch_id),historyTruncated:history.length>100,history:history.slice(0,100).reverse().map(item=>({id:Number(item.id),sequence:Number(item.sequence_no),fromStatus:item.from_status,toStatus:item.to_status,action:item.action,reason:item.reason,version:Number(item.order_version_after),actorLabel:item.actor_label,occurredAt:Number(item.occurred_at)}))};
-  });
+  }));
  }
  async listAudit({claims,id:orderId,input={}}){
   id(orderId);const query=validateSalesAuditQuery(input);if(Object.keys(input).some(key=>["targetType","targetId"].includes(key)))throw salesError("SALES_INPUT_INVALID");
