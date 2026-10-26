@@ -357,4 +357,9 @@ PHASE-001 (`uat/uat-phase-001.spec.js`, 25 cases). Local developer run on 2026-1
 | Fail on a recorded defect | None. UAT-031 passes since DEF-038, UAT-003 since DEF-039, UAT-048 since DEF-037. |
 | `test.fixme`, waiting on downstream modules (HD-124 A, HD-131 A) | UAT-005; the Supplier steps of UAT-016, 024, 050 and 051 run first. |
 
-Phases 002, 003, 004 and the cross-phase cases are not written yet. UAT-054 is the only case that intercepts a request in the browser: a slow response and a 503 cannot be produced safely on a real server.
+PHASE-002 (`uat/uat-phase-002.spec.js`, 9 cases): approval and Supplier settings. Local developer run on 2026-10-26, which is not a formal UAT execution:
+- **Result:** all 9 pass: UAT-010, 011, 012, 013, 014, 015, 040, 041 and 052.
+- **Approval policy setup:** the policy is a global setting. The cases set it in the database as a precondition and turn it off after each test, so PHASE-001 is unaffected. UAT-015 and UAT-041 change it through the Settings page, because that change is what they verify.
+- **Defects found here:** writing these cases found DEF-042 (no way to submit an existing Draft from the detail) and DEF-043 (the requester could not withdraw). Both were fixed in PR #282 before this run.
+
+Phases 003, 004 and the cross-phase cases are not written yet. UAT-054 is the only case that intercepts a request in the browser: a slow response and a 503 cannot be produced safely on a real server.
