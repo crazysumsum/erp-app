@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1391,
+  "revision": 1393,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "10e658c43562f4d07aeeac9486bdc9ba46bb613e99f8813cf3997bde6b1d073d",
     "plan": "b52e2746d16e4440f6d7dd33b76de0ff444a8234cbd5b5a28183210958209b41",
-    "code_commit": "152db4c34e925b737db5062495f70fb5a69ecdd6",
-    "source_fingerprint": "8fe90315c7ebdb6a15c509649fe3a9b3b082587ac5a4bd37f3306934ad923d20",
+    "code_commit": "bdb4ce02969e85d02b6ab7cc50e9180eef2e97e2",
+    "source_fingerprint": "c490e83de0fdacddcd6f9f1d837093fce11b8bc859ac5b5808262e9e26cbe340",
     "worktree": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app",
     "default_commit": "206484f4a4bbf902a03d8a17ddccac55bcbfff84",
     "mode_entry_commit": "e272f5d3ce05d0ca50be42e6d8764f0ef20d3dd1"
@@ -13191,6 +13191,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-P4-KEYSET501-SCOPED-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_archive_guard_review",
+      "reviewed_baseline": "c490e83de0fdacddcd6f9f1d837093fce11b8bc859ac5b5808262e9e26cbe340",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-archive-keyset501-r1-separate-scoped-reviewer-proof.json SHA55e504538b85f6ad0903a9fe4d0101d9bc7cb4422d762b307983b28c16f9b438",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -17373,6 +17385,17 @@
       "subject": "TC049 developer twoorder settledrollback/peercommit/pendingresume/exact2/2/0/reconcile/unchangedreplay; author1PASS andindependent1PASS focusedlint0; no crash/full500/fullcapacity claim",
       "status": "PASS",
       "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/148_archive_multiorder_recovery_cases.md; no fullphase/CI/merge approval"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "bdb4ce02969e85d02b6ab7cc50e9180eef2e97e2",
+      "spec_baseline": "b52e2746d16e4440f6d7dd33b76de0ff444a8234cbd5b5a28183210958209b41",
+      "source_fingerprint": "c490e83de0fdacddcd6f9f1d837093fce11b8bc859ac5b5808262e9e26cbe340",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-26T09:36:43.941208Z",
+      "subject": "TC049 developer500cap/501actualterminalroots, full501Saleshashes/manifests,4reconciliationsamples,500+1cursor/counters,endpointInventory/replay; author1PASS andindependent1PASS lint0; no monthly300k/fullcapacity claim",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/149_archive_keyset_resume_cases.md; no fullphase/CI/merge approval"
     }
   ],
   "pending_decisions": [
@@ -20774,8 +20797,16 @@
       "kind": "GIT_COMMIT",
       "target": "local reviewed twoorder rollback/pendingresume test increment",
       "idempotency_key": "p4-multiorder-recovery-commit-r1",
+      "status": "CONFIRMED",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/148_archive_multiorder_recovery_cases.md; no push/PR/mainmerge; actualcommitbdb4ce02969e85d02b6ab7cc50e9180eef2e97e2"
+    },
+    {
+      "id": "ACT-P4-KEYSET501-COMMIT-20261026",
+      "kind": "GIT_COMMIT",
+      "target": "local reviewed500cap/501keyset test increment",
+      "idempotency_key": "p4-keyset501-commit-r1",
       "status": "STARTED",
-      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/148_archive_multiorder_recovery_cases.md; no push/PR/mainmerge"
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/149_archive_keyset_resume_cases.md; no push/PR/mainmerge"
     }
   ],
   "evidence_files": [
@@ -22118,5 +22149,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Observe multiordercommit then continue500keyset edge and fullcapacity/restore/metrics/currentCI/wholephase gates."
+  "next_safe_action": "Observe501keysetcommit then continue querymetrics/remaining dataset anddiskpilot/fullcapacity/restore/original33checks/currentCI andwholephase gates."
 }
