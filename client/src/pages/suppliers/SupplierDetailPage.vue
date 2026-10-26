@@ -29,6 +29,7 @@ import { confirm } from "@/framework/ui/confirm.js";
 import { useSessionStore } from "@/stores/session.js";
 import { DETAIL_CHILD_LIMIT } from "@/components/suppliers/useMoreChildRows.js";
 import { paymentTermLabel } from "@/components/suppliers/paymentTermLabel.js";
+import { PENDING_EDIT_WARNING, withInvalidation } from "@/components/suppliers/approvalInvalidation.js";
 
 const STATUS_LABEL = Object.freeze({
   draft: "草稿", pending_approval: "待審批", active: "啟用", suspended: "已暫停",
@@ -100,6 +101,7 @@ const dirty = computed(() => editing.value && JSON.stringify(formValues()) !== s
 const paymentTermText = computed(() => paymentTermLabel(supplier.value?.defaultPaymentTerm, supplier.value?.defaultPaymentTermId));
 // DEF-043（HD-138 A）：待審批時講明交咗俾邊個；提交人自己喺度就撤回得（伺服器照樣核對係咪提交人）。
 const pending = computed(() => supplier.value?.pendingApproval ?? null);
+const approvalPending = computed(() => supplier.value?.status === "pending_approval");
 const personName = (person) => person?.displayName || person?.username || "未指派";
 const canWithdraw = computed(() => canManage.value && pending.value?.requester?.id === session.user?.id);
 const withdrawing = ref(false);
@@ -240,7 +242,7 @@ async function saveEdit() {
     completeness.value = await supplierService.completeness(updated.id);
     loadForm(updated);
     editing.value = false;
-    notifySuccess(`供應商 ${updated.supplierCode} 的一般資料已更新`);
+    notifySuccess(withInvalidation(`供應商 ${updated.supplierCode} 的一般資料已更新`, updated));
   } catch (saveError) {
     if (saveError.code === "VERSION_CONFLICT") {
       staleNotice.value = true;
@@ -301,7 +303,7 @@ async function submitCodeChange() {
     supplier.value = updated;
     loadForm(updated);
     showCodeDialog.value = false;
-    notifySuccess(`Supplier Code 已修正為 ${updated.supplierCode}`);
+    notifySuccess(withInvalidation(`Supplier Code 已修正為 ${updated.supplierCode}`, updated));
   } catch (changeError) {
     codeForm.password = "";
     if (changeError.code === "VERSION_CONFLICT") {
@@ -424,6 +426,7 @@ function childCount(rows) {
                     </template>
                   </q-banner>
                 </div>
+                <q-banner v-if="approvalPending" class="bg-warning text-dark q-mb-md" rounded>{{ PENDING_EDIT_WARNING }}</q-banner>
                 <q-banner v-if="duplicateCandidates.length" class="bg-warning text-dark q-mb-md" rounded>
                   名稱相近的供應商：
                   <span v-for="candidate in duplicateCandidates" :key="candidate.supplierId" class="q-ml-sm">
@@ -478,7 +481,7 @@ function childCount(rows) {
           <q-tab-panel name="identifiers">
             <SupplierIdentifierPanel
               :supplier-id="supplier.id" :supplier-code="supplier.supplierCode"
-              :identifiers="supplier.identifiers" :can-manage="canManage" @refresh="load"
+              :identifiers="supplier.identifiers" :can-manage="canManage" :approval-pending="approvalPending" @refresh="load"
             />
           </q-tab-panel>
           <q-tab-panel name="bank">
@@ -506,6 +509,7 @@ function childCount(rows) {
           <q-banner class="bg-warning text-dark q-mb-md" rounded>
             只允許未被任何交易或設定引用的供應商。修正後舊交易快照不會被改寫，操作會留下原因及稽核記錄。
           </q-banner>
+          <q-banner v-if="approvalPending" class="bg-warning text-dark q-mb-md" rounded>{{ PENDING_EDIT_WARNING }}</q-banner>
           <q-banner v-if="codeError" class="bg-negative text-white q-mb-md" rounded role="alert">{{ codeError }}</q-banner>
           <q-input v-model="codeForm.supplierCode" label="新 Supplier Code *" outlined dense maxlength="64" autofocus />
           <q-input v-model="codeForm.reason" label="修正原因 *" type="textarea" outlined dense maxlength="500" class="q-mt-md" hint="最少 5 個字元" />

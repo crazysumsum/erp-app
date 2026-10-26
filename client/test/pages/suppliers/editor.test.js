@@ -12,6 +12,7 @@ vi.mock("@/services/supplier.js", () => ({
 vi.mock("@/framework/ui/notify.js", () => ({ notifyError: vi.fn(), notifySuccess: vi.fn() }));
 
 import supplierService from "@/services/supplier.js";
+import { notifySuccess } from "@/framework/ui/notify.js";
 import SupplierDetailPage, { page } from "@/pages/suppliers/SupplierDetailPage.vue";
 import { useSessionStore } from "@/stores/session.js";
 
@@ -21,6 +22,9 @@ const DETAIL = {
   website: "", generalPhone: "2123 4567", generalEmail: "orders@example.test", notes: "",
   createdAt: 100, updatedAt: 200, addresses: [], contacts: [], identifiers: [], bankAccounts: [], warnings: []
 };
+
+const WARNING = "此供應商正在審批中，修改 Code、名稱、顯示名稱、幣別、付款條件或識別資料會令原申請失效";
+const NOTICE = "原審批申請已失效，供應商回到草稿，需要重新提交審批";
 
 let currentWrapper;
 
@@ -213,5 +217,43 @@ describe("Supplier general editor", () => {
     await body.findAll("button").find((button) => button.text().includes("編輯一般資料")).trigger("click");
     await field(body, "Supplier Name *").setValue("Dirty Supplier");
     expect(unload()).toBe(true);
+  });
+
+  it("warns before editing a Pending Supplier and says the request was invalidated after the save (DEF-044, HD-139 A)", async () => {
+    const pending = { ...DETAIL, status: "pending_approval" };
+    supplierService.update.mockResolvedValue({ ...DETAIL, supplierName: "Renamed", status: "draft", version: 3, approvalInvalidated: true });
+    supplierService.changeCode.mockResolvedValue({ ...pending, supplierCode: "SUP-NEW", status: "draft", version: 3, approvalInvalidated: true });
+    const { body } = await mountPage(pending);
+    expect(body.text()).not.toContain(WARNING);
+    await body.findAll("button").find((button) => button.text().includes("受控修正 Supplier Code")).trigger("click");
+    await flushPromises();
+    expect(body.find(".q-dialog").text()).toContain(WARNING);
+    await field(body, "新 Supplier Code *").setValue("SUP-NEW");
+    await field(body, "修正原因 *").setValue("Correct onboarding typo");
+    await field(body, "目前密碼 *").setValue("secret");
+    await body.findAll("button").find((button) => button.text().includes("確認修正")).trigger("click");
+    await flushPromises();
+    expect(notifySuccess).toHaveBeenLastCalledWith(`Supplier Code 已修正為 SUP-NEW。${NOTICE}`);
+
+    currentWrapper.unmount();
+    document.body.innerHTML = "";
+    const again = await mountPage(pending);
+    await again.body.findAll("button").find((button) => button.text().includes("編輯一般資料")).trigger("click");
+    expect(again.body.text()).toContain(WARNING);
+    await field(again.body, "Supplier Name *").setValue("Renamed");
+    await again.body.findAll("button").find((button) => button.text().includes("儲存一般資料")).trigger("click");
+    await flushPromises();
+    expect(notifySuccess).toHaveBeenLastCalledWith(`供應商 SUP-007 的一般資料已更新。${NOTICE}`);
+  });
+
+  it("keeps the plain messages, and shows no warning, when nothing was Pending (DEF-044)", async () => {
+    supplierService.update.mockResolvedValue({ ...DETAIL, version: 3, approvalInvalidated: false });
+    const { body } = await mountPage();
+    await body.findAll("button").find((button) => button.text().includes("編輯一般資料")).trigger("click");
+    expect(body.text()).not.toContain(WARNING);
+    await field(body, "Supplier Name *").setValue("Renamed");
+    await body.findAll("button").find((button) => button.text().includes("儲存一般資料")).trigger("click");
+    await flushPromises();
+    expect(notifySuccess).toHaveBeenLastCalledWith("供應商 SUP-007 的一般資料已更新");
   });
 });

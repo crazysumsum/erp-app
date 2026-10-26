@@ -2,12 +2,14 @@
 import { nextTick, reactive, ref } from "vue";
 import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
 import supplierService from "@/services/supplier.js";
+import { PENDING_EDIT_WARNING, withInvalidation } from "@/components/suppliers/approvalInvalidation.js";
 
 const props = defineProps({
   supplierId: { type: Number, required: true },
   supplierCode: { type: String, required: true },
   identifiers: { type: Array, default: () => [] },
-  canManage: { type: Boolean, default: false }
+  canManage: { type: Boolean, default: false },
+  approvalPending: { type: Boolean, default: false }
 });
 const emit = defineEmits(["refresh"]);
 
@@ -61,14 +63,15 @@ async function submit() {
   errorMessage.value = "";
   try {
     const body = payload();
+    let saved;
     if (editing.value) {
-      await supplierService.updateIdentifier(props.supplierId, editing.value.id, {
+      saved = await supplierService.updateIdentifier(props.supplierId, editing.value.id, {
         ...body, version: editing.value.version, reason: form.reason.trim()
       });
     } else {
-      await supplierService.createIdentifier(props.supplierId, body);
+      saved = await supplierService.createIdentifier(props.supplierId, body);
     }
-    notifySuccess(`供應商 ${props.supplierCode} 的識別資料「${body.identifierValue}」已${editing.value ? "更新" : "新增"}`);
+    notifySuccess(withInvalidation(`供應商 ${props.supplierCode} 的識別資料「${body.identifierValue}」已${editing.value ? "更新" : "新增"}`, saved));
     dialogOpen.value = false;
     emit("refresh");
   } catch (error) {
@@ -95,11 +98,11 @@ async function confirmDelete() {
   deleting.value = true;
   deleteError.value = "";
   try {
-    await supplierService.deleteIdentifier(props.supplierId, deletingIdentifier.value.id, {
+    const deleted = await supplierService.deleteIdentifier(props.supplierId, deletingIdentifier.value.id, {
       version: deletingIdentifier.value.version,
       reason: deleteReason.value.trim()
     });
-    notifySuccess(`供應商 ${props.supplierCode} 的識別資料「${deletingIdentifier.value.identifierValue}」已刪除`);
+    notifySuccess(withInvalidation(`供應商 ${props.supplierCode} 的識別資料「${deletingIdentifier.value.identifierValue}」已刪除`, deleted));
     deleteDialogOpen.value = false;
     emit("refresh");
   } catch (error) {
@@ -140,6 +143,7 @@ async function confirmDelete() {
       <q-card style="width: min(640px, 96vw); max-width: 640px">
         <q-card-section><h3 class="text-h6 q-ma-none">{{ editing ? "編輯識別資料" : "新增識別資料" }}</h3></q-card-section>
         <q-card-section class="q-pt-none">
+          <q-banner v-if="approvalPending" class="bg-warning text-dark q-mb-md" rounded>{{ PENDING_EDIT_WARNING }}</q-banner>
           <div v-if="errorMessage" ref="errorRef" role="alert" tabindex="-1" class="q-mb-md">
             <q-banner class="bg-negative text-white">{{ errorMessage }}</q-banner>
           </div>
@@ -173,6 +177,7 @@ async function confirmDelete() {
         <q-card-section><h3 class="text-h6 q-ma-none">刪除識別資料</h3></q-card-section>
         <q-card-section class="q-pt-none">
           <p>即將刪除「{{ deletingIdentifier?.identifierValue }}」。這項操作只允許未被引用的資料。</p>
+          <q-banner v-if="approvalPending" class="bg-warning text-dark q-mb-md" rounded>{{ PENDING_EDIT_WARNING }}</q-banner>
           <q-banner v-if="deleteError" class="bg-negative text-white q-mb-md" role="alert">{{ deleteError }}</q-banner>
           <q-input v-model="deleteReason" label="刪除原因 *" type="textarea" outlined dense maxlength="500" />
         </q-card-section>
