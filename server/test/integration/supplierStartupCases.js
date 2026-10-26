@@ -1,4 +1,5 @@
 import { up as reorderSkuIndex } from "../../database/migrations/0087_fix_supplier_sku_refs_sku_foreign_key.js";
+import { up as addSortOrder } from "../../database/migrations/0103_add_supplier_party_sort_order.js";
 import { createSupplierHarness } from "./supplierHttpHarness.js";
 import { schemaObjects, tableChecksums } from "./supplierAcceptanceRunner.js";
 
@@ -59,6 +60,18 @@ export function startupCases(admin, schema) {
       async restore() {
         await q("USE $$");
         await reorderSkuIndex(admin);
+      }
+    },
+    {
+      // DEF-037：漏咗 0103 嘅部署唔准開機（REV-118 M-2）。還原用 0103 自己嘅 up()。
+      name: "missing column supplier_contacts.sort_order (0103)",
+      refusal: /supplier_contacts\.sort_order/u,
+      async remove() {
+        await q("ALTER TABLE $$.supplier_contacts DROP COLUMN sort_order");
+      },
+      async restore() {
+        await q("USE $$");
+        await addSortOrder(admin);
       }
     },
     {

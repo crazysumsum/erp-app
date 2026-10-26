@@ -48,9 +48,12 @@ const CONTRACT = Object.freeze({
   "POST /api/v1/suppliers/:supplierId/addresses/create": [J, [M]],
   "POST /api/v1/suppliers/:supplierId/addresses/:addressId/update": [J, [M]],
   "POST /api/v1/suppliers/:supplierId/addresses/:addressId/deactivate": [J, [M]],
+  // DEF-037：地址同聯絡人上移／下移（設計 §6，HD-136）。
+  "POST /api/v1/suppliers/:supplierId/addresses/:addressId/move": [J, [M]],
   "POST /api/v1/suppliers/:supplierId/contacts/create": [J, [M]],
   "POST /api/v1/suppliers/:supplierId/contacts/:contactId/update": [J, [M]],
   "POST /api/v1/suppliers/:supplierId/contacts/:contactId/deactivate": [J, [M]],
+  "POST /api/v1/suppliers/:supplierId/contacts/:contactId/move": [J, [M]],
   "POST /api/v1/suppliers/:supplierId/identifiers/create": [J, [M]],
   "POST /api/v1/suppliers/:supplierId/identifiers/:identifierId/update": [J, [M]],
   "POST /api/v1/suppliers/:supplierId/identifiers/:identifierId/delete": [J, [M]],

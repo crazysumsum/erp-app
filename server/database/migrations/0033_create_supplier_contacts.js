@@ -8,6 +8,8 @@ const COLUMNS = Object.freeze({
   ]
 });
 
+const LATER_COLUMNS = Object.freeze({ supplier_contacts: ["sort_order"] });
+
 const INDEXES = Object.freeze({
   supplier_contacts: new Set(["PRIMARY", "uq_supplier_contacts_owner", "idx_supplier_contacts_owner_status_name", "idx_supplier_contacts_email"]),
   supplier_contact_purposes: new Set(["PRIMARY", "uq_supplier_contact_primary", "idx_supplier_contact_purpose_owner"])
@@ -40,7 +42,10 @@ export async function inspectSupplierContactSchema(connection) {
   }
   for (const [table, actual] of byTable) {
     const expected = COLUMNS[table];
-    if (!expected || actual.length !== expected.length || expected.some((name) => !actual.includes(name))) {
+    // 0103（DEF-037、HD-136）之後呢張表多一欄 sort_order：呢度只係唔當佢係陌生欄位，佢有冇由 0103 自己嘅 inspector 查。
+    // up() 冇改。
+    const known = [...(expected ?? []), ...(LATER_COLUMNS[table] ?? [])];
+    if (!expected || expected.some((name) => !actual.includes(name)) || actual.some((name) => !known.includes(name))) {
       throw new Error(`Incompatible existing Supplier contact schema: ${table}`);
     }
   }

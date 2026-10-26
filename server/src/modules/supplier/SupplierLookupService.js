@@ -172,14 +172,15 @@ export class SupplierLookupService {
         LIMIT 1`,
       [supplier.supplierId]
     );
-    const orderingAddress = addressRows[0]
+    // 顯示次序（DEF-037）唔屬於 Purchasing 用嘅 provider 契約，唔加入佢嘅回應。
+    const { sortOrder: _sortOrder, ...orderingAddress } = addressRows[0]
       ? toAddressResponse(addressRows[0], [{ purpose_code: "ordering", is_primary: 1 }])
-      : null;
+      : { sortOrder: null };
     return {
       supplier,
       currency: references.currency,
       paymentTerm: references.paymentTerm,
-      orderingAddress
+      orderingAddress: addressRows[0] ? orderingAddress : null
     };
   }
 

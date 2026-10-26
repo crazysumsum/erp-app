@@ -4,6 +4,7 @@ import { SupplierAuditLogService } from "./SupplierAuditLogService.js";
 import { invalidSupplierInput, supplierChildNotFound, supplierConflict, supplierNotFound } from "./supplierErrors.js";
 import { normalizeContactEmail } from "./supplierNormalization.js";
 import { toContactResponse } from "./supplierProjections.js";
+import { nextSortOrder, swapWithNeighbour } from "./partyOrder.js";
 
 export const SUPPLIER_CONTACT_PURPOSES = Object.freeze(["general", "orders", "sales", "accounts_payable", "returns", "emergency"]);
 const PURPOSE_SET = new Set(SUPPLIER_CONTACT_PURPOSES);
@@ -131,10 +132,11 @@ export class SupplierContactService {
     const [result] = await connection.execute(
       `INSERT INTO supplier_contacts
         (supplier_id, name, job_title, department, email, phone, mobile, preferred_language, notes,
-         status, version, created_at, updated_at, created_by, updated_by)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', 1, ?, ?, ?, ?)`,
+         status, sort_order, version, created_at, updated_at, created_by, updated_by)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, 1, ?, ?, ?, ?)`,
       [input.supplierId, contact.name, contact.jobTitle, contact.department, contact.email, contact.phone,
-        contact.mobile, contact.preferredLanguage, contact.notes, nowMs, nowMs, input.actorId, input.actorId]
+        contact.mobile, contact.preferredLanguage, contact.notes, await nextSortOrder(connection, "supplier_contacts", input.supplierId),
+        nowMs, nowMs, input.actorId, input.actorId]
     );
     const contactId = Number(result.insertId);
     await this.#replacePurposes(connection, { supplierId: input.supplierId, contactId, purposes: contact.purposes, actorId: input.actorId, nowMs, replace: false });
@@ -206,6 +208,32 @@ export class SupplierContactService {
         actorUserId: input.actorId, actorUsername: actor?.username ?? "", action: "supplier.contact.deactivate",
         targetType: "contact", targetId: input.contactId, supplierId: input.supplierId, targetLabel: current.name,
         detail: { before: { status: current.status }, after: { status: "inactive" } }, requestId: input.requestId, ip: input.ip
+      });
+      return projected;
+    });
+  }
+
+  /** 上移／下移：同相鄰嘅有效聯絡人交換顯示次序（DEF-037、HD-136）。 */
+  async move(input) {
+    if (input.direction !== "up" && input.direction !== "down") {
+      throw invalidSupplierInput("SUPPLIER_PARTY_MOVE_INVALID", "方向只可以係 up 或 down", { field: "direction" });
+    }
+    return this.database.withTransaction(async (connection) => {
+      const actor = await this.authorize(connection, input);
+      await this.#supplierForUpdate(connection, input.supplierId);
+      const current = await this.#contactForUpdate(connection, input.supplierId, input.contactId);
+      if (Number(current.version) !== input.version) throw supplierConflict("VERSION_CONFLICT", "聯絡人已被其他人修改，請重新載入");
+      if (current.status !== "active") throw supplierConflict("SUPPLIER_CONTACT_INACTIVE", "已停用聯絡人不可調整次序");
+      const order = await swapWithNeighbour(connection, "supplier_contacts", {
+        supplierId: input.supplierId, current, direction: input.direction, actorId: input.actorId, nowMs: this.time.nowMs()
+      });
+      const projected = await this.#project(connection, input.supplierId, input.contactId);
+      await this.audit.record(connection, {
+        actorUserId: input.actorId, actorUsername: actor?.username ?? "", action: "supplier.contact.reorder",
+        targetType: "contact", targetId: input.contactId, supplierId: input.supplierId, targetLabel: current.name,
+        // 鄰居嘅次序都變咗：記喺 metadata（REV-118 L-3）。
+        detail: { before: { sortOrder: order.before }, after: { sortOrder: order.after }, metadata: { swappedWith: order.neighbour } },
+        requestId: input.requestId, ip: input.ip
       });
       return projected;
     });
