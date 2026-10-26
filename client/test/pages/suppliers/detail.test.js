@@ -13,7 +13,7 @@ vi.mock("@/services/supplierBank.js", () => ({
   default: { list: vi.fn(), create: vi.fn(), update: vi.fn(), setDefault: vi.fn(), deactivate: vi.fn(), reveal: vi.fn() },
   service: { name: "supplierBank" }
 }));
-vi.mock("@/framework/ui/notify.js", () => ({ notifyError: vi.fn(), notifySuccess: vi.fn() }));
+vi.mock("@/framework/ui/notify.js", () => ({ notifyError: vi.fn(), notifySuccess: vi.fn(), notifyWarning: vi.fn() }));
 vi.mock("@/services/supplierApproval.js", () => ({
   default: { withdraw: vi.fn(), activationPolicy: vi.fn().mockResolvedValue({ requireActivationApproval: false }), eligibleApprovers: vi.fn() },
   service: { name: "supplierApproval" }

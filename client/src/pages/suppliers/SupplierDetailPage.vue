@@ -29,7 +29,7 @@ import { confirm } from "@/framework/ui/confirm.js";
 import { useSessionStore } from "@/stores/session.js";
 import { DETAIL_CHILD_LIMIT } from "@/components/suppliers/useMoreChildRows.js";
 import { paymentTermLabel } from "@/components/suppliers/paymentTermLabel.js";
-import { PENDING_EDIT_WARNING, withInvalidation } from "@/components/suppliers/approvalInvalidation.js";
+import { PENDING_EDIT_WARNING, notifySaved } from "@/components/suppliers/approvalInvalidation.js";
 
 const STATUS_LABEL = Object.freeze({
   draft: "草稿", pending_approval: "待審批", active: "啟用", suspended: "已暫停",
@@ -242,7 +242,7 @@ async function saveEdit() {
     completeness.value = await supplierService.completeness(updated.id);
     loadForm(updated);
     editing.value = false;
-    notifySuccess(withInvalidation(`供應商 ${updated.supplierCode} 的一般資料已更新`, updated));
+    notifySaved(`供應商 ${updated.supplierCode} 的一般資料已更新`, updated);
   } catch (saveError) {
     if (saveError.code === "VERSION_CONFLICT") {
       staleNotice.value = true;
@@ -303,7 +303,7 @@ async function submitCodeChange() {
     supplier.value = updated;
     loadForm(updated);
     showCodeDialog.value = false;
-    notifySuccess(withInvalidation(`Supplier Code 已修正為 ${updated.supplierCode}`, updated));
+    notifySaved(`Supplier Code 已修正為 ${updated.supplierCode}`, updated);
   } catch (changeError) {
     codeForm.password = "";
     if (changeError.code === "VERSION_CONFLICT") {

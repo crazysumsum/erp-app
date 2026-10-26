@@ -9,10 +9,10 @@ vi.mock("@/services/supplier.js", () => ({
   default: { getById: vi.fn(), completeness: vi.fn(), update: vi.fn(), changeCode: vi.fn(), currencyOptions: vi.fn(), paymentTermOptions: vi.fn() },
   service: { name: "supplier" }
 }));
-vi.mock("@/framework/ui/notify.js", () => ({ notifyError: vi.fn(), notifySuccess: vi.fn() }));
+vi.mock("@/framework/ui/notify.js", () => ({ notifyError: vi.fn(), notifySuccess: vi.fn(), notifyWarning: vi.fn() }));
 
 import supplierService from "@/services/supplier.js";
-import { notifySuccess } from "@/framework/ui/notify.js";
+import { notifySuccess, notifyWarning } from "@/framework/ui/notify.js";
 import SupplierDetailPage, { page } from "@/pages/suppliers/SupplierDetailPage.vue";
 import { useSessionStore } from "@/stores/session.js";
 
@@ -233,7 +233,7 @@ describe("Supplier general editor", () => {
     await field(body, "目前密碼 *").setValue("secret");
     await body.findAll("button").find((button) => button.text().includes("確認修正")).trigger("click");
     await flushPromises();
-    expect(notifySuccess).toHaveBeenLastCalledWith(`Supplier Code 已修正為 SUP-NEW。${NOTICE}`);
+    expect(notifyWarning).toHaveBeenLastCalledWith(`Supplier Code 已修正為 SUP-NEW。${NOTICE}`);
 
     currentWrapper.unmount();
     document.body.innerHTML = "";
@@ -243,7 +243,8 @@ describe("Supplier general editor", () => {
     await field(again.body, "Supplier Name *").setValue("Renamed");
     await again.body.findAll("button").find((button) => button.text().includes("儲存一般資料")).trigger("click");
     await flushPromises();
-    expect(notifySuccess).toHaveBeenLastCalledWith(`供應商 SUP-007 的一般資料已更新。${NOTICE}`);
+    expect(notifyWarning).toHaveBeenLastCalledWith(`供應商 SUP-007 的一般資料已更新。${NOTICE}`);
+    expect(notifySuccess).not.toHaveBeenCalled();
   });
 
   it("keeps the plain messages, and shows no warning, when nothing was Pending (DEF-044)", async () => {
@@ -255,5 +256,6 @@ describe("Supplier general editor", () => {
     await body.findAll("button").find((button) => button.text().includes("儲存一般資料")).trigger("click");
     await flushPromises();
     expect(notifySuccess).toHaveBeenLastCalledWith("供應商 SUP-007 的一般資料已更新");
+    expect(notifyWarning).not.toHaveBeenCalled();
   });
 });

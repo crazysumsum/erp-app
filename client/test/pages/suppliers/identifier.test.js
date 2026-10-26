@@ -6,10 +6,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("@/services/supplier.js", () => ({
   default: { createIdentifier: vi.fn(), updateIdentifier: vi.fn(), deleteIdentifier: vi.fn() }, service: { name: "supplier" }
 }));
-vi.mock("@/framework/ui/notify.js", () => ({ notifySuccess: vi.fn(), notifyError: vi.fn() }));
+vi.mock("@/framework/ui/notify.js", () => ({ notifySuccess: vi.fn(), notifyError: vi.fn(), notifyWarning: vi.fn() }));
 
 import supplierService from "@/services/supplier.js";
-import { notifySuccess } from "@/framework/ui/notify.js";
+import { notifySuccess, notifyWarning } from "@/framework/ui/notify.js";
 import SupplierIdentifierPanel from "@/components/suppliers/SupplierIdentifierPanel.vue";
 
 const IDENTIFIERS = [{
@@ -92,8 +92,9 @@ describe("SupplierIdentifierPanel", () => {
     expect(wrapper.emitted("refresh")).toBeTruthy();
   });
 
-  it("warns a Pending Supplier's edit and delete dialogs, and says so when a write invalidated the request (DEF-044, HD-139 A)", async () => {
+  it("warns a Pending Supplier's create, edit and delete dialogs, and says so when each write invalidated the request (DEF-044, HD-139 A)", async () => {
     supplierService.createIdentifier.mockResolvedValue({ ...IDENTIFIERS[0], id: 33, approvalInvalidated: true });
+    supplierService.updateIdentifier.mockResolvedValue({ ...IDENTIFIERS[0], identifierValue: "AB-124", version: 2, approvalInvalidated: true });
     supplierService.deleteIdentifier.mockResolvedValue({ id: 31, deleted: true, approvalInvalidated: true });
     const { body } = mountPanel({ approvalPending: true });
     await body.findAll(".q-btn").find((button) => button.text().includes("新增識別資料")).trigger("click");
@@ -103,14 +104,24 @@ describe("SupplierIdentifierPanel", () => {
     await body.findAll(".q-field").find((field) => field.text().includes("識別值")).find("input").setValue("EF-789");
     await body.findAll(".q-btn").find((button) => button.text() === "儲存").trigger("click");
     await flushPromises();
-    expect(notifySuccess).toHaveBeenLastCalledWith(expect.stringContaining(NOTICE));
+    expect(notifyWarning).toHaveBeenLastCalledWith(expect.stringContaining("「EF-789」已新增"));
+    expect(notifyWarning).toHaveBeenLastCalledWith(expect.stringContaining(NOTICE));
+    // REV-121 L-1：編輯都要警告同通知。
+    await body.find('[aria-label="編輯識別資料 AB-123"]').trigger("click");
+    await flushPromises();
+    expect(body.findAll(".q-dialog").at(-1).text()).toContain(WARNING);
+    await body.findAll(".q-field").find((field) => field.text().includes("修改原因")).find("textarea").setValue("證號修正");
+    await body.findAll(".q-btn").find((button) => button.text() === "儲存").trigger("click");
+    await flushPromises();
+    expect(notifyWarning).toHaveBeenLastCalledWith(`供應商 SUP-007 的識別資料「AB-123」已更新。${NOTICE}`);
     await body.find('[aria-label="刪除識別資料 AB-123"]').trigger("click");
     await flushPromises();
     expect(body.findAll(".q-dialog").at(-1).text()).toContain(WARNING);
     await body.findAll(".q-field").find((field) => field.text().includes("刪除原因")).find("textarea").setValue("輸入錯誤");
     await body.findAll(".q-btn").find((button) => button.text() === "確認刪除").trigger("click");
     await flushPromises();
-    expect(notifySuccess).toHaveBeenLastCalledWith(expect.stringContaining(NOTICE));
+    expect(notifyWarning).toHaveBeenLastCalledWith(`供應商 SUP-007 的識別資料「AB-123」已刪除。${NOTICE}`);
+    expect(notifySuccess).not.toHaveBeenCalled();
   });
 
   it("says nothing about the approval for a Supplier that is not Pending (DEF-044)", async () => {
@@ -123,6 +134,7 @@ describe("SupplierIdentifierPanel", () => {
     await body.findAll(".q-field").find((field) => field.text().includes("識別值")).find("input").setValue("EF-789");
     await body.findAll(".q-btn").find((button) => button.text() === "儲存").trigger("click");
     await flushPromises();
-    expect(notifySuccess).toHaveBeenLastCalledWith(expect.not.stringContaining(NOTICE));
+    expect(notifySuccess).toHaveBeenLastCalledWith("供應商 SUP-007 的識別資料「EF-789」已新增");
+    expect(notifyWarning).not.toHaveBeenCalled();
   });
 });

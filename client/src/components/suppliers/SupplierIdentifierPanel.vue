@@ -1,8 +1,8 @@
 <script setup>
 import { nextTick, reactive, ref } from "vue";
-import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
+import { notifyError } from "@/framework/ui/notify.js";
 import supplierService from "@/services/supplier.js";
-import { PENDING_EDIT_WARNING, withInvalidation } from "@/components/suppliers/approvalInvalidation.js";
+import { PENDING_EDIT_WARNING, notifySaved } from "@/components/suppliers/approvalInvalidation.js";
 
 const props = defineProps({
   supplierId: { type: Number, required: true },
@@ -71,7 +71,7 @@ async function submit() {
     } else {
       saved = await supplierService.createIdentifier(props.supplierId, body);
     }
-    notifySuccess(withInvalidation(`供應商 ${props.supplierCode} 的識別資料「${body.identifierValue}」已${editing.value ? "更新" : "新增"}`, saved));
+    notifySaved(`供應商 ${props.supplierCode} 的識別資料「${body.identifierValue}」已${editing.value ? "更新" : "新增"}`, saved);
     dialogOpen.value = false;
     emit("refresh");
   } catch (error) {
@@ -102,7 +102,7 @@ async function confirmDelete() {
       version: deletingIdentifier.value.version,
       reason: deleteReason.value.trim()
     });
-    notifySuccess(withInvalidation(`供應商 ${props.supplierCode} 的識別資料「${deletingIdentifier.value.identifierValue}」已刪除`, deleted));
+    notifySaved(`供應商 ${props.supplierCode} 的識別資料「${deletingIdentifier.value.identifierValue}」已刪除`, deleted);
     deleteDialogOpen.value = false;
     emit("refresh");
   } catch (error) {
