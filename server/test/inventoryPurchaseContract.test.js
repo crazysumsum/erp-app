@@ -115,8 +115,8 @@ test("Purchase ABI refuses partial replay and completes no root when member resu
   assert.ok(fresh.rows.every(row => row.completed_at === null));
 });
 
-test("Purchase ABI rejects invalid query fields and unsupported reversal kind in PR-A", async () => {
-  for (const patch of [{ documentType: "GOODS_RECEIPT_REVERSAL" }, { permission: "inventory.view" }, { documentId: "01" }]) {
+test("Purchase ABI rejects invalid query fields and unsupported document kinds", async () => {
+  for (const patch of [{ documentType: "CUSTOMER_RETURN" }, { permission: "inventory.view" }, { documentId: "01" }]) {
     await assert.rejects(readPurchaseReceipt(ledger(), { ...purchaseReceiptCommand().source, documentType: "GOODS_RECEIPT", ...patch }));
   }
 });
