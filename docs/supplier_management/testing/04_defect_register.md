@@ -348,18 +348,25 @@ Found while writing UAT-030. SEC-014 and design §4 (system-admin) say that a `s
 - **Effect:** no alert or metric signals a break-glass bank reveal or change. The Audit row records it. The request log records each bank route and status code, without the actor, so §12.4's counts could be derived from it, but nothing derives them. UAT-030 fails at its alert step; its other steps pass.
 - **Decision required (HD-142).**
 
-**Fixed under HD-142 A.**
+**Fixed under HD-142 A, except the denied count (HD-143).**
 - **Log event:** every committed bank reveal, create, update, default switch or deactivation by an actor holding `system-admin` writes a warn-level `supplier.bank.privileged_use` system log event.
   - Its context is `action`, `supplierId`, `bankAccountId`, `actorUserId` and `requestId`, and nothing else.
   - The role check uses the roles that `authorize` has just read from the database, not the token's claim.
-  - A failed operation is not reported.
-- **Metrics:** the Supplier metrics job's `supplier.metrics` line gains a `bank` section: `windowMs`, `reveals`, `changes` and `privilegedUses`.
-  - The counts cover the job's five-minute window. They are read from the Audit log through its `(action, occurred_at)` index, and system-admin is judged by the role the actor holds now.
-  - Any privileged use raises `supplier.alert.bank_privileged_use` at warn level.
-- **Denied attempts** are the bank routes' 403s in the request log, like the module's other API error counts.
+  - Nothing is reported for an operation that fails, including at COMMIT. An operation retried after a deadlock reports once.
+  - This event is the authoritative record and the one to page on.
+- **Metrics (a summary only):** each `supplier.metrics` line gains a `bank` section with `bucketStart`, `windowMs`, `reveals`, `changes` and `privilegedUses`.
+  - Each run reports the last whole five-minute bucket, aligned to the epoch and read from the Audit log. Any privileged use in the bucket raises `supplier.alert.bank_privileged_use` at warn level.
+  - The job's cluster scope is a mutex, not once per interval. With N instances, each reports the same bucket, up to N times; deduplicate on `bucketStart`. A bucket can go unreported across a restart (REV-124 R2).
+  - System-admin is judged by the role the actor holds now. A role revoked later under-counts, a role granted later over-counts, and a deleted user (`actor_user_id` set to NULL) drops out. The per-event log has none of these biases.
+- **Denied attempts are not counted.** HD-142 A included a denied count, but nothing durable records a denial: denials roll back, and most are refused by the route policy before the service runs. Today each denied bank request appears in two places:
+  - the request log, as a 403 on a bank route, without the actor;
+  - the system log, as `http.request_failed`, whose `error.code` separates `AUTHORIZATION_DENIED` (route policy) and `BANK_PERMISSION_LOST` (service) from a wrong re-authentication password (`PASSWORD_INVALID`).
+  
+  The narrowing is put to the Product Owner as HD-143 (REV-124 R1).
 - **Tests:**
-  - Unit tests cover each of the five operations by a system-admin, the same calls by an ordinary role, a failed operation, the alert, and the job's log lines. An integration test on real MySQL covers the window, the actions counted and the role join.
-  - Seven mutants are killed, among them: no report on update or on reveal, everyone reported, reporting inside the transaction, no alert, the role join inverted, and the window widened.
+  - Unit tests cover each of the five operations by a system-admin and by an ordinary role, a statement failure, a COMMIT that fails once or always, the alert, and the job's log lines.
+  - An integration test on real MySQL pins both bucket edges, the counted actions, and a non-admin role versus `system-admin`.
+  - Mutants killed: no report on update or on reveal; everyone reported; the report moved inside the transaction (create, update, reveal); no alert; the role join inverted or reduced to "any role"; the window widened; either bucket edge moved.
   - On the real backend, UAT-030 passes, including its alert step.
 
 ## HD-116 A: dispositions (2026-10-21)
