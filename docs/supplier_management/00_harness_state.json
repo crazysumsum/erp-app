@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 432,
+  "revision": 435,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
-  "status": "IMPLEMENTING",
-  "resume_status": null,
+  "status": "BLOCKED",
+  "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-004",
   "current_task": "TASK-051",
   "baseline": {
     "design": "171cf54069cb8d608ed8e263a3fc83f944b993f71e46643cbb8d6717173ce2c6",
     "plan": "3c683c4ea46984b476c96add5e9280b5d395c6cce9e996efa3ec36b683d4f784",
-    "code_commit": "fe5cdf2daf9caa41a42de518556d422b9372df6d",
-    "source_fingerprint": "f15efd1fabb07dd91ba0a3a9e5f444aec37a8d42797a8d875b1fa23c30546b64",
+    "code_commit": "34edae2132cd881620d34b225cb3cac8a497a93e",
+    "source_fingerprint": "80c5a3b2a04990f8020cfa94f0c1044fe862ade544d44ed03c4328d279f43f58",
     "worktree": "/Users/sam/Documents/workspace/erp-supplier-t51y",
     "default_commit": "44d7f836dbe4e1a7e99add06f63f1765277904f1",
     "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
@@ -3297,6 +3297,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-124",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (DEF-046 and DEF-047 fix, HD-141 A, HD-142 A)",
+      "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-def046-047 at 4c63fe3e (git diff origin/main..HEAD)",
+      "reviewed_baseline": "171cf54069cb8d608ed8e263a3fc83f944b993f71e46643cbb8d6717173ce2c6",
+      "source_ref": "docs/supplier_management/implementation/127_rev_124_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -6005,6 +6017,39 @@
       "source_ref": "Local, not CI. All Supplier server tests (92 files, unit and integration, DB_INTEGRATION_TESTS=1) 726/726, 0 skipped, before the follow-ups; after them, supplierImportPrecheck, supplierAdminService and supplierImport.integration 79/79, 0 skipped. New tests fail on main's processor. Mutants killed: guard removed, SELECT without supplier_name, SELECT without display_name (REV-122 L-1), blank fallback dropped, column misnamed, first column only, guard on active too, UI path never invalidates. eslint exit 0.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-26T15:04:00+08:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "Import refuses update rows that would invalidate a Pending approval (PR #285, DEF-045) merged to main",
+      "code_commit": "2fb7fcf8bdc36f440d4fd5373f58d723ba4b31e5",
+      "spec_baseline": "3c683c4ea46984b476c96add5e9280b5d395c6cce9e996efa3ec36b683d4f784",
+      "source_fingerprint": "f15efd1fabb07dd91ba0a3a9e5f444aec37a8d42797a8d875b1fa23c30546b64",
+      "status": "PASS",
+      "source_ref": "PR #285 merged as 2fb7fcf8bdc36f440d4fd5373f58d723ba4b31e5 at 2026-10-26T07:25:19Z on the Product Owner's word ('#284 同 DEF-045 都係 review 完 CI 過就 merge', then 'CI已通過'), with --match-head-commit 770d18fa, after a gate that refused unless the latest run of every check was SUCCESS (13 checks, PR run 40283630346), main was an ancestor of HEAD and the local, remote and PR heads were equal. Review REV-122 APPROVED; findings fixed before merge.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-26T07:25:19+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEF-046 and DEF-047 fix, developer checks (not formal UAT)",
+      "code_commit": "bfc3c71d990df4dee61c60db0425c20f3d7486a2",
+      "spec_baseline": "3c683c4ea46984b476c96add5e9280b5d395c6cce9e996efa3ec36b683d4f784",
+      "source_fingerprint": "5bf588d66dc40a7615382d24c3b911084eaa0dda3c587f78b797ed85e1d29e3c",
+      "status": "PASS",
+      "source_ref": "Local, not CI. Client 114 files, 956 tests; Supplier server tests (unit + integration, DB_INTEGRATION_TESTS=1) 729/729, 0 skipped; eslint exit 0. Negative control: the strengthened wording test fails on main's panel. Mutants killed: no report on update / on reveal, everyone reported, report inside the transaction, no alert, role join inverted, window widened. Real backend: full UAT config with the PHASE-003 spec from claude/supplier-uat-phase-003 34 passed, 7 skipped (UAT-028 and UAT-030 now pass); the privileged_use events carry ids only.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-26T17:19:00+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEF-046 and DEF-047 fix after REV-124 follow-ups, developer checks",
+      "code_commit": "34edae2132cd881620d34b225cb3cac8a497a93e",
+      "spec_baseline": "3c683c4ea46984b476c96add5e9280b5d395c6cce9e996efa3ec36b683d4f784",
+      "source_fingerprint": "80c5a3b2a04990f8020cfa94f0c1044fe862ade544d44ed03c4328d279f43f58",
+      "status": "PASS",
+      "source_ref": "Local, not CI. supplierBankService + supplierObservability 35/35; supplierObservability integration 2/2 with DB_INTEGRATION_TESTS=1, 0 skipped; eslint exit 0. REV-124 survivors now killed: any-role counted, start edge exclusive, end edge inclusive, update/create report inside the transaction, reveal report before decryption.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-26T17:31:00+08:00"
     }
   ],
   "pending_decisions": [
@@ -7844,6 +7889,46 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-26: 'HD-140 A'."
+    },
+    {
+      "id": "HD-141",
+      "impact": "MINOR",
+      "question": "DEF-046: the default-switch confirmation shows literal **同時被取消** (Vue does not render Markdown). (A) Render it as <strong>…</strong> in SupplierBankPanel.vue, with a component assertion; fix PR before the PHASE-003 PR. (B) Plain text without emphasis. (C) Leave it.",
+      "affected_ids": [
+        "DEF-046",
+        "UAT-028",
+        "SupplierBankPanel.vue"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-26: 'HD-141 A，HD-142 A，review 完 CI 過就 merge'."
+    },
+    {
+      "id": "HD-142",
+      "impact": "MAJOR",
+      "question": "DEF-047: SEC-014 / design §4 require system-admin bank reveal and write to go through alert controls, and §12.4 lists bank reveal/change counts and unauthorized attempts; none exist besides the Audit row. (A) Emit a warn-level system log event (e.g. supplier.bank.privileged_use: action, supplierId, bankAccountId, actor id, no account data) on every bank reveal or write by a system-admin actor, and add bank reveal/change/denied counts with a privileged-use count to the Supplier metrics job, alerting when privileged use is non-zero. (B) Only the privileged-use log event. (C) Accept Audit as the only signal and amend SEC-014/§12.4 and UAT-030's evidence.",
+      "affected_ids": [
+        "DEF-047",
+        "UAT-030",
+        "SupplierBankService.js",
+        "supplierMetrics.js",
+        "SupplierMetricsJob.js"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-26: 'HD-141 A，HD-142 A，review 完 CI 過就 merge'."
+    },
+    {
+      "id": "HD-143",
+      "impact": "MAJOR",
+      "question": "HD-142 A included a denied-attempt count in the Supplier metrics; it was not built (REV-124 R1). No durable source exists: denials roll back and most are refused by the route policy before the service runs. Today each denied bank request is in the request log (403, no actor) and in the system log as http.request_failed whose error.code separates AUTHORIZATION_DENIED / BANK_PERMISSION_LOST from PASSWORD_INVALID (no actor). (A) Accept: denied attempts are counted from those logs; record the narrowing of HD-142 A. (B) Build a durable denied count: a framework hook that records each bank-route authorization denial (actor, route, code) outside the rolled-back transaction, into the Supplier audit log or a new table (a new table needs schema sign-off), and count it in the metrics job. (C) Count only service-level BANK_PERMISSION_LOST denials, written in a separate transaction.",
+      "affected_ids": [
+        "DEF-047",
+        "SEC-014",
+        "03_design_spec.md §12.4",
+        "supplierMetrics.js",
+        "SupplierBankService.js"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
     }
   ],
   "external_actions": [
@@ -9248,7 +9333,7 @@
     {
       "id": "DEF-045",
       "severity": "MEDIUM",
-      "status": "IN_PROGRESS",
+      "status": "CLOSED",
       "source_ids": [
         "REV-121 I-1",
         "03_design_spec.md §4.5",
@@ -9256,9 +9341,42 @@
         "applySupplierImportRow.js",
         "docs/supplier_management/testing/04_defect_register.md"
       ],
+      "closure_evidence": [
+        "PR #285 merge commit 2fb7fcf8bdc36f440d4fd5373f58d723ba4b31e5",
+        "PR CI run 40283630346 on head 770d18fa: all 13 checks success",
+        "REV-122 (docs/supplier_management/implementation/125_rev_122_independent_review.md) APPROVED, findings fixed",
+        "All Supplier server tests 726/726 with DB_INTEGRATION_TESTS=1, 0 skipped (developer run)"
+      ],
+      "risk_approval_id": null
+    },
+    {
+      "id": "DEF-046",
+      "severity": "LOW",
+      "status": "IN_PROGRESS",
+      "source_ids": [
+        "UAT-028",
+        "03_design_spec.md §7.5",
+        "SupplierBankPanel.vue",
+        "docs/supplier_management/testing/04_defect_register.md"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": null
+    },
+    {
+      "id": "DEF-047",
+      "severity": "MEDIUM",
+      "status": "IN_PROGRESS",
+      "source_ids": [
+        "UAT-030",
+        "SEC-014",
+        "03_design_spec.md §4 system-admin",
+        "03_design_spec.md §12.4",
+        "supplierMetrics.js",
+        "docs/supplier_management/testing/04_defect_register.md"
+      ],
       "closure_evidence": [],
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "DEF-045 (HD-140 A) PR on claude/supplier-def045-import-pending: independent review, PR, merge on CI green. Then UAT PHASE-003."
+  "next_safe_action": "Await HD-143 (denied-attempt count). Then DEF-046/047 PR on claude/supplier-def046-047, merge on CI green; then the PHASE-003 PR."
 }
