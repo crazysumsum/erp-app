@@ -2,6 +2,27 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { withPurchaseUnitRequest } from "../test-support/inventoryPurchaseFixtures.js";
 import { issuePurchaseReceiptContext, consumePurchaseReceiptContext } from "../src/modules/inventory/InventoryPurchaseContext.js";
+import * as purchaseContexts from "../src/modules/inventory/InventoryPurchaseContext.js";
+
+function reversalRequest(f) {
+  f.command = { actor: { ...f.command.actor, claimedPermissions: ["purchasing.view", "inventory.adjust"] },
+    correlationId: "reversal-context", source: f.command.source, goodsReceiptId: "42", reasonText: "Wrong received quantity",
+    lines: [{ sourceLineId: "81", originalSourceLineId: "81", originalMovementId: 100, baseQuantity: 1 }] };
+  f.state.permissions = [...f.command.actor.claimedPermissions];
+  f.req.auth.claims.permissions = [...f.state.permissions]; f.req.auth.type = "jwt-device-password";
+  f.req.auth.claims.did = "a".repeat(64);
+  f.state.deviceBinding = { id: 2, user_id: 7, device_id: f.req.auth.claims.did, public_key: Buffer.from("synthetic unit key"), status: "approved" };
+  f.req.auth.deviceBinding = { ...f.state.deviceBinding };
+  f.req.apiRoute.path = "/api/v1/goods-receipts/:id/reversals/create";
+  f.req.apiRoute.authType = "jwt-device-password";
+  f.req.get = () => String(1_800_000_000_000);
+  f.options.signatureMaxSkewSeconds = 300;
+  f.options.ownerProof = { goodsReceiptId: "42", status: "CONFIRMED",
+    details: [{ sourceLineId: "81", goodsReceiptId: "42", originalMovementId: 100 }] };
+  return f;
+}
+const issueReversal = f => purchaseContexts.issuePurchaseReversalContext(f.req, f.tx, f.command, f.options);
+const consumeReversal = (f, capsule) => purchaseContexts.consumePurchaseReversalContext(f.tx, capsule, f.command, f.options.database);
 
 const issue = f => issuePurchaseReceiptContext(f.req, f.tx, f.command, f.confirmedLines, f.options);
 const consume = (f, capsule) => consumePurchaseReceiptContext(f.tx, capsule, f.command, f.options.database);
@@ -95,4 +116,80 @@ test("Purchase context retains original time limits and rejects changed request 
     await assert.rejects(guard.check());
   });
   await withPurchaseUnitRequest(async f => { delete f.options.clockToleranceSeconds; assert.throws(() => issue(f)); });
+});
+
+test("Purchase reversal context seals original GR proof and fixed device-password route without inventory.view", async () => {
+  await withPurchaseUnitRequest(async f => {
+    reversalRequest(f); const capsule = issueReversal(f), guard = consumeReversal(f, capsule);
+    assert.deepEqual(capsule, {}); assert.equal(guard.ownerStatus, "CONFIRMED");
+    const actor = await guard.check({ locking: true }); assert.equal(actor.id, 7);
+    assert.equal(actor.permissions.includes("inventory.view"), false);
+    assert.ok(f.queries.filter(sql => sql.startsWith("SELECT")).every(sql => sql.endsWith("FOR SHARE")));
+    assert.deepEqual(guard.audit, { deviceId: "a".repeat(64), signedRequestAt: 1_800_000_000_000 });
+  });
+});
+
+test("Purchase reversal context rejects fake, reused, cross-kind and changed-intent capsules", async () => {
+  await withPurchaseUnitRequest(async f => {
+    reversalRequest(f); assert.throws(() => consumeReversal(f, {}));
+    const capsule = issueReversal(f); assert.throws(() => issueReversal(f));
+    assert.throws(() => consume(f, capsule));
+    f.command.lines[0].baseQuantity = 2; assert.throws(() => consumeReversal(f, capsule));
+    f.command.lines[0].baseQuantity = 1; consumeReversal(f, capsule); assert.throws(() => consumeReversal(f, capsule));
+  });
+});
+
+test("Purchase reversal context rejects extra, missing, duplicate and mismatched owner projections", async () => {
+  for (const change of [f => { delete f.options.ownerProof; }, f => { f.options.ownerProof.requestBody = true; },
+    f => { f.options.ownerProof.goodsReceiptId = "43"; }, f => { f.options.ownerProof.status = "DRAFT"; },
+    f => { f.options.ownerProof.details = []; }, f => { f.options.ownerProof.details.push({ ...f.options.ownerProof.details[0] }); },
+    f => { f.options.ownerProof.details[0].goodsReceiptId = "43"; }, f => { f.options.ownerProof.details[0].sourceLineId = "82"; },
+    f => { f.options.ownerProof.details[0].originalMovementId = 101; }, f => { f.options.ownerProof.details[0].extra = true; }]) {
+    await withPurchaseUnitRequest(async f => { reversalRequest(f); change(f); assert.throws(() => issueReversal(f)); });
+  }
+});
+
+test("Purchase reversal context accepts terminal owner proof for replay but freezes it at issuance", async () => {
+  await withPurchaseUnitRequest(async f => {
+    reversalRequest(f); f.options.ownerProof.status = "REVERSED";
+    const capsule = issueReversal(f); f.options.ownerProof.status = "CONFIRMED";
+    assert.equal(consumeReversal(f, capsule).ownerStatus, "REVERSED");
+  });
+});
+
+test("Purchase reversal proof rejects same-cardinality duplicate and missing original detail", async () => {
+  await withPurchaseUnitRequest(async f => {
+    reversalRequest(f); f.command.lines.push({ sourceLineId: "82", originalSourceLineId: "82", originalMovementId: 101, baseQuantity: 1 });
+    f.options.ownerProof.details.push({ ...f.options.ownerProof.details[0] });
+    assert.throws(() => issueReversal(f), error => error.code === "PERMISSION_STALE");
+  });
+});
+
+test("Purchase reversal context rejects wrong request identity, route, resource and auth strategy", async () => {
+  for (const change of [f => { f.req.context = { ...f.req.context }; }, f => { f.req.apiRoute.path += "/fake"; },
+    f => { f.req.input.params.id = "51"; }, f => { f.req.auth.type = "jwt"; },
+    f => { f.req.input.params.extra = "x"; }, f => { f.req.method = "GET"; }]) {
+    await withPurchaseUnitRequest(async f => { reversalRequest(f); change(f); assert.throws(() => issueReversal(f)); });
+  }
+});
+
+test("Purchase reversal context rechecks device revocation, changed key and binding identity", async () => {
+  for (const change of [f => { f.state.deviceBinding.status = "revoked"; }, f => { f.state.deviceBinding.public_key = Buffer.from("changed"); },
+    f => { f.state.deviceBinding.id++; }, f => { f.state.deviceBinding.user_id++; }, f => { f.state.deviceBinding.device_id = "b".repeat(64); }]) {
+    await withPurchaseUnitRequest(async f => {
+      reversalRequest(f); const guard = consumeReversal(f, issueReversal(f)); await guard.check(); change(f);
+      await assert.rejects(guard.check({ locking: true }));
+    });
+  }
+});
+
+test("Purchase reversal context rechecks permission, token and signature/session deadlines", async () => {
+  for (const change of [f => { f.state.permissions = ["purchasing.view"]; }, f => { f.state.version++; },
+    f => { f.state.now += 300001; }, f => { f.state.status = "inactive"; }]) {
+    await withPurchaseUnitRequest(async f => {
+      reversalRequest(f); const guard = consumeReversal(f, issueReversal(f)); change(f); await assert.rejects(guard.check());
+    });
+  }
+  await withPurchaseUnitRequest(async f => { reversalRequest(f); f.req.auth.claims.auth_time -= 86401; assert.throws(() => issueReversal(f)); });
+  await withPurchaseUnitRequest(async f => { reversalRequest(f); delete f.options.signatureMaxSkewSeconds; assert.throws(() => issueReversal(f)); });
 });

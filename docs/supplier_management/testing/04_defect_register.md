@@ -185,6 +185,31 @@ Found while writing the UAT PHASE-001 browser tests (HD-124 A). FR-PARTY-001 (Mu
 - **Effect:** UAT-048 fails at its ordering step. Every other step of UAT-048 passes.
 - **Decision:** HD-129 A, fix it. This adds a `sort_order` column to `supplier_addresses` and `supplier_contacts`, an API to change the order, and move-up and move-down controls in the UI. The migration needs its own explanation and approval before it is written. The design text changes too, which moves the design baseline.
 
+**Fixed under HD-129 A. The migration was approved as HD-136.**
+- **Schema:** migration `0103_add_supplier_party_sort_order` adds `sort_order INT NOT NULL DEFAULT 0` to both tables.
+  - Each Supplier's current display order is filled in: addresses by status then id; contacts by status, name, then id.
+  - It is numbered 0103 because an in-flight sales-archive branch already uses 0101 and 0102.
+  - The 0032 and 0033 inspectors accept the new column; their `up()` is unchanged. The startup self-check requires the column through 0103's own inspector.
+- **Server:**
+  - New rows go last.
+  - `POST .../addresses/:addressId/move` and `.../contacts/:contactId/move` take `{ direction: up|down, version }`. They swap with the adjacent **active** row under the Supplier lock and are audited as `supplier.address.reorder` / `supplier.contact.reorder`. The first row cannot move up and the last cannot move down (409 `SUPPLIER_PARTY_MOVE_NOT_POSSIBLE`).
+  - Lists order by status, sort_order, id.
+  - The ordering address that the Purchasing provider returns does not include `sortOrder`.
+- **UI:** 上移 and 下移 on each active address and contact.
+- **Design:** §5.5, §5.6 and §6 are updated. The design baseline moved (29a0615a → 171cf540) and the bound approvals were re-affirmed as `-HD129` copies. Purchasing pins the Supplier design hash, so its owner has to refresh that pin.
+- **Tests:**
+  - Integration: move up and down, the ends, skipping inactive rows, version conflict, other Suppliers' rows untouched, the 0103 backfill order and its rerun.
+  - The migration convergence and adding-Supplier cases (TC-002, TC-006) and Audit coverage (TC-103).
+  - Panel vitest.
+  - UAT-048 now passes on the real backend.
+- **REV-118 follow-ups:**
+  - Locking reads, so two creates at the same time cannot share an order.
+  - Tied rows are renumbered before a move.
+  - Only the moved row's version changes; the neighbour is recorded in the Audit metadata.
+  - A startup case refuses a deployment without 0103.
+  - The manual rollback is written in 0103's header.
+  - The list reloads after a refused move.
+
 ## DEF-038 — MEDIUM
 
 Found by UAT-031. The Supplier detail shows the default payment term as its internal ID (for example 「付款條件 2」), whether or not the term is Active, because the page prints `defaultPaymentTermId`. The edit form shows the same ID when the Supplier's term has since been deactivated, because the Active-only options cannot label it. UAT-031 expects an old inactive value to stay readable. Currencies are not affected, because their code is the identifier.

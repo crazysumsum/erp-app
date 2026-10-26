@@ -1,0 +1,40 @@
+{
+  "status": "CANDIDATE_REVIEW_ONLY_NOT_APPLIED",
+  "author": "Codex /root",
+  "reviewer": "Codex /root/purchase_b_owner_proof_contract_review",
+  "method": "SEPARATE_AGENT",
+  "cross_model": "SKIPPED_BY_ACTUAL_SAM_STANDING_AUTHORITY_APR291",
+  "cycles": [
+    {
+      "cycle": 1,
+      "scope": "Four-file candidate and schema dependency, actual read-only agent reply in current chat",
+      "patch_sha256": "3c3b24b632a2d5ca0d1463a851e1d2a03e79e70c14af5b7dee1c5b9797f3c84c",
+      "findings": [
+        {
+          "priority": "P2",
+          "path": "docs/purchasing_receiving_management/03_design_spec.md:1387",
+          "finding": "Reconciliation still compares new reversal Detail PKs, which differ from proposed original GR Detail source IDs and can collapse repeated partial events.",
+          "disposition": "VALID_ACTIONABLE: explicit original GR/event/original Detail join and persisted operation/movement/original movement/quantity checks added in v2."
+        }
+      ],
+      "remaining": "No further actionable P0-P3 in bounded first-cycle review. No runtime execution."
+    },
+    {
+      "cycle": 2,
+      "scope": "Only section8.9 delta, corresponding Purchasing provided SHA pin and v2 patch mapping/applicability; unchanged first-cycle artifact not independently re-reviewed",
+      "patch_sha256": "92441af3f95e459e0d8bf3b045e146b5434271c419d67c557566c2c27444bf79",
+      "findings": [],
+      "remaining": "Actual agent final reply: no remaining actionable P0-P3 in cycle-2 delta or manifest/patch mapping. Not runtime or final implementation source approval."
+    }
+  ],
+  "candidate_hashes": {
+    "inventory_design": "a0e8e789cdbf9431c24fcc859b20a39cb1ba6a924aca2d51363349e058860687",
+    "inventory_plan": "1e9cdb380f31153173dab9b4959dcd274665107b3d0435dad37a2ddcdc09b7c7",
+    "provider": "8c0742a0c92b3ea96eac64ff8539cf5ab153124d3da1d555530977dd8baf6f7b",
+    "inventory_manifest": "07e8297398d9e85ffa4363598ff5d24a130e3c1ead2f2689b9f9f979a62ace9f",
+    "purchasing_design": "5785e0a6cb06fe8c5bedf472349e1b97f0c415ecec7c39c649de32eed9252b32",
+    "purchasing_manifest": "324f6b3bb82d4f4a8d06d89739112506ffe42fb59466c8a63ebb48082dea914c"
+  },
+  "runtime": "NOT_RUN_NEW_SEMANTICS",
+  "human_approval": "PENDING_ACTUAL_SAM"
+}

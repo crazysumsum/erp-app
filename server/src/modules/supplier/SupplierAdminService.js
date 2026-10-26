@@ -887,14 +887,14 @@ export class SupplierAdminService {
 
   async #addresses(id, { limit, offset }) {
     const [rows] = await this.database.query(
-      "SELECT * FROM supplier_addresses WHERE supplier_id = ? ORDER BY status, id LIMIT ? OFFSET ?", [id, limit, offset]);
+      "SELECT * FROM supplier_addresses WHERE supplier_id = ? ORDER BY status, sort_order, id LIMIT ? OFFSET ?", [id, limit, offset]);
     const purposes = await this.#purposes("supplier_address_purposes", "address_id", id, rows);
     return rows.map((address) => toAddressResponse(address, purposes.get(Number(address.id)) ?? []));
   }
 
   async #contacts(id, { limit, offset }) {
     const [rows] = await this.database.query(
-      "SELECT * FROM supplier_contacts WHERE supplier_id = ? ORDER BY status, name, id LIMIT ? OFFSET ?", [id, limit, offset]);
+      "SELECT * FROM supplier_contacts WHERE supplier_id = ? ORDER BY status, sort_order, id LIMIT ? OFFSET ?", [id, limit, offset]);
     const purposes = await this.#purposes("supplier_contact_purposes", "contact_id", id, rows);
     return rows.map((contact) => toContactResponse(contact, purposes.get(Number(contact.id)) ?? []));
   }

@@ -672,11 +672,21 @@ test("@uat UAT-048 several addresses per purpose with exactly one primary, saved
   await expect(page.getByRole("button", { name: "編輯地址 UAT-048 Office B" })).toHaveCount(0);
   await evidence(page, testInfo, "addresses");
   await expect(await auditRow(page, "停用地址")).toHaveCount(1);
-  expect(problems).toEqual([]);
 
-  // 調整順序並保存（FR-PARTY-001）：DEF-037，而家冇排序功能，修正獲批（HD-129 A）。
+  // 調整順序並保存（FR-PARTY-001，DEF-037）：Warehouse C 上移，越過已停用嘅 Office B，排到 Warehouse A 前面；重新載入次序照舊。
   await page.getByRole("tab", { name: /^地址/u }).click();
-  await expect(page.getByRole("button", { name: /上移|下移/u }).first()).toBeVisible();
+  const order = async () => (await page.locator(".q-item .q-item__label:not(.q-item__label--caption)").allTextContents())
+    .map((text) => text.replace(/已停用/u, "").trim()).filter((text) => text.startsWith("UAT-048"));
+  expect(await order()).toEqual(["UAT-048 Warehouse A", "UAT-048 Warehouse C", "UAT-048 Office B"]);
+  await expect(page.getByRole("button", { name: "上移地址 UAT-048 Warehouse A" })).toBeDisabled();
+  await page.getByRole("button", { name: "上移地址 UAT-048 Warehouse C" }).click();
+  await expect(page.getByRole("button", { name: "上移地址 UAT-048 Warehouse C" })).toBeDisabled();
+  await page.reload();
+  await page.getByRole("tab", { name: /^地址/u }).click();
+  expect(await order()).toEqual(["UAT-048 Warehouse C", "UAT-048 Warehouse A", "UAT-048 Office B"]);
+  await evidence(page, testInfo, "ordered");
+  await expect(await auditRow(page, "調整地址次序")).toHaveCount(1);
+  expect(problems).toEqual([]);
 });
 
 test("@uat UAT-050 an unreferenced identifier is created, corrected and deleted under control, and a normalised duplicate is refused", async ({ as }, testInfo) => {

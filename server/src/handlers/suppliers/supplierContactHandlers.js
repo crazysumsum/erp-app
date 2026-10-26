@@ -39,13 +39,19 @@ const DEACTIVATE_BODY = Object.freeze({
   type: "object", required: ["version"], additionalProperties: false,
   properties: { version: { type: "integer", minimum: 1 } }
 });
+// DEF-037（HD-136）：上移／下移，同相鄰有效聯絡人交換顯示次序。
+const MOVE_BODY = Object.freeze({
+  type: "object", required: ["direction", "version"], additionalProperties: false,
+  properties: { direction: { type: "string", enum: ["up", "down"] }, version: { type: "integer", minimum: 1 } }
+});
+
 export const CONTACT_RESPONSE = Object.freeze({
   type: "object", additionalProperties: false,
-  required: ["id", "supplierId", "name", "jobTitle", "department", "email", "phone", "mobile", "preferredLanguage", "notes", "status", "purposes", "version", "updatedAt"],
+  required: ["id", "supplierId", "name", "jobTitle", "department", "email", "phone", "mobile", "preferredLanguage", "notes", "status", "sortOrder", "purposes", "version", "updatedAt"],
   properties: {
     id: { type: "integer" }, supplierId: { type: "integer" }, name: { type: "string" }, jobTitle: { type: "string" },
     department: { type: "string" }, email: { type: "string" }, phone: { type: "string" }, mobile: { type: "string" },
-    preferredLanguage: { type: "string" }, notes: { type: "string" }, status: { type: "string", enum: ["active", "inactive"] },
+    preferredLanguage: { type: "string" }, notes: { type: "string" }, status: { type: "string", enum: ["active", "inactive"] }, sortOrder: { type: "integer" },
     purposes: { type: "array", items: PURPOSE_SCHEMA }, version: { type: "integer" }, updatedAt: { type: "integer" }
   }
 });
@@ -98,5 +104,17 @@ export class DeactivateSupplierContactHandler extends SupplierContactHandler {
   };
   async execute(req) {
     return this.response(await this.contacts.deactivate({ ...context(req), contactId: Number(req.input.params.contactId), ...req.input.body }));
+  }
+}
+
+export class MoveSupplierContactHandler extends SupplierContactHandler {
+  static handlerName = "moveSupplierContact";
+  static api = {
+    method: "POST", inputCoercion: false, path: "/api/v1/suppliers/:supplierId/contacts/:contactId/move", description: "上移或下移供應商聯絡人的顯示次序。",
+    authorizationPolicies: SUPPLIER_MGMT_POLICY,
+    requestSchema: { params: CHILD_PARAMS, query: EMPTY_SUPPLIER_SCHEMA, body: MOVE_BODY }, responseSchema: { 200: CONTACT_RESPONSE }
+  };
+  async execute(req) {
+    return this.response(await this.contacts.move({ ...context(req), contactId: Number(req.input.params.contactId), ...req.input.body }));
   }
 }

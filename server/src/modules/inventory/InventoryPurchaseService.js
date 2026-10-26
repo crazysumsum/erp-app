@@ -3,6 +3,7 @@ import { authorizePurchaseLookup, consumePurchaseReceiptContext } from "./Invent
 import { normalizePurchaseReceipt } from "./inventoryPurchaseValidation.js";
 import { claimPurchaseReceipt, completePurchaseReceipt, readPurchaseReceipt } from "./inventoryPurchaseReceipts.js";
 import { inventoryError } from "./inventoryErrors.js";
+import { reversePurchaseReceiptBatchInTransaction } from "./inventoryPurchaseReversal.js";
 import { inventoryRemainingLifeDays, isInventoryLotExpired, validateInventoryLotInput } from "./inventoryValidation.js";
 
 const compareText = (a, b) => a < b ? -1 : a > b ? 1 : 0;
@@ -38,6 +39,10 @@ function checkProfile(line, profile, date, actor) {
 export class InventoryPurchaseService {
   constructor(options) {
     Object.assign(this, options);
+  }
+
+  reversePurchaseReceiptBatchInTransaction(tx, command) {
+    return reversePurchaseReceiptBatchInTransaction(this, tx, command);
   }
 
   async findOperationsBySource(tx, query) {

@@ -105,9 +105,9 @@
       },
       {
         "id": "inventory-purchase-provider",
-        "version": "1.0-candidate",
+        "version": "1.1-candidate; receipt1.0 unchanged; reversal original-GR source and post-result consumer inserts",
         "source": "docs/inventory_management/implementation/purchase-provider-contract-v1.md",
-        "sha256": "fb1c9c2705949150e77e943630e2cae90b410f4bd2f0022dff33ec728df19f72",
+        "sha256": "8c0742a0c92b3ea96eac64ff8539cf5ab153124d3da1d555530977dd8baf6f7b",
         "consumers": [
           "purchasing-receiving"
         ]

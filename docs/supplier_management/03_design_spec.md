@@ -621,15 +621,16 @@ Primary key為`(supplier_id,gram_hash)`；另建`INDEX(gram_hash,supplier_id)`�
 | `phone` | VARCHAR(50) | 選填。 |
 | `notes` | VARCHAR(500) | 純文字。 |
 | `status` | VARCHAR(20) | active／inactive。 |
+| `sort_order` | INT NOT NULL DEFAULT 0 | 同一 Supplier 內的顯示次序，細者先；新增時取 max＋1，使用者以上移／下移與相鄰有效地址交換（FR-PARTY-001；DEF-037、HD-129 A、HD-136）。不設 unique，交換在同一 transaction 內完成。 |
 | `version`、時間、操作者 | 共通欄位 | — |
 
-索引：`(supplier_id,status,id)`、`(country_code)`。
+索引：`(supplier_id,status,id)`、`(country_code)`。列表次序 `status, sort_order, id`。
 
 `supplier_address_purposes`：`address_id`、`supplier_id`、`purpose_code VARCHAR(30)`、`is_primary`、generated `primary_slot`（primary 時為 1，否則 NULL）、時間／操作者。Primary key `(address_id,purpose_code)`；composite FK `(address_id,supplier_id)` 指向 address 的 unique `(id,supplier_id)`；`UNIQUE(supplier_id,purpose_code,primary_slot)` 保證每用途最多一個 primary。允許 purpose：registered／office／ordering／return／remittance／other。停用Address時在同一transaction把其所有purpose的`is_primary`清為0；mapping保留作歷史，但inactive owner不可再被設為primary。
 
 ### 5.6 `supplier_contacts` 與 `supplier_contact_purposes`
 
-`supplier_contacts`：`id`、`supplier_id` FK CASCADE、`name VARCHAR(190)`、`job_title VARCHAR(100)`、`department VARCHAR(100)`、`email VARCHAR(254)`、`phone VARCHAR(50)`、`mobile VARCHAR(50)`、`preferred_language VARCHAR(20)`、`notes VARCHAR(500)`、`status`、version／時間／操作者。索引 `(supplier_id,status,name)`、`(email)`。
+`supplier_contacts`：`id`、`supplier_id` FK CASCADE、`name VARCHAR(190)`、`job_title VARCHAR(100)`、`department VARCHAR(100)`、`email VARCHAR(254)`、`phone VARCHAR(50)`、`mobile VARCHAR(50)`、`preferred_language VARCHAR(20)`、`notes VARCHAR(500)`、`status`、`sort_order INT NOT NULL DEFAULT 0`（顯示次序，規則同 Address）、version／時間／操作者。索引 `(supplier_id,status,name)`、`(email)`。列表次序 `status, sort_order, id`。
 
 `supplier_contact_purposes` 與 address purpose 使用相同 composite FK／generated primary slot 模式；purpose：general／orders／sales／accounts_payable／returns／emergency。每個 Contact 可有多個 purpose，每個 Supplier 每種 purpose 至多一名 active primary；停用 Contact 時同交易移除其 primary 標記。
 
@@ -848,8 +849,8 @@ Supplier audit 與 `user_audit_logs` 分表，避免擴大現有 User domain ser
 
 | Resource | APIs | Auth |
 | --- | --- | --- |
-| Address | `POST /api/v1/suppliers/:supplierId/addresses/create`、`POST .../:addressId/update`、`POST .../:addressId/deactivate` | jwt＋supplier.mgmt |
-| Contact | `POST /api/v1/suppliers/:supplierId/contacts/create`、`POST .../:contactId/update`、`POST .../:contactId/deactivate` | jwt＋supplier.mgmt |
+| Address | `POST /api/v1/suppliers/:supplierId/addresses/create`、`POST .../:addressId/update`、`POST .../:addressId/deactivate`、`POST .../:addressId/move`（`{direction: up｜down, version}`，與相鄰有效地址交換 `sort_order`，Audit `supplier.address.reorder`；HD-136） | jwt＋supplier.mgmt |
+| Contact | `POST /api/v1/suppliers/:supplierId/contacts/create`、`POST .../:contactId/update`、`POST .../:contactId/deactivate`、`POST .../:contactId/move`（同上，Audit `supplier.contact.reorder`；HD-136） | jwt＋supplier.mgmt |
 | Identifier | `POST /api/v1/suppliers/:supplierId/identifiers/create`、`POST .../:identifierId/update`、`POST .../:identifierId/delete` | jwt＋supplier.mgmt；delete 僅未被引用 child |
 
 Supplier detail 已包含分頁上限內的 children；當單個 Supplier 超過 100 筆 Contact／Address 時，另用 `GET .../contacts`／`addresses` server-side 分頁。Create／update body 帶完整 purpose array；service 在同一交易覆蓋 mapping 並處理 primary slot。

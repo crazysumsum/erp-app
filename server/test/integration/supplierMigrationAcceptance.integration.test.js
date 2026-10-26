@@ -218,7 +218,7 @@ integrationTest("TC-001 (MIG-001): the runner deploys every migration on an empt
 integrationTest("TC-002 (MIG-002): every Supplier migration stopped before any one of its writes converges on rerun to the same schema and data as a clean run, a rerun of a finished one changes no row and runs no DDL, and rerunning all of them over business data changes nothing", async (t) => {
   const migrations = await allMigrations();
   const supplier = migrations.filter(isSupplierMigration);
-  assert.equal(supplier.length, 15, supplier.join(", "));
+  assert.equal(supplier.length, 16, supplier.join(", "));
   let cases = 0;
   let partial = 0;
   for (const target of supplier) {
@@ -260,7 +260,7 @@ integrationTest("TC-002 (MIG-002): every Supplier migration stopped before any o
   }
   t.diagnostic(`${supplier.length} migrations, ${cases} stopped runs, ${partial} of them after at least one write`);
 
-  // 成套 migration 做完、有業務資料之後，再跑晒 15 支 Supplier migration：schema 同資料都唔變（REV-102 M-4）。
+  // 成套 migration 做完、有業務資料之後，再跑晒 16 支 Supplier migration：schema 同資料都唔變（REV-102 M-4）。
   const full = await scratchDatabase(t);
   for (const name of migrations) await apply(full.connection, name);
   const now = Date.now();
@@ -399,7 +399,7 @@ integrationTest("TC-006 (MIG-006): adding Supplier to an existing deployment cha
 
   const supplierMigrations = migrations.filter(isSupplierMigration);
   assert.deepEqual(supplierMigrations.map((file) => file.slice("migrations/".length, "migrations/0000".length)),
-    ["0028", "0029", "0030", "0031", "0032", "0033", "0034", "0035", "0036", "0037", "0061", "0062", "0080", "0081", "0087"]);
+    ["0028", "0029", "0030", "0031", "0032", "0033", "0034", "0035", "0036", "0037", "0061", "0062", "0080", "0081", "0087", "0103"]);
   const recorder = recording(connection);
   for (const migration of supplierMigrations) await apply(recorder.connection, migration);
   const after = await snapshot(connection, name, { keepTimes: true });

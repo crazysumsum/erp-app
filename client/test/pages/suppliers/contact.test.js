@@ -4,7 +4,7 @@ import { Quasar } from "quasar";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/services/supplier.js", () => ({
-  default: { createContact: vi.fn(), listContacts: vi.fn(), updateContact: vi.fn(), deactivateContact: vi.fn() }, service: { name: "supplier" }
+  default: { createContact: vi.fn(), listContacts: vi.fn(), updateContact: vi.fn(), deactivateContact: vi.fn(), moveContact: vi.fn() }, service: { name: "supplier" }
 }));
 vi.mock("@/framework/ui/confirm.js", () => ({ confirm: vi.fn() }));
 vi.mock("@/framework/ui/notify.js", () => ({ notifySuccess: vi.fn(), notifyError: vi.fn() }));
@@ -100,6 +100,22 @@ describe("SupplierContactPanel", () => {
     expect(body.text()).toContain("已顯示 105 個聯絡人，共 105 個");
     expect(body.text()).toContain("Contact 2004");
     expect(body.findAll(".q-btn").some((button) => button.text().includes("載入更多聯絡人"))).toBe(false);
+  });
+
+  it("moves an active contact up or down, never past the ends or over an inactive one, and refreshes (DEF-037)", async () => {
+    supplierService.moveContact.mockResolvedValue({});
+    const rows = [{ ...CONTACTS[0], id: 41, name: "First", sortOrder: 1, version: 3 },
+      { ...CONTACTS[0], id: 42, name: "Second", sortOrder: 2, version: 5, purposes: [] }, CONTACTS[1]];
+    const { wrapper, body } = mountPanel({ contacts: rows });
+    const button = (name) => body.find(`button[aria-label="${name}"]`);
+    expect(button("上移聯絡人 First").attributes("disabled")).toBeDefined();
+    expect(button("下移聯絡人 Second").attributes("disabled")).toBeDefined();
+    expect(button("下移聯絡人 First").attributes("disabled")).toBeUndefined();
+    expect(button("上移聯絡人 Former Buyer").exists()).toBe(false);
+    await button("下移聯絡人 First").trigger("click");
+    await flushPromises();
+    expect(supplierService.moveContact).toHaveBeenCalledWith(7, 41, { direction: "down", version: 3 });
+    expect(wrapper.emitted("refresh")).toBeTruthy();
   });
 
   it("offers no load-more below the detail's 100", () => {

@@ -53,6 +53,7 @@ export function toAddressResponse(row, purposes = []) {
     phone: row.phone,
     notes: row.notes,
     status: row.status,
+    sortOrder: Number(row.sort_order),
     purposes: purposes.map((purpose) => ({
       purposeCode: purpose.purpose_code,
       isPrimary: Boolean(purpose.is_primary)
@@ -75,6 +76,7 @@ export function toContactResponse(row, purposes = []) {
     preferredLanguage: row.preferred_language,
     notes: row.notes,
     status: row.status,
+    sortOrder: Number(row.sort_order),
     purposes: purposes.map((purpose) => ({
       purposeCode: purpose.purpose_code,
       isPrimary: Boolean(purpose.is_primary)

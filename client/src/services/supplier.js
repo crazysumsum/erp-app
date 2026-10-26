@@ -112,6 +112,11 @@ export default {
     return httpClient.post(`/api/v1/suppliers/${supplierId}/addresses/${addressId}/deactivate`, { body: payload });
   },
 
+  /** 上移／下移地址（DEF-037）：`{ direction: "up" | "down", version }`。 */
+  moveAddress(supplierId, addressId, payload) {
+    return httpClient.post(`/api/v1/suppliers/${supplierId}/addresses/${addressId}/move`, { body: payload });
+  },
+
   createContact(supplierId, payload) {
     return httpClient.post(`/api/v1/suppliers/${supplierId}/contacts/create`, { body: payload });
   },
@@ -122,6 +127,11 @@ export default {
 
   deactivateContact(supplierId, contactId, payload) {
     return httpClient.post(`/api/v1/suppliers/${supplierId}/contacts/${contactId}/deactivate`, { body: payload });
+  },
+
+  /** 上移／下移聯絡人（DEF-037）。 */
+  moveContact(supplierId, contactId, payload) {
+    return httpClient.post(`/api/v1/suppliers/${supplierId}/contacts/${contactId}/move`, { body: payload });
   },
 
   createIdentifier(supplierId, payload) {

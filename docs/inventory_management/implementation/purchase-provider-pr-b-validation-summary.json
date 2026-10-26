@@ -1,0 +1,404 @@
+{
+  "classification": "MINIMIZED_SYNTHETIC_DEVELOPER_METADATA_ONLY; raw logs/XML/coverage/credentials/screenshots remain LOCAL_ONLY",
+  "status": "DEVELOPER_VERIFIED_NOT_CI_OR_HUMAN_SOURCE_APPROVAL",
+  "source_fingerprint": "b77b0468e6d9b3f2239490c7be8e0e3fb5f14f9e2af4bc747361cfb6bd418273",
+  "design": "a0e8e789cdbf9431c24fcc859b20a39cb1ba6a924aca2d51363349e058860687",
+  "plan": "1e9cdb380f31153173dab9b4959dcd274665107b3d0435dad37a2ddcdc09b7c7",
+  "observed_precommit_head": "01780e8dc54cc9a77051ab3d074211158206e96b",
+  "integrated_main": "1e57380e9df8fb7c0563a176921b86fb6e81682b",
+  "source_patch_uncompressed_sha256": "32da2f839a93d15e625786b3f4f1342d7bc50c721a636c5ec52a3aca634c5dfe",
+  "mandatory_groups": 25,
+  "suites": [
+    {
+      "id": "lint",
+      "result": "PASS",
+      "counts": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "local_report": "evidence/20261023T090934-e5b23061fda5/run.json",
+      "report_sha256": "b6fb168fcb443ff2e02a302857c7fa6034ea6ee9a77bc4c3f53e6eeba23c9a37",
+      "command_contract_sha256": "d9b002f5b56a257ac2f45384ae4c8a35adf99e52ecc80d9bc2a9d8c6460b8e07"
+    },
+    {
+      "id": "client-build",
+      "result": "PASS",
+      "counts": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "local_report": "evidence/20261023T090941-80b23b1dceaa/run.json",
+      "report_sha256": "a91a96dbaddc27bfe2e4b1f33d433b2b6cf4b6ba4ad1f82203c72418eac3788b",
+      "command_contract_sha256": "6c93f2b0ad4edee06fbef51a3028f476695c6716f11bdd4a85edeae6b1a4fb09"
+    },
+    {
+      "id": "inventory-developer",
+      "result": "PASS",
+      "counts": {
+        "total": 207,
+        "passed": 207,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "local_report": "evidence/20261023T090945-47c63f6f29b6/run.json",
+      "report_sha256": "53b90cb50a0c8075b7f3e78e849264fe29912fc1f39b89f5717234b381bcff4a",
+      "command_contract_sha256": "686dc74b83313908108e7b5824dcc5c0c791c764e714f2d0f3c84c7f12541664"
+    },
+    {
+      "id": "inventory-p2-database",
+      "result": "PASS",
+      "counts": {
+        "total": 7,
+        "passed": 7,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "local_report": "evidence/20261023T091634-11f0dd6691fa/run.json",
+      "report_sha256": "f3606d60135b97be9ae1b1763250f6e1530aa624f88a659ef9966435154cabd9",
+      "command_contract_sha256": "f5a596e528a9c3a2f39a6d5233cb89a59e06a1419c126eaebc29bdf36a8c2470"
+    },
+    {
+      "id": "inventory-p2-api",
+      "result": "PASS",
+      "counts": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "local_report": "evidence/20261023T091638-3199583c7e68/run.json",
+      "report_sha256": "15f59a901d6f9c78cfd19b57ceafd5a1d36eceb1f1947438396bd2f88dbdc202",
+      "command_contract_sha256": "c020a0c94e7b989652c2dab1bbfe7cfec433cbfcf8a59306bfdea139a1e58841"
+    },
+    {
+      "id": "inventory-p3-movement-database",
+      "result": "PASS",
+      "counts": {
+        "total": 48,
+        "passed": 48,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "local_report": "evidence/20261023T091637-cf4dcf70481d/run.json",
+      "report_sha256": "33fda0706cfb5d7f7b2015a8796c7faf23727cbbc749a809ce00875342d2a582",
+      "command_contract_sha256": "e8764d522a1389ca1dece0166e17e7963857fda7ed370b091ef6b48d5d8a9fea"
+    },
+    {
+      "id": "inventory-p3-transfer-database",
+      "result": "PASS",
+      "counts": {
+        "total": 32,
+        "passed": 32,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "local_report": "evidence/20261023T091643-bb3bc1b23baa/run.json",
+      "report_sha256": "6c93ff9fcd07cbc1bb91ed07e2ea2eb4a19a9bce610d8190b7ba21563fd4816f",
+      "command_contract_sha256": "f720085118d02b29eee210ff8bddd457c95a063eed49815b1be356ea255a6eea"
+    },
+    {
+      "id": "inventory-p3-api",
+      "result": "PASS",
+      "counts": {
+        "total": 31,
+        "passed": 31,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "local_report": "evidence/20261023T091648-a00967d8d8bb/run.json",
+      "report_sha256": "19515c82a7f4b0adcaa7fe1200d11d5bd1689c693f997c5185bd00d650d6548d",
+      "command_contract_sha256": "896aadb85a338a357c5fd053b009b6b95502bb9c83d91a2ae4f5ae863e84892c"
+    },
+    {
+      "id": "inventory-p3-server-coverage",
+      "result": "PASS",
+      "counts": {
+        "total": 2426,
+        "passed": 2426,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "local_report": "evidence/20261023T091330-81e9a99f46be/run.json",
+      "report_sha256": "47e3de325507184eea1df336837633c71efd8f76cf5d821717e555f47901654e",
+      "command_contract_sha256": "18b44ef38ceaee6ea85e2c3fd34fb22ab3710cf96ddc10b9964b86fae80e8b4e"
+    },
+    {
+      "id": "inventory-p3-coverage-floors",
+      "result": "PASS",
+      "counts": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "local_report": "evidence/20261023T094636-06e01671bc68/run.json",
+      "report_sha256": "3853a66518747399bc48d4fe929594772bf9de2e5f1348eafd1f4b4a753942ce",
+      "command_contract_sha256": "574fbfac171f28c692cf3325f411a67e6338b7953dd89adc68395b02cf6058e2"
+    },
+    {
+      "id": "inventory-p3-client-coverage",
+      "result": "PASS",
+      "counts": {
+        "total": 940,
+        "passed": 940,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "local_report": "evidence/20261023T091433-d250628c217f/run.json",
+      "report_sha256": "efc24be81d9e507d333fd306f1283fabfa364ac8da5cbe92c19ea620a24bc86b",
+      "command_contract_sha256": "e22db846f42b44773957383bc79c36efcad805a780815679b0de73c084573b3d"
+    },
+    {
+      "id": "inventory-p3-dependency-audit",
+      "result": "PASS",
+      "counts": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "local_report": "evidence/20261023T090950-87c9415b74df/run.json",
+      "report_sha256": "52207fc7854f0c709362a2d3fce5ac939980cb94e3450dec49acf60cf0244929",
+      "command_contract_sha256": "f2ddb885b3ce2c2545acaee4768430eea744cd2c404f8b7ecd37bd80a06cfc7d"
+    },
+    {
+      "id": "inventory-p3-browser",
+      "result": "PASS",
+      "counts": {
+        "total": 16,
+        "passed": 16,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "local_report": "evidence/20261023T091822-7a37b470d265/run.json",
+      "report_sha256": "eba03012a604ac2b92db39682c1b028d26adf46aa0186091820dd1ad47c1b86c",
+      "command_contract_sha256": "66e4f615e4482daf0cf352df2c00248d01ee7d85e2147a8cc2729f84eea9d1f0"
+    },
+    {
+      "id": "inventory-p3-browser-regression",
+      "result": "PASS",
+      "counts": {
+        "total": 18,
+        "passed": 18,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "local_report": "evidence/20261023T091947-1fc520c36abe/run.json",
+      "report_sha256": "4663e00b45c19d07e5264e7c6034e50b201ce08897bfa7ddee368eb315d15e25",
+      "command_contract_sha256": "70dd10f9ccf457a4b9dca4dce36170de081519d4c521a6abf268a5c0470c1c3f"
+    },
+    {
+      "id": "inventory-p3-sales-compatibility",
+      "result": "PASS",
+      "counts": {
+        "total": 48,
+        "passed": 48,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "local_report": "evidence/20261023T091638-c9c9f24b8513/run.json",
+      "report_sha256": "c61c4bda7e9aa6525f460e56524761f50ccaea2143fb0f9a289ed99f1ca34fc0",
+      "command_contract_sha256": "9e171b058f3a1040be05e9ff2a066d7de498d30ee260f5011627e02ddb6aae42"
+    },
+    {
+      "id": "inventory-purchase-existing-receipt",
+      "result": "PASS",
+      "counts": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "local_report": "evidence/20261023T091631-51c62af15e9a/run.json",
+      "report_sha256": "2b670f12cf2b983b0874562d3fa051bed3b681a9e2562058ea0e9ba6463c3f64",
+      "command_contract_sha256": "4343b19959f2f3b7c0b417b99c1734efbc5a0eec4ccf5d73b878674313adfe62"
+    },
+    {
+      "id": "inventory-purchase-existing-reservation",
+      "result": "PASS",
+      "counts": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "local_report": "evidence/20261023T091632-de5e0ecc4a77/run.json",
+      "report_sha256": "1a56e4d2db4293ac597003353ad870175b170f96b9cb727e12dbde3d22c9a0b2",
+      "command_contract_sha256": "a0e727d7ab2987c98bd079d6f608132547ae2be18555b2e7ce38d475dd9070b2"
+    },
+    {
+      "id": "inventory-purchase-existing-lock",
+      "result": "PASS",
+      "counts": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "local_report": "evidence/20261023T091634-755622f65a18/run.json",
+      "report_sha256": "f454c90f7984907294a347617713202c3fe00c8535d7cc54988fd44ea5528e2a",
+      "command_contract_sha256": "52605e56c4de35a3c96b13af6a8260b9f521a61268140bbf7660c29081c6ba97"
+    },
+    {
+      "id": "inventory-purchase-receipt-unit",
+      "result": "PASS",
+      "counts": {
+        "total": 36,
+        "passed": 36,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "local_report": "evidence/20261023T090947-6f37317b6313/run.json",
+      "report_sha256": "50c28335db457355c828c60809619968e68ae58bdcaa400497e0f71638e7428a",
+      "command_contract_sha256": "9f73e666df383793e00b8a9f3e32b3a0159dc13c78ee45a57c9cf6225ae9a048"
+    },
+    {
+      "id": "inventory-purchase-receipt-database",
+      "result": "PASS",
+      "counts": {
+        "total": 32,
+        "passed": 32,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "local_report": "evidence/20261023T091439-1a0bc73893b4/run.json",
+      "report_sha256": "ac3b016487137a019b2e11b4e6cfb471e68049a83a6e64e0004c8da88543344a",
+      "command_contract_sha256": "049fcfa4d63b4dd6fb8cd68e16a943e54d47fcc9ad99ea3e891b43d7f0713946"
+    },
+    {
+      "id": "inventory-purchase-receipt-auth",
+      "result": "PASS",
+      "counts": {
+        "total": 21,
+        "passed": 21,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "local_report": "evidence/20261023T091457-c99620a84bae/run.json",
+      "report_sha256": "be8622232824fe6ea4eb135193e31f44a40fbb8829c34514f546cb3aa47db2f0",
+      "command_contract_sha256": "731be254bfdb7581113e8ed4493c001ccbc2b6465e067c0c74292c860ccdc496"
+    },
+    {
+      "id": "inventory-purchase-contract",
+      "result": "PASS",
+      "counts": {
+        "total": 9,
+        "passed": 9,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "local_report": "evidence/20261023T090949-7e7c0337c6b2/run.json",
+      "report_sha256": "155ffab76eb09f2e06738b7839c7961bd82dd55f819e00599c6600e4c2520cb5",
+      "command_contract_sha256": "f8c906ba87cd978e0a812cf1cca3663764cf692e6e376435a76e42ecd9bd0827"
+    },
+    {
+      "id": "inventory-purchase-reversal-unit",
+      "result": "PASS",
+      "counts": {
+        "total": 45,
+        "passed": 45,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "local_report": "evidence/20261023T090948-f1519143e8f7/run.json",
+      "report_sha256": "3e45d234827d0c433a4f1d2c4fb8b1601e2c6da58faf06deed2f27094cf93133",
+      "command_contract_sha256": "6b9115243deafab142f4534610d94fa7aa7eb855f16a0b86dc3109d46e3caeaa"
+    },
+    {
+      "id": "inventory-purchase-reversal-database",
+      "result": "PASS",
+      "counts": {
+        "total": 35,
+        "passed": 35,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "local_report": "evidence/20261023T091449-191d43bc971d/run.json",
+      "report_sha256": "139828672e444c3ecbb6405404032e91c88b1f4b26a7a60ea0515870b5ecde77",
+      "command_contract_sha256": "b6327afedb1135eeb7267b841edaab9dcff934ad1cacac6ed77c194c5a714a3d"
+    },
+    {
+      "id": "inventory-purchase-reversal-auth",
+      "result": "PASS",
+      "counts": {
+        "total": 21,
+        "passed": 21,
+        "failed": 0,
+        "skipped": 0,
+        "not_run": 0
+      },
+      "local_report": "evidence/20261023T091503-a140ee61852c/run.json",
+      "report_sha256": "3f94b36b244b522bddbd218ce46958f6fe8101fb9f12e0c060dce789998fa76e",
+      "command_contract_sha256": "333c46fafee0df25cf6a4fefce460080448f931fa1b6a124675a789777ec82ec"
+    }
+  ],
+  "native_coverage": {
+    "method": "Existing repository four native shards plus official Node V8 merge; original92/83/90 and39floors unchanged",
+    "counts": {
+      "total": 3922,
+      "passed": 3715,
+      "failed": 0,
+      "guarded_skipped": 207
+    },
+    "lines": 95.59,
+    "branches": 87.34,
+    "functions": 94.17,
+    "floors_passed": 39,
+    "lcov_sha256": "32a25d25e2a428a0eac1a5221276359b4e249bd2be3c717f629f2ac55a456367",
+    "local_merge_log_sha256": "08af3358cd2e5ad7d0fa4798c878b59f279f66c47d87e826224a31cc61ff64a0",
+    "identity": "Local actual GitSHA/Node/cwd matched across4shards; not external CI",
+    "guarded_skips": "Not formal acceptance; dedicated mandatory suites executed zero skip"
+  },
+  "retained_failures": [
+    "Original fullnative3643PASS/72FAIL/207guardedskip: all72 actual Fulfillment owned-runtime path guard, original logSHA6f50d50d0981b827944f775ced9a2c7df9de5a3658e4b59f7808b5674a6caa14 remains FAIL",
+    "Original missing local report directory FAIL and unit-only Sales/Fulfillment coverage floors FAIL preserved",
+    "Original TDD/product/fixture/auth/metadata failures and deliberately failing mutations retained with original identities"
+  ],
+  "review_provenance": "Bounded actual independent reviews retained in Harness state; final documentation, administrative approval module-ID mapping and recorder-only artifact classification are root SELF_REVIEW, no invented fourth review. Sam final exact source review still required.",
+  "artifact_disposition": "4 post-manifest recorder-only V8 reports contain only temporary metadata recorder and official merge script file URLs; preserved byte-identical with recovery map outside native shard input. No native test report, original manifest or threshold modified. Three deterministic classification checks passed.",
+  "browser": {
+    "real": 16,
+    "explicit_network_mock": 18,
+    "screenshots_reviewed": 10,
+    "console_network": "Original real browser oracles passed; expected rejection responses distinguished",
+    "export": "LOCAL_ONLY raw images/traces"
+  },
+  "cleanup": "All owned SQL/schema/transactions/apps/daemons/data directories and generated credential files precisely cleaned; original logs/results retained privately.",
+  "remaining": [
+    "Current candidate actual mandatory CI",
+    "Fresh main check before merge",
+    "Actual Sam exact final source review",
+    "PR-B actual merge SHA and Issue267 handoff",
+    "Purchasing TASK008 actual consumer adoption/tx/rollback/error evidence"
+  ],
+  "purchasing": "NOT_ACTUALLY_UNLOCKED",
+  "task041": "SEPARATE; untouched; no P4 capacity/soak or real unmerged Stocktake Start claim"
+}

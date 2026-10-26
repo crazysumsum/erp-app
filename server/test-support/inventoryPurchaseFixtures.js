@@ -48,6 +48,7 @@ export async function withPurchaseUnitRequest(work, { isolationLevel = "REPEATAB
     if (sql.includes("FROM user_roles")) return [[{ role_id: 1, name: "receiver" }]];
     if (sql.includes("FROM role_permissions")) return [state.permissions.map(name => ({ name }))];
     if (sql.includes("FROM fr_token_versions")) return [[{ version: state.version }]];
+    if (sql.includes("FROM user_devices")) return [[state.deviceBinding].filter(Boolean)];
     throw new Error(`Unexpected unit SQL: ${sql}`);
   };
   const pool = { query, getConnection: async () => ({ query, execute: query,
