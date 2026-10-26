@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1389,
+  "revision": 1391,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "10e658c43562f4d07aeeac9486bdc9ba46bb613e99f8813cf3997bde6b1d073d",
     "plan": "b52e2746d16e4440f6d7dd33b76de0ff444a8234cbd5b5a28183210958209b41",
-    "code_commit": "478471c0ff0a20668dc1b3f734dd56132e6b8033",
-    "source_fingerprint": "b81c64e7e5d736bfea8c52d3721b2ff0ff439153b3ba236ff0ebedcf3277ab4a",
+    "code_commit": "152db4c34e925b737db5062495f70fb5a69ecdd6",
+    "source_fingerprint": "8fe90315c7ebdb6a15c509649fe3a9b3b082587ac5a4bd37f3306934ad923d20",
     "worktree": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app",
     "default_commit": "206484f4a4bbf902a03d8a17ddccac55bcbfff84",
     "mode_entry_commit": "e272f5d3ce05d0ca50be42e6d8764f0ef20d3dd1"
@@ -13179,6 +13179,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-P4-MULTIORDER-RECOVERY-SCOPED-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_archive_guard_review",
+      "reviewed_baseline": "8fe90315c7ebdb6a15c509649fe3a9b3b082587ac5a4bd37f3306934ad923d20",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-archive-multiorder-r1-separate-scoped-reviewer-proof.json SHA71ca5178b707a0b4746693e28a1e351c8bc68ea4f537cf4986ea2b714b13def8",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -17350,6 +17362,17 @@
       "subject": "DATA001 manual developer prototype1/5/20/100 actualwriters andthree-stage reconciliation; author4PASS andindependent4PASS; focusedlint0; no replay/fullcapacity claim",
       "status": "PASS",
       "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/147_capacity_manual_writer_prototypes.md; no fullphase/CI/merge approval"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "152db4c34e925b737db5062495f70fb5a69ecdd6",
+      "spec_baseline": "b52e2746d16e4440f6d7dd33b76de0ff444a8234cbd5b5a28183210958209b41",
+      "source_fingerprint": "8fe90315c7ebdb6a15c509649fe3a9b3b082587ac5a4bd37f3306934ad923d20",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-26T09:26:54.570904Z",
+      "subject": "TC049 developer twoorder settledrollback/peercommit/pendingresume/exact2/2/0/reconcile/unchangedreplay; author1PASS andindependent1PASS focusedlint0; no crash/full500/fullcapacity claim",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/148_archive_multiorder_recovery_cases.md; no fullphase/CI/merge approval"
     }
   ],
   "pending_decisions": [
@@ -20743,8 +20766,16 @@
       "kind": "GIT_COMMIT",
       "target": "local reviewed manual writer prototype andwarningreport increment",
       "idempotency_key": "p4-manual-prototypes-commit-r1",
+      "status": "CONFIRMED",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/147_capacity_manual_writer_prototypes.md; no push/PR/mainmerge; actualcommit152db4c34e925b737db5062495f70fb5a69ecdd6"
+    },
+    {
+      "id": "ACT-P4-MULTIORDER-RECOVERY-COMMIT-20261026",
+      "kind": "GIT_COMMIT",
+      "target": "local reviewed twoorder rollback/pendingresume test increment",
+      "idempotency_key": "p4-multiorder-recovery-commit-r1",
       "status": "STARTED",
-      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/147_capacity_manual_writer_prototypes.md; no push/PR/mainmerge"
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/148_archive_multiorder_recovery_cases.md; no push/PR/mainmerge"
     }
   ],
   "evidence_files": [
@@ -22087,5 +22118,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Observe manualprototype localcommit, continue Archive keyset/multiorder, remaining dataset templates/diskpilot/metrics/restore and latestmain integration; allcurrentCI/wholephase gates remain."
+  "next_safe_action": "Observe multiordercommit then continue500keyset edge and fullcapacity/restore/metrics/currentCI/wholephase gates."
 }
