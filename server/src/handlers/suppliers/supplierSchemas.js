@@ -172,7 +172,8 @@ export const SUPPLIER_DETAIL_SCHEMA = Object.freeze({
     warnings: { type: "array", items: WARNING }, duplicateCandidates: { type: "array", items: DUPLICATE },
     // 詳情先有（DEF-038、HD-130 A）：付款條件嘅 code 同名稱，已停用嘅都會回，等畫面唔使顯示內部 ID。
     defaultPaymentTerm: PAYMENT_TERM_REF_SCHEMA,
-    // DEF-043（HD-138 A）：待審批時嘅申請；其他狀態係 null。
+    // DEF-043（HD-138 A）：待審批時嘅申請；其他狀態係 null。只有行 getSupplier 嘅回應（GET 詳情、更新、改 Code、狀態操作）
+    // 先有呢個欄位，建立嘅回應冇（REV-119 Info）。
     pendingApproval: {
       type: ["object", "null"], additionalProperties: false, required: ["requestId", "version", "requestedAt", "requester", "assignedApprover"],
       properties: {

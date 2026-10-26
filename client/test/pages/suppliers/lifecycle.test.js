@@ -1,5 +1,5 @@
 import { DOMWrapper, flushPromises, mount } from "@vue/test-utils";
-import { Quasar } from "quasar";
+import { QSelect, Quasar } from "quasar";
 import { createPinia, setActivePinia } from "pinia";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -20,7 +20,6 @@ import SupplierStatusActions from "@/components/suppliers/SupplierStatusActions.
 import supplierService from "@/services/supplier.js";
 import supplierApprovalService from "@/services/supplierApproval.js";
 import { notifySuccess } from "@/framework/ui/notify.js";
-import { QSelect } from "quasar";
 
 const ACTIVE = { id: 7, supplierCode: "SUP-007", supplierName: "Evergreen", status: "active", version: 2 };
 
@@ -38,7 +37,6 @@ function field(body, label) {
 }
 
 describe("Supplier lifecycle actions", () => {
-
   beforeEach(() => { vi.clearAllMocks(); document.body.innerHTML = ""; });
   // DEF-042：「啟用」對話框入面嘅審批 panel 會讀政策同 session；預設政策關閉。
   beforeEach(() => {
@@ -114,6 +112,61 @@ describe("Supplier lifecycle actions", () => {
     expect(supplierService.activate).toHaveBeenCalledWith(7, { version: 2, approverUserId: 41, requestNote: "please check" });
     expect(notifySuccess).toHaveBeenCalledWith("供應商 SUP-007 已提交審批");
     expect(wrapper.emitted("updated")).toBeTruthy();
+  });
+
+  it("only activation carries the approver: other actions show no selector and send none, even with approval on (REV-119 L-4)", async () => {
+    supplierApprovalService.activationPolicy.mockResolvedValue({ requireActivationApproval: true });
+    supplierService.archive.mockResolvedValue({ ...ACTIVE, status: "archived", version: 3 });
+    const { body } = mountActions({ canApprove: false });
+    await body.findAll("button").find((button) => button.text() === "封存").trigger("click");
+    await flushPromises();
+    expect(body.find(".q-dialog").text()).not.toContain("審批人");
+    await field(body, "原因 *").setValue("UAT archive reason");
+    await field(body, "目前密碼 *").setValue("secret");
+    await body.find("form").trigger("submit");
+    await flushPromises();
+    expect(supplierService.archive).toHaveBeenCalledWith(7, { version: 2, reason: "UAT archive reason", password: "secret" });
+  });
+
+  it("reopening the activation dialog starts clean and cannot be confirmed before the policy is read (REV-119 L-2, L-4)", async () => {
+    let resolvePolicy;
+    supplierApprovalService.activationPolicy.mockImplementationOnce(() => new Promise((resolve) => { resolvePolicy = resolve; }));
+    supplierApprovalService.eligibleApprovers.mockResolvedValue({ items: [{ id: 41, username: "approver-a", displayName: "Approver A" }] });
+    const { wrapper, body } = mountActions({ supplier: { ...ACTIVE, status: "draft" }, canApprove: false });
+    const confirmButton = () => body.findAll("button").find((button) => /^確認(啟用|提交審批)$/u.test(button.text()));
+    await body.findAll("button").find((button) => button.text() === "啟用").trigger("click");
+    await flushPromises();
+    expect(confirmButton().attributes("disabled")).toBeDefined();
+    resolvePolicy({ requireActivationApproval: true });
+    await flushPromises();
+    wrapper.findAllComponents(QSelect).find((select) => select.props("label") === "審批人").vm.$emit("update:modelValue", 41);
+    await flushPromises();
+    expect(confirmButton().attributes("disabled")).toBeUndefined();
+    await body.findAll("button").find((button) => button.text() === "取消").trigger("click");
+    await vi.waitFor(() => expect(body.find(".q-dialog").exists()).toBe(false));
+
+    supplierApprovalService.activationPolicy.mockRejectedValueOnce(new Error("down"));
+    await body.findAll("button").find((button) => button.text() === "啟用").trigger("click");
+    await flushPromises();
+    expect(wrapper.findAllComponents(QSelect).some((select) => select.props("label") === "審批人")).toBe(false);
+    expect(confirmButton().text()).toBe("確認啟用");
+    expect(confirmButton().attributes("disabled")).toBeUndefined();
+  });
+
+  it("re-reads the policy when the server says it changed, and marks approver errors on the approver field (REV-119 L-1, L-3)", async () => {
+    supplierService.activate.mockRejectedValueOnce(Object.assign(new Error("目前設定需要指定審批人"), { code: "APPROVER_REQUIRED", details: { field: "approverUserId" } }));
+    const { wrapper, body } = mountActions({ supplier: { ...ACTIVE, status: "draft" }, canApprove: false });
+    await body.findAll("button").find((button) => button.text() === "啟用").trigger("click");
+    await flushPromises();
+    supplierApprovalService.activationPolicy.mockResolvedValue({ requireActivationApproval: true });
+    supplierApprovalService.eligibleApprovers.mockResolvedValue({ items: [{ id: 41, username: "approver-a", displayName: "Approver A" }] });
+    await body.find("form").trigger("submit");
+    await flushPromises();
+    expect(supplierApprovalService.activationPolicy).toHaveBeenCalledTimes(2);
+    const select = wrapper.findAllComponents(QSelect).find((item) => item.props("label") === "審批人");
+    expect(select.exists()).toBe(true);
+    expect(select.props("errorMessage")).toBe("目前設定需要指定審批人");
+    expect(body.findAll("button").find((button) => button.text() === "確認提交審批").attributes("disabled")).toBeDefined();
   });
 
   it("with approval off, activating a Draft sends no approver (DEF-042)", async () => {

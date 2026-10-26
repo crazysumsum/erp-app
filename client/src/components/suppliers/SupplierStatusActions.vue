@@ -38,10 +38,16 @@ const form = reactive({ reason: "", password: "" });
 // DEF-042（HD-138 A）：審批開咗嘅時候，「啟用」其實係提交審批，要喺度揀審批人（設計 §7.4，同新增頁同一個 panel）。
 const approval = ref({ approverUserId: null, requestNote: "" });
 const requireApproval = ref(false);
+// 政策未讀完就唔准確認（REV-119 L-2）；讀失敗係 null，交返伺服器判斷。
+const policyRead = ref(false);
+// 政策喺對話框開住期間改咗：重新掛載 panel 令佢再讀一次（REV-119 L-1）。
+const panelKey = ref(0);
+const approverError = ref("");
 const submitsForApproval = computed(() => selected.value?.key === "activate" && requireApproval.value);
 const shown = computed(() => (submitsForApproval.value ? { ...selected.value, label: "提交審批", target: "待審批" } : selected.value));
 const valid = computed(() => {
   if (!selected.value) return false;
+  if (selected.value.key === "activate" && !policyRead.value) return false;
   if (submitsForApproval.value && !approval.value.approverUserId) return false;
   if (selected.value.reason && (form.reason.trim().length < 5 || form.reason.trim().length > 500)) return false;
   if (selected.value.password && !form.password) return false;
@@ -54,6 +60,8 @@ function open(action) {
   form.password = "";
   approval.value = { approverUserId: null, requestNote: "" };
   requireApproval.value = false;
+  policyRead.value = false;
+  approverError.value = "";
   errorMessage.value = "";
   blockers.value = [];
   showDialog.value = true;
@@ -63,6 +71,7 @@ async function submit() {
   if (!valid.value || submitting.value) return;
   submitting.value = true;
   errorMessage.value = "";
+  approverError.value = "";
   blockers.value = [];
   const action = selected.value;
   try {
@@ -90,6 +99,13 @@ async function submit() {
       emit("conflict");
     } else {
       errorMessage.value = error.message || "狀態操作失敗";
+    }
+    // 審批人嘅錯誤標喺審批人欄（REV-119 L-3）；政策同畫面唔一致就重新讀政策（L-1）。
+    if (error.details?.field === "approverUserId") approverError.value = error.message || "審批人不正確";
+    if (error.code === "APPROVER_REQUIRED" || error.code === "APPROVER_NOT_REQUIRED") {
+      approval.value = { approverUserId: null, requestNote: "" };
+      policyRead.value = false;
+      panelKey.value += 1;
     }
     blockers.value = Object.entries(error.details?.references ?? {}).map(([name, count]) => ({ name, count }));
     notifyError(error.message || "狀態操作失敗");
@@ -134,8 +150,8 @@ async function submit() {
               </ul>
             </q-banner>
             <SupplierApprovalPanel
-              v-if="selected?.key === 'activate'" v-model="approval" :disable="submitting"
-              @policy="(value) => { requireApproval = value; }"
+              v-if="selected?.key === 'activate'" :key="panelKey" v-model="approval" :disable="submitting" :field-error="approverError"
+              @policy="(value) => { requireApproval = Boolean(value); policyRead = true; }"
             />
             <q-input v-if="selected?.reason" v-model="form.reason" label="原因 *" type="textarea" outlined dense maxlength="500" hint="最少 5 個字元" />
             <q-input v-if="selected?.password" v-model="form.password" label="目前密碼 *" type="password" outlined dense maxlength="1024" class="q-mt-md" autocomplete="current-password" />

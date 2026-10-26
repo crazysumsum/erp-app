@@ -293,6 +293,7 @@ Found by UAT-052. Only the requester can withdraw a Pending request, and the 「
 
 **Fixed under HD-138 A, extended by the Product Owner's 'DEF-043 A'.** A client-only fix was not possible, because nothing a CLERK can read returns the request ID and version.
 - **Server:** the Supplier detail response gains `pendingApproval { requestId, version, requestedAt, requester, assignedApprover }` while the Supplier is `pending_approval`, and `null` otherwise. The field is additive and readable with `supplier.view`.
+  - It is on the responses that go through `getSupplier`: GET detail, update, code change and the status actions. The create response does not carry it.
 - **Detail page:** it shows 「待 X 審批（Y 提交）」. Only the requester gets 「撤回審批」, which calls the existing withdraw API; the server still checks that the caller is the requester.
 - **Tests:** an integration test (fields, withdraw from those values, then `null`) and a component test (shown to the requester only). On the real backend, UAT-052 runs end to end: withdraw, resubmit, reassign with a reason, the old approver blocked, the new approver approves.
 

@@ -102,6 +102,21 @@ describe("pages/suppliers/SupplierDetailPage.vue", () => {
     expect(theirs.body.find('[data-testid="pending-approval"]').exists()).toBe(true);
   });
 
+  it("a requester without supplier.mgmt sees no withdraw, and cancelling the confirmation withdraws nothing (REV-119 L-4)", async () => {
+    const pending = { ...DETAIL, status: "pending_approval", pendingApproval: { requestId: 31, version: 4, requestedAt: 100,
+      requester: { id: 1, username: "clerk", displayName: "Clerk One" }, assignedApprover: { id: 2, username: "appr", displayName: "Approver A" } } };
+    const viewOnly = await mountPage({ permissions: ["supplier.view"], detail: pending });
+    expect(viewOnly.body.findAll("button").some((button) => button.text() === "撤回審批")).toBe(false);
+    viewOnly.wrapper.unmount();
+    document.body.innerHTML = "";
+
+    confirm.mockResolvedValue(false);
+    const mine = await mountPage({ permissions: ["supplier.view", "supplier.mgmt"], detail: pending });
+    await mine.body.findAll("button").find((button) => button.text() === "撤回審批").trigger("click");
+    await flushPromises();
+    expect(supplierApprovalService.withdraw).not.toHaveBeenCalled();
+  });
+
   it("requires supplier.view and shows status, completeness and masked bank data", async () => {
     expect(page.requires.permissions).toEqual(["supplier.view"]);
     const { body } = await mountPage();
