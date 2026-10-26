@@ -13,7 +13,7 @@ vi.mock("@/services/supplierBank.js", () => ({
   default: { list: vi.fn(), create: vi.fn(), update: vi.fn(), setDefault: vi.fn(), deactivate: vi.fn(), reveal: vi.fn() },
   service: { name: "supplierBank" }
 }));
-vi.mock("@/framework/ui/notify.js", () => ({ notifyError: vi.fn(), notifySuccess: vi.fn() }));
+vi.mock("@/framework/ui/notify.js", () => ({ notifyError: vi.fn(), notifySuccess: vi.fn(), notifyWarning: vi.fn() }));
 vi.mock("@/services/supplierApproval.js", () => ({
   default: { withdraw: vi.fn(), activationPolicy: vi.fn().mockResolvedValue({ requireActivationApproval: false }), eligibleApprovers: vi.fn() },
   service: { name: "supplierApproval" }
@@ -115,6 +115,22 @@ describe("pages/suppliers/SupplierDetailPage.vue", () => {
     await mine.body.findAll("button").find((button) => button.text() === "撤回審批").trigger("click");
     await flushPromises();
     expect(supplierApprovalService.withdraw).not.toHaveBeenCalled();
+  });
+
+  it("tells the identifier panel that the Supplier is Pending, so its dialogs warn of the invalidation (DEF-044, HD-139 A)", async () => {
+    const warning = "此供應商正在審批中，修改 Code、名稱、顯示名稱、幣別、付款條件或識別資料會令原申請失效";
+    const openCreate = async (status) => {
+      const { wrapper, body } = await mountPage({ permissions: ["supplier.view", "supplier.mgmt"], detail: { ...DETAIL, status } });
+      await body.findAll(".q-tab").find((item) => item.text().includes("識別資料")).trigger("click");
+      await flushPromises();
+      await clickButton(body, "新增識別資料");
+      return { wrapper, text: body.find(".q-dialog").text() };
+    };
+    const pending = await openCreate("pending_approval");
+    expect(pending.text).toContain(warning);
+    pending.wrapper.unmount();
+    document.body.innerHTML = "";
+    expect((await openCreate("draft")).text).not.toContain(warning);
   });
 
   it("requires supplier.view and shows status, completeness and masked bank data", async () => {

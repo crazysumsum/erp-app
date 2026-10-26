@@ -518,7 +518,8 @@ export class SupplierAdminService {
         .filter(([field]) => String(current[field] ?? "") !== String(next[NEXT_FIELD_NAMES[field]] ?? ""))
         .map(([, name_]) => name_);
       if (changedSignificant.length > 0) {
-        await this.approvals.invalidateForSignificantChange(connection, {
+        // 有冇真係失效，以佢嘅回傳值為準：冇開放中嘅申請就唔好話人知已經失效（REV-121 I-2）。
+        approvalInvalidated = await this.approvals.invalidateForSignificantChange(connection, {
           supplierId: input.id,
           actorId: input.actorId,
           actorUsername: actor.username,
@@ -528,7 +529,6 @@ export class SupplierAdminService {
           requestId: input.requestId,
           ip: input.ip
         });
-        approvalInvalidated = true;
       } else {
         // 唔顯著嘅改動唔會令申請失效，但 version 已經 bump 咗，所以要同步返
         // request 記住嗰個 version，否則佢會永遠 stale。
@@ -611,7 +611,7 @@ export class SupplierAdminService {
         // 之後個申請會卡死：snapshot 對唔上所以批唔到，Supplier 仲留喺
         // pending_approval 所以又重新提交唔到。
         if (current.status === "pending_approval") {
-          await this.approvals.invalidateForSignificantChange(connection, {
+          codeApprovalInvalidated = await this.approvals.invalidateForSignificantChange(connection, {
             supplierId: input.id,
             actorId: input.actorId,
             actorUsername: actor.username,
@@ -621,7 +621,6 @@ export class SupplierAdminService {
             requestId: input.requestId,
             ip: input.ip
           });
-          codeApprovalInvalidated = true;
         }
       }), { logger: this.logger, operation: "supplier.code.change", requestId: input.requestId });
     } catch (error) {

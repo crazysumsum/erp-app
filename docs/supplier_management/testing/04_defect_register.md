@@ -297,6 +297,27 @@ Found by UAT-052. Only the requester can withdraw a Pending request, and the 「
 - **Detail page:** it shows 「待 X 審批（Y 提交）」. Only the requester gets 「撤回審批」, which calls the existing withdraw API; the server still checks that the caller is the requester.
 - **Tests:** an integration test (fields, withdraw from those values, then `null`) and a component test (shown to the requester only). On the real backend, UAT-052 runs end to end: withdraw, resubmit, reassign with a reason, the old approver blocked, the new approver approves.
 
+## DEF-044 — MEDIUM
+
+Found by REV-120 (H-2) on UAT-014. Design §7.4 says 「Pending 進行 approval-significant 修改前提示原申請會失效」, and UAT-014's Required Evidence includes 「失效提示」. The UI shows neither:
+- **Before the save:** editing a Pending Supplier gives no warning.
+- **After the save:** the save shows only 「…的一般資料已更新」, while the Supplier silently returns to Draft. The server already returns `approvalInvalidated: true`, but the client never reads it.
+- **Significant fields:** Code, name, display name, currency and payment term (`APPROVAL_SIGNIFICANT_COLUMNS`), and identifier changes.
+- **Effect:** UAT-014 now fails at its warning step. **Decision required (HD-139).**
+
+**Fixed under HD-139 A (client only).** No server, schema or API change: the server already returned `approvalInvalidated`.
+- **Before the edit:** while the Supplier is `pending_approval`, the general editor, the Supplier Code dialog and the identifier create, edit and delete dialogs show 「此供應商正在審批中，修改 Code、名稱、顯示名稱、幣別、付款條件或識別資料會令原申請失效」.
+- **After the save:** when the response carries `approvalInvalidated: true`, a yellow notice that stays until 關閉 is pressed says 「…。原審批申請已失效，供應商回到草稿，需要重新提交審批」 (REV-121 L-2; it was first a five-second success toast). A save that invalidated nothing keeps the plain success message.
+- **Server flag (REV-121 I-2):** `updateSupplier` and `changeSupplierCode` now report `approvalInvalidated` from what `invalidateForSignificantChange` returns, as the identifier service already did, so the notice never claims an invalidation that did not happen.
+- **Tests:** component tests in `editor.test.js`, `identifier.test.js` and `detail.test.js` fail on main's components and pass on the fix; they cover create, edit and delete of identifiers (REV-121 L-1). REV-121 ran 13 mutants; its two survivors (identifier edit notice, identifier edit warning) are now killed. On the real backend UAT PHASE-002 passes 9 of 9, UAT-014 included.
+
+## DEF-045 — MEDIUM
+
+Found by REV-121 (I-1); pre-existing, not caused by DEF-044's fix. A CSV import update row for a Pending Supplier that changes the name, display name, currency or payment term goes through `updateSupplierInTransaction`, which invalidates the request and returns the Supplier to Draft (`applySupplierImportRow.js:57` discards the `approvalInvalidated` it returns).
+- **Design conflict:** §4.5 says significant edits invalidate a Pending request, while the import section says 「Update row 不藉匯入修改 Supplier Code、Bank 或狀態」.
+- **Effect:** neither the preview nor the row results say the request was invalidated or the status changed.
+- **Decision required (HD-140).**
+
 ## HD-116 A: dispositions (2026-10-21)
 
 Fixed in this change:

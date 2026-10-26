@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 vi.mock("quasar", () => ({ Notify: { create: vi.fn() } }));
 
 import { Notify } from "quasar";
-import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
+import { notifyError, notifySuccess, notifyWarning } from "@/framework/ui/notify.js";
 
 describe("notify", () => {
   afterEach(() => {
@@ -20,6 +20,14 @@ describe("notify", () => {
     notifyError("刪除失敗");
 
     expect(Notify.create).toHaveBeenCalledWith({ type: "negative", message: "刪除失敗", position: "top" });
+  });
+
+  it("notifyWarning 唔會自己消失，要用戶按關閉（REV-121 L-2）", () => {
+    notifyWarning("申請已失效");
+
+    expect(Notify.create).toHaveBeenCalledWith({
+      type: "warning", message: "申請已失效", position: "top", timeout: 0, actions: [{ label: "關閉", color: "dark" }]
+    });
   });
 
   it("冇傳訊息就用預設文案", () => {

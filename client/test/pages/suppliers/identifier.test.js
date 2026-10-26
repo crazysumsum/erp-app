@@ -6,10 +6,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("@/services/supplier.js", () => ({
   default: { createIdentifier: vi.fn(), updateIdentifier: vi.fn(), deleteIdentifier: vi.fn() }, service: { name: "supplier" }
 }));
-vi.mock("@/framework/ui/notify.js", () => ({ notifySuccess: vi.fn(), notifyError: vi.fn() }));
+vi.mock("@/framework/ui/notify.js", () => ({ notifySuccess: vi.fn(), notifyError: vi.fn(), notifyWarning: vi.fn() }));
 
 import supplierService from "@/services/supplier.js";
-import { notifySuccess } from "@/framework/ui/notify.js";
+import { notifySuccess, notifyWarning } from "@/framework/ui/notify.js";
 import SupplierIdentifierPanel from "@/components/suppliers/SupplierIdentifierPanel.vue";
 
 const IDENTIFIERS = [{
@@ -20,9 +20,12 @@ const IDENTIFIERS = [{
   identifierValue: "T-456", notes: "", canDelete: false, version: 2, updatedAt: 90
 }];
 
-function mountPanel({ canManage = true, identifiers = IDENTIFIERS } = {}) {
+const WARNING = "此供應商正在審批中，修改 Code、名稱、顯示名稱、幣別、付款條件或識別資料會令原申請失效";
+const NOTICE = "原審批申請已失效，供應商回到草稿，需要重新提交審批";
+
+function mountPanel({ canManage = true, identifiers = IDENTIFIERS, approvalPending = false } = {}) {
   const wrapper = mount(SupplierIdentifierPanel, {
-    props: { supplierId: 7, supplierCode: "SUP-007", identifiers, canManage },
+    props: { supplierId: 7, supplierCode: "SUP-007", identifiers, canManage, approvalPending },
     global: { plugins: [Quasar] }, attachTo: document.body
   });
   return { wrapper, body: new DOMWrapper(document.body) };
@@ -87,5 +90,51 @@ describe("SupplierIdentifierPanel", () => {
     await flushPromises();
     expect(supplierService.deleteIdentifier).toHaveBeenCalledWith(7, 31, { version: 1, reason: "輸入錯誤" });
     expect(wrapper.emitted("refresh")).toBeTruthy();
+  });
+
+  it("warns a Pending Supplier's create, edit and delete dialogs, and says so when each write invalidated the request (DEF-044, HD-139 A)", async () => {
+    supplierService.createIdentifier.mockResolvedValue({ ...IDENTIFIERS[0], id: 33, approvalInvalidated: true });
+    supplierService.updateIdentifier.mockResolvedValue({ ...IDENTIFIERS[0], identifierValue: "AB-124", version: 2, approvalInvalidated: true });
+    supplierService.deleteIdentifier.mockResolvedValue({ id: 31, deleted: true, approvalInvalidated: true });
+    const { body } = mountPanel({ approvalPending: true });
+    await body.findAll(".q-btn").find((button) => button.text().includes("新增識別資料")).trigger("click");
+    await flushPromises();
+    expect(body.text()).toContain(WARNING);
+    await body.findAll(".q-field").find((field) => field.text().includes("發證國家")).find("input").setValue("HK");
+    await body.findAll(".q-field").find((field) => field.text().includes("識別值")).find("input").setValue("EF-789");
+    await body.findAll(".q-btn").find((button) => button.text() === "儲存").trigger("click");
+    await flushPromises();
+    expect(notifyWarning).toHaveBeenLastCalledWith(expect.stringContaining("「EF-789」已新增"));
+    expect(notifyWarning).toHaveBeenLastCalledWith(expect.stringContaining(NOTICE));
+    // REV-121 L-1：編輯都要警告同通知。
+    await body.find('[aria-label="編輯識別資料 AB-123"]').trigger("click");
+    await flushPromises();
+    expect(body.findAll(".q-dialog").at(-1).text()).toContain(WARNING);
+    await body.findAll(".q-field").find((field) => field.text().includes("修改原因")).find("textarea").setValue("證號修正");
+    await body.findAll(".q-btn").find((button) => button.text() === "儲存").trigger("click");
+    await flushPromises();
+    expect(notifyWarning).toHaveBeenLastCalledWith(`供應商 SUP-007 的識別資料「AB-123」已更新。${NOTICE}`);
+    await body.find('[aria-label="刪除識別資料 AB-123"]').trigger("click");
+    await flushPromises();
+    expect(body.findAll(".q-dialog").at(-1).text()).toContain(WARNING);
+    await body.findAll(".q-field").find((field) => field.text().includes("刪除原因")).find("textarea").setValue("輸入錯誤");
+    await body.findAll(".q-btn").find((button) => button.text() === "確認刪除").trigger("click");
+    await flushPromises();
+    expect(notifyWarning).toHaveBeenLastCalledWith(`供應商 SUP-007 的識別資料「AB-123」已刪除。${NOTICE}`);
+    expect(notifySuccess).not.toHaveBeenCalled();
+  });
+
+  it("says nothing about the approval for a Supplier that is not Pending (DEF-044)", async () => {
+    supplierService.createIdentifier.mockResolvedValue({ ...IDENTIFIERS[0], id: 33, approvalInvalidated: false });
+    const { body } = mountPanel();
+    await body.findAll(".q-btn").find((button) => button.text().includes("新增識別資料")).trigger("click");
+    await flushPromises();
+    expect(body.text()).not.toContain(WARNING);
+    await body.findAll(".q-field").find((field) => field.text().includes("發證國家")).find("input").setValue("HK");
+    await body.findAll(".q-field").find((field) => field.text().includes("識別值")).find("input").setValue("EF-789");
+    await body.findAll(".q-btn").find((button) => button.text() === "儲存").trigger("click");
+    await flushPromises();
+    expect(notifySuccess).toHaveBeenLastCalledWith("供應商 SUP-007 的識別資料「EF-789」已新增");
+    expect(notifyWarning).not.toHaveBeenCalled();
   });
 });
