@@ -1,11 +1,11 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 428,
+  "revision": 429,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
-  "status": "BLOCKED",
-  "resume_status": "IMPLEMENTING",
+  "status": "IMPLEMENTING",
+  "resume_status": null,
   "current_phase": "PHASE-004",
   "current_task": "TASK-051",
   "baseline": {
@@ -5937,6 +5937,17 @@
       "source_ref": "Local, not CI. Client: 114 files, 956 tests pass; lint exit 0. Server supplierAdminService.test.js 23/23; the new I-2 test fails on main's service and on a Code-path-only revert. Supplier integration files touching update/code/invalidation: 76/76 with DB_INTEGRATION_TESTS=1, 0 skipped. REV-121 survivors M1, M2 now killed. Real backend: UAT PHASE-002 9/9; scratch identifier create-then-edit check passed (warning, persistent closable notice, Draft) and was deleted.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-26T14:17:00+08:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "Pending-approval invalidation warning and notice (PR #283, DEF-044) merged to main",
+      "code_commit": "206484f4a4bbf902a03d8a17ddccac55bcbfff84",
+      "spec_baseline": "3c683c4ea46984b476c96add5e9280b5d395c6cce9e996efa3ec36b683d4f784",
+      "source_fingerprint": "d45ca755563960ef1aed2ce2483f0a017da374504f0530a8ea391e6feda007fb",
+      "status": "PASS",
+      "source_ref": "PR #283 merged as 206484f4a4bbf902a03d8a17ddccac55bcbfff84 at 2026-10-26T06:37:06Z on the Product Owner's word ('review 完 CI 過就 merge', then 'CI已通過'), with --match-head-commit 75be5f8b, after a gate that refused unless the latest run of every check was SUCCESS (13 checks, PR run 40278953465), main was an ancestor of HEAD and the local, remote and PR heads were equal. Review REV-121 APPROVED; its findings fixed before merge.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-26T06:37:06+00:00"
     }
   ],
   "pending_decisions": [
@@ -7774,8 +7785,8 @@
         "applySupplierImportRow.js",
         "SupplierImportsPage.vue"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-26: 'HD-140 A'."
     }
   ],
   "external_actions": [
@@ -9160,7 +9171,7 @@
     {
       "id": "DEF-044",
       "severity": "MEDIUM",
-      "status": "IN_PROGRESS",
+      "status": "CLOSED",
       "source_ids": [
         "UAT-014",
         "03_design_spec.md §7.4",
@@ -9169,7 +9180,12 @@
         "SupplierIdentifierPanel.vue",
         "docs/supplier_management/testing/04_defect_register.md"
       ],
-      "closure_evidence": [],
+      "closure_evidence": [
+        "PR #283 merge commit 206484f4a4bbf902a03d8a17ddccac55bcbfff84",
+        "PR CI run 40278953465 on head 75be5f8b: all 13 checks success",
+        "REV-121 (docs/supplier_management/implementation/124_rev_121_independent_review.md) APPROVED, findings fixed",
+        "UAT PHASE-002 9/9 on the real backend with UAT-014 included (developer run)"
+      ],
       "risk_approval_id": null
     },
     {
@@ -9187,5 +9203,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "DEF-044 PR on claude/supplier-def044-invalidation-notice: push, PR, merge on CI green (Product Owner: 'review 完 CI 過就 merge'). HD-140 (DEF-045) awaits the Product Owner and blocks only the import path. Then rebuild UAT PHASE-002 on main."
+  "next_safe_action": "UAT PHASE-002 PR on claude/supplier-uat-phase-002 (rebuilt on main 206484f4). Then DEF-045 (HD-140 A) PR on claude/supplier-def045-import-pending, rebased on main."
 }
