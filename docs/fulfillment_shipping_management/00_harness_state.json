@@ -1,32 +1,31 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 169,
+  "revision": 175,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-002",
-  "current_task": "TASK-018",
+  "current_task": "TASK-020",
   "baseline": {
-    "design": "ed029da1aa6ff52bd6676896b5b2d7b3fe68283c78c08e85abb5e848d7d4d5f8",
-    "plan": "b81402af2d9f20ceac68aefa2029f32b280351909dc9cb0d6bfe2bb3b0cfe7a2",
-    "code_commit": "99e801559a626aaaac4e9d99c602284bcad74f72",
-    "source_fingerprint": "1aa72011fc06879833235498bd78bb3cf06a16219c4577730f7ac32c251977d1",
-    "worktree": "/private/tmp/erp-fulfillment-p1",
+    "design": "4b4d1695fa6b0ea55cd76952159c686b350a169105d501af4439cdbcdf0da99e",
+    "plan": "72cb47409cb93d1139475c72471143658facfb76844b41d9cfeb9740f1a09d4f",
+    "code_commit": "f02bbfe581ad373c38f2fbd18a0693a448d05ae9",
+    "source_fingerprint": "5f9526fa1fb67c47dce7fd98cdf8f799b74780251ede645fec6fb29cb2cfba1e",
+    "worktree": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1",
     "default_commit": "fd32762f4fa17a5e77aaa7118a9ded2d3ac81e9e",
     "mode_entry_commit": "fd32762f4fa17a5e77aaa7118a9ded2d3ac81e9e"
   },
   "runtime": {
-    "instance_id": "fulfillment-p1-queue-picking",
+    "instance_id": "fulfillment-p1-persistent-recovery",
     "owner": "/root; Sam actual P1 development and isolated developer verification authorization",
     "resources": {
-      "workspace": "/private/tmp/erp-fulfillment-p1",
-      "web-port": "Actual HTTP test localhost OS ephemeral port, app.shutdown registered and observed testPASS; no persistent web service",
-      "mysql-socket": "/var/folders/gk/rdtb5_px4z9gm7m1cm2q3xg40000gn/T/erp-fulfillment-p0-mysql-ton56on7/mysql.sock; existing owned synthetic daemon; no existing schema reset",
-      "mysql-queue-lane": "Own fulfillment_p1_q_4f105f0b_sf_UUID schemas; per-test create/cleanup observed11PASS; /private/tmp/fulfillment-p1-native-queue-runtime.json",
-      "mysql-capacity-lane": "Separate own fulfillment_p1_q_8728652f_sf_UUID schema; create/cleanup observed1PASS; /private/tmp/fulfillment-p1-native-capacity-runtime.json",
-      "dependencies": "Locked offline npm ci installed429packages; original shared main node_modules empty; no package/lockfile changes"
+      "workspace": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1",
+      "mysql-socket": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/erp-fulfillment-p0-mysql-r",
+      "runtime-and-private-evidence": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime",
+      "runtime-policy": "New owned synthetic MySQL26.7.0 socket-only daemon, per-test fresh UUID schemas; no shared/live DB; old tmp runtime absent",
+      "dependencies": "Locked offline npm ci --ignore-scripts; package/lock unchanged; generated test-only crypto rings outside source"
     },
     "lease_ref": null
   },
@@ -48,9 +47,9 @@
     "TASK-015": "DONE",
     "TASK-016": "DONE",
     "TASK-017": "DONE",
-    "TASK-018": "IN_PROGRESS",
-    "TASK-019": "PENDING",
-    "TASK-020": "PENDING",
+    "TASK-018": "DONE",
+    "TASK-019": "DONE",
+    "TASK-020": "IN_PROGRESS",
     "TASK-021": "PENDING",
     "TASK-022": "PENDING",
     "TASK-023": "PENDING",
@@ -2698,6 +2697,178 @@
         "NFR-023",
         "Exact original NA reason unchanged; TC010 mandatory/blocking"
       ]
+    },
+    {
+      "id": "APR-125-TASK019-DRAFT-PROOF-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam original full P1 authority/current continue; necessary DRAFT proof independently reviewed, not a new human inspection of hashes or HD019 choice",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/40_task019_cancel_increment.md",
+      "recorded_at": "2026-10-26T01:19:17.981555+00:00",
+      "code_commit": "f02bbfe581ad373c38f2fbd18a0693a448d05ae9",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "7c2d665c0b68051e8ff8ff5dc258dd83f58242314c015b9dd336b866cc497852",
+      "scope": [
+        "server/src/modules/inventory/InventoryLookupService.js",
+        "server/src/modules/inventory/inventoryFulfillmentCandidateAdvisory.js",
+        "server/src/modules/sales/SalesFulfillmentService.js",
+        "server/test/salesFulfillmentService.test.js",
+        "docs/inventory_management/03_design_spec.md",
+        "docs/inventory_management/00_module_manifest.json",
+        "docs/sales_order_management/03_design_spec.md",
+        "docs/sales_order_management/00_module_manifest.json",
+        "HD018 A, necessary receipt-bound readonly Sales facts within existing approved shared scope; owner review still required; no P4 routing",
+        "server/src/modules/inventory/inventoryFulfillmentAllocation.js",
+        "server/src/modules/inventory/inventoryFulfillmentAllocationPreparation.js",
+        "TASK016 planned owner readonly preparation/shared assessor; existing writer physical-reader enforcement and ABI unchanged",
+        "server/src/modules/inventory/InventoryPickSequenceService.js",
+        "TASK017 necessary owner-only release-aware preparation/shared eligibility reader; original APIs and all safety/20s gates retained",
+        "TASK018 necessary owner readonly complete Allocation/Reservation source/CAS facts and full existing-row Pick anchors; same InventoryLookup/AllocationPreparation named shared paths, no new write policy",
+        "TASK019 necessary explicit readonly DRAFT cancellation source/anchor proof in same InventoryLookup path; old eligibility reader unchanged; HD019 schema proposal NOT adopted"
+      ]
+    },
+    {
+      "id": "APR-126-TASK019-DRAFT-PROOF-DESIGN",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam original full P1 authority/current continue; necessary DRAFT proof independently reviewed, not a new human inspection of hashes or HD019 choice",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/40_task019_cancel_increment.md",
+      "recorded_at": "2026-10-26T01:19:17.981555+00:00",
+      "code_commit": "f02bbfe581ad373c38f2fbd18a0693a448d05ae9",
+      "expires_at": null,
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "eb44b5b0bcda06385a8b5bce617dec504ceea975252b85684005368fa3e711a9",
+      "scope": [
+        "PHASE-002",
+        "TASK-019",
+        "Necessary readonly DRAFT Claim-only cancellation proof, all existing policy/20s retained; HD019 NOT adopted"
+      ]
+    },
+    {
+      "id": "APR-127-TASK019-DRAFT-PROOF-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam original full P1 authority/current continue; necessary DRAFT proof independently reviewed, not a new human inspection of hashes or HD019 choice",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/40_task019_cancel_increment.md",
+      "recorded_at": "2026-10-26T01:19:17.981555+00:00",
+      "code_commit": "f02bbfe581ad373c38f2fbd18a0693a448d05ae9",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "7c2d665c0b68051e8ff8ff5dc258dd83f58242314c015b9dd336b866cc497852",
+      "scope": [
+        "PHASE-002",
+        "TASK-012–023",
+        "Original complete gates/currentCI beforedraftPR"
+      ]
+    },
+    {
+      "id": "APR-128-TASK019-DRAFT-PROOF-NFR023-LINEAGE",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam original full P1 authority/current continue; necessary DRAFT proof independently reviewed, not a new human inspection of hashes or HD019 choice",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/40_task019_cancel_increment.md",
+      "recorded_at": "2026-10-26T01:19:17.981555+00:00",
+      "code_commit": "f02bbfe581ad373c38f2fbd18a0693a448d05ae9",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "7c2d665c0b68051e8ff8ff5dc258dd83f58242314c015b9dd336b866cc497852",
+      "scope": [
+        "NFR-023",
+        "Exact original NA reason unchanged; TC010 mandatory/blocking; approval reference bookkeeping only"
+      ]
+    },
+    {
+      "id": "APR-129-HD019-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam actual HD019 A direct approval; exactproposal a89 plus necessary implementation lineage, not fresh human code/hash inspection",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/41_cancel_pick_history_constraint.md#actual-adoption--2026-10-26",
+      "recorded_at": "2026-10-26T02:46:11.732368+00:00",
+      "code_commit": "f02bbfe581ad373c38f2fbd18a0693a448d05ae9",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "72cb47409cb93d1139475c72471143658facfb76844b41d9cfeb9740f1a09d4f",
+      "scope": [
+        "server/src/modules/inventory/InventoryLookupService.js",
+        "server/src/modules/inventory/inventoryFulfillmentCandidateAdvisory.js",
+        "server/src/modules/sales/SalesFulfillmentService.js",
+        "server/test/salesFulfillmentService.test.js",
+        "docs/inventory_management/03_design_spec.md",
+        "docs/inventory_management/00_module_manifest.json",
+        "docs/sales_order_management/03_design_spec.md",
+        "docs/sales_order_management/00_module_manifest.json",
+        "HD018 A, necessary receipt-bound readonly Sales facts within existing approved shared scope; owner review still required; no P4 routing",
+        "server/src/modules/inventory/inventoryFulfillmentAllocation.js",
+        "server/src/modules/inventory/inventoryFulfillmentAllocationPreparation.js",
+        "TASK016 planned owner readonly preparation/shared assessor; existing writer physical-reader enforcement and ABI unchanged",
+        "server/src/modules/inventory/InventoryPickSequenceService.js",
+        "TASK017 necessary owner-only release-aware preparation/shared eligibility reader; original APIs and all safety/20s gates retained",
+        "TASK018 necessary owner readonly complete Allocation/Reservation source/CAS facts and full existing-row Pick anchors; same InventoryLookup/AllocationPreparation named shared paths, no new write policy",
+        "TASK019 necessary explicit readonly DRAFT cancellation source/anchor proof in same InventoryLookup path; old eligibility reader unchanged; HD019 schema proposal NOT adopted",
+        "server/database/migrations/0104_preserve_cancelled_fulfillment_pick_history.js",
+        "server/src/modules/fulfillment/fulfillmentCancelledAllocationSchema.js",
+        "server/src/modules/fulfillment/fulfillmentMigrationSchema.js",
+        "HD019 actual A narrowhistory/current-parent/sourceCAS/check/trigger revision and exact legacy compatibility; no0095rewrite/P4adoption"
+      ]
+    },
+    {
+      "id": "APR-130-HD019-DESIGN",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam actual HD019 A direct approval; exactproposal a89 plus necessary implementation lineage, not fresh human code/hash inspection",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/41_cancel_pick_history_constraint.md#actual-adoption--2026-10-26",
+      "recorded_at": "2026-10-26T02:46:11.732368+00:00",
+      "code_commit": "f02bbfe581ad373c38f2fbd18a0693a448d05ae9",
+      "expires_at": null,
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "4b4d1695fa6b0ea55cd76952159c686b350a169105d501af4439cdbcdf0da99e",
+      "scope": [
+        "PHASE-002",
+        "TASK-019",
+        "HD019 A actual Sam approved exactproposal a89; necessary faithful schema/ordering derivation; not human inspection of unseen implementation"
+      ]
+    },
+    {
+      "id": "APR-131-HD019-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam actual HD019 A direct approval; exactproposal a89 plus necessary implementation lineage, not fresh human code/hash inspection",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/41_cancel_pick_history_constraint.md#actual-adoption--2026-10-26",
+      "recorded_at": "2026-10-26T02:46:11.732368+00:00",
+      "code_commit": "f02bbfe581ad373c38f2fbd18a0693a448d05ae9",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "72cb47409cb93d1139475c72471143658facfb76844b41d9cfeb9740f1a09d4f",
+      "scope": [
+        "PHASE-002",
+        "TASK-012–023",
+        "Full original gates/currentcandidateCI beforedraftPR; no merge/formal/live scope"
+      ]
+    },
+    {
+      "id": "APR-132-HD019-NFR023-LINEAGE",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam actual HD019 A direct approval; exactproposal a89 plus necessary implementation lineage, not fresh human code/hash inspection",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/41_cancel_pick_history_constraint.md#actual-adoption--2026-10-26",
+      "recorded_at": "2026-10-26T02:46:11.732368+00:00",
+      "code_commit": "f02bbfe581ad373c38f2fbd18a0693a448d05ae9",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "72cb47409cb93d1139475c72471143658facfb76844b41d9cfeb9740f1a09d4f",
+      "scope": [
+        "NFR-023",
+        "Exact original NA reason retained, TC010 mandatory/blocking unchanged"
+      ]
     }
   ],
   "reviews": [
@@ -3900,6 +4071,54 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-101-TASK019-DIRECTION-FINDINGS",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "c49f0efeeb4c101e4e225ff0758799a997fb828bc4856f4063c2228b8af3e309",
+      "source_ref": "implementation/40_task019_cancel_increment.md#reconstructed-scope-and-direction",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-102-HD019-FOR-HUMAN-DECISION",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "a89fda84d38fc1ab351b68a2f20143be20e1bac199724f936f3597cdde62b6d8",
+      "source_ref": "implementation/41_cancel_pick_history_constraint.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-103-TASK019-M1-M2-M3-CORRECTION-CLOSURE",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "03dfc97d96c65c8abfeadb2bd10e222acc365194a58d7176c1e3006f1f085394",
+      "source_ref": "implementation/40_task019_cancel_increment.md#actual-independent-correction-closure",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-104-TASK019-CLOSING",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "5f9526fa1fb67c47dce7fd98cdf8f799b74780251ede645fec6fb29cb2cfba1e",
+      "source_ref": "implementation/40_task019_cancel_increment.md#actual-independent-task019-closing-review",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -4793,6 +5012,17 @@
       "observed_at": "2026-10-23T01:17:00.082004+00:00",
       "source_ref": "Current Sam chat: 按已批准計劃開始 fulfillment P1 開發，完成所有 TASK、獨立覆核及完整驗證，確認當前候選 CI 通過後建立 draft PR。; P0 merged receipt /private/tmp/fulfillment-p0-merge-final-receipt.json",
       "actor": "Sam actual direct user; P1 implementation/developer verification/draft PR only, no merge/formal acceptance"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK019 HD019 root full affected native regression and missing DRAFT races",
+      "status": "PASS",
+      "code_commit": "f02bbfe581ad373c38f2fbd18a0693a448d05ae9",
+      "spec_baseline": "72cb47409cb93d1139475c72471143658facfb76844b41d9cfeb9740f1a09d4f",
+      "source_fingerprint": "5f9526fa1fb67c47dce7fd98cdf8f799b74780251ede645fec6fb29cb2cfba1e",
+      "observed_at": "2026-10-26T03:38:06.277084+00:00",
+      "source_ref": "implementation/40_task019_cancel_increment.md#current-hd019-implementation-and-closing-developer-checkpoint",
+      "actor": "Root actual execution:42a39files378PASS;test-only5f9527racesPASS;currentpure97/lintPASS. Separate final review pending;notCI/formal/P1complete."
     }
   ],
   "pending_decisions": [
@@ -5033,6 +5263,20 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "docs/fulfillment_shipping_management/implementation/35_batch_candidate_shared_stock.md#actual-adoption; actual direct Sam selected A in current chat"
+    },
+    {
+      "id": "HD-019",
+      "impact": "MAJOR",
+      "question": "PICKED Cancel must retain per-Allocation Pick history while fully releasing; deployed0095 sumCHECK conflicts. A narrow forward migration/qualified overlap versus B separate immutable Pick-history redesign; actual human selection still required.",
+      "affected_ids": [
+        "TASK-019",
+        "DES-002",
+        "DES-003",
+        "DES-008",
+        "TC-005"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Actual Sam direct chat 2026-10-26: 批准 HD-019 方案 A，繼續按已批准計劃完成 fulfillment P1；保留所有安全檢查及原有20秒限制，待所有TASK、獨立覆核、完整驗證及當前候選CI通過後建立draftPR。"
     }
   ],
   "external_actions": [
@@ -5581,7 +5825,9 @@
     "implementation/36_task015_batch_candidates_developer_increment.md",
     "implementation/37_task016_allocate_developer_increment.md",
     "implementation/38_task017_reallocation_owner_preparation.md",
-    "implementation/39_task018_pick_confirmation_increment.md"
+    "implementation/39_task018_pick_confirmation_increment.md",
+    "implementation/40_task019_cancel_increment.md",
+    "implementation/41_cancel_pick_history_constraint.md"
   ],
   "defects": [
     {
@@ -5693,7 +5939,55 @@
         "/private/tmp/fulfillment-p1-task018-owner-mutation-green.log"
       ],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-008",
+      "severity": "MEDIUM",
+      "status": "CLOSED",
+      "source_ids": [
+        "PHASE-002",
+        "TASK-019"
+      ],
+      "closure_evidence": [
+        "implementation/40_task019_cancel_increment.md#actual-independent-correction-closure",
+        "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/cancel-scope-red.log",
+        "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/cancel-qualified-native.log",
+        "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-review-cancel-native.log"
+      ],
+      "risk_approval_id": null
+    },
+    {
+      "id": "DEF-009",
+      "severity": "MEDIUM",
+      "status": "CLOSED",
+      "source_ids": [
+        "PHASE-002",
+        "TASK-019"
+      ],
+      "closure_evidence": [
+        "implementation/40_task019_cancel_increment.md#actual-independent-correction-closure",
+        "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/cancel-unicode-red.log",
+        "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/cancel-qualified-pure.log",
+        "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-review-cancel-native.log"
+      ],
+      "risk_approval_id": null
+    },
+    {
+      "id": "DEF-010",
+      "severity": "MEDIUM",
+      "status": "CLOSED",
+      "source_ids": [
+        "PHASE-002",
+        "TASK-019"
+      ],
+      "closure_evidence": [
+        "implementation/40_task019_cancel_increment.md#actual-independent-correction-closure",
+        "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/cancel-root-contract-red.log",
+        "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/cancel-qualified-native.log",
+        "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-review-cancel-native.log"
+      ],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK018 final independent scopedAPPROVED0CHM actual33native+6pure, FP1aa unchanged; root220native+139pure/lint/trace/boundary complete. Atomic commit TASK018, reconcile commit/source then markDONE and enterTASK019 Cancel/races. TASK020–023/full browser/coverage/security/build/currentcandidateCI pending beforedraftPR. NoP1push/PR/merge."
+  "next_safe_action": "TASK019developerDONEactualindependent61native+6pure0CHM/frozen5f952;recordatomiccommit. ContinueTASK020clientcontracts/TDD/exactservererrorsandURLcursors thenTASK021–023actualPlaywright/build/fullcoverage/security/latesttargetintegration/exactcandidateCIbeforeDRAFTPR. Preserveallguards/original20s;noP1merge/formalacceptance/liveDB."
 }

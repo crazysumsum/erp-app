@@ -93,7 +93,7 @@
         "id": "inventory-domain-contract",
         "version": "HD018-A-scoped-candidate-source-proof-implementation; exact closing owner review and full P1 gates pending",
         "source": "docs/inventory_management/03_design_spec.md",
-        "sha256": "3be4e43b3a3a58b702bc746f2589d09ca8ed5ce7f240bb9652f3a24ee8e4b8c4",
+        "sha256": "331a15d2f1fc20d675a3aae21c03a1dccd7547638d3a98deb9b317c252841256",
         "consumers": [
           "purchasing-receiving",
           "sales-order",

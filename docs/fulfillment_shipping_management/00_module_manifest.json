@@ -155,7 +155,7 @@
         "id": "fulfillment-shipment-and-reversal-contract",
         "version": "P0-HD011-ADOPTED-IMPLEMENTATION_IN_PROGRESS",
         "source": "docs/fulfillment_shipping_management/03_design_spec.md",
-        "sha256": "357c2862c0543d306206ce821b35153c59d0cc65f43c32f7100befbb272ac77b",
+        "sha256": "0382b6b9d4aaa130053dc1a251bf194ec04d0c5849b2e5be68df082c1530d344",
         "consumers": [
           "sales-order-management",
           "inventory-management",
@@ -179,7 +179,7 @@
         "id": "inventory-allocation-issue-and-dedicated-reversal-contract",
         "version": "HD018-A-scoped-candidate-source-proof-implementation; exact closing owner review and full P1 gates pending",
         "source": "docs/inventory_management/03_design_spec.md",
-        "sha256": "3be4e43b3a3a58b702bc746f2589d09ca8ed5ce7f240bb9652f3a24ee8e4b8c4",
+        "sha256": "331a15d2f1fc20d675a3aae21c03a1dccd7547638d3a98deb9b317c252841256",
         "regression_suites": [
           "fulfillment-technical"
         ]

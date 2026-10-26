@@ -119,6 +119,36 @@ export class InventoryLookupService {
       originalInventoryOperationId:String(r.create_operation_id),originalSourceEventId:r.source_event_id,originalQuantity:String(r.original_quantity),consumedQuantity:String(r.consumed_quantity),
       releasedQuantity:String(r.released_quantity),outstandingQuantity:String(r.outstanding_quantity),status:r.status,version:number(r.version),minimumRemainingDays:number(r.minimum_remaining_days)})));
   }
+  // This read proof releases only local Claims; it authorizes no Inventory write.
+  async lockFulfillmentCancellationReservationScopeInTransaction(tx,input) {
+    fulfillmentInventoryFields(input,["warehouseId","salesOrderId","members"]);
+    const warehouseId=fulfillmentInventoryId(input.warehouseId),salesOrderId=fulfillmentInventoryId(input.salesOrderId);
+    if(!Array.isArray(input.members)||!input.members.length||input.members.length>5000)throw inventoryError("INVENTORY_INPUT_INVALID");
+    const members=Object.freeze(input.members.map(member=>{
+      fulfillmentInventoryFields(member,["inventoryReservationId","salesOrderLineId","skuId"]);
+      return Object.freeze(Object.fromEntries(["inventoryReservationId","salesOrderLineId","skuId"].map(key=>[key,fulfillmentInventoryId(member[key])])));
+    }).sort((a,b)=>Number(a.inventoryReservationId)-Number(b.inventoryReservationId)));
+    if(new Set(members.map(row=>row.inventoryReservationId)).size!==members.length)throw inventoryError("INVENTORY_INPUT_INVALID");
+    await this.#authorize(tx);
+    try {
+      const read=async batch=>{const [rows]=await tx.query(`SELECT r.id,r.warehouse_id,r.sku_id,r.create_operation_id,r.purpose,r.status,r.original_quantity,r.consumed_quantity,r.released_quantity,r.outstanding_quantity,r.version,o.source_module,o.source_document_type,o.source_document_id,o.source_line_id,o.source_event_id FROM inventory_reservations r JOIN inventory_operation_requests o ON o.id=r.create_operation_id WHERE r.id IN (${batch.map(()=>"?").join(",")}) ORDER BY r.id`,batch.map(row=>row.inventoryReservationId));return rows;};
+      const validate=(rows,batch)=>{if(rows.length!==batch.length)throw inventoryError("INVENTORY_DEPENDENCY_UNAVAILABLE");
+        for(const row of rows){const member=batch.find(value=>value.inventoryReservationId===String(row.id));if(!member||String(row.warehouse_id)!==warehouseId||String(row.sku_id)!==member.skuId||row.purpose!=="SALE"||row.source_module!=="SALES"||row.source_document_type!=="SALES_ORDER"||row.source_document_id!==salesOrderId||row.source_line_id!==member.salesOrderLineId)throw inventoryError("INVENTORY_SOURCE_CONFLICT");
+          for(const key of ["original_quantity","consumed_quantity","released_quantity","outstanding_quantity","version"])number(row[key]);if(!["ACTIVE","PARTIALLY_CONSUMED"].includes(row.status)||number(row.version)<1||number(row.version)>4294967295||number(row.outstanding_quantity)===0||BigInt(row.original_quantity)!==BigInt(row.consumed_quantity)+BigInt(row.released_quantity)+BigInt(row.outstanding_quantity))throw inventoryError("RESERVATION_STATE_CONFLICT");
+        }};
+      for(let start=0;start<members.length;start+=500){const batch=members.slice(start,start+500);validate(await read(batch),batch);}
+      const skuIds=[...new Set(members.map(row=>row.skuId))].sort((a,b)=>Number(a)-Number(b)),profiles=await this.fulfillment.itemLookup.getFulfillmentInventoryProfilesInTransaction(tx,skuIds,{atMs:this.time.nowMs()});
+      if(profiles.length!==skuIds.length)throw inventoryError("INVENTORY_DEPENDENCY_UNAVAILABLE");
+      const {warehouses}=await this.fulfillment.locks.lockForCommand(tx,{warehouseIds:[Number(warehouseId)]});if(warehouses.length!==1)throw inventoryError("INVENTORY_DEPENDENCY_UNAVAILABLE");
+      const [controls]=await tx.query(`SELECT id,warehouse_id,sku_id,reserved_quantity,version FROM inventory_stock_controls WHERE warehouse_id=? AND sku_id IN (${skuIds.map(()=>"?").join(",")}) ORDER BY warehouse_id,sku_id FOR UPDATE`,[warehouseId,...skuIds]);if(controls.length!==skuIds.length)throw inventoryError("INVENTORY_DEPENDENCY_UNAVAILABLE");
+      const current=[];
+      for(let start=0;start<members.length;start+=500){const batch=members.slice(start,start+500),locked=await this.fulfillment.locks.lockForCommand(tx,{reservationIds:batch.map(row=>Number(row.inventoryReservationId))});if(locked.reservations.length!==batch.length)throw inventoryError("INVENTORY_DEPENDENCY_UNAVAILABLE");
+        const rows=await read(batch);validate(rows,batch);current.push(...rows);
+      }
+      this.#assertReadControlCoverage(new Map(controls.map(row=>[String(row.sku_id),row])),current);
+      return Object.freeze(current.map(row=>Object.freeze({inventoryReservationId:String(row.id),warehouseId,skuId:String(row.sku_id),salesOrderId,salesOrderLineId:row.source_line_id,originalInventoryOperationId:String(row.create_operation_id),originalSourceEventId:row.source_event_id,originalQuantity:String(row.original_quantity),consumedQuantity:String(row.consumed_quantity),releasedQuantity:String(row.released_quantity),outstandingQuantity:String(row.outstanding_quantity),version:number(row.version)})));
+    }catch(error){if(["ER_NO_SUCH_TABLE","ER_BAD_FIELD_ERROR"].includes(error.cause?.code??error.code))throw inventoryError("INVENTORY_DEPENDENCY_UNAVAILABLE");throw error;}
+  }
   async prepareFulfillmentAllocationInTransaction(tx,query) {
     const actor=await this.#authorize(tx);
     try{return await prepareFulfillmentAllocation(tx,query,{inventory:this.fulfillment,time:this.time,actor});}
