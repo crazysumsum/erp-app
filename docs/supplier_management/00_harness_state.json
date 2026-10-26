@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 432,
+  "revision": 433,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -6005,6 +6005,17 @@
       "source_ref": "Local, not CI. All Supplier server tests (92 files, unit and integration, DB_INTEGRATION_TESTS=1) 726/726, 0 skipped, before the follow-ups; after them, supplierImportPrecheck, supplierAdminService and supplierImport.integration 79/79, 0 skipped. New tests fail on main's processor. Mutants killed: guard removed, SELECT without supplier_name, SELECT without display_name (REV-122 L-1), blank fallback dropped, column misnamed, first column only, guard on active too, UI path never invalidates. eslint exit 0.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-26T15:04:00+08:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "Import refuses update rows that would invalidate a Pending approval (PR #285, DEF-045) merged to main",
+      "code_commit": "2fb7fcf8bdc36f440d4fd5373f58d723ba4b31e5",
+      "spec_baseline": "3c683c4ea46984b476c96add5e9280b5d395c6cce9e996efa3ec36b683d4f784",
+      "source_fingerprint": "f15efd1fabb07dd91ba0a3a9e5f444aec37a8d42797a8d875b1fa23c30546b64",
+      "status": "PASS",
+      "source_ref": "PR #285 merged as 2fb7fcf8bdc36f440d4fd5373f58d723ba4b31e5 at 2026-10-26T07:25:19Z on the Product Owner's word ('#284 同 DEF-045 都係 review 完 CI 過就 merge', then 'CI已通過'), with --match-head-commit 770d18fa, after a gate that refused unless the latest run of every check was SUCCESS (13 checks, PR run 40283630346), main was an ancestor of HEAD and the local, remote and PR heads were equal. Review REV-122 APPROVED; findings fixed before merge.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-26T07:25:19+00:00"
     }
   ],
   "pending_decisions": [
@@ -9248,7 +9259,7 @@
     {
       "id": "DEF-045",
       "severity": "MEDIUM",
-      "status": "IN_PROGRESS",
+      "status": "CLOSED",
       "source_ids": [
         "REV-121 I-1",
         "03_design_spec.md §4.5",
@@ -9256,9 +9267,14 @@
         "applySupplierImportRow.js",
         "docs/supplier_management/testing/04_defect_register.md"
       ],
-      "closure_evidence": [],
+      "closure_evidence": [
+        "PR #285 merge commit 2fb7fcf8bdc36f440d4fd5373f58d723ba4b31e5",
+        "PR CI run 40283630346 on head 770d18fa: all 13 checks success",
+        "REV-122 (docs/supplier_management/implementation/125_rev_122_independent_review.md) APPROVED, findings fixed",
+        "All Supplier server tests 726/726 with DB_INTEGRATION_TESTS=1, 0 skipped (developer run)"
+      ],
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "DEF-045 (HD-140 A) PR on claude/supplier-def045-import-pending: independent review, PR, merge on CI green. Then UAT PHASE-003."
+  "next_safe_action": "HD-124 A UAT PHASE-003 (bank: UAT-025..030, 053) on claude/supplier-uat-phase-003 against the real backend."
 }
