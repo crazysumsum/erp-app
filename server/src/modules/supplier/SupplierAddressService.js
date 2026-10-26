@@ -233,7 +233,9 @@ export class SupplierAddressService {
       await this.audit.record(connection, {
         actorUserId: input.actorId, actorUsername: actor?.username ?? "", action: "supplier.address.reorder",
         targetType: "address", targetId: input.addressId, supplierId: input.supplierId, targetLabel: current.label,
-        detail: { before: { sortOrder: order.before }, after: { sortOrder: order.after } }, requestId: input.requestId, ip: input.ip
+        // 鄰居嘅次序都變咗：記喺 metadata（REV-118 L-3）。
+        detail: { before: { sortOrder: order.before }, after: { sortOrder: order.after }, metadata: { swappedWith: order.neighbour } },
+        requestId: input.requestId, ip: input.ip
       });
       return projected;
     });

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
 import { randomUUID } from "node:crypto";
+import mysql from "mysql2/promise";
 
 import { up as addSortOrder } from "../../database/migrations/0103_add_supplier_party_sort_order.js";
 import { createSupplierHarness } from "./supplierHttpHarness.js";
@@ -103,4 +104,43 @@ integrationTest("0103 fills the order each Supplier showed before: addresses by 
   await addSortOrder(db);
   const [[nine]] = await db.query("SELECT sort_order FROM supplier_addresses WHERE id = 9");
   assert.equal(nine.sort_order, 7);
+});
+
+integrationTest("two creates waiting on the same Supplier get distinct orders, and a move then moves exactly one place (REV-118 M-1)", async () => {
+  const { supplierId, rows } = await supplierWith("addresses", ["A"]);
+  const holder = await mysql.createConnection({ host: process.env.DB_HOST, port: Number(process.env.DB_PORT), user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD, database: process.env.DB_NAME });
+  try {
+    await holder.beginTransaction();
+    await holder.query("SELECT id FROM suppliers WHERE id = ? FOR UPDATE", [supplierId]);
+    const create = (label) => h.send(h.users.mgmt, h.route("POST /api/v1/suppliers/:supplierId/addresses/create"), { ids: { supplierId }, body: { label, purposes: [] } });
+    const pending = [create("B"), create("C")];
+    await new Promise((resolve) => { setTimeout(resolve, 500); });
+    await holder.commit();
+    for (const response of await Promise.all(pending)) assert.equal(response.status, 201, response.text);
+  } finally {
+    await holder.end();
+  }
+  const ordered = await listed("addresses", supplierId);
+  assert.deepEqual(ordered.map((row) => row.sortOrder).sort(), [1, 2, 3], "no two rows share an order");
+  const last = ordered[2];
+  assert.equal((await move("addresses", supplierId, last, "up")).status, 200);
+  assert.deepEqual((await listed("addresses", supplierId)).map((row) => label("addresses", row)),
+    [label("addresses", ordered[0]), label("addresses", last), label("addresses", ordered[1])]);
+  assert.equal(rows.length, 1);
+});
+
+integrationTest("rows that already share an order are renumbered first, so one move is still one place, and the neighbour keeps its version (REV-118 M-1, L-3)", async () => {
+  const { supplierId } = await supplierWith("contacts", ["A", "B", "C"]);
+  await h.db.execute("UPDATE supplier_contacts SET sort_order = 1 WHERE supplier_id = ?", [supplierId]);
+  const before = await listed("contacts", supplierId);
+  const [first, second, third] = before;
+  assert.equal((await move("contacts", supplierId, third, "up")).status, 200);
+  const after = await listed("contacts", supplierId);
+  assert.deepEqual(after.map((row) => row.name), [first.name, third.name, second.name]);
+  assert.deepEqual(after.map((row) => row.sortOrder), [1, 2, 3]);
+  assert.equal(after.find((row) => row.id === second.id).version, second.version, "the neighbour's version is untouched");
+  const [[audit]] = await h.db.query("SELECT detail FROM supplier_audit_logs WHERE action = 'supplier.contact.reorder' AND target_id = ? ORDER BY id DESC LIMIT 1", [third.id]);
+  const detail = typeof audit.detail === "string" ? JSON.parse(audit.detail) : audit.detail;
+  assert.deepEqual(detail, { before: { sortOrder: 3 }, after: { sortOrder: 2 }, metadata: { swappedWith: { id: second.id, before: 2, after: 3 } } });
 });

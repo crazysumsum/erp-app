@@ -5,6 +5,13 @@
 // unique（上移／下移喺同一個 transaction 交換兩行，中途會短暫同號）。加有預設值嘅欄位喺 MySQL 8 係 INSTANT DDL。
 //
 // 0101、0102 已經俾進行中嘅 sales-archive 分支用咗，所以用 0103。Runner 以完整檔名記錄，跳號唔影響。
+//
+// 冇自動 down。要退回舊版 app，就要先手動刪欄位（REV-118 L-1）：舊版嘅 0032／0033 inspector 要求欄位數目完全一樣，
+// 見到 sort_order 會拒絕開機。使用者排好嘅次序會冇咗：
+//   ALTER TABLE supplier_addresses DROP COLUMN sort_order;
+//   ALTER TABLE supplier_contacts DROP COLUMN sort_order;
+//   DELETE FROM fr_schema_migrations WHERE name = 'migrations/0103_add_supplier_party_sort_order.js';
+// ALTER 冇寫 ALGORITHM=INSTANT：MySQL 8 加有預設值嘅最後一欄本身就係 INSTANT；做唔到就退做 online rebuild，唔會失敗。
 const TABLES = Object.freeze({
   supplier_addresses: "status, id",
   supplier_contacts: "status, name, id"
