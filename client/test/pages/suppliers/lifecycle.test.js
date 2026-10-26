@@ -145,6 +145,15 @@ describe("Supplier lifecycle actions", () => {
     await body.findAll("button").find((button) => button.text() === "取消").trigger("click");
     await vi.waitFor(() => expect(body.find(".q-dialog").exists()).toBe(false));
 
+    // 再開：上一次揀咗嘅審批人唔會帶過嚟。
+    supplierApprovalService.activationPolicy.mockResolvedValueOnce({ requireActivationApproval: true });
+    await body.findAll("button").find((button) => button.text() === "啟用").trigger("click");
+    await flushPromises();
+    expect(wrapper.findAllComponents(QSelect).find((select) => select.props("label") === "審批人").props("modelValue")).toBe(null);
+    expect(confirmButton().attributes("disabled")).toBeDefined();
+    await body.findAll("button").find((button) => button.text() === "取消").trigger("click");
+    await vi.waitFor(() => expect(body.find(".q-dialog").exists()).toBe(false));
+
     supplierApprovalService.activationPolicy.mockRejectedValueOnce(new Error("down"));
     await body.findAll("button").find((button) => button.text() === "啟用").trigger("click");
     await flushPromises();
