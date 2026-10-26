@@ -1025,14 +1025,15 @@ integrationTest("TASK-045: update rows change root fields only, keep blank cells
   await execute(active.id);
 
   const update = await readyJob(owner, [
-    { supplierCode: `U1-${tag}`, generalPhone: "+852 2000 0001" },                  // 唔顯著：申請保留
+    // 唔顯著：申請保留。顯著欄位照填返原值（好似重新匯入匯出檔）都唔算改，要靠真 MySQL 讀到名稱先判斷得到。
+    { supplierCode: `U1-${tag}`, supplierName: `Update One ${tag}`, defaultCurrencyCode: "HKD", generalPhone: "+852 2000 0001" },
     { supplierCode: `U2-${tag}`, supplierName: `Update Two Renamed ${tag}` },       // 顯著：預檢拒絕，申請保留（HD-140 A）
     { supplierCode: `U3-${tag}`, defaultCurrencyCode: other }                      // 改幣別：要原因
   ], { mode: "upsert" });
   assert.equal((await confirmJob(owner, update.id, { version: update.version, activationMode: "activate" })).status, 200);
   const result = await execute(update.id);
-  assert.equal(result.status, "completed", JSON.stringify(await rowOutcomes(update.id)));
-  assert.deepEqual((await rowOutcomes(update.id))[1], [2, "skipped", "SUPPLIER_IMPORT_PENDING_APPROVAL"]);
+  assert.equal(result.status, "completed_with_errors", JSON.stringify(await rowOutcomes(update.id)));
+  assert.deepEqual(await rowOutcomes(update.id), [[1, "applied", null], [2, "skipped", "SUPPLIER_IMPORT_PENDING_APPROVAL"], [3, "applied", null]]);
 
   const one = await supplierByCode(`U1-${tag}`);
   assert.deepEqual([one.status, one.general_phone, one.notes, one.supplier_name], ["pending_approval", "+852 2000 0001", "keep me", `Update One ${tag}`],
