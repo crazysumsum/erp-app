@@ -271,6 +271,32 @@ Found by REV-116 (I-1). A Supplier whose payment term has since been deactivated
 - **Behaviour:** the refusal stays. On the Supplier editor, a 409 `PAYMENT_TERM_NOT_ACTIVE` now marks the payment-term field with 「付款條款已停用，請改選或清除」. Clearing the term and saving again succeeds (REV-117 real-browser check).
 - **Not changed:** the create page and activation still show only the generic message. HD-134 A named only the editor.
 
+## DEF-042 — HIGH
+
+Found while writing the UAT PHASE-002 browser tests (UAT-014). With approval on, an existing Draft cannot be submitted from the Supplier detail page.
+- **What the user sees:** the detail page's 「啟用」 dialog sends only the version. It even says 「完成後狀態：啟用」.
+- **What the server answers:** `400 APPROVER_REQUIRED` 「目前設定需要指定審批人」. The Supplier stays Draft.
+- **Where the selector is:** only on the create page (`SupplierApprovalPanel`). Design §7.4 says the Create／Detail editor shows the approver selector when approval is on.
+- **Effect:** a Supplier that was rejected, withdrawn, or whose request was invalidated by an edit cannot be resubmitted in the UI. Nor can any Draft created while approval was off. This blocks UAT-014 (「需重新提交」) and UAT-052 (resubmission).
+- **Measured:** local, real backend, CLERK, approval on. **Decision required (HD-138).**
+
+**Fixed under HD-138 A.** With approval on, the detail page's 「啟用」 dialog now shows the same approver selector and note as the create page. It reads 「提交審批」 and 「完成後狀態：待審批」, cannot be confirmed without an approver, and sends `approverUserId`. With approval off nothing changes.
+- Client only.
+- Tests: component tests (approval on and off). On the real backend, UAT-014 resubmits through it.
+
+## DEF-043 — MEDIUM
+
+Found by UAT-052. Only the requester can withdraw a Pending request, and the 「撤回」 button exists only on the approvals page (`/suppliers/approvals`).
+- **Why the requester cannot reach it:** that page requires `supplier.view` and `supplier.approval`. A CLERK (`supplier.view` and `supplier.mgmt`) who submitted is sent to /403.
+- **The API is not the problem:** `POST /api/v1/suppliers/:id/approval/withdraw` needs only `supplier.mgmt`. The requester simply has no screen to call it from.
+- **Effect:** UAT-052 fails at its first step. **Decision required (HD-138).**
+
+**Fixed under HD-138 A, extended by the Product Owner's 'DEF-043 A'.** A client-only fix was not possible, because nothing a CLERK can read returns the request ID and version.
+- **Server:** the Supplier detail response gains `pendingApproval { requestId, version, requestedAt, requester, assignedApprover }` while the Supplier is `pending_approval`, and `null` otherwise. The field is additive and readable with `supplier.view`.
+  - It is on the responses that go through `getSupplier`: GET detail, update, code change and the status actions. The create response does not carry it.
+- **Detail page:** it shows 「待 X 審批（Y 提交）」. Only the requester gets 「撤回審批」, which calls the existing withdraw API; the server still checks that the caller is the requester.
+- **Tests:** an integration test (fields, withdraw from those values, then `null`) and a component test (shown to the requester only). On the real backend, UAT-052 runs end to end: withdraw, resubmit, reassign with a reason, the old approver blocked, the new approver approves.
+
 ## HD-116 A: dispositions (2026-10-21)
 
 Fixed in this change:

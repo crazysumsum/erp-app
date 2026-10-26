@@ -24,6 +24,8 @@ import { can } from "@/framework/authorization/can.js";
 import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
 import { mapValidationDetailsToFieldErrors, unmatchedFieldErrors } from "@/framework/ui/validationIssues.js";
 import supplierService from "@/services/supplier.js";
+import supplierApprovalService from "@/services/supplierApproval.js";
+import { confirm } from "@/framework/ui/confirm.js";
 import { useSessionStore } from "@/stores/session.js";
 import { DETAIL_CHILD_LIMIT } from "@/components/suppliers/useMoreChildRows.js";
 import { paymentTermLabel } from "@/components/suppliers/paymentTermLabel.js";
@@ -96,6 +98,25 @@ function loadForm(data) {
 const dirty = computed(() => editing.value && JSON.stringify(formValues()) !== savedSnapshot.value);
 // 付款條件顯示 code 同名稱，唔顯示內部 ID；已停用就講明（DEF-038、HD-130 A）。
 const paymentTermText = computed(() => paymentTermLabel(supplier.value?.defaultPaymentTerm, supplier.value?.defaultPaymentTermId));
+// DEF-043（HD-138 A）：待審批時講明交咗俾邊個；提交人自己喺度就撤回得（伺服器照樣核對係咪提交人）。
+const pending = computed(() => supplier.value?.pendingApproval ?? null);
+const personName = (person) => person?.displayName || person?.username || "未指派";
+const canWithdraw = computed(() => canManage.value && pending.value?.requester?.id === session.user?.id);
+const withdrawing = ref(false);
+async function withdrawApproval() {
+  const accepted = await confirm({ title: "撤回審批", message: `撤回 ${supplier.value.supplierCode} 的啟用申請？供應商會回到草稿。`, okLabel: "撤回" });
+  if (!accepted) return;
+  withdrawing.value = true;
+  try {
+    await supplierApprovalService.withdraw(supplier.value.id, { requestId: pending.value.requestId, version: pending.value.version });
+    notifySuccess(`供應商 ${supplier.value.supplierCode} 的啟用申請已撤回`);
+  } catch (error) {
+    notifyError(error.message || "撤回審批失敗");
+  } finally {
+    withdrawing.value = false;
+    await load();
+  }
+}
 const currencyChanged = computed(() => form.defaultCurrencyCode !== supplier.value?.defaultCurrencyCode);
 const editValid = computed(() => {
   if (!form.supplierName.trim() || !form.defaultCurrencyCode) return false;
@@ -348,6 +369,10 @@ function childCount(rows) {
             <q-icon name="block" /> 不可用於新採購
           </span>
           <span class="text-caption text-grey-7">版本 {{ supplier.version }}</span>
+          <span v-if="pending" class="text-caption" data-testid="pending-approval">
+            待 {{ personName(pending.assignedApprover) }} 審批（{{ personName(pending.requester) }} 提交）
+          </span>
+          <q-btn v-if="canWithdraw" outline dense color="primary" label="撤回審批" :loading="withdrawing" @click="withdrawApproval" />
           <SupplierStatusActions
             :supplier="supplier" :can-manage="canManage" :can-approve="canApprove"
             :username="session.user?.username ?? ''"

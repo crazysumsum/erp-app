@@ -60,6 +60,7 @@ onMounted(async () => {
   } catch (error) {
     // 政策讀唔到：唔顯示 selector，亦都唔假設答案。伺服器係權威。
     policyKnown.value = false;
+    emit("policy", null);
     notifyError(error.message || "無法確認是否需要審批");
   }
 });
