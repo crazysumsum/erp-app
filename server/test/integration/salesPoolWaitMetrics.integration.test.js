@@ -5,7 +5,7 @@ import {salesPoolWaitWindow} from "../../src/modules/sales/salesPoolWaitMetrics.
 import {MySqlDatabaseService} from "../../src/services/mysqldatabase/MySqlDatabaseService.js";
 const nativeTest=process.env.DB_INTEGRATION_TESTS==="1"?test:test.skip;
 function target(){
- const local=process.env.DB_NAME==="erp_p4_78d105_20261026"&&process.env.DB_SOCKET_PATH==="/private/tmp/erp-fulfillment-p0-mysql-sales-p4-37e933d0a9db/mysql.sock";
+ const local=process.env.DB_NAME==="erp_p4_206107_20261026"&&process.env.DB_SOCKET_PATH==="/private/tmp/erp-fulfillment-p0-mysql-sales-p4-37e933d0a9db/mysql.sock";
  const ci=process.env.GITHUB_ACTIONS==="true"&&process.env.DB_NAME==="erp_dev"&&process.env.DB_HOST==="127.0.0.1"&&process.env.DB_SOCKET_PATH==="/tmp/erp-ci-mysql-socket/mysqld.sock";
  if(!local&&!ci)throw Error("Explicit owned local or declared CI native runtime required");return local?"local":"ci";
 }

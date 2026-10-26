@@ -71,3 +71,27 @@ integrationTest("TC-048 Archive migration rejects column drift while preserving 
  await assert.rejects(()=>archiveUp(f.scoped),/column customer_name_snapshot/u);
  assert.equal((await f.db.query(`SELECT COUNT(*) AS n FROM ${f.names.sales_orders_archive}`))[0][0].n,1);
 });
+
+for(const [cohort,archivedAt]of [["recent1y",Date.UTC(2034,0,1)],["older8y",Date.UTC(2027,0,1)]])integrationTest(`TC-051 six nonempty Sales mirrors reject native UPDATE/DELETE for ${cohort} without an override`,async t=>{
+ const {salesArchiveProtectionFixture}=await import("../sales/phase4/salesArchiveProtectionFixture.js"),f=await salesArchiveProtectionFixture(t,{archivedAt});
+ for(const [table,rows]of Object.entries(f.archiveRows)){assert.ok(rows.length,table);const id=rows[0].id;for(const sql of [`UPDATE ${table} SET row_hash=row_hash WHERE id=?`,`DELETE FROM ${table} WHERE id=?`])await assert.rejects(()=>f.db.execute(sql,[id]),error=>error.code==="ER_SIGNAL_EXCEPTION"&&error.sqlMessage.includes("SALES_ARCHIVE_IMMUTABLE"));}
+ for(const [table,rows]of Object.entries(f.archiveRows))assert.deepEqual((await f.db.query(`SELECT * FROM ${table} ORDER BY id`))[0],rows,table);
+});
+
+integrationTest("TC-051 exact partial immutable guards resume and rerun without historical row or trigger changes",async t=>{
+ const {salesArchiveProtectionFixture}=await import("../sales/phase4/salesArchiveProtectionFixture.js"),{SALES_ARCHIVE_GUARDS,inspectSalesArchiveProtection}=await import("../../src/modules/sales/salesArchiveProtectionSchema.js"),{up}=await import("../../database/migrations/0107_protect_sales_archive_immutability.js"),f=await salesArchiveProtectionFixture(t,{legacyMirrorsOnly:true});
+ assert.equal(await inspectSalesArchiveProtection(f.db),false);for(const guard of SALES_ARCHIVE_GUARDS.slice(0,4))await f.db.query(`CREATE TRIGGER ${guard.name} BEFORE ${guard.event} ON ${guard.table} FOR EACH ROW ${guard.body}`);
+ const read=async()=> (await f.db.query("SELECT trigger_name AS name,event_object_table AS table_name,event_manipulation AS event,action_timing AS timing,action_statement AS statement,created AS created FROM information_schema.triggers WHERE trigger_schema=DATABASE() AND event_object_table LIKE 'sales%archive' ORDER BY trigger_name"))[0],partial=await read();assert.equal(partial.length,4);await up(f.db);assert.equal(await inspectSalesArchiveProtection(f.db),true);const complete=await read();assert.equal(complete.length,12);for(const row of partial)assert.deepEqual(complete.find(x=>x.name===row.name),row);await up(f.db);assert.deepEqual(await read(),complete);for(const [table,rows]of Object.entries(f.archiveRows))assert.deepEqual((await f.db.query(`SELECT * FROM ${table} ORDER BY id`))[0],rows,table);
+});
+for(const mode of ["FOREIGN","WRONG_BODY","WRONG_TABLE","COLUMN_DRIFT"])integrationTest(`TC-051 forward guard installer refuses ${mode} before any additional protection DDL`,async t=>{
+ const {salesArchiveProtectionFixture}=await import("../sales/phase4/salesArchiveProtectionFixture.js"),{SALES_ARCHIVE_GUARDS}=await import("../../src/modules/sales/salesArchiveProtectionSchema.js"),{up}=await import("../../database/migrations/0107_protect_sales_archive_immutability.js"),f=await salesArchiveProtectionFixture(t,{legacyMirrorsOnly:true}),guard=SALES_ARCHIVE_GUARDS[0];
+ if(mode==="COLUMN_DRIFT")await f.db.query("ALTER TABLE sales_orders_archive DROP COLUMN row_hash");else{const name=mode==="FOREIGN"?"trg_sales_foreign_guard_probe":guard.name,table=mode==="WRONG_TABLE"?"sales_order_lines_archive":guard.table,body=mode==="WRONG_BODY"?"SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='S A L E S_ARCHIVE_IMMUTABLE'":guard.body;await f.db.query(`CREATE TRIGGER ${name} BEFORE UPDATE ON ${table} FOR EACH ROW ${body}`);}
+ const meta=async()=> (await f.db.query("SELECT trigger_name,event_object_table,event_manipulation,action_timing,action_statement,created FROM information_schema.triggers WHERE trigger_schema=DATABASE() ORDER BY trigger_name"))[0],before=await meta(),rows={};for(const table of Object.keys(f.archiveRows))rows[table]=(await f.db.query(`SELECT * FROM ${table} ORDER BY id`))[0];await assert.rejects(()=>up(f.db),/Incompatible/u);assert.deepEqual(await meta(),before);for(const [table,expected]of Object.entries(rows))assert.deepEqual((await f.db.query(`SELECT * FROM ${table} ORDER BY id`))[0],expected,table);
+});
+integrationTest("TC-051 parent FK, REPLACE and duplicate UPDATE cannot bypass immutable historical rows",async t=>{
+ const {salesArchiveProtectionFixture}=await import("../sales/phase4/salesArchiveProtectionFixture.js"),f=await salesArchiveProtectionFixture(t),id=f.s.orderId;
+ await assert.rejects(()=>f.db.execute("DELETE FROM sales_archive_batches WHERE id=?",[f.batch]),{code:"ER_ROW_IS_REFERENCED_2"});
+ await assert.rejects(()=>f.db.execute("REPLACE INTO sales_orders_archive SELECT * FROM sales_orders_archive WHERE id=?",[id]),error=>error.code==="ER_SIGNAL_EXCEPTION"&&error.sqlMessage.includes("SALES_ARCHIVE_IMMUTABLE"));
+ await assert.rejects(()=>f.db.execute("INSERT INTO sales_orders_archive SELECT * FROM sales_orders_archive WHERE id=? ON DUPLICATE KEY UPDATE row_hash=?",[id,f.archiveRows.sales_orders_archive[0].row_hash]),error=>error.code==="ER_SIGNAL_EXCEPTION"&&error.sqlMessage.includes("SALES_ARCHIVE_IMMUTABLE"));
+ for(const [table,rows]of Object.entries(f.archiveRows))assert.deepEqual((await f.db.query(`SELECT * FROM ${table} ORDER BY id`))[0],rows,table);
+});

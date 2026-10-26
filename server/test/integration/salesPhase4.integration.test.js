@@ -132,10 +132,10 @@ integrationTest("TC-045 Export stale claim cannot publish or overwrite a success
 });
 
 integrationTest("TC-050 bounded nonempty Archive Export reads only immutable header and line projections",{timeout:45000},async t=>{
- const f=await exportFixture(t);await new SalesOrderLifecycleService(f).cancel({claims:f.claims,id:f.request.id,input:{eventId:randomUUID(),version:1,reason:"Synthetic Archive read fixture"}});
+ const {ownedArchiveExportFixture}=await import("../sales/phase4/ownedArchiveExportFixture.js"),f=await ownedArchiveExportFixture(t);await new SalesOrderLifecycleService(f).cancel({claims:f.claims,id:f.request.id,input:{eventId:randomUUID(),version:1,reason:"Synthetic Archive read fixture"}});
  const batch=await f.insert("sales_archive_batches",{batch_number:"TEST-"+randomUUID().slice(0,20),period_key:"209901",cutoff_at:f.now,status:"COMPLETED",started_at:f.now,updated_at:f.now}),[[order]]=await f.db.query("SELECT * FROM sales_orders WHERE id=?",[f.request.id]),[[line]]=await f.db.query("SELECT * FROM sales_order_lines WHERE sales_order_id=?",[f.request.id]),archivedId=Number(order.id)+8000000000;
  // This is a synthetic read-store fixture, without invoking or qualifying Archive movement/providers.
- f.beforeParents.push(()=>f.db.execute("DELETE FROM sales_orders_archive WHERE id=? AND archive_batch_id=?",[archivedId,batch]));
+ // Guarded permanent rows are retained until the fixture closes pools and drops only its owned schema.
  await f.db.query("INSERT INTO sales_orders_archive SET ?",{...order,id:archivedId,sales_order_number:"SO-209901-999999",customer_name_snapshot:"Archive-only",archive_batch_id:batch,archived_at:f.now,row_hash:"a".repeat(64)});
  await f.db.query("INSERT INTO sales_order_lines_archive SET ?",{...line,id:Number(line.id)+8000000000,sales_order_id:archivedId,archive_batch_id:batch,archived_at:f.now,row_hash:"b".repeat(64)});
  const created=await f.exports.create({claims:f.claims,eventId:randomUUID(),input:{scope:"ARCHIVE",filters:{customerId:f.customerId}}}),row=await f.run(created.id),csv=parse(await readFile(path.join(f.exports.root,row.file_path),"utf8"),{bom:true,columns:true});assert.equal(row.status,"COMPLETED");assert.equal(csv.length,1);assert.equal(csv[0].number,"SO-209901-999999");assert.equal(csv[0].customerName,"Archive-only");assert.equal(csv[0].cancelledBaseQuantity,"10");assert.equal(csv[0].outstandingBaseQuantity,"0");

@@ -1,20 +1,20 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1376,
+  "revision": 1383,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-005",
-  "current_task": "TASK-062",
+  "current_task": "TASK-059",
   "baseline": {
     "design": "10e658c43562f4d07aeeac9486bdc9ba46bb613e99f8813cf3997bde6b1d073d",
     "plan": "b52e2746d16e4440f6d7dd33b76de0ff444a8234cbd5b5a28183210958209b41",
-    "code_commit": "0b66d82bb9c979aac7028fe4dfa8802a1c4877b2",
-    "source_fingerprint": "3127243c2afe0e5dead8cd5aa99d4c97f564ae35522dfb70ca771734820e65ad",
+    "code_commit": "72d5dbfa50cfd10bbf094531937f9928dfec7ab4",
+    "source_fingerprint": "6c2341986b7499beac78fbefa1df888acc2707ca503d8f0c20b645e83c98fdb1",
     "worktree": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app",
-    "default_commit": "78d1e3eea3a055f7f23327e427b3a9b9ce6ffefa",
+    "default_commit": "206484f4a4bbf902a03d8a17ddccac55bcbfff84",
     "mode_entry_commit": "e272f5d3ce05d0ca50be42e6d8764f0ef20d3dd1"
   },
   "runtime": {
@@ -23,8 +23,8 @@
     "resources": {
       "workspace": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app",
       "temp-directory": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/dec029-runtime-37e933d0a9db",
-      "mysql-instance": "READY same owned MySQL26.7 UUID154b50c8-cc62-11f1-83e8-d4284b001f9c UID501/nice10/socket-only PID7295 /private/tmp/sales-p4-37e933d0a9db/mysql.sock; fresh current schema104 exact migrations twice; old schemas/ledgers/grants preserved; observed in latest reviewer7native UUID preflight.",
-      "database": "erp_p4_78d105_20261026; per-test nonce schemas on same owned daemon only; current private binding p4-main78d-fresh-env-r1.json; old schemas retained, not remigrated"
+      "mysql-instance": "READY sameownedMySQL26.7 UUID154b50c8-cc62-11f1-83e8-d4284b001f9c UID501/nice10/socket-only PID7295 /private/tmp/sales-p4-37e933d0a9db/mysql.sock; ownedalias /private/tmp/erp-fulfillment-p0-mysql-sales-p4-37e933d0a9db/mysql.sock. Fresh105schema on same daemon; no grants/globalconfig change.",
+      "database": "erp_p4_206107_20261026; actual105 exactmigrations initial+rerunPASS, privateenvp4-main206107-fresh-env-r1.json on sameownedUUID/socket. Olderp_p4_78d105_20261026/olderledgers preserved, notremigrated. Per-testnonces dropped onlyafterpoolsclosed."
     },
     "lease_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/dec029-runtime-37e933d0a9db/runtime.json; actual owned PID/socket/auto.cnf verified by reviewed helper and fresh process/nice check."
   },
@@ -13107,6 +13107,42 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-P4-ARCHIVE-GUARDS-SOURCE-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_archive_guard_review",
+      "reviewed_baseline": "24df8e7bc5537796f487ce3ef1674aca7dd2fbf99a0fddab9f9fc31d7114cabe",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-archive-immutability-r1-separate-source-reviewer-proof.json SHAaadb5ad804525d602d196a5d4bf56d510f0206b1cbbac9fa9b1cd181657ebe5f; guardadapterand0107exactfiles; noSQL/noTaskDone; exactfilehashscope not a fabricated currentglobalFP/Phase/Gate approval",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P4-FRESH206107-HELPER-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_archive_guard_review",
+      "reviewed_baseline": "a157015d9dd6c4938c6934d3f9973baba3aa5ad5714f36b79ad7d25cec0401be",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-main206107-fresh-schema-r1-separate-helper-review.json SHA9941f850c59090c06158b6b1154d7ef1ea3b60ac057ae9d22607a7c660eaedf4; exact helperpreexecution; noSQLbyreviewer; exactfilehashscope not a fabricated currentglobalFP/Phase/Gate approval",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P4-ARCHIVE-GUARDS-SCOPED-R3",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_archive_guard_review",
+      "reviewed_baseline": "6c2341986b7499beac78fbefa1df888acc2707ca503d8f0c20b645e83c98fdb1",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-archive-immutability-r3-scoped-closing-reviewer-proof.json SHA0ff0b962228c1a0ad512b2a662dcc9a98a890457569f1cfa22a45097cd27923f; actualguard21/20leaf+TC0501+pure4, source/helper/runtimebounded; no fullTask/Phase/Gateapproval",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -17212,6 +17248,39 @@
       "subject": "DEC035 exact applied observer and owned collector237unit/15native/lint plus independent50/10; scope only",
       "status": "PASS",
       "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/142_dec035_installed_pool_wait_increment.md"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "72d5dbfa50cfd10bbf094531937f9928dfec7ab4",
+      "spec_baseline": "b52e2746d16e4440f6d7dd33b76de0ff444a8234cbd5b5a28183210958209b41",
+      "source_fingerprint": "d5509efd9209bfbe952720ca18759c4d9624ee49a33cdd126138097935801c8f",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-26T06:50:15.763122Z",
+      "subject": "Observed exact latestmain integration/21path impact, no backend migration or Sales-usednotification behavior delta; not a new test run",
+      "status": "PASS",
+      "source_ref": "Actual gitfetchorigin/main206484f4 and gitdiff78d..206; all backend/Sales/Fulfillment/MySql/migration/lock paths byteunchanged, notifyWarning is additive with0Salescallsites. Original237/15+independent50/10 retain312executionfingerprint; no retag. Actual ownerchat confirms only0104 inuse, no0107conflict; ownerHD020/21/22 not adopted intoSales."
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "72d5dbfa50cfd10bbf094531937f9928dfec7ab4",
+      "spec_baseline": "b52e2746d16e4440f6d7dd33b76de0ff444a8234cbd5b5a28183210958209b41",
+      "source_fingerprint": "4bf26bb0aac0fe23061e4941fd87634b9dd925d223628b142c51409e63063d38",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-26T07:32:41.724372Z",
+      "subject": "Fresh same-owned105migration schema prepared twice; old101app migrationSHAs preserved and only107new. No capacity/restore or PhasePASS",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-main206107-fresh-schema-r1.json SHA815cc28d7e196cab513dfabdb52fdb3341c53e4663f0fdf6f1ddda677ccf4583; exactcurrentmigrationinventorychecked, subsequenttest-only additions retain oldactualexecutionfingerprint"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "72d5dbfa50cfd10bbf094531937f9928dfec7ab4",
+      "spec_baseline": "b52e2746d16e4440f6d7dd33b76de0ff444a8234cbd5b5a28183210958209b41",
+      "source_fingerprint": "6c2341986b7499beac78fbefa1df888acc2707ca503d8f0c20b645e83c98fdb1",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-26T08:26:03.696954Z",
+      "subject": "Guard scoped developer checks241unit/native72node70leaf/22registeredworker/26browser/private1probe/lint/build and actualseparatereview; overlappingcounts notsummed",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/143_archive_immutable_guard_cases.md; fullcapacity/restore/currentCI/allGates remain, listenerwarningretained"
     }
   ],
   "pending_decisions": [
@@ -20549,8 +20618,40 @@
       "kind": "GIT_COMMIT",
       "target": "local approved shared observer and reviewed owned collector increment",
       "idempotency_key": "p4-dec035-observer-collector-commit-r1",
+      "status": "CONFIRMED",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/142_dec035_installed_pool_wait_increment.md; FP3127243c2afe0e5dead8cd5aa99d4c97f564ae35522dfb70ca771734820e65ad; no push/PR/mainmerge; observed actual local commit 30c29eebee4d8f09bd38fde2e0148042db0f36b4"
+    },
+    {
+      "id": "ACT-P4-MAIN44D-FETCH-20261026",
+      "kind": "GIT_FETCH",
+      "target": "origin/main in owned Sales worktree only",
+      "idempotency_key": "p4-main44d-fetch-20261026",
+      "status": "CONFIRMED",
+      "source_ref": "Actual GitHub connector fetch_commit(main) observed44d7f836dbe4e1a7e99add06f63f1765277904f1; compare78d..44d13Supplier-ownedpaths/8commits, no Sales/sharedDB/migration changes. Fetch before next migration allocation/integration under standing userauthority.; actual fetch confirmed newer206484f4, subsequentSupplierPR283 adds onlynew notifyWarning export, no change to existingnotifySuccess/Error; no Sales callsites use newexport. Actual21path impact checked, original44dread is history not currentref."
+    },
+    {
+      "id": "ACT-P4-MAIN206-INTEGRATE-20261026",
+      "kind": "GIT_MERGE",
+      "target": "origin/main206484f4 into owned Sales feature branch, NOT main merge",
+      "idempotency_key": "p4-main206-into-feature-20261026",
+      "status": "CONFIRMED",
+      "source_ref": "Actual exact21path diff checked; backend/Sales/Fulfillment/MySql/migrations/lock unchanged. Targetnotify addition preserves both Sales-used notification functions. No blanket expensive SQL/performance rerun for unrelateddelta; final currentcandidate checks remain.; actual mergecommit72d5dbfa, exactfeatureparent30c29eeb andtarget206484f4, no conflicts. No main-branch merge."
+    },
+    {
+      "id": "ACT-P4-MAIN206107-FRESH-SCHEMA-20261026",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "erp_p4_206107_20261026 on verified owned UUID154b50c8-cc62-11f1-83e8-d4284b001f9c socket-only syntheticdata",
+      "idempotency_key": "p4-main206107-fresh-schema-r1",
+      "status": "CONFIRMED",
+      "source_ref": "Current main206 integration and planned Sales immutable107; new absent exact schema only; no old schema/ledger/grants/account changes, root-only isolated developer fixture matches existing standard harness environment. Actual current migrations then second unchanged rerun, lowCPU serial.; /Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-main206107-fresh-schema-r1.json SHA815cc28d7e196cab513dfabdb52fdb3341c53e4663f0fdf6f1ddda677ccf4583"
+    },
+    {
+      "id": "ACT-P4-ARCHIVE-IMMUTABLE-GUARD-COMMIT-20261026",
+      "kind": "GIT_COMMIT",
+      "target": "local reviewedimmutableguard slice only",
+      "idempotency_key": "p4-archive-immutable-guard-commit-r1",
       "status": "STARTED",
-      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/142_dec035_installed_pool_wait_increment.md; FP3127243c2afe0e5dead8cd5aa99d4c97f564ae35522dfb70ca771734820e65ad; no push/PR/mainmerge"
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/143_archive_immutable_guard_cases.md; actualsource6c2341986b7499beac78fbefa1df888acc2707ca503d8f0c20b645e83c98fdb1; no push/PR/mainmerge"
     }
   ],
   "evidence_files": [
@@ -21880,5 +21981,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Commit and observe reviewedDEC035 increment. Fetch/inspect latestmain observed44d7f836 (onlySupplier-owned13paths since78d, no migrations/sharedDB/Salespaths); integrate after owncommit, retain unaffected scopedruns with honest lineage. Complete plannedSalesArchiveimmutableguards/TC051 and realworkerfailureisolationTC052, remainingTask062metrics/runbooks, fullcapacity/restore/33checks/currentCI/wholePhaseReview/allGates before alreadyauthorizedmainmerge. LowCPUserial."
+  "next_safe_action": "Commit/observe reviewedimmutableguardslice. Then add actualregisteredworker missing/drift ownSchema readiness and forward-repair tests on newlybuiltlegacy104nonce (no guardDROP/oldledger mutation), runvalidRED beforeminimumprivatepreflight; multiorder/TC052/remainingTask062/capacity/restore/currentCI/wholephase/allGates follow. Existing6cproofs preserved, no retag. LowCPUserial."
 }
