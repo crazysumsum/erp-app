@@ -72,6 +72,18 @@ async function chooseByKeyboard(page, combobox, optionName) {
   await expect(page.getByRole("listbox")).toHaveCount(0);
 }
 
+/** Tab 列係 roving tabindex：Tab 去到而家嗰個 tab，再用方向鍵揀，Enter 打開。 */
+async function openTabByKeyboard(page, name) {
+  await tabTo(page, page.getByRole("tab", { selected: true }));
+  const target = page.getByRole("tab", { name });
+  for (let presses = 0; presses < 12; presses += 1) {
+    if (await target.evaluate((element) => element === document.activeElement)) break;
+    await page.keyboard.press("ArrowRight");
+  }
+  await page.keyboard.press("Enter");
+  await expect(target).toHaveAttribute("aria-selected", "true");
+}
+
 const press = (page, key) => page.keyboard.press(key);
 const typeText = (page, text) => page.keyboard.type(text);
 
@@ -81,7 +93,9 @@ test("@uat UAT-047 a keyboard user completes each phase's happy path at 375, 768
     // ---- PHASE-001：新增並直接啟用；未填必填欄先試一次儲存，錯誤要講得明。 ----
     const { page: clerk } = await as("CLERK");
     await clerk.setViewportSize(viewport);
-    const problems = watchProblems(clerk, { allow: [{ status: 503, path: "/api/v1/suppliers" }] });
+    // 空白儲存係伺服器驗證：重複檢查同建立都回 400（重複檢查只係提示，會被吞咗）；列表嘅 503 係下面攔截嘅。
+    const problems = watchProblems(clerk, { allow: [{ status: 400, path: "/api/v1/suppliers/duplicates/check" },
+      { status: 400, path: "/api/v1/suppliers/create" }, { status: 503, path: "/api/v1/suppliers" }] });
     await clerk.goto("/suppliers/new");
     const code = clerk.getByLabel("Supplier Code *");
     await tabTo(clerk, code);
@@ -89,8 +103,11 @@ test("@uat UAT-047 a keyboard user completes each phase's happy path at 375, 768
     await tabTo(clerk, clerk.getByRole("button", { name: "儲存 Draft" }));
     await press(clerk, "Enter");
     await expect(code).toHaveAttribute("aria-invalid", "true");
-    const codeError = clerk.locator(".q-field", { has: code }).locator(".q-field__messages");
-    expect((await codeError.textContent()).trim().length, `${width}px: the error says what is wrong`).toBeGreaterThan(0);
+    // 錯誤訊息掛喺欄位嘅 aria-describedby：讀屏讀得到，亦講得出錯咗乜。
+    const describedBy = await code.getAttribute("aria-describedby");
+    expect(describedBy, `${width}px: the error is tied to its field`).toBeTruthy();
+    const codeError = (await clerk.locator(describedBy.split(/\s+/u).map((id) => `[id="${id}"]`).join(",")).allTextContents()).join(" ").trim();
+    expect(codeError.length, `${width}px: the error says what is wrong`).toBeGreaterThan(0);
     await evidence(clerk, testInfo, `${width}-p1-validation`);
 
     const supplierCode = unique(`K${width}`);
@@ -101,9 +118,9 @@ test("@uat UAT-047 a keyboard user completes each phase's happy path at 375, 768
     await chooseByKeyboard(clerk, clerk.getByRole("combobox", { name: "Default Currency *" }), /^HKD/u);
     await tabTo(clerk, clerk.getByRole("button", { name: "直接啟用" }));
     await press(clerk, "Enter");
-    await expect(statusBadge(clerk)).toHaveText("啟用");
-    // 狀態唔只靠顏色：badge 有字。
-    expect((await statusBadge(clerk).textContent()).trim()).toBe("啟用");
+    // 建立結果用 role=status 講出嚟，狀態係文字，唔只靠顏色。
+    const created = clerk.getByRole("status").filter({ hasText: `供應商 ${supplierCode} 已建立` });
+    await expect(created).toContainText("狀態：啟用");
     await evidence(clerk, testInfo, `${width}-p1-active`);
 
     // ---- 列表：loading、empty、error，「重試」用鍵盤撳。 ----
@@ -147,6 +164,7 @@ test("@uat UAT-047 a keyboard user completes each phase's happy path at 375, 768
     await tabTo(clerk, submitDialog.getByRole("button", { name: "確認提交審批" }));
     await press(clerk, "Enter");
     await expect(statusBadge(clerk)).toHaveText("待審批");
+    await expect(clerk.getByRole("dialog")).toHaveCount(0);
 
     const { page: approver, account: approverAccount } = await as("APPROVER-A");
     await approver.setViewportSize(viewport);
@@ -172,8 +190,7 @@ test("@uat UAT-047 a keyboard user completes each phase's happy path at 375, 768
     await reader.setViewportSize(viewport);
     const readerProblems = watchProblems(reader);
     await reader.goto(`/suppliers/${draft.id}`);
-    await tabTo(reader, reader.getByRole("tab", { name: "銀行資料" }));
-    await press(reader, "Enter");
+    await openTabByKeyboard(reader, "銀行資料");
     await tabTo(reader, reader.getByRole("button", { name: `查看完整帳號 UAT-047 Bank ${width}` }));
     await press(reader, "Enter");
     const revealDialog = reader.getByRole("dialog");
@@ -184,6 +201,8 @@ test("@uat UAT-047 a keyboard user completes each phase's happy path at 375, 768
     await tabTo(reader, revealDialog.getByRole("button", { name: "確認查看" }));
     await press(reader, "Enter");
     await expect.poll(async () => (await reader.locator(PLAINTEXT).allTextContents()).join("") === account, { message: "revealed by keyboard" }).toBe(true);
+    // Dialog 收埋嘅過場入面 focus 仲困喺 dialog：等佢真係冇咗先再 Tab。
+    await expect.poll(() => reader.getByRole("dialog").count()).toBe(0);
     await tabTo(reader, reader.getByRole("button", { name: "收起" }));
     await press(reader, "Enter");
     await expect.poll(() => reader.locator(PLAINTEXT).count(), { message: "collapsed by keyboard" }).toBe(0);
