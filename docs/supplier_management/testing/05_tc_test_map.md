@@ -365,4 +365,33 @@ PHASE-002 (`uat/uat-phase-002.spec.js`, 9 cases): approval and Supplier settings
 - **Approval policy setup:** the policy is a global setting. The cases set it in the database as a precondition and turn it off after each test, so PHASE-001 is unaffected. UAT-015 and UAT-041 change it through the Settings page, because that change is what they verify.
 - **Defects found here:** writing these cases found DEF-042 (no way to submit an existing Draft from the detail) and DEF-043 (the requester could not withdraw), fixed in PR #282. REV-120 found DEF-044 (no invalidation warning or notice), fixed in PR #283.
 
-Phases 003, 004 and the cross-phase cases are not written yet. UAT-054 is the only case that intercepts a request in the browser: a slow response and a 503 cannot be produced safely on a real server.
+PHASE-003 (`uat/uat-phase-003.spec.js`, 7 cases): bank data. Local developer run on 2026-10-26, which is not a formal UAT execution:
+- **Result:** 5 pass (UAT-025, 026, 027, 028 and 030). 2 are `test.fixme` after their Supplier steps pass. The full UAT config gives 34 passed and 7 skipped.
+- **Defects found here, fixed in PR #286:**
+  - UAT-028 failed at the default-switch wording: the dialog showed the literal `**同時被取消**` (DEF-046).
+  - UAT-030 failed at its alert step (DEF-047). Earlier it had been counted as a pass without that evidence, which REV-123 R2 corrected.
+- **`test.fixme`:**
+  - UAT-029: the Buyer step needs Purchasing.
+  - UAT-053: refusing to retire a referenced account needs a downstream payment reference.
+- **UAT-030 alert step:**
+  - The step asks for a warn-level or higher system log event naming the Supplier. Since PR #286 that is `supplier.bank.privileged_use`, which carries ids only. Denied attempts are read from the logs, not counted as a metric (HD-143 A).
+  - A wrong password is refused for both reveal and write, and the row is unchanged after the refused write (REV-123 R3).
+- **No plaintext:**
+  - Fictional account numbers are generated per test.
+  - Every case checks that no full number appears in the Audit rows or in the server log bytes written during the test.
+  - As a control, the check first waits for the test's last bank request id (`X-Request-Id`) in the request log. It looks in the request log only, because a refused request also writes its id to the system log (REV-123 R1).
+  - The server's stdout is not scanned.
+- **No plaintext in evidence (07 §2, REV-123 R4):**
+  - Trace, failure screenshots and the failure aria snapshot (`error-context.md`) are off.
+  - Plaintext is compared as booleans. While a number is on screen or in an input, only `expect.poll` is used, because a failed locator matcher attaches the page.
+  - Every evidence screenshot first checks that no account number is on the page.
+- **Refusal prompt:** UAT-025's refusal is the server's 403. A VIEWER has no reveal control, so there is no on-screen prompt to show.
+- **Deactivated accounts:**
+  - The masked list shows active accounts only, and nothing in the design or requirements asks for more.
+  - In `SupplierBankPanel.vue`, the 「已停用」 badge and the edit control for inactive rows never render, because `list({ includeInactive })` is never passed. That is dead code; it is noted here and left alone.
+  - UAT-053 checks that the row is kept as `inactive` and audited.
+- **30-second clear:** UAT-026 pauses Playwright's clock right after the reveal. The number is still shown at 29 s and is gone at 30 s; a 31 s deadline fails the case.
+- **Leaving the page:** the step proves only that the user sees the number cleared. The panel unmounts, so the step cannot tell which of its clear triggers fired.
+- **Database checks:** some checks read the database because the screen cannot show what they need: no plaintext in Audit detail, exactly one active default, and the kept inactive row. They are technical supplements, and each is marked in the spec.
+
+Phase 004 and the cross-phase cases are not written yet. UAT-054 is the only case that intercepts a request in the browser: a slow response and a 503 cannot be produced safely on a real server.

@@ -7,7 +7,8 @@ import { API_URL, CLIENT_URL, artifactsDirectory, connect, readFixture } from ".
  * UAT 測試共用：登入、前置資料、讀 scratch database 嘅結果。
  *
  * 使用者步驟同證據一律經畫面；database 只用嚟（一）核准登入設備，同 Item UAT 一樣係環境準備，
- * 唔係驗收步驟；（二）準備 07 §2 講嘅各狀態 Supplier 前置資料。
+ * 唔係驗收步驟；（二）準備 07 §2 講嘅各狀態 Supplier 前置資料；（三）畫面睇唔到嘅 technical 補充檢查，
+ * 例如 Audit detail 冇銀行明文、冇顯示嘅停用列（REV-123）。每處都喺 spec 註明。
  */
 let fixture;
 let database;
