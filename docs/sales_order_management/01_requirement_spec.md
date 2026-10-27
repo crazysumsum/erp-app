@@ -3155,6 +3155,8 @@ Normal Active common-list and exact lookup p95 <= 2 seconds. （來源／Provena
 
 Draft save/confirm up to 100 lines p95 <= 3 seconds excluding dependency failure. （來源／Provenance：NFR-PERF-003 | EXISTING。）
 
+Sam 於 2026-10-27 批准僅將 TC-032 的兩個 50-user burst 情境（無額外確認暖機／五次確認暖機）完成確認 P95 門檻調整為 10 秒。每情境三輪、150 個樣本、135 張一行／15 張百行訂單、背景作業、真實十連線池、終態與對帳要求均不變；計時仍包含 202 後輪詢至成功的時間。其他 NFR-003 情境、TC-042、TC-055 與 P4 容量／還原門檻維持原規格。歷史 3 秒失敗紀錄保留，不追溯改為 PASS。
+
 ### Acceptance criteria
 
 `NFR-003` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
