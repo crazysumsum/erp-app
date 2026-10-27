@@ -8,12 +8,13 @@ objects added by the upgrade, all modules: 3416 lines, of which Supplier tables:
 Supplier permissions added: 6
 current-on-upgraded-pre server: started, health 200, stopped (port closed)
 
-=== B. Previous release 72e205ef with business data: backup/restore, upgrade, rollback
+=== B. Older release 72e205ef (before 0087) with business data: backup/restore, upgrade, rollback to it
 Migrations complete.
 previous release: an orphan SKU relation is accepted (DEF-029, control)
-previous reads the Supplier rows over HTTP: list 200 (RH-001 listed), detail 200 (香港貿易有限公司), sku-relations 200 (1 row)
+older reads the Supplier rows over HTTP: list 200 (RH-001 listed), detail 200 (香港貿易有限公司, 2 addresses, 1 contact), sku-relations 200 (1 row)
 backup restored exactly: tables 94; data, counters, columns, indexes, keys, triggers, routines, views and events equal
 control: one changed row in the restore is detected
+control: a moved AUTO_INCREMENT counter alone is detected
 applied migrations/0087_fix_supplier_sku_refs_sku_foreign_key.js
 applied migrations/0088_create_sales_archive_batches.js
 applied migrations/0091_seed_fulfillment_permissions.js
@@ -29,9 +30,9 @@ applied migrations/0101_create_inventory_purchase_reversal_links.js
 applied migrations/0103_add_supplier_party_sort_order.js
 objects changed by the upgrade (< before, > after):
   26c26
-  < data fr_schema_migrations 298513470
+  < data fr_schema_migrations 924761673
   ---
-  > data fr_schema_migrations 3278222644
+  > data fr_schema_migrations 3346546329
   27a28,42
   > data fulfillment_allocations 0
   > data fulfillment_allocations_archive 0
@@ -51,9 +52,9 @@ objects changed by the upgrade (< before, > after):
   33a49
   > data inventory_purchase_reversal_links 0
   57c73
-  < data permissions 114656085
+  < data permissions 3741563885
   ---
-  > data permissions 3220811715
+  > data permissions 3478845277
   59a76,77
   > data sales_archive_batches 0
   > data sales_archive_order_manifests 0
@@ -70,6 +71,14 @@ objects changed by the upgrade (< before, > after):
   > data shipment_status_history_archive 0
   > data shipments 0
   > data shipments_archive 0
+  77c107
+  < data supplier_addresses 2367631925
+  ---
+  > data supplier_addresses 4096021815
+  81c111
+  < data supplier_contacts 54378247
+  ---
+  > data supplier_contacts 969679081
   121a152,166
   > auto fulfillment_allocations 1
   > auto fulfillment_allocations_archive -
@@ -88,6 +97,10 @@ objects changed by the upgrade (< before, > after):
   > auto fulfillments_archive -
   127a173
   > auto inventory_purchase_reversal_links 1
+  151c197
+  < auto permissions 30
+  ---
+  > auto permissions 38
   153a200,201
   > auto sales_archive_batches 1
   > auto sales_archive_order_manifests 1
@@ -1384,13 +1397,28 @@ objects changed by the upgrade (< before, > after):
   > trigger shipments trg_shipment_update BEFORE UPDATE dada85de261d4b15e05dbf59882dddb4b3d6185bacbbbe42229a5851f84349cc
   > tables 124
 after the upgrade: the orphan SKU relation is refused (DEF-029 fixed); no business data changed
+0103 numbered the existing rows in display order: addresses 1,2; contact 1; every other column of those rows unchanged
 current server: started, health 200, stopped (port closed)
-current reads the Supplier rows over HTTP: list 200 (RH-001 listed), detail 200 (香港貿易有限公司), sku-relations 200 (1 row)
-previous-rolled-back server: started, health 200, stopped (port closed)
-previous-rolled-back reads the Supplier rows over HTTP: list 200 (RH-001 listed), detail 200 (香港貿易有限公司), sku-relations 200 (1 row)
+current reads the Supplier rows over HTTP: list 200 (RH-001 listed), detail 200 (香港貿易有限公司, 2 addresses, 1 contact), sku-relations 200 (1 row)
+older-rolled-back server: started, health 200, stopped (port closed)
+older-rolled-back reads the Supplier rows over HTTP: list 200 (RH-001 listed), detail 200 (香港貿易有限公司, 2 addresses, 1 contact), sku-relations 200 (1 row)
 
-=== C. Similar-name exception list (HD-057 A), current release, on a sample legacy file
-{"threshold":0.85,"mode":"create_only","rows":4,"invalidNames":0,"keptNames":0,"existingMatches":1,"identicalRows":0,"fileMatches":1,"fileMatchesNotListed":0,"output":"$SCRATCH/t51/similar.csv"}
+=== C. Rolling back across 0103 to the release just before it (e6398b70), by the procedure in 0103's header
+pre-0103-on-0103-schema server: refused to start, as expected (Supplier startup self-check failed)
+  ALTER TABLE supplier_addresses DROP COLUMN sort_order;
+  ALTER TABLE supplier_contacts DROP COLUMN sort_order;
+  DELETE FROM fr_schema_migrations WHERE name = 'migrations/0103_add_supplier_party_sort_order.js';
+after the manual steps: both tables back to their pre-0103 columns and indexes, 0103 out of the ledger, every row kept
+pre-0103-rolled-back server: started, health 200, stopped (port closed)
+pre-0103-rolled-back reads the Supplier rows over HTTP: list 200 (RH-001 listed), detail 200 (香港貿易有限公司, 2 addresses, 1 contact), sku-relations 200 (1 row)
+rolling forward again with the current release:
+  applied migrations/0103_add_supplier_party_sort_order.js
+0103 applied again and the rows renumbered in display order (an order users set before the rollback is not restored)
+current-rolled-forward server: started, health 200, stopped (port closed)
+current-rolled-forward reads the Supplier rows over HTTP: list 200 (RH-001 listed), detail 200 (香港貿易有限公司, 2 addresses, 1 contact), sku-relations 200 (1 row)
+
+=== D. Similar-name exception list (HD-057 A), current release, on a sample legacy file
+{"threshold":0.85,"mode":"create_only","rows":4,"invalidNames":0,"keptNames":0,"existingMatches":1,"identicalRows":0,"fileMatches":1,"fileMatchesNotListed":0,"output":"$SCRATCH/t51reh2/t51/similar.csv"}
 ﻿row,supplierCode,supplierName,matchKind,matchRow,matchSupplierId,matchSupplierCode,matchSupplierName,score,exact
 1,L-001,香港貿易有限公司,existing,,1,RH-001,香港貿易有限公司,1.0000,true
 3,L-003,Contoso Trading,file,4,,L-004,Contoso Trading Ltd,0.8750,false

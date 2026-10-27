@@ -1,0 +1,288 @@
+Warning: got packets out of order. Expected 1 but received 0
+{
+  "database": "erp_t51",
+  "schema": "erp_t51_rh_53f58d29",
+  "evidence": {
+    "TC-131": [
+      {
+        "id": "control.complete_schema_starts",
+        "status": "PASS"
+      },
+      {
+        "id": "refuse.missing_table_supplier_contacts",
+        "status": "PASS",
+        "detail": {
+          "refused": true,
+          "unchanged": true,
+          "startsAfterRestore": true,
+          "message": "Supplier startup self-check failed. Missing: supplier_contacts, supplier_contact_purposes; supplier_addresses.sort_order, supplier_contacts.sort_order. Nothing was changed: run node scripts/migrate.js or restore the schema, then start again."
+        }
+      },
+      {
+        "id": "refuse.missing_column_suppliers.website",
+        "status": "PASS",
+        "detail": {
+          "refused": true,
+          "unchanged": true,
+          "startsAfterRestore": true,
+          "message": "Supplier startup self-check failed. Does not match its migration: Incompatible existing Supplier schema: suppliers. Nothing was changed: run node scripts/migrate.js or restore the schema, then start again."
+        }
+      },
+      {
+        "id": "refuse.missing_list_index_suppliers.idx_suppliers_name_id_(0080)",
+        "status": "PASS",
+        "detail": {
+          "refused": true,
+          "unchanged": true,
+          "startsAfterRestore": true,
+          "message": "Supplier startup self-check failed. Does not match its migration: suppliers.idx_suppliers_name_id must be (supplier_name,id). Nothing was changed: run node scripts/migrate.js or restore the schema, then start again."
+        }
+      },
+      {
+        "id": "refuse.missing_SKU_index_serving_the_foreign_key_(0087)",
+        "status": "PASS",
+        "detail": {
+          "refused": true,
+          "unchanged": true,
+          "startsAfterRestore": true,
+          "message": "Supplier startup self-check failed. Does not match its migration: supplier_sku_refs.idx_supplier_sku_refs_sku must serve fk_supplier_sku_refs_sku (found idx_supplier_sku_refs_sku_status_supplied). Nothing was changed: run node scripts/migrate.js or restore the schema, then start again."
+        }
+      },
+      {
+        "id": "refuse.missing_column_supplier_contacts.sort_order_(0103)",
+        "status": "PASS",
+        "detail": {
+          "refused": true,
+          "unchanged": true,
+          "startsAfterRestore": true,
+          "message": "Supplier startup self-check failed. Missing: supplier_addresses.sort_order, supplier_contacts.sort_order. Nothing was changed: run node scripts/migrate.js or restore the schema, then start again."
+        }
+      },
+      {
+        "id": "refuse.missing_supplier_settings_singleton_row",
+        "status": "PASS",
+        "detail": {
+          "refused": true,
+          "unchanged": true,
+          "startsAfterRestore": true,
+          "message": "Supplier startup self-check failed. Missing: supplier_settings row id = 1. Nothing was changed: run node scripts/migrate.js or restore the schema, then start again."
+        }
+      },
+      {
+        "id": "refuse.missing_permission_supplier.bank.view",
+        "status": "PASS",
+        "detail": {
+          "refused": true,
+          "unchanged": true,
+          "startsAfterRestore": true,
+          "message": "The permissions table is missing 1 permission(s) from the catalogue: supplier.bank.view. Run node scripts/migrate.js against this database. This is deliberately not fixed automatically: the permissions table is read-only to the application, and only migrations may write it."
+        }
+      },
+      {
+        "id": "refuse.missing_bank_key_rings",
+        "status": "PASS",
+        "detail": {
+          "message": "SupplierBankCrypto requires both the bankEncryption and bankLookup key rings"
+        }
+      },
+      {
+        "id": "control.starts_with_key_rings",
+        "status": "PASS"
+      }
+    ],
+    "TC-130": [
+      {
+        "id": "bank_unavailable.reveal_fails_explicitly",
+        "status": "PASS",
+        "detail": {
+          "status": 503,
+          "code": "BANK_KEY_UNAVAILABLE"
+        }
+      },
+      {
+        "id": "bank_unavailable.rest_still_works",
+        "status": "PASS",
+        "detail": {
+          "detail": 200,
+          "masked": 200
+        }
+      },
+      {
+        "id": "bank_unavailable.lookup_active_only_no_bank",
+        "status": "PASS"
+      },
+      {
+        "id": "bank_unavailable.recovers",
+        "status": "PASS"
+      },
+      {
+        "id": "currency_inactive.create_fails_explicitly",
+        "status": "PASS",
+        "detail": {
+          "status": 409,
+          "code": "CURRENCY_NOT_ACTIVE"
+        }
+      },
+      {
+        "id": "currency_inactive.reads_still_work",
+        "status": "PASS",
+        "detail": {
+          "list": 200
+        }
+      },
+      {
+        "id": "currency_inactive.recovers",
+        "status": "PASS",
+        "detail": {
+          "status": 201
+        }
+      },
+      {
+        "id": "connection_reset.in_flight_request_fails_cleanly",
+        "status": "PASS",
+        "detail": {
+          "killed": 13522,
+          "status": 500,
+          "code": "INTERNAL_SERVER_ERROR",
+          "answeredMs": 1
+        }
+      },
+      {
+        "id": "connection_reset.recovers",
+        "status": "PASS",
+        "detail": {
+          "statuses": [
+            200,
+            200,
+            200
+          ]
+        }
+      },
+      {
+        "id": "connection_reset.lookup_active_only",
+        "status": "PASS"
+      },
+      {
+        "id": "lock_timeout.fails_explicitly_after_the_transaction_timeout",
+        "status": "PASS",
+        "detail": {
+          "status": 500,
+          "code": "INTERNAL_SERVER_ERROR",
+          "statusAfterRelease": "active",
+          "waitedMs": 20122
+        }
+      },
+      {
+        "id": "lock_timeout.lookup_answers_meanwhile",
+        "status": "PASS",
+        "detail": {
+          "ok": true,
+          "status": 200,
+          "ids": [
+            1
+          ]
+        }
+      },
+      {
+        "id": "lock_timeout.recovers",
+        "status": "PASS",
+        "detail": {
+          "status": 200
+        }
+      },
+      {
+        "id": "never_opens_suspended",
+        "status": "PASS"
+      }
+    ],
+    "resetAnsweredMs": 1,
+    "lockWaitMs": 20122,
+    "TC-132": [
+      {
+        "id": "statuses",
+        "status": "PASS",
+        "detail": {
+          "success": 200,
+          "not_found": 404,
+          "conflict": 409,
+          "integrity": 500
+        }
+      },
+      {
+        "id": "metrics.values",
+        "status": "PASS",
+        "detail": {
+          "approvals": {
+            "pending": 1,
+            "oldestAgeMs": 90000209
+          },
+          "imports": {
+            "uploaded": 0,
+            "validating": 0,
+            "queued": 0,
+            "running": 1,
+            "oldestWaitingMs": null,
+            "stalled": 1
+          },
+          "bank": {
+            "bucketStart": 1793086200000,
+            "windowMs": 300000,
+            "reveals": 0,
+            "changes": 0,
+            "privilegedUses": 0
+          }
+        }
+      },
+      {
+        "id": "log.metrics_and_alerts",
+        "status": "PASS",
+        "detail": {
+          "found": [
+            true,
+            true,
+            true
+          ]
+        }
+      },
+      {
+        "id": "log.key_unavailable_is_error_level",
+        "status": "PASS",
+        "detail": {
+          "level": "error"
+        }
+      },
+      {
+        "id": "log.integrity_is_error_level",
+        "status": "PASS",
+        "detail": {
+          "line": [
+            "timestamp",
+            "level",
+            "event",
+            "message",
+            "context"
+          ],
+          "level": "error"
+        }
+      },
+      {
+        "id": "log.request_route_status_duration",
+        "status": "PASS",
+        "detail": {
+          "success": true,
+          "not_found": true,
+          "conflict": true,
+          "integrity": true
+        }
+      },
+      {
+        "id": "log.low_sensitivity",
+        "status": "PASS"
+      }
+    ]
+  },
+  "notRun": {
+    "TC-130 production network faults between the app and its dependencies": "Timeouts and resets at the network layer (proxy, load balancer, MySQL failover) need the deployed environment. An in-flight reset of the app's MySQL connection and a lock wait are tested here.",
+    "TC-132 production alert delivery": "Delivering error-level events and alerts to the on-call channel needs the production log pipeline; here the events are read from the log files."
+  }
+}

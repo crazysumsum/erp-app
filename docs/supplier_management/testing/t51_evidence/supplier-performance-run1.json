@@ -1,0 +1,29 @@
+{
+  "tests": [
+    {
+      "name": "TC-085 local for-SKU lookup at 100k under 50 users",
+      "id": "TC-085",
+      "status": "FAIL"
+    },
+    {
+      "name": "TC-101 local 10,000-row import alongside 50 online users",
+      "id": "TC-101",
+      "status": "PASS"
+    },
+    {
+      "name": "TC-128 local 100k Suppliers and 50 users, general operations",
+      "id": "TC-128",
+      "status": "PASS"
+    },
+    {
+      "name": "TC-129 local duplicate cap, query plans and counts",
+      "id": "TC-129",
+      "status": "FAIL"
+    },
+    {
+      "name": "TC-128 production-like MySQL and hardware",
+      "id": "TC-128",
+      "status": "NOT_RUN"
+    }
+  ]
+}

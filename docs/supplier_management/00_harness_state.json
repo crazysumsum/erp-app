@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 448,
+  "revision": 449,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -3357,6 +3357,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-128",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-051 completion boundary and rehearsal rerun)",
+      "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-task051-boundary at c8b1a326 (git diff origin/main..HEAD)",
+      "reviewed_baseline": "171cf54069cb8d608ed8e263a3fc83f944b993f71e46643cbb8d6717173ce2c6",
+      "source_ref": "docs/supplier_management/implementation/131_rev_128_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -6285,6 +6297,17 @@
       "source_ref": "docs/supplier_management/testing/t51_rehearsal/rehearsal-2026-10-27.log: all checks passed. Step B's upgrade check was generalised for 0088-0103 with a control (an invented change to suppliers must be reported); the control caught a BSD awk multi-line -v bug in the first draft, fixed by reading the table list from a file. The first two reruns failed on the old 0087-only expectation, not on a defect.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-27T16:06:00+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-051 A: T51 rehearsal after REV-128 (older 72e205ef and pre-0103 e6398b70 releases, live counters, byte-exact permissions)",
+      "code_commit": "c8b1a32629db741d816a61a2ff0785a0854edf2d",
+      "spec_baseline": "3c683c4ea46984b476c96add5e9280b5d395c6cce9e996efa3ec36b683d4f784",
+      "source_fingerprint": "ce3a057ea38eaa90666f6ee0af76bba0fed3bcf3cd33ee87018a1c38f82a5cb4",
+      "status": "PASS",
+      "source_ref": "docs/supplier_management/testing/t51_rehearsal/rehearsal-2026-10-27.log (replaces the earlier log of that name): all checks passed. Run from the branch worktree, whose product code equals main 38f05ba6; the rehearsal script changes were not yet committed. Supersedes the previous rehearsal observation's rollback claim, which used 72e205ef rather than the release before 0103 (REV-128 R1). New step C: e6398b70 refuses to start on the 0103 schema ('Supplier startup self-check failed'); after the three statements in 0103's header it starts and serves the rows; rolling forward renumbers them, so user ordering is lost. AUTO_INCREMENT read with information_schema_stats_expiry=0 (R2): the cache read NULL where the live value was 2. Controls: moved counter, five invented changes, case-only permission change in a rolled-back transaction.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-27T08:27:27+00:00"
     }
   ],
   "pending_decisions": [
@@ -9684,5 +9707,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-051 boundary PR (06_task051_completion_boundary.md, rehearsal rerun): independent review, CI, merge. TASK-051, formal UAT and release stay open (groups B and C); HD-147 awaits the Product Owner."
+  "next_safe_action": "TASK-051 boundary PR: REV-128 findings fixed (report 131); push, CI on the exact head, merge on the Product Owner's word. TASK-051, formal UAT and release stay open (groups B and C); HD-147 awaits the Product Owner."
 }
