@@ -1,5 +1,5 @@
 import fs from "node:fs";
-import { connect, fixturePath, isScratchName, readFixture } from "./uatEnvironment.mjs";
+import { connect, fixturePath, importRoot, isScratchName, readFixture } from "./uatEnvironment.mjs";
 
 /** 刪 uatServer 開嘅 scratch database。名唔係 `${DB_NAME}_rh_uat…` 就唔郁。 */
 export default async function globalTeardown() {
@@ -13,4 +13,5 @@ export default async function globalTeardown() {
     await admin.end();
   }
   fs.rmSync(fixturePath, { force: true });
+  fs.rmSync(importRoot, { recursive: true, force: true });
 }
