@@ -1,6 +1,6 @@
 import {inspectSalesTable} from "../../../database/migrations/0070_create_sales_quotations.js";
 import {inspectFulfillmentTable} from "./fulfillmentMigrationSchema.js";
-import {inspectFulfillmentArchiveProtection} from "./fulfillmentArchiveProtectionSchema.js";
+import {inspectFulfillmentArchiveProtection,FULFILLMENT_ARCHIVE_PROTECTION_ACTIVE,FULFILLMENT_ARCHIVE_PROTECTION_MIRRORS} from "./fulfillmentArchiveProtectionSchema.js";
 import {FULFILLMENT_AUDIT_EXPORT_TABLES} from "../../../database/migrations/0098_create_fulfillment_audit_and_exports.js";
 
 // Version1 metadata snapshots the published P0 operation/sequence contracts without rewriting them.
@@ -58,13 +58,48 @@ const requiredVersions=Object.freeze([
  "migrations/0106_protect_fulfillment_archive_contracts.js"
 ]);
 const refused=reasonCode=>({ready:false,reasonCode});
+// One probe only: preserve each existing strict validator while sharing its metadata family across fixed tables.
+const readinessMetadataQueries=new Set([
+ "SELECT column_name AS name,column_type AS type,is_nullable AS nullable,\n    column_default AS default_value,collation_name AS collation,extra AS extra FROM information_schema.columns\n    WHERE table_schema = DATABASE() AND table_name = ? ORDER BY ordinal_position",
+ "SELECT engine AS engine,table_collation AS collation,table_schema AS schema_name FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = ?",
+ "SELECT index_name AS name,non_unique AS non_unique,column_name AS column_name,sub_part AS sub_part\n    FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = ? ORDER BY index_name,seq_in_index",
+ "SELECT k.column_name AS name,k.referenced_table_name AS target,k.referenced_column_name AS field,\n    k.referenced_table_schema AS schema_name,r.delete_rule AS delete_rule,r.update_rule AS update_rule\n    FROM information_schema.key_column_usage k JOIN information_schema.referential_constraints r\n    ON r.constraint_schema=k.constraint_schema AND r.table_name=k.table_name AND r.constraint_name=k.constraint_name\n    WHERE k.table_schema=DATABASE() AND k.table_name=?",
+ "SELECT tc.constraint_name AS name,tc.enforced AS enforced,cc.check_clause AS clause\n    FROM information_schema.table_constraints tc JOIN information_schema.check_constraints cc\n    ON cc.constraint_schema=tc.constraint_schema AND cc.constraint_name=tc.constraint_name\n    WHERE tc.constraint_schema=DATABASE() AND tc.table_name=? AND tc.constraint_type='CHECK'",
+ "SELECT trigger_name AS name,event_manipulation AS event,action_timing AS timing,\n    action_orientation AS orientation,action_statement AS statement FROM information_schema.triggers WHERE trigger_schema=DATABASE() AND event_object_table=?",
+ "SELECT column_name AS name,column_type AS type,is_nullable AS nullable,column_default AS def,collation_name AS collation,extra AS extra,generation_expression AS generation\n    FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name=? ORDER BY ordinal_position",
+ "SELECT engine AS engine,table_collation AS collation FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name=?",
+ "SELECT index_name AS name,non_unique AS non_unique,column_name AS field,sub_part AS prefix FROM information_schema.statistics WHERE table_schema=DATABASE() AND table_name=? ORDER BY index_name,seq_in_index",
+ "SELECT k.constraint_name AS name,k.column_name AS field,k.referenced_table_name AS target,k.referenced_column_name AS target_field,r.delete_rule AS delete_rule,r.update_rule AS update_rule,\n    k.referenced_table_schema=DATABASE() AS local_scope FROM information_schema.key_column_usage k JOIN information_schema.referential_constraints r ON r.constraint_schema=k.constraint_schema AND r.table_name=k.table_name AND r.constraint_name=k.constraint_name\n    WHERE k.table_schema=DATABASE() AND k.table_name=? ORDER BY k.constraint_name,k.ordinal_position",
+ "SELECT tc.constraint_name AS name,tc.enforced AS enforced,cc.check_clause AS clause FROM information_schema.table_constraints tc JOIN information_schema.check_constraints cc ON cc.constraint_schema=tc.constraint_schema AND cc.constraint_name=tc.constraint_name WHERE tc.constraint_schema=DATABASE() AND tc.table_name=? AND tc.constraint_type='CHECK'",
+ "SELECT trigger_name AS name,event_manipulation AS event,action_timing AS timing,action_statement AS statement FROM information_schema.triggers WHERE trigger_schema=DATABASE() AND event_object_table=?",
+ "SELECT trigger_name AS name,event_manipulation AS event,action_timing AS timing,action_order AS ordinal,action_statement AS statement FROM information_schema.triggers WHERE trigger_schema=DATABASE() AND event_object_table=?",
+]);
+export function readinessMetadata(tx,tables){
+ const known=new Set(tables),families=new Map();
+ return {async query(sql,args=[]){
+  const predicate=/\b((?:[a-z]+\.)?(?:table_name|event_object_table))\s*=\s*\?/u.exec(sql);
+  if(args.length!==1||!known.has(args[0])||!predicate||!readinessMetadataQueries.has(sql))return tx.query(sql,args);
+  let grouped=families.get(sql);
+  if(!grouped){
+   // Bound the join order only for the two exact CHECK families; retain every constraint row.
+   const lookupSql=sql.includes("information_schema.check_constraints")?sql.replace(" JOIN information_schema.check_constraints cc"," STRAIGHT_JOIN information_schema.check_constraints cc"):sql;
+   const batchSql=lookupSql.replace(/^\s*SELECT\s+/u,prefix=>prefix+`${predicate[1]} AS __readiness_table,`).replace(predicate[0],`${predicate[1]} IN (?)`),[rows]=await tx.query(batchSql,[tables]);
+   grouped=new Map(tables.map(table=>[table,[]]));
+   if(!Array.isArray(rows))throw new TypeError("Invalid readiness metadata grouping");
+   for(const row of rows){if(!row||typeof row!=="object"||!grouped.has(row.__readiness_table))throw new TypeError("Invalid readiness metadata grouping");const copy={...row};delete copy.__readiness_table;grouped.get(row.__readiness_table).push(copy);}
+   families.set(sql,grouped);
+  }
+  return [grouped.get(args[0])];
+ }};
+}
 export async function inspectFulfillmentArchiveReadiness(tx){
  try{
   try{
-   if(!await inspectSalesTable(tx,sequence)||!await inspectSalesTable(tx,operations))return refused("SCHEMA_MISSING");
+   const sales=readinessMetadata(tx,[sequence.table,operations.table]),owner=readinessMetadata(tx,[FULFILLMENT_AUDIT_EXPORT_TABLES[1].table,...FULFILLMENT_ARCHIVE_PROTECTION_ACTIVE.map(({contract})=>contract.table),...FULFILLMENT_ARCHIVE_PROTECTION_MIRRORS.map(({contract})=>contract.table)]);
+   if(!await inspectSalesTable(sales,sequence)||!await inspectSalesTable(sales,operations))return refused("SCHEMA_MISSING");
    // The historical AND-only inspector flattens parentheses; OR/IF routing needs this strict second check.
    await inspectOperationStateChecks(tx);
-   if(!await inspectFulfillmentArchiveProtection(tx)||!await inspectFulfillmentTable(tx,FULFILLMENT_AUDIT_EXPORT_TABLES[1]))return refused("SCHEMA_MISSING");
+   if(!await inspectFulfillmentArchiveProtection(owner)||!await inspectFulfillmentTable(owner,FULFILLMENT_AUDIT_EXPORT_TABLES[1]))return refused("SCHEMA_MISSING");
   }catch(error){
    if(/^Incompatible /u.test(error.message??""))return refused("SCHEMA_INCOMPATIBLE");
    if((error.cause?.code??error.code)==="ER_NO_SUCH_TABLE")return refused("SCHEMA_MISSING");

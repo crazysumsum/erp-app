@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1395,
+  "revision": 1404,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "10e658c43562f4d07aeeac9486bdc9ba46bb613e99f8813cf3997bde6b1d073d",
     "plan": "b52e2746d16e4440f6d7dd33b76de0ff444a8234cbd5b5a28183210958209b41",
-    "code_commit": "d9301324bae2604b09a3d1e1e889d6eddabbc558",
-    "source_fingerprint": "32c4c0d9af824440529341bb0a23e69bc6dccba4b1fd81b42d85a0a02ef09f64",
+    "code_commit": "6a4dc5520eb9fc1b74a8af49c9341809c40a566e",
+    "source_fingerprint": "38d3887de53bac90ec1f6b509ffb675657f635caad25b39ea9cc49b98a2155de",
     "worktree": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app",
-    "default_commit": "206484f4a4bbf902a03d8a17ddccac55bcbfff84",
+    "default_commit": "2b4040e2b8276932fdb692e4a03f89f8ab5b7820",
     "mode_entry_commit": "e272f5d3ce05d0ca50be42e6d8764f0ef20d3dd1"
   },
   "runtime": {
@@ -13215,6 +13215,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-DEC038-METADATA-FINAL-R4",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_archive_guard_review",
+      "reviewed_baseline": "10e658c43562f4d07aeeac9486bdc9ba46bb613e99f8813cf3997bde6b1d073d",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-dec038-readiness-metadata-final-r4-slice-reviewer-proof.json SHA25664869637965f2d7339778c41f4fd82f9ad87a40406631ee926231bfab69ade40",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -17419,6 +17431,72 @@
       "subject": "Bounded queryoperation completion metrics; author250unit/lint0/89nativeleaf/26browser/securityaudit0/pathcheck; independent4native+11pure Q05closure; no fullSLO/Task/Phase/CI approval",
       "status": "PASS",
       "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/150_query_operation_observation_cases.md; securitylowerseverity5 andlistenerwarningretained; allrawprivate"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "6a4dc5520eb9fc1b74a8af49c9341809c40a566e",
+      "spec_baseline": "b52e2746d16e4440f6d7dd33b76de0ff444a8234cbd5b5a28183210958209b41",
+      "source_fingerprint": "781d067c55e61ee9e3fe93717786a8e6cbe8a50f943c20e579b71a658c2ab899",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-26T10:01:50.161216Z",
+      "subject": "Observed main2b Supplier-only20path conflictfree featureintegration; selectiveverification pending; no fullGateclaim",
+      "status": "PENDING",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/151_main_supplier_integration_impact.md"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "6a4dc5520eb9fc1b74a8af49c9341809c40a566e",
+      "spec_baseline": "b52e2746d16e4440f6d7dd33b76de0ff444a8234cbd5b5a28183210958209b41",
+      "source_fingerprint": "781d067c55e61ee9e3fe93717786a8e6cbe8a50f943c20e579b71a658c2ab899",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-27T00:53:13.702803Z",
+      "subject": "Main2b selective verification4native/299relatedunits/lint0/clientbuild0; actualownedruntime105confirmed afterinterruption; no fullphase result",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/151_main_supplier_integration_impact.md; /Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-main2b-query-smoke-native-r1/receipt.json SHAe1fa5630e30af86615061e3a254781d4fc64d115945f15828d049edc91a0485a; /Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-main2b-selective-source-checks-r2.json SHAc5e6ca135cf237c5e5fb75a564e921148d0147831701a7afd23086097350fe1e; /Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-main2b-client-build-r1/receipt.json SHA527e743175ad885b34e4bb282b57838fab44744ba187a22393c7d7a463517924"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "code_commit": "6a4dc5520eb9fc1b74a8af49c9341809c40a566e",
+      "spec_baseline": "b52e2746d16e4440f6d7dd33b76de0ff444a8234cbd5b5a28183210958209b41",
+      "source_fingerprint": "16384f1e8cd4b43abb84272960c5b5873e0675986011e1ab90ef576c0896dcf3",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-27T01:17:12.747624Z",
+      "subject": "Human-directed stop:164>20developerreadinessperformanceRED; applicableTC032contract priorCI failure/latePR287PASS retained; no automaticretries/fixes/merge. Profile501stillPASS; cleanup0nonce schemas/connections.",
+      "status": "FAIL",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/153_readiness_metadata_batching_cases.md; /Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-performance-stop-evidence-20261027-r1.json SHA54570af19cfe2c567e737543a9bd99896a33ca68e81456b3d309f32f4762c423"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEC036 r2 original3native/116pure/original501harddeadline developerchecks",
+      "code_commit": "6a4dc5520eb9fc1b74a8af49c9341809c40a566e",
+      "spec_baseline": "b52e2746d16e4440f6d7dd33b76de0ff444a8234cbd5b5a28183210958209b41",
+      "source_fingerprint": "43d8fe2beaa79b0c9e2c2eab81eb5ad5aa26c5742738987e1129214bf0ecb434",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-readiness-batching-r2-performance-stop.json SHA25635659eb807b613103f7406ae65b060feb78b50c3627fedf3123bac732149cf62",
+      "actor": "Codex /root actualexecution and separateproof",
+      "observed_at": "2026-10-27T06:06:50.308524Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEV-P4-SCHEMA-BATCH-005 optimizationeffectiveness notestablished",
+      "code_commit": "6a4dc5520eb9fc1b74a8af49c9341809c40a566e",
+      "spec_baseline": "b52e2746d16e4440f6d7dd33b76de0ff444a8234cbd5b5a28183210958209b41",
+      "source_fingerprint": "43d8fe2beaa79b0c9e2c2eab81eb5ad5aa26c5742738987e1129214bf0ecb434",
+      "status": "BLOCKED",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-readiness-batching-r2-performance-stop.json SHA25635659eb807b613103f7406ae65b060feb78b50c3627fedf3123bac732149cf62",
+      "actor": "Codex /root actualexecution and separateproof",
+      "observed_at": "2026-10-27T06:06:50.310748Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEC038 finalmetadata focused developerPASS, notwholeP4Gate",
+      "code_commit": "6a4dc5520eb9fc1b74a8af49c9341809c40a566e",
+      "spec_baseline": "b52e2746d16e4440f6d7dd33b76de0ff444a8234cbd5b5a28183210958209b41",
+      "source_fingerprint": "38d3887de53bac90ec1f6b509ffb675657f635caad25b39ea9cc49b98a2155de",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-readiness-batching-profile-native-r4/receipt.json SHA2b03a60d0150fcc86d6cb23b0b98e68b80b3b00b24bf04dbb3980ca0141af962; actualunit117/0/0 native3/0/0 profile1/0/0; first50034632.616833ms<600000; oldresults preserved, single-run effectqualified; wholelint/diffcheck0",
+      "actor": "Codex /root actualexecution; actualseparatereview",
+      "observed_at": "2026-10-27T06:43:57.751975Z"
     }
   ],
   "pending_decisions": [
@@ -17884,6 +17962,37 @@
       ],
       "question": "Approve exact one shared MySqlDatabaseService.js bounded readonly poolwait observation scope/API and proposed D10e658c43562f4d07aeeac9486bdc9ba46bb613e99f8813cf3997bde6b1d073d/Pb52e2746d16e4440f6d7dd33b76de0ff444a8234cbd5b5a28183210958209b41 with additive mandatory regression/test discovery; exact patch5880f26e and package1b91ad8e75e59a8190e6b07edac7619d9b71850a0222430e3b247c021634b100; no gate/transaction/dataownership waiver. Existing fullP4/isolatedtests/commit/PR/mainmerge authority retained. Unaffected capacity/restore planning may continue. Identity-authority correction: currentimmutableR4 aa2d85ffa888c7bbaf0ed0531c305bde695b171138da3041faacd176d58f7f29 requiresactualdirectSamDEC035 only; R1–R3 retained; no existingDEC030-HD008/009 authority canapprove this newfile. SameexactD/P/patch.",
       "answer_ref": "Direct human Sam response in current Sales conversation, request_user_input_async call_868e7e282add4309a90c94d6ca5cc5bb question0: 批准 DEC-035 單一共享觀測 scope（建議）. Approves exact R4 package aa2d85ff and patch5880f26e/proposed D10e658c4/Pb52e2746. Existing commit/PR/mainmerge authority retained; all original Gates and timed recovery retained. No production/deployment/formal acceptance grant."
+    },
+    {
+      "id": "DEC-036",
+      "impact": "MAJOR",
+      "question": "Under verified Sam performance-failure stop instruction, authorize minimal same-call metadata batching correction and targeted TC032 root-cause investigation/necessary retest with all original workloads/SLOs/coverage/CI gates unchanged, or request concrete testcontent-change proposal first? Existing164>20 developerRED and mainTC0323512/4921>3000ms require disposition; Archive50184599<600000ms PASS; latestPR287TC032 rerunPASS does not establish rootcause/currentP4CI. Privatepatchnotapplied/futureSQLfallbackfinding retained. No development/retry/merge untilactualSamanswer. Evidence /Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-performance-stop-evidence-20261027-r1.json SHA54570af19cfe2c567e737543a9bd99896a33ca68e81456b3d309f32f4762c423",
+      "affected_ids": [
+        "PHASE-005",
+        "TASK-059",
+        "TASK-062",
+        "TASK-063",
+        "TASK-068",
+        "TC-032",
+        "TC-042",
+        "TC-049"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Direct Sam Sales chat2026-10-27: 授權通知 Fulfillment，並恢復 DEC-036 的 metadata 效能修復。請維持低 CPU，繼續完成 P4 容量／還原驗證、CI 及所有 Gate，通過後直接合併到 main。 Explicit recovery of known164>20 developerRED/requiredunknownSQLfallbackfinding, no testload/threshold waiver; newperformancefailure stillstop/report. TC03210s separately approved and mergedPR289f104, notyet integratedintoP4worktree. Fulfillment notification actuallysent to01a15862-9933-7e50-8e10-4015cf35d078 underthisdirectauthorization."
+    },
+    {
+      "id": "DEC-038",
+      "impact": "MAJOR",
+      "question": "R2known-SQL batching fixes fallback and passes native14calls/functional501, but first50094.79s vs84.60s (+12.05%) fails to establish optimizationbenefit. Original600s SLOpasses. Underperformance-stoprule authorize boundedmetadata-keyquerydiagnosis/correction andsame501retest withalloriginalthresholds/load, orkeepstopped? No postresultfix/retry untilanswer.",
+      "affected_ids": [
+        "TASK-063",
+        "TASK-068",
+        "TC-049",
+        "TC-054",
+        "TC-055"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Direct Sam response to call_6bed44a18d7746bf84822824998bf131: 授權繼續限定修復，門檻與負載不變（建議）. Authorizes boundedmetadata-keydiagnosis/correction/review/original501retest atlowCPU, thencompleteP4capacity/restore/CI/allGates andmergeonlyafterPASS. No threshold/load waiver; preserve old84.60s/new94.79s reports and stop/report newperformancefailure."
     }
   ],
   "external_actions": [
@@ -20836,8 +20945,24 @@
       "kind": "GIT_COMMIT",
       "target": "local reviewed queryobservation increment",
       "idempotency_key": "p4-query-observations-commit-r1",
+      "status": "CONFIRMED",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/150_query_operation_observation_cases.md; no push/PR/mainmerge; actualcommitacd82bad933f2ea14726fcfe4beb630090b8320d"
+    },
+    {
+      "id": "ACT-P4-MAIN2B-INTEGRATION-20261026",
+      "kind": "GIT_MERGE",
+      "target": "2b4040e2b8276932fdb692e4a03f89f8ab5b7820 into Sales feature only",
+      "idempotency_key": "p4-main2b-integration-r1",
+      "status": "CONFIRMED",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/151_main_supplier_integration_impact.md; source parentacd82bad933f2ea14726fcfe4beb630090b8320d; no mainbranchmerge; observed actualmerge6a4dc5520eb9fc1b74a8af49c9341809c40a566e exactparents/conflictfree; no replay. Initialconfirmationproposal rejected schema NOT_READY observationenum; preserved failedproposal andcorrected PENDING only."
+    },
+    {
+      "id": "ACT-DEC038-METADATA-COMMIT-R4",
+      "kind": "COMMIT",
+      "target": "local codex/sales-order-phase-4-archive metadata slice only",
+      "idempotency_key": "dec038-metadata-localcommit-r4",
       "status": "STARTED",
-      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app/docs/sales_order_management/implementation/150_query_operation_observation_cases.md; no push/PR/mainmerge"
+      "source_ref": "DirectSamDEC038 limitedrepair/standingcommit authority; actualfocusedchecks/separatereviewPASS, no partialP4PR/merge authority exercised."
     }
   ],
   "evidence_files": [
@@ -22180,5 +22305,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Observe querymetricscommit; continue engine/lock/history/provider/runbook work, Archive SQL profile before fullvolume, remaining coherenttemplates/diskpilot, fullcapacity/restore/original33checks/latestmain/currentCI/wholephase gates; no mainmerge untilallPASS."
+  "next_safe_action": "Commitreviewedmetadata slice locally, inspectactualcommit then mergefreshorigin/main6cdc includingapprovedTC03210s; preserveallstatehistories, reconcileonlynecessaryhash/references. ContinuefixedP4remainingwork; noPR/mainmergebeforefullGate."
 }
