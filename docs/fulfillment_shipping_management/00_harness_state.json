@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 205,
+  "revision": 209,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -9,12 +9,12 @@
   "current_phase": "PHASE-002",
   "current_task": "TASK-022",
   "baseline": {
-    "design": "c998b03370c7105bade0e7b7fe5d51191c5bf8cef051b5002546db45d558b0ec",
-    "plan": "aecec0c3a2841c6cbb3ba32eac4693a9e3cc2a1c10118d843e4653354dddf0b4",
-    "code_commit": "f7a984e940665d15810396774484a135bed85731",
-    "source_fingerprint": "e2036f0e31652f8ae346cf86efdbcd8395b97078e73b6b4ad45e389a9d8b6474",
+    "design": "d81d2f6c9962f4a8dee4fc6d8f188ccec19b8ff44bbf4173c3e86fe2b92e17ae",
+    "plan": "117f92529d5098dd8175dd7cc3179e8c3cf1a83e4246047ba46ead4964d42285",
+    "code_commit": "35331210178d666f5b6240afd9eb51f8a2f7d7fc",
+    "source_fingerprint": "6bbf59686c17482e07fe855a29616707e9d8531e6b2b7e48bbe6c38d0b034daf",
     "worktree": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1",
-    "default_commit": "d805913bb22afad8b5eafef60920cfce73d0dd05",
+    "default_commit": "f104bd848b78b415595906f852962ae17dd3f7ba",
     "mode_entry_commit": "fd32762f4fa17a5e77aaa7118a9ded2d3ac81e9e"
   },
   "runtime": {
@@ -3372,6 +3372,102 @@
         "NFR-023",
         "ExactoriginalNAreason retained;TC010mandatory/blockingunchanged"
       ]
+    },
+    {
+      "id": "APR-154-P1-BROWSER-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam originalP1IMPLEMENT/fullverification/currentCI-before-draft instructions; actualHD024Alatestmainpin authority; TASK012/plan1.7 promisedP1browserlane; VERIFY-PREP001 actualA. Faithfullineage, nothumanunseenhashinspection.",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/58_p1_final_verification_binding.md",
+      "recorded_at": "2026-10-27T05:56:30.235791+00:00",
+      "code_commit": "35331210178d666f5b6240afd9eb51f8a2f7d7fc",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "117f92529d5098dd8175dd7cc3179e8c3cf1a83e4246047ba46ead4964d42285",
+      "scope": [
+        "server/src/modules/inventory/InventoryLookupService.js",
+        "server/src/modules/inventory/inventoryFulfillmentCandidateAdvisory.js",
+        "server/src/modules/sales/SalesFulfillmentService.js",
+        "server/test/salesFulfillmentService.test.js",
+        "docs/inventory_management/03_design_spec.md",
+        "docs/inventory_management/00_module_manifest.json",
+        "docs/sales_order_management/03_design_spec.md",
+        "docs/sales_order_management/00_module_manifest.json",
+        "server/src/modules/inventory/inventoryFulfillmentAllocation.js",
+        "server/src/modules/inventory/inventoryFulfillmentAllocationPreparation.js",
+        "server/src/modules/inventory/InventoryPickSequenceService.js",
+        "server/database/migrations/0104_preserve_cancelled_fulfillment_pick_history.js",
+        "server/src/modules/fulfillment/fulfillmentCancelledAllocationSchema.js",
+        "server/src/modules/fulfillment/fulfillmentMigrationSchema.js",
+        "client/config/menu.js",
+        "server/src/modules/inventory/inventoryFulfillmentReallocationAdvisory.js",
+        "server/src/framework/http/apiResponse.js",
+        "server/src/framework/api/apiDefinitionResolver.js",
+        "server/src/framework/middleware/apiDispatcher.js",
+        "server/src/framework/application/createApplication.js",
+        "server/src/framework/http/jsonBodyParser.js",
+        "server/src/modules/inventory/inventoryFulfillmentAllocationPreview.js",
+        "HD024actualA readonlyactualprefixpreview/fourthtrusted2MiB only; reuseexistingassessor withoutwriterpolicyedit; oldglobal100slots/10s/20s/safety/gatesunchanged",
+        ".github/workflows/ci.yml",
+        "client/e2e/fulfillment-shipping-management/**",
+        "OwnedfixtureHTTPcredentials only; noGRANT/globalaccount/RBACpolicy change; alreadyplannedrealP1UI step insideexistingrequiredshard1 afterallcapacitysamples"
+      ]
+    },
+    {
+      "id": "APR-155-P1-BROWSER-DESIGN",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam originalP1IMPLEMENT/fullverification/currentCI-before-draft instructions; actualHD024Alatestmainpin authority; TASK012/plan1.7 promisedP1browserlane; VERIFY-PREP001 actualA. Faithfullineage, nothumanunseenhashinspection.",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/58_p1_final_verification_binding.md",
+      "recorded_at": "2026-10-27T05:56:30.235791+00:00",
+      "code_commit": "35331210178d666f5b6240afd9eb51f8a2f7d7fc",
+      "expires_at": null,
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "d81d2f6c9962f4a8dee4fc6d8f188ccec19b8ff44bbf4173c3e86fe2b92e17ae",
+      "scope": [
+        "fulfillment-shipping-management",
+        "PHASE-002",
+        "TASK-012–023",
+        "ExistingHD024AfaithfullatestSalespin+existingP1lane; nofuturephase or businesscontractexpansion"
+      ]
+    },
+    {
+      "id": "APR-156-P1-BROWSER-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam originalP1IMPLEMENT/fullverification/currentCI-before-draft instructions; actualHD024Alatestmainpin authority; TASK012/plan1.7 promisedP1browserlane; VERIFY-PREP001 actualA. Faithfullineage, nothumanunseenhashinspection.",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/58_p1_final_verification_binding.md",
+      "recorded_at": "2026-10-27T05:56:30.235791+00:00",
+      "code_commit": "35331210178d666f5b6240afd9eb51f8a2f7d7fc",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "117f92529d5098dd8175dd7cc3179e8c3cf1a83e4246047ba46ead4964d42285",
+      "scope": [
+        "fulfillment-shipping-management",
+        "PHASE-002",
+        "TASK-012–023",
+        "Retainalloriginalsuites/5000/20s/safety/coverage/currentCI; addexplicitrealP1browsermin2/zeroSKIP; draftonlyafterallgates"
+      ]
+    },
+    {
+      "id": "APR-157-P1-BROWSER-NFR023-LINEAGE",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam originalP1IMPLEMENT/fullverification/currentCI-before-draft instructions; actualHD024Alatestmainpin authority; TASK012/plan1.7 promisedP1browserlane; VERIFY-PREP001 actualA. Faithfullineage, nothumanunseenhashinspection.",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/58_p1_final_verification_binding.md",
+      "recorded_at": "2026-10-27T05:56:30.235791+00:00",
+      "code_commit": "35331210178d666f5b6240afd9eb51f8a2f7d7fc",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "117f92529d5098dd8175dd7cc3179e8c3cf1a83e4246047ba46ead4964d42285",
+      "scope": [
+        "NFR-023",
+        "ExactoriginalNAreason retained; TC010mandatory/blocking unchanged"
+      ]
     }
   ],
   "reviews": [
@@ -4910,6 +5006,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-INDEPENDENT-P1-BROWSER-ADOPTION-206",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "d81d2f6c9962f4a8dee4fc6d8f188ccec19b8ff44bbf4173c3e86fe2b92e17ae",
+      "source_ref": "implementation/58_p1_final_verification_binding.md; independent-p1-browser-adoption-206-review.json; exact D/P/source qualified adoption only, not execution/Phase/CI approval SHA00b4954f9ead71698eae0f7675dd4fda7df7b07babd99379ae27e67451235c24; Dd81d2f6c9962f4a8dee4fc6d8f188ccec19b8ff44bbf4173c3e86fe2b92e17ae P117f92529d5098dd8175dd7cc3179e8c3cf1a83e4246047ba46ead4964d42285 FP9c459f81c1680f28a64f85ecd44dbf7c3f3b8faf2f082f96f6f4cb3ef3c83410",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -5836,6 +5944,17 @@
       "source_ref": "independent-allocation-ui-completed-results-hold.json SHAf3a5439693061cb245b08a5fdbefb25635eb584622dcef703f8ce49415ebd93b; exact9clientsubsetdaefc0f29b16870f7b5cd1079f65c67dbff20af6640b6c7d5d065bab15f3d5ec;30focused9private+actualAllocateabort403refreshsamebody/native16hash/manualRealloc500Unicode/FEFOdisabled/4widthscompletedbeforeSTOP. CleanupreceiptSHA3023400ec3baa19894fb72e9c58a683a7ef5a4d34dfa10deff3846fb55e162df. No newtests afterSTOP.",
       "actor": "/root/fulfillment_independent_review actualpreservedresults",
       "observed_at": "2026-10-27T01:12:48.740128+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "CurrentP1realbrowserA4PDF visualreview supporting actual2casePASS",
+      "code_commit": "35331210178d666f5b6240afd9eb51f8a2f7d7fc",
+      "spec_baseline": "117f92529d5098dd8175dd7cc3179e8c3cf1a83e4246047ba46ead4964d42285",
+      "source_fingerprint": "6bbf59686c17482e07fe855a29616707e9d8531e6b2b7e48bbe6c38d0b034daf",
+      "status": "PASS",
+      "source_ref": "evidence/20261027T060504-f258870ae8db/run.json; privatep1-final-browser-pdf-visual-proof.json SHAcd50d771fbb6fa4ea14eb532928c494625513b7d84bdcb5b277e216e20f900d8; actualPopplerrender/rootview, noblank/clipping/missingcharacters; retainedprior5000PDFseparate",
+      "actor": "/root actualrenderandvisualobservation",
+      "observed_at": "2026-10-27T06:08:46.698824+00:00"
     }
   ],
   "pending_decisions": [
@@ -6687,8 +6806,16 @@
       "kind": "INTEGRATION_BASELINE",
       "target": "f104bd848b78b415595906f852962ae17dd3f7ba",
       "idempotency_key": "p1-main-f104bd84-after-native542",
+      "status": "CONFIRMED",
+      "source_ref": "Freshgitfetchoriginmainexactf104; actualSaleshumanmessage01a17afc-2ad7-7c71-8527-c1b5b675723f:門檻放寬至10秒, verifiedread_thread; notificationauthorizedactualuser01a17b28-d9cd-7dd3-a32c-c7bf320deb19. ExistingHD024A/currentP1authoritylatestmainintegration; onlyownerTC03210s amendment, Fulfillment20s/5000 unchanged. No targetmerge/push/PR.; actuallocalmerge35331210 parents629878c5/f104bd84, Salesmanifest conflict resolved preservingHD018+ownerDEC037 provenance/currentSalesdesignpin4683b499. No P1productsource or Fulfillmentlatency change."
+    },
+    {
+      "id": "P1-REAL-BROWSER-LANE-COMMIT",
+      "kind": "GIT_COMMIT",
+      "target": "codex/fulfillment-p1-queue-picking reviewedrealP1browser/CI/ownedfixtureincrement only",
+      "idempotency_key": "p1-real-ui-lane-6bbf59686c17482e",
       "status": "STARTED",
-      "source_ref": "Freshgitfetchoriginmainexactf104; actualSaleshumanmessage01a17afc-2ad7-7c71-8527-c1b5b675723f:門檻放寬至10秒, verifiedread_thread; notificationauthorizedactualuser01a17b28-d9cd-7dd3-a32c-c7bf320deb19. ExistingHD024A/currentP1authoritylatestmainintegration; onlyownerTC03210s amendment, Fulfillment20s/5000 unchanged. No targetmerge/push/PR."
+      "source_ref": "Actual2P1browser+2P0browser/lint/build/auditPASS on6bbf; scopedindependentreviews00b4954f/50f65cb9/d87d8e50; no PR/targetmerge. CurrentnativefullgatesandCIstillpending."
     }
   ],
   "evidence_files": [
@@ -6696,7 +6823,13 @@
     "evidence/20261027T014532-802406ee29db/run.json",
     "evidence/20261027T014533-ed404b6fc204/run.json",
     "evidence/20261027T014653-a10720a727fb/run.json",
-    "evidence/20261027T020452-35b8660abed5/run.json"
+    "evidence/20261027T020452-35b8660abed5/run.json",
+    "evidence/20261027T060133-0b1931b49e18/run.json",
+    "evidence/20261027T060504-f258870ae8db/run.json",
+    "evidence/20261027T060618-54312575e151/run.json",
+    "evidence/20261027T060618-aefb293cac7a/run.json",
+    "evidence/20261027T060614-db54880f2c99/run.json",
+    "evidence/20261027T060618-d86631c5cb81/run.json"
   ],
   "defects": [
     {
@@ -6989,7 +7122,8 @@
       ],
       "closure_evidence": [
         "Promised realP1browser executable lane/profile/PHASE002/CIbinding remains missing; P0foundation2tests cannot substitute.",
-        "Actualseparatereview94e7a43f17ae5aae1cf9448853aba777bea4cf081b0f721cb4de3b5f9f6f45a1; correctionandactualverificationpending"
+        "Actualseparatereview94e7a43f17ae5aae1cf9448853aba777bea4cf081b0f721cb4de3b5f9f6f45a1; correctionandactualverificationpending",
+        "RealP1browser2PASS20261027T060504-f258870ae8db +P0browser2PASS; executableCI/profile/PHASEbindingreviewed; currentcandidateCIpending, remainsOPENuntilfinalqualification."
       ],
       "risk_approval_id": null
     },
@@ -7004,10 +7138,11 @@
       ],
       "closure_evidence": [
         "CI DB_USERerp_user cannot access admincreatedUUIDchild in startP1Http/CreateHTTP; explicitlybind existingownedfixturecredentials, noGRANT/global/productpolicy change.",
-        "Actualseparatereview94e7a43f17ae5aae1cf9448853aba777bea4cf081b0f721cb4de3b5f9f6f45a1; correctionandactualverificationpending"
+        "Actualseparatereview94e7a43f17ae5aae1cf9448853aba777bea4cf081b0f721cb4de3b5f9f6f45a1; correctionandactualverificationpending",
+        "Exactownedcredentialbindingreviewed; realP1childapp/browserPASS; existingHTTPnative/fullCIqualificationpending; no SQLlowprivexecutionclaim."
       ],
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Retainedactual542PASS/zeroSKIPnative + rawSHA565dcdada; complete reviewed realP1browserlane/CIstep and ownedfixturecredential fixes afterlocalmainf104integration; adopt actualpins/PLAN faithfully; finalverification/currentCI stillmandatory. Actualperformancefailure stopsreport."
+  "next_safe_action": "CurrentP1browser2PASS/P0browser2PASS/lint/build/auditPASS; preservefirstbrowserFAIL. Completeindependentproof/sourceclosingreview andfreeze UI/CIcandidate, thenrequirednativegates/currentCI beforedraft. All20s/5000/safety unchanged."
 }
