@@ -428,4 +428,24 @@ PHASE-004 (`uat/uat-phase-004.spec.js`, 12 cases): Supplier–SKU, import, expor
   - Browser-intercepted 503 (as in UAT-054): the badge stays Draft before and after a reload, and activating again after recovery succeeds.
 - **Import root:** the UAT server gets a per-run import root under `os.tmpdir()`, removed when the server exits.
 
-The cross-phase cases are not written yet. UAT-054 and the second half of UAT-046 intercept a request in the browser, because a slow response and a 503 cannot be produced safely on a real server.
+Cross-phase (`uat/uat-cross-phase.spec.js`, 2 cases). Local developer run on 2026-10-27, which is not a formal UAT execution:
+- **Result:** both pass. The full UAT config, all 55 cases, gives 41 passed and 14 skipped. The skips are `test.fixme` for downstream modules (HD-124 A, HD-131 A) and operations (HD-144 B).
+- **UAT-047 (keyboard, 375, 768 and 1440 px):** each phase's happy path is driven by keyboard only:
+  - PHASE-001: create and activate;
+  - PHASE-002: submit with an approver, then approve;
+  - PHASE-003: re-authenticate, reveal and collapse;
+  - PHASE-004: export with a password.
+- **How UAT-047 checks it:**
+  - A helper presses Tab until the target has focus, and fails rather than fall back to the mouse.
+  - Tabs use the arrow keys (roving tabindex). After each dialog, the test waits until it has closed, because focus stays trapped during the close transition.
+  - Focus is visible: a focused and an unfocused screenshot of the control differ.
+  - An empty save marks the field `aria-invalid`, and its error is linked by `aria-describedby`.
+  - The created status is announced as text (`role="status"`).
+  - The list's loading, empty and error states are seen, and 重試 is reached by keyboard. As in UAT-054, the slow and 503 list responses are intercepted in the browser.
+  - The page loads straight at each step's URL; the drawer menu is not keyboard-tested.
+- **UAT-055 (Audit):** a VIEWER filters by target, action plus target, actor and date (today included, tomorrow empty), and pages to page 2 (10 per page).
+  - Reloading the filter URL gives the same result.
+  - Each entry has a request id, including approval and import entries. No full account number appears in Audit or in the Supplier's Audit tab.
+  - The Audit page has no separate detail view: each row shows its redacted before and after values inline. 「開啟詳情」 is that row, plus the same entry, with the same request id, in the Supplier's 變更紀錄 tab.
+- **Plaintext:** trace, failure screenshots and the failure aria snapshot are off for this spec, because UAT-047's reveal and UAT-055's Audit carry fictional account numbers.
+- **UAT-026 fix (PHASE-003):** its clock pause had a 1 ms margin, which a slow full run overran ("Cannot fast-forward to the past"). It now has 200 ms. Deadline mutants at 29 s and 31 s still fail it. UAT-054 and the second half of UAT-046 intercept a request in the browser, because a slow response and a 503 cannot be produced safely on a real server.
