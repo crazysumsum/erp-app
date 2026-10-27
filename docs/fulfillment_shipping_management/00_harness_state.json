@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 196,
+  "revision": 203,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -9,12 +9,12 @@
   "current_phase": "PHASE-002",
   "current_task": "TASK-022",
   "baseline": {
-    "design": "899852004e767d619a2002a3d6acce75b3184eca19e947f4d6567fc92781ba09",
-    "plan": "4c4da18ac771847c854dba0be42900b46d53731270492bcbfac3d7936f1bd47e",
-    "code_commit": "a7a3e9fb1e16544f3ef05cc91e3a4cdb18696871",
-    "source_fingerprint": "bb64a94701a6c72a900909d93b1fb7cfcf40a51be784354915624142b6a9984d",
+    "design": "c998b03370c7105bade0e7b7fe5d51191c5bf8cef051b5002546db45d558b0ec",
+    "plan": "aecec0c3a2841c6cbb3ba32eac4693a9e3cc2a1c10118d843e4653354dddf0b4",
+    "code_commit": "297eae04b9fb05d4f3ad3b8e0880748f8dd3ab9a",
+    "source_fingerprint": "a53e84d06502b73e983efd629d2942155e65674f108f79ea3e97b52e7d1e3036",
     "worktree": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1",
-    "default_commit": "fd32762f4fa17a5e77aaa7118a9ded2d3ac81e9e",
+    "default_commit": "d805913bb22afad8b5eafef60920cfce73d0dd05",
     "mode_entry_commit": "fd32762f4fa17a5e77aaa7118a9ded2d3ac81e9e"
   },
   "runtime": {
@@ -24,9 +24,11 @@
       "workspace": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1",
       "mysql-socket": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/erp-fulfillment-p0-mysql-r",
       "runtime-and-private-evidence": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime",
-      "runtime-policy": "New owned synthetic MySQL26.7.0 socket-only daemon, per-test fresh UUID schemas; no shared/live DB; old tmp runtime absent",
-      "dependencies": "Locked offline npm ci --ignore-scripts; package/lock unchanged; generated test-only crypto rings outside source",
-      "browser-runtime": "Allroot/reviewerPick/CancelUIruntimesreleasedwithownUUIDschemaabsence/grantsrestored/sessioncloseobserved. Ownsocket-onlyMySQLcontinuesfornative. CurrentbranchuncommittedincrementunderapprovedP1;noformal/live."
+      "runtime-policy": "Owned MySQL26.7.0 socket-only/noTCP/noX restarted;128MiB bufferpool/100MiBredo defaults unchanged. New26charUUID namespace migrated0; previous32char schema dropped.",
+      "dependencies": "Actualmainlockedoffline npmci--ignore-scripts; body-parser2.4.0/qs6.16.1/PW1.63.0; nocode/dependency invention",
+      "browser-runtime": "Previousroot/reviewerUIruntimesclosed/grantsrestored/UUIDabsenceverified; finalmandatoryP0browserwilluseownports/base withoutreuse",
+      "mysql-schema": "fulfillment_p0_p1_b7a9c3ee; exactowned26charbase/migrations0; nativefixturesownUUIDchildren",
+      "web-port": "API 56002, client 56003; OSephemeral allocated; strict bind/no reuse; integrationHTTPport0"
     },
     "lease_ref": null
   },
@@ -3272,6 +3274,104 @@
         "NFR-023",
         "ExactoriginalNAreason retained;TC010mandatory/blockingunchanged"
       ]
+    },
+    {
+      "id": "APR-150-MAIN-INTEGRATION-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam actualHD024A includesfaithfullatestmainpins/deps; actualdirect2026-10-27resumeunaffectedP1scope, nothumanunseensource/hashinspection",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/57_allocation_ui_and_phase_integration.md",
+      "recorded_at": "2026-10-27T01:39:23.044117+00:00",
+      "code_commit": "6b34263b86fea7d6de9cf837ae5241000dee9c96",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "aecec0c3a2841c6cbb3ba32eac4693a9e3cc2a1c10118d843e4653354dddf0b4",
+      "scope": [
+        "server/src/modules/inventory/InventoryLookupService.js",
+        "server/src/modules/inventory/inventoryFulfillmentCandidateAdvisory.js",
+        "server/src/modules/sales/SalesFulfillmentService.js",
+        "server/test/salesFulfillmentService.test.js",
+        "docs/inventory_management/03_design_spec.md",
+        "docs/inventory_management/00_module_manifest.json",
+        "docs/sales_order_management/03_design_spec.md",
+        "docs/sales_order_management/00_module_manifest.json",
+        "server/src/modules/inventory/inventoryFulfillmentAllocation.js",
+        "server/src/modules/inventory/inventoryFulfillmentAllocationPreparation.js",
+        "server/src/modules/inventory/InventoryPickSequenceService.js",
+        "server/database/migrations/0104_preserve_cancelled_fulfillment_pick_history.js",
+        "server/src/modules/fulfillment/fulfillmentCancelledAllocationSchema.js",
+        "server/src/modules/fulfillment/fulfillmentMigrationSchema.js",
+        "client/config/menu.js",
+        "server/src/modules/inventory/inventoryFulfillmentReallocationAdvisory.js",
+        "server/src/framework/http/apiResponse.js",
+        "server/src/framework/api/apiDefinitionResolver.js",
+        "server/src/framework/middleware/apiDispatcher.js",
+        "server/src/framework/application/createApplication.js",
+        "server/src/framework/http/jsonBodyParser.js",
+        "server/src/modules/inventory/inventoryFulfillmentAllocationPreview.js",
+        "HD024actualA readonlyactualprefixpreview/fourthtrusted2MiB only; reuseexistingassessor withoutwriterpolicyedit; oldglobal100slots/10s/20s/safety/gatesunchanged"
+      ]
+    },
+    {
+      "id": "APR-151-MAIN-INTEGRATION-DESIGN",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam actualHD024A includesfaithfullatestmainpins/deps; actualdirect2026-10-27resumeunaffectedP1scope, nothumanunseensource/hashinspection",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/57_allocation_ui_and_phase_integration.md",
+      "recorded_at": "2026-10-27T01:39:23.044117+00:00",
+      "code_commit": "6b34263b86fea7d6de9cf837ae5241000dee9c96",
+      "expires_at": null,
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "c998b03370c7105bade0e7b7fe5d51191c5bf8cef051b5002546db45d558b0ec",
+      "scope": [
+        "PHASE-002",
+        "TASK-022",
+        "DES-003",
+        "DES-010",
+        "DES-013",
+        "ActualHD024Afaithfulcanonicalpreviewcontract;notunseenhumanhashinspection",
+        "fulfillment-shipping-management",
+        "MechanicalmoduleidentitybindingforcurrentapprovedP1lineageonly; noP2/P3implementation/merge/releaseexpansion"
+      ]
+    },
+    {
+      "id": "APR-152-MAIN-INTEGRATION-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam actualHD024A includesfaithfullatestmainpins/deps; actualdirect2026-10-27resumeunaffectedP1scope, nothumanunseensource/hashinspection",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/57_allocation_ui_and_phase_integration.md",
+      "recorded_at": "2026-10-27T01:39:23.044117+00:00",
+      "code_commit": "6b34263b86fea7d6de9cf837ae5241000dee9c96",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "aecec0c3a2841c6cbb3ba32eac4693a9e3cc2a1c10118d843e4653354dddf0b4",
+      "scope": [
+        "PHASE-002",
+        "TASK-012–023",
+        "Alloriginalfullsafety/currentCI/draftPRgates; no scope/latency/cap/concurrency waiver; necessary reviewedlatestmaincanonicalpinalignment",
+        "fulfillment-shipping-management",
+        "MechanicalmoduleidentitybindingforcurrentapprovedP1lineageonly; noP2/P3implementation/merge/releaseexpansion"
+      ]
+    },
+    {
+      "id": "APR-153-MAIN-INTEGRATION-NFR023-LINEAGE",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam actualHD024A includesfaithfullatestmainpins/deps; actualdirect2026-10-27resumeunaffectedP1scope, nothumanunseensource/hashinspection",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/implementation/57_allocation_ui_and_phase_integration.md",
+      "recorded_at": "2026-10-27T01:39:23.044117+00:00",
+      "code_commit": "6b34263b86fea7d6de9cf837ae5241000dee9c96",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "aecec0c3a2841c6cbb3ba32eac4693a9e3cc2a1c10118d843e4653354dddf0b4",
+      "scope": [
+        "NFR-023",
+        "ExactoriginalNAreason retained;TC010mandatory/blockingunchanged"
+      ]
     }
   ],
   "reviews": [
@@ -4786,6 +4886,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-INDEPENDENT-MAIN-D805913B-ADOPTION",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "c998b03370c7105bade0e7b7fe5d51191c5bf8cef051b5002546db45d558b0ec",
+      "source_ref": "implementation/57_allocation_ui_and_phase_integration.md; actual independent-main-d805-adoption-review.json/independent-main-d805-adoption-review-record.json; canonical/pins/lineage only; actualsourceclosing/regression/CIpending",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -5690,6 +5802,28 @@
       "observed_at": "2026-10-26T03:38:06.277084+00:00",
       "source_ref": "implementation/40_task019_cancel_increment.md#current-hd019-implementation-and-closing-developer-checkpoint",
       "actor": "Root actual execution:42a39files378PASS;test-only5f9527racesPASS;currentpure97/lintPASS. Separate final review pending;notCI/formal/P1complete."
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Read-only applicability inspection of known upstream TC032 performance failure; NOT currentP1CI execution",
+      "code_commit": "8cd3d9b70d5877b7bbd99d782605c30812577e46",
+      "spec_baseline": "4c4da18ac771847c854dba0be42900b46d53731270492bcbfac3d7936f1bd47e",
+      "source_fingerprint": "f4501fa48c12d398d32ae6fe9a2fbef4e3fbb038fd2d50db1192fea32ab0af80",
+      "status": "BLOCKED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/40302655569/job/121504038000; private readonly-main-tc032-summary.json + actualjoblog. Unchangedblobpairs SalesConfirmation d27c37e0c64581328cadb746989499d3a1772da2, InventoryReservation e916528feaad41866da26fcb0ad87f62237a63d9, TC032test5f2ae1bd362492102165703faf916907b2121b67. No retry/reproduction/mainmerge/push/PR afterstop.",
+      "actor": "/root readonly GitHub+source observations under actual Samstop policy",
+      "observed_at": "2026-10-27T01:12:48.740128+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "IndependentAllocationUI alreadycompleted beforeperformanceHOLD; scopedresults preserved, noTask/Phase/readinessapproval",
+      "code_commit": "8cd3d9b70d5877b7bbd99d782605c30812577e46",
+      "spec_baseline": "4c4da18ac771847c854dba0be42900b46d53731270492bcbfac3d7936f1bd47e",
+      "source_fingerprint": "f4501fa48c12d398d32ae6fe9a2fbef4e3fbb038fd2d50db1192fea32ab0af80",
+      "status": "PASS",
+      "source_ref": "independent-allocation-ui-completed-results-hold.json SHAf3a5439693061cb245b08a5fdbefb25635eb584622dcef703f8ce49415ebd93b; exact9clientsubsetdaefc0f29b16870f7b5cd1079f65c67dbff20af6640b6c7d5d065bab15f3d5ec;30focused9private+actualAllocateabort403refreshsamebody/native16hash/manualRealloc500Unicode/FEFOdisabled/4widthscompletedbeforeSTOP. CleanupreceiptSHA3023400ec3baa19894fb72e9c58a683a7ef5a4d34dfa10deff3846fb55e162df. No newtests afterSTOP.",
+      "actor": "/root/fulfillment_independent_review actualpreservedresults",
+      "observed_at": "2026-10-27T01:12:48.740128+00:00"
     }
   ],
   "pending_decisions": [
@@ -6005,6 +6139,30 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Actual Sam async answer2026-10-26: A：批准只讀 owner preview 及第四條2MiB路由（建議）. Exactproposal53SHA254b2a0c871990c0e0fd26dc597ed0e3dc25c599a341ca8b6b85624e0aaa0ff6, independentproposalreviewSHAb0df1256709f1c155ec50c84a983f183f901ee4cea266d86baf2a22342ac7296. SinglePOSTreadonlypreview actualprefix +pre-submitFEFO ownerassessment; noGETdraft or Bscopereduction adopted. Faithfulcanonicaladoption/source/fullgatesrequired."
+    },
+    {
+      "id": "PERF-STOP-TC032",
+      "impact": "MAJOR",
+      "question": "Actual Sam human instruction verified in project manager thread01a0e71b-fccb-7c81-b9fe-ed817cc58e1f newestuserturn01a17ae3-f3f2-7352-b467-6f9a978f37e5: any applicable performance failure stops development/fixes/retries/merge pendingactualdisposition. Readonlyactual main2b4040 CI40302655569/job121504038000 TC032 coldP953511.553ms/warm4921.045ms exceedoriginal3000ms.50users×3rounds/150samples per scenario,135oneLine15hundredLines,MySQL26.7/Node26.12.1/4CPU16GiB/pool10queue200. Allbusinessoutcomes/reconciliation/backgroundeffects correct; onlylatencyassertfails. SalesConfirmation/InventoryReservation/capacitytest exactGitblobs matchP1, butP1 candidateCI notrun; existingupstream mandatoryGate cannotbeassumedunrelatedorpassed. No rootcause established: poolqueue43/61 andwarm18HTTP202 areobserved, SQL/lock/runnerattribution unproven. Askpreserve3000workload andSalesowner diagnose/fix vs explicitlyreviewTC032contract; noautomaticretry. HistoricalHD0205000Balance capacityfixture prep409FIFOerror wasfixedbeforethisnewinstruction andlaterfullscopepassed; originalfailure retained anddisclosed, notalatencyfailureorhiddenPASS. No new workuntilSamactualanswer.",
+      "affected_ids": [
+        "PHASE-002",
+        "TASK-022",
+        "TASK-023"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Actual Sam first answeredB(readonlyTC032contractreview,keepHOLD); superseded bydirecthumanreply2026-10-27: 先繼續完成不受TC032影響的FulfillmentP1工作，TC032由Salesagent處理，不要因main既有失敗全面暫停。保留安全檢查20秒、當前候選CI全部通過才draftPR；僅當前候選效能失敗立即停報。No TC032threshold/load/schema change or oldCIreuse approved."
+    },
+    {
+      "id": "VERIFY-PREP-001",
+      "impact": "MAJOR",
+      "question": "Current297eae04 P1developerattempt exit1/BLOCKED45.16s, no timeout. Rootconfigured32characterownedDB_NAME fulfillment_p0_p1_final_8a5949c3 whileSalesProviderFixture requires^[A-Za-z0-9_]{1,30}$ beforeopeningDB; P1capacityfixturescannotstartsampling. GenericJUnitadapteralsofoundduplicaterunnerclass/name andunlinkedunreviewablereport; stdout/stderrempty/countsunavailable. Thisisverificationpreparation/reportfailure, notmeasuredproductP95/20sviolation, andcannotclaimtestPASS. ActualSamcurrentcandidatecapacityteststoprule invoked; no automaticnamespacefix/retry. Proposedsmallestrepair: reusepreviousverified26charprefixfulfillment_p0_p1_+uuid8, preserve30guard; privatelypreserveactualrawJUnitbeforeadapterrejection andqualifyonlycollidingtestidentitynames (orreviewedhierarchicalidentityadapter) withoutchangingassertions/counts; retainblockedrun andrerunaffectednecessarysuiteonceafteractualSamapproval. No scope/load/20s/CI/floor relaxation.",
+      "affected_ids": [
+        "PHASE-002",
+        "TASK-022",
+        "TASK-023"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Actual Sam direct async reply to call_975c0101cac9419b8ed62da9cf9cf658: A：批准最小環境／報告修正後恢復. Only26char namespace/rawJUnit preservation/identity qualification approved; no removed cases/assertions/threshold change. All current candidate CI required; actual performance failure stops/report."
     }
   ],
   "external_actions": [
@@ -6503,9 +6661,22 @@
       "idempotency_key": "hd023-7c223ccd91b39298bdeacca2c56465be70609b61134da31e355e449cf1adf314",
       "status": "CONFIRMED",
       "source_ref": "Actual Sam async answer2026-10-26: A：批准精確修復並保留完整歷史（建議）; exact proposal51, index SHA7c223ccd91b39298bdeacca2c56465be70609b61134da31e355e449cf1adf314, tool SHA4a63d4af0545afe291c657a5037d07ac7361c48525ddc43f659187612d556fa6. Explicit44 unavailable historical artifacts/20 narrative classification disposition; preserve all snapshots/history/new failures, unchanged fresh gates. No test/CI waiver.; implementation/recovery/hd023/exact-reference-index.json SHA7c223ccd91b39298bdeacca2c56465be70609b61134da31e355e449cf1adf314; original-state.json SHA8ad92e2987bf1573f27a1e6cded01ba3d744157d45ca87417e4f68dd15414607; migrate_evidence.py SHA4a63d4af0545afe291c657a5037d07ac7361c48525ddc43f659187612d556fa6; pre-repair revision187; implementation/recovery/hd023/pre-repair-ac7a010dc50fc4852490fe846804987739d1e1dac37e7fd765df5069604ae6eb.json SHAac7a010dc50fc4852490fe846804987739d1e1dac37e7fd765df5069604ae6eb; 44 originals UNAVAILABLE/UNKNOWN,20 narrative references archived; no qualification, test/CI waiver or task completion conferred"
+    },
+    {
+      "id": "P1-MAIN-INTEGRATION-D805913B",
+      "kind": "INTEGRATION_BASELINE",
+      "target": "d805913bb22afad8b5eafef60920cfce73d0dd05",
+      "idempotency_key": "p1-main-d805913b-6b34263b",
+      "status": "CONFIRMED",
+      "source_ref": "Actualgitmerge6b34263b parents8cd3d9b7+d805913b; existingHD024Aauthorizeslatestmainpin/dependencypreservation+actualSam2026-10-27resume; originalmode_entryfd32762 preserved, incomingSupplier/Purchasepreserved; nofeaturetargetmerge orCIclaim."
     }
   ],
-  "evidence_files": [],
+  "evidence_files": [
+    "evidence/20261027T014530-82e09e941658/run.json",
+    "evidence/20261027T014532-802406ee29db/run.json",
+    "evidence/20261027T014533-ed404b6fc204/run.json",
+    "evidence/20261027T014653-a10720a727fb/run.json"
+  ],
   "defects": [
     {
       "id": "DEF-001",
@@ -6787,5 +6958,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Complete independent Allocation browserclosing (ownruntimeactive), rerun expanded5000 first/middle selectors +fourthroute transport/memory; commit Task022 slice then integrate freshmain2b4040 withbothownercontracts/pins+actualnpmdeps, preserveoriginalentryhistory andexplicitbaseline transition. Re-run freshfullmandatorychecks/currentcandidateCI; onlythen draftPR. Tasks022/023 remainIN_PROGRESS untilfullDoD; noP1merge/formal/live."
+  "next_safe_action": "Complete reviewed minimal duplicate JUnit identity qualification; no test deletion/assertion/coverage/threshold change. Preserve original failed run and actual private raw reports; execute required final gates/currentCI. Actual current candidate performance failure stops/report."
 }

@@ -55,7 +55,7 @@ nativeTest("P1 Allocate accepts a mixed normal/FIFO override Line without attach
  const f=await mixedFixture(t),result=await f.allocate();assert.equal(result.outcome.status,"PICKING");const [rows]=await f.db.query("SELECT inventory_reservation_id,is_sequence_override,override_reason FROM fulfillment_allocations ORDER BY inventory_reservation_id");assert.deepEqual(rows.map(row=>[String(row.inventory_reservation_id),Number(row.is_sequence_override),row.override_reason]),[[String(f.reservationId),0,""],[String(f.secondReservation),1,f.body.lines[0].overrideReason]]);
 });
 nativeTest("P1 Allocate FEFO override needs fresh specialist permission as well as the single Line reason",async t=>{
- for(const allowed of [false,true])await t.test(String(allowed),async t=>{const f=await mixedFixture(t,{expiry:true,overridePermission:allowed});if(allowed){const result=await f.allocate();assert.equal(result.outcome.status,"PICKING");const [rows]=await f.db.query("SELECT selection_strategy,is_sequence_override,override_reason FROM fulfillment_allocations ORDER BY inventory_reservation_id");assert.deepEqual(rows.map(row=>[row.selection_strategy,Number(row.is_sequence_override),row.override_reason]),[["FEFO",0,""],["FEFO",1,f.body.lines[0].overrideReason]]);}else{await assert.rejects(f.allocate,{code:"FEFO_OVERRIDE_DENIED"});assert.equal(Number((await f.db.query("SELECT COUNT(*) AS n FROM inventory_allocations"))[0][0].n),0);assert.equal((await f.db.query("SELECT status FROM fulfillments WHERE id=?",[f.created.outcome.id]))[0][0].status,"DRAFT");}});
+ for(const allowed of [false,true])await t.test(`${t.name}: ${allowed}`,async t=>{const f=await mixedFixture(t,{expiry:true,overridePermission:allowed});if(allowed){const result=await f.allocate();assert.equal(result.outcome.status,"PICKING");const [rows]=await f.db.query("SELECT selection_strategy,is_sequence_override,override_reason FROM fulfillment_allocations ORDER BY inventory_reservation_id");assert.deepEqual(rows.map(row=>[row.selection_strategy,Number(row.is_sequence_override),row.override_reason]),[["FEFO",0,""],["FEFO",1,f.body.lines[0].overrideReason]]);}else{await assert.rejects(f.allocate,{code:"FEFO_OVERRIDE_DENIED"});assert.equal(Number((await f.db.query("SELECT COUNT(*) AS n FROM inventory_allocations"))[0][0].n),0);assert.equal((await f.db.query("SELECT status FROM fulfillments WHERE id=?",[f.created.outcome.id]))[0][0].status,"DRAFT");}});
 });
 
 nativeTest("P1 sequence audit never attributes the selected quantity to a smaller recommended bucket",async t=>{
@@ -69,7 +69,7 @@ async function allocationFacts(f){
  const facts={};for(const table of ["fulfillments","fulfillment_lines","fulfillment_line_reservation_claims","fulfillment_allocations","fulfillment_status_history","fulfillment_audit_logs","fulfillment_operation_requests","inventory_reservations","inventory_stock_controls","inventory_stock_balances","inventory_allocations","inventory_operation_requests","inventory_audit_logs"])facts[table]=(await f.db.query(`SELECT * FROM ${table} ORDER BY id`))[0];return facts;
 }
 nativeTest("P1 Allocate late projection, Header and audit failures roll back every owner and public effect",async t=>{
- for(const [table,verb]of [["fulfillment_allocations","INSERT"],["fulfillments","UPDATE"],["fulfillment_audit_logs","INSERT"]])await t.test(table,async t=>{
+ for(const [table,verb]of [["fulfillment_allocations","INSERT"],["fulfillments","UPDATE"],["fulfillment_audit_logs","INSERT"]])await t.test(`${t.name}: ${table}`,async t=>{
   const f=await fixture(t),before=await allocationFacts(f),body=f.allocationBody();await f.db.query(`CREATE TRIGGER test_allocate_late_failure BEFORE ${verb} ON ${table} FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Synthetic late Allocate failure'`);
   await assert.rejects(()=>f.allocate(body));assert.deepEqual(await allocationFacts(f),before);await f.db.query("DROP TRIGGER test_allocate_late_failure");assert.equal((await f.allocate(body)).outcome.status,"PICKING");
  });
@@ -83,7 +83,7 @@ nativeTest("P1 Allocate preparation follows actual alternate selection when reco
  await f.allocate();const [rows]=await f.db.query("SELECT inventory_reservation_id,is_sequence_override,override_reason FROM fulfillment_allocations ORDER BY inventory_reservation_id");assert.deepEqual(rows.map(row=>[String(row.inventory_reservation_id),Number(row.is_sequence_override),row.override_reason]),[[String(f.reservationId),1,f.body.lines[0].overrideReason],[String(f.secondReservation),0,""]]);
 });
 nativeTest("P1 Allocate rejects hidden counter drift with equal outstanding, but accepts quantity-neutral current CAS",async t=>{
- for(const drift of [false,true])await t.test(String(drift),async t=>{
+ for(const drift of [false,true])await t.test(`${t.name}: ${drift}`,async t=>{
   const f=await fixture(t),body=f.allocationBody();if(drift)await f.db.execute("UPDATE inventory_reservations SET original_quantity=6,consumed_quantity=1,version=version+1 WHERE id=?",[f.reservationId]);else await f.db.execute("UPDATE inventory_reservations SET version=version+1 WHERE id=?",[f.reservationId]);
   if(drift){const before=await allocationFacts(f);await assert.rejects(()=>f.allocate(body),{code:"FULFILLABLE_QUANTITY_CHANGED"});assert.deepEqual(await allocationFacts(f),before);}else{assert.equal((await f.allocate(body)).outcome.status,"PICKING");assert.equal(Number((await f.db.query("SELECT version FROM inventory_reservations WHERE id=?",[f.reservationId]))[0][0].version),3);}
  });
@@ -102,7 +102,7 @@ nativeTest("P1 Allocate discovered HTTP route enforces exact intent, original ou
 });
 
 nativeTest("P1 Allocate second-connection Reservation or candidate changes after preparation cause complete rollback",async t=>{
- for(const change of ["reservationVersion","normalToOverride","overrideToNormal"])await t.test(change,async t=>{
+ for(const change of ["reservationVersion","normalToOverride","overrideToNormal"])await t.test(`${t.name}: ${change}`,async t=>{
   const f=await fixture(t),body=f.allocationBody();let alternative;
   if(change!=="reservationVersion"){
    const bin=await f.s.insert("inventory_bins",{warehouse_id:f.s.warehouseId,bin_code:"RACE",normalized_code:"race",status:"ACTIVE",created_at:f.s.now,updated_at:f.s.now});alternative=await f.s.insert("inventory_stock_balances",{warehouse_id:f.s.warehouseId,bin_id:bin,sku_id:f.s.skuId,stock_status:"AVAILABLE",on_hand_quantity:5,allocated_quantity:0,fifo_anchor_date:"2023-11-14",created_at:f.s.now,updated_at:f.s.now});

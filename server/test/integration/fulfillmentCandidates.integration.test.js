@@ -168,7 +168,7 @@ nativeTest("HD018 quantity completeness does not waive the writer's 50-leg limit
 });
 
 nativeTest("HD018 missing or insufficient StockControl fails closed without repairing owner state",async t=>{
- for(const kind of ["missing","insufficient"]){await t.test(kind,async t=>{
+ for(const kind of ["missing","insufficient"]){await t.test(`${t.name}: ${kind}`,async t=>{
   const f=await p1Fixture(t,2),created=await f.create(f.body()),service=new FulfillmentAllocationService({database:f.database,time:{...f.time,fileDate:()=>"2023-11-14"},logger:{error(){}}});
   if(kind==="missing")await f.db.execute("DELETE FROM inventory_stock_controls WHERE warehouse_id=? AND sku_id=?",[f.s.warehouseId,f.s.skuId]);else await f.db.execute("UPDATE inventory_stock_controls SET reserved_quantity=1 WHERE warehouse_id=? AND sku_id=?",[f.s.warehouseId,f.s.skuId]);
   const before=await ownerQuantities(f);await assert.rejects(()=>f.execute(()=>service.candidates(created.outcome.id,{version:1})),{code:"INVENTORY_DEPENDENCY_UNAVAILABLE"});assert.deepEqual(await ownerQuantities(f),before);
