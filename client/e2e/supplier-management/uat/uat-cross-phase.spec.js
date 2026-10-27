@@ -4,7 +4,7 @@ import fs from "node:fs";
 import process from "node:process";
 import { expect } from "@playwright/test";
 import { parse } from "csv-parse/sync";
-import { activateViaApi, api, createDraft, db, evidence, moduleCall, statusBadge, test, uatFixture, unique, watchProblems } from "./uatSupport.js";
+import { api, createDraft, db, evidence as captureEvidence, moduleCall, statusBadge, test, uatFixture, unique, watchProblems } from "./uatSupport.js";
 
 /**
  * Supplier UAT 跨 phase 案例（07_uat_test_cases.md §4.6：UAT-047、UAT-055；HD-124 A）。真 server、真 MySQL scratch database。
@@ -18,6 +18,14 @@ process.env.PLAYWRIGHT_NO_COPY_PROMPT = "1";
 
 const PLAINTEXT = '[data-test="bank-plaintext"]';
 const fakeAccount = () => `8${randomInt(100_000_000, 999_999_999)}${randomInt(10, 99)}`;
+// 呢個 worker 開過嘅所有虛構帳號：每張截圖之前都確認畫面冇任何一個（REV-127 R1，同 PHASE-003）。
+const knownAccounts = [];
+async function evidence(page, testInfo, name) {
+  await expect.poll(() => page.locator(PLAINTEXT).count(), { message: "nothing is revealed before the screenshot" }).toBe(0);
+  const content = await page.content();
+  expect(knownAccounts.some((account) => content.includes(account)), "no full account number on the page before the screenshot").toBe(false);
+  await captureEvidence(page, testInfo, name);
+}
 const VIEWPORTS = [["375", { width: 375, height: 812 }], ["768", { width: 768, height: 1024 }], ["1440", { width: 1440, height: 900 }]];
 
 async function setApprovalPolicy(on) {
@@ -29,6 +37,7 @@ test.afterEach(async () => { await setApprovalPolicy(false); });
 async function addAccount(as, supplierId, bankName) {
   const { page, account: officer } = await as("BANK-OFFICER");
   const account = fakeAccount();
+  knownAccounts.push(account);
   const created = await moduleCall(page, "/src/services/supplierBank.js", "create", supplierId, {
     accountHolderName: `${bankName} Holder`, bankName, accountNumber: account, isDefault: true, reason: "UAT bank setup", password: officer.password
   });
@@ -59,7 +68,7 @@ async function expectFocusVisible(page, target, label) {
 }
 
 /** 用鍵盤揀 q-select 嘅選項：Enter 打開，方向鍵揀，Enter 確認。 */
-async function chooseByKeyboard(page, combobox, optionName) {
+async function chooseByKeyboard(page, combobox, optionName, { shows } = {}) {
   await tabTo(page, combobox);
   await page.keyboard.press("Enter");
   const option = page.getByRole("option", { name: optionName });
@@ -70,6 +79,8 @@ async function chooseByKeyboard(page, combobox, optionName) {
   }
   await page.keyboard.press("Enter");
   await expect(page.getByRole("listbox")).toHaveCount(0);
+  // 揀中嘅值要啱：方向鍵撳夠次數都未到就唔好當揀咗（REV-127 O1）。
+  if (shows) await expect(page.locator(".q-field", { has: combobox })).toContainText(shows);
 }
 
 /** Tab 列係 roving tabindex：Tab 去到而家嗰個 tab，再用方向鍵揀，Enter 打開。 */
@@ -115,7 +126,7 @@ test("@uat UAT-047 a keyboard user completes each phase's happy path at 375, 768
     await typeText(clerk, supplierCode);
     await tabTo(clerk, clerk.getByLabel("Supplier Name *"));
     await typeText(clerk, `UAT-047 Keyboard ${supplierCode}`);
-    await chooseByKeyboard(clerk, clerk.getByRole("combobox", { name: "Default Currency *" }), /^HKD/u);
+    await chooseByKeyboard(clerk, clerk.getByRole("combobox", { name: "Default Currency *" }), /^HKD/u, { shows: "HKD" });
     await tabTo(clerk, clerk.getByRole("button", { name: "直接啟用" }));
     await press(clerk, "Enter");
     // 建立結果用 role=status 講出嚟，狀態係文字，唔只靠顏色。
@@ -195,6 +206,7 @@ test("@uat UAT-047 a keyboard user completes each phase's happy path at 375, 768
     await press(reader, "Enter");
     const revealDialog = reader.getByRole("dialog");
     await tabTo(reader, revealDialog.getByLabel("密碼 *"));
+    await expectFocusVisible(reader, revealDialog.getByLabel("密碼 *"), `${width}px reveal password`);
     await typeText(reader, readerAccount.password);
     await tabTo(reader, revealDialog.getByLabel("查看原因 *"));
     await typeText(reader, `UAT-047 keyboard check ${width}`);
@@ -227,113 +239,137 @@ test("@uat UAT-047 a keyboard user completes each phase's happy path at 375, 768
     expect(await download.suggestedFilename()).toMatch(/\.csv$/u);
     await evidence(clerk, testInfo, `${width}-p4-exported`);
     expect(exportProblems).toEqual([]);
+    // CLERK 喺 PHASE-002 提交嗰段都計（REV-127 R2）。
+    expect(problems, `${width}px: CLERK console and network`).toEqual([]);
   }
 });
 
 test("@uat UAT-055 a VIEWER filters Audit by date, actor, action and target, pages through it, reads each entry's detail with sensitive values redacted and a request id", async ({ as }, testInfo) => {
-  test.setTimeout(150_000);
-  // 前置：一個 Supplier 有 create、狀態、Bank reveal、審批同 import 嘅 Audit（07 §2 前置，用 API／service，同 UI 送一樣嘅請求）。
+  test.setTimeout(180_000);
+  // 前置（07 §2）：同一個 Supplier 有 create、審批、狀態、Bank reveal 同匯入嘅 Audit（REV-127 O3）；另外一個 decoy
+  // Supplier（Code 唔含 tag）都有 reveal，令「對象」篩選要真係篩先過（R4）。經 API／service，同 UI 送一樣嘅請求。
   const { page: clerk, account: clerkAccount } = await as("CLERK");
   const tag = unique("U55");
   const supplier = await createDraft(clerk, { code: tag, name: `UAT-055 ${tag}` });
-  await activateViaApi(clerk, supplier.id);
-  const current = await api(clerk, "GET", `/api/v1/suppliers/${supplier.id}`);
-  await api(clerk, "POST", `/api/v1/suppliers/${supplier.id}/suspend`, { version: current.version, reason: "UAT-055 status change", password: clerkAccount.password });
-  const account = await addAccount(as, supplier.id, `UAT-055 Bank ${tag}`);
-  const { page: reader, account: readerAccount } = await as("BANK-READER");
-  const banks = await moduleCall(reader, "/src/services/supplierBank.js", "list", supplier.id);
-  const bankId = JSON.parse(banks.slice(3))[0].id;
-  expect((await moduleCall(reader, "/src/services/supplierBank.js", "reveal", supplier.id, bankId, { password: readerAccount.password, reason: "UAT-055 reveal" })).startsWith("ok:")).toBe(true);
-  // 一般資料改幾次，令呢個 Supplier 嘅紀錄多過一頁（每頁最少 10 筆）。
-  for (let n = 1; n <= 6; n += 1) {
+  await setApprovalPolicy(true);
+  const draft = await api(clerk, "GET", `/api/v1/suppliers/${supplier.id}`);
+  await api(clerk, "POST", `/api/v1/suppliers/${supplier.id}/activate`, { version: draft.version, approverUserId: uatFixture().users["APPROVER-A"].id });
+  const { page: approverPage, account: approver } = await as("APPROVER-A");
+  const { pendingApproval } = await api(clerk, "GET", `/api/v1/suppliers/${supplier.id}`);
+  expect(await moduleCall(approverPage, "/src/services/supplierApproval.js", "approve", pendingApproval.requestId,
+    { password: approver.password, version: pendingApproval.version })).toMatch(/^ok/u);
+  await setApprovalPolicy(false);
+  const active = await api(clerk, "GET", `/api/v1/suppliers/${supplier.id}`);
+  await api(clerk, "POST", `/api/v1/suppliers/${supplier.id}/suspend`, { version: active.version, reason: "UAT-055 status change", password: clerkAccount.password });
+  // 一般資料改幾次，令紀錄多過一頁（每頁最少 10 筆）。
+  for (let n = 1; n <= 5; n += 1) {
     const latest = await api(clerk, "GET", `/api/v1/suppliers/${supplier.id}`);
     await api(clerk, "POST", `/api/v1/suppliers/${supplier.id}/update`, { supplierName: latest.supplierName, displayName: latest.displayName,
       defaultCurrencyCode: latest.defaultCurrencyCode, defaultPaymentTermId: latest.defaultPaymentTermId, website: "", generalPhone: "",
       generalEmail: "", notes: `UAT-055 note ${n}`, version: latest.version });
   }
-  // 匯入：CLERK 喺畫面上載一個細檔（只要上載嘅 Audit）。
+  const account = await addAccount(as, supplier.id, `UAT-055 Bank ${tag}`);
+  const { page: reader, account: readerAccount } = await as("BANK-READER");
+  const reveal = async (supplierId) => {
+    const bankId = JSON.parse((await moduleCall(reader, "/src/services/supplierBank.js", "list", supplierId)).slice(3))[0].id;
+    expect((await moduleCall(reader, "/src/services/supplierBank.js", "reveal", supplierId, bankId, { password: readerAccount.password, reason: "UAT-055 reveal" })).startsWith("ok:")).toBe(true);
+  };
+  await reveal(supplier.id);
+  const decoy = await createDraft(clerk, { code: unique("D55"), name: "UAT-055 decoy" });
+  await addAccount(as, decoy.id, "UAT-055 decoy bank");
+  await reveal(decoy.id);
+  // 匯入：CLERK 喺畫面上載一個更新呢個 Supplier 嘅檔，確認並等佢寫完；寫入嘅 Audit 帶住匯入工作嘅 request id。
   await clerk.goto("/suppliers/imports");
   const [template] = await Promise.all([clerk.waitForEvent("download"), clerk.getByRole("button", { name: "下載範本" }).click()]);
   const columns = parse(fs.readFileSync(await template.path(), "utf8"), { bom: true })[0];
-  const values = { supplierCode: `${tag}-I`, supplierName: `UAT-055 import ${tag}`, defaultCurrencyCode: "HKD" };
+  const values = { supplierCode: tag, notes: "UAT-055 via import" };
   const csv = `${columns.join(",")}\r\n${columns.map((name) => values[name] ?? "").join(",")}\r\n`;
   await clerk.getByRole("button", { name: "上載 CSV" }).click();
-  await clerk.getByRole("dialog").locator("input[type=file]").setInputFiles({ name: "uat-055.csv", mimeType: "text/csv", buffer: Buffer.from(csv, "utf8") });
-  await clerk.getByRole("dialog").getByRole("button", { name: "上載" }).click();
-  await expect(clerk.getByRole("heading", { name: /匯入工作 #\d+/u })).toBeVisible();
-  await setApprovalPolicy(true);
-  const pending = await createDraft(clerk, { code: `${tag}-P`, name: `UAT-055 pending ${tag}` });
-  const draft = await api(clerk, "GET", `/api/v1/suppliers/${pending.id}`);
-  await api(clerk, "POST", `/api/v1/suppliers/${pending.id}/activate`, { version: draft.version, approverUserId: uatFixture().users["APPROVER-A"].id });
+  const upload = clerk.getByRole("dialog");
+  await upload.getByLabel("匯入模式").click();
+  await clerk.getByRole("option", { name: "新增或更新" }).click();
+  await upload.locator("input[type=file]").setInputFiles({ name: "uat-055.csv", mimeType: "text/csv", buffer: Buffer.from(csv, "utf8") });
+  await upload.getByRole("button", { name: "上載" }).click();
+  const jobId = Number((await clerk.getByRole("heading", { name: /匯入工作 #\d+/u }).textContent()).match(/#(\d+)/u)[1]);
+  await expect.poll(async () => (await api(clerk, "GET", `/api/v1/supplier-imports/${jobId}?page=1&pageSize=20`)).job.status, { timeout: 45_000 }).toBe("ready");
+  const { job } = await api(clerk, "GET", `/api/v1/supplier-imports/${jobId}?page=1&pageSize=20`);
+  await api(clerk, "POST", `/api/v1/supplier-imports/${jobId}/confirm`, { version: job.version, activationMode: "draft", approverUserId: null, password: clerkAccount.password });
+  await expect.poll(async () => (await api(clerk, "GET", `/api/v1/supplier-imports/${jobId}?page=1&pageSize=20`)).job.status, { timeout: 60_000 }).toBe("completed");
 
   const { page } = await as("VIEWER");
   const problems = watchProblems(page);
   const rows = page.locator("tbody tr");
+  const requestIds = async () => (await rows.locator(".audit-request-id").allTextContents()).map((text) => text.trim());
+  // Request ID：HTTP 請求係 UUID，匯入工作寫嘅係 `import-<job>`；空白會顯示「—」。
+  const hasRequestId = (id) => /^[0-9a-f-]{36}$|^import-\d+$/u.test(id);
 
-  // 對象：呢個 Supplier 嘅 Code；最少有 create、啟用、暫停、新增銀行帳戶、查看完整帳號。
+  // 對象（喺畫面打）：只係呢個 Supplier，冇 decoy；有 create、審批、狀態、新增銀行帳戶、reveal 同匯入寫入。
   await page.goto("/suppliers/audit");
   await page.getByLabel("對象", { exact: true }).fill(tag);
+  await expect(page).toHaveURL(new RegExp(`target=${tag}`, "u"));
   await expect(rows.filter({ hasText: "查看完整帳號" })).toHaveCount(1);
-  for (const label of ["新增供應商", "啟用", "暫停", "新增銀行帳戶", "提交審批"]) {
+  await expect(rows.filter({ hasText: decoy.supplierCode })).toHaveCount(0);
+  for (const label of ["新增供應商", "提交審批", "批准", "暫停", "新增銀行帳戶", "編輯供應商"]) {
     await expect(rows.filter({ hasText: label }).first(), label).toBeVisible();
   }
-  await expect(page).toHaveURL(new RegExp(`target=${tag}`, "u"));
+  // 內容（詳情）：前後值顯示；銀行帳號只係遮罩（REV-127 R3）。
+  const bankRow = rows.filter({ hasText: "新增銀行帳戶" }).first();
+  expect((await bankRow.locator(".audit-detail").textContent()).includes(`**** ${account.slice(-4)}`), "the bank detail shows the masked number").toBe(true);
+  await expect(rows.filter({ hasText: "編輯供應商" }).first().locator(".audit-detail")).toContainText("notes");
   await evidence(page, testInfo, "by-target");
 
-  // 動作＋對象：只得嗰一筆 reveal；內容遮罩、冇明文，有 Request ID。
-  await page.getByRole("combobox", { name: "動作" }).click();
-  await page.getByRole("option", { name: "查看完整帳號", exact: true }).click();
-  await expect(rows).toHaveCount(1);
-  const reveal = rows.first();
-  await expect(reveal).toContainText("uat-bank-reader");
-  await expect(reveal).toContainText("UAT-055 reveal");
-  const requestId = (await reveal.locator(".audit-request-id").textContent()).trim();
-  expect(requestId.length, "every entry carries a request id").toBeGreaterThan(8);
-  expect((await page.content()).includes(account), "no full account number in Audit").toBe(false);
-  await expect(page).toHaveURL(/action=supplier\.bank\.reveal/u);
-  await evidence(page, testInfo, "reveal-entry");
-
-  // Filter URL：重新載入，同一組條件、同一個結果。
-  await page.reload();
-  await expect(rows).toHaveCount(1);
-  await expect(rows.first().locator(".audit-request-id")).toHaveText(requestId);
-
-  // 操作者：清走動作，淨係睇 BANK-READER 嘅紀錄。
-  await page.goto(`/suppliers/audit?actor=uat-bank-reader&target=${tag}`);
-  await expect(rows).toHaveCount(1);
-  await expect(rows.first()).toContainText("查看完整帳號");
-
-  // 日期：今日包含；聽日之後冇資料。
-  const today = new Date(Date.now() + 8 * 3_600_000).toISOString().slice(0, 10);
-  const tomorrow = new Date(Date.now() + 32 * 3_600_000).toISOString().slice(0, 10);
-  await page.goto(`/suppliers/audit?from=${today}&to=${today}&target=${tag}`);
-  await expect(rows.filter({ hasText: "查看完整帳號" })).toHaveCount(1);
-  await page.goto(`/suppliers/audit?from=${tomorrow}&target=${tag}`);
-  await expect(page.getByText("冇資料")).toBeVisible();
-
-  // 分頁追溯：每頁 10 筆，翻到第 2 頁仲見到呢個 Supplier 較早嘅紀錄，URL 帶住頁數。
+  // 每筆都有 Request ID：第 1 同第 2 頁全部行（R3）；第 2 頁同第 1 頁唔同。
   await page.goto(`/suppliers/audit?target=${tag}&pageSize=10`);
   await expect(rows).toHaveCount(10);
   const firstPage = await rows.allTextContents();
+  expect((await requestIds()).filter((id) => !hasRequestId(id)), "every entry on page 1 has a request id").toEqual([]);
   await page.getByRole("button", { name: /下一頁|next/iu }).click();
   await expect(page).toHaveURL(/page=2/u);
   await expect.poll(async () => (await rows.allTextContents()).some((text) => firstPage.includes(text)),
     { message: "page 2 holds different entries" }).toBe(false);
-  await expect(rows.first()).toBeVisible();
+  expect((await requestIds()).filter((id) => !hasRequestId(id)), "every entry on page 2 has a request id").toEqual([]);
   await evidence(page, testInfo, "page-2");
 
-  // 審批同匯入嘅紀錄都追溯得到，每筆都有 Request ID。
-  for (const query of [`target=${tag}-P&action=approval.submit`, "actor=uat-clerk&action=import.upload"]) {
-    await page.goto(`/suppliers/audit?${query}`);
-    await expect(rows.first()).toBeVisible();
-    expect((await rows.first().locator(".audit-request-id").textContent()).trim().length, query).toBeGreaterThan(8);
+  // 匯入：同一個 Supplier 嘅「編輯供應商」入面有一筆係匯入工作寫嘅（request id = import-<job>）。
+  await page.goto(`/suppliers/audit?target=${tag}&action=supplier.update&pageSize=10`);
+  await expect.poll(async () => (await requestIds()).includes(`import-${jobId}`), { message: "the import's write is traceable on this Supplier" }).toBe(true);
+
+  // 動作（喺畫面揀）＋對象：只得嗰一筆 reveal；冇明文；重新載入同一個 URL，同一個結果。
+  await page.goto(`/suppliers/audit?target=${tag}`);
+  await page.getByRole("combobox", { name: "動作" }).click();
+  await page.getByRole("option", { name: "查看完整帳號", exact: true }).click();
+  await expect(page).toHaveURL(/action=supplier\.bank\.reveal/u);
+  await expect(rows).toHaveCount(1);
+  await expect(rows.first()).toContainText("uat-bank-reader");
+  const [requestId] = await requestIds();
+  expect(hasRequestId(requestId), "the reveal has a request id").toBe(true);
+  await evidence(page, testInfo, "reveal-entry");
+  await page.reload();
+  await expect(rows).toHaveCount(1);
+  await expect(rows.first().locator(".audit-request-id")).toHaveText(requestId);
+
+  // 操作者（喺畫面打）：淨係 BANK-READER 嘅紀錄（R4）。
+  await page.goto(`/suppliers/audit?target=${tag}`);
+  await page.getByLabel("操作者").fill("uat-bank-reader");
+  await expect(page).toHaveURL(/actor=uat-bank-reader/u);
+  await expect(rows).toHaveCount(1);
+  await expect(rows.first()).toContainText("查看完整帳號");
+
+  // 日期（喺畫面揀）：今日到今日包含；到琴日、由聽日都冇資料（R4）。香港時間，喺午夜前後跑會跨日（O4）。
+  const day = (offsetDays) => new Date(Date.now() + 8 * 3_600_000 + offsetDays * 86_400_000).toISOString().slice(0, 10);
+  for (const [from, to, found] of [[day(0), day(0), true], [day(-1), day(-1), false], [day(1), "", false]]) {
+    await page.goto(`/suppliers/audit?target=${tag}`);
+    await page.getByLabel("由").fill(from);
+    if (to) await page.getByLabel("至").fill(to);
+    await expect(page).toHaveURL(new RegExp(`from=${from}`, "u"));
+    if (found) await expect(rows.filter({ hasText: "查看完整帳號" })).toHaveCount(1);
+    else await expect(page.getByText("冇資料")).toBeVisible();
   }
 
-  // 開啟詳情：由紀錄去返 Supplier 詳情嘅變更紀錄，同一筆 reveal 有同一個 Request ID。
+  // 開啟詳情：Supplier 詳情嘅變更紀錄有同一筆 reveal、同一個 Request ID。
   await page.goto(`/suppliers/${supplier.id}`);
   await page.getByRole("tab", { name: "變更紀錄" }).click();
   await expect(page.locator("tbody tr", { hasText: "查看完整帳號" })).toContainText(requestId);
-  expect((await page.content()).includes(account), "no full account number in the Supplier's Audit tab").toBe(false);
   await evidence(page, testInfo, "supplier-audit-tab");
   expect(problems).toEqual([]);
 });
