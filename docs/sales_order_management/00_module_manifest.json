@@ -292,9 +292,9 @@
     "provided": [
       {
         "id": "sales-fulfillment-projection-and-lifecycle-contract",
-        "version": "HD018-A-scoped-candidate-source-proof-implementation; exact closing owner review and full P1 gates pending",
+        "version": "HD018-A-scoped-candidate-source-proof-implementation; HD011-A last-sync/current-CAS retained; DEC037 TC032-only10s owner documentation integrated; exact closing review/full P1 gates pending; no Customer2.2 or proposed Purchasing/P4 contract adoption",
         "source": "docs/sales_order_management/03_design_spec.md",
-        "sha256": "06585e0b2c793997c675c7ba7d934f7bffeb66936dd9c89052e0f8cf34153edd",
+        "sha256": "4683b49946a9a2e5ae0778231d48ffc7e56bc857f09468ee1095e32f4270801e",
         "consumers": [
           "fulfillment-shipping-management",
           "inventory-management",
@@ -306,9 +306,9 @@
       {
         "module_id": "inventory-management",
         "id": "inventory-batch-reserve-release-contract",
-        "version": "observed-main-f7ddcfd-Inventory-P3; compatible Sales consumption, full integrated original33/currentCI required",
+        "version": "observed-main-f7ddcfd-Inventory-P3; compatible Sales consumption, full integrated original33/currentCI required; DEC037 observed-main-d805 byte pin refresh only; existing Sales interfaces unchanged; no Customer2.2/HD016 or proposed Purchasing/P4 contract adoption",
         "source": "docs/inventory_management/03_design_spec.md",
-        "sha256": "2fb61cce8ee4ff9f32cd9c6d0e2a9fc8f87c08d34823be7fb622908610b1ac53",
+        "sha256": "7ee4e5f4b897663e276a966959843417e2e787a8adb30bc47fdd7820d3196193",
         "regression_suites": [
           "sales-technical"
         ]
@@ -316,9 +316,9 @@
       {
         "module_id": "customer-management",
         "id": "customer-snapshot-and-credit-contract",
-        "version": "postmerge-Customer-HD013-document-pin; Sales snapshot/credit/provider contracts unchanged; Customer timing waiver not adopted; P3 implementation qualified at750 and merged193; current main not reexecuted",
+        "version": "postmerge-Customer-HD013-document-pin; Sales snapshot/credit/provider contracts unchanged; Customer timing waiver not adopted; P3 implementation qualified at750 and merged193; current main not reexecuted; DEC037 observed-main-d805 byte pin refresh only; existing Sales interfaces unchanged; no Customer2.2/HD016 or proposed Purchasing/P4 contract adoption",
         "source": "docs/customer_management/03_design_spec.md",
-        "sha256": "0c70e3d5a619e02f4c7ae24d415a08f1276fe81101b57df0b2bf3d28303f96c9",
+        "sha256": "7b56997a4f33d64793739faa888c1a8d882015892750cce59532d9818ab53972",
         "regression_suites": [
           "sales-technical"
         ]
@@ -326,9 +326,9 @@
       {
         "module_id": "item-management",
         "id": "item-lookup-service",
-        "version": "integrated-main-7c927e26-Item-purchase-lookup; Sales named contracts unchanged, current33/currentCI pending; HD018 mechanical current-main pin only, unchanged Sales methods; Item committed-receipt addition not adopted as Sales behavior",
+        "version": "integrated-main-7c927e26-Item-purchase-lookup; Sales named contracts unchanged, current33/currentCI pending; HD018 mechanical current-main pin only, unchanged Sales methods; Item committed-receipt addition not adopted as Sales behavior; DEC037 observed-main-d805 byte pin refresh only; existing Sales interfaces unchanged; no Customer2.2/HD016 or proposed Purchasing/P4 contract adoption",
         "source": "server/src/modules/item/ItemLookupService.js",
-        "sha256": "a09d5baf602f44199cd218a2b3139edcdb2abad039a6f08a21b48162900562b5",
+        "sha256": "5ed3f26ff4271cc6bd533a417fd09fcde446f1682d662c3c465216e9ea08d558",
         "regression_suites": [
           "sales-technical"
         ]
@@ -336,9 +336,9 @@
       {
         "module_id": "authorization",
         "id": "permission-catalogue",
-        "version": "observed-sales-foundation-0067-source-only",
+        "version": "observed-sales-foundation-0067-source-only; DEC037 observed-main-d805 byte pin refresh only; existing Sales interfaces unchanged; no Customer2.2/HD016 or proposed Purchasing/P4 contract adoption",
         "source": "server/src/modules/authorization/permissionCatalogue.js",
-        "sha256": "e6363b8928b0f86d8c3ebba0a25695e9879dbb05d0bf9992fcdd175aa389cc0e",
+        "sha256": "6f6e14b642573f9e16ffcb13abe411ead9b5e2c95739100c188c51dd00207743",
         "regression_suites": [
           "sales-technical"
         ]

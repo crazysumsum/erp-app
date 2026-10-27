@@ -177,7 +177,7 @@
         "id": "sales-fulfillment-projection-and-lifecycle-contract",
         "version": "HD018-A-scoped-candidate-source-proof-implementation; exact closing owner review and full P1 gates pending",
         "source": "docs/sales_order_management/03_design_spec.md",
-        "sha256": "06585e0b2c793997c675c7ba7d934f7bffeb66936dd9c89052e0f8cf34153edd",
+        "sha256": "4683b49946a9a2e5ae0778231d48ffc7e56bc857f09468ee1095e32f4270801e",
         "regression_suites": [
           "fulfillment-technical"
         ]
