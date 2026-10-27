@@ -123,7 +123,7 @@ nativeTest("P1 Queue actual discovered HTTP endpoint enforces authentication, vi
   const directory = new URL("../../database/migrations/", import.meta.url);
   for (const name of (await readdir(directory)).filter(name => /^[0-9]{4}_.*\.js$/u.test(name) && Number(name.slice(0, 4)) > 88).sort()) await (await import(new URL(name, directory).href)).up(f.db);
   const source = defaultConfigurationSource();
-  const app = await createApplication({ configurationSource: { ...source, application: { ...source.application, port: 0 }, scheduler: { ...source.scheduler, jobs: { ...source.scheduler.jobs, "sales.backorderAllocate": { enabled: false }, "sales.importWorker": { enabled: false }, "sales.quotationExpire": { enabled: false } } }, database: { ...source.database, database: f.f.name } } });
+  const app = await createApplication({ configurationSource: { ...source, application: { ...source.application, port: 0 }, scheduler: { ...source.scheduler, jobs: { ...source.scheduler.jobs, "sales.backorderAllocate": { enabled: false }, "sales.importWorker": { enabled: false }, "sales.quotationExpire": { enabled: false } } }, database: { ...source.database, host: f.f.connectionOptions.host, port: f.f.connectionOptions.port, socketPath: f.f.connectionOptions.socketPath, user: f.f.connectionOptions.user, password: f.f.connectionOptions.password, database: f.f.name } } });
   t.after(() => app.shutdown("fulfillment_p1_queue_http_complete"));
   const { url } = await app.start(), subject = String(f.userId), version = await app.services.require("tokenRevocation").currentVersion(subject);
   const token = await app.services.require("jwt").issue({ roles: f.claims.roles, permissions: f.claims.permissions }, { subject, version, authTime: Math.floor(Date.now() / 1000) });

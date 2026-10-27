@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { fulfillmentQueueRequest, FULFILLMENT_QUEUE_RESPONSE } from "../../src/handlers/fulfillments/fulfillmentQueueSchemas.js";
-import { ListFulfillmentQueueHandler } from "../../src/handlers/fulfillments/listFulfillmentQueueHandler.js";
+import { fulfillmentQueueRequest, FULFILLMENT_QUEUE_RESPONSE } from "../../src/handlers/fulfillment-queue/fulfillmentQueueSchemas.js";
+import { ListFulfillmentQueueHandler } from "../../src/handlers/fulfillment-queue/listFulfillmentQueueHandler.js";
 import { RequestValidator } from "../../src/framework/validation/requestValidator.js";
 test("Queue HTTP query conversion is isolated, exact and rejects unknown or malformed filters", () => {
   const query = { page: "1", pageSize: "10", hasBackorder: "false", warehouseId: "4" };
