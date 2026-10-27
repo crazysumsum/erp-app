@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 209,
+  "revision": 214,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,7 +11,7 @@
   "baseline": {
     "design": "d81d2f6c9962f4a8dee4fc6d8f188ccec19b8ff44bbf4173c3e86fe2b92e17ae",
     "plan": "117f92529d5098dd8175dd7cc3179e8c3cf1a83e4246047ba46ead4964d42285",
-    "code_commit": "35331210178d666f5b6240afd9eb51f8a2f7d7fc",
+    "code_commit": "989fce938c843b7d94ce21a18bbc8589f754c7fc",
     "source_fingerprint": "6bbf59686c17482e07fe855a29616707e9d8531e6b2b7e48bbe6c38d0b034daf",
     "worktree": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1",
     "default_commit": "f104bd848b78b415595906f852962ae17dd3f7ba",
@@ -24,10 +24,10 @@
       "workspace": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1",
       "mysql-socket": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/erp-fulfillment-p0-mysql-r",
       "runtime-and-private-evidence": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime",
-      "runtime-policy": "Owned MySQL26.7.0 socket-only/noTCP/noX restarted;128MiB bufferpool/100MiBredo defaults unchanged. New26charUUID namespace migrated0; previous32char schema dropped.",
+      "runtime-policy": "CLOSED after all7 developercontracts PASS: exactownedsyntheticbase dropped; MySQL gracefullyshutdown; socket/pid absent; datadir/evidence preserved; no active web apps. See final-local-runtime-cleanup-989.json.",
       "dependencies": "Actualmainlockedoffline npmci--ignore-scripts; body-parser2.4.0/qs6.16.1/PW1.63.0; nocode/dependency invention",
-      "browser-runtime": "Previousroot/reviewerUIruntimesclosed/grantsrestored/UUIDabsenceverified; finalmandatoryP0browserwilluseownports/base withoutreuse",
-      "mysql-schema": "fulfillment_p0_p1_b7a9c3ee; exactowned26charbase/migrations0; nativefixturesownUUIDchildren",
+      "browser-runtime": "P0/P1 actualPlaywright runsclosed; bothownedportsavailable; no reuse; allproof/artifactsretained.",
+      "mysql-schema": "fulfillment_p0_p1_b7a9c3ee; exactownedbase now dropped afterverification, nochildschemas",
       "web-port": "API 56002, client 56003; OSephemeral allocated; strict bind/no reuse; integrationHTTPport0"
     },
     "lease_ref": null
@@ -54,8 +54,8 @@
     "TASK-019": "DONE",
     "TASK-020": "DONE",
     "TASK-021": "DONE",
-    "TASK-022": "IN_PROGRESS",
-    "TASK-023": "IN_PROGRESS",
+    "TASK-022": "DONE",
+    "TASK-023": "DONE",
     "TASK-024": "PENDING",
     "TASK-025": "PENDING",
     "TASK-026": "PENDING",
@@ -5018,6 +5018,30 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-INDEPENDENT-989FCE93-P1-SOURCE-TEST-UI",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "d81d2f6c9962f4a8dee4fc6d8f188ccec19b8ff44bbf4173c3e86fe2b92e17ae",
+      "source_ref": "implementation/58_p1_final_verification_binding.md; independent-989fce93-p1-source-test-ui-closing-review.json SHAe171f64335b910422a7984d51267a80714327c3b907a02f2b1f19c0874a8e8c9; code989fce938c843b7d94ce21a18bbc8589f754c7fc FP6bbf59686c17482e07fe855a29616707e9d8531e6b2b7e48bbe6c38d0b034daf PLAN117f92529d5098dd8175dd7cc3179e8c3cf1a83e4246047ba46ead4964d42285; scoped source/test/UI only, root5typedruns verified; old native/stress not relabeled; full current native/global/CI and Task/Phase still pending; audit--high PASS retains1low4moderate, build chunk warning retained.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-INDEPENDENT-989FCE93-TASK022-023-LOCAL-DOD",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "d81d2f6c9962f4a8dee4fc6d8f188ccec19b8ff44bbf4173c3e86fe2b92e17ae",
+      "source_ref": "implementation/58_p1_final_verification_binding.md; independent-989-task022-task023-local-dod-closing.json SHA6b136bb29c2e9f6cc19b639cb697ce18e014e8bc907941ee5638dc7f75a67f0f; exactcode989fce938c843b7d94ce21a18bbc8589f754c7fc FP6bbf59686c17482e07fe855a29616707e9d8531e6b2b7e48bbe6c38d0b034daf PLAN117f92529d5098dd8175dd7cc3179e8c3cf1a83e4246047ba46ead4964d42285; 0C/H/M local developerTask022/023DoD eligibleDONE afteractualall7PASS; Phase/currentCI pending, DEF020/021OPEN; noformalNFR/TC/UAT/merge approval.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -6814,8 +6838,8 @@
       "kind": "GIT_COMMIT",
       "target": "codex/fulfillment-p1-queue-picking reviewedrealP1browser/CI/ownedfixtureincrement only",
       "idempotency_key": "p1-real-ui-lane-6bbf59686c17482e",
-      "status": "STARTED",
-      "source_ref": "Actual2P1browser+2P0browser/lint/build/auditPASS on6bbf; scopedindependentreviews00b4954f/50f65cb9/d87d8e50; no PR/targetmerge. CurrentnativefullgatesandCIstillpending."
+      "status": "CONFIRMED",
+      "source_ref": "Actualgitcommit989fce938c843b7d94ce21a18bbc8589f754c7fc; exactsourceFP6bbf retained; newlane/CI/fixtureonly; selftestsPASSbeforecommit. No push/PR/currentCIyet."
     }
   ],
   "evidence_files": [
@@ -6829,7 +6853,9 @@
     "evidence/20261027T060618-54312575e151/run.json",
     "evidence/20261027T060618-aefb293cac7a/run.json",
     "evidence/20261027T060614-db54880f2c99/run.json",
-    "evidence/20261027T060618-d86631c5cb81/run.json"
+    "evidence/20261027T060618-d86631c5cb81/run.json",
+    "evidence/20261027T061002-a7868011afe4/run.json",
+    "evidence/20261027T062608-03060d12c14f/run.json"
   ],
   "defects": [
     {
@@ -7144,5 +7170,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "CurrentP1browser2PASS/P0browser2PASS/lint/build/auditPASS; preservefirstbrowserFAIL. Completeindependentproof/sourceclosingreview andfreeze UI/CIcandidate, thenrequirednativegates/currentCI beforedraft. All20s/5000/safety unchanged."
+  "next_safe_action": "PendingactualfinallocalDoDrecordanddocsreview beforecheckpoint/publication. ProposedTask022/023developerDONEonly; IMPLEMENTING/currentPhaseCIpending, DEF020/021remainOPENforCIconfirmation. Thenfinaldocscommit/push/exactCIallPASSbeforeDRAFT; no formalacceptance/merge."
 }
