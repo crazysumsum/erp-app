@@ -4,6 +4,10 @@ import { httpClient } from "@/framework/http/HttpClient.js";
 import fulfillment,{service,normalizeFulfillmentQuery} from "@/services/fulfillment.js";
 describe("TASK020 Fulfillment client contract",()=>{
  beforeEach(()=>vi.clearAllMocks());
+ it("rejects document path fragments before URL normalization or any HTTP request",()=>{
+  for(const id of ["../users","8/../../users","8%2F..","..","0","01","1.5","9007199254740992",[],{},NaN])for(const method of ["getFulfillment","getCandidates","getReallocationCandidates","previewAllocation","getPickList","updateFulfillment","allocate","reallocate","confirmPick","cancel"])expect(()=>fulfillment[method](id,{})).toThrow(TypeError);
+  expect(httpClient.get).not.toHaveBeenCalled();expect(httpClient.post).not.toHaveBeenCalled();
+ });
  it("preserves keyset pages and server quantities/actions without inventing totals",async()=>{
   expect(service.name).toBe("fulfillment");const page={items:[{id:"8",fulfillableBaseQuantity:"9007199254740991"}],page:2,pageSize:20,hasMore:true,nextCursor:"next"},signal=new AbortController().signal;httpClient.get.mockResolvedValue(page);
   await expect(fulfillment.listQueue({page:"2",rowsPerPage:"20",filter:" SO-1 ",cursor:"opaque",hasActiveWork:"false",salesOrderStatus:"CONFIRMED",signal})).resolves.toBe(page);expect(httpClient.get).toHaveBeenLastCalledWith("/api/v1/fulfillment-queue",{params:{page:2,pageSize:20,q:"SO-1",cursor:"opaque",hasActiveWork:false,salesOrderStatus:"CONFIRMED"},signal});
@@ -17,7 +21,9 @@ describe("TASK020 Fulfillment client contract",()=>{
   const data={fulfillment:{allowedActions:[],lines:[]}},signal=new AbortController().signal;httpClient.get.mockResolvedValue(data);
   await expect(fulfillment.getFulfillment("8",{allocationAfterId:"100",historyBeforeSequence:8,signal})).resolves.toBe(data);expect(httpClient.get).toHaveBeenLastCalledWith("/api/v1/fulfillments/8",{params:{allocationAfterId:"100",historyBeforeSequence:8},signal});
   await fulfillment.getCandidates("8",{version:3,page:2,signal});expect(httpClient.get).toHaveBeenLastCalledWith("/api/v1/fulfillments/8/allocation-candidates",{params:{version:3,page:2},signal});await fulfillment.getPickList("8",{signal});expect(httpClient.get).toHaveBeenLastCalledWith("/api/v1/fulfillments/8/pick-list",{signal});
+  await fulfillment.getReallocationCandidates("8",{version:3,page:2,signal});expect(httpClient.get).toHaveBeenLastCalledWith("/api/v1/fulfillments/8/reallocation-candidates",{params:{version:3,page:2},signal});
  });
+ it("sends preview as an abortable readonly POST without a write journal or idempotency identity",async()=>{const signal=new AbortController().signal,body={version:1,selectedClaimId:21,page:1,selections:[],lineReasons:[]};await fulfillment.previewAllocation("8",body,{signal});expect(httpClient.post).toHaveBeenLastCalledWith("/api/v1/fulfillments/8/allocation-preview",{body,signal});});
  it("retains immutable event/version/quantity strings and transport identity on every command",async()=>{
   const body=Object.freeze({eventId:"original",version:3,lines:Object.freeze([{pickedBaseQuantity:"9007199254740991"}])}),signal=new AbortController().signal,response={outcome:{id:"8",version:4},fulfillment:{version:5,allowedActions:["cancel"]}};httpClient.post.mockResolvedValue(response);
   for(const [method,path]of [["updateFulfillment","update"],["allocate","allocate"],["reallocate","reallocate"],["confirmPick","pick-confirm"],["cancel","cancel"]]){await expect(fulfillment[method]("8",body,{signal})).resolves.toBe(response);expect(httpClient.post).toHaveBeenLastCalledWith(`/api/v1/fulfillments/8/${path}`,{idempotent:true,idempotencyKey:"original",body,signal});}

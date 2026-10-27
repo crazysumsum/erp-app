@@ -7,7 +7,7 @@ const outcome={...FULFILLMENT_CREATE_RESPONSE.properties.outcome,properties:{...
 export const FULFILLMENT_ALLOCATION_RESPONSE={type:"object",additionalProperties:false,required:["outcome","fulfillment","salesOrder"],properties:{outcome,...FULFILLMENT_DETAIL_RESPONSE.properties}};
 export class AllocateFulfillmentHandler extends BaseRequestHandler {
  static handlerName="allocateFulfillment";
- static api={method:"POST",path:"/api/v1/fulfillments/:id/allocate",description:"Allocate the complete Draft Fulfillment",authorizationPolicies:[{name:"hasPermission",options:{permissions:["fulfillment.operation"]}}],idempotency:{enabled:true},requestSchema:{params:FULFILLMENT_ID_PARAMS,query:FULFILLMENT_INQUIRY_EMPTY,body:{}},responseSchema:{200:FULFILLMENT_ALLOCATION_RESPONSE}};
+ static api={method:"POST",jsonBodyLimitBytes:2097152,path:"/api/v1/fulfillments/:id/allocate",description:"Allocate the complete Draft Fulfillment",authorizationPolicies:[{name:"hasPermission",options:{permissions:["fulfillment.operation"]}}],idempotency:{enabled:true},requestSchema:{params:FULFILLMENT_ID_PARAMS,query:FULFILLMENT_INQUIRY_EMPTY,body:{}},responseSchema:{200:FULFILLMENT_ALLOCATION_RESPONSE}};
  constructor(services={}){super(services);this.allocations=new FulfillmentAllocationService({database:services.require("mysqldatabase"),time:services.require("time"),logger:this.logger});}
  authorizeRequest(){return this.allocations.authorizeWrite();}
  async execute(req){return this.response(await this.allocations.allocate(String(req.input.params.id),normalizeFulfillmentAllocation(req.input.body)));}

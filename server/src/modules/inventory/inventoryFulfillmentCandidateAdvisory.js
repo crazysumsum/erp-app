@@ -3,7 +3,7 @@ import { inventoryError } from "./inventoryErrors.js";
 
 // All inputs are owner-validated under current Warehouse/Reservation anchors.
 // The budget exists only for this read: physical quantities and CAS never change.
-export async function readFulfillmentBatchCandidates(tx,{warehouseId,demands,profiles,reservations,time}) {
+export async function readFulfillmentBatchCandidates(tx,{warehouseId,demands,profiles,reservations,time,loadCandidates=loadInventoryCandidates}) {
   const used=new Map(),pages=new Map(),result=[];
   for(const demand of demands) {
     const reservation=reservations.get(demand.inventoryReservationId),profile=profiles.get(demand.skuId),minimumRemainingDays=Number(reservation.minimum_remaining_days);
@@ -12,7 +12,7 @@ export async function readFulfillmentBatchCandidates(tx,{warehouseId,demands,pro
     while(!exhausted&&(remaining>0||rank<=demand.page*100)) {
       const key=`${demand.skuId}:${minimumRemainingDays}:${offset}`;
       let rows=pages.get(key);
-      if(!rows){rows=await loadInventoryCandidates(tx,{warehouseId:Number(warehouseId),skuId:Number(demand.skuId),currentDate:time.fileDate(),minimumRemainingDays,trackingPolicy:profile.trackingPolicy,limit:100,offset});pages.set(key,rows);}
+      if(!rows){rows=await loadCandidates(tx,{warehouseId:Number(warehouseId),skuId:Number(demand.skuId),currentDate:time.fileDate(),minimumRemainingDays,trackingPolicy:profile.trackingPolicy,limit:100,offset});pages.set(key,rows);}
       for(const candidate of rows) {
         const id=String(candidate.id);
         if(seen.has(id))throw inventoryError("INVENTORY_DEPENDENCY_UNAVAILABLE");seen.add(id);

@@ -46,7 +46,7 @@ export async function startP1Http(t,f){
  const token=await app.services.require("jwt").issue({roles:f.claims.roles,permissions:f.claims.permissions},{subject,version,authTime:Math.floor(Date.now()/1000)}),denied=await app.services.require("jwt").issue({roles:f.claims.roles,permissions:[]},{subject,version,authTime:Math.floor(Date.now()/1000)});
  return async(method,path,body,{auth=true,key=randomUUID()}={})=>{
   const response=await fetch(new URL(path,url),{method,headers:{...(auth?{Authorization:`Bearer ${auth==="denied"?denied:token}`} : {}),...(body===undefined?{}:{"Content-Type":"application/json","Idempotency-Key":key})},...(body===undefined?{}:{body:JSON.stringify(body)})});
-  return {status:response.status,body:await response.json()};
+  return {status:response.status,body:await response.json(),headers:{cacheControl:response.headers.get("cache-control"),pragma:response.headers.get("pragma")}};
  };
 }
 

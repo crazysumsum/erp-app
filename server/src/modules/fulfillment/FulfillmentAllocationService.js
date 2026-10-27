@@ -6,6 +6,8 @@ import { fulfillmentAllocationProjectionRows,fulfillmentReallocationProjectionRo
 import { FulfillmentOperationService } from "./FulfillmentOperationService.js";
 import { FulfillmentInquiryService } from "./FulfillmentInquiryService.js";
 import { assertFulfillmentCandidateResult } from "./fulfillmentCandidateResult.js";
+import { reallocationAdvisoryQuery,assertReallocationAdvisoryResult } from "./fulfillmentReallocationAdvisory.js";
+import { normalizeFulfillmentAllocationPreview,fulfillmentAllocationPreviewScope,assertFulfillmentAllocationPreviewResult } from "./fulfillmentAllocationPreview.js";
 import { FulfillmentTransactionService } from "./FulfillmentTransactionService.js";
 import { FulfillmentLockService,lockFulfillmentRowsInTransaction } from "./FulfillmentLockService.js";
 import { requireFulfillmentActor } from "./fulfillmentAuthorization.js";
@@ -62,6 +64,44 @@ export class FulfillmentAllocationService {
     });
   }
   authorizeWrite(){return this.transactions.withTransaction(tx=>requireFulfillmentActor(this.database,tx,"fulfillment.operation")).then(()=>true);}
+  preview(fulfillmentId,input){
+    fulfillmentInteger(fulfillmentId);const request=normalizeFulfillmentAllocationPreview(input),correlationId=randomUUID();
+    return this.transactions.withTransaction(async tx=>{
+      const actor=await requireFulfillmentActor(this.database,tx,"fulfillment.operation"),preflight=await this.#readAllocationSnapshot(tx,fulfillmentId,true),requested=fulfillmentAllocationPreviewScope(preflight,request,this.time.nowMs()),reallocate=requested.purpose==="REALLOCATE",order=await this.sales.getOrderForFulfillment(requested.salesOrderId,{atMs:requested.asOf}),intent=this.#allocationSalesIntent(actor,order,requested);
+      intent.lines.sort((a,b)=>Number(a.salesOrderLineId)-Number(b.salesOrderLineId));
+      const proof=await this.sales.lockLinesForFulfillmentInTransaction(tx,intent);
+      if(proof.replay!==false||!proof.order)throw fulfillmentError("FULFILLMENT_SOURCE_CONFLICT");
+      const snapshot=await this.#lockAllocationSnapshot(tx,proof.order,fulfillmentId,reallocate),[[history]]=await tx.query("SELECT COALESCE(MAX(sequence_no),0) AS sequence FROM fulfillment_status_history WHERE fulfillment_id=?",[fulfillmentId]);snapshot.historySequence=Number(history.sequence);
+      const locked=fulfillmentAllocationPreviewScope(snapshot,request,requested.asOf);
+      if(JSON.stringify(locked)!==JSON.stringify(requested))throw fulfillmentError("VERSION_CONFLICT");
+      const source=await this.sales.readLockedFulfillmentClaimSourceFactsInTransaction(tx,intent);let result;
+      try{result=await this.inventoryLookup.previewFulfillmentAllocationInTransaction(tx,locked);}catch(error){
+        if(["ALLOCATION_STATE_CONFLICT","INVENTORY_SOURCE_CONFLICT","INVENTORY_QUANTITY_INVALID"].includes(error.code))await this.#validateInventoryContract(()=>{throw error;},correlationId);
+        if(error.code==="INVENTORY_DEPENDENCY_UNAVAILABLE")throw fulfillmentError("FULFILLMENT_DEPENDENCY_UNAVAILABLE");throw error;
+      }
+      const projection=await this.#validateInventoryContract(()=>assertFulfillmentAllocationPreviewResult(result,snapshot,locked,source,actor),correlationId);
+      assertAllocationSourceFacts(snapshot,snapshot.allClaims,source,result.reservationFacts);
+      await requireFulfillmentActor(this.database,tx,"fulfillment.operation");return projection;
+    });
+  }
+  reallocationCandidates(fulfillmentId,input){
+    fulfillmentInteger(fulfillmentId);const query=normalizeFulfillmentCandidateQuery(input),correlationId=randomUUID();
+    return this.transactions.withTransaction(async tx=>{
+      const actor=await requireFulfillmentActor(this.database,tx,"fulfillment.operation"),preflight=await this.#readAllocationSnapshot(tx,fulfillmentId,true),requested=reallocationAdvisoryQuery(preflight,query,this.time.nowMs()),order=await this.sales.getOrderForFulfillment(requested.salesOrderId,{atMs:this.time.nowMs()}),intent=this.#allocationSalesIntent(actor,order,requested),salesProof=await this.sales.lockLinesForFulfillmentInTransaction(tx,intent);
+      if(salesProof.replay!==false||!salesProof.order)throw fulfillmentError("FULFILLMENT_SOURCE_CONFLICT");
+      const snapshot=await this.#lockAllocationSnapshot(tx,salesProof.order,fulfillmentId,true),locked=reallocationAdvisoryQuery(snapshot,query,requested.asOf);
+      if(JSON.stringify(locked)!==JSON.stringify(requested))throw fulfillmentError("VERSION_CONFLICT");
+      const source=await this.sales.readLockedFulfillmentClaimSourceFactsInTransaction(tx,intent);let result;
+      try{result=await this.inventoryLookup.listFulfillmentReallocationCandidates(tx,locked);}catch(error){
+        if(["ALLOCATION_STATE_CONFLICT","INVENTORY_SOURCE_CONFLICT","INVENTORY_QUANTITY_INVALID"].includes(error.code))await this.#validateInventoryContract(()=>{throw error;},correlationId);
+        if(error.code==="INVENTORY_DEPENDENCY_UNAVAILABLE")throw fulfillmentError("FULFILLMENT_DEPENDENCY_UNAVAILABLE");throw error;
+      }
+      const projection=await this.#validateInventoryContract(()=>assertReallocationAdvisoryResult(result,snapshot,locked,source),correlationId);
+      assertAllocationSourceFacts(snapshot,snapshot.allClaims,source,result.scope.reservationFacts);
+      await requireFulfillmentActor(this.database,tx,"fulfillment.operation");
+      return {fulfillmentId,version:query.version,...projection};
+    });
+  }
   async #readAllocationSnapshot(tx,id,reallocate=false){
     const [[header]]=await tx.query("SELECT * FROM fulfillments WHERE id=?",[id]);
     if(!header)throw fulfillmentError("FULFILLMENT_NOT_FOUND");

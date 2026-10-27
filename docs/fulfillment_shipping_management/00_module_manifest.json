@@ -125,7 +125,12 @@
       "server/test/integration/migrations.integration.test.js",
       "server/test/integration/passwordChange.integration.test.js",
       "server/test/integration/roleManagement.integration.test.js",
-      "server/test/integration/userManagement.integration.test.js"
+      "server/test/integration/userManagement.integration.test.js",
+      "server/src/framework/http/apiResponse.js",
+      "server/src/framework/api/apiDefinitionResolver.js",
+      "server/src/framework/middleware/apiDispatcher.js",
+      "server/src/framework/application/createApplication.js",
+      "server/src/framework/http/jsonBodyParser.js"
     ],
     "forbidden_paths": [
       ".env",
@@ -146,16 +151,19 @@
       "sales-archive-job-coordination",
       "inventory-reservation-and-posting-contracts",
       "local-mysql-instance",
-      "local-web-port"
+      "local-web-port",
+      "framework-private-no-store-success-read-policy",
+      "framework-registered-route-json-body-cap",
+      "inventory-owner-actual-selection-preview-and-fourth-route-cap"
     ]
   },
   "contracts": {
     "provided": [
       {
         "id": "fulfillment-shipment-and-reversal-contract",
-        "version": "P0-HD011-ADOPTED-IMPLEMENTATION_IN_PROGRESS",
+        "version": "P1-HD024-A-readonly-selected-prefix-preview/fourth2MiB-adopted; exact source/runtime/fullP1 gates pending",
         "source": "docs/fulfillment_shipping_management/03_design_spec.md",
-        "sha256": "0382b6b9d4aaa130053dc1a251bf194ec04d0c5849b2e5be68df082c1530d344",
+        "sha256": "861939c3d799e9e8b76dbbab25e92eb6f04a6727d4d04fb8545e536de3546cf0",
         "consumers": [
           "sales-order-management",
           "inventory-management",
@@ -177,9 +185,9 @@
       {
         "module_id": "inventory-management",
         "id": "inventory-allocation-issue-and-dedicated-reversal-contract",
-        "version": "HD018-A-scoped-candidate-source-proof-implementation; exact closing owner review and full P1 gates pending",
+        "version": "HD024-A-owner-actual-prefix-readonly-preview-adopted; oldrecommendation/writeABI unchanged; source/runtime gates pending",
         "source": "docs/inventory_management/03_design_spec.md",
-        "sha256": "331a15d2f1fc20d675a3aae21c03a1dccd7547638d3a98deb9b317c252841256",
+        "sha256": "b51afb5224bef8aecb075859dde5387d0e6d6125e6f340168a4cdb17b959db85",
         "regression_suites": [
           "fulfillment-technical"
         ]

@@ -7,7 +7,7 @@ import { number,proveOwnedAllocations } from "./inventoryFulfillmentStock.js";
 const fail=(code="INVENTORY_INPUT_INVALID")=>{throw inventoryError(code);};
 function freeze(value){if(value&&typeof value==="object"){for(const child of Object.values(value))freeze(child);Object.freeze(value);}return value;}
 // Inventory-owned virtual availability follows actual selections, not suggested ones.
-function virtualPages(used,cache,load=loadInventoryCandidates){return async(tx,query)=>{
+export function virtualPages(used,cache,load=loadInventoryCandidates){return async(tx,query)=>{
  const result=[],seen=new Set();let physicalOffset=0,rank=0;
  while(result.length<query.limit){
   const key=JSON.stringify([query.warehouseId,query.skuId,query.currentDate,query.minimumRemainingDays,query.trackingPolicy,physicalOffset]);

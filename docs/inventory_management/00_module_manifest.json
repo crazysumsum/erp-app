@@ -91,9 +91,9 @@
     "provided": [
       {
         "id": "inventory-domain-contract",
-        "version": "HD018-A-scoped-candidate-source-proof-implementation; exact closing owner review and full P1 gates pending",
+        "version": "HD024-A-actual-prefix-readonly-preview-adopted; oldbatch/writeABI unchanged; source/runtime gates pending",
         "source": "docs/inventory_management/03_design_spec.md",
-        "sha256": "331a15d2f1fc20d675a3aae21c03a1dccd7547638d3a98deb9b317c252841256",
+        "sha256": "b51afb5224bef8aecb075859dde5387d0e6d6125e6f340168a4cdb17b959db85",
         "consumers": [
           "purchasing-receiving",
           "sales-order",

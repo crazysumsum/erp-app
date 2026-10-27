@@ -2,6 +2,11 @@ import { httpClient } from "@/framework/http/HttpClient.js";
 import { ERROR_CODE_MESSAGES } from "@/framework/http/errorMessages.js";
 
 export const service={name:"fulfillment"};
+export function fulfillmentDocumentId(value){
+ const id=typeof value==="number"&&Number.isSafeInteger(value)?String(value):value;
+ if(typeof id!=="string"||! /^[1-9][0-9]{0,15}$/u.test(id)||BigInt(id)>BigInt(Number.MAX_SAFE_INTEGER))throw new TypeError("履約單識別碼不正確，請返回列表重新選取");
+ return id;
+}
 const common=["q","customerId","warehouseId","sortBy","descending","page","pageSize","cursor"];
 const queue=["salesOrderStatus","hasBackorder","hasActiveWork","requestedDateFrom","requestedDateTo"];
 const list=["view","salesOrderId","status","hasShortPick","createdFrom","createdTo","pickedFrom","pickedTo"];
@@ -36,13 +41,15 @@ const write=(path,{idempotencyKey,...body}={}, {signal}={})=>httpClient.post(pat
 export default {
  listQueue({signal,...query}={}){return httpClient.get("/api/v1/fulfillment-queue",{params:normalizeFulfillmentQuery("queue",query),signal});},
  listFulfillments({signal,...query}={}){return httpClient.get("/api/v1/fulfillments",{params:normalizeFulfillmentQuery("list",query),signal});},
- getFulfillment(id,{signal,...params}={}){return httpClient.get(`/api/v1/fulfillments/${id}`,{params,signal});},
- getCandidates(id,{signal,...params}={}){return httpClient.get(`/api/v1/fulfillments/${id}/allocation-candidates`,{params,signal});},
+ getFulfillment(id,{signal,...params}={}){return httpClient.get(`/api/v1/fulfillments/${fulfillmentDocumentId(id)}`,{params,signal});},
+ getCandidates(id,{signal,...params}={}){return httpClient.get(`/api/v1/fulfillments/${fulfillmentDocumentId(id)}/allocation-candidates`,{params,signal});},
+ getReallocationCandidates(id,{signal,...params}={}){return httpClient.get(`/api/v1/fulfillments/${fulfillmentDocumentId(id)}/reallocation-candidates`,{params,signal});},
+ previewAllocation(id,body,{signal}={}){return httpClient.post(`/api/v1/fulfillments/${fulfillmentDocumentId(id)}/allocation-preview`,{body,signal});},
  createFulfillment(body,options){return write("/api/v1/fulfillments/create",body,options);},
- updateFulfillment(id,body,options){return write(`/api/v1/fulfillments/${id}/update`,body,options);},
- allocate(id,body,options){return write(`/api/v1/fulfillments/${id}/allocate`,body,options);},
- reallocate(id,body,options){return write(`/api/v1/fulfillments/${id}/reallocate`,body,options);},
- confirmPick(id,body,options){return write(`/api/v1/fulfillments/${id}/pick-confirm`,body,options);},
- cancel(id,body,options){return write(`/api/v1/fulfillments/${id}/cancel`,body,options);},
- getPickList(id,{signal}={}){return httpClient.get(`/api/v1/fulfillments/${id}/pick-list`,{signal});}
+ updateFulfillment(id,body,options){return write(`/api/v1/fulfillments/${fulfillmentDocumentId(id)}/update`,body,options);},
+ allocate(id,body,options){return write(`/api/v1/fulfillments/${fulfillmentDocumentId(id)}/allocate`,body,options);},
+ reallocate(id,body,options){return write(`/api/v1/fulfillments/${fulfillmentDocumentId(id)}/reallocate`,body,options);},
+ confirmPick(id,body,options){return write(`/api/v1/fulfillments/${fulfillmentDocumentId(id)}/pick-confirm`,body,options);},
+ cancel(id,body,options){return write(`/api/v1/fulfillments/${fulfillmentDocumentId(id)}/cancel`,body,options);},
+ getPickList(id,{signal}={}){return httpClient.get(`/api/v1/fulfillments/${fulfillmentDocumentId(id)}/pick-list`,{signal});}
 };

@@ -2158,6 +2158,12 @@ Commit：`feat: add fulfillment queue and work list pages`。
 ### Approach
 預計變更範圍：`FulfillmentDetailPage.vue`、`AllocationPanel.vue`、`PickConfirmationPanel.vue`、`FulfillmentQuantitySummary.vue`、detail/picking page tests。
 
+HD020 A actual Sam批准2026-10-26：另在現有 InventoryLookup／AllocationPreparation／CandidateAdvisory named owner scope 增加獨立 `inventoryFulfillmentReallocationAdvisory.js`、Fulfillment GET reallocation-candidates handler/schema/service/client及完整原生／容量／零DML tests；依Design HD020保留原DRAFT及writer契約。不可用前端計算自身credit／排名或dummy選擇補缺。獨立owner覆核、適用延遲及100/50/5000與20000ms/fullP1/currentCI gates維持。
+
+HD022 A actual Sam批准2026-10-26：原TASK016/017/018及本TASK022的完整批次HTTP容量須以真實三支命令通過，不能用service-only代替。只在Allocate/Reallocate/Pick-confirm三個POST定義新增可信2MiB metadata；另限修改API definition resolver、dispatcher metadata validation、createApplication的單一parser選擇／安全budget診斷及新 `framework/http/jsonBodyParser.js`。使用同一Express registered-route匹配語意，不加prefix/regex捷徑。所有原限流、10秒收包、rawBody、auth/schema/idempotency、20秒交易、完整數量/版本/原子rollback/Gates及其他API100kb不變；新增模塊內policy/原生容量/slowbody/memory回歸並做獨立覆核。
+
+HD024 actual Sam A2026-10-26：採納Design末節單一read-only POST allocation-preview，按saved Claim／實際前序選擇由Inventory回最多100候選及100行assessment。新增第四條可信2MiB路由，原100kb其他API／100並行／10秒收包／20秒交易不變；無Inventory/Claim/operation/audit寫入、不改舊recommendation/writer或加bypass。嚴格未完成prefix／真正初始CAS／全部own credits／50legs perLine與5000／fresh權限、FEFO提交前禁用、選擇與assessment不可混版、原unknown write journal及完整native+HTTP/memory/security/regression/currentCI保持。僅限Design HD024列明owner/helper/handler/schema/client/test/sharedreadadapter路徑；另做provider/consumer pin及新main依賴整合覆核，不豁免任何Gate。具體實作／DoD及TC010沿用，preview契約驗證納入本Task。
+
 依賴：P1-T09、P1-T10。
 
 規格追溯：FR-PICK-001～012、FR-PICKCONF-001～010、FR-INQ-005；Design §§10.3、11.5。
@@ -2181,6 +2187,8 @@ Commit：`feat: add allocation and pick confirmation experience`。
 
 ### Approach
 預計變更範圍：`FulfillmentPrintService.js`、Pick List handler/schema、`PickListPrintPage.vue`、print service test、print page test。
+
+HD021 A actual Sam批准2026-10-26：另限 `server/src/framework/http/apiResponse.js` 成功2xx GET/HEAD保留可信 exact private,no-store；新增 `server/test/fulfillment/fulfillmentPrintHeaders.test.js` policy矩陣及原生真HTTP精確標頭驗證，執行既有shared回歸。其餘方法／值／預設／錯誤維持no-store；不讀requestheader，不豁免原精確驗收或任何Gate。
 
 依賴：P1-T05、P1-T09。
 

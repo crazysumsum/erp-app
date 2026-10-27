@@ -1,5 +1,7 @@
 import { prepareFulfillmentAllocation,prepareFulfillmentReallocation,readFulfillmentReallocationStates,readFulfillmentAllocationScope,lockFulfillmentPickScope,normalizeFulfillmentAllocationScopeQuery } from "./inventoryFulfillmentAllocationPreparation.js";
 import { readFulfillmentBatchCandidates } from "./inventoryFulfillmentCandidateAdvisory.js";
+import { normalizeInventoryAllocationPreview,readFulfillmentAllocationPreview } from "./inventoryFulfillmentAllocationPreview.js";
+import { normalizeReallocationAdvisoryQuery,readReallocationAdvisory } from "./inventoryFulfillmentReallocationAdvisory.js";
 import { assertActorFresh } from "../authorization/directoryLookups.js";
 import { InventoryFulfillmentService } from "./InventoryFulfillmentService.js";
 import { loadInventoryCandidates } from "./InventoryPickSequenceService.js";
@@ -199,6 +201,18 @@ export class InventoryLookupService {
     for(const demand of demands){const row=reservations.get(demand.inventoryReservationId);if(!row||String(row.warehouse_id)!==warehouseId||String(row.sku_id)!==demand.skuId||row.purpose!=="SALE"||!["ACTIVE","PARTIALLY_CONSUMED"].includes(row.status)||BigInt(row.outstanding_quantity)<BigInt(demand.requestedQuantity)||!Number.isSafeInteger(Number(row.minimum_remaining_days))||Number(row.minimum_remaining_days)<0||Number(row.minimum_remaining_days)>36500)throw inventoryError("RESERVATION_STATE_CONFLICT");}
     this.#assertReadControlCoverage(controls,locked.reservations);
     return readFulfillmentBatchCandidates(tx,{warehouseId,demands,profiles:bySku,reservations,time:this.time});
+  }
+  async listFulfillmentReallocationCandidates(tx,input) {
+    const query=normalizeReallocationAdvisoryQuery(input);await this.#authorize(tx);
+    try{return await readReallocationAdvisory(tx,query,{inventory:this.fulfillment,time:this.time});}
+    catch(error){if(["ER_NO_SUCH_TABLE","ER_BAD_FIELD_ERROR"].includes(error.cause?.code??error.code))throw inventoryError("INVENTORY_DEPENDENCY_UNAVAILABLE");throw error;}
+  }
+  async previewFulfillmentAllocationInTransaction(tx,input) {
+    const query=normalizeInventoryAllocationPreview(input),actor=await this.#authorize(tx);
+    try{
+      const result=await readFulfillmentAllocationPreview(tx,query,{inventory:this.fulfillment,time:this.time,actor,readReservations:source=>this.lockFulfillmentReservationStatesInTransaction(tx,source)});
+      await this.#authorize(tx);return result;
+    }catch(error){if(["ER_NO_SUCH_TABLE","ER_BAD_FIELD_ERROR"].includes(error.cause?.code??error.code))throw inventoryError("INVENTORY_DEPENDENCY_UNAVAILABLE");throw error;}
   }
   async listAllocationCandidates(tx,query) {
     await this.#authorize(tx);
