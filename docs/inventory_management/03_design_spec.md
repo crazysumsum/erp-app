@@ -2111,3 +2111,25 @@ Named changes only InventoryLookupService, newinventoryFulfillmentAllocationPrev
 
 
 HD024 faithful display completion (existing DES-010 §10.3, actual approved A; no new business or writer policy): each selected preview option additionally carries `lotNumber` and `remainingDays`. Inventory alone resolves at most100 distinct nonnull eligible Lot IDs in one bounded parameterized nonlocking read; require exact identity/SKU/expiry coverage and actual nonempty Lot number≤100 Unicode characters. Nonlot =>lotNumber=null; no expiry=>remainingDays=null. Otherwise use existing inventoryRemainingLifeDays with the same captured owner-local date/asOf used by eligibility, including today0/tomorrow1/calendar boundaries. Missing or malformed facts fail closed through the existing dependency/critical contract boundary. Frontend displays these values without expiry arithmetic. Old recommendation DTOs, atomic writers, rank/budget/eligibility/CAS, one read-only POST/fourth2MiB route, all100/50/5000 and10s/20s gates remain unchanged. Independent direction review explicitly classifies this as faithful completion of already-required display behavior under HD024A; exact canonical lineage and final source review remain required, not a new human approval claim.
+
+## DES-011 — Purchasing batch receipt provider
+
+### Decision
+PROPOSED，待Sam精確候選批准。正式ABI、可信context、transaction與來源結果協定定義於 [provider v1](implementation/purchase-provider-contract-v1.md) §1–3、5–6；以manifest另行pin該權威addendum。只供Purchasing已鎖定Confirmed PO的批次接入。
+
+### Rationale
+整批claims及全域鎖序避免逐行單筆posting的跨明細死鎖／部分效果；分開交易意圖hash與可持久重建的membershipDigest。獨立PHASE007，不以P4完整容量或P5為前置。
+
+### Failure behavior
+任一驗證／DB／Audit／caller故障整批rollback，未知commit保留原event查詢；NOT_FOUND不是失敗或另建event的證明。舊入口語義保持。
+
+## DES-012 — Purchasing partial reversal provider
+
+### Decision
+PROPOSED，待Sam精確候選批准。[provider v1](implementation/purchase-provider-contract-v1.md) §2–6定義專用partial reversal及link migration；保留舊generic reversal unique，不遷移歷史來源。
+
+### Rationale
+原Movement鎖序列化累計反向；獨立append-only link同交易留存原量關聯。PHASE008只依賴已合併PHASE007。
+
+### Failure behavior
+超額、allocated／Reserved不足、來源或認證錯誤全rollback。新purchase來源不能fallback generic，舊generic一次完整反向不變。

@@ -1,6 +1,7 @@
 import { BaseRequestHandler } from "../../framework/api/BaseRequestHandler.js";
 import { RequestValidationError } from "../../framework/validation/requestValidator.js";
 import { ItemLookupService } from "../../modules/item/ItemLookupService.js";
+import { uomConversionInvalid } from "../../modules/item/itemErrors.js";
 import { normalizeAndValidateSkuCode } from "../../modules/item/itemValidation.js";
 import { inventoryError } from "../../modules/inventory/inventoryErrors.js";
 import { EMPTY, VIEW_POLICY, SKU_LOOKUP_QUERY, SKU_LOOKUP_RESPONSE } from "./inventorySchemas.js";
@@ -25,13 +26,16 @@ export class LookupInventorySkuHandler extends BaseRequestHandler {
       const item = new ItemLookupService({ database: tx, ...this.itemDependencies });
       const found = await item.findByCode(code, { purpose: "inventory" });
       if (!found) throw inventoryError("INVENTORY_RESOURCE_NOT_FOUND");
-      const profile = await item.getInventoryProfileInTransaction(tx, found.skuId);
-      if (!profile) throw inventoryError("INVENTORY_RESOURCE_NOT_FOUND");
+      const profile = found;
+      const baseUom = profile.uoms.find(uom => uom.isBase);
+      if (!baseUom || baseUom.toBaseFactor !== 1) {
+        throw uomConversionInvalid("Inventory profile requires exactly one Base UOM with factor 1");
+      }
       if (!profile.inventoryTracked) throw inventoryError("SKU_NOT_INVENTORY_TRACKED");
       if (!profile.usable) throw inventoryError("INVENTORY_INPUT_INVALID", { field: "skuId" });
       if (profile.trackingPolicy === "serial") throw inventoryError("SERIAL_TRACKING_UNSUPPORTED");
       return { skuId: profile.skuId, skuCode: profile.skuCode, skuName: profile.skuName, trackingPolicy: profile.trackingPolicy,
-        baseUom: { uomId: profile.baseUom.uomId, uomCode: profile.baseUom.uomCode } };
+        baseUom: { uomId: baseUom.uomId, uomCode: baseUom.uomCode } };
     });
     return this.response(data);
   }

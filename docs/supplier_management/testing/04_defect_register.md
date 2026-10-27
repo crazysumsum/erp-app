@@ -129,6 +129,246 @@ Found while preparing the TC-131 (OPS-004) runner. On a freshly migrated scratch
 
 The first run of the performance runner (2026-10-22, TC-101) found a 10,000-row import, run alongside a 50-user load on 100k seeded Suppliers, that applied 9,999 rows. One row ended not applied. The job's counts stayed consistent, so the row was reported as failed rather than lost silently, but every row in that file is a valid create. The cause is unknown: that first runner version deleted the tools' reports. The next three runs applied 10,000 of 10,000, and T50's earlier runs did too. The runner now keeps the tools' reports. While the import runs, it also polls for failed rows and records their stored errors (`evidence.importFailedRows`), because the import tool deletes its job and rows when it finishes. A recurrence will therefore show the reason. REPORT_ONLY: no product change.
 
+## DEF-035 — MEDIUM
+
+Found while preparing the UAT browser tests (HD-124 A). Design §7.2 lists seven Supplier pages, including `SupplierAuditPage.vue` (`/suppliers/audit`, menu 「變更紀錄」, audit filter and masked detail). It also gives the detail page an Audit tab, `SupplierAuditTimeline.vue`. Neither exists. No task in `05_development_tasks.md` covers them: T09 built only the audit service and `GET /api/v1/supplier-audit/logs`. UAT accepts only user-observable evidence, and at least ten cases read the Audit page (UAT-001, 006, 009, 012, 020, 026, 030, 041, 043 and 055). Fix approved as HD-125 A, without changing the plan.
+
+**Fixed under HD-125 A.**
+- **What was built:**
+  - `SupplierAuditPage.vue` (`/suppliers/audit`, menu 「變更紀錄」, `supplier.view`).
+  - A shared `SupplierAuditTimeline.vue`, which is also used by a new 「變更紀錄」 tab on the detail page.
+  - Both read the existing `GET /api/v1/supplier-audit/logs`.
+- **What the page does:**
+  - Filters by Hong Kong day bounds, actor, target, action and target type. A reversed range is shown as an error and not queried; a half-typed date is not queried either.
+  - Any filter change starts again from page 1. Filters and paging are kept in the URL, so a refresh or a shared link restores them.
+  - Shows time in Hong Kong time, the action, the target, the request ID in full, the reason, and before → after for each field.
+  - The detail is shown as the server masked it. A notes digest is shown as a length (「notes：0 字 → 10 字」), never the hash, and a list the server summarised is shown as a count and a sample.
+  - The tab asks only for its Supplier.
+- **Review:** REV-113 (`implementation/116_rev_113_independent_review.md`); every finding fixed as recommended.
+- **Tests:**
+  - `audit.test.js` and `supplierAudit.test.js`. A 13-mutant sweep covering the review's surviving mutants turns every one red.
+  - Two Playwright tests in `supplier-audit.spec.js` (network mocked).
+  - A real-backend browser check (local, not CI): a viewer saw the request ID on screen, no account plaintext, inert markup, the notes length, and the filters restored after a reload.
+  - UAT (UAT-001, 055 and others) will exercise the page against a real backend under HD-124 A.
+
+## DEF-036 — HIGH
+
+Found during the DEF-035 real-backend check. The Supplier create and edit forms (`SupplierBasicForm.vue`, `SupplierPaymentDefaults.vue`) and the list filters (`SuppliersPage.vue`) load currencies and payment terms from `GET /api/v1/business-master/currencies` and `/payment-terms`. Both endpoints require `business_master.view` (`VIEW_POLICY` in `server/src/handlers/business-master/businessMasterSchemas.js`). Design §6 (the endpoint table) says they should accept `supplier.view` or the matching consumer permission.
+
+- **Measured** (local, erp_t51): a user with `supplier.view` and `supplier.mgmt`, the UAT CLERK role, gets 403 on both lists. With `business_master.view` added, both return 200.
+- **Effect:** a CLERK cannot choose a default currency, so cannot create a Supplier in the UI. This blocks UAT-001 and every UAT case that starts from a new Supplier.
+- **Owner:** the endpoints belong to Business Master, which is not Supplier code. **Decision required (HD-126).**
+
+**Fixed under HD-126 A.**
+- **What was built:** two Supplier-owned lookups, `GET /api/v1/supplier-lookups/currencies` and `/payment-terms`.
+  - Permission: `supplier.view` only, `jwt`, no password. Request and response schemas are closed.
+  - They read through the shared Business Master provider, so they return only Active values and only the provider's projection (no audit fields, timestamps or description).
+  - They run the Business Master readiness check first. When Business Master is not ready the answer is `503 BUSINESS_MASTER_NOT_READY`, never an empty list.
+  - At most the first 100 Active values, the same as the forms asked for before.
+- **Client:** the create form (`SupplierBasicForm.vue`) and the payment defaults on the detail editor (`SupplierPaymentDefaults.vue`) use them.
+- **Not changed:**
+  - Business Master's own lists still require `business_master.view`, and still refuse a CLERK (pinned by an integration test).
+  - The Supplier list filters (`SuppliersPage.vue`) still use the Business Master lists and stay hidden without `business_master.view`. They need Inactive values to filter older Suppliers, which the new lookups do not return.
+- **Design §6:** the endpoint table still names the Business Master routes. This is an approved deviation recorded here and in HD-126; the design text is not edited, because that would move the design baseline (REV-114 L-2).
+- **Review:** REV-114 (`implementation/117_rev_114_independent_review.md`); findings fixed as recommended.
+- **Tests:**
+  - Handler unit tests (permission, closed schemas, readiness before listing, real readiness wiring).
+  - An integration test: a CLERK gets Active values only, and the Business Master lists still answer 403.
+  - The route contract in `supplierSecurityAcceptance`.
+  - Client unit tests for the service and the edit-form options.
+  - A real-backend browser check: a CLERK created a Draft Supplier in HKD through the UI, with no call to `/api/v1/business-master/*`.
+
+## DEF-037 — MEDIUM
+
+Found while writing the UAT PHASE-001 browser tests (HD-124 A). FR-PARTY-001 (Must) says addresses and contacts can be added, edited, deactivated **and ordered**, and UAT-048 asks the user to change the order and see it saved. Design §5.5 and §5.6 have no ordering column, and neither the server nor the UI can order them: lists are sorted by status, name and id. The requirement reached neither the design nor the plan.
+
+- **Effect:** UAT-048 fails at its ordering step. Every other step of UAT-048 passes.
+- **Decision:** HD-129 A, fix it. This adds a `sort_order` column to `supplier_addresses` and `supplier_contacts`, an API to change the order, and move-up and move-down controls in the UI. The migration needs its own explanation and approval before it is written. The design text changes too, which moves the design baseline.
+
+**Fixed under HD-129 A. The migration was approved as HD-136.**
+- **Schema:** migration `0103_add_supplier_party_sort_order` adds `sort_order INT NOT NULL DEFAULT 0` to both tables.
+  - Each Supplier's current display order is filled in: addresses by status then id; contacts by status, name, then id.
+  - It is numbered 0103 because an in-flight sales-archive branch already uses 0101 and 0102.
+  - The 0032 and 0033 inspectors accept the new column; their `up()` is unchanged. The startup self-check requires the column through 0103's own inspector.
+- **Server:**
+  - New rows go last.
+  - `POST .../addresses/:addressId/move` and `.../contacts/:contactId/move` take `{ direction: up|down, version }`. They swap with the adjacent **active** row under the Supplier lock and are audited as `supplier.address.reorder` / `supplier.contact.reorder`. The first row cannot move up and the last cannot move down (409 `SUPPLIER_PARTY_MOVE_NOT_POSSIBLE`).
+  - Lists order by status, sort_order, id.
+  - The ordering address that the Purchasing provider returns does not include `sortOrder`.
+- **UI:** 上移 and 下移 on each active address and contact.
+- **Design:** §5.5, §5.6 and §6 are updated. The design baseline moved (29a0615a → 171cf540) and the bound approvals were re-affirmed as `-HD129` copies. Purchasing pins the Supplier design hash, so its owner has to refresh that pin.
+- **Tests:**
+  - Integration: move up and down, the ends, skipping inactive rows, version conflict, other Suppliers' rows untouched, the 0103 backfill order and its rerun.
+  - The migration convergence and adding-Supplier cases (TC-002, TC-006) and Audit coverage (TC-103).
+  - Panel vitest.
+  - UAT-048 now passes on the real backend.
+- **REV-118 follow-ups:**
+  - Locking reads, so two creates at the same time cannot share an order.
+  - Tied rows are renumbered before a move.
+  - Only the moved row's version changes; the neighbour is recorded in the Audit metadata.
+  - A startup case refuses a deployment without 0103.
+  - The manual rollback is written in 0103's header.
+  - The list reloads after a refused move.
+
+## DEF-038 — MEDIUM
+
+Found by UAT-031. The Supplier detail shows the default payment term as its internal ID (for example 「付款條件 2」), whether or not the term is Active, because the page prints `defaultPaymentTermId`. The edit form shows the same ID when the Supplier's term has since been deactivated, because the Active-only options cannot label it. UAT-031 expects an old inactive value to stay readable. Currencies are not affected, because their code is the identifier.
+
+- **Effect:** UAT-031 fails at its last step. Every step before it passes, including the check that Supplier Settings has no catalogue write controls.
+- **Decision:** HD-130 A. The Supplier detail response gains `defaultPaymentTerm { id, code, name, status }`, read through the provider's history so an Inactive term is included. The UI shows 「code — name」 and marks an inactive term. The response only gains a field, so existing callers are not affected.
+
+**Fixed under HD-130 A.**
+- **Server:** `getSupplier`, which every detail path uses (GET, update, code change, lifecycle actions), adds `defaultPaymentTerm` from `getPaymentTermHistory`. The response schema allows an object or null and is closed. Create returns no such field and shows no term.
+- **Client:**
+  - The overview shows 「code — name」, adds 「（已停用）」 for an Inactive term, and shows 「未設定」 without a term.
+  - The editor shows a term that is missing from the Active options as an extra option. That option is marked and disabled only when the server says the term is Inactive, so an Active term that is still loading, failed to load, or is not on the first page is never called inactive (REV-116 M-1).
+- **Review:** REV-116 (`implementation/119_rev_116_independent_review.md`). Its findings are fixed, except two raised as their own defects: DEF-040 and DEF-041.
+- **Tests:** an integration test (Active, then deactivated, then none) and vitest cases (inactive, Active, loading or failed options, unnamed term). UAT-031 now passes, and checks the 「（已停用）」 mark.
+
+## DEF-039 — LOW
+
+Found by REV-115 (M-2) on UAT-003. AC-003 says 「允許使用者確認合理原因後繼續」, and UAT-003 asks the user to 「確認原因」 and lists Audit as evidence. The create page offers only 「確認並繼續」, with no reason. The create Audit records neither that a duplicate warning was shown nor which candidates were overridden. Design §4 never had a reason either: the requirement did not reach the design, the same pattern as DEF-037.
+
+- **Wording is ambiguous:** AC-003 can also mean "the user confirms there is a valid reason", which the current button does.
+- **Effect:** UAT-003 now fails at its Audit step. Every earlier step passes.
+- **Decision required (HD-132):** the Product Owner interprets AC-003, or asks for a reason field and an Audit record.
+
+**Fixed under HD-132 B.** AC-003 is read as a plain confirmation, so the user gives no reason.
+- **Create Audit:** a create that follows a similar-name warning records the warned candidates' Supplier codes in its Audit, as `warnings.duplicateCandidates`. `warnings` was already on the Audit detail allow-list. A create without candidates records nothing.
+- **Import:** imports do not run the similar-name check (HD-052, HD-075), so they record nothing.
+- **Size:** the candidate list is capped at 10, so the Audit detail stays within its size limit.
+- **Tests:** an integration test with a near-match name (not an exact match), and UAT-003, which now passes.
+
+## DEF-040 — MEDIUM
+
+Found by REV-116 (M-2), the same class as DEF-038. Two more screens print the payment term's internal ID:
+- The Supplier list column 付款條件 renders `defaultPaymentTermId`.
+- The approval diff row 預設付款條款 renders the raw ID.
+
+DEF-038 covered only the detail page and the edit form, and UAT-031 does not cover these two screens. The list would need one batched read by ID, not one provider read per row. **Decision required (HD-133).**
+
+**Fixed under HD-133 A, with one deviation (REV-117 M-1, HD-135).**
+- **What changed:**
+  - List items gain `defaultPaymentTerm`; the approval detail gains `paymentTerms`. Both are `{ id, code, name, status }` read through the Business Master provider.
+  - The list column and the approval difference show 「code — name」 and mark an inactive term.
+  - The detail page uses the same label helper and schema.
+- **Deviation from HD-133 A:**
+  - The decision says one batched read per page. The provider has no read by IDs, and Business Master is not this module's code.
+  - So a page reads the first 100 Active terms once (one list read), then one history read for each term that is not in that list (Inactive, or beyond the first 100).
+  - The read count is pinned by a unit test.
+  - REV-117 measured: 0.35 ms for a page with 3 Active terms, 8.9 ms median and 28 ms worst for a page of 100 distinct Inactive terms (local).
+  - The performance fixture (TC-101) uses only Active terms, so it measures only the cheap path.
+  - Raised as HD-135.
+
+## DEF-041 — LOW
+
+Found by REV-116 (I-1). A Supplier whose payment term has since been deactivated cannot be saved, even when the user changes only another field.
+- **Effect:** the update re-checks the term with `purpose: "new_assignment"` and answers `409 PAYMENT_TERM_NOT_ACTIVE` 「付款條款目前不可用」. Activating such a Supplier is refused the same way.
+- **What the user sees:** the general edit banner shows the message, but the term field itself is not marked. The user has to clear the term or pick an Active one first.
+- **Requirement:** FR-EDIT-003 asks for statuses to be re-checked on edit, so the refusal may be intended, and the missing field hint is the defect. **Decision required (HD-134).**
+
+**Fixed under HD-134 A.**
+- **Behaviour:** the refusal stays. On the Supplier editor, a 409 `PAYMENT_TERM_NOT_ACTIVE` now marks the payment-term field with 「付款條款已停用，請改選或清除」. Clearing the term and saving again succeeds (REV-117 real-browser check).
+- **Not changed:** the create page and activation still show only the generic message. HD-134 A named only the editor.
+
+## DEF-042 — HIGH
+
+Found while writing the UAT PHASE-002 browser tests (UAT-014). With approval on, an existing Draft cannot be submitted from the Supplier detail page.
+- **What the user sees:** the detail page's 「啟用」 dialog sends only the version. It even says 「完成後狀態：啟用」.
+- **What the server answers:** `400 APPROVER_REQUIRED` 「目前設定需要指定審批人」. The Supplier stays Draft.
+- **Where the selector is:** only on the create page (`SupplierApprovalPanel`). Design §7.4 says the Create／Detail editor shows the approver selector when approval is on.
+- **Effect:** a Supplier that was rejected, withdrawn, or whose request was invalidated by an edit cannot be resubmitted in the UI. Nor can any Draft created while approval was off. This blocks UAT-014 (「需重新提交」) and UAT-052 (resubmission).
+- **Measured:** local, real backend, CLERK, approval on. **Decision required (HD-138).**
+
+**Fixed under HD-138 A.** With approval on, the detail page's 「啟用」 dialog now shows the same approver selector and note as the create page. It reads 「提交審批」 and 「完成後狀態：待審批」, cannot be confirmed without an approver, and sends `approverUserId`. With approval off nothing changes.
+- Client only.
+- Tests: component tests (approval on and off). On the real backend, UAT-014 resubmits through it.
+
+## DEF-043 — MEDIUM
+
+Found by UAT-052. Only the requester can withdraw a Pending request, and the 「撤回」 button exists only on the approvals page (`/suppliers/approvals`).
+- **Why the requester cannot reach it:** that page requires `supplier.view` and `supplier.approval`. A CLERK (`supplier.view` and `supplier.mgmt`) who submitted is sent to /403.
+- **The API is not the problem:** `POST /api/v1/suppliers/:id/approval/withdraw` needs only `supplier.mgmt`. The requester simply has no screen to call it from.
+- **Effect:** UAT-052 fails at its first step. **Decision required (HD-138).**
+
+**Fixed under HD-138 A, extended by the Product Owner's 'DEF-043 A'.** A client-only fix was not possible, because nothing a CLERK can read returns the request ID and version.
+- **Server:** the Supplier detail response gains `pendingApproval { requestId, version, requestedAt, requester, assignedApprover }` while the Supplier is `pending_approval`, and `null` otherwise. The field is additive and readable with `supplier.view`.
+  - It is on the responses that go through `getSupplier`: GET detail, update, code change and the status actions. The create response does not carry it.
+- **Detail page:** it shows 「待 X 審批（Y 提交）」. Only the requester gets 「撤回審批」, which calls the existing withdraw API; the server still checks that the caller is the requester.
+- **Tests:** an integration test (fields, withdraw from those values, then `null`) and a component test (shown to the requester only). On the real backend, UAT-052 runs end to end: withdraw, resubmit, reassign with a reason, the old approver blocked, the new approver approves.
+
+## DEF-044 — MEDIUM
+
+Found by REV-120 (H-2) on UAT-014. Design §7.4 says 「Pending 進行 approval-significant 修改前提示原申請會失效」, and UAT-014's Required Evidence includes 「失效提示」. The UI shows neither:
+- **Before the save:** editing a Pending Supplier gives no warning.
+- **After the save:** the save shows only 「…的一般資料已更新」, while the Supplier silently returns to Draft. The server already returns `approvalInvalidated: true`, but the client never reads it.
+- **Significant fields:** Code, name, display name, currency and payment term (`APPROVAL_SIGNIFICANT_COLUMNS`), and identifier changes.
+- **Effect:** UAT-014 now fails at its warning step. **Decision required (HD-139).**
+
+**Fixed under HD-139 A (client only).** No server, schema or API change: the server already returned `approvalInvalidated`.
+- **Before the edit:** while the Supplier is `pending_approval`, the general editor, the Supplier Code dialog and the identifier create, edit and delete dialogs show 「此供應商正在審批中，修改 Code、名稱、顯示名稱、幣別、付款條件或識別資料會令原申請失效」.
+- **After the save:** when the response carries `approvalInvalidated: true`, a yellow notice that stays until 關閉 is pressed says 「…。原審批申請已失效，供應商回到草稿，需要重新提交審批」 (REV-121 L-2; it was first a five-second success toast). A save that invalidated nothing keeps the plain success message.
+- **Server flag (REV-121 I-2):** `updateSupplier` and `changeSupplierCode` now report `approvalInvalidated` from what `invalidateForSignificantChange` returns, as the identifier service already did, so the notice never claims an invalidation that did not happen.
+- **Tests:** component tests in `editor.test.js`, `identifier.test.js` and `detail.test.js` fail on main's components and pass on the fix; they cover create, edit and delete of identifiers (REV-121 L-1). REV-121 ran 13 mutants; its two survivors (identifier edit notice, identifier edit warning) are now killed. On the real backend UAT PHASE-002 passes 9 of 9, UAT-014 included.
+
+## DEF-045 — MEDIUM
+
+Found by REV-121 (I-1); pre-existing, not caused by DEF-044's fix. A CSV import update row for a Pending Supplier that changes the name, display name, currency or payment term goes through `updateSupplierInTransaction`, which invalidates the request and returns the Supplier to Draft (`applySupplierImportRow.js:57` discards the `approvalInvalidated` it returns).
+- **Design conflict:** §4.5 says significant edits invalidate a Pending request, while the import section says 「Update row 不藉匯入修改 Supplier Code、Bank 或狀態」.
+- **Effect:** neither the preview nor the row results say the request was invalidated or the status changed.
+- **Decision required (HD-140).**
+
+**Fixed under HD-140 A.** Precheck now refuses such a row:
+- **Error:** an update row for a `pending_approval` Supplier that would change the name, display name, currency or payment term gets one `SUPPLIER_IMPORT_PENDING_APPROVAL` error per changed column. The error is shown in the import page's row results, and the row is skipped at execution, so an import never changes a Supplier's status.
+- **What still passes:** the whole row is refused, not just the significant columns. A row that changes no significant field still updates, and so does one that fills significant columns with their current values (for example an exported file re-imported). Each error message names its column, because the result CSV carries no field name (REV-122 I-3).
+- **Shared comparison:** the check uses the comparison `updateSupplier` already uses, now exported as `changedApprovalFields`.
+- **Timing:** a Supplier that becomes Pending after precheck has a new version, so its row fails at execution on the expected version instead.
+- **What this supersedes:** REV-064 I-4 had made such rows invalidate the request. That was a review recommendation, not a human decision, and HD-140 A replaces it. The integration test that asserted the old behaviour now asserts the refusal.
+- **Tests:** unit tests in `supplierImportPrecheck.test.js` and the import integration test fail on main's processor. Four mutants are killed:
+  - a SELECT without `supplier_name` or without `display_name` (caught only on real MySQL; the `display_name` mutant survived REV-122 until the integration row re-sent the current display name);
+  - the guard turned off;
+  - only the first changed column reported;
+  - the payment-term column misnamed.
+
+## DEF-046 — LOW
+
+Found by UAT-028. Design §7.5 asks that the default-switch wording state that the old default is cancelled. The confirmation in `SupplierBankPanel.vue` writes 「原本嘅預設銀行帳戶會**同時被取消**」 inside a Vue template, and Vue does not render Markdown. The user therefore sees the literal asterisks.
+- **Effect:** UAT-028 fails at the wording step. The switch itself works: exactly one active default remains, and the change is audited.
+- **Decision required (HD-141).**
+
+**Fixed under HD-141 A.**
+- **Fix:** the phrase is rendered as `<strong>同時被取消</strong>`.
+- **Test:** the component test in `bank.test.js` now asserts the full sentence, no `**`, and the emphasised phrase. Before the fix it accepted either 「原本嘅預設」 or 「取消」, which is how the asterisks got through.
+- **Result:** on the real backend, UAT-028 passes.
+
+## DEF-047 — MEDIUM
+
+Found while writing UAT-030. SEC-014 and design §4 (system-admin) say that a `system-admin` bank reveal or write still goes through the same re-authentication, audit **and alert** controls. UAT-030 asks for alert evidence.
+- **Design §12.4** lists bank reveal and change counts and unauthorized attempts as metrics, with critical alerts for integrity or key errors. Only the integrity and key-error logs exist (`supplier.bank.integrity_failed` and `supplier.bank.key_unavailable`). `supplierMetrics.js` reports approvals and imports only.
+- **Effect:** no alert or metric signals a break-glass bank reveal or change. The Audit row records it. The request log records each bank route and status code, without the actor, so §12.4's counts could be derived from it, but nothing derives them. UAT-030 fails at its alert step; its other steps pass.
+- **Decision required (HD-142).**
+
+**Fixed under HD-142 A, except the denied count (HD-143).**
+- **Log event:** every committed bank reveal, create, update, default switch or deactivation by an actor holding `system-admin` writes a warn-level `supplier.bank.privileged_use` system log event.
+  - Its context is `action`, `supplierId`, `bankAccountId`, `actorUserId` and `requestId`, and nothing else.
+  - The role check uses the roles that `authorize` has just read from the database, not the token's claim.
+  - Nothing is reported for an operation that fails, including at COMMIT. An operation retried after a deadlock reports once.
+  - This event is the authoritative record and the one to page on.
+- **Metrics (a summary only):** each `supplier.metrics` line gains a `bank` section with `bucketStart`, `windowMs`, `reveals`, `changes` and `privilegedUses`.
+  - Each run reports the last whole five-minute bucket, aligned to the epoch and read from the Audit log. Any privileged use in the bucket raises `supplier.alert.bank_privileged_use` at warn level.
+  - The job's cluster scope is a mutex, not once per interval. With N instances, each reports the same bucket, up to N times; deduplicate on `bucketStart`. A bucket can go unreported across a restart (REV-124 R2).
+  - System-admin is judged by the role the actor holds now. A role revoked later under-counts, a role granted later over-counts, and a deleted user (`actor_user_id` set to NULL) drops out. The per-event log has none of these biases.
+- **Denied attempts are not counted.** HD-142 A included a denied count, but nothing durable records a denial: denials roll back, and most are refused by the route policy before the service runs. Today each denied bank request appears in two places:
+  - the request log, as a 403 on a bank route, without the actor;
+  - the system log, as `http.request_failed`, whose `error.code` separates `AUTHORIZATION_DENIED` (route policy) and `BANK_PERMISSION_LOST` (service) from a wrong re-authentication password (`PASSWORD_INVALID`).
+  
+  The narrowing is put to the Product Owner as HD-143 (REV-124 R1).
+- **Tests:**
+  - Unit tests cover each of the five operations by a system-admin and by an ordinary role, a statement failure, a COMMIT that fails once or always, the alert, and the job's log lines.
+  - An integration test on real MySQL pins both bucket edges, the counted actions, and a non-admin role versus `system-admin`.
+  - Mutants killed: no report on update or on reveal; everyone reported; the report moved inside the transaction (create, update, reveal); no alert; the role join inverted or reduced to "any role"; the window widened; either bucket edge moved.
+  - On the real backend, UAT-030 passes, including its alert step.
+
 ## HD-116 A: dispositions (2026-10-21)
 
 Fixed in this change:

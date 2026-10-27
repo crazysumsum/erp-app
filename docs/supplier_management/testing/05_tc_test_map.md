@@ -285,9 +285,9 @@ TC-062 … TC-077 already carry their IDs in `supplierBank*.integration`, `suppl
 
 ## supplier-client-ui (11)
 
-Runner: `npm test --workspace client -- --config test/supplier-management.vitest.config.js` (HD-117 A). It runs the 19 Supplier page and service test files in jsdom; each test title carries at most one TC ID. Local run after REV-107: 168 passed, 0 failed, 0 skipped; every required ID PASS through the harness JUnit adapter. Keyboard, focus, viewport, browser back and visual checks need a real browser and are left to the Playwright specs and UAT.
+Runner: `npm test --workspace client -- --config test/supplier-management.vitest.config.js` (HD-117 A). It runs the 21 Supplier page and service test files in jsdom; each test title carries at most one TC ID. Local run after REV-107: 168 passed, 0 failed, 0 skipped; after DEF-035 (audit page and tab, 2026-10-22): 176 passed; after REV-113 (2026-10-23): 182 passed; after DEF-036 (REV-114): 184 passed; after DEF-038 (REV-116): 189 passed; after DEF-039..041 (REV-117): 193 passed; after DEF-037 (REV-118): 196 passed; after DEF-042/043 (REV-119): 203 passed; every required ID PASS through the harness JUnit adapter. Keyboard, focus, viewport, browser back and visual checks need a real browser and are left to the Playwright specs and UAT.
 
-Left out on purpose: `client/test/framework/routing/authorizationRefresh.test.js`. Its `同 SupplierBankPanel 夾埋` block checks that Bank plaintext is cleared and that losing `supplier.view` sends the user to 403, but the file is a framework routing test and the rest of it is not Supplier's. It runs in the main client suite. The profile's `min_tests` is 11 while 168 tests run, so a shrunken file list is caught only through the required IDs; raising the floor changes the profile and needs its own decision (REV-107 I-2).
+Left out on purpose: `client/test/framework/routing/authorizationRefresh.test.js`. Its `同 SupplierBankPanel 夾埋` block checks that Bank plaintext is cleared and that losing `supplier.view` sends the user to 403, but the file is a framework routing test and the rest of it is not Supplier's. It runs in the main client suite. The profile's `min_tests` is 11 while 203 tests run, so a shrunken file list is caught only through the required IDs; raising the floor changes the profile and needs its own decision (REV-107 I-2).
 
 | TC | Case | Tagged tests | Status | Gap |
 | --- | --- | --- | --- | --- |
@@ -295,7 +295,7 @@ Left out on purpose: `client/test/framework/routing/authorizationRefresh.test.js
 | TC-015 | LIST-008 | `list.test` (restore from URL, HD-107 filters, malformed values dropped) | PARTIAL | Back/forward and refresh in a real browser; no assertion that the URL holds no sensitive value |
 | TC-029 | CORE-013 | `editor.test` (dirty editor prompts before leaving) | PARTIAL | The "stay" choice (asserted in `detail.test`, tagged TC-123); saving the new Supplier value; existing purchase snapshots unchanged, which needs the purchasing module |
 | TC-075 | BANK-014 | `bank.test` (nine reveal and clearing tests, including the write dialog and the create form) | COVERED | |
-| TC-121 | UI-001 | `pageGuards.test`; `list.test` (menu entry); `create.test` (direct URL); `settings.test`; `approvals.test` | PARTIAL | Tests check page metadata only. Menu order is not asserted; the 403 redirect is asserted only in `authorizationRefresh.test.js`, outside this suite |
+| TC-121 | UI-001 | `pageGuards.test`; `list.test` (menu entry); `create.test` (direct URL); `settings.test`; `approvals.test`; `audit.test` (變更紀錄 menu entry) | PARTIAL | Tests check page metadata only. Menu order is not asserted; the 403 redirect is asserted only in `authorizationRefresh.test.js`, outside this suite |
 | TC-122 | UI-002 | `create.test` (draft with three fields, approver on and off) | PARTIAL | Error focus on summary or first field |
 | TC-123 | UI-003 | `create.test` and `editor.test` (dirty prompt on route leave and on closing the tab); `editor.test` (draft kept on 409); `detail.test` (refusing to discard keeps the page) | PARTIAL | Browser back, and two real sessions (the 409 is mocked) |
 | TC-124 | UI-004 | `lifecycle.test` (state-valid actions, Block, conflict, activation, archive and delete dialogs with Code, end state, kept history and password rule) | PARTIAL | Keyboard completion; status icon beside the text; suspend wording is not asserted |
@@ -340,4 +340,64 @@ Run it on an otherwise idle machine, with room in `performance_schema`'s digest 
 
 ## UAT (52)
 
-Not mapped yet. 42 Playwright tests exist across seven specs, none tagged with a UAT ID.
+Runner (HD-124 A): `npx playwright test --config client/e2e/supplier-management/playwright.uat.config.js`.
+- **Environment:** a real server and real MySQL, with no network mock.
+  - `uat/uatServer.mjs` creates `${DB_NAME}_rh_uat…` with the admin credentials, migrates it, seeds the 07 §2 roles with random passwords, and starts the server on :3021. Vite runs on :5216.
+  - `globalTeardown` drops the database.
+- **Logins:** each role keeps a persistent browser profile and logs in once per run, because the login throttle allows 20 attempts per IP in 10 minutes. New devices are approved in the database, as in Item UAT. Artifacts and profiles are written outside the evidence directory, because traces record typed passwords.
+- **Missing `DB_NAME` or `DB_ADMIN_USER`:** the config throws, so no report is written and the harness records BLOCKED.
+- **Test names:** each test title carries one UAT ID.
+- **The technical specs** (`playwright.config.js`) still mock the network and are not UAT evidence.
+
+PHASE-001 (`uat/uat-phase-001.spec.js`, 25 cases). Local developer run on 2026-10-23, which is not a formal UAT execution:
+
+| Result | Cases |
+| --- | --- |
+| Pass | UAT-001, 002, 003, 004, 006, 007, 008, 009, 017, 018, 019, 020, 021, 022, 023, 031, 042, 048, 049, 054 |
+| Fail on a recorded defect | None. UAT-031 passes since DEF-038, UAT-003 since DEF-039, UAT-048 since DEF-037. |
+| `test.fixme`, waiting on downstream modules (HD-124 A, HD-131 A) | UAT-005; the Supplier steps of UAT-016, 024, 050 and 051 run first. |
+
+PHASE-002 (`uat/uat-phase-002.spec.js`, 9 cases): approval and Supplier settings. Local developer run on 2026-10-26, which is not a formal UAT execution:
+- **Result:** all 9 pass: UAT-010, 011, 012, 013, 014, 015, 040, 041 and 052. The full UAT config gives 29 passed and the 5 PHASE-001 `test.fixme` cases skipped.
+- **UAT-014 and DEF-044:** before PR #283, UAT-014 failed at the invalidation warning (DEF-044, found by REV-120). It passes on main after that fix.
+- **Where the rejection reason shows:** UAT-013 reads it in the detail's 變更紀錄 (Audit) tab, the only place it is shown.
+- **Known limit:** a requester who also holds `supplier.approval` would be needed to prove that the approver list leaves out the requester. The 07 §2 roles have no such user. The server still refuses self-approval, which UAT-011 checks (`APPROVER_MUST_DIFFER`).
+- **Approval policy setup:** the policy is a global setting. The cases set it in the database as a precondition and turn it off after each test, so PHASE-001 is unaffected. UAT-015 and UAT-041 change it through the Settings page, because that change is what they verify.
+- **Defects found here:** writing these cases found DEF-042 (no way to submit an existing Draft from the detail) and DEF-043 (the requester could not withdraw), fixed in PR #282. REV-120 found DEF-044 (no invalidation warning or notice), fixed in PR #283.
+
+PHASE-003 (`uat/uat-phase-003.spec.js`, 7 cases): bank data. Local developer run on 2026-10-26, which is not a formal UAT execution:
+- **Result:** 5 pass (UAT-025, 026, 027, 028 and 030). 2 are `test.fixme` after their Supplier steps pass. The full UAT config gives 34 passed and 7 skipped.
+- **Defects found here, fixed in PR #286:**
+  - UAT-028 failed at the default-switch wording: the dialog showed the literal `**同時被取消**` (DEF-046).
+  - UAT-030 failed at its alert step (DEF-047). Earlier it had been counted as a pass without that evidence, which REV-123 R2 corrected.
+- **`test.fixme`:**
+  - UAT-029: the Buyer step needs Purchasing.
+  - UAT-053: refusing to retire a referenced account needs a downstream payment reference.
+- **UAT-030 alert step:**
+  - The step asks for a warn-level or higher system log event naming the Supplier. Since PR #286 that is `supplier.bank.privileged_use`, which carries ids only. Denied attempts are read from the logs, not counted as a metric (HD-143 A).
+  - A wrong password is refused for both reveal and write, and the row is unchanged after the refused write (REV-123 R3).
+- **No plaintext:**
+  - Fictional account numbers are generated per test.
+  - Every case checks that no full number appears in the Audit rows or in the server log bytes written during the test.
+  - As a control, the check first waits for the test's last bank request id (`X-Request-Id`) in the request log. It looks in the request log only, because a refused request also writes its id to the system log (REV-123 R1).
+  - The server's stdout is not scanned.
+- **No plaintext in evidence (07 §2, REV-123 R4):**
+  - Trace, failure screenshots and the failure aria snapshot (`error-context.md`) are off.
+  - Plaintext is compared as booleans. While a number is on screen or in an input, only `expect.poll` is used, because a failed locator matcher attaches the page.
+  - Every evidence screenshot first checks that no account number is on the page.
+- **Refusal prompt:** UAT-025's refusal is the server's 403. A VIEWER has no reveal control, so there is no on-screen prompt to show.
+- **Deactivated accounts:**
+  - The masked list shows active accounts only, and nothing in the design or requirements asks for more.
+  - In `SupplierBankPanel.vue`, the 「已停用」 badge and the edit control for inactive rows never render, because `list({ includeInactive })` is never passed. That is dead code; it is noted here and left alone.
+  - UAT-053 checks that the row is kept as `inactive` and audited.
+- **30-second clear:** UAT-026 pauses Playwright's clock right after the reveal. The number is still shown at 29 s and is gone at 30 s; a 31 s deadline fails the case.
+- **Leaving the page:** the step proves only that the user sees the number cleared. The panel unmounts, so the step cannot tell which of its clear triggers fired.
+- **Database checks:** some checks read the database because the screen cannot show what they need: no plaintext in Audit detail, exactly one active default, and the kept inactive row. They are technical supplements, and each is marked in the spec.
+
+Evidence screenshots, all phases: before REV-123 O6, `testInfo.attach({ body })` screenshots were never written to disk under the line and junit reporters, so no phase kept its screenshots. Since then:
+- the shared `evidence()` in `uatSupport.js` writes each screenshot to the test's output directory and attaches it by path;
+- the junit report lists each screenshot of a test that passes or fails as `[[ATTACHMENT|…]]`. A test that ends in `test.fixme` keeps its files, but junit omits them (REV-125 O1);
+- a repeated name within one test is refused, because it would overwrite the earlier screenshot (REV-125 O2);
+- the files stay in the run's artifacts directory under `os.tmpdir()`. The junit paths are local to that machine, and the OS may purge them.
+
+Phase 004 and the cross-phase cases are not written yet. UAT-054 is the only case that intercepts a request in the browser: a slow response and a 503 cannot be produced safely on a real server.

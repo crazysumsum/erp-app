@@ -18,7 +18,7 @@ integrationTest("DEF-033 (HD-121 A): startup refuses a missing Supplier table, c
   assert.equal((await tryStart(credentials)).started, true, "a complete schema starts: the control for every refusal below");
 
   const results = await runStartupCases({ admin: connection, schema: name, user: ADMIN.user, password: ADMIN.password });
-  assert.equal(results.length, 6);
+  assert.equal(results.length, 7);
   for (const result of results) {
     assert.deepEqual([result.name, result.error, result.refused, result.unchanged, result.startsAfterRestore],
       [result.name, undefined, true, true, true], `${result.name}: ${result.message}`);

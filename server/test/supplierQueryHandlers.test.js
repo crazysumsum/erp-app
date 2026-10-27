@@ -82,7 +82,8 @@ test("list applies bounded paging, escaped search, allowlisted stable sort and e
       primaryContactName: "Amy Chan",
       status: "active",
       version: 2,
-      updatedAt: 200
+      updatedAt: 200,
+      defaultPaymentTerm: null
     }],
     total: 1,
     page: 2,

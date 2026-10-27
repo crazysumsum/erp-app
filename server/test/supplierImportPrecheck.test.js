@@ -265,3 +265,27 @@ test("a batch runs the same number of queries whether it holds one row or five h
   assert.equal(many.statements.length, one.statements.length);
   assert.ok(one.statements.length <= 3, `${one.statements.length} queries per batch`);
 });
+
+test("DEF-045 (HD-140 A): an update row may not change a significant field of a pending Supplier; other fields still may", async () => {
+  const pending = (id) => ({ id, supplier_code_key: `p-${id}`, status: "pending_approval", version: 3, supplier_name: "Pending Ltd",
+    display_name: "Pending", default_currency_code: "HKD", default_payment_term_id: null });
+  const connection = database({ suppliers: [pending(10), pending(11), pending(12), pending(13), pending(14),
+    { ...pending(15), status: "draft" }] });
+  const { rows } = await precheck([
+    { supplierId: "10", supplierName: "Renamed Ltd" },
+    { supplierId: "11", displayName: "Renamed", defaultCurrencyCode: "USD", paymentTermCode: "NET 30" },
+    { supplierId: "12", supplierName: "Pending Ltd", displayName: "Pending", defaultCurrencyCode: "HKD", notes: "same values" },
+    { supplierId: "13", generalPhone: "+852 2000 0000", website: "https://example.test" },
+    { supplierId: "14", paymentTermCode: "NET 30", notes: "term only" },
+    { supplierId: "15", supplierName: "Draft may rename" }
+  ], { mode: "upsert", connection });
+  const pendingCodes = (row) => codes(row).filter(([, code]) => code === "SUPPLIER_IMPORT_PENDING_APPROVAL").map(([field]) => field);
+  assert.deepEqual(pendingCodes(rows[0]), ["supplierName"]);
+  assert.deepEqual(pendingCodes(rows[1]), ["displayName", "defaultCurrencyCode", "paymentTermCode"], "each changed column is named");
+  assert.equal(rows[1].status, "invalid");
+  assert.match(rows[1].errors.find(({ field }) => field === "paymentTermCode").message, /修改 paymentTermCode 會令原申請失效/u,
+    "the result CSV carries no column, so the message names it (REV-122 I-3)");
+  assert.deepEqual([rows[2].status, rows[3].status], ["valid", "valid"], "unchanged significant values and other fields pass");
+  assert.deepEqual(pendingCodes(rows[4]), ["paymentTermCode"], "a term set where there was none is a change");
+  assert.deepEqual([rows[5].status, pendingCodes(rows[5])], ["valid", []], "only a pending Supplier is guarded");
+});

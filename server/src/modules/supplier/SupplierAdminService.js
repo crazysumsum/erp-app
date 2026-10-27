@@ -14,6 +14,7 @@ import {
   normalizeSupplierUrl
 } from "./supplierNormalization.js";
 import { toAddressResponse, toContactResponse, toIdentifierResponse, toSupplierDetailResponse, toSupplierSummaryResponse } from "./supplierProjections.js";
+import { paymentTermsById } from "./paymentTermLabels.js";
 import { assertSupplierDeletable, transitionSupplierStatus } from "./supplierStateMachine.js";
 import {
   assertKnownSupplierFields,
@@ -84,7 +85,16 @@ const SIGNIFICANT_UPDATE_FIELDS = Object.freeze(
     .filter((column) => column !== "supplier_code")
     .map((column) => [column, COLUMN_TO_INPUT_FIELD[column]])
 );
-const NEXT_FIELD_NAMES = Object.freeze(Object.fromEntries(SIGNIFICANT_UPDATE_FIELDS));
+
+/**
+ * 一般更新會改到邊啲 approval-significant 欄位（Code 除外，佢有自己嘅路）：`current` 係 suppliers 嘅 row，
+ * `next` 用 input 欄位名。回 input 欄位名。匯入預檢用同一條規則判斷會唔會令 Pending 申請失效（DEF-045）。
+ */
+export function changedApprovalFields(current, next) {
+  return SIGNIFICANT_UPDATE_FIELDS
+    .filter(([column, field]) => String(current[column] ?? "") !== String(next[field] ?? ""))
+    .map(([, field]) => field);
+}
 
 const SUPPLIER_SORT_COLUMNS = Object.freeze({
   supplierCode: "s.supplier_code_key",
@@ -299,7 +309,8 @@ export class SupplierAdminService {
           claimedRoles: input.claimedRoles,
           claimedPermissions: input.claimedPermissions
         });
-        return this.createSupplierInTransaction(connection, { actor, input, findDuplicates: false });
+        return this.createSupplierInTransaction(connection, { actor, input, findDuplicates: false,
+          warnedDuplicates: duplicateCandidates });
       }), { logger: this.logger, operation: "supplier.create", requestId: input.requestId });
     } catch (error) {
       if (duplicateEntry(error)) {
@@ -322,11 +333,12 @@ export class SupplierAdminService {
    * - `approvalRequired(connection)`：預設讀設定（`FOR SHARE`）；匯入用 confirm 嗰陣嘅 snapshot（AC-013）。
    * - `addChildren(supplierId)`：Supplier 插入之後、開審批申請之前寫子資料，所以申請嘅 snapshot 包括
    *   同一次建立嘅 Identifier。
+   * - `warnedDuplicates`：transaction 之前已經警告過嘅相似名稱候選；寫入 create Audit（DEF-039、HD-132 B）。
    *
    * 回 `{ id, duplicateCandidates }`。
    */
   async createSupplierInTransaction(connection, { actor, input, approvalRequired = this.approvalRequired, addChildren = null,
-    findDuplicates = true }) {
+    findDuplicates = true, warnedDuplicates = null }) {
     const { code, name, displayName, website, email, generalPhone, notes } = createFields(input);
     // 設計 2.6 嘅鎖序由 settings 行先，政策讀取（settings 嘅 S 鎖）喺 Business Master 鎖 currencies 之前。
     // 當時 currencies 係 X 鎖：createSupplier 係 currencies -> settings、#changeStatus 係 settings -> currencies，
@@ -350,6 +362,7 @@ export class SupplierAdminService {
     }
     // 匯入唔用相似名稱（HD-052：只警告完全相同；HD-075）：佢嘅成本隨 Supplier 數目上升，一個 10,000 列嘅檔做唔完。
     const duplicateCandidates = findDuplicates ? await this.duplicates.find(connection, { nameKey: name.key }) : [];
+    const duplicateCodes = (warnedDuplicates ?? duplicateCandidates).map((candidate) => candidate.supplierCode);
     // 設計 4.4：設定開啟時 draft -> pending_approval，關閉時 draft -> active。
     // 政策喺提交嗰一刻讀一次並且 snapshot 落 request，所以之後改設定唔追溯。
     if (!needsApproval && input.approverUserId !== undefined && input.approverUserId !== null) {
@@ -416,7 +429,11 @@ export class SupplierAdminService {
       targetId: id,
       supplierId: id,
       targetLabel: code.value,
-      detail: { after: { status, currencyCode: defaults.currency.code, paymentTermId: defaults.paymentTerm?.id ?? null } },
+      detail: {
+        after: { status, currencyCode: defaults.currency.code, paymentTermId: defaults.paymentTerm?.id ?? null },
+        // AC-003：建立時有相似名稱候選，使用者確認咗先繼續；Audit 記低係邊幾個（DEF-039、HD-132 B）。
+        ...(duplicateCodes.length ? { warnings: { duplicateCandidates: duplicateCodes } } : {})
+      },
       requestId: input.requestId,
       ip: input.ip
     });
@@ -506,11 +523,10 @@ export class SupplierAdminService {
     // Supplier 回 draft，全部喺同一個交易入面，再回 approvalInvalidated: true。
     // Address／Contact／Notes／Bank 唔喺內，所以佢哋改動唔會令申請失效。
     if (current.status === "pending_approval") {
-      const changedSignificant = SIGNIFICANT_UPDATE_FIELDS
-        .filter(([field]) => String(current[field] ?? "") !== String(next[NEXT_FIELD_NAMES[field]] ?? ""))
-        .map(([, name_]) => name_);
+      const changedSignificant = changedApprovalFields(current, next);
       if (changedSignificant.length > 0) {
-        await this.approvals.invalidateForSignificantChange(connection, {
+        // 有冇真係失效，以佢嘅回傳值為準：冇開放中嘅申請就唔好話人知已經失效（REV-121 I-2）。
+        approvalInvalidated = await this.approvals.invalidateForSignificantChange(connection, {
           supplierId: input.id,
           actorId: input.actorId,
           actorUsername: actor.username,
@@ -520,7 +536,6 @@ export class SupplierAdminService {
           requestId: input.requestId,
           ip: input.ip
         });
-        approvalInvalidated = true;
       } else {
         // 唔顯著嘅改動唔會令申請失效，但 version 已經 bump 咗，所以要同步返
         // request 記住嗰個 version，否則佢會永遠 stale。
@@ -603,7 +618,7 @@ export class SupplierAdminService {
         // 之後個申請會卡死：snapshot 對唔上所以批唔到，Supplier 仲留喺
         // pending_approval 所以又重新提交唔到。
         if (current.status === "pending_approval") {
-          await this.approvals.invalidateForSignificantChange(connection, {
+          codeApprovalInvalidated = await this.approvals.invalidateForSignificantChange(connection, {
             supplierId: input.id,
             actorId: input.actorId,
             actorUsername: actor.username,
@@ -613,7 +628,6 @@ export class SupplierAdminService {
             requestId: input.requestId,
             ip: input.ip
           });
-          codeApprovalInvalidated = true;
         }
       }), { logger: this.logger, operation: "supplier.code.change", requestId: input.requestId });
     } catch (error) {
@@ -851,7 +865,11 @@ export class SupplierAdminService {
         LIMIT ? OFFSET ?`,
       listParams
     );
-    return { items: rows.map(toSupplierSummaryResponse), total: Number(countRows[0].total), page, pageSize };
+    // 列表顯示付款條件 code 同名稱，唔顯示內部 ID（DEF-040、HD-133 A）。
+    const terms = await paymentTermsById(this.businessMaster, rows.map((row) => row.default_payment_term_id));
+    const items = rows.map((row) => ({ ...toSupplierSummaryResponse(row),
+      defaultPaymentTerm: row.default_payment_term_id === null ? null : terms.get(Number(row.default_payment_term_id)) ?? null }));
+    return { items, total: Number(countRows[0].total), page, pageSize };
   }
 
   /** detail 最多帶 100 筆地址同聯絡人；再多就用呢兩個分頁讀（design：GET .../contacts／addresses，PARTY-009，HD-107）。 */
@@ -875,14 +893,14 @@ export class SupplierAdminService {
 
   async #addresses(id, { limit, offset }) {
     const [rows] = await this.database.query(
-      "SELECT * FROM supplier_addresses WHERE supplier_id = ? ORDER BY status, id LIMIT ? OFFSET ?", [id, limit, offset]);
+      "SELECT * FROM supplier_addresses WHERE supplier_id = ? ORDER BY status, sort_order, id LIMIT ? OFFSET ?", [id, limit, offset]);
     const purposes = await this.#purposes("supplier_address_purposes", "address_id", id, rows);
     return rows.map((address) => toAddressResponse(address, purposes.get(Number(address.id)) ?? []));
   }
 
   async #contacts(id, { limit, offset }) {
     const [rows] = await this.database.query(
-      "SELECT * FROM supplier_contacts WHERE supplier_id = ? ORDER BY status, name, id LIMIT ? OFFSET ?", [id, limit, offset]);
+      "SELECT * FROM supplier_contacts WHERE supplier_id = ? ORDER BY status, sort_order, id LIMIT ? OFFSET ?", [id, limit, offset]);
     const purposes = await this.#purposes("supplier_contact_purposes", "contact_id", id, rows);
     return rows.map((contact) => toContactResponse(contact, purposes.get(Number(contact.id)) ?? []));
   }
@@ -937,7 +955,11 @@ export class SupplierAdminService {
       [id]
     );
     const identifiers = identifierRows.map(toIdentifierResponse);
+    // 經 provider 嘅 history 讀（包括已停用），唔直接讀 Business Master 嘅表（DEF-038、HD-130 A）。
+    const term = row.default_payment_term_id === null ? null : await this.businessMaster.getPaymentTermHistory(Number(row.default_payment_term_id));
     return toSupplierDetailResponse(row, {
+      pendingApproval: row.status === "pending_approval" ? await this.#pendingApproval(id) : null,
+      defaultPaymentTerm: term ? { id: Number(term.id), code: term.code, name: term.name, status: term.status } : null,
       addresses,
       contacts,
       identifiers,
@@ -949,6 +971,31 @@ export class SupplierAdminService {
         hasBankAccount: await this.#hasActiveBankAccount(id)
       })
     });
+  }
+
+  /** DEF-043（HD-138 A）：提交人喺詳情就撤回得，要知申請 id、version 同提交人；審批人只係顯示。 */
+  async #pendingApproval(supplierId) {
+    const [[request]] = await this.database.query(
+      `SELECT r.id, r.version, r.requested_at, r.requested_by, requester.username AS requester_username,
+              requester.display_name AS requester_display_name, r.assigned_approver_id,
+              approver.username AS approver_username, approver.display_name AS approver_display_name
+         FROM supplier_activation_requests r
+         LEFT JOIN users requester ON requester.id = r.requested_by
+         LEFT JOIN users approver ON approver.id = r.assigned_approver_id
+        WHERE r.supplier_id = ? AND r.status = 'pending'
+        ORDER BY r.id DESC LIMIT 1`,
+      [supplierId]
+    );
+    if (!request) return null;
+    const user = (userId, username, displayName) => (userId === null || userId === undefined ? null
+      : { id: Number(userId), username: String(username ?? ""), displayName: String(displayName ?? "") });
+    return {
+      requestId: Number(request.id),
+      version: Number(request.version),
+      requestedAt: Number(request.requested_at),
+      requester: user(request.requested_by, request.requester_username, request.requester_display_name),
+      assignedApprover: user(request.assigned_approver_id, request.approver_username, request.approver_display_name)
+    };
   }
 
   async getSupplierCompleteness({ actorId, claimedRoles, claimedPermissions, id }) {

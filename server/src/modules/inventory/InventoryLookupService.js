@@ -9,12 +9,15 @@ import { inventoryError } from "./inventoryErrors.js";
 import { fulfillmentInventoryFields,fulfillmentInventoryId } from "./inventoryFulfillmentValidation.js";
 import { number } from "./inventoryFulfillmentStock.js";
 import { readOriginalFulfillmentIssueBatch } from "./inventoryFulfillmentReceipts.js";
+import { InventoryPurchaseService } from "./InventoryPurchaseService.js";
 
 export class InventoryLookupService {
   constructor(options={}) {
     this.fulfillment=options.fulfillment??new InventoryFulfillmentService(options);
     this.time=options.time;
+    this.purchase=new InventoryPurchaseService(options);
   }
+  findOperationsBySource(tx,query) { return this.purchase.findOperationsBySource(tx,query); }
   async #authorize(tx,permission="fulfillment.operation") {
     const current=this.fulfillment.assertTransaction(tx),claims=current.auth?.claims,actorId=Number(claims?.sub);
     if(!claims||!Number.isSafeInteger(actorId)||actorId<1||!Array.isArray(claims.roles)||!Array.isArray(claims.permissions))throw inventoryError("PERMISSION_STALE");

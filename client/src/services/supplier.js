@@ -112,6 +112,11 @@ export default {
     return httpClient.post(`/api/v1/suppliers/${supplierId}/addresses/${addressId}/deactivate`, { body: payload });
   },
 
+  /** 上移／下移地址（DEF-037）：`{ direction: "up" | "down", version }`。 */
+  moveAddress(supplierId, addressId, payload) {
+    return httpClient.post(`/api/v1/suppliers/${supplierId}/addresses/${addressId}/move`, { body: payload });
+  },
+
   createContact(supplierId, payload) {
     return httpClient.post(`/api/v1/suppliers/${supplierId}/contacts/create`, { body: payload });
   },
@@ -122,6 +127,11 @@ export default {
 
   deactivateContact(supplierId, contactId, payload) {
     return httpClient.post(`/api/v1/suppliers/${supplierId}/contacts/${contactId}/deactivate`, { body: payload });
+  },
+
+  /** 上移／下移聯絡人（DEF-037）。 */
+  moveContact(supplierId, contactId, payload) {
+    return httpClient.post(`/api/v1/suppliers/${supplierId}/contacts/${contactId}/move`, { body: payload });
   },
 
   createIdentifier(supplierId, payload) {
@@ -154,5 +164,14 @@ export default {
   /** 只列而家可以採購嘅 SKU 同佢哋嘅單位（Item searchForPurchase）；帶 `skuId` 就精確攞嗰一隻。 */
   searchPurchasableSkus({ q, skuId, pageSize = 20, signal } = {}) {
     return httpClient.get("/api/v1/supplier-lookups/skus", { params: { q: q || undefined, skuId, pageSize }, signal });
+  },
+
+  /** 表單揀嘅 Active 幣別同付款條件：Supplier 自己嘅 lookup，supplier.view 就讀到（DEF-036、HD-126 A）。 */
+  async currencyOptions() {
+    return (await httpClient.get("/api/v1/supplier-lookups/currencies")).items;
+  },
+
+  async paymentTermOptions() {
+    return (await httpClient.get("/api/v1/supplier-lookups/payment-terms")).items;
   }
 };

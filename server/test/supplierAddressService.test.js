@@ -20,6 +20,8 @@ function harness({ address = addressRow() } = {}) {
       if (sql.includes("FROM suppliers") && sql.includes("FOR UPDATE")) return [[{ id: 7, supplier_code: "SUP-007" }]];
       if (sql.includes("FROM supplier_addresses") && sql.includes("FOR UPDATE")) return [[current].filter(Boolean)];
       if (sql.includes("FROM supplier_addresses") && sql.includes("WHERE a.id")) return [[current].filter(Boolean)];
+      // DEF-037：新增嘅行排最後。
+      if (sql.includes("MAX(sort_order)")) return [[{ next: 1 }]];
       if (sql.includes("FROM supplier_address_purposes")) return [[{ purpose_code: "ordering", is_primary: 1 }]];
       return [[]];
     },

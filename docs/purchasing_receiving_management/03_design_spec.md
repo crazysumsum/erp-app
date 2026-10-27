@@ -269,7 +269,7 @@ ItemLookupService.findManyForCommittedReceipt(skuIds, { atMs })
 
 #### Inventory provider
 
-Purchasing需要在Inventory設計上增加兩個具名、只供內部同步呼叫的batch contracts：
+Purchasing的Inventory provider以 [inventory-purchase-provider/1.1候選](../inventory_management/implementation/purchase-provider-contract-v1.md)定義尚未交付的部分反向；已合併Receipt 1.0保持原ABI。Reversal以原GR／原Detail IDs＋反向event為Inventory source，由同transaction鎖定的既有rows發行strict ownerProof；成功回傳真實Inventory IDs後才INSERT正式new reversal header/details，不以尚不存在的新row作前置proof。兩個具名同步batch及來源查詢：
 
 ```js
 InventoryPostingService.postPurchaseReceiptBatchInTransaction(transaction, command)
@@ -310,9 +310,9 @@ COMMIT
 4. `purchase_orders`按ID升序。
 5. `purchase_order_approvals` active row，再鎖`purchase_order_lines`按ID升序。
 6. `goods_receipts`按ID升序、`goods_receipt_lines`及`goods_receipt_details`按ID升序。
-7. `goods_receipt_reversals`及details按ID升序。
+7. 如需查既有`goods_receipt_reversals`及details，按ID升序；本次新反向rows不在Inventory前INSERT或預留PK，ownerProof取自步驟6已鎖定的原GR／Details。
 8. Inventory batch contract內：Inventory operation claims → Warehouses → Stock Controls → Bins／locks → Lots → Balances → original Movements。
-9. Current projection update、Status History、Movements及Audit append。
+9. Inventory成功後以真實Movement／Operation IDs INSERT正式new reversal header/details，再更新current projections、Status History及必要Audit；均在原transaction內，失敗全回滾。
 
 任何Inventory流程不得在持有Inventory鎖後反向取得PO／GR鎖。Receipt Confirm與Reversal均先鎖同一PO root，因此兩張同時收同一PO的GR會序列化：第二張在第一張commit後重算Outstanding／Over-received，防止lost update或兩張都誤認未超收。
 
@@ -404,7 +404,7 @@ GR狀態：`DRAFT → CONFIRMED → PARTIALLY_REVERSED → REVERSED`，另有`DR
 
 1. Route驗證`purchasing.view`＋`receiving.operation`，schema及HTTP idempotency。
 2. Transaction內重讀actor並claim domain event。
-3. 鎖GR、PO、所有PO Lines及GR children；驗證GR仍DRAFT、version一致、PO仍CONFIRMED／PARTIALLY_RECEIVED。
+3. 按§2.6依序鎖PO、所有PO Lines、GR及GR children；驗證GR仍DRAFT、version一致、PO仍CONFIRMED／PARTIALLY_RECEIVED。
 4. 批量取得Supplier現在狀態、SKU committed-receipt projection及Warehouse／Bin資料。
 5. 依PO確認快照驗證SKU identity、Purchase／Base UOM、tracking baseline；依現在資料產生warning及reason要求。
 6. 驗證數量、duplicate dimension、Lot／Expiry／Manufacture、Minimum Receipt Life、Stock Status、超收與Blocked Supplier規則。
@@ -792,7 +792,7 @@ Draft可更新／刪除details；Parent轉CONFIRMED後trigger拒絕除`reversed_
 
 Composite FK `(goods_receipt_detail_id,goods_receipt_id)`確保owner；`UNIQUE(reversal_id,goods_receipt_detail_id)`避免同一command重複列；indexes為`(goods_receipt_detail_id,id)`及`(purchase_order_line_id,id)`。只准INSERT／SELECT。
 
-Inventory schema配合部分反向時，`inventory_movements.reversal_of_movement_id`不可再有「一個原Movement只能一個Reversal」unique constraint；改為普通index，transaction鎖原Movement並以reversal rows合計驗證上限。若Inventory尚未建立，直接在首次migration採正確設計；不可先建立衝突constraint再以未評審migration移除。
+Inventory provider v1保留既有`inventory_movements.reversal_of_movement_id` unique，舊generic full reversal語義不變。新purchase partial reversal使用獨立append-only `inventory_purchase_reversal_links`，新Movement的reversal_of_movement_id為NULL；同transaction鎖原Movement後以links current SUM核對累計上限。僅接管v1 purchase來源、不遷移legacy，正式schema／安全重跑／回滾限制以Inventory契約§4為準。此候選明確取代舊「移除unique」要求，採用仍須Sam批准。
 
 ### 4.14 `purchasing_operation_requests`
 
@@ -1357,51 +1357,19 @@ Confirm實作要點：
 - 依`purchase_order_line_id`排序鎖Lines；先以當前net與closed計算outstanding，再判超收。
 - 所有details先完成policy validation，然後一次呼叫Inventory batch；不得在部分Inventory成功後才驗下一Detail。
 - `overReceived=0`時server把`overReceiptReason`正規化為空字串，不建立虛假的超收Audit；只有提交時重新計算為正數的Line才保存原因及risk flag。
-- Inventory command使用內部ID作source：
-
-```js
-{
-  actor,
-  authorization: {
-    purpose: "PURCHASE_RECEIPT",
-    requiredCallerPermission: "receiving.operation"
-  },
-  source: {
-    module: "PURCHASING_RECEIVING",
-    documentType: "GOODS_RECEIPT",
-    documentId: String(goodsReceiptId),
-    eventId
-  },
-  lines: [
-    {
-      sourceLineId: String(goodsReceiptDetailId),
-      skuId,
-      baseQuantity,
-      warehouseId,
-      binId,
-      trackingPolicy: poTrackingSnapshot,
-      lotNumber,
-      expiryDate,
-      manufactureDate,
-      stockStatus,
-      minimumLifeEvidence
-    }
-  ]
-}
-```
-
-- Inventory response為`{operationId,movementId,movementGroupId,baseQuantity}` per sourceLineId；集合必須與request details完全相等，否則視為provider contract breach並rollback。
+- Inventory command／result精確欄位以 [provider v1 §2–3](../inventory_management/implementation/purchase-provider-contract-v1.md)為唯一ABI：source只含documentId／eventId；每line帶已鎖定PO commitment；issuer以同request／transaction及locked rows產生opaque context，不使用authorization.purpose／requiredCallerPermission自報物件。
+- 回傳root operationId及逐sourceLineId的lines；集合、數量及原receipt必須完全相符，缺漏／多列視為contract breach並rollback。未知commit維持原event；findOperationsBySource使用新只讀transaction的一致快照，NOT_FOUND不證明未提交或允許新event，COMPLETED須驗完整membership。
 - 寫PO progress時使用BigInt／DB integer，不以client或Inventory aggregate猜測。GR與PO updated version各加1。
 - 成功response在transaction內存最小result summary，回應遺失可按event查回。
 
 ### 8.8 `ReceiptReversalService`
 
-- 鎖GR→PO→Receipt Details→PO Lines→既有Reversal Details；驗證GR已Confirmed或Partially Reversed。
+- 按§2.6鎖PO→PO Lines→GR→原GR children→必要的既有reversal history，最後才進Inventory；新執行只接受Confirmed或Partially Reversed。已Reversed只能在fresh auth下查核exact replay，不能發出新反向量。
 - 對每Detail計算`reversible=received-reversed`，server不信client顯示值。
-- 呼叫Inventory batch partial reversal，source document為`GOODS_RECEIPT_REVERSAL`，sourceLineId使用新Reversal Detail ID。
+- 呼叫Inventory batch partial reversal，source document type為`GOODS_RECEIPT_REVERSAL`，documentId為原GR ID，sourceLineId與originalSourceLineId均為原GR Detail ID；用本次固定event區分不同部分反向。ownerProof來自已鎖定的原GR／Details，不能由request body拼成。
 - Inventory鎖原Movement及current buckets，累計反向不超原Movement；OUT效果不可令On Hand／free quantity等違規。
 - 任何Inventory line missing／extra、quantity不符或operation衝突整次rollback。
-- 成功後更新Detail／GR反向projection及PO progress，appendstatus history（如狀態變）、Purchasing／Inventory Audit及domain result。
+- Inventory成功後才INSERT正式new reversal header/details，以原Detail ID對應真實Inventory結果；不使用假ID／NULL FK／空結果placeholder。再更新Detail／GR反向projection及PO progress，appendstatus history（如狀態變）、Purchasing／Inventory Audit及domain result；任一步失敗包含Inventory在內全回滾。
 
 ### 8.9 Query、CSV與對賬
 
@@ -1416,8 +1384,11 @@ PO Line reversed = SUM(Confirmed Reversal Detail quantity)
 PO Line net = gross - reversed
 GR detail movement IN = receivedBaseQuantity
 GR detail reversal movement OUT sum = reversedBaseQuantity
-Inventory source detail集合 = Confirmed GR／Reversal detail集合
+Receipt Inventory source detail集合 = Confirmed GR Detail PK集合（沿用Receipt 1.0）
+Reversal Inventory source集合 = (GOODS_RECEIPT_REVERSAL, 原GR ID, reversal event_id, 原GR Detail ID)集合
 ```
+
+反向對賬逐event，以已持久化的Reversal header `goods_receipt_id`／`event_id`及Detail `goods_receipt_detail_id`連接上述Inventory source，不比較新Reversal Detail PK，也不只按原Detail ID合併多次部分反向。每個event須逐明細核對持久化的Inventory Operation／Movement ID、原Movement及base quantity，缺漏／多列／重複均為差異；header的event唯一性與原固定event未知commit查回規則保持。
 
 差異產生告警及報表，不直接UPDATE數字掩蓋事故。
 

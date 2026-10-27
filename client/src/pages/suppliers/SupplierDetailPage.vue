@@ -12,6 +12,7 @@ import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from "vue-router";
 import PageHeader from "@/framework/layout/PageHeader.vue";
 import SupplierAddressPanel from "@/components/suppliers/SupplierAddressPanel.vue";
+import SupplierAuditTimeline from "@/components/suppliers/SupplierAuditTimeline.vue";
 import SupplierBankPanel from "@/components/suppliers/SupplierBankPanel.vue";
 import SupplierCompletenessBanner from "@/components/suppliers/SupplierCompletenessBanner.vue";
 import SupplierContactPanel from "@/components/suppliers/SupplierContactPanel.vue";
@@ -23,8 +24,12 @@ import { can } from "@/framework/authorization/can.js";
 import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
 import { mapValidationDetailsToFieldErrors, unmatchedFieldErrors } from "@/framework/ui/validationIssues.js";
 import supplierService from "@/services/supplier.js";
+import supplierApprovalService from "@/services/supplierApproval.js";
+import { confirm } from "@/framework/ui/confirm.js";
 import { useSessionStore } from "@/stores/session.js";
 import { DETAIL_CHILD_LIMIT } from "@/components/suppliers/useMoreChildRows.js";
+import { paymentTermLabel } from "@/components/suppliers/paymentTermLabel.js";
+import { PENDING_EDIT_WARNING, notifySaved } from "@/components/suppliers/approvalInvalidation.js";
 
 const STATUS_LABEL = Object.freeze({
   draft: "草稿", pending_approval: "待審批", active: "啟用", suspended: "已暫停",
@@ -92,6 +97,28 @@ function loadForm(data) {
 }
 
 const dirty = computed(() => editing.value && JSON.stringify(formValues()) !== savedSnapshot.value);
+// 付款條件顯示 code 同名稱，唔顯示內部 ID；已停用就講明（DEF-038、HD-130 A）。
+const paymentTermText = computed(() => paymentTermLabel(supplier.value?.defaultPaymentTerm, supplier.value?.defaultPaymentTermId));
+// DEF-043（HD-138 A）：待審批時講明交咗俾邊個；提交人自己喺度就撤回得（伺服器照樣核對係咪提交人）。
+const pending = computed(() => supplier.value?.pendingApproval ?? null);
+const approvalPending = computed(() => supplier.value?.status === "pending_approval");
+const personName = (person) => person?.displayName || person?.username || "未指派";
+const canWithdraw = computed(() => canManage.value && pending.value?.requester?.id === session.user?.id);
+const withdrawing = ref(false);
+async function withdrawApproval() {
+  const accepted = await confirm({ title: "撤回審批", message: `撤回 ${supplier.value.supplierCode} 的啟用申請？供應商會回到草稿。`, okLabel: "撤回" });
+  if (!accepted) return;
+  withdrawing.value = true;
+  try {
+    await supplierApprovalService.withdraw(supplier.value.id, { requestId: pending.value.requestId, version: pending.value.version });
+    notifySuccess(`供應商 ${supplier.value.supplierCode} 的啟用申請已撤回`);
+  } catch (error) {
+    notifyError(error.message || "撤回審批失敗");
+  } finally {
+    withdrawing.value = false;
+    await load();
+  }
+}
 const currencyChanged = computed(() => form.defaultCurrencyCode !== supplier.value?.defaultCurrencyCode);
 const editValid = computed(() => {
   if (!form.supplierName.trim() || !form.defaultCurrencyCode) return false;
@@ -215,7 +242,7 @@ async function saveEdit() {
     completeness.value = await supplierService.completeness(updated.id);
     loadForm(updated);
     editing.value = false;
-    notifySuccess(`供應商 ${updated.supplierCode} 的一般資料已更新`);
+    notifySaved(`供應商 ${updated.supplierCode} 的一般資料已更新`, updated);
   } catch (saveError) {
     if (saveError.code === "VERSION_CONFLICT") {
       staleNotice.value = true;
@@ -225,6 +252,10 @@ async function saveEdit() {
         // Keep the last known version and, most importantly, the user's draft.
       }
       editError.value = `供應商已被其他人修改（最新版本 ${supplier.value.version}）；你的輸入仍然保留，請先複製所需內容再載入最新資料。`;
+    } else if (saveError.code === "PAYMENT_TERM_NOT_ACTIVE") {
+      // FR-EDIT-003：儲存時重新檢查付款條件。已停用就喺嗰個欄位講明要點做（DEF-041、HD-134 A）。
+      fieldErrors.value = { defaultPaymentTermId: "付款條款已停用，請改選或清除" };
+      editError.value = "付款條款已停用，請改選或清除後再儲存。";
     } else {
       fieldErrors.value = mapValidationDetailsToFieldErrors(saveError.details);
       const summary = unmatchedFieldErrors(fieldErrors.value, knownFields);
@@ -272,7 +303,7 @@ async function submitCodeChange() {
     supplier.value = updated;
     loadForm(updated);
     showCodeDialog.value = false;
-    notifySuccess(`Supplier Code 已修正為 ${updated.supplierCode}`);
+    notifySaved(`Supplier Code 已修正為 ${updated.supplierCode}`, updated);
   } catch (changeError) {
     codeForm.password = "";
     if (changeError.code === "VERSION_CONFLICT") {
@@ -340,6 +371,10 @@ function childCount(rows) {
             <q-icon name="block" /> 不可用於新採購
           </span>
           <span class="text-caption text-grey-7">版本 {{ supplier.version }}</span>
+          <span v-if="pending" class="text-caption" data-testid="pending-approval">
+            待 {{ personName(pending.assignedApprover) }} 審批（{{ personName(pending.requester) }} 提交）
+          </span>
+          <q-btn v-if="canWithdraw" outline dense color="primary" label="撤回審批" :loading="withdrawing" @click="withdrawApproval" />
           <SupplierStatusActions
             :supplier="supplier" :can-manage="canManage" :can-approve="canApprove"
             :username="session.user?.username ?? ''"
@@ -361,6 +396,7 @@ function childCount(rows) {
           -->
           <q-tab name="bank" label="銀行資料" />
           <q-tab name="skuRelations" label="供貨關係" />
+          <q-tab name="audit" label="變更紀錄" />
         </q-tabs>
 
         <!-- 轉 tab 唔好丟咗「載入更多」載入咗嘅地址／聯絡人（REV-095 L-2）；其他 panel 照舊每次重新掛載。 -->
@@ -374,7 +410,7 @@ function childCount(rows) {
             <q-list v-if="!editing" bordered separator>
               <q-item><q-item-section><q-item-label caption>顯示名稱</q-item-label><q-item-label>{{ supplier.displayName || "—" }}</q-item-label></q-item-section></q-item>
               <q-item><q-item-section><q-item-label caption>預設貨幣</q-item-label><q-item-label>{{ supplier.defaultCurrencyCode }}</q-item-label></q-item-section></q-item>
-              <q-item><q-item-section><q-item-label caption>付款條件</q-item-label><q-item-label>{{ supplier.defaultPaymentTermId ?? "未設定" }}</q-item-label></q-item-section></q-item>
+              <q-item><q-item-section><q-item-label caption>付款條件</q-item-label><q-item-label>{{ paymentTermText }}</q-item-label></q-item-section></q-item>
               <q-item><q-item-section><q-item-label caption>網站</q-item-label><q-item-label>{{ supplier.website || "—" }}</q-item-label></q-item-section></q-item>
               <q-item><q-item-section><q-item-label caption>電話／電郵</q-item-label><q-item-label>{{ supplier.generalPhone || "—" }}／{{ supplier.generalEmail || "—" }}</q-item-label></q-item-section></q-item>
               <q-item><q-item-section><q-item-label caption>備註</q-item-label><q-item-label class="pre-line">{{ supplier.notes || "—" }}</q-item-label></q-item-section></q-item>
@@ -390,6 +426,7 @@ function childCount(rows) {
                     </template>
                   </q-banner>
                 </div>
+                <q-banner v-if="approvalPending" class="bg-warning text-dark q-mb-md" rounded>{{ PENDING_EDIT_WARNING }}</q-banner>
                 <q-banner v-if="duplicateCandidates.length" class="bg-warning text-dark q-mb-md" rounded>
                   名稱相近的供應商：
                   <span v-for="candidate in duplicateCandidates" :key="candidate.supplierId" class="q-ml-sm">
@@ -409,7 +446,7 @@ function childCount(rows) {
                 </div>
 
                 <div class="text-subtitle2 q-mt-lg q-mb-sm">付款預設</div>
-                <SupplierPaymentDefaults v-model="form" :field-error="fieldError" />
+                <SupplierPaymentDefaults v-model="form" :field-error="fieldError" :current-payment-term="supplier.defaultPaymentTerm" />
                 <q-input
                   v-if="currencyChanged" v-model="form.reason" class="q-mt-sm"
                   label="修改預設幣別原因 *" type="textarea" outlined dense maxlength="500"
@@ -444,7 +481,7 @@ function childCount(rows) {
           <q-tab-panel name="identifiers">
             <SupplierIdentifierPanel
               :supplier-id="supplier.id" :supplier-code="supplier.supplierCode"
-              :identifiers="supplier.identifiers" :can-manage="canManage" @refresh="load"
+              :identifiers="supplier.identifiers" :can-manage="canManage" :approval-pending="approvalPending" @refresh="load"
             />
           </q-tab-panel>
           <q-tab-panel name="bank">
@@ -454,6 +491,10 @@ function childCount(rows) {
             <SupplierSkuRelationsPanel
               :supplier-id="supplier.id" :supplier-code="supplier.supplierCode" :supplier-status="supplier.status" :can-manage="canManage"
             />
+          </q-tab-panel>
+          <!-- 呢個 Supplier 嘅變更紀錄（設計 §7.2 Audit tab；DEF-035）。 -->
+          <q-tab-panel name="audit">
+            <SupplierAuditTimeline :supplier-id="supplier.id" />
           </q-tab-panel>
         </q-tab-panels>
       </template>
@@ -468,6 +509,7 @@ function childCount(rows) {
           <q-banner class="bg-warning text-dark q-mb-md" rounded>
             只允許未被任何交易或設定引用的供應商。修正後舊交易快照不會被改寫，操作會留下原因及稽核記錄。
           </q-banner>
+          <q-banner v-if="approvalPending" class="bg-warning text-dark q-mb-md" rounded>{{ PENDING_EDIT_WARNING }}</q-banner>
           <q-banner v-if="codeError" class="bg-negative text-white q-mb-md" rounded role="alert">{{ codeError }}</q-banner>
           <q-input v-model="codeForm.supplierCode" label="新 Supplier Code *" outlined dense maxlength="64" autofocus />
           <q-input v-model="codeForm.reason" label="修正原因 *" type="textarea" outlined dense maxlength="500" class="q-mt-md" hint="最少 5 個字元" />

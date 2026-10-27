@@ -48,9 +48,12 @@ const CONTRACT = Object.freeze({
   "POST /api/v1/suppliers/:supplierId/addresses/create": [J, [M]],
   "POST /api/v1/suppliers/:supplierId/addresses/:addressId/update": [J, [M]],
   "POST /api/v1/suppliers/:supplierId/addresses/:addressId/deactivate": [J, [M]],
+  // DEF-037：地址同聯絡人上移／下移（設計 §6，HD-136）。
+  "POST /api/v1/suppliers/:supplierId/addresses/:addressId/move": [J, [M]],
   "POST /api/v1/suppliers/:supplierId/contacts/create": [J, [M]],
   "POST /api/v1/suppliers/:supplierId/contacts/:contactId/update": [J, [M]],
   "POST /api/v1/suppliers/:supplierId/contacts/:contactId/deactivate": [J, [M]],
+  "POST /api/v1/suppliers/:supplierId/contacts/:contactId/move": [J, [M]],
   "POST /api/v1/suppliers/:supplierId/identifiers/create": [J, [M]],
   "POST /api/v1/suppliers/:supplierId/identifiers/:identifierId/update": [J, [M]],
   "POST /api/v1/suppliers/:supplierId/identifiers/:identifierId/delete": [J, [M]],
@@ -79,6 +82,9 @@ const CONTRACT = Object.freeze({
   "GET /api/v1/supplier-lookups/skus": [J, [M]],
   // 設計寫「呼叫方採購權限」；Purchasing 未有權限，暫時閘 supplier.view（HD-094 1A）。
   "GET /api/v1/supplier-lookups/for-sku/:skuId": [J, [V]],
+  // 表單揀 Active 幣別／付款條件：設計 §6 要 supplier.view 讀得到（DEF-036、HD-126 A）。
+  "GET /api/v1/supplier-lookups/currencies": [J, [V]],
+  "GET /api/v1/supplier-lookups/payment-terms": [J, [V]],
   "POST /api/v1/suppliers/:id/sku-relations/create": [J, [M]],
   "POST /api/v1/suppliers/:id/sku-relations/:relationId/update": [J, [M]],
   "GET /api/v1/supplier-imports/template": [J, [M]],

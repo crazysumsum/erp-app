@@ -172,10 +172,10 @@ test("TASK-029 lookup trims Code, keeps literal wildcards and confines Item read
   const fixture = lookupFixture();
   assert.deepEqual(await fixture.lookup("  SKU-%_  "), { skuId: 12, skuCode: "SKU-%_", skuName: "Lookup SKU",
     trackingPolicy: "none", baseUom: { uomId: 4, uomCode: "EA" } });
-  assert.equal(fixture.calls.length, 7);
+  assert.equal(fixture.calls.length, 2);
   assert.match(fixture.calls[0].sql, /s\.sku_code = \?/u); assert.deepEqual(fixture.calls[0].params, ["SKU-%_"]);
-  assert.deepEqual(fixture.calls[2].params, [12]);
-  assert.ok(fixture.calls.every(({ sql }) => !/INSERT|UPDATE|FOR UPDATE|inventory_stock/iu.test(sql)));
+  assert.deepEqual(fixture.calls[1].params, [12]);
+  assert.ok(fixture.calls.every(({ sql }) => !/INSERT|UPDATE|FOR UPDATE|FOR SHARE|inventory_stock/iu.test(sql)));
 });
 
 test("TASK-029 lookup preserves Item inventory eligibility, including discontinued Item", async () => {

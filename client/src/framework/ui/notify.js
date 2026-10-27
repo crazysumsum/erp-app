@@ -11,3 +11,8 @@ export function notifySuccess(message = "操作成功") {
 export function notifyError(message = "操作失敗") {
   Notify.create({ type: "negative", message, position: "top" });
 }
+
+/** 用戶一定要睇到嘅後果：黃色、唔會自己消失，要按「關閉」。 */
+export function notifyWarning(message) {
+  Notify.create({ type: "warning", message, position: "top", timeout: 0, actions: [{ label: "關閉", color: "dark" }] });
+}

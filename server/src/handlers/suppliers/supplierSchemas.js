@@ -131,13 +131,23 @@ const DUPLICATE = Object.freeze({
     score: { type: "number" }, exact: { type: "boolean" }, warningOnly: { const: true }
   }
 });
+const APPROVAL_PARTY_SCHEMA = Object.freeze({
+  type: ["object", "null"], additionalProperties: false, required: ["id", "username", "displayName"],
+  properties: { id: { type: "integer", minimum: 1 }, username: { type: "string" }, displayName: { type: "string" } }
+});
+
+/** 付款條件嘅顯示資料（DEF-038、DEF-040）：已停用嘅都會回，等畫面唔使顯示內部 ID。 */
+export const PAYMENT_TERM_REF_SCHEMA = Object.freeze({
+  type: ["object", "null"], additionalProperties: false, required: ["id", "code", "name", "status"],
+  properties: { id: { type: "integer" }, code: { type: "string" }, name: { type: "string" }, status: { type: "string", enum: ["ACTIVE", "INACTIVE"] } }
+});
 export const SUPPLIER_SUMMARY_SCHEMA = Object.freeze({
   type: "object", additionalProperties: false,
   required: ["id", "supplierCode", "supplierName", "displayName", "defaultCurrencyCode", "defaultPaymentTermId", "primaryContactName", "status", "version", "updatedAt"],
   properties: {
     id: { type: "integer", minimum: 1 }, supplierCode: { type: "string" }, supplierName: { type: "string" },
     displayName: { type: "string" }, defaultCurrencyCode: { type: "string" }, defaultPaymentTermId: { type: ["integer", "null"] },
-    primaryContactName: { type: "string" },
+    primaryContactName: { type: "string" }, defaultPaymentTerm: PAYMENT_TERM_REF_SCHEMA,
     status: { type: "string", enum: [...SUPPLIER_STATUSES] }, version: { type: "integer", minimum: 1 }, updatedAt: { type: "integer", minimum: 0 }
   }
 });
@@ -160,6 +170,17 @@ export const SUPPLIER_DETAIL_SCHEMA = Object.freeze({
     generalEmail: { type: "string" }, notes: { type: "string" }, createdAt: { type: "integer" },
     addresses: { type: "array" }, contacts: { type: "array" }, identifiers: { type: "array" }, bankAccounts: { type: "array" },
     warnings: { type: "array", items: WARNING }, duplicateCandidates: { type: "array", items: DUPLICATE },
+    // 詳情先有（DEF-038、HD-130 A）：付款條件嘅 code 同名稱，已停用嘅都會回，等畫面唔使顯示內部 ID。
+    defaultPaymentTerm: PAYMENT_TERM_REF_SCHEMA,
+    // DEF-043（HD-138 A）：待審批時嘅申請；其他狀態係 null。只有行 getSupplier 嘅回應（GET 詳情、更新、改 Code、狀態操作）
+    // 先有呢個欄位，建立嘅回應冇（REV-119 Info）。
+    pendingApproval: {
+      type: ["object", "null"], additionalProperties: false, required: ["requestId", "version", "requestedAt", "requester", "assignedApprover"],
+      properties: {
+        requestId: { type: "integer", minimum: 1 }, version: { type: "integer", minimum: 1 }, requestedAt: { type: "integer", minimum: 0 },
+        requester: APPROVAL_PARTY_SCHEMA, assignedApprover: APPROVAL_PARTY_SCHEMA
+      }
+    },
     // 設計 4.5 要求關鍵資料變更令原申請失效之後回 approvalInvalidated: true。
     approvalInvalidated: { type: "boolean" }
   }

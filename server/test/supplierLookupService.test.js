@@ -150,6 +150,7 @@ test("getPurchaseDefaults revalidates Active status and shared references in the
   assert.equal(result.currency.code, "HKD");
   assert.equal(result.paymentTerm.id, 3);
   assert.equal(result.orderingAddress.addressLine1, "1 Supply Road");
+  assert.equal("sortOrder" in result.orderingAddress, false, "the display order is not part of the Purchasing provider contract (DEF-037)");
   assert.equal("bankAccounts" in result, false);
   assert.match(database.calls[1].sql, /purpose_code = 'ordering'/u);
 });

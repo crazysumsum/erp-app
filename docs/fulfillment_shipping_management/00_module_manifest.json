@@ -187,7 +187,7 @@
         "id": "inventory-allocation-issue-and-dedicated-reversal-contract",
         "version": "HD024-A-owner-actual-prefix-readonly-preview-adopted; oldrecommendation/writeABI unchanged; source/runtime gates pending",
         "source": "docs/inventory_management/03_design_spec.md",
-        "sha256": "b51afb5224bef8aecb075859dde5387d0e6d6125e6f340168a4cdb17b959db85",
+        "sha256": "ba88703fa73d80011688cddd5595b02a947210ab6c579f82238fc1a1940ba19d",
         "regression_suites": [
           "fulfillment-technical"
         ]

@@ -167,6 +167,14 @@ integrationTest("TC-103 (AUD-001): every state-changing or sensitive Supplier ac
   await step("address deactivate", mgmt, () => send(mgmt, "POST /api/v1/suppliers/:supplierId/addresses/:addressId/deactivate",
     { ids: { supplierId: id, addressId: address.id }, body: { version: addressUpdated.json.data.version } }),
   { "supplier.address.deactivate": ["address", address.id, "HQ2"] }, { supplierId: id });
+  // DEF-037：上移同相鄰有效地址交換次序；Audit 記低前後次序（HD-136）。
+  await child("address", { label: "Depot", purposes: [] }, "Depot");
+  const branch = await child("address", { label: "Branch", purposes: [] }, "Branch");
+  await step("address move", mgmt, () => send(mgmt, "POST /api/v1/suppliers/:supplierId/addresses/:addressId/move",
+    { ids: { supplierId: id, addressId: branch.id }, body: { direction: "up", version: branch.version } }),
+  { "supplier.address.reorder": ["address", branch.id, "Branch"] }, { supplierId: id, details: { "supplier.address.reorder": (detail) =>
+    assert.deepEqual([detail.before, detail.after, detail.metadata.swappedWith.before, detail.metadata.swappedWith.after], [{ sortOrder: 3 }, { sortOrder: 2 }, 2, 3],
+      "address order before and after, and the neighbour it swapped with") } });
   const contact = await child("contact", { name: "Amy", purposes: [{ purposeCode: "sales", isPrimary: false }, { purposeCode: "orders", isPrimary: true }] }, "Amy");
   const contactUpdated = await step("contact update", mgmt, () => send(mgmt, "POST /api/v1/suppliers/:supplierId/contacts/:contactId/update",
     { ids: { supplierId: id, contactId: contact.id }, body: { version: contact.version, name: "Amy Two",
@@ -176,6 +184,13 @@ integrationTest("TC-103 (AUD-001): every state-changing or sensitive Supplier ac
   await step("contact deactivate", mgmt, () => send(mgmt, "POST /api/v1/suppliers/:supplierId/contacts/:contactId/deactivate",
     { ids: { supplierId: id, contactId: contact.id }, body: { version: contactUpdated.json.data.version } }),
   { "supplier.contact.deactivate": ["contact", contact.id, "Amy Two"] }, { supplierId: id });
+  await child("contact", { name: "Ben", purposes: [] }, "Ben");
+  const cara = await child("contact", { name: "Cara", purposes: [] }, "Cara");
+  await step("contact move", mgmt, () => send(mgmt, "POST /api/v1/suppliers/:supplierId/contacts/:contactId/move",
+    { ids: { supplierId: id, contactId: cara.id }, body: { direction: "up", version: cara.version } }),
+  { "supplier.contact.reorder": ["contact", cara.id, "Cara"] }, { supplierId: id, details: { "supplier.contact.reorder": (detail) =>
+    assert.deepEqual([detail.before, detail.after, detail.metadata.swappedWith.before, detail.metadata.swappedWith.after], [{ sortOrder: 3 }, { sortOrder: 2 }, 2, 3],
+      "contact order before and after, and the neighbour it swapped with") } });
   const identifier = await child("identifier", { identifierType: "business_registration", issuerCountryCode: "HK", identifierValue: `AU${t}` }, "business_registration:HK");
   const identifierUpdated = await step("identifier update", mgmt, () => send(mgmt, "POST /api/v1/suppliers/:supplierId/identifiers/:identifierId/update",
     { ids: { supplierId: id, identifierId: identifier.id }, body: { version: identifier.version, identifierType: "business_registration",
@@ -635,4 +650,82 @@ integrationTest("TC-014 (LIST-007): detail returns the general data, children, p
     assert.deepEqual([usable.usable, usable.reasons], status === "active" ? [true, []] : [false, ["STATUS_NOT_ACTIVE"]], status);
   }
   assert.equal((await h.send(h.users.view, h.route("GET /api/v1/suppliers/:id"), { ids: { id: MISSING } })).status, 404);
+});
+
+integrationTest("a create that went past a similar-name warning records the warned candidates in its Audit, and a plain create records none (DEF-039, HD-132 B)", async () => {
+  const t = tag();
+  const create = async (code, supplierName) => {
+    const response = await h.send(h.users.mgmt, h.route("POST /api/v1/suppliers/create"),
+      { body: { supplierCode: code, supplierName, defaultCurrencyCode: "HKD" } });
+    assert.equal(response.status, 201, response.text);
+    h.supplierIds.push(response.json.data.id);
+    const [[row]] = await h.db.query("SELECT detail FROM supplier_audit_logs WHERE action = 'supplier.create' AND supplier_id = ?", [response.json.data.id]);
+    return typeof row.detail === "string" ? JSON.parse(row.detail) : row.detail;
+  };
+  const first = await create(`DUPA-${t}`, `Harbour Duplicate Trading ${t}`);
+  assert.equal(Object.hasOwn(first, "warnings"), false, "no candidate, no record");
+  // 相似但唔完全相同嘅名稱都要記低（REV-117 L-1）。
+  const second = await create(`DUPB-${t}`, `Harbour Duplicate Trading Co ${t}`);
+  assert.deepEqual(second.warnings, { duplicateCandidates: [`DUPA-${t}`] });
+  assert.equal(second.after.status, "draft");
+});
+
+integrationTest("detail names the default payment term by code and name, still after the term is deactivated, and null without one (DEF-038)", async () => {
+  const t = tag();
+  const now = Date.now();
+  const [term] = await h.db.execute(`INSERT INTO payment_terms (code, code_key, name, calculation_type, due_days, status, version, created_at, updated_at)
+    VALUES (?, ?, 'Net 45', 'NET_DAYS', 45, 'ACTIVE', 1, ?, ?)`, [`PT-${t}`, `PT-${t}`.toUpperCase(), now, now]);
+  const termId = Number(term.insertId);
+  h.cleanup.push(["DELETE FROM payment_terms WHERE id = ?", [termId]]);
+  const withTerm = await h.seedSupplier(`PT-${t}`, `Payment term ${t}`, "active");
+  await h.db.execute("UPDATE suppliers SET default_payment_term_id = ? WHERE id = ?", [termId, withTerm]);
+  const withoutTerm = await h.seedSupplier(`NT-${t}`, `No term ${t}`, "draft");
+  const detail = async (id) => (await h.send(h.users.view, h.route("GET /api/v1/suppliers/:id"), { ids: { id } })).json.data;
+
+  assert.deepEqual((await detail(withTerm)).defaultPaymentTerm, { id: termId, code: `PT-${t}`, name: "Net 45", status: "ACTIVE" });
+  await h.db.execute("UPDATE payment_terms SET status = 'INACTIVE', version = version + 1 WHERE id = ?", [termId]);
+  const inactive = await detail(withTerm);
+  assert.deepEqual(inactive.defaultPaymentTerm, { id: termId, code: `PT-${t}`, name: "Net 45", status: "INACTIVE" });
+  assert.equal(inactive.defaultPaymentTermId, termId);
+  assert.equal((await detail(withoutTerm)).defaultPaymentTerm, null);
+});
+
+integrationTest("a pending Supplier's detail names its request, requester and approver, so the requester can withdraw from the detail; other statuses carry null (DEF-043, HD-138 A)", async () => {
+  const t = tag();
+  await h.db.execute("UPDATE supplier_settings SET require_activation_approval = 1, version = version + 1 WHERE id = 1");
+  try {
+    const created = await h.send(h.users.mgmt, h.route("POST /api/v1/suppliers/create"),
+      { body: { supplierCode: `PEND-${t}`, supplierName: `Pending ${t}`, defaultCurrencyCode: "HKD", activate: true, approverUserId: h.users.approver.userId } });
+    assert.equal(created.status, 201, created.text);
+    const id = created.json.data.id;
+    h.supplierIds.push(id);
+    const detail = async () => (await h.send(h.users.view, h.route("GET /api/v1/suppliers/:id"), { ids: { id } })).json.data;
+    const pending = (await detail()).pendingApproval;
+    const [[request]] = await h.db.query("SELECT id, version FROM supplier_activation_requests WHERE supplier_id = ? AND status = 'pending'", [id]);
+    assert.equal(pending.requestId, Number(request.id));
+    assert.equal(pending.version, Number(request.version));
+    assert.deepEqual([pending.requester.id, pending.requester.username], [h.users.mgmt.userId, h.users.mgmt.username]);
+    assert.deepEqual([pending.assignedApprover.id, pending.assignedApprover.username], [h.users.approver.userId, h.users.approver.username]);
+    assert.ok(pending.requestedAt > 0);
+
+    const withdraw = (open) => h.send(h.users.mgmt, h.route("POST /api/v1/suppliers/:id/approval/withdraw"),
+      { ids: { id }, body: { requestId: open.requestId, version: open.version } });
+    assert.equal((await withdraw(pending)).status, 200);
+    const after = await detail();
+    assert.deepEqual([after.status, after.pendingApproval], ["draft", null]);
+
+    // 撤回再提交：詳情要帶新嗰個申請，唔係已撤回嗰個；用佢再撤回一次一樣成功（REV-119 M-1）。
+    const resubmitted = await h.send(h.users.mgmt, h.route("POST /api/v1/suppliers/:id/activate"),
+      { ids: { id }, body: { version: after.version, approverUserId: h.users.approver2.userId } });
+    assert.equal(resubmitted.status, 200, resubmitted.text);
+    const second = (await detail()).pendingApproval;
+    const [[open]] = await h.db.query("SELECT id, version FROM supplier_activation_requests WHERE supplier_id = ? AND status = 'pending'", [id]);
+    assert.equal(second.requestId, Number(open.id));
+    assert.notEqual(second.requestId, pending.requestId);
+    assert.equal(second.assignedApprover.id, h.users.approver2.userId);
+    assert.equal((await withdraw(second)).status, 200);
+    assert.equal((await detail()).status, "draft");
+  } finally {
+    await h.db.execute("UPDATE supplier_settings SET require_activation_approval = 0, version = version + 1 WHERE id = 1");
+  }
 });

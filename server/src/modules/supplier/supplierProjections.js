@@ -18,10 +18,16 @@ export function toSupplierDetailResponse(row, {
   contacts = [],
   identifiers = [],
   bankAccounts = [],
-  warnings = []
+  warnings = [],
+  defaultPaymentTerm,
+  pendingApproval
 } = {}) {
   return {
     ...toSupplierSummaryResponse(row),
+    // 詳情先有：付款條件喺 Business Master，停用咗都要讀得返 code 同名稱（DEF-038、HD-130 A）。
+    ...(defaultPaymentTerm === undefined ? {} : { defaultPaymentTerm }),
+    // 詳情先有：待審批時嘅申請、提交人同審批人（DEF-043、HD-138 A）；其他狀態係 null。
+    ...(pendingApproval === undefined ? {} : { pendingApproval }),
     website: row.website,
     generalPhone: row.general_phone,
     generalEmail: row.general_email,
@@ -50,6 +56,7 @@ export function toAddressResponse(row, purposes = []) {
     phone: row.phone,
     notes: row.notes,
     status: row.status,
+    sortOrder: Number(row.sort_order),
     purposes: purposes.map((purpose) => ({
       purposeCode: purpose.purpose_code,
       isPrimary: Boolean(purpose.is_primary)
@@ -72,6 +79,7 @@ export function toContactResponse(row, purposes = []) {
     preferredLanguage: row.preferred_language,
     notes: row.notes,
     status: row.status,
+    sortOrder: Number(row.sort_order),
     purposes: purposes.map((purpose) => ({
       purposeCode: purpose.purpose_code,
       isPrimary: Boolean(purpose.is_primary)
