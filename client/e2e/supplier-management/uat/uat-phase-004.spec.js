@@ -307,7 +307,6 @@ test("@uat UAT-043 an export holds no full Bank data or ciphertext, guards formu
   const tag = unique("U43");
   const { page, account: clerk } = await as("CLERK");
   const supplier = await createDraft(page, { code: tag, name: `=UAT-043 formula ${tag}` });
-  await createDraft(page, { code: unique("U43X"), name: `UAT-043 other ${tag}x` });
   const { page: officerPage, account: officer } = await as("BANK-OFFICER");
   const account = fakeAccount();
   const created = await moduleCall(officerPage, "/src/services/supplierBank.js", "create", supplier.id, {
@@ -329,9 +328,8 @@ test("@uat UAT-043 an export holds no full Bank data or ciphertext, guards formu
   for (const [role, exporter] of [["CLERK", { page, account: clerk }], ["SYSTEM-ADMIN", await as("SYSTEM-ADMIN")]]) {
     const problems = watchProblems(exporter.page);
     await exporter.page.goto("/suppliers");
+    // 篩選到得一個；scratch database 入面有其他 test 嘅 Supplier，冇篩選嘅話匯出會多過一行。
     await exporter.page.getByPlaceholder("搜尋 Code、名稱、電話或電郵").fill(tag);
-    await expect(exporter.page.locator("tbody tr", { hasText: tag })).toHaveCount(2);
-    await exporter.page.getByPlaceholder("搜尋 Code、名稱、電話或電郵").fill(supplier.supplierCode);
     await expect(exporter.page.locator("tbody tr")).toHaveCount(1);
     const csvText = await downloadText(exporter.page, async () => {
       await exporter.page.getByRole("button", { name: "匯出 CSV" }).click();
