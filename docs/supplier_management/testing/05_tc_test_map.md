@@ -400,4 +400,19 @@ Evidence screenshots, all phases: before REV-123 O6, `testInfo.attach({ body })`
 - a repeated name within one test is refused, because it would overwrite the earlier screenshot (REV-125 O2);
 - the files stay in the run's artifacts directory under `os.tmpdir()`. The junit paths are local to that machine, and the OS may purge them.
 
-Phase 004 and the cross-phase cases are not written yet. UAT-054 is the only case that intercepts a request in the browser: a slow response and a 503 cannot be produced safely on a real server.
+PHASE-004 (`uat/uat-phase-004.spec.js`, 12 cases): Supplier–SKU, import, export and operations. Local developer run on 2026-10-27, which is not a formal UAT execution:
+- **Result:** 5 pass (UAT-037, 038, 039, 043 and 046), and 7 are `test.fixme`. The full UAT config gives 39 passed and 14 skipped.
+- **`test.fixme`, Purchasing (HD-124 A):**
+  - UAT-032 and 035 have no Supplier-side step.
+  - UAT-033 (preferred relation added in the 供貨關係 tab), 034 (that Supplier suspended) and 036 (default currency changed with a reason) run their Supplier steps first.
+- **`test.fixme`, operations (HD-144 B):** UAT-044 and 045 need a representative environment and the operations role. The technical evidence is `performance_report.md` (T50) and `supplierBankRestore.integration.test.js`.
+- **Preconditions written in SQL (07 §2 environment preparation):**
+  - a purchasable SKU, because Item has no UAT role or screen here;
+  - an active USD currency, because migration seeds HKD only.
+- **CSV-MIXED (UAT-037):** the 10 rows cover valid, warning (same name), invalid (missing or unknown currency, bad e-mail), duplicate-in-file, update and formula-prefixed rows. 07 §2 also lists a Bank column, but a Bank column refuses the whole file at upload, so it is checked on its own in UAT-038 (as TC-091 and TC-099 split it).
+- **UAT-043 role:** 07 names VIEWER, but design §6 requires `supplier.mgmt` to export. The case checks that a VIEWER has no export control and is refused by the server, then exports as CLERK.
+- **UAT-039:** a double-click on 確認匯入 opens one password prompt and confirms once. A confirmation resent with the same Idempotency-Key is replayed with the same answer; a new key is refused with 409.
+- **UAT-046:** a create resent with the same Idempotency-Key makes one Supplier. The activation's dependency failure is a 503 intercepted in the browser, as in UAT-054: the Supplier stays Draft, and activating again after recovery succeeds.
+- **Import root:** the UAT server gets a per-run import root under `os.tmpdir()`, removed when the server exits.
+
+The cross-phase cases are not written yet. UAT-054 is the only case that intercepts a request in the browser: a slow response and a 503 cannot be produced safely on a real server.
