@@ -396,7 +396,8 @@ PHASE-003 (`uat/uat-phase-003.spec.js`, 7 cases): bank data. Local developer run
 
 Evidence screenshots, all phases: before REV-123 O6, `testInfo.attach({ body })` screenshots were never written to disk under the line and junit reporters, so no phase kept its screenshots. Since then:
 - the shared `evidence()` in `uatSupport.js` writes each screenshot to the test's output directory and attaches it by path;
-- the junit report lists each one as `[[ATTACHMENT|…]]`;
-- the files stay in the run's artifacts directory under `os.tmpdir()`.
+- the junit report lists each screenshot of a test that passes or fails as `[[ATTACHMENT|…]]`. A test that ends in `test.fixme` keeps its files, but junit omits them (REV-125 O1);
+- a repeated name within one test is refused, because it would overwrite the earlier screenshot (REV-125 O2);
+- the files stay in the run's artifacts directory under `os.tmpdir()`. The junit paths are local to that machine, and the OS may purge them.
 
 Phase 004 and the cross-phase cases are not written yet. UAT-054 is the only case that intercepts a request in the browser: a slow response and a 503 cannot be produced safely on a real server.

@@ -36,6 +36,8 @@ export const unique = (prefix) => `${prefix}-${randomUUID().slice(0, 8).toUpperC
  * 喺 line＋junit reporter 之下唔會寫落磁碟，即係之前每個 phase 嘅截圖都冇保留（REV-123 O6）。
  */
 export async function evidence(page, testInfo, name) {
+  // 同一個名會寫去同一個檔，後一張靜靜蓋咗前一張（REV-125 O2）。
+  if (testInfo.attachments.some((attachment) => attachment.name === name)) throw new Error(`duplicate evidence name: ${name}`);
   const file = testInfo.outputPath(`${name}.png`);
   await page.screenshot({ path: file, fullPage: true });
   await testInfo.attach(name, { path: file, contentType: "image/png" });

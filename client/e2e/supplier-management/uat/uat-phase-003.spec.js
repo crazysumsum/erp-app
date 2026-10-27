@@ -4,7 +4,7 @@ import path from "node:path";
 import process from "node:process";
 import { expect } from "@playwright/test";
 import { serverRoot } from "./uatEnvironment.mjs";
-import { activateViaApi, auditRow, createDraft, db, evidence as screenshot, moduleCall, statusAction, statusBadge, test, watchProblems } from "./uatSupport.js";
+import { activateViaApi, auditRow, createDraft, db, evidence as captureEvidence, moduleCall, statusAction, statusBadge, test, watchProblems } from "./uatSupport.js";
 
 /**
  * Supplier UAT PHASE-003：銀行資料（07_uat_test_cases.md §4.3；HD-124 A）。真 server、真 MySQL scratch database，冇 mock。
@@ -36,7 +36,7 @@ const until = (probe, message) => expect.poll(probe, { message }).toBe(true);
 const evidence = async (page, testInfo, name, accounts) => {
   await until(async () => (await revealedCount(page)) === 0, "nothing is revealed before the screenshot");
   for (const account of accounts) expect(await domHas(page, account), "no full account number on the page before the screenshot").toBe(false);
-  await screenshot(page, testInfo, name);
+  await captureEvidence(page, testInfo, name);
 };
 
 /** 前置：BANK-OFFICER 經 client service（簽名＋密碼，同 UI 一樣）開一個虛構帳戶。 */
