@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 445,
+  "revision": 446,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "171cf54069cb8d608ed8e263a3fc83f944b993f71e46643cbb8d6717173ce2c6",
     "plan": "3c683c4ea46984b476c96add5e9280b5d395c6cce9e996efa3ec36b683d4f784",
-    "code_commit": "67472ee6e3ceb4ecece5f3f374f8ebe2a86528a3",
-    "source_fingerprint": "f161fd03fd552abeb120b92157d6c32d1ac5592fdef25a659c0452c6a52eb82d",
+    "code_commit": "5ddfdb0984fb1620bf82e1c746fc11225c81bc64",
+    "source_fingerprint": "ce3a057ea38eaa90666f6ee0af76bba0fed3bcf3cd33ee87018a1c38f82a5cb4",
     "worktree": "/Users/sam/Documents/workspace/erp-supplier-t51r",
     "default_commit": "44d7f836dbe4e1a7e99add06f63f1765277904f1",
     "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
@@ -3345,6 +3345,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-127",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (HD-124 A, cross-phase UAT cases)",
+      "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-uat-cross-phase at 0176ec39 (git diff origin/main..HEAD)",
+      "reviewed_baseline": "171cf54069cb8d608ed8e263a3fc83f944b993f71e46643cbb8d6717173ce2c6",
+      "source_ref": "docs/supplier_management/implementation/130_rev_127_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -6196,6 +6208,17 @@
       "source_ref": "Local, not CI. Full UAT config on the real backend (55 cases): 41 passed, 14 skipped (test.fixme: downstream HD-124 A / HD-131 A, operations HD-144 B). Cross-phase UAT-047 (keyboard at 375/768/1440 px) and UAT-055 (Audit filters, paging, request ids, redaction) pass. UAT-026's clock-pause margin raised to 200 ms after a 'Cannot fast-forward to the past' failure; 3 consecutive passes; 29 s and 31 s deadline mutants still fail it. No account-shaped string in junit.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-27T14:40:00+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Cross-phase UAT after REV-127 follow-ups (developer run, not formal UAT)",
+      "code_commit": "5ddfdb0984fb1620bf82e1c746fc11225c81bc64",
+      "spec_baseline": "3c683c4ea46984b476c96add5e9280b5d395c6cce9e996efa3ec36b683d4f784",
+      "source_fingerprint": "ce3a057ea38eaa90666f6ee0af76bba0fed3bcf3cd33ee87018a1c38f82a5cb4",
+      "status": "PASS",
+      "source_ref": "Local, not CI. uat-cross-phase: 2 passed. REV-127 survivors re-run and killed: console.error after a status action (CLERK problems), target ignored (decoy), to ignored (yesterday empty), request id missing for edits (every row), detail empty (masked detail), actor input unbound (actor URL); full number in the bank audit detail fails before any screenshot.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-27T15:03:00+08:00"
     }
   ],
   "pending_decisions": [
@@ -8110,6 +8133,19 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-27: 'HD-145 A，CI已通過'. 07 stays unchanged now; the TC map records each deviation; amend 07 at the next plan revision."
+    },
+    {
+      "id": "HD-146",
+      "impact": "MINOR",
+      "question": "Cross-phase UAT interpretations (REV-127). (1) UAT-055 '開啟詳情 / Audit detail': the Audit page shows each row's masked before/after detail inline, with no separate detail view (design §7.2 says only 'masked detail'); the case accepts the inline row plus the same entry in the Supplier's 變更紀錄 tab. (2) UAT-047 opens each step by URL; keyboard use of the drawer menu is not part of the path. (3) UAT-055 runs as VIEWER; the UAT fixture has no AUDITOR role. (A) Accept all three as recorded in the TC map; amend 07 at the next plan revision. (B) Require a row-level Audit detail view (a product change). (C) Add the drawer menu to UAT-047 and/or an AUDITOR role to the fixture.",
+      "affected_ids": [
+        "UAT-047",
+        "UAT-055",
+        "07_uat_test_cases.md §4.6",
+        "03_design_spec.md §7.2"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
     }
   ],
   "external_actions": [
@@ -9570,5 +9606,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Independent review of the cross-phase spec, then its PR; merge on the Product Owner's word."
+  "next_safe_action": "Cross-phase UAT PR: open; merge on the Product Owner's word. HD-146 (interpretations) awaits the Product Owner and does not change the tests."
 }

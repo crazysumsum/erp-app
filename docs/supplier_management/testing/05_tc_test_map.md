@@ -438,14 +438,23 @@ Cross-phase (`uat/uat-cross-phase.spec.js`, 2 cases). Local developer run on 202
 - **How UAT-047 checks it:**
   - A helper presses Tab until the target has focus, and fails rather than fall back to the mouse.
   - Tabs use the arrow keys (roving tabindex). After each dialog, the test waits until it has closed, because focus stays trapped during the close transition.
-  - Focus is visible: a focused and an unfocused screenshot of the control differ.
+  - Each keyboard-chosen value is checked.
+  - Focus is visible on a form field, a dialog field and a button: a focused and an unfocused screenshot of the control differ.
   - An empty save marks the field `aria-invalid`, and its error is linked by `aria-describedby`.
   - The created status is announced as text (`role="status"`).
   - The list's loading, empty and error states are seen, and 重試 is reached by keyboard. As in UAT-054, the slow and 503 list responses are intercepted in the browser.
-  - The page loads straight at each step's URL; the drawer menu is not keyboard-tested.
-- **UAT-055 (Audit):** a VIEWER filters by target, action plus target, actor and date (today included, tomorrow empty), and pages to page 2 (10 per page).
-  - Reloading the filter URL gives the same result.
-  - Each entry has a request id, including approval and import entries. No full account number appears in Audit or in the Supplier's Audit tab.
-  - The Audit page has no separate detail view: each row shows its redacted before and after values inline. 「開啟詳情」 is that row, plus the same entry, with the same request id, in the Supplier's 變更紀錄 tab.
-- **Plaintext:** trace, failure screenshots and the failure aria snapshot are off for this spec, because UAT-047's reveal and UAT-055's Audit carry fictional account numbers.
-- **UAT-026 fix (PHASE-003):** its clock pause had a 1 ms margin, which a slow full run overran ("Cannot fast-forward to the past"). It now has 200 ms. Deadline mutants at 29 s and 31 s still fail it. UAT-054 and the second half of UAT-046 intercept a request in the browser, because a slow response and a 503 cannot be produced safely on a real server.
+  - Every page's console and network are checked, including the CLERK's during the submit.
+  - Each step's page is opened by URL; the drawer menu is not keyboard-tested (HD-146).
+- **UAT-055 (Audit), one Supplier with every audited action:**
+  - The Supplier has create, approval submission and approval, suspension, edits, a Bank account and a reveal, and an import that updated it. A decoy Supplier with its own reveal checks that the target filter really filters.
+  - A VIEWER, through the UI, filters by target, action, actor and dates (today to today found; yesterday to yesterday, and from tomorrow, empty), and pages to page 2 (10 per page).
+  - Each filter shows in the URL, and reloading it gives the same result.
+  - Every entry on both pages has a request id: a UUID, or `import-<job>` for the import's write.
+  - The detail column shows before and after values, and the Bank account only masked. No full account number reaches any screenshot: every screenshot first checks the page for every fictional account.
+  - The Audit page has no separate detail view: each row shows its redacted before and after values inline, as design §7.2 describes. 「開啟詳情」 is that row, plus the same entry, with the same request id, in the Supplier's 變更紀錄 tab (HD-146).
+  - The role is VIEWER; the UAT fixture has no AUDITOR role (HD-146).
+- **Plaintext:** trace, failure screenshots and the failure aria snapshot are off for this spec.
+- **Limit:** a full-page screenshot of the Audit table cuts off the right edge of the 內容 column, because the table scrolls inside its container. The detail values are asserted, not only pictured.
+- **UAT-026 fix (PHASE-003):** its clock pause had a 1 ms margin, which a slow full run overran ("Cannot fast-forward to the past"). It now has 200 ms. Deadline mutants at 29 s and 31 s still fail it.
+
+UAT-054, the second half of UAT-046 and UAT-047's list states intercept a request in the browser, because a slow response and a 503 cannot be produced safely on a real server.
