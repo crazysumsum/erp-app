@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 440,
+  "revision": 441,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -13,7 +13,7 @@
     "plan": "3c683c4ea46984b476c96add5e9280b5d395c6cce9e996efa3ec36b683d4f784",
     "code_commit": "3047dbd2ef1c470c042b3e9f34e9bd0753dbb45f",
     "source_fingerprint": "484394e2694aedc43c45b3565298b9af7a4f2b5850a43c1855635730d9da42be",
-    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t51t",
+    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t51s",
     "default_commit": "44d7f836dbe4e1a7e99add06f63f1765277904f1",
     "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
   },
@@ -6129,6 +6129,17 @@
       "source_ref": "Local, not CI. Full UAT config at 3047dbd2: 34 passed, 7 skipped; 63 junit attachment references, 0 missing, 0 account-shaped strings. Duplicate-name mutant (UAT-001 'detail' renamed 'created') fails with 'duplicate evidence name: created'. eslint exit 0.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-27T09:19:00+08:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "UAT evidence screenshots written to files (PR #288, REV-123 O6) merged to main",
+      "code_commit": "d805913bb22afad8b5eafef60920cfce73d0dd05",
+      "spec_baseline": "3c683c4ea46984b476c96add5e9280b5d395c6cce9e996efa3ec36b683d4f784",
+      "source_fingerprint": "484394e2694aedc43c45b3565298b9af7a4f2b5850a43c1855635730d9da42be",
+      "status": "PASS",
+      "source_ref": "PR #288 merged as d805913bb22afad8b5eafef60920cfce73d0dd05 at 2026-10-27T01:34:05Z on the Product Owner's word ('CI 過就 merge，之後繼續 PHASE-004', then 'HD-144 B，CI已通過'), with --match-head-commit 047e5077, after a gate that refused unless the latest run of every check was SUCCESS (13 checks, PR run 40431954792), main was an ancestor of HEAD and the local, remote and PR heads were equal. Review REV-125 APPROVED; follow-ups made before merge.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-27T01:34:05+00:00"
     }
   ],
   "pending_decisions": [
@@ -8008,6 +8019,24 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-26: 'HD-143 A，CI 過就 merge'. HD-142 A's denied-attempt count is narrowed: denials are read from the request log (403 on bank routes) and the system log (http.request_failed error.code), with no metric."
+    },
+    {
+      "id": "HD-144",
+      "impact": "MAJOR",
+      "question": "UAT-044 (operations representative at representative volume: search p95 < 2 s, 10k import <= 10 min) and UAT-045 (DR owner in an isolated restore: RTO <= 4 h, RPO <= 15 min, no success claimed without keys) are operational acceptance; the UAT environment is a small fresh scratch database. (A) Automate locally: an opt-in 100k-Supplier spec and a local dump/restore drill with a second server. (B) test.fixme with the reason (representative environment, operations representative and DR owner needed), citing the technical evidence: performance_report.md (T50) and supplierBankRestore.integration.test.js. (C) Only the local restore drill; UAT-044 as B.",
+      "affected_ids": [
+        "UAT-044",
+        "UAT-045",
+        "NFR-001",
+        "NFR-002",
+        "NFR-003",
+        "NFR-004",
+        "NFR-005",
+        "NFR-009",
+        "NFR-011"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-27: 'HD-144 B，CI已通過'."
     }
   ],
   "external_actions": [
@@ -9468,5 +9497,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "UAT evidence-file PR: open and merge on the Product Owner's word. Then UAT PHASE-004."
+  "next_safe_action": "HD-124 A UAT PHASE-004 on claude/supplier-uat-phase-004: UAT-037, 038, 039, 043, 046 on the real backend; UAT-032..036 Supplier steps then test.fixme (HD-124 A); UAT-044 and 045 test.fixme (HD-144 B)."
 }
