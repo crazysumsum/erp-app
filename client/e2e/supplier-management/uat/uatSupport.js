@@ -30,6 +30,16 @@ export async function closeDb() {
 
 export const unique = (prefix) => `${prefix}-${randomUUID().slice(0, 8).toUpperCase()}`;
 
+/**
+ * 截圖證據：寫落呢個 test 嘅 output 目錄，再按路徑 attach，咁 junit 會引用個檔。淨係 `body` 嘅 attachment
+ * 喺 line＋junit reporter 之下唔會寫落磁碟，即係之前每個 phase 嘅截圖都冇保留（REV-123 O6）。
+ */
+export async function evidence(page, testInfo, name) {
+  const file = testInfo.outputPath(`${name}.png`);
+  await page.screenshot({ path: file, fullPage: true });
+  await testInfo.attach(name, { path: file, contentType: "image/png" });
+}
+
 async function submitLogin(page, account) {
   await page.goto("/login");
   await page.getByLabel("帳號").fill(account.username);
