@@ -428,4 +428,33 @@ PHASE-004 (`uat/uat-phase-004.spec.js`, 12 cases): Supplier–SKU, import, expor
   - Browser-intercepted 503 (as in UAT-054): the badge stays Draft before and after a reload, and activating again after recovery succeeds.
 - **Import root:** the UAT server gets a per-run import root under `os.tmpdir()`, removed when the server exits.
 
-The cross-phase cases are not written yet. UAT-054 and the second half of UAT-046 intercept a request in the browser, because a slow response and a 503 cannot be produced safely on a real server.
+Cross-phase (`uat/uat-cross-phase.spec.js`, 2 cases). Local developer run on 2026-10-27, which is not a formal UAT execution:
+- **Result:** both pass. The full UAT config, all 55 cases, gives 41 passed and 14 skipped. The skips are `test.fixme` for downstream modules (HD-124 A, HD-131 A) and operations (HD-144 B).
+- **UAT-047 (keyboard, 375, 768 and 1440 px):** each phase's happy path is driven by keyboard only:
+  - PHASE-001: create and activate;
+  - PHASE-002: submit with an approver, then approve;
+  - PHASE-003: re-authenticate, reveal and collapse;
+  - PHASE-004: export with a password.
+- **How UAT-047 checks it:**
+  - A helper presses Tab until the target has focus, and fails rather than fall back to the mouse.
+  - Tabs use the arrow keys (roving tabindex). After each dialog, the test waits until it has closed, because focus stays trapped during the close transition.
+  - Each keyboard-chosen value is checked.
+  - Focus is visible on a form field, a dialog field and a button: a focused and an unfocused screenshot of the control differ.
+  - An empty save marks the field `aria-invalid`, and its error is linked by `aria-describedby`.
+  - The created status is announced as text (`role="status"`).
+  - The list's loading, empty and error states are seen, and 重試 is reached by keyboard. As in UAT-054, the slow and 503 list responses are intercepted in the browser.
+  - Every page's console and network are checked, including the CLERK's during the submit.
+  - Each step's page is opened by URL; the drawer menu is not keyboard-tested (HD-146).
+- **UAT-055 (Audit), one Supplier with every audited action:**
+  - The Supplier has create, approval submission and approval, suspension, edits, a Bank account and a reveal, and an import that updated it. A decoy Supplier with its own reveal checks that the target filter really filters.
+  - A VIEWER, through the UI, filters by target, action, actor and dates (today to today found; yesterday to yesterday, and from tomorrow, empty), and pages to page 2 (10 per page).
+  - Each filter shows in the URL, and reloading it gives the same result.
+  - Every entry on both pages has a request id: a UUID, or `import-<job>` for the import's write.
+  - The detail column shows before and after values, and the Bank account only masked. No full account number reaches any screenshot: every screenshot first checks the page for every fictional account.
+  - The Audit page has no separate detail view: each row shows its redacted before and after values inline, as design §7.2 describes. 「開啟詳情」 is that row, plus the same entry, with the same request id, in the Supplier's 變更紀錄 tab (HD-146).
+  - The role is VIEWER; the UAT fixture has no AUDITOR role (HD-146).
+- **Plaintext:** trace, failure screenshots and the failure aria snapshot are off for this spec.
+- **Limit:** a full-page screenshot of the Audit table cuts off the right edge of the 內容 column, because the table scrolls inside its container. The detail values are asserted, not only pictured.
+- **UAT-026 fix (PHASE-003):** its clock pause had a 1 ms margin, which a slow full run overran ("Cannot fast-forward to the past"). It now has 200 ms. Deadline mutants at 29 s and 31 s still fail it.
+
+UAT-054, the second half of UAT-046 and UAT-047's list states intercept a request in the browser, because a slow response and a 503 cannot be produced safely on a real server.
