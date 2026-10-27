@@ -1,17 +1,17 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 447,
+  "revision": 448,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
-  "status": "IMPLEMENTING",
-  "resume_status": null,
+  "status": "BLOCKED",
+  "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-004",
   "current_task": "TASK-051",
   "baseline": {
     "design": "171cf54069cb8d608ed8e263a3fc83f944b993f71e46643cbb8d6717173ce2c6",
     "plan": "3c683c4ea46984b476c96add5e9280b5d395c6cce9e996efa3ec36b683d4f784",
-    "code_commit": "5ddfdb0984fb1620bf82e1c746fc11225c81bc64",
+    "code_commit": "db6298d3c8a53aff0815f3f59fa653eb841d18bb",
     "source_fingerprint": "ce3a057ea38eaa90666f6ee0af76bba0fed3bcf3cd33ee87018a1c38f82a5cb4",
     "worktree": "/Users/sam/Documents/workspace/erp-supplier-t51q",
     "default_commit": "44d7f836dbe4e1a7e99add06f63f1765277904f1",
@@ -6230,6 +6230,61 @@
       "source_ref": "PR #291 merged as 38f05ba6016aa7c3ae0903acf889928970348184 at 2026-10-27T07:25:55Z on the Product Owner's word ('HD-146 A，review 完 CI 過就 merge', then 'CI已通過'), with --match-head-commit a51a60b0, after a gate that refused unless the latest run of every check was SUCCESS (13 checks, PR run 40465140671), main was an ancestor of HEAD and the local, remote and PR heads were equal. Review REV-127 CHANGES_REQUESTED; every finding dispositioned (report 130).",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-27T07:25:55+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-051 A: supplier-server-integration, supplier-security and supplier-bank-security from one execution on 38f05ba6's code",
+      "code_commit": "db6298d3c8a53aff0815f3f59fa653eb841d18bb",
+      "spec_baseline": "3c683c4ea46984b476c96add5e9280b5d395c6cce9e996efa3ec36b683d4f784",
+      "source_fingerprint": "ce3a057ea38eaa90666f6ee0af76bba0fed3bcf3cd33ee87018a1c38f82a5cb4",
+      "status": "PASS",
+      "source_ref": "Local developer stage, not CI, not formal. The profile's argv, cwd and env for supplier-server-integration, DB_INTEGRATION_TESTS=1, MySQL 26.7.0, 2026-10-27 07:33:44-07:36:06Z, junit sha256 3ab29aa91750f51040b749050eb35e697dd2ca7c688f8f3f0c02656571db215f: 730 tests, 730 passed. Judged with harness_runner.parse_results and run_suite's gate per suite: integration 730/730 (min 620), 89/89 required IDs; security (identical argv) the same 730, 10/10 IDs; bank-security (supplierBank* subset of the same run) 142/142 (min 135), 15/15 IDs. One execution, not three. run_check itself refused (CONTRACT_DRIFT on the Item and Purchasing pins, HD-147; and COMMIT_CHANGED).",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-27T16:06:00+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-051 A: supplier-client-ui on 38f05ba6's code",
+      "code_commit": "db6298d3c8a53aff0815f3f59fa653eb841d18bb",
+      "spec_baseline": "3c683c4ea46984b476c96add5e9280b5d395c6cce9e996efa3ec36b683d4f784",
+      "source_fingerprint": "ce3a057ea38eaa90666f6ee0af76bba0fed3bcf3cd33ee87018a1c38f82a5cb4",
+      "status": "PASS",
+      "source_ref": "Local developer stage, profile argv: 208/208, 11/11 required IDs.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-27T16:06:00+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-051 A: resilience, recovery and release-operations runners (local parts) on 38f05ba6's code",
+      "code_commit": "db6298d3c8a53aff0815f3f59fa653eb841d18bb",
+      "spec_baseline": "3c683c4ea46984b476c96add5e9280b5d395c6cce9e996efa3ec36b683d4f784",
+      "source_fingerprint": "ce3a057ea38eaa90666f6ee0af76bba0fed3bcf3cd33ee87018a1c38f82a5cb4",
+      "status": "PASS",
+      "source_ref": "Local developer stage with admin credentials. Resilience TC-130/131/132 local PASS; recovery TC-133 local PASS (backup, isolated restore, reconciliation, smoke, fail-closed key ring); release TC-134/135 local PASS. Production parts NOT_RUN by design (HD-117 A, HD-119 A): TC-130, 132, 133, 134, 135 production and TC-136; each suite is BLOCKED on those, as designed.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-27T16:06:00+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-051 A: performance runner, 100k Suppliers, 50 users, on 38f05ba6's code (two runs)",
+      "code_commit": "db6298d3c8a53aff0815f3f59fa653eb841d18bb",
+      "spec_baseline": "3c683c4ea46984b476c96add5e9280b5d395c6cce9e996efa3ec36b683d4f784",
+      "source_fingerprint": "ce3a057ea38eaa90666f6ee0af76bba0fed3bcf3cd33ee87018a1c38f82a5cb4",
+      "status": "PASS",
+      "source_ref": "Run 1 FAILED TC-085 and TC-129: the scratch instance's performance_schema digest table was full (10000/10000), 32,662 and 91,964 statements unattributed, so the no-full-scan checks saw 0 statements; TC-101 10,000/10,000 applied. The digest table of that throwaway instance was truncated and the runner re-run. Run 2: TC-085, 101, 128 (local), 129 PASS; mixed p95 239 ms, for-SKU worst 1,480 ms, import 10,000 applied, none not applied, 0 digests lost. TC-128 production part NOT_RUN. DEF-034 not reproduced; stays OPEN.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-27T16:06:00+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-051 A: T51 rehearsal rerun on main 38f05ba6 (upgrade, backup/restore, rollback) after migration 0103",
+      "code_commit": "db6298d3c8a53aff0815f3f59fa653eb841d18bb",
+      "spec_baseline": "3c683c4ea46984b476c96add5e9280b5d395c6cce9e996efa3ec36b683d4f784",
+      "source_fingerprint": "ce3a057ea38eaa90666f6ee0af76bba0fed3bcf3cd33ee87018a1c38f82a5cb4",
+      "status": "PASS",
+      "source_ref": "docs/supplier_management/testing/t51_rehearsal/rehearsal-2026-10-27.log: all checks passed. Step B's upgrade check was generalised for 0088-0103 with a control (an invented change to suppliers must be reported); the control caught a BSD awk multi-line -v bug in the first draft, fixed by reading the table list from a file. The first two reruns failed on the old 0087-only expectation, not on a defect.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-27T16:06:00+08:00"
     }
   ],
   "pending_decisions": [
@@ -8157,6 +8212,18 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-27: 'HD-146 A，review 完 CI 過就 merge'. The three interpretations stand as recorded in the TC map; 07 is amended at the next plan revision with HD-145's points."
+    },
+    {
+      "id": "HD-147",
+      "impact": "MAJOR",
+      "question": "run_check refuses every Supplier suite on CONTRACT_DRIFT: docs/items_management/03_design_spec.md (pinned at 34207893; since then DES-022, a committed-receipt provider for Receiving, still PROPOSED) and docs/purchasing_receiving_management/03_design_spec.md (pinned at 11e4b5b0; since then Purchasing-Inventory receipt reversal provider changes). Supplier analysed both: neither touches a contract Supplier consumes (item-sku-uom-provider purchase lookup; supplier-consumer-contract). Refreshing the pins edits 00_module_manifest.json, which strands baseline-bound approvals, reviews and evidence. (A) Refresh both pins now with the analysis recorded and the bound approvals re-affirmed, so harness formal stages can run. (B) Refresh at the mode change to TEST_AND_VERIFY, together with any other baseline change, so records are stranded once. (C) Keep the pins and run suites outside run_check (developer-stage evidence only).",
+      "affected_ids": [
+        "00_module_manifest.json#contracts.consumed",
+        "supplier-server-integration",
+        "TASK-051"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
     }
   ],
   "external_actions": [
@@ -9617,5 +9684,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-051 convergence: split completion into Supplier self-verification, downstream integration and operations/release; regress the Supplier suites affected since their last evidence on main 38f05ba6; deliver the self part; keep TASK-051, UAT and release open."
+  "next_safe_action": "TASK-051 boundary PR (06_task051_completion_boundary.md, rehearsal rerun): independent review, CI, merge. TASK-051, formal UAT and release stay open (groups B and C); HD-147 awaits the Product Owner."
 }

@@ -144,8 +144,33 @@ echo "control: one changed row in the restore is detected"
 fingerprint erp_t51_rh_old > "$OUT/old-after.txt"
 diff "$OUT/old-before.txt" "$OUT/old-after.txt" > "$OUT/upgrade-diff.txt" || true
 echo "objects changed by the upgrade (< before, > after):"; sed 's/^/  /' "$OUT/upgrade-diff.txt"
-if grep -E '^[<>] ' "$OUT/upgrade-diff.txt" | grep -v -E '^[<>] (data|auto) fr_schema_migrations |^[<>] index supplier_sku_refs '; then
-  fail "the upgrade changed something other than the ledger and supplier_sku_refs' indexes"
+# Every object of a table that existed before the upgrade must be unchanged, except: the ledger, 0087's supplier_sku_refs
+# index, 0103's sort_order on supplier_addresses and supplier_contacts, and new permission rows (checked row by row below).
+# Tables the upgrade creates (other modules' 0088+) and new routines, views or events are additions, not changes.
+# Generalised on 2026-10-27, when main gained 0088-0103: the first version listed only 0087's changes.
+awk '$1=="data"{print $2}' "$OUT/old-before.txt" > "$OUT/existing-tables.txt"
+unexpected_changes() {
+  # The table list comes from a file: BSD awk drops a multi-line -v value without an error, which made every table look new.
+  grep -E '^[<>] ' | awk '
+    NR == FNR { old[$1] = 1; next }
+    { side = $1; kind = $2; table = $3 }
+    kind == "tables" { next }
+    kind == "routine" || kind == "view" || kind == "event" { if (side == "<") print; next }
+    !(table in old) { next }
+    (kind == "data" || kind == "auto") && table == "fr_schema_migrations" { next }
+    kind == "index" && table == "supplier_sku_refs" { next }
+    kind == "column" && (table == "supplier_addresses" || table == "supplier_contacts") && $4 == "sort_order" { next }
+    kind == "data" && table == "permissions" { next }
+    { print }' "$OUT/existing-tables.txt" -
+}
+# Control: a change to a pre-existing table must be reported.
+[ -n "$(printf '> column suppliers unexpected_col 99 int NO 0 -\n' | unexpected_changes)" ] || fail "control: a changed pre-existing table went unnoticed"
+unexpected=$(unexpected_changes < "$OUT/upgrade-diff.txt" || true)
+changed_permissions=$(q "SELECT COUNT(*) FROM erp_t51_rh_restore.permissions b WHERE NOT EXISTS (SELECT 1 FROM erp_t51_rh_old.permissions a
+  WHERE a.id = b.id AND a.name <=> b.name AND a.description <=> b.description AND a.created_at <=> b.created_at)")
+if [ -n "$unexpected" ] || [ "$changed_permissions" != 0 ]; then
+  echo "$unexpected"; echo "pre-existing permission rows changed or missing: $changed_permissions"
+  fail "the upgrade changed a pre-existing object beyond the ledger, 0087's index, 0103's sort_order and new permission rows"
 fi
 [ "$(orphan)" = refused ] || fail "the orphan SKU relation is still accepted after 0087"
 echo "after the upgrade: the orphan SKU relation is refused (DEF-029 fixed); no business data changed"

@@ -64,6 +64,21 @@ Run on a 4-row legacy file against the step-B database:
 - **Database:** forward-only, as §14.3 requires; nothing is dropped or downgraded. Going back to before an upgrade means restoring the backup, and step B shows the backup restores exactly.
 - **Migration files:** each of the 15 Supplier migrations has exactly one commit on main's first-parent history, so none was edited after it merged. Checked with `git log --first-parent origin/main -- <file>`.
 
+## Rerun on 2026-10-27 (main `38f05ba6`)
+
+Migration 0103 (DEF-037, supplier party `sort_order`) and other modules' 0088–0102 landed after the first run, so upgrade and rollback were rehearsed again. The log is [`rehearsal-2026-10-27.log`](rehearsal-2026-10-27.log). All checks passed:
+- A: the pre-Supplier release upgraded to current with every pre-existing table, permission and grant unchanged.
+- B: previous `72e205ef` backed up and restored exactly. After the upgrade, no business data changed. The current release, and then the rolled-back previous release, each served the Supplier rows on the upgraded database, which includes 0103's `sort_order` columns.
+- C: the similar-name list matched.
+
+The upgrade check in step B was generalised:
+- **Before:** it listed only 0087's changes.
+- **Now:**
+  - Every object of a table that existed before the upgrade must be unchanged. The exceptions are the ledger, 0087's `supplier_sku_refs` index, 0103's `sort_order` columns, and new permission rows; the permission rows are compared row by row, and every earlier row must remain unchanged.
+  - Tables the upgrade creates count as additions.
+  - A control feeds one invented change to `suppliers` and must see it reported.
+- **A bug the control found:** BSD awk drops a multi-line `-v` value without any error, so in the first draft every table looked new. The table list is now read from a file.
+
 ## Not covered here
 
 - A production-like host, real secrets, and the real backup tooling and retention.
