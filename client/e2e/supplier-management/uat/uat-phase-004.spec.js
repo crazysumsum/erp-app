@@ -4,7 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { expect } from "@playwright/test";
 import { parse } from "csv-parse/sync";
-import { API_URL, serverRoot } from "./uatEnvironment.mjs";
+import { API_URL, importRoot, serverRoot } from "./uatEnvironment.mjs";
 import { activateViaApi, api, auditRow, createDraft, db, evidence, moduleCall, statusAction, statusBadge, test, unique, watchProblems } from "./uatSupport.js";
 
 /**
@@ -17,6 +17,9 @@ import { activateViaApi, api, auditRow, createDraft, db, evidence, moduleCall, s
  *   performance_report.md（T50）同 supplierBankRestore.integration.test.js。
  * - SKU 用 SQL 準備（07 §2 前置資料）：Item 唔係呢個 module 嘅畫面，UAT 角色亦冇 Item 權限。
  */
+// UAT-038、043 有完整（虛構）帳號：trace 同失敗截圖會記低請求內容，Playwright 只准成個檔一齊關（07 §2；REV-126 R1，同 PHASE-003）。
+test.use({ trace: "off", screenshot: "off" });
+
 const DOWNSTREAM = "needs downstream references (Purchasing / Receiving / AP), which are not installed yet: HD-124 A, HD-131 A";
 const OPERATIONS = "needs a representative environment and the named operations role (HD-144 B); technical evidence: performance_report.md (T50) and supplierBankRestore.integration.test.js";
 
@@ -41,6 +44,14 @@ async function ensureCurrency(code, name) {
   await (await db()).execute(
     `INSERT INTO currencies (code, name, decimal_places, status, version, created_at, updated_at) VALUES (?, ?, 2, 'ACTIVE', 1, ?, ?)
      ON DUPLICATE KEY UPDATE status = 'ACTIVE'`, [code, name, now, now]);
+}
+
+/** 前置：一個啟用中嘅付款條款（Business Master；migration 冇種）。 */
+async function ensurePaymentTerm(code, name) {
+  const now = Date.now();
+  await (await db()).execute(
+    `INSERT INTO payment_terms (code, code_key, name, description, calculation_type, due_days, status, version, created_at, updated_at)
+     VALUES (?, ?, ?, '', 'NET_DAYS', 30, 'ACTIVE', 1, ?, ?) ON DUPLICATE KEY UPDATE status = 'ACTIVE'`, [code, code, name, now, now]);
 }
 
 /** CLERK 喺 Supplier 詳情嘅「供貨關係」tab 為一個 SKU 加首選關係（使用者步驟）。 */
@@ -85,8 +96,8 @@ async function templateColumns(page) {
 const toCsv = (columns, records) => [columns, ...records.map((record) => columns.map((name) => record[name] ?? ""))]
   .map((cells) => cells.map((cell) => (/[",\n]/u.test(cell) ? `"${cell.replaceAll('"', '""')}"` : cell)).join(",")).join("\r\n");
 
-/** 第二步：上載。成功就打開工作詳情，回工作編號。 */
-async function uploadCsv(page, { name, csv, mode = "只新增" }) {
+/** 第二步：上載。`beforeUpload` 喺撳「上載」之前行（截上載畫面）。 */
+async function uploadCsv(page, { name, csv, mode = "只新增", beforeUpload }) {
   await page.goto("/suppliers/imports");
   await page.getByRole("button", { name: "上載 CSV" }).click();
   const dialog = page.getByRole("dialog");
@@ -95,6 +106,7 @@ async function uploadCsv(page, { name, csv, mode = "只新增" }) {
     await page.getByRole("option", { name: mode }).click();
   }
   await dialog.locator("input[type=file]").setInputFiles({ name, mimeType: "text/csv", buffer: Buffer.from(csv, "utf8") });
+  await beforeUpload?.();
   await dialog.getByRole("button", { name: "上載" }).click();
 }
 
@@ -116,6 +128,16 @@ async function searchCount(page, code) {
   const result = await api(page, "GET", `/api/v1/suppliers?q=${encodeURIComponent(code)}&page=1&pageSize=20`);
   return result.items.filter((item) => item.supplierCode === code).length;
 }
+
+/** 新寫嘅 server log（呢個 test 開始之後）；之前 run 留低嘅唔算（REV-123 R1）。 */
+const logFiles = () => fs.readdirSync(path.join(serverRoot, "logs"), { recursive: true }).map((name) => path.join(serverRoot, "logs", name))
+  .filter((file) => fs.statSync(file).isFile());
+const logMark = () => new Map(logFiles().map((file) => [file, fs.statSync(file).size]));
+const newLogText = (mark) => logFiles().map((file) => fs.readFileSync(file).subarray(mark.get(file) ?? 0).toString("utf8")).join("\n");
+/** 匯入目錄入面所有檔（來源檔、結果檔）嘅內容。 */
+const importRootText = () => (fs.existsSync(importRoot) ? fs.readdirSync(importRoot, { recursive: true }).map((name) => path.join(importRoot, name))
+  .filter((file) => fs.statSync(file).isFile()).map((file) => fs.readFileSync(file).toString("latin1")).join("\n") : "");
+const fakeAccount = () => `8${randomInt(100_000_000, 999_999_999)}${randomInt(10, 99)}`;
 
 // ---- PHASE-004 cases ----------------------------------------------------------------------------------------
 
@@ -167,16 +189,20 @@ test("@uat UAT-036 an old purchase order keeps its Currency and Term snapshot af
   const supplier = await createDraft(page);
   await activateViaApi(page, supplier.id);
   await ensureCurrency("USD", "US Dollar");
+  await ensurePaymentTerm("UAT NET30", "UAT Net 30");
   const problems = watchProblems(page);
 
-  // Supplier 呢邊嘅步驟：改預設幣別（要原因），詳情即刻係新值。
+  // Supplier 呢邊嘅步驟：改預設幣別（要原因）同付款條件，詳情即刻係新值。
   await page.goto(`/suppliers/${supplier.id}`);
   await page.getByRole("button", { name: "編輯一般資料" }).click();
   await page.getByRole("combobox", { name: "Default Currency *" }).click();
   await page.getByRole("option", { name: /^USD/u }).click();
+  await page.getByRole("combobox", { name: "預設付款條件（選填）" }).click();
+  await page.getByRole("option", { name: /^UAT NET30/u }).click();
   await page.getByLabel("修改預設幣別原因 *").fill("UAT-036 contract now in USD");
   await page.getByRole("button", { name: "儲存一般資料" }).click();
   await expect(page.locator(".q-item", { hasText: "預設貨幣" })).toContainText("USD");
+  await expect(page.locator(".q-item", { hasText: "付款條件" })).toContainText("UAT NET30 — UAT Net 30");
   await evidence(page, testInfo, "defaults-changed");
   expect(problems).toEqual([]);
   // 舊採購單保留原 Currency／Term、新選擇帶新預設：要 Purchasing 嘅採購單。
@@ -184,6 +210,8 @@ test("@uat UAT-036 an old purchase order keeps its Currency and Term snapshot af
 });
 
 test("@uat UAT-037 a CLERK uploads a mixed CSV, prechecks, confirms and downloads the result; valid rows are written, error rows are not, and the counts agree", async ({ as }, testInfo) => {
+  // 預檢同執行各要幾個 5 秒嘅 worker 週期（REV-126 O6）。
+  test.setTimeout(150_000);
   const { page, account: clerk } = await as("CLERK");
   const existing = await createDraft(page);
   await ensureCurrency("USD", "US Dollar");
@@ -191,8 +219,10 @@ test("@uat UAT-037 a CLERK uploads a mixed CSV, prechecks, confirms and download
   const tag = unique("U37");
   const code = (n) => `${tag}-${n}`;
 
-  // 07 §2 CSV-MIXED：合法、警告、錯誤、重複。銀行欄位會令成個檔喺上載就被拒，所以喺 UAT-038 獨立驗（同 TC-091／TC-099 一樣分開）。
+  // 07 §2 CSV-MIXED：合法、警告、錯誤、重複。銀行欄位會令成個檔喺上載就被拒（HD-053 A、HD-054 A），所以喺 UAT-038 獨立驗。
+  // 第一步：下載範本。
   const columns = await templateColumns(page);
+  await evidence(page, testInfo, "1-template");
   const records = [
     { supplierCode: code(1), supplierName: `UAT-037 One ${tag}`, defaultCurrencyCode: "HKD" },                      // 合法
     { supplierCode: code(2), supplierName: `UAT-037 Two ${tag}`, defaultCurrencyCode: "USD", generalEmail: "two@example.test" }, // 合法
@@ -205,22 +235,32 @@ test("@uat UAT-037 a CLERK uploads a mixed CSV, prechecks, confirms and download
     { supplierCode: existing.supplierCode, notes: "UAT-037 updated" },                                             // 更新（upsert）
     { supplierCode: code(10), supplierName: `=UAT-037 Ten ${tag}`, defaultCurrencyCode: "HKD" }                     // 合法：公式字首照存
   ];
-  await uploadCsv(page, { name: "uat-037-mixed.csv", csv: toCsv(columns, records), mode: "新增或更新" });
+  // 第二步：上載。
+  await uploadCsv(page, { name: "uat-037-mixed.csv", csv: toCsv(columns, records), mode: "新增或更新",
+    beforeUpload: () => evidence(page, testInfo, "2-upload") });
   const detail = jobDialog(page);
   await expect(detail.locator(".q-badge").first()).toHaveText("待確認（有錯誤列）", { timeout: 45_000 });
   await expect(detail.getByTestId("job-counts")).toContainText("共 10 列；有效 5、警告 1、無效 4");
-  await evidence(page, testInfo, "prechecked");
+  // 逐列預檢原因（FR-IMPORT-003；REV-126 O4）。
+  const rowIssue = (rowNumber) => detail.locator("tbody tr").nth(rowNumber - 1);
+  await expect(rowIssue(3)).toContainText("SUPPLIER_IMPORT_NAME_EXISTS");
+  await expect(rowIssue(4)).toContainText("SUPPLIER_IMPORT_REQUIRED_FIELD");
+  await expect(rowIssue(5)).toContainText("generalEmail");
+  await expect(rowIssue(7)).toContainText("SUPPLIER_IMPORT_CODE_DUPLICATED_IN_FILE");
+  await expect(rowIssue(8)).toContainText("CURRENCY_NOT_ACTIVE");
+  await evidence(page, testInfo, "3-prechecked");
 
+  // 第三步：確認。
   await confirmImport(page, clerk.password);
   await expect(detail.locator(".q-badge").first()).toHaveText("已完成（有錯誤列）", { timeout: 60_000 });
   await expect(detail.getByTestId("job-counts")).toContainText("已寫入 6、失敗 0、略過 4");
-  await evidence(page, testInfo, "completed");
+  await evidence(page, testInfo, "4-completed");
 
-  // 第四步：逐列結果檔同畫面同 Supplier 搜尋對得上。
+  // 第四步：逐列結果檔，每一列嘅結果都對（REV-126 R2），同 Supplier 搜尋對得上。
   const result = parse(await downloadText(page, () => detail.getByRole("button", { name: "下載結果" }).click()), { bom: true, columns: true });
-  expect(result).toHaveLength(10);
-  const byStatus = (status) => result.filter((row) => Object.values(row).includes(status)).length;
-  expect([byStatus("applied"), byStatus("skipped")]).toEqual([6, 4]);
+  expect(result.map((row) => [row.supplierCode, row.outcome])).toEqual([
+    [code(1), "applied"], [code(2), "applied"], [code(3), "applied"], [code(4), "skipped"], [code(5), "skipped"],
+    [code(6), "applied"], [code(6), "skipped"], [code(8), "skipped"], [existing.supplierCode, "applied"], [code(10), "applied"]]);
   for (const [n, count] of [[1, 1], [2, 1], [3, 1], [4, 0], [5, 0], [6, 1], [8, 0], [10, 1]]) {
     expect(await searchCount(page, code(n)), `${code(n)} written ${count} time(s)`).toBe(count);
   }
@@ -231,38 +271,104 @@ test("@uat UAT-037 a CLERK uploads a mixed CSV, prechecks, confirms and download
 
 test("@uat UAT-038 a CSV with a Bank column is refused outright, and no Bank data is written anywhere", async ({ as }, testInfo) => {
   const { page } = await as("CLERK");
-  const problems = watchProblems(page, { allow: [{ status: 400, path: "/api/v1/supplier-imports/upload" }, { status: 422, path: "/api/v1/supplier-imports/upload" }] });
-  const tag = unique("U38");
-  const account = `8${randomInt(100_000_000, 999_999_999)}${randomInt(10, 99)}`;
-  const logMark = new Map(fs.readdirSync(path.join(serverRoot, "logs"), { recursive: true }).map((name) => path.join(serverRoot, "logs", name))
-    .filter((file) => fs.statSync(file).isFile()).map((file) => [file, fs.statSync(file).size]));
+  const target = await createDraft(page);
+  const problems = watchProblems(page, { allow: [{ status: 400, path: "/api/v1/supplier-imports/upload" }] });
+  const account = fakeAccount();
+  const mark = logMark();
   const [[{ jobs: jobsBefore }]] = await (await db()).query("SELECT COUNT(*) AS jobs FROM supplier_import_jobs");
 
+  // 一個更新現有 Supplier 嘅列，加一個 Bank 欄位：預檢之前、上載嗰下就被拒。
   const columns = [...(await templateColumns(page)), "bankAccountNumber"];
-  const csv = toCsv(columns, [{ supplierCode: tag, supplierName: `UAT-038 ${tag}`, defaultCurrencyCode: "HKD", bankAccountNumber: account }]);
-  await uploadCsv(page, { name: "uat-038-bank.csv", csv });
+  const csv = toCsv(columns, [{ supplierCode: target.supplierCode, notes: "UAT-038 should not land", bankAccountNumber: account }]);
+  await uploadCsv(page, { name: "uat-038-bank.csv", csv, mode: "新增或更新" });
   await expect(page.getByRole("alert").filter({ hasText: /銀行/u })).toBeVisible();
   await expect(jobDialog(page)).toHaveCount(0);
   await evidence(page, testInfo, "refused");
 
-  // 冇 job、冇 Supplier、冇銀行資料；帳號冇入呢個 test 寫嘅 log（technical 補充：畫面睇唔到 log 同其他表）。
+  // Bank 遮罩列表：個 Supplier 仍然冇銀行資料，一般資料亦冇改。
+  const { page: readerPage } = await as("BANK-READER");
+  await readerPage.goto(`/suppliers/${target.id}`);
+  await readerPage.getByRole("tab", { name: "銀行資料" }).click();
+  await expect(readerPage.getByText("尚未設定銀行資料")).toBeVisible();
+  await evidence(readerPage, testInfo, "bank-list-empty");
+  expect((await api(page, "GET", `/api/v1/suppliers/${target.id}`)).notes).toBe("");
+
+  // 冇 job；帳號冇入匯入目錄、亦冇入呢個 test 寫嘅 log（technical 補充：畫面睇唔到檔案同 log）。
   const [[{ jobs: jobsAfter }]] = await (await db()).query("SELECT COUNT(*) AS jobs FROM supplier_import_jobs");
   expect(jobsAfter).toBe(jobsBefore);
-  expect(await searchCount(page, tag)).toBe(0);
-  const [[{ banks }]] = await (await db()).query(
-    "SELECT COUNT(*) AS banks FROM supplier_bank_accounts b JOIN suppliers s ON s.id = b.supplier_id WHERE s.supplier_code = ?", [tag]);
-  expect(banks).toBe(0);
-  const written = [...logMark.keys(), ...fs.readdirSync(path.join(serverRoot, "logs"), { recursive: true }).map((name) => path.join(serverRoot, "logs", name))]
-    .filter((file, index, all) => all.indexOf(file) === index && fs.existsSync(file) && fs.statSync(file).isFile())
-    .map((file) => fs.readFileSync(file).subarray(logMark.get(file) ?? 0).toString("utf8")).join("\n");
+  expect(importRootText().includes(account), "no account number in the import root").toBe(false);
+  const written = newLogText(mark);
   expect(written.includes("/api/v1/supplier-imports/upload"), "the request log has the refused upload").toBe(true);
   expect(written.includes(account), "no account number in the server logs").toBe(false);
   expect(problems).toEqual([]);
 });
 
-test("@uat UAT-039 confirming twice, by double click or by resending the same confirmation, writes the rows once and answers with the same outcome", async ({ as }, testInfo) => {
+test("@uat UAT-043 an export holds no full Bank data or ciphertext, guards formula cells, and is audited", async ({ as }, testInfo) => {
+  const tag = unique("U43");
   const { page, account: clerk } = await as("CLERK");
-  const problems = watchProblems(page, { allow: [{ status: 409, path: "/confirm" }] });
+  const supplier = await createDraft(page, { code: tag, name: `=UAT-043 formula ${tag}` });
+  await createDraft(page, { code: unique("U43X"), name: `UAT-043 other ${tag}x` });
+  const { page: officerPage, account: officer } = await as("BANK-OFFICER");
+  const account = fakeAccount();
+  const created = await moduleCall(officerPage, "/src/services/supplierBank.js", "create", supplier.id, {
+    accountHolderName: "UAT-043 Holder", bankName: `UAT-043 Bank ${tag}`, accountNumber: account, isDefault: true, reason: "UAT-043 bank setup", password: officer.password
+  });
+  expect(created.startsWith("ok:"), "bank setup").toBe(true);
+  const columns = await templateColumns(page);
+
+  // 07 寫 VIEWER，但設計 §6.9 嘅匯出要 supplier.mgmt：VIEWER 冇入口、直接叫亦以權限被拒。
+  const { page: viewerPage, account: viewer } = await as("VIEWER");
+  await viewerPage.goto("/suppliers");
+  await expect(viewerPage.getByPlaceholder("搜尋 Code、名稱、電話或電郵")).toBeVisible();
+  await expect(viewerPage.getByRole("button", { name: "匯出 CSV" })).toHaveCount(0);
+  const refused = await moduleCall(viewerPage, "/src/services/supplier.js", "exportCsv", { filter: tag, password: viewer.password });
+  // Route 嘅權限拒絕喺 client 係 `403 Forbidden`（同 UAT-040）；VIEWER 嘅正確密碼已經過咗重新認證。
+  expect(refused, "VIEWER export refused by permission").toBe("403 Forbidden");
+
+  // CLERK（冇 bank.view）同 SYSTEM-ADMIN（有齊銀行權限）都匯出：兩個檔一樣冇銀行資料（AC-040；REV-126 O2）。
+  for (const [role, exporter] of [["CLERK", { page, account: clerk }], ["SYSTEM-ADMIN", await as("SYSTEM-ADMIN")]]) {
+    const problems = watchProblems(exporter.page);
+    await exporter.page.goto("/suppliers");
+    await exporter.page.getByPlaceholder("搜尋 Code、名稱、電話或電郵").fill(tag);
+    await expect(exporter.page.locator("tbody tr", { hasText: tag })).toHaveCount(2);
+    await exporter.page.getByPlaceholder("搜尋 Code、名稱、電話或電郵").fill(supplier.supplierCode);
+    await expect(exporter.page.locator("tbody tr")).toHaveCount(1);
+    const csvText = await downloadText(exporter.page, async () => {
+      await exporter.page.getByRole("button", { name: "匯出 CSV" }).click();
+      const prompt = titledDialog(exporter.page, "匯出供應商");
+      await prompt.locator("input[type=password]").fill(exporter.account.password);
+      await prompt.getByRole("button", { name: "匯出" }).click();
+    });
+    // 以文字讀（安全 viewer：唔執行公式）。欄位正正係範本 v1（HD-067 2A）：多一欄密文都會紅（REV-126 R5）。
+    expect(csvText.includes(account), `${role}: no full account number in the export`).toBe(false);
+    const rows = parse(csvText, { bom: true, columns: true });
+    expect(Object.keys(rows[0]), `${role}: exactly the template columns`).toEqual(columns);
+    expect(rows.map((row) => row.supplierCode), `${role}: only the filtered Supplier (FR-IMPORT-009)`).toEqual([supplier.supplierCode]);
+    expect(rows[0].supplierName, `${role}: the formula cell is guarded`).toBe(`'=UAT-043 formula ${tag}`);
+    await evidence(exporter.page, testInfo, `exported-${role.toLowerCase()}`);
+    expect(problems).toEqual([]);
+  }
+
+  await page.goto("/suppliers/audit?action=supplier.export");
+  for (const actor of ["uat-clerk", "uat-system-admin"]) {
+    await expect(page.locator("tbody tr", { hasText: "匯出供應商" }).filter({ hasText: actor }).first()).toBeVisible();
+  }
+  await evidence(page, testInfo, "export-audit");
+});
+
+test("@uat UAT-044 search, SKU selection and a 10k import stay usable at representative volume", () => {
+  test.fixme(true, OPERATIONS);
+});
+
+test("@uat UAT-045 an isolated restore matches the source, keeps Bank masked and Audit, and is not declared a success without the keys", () => {
+  test.fixme(true, OPERATIONS);
+});
+
+test("@uat UAT-039 confirming twice, by double click or by resending the same confirmation, writes the rows once and answers with the same outcome", async ({ as }, testInfo) => {
+  test.setTimeout(150_000);
+  const { page, account: clerk } = await as("CLERK");
+  // 冇 allow：畫面送多一次確認（409）都要紅（REV-126 R3）。下面 page.request 嘅請求唔經 page 嘅 response 事件。
+  const problems = watchProblems(page);
   const tag = unique("U39");
   const columns = await templateColumns(page);
 
@@ -304,58 +410,8 @@ test("@uat UAT-039 confirming twice, by double click or by resending the same co
   expect(problems).toEqual([]);
 });
 
-test("@uat UAT-043 an export holds no full Bank data or ciphertext, guards formula cells, and is audited", async ({ as }, testInfo) => {
-  const tag = unique("U43");
-  const { page, account: clerk } = await as("CLERK");
-  const supplier = await createDraft(page, { code: tag, name: `=UAT-043 formula ${tag}` });
-  const { page: officerPage, account: officer } = await as("BANK-OFFICER");
-  const account = `8${randomInt(100_000_000, 999_999_999)}${randomInt(10, 99)}`;
-  const created = await moduleCall(officerPage, "/src/services/supplierBank.js", "create", supplier.id, {
-    accountHolderName: "UAT-043 Holder", bankName: `UAT-043 Bank ${tag}`, accountNumber: account, isDefault: true, reason: "UAT-043 bank setup", password: officer.password
-  });
-  expect(created.startsWith("ok:"), "bank setup").toBe(true);
-
-  // 07 寫 VIEWER，但設計 §6.11／§6.12 嘅匯出要 supplier.mgmt：VIEWER 冇入口、直接叫亦被拒；匯出由 CLERK 做。
-  const { page: viewerPage, account: viewer } = await as("VIEWER");
-  await viewerPage.goto("/suppliers");
-  await expect(viewerPage.getByRole("button", { name: "匯出 CSV" })).toHaveCount(0);
-  expect((await moduleCall(viewerPage, "/src/services/supplier.js", "exportCsv", { filter: tag, password: viewer.password })).startsWith("403 ")).toBe(true);
-
-  const problems = watchProblems(page);
-  await page.goto("/suppliers");
-  await page.getByPlaceholder("搜尋 Code、名稱、電話或電郵").fill(tag);
-  await expect(page.locator("tbody tr", { hasText: tag })).toHaveCount(1);
-  const csvText = await downloadText(page, async () => {
-    await page.getByRole("button", { name: "匯出 CSV" }).click();
-    const prompt = titledDialog(page, "匯出供應商");
-    await prompt.locator("input[type=password]").fill(clerk.password);
-    await prompt.getByRole("button", { name: "匯出" }).click();
-  });
-  // 以文字讀（安全 viewer：唔執行公式）：冇帳號、冇密文欄位，公式字首加咗 `'`。
-  expect(csvText.includes(account), "no full account number in the export").toBe(false);
-  expect(/ciphertext|blind_?index|account_?iv|auth_?tag|accountNumber/iu.test(csvText), "no Bank or internal column").toBe(false);
-  const rows = parse(csvText, { bom: true, columns: true });
-  const exported = rows.find((row) => row.supplierCode === tag);
-  expect(exported.supplierName).toBe(`'=UAT-043 formula ${tag}`);
-  await evidence(page, testInfo, "exported");
-
-  await page.goto("/suppliers/audit?action=supplier.export");
-  await expect(page.locator("tbody tr", { hasText: "匯出供應商" }).first()).toContainText("uat-clerk");
-  await evidence(page, testInfo, "export-audit");
-  expect(problems).toEqual([]);
-});
-
-test("@uat UAT-044 search, SKU selection and a 10k import stay usable at representative volume", () => {
-  test.fixme(true, OPERATIONS);
-});
-
-test("@uat UAT-045 an isolated restore matches the source, keeps Bank masked and Audit, and is not declared a success without the keys", () => {
-  test.fixme(true, OPERATIONS);
-});
-
 test("@uat UAT-046 replayed operations do not duplicate, an unavailable dependency opens nothing it should not, and work continues after recovery", async ({ as }, testInfo) => {
   const { page } = await as("CLERK");
-  const problems = watchProblems(page, { allow: [{ status: 503, path: "/activate" }] });
   const tag = unique("U46");
 
   // 重送：同一個 Idempotency-Key 建立兩次，只得一個 Supplier，第二次係重播。
@@ -366,15 +422,39 @@ test("@uat UAT-046 replayed operations do not duplicate, an unavailable dependen
   expect(first.status).toBeLessThan(300);
   expect([second.status, second.replayed, second.body?.data?.id]).toEqual([first.status, true, first.body?.data?.id]);
   expect(await searchCount(page, tag)).toBe(1);
+  const supplierId = first.body.data.id;
 
-  // 依賴不可用：啟用請求喺路上回 503。Supplier 唔會變啟用，畫面講明失敗；恢復之後再撳就成功。
-  await page.route("**/api/v1/suppliers/*/activate", (route) => route.fulfill({ status: 503, contentType: "application/json",
-    body: JSON.stringify({ error: { code: "SERVICE_UNAVAILABLE", message: "服務暫時無法使用" } }) }));
-  await page.goto(`/suppliers/${first.body.data.id}`);
+  // 依賴不可用（真後端，REV-126 O5）：Supplier 嘅幣別喺 Business Master 停用咗。伺服器拒絕啟用，Supplier 仍然係草稿；
+  // 幣別恢復之後再啟用就成功。
+  await ensureCurrency("XTS", "UAT Testing Currency");
+  const xts = unique("U46X");
+  const dependent = (await rawCall(page, "POST", "/api/v1/suppliers/create", { supplierCode: xts, supplierName: `UAT-046 ${xts}`, defaultCurrencyCode: "XTS" })).body.data;
+  await (await db()).execute("UPDATE currencies SET status = 'INACTIVE', version = version + 1 WHERE code = 'XTS'");
+  const serverProblems = watchProblems(page, { allow: [{ status: 409, path: "/activate" }, { status: 422, path: "/activate" }] });
+  await page.goto(`/suppliers/${dependent.id}`);
   await statusAction(page, "啟用");
-  await expect(page.getByRole("alert").filter({ hasText: /暫時無法使用|失敗/u }).first()).toBeVisible();
+  await expect(page.getByRole("dialog").getByRole("alert")).toBeVisible();
+  await expect(statusBadge(page)).toHaveText("草稿");
   await page.reload();
   await expect(statusBadge(page)).toHaveText("草稿");
+  await evidence(page, testInfo, "dependency-inactive");
+  await ensureCurrency("XTS", "UAT Testing Currency");
+  await page.reload();
+  await statusAction(page, "啟用");
+  await expect(statusBadge(page)).toHaveText("啟用");
+  expect(serverProblems).toEqual([]);
+
+  // 依賴喺路上失敗：啟用請求回 503（喺瀏覽器攔截，同 UAT-054）。重新載入之前畫面都唔可以話已啟用（REV-126 R4）。
+  const problems = watchProblems(page, { allow: [{ status: 503, path: "/activate" }] });
+  await page.route("**/api/v1/suppliers/*/activate", (route) => route.fulfill({ status: 503, contentType: "application/json",
+    body: JSON.stringify({ error: { code: "SERVICE_UNAVAILABLE", message: "服務暫時無法使用" } }) }));
+  await page.goto(`/suppliers/${supplierId}`);
+  await statusAction(page, "啟用");
+  await expect(page.getByRole("alert").filter({ hasText: /暫時無法使用|失敗/u }).first()).toBeVisible();
+  await expect(statusBadge(page)).toHaveText("草稿");
+  await page.reload();
+  await expect(statusBadge(page)).toHaveText("草稿");
+  await expect(page.getByRole("button", { name: "啟用", exact: true })).toBeVisible();
   await evidence(page, testInfo, "still-draft");
   await page.unroute("**/api/v1/suppliers/*/activate");
   await statusAction(page, "啟用");

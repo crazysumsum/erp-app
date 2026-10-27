@@ -42,6 +42,8 @@ async function dropScratch() {
   }
   fs.rmSync(fixturePath, { force: true });
   fs.rmSync(importRoot, { recursive: true, force: true });
+  // 父目錄空咗就一齊刪（REV-126 nit）；有其他 run 嘅目錄就留低。
+  try { fs.rmdirSync(path.dirname(importRoot)); } catch { /* not empty, or gone */ }
 }
 
 async function prepare() {
