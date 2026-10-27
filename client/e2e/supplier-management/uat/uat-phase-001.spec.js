@@ -1,11 +1,10 @@
 import { expect } from "@playwright/test";
-import { activateViaApi, api, auditRow, createDraft, db, moduleCall, serviceCall, setStatus, statusAction, statusBadge, test, unique, watchProblems } from "./uatSupport.js";
+import { activateViaApi, api, auditRow, createDraft, db, evidence, moduleCall, serviceCall, setStatus, statusAction, statusBadge, test, unique, watchProblems } from "./uatSupport.js";
 
 /**
  * Supplier UAT PHASE-001（07_uat_test_cases.md §4；HD-124 A）。真 server、真 MySQL scratch database，冇 mock。
  * 每個 test 標題只帶一個 UAT ID；證據係畫面、Audit 頁同 Correlation ID（request ID），截圖掛喺 test 報告。
  */
-const evidence = async (page, testInfo, name) => testInfo.attach(name, { body: await page.screenshot({ fullPage: true }), contentType: "image/png" });
 
 test("@uat UAT-001 a CLERK creates a Draft from code, name and currency, finds it, opens it and traces the create in Audit", async ({ as }, testInfo) => {
   const { page } = await as("CLERK");

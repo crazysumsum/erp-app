@@ -74,7 +74,7 @@
 
 ### 1.1 可驗證成功條件
 
-1. 人工使用者確認不超過 100 行的 SO，正常情況同步收到每行 Reserved／Backorder；P95 不超過 3 秒。
+1. 人工使用者確認不超過 100 行的 SO，正常情況同步收到每行 Reserved／Backorder；P95 不超過 3 秒。TC-032 的兩個 50-user burst 情境依 Sam 2026-10-27 決策採 10 秒；其他情境維持原門檻（詳 NFR-003 與 TC-032）。
 2. 兩張訂單競爭相同 Warehouse＋SKU 時不超賣、不出現負 ATP、不重複 Reservation。
 3. CSV 10,000 張訂單在標準容量環境 30 分鐘內完成；單一無效來源訂單不建立部分 SO，也不阻止其他有效訂單。
 4. `channelCode + externalOrderId` 在 HTTP retry、Job retry、Process crash 及跨批次重送下只建立一張 SO。

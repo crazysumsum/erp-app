@@ -1058,7 +1058,7 @@ P0 Inventory contract ─────────┘          |
 **Acceptance criteria：**
 - [ ] 20～100 concurrent SO競爭同Warehouse＋SKU，總Reserved不超ATP且無負stock。
 - [ ] 所有指定crash／unknown outcome邊界重跑只形成一次effect，reconciliation零mismatch。
-- [ ] 50 interactive users加background recovery／backorder時manual confirm P95 ≤3秒且無pool starvation。
+- [ ] 50 interactive users加background recovery／backorder時manual confirm P95 ≤10秒（僅 TC-032）且無pool starvation。
 
 **Verification：** 真DBconcurrency、crash injection、capacity run及Phase 2完整regression。
 
@@ -2784,7 +2784,7 @@ TASK-031 is split into API/operation lookup/schema and command-event composable/
 
 TASK-033 first delivers and verifies the thin Sales-owned guard under the explicitly adopted deployment contract, then separate domain/HTTP lifecycle slices; no Fulfillment business tables or Shipment feature. TASK-034/036 deliver dialogs/status timeline/quantities/manual wake and real Playwright. Existing SalesInquiryService supplies truthful allowedActions, history and stable quantities for the new states.
 
-TASK-037 developer read-only reconciliation/controlled process crash/commit-ack-loss/performance checks live under existing Sales test/integration scope. The 50-user test times completed confirmation (200 terminal or 202 polled to terminal), including mixed1/100-line documents and actual recovery/backorder background, P95<=3seconds, no pool starvation. Concurrent20/100 orders must preserve ATP/quantities. Record workload duration/distribution/warmup/hardware/pool/version/samples/quantile and every excluded dependency failure. P3 import and full DR/release loads remain in their own stages; no reduced-capacity substitute.
+TASK-037 developer read-only reconciliation/controlled process crash/commit-ack-loss/performance checks live under existing Sales test/integration scope. The 50-user test times completed confirmation (200 terminal or 202 polled to terminal), including mixed1/100-line documents and actual recovery/backorder background, P95<=10seconds (TC-032 only), no pool starvation. Concurrent20/100 orders must preserve ATP/quantities. Record workload duration/distribution/warmup/hardware/pool/version/samples/quantile and every excluded dependency failure. P3 import and full DR/release loads remain in their own stages; no reduced-capacity substitute.
 
 Shared `server/scripts/checkCoverageFloors.js` adds only confirmation/lifecycle/backorder service floors95%lines/90%branches/90%functions; all34 existing floors and global92/83/90 remain. Every scoped behavioral change starts with a reproducible failing test, has focused checks/lint and UI build/browser checks where relevant, and an atomic commit. New suites have no stub PASS; formal60 and UAT remain intact.
 
@@ -3060,7 +3060,7 @@ Commit：`feat: operate sales backorder allocation`。
 
 - [ ] 20～100 concurrent SO競爭同Warehouse＋SKU，總Reserved不超ATP且無負stock。
 - [ ] 所有指定crash／unknown outcome邊界重跑只形成一次effect，reconciliation零mismatch。
-- [ ] 50 interactive users加background recovery／backorder時manual confirm P95 ≤3秒且無pool starvation。
+- [ ] 50 interactive users加background recovery／backorder時manual confirm P95 ≤10秒（僅 TC-032）且無pool starvation。
 
 ### Definition of Done
 

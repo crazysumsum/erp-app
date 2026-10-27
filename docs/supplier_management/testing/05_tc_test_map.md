@@ -365,4 +365,67 @@ PHASE-002 (`uat/uat-phase-002.spec.js`, 9 cases): approval and Supplier settings
 - **Approval policy setup:** the policy is a global setting. The cases set it in the database as a precondition and turn it off after each test, so PHASE-001 is unaffected. UAT-015 and UAT-041 change it through the Settings page, because that change is what they verify.
 - **Defects found here:** writing these cases found DEF-042 (no way to submit an existing Draft from the detail) and DEF-043 (the requester could not withdraw), fixed in PR #282. REV-120 found DEF-044 (no invalidation warning or notice), fixed in PR #283.
 
-Phases 003, 004 and the cross-phase cases are not written yet. UAT-054 is the only case that intercepts a request in the browser: a slow response and a 503 cannot be produced safely on a real server.
+PHASE-003 (`uat/uat-phase-003.spec.js`, 7 cases): bank data. Local developer run on 2026-10-26, which is not a formal UAT execution:
+- **Result:** 5 pass (UAT-025, 026, 027, 028 and 030). 2 are `test.fixme` after their Supplier steps pass. The full UAT config gives 34 passed and 7 skipped.
+- **Defects found here, fixed in PR #286:**
+  - UAT-028 failed at the default-switch wording: the dialog showed the literal `**同時被取消**` (DEF-046).
+  - UAT-030 failed at its alert step (DEF-047). Earlier it had been counted as a pass without that evidence, which REV-123 R2 corrected.
+- **`test.fixme`:**
+  - UAT-029: the Buyer step needs Purchasing.
+  - UAT-053: refusing to retire a referenced account needs a downstream payment reference.
+- **UAT-030 alert step:**
+  - The step asks for a warn-level or higher system log event naming the Supplier. Since PR #286 that is `supplier.bank.privileged_use`, which carries ids only. Denied attempts are read from the logs, not counted as a metric (HD-143 A).
+  - A wrong password is refused for both reveal and write, and the row is unchanged after the refused write (REV-123 R3).
+- **No plaintext:**
+  - Fictional account numbers are generated per test.
+  - Every case checks that no full number appears in the Audit rows or in the server log bytes written during the test.
+  - As a control, the check first waits for the test's last bank request id (`X-Request-Id`) in the request log. It looks in the request log only, because a refused request also writes its id to the system log (REV-123 R1).
+  - The server's stdout is not scanned.
+- **No plaintext in evidence (07 §2, REV-123 R4):**
+  - Trace, failure screenshots and the failure aria snapshot (`error-context.md`) are off.
+  - Plaintext is compared as booleans. While a number is on screen or in an input, only `expect.poll` is used, because a failed locator matcher attaches the page.
+  - Every evidence screenshot first checks that no account number is on the page.
+- **Refusal prompt:** UAT-025's refusal is the server's 403. A VIEWER has no reveal control, so there is no on-screen prompt to show.
+- **Deactivated accounts:**
+  - The masked list shows active accounts only, and nothing in the design or requirements asks for more.
+  - In `SupplierBankPanel.vue`, the 「已停用」 badge and the edit control for inactive rows never render, because `list({ includeInactive })` is never passed. That is dead code; it is noted here and left alone.
+  - UAT-053 checks that the row is kept as `inactive` and audited.
+- **30-second clear:** UAT-026 pauses Playwright's clock right after the reveal. The number is still shown at 29 s and is gone at 30 s; a 31 s deadline fails the case.
+- **Leaving the page:** the step proves only that the user sees the number cleared. The panel unmounts, so the step cannot tell which of its clear triggers fired.
+- **Database checks:** some checks read the database because the screen cannot show what they need: no plaintext in Audit detail, exactly one active default, and the kept inactive row. They are technical supplements, and each is marked in the spec.
+
+Evidence screenshots, all phases: before REV-123 O6, `testInfo.attach({ body })` screenshots were never written to disk under the line and junit reporters, so no phase kept its screenshots. Since then:
+- the shared `evidence()` in `uatSupport.js` writes each screenshot to the test's output directory and attaches it by path;
+- the junit report lists each screenshot of a test that passes or fails as `[[ATTACHMENT|…]]`. A test that ends in `test.fixme` keeps its files, but junit omits them (REV-125 O1);
+- a repeated name within one test is refused, because it would overwrite the earlier screenshot (REV-125 O2);
+- the files stay in the run's artifacts directory under `os.tmpdir()`. The junit paths are local to that machine, and the OS may purge them.
+
+PHASE-004 (`uat/uat-phase-004.spec.js`, 12 cases): Supplier–SKU, import, export and operations. Local developer run on 2026-10-27, which is not a formal UAT execution:
+- **Result:** 5 pass (UAT-037, 038, 039, 043 and 046), and 7 are `test.fixme`. The full UAT config gives 39 passed and 14 skipped.
+- **`test.fixme`, Purchasing (HD-124 A):**
+  - UAT-032 and 035 have no Supplier-side step.
+  - UAT-033 (preferred relation added in the 供貨關係 tab), 034 (that Supplier suspended) and 036 (default currency and payment term changed, with a reason) run their Supplier steps first.
+- **`test.fixme`, operations (HD-144 B):** UAT-044 and 045 need a representative environment and the operations role. The technical evidence is `performance_report.md` (T50) and `supplierBankRestore.integration.test.js`.
+- **Preconditions written in SQL (07 §2 environment preparation):**
+  - a purchasable SKU, because Item has no UAT role or screen here;
+  - active USD and XTS currencies and an active payment term, because migration seeds HKD only and no term.
+- **CSV-MIXED (UAT-037):**
+  - The 10 rows cover valid, warning (same name), invalid (missing or unknown currency, bad e-mail), duplicate-in-file, update and formula-prefixed rows.
+  - Each step has a screenshot. Each row's precheck reason and each row's outcome in the result file are asserted (REV-126 R2, O4).
+  - 07 §2 also lists a Bank column. A Bank column refuses the whole file at upload (HD-053 A, HD-054 A), so it is checked on its own in UAT-038, as TC-091 and TC-099 split it.
+- **UAT-038:** the refused file is an upsert of an existing Supplier.
+  - That Supplier's masked Bank list stays empty and its notes unchanged.
+  - The account number reaches neither the import root nor this test's server log bytes.
+  - Trace and failure screenshots are off for this spec, because UAT-038 and UAT-043 carry fictional account numbers (REV-126 R1).
+- **UAT-043 role:** 07 names VIEWER, but design §6.9 requires `supplier.mgmt` to export.
+  - The case checks that a VIEWER has no export control and that the server refuses the export (`403 Forbidden`).
+  - It then exports as CLERK and as SYSTEM-ADMIN, which holds every Bank permission.
+  - Each file has exactly the template v1 columns, only the filtered Supplier and a guarded formula cell. Both exports are in Audit.
+- **UAT-039:** a double-click on 確認匯入 opens one password prompt and confirms once. A confirmation resent with the same Idempotency-Key is replayed with the same answer; a new key is refused with 409.
+- **UAT-046:**
+  - A create resent with the same Idempotency-Key makes one Supplier.
+  - Real backend: with the Supplier's currency made inactive in Business Master, the server refuses activation and the Supplier stays Draft. After the currency is restored, activation succeeds.
+  - Browser-intercepted 503 (as in UAT-054): the badge stays Draft before and after a reload, and activating again after recovery succeeds.
+- **Import root:** the UAT server gets a per-run import root under `os.tmpdir()`, removed when the server exits.
+
+The cross-phase cases are not written yet. UAT-054 and the second half of UAT-046 intercept a request in the browser, because a slow response and a 503 cannot be produced safely on a real server.

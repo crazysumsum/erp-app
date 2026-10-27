@@ -1,12 +1,11 @@
 import { expect } from "@playwright/test";
-import { api, auditRow, createDraft, db, moduleCall, serviceCall, statusAction, statusBadge, test, unique, uatFixture, watchProblems } from "./uatSupport.js";
+import { api, auditRow, createDraft, db, evidence, moduleCall, serviceCall, statusAction, statusBadge, test, unique, uatFixture, watchProblems } from "./uatSupport.js";
 
 /**
  * Supplier UAT PHASE-002：啟用審批同 Supplier 設定（07_uat_test_cases.md §4；HD-124 A）。真 server、真 MySQL scratch database，冇 mock。
  * 每個 test 標題只帶一個 UAT ID。審批政策係全域設定：前置用 SQL 開關（07 §2 嘅環境準備），每個 test 之後都還原做 OFF，
  * 唔影響 PHASE-001。UAT-015、041 係透過畫面改設定本身，佢哋自己就係驗收步驟；UAT-040 驗嘅係冇權限改唔到。
  */
-const evidence = async (page, testInfo, name) => testInfo.attach(name, { body: await page.screenshot({ fullPage: true }), contentType: "image/png" });
 
 async function setApprovalPolicy(on) {
   await (await db()).execute("UPDATE supplier_settings SET require_activation_approval = ?, version = version + 1 WHERE id = 1", [on ? 1 : 0]);

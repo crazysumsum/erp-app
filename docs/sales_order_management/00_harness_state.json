@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1404,
+  "revision": 1405,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -9,12 +9,12 @@
   "current_phase": "PHASE-005",
   "current_task": "TASK-062",
   "baseline": {
-    "design": "10e658c43562f4d07aeeac9486bdc9ba46bb613e99f8813cf3997bde6b1d073d",
-    "plan": "b52e2746d16e4440f6d7dd33b76de0ff444a8234cbd5b5a28183210958209b41",
-    "code_commit": "6a4dc5520eb9fc1b74a8af49c9341809c40a566e",
-    "source_fingerprint": "38d3887de53bac90ec1f6b509ffb675657f635caad25b39ea9cc49b98a2155de",
+    "design": "1020442afe8b1cd33999a46c75f5d3b06f6609dacb2ca4658fab83c86b8f9056",
+    "plan": "a0414f3f85f04ccb1539551bc8e629cbf41e0d2c77d669c89ad3350c1759162c",
+    "code_commit": "0753f0a0b419c67086a1d09552e23d9bf2591626",
+    "source_fingerprint": "c2fc4515d7064c9c601a4105f2100d3080869aef3a327ef1f4e19f73fd300af0",
     "worktree": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app",
-    "default_commit": "2b4040e2b8276932fdb692e4a03f89f8ab5b7820",
+    "default_commit": "6cdc2eecb77c8182f6397243ef695a9aaf6c23b3",
     "mode_entry_commit": "e272f5d3ce05d0ca50be42e6d8764f0ef20d3dd1"
   },
   "runtime": {
@@ -8569,6 +8569,374 @@
       "recorded_at": "2026-10-26T05:58:12.490622Z",
       "code_commit": "0b66d82bb9c979aac7028fe4dfa8802a1c4877b2",
       "expires_at": null
+    },
+    {
+      "id": "APR-DEC037-DESIGN",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Verified direct Sam Sales userMessage01a17afc-2ad7-7c71-8527-c1b5b675723f turn01a17afc-2a8a-74b2-b13a-cab87ce4b395: 門檻放寬至10秒。 Narrow TC-032 two-scenario 3s→10s amendment only, exact scope documented154; resulting hashes computed by Codex, not a claim Sam inspected unseen hashes. Existing commit/PR/merge authorization retained; no other P4 recovery authority inferred.",
+      "recorded_at": "2026-10-27T01:43:35.590937Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "5e80862bcba3e6a48a56069ae296dea17506cd68ff9d49648909fdbc71d24d87",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management",
+        "TC-032",
+        "TASK-037",
+        "NFR-003",
+        "DES-019",
+        "server/test/integration/salesCapacity.integration.test.js",
+        "docs/sales_order_management/**"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-DEC037-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Verified direct Sam Sales userMessage01a17afc-2ad7-7c71-8527-c1b5b675723f turn01a17afc-2a8a-74b2-b13a-cab87ce4b395: 門檻放寬至10秒。 Narrow TC-032 two-scenario 3s→10s amendment only, exact scope documented154; resulting hashes computed by Codex, not a claim Sam inspected unseen hashes. Existing commit/PR/merge authorization retained; no other P4 recovery authority inferred.",
+      "recorded_at": "2026-10-27T01:43:35.591074Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "9eedf1feb4d2a229c616d6d77cf5d56606dd59b2f30082f466746676dfec0cee",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management",
+        "TC-032",
+        "TASK-037",
+        "NFR-003",
+        "DES-019",
+        "server/test/integration/salesCapacity.integration.test.js",
+        "docs/sales_order_management/**"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-DEC037-DESIGN-OBSERVED-PINS",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Verified direct Sam Sales userMessage01a17afc-2ad7-7c71-8527-c1b5b675723f turn01a17afc-2a8a-74b2-b13a-cab87ce4b395: 門檻放寬至10秒。 Narrow TC-032 two-scenario 3s→10s amendment only, exact scope documented154; resulting hashes computed by Codex, not a claim Sam inspected unseen hashes. Existing commit/PR/merge authorization retained; no other P4 recovery authority inferred. Narrow mechanical manifest byte pins independently compared to original sources by separate reviewer sales_archive_guard_review; existing Sales contracts unchanged, no other module proposal adopted. Supersedes use of earlier computed DEC037 hash; original record retained.",
+      "recorded_at": "2026-10-27T01:46:08.148700Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "17d33559944f32b6677ae4e47046a8fac07898e3d4b77d27821bcde6fdb127a4",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management",
+        "TC-032",
+        "TASK-037",
+        "NFR-003",
+        "DES-019",
+        "server/test/integration/salesCapacity.integration.test.js",
+        "docs/sales_order_management/**"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-DEC037-PLAN-OBSERVED-PINS",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Verified direct Sam Sales userMessage01a17afc-2ad7-7c71-8527-c1b5b675723f turn01a17afc-2a8a-74b2-b13a-cab87ce4b395: 門檻放寬至10秒。 Narrow TC-032 two-scenario 3s→10s amendment only, exact scope documented154; resulting hashes computed by Codex, not a claim Sam inspected unseen hashes. Existing commit/PR/merge authorization retained; no other P4 recovery authority inferred. Narrow mechanical manifest byte pins independently compared to original sources by separate reviewer sales_archive_guard_review; existing Sales contracts unchanged, no other module proposal adopted. Supersedes use of earlier computed DEC037 hash; original record retained.",
+      "recorded_at": "2026-10-27T01:46:08.148842Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "5c2915f38d50a1d5d364e879851af5a75517521ccc9a552c11510b32ed980d31",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management",
+        "TC-032",
+        "TASK-037",
+        "NFR-003",
+        "DES-019",
+        "server/test/integration/salesCapacity.integration.test.js",
+        "docs/sales_order_management/**"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-DEC037-DERIVED-UATNA-NFR-014",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "DERIVED under original Sam-adopted DEC025 implementation/68_phase3_activation_decision.md:27,49 and direct DEC037 TC032-only10s userMessage01a17afc-2ad7-7c71-8527-c1b5b675723f. Only unchanged UAT-NA reference/hash binding; original approval APR-HD018-DERIVED-UATNA-NFR-014 retained verbatim. No new waiver, no restorePASS, no omitted technicalDR/restore execution. Separate prospective review sales_archive_guard_review confirmed explicit mechanical authority. Prior source_ref: Verified direct Sam user message in Customer chat01a09d60-e0f0-7c53-a064-eeb58fb83c2f turn01a1443b-4991-7fd0-99e5-405de41e8f44 / userMessage01a1443b-49fe-7360-9dc1-0a136faf2f1d: 批准 HD-018，請通知 Sales 將死鎖修復及直接相關測試拆成獨立 PR，通過正常 CI／審查後先合 main；之後自動整合驗證 Customer，所有 Gate 通過後合併 PR #244，不擴大 Customer 修復範圍，完整下游整合驗收保持阻塞。 Actual read_thread authenticated human evidence observed2026-10-16; deliveryscope explicitly approved, Codex computed resulting hashes, no claim Sam inspected unseen hashes. Existing adopted DEC025 narrow mechanical owner-source pin/reference authority preserves unchanged business contracts/UAT-NA reasons and every prior approval. DERIVED unchanged NFR-014 N/A condition; original approval APR-P3-POSTMERGE-CUSTOMERPIN-DERIVED-UATNA remains verbatim. Original source: DERIVED mechanical postmerge document binding under Sam-adopted DEC-025 implementation/68_phase3_activation_decision.md:27,49, and direct user no-impact/retest instruction. Codex computed Customer document-only pin, D/P, two unchanged NFR UAT-NA references and matrix; no fresh Sam hash inspection or new business/security/acceptance authority. Original scopes, expiry, authority and code_commit unchanged; Customer HD013 timing waiver NOT adopted; original750 implementation/run/CI/Gate bindings preserved. DEC027 once-only retirement and276 unavailable historical raw references unchanged. Prior source_ref (verbatim): DERIVED under actual adopted DEC025 packet68 line27 narrow source-pin/hash/matrix/reference authority; Codex computed these baselines, no fresh Sam hash inspection. Origin APR-PHASE3-UATNA-MAINd69b-MECHANICAL remains unchanged. Only Customer HD012 design-document consumed pin/currentversion and two unchanged NFR014015 UAT-NA references/matrix; no sharedDataTable/Customer UI implementation or new Sales behavior adopted. All original33/live35/fiveCI/50users/P95<=3s/10korders50klines<=30m/worker30s/parser180s/coverage/memory/wholeReview/unmodifiedGate preserved. DEC027 exact276 retirement already completed once at0104/source675a receipt ed8491a640fa071f32f29562ad4042df5eb7e225a2556a83a398ced5833f386a; retain originalqualifier/history/retiredindex, no secondretirement or readding/filtering276. Exactprospective patch/derived records require actual independent review before application.",
+      "recorded_at": "2026-10-27T01:59:36.504333Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "52f09ad99eda4db77792713965da8a7d80d0e5dc969835e667d4dbe8aa919927",
+      "code_commit": null,
+      "scope": [
+        "NFR-014"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-DEC037-DERIVED-UATNA-NFR-015",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "DERIVED under original Sam-adopted DEC025 implementation/68_phase3_activation_decision.md:27,49 and direct DEC037 TC032-only10s userMessage01a17afc-2ad7-7c71-8527-c1b5b675723f. Only unchanged UAT-NA reference/hash binding; original approval APR-HD018-DERIVED-UATNA-NFR-015 retained verbatim. No new waiver, no restorePASS, no omitted technicalDR/restore execution. Separate prospective review sales_archive_guard_review confirmed explicit mechanical authority. Prior source_ref: Verified direct Sam user message in Customer chat01a09d60-e0f0-7c53-a064-eeb58fb83c2f turn01a1443b-4991-7fd0-99e5-405de41e8f44 / userMessage01a1443b-49fe-7360-9dc1-0a136faf2f1d: 批准 HD-018，請通知 Sales 將死鎖修復及直接相關測試拆成獨立 PR，通過正常 CI／審查後先合 main；之後自動整合驗證 Customer，所有 Gate 通過後合併 PR #244，不擴大 Customer 修復範圍，完整下游整合驗收保持阻塞。 Actual read_thread authenticated human evidence observed2026-10-16; deliveryscope explicitly approved, Codex computed resulting hashes, no claim Sam inspected unseen hashes. Existing adopted DEC025 narrow mechanical owner-source pin/reference authority preserves unchanged business contracts/UAT-NA reasons and every prior approval. DERIVED unchanged NFR-015 N/A condition; original approval APR-P3-POSTMERGE-CUSTOMERPIN-DERIVED-UATNA remains verbatim. Original source: DERIVED mechanical postmerge document binding under Sam-adopted DEC-025 implementation/68_phase3_activation_decision.md:27,49, and direct user no-impact/retest instruction. Codex computed Customer document-only pin, D/P, two unchanged NFR UAT-NA references and matrix; no fresh Sam hash inspection or new business/security/acceptance authority. Original scopes, expiry, authority and code_commit unchanged; Customer HD013 timing waiver NOT adopted; original750 implementation/run/CI/Gate bindings preserved. DEC027 once-only retirement and276 unavailable historical raw references unchanged. Prior source_ref (verbatim): DERIVED under actual adopted DEC025 packet68 line27 narrow source-pin/hash/matrix/reference authority; Codex computed these baselines, no fresh Sam hash inspection. Origin APR-PHASE3-UATNA-MAINd69b-MECHANICAL remains unchanged. Only Customer HD012 design-document consumed pin/currentversion and two unchanged NFR014015 UAT-NA references/matrix; no sharedDataTable/Customer UI implementation or new Sales behavior adopted. All original33/live35/fiveCI/50users/P95<=3s/10korders50klines<=30m/worker30s/parser180s/coverage/memory/wholeReview/unmodifiedGate preserved. DEC027 exact276 retirement already completed once at0104/source675a receipt ed8491a640fa071f32f29562ad4042df5eb7e225a2556a83a398ced5833f386a; retain originalqualifier/history/retiredindex, no secondretirement or readding/filtering276. Exactprospective patch/derived records require actual independent review before application.",
+      "recorded_at": "2026-10-27T01:59:36.504486Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "52f09ad99eda4db77792713965da8a7d80d0e5dc969835e667d4dbe8aa919927",
+      "code_commit": null,
+      "scope": [
+        "NFR-015"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-DEC037-DESIGN-FINAL-REFERENCES",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Verified direct Sam Sales userMessage01a17afc-2ad7-7c71-8527-c1b5b675723f turn01a17afc-2a8a-74b2-b13a-cab87ce4b395: 門檻放寬至10秒。 Narrow TC-032 two-scenario 3s→10s amendment only, exact scope documented154; resulting hashes computed by Codex, not a claim Sam inspected unseen hashes. Existing commit/PR/merge authorization retained; no other P4 recovery authority inferred. Narrow mechanical manifest byte pins independently compared to original sources by separate reviewer sales_archive_guard_review; existing Sales contracts unchanged, no other module proposal adopted. Supersedes use of earlier computed DEC037 hash; original record retained. Final unchanged NFR014/015 UATNA ledger/matrix reference binding under DEC025 mechanical authority; no new waiver/DR completion; originals retained.",
+      "recorded_at": "2026-10-27T01:59:36.504498Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "17d33559944f32b6677ae4e47046a8fac07898e3d4b77d27821bcde6fdb127a4",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management",
+        "TC-032",
+        "TASK-037",
+        "NFR-003",
+        "DES-019",
+        "server/test/integration/salesCapacity.integration.test.js",
+        "docs/sales_order_management/**"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-DEC037-PLAN-FINAL-REFERENCES",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Verified direct Sam Sales userMessage01a17afc-2ad7-7c71-8527-c1b5b675723f turn01a17afc-2a8a-74b2-b13a-cab87ce4b395: 門檻放寬至10秒。 Narrow TC-032 two-scenario 3s→10s amendment only, exact scope documented154; resulting hashes computed by Codex, not a claim Sam inspected unseen hashes. Existing commit/PR/merge authorization retained; no other P4 recovery authority inferred. Narrow mechanical manifest byte pins independently compared to original sources by separate reviewer sales_archive_guard_review; existing Sales contracts unchanged, no other module proposal adopted. Supersedes use of earlier computed DEC037 hash; original record retained. Final unchanged NFR014/015 UATNA ledger/matrix reference binding under DEC025 mechanical authority; no new waiver/DR completion; originals retained.",
+      "recorded_at": "2026-10-27T01:59:36.504507Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "52f09ad99eda4db77792713965da8a7d80d0e5dc969835e667d4dbe8aa919927",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management",
+        "TC-032",
+        "TASK-037",
+        "NFR-003",
+        "DES-019",
+        "server/test/integration/salesCapacity.integration.test.js",
+        "docs/sales_order_management/**"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-P4-MAIN6CDC-DERIVED-DESIGN",
+      "kind": "DESIGN",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "1020442afe8b1cd33999a46c75f5d3b06f6609dacb2ca4658fab83c86b8f9056",
+      "scope": [
+        "sales-order-management",
+        "PHASE-005",
+        "TC-032"
+      ],
+      "authority_kind": "HUMAN",
+      "actor": "Sam",
+      "decision": "APPROVED",
+      "source_ref": "DERIVED mechanical main6cdc integration under adopted DEC025 unchanged reference/pin authority, original P4 DEC035 scope approvals APR-P4-POOLWAIT-SCOPE-DESIGN,APR-P4-POOLWAIT-SCOPE-PLAN, and actual Sam TC032-only10s DEC037 decision (main APR-DEC037-*-FINAL-REFERENCES). Sam directly resumed DEC036/038 and retained fullP4 allGate merge authority. Only new criterion is already approved TC03210s; keep allother P4 scopes/load/thresholds/UATNA reasons/coverage/gates. Combined hashes computed by Codex; no claim Sam inspected unseen hashes or granted new provider/acceptance/release authority. All old approval records retained byte-semantically. Actual localmetadata0753 and main6cdc source/spec history preserved.",
+      "recorded_at": "2026-10-27T06:52:53.589411Z",
+      "code_commit": "0b66d82bb9c979aac7028fe4dfa8802a1c4877b2",
+      "expires_at": null
+    },
+    {
+      "id": "APR-P4-MAIN6CDC-DERIVED-PLAN",
+      "kind": "PLAN",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a0414f3f85f04ccb1539551bc8e629cbf41e0d2c77d669c89ad3350c1759162c",
+      "scope": [
+        "sales-order-management",
+        "PHASE-005",
+        "TC-032"
+      ],
+      "authority_kind": "HUMAN",
+      "actor": "Sam",
+      "decision": "APPROVED",
+      "source_ref": "DERIVED mechanical main6cdc integration under adopted DEC025 unchanged reference/pin authority, original P4 DEC035 scope approvals APR-P4-POOLWAIT-SCOPE-DESIGN,APR-P4-POOLWAIT-SCOPE-PLAN, and actual Sam TC032-only10s DEC037 decision (main APR-DEC037-*-FINAL-REFERENCES). Sam directly resumed DEC036/038 and retained fullP4 allGate merge authority. Only new criterion is already approved TC03210s; keep allother P4 scopes/load/thresholds/UATNA reasons/coverage/gates. Combined hashes computed by Codex; no claim Sam inspected unseen hashes or granted new provider/acceptance/release authority. All old approval records retained byte-semantically. Actual localmetadata0753 and main6cdc source/spec history preserved.",
+      "recorded_at": "2026-10-27T06:52:53.589582Z",
+      "code_commit": "0b66d82bb9c979aac7028fe4dfa8802a1c4877b2",
+      "expires_at": null
+    },
+    {
+      "id": "APR-P4-MAIN6CDC-UATNA-NFR-014",
+      "kind": "UAT_NA",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a0414f3f85f04ccb1539551bc8e629cbf41e0d2c77d669c89ad3350c1759162c",
+      "scope": [
+        "NFR-014"
+      ],
+      "authority_kind": "HUMAN",
+      "actor": "Sam",
+      "decision": "APPROVED",
+      "source_ref": "DERIVED mechanical main6cdc integration under adopted DEC025 unchanged reference/pin authority, original P4 DEC035 scope approvals APR-P4-POOLWAIT-SCOPE-DESIGN,APR-P4-POOLWAIT-SCOPE-PLAN, and actual Sam TC032-only10s DEC037 decision (main APR-DEC037-*-FINAL-REFERENCES). Sam directly resumed DEC036/038 and retained fullP4 allGate merge authority. Only new criterion is already approved TC03210s; keep allother P4 scopes/load/thresholds/UATNA reasons/coverage/gates. Combined hashes computed by Codex; no claim Sam inspected unseen hashes or granted new provider/acceptance/release authority. All old approval records retained byte-semantically. Actual localmetadata0753 and main6cdc source/spec history preserved. Unchanged NFR-014 businessUAT-NA only, original APR-P4-POOLWAIT-SCOPE-UATNA-NFR-014 and mainDEC037 counterpart retained; technicalbackup/restore/RTO/RPO remainmandatory, no new waiver or restorePASS.",
+      "recorded_at": "2026-10-27T06:52:53.589602Z",
+      "code_commit": "0b66d82bb9c979aac7028fe4dfa8802a1c4877b2",
+      "expires_at": null
+    },
+    {
+      "id": "APR-P4-MAIN6CDC-UATNA-NFR-015",
+      "kind": "UAT_NA",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a0414f3f85f04ccb1539551bc8e629cbf41e0d2c77d669c89ad3350c1759162c",
+      "scope": [
+        "NFR-015"
+      ],
+      "authority_kind": "HUMAN",
+      "actor": "Sam",
+      "decision": "APPROVED",
+      "source_ref": "DERIVED mechanical main6cdc integration under adopted DEC025 unchanged reference/pin authority, original P4 DEC035 scope approvals APR-P4-POOLWAIT-SCOPE-DESIGN,APR-P4-POOLWAIT-SCOPE-PLAN, and actual Sam TC032-only10s DEC037 decision (main APR-DEC037-*-FINAL-REFERENCES). Sam directly resumed DEC036/038 and retained fullP4 allGate merge authority. Only new criterion is already approved TC03210s; keep allother P4 scopes/load/thresholds/UATNA reasons/coverage/gates. Combined hashes computed by Codex; no claim Sam inspected unseen hashes or granted new provider/acceptance/release authority. All old approval records retained byte-semantically. Actual localmetadata0753 and main6cdc source/spec history preserved. Unchanged NFR-015 businessUAT-NA only, original APR-P4-POOLWAIT-SCOPE-UATNA-NFR-015 and mainDEC037 counterpart retained; technicalbackup/restore/RTO/RPO remainmandatory, no new waiver or restorePASS.",
+      "recorded_at": "2026-10-27T06:52:53.589616Z",
+      "code_commit": "0b66d82bb9c979aac7028fe4dfa8802a1c4877b2",
+      "expires_at": null
+    },
+    {
+      "id": "APR-P4-MAIN6CDC-DERIVED-SCOPE",
+      "kind": "SCOPE",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a0414f3f85f04ccb1539551bc8e629cbf41e0d2c77d669c89ad3350c1759162c",
+      "scope": [
+        "sales-order-management",
+        "PHASE-005",
+        "TASK-058",
+        "docs/sales_order_management/**",
+        "server/config/sales.js",
+        "server/src/modules/sales/**",
+        "server/src/handlers/sales-quotations/**",
+        "server/src/handlers/sales-orders/**",
+        "server/src/handlers/sales-imports/**",
+        "server/src/handlers/sales-intake/**",
+        "server/src/handlers/sales-operations/**",
+        "server/src/handlers/sales-exports/**",
+        "server/src/handlers/archived-sales-orders/**",
+        "server/src/services/scheduler/jobs/Sales*.js",
+        "client/src/services/salesQuotation.js",
+        "client/src/services/salesOrder.js",
+        "client/src/pages/sales/**",
+        "client/src/components/sales/**",
+        "server/test/sales/**",
+        "server/test/integration/sales*.integration.test.js",
+        "server/test-support/fakeSalesDatabase.js",
+        "client/test/**/sales*.test.js",
+        "client/e2e/sales-order-management/**",
+        "server/test-support/salesProviderReport.py",
+        "client/src/services/sales.js",
+        "client/test/pages/sales/**",
+        "client/test/components/sales/**",
+        "client/test/services/sales.test.js",
+        "server/test/migrate.test.js",
+        "server/config/scheduler.js",
+        "client/config/menu.js",
+        "server/database/migrations/*_create_sales_quotations.js",
+        "server/database/migrations/*_create_sales_quotation_lines.js",
+        "server/database/migrations/*_create_sales_orders.js",
+        "server/database/migrations/*_create_sales_order_lines.js",
+        "server/database/migrations/*_create_sales_order_status_history.js",
+        "server/database/migrations/*_create_sales_audit_logs.js",
+        "server/database/migrations/*_create_sales_quotation_conversions.js",
+        "server/src/services/salesJobs/SalesJobRuntimeService.js",
+        "server/src/services/salesJobs/jobs/SalesQuotationExpiryJob.js",
+        "server/src/handlers/sales/salesSchemas.js",
+        "server/src/handlers/sales/salesLookupHandlers.js",
+        "server/database/migrations/*_create_sales_external_order_keys.js",
+        "server/src/handlers/sales-lookups/salesLookupHandlers.js",
+        "server/src/modules/item/ItemLookupService.js",
+        "server/test/serviceContainer.test.js",
+        "README.md",
+        "server/src/modules/businessMaster/businessMasterFactory.js",
+        "server/test/business-master/http.integration.test.js",
+        ".github/workflows/ci.yml",
+        "server/src/services/salesJobs/jobs/SalesConfirmationRecoveryJob.js",
+        "server/src/services/salesJobs/jobs/SalesBackorderAllocationJob.js",
+        "server/src/handlers/sales-backorders/**",
+        "client/src/composables/sales/**",
+        "server/src/modules/inventory/InventoryReservationService.js",
+        "server/test/inventorySalesWorkerContracts.test.js",
+        "client/test/composables/sales/**",
+        "server/database/migrations/*_create_sales_order_line_reservations.js",
+        "server/database/migrations/*_create_sales_backorder_entries.js",
+        "server/scripts/checkCoverageFloors.js",
+        "server/test/inventoryProviderContracts.test.js",
+        "docs/inventory_management/03_design_spec.md",
+        "docs/fulfillment_shipping_management/03_design_spec.md",
+        "server/src/modules/inventory/inventoryConstants.js",
+        "server/src/services/idempotency/IdempotencyService.js",
+        "server/test/idempotencyService.test.js",
+        "server/test/integration/itemRecoveryAcceptance.integration.test.js",
+        "server/src/services/salesJobs/jobs/SalesImportJob.js",
+        "server/src/services/salesJobs/jobs/SalesFileRetentionJob.js",
+        "server/src/handlers/sales-import-templates/**",
+        "server/src/modules/customer/CustomerLookupService.js",
+        "server/test/sales/phase3/**",
+        "server/database/migrations/*_create_sales_import_jobs.js",
+        "server/database/migrations/*_create_sales_intake_orders.js",
+        "server/database/migrations/*_create_sales_intake_errors.js",
+        "server/database/migrations/*_extend_sales_reservation_intake_projection.js",
+        "server/test/itemLookupService.test.js",
+        "server/test/customerLookupService.test.js",
+        "server/test/configNormalizers.test.js",
+        "server/test/configuration.test.js",
+        "docs/customer_management/03_design_spec.md",
+        "docs/items_management/03_design_spec.md",
+        "server/config/api.js",
+        "server/src/framework/middleware/bodyReceiveTimeout.js",
+        "server/test-support/salesProcessingCrashChild.js",
+        "server/src/handlers/outstanding-sales-orders/**",
+        "server/src/handlers/sales-audit-logs/**",
+        "server/src/handlers/sales-archive-batches/**",
+        "server/src/services/salesJobs/jobs/SalesExportJob.js",
+        "server/src/services/salesJobs/jobs/SalesArchiveJob.js",
+        "docs/runbooks/sales-order-management.md",
+        "server/database/migrations/*_create_sales_export_jobs.js",
+        "server/database/migrations/*_create_sales_archive_batches.js",
+        "server/database/migrations/*_create_sales_archive_tables.js",
+        "server/database/migrations/*_protect_sales_archive_immutability.js",
+        "server/test-capacity/sales/phase4/**",
+        "client/src/framework/layout/AppTopbar.vue",
+        "server/src/modules/fulfillment/**",
+        "server/src/services/fulfillmentArchive/**",
+        "server/test/salesArchiveEligibility.test.js",
+        "server/test/fulfillmentArchive*.test.js",
+        "server/test/fulfillmentOpenMatter*.test.js",
+        "server/test/integration/fulfillmentArchive*.integration.test.js",
+        "server/test/integration/fulfillmentOpenMatter*.integration.test.js",
+        "server/test/integration/salesArchiveJoint.integration.test.js",
+        "server/database/migrations/*_create_fulfillment_archive_prerequisites.js",
+        "server/database/migrations/*_create_fulfillment_archive_mirrors.js",
+        "server/database/migrations/*_protect_fulfillment_archive_contracts.js",
+        "docs/fulfillment_shipping_management/**",
+        "server/database/migrations/0101_add_fulfillment_archive_routing.js",
+        "server/test/fulfillment/archiveFactsFixture.js",
+        "server/test/fulfillment/shipmentFixture.js",
+        "server/test/integration/fulfillmentOperationRouting.integration.test.js",
+        "server/test/integration/shipmentMigrations.integration.test.js",
+        "server/src/modules/inventory/InventoryLookupService.js",
+        "server/test/salesFulfillmentService.test.js",
+        "server/test/integration/fulfillmentPendingClaims.integration.test.js",
+        "server/src/services/fulfillment/FulfillmentOpenMatterService.js",
+        "server/test/applicationFactory.test.js",
+        "server/database/migrations/0105_add_fulfillment_archive_routing.js",
+        "server/src/services/mysqldatabase/MySqlDatabaseService.js"
+      ],
+      "authority_kind": "HUMAN",
+      "actor": "Sam",
+      "decision": "APPROVED",
+      "source_ref": "DERIVED unchanged shared-path grant under adopted DEC025 mechanical reference authority and already Sam-approved DEC035 P4scope; approved TC03210s integrated fromPR289 only. Exactscope/code_commit/expiry/authority copied from APR-P4-POOLWAIT-SCOPE, oldrecord preserved verbatim. No newpath, newriskexception, newproviderbusinessauthority or newSamhashinspection. Original source_ref: Direct human Sam response in current Sales conversation, request_user_input_async call_868e7e282add4309a90c94d6ca5cc5bb question0: 批准 DEC-035 單一共享觀測 scope（建議）. Approves exact R4 package aa2d85ff and patch5880f26e/proposed D10e658c4/Pb52e2746. Existing commit/PR/mainmerge authority retained; all original Gates and timed recovery retained. No production/deployment/formal acceptance grant. Original two business UAT_NA reasons retained only; no timedRTO/RPO waiver.",
+      "recorded_at": "2026-10-27T06:57:55.223081Z",
+      "code_commit": "0b66d82bb9c979aac7028fe4dfa8802a1c4877b2",
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -13227,6 +13595,42 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-DEC037-PREEXECUTION",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_archive_guard_review",
+      "reviewed_baseline": "17d33559944f32b6677ae4e47046a8fac07898e3d4b77d27821bcde6fdb127a4",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-tc032-p95-10s/amendment-private/tc032-10s-r1-separate-review-preexecution-proof.json SHA256073b539d11889ba91d25104c62e96dda9ebbd11fa58d88a1fac03770dcab0bd3",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P4-MAIN6CDC-STRUCTURED-INTEGRATION",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_archive_guard_review",
+      "reviewed_baseline": "1020442afe8b1cd33999a46c75f5d3b06f6609dacb2ca4658fab83c86b8f9056",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-main6cdc-resolution-r2-final-proposal-review.json SHA256006b7bd75bf3155dd62807d9ce9e027cedb6aad3d0035b77d4f07f0238f3b118",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P4-MAIN6CDC-HISTORICAL-KEY-NAMESPACE",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_archive_guard_review",
+      "reviewed_baseline": "1020442afe8b1cd33999a46c75f5d3b06f6609dacb2ca4658fab83c86b8f9056",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-main6cdc-resolution-r3-namespace-cas-resume-review.json SHA2563ad3fd0683850d116cba33bbcdab60d8460e87b2ee6b1545e90c296927a7e748",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -17497,6 +17901,17 @@
       "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/p4-readiness-batching-profile-native-r4/receipt.json SHA2b03a60d0150fcc86d6cb23b0b98e68b80b3b00b24bf04dbb3980ca0141af962; actualunit117/0/0 native3/0/0 profile1/0/0; first50034632.616833ms<600000; oldresults preserved, single-run effectqualified; wholelint/diffcheck0",
       "actor": "Codex /root actualexecution; actualseparatereview",
       "observed_at": "2026-10-27T06:43:57.751975Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEC037 TC032 amended10s developer verification",
+      "code_commit": "d805913bb22afad8b5eafef60920cfce73d0dd05",
+      "spec_baseline": "5c2915f38d50a1d5d364e879851af5a75517521ccc9a552c11510b32ed980d31",
+      "source_fingerprint": "f8b181ac311bad944640ac8f1cf86ffc6031fa8a62f079e8b4ad349566d853a4",
+      "status": "PASS",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-tc032-p95-10s/amendment-private/native-r1.json SHA2560819d153f95b3a60a2b872e7660c3f9042c33083dbe9a467ca5cd4d2c840bba7; cold610.887541ms/warm558.562666ms, 150completions each, zeroexcluded, all originalcorrectness assertions; only selected counterpart deferredtootherinvocation; notformalacceptance/CI",
+      "actor": "Codex /root actualexecution",
+      "observed_at": "2026-10-27T01:49:18.759365Z"
     }
   ],
   "pending_decisions": [
@@ -17993,6 +18408,19 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Direct Sam response to call_6bed44a18d7746bf84822824998bf131: 授權繼續限定修復，門檻與負載不變（建議）. Authorizes boundedmetadata-keydiagnosis/correction/review/original501retest atlowCPU, thencompleteP4capacity/restore/CI/allGates andmergeonlyafterPASS. No threshold/load waiver; preserve old84.60s/new94.79s reports and stop/report newperformancefailure."
+    },
+    {
+      "id": "DEC-037",
+      "impact": "MAJOR",
+      "question": "TC-032 only completed-confirmation P95 3s to10s; workload/other criteria unchanged",
+      "affected_ids": [
+        "TC-032",
+        "TASK-037",
+        "NFR-003",
+        "DES-019"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Verified direct Sam Sales userMessage01a17afc-2ad7-7c71-8527-c1b5b675723f turn01a17afc-2a8a-74b2-b13a-cab87ce4b395: 門檻放寬至10秒。 Narrow TC-032 two-scenario 3s→10s amendment only, exact scope documented154; resulting hashes computed by Codex, not a claim Sam inspected unseen hashes. Existing commit/PR/merge authorization retained; no other P4 recovery authority inferred."
     }
   ],
   "external_actions": [
@@ -20961,8 +21389,64 @@
       "kind": "COMMIT",
       "target": "local codex/sales-order-phase-4-archive metadata slice only",
       "idempotency_key": "dec038-metadata-localcommit-r4",
+      "status": "CONFIRMED",
+      "source_ref": "DirectSamDEC038 limitedrepair/standingcommit authority; actualfocusedchecks/separatereviewPASS, no partialP4PR/merge authority exercised. Actual localcommit0753f0a0b419c67086a1d09552e23d9bf2591626 observed; notpushed/PR/mainmerged."
+    },
+    {
+      "id": "MODE-CHANGE-1061-MAIN6CDC-HD018",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-1061-main6cdc-hd018",
+      "status": "CONFIRMED",
+      "source_ref": "Original historical idempotency_key=mode-change-1061, namespaced solely to disambiguate two independently confirmed fork mode actions; no effect replay or authority change. Historical main HD018 action, original ID MODE-CHANGE-1061 collides with independent P4 mode action. Main original preserved verbatim in preintegration backup and main Git history; this disambiguated ledger key adds no authority. Original source_ref: Authenticated Sam HD018 corrective fresh-main delivery, Customer userturn01a1443b-4991-7fd0-99e5-405de41e8f44 verified through read_thread"
+    },
+    {
+      "id": "ACT-DEC037-FRESH-SCHEMA",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "erp_tc032_10s_20261027_r1 on owned socket-only UUID154b50c8-cc62-11f1-83e8-d4284b001f9c",
+      "idempotency_key": "tc032-10s-fresh-schema-20261027-r1",
+      "status": "CONFIRMED",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-tc032-p95-10s/amendment-private/native-r1.json SHA2560819d153f95b3a60a2b872e7660c3f9042c33083dbe9a467ca5cd4d2c840bba7; exact fresh schema/current main migration100 and both original TC032 actualPASS; no oldschemas/accounts changed"
+    },
+    {
+      "id": "ACT-DEC037-COMMIT",
+      "kind": "COMMIT",
+      "target": "codex/sales-tc032-p95-10s to main in crazysumsum/erp-app",
+      "idempotency_key": "dec037-tc032-10s-commit-r1",
+      "status": "CONFIRMED",
+      "source_ref": "Actual commit/push d893103ac71072b3d3a271f9adbdcac1c8cc6ca1; PR289 https://github.com/crazysumsum/erp-app/pull/289 observed by CLI+connector; initial connectorcreate403hadnoeffect; private/external-actions-observed-r1.json"
+    },
+    {
+      "id": "ACT-DEC037-PUSH",
+      "kind": "PUSH",
+      "target": "codex/sales-tc032-p95-10s to main in crazysumsum/erp-app",
+      "idempotency_key": "dec037-tc032-10s-push-r1",
+      "status": "CONFIRMED",
+      "source_ref": "Actual commit/push d893103ac71072b3d3a271f9adbdcac1c8cc6ca1; PR289 https://github.com/crazysumsum/erp-app/pull/289 observed by CLI+connector; initial connectorcreate403hadnoeffect; private/external-actions-observed-r1.json"
+    },
+    {
+      "id": "ACT-DEC037-PR",
+      "kind": "PR_CREATE",
+      "target": "codex/sales-tc032-p95-10s to main in crazysumsum/erp-app",
+      "idempotency_key": "dec037-tc032-10s-pr-r1",
+      "status": "CONFIRMED",
+      "source_ref": "Actual commit/push d893103ac71072b3d3a271f9adbdcac1c8cc6ca1; PR289 https://github.com/crazysumsum/erp-app/pull/289 observed by CLI+connector; initial connectorcreate403hadnoeffect; private/external-actions-observed-r1.json"
+    },
+    {
+      "id": "ACT-DEC037-REFERENCE-COMMIT-PUSH",
+      "kind": "PUSH",
+      "target": "PR289 codex/sales-tc032-p95-10s",
+      "idempotency_key": "dec037-unchanged-uatna-bindings-r1",
       "status": "STARTED",
-      "source_ref": "DirectSamDEC038 limitedrepair/standingcommit authority; actualfocusedchecks/separatereviewPASS, no partialP4PR/merge authority exercised."
+      "source_ref": "Mechanical unchanged2NFR approvalreferences plus generatedmatrix/history; no product/workload/criterion changes. Actual currentcandidateCI required."
+    },
+    {
+      "id": "ACT-P4-MAIN6CDC-LOCAL-INTEGRATION",
+      "kind": "MERGE",
+      "target": "main6cdc into local codex/sales-order-phase-4-archive",
+      "idempotency_key": "p4-main6cdc-integration-r1",
+      "status": "STARTED",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/main6cdc-integration-r1.json actual Git MERGE_HEAD6cdc and fourstructured conflicts, normaldocs auto-merged; proposal preserves both histories. Not a public mainmerge."
     }
   ],
   "evidence_files": [
@@ -22305,5 +22789,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Commitreviewedmetadata slice locally, inspectactualcommit then mergefreshorigin/main6cdc includingapprovedTC03210s; preserveallstatehistories, reconcileonlynecessaryhash/references. ContinuefixedP4remainingwork; noPR/mainmergebeforefullGate."
+  "next_safe_action": "Finish reviewed structured main6cdc merge, actualcommit observation; then remainingTASK062/fullcoherentcapacitypilot+diskadmission/fullcapacity+restore/originalregressions+currentCI+wholeP4Gates. TC03210s only, otherSLO unchanged; no partialPhasePRmerge."
 }

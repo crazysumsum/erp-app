@@ -32,6 +32,8 @@ export const fixturePath = path.join(runDirectory, `uat-fixture-${process.env.SU
  * Trace 會記低 fill 落去嘅密碼：放喺 evidence 目錄（HARNESS_RUN_DIR）以外，唔會跟 evidence 入 repo（REV-115 L-2）。
  */
 export const artifactsDirectory = path.join(os.tmpdir(), "supplier-management-uat-artifacts", process.env.SUPPLIER_UAT_RUN);
+// 匯入嘅來源檔同結果檔（PHASE-004）：每次 run 一個，唔放 Playwright 嘅 outputDir（佢開跑會清空），server 退出就刪。
+export const importRoot = path.join(os.tmpdir(), "supplier-management-uat-imports", process.env.SUPPLIER_UAT_RUN);
 
 /**
  * 冇 DB_NAME／DB_ADMIN_USER 係環境前提唔齊，唔係測試失敗：config 載入時就拋，Playwright 唔寫報告，harness 記 BLOCKED，

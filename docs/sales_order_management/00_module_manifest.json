@@ -366,9 +366,9 @@
     "provided": [
       {
         "id": "sales-fulfillment-projection-and-lifecycle-contract",
-        "version": "HD011/013/014 plus approved HD016A pending-only provider; original lifecycle/Shipment/replay unchanged; full P4 Gates pending",
+        "version": "HD011/013/014 plus approved HD016A pending-only provider; original lifecycle/Shipment/replay unchanged; full P4 Gates pending; current-main6cdc observed byte pin; approved TC03210s only, no new consumer contract",
         "source": "docs/sales_order_management/03_design_spec.md",
-        "sha256": "f37b74b2f23bf904513aef8b3c216d9f39c35574400f266764bac4751f5119ef",
+        "sha256": "5ba756e39d3493c37c42cb20547de0c19a5b259d899ca2ed62056569bd795e6f",
         "consumers": [
           "fulfillment-shipping-management",
           "inventory-management",

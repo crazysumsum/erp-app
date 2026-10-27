@@ -55,7 +55,7 @@ Fields: `ID | Title | Type/Priority | Traceability | Preconditions/Data | Steps/
 | TC-029 | Cancel/close/completed invariants | INTEGRATION/P0 | FR-065–075; DES-002,005; TASK-033,034 | DRAFT/confirmed/partial/full fulfilled | cancel/close/apply result | allowed transitions only; reason/audit; quantities conserved | rollback | YES | PLANNED | — |
 | TC-030 | Revoked actor during confirm/lifecycle | SECURITY/P0 | SEC-001/013; DES-013; TASK-031,033 | loaded page then revoke | confirm/cancel/withdraw | transaction rejects before Inventory/Sales effect | restore actor | YES | PLANNED | — |
 | TC-031 | Reservation/backorder reconciliation | INTEGRATION/OBSERVABILITY/P0 | FR-053–061,064–075; NFR-011; DES-014; TASK-037 | seeded match/mismatch | run read-only reconciliation | every mismatch detected/correlated; no auto SQL repair | restore fixture | YES | PLANNED | — |
-| TC-032 | 50-user confirmation performance | PERFORMANCE/P1 | NFR-003/005; DES-019; TASK-037 | 1/100-line, mixed jobs, real MySQL | load test | p95 <=3s excluding dependency failure; no pool starvation/incorrect result | stop load | PARTIAL | PLANNED | — |
+| TC-032 | 50-user confirmation performance | PERFORMANCE/P1 | NFR-003/005; DES-019; TASK-037 | 1/100-line, mixed jobs, real MySQL | load test | p95 <=10s excluding dependency failure; no pool starvation/incorrect result | stop load | PARTIAL | PLANNED | — |
 | TC-033 | PHASE-003 full regression | REGRESSION/P0 | FR-042–075; TASK-028–037 | production-like | full Phase and prior gates | all concurrency/recovery/security invariants pass | reset env | PARTIAL | PLANNED | — |
 
 ## 5. PHASE-004 CSV and Channel Intake
@@ -830,7 +830,9 @@ load test。
 
 ### Expected result
 
-p95 <=3s excluding dependency failure; no pool starvation/incorrect result。
+p95 <=10s excluding dependency failure; no pool starvation/incorrect result。
+
+Sam 於 2026-10-27 批准僅將 TC-032 的兩個 50-user burst 情境（無額外確認暖機／五次確認暖機）完成確認 P95 門檻調整為 10 秒。每情境三輪、150 個樣本、135 張一行／15 張百行訂單、背景作業、真實十連線池、終態與對帳要求均不變；計時仍包含 202 後輪詢至成功的時間。其他 NFR-003 情境、TC-042、TC-055 與 P4 容量／還原門檻維持原規格。歷史 3 秒失敗紀錄保留，不追溯改為 PASS。
 
 ### Acceptance criteria
 
