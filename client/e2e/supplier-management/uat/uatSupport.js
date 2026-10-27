@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import fs from "node:fs";
 import path from "node:path";
 import { test as base, chromium, devices } from "@playwright/test";
 import { API_URL, CLIENT_URL, artifactsDirectory, connect, readFixture } from "./uatEnvironment.mjs";
@@ -29,6 +30,20 @@ export async function closeDb() {
 }
 
 export const unique = (prefix) => `${prefix}-${randomUUID().slice(0, 8).toUpperCase()}`;
+
+/**
+ * 截圖證據：寫落呢個 test 嘅 output 目錄，再按路徑 attach，咁 junit 會引用個檔。淨係 `body` 嘅 attachment
+ * 喺 line＋junit reporter 之下唔會寫落磁碟，即係之前每個 phase 嘅截圖都冇保留（REV-123 O6）。
+ */
+export async function evidence(page, testInfo, name) {
+  // 同一個名會寫去同一個檔，後一張靜靜蓋咗前一張（REV-125 O2）。
+  if (testInfo.attachments.some((attachment) => attachment.name === name)) throw new Error(`duplicate evidence name: ${name}`);
+  const file = testInfo.outputPath(`${name}.png`);
+  await page.screenshot({ path: file, fullPage: true });
+  await testInfo.attach(name, { path: file, contentType: "image/png" });
+  // attach 會將檔案抄入 attachments/；原本嗰份唔使留兩份。
+  fs.rmSync(file);
+}
 
 async function submitLogin(page, account) {
   await page.goto("/login");
