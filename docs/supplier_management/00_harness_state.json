@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 449,
+  "revision": 452,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -3369,6 +3369,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-129",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (T51 deliverables: operations.md, release_evidence.md, smokeSupplierManagement.js under HD-148 B)",
+      "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-t51-deliverables at 1675cf0f (git diff origin/main..HEAD)",
+      "reviewed_baseline": "171cf54069cb8d608ed8e263a3fc83f944b993f71e46643cbb8d6717173ce2c6",
+      "source_ref": "docs/supplier_management/implementation/132_rev_129_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -6308,6 +6320,39 @@
       "source_ref": "docs/supplier_management/testing/t51_rehearsal/rehearsal-2026-10-27.log (replaces the earlier log of that name): all checks passed. Run from the branch worktree, whose product code equals main 38f05ba6; the rehearsal script changes were not yet committed. Supersedes the previous rehearsal observation's rollback claim, which used 72e205ef rather than the release before 0103 (REV-128 R1). New step C: e6398b70 refuses to start on the 0103 schema ('Supplier startup self-check failed'); after the three statements in 0103's header it starts and serves the rows; rolling forward renumbers them, so user ordering is lost. AUTO_INCREMENT read with information_schema_stats_expiry=0 (R2): the cache read NULL where the live value was 2. Controls: moved counter, five invented changes, case-only permission change in a rolled-back transaction.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-27T08:27:27+00:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "TASK-051 completion boundary and rehearsal across 0103 (PR #292) merged to main",
+      "code_commit": "6458d9d5f738cbb03685dc07f78976f0415ac9d3",
+      "spec_baseline": "3c683c4ea46984b476c96add5e9280b5d395c6cce9e996efa3ec36b683d4f784",
+      "source_fingerprint": "ce3a057ea38eaa90666f6ee0af76bba0fed3bcf3cd33ee87018a1c38f82a5cb4",
+      "status": "PASS",
+      "source_ref": "PR #292 merged as 6458d9d5f738cbb03685dc07f78976f0415ac9d3 at 2026-10-28T00:47:22Z on the Product Owner's word (the TASK-051 convergence instruction, then 'ci 己過'), with --match-head-commit 6c071e59, after a gate that refused unless the latest run of every check was SUCCESS (13 checks, PR run 40474278507), main was an ancestor of HEAD and the local, remote and PR heads were equal. Review REV-128 CHANGES_REQUESTED; every finding fixed before merge (report 131).",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-28T00:47:22+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "T51 smoke (HD-148 B) and TC-134/135 after moving the shared checks (developer run, local)",
+      "code_commit": "fcc0447f75aa97473d4608fa2d26aa68c103c02f",
+      "spec_baseline": "3c683c4ea46984b476c96add5e9280b5d395c6cce9e996efa3ec36b683d4f784",
+      "source_fingerprint": "501daf66cd67dfba1a854d26cb9ea88316e32377db5ff96b28d5dc88c4d39a05",
+      "status": "PASS",
+      "source_ref": "Local scratch MySQL, uncommitted working tree on the branch head. runSupplierReleaseAcceptance.js: TC-134 PASS, TC-135 PASS (20 checks, including the new deploy.no_unknown_migration; the first run failed it on the framework/*.sql ledger rows, fixed by listing database/framework). smokeSupplierManagement.js copy on a restored copy of erp_t51 (erp_t51_rh_copy_smoke): PASS, 19 checks; names erp_t51 and erp_t51_rh_copy refused before any change; temporary users removed, RLA/RLB/RLC Suppliers left in the copy. check with a SELECT-only account against a server on the copy: PASS, 8 checks. Six injected faults (wrong URL, sort_order dropped, 0103 ledger row deleted, unknown ledger row, extra supplier.* permission, no active currency) each failed its own check; approval ON was reported, not failed. Copy, server (exact PID) and the read-only account removed afterwards.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-28T01:04:14+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "T51 smoke after REV-129 fixes, and TC-134/135 (developer run, local)",
+      "code_commit": "b374ca6c3b35fde72393be1ccdb672059345c18e",
+      "spec_baseline": "3c683c4ea46984b476c96add5e9280b5d395c6cce9e996efa3ec36b683d4f784",
+      "source_fingerprint": "7d16b8f8e33cc2b5fbd2459b5ac656948ef21b1af0f7e36bb29982eb71ba270a",
+      "status": "PASS",
+      "source_ref": "Local scratch MySQL. Server code tested as the working tree later committed as b374ca6c on top of 1675cf0f (the earlier observation's runs were of 1675cf0f's code before it was committed). TC-134 PASS, TC-135 PASS (20 checks). copy: approval OFF PASS (19), approval ON PASS (19; it failed before the fix with APPROVER_REQUIRED, as REV-129 showed), approval ON with --first-deployment FAIL on deploy.settings_singleton_approval_off; a REQUIRE SSL admin account PASS with DB_SSL_ENABLED=true and refused without it; refused before any change: DB_NAME equal to --database, no JWT_SECRET; no mode reports usage. check (SELECT-only account, server on an approval-ON copy): PASS 8 with approval reported; --first-deployment FAIL on the approval check. Copies, server (exact PID), accounts and dump removed; erp_t51 approval 0.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-28T01:17:49+00:00"
     }
   ],
   "pending_decisions": [
@@ -8245,8 +8290,21 @@
         "supplier-server-integration",
         "TASK-051"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-28: 'HD-147 B'. The consumed-contract pins are refreshed at the mode change to TEST_AND_VERIFY, together with any other baseline change, so baseline-bound records are stranded once. Until then run_check stays refused on CONTRACT_DRIFT and the Supplier suites run outside it as developer-stage evidence."
+    },
+    {
+      "id": "HD-148",
+      "impact": "MAJOR",
+      "question": "How smokeSupplierManagement.js smokes a deployed environment. Write flows (Draft, activation, approval ON, suspend, block, Bank create and reveal) on a deployed environment need real per-role accounts, passwords and approved device keys, leave permanent Suppliers and audit rows (no hard delete), and approval ON is a global setting. (A) Write smoke on the deployed environment behind --write, operator-supplied credentials, SMOKE- prefix, blocked at the end, approval ON only off production. (B) Write smoke on a restored copy of production with temporary users (reusing the TC-135 smoke), plus read-only §14.4 checks on production with a SELECT-only account. (C) Read-only checks only; write flows by manual UAT on staging.",
+      "affected_ids": [
+        "TASK-051",
+        "TC-135",
+        "server/scripts/smokeSupplierManagement.js",
+        "operations.md"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-28: 'HD-148 B'. check mode is read-only on the deployed environment; copy mode writes only to a restored copy whose name ends in _smoke."
     }
   ],
   "external_actions": [
@@ -9707,5 +9765,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-051 boundary PR: REV-128 findings fixed (report 131); push, CI on the exact head, merge on the Product Owner's word. TASK-051, formal UAT and release stay open (groups B and C); HD-147 awaits the Product Owner."
+  "next_safe_action": "T51 deliverables PR (operations.md, release_evidence.md, smokeSupplierManagement.js under HD-148 B): independent review, CI, merge on the Product Owner's word ('A，review 完 CI 過就 merge'). TASK-051, formal UAT and release stay open (groups B and C); pins and the smoke's profile suite at the mode change (HD-147 B)."
 }

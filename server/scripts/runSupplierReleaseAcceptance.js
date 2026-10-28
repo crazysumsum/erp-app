@@ -2,7 +2,6 @@
 import "../test-support/testEnv.js";
 import { execFile } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
-import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
@@ -11,7 +10,8 @@ import { stringify } from "csv-stringify/sync";
 import { SUPPLIER_CSV_STRINGIFY_OPTIONS, SUPPLIER_IMPORT_COLUMN_NAMES } from "../src/modules/supplier/import/supplierCsvSchema.js";
 import { createSupplierHarness } from "../test/integration/supplierHttpHarness.js";
 import {
-  adminConnection, adminCredentials, exitUnlessAdmin, checklist, errorText, outputPath, schemaObjects, scratchName, tableChecksums, writeReport
+  adminConnection, adminCredentials, deploymentChecks, exitUnlessAdmin, expectOk, checklist, errorText, outputPath, schemaObjects, scratchName,
+  separatedRoleSmoke, tableChecksums, writeReport
 } from "../test/integration/supplierAcceptanceRunner.js";
 
 /**
@@ -40,11 +40,6 @@ const NOT_RUN = [
 ];
 const results = {};
 const evidence = {};
-
-async function expectOk(name, response) {
-  if (response.status < 200 || response.status > 299) throw new Error(`${name}: ${response.status} ${String(response.text).slice(0, 300)}`);
-  return response.json?.data;
-}
 
 async function uploadImport(h, user, codes, mode) {
   const rows = codes.map((code) => SUPPLIER_IMPORT_COLUMN_NAMES.map((name) =>
@@ -133,20 +128,6 @@ async function workerRollback() {
   }
 }
 
-async function purchasableSku(h) {
-  const now = Date.now();
-  const code = `RLSKU-${tag}`;
-  const [item] = await h.db.execute("INSERT INTO items (name, status, created_at, updated_at) VALUES (?, 'active', ?, ?)", [code, now, now]);
-  const [sku] = await h.db.execute(
-    "INSERT INTO item_skus (item_id, sku_code, sku_name, status, purchasable, created_at, updated_at) VALUES (?, ?, ?, 'active', 1, ?, ?)",
-    [item.insertId, code, code, now, now]);
-  const [uom] = await h.db.execute("INSERT INTO item_uoms (code, name, created_at, updated_at) VALUES (?, 'Each', ?, ?)", [code, now, now]);
-  const [mapping] = await h.db.execute(
-    "INSERT INTO item_sku_uoms (sku_id, uom_id, to_base_factor, is_base, created_at, updated_at) VALUES (?, ?, 1, 1, ?, ?)",
-    [sku.insertId, uom.insertId, now, now]);
-  return { skuId: Number(sku.insertId), uomId: Number(mapping.insertId) };
-}
-
 async function capabilityDeployment() {
   const { checks, check, passed } = checklist();
   evidence["TC-135"] = checks;
@@ -164,123 +145,14 @@ async function capabilityDeployment() {
     const applied = await count();
     await migrate();
     check("deploy.migrations_rerun_is_noop", applied > 0 && (await count()) === applied, { applied });
-    // 每個 migration 檔都入咗 ledger（§14.4「Migration count」）；schema 嘅 digest 記低做證據，未有 release baseline 可以比。
-    const files = fs.readdirSync(path.join(SERVER, "database/migrations")).filter((name) => /\.(js|sql)$/u.test(name)).map((name) => `migrations/${name}`);
-    const [ledger] = await admin.query(`SELECT name FROM \`${fresh}\`.fr_schema_migrations`);
-    const recorded = new Set(ledger.map((row) => row.name));
-    check("deploy.every_migration_applied", files.length > 0 && files.every((name) => recorded.has(name)),
-      { files: files.length, missing: files.filter((name) => !recorded.has(name)) });
     const objects = await schemaObjects(admin, fresh);
+    // Schema 嘅 digest 記低做證據，未有 release baseline 可以比。
     evidence.schemaDigest = createHash("sha256").update(JSON.stringify(Object.entries(objects).sort())).digest("hex");
+    await deploymentChecks(admin, fresh, check);
 
-    // §14.4 核對。
-    const [permissions] = await admin.query(`SELECT name FROM \`${fresh}\`.permissions WHERE name LIKE 'supplier.%' ORDER BY name`);
-    const six = ["supplier.approval", "supplier.bank.mgmt", "supplier.bank.view", "supplier.mgmt", "supplier.settings", "supplier.view"];
-    check("deploy.six_permissions_no_extra", JSON.stringify(permissions.map((row) => row.name)) === JSON.stringify(six),
-      { permissions: permissions.map((row) => row.name) });
-    const [[admins]] = await admin.query(`SELECT COUNT(*) AS n FROM \`${fresh}\`.role_permissions rp JOIN \`${fresh}\`.roles r ON r.id = rp.role_id
-      JOIN \`${fresh}\`.permissions p ON p.id = rp.permission_id WHERE r.name = 'system-admin' AND p.name LIKE 'supplier.%'`);
-    check("deploy.system_admin_holds_six", Number(admins.n) === 6, { granted: Number(admins.n) });
-    const [settingsRows] = await admin.query(`SELECT id, require_activation_approval FROM \`${fresh}\`.supplier_settings`);
-    check("deploy.settings_singleton_approval_off", settingsRows.length === 1 && Number(settingsRows[0].id) === 1
-      && Number(settingsRows[0].require_activation_approval) === 0);
-    const [[currencies]] = await admin.query(`SELECT COUNT(*) AS n FROM \`${fresh}\`.currencies WHERE status = 'ACTIVE'`);
-    check("deploy.active_currency", Number(currencies.n) >= 1, { active: Number(currencies.n) });
-
-    // §14.1 第 4 步：server 喺新 schema 上面起得到，每條 Supplier route 都受 supplier.* 權限保護。
+    // §14.1 第 4、6、7 步：server 喺新 schema 上面起得到，route 受保護，分開嘅日常角色行 smoke。
     await app.start();
-    const unguarded = app.routes.filter((route) => route.authType === "public" || route.policies.length === 0
-      || !route.policies.every((policy) => policy.name === "hasPermission" && policy.options.permissions.length > 0
-        && policy.options.permissions.every((name) => six.includes(name))));
-    check("server.routes_guarded", app.routes.length > 0 && unguarded.length === 0,
-      { routes: app.routes.length, unguarded: unguarded.map((route) => route.key) });
-
-    // §14.1 第 6、7 步：分開嘅日常角色行 smoke。
-    const mgmt = await app.makeUser("mgmt", ["supplier.view", "supplier.mgmt"]);
-    const approver = await app.makeUser("apr", ["supplier.view", "supplier.approval"]);
-    const bankRead = await app.makeUser("bankr", ["supplier.view", "supplier.bank.view"]);
-    const bankWrite = await app.makeUser("bankw", ["supplier.view", "supplier.bank.view", "supplier.bank.mgmt"]);
-    const settings = await app.makeUser("set", ["supplier.settings"]);
-    const outsider = await app.makeUser("none", []);
-    const send = (who, key, options) => app.send(who, app.route(key), options);
-    const requestIds = {};
-    const step = async (name, who, key, options) => {
-      const response = await send(who, key, options);
-      const data = await expectOk(name, response);
-      requestIds[name] = response.json?.meta?.requestId;
-      return data;
-    };
-
-    check("roles.outsider_refused", (await send(outsider, "GET /api/v1/suppliers")).status === 403);
-    const draft = await step("create", mgmt, "POST /api/v1/suppliers/create",
-      { body: { supplierCode: `RLA-${tag}`, supplierName: `Release A ${tag}`, defaultCurrencyCode: "HKD" } });
-    check("smoke.draft_created", draft.status === "draft");
-    const active = await step("activate", mgmt, "POST /api/v1/suppliers/:id/activate", { ids: { id: draft.id }, body: { version: draft.version } });
-    check("smoke.direct_activation", active.status === "active");
-
-    const current = await step("settings read", settings, "GET /api/v1/supplier-settings");
-    await step("settings on", settings, "POST /api/v1/supplier-settings/update",
-      { body: { requireActivationApproval: true, version: current.version, reason: `${REASON} on` } });
-    const submitted = await step("approval submit", mgmt, "POST /api/v1/suppliers/create", { body: { supplierCode: `RLB-${tag}`,
-      supplierName: `Release B ${tag}`, defaultCurrencyCode: "HKD", activate: true, approverUserId: approver.userId } });
-    const queue = await app.send(approver, { ...app.route("GET /api/v1/supplier-approvals"), path: "/api/v1/supplier-approvals?scope=all&pageSize=100" });
-    const request = queue.json.data.items.find((item) => item.supplierId === submitted.id);
-    await step("approval approve", approver, "POST /api/v1/supplier-approvals/:id/approve", { ids: { id: request.id }, body: { version: request.version } });
-    const approved = await step("approved read", mgmt, "GET /api/v1/suppliers/:id", { ids: { id: submitted.id } });
-    check("smoke.approval_flow", submitted.status === "pending_approval" && approved.status === "active", { submitted: submitted.status });
-    const now = await step("settings read 2", settings, "GET /api/v1/supplier-settings");
-    await step("settings off", settings, "POST /api/v1/supplier-settings/update",
-      { body: { requireActivationApproval: false, version: now.version, reason: `${REASON} off` } });
-    const third = await step("create third", mgmt, "POST /api/v1/suppliers/create",
-      { body: { supplierCode: `RLC-${tag}`, supplierName: `Release C ${tag}`, defaultCurrencyCode: "HKD", activate: true } });
-
-    // Purchase lookup：三個都有 SKU relation，暫停同封鎖之後即刻消失，history 仲睇得到。
-    const { skuId, uomId } = await purchasableSku(app);
-    for (const supplier of [active, approved, third]) {
-      await step(`relation ${supplier.supplierCode}`, mgmt, "POST /api/v1/suppliers/:id/sku-relations/create",
-        { ids: { id: supplier.id }, body: { skuId, purchaseSkuUomId: uomId } });
-    }
-    const latest = async (id) => (await send(mgmt, "GET /api/v1/suppliers/:id", { ids: { id } })).json.data;
-    await step("suspend", mgmt, "POST /api/v1/suppliers/:id/suspend",
-      { ids: { id: active.id }, body: { version: (await latest(active.id)).version, reason: REASON } });
-    await step("block", approver, "POST /api/v1/suppliers/:id/block",
-      { ids: { id: approved.id }, body: { version: (await latest(approved.id)).version, reason: REASON } });
-    const lookup = await app.send(mgmt, { ...app.route("GET /api/v1/supplier-lookups/for-sku/:skuId"),
-      path: `/api/v1/supplier-lookups/for-sku/${skuId}` });
-    const visible = lookup.json?.data?.items?.map((item) => item.supplierId) ?? [];
-    check("smoke.lookup_hides_suspended_and_blocked", lookup.status === 200 && JSON.stringify(visible) === JSON.stringify([third.id]), { visible });
-    check("smoke.history_still_visible", (await latest(active.id)).status === "suspended" && (await latest(approved.id)).status === "blocked");
-
-    // Bank：讀同寫分開；DB 同 audit 冇明文；有授權 reveal 攞返帳號。
-    const account = `65${String(Date.now()).slice(-12)}`;
-    const bankBody = { accountHolderName: "Release Holder", bankName: "Release Bank", accountNumber: account, isDefault: true, reason: REASON };
-    check("roles.bank_reader_cannot_write",
-      (await send(bankRead, "POST /api/v1/suppliers/:id/bank-accounts/create", { ids: { id: third.id }, body: bankBody })).status === 403);
-    const created = await step("bank create", bankWrite, "POST /api/v1/suppliers/:id/bank-accounts/create", { ids: { id: third.id }, body: bankBody });
-    const listed = await send(bankRead, "GET /api/v1/suppliers/:id/bank-accounts", { ids: { id: third.id } });
-    check("smoke.bank_masked", listed.status === 200 && listed.json.data.items[0]?.maskedAccountNumber.endsWith(account.slice(-4))
-      && !listed.text.includes(account));
-    const [stored] = await app.db.query("SELECT * FROM supplier_bank_accounts WHERE id = ?", [created.id]);
-    const [audited] = await app.db.query("SELECT CAST(detail AS CHAR) AS detail FROM supplier_audit_logs WHERE supplier_id = ?", [third.id]);
-    // VARBINARY 欄係 Buffer：JSON.stringify 會變成數字陣列，要逐欄喺 bytes 入面搵（REV-109 M-1）。
-    const holds = (value) => (Buffer.isBuffer(value) ? value.includes(account) : String(value ?? "").includes(account));
-    check("smoke.no_plaintext_stored", stored.length === 1 && !Object.values(stored[0]).some(holds)
-      && Buffer.isBuffer(stored[0].account_ciphertext) && !stored[0].account_ciphertext.equals(Buffer.from(account))
-      && audited.every((row) => !holds(row.detail)));
-    const revealRoute = "POST /api/v1/suppliers/:id/bank-accounts/:bankAccountId/reveal";
-    const revealIds = { id: third.id, bankAccountId: created.id };
-    check("roles.manager_cannot_reveal", (await send(mgmt, revealRoute, { ids: revealIds, body: { reason: REASON } })).status === 403);
-    const revealed = await step("reveal", bankRead, revealRoute, { ids: revealIds, body: { reason: REASON } });
-    check("smoke.reveal", revealed.accountNumber === account);
-
-    // 每個寫入或者敏感讀取都對應到 audit 行。
-    const audited2 = {};
-    for (const [name, requestId] of Object.entries(requestIds)) {
-      if (/read/u.test(name)) continue;
-      const [[row]] = await app.db.query("SELECT COUNT(*) AS n FROM supplier_audit_logs WHERE request_id = ?", [requestId]);
-      audited2[name] = Number(row.n);
-    }
-    check("smoke.audit_for_each_action", Object.values(audited2).every((n) => n >= 1), audited2);
+    await separatedRoleSmoke(app, check, { tag, reason: REASON });
     return passed() ? "PASS" : "FAIL";
   } catch (error) {
     check("runner.completed", false, errorText(error));

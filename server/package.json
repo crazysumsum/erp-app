@@ -8,6 +8,7 @@
     "start": "node src/index.js",
     "migrate": "node scripts/migrate.js",
     "perf:supplier": "node scripts/perfSupplier.js",
+    "smoke:supplier": "node scripts/smokeSupplierManagement.js",
     "customer-bank:rotate": "node scripts/rotateCustomerBankEncryption.js",
     "customer-bank:reindex": "node scripts/reindexCustomerBankBlindIndexes.js",
     "create-user": "node scripts/createUser.js",
