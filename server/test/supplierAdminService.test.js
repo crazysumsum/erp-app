@@ -183,7 +183,7 @@ test("TC-025 (CORE-009): update Supplier locks and revalidates actor/catalog, re
     "duplicates", "authorize", "business-master", "grams", "audit", "authorize"
   ]);
   // 改名要先 DELETE 舊 grams：update 唔傳 isNew（DEF-048）。
-  assert.equal(events.find(([name]) => name === "grams")[1], undefined);
+  assert.notEqual(events.find(([name]) => name === "grams")[1]?.isNew, true);
   assert.deepEqual(events.filter(([name]) => name === "duplicates"), [["duplicates", "pool"]]);
   assert.match(events.find(([name, sql]) => name === "execute" && sql.includes("UPDATE suppliers"))[1], /version = version \+ 1/u);
 });

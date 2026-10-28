@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 466,
+  "revision": 467,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -3672,6 +3672,18 @@
       "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-technical-acceptance delta 35903133..c747097c",
       "reviewed_baseline": "2390e6fc44da25124375f4347f2a093db512f8353e01d456780a11073be494a3",
       "source_ref": "docs/supplier_management/implementation/135_rev_132_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-133",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (DEF-048 fix under HD-153 A)",
+      "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-def048-name-grams at 140c369f (git diff origin/main..HEAD)",
+      "reviewed_baseline": "2390e6fc44da25124375f4347f2a093db512f8353e01d456780a11073be494a3",
+      "source_ref": "docs/supplier_management/implementation/136_rev_133_independent_review.md",
       "status": "CHANGES_REQUESTED",
       "open_critical": 0,
       "open_high": 0,
@@ -8739,7 +8751,7 @@
         "SupplierAdminService.createSupplierInTransaction"
       ],
       "status": "ANSWERED",
-      "answer_ref": "Product Owner, 2026-10-28: 'A'. REMEDIATE_AND_RETEST: re-enter IMPLEMENT, skip the name-gram DELETE on the create path with a discriminating test first, keep the benchmark's server warnings, add a deadlock check the re-test can fail on; then TEST_AND_VERIFY again on the new baseline and fresh formal runs."
+      "answer_ref": "Product Owner, 2026-10-28: 'A'. REMEDIATE_AND_RETEST: re-enter IMPLEMENT, skip the name-gram DELETE on the create path with a discriminating test first, keep the benchmark's server logs (as option A says; implemented as the server's warn and error lines, capped at 200 with paths masked, which is what the DEF-048 diagnosis used; put to the Product Owner to confirm, REV-133), add a deadlock check the re-test can fail on; then TEST_AND_VERIFY again on the new baseline and fresh formal runs."
     }
   ],
   "external_actions": [

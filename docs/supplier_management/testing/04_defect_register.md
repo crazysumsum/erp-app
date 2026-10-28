@@ -432,6 +432,8 @@ Found by the formal run in TEST_AND_VERIFY (HD-151 A). The run was `supplier-per
   - **Open observation, not proven (REV-132 O3).** The import row transaction's lock count grows linearly with the rows applied. That fits `processNextRow`'s `… status IN ('valid','warning') ORDER BY row_number LIMIT 1 FOR UPDATE` (`SupplierImportService.js:652-658`) locking the applied rows it scans, which would be O(n²) over an import. It would explain why the import is never the victim, and it may bear on TC-101's `import.inside_measured_window` failure. An EXPLAIN on a throwaway database would settle it.
   - **Fix options** are put to the Product Owner as HD-153.
 
+- **Before HD-153 (REPORT_ONLY):** no product change in TEST_AND_VERIFY. The route was HD-152 (A: diagnose first); the remediation route is put to the Product Owner next. The severity, MEDIUM, is proposed: the 500s roll back with no data loss, and the user can retry.
+
 **Fixed under HD-153 A (REMEDIATE_AND_RETEST); still OPEN until the formal re-test in TEST_AND_VERIFY.**
 - **Fix:** the create path (`SupplierAdminService.createSupplierInTransaction`, used by online create and by import create) calls `replaceSupplierNameGrams(…, { isNew: true })`, which skips the `DELETE` for a Supplier made in the same transaction. The update path keeps its `DELETE` and the existing deadlock retry. Update against update on adjacent ids can still deadlock, rarely (REV-132).
 - **Tests:**
@@ -442,12 +444,17 @@ Found by the formal run in TEST_AND_VERIFY (HD-151 A). The run was `supplier-per
 - **The re-test can now fail on the defect:**
   - The performance runner reads InnoDB's `lock_deadlocks` before and after the mixed load and the load during the import. It fails TC-128 (`db.no_deadlocks_mixed_load`) and TC-101 (`db.no_deadlocks_during_import`) on any deadlock.
   - The counter covers the whole instance, so the runner needs its own mysqld, and it refuses to run if the metric is disabled.
+  - **It also refuses to start unless `innodb_deadlock_detect` and `innodb_print_all_deadlocks` are both ON** (REV-133 R1).
+    - With detection off, the counter stays at 0 and the checks would pass without measuring anything.
+    - With printing off, a FAIL could not be traced to name-gram deadlocks.
+    - The runner records both settings and the absolute counter values in its evidence.
+    - Checked on the throwaway mysqld: with printing OFF, the runner failed every case in under a second, before creating its schema; the setting was then turned back ON.
+  - The warnings file keeps at most 200 lines plus a count, with the repository path replaced by `$REPO`. This was added after the developer runs below, and the formal runs will be its first use.
   - The benchmark now keeps the server's warn and error lines next to its report (`<report>.warnings.log`).
 - **Developer runs** on the throwaway mysqld, 2026-10-28:
   - Lint passed, and the Supplier server suite passed 732 of 732.
   - With the fix, the performance runner found 0 deadlocks in the mixed load and 0 during the import; every local case passed. The import took 82.8 s, inside the window.
   - With the fix reverted in place (backed up, then restored and compared): 7 and 19 deadlocks, and 26 `deadlock_retried` warnings in the kept log. TC-101 and TC-128 **failed, only on the new deadlock checks**: the error rate was 0, because the retries hid the deadlocks. So without the new checks, the defect would have passed.
-- **REPORT_ONLY:** no product change in TEST_AND_VERIFY. The route was HD-152 (A: diagnose first); the remediation route is put to the Product Owner next. The severity, MEDIUM, is proposed: the 500s roll back with no data loss, and the user can retry.
 
 ## HD-116 A: dispositions (2026-10-21)
 

@@ -121,6 +121,13 @@ async function totals(view) {
 
 evidence.loadAverageAtStart = os.loadavg().map((value) => Math.round(value * 10) / 10);
 try {
+  // DEF-048（HD-153 A、REV-133 R1）：deadlock 偵測關咗嘅話計數永遠係 0，下面嘅檢查會白白 PASS；print_all_deadlocks 要開，
+  // 個 FAIL 先分得出係咪 name-gram deadlock。一開始就查，唔使等 seed 完先知。
+  const [[settings]] = await admin.query("SELECT @@innodb_deadlock_detect AS detect, @@innodb_print_all_deadlocks AS printAll");
+  evidence.deadlockSettings = { innodbDeadlockDetect: Number(settings.detect), innodbPrintAllDeadlocks: Number(settings.printAll) };
+  if (evidence.deadlockSettings.innodbDeadlockDetect !== 1 || evidence.deadlockSettings.innodbPrintAllDeadlocks !== 1) {
+    throw new Error("innodb_deadlock_detect and innodb_print_all_deadlocks must both be ON: the deadlock checks would otherwise pass without measuring");
+  }
   // ---- 準備：全新 schema、migrate、seed 100k ----
   await admin.query(`CREATE DATABASE \`${schema}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci`);
   await promisify(execFile)(process.execPath, [path.join(SCRIPTS, "migrate.js")], { cwd: SERVER, env: childEnv });
@@ -139,7 +146,8 @@ try {
   const deadlocksBeforeMixed = await deadlocks();
   const mixed = await runScript("benchmarkSupplierManagement.js", LOAD_ARGS, { output: path.join(work, "load.json") });
   evidence.load = summary(mixed.report);
-  const deadlocksMixed = (await deadlocks()) - deadlocksBeforeMixed;
+  const deadlocksAfterMixed = await deadlocks();
+  const deadlocksMixed = deadlocksAfterMixed - deadlocksBeforeMixed;
   const forSku = await runScript("benchmarkSupplierManagement.js", [...LOAD_ARGS, "--only=forSku"], { output: path.join(work, "for-sku.json") });
   evidence.forSku = summary(forSku.report);
   const recall = await runScript("measureSupplierDuplicateRecall.js", ["--queries=200", "--seed=50"], { output: path.join(work, "recall.json") });
@@ -156,8 +164,10 @@ try {
   await new Promise((resolve) => { setTimeout(resolve, Math.max(0, Date.parse(loadWindow.measureFrom) - Date.now()) + 1_000); });
   const imported = await runScript("benchmarkSupplierImport.js", ["--rows=10000"], { output: path.join(work, "import.json") });
   const during = await online;
-  const deadlocksDuringImport = (await deadlocks()) - deadlocksBeforeImport;
-  evidence.deadlocks = { mixedLoad: deadlocksMixed, loadDuringImport: deadlocksDuringImport };
+  const deadlocksAfterImport = await deadlocks();
+  const deadlocksDuringImport = deadlocksAfterImport - deadlocksBeforeImport;
+  evidence.deadlocks = { mixedLoad: deadlocksMixed, loadDuringImport: deadlocksDuringImport,
+    counter: { beforeMixed: deadlocksBeforeMixed, afterMixed: deadlocksAfterMixed, beforeImport: deadlocksBeforeImport, afterImport: deadlocksAfterImport } };
   evidence.import = imported.report ? { ok: imported.report.ok, precheck: imported.report.precheck, execute: imported.report.execute,
     nfr004: imported.report.nfr004, verification: imported.report.verification, notApplied: imported.report.notApplied, error: imported.report.error }
     : { code: imported.code, stderr: imported.stderr };
