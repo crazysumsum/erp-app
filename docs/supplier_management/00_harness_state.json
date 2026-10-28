@@ -1,27 +1,27 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 467,
+  "revision": 468,
   "mode": "FULL_LIFECYCLE",
-  "active_mode": "IMPLEMENT",
-  "status": "IMPLEMENTING",
+  "active_mode": "TEST_AND_VERIFY",
+  "status": "READY_FOR_TESTING",
   "resume_status": null,
   "current_phase": "PHASE-004",
   "current_task": "TASK-051",
   "baseline": {
     "design": "2390e6fc44da25124375f4347f2a093db512f8353e01d456780a11073be494a3",
     "plan": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
-    "code_commit": "064d5d2dd44b3456599c5f0037371f59e32de200",
-    "source_fingerprint": "6bcc3b57430f5c733a1d730cf7abb810cea8f172bbd8f5935ac56aced49f2d28",
-    "worktree": "/Users/sam/Documents/workspace/erp-supplier-d48",
-    "default_commit": "e7f67b82b85f7ae9e3e44914148866487f211645",
-    "mode_entry_commit": "e7f67b82b85f7ae9e3e44914148866487f211645"
+    "code_commit": "f62651d82e2cb58a30aa62948fa96bb8f0f8552a",
+    "source_fingerprint": "418abf1eb92f20dc948ee3a32a60487fa7069c07296797b0cffd47d6c92e7104",
+    "worktree": "/Users/sam/Documents/workspace/erp-supplier-ta2",
+    "default_commit": "f62651d82e2cb58a30aa62948fa96bb8f0f8552a",
+    "mode_entry_commit": "f62651d82e2cb58a30aa62948fa96bb8f0f8552a"
   },
   "runtime": {
     "instance_id": "supplier-t51-scratch-mysqld-3450",
     "owner": "Primary Harness agent",
     "resources": {
-      "workspace": "/Users/sam/Documents/workspace/erp-supplier-ta (claude/supplier-technical-acceptance, cut from main a98e50e7)",
+      "workspace": "/Users/sam/Documents/workspace/erp-supplier-ta2 (claude/supplier-technical-acceptance-2, cut from main f62651d8)",
       "mysql-schema": "erp_t51, and the erp_t51_rh_* scratch schemas the runners create and drop, on a throwaway mysqld at 127.0.0.1:3450 (session scratch datadir, --skip-log-bin); no production data",
       "web-port": "3021 (UAT API) and 5216 (UAT client); the other runners bind free ports"
     },
@@ -6726,6 +6726,17 @@
       "source_ref": "Local, throwaway mysqld 3450, 2026-10-28 05:5x-06:22Z, on 064d5d2d: npm run lint exit 0; Supplier server suite (profile globs, DB_INTEGRATION_TESTS=1) 732/732; runSupplierPerformanceAcceptance.js with the fix: deadlocks mixedLoad 0, loadDuringImport 0, TC-085/101/128/129 local PASS, import 82.8 s inside the window; the same runner with the create-path isNew removed in place (backup, restore, cmp, identical to HEAD): deadlocks 7 and 19, 26 deadlock_retried warnings in the kept log, TC-101 and TC-128 FAIL only on db.no_deadlocks_* (online error rate 0). New integration test red before the fix (ER_LOCK_WAIT_TIMEOUT) with its control green; unit-test mutant (isNew removed) killed. Developer evidence, not formal.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-28T06:22:11+00:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "DEF-048 fix: no name-gram DELETE for a just-created Supplier (PR #298) merged to main",
+      "code_commit": "f62651d82e2cb58a30aa62948fa96bb8f0f8552a",
+      "spec_baseline": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "source_fingerprint": "418abf1eb92f20dc948ee3a32a60487fa7069c07296797b0cffd47d6c92e7104",
+      "status": "PASS",
+      "source_ref": "PR #298 merged as f62651d82e2cb58a30aa62948fa96bb8f0f8552a at 2026-10-28T06:52:07Z on the Product Owner's word ('1 merge 2 只留 warn 同 error 行'), with --match-head-commit 106ef26c, after a gate that refused unless the latest run of every check was SUCCESS (13 checks, PR run 40645193058), main was an ancestor of HEAD and the local, remote and PR heads were equal. Review REV-133 CHANGES_REQUESTED; every finding fixed before merge (report 136). On the merged main: validate_traceability STRUCTURE_PASS, verify_gate PLAN_READY LOCAL_CHECKS_PASS.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-28T06:52:07+00:00"
     }
   ],
   "pending_decisions": [
@@ -8751,7 +8762,7 @@
         "SupplierAdminService.createSupplierInTransaction"
       ],
       "status": "ANSWERED",
-      "answer_ref": "Product Owner, 2026-10-28: 'A'. REMEDIATE_AND_RETEST: re-enter IMPLEMENT, skip the name-gram DELETE on the create path with a discriminating test first, keep the benchmark's server logs (as option A says; implemented as the server's warn and error lines, capped at 200 with paths masked, which is what the DEF-048 diagnosis used; put to the Product Owner to confirm, REV-133), add a deadlock check the re-test can fail on; then TEST_AND_VERIFY again on the new baseline and fresh formal runs."
+      "answer_ref": "Product Owner, 2026-10-28: 'A'. REMEDIATE_AND_RETEST: re-enter IMPLEMENT, skip the name-gram DELETE on the create path with a discriminating test first, keep the benchmark's server logs (as option A says; implemented as the server's warn and error lines, capped at 200 with paths masked, which is what the DEF-048 diagnosis used; put to the Product Owner to confirm, REV-133), add a deadlock check the re-test can fail on; then TEST_AND_VERIFY again on the new baseline and fresh formal runs. Confirmed by the Product Owner, 2026-10-28: '只留 warn 同 error 行' (keep only the warn and error lines)."
     }
   ],
   "external_actions": [
@@ -9282,6 +9293,14 @@
       "idempotency_key": "mode-change-465",
       "status": "CONFIRMED",
       "source_ref": "Product Owner, 2026-10-28: 'A' to HD-153 (REMEDIATE_AND_RETEST for DEF-048). Step 2 of 2: TEST_AND_VERIFY -> IMPLEMENT from main e7f67b82 (PR #296 merge). Step 1 (revision 464) re-entered READY_FOR_TESTING at a98e50e7 with the same reference, because the transition table has no VERIFYING -> IMPLEMENTING edge; no state was written outside state_tool."
+    },
+    {
+      "id": "MODE-CHANGE-468",
+      "kind": "MODE_CHANGE",
+      "target": "TEST_AND_VERIFY",
+      "idempotency_key": "mode-change-468",
+      "status": "CONFIRMED",
+      "source_ref": "Product Owner, 2026-10-28: 'A' to HD-153 (REMEDIATE_AND_RETEST): after the fix merged (PR #298, '1 merge'), back to TEST_AND_VERIFY for the formal re-test; entry commit f62651d82e2cb58a30aa62948fa96bb8f0f8552a"
     }
   ],
   "evidence_files": [
@@ -10266,5 +10285,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "HD-153 A, DEF-048 fix in IMPLEMENT: skip the name-gram DELETE on the create path (createSupplierInTransaction) with a discriminating integration test first; benchmark keeps its server warnings; performance runner fails TC-101/TC-128 on any InnoDB deadlock. Developer checks, independent review, CI, merge on the Product Owner's word; then TEST_AND_VERIFY again and fresh formal runs."
+  "next_safe_action": "DEF-048 formal re-test (HD-153 A) on mode entry commit f62651d8: the 8 required suites at TECHNICAL and REGRESSION (as HD-151 A), with innodb_deadlock_detect and innodb_print_all_deadlocks ON; then the Technical Acceptance report. REPORT_ONLY."
 }
