@@ -28,7 +28,8 @@ A role signs only when everything it reviews is complete on the **same candidate
 | Downstream cases blocked until Purchasing, Receiving and AP ship their parts | Boundary page, group B |
 | All evidence so far is local and developer-stage; none is from a production-like environment | Boundary page, groups A and C |
 | The rehearsal fingerprint does not compare table options, CHECK constraints, generated columns, FK column mapping, index prefixes or privileges | `testing/t51_rehearsal/README.md` |
-| The deployed-environment smoke (`smokeSupplierManagement.js`) does not exist yet | `operations.md` §5 |
+| Production itself is only checked read-only. The write smoke runs on a restored copy (HD-148 B), so the first real write in production is a user's | `operations.md` §5 |
+| The smoke has run only locally; neither mode has run against a production-like environment | `operations.md` §5 |
 
 ## Sign-off
 

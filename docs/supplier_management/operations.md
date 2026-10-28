@@ -85,9 +85,22 @@ The data checks:
 - an Audit entry for every action;
 - Suspended and Blocked Suppliers gone from the purchase lookup.
 
-*Rehearsed locally,* with separated roles, on a fresh schema: TC-135 in `scripts/runSupplierReleaseAcceptance.js`. That runner creates its users directly in its own scratch database, so it cannot run against a deployed environment.
+`server/scripts/smokeSupplierManagement.js` (`npm run smoke:supplier --workspace server -- …`) splits this in two (HD-148 B). Production is never written to, and the script never handles a real account's password or device key.
 
-**The smoke for a deployed environment (`smokeSupplierManagement.js`) is not written yet.** It needs real accounts and devices per role, and it writes Suppliers and a reveal into the target environment. How it does that is open with the Product Owner.
+| Mode | Where | What it does | Needs |
+| --- | --- | --- | --- |
+| `check --url <base URL> --output <file>` | The deployed environment, after step 4 and again after step 8 | Health 200. The Supplier schema is checked with the same inspectors as the startup self-check. The §14.4 data checks: every migration file of this release is in the ledger, and the ledger holds no file this release does not know (that would mean the schema is newer than the code); six permissions and no extra; `system-admin` holds all six; the settings row; an active currency. **Approval is reported, not required OFF**, because the business may have turned it on. It writes nothing. | `DB_*` set to an account with **SELECT only** on the production database; the same SSL settings as the app |
+| `copy --database <name>_smoke --output <file>` | A **restored copy** of the production backup from step 1. The name must end in `_smoke` and must not be `DB_NAME`. | Applies this release's migrations to the copy, which rehearses the upgrade on real data. Runs the §14.4 checks. Starts the app on the copy with the deployment's config, Bank key ring included, so the startup self-check runs. Then runs the separated-role smoke with temporary users: Draft, direct activation, the approval ON flow, suspend, block, the purchase lookup, the masked Bank list, no plaintext stored, reveal, and an Audit row for every action. | `DB_ADMIN_*` for the copy; the deployment's environment variables |
+
+The temporary users are removed at the end. The smoke Suppliers (`RLA-`, `RLB-`, `RLC-`), their SKU and Bank account stay in the copy; drop the copy when done. The report is the harness JSON (`TC-135`), and each check, with its detail, is printed on stdout.
+
+*Rehearsed locally* on the throwaway MySQL:
+- `copy` on a restored copy of the module database passed 19 checks. A database name without `_smoke`, or equal to `DB_NAME`, is refused before anything is touched.
+- `check` with a SELECT-only account against a running server passed 8 checks.
+- Six faults were then injected into the copy. Each was reported by its own check: a wrong URL, a missing `sort_order`, 0103 missing from the ledger, an unknown ledger file, an extra `supplier.*` permission, and no active currency. Approval ON was reported, as designed, and did not fail the run.
+- TC-135 (`runSupplierReleaseAcceptance.js`) now uses the same check and smoke code.
+
+The production side of TC-135 (staged rollout, break-glass audit) still needs the real environment.
 
 ## 6. Not covered by this draft
 

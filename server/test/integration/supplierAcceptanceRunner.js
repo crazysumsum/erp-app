@@ -1,7 +1,9 @@
 import { spawnSync } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
+import fs from "node:fs";
 import { writeFile } from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import mysql from "mysql2/promise";
 
 /**
@@ -114,4 +116,157 @@ export async function schemaObjects(connection, database) {
     FROM information_schema.events WHERE event_schema = ?`, [database]);
   for (const row of events) objects[`event:${row.name}`] = hash(JSON.stringify([row.body, row.every, row.unit]));
   return objects;
+}
+
+export async function expectOk(name, response) {
+  if (response.status < 200 || response.status > 299) throw new Error(`${name}: ${response.status} ${String(response.text).slice(0, 300)}`);
+  return response.json?.data;
+}
+
+export const SUPPLIER_PERMISSIONS = Object.freeze(["supplier.approval", "supplier.bank.mgmt", "supplier.bank.view", "supplier.mgmt",
+  "supplier.settings", "supplier.view"]);
+const DATABASE = fileURLToPath(new URL("../../database/", import.meta.url));
+
+/**
+ * 設計 §14.4 嘅資料核對，只讀（TC-135、smokeSupplierManagement.js）。Ledger 要有呢個 release 每個 migration 檔，亦唔可以有
+ * 呢個 release 唔認識嘅檔（即係 schema 比 code 新，例如 server rollback 咗）。回 approval 狀態同一個 active 貨幣。
+ */
+export async function deploymentChecks(connection, schema, check, { approvalMustBeOff = true } = {}) {
+  const listed = (directory) => fs.readdirSync(path.join(DATABASE, directory)).filter((name) => /\.(js|sql)$/u.test(name))
+    .map((name) => `${directory}/${name}`);
+  const files = listed("migrations");
+  const [ledger] = await connection.query(`SELECT name FROM \`${schema}\`.fr_schema_migrations`);
+  const recorded = new Set(ledger.map((row) => row.name));
+  const known = new Set([...files, ...listed("framework")]);
+  check("deploy.every_migration_applied", files.length > 0 && files.every((name) => recorded.has(name)),
+    { files: files.length, missing: files.filter((name) => !recorded.has(name)) });
+  check("deploy.no_unknown_migration", ledger.every((row) => known.has(row.name)),
+    { unknown: ledger.map((row) => row.name).filter((name) => !known.has(name)) });
+  const [permissions] = await connection.query(`SELECT name FROM \`${schema}\`.permissions WHERE name LIKE 'supplier.%' ORDER BY name`);
+  check("deploy.six_permissions_no_extra", JSON.stringify(permissions.map((row) => row.name)) === JSON.stringify(SUPPLIER_PERMISSIONS),
+    { permissions: permissions.map((row) => row.name) });
+  const [[admins]] = await connection.query(`SELECT COUNT(*) AS n FROM \`${schema}\`.role_permissions rp JOIN \`${schema}\`.roles r ON r.id = rp.role_id
+    JOIN \`${schema}\`.permissions p ON p.id = rp.permission_id WHERE r.name = 'system-admin' AND p.name LIKE 'supplier.%'`);
+  check("deploy.system_admin_holds_six", Number(admins.n) === 6, { granted: Number(admins.n) });
+  const [settingsRows] = await connection.query(`SELECT id, require_activation_approval FROM \`${schema}\`.supplier_settings`);
+  const approval = settingsRows.length === 1 ? Number(settingsRows[0].require_activation_approval) === 1 : null;
+  const singleton = settingsRows.length === 1 && Number(settingsRows[0].id) === 1;
+  if (approvalMustBeOff) check("deploy.settings_singleton_approval_off", singleton && approval === false);
+  else check("deploy.settings_singleton", singleton, { requireActivationApproval: approval });
+  const [active] = await connection.query(`SELECT code FROM \`${schema}\`.currencies WHERE status = 'ACTIVE' ORDER BY code`);
+  check("deploy.active_currency", active.length >= 1, { active: active.length });
+  return { approval, currencyCode: active.some((row) => row.code === "HKD") ? "HKD" : active[0]?.code ?? null };
+}
+
+async function purchasableSku(h, tag) {
+  const now = Date.now();
+  const code = `RLSKU-${tag}`;
+  const [item] = await h.db.execute("INSERT INTO items (name, status, created_at, updated_at) VALUES (?, 'active', ?, ?)", [code, now, now]);
+  const [sku] = await h.db.execute(
+    "INSERT INTO item_skus (item_id, sku_code, sku_name, status, purchasable, created_at, updated_at) VALUES (?, ?, ?, 'active', 1, ?, ?)",
+    [item.insertId, code, code, now, now]);
+  const [uom] = await h.db.execute("INSERT INTO item_uoms (code, name, created_at, updated_at) VALUES (?, 'Each', ?, ?)", [code, now, now]);
+  const [mapping] = await h.db.execute(
+    "INSERT INTO item_sku_uoms (sku_id, uom_id, to_base_factor, is_base, created_at, updated_at) VALUES (?, ?, 1, 1, ?, ?)",
+    [sku.insertId, uom.insertId, now, now]);
+  return { skuId: Number(sku.insertId), uomId: Number(mapping.insertId) };
+}
+
+/**
+ * 設計 §14.1 第 4、6、7 步：一個已經起咗嘅 harness app（`createSupplierHarness`）上面，每條 Supplier route 都受 supplier.*
+ * 權限保護；分開嘅日常角色行 smoke：Draft、直接啟用、審批、暫停、封鎖、purchase lookup、masked Bank、reveal、audit。
+ * 會寫 Supplier、SKU、Bank 同設定，所以只喺 scratch schema 或者還原副本跑（TC-135、HD-148 B）。
+ */
+export async function separatedRoleSmoke(app, check, { tag, reason, currencyCode = "HKD" }) {
+  const unguarded = app.routes.filter((route) => route.authType === "public" || route.policies.length === 0
+    || !route.policies.every((policy) => policy.name === "hasPermission" && policy.options.permissions.length > 0
+      && policy.options.permissions.every((name) => SUPPLIER_PERMISSIONS.includes(name))));
+  check("server.routes_guarded", app.routes.length > 0 && unguarded.length === 0,
+    { routes: app.routes.length, unguarded: unguarded.map((route) => route.key) });
+
+  const mgmt = await app.makeUser("mgmt", ["supplier.view", "supplier.mgmt"]);
+  const approver = await app.makeUser("apr", ["supplier.view", "supplier.approval"]);
+  const bankRead = await app.makeUser("bankr", ["supplier.view", "supplier.bank.view"]);
+  const bankWrite = await app.makeUser("bankw", ["supplier.view", "supplier.bank.view", "supplier.bank.mgmt"]);
+  const settings = await app.makeUser("set", ["supplier.settings"]);
+  const outsider = await app.makeUser("none", []);
+  const send = (who, key, options) => app.send(who, app.route(key), options);
+  const requestIds = {};
+  const step = async (name, who, key, options) => {
+    const response = await send(who, key, options);
+    const data = await expectOk(name, response);
+    requestIds[name] = response.json?.meta?.requestId;
+    return data;
+  };
+
+  check("roles.outsider_refused", (await send(outsider, "GET /api/v1/suppliers")).status === 403);
+  const draft = await step("create", mgmt, "POST /api/v1/suppliers/create",
+    { body: { supplierCode: `RLA-${tag}`, supplierName: `Release A ${tag}`, defaultCurrencyCode: currencyCode } });
+  check("smoke.draft_created", draft.status === "draft");
+  const active = await step("activate", mgmt, "POST /api/v1/suppliers/:id/activate", { ids: { id: draft.id }, body: { version: draft.version } });
+  check("smoke.direct_activation", active.status === "active");
+
+  const current = await step("settings read", settings, "GET /api/v1/supplier-settings");
+  await step("settings on", settings, "POST /api/v1/supplier-settings/update",
+    { body: { requireActivationApproval: true, version: current.version, reason: `${reason} on` } });
+  const submitted = await step("approval submit", mgmt, "POST /api/v1/suppliers/create", { body: { supplierCode: `RLB-${tag}`,
+    supplierName: `Release B ${tag}`, defaultCurrencyCode: currencyCode, activate: true, approverUserId: approver.userId } });
+  const queue = await app.send(approver, { ...app.route("GET /api/v1/supplier-approvals"), path: "/api/v1/supplier-approvals?scope=all&pageSize=100" });
+  const request = queue.json.data.items.find((item) => item.supplierId === submitted.id);
+  await step("approval approve", approver, "POST /api/v1/supplier-approvals/:id/approve", { ids: { id: request.id }, body: { version: request.version } });
+  const approved = await step("approved read", mgmt, "GET /api/v1/suppliers/:id", { ids: { id: submitted.id } });
+  check("smoke.approval_flow", submitted.status === "pending_approval" && approved.status === "active", { submitted: submitted.status });
+  const now = await step("settings read 2", settings, "GET /api/v1/supplier-settings");
+  await step("settings off", settings, "POST /api/v1/supplier-settings/update",
+    { body: { requireActivationApproval: false, version: now.version, reason: `${reason} off` } });
+  const third = await step("create third", mgmt, "POST /api/v1/suppliers/create",
+    { body: { supplierCode: `RLC-${tag}`, supplierName: `Release C ${tag}`, defaultCurrencyCode: currencyCode, activate: true } });
+
+  // Purchase lookup：三個都有 SKU relation，暫停同封鎖之後即刻消失，history 仲睇得到。
+  const { skuId, uomId } = await purchasableSku(app, tag);
+  for (const supplier of [active, approved, third]) {
+    await step(`relation ${supplier.supplierCode}`, mgmt, "POST /api/v1/suppliers/:id/sku-relations/create",
+      { ids: { id: supplier.id }, body: { skuId, purchaseSkuUomId: uomId } });
+  }
+  const latest = async (id) => (await send(mgmt, "GET /api/v1/suppliers/:id", { ids: { id } })).json.data;
+  await step("suspend", mgmt, "POST /api/v1/suppliers/:id/suspend",
+    { ids: { id: active.id }, body: { version: (await latest(active.id)).version, reason } });
+  await step("block", approver, "POST /api/v1/suppliers/:id/block",
+    { ids: { id: approved.id }, body: { version: (await latest(approved.id)).version, reason } });
+  const lookup = await app.send(mgmt, { ...app.route("GET /api/v1/supplier-lookups/for-sku/:skuId"),
+    path: `/api/v1/supplier-lookups/for-sku/${skuId}` });
+  const visible = lookup.json?.data?.items?.map((item) => item.supplierId) ?? [];
+  check("smoke.lookup_hides_suspended_and_blocked", lookup.status === 200 && JSON.stringify(visible) === JSON.stringify([third.id]), { visible });
+  check("smoke.history_still_visible", (await latest(active.id)).status === "suspended" && (await latest(approved.id)).status === "blocked");
+
+  // Bank：讀同寫分開；DB 同 audit 冇明文；有授權 reveal 攞返帳號。
+  const account = `65${String(Date.now()).slice(-12)}`;
+  const bankBody = { accountHolderName: "Release Holder", bankName: "Release Bank", accountNumber: account, isDefault: true, reason };
+  check("roles.bank_reader_cannot_write",
+    (await send(bankRead, "POST /api/v1/suppliers/:id/bank-accounts/create", { ids: { id: third.id }, body: bankBody })).status === 403);
+  const created = await step("bank create", bankWrite, "POST /api/v1/suppliers/:id/bank-accounts/create", { ids: { id: third.id }, body: bankBody });
+  const listed = await send(bankRead, "GET /api/v1/suppliers/:id/bank-accounts", { ids: { id: third.id } });
+  check("smoke.bank_masked", listed.status === 200 && listed.json.data.items[0]?.maskedAccountNumber.endsWith(account.slice(-4))
+    && !listed.text.includes(account));
+  const [stored] = await app.db.query("SELECT * FROM supplier_bank_accounts WHERE id = ?", [created.id]);
+  const [audited] = await app.db.query("SELECT CAST(detail AS CHAR) AS detail FROM supplier_audit_logs WHERE supplier_id = ?", [third.id]);
+  // VARBINARY 欄係 Buffer：JSON.stringify 會變成數字陣列，要逐欄喺 bytes 入面搵（REV-109 M-1）。
+  const holds = (value) => (Buffer.isBuffer(value) ? value.includes(account) : String(value ?? "").includes(account));
+  check("smoke.no_plaintext_stored", stored.length === 1 && !Object.values(stored[0]).some(holds)
+    && Buffer.isBuffer(stored[0].account_ciphertext) && !stored[0].account_ciphertext.equals(Buffer.from(account))
+    && audited.every((row) => !holds(row.detail)));
+  const revealRoute = "POST /api/v1/suppliers/:id/bank-accounts/:bankAccountId/reveal";
+  const revealIds = { id: third.id, bankAccountId: created.id };
+  check("roles.manager_cannot_reveal", (await send(mgmt, revealRoute, { ids: revealIds, body: { reason } })).status === 403);
+  const revealed = await step("reveal", bankRead, revealRoute, { ids: revealIds, body: { reason } });
+  check("smoke.reveal", revealed.accountNumber === account);
+
+  // 每個寫入或者敏感讀取都對應到 audit 行。
+  const audited2 = {};
+  for (const [name, requestId] of Object.entries(requestIds)) {
+    if (/read/u.test(name)) continue;
+    const [[row]] = await app.db.query("SELECT COUNT(*) AS n FROM supplier_audit_logs WHERE request_id = ?", [requestId]);
+    audited2[name] = Number(row.n);
+  }
+  check("smoke.audit_for_each_action", Object.values(audited2).every((n) => n >= 1), audited2);
 }

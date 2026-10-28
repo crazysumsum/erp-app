@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 450,
+  "revision": 451,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -6319,6 +6319,17 @@
       "source_ref": "PR #292 merged as 6458d9d5f738cbb03685dc07f78976f0415ac9d3 at 2026-10-28T00:47:22Z on the Product Owner's word (the TASK-051 convergence instruction, then 'ci 己過'), with --match-head-commit 6c071e59, after a gate that refused unless the latest run of every check was SUCCESS (13 checks, PR run 40474278507), main was an ancestor of HEAD and the local, remote and PR heads were equal. Review REV-128 CHANGES_REQUESTED; every finding fixed before merge (report 131).",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-28T00:47:22+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "T51 smoke (HD-148 B) and TC-134/135 after moving the shared checks (developer run, local)",
+      "code_commit": "fcc0447f75aa97473d4608fa2d26aa68c103c02f",
+      "spec_baseline": "3c683c4ea46984b476c96add5e9280b5d395c6cce9e996efa3ec36b683d4f784",
+      "source_fingerprint": "501daf66cd67dfba1a854d26cb9ea88316e32377db5ff96b28d5dc88c4d39a05",
+      "status": "PASS",
+      "source_ref": "Local scratch MySQL, uncommitted working tree on the branch head. runSupplierReleaseAcceptance.js: TC-134 PASS, TC-135 PASS (20 checks, including the new deploy.no_unknown_migration; the first run failed it on the framework/*.sql ledger rows, fixed by listing database/framework). smokeSupplierManagement.js copy on a restored copy of erp_t51 (erp_t51_rh_copy_smoke): PASS, 19 checks; names erp_t51 and erp_t51_rh_copy refused before any change; temporary users removed, RLA/RLB/RLC Suppliers left in the copy. check with a SELECT-only account against a server on the copy: PASS, 8 checks. Six injected faults (wrong URL, sort_order dropped, 0103 ledger row deleted, unknown ledger row, extra supplier.* permission, no active currency) each failed its own check; approval ON was reported, not failed. Copy, server (exact PID) and the read-only account removed afterwards.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-28T01:04:14+00:00"
     }
   ],
   "pending_decisions": [
@@ -8258,6 +8269,19 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-28: 'HD-147 B'. The consumed-contract pins are refreshed at the mode change to TEST_AND_VERIFY, together with any other baseline change, so baseline-bound records are stranded once. Until then run_check stays refused on CONTRACT_DRIFT and the Supplier suites run outside it as developer-stage evidence."
+    },
+    {
+      "id": "HD-148",
+      "impact": "MAJOR",
+      "question": "How smokeSupplierManagement.js smokes a deployed environment. Write flows (Draft, activation, approval ON, suspend, block, Bank create and reveal) on a deployed environment need real per-role accounts, passwords and approved device keys, leave permanent Suppliers and audit rows (no hard delete), and approval ON is a global setting. (A) Write smoke on the deployed environment behind --write, operator-supplied credentials, SMOKE- prefix, blocked at the end, approval ON only off production. (B) Write smoke on a restored copy of production with temporary users (reusing the TC-135 smoke), plus read-only §14.4 checks on production with a SELECT-only account. (C) Read-only checks only; write flows by manual UAT on staging.",
+      "affected_ids": [
+        "TASK-051",
+        "TC-135",
+        "server/scripts/smokeSupplierManagement.js",
+        "operations.md"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-28: 'HD-148 B'. check mode is read-only on the deployed environment; copy mode writes only to a restored copy whose name ends in _smoke."
     }
   ],
   "external_actions": [
@@ -9718,5 +9742,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "T51 deliverable drafts (operations.md, release_evidence.md, smokeSupplierManagement.js): independent review, CI, merge on the Product Owner's word ('A，review 完 CI 過就 merge'). TASK-051, formal UAT and release stay open (groups B and C); pins refresh at the mode change (HD-147 B)."
+  "next_safe_action": "T51 deliverables PR (operations.md, release_evidence.md, smokeSupplierManagement.js under HD-148 B): independent review, CI, merge on the Product Owner's word ('A，review 完 CI 過就 merge'). TASK-051, formal UAT and release stay open (groups B and C); pins and the smoke's profile suite at the mode change (HD-147 B)."
 }
