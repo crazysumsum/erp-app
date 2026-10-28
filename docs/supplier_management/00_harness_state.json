@@ -1,17 +1,17 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 457,
+  "revision": 460,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "TEST_AND_VERIFY",
-  "status": "READY_FOR_TESTING",
-  "resume_status": null,
+  "status": "BLOCKED",
+  "resume_status": "VERIFYING",
   "current_phase": "PHASE-004",
   "current_task": "TASK-051",
   "baseline": {
     "design": "2390e6fc44da25124375f4347f2a093db512f8353e01d456780a11073be494a3",
     "plan": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
-    "code_commit": "a98e50e750c9cdfa7919d3daad8385113e94be0c",
+    "code_commit": "7bbf547d5a019137d2cc77d8930cf6cb4a3c9f69",
     "source_fingerprint": "675f2e537bd908f9cd5fb14cd11b72df9c657e00393de9062ac42ea2cdc39077",
     "worktree": "/Users/sam/Documents/workspace/erp-supplier-ta",
     "default_commit": "a98e50e750c9cdfa7919d3daad8385113e94be0c",
@@ -6646,6 +6646,17 @@
       "source_ref": "PR #295 merged as a98e50e750c9cdfa7919d3daad8385113e94be0c at 2026-10-28T03:00:52Z on the Product Owner's word ('HD-150 A，review 完 CI 過就 merge', then 'CI已通過'), with --match-head-commit 009e3a13, after a gate that refused unless the latest run of every check was SUCCESS (13 checks, PR run 40622968950), main was an ancestor of HEAD and the local, remote and PR heads were equal. Review REV-130 APPROVED (report 133). On the merged main: validate_traceability STRUCTURE_PASS, verify_gate PLAN_READY LOCAL_CHECKS_PASS.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-28T03:00:52+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Formal run_check at TECHNICAL and REGRESSION, 8 required suites (HD-151 A)",
+      "code_commit": "7bbf547d5a019137d2cc77d8930cf6cb4a3c9f69",
+      "spec_baseline": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "source_fingerprint": "675f2e537bd908f9cd5fb14cd11b72df9c657e00393de9062ac42ea2cdc39077",
+      "status": "FAIL",
+      "source_ref": "docs/supplier_management/testing/07_technical_acceptance_report.md. 16 run_check --execute runs, 2026-10-28 03:05-03:40Z, all registered in evidence_files. PASS at both stages: server-integration 730/730, security 730/730, bank-security 142/142, client-ui 208/208. BLOCKED at both stages, production parts NOT_RUN by design: resilience (TC-130, TC-132), recovery (TC-133), release-operations (TC-134..136), performance (TC-128). REGRESSION performance FAIL: TC-101, online create 6 of 291 HTTP 500 during the import (DEF-048). verify_gate TECHNICAL_ACCEPTANCE BLOCKED: TASK_INCOMPLETE TASK-051, the NOT_RUN production parts, TC-101.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-28T03:40:37+00:00"
     }
   ],
   "pending_decisions": [
@@ -8625,6 +8636,39 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-28: 'HD-150 A，review 完 CI 過就 merge'. APPROVAL-HD-150-SCOPE."
+    },
+    {
+      "id": "HD-151",
+      "impact": "MAJOR",
+      "question": "The TECHNICAL_ACCEPTANCE gate needs TECHNICAL and REGRESSION evidence for the 8 required suites; run_check runs one stage per execution, and no remediation happened, so REGRESSION repeats TECHNICAL on the same baseline (about 25 more minutes, a second 100k performance run). (A) Run both stages for real. (B) TECHNICAL only; REGRESSION NOT_RUN until a real new baseline, leaving the gate on REQUIRED_RUN_MISSING.",
+      "affected_ids": [
+        "TECHNICAL_ACCEPTANCE",
+        "supplier-server-integration",
+        "supplier-bank-security",
+        "supplier-security",
+        "supplier-client-ui",
+        "supplier-performance",
+        "supplier-resilience",
+        "supplier-recovery",
+        "supplier-release-operations"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-28: 'HD-151 A'."
+    },
+    {
+      "id": "HD-152",
+      "impact": "MAJOR",
+      "question": "DEF-048 (proposed MEDIUM): during a 10,000-row import, online Supplier create answered HTTP 500 for 6 of 291 requests at the REGRESSION run (TECHNICAL passed). Evidence points to a supplier_name_grams deadlock surviving the single DEF-031 retry, unproven because the benchmark deletes its server logs; the same mechanism may explain DEF-034. Route? (A) Diagnose first under REPORT_ONLY: rerun the performance benchmark locally with its server logs kept (an uncommitted, backed-up and restored copy; not formal evidence) until the 500 recurs, then bring a proven cause and fix options. (B) REMEDIATE_AND_RETEST now on the current hypothesis. (C) Defer DEF-048 to the release decision with the other risks.",
+      "affected_ids": [
+        "DEF-048",
+        "DEF-034",
+        "TC-101",
+        "NFR-001",
+        "SupplierAdminService.create",
+        "SupplierImportService"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
     }
   ],
   "external_actions": [
@@ -9304,7 +9348,23 @@
     "evidence/20261014T080726-b7a1f7acd2f5/run.json",
     "evidence/20261014T081826-87f4b93b54fb/run.json",
     "evidence/20261014T082013-b336a4b827af/run.json",
-    "evidence/20261014T091552-f1d61392c0aa/run.json"
+    "evidence/20261014T091552-f1d61392c0aa/run.json",
+    "evidence/20261028T030549-e436dd8c8e0e/run.json",
+    "evidence/20261028T030619-93214fa82680/run.json",
+    "evidence/20261028T030846-6e37409ee932/run.json",
+    "evidence/20261028T031107-5a60930937d7/run.json",
+    "evidence/20261028T031113-f62b26dcfead/run.json",
+    "evidence/20261028T031143-82e03aedafcb/run.json",
+    "evidence/20261028T031148-f1db966ec506/run.json",
+    "evidence/20261028T031155-3985c6786392/run.json",
+    "evidence/20261028T032301-7b6667f1694c/run.json",
+    "evidence/20261028T032524-7dca7b3aef27/run.json",
+    "evidence/20261028T032537-ea993c5503a9/run.json",
+    "evidence/20261028T032808-13d6884a8eec/run.json",
+    "evidence/20261028T032813-509e90dc36cf/run.json",
+    "evidence/20261028T032844-d9c9a99ea4cd/run.json",
+    "evidence/20261028T032850-0bf8ad538455/run.json",
+    "evidence/20261028T032858-19847f4da7f2/run.json"
   ],
   "defects": [
     {
@@ -10099,7 +10159,21 @@
         "HD-143 A: the denied-attempt count of HD-142 A is narrowed to the request and system logs"
       ],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-048",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "source_ids": [
+        "TC-101",
+        "NFR-001",
+        "supplier-performance REGRESSION evidence/20261028T032858-19847f4da7f2",
+        "server/src/modules/supplier/SupplierAdminService.js:306",
+        "docs/supplier_management/testing/04_defect_register.md"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TEST_AND_VERIFY on mode entry commit a98e50e7: Product Owner decision on the TECHNICAL/REGRESSION runs (HD-151), then formal run_check of the required technical suites, the Technical Acceptance report, and UAT execution only if Technical Acceptance permits. REPORT_ONLY: formal failures go to triage, no product change. TASK-051 groups B and C stay open; release not approved."
+  "next_safe_action": "HD-152 (DEF-048 route) awaits the Product Owner. Formal evidence and the Technical Acceptance report are committed on claude/supplier-technical-acceptance; PR, independent review and CI follow, merge on the Product Owner's word. UAT not executed (Technical Acceptance does not permit it)."
 }

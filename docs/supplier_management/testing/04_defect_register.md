@@ -127,7 +127,7 @@ Found while preparing the TC-131 (OPS-004) runner. On a freshly migrated scratch
 
 ## DEF-034 — LOW
 
-The first run of the performance runner (2026-10-22, TC-101) found a 10,000-row import, run alongside a 50-user load on 100k seeded Suppliers, that applied 9,999 rows. One row ended not applied. The job's counts stayed consistent, so the row was reported as failed rather than lost silently, but every row in that file is a valid create. The cause is unknown: that first runner version deleted the tools' reports. The next three runs applied 10,000 of 10,000, and T50's earlier runs did too. The runner now keeps the tools' full reports in `supplier-performance-details/` next to its own output. The import tool deletes its job and rows when it finishes, so before that it records up to 20 not-applied rows with their stored errors (`report.notApplied`, HD-122 A), and the runner copies them into its evidence (`evidence.import.notApplied`). A recurrence will therefore show the reason. Both runs on 2026-10-27 also applied 10,000 of 10,000. (Corrected 2026-10-27, REV-128 R4: this paragraph used to name `evidence.importFailedRows`, a poll that was removed in `6f413337`.) REPORT_ONLY: no product change.
+The first run of the performance runner (2026-10-22, TC-101) found a 10,000-row import, run alongside a 50-user load on 100k seeded Suppliers, that applied 9,999 rows. One row ended not applied. The job's counts stayed consistent, so the row was reported as failed rather than lost silently, but every row in that file is a valid create. The cause is unknown: that first runner version deleted the tools' reports. The next three runs applied 10,000 of 10,000, and T50's earlier runs did too. The runner now keeps the tools' full reports in `supplier-performance-details/` next to its own output. The import tool deletes its job and rows when it finishes, so before that it records up to 20 not-applied rows with their stored errors (`report.notApplied`, HD-122 A), and the runner copies them into its evidence (`evidence.import.notApplied`). A recurrence will therefore show the reason. Both runs on 2026-10-27 also applied 10,000 of 10,000. (Corrected 2026-10-27, REV-128 R4: this paragraph used to name `evidence.importFailedRows`, a poll that was removed in `6f413337`.) **2026-10-28:** both formal runs at `a98e50e7` applied 10,000 of 10,000. The REGRESSION run's online creates hit 500s under the import (DEF-048), with a name-gram deadlock as the likely cause. That points to a possible cause for DEF-034, still unproven. REPORT_ONLY: no product change.
 
 ## DEF-035 — MEDIUM
 
@@ -368,6 +368,24 @@ Found while writing UAT-030. SEC-014 and design §4 (system-admin) say that a `s
   - An integration test on real MySQL pins both bucket edges, the counted actions, and a non-admin role versus `system-admin`.
   - Mutants killed: no report on update or on reveal; everyone reported; the report moved inside the transaction (create, update, reveal); no alert; the role join inverted or reduced to "any role"; the window widened; either bucket edge moved.
   - On the real backend, UAT-030 passes, including its alert step.
+
+## DEF-048 — MEDIUM (proposed; open)
+
+Found by the formal run in TEST_AND_VERIFY (HD-151 A). The run was `supplier-performance` at REGRESSION, on code `a98e50e7`, with evidence `evidence/20261028T032858-19847f4da7f2`.
+
+- **What failed:** TC-101 (NFR-001 while a 10,000-row import runs alongside 50 online users). Online **Supplier create** answered **HTTP 500 for 6 of 291 requests** (error rate 2.06%, limit 1%; p99 2,532 ms, max 3,982 ms).
+  - Every other operation passed.
+  - The import itself applied 10,000 of 10,000, with an empty `notApplied` list.
+- **Not every time:**
+  - The TECHNICAL run 17 minutes earlier, on the same code and data volume, passed: create 0 errors, p95 267 ms overall.
+  - Both developer runs on 2026-10-27 passed too.
+- **Evidence for the cause:**
+  - After the run, InnoDB's latest detected deadlock (11:40:20 local) was between two transactions inserting `supplier_name_grams` for adjacent new Suppliers (ids 110468 and 110469). Each held the supremum gap lock on that table's PRIMARY index and waited on the other's insert intention. One of them held 10,451 row locks.
+  - Online create already retries once on `ER_LOCK_DEADLOCK` (DEF-031, `SupplierAdminService.js:306`); a second deadlock propagates as a 500.
+  - The longest 500 took 3.98 s, far below the 50 s lock-wait timeout, so the 500s are not lock-wait timeouts.
+- **Not proven:** the benchmark deletes its temporary directory, server logs included (`benchmarkSupplierManagement.js:344`), so the 500s' own errors and the `supplier.write.deadlock_retried` warnings are lost. This is the same evidence loss that left DEF-034's cause unknown.
+- **Link to DEF-034 (hypothesis):** the import treats `ER_LOCK_DEADLOCK` as busy and leaves that row not applied (`SupplierImportService.js:161`). A deadlock that the import side loses would give DEF-034's 9,999 of 10,000. Both directions of one gram-insert deadlock would explain both defects. This is not proven.
+- **REPORT_ONLY:** no product change in TEST_AND_VERIFY. The severity and the route are put to the Product Owner.
 
 ## HD-116 A: dispositions (2026-10-21)
 
