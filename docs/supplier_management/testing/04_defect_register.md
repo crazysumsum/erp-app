@@ -396,7 +396,22 @@ Found by the formal run in TEST_AND_VERIFY (HD-151 A). The run was `supplier-per
   - The longest 500 took 3.98 s; `innodb_lock_wait_timeout` is 50 s, so the 500s are not lock-wait timeouts.
 - **Not proven:** the benchmark deletes its temporary directory, server logs included (`benchmarkSupplierManagement.js:344`). So the 500s' own errors and the `supplier.write.deadlock_retried` warnings are lost, and no 500 is tied to a particular deadlock. This is the same evidence loss that left DEF-034's cause unknown. The diagnosis under HD-152 A keeps those logs.
 - **Link to DEF-034 (weak hypothesis):** the import treats `ER_LOCK_DEADLOCK` as busy and leaves that row not applied (`SupplierImportService.js:161`). If the import side lost this deadlock, the result would be DEF-034's 9,999 of 10,000. InnoDB rolls back the lighter transaction, though, and late in an import that is rarely the import's, so this explains DEF-034 only if it happened early in the import. Not proven.
-- **REPORT_ONLY:** no product change in TEST_AND_VERIFY. The route is HD-152 (A: diagnose first). The severity, MEDIUM, is proposed: the 500s roll back with no data loss, and the user can retry.
+- **Diagnosis under HD-152 A (2026-10-28, 03:51–04:02Z): cause proven.**
+  - **Setup:**
+    - A throwaway worktree at `a98e50e7`, with one uncommitted change: the benchmark keeps its temporary directory, server logs included.
+    - `innodb_print_all_deadlocks=ON` on the throwaway mysqld from 03:58:28Z (`lock_deadlocks` 256 at that point).
+    - The first performance run reproduced it. The files are in `def048_diagnosis_2026-10-28/`: `innodb-deadlocks.txt`, `app-load.log`, `app-load-during-import.log` and `run.sh`. Local paths are masked.
+  - **Every deadlock is the name-gram one.** The counter went from 256 to 274: 18 deadlocks while the import ran, all on the supremum of `supplier_name_grams` PRIMARY, each between two `INSERT INTO supplier_name_grams` for adjacent new Supplier ids.
+    - 11 paired an online create with the heavy import row transaction.
+    - 7 paired two online creates, so it happens without any import too: the mixed load phase alone logged 2 `supplier.write.deadlock_retried`.
+  - **The 500 is a second deadlock.**
+    - While the import ran, the app logged 17 `supplier.write.deadlock_retried` and one 500. 17 retries plus that one failed retry equal the 18 deadlocks.
+    - The failing request, `d70e765c`, started at 12:01:02.986 HKT. It retried after a deadlock at .005, failed again inside `replaceSupplierNameGrams` at .007, and answered `DATABASE_OPERATION_FAILED` / HTTP 500.
+    - The app log does not carry the MySQL error code, so "second deadlock" is established by the count, not by the log line.
+  - **The import never lost** in this run: 10,000 of 10,000 applied, and the heavy transaction was never the victim. The DEF-034 link stays unproven.
+  - **This run passed TC-101:** 1 error, within the 1% limit. The defect shows up as a failure only when several creates lose twice, as in the REGRESSION run.
+  - **Fix options** are put to the Product Owner. The smallest is not to run the `DELETE` for a Supplier that has just been created, since a new id has no grams; that removes the supremum lock.
+- **REPORT_ONLY:** no product change in TEST_AND_VERIFY. The route was HD-152 (A: diagnose first); the remediation route is put to the Product Owner next. The severity, MEDIUM, is proposed: the 500s roll back with no data loss, and the user can retry.
 
 ## HD-116 A: dispositions (2026-10-21)
 
