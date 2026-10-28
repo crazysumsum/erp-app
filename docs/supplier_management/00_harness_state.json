@@ -1,31 +1,31 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 456,
+  "revision": 457,
   "mode": "FULL_LIFECYCLE",
-  "active_mode": "IMPLEMENT",
-  "status": "BLOCKED",
-  "resume_status": "IMPLEMENTING",
+  "active_mode": "TEST_AND_VERIFY",
+  "status": "READY_FOR_TESTING",
+  "resume_status": null,
   "current_phase": "PHASE-004",
   "current_task": "TASK-051",
   "baseline": {
     "design": "2390e6fc44da25124375f4347f2a093db512f8353e01d456780a11073be494a3",
     "plan": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
-    "code_commit": "12d52ff3d4a2f2b607c284eb3d4c50f2463d286f",
-    "source_fingerprint": "0852709d1e9eb4b6d0e73fc033c6f95d49ecc08105592e274f59e61b9a46fd2f",
-    "worktree": "/Users/sam/Documents/workspace/erp-supplier-bl",
-    "default_commit": "44d7f836dbe4e1a7e99add06f63f1765277904f1",
-    "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
+    "code_commit": "a98e50e750c9cdfa7919d3daad8385113e94be0c",
+    "source_fingerprint": "675f2e537bd908f9cd5fb14cd11b72df9c657e00393de9062ac42ea2cdc39077",
+    "worktree": "/Users/sam/Documents/workspace/erp-supplier-ta",
+    "default_commit": "a98e50e750c9cdfa7919d3daad8385113e94be0c",
+    "mode_entry_commit": "a98e50e750c9cdfa7919d3daad8385113e94be0c"
   },
   "runtime": {
-    "instance_id": "supplier-phase-001-local-mysql-v2",
+    "instance_id": "supplier-t51-scratch-mysqld-3450",
     "owner": "Primary Harness agent",
     "resources": {
-      "workspace": "erp-app-worktrees/supplier-task-034 (claude/supplier-task-034, cut from main b1e3aa8)",
-      "mysql-schema": "erp_dev@127.0.0.1:3306 (test-only)",
-      "web-port": "NOT_ALLOCATED"
+      "workspace": "/Users/sam/Documents/workspace/erp-supplier-ta (claude/supplier-technical-acceptance, cut from main a98e50e7)",
+      "mysql-schema": "erp_t51, and the erp_t51_rh_* scratch schemas the runners create and drop, on a throwaway mysqld at 127.0.0.1:3450 (session scratch datadir, --skip-log-bin); no production data",
+      "web-port": "3021 (UAT API) and 5216 (UAT client); the other runners bind free ports"
     },
-    "lease_ref": "APPROVAL-HD-006-ERP-DEV"
+    "lease_ref": null
   },
   "tasks": {
     "TASK-001": "DONE",
@@ -6635,6 +6635,17 @@
       "source_ref": "PR #293 merged as c51ddbc8eb30cf1ada401847aae795806d98701e at 2026-10-28T01:34:32Z on the Product Owner's word ('A，review 完 CI 過就 merge', then 'CI已通過'), with --match-head-commit 566bf76c, after a gate that refused unless the latest run of every check was SUCCESS (13 checks, PR run 40614375964), main was an ancestor of HEAD and the local, remote and PR heads were equal. Review REV-129 CHANGES_REQUESTED; every finding fixed before merge (report 132).",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-28T01:34:32+00:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "Baseline refresh for TEST_AND_VERIFY (PR #295) merged to main",
+      "code_commit": "a98e50e750c9cdfa7919d3daad8385113e94be0c",
+      "spec_baseline": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "source_fingerprint": "675f2e537bd908f9cd5fb14cd11b72df9c657e00393de9062ac42ea2cdc39077",
+      "status": "PASS",
+      "source_ref": "PR #295 merged as a98e50e750c9cdfa7919d3daad8385113e94be0c at 2026-10-28T03:00:52Z on the Product Owner's word ('HD-150 A，review 完 CI 過就 merge', then 'CI已通過'), with --match-head-commit 009e3a13, after a gate that refused unless the latest run of every check was SUCCESS (13 checks, PR run 40622968950), main was an ancestor of HEAD and the local, remote and PR heads were equal. Review REV-130 APPROVED (report 133). On the merged main: validate_traceability STRUCTURE_PASS, verify_gate PLAN_READY LOCAL_CHECKS_PASS.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-28T03:00:52+00:00"
     }
   ],
   "pending_decisions": [
@@ -9128,6 +9139,14 @@
       "idempotency_key": "supplier-purchasing-pin-issue-2026-10-28",
       "status": "CONFIRMED",
       "source_ref": "https://github.com/crazysumsum/erp-app/issues/294 opened 2026-10-28T02:19:54Z on the Product Owner's word ('開 issue'): Purchasing's supplier-purchasing-contract pin a9f64493 vs current 2b81eb9a; only 6b971c71 (DEF-037 ordering) changed in between."
+    },
+    {
+      "id": "MODE-CHANGE-457",
+      "kind": "MODE_CHANGE",
+      "target": "TEST_AND_VERIFY",
+      "idempotency_key": "mode-change-457",
+      "status": "CONFIRMED",
+      "source_ref": "Product Owner, 2026-10-28: 'HD-149 A，開 issue，風險接受留返 release 時' (HD-149 A: move to TEST_AND_VERIFY now); entry commit a98e50e7 = PR #295 merge"
     }
   ],
   "evidence_files": [
@@ -10082,5 +10101,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Baseline refresh PR (HD-149 A, HD-150 A): independent review that must end APPROVED on design baseline 2390e6fc; CI; merge on the Product Owner's word ('review 完 CI 過就 merge'). Then the mode change to TEST_AND_VERIFY with the merged main as mode entry commit, formal run_check and the Technical Acceptance report."
+  "next_safe_action": "TEST_AND_VERIFY on mode entry commit a98e50e7: Product Owner decision on the TECHNICAL/REGRESSION runs (HD-151), then formal run_check of the required technical suites, the Technical Acceptance report, and UAT execution only if Technical Acceptance permits. REPORT_ONLY: formal failures go to triage, no product change. TASK-051 groups B and C stay open; release not approved."
 }
