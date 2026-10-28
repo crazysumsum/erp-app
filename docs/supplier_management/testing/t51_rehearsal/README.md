@@ -3,7 +3,7 @@
 - **Date:** 2026-10-21
 - **Environment:** local, on a throwaway MySQL 26.7.0. This is not CI and not a production-like environment.
 - **Script:** [`rehearsal.sh`](rehearsal.sh), with the helper [`read_through.mjs`](read_through.mjs).
-  - It needs three checkouts, an output directory, and the throwaway instance's socket, port and credentials, all from environment variables. The script's header lists them.
+  - It needs four checkouts, an output directory, and the throwaway instance's socket, port and credentials, all from environment variables. The script's header lists them.
   - It refuses to run against any server whose port is not the throwaway one.
   - It only creates and drops `erp_t51_rh_*` databases.
   - It exits non-zero on the first failed check.
@@ -16,8 +16,9 @@ This record covers the parts of MIG-006 (TC-006) and design §14 that an automat
 | Name | Commit | Why |
 | --- | --- | --- |
 | pre-Supplier | `b3e5aa90^1` (`e4aed631`) | main just before Supplier's first migration (0028). Its 0001–0027 are byte-identical to today's. |
-| previous | `72e205ef` | main at PR #249, the last release before migration 0087. Upgrading it exercises exactly one Supplier migration. |
+| previous (called "older" from 2026-10-27) | `72e205ef` | main at PR #249, the last release before migration 0087. Upgrading it exercises exactly one Supplier migration. |
 | current | main at `3c0c3370`, plus this branch (no runtime change) | |
+| pre-0103 (added 2026-10-27) | `e6398b70` | main at PR #280, the last release before migration 0103. It has the startup schema check (DEF-033). |
 
 ## What was done and what happened
 
@@ -54,6 +55,10 @@ Run on a 4-row legacy file against the step-B database:
 
 ## Rollback boundaries, against design §14.3
 
+These statements are from 2026-10-21 and hold for 0087 only. **Migration 0103 changes them; see the rerun below.** It
+adds a column that the pre-0103 release's startup check rejects, so a plain server rollback across 0103 fails, the
+database is no longer forward-only for that step, and 0103 added routes and client screens (move up and down).
+
 - **Server:** the previous release starts on the schema the current release migrated, and reads Supplier data through it.
   - 0087 is backward compatible: it adds one index and reorders another, and the previous code does not inspect it at startup.
   - After the rollback, the SKU foreign key is enforced. The previous release checks the SKU before inserting a relation, so it only meets the foreign key in a race, and then the insert is refused rather than writing an orphan.
@@ -64,9 +69,50 @@ Run on a 4-row legacy file against the step-B database:
 - **Database:** forward-only, as §14.3 requires; nothing is dropped or downgraded. Going back to before an upgrade means restoring the backup, and step B shows the backup restores exactly.
 - **Migration files:** each of the 15 Supplier migrations has exactly one commit on main's first-parent history, so none was edited after it merged. Checked with `git log --first-parent origin/main -- <file>`.
 
+## Rerun on 2026-10-27 (main `38f05ba6`), corrected after REV-128
+
+Migration 0103 (DEF-037, supplier party `sort_order`) and other modules' 0088–0102 landed after the first run, so upgrade
+and rollback were rehearsed again. The log is [`rehearsal-2026-10-27.log`](rehearsal-2026-10-27.log). All checks passed.
+
+- **A:** the pre-Supplier release upgraded to current; every pre-existing table, permission and grant is unchanged.
+- **B (older release `72e205ef`):** the business data now also has two addresses and a contact.
+  - Backed up and restored exactly.
+  - After the upgrade, 0103 numbered the existing rows in display order (addresses 1, 2; contact 1). Every other column of those rows is unchanged, compared row by row against the before-image.
+  - No other business data changed.
+  - The current release served the rows, addresses and contacts included. So did `72e205ef` started on the upgraded schema. `72e205ef` has no startup schema check, which is why it starts; **it is not the release before 0103**.
+- **C (pre-0103 release `e6398b70`), new:**
+  - Started on the 0103 schema, it **refuses to start** (`Supplier startup self-check failed`): its 0032/0033 inspectors reject the extra column.
+  - The three statements in 0103's header were then run, taken from the file itself: drop `sort_order` from both tables, and delete 0103's ledger row.
+  - After that: both tables' columns and indexes equal the pre-upgrade fingerprint; 0103 is out of the ledger; every row is kept. `e6398b70` starts and serves the rows over HTTP.
+  - Rolling forward with the current release applies 0103 again and renumbers the rows in display order. **An order users set before the rollback is lost.** That is what 0103's header says; accepting it is a release decision.
+- **D:** the similar-name list matched.
+
+What REV-128 changed in the script:
+- **Previous claim withdrawn.** The first version of this section said the "previous release" rolled back across 0103 with no manual step. It had used `72e205ef`, not the release before 0103, and seeded no address or contact rows.
+- **Counters are now read live.** `information_schema` serves AUTO_INCREMENT from a cache that lives a day (`information_schema_stats_expiry`), so a moved counter went unseen. The script now sets it to 0 for the session.
+  - On the same instance: a table whose counter moved from NULL to 2 still read NULL from the cache and 2 with the setting.
+  - The upgrade now shows `auto permissions 30 → 38`. That is accepted only because it goes up; a decrease is reported.
+  - A control adds and removes a Supplier in the restore, and must see the counter, and only the counter, change.
+- **Narrower exceptions.**
+  - The `supplier_sku_refs` index exception names 0087's two indexes.
+  - The `sort_order` exception covers an added column only.
+  - The two party tables' data is exempt only because it is compared column by column without `sort_order`.
+  - Controls feed five invented changes, and each must be reported: a new column, another index, a removed `sort_order`, a moved Supplier counter, and a permission counter that went down.
+- **Permission rows compared byte for byte.** The columns' collation ignores case, so the earlier comparison could not see a case-only change. A control changes one permission name's case inside a rolled-back transaction, and the comparison must count it.
+
+The first two runs on 2026-10-27, before the generalised check, failed: one on the stale 0087-only expectation, one on the BSD awk bug. Their logs were not kept. The control found the BSD awk bug: awk drops a multi-line `-v` value without any error, so every table looked new. The table list is now read from a file.
+
 ## Not covered here
 
 - A production-like host, real secrets, and the real backup tooling and retention.
 - Driving the old client against the new server in a browser; only the API contract was compared.
 - The full release smoke in §14.4, for example Bank reveal and approval ON. That belongs to TEST_AND_VERIFY and the UAT runs.
 - An upgrade under live traffic.
+- Rolling back across 0103 in production: the order users set is lost, and the documented statements need a maintenance window. This is part of the operations runbook (TASK-051, group C).
+- **What the fingerprint does not compare:**
+  - Table options: engine, charset, row format and partitioning.
+  - CHECK constraints, column comments and generated-column expressions.
+  - Which columns a foreign key maps: only its name, referenced table and rules are compared.
+  - Index prefix lengths (`sub_part`).
+  - Users and privileges.
+  - `CHECKSUM TABLE` is a 32-bit checksum per table, not a cryptographic hash.
