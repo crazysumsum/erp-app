@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 462,
+  "revision": 463,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "TEST_AND_VERIFY",
   "status": "BLOCKED",
@@ -3664,6 +3664,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-132",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (DEF-048 diagnosis under HD-152 A)",
+      "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-technical-acceptance delta 35903133..c747097c",
+      "reviewed_baseline": "2390e6fc44da25124375f4347f2a093db512f8353e01d456780a11073be494a3",
+      "source_ref": "docs/supplier_management/implementation/135_rev_132_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -6677,7 +6689,7 @@
       "spec_baseline": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
       "source_fingerprint": "675f2e537bd908f9cd5fb14cd11b72df9c657e00393de9062ac42ea2cdc39077",
       "status": "FAIL",
-      "source_ref": "docs/supplier_management/testing/def048_diagnosis_2026-10-28/ and DEF-048 in 04_defect_register.md. Throwaway detached worktree at a98e50e7 with one uncommitted change (benchmark keeps its server logs), removed afterwards; runSupplierPerformanceAcceptance.js once, 03:51-04:02Z, innodb_print_all_deadlocks ON from 03:58:28Z. 18 deadlocks (lock_deadlocks 256 -> 274), all on the supplier_name_grams PRIMARY supremum between INSERTs for adjacent new Supplier ids (11 online create vs import row transaction, 7 online create vs online create); app log: 17 supplier.write.deadlock_retried plus one create (d70e765c) that deadlocked again on its retry inside replaceSupplierNameGrams and answered 500. Import 10,000/10,000. TC-101 passed this time (1 error). Source fingerprint is that of the committed code; the uncommitted benchmark change is not covered.",
+      "source_ref": "docs/supplier_management/testing/def048_diagnosis_2026-10-28/ and DEF-048 in 04_defect_register.md. status FAIL means the defect was reproduced, not that TC-101 failed: TC-101 passed in this run (1 error, under 1%). Throwaway detached worktree at a98e50e7 with one uncommitted change (benchmark-keep-logs.diff), removed afterwards; runSupplierPerformanceAcceptance.js once, 03:51-04:02Z, innodb_print_all_deadlocks ON from 03:58:28Z. 18 deadlocks in the load-during-import phase (lock_deadlocks 256 -> 274), all on the supplier_name_grams PRIMARY supremum between new-id INSERTs; the import ran 04:00:35.847Z-04:01:53.018Z and 3 deadlocks fell outside it; by connection, 12 import row transaction (thread 23736) vs online create, 6 online vs online. App log: 17 supplier.write.deadlock_retried plus one create (d70e765c) that lost again on its retry (InnoDB #4/#5) and answered 500. Import 10,000/10,000. Source fingerprint is that of the committed code; the uncommitted benchmark change is not covered (REV-132).",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-28T04:02:37+00:00"
     }
@@ -8696,14 +8708,13 @@
     {
       "id": "HD-153",
       "impact": "MAJOR",
-      "question": "DEF-048 cause is proven: replaceSupplierNameGrams runs DELETE FROM supplier_name_grams WHERE supplier_id = ? for a just-created Supplier, which under REPEATABLE READ takes the PRIMARY supremum lock; concurrent creates (online and import) deadlock, and a create that loses twice answers 500. Route? (A) REMEDIATE_AND_RETEST: re-enter IMPLEMENT; skip the DELETE when the Supplier was created in the same transaction (online create and import create), with a test that reproduces the deadlock first; keep the benchmark's server logs; then a new baseline, TEST_AND_VERIFY again and fresh formal runs. (B) Raise the deadlock retries (symptom only; deadlocks remain). (C) Defer to the release decision.",
+      "question": "DEF-048 cause is proven: replaceSupplierNameGrams runs DELETE FROM supplier_name_grams WHERE supplier_id = ? for a just-created Supplier, which under REPEATABLE READ takes the PRIMARY supremum lock; concurrent creates deadlock (12 of 18 with the import, 6 between online creates), and a create that loses twice answers 500. Route? (A) REMEDIATE_AND_RETEST: re-enter IMPLEMENT; skip the DELETE in createSupplierInTransaction (SupplierAdminService.js:402, which online create and import create both use), with a test that reproduces the deadlock first; the update path keeps its DELETE and the existing retry (update vs update on adjacent ids can still deadlock, rarely); keep the benchmark's server logs; then a new baseline, TEST_AND_VERIFY again and fresh formal runs. The re-test must be able to fail: TC-101 passed once with the defect present, so also require zero name-gram deadlocks across the load phases with innodb_print_all_deadlocks on (REV-132). Separately open: the import row transaction's lock count grows with rows applied (likely processNextRow FOR UPDATE), which may bear on TC-101's window failure. (B) Raise the deadlock retries (symptom only; deadlocks remain). (C) Defer to the release decision.",
       "affected_ids": [
         "DEF-048",
         "TC-101",
         "NFR-001",
         "supplierDuplicateCandidates.replaceSupplierNameGrams",
-        "SupplierAdminService.create",
-        "SupplierImportService"
+        "SupplierAdminService.createSupplierInTransaction"
       ],
       "status": "OPEN",
       "answer_ref": null

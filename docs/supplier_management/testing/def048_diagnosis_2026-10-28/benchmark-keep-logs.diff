@@ -1,0 +1,9 @@
+--- a/server/scripts/benchmarkSupplierManagement.js   (a98e50e7)
++++ b/server/scripts/benchmarkSupplierManagement.js   (diagnosis only, never committed; the worktree was removed)
+@@ -341,5 +341,6 @@
+   await application?.shutdown("supplier-performance").catch(() => {});
+   await admin.end();
+-  fs.rmSync(work, { recursive: true, force: true });
++  // DEF-048 diagnosis only (uncommitted, throwaway worktree): keep the server logs.
++  fs.writeFileSync(path.join(work, "KEPT-FOR-DEF-048"), `${OUTPUT}\n`);
+   console.log(JSON.stringify({ ok: report.ok, overall: report.overall, nfr001: report.nfr001, nfr005: report.nfr005, error: report.error }, null, 2));
