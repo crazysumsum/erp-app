@@ -127,7 +127,7 @@ Found while preparing the TC-131 (OPS-004) runner. On a freshly migrated scratch
 
 ## DEF-034 — LOW
 
-The first run of the performance runner (2026-10-22, TC-101) found a 10,000-row import, run alongside a 50-user load on 100k seeded Suppliers, that applied 9,999 rows. One row ended not applied. The job's counts stayed consistent, so the row was reported as failed rather than lost silently, but every row in that file is a valid create. The cause is unknown: that first runner version deleted the tools' reports. The next three runs applied 10,000 of 10,000, and T50's earlier runs did too. The runner now keeps the tools' full reports in `supplier-performance-details/` next to its own output. The import tool deletes its job and rows when it finishes, so before that it records up to 20 not-applied rows with their stored errors (`report.notApplied`, HD-122 A), and the runner copies them into its evidence (`evidence.import.notApplied`). A recurrence will therefore show the reason. Both runs on 2026-10-27 also applied 10,000 of 10,000. (Corrected 2026-10-27, REV-128 R4: this paragraph used to name `evidence.importFailedRows`, a poll that was removed in `6f413337`.) **2026-10-28:** both formal runs, code-identical to `a98e50e7`, applied 10,000 of 10,000. The REGRESSION run's online creates hit 500s under the import (DEF-048). The captured deadlock is in the name grams, and the online side lost it. If the import side lost such a deadlock, it would leave one row not applied, so this is a weak hypothesis for DEF-034, still unproven. REPORT_ONLY: no product change.
+The first run of the performance runner (2026-10-22, TC-101) found a 10,000-row import, run alongside a 50-user load on 100k seeded Suppliers, that applied 9,999 rows. One row ended not applied. The job's counts stayed consistent, so the row was reported as failed rather than lost silently, but every row in that file is a valid create. The cause is unknown: that first runner version deleted the tools' reports. The next three runs applied 10,000 of 10,000, and T50's earlier runs did too. The runner now keeps the tools' full reports in `supplier-performance-details/` next to its own output. The import tool deletes its job and rows when it finishes, so before that it records up to 20 not-applied rows with their stored errors (`report.notApplied`, HD-122 A), and the runner copies them into its evidence (`evidence.import.notApplied`). A recurrence will therefore show the reason. Both runs on 2026-10-27 also applied 10,000 of 10,000. (Corrected 2026-10-27, REV-128 R4: this paragraph used to name `evidence.importFailedRows`, a poll that was removed in `6f413337`.) **2026-10-28, after the DEF-048 fix:** the two re-test imports at `f62651d8` also applied 10,000 of 10,000. PR #298 removed the create-path name-gram DELETE, which is the hypothesised route by which an import create could lose a deadlock. If the hypothesis holds, DEF-034 cannot recur by that route. The hypothesis is unproven, so DEF-034 stays OPEN. **Earlier on 2026-10-28:** both formal runs, code-identical to `a98e50e7`, applied 10,000 of 10,000. The REGRESSION run's online creates hit 500s under the import (DEF-048). The captured deadlock is in the name grams, and the online side lost it. If the import side lost such a deadlock, it would leave one row not applied, so this is a weak hypothesis for DEF-034, still unproven. REPORT_ONLY: no product change.
 
 ## DEF-035 — MEDIUM
 
@@ -369,7 +369,7 @@ Found while writing UAT-030. SEC-014 and design §4 (system-admin) say that a `s
   - Mutants killed: no report on update or on reveal; everyone reported; the report moved inside the transaction (create, update, reveal); no alert; the role join inverted or reduced to "any role"; the window widened; either bucket edge moved.
   - On the real backend, UAT-030 passes, including its alert step.
 
-## DEF-048 — MEDIUM (proposed; open)
+## DEF-048 — MEDIUM (closed 2026-10-28)
 
 Found by the formal run in TEST_AND_VERIFY (HD-151 A). The run was `supplier-performance` at REGRESSION, on commit `7bbf547d` (code-identical to the mode entry commit `a98e50e7`), with evidence `evidence/20261028T032858-19847f4da7f2`.
 
@@ -434,7 +434,18 @@ Found by the formal run in TEST_AND_VERIFY (HD-151 A). The run was `supplier-per
 
 - **Before HD-153 (REPORT_ONLY):** no product change in TEST_AND_VERIFY. The route was HD-152 (A: diagnose first); the remediation route is put to the Product Owner next. The severity, MEDIUM, is proposed: the 500s roll back with no data loss, and the user can retry.
 
-**Fixed under HD-153 A (REMEDIATE_AND_RETEST); still OPEN until the formal re-test in TEST_AND_VERIFY.**
+**CLOSED 2026-10-28 after the formal re-test.**
+- The fix merged as PR #298 (`f62651d8`).
+- **Targeted re-test.** At TECHNICAL and REGRESSION (evidence `20261028T065924-ff2600591596`, `20261028T071628-f0de8491fc9a`), TC-101 passed with:
+  - 0 deadlocks in both loads, with deadlock detection and printing ON;
+  - online error rate 0 during the import;
+  - the import inside the window: precheck plus execute 78.1 s and 83.7 s (execute alone 71.8 s and 77.4 s).
+- **The online server's kept warnings** hold no `deadlock_retried`. The import runs in its own worker process and keeps no warnings file, but the deadlock counter covers both processes.
+- **Impact regression.** `createSupplierInTransaction` serves online and import create, so the regression is the Supplier server suite, which includes the new discriminating integration test. It passed 732 of 732 at both stages (`20261028T065312-10bcf7528c57`, `20261028T071029-834b3ecdfd95`), and `supplier-security` did too (`20261028T065601-39b9b1210994`, `20261028T071313-13f3281c06c6`).
+- **CI.** PR #298 run 40645193058 on head `106ef26c`: all 13 checks success.
+- See `07_technical_acceptance_report.md`.
+
+**Fixed under HD-153 A (REMEDIATE_AND_RETEST).**
 - **Fix:** the create path (`SupplierAdminService.createSupplierInTransaction`, used by online create and by import create) calls `replaceSupplierNameGrams(…, { isNew: true })`, which skips the `DELETE` for a Supplier made in the same transaction. The update path keeps its `DELETE` and the existing deadlock retry. Update against update on adjacent ids can still deadlock, rarely (REV-132).
 - **Tests:**
   - **Integration:** two open transactions each create a new Supplier and write its grams, and the second must not wait.
