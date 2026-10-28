@@ -40,7 +40,9 @@ const option = (name) => {
   const index = process.argv.indexOf(`--${name}`);
   return index > 0 ? process.argv[index + 1] : undefined;
 };
-const firstDeployment = process.argv.includes("--first-deployment") || process.env.SUPPLIER_SMOKE_FIRST_DEPLOYMENT === "true";
+// 只收 true／false：其他值（1、yes）會靜靜雞略過 approval OFF 檢查（REV-130 N1）。
+const firstDeploymentEnv = process.env.SUPPLIER_SMOKE_FIRST_DEPLOYMENT;
+const firstDeployment = process.argv.includes("--first-deployment") || firstDeploymentEnv === "true";
 const reportPath = outputPath();
 const { checks, check, passed } = checklist();
 const evidence = { mode, firstDeployment, checks };
@@ -92,11 +94,12 @@ const NAMES = {
   copy: "TC-135 restored copy of production: upgrade, §14.4 checks and separated-role smoke"
 };
 try {
+  if (![undefined, "", "true", "false"].includes(firstDeploymentEnv)) throw new Error("SUPPLIER_SMOKE_FIRST_DEPLOYMENT must be true or false");
   if (mode === "check") {
-    await deployedCheck(option("url") ?? process.env.SUPPLIER_SMOKE_URL ?? (() => { throw new Error("check needs --url"); })());
+    await deployedCheck(option("url") ?? process.env.SUPPLIER_SMOKE_URL ?? (() => { throw new Error("check needs --url or SUPPLIER_SMOKE_URL"); })());
   } else if (mode === "copy") await restoredCopy(option("database") ?? process.env.SUPPLIER_SMOKE_DATABASE);
   else throw new Error("usage: smokeSupplierManagement.js check --url <url> | copy --database <name>_smoke, with --output <file>"
-    + " [--first-deployment]");
+    + " [--first-deployment]; or SUPPLIER_SMOKE_URL, SUPPLIER_SMOKE_DATABASE, SUPPLIER_SMOKE_FIRST_DEPLOYMENT=true");
 } catch (error) {
   check("runner.completed", false, errorText(error));
 }
