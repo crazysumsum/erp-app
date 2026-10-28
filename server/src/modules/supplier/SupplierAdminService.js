@@ -399,7 +399,7 @@ export class SupplierAdminService {
       throw error;
     }
     const id = Number(result.insertId);
-    await this.replaceNameGrams(connection, id, name.key);
+    await this.replaceNameGrams(connection, id, name.key, { isNew: true });
     if (addChildren) await addChildren(id);
     if (needsApproval) {
       const [identifiers] = await connection.query(

@@ -61,7 +61,7 @@ function harness({ approvalRequired = false, duplicateRows = [], approverEligibl
       }
     },
     duplicates: { async find(connection) { events.push(["duplicates", connection === database ? "pool" : "transaction"]); return duplicateRows; } },
-    replaceNameGrams: async () => events.push(["grams"]),
+    replaceNameGrams: async (_connection, _id, _key, options) => events.push(["grams", options]),
     audit: { async record() { events.push(["audit"]); } },
     approvalRequired: async () => approvalRequired
   });
@@ -81,6 +81,8 @@ test("TC-018 (CORE-002): create Supplier revalidates actor and Business Master i
   assert.deepEqual(events.filter(([name]) => ["authorize", "business-master", "duplicates", "grams", "audit"].includes(name)).map(([name]) => name), [
     "duplicates", "authorize", "business-master", "grams", "audit"
   ]);
+  // DEF-048：新建嘅 Supplier 唔 DELETE name grams（新 id 喺 index 最尾，DELETE 會鎖 supremum）。
+  assert.deepEqual(events.find(([name]) => name === "grams")[1], { isNew: true });
   // 相似名稱喺 transaction 之外、用 pool 查，唔會揸住 currencies 嘅鎖（T50，HD-084）。
   assert.deepEqual(events.filter(([name]) => name === "duplicates"), [["duplicates", "pool"]]);
   assert.equal(events.at(-1)[1], "commit");
@@ -158,7 +160,7 @@ function updateHarness({ version = 2, references = 0, duplicateError = false, st
       }
     },
     duplicates: { async find(connection) { events.push(["duplicates", connection === database ? "pool" : "transaction"]); return duplicateRows; } },
-    replaceNameGrams: async () => events.push(["grams"]),
+    replaceNameGrams: async (_connection, _id, _key, options) => events.push(["grams", options]),
     audit: { async record(_connection, value) { events.push(["audit", value]); } },
     references: { async describeReferences() { events.push(["references"]); return { references: { purchaseOrders: references }, total: references }; } }
   });
@@ -180,6 +182,8 @@ test("TC-025 (CORE-009): update Supplier locks and revalidates actor/catalog, re
   assert.deepEqual(events.filter(([name]) => ["authorize", "business-master", "duplicates", "grams", "audit"].includes(name)).map(([name]) => name), [
     "duplicates", "authorize", "business-master", "grams", "audit", "authorize"
   ]);
+  // 改名要先 DELETE 舊 grams：update 唔傳 isNew（DEF-048）。
+  assert.equal(events.find(([name]) => name === "grams")[1], undefined);
   assert.deepEqual(events.filter(([name]) => name === "duplicates"), [["duplicates", "pool"]]);
   assert.match(events.find(([name, sql]) => name === "execute" && sql.includes("UPDATE suppliers"))[1], /version = version \+ 1/u);
 });
