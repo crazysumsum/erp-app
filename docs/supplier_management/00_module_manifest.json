@@ -99,7 +99,7 @@
         "id": "item-sku-uom-provider",
         "version": "aligned-design-v2",
         "source": "docs/items_management/03_design_spec.md",
-        "sha256": "1bbb882f0f1faed296615b5b253f3e6169d79b6289d1a6300e078377400e4a7f",
+        "sha256": "f553cf74068b22b6e0645c37131ae57918ecadb701dcdfabe0d70361266a3cd9",
         "regression_suites": [
           "supplier-server-integration"
         ]
@@ -109,7 +109,7 @@
         "id": "supplier-consumer-contract",
         "version": "design-spec",
         "source": "docs/purchasing_receiving_management/03_design_spec.md",
-        "sha256": "a29fb66d0e5ad10c638e5c556e40cf16c534cfce7c7283077a8f922a8fd0ee70",
+        "sha256": "5785e0a6cb06fe8c5bedf472349e1b97f0c415ecec7c39c649de32eed9252b32",
         "regression_suites": [
           "supplier-server-integration"
         ]
