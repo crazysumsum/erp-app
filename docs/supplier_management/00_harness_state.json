@@ -1,21 +1,21 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 463,
+  "revision": 467,
   "mode": "FULL_LIFECYCLE",
-  "active_mode": "TEST_AND_VERIFY",
-  "status": "BLOCKED",
-  "resume_status": "VERIFYING",
+  "active_mode": "IMPLEMENT",
+  "status": "IMPLEMENTING",
+  "resume_status": null,
   "current_phase": "PHASE-004",
   "current_task": "TASK-051",
   "baseline": {
     "design": "2390e6fc44da25124375f4347f2a093db512f8353e01d456780a11073be494a3",
     "plan": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
-    "code_commit": "7bbf547d5a019137d2cc77d8930cf6cb4a3c9f69",
-    "source_fingerprint": "675f2e537bd908f9cd5fb14cd11b72df9c657e00393de9062ac42ea2cdc39077",
-    "worktree": "/Users/sam/Documents/workspace/erp-supplier-ta",
-    "default_commit": "a98e50e750c9cdfa7919d3daad8385113e94be0c",
-    "mode_entry_commit": "a98e50e750c9cdfa7919d3daad8385113e94be0c"
+    "code_commit": "064d5d2dd44b3456599c5f0037371f59e32de200",
+    "source_fingerprint": "6bcc3b57430f5c733a1d730cf7abb810cea8f172bbd8f5935ac56aced49f2d28",
+    "worktree": "/Users/sam/Documents/workspace/erp-supplier-d48",
+    "default_commit": "e7f67b82b85f7ae9e3e44914148866487f211645",
+    "mode_entry_commit": "e7f67b82b85f7ae9e3e44914148866487f211645"
   },
   "runtime": {
     "instance_id": "supplier-t51-scratch-mysqld-3450",
@@ -3676,6 +3676,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-133",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (DEF-048 fix under HD-153 A)",
+      "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-def048-name-grams at 140c369f (git diff origin/main..HEAD)",
+      "reviewed_baseline": "2390e6fc44da25124375f4347f2a093db512f8353e01d456780a11073be494a3",
+      "source_ref": "docs/supplier_management/implementation/136_rev_133_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -6692,6 +6704,28 @@
       "source_ref": "docs/supplier_management/testing/def048_diagnosis_2026-10-28/ and DEF-048 in 04_defect_register.md. status FAIL means the defect was reproduced, not that TC-101 failed: TC-101 passed in this run (1 error, under 1%). Throwaway detached worktree at a98e50e7 with one uncommitted change (benchmark-keep-logs.diff), removed afterwards; runSupplierPerformanceAcceptance.js once, 03:51-04:02Z, innodb_print_all_deadlocks ON from 03:58:28Z. 18 deadlocks in the load-during-import phase (lock_deadlocks 256 -> 274), all on the supplier_name_grams PRIMARY supremum between new-id INSERTs; the import ran 04:00:35.847Z-04:01:53.018Z and 3 deadlocks fell outside it; by connection, 12 import row transaction (thread 23736) vs online create, 6 online vs online. App log: 17 supplier.write.deadlock_retried plus one create (d70e765c) that lost again on its retry (InnoDB #4/#5) and answered 500. Import 10,000/10,000. Source fingerprint is that of the committed code; the uncommitted benchmark change is not covered (REV-132).",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-28T04:02:37+00:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "TEST_AND_VERIFY formal runs, Technical Acceptance report and DEF-048 diagnosis (PR #296) merged to main",
+      "code_commit": "e7f67b82b85f7ae9e3e44914148866487f211645",
+      "spec_baseline": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "source_fingerprint": "675f2e537bd908f9cd5fb14cd11b72df9c657e00393de9062ac42ea2cdc39077",
+      "status": "PASS",
+      "source_ref": "PR #296 merged as e7f67b82b85f7ae9e3e44914148866487f211645 at 2026-10-28T04:30:50Z on the Product Owner's word ('HD-152 A，review 完 CI 過就 merge', then 'CI 過咗'), with --match-head-commit 4f89c553, after a gate that refused unless the latest run of every check was SUCCESS (13 checks, PR run 40631358349), main was an ancestor of HEAD and the local, remote and PR heads were equal. Reviews REV-131 and REV-132 CHANGES_REQUESTED; every finding fixed before merge (reports 134, 135).",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-28T04:30:50+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEF-048 fix: developer checks (HD-153 A, IMPLEMENT)",
+      "code_commit": "064d5d2dd44b3456599c5f0037371f59e32de200",
+      "spec_baseline": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "source_fingerprint": "6bcc3b57430f5c733a1d730cf7abb810cea8f172bbd8f5935ac56aced49f2d28",
+      "status": "PASS",
+      "source_ref": "Local, throwaway mysqld 3450, 2026-10-28 05:5x-06:22Z, on 064d5d2d: npm run lint exit 0; Supplier server suite (profile globs, DB_INTEGRATION_TESTS=1) 732/732; runSupplierPerformanceAcceptance.js with the fix: deadlocks mixedLoad 0, loadDuringImport 0, TC-085/101/128/129 local PASS, import 82.8 s inside the window; the same runner with the create-path isNew removed in place (backup, restore, cmp, identical to HEAD): deadlocks 7 and 19, 26 deadlock_retried warnings in the kept log, TC-101 and TC-128 FAIL only on db.no_deadlocks_* (online error rate 0). New integration test red before the fix (ER_LOCK_WAIT_TIMEOUT) with its control green; unit-test mutant (isNew removed) killed. Developer evidence, not formal.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-28T06:22:11+00:00"
     }
   ],
   "pending_decisions": [
@@ -8716,8 +8750,8 @@
         "supplierDuplicateCandidates.replaceSupplierNameGrams",
         "SupplierAdminService.createSupplierInTransaction"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-28: 'A'. REMEDIATE_AND_RETEST: re-enter IMPLEMENT, skip the name-gram DELETE on the create path with a discriminating test first, keep the benchmark's server logs (as option A says; implemented as the server's warn and error lines, capped at 200 with paths masked, which is what the DEF-048 diagnosis used; put to the Product Owner to confirm, REV-133), add a deadlock check the re-test can fail on; then TEST_AND_VERIFY again on the new baseline and fresh formal runs."
     }
   ],
   "external_actions": [
@@ -9240,6 +9274,14 @@
       "idempotency_key": "mode-change-457",
       "status": "CONFIRMED",
       "source_ref": "Product Owner, 2026-10-28: 'HD-149 A，開 issue，風險接受留返 release 時' (HD-149 A: move to TEST_AND_VERIFY now); entry commit a98e50e7 = PR #295 merge"
+    },
+    {
+      "id": "MODE-CHANGE-465",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-465",
+      "status": "CONFIRMED",
+      "source_ref": "Product Owner, 2026-10-28: 'A' to HD-153 (REMEDIATE_AND_RETEST for DEF-048). Step 2 of 2: TEST_AND_VERIFY -> IMPLEMENT from main e7f67b82 (PR #296 merge). Step 1 (revision 464) re-entered READY_FOR_TESTING at a98e50e7 with the same reference, because the transition table has no VERIFYING -> IMPLEMENTING edge; no state was written outside state_tool."
     }
   ],
   "evidence_files": [
@@ -10224,5 +10266,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "HD-153 (DEF-048 remediation route) awaits the Product Owner. PR #296 carries the formal runs, the report and the diagnosis; independent review of the diagnosis delta, CI, merge on the Product Owner's word."
+  "next_safe_action": "HD-153 A, DEF-048 fix in IMPLEMENT: skip the name-gram DELETE on the create path (createSupplierInTransaction) with a discriminating integration test first; benchmark keeps its server warnings; performance runner fails TC-101/TC-128 on any InnoDB deadlock. Developer checks, independent review, CI, merge on the Product Owner's word; then TEST_AND_VERIFY again and fresh formal runs."
 }
