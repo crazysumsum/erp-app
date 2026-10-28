@@ -285,7 +285,7 @@
       "lint",
       "client-build",
       "security-audit",
-      "fulfillment-p0-developer"
+      "fulfillment-p1-developer"
     ],
     "technical": [
       "fulfillment-technical"

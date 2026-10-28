@@ -109,6 +109,15 @@ npm run security:audit
 
 Focused verification可使用`npm test --workspace server -- <test-file>`及`npm test --workspace client -- <test-file>`；Phase Gate仍須執行本節完整命令及該Phase列明的真MySQL、效能、安全或恢復驗證。
 
+Sam 已直接批准 P0／P1 驗證去重。相同完整 backend developer collection
+只執行一次既有 `fulfillment-p1-developer`，manifest default 及 PHASE-001／002
+共用同一真實執行。min_tests=230 嚴於原 P0=166，max_skipped=0；原 argv、
+案例集合、環境、20 秒及 5,000 容量不變。兩個歷史 suite 定義與兩份真實
+542 PASS 原件保留，不複製或重新命名報告來冒充第二次執行。
+P0／P1 browser 為不同案例，仍各自驗證；正式 technical／regression／UAT、
+coverage、當前 CI／review／Phase Gate 要求不變。此 binding 修正與本輪實際
+效能修正同一候選，不另造治理候選或因去重重跑舊結果。
+
 ---
 
 ## 2. Task 索引

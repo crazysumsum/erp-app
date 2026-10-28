@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 221,
+  "revision": 234,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -10,9 +10,9 @@
   "current_task": "TASK-022",
   "baseline": {
     "design": "f7902ae0f02984b5feeb8cb02d5893c57820e99b1e90c471b6f6044305270584",
-    "plan": "82e58fbf999fb9418584a1cf764803e3cc2f6e434489d7d71d3430d237133f97",
-    "code_commit": "dc46b48ba28a08f1e0d1bf1ca9e205bbbf73092f",
-    "source_fingerprint": "6fb7a3e02fc7b720f4a44f02c9279e14557d94af15ccb17ceaad02c8810f15e5",
+    "plan": "142a24e513c6889dcd6da31cc5c7313f98d1e937a50998ff56c0a45025c4b23e",
+    "code_commit": "79aef39d07940d1e37e46b122bcd9d78a89c93db",
+    "source_fingerprint": "b6f466b07d73d63e75b4cf0f87ecb6aefb67a124e14d5123d0f612b6dd24cbbb",
     "worktree": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1",
     "default_commit": "f104bd848b78b415595906f852962ae17dd3f7ba",
     "mode_entry_commit": "fd32762f4fa17a5e77aaa7118a9ded2d3ac81e9e"
@@ -24,11 +24,11 @@
       "workspace": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1",
       "mysql-socket": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/erp-fulfillment-p0-mysql-r",
       "runtime-and-private-evidence": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime",
-      "runtime-policy": "CLOSED after one focused coverage diagnostic4PASS0skip and QueueHTTP1PASS; exact diagnostic base/account removed, own MySQL gracefully stopped; data/evidence retained. diagnostic-runtime-cleanup.json",
+      "runtime-policy": "CLEANED after all six actual currentdeveloper suites; perf-a-runtime-cleanup.json CONFIRMED exactownedbase/accountgone,0children/clients, ownMySQL gracefullystopped; datadir/evidencepreserved; no tuning/productiondata.",
       "dependencies": "Actualmainlockedoffline npmci--ignore-scripts; body-parser2.4.0/qs6.16.1/PW1.63.0; nocode/dependency invention",
-      "browser-runtime": "P0/P1 actualPlaywright runsclosed; bothownedportsavailable; no reuse; allproof/artifactsretained.",
-      "mysql-schema": "fulfillment_p0_p1_82e2812c; exact diagnostic schema/account now removed; no child schemas or active clients",
-      "web-port": "API 56002, client 56003; OSephemeral allocated; strict bind/no reuse; integrationHTTPport0"
+      "browser-runtime": "CurrentP0/P1 realPlaywright2PASS each; owned API61349/client61350released; no reuse; currentPDF actualrender/view proof preserved.",
+      "mysql-schema": "fulfillment_p0_p1_6a148d9d",
+      "web-port": "API61349/client61350 allocatedbyOS; actualstrictbind/no reuse; bothreleased after actualbrowsercleanup."
     },
     "lease_ref": null
   },
@@ -3568,6 +3568,108 @@
         "ExactoriginalNAreason retained; TC010mandatory/blocking unchanged",
         "Only test diagnostics and confirmed Queue fixture/namespace correction; original public route, safety, 5000/20s/coverage unchanged; old unchanged shared-path and NFR023 approvals retained by lineage; no performance optimization."
       ]
+    },
+    {
+      "id": "APR-162-PERF-CI002-A-IMPLEMENTATION-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam actual direct approval of PERF-CI-002 option A, preserved verbatim in pending decision answer_ref; no new design/business/DB semantics",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam current direct message approving方案A; docs/fulfillment_shipping_management/implementation/62_diagnostic_ci_capacity_stop.md proposed scope and separate review b0c1c642",
+      "recorded_at": "2026-10-28T02:35:45.759544+00:00",
+      "code_commit": "79aef39d07940d1e37e46b122bcd9d78a89c93db",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "82e58fbf999fb9418584a1cf764803e3cc2f6e434489d7d71d3430d237133f97",
+      "scope": [
+        "fulfillment-shipping-management",
+        "PHASE-002",
+        "server/src/modules/inventory/inventoryFulfillmentAllocationPreparation.js",
+        "server/src/modules/inventory/inventoryFulfillmentReallocationAdvisory.js",
+        "server/src/modules/inventory/inventoryFulfillmentAllocationPreview.js",
+        "Existing Fulfillment owner/consumer proof local fresh-read indexing and test-onlyHTTPdiagnostics; preserve all safeguards/20s/5000/20samples/300s/coverage/gates; no CASbatching/newAPI/cachetruth"
+      ]
+    },
+    {
+      "id": "APR-163-PERF-A-SHARED-NATIVE-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam actual PERF-CI002A plus verified direct Sam P0/P1 dedupe instruction; faithful existing-scope lineage only, no unseen-hash approval",
+      "decision": "APPROVED",
+      "source_ref": "Actual PERF-CI002A and Sam message01a17c33-9b60-7011-8fda-9a74a2bad727; implementation/63_fresh_read_index_optimization.md; clarified only this newly derived approval restriction; historical APR158–161 and state231 proposal preserved unchanged.",
+      "recorded_at": "2026-10-28T03:02:22.580303+00:00",
+      "code_commit": "79aef39d07940d1e37e46b122bcd9d78a89c93db",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "142a24e513c6889dcd6da31cc5c7313f98d1e937a50998ff56c0a45025c4b23e",
+      "scope": [
+        "server/src/modules/inventory/InventoryLookupService.js",
+        "server/src/modules/inventory/inventoryFulfillmentCandidateAdvisory.js",
+        "server/src/modules/sales/SalesFulfillmentService.js",
+        "server/test/salesFulfillmentService.test.js",
+        "docs/inventory_management/03_design_spec.md",
+        "docs/inventory_management/00_module_manifest.json",
+        "docs/sales_order_management/03_design_spec.md",
+        "docs/sales_order_management/00_module_manifest.json",
+        "server/src/modules/inventory/inventoryFulfillmentAllocation.js",
+        "server/src/modules/inventory/inventoryFulfillmentAllocationPreparation.js",
+        "server/src/modules/inventory/InventoryPickSequenceService.js",
+        "server/database/migrations/0104_preserve_cancelled_fulfillment_pick_history.js",
+        "server/src/modules/fulfillment/fulfillmentCancelledAllocationSchema.js",
+        "server/src/modules/fulfillment/fulfillmentMigrationSchema.js",
+        "client/config/menu.js",
+        "server/src/modules/inventory/inventoryFulfillmentReallocationAdvisory.js",
+        "server/src/framework/http/apiResponse.js",
+        "server/src/framework/api/apiDefinitionResolver.js",
+        "server/src/framework/middleware/apiDispatcher.js",
+        "server/src/framework/application/createApplication.js",
+        "server/src/framework/http/jsonBodyParser.js",
+        "server/src/modules/inventory/inventoryFulfillmentAllocationPreview.js",
+        "HD024actualA readonlyactualprefixpreview/fourthtrusted2MiB only; reuseexistingassessor withoutwriterpolicyedit; oldglobal100slots/10s/20s/safety/gatesunchanged",
+        ".github/workflows/ci.yml",
+        "client/e2e/fulfillment-shipping-management/**",
+        "OwnedfixtureHTTPcredentials only; noGRANT/globalaccount/RBACpolicy change; alreadyplannedrealP1UI step insideexistingrequiredshard1 afterallcapacitysamples",
+        "Only approved fresh-read local indexes, test-only HTTP diagnostics and one existing stricter full native run shared by P0/P1 bindings; no case/threshold/browser/formal/CI reduction.",
+        "Prior diagnostic-only restriction is historical. ActualPERF-CI002A authorizes ONLY fresh-read local indexes and HTTP test diagnostics; verifiedSamdedupe authorizes ONE actual existing p1 fullrun for PHASE001/002. No other write/API/SQL/lock/isolation/CAS/receipt/threshold or safety change."
+      ]
+    },
+    {
+      "id": "APR-164-PERF-A-SHARED-NATIVE-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam actual PERF-CI002A plus existing verified dedupe/NFR023 human decisions; faithful unchanged-policy lineage, not new human hash inspection",
+      "decision": "APPROVED",
+      "source_ref": "implementation/63_fresh_read_index_optimization.md; original APR-160-CI-DIAGNOSTIC-PLAN; actual Sam direct PERF-CI002A/dedupe approval; clarified only this newly derived approval restriction; historical APR158–161 and state231 proposal preserved unchanged.",
+      "recorded_at": "2026-10-28T03:02:22.580303+00:00",
+      "code_commit": "79aef39d07940d1e37e46b122bcd9d78a89c93db",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "142a24e513c6889dcd6da31cc5c7313f98d1e937a50998ff56c0a45025c4b23e",
+      "scope": [
+        "fulfillment-shipping-management",
+        "PHASE-002",
+        "TASK-012–023",
+        "Retainalloriginalsuites/5000/20s/safety/coverage/currentCI; addexplicitrealP1browsermin2/zeroSKIP; draftonlyafterallgates",
+        "Prior diagnostic-only restriction is historical. ActualPERF-CI002A authorizes ONLY fresh-read local indexes and HTTP test diagnostics; verifiedSamdedupe authorizes ONE actual existing p1 fullrun for PHASE001/002. No other write/API/SQL/lock/isolation/CAS/receipt/threshold or safety change."
+      ]
+    },
+    {
+      "id": "APR-165-PERF-A-SHARED-NATIVE-NFR023-LINEAGE",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam actual PERF-CI002A plus existing verified dedupe/NFR023 human decisions; faithful unchanged-policy lineage, not new human hash inspection",
+      "decision": "APPROVED",
+      "source_ref": "implementation/63_fresh_read_index_optimization.md; original APR-161-CI-DIAGNOSTIC-NFR023-LINEAGE; actual Sam direct PERF-CI002A/dedupe approval; clarified only this newly derived approval restriction; historical APR158–161 and state231 proposal preserved unchanged.",
+      "recorded_at": "2026-10-28T03:02:22.580303+00:00",
+      "code_commit": "79aef39d07940d1e37e46b122bcd9d78a89c93db",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "142a24e513c6889dcd6da31cc5c7313f98d1e937a50998ff56c0a45025c4b23e",
+      "scope": [
+        "NFR-023",
+        "ExactoriginalNAreason retained; TC010mandatory/blocking unchanged",
+        "Exact original NFR023 N/A reason unchanged; TC010 remains mandatory/blocking. Only mechanical currentPLAN lineage under actual prior NFR023 approval, no new waiver."
+      ]
     }
   ],
   "reviews": [
@@ -5166,6 +5268,90 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-PERF-CI002-COMPLETE-DIAGNOSIS-PROPOSAL",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "f7902ae0f02984b5feeb8cb02d5893c57820e99b1e90c471b6f6044305270584",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-79aef39d-complete-ci-diagnosis-and-perf-ci002-proposal-review.json SHAb0c1c6428031a3f7ed22ef569f4dc5e4c1683d06de4bfd9591b108a0604886ec; 0C/H/M FOR HUMAN DECISION ONLY. Exact79aef39d actualCI5notpassingcases, report62/state227/provenanceconfirmed. OptionA boundedfreshreadMaps/groups+HTTPtestdiagnostics reviewable, CPUbenefitunproven; notimplementation/CI/gateapproval.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-PERF-CI002-A-FRESH-INDEX-HTTP-SOURCE",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "f7902ae0f02984b5feeb8cb02d5893c57820e99b1e90c471b6f6044305270584",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-perf-ci002-a-fresh-index-and-http-diagnostic-source-review.json SHAcae05905d3ea10cece9df6218485b25f4ce026893e96c0021b46a6be6c9684a0; scopedsource/unit0C/H/M atFPb6f466b07d73d63e75b4cf0f87ecb6aefb67a124e14d5123d0f612b6dd24cbbb; actualA,35SQL/lock AST+21HTTPassertions unchanged; native/measurement/CIpending",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-PERF-A-SHARED-NATIVE-METADATA",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "f7902ae0f02984b5feeb8cb02d5893c57820e99b1e90c471b6f6044305270584",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-state232-shared-native-metadata-and-remediation-direction-review.json SHA5c6a70eb353a6eeca773de19eaf952659a355e9a32de84740f1bda8d52e3dd10; scoped0C/H/M; authorizedsameactualsuite/evidencecaptureonly; originalPLAN_READYBLOCKED/HIGHOPEN preserved, noCI/Phase/gatewaiver",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-PERF-A-EXPLICIT-REMEDIATION-CAPTURER",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "f7902ae0f02984b5feeb8cb02d5893c57820e99b1e90c471b6f6044305270584",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-perf-a-private-remediation-capturer-review.json SHA247fd9c042c73f8c5ae1a32745cb9945bd99f437e1258adf9268f53b9c3d512f; scoped0C/H/M; authorizedsameactualsuite/evidencecaptureonly; originalPLAN_READYBLOCKED/HIGHOPEN preserved, noCI/Phase/gatewaiver",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-PERF-A-LINT-AUDIT-RESULTS",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "f7902ae0f02984b5feeb8cb02d5893c57820e99b1e90c471b6f6044305270584",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-perf-a-lint-security-audit-results-review.json SHA0126f175b53f44b641262c3545a0d2ef2c210e2f20439e70992c2843156b9427; Exact current developer lint/audit result/provenance only; 0C/H/M; high threshold retained,1low4moderate; not finalGate/CI",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-PERF-A-SHARED-NATIVE-553-RESULTS",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "f7902ae0f02984b5feeb8cb02d5893c57820e99b1e90c471b6f6044305270584",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-perf-a-shared-native-553-results-review.json SHA4a92a92c2ce414066ab2cf2ea8f7191e531e0f54753ee32877b3142c6ae2dbdd; Exact current actual553PASS143unit410integration; one p1 run sharedby adoptedP0/P1bindings; 0C/H/M; no stage/SQL/P95 values recoverable fromJUnit; focusedmeasurement separate; not finalGate/CI",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-PERF-A-LOCAL-CLOSING-CI-READINESS",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "f7902ae0f02984b5feeb8cb02d5893c57820e99b1e90c471b6f6044305270584",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-perf-a-build-two-browser-and-ci-readiness-review.json SHA6d273ce01c66648f184ec6f9c952c6a1b056b77de18f2503c6667c3c535ae5c2; scoped0C/H/M actual6unique runs/source→UI mapping/currentPDF/cleanup; same reviewedcandidate ready for commit and onceCI only; originalHIGH/GateBLOCKED retained; no CI/Phase/draft/readinessapproval",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -6125,6 +6311,61 @@
       "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/40464059084; actualcompletedfailure, shard1job122055148210/shard3job122055148078; rawhashes9b83d07e/59d2270e; no earliergreen/localPASSsubstitution",
       "actor": "/root actualGitHubrunAPIanddecodedjoblogs",
       "observed_at": "2026-10-27T07:32:35.889455+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Test (server + client, MySQL integration)",
+      "code_commit": "79aef39d07940d1e37e46b122bcd9d78a89c93db",
+      "spec_baseline": "82e58fbf999fb9418584a1cf764803e3cc2f6e434489d7d71d3430d237133f97",
+      "source_fingerprint": "6fb7a3e02fc7b720f4a44f02c9279e14557d94af15ccb17ceaad02c8810f15e5",
+      "status": "PENDING",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/40472547220; exact79aef39d workflowdispatch; one approved diagnosticCI only, unchanged workflow/coverage/thresholds",
+      "actor": "/root actualGitHub/ghrunobservation",
+      "observed_at": "2026-10-27T08:18:32.037601+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Server coverage shard (4/4)",
+      "code_commit": "79aef39d07940d1e37e46b122bcd9d78a89c93db",
+      "spec_baseline": "82e58fbf999fb9418584a1cf764803e3cc2f6e434489d7d71d3430d237133f97",
+      "source_fingerprint": "6fb7a3e02fc7b720f4a44f02c9279e14557d94af15ccb17ceaad02c8810f15e5",
+      "status": "FAIL",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/40472547220/job/122082872415; actualcompletedfailure,998tests960PASS1FAIL37SKIP; Full5000actualHTTPcase Reallocate line20 returns500expected200 INTERNAL_SERVER_ERROR; internalcause/timeoutnotproven; rawSHAd723a56846a180e6a6395564832160157caaa7e5b6ea9117280308b9725f65ed",
+      "actor": "/root actualdecodedGitHubjoblogs",
+      "observed_at": "2026-10-27T08:31:05.771882+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Test (server + client, MySQL integration)",
+      "code_commit": "79aef39d07940d1e37e46b122bcd9d78a89c93db",
+      "spec_baseline": "82e58fbf999fb9418584a1cf764803e3cc2f6e434489d7d71d3430d237133f97",
+      "source_fingerprint": "6fb7a3e02fc7b720f4a44f02c9279e14557d94af15ccb17ceaad02c8810f15e5",
+      "status": "FAIL",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/40472547220; actual completedFAILURE. NativePick/Reallocate/Cancel actual20s watchdogs; preview5000 wholecase300s cancelled, not20s; HTTPReallocate500 causeunknown. report62 and private raw/parsed records.",
+      "actor": "/root actualGitHubdecodedlogs andrunfinalAPI",
+      "observed_at": "2026-10-28T00:52:12.161692+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Test (server + client, MySQL integration)",
+      "code_commit": "79aef39d07940d1e37e46b122bcd9d78a89c93db",
+      "spec_baseline": "82e58fbf999fb9418584a1cf764803e3cc2f6e434489d7d71d3430d237133f97",
+      "source_fingerprint": "54333a94a995df50c89d88c29ebebd04f56671fdbb9ae7e1e7d4590a869d1690",
+      "status": "FAIL",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/40472547220; actualsame79aef39d completedFAILURE. CorrectcommittedFP5433 replacesprecommitinventory6fb only: exacttwo-deletedsentinelreconstruction in79aef39d-rename-fingerprint-reconciliation.json; allmeasuredbytesunchanged. Priorobservationsretained, notrelabelledPASS/retested.",
+      "actor": "/root actualGitHublogs andindependentlyverifiableGitindex/contentreconciliation",
+      "observed_at": "2026-10-28T00:54:22.366144+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "CurrentP1realbrowserA4 PDF actualrender/view supporting this actual2casePASS only",
+      "code_commit": "79aef39d07940d1e37e46b122bcd9d78a89c93db",
+      "spec_baseline": "142a24e513c6889dcd6da31cc5c7313f98d1e937a50998ff56c0a45025c4b23e",
+      "source_fingerprint": "b6f466b07d73d63e75b4cf0f87ecb6aefb67a124e14d5123d0f612b6dd24cbbb",
+      "status": "PASS",
+      "source_ref": "evidence/20261028T034217-3d3a0e854d18/run.json; privateperf-a-current-pick-list-visual-proof.json; currentPICKEDv3 planned1/picked1/short0,P1-SMOKE/FIFO1,Chinese readable/no blank/clipping; not5000PDF orformalUAT",
+      "actor": "/root actualcurrentPDF render/view",
+      "observed_at": "2026-10-28T03:45:39.681877Z"
     }
   ],
   "pending_decisions": [
@@ -6481,6 +6722,20 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Actual Sam direct async reply call_b314959146c743aa9aaf7b4fb78bd12f: A：批准針對性定位及已確認測試修正（建議）. Onlyboundedstage/SQLcounts/error-discrimination + knownQueuefixture/directoryconventionfixes, preservepublicroute/5000/20s/coverage/safety; identifybottleneckbeforechoosingoptimization; no P0/P1name-basedreruns."
+    },
+    {
+      "id": "PERF-CI-002",
+      "impact": "MAJOR",
+      "question": "Complete79aef39d diagnosticCI evidence: Pick/Reallocate/Cancel20s watchdog;5000balancespreviewwholecase300s timeout; HTTPReallocate500 internalcauseunknown. RecommendA firstfresh-readlocalMap/groupindexes inequivalentowner/consumerproof, retainingduplicate/extra/missing/error/orderchecks,noSQL/locks/isolation/API/cachetruthchange; addtest-onlyHTTPactualexecutordiagnostics. B priorReservationCASbatching haslargerDB/CAS/triggerproofscope. Bothpreserve5000/20s/20samples/300scase/coverage/allgates. ActualSam continue authorizescollect/explain, not choosingunpresentedoptimization. Awaitindependentreviewthenconsolidatedhumanchoice; no edits/reruns/PR.",
+      "affected_ids": [
+        "PHASE-002",
+        "TASK-016",
+        "TASK-017",
+        "TASK-022",
+        "TC-010"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Actual Sam direct message: 批准方案 A，先優化 fresh-read 查找索引並補足 HTTP 診斷，保留全部安全檢查及原有限制；完成獨立覆核後重新量測及跑當前候選 CI，若仍有容量或效能失敗便停下報告。"
     }
   ],
   "external_actions": [
@@ -7025,8 +7280,24 @@
       "kind": "PUSH",
       "target": "crazysumsum/erp-app codex/fulfillment-p1-queue-picking",
       "idempotency_key": "p1-ci001-diagnostic-6fb7a3e02fc7b720",
+      "status": "CONFIRMED",
+      "source_ref": "Actual gitpush exit0 origin branch dc46b48b→79aef39d07940d1e37e46b122bcd9d78a89c93db; no main/PR/merge. Reviewed bridge672fae97, exact FP6fb7a3e0 preserved."
+    },
+    {
+      "id": "P1-DIAGNOSTIC-CI-79AEF39D",
+      "kind": "CI",
+      "target": "ci.yml workflow_dispatch on codex/fulfillment-p1-queue-picking exact79aef39d07940d1e37e46b122bcd9d78a89c93db",
+      "idempotency_key": "p1-ci001-79aef39d07940d1e",
+      "status": "CONFIRMED",
+      "source_ref": "Actual ghworkflowdispatch exit0 https://github.com/crazysumsum/erp-app/actions/runs/40472547220; exacthead79aef39d07940d1e37e46b122bcd9d78a89c93db created2026-10-27T08:18:05Z; triggeronly, CI PENDING, no retry/PR.; actualcompletedFAILURE,3nativefail/aggregateTestfail/coverageSkipped. No retry/PR/productionoptimization."
+    },
+    {
+      "id": "P1-PERF-A-CANDIDATE-PUSH",
+      "kind": "PUSH",
+      "target": "crazysumsum/erp-app refs/heads/codex/fulfillment-p1-queue-picking reviewedFPb6f466b07d73d63e75b4cf0f87ecb6aefb67a124e14d5123d0f612b6dd24cbbb PLAN142a24e513c6889dcd6da31cc5c7313f98d1e937a50998ff56c0a45025c4b23e",
+      "idempotency_key": "p1-perf-a-push-b6f466b07d73d63e",
       "status": "PLANNED",
-      "source_ref": "ActualSam PERF-CI-001 A; independent diagnosticdirection43481ca7; existing publicbranch, no PR/merge/deploy. SourceFP6fb7a3e02fc7b720f4a44f02c9279e14557d94af15ccb17ceaad02c8810f15e5"
+      "source_ref": "ActualSamPERF-CI002A implementation/review/currentCI authorization; independentclosing6d273ce0; remote feature exact79aef. Latestmaina98 observed fetch, outsideSupplier change compatibilityunderreadonlyreview; noPR/merge permission implied."
     }
   ],
   "evidence_files": [
@@ -7042,7 +7313,13 @@
     "evidence/20261027T060614-db54880f2c99/run.json",
     "evidence/20261027T060618-d86631c5cb81/run.json",
     "evidence/20261027T061002-a7868011afe4/run.json",
-    "evidence/20261027T062608-03060d12c14f/run.json"
+    "evidence/20261027T062608-03060d12c14f/run.json",
+    "evidence/20261028T032503-64150925bcca/run.json",
+    "evidence/20261028T033112-6d72134db890/run.json",
+    "evidence/20261028T033112-ff6786c9214a/run.json",
+    "evidence/20261028T034115-9bff23c8c917/run.json",
+    "evidence/20261028T034134-eb989ffc4f7d/run.json",
+    "evidence/20261028T034217-3d3a0e854d18/run.json"
   ],
   "defects": [
     {
@@ -7337,7 +7614,9 @@
         "Promised realP1browser executable lane/profile/PHASE002/CIbinding remains missing; P0foundation2tests cannot substitute.",
         "Actualseparatereview94e7a43f17ae5aae1cf9448853aba777bea4cf081b0f721cb4de3b5f9f6f45a1; correctionandactualverificationpending",
         "RealP1browser2PASS20261027T060504-f258870ae8db +P0browser2PASS; executableCI/profile/PHASEbindingreviewed; currentcandidateCIpending, remainsOPENuntilfinalqualification.",
-        "CurrentCIrealP1browserstepnotreachedbecausepreviousnativecoveragefailed; missingreportuploadsecondary. Local2PASSretained, CIconfirmationnotestablished."
+        "CurrentCIrealP1browserstepnotreachedbecausepreviousnativecoveragefailed; missingreportuploadsecondary. Local2PASSretained, CIconfirmationnotestablished.",
+        "79aef39d realP1browserCIstep stillnotreached after shard1nativefailure; remainsOPEN, noCIbrowserPASSclaim.",
+        "PERF-CI002A currentFPb6f/PLAN142a oneactualnative553PASS0skip +twoactualbrowser2PASSeach; focusedcoverage5PASS prior; originalfailures preserved and defect remainsOPEN pending exactcurrentcandidateCI and independentclosing. report63; evidence index perf-a-all-local-results-index.json."
       ],
       "risk_approval_id": null
     },
@@ -7354,7 +7633,9 @@
         "CI DB_USERerp_user cannot access admincreatedUUIDchild in startP1Http/CreateHTTP; explicitlybind existingownedfixturecredentials, noGRANT/global/productpolicy change.",
         "Actualseparatereview94e7a43f17ae5aae1cf9448853aba777bea4cf081b0f721cb4de3b5f9f6f45a1; correctionandactualverificationpending",
         "Exactownedcredentialbindingreviewed; realP1childapp/browserPASS; existingHTTPnative/fullCIqualificationpending; no SQLlowprivexecutionclaim.",
-        "CIactualQueueHTTPstartupfailed: previouslymissedthirdseparatecreateApplication atfulfillmentQueue.integration126 stilluseserp_user/UUIDchild. Earlier2fixturefixesnotcompleteclosure; nofixafterSTOP."
+        "CIactualQueueHTTPstartupfailed: previouslymissedthirdseparatecreateApplication atfulfillmentQueue.integration126 stilluseserp_user/UUIDchild. Earlier2fixturefixesnotcompleteclosure; nofixafterSTOP.",
+        "79aef39d QueueactualHTTP CI PASS; correspondingownedappAllocate also passed. Credential correction has actualrunnerproof; globaldelivery gatesstillblocked, no newGRANT.",
+        "PERF-CI002A currentFPb6f/PLAN142a oneactualnative553PASS0skip +twoactualbrowser2PASSeach; focusedcoverage5PASS prior; originalfailures preserved and defect remainsOPEN pending exactcurrentcandidateCI and independentclosing. report63; evidence index perf-a-all-local-results-index.json."
       ],
       "risk_approval_id": null
     },
@@ -7371,7 +7652,9 @@
       "closure_evidence": [
         "CurrentCI confirmed20sDBwatchdogtimeouts; exactpostALLOCATEpreviewwindow/Cancelcaseactiveoperationunknown; no sourcecorruption/coveragecausalityclaim.",
         "ActualCI40464059084 failedshard1/3 logs; private triage /Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/dc46-ci-failure-readonly-triage.json SHA1d70d1bded248e571b52d70d8b6a5c632f6ed049adee0d90506e6b3e9425f262",
-        "One filtered localcoverage diagnostic4PASS0skip, no timeout reproduction; CI rootcause notproven. report61; rawSHA43703e2cca7b775735a3c17d29a687261f1fc8f9721edacf88d7ac0c0ae7ffda. RemainsOPEN pending actualCI."
+        "One filtered localcoverage diagnostic4PASS0skip, no timeout reproduction; CI rootcause notproven. report61; rawSHA43703e2cca7b775735a3c17d29a687261f1fc8f9721edacf88d7ac0c0ae7ffda. RemainsOPEN pending actualCI.",
+        "79aef39d exact20s watchdog confirmed during PICK_ROLLBACK_projection (11504SQL), REALLOCATE_ROLLBACK (46107SQL), CANCEL_ROLLBACK_allocation (25869SQL). Report62 actualstage breakdown; no automaticproductoptimization.",
+        "PERF-CI002A currentFPb6f/PLAN142a oneactualnative553PASS0skip +twoactualbrowser2PASSeach; focusedcoverage5PASS prior; originalfailures preserved and defect remainsOPEN pending exactcurrentcandidateCI and independentclosing. report63; evidence index perf-a-all-local-results-index.json."
       ],
       "risk_approval_id": null
     },
@@ -7387,7 +7670,9 @@
       "closure_evidence": [
         "CurrentCI Pick/Reallocate5000rollbackprojectioncounter0 expected50; upstreamerrorsswallowedbyassert.rejects, timeoutcausenotproven.",
         "ActualCI40464059084 failedshard1/3 logs; private triage /Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/dc46-ci-failure-readonly-triage.json SHA1d70d1bded248e571b52d70d8b6a5c632f6ed049adee0d90506e6b3e9425f262",
-        "Strict native45000 exactmarker predicates and full50batch/rollbackproofs pass focusedlocalcoverage; priorCI cause remainsunknown. RemainsOPEN pending actualCI."
+        "Strict native45000 exactmarker predicates and full50batch/rollbackproofs pass focusedlocalcoverage; priorCI cause remainsunknown. RemainsOPEN pending actualCI.",
+        "79aef39d strict45000syntheticpredicate nowexposesactual20s watchdog beforeplannedtailinjection; expectedrollbacktailproof notobtained inCI. Do not callbatchwriterbug orpassedfaultproof.",
+        "PERF-CI002A currentFPb6f/PLAN142a oneactualnative553PASS0skip +twoactualbrowser2PASSeach; focusedcoverage5PASS prior; originalfailures preserved and defect remainsOPEN pending exactcurrentcandidateCI and independentclosing. report63; evidence index perf-a-all-local-results-index.json."
       ],
       "risk_approval_id": null
     },
@@ -7402,10 +7687,45 @@
       "closure_evidence": [
         "GlobalhandlerConventions rejectsListFulfillmentQueueHandler foldervsapprovedURLprefix; publiccontractandtestremainunchanged.",
         "ActualCI40464059084 failedshard1/3 logs; private triage /Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/dc46-ci-failure-readonly-triage.json SHA1d70d1bded248e571b52d70d8b6a5c632f6ed049adee0d90506e6b3e9425f262",
-        "Byteidenticalhandler/schema movedto approvedURLnamespace; convention/schema4PASS, independent0C/H/M. RetainOPEN until candidateCI verifies."
+        "Byteidenticalhandler/schema movedto approvedURLnamespace; convention/schema4PASS, independent0C/H/M. RetainOPEN until candidateCI verifies.",
+        "79aef39d currentCI everyhandlersdirectorymatchesURLprefix PASS; namespacecorrection verified, globalgatesstillblocked.",
+        "PERF-CI002A currentFPb6f/PLAN142a oneactualnative553PASS0skip +twoactualbrowser2PASSeach; focusedcoverage5PASS prior; originalfailures preserved and defect remainsOPEN pending exactcurrentcandidateCI and independentclosing. report63; evidence index perf-a-all-local-results-index.json."
+      ],
+      "risk_approval_id": null
+    },
+    {
+      "id": "DEF-025",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "source_ids": [
+        "TASK-016",
+        "TASK-017",
+        "TASK-022",
+        "TC-010"
+      ],
+      "closure_evidence": [
+        "Actual79aef39d CI40472547220 shard4 full5000 HTTPReallocate500/200; HTTPAllocateprecedingstepspassed; internalcauseunknown, do notlabelDATABASE_TRANSACTION_TIMEOUT fromwholecase46.10s.",
+        "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/79aef39d-ci-shard4-job122082872415-actual.log SHAd723a56846a180e6a6395564832160157caaa7e5b6ea9117280308b9725f65ed",
+        "PERF-CI002A currentFPb6f/PLAN142a oneactualnative553PASS0skip +twoactualbrowser2PASSeach; focusedcoverage5PASS prior; originalfailures preserved and defect remainsOPEN pending exactcurrentcandidateCI and independentclosing. report63; evidence index perf-a-all-local-results-index.json."
+      ],
+      "risk_approval_id": null
+    },
+    {
+      "id": "DEF-026",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "source_ids": [
+        "TASK-016",
+        "TASK-022",
+        "TC-010"
+      ],
+      "closure_evidence": [
+        "79aef39d preview5000balances hitunchanged300s WHOLECASEdeadline;20lastclaimreadtransactions each411SQL completed10.44–10.94s, no20swatchdog inthiscase. Laterattemptcancelled0SQL/callbackunsettled; noallselectors/HTTP/zeroDMLcompletionclaim.",
+        "ActualCI40472547220 job122082872324 rawSHA516212d1e12b4d5ffd2f7b80a820d5c2473381bb5c11d2e4c2d2e0838f83168f; report62",
+        "PERF-CI002A currentFPb6f/PLAN142a oneactualnative553PASS0skip +twoactualbrowser2PASSeach; focusedcoverage5PASS prior; originalfailures preserved and defect remainsOPEN pending exactcurrentcandidateCI and independentclosing. report63; evidence index perf-a-all-local-results-index.json."
       ],
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Publish reviewed test-only diagnostics and confirmed Queue fixture/namespace fixes as one diagnostic candidate; dispatch existing unchanged CI once for actual-runner stage/SQL evidence. No production optimization; preserve20s/5000/coverage/safety and historicalP0/P1PASS; no duplicate full local suites for names. Another CI capacity/performancefailure STOP/report with exact stages, no retry/PR. Final TASK/Phase/currentCI gates still pending."
+  "next_safe_action": "All six current-source local suites actuallyPASS; obtain final independent result/provenance/docs closing, commit/push same reviewedFPb6f/PLAN142a candidate and run unchangedci.yml once. All DEF020-026 remainOPEN until actualCI qualification; anycapacity/performanceFAIL STOP/report, no retry/fix. DraftPR only after currentcandidateCI and all required checks/review pass; no merge/deploy/formalacceptance."
 }

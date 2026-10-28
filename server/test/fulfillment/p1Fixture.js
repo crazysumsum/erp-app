@@ -1,3 +1,4 @@
+import {capacityDiagnostics} from "./p1CapacityDiagnostics.js";
 import { randomUUID } from "node:crypto";
 import { fixture } from "./aggregateFixture.js";
 import { up as auditUp } from "../../database/migrations/0098_create_fulfillment_audit_and_exports.js";
@@ -37,17 +38,19 @@ export async function ownerQuantities(f){
  const facts={};for(const table of ["sales_orders","sales_order_lines","sales_order_line_reservations","inventory_reservations","inventory_stock_controls","inventory_stock_balances"])facts[table]=(await f.db.query(`SELECT * FROM ${table} ORDER BY id`))[0];return facts;
 }
 
-export async function startP1Http(t,f){
+export async function startP1Http(t,f,{diagnostics=false}={}){
  const {createApplication}=await import("../../src/framework/application/createApplication.js"),{defaultConfigurationSource}=await import("../../src/framework/configuration/applicationConfiguration.js"),{readdir}=await import("node:fs/promises");
  const directory=new URL("../../database/migrations/",import.meta.url),installed=new Set([92,93,95,96,98]);
  for(const name of (await readdir(directory)).filter(name=>/^[0-9]{4}_.*\.js$/u.test(name)&&Number(name.slice(0,4))>88&&!installed.has(Number(name.slice(0,4)))).sort())await(await import(new URL(name,directory).href)).up(f.db);
  const source=defaultConfigurationSource(),app=await createApplication({configurationSource:{...source,application:{...source.application,port:0},scheduler:{...source.scheduler,jobs:{...source.scheduler.jobs,"sales.backorderAllocate":{enabled:false},"sales.importWorker":{enabled:false},"sales.quotationExpire":{enabled:false}}},database:{...source.database,host:f.f.connectionOptions.host,port:f.f.connectionOptions.port,socketPath:f.f.connectionOptions.socketPath,user:f.f.connectionOptions.user,password:f.f.connectionOptions.password,database:f.f.name}}});
  t.after(()=>app.shutdown("fulfillment_p1_http_complete"));const {url}=await app.start(),subject=String(f.userId),version=await app.services.require("tokenRevocation").currentVersion(subject);
  const token=await app.services.require("jwt").issue({roles:f.claims.roles,permissions:f.claims.permissions},{subject,version,authTime:Math.floor(Date.now()/1000)}),denied=await app.services.require("jwt").issue({roles:f.claims.roles,permissions:[]},{subject,version,authTime:Math.floor(Date.now()/1000)});
- return async(method,path,body,{auth=true,key=randomUUID()}={})=>{
+ const profile=diagnostics?capacityDiagnostics(t,app.services.require("mysqldatabase"),"HTTP_APPLICATION_DATABASE"):null;
+ const request=async(method,path,body,{auth=true,key=randomUUID()}={})=>{
   const response=await fetch(new URL(path,url),{method,headers:{...(auth?{Authorization:`Bearer ${auth==="denied"?denied:token}`} : {}),...(body===undefined?{}:{"Content-Type":"application/json","Idempotency-Key":key})},...(body===undefined?{}:{body:JSON.stringify(body)})});
   return {status:response.status,body:await response.json(),headers:{cacheControl:response.headers.get("cache-control"),pragma:response.headers.get("pragma")}};
  };
+ return profile?(method,path,...args)=>profile.phase(path.endsWith("/allocate")?"HTTP_ALLOCATE":path.endsWith("/reallocate")?"HTTP_REALLOCATE":path.endsWith("/pick-confirm")?"HTTP_PICK":"HTTP_OTHER",()=>request(method,path,...args)):request;
 }
 
 export async function allocateWithInventoryOwner(f,document,{projected=false}={}){
