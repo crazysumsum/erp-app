@@ -35,12 +35,22 @@
 **DEF-048 re-test (HD-153 A), at both stages:**
 - **TC-101 passes:**
   - online error rate 0 during the import;
-  - the import applied 10,000 of 10,000, in 71.8 s and 77.4 s, inside the window;
+  - the import applied 10,000 of 10,000, inside the window: precheck plus execute 78.1 s and 83.7 s (execute alone 71.8 s and 77.4 s);
   - `db.no_deadlocks_during_import` is 0.
 - **TC-128's `db.no_deadlocks_mixed_load` is 0.**
-- **The kept server warnings** hold no `supplier.write.deadlock_retried`, only `supplier.import.disabled`.
-- **Deadlocks elsewhere:** the instance-wide counter rose from 314 to 341 during the session, but only while the server suites ran. It stayed flat across every performance load (325→325 at TECHNICAL, 341→341 at REGRESSION). Seven Supplier integration test files deal with deadlocks or races. `supplierDeadlockRetry` and `supplierConstraintRaces`, for example, provoke them on purpose.
-- **DEF-048 is CLOSED**, with closure evidence: PR #298, plus these two performance runs.
+- **The online server's kept warnings** hold no `supplier.write.deadlock_retried`, only `supplier.import.disabled`. The import worker is a separate process and keeps no warnings file; the deadlock counter covers both.
+- **Deadlocks elsewhere:** the instance-wide counter rose from 314 to 341 during the session.
+  - The 314 is a manual query just before the runs; it is not in the run evidence.
+  - Across every performance load the counter stayed flat (325→325 at TECHNICAL, 341→341 at REGRESSION), which the run evidence records.
+  - REV-134 attributed the 27 from the mysqld error log, read-only; the log lives in the session scratchpad, so this is an observation, not evidence:
+    - all 27 are in `erp_t51` or the migration-test schemas `erp_t51_mig_*`;
+    - their fixtures are `supplierDeadlockRetry`'s and `supplierConstraintRaces'`, which provoke deadlocks on purpose;
+    - per stage they come to 11 and 16, the two counter deltas;
+    - none touch `supplier_name_grams`, and none are in a performance schema.
+- **DEF-048 is CLOSED.** The closure evidence:
+  - the targeted re-test: the two performance runs;
+  - the impact regression: the Supplier server suite and `supplier-security` at both stages;
+  - PR #298 and its CI (run 40645193058, 13 of 13).
 
 **Gate at `151aedf8`** (state revision 470): `verify_gate --gate TECHNICAL_ACCEPTANCE` is BLOCKED on:
 - `TASK_INCOMPLETE` TASK-051;
