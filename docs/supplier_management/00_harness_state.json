@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 449,
+  "revision": 450,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -6308,6 +6308,17 @@
       "source_ref": "docs/supplier_management/testing/t51_rehearsal/rehearsal-2026-10-27.log (replaces the earlier log of that name): all checks passed. Run from the branch worktree, whose product code equals main 38f05ba6; the rehearsal script changes were not yet committed. Supersedes the previous rehearsal observation's rollback claim, which used 72e205ef rather than the release before 0103 (REV-128 R1). New step C: e6398b70 refuses to start on the 0103 schema ('Supplier startup self-check failed'); after the three statements in 0103's header it starts and serves the rows; rolling forward renumbers them, so user ordering is lost. AUTO_INCREMENT read with information_schema_stats_expiry=0 (R2): the cache read NULL where the live value was 2. Controls: moved counter, five invented changes, case-only permission change in a rolled-back transaction.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-27T08:27:27+00:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "TASK-051 completion boundary and rehearsal across 0103 (PR #292) merged to main",
+      "code_commit": "6458d9d5f738cbb03685dc07f78976f0415ac9d3",
+      "spec_baseline": "3c683c4ea46984b476c96add5e9280b5d395c6cce9e996efa3ec36b683d4f784",
+      "source_fingerprint": "ce3a057ea38eaa90666f6ee0af76bba0fed3bcf3cd33ee87018a1c38f82a5cb4",
+      "status": "PASS",
+      "source_ref": "PR #292 merged as 6458d9d5f738cbb03685dc07f78976f0415ac9d3 at 2026-10-28T00:47:22Z on the Product Owner's word (the TASK-051 convergence instruction, then 'ci 己過'), with --match-head-commit 6c071e59, after a gate that refused unless the latest run of every check was SUCCESS (13 checks, PR run 40474278507), main was an ancestor of HEAD and the local, remote and PR heads were equal. Review REV-128 CHANGES_REQUESTED; every finding fixed before merge (report 131).",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-28T00:47:22+00:00"
     }
   ],
   "pending_decisions": [
@@ -8245,8 +8256,8 @@
         "supplier-server-integration",
         "TASK-051"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-28: 'HD-147 B'. The consumed-contract pins are refreshed at the mode change to TEST_AND_VERIFY, together with any other baseline change, so baseline-bound records are stranded once. Until then run_check stays refused on CONTRACT_DRIFT and the Supplier suites run outside it as developer-stage evidence."
     }
   ],
   "external_actions": [
@@ -9707,5 +9718,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-051 boundary PR: REV-128 findings fixed (report 131); push, CI on the exact head, merge on the Product Owner's word. TASK-051, formal UAT and release stay open (groups B and C); HD-147 awaits the Product Owner."
+  "next_safe_action": "T51 deliverable drafts (operations.md, release_evidence.md, smokeSupplierManagement.js): independent review, CI, merge on the Product Owner's word ('A，review 完 CI 過就 merge'). TASK-051, formal UAT and release stay open (groups B and C); pins refresh at the mode change (HD-147 B)."
 }
