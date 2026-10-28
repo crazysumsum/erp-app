@@ -129,13 +129,23 @@ try {
   if (seeded.code !== 0) throw new Error("seed failed");
 
   // ---- 量度：混合負載（TC-128、TC-129）、for-SKU 最差情況（TC-085）、相似名稱（TC-129）、匯入加負載（TC-101）----
+  // DEF-048（HD-153 A）：InnoDB 嘅 deadlock 計數。Retry 會遮住 deadlock，TC-101 試過有 defect 都 PASS，所以有一個就 FAIL。
+  // 計數係成個 instance 嘅：同一個 mysqld 上面其他嘢嘅 deadlock 都會計入，所以要用獨立嘅 instance 跑。
+  const deadlocks = async () => {
+    const [[row]] = await admin.query("SELECT `COUNT` AS n, `STATUS` AS status FROM information_schema.INNODB_METRICS WHERE NAME = 'lock_deadlocks'");
+    if (row?.status !== "enabled") throw new Error("INNODB_METRICS lock_deadlocks is not enabled, so deadlocks cannot be counted");
+    return Number(row.n);
+  };
+  const deadlocksBeforeMixed = await deadlocks();
   const mixed = await runScript("benchmarkSupplierManagement.js", LOAD_ARGS, { output: path.join(work, "load.json") });
   evidence.load = summary(mixed.report);
+  const deadlocksMixed = (await deadlocks()) - deadlocksBeforeMixed;
   const forSku = await runScript("benchmarkSupplierManagement.js", [...LOAD_ARGS, "--only=forSku"], { output: path.join(work, "for-sku.json") });
   evidence.forSku = summary(forSku.report);
   const recall = await runScript("measureSupplierDuplicateRecall.js", ["--queries=200", "--seed=50"], { output: path.join(work, "recall.json") });
   evidence.recall = recall.report?.variants ?? { code: recall.code, stderr: recall.stderr };
   // 匯入喺負載工具報出嘅量度窗口開始之後先起步（HD-122 A；REV-111 M-4），唔再靠固定延遲。
+  const deadlocksBeforeImport = await deadlocks();
   let windowStart;
   const windowSeen = new Promise((resolve) => { windowStart = resolve; });
   const online = runScript("benchmarkSupplierManagement.js", LOAD_ARGS, { output: path.join(work, "load-during-import.json"), onLine: (line) => {
@@ -146,6 +156,8 @@ try {
   await new Promise((resolve) => { setTimeout(resolve, Math.max(0, Date.parse(loadWindow.measureFrom) - Date.now()) + 1_000); });
   const imported = await runScript("benchmarkSupplierImport.js", ["--rows=10000"], { output: path.join(work, "import.json") });
   const during = await online;
+  const deadlocksDuringImport = (await deadlocks()) - deadlocksBeforeImport;
+  evidence.deadlocks = { mixedLoad: deadlocksMixed, loadDuringImport: deadlocksDuringImport };
   evidence.import = imported.report ? { ok: imported.report.ok, precheck: imported.report.precheck, execute: imported.report.execute,
     nfr004: imported.report.nfr004, verification: imported.report.verification, notApplied: imported.report.notApplied, error: imported.report.error }
     : { code: imported.code, stderr: imported.stderr };
@@ -162,6 +174,9 @@ try {
   Object.assign(evidence, performanceVerdicts({ mixed, forSku, recall, imported, during, counted }));
   // TC-128「冇不可恢復嘅飽和」：全部量度之後仲答到。
   evidence["TC-128"].push({ id: "load.answers_after_all_runs", status: after.status === 200 ? "PASS" : "FAIL", detail: { status: after.status } });
+  evidence["TC-128"].push({ id: "db.no_deadlocks_mixed_load", status: deadlocksMixed === 0 ? "PASS" : "FAIL", detail: { deadlocks: deadlocksMixed } });
+  evidence["TC-101"].push({ id: "db.no_deadlocks_during_import", status: deadlocksDuringImport === 0 ? "PASS" : "FAIL",
+    detail: { deadlocks: deadlocksDuringImport } });
   for (const id of ["TC-085", "TC-101", "TC-128", "TC-129"]) {
     results[id] = evidence[id].length > 0 && evidence[id].every(({ status }) => status === "PASS") ? "PASS" : "FAIL";
   }

@@ -341,6 +341,11 @@ try {
   fs.writeFileSync(OUTPUT, `${JSON.stringify(report, null, 2)}\n`);
   await application?.shutdown("supplier-performance").catch(() => {});
   await admin.end();
+  // Server 嘅 warn／error 留喺報告隔籬（DEF-048）：之前成個目錄連 log 一齊剷，500 嘅原因就冇得查。
+  const systemLog = path.join(work, "system");
+  const warnings = fs.existsSync(systemLog) ? fs.readdirSync(systemLog).flatMap((name) => fs.readFileSync(path.join(systemLog, name), "utf8").split("\n"))
+    .filter((line) => /"level":"(warn|error)"/u.test(line)) : [];
+  fs.writeFileSync(`${OUTPUT}.warnings.log`, warnings.length ? `${warnings.join("\n")}\n` : "");
   fs.rmSync(work, { recursive: true, force: true });
   console.log(JSON.stringify({ ok: report.ok, overall: report.overall, nfr001: report.nfr001, nfr005: report.nfr005, error: report.error }, null, 2));
 }
