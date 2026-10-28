@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 465,
+  "revision": 466,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "2390e6fc44da25124375f4347f2a093db512f8353e01d456780a11073be494a3",
     "plan": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
-    "code_commit": "e7f67b82b85f7ae9e3e44914148866487f211645",
-    "source_fingerprint": "675f2e537bd908f9cd5fb14cd11b72df9c657e00393de9062ac42ea2cdc39077",
+    "code_commit": "064d5d2dd44b3456599c5f0037371f59e32de200",
+    "source_fingerprint": "6bcc3b57430f5c733a1d730cf7abb810cea8f172bbd8f5935ac56aced49f2d28",
     "worktree": "/Users/sam/Documents/workspace/erp-supplier-d48",
     "default_commit": "e7f67b82b85f7ae9e3e44914148866487f211645",
     "mode_entry_commit": "e7f67b82b85f7ae9e3e44914148866487f211645"
@@ -6703,6 +6703,17 @@
       "source_ref": "PR #296 merged as e7f67b82b85f7ae9e3e44914148866487f211645 at 2026-10-28T04:30:50Z on the Product Owner's word ('HD-152 A，review 完 CI 過就 merge', then 'CI 過咗'), with --match-head-commit 4f89c553, after a gate that refused unless the latest run of every check was SUCCESS (13 checks, PR run 40631358349), main was an ancestor of HEAD and the local, remote and PR heads were equal. Reviews REV-131 and REV-132 CHANGES_REQUESTED; every finding fixed before merge (reports 134, 135).",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-28T04:30:50+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEF-048 fix: developer checks (HD-153 A, IMPLEMENT)",
+      "code_commit": "064d5d2dd44b3456599c5f0037371f59e32de200",
+      "spec_baseline": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "source_fingerprint": "6bcc3b57430f5c733a1d730cf7abb810cea8f172bbd8f5935ac56aced49f2d28",
+      "status": "PASS",
+      "source_ref": "Local, throwaway mysqld 3450, 2026-10-28 05:5x-06:22Z, on 064d5d2d: npm run lint exit 0; Supplier server suite (profile globs, DB_INTEGRATION_TESTS=1) 732/732; runSupplierPerformanceAcceptance.js with the fix: deadlocks mixedLoad 0, loadDuringImport 0, TC-085/101/128/129 local PASS, import 82.8 s inside the window; the same runner with the create-path isNew removed in place (backup, restore, cmp, identical to HEAD): deadlocks 7 and 19, 26 deadlock_retried warnings in the kept log, TC-101 and TC-128 FAIL only on db.no_deadlocks_* (online error rate 0). New integration test red before the fix (ER_LOCK_WAIT_TIMEOUT) with its control green; unit-test mutant (isNew removed) killed. Developer evidence, not formal.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-28T06:22:11+00:00"
     }
   ],
   "pending_decisions": [
