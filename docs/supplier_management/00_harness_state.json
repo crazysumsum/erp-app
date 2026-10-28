@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 451,
+  "revision": 452,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -3369,6 +3369,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-129",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (T51 deliverables: operations.md, release_evidence.md, smokeSupplierManagement.js under HD-148 B)",
+      "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-t51-deliverables at 1675cf0f (git diff origin/main..HEAD)",
+      "reviewed_baseline": "171cf54069cb8d608ed8e263a3fc83f944b993f71e46643cbb8d6717173ce2c6",
+      "source_ref": "docs/supplier_management/implementation/132_rev_129_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -6330,6 +6342,17 @@
       "source_ref": "Local scratch MySQL, uncommitted working tree on the branch head. runSupplierReleaseAcceptance.js: TC-134 PASS, TC-135 PASS (20 checks, including the new deploy.no_unknown_migration; the first run failed it on the framework/*.sql ledger rows, fixed by listing database/framework). smokeSupplierManagement.js copy on a restored copy of erp_t51 (erp_t51_rh_copy_smoke): PASS, 19 checks; names erp_t51 and erp_t51_rh_copy refused before any change; temporary users removed, RLA/RLB/RLC Suppliers left in the copy. check with a SELECT-only account against a server on the copy: PASS, 8 checks. Six injected faults (wrong URL, sort_order dropped, 0103 ledger row deleted, unknown ledger row, extra supplier.* permission, no active currency) each failed its own check; approval ON was reported, not failed. Copy, server (exact PID) and the read-only account removed afterwards.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-28T01:04:14+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "T51 smoke after REV-129 fixes, and TC-134/135 (developer run, local)",
+      "code_commit": "b374ca6c3b35fde72393be1ccdb672059345c18e",
+      "spec_baseline": "3c683c4ea46984b476c96add5e9280b5d395c6cce9e996efa3ec36b683d4f784",
+      "source_fingerprint": "7d16b8f8e33cc2b5fbd2459b5ac656948ef21b1af0f7e36bb29982eb71ba270a",
+      "status": "PASS",
+      "source_ref": "Local scratch MySQL. Server code tested as the working tree later committed as b374ca6c on top of 1675cf0f (the earlier observation's runs were of 1675cf0f's code before it was committed). TC-134 PASS, TC-135 PASS (20 checks). copy: approval OFF PASS (19), approval ON PASS (19; it failed before the fix with APPROVER_REQUIRED, as REV-129 showed), approval ON with --first-deployment FAIL on deploy.settings_singleton_approval_off; a REQUIRE SSL admin account PASS with DB_SSL_ENABLED=true and refused without it; refused before any change: DB_NAME equal to --database, no JWT_SECRET; no mode reports usage. check (SELECT-only account, server on an approval-ON copy): PASS 8 with approval reported; --first-deployment FAIL on the approval check. Copies, server (exact PID), accounts and dump removed; erp_t51 approval 0.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-28T01:17:49+00:00"
     }
   ],
   "pending_decisions": [
