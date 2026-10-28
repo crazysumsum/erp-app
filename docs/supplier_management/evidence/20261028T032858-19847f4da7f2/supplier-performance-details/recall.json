@@ -1,0 +1,107 @@
+{
+  "command": "/Users/sam/Documents/workspace/erp-supplier-ta/server/scripts/measureSupplierDuplicateRecall.js --database=erp_t51_rh_51c55efa --queries=200 --seed=50 --output=/Users/sam/Documents/workspace/erp-supplier-ta/docs/supplier_management/evidence/20261028T032858-19847f4da7f2/supplier-performance-details/recall.json",
+  "database": "erp_t51_rh_51c55efa",
+  "suppliers": 100000,
+  "queries": 200,
+  "seed": 50,
+  "truthCandidates": 1011,
+  "variants": {
+    "capped": {
+      "candidateCap": 3000,
+      "recall": 0.9723,
+      "missed": 28,
+      "queriesMissing": 16,
+      "p50Ms": 77,
+      "p95Ms": 102
+    },
+    "uncapped": {
+      "candidateCap": 9007199254740991,
+      "recall": 0.9753,
+      "missed": 25,
+      "queriesMissing": 14,
+      "p50Ms": 839,
+      "p95Ms": 1006
+    }
+  },
+  "cappedMissExamples": [
+    {
+      "query": "hing ho chemical limited",
+      "truthSize": 10,
+      "missedScores": [
+        0.9,
+        0.9,
+        0.8695652173913043,
+        0.8636363636363636,
+        0.851063829787234
+      ]
+    },
+    {
+      "query": "pearl ing pape international ltd.",
+      "truthSize": 10,
+      "missedScores": [
+        0.8888888888888888
+      ]
+    },
+    {
+      "query": "shun lee lighting group td.",
+      "truthSize": 4,
+      "missedScores": [
+        0.8571428571428571,
+        0.8571428571428571
+      ]
+    },
+    {
+      "query": "chan hakrbour xmachinery co., ltd.",
+      "truthSize": 2,
+      "missedScores": [
+        0.8813559322033898
+      ]
+    },
+    {
+      "query": "asia cheung electronics (k) limited",
+      "truthSize": 9,
+      "missedScores": [
+        0.8666666666666667
+      ]
+    },
+    {
+      "query": "dragon silver trading limited",
+      "truthSize": 9,
+      "missedScores": [
+        0.8627450980392157
+      ]
+    },
+    {
+      "query": "shun ng textile company imited",
+      "truthSize": 5,
+      "missedScores": [
+        0.8518518518518519
+      ]
+    },
+    {
+      "query": "star lee logistics limited",
+      "truthSize": 8,
+      "missedScores": [
+        0.926829268292683,
+        0.8837209302325582,
+        0.8636363636363636
+      ]
+    },
+    {
+      "query": "tai kowloon packaging limited",
+      "truthSize": 9,
+      "missedScores": [
+        0.8727272727272727,
+        0.8571428571428571
+      ]
+    },
+    {
+      "query": "leung chan mateaials international ltd.",
+      "truthSize": 8,
+      "missedScores": [
+        0.8571428571428571
+      ]
+    }
+  ],
+  "note": "single connection, one query at a time, no other load"
+}
