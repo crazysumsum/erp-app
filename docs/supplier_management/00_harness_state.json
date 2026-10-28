@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 460,
+  "revision": 461,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "TEST_AND_VERIFY",
   "status": "BLOCKED",
@@ -3652,6 +3652,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-131",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TEST_AND_VERIFY entry, formal runs, Technical Acceptance report, DEF-048)",
+      "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-technical-acceptance at 80e00c1c (git diff origin/main..HEAD)",
+      "reviewed_baseline": "2390e6fc44da25124375f4347f2a093db512f8353e01d456780a11073be494a3",
+      "source_ref": "docs/supplier_management/implementation/134_rev_131_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -6654,7 +6666,7 @@
       "spec_baseline": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
       "source_fingerprint": "675f2e537bd908f9cd5fb14cd11b72df9c657e00393de9062ac42ea2cdc39077",
       "status": "FAIL",
-      "source_ref": "docs/supplier_management/testing/07_technical_acceptance_report.md. 16 run_check --execute runs, 2026-10-28 03:05-03:40Z, all registered in evidence_files. PASS at both stages: server-integration 730/730, security 730/730, bank-security 142/142, client-ui 208/208. BLOCKED at both stages, production parts NOT_RUN by design: resilience (TC-130, TC-132), recovery (TC-133), release-operations (TC-134..136), performance (TC-128). REGRESSION performance FAIL: TC-101, online create 6 of 291 HTTP 500 during the import (DEF-048). verify_gate TECHNICAL_ACCEPTANCE BLOCKED: TASK_INCOMPLETE TASK-051, the NOT_RUN production parts, TC-101.",
+      "source_ref": "docs/supplier_management/testing/07_technical_acceptance_report.md. 16 run_check --execute runs, 2026-10-28 03:05-03:40Z, all registered in evidence_files. PASS at both stages: server-integration 730/730, security 730/730, bank-security 142/142, client-ui 208/208. BLOCKED at both stages, production parts NOT_RUN by design: resilience (TC-130, TC-132), recovery (TC-133), release-operations (TC-134..136), performance (TC-128). REGRESSION performance FAIL: TC-101, online create 6 of 291 HTTP 500 during the import and import.inside_measured_window (DEF-048). verify_gate TECHNICAL_ACCEPTANCE at 7bbf547d, state revision 459: BLOCKED on TASK_INCOMPLETE TASK-051, the NOT_RUN production parts, TC-101; at later commits also COMMIT_CHANGED, EVIDENCE_COMMIT for all 16 runs and, while open, HUMAN_DECISION_REQUIRED HD-152 (REV-131 R2).",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-28T03:40:37+00:00"
     }
@@ -8667,8 +8679,8 @@
         "SupplierAdminService.create",
         "SupplierImportService"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-28: 'HD-152 A，review 完 CI 過就 merge'. Diagnosis first, under REPORT_ONLY, in a throwaway worktree with the benchmark's server logs kept. Note: the question put to the Product Owner named only the 500s. REV-131 R1 then found that TC-101 also failed import.inside_measured_window (the import ran 114.6 s and ended about 3 s after the load window). That is recorded in DEF-048 and told to the Product Owner with this answer."
     }
   ],
   "external_actions": [
@@ -10175,5 +10187,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "HD-152 (DEF-048 route) awaits the Product Owner. Formal evidence and the Technical Acceptance report are committed on claude/supplier-technical-acceptance; PR, independent review and CI follow, merge on the Product Owner's word. UAT not executed (Technical Acceptance does not permit it)."
+  "next_safe_action": "HD-152 A: DEF-048 diagnosis is running in the throwaway worktree erp-diag048 (server logs kept; innodb_print_all_deadlocks ON on the throwaway mysqld since 03:58:28Z, lock_deadlocks 256 at that time). PR #296: REV-131 fixed (report 134), CI, merge on the Product Owner's word. UAT not executed."
 }
