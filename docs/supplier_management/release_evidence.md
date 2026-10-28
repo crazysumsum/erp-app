@@ -30,6 +30,8 @@ A role signs only when everything it reviews is complete on the **same candidate
 | The rehearsal fingerprint does not compare table options, CHECK constraints, generated columns, FK column mapping, index prefixes or privileges | `testing/t51_rehearsal/README.md` |
 | Production itself is only checked read-only. The write smoke runs on a restored copy (HD-148 B), so the first real write in production is a user's | `operations.md` §5 |
 | The smoke has run only locally; neither mode has run against a production-like environment | `operations.md` §5 |
+| §14.4's "schema hash matches the expected one" is not compared: there is no release baseline hash. The release's own schema inspectors are used instead, and TC-135 records a digest with nothing to compare it to. | `operations.md` §5 |
+| The `copy` smoke runs the app with the admin account, so the deployment account's grants on new tables are not exercised | `operations.md` §5 |
 
 ## Sign-off
 

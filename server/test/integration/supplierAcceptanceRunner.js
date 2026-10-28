@@ -128,16 +128,17 @@ export const SUPPLIER_PERMISSIONS = Object.freeze(["supplier.approval", "supplie
 const DATABASE = fileURLToPath(new URL("../../database/", import.meta.url));
 
 /**
- * 設計 §14.4 嘅資料核對，只讀（TC-135、smokeSupplierManagement.js）。Ledger 要有呢個 release 每個 migration 檔，亦唔可以有
- * 呢個 release 唔認識嘅檔（即係 schema 比 code 新，例如 server rollback 咗）。回 approval 狀態同一個 active 貨幣。
+ * 設計 §14.4 嘅資料核對，只讀（TC-135、smokeSupplierManagement.js）。Ledger 要有呢個 release 每個 framework／migration 檔，
+ * 亦唔可以有呢個 release 唔認識嘅檔：schema 比 code 新（例如 server rollback 咗），或者有檔改咗名或者刪咗。回 approval 狀態同
+ * 一個 active 貨幣。
  */
 export async function deploymentChecks(connection, schema, check, { approvalMustBeOff = true } = {}) {
   const listed = (directory) => fs.readdirSync(path.join(DATABASE, directory)).filter((name) => /\.(js|sql)$/u.test(name))
     .map((name) => `${directory}/${name}`);
-  const files = listed("migrations");
+  const files = [...listed("framework"), ...listed("migrations")];
   const [ledger] = await connection.query(`SELECT name FROM \`${schema}\`.fr_schema_migrations`);
   const recorded = new Set(ledger.map((row) => row.name));
-  const known = new Set([...files, ...listed("framework")]);
+  const known = new Set(files);
   check("deploy.every_migration_applied", files.length > 0 && files.every((name) => recorded.has(name)),
     { files: files.length, missing: files.filter((name) => !recorded.has(name)) });
   check("deploy.no_unknown_migration", ledger.every((row) => known.has(row.name)),
@@ -198,6 +199,14 @@ export async function separatedRoleSmoke(app, check, { tag, reason, currencyCode
     requestIds[name] = response.json?.meta?.requestId;
     return data;
   };
+
+  // 還原副本可能已經開咗 approval：直接啟用要先關（REV-129 R1）。新 schema 本身係 OFF，呢步唔做嘢。
+  const initial = await step("settings read 0", settings, "GET /api/v1/supplier-settings");
+  if (typeof initial.requireActivationApproval !== "boolean") throw new Error("settings read: no requireActivationApproval");
+  if (initial.requireActivationApproval) {
+    await step("settings off 0", settings, "POST /api/v1/supplier-settings/update",
+      { body: { requireActivationApproval: false, version: initial.version, reason: `${reason} off first` } });
+  }
 
   check("roles.outsider_refused", (await send(outsider, "GET /api/v1/suppliers")).status === 403);
   const draft = await step("create", mgmt, "POST /api/v1/suppliers/create",
