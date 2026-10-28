@@ -1,17 +1,17 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 468,
+  "revision": 471,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "TEST_AND_VERIFY",
-  "status": "READY_FOR_TESTING",
-  "resume_status": null,
+  "status": "BLOCKED",
+  "resume_status": "VERIFYING",
   "current_phase": "PHASE-004",
   "current_task": "TASK-051",
   "baseline": {
     "design": "2390e6fc44da25124375f4347f2a093db512f8353e01d456780a11073be494a3",
     "plan": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
-    "code_commit": "f62651d82e2cb58a30aa62948fa96bb8f0f8552a",
+    "code_commit": "151aedf8386897481d9af82521036cd923c93ed0",
     "source_fingerprint": "418abf1eb92f20dc948ee3a32a60487fa7069c07296797b0cffd47d6c92e7104",
     "worktree": "/Users/sam/Documents/workspace/erp-supplier-ta2",
     "default_commit": "f62651d82e2cb58a30aa62948fa96bb8f0f8552a",
@@ -6737,6 +6737,17 @@
       "source_ref": "PR #298 merged as f62651d82e2cb58a30aa62948fa96bb8f0f8552a at 2026-10-28T06:52:07Z on the Product Owner's word ('1 merge 2 只留 warn 同 error 行'), with --match-head-commit 106ef26c, after a gate that refused unless the latest run of every check was SUCCESS (13 checks, PR run 40645193058), main was an ancestor of HEAD and the local, remote and PR heads were equal. Review REV-133 CHANGES_REQUESTED; every finding fixed before merge (report 136). On the merged main: validate_traceability STRUCTURE_PASS, verify_gate PLAN_READY LOCAL_CHECKS_PASS.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-28T06:52:07+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Formal re-test after the DEF-048 fix: 8 required suites at TECHNICAL and REGRESSION (HD-151 A, HD-153 A)",
+      "code_commit": "151aedf8386897481d9af82521036cd923c93ed0",
+      "spec_baseline": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "source_fingerprint": "418abf1eb92f20dc948ee3a32a60487fa7069c07296797b0cffd47d6c92e7104",
+      "status": "PASS",
+      "source_ref": "docs/supplier_management/testing/07_technical_acceptance_report.md (re-test section). 16 run_check --execute runs, 2026-10-28 06:53-07:28Z, on 151aedf8 (code-identical to the mode entry commit f62651d8), all registered. PASS at both stages: server-integration 732/732, security 732/732, bank-security 142/142, client-ui 208/208. resilience, recovery, release-operations, performance: every local check PASS; BLOCKED only on the production parts NOT_RUN by design. supplier-performance at both stages: TC-101 PASS, deadlocks 0/0 with innodb_deadlock_detect and innodb_print_all_deadlocks ON, online error rate 0, import 71.8 s / 77.4 s. DEF-048 CLOSED. verify_gate TECHNICAL_ACCEPTANCE at 151aedf8, state revision 470: BLOCKED only on TASK_INCOMPLETE TASK-051 and the NOT_RUN production parts of TC-128, TC-130, TC-132..TC-136. status PASS here means every executed local check passed; it is not Technical Acceptance.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-28T07:27:46+00:00"
     }
   ],
   "pending_decisions": [
@@ -9474,7 +9485,23 @@
     "evidence/20261028T032813-509e90dc36cf/run.json",
     "evidence/20261028T032844-d9c9a99ea4cd/run.json",
     "evidence/20261028T032850-0bf8ad538455/run.json",
-    "evidence/20261028T032858-19847f4da7f2/run.json"
+    "evidence/20261028T032858-19847f4da7f2/run.json",
+    "evidence/20261028T065312-10bcf7528c57/run.json",
+    "evidence/20261028T065548-e971bb6be35e/run.json",
+    "evidence/20261028T065601-39b9b1210994/run.json",
+    "evidence/20261028T065833-dbae862acb58/run.json",
+    "evidence/20261028T065839-c56a598014fa/run.json",
+    "evidence/20261028T065910-2b5416ec92f2/run.json",
+    "evidence/20261028T065916-9f6661f1472f/run.json",
+    "evidence/20261028T065924-ff2600591596/run.json",
+    "evidence/20261028T071029-834b3ecdfd95/run.json",
+    "evidence/20261028T071301-8a0d51f33c24/run.json",
+    "evidence/20261028T071313-13f3281c06c6/run.json",
+    "evidence/20261028T071539-3e85ac9f897a/run.json",
+    "evidence/20261028T071544-09ecbbce124f/run.json",
+    "evidence/20261028T071615-2f7ec49f38e6/run.json",
+    "evidence/20261028T071621-93cd1dd5d37e/run.json",
+    "evidence/20261028T071628-f0de8491fc9a/run.json"
   ],
   "defects": [
     {
@@ -10273,7 +10300,7 @@
     {
       "id": "DEF-048",
       "severity": "MEDIUM",
-      "status": "OPEN",
+      "status": "CLOSED",
       "source_ids": [
         "TC-101",
         "NFR-001",
@@ -10281,9 +10308,13 @@
         "server/src/modules/supplier/SupplierAdminService.js:306",
         "docs/supplier_management/testing/04_defect_register.md"
       ],
-      "closure_evidence": [],
+      "closure_evidence": [
+        "PR #298 merged as f62651d82e2cb58a30aa62948fa96bb8f0f8552a (fix, REV-133)",
+        "evidence/20261028T065924-ff2600591596/run.json (supplier-performance TECHNICAL: TC-101 PASS, deadlocks 0/0)",
+        "evidence/20261028T071628-f0de8491fc9a/run.json (supplier-performance REGRESSION: TC-101 PASS, deadlocks 0/0)"
+      ],
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "DEF-048 formal re-test (HD-153 A) on mode entry commit f62651d8: the 8 required suites at TECHNICAL and REGRESSION (as HD-151 A), with innodb_deadlock_detect and innodb_print_all_deadlocks ON; then the Technical Acceptance report. REPORT_ONLY."
+  "next_safe_action": "Technical Acceptance is blocked only by TASK-051 groups B and C (downstream modules, production-like environment, Operations, sign-offs). PR for the re-test evidence: independent review, CI, merge on the Product Owner's word. UAT execution (supplier-uat-browser) is not run: Technical Acceptance does not permit it unless the Product Owner authorizes a limited diagnostic UAT."
 }

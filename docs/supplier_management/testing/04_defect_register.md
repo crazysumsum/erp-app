@@ -434,7 +434,16 @@ Found by the formal run in TEST_AND_VERIFY (HD-151 A). The run was `supplier-per
 
 - **Before HD-153 (REPORT_ONLY):** no product change in TEST_AND_VERIFY. The route was HD-152 (A: diagnose first); the remediation route is put to the Product Owner next. The severity, MEDIUM, is proposed: the 500s roll back with no data loss, and the user can retry.
 
-**Fixed under HD-153 A (REMEDIATE_AND_RETEST); still OPEN until the formal re-test in TEST_AND_VERIFY.**
+**CLOSED 2026-10-28 after the formal re-test.**
+- The fix merged as PR #298 (`f62651d8`).
+- At TECHNICAL and REGRESSION (evidence `20261028T065924-ff2600591596`, `20261028T071628-f0de8491fc9a`), TC-101 passed with:
+  - 0 deadlocks in both loads, with deadlock detection and printing ON;
+  - online error rate 0 during the import;
+  - the import inside the window (71.8 s and 77.4 s).
+- No `deadlock_retried` warning appears in the kept server warnings.
+- See `07_technical_acceptance_report.md`.
+
+**Fixed under HD-153 A (REMEDIATE_AND_RETEST).**
 - **Fix:** the create path (`SupplierAdminService.createSupplierInTransaction`, used by online create and by import create) calls `replaceSupplierNameGrams(…, { isNew: true })`, which skips the `DELETE` for a Supplier made in the same transaction. The update path keeps its `DELETE` and the existing deadlock retry. Update against update on adjacent ids can still deadlock, rarely (REV-132).
 - **Tests:**
   - **Integration:** two open transactions each create a new Supplier and write its grams, and the second must not wait.

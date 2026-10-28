@@ -1,5 +1,57 @@
 # Supplier Management — Technical Acceptance report (2026-10-28)
 
+## Re-test after the DEF-048 fix (current result)
+
+**Result: Technical Acceptance still NOT complete.** It is now blocked only by what was known before any run: TASK-051 is open, and the production parts are NOT_RUN by design. Every local check passes at both stages, and **DEF-048 is closed**. UAT was not executed. Business acceptance and release approval have not happened.
+
+- **Baseline:**
+  - Mode entry commit `f62651d8`, the PR #298 merge with the fix.
+  - The runs were made at `151aedf8`, which adds ledger only.
+  - Plan baseline `598f012b`, design baseline `2390e6fc`, both unchanged.
+- **Environment:**
+  - The same throwaway mysqld as before, with `innodb_deadlock_detect` and `innodb_print_all_deadlocks` both ON. The runner checks and records both.
+  - Two mysqld instances belonging to other worktrees were running on the host; they are not this module's and were left alone. Load averages recorded by the performance runner: TECHNICAL 5.1→10.5, REGRESSION 3.4→11.0.
+- **Runs:** the 8 required suites at TECHNICAL, then at REGRESSION (HD-151 A, HD-153 A), from 06:53Z to 07:28Z, each a real `run_check --execute`.
+
+| Stage | Suite | Result | Tests | Time (UTC) | Evidence (`evidence/…/run.json`) | Cases not passed |
+| --- | --- | --- | --- | --- | --- | --- |
+| TECHNICAL | `supplier-server-integration` | PASS | 732/732 passed, 0 failed, 0 not run | 06:53:12–06:55:47 | `20261028T065312-10bcf7528c57` |  |
+| TECHNICAL | `supplier-bank-security` | PASS | 142/142 passed, 0 failed, 0 not run | 06:55:48–06:56:00 | `20261028T065548-e971bb6be35e` |  |
+| TECHNICAL | `supplier-security` | PASS | 732/732 passed, 0 failed, 0 not run | 06:56:01–06:58:33 | `20261028T065601-39b9b1210994` |  |
+| TECHNICAL | `supplier-client-ui` | PASS | 208/208 passed, 0 failed, 0 not run | 06:58:33–06:58:39 | `20261028T065833-dbae862acb58` |  |
+| TECHNICAL | `supplier-resilience` | BLOCKED | 3/5 passed, 0 failed, 2 not run | 06:58:40–06:59:10 | `20261028T065839-c56a598014fa` | TC-130 NOT_RUN, TC-132 NOT_RUN |
+| TECHNICAL | `supplier-recovery` | BLOCKED | 1/2 passed, 0 failed, 1 not run | 06:59:11–06:59:16 | `20261028T065910-2b5416ec92f2` | TC-133 NOT_RUN |
+| TECHNICAL | `supplier-release-operations` | BLOCKED | 2/5 passed, 0 failed, 3 not run | 06:59:17–06:59:23 | `20261028T065916-9f6661f1472f` | TC-134 NOT_RUN, TC-135 NOT_RUN, TC-136 NOT_RUN |
+| TECHNICAL | `supplier-performance` | BLOCKED | 4/5 passed, 0 failed, 1 not run | 06:59:24–07:10:28 | `20261028T065924-ff2600591596` | TC-128 NOT_RUN |
+| REGRESSION | `supplier-server-integration` | PASS | 732/732 passed, 0 failed, 0 not run | 07:10:29–07:13:00 | `20261028T071029-834b3ecdfd95` |  |
+| REGRESSION | `supplier-bank-security` | PASS | 142/142 passed, 0 failed, 0 not run | 07:13:01–07:13:13 | `20261028T071301-8a0d51f33c24` |  |
+| REGRESSION | `supplier-security` | PASS | 732/732 passed, 0 failed, 0 not run | 07:13:14–07:15:39 | `20261028T071313-13f3281c06c6` |  |
+| REGRESSION | `supplier-client-ui` | PASS | 208/208 passed, 0 failed, 0 not run | 07:15:40–07:15:43 | `20261028T071539-3e85ac9f897a` |  |
+| REGRESSION | `supplier-resilience` | BLOCKED | 3/5 passed, 0 failed, 2 not run | 07:15:44–07:16:15 | `20261028T071544-09ecbbce124f` | TC-130 NOT_RUN, TC-132 NOT_RUN |
+| REGRESSION | `supplier-recovery` | BLOCKED | 1/2 passed, 0 failed, 1 not run | 07:16:15–07:16:20 | `20261028T071615-2f7ec49f38e6` | TC-133 NOT_RUN |
+| REGRESSION | `supplier-release-operations` | BLOCKED | 2/5 passed, 0 failed, 3 not run | 07:16:21–07:16:27 | `20261028T071621-93cd1dd5d37e` | TC-134 NOT_RUN, TC-135 NOT_RUN, TC-136 NOT_RUN |
+| REGRESSION | `supplier-performance` | BLOCKED | 4/5 passed, 0 failed, 1 not run | 07:16:28–07:27:46 | `20261028T071628-f0de8491fc9a` | TC-128 NOT_RUN |
+
+**DEF-048 re-test (HD-153 A), at both stages:**
+- **TC-101 passes:**
+  - online error rate 0 during the import;
+  - the import applied 10,000 of 10,000, in 71.8 s and 77.4 s, inside the window;
+  - `db.no_deadlocks_during_import` is 0.
+- **TC-128's `db.no_deadlocks_mixed_load` is 0.**
+- **The kept server warnings** hold no `supplier.write.deadlock_retried`, only `supplier.import.disabled`.
+- **Deadlocks elsewhere:** the instance-wide counter rose from 314 to 341 during the session, but only while the server suites ran. It stayed flat across every performance load (325→325 at TECHNICAL, 341→341 at REGRESSION). Seven Supplier integration test files deal with deadlocks or races. `supplierDeadlockRetry` and `supplierConstraintRaces`, for example, provoke them on purpose.
+- **DEF-048 is CLOSED**, with closure evidence: PR #298, plus these two performance runs.
+
+**Gate at `151aedf8`** (state revision 470): `verify_gate --gate TECHNICAL_ACCEPTANCE` is BLOCKED on:
+- `TASK_INCOMPLETE` TASK-051;
+- the NOT_RUN production parts of TC-128, TC-130, TC-132, TC-133, TC-134, TC-135 and TC-136, at both stages.
+
+There is nothing else. As before, committing this evidence moves HEAD, so the gate will add `COMMIT_CHANGED` and `EVIDENCE_COMMIT` at later commits (REV-131 R2).
+
+**DEF-034** stays OPEN. Both re-test imports applied 10,000 of 10,000, and the link to DEF-048 remains unproven.
+
+## First run (2026-10-28, `a98e50e7`) — kept as history
+
 **Result: Technical Acceptance NOT complete.** `verify_gate --gate TECHNICAL_ACCEPTANCE` is BLOCKED. Run at `7bbf547d` with state revision 459, just after the runs, it reported the three reasons below. At later commits it reports more; see "Why the gate is BLOCKED". UAT was not executed, because Technical Acceptance does not permit it. The business UAT, sign-offs and the release decision are not affected by this report; none of them has happened.
 
 - **Mode:** `TEST_AND_VERIFY` (HD-149 A), product code `REPORT_ONLY`.
@@ -24,7 +76,7 @@
   - **The environment's written authorization** (`00_project_profile.json`, `environment.authorization_ref`, 2026-09-15) names `erp_dev` on port 3306. These runs used the throwaway instance on 3450 instead. It is more isolated, but the text does not literally cover it. Changing the profile would move the plan baseline, so this is stated here instead (REV-131).
 - **Runs:** every required technical suite at TECHNICAL, then again at REGRESSION (HD-151 A). Each run is a real execution through `run_check.py --execute`; no report was copied.
 
-## Results
+### Results
 
 | Stage | Suite | Result | Tests | Time (UTC) | Evidence (`evidence/…/run.json`) | Cases not passed |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -49,7 +101,7 @@ The resilience, recovery and release-operations result JSONs are byte-identical 
 
 How to read the BLOCKED rows: every local part passed. Each of those cases also has a production part that the runner reports NOT_RUN (HD-117 A, HD-119 A). The case therefore cannot pass, so the suite is BLOCKED and not PASS. Those parts are group C in `06_task051_completion_boundary.md`.
 
-## Why the gate is BLOCKED
+### Why the gate is BLOCKED
 
 At `7bbf547d` (state revision 459):
 
@@ -79,14 +131,14 @@ The result: **these 16 runs can never satisfy the gate at a later commit.** The 
 
 The plan recorded an expectation before the runs: that running both stages would let the gate pass. That was wrong. Reasons 1 and 2 were known in advance, so they block the gate whichever way the runs come out. What HD-151 A bought is real evidence at both stages, and with it the intermittent DEF-048.
 
-## What this establishes
+### What this establishes
 
 - Server unit and integration, security and Bank security, and client UI: the formal contract (count, skips, not-run, required IDs) **passes at both stages** on the mode entry baseline.
 - Resilience, recovery, release operations and performance: their local parts pass at both stages, except TC-101 at REGRESSION.
 - **TC-085 and TC-129** (for-SKU at 100k under 50 users; the duplicate cap, plans and counts) pass at both stages.
 - The deployment smoke suites (`supplier-deployment-check`, `supplier-deployment-copy`) were not run. They are not required, and a run here would be a local rehearsal only (REV-130 O2, O3).
 
-## Not done
+### Not done
 
 - **UAT execution** (`supplier-uat-browser`): not run, because Technical Acceptance does not permit it. A limited diagnostic UAT would need explicit authorization.
 - **Business acceptance and release approval:** not given.
