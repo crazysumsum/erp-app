@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 452,
+  "revision": 453,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -6353,6 +6353,17 @@
       "source_ref": "Local scratch MySQL. Server code tested as the working tree later committed as b374ca6c on top of 1675cf0f (the earlier observation's runs were of 1675cf0f's code before it was committed). TC-134 PASS, TC-135 PASS (20 checks). copy: approval OFF PASS (19), approval ON PASS (19; it failed before the fix with APPROVER_REQUIRED, as REV-129 showed), approval ON with --first-deployment FAIL on deploy.settings_singleton_approval_off; a REQUIRE SSL admin account PASS with DB_SSL_ENABLED=true and refused without it; refused before any change: DB_NAME equal to --database, no JWT_SECRET; no mode reports usage. check (SELECT-only account, server on an approval-ON copy): PASS 8 with approval reported; --first-deployment FAIL on the approval check. Copies, server (exact PID), accounts and dump removed; erp_t51 approval 0.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-28T01:17:49+00:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "T51 runbook, release sign-off sheet and deployment smoke (PR #293) merged to main",
+      "code_commit": "c51ddbc8eb30cf1ada401847aae795806d98701e",
+      "spec_baseline": "3c683c4ea46984b476c96add5e9280b5d395c6cce9e996efa3ec36b683d4f784",
+      "source_fingerprint": "7d16b8f8e33cc2b5fbd2459b5ac656948ef21b1af0f7e36bb29982eb71ba270a",
+      "status": "PASS",
+      "source_ref": "PR #293 merged as c51ddbc8eb30cf1ada401847aae795806d98701e at 2026-10-28T01:34:32Z on the Product Owner's word ('A，review 完 CI 過就 merge', then 'CI已通過'), with --match-head-commit 566bf76c, after a gate that refused unless the latest run of every check was SUCCESS (13 checks, PR run 40614375964), main was an ancestor of HEAD and the local, remote and PR heads were equal. Review REV-129 CHANGES_REQUESTED; every finding fixed before merge (report 132).",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-28T01:34:32+00:00"
     }
   ],
   "pending_decisions": [
@@ -8305,6 +8316,20 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-28: 'HD-148 B'. check mode is read-only on the deployed environment; copy mode writes only to a restored copy whose name ends in _smoke."
+    },
+    {
+      "id": "HD-149",
+      "impact": "MAJOR",
+      "question": "Move Supplier from IMPLEMENT to TEST_AND_VERIFY now, while TASK-051 groups B and C stay open? (A) Now: one baseline change (refresh the Item and Purchasing consumed pins per HD-147 B, add the deployment smoke to the profile, amend 07 per HD-145 A and HD-146 A, re-record the affected approvals on the new baselines), then a formal run_check of the group A suites and a Technical Acceptance report; B and C stay BLOCKED/NOT_RUN, release not approved; REPORT_ONLY applies during testing. (B) Wait until downstream modules ship.",
+      "affected_ids": [
+        "00_module_manifest.json#contracts.consumed",
+        "00_project_profile.json",
+        "07_uat_test_cases.md",
+        "TASK-051",
+        "state/active_mode"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-28: 'HD-149 A，開 issue，風險接受留返 release 時'. Risk acceptance (deferred defects, DEF-034, the 0103 rollback ordering loss, the two new limitations) stays a release decision; this answer re-records existing approvals on the new baselines only and grants no new risk acceptance."
     }
   ],
   "external_actions": [
@@ -8811,6 +8836,14 @@
       "idempotency_key": "mode-change-248",
       "status": "CONFIRMED",
       "source_ref": "Baseline correction (REV-059 L-8): IMPLEMENT for TASK-041 was entered from main 894cdc62f54dc3ea27efabfad8db5f14510fa953 on the Product Owner's '可以開始' (MODE-CHANGE-247); default_commit and mode_entry_commit now record that"
+    },
+    {
+      "id": "ISSUE-294",
+      "kind": "OPEN_ISSUE",
+      "target": "crazysumsum/erp-app#294",
+      "idempotency_key": "supplier-purchasing-pin-issue-2026-10-28",
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/issues/294 opened 2026-10-28T02:19:54Z on the Product Owner's word ('開 issue'): Purchasing's supplier-purchasing-contract pin a9f64493 vs current 2b81eb9a; only 6b971c71 (DEF-037 ordering) changed in between."
     }
   ],
   "evidence_files": [
@@ -9765,5 +9798,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "T51 deliverables PR (operations.md, release_evidence.md, smokeSupplierManagement.js under HD-148 B): independent review, CI, merge on the Product Owner's word ('A，review 完 CI 過就 merge'). TASK-051, formal UAT and release stay open (groups B and C); pins and the smoke's profile suite at the mode change (HD-147 B)."
+  "next_safe_action": "Baseline refresh PR (HD-149 A, still IMPLEMENT): consumed pins, deployment smoke suites in the profile, 07 amendments, approvals re-recorded on the new baselines; independent review that must be APPROVED; CI; merge on the Product Owner's word. Then the mode change to TEST_AND_VERIFY with the merged main as mode entry commit, formal run_check and the Technical Acceptance report."
 }
