@@ -18,6 +18,9 @@ import dotenv from "dotenv";
  *   app（只聽 127.0.0.1），臨時用戶（harness 會刪返）行齊分角色 smoke，包括 approval ON。Supplier、SKU、Bank 等 smoke
  *   資料留喺副本，副本由 operator 自己剷。
  *
+ * `--url`、`--database`、`--first-deployment` 亦可以用 `SUPPLIER_SMOKE_URL`、`SUPPLIER_SMOKE_DATABASE`、
+ * `SUPPLIER_SMOKE_FIRST_DEPLOYMENT=true` 畀：profile 嘅 suite argv 係固定嘅（HD-149 A）。
+ *
  * 報告係 harness 嘅 HARNESS_JSON；每項檢查同細節印喺 stdout。需要 server/test/integration 同 test-support（smoke 同 TC-135
  * 共用嗰份 code），所以要喺一個完整嘅 repository checkout 度跑。
  */
@@ -37,7 +40,9 @@ const option = (name) => {
   const index = process.argv.indexOf(`--${name}`);
   return index > 0 ? process.argv[index + 1] : undefined;
 };
-const firstDeployment = process.argv.includes("--first-deployment");
+// 只收 true／false：其他值（1、yes）會靜靜雞略過 approval OFF 檢查（REV-130 N1）。
+const firstDeploymentEnv = process.env.SUPPLIER_SMOKE_FIRST_DEPLOYMENT;
+const firstDeployment = process.argv.includes("--first-deployment") || firstDeploymentEnv === "true";
 const reportPath = outputPath();
 const { checks, check, passed } = checklist();
 const evidence = { mode, firstDeployment, checks };
@@ -89,10 +94,12 @@ const NAMES = {
   copy: "TC-135 restored copy of production: upgrade, §14.4 checks and separated-role smoke"
 };
 try {
-  if (mode === "check") await deployedCheck(option("url") ?? (() => { throw new Error("check needs --url"); })());
-  else if (mode === "copy") await restoredCopy(option("database"));
+  if (![undefined, "", "true", "false"].includes(firstDeploymentEnv)) throw new Error("SUPPLIER_SMOKE_FIRST_DEPLOYMENT must be true or false");
+  if (mode === "check") {
+    await deployedCheck(option("url") ?? process.env.SUPPLIER_SMOKE_URL ?? (() => { throw new Error("check needs --url or SUPPLIER_SMOKE_URL"); })());
+  } else if (mode === "copy") await restoredCopy(option("database") ?? process.env.SUPPLIER_SMOKE_DATABASE);
   else throw new Error("usage: smokeSupplierManagement.js check --url <url> | copy --database <name>_smoke, with --output <file>"
-    + " [--first-deployment]");
+    + " [--first-deployment]; or SUPPLIER_SMOKE_URL, SUPPLIER_SMOKE_DATABASE, SUPPLIER_SMOKE_FIRST_DEPLOYMENT=true");
 } catch (error) {
   check("runner.completed", false, errorText(error));
 }
