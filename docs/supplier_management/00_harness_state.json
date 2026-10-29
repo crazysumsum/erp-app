@@ -1,27 +1,27 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 480,
+  "revision": 481,
   "mode": "FULL_LIFECYCLE",
-  "active_mode": "IMPLEMENT",
-  "status": "IMPLEMENTING",
+  "active_mode": "TEST_AND_VERIFY",
+  "status": "READY_FOR_TESTING",
   "resume_status": null,
   "current_phase": "PHASE-004",
   "current_task": "TASK-051",
   "baseline": {
     "design": "2390e6fc44da25124375f4347f2a093db512f8353e01d456780a11073be494a3",
     "plan": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
-    "code_commit": "606728f2d7fbf11f4746e40e2fddf362a4532bcb",
+    "code_commit": "4f101642a284c44d6dd53338ddfeb431582aa5f4",
     "source_fingerprint": "493d144c455c6db5d08c3baeb3b36c961539740c393727739956e060f66c252f",
-    "worktree": "/Users/sam/Documents/workspace/erp-supplier-d49",
-    "default_commit": "8c31c94aaceb761ea0efaa16217af4c2eab68d7a",
-    "mode_entry_commit": "8c31c94aaceb761ea0efaa16217af4c2eab68d7a"
+    "worktree": "/Users/sam/Documents/workspace/erp-supplier-ta3",
+    "default_commit": "4f101642a284c44d6dd53338ddfeb431582aa5f4",
+    "mode_entry_commit": "4f101642a284c44d6dd53338ddfeb431582aa5f4"
   },
   "runtime": {
     "instance_id": "supplier-t51-scratch-mysqld-3450",
     "owner": "Primary Harness agent",
     "resources": {
-      "workspace": "/Users/sam/Documents/workspace/erp-supplier-d49 (claude/supplier-def049-row-pick, cut from main 8c31c94a)",
+      "workspace": "/Users/sam/Documents/workspace/erp-supplier-ta3 (claude/supplier-technical-acceptance-3, cut from main 4f101642)",
       "mysql-schema": "erp_t51, and the erp_t51_rh_* scratch schemas the runners create and drop, on a throwaway mysqld at 127.0.0.1:3450 (session scratch datadir, --skip-log-bin); no production data",
       "web-port": "3021 (UAT API) and 5216 (UAT client); the other runners bind free ports"
     },
@@ -6850,6 +6850,17 @@
       "source_ref": "Local, throwaway mysqld 3450, 2026-10-29 03:08-03:12Z (mutants 03:08Z), on the working tree later committed unchanged as 606728f2. supplierImportExecution.integration 19/19. Mutants on SupplierImportService.js (backup, restore, cmp): old query red (10 of 59 unlocked); rejected per-status FOR UPDATE red (58 of 59; staging ER_LOCK_WAIT_TIMEOUT); outer ORDER BY dropped red (picked 51, expected 50); a non-locking read before the job lock red (SUPPLIER_IMPORT_ROW_STATE_CONFLICT). Supplier server suite 735/735 (03:09-03:11Z); then a lint-only rewrite of the test's wait loop (no-promise-executor-return), after which npm run lint exit 0 and the file 19/19. The performance runner was not re-run: production code changed only by a comment since its PASS.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-29T03:11:59+00:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "DEF-049 fix: import row pick locks only the row it picks (PR #301) merged to main",
+      "code_commit": "4f101642a284c44d6dd53338ddfeb431582aa5f4",
+      "spec_baseline": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "source_fingerprint": "493d144c455c6db5d08c3baeb3b36c961539740c393727739956e060f66c252f",
+      "status": "PASS",
+      "source_ref": "PR #301 merged as 4f101642a284c44d6dd53338ddfeb431582aa5f4 at 2026-10-29T03:35:35Z on the Product Owner's word ('CI己通過'), with --match-head-commit 1c632271, after a gate that refused unless the latest run of every check was SUCCESS (13 checks, PR run 40810936200), main was an ancestor of HEAD and the local, remote and PR heads were equal. Review REV-136 CHANGES_REQUESTED; every finding fixed before merge (report 139).",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-29T03:35:35+00:00"
     }
   ],
   "pending_decisions": [
@@ -9436,6 +9447,14 @@
       "idempotency_key": "mode-change-477",
       "status": "CONFIRMED",
       "source_ref": "Product Owner, 2026-10-29: 'HD-154 先修好' (HD-154 A, REMEDIATE_AND_RETEST for DEF-049). Step 2 of 2: TEST_AND_VERIFY -> IMPLEMENT from main 8c31c94a (PR #300 merge). Step 1 (revision 476) re-entered READY_FOR_TESTING with the same authorization."
+    },
+    {
+      "id": "MODE-CHANGE-481",
+      "kind": "MODE_CHANGE",
+      "target": "TEST_AND_VERIFY",
+      "idempotency_key": "mode-change-481",
+      "status": "CONFIRMED",
+      "source_ref": "Product Owner, 2026-10-29: 'HD-154 先修好' (HD-154 A, REMEDIATE_AND_RETEST): after the fix merged (PR #301, 'CI己通過'), back to TEST_AND_VERIFY for the formal re-test; entry commit 4f101642a284c44d6dd53338ddfeb431582aa5f4"
     }
   ],
   "evidence_files": [
@@ -10458,5 +10477,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "DEF-049 fix (HD-154 A): independent review, CI, merge on the Product Owner's word; then TEST_AND_VERIFY again on the merged baseline with fresh formal runs of the affected suites (supplier-server-integration, supplier-security, supplier-performance at TECHNICAL and REGRESSION)."
+  "next_safe_action": "DEF-049 formal re-test (HD-154 A) on mode entry commit 4f101642: the 8 required suites at TECHNICAL and REGRESSION, as for DEF-048 (HD-151 A); the scratch mysqld with innodb_deadlock_detect and innodb_print_all_deadlocks ON and the three 16,384 digest settings; then the Technical Acceptance report. REPORT_ONLY."
 }
