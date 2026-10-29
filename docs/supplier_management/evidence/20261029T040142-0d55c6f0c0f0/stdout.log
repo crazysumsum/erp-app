@@ -1,0 +1,201 @@
+{
+  "database": "erp_t51",
+  "evidence": {
+    "TC-134": [
+      {
+        "id": "precondition.no_other_open_jobs",
+        "status": "PASS",
+        "detail": {
+          "open": 0
+        }
+      },
+      {
+        "id": "stop_claim.no_new_claim",
+        "status": "PASS"
+      },
+      {
+        "id": "crash.one_row_applied",
+        "status": "PASS"
+      },
+      {
+        "id": "restart.respects_live_lease",
+        "status": "PASS"
+      },
+      {
+        "id": "restart.takes_over_after_expiry",
+        "status": "PASS",
+        "detail": {
+          "claimed": true,
+          "jobId": 3465,
+          "applied": 2,
+          "failed": 0,
+          "status": "completed"
+        }
+      },
+      {
+        "id": "restart.no_redo",
+        "status": "PASS",
+        "detail": {
+          "suppliers": 3,
+          "rows": [
+            "applied",
+            "applied",
+            "applied"
+          ],
+          "updates": 1,
+          "versionBefore": 1,
+          "versionAfter": 2
+        }
+      },
+      {
+        "id": "completed.not_redone",
+        "status": "PASS",
+        "detail": {
+          "changed": []
+        }
+      }
+    ],
+    "TC-135": [
+      {
+        "id": "deploy.migrations_rerun_is_noop",
+        "status": "PASS",
+        "detail": {
+          "applied": 100
+        }
+      },
+      {
+        "id": "deploy.every_migration_applied",
+        "status": "PASS",
+        "detail": {
+          "files": 100,
+          "missing": []
+        }
+      },
+      {
+        "id": "deploy.no_unknown_migration",
+        "status": "PASS",
+        "detail": {
+          "unknown": []
+        }
+      },
+      {
+        "id": "deploy.six_permissions_no_extra",
+        "status": "PASS",
+        "detail": {
+          "permissions": [
+            "supplier.approval",
+            "supplier.bank.mgmt",
+            "supplier.bank.view",
+            "supplier.mgmt",
+            "supplier.settings",
+            "supplier.view"
+          ]
+        }
+      },
+      {
+        "id": "deploy.system_admin_holds_six",
+        "status": "PASS",
+        "detail": {
+          "granted": 6
+        }
+      },
+      {
+        "id": "deploy.settings_singleton_approval_off",
+        "status": "PASS"
+      },
+      {
+        "id": "deploy.active_currency",
+        "status": "PASS",
+        "detail": {
+          "active": 1
+        }
+      },
+      {
+        "id": "server.routes_guarded",
+        "status": "PASS",
+        "detail": {
+          "routes": 61,
+          "unguarded": []
+        }
+      },
+      {
+        "id": "roles.outsider_refused",
+        "status": "PASS"
+      },
+      {
+        "id": "smoke.draft_created",
+        "status": "PASS"
+      },
+      {
+        "id": "smoke.direct_activation",
+        "status": "PASS"
+      },
+      {
+        "id": "smoke.approval_flow",
+        "status": "PASS",
+        "detail": {
+          "submitted": "pending_approval"
+        }
+      },
+      {
+        "id": "smoke.lookup_hides_suspended_and_blocked",
+        "status": "PASS",
+        "detail": {
+          "visible": [
+            3
+          ]
+        }
+      },
+      {
+        "id": "smoke.history_still_visible",
+        "status": "PASS"
+      },
+      {
+        "id": "roles.bank_reader_cannot_write",
+        "status": "PASS"
+      },
+      {
+        "id": "smoke.bank_masked",
+        "status": "PASS"
+      },
+      {
+        "id": "smoke.no_plaintext_stored",
+        "status": "PASS"
+      },
+      {
+        "id": "roles.manager_cannot_reveal",
+        "status": "PASS"
+      },
+      {
+        "id": "smoke.reveal",
+        "status": "PASS"
+      },
+      {
+        "id": "smoke.audit_for_each_action",
+        "status": "PASS",
+        "detail": {
+          "create": 1,
+          "activate": 1,
+          "settings on": 1,
+          "approval submit": 2,
+          "approval approve": 1,
+          "settings off": 1,
+          "create third": 1,
+          "relation RLA-919605A8": 1,
+          "relation RLB-919605A8": 1,
+          "relation RLC-919605A8": 1,
+          "suspend": 1,
+          "block": 1,
+          "bank create": 1,
+          "reveal": 1
+        }
+      }
+    ],
+    "schemaDigest": "92fc885e53661d824f9569eb8b7489cc07e73354d5751a732ed61f10cf4f81fd"
+  },
+  "notRun": {
+    "TC-134 production worker rollback and restart timeline": "Needs a deployed server, its process manager and the runbook timeline. Here the restart is a second app in the same process and lease expiry is set in the database; that client rollback leaves data in place is not shown here.",
+    "TC-135 production staged capability deployment and break-glass accounts": "Needs the real environment: deploying capabilities in §14 order, and showing that only approved break-glass accounts hold system-admin, with their use audited. The client menu inventory is covered by the supplier-client-ui suite (TC-121).",
+    "TC-136 release regression and evidence gate": "The release gate is the harness verify_gate over the candidate's CI and suite evidence, the open P0/P1 cases and defects, and the Product Owner's GO; a runner cannot decide it."
+  }
+}

@@ -1,0 +1,6 @@
+26.7.0 3450 16384 134217728
+seeded 06:12:08-06:12:58
+25:  connectionLimit: 20,
+pool20-forsku-u50: n=1992 tput=33/s p50/p95 overall=1081/1600 | typical=397/629 cold=1113/1376 hot=809/1048 codeExact=1375/1615 nameSearch=1459/1990 deepPage=1313/1634
+   db busy ~17.0 conns; LIKE statements: avg 579 ms x726 rows 80454; avg 160 ms x729 rows 26926; avg 163 ms x664 rows 26961
+dropped erp_t51_mig_d50

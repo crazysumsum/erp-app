@@ -1,0 +1,12 @@
+26.7.0 3450 16384 134217728
+seeded 06:14:57-06:15:47
+suppliers data+index MiB=61 rows~98638
+bp128-forsku-u50: n=1700 tput=28/s p50/p95 overall=1290/1739 | typical=876/1124 cold=1308/1577 hot=1155/1381 codeExact=1502/1756 nameSearch=1579/2000 deepPage=1376/1656
+   db busy ~8.7 conns; LIKE statements: avg 344 ms x637 rows 80064; avg 93 ms x637 rows 26835; avg 94 ms x568 rows 26921
+   disk page reads during run (128 MiB): 18152
+buffer pool now 1073741824
+bp1g-forsku-u50: n=1701 tput=28/s p50/p95 overall=1261/1830 | typical=879/1156 cold=1288/1582 hot=1121/1398 codeExact=1531/1885 nameSearch=1634/2021 deepPage=1422/1706
+   db busy ~8.7 conns; LIKE statements: avg 342 ms x644 rows 80064; avg 94 ms x645 rows 26898; avg 96 ms x593 rows 26933
+   disk page reads during run (1 GiB): 13975
+buffer pool restored to 134217728
+dropped erp_t51_mig_d50

@@ -1,0 +1,22 @@
+500 suppliers, 0 s
+10500 suppliers, 5 s
+20500 suppliers, 9 s
+30500 suppliers, 14 s
+40500 suppliers, 18 s
+50500 suppliers, 23 s
+60500 suppliers, 28 s
+70500 suppliers, 32 s
+80500 suppliers, 37 s
+90500 suppliers, 42 s
+{
+  "database": "erp_t51_mig_d50",
+  "suppliers": 100000,
+  "heavy": 1032,
+  "addresses": 515480,
+  "contacts": 1041280,
+  "identifiers": 200000,
+  "bankAccounts": 208256,
+  "nameGrams": 2388672,
+  "skuRelations": 120000,
+  "seconds": 48
+}

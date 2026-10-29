@@ -1,0 +1,481 @@
+{
+  "database": "erp_t51",
+  "schema": "erp_t51_rh_2b3f3706",
+  "evidence": {
+    "loadAverageAtStart": [
+      3.3,
+      4.3,
+      4.8
+    ],
+    "deadlockSettings": {
+      "innodbDeadlockDetect": 1,
+      "innodbPrintAllDeadlocks": 1
+    },
+    "seed": {
+      "database": "erp_t51_rh_2b3f3706",
+      "suppliers": 100000,
+      "heavy": 1004,
+      "addresses": 515060,
+      "contacts": 1040160,
+      "identifiers": 200000,
+      "bankAccounts": 208032,
+      "nameGrams": 2390025,
+      "skuRelations": 120000,
+      "seconds": 47
+    },
+    "load": {
+      "ok": true,
+      "overall": {
+        "count": 9337,
+        "p50": 86.5,
+        "p95": 434,
+        "p99": 845.9,
+        "max": 2691.4,
+        "errorRate": 0,
+        "throughputPerSecond": 78
+      },
+      "nfr001": {
+        "limitP95Ms": 2000,
+        "maxErrorRate": 0.01,
+        "operations": 15,
+        "failing": [],
+        "pass": true
+      },
+      "nfr005": {
+        "limitP95Ms": 2000,
+        "maxErrorRate": 0.01,
+        "operations": 6,
+        "failing": [],
+        "pass": true
+      },
+      "resources": {
+        "processCpuPercent": {
+          "avg": 22,
+          "max": 31
+        },
+        "rssMiB": {
+          "avg": 290,
+          "max": 299
+        },
+        "dbThreadsConnected": {
+          "avg": 12,
+          "max": 12
+        }
+      },
+      "statements": 12,
+      "digestTable": {
+        "used": 509,
+        "size": 10000,
+        "lostDuringRun": 0
+      }
+    },
+    "forSku": {
+      "ok": true,
+      "overall": {
+        "count": 3499,
+        "p50": 1223.4,
+        "p95": 1751,
+        "p99": 1959.6,
+        "max": 2312.9,
+        "errorRate": 0,
+        "throughputPerSecond": 29
+      },
+      "nfr001": null,
+      "nfr005": {
+        "limitP95Ms": 2000,
+        "maxErrorRate": 0.01,
+        "operations": 6,
+        "failing": [],
+        "pass": true
+      },
+      "resources": {
+        "processCpuPercent": {
+          "avg": 10,
+          "max": 17
+        },
+        "rssMiB": {
+          "avg": 253,
+          "max": 275
+        },
+        "dbThreadsConnected": {
+          "avg": 12,
+          "max": 12
+        }
+      },
+      "statements": 12,
+      "digestTable": {
+        "used": 532,
+        "size": 10000,
+        "lostDuringRun": 0
+      }
+    },
+    "recall": {
+      "capped": {
+        "candidateCap": 3000,
+        "recall": 0.9752,
+        "missed": 26,
+        "queriesMissing": 17,
+        "p50Ms": 81,
+        "p95Ms": 101
+      },
+      "uncapped": {
+        "candidateCap": 9007199254740991,
+        "recall": 0.9847,
+        "missed": 16,
+        "queriesMissing": 11,
+        "p50Ms": 872,
+        "p95Ms": 1030
+      }
+    },
+    "deadlocks": {
+      "mixedLoad": 0,
+      "loadDuringImport": 0,
+      "counter": {
+        "beforeMixed": 39,
+        "afterMixed": 39,
+        "beforeImport": 39,
+        "afterImport": 39
+      }
+    },
+    "import": {
+      "ok": true,
+      "precheck": {
+        "ms": 6558,
+        "status": "ready",
+        "total": 10000,
+        "valid": 10000
+      },
+      "execute": {
+        "ms": 51184,
+        "status": "completed",
+        "applied": 10000,
+        "failed": 0,
+        "skipped": 0
+      },
+      "nfr004": {
+        "precheckPlusExecuteMs": 57742,
+        "limitMs": 600000,
+        "pass": true,
+        "note": ""
+      },
+      "verification": {
+        "suppliersCreated": 10000,
+        "rowsApplied": 10000,
+        "distinctAppliedSuppliers": 10000,
+        "createAudits": 10000,
+        "exactlyOnce": true,
+        "countsConsistent": true
+      },
+      "notApplied": []
+    },
+    "loadDuringImport": {
+      "ok": true,
+      "overall": {
+        "count": 9195,
+        "p50": 105.6,
+        "p95": 483.7,
+        "p99": 1033.3,
+        "max": 3518.8,
+        "errorRate": 0,
+        "throughputPerSecond": 77
+      },
+      "nfr001": {
+        "limitP95Ms": 2000,
+        "maxErrorRate": 0.01,
+        "operations": 15,
+        "failing": [],
+        "pass": true
+      },
+      "nfr005": {
+        "limitP95Ms": 2000,
+        "maxErrorRate": 0.01,
+        "operations": 6,
+        "failing": [],
+        "pass": true
+      },
+      "resources": {
+        "processCpuPercent": {
+          "avg": 20,
+          "max": 29
+        },
+        "rssMiB": {
+          "avg": 289,
+          "max": 302
+        },
+        "dbThreadsConnected": {
+          "avg": 14,
+          "max": 16
+        }
+      },
+      "statements": 12,
+      "digestTable": {
+        "used": 640,
+        "size": 10000,
+        "lostDuringRun": 0
+      }
+    },
+    "totals": {
+      "list": {
+        "api": 79963,
+        "sql": 79963,
+        "status": 200
+      },
+      "listSearch": {
+        "term": "123",
+        "api": 812,
+        "distinct": 812,
+        "joined": 1101,
+        "status": 200
+      },
+      "forSku": {
+        "api": 79963,
+        "sql": 79963,
+        "status": 200
+      }
+    },
+    "TC-128": [
+      {
+        "id": "load.completed",
+        "status": "PASS",
+        "detail": {
+          "code": 0
+        }
+      },
+      {
+        "id": "load.list_and_exact_code_p95_under_2s",
+        "status": "PASS",
+        "detail": {
+          "listDefault": 189.7,
+          "codeExact": 366.3
+        }
+      },
+      {
+        "id": "load.every_general_operation_within_limits",
+        "status": "PASS",
+        "detail": {
+          "limitP95Ms": 2000,
+          "maxErrorRate": 0.01,
+          "operations": 15,
+          "failing": [],
+          "pass": true
+        }
+      },
+      {
+        "id": "load.resources_bounded",
+        "status": "PASS",
+        "detail": {
+          "processCpuPercent": {
+            "avg": 22,
+            "max": 31
+          },
+          "rssMiB": {
+            "avg": 290,
+            "max": 299
+          },
+          "dbThreadsConnected": {
+            "avg": 12,
+            "max": 12
+          }
+        }
+      },
+      {
+        "id": "load.answers_after_all_runs",
+        "status": "PASS",
+        "detail": {
+          "status": 200
+        }
+      },
+      {
+        "id": "db.no_deadlocks_mixed_load",
+        "status": "PASS",
+        "detail": {
+          "deadlocks": 0
+        }
+      }
+    ],
+    "TC-085": [
+      {
+        "id": "for_sku.completed",
+        "status": "PASS",
+        "detail": {
+          "code": 0
+        }
+      },
+      {
+        "id": "for_sku.p95_under_2s",
+        "status": "PASS",
+        "detail": {
+          "limitP95Ms": 2000,
+          "maxErrorRate": 0.01,
+          "operations": 6,
+          "failing": [],
+          "pass": true
+        }
+      },
+      {
+        "id": "for_sku.count_not_inflated",
+        "status": "PASS",
+        "detail": {
+          "api": 79963,
+          "sql": 79963,
+          "status": 200
+        }
+      },
+      {
+        "id": "for_sku.no_full_scan",
+        "status": "PASS",
+        "detail": {
+          "statements": 12,
+          "digestTable": {
+            "used": 532,
+            "size": 10000,
+            "lostDuringRun": 0
+          },
+          "scans": [],
+          "unverified": []
+        }
+      }
+    ],
+    "TC-129": [
+      {
+        "id": "duplicates.bounded_by_the_candidate_cap",
+        "status": "PASS",
+        "detail": {
+          "capped": {
+            "candidateCap": 3000,
+            "recall": 0.9752,
+            "missed": 26,
+            "queriesMissing": 17,
+            "p50Ms": 81,
+            "p95Ms": 101
+          },
+          "uncapped": {
+            "candidateCap": 9007199254740991,
+            "recall": 0.9847,
+            "missed": 16,
+            "queriesMissing": 11,
+            "p50Ms": 872,
+            "p95Ms": 1030
+          }
+        }
+      },
+      {
+        "id": "duplicates.recall_within_two_points",
+        "status": "PASS",
+        "detail": {
+          "capped": 0.9752,
+          "uncapped": 0.9847
+        }
+      },
+      {
+        "id": "duplicates.check_p95_under_2s",
+        "status": "PASS",
+        "detail": {
+          "p95": 211.4
+        }
+      },
+      {
+        "id": "plans.no_full_scan_outside_text_search",
+        "status": "PASS",
+        "detail": {
+          "statements": 12,
+          "digestTable": {
+            "used": 509,
+            "size": 10000,
+            "lostDuringRun": 0
+          },
+          "scans": [],
+          "unverified": []
+        }
+      },
+      {
+        "id": "list.count_not_inflated",
+        "status": "PASS",
+        "detail": {
+          "term": "123",
+          "api": 812,
+          "distinct": 812,
+          "joined": 1101,
+          "status": 200
+        }
+      }
+    ],
+    "TC-101": [
+      {
+        "id": "import.within_10_minutes",
+        "status": "PASS",
+        "detail": {
+          "precheckPlusExecuteMs": 57742,
+          "limitMs": 600000,
+          "pass": true,
+          "note": ""
+        }
+      },
+      {
+        "id": "import.exactly_once_and_counts_consistent",
+        "status": "PASS",
+        "detail": {
+          "suppliersCreated": 10000,
+          "rowsApplied": 10000,
+          "distinctAppliedSuppliers": 10000,
+          "createAudits": 10000,
+          "exactlyOnce": true,
+          "countsConsistent": true
+        }
+      },
+      {
+        "id": "import.report_ok",
+        "status": "PASS",
+        "detail": {
+          "code": 0
+        }
+      },
+      {
+        "id": "online.p95_under_2s_during_import",
+        "status": "PASS",
+        "detail": {
+          "limitP95Ms": 2000,
+          "maxErrorRate": 0.01,
+          "operations": 15,
+          "failing": [],
+          "pass": true
+        }
+      },
+      {
+        "id": "import.inside_measured_window",
+        "status": "PASS",
+        "detail": {
+          "window": {
+            "measureFrom": "2026-10-29T04:10:58.101Z",
+            "measureTo": "2026-10-29T04:12:58.101Z"
+          },
+          "importStart": "2026-10-29T04:10:59.223Z",
+          "importEnd": "2026-10-29T04:11:56.981Z"
+        }
+      },
+      {
+        "id": "import.resources_bounded",
+        "status": "PASS",
+        "detail": {
+          "dbConnections": 16,
+          "workerPeakRssMiB": 259
+        }
+      },
+      {
+        "id": "db.no_deadlocks_during_import",
+        "status": "PASS",
+        "detail": {
+          "deadlocks": 0
+        }
+      }
+    ],
+    "loadAverageAtEnd": [
+      9.1,
+      7.6,
+      6.6
+    ]
+  },
+  "notRun": {
+    "TC-128 production-like MySQL and hardware": "OPS-001 asks for a production-like MySQL. This run uses a local MySQL 26.7.0 on the developer machine with the app's default pool; the figures show the design holds at 100k rows, not production capacity."
+  }
+}

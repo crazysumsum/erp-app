@@ -1,0 +1,120 @@
+{
+  "schema_version": "2.0",
+  "module_id": "supplier-management",
+  "run_id": "20261029T034341-cc8de2b7e750",
+  "suite_id": "supplier-client-ui",
+  "stage": "TECHNICAL",
+  "result": "PASS",
+  "spec_baseline": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+  "source_fingerprint": "493d144c455c6db5d08c3baeb3b36c961539740c393727739956e060f66c252f",
+  "code_commit": "558adc220a8b0fad54317e716e979979128e5693",
+  "started_at": "2026-10-29T03:43:41.966368Z",
+  "ended_at": "2026-10-29T03:43:47.199339Z",
+  "environment_id": "supplier-isolated-test",
+  "runtime_instance_id": "supplier-t51-scratch-mysqld-3450",
+  "data_reference": "Synthetic Supplier fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "npm",
+    "test",
+    "--workspace",
+    "client",
+    "--",
+    "--config",
+    "test/supplier-management.vitest.config.js",
+    "--reporter=junit",
+    "--outputFile=/Users/sam/Documents/workspace/erp-supplier-ta3/docs/supplier_management/evidence/20261029T034341-cc8de2b7e750/supplier-client-ui.xml"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "435d736fbf5f657a8132329ae363b689e70767950f69bf642dd6ee7674e38a7a",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 208,
+    "passed": 208,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [
+    {
+      "id": "TC-013",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-015",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-029",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-070",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-075",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-121",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-122",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-123",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-124",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-125",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-126",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-127",
+      "status": "PASS"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "evidence/20261029T034341-cc8de2b7e750/stdout.log",
+      "sha256": "6e84adc7eec9f703acc6b561b2cb8d9eb30270f3a18ce17f682d23a44afb8baa",
+      "bytes": 413
+    },
+    {
+      "path": "evidence/20261029T034341-cc8de2b7e750/stderr.log",
+      "sha256": "8baf60fa92bd1dadc73704e0613401a95f45bc7d75cb451a8c0e64df6a36ad3d",
+      "bytes": 4480
+    },
+    {
+      "path": "evidence/20261029T034341-cc8de2b7e750/supplier-client-ui.xml",
+      "sha256": "6339c2f601925f5e223de12a9222e155eb460f98f869a3e43ec17aba77680d87",
+      "bytes": 53655
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "Local observation only; external services/config/data and secret redaction completeness require review."
+  ]
+}
