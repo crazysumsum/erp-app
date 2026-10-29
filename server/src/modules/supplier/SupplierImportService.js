@@ -670,6 +670,7 @@ export class SupplierImportService {
             WHERE job_id = ? AND \`row_number\` = ? AND status IN ('valid', 'warning') FOR UPDATE`,
           [jobId, next.row_number]
         );
+        // 正常唔會發生：寫列一定先鎖 job。萬一發生就拋，唔好回 null 當做完：job 仲有未做嘅列，下一輪重新揀。
         if (!row) throw supplierConflict("SUPPLIER_IMPORT_ROW_STATE_CONFLICT", "匯入資料列狀態已變更");
         // 每列之前再驗確認人（HD-060 5A）：停用咗或者冇咗 supplier.mgmt，就停晒成個 job。冇列剩就唔驗 ——
         // 全部做完嘅 job 照常收尾，唔會因為收尾前失去權限而報失敗（REV-071 L-1）。
