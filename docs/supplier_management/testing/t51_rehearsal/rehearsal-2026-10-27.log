@@ -1,0 +1,1426 @@
+
+=== A. Adding Supplier to a deployment without it: pre-Supplier main (b3e5aa90^1) -> current release, real runners
+Migrations complete.
+pre-Supplier ledger: 30 files
+applied by the current runner, in main's order: 70 files
+every pre-existing table's data, counter, columns, indexes, keys and triggers unchanged (29 tables), plus every existing permission and grant
+objects added by the upgrade, all modules: 3416 lines, of which Supplier tables: 15
+Supplier permissions added: 6
+current-on-upgraded-pre server: started, health 200, stopped (port closed)
+
+=== B. Older release 72e205ef (before 0087) with business data: backup/restore, upgrade, rollback to it
+Migrations complete.
+previous release: an orphan SKU relation is accepted (DEF-029, control)
+older reads the Supplier rows over HTTP: list 200 (RH-001 listed), detail 200 (香港貿易有限公司, 2 addresses, 1 contact), sku-relations 200 (1 row)
+backup restored exactly: tables 94; data, counters, columns, indexes, keys, triggers, routines, views and events equal
+control: one changed row in the restore is detected
+control: a moved AUTO_INCREMENT counter alone is detected
+applied migrations/0087_fix_supplier_sku_refs_sku_foreign_key.js
+applied migrations/0088_create_sales_archive_batches.js
+applied migrations/0091_seed_fulfillment_permissions.js
+applied migrations/0092_create_fulfillment_operations_and_sequences.js
+applied migrations/0093_create_fulfillment_documents.js
+applied migrations/0095_create_fulfillment_allocations.js
+applied migrations/0096_create_shipments.js
+applied migrations/0097_create_shipment_issues_and_reversals.js
+applied migrations/0098_create_fulfillment_audit_and_exports.js
+applied migrations/0099_create_fulfillment_archives.js
+applied migrations/0100_seed_purchasing_permissions.js
+applied migrations/0101_create_inventory_purchase_reversal_links.js
+applied migrations/0103_add_supplier_party_sort_order.js
+objects changed by the upgrade (< before, > after):
+  26c26
+  < data fr_schema_migrations 924761673
+  ---
+  > data fr_schema_migrations 3346546329
+  27a28,42
+  > data fulfillment_allocations 0
+  > data fulfillment_allocations_archive 0
+  > data fulfillment_audit_logs 0
+  > data fulfillment_audit_logs_archive 0
+  > data fulfillment_document_sequences 0
+  > data fulfillment_export_jobs 0
+  > data fulfillment_line_reservation_claims 0
+  > data fulfillment_line_reservation_claims_archive 0
+  > data fulfillment_lines 0
+  > data fulfillment_lines_archive 0
+  > data fulfillment_operation_requests 0
+  > data fulfillment_status_history 0
+  > data fulfillment_status_history_archive 0
+  > data fulfillments 0
+  > data fulfillments_archive 0
+  33a49
+  > data inventory_purchase_reversal_links 0
+  57c73
+  < data permissions 3741563885
+  ---
+  > data permissions 3478845277
+  59a76,77
+  > data sales_archive_batches 0
+  > data sales_archive_order_manifests 0
+  74a93,104
+  > data shipment_issue_details 0
+  > data shipment_issue_details_archive 0
+  > data shipment_lines 0
+  > data shipment_lines_archive 0
+  > data shipment_reversal_details 0
+  > data shipment_reversal_details_archive 0
+  > data shipment_reversals 0
+  > data shipment_reversals_archive 0
+  > data shipment_status_history 0
+  > data shipment_status_history_archive 0
+  > data shipments 0
+  > data shipments_archive 0
+  77c107
+  < data supplier_addresses 2367631925
+  ---
+  > data supplier_addresses 4096021815
+  81c111
+  < data supplier_contacts 54378247
+  ---
+  > data supplier_contacts 969679081
+  121a152,166
+  > auto fulfillment_allocations 1
+  > auto fulfillment_allocations_archive -
+  > auto fulfillment_audit_logs 1
+  > auto fulfillment_audit_logs_archive -
+  > auto fulfillment_document_sequences 1
+  > auto fulfillment_export_jobs 1
+  > auto fulfillment_line_reservation_claims 1
+  > auto fulfillment_line_reservation_claims_archive -
+  > auto fulfillment_lines 1
+  > auto fulfillment_lines_archive -
+  > auto fulfillment_operation_requests 1
+  > auto fulfillment_status_history 1
+  > auto fulfillment_status_history_archive -
+  > auto fulfillments 1
+  > auto fulfillments_archive -
+  127a173
+  > auto inventory_purchase_reversal_links 1
+  151c197
+  < auto permissions 30
+  ---
+  > auto permissions 38
+  153a200,201
+  > auto sales_archive_batches 1
+  > auto sales_archive_order_manifests 1
+  168a217,228
+  > auto shipment_issue_details 1
+  > auto shipment_issue_details_archive -
+  > auto shipment_lines 1
+  > auto shipment_lines_archive -
+  > auto shipment_reversal_details 1
+  > auto shipment_reversal_details_archive -
+  > auto shipment_reversals 1
+  > auto shipment_reversals_archive -
+  > auto shipment_status_history 1
+  > auto shipment_status_history_archive -
+  > auto shipments 1
+  > auto shipments_archive -
+  554a615,918
+  > column fulfillment_allocations id 1 bigint unsigned NO NULL - auto_increment
+  > column fulfillment_allocations fulfillment_id 2 bigint unsigned NO NULL - 
+  > column fulfillment_allocations fulfillment_line_id 3 bigint unsigned NO NULL - 
+  > column fulfillment_allocations claim_id 4 bigint unsigned NO NULL - 
+  > column fulfillment_allocations inventory_reservation_id 5 bigint unsigned NO NULL - 
+  > column fulfillment_allocations inventory_allocation_id 6 bigint unsigned NO NULL - 
+  > column fulfillment_allocations inventory_balance_id 7 bigint unsigned NO NULL - 
+  > column fulfillment_allocations warehouse_id 8 bigint unsigned NO NULL - 
+  > column fulfillment_allocations bin_id 9 bigint unsigned NO NULL - 
+  > column fulfillment_allocations lot_id 10 bigint unsigned YES NULL - 
+  > column fulfillment_allocations bin_code_snapshot 11 varchar(100) NO  utf8mb4_unicode_ci 
+  > column fulfillment_allocations lot_number_snapshot 12 varchar(100) NO  utf8mb4_unicode_ci 
+  > column fulfillment_allocations expiry_date_snapshot 13 date YES NULL - 
+  > column fulfillment_allocations stock_status_snapshot 14 varchar(20) NO NULL ascii_bin 
+  > column fulfillment_allocations selection_strategy 15 varchar(20) NO NULL ascii_bin 
+  > column fulfillment_allocations recommended_rank_snapshot 16 int unsigned NO NULL - 
+  > column fulfillment_allocations is_sequence_override 17 tinyint(1) NO 0 - 
+  > column fulfillment_allocations override_reason 18 varchar(500) NO  utf8mb4_unicode_ci 
+  > column fulfillment_allocations recommended_summary 19 json YES NULL - 
+  > column fulfillment_allocations allocated_base_quantity 20 bigint unsigned NO NULL - 
+  > column fulfillment_allocations picked_base_quantity 21 bigint unsigned NO 0 - 
+  > column fulfillment_allocations released_base_quantity 22 bigint unsigned NO 0 - 
+  > column fulfillment_allocations status 23 varchar(30) NO NULL ascii_bin 
+  > column fulfillment_allocations inventory_version 24 int unsigned NO NULL - 
+  > column fulfillment_allocations balance_version 25 int unsigned NO NULL - 
+  > column fulfillment_allocations created_at 26 bigint unsigned NO NULL - 
+  > column fulfillment_allocations updated_at 27 bigint unsigned NO NULL - 
+  > column fulfillment_allocations_archive id 1 bigint unsigned NO NULL - 
+  > column fulfillment_allocations_archive fulfillment_id 2 bigint unsigned NO NULL - 
+  > column fulfillment_allocations_archive fulfillment_line_id 3 bigint unsigned NO NULL - 
+  > column fulfillment_allocations_archive claim_id 4 bigint unsigned NO NULL - 
+  > column fulfillment_allocations_archive inventory_reservation_id 5 bigint unsigned NO NULL - 
+  > column fulfillment_allocations_archive inventory_allocation_id 6 bigint unsigned NO NULL - 
+  > column fulfillment_allocations_archive inventory_balance_id 7 bigint unsigned NO NULL - 
+  > column fulfillment_allocations_archive warehouse_id 8 bigint unsigned NO NULL - 
+  > column fulfillment_allocations_archive bin_id 9 bigint unsigned NO NULL - 
+  > column fulfillment_allocations_archive lot_id 10 bigint unsigned YES NULL - 
+  > column fulfillment_allocations_archive bin_code_snapshot 11 varchar(100) NO  utf8mb4_unicode_ci 
+  > column fulfillment_allocations_archive lot_number_snapshot 12 varchar(100) NO  utf8mb4_unicode_ci 
+  > column fulfillment_allocations_archive expiry_date_snapshot 13 date YES NULL - 
+  > column fulfillment_allocations_archive stock_status_snapshot 14 varchar(20) NO NULL ascii_bin 
+  > column fulfillment_allocations_archive selection_strategy 15 varchar(20) NO NULL ascii_bin 
+  > column fulfillment_allocations_archive recommended_rank_snapshot 16 int unsigned NO NULL - 
+  > column fulfillment_allocations_archive is_sequence_override 17 tinyint(1) NO 0 - 
+  > column fulfillment_allocations_archive override_reason 18 varchar(500) NO  utf8mb4_unicode_ci 
+  > column fulfillment_allocations_archive recommended_summary 19 json YES NULL - 
+  > column fulfillment_allocations_archive allocated_base_quantity 20 bigint unsigned NO NULL - 
+  > column fulfillment_allocations_archive picked_base_quantity 21 bigint unsigned NO 0 - 
+  > column fulfillment_allocations_archive released_base_quantity 22 bigint unsigned NO 0 - 
+  > column fulfillment_allocations_archive status 23 varchar(30) NO NULL ascii_bin 
+  > column fulfillment_allocations_archive inventory_version 24 int unsigned NO NULL - 
+  > column fulfillment_allocations_archive balance_version 25 int unsigned NO NULL - 
+  > column fulfillment_allocations_archive created_at 26 bigint unsigned NO NULL - 
+  > column fulfillment_allocations_archive updated_at 27 bigint unsigned NO NULL - 
+  > column fulfillment_allocations_archive archive_batch_id 28 bigint unsigned NO NULL - 
+  > column fulfillment_allocations_archive archived_at 29 bigint unsigned NO NULL - 
+  > column fulfillment_allocations_archive row_hash 30 char(64) NO NULL ascii_bin 
+  > column fulfillment_audit_logs id 1 bigint unsigned NO NULL - auto_increment
+  > column fulfillment_audit_logs target_type 2 varchar(30) NO NULL ascii_bin 
+  > column fulfillment_audit_logs target_id 3 bigint unsigned NO NULL - 
+  > column fulfillment_audit_logs action 4 varchar(60) NO NULL ascii_bin 
+  > column fulfillment_audit_logs event_id 5 char(36) YES NULL ascii_bin 
+  > column fulfillment_audit_logs correlation_id 6 char(36) NO NULL ascii_bin 
+  > column fulfillment_audit_logs actor_user_id 7 bigint unsigned YES NULL - 
+  > column fulfillment_audit_logs actor_label 8 varchar(190) NO NULL utf8mb4_unicode_ci 
+  > column fulfillment_audit_logs before_summary 9 json YES NULL - 
+  > column fulfillment_audit_logs after_summary 10 json YES NULL - 
+  > column fulfillment_audit_logs details 11 json YES NULL - 
+  > column fulfillment_audit_logs ip_address 12 varchar(45) NO  ascii_bin 
+  > column fulfillment_audit_logs is_archived 13 tinyint(1) NO 0 - 
+  > column fulfillment_audit_logs occurred_at 14 bigint unsigned NO NULL - 
+  > column fulfillment_audit_logs_archive id 1 bigint unsigned NO NULL - 
+  > column fulfillment_audit_logs_archive target_type 2 varchar(30) NO NULL ascii_bin 
+  > column fulfillment_audit_logs_archive target_id 3 bigint unsigned NO NULL - 
+  > column fulfillment_audit_logs_archive action 4 varchar(60) NO NULL ascii_bin 
+  > column fulfillment_audit_logs_archive event_id 5 char(36) YES NULL ascii_bin 
+  > column fulfillment_audit_logs_archive correlation_id 6 char(36) NO NULL ascii_bin 
+  > column fulfillment_audit_logs_archive actor_user_id 7 bigint unsigned YES NULL - 
+  > column fulfillment_audit_logs_archive actor_label 8 varchar(190) NO NULL utf8mb4_unicode_ci 
+  > column fulfillment_audit_logs_archive before_summary 9 json YES NULL - 
+  > column fulfillment_audit_logs_archive after_summary 10 json YES NULL - 
+  > column fulfillment_audit_logs_archive details 11 json YES NULL - 
+  > column fulfillment_audit_logs_archive ip_address 12 varchar(45) NO  ascii_bin 
+  > column fulfillment_audit_logs_archive is_archived 13 tinyint(1) NO 0 - 
+  > column fulfillment_audit_logs_archive occurred_at 14 bigint unsigned NO NULL - 
+  > column fulfillment_audit_logs_archive archive_batch_id 15 bigint unsigned NO NULL - 
+  > column fulfillment_audit_logs_archive archived_at 16 bigint unsigned NO NULL - 
+  > column fulfillment_audit_logs_archive row_hash 17 char(64) NO NULL ascii_bin 
+  > column fulfillment_document_sequences id 1 bigint unsigned NO NULL - auto_increment
+  > column fulfillment_document_sequences document_type 2 varchar(20) NO NULL ascii_bin 
+  > column fulfillment_document_sequences period_key 3 char(6) NO NULL ascii_bin 
+  > column fulfillment_document_sequences next_value 4 bigint unsigned NO 1 - 
+  > column fulfillment_document_sequences version 5 int unsigned NO 1 - 
+  > column fulfillment_document_sequences updated_at 6 bigint unsigned NO NULL - 
+  > column fulfillment_export_jobs id 1 bigint unsigned NO NULL - auto_increment
+  > column fulfillment_export_jobs export_type 2 varchar(30) NO NULL ascii_bin 
+  > column fulfillment_export_jobs filter_json 3 json NO NULL - 
+  > column fulfillment_export_jobs filter_hash 4 char(64) NO NULL ascii_bin 
+  > column fulfillment_export_jobs status 5 varchar(20) NO NULL ascii_bin 
+  > column fulfillment_export_jobs cursor_json 6 json YES NULL - 
+  > column fulfillment_export_jobs row_count 7 bigint unsigned NO 0 - 
+  > column fulfillment_export_jobs stored_name 8 varchar(255) NO  ascii_bin 
+  > column fulfillment_export_jobs sha256 9 char(64) NO  ascii_bin 
+  > column fulfillment_export_jobs expires_at 10 bigint unsigned YES NULL - 
+  > column fulfillment_export_jobs failure_code 11 varchar(80) NO  ascii_bin 
+  > column fulfillment_export_jobs version 12 int unsigned NO 1 - 
+  > column fulfillment_export_jobs created_at 13 bigint unsigned NO NULL - 
+  > column fulfillment_export_jobs updated_at 14 bigint unsigned NO NULL - 
+  > column fulfillment_export_jobs completed_at 15 bigint unsigned YES NULL - 
+  > column fulfillment_export_jobs created_by 16 bigint unsigned YES NULL - 
+  > column fulfillment_line_reservation_claims id 1 bigint unsigned NO NULL - auto_increment
+  > column fulfillment_line_reservation_claims fulfillment_id 2 bigint unsigned NO NULL - 
+  > column fulfillment_line_reservation_claims fulfillment_line_id 3 bigint unsigned NO NULL - 
+  > column fulfillment_line_reservation_claims sales_order_line_reservation_id 4 bigint unsigned NO NULL - 
+  > column fulfillment_line_reservation_claims inventory_reservation_id 5 bigint unsigned NO NULL - 
+  > column fulfillment_line_reservation_claims original_claimed_quantity 6 bigint unsigned NO NULL - 
+  > column fulfillment_line_reservation_claims active_claimed_quantity 7 bigint unsigned NO NULL - 
+  > column fulfillment_line_reservation_claims released_quantity 8 bigint unsigned NO 0 - 
+  > column fulfillment_line_reservation_claims consumed_quantity 9 bigint unsigned NO 0 - 
+  > column fulfillment_line_reservation_claims reversed_quantity 10 bigint unsigned NO 0 - 
+  > column fulfillment_line_reservation_claims status 11 varchar(20) NO NULL ascii_bin 
+  > column fulfillment_line_reservation_claims inventory_version 12 int unsigned NO NULL - 
+  > column fulfillment_line_reservation_claims created_at 13 bigint unsigned NO NULL - 
+  > column fulfillment_line_reservation_claims updated_at 14 bigint unsigned NO NULL - 
+  > column fulfillment_line_reservation_claims_archive id 1 bigint unsigned NO NULL - 
+  > column fulfillment_line_reservation_claims_archive fulfillment_id 2 bigint unsigned NO NULL - 
+  > column fulfillment_line_reservation_claims_archive fulfillment_line_id 3 bigint unsigned NO NULL - 
+  > column fulfillment_line_reservation_claims_archive sales_order_line_reservation_id 4 bigint unsigned NO NULL - 
+  > column fulfillment_line_reservation_claims_archive inventory_reservation_id 5 bigint unsigned NO NULL - 
+  > column fulfillment_line_reservation_claims_archive original_claimed_quantity 6 bigint unsigned NO NULL - 
+  > column fulfillment_line_reservation_claims_archive active_claimed_quantity 7 bigint unsigned NO NULL - 
+  > column fulfillment_line_reservation_claims_archive released_quantity 8 bigint unsigned NO 0 - 
+  > column fulfillment_line_reservation_claims_archive consumed_quantity 9 bigint unsigned NO 0 - 
+  > column fulfillment_line_reservation_claims_archive reversed_quantity 10 bigint unsigned NO 0 - 
+  > column fulfillment_line_reservation_claims_archive status 11 varchar(20) NO NULL ascii_bin 
+  > column fulfillment_line_reservation_claims_archive inventory_version 12 int unsigned NO NULL - 
+  > column fulfillment_line_reservation_claims_archive created_at 13 bigint unsigned NO NULL - 
+  > column fulfillment_line_reservation_claims_archive updated_at 14 bigint unsigned NO NULL - 
+  > column fulfillment_line_reservation_claims_archive archive_batch_id 15 bigint unsigned NO NULL - 
+  > column fulfillment_line_reservation_claims_archive archived_at 16 bigint unsigned NO NULL - 
+  > column fulfillment_line_reservation_claims_archive row_hash 17 char(64) NO NULL ascii_bin 
+  > column fulfillment_lines id 1 bigint unsigned NO NULL - auto_increment
+  > column fulfillment_lines fulfillment_id 2 bigint unsigned NO NULL - 
+  > column fulfillment_lines sales_order_id 3 bigint unsigned NO NULL - 
+  > column fulfillment_lines sales_order_line_id 4 bigint unsigned NO NULL - 
+  > column fulfillment_lines line_no 5 smallint unsigned NO NULL - 
+  > column fulfillment_lines sales_order_line_no 6 smallint unsigned NO NULL - 
+  > column fulfillment_lines sku_id 7 bigint unsigned NO NULL - 
+  > column fulfillment_lines sku_code_snapshot 8 varchar(190) NO NULL utf8mb4_unicode_ci 
+  > column fulfillment_lines sku_name_snapshot 9 varchar(190) NO NULL utf8mb4_unicode_ci 
+  > column fulfillment_lines base_uom_id 10 bigint unsigned NO NULL - 
+  > column fulfillment_lines base_uom_code_snapshot 11 varchar(100) NO NULL utf8mb4_unicode_ci 
+  > column fulfillment_lines base_uom_name_snapshot 12 varchar(100) NO NULL utf8mb4_unicode_ci 
+  > column fulfillment_lines tracking_policy_snapshot 13 varchar(30) NO NULL ascii_bin 
+  > column fulfillment_lines minimum_sale_life_days_snapshot 14 int unsigned NO 0 - 
+  > column fulfillment_lines planned_base_quantity 15 bigint unsigned NO NULL - 
+  > column fulfillment_lines allocated_base_quantity 16 bigint unsigned NO 0 - 
+  > column fulfillment_lines picked_base_quantity 17 bigint unsigned NO 0 - 
+  > column fulfillment_lines short_base_quantity 18 bigint unsigned NO 0 - 
+  > column fulfillment_lines shipped_base_quantity 19 bigint unsigned NO 0 - 
+  > column fulfillment_lines reversed_base_quantity 20 bigint unsigned NO 0 - 
+  > column fulfillment_lines short_pick_reason 21 varchar(500) NO  utf8mb4_unicode_ci 
+  > column fulfillment_lines version 22 int unsigned NO 1 - 
+  > column fulfillment_lines created_at 23 bigint unsigned NO NULL - 
+  > column fulfillment_lines updated_at 24 bigint unsigned NO NULL - 
+  > column fulfillment_lines_archive id 1 bigint unsigned NO NULL - 
+  > column fulfillment_lines_archive fulfillment_id 2 bigint unsigned NO NULL - 
+  > column fulfillment_lines_archive sales_order_id 3 bigint unsigned NO NULL - 
+  > column fulfillment_lines_archive sales_order_line_id 4 bigint unsigned NO NULL - 
+  > column fulfillment_lines_archive line_no 5 smallint unsigned NO NULL - 
+  > column fulfillment_lines_archive sales_order_line_no 6 smallint unsigned NO NULL - 
+  > column fulfillment_lines_archive sku_id 7 bigint unsigned NO NULL - 
+  > column fulfillment_lines_archive sku_code_snapshot 8 varchar(190) NO NULL utf8mb4_unicode_ci 
+  > column fulfillment_lines_archive sku_name_snapshot 9 varchar(190) NO NULL utf8mb4_unicode_ci 
+  > column fulfillment_lines_archive base_uom_id 10 bigint unsigned NO NULL - 
+  > column fulfillment_lines_archive base_uom_code_snapshot 11 varchar(100) NO NULL utf8mb4_unicode_ci 
+  > column fulfillment_lines_archive base_uom_name_snapshot 12 varchar(100) NO NULL utf8mb4_unicode_ci 
+  > column fulfillment_lines_archive tracking_policy_snapshot 13 varchar(30) NO NULL ascii_bin 
+  > column fulfillment_lines_archive minimum_sale_life_days_snapshot 14 int unsigned NO 0 - 
+  > column fulfillment_lines_archive planned_base_quantity 15 bigint unsigned NO NULL - 
+  > column fulfillment_lines_archive allocated_base_quantity 16 bigint unsigned NO 0 - 
+  > column fulfillment_lines_archive picked_base_quantity 17 bigint unsigned NO 0 - 
+  > column fulfillment_lines_archive short_base_quantity 18 bigint unsigned NO 0 - 
+  > column fulfillment_lines_archive shipped_base_quantity 19 bigint unsigned NO 0 - 
+  > column fulfillment_lines_archive reversed_base_quantity 20 bigint unsigned NO 0 - 
+  > column fulfillment_lines_archive short_pick_reason 21 varchar(500) NO  utf8mb4_unicode_ci 
+  > column fulfillment_lines_archive version 22 int unsigned NO 1 - 
+  > column fulfillment_lines_archive created_at 23 bigint unsigned NO NULL - 
+  > column fulfillment_lines_archive updated_at 24 bigint unsigned NO NULL - 
+  > column fulfillment_lines_archive archive_batch_id 25 bigint unsigned NO NULL - 
+  > column fulfillment_lines_archive archived_at 26 bigint unsigned NO NULL - 
+  > column fulfillment_lines_archive row_hash 27 char(64) NO NULL ascii_bin 
+  > column fulfillment_operation_requests id 1 bigint unsigned NO NULL - auto_increment
+  > column fulfillment_operation_requests event_id 2 char(36) NO NULL ascii_bin 
+  > column fulfillment_operation_requests operation_type 3 varchar(50) NO NULL ascii_bin 
+  > column fulfillment_operation_requests target_type 4 varchar(30) NO NULL ascii_bin 
+  > column fulfillment_operation_requests target_id 5 bigint unsigned YES NULL - 
+  > column fulfillment_operation_requests payload_hash 6 char(64) NO NULL ascii_bin 
+  > column fulfillment_operation_requests status 7 varchar(20) NO NULL ascii_bin 
+  > column fulfillment_operation_requests result_json 8 json YES NULL - 
+  > column fulfillment_operation_requests public_error_code 9 varchar(80) NO  ascii_bin 
+  > column fulfillment_operation_requests public_error_details 10 json YES NULL - 
+  > column fulfillment_operation_requests lease_owner 11 varchar(190) NO  ascii_bin 
+  > column fulfillment_operation_requests lease_expires_at 12 bigint unsigned YES NULL - 
+  > column fulfillment_operation_requests next_attempt_at 13 bigint unsigned YES NULL - 
+  > column fulfillment_operation_requests attempt_count 14 int unsigned NO 0 - 
+  > column fulfillment_operation_requests correlation_id 15 char(36) NO NULL ascii_bin 
+  > column fulfillment_operation_requests is_document_archived 16 tinyint(1) NO 0 - 
+  > column fulfillment_operation_requests created_at 17 bigint unsigned NO NULL - 
+  > column fulfillment_operation_requests updated_at 18 bigint unsigned NO NULL - 
+  > column fulfillment_operation_requests completed_at 19 bigint unsigned YES NULL - 
+  > column fulfillment_operation_requests initiated_by 20 bigint unsigned YES NULL - 
+  > column fulfillment_status_history id 1 bigint unsigned NO NULL - auto_increment
+  > column fulfillment_status_history fulfillment_id 2 bigint unsigned NO NULL - 
+  > column fulfillment_status_history sequence_no 3 int unsigned NO NULL - 
+  > column fulfillment_status_history from_status 4 varchar(20) YES NULL ascii_bin 
+  > column fulfillment_status_history to_status 5 varchar(20) NO NULL ascii_bin 
+  > column fulfillment_status_history action 6 varchar(50) NO NULL ascii_bin 
+  > column fulfillment_status_history reason 7 varchar(500) NO  utf8mb4_unicode_ci 
+  > column fulfillment_status_history event_id 8 char(36) NO NULL ascii_bin 
+  > column fulfillment_status_history version_after 9 int unsigned NO NULL - 
+  > column fulfillment_status_history actor_user_id 10 bigint unsigned YES NULL - 
+  > column fulfillment_status_history actor_label 11 varchar(190) NO NULL utf8mb4_unicode_ci 
+  > column fulfillment_status_history occurred_at 12 bigint unsigned NO NULL - 
+  > column fulfillment_status_history_archive id 1 bigint unsigned NO NULL - 
+  > column fulfillment_status_history_archive fulfillment_id 2 bigint unsigned NO NULL - 
+  > column fulfillment_status_history_archive sequence_no 3 int unsigned NO NULL - 
+  > column fulfillment_status_history_archive from_status 4 varchar(20) YES NULL ascii_bin 
+  > column fulfillment_status_history_archive to_status 5 varchar(20) NO NULL ascii_bin 
+  > column fulfillment_status_history_archive action 6 varchar(50) NO NULL ascii_bin 
+  > column fulfillment_status_history_archive reason 7 varchar(500) NO  utf8mb4_unicode_ci 
+  > column fulfillment_status_history_archive event_id 8 char(36) NO NULL ascii_bin 
+  > column fulfillment_status_history_archive version_after 9 int unsigned NO NULL - 
+  > column fulfillment_status_history_archive actor_user_id 10 bigint unsigned YES NULL - 
+  > column fulfillment_status_history_archive actor_label 11 varchar(190) NO NULL utf8mb4_unicode_ci 
+  > column fulfillment_status_history_archive occurred_at 12 bigint unsigned NO NULL - 
+  > column fulfillment_status_history_archive archive_batch_id 13 bigint unsigned NO NULL - 
+  > column fulfillment_status_history_archive archived_at 14 bigint unsigned NO NULL - 
+  > column fulfillment_status_history_archive row_hash 15 char(64) NO NULL ascii_bin 
+  > column fulfillments id 1 bigint unsigned NO NULL - auto_increment
+  > column fulfillments fulfillment_number 2 varchar(24) NO NULL ascii_bin 
+  > column fulfillments sales_order_id 3 bigint unsigned NO NULL - 
+  > column fulfillments sales_order_number_snapshot 4 varchar(20) NO NULL ascii_bin 
+  > column fulfillments customer_id 5 bigint unsigned NO NULL - 
+  > column fulfillments customer_code_snapshot 6 varchar(100) NO NULL utf8mb4_unicode_ci 
+  > column fulfillments customer_name_snapshot 7 varchar(190) NO NULL utf8mb4_unicode_ci 
+  > column fulfillments warehouse_id 8 bigint unsigned NO NULL - 
+  > column fulfillments warehouse_code_snapshot 9 varchar(100) NO NULL utf8mb4_unicode_ci 
+  > column fulfillments warehouse_name_snapshot 10 varchar(190) NO NULL utf8mb4_unicode_ci 
+  > column fulfillments status 11 varchar(20) NO NULL ascii_bin 
+  > column fulfillments line_count 12 smallint unsigned NO NULL - 
+  > column fulfillments has_short_pick 13 tinyint(1) NO 0 - 
+  > column fulfillments active_shipment_id 14 bigint unsigned YES NULL - 
+  > column fulfillments version 15 int unsigned NO 1 - 
+  > column fulfillments allocated_at 16 bigint unsigned YES NULL - 
+  > column fulfillments picked_at 17 bigint unsigned YES NULL - 
+  > column fulfillments shipped_at 18 bigint unsigned YES NULL - 
+  > column fulfillments cancelled_at 19 bigint unsigned YES NULL - 
+  > column fulfillments reversed_at 20 bigint unsigned YES NULL - 
+  > column fulfillments picked_by 21 bigint unsigned YES NULL - 
+  > column fulfillments shipped_by 22 bigint unsigned YES NULL - 
+  > column fulfillments cancelled_by 23 bigint unsigned YES NULL - 
+  > column fulfillments reversed_by 24 bigint unsigned YES NULL - 
+  > column fulfillments cancel_reason 25 varchar(500) NO  utf8mb4_unicode_ci 
+  > column fulfillments notes 26 varchar(2000) NO  utf8mb4_unicode_ci 
+  > column fulfillments last_business_updated_at 27 bigint unsigned NO NULL - 
+  > column fulfillments created_at 28 bigint unsigned NO NULL - 
+  > column fulfillments updated_at 29 bigint unsigned NO NULL - 
+  > column fulfillments created_by 30 bigint unsigned YES NULL - 
+  > column fulfillments updated_by 31 bigint unsigned YES NULL - 
+  > column fulfillments_archive id 1 bigint unsigned NO NULL - 
+  > column fulfillments_archive fulfillment_number 2 varchar(24) NO NULL ascii_bin 
+  > column fulfillments_archive sales_order_id 3 bigint unsigned NO NULL - 
+  > column fulfillments_archive sales_order_number_snapshot 4 varchar(20) NO NULL ascii_bin 
+  > column fulfillments_archive customer_id 5 bigint unsigned NO NULL - 
+  > column fulfillments_archive customer_code_snapshot 6 varchar(100) NO NULL utf8mb4_unicode_ci 
+  > column fulfillments_archive customer_name_snapshot 7 varchar(190) NO NULL utf8mb4_unicode_ci 
+  > column fulfillments_archive warehouse_id 8 bigint unsigned NO NULL - 
+  > column fulfillments_archive warehouse_code_snapshot 9 varchar(100) NO NULL utf8mb4_unicode_ci 
+  > column fulfillments_archive warehouse_name_snapshot 10 varchar(190) NO NULL utf8mb4_unicode_ci 
+  > column fulfillments_archive status 11 varchar(20) NO NULL ascii_bin 
+  > column fulfillments_archive line_count 12 smallint unsigned NO NULL - 
+  > column fulfillments_archive has_short_pick 13 tinyint(1) NO 0 - 
+  > column fulfillments_archive active_shipment_id 14 bigint unsigned YES NULL - 
+  > column fulfillments_archive version 15 int unsigned NO 1 - 
+  > column fulfillments_archive allocated_at 16 bigint unsigned YES NULL - 
+  > column fulfillments_archive picked_at 17 bigint unsigned YES NULL - 
+  > column fulfillments_archive shipped_at 18 bigint unsigned YES NULL - 
+  > column fulfillments_archive cancelled_at 19 bigint unsigned YES NULL - 
+  > column fulfillments_archive reversed_at 20 bigint unsigned YES NULL - 
+  > column fulfillments_archive picked_by 21 bigint unsigned YES NULL - 
+  > column fulfillments_archive shipped_by 22 bigint unsigned YES NULL - 
+  > column fulfillments_archive cancelled_by 23 bigint unsigned YES NULL - 
+  > column fulfillments_archive reversed_by 24 bigint unsigned YES NULL - 
+  > column fulfillments_archive cancel_reason 25 varchar(500) NO  utf8mb4_unicode_ci 
+  > column fulfillments_archive notes 26 varchar(2000) NO  utf8mb4_unicode_ci 
+  > column fulfillments_archive last_business_updated_at 27 bigint unsigned NO NULL - 
+  > column fulfillments_archive created_at 28 bigint unsigned NO NULL - 
+  > column fulfillments_archive updated_at 29 bigint unsigned NO NULL - 
+  > column fulfillments_archive created_by 30 bigint unsigned YES NULL - 
+  > column fulfillments_archive updated_by 31 bigint unsigned YES NULL - 
+  > column fulfillments_archive archive_batch_id 32 bigint unsigned NO NULL - 
+  > column fulfillments_archive archived_at 33 bigint unsigned NO NULL - 
+  > column fulfillments_archive row_hash 34 char(64) NO NULL ascii_bin 
+  662a1027,1032
+  > column inventory_purchase_reversal_links id 1 bigint unsigned NO NULL - auto_increment
+  > column inventory_purchase_reversal_links original_movement_id 2 bigint unsigned NO NULL - 
+  > column inventory_purchase_reversal_links reversal_movement_id 3 bigint unsigned NO NULL - 
+  > column inventory_purchase_reversal_links operation_request_id 4 bigint unsigned NO NULL - 
+  > column inventory_purchase_reversal_links quantity 5 bigint unsigned NO NULL - 
+  > column inventory_purchase_reversal_links created_at 6 bigint unsigned NO NULL - 
+  984a1355,1380
+  > column sales_archive_batches id 1 bigint unsigned NO NULL - auto_increment
+  > column sales_archive_batches batch_number 2 varchar(30) NO NULL ascii_bin 
+  > column sales_archive_batches period_key 3 char(6) NO NULL ascii_bin 
+  > column sales_archive_batches cutoff_at 4 bigint unsigned NO NULL - 
+  > column sales_archive_batches status 5 varchar(20) NO NULL ascii_bin 
+  > column sales_archive_batches candidate_count 6 bigint unsigned NO 0 - 
+  > column sales_archive_batches archived_count 7 bigint unsigned NO 0 - 
+  > column sales_archive_batches skipped_count 8 bigint unsigned NO 0 - 
+  > column sales_archive_batches failed_count 9 bigint unsigned NO 0 - 
+  > column sales_archive_batches last_scanned_order_id 10 bigint unsigned NO 0 - 
+  > column sales_archive_batches checksum_summary 11 json YES NULL - 
+  > column sales_archive_batches lease_owner 12 char(36) YES NULL ascii_bin 
+  > column sales_archive_batches lease_until 13 bigint unsigned YES NULL - 
+  > column sales_archive_batches started_at 14 bigint unsigned NO NULL - 
+  > column sales_archive_batches updated_at 15 bigint unsigned NO NULL - 
+  > column sales_archive_batches completed_at 16 bigint unsigned YES NULL - 
+  > column sales_archive_order_manifests id 1 bigint unsigned NO NULL - auto_increment
+  > column sales_archive_order_manifests archive_batch_id 2 bigint unsigned NO NULL - 
+  > column sales_archive_order_manifests sales_order_id 3 bigint unsigned NO NULL - 
+  > column sales_archive_order_manifests sales_order_number 4 varchar(20) NO NULL ascii_bin 
+  > column sales_archive_order_manifests sales_table_counts 5 json NO NULL - 
+  > column sales_archive_order_manifests sales_hash_summary 6 json NO NULL - 
+  > column sales_archive_order_manifests fulfillment_table_counts 7 json NO NULL - 
+  > column sales_archive_order_manifests fulfillment_hash_summary 8 json NO NULL - 
+  > column sales_archive_order_manifests participant_versions 9 json NO NULL - 
+  > column sales_archive_order_manifests archived_at 10 bigint unsigned NO NULL - 
+  1272a1669,1952
+  > column shipment_issue_details id 1 bigint unsigned NO NULL - auto_increment
+  > column shipment_issue_details shipment_id 2 bigint unsigned NO NULL - 
+  > column shipment_issue_details shipment_line_id 3 bigint unsigned NO NULL - 
+  > column shipment_issue_details fulfillment_allocation_id 4 bigint unsigned NO NULL - 
+  > column shipment_issue_details inventory_operation_id 5 bigint unsigned NO NULL - 
+  > column shipment_issue_details inventory_movement_id 6 bigint unsigned NO NULL - 
+  > column shipment_issue_details inventory_reservation_id 7 bigint unsigned NO NULL - 
+  > column shipment_issue_details inventory_allocation_id 8 bigint unsigned NO NULL - 
+  > column shipment_issue_details inventory_balance_id 9 bigint unsigned NO NULL - 
+  > column shipment_issue_details warehouse_id 10 bigint unsigned NO NULL - 
+  > column shipment_issue_details bin_id 11 bigint unsigned NO NULL - 
+  > column shipment_issue_details lot_id 12 bigint unsigned YES NULL - 
+  > column shipment_issue_details warehouse_code_snapshot 13 varchar(100) NO  utf8mb4_unicode_ci 
+  > column shipment_issue_details bin_code_snapshot 14 varchar(100) NO  utf8mb4_unicode_ci 
+  > column shipment_issue_details lot_number_snapshot 15 varchar(100) NO  utf8mb4_unicode_ci 
+  > column shipment_issue_details expiry_date_snapshot 16 date YES NULL - 
+  > column shipment_issue_details stock_status_snapshot 17 varchar(20) NO NULL ascii_bin 
+  > column shipment_issue_details sku_code_snapshot 18 varchar(190) NO NULL utf8mb4_unicode_ci 
+  > column shipment_issue_details base_uom_code_snapshot 19 varchar(100) NO NULL utf8mb4_unicode_ci 
+  > column shipment_issue_details issued_base_quantity 20 bigint unsigned NO NULL - 
+  > column shipment_issue_details reversal_movement_id 21 bigint unsigned YES NULL - 
+  > column shipment_issue_details created_at 22 bigint unsigned NO NULL - 
+  > column shipment_issue_details_archive id 1 bigint unsigned NO NULL - 
+  > column shipment_issue_details_archive shipment_id 2 bigint unsigned NO NULL - 
+  > column shipment_issue_details_archive shipment_line_id 3 bigint unsigned NO NULL - 
+  > column shipment_issue_details_archive fulfillment_allocation_id 4 bigint unsigned NO NULL - 
+  > column shipment_issue_details_archive inventory_operation_id 5 bigint unsigned NO NULL - 
+  > column shipment_issue_details_archive inventory_movement_id 6 bigint unsigned NO NULL - 
+  > column shipment_issue_details_archive inventory_reservation_id 7 bigint unsigned NO NULL - 
+  > column shipment_issue_details_archive inventory_allocation_id 8 bigint unsigned NO NULL - 
+  > column shipment_issue_details_archive inventory_balance_id 9 bigint unsigned NO NULL - 
+  > column shipment_issue_details_archive warehouse_id 10 bigint unsigned NO NULL - 
+  > column shipment_issue_details_archive bin_id 11 bigint unsigned NO NULL - 
+  > column shipment_issue_details_archive lot_id 12 bigint unsigned YES NULL - 
+  > column shipment_issue_details_archive warehouse_code_snapshot 13 varchar(100) NO  utf8mb4_unicode_ci 
+  > column shipment_issue_details_archive bin_code_snapshot 14 varchar(100) NO  utf8mb4_unicode_ci 
+  > column shipment_issue_details_archive lot_number_snapshot 15 varchar(100) NO  utf8mb4_unicode_ci 
+  > column shipment_issue_details_archive expiry_date_snapshot 16 date YES NULL - 
+  > column shipment_issue_details_archive stock_status_snapshot 17 varchar(20) NO NULL ascii_bin 
+  > column shipment_issue_details_archive sku_code_snapshot 18 varchar(190) NO NULL utf8mb4_unicode_ci 
+  > column shipment_issue_details_archive base_uom_code_snapshot 19 varchar(100) NO NULL utf8mb4_unicode_ci 
+  > column shipment_issue_details_archive issued_base_quantity 20 bigint unsigned NO NULL - 
+  > column shipment_issue_details_archive reversal_movement_id 21 bigint unsigned YES NULL - 
+  > column shipment_issue_details_archive created_at 22 bigint unsigned NO NULL - 
+  > column shipment_issue_details_archive archive_batch_id 23 bigint unsigned NO NULL - 
+  > column shipment_issue_details_archive archived_at 24 bigint unsigned NO NULL - 
+  > column shipment_issue_details_archive row_hash 25 char(64) NO NULL ascii_bin 
+  > column shipment_lines id 1 bigint unsigned NO NULL - auto_increment
+  > column shipment_lines shipment_id 2 bigint unsigned NO NULL - 
+  > column shipment_lines fulfillment_id 3 bigint unsigned NO NULL - 
+  > column shipment_lines fulfillment_line_id 4 bigint unsigned NO NULL - 
+  > column shipment_lines line_no 5 smallint unsigned NO NULL - 
+  > column shipment_lines sales_order_line_id 6 bigint unsigned NO NULL - 
+  > column shipment_lines sku_id 7 bigint unsigned NO NULL - 
+  > column shipment_lines base_uom_id 8 bigint unsigned NO NULL - 
+  > column shipment_lines sku_code_snapshot 9 varchar(190) NO NULL utf8mb4_unicode_ci 
+  > column shipment_lines sku_name_snapshot 10 varchar(190) NO NULL utf8mb4_unicode_ci 
+  > column shipment_lines base_uom_code_snapshot 11 varchar(100) NO NULL utf8mb4_unicode_ci 
+  > column shipment_lines shipped_base_quantity 12 bigint unsigned NO NULL - 
+  > column shipment_lines reversed_base_quantity 13 bigint unsigned NO 0 - 
+  > column shipment_lines created_at 14 bigint unsigned NO NULL - 
+  > column shipment_lines updated_at 15 bigint unsigned NO NULL - 
+  > column shipment_lines_archive id 1 bigint unsigned NO NULL - 
+  > column shipment_lines_archive shipment_id 2 bigint unsigned NO NULL - 
+  > column shipment_lines_archive fulfillment_id 3 bigint unsigned NO NULL - 
+  > column shipment_lines_archive fulfillment_line_id 4 bigint unsigned NO NULL - 
+  > column shipment_lines_archive line_no 5 smallint unsigned NO NULL - 
+  > column shipment_lines_archive sales_order_line_id 6 bigint unsigned NO NULL - 
+  > column shipment_lines_archive sku_id 7 bigint unsigned NO NULL - 
+  > column shipment_lines_archive base_uom_id 8 bigint unsigned NO NULL - 
+  > column shipment_lines_archive sku_code_snapshot 9 varchar(190) NO NULL utf8mb4_unicode_ci 
+  > column shipment_lines_archive sku_name_snapshot 10 varchar(190) NO NULL utf8mb4_unicode_ci 
+  > column shipment_lines_archive base_uom_code_snapshot 11 varchar(100) NO NULL utf8mb4_unicode_ci 
+  > column shipment_lines_archive shipped_base_quantity 12 bigint unsigned NO NULL - 
+  > column shipment_lines_archive reversed_base_quantity 13 bigint unsigned NO 0 - 
+  > column shipment_lines_archive created_at 14 bigint unsigned NO NULL - 
+  > column shipment_lines_archive updated_at 15 bigint unsigned NO NULL - 
+  > column shipment_lines_archive archive_batch_id 16 bigint unsigned NO NULL - 
+  > column shipment_lines_archive archived_at 17 bigint unsigned NO NULL - 
+  > column shipment_lines_archive row_hash 18 char(64) NO NULL ascii_bin 
+  > column shipment_reversal_details id 1 bigint unsigned NO NULL - auto_increment
+  > column shipment_reversal_details reversal_id 2 bigint unsigned NO NULL - 
+  > column shipment_reversal_details shipment_id 3 bigint unsigned NO NULL - 
+  > column shipment_reversal_details shipment_issue_detail_id 4 bigint unsigned NO NULL - 
+  > column shipment_reversal_details inventory_reversal_operation_id 5 bigint unsigned NO NULL - 
+  > column shipment_reversal_details inventory_reversal_movement_id 6 bigint unsigned NO NULL - 
+  > column shipment_reversal_details inventory_reservation_id 7 bigint unsigned NO NULL - 
+  > column shipment_reversal_details warehouse_id 8 bigint unsigned NO NULL - 
+  > column shipment_reversal_details bin_id 9 bigint unsigned NO NULL - 
+  > column shipment_reversal_details lot_id 10 bigint unsigned YES NULL - 
+  > column shipment_reversal_details stock_status_snapshot 11 varchar(20) NO NULL ascii_bin 
+  > column shipment_reversal_details reversed_base_quantity 12 bigint unsigned NO NULL - 
+  > column shipment_reversal_details reservation_before_summary 13 json NO NULL - 
+  > column shipment_reversal_details reservation_after_summary 14 json NO NULL - 
+  > column shipment_reversal_details created_at 15 bigint unsigned NO NULL - 
+  > column shipment_reversal_details_archive id 1 bigint unsigned NO NULL - 
+  > column shipment_reversal_details_archive reversal_id 2 bigint unsigned NO NULL - 
+  > column shipment_reversal_details_archive shipment_id 3 bigint unsigned NO NULL - 
+  > column shipment_reversal_details_archive shipment_issue_detail_id 4 bigint unsigned NO NULL - 
+  > column shipment_reversal_details_archive inventory_reversal_operation_id 5 bigint unsigned NO NULL - 
+  > column shipment_reversal_details_archive inventory_reversal_movement_id 6 bigint unsigned NO NULL - 
+  > column shipment_reversal_details_archive inventory_reservation_id 7 bigint unsigned NO NULL - 
+  > column shipment_reversal_details_archive warehouse_id 8 bigint unsigned NO NULL - 
+  > column shipment_reversal_details_archive bin_id 9 bigint unsigned NO NULL - 
+  > column shipment_reversal_details_archive lot_id 10 bigint unsigned YES NULL - 
+  > column shipment_reversal_details_archive stock_status_snapshot 11 varchar(20) NO NULL ascii_bin 
+  > column shipment_reversal_details_archive reversed_base_quantity 12 bigint unsigned NO NULL - 
+  > column shipment_reversal_details_archive reservation_before_summary 13 json NO NULL - 
+  > column shipment_reversal_details_archive reservation_after_summary 14 json NO NULL - 
+  > column shipment_reversal_details_archive created_at 15 bigint unsigned NO NULL - 
+  > column shipment_reversal_details_archive archive_batch_id 16 bigint unsigned NO NULL - 
+  > column shipment_reversal_details_archive archived_at 17 bigint unsigned NO NULL - 
+  > column shipment_reversal_details_archive row_hash 18 char(64) NO NULL ascii_bin 
+  > column shipment_reversals id 1 bigint unsigned NO NULL - auto_increment
+  > column shipment_reversals reversal_number 2 varchar(24) NO NULL ascii_bin 
+  > column shipment_reversals shipment_id 3 bigint unsigned NO NULL - 
+  > column shipment_reversals effective_shipment_id 4 bigint unsigned YES NULL - STORED GENERATED
+  > column shipment_reversals status 5 varchar(20) NO NULL ascii_bin 
+  > column shipment_reversals event_id 6 char(36) NO NULL ascii_bin 
+  > column shipment_reversals correlation_id 7 char(36) NO NULL ascii_bin 
+  > column shipment_reversals reason 8 varchar(500) NO NULL utf8mb4_unicode_ci 
+  > column shipment_reversals goods_under_company_control 9 tinyint(1) NO NULL - 
+  > column shipment_reversals goods_returned_to_original_bins 10 tinyint(1) NO NULL - 
+  > column shipment_reversals failure_code 11 varchar(80) NO  ascii_bin 
+  > column shipment_reversals before_summary 12 json YES NULL - 
+  > column shipment_reversals after_summary 13 json YES NULL - 
+  > column shipment_reversals version 14 int unsigned NO 1 - 
+  > column shipment_reversals created_at 15 bigint unsigned NO NULL - 
+  > column shipment_reversals completed_at 16 bigint unsigned YES NULL - 
+  > column shipment_reversals created_by 17 bigint unsigned YES NULL - 
+  > column shipment_reversals completed_by 18 bigint unsigned YES NULL - 
+  > column shipment_reversals_archive id 1 bigint unsigned NO NULL - 
+  > column shipment_reversals_archive reversal_number 2 varchar(24) NO NULL ascii_bin 
+  > column shipment_reversals_archive shipment_id 3 bigint unsigned NO NULL - 
+  > column shipment_reversals_archive effective_shipment_id 4 bigint unsigned YES NULL - 
+  > column shipment_reversals_archive status 5 varchar(20) NO NULL ascii_bin 
+  > column shipment_reversals_archive event_id 6 char(36) NO NULL ascii_bin 
+  > column shipment_reversals_archive correlation_id 7 char(36) NO NULL ascii_bin 
+  > column shipment_reversals_archive reason 8 varchar(500) NO NULL utf8mb4_unicode_ci 
+  > column shipment_reversals_archive goods_under_company_control 9 tinyint(1) NO NULL - 
+  > column shipment_reversals_archive goods_returned_to_original_bins 10 tinyint(1) NO NULL - 
+  > column shipment_reversals_archive failure_code 11 varchar(80) NO  ascii_bin 
+  > column shipment_reversals_archive before_summary 12 json YES NULL - 
+  > column shipment_reversals_archive after_summary 13 json YES NULL - 
+  > column shipment_reversals_archive version 14 int unsigned NO 1 - 
+  > column shipment_reversals_archive created_at 15 bigint unsigned NO NULL - 
+  > column shipment_reversals_archive completed_at 16 bigint unsigned YES NULL - 
+  > column shipment_reversals_archive created_by 17 bigint unsigned YES NULL - 
+  > column shipment_reversals_archive completed_by 18 bigint unsigned YES NULL - 
+  > column shipment_reversals_archive archive_batch_id 19 bigint unsigned NO NULL - 
+  > column shipment_reversals_archive archived_at 20 bigint unsigned NO NULL - 
+  > column shipment_reversals_archive row_hash 21 char(64) NO NULL ascii_bin 
+  > column shipment_status_history id 1 bigint unsigned NO NULL - auto_increment
+  > column shipment_status_history shipment_id 2 bigint unsigned NO NULL - 
+  > column shipment_status_history sequence_no 3 int unsigned NO NULL - 
+  > column shipment_status_history from_status 4 varchar(20) YES NULL ascii_bin 
+  > column shipment_status_history to_status 5 varchar(20) NO NULL ascii_bin 
+  > column shipment_status_history action 6 varchar(50) NO NULL ascii_bin 
+  > column shipment_status_history reason 7 varchar(500) NO  utf8mb4_unicode_ci 
+  > column shipment_status_history event_id 8 char(36) NO NULL ascii_bin 
+  > column shipment_status_history version_after 9 int unsigned NO NULL - 
+  > column shipment_status_history actor_user_id 10 bigint unsigned YES NULL - 
+  > column shipment_status_history actor_label 11 varchar(190) NO NULL utf8mb4_unicode_ci 
+  > column shipment_status_history occurred_at 12 bigint unsigned NO NULL - 
+  > column shipment_status_history_archive id 1 bigint unsigned NO NULL - 
+  > column shipment_status_history_archive shipment_id 2 bigint unsigned NO NULL - 
+  > column shipment_status_history_archive sequence_no 3 int unsigned NO NULL - 
+  > column shipment_status_history_archive from_status 4 varchar(20) YES NULL ascii_bin 
+  > column shipment_status_history_archive to_status 5 varchar(20) NO NULL ascii_bin 
+  > column shipment_status_history_archive action 6 varchar(50) NO NULL ascii_bin 
+  > column shipment_status_history_archive reason 7 varchar(500) NO  utf8mb4_unicode_ci 
+  > column shipment_status_history_archive event_id 8 char(36) NO NULL ascii_bin 
+  > column shipment_status_history_archive version_after 9 int unsigned NO NULL - 
+  > column shipment_status_history_archive actor_user_id 10 bigint unsigned YES NULL - 
+  > column shipment_status_history_archive actor_label 11 varchar(190) NO NULL utf8mb4_unicode_ci 
+  > column shipment_status_history_archive occurred_at 12 bigint unsigned NO NULL - 
+  > column shipment_status_history_archive archive_batch_id 13 bigint unsigned NO NULL - 
+  > column shipment_status_history_archive archived_at 14 bigint unsigned NO NULL - 
+  > column shipment_status_history_archive row_hash 15 char(64) NO NULL ascii_bin 
+  > column shipments id 1 bigint unsigned NO NULL - auto_increment
+  > column shipments shipment_number 2 varchar(24) NO NULL ascii_bin 
+  > column shipments fulfillment_id 3 bigint unsigned NO NULL - 
+  > column shipments sales_order_id 4 bigint unsigned NO NULL - 
+  > column shipments customer_id 5 bigint unsigned NO NULL - 
+  > column shipments warehouse_id 6 bigint unsigned NO NULL - 
+  > column shipments status 7 varchar(20) NO DRAFT ascii_bin 
+  > column shipments effective_fulfillment_id 8 bigint unsigned YES NULL - STORED GENERATED
+  > column shipments shipping_address_id 9 bigint unsigned NO NULL - 
+  > column shipments shipping_address_version 10 int unsigned NO NULL - 
+  > column shipments shipping_contact_id 11 bigint unsigned YES NULL - 
+  > column shipments shipping_contact_version 12 int unsigned YES NULL - 
+  > column shipments customer_code_snapshot 13 varchar(100) NO  utf8mb4_unicode_ci 
+  > column shipments customer_name_snapshot 14 varchar(190) NO  utf8mb4_unicode_ci 
+  > column shipments address_name_snapshot 15 varchar(190) NO  utf8mb4_unicode_ci 
+  > column shipments recipient_company_snapshot 16 varchar(190) NO  utf8mb4_unicode_ci 
+  > column shipments recipient_name_snapshot 17 varchar(190) NO  utf8mb4_unicode_ci 
+  > column shipments address_line1_snapshot 18 varchar(255) NO  utf8mb4_unicode_ci 
+  > column shipments address_line2_snapshot 19 varchar(255) NO  utf8mb4_unicode_ci 
+  > column shipments address_line3_snapshot 20 varchar(255) NO  utf8mb4_unicode_ci 
+  > column shipments city_snapshot 21 varchar(190) NO  utf8mb4_unicode_ci 
+  > column shipments region_snapshot 22 varchar(190) NO  utf8mb4_unicode_ci 
+  > column shipments postal_code_snapshot 23 varchar(40) NO  utf8mb4_unicode_ci 
+  > column shipments country_code_snapshot 24 char(2) NO  utf8mb4_unicode_ci 
+  > column shipments contact_name_snapshot 25 varchar(190) NO  utf8mb4_unicode_ci 
+  > column shipments contact_phone_snapshot 26 varchar(100) NO  utf8mb4_unicode_ci 
+  > column shipments contact_email_snapshot 27 varchar(254) NO  utf8mb4_unicode_ci 
+  > column shipments carrier_name 28 varchar(190) NO  utf8mb4_unicode_ci 
+  > column shipments tracking_number 29 varchar(190) NO  utf8mb4_unicode_ci 
+  > column shipments package_count 30 int unsigned YES NULL - 
+  > column shipments total_weight 31 decimal(20,6) YES NULL - 
+  > column shipments weight_uom 32 varchar(20) NO  ascii_bin 
+  > column shipments notes 33 varchar(2000) NO  utf8mb4_unicode_ci 
+  > column shipments line_count 34 smallint unsigned NO NULL - 
+  > column shipments shipment_date 35 date YES NULL - 
+  > column shipments confirmation_event_id 36 char(36) YES NULL ascii_bin 
+  > column shipments reversal_event_id 37 char(36) YES NULL ascii_bin 
+  > column shipments correlation_id 38 char(36) YES NULL ascii_bin 
+  > column shipments version 39 int unsigned NO 1 - 
+  > column shipments shipped_at 40 bigint unsigned YES NULL - 
+  > column shipments cancelled_at 41 bigint unsigned YES NULL - 
+  > column shipments reversed_at 42 bigint unsigned YES NULL - 
+  > column shipments shipped_by 43 bigint unsigned YES NULL - 
+  > column shipments cancelled_by 44 bigint unsigned YES NULL - 
+  > column shipments reversed_by 45 bigint unsigned YES NULL - 
+  > column shipments cancel_reason 46 varchar(500) NO  utf8mb4_unicode_ci 
+  > column shipments last_business_updated_at 47 bigint unsigned NO NULL - 
+  > column shipments created_at 48 bigint unsigned NO NULL - 
+  > column shipments updated_at 49 bigint unsigned NO NULL - 
+  > column shipments created_by 50 bigint unsigned YES NULL - 
+  > column shipments updated_by 51 bigint unsigned YES NULL - 
+  > column shipments_archive id 1 bigint unsigned NO NULL - 
+  > column shipments_archive shipment_number 2 varchar(24) NO NULL ascii_bin 
+  > column shipments_archive fulfillment_id 3 bigint unsigned NO NULL - 
+  > column shipments_archive sales_order_id 4 bigint unsigned NO NULL - 
+  > column shipments_archive customer_id 5 bigint unsigned NO NULL - 
+  > column shipments_archive warehouse_id 6 bigint unsigned NO NULL - 
+  > column shipments_archive status 7 varchar(20) NO DRAFT ascii_bin 
+  > column shipments_archive effective_fulfillment_id 8 bigint unsigned YES NULL - 
+  > column shipments_archive shipping_address_id 9 bigint unsigned NO NULL - 
+  > column shipments_archive shipping_address_version 10 int unsigned NO NULL - 
+  > column shipments_archive shipping_contact_id 11 bigint unsigned YES NULL - 
+  > column shipments_archive shipping_contact_version 12 int unsigned YES NULL - 
+  > column shipments_archive customer_code_snapshot 13 varchar(100) NO  utf8mb4_unicode_ci 
+  > column shipments_archive customer_name_snapshot 14 varchar(190) NO  utf8mb4_unicode_ci 
+  > column shipments_archive address_name_snapshot 15 varchar(190) NO  utf8mb4_unicode_ci 
+  > column shipments_archive recipient_company_snapshot 16 varchar(190) NO  utf8mb4_unicode_ci 
+  > column shipments_archive recipient_name_snapshot 17 varchar(190) NO  utf8mb4_unicode_ci 
+  > column shipments_archive address_line1_snapshot 18 varchar(255) NO  utf8mb4_unicode_ci 
+  > column shipments_archive address_line2_snapshot 19 varchar(255) NO  utf8mb4_unicode_ci 
+  > column shipments_archive address_line3_snapshot 20 varchar(255) NO  utf8mb4_unicode_ci 
+  > column shipments_archive city_snapshot 21 varchar(190) NO  utf8mb4_unicode_ci 
+  > column shipments_archive region_snapshot 22 varchar(190) NO  utf8mb4_unicode_ci 
+  > column shipments_archive postal_code_snapshot 23 varchar(40) NO  utf8mb4_unicode_ci 
+  > column shipments_archive country_code_snapshot 24 char(2) NO  utf8mb4_unicode_ci 
+  > column shipments_archive contact_name_snapshot 25 varchar(190) NO  utf8mb4_unicode_ci 
+  > column shipments_archive contact_phone_snapshot 26 varchar(100) NO  utf8mb4_unicode_ci 
+  > column shipments_archive contact_email_snapshot 27 varchar(254) NO  utf8mb4_unicode_ci 
+  > column shipments_archive carrier_name 28 varchar(190) NO  utf8mb4_unicode_ci 
+  > column shipments_archive tracking_number 29 varchar(190) NO  utf8mb4_unicode_ci 
+  > column shipments_archive package_count 30 int unsigned YES NULL - 
+  > column shipments_archive total_weight 31 decimal(20,6) YES NULL - 
+  > column shipments_archive weight_uom 32 varchar(20) NO  ascii_bin 
+  > column shipments_archive notes 33 varchar(2000) NO  utf8mb4_unicode_ci 
+  > column shipments_archive line_count 34 smallint unsigned NO NULL - 
+  > column shipments_archive shipment_date 35 date YES NULL - 
+  > column shipments_archive confirmation_event_id 36 char(36) YES NULL ascii_bin 
+  > column shipments_archive reversal_event_id 37 char(36) YES NULL ascii_bin 
+  > column shipments_archive correlation_id 38 char(36) YES NULL ascii_bin 
+  > column shipments_archive version 39 int unsigned NO 1 - 
+  > column shipments_archive shipped_at 40 bigint unsigned YES NULL - 
+  > column shipments_archive cancelled_at 41 bigint unsigned YES NULL - 
+  > column shipments_archive reversed_at 42 bigint unsigned YES NULL - 
+  > column shipments_archive shipped_by 43 bigint unsigned YES NULL - 
+  > column shipments_archive cancelled_by 44 bigint unsigned YES NULL - 
+  > column shipments_archive reversed_by 45 bigint unsigned YES NULL - 
+  > column shipments_archive cancel_reason 46 varchar(500) NO  utf8mb4_unicode_ci 
+  > column shipments_archive last_business_updated_at 47 bigint unsigned NO NULL - 
+  > column shipments_archive created_at 48 bigint unsigned NO NULL - 
+  > column shipments_archive updated_at 49 bigint unsigned NO NULL - 
+  > column shipments_archive created_by 50 bigint unsigned YES NULL - 
+  > column shipments_archive updated_by 51 bigint unsigned YES NULL - 
+  > column shipments_archive archive_batch_id 52 bigint unsigned NO NULL - 
+  > column shipments_archive archived_at 53 bigint unsigned NO NULL - 
+  > column shipments_archive row_hash 54 char(64) NO NULL ascii_bin 
+  1313a1994
+  > column supplier_addresses sort_order 19 int NO 0 - 
+  1377a2059
+  > column supplier_contacts sort_order 17 int NO 0 - 
+  1808a2491,2746
+  > index fulfillment_allocations idx_ful_allocation_balance 1 1 inventory_balance_id
+  > index fulfillment_allocations idx_ful_allocation_balance 1 2 status
+  > index fulfillment_allocations idx_ful_allocation_balance 1 3 id
+  > index fulfillment_allocations idx_ful_allocation_bin 1 1 bin_id
+  > index fulfillment_allocations idx_ful_allocation_claim 1 1 claim_id
+  > index fulfillment_allocations idx_ful_allocation_claim 1 2 fulfillment_line_id
+  > index fulfillment_allocations idx_ful_allocation_claim 1 3 fulfillment_id
+  > index fulfillment_allocations idx_ful_allocation_claim 1 4 inventory_reservation_id
+  > index fulfillment_allocations idx_ful_allocation_line_owner 1 1 fulfillment_line_id
+  > index fulfillment_allocations idx_ful_allocation_line_owner 1 2 fulfillment_id
+  > index fulfillment_allocations idx_ful_allocation_lot 1 1 lot_id
+  > index fulfillment_allocations idx_ful_allocation_res 1 1 inventory_reservation_id
+  > index fulfillment_allocations idx_ful_allocation_res 1 2 status
+  > index fulfillment_allocations idx_ful_allocation_res 1 3 id
+  > index fulfillment_allocations idx_ful_allocation_warehouse 1 1 warehouse_id
+  > index fulfillment_allocations idx_ful_allocation_work 1 1 fulfillment_id
+  > index fulfillment_allocations idx_ful_allocation_work 1 2 status
+  > index fulfillment_allocations idx_ful_allocation_work 1 3 id
+  > index fulfillment_allocations PRIMARY 0 1 id
+  > index fulfillment_allocations uq_ful_allocation_inventory 0 1 inventory_allocation_id
+  > index fulfillment_allocations uq_ful_allocation_line 0 1 fulfillment_line_id
+  > index fulfillment_allocations uq_ful_allocation_line 0 2 inventory_allocation_id
+  > index fulfillment_allocations uq_ful_allocation_owner 0 1 id
+  > index fulfillment_allocations uq_ful_allocation_owner 0 2 fulfillment_line_id
+  > index fulfillment_allocations uq_ful_allocation_owner 0 3 fulfillment_id
+  > index fulfillment_allocations uq_ful_allocation_owner 0 4 inventory_reservation_id
+  > index fulfillment_allocations uq_ful_allocation_owner 0 5 inventory_allocation_id
+  > index fulfillment_allocations uq_ful_allocation_owner 0 6 inventory_balance_id
+  > index fulfillment_allocations_archive idx_ful_allocation_balance 1 1 inventory_balance_id
+  > index fulfillment_allocations_archive idx_ful_allocation_balance 1 2 status
+  > index fulfillment_allocations_archive idx_ful_allocation_balance 1 3 id
+  > index fulfillment_allocations_archive idx_ful_allocation_bin 1 1 bin_id
+  > index fulfillment_allocations_archive idx_ful_allocation_claim 1 1 claim_id
+  > index fulfillment_allocations_archive idx_ful_allocation_claim 1 2 fulfillment_line_id
+  > index fulfillment_allocations_archive idx_ful_allocation_claim 1 3 fulfillment_id
+  > index fulfillment_allocations_archive idx_ful_allocation_claim 1 4 inventory_reservation_id
+  > index fulfillment_allocations_archive idx_ful_allocation_line_owner 1 1 fulfillment_line_id
+  > index fulfillment_allocations_archive idx_ful_allocation_line_owner 1 2 fulfillment_id
+  > index fulfillment_allocations_archive idx_ful_allocation_lot 1 1 lot_id
+  > index fulfillment_allocations_archive idx_ful_allocation_res 1 1 inventory_reservation_id
+  > index fulfillment_allocations_archive idx_ful_allocation_res 1 2 status
+  > index fulfillment_allocations_archive idx_ful_allocation_res 1 3 id
+  > index fulfillment_allocations_archive idx_ful_allocation_warehouse 1 1 warehouse_id
+  > index fulfillment_allocations_archive idx_ful_allocation_work 1 1 fulfillment_id
+  > index fulfillment_allocations_archive idx_ful_allocation_work 1 2 status
+  > index fulfillment_allocations_archive idx_ful_allocation_work 1 3 id
+  > index fulfillment_allocations_archive idx_fulfillment_allocations_archive_batch 1 1 archive_batch_id
+  > index fulfillment_allocations_archive idx_fulfillment_allocations_archive_batch 1 2 id
+  > index fulfillment_allocations_archive PRIMARY 0 1 id
+  > index fulfillment_allocations_archive uq_ful_allocation_inventory 0 1 inventory_allocation_id
+  > index fulfillment_allocations_archive uq_ful_allocation_line 0 1 fulfillment_line_id
+  > index fulfillment_allocations_archive uq_ful_allocation_line 0 2 inventory_allocation_id
+  > index fulfillment_allocations_archive uq_ful_allocation_owner 0 1 id
+  > index fulfillment_allocations_archive uq_ful_allocation_owner 0 2 fulfillment_line_id
+  > index fulfillment_allocations_archive uq_ful_allocation_owner 0 3 fulfillment_id
+  > index fulfillment_allocations_archive uq_ful_allocation_owner 0 4 inventory_reservation_id
+  > index fulfillment_allocations_archive uq_ful_allocation_owner 0 5 inventory_allocation_id
+  > index fulfillment_allocations_archive uq_ful_allocation_owner 0 6 inventory_balance_id
+  > index fulfillment_audit_logs idx_ful_audit_action 1 1 action
+  > index fulfillment_audit_logs idx_ful_audit_action 1 2 occurred_at
+  > index fulfillment_audit_logs idx_ful_audit_action 1 3 id
+  > index fulfillment_audit_logs idx_ful_audit_actor 1 1 actor_user_id
+  > index fulfillment_audit_logs idx_ful_audit_event 1 1 event_id
+  > index fulfillment_audit_logs idx_ful_audit_event 1 2 id
+  > index fulfillment_audit_logs idx_ful_audit_target 1 1 target_type
+  > index fulfillment_audit_logs idx_ful_audit_target 1 2 target_id
+  > index fulfillment_audit_logs idx_ful_audit_target 1 3 occurred_at
+  > index fulfillment_audit_logs idx_ful_audit_target 1 4 id
+  > index fulfillment_audit_logs PRIMARY 0 1 id
+  > index fulfillment_audit_logs_archive idx_ful_audit_action 1 1 action
+  > index fulfillment_audit_logs_archive idx_ful_audit_action 1 2 occurred_at
+  > index fulfillment_audit_logs_archive idx_ful_audit_action 1 3 id
+  > index fulfillment_audit_logs_archive idx_ful_audit_actor 1 1 actor_user_id
+  > index fulfillment_audit_logs_archive idx_ful_audit_event 1 1 event_id
+  > index fulfillment_audit_logs_archive idx_ful_audit_event 1 2 id
+  > index fulfillment_audit_logs_archive idx_ful_audit_target 1 1 target_type
+  > index fulfillment_audit_logs_archive idx_ful_audit_target 1 2 target_id
+  > index fulfillment_audit_logs_archive idx_ful_audit_target 1 3 occurred_at
+  > index fulfillment_audit_logs_archive idx_ful_audit_target 1 4 id
+  > index fulfillment_audit_logs_archive idx_fulfillment_audit_logs_archive_batch 1 1 archive_batch_id
+  > index fulfillment_audit_logs_archive idx_fulfillment_audit_logs_archive_batch 1 2 id
+  > index fulfillment_audit_logs_archive PRIMARY 0 1 id
+  > index fulfillment_document_sequences PRIMARY 0 1 id
+  > index fulfillment_document_sequences uq_ful_sequence 0 1 document_type
+  > index fulfillment_document_sequences uq_ful_sequence 0 2 period_key
+  > index fulfillment_export_jobs idx_ful_export_expiry 1 1 expires_at
+  > index fulfillment_export_jobs idx_ful_export_expiry 1 2 id
+  > index fulfillment_export_jobs idx_ful_export_owner 1 1 created_by
+  > index fulfillment_export_jobs idx_ful_export_owner 1 2 status
+  > index fulfillment_export_jobs idx_ful_export_owner 1 3 created_at
+  > index fulfillment_export_jobs idx_ful_export_owner 1 4 id
+  > index fulfillment_export_jobs idx_ful_export_work 1 1 status
+  > index fulfillment_export_jobs idx_ful_export_work 1 2 updated_at
+  > index fulfillment_export_jobs idx_ful_export_work 1 3 id
+  > index fulfillment_export_jobs PRIMARY 0 1 id
+  > index fulfillment_line_reservation_claims idx_ful_claim_line_owner 1 1 fulfillment_line_id
+  > index fulfillment_line_reservation_claims idx_ful_claim_line_owner 1 2 fulfillment_id
+  > index fulfillment_line_reservation_claims idx_ful_claim_mapping 1 1 sales_order_line_reservation_id
+  > index fulfillment_line_reservation_claims idx_ful_claim_reservation 1 1 inventory_reservation_id
+  > index fulfillment_line_reservation_claims idx_ful_claim_reservation 1 2 status
+  > index fulfillment_line_reservation_claims idx_ful_claim_reservation 1 3 id
+  > index fulfillment_line_reservation_claims PRIMARY 0 1 id
+  > index fulfillment_line_reservation_claims uq_ful_claim_line_res 0 1 fulfillment_line_id
+  > index fulfillment_line_reservation_claims uq_ful_claim_line_res 0 2 inventory_reservation_id
+  > index fulfillment_line_reservation_claims uq_ful_claim_owner 0 1 id
+  > index fulfillment_line_reservation_claims uq_ful_claim_owner 0 2 fulfillment_line_id
+  > index fulfillment_line_reservation_claims uq_ful_claim_owner 0 3 fulfillment_id
+  > index fulfillment_line_reservation_claims uq_ful_claim_owner 0 4 inventory_reservation_id
+  > index fulfillment_line_reservation_claims_archive idx_ful_claim_line_owner 1 1 fulfillment_line_id
+  > index fulfillment_line_reservation_claims_archive idx_ful_claim_line_owner 1 2 fulfillment_id
+  > index fulfillment_line_reservation_claims_archive idx_ful_claim_mapping 1 1 sales_order_line_reservation_id
+  > index fulfillment_line_reservation_claims_archive idx_ful_claim_reservation 1 1 inventory_reservation_id
+  > index fulfillment_line_reservation_claims_archive idx_ful_claim_reservation 1 2 status
+  > index fulfillment_line_reservation_claims_archive idx_ful_claim_reservation 1 3 id
+  > index fulfillment_line_reservation_claims_archive idx_fulfillment_line_reservation_claims_archive_batch 1 1 archive_batch_id
+  > index fulfillment_line_reservation_claims_archive idx_fulfillment_line_reservation_claims_archive_batch 1 2 id
+  > index fulfillment_line_reservation_claims_archive PRIMARY 0 1 id
+  > index fulfillment_line_reservation_claims_archive uq_ful_claim_line_res 0 1 fulfillment_line_id
+  > index fulfillment_line_reservation_claims_archive uq_ful_claim_line_res 0 2 inventory_reservation_id
+  > index fulfillment_line_reservation_claims_archive uq_ful_claim_owner 0 1 id
+  > index fulfillment_line_reservation_claims_archive uq_ful_claim_owner 0 2 fulfillment_line_id
+  > index fulfillment_line_reservation_claims_archive uq_ful_claim_owner 0 3 fulfillment_id
+  > index fulfillment_line_reservation_claims_archive uq_ful_claim_owner 0 4 inventory_reservation_id
+  > index fulfillment_lines idx_ful_line_parent_order 1 1 fulfillment_id
+  > index fulfillment_lines idx_ful_line_parent_order 1 2 sales_order_id
+  > index fulfillment_lines idx_ful_line_sales 1 1 sales_order_line_id
+  > index fulfillment_lines idx_ful_line_sales 1 2 fulfillment_id
+  > index fulfillment_lines idx_ful_line_sales 1 3 id
+  > index fulfillment_lines idx_ful_line_sku 1 1 sku_id
+  > index fulfillment_lines idx_ful_line_sku 1 2 fulfillment_id
+  > index fulfillment_lines idx_ful_line_sku 1 3 id
+  > index fulfillment_lines idx_ful_line_source_owner 1 1 sales_order_line_id
+  > index fulfillment_lines idx_ful_line_source_owner 1 2 sales_order_id
+  > index fulfillment_lines idx_ful_line_uom 1 1 base_uom_id
+  > index fulfillment_lines PRIMARY 0 1 id
+  > index fulfillment_lines uq_ful_line_number 0 1 fulfillment_id
+  > index fulfillment_lines uq_ful_line_number 0 2 line_no
+  > index fulfillment_lines uq_ful_line_owner 0 1 id
+  > index fulfillment_lines uq_ful_line_owner 0 2 fulfillment_id
+  > index fulfillment_lines uq_ful_line_source 0 1 fulfillment_id
+  > index fulfillment_lines uq_ful_line_source 0 2 sales_order_line_id
+  > index fulfillment_lines_archive idx_ful_line_parent_order 1 1 fulfillment_id
+  > index fulfillment_lines_archive idx_ful_line_parent_order 1 2 sales_order_id
+  > index fulfillment_lines_archive idx_ful_line_sales 1 1 sales_order_line_id
+  > index fulfillment_lines_archive idx_ful_line_sales 1 2 fulfillment_id
+  > index fulfillment_lines_archive idx_ful_line_sales 1 3 id
+  > index fulfillment_lines_archive idx_ful_line_sku 1 1 sku_id
+  > index fulfillment_lines_archive idx_ful_line_sku 1 2 fulfillment_id
+  > index fulfillment_lines_archive idx_ful_line_sku 1 3 id
+  > index fulfillment_lines_archive idx_ful_line_source_owner 1 1 sales_order_line_id
+  > index fulfillment_lines_archive idx_ful_line_source_owner 1 2 sales_order_id
+  > index fulfillment_lines_archive idx_ful_line_uom 1 1 base_uom_id
+  > index fulfillment_lines_archive idx_fulfillment_lines_archive_batch 1 1 archive_batch_id
+  > index fulfillment_lines_archive idx_fulfillment_lines_archive_batch 1 2 id
+  > index fulfillment_lines_archive PRIMARY 0 1 id
+  > index fulfillment_lines_archive uq_ful_line_number 0 1 fulfillment_id
+  > index fulfillment_lines_archive uq_ful_line_number 0 2 line_no
+  > index fulfillment_lines_archive uq_ful_line_owner 0 1 id
+  > index fulfillment_lines_archive uq_ful_line_owner 0 2 fulfillment_id
+  > index fulfillment_lines_archive uq_ful_line_source 0 1 fulfillment_id
+  > index fulfillment_lines_archive uq_ful_line_source 0 2 sales_order_line_id
+  > index fulfillment_operation_requests fk_fulfillment_operation_requests_initiated_by 1 1 initiated_by
+  > index fulfillment_operation_requests idx_ful_operation_archive 1 1 is_document_archived
+  > index fulfillment_operation_requests idx_ful_operation_archive 1 2 updated_at
+  > index fulfillment_operation_requests idx_ful_operation_archive 1 3 id
+  > index fulfillment_operation_requests idx_ful_operation_lease 1 1 status
+  > index fulfillment_operation_requests idx_ful_operation_lease 1 2 lease_expires_at
+  > index fulfillment_operation_requests idx_ful_operation_lease 1 3 next_attempt_at
+  > index fulfillment_operation_requests idx_ful_operation_lease 1 4 id
+  > index fulfillment_operation_requests idx_ful_operation_target 1 1 target_type
+  > index fulfillment_operation_requests idx_ful_operation_target 1 2 target_id
+  > index fulfillment_operation_requests idx_ful_operation_target 1 3 status
+  > index fulfillment_operation_requests idx_ful_operation_target 1 4 id
+  > index fulfillment_operation_requests PRIMARY 0 1 id
+  > index fulfillment_operation_requests uq_ful_operation_event 0 1 event_id
+  > index fulfillment_status_history idx_ful_history_actor 1 1 actor_user_id
+  > index fulfillment_status_history idx_ful_history_time 1 1 fulfillment_id
+  > index fulfillment_status_history idx_ful_history_time 1 2 occurred_at
+  > index fulfillment_status_history idx_ful_history_time 1 3 id
+  > index fulfillment_status_history PRIMARY 0 1 id
+  > index fulfillment_status_history uq_ful_history_event 0 1 fulfillment_id
+  > index fulfillment_status_history uq_ful_history_event 0 2 event_id
+  > index fulfillment_status_history uq_ful_history_event 0 3 action
+  > index fulfillment_status_history uq_ful_history_sequence 0 1 fulfillment_id
+  > index fulfillment_status_history uq_ful_history_sequence 0 2 sequence_no
+  > index fulfillment_status_history_archive idx_ful_history_actor 1 1 actor_user_id
+  > index fulfillment_status_history_archive idx_ful_history_time 1 1 fulfillment_id
+  > index fulfillment_status_history_archive idx_ful_history_time 1 2 occurred_at
+  > index fulfillment_status_history_archive idx_ful_history_time 1 3 id
+  > index fulfillment_status_history_archive idx_fulfillment_status_history_archive_batch 1 1 archive_batch_id
+  > index fulfillment_status_history_archive idx_fulfillment_status_history_archive_batch 1 2 id
+  > index fulfillment_status_history_archive PRIMARY 0 1 id
+  > index fulfillment_status_history_archive uq_ful_history_event 0 1 fulfillment_id
+  > index fulfillment_status_history_archive uq_ful_history_event 0 2 event_id
+  > index fulfillment_status_history_archive uq_ful_history_event 0 3 action
+  > index fulfillment_status_history_archive uq_ful_history_sequence 0 1 fulfillment_id
+  > index fulfillment_status_history_archive uq_ful_history_sequence 0 2 sequence_no
+  > index fulfillments fk_ful_cancelled_by 1 1 cancelled_by
+  > index fulfillments fk_ful_picked_by 1 1 picked_by
+  > index fulfillments fk_ful_reversed_by 1 1 reversed_by
+  > index fulfillments fk_ful_shipped_by 1 1 shipped_by
+  > index fulfillments fk_ful_updated_by 1 1 updated_by
+  > index fulfillments fk_ful_warehouse 1 1 warehouse_id
+  > index fulfillments idx_ful_active_owner 1 1 active_shipment_id
+  > index fulfillments idx_ful_active_owner 1 2 id
+  > index fulfillments idx_ful_active_work 1 1 status
+  > index fulfillments idx_ful_active_work 1 2 warehouse_id
+  > index fulfillments idx_ful_active_work 1 3 last_business_updated_at
+  > index fulfillments idx_ful_active_work 1 4 id
+  > index fulfillments idx_ful_archive 1 1 last_business_updated_at
+  > index fulfillments idx_ful_archive 1 2 status
+  > index fulfillments idx_ful_archive 1 3 id
+  > index fulfillments idx_ful_customer 1 1 customer_id
+  > index fulfillments idx_ful_customer 1 2 created_at
+  > index fulfillments idx_ful_customer 1 3 id
+  > index fulfillments idx_ful_order 1 1 sales_order_id
+  > index fulfillments idx_ful_order 1 2 status
+  > index fulfillments idx_ful_order 1 3 id
+  > index fulfillments idx_ful_recent 1 1 created_by
+  > index fulfillments idx_ful_recent 1 2 status
+  > index fulfillments idx_ful_recent 1 3 updated_at
+  > index fulfillments idx_ful_recent 1 4 id
+  > index fulfillments PRIMARY 0 1 id
+  > index fulfillments uq_ful_active_shipment 0 1 active_shipment_id
+  > index fulfillments uq_ful_id_order 0 1 id
+  > index fulfillments uq_ful_id_order 0 2 sales_order_id
+  > index fulfillments uq_ful_number 0 1 fulfillment_number
+  > index fulfillments_archive idx_ful_active_owner 1 1 active_shipment_id
+  > index fulfillments_archive idx_ful_active_owner 1 2 id
+  > index fulfillments_archive idx_ful_active_work 1 1 status
+  > index fulfillments_archive idx_ful_active_work 1 2 warehouse_id
+  > index fulfillments_archive idx_ful_active_work 1 3 last_business_updated_at
+  > index fulfillments_archive idx_ful_active_work 1 4 id
+  > index fulfillments_archive idx_ful_archive 1 1 last_business_updated_at
+  > index fulfillments_archive idx_ful_archive 1 2 status
+  > index fulfillments_archive idx_ful_archive 1 3 id
+  > index fulfillments_archive idx_ful_archive_warehouse_date 1 1 warehouse_id
+  > index fulfillments_archive idx_ful_archive_warehouse_date 1 2 created_at
+  > index fulfillments_archive idx_ful_archive_warehouse_date 1 3 id
+  > index fulfillments_archive idx_ful_customer 1 1 customer_id
+  > index fulfillments_archive idx_ful_customer 1 2 created_at
+  > index fulfillments_archive idx_ful_customer 1 3 id
+  > index fulfillments_archive idx_ful_order 1 1 sales_order_id
+  > index fulfillments_archive idx_ful_order 1 2 status
+  > index fulfillments_archive idx_ful_order 1 3 id
+  > index fulfillments_archive idx_ful_recent 1 1 created_by
+  > index fulfillments_archive idx_ful_recent 1 2 status
+  > index fulfillments_archive idx_ful_recent 1 3 updated_at
+  > index fulfillments_archive idx_ful_recent 1 4 id
+  > index fulfillments_archive idx_fulfillments_archive_batch 1 1 archive_batch_id
+  > index fulfillments_archive idx_fulfillments_archive_batch 1 2 id
+  > index fulfillments_archive PRIMARY 0 1 id
+  > index fulfillments_archive uq_ful_active_shipment 0 1 active_shipment_id
+  > index fulfillments_archive uq_ful_id_order 0 1 id
+  > index fulfillments_archive uq_ful_id_order 0 2 sales_order_id
+  > index fulfillments_archive uq_ful_number 0 1 fulfillment_number
+  1902a2841,2845
+  > index inventory_purchase_reversal_links idx_purchase_reversal_original 1 1 original_movement_id
+  > index inventory_purchase_reversal_links idx_purchase_reversal_original 1 2 id
+  > index inventory_purchase_reversal_links PRIMARY 0 1 id
+  > index inventory_purchase_reversal_links uq_purchase_reversal_movement 0 1 reversal_movement_id
+  > index inventory_purchase_reversal_links uq_purchase_reversal_operation 0 1 operation_request_id
+  2131a3075,3086
+  > index sales_archive_batches idx_sales_archive_status 1 1 status
+  > index sales_archive_batches idx_sales_archive_status 1 2 started_at
+  > index sales_archive_batches idx_sales_archive_status 1 3 id
+  > index sales_archive_batches PRIMARY 0 1 id
+  > index sales_archive_batches uq_sales_archive_batch 0 1 batch_number
+  > index sales_archive_batches uq_sales_archive_period 0 1 period_key
+  > index sales_archive_order_manifests idx_sales_manifest_batch 1 1 archive_batch_id
+  > index sales_archive_order_manifests idx_sales_manifest_batch 1 2 sales_order_id
+  > index sales_archive_order_manifests idx_sales_manifest_batch 1 3 id
+  > index sales_archive_order_manifests PRIMARY 0 1 id
+  > index sales_archive_order_manifests uq_sales_manifest_number 0 1 sales_order_number
+  > index sales_archive_order_manifests uq_sales_manifest_order 0 1 sales_order_id
+  2313a3269,3486
+  > index shipment_issue_details idx_issue_bin_id 1 1 bin_id
+  > index shipment_issue_details idx_issue_fulfillment_allocation_id 1 1 fulfillment_allocation_id
+  > index shipment_issue_details idx_issue_inventory_balance_id 1 1 inventory_balance_id
+  > index shipment_issue_details idx_issue_inventory_operation_id 1 1 inventory_operation_id
+  > index shipment_issue_details idx_issue_inventory_reservation_id 1 1 inventory_reservation_id
+  > index shipment_issue_details idx_issue_lot_id 1 1 lot_id
+  > index shipment_issue_details idx_issue_warehouse_id 1 1 warehouse_id
+  > index shipment_issue_details idx_shipment_issue_lines 1 1 shipment_id
+  > index shipment_issue_details idx_shipment_issue_lines 1 2 shipment_line_id
+  > index shipment_issue_details idx_shipment_issue_lines 1 3 id
+  > index shipment_issue_details idx_shipment_issue_parent 1 1 shipment_line_id
+  > index shipment_issue_details idx_shipment_issue_parent 1 2 shipment_id
+  > index shipment_issue_details PRIMARY 0 1 id
+  > index shipment_issue_details uq_shipment_issue_allocation 0 1 inventory_allocation_id
+  > index shipment_issue_details uq_shipment_issue_movement 0 1 inventory_movement_id
+  > index shipment_issue_details uq_shipment_issue_owner 0 1 id
+  > index shipment_issue_details uq_shipment_issue_owner 0 2 shipment_id
+  > index shipment_issue_details uq_shipment_issue_reversal 0 1 reversal_movement_id
+  > index shipment_issue_details_archive idx_issue_bin_id 1 1 bin_id
+  > index shipment_issue_details_archive idx_issue_fulfillment_allocation_id 1 1 fulfillment_allocation_id
+  > index shipment_issue_details_archive idx_issue_inventory_balance_id 1 1 inventory_balance_id
+  > index shipment_issue_details_archive idx_issue_inventory_operation_id 1 1 inventory_operation_id
+  > index shipment_issue_details_archive idx_issue_inventory_reservation_id 1 1 inventory_reservation_id
+  > index shipment_issue_details_archive idx_issue_lot_id 1 1 lot_id
+  > index shipment_issue_details_archive idx_issue_warehouse_id 1 1 warehouse_id
+  > index shipment_issue_details_archive idx_shipment_issue_details_archive_batch 1 1 archive_batch_id
+  > index shipment_issue_details_archive idx_shipment_issue_details_archive_batch 1 2 id
+  > index shipment_issue_details_archive idx_shipment_issue_lines 1 1 shipment_id
+  > index shipment_issue_details_archive idx_shipment_issue_lines 1 2 shipment_line_id
+  > index shipment_issue_details_archive idx_shipment_issue_lines 1 3 id
+  > index shipment_issue_details_archive idx_shipment_issue_parent 1 1 shipment_line_id
+  > index shipment_issue_details_archive idx_shipment_issue_parent 1 2 shipment_id
+  > index shipment_issue_details_archive PRIMARY 0 1 id
+  > index shipment_issue_details_archive uq_shipment_issue_allocation 0 1 inventory_allocation_id
+  > index shipment_issue_details_archive uq_shipment_issue_movement 0 1 inventory_movement_id
+  > index shipment_issue_details_archive uq_shipment_issue_owner 0 1 id
+  > index shipment_issue_details_archive uq_shipment_issue_owner 0 2 shipment_id
+  > index shipment_issue_details_archive uq_shipment_issue_reversal 0 1 reversal_movement_id
+  > index shipment_lines idx_shipment_line_fulfillment 1 1 fulfillment_line_id
+  > index shipment_lines idx_shipment_line_fulfillment 1 2 fulfillment_id
+  > index shipment_lines idx_shipment_line_parent 1 1 shipment_id
+  > index shipment_lines idx_shipment_line_parent 1 2 fulfillment_id
+  > index shipment_lines idx_shipment_line_sales 1 1 sales_order_line_id
+  > index shipment_lines idx_shipment_line_sales 1 2 shipment_id
+  > index shipment_lines idx_shipment_line_sales 1 3 id
+  > index shipment_lines idx_shipment_line_sku 1 1 sku_id
+  > index shipment_lines idx_shipment_line_sku 1 2 shipment_id
+  > index shipment_lines idx_shipment_line_sku 1 3 id
+  > index shipment_lines idx_shipment_line_uom 1 1 base_uom_id
+  > index shipment_lines PRIMARY 0 1 id
+  > index shipment_lines uq_shipment_line_no 0 1 shipment_id
+  > index shipment_lines uq_shipment_line_no 0 2 line_no
+  > index shipment_lines uq_shipment_line_owner 0 1 id
+  > index shipment_lines uq_shipment_line_owner 0 2 shipment_id
+  > index shipment_lines uq_shipment_line_source 0 1 shipment_id
+  > index shipment_lines uq_shipment_line_source 0 2 fulfillment_line_id
+  > index shipment_lines_archive idx_shipment_line_fulfillment 1 1 fulfillment_line_id
+  > index shipment_lines_archive idx_shipment_line_fulfillment 1 2 fulfillment_id
+  > index shipment_lines_archive idx_shipment_line_parent 1 1 shipment_id
+  > index shipment_lines_archive idx_shipment_line_parent 1 2 fulfillment_id
+  > index shipment_lines_archive idx_shipment_line_sales 1 1 sales_order_line_id
+  > index shipment_lines_archive idx_shipment_line_sales 1 2 shipment_id
+  > index shipment_lines_archive idx_shipment_line_sales 1 3 id
+  > index shipment_lines_archive idx_shipment_line_sku 1 1 sku_id
+  > index shipment_lines_archive idx_shipment_line_sku 1 2 shipment_id
+  > index shipment_lines_archive idx_shipment_line_sku 1 3 id
+  > index shipment_lines_archive idx_shipment_line_uom 1 1 base_uom_id
+  > index shipment_lines_archive idx_shipment_lines_archive_batch 1 1 archive_batch_id
+  > index shipment_lines_archive idx_shipment_lines_archive_batch 1 2 id
+  > index shipment_lines_archive PRIMARY 0 1 id
+  > index shipment_lines_archive uq_shipment_line_no 0 1 shipment_id
+  > index shipment_lines_archive uq_shipment_line_no 0 2 line_no
+  > index shipment_lines_archive uq_shipment_line_owner 0 1 id
+  > index shipment_lines_archive uq_shipment_line_owner 0 2 shipment_id
+  > index shipment_lines_archive uq_shipment_line_source 0 1 shipment_id
+  > index shipment_lines_archive uq_shipment_line_source 0 2 fulfillment_line_id
+  > index shipment_reversal_details idx_rev_detail_bin_id 1 1 bin_id
+  > index shipment_reversal_details idx_rev_detail_inventory_reservation_id 1 1 inventory_reservation_id
+  > index shipment_reversal_details idx_rev_detail_inventory_reversal_operation_id 1 1 inventory_reversal_operation_id
+  > index shipment_reversal_details idx_rev_detail_lot_id 1 1 lot_id
+  > index shipment_reversal_details idx_rev_detail_warehouse_id 1 1 warehouse_id
+  > index shipment_reversal_details idx_reversal_detail_issue 1 1 shipment_issue_detail_id
+  > index shipment_reversal_details idx_reversal_detail_issue 1 2 shipment_id
+  > index shipment_reversal_details idx_reversal_detail_list 1 1 reversal_id
+  > index shipment_reversal_details idx_reversal_detail_list 1 2 id
+  > index shipment_reversal_details idx_reversal_detail_parent 1 1 reversal_id
+  > index shipment_reversal_details idx_reversal_detail_parent 1 2 shipment_id
+  > index shipment_reversal_details PRIMARY 0 1 id
+  > index shipment_reversal_details uq_reversal_detail_issue 0 1 shipment_issue_detail_id
+  > index shipment_reversal_details uq_reversal_detail_movement 0 1 inventory_reversal_movement_id
+  > index shipment_reversal_details_archive idx_rev_detail_bin_id 1 1 bin_id
+  > index shipment_reversal_details_archive idx_rev_detail_inventory_reservation_id 1 1 inventory_reservation_id
+  > index shipment_reversal_details_archive idx_rev_detail_inventory_reversal_operation_id 1 1 inventory_reversal_operation_id
+  > index shipment_reversal_details_archive idx_rev_detail_lot_id 1 1 lot_id
+  > index shipment_reversal_details_archive idx_rev_detail_warehouse_id 1 1 warehouse_id
+  > index shipment_reversal_details_archive idx_reversal_detail_issue 1 1 shipment_issue_detail_id
+  > index shipment_reversal_details_archive idx_reversal_detail_issue 1 2 shipment_id
+  > index shipment_reversal_details_archive idx_reversal_detail_list 1 1 reversal_id
+  > index shipment_reversal_details_archive idx_reversal_detail_list 1 2 id
+  > index shipment_reversal_details_archive idx_reversal_detail_parent 1 1 reversal_id
+  > index shipment_reversal_details_archive idx_reversal_detail_parent 1 2 shipment_id
+  > index shipment_reversal_details_archive idx_shipment_reversal_details_archive_batch 1 1 archive_batch_id
+  > index shipment_reversal_details_archive idx_shipment_reversal_details_archive_batch 1 2 id
+  > index shipment_reversal_details_archive PRIMARY 0 1 id
+  > index shipment_reversal_details_archive uq_reversal_detail_issue 0 1 shipment_issue_detail_id
+  > index shipment_reversal_details_archive uq_reversal_detail_movement 0 1 inventory_reversal_movement_id
+  > index shipment_reversals idx_shipment_reversal_completer 1 1 completed_by
+  > index shipment_reversals idx_shipment_reversal_creator 1 1 created_by
+  > index shipment_reversals idx_shipment_reversal_parent 1 1 shipment_id
+  > index shipment_reversals idx_shipment_reversal_parent 1 2 created_at
+  > index shipment_reversals idx_shipment_reversal_parent 1 3 id
+  > index shipment_reversals PRIMARY 0 1 id
+  > index shipment_reversals uq_shipment_reversal_effective 0 1 effective_shipment_id
+  > index shipment_reversals uq_shipment_reversal_event 0 1 event_id
+  > index shipment_reversals uq_shipment_reversal_number 0 1 reversal_number
+  > index shipment_reversals uq_shipment_reversal_owner 0 1 id
+  > index shipment_reversals uq_shipment_reversal_owner 0 2 shipment_id
+  > index shipment_reversals_archive idx_shipment_reversal_completer 1 1 completed_by
+  > index shipment_reversals_archive idx_shipment_reversal_creator 1 1 created_by
+  > index shipment_reversals_archive idx_shipment_reversal_parent 1 1 shipment_id
+  > index shipment_reversals_archive idx_shipment_reversal_parent 1 2 created_at
+  > index shipment_reversals_archive idx_shipment_reversal_parent 1 3 id
+  > index shipment_reversals_archive idx_shipment_reversals_archive_batch 1 1 archive_batch_id
+  > index shipment_reversals_archive idx_shipment_reversals_archive_batch 1 2 id
+  > index shipment_reversals_archive PRIMARY 0 1 id
+  > index shipment_reversals_archive uq_shipment_reversal_effective 0 1 effective_shipment_id
+  > index shipment_reversals_archive uq_shipment_reversal_event 0 1 event_id
+  > index shipment_reversals_archive uq_shipment_reversal_number 0 1 reversal_number
+  > index shipment_reversals_archive uq_shipment_reversal_owner 0 1 id
+  > index shipment_reversals_archive uq_shipment_reversal_owner 0 2 shipment_id
+  > index shipment_status_history idx_shipment_history_actor 1 1 actor_user_id
+  > index shipment_status_history idx_shipment_history_time 1 1 shipment_id
+  > index shipment_status_history idx_shipment_history_time 1 2 occurred_at
+  > index shipment_status_history idx_shipment_history_time 1 3 id
+  > index shipment_status_history PRIMARY 0 1 id
+  > index shipment_status_history uq_shipment_history_event 0 1 shipment_id
+  > index shipment_status_history uq_shipment_history_event 0 2 event_id
+  > index shipment_status_history uq_shipment_history_event 0 3 action
+  > index shipment_status_history uq_shipment_history_sequence 0 1 shipment_id
+  > index shipment_status_history uq_shipment_history_sequence 0 2 sequence_no
+  > index shipment_status_history_archive idx_shipment_history_actor 1 1 actor_user_id
+  > index shipment_status_history_archive idx_shipment_history_time 1 1 shipment_id
+  > index shipment_status_history_archive idx_shipment_history_time 1 2 occurred_at
+  > index shipment_status_history_archive idx_shipment_history_time 1 3 id
+  > index shipment_status_history_archive idx_shipment_status_history_archive_batch 1 1 archive_batch_id
+  > index shipment_status_history_archive idx_shipment_status_history_archive_batch 1 2 id
+  > index shipment_status_history_archive PRIMARY 0 1 id
+  > index shipment_status_history_archive uq_shipment_history_event 0 1 shipment_id
+  > index shipment_status_history_archive uq_shipment_history_event 0 2 event_id
+  > index shipment_status_history_archive uq_shipment_history_event 0 3 action
+  > index shipment_status_history_archive uq_shipment_history_sequence 0 1 shipment_id
+  > index shipment_status_history_archive uq_shipment_history_sequence 0 2 sequence_no
+  > index shipments fk_shipment_cancelled_by 1 1 cancelled_by
+  > index shipments fk_shipment_created_by 1 1 created_by
+  > index shipments fk_shipment_reversed_by 1 1 reversed_by
+  > index shipments fk_shipment_shipped_by 1 1 shipped_by
+  > index shipments fk_shipment_updated_by 1 1 updated_by
+  > index shipments idx_shipment_address 1 1 shipping_address_id
+  > index shipments idx_shipment_archive 1 1 status
+  > index shipments idx_shipment_archive 1 2 last_business_updated_at
+  > index shipments idx_shipment_archive 1 3 id
+  > index shipments idx_shipment_contact 1 1 shipping_contact_id
+  > index shipments idx_shipment_customer 1 1 customer_id
+  > index shipments idx_shipment_customer 1 2 shipped_at
+  > index shipments idx_shipment_customer 1 3 id
+  > index shipments idx_shipment_order 1 1 sales_order_id
+  > index shipments idx_shipment_order 1 2 status
+  > index shipments idx_shipment_order 1 3 id
+  > index shipments idx_shipment_parent 1 1 fulfillment_id
+  > index shipments idx_shipment_parent 1 2 status
+  > index shipments idx_shipment_parent 1 3 id
+  > index shipments idx_shipment_tracking 1 1 tracking_number
+  > index shipments idx_shipment_tracking 1 2 shipped_at
+  > index shipments idx_shipment_tracking 1 3 id
+  > index shipments idx_shipment_warehouse 1 1 warehouse_id
+  > index shipments idx_shipment_warehouse 1 2 status
+  > index shipments idx_shipment_warehouse 1 3 shipped_at
+  > index shipments idx_shipment_warehouse 1 4 id
+  > index shipments PRIMARY 0 1 id
+  > index shipments uq_shipment_confirmation 0 1 confirmation_event_id
+  > index shipments uq_shipment_effective 0 1 effective_fulfillment_id
+  > index shipments uq_shipment_number 0 1 shipment_number
+  > index shipments uq_shipment_owner 0 1 id
+  > index shipments uq_shipment_owner 0 2 fulfillment_id
+  > index shipments uq_shipment_reversal 0 1 reversal_event_id
+  > index shipments_archive idx_shipment_address 1 1 shipping_address_id
+  > index shipments_archive idx_shipment_archive 1 1 status
+  > index shipments_archive idx_shipment_archive 1 2 last_business_updated_at
+  > index shipments_archive idx_shipment_archive 1 3 id
+  > index shipments_archive idx_shipment_archive_warehouse_date 1 1 warehouse_id
+  > index shipments_archive idx_shipment_archive_warehouse_date 1 2 shipped_at
+  > index shipments_archive idx_shipment_archive_warehouse_date 1 3 id
+  > index shipments_archive idx_shipment_contact 1 1 shipping_contact_id
+  > index shipments_archive idx_shipment_customer 1 1 customer_id
+  > index shipments_archive idx_shipment_customer 1 2 shipped_at
+  > index shipments_archive idx_shipment_customer 1 3 id
+  > index shipments_archive idx_shipment_order 1 1 sales_order_id
+  > index shipments_archive idx_shipment_order 1 2 status
+  > index shipments_archive idx_shipment_order 1 3 id
+  > index shipments_archive idx_shipment_parent 1 1 fulfillment_id
+  > index shipments_archive idx_shipment_parent 1 2 status
+  > index shipments_archive idx_shipment_parent 1 3 id
+  > index shipments_archive idx_shipment_tracking 1 1 tracking_number
+  > index shipments_archive idx_shipment_tracking 1 2 shipped_at
+  > index shipments_archive idx_shipment_tracking 1 3 id
+  > index shipments_archive idx_shipment_warehouse 1 1 warehouse_id
+  > index shipments_archive idx_shipment_warehouse 1 2 status
+  > index shipments_archive idx_shipment_warehouse 1 3 shipped_at
+  > index shipments_archive idx_shipment_warehouse 1 4 id
+  > index shipments_archive idx_shipments_archive_batch 1 1 archive_batch_id
+  > index shipments_archive idx_shipments_archive_batch 1 2 id
+  > index shipments_archive PRIMARY 0 1 id
+  > index shipments_archive uq_shipment_confirmation 0 1 confirmation_event_id
+  > index shipments_archive uq_shipment_effective 0 1 effective_fulfillment_id
+  > index shipments_archive uq_shipment_number 0 1 shipment_number
+  > index shipments_archive uq_shipment_owner 0 1 id
+  > index shipments_archive uq_shipment_owner 0 2 fulfillment_id
+  > index shipments_archive uq_shipment_reversal 0 1 reversal_event_id
+  2428a3602
+  > index supplier_sku_refs idx_supplier_sku_refs_sku 1 1 sku_id
+  2541a3716,3751
+  > fk fulfillment_allocations fk_ful_allocation_balance inventory_stock_balances NO ACTION RESTRICT
+  > fk fulfillment_allocations fk_ful_allocation_bin inventory_bins NO ACTION RESTRICT
+  > fk fulfillment_allocations fk_ful_allocation_claim fulfillment_line_reservation_claims NO ACTION RESTRICT
+  > fk fulfillment_allocations fk_ful_allocation_inventory inventory_allocations NO ACTION RESTRICT
+  > fk fulfillment_allocations fk_ful_allocation_line fulfillment_lines NO ACTION CASCADE
+  > fk fulfillment_allocations fk_ful_allocation_lot inventory_lots NO ACTION RESTRICT
+  > fk fulfillment_allocations fk_ful_allocation_res inventory_reservations NO ACTION RESTRICT
+  > fk fulfillment_allocations fk_ful_allocation_warehouse inventory_warehouses NO ACTION RESTRICT
+  > fk fulfillment_allocations_archive fk_fulfillment_allocations_archive_batch sales_archive_batches NO ACTION RESTRICT
+  > fk fulfillment_audit_logs fk_ful_audit_actor users NO ACTION SET NULL
+  > fk fulfillment_audit_logs_archive fk_fulfillment_audit_logs_archive_batch sales_archive_batches NO ACTION RESTRICT
+  > fk fulfillment_export_jobs fk_ful_export_creator users NO ACTION SET NULL
+  > fk fulfillment_line_reservation_claims fk_ful_claim_line fulfillment_lines NO ACTION CASCADE
+  > fk fulfillment_line_reservation_claims fk_ful_claim_mapping sales_order_line_reservations NO ACTION RESTRICT
+  > fk fulfillment_line_reservation_claims fk_ful_claim_reservation inventory_reservations NO ACTION RESTRICT
+  > fk fulfillment_line_reservation_claims_archive fk_fulfillment_line_reservation_claims_archive_batch sales_archive_batches NO ACTION RESTRICT
+  > fk fulfillment_lines fk_ful_line_parent fulfillments NO ACTION CASCADE
+  > fk fulfillment_lines fk_ful_line_sku item_skus NO ACTION RESTRICT
+  > fk fulfillment_lines fk_ful_line_source sales_order_lines NO ACTION RESTRICT
+  > fk fulfillment_lines fk_ful_line_uom item_uoms NO ACTION RESTRICT
+  > fk fulfillment_lines_archive fk_fulfillment_lines_archive_batch sales_archive_batches NO ACTION RESTRICT
+  > fk fulfillment_operation_requests fk_fulfillment_operation_requests_initiated_by users NO ACTION SET NULL
+  > fk fulfillment_status_history fk_ful_history_actor users NO ACTION SET NULL
+  > fk fulfillment_status_history fk_ful_history_parent fulfillments NO ACTION CASCADE
+  > fk fulfillment_status_history_archive fk_fulfillment_status_history_archive_batch sales_archive_batches NO ACTION RESTRICT
+  > fk fulfillments fk_ful_active_shipment shipments NO ACTION RESTRICT
+  > fk fulfillments fk_ful_cancelled_by users NO ACTION SET NULL
+  > fk fulfillments fk_ful_created_by users NO ACTION SET NULL
+  > fk fulfillments fk_ful_customer customers NO ACTION RESTRICT
+  > fk fulfillments fk_ful_order sales_orders NO ACTION RESTRICT
+  > fk fulfillments fk_ful_picked_by users NO ACTION SET NULL
+  > fk fulfillments fk_ful_reversed_by users NO ACTION SET NULL
+  > fk fulfillments fk_ful_shipped_by users NO ACTION SET NULL
+  > fk fulfillments fk_ful_updated_by users NO ACTION SET NULL
+  > fk fulfillments fk_ful_warehouse inventory_warehouses NO ACTION RESTRICT
+  > fk fulfillments_archive fk_fulfillments_archive_batch sales_archive_batches NO ACTION RESTRICT
+  2565a3776,3778
+  > fk inventory_purchase_reversal_links fk_purchase_reversal_movement inventory_movements RESTRICT RESTRICT
+  > fk inventory_purchase_reversal_links fk_purchase_reversal_operation inventory_operation_requests RESTRICT RESTRICT
+  > fk inventory_purchase_reversal_links fk_purchase_reversal_original inventory_movements RESTRICT RESTRICT
+  2644a3858
+  > fk sales_archive_order_manifests fk_sales_archive_order_manifests_archive_batch_id sales_archive_batches NO ACTION RESTRICT
+  2685a3900,3945
+  > fk shipment_issue_details fk_issue_bin_id inventory_bins NO ACTION RESTRICT
+  > fk shipment_issue_details fk_issue_fulfillment_allocation_id fulfillment_allocations NO ACTION RESTRICT
+  > fk shipment_issue_details fk_issue_inventory_allocation_id inventory_allocations NO ACTION RESTRICT
+  > fk shipment_issue_details fk_issue_inventory_balance_id inventory_stock_balances NO ACTION RESTRICT
+  > fk shipment_issue_details fk_issue_inventory_movement_id inventory_movements NO ACTION RESTRICT
+  > fk shipment_issue_details fk_issue_inventory_operation_id inventory_operation_requests NO ACTION RESTRICT
+  > fk shipment_issue_details fk_issue_inventory_reservation_id inventory_reservations NO ACTION RESTRICT
+  > fk shipment_issue_details fk_issue_lot_id inventory_lots NO ACTION RESTRICT
+  > fk shipment_issue_details fk_issue_reversal_movement_id inventory_movements NO ACTION RESTRICT
+  > fk shipment_issue_details fk_issue_warehouse_id inventory_warehouses NO ACTION RESTRICT
+  > fk shipment_issue_details fk_shipment_issue_line shipment_lines NO ACTION RESTRICT
+  > fk shipment_issue_details_archive fk_shipment_issue_details_archive_batch sales_archive_batches NO ACTION RESTRICT
+  > fk shipment_lines fk_shipment_line_fulfillment fulfillment_lines NO ACTION RESTRICT
+  > fk shipment_lines fk_shipment_line_parent shipments NO ACTION CASCADE
+  > fk shipment_lines fk_shipment_line_sales sales_order_lines NO ACTION RESTRICT
+  > fk shipment_lines fk_shipment_line_sku item_skus NO ACTION RESTRICT
+  > fk shipment_lines fk_shipment_line_uom item_uoms NO ACTION RESTRICT
+  > fk shipment_lines_archive fk_shipment_lines_archive_batch sales_archive_batches NO ACTION RESTRICT
+  > fk shipment_reversal_details fk_rev_detail_bin_id inventory_bins NO ACTION RESTRICT
+  > fk shipment_reversal_details fk_rev_detail_inventory_reservation_id inventory_reservations NO ACTION RESTRICT
+  > fk shipment_reversal_details fk_rev_detail_inventory_reversal_movement_id inventory_movements NO ACTION RESTRICT
+  > fk shipment_reversal_details fk_rev_detail_inventory_reversal_operation_id inventory_operation_requests NO ACTION RESTRICT
+  > fk shipment_reversal_details fk_rev_detail_lot_id inventory_lots NO ACTION RESTRICT
+  > fk shipment_reversal_details fk_rev_detail_warehouse_id inventory_warehouses NO ACTION RESTRICT
+  > fk shipment_reversal_details fk_reversal_detail_issue shipment_issue_details NO ACTION RESTRICT
+  > fk shipment_reversal_details fk_reversal_detail_parent shipment_reversals NO ACTION RESTRICT
+  > fk shipment_reversal_details_archive fk_shipment_reversal_details_archive_batch sales_archive_batches NO ACTION RESTRICT
+  > fk shipment_reversals fk_reversal_completer users NO ACTION SET NULL
+  > fk shipment_reversals fk_reversal_creator users NO ACTION SET NULL
+  > fk shipment_reversals fk_reversal_shipment shipments NO ACTION RESTRICT
+  > fk shipment_reversals_archive fk_shipment_reversals_archive_batch sales_archive_batches NO ACTION RESTRICT
+  > fk shipment_status_history fk_shipment_history_actor users NO ACTION SET NULL
+  > fk shipment_status_history fk_shipment_history_parent shipments NO ACTION CASCADE
+  > fk shipment_status_history_archive fk_shipment_status_history_archive_batch sales_archive_batches NO ACTION RESTRICT
+  > fk shipments fk_shipment_address customer_addresses NO ACTION RESTRICT
+  > fk shipments fk_shipment_cancelled_by users NO ACTION SET NULL
+  > fk shipments fk_shipment_contact customer_contacts NO ACTION RESTRICT
+  > fk shipments fk_shipment_created_by users NO ACTION SET NULL
+  > fk shipments fk_shipment_customer customers NO ACTION RESTRICT
+  > fk shipments fk_shipment_order sales_orders NO ACTION RESTRICT
+  > fk shipments fk_shipment_parent fulfillments NO ACTION RESTRICT
+  > fk shipments fk_shipment_reversed_by users NO ACTION SET NULL
+  > fk shipments fk_shipment_shipped_by users NO ACTION SET NULL
+  > fk shipments fk_shipment_updated_by users NO ACTION SET NULL
+  > fk shipments fk_shipment_warehouse inventory_warehouses NO ACTION RESTRICT
+  > fk shipments_archive fk_shipments_archive_batch sales_archive_batches NO ACTION RESTRICT
+  2732a3993,4021
+  > trigger fulfillments_archive trg_fulfillments_archive_delete BEFORE DELETE 4160c0596f8c5fc046f49dba1eaad298dd1e751ce8b17b9b11e450843af46c4b
+  > trigger fulfillments_archive trg_fulfillments_archive_update BEFORE UPDATE 4160c0596f8c5fc046f49dba1eaad298dd1e751ce8b17b9b11e450843af46c4b
+  > trigger fulfillment_allocations_archive trg_fulfillment_allocations_archive_delete BEFORE DELETE 4160c0596f8c5fc046f49dba1eaad298dd1e751ce8b17b9b11e450843af46c4b
+  > trigger fulfillment_allocations_archive trg_fulfillment_allocations_archive_update BEFORE UPDATE 4160c0596f8c5fc046f49dba1eaad298dd1e751ce8b17b9b11e450843af46c4b
+  > trigger fulfillment_audit_logs_archive trg_fulfillment_audit_logs_archive_delete BEFORE DELETE 4160c0596f8c5fc046f49dba1eaad298dd1e751ce8b17b9b11e450843af46c4b
+  > trigger fulfillment_audit_logs_archive trg_fulfillment_audit_logs_archive_update BEFORE UPDATE 4160c0596f8c5fc046f49dba1eaad298dd1e751ce8b17b9b11e450843af46c4b
+  > trigger fulfillment_lines_archive trg_fulfillment_lines_archive_delete BEFORE DELETE 4160c0596f8c5fc046f49dba1eaad298dd1e751ce8b17b9b11e450843af46c4b
+  > trigger fulfillment_lines_archive trg_fulfillment_lines_archive_update BEFORE UPDATE 4160c0596f8c5fc046f49dba1eaad298dd1e751ce8b17b9b11e450843af46c4b
+  > trigger fulfillment_line_reservation_claims_archive trg_fulfillment_line_reservation_claims_archive_delete BEFORE DELETE 4160c0596f8c5fc046f49dba1eaad298dd1e751ce8b17b9b11e450843af46c4b
+  > trigger fulfillment_line_reservation_claims_archive trg_fulfillment_line_reservation_claims_archive_update BEFORE UPDATE 4160c0596f8c5fc046f49dba1eaad298dd1e751ce8b17b9b11e450843af46c4b
+  > trigger fulfillment_status_history_archive trg_fulfillment_status_history_archive_delete BEFORE DELETE 4160c0596f8c5fc046f49dba1eaad298dd1e751ce8b17b9b11e450843af46c4b
+  > trigger fulfillment_status_history_archive trg_fulfillment_status_history_archive_update BEFORE UPDATE 4160c0596f8c5fc046f49dba1eaad298dd1e751ce8b17b9b11e450843af46c4b
+  > trigger fulfillment_allocations trg_ful_allocation_insert BEFORE INSERT db4c825457ec8350be74679b1d26808c98264a52d14a9262c2b710938f79357c
+  > trigger fulfillment_allocations trg_ful_allocation_update BEFORE UPDATE 20e5dd2ad24ae4a9fc7d565b6802a125d4075391b80f7c33c3f41de0cd533cba
+  > trigger fulfillment_audit_logs trg_ful_audit_delete BEFORE DELETE 4160c0596f8c5fc046f49dba1eaad298dd1e751ce8b17b9b11e450843af46c4b
+  > trigger fulfillment_audit_logs trg_ful_audit_update BEFORE UPDATE 4160c0596f8c5fc046f49dba1eaad298dd1e751ce8b17b9b11e450843af46c4b
+  > trigger fulfillment_line_reservation_claims trg_ful_claim_insert BEFORE INSERT b4aead64a169158ca76eec2b93592acd8f53df7ddeaca6260b502739b720c35b
+  > trigger fulfillment_line_reservation_claims trg_ful_claim_update BEFORE UPDATE 9709afce315d3c1ce22faf0c09ee52f84d33f095473e5099330a5512b589bca5
+  > trigger fulfillment_export_jobs trg_ful_export_update BEFORE UPDATE c7639ef423a664b6a393433751cd3e31d9485dedb6915b4047e4749d40e07c2c
+  > trigger fulfillments trg_ful_header_insert BEFORE INSERT f395f6e13109580320d154516b379a8226f227f6561303662e0d13d60abc74d5
+  > trigger fulfillments trg_ful_header_update BEFORE UPDATE 344f30010d6412569bc4e8c17bd5d69ae5c7631fe74adc25aca3cbb71de5f6a0
+  > trigger fulfillment_status_history trg_ful_history_delete BEFORE DELETE 4160c0596f8c5fc046f49dba1eaad298dd1e751ce8b17b9b11e450843af46c4b
+  > trigger fulfillment_status_history trg_ful_history_update BEFORE UPDATE 4160c0596f8c5fc046f49dba1eaad298dd1e751ce8b17b9b11e450843af46c4b
+  > trigger fulfillment_lines trg_ful_line_insert BEFORE INSERT f59044b64023f0865215edd81e8c84cbe67742b7a11a2e1bc647aa26a1de0926
+  > trigger fulfillment_lines trg_ful_line_update BEFORE UPDATE 19edf6c422780fdfefed936be2eb2b8c4cd71a6953daec55ad44e7d2d729fc78
+  > trigger fulfillment_operation_requests trg_ful_operation_delete BEFORE DELETE 199d8a1bb2efa552efd00ae466c199aef049014a42660ced75e356550506b71c
+  > trigger fulfillment_operation_requests trg_ful_operation_update BEFORE UPDATE 2e8739d4ba8eab9ade997e9bf2b6a34a35c47c5e0e88cb3b4cfaf5bee3f777fc
+  > trigger fulfillment_document_sequences trg_ful_sequence_delete BEFORE DELETE 1225facf7fc4293bfd4ed7b815738298104c239eb6737e1f134abb4f2193efb3
+  > trigger fulfillment_document_sequences trg_ful_sequence_update BEFORE UPDATE d416e542f41b903f41c088bc7907c17c7a47f8a8ff853e7941d636c3ea535c2d
+  2736a4026,4027
+  > trigger inventory_purchase_reversal_links trg_purchase_reversal_links_delete BEFORE DELETE 8c2cb81ceed221736a61b50a145803fa43f27ca161038d78787cdf3db5b5ab8d
+  > trigger inventory_purchase_reversal_links trg_purchase_reversal_links_update BEFORE UPDATE 8c2cb81ceed221736a61b50a145803fa43f27ca161038d78787cdf3db5b5ab8d
+  2746c4037,4064
+  < tables 94
+  ---
+  > trigger shipments_archive trg_shipments_archive_delete BEFORE DELETE 4160c0596f8c5fc046f49dba1eaad298dd1e751ce8b17b9b11e450843af46c4b
+  > trigger shipments_archive trg_shipments_archive_update BEFORE UPDATE 4160c0596f8c5fc046f49dba1eaad298dd1e751ce8b17b9b11e450843af46c4b
+  > trigger shipment_status_history trg_shipment_history_delete BEFORE DELETE 4160c0596f8c5fc046f49dba1eaad298dd1e751ce8b17b9b11e450843af46c4b
+  > trigger shipment_status_history trg_shipment_history_update BEFORE UPDATE 4160c0596f8c5fc046f49dba1eaad298dd1e751ce8b17b9b11e450843af46c4b
+  > trigger shipments trg_shipment_insert BEFORE INSERT b87ffbf280f5c690e03e1afb217505af4597515791e3982d4c23fa1db0975ff8
+  > trigger shipment_issue_details trg_shipment_issue_delete BEFORE DELETE 98a4a669f2b1cf180bd58122d79a7ddb238795b333df59e7d7e48e5a6802f10a
+  > trigger shipment_issue_details_archive trg_shipment_issue_details_archive_delete BEFORE DELETE 4160c0596f8c5fc046f49dba1eaad298dd1e751ce8b17b9b11e450843af46c4b
+  > trigger shipment_issue_details_archive trg_shipment_issue_details_archive_update BEFORE UPDATE 4160c0596f8c5fc046f49dba1eaad298dd1e751ce8b17b9b11e450843af46c4b
+  > trigger shipment_issue_details trg_shipment_issue_insert BEFORE INSERT e4ed6fd5ca5813075bdae3c0bc8166d0126afdad62c1685f30d2d08a1cfb8e5c
+  > trigger shipment_issue_details trg_shipment_issue_update BEFORE UPDATE 81507eadde8f30cc91408abc6f9256adc4b6c5dab280b1183470618fd3c56a80
+  > trigger shipment_lines_archive trg_shipment_lines_archive_delete BEFORE DELETE 4160c0596f8c5fc046f49dba1eaad298dd1e751ce8b17b9b11e450843af46c4b
+  > trigger shipment_lines_archive trg_shipment_lines_archive_update BEFORE UPDATE 4160c0596f8c5fc046f49dba1eaad298dd1e751ce8b17b9b11e450843af46c4b
+  > trigger shipment_lines trg_shipment_line_insert BEFORE INSERT ad7a1636a595d9a89d236348e9c17a92b83e4ce25e89046e3d37144be38619db
+  > trigger shipment_lines trg_shipment_line_update BEFORE UPDATE 2fac416de982f1f895bb3fc392d965471544aa40eb4c173bc114519cc02ea19d
+  > trigger shipment_reversals_archive trg_shipment_reversals_archive_delete BEFORE DELETE 4160c0596f8c5fc046f49dba1eaad298dd1e751ce8b17b9b11e450843af46c4b
+  > trigger shipment_reversals_archive trg_shipment_reversals_archive_update BEFORE UPDATE 4160c0596f8c5fc046f49dba1eaad298dd1e751ce8b17b9b11e450843af46c4b
+  > trigger shipment_reversals trg_shipment_reversal_delete BEFORE DELETE 805e082091704e34879e32c909ba9711f5a8d34c4d1790ae80066dc255c96e17
+  > trigger shipment_reversal_details_archive trg_shipment_reversal_details_archive_delete BEFORE DELETE 4160c0596f8c5fc046f49dba1eaad298dd1e751ce8b17b9b11e450843af46c4b
+  > trigger shipment_reversal_details_archive trg_shipment_reversal_details_archive_update BEFORE UPDATE 4160c0596f8c5fc046f49dba1eaad298dd1e751ce8b17b9b11e450843af46c4b
+  > trigger shipment_reversal_details trg_shipment_reversal_detail_delete BEFORE DELETE 4160c0596f8c5fc046f49dba1eaad298dd1e751ce8b17b9b11e450843af46c4b
+  > trigger shipment_reversal_details trg_shipment_reversal_detail_insert BEFORE INSERT e3dbc4160d691085c64ec067263d0ca0142d3839d6afb08df3e861d4bc2d087f
+  > trigger shipment_reversal_details trg_shipment_reversal_detail_update BEFORE UPDATE 4160c0596f8c5fc046f49dba1eaad298dd1e751ce8b17b9b11e450843af46c4b
+  > trigger shipment_reversals trg_shipment_reversal_insert BEFORE INSERT 20b26f9fba531894947cbc5743f610aafeee8063d204ba41d26ce70ded49456d
+  > trigger shipment_reversals trg_shipment_reversal_update BEFORE UPDATE 10ee21f487d8b6e846e9e8b4f0eeada243acd397d4f41398810b45820dc294ae
+  > trigger shipment_status_history_archive trg_shipment_status_history_archive_delete BEFORE DELETE 4160c0596f8c5fc046f49dba1eaad298dd1e751ce8b17b9b11e450843af46c4b
+  > trigger shipment_status_history_archive trg_shipment_status_history_archive_update BEFORE UPDATE 4160c0596f8c5fc046f49dba1eaad298dd1e751ce8b17b9b11e450843af46c4b
+  > trigger shipments trg_shipment_update BEFORE UPDATE dada85de261d4b15e05dbf59882dddb4b3d6185bacbbbe42229a5851f84349cc
+  > tables 124
+after the upgrade: the orphan SKU relation is refused (DEF-029 fixed); no business data changed
+0103 numbered the existing rows in display order: addresses 1,2; contact 1; every other column of those rows unchanged
+current server: started, health 200, stopped (port closed)
+current reads the Supplier rows over HTTP: list 200 (RH-001 listed), detail 200 (香港貿易有限公司, 2 addresses, 1 contact), sku-relations 200 (1 row)
+older-rolled-back server: started, health 200, stopped (port closed)
+older-rolled-back reads the Supplier rows over HTTP: list 200 (RH-001 listed), detail 200 (香港貿易有限公司, 2 addresses, 1 contact), sku-relations 200 (1 row)
+
+=== C. Rolling back across 0103 to the release just before it (e6398b70), by the procedure in 0103's header
+pre-0103-on-0103-schema server: refused to start, as expected (Supplier startup self-check failed)
+  ALTER TABLE supplier_addresses DROP COLUMN sort_order;
+  ALTER TABLE supplier_contacts DROP COLUMN sort_order;
+  DELETE FROM fr_schema_migrations WHERE name = 'migrations/0103_add_supplier_party_sort_order.js';
+after the manual steps: both tables back to their pre-0103 columns and indexes, 0103 out of the ledger, every row kept
+pre-0103-rolled-back server: started, health 200, stopped (port closed)
+pre-0103-rolled-back reads the Supplier rows over HTTP: list 200 (RH-001 listed), detail 200 (香港貿易有限公司, 2 addresses, 1 contact), sku-relations 200 (1 row)
+rolling forward again with the current release:
+  applied migrations/0103_add_supplier_party_sort_order.js
+0103 applied again and the rows renumbered in display order (an order users set before the rollback is not restored)
+current-rolled-forward server: started, health 200, stopped (port closed)
+current-rolled-forward reads the Supplier rows over HTTP: list 200 (RH-001 listed), detail 200 (香港貿易有限公司, 2 addresses, 1 contact), sku-relations 200 (1 row)
+
+=== D. Similar-name exception list (HD-057 A), current release, on a sample legacy file
+{"threshold":0.85,"mode":"create_only","rows":4,"invalidNames":0,"keptNames":0,"existingMatches":1,"identicalRows":0,"fileMatches":1,"fileMatchesNotListed":0,"output":"$SCRATCH/t51reh2/t51/similar.csv"}
+﻿row,supplierCode,supplierName,matchKind,matchRow,matchSupplierId,matchSupplierCode,matchSupplierName,score,exact
+1,L-001,香港貿易有限公司,existing,,1,RH-001,香港貿易有限公司,1.0000,true
+3,L-003,Contoso Trading,file,4,,L-004,Contoso Trading Ltd,0.8750,false
+
+=== all checks passed; the scratch databases are dropped on exit

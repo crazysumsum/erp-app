@@ -1,0 +1,2 @@
+{"timestamp":"2026-10-28T11:53:00.080+08:00","level":"warn","event":"supplier.write.deadlock_retried","message":"Supplier write retried once after a deadlock","context":{"operation":"supplier.create","requestId":"dd9239a5-224a-43ff-bf45-f939e355a5d6"}}
+{"timestamp":"2026-10-28T11:53:06.523+08:00","level":"warn","event":"supplier.write.deadlock_retried","message":"Supplier write retried once after a deadlock","context":{"operation":"supplier.create","requestId":"84a15cd1-d076-42c0-9b59-9c951add3237"}}

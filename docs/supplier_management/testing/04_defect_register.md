@@ -127,7 +127,7 @@ Found while preparing the TC-131 (OPS-004) runner. On a freshly migrated scratch
 
 ## DEF-034 — LOW
 
-The first run of the performance runner (2026-10-22, TC-101) found a 10,000-row import, run alongside a 50-user load on 100k seeded Suppliers, that applied 9,999 rows. One row ended not applied. The job's counts stayed consistent, so the row was reported as failed rather than lost silently, but every row in that file is a valid create. The cause is unknown: that first runner version deleted the tools' reports. The next three runs applied 10,000 of 10,000, and T50's earlier runs did too. The runner now keeps the tools' reports. While the import runs, it also polls for failed rows and records their stored errors (`evidence.importFailedRows`), because the import tool deletes its job and rows when it finishes. A recurrence will therefore show the reason. REPORT_ONLY: no product change.
+The first run of the performance runner (2026-10-22, TC-101) found a 10,000-row import, run alongside a 50-user load on 100k seeded Suppliers, that applied 9,999 rows. One row ended not applied. The job's counts stayed consistent, so the row was reported as failed rather than lost silently, but every row in that file is a valid create. The cause is unknown: that first runner version deleted the tools' reports. The next three runs applied 10,000 of 10,000, and T50's earlier runs did too. The runner now keeps the tools' full reports in `supplier-performance-details/` next to its own output. The import tool deletes its job and rows when it finishes, so before that it records up to 20 not-applied rows with their stored errors (`report.notApplied`, HD-122 A), and the runner copies them into its evidence (`evidence.import.notApplied`). A recurrence will therefore show the reason. Both runs on 2026-10-27 also applied 10,000 of 10,000. (Corrected 2026-10-27, REV-128 R4: this paragraph used to name `evidence.importFailedRows`, a poll that was removed in `6f413337`.) **2026-10-28, after the DEF-048 fix:** the two re-test imports at `f62651d8` also applied 10,000 of 10,000. PR #298 removed the create-path name-gram DELETE, which is the hypothesised route by which an import create could lose a deadlock. If the hypothesis holds, DEF-034 cannot recur by that route. The hypothesis is unproven, so DEF-034 stays OPEN. **Earlier on 2026-10-28:** both formal runs, code-identical to `a98e50e7`, applied 10,000 of 10,000. The REGRESSION run's online creates hit 500s under the import (DEF-048). The captured deadlock is in the name grams, and the online side lost it. If the import side lost such a deadlock, it would leave one row not applied, so this is a weak hypothesis for DEF-034, still unproven. REPORT_ONLY: no product change.
 
 ## DEF-035 — MEDIUM
 
@@ -368,6 +368,171 @@ Found while writing UAT-030. SEC-014 and design §4 (system-admin) say that a `s
   - An integration test on real MySQL pins both bucket edges, the counted actions, and a non-admin role versus `system-admin`.
   - Mutants killed: no report on update or on reveal; everyone reported; the report moved inside the transaction (create, update, reveal); no alert; the role join inverted or reduced to "any role"; the window widened; either bucket edge moved.
   - On the real backend, UAT-030 passes, including its alert step.
+
+## DEF-048 — MEDIUM (closed 2026-10-28)
+
+Found by the formal run in TEST_AND_VERIFY (HD-151 A). The run was `supplier-performance` at REGRESSION, on commit `7bbf547d` (code-identical to the mode entry commit `a98e50e7`), with evidence `evidence/20261028T032858-19847f4da7f2`.
+
+- **What failed:** TC-101 (NFR-001 while a 10,000-row import runs alongside 50 online users). It failed two checks:
+  - **Online Supplier create:** HTTP 500 for 6 of 291 requests (error rate 2.06%, limit 1%; p99 2,532 ms, max 3,982 ms). Every other operation passed.
+  - **`import.inside_measured_window`:** the import ended at 03:40:24.195Z, after the load window closed at 03:40:21.338Z. The import took 114,558 ms (precheck plus execute 121,375 ms), against 66,267 ms (72,572 ms) at TECHNICAL. With zero 500s, TC-101 would still have failed (REV-131 R1).
+  - The import itself applied 10,000 of 10,000, with an empty `notApplied` list.
+- **Not every time:**
+  - The TECHNICAL run 17 minutes earlier passed. Same code and data volume; online create had 0 errors, and overall p95 was 267 ms.
+  - TC-101 also passed in both developer runs on 2026-10-27.
+  - **The host was not quiescent** (REV-131 O3):
+    - load average rose from 4.1 to 11.9 during the REGRESSION run, against 3.1 to 8.4 during TECHNICAL;
+    - another module's mysqld (Sales capacity runtime, started 08:51 HKT) ran on the same host;
+    - the slower import widens the window in which online creates and import rows overlap.
+- **Mechanism (captured, not yet tied to each 500):**
+  - The deadlock: InnoDB's latest detected deadlock, kept in `def048_innodb_deadlock_2026-10-28.txt`. It occurred at 11:40:20 HKT (03:40:20Z), inside this run's import, in this run's schema `erp_t51_rh_51c55efa`.
+    - Two transactions were inserting `supplier_name_grams` rows for adjacent new Suppliers (ids 110468 and 110469).
+    - Each held an X lock on the supremum of that table's PRIMARY index. Each waited for its own insert-intention lock, which the other's supremum lock blocked.
+  - Where the supremum lock comes from: `replaceSupplierNameGrams` (`supplierDuplicateCandidates.js:30-31`) first runs `DELETE FROM supplier_name_grams WHERE supplier_id = ?`. For a Supplier that has just been created, that id is past the end of the index. Under REPEATABLE READ, the DELETE then takes a next-key lock on the supremum, so two such creates at once deadlock in exactly the recorded shape.
+  - Who won and who lost:
+    - Transaction (1), with 10,451 row locks, is very likely the import's row transaction. `processNextRow` reads the next row with `FOR UPDATE` over the job's rows (`SupplierImportService.js:652-658`). That is inference: thread ids cannot be mapped.
+    - InnoDB rolled back the light transaction (2), which fits an online create.
+  - Online create retries once on `ER_LOCK_DEADLOCK` (DEF-031, `SupplierAdminService.js:306`); losing twice propagates as a 500.
+  - The longest 500 took 3.98 s; `innodb_lock_wait_timeout` is 50 s, so the 500s are not lock-wait timeouts.
+- **Not proven:** the benchmark deletes its temporary directory, server logs included (`benchmarkSupplierManagement.js:344`). So the 500s' own errors and the `supplier.write.deadlock_retried` warnings are lost, and no 500 is tied to a particular deadlock. This is the same evidence loss that left DEF-034's cause unknown. The diagnosis under HD-152 A keeps those logs.
+- **Link to DEF-034 (weak hypothesis):** the import treats `ER_LOCK_DEADLOCK` as busy and leaves that row not applied (`SupplierImportService.js:161`). If the import side lost this deadlock, the result would be DEF-034's 9,999 of 10,000. InnoDB rolls back the lighter transaction, though, and late in an import that is rarely the import's, so this explains DEF-034 only if it happened early in the import. Not proven.
+- **Diagnosis under HD-152 A (2026-10-28, 03:51–04:02Z): the deadlock mechanism is proven; the 500 is tied to it by accounting.**
+  - **Setup:**
+    - A throwaway worktree at `a98e50e7`, with one uncommitted change, `benchmark-keep-logs.diff`: the benchmark keeps its temporary directory, server logs included. The worktree has been removed.
+    - `innodb_print_all_deadlocks=ON` on the throwaway mysqld from 03:58:28Z. `lock_deadlocks` read 256 then and 274 after the run. (276 later: REV-132's two deliberate deadlocks.)
+  - **Files** in `def048_diagnosis_2026-10-28/`, with local paths masked:
+    - `innodb-deadlocks.txt`: the error log from the first deadlock print on, without the redo-log warnings. This MySQL 26.7 instance prints no header, timestamp or victim line for each deadlock.
+    - `app-load.log` and `app-load-during-import.log`: retry warnings and errors.
+    - `perf-1.stdout`: the runner's report, including the import window.
+    - `run.sh`.
+  - **Every deadlock is the name-gram one.** All 18 are on the supremum of `supplier_name_grams` PRIMARY, each between two `INSERT INTO supplier_name_grams` for new Supplier ids. The ids are usually adjacent; a retry uses up an id, as in #5 (103660 and 103662).
+  - **When they happened.** All 18 fell in the load-during-import phase, warm-up included. The import ran from 04:00:35.847Z to 04:01:53.018Z. Deadlock #1 came 3.2 s before it, and #17 and #18 came 24–28 s after; one more retry, 142 ms after the import ended, is borderline. Those 3 are InnoDB's direct proof that the deadlock happens with no import running.
+  - **Who was involved**, classified by connection, not by lock count (REV-132 R2):
+    - **12 paired the import row transaction with an online create.** The import is MySQL thread 23736, and its gram hashes have their own prefixes.
+    - **6 paired two online creates:** #1, #4, #5, #11, #17 and #18.
+    - The import's per-row lock count grows across the run (65 → 1,440 → … → 10,618), so a lock-count threshold misclassifies early rows.
+    - Separately, the mixed load phase with no import logged 2 `supplier.write.deadlock_retried`, at 03:53Z, before the print was on and before the 256 reading.
+  - **The 500 is a second deadlock.**
+    - **The accounting:** the import never lost (10,000 applied, 0 failed), and every one of the 36 transactions is a new-id INSERT. The app logged 17 `supplier.write.deadlock_retried` and one 500, so 18 = 17 first losses + 1 second loss.
+    - **The failing request** was `d70e765c`. It started at 12:01:02.986 HKT, retried after a deadlock at .005, and failed again at .007 in `replaceSupplierNameGrams`'s INSERT (`supplierDuplicateCandidates.js:36`), which matches "insert intention waiting".
+    - **InnoDB shows the same request losing twice:**
+      - deadlocks #4 and #5 share the surviving transaction 4431558;
+      - in #5, the same thread 23733 returns with id 103662, after its first id, 103661, was rolled back.
+      
+      Both of its deadlocks were online vs online.
+    - The app log does not carry the MySQL error code, so "second deadlock" rests on this accounting.
+    - The handler line's `"responseCode":200` is `res.statusCode` before the error handler runs. The 500 is shown by the runner's errorRate (1 of 9,883) and by `DATABASE_OPERATION_FAILED` mapping to 500.
+  - **The import never lost** in this run, so the DEF-034 link stays unproven.
+  - **This run passed TC-101,** with 1 error, within the 1% limit. The defect shows as a failure only when several creates lose twice, as in the REGRESSION run. A TC-101 pass alone therefore cannot show a fix.
+  - **Isolated reproduction (REV-132)**, on a copy of the real table DDL in a throwaway schema, since dropped:
+    - DELETE-then-INSERT for new ids 101 and 102: deadlock 1213, with the same lock picture as above.
+    - Plain INSERTs, in both orders: no wait and no deadlock, because insert-intention locks do not conflict with each other.
+    - A plain create against a rename of the newest Supplier: no deadlock.
+    - An update against an update on adjacent existing ids: still a deadlock, through a gap lock. That is the residual risk on the update path, which the existing retry covers.
+  - **Open observation, not proven (REV-132 O3).** The import row transaction's lock count grows linearly with the rows applied. That fits `processNextRow`'s `… status IN ('valid','warning') ORDER BY row_number LIMIT 1 FOR UPDATE` (`SupplierImportService.js:652-658`) locking the applied rows it scans, which would be O(n²) over an import. It would explain why the import is never the victim, and it may bear on TC-101's `import.inside_measured_window` failure. An EXPLAIN on a throwaway database would settle it.
+  - **Fix options** are put to the Product Owner as HD-153.
+
+- **Before HD-153 (REPORT_ONLY):** no product change in TEST_AND_VERIFY. The route was HD-152 (A: diagnose first); the remediation route is put to the Product Owner next. The severity, MEDIUM, is proposed: the 500s roll back with no data loss, and the user can retry.
+
+**CLOSED 2026-10-28 after the formal re-test.**
+- The fix merged as PR #298 (`f62651d8`).
+- **Targeted re-test.** At TECHNICAL and REGRESSION (evidence `20261028T065924-ff2600591596`, `20261028T071628-f0de8491fc9a`), TC-101 passed with:
+  - 0 deadlocks in both loads, with deadlock detection and printing ON;
+  - online error rate 0 during the import;
+  - the import inside the window: precheck plus execute 78.1 s and 83.7 s (execute alone 71.8 s and 77.4 s).
+- **The online server's kept warnings** hold no `deadlock_retried`. The import runs in its own worker process and keeps no warnings file, but the deadlock counter covers both processes.
+- **Impact regression.** `createSupplierInTransaction` serves online and import create, so the regression is the Supplier server suite, which includes the new discriminating integration test. It passed 732 of 732 at both stages (`20261028T065312-10bcf7528c57`, `20261028T071029-834b3ecdfd95`), and `supplier-security` did too (`20261028T065601-39b9b1210994`, `20261028T071313-13f3281c06c6`).
+- **CI.** PR #298 run 40645193058 on head `106ef26c`: all 13 checks success.
+- See `07_technical_acceptance_report.md`.
+
+**Fixed under HD-153 A (REMEDIATE_AND_RETEST).**
+- **Fix:** the create path (`SupplierAdminService.createSupplierInTransaction`, used by online create and by import create) calls `replaceSupplierNameGrams(…, { isNew: true })`, which skips the `DELETE` for a Supplier made in the same transaction. The update path keeps its `DELETE` and the existing deadlock retry. Update against update on adjacent ids can still deadlock, rarely (REV-132).
+- **Tests:**
+  - **Integration:** two open transactions each create a new Supplier and write its grams, and the second must not wait.
+    - A control in the same file, the old DELETE-first behaviour, must time out on lock wait.
+    - Before the fix the new case failed (`ER_LOCK_WAIT_TIMEOUT`) and the control passed; after the fix both pass.
+  - **Unit:** create passes `{ isNew: true }`, and update passes nothing. Removing `isNew` from the call site turns the test red.
+- **The re-test can now fail on the defect:**
+  - The performance runner reads InnoDB's `lock_deadlocks` before and after the mixed load and the load during the import. It fails TC-128 (`db.no_deadlocks_mixed_load`) and TC-101 (`db.no_deadlocks_during_import`) on any deadlock.
+  - The counter covers the whole instance, so the runner needs its own mysqld, and it refuses to run if the metric is disabled.
+  - **It also refuses to start unless `innodb_deadlock_detect` and `innodb_print_all_deadlocks` are both ON** (REV-133 R1).
+    - With detection off, the counter stays at 0 and the checks would pass without measuring anything.
+    - With printing off, a FAIL could not be traced to name-gram deadlocks.
+    - The runner records both settings and the absolute counter values in its evidence.
+    - Checked on the throwaway mysqld: with printing OFF, the runner failed every case in under a second, before creating its schema; the setting was then turned back ON.
+  - The warnings file keeps at most 200 lines plus a count, with the repository path replaced by `$REPO`. This was added after the developer runs below, and the formal runs will be its first use.
+  - The benchmark now keeps the server's warn and error lines next to its report (`<report>.warnings.log`).
+- **Developer runs** on the throwaway mysqld, 2026-10-28:
+  - Lint passed, and the Supplier server suite passed 732 of 732.
+  - With the fix, the performance runner found 0 deadlocks in the mixed load and 0 during the import; every local case passed. The import took 82.8 s, inside the window.
+  - With the fix reverted in place (backed up, then restored and compared): 7 and 19 deadlocks, and 26 `deadlock_retried` warnings in the kept log. TC-101 and TC-128 **failed, only on the new deadlock checks**: the error rate was 0, because the retries hid the deadlocks. So without the new checks, the defect would have passed.
+
+## DEF-049 — LOW
+
+Found by diagnosis in TEST_AND_VERIFY, REPORT_ONLY, on 2026-10-29 at `ef5a61a4`; the diagnosis observation's `7f47f619` is code-identical, since it changed only docs. It follows up REV-132 O3, the observation in DEF-048 that the import's per-row lock count grows across the run (65 → 1,440 → … → 10,618). Reviewed by REV-135, whose findings are folded in below.
+
+**What happens:** each import row transaction locks every row of the job that has already been applied.
+- `processNextRow` picks the next row with `WHERE job_id = ? AND status IN ('valid', 'warning') ORDER BY row_number LIMIT 1 FOR UPDATE` (`SupplierImportService.js:652-658`).
+- The optimizer reads that through PRIMARY `(job_id, row_number)` and filters on `status`, so it reads every row already applied before it finds the first pending one.
+- Under REPEATABLE READ, which the app sets explicitly, `FOR UPDATE` locks every row it reads, matching or not, until commit.
+- So the transaction for row k+1 reads about k+1 index entries and holds about k+1 record locks. The extra locks beyond that are page supremum locks, about one per 100 rows. Over a whole import that is O(n²) reads.
+
+**Measured** on the throwaway mysqld 3450 (MySQL 26.7.0, REPEATABLE READ). The files are in `def049_diagnosis_2026-10-29/`, and its `README.md` describes each one.
+- **Setup:** a scratch schema with the exact `0062` table, minus the foreign key to the jobs table. Leaving out the foreign key changes no index, because `job_id` is the PRIMARY prefix.
+  - Job 1 has 10,000 rows, 10% of them `warning`. Job 2 has 10,000 rows.
+  - For each k, rows 1..k of job 1 are `applied` and `ANALYZE TABLE` is run.
+  - Each pick runs in its own transaction. Its own record locks are counted from `performance_schema.data_locks`, and its reads from `Handler_read_*`.
+- **The current query** (`out-v2.txt`):
+  - At k = 0, 100, 1,000, 5,000 and 9,000 it read 1, 101, 1,001, 5,001 and 9,001 entries and held 1, 101, 1,011, 5,056 and 9,100 locks, all through PRIMARY.
+  - This is consistent with the 10,618 row locks in the DEF-048 print near the end of a 10,000-row import, which also counts `applyRow`'s own locks. That print (`def048_diagnosis_2026-10-28/innodb-deadlocks.txt:393`) shows 720 lock structs and a 90,232-byte lock heap.
+  - The plan switches to `idx_supplier_import_row_status` only in the last few rows (by k = 9,995).
+  - The first run's figure of "about 2k reads" was wrong: its counter included the probe's own scan (REV-135 L1).
+- **Cost:**
+  - One pick took 0.21 ms at k = 0 and 2.26 ms at k = 9,000 (200 runs each, `time-out.txt`). That is about 0.23 µs per applied row, roughly linear (1.40 ms at k = 5,000).
+  - Summed over a 10,000-row import, the extra cost is about 11 s on this quiet host.
+  - At the 50,000-row ceiling of `import.maxRows` (the default is 10,000), it would be about 4.75 minutes. That is an extrapolation, not a measurement.
+
+**TC-101's window (REV-135 M2).** TC-101 has two time checks:
+- `import.within_10_minutes`: precheck plus execute must take at most 10 minutes.
+- `import.inside_measured_window`: upload, precheck and execute must end inside the 120 s load window (`supplierPerformanceVerdicts.js:96-101`).
+
+The margins are taken from each run's `supplier-performance-details/`:
+
+| Run | Import start, after the window opens | Upload + precheck + execute | Margin at window close |
+|---|---|---|---|
+| Re-test, TECHNICAL | 1.1 s | 78.1 s | 40.7 s |
+| Re-test, REGRESSION | 1.2 s | 83.8 s | 35.1 s |
+| First run, REGRESSION (DEF-048 FAIL) | 1.5 s | 121.4 s | **−2.9 s** |
+
+- That failed run was about 1.5× slower than the re-test on a busy host, and DEF-049's share slows down with it. So DEF-049 plausibly contributed more than the 2.9 s miss. That is not proven: DEF-048's name-gram deadlocks were present in that run too.
+- REV-132 O3 asked exactly this question. The answer: plausible, not proven.
+- With DEF-049 present, TC-101's window check has about 35–41 s of headroom on a quiet host. It may fail on a slower host at release re-runs.
+
+**What it does not do:**
+- It loses no data and produces no wrong counts.
+- **Locks inside the job do not block other work.**
+  - Every product path that writes a job's rows first takes that job's row `FOR UPDATE`: cancel, expire, revoke, row failure, staging and the claims (`SupplierImportService.js:328, 416, 465, 519, 548, 601, 650, 695, 776, 856`). So those paths are already serialised behind the row transaction.
+  - Reads of results are non-locking.
+  - The only writer that skips the job lock is a benchmark cleanup, `server/scripts/benchmarkSupplierImport.js:186`.
+- **One exception, already present today:** once the plan switches near the end of a job, and at the final empty pick, the current query also locks the first index entry after its range (`other_job_locks=1` at k = 9,995 and 9,999 in `out-v2.txt`). That entry can belong to the next job. The lock lasts only for those last picks.
+- DEF-049 is not the cause of DEF-048, whose deadlock was on the name grams.
+
+**Fix candidates.** These are measured, not designed. The design belongs in IMPLEMENT if HD-154 chooses to fix.
+- **`FORCE INDEX (idx_supplier_import_row_status)` on the current `IN` query:** worse. The two `status` ranges are not ordered by `row_number` together, so it sorts and locks every pending row (20,017 locks at k = 0 in `out.txt`).
+- **An equality on one status without the hint:** the optimizer still chooses PRIMARY. The plan switches only between k = 5,000 and 7,500 (`out.txt`, `time-out.txt`).
+- **One equality per status with `FORCE INDEX`, taking the lower `row_number` (REV-135 M1: rejected).**
+  - Each lookup reads 1 entry and holds 1–3 locks.
+  - But when a status has no pending row, the empty lookup takes a next-key lock on the first index entry after it. `'warning'` sorts last within a job, so this happens on every pick of an import with no warnings.
+  - That entry is the next job's, or the supremum. While it is held, staging a newer job's rows waits: part 2 of `out-v2.txt` shows `fx-warning` making the next job's INSERT time out (`ER_LOCK_WAIT_TIMEOUT` after 2 s), against an immediate insert in the control.
+- **REV-135's alternative (`alt`): measured best.**
+  - It picks the row number with the two non-locking forced-index lookups, then locks that row with `WHERE job_id = ? AND row_number = ? FOR UPDATE`.
+  - That is a unique equality, so it takes a record lock only, with no gap. It reads 3 entries and holds 1 lock at every k, and it did not block the next job's staging.
+  - Two things for IMPLEMENT to confirm:
+    - the read-view timing: the first consistent read must come after the job lock, so the lookup sees every committed writer;
+    - that the existing `status IN ('valid', 'warning')` check on the UPDATE (line 675) still fences a row that changed in between.
+  - The IMPLEMENT test must have a second job staging at the same time.
+
+**Decision required (HD-154):** fix now, defer, or accept. See the ledger.
 
 ## HD-116 A: dispositions (2026-10-21)
 

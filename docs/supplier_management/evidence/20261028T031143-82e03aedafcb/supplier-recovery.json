@@ -1,0 +1,14 @@
+{
+  "tests": [
+    {
+      "name": "TC-133 local full-module backup and isolated restore: table and file reconciliation, smoke, key ring",
+      "id": "TC-133",
+      "status": "PASS"
+    },
+    {
+      "name": "TC-133 production restore drill: RTO within 4 hours and RPO within 15 minutes",
+      "id": "TC-133",
+      "status": "NOT_RUN"
+    }
+  ]
+}

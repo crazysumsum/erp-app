@@ -15,10 +15,12 @@ try {
   if (list.status !== 200 || !found) throw new Error(`list ${list.status}: RH-001 not listed`);
   const detail = await h.send(user, h.route("GET /api/v1/suppliers/:id"), { ids: { id: found.id } });
   if (detail.status !== 200 || detail.json.data.supplierName !== "香港貿易有限公司") throw new Error(`detail ${detail.status}`);
+  const { addresses = [], contacts = [] } = detail.json.data;
+  if (addresses.length !== 2 || contacts.length !== 1) throw new Error(`detail: ${addresses.length} addresses, ${contacts.length} contacts`);
   const relations = await h.send(user, h.route("GET /api/v1/suppliers/:id/sku-relations"), { ids: { id: found.id } });
   const rows = relations.json?.data?.items ?? relations.json?.data ?? [];
   if (relations.status !== 200 || rows.length !== 1) throw new Error(`sku-relations ${relations.status}: ${rows.length} rows`);
-  console.log(`list 200 (RH-001 listed), detail 200 (${detail.json.data.supplierName}), sku-relations 200 (${rows.length} row)`);
+  console.log(`list 200 (RH-001 listed), detail 200 (${detail.json.data.supplierName}, 2 addresses, 1 contact), sku-relations 200 (${rows.length} row)`);
 } catch (error) {
   failure = error;
 } finally {

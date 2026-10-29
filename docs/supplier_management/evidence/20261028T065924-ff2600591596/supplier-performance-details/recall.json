@@ -1,0 +1,105 @@
+{
+  "command": "/Users/sam/Documents/workspace/erp-supplier-ta2/server/scripts/measureSupplierDuplicateRecall.js --database=erp_t51_rh_019c5750 --queries=200 --seed=50 --output=/Users/sam/Documents/workspace/erp-supplier-ta2/docs/supplier_management/evidence/20261028T065924-ff2600591596/supplier-performance-details/recall.json",
+  "database": "erp_t51_rh_019c5750",
+  "suppliers": 100000,
+  "queries": 200,
+  "seed": 50,
+  "truthCandidates": 1019,
+  "variants": {
+    "capped": {
+      "candidateCap": 3000,
+      "recall": 0.9686,
+      "missed": 32,
+      "queriesMissing": 20,
+      "p50Ms": 71,
+      "p95Ms": 92
+    },
+    "uncapped": {
+      "candidateCap": 9007199254740991,
+      "recall": 0.9706,
+      "missed": 30,
+      "queriesMissing": 17,
+      "p50Ms": 787,
+      "p95Ms": 923
+    }
+  },
+  "cappedMissExamples": [
+    {
+      "query": "silver kowloon supplies group ltd.",
+      "truthSize": 10,
+      "missedScores": [
+        0.8571428571428571
+      ]
+    },
+    {
+      "query": "lucky yip engineering compny limited",
+      "truthSize": 10,
+      "missedScores": [
+        0.8771929824561403
+      ]
+    },
+    {
+      "query": "ng ng trading holdings limited",
+      "truthSize": 10,
+      "missedScores": [
+        0.9545454545454546,
+        0.9545454545454546,
+        0.9545454545454546,
+        0.9545454545454546,
+        0.9333333333333333
+      ]
+    },
+    {
+      "query": "summit lee electronics comany limited",
+      "truthSize": 10,
+      "missedScores": [
+        0.8852459016393442
+      ]
+    },
+    {
+      "query": "wizng ng machnery enterprises ltd.",
+      "truthSize": 8,
+      "missedScores": [
+        0.8620689655172413
+      ]
+    },
+    {
+      "query": "lucky chan irinting likmited",
+      "truthSize": 1,
+      "missedScores": [
+        0.8627450980392157
+      ]
+    },
+    {
+      "query": "hing kwong garment holdings limited",
+      "truthSize": 10,
+      "missedScores": [
+        0.9122807017543859
+      ]
+    },
+    {
+      "query": "lucky wah logistics limited",
+      "truthSize": 7,
+      "missedScores": [
+        0.9130434782608695
+      ]
+    },
+    {
+      "query": "cieung chan food qgroup ltd.",
+      "truthSize": 2,
+      "missedScores": [
+        0.8627450980392157
+      ]
+    },
+    {
+      "query": "dragon kwong printing limited",
+      "truthSize": 10,
+      "missedScores": [
+        0.8837209302325582,
+        0.875,
+        0.8636363636363636
+      ]
+    }
+  ],
+  "note": "single connection, one query at a time, no other load"
+}

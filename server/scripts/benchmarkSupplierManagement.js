@@ -23,6 +23,7 @@ import { randomBytes, randomInt, randomUUID } from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import mysql from "mysql2/promise";
 
 import { createApplication } from "../src/framework/application/createApplication.js";
@@ -41,6 +42,7 @@ const WARMUP_SECONDS = Number(arg("warmup-seconds", 20));
 const THINK_MS = Number(arg("think-ms", 1000));
 const OUTPUT = arg("output", null);
 const ONLY = arg("only", "");
+const WARNING_LINES = 200;
 if (![USERS, SECONDS, WARMUP_SECONDS, THINK_MS].every(Number.isSafeInteger) || USERS < 1 || SECONDS < 1 || WARMUP_SECONDS < 0 ||
     THINK_MS < 0 || typeof OUTPUT !== "string") {
   throw new Error("usage: node scripts/benchmarkSupplierManagement.js --database=<DB_NAME> --output <report.json> [--users=50] [--seconds=120] [--warmup-seconds=20] [--think-ms=1000] [--only=<operation prefix>]");
@@ -341,6 +343,19 @@ try {
   fs.writeFileSync(OUTPUT, `${JSON.stringify(report, null, 2)}\n`);
   await application?.shutdown("supplier-performance").catch(() => {});
   await admin.end();
+  // Server 嘅 warn／error 留喺報告隔籬（DEF-048）：之前成個目錄連 log 一齊剷，500 嘅原因就冇得查。
+  // 最多留 200 行（error 行連 stack 每行幾 KB）再寫總數；repository 路徑換成 $REPO，咁先可以直接 commit 做證據（REV-133 O2）。
+  const systemLog = path.join(work, "system");
+  const lines = [];
+  if (fs.existsSync(systemLog)) {
+    for (const name of fs.readdirSync(systemLog).sort()) {
+      lines.push(...fs.readFileSync(path.join(systemLog, name), "utf8").split("\n").filter((line) => /"level":"(warn|error)"/u.test(line)));
+    }
+  }
+  const repo = fileURLToPath(new URL("../../", import.meta.url)).replace(/\/$/u, "");
+  const kept = lines.slice(0, WARNING_LINES).map((line) => line.split(repo).join("$REPO"));
+  if (lines.length > WARNING_LINES) kept.push(`… ${lines.length - WARNING_LINES} more warn/error lines not kept (${lines.length} in all)`);
+  fs.writeFileSync(`${OUTPUT}.warnings.log`, kept.length ? `${kept.join("\n")}\n` : "");
   fs.rmSync(work, { recursive: true, force: true });
   console.log(JSON.stringify({ ok: report.ok, overall: report.overall, nfr001: report.nfr001, nfr005: report.nfr005, error: report.error }, null, 2));
 }

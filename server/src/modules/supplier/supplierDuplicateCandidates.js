@@ -27,8 +27,12 @@ export function bigramDiceScore(left, right) {
   return (2 * common) / (leftGrams.size + rightGrams.size);
 }
 
-export async function replaceSupplierNameGrams(connection, supplierId, nameKey) {
-  await connection.execute("DELETE FROM supplier_name_grams WHERE supplier_id = ?", [supplierId]);
+/**
+ * `isNew`：Supplier 喺同一個 transaction 啱啱建立，未有 grams，唔使 DELETE。新 id 喺 PRIMARY 最尾，REPEATABLE READ 之下
+ * DELETE 一個冇行嘅 id 會鎖住 supremum，同時建立嘅 Supplier（在線或者 import）就會互相 deadlock（DEF-048、HD-153 A）。
+ */
+export async function replaceSupplierNameGrams(connection, supplierId, nameKey, { isNew = false } = {}) {
+  if (!isNew) await connection.execute("DELETE FROM supplier_name_grams WHERE supplier_id = ?", [supplierId]);
   const hashes = hashNameBigrams(nameKey);
   if (hashes.length === 0) return;
   const placeholders = hashes.map(() => "(?, ?)").join(", ");

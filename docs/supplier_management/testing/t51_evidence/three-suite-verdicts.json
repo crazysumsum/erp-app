@@ -1,0 +1,59 @@
+{
+  "supplier-server-integration": {
+    "globs": [
+      "test/supplier*.test.js",
+      "test/integration/supplier*.integration.test.js"
+    ],
+    "counts": {
+      "total": 730,
+      "passed": 730,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0
+    },
+    "min_tests": 620,
+    "max_skipped": 0,
+    "required": 89,
+    "missing": [],
+    "verdict": "PASS",
+    "limitations": []
+  },
+  "supplier-security": {
+    "globs": [
+      "test/supplier*.test.js",
+      "test/integration/supplier*.integration.test.js"
+    ],
+    "counts": {
+      "total": 730,
+      "passed": 730,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0
+    },
+    "min_tests": 620,
+    "max_skipped": 0,
+    "required": 10,
+    "missing": [],
+    "verdict": "PASS",
+    "limitations": []
+  },
+  "supplier-bank-security": {
+    "globs": [
+      "test/supplierBank*.test.js",
+      "test/integration/supplierBank*.integration.test.js"
+    ],
+    "counts": {
+      "total": 142,
+      "passed": 142,
+      "failed": 0,
+      "skipped": 0,
+      "not_run": 0
+    },
+    "min_tests": 135,
+    "max_skipped": 0,
+    "required": 15,
+    "missing": [],
+    "verdict": "PASS",
+    "limitations": []
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "schema_version": "2.0",
+  "module_id": "supplier-management",
+  "run_id": "20261028T071615-2f7ec49f38e6",
+  "suite_id": "supplier-recovery",
+  "stage": "REGRESSION",
+  "result": "BLOCKED",
+  "spec_baseline": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+  "source_fingerprint": "418abf1eb92f20dc948ee3a32a60487fa7069c07296797b0cffd47d6c92e7104",
+  "code_commit": "151aedf8386897481d9af82521036cd923c93ed0",
+  "started_at": "2026-10-28T07:16:15.923045Z",
+  "ended_at": "2026-10-28T07:16:20.949014Z",
+  "environment_id": "supplier-isolated-test",
+  "runtime_instance_id": "supplier-t51-scratch-mysqld-3450",
+  "data_reference": "Synthetic Supplier fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "node",
+    "server/scripts/runSupplierRecoveryAcceptance.js",
+    "--output",
+    "/Users/sam/Documents/workspace/erp-supplier-ta2/docs/supplier_management/evidence/20261028T071615-2f7ec49f38e6/supplier-recovery.json"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "b942aa68ffebc22555fc883ff2157fec161fed2b08096a119ff510e298dbcee0",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 2,
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 1
+  },
+  "cases": [
+    {
+      "id": "TC-133",
+      "status": "NOT_RUN"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "evidence/20261028T071615-2f7ec49f38e6/stdout.log",
+      "sha256": "c76d63ebc2b38f5a14614f56ca0ee336fa4229a5aadc2272bb707cbdd2ab7982",
+      "bytes": 2562
+    },
+    {
+      "path": "evidence/20261028T071615-2f7ec49f38e6/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/20261028T071615-2f7ec49f38e6/supplier-recovery.json",
+      "sha256": "b7c638cacd18d8d5e8d423cff10e7f17adcfecfb6e5307cb46ccb3a3d3502785",
+      "bytes": 352
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    },
+    {
+      "argv": [
+        "mysql",
+        "--version"
+      ],
+      "output": "mysql  Ver 26.7.0 for macos15 on arm64 (MySQL Community Server - GPL)\n",
+      "matched": true
+    },
+    {
+      "argv": [
+        "mysqldump",
+        "--version"
+      ],
+      "output": "mysqldump  Ver 26.7.0 for macos15 on arm64 (MySQL Community Server - GPL)\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "Executed test count / skipped / not-run contract was not satisfied.",
+    "Required cases not passed: TC-133",
+    "Local observation only; external services/config/data and secret redaction completeness require review."
+  ]
+}

@@ -164,7 +164,8 @@ test("@uat UAT-026 a BANK-READER re-authenticates to reveal; the number shows br
   // 30 秒：29 秒仲喺度，夠 30 秒就清走（REV-123 O2：一秒一步，31 秒先清都會紅）。Reveal 之後即刻停咗個鐘：
   // 唔停嘅話假時間會跟真時間行，poll 等緊嗰幾秒就會行過 deadline。
   await reveal("UAT-026 confirm payee details");
-  await page.clock.pauseAt(await page.evaluate(() => Date.now() + 1));
+  // +200 ms：pauseAt 只可以向前；+1 ms 喺機器慢嗰陣已經過咗（Cannot fast-forward to the past）。29 秒嗰下仍然有約 800 ms 餘地。
+  await page.clock.pauseAt(await page.evaluate(() => Date.now() + 200));
   await until(async () => (await page.locator('[data-test="bank-reveal-countdown"]').allTextContents()).join("").includes("秒後自動隱藏"),
     "a countdown is shown");
   await page.clock.runFor(29_000);

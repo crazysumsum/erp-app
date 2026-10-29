@@ -169,3 +169,35 @@ integrationTest("TASK-050 (REV-083 L-1, REV-084 L-1): the cap keeps the name mat
   assert.ok(uncapped.includes(full) && uncapped.includes(partial), "control: without the cap biting both are found");
   assert.throws(() => new SupplierDuplicateCandidates({ candidateCap: 0 }), TypeError);
 });
+
+// DEF-048（HD-153 A）：兩個未 commit 嘅 transaction 各自建一個新 Supplier 再寫 name grams。新 id 喺 PRIMARY 最尾；舊做法先
+// DELETE 個新 id，REPEATABLE READ 之下會鎖住 supremum，第二個 transaction 嘅 INSERT 就要等第一個（並發時互鎖 deadlock）。
+async function openCreate(connection, suffix, label, options) {
+  await connection.beginTransaction();
+  const name = `def048 ${label} ${suffix}`;
+  const [result] = await connection.execute(
+    `INSERT INTO suppliers
+      (supplier_code, supplier_code_key, supplier_name, supplier_name_key, default_currency_code,
+       status, version, created_at, updated_at)
+     VALUES (?, ?, ?, ?, 'HKD', 'draft', 1, ?, ?)`,
+    [`D48-${suffix}-${label}`, `d48-${suffix}-${label}`, name, name, Date.now(), Date.now()]
+  );
+  await replaceSupplierNameGrams(connection, Number(result.insertId), name, options);
+}
+
+for (const [label, options, waits] of [["isNew", { isNew: true }, false], ["control: DELETE first", {}, true]]) {
+  integrationTest(`DEF-048: name grams of a new Supplier ${waits ? "wait" : "do not wait"} on another open create (${label})`, async (t) => {
+    const first = await mysql.createConnection(config());
+    const second = await mysql.createConnection(config());
+    t.after(async () => {
+      await second.rollback().catch(() => {});
+      await first.rollback().catch(() => {});
+      await Promise.all([first.end(), second.end()]);
+    });
+    await second.query("SET SESSION innodb_lock_wait_timeout = 1");
+    const suffix = `${Date.now()}`;
+    await openCreate(first, suffix, "a", options);
+    const outcome = await openCreate(second, suffix, "b", options).then(() => "inserted", (error) => error.code);
+    assert.equal(outcome, waits ? "ER_LOCK_WAIT_TIMEOUT" : "inserted");
+  });
+}

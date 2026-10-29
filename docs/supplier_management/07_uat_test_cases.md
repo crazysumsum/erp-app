@@ -32,7 +32,7 @@ UAT只採用使用者可觀察證據：畫面、提示、前後狀態、Audit頁
 | SYSTEM-ADMIN | 受保護的最高權限break-glass角色；銀行操作仍需同等重新認證、稽核及告警 |
 | BUYER | Purchasing授權使用者，只透過正式Supplier lookup選擇供應商 |
 | S-DRAFT／S-ACTIVE／S-SUSP／S-BLOCK／S-ARCH | 各狀態Supplier；另準備未引用及已引用資料 |
-| CSV-MIXED | 含合法、錯誤、警告、重複及銀行欄位的10列小型CSV |
+| CSV-MIXED | 含合法、錯誤、警告、檔內重複、更新及公式字首列的10列小型CSV；不含銀行欄位：含銀行欄位的檔案於上傳時整檔拒絕，由UAT-038獨立驗證（HD-053 A、HD-054 A；HD-145 A修訂） |
 
 所有人名、地址、證號、銀行帳號及聯絡資料均使用虛構值。每次驗收記錄build、環境、actor、時間及Correlation ID；完整銀行帳號不可放入截圖、缺陷標題或附件。
 
@@ -101,12 +101,12 @@ UAT只採用使用者可觀察證據：畫面、提示、前後狀態、Audit頁
 | UAT-035 | P1 | PHASE-004 | BUYER | FR-066；AC-031 | Active Supplier無relation | 完成一次採購並回到Supplier／SKU畫面 | 建立軟性relation／last supplied資訊；Supplier狀態不變 | PO結果、relation、Supplier狀態 | — | NOT_RUN |
 | UAT-036 | P0 | PHASE-004 | CLERK/BUYER | FR-030；AC-032 | 已有PO快照 | 修改Supplier defaults後看舊PO | 舊PO保留原Currency／Term；新選擇帶新default | 舊／新文件對照 | — | NOT_RUN |
 | UAT-037 | P0 | PHASE-004 | CLERK | FR-071～FR-079；AC-033 | CSV-MIXED | 上傳、預檢、確認、下載結果 | 合法列完整寫入；錯誤列不寫；逐列結果與總數一致 | 四步畫面、結果CSV、Supplier搜尋 | — | NOT_RUN |
-| UAT-038 | P0 | PHASE-004 | CLERK | FR-073；AC-034 | CSV含Bank header/value | 預檢 | 明確拒絕敏感欄位；沒有Supplier Bank資料寫入 | 預檢錯誤、Bank遮罩列表 | — | NOT_RUN |
+| UAT-038 | P0 | PHASE-004 | CLERK | FR-073；AC-034 | CSV含Bank header/value | 上傳 | 上傳時整檔明確拒絕敏感欄位，不進入預檢（HD-053 A、HD-054 A；HD-145 A修訂）；沒有Supplier Bank資料寫入 | 上傳拒絕訊息、Bank遮罩列表 | — | NOT_RUN |
 | UAT-039 | P0 | PHASE-004 | CLERK | FR-077；AC-035 | 已完成confirm | 雙擊或重送同一確認 | 只建立一次；回相同job outcome | 畫面、job結果、Supplier搜尋 | — | NOT_RUN |
 | UAT-040 | P0 | PHASE-002 | CLERK | FR-059；AC-036 | 無settings權限 | 直接導航並嘗試更新setting | 頁面／API拒絕；值不變 | route、network、Settings由有權人核對 | — | NOT_RUN |
 | UAT-041 | P1 | PHASE-002 | SETTINGS-ADMIN | FR-060～FR-064；AC-037 | approved device | 開啟approval，填原因保存，再建Supplier | 新提交走approval；設定before／after及原因可查 | Settings、提交、Audit | — | NOT_RUN |
 | UAT-042 | P0 | PHASE-001 | VIEWER | SEC-001～SEC-009；AC-039 | 只有view／無Supplier權限兩種帳號 | 從UI及直接URL／request嘗試寫入 | 不能寫；無資料或Audit副作用；不洩漏目標存在性 | route、network、重新載入結果 | — | NOT_RUN |
-| UAT-043 | P0 | PHASE-004 | VIEWER | FR-007, FR-080, FR-087；AC-040 | Supplier含Bank及CSV公式字首文字 | 匯出並以安全viewer開啟 | 不含完整Bank／內部密文；危險儲存格安全；Export Audit可查 | 欄位清單、redacted CSV、Audit | — | NOT_RUN |
+| UAT-043 | P0 | PHASE-004 | CLERK、SYSTEM-ADMIN；VIEWER只驗證被拒 | FR-007, FR-080, FR-087；AC-040 | Supplier含Bank及CSV公式字首文字 | VIEWER無匯出控制且server拒絕（design §6.9、SEC-002：匯出需supplier.mgmt；HD-145 A修訂）；CLERK及SYSTEM-ADMIN匯出並以安全viewer開啟 | 不含完整Bank／內部密文；危險儲存格安全；Export Audit可查 | 欄位清單、redacted CSV、Audit | — | NOT_RUN |
 
 ### 4.5 營運品質與復原
 
@@ -114,8 +114,8 @@ UAT只採用使用者可觀察證據：畫面、提示、前後狀態、Audit頁
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | UAT-044 | P1 | PHASE-004 | 營運代表 | NFR-001～NFR-005 | Technical performance report已通過 | 在代表資料量下執行搜尋、SKU選擇及10k import | 畫面可持續操作；一般及精確查詢p95<2秒；10k import≤10分鐘 | 使用者畫面＋已簽 technical report | — | NOT_RUN |
 | UAT-045 | P0 | PHASE-004 | 營運／DR owner | NFR-009, NFR-011 | 隔離restore完成 | 登入restore環境，抽查Supplier、Bank遮罩、Audit及Import結果 | 資料一致；RTO≤4小時、RPO≤15分鐘；缺key時不得宣稱成功 | timestamp、對賬、redacted smoke | — | NOT_RUN |
-| UAT-046 | P1 | PHASE-004 | 各業務角色 | NFR-006～NFR-010 | 候選build | 重送主要操作、模擬依賴不可用後重試 | 無重複／矛盾結果；不錯誤開放Supplier；恢復後可繼續 | Correlation IDs、前後狀態、營運提示 | — | NOT_RUN |
-| UAT-047 | P1 | PHASE-001～004 | 鍵盤使用者 | NFR-006；frontend-design | 375／768／1440px | 僅鍵盤完成各Phase happy path並檢查loading/empty/error | Focus可見、label／error可理解、狀態不只靠顏色、無阻擋性console／network錯誤 | Playwright screenshots/trace、console/network | — | NOT_RUN |
+| UAT-046 | P1 | PHASE-004 | 各業務角色 | NFR-006～NFR-010 | 候選build | 重送主要操作、模擬依賴不可用後重試（真backend：停用Supplier所用Currency；並以瀏覽器攔截503，同UAT-054；HD-145 A修訂） | 無重複／矛盾結果；不錯誤開放Supplier；恢復後可繼續 | Correlation IDs、前後狀態、營運提示 | — | NOT_RUN |
+| UAT-047 | P1 | PHASE-001～004 | 鍵盤使用者 | NFR-006；frontend-design | 375／768／1440px | 僅鍵盤完成各Phase happy path並檢查loading/empty/error；各步頁面以URL開啟，drawer menu不在鍵盤路徑內（HD-146 A修訂） | Focus可見、label／error可理解、狀態不只靠顏色、無阻擋性console／network錯誤 | Playwright screenshots/trace、console/network | — | NOT_RUN |
 
 ### 4.6 主資料維護、控制與稽核補充
 
@@ -128,7 +128,7 @@ UAT只採用使用者可觀察證據：畫面、提示、前後狀態、Audit頁
 | UAT-052 | P0 | PHASE-002 | CLERK/APPROVER-A | FR-056～FR-057；AC-012 | 一筆assigned Pending申請 | Requester撤回；重新提交後由有權人填原因重新指派，再由新assigned approver決定 | 撤回回Draft；reassign完整留痕；舊assigned不能決定，新assigned可合法完成 | Queue、詳情、權限錯誤、Audit | — | NOT_RUN |
 | UAT-053 | P0 | PHASE-003 | BANK-OFFICER | FR-045～FR-051；SEC-005～SEC-013；AC-023～AC-027 | 已重新認證；Supplier有被付款流程引用及未引用Bank各一 | 新增、修改、設default、停用未引用帳戶，再嘗試刪除／停用被引用帳戶 | 所有明文只在必要輸入／Reveal短暫出現；合法操作成功；被引用資料不可永久刪除且歷史完整 | 遮罩列表、操作結果、拒絕提示、Audit（不得含明文） | — | NOT_RUN |
 | UAT-054 | P1 | PHASE-001 | VIEWER | FR-001～FR-010 | 分別準備慢回應、零結果、依賴錯誤及無權帳號 | 開啟Supplier列表並依次觸發loading、empty、error、no-permission | 四種狀態文案與可行動項明確不同；error可安全重試；無資料外洩或假成功 | 每種畫面、console/network | — | NOT_RUN |
-| UAT-055 | P1 | PHASE-001～004 | VIEWER/AUDITOR | FR-081～FR-087 | Supplier具有create、status、Bank reveal、approval及import audit | 依日期、actor、action及target篩選Audit並開啟詳情 | 篩選結果準確、可分頁追溯；敏感值保持redacted；每筆有request／correlation識別 | Filter URL、結果、Audit detail | — | NOT_RUN |
+| UAT-055 | P1 | PHASE-001～004 | VIEWER（UAT fixture沒有AUDITOR角色；HD-146 A修訂） | FR-081～FR-087 | Supplier具有create、status、Bank reveal、approval及import audit | 依日期、actor、action及target篩選Audit並檢視詳情：Audit頁每列直接顯示redacted前後值，另於該Supplier「變更紀錄」tab核對同一request id的entry（無獨立詳情頁；design §7.2；HD-146 A修訂） | 篩選結果準確、可分頁追溯；敏感值保持redacted；每筆有request／correlation識別 | Filter URL、結果、Audit detail | — | NOT_RUN |
 
 ## 5. Canonical requirement coverage manifest
 

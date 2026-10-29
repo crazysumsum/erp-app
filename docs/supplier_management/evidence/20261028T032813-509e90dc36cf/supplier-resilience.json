@@ -1,0 +1,29 @@
+{
+  "tests": [
+    {
+      "name": "TC-130 local dependency failures: Bank key, inactive currency, in-flight connection reset, lock wait",
+      "id": "TC-130",
+      "status": "PASS"
+    },
+    {
+      "name": "TC-131 local startup refuses a missing table, column, settings row, permission or key ring",
+      "id": "TC-131",
+      "status": "PASS"
+    },
+    {
+      "name": "TC-132 local logs and metrics for success, 4xx, conflict, 5xx, approval backlog and stalled import",
+      "id": "TC-132",
+      "status": "PASS"
+    },
+    {
+      "name": "TC-130 production network faults between the app and its dependencies",
+      "id": "TC-130",
+      "status": "NOT_RUN"
+    },
+    {
+      "name": "TC-132 production alert delivery",
+      "id": "TC-132",
+      "status": "NOT_RUN"
+    }
+  ]
+}
