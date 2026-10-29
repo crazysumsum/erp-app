@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 472,
+  "revision": 475,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "TEST_AND_VERIFY",
   "status": "BLOCKED",
@@ -11,9 +11,9 @@
   "baseline": {
     "design": "2390e6fc44da25124375f4347f2a093db512f8353e01d456780a11073be494a3",
     "plan": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
-    "code_commit": "151aedf8386897481d9af82521036cd923c93ed0",
+    "code_commit": "2f67bf696d931b08b873145959b11ba5f23c1920",
     "source_fingerprint": "418abf1eb92f20dc948ee3a32a60487fa7069c07296797b0cffd47d6c92e7104",
-    "worktree": "/Users/sam/Documents/workspace/erp-supplier-ta2",
+    "worktree": "/Users/sam/Documents/workspace/erp-supplier-locks",
     "default_commit": "f62651d82e2cb58a30aa62948fa96bb8f0f8552a",
     "mode_entry_commit": "f62651d82e2cb58a30aa62948fa96bb8f0f8552a"
   },
@@ -21,7 +21,7 @@
     "instance_id": "supplier-t51-scratch-mysqld-3450",
     "owner": "Primary Harness agent",
     "resources": {
-      "workspace": "/Users/sam/Documents/workspace/erp-supplier-ta2 (claude/supplier-technical-acceptance-2, cut from main f62651d8)",
+      "workspace": "/Users/sam/Documents/workspace/erp-supplier-locks (claude/supplier-import-row-locks, cut from main ef5a61a4)",
       "mysql-schema": "erp_t51, and the erp_t51_rh_* scratch schemas the runners create and drop, on a throwaway mysqld at 127.0.0.1:3450 (session scratch datadir, --skip-log-bin); no production data",
       "web-port": "3021 (UAT API) and 5216 (UAT client); the other runners bind free ports"
     },
@@ -3700,6 +3700,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-135",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (DEF-049 diagnosis, REPORT_ONLY)",
+      "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-import-row-locks at 2f67bf69 (git diff origin/main..HEAD)",
+      "reviewed_baseline": "2390e6fc44da25124375f4347f2a093db512f8353e01d456780a11073be494a3",
+      "source_ref": "docs/supplier_management/implementation/138_rev_135_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -6760,6 +6772,39 @@
       "source_ref": "docs/supplier_management/testing/07_technical_acceptance_report.md (re-test section). 16 run_check --execute runs, 2026-10-28 06:53-07:28Z, on 151aedf8 (code-identical to the mode entry commit f62651d8), all registered. PASS at both stages: server-integration 732/732, security 732/732, bank-security 142/142, client-ui 208/208. resilience, recovery, release-operations, performance: every local check PASS; BLOCKED only on the production parts NOT_RUN by design. supplier-performance at both stages: TC-101 PASS, deadlocks 0/0 with innodb_deadlock_detect and innodb_print_all_deadlocks ON, online error rate 0, import 71.8 s / 77.4 s. DEF-048 CLOSED. verify_gate TECHNICAL_ACCEPTANCE at 151aedf8, state revision 470: BLOCKED only on TASK_INCOMPLETE TASK-051 and the NOT_RUN production parts of TC-128, TC-130, TC-132..TC-136. status PASS here means every executed local check passed; it is not Technical Acceptance. observed_at is the end of the last run; the gate result was observed after the runs, before commit 6acea5ed (REV-134 N2). Import times: precheck plus execute 78.1 s and 83.7 s, execute alone 71.8 s and 77.4 s. The deadlock counter's 314 starting value is a manual query, not run evidence; REV-134 attributed the 27 session deadlocks from the mysqld error log in the scratchpad to supplierDeadlockRetry and supplierConstraintRaces fixtures in erp_t51 and erp_t51_mig_*, none in supplier_name_grams or a performance schema.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-28T07:27:46+00:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "DEF-048 formal re-test evidence and closure; Technical Acceptance blocked only by TASK-051 B and C (PR #299) merged to main",
+      "code_commit": "ef5a61a4a3c71a2b969369fec9a9dbc9cdecf2c7",
+      "spec_baseline": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "source_fingerprint": "418abf1eb92f20dc948ee3a32a60487fa7069c07296797b0cffd47d6c92e7104",
+      "status": "PASS",
+      "source_ref": "PR #299 merged as ef5a61a4a3c71a2b969369fec9a9dbc9cdecf2c7 at 2026-10-28T08:04:32Z on the Product Owner's word ('CI 已通過就等於 merge'), with --match-head-commit 4a528c76, after a gate that refused unless the latest run of every check was SUCCESS (13 checks, PR run 40651747391), main was an ancestor of HEAD and the local, remote and PR heads were equal. Review REV-134 CHANGES_REQUESTED; every finding fixed before merge (4a528c76). Docs only: source fingerprint unchanged from f62651d8.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-28T08:04:32+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEF-049 diagnosis: import row lock growth (REV-132 O3), REPORT_ONLY (not formal evidence)",
+      "code_commit": "7f47f6198432a828fbec2847af80c4317c69babe",
+      "spec_baseline": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "source_fingerprint": "418abf1eb92f20dc948ee3a32a60487fa7069c07296797b0cffd47d6c92e7104",
+      "status": "FAIL",
+      "source_ref": "docs/supplier_management/testing/def049_diagnosis_2026-10-29/ and DEF-049 in 04_defect_register.md. status FAIL means the defect was reproduced; no test case failed. Throwaway mysqld 3450 (26.7.0), scratch schema erp_t51_mig_lockdiag (exact 0062 table minus the FK; created and dropped by run.sh). The exact query from SupplierImportService.js:653 took 1, 102, 1,011, 5,056 and 9,100 record locks at k = 0, 100, 1,000, 5,000 and 9,000 applied rows, with the PRIMARY plan. Per pick: 0.21 ms at k = 0 and 2.26 ms at k = 9,000. Controls: FORCE INDEX on the IN query locks every pending row (20,017 at k = 0); an equality on one status without the hint still uses PRIMARY until k = 9,000; one equality per status with FORCE INDEX holds 1-3 locks at every k. No product code changed.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-29T00:49:29+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEF-049 diagnosis v2 after REV-135: reads, locks and cross-job blocking, REPORT_ONLY (not formal evidence)",
+      "code_commit": "2f67bf696d931b08b873145959b11ba5f23c1920",
+      "spec_baseline": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "source_fingerprint": "418abf1eb92f20dc948ee3a32a60487fa7069c07296797b0cffd47d6c92e7104",
+      "status": "FAIL",
+      "source_ref": "docs/supplier_management/testing/def049_diagnosis_2026-10-29/run-v2.sh and out-v2.txt (README.md explains every file). status FAIL means the defect was reproduced; no test case failed. Throwaway mysqld 3450, version 26.7.0, REPEATABLE-READ (printed); scratch schema erp_t51_mig_lockdiag with two jobs, created and dropped by the script; locks filtered to the probe's own thread; reads counted before the data_locks query. Current query at k = 0, 100, 1,000, 5,000, 9,000: reads 1, 101, 1,001, 5,001, 9,001; locks 1, 101, 1,011, 5,056, 9,100. Part 2: a per-status forced-index FOR UPDATE on a job with no pending warning made the next job's staging INSERT time out (ER_LOCK_WAIT_TIMEOUT after 2.0 s; control 0.0 s); the non-locking pick plus primary-key FOR UPDATE held 1 lock at every k and did not block. TC-101 window margins from the runs' details: 40.7 s and 35.1 s (re-test), -2.9 s (first REGRESSION). No product code changed.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-29T00:58:32+00:00"
     }
   ],
   "pending_decisions": [
@@ -8786,6 +8831,20 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-28: 'A'. REMEDIATE_AND_RETEST: re-enter IMPLEMENT, skip the name-gram DELETE on the create path with a discriminating test first, keep the benchmark's server logs (as option A says; implemented as the server's warn and error lines, capped at 200 with paths masked, which is what the DEF-048 diagnosis used; put to the Product Owner to confirm, REV-133), add a deadlock check the re-test can fail on; then TEST_AND_VERIFY again on the new baseline and fresh formal runs. Confirmed by the Product Owner, 2026-10-28: '只留 warn 同 error 行' (keep only the warn and error lines)."
+    },
+    {
+      "id": "HD-154",
+      "impact": "MAJOR",
+      "question": "DEF-049 (LOW): processNextRow's row pick (status IN ('valid','warning') ORDER BY row_number LIMIT 1 FOR UPDATE) is read through PRIMARY, so the transaction for row k+1 reads and locks about k+1 rows already applied: O(n^2) reads over an import. Measured: about 11 s extra on a 10,000-row import on a quiet host; extrapolated about 4.75 minutes at the 50,000-row ceiling of import.maxRows. No data or count effect; every writer of a job's rows locks the job first. TC-101's import.inside_measured_window had 40.7 s and 35.1 s of headroom at the re-test, but missed by 2.9 s in the first REGRESSION run on a busy host, where DEF-049 plausibly contributed (not proven), so that check may fail on a slower host at release re-runs. Fix candidates are measured, not designed: a per-status FORCE INDEX ... FOR UPDATE was rejected because its empty-status lookup locks the next job's first index entry and blocked that job's staging (REV-135 M1, reproduced); the best measured candidate picks the row with non-locking forced-index lookups, then locks it with a primary-key equality FOR UPDATE (3 reads, 1 lock at every k, no blocking); IMPLEMENT must confirm the read-view timing and the line-675 status fence, and test a concurrent second job. Route? (A) REMEDIATE_AND_RETEST now: re-enter IMPLEMENT, change the row pick with a test that fails on the current query first, then TEST_AND_VERIFY and fresh formal runs of the affected suites. (B) Defer: fix at the next IMPLEMENT re-entry for Supplier; until then keep import.maxRows at 10,000, accept that TC-101's window check may flake on a slower host, and carry DEF-049 to the release risk decision with DEF-034. (C) Accept permanently (won't fix), with the same TC-101 window exposure.",
+      "affected_ids": [
+        "DEF-049",
+        "TC-101",
+        "IMP-016",
+        "NFR-004",
+        "SupplierImportService.processNextRow"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
     }
   ],
   "external_actions": [
@@ -10330,7 +10389,21 @@
         "PR #298 CI run 40645193058 on head 106ef26c: 13 of 13 checks success"
       ],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-049",
+      "severity": "LOW",
+      "status": "OPEN",
+      "source_ids": [
+        "REV-132 O3",
+        "TC-101",
+        "IMP-016",
+        "server/src/modules/supplier/SupplierImportService.js:653",
+        "docs/supplier_management/testing/04_defect_register.md"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Technical Acceptance is blocked only by TASK-051 groups B and C (downstream modules, production-like environment, Operations, sign-offs). PR for the re-test evidence: independent review, CI, merge on the Product Owner's word. UAT execution (supplier-uat-browser) is not run: Technical Acceptance does not permit it unless the Product Owner authorizes a limited diagnostic UAT."
+  "next_safe_action": "HD-154 (DEF-049 route) awaits the Product Owner. Technical Acceptance is blocked only by TASK-051 groups B and C (downstream modules, production-like environment, Operations, sign-offs). UAT execution (supplier-uat-browser) is not run unless the Product Owner authorizes a limited diagnostic UAT. REPORT_ONLY."
 }
