@@ -348,8 +348,12 @@ mysql -u<admin> -p <restore_db> < backup.sql
 DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/supplierBankRestore.integration.test.js
 ```
 
-*未涵蓋：* 異地／另一台主機的還原、作業系統層級的還原、以及全模組還原演練（OPS-006／TC-133，
-仍未有 harness）。
+全模組還原演練（OPS-006／TC-133）的本機部分由 `server/scripts/runSupplierRecoveryAcceptance.js`
+（`supplier-recovery` suite）執行：還原到獨立 schema、逐表 checksum 及逐檔 SHA-256 對賬、Bank reveal
+及 key ring fail closed。
+
+*未涵蓋：* 異地／另一台主機的還原、作業系統層級的還原，以及 production 還原演練的 RTO／RPO
+（TC-133 的 production 部分，NOT_RUN，需要 production 備份排程及隔離還原環境）。
 
 ---
 

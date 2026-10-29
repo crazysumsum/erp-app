@@ -84,3 +84,9 @@ These cases keep their original assertions. They are not re-run while the depend
   - before the import tool deletes its job and rows, it records up to 20 not-applied rows with their stored errors (`report.notApplied`, HD-122 A);
   - the runner copies them into its own evidence (`evidence.import.notApplied`). Both 2026-10-27 runs recorded an empty list.
 - **Status:** later passes are not a root cause and do not close the risk. DEF-034 stays OPEN until a recurrence shows the reason, or the Product Owner accepts the risk at release.
+
+## DEF-049 — OPEN (LOW)
+
+- **What happens:** the import's row pick reads and locks every row the job has already applied, so the cost is O(n²) over an import.
+- **Effect:** about 11 s extra on a 10,000-row import, inside TC-101's window. It would be about 4.75 minutes at the 50,000-row ceiling of `import.maxRows`, an extrapolation. No blocking, deadlock, data or count effect.
+- **Status:** the route (fix now, defer to the next IMPLEMENT re-entry, or accept) is HD-154, for the Product Owner. Details are in `04_defect_register.md`.

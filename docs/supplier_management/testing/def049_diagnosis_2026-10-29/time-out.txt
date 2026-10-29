@@ -1,0 +1,13 @@
+as-is k=0 ms_per_pick=0.210
+eq-valid k=0 ms_per_pick=0.206
+as-is k=1000 ms_per_pick=0.435
+eq-valid k=1000 ms_per_pick=0.437
+as-is k=2500 ms_per_pick=0.797
+eq-valid k=2500 ms_per_pick=0.792
+as-is k=5000 ms_per_pick=1.400
+eq-valid k=5000 ms_per_pick=1.256
+as-is k=7500 ms_per_pick=1.820
+eq-valid k=7500 ms_per_pick=0.167
+as-is k=9000 ms_per_pick=2.260
+eq-valid k=9000 ms_per_pick=0.170
+dropped erp_t51_mig_lockdiag
