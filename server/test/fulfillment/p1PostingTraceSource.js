@@ -52,7 +52,7 @@ export const postingTraceManifest={
   }
  },
  "inventoryFulfillmentReceipts.js": {
-  "sha256": "890fea3f7da2a9aa4c580d7e71636f5ba1de0ed0b837f7ff82e4c13f28a07f6d",
+  "sha256": "d981e553055934ade0731c943c847292fefdc7d84e1caa31c6fea2e64e161d6b",
   "targets": {
    "completeFulfillmentInventoryBatch": {
     "label": "RECEIPT_COMPLETE",

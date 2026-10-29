@@ -60,8 +60,8 @@ test("Caller AST targets are pinned, class-qualified and restore unchanged busin
  assert.equal(targets,10);
 });
 
-test("Original five-module thirteen-target transform output remains byte-identical to reviewed30d",async()=>{
- const expected={"inventoryFulfillmentAllocation.js":"91734b625d764ed8ed9cf6303b10a5c753444a7d9495d32cf843e3e67d6cdc70","InventoryPickSequenceService.js":"b732e9c4203fd80ffe4ff60b930f785f012e5daa434b87b2766777c7a6773d54","InventoryLockService.js":"36737121048a154e161eace45b7daa8e3bdd1eb270a85744cd4147e17808c271","inventoryFulfillmentReceipts.js":"bc6faf5f7fdbc63a023b24e7c6e5ade1b5afd4c25ba005e1852869aae41f12c4","InventoryAuditService.js":"fe63d8020d44cee95a8b24b712ee06916231ac8b64169e701328b7b1ced69f9e"};
+test("Five-module thirteen-target output pins four unchanged modules and approved child-claim receipts",async()=>{
+ const expected={"inventoryFulfillmentAllocation.js":"91734b625d764ed8ed9cf6303b10a5c753444a7d9495d32cf843e3e67d6cdc70","InventoryPickSequenceService.js":"b732e9c4203fd80ffe4ff60b930f785f012e5daa434b87b2766777c7a6773d54","InventoryLockService.js":"36737121048a154e161eace45b7daa8e3bdd1eb270a85744cd4147e17808c271","inventoryFulfillmentReceipts.js":"a8f16854c75da4bcbd83f7d8e54b8b58cf4d3e606fb05c3a450f640628cfdaa0","InventoryAuditService.js":"fe63d8020d44cee95a8b24b712ee06916231ac8b64169e701328b7b1ced69f9e"};
  for(const [name,sha]of Object.entries(expected)){const source=await readFile(new URL("../../src/modules/inventory/"+name,import.meta.url),"utf8");assert.equal(transformPostingSource(name,source,"file:///fixed-diagnostic-helper.js").proof.transformedSha256,sha);}
 });
 test("Caller selector observer errors never replace the business result or original error",async()=>{
