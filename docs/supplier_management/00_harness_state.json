@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 484,
+  "revision": 486,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "TEST_AND_VERIFY",
   "status": "BLOCKED",
@@ -3724,6 +3724,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-137",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (DEF-049 formal re-test, DEF-050 diagnosis)",
+      "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-technical-acceptance-3 at 90652f01 (git diff origin/main..HEAD)",
+      "reviewed_baseline": "2390e6fc44da25124375f4347f2a093db512f8353e01d456780a11073be494a3",
+      "source_ref": "docs/supplier_management/implementation/140_rev_137_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 3,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -6869,7 +6881,7 @@
       "spec_baseline": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
       "source_fingerprint": "493d144c455c6db5d08c3baeb3b36c961539740c393727739956e060f66c252f",
       "status": "FAIL",
-      "source_ref": "docs/supplier_management/testing/def050_diagnosis_2026-10-29/ and DEF-050 in 04_defect_register.md. status FAIL means the cause was reproduced (name-search p95 1,916-2,021 ms at 50 users), not that a test case failed. Throwaway mysqld 3450 (26.7.0); scratch schema erp_t51_mig_d50 migrated and seeded as the performance runner does, dropped after each experiment; 60 s runs after 10 s warm-up. E1 --only=forSku at 1/10/25/50 users: throughput 1, 15, 29, 29/s; COUNT scan 98, 139, 311, 336 ms. E2 at 50 users: forSku.typical only 97/s, p95 29 ms; forSku.nameSearch only p95 2,958 ms. E3 app pool 20 (uncommitted one-line change in a throwaway detached worktree, removed): 33/s, nameSearch p95 1,990 ms, COUNT scan 579 ms. E4 buffer pool 1 GiB (dynamic, set back to 128 MiB): no change. No product code changed.",
+      "source_ref": "docs/supplier_management/testing/def050_diagnosis_2026-10-29/ and DEF-050 in 04_defect_register.md. status FAIL means the cause was reproduced (name-search p95 1,916-2,021 ms at 50 users), not that a test case failed. Throwaway mysqld 3450 (26.7.0); scratch schema erp_t51_mig_d50 migrated and seeded as the performance runner does, dropped after each experiment; 60 s runs after 10 s warm-up. E1 --only=forSku at 1/10/25/50 users: throughput 1, 15, 29, 29/s; COUNT scan 98, 139, 311, 336 ms. E2 at 50 users: forSku.typical only (the cheapest operation without q) 97/s, p95 29 ms; forSku.nameSearch only p95 2,958 ms. E3 app pool 20 (uncommitted one-line change in a throwaway detached worktree, removed): 33/s, nameSearch p95 1,990 ms, COUNT scan 579 ms. E4 buffer pool 1 GiB (dynamic, set back to 128 MiB): no change. No product code changed. Interpretation corrected after REV-137 (see the next observation and DEF-050 in 04_defect_register.md).",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-29T06:18:15+00:00"
     },
@@ -6880,9 +6892,20 @@
       "spec_baseline": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
       "source_fingerprint": "493d144c455c6db5d08c3baeb3b36c961539740c393727739956e060f66c252f",
       "status": "FAIL",
-      "source_ref": "docs/supplier_management/testing/07_technical_acceptance_report.md (DEF-049 re-test section). 16 run_check --execute runs, 2026-10-29 03:38-04:13Z, on 558adc22 (code-identical to the mode entry commit 4f101642), all registered; an earlier attempt at 03:37Z was refused by COMMIT_CHANGED before any test ran and wrote no evidence. PASS at both stages: server-integration 735/735, security 735/735, bank-security 142/142, client-ui 208/208. resilience, recovery, release-operations: every local check PASS; BLOCKED only on the production parts NOT_RUN by design. supplier-performance: TC-101 PASS at both stages (execute 53.9 s / 51.2 s, 58.3 s / 61.1 s before the window closed, deadlocks 0/0 with detection and printing ON); TC-129 PASS at both; TC-085 FAIL at TECHNICAL (forSku.nameSearch p95 2,113 ms against 2,000; DEF-050) and PASS at REGRESSION (1,937 ms). DEF-049 CLOSED. verify_gate TECHNICAL_ACCEPTANCE at 558adc22, state revision 483: BLOCKED on TASK_INCOMPLETE TASK-051, the NOT_RUN production parts of TC-128, TC-130, TC-132..TC-136, and TC-085 at TECHNICAL. status FAIL is TC-085's.",
+      "source_ref": "docs/supplier_management/testing/07_technical_acceptance_report.md (DEF-049 re-test section). 16 run_check --execute runs, 2026-10-29 03:38-04:13Z, on 558adc22 (code-identical to the mode entry commit 4f101642), all registered; an earlier attempt at 03:37Z was refused by COMMIT_CHANGED before any test ran and wrote no evidence. PASS at both stages: server-integration 735/735, security 735/735, bank-security 142/142, client-ui 208/208. resilience, recovery, release-operations: every local check PASS; BLOCKED only on the production parts NOT_RUN by design. supplier-performance: TC-101 PASS at both stages (execute 53.9 s / 51.2 s, 58.3 s / 61.1 s before the window closed, deadlocks 0/0 with detection and printing ON); TC-129 PASS at both; TC-085 FAIL at TECHNICAL (forSku.nameSearch p95 2,113 ms against 2,000; DEF-050) and PASS at REGRESSION (1,937 ms). DEF-049 CLOSED. verify_gate TECHNICAL_ACCEPTANCE at 558adc22, state revision 483: BLOCKED on TASK_INCOMPLETE TASK-051, the NOT_RUN production parts of TC-128, TC-130, TC-132..TC-136, and TC-085 at TECHNICAL. status FAIL is TC-085's. From state revision 484 (HD-156 OPEN) the gate also reports HUMAN_DECISION_REQUIRED (REV-137 L2).",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-29T04:13:01+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEF-050 diagnosis after REV-137: DB-time split from the digests, and E5 (rest page without q, today's plan against the name index), REPORT_ONLY (not formal evidence)",
+      "code_commit": "558adc220a8b0fad54317e716e979979128e5693",
+      "spec_baseline": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "source_fingerprint": "493d144c455c6db5d08c3baeb3b36c961539740c393727739956e060f66c252f",
+      "status": "FAIL",
+      "source_ref": "docs/supplier_management/testing/def050_diagnosis_2026-10-29/ (README.md, run-restplan.sh, out-restplan.txt) and DEF-050 in 04_defect_register.md. status FAIL: the defect stands; no test case failed. Split across all six formal for-SKU reports and every diagnosis report: q-related statements 60-62%, the rest page without q 21-24%; the formal runs' pool of 10 is 10.0 busy. Correct DB busy (60 s window): E1 0.1, 2.1, 8.9, 10.1; pool of 20 19.9. E5 on scratch schema erp_t51_mig_d50 (migrated, seeded, dropped), quiet DB, 10 runs per point: rest page without q at offset 0 / 10,000 / 40,000 / 69,000: today's plan 2.4 / 97-99 / 109-121 / 122-140 ms; FORCE INDEX (idx_suppliers_name_id) 2.5 / 17-22 / 63-81 / 105-136 ms. No product code changed.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-29T06:34:34+00:00"
     }
   ],
   "pending_decisions": [
@@ -8940,7 +8963,7 @@
     {
       "id": "HD-156",
       "impact": "MAJOR",
-      "question": "DEF-050 cause (HD-155 A diagnosis): every for-SKU request with q runs supplierSearchCondition (code prefix LIKE plus unanchored LIKE '%term%' on supplier_name, display_name, general_phone, general_email; HD-094 4A, HD-108 A), which no B-tree index serves, and scans the ~80,000 active Suppliers at least twice (COUNT(*) total and the sorted rest page). On this host MySQL saturates at ~29 requests/s from 25 users; at 50 users the rest is queueing (p95 1.7-2.1 s). Without q the same 50 users get p95 29 ms. A pool of 20 (throughput 33/s, each scan 1.7x slower) and a 1 GiB buffer pool (no change; suppliers is 61 MiB) do not help. Route? (A) REMEDIATE_AND_RETEST without contract or schema change: cut the scans per q request (for example take the total from the scan that builds the page instead of a separate COUNT); the saving (the COUNT was ~35% of DB time in the failing run) must be measured, and may not restore enough margin. (B) Design change: narrow name matches through the existing supplier_name_grams index before the LIKE (changes how substring search on names works; needs a design decision). (C) Schema change: FULLTEXT ngram index on the searched columns (needs schema sign-off; changes match semantics). (D) Defer: keep DEF-050 open, re-measure TC-085 in the production-like environment (TASK-051 C), and carry the local FAIL to the release risk decision.",
+      "question": "DEF-050 cause (HD-155 A diagnosis, corrected after REV-137): a capacity limit of the for-SKU design on this host at 100k Suppliers and 50 users. The app pool of 10 is full from 25 users (about 29 requests/s; MySQL here caps at about 33/s with a pool of 20), so every for-SKU operation queues. DB time in the failing run: 35% the exact COUNT(*) total of a q search (its only full scan: unanchored LIKE over ~80,000 active Suppliers; an exact total needs a full scan whatever the SQL); 22% the deep-OFFSET rest page without q (cold, deepPage), which MySQL sorts via idx_suppliers_status_updated_id instead of reading idx_suppliers_name_id as designed; about 35% the relation-driven head queries; 5% the item-code lookup. q-related statements total 60-62% in every run. Route? (A) No contract or schema change: FORCE INDEX (idx_suppliers_name_id) on the rest page without q; measured on a quiet DB it cuts that statement roughly 40% over the page spread (97 to 17-22 ms at offset 10,000, little at 69,000), about 10% of total DB time; probably not enough margin alone. (B) Contract change: no exact total for q searches (capped, estimated, or has-more), removing about 35% of DB time; changes supplier-core-provider/v1 ('total counts Suppliers'), which Purchasing consumes (listForSku), so Purchasing must agree. (C) Contract change: keyset pagination for the rest page instead of deep OFFSET, removing most of the 22%; changes the page parameter of the same contract. (D) Schema change (sign-off): a (status, supplier_name, id) index for the rest page; a (sku_id, supplier_item_code_key) index for the item-code lookup (about 5%); or a FULLTEXT ngram index or gram-based narrowing for the name search (changes match semantics; design decision). (E) Defer: keep DEF-050 open, re-measure TC-085 in the production-like environment (TASK-051 C), choose among A-D with those numbers, and carry the local FAIL to the release risk decision.",
       "affected_ids": [
         "DEF-050",
         "TC-085",
@@ -10554,7 +10577,8 @@
         "evidence/20261029T033823-87bd1a75ca35/run.json (impact regression: supplier-server-integration TECHNICAL 735/735, with the DEF-049 integration tests)",
         "evidence/20261029T035602-932188e8081e/run.json (impact regression: supplier-server-integration REGRESSION 735/735)",
         "evidence/20261029T034118-6686b68cd58e/run.json and evidence/20261029T035837-74e13e27361b/run.json (supplier-security 735/735 at both stages)",
-        "PR #301 CI run 40810936200 on head 1c632271: 13 of 13 checks success"
+        "PR #301 CI run 40810936200 on head 1c632271: 13 of 13 checks success",
+        "Discriminating signal (REV-137 L3): import.json msPerRowByThousand rose 4.6->8.6 and 5.4->8.8 ms/row before the fix (20261028T065924, 20261028T071628) and is flat 4.6-5.5 and 4.4-5.2 after it (20261029T034431, 20261029T040149)"
       ],
       "risk_approval_id": null
     },

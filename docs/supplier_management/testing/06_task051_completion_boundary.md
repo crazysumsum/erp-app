@@ -98,5 +98,7 @@ These cases keep their original assertions. They are not re-run while the depend
 ## DEF-050 — OPEN (MEDIUM)
 
 - **What happened:** TC-085 failed at TECHNICAL in the DEF-049 re-test. The for-SKU name search p95 was 2,113 ms against 2,000 ms. It passed at REGRESSION, at 1,937 ms. Every formal run has been within 10% of the limit.
-- **Cause (HD-155 A diagnosis):** every for-SKU search with `q` runs unanchored `LIKE` over the roughly 80,000 active Suppliers at least twice. MySQL on this host saturates at about 29 requests per second, so at 50 users the rest is queueing. A bigger pool or buffer pool does not help.
+- **Cause (HD-155 A diagnosis, corrected after REV-137):** this is a capacity limit. The pool of 10 is full from 25 users, at about 29 requests per second. Above that, every for-SKU operation queues.
+  - The largest costs are the exact `COUNT(*) total` of a `q` search (35%, a full `LIKE` scan), the deep-`OFFSET` rest page without `q` (22%) and the head queries (about 35%).
+  - A bigger pool or buffer pool does not help.
 - **Status:** the remediation route is HD-156, for the Product Owner. DEF-050 blocks Technical Acceptance. Details are in `04_defect_register.md`.

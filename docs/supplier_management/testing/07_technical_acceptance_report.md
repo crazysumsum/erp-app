@@ -63,11 +63,14 @@
   - Every other for-SKU operation passed at both stages. The error rate was 0.
 - **History:** every formal run's name-search p95 was 1,861, 1,991, 1,891 and 1,830 ms, then 2,113 and 1,937 ms. So the case has always passed by under 10%.
 - **Not caused by DEF-049:** the fix changed only the import's row pick, and TC-085's load runs no import.
-- **The cause is a capacity limit, from the diagnosis under HD-155 A.** Every for-SKU request with `q` scans the roughly 80,000 active Suppliers at least twice: once for the `COUNT(*)` and once for the rest page. It runs unanchored `LIKE '%term%'` on four columns, which no B-tree index can serve.
-  - That saturates MySQL on this host at about 29 requests per second, at 25 users.
-  - At 50 users the extra requests only queue.
-  - Without the `q` operations, the same 50 users get a p95 of 29 ms.
-  - Neither a larger application pool nor a larger buffer pool helps.
+- **The cause is a capacity limit, from the diagnosis under HD-155 A and as corrected after REV-137.**
+  - **Where the time goes:**
+    - 35% is the exact `COUNT(*) total` of a `q` search. This is its only full scan: unanchored `LIKE` over the roughly 80,000 active Suppliers.
+    - 22% is the deep-`OFFSET` rest page without `q`, which MySQL sorts instead of reading the name index.
+    - About 35% is the relation-driven head queries.
+    - `q`-related statements total 60–62%.
+  - **Saturation:** the pool of 10 is full from 25 users, at about 29 requests per second. At 50 users every operation queues.
+  - **What does not help:** a pool of 20 reaches only 33/s, and a larger buffer pool changes nothing.
 - The details are in `04_defect_register.md` (DEF-050) and `def050_diagnosis_2026-10-29/`. The route is HD-156.
 
 **Gate at `558adc22`** (state revision 483): `verify_gate --gate TECHNICAL_ACCEPTANCE` is BLOCKED on:
@@ -75,7 +78,7 @@
 - the NOT_RUN production parts of TC-128, TC-130, TC-132, TC-133, TC-134, TC-135 and TC-136, at both stages;
 - **TC-085 at TECHNICAL** (DEF-050), which is new.
 
-Committing this evidence moves HEAD, so at later commits the gate also reports `COMMIT_CHANGED` and `EVIDENCE_COMMIT` (REV-131 R2).
+From state revision 484, which records HD-156 as OPEN, the gate also reports `HUMAN_DECISION_REQUIRED` (REV-137 L2). Committing this evidence moves HEAD, so at later commits the gate also reports `COMMIT_CHANGED` and `EVIDENCE_COMMIT` (REV-131 R2).
 
 **DEF-034** stays OPEN. Both imports applied 10,000 of 10,000.
 
