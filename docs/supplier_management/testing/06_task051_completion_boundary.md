@@ -93,4 +93,4 @@ These cases keep their original assertions. They are not re-run while the depend
   - TC-101's window check had 35–41 s of headroom at the re-test, but missed by 2.9 s in the first run on a busy host, where DEF-049 plausibly contributed (not proven);
   - no data or count effect; the extra locks stay inside the job's own serialised work.
 - **Fix candidates:** a per-status forced-index `FOR UPDATE` was rejected, because it blocks the next job's staging (REV-135 M1). The candidate that measured best picks the row without locking, then locks it by primary key.
-- **Status:** the route (fix now, defer to the next IMPLEMENT re-entry, or accept) is HD-154, for the Product Owner. Details are in `04_defect_register.md`.
+- **Status:** fixed under HD-154 A (Product Owner, 2026-10-29). The pick now uses a non-locking lookup and then a primary-key lock. Developer checks pass. DEF-049 stays OPEN until the formal re-test on the merged baseline. Details are in `04_defect_register.md`.
