@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 263,
+  "revision": 290,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "f7902ae0f02984b5feeb8cb02d5893c57820e99b1e90c471b6f6044305270584",
     "plan": "142a24e513c6889dcd6da31cc5c7313f98d1e937a50998ff56c0a45025c4b23e",
-    "code_commit": "e54a53984a3fbfc15c9c1bbd94f7b9c46af27949",
-    "source_fingerprint": "6a31aa80082fe885f28320b16c2393453ce5546ef5fa3ba8a4043f8fa42604ca",
+    "code_commit": "30d442b5082bdcd32b1beffac6219473ebe22a4b",
+    "source_fingerprint": "4efcbe29466695a72cd8097cb7c7d9bb5e42473a3f612aaa630c66ffc87430bf",
     "worktree": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1",
     "default_commit": "f104bd848b78b415595906f852962ae17dd3f7ba",
     "mode_entry_commit": "fd32762f4fa17a5e77aaa7118a9ded2d3ac81e9e"
@@ -24,10 +24,10 @@
       "workspace": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1",
       "mysql-socket": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/erp-fulfillment-p0-mysql-r",
       "runtime-and-private-evidence": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime",
-      "runtime-policy": "CLEANED final a220a638/base-only p1post_5747ea3c and own MySQL after fullnative578 plus five checks PASS; data/evidence retained. PW57882/57883 ended. No active test runtime.",
+      "runtime-policy": "CLEANED child-c runtime516927f9/accountae6c8ffd: cleanupCONFIRMED, zeroactiveclients/childschemas, exactbase/accountremoved, ownserverstopped socket/pidabsent; datadir/evidence retained. Small13PASS/full44PASS collectorVALID onFP4efcbe29, notcurrentCI orfinalGate.",
       "dependencies": "Actualmainlockedoffline npmci--ignore-scripts; body-parser2.4.0/qs6.16.1/PW1.63.0; nocode/dependency invention",
       "browser-runtime": "No frontend/browser suite; focusednativeoriginalHTTPpreview usesownedUUIDchild/ephemeralport0 andexistingcleanup; no sharedportreuse.",
-      "mysql-schema": "fulfillment_p0_p1_a220a638",
+      "mysql-schema": "fulfillment_p0_p1_516927f9 (CLEANED)",
       "web-port": "RealP0/P1PW API57882/client57883 OSprobed/strictbind/no reuse, suites2PASSeach nowended; cleanup required ownMySQL only."
     },
     "lease_ref": null
@@ -5504,6 +5504,234 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-BUDGET-A-PUBLISHED-SOURCE-BRIDGE",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "f7902ae0f02984b5feeb8cb02d5893c57820e99b1e90c471b6f6044305270584",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-budget-a-published-candidate-bridge-review.json SHA961e2f1c50aa7875e92f3427847f7e315195cb005e5bfa9d305129f6574e6645; 0C/H/M published15blobs/newhead30d/source6a31, actualsyntheticf074 parents ef5+30d/tree6fd9 and staleAPIbase distinction; source/publication only, NOT CI PASS. Later genuinecapacityfailure preserved, no defectclosure.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-BUDGET-A-CI-FAILURE-REPORT-STOP",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "f7902ae0f02984b5feeb8cb02d5893c57820e99b1e90c471b6f6044305270584",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-budget-a-ci-failure-report-body-review.json SHA43e9c1b0d94dd13f5b98dcfd35d8d21750631bd339204156f3f652c049d5a998; 0C/H/M only report67 exactc4ad and blockedbody0db46/state266 truthful facts/stop handling, NOT candidate qualification. ActualconfirmedHIGH capacityblocker retained; no source change/retry/merge. Authorizes one existingdraftbody metadata update only.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-CALLER-TAIL-SOURCE-PURE-CLOSING",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "f7902ae0f02984b5feeb8cb02d5893c57820e99b1e90c471b6f6044305270584",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-caller-tail-source-pure-closing-review.json SHA3c753018ae2b93d5741df2d76839cf7745758f086a724463c7e57d10e9c106b6; source/pure only0C/H/M, independent28purePASS. M1/M2 RED preserved and closed. Original case minus2 diagnostics lines byteidenticalHEAD30d. No DB/native admission.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-CALLER-TAIL-FINAL-MEASUREMENT-ADMISSION",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "f7902ae0f02984b5feeb8cb02d5893c57820e99b1e90c471b6f6044305270584",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-caller-tail-final-measurement-admission-review.json SHA2ed14e4e27d077b6633783ce1039db690008a12b6e8a3b821d973f4efc5c1873;0C/H/M exactHEAD30d/FP9d405/PLAN142a/9privatefiles; independentcollector25PASS and actualpreload5module10target0SQLsmokePASS. Approve once ownprepare/originalsinglefull5000casecoverage/guardedcleanup; original20s/120s/strict45000/allassertions retained. No retry/optimization/CI/push/merge/Gate qualification.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-CALLER-TAIL-RESULTS-UNADOPTED-OPTIONS",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "f7902ae0f02984b5feeb8cb02d5893c57820e99b1e90c471b6f6044305270584",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-caller-tail-results-and-unadopted-options-review.json SHAcd1dc8acb3ba98c299da3a9c5a1933343465812175c7822c23b822a1d461ce9d;0C/H/M actualonce originalfull5000case1PASS0skip/strictVALID; all source/private baseline matched; exactownedcleanupCONFIRMED. Report68SHA78907ef2 reviewed. Tail2168.509ms535SQL, release50UPDATE1240.194ms57.191percent. SourceSQL unchanged. Proposal only, originalCI408FAIL/HIGH022025 retained. Any later PKpredicate optimization needs actualplan/rows/waits/trigger evidence, complete preheld target-lock and physical-order/trigger equivalence proof, originalCAS/affectedRows/rollback/recovery/fullgates. No newDB/optimization/CI/push/merge admitted.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-RELEASE-PLAN-PREPARE-INVENTORY",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "f7902ae0f02984b5feeb8cb02d5893c57820e99b1e90c471b6f6044305270584",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-release-plan-prepare-inventory-admission-review.json SHA558ccd51b4160148abc5aa1caaa6d2734dd05357ecbb7c606ab80c8a1313d949;0C/H/M exact prefix-only ownruntimeprepare/guardedcleanup and identity-first7metadataqueries only; no smoke/EXPLAIN/nativecapacity/settings/productSQL admitted.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-RELEASE-PLAN-COMPATIBILITY-PROBE",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "f7902ae0f02984b5feeb8cb02d5893c57820e99b1e90c471b6f6044305270584",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-release-plan-source-pure-probe-admission-review.json SHA4df163414fd80134ad739afb9bbc01cf299da2376443085d5eabd458b6f0c874;0C/H/M source/pure and one100-row isolated diagnosticcompatibility probe only; independent27purePASS. Actualroot34purePASS/lintPASS. Not product/full5000/CI/currentcandidate performance PASS; no PFS tuning or retries.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-RELEASE-PLAN-READONLY-POSTMORTEM",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "f7902ae0f02984b5feeb8cb02d5893c57820e99b1e90c471b6f6044305270584",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-release-plan-readonly-postmortem-admission-review.json SHA8d7a70118afc1d8b74f92e4e61cce40eb103c3500356db1aa89a149caac4be53; Only prepare/read, no execute/rowwrites; actualpostmortem nowexit0/COUNT_EXECUTE0,SQLTEXT exact1024prefix,2exactinternaldaemons found. Firstfailedprobe capturecheck stillUNKNOWN.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-RELEASE-PLAN-V2-COMPATIBILITY",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "f7902ae0f02984b5feeb8cb02d5893c57820e99b1e90c471b6f6044305270584",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-release-plan-v2-source-pure-admission-review.json SHAafd3a25f314f36e207ed37a795940412759ba7ef9d3a7e6b7038b45b7b706a3c; 0C/H/M exactv2probeonce only; independent28repoPURE+1actualfakefailurebranchPASS; evidencepersistenceM CLOSED_FORWARD_ONLY, oldFAILED/uncapturedcheck preserved UNKNOWN. No fullcase/optimization/CI admission.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-RELEASE-PLAN-FORMAT-READONLY",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "f7902ae0f02984b5feeb8cb02d5893c57820e99b1e90c471b6f6044305270584",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-release-plan-explain-format-postmortem-admission-review.json SHA54fb17e09efa68253dd69d20865847e3650bfc8fa1ae6a31f1a6677134ddf713; Actualreadonlyformat exit0; JSONv2 UPDATE noiterator/table,TRADsupported; noDML.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-RELEASE-PLAN-SPLIT-READINESS",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "f7902ae0f02984b5feeb8cb02d5893c57820e99b1e90c471b6f6044305270584",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-release-plan-split-evidence-traditional-readiness-review.json SHA9bac22dfac8f316f217c63773d2847d84a4c9df9a1d41e591bd03a32b40d352f; Interface readiness only,v2 remainsFAILED/countersample retained; separateactualreadonlyTRAD+pureformatter. No thirdDMLprobe orfullcaseadmission; persistenceM CLOSED_FORWARD_ONLY; oldcheckUNKNOWN.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-RELEASE-PLAN-FINAL-MEASUREMENT-ADMISSION",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "f7902ae0f02984b5feeb8cb02d5893c57820e99b1e90c471b6f6044305270584",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-release-plan-final-measurement-admission-review.json SHA4e132b12460b41db5f33af40affa39da082aae8d94f66cdeff4e18fc209e119c;0C/H/M exactfrozen8ba46/HEAD30d/FP2f819/PLAN142a/16private/10source;53syntheticPASS and3repros nowINVALID. Onceoriginalfull5000casecoverage/all20s/120s/strict45000/rollback/facts/sameevent only, then readonlyPFSunchanged and guardedcleanup. Splitpreflight not oldFAILED requalification. No productSQL/opt/CI/push/merge.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-RELEASE-PLAN-RESULTS-REPORT-UNADOPTED-OPTIONS",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "f7902ae0f02984b5feeb8cb02d5893c57820e99b1e90c471b6f6044305270584",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-release-plan-results-report-unadopted-options-review.json SHAf0d65a6daf0ca7742ecafcf265f94a8405600e7d95f9dbe6cc4e3cc863cd5a05;0C/H/M exactreport69SHA6f901/sourceFP2f819/HEAD30d/PLAN142a. Actualrawindependentreparseexactmatch1PASS0skip/strictVALID; two phases260000examined/250000Handlernext/5000affected;4PRIMARY46idxworkactualI/O distinctfrom50posthocplans;PFSUNCHANGED/cleanupCONFIRMED. Proposalonly: explicit100ID IN firstvalidatedplan/actualaccess; optionalPRIMARY+IN separateboundedreview,allCAS/CASE/batches/affectedrows/preheldlocks/physicalorder/triggerFK/rollback/fullCI retained. No opt/newDB/CI/push/merge admission; originalfailures/CI408FAIL/HIGHOPEN preserved.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-RELEASE-IN-FINAL-MEASUREMENT-ADMISSION",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "f7902ae0f02984b5feeb8cb02d5893c57820e99b1e90c471b6f6044305270584",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-release-in-source-final-execution-admission-review.json SHA41799fb2c13f793532ca88fdc4f76e1262d0e51c7e193b9e48e96fa901dd1a53;0C/H/M exactsource32039/FP867e0/HEAD30d/PLAN142a/freeze7c759/20private+10source. Productreversefull545204/ORimpliesIN/802bind/preheldPKtargets/currentproof preserved;physicaltraversalnotidenticalclaim. Pure4actualbodySQLbind+9diagnostic+53collectorPASS. CountMclosed44=24parents20children. Onceprepare/inventory/fullfile44coverage/full5000/all20s120s/strict45000/factsrecovery thenPFSunchanged+cleanup only. Ifstillbroadreport/nohint/CI/push/merge.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-RELEASE-IN-RESULTS-REPORT-NEXT-PROPOSAL",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "f7902ae0f02984b5feeb8cb02d5893c57820e99b1e90c471b6f6044305270584",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-release-in-results-report-next-proposal-review.json SHA100bd1e96a49a93625ea68fd82b38f5235c62556835bf616f688004a6deeff56;0C/H/M reportingonly actualrawreparseexact44PASS0skip/strictVALID/sourceunchanged/PFSUNCHANGED/cleanupCONFIRMED. Report70ad244e reviewed;read-reductionNOT_MET:260000examined/250000Handlernext unchanged. No stable35percentgain/transactionimprovement/CIrepair or deliveryapproval. INuncommittedWIPretained. NextFORCEPRIMARY+INisproposalonly,separateSampermission/source/plan/actualreads/preheldlocks/physicalorder/triggerFK/CAS/allguards/full44/20s/currentCI needed,no execution now.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P1-DELIVERY-CONVERGENCE-READINESS",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "f7902ae0f02984b5feeb8cb02d5893c57820e99b1e90c471b6f6044305270584",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-p1-delivery-convergence-readiness-review.json SHA6ef088ec36f5f416473ede72be6dafb512757ee1cf1204b0505d8d1ef3e71364; exact readiness4325b5db206b3ea4b8ae10730f91e361c04470a6f384e32c8c7eabe9ce168185;0C/H/M limited document/report review. Corrected CI callback-from-outer boundary and operation-only scope; preserve P0 historical body and67-70; B-first recommendation is not executable admission, focused CI entry unproven. No DB/test/CI/product/PR changes or delivery approval.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-REALLOCATE-CHILD-CLAIM-BATCH-C-PROPOSAL",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "f7902ae0f02984b5feeb8cb02d5893c57820e99b1e90c471b6f6044305270584",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-reallocate-child-claim-batch-proposal-c-review.json SHA09887c4c266975ed418b112d0fb8dfbb52661f66b20521d38d569ac6525603c5; readiness c3005f4afac273fb49f9d11224e0ebe66704bff04776d880ed554ea0280ff0f1;0C/H/M proposal only, READY_FOR_HUMAN_DECISION. Bounded REALLOCATE-only child claim100 ordinaryINSERT+fullsource actualID readback; legacy collision/activeRC/physical-lock native equivalence mandatory. 14700 fewer calls is prediction not measured timing; no execution admission orHIGH closure.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-CHILD-C-SMALL-NATIVE-ADMISSION",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "f7902ae0f02984b5feeb8cb02d5893c57820e99b1e90c471b6f6044305270584",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-child-c-small-native-admission-review.json SHA9eb873d2d2f96247b08d7aef695dc4fc21c47064bbe787f3e1562614da8caffb; exact13 only, 0C/H/M; full5000 not admitted. sourceFP4efcbe29; sandbox startup failed before tests preserved child-c-startup-failure.json; same reviewed prepare succeeded outside sandbox, original settings.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-CHILD-C-FINAL-MEASUREMENT-ADMISSION",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_independent_review",
+      "reviewed_baseline": "f7902ae0f02984b5feeb8cb02d5893c57820e99b1e90c471b6f6044305270584",
+      "source_ref": "Actual reviewer message: small13 raw f5547c7e PASS; full44 baseline a4106492 sourceFP4efcbe29 PLAN142a HEAD30d verified; byte-equivalent originalcase after4diaglines, whole44 collector guards unchanged, same caller-tail loader, no SQLobserver/selector/NodeOptions; 0C/H/M, admits one whole44 coverage no filter and cleanup. Formal receipt to append when returned. Formal receipt /Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-child-c-final-measurement-admission-review.json SHA14a5a96346cdb525af965937dd46e63707fd99e8a2c7c7c88aa3ba207180a5f2.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -7035,6 +7263,54 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Actual Sam direct 2026-10-29: 按建議方案執行; refers immediately preceding concrete A solution in current chat and report65. Original safety/20s/performance-failure stop/no merge preserved; no new limits/contracts/dependencies authorized."
+    },
+    {
+      "id": "CALLER-TAIL-DIAGNOSTIC-001",
+      "impact": "MINOR",
+      "question": "Bounded test-only timing and SQL classification after actual Inventory posting returns, independent review then targeted original Reallocate capacity diagnostic and proposal only; all guards/original20s and no merge297 retained. No production optimization/push/CI rerun.",
+      "affected_ids": [
+        "TASK-017",
+        "TASK-022",
+        "TC-010"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Actual Sam latest direct instruction: resume measuring post-Inventory Fulfillment projection/audit/operation completion stages, identify exact wall time and SQL counts then propose optimization; retain all safety/20s/no merge PR297. This supersedes earlier stop only for this bounded diagnostic."
+    },
+    {
+      "id": "RELEASE-PLAN-DIAGNOSTIC-001",
+      "impact": "MINOR",
+      "question": "Bounded read-only plan/actual rows/waits/trigger diagnosis of original50releasedprojectionUPDATEs; independent instrument/admission review, originalfull5000case/20s/allguards retained, propose only. No productSQL/newcandidate/CI/push/merge.",
+      "affected_ids": [
+        "TASK-017",
+        "TASK-022",
+        "TC-010"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Actual Sam direct: 按建議，先檢查舊投影這50個UPDATE的執行計劃、掃描列數及等待，確認原因後再提出具體優化方案；保留全部安全檢查及原有20秒限制，暫不合併PR297。"
+    },
+    {
+      "id": "RELEASE-IN-OPTIMIZATION-001",
+      "impact": "MINOR",
+      "question": "Only add independent alreadylocked100batch PK IN plus corresponding bindings; preserve originalCAS/guards/20s,independentreview then plans/actualreads/performance; ifstillbroad proposeonly,nohint/merge297.",
+      "affected_ids": [
+        "TASK-017",
+        "TASK-022",
+        "TC-010"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Actual Sam latestdirect: 按建議，先加入本批100個已鎖定主鍵的獨立id IN，保留完整CAS、所有安全檢查及20秒限制；完成獨立覆核後驗證執行計劃、實際讀取量及效能，若仍寬掃再提出方案，暫不合併PR297。"
+    },
+    {
+      "id": "REALLOCATE-CHILD-CLAIM-BATCH-001",
+      "impact": "MAJOR",
+      "question": "Approve proposal C: only REALLOCATE fresh child operation claims in batches <=100 with exact source tuple/actual ID/hash/pending readback, same scope/root/legacy claim/other actions; preserve first conflict errors, activeRC, all records/guards/5000/20s. Independent implementation review, small native collision/rollback/concurrency, original full5000 and necessary regression then fixed-candidate mandatory CI; stop on real performance failure. Alternative retain per-row child claims and explicitly choose bounded PRIMARY+IN proposal A. Proposal/readiness SHA c3005f4afac273fb49f9d11224e0ebe66704bff04776d880ed554ea0280ff0f1.",
+      "affected_ids": [
+        "TASK-017",
+        "TASK-022",
+        "TC-010"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Actual Sam async reply: 批准方案 C：批量 child claim及完整驗證（建議）; approved readiness SHA c3005f4afac273fb49f9d11224e0ebe66704bff04776d880ed554ea0280ff0f1, preserves20s/5000/guards/stop-on-performance-failure/no merge297."
     }
   ],
   "external_actions": [
@@ -7763,16 +8039,176 @@
       "kind": "GIT_COMMIT",
       "target": "One reviewed staged Fulfillment source6a31 and module docs; parent e54 only",
       "idempotency_key": "budget-a-frozen-commit-6a31-once",
-      "status": "PLANNED",
-      "source_ref": "ActualSam A and independent994ff9d2 localresults/publication0C/H/M. Source/PLAN unchanged from six actualchecks; no raw logs, secrets, other modules or merge."
+      "status": "CONFIRMED",
+      "source_ref": "Actual gitcommit 30d442b5082bdcd32b1beffac6219473ebe22a4b parent e54; exact sourceFP 6a31aa80082fe885f28320b16c2393453ce5546ef5fa3ba8a4043f8fa42604ca remains identical to all6localchecks;15intendedfiles only,no raw/privateevidence/export."
     },
     {
       "id": "BUDGET-A-NORMAL-PUSH",
       "kind": "GIT_PUSH",
-      "target": "origin refs/heads/codex/fulfillment-p1-queue-picking expected remote e54, one frozen new commit only",
+      "target": "origin refs/heads/codex/fulfillment-p1-queue-picking exact 30d442b5082bdcd32b1beffac6219473ebe22a4b expectedremotee54 normalFF only",
       "idempotency_key": "budget-a-normalpush-6a31-once",
-      "status": "PLANNED",
-      "source_ref": "ActualSam implementation/currentCI authority and independent994ff9d2; normal nonforce push only; existingdraft297 automaticPR CI, no redundantworkflow_dispatch or targetmerge."
+      "status": "CONFIRMED",
+      "source_ref": "Actual normalFF push exit0 e54..30d442b5082bdcd32b1beffac6219473ebe22a4b originaltopic only; authenticated PR readback OPEN/DRAFT/unmerged exactnewhead. No main push, no raw export."
+    },
+    {
+      "id": "BUDGET-A-CURRENT-PR-CI",
+      "kind": "CI",
+      "target": "https://github.com/crazysumsum/erp-app/actions/runs/40801317549 automaticPR297 head30d/main ef5",
+      "idempotency_key": "budget-a-PR297-ci40801317549",
+      "status": "CONFIRMED",
+      "source_ref": "Actualautomaticrun exists/in_progress, no redundant dispatch. Build rawcheckout f074273b2f00af509f4960119f912c0d0d9c47fc SHA409f375a56c4eea9e3c6256420d30b46dbffe8703a35f512867be229d435ee2a; REST actualparents latestmainef5 +head30d, tree6fd9 matches git merge-tree calculation. Actualserver/native/coverage/currentCI result PENDING, no PASS or merged-local-FP claim. Connector omittedparents/treelogtransporterror; existinggh read-onlyfallback used, terminal controls retained privately only. FINAL observed FAILURE/attempt1:10SUCCESS2FAIL1SKIP. Actual S4 unique directReallocate tail rollback tx20001.045634ms/941q40338e/DATABASE_TRANSACTION_TIMEOUT; originalstrict45000 predicate rejects abort, intendedtail/facts/recovery not reached. RawSHA7a31b31144e90ad88e6a824c82f73974ec1dd1533fecfba572fcfd78e82c884d; all4raw/checkouts and finalAPI preserved; global4361=4153PASS1FAIL0CANCEL207existingSKIP. No rerun/fix/push/merge."
+    },
+    {
+      "id": "BUDGET-A-BLOCKED-PR-BODY-CONNECTOR",
+      "kind": "PR_METADATA_UPDATE_ATTEMPT",
+      "target": "ExistingdraftPR297 blockedbody reporting only",
+      "idempotency_key": "budget-a-blocked-body-connector",
+      "status": "FAILED",
+      "source_ref": "Actual GitHub connector update_pull_request 403FORBIDDEN Resource not accessible by integration; no mutation confirmation. Existing owner gh transport fallback already authorized for same PR metadata; no token/scope changes."
+    },
+    {
+      "id": "BUDGET-A-BLOCKED-PR-BODY",
+      "kind": "PR_METADATA_UPDATE",
+      "target": "ExistingdraftPR297 body SHA0db46c7597b0a336e63bae66fe2add402d95daf914c2d5c9501d726d8b4fc4fe; head30d/statusdraft unmerged preserved",
+      "idempotency_key": "budget-a-blocked-body-exact-once",
+      "status": "CONFIRMED",
+      "source_ref": "Actualgh pr edit exit0 under existingowner authorization; /Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/budget-a-pr-blocked-readback.json SHA2c9a5c6456a92274956d33a5ae84f8fdba01d0824ddfd12f9bc38a91bff9ca01; exactreviewedbody readback matched after trailingnewline normalization, head30d OPEN/DRAFT/unmerged unchanged. Descriptiononly, no sourcepush/CIrerun/ready/base/merge mutation; connector403historicalattempt preserved."
+    },
+    {
+      "id": "CALLER-TAIL-RUNTIME-PREPARE",
+      "kind": "ISOLATED_TEST_PREPARE",
+      "target": "Fresh synthetic cd0c9a30/p1post_c997e1e8 owned socket-only MySQL26.7 defaults",
+      "idempotency_key": "caller-tail-runtime-prepare-once",
+      "status": "CONFIRMED",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/caller-tail-runtime-public.json SHA0b182d2e9a75bfbda41536f1975e7a4ca98602384b32f71310e06a3b067f6104; Actualprepareexit0/migrations0/no networking/new26charbase/exactaccount only."
+    },
+    {
+      "id": "CALLER-TAIL-ONCE-MEASUREMENT",
+      "kind": "BOUNDED_DEVELOPER_DIAGNOSTIC",
+      "target": "One original full5000 Reallocate filtered coverage case on HEAD30d/FP9d405/PLAN142a; all20s/120s/nativefault/rollback/recoveryassertions retained",
+      "idempotency_key": "caller-tail-once-measurement-once",
+      "status": "CONFIRMED",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/caller-tail-measurement-result.json SHA688093d8571774872bcd25c8c9d94e4c1ae88e3328eac83c0ccd2bf91c292613; Actualexit0/1PASS0FAIL0CANCEL0SKIP/collectorVALID issuesempty/sourceunchanged; no retry; originalCI408FAIL not replaced; not canonicalHARNESS run or formal/currentCI/GatePASS."
+    },
+    {
+      "id": "CALLER-TAIL-RUNTIME-CLEANUP",
+      "kind": "ISOLATED_TEST_CLEANUP",
+      "target": "Only exact cd0c9a30/p1post_c997e1e8 base/account and own MySQL",
+      "idempotency_key": "caller-tail-runtime-cleanup-once",
+      "status": "CONFIRMED",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/caller-tail-runtime-cleanup.json SHAc571afd0d8ad788a3bcd8a06767f9587d7aba7c0f218fd64c4f91b533975532c; Actualguardedexit0/zeroclients/ownedchildren0/exactbaseandaccountgone/ownMySQLshutdown0/socketpidabsent; datadir/evidence retained."
+    },
+    {
+      "id": "RELEASE-PLAN-COMPATIBILITY-FIRST",
+      "kind": "DIAGNOSTIC_COMPATIBILITY",
+      "target": "Owned release-plan runtime only",
+      "idempotency_key": "release-plan-compatibility-first-once",
+      "status": "FAILED",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/release-plan-probe-result.json SHA372e915139c28c5bcd92cb5822057233fdb2c1039d81f2fa3c41a8068fc942ee; Original100rowUPDATEaffected100/committed but captureinvalid rejected. Not a20s orcapacityfailure. Rawcountercheck neverpersisted due toolbug,UNKNOWN not reconstructed; exactprobeschema removed. No fullcase."
+    },
+    {
+      "id": "RELEASE-PLAN-READONLY-POSTMORTEM",
+      "kind": "DIAGNOSTIC_METADATA",
+      "target": "Owned release-plan runtime only",
+      "idempotency_key": "release-plan-readonly-postmortem-once",
+      "status": "CONFIRMED",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/release-plan-readonly-postmortem.json SHA40fd25da34af5c3bc2754fa118b7c6e41bab401423a39b6fbbac6dd5f89059be; Exactadmittedprepareonly/noexecute/COUNT0;SQLtext1024exactprefix;2specificdefaultdaemons identified; no DML/DDL/EXPLAIN/settings/proberetry."
+    },
+    {
+      "id": "RELEASE-PLAN-COMPATIBILITY-V2",
+      "kind": "DIAGNOSTIC_COMPATIBILITY",
+      "target": "Owned release-plan runtime only",
+      "idempotency_key": "release-plan-compatibility-v2-once",
+      "status": "FAILED",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/release-plan-probe-v2-result.json SHAaa78ba487d4eb1ad660919870313c8788440a9eba074cda5d2dfb3aaf54b5e2f; Original100rowUPDATE succeeded/countsvalid,JSONparsernotable rejected; entirev2FAILED/exactchildremoved. Not capacity/performancefailure orPASS."
+    },
+    {
+      "id": "RELEASE-PLAN-FORMAT-READONLY",
+      "kind": "DIAGNOSTIC_METADATA",
+      "target": "Owned release-plan runtime only",
+      "idempotency_key": "release-plan-format-readonly-once",
+      "status": "CONFIRMED",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/release-plan-explain-format-postmortem.json SHAc75aae291e57ea3e9db1cbaa6c43d632e69187fdd74c0830f91847b0cc7b3352; Only originalUPDATE EXPLAIN JSON/TRAD syntheticparams/ownedemptybase; no execute/ANALYZE/SET/DML/DDL; JSONv2 marker explains rejection,TRADsupported."
+    },
+    {
+      "id": "RELEASE-PLAN-RUNTIME-PREPARE",
+      "kind": "ISOLATED_TEST_PREPARE",
+      "target": "Owned release-plan runtime a329dc43/p1post_9b96a4c4 only",
+      "idempotency_key": "release-plan-runtime-prepare-once",
+      "status": "CONFIRMED",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/release-plan-runtime-public.json SHAff6910aa7fcbc3268a58e5ed3b03111e755235bd6c809849da07e0c4f6ed298b; Ownsocket-onlyMySQL26.7 defaults/migrations0/newa329dc43/p1post_9b96a4c4; no networking/sharedDB/tuning."
+    },
+    {
+      "id": "RELEASE-PLAN-PFS-INVENTORY",
+      "kind": "DIAGNOSTIC_METADATA",
+      "target": "Owned release-plan runtime a329dc43/p1post_9b96a4c4 only",
+      "idempotency_key": "release-plan-pfs-inventory-once",
+      "status": "CONFIRMED",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/release-plan-pfs-inventory.json SHA4a171787d639cd553abdaa9f3e92fc8272cd258d73e526045a08c328d587ae97; Identityfirst7readonlymetadataqueries; no setting changes or businessroweffects."
+    },
+    {
+      "id": "RELEASE-PLAN-ONCE-FULLCASE",
+      "kind": "BOUNDED_DEVELOPER_DIAGNOSTIC",
+      "target": "Owned release-plan runtime a329dc43/p1post_9b96a4c4 only",
+      "idempotency_key": "release-plan-once-fullcase-once",
+      "status": "CONFIRMED",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/release-plan-measurement-result.json SHAdd68fbefed9d58ca4833a6bcacf611e462420a2c807632ccc2d2f325b2c2ce6a; Actualonceoriginalfull5000filteredcasecoverage/120s/all20s/strict45000/fullfactsrollback/sameeventconservation PASS1/0skip/exit0/strictVALID/sourceunchanged. Observeroverheadinsidedeadline; notformal/canonicalrun/currentCI/GatePASS."
+    },
+    {
+      "id": "RELEASE-PLAN-PFS-UNCHANGED",
+      "kind": "DIAGNOSTIC_METADATA",
+      "target": "Owned release-plan runtime a329dc43/p1post_9b96a4c4 only",
+      "idempotency_key": "release-plan-pfs-unchanged-once",
+      "status": "CONFIRMED",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/release-plan-pfs-unchanged.json SHAc96b0b56f8307d1dacdccd9ba48e5541238e745b7517e59377341c481a986f78; Postcaseonlyreadonlycomparison confirmsconsumers/instruments/objects/variables allUNCHANGED."
+    },
+    {
+      "id": "RELEASE-PLAN-RUNTIME-CLEANUP",
+      "kind": "ISOLATED_TEST_CLEANUP",
+      "target": "Owned release-plan runtime a329dc43/p1post_9b96a4c4 only",
+      "idempotency_key": "release-plan-runtime-cleanup-once",
+      "status": "CONFIRMED",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/release-plan-runtime-cleanup.json SHAd06663da72d485c3f72e9813f64c963eb60d1c68685dc748412c94ee0ab495cc; Exactownednamespace/account only,zeroclients/children/UUIDsocketdatadirverified,gracefulownshutdown0/socketpidabsent; datadir/all evidence preserved."
+    },
+    {
+      "id": "RELEASE-IN-RUNTIME-PREPARE",
+      "kind": "ISOLATED_TEST_PREPARE",
+      "target": "Owned release-in aa6dc08d/p1post_fefe1a44 only",
+      "idempotency_key": "release-in-runtime-prepare-once",
+      "status": "CONFIRMED",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/release-in-runtime-public.json SHAcbc924b57eee64b8f58b537366c9c952a2ea7419573f77bdb82e374c68f95dc1; Ownedaa6dc08d/p1post_fefe1a44 socketonly26.7/default128MiBbuffer100MiBredo/migrations0,no tuning."
+    },
+    {
+      "id": "RELEASE-IN-PFS-INVENTORY",
+      "kind": "DIAGNOSTIC_METADATA",
+      "target": "Owned release-in aa6dc08d/p1post_fefe1a44 only",
+      "idempotency_key": "release-in-pfs-inventory-once",
+      "status": "CONFIRMED",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/release-in-pfs-inventory.json SHAd50dc26cd31ccad8f721450d090e7a65c30f05c0aad760d5c1b6cd0e1947a9ed; Identity-first7readonlyqueries,defaultPFSmetadata only,notcapacityPASS."
+    },
+    {
+      "id": "RELEASE-IN-ONCE-WHOLE-FILE",
+      "kind": "BOUNDED_DEVELOPER_DIAGNOSTIC",
+      "target": "Owned release-in aa6dc08d/p1post_fefe1a44 only",
+      "idempotency_key": "release-in-once-whole-file-once",
+      "status": "CONFIRMED",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/release-in-measurement-result.json SHA9316d86feed1667aa04424ad958bc61e2386b07ac207e7c517cdfcf0ae843fc1; Actualwholeoriginal44tests includingfull5000once PASS0skip/strictVALID/exit0/sourceunchanged;allCAS/guards/coverage/20s/120s/strict45000/fullfacts/sameeventretained. OptimizationREAD_REDUCTION_NOT_MET,still260000examined/250000next;no currentCI/GatePASS."
+    },
+    {
+      "id": "RELEASE-IN-PFS-UNCHANGED",
+      "kind": "DIAGNOSTIC_METADATA",
+      "target": "Owned release-in aa6dc08d/p1post_fefe1a44 only",
+      "idempotency_key": "release-in-pfs-unchanged-once",
+      "status": "CONFIRMED",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/release-in-pfs-unchanged.json SHAc96b0b56f8307d1dacdccd9ba48e5541238e745b7517e59377341c481a986f78; All4consumers/instruments/objects/variablesUNCHANGED;post-runread-only."
+    },
+    {
+      "id": "RELEASE-IN-RUNTIME-CLEANUP",
+      "kind": "ISOLATED_TEST_CLEANUP",
+      "target": "Owned release-in aa6dc08d/p1post_fefe1a44 only",
+      "idempotency_key": "release-in-runtime-cleanup-once",
+      "status": "CONFIRMED",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/release-in-runtime-cleanup.json SHAd384348c6220bdff62d6a3c9ad9794fffef9d64b3bb81834cfba24fd80165903; Exactownedbase/account removed/zero clients+children/ownUUIDdatadirsocketverified/gracefulshutdown0/socketpidabsent;datadir/evidence retained."
     }
   ],
   "evidence_files": [
@@ -8144,7 +8580,8 @@
         "Exacte54CI40628810071 13/13jobsSUCCESS; OriginalPick/Reallocate/Cancel20s failures nowallstrictcapacitycasesPASS atsame20s/5000/coverage; intended45000 tailfailuresreached ratherthanwatchdog. Actuale54rawshard1/3. Preservedalloriginalfailures; independentfinalCIclosure reviewrequired beforeadoption.",
         "PASS qualification:5000balances previewALLOCATE_SETUP actualtx19968.595287ms/callback19797.434984/noerror/allsettled; outerphase19994.380481ms. Only31.405ms txheadroom, explicitlydisclosed torootuser/PR; no minimumheadroomcontractinvented, no stableP95/amplemarginclaim orwaiver.",
         "Actualfinalindependentreviewc707e8d0ba317459bd85d8d8db13895504094da9eaed0ff1d22fdc830f2a5cb1 confirms currentCIe54/DoD/closure,0C/H/M; originalfailurespreserved, no waiver.",
-        "REOPEN actualPRintegrationCI40632110878 checkout22b1742b8b65f1072f4ad19e5d2e4e1210ca6fdf(head e54/basea98): directREALLOCATE_ROLLBACK tx20053.779930ms/5841queries40257executes DATABASE_TRANSACTION_TIMEOUT; inventoryPost12177.549ms thenownerCurrentProof853.590msfailed; exactsynthetic45000notreached. PriorbranchPASS/closure retained, notsameasoriginal5000Balancepreviewfailure (thatcase shard1PASS). RawSHA3fe42f5eebb25fd9761532e25f3bcaf8042185e6d39129157ae6f268f6ae539c; report64; no rerun/fix."
+        "REOPEN actualPRintegrationCI40632110878 checkout22b1742b8b65f1072f4ad19e5d2e4e1210ca6fdf(head e54/basea98): directREALLOCATE_ROLLBACK tx20053.779930ms/5841queries40257executes DATABASE_TRANSACTION_TIMEOUT; inventoryPost12177.549ms thenownerCurrentProof853.590msfailed; exactsynthetic45000notreached. PriorbranchPASS/closure retained, notsameasoriginal5000Balancepreviewfailure (thatcase shard1PASS). RawSHA3fe42f5eebb25fd9761532e25f3bcaf8042185e6d39129157ae6f268f6ae539c; report64; no rerun/fix.",
+        "Current30d PR CI40801317549 actualcheckoutf074/parents ef5+30d FAIL: REALLOCATE_ROLLBACK ordinal6 tx20001.045634ms,941query40338execute,DATABASE_TRANSACTION_TIMEOUT; case38373.236757ms is not TX. prepare696.828/preclaim4528.262/inventoryPost9073.143/ownerCurrentProof810.222ms each completed; timeout after ownerCurrentProof in caller, exactslowSQL and prior/aftergap attribution not proven. Strict45000 rejectedtimeout; tailfault/facts/recovery not reached. report67/rawSHA7a31b311; userstoprule observed,no retry oroptimization. Original failure/PASS histories preserved."
       ],
       "risk_approval_id": null
     },
@@ -8203,7 +8640,8 @@
         "PERF-CI002A currentFPb6f/PLAN142a oneactualnative553PASS0skip +twoactualbrowser2PASSeach; focusedcoverage5PASS prior; originalfailures preserved and defect remainsOPEN pending exactcurrentcandidateCI and independentclosing. report63; evidence index perf-a-all-local-results-index.json.",
         "Exacte54CI40628810071 13/13jobsSUCCESS; ActualcurrentHTTP5000Allocate/Reallocate/Pick200,8739.79/12337.97/2599.14ms; tailrollback+3replays/conservationPASS; original79HTTP500cause remainshistoricallyunknown, no falsecauseclaim. Preservedalloriginalfailures; independentfinalCIclosure reviewrequired beforeadoption.",
         "Actualfinalindependentreviewc707e8d0ba317459bd85d8d8db13895504094da9eaed0ff1d22fdc830f2a5cb1 confirms currentCIe54/DoD/closure,0C/H/M; originalfailurespreserved, no waiver.",
-        "REOPEN actualPRintegrationCI40632110878 actualcheckout22b1742b: routeboundHTTP_REALLOCATE tx20002.592280ms/5413queries40256executes DATABASE_TRANSACTION_TIMEOUT, HTTP500/20115.181ms. PrecedingHTTPAllocate200/16147.729ms, laterPick/replaynotreached. RawSHA3d3e8976da08949c37491c57f2ba54736a2214d7deed973b32b1ad1d0d72f94a. ThisnewHTTP500causeproven; original79aef500causehistoricallyunknown retained. No inferencefromwholecase47859ms."
+        "REOPEN actualPRintegrationCI40632110878 actualcheckout22b1742b: routeboundHTTP_REALLOCATE tx20002.592280ms/5413queries40256executes DATABASE_TRANSACTION_TIMEOUT, HTTP500/20115.181ms. PrecedingHTTPAllocate200/16147.729ms, laterPick/replaynotreached. RawSHA3d3e8976da08949c37491c57f2ba54736a2214d7deed973b32b1ad1d0d72f94a. ThisnewHTTP500causeproven; original79aef500causehistoricallyunknown retained. No inferencefromwholecase47859ms.",
+        "Current30d PR CI40801317549 partial HTTP originalcasePASS:Allocate6345.539/Reallocate10083.355/Pick2587.220ms each200 with tailrollback/replay/conservation. Originalfailurehistory retained; remainsOPEN with joined currentcandidateCI closure blocked by directReallocate20s timeout; no all-gates-pass claim. report67/S2rawSHAea87c2ee452cb5c109d3de913cd64d73502c0955df8fb19e4a1fa1f0050a75f1."
       ],
       "risk_approval_id": null
     },
@@ -8239,5 +8677,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Commit exactstagedsource6a31 plusdocs, observecommit/FP/HEAD then normalpush expectedremotee54 once. Recordactualnewhead and PRautomaticCI; verifyactualsyntheticcheckout tree and parents(newhead/latestmainef5), allrequiredjobs/coverage/perf beforecloseHIGHs/TASKs orclaimdone. On actualcapacity/perf fail stop/report. PR297 draft/no merge."
+  "next_safe_action": "C structure/equivalence proven locally:13PASS/44PASS sourceunchanged, preclaim155q152e andfullrollback7.744s/success7.291s. Save C+IN+diagnostics workcommit, integrate freshlyfetchedmaine64dfc74 (reviewerread-onlyimpact noP1consumedsourcechanges), reconcile sourcebaseline then independent results/finalrun admission andnecessaryfullregression/currentCI. Newchildtests explicitly separate focused evidence. DEF022/025 remainOPEN untilcurrentCI; no merge297. Ownruntimecleaned."
 }

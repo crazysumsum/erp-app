@@ -1,4 +1,95 @@
-# Fulfillment P0 implementation entry
+# Fulfillment implementation readiness
+
+## 當前 P1 交付及唯一阻塞表（2026-10-29）
+
+下一個交付固定為：**解除原 CI 的 Reallocate 末批 projection rollback 20 秒逾時，完成必要回歸、當前候選必要 CI 與獨立覆核，使 PR297 可審閱**。不合併 PR297；不因其他模塊的歷史失敗全面停止不受影響的工作。此節是唯一持續更新的交付阻塞表；下方 P0 entry 及報告67–70保留各自歷史，不將舊結論改寫成當前狀態。
+
+目前 HEAD `30d442b5082bdcd32b1beffac6219473ebe22a4b`，未提交 C＋既有 IN 候選 source fingerprint `4efcbe29466695a72cd8097cb7c7d9bb5e42473a3f612aaa630c66ffc87430bf`，PLAN `142a24e513c6889dcd6da31cc5c7313f98d1e937a50998ff56c0a45025c4b23e`，DESIGN `f7902ae0f02984b5feeb8cb02d5893c57820e99b1e90c471b6f6044305270584`。本輪 GitHub 唯讀查驗：[PR297](https://github.com/crazysumsum/erp-app/pull/297) OPEN／DRAFT／未合併／remote head 仍30d；該 head 最新 PR [CI40801317549](https://github.com/crazysumsum/erp-app/actions/runs/40801317549) FAILURE，13 jobs＝10 SUCCESS／2 FAILURE／1 SKIPPED。C＋IN WIP 尚未推送，沒有自己的 CI，不借用舊候選結果。
+
+| 阻塞 | 證據 | 最小下一動作 | 完成標準 | Sam 決定 |
+| --- | --- | --- | --- | --- |
+| **唯一產品交付阻塞：原 full5000 Reallocate 末批 rollback 在20秒被 watchdog 中止**；DEF022／025 OPEN，TASK017／022 IN_PROGRESS。IN trial 功能通過但讀量目標未達，不能關閉阻塞。 | [67：CI 原失敗](67_candidate_ci_reallocate_timeout_stop.md)，交易20,001.046ms、941 query／40,338 execute；[70：IN trial](70_released_projection_id_in_optimization.md)，原完整 file 44 PASS／0 FAIL／0 SKIP，但每個 phase 仍50 UPDATE／260,000 examined／250,000 Handler_read_next。 | 最新建議C：只把Reallocate全新child operation改為每批100的INSERT及完整source鍵ID回讀，先證明完整性／duplicate／rollback等價及SQL數下降，再驗證原5000案例整筆效果。下文A／B保留為先前方案，C的具體範圍與風險見新增段落。 | 必須以整筆交易效果證實具體修法；原嚴格45000末批故障、整筆 facts rollback、同event恢復及數量守恆通過；原5000／20秒與所有安全檢查不變。之後才做必要回歸、固定候選必要 CI／coverage、獨立覆核；任何項未過，PR保持 BLOCKED。局部read-proof或診斷完成均不是解阻。 | **Sam 已實際批准 C**：「批准方案 C：批量 child claim及完整驗證（建議）」，綁定原 readiness SHA `c3005f4afac273fb49f9d11224e0ebe66704bff04776d880ed554ea0280ff0f1`。已進入實作及獨立覆核，尚未 native／容量／CI；A／B未執行。 |
+
+### C 已批准後的實作進度
+
+只在 Reallocate 的新 member／leg 使用每批100普通 INSERT與完整來源鍵回讀；scope／root／其他action／schema保持原有行為。單元19 PASS，lint exit0；原 fixture mock／lint失敗紀錄保留。獨立 reviewer 發現 duplicate 批次讀鎖可能等待後續無關鍵，已修成依原輸入順序逐一 exact-key FOR UPDATE，在第一個衝突停止，並新增原生競爭回歸。小型原生13 PASS／0 FAIL／0 SKIP，覆蓋跨批次全rollback／FK錯誤／真鎖競爭及無關後鍵不等待；完整原Reallocate file44亦44 PASS／0 FAIL／0 SKIP，coverage啟用、collector VALID、source／PLAN／HEAD前後相同。當前CI尚未開始，原CI阻塞仍未關閉。下方C提案段落是批准前歷史，保留原決策語意。
+
+### C 原生量測結果（本機開發驗證）
+
+原5000 case／100行／每行50／100 Balance不變；末批45000正確觸發，整筆facts回滾及同event恢復全部通過。每個phase的child紀錄與posting工作保留，preclaim實測為 **155 query＋152 execute＝307次**，較舊5＋15002少14700次，符合結構目標。
+
+| 階段 | rollback | 同event恢復 |
+| --- | ---: | ---: |
+| preclaim | 1447.157ms；155q／152e | 1442.429ms；155q／152e |
+| Inventory posting | 3513.673ms；379q／25254e | 3494.978ms；379q／25254e |
+| 完整parent交易 | 7743.902ms；1091q／25507e；預期45000 | 7291.164ms；1097q／25661e；成功 |
+
+只有本機單輪觀察，不是P95或CI通過。前次IN使用SQL／PFS observer，本輪只有caller計時，因此不能把整筆時間差全歸C、亦不能把呼叫數減少98%稱為時間改善98%。原Inventory逐筆posting成本仍存在；沒有增加hint、index、schema或時限。
+
+證據：private `child-c-measurement-result.json` SHA `74103bee1fdf0d548a5fcdc83c79914b0e82a7b93b3a0948409962ad571fb286`；小型13原始log SHA `f5547c7efa0430a68d4477f4064aaf42121c9bda7ea18b31613963af828ac6a4`；實作與小型／容量准入均由 `/root/fulfillment_independent_review` 實際覆核0C/H/M。最初MySQL啟動SIGSEGV發生於migration／schema／Node測試前，失敗原件以`.failed-sandbox-startup`保留；相同prepare bytes／參數在獲准環境執行後成功，未偽造或刪除失敗。下一步固定最新main整合後候選、必要完整回歸及當前CI；PR297不合併。
+
+### 同一原失敗情境的完整交易成本
+
+測試固定為一張 SO／Fulfillment 的100行，每行50個既有 Reservation，合計5000；100個 Balance。Reallocate 釋放5000舊 Allocation、建立5000新 Allocation，末批 projection 注入45000，要求全交易回滾後同event成功恢復。不是不停替一張 SO 新建 Reservation，也不是5000 Balance preview 案例。以下 CI 是原失敗，local 是新的 IN WIP；同一業務情境但不同 source／環境／執行上下文，不能作同環境加速比。均為單次觀察，**不是P95**。
+
+| 階段／包含關係 | 原 CI rollback（ms；query／execute） | IN local rollback（ms；query／execute） | IN local 恢復成功（ms；query／execute） |
+| --- | ---: | ---: | ---: |
+| 完整 parent transaction，含交易邊界 | **20,001.046；941／40,338；TIMEOUT** | 8,794.022；941／40,357；預期45000 | 8,255.884；947／40,511；成功 |
+| callback 計時邊界 | 20,001.290：由外層withTransaction起算至callback結束，**不是body-only** | 8,261.435：caller root body-only | 8,236.140：caller root body-only |
+| prepare | 696.828；214／0 | 335.407；214／0 | 250.274；214／0 |
+| preclaim | **4,528.262；5／15,002** | 1,755.215；5／15,002 | 1,735.459；5／15,002 |
+| Inventory posting | **9,073.143；379／25,254** | 3,721.850；379／25,254 | 3,749.258；379／25,254 |
+| Inventory 返回後 tail（以下子項均已包含於此） | 未有完整起迄量測，不能以交易差額冒充 | 1,898.030 | 2,000.478 |
+| ↳ Reservation current read | CI 未細分 | 63.538；13次 SQL | 63.270；13次 SQL |
+| ↳ ownerCurrentProof | 810.222；262／0；已完成 | 378.587；262／0 | 374.157；262／0 |
+| ↳ 舊 projection UPDATE span，含本輪 observer | CI 未細分 | 1,044.322；50次 UPDATE | 1,042.293；50次 UPDATE |
+| ↳ 上列 UPDATE 直接 client SQL／server prepared／observer（不同邊界，不能三者相加） | CI 未細分 | 783.713／732.994／250.524 | 777.870／730.095／255.434 |
+| ↳ 新 projection／Claim／Line 保存 | CI 未細分，不能判定中止批次 | 360.517；50次 SQL，末批預期故障 | 457.101；200次 SQL |
+| ↳ sequence override audit | CI 未細分 | 未到達 | 0.075；0次 SQL／0筆 override，本案例無偏離；不是5000 audit benchmark |
+| ↳ Header／history／一般audit | CI 未細分 | 未到達 | 4次直接SQL／SQL wall合計0.659ms（1 query＋3 execute）；不包含於下列operation方法 |
+| ↳ `F_OPERATION_COMPLETE_ASYNC` 方法 | CI 未細分 | 未到達 | 8.098；6次 SQL；只代表此方法及其子呼叫，不包含上述Header／history／audit |
+| 提交後 RR Inquiry，**不屬於 RC 交易** | rollback 未到達 | 未到達 | 13.045；11／0 |
+
+preclaim 與 Inventory posting 兩個已完成區間在原 CI 合計 **13,601.406ms、40,256 execute**；加 prepare 為14,298.233ms。CI外層起算至callback結束的時間減這三段約5,703.056ms，只能稱未歸屬的整體 wall，包含交易前置邊界、owner proof、其他來源處理、projection及未完成步驟；不能全稱 callback body、projection 或 CPU。再扣 owner proof 的數學差約4,892.834ms仍不是已量到的某個函式。所有父／子 span、trigger／table I/O／server prepared 都可能 inclusive；不重複加總，不把 SQL client wait 當純 server CPU。
+
+四個CI已完成provider合計860 query／40,256 execute，與parent的差是81 query／82 execute；只代表四段以外已觀察到的client呼叫，不全歸tail。以parent elapsed而非callback-end-from-outer-start計算，四段以外wall為4,892.590ms；兩種計時邊界分開保留。
+
+本機同一成功 phase 中，舊 SQL→IN 的 UPDATE client 1,202.884→777.870ms，完整 parent 卻8,173.692→8,255.884ms；原 SQL 用filtered單案例、新 IN 用完整44 file，不能認證35%改善或推算CI剩餘預算。即使本機0.778秒這部分完全消失，也不能據此保證CI通過。SQL次數及廣掃量未降；因此不再以局部時間下降宣布交付完成，也不針對同一失效 IN 反覆量測。
+
+### 集中決策：下一個有界候選與退路
+
+**A：批准只對 `#saveReleasedProjections` 的原 UPDATE 加局部 `FORCE INDEX(PRIMARY)`，保留已鎖定本批100主鍵 IN、完整原 OR CAS、CASE、batch100及affectedRows一致性。**先對照兩種唯讀計劃及警告，再於5000總目標中驗證一批100的實際讀量；看到 PRIMARY 本身不算成功（現有前4批已用PRIMARY卻仍寬掃）。若range／實讀未收窄即停止，不擴至schema／其他hint／optimizer設定。只有小型證明及獨立覆核通過，才使用現有診斷執行原完整44 file一次，核對整筆交易、原故障及恢復；列明本機與CI環境差異，不宣稱本機等於CI。仍超時／容量失敗即停報。若原案例效果成立，再以來源／輸入／門檻適用性判定必要回歸；同一P0／P1底層套件不因標籤不同重複跑。固定候選後才推送並跑全部必要 CI／coverage及審查，CI不作SQL試驗循環。
+
+選A的理由是已有直接 server 實讀證據支持這一個可去除的廣掃，修改局部、無migration／owner契約擴張；**不是承諾它足以解決整體20秒**。仍需檢查預鎖集合、physical row／trigger次序、FK、版本／數量／權限與CAS等價；不得繞過既有安全檢查。原20秒、5000、coverage、strict故障、完整rollback、same-event replay、守恆、既有真Playwright及最終CI Gate全部保留。
+
+**B（建議）：暫不加hint，先把現有 caller 分類診斷帶到可核實CI條件的同一原失敗情境作一次聚焦量測，補上CI缺少的tail／中止位置。**優點是先確認40k逐筆操作及尾段的CI實際成本，降低只改善本機小段的風險；代價是此輪不修產品，可能仍在20秒中止，之後仍需另一項具體修法批准。沿用現有工具，不建新平台、不跑全量CI、不放寬時限。執行前先核實既有可用入口及source／版本／coverage／資源差異；目前唯一workflow是完整CI，**尚未證實有可用的單案例CI入口**。若找不到可核實入口，只報告這項環境限制，不擅改workflow／新增平台／跑全量CI或用本機結果冒充CI。真正失敗即停報，不自動重試。這是有明確未知項的診斷提案，不能宣稱已是可直接執行或能解除阻塞的產品修法。
+
+針對「解除原CI整筆20秒阻塞」的交付目標，獨立reviewer建議優先B；我採納此建議，避免由本機約0.78秒SQL推導未獲證明的CI效益。報告70的hint提案保留為當時歷史，現行優先順序以此節為準。A仍是具體、有界的產品候選，但不是本輪已批准／已採納方案；B亦不是驗收豁免。不獲實際答覆前維持現有WIP／證據及BLOCKED，不實作hint、不啟動DB／容量／CI／push。這次沒有新增測試或診斷平台，也沒有啟動背景工作；本輪既有DB／帳號／程序均已清理。報告67–70原失敗、批准、run引用及原始檔完整保留。
+
+### 繼續排查後的具體方案 C：只對 Reallocate 新 child operation 批量 claim（提案，未實作）
+
+Sam 最新要求「繼續排查問題提出解決方案」。本次只讀 source／原始結果／既有CI設定，沒有DB、容量、CI重跑或產品修改。以下是更新後的優先建議；上文A／B保留為先前方案及其限制，**現時建議優先C，不以尚未存在的單案例CI入口作必要前置**。唯一交付阻塞及最終Gate不變。
+
+新增可核對事實：`InventoryFulfillmentService.claimFulfillmentBatchInTransaction` 先claim scope，再由 `inventoryFulfillmentReceipts.claimFulfillmentInventoryBatch` claim root、逐筆5000個member、逐筆10000個leg。每個 `InventoryOperationService.claim` 都await一次普通INSERT。因此原CI preclaim的15002 execute對應scope嘗試1＋新root1＋新member5000＋新leg10000；scope已存在時走原duplicate/read/replay。本案例preclaim4.528秒不是純INSERT server時間，還包括hash／驗證／JS和往返，不能承諾批量後省4.5秒。但15000次串行child INSERT是直接由source及實測計數共同支持的可減少工作。
+
+SQL廣掃方面，本輪重讀兩個phase全50個sample的prepared SUM_WARNINGS均為0，range_optimizer_max_mem_size為8388608；沒有證據支持「optimizer記憶體不足」作已證實原因。`idx_ful_allocation_work` 是 `(fulfillment_id,status,id)`，UPDATE亦改status；事後Using temporary與使用被更新索引的分兩階段UPDATE機制相容，但這只是解釋線索，不能單靠8.4官方source推定26.7當次執行路徑或全部廣掃成因。PRIMARY前4批也曾廣掃，因此不把FORCE PRIMARY當已證實修法。參考：[range規則](https://dev.mysql.com/doc/refman/8.4/en/range-optimization.html)、[官方UPDATE實作（8.4，僅機制參考）](https://github.com/mysql/mysql-server/blob/8.4/sql/sql_update.cc)。
+
+**C的最小改動範圍：**Inventory owner內部的 `InventoryOperationService.js`／`inventoryFulfillmentReceipts.js` 及必要測試。只讓 `action==='REALLOCATE'` 的全新child使用有界批次；scope／root、原通用claim、其他action、schema及公開provider契約維持原樣。每批最多100筆，保持原member排序，全部member完成後才依原member／leg次序建立legs。原permission／source／數量／actual RC／scope/root鎖與Inventory posting完全保留。
+
+1. 每筆沿用原輸入驗證與canonical hash；以普通多列INSERT寫入原全部欄位。禁止IGNORE、REPLACE及UPSERT，不能吞duplicate或把既有child變成成功。
+2. 僅接受可信metadata證實仍active的RC交易；INSERT affectedRows必須等於本批長度。按完整唯一source tuple（module、document type、document id、line id、event id）回讀本批真實ID、command/hash及全部pending欄位為NULL，核對exact set／unique id／hash，按原輸入順序重建映射。不同document type分批，不只用line id查；使用既有unique index，不新增索引。
+3. 不用第一個insertId加offset推算其他ID，不假設連號；每筆receipt／leg parent reference都用回讀映射。保留完整15000筆child資料、原digest構造及後續完成／replay驗證。
+4. 只在真正ER_DUP_ENTRY且交易仍active時進入duplicate辨識，依完整source鍵FOR UPDATE讀取並按原輸入順序找first conflict：hash不符維持SOURCE_CONFLICT、未完成維持CONCURRENT_OPERATION、已完成child replay維持原SOURCE_CONFLICT；未知unique collision保留原錯誤。deadlock／timeout／FK或其他錯誤直接傳遞，不歸類成duplicate、不繼續posting。該路徑只能失敗並令整個交易rollback，不能補寫後成功。批量statement的實體鎖取得／保留不等同逐句INSERT，即使class及輸入次序相同，也必須原生驗證collision讀鎖及競爭；不宣稱現已證明等價。
+
+**可驗證的結構目標：**此5000案例的15000 child INSERT→150批INSERT＋150次exact-set回讀；preclaim正常路徑由15002 execute＋5 query預期變為152 execute＋155 query，共少14700次client往返。DB仍插入相同15000筆並維護相同unique／資料完整性，hash／JSON工作也仍存在；這是呼叫數預測，尚未量測，不能當成98%時間改善或CI必過。
+
+**一次收斂驗證順序：**先獨立覆核具體實作及0／1／99／100／101邊界、ID有間隙、錯hash／incomplete／completed duplicate、回讀少／多／錯ID及同scope競爭；小型native確認duplicate錯誤分類和末批失敗全rollback。通過才跑原full5000 Reallocate末批45000／完整facts rollback／同event恢復案例，量測preclaim及整筆交易並核對15000筆紀錄完整；不改20秒／120秒case／5000或coverage。發生真容量／效能失敗立即停報，不自動重試。結構與功能效果成立後才跑必要回歸，固定候選並處理最新main影響，再跑全部必要CI／coverage／真Playwright適用Gate及獨立覆核；同一P0／P1底層套件依source／input／threshold適用性只執行一次。不能僅憑局部快而關閉DEF022／025。
+
+**選擇及代價：**建議C，因原CI已直接量到4.53秒的前置區間，且SQL呼叫削減有source可證，不依賴猜測optimizer或新CI診斷平台。代價是child claim的ID回讀及duplicate錯誤等價比單行hint更需要嚴格驗證；尚未證明能提供足夠整體餘裕。A的FORCE PRIMARY＋IN仍可作局部廣掃候選，但本輪不兩項一起修改；B則保留為若C後仍失敗時依實際證據評估的診斷方向，不能預先授權新workflow。
+
+MySQL官方亦建議多列INSERT減少逐句成本；此一般機制並不是本候選的性能驗收：[26.7 INSERT optimization](https://dev.mysql.com/doc/refman/26.7/en/insert-optimization.html)。C目前只是具體提案，未新增owner方法、未執行native／容量或推送，PR297不合併。實作批准須明確涵蓋這個內部claim寫入策略及上述驗證，原IN批准不自動延伸到C。
+
+## 歷史：P0 implementation entry
 
 Status: **CONDITIONAL / TASK-001 in progress**. P0 has entered implementation discovery; no product Task is DONE. The schema ownership collision below blocks migration allocation and dependent work. This report supplements, rather than replaces, the approved specifications.
 

@@ -89,26 +89,29 @@ function strip(node){
  for(const key of Object.keys(node)){const value=node[key];if(Array.isArray(value))node[key]=value.map(strip);else if(value&&typeof value==="object")node[key]=strip(value);}
  return node;
 }
-export function transformPostingSource(name,source,helper){
- assert.ok(Object.hasOwn(postingTraceManifest,name),"Unknown diagnostic module");const entry=postingTraceManifest[name];
+export function transformPostingSource(name,source,helper,manifest=postingTraceManifest){
+ assert.ok(Object.hasOwn(manifest,name),"Unknown diagnostic module");const entry=manifest[name];
  assert.equal(createHash("sha256").update(source).digest("hex"),entry.sha256,"Posting trace source baseline changed");
  assert.equal(/tracePostingSync|tracePostingAsync/u.test(source),false);
  const ast=parse(source,{ecmaVersion:"latest",sourceType:"module"}),found=new Set(),insertions=[];
- function visit(node){
+ function visit(node,className=null){
   if(!node||typeof node!=="object")return;
+  if(node.type==="ClassDeclaration")className=node.id?.name;
   let name,fn;
   if(node.type==="FunctionDeclaration"){name=node.id?.name;fn=node;}
   if(node.type==="MethodDefinition"){name=node.key.name;fn=node.value;}
   if(node.type==="VariableDeclarator"&&node.init?.type==="ArrowFunctionExpression"){name=node.id.name;fn=node.init;}
   if(node.type==="Property"&&node.value?.type==="ArrowFunctionExpression"){name=node.key.name;fn=node.value;}
-  const target=Object.hasOwn(entry.targets,name)?entry.targets[name]:null,label=target&&target.nodeType===node.type?target.label:null;
+  const target=Object.hasOwn(entry.targets,name)?entry.targets[name]:null,label=target&&target.nodeType===node.type&&(target.className===undefined||target.className===className)?target.label:null;
   if(label){
+   if(target.private!==undefined)assert.equal(node.key.type==="PrivateIdentifier",target.private);
+   if(target.async!==undefined)assert.equal(fn.async,target.async);
    assert.equal(fn.body.type,"BlockStatement");assert.equal(Boolean(fn.generator),false);assert.equal(node.kind==="constructor",false);assert.equal(found.has(name),false,"Duplicate posting trace target");
    assert.ok(!fn.body.body.some(item=>item.directive),"Diagnostic wrapping cannot move directives");
    const checkEval=n=>{if(!n||typeof n!=="object")return;assert.ok(!(n.type==="CallExpression"&&n.callee.type==="Identifier"&&n.callee.name==="eval"),"Direct eval is not supported");for(const v of Object.values(n))if(Array.isArray(v))v.forEach(checkEval);else if(v&&typeof v==="object")checkEval(v);};checkEval(fn.body);
    found.add(name);insertions.push({position:fn.body.start+1,text:`return ${fn.async?"tracePostingAsync":"tracePostingSync"}(${JSON.stringify(label)},${fn.async?"async ":""}()=>{`},{position:fn.body.end-1,text:"});"});
   }
-  for(const value of Object.values(node)){if(Array.isArray(value))value.forEach(visit);else if(value&&typeof value==="object")visit(value);}
+  for(const value of Object.values(node)){if(Array.isArray(value))value.forEach(child=>visit(child,className));else if(value&&typeof value==="object")visit(value,className);}
  }
  visit(ast);assert.deepEqual([...found].sort(),Object.keys(entry.targets).sort(),"Missing posting trace target");
  let transformed=source;for(const edit of insertions.sort((a,b)=>b.position-a.position))transformed=transformed.slice(0,edit.position)+edit.text+transformed.slice(edit.position);
