@@ -6,6 +6,7 @@ import mysql from "mysql2/promise";
 import os from "node:os";
 import path from "node:path";
 
+import databaseConfig from "../../config/database.js";
 import { ApplicationError } from "../../src/framework/errors/ApplicationError.js";
 import { SupplierImportService } from "../../src/modules/supplier/SupplierImportService.js";
 import { inspectSupplierImportJobSchema, up as createJobs } from "../../database/migrations/0061_create_supplier_import_jobs.js";
@@ -556,4 +557,104 @@ integrationTest("TASK-049 (REV-078 M-1, REV-079 I-B): the capacity benchmark ref
     assert.deepEqual([row.status, Number(row.version)], [status, 1], "the pending job is untouched");
     await h.db.execute("UPDATE supplier_import_jobs SET status = 'cancelled' WHERE id = ?", [pending]);
   }
+});
+
+// DEF-049（HD-154 A）：揀下一列只可以鎖住揀中嗰一列。舊 query 經 PRIMARY 由第一列睇起，REPEATABLE READ 之下
+// 鎖住晒之前 applied 嘅列；按 status 逐個 `FOR UPDATE` 又會喺冇 warning 嘅時候鎖住下一個 job 嘅 index 位（REV-135 M1）。
+function sideConnection() {
+  const { host, port, user, password, database, socketPath } = databaseConfig;
+  return mysql.createConnection({ host, port, user, password, database, socketPath });
+}
+
+async function applyBehind(jobId, applied) {
+  await h.db.execute(`UPDATE supplier_import_rows SET status = 'applied', applied_supplier_id = \`row_number\`
+    WHERE job_id = ? AND \`row_number\` <= ?`, [jobId, applied]);
+}
+
+integrationTest("DEF-049: picking the next row locks that row only, however many rows the job has applied", async (t) => {
+  clock += 1_000_000;
+  await quiesce();
+  const jobId = await seedJob({ rows: Array.from({ length: 60 }, (_, index) => ((index + 1) % 10 === 0 ? "warning" : "valid")) });
+  // 49 列 applied：下一列 50 係 warning，51 起仲有 valid 未做，所以亦驗到兩種 status 之間按 row_number 揀（REV-136 M1）。
+  await applyBehind(jobId, 49);
+  const side = await sideConnection();
+  t.after(() => side.end());
+  const importer = service();
+  await importer.claimForExecution({ leaseOwner: "me", leaseDurationMs: 60_000 });
+  let unlocked = null;
+  const probe = async (connection, context) => {
+    // SKIP LOCKED 跳過被鎖住嘅列：計返有幾多列冇鎖，唔使 performance_schema 權限。
+    const [free] = await side.query("SELECT `row_number` FROM supplier_import_rows WHERE job_id = ? FOR UPDATE SKIP LOCKED", [jobId]);
+    unlocked = free.map((row) => Number(row.row_number));
+    return writeSupplier()(connection, context);
+  };
+  const picked = await importer.processNextRow({ jobId, leaseOwner: "me", leaseDurationMs: 60_000, applyRow: probe });
+  assert.equal(picked.rowNumber, 50, "the first pending row by row_number, a warning row ahead of pending valid rows");
+  assert.equal(unlocked.length, 59, "every row but the picked one stays unlocked: applied rows and later pending rows alike");
+  assert.ok(!unlocked.includes(50));
+  const second = await importer.processNextRow({ jobId, leaseOwner: "me", leaseDurationMs: 60_000, applyRow: writeSupplier() });
+  assert.deepEqual([second.rowNumber, second.status], [51, "applied"]);
+  await applyBehind(jobId, 59);
+  assert.equal((await importer.processNextRow({ jobId, leaseOwner: "me", leaseDurationMs: 60_000, applyRow: writeSupplier() })).rowNumber,
+    60, "a warning row is still picked when it is the only one left");
+  assert.equal(await importer.processNextRow({ jobId, leaseOwner: "me", leaseDurationMs: 60_000, applyRow: writeSupplier() }), null);
+});
+
+integrationTest("DEF-049: picking a row of a job with no warning rows does not block a newer job's staging", async (t) => {
+  clock += 1_000_000;
+  await quiesce();
+  const jobId = await seedJob({ rows: ["valid", "valid", "valid", "valid", "valid"] });
+  await applyBehind(jobId, 2);
+  // 較新嘅 job：id 較大，佢嘅列喺兩個 index 都排喺上面嗰個 job 之後。
+  const newer = await seedJob({ status: "ready", rows: [] });
+  const side = await sideConnection();
+  t.after(() => side.end());
+  await side.query("SET SESSION innodb_lock_wait_timeout = 1");
+  const importer = service();
+  await importer.claimForExecution({ leaseOwner: "me", leaseDurationMs: 60_000 });
+  let staging = null;
+  const stage = async (connection, context) => {
+    staging = await side.execute(
+      `INSERT INTO supplier_import_rows (job_id, \`row_number\`, operation, normalized_payload, status, created_at, updated_at)
+       VALUES (?, 1, 'create', '{}', 'valid', ?, ?)`, [newer, clock, clock]).then(() => "inserted", (error) => error.code);
+    return writeSupplier()(connection, context);
+  };
+  const picked = await importer.processNextRow({ jobId, leaseOwner: "me", leaseDurationMs: 60_000, applyRow: stage });
+  assert.equal(picked.rowNumber, 3);
+  assert.equal(staging, "inserted", "the newer job's row is staged while the row transaction is open");
+});
+
+// 揀列嘅非鎖定讀取要喺 job 鎖之後先開 read view（REV-136 L1）：另一個 transaction 揸住 job 鎖、將第 1 列做完先
+// commit，等緊 job 鎖嘅 processNextRow 一定要睇到，揀第 2 列，唔可以因為舊 snapshot 撞落 state conflict。
+integrationTest("DEF-049: the row pick sees what a writer holding the job lock committed while it waited", async (t) => {
+  clock += 1_000_000;
+  await quiesce();
+  const jobId = await seedJob({ rows: ["valid", "valid", "valid"] });
+  const importer = service();
+  await importer.claimForExecution({ leaseOwner: "me", leaseDurationMs: 60_000 });
+  const side = await sideConnection();
+  t.after(async () => {
+    await side.rollback().catch(() => {});
+    await side.end();
+  });
+  await side.beginTransaction();
+  await side.query("SELECT id FROM supplier_import_jobs WHERE id = ? FOR UPDATE", [jobId]);
+  await side.query("UPDATE supplier_import_rows SET status = 'applied', applied_supplier_id = 1 WHERE job_id = ? AND `row_number` = 1",
+    [jobId]);
+  const pending = importer.processNextRow({ jobId, leaseOwner: "me", leaseDurationMs: 60_000, applyRow: writeSupplier() });
+  // 等到佢真係塞喺 job 鎖（同一個 DB user 嘅 thread 喺 PROCESSLIST 睇得到），先 commit。
+  const deadline = Date.now() + 10_000;
+  for (;;) {
+    const [[waiting]] = await side.query(
+      `SELECT COUNT(*) AS n FROM information_schema.PROCESSLIST
+        WHERE ID <> CONNECTION_ID() AND INFO LIKE ?`, [`SELECT % FROM supplier_import_jobs WHERE id = ${jobId} FOR UPDATE`]);
+    if (Number(waiting.n) > 0) break;
+    assert.ok(Date.now() < deadline, "processNextRow never reached the job lock");
+    await new Promise((resolve) => {
+      setImmediate(resolve);
+    });
+  }
+  await side.commit();
+  const picked = await pending;
+  assert.deepEqual([picked.rowNumber, picked.status], [2, "applied"]);
 });

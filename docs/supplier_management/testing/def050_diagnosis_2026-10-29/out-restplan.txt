@@ -1,0 +1,34 @@
+hot=1 cold=2 active=79913
+cold off=0 default: 2.4 ms/query
+    plan: -> Limit: 20 row(s) (cost=12350 rows=20)\n -> Filter: (0 = coalesce(((r.relationship_status = 'preferred') or ((r.relationship_status <> 'stopped') an
+cold off=0 FORCE INDEX (: 2.5 ms/query
+    plan: -> Limit: 20 row(s) (cost=4947 rows=2)\n -> Filter: (0 = coalesce(((r.relationship_status = 'preferred') or ((r.relationship_status <> 'stopped') and 
+cold off=10000 default: 97.2 ms/query
+    plan: -> Limit/Offset: 20/10000 row(s) (cost=25176 rows=20)\n -> Filter: (0 = coalesce(((r.relationship_status = 'preferred') or ((r.relationship_status <> 
+cold off=10000 FORCE INDEX (: 17.4 ms/query
+    plan: -> Limit/Offset: 20/10000 row(s) (cost=6697 rows=0)\n -> Filter: (0 = coalesce(((r.relationship_status = 'preferred') or ((r.relationship_status <> 's
+cold off=40000 default: 109.3 ms/query
+    plan: -> Limit/Offset: 20/40000 row(s) (cost=23259 rows=20)\n -> Filter: (0 = coalesce(((r.relationship_status = 'preferred') or ((r.relationship_status <> 
+cold off=40000 FORCE INDEX (: 62.7 ms/query
+    plan: -> Limit/Offset: 20/40000 row(s) (cost=12023 rows=0)\n -> Filter: (0 = coalesce(((r.relationship_status = 'preferred') or ((r.relationship_status <> '
+cold off=69000 default: 121.8 ms/query
+    plan: -> Limit/Offset: 20/69000 row(s) (cost=23259 rows=0)\n -> Filter: (0 = coalesce(((r.relationship_status = 'preferred') or ((r.relationship_status <> '
+cold off=69000 FORCE INDEX (: 105.0 ms/query
+    plan: -> Limit/Offset: 20/69000 row(s) (cost=17258 rows=0)\n -> Filter: (0 = coalesce(((r.relationship_status = 'preferred') or ((r.relationship_status <> '
+hot off=0 default: 2.5 ms/query
+    plan: -> Limit: 20 row(s) (cost=12349 rows=20)\n -> Filter: (0 = coalesce(((r.relationship_status = 'preferred') or ((r.relationship_status <> 'stopped') an
+hot off=0 FORCE INDEX (: 2.5 ms/query
+    plan: -> Limit: 20 row(s) (cost=4942 rows=2)\n -> Filter: (0 = coalesce(((r.relationship_status = 'preferred') or ((r.relationship_status <> 'stopped') and 
+hot off=10000 default: 98.6 ms/query
+    plan: -> Limit/Offset: 20/10000 row(s) (cost=23259 rows=20)\n -> Filter: (0 = coalesce(((r.relationship_status = 'preferred') or ((r.relationship_status <> 
+hot off=10000 FORCE INDEX (: 21.9 ms/query
+    plan: -> Limit/Offset: 20/10000 row(s) (cost=6697 rows=0)\n -> Filter: (0 = coalesce(((r.relationship_status = 'preferred') or ((r.relationship_status <> 's
+hot off=40000 default: 121.2 ms/query
+    plan: -> Limit/Offset: 20/40000 row(s) (cost=23259 rows=20)\n -> Filter: (0 = coalesce(((r.relationship_status = 'preferred') or ((r.relationship_status <> 
+hot off=40000 FORCE INDEX (: 81.0 ms/query
+    plan: -> Limit/Offset: 20/40000 row(s) (cost=12023 rows=0)\n -> Filter: (0 = coalesce(((r.relationship_status = 'preferred') or ((r.relationship_status <> '
+hot off=69000 default: 139.9 ms/query
+    plan: -> Limit/Offset: 20/69000 row(s) (cost=23259 rows=0)\n -> Filter: (0 = coalesce(((r.relationship_status = 'preferred') or ((r.relationship_status <> '
+hot off=69000 FORCE INDEX (: 136.1 ms/query
+    plan: -> Limit/Offset: 20/69000 row(s) (cost=17258 rows=0)\n -> Filter: (0 = coalesce(((r.relationship_status = 'preferred') or ((r.relationship_status <> '
+dropped erp_t51_mig_d50

@@ -1,31 +1,31 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 440,
+  "revision": 489,
   "mode": "FULL_LIFECYCLE",
-  "active_mode": "IMPLEMENT",
-  "status": "IMPLEMENTING",
-  "resume_status": null,
+  "active_mode": "TEST_AND_VERIFY",
+  "status": "BLOCKED",
+  "resume_status": "VERIFYING",
   "current_phase": "PHASE-004",
   "current_task": "TASK-051",
   "baseline": {
-    "design": "171cf54069cb8d608ed8e263a3fc83f944b993f71e46643cbb8d6717173ce2c6",
-    "plan": "3c683c4ea46984b476c96add5e9280b5d395c6cce9e996efa3ec36b683d4f784",
-    "code_commit": "3047dbd2ef1c470c042b3e9f34e9bd0753dbb45f",
-    "source_fingerprint": "484394e2694aedc43c45b3565298b9af7a4f2b5850a43c1855635730d9da42be",
-    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t51t",
-    "default_commit": "44d7f836dbe4e1a7e99add06f63f1765277904f1",
-    "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
+    "design": "2390e6fc44da25124375f4347f2a093db512f8353e01d456780a11073be494a3",
+    "plan": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+    "code_commit": "5bed215bade454f5181d34019701c2621353603d",
+    "source_fingerprint": "493d144c455c6db5d08c3baeb3b36c961539740c393727739956e060f66c252f",
+    "worktree": "/Users/sam/Documents/workspace/erp-supplier-hd156",
+    "default_commit": "4f101642a284c44d6dd53338ddfeb431582aa5f4",
+    "mode_entry_commit": "4f101642a284c44d6dd53338ddfeb431582aa5f4"
   },
   "runtime": {
-    "instance_id": "supplier-phase-001-local-mysql-v2",
+    "instance_id": "supplier-t51-scratch-mysqld-3450",
     "owner": "Primary Harness agent",
     "resources": {
-      "workspace": "erp-app-worktrees/supplier-task-034 (claude/supplier-task-034, cut from main b1e3aa8)",
-      "mysql-schema": "erp_dev@127.0.0.1:3306 (test-only)",
-      "web-port": "NOT_ALLOCATED"
+      "workspace": "/Users/sam/Documents/workspace/erp-supplier-hd156 (claude/supplier-hd156-defer, cut from main 5bed215b)",
+      "mysql-schema": "erp_t51, and the erp_t51_rh_* scratch schemas the runners create and drop, on a throwaway mysqld at 127.0.0.1:3450 (session scratch datadir, --skip-log-bin); no production data",
+      "web-port": "3021 (UAT API) and 5216 (UAT client); the other runners bind free ports"
     },
-    "lease_ref": "APPROVAL-HD-006-ERP-DEV"
+    "lease_ref": null
   },
   "tasks": {
     "TASK-001": "DONE",
@@ -1879,6 +1879,265 @@
         "server/scripts/benchmarkSupplierImport.js"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-129-DESIGN-HD149",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on design baseline 2390e6fc by HD-149 A ('HD-149 A，開 issue，風險接受留返 release 時', 2026-10-28), because refreshing the consumed Item and Purchasing pins (HD-147 B), adding the supplier-deployment-check/-copy suites to the profile and amending 07 per HD-145 A and HD-146 A (commit 12d52ff3) moved the design baseline 171cf540 -> 2390e6fc and the plan baseline 3c683c4e -> 598f012b. No new acceptance: what was approved does not change. Original APPROVAL-HD-129-DESIGN is kept. Original text: HD-129 A ('DEF-037 A', 2026-10-23) and HD-136 ('批准 migration，照建議做', 2026-10-23). Design §5.5 and §5.6 gain sort_order on supplier_addresses and supplier_contacts (display order, max+1 on create, move up/down swaps adjacent active rows, list order status, sort_order, id); §6 gains POST .../addresses/:addressId/move and .../contacts/:contactId/move. The manifest's provided-contract sha256 follows the design file (a9f64493 -> 2b81eb9a). Design baseline 29a0615a -> 171cf540.",
+      "recorded_at": "2026-10-28T10:33:55+08:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "2390e6fc44da25124375f4347f2a093db512f8353e01d456780a11073be494a3",
+      "code_commit": "12d52ff3d4a2f2b607c284eb3d4c50f2463d286f",
+      "scope": [
+        "supplier-management",
+        "DEF-037 address and contact ordering",
+        "TASK-051"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-129-PLAN-HD149",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline 598f012b by HD-149 A ('HD-149 A，開 issue，風險接受留返 release 時', 2026-10-28), because refreshing the consumed Item and Purchasing pins (HD-147 B), adding the supplier-deployment-check/-copy suites to the profile and amending 07 per HD-145 A and HD-146 A (commit 12d52ff3) moved the design baseline 171cf540 -> 2390e6fc and the plan baseline 3c683c4e -> 598f012b. No new acceptance: what was approved does not change. Original APPROVAL-HD-129-PLAN is kept. Original text: HD-129 A ('DEF-037 A', 2026-10-23) and HD-136 ('批准 migration，照建議做', 2026-10-23). The plan baseline moves only because the design file and the manifest's contract hash changed (plan bfb0af4f -> 3c683c4e); no task, profile or traceability change.",
+      "recorded_at": "2026-10-28T10:33:55+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "code_commit": "12d52ff3d4a2f2b607c284eb3d4c50f2463d286f",
+      "scope": [
+        "supplier-management",
+        "DEF-037 address and contact ordering",
+        "TASK-051"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-097-DESIGN-HD149",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "recorded_at": "2026-10-28T10:33:55+08:00",
+      "code_commit": "12d52ff3d4a2f2b607c284eb3d4c50f2463d286f",
+      "scope": [
+        "supplier-management manifest contracts.consumed item-sku-uom-provider",
+        "TASK-039"
+      ],
+      "expires_at": null,
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "2390e6fc44da25124375f4347f2a093db512f8353e01d456780a11073be494a3",
+      "source_ref": "Re-affirmed unchanged on design baseline 2390e6fc by HD-149 A ('HD-149 A，開 issue，風險接受留返 release 時', 2026-10-28), because refreshing the consumed Item and Purchasing pins (HD-147 B), adding the supplier-deployment-check/-copy suites to the profile and amending 07 per HD-145 A and HD-146 A (commit 12d52ff3) moved the design baseline 171cf540 -> 2390e6fc and the plan baseline 3c683c4e -> 598f012b. No new acceptance: what was approved does not change. Original APPROVAL-HD-097-DESIGN-HD129 is kept. Original text: Re-affirmed unchanged on design baseline 171cf540 by HD-129 A ('DEF-037 A', 2026-10-23) and HD-136 ('批准 migration，照建議做', 2026-10-23), because the DEF-037 design change moved it from 29a0615a. Original APPROVAL-HD-097-DESIGN is kept. Original text: HD-097: refresh of the consumed item-sku-uom-provider pin from 5a44ef30 to 1bbb882f0f1faed296615b5b253f3e6169d79b6289d1a6300e078377400e4a7f (Item §8.3.2 and DES-021, PR #210: additive purchase search and UOM mapping fields). Only the manifest contracts block changed; it moves the design baseline from f2f4a82b to 29a0615a. No requirement, design, phase, task, suite or test flag changed."
+    },
+    {
+      "id": "APPROVAL-HD-104-DESIGN-HD149",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "recorded_at": "2026-10-28T10:33:55+08:00",
+      "code_commit": "12d52ff3d4a2f2b607c284eb3d4c50f2463d286f",
+      "scope": [
+        "supplier-management",
+        "TASK-051"
+      ],
+      "expires_at": null,
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "2390e6fc44da25124375f4347f2a093db512f8353e01d456780a11073be494a3",
+      "source_ref": "Re-affirmed unchanged on design baseline 2390e6fc by HD-149 A ('HD-149 A，開 issue，風險接受留返 release 時', 2026-10-28), because refreshing the consumed Item and Purchasing pins (HD-147 B), adding the supplier-deployment-check/-copy suites to the profile and amending 07 per HD-145 A and HD-146 A (commit 12d52ff3) moved the design baseline 171cf540 -> 2390e6fc and the plan baseline 3c683c4e -> 598f012b. No new acceptance: what was approved does not change. Original APPROVAL-HD-104-DESIGN-HD129 is kept. Original text: Re-affirmed unchanged on design baseline 171cf540 by HD-129 A ('DEF-037 A', 2026-10-23) and HD-136 ('批准 migration，照建議做', 2026-10-23), because the DEF-037 design change moved it from 29a0615a. Original APPROVAL-HD-104-DESIGN is kept. Original text: HD-104 'A': re-records the HD-097 design approval for design 29a0615a with the module scope. Nothing about the design changes; APPROVAL-HD-097-DESIGN and the revoked APPROVAL-HD-097-DESIGN-REBIND are kept."
+    },
+    {
+      "id": "APPROVAL-HD-124-PLAN-HD149",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline 598f012b by HD-149 A ('HD-149 A，開 issue，風險接受留返 release 時', 2026-10-28), because refreshing the consumed Item and Purchasing pins (HD-147 B), adding the supplier-deployment-check/-copy suites to the profile and amending 07 per HD-145 A and HD-146 A (commit 12d52ff3) moved the design baseline 171cf540 -> 2390e6fc and the plan baseline 3c683c4e -> 598f012b. No new acceptance: what was approved does not change. Original APPROVAL-HD-124-PLAN-HD129 is kept. Original text: Re-affirmed unchanged on plan baseline 3c683c4e by HD-129 A ('DEF-037 A', 2026-10-23) and HD-136 ('批准 migration，照建議做', 2026-10-23), because the DEF-037 design change moved it from bfb0af4f. Original APPROVAL-HD-124-PLAN is kept. Original text: HD-124 A ('A', 2026-10-22: real-backend Playwright UAT; the first PR also changes the UAT suite's profile with another re-affirmation). Only 00_project_profile.json changed: supplier-uat-browser argv now runs client/e2e/supplier-management/playwright.uat.config.js; env_keys DB_HOST, DB_PORT, DB_NAME, DB_ADMIN_USER, DB_ADMIN_PASSWORD and the Supplier and Customer bank key rings; redaction_env_keys add the Customer bank keys and DB_ADMIN_PASSWORD. Design baseline unchanged; plan baseline 6c885dba -> bfb0af4f.",
+      "recorded_at": "2026-10-28T10:33:55+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "code_commit": "12d52ff3d4a2f2b607c284eb3d4c50f2463d286f",
+      "scope": [
+        "supplier-management",
+        "supplier-management project profile: supplier-uat-browser argv, env_keys, redaction keys",
+        "TASK-051"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-123-PLAN-HD149",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline 598f012b by HD-149 A ('HD-149 A，開 issue，風險接受留返 release 時', 2026-10-28), because refreshing the consumed Item and Purchasing pins (HD-147 B), adding the supplier-deployment-check/-copy suites to the profile and amending 07 per HD-145 A and HD-146 A (commit 12d52ff3) moved the design baseline 171cf540 -> 2390e6fc and the plan baseline 3c683c4e -> 598f012b. No new acceptance: what was approved does not change. Original APPROVAL-HD-123-PLAN-HD129 is kept. Original text: Re-affirmed unchanged on plan baseline 3c683c4e by HD-129 A ('DEF-037 A', 2026-10-23) and HD-136 ('批准 migration，照建議做', 2026-10-23), because the DEF-037 design change moved it from bfb0af4f. Original APPROVAL-HD-123-PLAN-HD124 is kept. Original text: Re-affirmed unchanged on plan baseline bfb0af4f by HD-124 A ('A', 2026-10-22), because the UAT profile change moved the plan baseline from 6c885dba. Original APPROVAL-HD-123-PLAN is kept. Original text: HD-123 A ('HD-123 A，review 完 CI 過就 merge', 2026-10-22). Only 00_project_profile.json changed: DB_ADMIN_USER, DB_ADMIN_PASSWORD and MYSQL_BIN added to the env_keys of supplier-recovery, supplier-release-operations, supplier-resilience and supplier-performance, DB_ADMIN_PASSWORD to their redaction_env_keys; a mysqldump --version tool probe on supplier-recovery; supplier-release-operations min_tests 3 -> 2. Design baseline 29a0615a unchanged; plan baseline 6cb156c3 -> 6c885dba.",
+      "recorded_at": "2026-10-28T10:33:55+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "code_commit": "12d52ff3d4a2f2b607c284eb3d4c50f2463d286f",
+      "scope": [
+        "supplier-management",
+        "supplier-management project profile: runner env_keys, redaction keys, mysqldump probe, release min_tests",
+        "TASK-051"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-105-PLAN-HD149",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "recorded_at": "2026-10-28T10:33:55+08:00",
+      "code_commit": "12d52ff3d4a2f2b607c284eb3d4c50f2463d286f",
+      "scope": [
+        "supplier-management",
+        "supplier-management project profile env_keys, phase-001-server runner, min_tests",
+        "TASK-051"
+      ],
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "source_ref": "Re-affirmed unchanged on plan baseline 598f012b by HD-149 A ('HD-149 A，開 issue，風險接受留返 release 時', 2026-10-28), because refreshing the consumed Item and Purchasing pins (HD-147 B), adding the supplier-deployment-check/-copy suites to the profile and amending 07 per HD-145 A and HD-146 A (commit 12d52ff3) moved the design baseline 171cf540 -> 2390e6fc and the plan baseline 3c683c4e -> 598f012b. No new acceptance: what was approved does not change. Original APPROVAL-HD-105-PLAN-HD129 is kept. Original text: Re-affirmed unchanged on plan baseline 3c683c4e by HD-129 A ('DEF-037 A', 2026-10-23) and HD-136 ('批准 migration，照建議做', 2026-10-23), because the DEF-037 design change moved it from bfb0af4f. Original APPROVAL-HD-105-PLAN-HD124 is kept. Original text: Re-affirmed unchanged on plan baseline bfb0af4f by HD-124 A ('A', 2026-10-22), because the UAT profile change moved the plan baseline from 6c885dba. Original APPROVAL-HD-105-PLAN-HD123 is kept. Original text: Re-affirmed unchanged on plan baseline 6c885dba by HD-123 A ('HD-123 A，review 完 CI 過就 merge', 2026-10-22), because the profile change moved the plan baseline from 6cb156c3. Original APPROVAL-HD-105-PLAN is kept. Original text: HD-105 'A': plan 6cb156c3, the REV-091 follow-ups and env additions after HD-103 '1A' (APPROVAL-HD-103-PLAN-1A, 7232d2ec)."
+    },
+    {
+      "id": "APPROVAL-HD-113-SCOPE-HD149",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline 598f012b by HD-149 A ('HD-149 A，開 issue，風險接受留返 release 時', 2026-10-28), because refreshing the consumed Item and Purchasing pins (HD-147 B), adding the supplier-deployment-check/-copy suites to the profile and amending 07 per HD-145 A and HD-146 A (commit 12d52ff3) moved the design baseline 171cf540 -> 2390e6fc and the plan baseline 3c683c4e -> 598f012b. No new acceptance: what was approved does not change. Original APPROVAL-HD-113-SCOPE-HD129 is kept. Original text: Re-affirmed unchanged on plan baseline 3c683c4e by HD-129 A ('DEF-037 A', 2026-10-23) and HD-136 ('批准 migration，照建議做', 2026-10-23), because the DEF-037 design change moved it from bfb0af4f. Original APPROVAL-HD-113-SCOPE-HD124 is kept. Original text: Re-affirmed unchanged on plan baseline bfb0af4f by HD-124 A ('A', 2026-10-22), because the UAT profile change moved the plan baseline from 6c885dba. Original APPROVAL-HD-113-SCOPE-HD123 is kept. Original text: Re-affirmed unchanged on plan baseline 6c885dba by HD-123 A ('HD-123 A，review 完 CI 過就 merge', 2026-10-22), because the profile change moved the plan baseline from 6cb156c3. Original APPROVAL-HD-113-SCOPE is kept. Original text: HD-113 A. Authorises TASK-051 to add server/database/migrations/0087_fix_supplier_sku_refs_sku_foreign_key.js with the change proposed in chat on 2026-10-20 (orphan check, drop and re-add fk_supplier_sku_refs_sku and idx_supplier_sku_refs_sku_status_supplied around a new idx_supplier_sku_refs_sku (sku_id)).",
+      "recorded_at": "2026-10-28T10:33:55+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "code_commit": "12d52ff3d4a2f2b607c284eb3d4c50f2463d286f",
+      "scope": [
+        "supplier-management",
+        "server/database/migrations/0087_fix_supplier_sku_refs_sku_foreign_key.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-VITE-ADVISORY-LOCK-SCOPE-HD149",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline 598f012b by HD-149 A ('HD-149 A，開 issue，風險接受留返 release 時', 2026-10-28), because refreshing the consumed Item and Purchasing pins (HD-147 B), adding the supplier-deployment-check/-copy suites to the profile and amending 07 per HD-145 A and HD-146 A (commit 12d52ff3) moved the design baseline 171cf540 -> 2390e6fc and the plan baseline 3c683c4e -> 598f012b. No new acceptance: what was approved does not change. Original APPROVAL-VITE-ADVISORY-LOCK-SCOPE-HD129 is kept. Original text: Re-affirmed unchanged on plan baseline 3c683c4e by HD-129 A ('DEF-037 A', 2026-10-23) and HD-136 ('批准 migration，照建議做', 2026-10-23), because the DEF-037 design change moved it from bfb0af4f. Original APPROVAL-VITE-ADVISORY-LOCK-SCOPE-HD124 is kept. Original text: Re-affirmed unchanged on plan baseline bfb0af4f by HD-124 A ('A', 2026-10-22), because the UAT profile change moved the plan baseline from 6c885dba. Original APPROVAL-VITE-ADVISORY-LOCK-SCOPE-HD123 is kept. Original text: Re-affirmed unchanged on plan baseline 6c885dba by HD-123 A ('HD-123 A，review 完 CI 過就 merge', 2026-10-22), because the profile change moved the plan baseline from 6cb156c3. Original APPROVAL-VITE-ADVISORY-LOCK-SCOPE is kept. Original text: Product Owner, 2026-10-21: 'A，批准改 package-lock.json，CI 過就 merge'. Authorises a lockfile-only change resolving vite 8.2.4 (within client/package.json's ^8.2.1) after new launch-editor advisories (GHSA-587h-7wmj-h5pm high; GHSA-698v-4r3x-3vcv, GHSA-r825-w8mm-5pxw moderate) failed the Dependency audit check on every branch, blocking PR #258. Delivered as PR #259.",
+      "recorded_at": "2026-10-28T10:33:55+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "code_commit": "12d52ff3d4a2f2b607c284eb3d4c50f2463d286f",
+      "scope": [
+        "package-lock.json"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-116-RISK-HD149",
+      "kind": "RISK",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline 598f012b by HD-149 A ('HD-149 A，開 issue，風險接受留返 release 時', 2026-10-28), because refreshing the consumed Item and Purchasing pins (HD-147 B), adding the supplier-deployment-check/-copy suites to the profile and amending 07 per HD-145 A and HD-146 A (commit 12d52ff3) moved the design baseline 171cf540 -> 2390e6fc and the plan baseline 3c683c4e -> 598f012b. No new acceptance: what was approved does not change. Original APPROVAL-HD-116-RISK-HD129 is kept. Original text: Re-affirmed unchanged on plan baseline 3c683c4e by HD-129 A ('DEF-037 A', 2026-10-23) and HD-136 ('批准 migration，照建議做', 2026-10-23), because the DEF-037 design change moved it from bfb0af4f. Original APPROVAL-HD-116-RISK-HD124 is kept. Original text: Re-affirmed unchanged on plan baseline bfb0af4f by HD-124 A ('A', 2026-10-22), because the UAT profile change moved the plan baseline from 6c885dba. Original APPROVAL-HD-116-RISK-HD123 is kept. Original text: Re-affirmed unchanged on plan baseline 6c885dba by HD-123 A ('HD-123 A，review 完 CI 過就 merge', 2026-10-22), because the profile change moved the plan baseline from 6cb156c3. Original APPROVAL-HD-116-RISK is kept. Original text: HD-116 A ('A，review 完 CI 過就 merge', 2026-10-21). Defers DEF-004, DEF-007 and DEF-016 to release as recorded known limitations; records DEF-008, DEF-012, DEF-013, DEF-015, DEF-017, DEF-018, DEF-019 and DEF-023 as handed to their owners (docs/supplier_management/testing/defect_handoffs.md) and DEF-014 as accepted. Supersedes APPROVAL-HD-017-RISK and APPROVAL-HD-017-RISK-DEF012 for these defects.",
+      "recorded_at": "2026-10-28T10:33:55+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "code_commit": "12d52ff3d4a2f2b607c284eb3d4c50f2463d286f",
+      "scope": [
+        "supplier-management",
+        "DEF-004",
+        "DEF-007",
+        "DEF-016",
+        "DEF-008",
+        "DEF-012",
+        "DEF-013",
+        "DEF-015",
+        "DEF-017",
+        "DEF-018",
+        "DEF-019",
+        "DEF-023",
+        "DEF-014"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-117-SCOPE-HD149",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline 598f012b by HD-149 A ('HD-149 A，開 issue，風險接受留返 release 時', 2026-10-28), because refreshing the consumed Item and Purchasing pins (HD-147 B), adding the supplier-deployment-check/-copy suites to the profile and amending 07 per HD-145 A and HD-146 A (commit 12d52ff3) moved the design baseline 171cf540 -> 2390e6fc and the plan baseline 3c683c4e -> 598f012b. No new acceptance: what was approved does not change. Original APPROVAL-HD-117-SCOPE-HD129 is kept. Original text: Re-affirmed unchanged on plan baseline 3c683c4e by HD-129 A ('DEF-037 A', 2026-10-23) and HD-136 ('批准 migration，照建議做', 2026-10-23), because the DEF-037 design change moved it from bfb0af4f. Original APPROVAL-HD-117-SCOPE-HD124 is kept. Original text: Re-affirmed unchanged on plan baseline bfb0af4f by HD-124 A ('A', 2026-10-22), because the UAT profile change moved the plan baseline from 6c885dba. Original APPROVAL-HD-117-SCOPE-HD123 is kept. Original text: Re-affirmed unchanged on plan baseline 6c885dba by HD-123 A ('HD-123 A，review 完 CI 過就 merge', 2026-10-22), because the profile change moved the plan baseline from 6cb156c3. Original APPROVAL-HD-117-SCOPE is kept. Original text: HD-117 A ('A，review 完 CI 過就 merge', 2026-10-21). Authorises the four acceptance runners named by 00_project_profile.json at their profile paths in server/scripts/, following the HD-034/HD-035 convention: server/scripts/ is not declared in approval_required_paths and reports OUTSIDE_MODULE; this approval covers exactly these four files. Parts that need production-like infrastructure must report BLOCKED with the reason, never PASS. The client-ui config lives under client/test/**, already an allowed write path.",
+      "recorded_at": "2026-10-28T10:33:55+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "code_commit": "12d52ff3d4a2f2b607c284eb3d4c50f2463d286f",
+      "scope": [
+        "supplier-management",
+        "server/scripts/runSupplierPerformanceAcceptance.js",
+        "server/scripts/runSupplierResilienceAcceptance.js",
+        "server/scripts/runSupplierRecoveryAcceptance.js",
+        "server/scripts/runSupplierReleaseAcceptance.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-118-SCOPE-HD149",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline 598f012b by HD-149 A ('HD-149 A，開 issue，風險接受留返 release 時', 2026-10-28), because refreshing the consumed Item and Purchasing pins (HD-147 B), adding the supplier-deployment-check/-copy suites to the profile and amending 07 per HD-145 A and HD-146 A (commit 12d52ff3) moved the design baseline 171cf540 -> 2390e6fc and the plan baseline 3c683c4e -> 598f012b. No new acceptance: what was approved does not change. Original APPROVAL-HD-118-SCOPE-HD129 is kept. Original text: Re-affirmed unchanged on plan baseline 3c683c4e by HD-129 A ('DEF-037 A', 2026-10-23) and HD-136 ('批准 migration，照建議做', 2026-10-23), because the DEF-037 design change moved it from bfb0af4f. Original APPROVAL-HD-118-SCOPE-HD124 is kept. Original text: Re-affirmed unchanged on plan baseline bfb0af4f by HD-124 A ('A', 2026-10-22), because the UAT profile change moved the plan baseline from 6c885dba. Original APPROVAL-HD-118-SCOPE-HD123 is kept. Original text: Re-affirmed unchanged on plan baseline 6c885dba by HD-123 A ('HD-123 A，review 完 CI 過就 merge', 2026-10-22), because the profile change moved the plan baseline from 6cb156c3. Original APPROVAL-HD-118-SCOPE is kept. Original text: HD-118 A ('DEF-032 A', 2026-10-21). Authorises a change to the shared client/src/framework/ui/DataTable.vue so that the empty-state text is not shown while loading or on a failed read. The file is not declared in the module manifest and reports OUTSIDE_MODULE; this approval covers exactly that file. Its tests live under client/test/**, already an allowed write path.",
+      "recorded_at": "2026-10-28T10:33:55+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "code_commit": "12d52ff3d4a2f2b607c284eb3d4c50f2463d286f",
+      "scope": [
+        "supplier-management",
+        "client/src/framework/ui/DataTable.vue"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-122-SCOPE-HD149",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline 598f012b by HD-149 A ('HD-149 A，開 issue，風險接受留返 release 時', 2026-10-28), because refreshing the consumed Item and Purchasing pins (HD-147 B), adding the supplier-deployment-check/-copy suites to the profile and amending 07 per HD-145 A and HD-146 A (commit 12d52ff3) moved the design baseline 171cf540 -> 2390e6fc and the plan baseline 3c683c4e -> 598f012b. No new acceptance: what was approved does not change. Original APPROVAL-HD-122-SCOPE-HD129 is kept. Original text: Re-affirmed unchanged on plan baseline 3c683c4e by HD-129 A ('DEF-037 A', 2026-10-23) and HD-136 ('批准 migration，照建議做', 2026-10-23), because the DEF-037 design change moved it from bfb0af4f. Original APPROVAL-HD-122-SCOPE-HD124 is kept. Original text: Re-affirmed unchanged on plan baseline bfb0af4f by HD-124 A ('A', 2026-10-22), because the UAT profile change moved the plan baseline from 6c885dba. Original APPROVAL-HD-122-SCOPE-HD123 is kept. Original text: Re-affirmed unchanged on plan baseline 6c885dba by HD-123 A ('HD-123 A，review 完 CI 過就 merge', 2026-10-22), because the profile change moved the plan baseline from 6cb156c3. Original APPROVAL-HD-122-SCOPE is kept. Original text: HD-122 A (2026-10-22). Authorises small changes to two T50 tools in server/scripts/: benchmarkSupplierManagement.js keeps the full statement digest and reports its measured window; benchmarkSupplierImport.js records up to 20 not-applied rows with their errors before cleanup. server/scripts/ is not declared in approval_required_paths (HD-034) and reports OUTSIDE_MODULE; this approval covers exactly these two files.",
+      "recorded_at": "2026-10-28T10:33:55+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "code_commit": "12d52ff3d4a2f2b607c284eb3d4c50f2463d286f",
+      "scope": [
+        "supplier-management",
+        "server/scripts/benchmarkSupplierManagement.js",
+        "server/scripts/benchmarkSupplierImport.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-150-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "HD-150 A ('HD-150 A，review 完 CI 過就 merge', 2026-10-28). server/scripts/smokeSupplierManagement.js (new, T51 deployment smoke under HD-148 B) and server/package.json (the smoke:supplier script line) are outside allowed_write_paths / in approval_required_paths. PR #293 merged both at c51ddbc8 without a SCOPE approval; that process deviation is recorded in HD-150 and kept. This approval covers those two paths for TASK-051 while plan baseline 598f012b holds, including this PR's change to the script (target from environment variables). It covers the whole of server/package.json, not only the smoke:supplier line, because that is the harness's granularity (REV-130 N5).",
+      "recorded_at": "2026-10-28T10:33:55+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "code_commit": "12d52ff3d4a2f2b607c284eb3d4c50f2463d286f",
+      "scope": [
+        "supplier-management",
+        "server/scripts/smokeSupplierManagement.js",
+        "server/package.json",
+        "TASK-051"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -3330,6 +3589,162 @@
       "reviewed_baseline": "171cf54069cb8d608ed8e263a3fc83f944b993f71e46643cbb8d6717173ce2c6",
       "source_ref": "docs/supplier_management/implementation/128_rev_125_independent_review.md",
       "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-126",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (HD-124 A, UAT PHASE-004 cases)",
+      "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-uat-phase-004 at 60382be2 (git diff origin/main..HEAD)",
+      "reviewed_baseline": "171cf54069cb8d608ed8e263a3fc83f944b993f71e46643cbb8d6717173ce2c6",
+      "source_ref": "docs/supplier_management/implementation/129_rev_126_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-127",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (HD-124 A, cross-phase UAT cases)",
+      "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-uat-cross-phase at 0176ec39 (git diff origin/main..HEAD)",
+      "reviewed_baseline": "171cf54069cb8d608ed8e263a3fc83f944b993f71e46643cbb8d6717173ce2c6",
+      "source_ref": "docs/supplier_management/implementation/130_rev_127_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-128",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-051 completion boundary and rehearsal rerun)",
+      "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-task051-boundary at c8b1a326 (git diff origin/main..HEAD)",
+      "reviewed_baseline": "171cf54069cb8d608ed8e263a3fc83f944b993f71e46643cbb8d6717173ce2c6",
+      "source_ref": "docs/supplier_management/implementation/131_rev_128_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-129",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (T51 deliverables: operations.md, release_evidence.md, smokeSupplierManagement.js under HD-148 B)",
+      "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-t51-deliverables at 1675cf0f (git diff origin/main..HEAD)",
+      "reviewed_baseline": "171cf54069cb8d608ed8e263a3fc83f944b993f71e46643cbb8d6717173ce2c6",
+      "source_ref": "docs/supplier_management/implementation/132_rev_129_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-130",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (HD-149 A baseline refresh and HD-150 A scope approval)",
+      "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-baseline-refresh at 65b89ff2 (git diff origin/main..HEAD)",
+      "reviewed_baseline": "2390e6fc44da25124375f4347f2a093db512f8353e01d456780a11073be494a3",
+      "source_ref": "docs/supplier_management/implementation/133_rev_130_independent_review.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-131",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TEST_AND_VERIFY entry, formal runs, Technical Acceptance report, DEF-048)",
+      "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-technical-acceptance at 80e00c1c (git diff origin/main..HEAD)",
+      "reviewed_baseline": "2390e6fc44da25124375f4347f2a093db512f8353e01d456780a11073be494a3",
+      "source_ref": "docs/supplier_management/implementation/134_rev_131_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-132",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (DEF-048 diagnosis under HD-152 A)",
+      "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-technical-acceptance delta 35903133..c747097c",
+      "reviewed_baseline": "2390e6fc44da25124375f4347f2a093db512f8353e01d456780a11073be494a3",
+      "source_ref": "docs/supplier_management/implementation/135_rev_132_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-133",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (DEF-048 fix under HD-153 A)",
+      "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-def048-name-grams at 140c369f (git diff origin/main..HEAD)",
+      "reviewed_baseline": "2390e6fc44da25124375f4347f2a093db512f8353e01d456780a11073be494a3",
+      "source_ref": "docs/supplier_management/implementation/136_rev_133_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-134",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (DEF-048 formal re-test and closure)",
+      "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-technical-acceptance-2 at 6acea5ed (git diff origin/main..HEAD)",
+      "reviewed_baseline": "2390e6fc44da25124375f4347f2a093db512f8353e01d456780a11073be494a3",
+      "source_ref": "docs/supplier_management/implementation/137_rev_134_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-135",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (DEF-049 diagnosis, REPORT_ONLY)",
+      "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-import-row-locks at 2f67bf69 (git diff origin/main..HEAD)",
+      "reviewed_baseline": "2390e6fc44da25124375f4347f2a093db512f8353e01d456780a11073be494a3",
+      "source_ref": "docs/supplier_management/implementation/138_rev_135_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-136",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (DEF-049 fix, HD-154 A)",
+      "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-def049-row-pick at e162c60d (git diff origin/main..HEAD)",
+      "reviewed_baseline": "2390e6fc44da25124375f4347f2a093db512f8353e01d456780a11073be494a3",
+      "source_ref": "docs/supplier_management/implementation/139_rev_136_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-137",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (DEF-049 formal re-test, DEF-050 diagnosis)",
+      "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-technical-acceptance-3 at 90652f01 (git diff origin/main..HEAD)",
+      "reviewed_baseline": "2390e6fc44da25124375f4347f2a093db512f8353e01d456780a11073be494a3",
+      "source_ref": "docs/supplier_management/implementation/140_rev_137_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 3,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-138",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (HD-156 E record)",
+      "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-hd156-defer at c72acb52 (git diff origin/main..HEAD)",
+      "reviewed_baseline": "2390e6fc44da25124375f4347f2a093db512f8353e01d456780a11073be494a3",
+      "source_ref": "docs/supplier_management/implementation/141_rev_138_independent_review.md",
+      "status": "CHANGES_REQUESTED",
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
@@ -6129,6 +6544,391 @@
       "source_ref": "Local, not CI. Full UAT config at 3047dbd2: 34 passed, 7 skipped; 63 junit attachment references, 0 missing, 0 account-shaped strings. Duplicate-name mutant (UAT-001 'detail' renamed 'created') fails with 'duplicate evidence name: created'. eslint exit 0.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-27T09:19:00+08:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "UAT evidence screenshots written to files (PR #288, REV-123 O6) merged to main",
+      "code_commit": "d805913bb22afad8b5eafef60920cfce73d0dd05",
+      "spec_baseline": "3c683c4ea46984b476c96add5e9280b5d395c6cce9e996efa3ec36b683d4f784",
+      "source_fingerprint": "484394e2694aedc43c45b3565298b9af7a4f2b5850a43c1855635730d9da42be",
+      "status": "PASS",
+      "source_ref": "PR #288 merged as d805913bb22afad8b5eafef60920cfce73d0dd05 at 2026-10-27T01:34:05Z on the Product Owner's word ('CI 過就 merge，之後繼續 PHASE-004', then 'HD-144 B，CI已通過'), with --match-head-commit 047e5077, after a gate that refused unless the latest run of every check was SUCCESS (13 checks, PR run 40431954792), main was an ancestor of HEAD and the local, remote and PR heads were equal. Review REV-125 APPROVED; follow-ups made before merge.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-27T01:34:05+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "UAT PHASE-001..004 with the PHASE-004 cases (developer run, not formal UAT)",
+      "code_commit": "600429d989a02799bcaffe3ef49457b50be0d19e",
+      "spec_baseline": "3c683c4ea46984b476c96add5e9280b5d395c6cce9e996efa3ec36b683d4f784",
+      "source_fingerprint": "03c3603ced4a64aec3ca3f1e5fb74994334f1efc80f3ed852abb9c8f3fd18b14",
+      "status": "PASS",
+      "source_ref": "Local, not CI. Full UAT config on the real backend: 39 passed, 14 skipped. PHASE-004: UAT-037, 038, 039, 043, 046 pass; UAT-032..036 test.fixme (Purchasing, HD-124 A; 033, 034, 036 after their Supplier steps) and UAT-044, 045 test.fixme (HD-144 B).",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-27T09:55:00+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "UAT PHASE-004 after REV-126 follow-ups (developer run, not formal UAT)",
+      "code_commit": "f5e5adefaa3cc70e406e4c6a38bf3ae72d7061c9",
+      "spec_baseline": "3c683c4ea46984b476c96add5e9280b5d395c6cce9e996efa3ec36b683d4f784",
+      "source_fingerprint": "e98e43f32871fa3e2b33d0d71fe2df175be2636dbce51a7d90110362d2bb75e2",
+      "status": "PASS",
+      "source_ref": "Local, not CI. Full UAT config: 39 passed, 14 skipped; no account-shaped string in junit. REV-126 survivors re-run and killed: result outcomes swapped (per-row outcome), UI double confirm (problems list), extra export column (template columns), Active shown after a failed activation (badge before reload), Bank file stored before refusal (import root scan).",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-27T14:01:00+08:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "UAT PHASE-004 cases (PR #290) merged to main",
+      "code_commit": "6cdc2eecb77c8182f6397243ef695a9aaf6c23b3",
+      "spec_baseline": "3c683c4ea46984b476c96add5e9280b5d395c6cce9e996efa3ec36b683d4f784",
+      "source_fingerprint": "0d7156980fa707723b5eb498c4768c8f2ec06e4b075822b87487017218752a84",
+      "status": "PASS",
+      "source_ref": "PR #290 merged as 6cdc2eecb77c8182f6397243ef695a9aaf6c23b3 at 2026-10-27T06:21:38Z on the Product Owner's word ('review 完 CI 過就 merge', then 'HD-145 A，CI已通過'), with --match-head-commit a20e46b8, after a gate that refused unless the latest run of every check was SUCCESS (13 checks, PR run 40458728358), main was an ancestor of HEAD and the local, remote and PR heads were equal. main (#289) was merged in before the PR's only CI run. Review REV-126 CHANGES_REQUESTED; every finding fixed before merge (report 129).",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-27T06:21:38+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "UAT all phases plus the cross-phase cases (developer run, not formal UAT)",
+      "code_commit": "67472ee6e3ceb4ecece5f3f374f8ebe2a86528a3",
+      "spec_baseline": "3c683c4ea46984b476c96add5e9280b5d395c6cce9e996efa3ec36b683d4f784",
+      "source_fingerprint": "f161fd03fd552abeb120b92157d6c32d1ac5592fdef25a659c0452c6a52eb82d",
+      "status": "PASS",
+      "source_ref": "Local, not CI. Full UAT config on the real backend (55 cases): 41 passed, 14 skipped (test.fixme: downstream HD-124 A / HD-131 A, operations HD-144 B). Cross-phase UAT-047 (keyboard at 375/768/1440 px) and UAT-055 (Audit filters, paging, request ids, redaction) pass. UAT-026's clock-pause margin raised to 200 ms after a 'Cannot fast-forward to the past' failure; 3 consecutive passes; 29 s and 31 s deadline mutants still fail it. No account-shaped string in junit.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-27T14:40:00+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Cross-phase UAT after REV-127 follow-ups (developer run, not formal UAT)",
+      "code_commit": "5ddfdb0984fb1620bf82e1c746fc11225c81bc64",
+      "spec_baseline": "3c683c4ea46984b476c96add5e9280b5d395c6cce9e996efa3ec36b683d4f784",
+      "source_fingerprint": "ce3a057ea38eaa90666f6ee0af76bba0fed3bcf3cd33ee87018a1c38f82a5cb4",
+      "status": "PASS",
+      "source_ref": "Local, not CI. uat-cross-phase: 2 passed. REV-127 survivors re-run and killed: console.error after a status action (CLERK problems), target ignored (decoy), to ignored (yesterday empty), request id missing for edits (every row), detail empty (masked detail), actor input unbound (actor URL); full number in the bank audit detail fails before any screenshot.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-27T15:03:00+08:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "UAT cross-phase cases (PR #291) merged to main",
+      "code_commit": "38f05ba6016aa7c3ae0903acf889928970348184",
+      "spec_baseline": "3c683c4ea46984b476c96add5e9280b5d395c6cce9e996efa3ec36b683d4f784",
+      "source_fingerprint": "ce3a057ea38eaa90666f6ee0af76bba0fed3bcf3cd33ee87018a1c38f82a5cb4",
+      "status": "PASS",
+      "source_ref": "PR #291 merged as 38f05ba6016aa7c3ae0903acf889928970348184 at 2026-10-27T07:25:55Z on the Product Owner's word ('HD-146 A，review 完 CI 過就 merge', then 'CI已通過'), with --match-head-commit a51a60b0, after a gate that refused unless the latest run of every check was SUCCESS (13 checks, PR run 40465140671), main was an ancestor of HEAD and the local, remote and PR heads were equal. Review REV-127 CHANGES_REQUESTED; every finding dispositioned (report 130).",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-27T07:25:55+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-051 A: supplier-server-integration, supplier-security and supplier-bank-security from one execution on 38f05ba6's code",
+      "code_commit": "db6298d3c8a53aff0815f3f59fa653eb841d18bb",
+      "spec_baseline": "3c683c4ea46984b476c96add5e9280b5d395c6cce9e996efa3ec36b683d4f784",
+      "source_fingerprint": "ce3a057ea38eaa90666f6ee0af76bba0fed3bcf3cd33ee87018a1c38f82a5cb4",
+      "status": "PASS",
+      "source_ref": "Local developer stage, not CI, not formal. The profile's argv, cwd and env for supplier-server-integration, DB_INTEGRATION_TESTS=1, MySQL 26.7.0, 2026-10-27 07:33:44-07:36:06Z, junit sha256 3ab29aa91750f51040b749050eb35e697dd2ca7c688f8f3f0c02656571db215f: 730 tests, 730 passed. Judged with harness_runner.parse_results and run_suite's gate per suite: integration 730/730 (min 620), 89/89 required IDs; security (identical argv) the same 730, 10/10 IDs; bank-security (supplierBank* subset of the same run) 142/142 (min 135), 15/15 IDs. One execution, not three. run_check itself refused (CONTRACT_DRIFT on the Item and Purchasing pins, HD-147; and COMMIT_CHANGED).",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-27T16:06:00+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-051 A: supplier-client-ui on 38f05ba6's code",
+      "code_commit": "db6298d3c8a53aff0815f3f59fa653eb841d18bb",
+      "spec_baseline": "3c683c4ea46984b476c96add5e9280b5d395c6cce9e996efa3ec36b683d4f784",
+      "source_fingerprint": "ce3a057ea38eaa90666f6ee0af76bba0fed3bcf3cd33ee87018a1c38f82a5cb4",
+      "status": "PASS",
+      "source_ref": "Local developer stage, profile argv: 208/208, 11/11 required IDs.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-27T16:06:00+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-051 A: resilience, recovery and release-operations runners (local parts) on 38f05ba6's code",
+      "code_commit": "db6298d3c8a53aff0815f3f59fa653eb841d18bb",
+      "spec_baseline": "3c683c4ea46984b476c96add5e9280b5d395c6cce9e996efa3ec36b683d4f784",
+      "source_fingerprint": "ce3a057ea38eaa90666f6ee0af76bba0fed3bcf3cd33ee87018a1c38f82a5cb4",
+      "status": "PASS",
+      "source_ref": "Local developer stage with admin credentials. Resilience TC-130/131/132 local PASS; recovery TC-133 local PASS (backup, isolated restore, reconciliation, smoke, fail-closed key ring); release TC-134/135 local PASS. Production parts NOT_RUN by design (HD-117 A, HD-119 A): TC-130, 132, 133, 134, 135 production and TC-136; each suite is BLOCKED on those, as designed.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-27T16:06:00+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-051 A: performance runner, 100k Suppliers, 50 users, on 38f05ba6's code (two runs)",
+      "code_commit": "db6298d3c8a53aff0815f3f59fa653eb841d18bb",
+      "spec_baseline": "3c683c4ea46984b476c96add5e9280b5d395c6cce9e996efa3ec36b683d4f784",
+      "source_fingerprint": "ce3a057ea38eaa90666f6ee0af76bba0fed3bcf3cd33ee87018a1c38f82a5cb4",
+      "status": "PASS",
+      "source_ref": "Run 1 FAILED TC-085 and TC-129: the scratch instance's performance_schema digest table was full (10000/10000), 32,662 and 91,964 statements unattributed, so the no-full-scan checks saw 0 statements; TC-101 10,000/10,000 applied. The digest table of that throwaway instance was truncated and the runner re-run. Run 2: TC-085, 101, 128 (local), 129 PASS; mixed p95 239 ms, for-SKU worst 1,480 ms, import 10,000 applied, none not applied, 0 digests lost. TC-128 production part NOT_RUN. DEF-034 not reproduced; stays OPEN.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-27T16:06:00+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-051 A: T51 rehearsal rerun on main 38f05ba6 (upgrade, backup/restore, rollback) after migration 0103",
+      "code_commit": "db6298d3c8a53aff0815f3f59fa653eb841d18bb",
+      "spec_baseline": "3c683c4ea46984b476c96add5e9280b5d395c6cce9e996efa3ec36b683d4f784",
+      "source_fingerprint": "ce3a057ea38eaa90666f6ee0af76bba0fed3bcf3cd33ee87018a1c38f82a5cb4",
+      "status": "PASS",
+      "source_ref": "docs/supplier_management/testing/t51_rehearsal/rehearsal-2026-10-27.log: all checks passed. Step B's upgrade check was generalised for 0088-0103 with a control (an invented change to suppliers must be reported); the control caught a BSD awk multi-line -v bug in the first draft, fixed by reading the table list from a file. The first two reruns failed on the old 0087-only expectation, not on a defect.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-27T16:06:00+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-051 A: T51 rehearsal after REV-128 (older 72e205ef and pre-0103 e6398b70 releases, live counters, byte-exact permissions)",
+      "code_commit": "c8b1a32629db741d816a61a2ff0785a0854edf2d",
+      "spec_baseline": "3c683c4ea46984b476c96add5e9280b5d395c6cce9e996efa3ec36b683d4f784",
+      "source_fingerprint": "ce3a057ea38eaa90666f6ee0af76bba0fed3bcf3cd33ee87018a1c38f82a5cb4",
+      "status": "PASS",
+      "source_ref": "docs/supplier_management/testing/t51_rehearsal/rehearsal-2026-10-27.log (replaces the earlier log of that name): all checks passed. Run from the branch worktree, whose product code equals main 38f05ba6; the rehearsal script changes were not yet committed. Supersedes the previous rehearsal observation's rollback claim, which used 72e205ef rather than the release before 0103 (REV-128 R1). New step C: e6398b70 refuses to start on the 0103 schema ('Supplier startup self-check failed'); after the three statements in 0103's header it starts and serves the rows; rolling forward renumbers them, so user ordering is lost. AUTO_INCREMENT read with information_schema_stats_expiry=0 (R2): the cache read NULL where the live value was 2. Controls: moved counter, five invented changes, case-only permission change in a rolled-back transaction.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-27T08:27:27+00:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "TASK-051 completion boundary and rehearsal across 0103 (PR #292) merged to main",
+      "code_commit": "6458d9d5f738cbb03685dc07f78976f0415ac9d3",
+      "spec_baseline": "3c683c4ea46984b476c96add5e9280b5d395c6cce9e996efa3ec36b683d4f784",
+      "source_fingerprint": "ce3a057ea38eaa90666f6ee0af76bba0fed3bcf3cd33ee87018a1c38f82a5cb4",
+      "status": "PASS",
+      "source_ref": "PR #292 merged as 6458d9d5f738cbb03685dc07f78976f0415ac9d3 at 2026-10-28T00:47:22Z on the Product Owner's word (the TASK-051 convergence instruction, then 'ci 己過'), with --match-head-commit 6c071e59, after a gate that refused unless the latest run of every check was SUCCESS (13 checks, PR run 40474278507), main was an ancestor of HEAD and the local, remote and PR heads were equal. Review REV-128 CHANGES_REQUESTED; every finding fixed before merge (report 131).",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-28T00:47:22+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "T51 smoke (HD-148 B) and TC-134/135 after moving the shared checks (developer run, local)",
+      "code_commit": "fcc0447f75aa97473d4608fa2d26aa68c103c02f",
+      "spec_baseline": "3c683c4ea46984b476c96add5e9280b5d395c6cce9e996efa3ec36b683d4f784",
+      "source_fingerprint": "501daf66cd67dfba1a854d26cb9ea88316e32377db5ff96b28d5dc88c4d39a05",
+      "status": "PASS",
+      "source_ref": "Local scratch MySQL, uncommitted working tree on the branch head. runSupplierReleaseAcceptance.js: TC-134 PASS, TC-135 PASS (20 checks, including the new deploy.no_unknown_migration; the first run failed it on the framework/*.sql ledger rows, fixed by listing database/framework). smokeSupplierManagement.js copy on a restored copy of erp_t51 (erp_t51_rh_copy_smoke): PASS, 19 checks; names erp_t51 and erp_t51_rh_copy refused before any change; temporary users removed, RLA/RLB/RLC Suppliers left in the copy. check with a SELECT-only account against a server on the copy: PASS, 8 checks. Six injected faults (wrong URL, sort_order dropped, 0103 ledger row deleted, unknown ledger row, extra supplier.* permission, no active currency) each failed its own check; approval ON was reported, not failed. Copy, server (exact PID) and the read-only account removed afterwards.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-28T01:04:14+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "T51 smoke after REV-129 fixes, and TC-134/135 (developer run, local)",
+      "code_commit": "b374ca6c3b35fde72393be1ccdb672059345c18e",
+      "spec_baseline": "3c683c4ea46984b476c96add5e9280b5d395c6cce9e996efa3ec36b683d4f784",
+      "source_fingerprint": "7d16b8f8e33cc2b5fbd2459b5ac656948ef21b1af0f7e36bb29982eb71ba270a",
+      "status": "PASS",
+      "source_ref": "Local scratch MySQL. Server code tested as the working tree later committed as b374ca6c on top of 1675cf0f (the earlier observation's runs were of 1675cf0f's code before it was committed). TC-134 PASS, TC-135 PASS (20 checks). copy: approval OFF PASS (19), approval ON PASS (19; it failed before the fix with APPROVER_REQUIRED, as REV-129 showed), approval ON with --first-deployment FAIL on deploy.settings_singleton_approval_off; a REQUIRE SSL admin account PASS with DB_SSL_ENABLED=true and refused without it; refused before any change: DB_NAME equal to --database, no JWT_SECRET; no mode reports usage. check (SELECT-only account, server on an approval-ON copy): PASS 8 with approval reported; --first-deployment FAIL on the approval check. Copies, server (exact PID), accounts and dump removed; erp_t51 approval 0.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-28T01:17:49+00:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "T51 runbook, release sign-off sheet and deployment smoke (PR #293) merged to main",
+      "code_commit": "c51ddbc8eb30cf1ada401847aae795806d98701e",
+      "spec_baseline": "3c683c4ea46984b476c96add5e9280b5d395c6cce9e996efa3ec36b683d4f784",
+      "source_fingerprint": "7d16b8f8e33cc2b5fbd2459b5ac656948ef21b1af0f7e36bb29982eb71ba270a",
+      "status": "PASS",
+      "source_ref": "PR #293 merged as c51ddbc8eb30cf1ada401847aae795806d98701e at 2026-10-28T01:34:32Z on the Product Owner's word ('A，review 完 CI 過就 merge', then 'CI已通過'), with --match-head-commit 566bf76c, after a gate that refused unless the latest run of every check was SUCCESS (13 checks, PR run 40614375964), main was an ancestor of HEAD and the local, remote and PR heads were equal. Review REV-129 CHANGES_REQUESTED; every finding fixed before merge (report 132).",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-28T01:34:32+00:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "Baseline refresh for TEST_AND_VERIFY (PR #295) merged to main",
+      "code_commit": "a98e50e750c9cdfa7919d3daad8385113e94be0c",
+      "spec_baseline": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "source_fingerprint": "675f2e537bd908f9cd5fb14cd11b72df9c657e00393de9062ac42ea2cdc39077",
+      "status": "PASS",
+      "source_ref": "PR #295 merged as a98e50e750c9cdfa7919d3daad8385113e94be0c at 2026-10-28T03:00:52Z on the Product Owner's word ('HD-150 A，review 完 CI 過就 merge', then 'CI已通過'), with --match-head-commit 009e3a13, after a gate that refused unless the latest run of every check was SUCCESS (13 checks, PR run 40622968950), main was an ancestor of HEAD and the local, remote and PR heads were equal. Review REV-130 APPROVED (report 133). On the merged main: validate_traceability STRUCTURE_PASS, verify_gate PLAN_READY LOCAL_CHECKS_PASS.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-28T03:00:52+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Formal run_check at TECHNICAL and REGRESSION, 8 required suites (HD-151 A)",
+      "code_commit": "7bbf547d5a019137d2cc77d8930cf6cb4a3c9f69",
+      "spec_baseline": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "source_fingerprint": "675f2e537bd908f9cd5fb14cd11b72df9c657e00393de9062ac42ea2cdc39077",
+      "status": "FAIL",
+      "source_ref": "docs/supplier_management/testing/07_technical_acceptance_report.md. 16 run_check --execute runs, 2026-10-28 03:05-03:40Z, all registered in evidence_files. PASS at both stages: server-integration 730/730, security 730/730, bank-security 142/142, client-ui 208/208. BLOCKED at both stages, production parts NOT_RUN by design: resilience (TC-130, TC-132), recovery (TC-133), release-operations (TC-134..136), performance (TC-128). REGRESSION performance FAIL: TC-101, online create 6 of 291 HTTP 500 during the import and import.inside_measured_window (DEF-048). verify_gate TECHNICAL_ACCEPTANCE at 7bbf547d, state revision 459: BLOCKED on TASK_INCOMPLETE TASK-051, the NOT_RUN production parts, TC-101; at later commits also COMMIT_CHANGED, EVIDENCE_COMMIT for all 16 runs and, while open, HUMAN_DECISION_REQUIRED HD-152 (REV-131 R2).",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-28T03:40:37+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEF-048 diagnosis under HD-152 A (not formal evidence)",
+      "code_commit": "a98e50e750c9cdfa7919d3daad8385113e94be0c",
+      "spec_baseline": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "source_fingerprint": "675f2e537bd908f9cd5fb14cd11b72df9c657e00393de9062ac42ea2cdc39077",
+      "status": "FAIL",
+      "source_ref": "docs/supplier_management/testing/def048_diagnosis_2026-10-28/ and DEF-048 in 04_defect_register.md. status FAIL means the defect was reproduced, not that TC-101 failed: TC-101 passed in this run (1 error, under 1%). Throwaway detached worktree at a98e50e7 with one uncommitted change (benchmark-keep-logs.diff), removed afterwards; runSupplierPerformanceAcceptance.js once, 03:51-04:02Z, innodb_print_all_deadlocks ON from 03:58:28Z. 18 deadlocks in the load-during-import phase (lock_deadlocks 256 -> 274), all on the supplier_name_grams PRIMARY supremum between new-id INSERTs; the import ran 04:00:35.847Z-04:01:53.018Z and 3 deadlocks fell outside it; by connection, 12 import row transaction (thread 23736) vs online create, 6 online vs online. App log: 17 supplier.write.deadlock_retried plus one create (d70e765c) that lost again on its retry (InnoDB #4/#5) and answered 500. Import 10,000/10,000. Source fingerprint is that of the committed code; the uncommitted benchmark change is not covered (REV-132).",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-28T04:02:37+00:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "TEST_AND_VERIFY formal runs, Technical Acceptance report and DEF-048 diagnosis (PR #296) merged to main",
+      "code_commit": "e7f67b82b85f7ae9e3e44914148866487f211645",
+      "spec_baseline": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "source_fingerprint": "675f2e537bd908f9cd5fb14cd11b72df9c657e00393de9062ac42ea2cdc39077",
+      "status": "PASS",
+      "source_ref": "PR #296 merged as e7f67b82b85f7ae9e3e44914148866487f211645 at 2026-10-28T04:30:50Z on the Product Owner's word ('HD-152 A，review 完 CI 過就 merge', then 'CI 過咗'), with --match-head-commit 4f89c553, after a gate that refused unless the latest run of every check was SUCCESS (13 checks, PR run 40631358349), main was an ancestor of HEAD and the local, remote and PR heads were equal. Reviews REV-131 and REV-132 CHANGES_REQUESTED; every finding fixed before merge (reports 134, 135).",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-28T04:30:50+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEF-048 fix: developer checks (HD-153 A, IMPLEMENT)",
+      "code_commit": "064d5d2dd44b3456599c5f0037371f59e32de200",
+      "spec_baseline": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "source_fingerprint": "6bcc3b57430f5c733a1d730cf7abb810cea8f172bbd8f5935ac56aced49f2d28",
+      "status": "PASS",
+      "source_ref": "Local, throwaway mysqld 3450, 2026-10-28 05:5x-06:22Z, on 064d5d2d: npm run lint exit 0; Supplier server suite (profile globs, DB_INTEGRATION_TESTS=1) 732/732; runSupplierPerformanceAcceptance.js with the fix: deadlocks mixedLoad 0, loadDuringImport 0, TC-085/101/128/129 local PASS, import 82.8 s inside the window; the same runner with the create-path isNew removed in place (backup, restore, cmp, identical to HEAD): deadlocks 7 and 19, 26 deadlock_retried warnings in the kept log, TC-101 and TC-128 FAIL only on db.no_deadlocks_* (online error rate 0). New integration test red before the fix (ER_LOCK_WAIT_TIMEOUT) with its control green; unit-test mutant (isNew removed) killed. Developer evidence, not formal.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-28T06:22:11+00:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "DEF-048 fix: no name-gram DELETE for a just-created Supplier (PR #298) merged to main",
+      "code_commit": "f62651d82e2cb58a30aa62948fa96bb8f0f8552a",
+      "spec_baseline": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "source_fingerprint": "418abf1eb92f20dc948ee3a32a60487fa7069c07296797b0cffd47d6c92e7104",
+      "status": "PASS",
+      "source_ref": "PR #298 merged as f62651d82e2cb58a30aa62948fa96bb8f0f8552a at 2026-10-28T06:52:07Z on the Product Owner's word ('1 merge 2 只留 warn 同 error 行'), with --match-head-commit 106ef26c, after a gate that refused unless the latest run of every check was SUCCESS (13 checks, PR run 40645193058), main was an ancestor of HEAD and the local, remote and PR heads were equal. Review REV-133 CHANGES_REQUESTED; every finding fixed before merge (report 136). On the merged main: validate_traceability STRUCTURE_PASS, verify_gate PLAN_READY LOCAL_CHECKS_PASS.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-28T06:52:07+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Formal re-test after the DEF-048 fix: 8 required suites at TECHNICAL and REGRESSION (HD-151 A, HD-153 A)",
+      "code_commit": "151aedf8386897481d9af82521036cd923c93ed0",
+      "spec_baseline": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "source_fingerprint": "418abf1eb92f20dc948ee3a32a60487fa7069c07296797b0cffd47d6c92e7104",
+      "status": "PASS",
+      "source_ref": "docs/supplier_management/testing/07_technical_acceptance_report.md (re-test section). 16 run_check --execute runs, 2026-10-28 06:53-07:28Z, on 151aedf8 (code-identical to the mode entry commit f62651d8), all registered. PASS at both stages: server-integration 732/732, security 732/732, bank-security 142/142, client-ui 208/208. resilience, recovery, release-operations, performance: every local check PASS; BLOCKED only on the production parts NOT_RUN by design. supplier-performance at both stages: TC-101 PASS, deadlocks 0/0 with innodb_deadlock_detect and innodb_print_all_deadlocks ON, online error rate 0, import 71.8 s / 77.4 s. DEF-048 CLOSED. verify_gate TECHNICAL_ACCEPTANCE at 151aedf8, state revision 470: BLOCKED only on TASK_INCOMPLETE TASK-051 and the NOT_RUN production parts of TC-128, TC-130, TC-132..TC-136. status PASS here means every executed local check passed; it is not Technical Acceptance. observed_at is the end of the last run; the gate result was observed after the runs, before commit 6acea5ed (REV-134 N2). Import times: precheck plus execute 78.1 s and 83.7 s, execute alone 71.8 s and 77.4 s. The deadlock counter's 314 starting value is a manual query, not run evidence; REV-134 attributed the 27 session deadlocks from the mysqld error log in the scratchpad to supplierDeadlockRetry and supplierConstraintRaces fixtures in erp_t51 and erp_t51_mig_*, none in supplier_name_grams or a performance schema.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-28T07:27:46+00:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "DEF-048 formal re-test evidence and closure; Technical Acceptance blocked only by TASK-051 B and C (PR #299) merged to main",
+      "code_commit": "ef5a61a4a3c71a2b969369fec9a9dbc9cdecf2c7",
+      "spec_baseline": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "source_fingerprint": "418abf1eb92f20dc948ee3a32a60487fa7069c07296797b0cffd47d6c92e7104",
+      "status": "PASS",
+      "source_ref": "PR #299 merged as ef5a61a4a3c71a2b969369fec9a9dbc9cdecf2c7 at 2026-10-28T08:04:32Z on the Product Owner's word ('CI 已通過就等於 merge'), with --match-head-commit 4a528c76, after a gate that refused unless the latest run of every check was SUCCESS (13 checks, PR run 40651747391), main was an ancestor of HEAD and the local, remote and PR heads were equal. Review REV-134 CHANGES_REQUESTED; every finding fixed before merge (4a528c76). Docs only: source fingerprint unchanged from f62651d8.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-28T08:04:32+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEF-049 diagnosis: import row lock growth (REV-132 O3), REPORT_ONLY (not formal evidence)",
+      "code_commit": "7f47f6198432a828fbec2847af80c4317c69babe",
+      "spec_baseline": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "source_fingerprint": "418abf1eb92f20dc948ee3a32a60487fa7069c07296797b0cffd47d6c92e7104",
+      "status": "FAIL",
+      "source_ref": "docs/supplier_management/testing/def049_diagnosis_2026-10-29/ and DEF-049 in 04_defect_register.md. status FAIL means the defect was reproduced; no test case failed. Throwaway mysqld 3450 (26.7.0), scratch schema erp_t51_mig_lockdiag (exact 0062 table minus the FK; created and dropped by run.sh). The exact query from SupplierImportService.js:653 took 1, 102, 1,011, 5,056 and 9,100 record locks at k = 0, 100, 1,000, 5,000 and 9,000 applied rows, with the PRIMARY plan. Per pick: 0.21 ms at k = 0 and 2.26 ms at k = 9,000. Controls: FORCE INDEX on the IN query locks every pending row (20,017 at k = 0); an equality on one status without the hint still uses PRIMARY until k = 9,000; one equality per status with FORCE INDEX holds 1-3 locks at every k. No product code changed.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-29T00:49:29+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEF-049 diagnosis v2 after REV-135: reads, locks and cross-job blocking, REPORT_ONLY (not formal evidence)",
+      "code_commit": "2f67bf696d931b08b873145959b11ba5f23c1920",
+      "spec_baseline": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "source_fingerprint": "418abf1eb92f20dc948ee3a32a60487fa7069c07296797b0cffd47d6c92e7104",
+      "status": "FAIL",
+      "source_ref": "docs/supplier_management/testing/def049_diagnosis_2026-10-29/run-v2.sh and out-v2.txt (README.md explains every file). status FAIL means the defect was reproduced; no test case failed. Throwaway mysqld 3450, version 26.7.0, REPEATABLE-READ (printed); scratch schema erp_t51_mig_lockdiag with two jobs, created and dropped by the script; locks filtered to the probe's own thread; reads counted before the data_locks query. Current query at k = 0, 100, 1,000, 5,000, 9,000: reads 1, 101, 1,001, 5,001, 9,001; locks 1, 101, 1,011, 5,056, 9,100. Part 2: a per-status forced-index FOR UPDATE on a job with no pending warning made the next job's staging INSERT time out (ER_LOCK_WAIT_TIMEOUT after 2.0 s; control 0.0 s); the non-locking pick plus primary-key FOR UPDATE held 1 lock at every k and did not block. TC-101 window margins from the runs' details: 40.7 s and 35.1 s (re-test), -2.9 s (first REGRESSION). No product code changed.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-29T00:58:32+00:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "DEF-049 diagnosis, HD-154 and REV-135 fixes (PR #300) merged to main",
+      "code_commit": "8c31c94aaceb761ea0efaa16217af4c2eab68d7a",
+      "spec_baseline": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "source_fingerprint": "418abf1eb92f20dc948ee3a32a60487fa7069c07296797b0cffd47d6c92e7104",
+      "status": "PASS",
+      "source_ref": "PR #300 merged as 8c31c94aaceb761ea0efaa16217af4c2eab68d7a at 2026-10-29T01:38:55Z on the Product Owner's word ('CI 過咗'), with --match-head-commit 28e26efa, after a gate that refused unless the latest run of every check was SUCCESS (13 checks, PR run 40797826220), main was an ancestor of HEAD and the local, remote and PR heads were equal. Review REV-135 CHANGES_REQUESTED; every finding fixed before merge (report 138). Docs only: source fingerprint unchanged.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-29T01:38:55+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEF-049 fix developer checks (IMPLEMENT, HD-154 A); developer evidence, not formal",
+      "code_commit": "3a2cfcd5b2ba0182896a614b19ad5878a8afd025",
+      "spec_baseline": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "source_fingerprint": "107fb43938a1227a1ce7cdf298c08d7e429fb613933f7a14e3059b654fc94816",
+      "status": "PASS",
+      "source_ref": "Local, throwaway mysqld 3450, 2026-10-29: server suite 02:29Z, performance run about 02:41-02:53Z, on the working tree later committed unchanged as 3a2cfcd5: npm run lint exit 0; Supplier server suite (profile globs, DB_INTEGRATION_TESTS=1) 734/734; runSupplierPerformanceAcceptance.js: TC-085/101/128/129 local PASS, deadlocks 0/0 (detect and print ON), import 10,000/10,000, execute 54.2 s, precheck plus execute 61.0 s, 57.9 s before the load window closed. The first performance run failed TC-129 on null plans and TC-085 on null plans and on for_sku.p95_under_2s (forSku.nameSearch over 2 s, value not retained; corrected after REV-136 L2), because the mysqld had been restarted without the three 16,384 startup settings (05_tc_test_map.md); after restarting with them the same code passed. New DEF-049 integration tests: red on the old query (9 of 59 rows unlocked); a mutant toward the rejected per-status FOR UPDATE candidate made both red (58 of 59; staging ER_LOCK_WAIT_TIMEOUT), backed up, restored and checked with cmp.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-29T02:52:57+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEF-049 fix after REV-136: tests and mutants; developer evidence, not formal",
+      "code_commit": "606728f2d7fbf11f4746e40e2fddf362a4532bcb",
+      "spec_baseline": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "source_fingerprint": "493d144c455c6db5d08c3baeb3b36c961539740c393727739956e060f66c252f",
+      "status": "PASS",
+      "source_ref": "Local, throwaway mysqld 3450, 2026-10-29 03:08-03:12Z (mutants 03:08Z), on the working tree later committed unchanged as 606728f2. supplierImportExecution.integration 19/19. Mutants on SupplierImportService.js (backup, restore, cmp): old query red (10 of 59 unlocked); rejected per-status FOR UPDATE red (58 of 59; staging ER_LOCK_WAIT_TIMEOUT); outer ORDER BY dropped red (picked 51, expected 50); a non-locking read before the job lock red (SUPPLIER_IMPORT_ROW_STATE_CONFLICT). Supplier server suite 735/735 (03:09-03:11Z); then a lint-only rewrite of the test's wait loop (no-promise-executor-return), after which npm run lint exit 0 and the file 19/19. The performance runner was not re-run: production code changed only by a comment since its PASS.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-29T03:11:59+00:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "DEF-049 fix: import row pick locks only the row it picks (PR #301) merged to main",
+      "code_commit": "4f101642a284c44d6dd53338ddfeb431582aa5f4",
+      "spec_baseline": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "source_fingerprint": "493d144c455c6db5d08c3baeb3b36c961539740c393727739956e060f66c252f",
+      "status": "PASS",
+      "source_ref": "PR #301 merged as 4f101642a284c44d6dd53338ddfeb431582aa5f4 at 2026-10-29T03:35:35Z on the Product Owner's word ('CI己通過'), with --match-head-commit 1c632271, after a gate that refused unless the latest run of every check was SUCCESS (13 checks, PR run 40810936200), main was an ancestor of HEAD and the local, remote and PR heads were equal. Review REV-136 CHANGES_REQUESTED; every finding fixed before merge (report 139).",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-29T03:35:35+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEF-050 diagnosis under HD-155 A: for-SKU search capacity at 100k, REPORT_ONLY (not formal evidence)",
+      "code_commit": "558adc220a8b0fad54317e716e979979128e5693",
+      "spec_baseline": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "source_fingerprint": "493d144c455c6db5d08c3baeb3b36c961539740c393727739956e060f66c252f",
+      "status": "FAIL",
+      "source_ref": "docs/supplier_management/testing/def050_diagnosis_2026-10-29/ and DEF-050 in 04_defect_register.md. status FAIL means the cause was reproduced (name-search p95 1,916-2,021 ms at 50 users), not that a test case failed. Throwaway mysqld 3450 (26.7.0); scratch schema erp_t51_mig_d50 migrated and seeded as the performance runner does, dropped after each experiment; 60 s runs after 10 s warm-up. E1 --only=forSku at 1/10/25/50 users: throughput 1, 15, 29, 29/s; COUNT scan 98, 139, 311, 336 ms. E2 at 50 users: forSku.typical only (the cheapest operation without q) 97/s, p95 29 ms; forSku.nameSearch only p95 2,958 ms. E3 app pool 20 (uncommitted one-line change in a throwaway detached worktree, removed): 33/s, nameSearch p95 1,990 ms, COUNT scan 579 ms. E4 buffer pool 1 GiB (dynamic, set back to 128 MiB): no change. No product code changed. Interpretation corrected after REV-137 (see the next observation and DEF-050 in 04_defect_register.md).",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-29T06:18:15+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Formal re-test after the DEF-049 fix: 8 required suites at TECHNICAL and REGRESSION (HD-151 A suite set, HD-154 A)",
+      "code_commit": "558adc220a8b0fad54317e716e979979128e5693",
+      "spec_baseline": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "source_fingerprint": "493d144c455c6db5d08c3baeb3b36c961539740c393727739956e060f66c252f",
+      "status": "FAIL",
+      "source_ref": "docs/supplier_management/testing/07_technical_acceptance_report.md (DEF-049 re-test section). 16 run_check --execute runs, 2026-10-29 03:38-04:13Z, on 558adc22 (code-identical to the mode entry commit 4f101642), all registered; an earlier attempt at 03:37Z was refused by COMMIT_CHANGED before any test ran and wrote no evidence. PASS at both stages: server-integration 735/735, security 735/735, bank-security 142/142, client-ui 208/208. resilience, recovery, release-operations: every local check PASS; BLOCKED only on the production parts NOT_RUN by design. supplier-performance: TC-101 PASS at both stages (execute 53.9 s / 51.2 s, 58.3 s / 61.1 s before the window closed, deadlocks 0/0 with detection and printing ON); TC-129 PASS at both; TC-085 FAIL at TECHNICAL (forSku.nameSearch p95 2,113 ms against 2,000; DEF-050) and PASS at REGRESSION (1,937 ms). DEF-049 CLOSED. verify_gate TECHNICAL_ACCEPTANCE at 558adc22, state revision 483: BLOCKED on TASK_INCOMPLETE TASK-051, the NOT_RUN production parts of TC-128, TC-130, TC-132..TC-136, and TC-085 at TECHNICAL. status FAIL is TC-085's. From state revision 484 (HD-156 OPEN) the gate also reports HUMAN_DECISION_REQUIRED (REV-137 L2).",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-29T04:13:01+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEF-050 diagnosis after REV-137: DB-time split from the digests, and E5 (rest page without q, today's plan against the name index), REPORT_ONLY (not formal evidence)",
+      "code_commit": "558adc220a8b0fad54317e716e979979128e5693",
+      "spec_baseline": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "source_fingerprint": "493d144c455c6db5d08c3baeb3b36c961539740c393727739956e060f66c252f",
+      "status": "FAIL",
+      "source_ref": "docs/supplier_management/testing/def050_diagnosis_2026-10-29/ (README.md, run-restplan.sh, out-restplan.txt) and DEF-050 in 04_defect_register.md. status FAIL: the defect stands; no test case failed. Split across all six formal for-SKU reports and every diagnosis report: q-related statements 60-62%, the rest page without q 21-24%; the formal runs' pool of 10 is 10.0 busy. Correct DB busy (60 s window): E1 0.1, 2.1, 8.9, 10.1; pool of 20 19.9. E5 on scratch schema erp_t51_mig_d50 (migrated, seeded, dropped), quiet DB, 10 runs per point: rest page without q at offset 0 / 10,000 / 40,000 / 69,000: today's plan 2.4 / 97-99 / 109-121 / 122-140 ms; FORCE INDEX (idx_suppliers_name_id) 2.5 / 17-22 / 63-81 / 105-136 ms. No product code changed.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-29T06:34:34+00:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "DEF-049 formal re-test, DEF-049 closed, DEF-050 diagnosis and HD-156 (PR #303) merged to main",
+      "code_commit": "5bed215bade454f5181d34019701c2621353603d",
+      "spec_baseline": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "source_fingerprint": "493d144c455c6db5d08c3baeb3b36c961539740c393727739956e060f66c252f",
+      "status": "PASS",
+      "source_ref": "PR #303 merged as 5bed215bade454f5181d34019701c2621353603d at 2026-10-29T07:53:43Z on the Product Owner's word ('CI己通過'), with --match-head-commit 31ab2a28, after a gate that refused unless the latest run of every check was SUCCESS (13 checks, PR run 40830448716), main was an ancestor of HEAD and the local, remote and PR heads were equal. Review REV-137 CHANGES_REQUESTED; every finding fixed before merge (report 140). Docs and evidence only: source fingerprint unchanged from 4f101642.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-29T07:53:43+00:00"
     }
   ],
   "pending_decisions": [
@@ -8008,6 +8808,195 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-26: 'HD-143 A，CI 過就 merge'. HD-142 A's denied-attempt count is narrowed: denials are read from the request log (403 on bank routes) and the system log (http.request_failed error.code), with no metric."
+    },
+    {
+      "id": "HD-144",
+      "impact": "MAJOR",
+      "question": "UAT-044 (operations representative at representative volume: search p95 < 2 s, 10k import <= 10 min) and UAT-045 (DR owner in an isolated restore: RTO <= 4 h, RPO <= 15 min, no success claimed without keys) are operational acceptance; the UAT environment is a small fresh scratch database. (A) Automate locally: an opt-in 100k-Supplier spec and a local dump/restore drill with a second server. (B) test.fixme with the reason (representative environment, operations representative and DR owner needed), citing the technical evidence: performance_report.md (T50) and supplierBankRestore.integration.test.js. (C) Only the local restore drill; UAT-044 as B.",
+      "affected_ids": [
+        "UAT-044",
+        "UAT-045",
+        "NFR-001",
+        "NFR-002",
+        "NFR-003",
+        "NFR-004",
+        "NFR-005",
+        "NFR-009",
+        "NFR-011"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-27: 'HD-144 B，CI已通過'."
+    },
+    {
+      "id": "HD-145",
+      "impact": "MAJOR",
+      "question": "07_uat_test_cases.md disagrees with approved decisions and the design in two PHASE-004 cases, and one evidence form needs acceptance (REV-126). (1) CSV-MIXED in 07 §2 includes a Bank column, but HD-053 A / HD-054 A refuse such a file at upload; UAT-038 says 預檢錯誤 though the refusal is at upload. (2) UAT-043 names VIEWER, but design §6.9 and SEC-002 restrict export to supplier.mgmt. (3) UAT-046's 'dependency unavailable' includes a browser-intercepted 503, as accepted for UAT-054. (A) Keep 07 unchanged now; the cases follow the decisions and design and the TC map records each deviation; amend 07 at the next plan revision (amending now moves the plan baseline and strands its approval records). (B) Amend 07 now, with re-affirmed approvals. (C) Treat VIEWER export as intended: the 403 becomes a product defect.",
+      "affected_ids": [
+        "UAT-037",
+        "UAT-038",
+        "UAT-043",
+        "UAT-046",
+        "07_uat_test_cases.md §2",
+        "HD-053",
+        "HD-054",
+        "03_design_spec.md §6.9"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-27: 'HD-145 A，CI已通過'. 07 stays unchanged now; the TC map records each deviation; amend 07 at the next plan revision."
+    },
+    {
+      "id": "HD-146",
+      "impact": "MINOR",
+      "question": "Cross-phase UAT interpretations (REV-127). (1) UAT-055 '開啟詳情 / Audit detail': the Audit page shows each row's masked before/after detail inline, with no separate detail view (design §7.2 says only 'masked detail'); the case accepts the inline row plus the same entry in the Supplier's 變更紀錄 tab. (2) UAT-047 opens each step by URL; keyboard use of the drawer menu is not part of the path. (3) UAT-055 runs as VIEWER; the UAT fixture has no AUDITOR role. (A) Accept all three as recorded in the TC map; amend 07 at the next plan revision. (B) Require a row-level Audit detail view (a product change). (C) Add the drawer menu to UAT-047 and/or an AUDITOR role to the fixture.",
+      "affected_ids": [
+        "UAT-047",
+        "UAT-055",
+        "07_uat_test_cases.md §4.6",
+        "03_design_spec.md §7.2"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-27: 'HD-146 A，review 完 CI 過就 merge'. The three interpretations stand as recorded in the TC map; 07 is amended at the next plan revision with HD-145's points."
+    },
+    {
+      "id": "HD-147",
+      "impact": "MAJOR",
+      "question": "run_check refuses every Supplier suite on CONTRACT_DRIFT: docs/items_management/03_design_spec.md (pinned at 34207893; since then DES-022, a committed-receipt provider for Receiving, still PROPOSED) and docs/purchasing_receiving_management/03_design_spec.md (pinned at 11e4b5b0; since then Purchasing-Inventory receipt reversal provider changes). Supplier analysed both: neither touches a contract Supplier consumes (item-sku-uom-provider purchase lookup; supplier-consumer-contract). Refreshing the pins edits 00_module_manifest.json, which strands baseline-bound approvals, reviews and evidence. (A) Refresh both pins now with the analysis recorded and the bound approvals re-affirmed, so harness formal stages can run. (B) Refresh at the mode change to TEST_AND_VERIFY, together with any other baseline change, so records are stranded once. (C) Keep the pins and run suites outside run_check (developer-stage evidence only).",
+      "affected_ids": [
+        "00_module_manifest.json#contracts.consumed",
+        "supplier-server-integration",
+        "TASK-051"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-28: 'HD-147 B'. The consumed-contract pins are refreshed at the mode change to TEST_AND_VERIFY, together with any other baseline change, so baseline-bound records are stranded once. Until then run_check stays refused on CONTRACT_DRIFT and the Supplier suites run outside it as developer-stage evidence."
+    },
+    {
+      "id": "HD-148",
+      "impact": "MAJOR",
+      "question": "How smokeSupplierManagement.js smokes a deployed environment. Write flows (Draft, activation, approval ON, suspend, block, Bank create and reveal) on a deployed environment need real per-role accounts, passwords and approved device keys, leave permanent Suppliers and audit rows (no hard delete), and approval ON is a global setting. (A) Write smoke on the deployed environment behind --write, operator-supplied credentials, SMOKE- prefix, blocked at the end, approval ON only off production. (B) Write smoke on a restored copy of production with temporary users (reusing the TC-135 smoke), plus read-only §14.4 checks on production with a SELECT-only account. (C) Read-only checks only; write flows by manual UAT on staging.",
+      "affected_ids": [
+        "TASK-051",
+        "TC-135",
+        "server/scripts/smokeSupplierManagement.js",
+        "operations.md"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-28: 'HD-148 B'. check mode is read-only on the deployed environment; copy mode writes only to a restored copy whose name ends in _smoke."
+    },
+    {
+      "id": "HD-149",
+      "impact": "MAJOR",
+      "question": "Move Supplier from IMPLEMENT to TEST_AND_VERIFY now, while TASK-051 groups B and C stay open? (A) Now: one baseline change (refresh the Item and Purchasing consumed pins per HD-147 B, add the deployment smoke to the profile, amend 07 per HD-145 A and HD-146 A, re-record the affected approvals on the new baselines), then a formal run_check of the group A suites and a Technical Acceptance report; B and C stay BLOCKED/NOT_RUN, release not approved; REPORT_ONLY applies during testing. (B) Wait until downstream modules ship.",
+      "affected_ids": [
+        "00_module_manifest.json#contracts.consumed",
+        "00_project_profile.json",
+        "07_uat_test_cases.md",
+        "TASK-051",
+        "state/active_mode"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-28: 'HD-149 A，開 issue，風險接受留返 release 時'. Risk acceptance (deferred defects, DEF-034, the 0103 rollback ordering loss, the two new limitations) stays a release decision; this answer re-records existing approvals on the new baselines only and grants no new risk acceptance."
+    },
+    {
+      "id": "HD-150",
+      "impact": "MAJOR",
+      "question": "PR #293 merged server/scripts/smokeSupplierManagement.js (outside allowed_write_paths; server/scripts/** reports OUTSIDE_MODULE by HD-034) and a server/package.json line (approval_required_paths) without a SCOPE approval; validate_module_boundary.py was not run before the push or by REV-129. (A) Record the deviation and grant a SCOPE approval for both paths on the new plan baseline. (B) Remove the smoke script and npm script from main. (C) Move the script under an allowed path such as server/test/ and drop the npm script.",
+      "affected_ids": [
+        "server/scripts/smokeSupplierManagement.js",
+        "server/package.json",
+        "TASK-051",
+        "PR #293"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-28: 'HD-150 A，review 完 CI 過就 merge'. APPROVAL-HD-150-SCOPE."
+    },
+    {
+      "id": "HD-151",
+      "impact": "MAJOR",
+      "question": "The TECHNICAL_ACCEPTANCE gate needs TECHNICAL and REGRESSION evidence for the 8 required suites; run_check runs one stage per execution, and no remediation happened, so REGRESSION repeats TECHNICAL on the same baseline (about 25 more minutes, a second 100k performance run). (A) Run both stages for real. (B) TECHNICAL only; REGRESSION NOT_RUN until a real new baseline, leaving the gate on REQUIRED_RUN_MISSING.",
+      "affected_ids": [
+        "TECHNICAL_ACCEPTANCE",
+        "supplier-server-integration",
+        "supplier-bank-security",
+        "supplier-security",
+        "supplier-client-ui",
+        "supplier-performance",
+        "supplier-resilience",
+        "supplier-recovery",
+        "supplier-release-operations"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-28: 'HD-151 A'."
+    },
+    {
+      "id": "HD-152",
+      "impact": "MAJOR",
+      "question": "DEF-048 (proposed MEDIUM): during a 10,000-row import, online Supplier create answered HTTP 500 for 6 of 291 requests at the REGRESSION run (TECHNICAL passed). Evidence points to a supplier_name_grams deadlock surviving the single DEF-031 retry, unproven because the benchmark deletes its server logs; the same mechanism may explain DEF-034. Route? (A) Diagnose first under REPORT_ONLY: rerun the performance benchmark locally with its server logs kept (an uncommitted, backed-up and restored copy; not formal evidence) until the 500 recurs, then bring a proven cause and fix options. (B) REMEDIATE_AND_RETEST now on the current hypothesis. (C) Defer DEF-048 to the release decision with the other risks.",
+      "affected_ids": [
+        "DEF-048",
+        "DEF-034",
+        "TC-101",
+        "NFR-001",
+        "SupplierAdminService.create",
+        "SupplierImportService"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-28: 'HD-152 A，review 完 CI 過就 merge'. Diagnosis first, under REPORT_ONLY, in a throwaway worktree with the benchmark's server logs kept. Note: the question put to the Product Owner named only the 500s. REV-131 R1 then found that TC-101 also failed import.inside_measured_window (the import ran 114.6 s and ended about 3 s after the load window). That is recorded in DEF-048 and told to the Product Owner with this answer."
+    },
+    {
+      "id": "HD-153",
+      "impact": "MAJOR",
+      "question": "DEF-048 cause is proven: replaceSupplierNameGrams runs DELETE FROM supplier_name_grams WHERE supplier_id = ? for a just-created Supplier, which under REPEATABLE READ takes the PRIMARY supremum lock; concurrent creates deadlock (12 of 18 with the import, 6 between online creates), and a create that loses twice answers 500. Route? (A) REMEDIATE_AND_RETEST: re-enter IMPLEMENT; skip the DELETE in createSupplierInTransaction (SupplierAdminService.js:402, which online create and import create both use), with a test that reproduces the deadlock first; the update path keeps its DELETE and the existing retry (update vs update on adjacent ids can still deadlock, rarely); keep the benchmark's server logs; then a new baseline, TEST_AND_VERIFY again and fresh formal runs. The re-test must be able to fail: TC-101 passed once with the defect present, so also require zero name-gram deadlocks across the load phases with innodb_print_all_deadlocks on (REV-132). Separately open: the import row transaction's lock count grows with rows applied (likely processNextRow FOR UPDATE), which may bear on TC-101's window failure. (B) Raise the deadlock retries (symptom only; deadlocks remain). (C) Defer to the release decision.",
+      "affected_ids": [
+        "DEF-048",
+        "TC-101",
+        "NFR-001",
+        "supplierDuplicateCandidates.replaceSupplierNameGrams",
+        "SupplierAdminService.createSupplierInTransaction"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-28: 'A'. REMEDIATE_AND_RETEST: re-enter IMPLEMENT, skip the name-gram DELETE on the create path with a discriminating test first, keep the benchmark's server logs (as option A says; implemented as the server's warn and error lines, capped at 200 with paths masked, which is what the DEF-048 diagnosis used; put to the Product Owner to confirm, REV-133), add a deadlock check the re-test can fail on; then TEST_AND_VERIFY again on the new baseline and fresh formal runs. Confirmed by the Product Owner, 2026-10-28: '只留 warn 同 error 行' (keep only the warn and error lines)."
+    },
+    {
+      "id": "HD-154",
+      "impact": "MAJOR",
+      "question": "DEF-049 (LOW): processNextRow's row pick (status IN ('valid','warning') ORDER BY row_number LIMIT 1 FOR UPDATE) is read through PRIMARY, so the transaction for row k+1 reads and locks about k+1 rows already applied: O(n^2) reads over an import. Measured: about 11 s extra on a 10,000-row import on a quiet host; extrapolated about 4.75 minutes at the 50,000-row ceiling of import.maxRows. No data or count effect; every writer of a job's rows locks the job first. TC-101's import.inside_measured_window had 40.7 s and 35.1 s of headroom at the re-test, but missed by 2.9 s in the first REGRESSION run on a busy host, where DEF-049 plausibly contributed (not proven), so that check may fail on a slower host at release re-runs. Fix candidates are measured, not designed: a per-status FORCE INDEX ... FOR UPDATE was rejected because its empty-status lookup locks the next job's first index entry and blocked that job's staging (REV-135 M1, reproduced); the best measured candidate picks the row with non-locking forced-index lookups, then locks it with a primary-key equality FOR UPDATE (3 reads, 1 lock at every k, no blocking); IMPLEMENT must confirm the read-view timing and the line-675 status fence, and test a concurrent second job. Route? (A) REMEDIATE_AND_RETEST now: re-enter IMPLEMENT, change the row pick with a test that fails on the current query first, then TEST_AND_VERIFY and fresh formal runs of the affected suites. (B) Defer: fix at the next IMPLEMENT re-entry for Supplier; until then keep import.maxRows at 10,000, accept that TC-101's window check may flake on a slower host, and carry DEF-049 to the release risk decision with DEF-034. (C) Accept permanently (won't fix), with the same TC-101 window exposure.",
+      "affected_ids": [
+        "DEF-049",
+        "TC-101",
+        "IMP-016",
+        "NFR-004",
+        "SupplierImportService.processNextRow"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-29: 'HD-154 先修好' (fix HD-154 first), after the plain-language explanation: option A, REMEDIATE_AND_RETEST. Re-enter IMPLEMENT; replace the row pick with non-locking forced-index lookups plus a primary-key FOR UPDATE, with a test that fails on the current query first and a concurrent second job staging; then TEST_AND_VERIFY again on the new baseline with fresh formal runs of the affected suites."
+    },
+    {
+      "id": "HD-155",
+      "impact": "MAJOR",
+      "question": "TC-085 failed at TECHNICAL in the DEF-049 re-test: forSku.nameSearch p95 2,113 ms against 2,000 ms (REGRESSION 1,937 ms, a pass); every formal run since 2026-10-28 was within 10% of the limit; unrelated to the DEF-049 fix. Registered as DEF-050. Route? (A) REPORT_ONLY diagnosis on a scratch MySQL (EXPLAIN, timing, concurrency) to find why name search sits near 2 s, then decide. (B) Treat as host variance: one diagnostic re-run of supplier-performance at TECHNICAL on a quiet host, keeping the FAIL on record. (C) Defer to the production-like performance test (TASK-051 C) and carry the local FAIL to the release risk decision.",
+      "affected_ids": [
+        "DEF-050",
+        "TC-085",
+        "SKU-008",
+        "NFR-005"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-29: 'A'. REPORT_ONLY diagnosis; no product change."
+    },
+    {
+      "id": "HD-156",
+      "impact": "MAJOR",
+      "question": "DEF-050 cause (HD-155 A diagnosis, corrected after REV-137): a capacity limit of the for-SKU design on this host at 100k Suppliers and 50 users. The app pool of 10 is full from 25 users (about 29 requests/s; MySQL here caps at about 33/s with a pool of 20), so every for-SKU operation queues. DB time in the failing run: 35% the exact COUNT(*) total of a q search (its only full scan: unanchored LIKE over ~80,000 active Suppliers; an exact total needs a full scan whatever the SQL); 22% the deep-OFFSET rest page without q (cold, deepPage), which MySQL sorts via idx_suppliers_status_updated_id instead of reading idx_suppliers_name_id as designed; about 35% the relation-driven head queries; 5% the item-code lookup. q-related statements total 60-62% in every run. Route? (A) No contract or schema change: FORCE INDEX (idx_suppliers_name_id) on the rest page without q; measured on a quiet DB it cuts that statement roughly 40% over the page spread (97 to 17-22 ms at offset 10,000, little at 69,000), about 10% of total DB time; probably not enough margin alone. (B) Contract change: no exact total for q searches (capped, estimated, or has-more), removing about 35% of DB time; changes supplier-core-provider/v1 ('total counts Suppliers'), which Purchasing consumes (listForSku), so Purchasing must agree. (C) Contract change: keyset pagination for the rest page instead of deep OFFSET, removing most of the 22%; changes the page parameter of the same contract. (D) Schema change (sign-off): a (status, supplier_name, id) index for the rest page; a (sku_id, supplier_item_code_key) index for the item-code lookup (about 5%); or a FULLTEXT ngram index or gram-based narrowing for the name search (changes match semantics; design decision). (E) Defer: keep DEF-050 open, re-measure TC-085 in the production-like environment (TASK-051 C), choose among A-D with those numbers, and carry the local FAIL to the release risk decision.",
+      "affected_ids": [
+        "DEF-050",
+        "TC-085",
+        "SKU-008",
+        "NFR-005",
+        "SupplierLookupService.listForSku",
+        "supplierSearchCondition"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-29: 'E', after a plain-language explanation of DEF-050 and the five options. Defer: DEF-050 stays OPEN; TC-085 is re-measured in the production-like environment (TASK-051 C, row 'Production-like performance' in 06_task051_completion_boundary.md); the remedy is chosen among A-D with those numbers; the local FAIL goes to the release risk decision. No product change."
     }
   ],
   "external_actions": [
@@ -8514,6 +9503,62 @@
       "idempotency_key": "mode-change-248",
       "status": "CONFIRMED",
       "source_ref": "Baseline correction (REV-059 L-8): IMPLEMENT for TASK-041 was entered from main 894cdc62f54dc3ea27efabfad8db5f14510fa953 on the Product Owner's '可以開始' (MODE-CHANGE-247); default_commit and mode_entry_commit now record that"
+    },
+    {
+      "id": "ISSUE-294",
+      "kind": "OPEN_ISSUE",
+      "target": "crazysumsum/erp-app#294",
+      "idempotency_key": "supplier-purchasing-pin-issue-2026-10-28",
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/issues/294 opened 2026-10-28T02:19:54Z on the Product Owner's word ('開 issue'): Purchasing's supplier-purchasing-contract pin a9f64493 vs current 2b81eb9a; only 6b971c71 (DEF-037 ordering) changed in between."
+    },
+    {
+      "id": "MODE-CHANGE-457",
+      "kind": "MODE_CHANGE",
+      "target": "TEST_AND_VERIFY",
+      "idempotency_key": "mode-change-457",
+      "status": "CONFIRMED",
+      "source_ref": "Product Owner, 2026-10-28: 'HD-149 A，開 issue，風險接受留返 release 時' (HD-149 A: move to TEST_AND_VERIFY now); entry commit a98e50e7 = PR #295 merge"
+    },
+    {
+      "id": "MODE-CHANGE-465",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-465",
+      "status": "CONFIRMED",
+      "source_ref": "Product Owner, 2026-10-28: 'A' to HD-153 (REMEDIATE_AND_RETEST for DEF-048). Step 2 of 2: TEST_AND_VERIFY -> IMPLEMENT from main e7f67b82 (PR #296 merge). Step 1 (revision 464) re-entered READY_FOR_TESTING at a98e50e7 with the same reference, because the transition table has no VERIFYING -> IMPLEMENTING edge; no state was written outside state_tool."
+    },
+    {
+      "id": "MODE-CHANGE-468",
+      "kind": "MODE_CHANGE",
+      "target": "TEST_AND_VERIFY",
+      "idempotency_key": "mode-change-468",
+      "status": "CONFIRMED",
+      "source_ref": "Product Owner, 2026-10-28: 'A' to HD-153 (REMEDIATE_AND_RETEST): after the fix merged (PR #298, '1 merge'), back to TEST_AND_VERIFY for the formal re-test; entry commit f62651d82e2cb58a30aa62948fa96bb8f0f8552a"
+    },
+    {
+      "id": "MODE-CHANGE-477",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-477",
+      "status": "CONFIRMED",
+      "source_ref": "Product Owner, 2026-10-29: 'HD-154 先修好' (HD-154 A, REMEDIATE_AND_RETEST for DEF-049). Step 2 of 2: TEST_AND_VERIFY -> IMPLEMENT from main 8c31c94a (PR #300 merge). Step 1 (revision 476) re-entered READY_FOR_TESTING with the same authorization."
+    },
+    {
+      "id": "MODE-CHANGE-481",
+      "kind": "MODE_CHANGE",
+      "target": "TEST_AND_VERIFY",
+      "idempotency_key": "mode-change-481",
+      "status": "CONFIRMED",
+      "source_ref": "Product Owner, 2026-10-29: 'HD-154 先修好' (HD-154 A, REMEDIATE_AND_RETEST): after the fix merged (PR #301, 'CI己通過'), back to TEST_AND_VERIFY for the formal re-test; entry commit 4f101642a284c44d6dd53338ddfeb431582aa5f4"
+    },
+    {
+      "id": "ISSUE-302",
+      "kind": "OPEN_ISSUE",
+      "target": "crazysumsum/erp-app#302",
+      "idempotency_key": "customer-import-row-pick-issue-2026-10-29",
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/issues/302 opened 2026-10-29T03:47:55Z on the Product Owner's word ('開issues吧'): Customer import's next-row pick (CustomerImportService.js:383-389) has the DEF-049 defect; measured on a scratch schema with the 0053 table (locks 1, 1,010, 5,048, 9,086 at k = 0, 1,000, 5,000, 9,000; 2.25 ms per pick at k = 9,000); the Supplier fix and the per-status FOR UPDATE pitfall described. No Customer code or docs changed; the Customer manifest names the ERP Product Owner as owner."
     }
   ],
   "evidence_files": [
@@ -8671,7 +9716,55 @@
     "evidence/20261014T080726-b7a1f7acd2f5/run.json",
     "evidence/20261014T081826-87f4b93b54fb/run.json",
     "evidence/20261014T082013-b336a4b827af/run.json",
-    "evidence/20261014T091552-f1d61392c0aa/run.json"
+    "evidence/20261014T091552-f1d61392c0aa/run.json",
+    "evidence/20261028T030549-e436dd8c8e0e/run.json",
+    "evidence/20261028T030619-93214fa82680/run.json",
+    "evidence/20261028T030846-6e37409ee932/run.json",
+    "evidence/20261028T031107-5a60930937d7/run.json",
+    "evidence/20261028T031113-f62b26dcfead/run.json",
+    "evidence/20261028T031143-82e03aedafcb/run.json",
+    "evidence/20261028T031148-f1db966ec506/run.json",
+    "evidence/20261028T031155-3985c6786392/run.json",
+    "evidence/20261028T032301-7b6667f1694c/run.json",
+    "evidence/20261028T032524-7dca7b3aef27/run.json",
+    "evidence/20261028T032537-ea993c5503a9/run.json",
+    "evidence/20261028T032808-13d6884a8eec/run.json",
+    "evidence/20261028T032813-509e90dc36cf/run.json",
+    "evidence/20261028T032844-d9c9a99ea4cd/run.json",
+    "evidence/20261028T032850-0bf8ad538455/run.json",
+    "evidence/20261028T032858-19847f4da7f2/run.json",
+    "evidence/20261028T065312-10bcf7528c57/run.json",
+    "evidence/20261028T065548-e971bb6be35e/run.json",
+    "evidence/20261028T065601-39b9b1210994/run.json",
+    "evidence/20261028T065833-dbae862acb58/run.json",
+    "evidence/20261028T065839-c56a598014fa/run.json",
+    "evidence/20261028T065910-2b5416ec92f2/run.json",
+    "evidence/20261028T065916-9f6661f1472f/run.json",
+    "evidence/20261028T065924-ff2600591596/run.json",
+    "evidence/20261028T071029-834b3ecdfd95/run.json",
+    "evidence/20261028T071301-8a0d51f33c24/run.json",
+    "evidence/20261028T071313-13f3281c06c6/run.json",
+    "evidence/20261028T071539-3e85ac9f897a/run.json",
+    "evidence/20261028T071544-09ecbbce124f/run.json",
+    "evidence/20261028T071615-2f7ec49f38e6/run.json",
+    "evidence/20261028T071621-93cd1dd5d37e/run.json",
+    "evidence/20261028T071628-f0de8491fc9a/run.json",
+    "evidence/20261029T033823-87bd1a75ca35/run.json",
+    "evidence/20261029T034103-e20171261f69/run.json",
+    "evidence/20261029T034118-6686b68cd58e/run.json",
+    "evidence/20261029T034341-cc8de2b7e750/run.json",
+    "evidence/20261029T034347-e6864cd3e14d/run.json",
+    "evidence/20261029T034418-b2d35dd80b42/run.json",
+    "evidence/20261029T034423-4f9adc884706/run.json",
+    "evidence/20261029T034431-5afc891c6c57/run.json",
+    "evidence/20261029T035602-932188e8081e/run.json",
+    "evidence/20261029T035825-cec5377c54b6/run.json",
+    "evidence/20261029T035837-74e13e27361b/run.json",
+    "evidence/20261029T040101-c18ff7e10b89/run.json",
+    "evidence/20261029T040105-a05fb177b6e8/run.json",
+    "evidence/20261029T040136-8192fee4677f/run.json",
+    "evidence/20261029T040142-0d55c6f0c0f0/run.json",
+    "evidence/20261029T040149-baed2fb7b585/run.json"
   ],
   "defects": [
     {
@@ -8737,7 +9830,7 @@
         "REV-006"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-116-RISK-HD129"
+      "risk_approval_id": "APPROVAL-HD-116-RISK-HD149"
     },
     {
       "id": "DEF-005",
@@ -8784,7 +9877,7 @@
         "REV-006"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-116-RISK-HD129"
+      "risk_approval_id": "APPROVAL-HD-116-RISK-HD149"
     },
     {
       "id": "DEF-008",
@@ -8796,7 +9889,7 @@
         "REV-006"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-116-RISK-HD129"
+      "risk_approval_id": "APPROVAL-HD-116-RISK-HD149"
     },
     {
       "id": "DEF-009",
@@ -8860,7 +9953,7 @@
         "server/src/services/idempotency/IdempotencyService.js:233"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-116-RISK-HD129"
+      "risk_approval_id": "APPROVAL-HD-116-RISK-HD149"
     },
     {
       "id": "DEF-013",
@@ -8876,7 +9969,7 @@
         "TASK-038"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-116-RISK-HD129"
+      "risk_approval_id": "APPROVAL-HD-116-RISK-HD149"
     },
     {
       "id": "DEF-014",
@@ -8888,7 +9981,7 @@
         "docs/supplier_management/evidence"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-116-RISK-HD129"
+      "risk_approval_id": "APPROVAL-HD-116-RISK-HD149"
     },
     {
       "id": "DEF-015",
@@ -8900,7 +9993,7 @@
         ".gitignore"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-116-RISK-HD129"
+      "risk_approval_id": "APPROVAL-HD-116-RISK-HD149"
     },
     {
       "id": "DEF-016",
@@ -8915,7 +10008,7 @@
         "server/test/integration/supplierCoreMigrations.integration.test.js#supplier_settings-lock-window"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-116-RISK-HD129"
+      "risk_approval_id": "APPROVAL-HD-116-RISK-HD149"
     },
     {
       "id": "DEF-017",
@@ -8928,7 +10021,7 @@
         "item-management"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-116-RISK-HD129"
+      "risk_approval_id": "APPROVAL-HD-116-RISK-HD149"
     },
     {
       "id": "DEF-018",
@@ -8940,7 +10033,7 @@
         "client/e2e/supplier-management/supplier-settings.spec.js"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-116-RISK-HD129"
+      "risk_approval_id": "APPROVAL-HD-116-RISK-HD149"
     },
     {
       "id": "DEF-019",
@@ -8953,7 +10046,7 @@
         "item-management"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-116-RISK-HD129"
+      "risk_approval_id": "APPROVAL-HD-116-RISK-HD149"
     },
     {
       "id": "DEF-020",
@@ -9020,7 +10113,7 @@
         "docs/supplier_management/testing/04_defect_register.md"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-116-RISK-HD129"
+      "risk_approval_id": "APPROVAL-HD-116-RISK-HD149"
     },
     {
       "id": "DEF-024",
@@ -9466,7 +10559,68 @@
         "HD-143 A: the denied-attempt count of HD-142 A is narrowed to the request and system logs"
       ],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-048",
+      "severity": "MEDIUM",
+      "status": "CLOSED",
+      "source_ids": [
+        "TC-101",
+        "NFR-001",
+        "supplier-performance REGRESSION evidence/20261028T032858-19847f4da7f2",
+        "server/src/modules/supplier/SupplierAdminService.js:306",
+        "docs/supplier_management/testing/04_defect_register.md"
+      ],
+      "closure_evidence": [
+        "PR #298 merged as f62651d82e2cb58a30aa62948fa96bb8f0f8552a (fix, REV-133)",
+        "evidence/20261028T065924-ff2600591596/run.json (supplier-performance TECHNICAL: TC-101 PASS, deadlocks 0/0)",
+        "evidence/20261028T071628-f0de8491fc9a/run.json (supplier-performance REGRESSION: TC-101 PASS, deadlocks 0/0)",
+        "evidence/20261028T065312-10bcf7528c57/run.json (impact regression: supplier-server-integration TECHNICAL 732/732, with the DEF-048 integration test)",
+        "evidence/20261028T071029-834b3ecdfd95/run.json (impact regression: supplier-server-integration REGRESSION 732/732)",
+        "evidence/20261028T065601-39b9b1210994/run.json and evidence/20261028T071313-13f3281c06c6/run.json (supplier-security 732/732 at both stages)",
+        "PR #298 CI run 40645193058 on head 106ef26c: 13 of 13 checks success"
+      ],
+      "risk_approval_id": null
+    },
+    {
+      "id": "DEF-049",
+      "severity": "LOW",
+      "status": "CLOSED",
+      "source_ids": [
+        "REV-132 O3",
+        "TC-101",
+        "IMP-016",
+        "server/src/modules/supplier/SupplierImportService.js:653",
+        "docs/supplier_management/testing/04_defect_register.md"
+      ],
+      "closure_evidence": [
+        "PR #301 merged as 4f101642a284c44d6dd53338ddfeb431582aa5f4 (fix, REV-136)",
+        "evidence/20261029T034431-5afc891c6c57/run.json (supplier-performance TECHNICAL: TC-101 PASS, deadlocks 0/0; TC-085 FAIL is DEF-050)",
+        "evidence/20261029T040149-baed2fb7b585/run.json (supplier-performance REGRESSION: TC-101 PASS, deadlocks 0/0)",
+        "evidence/20261029T033823-87bd1a75ca35/run.json (impact regression: supplier-server-integration TECHNICAL 735/735, with the DEF-049 integration tests)",
+        "evidence/20261029T035602-932188e8081e/run.json (impact regression: supplier-server-integration REGRESSION 735/735)",
+        "evidence/20261029T034118-6686b68cd58e/run.json and evidence/20261029T035837-74e13e27361b/run.json (supplier-security 735/735 at both stages)",
+        "PR #301 CI run 40810936200 on head 1c632271: 13 of 13 checks success",
+        "Discriminating signal (REV-137 L3): import.json msPerRowByThousand rose 4.6->8.6 and 5.4->8.8 ms/row before the fix (20261028T065924, 20261028T071628) and is flat 4.6-5.5 and 4.4-5.2 after it (20261029T034431, 20261029T040149)"
+      ],
+      "risk_approval_id": null
+    },
+    {
+      "id": "DEF-050",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "source_ids": [
+        "TC-085",
+        "SKU-008",
+        "NFR-005",
+        "supplier-performance TECHNICAL evidence/20261029T034431-5afc891c6c57",
+        "server/src/modules/supplier/SupplierLookupService.js:196",
+        "server/src/modules/supplier/SupplierAdminService.js:128",
+        "docs/supplier_management/testing/04_defect_register.md"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "UAT evidence-file PR: open and merge on the Product Owner's word. Then UAT PHASE-004."
+  "next_safe_action": "PR #304 (HD-156 E record): independent review, CI, merge on the Product Owner's word. Then: Technical Acceptance is blocked by TASK-051 groups B and C, and by TC-085's TECHNICAL FAIL (DEF-050, deferred under HD-156 E to the production-like performance measurement). No further Supplier-side work until the production-like environment exists (Supplier's C items: the TC-085 re-measurement, the production-like UI smoke script, the T51 deliverable drafts), unless the Product Owner authorizes more (for example a limited diagnostic UAT). REPORT_ONLY."
 }

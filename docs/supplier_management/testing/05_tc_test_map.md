@@ -253,7 +253,7 @@ Coverage: supplier-bank-security 15/15, supplier-server-integration 89/89, suppl
 | TC-098 | IMP-013 | `supplierImport.integration` (cancel); `supplierImportService` (counts rebuilt) | COVERED | |
 | TC-099 | IMP-014 | `supplierImport.integration` (already tagged) | COVERED | |
 | TC-100 | IMP-015 | `supplierImport.integration` (IMP-015); `supplierImportRetention.integration` (410) | COVERED | |
-| TC-101 | IMP-016 | `runSupplierPerformanceAcceptance.js` (supplier-performance suite): a 10,000-row import started inside a 50-user load's measured window (from the window the load tool reports) and finished inside it; precheck plus execution ≤ 10 min, every row applied exactly once with consistent counts, online p95 < 2 s, DB connections and worker RSS bounded; rows not applied are recorded by the import tool; `supplierImport.integration` (10,000 rows within the timeout) | PARTIAL | One run applied 9,999 of 10,000 rows (DEF-034, cause unknown); the import is all creates, not the create/update/invalid mix |
+| TC-101 | IMP-016 | `runSupplierPerformanceAcceptance.js` (supplier-performance suite): a 10,000-row import started inside a 50-user load's measured window (from the window the load tool reports) and finished inside it; precheck plus execution ≤ 10 min, every row applied exactly once with consistent counts, online p95 < 2 s, DB connections and worker RSS bounded; rows not applied are recorded by the import tool; `supplierImport.integration` (10,000 rows within the timeout); since DEF-048 (HD-153 A) also `db.no_deadlocks_during_import`: no InnoDB deadlock during that load (instance-wide `lock_deadlocks`, so an own mysqld is required); the runner refuses to start unless `innodb_deadlock_detect` and `innodb_print_all_deadlocks` are ON; the window is the whole second online load, its warm-up and both tools' clean-up included, so extra deadlocks give a false FAIL, never a false PASS (REV-133 O3) | PARTIAL | One run applied 9,999 of 10,000 rows (DEF-034, cause unknown); the import is all creates, not the create/update/invalid mix |
 | TC-102 | IMP-017 | `supplierExport.integration` | COVERED | |
 | TC-103 | AUD-001 | `supplierAuditLogService`; service tests | PARTIAL | requestId and IP on each action |
 | TC-104 | AUD-002 | `supplierBank.integration` (no plaintext in audit); `supplierAuditLogService` | COVERED | |
@@ -307,14 +307,14 @@ Left out on purpose: `client/test/framework/routing/authorizationRefresh.test.js
 
 | TC | Case | Evidence or tests | Status | Gap |
 | --- | --- | --- | --- | --- |
-| TC-128 | OPS-001 | `runSupplierPerformanceAcceptance.js` (supplier-performance suite): 100k Suppliers, 50 users, every general operation p95 < 2 s and error rate ≤ 1%, DB threads within one pool plus 3 and RSS ≤ 1 GiB; a fresh app instance still answers after all runs; T50 `performance_report.md` | PARTIAL | Production-like MySQL (NOT_RUN by design); no ramp-up (all 50 users start together after the warm-up); CPU saturation is recorded, not judged |
+| TC-128 | OPS-001 | `runSupplierPerformanceAcceptance.js` (supplier-performance suite): 100k Suppliers, 50 users, every general operation p95 < 2 s and error rate ≤ 1%, DB threads within one pool plus 3 and RSS ≤ 1 GiB; a fresh app instance still answers after all runs; T50 `performance_report.md`; since DEF-048 (HD-153 A) also `db.no_deadlocks_mixed_load`: no InnoDB deadlock during that load (instance-wide `lock_deadlocks`, so an own mysqld is required); the runner refuses to start unless `innodb_deadlock_detect` and `innodb_print_all_deadlocks` are ON | PARTIAL | Production-like MySQL (NOT_RUN by design); no ramp-up (all 50 users start together after the warm-up); CPU saturation is recorded, not judged |
 | TC-129 | OPS-002 | `runSupplierPerformanceAcceptance.js` (supplier-performance suite): the similar-name search uses the 3,000-candidate cap (HD-084/HD-087, which replaced OPS-002's "≤ 50 candidates"), is at least 5 times faster than without it and within 2 points of its recall; duplicate check p95 < 2 s; every top statement's plan visible (12 of 12) and no base-table full scan outside the text search (a scan by HD-088); a search that matches two identifiers per Supplier totals the distinct Suppliers, not the joined rows; `supplierDuplicateCandidates.integration`; `supplierListIndexes.integration` | PARTIAL | The short-spike workload is not run |
 | TC-130 | OPS-003 | `runSupplierResilienceAcceptance.js`: Bank key outside the ring (reveal 503 `BANK_KEY_UNAVAILABLE`, detail, masked list and lookup still work, no account leaks, recovers); default currency inactive (create refused 409 `CURRENCY_NOT_ACTIVE`, reads and lookup still work, recovers; a business-rule rejection, not the `BUSINESS_MASTER_NOT_READY` dependency path); an in-flight request whose MySQL connection is killed (clean 500 with a code within milliseconds, thread gone, recovers); a locked Supplier row (suspend fails with a generic 500 after the 20 s transaction timeout and writes nothing later; lookup answers meanwhile; retry succeeds); a suspended Supplier never appears in lookup | PARTIAL | Network-layer faults in the deployed environment (NOT_RUN by design); the `BUSINESS_MASTER_NOT_READY` path and purchase submit are not exercised; lock contention answers a generic 500, not a specific code |
 | TC-131 | OPS-004 | `runSupplierResilienceAcceptance.js` and `supplierStartupSelfCheck.integration`: on a freshly migrated schema, startup refuses a missing table, column, 0080 list index, 0087 SKU index serving its foreign key, settings row, permission or Bank key ring, changes nothing, and starts after the original definition is restored (DEF-033 fixed) | COVERED | Checked in-process, not by spawning `src/index.js` (its catch path exits 1 and logs `application.startup_failed`) |
 | TC-132 | OPS-005 | `runSupplierResilienceAcceptance.js`: success, 404, 409 and integrity 500 each leave a request log line with route, status and duration; the metrics job reports a 25-hour approval and a stalled import and writes both alerts; key and integrity errors are error level; no account number or password in any log file; `supplierObservability` (unit, integration) | PARTIAL | Alert delivery to on-call (NOT_RUN by design). Not asserted: lookup metrics (`supplier.lookup.slow` is not implemented, `performance_report.md`), import lease-recovery and purge-failure events, Bank reveal and change counts, duplicate-conflict counts |
 | TC-133 | OPS-006 | `runSupplierRecoveryAcceptance.js`: core, address, contact, identifier, Bank (real encryption), settings, a pending approval, an import job with its file, and audit seeded over HTTP (SKU relations and supply events are not); `mysqldump`, isolated restore; all-table CHECKSUM, table/trigger/routine/event definitions, job rows tied to their files by SHA-256, transaction marker; smoke and reveal on the restored copy; missing key `BANK_KEY_UNAVAILABLE` and wrong key `BANK_ACCOUNT_INTEGRITY_FAILED` | PARTIAL | Production RTO ≤ 4 h and RPO ≤ 15 min drill (NOT_RUN by design, HD-119 A) |
 | TC-134 | OPS-007 | `runSupplierReleaseAcceptance.js`: stop-claim, a worker dying after an update row, a restarted app (second app in the same process) that waits for the live lease and takes over after expiry (set in the database), the update applied exactly once, completed job not rerun | PARTIAL | Production rollback timeline (NOT_RUN by design) |
-| TC-135 | OPS-008 | `runSupplierReleaseAcceptance.js`: fresh schema from migrations (every migration file applied, rerun no-op, schema digest recorded but no release baseline to compare it with), six permissions and system-admin, settings default OFF, every Supplier route guarded by supplier.* permissions, separated-role smoke (Draft, direct activation, approval, suspend, block, purchase lookup, masked Bank, no plaintext in any stored byte, reveal, audit) | PARTIAL | Staged deployment in §14 order and break-glass accounts (NOT_RUN by design); client menu is TC-121 |
+| TC-135 | OPS-008 | `runSupplierReleaseAcceptance.js`: fresh schema from migrations (every migration file applied, rerun no-op, schema digest recorded but no release baseline to compare it with), six permissions and system-admin, settings default OFF, every Supplier route guarded by supplier.* permissions, separated-role smoke (Draft, direct activation, approval, suspend, block, purchase lookup, masked Bank, no plaintext in any stored byte, reveal, audit) | PARTIAL | Staged deployment in §14 order and break-glass accounts (NOT_RUN by design); client menu is TC-121. The `supplier-deployment-check` and `supplier-deployment-copy` suites (HD-149 A) also report TC-135, but only for their part: `check` covers health, the schema and §14.4; `copy` adds the upgrade and the separated-role smoke. A formal run of either in `supplier-isolated-test` is a local rehearsal, not evidence about a deployed environment or a production copy (REV-130 O2, O3). |
 | TC-136 | OPS-009 | — (runner reports NOT_RUN) | NONE | The release gate is the harness verify_gate over CI and suite evidence plus the Product Owner's GO |
 
 Recovery and release runners (HD-117 A, HD-119 A). Each TC has a local test and a separate NOT_RUN test for the production-only part, so `supplier-recovery` and `supplier-release-operations` report BLOCKED. Rerunning cannot change that: they close only through a risk approval, or a profile change once production evidence exists. The release suite also has two executable tests against `min_tests` 3.
@@ -400,4 +400,62 @@ Evidence screenshots, all phases: before REV-123 O6, `testInfo.attach({ body })`
 - a repeated name within one test is refused, because it would overwrite the earlier screenshot (REV-125 O2);
 - the files stay in the run's artifacts directory under `os.tmpdir()`. The junit paths are local to that machine, and the OS may purge them.
 
-Phase 004 and the cross-phase cases are not written yet. UAT-054 is the only case that intercepts a request in the browser: a slow response and a 503 cannot be produced safely on a real server.
+PHASE-004 (`uat/uat-phase-004.spec.js`, 12 cases): Supplier–SKU, import, export and operations. Local developer run on 2026-10-27, which is not a formal UAT execution:
+- **Result:** 5 pass (UAT-037, 038, 039, 043 and 046), and 7 are `test.fixme`. The full UAT config gives 39 passed and 14 skipped.
+- **`test.fixme`, Purchasing (HD-124 A):**
+  - UAT-032 and 035 have no Supplier-side step.
+  - UAT-033 (preferred relation added in the 供貨關係 tab), 034 (that Supplier suspended) and 036 (default currency and payment term changed, with a reason) run their Supplier steps first.
+- **`test.fixme`, operations (HD-144 B):** UAT-044 and 045 need a representative environment and the operations role. The technical evidence is `performance_report.md` (T50) and `supplierBankRestore.integration.test.js`.
+- **Preconditions written in SQL (07 §2 environment preparation):**
+  - a purchasable SKU, because Item has no UAT role or screen here;
+  - active USD and XTS currencies and an active payment term, because migration seeds HKD only and no term.
+- **CSV-MIXED (UAT-037):**
+  - The 10 rows cover valid, warning (same name), invalid (missing or unknown currency, bad e-mail), duplicate-in-file, update and formula-prefixed rows.
+  - Each step has a screenshot. Each row's precheck reason and each row's outcome in the result file are asserted (REV-126 R2, O4).
+  - 07 §2 used to list a Bank column; since HD-149 A (12d52ff3) it no longer does. A Bank column refuses the whole file at upload (HD-053 A, HD-054 A), so it is checked on its own in UAT-038, as TC-091 and TC-099 split it.
+- **UAT-038:** the refused file is an upsert of an existing Supplier.
+  - That Supplier's masked Bank list stays empty and its notes unchanged.
+  - The account number reaches neither the import root nor this test's server log bytes.
+  - Trace and failure screenshots are off for this spec, because UAT-038 and UAT-043 carry fictional account numbers (REV-126 R1).
+- **UAT-043 role:** 07 used to name VIEWER; design §6.9 requires `supplier.mgmt` to export, and since HD-149 A (12d52ff3) 07 names CLERK and SYSTEM-ADMIN, with VIEWER checked only for the refusal.
+  - The case checks that a VIEWER has no export control and that the server refuses the export (`403 Forbidden`).
+  - It then exports as CLERK and as SYSTEM-ADMIN, which holds every Bank permission.
+  - Each file has exactly the template v1 columns, only the filtered Supplier and a guarded formula cell. Both exports are in Audit.
+- **UAT-039:** a double-click on 確認匯入 opens one password prompt and confirms once. A confirmation resent with the same Idempotency-Key is replayed with the same answer; a new key is refused with 409.
+- **UAT-046:**
+  - A create resent with the same Idempotency-Key makes one Supplier.
+  - Real backend: with the Supplier's currency made inactive in Business Master, the server refuses activation and the Supplier stays Draft. After the currency is restored, activation succeeds.
+  - Browser-intercepted 503 (as in UAT-054): the badge stays Draft before and after a reload, and activating again after recovery succeeds.
+- **Left for the next plan revision (REV-130 N3, N6):** 07 §0 still shows its 2026-09-11 document control and does not record the HD-149 A amendment; UAT-046's real-backend currency step is labelled "HD-145 A修訂", although HD-145 (3) decided only the browser 503 and the currency step was already this map's reading of 「模擬依賴不可用」. Editing 07 moves the plan baseline, which would strand the approvals re-recorded under HD-149 A.
+- **Import root:** the UAT server gets a per-run import root under `os.tmpdir()`, removed when the server exits.
+
+Cross-phase (`uat/uat-cross-phase.spec.js`, 2 cases). Local developer run on 2026-10-27, which is not a formal UAT execution:
+- **Result:** both pass. The full UAT config, all 55 cases, gives 41 passed and 14 skipped. The skips are `test.fixme` for downstream modules (HD-124 A, HD-131 A) and operations (HD-144 B).
+- **UAT-047 (keyboard, 375, 768 and 1440 px):** each phase's happy path is driven by keyboard only:
+  - PHASE-001: create and activate;
+  - PHASE-002: submit with an approver, then approve;
+  - PHASE-003: re-authenticate, reveal and collapse;
+  - PHASE-004: export with a password.
+- **How UAT-047 checks it:**
+  - A helper presses Tab until the target has focus, and fails rather than fall back to the mouse.
+  - Tabs use the arrow keys (roving tabindex). After each dialog, the test waits until it has closed, because focus stays trapped during the close transition.
+  - Each keyboard-chosen value is checked.
+  - Focus is visible on a form field, a dialog field and a button: a focused and an unfocused screenshot of the control differ.
+  - An empty save marks the field `aria-invalid`, and its error is linked by `aria-describedby`.
+  - The created status is announced as text (`role="status"`).
+  - The list's loading, empty and error states are seen, and 重試 is reached by keyboard. As in UAT-054, the slow and 503 list responses are intercepted in the browser.
+  - Every page's console and network are checked, including the CLERK's during the submit.
+  - Each step's page is opened by URL; the drawer menu is not keyboard-tested (HD-146).
+- **UAT-055 (Audit), one Supplier with every audited action:**
+  - The Supplier has create, approval submission and approval, suspension, edits, a Bank account and a reveal, and an import that updated it. A decoy Supplier with its own reveal checks that the target filter really filters.
+  - A VIEWER, through the UI, filters by target, action, actor and dates (today to today found; yesterday to yesterday, and from tomorrow, empty), and pages to page 2 (10 per page).
+  - Each filter shows in the URL, and reloading it gives the same result.
+  - Every entry on both pages has a request id: a UUID, or `import-<job>` for the import's write.
+  - The detail column shows before and after values, and the Bank account only masked. No full account number reaches any screenshot: every screenshot first checks the page for every fictional account.
+  - The Audit page has no separate detail view: each row shows its redacted before and after values inline, as design §7.2 describes. 「開啟詳情」 is that row, plus the same entry, with the same request id, in the Supplier's 變更紀錄 tab (HD-146).
+  - The role is VIEWER; the UAT fixture has no AUDITOR role (HD-146).
+- **Plaintext:** trace, failure screenshots and the failure aria snapshot are off for this spec.
+- **Limit:** a full-page screenshot of the Audit table cuts off the right edge of the 內容 column, because the table scrolls inside its container. The detail values are asserted, not only pictured.
+- **UAT-026 fix (PHASE-003):** its clock pause had a 1 ms margin, which a slow full run overran ("Cannot fast-forward to the past"). It now has 200 ms. Deadline mutants at 29 s and 31 s still fail it.
+
+UAT-054, the second half of UAT-046 and UAT-047's list states intercept a request in the browser, because a slow response and a 503 cannot be produced safely on a real server.

@@ -5,7 +5,7 @@ import path from "node:path";
 import process from "node:process";
 import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
-import { API_PORT, CLIENT_URL, adminConfig, assertUatEnvironment, connect, fixturePath, isScratchName, runDirectory, serverRoot } from "./uatEnvironment.mjs";
+import { API_PORT, CLIENT_URL, adminConfig, assertUatEnvironment, connect, fixturePath, importRoot, isScratchName, runDirectory, serverRoot } from "./uatEnvironment.mjs";
 
 /**
  * Playwright webServer 會喺 globalSetup 之前起，所以 scratch database 喺呢度準備：建庫 → migrate → 種 UAT 角色同帳號 → 起 server。
@@ -41,6 +41,9 @@ async function dropScratch() {
     await admin.end();
   }
   fs.rmSync(fixturePath, { force: true });
+  fs.rmSync(importRoot, { recursive: true, force: true });
+  // 父目錄空咗就一齊刪（REV-126 nit）；有其他 run 嘅目錄就留低。
+  try { fs.rmdirSync(path.dirname(importRoot)); } catch { /* not empty, or gone */ }
 }
 
 async function prepare() {
@@ -94,10 +97,11 @@ try {
   process.exit(1);
 }
 
+fs.mkdirSync(importRoot, { recursive: true, mode: 0o700 });
 const server = spawn(process.execPath, ["src/index.js"], {
   cwd: serverRoot,
   stdio: "inherit",
-  env: { ...env, APP_HOST: "127.0.0.1", APP_PORT: String(API_PORT), CLIENT_URL, NODE_ENV: "test", JWT_SECRET: randomBytes(48).toString("base64url") }
+  env: { ...env, SUPPLIER_IMPORT_ROOT: importRoot, APP_HOST: "127.0.0.1", APP_PORT: String(API_PORT), CLIENT_URL, NODE_ENV: "test", JWT_SECRET: randomBytes(48).toString("base64url") }
 });
 for (const signal of ["SIGINT", "SIGTERM"]) process.on(signal, () => server.kill(signal));
 server.on("exit", async (code) => {

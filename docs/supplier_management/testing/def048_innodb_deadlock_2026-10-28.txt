@@ -1,0 +1,50 @@
+# DEF-048 diagnostic attachment (not run evidence).
+# Source: SHOW ENGINE INNODB STATUS on the throwaway mysqld 127.0.0.1:3450, saved by REV-131 during its review on 2026-10-28,
+# while it was still the latest deadlock on that instance. innodb_print_all_deadlocks was OFF then, so InnoDB kept only this one.
+# 2026-10-28 11:40:20 HKT = 03:40:20Z, inside the REGRESSION supplier-performance run's import (window closed 03:40:21.338Z).
+# Schema erp_t51_rh_51c55efa = that run's database (supplier-performance-details/load-during-import.json environment.database.name).
+# The gram_hash values are hashes of synthetic Supplier names; no secret or real data.
+
+------------------------
+LATEST DETECTED DEADLOCK
+------------------------
+2026-10-28 11:40:20 0x17c667000
+*** (1) TRANSACTION:
+TRANSACTION 4416222, ACTIVE 0 sec inserting
+mysql tables in use 2, locked 2
+LOCK WAIT 709 lock struct(s), heap size 73848, 10451 row lock(s), undo log entries 1
+MySQL thread id 23683, OS thread handle 6406729728, query id 6340674 localhost 127.0.0.1 root update
+INSERT INTO supplier_name_grams (supplier_id, gram_hash) VALUES (110468, X'f00d9ca07f97df0310dc4cf04a2eb3a328a0e370b65a73ec10b58d91c2e870d4'), (110468, X'2f23fe61002ddf2eb8b73a421501d0c170735418f617bac812f9fb0ee64a6531'), (110468, X'403d5f23d149670348b147a15eeb7010914701a7e99aad2e43f90cfa0325c76f'), (110468, X'7daed43814b633951fa277cd01695574df6e05a9cb10523f1763e842b06be0ff'), (110468, X'3514acf61732f662da19625f7fe781c3e483f2dce8506012f3bb393f5003e105'), (110468, X'a73fcf339640929207281fb8e038884806e2eb0840f2245694dbba1d5cc89e65'), (110468, X'eb1e33e8a81b697b75855af6bfcdbcbf7cbbde9f94962ceaec1ed8af21f5a50f'), (110468, X'44cb730c420480a0477b505ae68af508fb90f96cf0ec54c6ad16949dd427f13a'), (110468, X'0e17daca5f3e175f448bacace3bc0da47d0655a74c8dd0dc497a3afbdad95f1f'), (110468, X'eb624dbe56eb6620ae62080c10a273cab73ae8eca98ab17b731446a31c79393a'), (110468, X'd6d824abba4afde81129c71dea75b8100e96338da5f416d2f69088f1960cb091'), (110468, X'f9a00f43e97e3966bb846e76b6795e11512c3bbfa787e6b70e0310c7b9346b98'), (110468, X'ab5b62081b1d305e78d0daadb2cd23470b3faeb65af7370627798b7219ea2061'), (110468, X'46599c5bb5c33101f80cea8438e2228085513dbbb19b2f5ce97bd68494d3344d'), (110468, X'343677762813eaeb65704cc8d9e96f7a444ba0cca92ff861af7f68648b3e6ef1'), (110468, X'5c88e7a226e11ad1204cb8d30cd5d6ff6cba69bc32da73134928e17c90c54086'), (110468, X'dbd3a49d0d906b4ed9216b73330d2fb080ef2f758c12f3885068222e5e17151c'), (110468, X'cc7e4412564ba8a761bd32ab4cc6086bac3c2c9e580367e0b0eb32a4316f9154'), (110468, X'b82e2178ecf4d0c5859dc2e169d7fed8673f9f6eeb9f3591bed5f253b7742408'), (110468, X'292c1980ba2805512acfef5d0cf8f43fba5c7b9b73a5a7afad1c37cfacad3c98'), (110468, X'72b24441e5852897f44a229a1ee58269986c0a095d949a3c9fda1fe93b8ccf6e'), (110468, X'00a9e4255a5b63067b76cbfb9fd67f26bdb91be802d5ffcb177ec1b7a8d4c623'), (110468, X'3c44c3e1b8b7844786724ac776d3d90ee7eac452bdbcb44495b77dec2ef73cfe'), (110468, X'0be477336d3e1a8d45d820aa54755092e2ec5e0751ccdf93a8fa8fa1e10bd753'), (110468, X'3485639faf1591f3c16f295198e9389db5b33c949587ec48663597d4e00299d5'), (110468, X'd53315bea08cec50d2591fcaf3b32dc5d289cdc6c16b7e8bed8c8e3f7ceaa34e'), (110468, X'bd363b0520e108f938caea3b56d09af75fb760142768d84230a5245b5d320803'), (110468, X'da8d176f739559b1fb9c2b64cbe793ce280732f2ef239090d75df41dc9054e7c'), (110468, X'0a64ce10853f25cb3dc3f7d498f62d72b406be37ba8caf5aa7671414d9696049'), (110468, X'75a288c0d6898c5f7b054590845978a82a3ad79fcce3d43ff68a7501e5a91ee9')
+
+*** (1) HOLDS THE LOCK(S):
+RECORD LOCKS space id 144640 page no 25921 n bits 344 index PRIMARY of table `erp_t51_rh_51c55efa`.`supplier_name_grams` trx id 4416222 lock_mode X
+Record lock, heap no 1 PHYSICAL RECORD: n_fields 1; compact format; info bits 0
+ 0: len 8; hex 73757072656d756d; asc supremum;;
+
+
+*** (1) WAITING FOR THIS LOCK TO BE GRANTED:
+RECORD LOCKS space id 144640 page no 25921 n bits 344 index PRIMARY of table `erp_t51_rh_51c55efa`.`supplier_name_grams` trx id 4416222 lock_mode X insert intention waiting
+Record lock, heap no 1 PHYSICAL RECORD: n_fields 1; compact format; info bits 0
+ 0: len 8; hex 73757072656d756d; asc supremum;;
+
+
+*** (2) TRANSACTION:
+TRANSACTION 4416223, ACTIVE 0 sec inserting
+mysql tables in use 2, locked 2
+LOCK WAIT 9 lock struct(s), heap size 1128, 5 row lock(s), undo log entries 1
+MySQL thread id 23674, OS thread handle 6393360384, query id 6340675 localhost 127.0.0.1 root update
+INSERT INTO supplier_name_grams (supplier_id, gram_hash) VALUES (110469, X'dc968997b2904bcdb46f90378701f86fb09b17274579e9d75601cdaaecd0a5fb'), (110469, X'b0d3db40081ae1e91ea8e725938cd0503f33b7efbfed751ee6ed66d0aa9a46dd'), (110469, X'353ca38ca96570295a0e8a28c6b15ba8c80e77c8097da016c6a361d40afd4bfa'), (110469, X'30a94516a5b4761e1ed0f17d170edc61af730b850d7e5d138bf41f13ee7009e1'), (110469, X'dd8d69f25e9c009f1e8ec0f9febea1ea6d5eff1a52a73cd216b0c74d69eed078'), (110469, X'70d25f2c1428def16804c3b346ee8d13edcce0709b4aca0b24e6698c8afcaa6e'), (110469, X'c6f3ac57944a531490cd39902d0f777715fd005efac9a30622d5f5205e7f6894'), (110469, X'49d180ecf56132819571bf39d9b7b342522a2ac6d23c1418d3338251bfe469c8'), (110469, X'c69b33366ea0bcfb6c30799a4100c6a040ae9073c5f5a9f3c0b2950fa5dd8558'), (110469, X'f45de51cdef30991551e41e882dd7b5404799648a0a00753f44fc966e6153fc1'), (110469, X'70ba33708cbfb103f1a8e34afef333ba7dc021022b2d9aaa583aabb8058d8d67'), (110469, X'677021e9c1bab8dab637f18ef0211e635446e45fb6ab261761a75e98e9810ba1'), (110469, X'6db53c9d5a2ca72a85ddf3a681c0d9567899f4c48632a2e9b0beeba0d6938485'), (110469, X'1b158839f8aa339e89bb50b1603e90ec68e0fd5565fe10a7cb32729fddf7070a'), (110469, X'959a45d44e6fcf58361ed004681556fe50129f2109e817dec098c00c9e5d2578'), (110469, X'225ed6562f6887b1074b9d0908100afedb97b49e883ed40361f7470b990f43a4'), (110469, X'9c1623f0d38e28e9594f2ef31a7ec909291c4fdb05a777dccd2e936a7f406011'), (110469, X'27a84712e4b22c415fc544d55cdee82327a829f96d03329457f76ebf9af4dcaa'), (110469, X'4ca669ac3713d1f4aea07dae8dcc0d1c9867d27ea82a3ba4e6158a42206f959b'), (110469, X'dbd3a49d0d906b4ed9216b73330d2fb080ef2f758c12f3885068222e5e17151c'), (110469, X'8312c5d48baec3e2cb31e1402d2eedd77ff6dc19f9f64895ca7fe6e23a73a636'), (110469, X'b4bdc848109722a383d0a972c6eb859f2abd29565b8c4cc7199e7c9eb708f1b7'), (110469, X'ca999315d49fcf0cb276ee4229c4a44c93c0df52e0fbbabe307ef56a13d15f18'), (110469, X'4cd0e21a9a0795a14ec9aa5f0e7d1abff0492565770e43eafdf1e3e8afed1f33'), (110469, X'dae7f3a056377ab98e8eba07dd01c64c813dc392d02ecd4b7b3b728c6d1e21a8'), (110469, X'935f68319d4f227e02bfd54a0ddf85b8a242e42a4277aa5ef5eaab691710924e'), (110469, X'a898df22bfc74a1ae298c73211ab3b319e5b8da7543d6cd002a8dc4f8723be43'), (110469, X'582967534d0f909d196b97f9e6921342777aea87b46fa52df165389db1fb8ccf'), (110469, X'2ad8a7049d7c5511ac254f5f51fe70a046ebd884729056f0fe57f5160d467153'), (110469, X'e5a08ffd3d7509c66e79642edbdcd8ed889269a7164c718afca541304188423d'), (110469, X'00a9e4255a5b63067b76cbfb9fd67f26bdb91be802d5ffcb177ec1b7a8d4c623'), (110469, X'eee1c1ade6525d2463185a68156723b98306835f88a8d988c82fcf6d8baf85da'), (110469, X'810ec9dd94477aeb42f7efff2ce01c4e5f1c091b09fb1b7e5534fa9b58a4109d'), (110469, X'd59ce33d91a87db762aa0cf1f47321b5e9e8847633e0c2c02c845f42479bcee9'), (110469, X'e20882595488fa4f5a9ecf837ef7e2d220e9898cac625f1163dba2c1c7ec56f7'), (110469, X'9513229d435978263d82902c59d4e0fb86c941a9bf09b605cd8a6643f40149a8'), (110469, X'37e7702e5ce449c1225fa1b3b3ed8e2dff35d24464d9264a4c2bebf3e0deee05'), (110469, X'2d
+
+*** (2) HOLDS THE LOCK(S):
+RECORD LOCKS space id 144640 page no 25921 n bits 344 index PRIMARY of table `erp_t51_rh_51c55efa`.`supplier_name_grams` trx id 4416223 lock_mode X
+Record lock, heap no 1 PHYSICAL RECORD: n_fields 1; compact format; info bits 0
+ 0: len 8; hex 73757072656d756d; asc supremum;;
+
+
+*** (2) WAITING FOR THIS LOCK TO BE GRANTED:
+RECORD LOCKS space id 144640 page no 25921 n bits 344 index PRIMARY of table `erp_t51_rh_51c55efa`.`supplier_name_grams` trx id 4416223 lock_mode X insert intention waiting
+Record lock, heap no 1 PHYSICAL RECORD: n_fields 1; compact format; info bits 0
+ 0: len 8; hex 73757072656d756d; asc supremum;;
+
+*** WE ROLL BACK TRANSACTION (2)
+------------

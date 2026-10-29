@@ -1,0 +1,41 @@
+version=26.7.0 port=3450 default_isolation=REPEATABLE-READ
+== part 1: locks and reads per pick (job 1; job 2 follows it in both indexes)
+as-is      k=0 picked=1 rows_read=1 locks=1 other_job_locks=0 supremum=0 
+fx-valid   k=0 picked=1 rows_read=1 locks=2 other_job_locks=0 supremum=0 
+fx-warning k=0 picked=10 rows_read=1 locks=2 other_job_locks=0 supremum=0 
+alt        k=0 picked=1 rows_read=3 locks=1 other_job_locks=0 supremum=0 
+as-is      k=1 picked=2 rows_read=2 locks=2 other_job_locks=0 supremum=0 
+fx-valid   k=1 picked=2 rows_read=1 locks=2 other_job_locks=0 supremum=0 
+fx-warning k=1 picked=10 rows_read=1 locks=2 other_job_locks=0 supremum=0 
+alt        k=1 picked=2 rows_read=3 locks=1 other_job_locks=0 supremum=0 
+as-is      k=100 picked=101 rows_read=101 locks=101 other_job_locks=0 supremum=0 
+fx-valid   k=100 picked=101 rows_read=1 locks=3 other_job_locks=0 supremum=1 
+fx-warning k=100 picked=110 rows_read=1 locks=3 other_job_locks=0 supremum=1 
+alt        k=100 picked=101 rows_read=3 locks=1 other_job_locks=0 supremum=0 
+as-is      k=1000 picked=1001 rows_read=1001 locks=1011 other_job_locks=0 supremum=10 
+fx-valid   k=1000 picked=1001 rows_read=1 locks=3 other_job_locks=0 supremum=1 
+fx-warning k=1000 picked=1010 rows_read=1 locks=3 other_job_locks=0 supremum=1 
+alt        k=1000 picked=1001 rows_read=3 locks=1 other_job_locks=0 supremum=0 
+as-is      k=5000 picked=5001 rows_read=5001 locks=5056 other_job_locks=0 supremum=55 
+fx-valid   k=5000 picked=5001 rows_read=1 locks=3 other_job_locks=0 supremum=1 
+fx-warning k=5000 picked=5010 rows_read=1 locks=2 other_job_locks=0 supremum=0 
+alt        k=5000 picked=5001 rows_read=3 locks=1 other_job_locks=0 supremum=0 
+as-is      k=9000 picked=9001 rows_read=9001 locks=9100 other_job_locks=0 supremum=99 
+fx-valid   k=9000 picked=9001 rows_read=1 locks=2 other_job_locks=0 supremum=0 
+fx-warning k=9000 picked=9010 rows_read=1 locks=2 other_job_locks=0 supremum=0 
+alt        k=9000 picked=9001 rows_read=3 locks=1 other_job_locks=0 supremum=0 
+as-is      k=9995 picked=9996 rows_read=7 locks=13 other_job_locks=1 supremum=1 
+fx-valid   k=9995 picked=9996 rows_read=1 locks=2 other_job_locks=0 supremum=0 
+fx-warning k=9995 picked=10000 rows_read=1 locks=2 other_job_locks=0 supremum=0 
+alt        k=9995 picked=9996 rows_read=3 locks=1 other_job_locks=0 supremum=0 
+as-is      k=9999 picked=10000 rows_read=3 locks=5 other_job_locks=1 supremum=1 
+fx-valid   k=9999 picked=none rows_read=1 locks=1 other_job_locks=0 supremum=0 
+fx-warning k=9999 picked=10000 rows_read=1 locks=2 other_job_locks=0 supremum=0 
+alt        k=9999 picked=10000 rows_read=3 locks=1 other_job_locks=0 supremum=0 
+== part 2: does a pick on job 1 block staging rows for job 3 (INSERT, lock wait timeout 2 s)?
+control (no pick)   staging job 3: inserted (0.0 s)
+as-is, job 2 k=5000 staging job 3: inserted (0.0 s)
+fx-valid, job 2     staging job 3: inserted (0.0 s)
+fx-warning, job 2   staging job 3: ERROR 1205 (HY000) at line 1: Lock wait timeout exceeded; try restarting transaction (2.0 s)
+alt, job 2          staging job 3: inserted (0.0 s)
+dropped erp_t51_mig_lockdiag

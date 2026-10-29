@@ -1,0 +1,107 @@
+{
+  "command": "/Users/sam/Documents/workspace/erp-supplier-ta/server/scripts/measureSupplierDuplicateRecall.js --database=erp_t51_rh_a6a16d25 --queries=200 --seed=50 --output=/Users/sam/Documents/workspace/erp-supplier-ta/docs/supplier_management/evidence/20261028T031155-3985c6786392/supplier-performance-details/recall.json",
+  "database": "erp_t51_rh_a6a16d25",
+  "suppliers": 100000,
+  "queries": 200,
+  "seed": 50,
+  "truthCandidates": 1010,
+  "variants": {
+    "capped": {
+      "candidateCap": 3000,
+      "recall": 0.9663,
+      "missed": 34,
+      "queriesMissing": 17,
+      "p50Ms": 71,
+      "p95Ms": 90
+    },
+    "uncapped": {
+      "candidateCap": 9007199254740991,
+      "recall": 0.9782,
+      "missed": 22,
+      "queriesMissing": 10,
+      "p50Ms": 787,
+      "p95Ms": 918
+    }
+  },
+  "cappedMissExamples": [
+    {
+      "query": "shun lqucky industrial limited",
+      "truthSize": 3,
+      "missedScores": [
+        0.8627450980392157
+      ]
+    },
+    {
+      "query": "pearl rkoyal pxaper company limited",
+      "truthSize": 5,
+      "missedScores": [
+        0.8571428571428571
+      ]
+    },
+    {
+      "query": "oceao ng textile holdings limited",
+      "truthSize": 10,
+      "missedScores": [
+        0.8727272727272727
+      ]
+    },
+    {
+      "query": "grand ocean plastics (hk) limited",
+      "truthSize": 10,
+      "missedScores": [
+        0.8771929824561403
+      ]
+    },
+    {
+      "query": "oriental cheung plastics limited",
+      "truthSize": 9,
+      "missedScores": [
+        0.8571428571428571,
+        0.8571428571428571,
+        0.8571428571428571,
+        0.8518518518518519,
+        0.8518518518518519
+      ]
+    },
+    {
+      "query": "cheung inion grment enterprises ltd.",
+      "truthSize": 3,
+      "missedScores": [
+        0.8615384615384616
+      ]
+    },
+    {
+      "query": "leung tsang zfurniture enterprises ltd.",
+      "truthSize": 10,
+      "missedScores": [
+        0.8923076923076924,
+        0.8656716417910447
+      ]
+    },
+    {
+      "query": "summit summit textile limqited",
+      "truthSize": 7,
+      "missedScores": [
+        0.9,
+        0.8571428571428571,
+        0.8571428571428571
+      ]
+    },
+    {
+      "query": "chan kwong materials limited",
+      "truthSize": 10,
+      "missedScores": [
+        0.9166666666666666
+      ]
+    },
+    {
+      "query": "kowloon wong toys enterprises ltd.",
+      "truthSize": 10,
+      "missedScores": [
+        0.8852459016393442,
+        0.8852459016393442
+      ]
+    }
+  ],
+  "note": "single connection, one query at a time, no other load"
+}

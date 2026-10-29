@@ -933,6 +933,126 @@
       ]
     },
     {
+      "id": "supplier-deployment-check",
+      "kind": "ACCEPTANCE",
+      "argv": [
+        "node",
+        "server/scripts/smokeSupplierManagement.js",
+        "check",
+        "--output",
+        "{run_dir}/supplier-deployment-check.json"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "HARNESS_JSON",
+      "result_path": "supplier-deployment-check.json",
+      "min_tests": 1,
+      "max_skipped": 0,
+      "stages": [
+        "TECHNICAL"
+      ],
+      "required_case_ids": [
+        "TC-135"
+      ],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [
+        "DB_HOST",
+        "DB_PORT",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_NAME",
+        "DB_SOCKET_PATH",
+        "DB_SSL_ENABLED",
+        "DB_SSL_CA",
+        "DB_SSL_REJECT_UNAUTHORIZED",
+        "SUPPLIER_SMOKE_URL",
+        "SUPPLIER_SMOKE_FIRST_DEPLOYMENT"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD"
+      ]
+    },
+    {
+      "id": "supplier-deployment-copy",
+      "kind": "ACCEPTANCE",
+      "argv": [
+        "node",
+        "server/scripts/smokeSupplierManagement.js",
+        "copy",
+        "--output",
+        "{run_dir}/supplier-deployment-copy.json"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "HARNESS_JSON",
+      "result_path": "supplier-deployment-copy.json",
+      "min_tests": 1,
+      "max_skipped": 0,
+      "stages": [
+        "TECHNICAL"
+      ],
+      "required_case_ids": [
+        "TC-135"
+      ],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_HOST",
+        "DB_PORT",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_NAME",
+        "DB_SOCKET_PATH",
+        "DB_SSL_ENABLED",
+        "DB_SSL_CA",
+        "DB_SSL_REJECT_UNAUTHORIZED",
+        "DB_ADMIN_USER",
+        "DB_ADMIN_PASSWORD",
+        "JWT_SECRET",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "SUPPLIER_SMOKE_DATABASE",
+        "SUPPLIER_SMOKE_FIRST_DEPLOYMENT"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD",
+        "DB_ADMIN_PASSWORD",
+        "JWT_SECRET",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
+      ]
+    },
+    {
       "id": "supplier-uat-browser",
       "kind": "UAT",
       "argv": [

@@ -1,0 +1,111 @@
+{
+  "command": "/Users/sam/Documents/workspace/erp-supplier-ta2/server/scripts/measureSupplierDuplicateRecall.js --database=erp_t51_rh_cfb5cfa2 --queries=200 --seed=50 --output=/Users/sam/Documents/workspace/erp-supplier-ta2/docs/supplier_management/evidence/20261028T071628-f0de8491fc9a/supplier-performance-details/recall.json",
+  "database": "erp_t51_rh_cfb5cfa2",
+  "suppliers": 100000,
+  "queries": 200,
+  "seed": 50,
+  "truthCandidates": 1064,
+  "variants": {
+    "capped": {
+      "candidateCap": 3000,
+      "recall": 0.9756,
+      "missed": 26,
+      "queriesMissing": 13,
+      "p50Ms": 74,
+      "p95Ms": 98
+    },
+    "uncapped": {
+      "candidateCap": 9007199254740991,
+      "recall": 0.9793,
+      "missed": 22,
+      "queriesMissing": 10,
+      "p50Ms": 816,
+      "p95Ms": 965
+    }
+  },
+  "cappedMissExamples": [
+    {
+      "query": "leung oriental furnitare co.a ltd.",
+      "truthSize": 2,
+      "missedScores": [
+        0.8888888888888888
+      ]
+    },
+    {
+      "query": "tsang lee metal limited",
+      "truthSize": 10,
+      "missedScores": [
+        0.9,
+        0.8780487804878049,
+        0.8780487804878049,
+        0.8648648648648649
+      ]
+    },
+    {
+      "query": "wing ihan machinery limited",
+      "truthSize": 7,
+      "missedScores": [
+        0.8695652173913043,
+        0.8695652173913043,
+        0.8695652173913043
+      ]
+    },
+    {
+      "query": "silver earl chemical limited",
+      "truthSize": 4,
+      "missedScores": [
+        0.8571428571428571
+      ]
+    },
+    {
+      "query": "wing ho import & export holdins limited",
+      "truthSize": 10,
+      "missedScores": [
+        0.9310344827586207
+      ]
+    },
+    {
+      "query": "lee kwong engineerkxing holdings limited",
+      "truthSize": 9,
+      "missedScores": [
+        0.8524590163934426
+      ]
+    },
+    {
+      "query": "lucky lee lighting (hk) limited",
+      "truthSize": 10,
+      "missedScores": [
+        0.9056603773584906,
+        0.8979591836734694
+      ]
+    },
+    {
+      "query": "silver lucky plastics limited",
+      "truthSize": 4,
+      "missedScores": [
+        0.88,
+        0.875
+      ]
+    },
+    {
+      "query": "ocean ai materials limited",
+      "truthSize": 6,
+      "missedScores": [
+        0.9130434782608695,
+        0.875
+      ]
+    },
+    {
+      "query": "kwong ng optical limited",
+      "truthSize": 10,
+      "missedScores": [
+        0.9090909090909091,
+        0.8888888888888888,
+        0.8837209302325582,
+        0.8780487804878049,
+        0.8780487804878049
+      ]
+    }
+  ],
+  "note": "single connection, one query at a time, no other load"
+}
