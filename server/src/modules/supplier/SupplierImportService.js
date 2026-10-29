@@ -649,15 +649,29 @@ export class SupplierImportService {
         const [[job]] = await connection.query(
           `SELECT ${JOB_COLUMNS} FROM supplier_import_jobs WHERE id = ? FOR UPDATE`, [jobId]);
         assertLease(job, leaseOwner, nowMs);
+        // DEF-049（HD-154 A）：先用唔鎖嘅讀取揀列，再用主鍵淨係鎖嗰一列。`IN (...) ORDER BY ... FOR UPDATE` 經 PRIMARY
+        // 由第一列睇起，鎖住晒之前 applied 嘅列；按 status 逐個 `FOR UPDATE` 冇 warning 時會鎖住下一個 job 嘅 index 位
+        // （REV-135 M1）。呢度係第一個非鎖定讀取，read view 喺 job 鎖之後先開：寫呢個 job 嘅列一定先鎖 job，所以睇到嘅
+        // 係佢哋 commit 之後嘅狀態。
+        const [[next]] = await connection.query(
+          `(SELECT \`row_number\` FROM supplier_import_rows FORCE INDEX (idx_supplier_import_row_status)
+             WHERE job_id = ? AND status = 'valid' ORDER BY \`row_number\` LIMIT 1)
+           UNION ALL
+           (SELECT \`row_number\` FROM supplier_import_rows FORCE INDEX (idx_supplier_import_row_status)
+             WHERE job_id = ? AND status = 'warning' ORDER BY \`row_number\` LIMIT 1)
+           ORDER BY \`row_number\` LIMIT 1`,
+          [jobId, jobId]
+        );
+        if (!next) return null;
         const [[row]] = await connection.query(
           `SELECT job_id, \`row_number\`, operation, match_supplier_id, expected_supplier_version,
                   normalized_payload, status, warnings
              FROM supplier_import_rows
-            WHERE job_id = ? AND status IN ('valid', 'warning')
-            ORDER BY \`row_number\` LIMIT 1 FOR UPDATE`,
-          [jobId]
+            WHERE job_id = ? AND \`row_number\` = ? AND status IN ('valid', 'warning') FOR UPDATE`,
+          [jobId, next.row_number]
         );
-        if (!row) return null;
+        // 正常唔會發生：寫列一定先鎖 job。萬一發生就拋，唔好回 null 當做完：job 仲有未做嘅列，下一輪重新揀。
+        if (!row) throw supplierConflict("SUPPLIER_IMPORT_ROW_STATE_CONFLICT", "匯入資料列狀態已變更");
         // 每列之前再驗確認人（HD-060 5A）：停用咗或者冇咗 supplier.mgmt，就停晒成個 job。冇列剩就唔驗 ——
         // 全部做完嘅 job 照常收尾，唔會因為收尾前失去權限而報失敗（REV-071 L-1）。
         const actor = await this.#executionActor(connection, job);
