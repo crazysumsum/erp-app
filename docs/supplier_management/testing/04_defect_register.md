@@ -681,6 +681,12 @@ The hint helps at middle offsets. At deep offsets an `OFFSET` walk reads everyth
 
 **Decision required (HD-156):** the remediation route. See the ledger.
 
+**HD-156 answered (Product Owner, 2026-10-29: "E", after a plain-language explanation)** (E): DEF-050 stays OPEN. TC-085 is re-measured in the production-like environment (TASK-051 C), and the remedy is then chosen among A–D with those numbers. The local FAIL goes to the release risk decision. No product code changes. If the production-like run also fails, the options in HD-156 remain:
+- (A) the rest-page index hint, about 10%;
+- (B) no exact total for `q` searches, about 35%; a contract change Purchasing must agree;
+- (C) keyset pagination; a contract change;
+- (D) schema indexes or narrower name search; needs sign-off.
+
 ## HD-116 A: dispositions (2026-10-21)
 
 Fixed in this change:

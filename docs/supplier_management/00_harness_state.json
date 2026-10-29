@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 487,
+  "revision": 488,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "TEST_AND_VERIFY",
   "status": "BLOCKED",
@@ -8983,8 +8983,8 @@
         "SupplierLookupService.listForSku",
         "supplierSearchCondition"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-29: 'E', after a plain-language explanation of DEF-050 and the five options. Defer: DEF-050 stays OPEN; TC-085 is re-measured in the production-like environment (TASK-051 C, row 'Production-like performance' in 06_task051_completion_boundary.md); the remedy is chosen among A-D with those numbers; the local FAIL goes to the release risk decision. No product change."
     }
   ],
   "external_actions": [
@@ -10610,5 +10610,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "HD-156 (DEF-050 remediation route) awaits the Product Owner. Technical Acceptance is blocked by DEF-050 (TC-085 FAIL at TECHNICAL) and by TASK-051 groups B and C. PR for the re-test evidence and the DEF-050 diagnosis: independent review, CI, merge on the Product Owner's word. REPORT_ONLY."
+  "next_safe_action": "Technical Acceptance is blocked by TASK-051 groups B and C, and by DEF-050 (TC-085 at TECHNICAL), deferred under HD-156 E to the production-like performance measurement. Supplier-side work is done unless the Product Owner authorizes more (for example a limited diagnostic UAT). REPORT_ONLY."
 }

@@ -59,7 +59,7 @@ These cases keep their original assertions. They are not re-run while the depend
 | Item | Case IDs | Remaining | Owner | Unlocks when |
 | --- | --- | --- | --- | --- |
 | Representative volume and DR as UAT | UAT-044, UAT-045 (HD-144 B) | An operations representative at representative volume; a DR owner in an isolated restore with RTO ≤ 4 h and RPO ≤ 15 min | Operations, DR owner | Representative environment exists |
-| Production-like performance | TC-128 (production part) | Production-like MySQL and hardware | Operations | Same |
+| Production-like performance | TC-128 (production part); TC-085 re-measured (DEF-050, HD-156 E) | Production-like MySQL and hardware. TC-085's for-SKU worst case at 100k and 50 users decides whether DEF-050 needs one of HD-156's remedies. | Operations; Supplier for TC-085 | Same |
 | Production resilience | TC-130, TC-132 (production parts) | Network faults in the deployed topology; alert delivery to on-call | Operations | Deployed environment and log pipeline |
 | Production restore drill | TC-133 (production part) | Backup schedule, binlog retention, isolated restore; RTO/RPO measured | Operations | Same |
 | Production deployment | TC-134, TC-135 (production parts) | Worker rollback timeline; staged capability deployment per §14; break-glass accounts audited | Operations, Security | Same |
@@ -101,4 +101,4 @@ These cases keep their original assertions. They are not re-run while the depend
 - **Cause (HD-155 A diagnosis, corrected after REV-137):** this is a capacity limit. The pool of 10 is full from 25 users, at about 29 requests per second. Above that, every for-SKU operation queues.
   - The largest costs are the exact `COUNT(*) total` of a `q` search (35%, a full `LIKE` scan), the deep-`OFFSET` rest page without `q` (22%) and the head queries (about 35%).
   - A bigger pool or buffer pool does not help.
-- **Status:** the remediation route is HD-156, for the Product Owner. DEF-050 blocks Technical Acceptance. Details are in `04_defect_register.md`.
+- **Status:** HD-156 answered E (Product Owner, 2026-10-29). DEF-050 stays OPEN, and TC-085 is re-measured in the production-like environment (row in C). The remedy is chosen among the HD-156 options with those numbers, and the local FAIL goes to the release risk decision. DEF-050 blocks Technical Acceptance until then. Details are in `04_defect_register.md`.
