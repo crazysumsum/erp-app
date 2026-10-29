@@ -511,7 +511,7 @@ The margins are taken from each run's `supplier-performance-details/`:
 **What it does not do:**
 - It loses no data and produces no wrong counts.
 - **Locks inside the job do not block other work.**
-  - Every product path that writes a job's rows first takes that job's row `FOR UPDATE`: cancel, expire, revoke, row failure, staging and the claims (`SupplierImportService.js:328, 416, 465, 519, 548, 601, 650, 695, 776, 856`). So those paths are already serialised behind the row transaction.
+  - Every product path that writes a job's rows first takes that job's row `FOR UPDATE`: cancel, expire, revoke, row failure, staging and the claims (`SupplierImportService.js:328, 416, 465, 519, 548, 601, 650, 695, 776, 856` at `ef5a61a4`; the fix moved the lines after 650 down). So those paths are already serialised behind the row transaction.
   - Reads of results are non-locking.
   - The only writer that skips the job lock is a benchmark cleanup, `server/scripts/benchmarkSupplierImport.js:186`.
 - **One exception, already present today:** once the plan switches near the end of a job, and at the final empty pick, the current query also locks the first index entry after its range (`other_job_locks=1` at k = 9,995 and 9,999 in `out-v2.txt`). That entry can belong to the next job. The lock lasts only for those last picks.
@@ -540,19 +540,36 @@ The margins are taken from each run's `supplier-performance-details/`:
   1. It runs one non-locking `UNION ALL` of two forced-index lookups on `idx_supplier_import_row_status`, one per pending status, ordered by `row_number` with `LIMIT 1`.
   2. It locks the chosen row with `WHERE job_id = ? AND row_number = ? AND status IN ('valid', 'warning') FOR UPDATE`. That is a unique-key equality, so it takes a record lock only.
 - **Read view:** the lookup is the transaction's first non-locking read, and it runs after the job row is locked `FOR UPDATE`. The transaction is plain `START TRANSACTION` (`MySqlDatabaseService.js:510`), so the snapshot opens at that lookup. Every product writer of a job's rows locks the job first, so the lookup sees their committed state.
-- **Fence:** if the locked row is no longer pending, the pick throws `SUPPLIER_IMPORT_ROW_STATE_CONFLICT` instead of ending the job early. No path should reach that.
+- **Fence:** if the locked row is no longer pending, the pick throws `SUPPLIER_IMPORT_ROW_STATE_CONFLICT` instead of returning null, which would treat the job as done while it still has pending rows. The worker releases the lease and the next tick picks again with a fresh snapshot. No path should reach that.
 - **Tests** in `supplierImportExecution.integration.test.js`:
-  - **Only the picked row is locked.** A job has 60 rows, every tenth a warning, with 50 already applied. While the picked row's transaction is open, a second connection's `FOR UPDATE SKIP LOCKED` must see all 59 other rows unlocked. The test also covers the warning row and the last row.
+  - **Only the picked row is locked, picked by `row_number` across both statuses.**
+    - A job has 60 rows, every tenth a warning, with 49 already applied. So the next row, 50, is a warning row, with valid rows still pending from 51.
+    - The pick must be 50 and then 51, and the last row, 60 (a warning), must still be picked.
+    - While the picked row's transaction is open, a second connection's `FOR UPDATE SKIP LOCKED` must see all 59 other rows unlocked.
   - **Staging is not blocked.** A job has no warning rows. While its row transaction is open, staging a newer job's row must insert, with `innodb_lock_wait_timeout` of 1 s.
-- **The tests discriminate:**
-  - On the old query, the first test is red: 9 rows unlocked against 59 required, because rows 1–51 were locked.
-  - Mutated toward the rejected candidate (`FOR UPDATE` on each per-status lookup), both tests are red: 58 against 59, and the staging INSERT timed out.
-  - The mutated file was backed up first, restored afterwards and checked with `cmp`.
+  - **The read view opens after the job lock (REV-136 L1).**
+    - Another transaction holds the job lock and marks row 1 applied.
+    - `processNextRow` is started and waits on the job lock. The test polls `information_schema.PROCESSLIST` until that wait is visible, then the other transaction commits.
+    - The pick must be row 2.
+- **The tests discriminate.** Each mutant was run on `SupplierImportService.js`; the file was backed up first, restored afterwards and checked with `cmp`.
+
+| Mutant | Result |
+|---|---|
+| The old query from `origin/main` | The first test is red: 10 rows unlocked against 59 (rows 1–50 locked). The first version of the test, with 50 applied, read 9 against 59. |
+| The rejected candidate (`FOR UPDATE` on each per-status lookup) | The first test is red at 58 against 59. The second test is red because the staging INSERT timed out. |
+| The outer `ORDER BY row_number` dropped, which picks the valid branch first | The first test is red: 51 against 50. Before REV-136 M1 this mutant passed all 91 import tests. |
+| A non-locking read added before the job lock, which opens a stale snapshot | The third test is red with `SUPPLIER_IMPORT_ROW_STATE_CONFLICT`, so it also exercises the fence. |
 - **Developer runs** on the throwaway mysqld 3450, 2026-10-29, at the fix:
-  - lint passed, and the Supplier server suite passed 734 of 734;
+  - lint passed; the Supplier server suite passed 734 of 734 (02:29Z) before REV-136, and 735 of 735 (03:09–03:11Z) after its test changes;
+  - a lint-only change followed, to the test's wait loop, after which the file passed 19 of 19;
   - the performance runner passed every local case (TC-085, TC-101, TC-128, TC-129) with 0 deadlocks in both loads.
   - The import applied 10,000 of 10,000. Execute took 54.2 s, and precheck plus execute 61.0 s. The import ended 57.9 s before the load window closed, against 40.7 s and 35.1 s at the formal re-test, which ran at another time.
-- **First developer run, disclosed:** TC-085 and TC-129 failed only on unverified plans, and `forSku.nameSearch` p95 was 2 s. The scratch mysqld had been restarted without the three startup-only 16,384 settings that `05_tc_test_map.md` requires, so statement samples were truncated and plans came back `null`. The buffer pool was also cold. After a restart with the settings, the same code passed.
+- **First developer run, disclosed:**
+  - TC-085 failed on unverified plans and on `for_sku.p95_under_2s`: `forSku.nameSearch` was over the 2 s limit (value not retained).
+  - TC-129 failed on unverified plans.
+  - **Cause:** the scratch mysqld had been restarted without the three startup-only 16,384 settings that `05_tc_test_map.md` requires, so statement samples were truncated and plans came back `null`.
+  - **The p95 miss:** a cold cache after the restart is an inference, not measured. Both runs had the default 128 MiB buffer pool.
+  - After a restart with the settings, at about 02:41Z, the same code passed (02:41–02:53Z).
 - **Status:** DEF-049 stays OPEN until the formal re-test in TEST_AND_VERIFY on the merged baseline.
 
 

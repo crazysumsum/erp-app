@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 478,
+  "revision": 480,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "2390e6fc44da25124375f4347f2a093db512f8353e01d456780a11073be494a3",
     "plan": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
-    "code_commit": "3a2cfcd5b2ba0182896a614b19ad5878a8afd025",
-    "source_fingerprint": "107fb43938a1227a1ce7cdf298c08d7e429fb613933f7a14e3059b654fc94816",
+    "code_commit": "606728f2d7fbf11f4746e40e2fddf362a4532bcb",
+    "source_fingerprint": "493d144c455c6db5d08c3baeb3b36c961539740c393727739956e060f66c252f",
     "worktree": "/Users/sam/Documents/workspace/erp-supplier-d49",
     "default_commit": "8c31c94aaceb761ea0efaa16217af4c2eab68d7a",
     "mode_entry_commit": "8c31c94aaceb761ea0efaa16217af4c2eab68d7a"
@@ -3712,6 +3712,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-136",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (DEF-049 fix, HD-154 A)",
+      "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-def049-row-pick at e162c60d (git diff origin/main..HEAD)",
+      "reviewed_baseline": "2390e6fc44da25124375f4347f2a093db512f8353e01d456780a11073be494a3",
+      "source_ref": "docs/supplier_management/implementation/139_rev_136_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -6824,9 +6836,20 @@
       "spec_baseline": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
       "source_fingerprint": "107fb43938a1227a1ce7cdf298c08d7e429fb613933f7a14e3059b654fc94816",
       "status": "PASS",
-      "source_ref": "Local, throwaway mysqld 3450, 2026-10-29 02:2x-02:53Z, on the working tree later committed unchanged as 3a2cfcd5: npm run lint exit 0; Supplier server suite (profile globs, DB_INTEGRATION_TESTS=1) 734/734; runSupplierPerformanceAcceptance.js: TC-085/101/128/129 local PASS, deadlocks 0/0 (detect and print ON), import 10,000/10,000, execute 54.2 s, precheck plus execute 61.0 s, 57.9 s before the load window closed. The first performance run failed TC-085 and TC-129 only on null plans, because the mysqld had been restarted without the three 16,384 startup settings (05_tc_test_map.md); after restarting with them the same code passed. New DEF-049 integration tests: red on the old query (9 of 59 rows unlocked); a mutant toward the rejected per-status FOR UPDATE candidate made both red (58 of 59; staging ER_LOCK_WAIT_TIMEOUT), backed up, restored and checked with cmp.",
+      "source_ref": "Local, throwaway mysqld 3450, 2026-10-29: server suite 02:29Z, performance run about 02:41-02:53Z, on the working tree later committed unchanged as 3a2cfcd5: npm run lint exit 0; Supplier server suite (profile globs, DB_INTEGRATION_TESTS=1) 734/734; runSupplierPerformanceAcceptance.js: TC-085/101/128/129 local PASS, deadlocks 0/0 (detect and print ON), import 10,000/10,000, execute 54.2 s, precheck plus execute 61.0 s, 57.9 s before the load window closed. The first performance run failed TC-129 on null plans and TC-085 on null plans and on for_sku.p95_under_2s (forSku.nameSearch over 2 s, value not retained; corrected after REV-136 L2), because the mysqld had been restarted without the three 16,384 startup settings (05_tc_test_map.md); after restarting with them the same code passed. New DEF-049 integration tests: red on the old query (9 of 59 rows unlocked); a mutant toward the rejected per-status FOR UPDATE candidate made both red (58 of 59; staging ER_LOCK_WAIT_TIMEOUT), backed up, restored and checked with cmp.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-29T02:52:57+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEF-049 fix after REV-136: tests and mutants; developer evidence, not formal",
+      "code_commit": "606728f2d7fbf11f4746e40e2fddf362a4532bcb",
+      "spec_baseline": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "source_fingerprint": "493d144c455c6db5d08c3baeb3b36c961539740c393727739956e060f66c252f",
+      "status": "PASS",
+      "source_ref": "Local, throwaway mysqld 3450, 2026-10-29 03:08-03:12Z (mutants 03:08Z), on the working tree later committed unchanged as 606728f2. supplierImportExecution.integration 19/19. Mutants on SupplierImportService.js (backup, restore, cmp): old query red (10 of 59 unlocked); rejected per-status FOR UPDATE red (58 of 59; staging ER_LOCK_WAIT_TIMEOUT); outer ORDER BY dropped red (picked 51, expected 50); a non-locking read before the job lock red (SUPPLIER_IMPORT_ROW_STATE_CONFLICT). Supplier server suite 735/735 (03:09-03:11Z); then a lint-only rewrite of the test's wait loop (no-promise-executor-return), after which npm run lint exit 0 and the file 19/19. The performance runner was not re-run: production code changed only by a comment since its PASS.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-29T03:11:59+00:00"
     }
   ],
   "pending_decisions": [
