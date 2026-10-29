@@ -68,3 +68,26 @@ raw log 138,377 bytes SHA `47c0524bec3b9c359f2f5ffe06e2261b49b0764cfa26810c3b6b5
 兩組真瀏覽器維持原有登入／權限、提交／恢復、fresh work／Pick／列印、console／network 斷言；當前產生的 A4 PDF 已實際 render／view，中文、狀態與數量正確，無空白或截斷。完成後確認無 child schema／active clients，僅清理本次 exact synthetic base／帳號，正常關閉自有 MySQL；API／client ports 已釋放。
 
 這些命令使用 Sam 明確批准的 remediation 及已獨立覆核的私有擷取工具，沿用 canonical argv／環境 allowlist／工具探針／timeout／report parser／min count／skip contract。原始 PLAN_READY 仍因 DEF-022／025／026 HIGH OPEN 而 BLOCKED，保留於每份報告；沒有偽稱 canonical run_check 或 Gate PASS。可驗證的是實際 suite PASS；完整獨立結果／provenance 覆核及當前候選 CI 仍須完成，舊失敗與所有缺陷歷史保留。
+
+## 當前 e54 候選 CI 實際結果
+
+唯一 workflow run [40628810071](https://github.com/crazysumsum/erp-app/actions/runs/40628810071)，exact HEAD `e54a53984a3fbfc15c9c1bbd94f7b9c46af27949`，於 2026-10-28 04:11:46 UTC 完成 SUCCESS，13／13 jobs 成功，包括四個 native coverage shards、server／client coverage 彙總、原 high dependency audit、lint、build、一般及真實 P1 browser、TC-032／TC-042。完整 developer 的 553 零 skip 與全域 CI 是不同執行；四個 CI shards 合計 4,332 tests＝4,125 PASS／0 FAIL／0 CANCEL／207 conditional／discovery SKIP，不冒稱所有上游案例零 skip。
+
+| 當前 CI 容量指標 | 實際結果 |
+|---|---:|
+| 原生 Allocate／Pick／Reallocate／Picked Cancel 成功命令 | 10.43／11.74／17.26／10.33 秒 |
+| Reallocate 預期末批故障／rollback phase | 18.12 秒；實際故障交易 18.103 秒，為精確 ER_SIGNAL_EXCEPTION，非 watchdog |
+| 真實 HTTP Allocate／Reallocate／Pick | 8.74／12.34／2.60 秒，全部 200、rollback／3 次 replay／對帳通過 |
+| 5,000 balances Allocate／Reallocate preview P95，分別 20 樣本 | 1.401／2.546 秒；180／411 client statements，零 DML |
+| 5,000 balances preview 完整 case | 129.378 秒，在原 300 秒整案時限內；不是單一交易耗時 |
+
+重要風險：上述 preview 案例建立 Allocation 的準備交易實際耗時 **19,968.595ms**，距原 20,000ms 僅 **31.405ms**；其外層 setup phase 為 19,994.380ms，不能當作交易值。沒有錯誤、callback／promise 均完成，整案與全 CI 實際 PASS；原契約沒有另設最低餘裕，故不虛構失敗或新增 Gate，也不聲稱充分餘裕、穩定寫入 P95 或原失敗的唯一原因已證實。原 20 秒／5,000／20 樣本／300 秒、完整安全及錯誤 predicate 全部保留，沒有為此重跑或追加未批准優化。
+
+新測試檔案改變 Node 原生分片分派，真實 HTTP 容量實際在 shard 2；不能只根據「舊 shard 4 曾失敗、本輪 shard 4 通過」推定同一案例通過。原生 Pick／Reallocate 在 shard 3，preview／Cancel 在 shard 1，均按本輪原始 case／diagnostic 核對。
+
+全部四份 decoded CI raw log、解析紀錄、final API 及原始雜湊保存在 private runtime；不輸出原始 log 或偽造舊 PASS。精確候選 published bridge 獨立覆核 0 C/H/M，另記一項非阻塞 LOW：本次 `perf` commit 類型超出計劃字面列舉。最終 CI／缺陷結案／P1 DoD 的獨立覆核完成後才採納狀態並建立 draft，不授權 merge、正式接受或發布。
+
+
+最終採納：獨立 CI／DoD／缺陷結案覆核 SHA `c707e8d0ba317459bd85d8d8db13895504094da9eaed0ff1d22fdc830f2a5cb1`，0 C/H/M、1 非阻塞 Low，已確認 31.405ms 風險及 skip 資格。state 238 採納 DEF-020–026 結案與 TASK-012–023 developer DONE，實際 PHASE-002 local gate 回 LOCAL_CHECKS_PASS／issues=[]（僅本地證據一致性，不代替人類 merge 許可）。
+
+已建立並附加 [draft PR #297](https://github.com/crazysumsum/erp-app/pull/297)，exact e54、base a98、OPEN／DRAFT／未合併，已讀回核對 body。GitHub connector 的建立功能回 403，確認沒有產生 PR 後，使用既有 gh CLI 成功建立；原失敗及 fallback 已記錄。PR 建立後自動啟動的 [pull_request CI 40632110878](https://github.com/crazysumsum/erp-app/actions/runs/40632110878) 尚在執行，不能冒稱已全綠；建立前的 branch CI 40628810071 13／13 SUCCESS 保留其原資格。未進行 merge／發布／P2，也未清除開放 PR 的 worktree／分支。

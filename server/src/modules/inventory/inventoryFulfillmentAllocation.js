@@ -1,4 +1,5 @@
 import { inventoryError } from "./inventoryErrors.js";
+import {postingCandidatePages} from "./inventoryFulfillmentCandidatePages.js";
 import { loadInventoryCandidates } from "./InventoryPickSequenceService.js";
 import { cas,memberOrder,number,proveOwnedAllocations } from "./inventoryFulfillmentStock.js";
 
@@ -28,8 +29,8 @@ export async function assessFulfillmentAllocationSelection(tx,service,member,pro
   return {selected,first,differs,fefo};
 }
 
-async function selection(tx,service,member,profile) {
-  const recommendation=await assessFulfillmentAllocationSelection(tx,service,member,profile);
+async function selection(tx,service,member,profile,readPage) {
+  const recommendation=await assessFulfillmentAllocationSelection(tx,service,member,profile,readPage);
   const {differs,fefo}=recommendation;
   const reason=member.input.overrideReason;
   if(differs) {
@@ -126,9 +127,10 @@ export async function postFulfillmentAllocationBatch(service,tx,batch,context) {
     Object.assign(b,{allocated_quantity:after,version:number(b.version)+1});Object.assign(a,{released_quantity:released,outstanding_quantity:outstanding,status,version:number(a.version)+1});
     await audit(audits,batch,context,member,leg,batch.action==="REALLOCATE"?"allocation.reallocate":"allocation.release",{allocatedQuantity:before},{allocatedQuantity:after,releasedQuantity:released,outstandingQuantity:outstanding,status,version:number(a.version)});
   }
+  const readPage=batch.action==="RELEASE"?null:postingCandidatePages(new Map(members.flatMap(member=>member.legs.map(leg=>[String(leg.balance.id),leg.balance]))));
   for(const member of members) {
     if(batch.action!=="RELEASE") {
-      const recommendation=await selection(tx,service,member,member.profile);
+      const recommendation=await selection(tx,service,member,member.profile,readPage);
       for(const leg of member.legs.filter(l=>l.kind==="ALLOCATE")) {
         const {candidate,rank}=recommendation.selected.get(leg.input.inventoryBalanceId),b=leg.balance,q=number(leg.input.baseQuantity),before=number(b.allocated_quantity),after=before+q;
         if(!Number.isSafeInteger(after)||after>number(b.on_hand_quantity)||String(candidate.binId)!==String(b.bin_id)||String(candidate.lotId)!==String(b.lot_id)||b.stock_status!=="AVAILABLE"||leg.bin.status!=="ACTIVE")fail("ALLOCATION_INSUFFICIENT");

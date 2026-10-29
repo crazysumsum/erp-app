@@ -2,8 +2,11 @@ import { inventoryError } from "./inventoryErrors.js";
 import { inventoryPositiveInteger } from "./inventoryValidation.js";
 import { getActiveTransactionIsolation } from "../../services/mysqldatabase/MySqlDatabaseService.js";
 
-// Schema installation drains Inventory transactions; never cache candidate rows or reuse proof across transactions.
+// Schema installation drains Inventory transactions; never reuse proof across transactions.
 const preStocktakeTransactions = new WeakSet();
+
+// Internal posting reuse requires the actual reader's complete absent-schema proof.
+export function hasPreStocktakeCandidateProof(transaction){return getActiveTransactionIsolation(transaction)!==null&&preStocktakeTransactions.has(transaction);}
 
 function compare(left, right) {
   if(typeof left==="string"&&typeof right==="string")return Buffer.compare(Buffer.from(left,"utf8"),Buffer.from(right,"utf8"));
