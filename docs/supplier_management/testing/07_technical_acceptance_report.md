@@ -78,7 +78,7 @@
 - the NOT_RUN production parts of TC-128, TC-130, TC-132, TC-133, TC-134, TC-135 and TC-136, at both stages;
 - **TC-085 at TECHNICAL** (DEF-050), which is new.
 
-From state revision 484, which records HD-156 as OPEN, the gate also reports `HUMAN_DECISION_REQUIRED` (REV-137 L2). Committing this evidence moves HEAD, so at later commits the gate also reports `COMMIT_CHANGED` and `EVIDENCE_COMMIT` (REV-131 R2).
+From state revision 484 to 487, while HD-156 was OPEN, the gate also reported `HUMAN_DECISION_REQUIRED` (REV-137 L2). From revision 488, after HD-156 was answered E, it no longer does (REV-138 L1). Committing this evidence moves HEAD, so at later commits the gate also reports `COMMIT_CHANGED` and `EVIDENCE_COMMIT` (REV-131 R2).
 
 **DEF-034** stays OPEN. Both imports applied 10,000 of 10,000.
 
