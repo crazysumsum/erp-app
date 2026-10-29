@@ -1,0 +1,15 @@
+26.7.0 3450 16384 134217728
+seeded 06:03:17-06:04:06
+forsku-u1: n=76 tput=1/s p50/p95 overall=234/684 | typical=130/396 cold=202/981 hot=236/869 codeExact=302/1085 nameSearch=294/684 deepPage=225/497
+   db busy ~0.1 conns; LIKE statements: avg 98 ms x30 rows 79994; avg 21 ms x30 rows 26916; avg 22 ms x25 rows 26979
+forsku-u10: n=929 tput=15/s p50/p95 overall=158/330 | typical=16/65 cold=195/254 hot=112/168 codeExact=229/358 nameSearch=260/385 deepPage=227/352
+   db busy ~1.8 conns; LIKE statements: avg 139 ms x324 rows 79994; avg 37 ms x324 rows 27042; avg 36 ms x280 rows 27111
+forsku-u25: n=1718 tput=29/s p50/p95 overall=396/753 | typical=32/242 cold=425/635 hot=262/451 codeExact=568/784 nameSearch=606/854 deepPage=537/764
+   db busy ~7.6 conns; LIKE statements: avg 311 ms x631 rows 79994; avg 84 ms x631 rows 26950; avg 86 ms x553 rows 27000
+forsku-u50: n=1745 tput=29/s p50/p95 overall=1224/1717 | typical=849/1076 cold=1271/1510 hot=1105/1310 codeExact=1462/1770 nameSearch=1500/1916 deepPage=1379/1629
+   db busy ~8.7 conns; LIKE statements: avg 336 ms x653 rows 79994; avg 90 ms x655 rows 26903; avg 92 ms x595 rows 26936
+typical-u50: n=5841 tput=97/s p50/p95 overall=11/29 | typical=11/29
+   db busy ~0.6 conns; LIKE statements: avg 1 ms x1 rows 62
+namesearch-u50: n=983 tput=16/s p50/p95 overall=2552/2958 | nameSearch=2552/2958
+   db busy ~8.8 conns; LIKE statements: avg 341 ms x1008 rows 80153; avg 98 ms x1017 rows 27214; avg 93 ms x1015 rows 27194
+dropped erp_t51_mig_d50

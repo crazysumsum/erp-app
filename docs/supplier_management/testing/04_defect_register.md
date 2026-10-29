@@ -467,7 +467,7 @@ Found by the formal run in TEST_AND_VERIFY (HD-151 A). The run was `supplier-per
   - With the fix, the performance runner found 0 deadlocks in the mixed load and 0 during the import; every local case passed. The import took 82.8 s, inside the window.
   - With the fix reverted in place (backed up, then restored and compared): 7 and 19 deadlocks, and 26 `deadlock_retried` warnings in the kept log. TC-101 and TC-128 **failed, only on the new deadlock checks**: the error rate was 0, because the retries hid the deadlocks. So without the new checks, the defect would have passed.
 
-## DEF-049 — LOW
+## DEF-049 — LOW (closed 2026-10-29)
 
 Found by diagnosis in TEST_AND_VERIFY, REPORT_ONLY, on 2026-10-29 at `ef5a61a4`; the diagnosis observation's `7f47f619` is code-identical, since it changed only docs. It follows up REV-132 O3, the observation in DEF-048 that the import's per-row lock count grows across the run (65 → 1,440 → … → 10,618). Reviewed by REV-135, whose findings are folded in below.
 
@@ -570,8 +570,79 @@ The margins are taken from each run's `supplier-performance-details/`:
   - **Cause:** the scratch mysqld had been restarted without the three startup-only 16,384 settings that `05_tc_test_map.md` requires, so statement samples were truncated and plans came back `null`.
   - **The p95 miss:** a cold cache after the restart is an inference, not measured. Both runs had the default 128 MiB buffer pool.
   - After a restart with the settings, at about 02:41Z, the same code passed (02:41–02:53Z).
-- **Status:** DEF-049 stays OPEN until the formal re-test in TEST_AND_VERIFY on the merged baseline.
+- **Status, before the re-test:** DEF-049 stayed OPEN until the formal re-test in TEST_AND_VERIFY on the merged baseline.
 
+**Closed 2026-10-29, after the formal re-test.** The 8 required suites ran at TECHNICAL and REGRESSION on the mode entry commit `4f101642`; the runs were at `558adc22`, which adds ledger only. The closure has three parts:
+- **Targeted re-test:** TC-101 passed at both stages (`evidence/20261029T034431-5afc891c6c57`, `evidence/20261029T040149-baed2fb7b585`).
+  - The import applied 10,000 of 10,000, and execute took 53.9 s and 51.2 s.
+  - It ended 58.3 s and 61.1 s before the load window closed, against 40.7 s and 35.1 s before the fix.
+  - There were 0 deadlocks.
+- **Impact regression:** `supplier-server-integration` passed 735 of 735 at both stages (`evidence/20261029T033823-87bd1a75ca35`, `evidence/20261029T035602-932188e8081e`), and so did `supplier-security` (`evidence/20261029T034118-6686b68cd58e`, `evidence/20261029T035837-74e13e27361b`). Both include the DEF-049 integration tests.
+- **CI:** PR #301's run 40810936200, 13 of 13 checks passed.
+
+TC-085 failed at TECHNICAL in the same run. That failure is DEF-050: it is unrelated to this fix, and TC-085's load runs no import.
+
+
+## DEF-050 — MEDIUM
+
+Found by the formal DEF-049 re-test in TEST_AND_VERIFY, at `558adc22` (code-identical to the mode entry commit `4f101642`), with evidence `evidence/20261029T034431-5afc891c6c57`.
+
+**What failed:** TC-085 (SKU-008, NFR-005): the for-SKU worst case, with 50 users at 100k Suppliers.
+- At TECHNICAL, `forSku.nameSearch` p95 was 2,113 ms against the 2,000 ms limit (p50 1,648 ms). So `for_sku.p95_under_2s` failed, and with it `for_sku.completed`.
+- At REGRESSION, the same code gave 1,937 ms, a pass (`evidence/20261029T040149-baed2fb7b585`).
+- The error rate was 0, and every other for-SKU operation passed.
+
+**Always close to the limit.** Every formal run's name-search p95, in ms:
+
+| Run | p95 |
+|---|---|
+| 2026-10-28 first run, TECHNICAL | 1,861 |
+| 2026-10-28 first run, REGRESSION | 1,991 |
+| DEF-048 re-test, TECHNICAL | 1,891 |
+| DEF-048 re-test, REGRESSION | 1,830 |
+| DEF-049 re-test, TECHNICAL | **2,113** |
+| DEF-049 re-test, REGRESSION | 1,937 |
+
+The diagnosis's own 50-user runs gave 1,916, 2,000 and 2,021. So the case has passed by less than 10%, and now sometimes fails. This is not a one-off.
+
+**Not caused by DEF-049:** that fix changed only `processNextRow`, and TC-085's load (`--only=forSku`) runs no import.
+
+**Diagnosis (HD-155 A, REPORT_ONLY)**
+- **Setup:**
+  - The throwaway mysqld 3450 (MySQL 26.7.0) and a scratch schema `erp_t51_mig_d50`, migrated and seeded exactly as the performance runner does (100k Suppliers, 1% heavy). The schema was dropped after each experiment.
+  - Each benchmark ran 60 s after a 10 s warm-up.
+  - The files are in `def050_diagnosis_2026-10-29/`: `run.sh`, `run-pool20.sh` and `run-bp1g.sh` with their `out*.txt` and the benchmark reports.
+- **What a search request does:** `SupplierLookupService.listForSku` with `q` runs `supplierSearchCondition`. That is `supplier_code_key LIKE 'term%'` OR `LIKE '%term%'` on `supplier_name`, `display_name`, `general_phone` and `general_email` (HD-094 4A, HD-108 A).
+  - The unanchored patterns cannot use a B-tree index.
+  - The request scans the roughly 80,000 active Suppliers at least twice: once for `COUNT(*) total` (79,972–80,454 rows examined per call) and once for the rest page, which also sorts. The head queries examine about 27,000 more rows each.
+- **E1: --only=forSku at 1, 10, 25 and 50 users (`out.txt`)**
+
+| Users | Throughput | p50 / p95 | COUNT scan avg | DB busy (connections) |
+|---|---|---|---|---|
+| 1 | 1/s | 234 / 684 ms | 98 ms | 0.1 |
+| 10 | 15/s | 158 / 330 ms | 139 ms | 1.8 |
+| 25 | **29/s** | 396 / 753 ms | 311 ms | 7.6 |
+| 50 | **29/s** | 1,224 / 1,717 ms | 336 ms | 8.7 |
+
+  Throughput stops at 29 requests per second from 25 users. Above that, latency grows by queueing alone, and every for-SKU operation slows, the cheap ones too.
+- **E2: 50 users with only one kind of operation (`out.txt`)**
+  - Only `forSku.typical`, which sends no `q`: 97/s, p50/p95 11/29 ms, DB busy 0.6 connections.
+  - Only `forSku.nameSearch`: 16/s, p95 2,958 ms, DB busy 8.8 connections.
+  - So the `q` searches are the whole cost.
+- **E3: the application pool raised from 10 to 20 (`out-pool20.txt`)**
+  - This used an uncommitted one-line change in a throwaway detached worktree, which was removed afterwards.
+  - Throughput rose only from 29 to 33 per second, and name-search p95 was 1,990 ms.
+  - The DB was busier (17 connections), but each COUNT scan slowed from 336 to 579 ms.
+  - So MySQL, not the pool, is the limit.
+- **E4: the buffer pool raised from 128 MiB to 1 GiB (`out-bp.txt`)**
+  - `suppliers` is 61 MiB with its indexes, so it already fits.
+  - At both sizes: 28/s, name-search p95 2,000 and 2,021 ms, COUNT scan 344 and 342 ms.
+  - The buffer pool was set back to 128 MiB, as the formal runs used.
+- **Conclusion:** DEF-050 is a capacity limit of the search design on this host. Each `q` request costs about 100–140 ms of scan work on its own. At 50 users that exceeds what MySQL can serve, and the rest is queueing.
+  - The production-like environment (TASK-051 C) may have more headroom, but it was not measured.
+  - A host under other load, as here, pushes p95 over the limit.
+
+**Decision required (HD-156):** the remediation route. See the ledger.
 
 ## HD-116 A: dispositions (2026-10-21)
 

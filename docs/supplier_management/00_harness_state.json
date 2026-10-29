@@ -1,17 +1,17 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 481,
+  "revision": 484,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "TEST_AND_VERIFY",
-  "status": "READY_FOR_TESTING",
-  "resume_status": null,
+  "status": "BLOCKED",
+  "resume_status": "VERIFYING",
   "current_phase": "PHASE-004",
   "current_task": "TASK-051",
   "baseline": {
     "design": "2390e6fc44da25124375f4347f2a093db512f8353e01d456780a11073be494a3",
     "plan": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
-    "code_commit": "4f101642a284c44d6dd53338ddfeb431582aa5f4",
+    "code_commit": "558adc220a8b0fad54317e716e979979128e5693",
     "source_fingerprint": "493d144c455c6db5d08c3baeb3b36c961539740c393727739956e060f66c252f",
     "worktree": "/Users/sam/Documents/workspace/erp-supplier-ta3",
     "default_commit": "4f101642a284c44d6dd53338ddfeb431582aa5f4",
@@ -6861,6 +6861,28 @@
       "source_ref": "PR #301 merged as 4f101642a284c44d6dd53338ddfeb431582aa5f4 at 2026-10-29T03:35:35Z on the Product Owner's word ('CI己通過'), with --match-head-commit 1c632271, after a gate that refused unless the latest run of every check was SUCCESS (13 checks, PR run 40810936200), main was an ancestor of HEAD and the local, remote and PR heads were equal. Review REV-136 CHANGES_REQUESTED; every finding fixed before merge (report 139).",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-29T03:35:35+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEF-050 diagnosis under HD-155 A: for-SKU search capacity at 100k, REPORT_ONLY (not formal evidence)",
+      "code_commit": "558adc220a8b0fad54317e716e979979128e5693",
+      "spec_baseline": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "source_fingerprint": "493d144c455c6db5d08c3baeb3b36c961539740c393727739956e060f66c252f",
+      "status": "FAIL",
+      "source_ref": "docs/supplier_management/testing/def050_diagnosis_2026-10-29/ and DEF-050 in 04_defect_register.md. status FAIL means the cause was reproduced (name-search p95 1,916-2,021 ms at 50 users), not that a test case failed. Throwaway mysqld 3450 (26.7.0); scratch schema erp_t51_mig_d50 migrated and seeded as the performance runner does, dropped after each experiment; 60 s runs after 10 s warm-up. E1 --only=forSku at 1/10/25/50 users: throughput 1, 15, 29, 29/s; COUNT scan 98, 139, 311, 336 ms. E2 at 50 users: forSku.typical only 97/s, p95 29 ms; forSku.nameSearch only p95 2,958 ms. E3 app pool 20 (uncommitted one-line change in a throwaway detached worktree, removed): 33/s, nameSearch p95 1,990 ms, COUNT scan 579 ms. E4 buffer pool 1 GiB (dynamic, set back to 128 MiB): no change. No product code changed.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-29T06:18:15+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Formal re-test after the DEF-049 fix: 8 required suites at TECHNICAL and REGRESSION (HD-151 A suite set, HD-154 A)",
+      "code_commit": "558adc220a8b0fad54317e716e979979128e5693",
+      "spec_baseline": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "source_fingerprint": "493d144c455c6db5d08c3baeb3b36c961539740c393727739956e060f66c252f",
+      "status": "FAIL",
+      "source_ref": "docs/supplier_management/testing/07_technical_acceptance_report.md (DEF-049 re-test section). 16 run_check --execute runs, 2026-10-29 03:38-04:13Z, on 558adc22 (code-identical to the mode entry commit 4f101642), all registered; an earlier attempt at 03:37Z was refused by COMMIT_CHANGED before any test ran and wrote no evidence. PASS at both stages: server-integration 735/735, security 735/735, bank-security 142/142, client-ui 208/208. resilience, recovery, release-operations: every local check PASS; BLOCKED only on the production parts NOT_RUN by design. supplier-performance: TC-101 PASS at both stages (execute 53.9 s / 51.2 s, 58.3 s / 61.1 s before the window closed, deadlocks 0/0 with detection and printing ON); TC-129 PASS at both; TC-085 FAIL at TECHNICAL (forSku.nameSearch p95 2,113 ms against 2,000; DEF-050) and PASS at REGRESSION (1,937 ms). DEF-049 CLOSED. verify_gate TECHNICAL_ACCEPTANCE at 558adc22, state revision 483: BLOCKED on TASK_INCOMPLETE TASK-051, the NOT_RUN production parts of TC-128, TC-130, TC-132..TC-136, and TC-085 at TECHNICAL. status FAIL is TC-085's.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-29T04:13:01+00:00"
     }
   ],
   "pending_decisions": [
@@ -8901,6 +8923,34 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-29: 'HD-154 先修好' (fix HD-154 first), after the plain-language explanation: option A, REMEDIATE_AND_RETEST. Re-enter IMPLEMENT; replace the row pick with non-locking forced-index lookups plus a primary-key FOR UPDATE, with a test that fails on the current query first and a concurrent second job staging; then TEST_AND_VERIFY again on the new baseline with fresh formal runs of the affected suites."
+    },
+    {
+      "id": "HD-155",
+      "impact": "MAJOR",
+      "question": "TC-085 failed at TECHNICAL in the DEF-049 re-test: forSku.nameSearch p95 2,113 ms against 2,000 ms (REGRESSION 1,937 ms, a pass); every formal run since 2026-10-28 was within 10% of the limit; unrelated to the DEF-049 fix. Registered as DEF-050. Route? (A) REPORT_ONLY diagnosis on a scratch MySQL (EXPLAIN, timing, concurrency) to find why name search sits near 2 s, then decide. (B) Treat as host variance: one diagnostic re-run of supplier-performance at TECHNICAL on a quiet host, keeping the FAIL on record. (C) Defer to the production-like performance test (TASK-051 C) and carry the local FAIL to the release risk decision.",
+      "affected_ids": [
+        "DEF-050",
+        "TC-085",
+        "SKU-008",
+        "NFR-005"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-29: 'A'. REPORT_ONLY diagnosis; no product change."
+    },
+    {
+      "id": "HD-156",
+      "impact": "MAJOR",
+      "question": "DEF-050 cause (HD-155 A diagnosis): every for-SKU request with q runs supplierSearchCondition (code prefix LIKE plus unanchored LIKE '%term%' on supplier_name, display_name, general_phone, general_email; HD-094 4A, HD-108 A), which no B-tree index serves, and scans the ~80,000 active Suppliers at least twice (COUNT(*) total and the sorted rest page). On this host MySQL saturates at ~29 requests/s from 25 users; at 50 users the rest is queueing (p95 1.7-2.1 s). Without q the same 50 users get p95 29 ms. A pool of 20 (throughput 33/s, each scan 1.7x slower) and a 1 GiB buffer pool (no change; suppliers is 61 MiB) do not help. Route? (A) REMEDIATE_AND_RETEST without contract or schema change: cut the scans per q request (for example take the total from the scan that builds the page instead of a separate COUNT); the saving (the COUNT was ~35% of DB time in the failing run) must be measured, and may not restore enough margin. (B) Design change: narrow name matches through the existing supplier_name_grams index before the LIKE (changes how substring search on names works; needs a design decision). (C) Schema change: FULLTEXT ngram index on the searched columns (needs schema sign-off; changes match semantics). (D) Defer: keep DEF-050 open, re-measure TC-085 in the production-like environment (TASK-051 C), and carry the local FAIL to the release risk decision.",
+      "affected_ids": [
+        "DEF-050",
+        "TC-085",
+        "SKU-008",
+        "NFR-005",
+        "SupplierLookupService.listForSku",
+        "supplierSearchCondition"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
     }
   ],
   "external_actions": [
@@ -9455,6 +9505,14 @@
       "idempotency_key": "mode-change-481",
       "status": "CONFIRMED",
       "source_ref": "Product Owner, 2026-10-29: 'HD-154 先修好' (HD-154 A, REMEDIATE_AND_RETEST): after the fix merged (PR #301, 'CI己通過'), back to TEST_AND_VERIFY for the formal re-test; entry commit 4f101642a284c44d6dd53338ddfeb431582aa5f4"
+    },
+    {
+      "id": "ISSUE-302",
+      "kind": "OPEN_ISSUE",
+      "target": "crazysumsum/erp-app#302",
+      "idempotency_key": "customer-import-row-pick-issue-2026-10-29",
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/issues/302 opened 2026-10-29T03:47:55Z on the Product Owner's word ('開issues吧'): Customer import's next-row pick (CustomerImportService.js:383-389) has the DEF-049 defect; measured on a scratch schema with the 0053 table (locks 1, 1,010, 5,048, 9,086 at k = 0, 1,000, 5,000, 9,000; 2.25 ms per pick at k = 9,000); the Supplier fix and the per-status FOR UPDATE pitfall described. No Customer code or docs changed; the Customer manifest names the ERP Product Owner as owner."
     }
   ],
   "evidence_files": [
@@ -9644,7 +9702,23 @@
     "evidence/20261028T071544-09ecbbce124f/run.json",
     "evidence/20261028T071615-2f7ec49f38e6/run.json",
     "evidence/20261028T071621-93cd1dd5d37e/run.json",
-    "evidence/20261028T071628-f0de8491fc9a/run.json"
+    "evidence/20261028T071628-f0de8491fc9a/run.json",
+    "evidence/20261029T033823-87bd1a75ca35/run.json",
+    "evidence/20261029T034103-e20171261f69/run.json",
+    "evidence/20261029T034118-6686b68cd58e/run.json",
+    "evidence/20261029T034341-cc8de2b7e750/run.json",
+    "evidence/20261029T034347-e6864cd3e14d/run.json",
+    "evidence/20261029T034418-b2d35dd80b42/run.json",
+    "evidence/20261029T034423-4f9adc884706/run.json",
+    "evidence/20261029T034431-5afc891c6c57/run.json",
+    "evidence/20261029T035602-932188e8081e/run.json",
+    "evidence/20261029T035825-cec5377c54b6/run.json",
+    "evidence/20261029T035837-74e13e27361b/run.json",
+    "evidence/20261029T040101-c18ff7e10b89/run.json",
+    "evidence/20261029T040105-a05fb177b6e8/run.json",
+    "evidence/20261029T040136-8192fee4677f/run.json",
+    "evidence/20261029T040142-0d55c6f0c0f0/run.json",
+    "evidence/20261029T040149-baed2fb7b585/run.json"
   ],
   "defects": [
     {
@@ -10465,7 +10539,7 @@
     {
       "id": "DEF-049",
       "severity": "LOW",
-      "status": "OPEN",
+      "status": "CLOSED",
       "source_ids": [
         "REV-132 O3",
         "TC-101",
@@ -10473,9 +10547,33 @@
         "server/src/modules/supplier/SupplierImportService.js:653",
         "docs/supplier_management/testing/04_defect_register.md"
       ],
+      "closure_evidence": [
+        "PR #301 merged as 4f101642a284c44d6dd53338ddfeb431582aa5f4 (fix, REV-136)",
+        "evidence/20261029T034431-5afc891c6c57/run.json (supplier-performance TECHNICAL: TC-101 PASS, deadlocks 0/0; TC-085 FAIL is DEF-050)",
+        "evidence/20261029T040149-baed2fb7b585/run.json (supplier-performance REGRESSION: TC-101 PASS, deadlocks 0/0)",
+        "evidence/20261029T033823-87bd1a75ca35/run.json (impact regression: supplier-server-integration TECHNICAL 735/735, with the DEF-049 integration tests)",
+        "evidence/20261029T035602-932188e8081e/run.json (impact regression: supplier-server-integration REGRESSION 735/735)",
+        "evidence/20261029T034118-6686b68cd58e/run.json and evidence/20261029T035837-74e13e27361b/run.json (supplier-security 735/735 at both stages)",
+        "PR #301 CI run 40810936200 on head 1c632271: 13 of 13 checks success"
+      ],
+      "risk_approval_id": null
+    },
+    {
+      "id": "DEF-050",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "source_ids": [
+        "TC-085",
+        "SKU-008",
+        "NFR-005",
+        "supplier-performance TECHNICAL evidence/20261029T034431-5afc891c6c57",
+        "server/src/modules/supplier/SupplierLookupService.js:196",
+        "server/src/modules/supplier/SupplierAdminService.js:128",
+        "docs/supplier_management/testing/04_defect_register.md"
+      ],
       "closure_evidence": [],
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "DEF-049 formal re-test (HD-154 A) on mode entry commit 4f101642: the 8 required suites at TECHNICAL and REGRESSION, as for DEF-048 (HD-151 A); the scratch mysqld with innodb_deadlock_detect and innodb_print_all_deadlocks ON and the three 16,384 digest settings; then the Technical Acceptance report. REPORT_ONLY."
+  "next_safe_action": "HD-156 (DEF-050 remediation route) awaits the Product Owner. Technical Acceptance is blocked by DEF-050 (TC-085 FAIL at TECHNICAL) and by TASK-051 groups B and C. PR for the re-test evidence and the DEF-050 diagnosis: independent review, CI, merge on the Product Owner's word. REPORT_ONLY."
 }

@@ -1,6 +1,85 @@
-# Supplier Management — Technical Acceptance report (2026-10-28)
+# Supplier Management — Technical Acceptance report (2026-10-28, re-tested 2026-10-29)
 
-## Re-test after the DEF-048 fix (current result)
+## Re-test after the DEF-049 fix (2026-10-29, current result)
+
+**Result: Technical Acceptance NOT complete.**
+- **DEF-049 is closed.**
+- **A new formal failure:** TC-085 failed at TECHNICAL. The for-SKU name search p95 was 2,113 ms against a 2,000 ms limit.
+  - It passed at REGRESSION, at 1,937 ms.
+  - It is registered as **DEF-050**. A REPORT_ONLY diagnosis was done under HD-155 A.
+  - The route is **HD-156**, for the Product Owner.
+- **Otherwise the gate is blocked only by what was known before:** TASK-051 is open, and the production parts are NOT_RUN by design.
+- UAT was not executed. Business acceptance and release approval have not happened.
+
+**Baseline:**
+- The mode entry commit is `4f101642`, the PR #301 merge with the fix.
+- The runs were made at `558adc22`, which adds ledger only. Every run records `code_unchanged` and `spec_unchanged` as true.
+- The plan baseline `598f012b` and the design baseline `2390e6fc` are unchanged.
+
+**Environment:**
+- The same throwaway mysqld. The runner script refused to start unless all five settings were as required, and they were:
+  - `innodb_deadlock_detect` ON;
+  - `innodb_print_all_deadlocks` ON;
+  - the three 16,384 digest and SQL-text settings.
+- Other modules' mysqld instances (Fulfillment, Sales) were running on the host and were left alone.
+- Load averages recorded by the performance runner: 3.3→9.4 at TECHNICAL, 3.3→9.1 at REGRESSION.
+
+**Runs:** the 8 required suites at TECHNICAL, then at REGRESSION, as for DEF-048 (HD-151 A, HD-154 A). They ran from 03:38Z to 04:13Z, each a real `run_check --execute`.
+- A first attempt at 03:37Z was refused before any test ran, because the state's `code_commit` was not yet HEAD. Every one of its 16 calls returned `COMMIT_CHANGED` and wrote no evidence. The state was then bound to HEAD, as for DEF-048.
+
+| Stage | Suite | Result | Tests | Time (UTC) | Evidence (`evidence/…/run.json`) | Cases not passed |
+| --- | --- | --- | --- | --- | --- | --- |
+| TECHNICAL | `supplier-server-integration` | PASS | 735/735 passed, 0 failed, 0 not run | 03:38:24–03:41:02 | `20261029T033823-87bd1a75ca35` |  |
+| TECHNICAL | `supplier-bank-security` | PASS | 142/142 passed, 0 failed, 0 not run | 03:41:03–03:41:17 | `20261029T034103-e20171261f69` |  |
+| TECHNICAL | `supplier-security` | PASS | 735/735 passed, 0 failed, 0 not run | 03:41:18–03:43:40 | `20261029T034118-6686b68cd58e` |  |
+| TECHNICAL | `supplier-client-ui` | PASS | 208/208 passed, 0 failed, 0 not run | 03:43:41–03:43:47 | `20261029T034341-cc8de2b7e750` |  |
+| TECHNICAL | `supplier-resilience` | BLOCKED | 3/5 passed, 0 failed, 2 not run | 03:43:48–03:44:17 | `20261029T034347-e6864cd3e14d` | TC-130 NOT_RUN, TC-132 NOT_RUN |
+| TECHNICAL | `supplier-recovery` | BLOCKED | 1/2 passed, 0 failed, 1 not run | 03:44:18–03:44:23 | `20261029T034418-b2d35dd80b42` | TC-133 NOT_RUN |
+| TECHNICAL | `supplier-release-operations` | BLOCKED | 2/5 passed, 0 failed, 3 not run | 03:44:24–03:44:30 | `20261029T034423-4f9adc884706` | TC-134 NOT_RUN, TC-135 NOT_RUN, TC-136 NOT_RUN |
+| TECHNICAL | `supplier-performance` | **FAIL** | 3/5 passed, 1 failed, 1 not run | 03:44:31–03:56:01 | `20261029T034431-5afc891c6c57` | **TC-085 FAIL** (DEF-050), TC-128 NOT_RUN |
+| REGRESSION | `supplier-server-integration` | PASS | 735/735 passed, 0 failed, 0 not run | 03:56:02–03:58:24 | `20261029T035602-932188e8081e` |  |
+| REGRESSION | `supplier-bank-security` | PASS | 142/142 passed, 0 failed, 0 not run | 03:58:25–03:58:36 | `20261029T035825-cec5377c54b6` |  |
+| REGRESSION | `supplier-security` | PASS | 735/735 passed, 0 failed, 0 not run | 03:58:37–04:01:00 | `20261029T035837-74e13e27361b` |  |
+| REGRESSION | `supplier-client-ui` | PASS | 208/208 passed, 0 failed, 0 not run | 04:01:01–04:01:05 | `20261029T040101-c18ff7e10b89` |  |
+| REGRESSION | `supplier-resilience` | BLOCKED | 3/5 passed, 0 failed, 2 not run | 04:01:06–04:01:36 | `20261029T040105-a05fb177b6e8` | TC-130 NOT_RUN, TC-132 NOT_RUN |
+| REGRESSION | `supplier-recovery` | BLOCKED | 1/2 passed, 0 failed, 1 not run | 04:01:36–04:01:41 | `20261029T040136-8192fee4677f` | TC-133 NOT_RUN |
+| REGRESSION | `supplier-release-operations` | BLOCKED | 2/5 passed, 0 failed, 3 not run | 04:01:42–04:01:48 | `20261029T040142-0d55c6f0c0f0` | TC-134 NOT_RUN, TC-135 NOT_RUN, TC-136 NOT_RUN |
+| REGRESSION | `supplier-performance` | BLOCKED | 4/5 passed, 0 failed, 1 not run | 04:01:49–04:13:01 | `20261029T040149-baed2fb7b585` | TC-128 NOT_RUN |
+
+**DEF-049 re-test (HD-154 A), at both stages:**
+- **TC-101 passes.**
+  - The online error rate was 0 during the import.
+  - The import applied 10,000 of 10,000, with an empty `notApplied` list.
+  - Execute took 53.9 s and 51.2 s. Precheck plus execute took 60.5 s and 57.7 s.
+  - The import ended 58.3 s and 61.1 s before the load window closed. At the DEF-048 re-test, which ran at a different time and load, the margins were 40.7 s and 35.1 s.
+- **Deadlocks:** `db.no_deadlocks_mixed_load` and `db.no_deadlocks_during_import` are 0 at both stages, and the counter stayed flat across every performance load.
+- **Impact regression:** `supplier-server-integration` and `supplier-security` pass 735 of 735 at both stages. That includes the three DEF-049 integration tests.
+- **DEF-049 is CLOSED.** The closure evidence is the targeted re-test (TC-101 at both stages), the impact regression above, and PR #301's CI run 40810936200 (13 of 13).
+
+**TC-085 failed at TECHNICAL (DEF-050).** The for-SKU load ran with 50 users at 100k Suppliers.
+- **The two stages:**
+  - TECHNICAL: `forSku.nameSearch` p95 2,113 ms against the 2,000 ms limit, p50 1,648 ms.
+  - REGRESSION: p95 1,937 ms, which passed.
+  - Every other for-SKU operation passed at both stages. The error rate was 0.
+- **History:** every formal run's name-search p95 was 1,861, 1,991, 1,891 and 1,830 ms, then 2,113 and 1,937 ms. So the case has always passed by under 10%.
+- **Not caused by DEF-049:** the fix changed only the import's row pick, and TC-085's load runs no import.
+- **The cause is a capacity limit, from the diagnosis under HD-155 A.** Every for-SKU request with `q` scans the roughly 80,000 active Suppliers at least twice: once for the `COUNT(*)` and once for the rest page. It runs unanchored `LIKE '%term%'` on four columns, which no B-tree index can serve.
+  - That saturates MySQL on this host at about 29 requests per second, at 25 users.
+  - At 50 users the extra requests only queue.
+  - Without the `q` operations, the same 50 users get a p95 of 29 ms.
+  - Neither a larger application pool nor a larger buffer pool helps.
+- The details are in `04_defect_register.md` (DEF-050) and `def050_diagnosis_2026-10-29/`. The route is HD-156.
+
+**Gate at `558adc22`** (state revision 483): `verify_gate --gate TECHNICAL_ACCEPTANCE` is BLOCKED on:
+- `TASK_INCOMPLETE` TASK-051;
+- the NOT_RUN production parts of TC-128, TC-130, TC-132, TC-133, TC-134, TC-135 and TC-136, at both stages;
+- **TC-085 at TECHNICAL** (DEF-050), which is new.
+
+Committing this evidence moves HEAD, so at later commits the gate also reports `COMMIT_CHANGED` and `EVIDENCE_COMMIT` (REV-131 R2).
+
+**DEF-034** stays OPEN. Both imports applied 10,000 of 10,000.
+
+## Re-test after the DEF-048 fix (2026-10-28) — kept as history
 
 **Result: Technical Acceptance still NOT complete.** It is now blocked only by what was known before any run: TASK-051 is open, and the production parts are NOT_RUN by design. Every local check passes at both stages, and **DEF-048 is closed**. UAT was not executed. Business acceptance and release approval have not happened.
 

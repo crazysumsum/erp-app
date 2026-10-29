@@ -85,7 +85,7 @@ These cases keep their original assertions. They are not re-run while the depend
   - the runner copies them into its own evidence (`evidence.import.notApplied`). Both 2026-10-27 runs recorded an empty list.
 - **Status:** later passes are not a root cause and do not close the risk. DEF-034 stays OPEN until a recurrence shows the reason, or the Product Owner accepts the risk at release.
 
-## DEF-049 — OPEN (LOW)
+## DEF-049 — CLOSED (LOW, 2026-10-29)
 
 - **What happens:** the import's row pick reads and locks every row the job has already applied, so the cost is O(n²) over an import.
 - **Effect:**
@@ -93,4 +93,10 @@ These cases keep their original assertions. They are not re-run while the depend
   - TC-101's window check had 35–41 s of headroom at the re-test, but missed by 2.9 s in the first run on a busy host, where DEF-049 plausibly contributed (not proven);
   - no data or count effect; the extra locks stay inside the job's own serialised work.
 - **Fix candidates:** a per-status forced-index `FOR UPDATE` was rejected, because it blocks the next job's staging (REV-135 M1). The candidate that measured best picks the row without locking, then locks it by primary key.
-- **Status:** fixed under HD-154 A (Product Owner, 2026-10-29). The pick now uses a non-locking lookup and then a primary-key lock. Developer checks pass. DEF-049 stays OPEN until the formal re-test on the merged baseline. Details are in `04_defect_register.md`.
+- **Status:** fixed under HD-154 A (Product Owner, 2026-10-29). The pick now uses a non-locking lookup and then a primary-key lock. Closed after the formal re-test at `4f101642`: TC-101 passed at both stages, the impact regression passed 735/735, and PR #301's CI passed. Details are in `04_defect_register.md`.
+
+## DEF-050 — OPEN (MEDIUM)
+
+- **What happened:** TC-085 failed at TECHNICAL in the DEF-049 re-test. The for-SKU name search p95 was 2,113 ms against 2,000 ms. It passed at REGRESSION, at 1,937 ms. Every formal run has been within 10% of the limit.
+- **Cause (HD-155 A diagnosis):** every for-SKU search with `q` runs unanchored `LIKE` over the roughly 80,000 active Suppliers at least twice. MySQL on this host saturates at about 29 requests per second, so at 50 users the rest is queueing. A bigger pool or buffer pool does not help.
+- **Status:** the remediation route is HD-156, for the Product Owner. DEF-050 blocks Technical Acceptance. Details are in `04_defect_register.md`.

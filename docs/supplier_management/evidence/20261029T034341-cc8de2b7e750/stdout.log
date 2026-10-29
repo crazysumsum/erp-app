@@ -1,0 +1,5 @@
+
+> @erp/client@0.1.0 test
+> vitest run --config test/supplier-management.vitest.config.js --reporter=junit --outputFile=/Users/sam/Documents/workspace/erp-supplier-ta3/docs/supplier_management/evidence/20261029T034341-cc8de2b7e750/supplier-client-ui.xml
+
+JUNIT report written to /Users/sam/Documents/workspace/erp-supplier-ta3/docs/supplier_management/evidence/20261029T034341-cc8de2b7e750/supplier-client-ui.xml
