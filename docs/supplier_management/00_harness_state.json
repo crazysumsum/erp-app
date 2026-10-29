@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 477,
+  "revision": 478,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "2390e6fc44da25124375f4347f2a093db512f8353e01d456780a11073be494a3",
     "plan": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
-    "code_commit": "8c31c94aaceb761ea0efaa16217af4c2eab68d7a",
-    "source_fingerprint": "418abf1eb92f20dc948ee3a32a60487fa7069c07296797b0cffd47d6c92e7104",
+    "code_commit": "3a2cfcd5b2ba0182896a614b19ad5878a8afd025",
+    "source_fingerprint": "107fb43938a1227a1ce7cdf298c08d7e429fb613933f7a14e3059b654fc94816",
     "worktree": "/Users/sam/Documents/workspace/erp-supplier-d49",
     "default_commit": "8c31c94aaceb761ea0efaa16217af4c2eab68d7a",
     "mode_entry_commit": "8c31c94aaceb761ea0efaa16217af4c2eab68d7a"
@@ -6816,6 +6816,17 @@
       "source_ref": "PR #300 merged as 8c31c94aaceb761ea0efaa16217af4c2eab68d7a at 2026-10-29T01:38:55Z on the Product Owner's word ('CI 過咗'), with --match-head-commit 28e26efa, after a gate that refused unless the latest run of every check was SUCCESS (13 checks, PR run 40797826220), main was an ancestor of HEAD and the local, remote and PR heads were equal. Review REV-135 CHANGES_REQUESTED; every finding fixed before merge (report 138). Docs only: source fingerprint unchanged.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-29T01:38:55+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEF-049 fix developer checks (IMPLEMENT, HD-154 A); developer evidence, not formal",
+      "code_commit": "3a2cfcd5b2ba0182896a614b19ad5878a8afd025",
+      "spec_baseline": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "source_fingerprint": "107fb43938a1227a1ce7cdf298c08d7e429fb613933f7a14e3059b654fc94816",
+      "status": "PASS",
+      "source_ref": "Local, throwaway mysqld 3450, 2026-10-29 02:2x-02:53Z, on the working tree later committed unchanged as 3a2cfcd5: npm run lint exit 0; Supplier server suite (profile globs, DB_INTEGRATION_TESTS=1) 734/734; runSupplierPerformanceAcceptance.js: TC-085/101/128/129 local PASS, deadlocks 0/0 (detect and print ON), import 10,000/10,000, execute 54.2 s, precheck plus execute 61.0 s, 57.9 s before the load window closed. The first performance run failed TC-085 and TC-129 only on null plans, because the mysqld had been restarted without the three 16,384 startup settings (05_tc_test_map.md); after restarting with them the same code passed. New DEF-049 integration tests: red on the old query (9 of 59 rows unlocked); a mutant toward the rejected per-status FOR UPDATE candidate made both red (58 of 59; staging ER_LOCK_WAIT_TIMEOUT), backed up, restored and checked with cmp.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-29T02:52:57+00:00"
     }
   ],
   "pending_decisions": [
@@ -10424,5 +10435,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "HD-154 A, DEF-049 fix in IMPLEMENT: replace processNextRow's row pick with non-locking forced-index lookups plus a primary-key FOR UPDATE; integration tests first (bounded locks after many applied rows, and a concurrent second job's staging not blocked), red on the current query; developer checks including the performance runner; independent review, CI, merge on the Product Owner's word; then TEST_AND_VERIFY again with fresh formal runs."
+  "next_safe_action": "DEF-049 fix (HD-154 A): independent review, CI, merge on the Product Owner's word; then TEST_AND_VERIFY again on the merged baseline with fresh formal runs of the affected suites (supplier-server-integration, supplier-security, supplier-performance at TECHNICAL and REGRESSION)."
 }

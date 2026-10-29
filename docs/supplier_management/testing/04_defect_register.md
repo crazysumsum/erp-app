@@ -534,6 +534,28 @@ The margins are taken from each run's `supplier-performance-details/`:
 
 **Decision required (HD-154):** fix now, defer, or accept. See the ledger.
 
+**Fixed under HD-154 A** (Product Owner, 2026-10-29: 「HD-154 先修好」).
+
+- **Fix:** `processNextRow` (`SupplierImportService.js`) no longer picks the row with a locking `IN (...) ORDER BY ... LIMIT 1 FOR UPDATE`. It now works in two steps:
+  1. It runs one non-locking `UNION ALL` of two forced-index lookups on `idx_supplier_import_row_status`, one per pending status, ordered by `row_number` with `LIMIT 1`.
+  2. It locks the chosen row with `WHERE job_id = ? AND row_number = ? AND status IN ('valid', 'warning') FOR UPDATE`. That is a unique-key equality, so it takes a record lock only.
+- **Read view:** the lookup is the transaction's first non-locking read, and it runs after the job row is locked `FOR UPDATE`. The transaction is plain `START TRANSACTION` (`MySqlDatabaseService.js:510`), so the snapshot opens at that lookup. Every product writer of a job's rows locks the job first, so the lookup sees their committed state.
+- **Fence:** if the locked row is no longer pending, the pick throws `SUPPLIER_IMPORT_ROW_STATE_CONFLICT` instead of ending the job early. No path should reach that.
+- **Tests** in `supplierImportExecution.integration.test.js`:
+  - **Only the picked row is locked.** A job has 60 rows, every tenth a warning, with 50 already applied. While the picked row's transaction is open, a second connection's `FOR UPDATE SKIP LOCKED` must see all 59 other rows unlocked. The test also covers the warning row and the last row.
+  - **Staging is not blocked.** A job has no warning rows. While its row transaction is open, staging a newer job's row must insert, with `innodb_lock_wait_timeout` of 1 s.
+- **The tests discriminate:**
+  - On the old query, the first test is red: 9 rows unlocked against 59 required, because rows 1–51 were locked.
+  - Mutated toward the rejected candidate (`FOR UPDATE` on each per-status lookup), both tests are red: 58 against 59, and the staging INSERT timed out.
+  - The mutated file was backed up first, restored afterwards and checked with `cmp`.
+- **Developer runs** on the throwaway mysqld 3450, 2026-10-29, at the fix:
+  - lint passed, and the Supplier server suite passed 734 of 734;
+  - the performance runner passed every local case (TC-085, TC-101, TC-128, TC-129) with 0 deadlocks in both loads.
+  - The import applied 10,000 of 10,000. Execute took 54.2 s, and precheck plus execute 61.0 s. The import ended 57.9 s before the load window closed, against 40.7 s and 35.1 s at the formal re-test, which ran at another time.
+- **First developer run, disclosed:** TC-085 and TC-129 failed only on unverified plans, and `forSku.nameSearch` p95 was 2 s. The scratch mysqld had been restarted without the three startup-only 16,384 settings that `05_tc_test_map.md` requires, so statement samples were truncated and plans came back `null`. The buffer pool was also cold. After a restart with the settings, the same code passed.
+- **Status:** DEF-049 stays OPEN until the formal re-test in TEST_AND_VERIFY on the merged baseline.
+
+
 ## HD-116 A: dispositions (2026-10-21)
 
 Fixed in this change:
