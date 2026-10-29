@@ -1,0 +1,105 @@
+{
+  "command": "/Users/sam/Documents/workspace/erp-supplier-ta3/server/scripts/measureSupplierDuplicateRecall.js --database=erp_t51_rh_2b3f3706 --queries=200 --seed=50 --output=/Users/sam/Documents/workspace/erp-supplier-ta3/docs/supplier_management/evidence/20261029T040149-baed2fb7b585/supplier-performance-details/recall.json",
+  "database": "erp_t51_rh_2b3f3706",
+  "suppliers": 100000,
+  "queries": 200,
+  "seed": 50,
+  "truthCandidates": 1049,
+  "variants": {
+    "capped": {
+      "candidateCap": 3000,
+      "recall": 0.9752,
+      "missed": 26,
+      "queriesMissing": 17,
+      "p50Ms": 81,
+      "p95Ms": 101
+    },
+    "uncapped": {
+      "candidateCap": 9007199254740991,
+      "recall": 0.9847,
+      "missed": 16,
+      "queriesMissing": 11,
+      "p50Ms": 872,
+      "p95Ms": 1030
+    }
+  },
+  "cappedMissExamples": [
+    {
+      "query": "wing lucky paper co., ltd.",
+      "truthSize": 9,
+      "missedScores": [
+        0.8636363636363636
+      ]
+    },
+    {
+      "query": "lucky prime chemicaa cxo., ltd.",
+      "truthSize": 2,
+      "missedScores": [
+        0.8571428571428571
+      ]
+    },
+    {
+      "query": "cheung chan materials (h) limited",
+      "truthSize": 10,
+      "missedScores": [
+        0.9285714285714286,
+        0.8727272727272727,
+        0.8727272727272727
+      ]
+    },
+    {
+      "query": "star silver ighting enterprises ltd.",
+      "truthSize": 10,
+      "missedScores": [
+        0.8787878787878788
+      ]
+    },
+    {
+      "query": "leung cheung medical limited",
+      "truthSize": 10,
+      "missedScores": [
+        0.926829268292683,
+        0.926829268292683,
+        0.9047619047619048
+      ]
+    },
+    {
+      "query": "hing anion furniture limited",
+      "truthSize": 7,
+      "missedScores": [
+        0.8695652173913043,
+        0.8636363636363636
+      ]
+    },
+    {
+      "query": "hing ocean textile holdings limited",
+      "truthSize": 10,
+      "missedScores": [
+        0.8928571428571429
+      ]
+    },
+    {
+      "query": "wing grand food group ltd.",
+      "truthSize": 10,
+      "missedScores": [
+        0.9,
+        0.9
+      ]
+    },
+    {
+      "query": "golden tsang machinery limited",
+      "truthSize": 5,
+      "missedScores": [
+        0.8846153846153846
+      ]
+    },
+    {
+      "query": "wing fok garment (hk) limited",
+      "truthSize": 10,
+      "missedScores": [
+        0.8627450980392157
+      ]
+    }
+  ],
+  "note": "single connection, one query at a time, no other load"
+}

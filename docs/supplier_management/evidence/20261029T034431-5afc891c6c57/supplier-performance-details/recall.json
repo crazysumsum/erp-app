@@ -1,0 +1,108 @@
+{
+  "command": "/Users/sam/Documents/workspace/erp-supplier-ta3/server/scripts/measureSupplierDuplicateRecall.js --database=erp_t51_rh_5d373be6 --queries=200 --seed=50 --output=/Users/sam/Documents/workspace/erp-supplier-ta3/docs/supplier_management/evidence/20261029T034431-5afc891c6c57/supplier-performance-details/recall.json",
+  "database": "erp_t51_rh_5d373be6",
+  "suppliers": 100000,
+  "queries": 200,
+  "seed": 50,
+  "truthCandidates": 1150,
+  "variants": {
+    "capped": {
+      "candidateCap": 3000,
+      "recall": 0.9713,
+      "missed": 33,
+      "queriesMissing": 17,
+      "p50Ms": 82,
+      "p95Ms": 103
+    },
+    "uncapped": {
+      "candidateCap": 9007199254740991,
+      "recall": 0.98,
+      "missed": 23,
+      "queriesMissing": 10,
+      "p50Ms": 901,
+      "p95Ms": 1065
+    }
+  },
+  "cappedMissExamples": [
+    {
+      "query": "leung cheung toys international ltd.",
+      "truthSize": 10,
+      "missedScores": [
+        0.9310344827586207
+      ]
+    },
+    {
+      "query": "star tai lighting international ltd.",
+      "truthSize": 10,
+      "missedScores": [
+        0.9310344827586207,
+        0.9
+      ]
+    },
+    {
+      "query": "tsang global metal limited",
+      "truthSize": 4,
+      "missedScores": [
+        0.8571428571428571
+      ]
+    },
+    {
+      "query": "victoria lam technology (hkz) limited",
+      "truthSize": 8,
+      "missedScores": [
+        0.9032258064516129,
+        0.8571428571428571
+      ]
+    },
+    {
+      "query": "kam luky packaging limited",
+      "truthSize": 10,
+      "missedScores": [
+        0.8636363636363636,
+        0.8636363636363636,
+        0.851063829787234,
+        0.851063829787234,
+        0.851063829787234
+      ]
+    },
+    {
+      "query": "global laung chemical enterprises ltd.",
+      "truthSize": 10,
+      "missedScores": [
+        0.8888888888888888,
+        0.875,
+        0.875,
+        0.8709677419354839
+      ]
+    },
+    {
+      "query": "asia wong electronics co., ltd.",
+      "truthSize": 10,
+      "missedScores": [
+        0.8727272727272727
+      ]
+    },
+    {
+      "query": "lam silver lighting (hk) liqmited",
+      "truthSize": 4,
+      "missedScores": [
+        0.8571428571428571
+      ]
+    },
+    {
+      "query": "jade royal electronics limited",
+      "truthSize": 10,
+      "missedScores": [
+        0.8846153846153846
+      ]
+    },
+    {
+      "query": "sunrise kam metal limited",
+      "truthSize": 4,
+      "missedScores": [
+        0.851063829787234
+      ]
+    }
+  ],
+  "note": "single connection, one query at a time, no other load"
+}
