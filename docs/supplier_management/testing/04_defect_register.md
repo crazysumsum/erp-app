@@ -469,42 +469,70 @@ Found by the formal run in TEST_AND_VERIFY (HD-151 A). The run was `supplier-per
 
 ## DEF-049 — LOW
 
-Found by diagnosis in TEST_AND_VERIFY, REPORT_ONLY, on 2026-10-29 at `ef5a61a4`. It follows up REV-132 O3, the observation in DEF-048 that the import's per-row lock count grows across the run (65 → 1,440 → … → 10,618).
+Found by diagnosis in TEST_AND_VERIFY, REPORT_ONLY, on 2026-10-29 at `ef5a61a4`; the diagnosis observation's `7f47f619` is code-identical, since it changed only docs. It follows up REV-132 O3, the observation in DEF-048 that the import's per-row lock count grows across the run (65 → 1,440 → … → 10,618). Reviewed by REV-135, whose findings are folded in below.
 
-- **What happens:** each import row transaction locks every row of the job that has already been applied.
-  - `processNextRow` picks the next row with `WHERE job_id = ? AND status IN ('valid', 'warning') ORDER BY row_number LIMIT 1 FOR UPDATE` (`SupplierImportService.js:653-658`).
-  - The optimizer reads that through PRIMARY `(job_id, row_number)` and filters on `status`. Before it finds the first pending row, it reads every row already applied.
-  - Under REPEATABLE READ, `FOR UPDATE` locks every row it reads, matching or not, until commit.
-  - So the transaction for row k+1 holds about k+1 record locks and reads about 2k index entries. Over a whole import that is O(n²) reads.
-- **Measured** on the throwaway mysqld 3450 (MySQL 26.7.0), with files in `def049_diagnosis_2026-10-29/`:
-  - **Setup:** a scratch schema `erp_t51_mig_lockdiag` with the exact `0062` table, minus the foreign key to the jobs table.
-    - It held one job of 10,000 rows, 10% of them `warning`.
-    - For each k, rows 1..k were set to `applied`, `ANALYZE TABLE` was run, and then the exact query was run in a transaction.
-    - Record locks were counted from `performance_schema.data_locks`, and rows read from the `Handler_read_*` counters.
-    - The schema was dropped afterwards.
-  - **Locks follow k:** 1, 2, 102, 1,011, 5,056 and 9,100 at k = 0, 1, 100, 1,000, 5,000 and 9,000, with the PRIMARY plan at every one of them (`out.txt`). This matches the 10,618 seen near the end of the DEF-048 import.
-  - **The plan changes only at the very end:** at k = 9,999 the optimizer switches to `idx_supplier_import_row_status`.
-  - **Cost:** one pick takes 0.21 ms at k = 0 and 2.26 ms at k = 9,000 (200 runs each, `time-out.txt`), which is about 0.23 µs per applied row.
-    - Summed over a 10,000-row import, the extra cost is about 11 s. The TC-101 re-test measured 71.8 s and 77.4 s for the execute step.
-    - At the configurable ceiling of `import.maxRows` (50,000; the default is 10,000), the extra cost would be about 4.75 minutes. This is an extrapolation from the same per-row cost, not a measurement.
-- **What it does not do:**
-  - It does not cause blocking or deadlocks between transactions.
-    - Every path that writes a job's rows (cancel, expire, revoke, row failure, staging) first takes that job's row `FOR UPDATE`, so they are already serialised behind the row transaction (`SupplierImportService.js:328, 416, 465, 519, 548, 601, 650, 695, 776, 856`).
-    - The extra locks are on rows that only the same job's own work touches.
-    - Reads of results are non-locking.
-  - It does not lose data or produce wrong counts.
-  - So DEF-049 is cost (CPU, index reads, lock memory: 654 lock structs, 74 KB heap in the DEF-048 print), not correctness.
-  - It is also not the cause of DEF-048: there the deadlock was on the name grams, not on `supplier_import_rows`.
-- **Candidates that do not fix it:**
-  - **`FORCE INDEX (idx_supplier_import_row_status)` on the current `IN` query:** this is worse.
-    - The two `status` ranges are not ordered by `row_number` together, so it sorts every pending row.
-    - It locks all of them: 20,017 locks at k = 0.
-  - **An equality on one status without the hint:** the optimizer still chooses PRIMARY until k = 9,000 (`eq-valid` in `out.txt`).
-- **Candidate that does fix it:** one equality query per pending status, with `FORCE INDEX (idx_supplier_import_row_status)`, taking the lower `row_number` of the two.
-  - The index is ordered by `row_number` within `(job_id, status)`, so `LIMIT 1` stops at once.
-  - Each query held 1–3 locks and read 4–6 entries at every k (`out2.txt`).
-  - This is a measurement of the queries, not a product change: no product code was changed.
-- **Decision required (HD-154):** fix now or accept. See the ledger.
+**What happens:** each import row transaction locks every row of the job that has already been applied.
+- `processNextRow` picks the next row with `WHERE job_id = ? AND status IN ('valid', 'warning') ORDER BY row_number LIMIT 1 FOR UPDATE` (`SupplierImportService.js:652-658`).
+- The optimizer reads that through PRIMARY `(job_id, row_number)` and filters on `status`, so it reads every row already applied before it finds the first pending one.
+- Under REPEATABLE READ, which the app sets explicitly, `FOR UPDATE` locks every row it reads, matching or not, until commit.
+- So the transaction for row k+1 reads about k+1 index entries and holds about k+1 record locks. The extra locks beyond that are page supremum locks, about one per 100 rows. Over a whole import that is O(n²) reads.
+
+**Measured** on the throwaway mysqld 3450 (MySQL 26.7.0, REPEATABLE READ). The files are in `def049_diagnosis_2026-10-29/`, and its `README.md` describes each one.
+- **Setup:** a scratch schema with the exact `0062` table, minus the foreign key to the jobs table. Leaving out the foreign key changes no index, because `job_id` is the PRIMARY prefix.
+  - Job 1 has 10,000 rows, 10% of them `warning`. Job 2 has 10,000 rows.
+  - For each k, rows 1..k of job 1 are `applied` and `ANALYZE TABLE` is run.
+  - Each pick runs in its own transaction. Its own record locks are counted from `performance_schema.data_locks`, and its reads from `Handler_read_*`.
+- **The current query** (`out-v2.txt`):
+  - At k = 0, 100, 1,000, 5,000 and 9,000 it read 1, 101, 1,001, 5,001 and 9,001 entries and held 1, 101, 1,011, 5,056 and 9,100 locks, all through PRIMARY.
+  - This is consistent with the 10,618 row locks in the DEF-048 print near the end of a 10,000-row import, which also counts `applyRow`'s own locks. That print (`def048_diagnosis_2026-10-28/innodb-deadlocks.txt:393`) shows 720 lock structs and a 90,232-byte lock heap.
+  - The plan switches to `idx_supplier_import_row_status` only in the last few rows (by k = 9,995).
+  - The first run's figure of "about 2k reads" was wrong: its counter included the probe's own scan (REV-135 L1).
+- **Cost:**
+  - One pick took 0.21 ms at k = 0 and 2.26 ms at k = 9,000 (200 runs each, `time-out.txt`). That is about 0.23 µs per applied row, roughly linear (1.40 ms at k = 5,000).
+  - Summed over a 10,000-row import, the extra cost is about 11 s on this quiet host.
+  - At the 50,000-row ceiling of `import.maxRows` (the default is 10,000), it would be about 4.75 minutes. That is an extrapolation, not a measurement.
+
+**TC-101's window (REV-135 M2).** TC-101 has two time checks:
+- `import.within_10_minutes`: precheck plus execute must take at most 10 minutes.
+- `import.inside_measured_window`: upload, precheck and execute must end inside the 120 s load window (`supplierPerformanceVerdicts.js:96-101`).
+
+The margins are taken from each run's `supplier-performance-details/`:
+
+| Run | Import start, after the window opens | Upload + precheck + execute | Margin at window close |
+|---|---|---|---|
+| Re-test, TECHNICAL | 1.1 s | 78.1 s | 40.7 s |
+| Re-test, REGRESSION | 1.2 s | 83.8 s | 35.1 s |
+| First run, REGRESSION (DEF-048 FAIL) | 1.5 s | 121.4 s | **−2.9 s** |
+
+- That failed run was about 1.5× slower than the re-test on a busy host, and DEF-049's share slows down with it. So DEF-049 plausibly contributed more than the 2.9 s miss. That is not proven: DEF-048's name-gram deadlocks were present in that run too.
+- REV-132 O3 asked exactly this question. The answer: plausible, not proven.
+- With DEF-049 present, TC-101's window check has about 35–41 s of headroom on a quiet host. It may fail on a slower host at release re-runs.
+
+**What it does not do:**
+- It loses no data and produces no wrong counts.
+- **Locks inside the job do not block other work.**
+  - Every product path that writes a job's rows first takes that job's row `FOR UPDATE`: cancel, expire, revoke, row failure, staging and the claims (`SupplierImportService.js:328, 416, 465, 519, 548, 601, 650, 695, 776, 856`). So those paths are already serialised behind the row transaction.
+  - Reads of results are non-locking.
+  - The only writer that skips the job lock is a benchmark cleanup, `server/scripts/benchmarkSupplierImport.js:186`.
+- **One exception, already present today:** once the plan switches near the end of a job, and at the final empty pick, the current query also locks the first index entry after its range (`other_job_locks=1` at k = 9,995 and 9,999 in `out-v2.txt`). That entry can belong to the next job. The lock lasts only for those last picks.
+- DEF-049 is not the cause of DEF-048, whose deadlock was on the name grams.
+
+**Fix candidates.** These are measured, not designed. The design belongs in IMPLEMENT if HD-154 chooses to fix.
+- **`FORCE INDEX (idx_supplier_import_row_status)` on the current `IN` query:** worse. The two `status` ranges are not ordered by `row_number` together, so it sorts and locks every pending row (20,017 locks at k = 0 in `out.txt`).
+- **An equality on one status without the hint:** the optimizer still chooses PRIMARY. The plan switches only between k = 5,000 and 7,500 (`out.txt`, `time-out.txt`).
+- **One equality per status with `FORCE INDEX`, taking the lower `row_number` (REV-135 M1: rejected).**
+  - Each lookup reads 1 entry and holds 1–3 locks.
+  - But when a status has no pending row, the empty lookup takes a next-key lock on the first index entry after it. `'warning'` sorts last within a job, so this happens on every pick of an import with no warnings.
+  - That entry is the next job's, or the supremum. While it is held, staging a newer job's rows waits: part 2 of `out-v2.txt` shows `fx-warning` making the next job's INSERT time out (`ER_LOCK_WAIT_TIMEOUT` after 2 s), against an immediate insert in the control.
+- **REV-135's alternative (`alt`): measured best.**
+  - It picks the row number with the two non-locking forced-index lookups, then locks that row with `WHERE job_id = ? AND row_number = ? FOR UPDATE`.
+  - That is a unique equality, so it takes a record lock only, with no gap. It reads 3 entries and holds 1 lock at every k, and it did not block the next job's staging.
+  - Two things for IMPLEMENT to confirm:
+    - the read-view timing: the first consistent read must come after the job lock, so the lookup sees every committed writer;
+    - that the existing `status IN ('valid', 'warning')` check on the UPDATE (line 675) still fences a row that changed in between.
+  - The IMPLEMENT test must have a second job staging at the same time.
+
+**Decision required (HD-154):** fix now, defer, or accept. See the ledger.
 
 ## HD-116 A: dispositions (2026-10-21)
 

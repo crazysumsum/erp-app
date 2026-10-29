@@ -88,5 +88,9 @@ These cases keep their original assertions. They are not re-run while the depend
 ## DEF-049 — OPEN (LOW)
 
 - **What happens:** the import's row pick reads and locks every row the job has already applied, so the cost is O(n²) over an import.
-- **Effect:** about 11 s extra on a 10,000-row import, inside TC-101's window. It would be about 4.75 minutes at the 50,000-row ceiling of `import.maxRows`, an extrapolation. No blocking, deadlock, data or count effect.
+- **Effect:**
+  - about 11 s extra on a 10,000-row import on a quiet host, or about 4.75 minutes at the 50,000-row ceiling of `import.maxRows` (an extrapolation);
+  - TC-101's window check had 35–41 s of headroom at the re-test, but missed by 2.9 s in the first run on a busy host, where DEF-049 plausibly contributed (not proven);
+  - no data or count effect; the extra locks stay inside the job's own serialised work.
+- **Fix candidates:** a per-status forced-index `FOR UPDATE` was rejected, because it blocks the next job's staging (REV-135 M1). The candidate that measured best picks the row without locking, then locks it by primary key.
 - **Status:** the route (fix now, defer to the next IMPLEMENT re-entry, or accept) is HD-154, for the Product Owner. Details are in `04_defect_register.md`.

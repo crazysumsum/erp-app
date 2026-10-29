@@ -60,7 +60,10 @@ There is nothing else. As before, committing this evidence moves HEAD, so the ga
 
 **DEF-034** stays OPEN. Both re-test imports applied 10,000 of 10,000, and the link to DEF-048 remains unproven.
 
-**DEF-049** (LOW, found after this report, 2026-10-29): each import row transaction locks every row the job has already applied. It adds about 11 s to a 10,000-row import, so TC-101's results above stand. The route is HD-154. See `04_defect_register.md`.
+**DEF-049** (LOW, found after this report, 2026-10-29): each import row transaction locks every row the job has already applied. It adds about 11 s to a 10,000-row import on a quiet host.
+- TC-101's results above stand: the re-test imports ended 40.7 s and 35.1 s before the load window closed.
+- It plausibly contributed to the first run's 2.9 s window miss (not proven), and it leaves TC-101's window check exposed on a slower host.
+- The route is HD-154. See `04_defect_register.md`.
 
 ## First run (2026-10-28, `a98e50e7`) — kept as history
 
