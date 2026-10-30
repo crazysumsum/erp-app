@@ -19,10 +19,10 @@ import { databaseState, runStartupCases, tryStart } from "../test/integration/su
  * `${DB_NAME}_rh_*` schema 上面做，完咗成個剷走，唔郁共用嘅 DB_NAME。
  *
  * - TC-130 本機：Bank key 唔喺 ring、Business Master 未 ready、app 嘅 DB 連線俾人斷、一行俾人鎖住，各自要明確失敗
- *   或者按設計降級，唔漏 Bank、唔開放非 Active Supplier，恢復之後正常。部署環境網絡層嘅故障係 NOT_RUN。
+ *   或者按設計降級，唔漏 Bank、唔開放非 Active Supplier，恢復之後正常。部署環境網絡層嘅故障由 HD-157 豁免。
  * - TC-131 本機：缺 table、column、settings 行、permission、Bank key ring，開機都要拒絕、唔改 DB，修好之後開到機。
  * - TC-132 本機：成功、4xx、409、5xx、審批積壓、import 卡住都留低 log 同指標；integrity 錯誤係 error 級；冇明文。
- *   告警真係送到值班係 NOT_RUN。
+ *   告警真係送到值班由 HD-157 豁免。豁免項目照列喺輸出（`waived`），唔當測試案例。
  */
 const SCRIPT = fileURLToPath(import.meta.url);
 const SERVER = fileURLToPath(new URL("../", import.meta.url));
@@ -40,11 +40,11 @@ const reportPath = outputPath();
 await exitUnlessAdmin(reportPath, ["TC-130", "TC-131", "TC-132"]);
 const REASON = "TC-130/132 resilience rehearsal";
 const tag = randomUUID().slice(0, 8).toUpperCase();
-const NOT_RUN = [
+const WAIVED = [
   { id: "TC-130", name: "TC-130 production network faults between the app and its dependencies",
-    reason: "Timeouts and resets at the network layer (proxy, load balancer, MySQL failover) need the deployed environment. An in-flight reset of the app's MySQL connection and a lock wait are tested here." },
+    reason: "Waived by HD-157 (2026-10-30); the local parts are the acceptance evidence. Timeouts and resets at the network layer (proxy, load balancer, MySQL failover) need the deployed environment. An in-flight reset of the app's MySQL connection and a lock wait are tested here." },
   { id: "TC-132", name: "TC-132 production alert delivery",
-    reason: "Delivering error-level events and alerts to the on-call channel needs the production log pipeline; here the events are read from the log files." }
+    reason: "Waived by HD-157 (2026-10-30); the local parts are the acceptance evidence. Delivering error-level events and alerts to the on-call channel needs the production log pipeline; here the events are read from the log files." }
 ];
 const evidence = {};
 const results = {};
@@ -366,9 +366,8 @@ const tests = [
   { name: "TC-130 local dependency failures: Bank key, inactive currency, in-flight connection reset, lock wait", id: "TC-130", status: results["TC-130"] ?? "FAIL" },
   { name: "TC-131 local startup refuses a missing table, column, settings row, permission or key ring", id: "TC-131", status: results["TC-131"] ?? "FAIL" },
   { name: "TC-132 local logs and metrics for success, 4xx, conflict, 5xx, approval backlog and stalled import", id: "TC-132", status: results["TC-132"] ?? "FAIL" },
-  ...NOT_RUN.map(({ id, name }) => ({ name, id, status: "NOT_RUN" }))
 ];
 console.log(JSON.stringify({ database: process.env.DB_NAME, schema, evidence,
-  notRun: Object.fromEntries(NOT_RUN.map(({ name, reason }) => [name, reason])) }, null, 2));
+  waived: Object.fromEntries(WAIVED.map(({ name, reason }) => [name, reason])) }, null, 2));
 await writeReport(reportPath, tests);
 if (tests.some((test) => test.status === "FAIL") || evidence.cleanup) process.exitCode = 1;

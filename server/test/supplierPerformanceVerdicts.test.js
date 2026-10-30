@@ -6,7 +6,7 @@ import { performanceVerdicts } from "./integration/supplierPerformanceVerdicts.j
 /** 同 T50 工具報告一樣形狀嘅最細一份「全部過」嘅輸入。每份報告有自己嘅 statements，改一份唔會連累另一份。 */
 function passing() {
   const op = (p95) => ({ p50: p95 / 2, p95, p99: p95 * 1.2, errorRate: 0 });
-  const verdict = () => ({ limitP95Ms: 2000, maxErrorRate: 0.01, operations: 1, failing: [], pass: true });
+  const verdict = (limitP95Ms = 2000) => ({ limitP95Ms, maxErrorRate: 0.01, operations: 1, failing: [], pass: true });
   const statements = () => [
     { digest: "SELECT COUNT ( * ) FROM `suppliers` WHERE `status` = ?", count: 900, noIndexUsed: 0,
       plan: [{ table: "suppliers", type: "ref", key: "idx_suppliers_status_updated_id", rows: 20 }, { table: "<derived2>", type: "ALL", key: null, rows: 31_594 }] },
@@ -18,7 +18,7 @@ function passing() {
   return {
     mixed: { code: 0, report: { ok: true, operations: { "list.default": op(66), "list.codeExact": op(248), "duplicates.check": op(127) }, nfr001: verdict(),
       resources: { dbThreadsConnected: { avg: 12, max: 12 }, rssMiB: { avg: 270, max: 336 } }, topStatements: statements(), digestTable: digestTable() } },
-    forSku: { code: 0, report: { ok: true, nfr005: verdict(), topStatements: statements(), digestTable: digestTable() } },
+    forSku: { code: 0, report: { ok: true, nfr005: verdict(3000), topStatements: statements(), digestTable: digestTable() } },
     recall: { code: 0, report: { variants: { capped: { candidateCap: 3_000, recall: 0.966, p95Ms: 93 },
       uncapped: { candidateCap: Number.MAX_SAFE_INTEGER, recall: 0.977, p95Ms: 950 } } } },
     imported: { code: 0, report: { ok: true, startedAt: "2026-10-22T02:55:33.000Z", uploadMs: 900, precheck: { ms: 6_307 }, execute: { ms: 78_714 }, nfr004: { precheckPlusExecuteMs: 82_766, limitMs: 600_000, pass: true },
@@ -45,12 +45,16 @@ test("HD-117 A: every condition of every performance check fails on its own brok
     ["load.list_and_exact_code_p95_under_2s", (input) => { input.mixed.report.operations["list.codeExact"].p95 = 2_000; }],
     ["load.list_and_exact_code_p95_under_2s", (input) => { delete input.mixed.report.operations["list.default"]; }],
     ["load.every_general_operation_within_limits", (input) => { input.mixed.report.nfr001.pass = false; }],
+    // NFR-001 仍然係 2 秒：用 3 秒判斷嘅報告唔算（REV-139 L4）。
+    ["load.every_general_operation_within_limits", (input) => { input.mixed.report.nfr001.limitP95Ms = 3000; }],
     ["load.resources_bounded", (input) => { input.mixed.report.resources.dbThreadsConnected.max = 14; }],
     ["load.resources_bounded", (input) => { input.mixed.report.resources.rssMiB.max = 1_025; }],
     ["load.resources_bounded", (input) => { delete input.mixed.report.resources; }],
     ["for_sku.completed", (input) => { input.forSku.code = 1; }],
     ["for_sku.completed", (input) => { input.forSku.report.ok = false; }],
-    ["for_sku.p95_under_2s", (input) => { input.forSku.report.nfr005.pass = false; }],
+    ["for_sku.p95_under_3s", (input) => { input.forSku.report.nfr005.pass = false; }],
+    // 上限要係 HD-157 嘅 3 秒：寬鬆過佢嘅報告唔算。
+    ["for_sku.p95_under_3s", (input) => { input.forSku.report.nfr005.limitP95Ms = 4000; }],
     ["for_sku.count_not_inflated", (input) => { input.counted.forSku.api = 100_225; }],
     ["for_sku.count_not_inflated", (input) => { input.counted.forSku.status = 500; }],
     ["for_sku.no_full_scan", (input) => { input.forSku.report.topStatements[0].plan[0].type = "ALL"; }],
@@ -80,6 +84,7 @@ test("HD-117 A: every condition of every performance check fails on its own brok
     ["import.report_ok", (input) => { input.imported.code = 1; }],
     ["import.report_ok", (input) => { input.imported.report.ok = false; }],
     ["online.p95_under_2s_during_import", (input) => { input.during.report.nfr001.pass = false; }],
+    ["online.p95_under_2s_during_import", (input) => { input.during.report.nfr001.limitP95Ms = 3000; }],
     ["online.p95_under_2s_during_import", (input) => { input.during.code = 1; }],
     ["import.resources_bounded", (input) => { input.imported.report.dbConnectionsPeak.userConnections = 34; }],
     ["import.resources_bounded", (input) => { input.imported.report.workerPeakRssMiB = 1_025; }],

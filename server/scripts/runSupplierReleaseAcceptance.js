@@ -23,18 +23,21 @@ import {
  *   system-admin、settings 預設 OFF、有 active 貨幣；新 app 註冊嘅每條 Supplier route 都受 supplier.* 權限保護；
  *   分開嘅日常角色行 §14.1 第 7 步嘅 smoke 同 §14.4 嘅核對（Draft、直接啟用、審批、暫停、封鎖、masked Bank、
  *   reveal、purchase lookup、audit）。
- * - Production 先做到嘅部分（真部署時間線、按 §14 逐步部署、break-glass 帳號）同成個 TC-136 都係 NOT_RUN。
+ * - Production 先做到嘅部分（真部署時間線、按 §14 逐步部署、break-glass 帳號）由 HD-157 豁免，照列喺輸出（`waived`），
+ *   唔當測試案例。成個 TC-136（release gate）仍然係 NOT_RUN。
  */
 const reportPath = outputPath();
 await exitUnlessAdmin(reportPath, ["TC-134", "TC-135", "TC-136"]);
 const SERVER = fileURLToPath(new URL("../", import.meta.url));
 const REASON = "TC-134/135 release rehearsal";
 const tag = randomUUID().slice(0, 8).toUpperCase();
-const NOT_RUN = [
+const WAIVED = [
   { id: "TC-134", name: "TC-134 production worker rollback and restart timeline",
-    reason: "Needs a deployed server, its process manager and the runbook timeline. Here the restart is a second app in the same process and lease expiry is set in the database; that client rollback leaves data in place is not shown here." },
+    reason: "Waived by HD-157 (2026-10-30); the local part is the acceptance evidence. Needs a deployed server, its process manager and the runbook timeline. Here the restart is a second app in the same process and lease expiry is set in the database; that client rollback leaves data in place is not shown here." },
   { id: "TC-135", name: "TC-135 production staged capability deployment and break-glass accounts",
-    reason: "Needs the real environment: deploying capabilities in §14 order, and showing that only approved break-glass accounts hold system-admin, with their use audited. The client menu inventory is covered by the supplier-client-ui suite (TC-121)." },
+    reason: "Waived by HD-157 (2026-10-30); the local part is the acceptance evidence. Needs the real environment: deploying capabilities in §14 order, and showing that only approved break-glass accounts hold system-admin, with their use audited. The client menu inventory is covered by the supplier-client-ui suite (TC-121)." }
+];
+const NOT_RUN = [
   { id: "TC-136", name: "TC-136 release regression and evidence gate",
     reason: "The release gate is the harness verify_gate over the candidate's CI and suite evidence, the open P0/P1 cases and defects, and the Product Owner's GO; a runner cannot decide it." }
 ];
@@ -176,6 +179,7 @@ const tests = [
   ...NOT_RUN.map(({ id, name }) => ({ name, id, status: "NOT_RUN" }))
 ];
 console.log(JSON.stringify({ database: process.env.DB_NAME, evidence,
-  notRun: Object.fromEntries(NOT_RUN.map(({ name, reason }) => [name, reason])) }, null, 2));
+  notRun: Object.fromEntries(NOT_RUN.map(({ name, reason }) => [name, reason])),
+  waived: Object.fromEntries(WAIVED.map(({ name, reason }) => [name, reason])) }, null, 2));
 await writeReport(reportPath, tests);
 if (tests.some((test) => test.status === "FAIL")) process.exitCode = 1;

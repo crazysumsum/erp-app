@@ -24,13 +24,14 @@ import {
  * （detail、masked Bank、有授權 reveal 攞返原本帳號、審批隊列、匯入結果下載）；冇 key ring 或者錯 key 一定 fail closed。
  *
  * 本機做唔到嘅：RTO ≤ 4 小時、RPO ≤ 15 分鐘。嗰兩個數取決於 production 嘅備份排程、binlog 同還原環境，
- * 本機量到嘅秒數同 RPO 0 唔代表佢哋，所以另開一項 NOT_RUN。
+ * 本機量到嘅秒數同 RPO 0 唔代表佢哋。HD-157 豁免咗 production 還原演練，本機結果就係證據；豁免項目照列喺
+ * 輸出（`waived`），唔當測試案例。
  */
 const reportPath = outputPath();
 await exitUnlessAdmin(reportPath, ["TC-133"]);
 const LOCAL = "TC-133 local full-module backup and isolated restore: table and file reconciliation, smoke, key ring";
 const PRODUCTION = "TC-133 production restore drill: RTO within 4 hours and RPO within 15 minutes";
-const NOT_RUN_REASON = "Needs the production backup schedule, binlog retention and an isolated restore environment; a local logical copy cannot show RTO or RPO.";
+const WAIVED_REASON = "Waived by HD-157 (2026-10-30): no production restore drill; the local backup and isolated restore is the acceptance evidence. A local logical copy cannot show RTO or RPO against the production backup schedule and binlog retention.";
 const REASON = "TC-133 recovery rehearsal";
 const tag = randomUUID().slice(0, 8).toUpperCase();
 const { checks, check, passed } = checklist();
@@ -284,10 +285,9 @@ try {
   fs.rmSync(work, { recursive: true, force: true });
   if (checks.some(({ id, status }) => id.startsWith("cleanup.") && status === "FAIL")) localStatus = "FAIL";
   console.log(JSON.stringify({ database: process.env.DB_NAME, restoreSchema: restoreName, metrics, checks,
-    notRun: { [PRODUCTION]: NOT_RUN_REASON } }, null, 2));
+    waived: { [PRODUCTION]: WAIVED_REASON } }, null, 2));
   await writeReport(reportPath, [
-    { name: LOCAL, id: "TC-133", status: localStatus },
-    { name: PRODUCTION, id: "TC-133", status: "NOT_RUN" }
+    { name: LOCAL, id: "TC-133", status: localStatus }
   ]);
   if (localStatus !== "PASS") process.exitCode = 1;
 }
