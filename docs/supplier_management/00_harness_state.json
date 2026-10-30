@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 498,
+  "revision": 501,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "TEST_AND_VERIFY",
   "status": "READY_FOR_TESTING",
@@ -11,7 +11,7 @@
   "baseline": {
     "design": "22865f96b0ce3aa7e70b1433533a3a0551d557a6e3dcb12bef28e4546e57a056",
     "plan": "8b31fcdd93bafe8275cb5cd2eded0a50b608a49bb17227beb7339ee099a344bd",
-    "code_commit": "6d84ee454b72f4b3e43b2aa6eee2436e6e950716",
+    "code_commit": "309aa9ebdd0c10dfb57b373d08935e9e0a79b05a",
     "source_fingerprint": "b00c7d69b52834f1cc4b2be0224208cff4ad046afd8eef70b2ee239d13b91394",
     "worktree": "/Users/sam/Documents/workspace/erp-supplier-ta4",
     "default_commit": "6d84ee454b72f4b3e43b2aa6eee2436e6e950716",
@@ -7515,6 +7515,28 @@
       "source_ref": "PR #305 merged as 6d84ee454b72f4b3e43b2aa6eee2436e6e950716 at 2026-10-30T03:21:32Z on the Product Owner's word ('CI己通過'), with --match-head-commit 77d608b4, after a gate that refused unless the latest run of every check was SUCCESS (13 checks, PR run 40988675382), main was an ancestor of HEAD and the local, remote and PR heads were equal. Reviews REV-139 CHANGES_REQUESTED and REV-140 APPROVED; every REV-139 finding fixed before merge (report 142).",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-30T03:21:32+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Formal run on the HD-157 baseline: 8 required suites at TECHNICAL and REGRESSION (HD-151 A suite set)",
+      "code_commit": "309aa9ebdd0c10dfb57b373d08935e9e0a79b05a",
+      "spec_baseline": "8b31fcdd93bafe8275cb5cd2eded0a50b608a49bb17227beb7339ee099a344bd",
+      "source_fingerprint": "b00c7d69b52834f1cc4b2be0224208cff4ad046afd8eef70b2ee239d13b91394",
+      "status": "FAIL",
+      "source_ref": "16 run_check --execute runs, 2026-10-30 03:24:20-03:59:55Z, on 309aa9eb (code-identical to the mode entry commit 6d84ee45), all registered; throwaway mysqld 3450 with the three 16,384 digest settings and deadlock detection and printing ON. PASS at both stages: server-integration 735/735, security 735/735, bank-security 142/142, client-ui 208/208, resilience 3/3 (TC-130/131/132), recovery 1/1 (TC-133). release-operations BLOCKED at both stages only on TC-136 NOT_RUN (release gate); TC-134/135 PASS. supplier-performance TECHNICAL PASS (TC-085/101/128/129): TC-085 for_sku.p95_under_3s with limitP95Ms 3000, overall for-SKU p95 1,737 ms; TC-101 import 57.8 s, online during import worst list.missingFilter 1,443 ms, update 820 ms. supplier-performance REGRESSION FAIL: TC-085 PASS (for-SKU p95 1,818 ms, limit 3,000), TC-128/129 PASS, TC-101 FAIL on online.p95_under_2s_during_import only (update 2,286 ms, list.missingFilter 2,011 ms; import 63.5 s, exactly once, deadlocks 0). Registered as DEF-051.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-30T03:59:55+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEF-051 diagnosis under HD-158 A: old/new row-pick A/B, stopped by the Product Owner before any measurement (REPORT_ONLY, not formal evidence)",
+      "code_commit": "309aa9ebdd0c10dfb57b373d08935e9e0a79b05a",
+      "spec_baseline": "8b31fcdd93bafe8275cb5cd2eded0a50b608a49bb17227beb7339ee099a344bd",
+      "source_fingerprint": "b00c7d69b52834f1cc4b2be0224208cff4ad046afd8eef70b2ee239d13b91394",
+      "status": "BLOCKED",
+      "source_ref": "status BLOCKED: stopped before any measurement, not a result. Planned: the performance runner, alternating main 6d84ee45 (new) and 8c31c94a (old, before PR #301; the only server/src difference is SupplierImportService.js), 3 runs each, outputs in the session scratchpad. Started 05:58:08Z; at 06:04:32Z the Product Owner said '停，唔好再跑' and the first run (new-1) was stopped by exact PID during TC-129 recall, before the load-during-import step. The runner's SIGTERM cleanup dropped its erp_t51_rh_* schema (none left). No measurement was produced; the detached worktree for 8c31c94a was removed. The table of earlier formal runs in DEF-051 is the only evidence for the step change.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-30T06:04:32+00:00"
     }
   ],
   "pending_decisions": [
@@ -9604,6 +9626,20 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-30: 'C組全部本機己通過的案例就紀錄為通過，不用再找production like 環境再測了' (record every C case that passed locally as passed; no production-like re-test), then, after the remaining list and the risk were set out, '確認，開 HD-157 修訂 plan，TC-085不用修，放鬆至3秒' (confirmed; revise the plan; TC-085 is not fixed; relax to 3 seconds). Scope: NFR-005 for-SKU p95 limit 3 s (NFR-001 stays 2 s); production parts of TC-128/130/132/133/134/135/006 and the production-like UI smoke waived, local results stand; TC-136 (release gate), UAT-044/045, business UAT, sign-offs and release decisions unchanged; the plan revision also carries the 07 amendments (HD-145 A, HD-146 A), REV-130 N3/N6 and the profile environment authorization; existing approvals are re-recorded on the new baselines, with no new risk acceptance. Shown to the Product Owner before the answer (REV-139 L1): in the reply listing what remains under the principle, that recording it needs a plan revision marking the production parts waived, 'with 14 approvals to be re-recorded', carried together with the 07 amendments, N3 and N6, and the residual risk that no one verifies performance, restore time, alerts and deployment order in a real environment before production; in the earlier TASK-051 C reply, that the plan revision would carry 07, N3, N6 and the environment authorization."
+    },
+    {
+      "id": "HD-158",
+      "impact": "MAJOR",
+      "question": "TC-101 failed at REGRESSION on the HD-157 baseline: online.p95_under_2s_during_import, update 2,286 ms and list.missingFilter 2,011 ms (TECHNICAL on the same code: 820 and 1,443 ms). Every formal run since PR #301 (DEF-049 fix) has list.missingFilter during import at 1,443-2,011 ms, against 392-580 ms in the four runs before it; the two missing-primary COUNT statements read the same rows but take about three times as long, and the import executes in 51-57 s instead of 66-77 s (as put to the Product Owner; corrected afterwards from the evidence: 66-115 s, the 114.6 s run being the 2026-10-28 first REGRESSION). Cause not proven (timing only). Route? (A) REPORT_ONLY diagnosis: old/new row-pick A/B under load-during-import, 3 runs each, plus variance on a quiet host. (B) Re-run REGRESSION supplier-performance on a quiet host and accept a pass (not recommended: picks a good result, the regression stays). (C) Accept as a known limitation: relax the during-import online p95 target (business decision). (D) Remediate now (cause unproven).",
+      "affected_ids": [
+        "DEF-051",
+        "TC-101",
+        "IMP-016",
+        "NFR-004",
+        "NFR-001"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-30: 'A', then, after asking what the A/B tests and why, '停，唔好再跑' (stop; the A/B was stopped before any measurement), then 'TC-101 改要求放寬至5秒就好了' (relax TC-101's requirement to 5 s). Route C: during a 10,000-row import, online general operations' p95 limit is 5 s (NFR-004 and IMP-016; NFR-001's 2 s under normal mixed load and NFR-005's 3 s unchanged); no remedy; the step change after PR #301 stays unexplained and is recorded in DEF-051. The plan revision moves both baselines, so existing approvals are re-recorded on the new baselines with no new risk acceptance, and the Supplier provided pin (03 §11.5) moves, so Purchasing's pin target in issue #294 moves again; these consequences were set out to the Product Owner after the answer, not before. DEF-051 closes when TC-101 passes against 5 s in the formal run on the HD-158 baseline."
     }
   ],
   "external_actions": [
@@ -10395,7 +10431,23 @@
     "evidence/20261029T040105-a05fb177b6e8/run.json",
     "evidence/20261029T040136-8192fee4677f/run.json",
     "evidence/20261029T040142-0d55c6f0c0f0/run.json",
-    "evidence/20261029T040149-baed2fb7b585/run.json"
+    "evidence/20261029T040149-baed2fb7b585/run.json",
+    "evidence/20261030T032421-002040bd2fd9/run.json",
+    "evidence/20261030T032656-34275715e091/run.json",
+    "evidence/20261030T032708-7195a5ce235a/run.json",
+    "evidence/20261030T032937-1f94f5848892/run.json",
+    "evidence/20261030T032943-c484462380ea/run.json",
+    "evidence/20261030T033013-cf861b6a86a3/run.json",
+    "evidence/20261030T033019-f3eb920f33b4/run.json",
+    "evidence/20261030T033026-b856fe2963d2/run.json",
+    "evidence/20261030T034152-08fd4a1f2f00/run.json",
+    "evidence/20261030T034429-8f5306e957ed/run.json",
+    "evidence/20261030T034443-a6489778b4f0/run.json",
+    "evidence/20261030T034723-8f82647fe185/run.json",
+    "evidence/20261030T034729-dca35ef45afa/run.json",
+    "evidence/20261030T034802-0c3c0f91d809/run.json",
+    "evidence/20261030T034810-14d1ccd1c16d/run.json",
+    "evidence/20261030T034819-b8b65bdb3861/run.json"
   ],
   "defects": [
     {
@@ -11239,7 +11291,7 @@
     {
       "id": "DEF-050",
       "severity": "MEDIUM",
-      "status": "OPEN",
+      "status": "CLOSED",
       "source_ids": [
         "TC-085",
         "SKU-008",
@@ -11249,9 +11301,28 @@
         "server/src/modules/supplier/SupplierAdminService.js:128",
         "docs/supplier_management/testing/04_defect_register.md"
       ],
+      "closure_evidence": [
+        "evidence/20261030T033026-b856fe2963d2/run.json (supplier-performance TECHNICAL on the HD-157 baseline: TC-085 PASS, for_sku.p95_under_3s with limitP95Ms 3000, for-SKU p95 1,737 ms)",
+        "evidence/20261030T034819-b8b65bdb3861/run.json (supplier-performance REGRESSION on the HD-157 baseline: TC-085 PASS, for-SKU p95 1,818 ms; the run FAILs on TC-101, which is DEF-051)",
+        "HD-157 (Product Owner, 2026-10-30): NFR-005 for-SKU p95 limit 3 s; no remedy; PR #305 merged as 6d84ee45"
+      ],
+      "risk_approval_id": null
+    },
+    {
+      "id": "DEF-051",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "source_ids": [
+        "TC-101",
+        "IMP-016",
+        "NFR-004",
+        "NFR-001",
+        "supplier-performance REGRESSION evidence/20261030T034819-b8b65bdb3861",
+        "docs/supplier_management/testing/04_defect_register.md"
+      ],
       "closure_evidence": [],
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Formal run on mode entry commit 6d84ee45 (HD-157 baseline): the 8 required suites at TECHNICAL and REGRESSION, as for DEF-048 (HD-151 A); the scratch mysqld with innodb_deadlock_detect and innodb_print_all_deadlocks ON and the three 16,384 digest settings; DEF-050 closes if TC-085 passes against 3 s; then the Technical Acceptance report. REPORT_ONLY."
+  "next_safe_action": "HD-158 C: plan revision in IMPLEMENT (TC-101 online during import p95 < 5 s: 01 NFR-004, 03 §11.5, 06 IMP-016, the benchmark's general-operation limit for the during-import run and the TC-101 verdict), re-record approvals last, developer checks, independent review, PR, merge on the Product Owner's word; then TEST_AND_VERIFY on the merged baseline: the 8 required suites at TECHNICAL and REGRESSION; DEF-051 closes if TC-101 passes against 5 s."
 }

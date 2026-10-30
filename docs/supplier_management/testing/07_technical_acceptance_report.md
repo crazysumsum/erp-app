@@ -1,8 +1,63 @@
-# Supplier Management — Technical Acceptance report (2026-10-28, re-tested 2026-10-29)
+# Supplier Management — Technical Acceptance report (2026-10-28, re-tested 2026-10-29 and 2026-10-30)
 
-> **2026-10-30, HD-157:** the HD-156 E path below (re-measure TC-085 in a production-like environment) is superseded. NFR-005 is now 3 s, and the C-group production parts are waived, with the local results standing. This report's results are on the old plan baseline. The next formal run is on the HD-157 baseline, and it will be added here as the current result.
+## Formal run on the HD-157 baseline (2026-10-30, current result)
 
-## Re-test after the DEF-049 fix (2026-10-29, current result)
+**Result: Technical Acceptance NOT complete.**
+- **DEF-050 is closed.** TC-085 passed against NFR-005's 3 s at both stages. The for-SKU p95 was 1,737 ms at TECHNICAL and 1,818 ms at REGRESSION.
+- **A new formal failure:** at REGRESSION, TC-101 failed `online.p95_under_2s_during_import`. During the import, `update` p95 was 2,286 ms and `list.missingFilter` 2,011 ms, against 2,000 ms.
+  - The same code passed at TECHNICAL, at 820 ms and 1,443 ms.
+  - Everything else in TC-101 passed at both stages. The import took 57.8 s and 63.5 s, every row was applied exactly once, and there were no deadlocks.
+  - It is registered as **DEF-051**. Since PR #301, every formal run is close to the limit; see the register.
+  - HD-158 was answered: a REPORT_ONLY diagnosis was started (A) and then stopped by the Product Owner before it measured anything. Then: "TC-101 改要求放寬至5秒就好了". The plan revision follows; DEF-051 closes when TC-101 passes against 5 s.
+- **release-operations** is BLOCKED at both stages only by TC-136 (the release gate), which is NOT_RUN by design. TC-134 and TC-135 passed.
+- **Otherwise the gate is blocked by what was known before:** TASK-051 group B is open.
+- UAT was not executed. Business acceptance and release approval have not happened.
+
+**Baseline:**
+- The mode entry commit is `6d84ee45`, the PR #305 merge (HD-157).
+- The runs were made at `309aa9eb`, which adds ledger only. Every run records `code_unchanged` and `spec_unchanged` as true.
+- The plan baseline is `8b31fcdd` and the design baseline `22865f96`.
+
+**Environment:**
+- The same throwaway mysqld 3450 (MySQL 26.7.0). The runner script refused to start unless all five settings were as required, and they were: `innodb_deadlock_detect` ON, `innodb_print_all_deadlocks` ON, and the three 16,384 digest and SQL-text settings.
+- Other agents' mysqld instances were running on the host and were left alone.
+- Load averages recorded by the performance runner: 3.9→11.4 at TECHNICAL, 3.5→13.9 at REGRESSION. The runner's own load accounts for most of the rise in every run (3.3→9.1 to 3.4→11.0 before), so these numbers do not show whether other load was present.
+
+**Runs:** the 8 required suites at TECHNICAL, then at REGRESSION (HD-151 A suite set), from 03:24Z to 04:00Z, each a real `run_check --execute`.
+
+| Stage | Suite | Result | Tests | Time (UTC) | Evidence (`evidence/…/run.json`) | Cases not passed |
+| --- | --- | --- | --- | --- | --- | --- |
+| TECHNICAL | `supplier-server-integration` | PASS | 735/735 passed, 0 failed, 0 not run | 03:24:21–03:26:55 | `20261030T032421-002040bd2fd9` |  |
+| TECHNICAL | `supplier-bank-security` | PASS | 142/142 passed, 0 failed, 0 not run | 03:26:56–03:27:08 | `20261030T032656-34275715e091` |  |
+| TECHNICAL | `supplier-security` | PASS | 735/735 passed, 0 failed, 0 not run | 03:27:09–03:29:36 | `20261030T032708-7195a5ce235a` |  |
+| TECHNICAL | `supplier-client-ui` | PASS | 208/208 passed, 0 failed, 0 not run | 03:29:37–03:29:42 | `20261030T032937-1f94f5848892` |  |
+| TECHNICAL | `supplier-resilience` | PASS | 3/3 passed, 0 failed, 0 not run | 03:29:43–03:30:12 | `20261030T032943-c484462380ea` |  |
+| TECHNICAL | `supplier-recovery` | PASS | 1/1 passed, 0 failed, 0 not run | 03:30:13–03:30:18 | `20261030T033013-cf861b6a86a3` |  |
+| TECHNICAL | `supplier-release-operations` | BLOCKED | 2/3 passed, 0 failed, 1 not run | 03:30:19–03:30:26 | `20261030T033019-f3eb920f33b4` | TC-136 NOT_RUN |
+| TECHNICAL | `supplier-performance` | PASS | 4/4 passed, 0 failed, 0 not run | 03:30:27–03:41:52 | `20261030T033026-b856fe2963d2` |  |
+| REGRESSION | `supplier-server-integration` | PASS | 735/735 passed, 0 failed, 0 not run | 03:41:53–03:44:28 | `20261030T034152-08fd4a1f2f00` |  |
+| REGRESSION | `supplier-bank-security` | PASS | 142/142 passed, 0 failed, 0 not run | 03:44:30–03:44:42 | `20261030T034429-8f5306e957ed` |  |
+| REGRESSION | `supplier-security` | PASS | 735/735 passed, 0 failed, 0 not run | 03:44:43–03:47:22 | `20261030T034443-a6489778b4f0` |  |
+| REGRESSION | `supplier-client-ui` | PASS | 208/208 passed, 0 failed, 0 not run | 03:47:23–03:47:29 | `20261030T034723-8f82647fe185` |  |
+| REGRESSION | `supplier-resilience` | PASS | 3/3 passed, 0 failed, 0 not run | 03:47:30–03:48:02 | `20261030T034729-dca35ef45afa` |  |
+| REGRESSION | `supplier-recovery` | PASS | 1/1 passed, 0 failed, 0 not run | 03:48:03–03:48:10 | `20261030T034802-0c3c0f91d809` |  |
+| REGRESSION | `supplier-release-operations` | BLOCKED | 2/3 passed, 0 failed, 1 not run | 03:48:11–03:48:18 | `20261030T034810-14d1ccd1c16d` | TC-136 NOT_RUN |
+| REGRESSION | `supplier-performance` | FAIL | 3/4 passed, 1 failed, 0 not run | 03:48:19–03:59:55 | `20261030T034819-b8b65bdb3861` | TC-101 FAIL |
+
+**Performance numbers** (from each run's `supplier-performance-details/`):
+
+| | TECHNICAL | REGRESSION | Limit |
+| --- | --- | --- | --- |
+| TC-085 for-SKU p95, all operations | 1,737 ms | 1,818 ms | 3,000 ms |
+| TC-101 precheck + execute | 57.8 s | 63.5 s | 600 s |
+| TC-101 online during import, `update` p95 | 820 ms | **2,286 ms** | 2,000 ms |
+| TC-101 online during import, `list.missingFilter` p95 | 1,443 ms | **2,011 ms** | 2,000 ms |
+| TC-101 online during import, all operations p95 | 486 ms | 739 ms | — |
+| Deadlocks (mixed load / during import) | 0 / 0 | 0 / 0 | 0 |
+
+## Re-test after the DEF-049 fix (2026-10-29) — kept as history
+
+> **2026-10-30, HD-157:** the HD-156 E path below (re-measure TC-085 in a production-like environment) is superseded. NFR-005 is now 3 s, and the C-group production parts are waived, with the local results standing.
 
 **Result: Technical Acceptance NOT complete.**
 - **DEF-049 is closed.**

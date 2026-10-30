@@ -1,0 +1,87 @@
+{
+  "schema_version": "2.0",
+  "module_id": "supplier-management",
+  "run_id": "20261030T032943-c484462380ea",
+  "suite_id": "supplier-resilience",
+  "stage": "TECHNICAL",
+  "result": "PASS",
+  "spec_baseline": "8b31fcdd93bafe8275cb5cd2eded0a50b608a49bb17227beb7339ee099a344bd",
+  "source_fingerprint": "b00c7d69b52834f1cc4b2be0224208cff4ad046afd8eef70b2ee239d13b91394",
+  "code_commit": "309aa9ebdd0c10dfb57b373d08935e9e0a79b05a",
+  "started_at": "2026-10-30T03:29:43.368164Z",
+  "ended_at": "2026-10-30T03:30:12.999958Z",
+  "environment_id": "supplier-isolated-test",
+  "runtime_instance_id": "supplier-t51-scratch-mysqld-3450",
+  "data_reference": "Synthetic Supplier fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "node",
+    "server/scripts/runSupplierResilienceAcceptance.js",
+    "--output",
+    "/Users/sam/Documents/workspace/erp-supplier-ta4/docs/supplier_management/evidence/20261030T032943-c484462380ea/supplier-resilience.json"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "9f3249d9bb4e94d181081dec6121c13795a7767aae023b05a76b6b4d57bc2247",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 3,
+    "passed": 3,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [
+    {
+      "id": "TC-130",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-131",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-132",
+      "status": "PASS"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "evidence/20261030T032943-c484462380ea/stdout.log",
+      "sha256": "0602f59b59685521334098aaf9305dcfba9b301e1edac03b32933bfde3cb572f",
+      "bytes": 8703
+    },
+    {
+      "path": "evidence/20261030T032943-c484462380ea/stderr.log",
+      "sha256": "8d84c0e899ee4f168ffb7ef1a7d756a5f46690b4922aac026a5e0dec2bffc887",
+      "bytes": 61
+    },
+    {
+      "path": "evidence/20261030T032943-c484462380ea/supplier-resilience.json",
+      "sha256": "359cb3556766b23486b28563fe8cad030bca6678d7531d54345ffd219f85b7a2",
+      "bytes": 536
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    },
+    {
+      "argv": [
+        "mysql",
+        "--version"
+      ],
+      "output": "mysql  Ver 26.7.0 for macos15 on arm64 (MySQL Community Server - GPL)\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "Local observation only; external services/config/data and secret redaction completeness require review."
+  ]
+}

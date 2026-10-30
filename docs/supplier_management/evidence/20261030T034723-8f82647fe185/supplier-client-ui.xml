@@ -1,0 +1,483 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="208" failures="0" errors="0" time="7.643622248">
+    <testsuite name="test/services/supplier.test.js" timestamp="2026-10-30T03:47:28.873Z" hostname="samMacBook-Pro.local" tests="17" failures="0" errors="0" skipped="0" time="0.006859791">
+        <testcase classname="test/services/supplier.test.js" name="supplier service &gt; declares its discovery name" time="0.000876041">
+        </testcase>
+        <testcase classname="test/services/supplier.test.js" name="supplier service &gt; creates a supplier with framework idempotency" time="0.001013167">
+        </testcase>
+        <testcase classname="test/services/supplier.test.js" name="supplier service &gt; checks duplicate candidates without marking a read as idempotent" time="0.000223375">
+        </testcase>
+        <testcase classname="test/services/supplier.test.js" name="supplier service &gt; maps paged Supplier results to DataTable shape" time="0.000934708">
+        </testcase>
+        <testcase classname="test/services/supplier.test.js" name="supplier service &gt; exports with the list&apos;s filters and sort behind a password (HD-067)" time="0.001162291">
+        </testcase>
+        <testcase classname="test/services/supplier.test.js" name="supplier service &gt; sends every HD-107 list filter, drops empty ones, and exports with the same filters" time="0.000321667">
+        </testcase>
+        <testcase classname="test/services/supplier.test.js" name="supplier service &gt; pages addresses and contacts past the detail&apos;s 100 (HD-107 G5)" time="0.000143042">
+        </testcase>
+        <testcase classname="test/services/supplier.test.js" name="supplier service &gt; loads detail and completeness by Supplier id" time="0.000166041">
+        </testcase>
+        <testcase classname="test/services/supplier.test.js" name="supplier service &gt; uses ownership-scoped versioned Address routes" time="0.000154083">
+        </testcase>
+        <testcase classname="test/services/supplier.test.js" name="supplier service &gt; uses ownership-scoped versioned Contact routes" time="0.000132584">
+        </testcase>
+        <testcase classname="test/services/supplier.test.js" name="supplier service &gt; uses ownership-scoped reasoned Identifier routes" time="0.000131083">
+        </testcase>
+        <testcase classname="test/services/supplier.test.js" name="supplier service &gt; uses normal Supplier update and a signed controlled Code correction" time="0.000128208">
+        </testcase>
+        <testcase classname="test/services/supplier.test.js" name="supplier service &gt; maps lifecycle commands to their required password and device-signature levels" time="0.000126709">
+        </testcase>
+        <testcase classname="test/services/supplier.test.js" name="supplier service: SKU relations (TASK-039) &gt; listSkuRelations() pages on the server and returns DataTable&apos;s { rows, rowsNumber }" time="0.000223084">
+        </testcase>
+        <testcase classname="test/services/supplier.test.js" name="supplier service: SKU relations (TASK-039) &gt; create and update post to the relation routes" time="0.000084333">
+        </testcase>
+        <testcase classname="test/services/supplier.test.js" name="supplier service: SKU relations (TASK-039) &gt; form options come from the Supplier lookups, with no parameters, as bare item arrays (DEF-036)" time="0.000101584">
+        </testcase>
+        <testcase classname="test/services/supplier.test.js" name="supplier service: SKU relations (TASK-039) &gt; searchPurchasableSkus() asks the Supplier lookup, by text or by exact SKU ID, and passes the abort signal" time="0.000094708">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/services/supplierAudit.test.js" timestamp="2026-10-30T03:47:28.874Z" hostname="samMacBook-Pro.local" tests="1" failures="0" errors="0" skipped="0" time="0.002383709">
+        <testcase classname="test/services/supplierAudit.test.js" name="supplier audit service (DEF-035) &gt; pages the read-only audit API and drops empty filters" time="0.001849542">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/services/supplierBank.test.js" timestamp="2026-10-30T03:47:28.874Z" hostname="samMacBook-Pro.local" tests="3" failures="0" errors="0" skipped="0" time="0.003591416">
+        <testcase classname="test/services/supplierBank.test.js" name="supplierBank service &gt; reads the masked list without asking for plaintext" time="0.001890875">
+        </testcase>
+        <testcase classname="test/services/supplierBank.test.js" name="supplierBank service &gt; signs the four writes with the device and does not sign reveal" time="0.000609833">
+        </testcase>
+        <testcase classname="test/services/supplierBank.test.js" name="supplierBank service &gt; puts the account number in the body, never in the path or a query string" time="0.000214375">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/services/supplierImport.test.js" timestamp="2026-10-30T03:47:28.875Z" hostname="samMacBook-Pro.local" tests="6" failures="0" errors="0" skipped="0" time="0.004225417">
+        <testcase classname="test/services/supplierImport.test.js" name="supplier import service (T44–T46) &gt; maps the job list to the DataTable shape and drops an empty status filter" time="0.002013375">
+        </testcase>
+        <testcase classname="test/services/supplierImport.test.js" name="supplier import service (T44–T46) &gt; keeps the job summary beside the paged rows" time="0.000384541">
+        </testcase>
+        <testcase classname="test/services/supplierImport.test.js" name="supplier import service (T44–T46) &gt; confirms with the mode, the approver or null, the password and an idempotency key" time="0.000218792">
+        </testcase>
+        <testcase classname="test/services/supplierImport.test.js" name="supplier import service (T44–T46) &gt; cancels with the job version and an idempotency key" time="0.000152">
+        </testcase>
+        <testcase classname="test/services/supplierImport.test.js" name="supplier import service (T44–T46) &gt; T46: jumps to a row number" time="0.000125083">
+        </testcase>
+        <testcase classname="test/services/supplierImport.test.js" name="supplier import service (T44–T46) &gt; T46: uploads multipart with the mode and an idempotency key, and downloads template and result as blobs" time="0.000603458">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/services/supplierSettings.test.js" timestamp="2026-10-30T03:47:28.875Z" hostname="samMacBook-Pro.local" tests="3" failures="0" errors="0" skipped="0" time="0.002864166">
+        <testcase classname="test/services/supplierSettings.test.js" name="supplier settings service &gt; reads the settings singleton without a password" time="0.001692667">
+        </testcase>
+        <testcase classname="test/services/supplierSettings.test.js" name="supplier settings service &gt; signs the update, because the backend demands an approved device and a password" time="0.000369791">
+        </testcase>
+        <testcase classname="test/services/supplierSettings.test.js" name="supplier settings service &gt; reads Business Master readiness through the Supplier lookup, never the owner&apos;s endpoint" time="0.000207208">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/address.test.js" timestamp="2026-10-30T03:47:28.875Z" hostname="samMacBook-Pro.local" tests="8" failures="0" errors="0" skipped="0" time="0.449854">
+        <testcase classname="test/pages/suppliers/address.test.js" name="SupplierAddressPanel &gt; shows purpose/primary text and hides all writes from view-only users" time="0.016903042">
+        </testcase>
+        <testcase classname="test/pages/suppliers/address.test.js" name="SupplierAddressPanel &gt; creates an Address and emits refresh with a Supplier-identifying success message" time="0.056237959">
+        </testcase>
+        <testcase classname="test/pages/suppliers/address.test.js" name="SupplierAddressPanel &gt; keeps the edit dialog and draft open on VERSION_CONFLICT" time="0.031548375">
+        </testcase>
+        <testcase classname="test/pages/suppliers/address.test.js" name="SupplierAddressPanel &gt; deactivates only after confirmation and inactive rows expose no write actions" time="0.012286">
+        </testcase>
+        <testcase classname="test/pages/suppliers/address.test.js" name="SupplierAddressPanel &gt; loads addresses past the detail&apos;s 100 a page at a time, without duplicates, and stops at the total (HD-107 G5)" time="0.285538291">
+        </testcase>
+        <testcase classname="test/pages/suppliers/address.test.js" name="SupplierAddressPanel &gt; moves an active address up or down, never past the ends or over an inactive one, and refreshes (DEF-037)" time="0.031439625">
+        </testcase>
+        <testcase classname="test/pages/suppliers/address.test.js" name="SupplierAddressPanel &gt; reloads after a refused move instead of keeping a stale order (REV-118 I-1)" time="0.00724">
+        </testcase>
+        <testcase classname="test/pages/suppliers/address.test.js" name="SupplierAddressPanel &gt; offers no load-more below the detail&apos;s 100" time="0.007639541">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/approvals.test.js" timestamp="2026-10-30T03:47:28.876Z" hostname="samMacBook-Pro.local" tests="17" failures="0" errors="0" skipped="0" time="0.508351375">
+        <testcase classname="test/pages/suppliers/approvals.test.js" name="pages/suppliers/SupplierApprovalsPage.vue &gt; TC-121 (UI-001): guards on the same pair of permissions the API demands" time="0.002241">
+        </testcase>
+        <testcase classname="test/pages/suppliers/approvals.test.js" name="pages/suppliers/SupplierApprovalsPage.vue &gt; opens on the actor&apos;s own pending queue" time="0.084412708">
+        </testcase>
+        <testcase classname="test/pages/suppliers/approvals.test.js" name="pages/suppliers/SupplierApprovalsPage.vue &gt; switches between mine, all and unassigned" time="0.048785792">
+        </testcase>
+        <testcase classname="test/pages/suppliers/approvals.test.js" name="pages/suppliers/SupplierApprovalsPage.vue &gt; TC-125 (UI-005): shows the submitted snapshot beside the current Supplier and marks what changed" time="0.038387209">
+        </testcase>
+        <testcase classname="test/pages/suppliers/approvals.test.js" name="pages/suppliers/SupplierApprovalsPage.vue &gt; names the payment terms in the difference by code and name, never by ID (DEF-040)" time="0.018283375">
+        </testcase>
+        <testcase classname="test/pages/suppliers/approvals.test.js" name="pages/suppliers/SupplierApprovalsPage.vue &gt; shows — rather than the ID when the server did not name a term (REV-117 L-1)" time="0.020699167">
+        </testcase>
+        <testcase classname="test/pages/suppliers/approvals.test.js" name="pages/suppliers/SupplierApprovalsPage.vue &gt; TC-125 (UI-005): refuses to approve a stale request, which is the same rule the service enforces" time="0.024376209">
+        </testcase>
+        <testcase classname="test/pages/suppliers/approvals.test.js" name="pages/suppliers/SupplierApprovalsPage.vue &gt; only the assigned approver may decide" time="0.027926375">
+        </testcase>
+        <testcase classname="test/pages/suppliers/approvals.test.js" name="pages/suppliers/SupplierApprovalsPage.vue &gt; TC-125 (UI-005): approving asks for the password and sends the request version" time="0.037157333">
+        </testcase>
+        <testcase classname="test/pages/suppliers/approvals.test.js" name="pages/suppliers/SupplierApprovalsPage.vue &gt; TC-125 (UI-005): rejecting demands a reason as well as the password" time="0.049229875">
+        </testcase>
+        <testcase classname="test/pages/suppliers/approvals.test.js" name="pages/suppliers/SupplierApprovalsPage.vue &gt; cancelling a decision sends nothing" time="0.026492417">
+        </testcase>
+        <testcase classname="test/pages/suppliers/approvals.test.js" name="pages/suppliers/SupplierApprovalsPage.vue &gt; the requester sees withdraw, and the approver does not" time="0.034983375">
+        </testcase>
+        <testcase classname="test/pages/suppliers/approvals.test.js" name="pages/suppliers/SupplierApprovalsPage.vue &gt; a version conflict reloads instead of retrying" time="0.025391416">
+        </testcase>
+        <testcase classname="test/pages/suppliers/approvals.test.js" name="pages/suppliers/SupplierApprovalsPage.vue &gt; TC-125 (UI-005): reassigning excludes the requester and demands a reason" time="0.026217333">
+        </testcase>
+        <testcase classname="test/pages/suppliers/approvals.test.js" name="pages/suppliers/SupplierApprovalsPage.vue &gt; reassigning without a target sends nothing" time="0.015565333">
+        </testcase>
+        <testcase classname="test/pages/suppliers/approvals.test.js" name="pages/suppliers/SupplierApprovalsPage.vue &gt; a failed detail read reports the failure instead of showing a half-open detail" time="0.012720667">
+        </testcase>
+        <testcase classname="test/pages/suppliers/approvals.test.js" name="pages/suppliers/SupplierApprovalsPage.vue &gt; a failed approver lookup leaves the reassign list empty rather than stale" time="0.014227208">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/audit.test.js" timestamp="2026-10-30T03:47:28.876Z" hostname="samMacBook-Pro.local" tests="13" failures="0" errors="0" skipped="0" time="0.989141084">
+        <testcase classname="test/pages/suppliers/audit.test.js" name="pages/suppliers/SupplierAuditPage.vue (DEF-035) &gt; TC-121 (UI-001): is the 變更紀錄 entry of the Supplier menu and needs supplier.view" time="0.002072625">
+        </testcase>
+        <testcase classname="test/pages/suppliers/audit.test.js" name="pages/suppliers/SupplierAuditPage.vue (DEF-035) &gt; lists actions, targets, before and after, reasons and full request IDs, in Hong Kong time" time="0.061902916">
+        </testcase>
+        <testcase classname="test/pages/suppliers/audit.test.js" name="pages/suppliers/SupplierAuditPage.vue (DEF-035) &gt; shows notes digests (before and after, as the server writes them) as lengths, never the hash, and skips fields empty on both sides (REV-113 L-2)" time="0.029238458">
+        </testcase>
+        <testcase classname="test/pages/suppliers/audit.test.js" name="pages/suppliers/SupplierAuditPage.vue (DEF-035) &gt; sends every filter: Hong Kong day bounds, trimmed actor and target, action and target type (REV-113 M-3)" time="0.787511709">
+        </testcase>
+        <testcase classname="test/pages/suppliers/audit.test.js" name="pages/suppliers/SupplierAuditPage.vue (DEF-035) &gt; keeps the filters and page in the URL and restores them on load (REV-113 M-2)" time="0.038199">
+        </testcase>
+        <testcase classname="test/pages/suppliers/audit.test.js" name="pages/suppliers/SupplierAuditPage.vue (DEF-035) &gt; ignores filter values in the URL that the page would not offer" time="0.006578792">
+        </testcase>
+        <testcase classname="test/pages/suppliers/audit.test.js" name="pages/suppliers/SupplierAuditPage.vue (DEF-035) &gt; goes back to page 1 when a filter changes (REV-113 L-4)" time="0.014714292">
+        </testcase>
+        <testcase classname="test/pages/suppliers/audit.test.js" name="pages/suppliers/SupplierAuditPage.vue (DEF-035) &gt; does not query a half-typed year or a reversed range (REV-113 L-3)" time="0.013747708">
+        </testcase>
+        <testcase classname="test/pages/suppliers/audit.test.js" name="pages/suppliers/SupplierAuditPage.vue (DEF-035) &gt; renders markup anywhere in a record as text, never as elements (REV-113 M-3)" time="0.01957">
+        </testcase>
+        <testcase classname="test/pages/suppliers/audit.test.js" name="components/suppliers/SupplierAuditTimeline.vue (detail Audit tab) &gt; asks only for the given Supplier&apos;s records" time="0.005244709">
+        </testcase>
+        <testcase classname="test/pages/suppliers/audit.test.js" name="components/suppliers/SupplierAuditTimeline.vue (detail Audit tab) &gt; lists the other detail keys a record carries, such as changes and metadata (REV-113 M-3)" time="0.003268584">
+        </testcase>
+        <testcase classname="test/pages/suppliers/audit.test.js" name="components/suppliers/SupplierAuditTimeline.vue (detail Audit tab) &gt; explains a list the server summarised as a count and a sample (REV-113 L-1)" time="0.00371">
+        </testcase>
+        <testcase classname="test/pages/suppliers/audit.test.js" name="Supplier audit labels (REV-113 I-2) &gt; name every action and target type the Supplier server writes" time="0.002461875">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/bank.test.js" timestamp="2026-10-30T03:47:28.877Z" hostname="samMacBook-Pro.local" tests="26" failures="0" errors="0" skipped="0" time="0.711576792">
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; TC-075 (BANK-014): renders masked rows on load and never calls reveal by itself" time="0.027897292">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; offers no reveal without bank.view and no write controls without bank.mgmt" time="0.040217791">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; TC-075 (BANK-014): reveals one row for thirty seconds with a countdown, then clears it from the DOM" time="0.088158375">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; clears on elapsed time even if the tab was throttled to one tick" time="0.019275542">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; is not extended by the system clock jumping backwards" time="0.020856">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; TC-075 (BANK-014): keeps the plaintext out of Pinia, storage, the URL and notifications" time="0.019551958">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; TC-075 (BANK-014): clears the plaintext when the row is closed by hand" time="0.026186291">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; TC-075 (BANK-014): clears the plaintext when only the :id changes and the panel is reused" time="0.025131166">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; does not re-hold the account if reveal resolves after the panel is gone" time="0.024352875">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; drops a reveal that lands after the Supplier has changed" time="0.014941083">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; TC-075 (BANK-014): wipes a half-typed write dialog on a Supplier change and on session expiry" time="0.055429875">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; forgets the plaintext when a session refresh revokes the entitlement" time="0.014210083">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; forgets both step-up passwords from component state, not just from the DOM" time="0.02013325">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; replaces the first row&apos;s countdown when a second row is revealed" time="0.026384417">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; wipes the confirm dialog&apos;s password on a Supplier change and on session expiry" time="0.017099708">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; issues one reveal for a double-clicked confirm, because each one writes an audit row" time="0.016301041">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; says so when a reveal is discarded, because the server already audited it" time="0.042062167">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; TC-075 (BANK-014): clears the plaintext when the user navigates away" time="0.013890792">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; TC-075 (BANK-014): clears the plaintext on unmount and on session expiry" time="0.028016792">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; TC-075 (BANK-014): clears the account number and password fields after a successful create" time="0.017927667">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; marks the account and password inputs so browsers do not autofill or store them" time="0.017854833">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; TC-070 (BANK-009): blocks a same-Supplier duplicate and makes a cross-Supplier duplicate an explicit confirmation" time="0.05906625">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; says the previous default will be cancelled before switching" time="0.030220916">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; wipes the confirm password even when the dialog stays open on an error" time="0.017290542">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; deactivates with a version and a reason" time="0.014629708">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; surfaces a wrong password as a password problem, not a permission one" time="0.010343209">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/contact.test.js" timestamp="2026-10-30T03:47:28.878Z" hostname="samMacBook-Pro.local" tests="8" failures="0" errors="0" skipped="0" time="0.710316917">
+        <testcase classname="test/pages/suppliers/contact.test.js" name="SupplierContactPanel &gt; shows purpose/primary and contact details while hiding writes from view-only users" time="0.016897291">
+        </testcase>
+        <testcase classname="test/pages/suppliers/contact.test.js" name="SupplierContactPanel &gt; creates a Contact and emits refresh with a Supplier-identifying success message" time="0.044311041">
+        </testcase>
+        <testcase classname="test/pages/suppliers/contact.test.js" name="SupplierContactPanel &gt; keeps the edit dialog and draft open on VERSION_CONFLICT" time="0.037957333">
+        </testcase>
+        <testcase classname="test/pages/suppliers/contact.test.js" name="SupplierContactPanel &gt; TC-127 (UI-007): surfaces server validation accessibly and deactivates only after confirmation" time="0.036060917">
+        </testcase>
+        <testcase classname="test/pages/suppliers/contact.test.js" name="SupplierContactPanel &gt; loads contacts past the detail&apos;s 100 a page at a time, without duplicates, and stops at the total (HD-107 G5)" time="0.2973065">
+        </testcase>
+        <testcase classname="test/pages/suppliers/contact.test.js" name="SupplierContactPanel &gt; moves an active contact up or down, never past the ends or over an inactive one, and refreshes (DEF-037)" time="0.028399083">
+        </testcase>
+        <testcase classname="test/pages/suppliers/contact.test.js" name="SupplierContactPanel &gt; offers no load-more below the detail&apos;s 100" time="0.004350417">
+        </testcase>
+        <testcase classname="test/pages/suppliers/contact.test.js" name="SupplierContactPanel &gt; starts again from the detail&apos;s rows when they are replaced, and drops a page that was in flight (REV-095 L-3)" time="0.244106208">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/coreFlow.test.js" timestamp="2026-10-30T03:47:28.878Z" hostname="samMacBook-Pro.local" tests="1" failures="0" errors="0" skipped="0" time="0.077804833">
+        <testcase classname="test/pages/suppliers/coreFlow.test.js" name="Supplier Core client smoke flow &gt; TC-013 (LIST-006): lets a view-only user move from the bounded list projection to detail without exposing write actions" time="0.076989333">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/create.test.js" timestamp="2026-10-30T03:47:28.878Z" hostname="samMacBook-Pro.local" tests="10" failures="0" errors="0" skipped="0" time="0.393724916">
+        <testcase classname="test/pages/suppliers/create.test.js" name="pages/suppliers/SupplierCreatePage.vue &gt; TC-121 (UI-001): requires supplier.mgmt even when opened by direct URL" time="0.002371916">
+        </testcase>
+        <testcase classname="test/pages/suppliers/create.test.js" name="pages/suppliers/SupplierCreatePage.vue &gt; TC-122 (UI-002): saves a draft with only Code, Name and an active Currency" time="0.128346959">
+        </testcase>
+        <testcase classname="test/pages/suppliers/create.test.js" name="pages/suppliers/SupplierCreatePage.vue &gt; requires explicit confirmation before creating a possible duplicate" time="0.035479958">
+        </testcase>
+        <testcase classname="test/pages/suppliers/create.test.js" name="pages/suppliers/SupplierCreatePage.vue &gt; TC-123 (UI-003): prompts before leaving a dirty form" time="0.0409565">
+        </testcase>
+        <testcase classname="test/pages/suppliers/create.test.js" name="pages/suppliers/SupplierCreatePage.vue &gt; TC-123 (UI-003): asks the browser to confirm closing the tab only while the form is dirty" time="0.024516791">
+        </testcase>
+        <testcase classname="test/pages/suppliers/create.test.js" name="pages/suppliers/SupplierCreatePage.vue &gt; TC-122 (UI-002): does not offer an approver, or send one, when the policy is off" time="0.034687583">
+        </testcase>
+        <testcase classname="test/pages/suppliers/create.test.js" name="pages/suppliers/SupplierCreatePage.vue &gt; offers an approver selector that excludes the actor when the policy is on" time="0.03299775">
+        </testcase>
+        <testcase classname="test/pages/suppliers/create.test.js" name="pages/suppliers/SupplierCreatePage.vue &gt; TC-122 (UI-002): sends the chosen approver, and refuses to submit without one" time="0.043043334">
+        </testcase>
+        <testcase classname="test/pages/suppliers/create.test.js" name="pages/suppliers/SupplierCreatePage.vue &gt; an unreadable policy hides the selector and never assumes no approval is needed" time="0.034571416">
+        </testcase>
+        <testcase classname="test/pages/suppliers/create.test.js" name="pages/suppliers/SupplierCreatePage.vue &gt; a failed approver lookup tells the user instead of offering an empty list silently" time="0.015620458">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/detail.test.js" timestamp="2026-10-30T03:47:28.879Z" hostname="samMacBook-Pro.local" tests="13" failures="0" errors="0" skipped="0" time="0.469988417">
+        <testcase classname="test/pages/suppliers/detail.test.js" name="pages/suppliers/SupplierDetailPage.vue &gt; a pending Supplier names its approver, and only its requester can withdraw from the detail (DEF-043, HD-138 A)" time="0.092348208">
+        </testcase>
+        <testcase classname="test/pages/suppliers/detail.test.js" name="pages/suppliers/SupplierDetailPage.vue &gt; a requester without supplier.mgmt sees no withdraw, and cancelling the confirmation withdraws nothing (REV-119 L-4)" time="0.034112917">
+        </testcase>
+        <testcase classname="test/pages/suppliers/detail.test.js" name="pages/suppliers/SupplierDetailPage.vue &gt; tells the identifier panel that the Supplier is Pending, so its dialogs warn of the invalidation (DEF-044, HD-139 A)" time="0.100141084">
+        </testcase>
+        <testcase classname="test/pages/suppliers/detail.test.js" name="pages/suppliers/SupplierDetailPage.vue &gt; requires supplier.view and shows status, completeness and masked bank data" time="0.02949625">
+        </testcase>
+        <testcase classname="test/pages/suppliers/detail.test.js" name="pages/suppliers/SupplierDetailPage.vue &gt; shows the new Supplier&apos;s bank rows after the route id changes" time="0.034256583">
+        </testcase>
+        <testcase classname="test/pages/suppliers/detail.test.js" name="pages/suppliers/SupplierDetailPage.vue &gt; distinguishes not-found and generic loading failures" time="0.005128042">
+            <system-err>
+[VUE_ROUTER_R0004] No match found for location with path &quot;/suppliers&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/pages/suppliers/detail.test.js" name="pages/suppliers/SupplierDetailPage.vue &gt; shows a not-found error instead of an endless skeleton for a non-numeric id" time="0.00785075">
+            <system-err>
+[VUE_ROUTER_R0004] No match found for location with path &quot;/suppliers&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/pages/suppliers/detail.test.js" name="pages/suppliers/SupplierDetailPage.vue &gt; refetches and renders the new supplier when the route id changes on a reused instance" time="0.022386083">
+        </testcase>
+        <testcase classname="test/pages/suppliers/detail.test.js" name="pages/suppliers/SupplierDetailPage.vue &gt; drops a half-edited form instead of carrying it onto the next supplier" time="0.069025958">
+        </testcase>
+        <testcase classname="test/pages/suppliers/detail.test.js" name="pages/suppliers/SupplierDetailPage.vue &gt; TC-123 (UI-003): keeps the user on the current supplier when they refuse to discard the draft" time="0.034824959">
+        </testcase>
+        <testcase classname="test/pages/suppliers/detail.test.js" name="pages/suppliers/SupplierDetailPage.vue &gt; ignores a load response that a newer navigation has superseded" time="0.019105875">
+        </testcase>
+        <testcase classname="test/pages/suppliers/detail.test.js" name="pages/suppliers/SupplierDetailPage.vue &gt; shows 100+ on the address and contact tabs when the detail holds its 100-row page (HD-107 G5)" time="0.010003083">
+        </testcase>
+        <testcase classname="test/pages/suppliers/detail.test.js" name="pages/suppliers/SupplierDetailPage.vue &gt; labels missing optional data as a non-blocking hint (PARTY-007 UI)" time="0.009661333">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/editor.test.js" timestamp="2026-10-30T03:47:28.880Z" hostname="samMacBook-Pro.local" tests="14" failures="0" errors="0" skipped="0" time="0.63040925">
+        <testcase classname="test/pages/suppliers/editor.test.js" name="Supplier general editor &gt; updates editable root fields while keeping Supplier Code outside the normal payload" time="0.110447125">
+        </testcase>
+        <testcase classname="test/pages/suppliers/editor.test.js" name="Supplier general editor &gt; offers the Active currencies and payment terms from the Supplier lookups, not Business Master (DEF-036)" time="0.040592083">
+        </testcase>
+        <testcase classname="test/pages/suppliers/editor.test.js" name="Supplier general editor &gt; marks the payment-term field when the stored term is no longer active, instead of a bare banner (DEF-041, HD-134 A)" time="0.09416925">
+        </testcase>
+        <testcase classname="test/pages/suppliers/editor.test.js" name="Supplier general editor &gt; names the payment term by code and name, and keeps a deactivated one readable in the editor without offering it (DEF-038)" time="0.023161041">
+        </testcase>
+        <testcase classname="test/pages/suppliers/editor.test.js" name="Supplier general editor &gt; shows an Active payment term plainly, once, in the overview and the editor (REV-116 L-1)" time="0.054943125">
+        </testcase>
+        <testcase classname="test/pages/suppliers/editor.test.js" name="Supplier general editor &gt; does not call an Active term inactive while the options are loading or failed to load (REV-116 M-1)" time="0.085460041">
+        </testcase>
+        <testcase classname="test/pages/suppliers/editor.test.js" name="Supplier general editor &gt; shows — rather than the ID when a stored term cannot be named (REV-116 L-1)" time="0.019232542">
+        </testcase>
+        <testcase classname="test/pages/suppliers/editor.test.js" name="Supplier general editor &gt; says 未設定 when there is no payment term (DEF-038)" time="0.0125375">
+        </testcase>
+        <testcase classname="test/pages/suppliers/editor.test.js" name="Supplier general editor &gt; TC-123 (UI-003): keeps the user&apos;s draft visible when a stale update reloads the latest Supplier" time="0.0254395">
+        </testcase>
+        <testcase classname="test/pages/suppliers/editor.test.js" name="Supplier general editor &gt; uses a separate password-and-reason flow for controlled Supplier Code correction" time="0.034517416">
+        </testcase>
+        <testcase classname="test/pages/suppliers/editor.test.js" name="Supplier general editor &gt; TC-029 (CORE-013): prompts before leaving a dirty general editor" time="0.02926575">
+        </testcase>
+        <testcase classname="test/pages/suppliers/editor.test.js" name="Supplier general editor &gt; TC-123 (UI-003): asks the browser to confirm closing the tab only while the general editor is dirty" time="0.027170541">
+        </testcase>
+        <testcase classname="test/pages/suppliers/editor.test.js" name="Supplier general editor &gt; warns before editing a Pending Supplier and says the request was invalidated after the save (DEF-044, HD-139 A)" time="0.051846875">
+        </testcase>
+        <testcase classname="test/pages/suppliers/editor.test.js" name="Supplier general editor &gt; keeps the plain messages, and shows no warning, when nothing was Pending (DEF-044)" time="0.02065925">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/identifier.test.js" timestamp="2026-10-30T03:47:28.880Z" hostname="samMacBook-Pro.local" tests="6" failures="0" errors="0" skipped="0" time="0.168758959">
+        <testcase classname="test/pages/suppliers/identifier.test.js" name="SupplierIdentifierPanel &gt; renders type/country/value, hides writes from viewers and hides delete for referenced rows" time="0.026379458">
+        </testcase>
+        <testcase classname="test/pages/suppliers/identifier.test.js" name="SupplierIdentifierPanel &gt; creates an Identifier and emits refresh with a Supplier-identifying success message" time="0.027993875">
+        </testcase>
+        <testcase classname="test/pages/suppliers/identifier.test.js" name="SupplierIdentifierPanel &gt; requires a reason for updates and preserves the draft on unique/version conflicts" time="0.029581791">
+        </testcase>
+        <testcase classname="test/pages/suppliers/identifier.test.js" name="SupplierIdentifierPanel &gt; collects a reason before confirmed deletion" time="0.022023209">
+        </testcase>
+        <testcase classname="test/pages/suppliers/identifier.test.js" name="SupplierIdentifierPanel &gt; warns a Pending Supplier&apos;s create, edit and delete dialogs, and says so when each write invalidated the request (DEF-044, HD-139 A)" time="0.049702834">
+        </testcase>
+        <testcase classname="test/pages/suppliers/identifier.test.js" name="SupplierIdentifierPanel &gt; says nothing about the approval for a Supplier that is not Pending (DEF-044)" time="0.012161792">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/import.test.js" timestamp="2026-10-30T03:47:28.881Z" hostname="samMacBook-Pro.local" tests="13" failures="0" errors="0" skipped="0" time="0.583138708">
+        <testcase classname="test/pages/suppliers/import.test.js" name="supplier import page (T46) &gt; is gated by supplier.mgmt at /suppliers/imports and lists the uploader&apos;s jobs" time="0.0616435">
+        </testcase>
+        <testcase classname="test/pages/suppliers/import.test.js" name="supplier import page (T46) &gt; saves downloads under the server&apos;s file name, or the old default when the header is unreadable (T46 I-2)" time="0.023346833">
+        </testcase>
+        <testcase classname="test/pages/suppliers/import.test.js" name="supplier import page (T46) &gt; TC-126 (UI-006): reopens the job named in the URL after a refresh, and records the open job in the URL" time="0.049991708">
+        </testcase>
+        <testcase classname="test/pages/suppliers/import.test.js" name="supplier import page (T46) &gt; TC-126 (UI-006): confirms as draft with the password and no approver when approval is off" time="0.045652166">
+        </testcase>
+        <testcase classname="test/pages/suppliers/import.test.js" name="supplier import page (T46) &gt; TC-126 (UI-006): with approval on, activating needs an approver chosen from the eligible list, excluding the user" time="0.06821225">
+        </testcase>
+        <testcase classname="test/pages/suppliers/import.test.js" name="supplier import page (T46) &gt; TC-126 (UI-006): shows a stopped job, retryable rows and the result download; an expired result says the summary stays" time="0.052144708">
+        </testcase>
+        <testcase classname="test/pages/suppliers/import.test.js" name="supplier import page (T46) &gt; a job that never ran offers no result" time="0.019413625">
+        </testcase>
+        <testcase classname="test/pages/suppliers/import.test.js" name="supplier import page (T46) &gt; TC-126 (UI-006): filters rows by status and row number" time="0.055222583">
+        </testcase>
+        <testcase classname="test/pages/suppliers/import.test.js" name="supplier import page (T46) &gt; REV-073 L-4: a failed precheck never ran, so it offers neither a download nor an expiry note" time="0.027506458">
+        </testcase>
+        <testcase classname="test/pages/suppliers/import.test.js" name="supplier import page (T46) &gt; REV-073 L-3: a malformed ?job= opens nothing and is dropped from the URL" time="0.080506875">
+        </testcase>
+        <testcase classname="test/pages/suppliers/import.test.js" name="supplier import page (T46) &gt; REV-073 L-2: a late answer to an older row request does not replace the newer one" time="0.023431167">
+        </testcase>
+        <testcase classname="test/pages/suppliers/import.test.js" name="supplier import page (T46) &gt; REV-074 L-1/I-2: a late failure of an older request neither blanks the newer rows nor repeats a notice" time="0.031658583">
+        </testcase>
+        <testcase classname="test/pages/suppliers/import.test.js" name="supplier import page (T46) &gt; REV-074 L-4: a row number the server would refuse is never sent" time="0.043544917">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/lifecycle.test.js" timestamp="2026-10-30T03:47:28.881Z" hostname="samMacBook-Pro.local" tests="11" failures="0" errors="0" skipped="0" time="0.824755625">
+        <testcase classname="test/pages/suppliers/lifecycle.test.js" name="Supplier lifecycle actions &gt; TC-124 (UI-004): shows only state-valid actions allowed by management and approval permissions" time="0.021606125">
+        </testcase>
+        <testcase classname="test/pages/suppliers/lifecycle.test.js" name="Supplier lifecycle actions &gt; TC-124 (UI-004): requires reason and password for Block and explains the approved-device requirement" time="0.044192875">
+        </testcase>
+        <testcase classname="test/pages/suppliers/lifecycle.test.js" name="Supplier lifecycle actions &gt; TC-124 (UI-004): keeps a lifecycle dialog open and requests refresh after VERSION_CONFLICT" time="0.014205833">
+        </testcase>
+        <testcase classname="test/pages/suppliers/lifecycle.test.js" name="Supplier lifecycle actions &gt; with approval on, activating a Draft from the detail submits it to a chosen approver (DEF-042, HD-138 A)" time="0.05898775">
+        </testcase>
+        <testcase classname="test/pages/suppliers/lifecycle.test.js" name="Supplier lifecycle actions &gt; only activation carries the approver: other actions show no selector and send none, even with approval on (REV-119 L-4)" time="0.015544417">
+        </testcase>
+        <testcase classname="test/pages/suppliers/lifecycle.test.js" name="Supplier lifecycle actions &gt; reopening the activation dialog starts clean and cannot be confirmed before the policy is read (REV-119 L-2, L-4)" time="0.642365584">
+        </testcase>
+        <testcase classname="test/pages/suppliers/lifecycle.test.js" name="Supplier lifecycle actions &gt; re-reads the policy when the server says it changed, and marks approver errors on the approver field (REV-119 L-1, L-3)" time="0.008552584">
+        </testcase>
+        <testcase classname="test/pages/suppliers/lifecycle.test.js" name="Supplier lifecycle actions &gt; with approval off, activating a Draft sends no approver (DEF-042)" time="0.006403541">
+        </testcase>
+        <testcase classname="test/pages/suppliers/lifecycle.test.js" name="Supplier lifecycle actions &gt; TC-124 (UI-004): Draft activation needs confirmation but no password" time="0.003737583">
+        </testcase>
+        <testcase classname="test/pages/suppliers/lifecycle.test.js" name="Supplier lifecycle actions &gt; TC-124 (UI-004): the 封存 dialog names the Supplier, the end state, the kept history and its password rule" time="0.003806167">
+        </testcase>
+        <testcase classname="test/pages/suppliers/lifecycle.test.js" name="Supplier lifecycle actions &gt; TC-124 (UI-004): the 永久刪除 dialog names the Supplier, the end state, the kept history and its password rule" time="0.003919416">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/list.test.js" timestamp="2026-10-30T03:47:28.882Z" hostname="samMacBook-Pro.local" tests="23" failures="0" errors="0" skipped="0" time="0.730082041">
+        <testcase classname="test/pages/suppliers/list.test.js" name="pages/suppliers/SuppliersPage.vue &gt; TC-121 (UI-001): is the permission-filtered Supplier menu entry and renders explicit status text" time="0.072099542">
+        </testcase>
+        <testcase classname="test/pages/suppliers/list.test.js" name="pages/suppliers/SuppliersPage.vue &gt; TC-013 (LIST-006): tells a loading, an empty and a failed list apart, and retries a failed read" time="0.104081709">
+        </testcase>
+        <testcase classname="test/pages/suppliers/list.test.js" name="pages/suppliers/SuppliersPage.vue &gt; names the payment term by code and name, marks an inactive one, and never shows its ID (DEF-040)" time="0.039965541">
+        </testcase>
+        <testcase classname="test/pages/suppliers/list.test.js" name="pages/suppliers/SuppliersPage.vue &gt; shows create only to supplier.mgmt users" time="0.049592708">
+        </testcase>
+        <testcase classname="test/pages/suppliers/list.test.js" name="pages/suppliers/SuppliersPage.vue &gt; offers export only to supplier.mgmt users" time="0.06200475">
+        </testcase>
+        <testcase classname="test/pages/suppliers/list.test.js" name="pages/suppliers/SuppliersPage.vue &gt; exports the current search, status and sort after a password, under the server&apos;s file name" time="0.039885166">
+        </testcase>
+        <testcase classname="test/pages/suppliers/list.test.js" name="pages/suppliers/SuppliersPage.vue &gt; does nothing when the password prompt is cancelled, and shows the server&apos;s message on failure" time="0.02498775">
+        </testcase>
+        <testcase classname="test/pages/suppliers/list.test.js" name="pages/suppliers/SuppliersPage.vue &gt; TC-015 (LIST-008): restores filters and paging from URL and keeps the query shareable" time="0.0172045">
+        </testcase>
+        <testcase classname="test/pages/suppliers/list.test.js" name="pages/suppliers/SuppliersPage.vue &gt; TC-015 (LIST-008): restores the HD-107 filters from the URL and sends them to the list and the export as Hong Kong day bounds" time="0.0204565">
+        </testcase>
+        <testcase classname="test/pages/suppliers/list.test.js" name="pages/suppliers/SuppliersPage.vue &gt; TC-015 (LIST-008): ignores malformed filter values in the URL" time="0.01776675">
+        </testcase>
+        <testcase classname="test/pages/suppliers/list.test.js" name="pages/suppliers/SuppliersPage.vue &gt; reloads and updates the URL when a missing-data filter is ticked" time="0.026471042">
+        </testcase>
+        <testcase classname="test/pages/suppliers/list.test.js" name="pages/suppliers/SuppliersPage.vue &gt; TC-127 (UI-007): flags a date range that ends before it starts" time="0.019415875">
+        </testcase>
+        <testcase classname="test/pages/suppliers/list.test.js" name="pages/suppliers/SuppliersPage.vue &gt; offers currency and payment-term filters only with business_master.view, including inactive masters" time="0.039453292">
+        </testcase>
+        <testcase classname="test/pages/suppliers/list.test.js" name="pages/suppliers/SuppliersPage.vue &gt; goes back to page 1 when a filter changes (REV-095 M-1)" time="0.047171625">
+        </testcase>
+        <testcase classname="test/pages/suppliers/list.test.js" name="pages/suppliers/SuppliersPage.vue &gt; ignores currency and payment term from the URL without business_master.view (REV-095 M-2)" time="0.032975666">
+        </testcase>
+        <testcase classname="test/pages/suppliers/list.test.js" name="pages/suppliers/SuppliersPage.vue &gt; drops a date that has the right shape but is not a usable day: createdFrom=2026-13-01 (REV-095 L-1)" time="0.012509875">
+        </testcase>
+        <testcase classname="test/pages/suppliers/list.test.js" name="pages/suppliers/SuppliersPage.vue &gt; drops a date that has the right shape but is not a usable day: createdFrom=2026-02-31 (REV-095 L-1)" time="0.011009292">
+        </testcase>
+        <testcase classname="test/pages/suppliers/list.test.js" name="pages/suppliers/SuppliersPage.vue &gt; drops a date that has the right shape but is not a usable day: createdFrom=0000-01-01 (REV-095 L-1)" time="0.014978416">
+        </testcase>
+        <testcase classname="test/pages/suppliers/list.test.js" name="pages/suppliers/SuppliersPage.vue &gt; drops a date that has the right shape but is not a usable day: createdFrom=1970-01-01 (REV-095 L-1)" time="0.013257834">
+        </testcase>
+        <testcase classname="test/pages/suppliers/list.test.js" name="pages/suppliers/SuppliersPage.vue &gt; drops a payment term id that is not a whole number (REV-095 L-1)" time="0.016111916">
+        </testcase>
+        <testcase classname="test/pages/suppliers/list.test.js" name="pages/suppliers/SuppliersPage.vue &gt; keeps a real leap day" time="0.011017666">
+        </testcase>
+        <testcase classname="test/pages/suppliers/list.test.js" name="pages/suppliers/SuppliersPage.vue &gt; renders markup in Supplier fields as text, never as elements (AUTH-009 client side)" time="0.024962667">
+        </testcase>
+        <testcase classname="test/pages/suppliers/list.test.js" name="pages/suppliers/SuppliersPage.vue &gt; TC-127 (UI-007): shows updated times in Hong Kong time whatever the browser&apos;s zone, across a year boundary (AUD-008 UI)" time="0.011098792">
+            <system-err>
+[VUE_ROUTER_R0004] No match found for location with path &quot;/suppliers/7&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/suppliers/7&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+            </system-err>
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/pageGuards.test.js" timestamp="2026-10-30T03:47:28.883Z" hostname="samMacBook-Pro.local" tests="1" failures="0" errors="0" skipped="0" time="0.001588">
+        <testcase classname="test/pages/suppliers/pageGuards.test.js" name="Supplier page guards &gt; TC-121 (UI-001): every Supplier page requires permissions and none is public" time="0.001091042">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/settings.test.js" timestamp="2026-10-30T03:47:28.883Z" hostname="samMacBook-Pro.local" tests="11" failures="0" errors="0" skipped="0" time="0.162732916">
+        <testcase classname="test/pages/suppliers/settings.test.js" name="pages/suppliers/SupplierSettingsPage.vue &gt; TC-121 (UI-001): is gated on supplier.settings alone and sits in the supplier menu" time="0.002014834">
+        </testcase>
+        <testcase classname="test/pages/suppliers/settings.test.js" name="pages/suppliers/SupplierSettingsPage.vue &gt; shows the stored value, the default and the non-retroactive wording" time="0.023399958">
+        </testcase>
+        <testcase classname="test/pages/suppliers/settings.test.js" name="pages/suppliers/SupplierSettingsPage.vue &gt; saving the toggle demands a reason and a password, and sends the loaded version" time="0.017551958">
+        </testcase>
+        <testcase classname="test/pages/suppliers/settings.test.js" name="pages/suppliers/SupplierSettingsPage.vue &gt; cancelling the confirmation writes nothing" time="0.012361208">
+        </testcase>
+        <testcase classname="test/pages/suppliers/settings.test.js" name="pages/suppliers/SupplierSettingsPage.vue &gt; a version conflict shows the server&apos;s value, not the one the user just clicked" time="0.0131855">
+        </testcase>
+        <testcase classname="test/pages/suppliers/settings.test.js" name="pages/suppliers/SupplierSettingsPage.vue &gt; a failed settings read renders an error and a retry, not a crash" time="0.031033959">
+        </testcase>
+        <testcase classname="test/pages/suppliers/settings.test.js" name="pages/suppliers/SupplierSettingsPage.vue &gt; shows Business Master readiness read-only, with no catalog write control" time="0.012299958">
+        </testcase>
+        <testcase classname="test/pages/suppliers/settings.test.js" name="pages/suppliers/SupplierSettingsPage.vue &gt; names what is missing when the provider is not ready" time="0.005146292">
+        </testcase>
+        <testcase classname="test/pages/suppliers/settings.test.js" name="pages/suppliers/SupplierSettingsPage.vue &gt; links to Business Master only when the actor may open it" time="0.030740459">
+        </testcase>
+        <testcase classname="test/pages/suppliers/settings.test.js" name="pages/suppliers/SupplierSettingsPage.vue &gt; a readiness failure does not take the toggle down with it" time="0.004812">
+        </testcase>
+        <testcase classname="test/pages/suppliers/settings.test.js" name="pages/suppliers/SupplierSettingsPage.vue &gt; a failed reload after a version conflict still tells the user, instead of losing the page" time="0.009107166">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/skuRelations.test.js" timestamp="2026-10-30T03:47:28.883Z" hostname="samMacBook-Pro.local" tests="3" failures="0" errors="0" skipped="0" time="0.211473916">
+        <testcase classname="test/pages/suppliers/skuRelations.test.js" name="SupplierSkuRelationsPanel &gt; loads relations for this Supplier and offers writes only to a manager of a non-archived Supplier" time="0.059076833">
+        </testcase>
+        <testcase classname="test/pages/suppliers/skuRelations.test.js" name="SupplierSkuRelationsPanel &gt; sends cleared number fields as null and the version on update, then reloads the table" time="0.059721917">
+        </testcase>
+        <testcase classname="test/pages/suppliers/skuRelations.test.js" name="SupplierSkuRelationsPanel &gt; refuses a fractional or out-of-range number before calling the server" time="0.091765584">
+        </testcase>
+    </testsuite>
+</testsuites>
