@@ -1,5 +1,17 @@
 # Fulfillment implementation readiness
 
+## 恢復後驗證及 C 範圍登記（2026-10-30）
+
+恢復後原共用完整 developer collection：**596 PASS／0 FAIL／0 SKIP**（`20261030T005654-3cd09dde9859`）；真P0／P1 Playwright各 **2 PASS／0 FAIL／0 SKIP**（`20261030T010843-fca9dac13c72`、`20261030T010920-3bfd5bbcda06`）。三份原始報告及artifact hashes已獨立覆核0C/H/M，來源 `f5722fef…6852df`、實際執行PLAN `142a24e5…4b23e` 前後一致。相同來源的lint／build／audit及C新測試16／7保留；原中斷run仍是中斷，不覆寫。專用runtime已精確清理並停止。
+
+機器範圍檢查發現C批准尚未登記為SCOPE、兩個既有C測試路徑未列入manifest；現在只把這兩個確切路徑加入test_paths及approval_required_paths，新增原批准的衍生記錄與C精確SCOPE。所有舊批准、需求／設計文字、測試契約、命令／門檻、NFR023豁免實質均保留；NFR023只改指向同一權威的衍生ID。已重新生成matrix，範圍及traceability檢查通過。
+
+此登記機械上產生DESIGN `ffca05957b4ca550ff231f6b9224537735e93615c91345c215f1eb0572be1747`、PLAN `9a651b0b761d938b06f4083359398de612fa14ad94e1755be8ecafac9dfde030`。原測試仍如實綁定執行時PLAN142a，不改run.json、不複製成新PASS、不冒稱在新PLAN重新執行；generic Harness尚無metadata-only adoption，故不能宣稱其總Gate已通過。保留獨立適用性說明及該機械限制；繼續完成目前候選的真正CI，DEF022／025與TASK017／022仍待當前CI及最終覆核，PR297不合併。
+
+## 已恢復工作（2026-10-30，Asia/Hong_Kong）
+
+Sam 已明確指示「繼續」，解除下方歷史暫停。核實保存提交 `c4352baa` 僅改兩份本模塊文件，來源 fingerprint `f5722fef…6852df`、PLAN及DESIGN與暫停前相同；fresh fetch 的 main 仍為 `e64dfc74`。保留已完成13／44診斷及同來源16／7、lint／build／audit結果；只補齊因使用者中斷而未完成的原共用完整collection及兩條真Playwright lane，再處理當前候選CI與覆核。原中斷記錄不改寫，20秒／5000／全部安全檢查及PR297不合併限制保留。
+
 ## 使用者要求暫停（2026-10-29）
 
 Sam：「保存現有工作成果，之後暫停」。已停止新增工作，並對已確認的本任務 Node process group 發送 SIGINT；原完整 P0／P1 developer run `20261029T100154-9fc3feec1915` 因使用者暫停而中斷。原始52-byte未完成JUnit保留，adapter為BLOCKED，沒有可信完整計數；**不是產品效能失敗，也不是完整套件PASS**。不重跑、不啟動瀏覽器或CI。

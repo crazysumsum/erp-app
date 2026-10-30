@@ -53,7 +53,9 @@
       "server/test/integration/migrations.integration.test.js",
       "server/test/integration/passwordChange.integration.test.js",
       "server/test/integration/roleManagement.integration.test.js",
-      "server/test/integration/userManagement.integration.test.js"
+      "server/test/integration/userManagement.integration.test.js",
+      "server/test/inventoryReallocationChildClaims.test.js",
+      "server/test/integration/inventoryReallocationChildClaims.integration.test.js"
     ],
     "allowed_write_paths": [
       "docs/fulfillment_shipping_management/**",
@@ -132,7 +134,9 @@
       "server/src/framework/api/apiDefinitionResolver.js",
       "server/src/framework/middleware/apiDispatcher.js",
       "server/src/framework/application/createApplication.js",
-      "server/src/framework/http/jsonBodyParser.js"
+      "server/src/framework/http/jsonBodyParser.js",
+      "server/test/inventoryReallocationChildClaims.test.js",
+      "server/test/integration/inventoryReallocationChildClaims.integration.test.js"
     ],
     "forbidden_paths": [
       ".env",

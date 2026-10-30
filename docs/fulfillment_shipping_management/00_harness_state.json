@@ -1,17 +1,17 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 295,
+  "revision": 301,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
-  "status": "BLOCKED",
-  "resume_status": "IMPLEMENTING",
+  "status": "IMPLEMENTING",
+  "resume_status": null,
   "current_phase": "PHASE-002",
   "current_task": "TASK-017",
   "baseline": {
-    "design": "f7902ae0f02984b5feeb8cb02d5893c57820e99b1e90c471b6f6044305270584",
-    "plan": "142a24e513c6889dcd6da31cc5c7313f98d1e937a50998ff56c0a45025c4b23e",
-    "code_commit": "a2a29617c6935fd5ba8c65cc7890a6f38dbaa5f5",
+    "design": "ffca05957b4ca550ff231f6b9224537735e93615c91345c215f1eb0572be1747",
+    "plan": "9a651b0b761d938b06f4083359398de612fa14ad94e1755be8ecafac9dfde030",
+    "code_commit": "c4352baa2047a3c666a36b36424c362a3f0789ea",
     "source_fingerprint": "f5722fefc3372188dfe6396d2ea7fad158315aa6abd5778ccffbf5a3ad6852df",
     "worktree": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1",
     "default_commit": "e64dfc7452dd4ce598e6e9d1765000d9633dd849",
@@ -24,11 +24,11 @@
       "workspace": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1",
       "mysql-socket": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/erp-fulfillment-p0-mysql-r",
       "runtime-and-private-evidence": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime",
-      "runtime-policy": "USER_PAUSED. Own child-c-final MySQL62165 gracefully stopped; exactbase47d6aab9/appa88832d2removed, zeroactiveclients, socket/pidabsent. Read-only datadirinventory found0remaining syntheticdirectories createdsincefinalsuite. All evidence/datadir retained. No ownedactive tests/browser/server/CI work.",
+      "runtime-policy": "CLEANED child-c-resume: exactbasebe6df2eb/appbe5f04e7 removed; ownMySQL66189 gracefullystopped, zeroactiveclients/ownedSFchildren, socket/pidabsent; datadir/allprivateevidence retained.",
       "dependencies": "Actualmainlockedoffline npmci--ignore-scripts; body-parser2.4.0/qs6.16.1/PW1.63.0; nocode/dependency invention",
       "browser-runtime": "No frontend/browser suite; focusednativeoriginalHTTPpreview usesownedUUIDchild/ephemeralport0 andexistingcleanup; no sharedportreuse.",
-      "mysql-schema": "fulfillment_p0_p1_47d6aab9 (CLEANED)",
-      "web-port": "Browser suites NOT_RUN at userpause; no testwebserverstarted."
+      "mysql-schema": "fulfillment_p0_p1_be6df2eb (CLEANED)",
+      "web-port": "P0/P1 realPW PASS2each; both ownedservers ended; no active browserwork."
     },
     "lease_ref": null
   },
@@ -3690,6 +3690,146 @@
         "server/test/fulfillment/postingCandidatePages.test.js",
         "server/test/integration/fulfillmentPostingCandidatePages.integration.test.js"
       ]
+    },
+    {
+      "id": "APR-166-CHILD-C-REGISTRY-DESIGN-LINEAGE",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam prior actual authority preserved via APR-159-CI-DIAGNOSTIC-DESIGN and explicit approved proposal C; derived metadata-only scope binding, not new human inspection of hash",
+      "decision": "APPROVED",
+      "source_ref": "Original APR-159-CI-DIAGNOSTIC-DESIGN remains bytewise unchanged. docs/fulfillment_shipping_management/implementation/61_ci_capacity_stage_diagnostics.md; actual async reply call_b314959146c743aa9aaf7b4fb78bd12f; prior APR-155-P1-BROWSER-DESIGN; actualSam C reply: 批准方案 C：批量 child claim及完整驗證（建議）, approved proposal readiness c3005f4afac273fb49f9d11224e0ebe66704bff04776d880ed554ea0280ff0f1. Only exact2 existing test paths registered; requirements/design/spec/profile/commands/limits/NFR023 waiver substance unchanged. Independent registry-equivalence review required; no evidence relabel or Gate waiver.",
+      "recorded_at": "2026-10-30T01:15:27.773882Z",
+      "code_commit": "dc46b48ba28a08f1e0d1bf1ca9e205bbbf73092f",
+      "expires_at": null,
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "ffca05957b4ca550ff231f6b9224537735e93615c91345c215f1eb0572be1747",
+      "scope": [
+        "fulfillment-shipping-management",
+        "PHASE-002",
+        "TASK-012–023",
+        "ExistingHD024AfaithfullatestSalespin+existingP1lane; nofuturephase or businesscontractexpansion",
+        "Only test diagnostics and confirmed Queue fixture/namespace correction; original public route, safety, 5000/20s/coverage unchanged; old unchanged shared-path and NFR023 approvals retained by lineage; no performance optimization."
+      ]
+    },
+    {
+      "id": "APR-167-CHILD-C-REGISTRY-PRIOR-SCOPE-LINEAGE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam prior actual authority preserved via APR-163-PERF-A-SHARED-NATIVE-SCOPE and explicit approved proposal C; derived metadata-only scope binding, not new human inspection of hash",
+      "decision": "APPROVED",
+      "source_ref": "Original APR-163-PERF-A-SHARED-NATIVE-SCOPE remains bytewise unchanged. Actual PERF-CI002A and Sam message01a17c33-9b60-7011-8fda-9a74a2bad727; implementation/63_fresh_read_index_optimization.md; clarified only this newly derived approval restriction; historical APR158–161 and state231 proposal preserved unchanged.; actualSam C reply: 批准方案 C：批量 child claim及完整驗證（建議）, approved proposal readiness c3005f4afac273fb49f9d11224e0ebe66704bff04776d880ed554ea0280ff0f1. Only exact2 existing test paths registered; requirements/design/spec/profile/commands/limits/NFR023 waiver substance unchanged. Independent registry-equivalence review required; no evidence relabel or Gate waiver.",
+      "recorded_at": "2026-10-30T01:15:27.773978Z",
+      "code_commit": "79aef39d07940d1e37e46b122bcd9d78a89c93db",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "9a651b0b761d938b06f4083359398de612fa14ad94e1755be8ecafac9dfde030",
+      "scope": [
+        "server/src/modules/inventory/InventoryLookupService.js",
+        "server/src/modules/inventory/inventoryFulfillmentCandidateAdvisory.js",
+        "server/src/modules/sales/SalesFulfillmentService.js",
+        "server/test/salesFulfillmentService.test.js",
+        "docs/inventory_management/03_design_spec.md",
+        "docs/inventory_management/00_module_manifest.json",
+        "docs/sales_order_management/03_design_spec.md",
+        "docs/sales_order_management/00_module_manifest.json",
+        "server/src/modules/inventory/inventoryFulfillmentAllocation.js",
+        "server/src/modules/inventory/inventoryFulfillmentAllocationPreparation.js",
+        "server/src/modules/inventory/InventoryPickSequenceService.js",
+        "server/database/migrations/0104_preserve_cancelled_fulfillment_pick_history.js",
+        "server/src/modules/fulfillment/fulfillmentCancelledAllocationSchema.js",
+        "server/src/modules/fulfillment/fulfillmentMigrationSchema.js",
+        "client/config/menu.js",
+        "server/src/modules/inventory/inventoryFulfillmentReallocationAdvisory.js",
+        "server/src/framework/http/apiResponse.js",
+        "server/src/framework/api/apiDefinitionResolver.js",
+        "server/src/framework/middleware/apiDispatcher.js",
+        "server/src/framework/application/createApplication.js",
+        "server/src/framework/http/jsonBodyParser.js",
+        "server/src/modules/inventory/inventoryFulfillmentAllocationPreview.js",
+        "HD024actualA readonlyactualprefixpreview/fourthtrusted2MiB only; reuseexistingassessor withoutwriterpolicyedit; oldglobal100slots/10s/20s/safety/gatesunchanged",
+        ".github/workflows/ci.yml",
+        "client/e2e/fulfillment-shipping-management/**",
+        "OwnedfixtureHTTPcredentials only; noGRANT/globalaccount/RBACpolicy change; alreadyplannedrealP1UI step insideexistingrequiredshard1 afterallcapacitysamples",
+        "Only approved fresh-read local indexes, test-only HTTP diagnostics and one existing stricter full native run shared by P0/P1 bindings; no case/threshold/browser/formal/CI reduction.",
+        "Prior diagnostic-only restriction is historical. ActualPERF-CI002A authorizes ONLY fresh-read local indexes and HTTP test diagnostics; verifiedSamdedupe authorizes ONE actual existing p1 fullrun for PHASE001/002. No other write/API/SQL/lock/isolation/CAS/receipt/threshold or safety change."
+      ]
+    },
+    {
+      "id": "APR-168-CHILD-C-REGISTRY-PLAN-LINEAGE",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam prior actual authority preserved via APR-164-PERF-A-SHARED-NATIVE-PLAN and explicit approved proposal C; derived metadata-only scope binding, not new human inspection of hash",
+      "decision": "APPROVED",
+      "source_ref": "Original APR-164-PERF-A-SHARED-NATIVE-PLAN remains bytewise unchanged. implementation/63_fresh_read_index_optimization.md; original APR-160-CI-DIAGNOSTIC-PLAN; actual Sam direct PERF-CI002A/dedupe approval; clarified only this newly derived approval restriction; historical APR158–161 and state231 proposal preserved unchanged.; actualSam C reply: 批准方案 C：批量 child claim及完整驗證（建議）, approved proposal readiness c3005f4afac273fb49f9d11224e0ebe66704bff04776d880ed554ea0280ff0f1. Only exact2 existing test paths registered; requirements/design/spec/profile/commands/limits/NFR023 waiver substance unchanged. Independent registry-equivalence review required; no evidence relabel or Gate waiver.",
+      "recorded_at": "2026-10-30T01:15:27.773990Z",
+      "code_commit": "79aef39d07940d1e37e46b122bcd9d78a89c93db",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "9a651b0b761d938b06f4083359398de612fa14ad94e1755be8ecafac9dfde030",
+      "scope": [
+        "fulfillment-shipping-management",
+        "PHASE-002",
+        "TASK-012–023",
+        "Retainalloriginalsuites/5000/20s/safety/coverage/currentCI; addexplicitrealP1browsermin2/zeroSKIP; draftonlyafterallgates",
+        "Prior diagnostic-only restriction is historical. ActualPERF-CI002A authorizes ONLY fresh-read local indexes and HTTP test diagnostics; verifiedSamdedupe authorizes ONE actual existing p1 fullrun for PHASE001/002. No other write/API/SQL/lock/isolation/CAS/receipt/threshold or safety change."
+      ]
+    },
+    {
+      "id": "APR-169-CHILD-C-REGISTRY-NFR023-LINEAGE",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam prior actual authority preserved via APR-165-PERF-A-SHARED-NATIVE-NFR023-LINEAGE and explicit approved proposal C; derived metadata-only scope binding, not new human inspection of hash",
+      "decision": "APPROVED",
+      "source_ref": "Original APR-165-PERF-A-SHARED-NATIVE-NFR023-LINEAGE remains bytewise unchanged. implementation/63_fresh_read_index_optimization.md; original APR-161-CI-DIAGNOSTIC-NFR023-LINEAGE; actual Sam direct PERF-CI002A/dedupe approval; clarified only this newly derived approval restriction; historical APR158–161 and state231 proposal preserved unchanged.; actualSam C reply: 批准方案 C：批量 child claim及完整驗證（建議）, approved proposal readiness c3005f4afac273fb49f9d11224e0ebe66704bff04776d880ed554ea0280ff0f1. Only exact2 existing test paths registered; requirements/design/spec/profile/commands/limits/NFR023 waiver substance unchanged. Independent registry-equivalence review required; no evidence relabel or Gate waiver.",
+      "recorded_at": "2026-10-30T01:15:27.774001Z",
+      "code_commit": "79aef39d07940d1e37e46b122bcd9d78a89c93db",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "9a651b0b761d938b06f4083359398de612fa14ad94e1755be8ecafac9dfde030",
+      "scope": [
+        "NFR-023",
+        "ExactoriginalNAreason retained; TC010mandatory/blocking unchanged",
+        "Exact original NFR023 N/A reason unchanged; TC010 remains mandatory/blocking. Only mechanical currentPLAN lineage under actual prior NFR023 approval, no new waiver."
+      ]
+    },
+    {
+      "id": "APR-170-CHILD-C-REGISTRY-BUDGET-SCOPE-LINEAGE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam prior actual authority preserved via APR-164-POSTING-CANDIDATE-BUDGET-A-SCOPE and explicit approved proposal C; derived metadata-only scope binding, not new human inspection of hash",
+      "decision": "APPROVED",
+      "source_ref": "Original APR-164-POSTING-CANDIDATE-BUDGET-A-SCOPE remains bytewise unchanged. Current actual Sam message approving preceding concrete A solution; pending POSTING-CANDIDATE-BUDGET-A; report65 and implementation66; design direction review e85759a9 and source review338aaeea. Includes the minimal owner internal helper and actual-active absence-proof accessor; no public API/new schema/B optimization/limit waiver.; actualSam C reply: 批准方案 C：批量 child claim及完整驗證（建議）, approved proposal readiness c3005f4afac273fb49f9d11224e0ebe66704bff04776d880ed554ea0280ff0f1. Only exact2 existing test paths registered; requirements/design/spec/profile/commands/limits/NFR023 waiver substance unchanged. Independent registry-equivalence review required; no evidence relabel or Gate waiver.",
+      "recorded_at": "2026-10-30T01:15:27.774012Z",
+      "code_commit": "e54a53984a3fbfc15c9c1bbd94f7b9c46af27949",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "9a651b0b761d938b06f4083359398de612fa14ad94e1755be8ecafac9dfde030",
+      "scope": [
+        "server/src/modules/inventory/inventoryFulfillmentAllocation.js",
+        "server/src/modules/inventory/InventoryPickSequenceService.js",
+        "server/src/modules/inventory/inventoryFulfillmentCandidatePages.js",
+        "server/test/fulfillment/postingCandidatePages.test.js",
+        "server/test/integration/fulfillmentPostingCandidatePages.integration.test.js"
+      ]
+    },
+    {
+      "id": "APR-171-CHILD-C-EXACT-IMPLEMENTATION-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam actual proposal C approval and subsequent resume; faithful typed path registration, not new unseen hash approval",
+      "decision": "APPROVED",
+      "source_ref": "ActualSam reply 批准方案 C：批量 child claim及完整驗證（建議）; pendingREALLOCATE-CHILD-CLAIM-BATCH-001 ANSWERED, readinessproposal SHA c3005f4afac273fb49f9d11224e0ebe66704bff04776d880ed554ea0280ff0f1. Only REALLOCATE fresh children batch<=100/plainINSERT/fullkeyactualID/hash/pending verification + necessarytests; originalscope/root/otheractions/schema/guards/20s/5000 unchanged. Independent proposal/source/native results retained.",
+      "recorded_at": "2026-10-30T01:15:27.774014Z",
+      "code_commit": "c4352baa2047a3c666a36b36424c362a3f0789ea",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "9a651b0b761d938b06f4083359398de612fa14ad94e1755be8ecafac9dfde030",
+      "scope": [
+        "server/src/modules/inventory/InventoryOperationService.js",
+        "server/src/modules/inventory/inventoryFulfillmentReceipts.js",
+        "server/test/inventoryReallocationChildClaims.test.js",
+        "server/test/integration/inventoryReallocationChildClaims.integration.test.js"
+      ]
     }
   ],
   "reviews": [
@@ -5752,6 +5892,30 @@
       "reviewer": "/root/fulfillment_independent_review",
       "reviewed_baseline": "f7902ae0f02984b5feeb8cb02d5893c57820e99b1e90c471b6f6044305270584",
       "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-child-c-final-regression-execution-admission-review.json SHAaad2fca1039dd2443a94141f466785ff9b234e03cdd798e305286128e5c85750; mergedHEADa2a29617 FPf5722fef exactfrozen4tools. Original6suites/nativecollectiononce; child16pure7native separately, no namefilter andcoverage. 0C/H/M preserves20s/5000/guards, genuineperf failureSTOP, HIGH/CI open noPRmerge.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-CHILD-C-RESUMED-REGRESSION-ADMISSION",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_resume_review",
+      "reviewed_baseline": "f7902ae0f02984b5feeb8cb02d5893c57820e99b1e90c471b6f6044305270584",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-child-c-resumed-regression-execution-admission-review.json SHAd5fbbc44e980dacf87071858bf9f06fe4d2b04b4b88df819171aead0e31336e3; exact3prefix-onlytools/FPf5722/PLAN142a/HEADc435 docs-onlybridge; admits only interruptedfullcollectiononce+2realPW lanes. 0C/H/M, original13/44/16/7/lintbuildaudit retained same-source; trueperf failureSTOP/HIGHopen/currentCI mandatory/noPRmerge.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-CHILD-C-REGISTRY-EQUIVALENCE-CI-PUBLICATION",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_resume_review",
+      "reviewed_baseline": "ffca05957b4ca550ff231f6b9224537735e93615c91345c215f1eb0572be1747",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-child-c-exact-registry-equivalence-ci-publication-review.json SHA32b992c80301af69cfa4eb77201e1fef5b6012372e9f141802124f9f076459dc; actualnewDESIGNffca binding, exact2tests/5unchangedauthoritylineages/Cscope only; originalruns/approvals untouched/profile/sourceunchanged, metadata+actual596/2/2 review0C/H/M. Safe authorizedcandidatepublication, NOTgenericGatePASS/merge; oldPLAN evidenceblock/HIGH/currentCI closure retained.",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -8249,6 +8413,30 @@
       "idempotency_key": "child-c-final-runtime-cleanup",
       "status": "CONFIRMED",
       "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/child-c-final-runtime-cleanup.json SHA124640b1ceb37ee8cd31cec81fc18f1d8ea640162bf775dbe431cf275d912903; Exactownedbase/accountremoved andownservergracefulshutdown;socketpidabsent;evidence/datadirretained."
+    },
+    {
+      "id": "CHILD-C-RESUME-RUNTIME",
+      "kind": "ISOLATED_TEST_SETUP",
+      "target": "Owned socket-only MySQL datadir and fresh synthetic UUIDbase/account only",
+      "idempotency_key": "child-c-resume-runtime-once",
+      "status": "CONFIRMED",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/child-c-resume-runtime-public.json SHAaa7a56abc582a842e0b170dd068fda1171440daa1c77589c3f9d5725609429a7"
+    },
+    {
+      "id": "CHILD-C-RESUME-RUNTIME-CLEANUP",
+      "kind": "ISOLATED_TEST_CLEANUP",
+      "target": "Ownedbe6df2eb/appbe5f04e7/MySQL66189 only",
+      "idempotency_key": "child-c-resume-cleanup-once",
+      "status": "CONFIRMED",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/child-c-resume-runtime-cleanup.json SHA37699d285a6d18e0ed90995677b1f7244e39a3cc2281f0dd043eebc435788bc8 exactbase/accountremoved,ownMySQLshutdown/socketpidabsent,datadir/evidenceretained."
+    },
+    {
+      "id": "CHILD-C-CANDIDATE-PUSH",
+      "kind": "GIT_PUSH",
+      "target": "crazysumsum/erp-app refs/heads/codex/fulfillment-p1-queue-picking; existingdraftPR297",
+      "idempotency_key": "child-c-reviewed-candidate-push",
+      "status": "PLANNED",
+      "source_ref": "ActualSam originalP1/CcurrentCI/draftPRauthority + resumed繼續; reviewedsourceFPf5722/newmetadataPLAN9a651. Commit reviewedmetadata first, record exactcandidateSHA beforepush; noforce/noPRmerge/noevidenceexport."
     }
   ],
   "evidence_files": [
@@ -8280,7 +8468,10 @@
     "evidence/20261029T100113-5ac5755734f9/run.json",
     "evidence/20261029T100116-6961505bc8c6/run.json",
     "evidence/20261029T100115-4980407e3ca1/run.json",
-    "evidence/20261029T100154-9fc3feec1915/run.json"
+    "evidence/20261029T100154-9fc3feec1915/run.json",
+    "evidence/20261030T005654-3cd09dde9859/run.json",
+    "evidence/20261030T010843-fca9dac13c72/run.json",
+    "evidence/20261030T010920-3bfd5bbcda06/run.json"
   ],
   "defects": [
     {
@@ -8721,5 +8912,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "USER_PAUSED by actualSam 保存現有工作成果，之後暫停. Do notresume/develop/test/push/CI untilhumanresumes. AllproductC+IN/diagnostics committed, freshmaine64integrated, sourcea2a29617 FPf5722fef. Saved pause documentation maycreate a docs-only laterHEAD; reconcile that knowncommit, sourceFP andactualremote before work. Completed original13native+44casecoverage/strictVALID andmergedcandidate16pure+7native, lint/build/auditPASS. OriginalcompleteP0P1developer run20261029T100154-9fc3feec1915 explicitlyUSER_INTERRUPTED, raw52bytepartialJUnitretained, adapterBLOCKED/zero trustworthycounts; notperfFAIL orPASS. Onauthorizedresume finish affectedfullcollection once/newruntime, P0/P1realPlaywright, independentresultreview then fixedcandidateCI; no replay ofalreadycompleted13/44diagnostic withoutnewreason. CurrentCI notrun/newcommitsnotpushed; PR297draftunmerged; HIGH022025/TASK017022 remainOPEN. Ownedruntimecleaned, noactiveownedwork."
+  "next_safe_action": "Actualnative596/P0PW2/P1PW2 PASS andindependentlocalresults/metadatareview0CHM. SourceFPf5722unchanged; newDESIGNffca/PLAN9a651registry-only, originalPLAN142arunsneverrelabeled. Commit exactreviewedmetadata tofreeze candidate, recordSHA, normalpushauthorizedbranch, inspectactualcurrentCIincludingallshards/floors/P1browser. Stopanygenuinecapacity/perfFAIL. HIGH022/025/TASK017022 andgeneric6missingrun oldPLAN limitation remainOPEN; noPRmerge. Runtimeclean."
 }
