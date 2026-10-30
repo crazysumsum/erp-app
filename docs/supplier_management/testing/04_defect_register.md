@@ -691,7 +691,7 @@ The hint helps at middle offsets. At deep offsets an `OFFSET` walk reads everyth
 
 **Closed (2026-10-30).** In the formal run on the HD-157 baseline (`309aa9eb`, code-identical to the PR #305 merge `6d84ee45`), TC-085 passed against 3 s at both stages: the for-SKU p95 over all operations was 1,737 ms at TECHNICAL (`evidence/20261030T033026-b856fe2963d2`) and 1,818 ms at REGRESSION (`evidence/20261030T034819-b8b65bdb3861`). No remedy was made, so the capacity limit diagnosed above still holds; only the target changed. The REGRESSION run fails on TC-101, which is DEF-051.
 
-## DEF-051 — MEDIUM
+## DEF-051 — MEDIUM (closed 2026-10-30)
 
 Found by the formal run on the HD-157 baseline in TEST_AND_VERIFY, at `309aa9eb` (code-identical to the mode entry commit `6d84ee45`), with evidence `evidence/20261030T034819-b8b65bdb3861`.
 
@@ -723,6 +723,12 @@ Found by the formal run on the HD-157 baseline in TEST_AND_VERIFY, at `309aa9eb`
 **HD-158 answered (Product Owner, 2026-10-30: "TC-101 改要求放寬至5秒就好了"):** during a 10,000-row import, the online general operations' p95 limit is 5 s (NFR-004, IMP-016). NFR-001's 2 s under normal mixed load and NFR-005's 3 s are unchanged. No remedy; the step change stays unexplained. Every formal run so far was under 5 s (worst 2,286 ms). DEF-051 closes once TC-101 passes against 5 s in the formal run on the HD-158 baseline.
 
 **Follow-up (REV-141 L1):** 03 §11.5 was left unchanged. Its line "並保持線上query p95" has no number of its own, but next to the bullet before it (general query p95 < 2 s) it can be read as 2 s during an import. The authority is 01 NFR-004 (5 s). Rewording §11.5 to "匯入期間線上一般操作p95<5秒（NFR-004，HD-158）" waits for the next change that has to touch 03 anyway, so that Purchasing re-pins once (its pin e49ac37d stays valid until then).
+
+**Closed by HD-160 (Product Owner, 2026-10-30: "3不用跑了，都己跑了幾次，再跑意義不大").** There is no formal run on the HD-158 baseline. DEF-051 closes on the existing evidence:
+- all eight formal runs measured TC-101's online p95 during the import below 5 s; the worst was 2,286 ms (`update`, `evidence/20261030T034819-b8b65bdb3861`);
+- the HD-158 developer run, on the merged code with the 5 s verdict, passed TC-101 (`online.p95_under_5s_during_import`, worst `list.missingFilter` 1,514 ms). That run is developer evidence, not formal.
+
+The REGRESSION run's recorded result stays FAIL, because it was judged against 2 s; it is re-read against 5 s, not re-run. The step change after PR #301 is unexplained and stays a known limitation for the release decision.
 
 ## HD-116 A: dispositions (2026-10-21)
 

@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 506,
+  "revision": 507,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -10152,6 +10152,19 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-30: 'A'. Pin 5785e0a6 -> 366abb1fed7ced7fbae79b6d1dfe42836f007f68e643a7839070a193812e45cf (commit 06bbbbaf); the move of both baselines is absorbed by the HD-158 approval re-record."
+    },
+    {
+      "id": "HD-160",
+      "impact": "MAJOR",
+      "question": "main 41fb488a (PR #310, merged 2026-10-30T07:24:07Z) adds AGENTS.md: adding any test case to routine CI, and any performance/capacity execution (local, or CI triggered by a push or PR), needs the Product Owner's prior approval. PR #309 meets it three ways. (1) server/test/supplierPerformanceVerdicts.test.js, auto-discovered by routine CI: 1 new case (a 10,000 ms limit must fail), 3 renamed, fixture limit 2,000 -> 5,000; pure unit test, about 0.1 s, every PR. (2) Merging main and pushing triggers one CI run (13 checks, including the existing Sales TC-042 mixed-load and shard-1 Sales capacity jobs; about 25-30 min); there is no alternative, because the CI config changed. (3) The post-merge formal run: 8 suites at TECHNICAL and REGRESSION on the scratch mysqld, about 40 min, supplier-performance at 100,000 Suppliers, 50 users for three 120 s loads, 200 recall queries and one 10,000-row import; needed to close DEF-051 and to give Technical Acceptance formal evidence on the HD-158 baseline. Earlier performance runs today (formal 03:24-04:00Z, A/B 05:58Z, developer 06:18-06:29Z) and the 6ff4f28b CI (from about 07:08Z) predate the rule.",
+      "affected_ids": [
+        "DEF-051",
+        "TC-101",
+        "server/test/supplierPerformanceVerdicts.test.js",
+        "PR #309"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-30: '1、2批准，3不用跑了，都己跑了幾次，再跑意義不大'. (1) approved: the one new case in supplierPerformanceVerdicts.test.js, for PR #309. (2) approved: one push of PR #309 with main merged in, and the CI it triggers. (3) declined: no formal run on the HD-158 baseline. Read as: the formal run on the HD-157 baseline (309aa9eb) stays the current formal result; TC-101 is re-read against 5 s (worst 2,286 ms), not re-run; DEF-051 closes on the existing evidence; the harness gate will not count those runs for the HD-158 plan baseline, and that gap is accepted, not hidden. This reading was stated to the Product Owner in the same reply that started the work."
     }
   ],
   "external_actions": [
@@ -11831,7 +11844,7 @@
     {
       "id": "DEF-051",
       "severity": "MEDIUM",
-      "status": "OPEN",
+      "status": "CLOSED",
       "source_ids": [
         "TC-101",
         "IMP-016",
@@ -11839,9 +11852,14 @@
         "supplier-performance REGRESSION evidence/20261030T034819-b8b65bdb3861",
         "docs/supplier_management/testing/04_defect_register.md"
       ],
-      "closure_evidence": [],
+      "closure_evidence": [
+        "HD-160 (Product Owner, 2026-10-30): no formal run on the HD-158 baseline",
+        "evidence/20261030T033026-b856fe2963d2/run.json and evidence/20261030T034819-b8b65bdb3861/run.json (HD-157 baseline; TC-101 online p95 during import worst 1,443 and 2,286 ms, under 5 s; the REGRESSION run.json records FAIL against 2 s, re-read against 5 s)",
+        "Every formal TC-101 run since 2026-10-28 under 5 s (testing/04_defect_register.md, DEF-051 table)",
+        "HD-158 developer run on 043c2af8: TC-101 online.p95_under_5s_during_import PASS with limitP95Ms 5000 (developer evidence, not formal)"
+      ],
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "HD-158 C and HD-159 A (PR from claude/supplier-technical-acceptance-4): REV-141 APPROVED, its Lows and nits fixed and confirmed by the reviewer; CI, merge on the Product Owner's word. 03 §11.5 stays unchanged (REV-141 L1 follow-up: reword it with the next change to 03). After merge: TEST_AND_VERIFY on the merged baseline: the 8 required suites at TECHNICAL and REGRESSION; DEF-051 closes if TC-101 passes against 5 s; then the Technical Acceptance report. REPORT_ONLY."
+  "next_safe_action": "PR #309 (HD-158 C, HD-159 A, HD-160): one push with main merged in (HD-160 (2)), CI, merge on the Product Owner's word. After merge: record the merge; no formal run on the HD-158 baseline (HD-160 (3)). Technical Acceptance stays blocked only by TASK-051 group B and TC-136 (release gate). Follow-up: reword 03 §11.5 with the next change to 03 (REV-141 L1). Any new routine-CI test or any performance/capacity run needs the Product Owner's prior approval (AGENTS.md)."
 }

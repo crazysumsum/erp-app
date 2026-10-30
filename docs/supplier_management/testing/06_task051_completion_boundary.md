@@ -105,8 +105,9 @@ These cases keep their original assertions. They are not re-run while the depend
 - **Superseded by HD-157 (Product Owner, 2026-10-30):** there is no production-like re-measurement, and no remedy. NFR-005's limit is 3 s. DEF-050 closes once TC-085 passes against 3 s in the formal run on the HD-157 baseline. Details are in `04_defect_register.md`.
 - **Closed (2026-10-30):** TC-085 passed against 3 s at both stages of the formal run on the HD-157 baseline (for-SKU p95 1,737 and 1,818 ms).
 
-## DEF-051 — OPEN (MEDIUM)
+## DEF-051 — CLOSED (MEDIUM)
 
 - **What happened:** TC-101 failed at REGRESSION in the formal run on the HD-157 baseline. During the import, `update` p95 was 2,286 ms and `list.missingFilter` 2,011 ms, against 2,000 ms. It passed at TECHNICAL, at 820 and 1,443 ms.
 - **A step change:** since PR #301 (DEF-049 fix), `list.missingFilter` during import has been 1,443–2,011 ms in every formal run, against 392–580 ms before. The cause is not proven; the A/B diagnosis (HD-158 A) was stopped before it measured anything.
 - **Status:** HD-158 answered (Product Owner, 2026-10-30): the during-import online p95 limit is 5 s, with no remedy. DEF-051 closes once TC-101 passes against 5 s in the formal run on the HD-158 baseline. Details are in `04_defect_register.md`.
+- **Closed by HD-160 (Product Owner, 2026-10-30):** no formal run on the HD-158 baseline. All eight formal runs were under 5 s (worst 2,286 ms), and the HD-158 developer run passed against 5 s.

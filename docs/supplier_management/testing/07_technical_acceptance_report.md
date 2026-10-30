@@ -2,6 +2,8 @@
 
 ## Formal run on the HD-157 baseline (2026-10-30, current result)
 
+> **2026-10-30, HD-158 and HD-160:** TC-101's online p95 limit during an import is now 5 s (HD-158). The Product Owner decided not to repeat the formal run on the HD-158 baseline (HD-160: "3不用跑了，都己跑了幾次，再跑意義不大"). So this run stays the current formal result. Read against 5 s, TC-101 passes at both stages by its measured numbers (worst 2,286 ms), and **DEF-051 is closed**. The REGRESSION `run.json` still records FAIL, because it was judged against 2 s at the time; it was re-read, not re-run. The harness gate binds formal evidence to the plan baseline, so it will not count these runs for the HD-158 baseline. That gap is accepted by HD-160, not hidden. What still blocks Technical Acceptance is TASK-051 group B and TC-136 (release gate).
+
 **Result: Technical Acceptance NOT complete.**
 - **DEF-050 is closed.** TC-085 passed against NFR-005's 3 s at both stages. The for-SKU p95 was 1,737 ms at TECHNICAL and 1,818 ms at REGRESSION.
 - **A new formal failure:** at REGRESSION, TC-101 failed `online.p95_under_2s_during_import`. During the import, `update` p95 was 2,286 ms and `list.missingFilter` 2,011 ms, against 2,000 ms.
