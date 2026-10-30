@@ -16,8 +16,38 @@ function list(path, { page, rowsPerPage, filter, status, lockStatus, sortBy, des
   }).then(({ items, total }) => ({ rows: items, rowsNumber: total }));
 }
 
+function stocktakeList(path, { page, rowsPerPage, signal, ...filters } = {}) {
+  const params = Object.fromEntries(Object.entries({ page, pageSize: rowsPerPage, ...filters })
+    .filter(([, value]) => value !== undefined && value !== null && value !== ""));
+  return httpClient.get(path, { params, signal }).then(({ items, total, ...metadata }) =>
+    ({ rows: items, rowsNumber: total, ...metadata }));
+}
+
 export default {
+  listStocktakes(options) { return stocktakeList("/api/v1/inventory/stocktakes", options); },
+  getStocktake(id, { signal, scopePage, scopePageSize } = {}) {
+    return httpClient.get(`/api/v1/inventory/stocktakes/${id}`, { params: { scopePage, scopePageSize }, signal });
+  },
+  listStocktakeLines(id, options) { return stocktakeList(`/api/v1/inventory/stocktakes/${id}/lines`, options); },
+  createStocktake(payload, { signal } = {}) { return write("/api/v1/inventory/stocktakes/create", payload, { signal }); },
+  updateStocktake(id, payload, { signal } = {}) { return write(`/api/v1/inventory/stocktakes/${id}/update`, payload, { signal }); },
+  startStocktake(id, payload, { signal } = {}) { return write(`/api/v1/inventory/stocktakes/${id}/start`, payload, { signal }); },
+  saveStocktakeCounts(id, payload, { signal } = {}) { return write(`/api/v1/inventory/stocktakes/${id}/counts/save`, payload, { signal }); },
+  addStocktakeLine(id, payload, { signal } = {}) { return write(`/api/v1/inventory/stocktakes/${id}/lines/add`, payload, { signal }); },
+  readyStocktake(id, payload, { signal } = {}) { return write(`/api/v1/inventory/stocktakes/${id}/ready`, payload, { signal }); },
+  postStocktake(id, payload, { signal } = {}) { return write(`/api/v1/inventory/stocktakes/${id}/post`, payload, { signed: true, signal }); },
+  cancelStocktake(id, payload, { signal } = {}) { return write(`/api/v1/inventory/stocktakes/${id}/cancel`, payload, { signal }); },
+  exportStocktake(id, { signal, ...filters } = {}) {
+    const params = new URLSearchParams();
+    for (const key of ["binId", "skuId", "lotId", "stockStatus", "progress", "variance", "q"]) {
+      const value = filters[key];
+      if (value !== undefined && value !== null && value !== "") params.set(key, value);
+    }
+    const query = params.toString();
+    return httpClient.getBlob(`/api/v1/inventory/stocktakes/${id}/export${query ? `?${query}` : ""}`, { signal });
+  },
   lookupSku(code, { signal } = {}) { return httpClient.get("/api/v1/inventory/sku-lookup", { params: { code }, signal }); },
+  lookupSkuByBarcode(barcode, { signal } = {}) { return httpClient.get("/api/v1/inventory/sku-lookup", { params: { barcode }, signal }); },
   listTransfers({ filter, ...options } = {}) { return list("/api/v1/inventory/transfers", { ...options, number: filter || undefined }); },
   getTransfer(id, { signal } = {}) { return httpClient.get(`/api/v1/inventory/transfers/${id}`, { signal }); },
   createTransfer(payload) { return write("/api/v1/inventory/transfers/create", payload); },

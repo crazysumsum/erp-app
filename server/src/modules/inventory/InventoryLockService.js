@@ -5,6 +5,7 @@ import { assertInventoryTransaction } from "./inventoryValidation.js";
 
 const STOCK_STATUSES = new Set(INVENTORY_STOCK_STATUSES);
 const RETRYABLE_LOCK_ERRORS = new Set(["ER_LOCK_DEADLOCK", "ER_LOCK_WAIT_TIMEOUT"]);
+const CONTROL_SQL_BATCH_SIZE = 1000;
 
 function id(value, label) {
   if (!Number.isSafeInteger(value) || value <= 0) throw new TypeError(`Invalid Inventory ${label}`);
@@ -173,6 +174,27 @@ async function upsertAndLockBalances(connection, balances, timestamp) {
 }
 
 export class InventoryLockService {
+  async lockForStocktakeDraftCreate(connection, input = {}, writeDraft) {
+    assertInventoryTransaction(connection);
+    const warehouseIds = ids(input?.warehouseIds, "warehouse ids");
+    const binIds = ids(input?.binIds, "bin ids");
+    if (warehouseIds.length !== 1 || binIds.length === 0 || typeof writeDraft !== "function") {
+      throw new TypeError("Stocktake Draft Create requires one warehouse, bins and a draft writer");
+    }
+    try {
+      const locked = { warehouses: await lockIds(connection, "inventory_warehouses", warehouseIds) };
+      locked.bins = await lockIds(connection, "inventory_bins", binIds);
+      // All scope inserts must finish before acquiring an absent active-lock gap.
+      const draft = await writeDraft(locked);
+      locked.binLocks = await lockActiveBinLocks(connection, binIds);
+      if (locked.binLocks.length) throw inventoryError("BIN_LOCKED_BY_STOCKTAKE");
+      return { ...locked, draft };
+    } catch (error) {
+      if (RETRYABLE_LOCK_ERRORS.has(error?.cause?.code ?? error?.code)) throw inventoryError("CONCURRENT_OPERATION");
+      throw error;
+    }
+  }
+
   async lockForCommand(connection, input = {}) {
     assertInventoryTransaction(connection);
     try {
@@ -190,21 +212,27 @@ export class InventoryLockService {
 
       locked.warehouses = await lockIds(connection, "inventory_warehouses", warehouseIds);
 
-      if (controls.length) {
+      locked.stockControls = [];
+      for (let offset = 0; offset < controls.length; offset += CONTROL_SQL_BATCH_SIZE) {
+        const batch = controls.slice(offset, offset + CONTROL_SQL_BATCH_SIZE);
         await connection.execute(
           `INSERT INTO inventory_stock_controls
              (warehouse_id, sku_id, reserved_quantity, version, created_at, updated_at)
-           VALUES ${controls.map(() => "(?, ?, 0, 1, ?, ?)").join(", ")}
+           VALUES ${batch.map(() => "(?, ?, 0, 1, ?, ?)").join(", ")}
            ON DUPLICATE KEY UPDATE id = id`,
-          controls.flatMap((value) => [value.warehouseId, value.skuId, timestamp, timestamp])
+          batch.flatMap((value) => [value.warehouseId, value.skuId, timestamp, timestamp])
         );
-        [locked.stockControls] = await connection.query(
+      }
+      for (let offset = 0; offset < controls.length; offset += CONTROL_SQL_BATCH_SIZE) {
+        const batch = controls.slice(offset, offset + CONTROL_SQL_BATCH_SIZE);
+        const [rows] = await connection.query(
           `SELECT * FROM inventory_stock_controls
-           WHERE ${controls.map(() => "(warehouse_id = ? AND sku_id = ?)").join(" OR ")}
+           WHERE ${batch.map(() => "(warehouse_id = ? AND sku_id = ?)").join(" OR ")}
            ORDER BY warehouse_id, sku_id FOR UPDATE`,
-          controls.flatMap((value) => [value.warehouseId, value.skuId])
+          batch.flatMap((value) => [value.warehouseId, value.skuId])
         );
-      } else locked.stockControls = [];
+        locked.stockControls.push(...rows);
+      }
 
       locked.bins = await lockIds(connection, "inventory_bins", binIds);
       locked.binLocks = await lockActiveBinLocks(connection, binIds);
@@ -212,7 +240,7 @@ export class InventoryLockService {
       if (lots.length) {
         [locked.lots] = await connection.query(
           `SELECT * FROM inventory_lots
-           WHERE ${lots.map(() => "(sku_id = ? AND normalized_lot_number = ?)").join(" OR ")}
+           WHERE (sku_id, normalized_lot_number) IN (${lots.map(() => "(?, ?)").join(", ")})
            ORDER BY sku_id, normalized_lot_number FOR UPDATE`,
           lots.flatMap((value) => [value.skuId, value.normalizedLotNumber])
         );

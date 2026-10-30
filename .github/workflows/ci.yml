@@ -77,6 +77,9 @@ jobs:
       - name: Lint (server + client, including .vue)
         run: npm run lint
 
+      - name: Verify Inventory phase005 evidence adapter
+        run: python3 server/scripts/inventoryPhase005Gate.test.py --report "$RUNNER_TEMP/inventory-gate-binding-unit.json"
+
   # CLAUDE.md §9 要求每個前端改動都要做真瀏覽器驗證。在這個 job 出現之前，那件事
   # 只發生在誰記得跑它的機器上——PR 全綠從來不代表 e2e 跑過。
   #
@@ -192,7 +195,13 @@ jobs:
           DB_PASSWORD: root
         run: npm run migrate --workspace server
 
+      - name: Capture Inventory native coverage inputs
+        env:
+          INVENTORY_CI_MYSQL_CONTAINER: ${{ job.services.mysql.id }}
+        run: env -u NODE_V8_COVERAGE node server/scripts/inventoryPhase005CoverageEvidence.mjs before-shard ${{ matrix.shard }}
+
       - name: Collect native server coverage for this shard
+        id: inventory_native_coverage
         # Each shard stays serial on its own DB; the merged report enforces the original floors.
         env:
           SALES_CAPACITY_SEPARATE_STEP: "1"
@@ -246,7 +255,15 @@ jobs:
           grep -qx "# fail 0" import-capacity.tap
           grep -qx "# skipped 0" import-capacity.tap
 
+      - name: Finalize Inventory native coverage ownership proof
+        if: always()
+        env:
+          INVENTORY_CI_MYSQL_CONTAINER: ${{ job.services.mysql.id }}
+          INVENTORY_NATIVE_OUTCOME: ${{ steps.inventory_native_coverage.outcome }}
+        run: env -u NODE_V8_COVERAGE node server/scripts/inventoryPhase005CoverageEvidence.mjs finish-shard ${{ matrix.shard }}
+
       - name: Upload this shard's raw coverage
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: server-coverage-${{ matrix.shard }}
@@ -291,11 +308,32 @@ jobs:
           pattern: server-coverage-*
           path: server/coverage/shards
           merge-multiple: false
+      - name: Capture Inventory merge inputs
+        run: env -u NODE_V8_COVERAGE node server/scripts/inventoryPhase005CoverageEvidence.mjs before-merge
+
       - name: Merge native coverage and enforce unchanged global and per-file floors
+        id: inventory_native_merge
         env:
           COVERAGE_SHARD_ROOT: ${{ github.workspace }}/server/coverage/shards
           COVERAGE_SHARD_TOTAL: "4"
         run: npm run test:coverage:merge --workspace server
+
+      - name: Finalize Inventory native merge proof
+        if: always()
+        env:
+          INVENTORY_NATIVE_OUTCOME: ${{ steps.inventory_native_merge.outcome }}
+        run: env -u NODE_V8_COVERAGE node server/scripts/inventoryPhase005CoverageEvidence.mjs finish-merge
+
+      - name: Upload Inventory native merge evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: inventory-native-merge-proof
+          path: |
+            server/coverage/inventory-proof
+            server/coverage/lcov.info
+          if-no-files-found: error
+          retention-days: 1
 
   sales-import-capacity:
     name: Sales import mixed-load capacity (TC-042)

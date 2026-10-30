@@ -12,7 +12,8 @@
       "server/config/inventory.js",
       "client/src/pages/inventory/**",
       "client/src/components/inventory/**",
-      "client/src/services/inventory.js"
+      "client/src/services/inventory.js",
+      "client/src/framework/layout/AppTopbar.vue"
     ],
     "test_paths": [
       "server/test/**/inventory*.test.js",
@@ -22,7 +23,16 @@
       "server/test/integration/passwordChange.integration.test.js",
       "server/test/integration/roleManagement.integration.test.js",
       "server/test/integration/userManagement.integration.test.js",
-      "server/test-support/inventoryPurchaseFixtures.js"
+      "client/test/framework/layout/AppTopbar.test.js",
+      "server/test-support/inventoryStocktakeSafetyChild.js",
+      "server/test-support/inventoryStocktakeExportChild.js",
+      "server/test-support/inventoryStocktakePerformanceChild.js",
+      "server/test-support/inventoryPurchaseFixtures.js",
+      "server/scripts/inventoryPhase005Gate.py",
+      "server/scripts/inventoryPhase005Gate.test.py",
+      "server/test-support/inventoryPhase005GateNative.mjs.txt",
+      "server/scripts/inventoryPhase005CoverageEvidence.mjs",
+      ".github/workflows/ci.yml"
     ],
     "allowed_write_paths": [
       "docs/inventory_management/**",
@@ -37,7 +47,15 @@
       "server/test/**/inventory*.test.js",
       "client/test/**/inventory*.test.js",
       "client/e2e/inventory-management/**",
-      "server/test-support/inventoryPurchaseFixtures.js"
+      "server/test-support/inventoryStocktakeSafetyChild.js",
+      "server/test-support/inventoryStocktakeExportChild.js",
+      "server/test-support/inventoryStocktakePerformanceChild.js",
+      "server/test-support/inventoryPurchaseFixtures.js",
+      "server/scripts/inventoryPhase005Gate.py",
+      "server/scripts/inventoryPhase005Gate.test.py",
+      "server/test-support/inventoryPhase005GateNative.mjs.txt",
+      "server/scripts/inventoryPhase005CoverageEvidence.mjs",
+      ".github/workflows/ci.yml"
     ],
     "approval_required_paths": [
       "server/database/migrations/**",
@@ -71,7 +89,9 @@
       "server/test/integration/passwordChange.integration.test.js",
       "server/test/integration/roleManagement.integration.test.js",
       "server/test/integration/userManagement.integration.test.js",
-      "server/test/supplierBankCrypto.test.js"
+      "server/test/supplierBankCrypto.test.js",
+      "client/src/framework/layout/AppTopbar.vue",
+      "client/test/framework/layout/AppTopbar.test.js"
     ],
     "forbidden_paths": [
       ".env",
@@ -93,9 +113,9 @@
     "provided": [
       {
         "id": "inventory-domain-contract",
-        "version": "planning-v16; P3 fresh-main reserve-only fenced Sales Backorder owner contract; manual and P3 semantics preserved",
+        "version": "planning-v48 candidate; consolidated P4 receipts/current CI native provenance; product/provider ABI unchanged",
         "source": "docs/inventory_management/03_design_spec.md",
-        "sha256": "7ee4e5f4b897663e276a966959843417e2e787a8adb30bc47fdd7820d3196193",
+        "sha256": "317a87d440d7de342adc340f50b7c5fa795c9ec1aef974e8991c4f88b5120d80",
         "consumers": [
           "purchasing-receiving",
           "sales-order",
