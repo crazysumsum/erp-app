@@ -117,7 +117,7 @@ export function validateApplicationConfiguration(
   validateSection("item", () => normalizeItemConfig(source?.item));
   validateSection("jwt", () => normalizeJwtConfig(source?.jwt));
   validateSection("logging", () => normalizeLoggingConfig(source?.logging));
-  validateSection("purchasing", () => normalizePurchasingConfig(source?.purchasing, { requestTimeoutMs: normalized.application?.requestTimeoutMs }));
+  validateSection("purchasing", () => normalizePurchasingConfig(source?.purchasing));
   validateSection("request", () =>
     normalizeRequestConfig(source?.request, { environment })
   );

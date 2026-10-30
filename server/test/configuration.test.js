@@ -152,8 +152,7 @@ test("global configuration validation reports errors from multiple sections", ()
       assert.equal(error.code, "CONFIGURATION_INVALID");
       assert.deepEqual(
         error.details.map(({ section }) => section),
-        // Sales 同 Purchasing 要用實際 HTTP timeout 驗自己嘅交易時限；application 無效時佢哋驗唔到，所以一齊報。
-        ["application", "sales", "api", "database", "purchasing", "requestLimiter"]
+        ["application", "sales", "api", "database", "requestLimiter"]
       );
       return true;
     }

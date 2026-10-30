@@ -1,5 +1,7 @@
 // [default, maximum]。上限係已測容量或者欄位／JSON 大小限制，config 只可以收緊（設計 §12.1）。
 // 數量／單價精度同 6 位 PO／GR 編號綁死 DB 欄位，喺 purchasingConstants.js，唔係 config。
+// 冇自己嘅 transactionTimeoutMs（HD-011）：HTTP 路徑嘅交易用 database.transactionTimeoutMs，佢已經有
+// 「acquire＋transaction < requestTimeoutMs」嘅跨區塊檢查；§12.1 嘅 30000 會令交易喺 route 504 之後先 commit。
 const SETTINGS = Object.freeze({
   maxPurchaseOrderLines: [100, 100],
   maxGoodsReceiptDetails: [200, 200],
@@ -8,14 +10,10 @@ const SETTINGS = Object.freeze({
   exportMaxRows: [50000, 50000],
   exportTimeoutMs: [120000, 120000],
   approvalSnapshotMaxBytes: [65536, 65536],
-  auditDetailMaxBytes: [8192, 8192],
-  transactionTimeoutMs: [30000, 2147483647]
+  auditDetailMaxBytes: [8192, 8192]
 });
 
-export function normalizePurchasingConfig(source = {}, { requestTimeoutMs } = {}) {
-  if (!Number.isSafeInteger(requestTimeoutMs) || requestTimeoutMs < 1) {
-    throw new TypeError("Purchasing config requires the actual HTTP request timeout");
-  }
+export function normalizePurchasingConfig(source = {}) {
   if (!source || typeof source !== "object" || Array.isArray(source)) {
     throw new TypeError("Purchasing config must be an object");
   }
@@ -30,10 +28,6 @@ export function normalizePurchasingConfig(source = {}, { requestTimeoutMs } = {}
       throw new Error(`Purchasing config "${name}" must be an integer from 1 to ${maximum}`);
     }
     config[name] = value;
-  }
-  // 交易唔可以比開佢嘅 HTTP request 活得耐：client 已經 timeout 而交易仍然 commit，就只剩 TRANSACTION_OUTCOME_UNKNOWN。
-  if (config.transactionTimeoutMs > requestTimeoutMs) {
-    throw new Error('Purchasing config "transactionTimeoutMs" must not exceed the application request timeout');
   }
   return Object.freeze(config);
 }

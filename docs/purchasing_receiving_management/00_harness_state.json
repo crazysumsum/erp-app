@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "purchasing-receiving-management",
-  "revision": 13,
+  "revision": 14,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -398,6 +398,18 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "docs/purchasing_receiving_management/implementation/P1_task009_arithmetic.md#owner-decisions"
+    },
+    {
+      "id": "HD-011",
+      "impact": "MAJOR",
+      "question": "Design 12.1 gives Purchasing transactionTimeoutMs 30000 related to the route timeout, but the framework invariant is database.acquireTimeoutMs + transaction timeout < application.requestTimeoutMs, strictly; 5000 + 30000 > 30000 lets a transaction commit after the route has answered 504. Drop the Purchasing setting and use database.transactionTimeoutMs, or keep it at a lower default with a cross-section check?",
+      "affected_ids": [
+        "TASK-010",
+        "TASK-013",
+        "TASK-032"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "docs/purchasing_receiving_management/implementation/P1_task010_config_validation.md#hd-011--no-purchasing-transaction-timeout"
     }
   ],
   "external_actions": [
@@ -468,5 +480,5 @@
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "TASK-010 is DONE and the Purchasing config is validated at server startup. APR-006 approves the two shared files that wiring touches; APR-001 through APR-005 are re-confirmed and REV-004 reviews design 600d9d58ff1c / plan 5b8a282f8244. HD-009 and HD-010 (amount scale, amount overflow code) are answered and pinned by TC-002; fold them into design sections 2.8 and 5.7 at the next design revision. Next startable task: TASK-011 (settings, sequence and PO core tables), the first migration in this module, which needs schema sign-off before it is written. PHASE-001 still needs a fresh checkpoint, DEVELOPER evidence and MERGE_READY, and HD-006 blocks every harness gate until answered."
+  "next_safe_action": "TASK-010 is DONE and the Purchasing config is validated at server startup. APR-006 approves the two shared files that wiring touches; APR-001 through APR-005 are re-confirmed and REV-004 reviews design 600d9d58ff1c / plan 5b8a282f8244. HD-009, HD-010 and HD-011 (amount scale, amount overflow code, no Purchasing transaction timeout) are answered and pinned by tests; fold them into design sections 2.8, 5.7 and 12.1 at the next design revision. Purchasing HTTP transactions must not pass their own timeoutMs to withTransaction. Next startable task: TASK-011 (settings, sequence and PO core tables), the first migration in this module, which needs schema sign-off before it is written. PHASE-001 still needs a fresh checkpoint, DEVELOPER evidence and MERGE_READY, and HD-006 blocks every harness gate until answered."
 }

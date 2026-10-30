@@ -5,11 +5,11 @@ Built on 2026-10-30 from main `1f5ea721`. Composite baselines moved `design d610
 | File | Contents |
 | --- | --- |
 | `server/config/purchasing.js` | The §12.1 settings, env-overridable like every other module config |
-| `server/src/modules/purchasing/normalizePurchasingConfig.js` | Positive safe integers; each setting may only be lowered from its §12.1 value (lookback days capped at 366); `transactionTimeoutMs ≤` the application request timeout; unknown settings rejected; frozen result |
+| `server/src/modules/purchasing/normalizePurchasingConfig.js` | Positive safe integers; each setting may only be lowered from its §12.1 value (lookback days capped at 366); unknown settings rejected, including `transactionTimeoutMs` (HD-011); frozen result |
 | `server/src/modules/purchasing/purchasingValidation.js` | `positiveId`, `eventId`, `localDate`, `reason`, `notes`, `reference`, `onlyFields`, `requireItems` |
 | `server/src/framework/configuration/applicationConfiguration.js` | +4 lines: the `purchasing` section is validated at startup |
-| `server/test/configuration.test.js` | `purchasing` added to the two expected-section lists |
-| `server/test/purchasing/purchasingConfig.test.js`, `purchasingValidation.test.js` | 11 new cases — **pending CI admission** |
+| `server/test/configuration.test.js` | `purchasing` added to the expected-section list |
+| `server/test/purchasing/purchasingConfig.test.js`, `purchasingValidation.test.js` | 10 new cases (3 + 7) |
 
 ## APR-006 — startup wiring
 
@@ -22,14 +22,24 @@ Verified end to end through `validateApplicationConfiguration(defaultConfigurati
 | defaults | starts, `maxPurchaseOrderLines` 100 |
 | `PURCHASING_MAX_PURCHASE_ORDER_LINES=500` | refused: `ConfigurationError`, purchasing section |
 | `PURCHASING_MAX_PURCHASE_ORDER_LINES=` (empty) | refused |
-| `PURCHASING_TRANSACTION_TIMEOUT_MS=60000`, HTTP 30000 | refused: transaction would outlive the request |
-| transaction 45000, HTTP 45000 | starts (boundary) |
-| transaction 45001, HTTP 45000 | refused |
+| `REQUEST_TIMEOUT_MS=5000` | refused by the **database** section, not Purchasing — the case CI caught (below) |
 | **wiring line removed**, PO lines 500 | **starts with no purchasing section** — negative control: the refusal comes from this wiring |
 
 The first probe of that negative control was itself wrong: it read `c.purchasing.maxPurchaseOrderLines`, so a missing section threw inside the probe and was reported as "refused". Fixed to distinguish the two outcomes before the result was trusted.
 
-`configuration.test.js` then failed one existing case: with an invalid `application` section, `requestTimeoutMs` is unavailable, so Purchasing — like Sales — reports that it cannot verify its transaction bound. Kept strict, matching Sales and design §12.1, and added `purchasing` to that case's expected list. Fulfillment instead skips the check when the timeout is missing; doing that here would let the relation go unverified, which is exactly what mutant C6 guards against.
+## HD-011 — no Purchasing transaction timeout
+
+The first push of this branch failed CI shard 2/4 in `databasePoolPressure.test.js` — "the database must give up before the route timeout does". That case sets `requestTimeoutMs` to 5000 to provoke the database cross-section error; the Purchasing section, holding §12.1's `transactionTimeoutMs: 30000` with an in-section `≤ requestTimeoutMs` check, failed first and the expected database error never appeared.
+
+The test failure exposed a design defect, not only a test interaction:
+
+- `applicationConfiguration.js` already enforces, as a cross-section check and strictly, that `database.acquireTimeoutMs + database.transactionTimeoutMs < application.requestTimeoutMs`. Its comment records that the factory default was once `5000 + 30000 > 30000`, so a transaction could still hold its connection after the route had answered 504.
+- `MySqlDatabaseService.withTransaction` lets a per-call `timeoutMs` replace that default without a cap. §12.1's `30000`, passed per call, reproduces the fixed defect; the `≤` check let it through.
+- No HTTP path in the codebase passes its own transaction timeout; only `SalesIntakeWorker`, a background worker, does.
+
+**Sam chose on 2026-10-30 to drop the setting.** Purchasing HTTP transactions use `database.transactionTimeoutMs` (default 20000), already guarded by the correct check. The wiring is back to the Fulfillment pattern — `normalizePurchasingConfig(source?.purchasing)`, four lines — and the `configuration.test.js` multiple-sections case is unchanged from main. Configuring `transactionTimeoutMs` is rejected as an unsupported setting, which pins the decision. Rejected alternative: keep the setting at a 20000 default with a new cross-section check, which would have grown the shared-file change and added a second knob to keep consistent with the database's.
+
+**This also records a verification gap of mine.** I ran the full server suite before wiring `applicationConfiguration.js`, and after wiring re-ran only `configuration.test.js` and the Purchasing files. A change to the shared startup path needs the full suite after the last edit. The suite has since been run after the fix, and with CI's bank key-ring variables set locally: 4,260 tests, 0 failures (1,312 MySQL-backed tests skipped locally). Those variables also make the two startup-path files that fail locally for lack of them — `applicationFactory.test.js`, `shutdownResources.test.js` — pass 12/12, so the "7 known environment failures" were not hiding anything.
 
 ## REV-004 — review of the scope change
 
@@ -49,9 +59,9 @@ The first probe of that negative control was itself wrong: it read `c.purchasing
 
 ## Verification
 
-- 11/11 new cases pass; `configuration.test.js` 9/9 after the expected-list update.
-- **Mutation sweep 23/23 RED** between a GREEN baseline and a GREEN restore, skips counted as failures.
-- Lint exit 0. Full local server suite: only the 7 known environment failures (missing bank key rings), unchanged.
+- 10/10 new cases pass; `configuration.test.js` 9/9; `databasePoolPressure.test.js` passes.
+- **Mutation sweep 21/21 RED** after the HD-011 change (the three transaction-bound mutants removed with the setting; one added for `transactionTimeoutMs` being accepted again), between a GREEN baseline and a GREEN restore, skips counted as failures.
+- Lint exit 0. Full local server suite with CI's key-ring variables: 4,260 tests, 0 failures.
 - `validate_traceability.py` STRUCTURE_PASS; `PLAN_READY` BLOCKED on HD-006 only.
 
 ## CI admission — pending
@@ -62,8 +72,8 @@ Sam's rule of 2026-10-30 (`AGENTS.md`, merged in #310 after this branch was cut)
 
 | | |
 | --- | --- |
-| Cases | All 11 new cases: `purchasingConfig.test.js` (4) and `purchasingValidation.test.js` (7), including the 1,000-sample `crypto.randomUUID()` loop |
-| Existing cases | `configuration.test.js`: `purchasing` added to its two expected-section lists, required by the APR-006 wiring; no new case |
+| Cases | All 11 new cases: `purchasingConfig.test.js` (4) and `purchasingValidation.test.js` (7), including the 1,000-sample `crypto.randomUUID()` loop. After HD-011 one config case was removed with the setting, so **10** are admitted — a subset of the approved scope |
+| Existing cases | `configuration.test.js`: `purchasing` added to its expected-section lists, required by the APR-006 wiring; no new case. After HD-011 only the first list changes |
 | Data / concurrency | In-memory only; no database, network or concurrency; one repetition; threshold all pass |
 | Trigger | Every PR and push to main, through the server suite's automatic discovery |
 | Measured cost | About 0.12 s wall per file locally, almost all Node startup; CI speed not measured, estimated under 1 s per job |
