@@ -93,9 +93,9 @@
     "provided": [
       {
         "id": "inventory-domain-contract",
-        "version": "planning-v16; P3 fresh-main reserve-only fenced Sales Backorder owner contract; manual and P3 semantics preserved",
+        "version": "HD024-A-actual-prefix-readonly-preview-adopted; oldbatch/writeABI unchanged; source/runtime gates pending",
         "source": "docs/inventory_management/03_design_spec.md",
-        "sha256": "7ee4e5f4b897663e276a966959843417e2e787a8adb30bc47fdd7820d3196193",
+        "sha256": "ba88703fa73d80011688cddd5595b02a947210ab6c579f82238fc1a1940ba19d",
         "consumers": [
           "purchasing-receiving",
           "sales-order",

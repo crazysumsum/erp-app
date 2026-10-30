@@ -292,9 +292,9 @@
     "provided": [
       {
         "id": "sales-fulfillment-projection-and-lifecycle-contract",
-        "version": "HD011-A-adopted-last-sync-current-CAS; scoped Sales implementation and WIP diagnostic only; full P0/P4 provider, CI and Gates pending; DEC037 observed-main-d805 byte pin refresh only; existing Sales interfaces unchanged; no Customer2.2/HD016 or proposed Purchasing/P4 contract adoption",
+        "version": "HD018-A-scoped-candidate-source-proof-implementation; HD011-A last-sync/current-CAS retained; DEC037 TC032-only10s owner documentation integrated; exact closing review/full P1 gates pending; no Customer2.2 or proposed Purchasing/P4 contract adoption",
         "source": "docs/sales_order_management/03_design_spec.md",
-        "sha256": "84e292475b013ebb0c5efaf75c7272b35db1d8d557d29514f49ff2b138c28fcb",
+        "sha256": "4683b49946a9a2e5ae0778231d48ffc7e56bc857f09468ee1095e32f4270801e",
         "consumers": [
           "fulfillment-shipping-management",
           "inventory-management",
@@ -306,9 +306,9 @@
       {
         "module_id": "inventory-management",
         "id": "inventory-batch-reserve-release-contract",
-        "version": "observed-main-f7ddcfd-Inventory-P3; compatible Sales consumption, full integrated original33/currentCI required; DEC037 observed-main-d805 byte pin refresh only; existing Sales interfaces unchanged; no Customer2.2/HD016 or proposed Purchasing/P4 contract adoption",
+        "version": "observed-main-f7ddcfd-Inventory-P3; compatible Sales consumption, full integrated original33/currentCI required; DEC037 observed-main-d805 byte pin refresh only; existing Sales interfaces unchanged; no Customer2.2/HD016 or proposed Purchasing/P4 contract adoption; additive approved Fulfillment P1 documentation current-byte pin only, no Inventory writer/API policy change",
         "source": "docs/inventory_management/03_design_spec.md",
-        "sha256": "7ee4e5f4b897663e276a966959843417e2e787a8adb30bc47fdd7820d3196193",
+        "sha256": "ba88703fa73d80011688cddd5595b02a947210ab6c579f82238fc1a1940ba19d",
         "regression_suites": [
           "sales-technical"
         ]

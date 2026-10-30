@@ -48,6 +48,7 @@ const menuConfig = {
       icon: "receipt_long",
       order: 600
     },
+    { name: "fulfillment", label: "履約管理", icon: "inventory", order: 700 },
     // 目前沒有任何頁面掛在這個群組——buildMenu() 會濾掉沒有頁面的群組，所以
     // 它暫時不會出現在側欄。保留定義是留給日後非用戶管理的系統設定用。
     {

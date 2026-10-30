@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "purchasing-receiving-management",
-  "revision": 9,
+  "revision": 10,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -9,8 +9,8 @@
   "current_phase": "PHASE-001",
   "current_task": "TASK-008",
   "baseline": {
-    "design": "15e4423b088a365c3b552fcc0bfde5fc1622398d004beb78295f13dca4d0bef7",
-    "plan": "3fd127d19861e54897d2938a129818a804e81baa1fbb416fd8e272169edc1055",
+    "design": "d6103ad183e2b860fd5ae77d50a573b291550cf052d214234ded23c903cbd133",
+    "plan": "24a86ab4c6771f87246b46cb7b5b946b0139bde4805b2d29dacdbc5002f82828",
     "code_commit": "81a873fc941d54c634772c46641db95b552bf298",
     "source_fingerprint": "95b181c03bbef52334c436979b81b0db448c6020bd63f18eb629bd4369ff39d5",
     "worktree": "/Users/sam/Documents/workspace/erp-purchasing-p0",
@@ -79,9 +79,9 @@
       "actor": "Sam (ERP Product Owner and independent reviewer)",
       "decision": "APPROVED",
       "source_ref": "docs/purchasing_receiving_management/implementation/P0_contract_repin.md",
-      "recorded_at": "2026-10-22T14:22:31+08:00",
+      "recorded_at": "2026-10-30T11:30:05+08:00",
       "baseline_kind": "PLAN",
-      "baseline_sha256": "3fd127d19861e54897d2938a129818a804e81baa1fbb416fd8e272169edc1055",
+      "baseline_sha256": "24a86ab4c6771f87246b46cb7b5b946b0139bde4805b2d29dacdbc5002f82828",
       "code_commit": null,
       "scope": [
         "purchasing-receiving-management requirement baseline, file 01_requirement_spec.md sha256 75ad45897c6b835712a1b9e84faa0e8822a626d9dd8ec55539da9998dbce4f35; recorded under kind SCOPE and bound to the harness composite design baseline because the state schema has no REQUIREMENT approval kind",
@@ -92,7 +92,8 @@
         "AC-001 through AC-055",
         "DEC-001 through DEC-013",
         "OPEN-001 through OPEN-005 closed as DECIDED",
-        "Re-confirmed on 2026-10-22 after refreshing the five drifted consumed-contract pins (design 5db990ab6967->15e4423b088a, plan 54e2b1cb2fa8->3fd127d19861). The requirement, design and plan documents themselves are byte-identical; only manifest contract pins changed."
+        "Re-confirmed on 2026-10-22 after refreshing the five drifted consumed-contract pins (design 5db990ab6967->15e4423b088a, plan 54e2b1cb2fa8->3fd127d19861). The requirement, design and plan documents themselves are byte-identical; only manifest contract pins changed.",
+        "Re-confirmed on 2026-10-30 against main 6d84ee45 (design 15e4423b088a->d6103ad183e2, plan 3fd127d19861->24a86ab4c677). Unlike the 2026-10-22 pass the design document is NOT byte-identical: the Inventory owner rewrote §2.4, §2.6 items 7/9, §3.5 step 3, §4.13, §8.7, §8.8 and §8.9. Those changes are approved separately as APR-005 and reviewed as REV-003."
       ],
       "expires_at": null
     },
@@ -103,15 +104,16 @@
       "actor": "Sam (ERP Product Owner and independent reviewer)",
       "decision": "APPROVED",
       "source_ref": "docs/purchasing_receiving_management/implementation/P0_contract_repin.md",
-      "recorded_at": "2026-10-22T14:22:31+08:00",
+      "recorded_at": "2026-10-30T11:30:05+08:00",
       "baseline_kind": "DESIGN",
-      "baseline_sha256": "15e4423b088a365c3b552fcc0bfde5fc1622398d004beb78295f13dca4d0bef7",
+      "baseline_sha256": "d6103ad183e2b860fd5ae77d50a573b291550cf052d214234ded23c903cbd133",
       "code_commit": null,
       "scope": [
         "purchasing-receiving-management",
         "DES-001 through DES-012",
         "MySQL 8.0 compatibility baseline",
-        "Re-confirmed on 2026-10-22 after refreshing the five drifted consumed-contract pins (design 5db990ab6967->15e4423b088a, plan 54e2b1cb2fa8->3fd127d19861). The requirement, design and plan documents themselves are byte-identical; only manifest contract pins changed."
+        "Re-confirmed on 2026-10-22 after refreshing the five drifted consumed-contract pins (design 5db990ab6967->15e4423b088a, plan 54e2b1cb2fa8->3fd127d19861). The requirement, design and plan documents themselves are byte-identical; only manifest contract pins changed.",
+        "Re-confirmed on 2026-10-30 against main 6d84ee45 (design 15e4423b088a->d6103ad183e2, plan 3fd127d19861->24a86ab4c677). Unlike the 2026-10-22 pass the design document is NOT byte-identical: the Inventory owner rewrote §2.4, §2.6 items 7/9, §3.5 step 3, §4.13, §8.7, §8.8 and §8.9. Those changes are approved separately as APR-005 and reviewed as REV-003."
       ],
       "expires_at": null
     },
@@ -122,9 +124,9 @@
       "actor": "Sam (ERP Product Owner and independent reviewer)",
       "decision": "APPROVED",
       "source_ref": "docs/purchasing_receiving_management/implementation/P0_contract_repin.md",
-      "recorded_at": "2026-10-22T14:22:31+08:00",
+      "recorded_at": "2026-10-30T11:30:05+08:00",
       "baseline_kind": "PLAN",
-      "baseline_sha256": "3fd127d19861e54897d2938a129818a804e81baa1fbb416fd8e272169edc1055",
+      "baseline_sha256": "24a86ab4c6771f87246b46cb7b5b946b0139bde4805b2d29dacdbc5002f82828",
       "code_commit": null,
       "scope": [
         "purchasing-receiving-management",
@@ -132,7 +134,8 @@
         "TASK-001 through TASK-044",
         "TC-001 through TC-012",
         "UAT-001 through UAT-106",
-        "Re-confirmed on 2026-10-22 after refreshing the five drifted consumed-contract pins (design 5db990ab6967->15e4423b088a, plan 54e2b1cb2fa8->3fd127d19861). The requirement, design and plan documents themselves are byte-identical; only manifest contract pins changed."
+        "Re-confirmed on 2026-10-22 after refreshing the five drifted consumed-contract pins (design 5db990ab6967->15e4423b088a, plan 54e2b1cb2fa8->3fd127d19861). The requirement, design and plan documents themselves are byte-identical; only manifest contract pins changed.",
+        "Re-confirmed on 2026-10-30 against main 6d84ee45 (design 15e4423b088a->d6103ad183e2, plan 3fd127d19861->24a86ab4c677). Unlike the 2026-10-22 pass the design document is NOT byte-identical: the Inventory owner rewrote §2.4, §2.6 items 7/9, §3.5 step 3, §4.13, §8.7, §8.8 and §8.9. Those changes are approved separately as APR-005 and reviewed as REV-003."
       ],
       "expires_at": null
     },
@@ -143,9 +146,9 @@
       "actor": "Sam (ERP Product Owner)",
       "decision": "APPROVED",
       "source_ref": "docs/purchasing_receiving_management/implementation/P0_contract_repin.md",
-      "recorded_at": "2026-10-22T14:22:31+08:00",
+      "recorded_at": "2026-10-30T11:30:05+08:00",
       "baseline_kind": "PLAN",
-      "baseline_sha256": "3fd127d19861e54897d2938a129818a804e81baa1fbb416fd8e272169edc1055",
+      "baseline_sha256": "24a86ab4c6771f87246b46cb7b5b946b0139bde4805b2d29dacdbc5002f82828",
       "code_commit": null,
       "scope": [
         "TASK-003",
@@ -153,7 +156,29 @@
         "server/database/migrations/0100_seed_purchasing_permissions.js (approval_required_path)",
         "server/test/permissionCatalogueConventions.test.js (shared, outside module: the three-step process requires registering the seed migration there)",
         "server/test/integration/{roleManagement,userManagement,passwordChange,migrations}.integration.test.js (shared, outside module: six ungranted catalogue entries made their admin claim denylists stale)",
-        "Re-confirmed on 2026-10-22 after refreshing the five drifted consumed-contract pins (design 5db990ab6967->15e4423b088a, plan 54e2b1cb2fa8->3fd127d19861). The requirement, design and plan documents themselves are byte-identical; only manifest contract pins changed."
+        "Re-confirmed on 2026-10-22 after refreshing the five drifted consumed-contract pins (design 5db990ab6967->15e4423b088a, plan 54e2b1cb2fa8->3fd127d19861). The requirement, design and plan documents themselves are byte-identical; only manifest contract pins changed.",
+        "Re-confirmed on 2026-10-30 against main 6d84ee45 (design 15e4423b088a->d6103ad183e2, plan 3fd127d19861->24a86ab4c677). Unlike the 2026-10-22 pass the design document is NOT byte-identical: the Inventory owner rewrote §2.4, §2.6 items 7/9, §3.5 step 3, §4.13, §8.7, §8.8 and §8.9. Those changes are approved separately as APR-005 and reviewed as REV-003."
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-005",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and named independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "docs/purchasing_receiving_management/implementation/P0_contract_rebaseline.md#apr-005--inventory-authored-design-changes",
+      "recorded_at": "2026-10-30T11:30:05+08:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "d6103ad183e2b860fd5ae77d50a573b291550cf052d214234ded23c903cbd133",
+      "code_commit": null,
+      "scope": [
+        "Inventory-authored changes to this module's 03_design_spec.md, delivered in commits 1e9f8159 and 31324ff1 as part of inventory-purchase-provider/1.1",
+        "§2.6 items 7 and 9, §3.5 confirm step 3, §8.8: reversal rows are no longer INSERTed or PK-reserved before the Inventory call; ownerProof comes from the original GR/Details locked at step 6; real Inventory IDs come back first; sourceLineId and originalSourceLineId are both the original GR Detail ID, with the fixed per-reversal event_id distinguishing successive partial reversals",
+        "§4.13: inventory_movements.reversal_of_movement_id keeps its unique constraint; purchase partial reversal uses the append-only inventory_purchase_reversal_links table (migration 0101, Inventory-owned) with a locked SUM check, superseding the former 'remove the unique constraint' requirement",
+        "§2.4 and §8.7: the inline Inventory command example and its caller-supplied authorization.purpose / requiredCallerPermission object are removed; the ABI is inventory-purchase-provider/1.1 §2-3, with a server-issued opaque context, per-line locked commitment, and findOperationsBySource semantics where NOT_FOUND proves nothing and COMPLETED requires full membership verification",
+        "§8.9: reversal reconciliation is per-event on (GOODS_RECEIPT_REVERSAL, original GR ID, reversal event_id, original GR Detail ID) rather than on new Reversal Detail PKs",
+        "No purchasing schema change and no purchasing migration follow from this approval"
       ],
       "expires_at": null
     }
@@ -178,6 +203,18 @@
       "reviewer": "Sam (ERP Product Owner and named independent reviewer)",
       "reviewed_baseline": "15e4423b088a365c3b552fcc0bfde5fc1622398d004beb78295f13dca4d0bef7",
       "source_ref": "docs/purchasing_receiving_management/04_design_review.md#decision",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-003",
+      "method": "HUMAN",
+      "author": "Inventory module owner (inventory-purchase-provider v1.1 candidate; commits 1e9f8159 and 31324ff1)",
+      "reviewer": "Sam (ERP Product Owner and named independent reviewer)",
+      "reviewed_baseline": "d6103ad183e2b860fd5ae77d50a573b291550cf052d214234ded23c903cbd133",
+      "source_ref": "docs/purchasing_receiving_management/implementation/P0_contract_rebaseline.md#rev-003--review-of-the-changed-design",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -297,8 +334,8 @@
         "DES-001",
         "DES-002"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "docs/purchasing_receiving_management/implementation/P0_contract_rebaseline.md#hd-008--the-consumed-inventory-pin"
     }
   ],
   "external_actions": [
@@ -341,9 +378,17 @@
       "idempotency_key": "purchasing-p0-t001-t003-pr266-merge-20261022",
       "status": "CONFIRMED",
       "source_ref": "Observed merge commit 09281b0a on origin/main; CI run 39713871850 passed all 13 checks on head f634a013"
+    },
+    {
+      "id": "EXT-006",
+      "kind": "PR_MERGE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/269 -> main",
+      "idempotency_key": "purchasing-p0-repin-pr269-merge-20261022",
+      "status": "CONFIRMED",
+      "source_ref": "Observed merge commit 5a315640d9f8d3adc41f11e6b8bd919e33b42edc, verified as an ancestor of origin/main; CI run 39735442601 completed success on head e38a54e5d662613083a37512f7967be3493c95b7"
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Contract pins are refreshed and the owner re-confirmed APR-001 through APR-004 and REV-002 against design 15e4423b / plan 3fd127d1. validate_traceability.py should now return STRUCTURE_PASS. PHASE-001 still cannot close: TASK-006 and TASK-007 are with the Inventory owner (issue #267), and TASK-008 follows them. HD-008 records that the Inventory design document does not actually specify the two contracts it is pinned for. HD-006 (OPEN-006 cutover) remains open and blocks Go-Live only."
+  "next_safe_action": "Rebaselined on 2026-10-30 against main 6d84ee45. Three drifted consumed pins refreshed (item-lookup-service, permission-catalogue, supplier-purchasing-contract); all three changes are additive and touch nothing purchasing consumes. HD-008 is answered: the pin now resolves to purchase-provider-contract-v1.md, which names both contracts. APR-005 approves the Inventory-authored design changes and REV-003 records Sam's review of them; APR-001 through APR-004 are re-confirmed at design d6103ad183e2 / plan 24a86ab4c677. TASK-006 and TASK-007 are DELIVERED by the Inventory owner (PR #275 ABI 1.0, PR #278 ABI 1.1), so TASK-008 (consumer contract evidence) is the next startable task and needs no migration. HD-006 (OPEN-006 cutover) remains open and blocks Go-Live and TASK-044 only."
 }
