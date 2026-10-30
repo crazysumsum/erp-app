@@ -1,7 +1,7 @@
 <script setup>
 import { nextTick, onUnmounted, ref, watch } from "vue";
 const props = defineProps({ modelValue: Boolean, disabled: Boolean, busy: Boolean,
-  title: { type: String, default: "確認高風險庫存操作" }, execute: { type: Function, required: true } });
+  title: { type: String, default: "確認高風險庫存操作" }, confirmLabel: { type: String, default: "確認過帳" }, execute: { type: Function, required: true } });
 const emit = defineEmits(["update:modelValue", "hidden"]);
 const passwordInput = ref(null), error = ref(""), submitting = ref(false);
 function clear() { if (passwordInput.value) passwordInput.value.value = ""; }
@@ -32,7 +32,7 @@ onUnmounted(clear);
           <div v-if="error" role="alert" class="text-negative q-mb-md">{{ error }}</div>
           <div class="row justify-end q-gutter-sm">
             <q-btn flat label="取消" :disable="busy || submitting" @click="cancel" />
-            <q-btn color="negative" type="submit" label="確認過帳" :disable="disabled || busy || submitting" :loading="busy || submitting" />
+            <q-btn color="negative" type="submit" :label="confirmLabel" :disable="disabled || busy || submitting" :loading="busy || submitting" />
           </div>
         </form>
       </q-card-section>

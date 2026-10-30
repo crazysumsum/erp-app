@@ -9,7 +9,7 @@ import { EMPTY, VIEW_POLICY, SKU_LOOKUP_QUERY, SKU_LOOKUP_RESPONSE } from "./inv
 export class LookupInventorySkuHandler extends BaseRequestHandler {
   static handlerName = "lookupInventorySku";
   static api = { method: "GET", path: "/api/v1/inventory/sku-lookup", authType: "jwt",
-    description: "依精確 SKU Code 查找可供庫存選料的最小資料。", authorizationPolicies: VIEW_POLICY,
+    description: "依精確 SKU Code 或 Barcode 查找可供庫存選料的最小資料。", authorizationPolicies: VIEW_POLICY,
     requestSchema: { params: EMPTY, query: SKU_LOOKUP_QUERY }, responseSchema: { 200: SKU_LOOKUP_RESPONSE } };
   constructor(services = {}) {
     super(services);
@@ -18,13 +18,18 @@ export class LookupInventorySkuHandler extends BaseRequestHandler {
   }
   async execute(req) {
     // Global query coercion supports numeric filters, but this contract accepts only raw strings.
-    if (typeof req.query.code !== "string") {
-      throw new RequestValidationError([{ location: "query", path: "/code", keyword: "type", message: "must be string" }], true);
+    const byCode = Object.hasOwn(req.query, "code"), field = byCode ? "code" : "barcode";
+    if (byCode === Object.hasOwn(req.query, "barcode") || typeof req.query[field] !== "string") {
+      throw new RequestValidationError([{ location: "query", path: `/${field}`, keyword: "type", message: byCode ? "must be string" : "must be one raw string" }], true);
     }
-    const code = normalizeAndValidateSkuCode(req.input.query.code);
+    const raw = req.query[field];
+    if (!byCode && (!raw.trim() || [...raw].length > 190 || Buffer.byteLength(raw, "utf8") > 760 || /\p{Cc}/u.test(raw))) {
+      throw new RequestValidationError([{ location: "query", path: "/barcode", keyword: "pattern", message: "invalid barcode input" }], true);
+    }
+    const value = byCode ? normalizeAndValidateSkuCode(req.input.query.code) : raw;
     const data = await this.database.withTransaction(async (tx) => {
       const item = new ItemLookupService({ database: tx, ...this.itemDependencies });
-      const found = await item.findByCode(code, { purpose: "inventory" });
+      const found = byCode ? await item.findByCode(value, { purpose: "inventory" }) : await item.findByBarcode(value, { purpose: "inventory" });
       if (!found) throw inventoryError("INVENTORY_RESOURCE_NOT_FOUND");
       const profile = found;
       const baseUom = profile.uoms.find(uom => uom.isBase);

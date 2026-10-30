@@ -12,7 +12,8 @@
       "server/config/inventory.js",
       "client/src/pages/inventory/**",
       "client/src/components/inventory/**",
-      "client/src/services/inventory.js"
+      "client/src/services/inventory.js",
+      "client/src/framework/layout/AppTopbar.vue"
     ],
     "test_paths": [
       "server/test/**/inventory*.test.js",
@@ -22,7 +23,16 @@
       "server/test/integration/passwordChange.integration.test.js",
       "server/test/integration/roleManagement.integration.test.js",
       "server/test/integration/userManagement.integration.test.js",
-      "server/test-support/inventoryPurchaseFixtures.js"
+      "client/test/framework/layout/AppTopbar.test.js",
+      "server/test-support/inventoryStocktakeSafetyChild.js",
+      "server/test-support/inventoryStocktakeExportChild.js",
+      "server/test-support/inventoryStocktakePerformanceChild.js",
+      "server/test-support/inventoryPurchaseFixtures.js",
+      "server/scripts/inventoryPhase005Gate.py",
+      "server/scripts/inventoryPhase005Gate.test.py",
+      "server/test-support/inventoryPhase005GateNative.mjs.txt",
+      "server/scripts/inventoryPhase005CoverageEvidence.mjs",
+      ".github/workflows/ci.yml"
     ],
     "allowed_write_paths": [
       "docs/inventory_management/**",
@@ -37,7 +47,15 @@
       "server/test/**/inventory*.test.js",
       "client/test/**/inventory*.test.js",
       "client/e2e/inventory-management/**",
-      "server/test-support/inventoryPurchaseFixtures.js"
+      "server/test-support/inventoryStocktakeSafetyChild.js",
+      "server/test-support/inventoryStocktakeExportChild.js",
+      "server/test-support/inventoryStocktakePerformanceChild.js",
+      "server/test-support/inventoryPurchaseFixtures.js",
+      "server/scripts/inventoryPhase005Gate.py",
+      "server/scripts/inventoryPhase005Gate.test.py",
+      "server/test-support/inventoryPhase005GateNative.mjs.txt",
+      "server/scripts/inventoryPhase005CoverageEvidence.mjs",
+      ".github/workflows/ci.yml"
     ],
     "approval_required_paths": [
       "server/database/migrations/**",
@@ -71,7 +89,9 @@
       "server/test/integration/passwordChange.integration.test.js",
       "server/test/integration/roleManagement.integration.test.js",
       "server/test/integration/userManagement.integration.test.js",
-      "server/test/supplierBankCrypto.test.js"
+      "server/test/supplierBankCrypto.test.js",
+      "client/src/framework/layout/AppTopbar.vue",
+      "client/test/framework/layout/AppTopbar.test.js"
     ],
     "forbidden_paths": [
       ".env",
@@ -93,9 +113,9 @@
     "provided": [
       {
         "id": "inventory-domain-contract",
-        "version": "HD024-A-actual-prefix-readonly-preview-adopted; oldbatch/writeABI unchanged; source/runtime gates pending",
+        "version": "planning-v49 candidate; P4 Stocktake plus merged Fulfillment HD024 additive read contracts; existing writer ABI unchanged",
         "source": "docs/inventory_management/03_design_spec.md",
-        "sha256": "ba88703fa73d80011688cddd5595b02a947210ab6c579f82238fc1a1940ba19d",
+        "sha256": "4b3f2efb4f781f6c2ade5aac41b499fcbe3ce034e34805af0e926e2d9dc5a080",
         "consumers": [
           "purchasing-receiving",
           "sales-order",

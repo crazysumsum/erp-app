@@ -1,0 +1,897 @@
+// HD235 approved selected-suite original Harness/receipt runtime. Small-stage admission only until other recipes are implemented.
+// Copy to a private .mjs; invoke with repository cwd and one whitelisted suite ID. No source edits while children run.
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import os from 'node:os';
+import { promisify } from 'node:util';
+import { createRequire } from 'node:module';
+import { pathToFileURL } from 'node:url';
+import { createHash, randomUUID } from 'node:crypto';
+import { spawn, execFile } from 'node:child_process';
+const execute=promisify(execFile);
+import net from 'node:net';
+import { setTimeout as delay } from 'node:timers/promises';
+
+const HD235_GENERATED_OUTPUTS = {"client-build":["client/dist","server/logs","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-p3-client-coverage":["client/coverage","client/node_modules/.vite/vitest","server/logs","client/dist","server/coverage","client/node_modules/.vite/deps"],"inventory-p3-browser":["client/node_modules/.vite/deps","server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/vitest"],"inventory-p3-browser-regression":["client/node_modules/.vite/deps","server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/vitest"],"inventory-task039-browser":["client/node_modules/.vite/deps","server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/vitest"],"inventory-task040-browser":["client/node_modules/.vite/deps","server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/vitest"],"inventory-p3-transfers-client":["client/node_modules/.vite/vitest","server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps"],"inventory-p3-movements-client":["client/node_modules/.vite/vitest","server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps"],"inventory-p3-adjustments-client":["client/node_modules/.vite/vitest","server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps"],"inventory-task039-client":["client/node_modules/.vite/vitest","server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps"],"inventory-task040-client":["client/node_modules/.vite/vitest","server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps"],"inventory-task040-topbar":["client/node_modules/.vite/vitest","server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps"],"lint":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-developer":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-p2-database":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-p2-api":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-task026-unit":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-task026-database":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-p3-unit":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-p3-transfer-database":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-p3-movement-database":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-p3-api":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-p3-server-coverage":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-p3-coverage-floors":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-p3-dependency-audit":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-task027-unit":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-task028-unit":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-p3-sales-compatibility":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-p3-customer-capacity":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-p3-core-capacity":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-task035-unit":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-task035-database":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-task036-unit":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-task036-database":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-task037-unit":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-task037-database":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-task038-unit":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-task038-database":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-task039-unit":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-task039-database":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-task039-api":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-task040-unit":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-task040-api":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-task041-safety":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-task041-export-recovery-unit":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-task041-export-recovery-process":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-task041-characterization":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-task041-resource-soak":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-task041-control-lock-unit":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-task041-post-lookup-unit":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-task041-post-batch-unit":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-task041-post-batch-database":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-task041-profile-batch-unit":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-task041-profile-batch-database":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-purchase-receipt-unit":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-purchase-receipt-database":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-purchase-receipt-auth":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-purchase-contract":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-purchase-reversal-unit":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-purchase-reversal-database":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-purchase-reversal-auth":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-purchase-existing-receipt":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-purchase-existing-reservation":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-purchase-existing-lock":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-task041-main-compatibility-unit":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-task041-provider-joint-database":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-task041-export-failure-audit-unit":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-task041-export-failure-audit-api":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-task041-fail-fast-unit":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-task041-gate-binding-unit":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-task041-gate-binding-native":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-task041-draft-lock-range-unit":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"],"inventory-task041-draft-lock-range-database":["server/logs","client/dist","client/coverage","server/coverage","client/node_modules/.vite/deps","client/node_modules/.vite/vitest"]};
+function isGeneratedOutput(relative) {
+  return (HD235_GENERATED_OUTPUTS[suiteId]??[]).some(name=>relative===name||relative.startsWith(name+'/'));
+}
+const repo = process.cwd(), require = createRequire(path.join(repo, 'package.json'));
+const nodeToolchain = path.dirname(path.dirname(process.execPath));
+const mysql = require('mysql2/promise'), mysqld = '/usr/local/mysql/bin/mysqld';
+const profileFile = 'docs/inventory_management/00_project_profile.json';
+// Pin only reviewed selection metadata; the shared profile is read, never rewritten.
+assert.equal(process.argv.length, 3);
+const suiteId = process.argv[2];
+const manifestPath = 'docs/inventory_management/implementation/task041-hd235-completion-manifest.json';
+const manifest = JSON.parse(await fs.readFile(path.join(repo,manifestPath),'utf8'));
+assert.equal(manifest.required_groups,73);
+const descriptor = manifest.rows.find(row => row.suite_id===suiteId);
+assert.ok(descriptor,'Only the reviewed PHASE00573 IDs are supported');
+const profile = JSON.parse(await fs.readFile(path.join(repo,profileFile),'utf8'));
+const selectedSuite = profile.suites.find(value => value.id===suiteId);
+assert.deepEqual(selectedSuite,descriptor.candidate_suite,'Exact reviewed suite contract');
+assert.ok(['FILES_DIRECT','MYSQL_DIRECT','MYSQL_HTTP','MYSQL_IPC_PROCESS','BROWSER_REAL_APP','BROWSER_DECLARED_MOCK'].includes(descriptor.proposed_recipe),'Browser/load recipe not yet admitted; no resource created');
+assert.ok(!['inventory-p3-customer-capacity','inventory-p3-core-capacity'].includes(suiteId),'Capacity remains behind prerequisites; no resource created');
+const isFloor=suiteId==='inventory-p3-coverage-floors';
+if(isFloor){assert.deepEqual(selectedSuite.argv,['node','server/scripts/checkCoverageFloors.js']);assert.equal(selectedSuite.cwd,'.');assert.deepEqual(selectedSuite.env_keys,[]);assert.equal(selectedSuite.timeout_seconds,1800);}
+const minimum=selectedSuite.min_tests, seconds=selectedSuite.timeout_seconds;
+const testFile = selectedSuite.argv.find(value=>/^(server|client)\//u.test(value)&&/\.(js|py|txt)$/u.test(value)) ?? 'server/scripts/inventoryPhase005Gate.py';
+assert.equal(selectedSuite.max_skipped,0);
+const transport = descriptor.proposed_recipe;
+const isBrowser=['BROWSER_REAL_APP','BROWSER_DECLARED_MOCK'].includes(transport);
+const usesCli=['inventory-task039-browser','inventory-task040-browser'].includes(suiteId);
+let finishCliObserver;
+const needsMysql = !['FILES_DIRECT','BROWSER_DECLARED_MOCK'].includes(transport);
+const browserPayloadRoots=[];
+let browserPayloads=[],frontend;
+async function availablePort() {
+  const probe=net.createServer();
+  await new Promise((resolve,reject)=>{probe.once('error',reject);probe.listen({host:'127.0.0.1',port:0},resolve);});
+  const port=probe.address().port;await new Promise((resolve,reject)=>probe.close(error=>error?reject(error):resolve()));return port;
+}
+const clientPort=isBrowser?(suiteId.startsWith('inventory-p3-')?5205:await availablePort()):null;
+const apiPort=isBrowser&&needsMysql?await availablePort():null;
+if(isBrowser) {
+  assert.ok(!process.env.PLAYWRIGHT_BROWSERS_PATH,'Original selected child uses default browser cache, not a parent override');
+  const core=require(path.join(path.dirname(require.resolve('playwright-core/package.json')),'lib/coreBundle.js'));
+  for(const name of ['chromium','chromium-headless-shell']) {
+    const entry=core.registry.registry.findExecutable(name);
+    assert.ok(entry.directory&&entry.executablePath());
+    browserPayloadRoots.push(entry.directory);
+    browserPayloads.push({name,root:entry.directory,executable:entry.executablePath(),revision:entry.revision,browserVersion:entry.browserVersion});
+  }
+  if(usesCli) {
+    browserPayloadRoots.push('/Applications/Google Chrome.app');
+    browserPayloads.push({name:'installed-cli-chrome',root:'/Applications/Google Chrome.app',executable:'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'});
+  }
+}
+const namespace = descriptor.namespace_plan;
+const usesTcp = namespace.transport === 'OWN_LOOPBACK_TCP';
+let tcpPort = null;
+if(usesTcp) {
+  const reservation=net.createServer();
+  await new Promise((resolve,reject)=>{reservation.once('error',reject);reservation.listen({host:'127.0.0.1',port:0},resolve);});
+  tcpPort=reservation.address().port;
+  await new Promise((resolve,reject)=>reservation.close(error=>error?reject(error):resolve()));
+}
+const python = '/Users/sam/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3.12';
+const harness = '/Users/sam/.agents/skills/software-engineering-harness/scripts';
+const id = randomUUID().replaceAll('-', '').slice(0, 12);
+const output = path.join(repo, 'docs/inventory_management/evidence', 'task041-hd235-' + suiteId + '-' + id);
+await fs.mkdir(output, { mode: 0o700 });
+const rootPrefix = namespace.private_root_prefix ?? '/private/tmp/erp-inventory-hd235-files.';
+const root = await fs.mkdtemp(rootPrefix);
+await fs.chmod(root, 0o700);
+const schema = needsMysql ? namespace.database_prefix + id : null, socketPath = path.join(root, 'mysql.sock');
+if(needsMysql)assert.match(schema, /^erp_inventory_[a-z0-9_]+$/u);
+assert.ok(root.startsWith(rootPrefix)); assert.match(root.slice(rootPrefix.length), /^[A-Za-z0-9]+$/u);
+const baseEnv = { ...Object.fromEntries(['PATH', 'LANG', 'TZ'].filter(key => process.env[key] !== undefined).map(key => [key, process.env[key]])), PYTHONDONTWRITEBYTECODE:'1' };
+baseEnv.PATH='/usr/local/mysql/bin:'+(baseEnv.PATH??'');
+const values = { DB_HOST:usesTcp?'127.0.0.1':'localhost', DB_PORT:String(tcpPort??3306), DB_NAME: schema, DB_SOCKET_PATH: socketPath, DB_USER: 'root', DB_PASSWORD: '',
+  DB_INTEGRATION_TESTS: '1', INVENTORY_GATE_BINDING_TESTS: '1', TMPDIR: root, DB_SOCKET:socketPath };
+for (const module of ['SUPPLIER','CUSTOMER']) {
+  values[module+'_BANK_ACTIVE_KEY_ID'] = 'synthetic-enc';
+  values[module+'_BANK_ENCRYPTION_KEYS'] = JSON.stringify({ 'synthetic-enc': Buffer.alloc(32,17).toString('base64') });
+  values[module+'_BANK_LOOKUP_ACTIVE_KEY_ID'] = 'synthetic-lookup';
+  values[module+'_BANK_LOOKUP_KEYS'] = JSON.stringify({ 'synthetic-lookup': Buffer.alloc(32,29).toString('base64') });
+} 
+for(const key of selectedSuite.env_keys) if(key.endsWith('_TESTS')) values[key]='1';
+values.FULFILLMENT_LIFECYCLE_ENABLED='true';
+if(isBrowser)Object.assign(values,{VITE_API_BASE_URL:apiPort?`http://127.0.0.1:${apiPort}`:'http://localhost:3000',
+  INVENTORY_P3_API_ORIGIN:`http://127.0.0.1:${apiPort}`,INVENTORY_STOCKTAKE_API_ORIGIN:`http://127.0.0.1:${apiPort}`,
+  INVENTORY_STOCKTAKE_CLIENT_ORIGIN:`http://127.0.0.1:${clientPort}`,CLIENT_URL:`http://127.0.0.1:${clientPort}`});
+const testEnv = { ...baseEnv, ...Object.fromEntries(selectedSuite.env_keys.map(key => [key, values[key]])) };
+// mysql tool probe is resolved from the actual installation, not an invented version.
+testEnv.PATH = '/usr/local/mysql/bin:' + (testEnv.PATH ?? '');
+const expandedArgv = selectedSuite.argv.map(arg => arg === '{python}' ? python : arg.replaceAll('{run_dir}', root));
+const testArgs = expandedArgv.slice(1), resultName = selectedSuite.result_path;
+const report = { kind: 'FROZEN_HD235_INVENTORY_RUNTIME', transport, formalGate: 'TYPED_RUN_REQUIRES_NORMAL_RUNTIME_CLEANUP', suiteId, selectedSuite, expandedArgv, status: 'IN_PROGRESS',
+  repo, root, schema, output, startedAt: new Date().toISOString(),
+  runtime: { executable: process.execPath, version: process.version, versions: process.versions, platform: process.platform, arch: process.arch },
+  testEnvironmentKeys: Object.keys(testEnv), syntheticKeysOnly: true, deadlinesMs: { initialize: 30000, startup: 10000, test: selectedSuite.timeout_seconds * 1000, end: 10000, term: 5000, kill: 5000 },
+  cleanup: 'PENDING', commands: [], processes: [] };
+const handles = [], processes = [], artifacts = new Set(), cleanupErrors = [];
+let leaseRecorded = false, innerMayBeRunning = false, floorStage;
+let admin, adminStream, adminClosed = false, daemon, suite, primary, created = false, dropped = false, sqlTerminal = false, normalShutdown = false;
+const failure = error => ({ name: error.name, code: error.code ?? null, message: error.message, stack: error.stack });
+const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
+async function hashes() {
+  const files = new Set(['server/test/inventoryStocktakeDraftLockRange.test.js','server/test/inventoryStocktakeService.test.js',testFile, profileFile, 'package.json', 'package-lock.json', 'server/package.json','server/test/performance/inventoryStocktakeCharacterization.performance.test.js','server/test/performance/inventoryStocktakeResourceSoak.performance.test.js']);
+  async function walk(relative) {
+    for (const entry of await fs.readdir(path.join(repo, relative), { withFileTypes: true })) {
+      const name = `${relative}/${entry.name}`;
+      if (entry.isDirectory()) await walk(name);
+      else if (entry.isFile()) files.add(name);
+    }
+  }
+  // Include shared authorization/configuration dependencies without approximating an import registry.
+  for (const directory of ['server/src', 'server/config', 'server/database/migrations', 'server/database/framework', 'server/test-support','server/scripts']) await walk(directory);
+  const result = Object.fromEntries(await Promise.all([...files].sort().map(async name => [name, sha256(await fs.readFile(path.join(repo, name)))])));
+  // Actual installed inputs for this run only; never a historical snapshot.
+  const installed = {};
+  async function installedTree(relative) {
+    if(isGeneratedOutput(relative))return;
+    let info; try { info = await fs.lstat(path.join(repo,relative)); }
+    catch(error) { if(error.code==='ENOENT') { installed[relative]={absent:true}; return; } throw error; }
+    if(info.isSymbolicLink()) {
+      const target=await fs.realpath(path.join(repo,relative));
+      assert.ok([path.join(repo,'client'),path.join(repo,'server')].includes(target),'Unreviewed installed symlink target');
+      installed[relative]={symlink:await fs.readlink(path.join(repo,relative)),realpath:target,workspaceSource:true};
+      const actual=path.relative(repo,target);await installedTree(actual+'/package.json');await installedTree(actual+'/src');return;
+    }
+    if(info.isDirectory()) { installed[relative]={directory:true}; for(const name of (await fs.readdir(path.join(repo,relative))).sort()) await installedTree(relative+'/'+name); }
+    else if(info.isFile()) installed[relative]={sha256:sha256(await fs.readFile(path.join(repo,relative))),executable:!!(info.mode&0o111)};
+    else throw new Error('Unsupported installed dependency input: '+relative);
+  }
+  // .bin links are not imported by these direct Node suites; record their link identities.
+  for(const base of ['node_modules','server/node_modules','client/node_modules']) {
+    async function packageTree(relative) {
+      if(isGeneratedOutput(relative))return;
+      let entries; try { entries=await fs.readdir(path.join(repo,relative),{withFileTypes:true}); }
+      catch(error) { if(error.code==='ENOENT') {installed[relative]={absent:true};return;} throw error; }
+      for(const entry of entries.sort((a,b)=>a.name.localeCompare(b.name))) {
+        const name=relative+'/'+entry.name;
+        if(entry.isSymbolicLink() && relative.endsWith('/.bin')) installed[name]={symlink:await fs.readlink(path.join(repo,name))};
+        else if(entry.isDirectory()) await packageTree(name);
+        else await installedTree(name);
+      }
+    }
+    await packageTree(base);
+  }
+  result.installedInputs = installed;
+  result.executedPython = sha256(await fs.readFile(python));
+  result.executedCoordinator = sha256(await fs.readFile(new URL(import.meta.url)));
+  result.executedNode = sha256(await fs.readFile(process.execPath));
+  result.executedMySQL = sha256(await fs.readFile(mysqld));
+  result.hd233Inputs = await captureExtraInputs(result);
+  report.generatedOutputSnapshots ??= [];
+  report.generatedOutputSnapshots.push({observedAt:new Date().toISOString(),outputs:await generatedOutputManifest()});
+  return result;
+}
+let snapshotIndex = 0;
+async function treeManifest(directory, exclusions = []) {
+  const files = {}, seen = new Set();
+  async function visit(name) {
+    if (exclusions.some(excluded => name === excluded || name.startsWith(excluded + path.sep))) return;
+    const info = await fs.lstat(name);
+    if (info.isSymbolicLink()) {
+      const realpath = await fs.realpath(name), target = await fs.stat(realpath);
+      assert.ok([repo,path.dirname(path.dirname(python)),path.dirname(harness),nodeToolchain,...browserPayloadRoots].some(parent=>realpath===parent||realpath.startsWith(parent+path.sep)),'Unreviewed runtime symlink target');
+      files[name] = { symlink: await fs.readlink(name), realpath,
+        ...(target.isFile() ? { sha256: sha256(await fs.readFile(realpath)) } : { directory: true }) };
+      if (target.isDirectory()) await visit(realpath);
+    } else if (info.isDirectory()) {
+      const realpath = await fs.realpath(name);
+      const children = (await fs.readdir(name)).sort();
+      files[name] = { directory: true, children };
+      if (seen.has(realpath)) return; seen.add(realpath);
+      for (const child of children) await visit(path.join(name, child));
+    } else if (info.isFile()) files[name] = { sha256: sha256(await fs.readFile(name)), executable: !!(info.mode & 0o111) };
+    else throw new Error('Unsupported runtime input: ' + name);
+  }
+  await visit(directory); return files;
+}
+async function repositoryImportManifest() {
+  const outputs = HD235_GENERATED_OUTPUTS[suiteId] ?? [];
+  const files = await treeManifest(repo, [path.join(repo,'.git'),path.join(repo,'docs/inventory_management'),
+    path.join(repo,'node_modules'),path.join(repo,'server/node_modules'),path.join(repo,'client/node_modules'),
+    ...outputs.map(name=>path.join(repo,name))]);
+  for(const [filename,record] of Object.entries(files)) {
+    if(record.directory!==true || record.symlink!==undefined)continue;
+    const generated = outputs.filter(name=>path.dirname(path.join(repo,name))===filename).map(name=>path.basename(name)).sort();
+    if(generated.length) {
+      record.generatedChildren=generated;
+      record.children=record.children.filter(name=>!generated.includes(name));
+    }
+  }
+  return files;
+}
+async function generatedOutputManifest() {
+  const records = {};
+  for(const name of HD235_GENERATED_OUTPUTS[suiteId] ?? []) {
+    const absolute=path.join(repo,name);
+    let info;try{info=await fs.lstat(absolute);}catch(error){if(error.code==='ENOENT'){records[name]={absent:true};continue;}throw error;}
+    assert.ok(info.isDirectory()&&!info.isSymbolicLink(),'Generated output root must remain an own regular directory');
+    if(name==='server/logs') {
+      assert.equal(info.uid,process.geteuid(),'Generated log output owner');
+      const pending=[absolute];
+      while(pending.length) {
+        const directory=pending.pop();
+        for(const entry of await fs.readdir(directory,{withFileTypes:true})) {
+          const filename=path.join(directory,entry.name),st=await fs.lstat(filename);
+          assert.ok(!st.isSymbolicLink()&&st.uid===process.geteuid(),'Generated log output identity');
+          if(entry.isDirectory()) {
+            assert.ok(directory===absolute&&entry.name==='system','Generated log output directory');
+            pending.push(filename);
+          } else {
+            const prefix=directory===absolute?'requests':'system';
+            assert.ok(st.isFile()&&!(st.mode&0o111)&&new RegExp('^'+prefix+'-\\d{4}-\\d{2}-\\d{2}(?:-\\d+)?\\.log$','u').test(entry.name),'Generated log output file');
+          }
+        }
+      }
+    }
+    records[name]={files:await treeManifest(absolute)};
+  }
+  return records;
+}
+
+async function resolvedExecutable(name, searchPath = testEnv.PATH) {
+  const candidates = name.startsWith('/') ? [name] : searchPath.split(path.delimiter).map(directory => path.join(directory, name));
+  for (const candidate of candidates) {
+    try {
+      await fs.access(candidate, 1); const realpath = await fs.realpath(candidate);
+      return { path: candidate, realpath, sha256: sha256(await fs.readFile(realpath)), executable:!!((await fs.stat(realpath)).mode & 0o111),
+        symlink: (await fs.lstat(candidate)).isSymbolicLink() ? await fs.readlink(candidate) : null };
+    } catch (error) { if (!['ENOENT','EACCES','ENOTDIR'].includes(error.code)) throw error; }
+  }
+  throw new Error('Executable resolution unknown: '+name);
+}
+async function captureExtraInputs(result) {
+  const paths = {};
+  for (const name of ['node','mysql','git','npm','npx',...(usesCli?['ps','lsof']:[])]) paths[name] = await resolvedExecutable(name);
+  paths.python = await resolvedExecutable(python);
+  assert.equal(paths.node.realpath, await fs.realpath(process.execPath));
+  const code = `import sys,json,os\nsys.dont_write_bytecode=True\nsys.path.insert(0,sys.argv[1])\nfrom pathlib import Path\nfrom harness_core import Context,fingerprint,git,file_sha\nr=Path(sys.argv[2]);c=Context(r/'docs/inventory_management',r);names=git(r,'ls-files','-z','--cached','--others','--exclude-standard').split('\\0');rows=[]\nfor name in sorted(set(names)-{''}):\n if name==c.manifest['docs_path'] or name.startswith(c.manifest['docs_path']+'/'):continue\n p=r/name\n if p.is_symlink():rows.append([name,'symlink',os.readlink(p)])\n elif p.is_file():rows.append([name,bool(p.stat().st_mode&0o111),file_sha(p)])\n elif not p.exists():rows.append([name,'deleted'])\n else:raise AssertionError('Unsupported input '+name)\nprint(json.dumps({'source_fingerprint':fingerprint(r,c.manifest['docs_path']),'records':rows,'python_prefix':sys.prefix,'python_path':sys.path,'import_origins':{name:getattr(module,'__file__',None) for name,module in sys.modules.items() if getattr(module,'__file__',None)}}))`;
+  const label = 'snapshot-source-' + snapshotIndex++;
+  const child = await launch(python, ['-B','-c',code,harness,repo], baseEnv, label);
+  assert.deepEqual(await bounded(child.exit,10000,'Source snapshot original10s budget'),{code:0,signal:null});await groupEnd(child);
+  const actual = JSON.parse(await fs.readFile(path.join(root,label+'.stdout.log'),'utf8'));
+  const harnessFiles = {};
+  for (const directory of [harness,path.join(harness,'../schemas')]) Object.assign(harnessFiles,await treeManifest(directory));
+  const importRoots = [];
+  for (const raw of [...actual.python_path, path.join(repo,'server/scripts')]) {
+    const absolute = path.resolve(raw || repo);
+    let resolved;
+    try { resolved = await fs.realpath(absolute); }
+    catch(error) { if(error.code==='ENOENT') { importRoots.push({path:absolute,absent:true});continue; } throw error; }
+    assert.ok([actual.python_prefix,harness,path.dirname(harness),repo].some(parent=>resolved===parent||resolved.startsWith(parent+path.sep)),'Unreviewed external Python import root');
+    importRoots.push({path:absolute,realpath:resolved});
+  }
+  // Repository Python lookup roots are captured excluding data-only module docs,
+  // Git metadata and installed Node trees already captured separately. No Gate
+  // Python command imports those module documents; the producer is pinned below.
+  const importFiles = await repositoryImportManifest();
+  const npmRoot = path.dirname(path.dirname(paths.npm.realpath));
+  assert.equal(npmRoot,path.join(nodeToolchain,'lib/node_modules/npm'));
+  assert.ok(paths.npx.realpath.startsWith(npmRoot+path.sep));
+  const libraryRoot = path.join(nodeToolchain,'lib');
+  const libraryNames = (await fs.readdir(libraryRoot)).filter(name=>name.endsWith('.dylib')).sort();
+  assert.ok(libraryNames.length,'This reviewed local Node uses the captured shared-library toolchain');
+  const libraryFiles = {};
+  for(const name of libraryNames)Object.assign(libraryFiles,await treeManifest(path.join(libraryRoot,name)));
+  const globalNpm = {root:npmRoot,files:await treeManifest(npmRoot)};
+  const nativeLibraries = {root:libraryRoot,names:libraryNames,files:libraryFiles};
+  let browserInputs,cliGlobalConfig;
+  if(isBrowser) {
+    browserInputs=[];
+    for(const payload of browserPayloads)browserInputs.push({...payload,files:await treeManifest(payload.root)});
+    paths.playwrightCli=await resolvedExecutable('playwright-cli');
+    const cliRoot=path.dirname(paths.playwrightCli.realpath);
+    assert.equal(cliRoot,path.join(nodeToolchain,'lib/node_modules/@playwright/cli'));
+    browserInputs.push({name:'available-playwright-cli-package',root:cliRoot,executable:paths.playwrightCli.realpath,files:await treeManifest(cliRoot)});
+    if(usesCli){const file=path.join(os.homedir(),'.playwright/cli.config.json');assert.equal(await absent(file),true,'Unreviewed global CLI config');cliGlobalConfig={path:file,absent:true};}
+  }
+  const producer = path.join(repo,'docs/inventory_management/implementation/task041-hd235-verification-runtime.mjs.txt');
+  assert.equal(sha256(await fs.readFile(producer)), result.executedCoordinator);
+  return { node: { installedInputs: result.installedInputs, executable: paths.node, globalNpm, nativeLibraries, ...(browserInputs?{browserInputs}:{}),...(cliGlobalConfig?{cliGlobalConfig}:{}) },
+    python: { prefix: actual.python_prefix, sysPath: actual.python_path, importRoots, importOrigins:actual.import_origins, importFiles,
+      files: await treeManifest(actual.python_prefix,[path.join(actual.python_prefix,'share'),path.join(actual.python_prefix,'lib/pkgconfig')]) },
+    mysql: { daemon: await resolvedExecutable(mysqld), client: paths.mysql },
+    harness: { root: harness, files: harnessFiles }, path: paths,
+    tools: { producer: { path: producer, sha256: result.executedCoordinator },
+      sourceMap: { source_fingerprint: actual.source_fingerprint, records: actual.records } } };
+}
+async function registerTyped(reference, digest) {
+  const code = `import sys,json,copy,hashlib,tempfile\nsys.dont_write_bytecode=True\nfrom pathlib import Path\nsys.path.insert(0,sys.argv[1])\nfrom harness_core import Context,inside,typed_json\nfrom state_tool import checkpoint\nr=Path(sys.argv[2]);c=Context(r/'docs/inventory_management',r);name=sys.argv[3];p=inside(c.module_dir,name,True);raw=typed_json(p,'evidence')\nassert name=='evidence/'+raw['run_id']+'/run.json' and hashlib.sha256(p.read_bytes()).hexdigest()==sys.argv[4]\nassert raw['suite_id'] in {x['id'] for x in c.profile['suites']} and raw['stage']=='DEVELOPER'\ns=copy.deepcopy(c.state)\nif name not in s['evidence_files']:s['evidence_files'].append(name)\nwith tempfile.NamedTemporaryFile(mode='w',dir='/private/tmp',delete=False) as f:json.dump(s,f);tmp=Path(f.name)\ntry:\n result=checkpoint(c,tmp,c.state['revision']);assert result['status']=='RECORDED',result;print(json.dumps(result))\nfinally:tmp.unlink()`;
+  const child = await launch(python,['-B','-c',code,harness,repo,reference,digest],baseEnv,'register-typed-'+reference.split('/')[1]+'-'+processes.length);
+  assert.deepEqual(await bounded(child.exit,10000,'OriginalCAS registration deadline'),{code:0,signal:null});await groupEnd(child);
+}
+async function publishReceiptReferences(filename, observationFile) {
+  const relative=path.relative(path.join(repo,'docs/inventory_management'),path.join(output,observationFile));
+  const digest=sha256(await fs.readFile(path.join(output,observationFile)));
+  for(const value of [report.typedEvidence]) {
+    if(!value)continue;
+    assert.match(value.path,/^evidence\/[A-Za-z0-9T+-]+\/run\.json$/u);
+    const directory=path.dirname(path.join(repo,'docs/inventory_management',value.path));
+    const reference=await fs.open(path.join(directory,filename),'wx',0o600);
+    try{await reference.writeFile(JSON.stringify({path:relative,sha256:digest})+'\n');await reference.sync();}finally{await reference.close();}
+    const handle=await fs.open(directory,'r');try{await handle.sync();}finally{await handle.close();}
+  }
+}
+async function livePreflight() {
+  await durableJson('live-observation.json',report);
+  await publishReceiptReferences('runtime-live-ref.json','live-observation.json');
+  const child=await launch(python,[path.join(repo,'server/scripts/inventoryPhase005Gate.py'),'--receipt-preflight','--suite',suiteId,'--phase','PHASE-005','--module','docs/inventory_management','--repo-root',repo,'--harness-scripts',harness,'--json'],baseEnv,'live-preflight');
+  const result=await bounded(child.exit,60000,'Read-only preflight60s');await groupEnd(child);
+  const raw=await fs.readFile(path.join(root,'live-preflight.stdout.log'),'utf8');
+  const observed=JSON.parse(raw);assert.equal(observed.status,'BLOCKED');assert.ok(observed.issues.length);
+  await fs.writeFile(path.join(output,'live-preflight.stdout.json'),raw,{flag:'wx',mode:0o600});
+  report.livePreflight={path:path.relative(path.join(repo,'docs/inventory_management'),path.join(output,'live-preflight.stdout.json')),sha256:sha256(Buffer.from(raw))};
+  assert.equal(result.signal,null);
+}
+
+async function bounded(work, ms, label) {
+  let timer;
+  try { return await Promise.race([work, new Promise((_, reject) => { timer = setTimeout(() => reject(new Error(label)), ms); })]); }
+  finally { clearTimeout(timer); }
+}
+async function launch(executable, args, env, label) {
+  const stdoutName = `${label}.stdout.log`, stderrName = `${label}.stderr.log`;
+  const stdout = await fs.open(path.join(root, stdoutName), 'wx', 0o600); handles.push(stdout); artifacts.add(stdoutName);
+  const stderr = await fs.open(path.join(root, stderrName), 'wx', 0o600); handles.push(stderr); artifacts.add(stderrName);
+  report.commands.push({ label, executable, args, cwd: repo, env });
+  // The runner may fork a test worker; its fresh process group is owned from spawn.
+  const child = spawn(executable, args, { cwd: repo, env, detached: true, stdio: ['ignore', stdout.fd, stderr.fd] });
+  const record = { label, child, settled: false, result: null, signals: [], groupTerminal: false }; processes.push(record);
+  record.exit = new Promise(resolve => {
+    child.once('error', error => { record.spawnError = failure(error); });
+    child.once('close', (code, signal) => { record.settled = true; record.result = { code, signal }; resolve(record.result); });
+  });
+  return record;
+}
+function groupGone(record) {
+  if (!record.child.pid) return record.settled;
+  assert.ok(Number.isSafeInteger(record.child.pid) && record.child.pid > 0);
+  try { process.kill(-record.child.pid, 0); return false; }
+  catch (error) {
+    if (error.code === 'ESRCH') return true;
+    record.groupError = failure(error); return false;
+  }
+}
+async function groupEnd(record) {
+  if (record.groupTerminal) return;
+  const deadline = performance.now() + 5000;
+  while (!groupGone(record)) {
+    assert.ok(performance.now() < deadline, `${record.label} process group disappearance unknown`);
+    await delay(25);
+  }
+  record.groupTerminal = true;
+}
+async function stop(record) {
+  if (record.groupTerminal) return; // A disappeared PGID is never owned again.
+  if (record.settled && groupGone(record)) { record.groupTerminal = true; return; }
+  cleanupErrors.push(`Normal child completion unproven: ${record.label}`);
+  for (const signal of ['SIGTERM', 'SIGKILL']) {
+    record.signals.push(signal);
+    try {
+      if (record.child.pid && !groupGone(record)) process.kill(-record.child.pid, signal);
+      await bounded(Promise.all([record.exit, groupEnd(record)]), 5000, `${record.label} ${signal} completion unknown`);
+    }
+    catch (error) { cleanupErrors.push(error.message); }
+    if (record.settled && record.groupTerminal) return;
+  }
+  record.child.unref();
+}
+async function connect(remainingMs) {
+  const db = await mysql.createConnection({ socketPath, user: 'root', connectTimeout: Math.min(500, remainingMs) });
+  const query = db.query.bind(db);
+  db.query = (sql, params = []) => query(typeof sql === 'string' ? { sql, timeout: 1000 } : sql, params).catch(error => {
+    if (error.code === 'PROTOCOL_SEQUENCE_TIMEOUT') db.destroy();
+    throw error;
+  });
+  return db;
+}
+async function terminal() {
+  const deadline = performance.now() + 10000;
+  do {
+    const remaining = Math.floor(deadline - performance.now());
+    assert.ok(remaining > 0, 'SQL terminal absolute deadline');
+    const [[state]] = await admin.query({ sql: `SELECT
+      (SELECT COUNT(*) FROM performance_schema.threads WHERE TYPE='FOREGROUND'
+        AND PROCESSLIST_ID IS NOT NULL AND PROCESSLIST_ID<>CONNECTION_ID()
+        AND NOT (NAME='thread/sql/event_scheduler' AND PROCESSLIST_USER='event_scheduler' AND PROCESSLIST_COMMAND='Daemon')
+        AND NOT (NAME='thread/sql/compress_gtid_table' AND PROCESSLIST_USER IS NULL AND PROCESSLIST_COMMAND='Daemon')) AS connections,
+      (SELECT COUNT(*) FROM information_schema.innodb_trx) AS transactions,
+      (SELECT COUNT(*) FROM performance_schema.data_locks WHERE OBJECT_SCHEMA=?) AS locks`, timeout: Math.min(1000, remaining) }, [schema]);
+    assert.ok(performance.now() < deadline, 'SQL terminal observation completed after deadline');
+    report.postTestSql = state;
+    if (Object.values(state).every(value => Number(value) === 0)) { sqlTerminal = true; return; }
+    await delay(25);
+  } while (performance.now() < deadline);
+  throw new Error('Independent post-child SQL connection/transaction/lock disappearance unproven');
+}
+async function stateRuntime(active) {
+  const stateCode = `import copy,json,sys,tempfile
+from pathlib import Path
+sys.path.insert(0,sys.argv[1])
+from harness_core import Context
+from state_tool import checkpoint
+repo=Path(sys.argv[2]);ctx=Context(repo/'docs/inventory_management',repo);state=copy.deepcopy(ctx.state)
+active=sys.argv[3]=='true';root=sys.argv[4];schema=sys.argv[5];proof=sys.argv[6]
+assert state['status']=='IMPLEMENTING' and state['baseline']['source_fingerprint']
+if active:
+ assert set(state['runtime']['resources'])=={'workspace'}
+ state['runtime']={'instance_id':Path(root).name,'owner':'Codex TASK041 HD235 selected-suite '+Path(root).name,'resources':{'workspace':str(repo),'mysql-schema':schema if schema!='null' else 'Serialized FILES-only lease held by private owner; no database created','web-port':'Serialized owner lease; no listener for FILES; native HTTP uses actual OS-assigned listener','opening-file-root':root+'/opening'},'lease_ref':'Exclusive private mkdtemp root and owned daemon/schema; source frozen; '+proof}
+else:
+ assert state['runtime']['instance_id']==Path(root).name
+ state['runtime']={'instance_id':Path(root).name,'owner':'Codex TASK041','resources':{'workspace':str(repo)},'lease_ref':'Runtime stopped; inspect exact cleanup in '+proof}
+state['next_safe_action']='HD235 selected-suite runtime '+('STARTED' if active else 'FINISHED')+'; typed suite run and separate runtime cleanup must both be inspected: '+proof
+with tempfile.NamedTemporaryFile(mode='w',dir='/private/tmp',delete=False) as f:json.dump(state,f);tmp=Path(f.name)
+try:
+ result=checkpoint(ctx,tmp,ctx.state['revision']);assert result['status']=='RECORDED',result
+finally:tmp.unlink()
+print(json.dumps(result))`;
+  const child = await launch(python,['-c',stateCode,harness,repo,String(active),root,schema,path.relative(repo,output)],baseEnv,active?'runtime-acquire':'runtime-release');
+  try {
+    assert.deepEqual(await bounded(child.exit,10000,'State checkpoint deadline'),{code:0,signal:null});
+    await groupEnd(child);
+  } finally { await stop(child); }
+}
+async function confirmNativeOwnership() {
+  assert.ok(suite?.settled && suite.signals.length===0,'No normal Harness completion: inner ownership UNKNOWN');
+  report.runnerResponse=JSON.parse(await fs.readFile(path.join(root,'harness-runner.stdout.log'),'utf8'));
+  const relative=report.runnerResponse.evidence_file;
+  if(typeof relative!=='string') {
+    if(report.runnerResponse.status==='BLOCKED' && report.runnerResponse.scope==='Suite was not executed.')innerMayBeRunning=false;
+    throw Object.assign(new Error('Harness did not execute: '+JSON.stringify(report.runnerResponse)),{code:'HARNESS_NOT_EXECUTED'});
+  }
+  assert.match(relative,/^evidence\/[A-Za-z0-9T+-]+\/run\.json$/u);
+  const formalPath=path.resolve(repo,'docs/inventory_management',relative);
+  assert.equal(await fs.realpath(formalPath),formalPath);
+  const typed=JSON.parse(await fs.readFile(formalPath,'utf8'));
+  assert.equal(typed.suite_id,suiteId);await registerTyped(relative,sha256(await fs.readFile(formalPath)));
+  report.expandedArgv=typed.command;
+  report.typedEvidence={path:relative,sha256:sha256(await fs.readFile(formalPath)),counts:typed.counts};
+  assert.equal(typed.timed_out,false,'Runner timeout retains inner terminal UNKNOWN');
+  if(transport==='MYSQL_IPC_PROCESS' && suiteId!=='inventory-task041-gate-binding-native') {
+    const name=suiteId==='inventory-task041-safety' ? path.join(path.dirname(formalPath),'stocktake-safety-observations.json') : path.join(path.dirname(formalPath),path.basename(resultName));
+    assert.equal(typed.result,'PASS','Original IPC fixture must complete successfully before releasing ownership');
+    const code=`import importlib.util,json,sys
+spec=importlib.util.spec_from_file_location('phase005',sys.argv[1]);module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+issues=module.hd235_fixture_terminal_issues(sys.argv[2],open(sys.argv[3]).read(),{'schema':sys.argv[4]})
+print(json.dumps(issues));sys.exit(1 if issues else 0)`;
+    const checker=await launch(python,['-B','-c',code,path.join(repo,'server/scripts/inventoryPhase005Gate.py'),suiteId,name,schema],baseEnv,'fixture-terminal-check');
+    assert.deepEqual(await bounded(checker.exit,10000,'Original fixture terminal decoder deadline'),{code:0,signal:null});await groupEnd(checker);
+    const bytes=await fs.readFile(name);
+    report.nativeOwnership={reportPath:path.relative(repo,name),sha256:sha256(bytes),format:suiteId==='inventory-task041-safety'?'JSON':'ORIGINAL_JUNIT'};
+  }
+  if(transport==='MYSQL_IPC_PROCESS' && suiteId==='inventory-task041-gate-binding-native') {
+    const name=path.join(path.dirname(formalPath),'inventory-phase005-gate-native.json');
+    const native=JSON.parse(await fs.readFile(name,'utf8'));
+    assert.equal(native.kind,'DEVELOPER_GATE_BINDING_RESOURCE_VERIFIER_PROBE');assert.equal(native.cleanup,'CHILD_EXIT_AND_SQL_TERMINAL_CONFIRMED');
+    report.nativeOwnership={reportPath:path.relative(repo,name),sha256:sha256(await fs.readFile(name)),ownedStops:native.ownedStops};
+    report.nativeObservation={path:path.relative(repo,name),sha256:report.nativeOwnership.sha256};
+    const proof=path.join(path.dirname(formalPath),'inventory-phase005-native-executable.json');
+    report.nativeOwnership.executionProof={path:path.relative(repo,proof),sha256:sha256(await fs.readFile(proof))};
+    assert.equal(native.status,'PASS');
+  }
+  if(['MYSQL_HTTP','BROWSER_REAL_APP'].includes(transport)) {
+    const supplementary={'inventory-task041-export-failure-audit-api':'failure-audit-native-observations.json',
+      'inventory-task039-api':'stocktake-api-observations.json','inventory-task040-api':'stocktake-ui-api-observations.json'}[suiteId];
+    const name=path.join(path.dirname(formalPath),supplementary??path.basename(resultName));
+    if(supplementary)assert.ok(JSON.parse(await fs.readFile(name,'utf8')).length);
+    report.httpNative={path:path.relative(repo,name),sha256:sha256(await fs.readFile(name)),format:supplementary?'JSON':'ORIGINAL_JUNIT'};
+  }
+  if(isBrowser) {
+    assert.equal(typed.result,'PASS','Original browser fixture must finish successfully');
+    report.browser.originalPlaywrightPassed=true;
+  }
+  if(usesCli&&!report.browser.cli?.verified)await finishCliObserver(path.dirname(formalPath));
+  innerMayBeRunning=false;return typed;
+}
+
+async function cliProcessRows() {
+  const {stdout}=await execute('/bin/ps',['-axo','pid=,ppid=,pgid=,lstart=,command='],{env:{PATH:baseEnv.PATH,LANG:'C',TZ:'UTC'},timeout:1000,maxBuffer:4*1024*1024});
+  return stdout.split('\n').map(line=>{const m=/^\s*(\d+)\s+(\d+)\s+(\d+)\s+(\w+\s+\w+\s+\d+\s+\d\d:\d\d:\d\d\s+\d{4})\s+(.*)$/u.exec(line);return m?{pid:+m[1],ppid:+m[2],pgid:+m[3],startedAt:new Date(m[4]+' UTC').toISOString(),command:m[5]}:null;}).filter(Boolean);
+}
+async function absent(filename) {try{await fs.lstat(filename);return false;}catch(error){if(error.code==='ENOENT')return true;throw error;}}
+function cliGroupTerminal(pid) {try{process.kill(-pid,0);return false;}catch(error){if(error.code==='ESRCH')return true;if(error.code==='EPERM')return false;throw error;}}
+async function cliFileIdentity(filename) {const st=await fs.lstat(filename);assert.equal(st.uid,process.geteuid());assert.ok(!st.isSymbolicLink());return{path:filename,uid:st.uid,dev:st.dev,ino:st.ino,terminal:false};}
+function cliProcessIdentity(row) {return{pid:row.pid,ppid:row.ppid,pgid:row.pgid,startedAt:row.startedAt,commandOriginal:row.command,commandSha256:sha256(Buffer.from(row.command)),groupTerminal:false,exitCode:'UNOBSERVABLE_NON_CHILD'};}
+function startBrowserCliObserver() {
+  let finished=false,problem=null;const record={workspace:null,workspaceCreatedPrivate:false,cacheRoot:null,sessions:[]};report.browser.cli=record;
+  const prefix=suiteId==='inventory-task039-browser'?'st039-':'st040-';
+  async function tick() {
+    if(!record.workspace) {
+      const rows=await cliProcessRows(),owned=new Set([suite.child.pid]);let changed=true;
+      while(changed){changed=false;for(const row of rows)if(owned.has(row.ppid)&&!owned.has(row.pid)){owned.add(row.pid);changed=true;}}
+      for(const row of rows.filter(value=>owned.has(value.pid)&&value.pid!==suite.child.pid&&/playwright|(?:^|\/)node |(?:^|\/)npx /u.test(value.command))) {
+        const {stdout}=await execute('/bin/ps',['eww','-p',String(row.pid),'-o','command='],{env:{PATH:baseEnv.PATH,LANG:'C',TZ:'UTC'},timeout:1000,maxBuffer:1024*1024});
+        const directory=/(?:^|\s)HARNESS_RUN_DIR=([^\s]+)/u.exec(stdout)?.[1];if(!directory)continue;
+        const parent=path.join(repo,'docs/inventory_management/evidence');assert.equal(path.dirname(directory),parent);assert.match(path.basename(directory),/^\d{8}T\d{6}-[a-f0-9]{12}$/u);
+        assert.equal(await fs.realpath(directory),directory);const st=await fs.lstat(directory);assert.equal(st.uid,process.geteuid());assert.equal(st.mode&0o077,0);
+        const marker=path.join(directory,'.playwright');await fs.mkdir(marker,{mode:0o700});
+        record.workspace=directory;record.workspaceCreatedPrivate=true;record.workspaceCreatedAt=new Date().toISOString();
+        record.cacheRoot=path.join(os.homedir(),'Library/Caches/ms-playwright/daemon',createHash('sha1').update(directory).digest('hex').slice(0,16));
+        assert.equal(await absent(record.cacheRoot),true,'Own fresh CLI namespace must not pre-exist');break;
+      }
+      return;
+    }
+    if(await absent(record.cacheRoot))return;
+    if(!record.cacheIdentity){assert.equal(await fs.realpath(record.cacheRoot),record.cacheRoot);const st=await fs.lstat(record.cacheRoot);assert.ok(st.isDirectory()&&!st.isSymbolicLink());assert.equal(st.uid,process.geteuid());record.cacheIdentity={dev:st.dev,ino:st.ino,uid:st.uid};}
+    const names=(await fs.readdir(record.cacheRoot)).filter(name=>name.endsWith('.session'));
+    for(const filename of names) {
+      const name=filename.slice(0,-8);assert.match(name,new RegExp('^'+prefix+'[a-f0-9]{8}$','u'));
+      if(record.sessions.some(value=>value.name===name))continue;
+      const file=path.join(record.cacheRoot,filename),bytes=await fs.readFile(file);let cfg;try{cfg=JSON.parse(bytes);}catch(error){if(error instanceof SyntaxError)continue;throw error;}
+      assert.equal(cfg.workspaceDir,record.workspace);assert.equal(cfg.name,name);assert.ok(!cfg.attached&&!cfg.cli.persistent);assert.equal(cfg.browser.launchOptions.channel,'chrome');
+      assert.ok(cfg.timestamp>=Date.parse(record.workspaceCreatedAt));
+      const archive=path.join(output,'observed-cli-session-'+name+'.json');await fs.writeFile(archive,bytes,{flag:'wx',mode:0o600});
+      record.sessions.push({name,channel:'chrome',attached:false,persistent:false,socket:await cliFileIdentity(cfg.socketPath),
+        sessionFile:{path:file,sha256:sha256(bytes),archivePath:path.relative(repo,archive),terminal:false},close:{observed:false}});
+    }
+    if(!record.sessions.length)return;
+    const rows=await cliProcessRows();
+    for(const entry of record.sessions) {
+      if(!entry.daemon) {
+        const row=rows.find(value=>value.command.includes('/entry/cliDaemon.js '+entry.name));
+        if(row) {
+          assert.equal(row.pgid,row.pid);const {stdout}=await execute('/usr/sbin/lsof',['-t','-a','-U',entry.socket.path],{env:{PATH:baseEnv.PATH,LANG:'C',TZ:'UTC'},timeout:1000,maxBuffer:1024*1024});
+          assert.ok(stdout.trim().split(/\s+/u).map(Number).includes(row.pid));entry.daemon=cliProcessIdentity(row);
+        }
+      }
+      if(entry.daemon&&!entry.browser) {
+        const row=rows.find(value=>value.ppid===entry.daemon.pid&&value.command.startsWith('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome '));
+        if(row){assert.equal(row.pgid,row.pid);entry.browser=cliProcessIdentity(row);const profile=/--user-data-dir=([^ ]+)/u.exec(row.command)?.[1];assert.ok(profile);entry.profile=await cliFileIdentity(profile);}
+      }
+      if(!entry.close.observed) {
+        const row=rows.find(value=>new RegExp('playwright-cli(?:\\.js)? -s='+entry.name+' close(?: |$)','u').test(value.command));
+        if(row) {
+          assert.ok(entry.daemon&&entry.browser,'CLI close requires prior daemon and browser ownership');
+          // Observe the same groups after seeing the close invocation, not merely before its eventual disappearance.
+          const alive=await cliProcessRows(),groups=[];
+          for(const previous of [entry.daemon,entry.browser]) {
+            const current=alive.find(value=>value.pid===previous.pid&&value.pgid===previous.pgid&&value.startedAt===previous.startedAt&&sha256(Buffer.from(value.command))===previous.commandSha256);
+            assert.ok(current&&!cliGroupTerminal(previous.pid),'Original owned CLI groups must overlap close invocation');
+            groups.push({pid:current.pid,pgid:current.pgid,startedAt:current.startedAt,commandSha256:previous.commandSha256});
+          }
+          entry.close={observed:true,pid:row.pid,startedAtLowerBound:row.startedAt,commandOriginal:row.command,commandSha256:sha256(Buffer.from(row.command)),groupsAtStart:groups,observedLiveAt:new Date().toISOString()};
+        }
+      }
+      if(entry.close.observed&&!entry.close.observedGoneAt&&!rows.some(row=>row.pid===entry.close.pid&&row.startedAt===entry.close.startedAtLowerBound)) {
+        entry.close.observedGoneAt=new Date().toISOString();entry.close.elapsedUpperBoundMs=Date.parse(entry.close.observedGoneAt)-Date.parse(entry.close.startedAtLowerBound);
+      }
+      if(entry.daemon)entry.daemon.groupTerminal=cliGroupTerminal(entry.daemon.pid);
+      if(entry.browser)entry.browser.groupTerminal=cliGroupTerminal(entry.browser.pid);
+      entry.socket.terminal=await absent(entry.socket.path);entry.sessionFile.terminal=await absent(entry.sessionFile.path);
+      if(entry.profile)entry.profile.terminal=await absent(entry.profile.path);
+    }
+  }
+  const task=(async()=>{while(!finished){await tick();await delay(record.sessions.length?25:100);}})().catch(error=>{problem=error;record.observationError=failure(error);});
+  let finishPromise;
+  const finish=formalDirectory=>finishPromise??=(async()=>{
+    finished=true;await bounded(task,5000,'Own CLI observer stop deadline');if(problem)throw problem;await tick();
+    assert.equal(record.workspace,formalDirectory,'Observer must bind actual selected Harness run');assert.equal(record.sessions.length,1,'Exactly the original one named CLI session expected');
+    const code=`import importlib.util,json,os,sys\nspec=importlib.util.spec_from_file_location('phase005',sys.argv[1]);module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)\nissues=module.hd235_cli_terminal_issues(json.load(open(sys.argv[2])),sys.argv[3],os.geteuid(),sys.argv[4]);print(json.dumps(issues));sys.exit(1 if issues else 0)`;
+    const proof=path.join(output,'cli-owned-terminal.json');await fs.writeFile(proof,JSON.stringify(record,null,2)+'\n',{flag:'wx',mode:0o600});
+    const check=await launch(python,['-B','-c',code,path.join(repo,'server/scripts/inventoryPhase005Gate.py'),proof,formalDirectory,prefix],baseEnv,'cli-terminal-check-'+processes.length);
+    assert.deepEqual(await bounded(check.exit,10000,'CLI proof checker deadline'),{code:0,signal:null});await groupEnd(check);
+    // Only this fresh per-run CLI cache and exact known .err file belong to this owner.
+    assert.equal(await fs.realpath(record.cacheRoot),record.cacheRoot);const cacheStat=await fs.lstat(record.cacheRoot);assert.deepEqual({dev:cacheStat.dev,ino:cacheStat.ino,uid:cacheStat.uid},record.cacheIdentity);
+    const expected=record.sessions.map(entry=>entry.name+'.err').sort();assert.deepEqual((await fs.readdir(record.cacheRoot)).sort(),expected);
+    for(const name of expected){const file=path.join(record.cacheRoot,name),st=await fs.lstat(file);assert.equal(st.uid,process.geteuid());assert.ok(st.isFile()&&!st.isSymbolicLink());
+      const bytes=await fs.readFile(file),target=path.join(formalDirectory,'owned-'+name+'.txt'),handle=await fs.open(target,'wx',0o600);try{await handle.writeFile(bytes);await handle.sync();}finally{await handle.close();}
+      assert.equal((await fs.lstat(file)).ino,st.ino);await fs.unlink(file);
+    }
+    await fs.rmdir(record.cacheRoot);record.cacheRemoved=true;record.verified=true;
+  })();
+  finish.stop=async()=>{finished=true;await bounded(task,5000,'Own CLI observation loop stop');if(problem)throw problem;};
+  return finish;
+}
+
+async function stageFloorLcov(repo, bytes, binding, proof) {
+  assert.equal(sha256(bytes),binding.lcov_sha256,'Verified CI LCOV bytes required');
+  const directory=path.join(repo,'server/coverage'),target=path.join(directory,'lcov.info');
+  const snapshot=async filename=>{
+    let st;try{st=await fs.lstat(filename);}catch(error){if(error.code==='ENOENT')return{absent:true};throw error;}
+    assert.ok(st.isFile()&&!st.isSymbolicLink()&&st.uid===process.geteuid(),'Own regular LCOV required');
+    return{dev:st.dev,ino:st.ino,uid:st.uid,mode:st.mode&0o7777,sha256:sha256(await fs.readFile(filename))};
+  };
+  let madeDirectory=false,backupDirectory,backup,moved=false,staged;
+  Object.assign(proof,{kind:'HD235_ORIGINAL_FLOOR_CONSUMPTION',binding,target:'server/coverage/lcov.info',backupRemoved:false});
+  let restorePromise;
+  const restore=()=>restorePromise??=(async()=>{
+    if(staged) {
+      const taken=path.join(backupDirectory,'consumed-lcov.info');
+      await fs.rename(target,taken);proof.takenTarget=taken;
+      let current;
+      try {
+        current=await snapshot(taken);
+        assert.ok(!current.absent&&current.dev===staged.dev&&current.ino===staged.ino&&current.uid===staged.uid,'Staged LCOV replaced; preserve original backup');
+      } catch(error) {
+        // The moved pathname may be foreign. Return it only without clobbering,
+        // otherwise retain it in our unique slot beside the original backup.
+        try{await fs.link(taken,target);await fs.unlink(taken);proof.takenTarget=target;}
+        catch(returnError){proof.unexpectedReturnError=returnError.code??returnError.message;}
+        throw error;
+      }
+      proof.consumedAfterSha256=current.sha256;proof.consumedAt=new Date().toISOString();
+      await fs.unlink(taken); // Only the verified inode in our own slot is removed.
+    }
+    if(moved)await fs.link(backup,target); // EEXIST preserves a newly created foreign target.
+    proof.restored=await snapshot(target);assert.deepEqual(proof.restored,proof.before,'Original LCOV identity/bytes/mode restored');
+    if(moved){await fs.unlink(backup);moved=false;}
+    if(backupDirectory)await fs.rmdir(backupDirectory);
+    if(madeDirectory)await fs.rmdir(directory); // Never remove unrelated coverage files.
+    proof.backupRemoved=true;proof.restoredAt=new Date().toISOString();
+    if(staged)assert.equal(proof.consumedAfterSha256,binding.lcov_sha256,'Consumed LCOV changed during checker execution');
+    return proof;
+  })();
+  try {
+    let directoryState;try{directoryState=await fs.lstat(directory);}catch(error){if(error.code!=='ENOENT')throw error;await fs.mkdir(directory,{mode:0o700});madeDirectory=true;directoryState=await fs.lstat(directory);}
+    assert.ok(directoryState.isDirectory()&&!directoryState.isSymbolicLink()&&directoryState.uid===process.geteuid(),'Own coverage directory required');
+    assert.equal(await fs.realpath(directory),directory,'Coverage parent link refused');
+    proof.before=await snapshot(target);
+    backupDirectory=await fs.mkdtemp(path.join(directory,'.hd235-floor-'));backup=path.join(backupDirectory,'original-lcov.info');proof.backupDirectory=backupDirectory;
+    if(!proof.before.absent){await fs.rename(target,backup);moved=true;assert.deepEqual(await snapshot(backup),proof.before);}
+    const handle=await fs.open(target,'wx',0o600);
+    try {
+      const st=await handle.stat();staged={dev:st.dev,ino:st.ino,uid:st.uid};
+      await handle.writeFile(bytes);await handle.sync();
+    } finally {await handle.close();}
+    proof.staged=await snapshot(target);proof.consumedBeforeSha256=proof.staged.sha256;
+    assert.equal(proof.consumedBeforeSha256,binding.lcov_sha256);
+    proof.stagedAt=new Date().toISOString();
+    return{proof,restore};
+  } catch(error) {
+    if(proof.before)try{await restore();}catch(cleanup){error.floorRestorationError=cleanup.message;}
+    else if(madeDirectory)try{await fs.rmdir(directory);}catch(cleanup){error.floorRestorationError=cleanup.message;}
+    throw error;
+  }
+}
+
+async function durableJson(name,value) {
+  const destination=path.join(output,name), temporary=destination+'.'+randomUUID()+'.tmp';
+  const handle=await fs.open(temporary,'wx',0o600);
+  try { await handle.writeFile(JSON.stringify(value,null,2)+'\n');await handle.sync(); }
+  finally { await handle.close(); }
+  await fs.rename(temporary,destination);
+  const directory=await fs.open(output,'r');try{await directory.sync();}finally{await directory.close();}
+}
+try {
+  const executedBytes=await fs.readFile(new URL(import.meta.url));report.coordinatorHash=sha256(executedBytes);
+  const archive=path.join(output,'executed-coordinator.mjs.txt'),handle=await fs.open(archive,'wx',0o600);
+  try{await handle.writeFile(executedBytes);await handle.sync();}finally{await handle.close();}
+  report.coordinatorArchive={path:path.relative(repo,archive),sha256:report.coordinatorHash};
+  report.hashesBefore = await hashes();
+  await fs.mkdir(path.join(root,'opening'), {mode:0o700});
+  await stateRuntime(true); leaseRecorded = true;
+  report.mysqlBinaryHash = sha256(await fs.readFile(mysqld));
+  if(needsMysql) {
+  const init = await launch(mysqld, ['--no-defaults', '--initialize-insecure', '--basedir=/usr/local/mysql', `--datadir=${root}/data`], baseEnv, 'initialize');
+  assert.deepEqual(await bounded(init.exit, 30000, 'Initialize deadline'), { code: 0, signal: null });
+  await groupEnd(init);
+  artifacts.add('mysql.log');
+  daemon = await launch(mysqld, ['--no-defaults', '--basedir=/usr/local/mysql', `--datadir=${root}/data`,
+    `--socket=${socketPath}`, `--pid-file=${root}/mysql.pid`, `--log-error=${root}/mysql.log`, ...(usesTcp?['--bind-address=127.0.0.1',`--port=${tcpPort}`]:['--skip-networking']), '--mysqlx=OFF'], baseEnv, 'daemon');
+  const ready = performance.now() + 10000;
+  while (!admin && performance.now() < ready && !daemon.settled) {
+    const remaining = Math.floor(ready - performance.now());
+    if (remaining <= 0) break;
+    try { admin = await connect(remaining); } catch { await delay(Math.min(25, Math.max(0, ready - performance.now()))); }
+  }
+  assert.ok(admin, 'Private MySQL startup failed');
+  adminStream = admin.connection.stream;
+  adminStream.once('close', () => { adminClosed = true; });
+  assert.ok(performance.now() < ready, 'Private MySQL startup completed after deadline');
+  const [[environment]] = await admin.query('SELECT VERSION() AS version,@@skip_networking AS isolated,@@socket AS socket,@@datadir AS datadir,CONNECTION_ID() AS observerId,CURRENT_USER() AS account');
+  report.mysql = environment;
+  assert.equal(environment.version, '26.7.0'); assert.equal(Number(environment.isolated), usesTcp?0:1);
+  assert.equal(environment.socket, socketPath); assert.equal(environment.datadir.replace(/\/$/u, ''), `${root}/data`);
+  if(usesTcp) {
+    const tcp=await mysql.createConnection({host:'127.0.0.1',port:tcpPort,user:'root',connectTimeout:1000});
+    const stream=tcp.connection.stream;
+    const closed=new Promise(resolve=>stream.once('close',resolve));
+    try {
+      const [[actual]]=await tcp.query({sql:'SELECT VERSION() AS version,@@socket AS socket,@@datadir AS datadir,@@port AS port,CURRENT_USER() AS account',timeout:1000});
+      assert.deepEqual(actual,{version:environment.version,socket:environment.socket,datadir:environment.datadir,port:tcpPort,account:environment.account});
+      report.tcpIdentity={host:'127.0.0.1',...actual};
+    } finally {
+      try { await bounded(tcp.end(),1000,'TCP identity observer end'); await bounded(closed,1000,'TCP identity socket close'); }
+      catch(error) { stream.destroy();await bounded(closed,1000,'TCP identity destroy close');throw error; }
+    }
+    report.tcpIdentity.socketClosed=true;
+  }
+  await admin.query(`CREATE DATABASE ${schema}`); created = true;
+  assert.equal((await admin.query('SELECT TABLE_NAME FROM information_schema.tables WHERE TABLE_SCHEMA=?', [schema]))[0].length, 0);
+  report.schemasBefore=(await admin.query('SELECT SCHEMA_NAME FROM information_schema.schemata ORDER BY SCHEMA_NAME'))[0].map(row=>row.SCHEMA_NAME);
+  if(['inventory-task041-export-failure-audit-api','inventory-task039-api','inventory-task040-api','inventory-task041-safety','inventory-task041-export-recovery-process','inventory-p2-api','inventory-p3-api','inventory-p3-sales-compatibility','inventory-p3-browser','inventory-task039-browser','inventory-task040-browser'].includes(suiteId)) {
+    const migration=await launch(process.execPath,['--import','./server/test-support/testEnv.js','server/scripts/migrate.js'],testEnv,'migrations');
+    assert.deepEqual(await bounded(migration.exit,60000,'Original minimal native migration budget60s'),{code:0,signal:null});await groupEnd(migration);
+  }
+  }
+  if(isBrowser) {
+    report.browser={mode:needsMysql?'REAL_APP':'EXPLICIT_EXISTING_MOCK',config:selectedSuite.argv[selectedSuite.argv.indexOf('--config')+1],
+      originalPlaywrightPassed:false,binariesCaptured:report.hashesBefore.hd233Inputs.node.browserInputs.length===(usesCli?4:3),
+      origins:[{role:'client',url:`http://127.0.0.1:${clientPort}`,terminal:false},...(apiPort?[{role:'api',url:`http://127.0.0.1:${apiPort}`,terminal:false}]:[])]};
+    if(suiteId.startsWith('inventory-p3-')) {
+      // The original P3 config reuses port5205; hold our own Vite listener before it runs.
+      const saved=Object.fromEntries(Object.entries(process.env).filter(([key])=>key.startsWith('VITE_')));
+      for(const key of Object.keys(saved))delete process.env[key];
+      try {
+        if(testEnv.VITE_API_BASE_URL)process.env.VITE_API_BASE_URL=testEnv.VITE_API_BASE_URL;
+        const {createServer}=await import(pathToFileURL(require.resolve('vite')).href);
+        frontend=await createServer({root:path.join(repo,'client'),configFile:path.join(repo,'client/vite.config.js'),mode:'development',
+          server:{host:'127.0.0.1',port:clientPort,strictPort:true}});
+        await frontend.listen();assert.equal(frontend.httpServer.address().port,clientPort);
+        report.browser.frontendOwner={kind:'OWN_VITE_API',pid:process.pid,port:clientPort,cacheDir:frontend.config.cacheDir,closed:false};
+      } finally {
+        for(const key of Object.keys(process.env).filter(key=>key.startsWith('VITE_')))delete process.env[key];Object.assign(process.env,saved);
+      }
+    } else report.browser.frontendOwner={kind:'ORIGINAL_PLAYWRIGHT_WEBSERVER_REUSE_FALSE',closed:false};
+  }
+  if(isFloor) {
+    const code=`import importlib.util,json,sys,base64
+sys.dont_write_bytecode=True
+from pathlib import Path
+spec=importlib.util.spec_from_file_location('phase005',sys.argv[1]);g=importlib.util.module_from_spec(spec);spec.loader.exec_module(g)
+r=Path(sys.argv[3]);core,_=g.load_harness(Path(sys.argv[2]));ctx=core.Context(r/'docs/inventory_management',r)
+source,_=g.observed_source(core,r,ctx.manifest['docs_path']);value=g.hd235_verified_floor_lcov(ctx,core,source)
+print(json.dumps({'binding':value['binding'],'lcovBase64':base64.b64encode(value['bytes']).decode()}))`;
+    const child=await launch(python,['-B','-c',code,path.join(repo,'server/scripts/inventoryPhase005Gate.py'),harness,repo],baseEnv,'floor-ci-admission');
+    try {
+      assert.deepEqual(await bounded(child.exit,30000,'Original preparation30s: current native CI admission'),{code:0,signal:null});await groupEnd(child);
+      const admitted=JSON.parse(await fs.readFile(path.join(root,'floor-ci-admission.stdout.log'),'utf8'));
+      const bytes=Buffer.from(admitted.lcovBase64,'base64');assert.equal(sha256(bytes),admitted.binding.lcov_sha256);
+      const retained=path.join(output,'ci-native-lcov.info');await fs.writeFile(retained,bytes,{flag:'wx',mode:0o600});
+      report.floorConsumption={retainedLcov:{path:path.relative(repo,retained),sha256:sha256(bytes)}};
+      try{floorStage=await stageFloorLcov(repo,bytes,admitted.binding,report.floorConsumption);}
+      catch(error){if(error.floorRestorationError)cleanupErrors.push('Floor LCOV restoration: '+error.floorRestorationError);throw error;}
+    } finally {await stop(child);}
+  }
+  const runnerArgs = [path.join(harness,'run_check.py'),'docs/inventory_management','--repo-root',repo,
+    '--suite',suiteId,'--stage','DEVELOPER','--execute','--json'];
+  innerMayBeRunning = true; // Harness launches the actual Node suite in its own session.
+  suite = await launch(python, runnerArgs, testEnv, 'harness-runner');
+  if(usesCli)finishCliObserver=startBrowserCliObserver();
+  // Profile timeout belongs to the unmodified runner. Extra 30s is coordinator bookkeeping only.
+  report.runnerExit = await bounded(suite.exit, selectedSuite.timeout_seconds * 1000 + 30000, 'Harness bookkeeping did not terminate after profile deadline');
+  await groupEnd(suite);
+  const typed = await confirmNativeOwnership();
+  assert.equal(report.runnerResponse.run_result,'PASS');
+  assert.equal(report.runnerResponse.status,'RECORDED');
+  const relative = report.runnerResponse.evidence_file;
+  const formalPath = path.resolve(repo,'docs/inventory_management',relative);
+  report.expandedArgv = typed.command;
+  assert.equal(typed.suite_id,suiteId); assert.equal(typed.result,'PASS');
+  assert.equal(typed.counts.failed,0);assert.equal(typed.counts.skipped,0);assert.equal(typed.counts.not_run,0);
+  assert.ok(typed.counts.passed>=minimum);assert.equal(typed.code_unchanged,true);assert.equal(typed.spec_unchanged,true);
+  report.typedEvidence = {path:relative,sha256:sha256(await fs.readFile(formalPath)),counts:typed.counts};
+  if(isFloor) {
+    const stdout=path.join(path.dirname(formalPath),'stdout.log'),bytes=await fs.readFile(stdout);
+    assert.equal(bytes.toString().trim(),'Per-file coverage floors met for 39 high-risk files.');
+    report.floorConsumption.stdout={path:path.relative(path.join(repo,'docs/inventory_management'),stdout),sha256:sha256(bytes)};
+    await floorStage.restore();
+  }
+  report.status = 'PASS_PENDING_OWN_RUNTIME_CLEANUP';
+  await livePreflight();
+} catch (error) {
+  primary = error; report.status = 'FAIL'; report.error = failure(error);
+} finally {
+  // A timed-out child remains owned and is stopped before SQL teardown or source re-hashing.
+  for (const record of processes) if (record !== daemon) await stop(record);
+  if (innerMayBeRunning) {
+    try { await confirmNativeOwnership(); } catch (error) { cleanupErrors.push(error.message); }
+  }
+  if(finishCliObserver)try{await finishCliObserver.stop();}catch(error){cleanupErrors.push('CLI observer termination: '+error.message);}
+  if (innerMayBeRunning) cleanupErrors.push('Detached inner suite/worker terminal UNKNOWN: preserve schema, daemon, root and runtime lease');
+  if(isBrowser&&report.browser) {
+    try {
+      if(frontend)await bounded(frontend.close(),10000,'Own Vite close deadline');
+      if(!innerMayBeRunning)for(const endpoint of report.browser.origins) {
+        const probe=net.createServer();
+        await new Promise((resolve,reject)=>{probe.once('error',reject);probe.listen({host:'127.0.0.1',port:Number(new URL(endpoint.url).port)},resolve);});
+        await new Promise((resolve,reject)=>probe.close(error=>error?reject(error):resolve()));endpoint.terminal=true;
+      }
+      if(!innerMayBeRunning)report.browser.frontendOwner.closed=true;
+    } catch(error) { cleanupErrors.push('Browser own endpoint terminal: '+error.message); }
+  }
+  if(floorStage&&!report.floorConsumption.backupRemoved) {
+    if(innerMayBeRunning)cleanupErrors.push('Floor LCOV restoration withheld: original inner termination UNKNOWN; preserve owned backup');
+    else try{await floorStage.restore();}catch(error){cleanupErrors.push('Floor LCOV restoration: '+error.message);}
+  }
+  if (!innerMayBeRunning && processes.filter(record => record !== daemon).every(record => record.settled && record.groupTerminal)) {
+    try { report.hashesAfter = await hashes(); assert.deepEqual(report.hashesAfter, report.hashesBefore, 'sources changed during native run'); report.sourceFreeze = 'MATCHED'; }
+    catch (error) { cleanupErrors.push(error.message); }
+    if (admin && !adminStream.destroyed) {
+      try {
+        await terminal();
+        report.schemasAfter=(await admin.query('SELECT SCHEMA_NAME FROM information_schema.schemata ORDER BY SCHEMA_NAME'))[0].map(row=>row.SCHEMA_NAME);
+        assert.deepEqual(report.schemasAfter,report.schemasBefore,'Original fixture left unknown child schema; do not delete by prefix');
+      } catch (error) { cleanupErrors.push(error.message); }
+      if (created && sqlTerminal) {
+        try {
+          await admin.query(`DROP DATABASE ${schema}`);
+          assert.equal((await admin.query('SELECT SCHEMA_NAME FROM information_schema.schemata WHERE SCHEMA_NAME=?', [schema]))[0].length, 0);
+          dropped = true;
+        } catch (error) { cleanupErrors.push(error.message); }
+      }
+    }
+  }
+  if (!innerMayBeRunning && admin && !adminStream.destroyed) {
+    try { await admin.query('SHUTDOWN'); normalShutdown = true; }
+    catch (error) {
+      if (['PROTOCOL_CONNECTION_LOST', 'ECONNRESET'].includes(error.code)) normalShutdown = true;
+      else cleanupErrors.push(error.message);
+    }
+  }
+  if (!innerMayBeRunning && daemon) {
+    try { assert.deepEqual(await bounded(daemon.exit, 10000, 'Daemon shutdown deadline'), { code: 0, signal: null }); }
+    catch (error) { cleanupErrors.push(error.message); }
+  }
+  for (const record of processes) if (record !== daemon || !innerMayBeRunning) await stop(record);
+  if (innerMayBeRunning) daemon?.child.unref();
+  if (admin) {
+    try { if (!adminStream.destroyed) await bounded(admin.end(), 10000, 'Observer end deadline'); }
+    catch (error) { cleanupErrors.push(error.message); admin.destroy(); }
+    if (!adminClosed) {
+      try { await bounded(new Promise(resolve => { if (adminClosed) resolve(); else adminStream.once('close', resolve); }), 10000, 'Observer socket close deadline'); }
+      catch (error) { cleanupErrors.push(error.message); admin.destroy(); }
+    }
+  }
+  if (!innerMayBeRunning && leaseRecorded && processes.every(record => record.settled && record.groupTerminal)) {
+    try { await stateRuntime(false); } catch (error) { cleanupErrors.push('Runtime checkpoint: '+error.message); }
+  }
+  for (const handle of handles) try { await handle.close(); } catch (error) { cleanupErrors.push(error.message); }
+  report.artifacts = {};
+  for (const name of artifacts) {
+    try {
+      await fs.copyFile(path.join(root, name), path.join(output, name));
+      const copied = await fs.open(path.join(output,name),'r');
+      try { await copied.sync(); } finally { await copied.close(); }
+      report.artifacts[name] = sha256(await fs.readFile(path.join(output, name)));
+    } catch (error) { cleanupErrors.push(`${name}: ${error.message}`); }
+  }
+  // Generic runner owns native diagnostics outside the temporary runtime.
+  report.directSuiteArtifacts = {};
+  try {
+    for (const entry of await fs.readdir(output, { withFileTypes: true })) {
+      if (entry.isFile()) report.directSuiteArtifacts[entry.name] = sha256(await fs.readFile(path.join(output, entry.name)));
+    }
+  } catch (error) { cleanupErrors.push(`direct suite artifact retention: ${error.message}`); }
+  try { report.runnerResponse ??= JSON.parse(await fs.readFile(path.join(root,'harness-runner.stdout.log'),'utf8')); } catch {}
+  report.processes = processes.map(record => ({ label: record.label, pid: record.child.pid ?? null,
+    settled: record.settled, groupTerminal: record.groupTerminal, groupError: record.groupError ?? null,
+    result: record.result, spawnError: record.spawnError ?? null, signals: record.signals }));
+  report.terminal = { sqlTerminal, dropped, normalShutdown, observerSocketClosed: adminClosed, observerSocketDestroyed: adminStream?.destroyed ?? null };
+  const workersKnown = processes.every(record => record.settled && record.groupTerminal && !record.spawnError && record.signals.length === 0);
+  const lifecycleKnown = workersKnown && (!needsMysql || (created && dropped && sqlTerminal && normalShutdown && adminClosed && adminStream.destroyed && daemon?.result?.code === 0 && daemon?.result?.signal === null));
+  if (!lifecycleKnown) cleanupErrors.push('Complete normal lifecycle unproven; retain exact owned root');
+  if (cleanupErrors.length) report.status = 'FAIL';
+  report.cleanup = cleanupErrors.length ? 'UNKNOWN_OWN_ROOT_RETAINED' : 'EXACT_ROOT_READY_FOR_REMOVAL';
+  report.cleanupErrors = cleanupErrors;
+  report.finishedAt = new Date().toISOString();
+  // Evidence must be durable before deleting only this validated, unsymlinked mkdtemp root.
+  try {
+    await durableJson('pre-removal-observation.json',report);
+    if (!cleanupErrors.length) {
+      assert.equal(path.dirname(root), '/private/tmp');
+      assert.ok(root.startsWith(rootPrefix)); assert.match(root.slice(rootPrefix.length), /^[A-Za-z0-9]+$/u);
+      assert.equal(await fs.realpath(root), root); assert.equal((await fs.lstat(root)).isDirectory(), true);
+      await fs.rm(root, { recursive: true }); report.cleanup = needsMysql ? 'OWN_SCHEMA_DROPPED_NORMAL_DAEMON_EXIT0_EXACT_ROOT_REMOVED' : 'OWN_FILES_ROOT_REMOVED';
+      await durableJson('observation.json',report);
+    }
+  } catch (error) {
+    cleanupErrors.push(error.message); report.status = 'FAIL'; report.reportOrRemovalError = failure(error);
+    report.cleanup = 'EVIDENCE_OR_ROOT_REMOVAL_FAILED';
+    try { await durableJson('observation.json',report); } catch {}
+  }
+  await durableJson('observation.json',report);
+  if(['OWN_SCHEMA_DROPPED_NORMAL_DAEMON_EXIT0_EXACT_ROOT_REMOVED','OWN_FILES_ROOT_REMOVED'].includes(report.cleanup))await publishReceiptReferences('runtime-complete-ref.json','observation.json');
+  console.log(JSON.stringify({ output, root, status: report.status, cleanup: report.cleanup,
+    error: report.error ?? null, cleanupErrors, reportOrRemovalError: report.reportOrRemovalError ?? null }));
+}
+if (primary || report.status === 'FAIL') process.exitCode = 1;
+

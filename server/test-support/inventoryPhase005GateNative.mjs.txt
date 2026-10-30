@@ -1,0 +1,786 @@
+// HD228 verifier-resource probes only; no Inventory business or capacity claim.
+import assert from "node:assert/strict";
+import { fork, spawn } from "node:child_process";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
+import { once } from "node:events";
+import fs from "node:fs/promises";
+import { createRequire } from "node:module";
+import http from "node:http";
+import net from "node:net";
+import path from "node:path";
+import { performance } from "node:perf_hooks";
+import process from "node:process";
+import { clearTimeout, setTimeout } from "node:timers";
+import { setTimeout as delay } from "node:timers/promises";
+import test, { after, before } from "node:test";
+import { fileURLToPath } from "node:url";
+
+const enabled = process.env.DB_INTEGRATION_TESTS === "1" && process.env.INVENTORY_GATE_BINDING_TESTS === "1";
+const childMode = process.argv[2] === "--hd228-resource-probe-child";
+const SQL_MS = 10000, TRANSACTION_MS = 20000, TERMINAL_MS = 20000;
+const sha = value => createHash("sha256").update(value).digest("hex");
+const failure = error => {
+  const original = String(error.message), secret = process.env.DB_PASSWORD;
+  return { name: error.name, code: error.code ?? null, errno: error.errno ?? null, sqlState: error.sqlState ?? null,
+    message: secret ? original.replaceAll(secret, "<redacted>") : original, messageSha256: sha(original) };
+};
+const runDir = path.dirname(fileURLToPath(import.meta.url));
+const reportPath = path.join(runDir, "inventory-phase005-gate-native.json");
+const sqlEvents = [];
+
+function configuration() {
+  assert.equal(enabled, true, "Both approved integration guards are required");
+  assert.match(process.version, /^v26\./u, "Node26 is required");
+  assert.equal(process.env.DB_USER, "root");
+  assert.match(process.env.DB_NAME ?? "", /^erp_inventory_gate_binding_[a-f0-9]{12}$/u);
+  assert.match(process.env.DB_SOCKET_PATH ?? "", /^\/private\/tmp\/erp-inventory-task041-gate-binding-mysql-2670\.[A-Za-z0-9]+\/mysql\.sock$/u);
+  assert.ok(path.isAbsolute(process.env.HD228_REPO_ROOT ?? ""));
+  assert.ok(path.isAbsolute(process.env.HD228_PYTHON_EXECUTABLE ?? ""));
+  const socket = process.env.DB_SOCKET_PATH, root = path.dirname(socket);
+  return { socket, root, schema: process.env.DB_NAME, datadir: path.join(root, "data") };
+}
+
+async function bounded(promise, deadline, label, onTimeout = () => {}) {
+  const remaining = deadline - performance.now();
+  assert.ok(remaining > 0, `${label}: original deadline exhausted`);
+  let timer;
+  try {
+    const value = await Promise.race([promise, new Promise((_, reject) => {
+      timer = setTimeout(() => {
+        const error = Object.assign(new Error(`${label}: original deadline exhausted`), { code: "HD228_DEADLINE" });
+        try { onTimeout(); } catch (cleanupError) { error.cleanupError = cleanupError; }
+        reject(error);
+      }, remaining);
+    })]);
+    assert.ok(performance.now() < deadline, `${label}: returned after original deadline`);
+    return value;
+  } finally { clearTimeout(timer); }
+}
+
+async function query(db, label, sql, values = [], deadline = performance.now() + SQL_MS) {
+  const started = performance.now(), end = Math.min(deadline, started + SQL_MS);
+  const event = { label, startedAtMs: started, deadlineMs: end, status: "IN_PROGRESS" };
+  sqlEvents.push(event);
+  try {
+    const remaining = Math.floor(end - performance.now());
+    assert.ok(remaining > 0, `${label}: no SQL dispatch after original deadline`);
+    event.dispatchAtMs = performance.now();
+    const result = await bounded(db.query({ sql, timeout: remaining }, values), end, label, () => db.destroy());
+    event.status = "COMPLETE";
+    return result;
+  } catch (error) {
+    event.status = "FAIL"; event.error = failure(error);
+    if (error.code === "PROTOCOL_SEQUENCE_TIMEOUT") db.destroy();
+    throw error;
+  }
+  finally { event.settledAtMs = performance.now(); event.elapsedMs = event.settledAtMs - started; }
+}
+
+async function connect(config, schema = config.schema) {
+  assert.match(schema, /^erp_inventory_gate_binding_[a-f0-9]{12}$/u);
+  const mysql = createRequire(path.join(process.env.HD228_REPO_ROOT, "package.json"))("mysql2");
+  const raw = mysql.createConnection({ socketPath: config.socket, user: "root", password: process.env.DB_PASSWORD ?? "",
+    database: schema, connectTimeout: SQL_MS, supportBigNumbers: true, bigNumberStrings: true, enableKeepAlive: false });
+  // Retain the raw transport before handshake: driver connectTimeout alone ends
+  // after first data and does not own an incomplete handshake through cleanup.
+  const socket = raw.stream;
+  let closed = false;
+  const terminal = new Promise(resolve => socket.once("close", () => { closed = true; resolve(); }));
+  const connected = new Promise((resolve, reject) => raw.connect(error => error ? reject(error) : resolve()));
+  raw.on("error", () => {});
+  try {
+    await bounded(connected, performance.now() + SQL_MS, "Owned MySQL connect", () => { raw.destroy(); socket.destroy(); });
+    return raw.promise();
+  } catch (error) {
+    raw.destroy(); socket.destroy();
+    try { if (!closed) await bounded(terminal, performance.now() + TERMINAL_MS, "Failed handshake socket close", () => socket.destroy()); }
+    catch (cleanupError) { error.cleanupError = cleanupError; }
+    throw error;
+  }
+}
+
+async function identity(db) {
+  const [[row]] = await query(db, "IDENTITY", "SELECT VERSION() AS version,DATABASE() AS schemaName,@@socket AS socket,@@datadir AS datadir,@@skip_networking AS isolated,@@performance_schema AS instrumented,CONNECTION_ID() AS id,CURRENT_USER() AS account");
+  return { mysql: { version: row.version, socket: row.socket, datadir: row.datadir.replace(/\/$/u, ""), isolated: Number(row.isolated) },
+    schema: row.schemaName, threadId: Number(row.id), account: row.account, performanceSchema: Number(row.instrumented) };
+}
+
+function checkIdentity(actual, config, schema = config.schema) {
+  assert.deepEqual(actual.mysql, { version: "26.7.0", socket: config.socket, datadir: config.datadir, isolated: 1 });
+  assert.equal(actual.schema, schema); assert.equal(actual.performanceSchema, 1);
+  assert.match(actual.account, /^root@/u);
+  assert.ok(Number.isSafeInteger(actual.threadId) && actual.threadId > 0);
+}
+
+async function closeDatabase(db, deadline) {
+  const socket = db.connection.stream, observed = { endEvent: false, closeEvent: false, hadError: null };
+  socket.once("end", () => { observed.endEvent = true; });
+  const closed = new Promise(resolve => {
+    socket.once("close", hadError => { observed.closeEvent = true; observed.hadError = hadError; resolve(); });
+  });
+  await bounded(db.end(), deadline, "Owned MySQL end", () => db.destroy());
+  await bounded(closed, deadline, "Owned MySQL socket close event", () => socket.destroy());
+  assert.equal(observed.closeEvent, true); assert.equal(observed.hadError, false);
+  return observed;
+}
+
+async function childMain() {
+  const config = configuration(), nonce = process.argv[3], incarnation = process.argv[4];
+  assert.match(nonce ?? "", /^[a-f0-9]{32}$/u); assert.match(incarnation ?? "", /^[a-f0-9-]{36}$/u);
+  const connections = new Map();
+  let queue = Promise.resolve(), expired = false;
+  const send = message => new Promise((resolve, reject) => {
+    process.send({ nonce, incarnation, ...message }, error => { if (error) reject(error); else resolve(); });
+  });
+  async function closeOwned(label, deadline) {
+    const owned = connections.get(label); assert.ok(owned, "Only a registered owned connection may close");
+    let originalError, socket;
+    try {
+      if (owned.transaction) await query(owned.db, "ROLLBACK", "ROLLBACK", [], Math.min(deadline, owned.transactionDeadline));
+    } catch (error) { originalError = error; }
+    finally { clearTimeout(owned.watchdog); }
+    try { socket = await closeDatabase(owned.db, deadline); connections.delete(label); }
+    catch (error) { if (originalError) originalError.cleanupError = error; else originalError = error; }
+    if (originalError) throw originalError;
+    return { threadId: owned.identity.threadId, socket };
+  }
+  process.on("message", message => {
+    queue = queue.then(async () => {
+      const offset = sqlEvents.length;
+      try {
+        assert.equal(message.nonce, nonce); assert.equal(message.incarnation, incarnation);
+        assert.match(message.requestId ?? "", /^[a-f0-9-]{36}$/u);
+        if (!["cleanup", "shutdown"].includes(message.action)) assert.equal(expired, false, "Original owned transaction timeout remains a failure");
+        let value;
+        if (message.action === "open") {
+          assert.ok(!connections.has(message.label));
+          const db = await connect(config, message.schema), owned = { db, transaction: false };
+          connections.set(message.label, owned);
+          owned.identity = await identity(db); checkIdentity(owned.identity, config, message.schema);
+          value = owned.identity;
+        } else if (message.action === "begin") {
+          assert.match(message.table, /^gate_probe_[a-f0-9]{12}$/u);
+          const owned = connections.get(message.label); assert.ok(owned && !owned.transaction);
+          const deadline = performance.now() + TRANSACTION_MS;
+          owned.transaction = true; owned.transactionDeadline = deadline;
+          owned.watchdog = setTimeout(() => {
+            expired = true;
+            queue = queue.then(async () => {
+              const timeout = Object.assign(new Error("Original transaction20s exhausted"), { code: "HD228_TRANSACTION_TIMEOUT" });
+              try { await closeOwned(message.label, performance.now() + TERMINAL_MS); }
+              catch (cleanupError) { timeout.cleanupError = cleanupError; }
+              await send({ event: "transactionExpired", error: failure(timeout) });
+            });
+          }, TRANSACTION_MS);
+          await query(owned.db, "BEGIN", "START TRANSACTION", [], deadline);
+          await query(owned.db, "OWNED_INSERT", `INSERT INTO \`${message.table}\` (id,owner_nonce) VALUES (?,?)`, [message.id, nonce], deadline);
+          const [[row]] = await query(owned.db, "OWNER_READ", `SELECT COUNT(*) AS n FROM \`${message.table}\` WHERE id=? AND owner_nonce=?`, [message.id, nonce], deadline);
+          assert.equal(Number(row.n), 1);
+          value = { ownerRows: Number(row.n), transactionStartedAtMs: deadline - TRANSACTION_MS };
+        } else if (message.action === "close") {
+          value = await closeOwned(message.label, performance.now() + Math.min(TERMINAL_MS, message.remainingMs));
+        } else if (message.action === "loopback") {
+          assert.ok(Number.isInteger(message.port) && message.port > 0 && message.port <= 65535);
+          const deadline = performance.now() + TERMINAL_MS, socket = net.createConnection({ host: "127.0.0.1", port: message.port });
+          const observed = { connected: false, endEvent: false, closeEvent: false, hadError: null, response: "" };
+          socket.setEncoding("utf8");
+          socket.on("data", chunk => { observed.response += chunk; assert.ok(observed.response.length <= 128); });
+          socket.once("end", () => { observed.endEvent = true; });
+          const closed = new Promise((resolve, reject) => {
+            socket.once("error", reject);
+            socket.once("close", hadError => { observed.closeEvent = true; observed.hadError = hadError; resolve(); });
+          });
+          await bounded(once(socket, "connect"), deadline, "Owned loopback connect", () => socket.destroy());
+          observed.connected = true; socket.end(nonce);
+          await bounded(closed, deadline, "Owned loopback close event", () => socket.destroy());
+          assert.deepEqual([observed.endEvent, observed.closeEvent, observed.hadError, observed.response], [true, true, false, `ACK:${nonce}`]);
+          value = observed;
+        } else if (message.action === "shutdown") {
+          assert.equal(connections.size, 0, "Normal worker exit requires every owned DB socket closed");
+          await send({ requestId: message.requestId, value: { ownConnections: 0 }, sqlEvents: sqlEvents.slice(offset) });
+          process.disconnect(); return;
+        } else if (message.action === "cleanup") {
+          const deadline = performance.now() + TERMINAL_MS, closed = [];
+          for (const label of connections.keys()) closed.push(await closeOwned(label, deadline));
+          value = closed;
+        } else assert.fail("Unrecognized resource-probe command");
+        await send({ requestId: message.requestId, value, sqlEvents: sqlEvents.slice(offset) });
+      } catch (error) {
+        process.exitCode = 1;
+        await send({ requestId: message.requestId, error: failure(error), sqlEvents: sqlEvents.slice(offset) });
+      }
+    }).catch(() => { process.exitCode = 1; process.disconnect(); });
+  });
+  await send({ event: "ready", pid: process.pid });
+}
+
+if (childMode) {
+  await childMain();
+} else {
+  const nonce = randomBytes(16).toString("hex"), incarnation = randomUUID(), table = `gate_probe_${nonce.slice(0, 12)}`;
+  const report = { kind: "DEVELOPER_GATE_BINDING_RESOURCE_VERIFIER_PROBE", status: "IN_PROGRESS", nonce, incarnation,
+    claimsExcluded: ["INVENTORY_BUSINESS_PASS", "INVENTORY_NATIVE_PRODUCT_PASS", "FULL_CAPACITY_SOAK_PASS", "FOREIGN_USER_ATTACK_PROOF", "OUTER_DAEMON_SCHEMA_ROOT_CLEANUP"],
+    cases: [], ownedStops: [], ownedSql: { status: "SQL_TERMINAL_UNKNOWN", workers: [] }, workerCleanupErrors: [], cleanup: "UNKNOWN", sqlEvents, childSqlEvents: [] };
+  let config, monitor, monitorIdentity, worker, workerExit, exitValue, tableOwned = false, mismatchSchema, mismatchOwned = false;
+  let server, serverSocket, childReady, childFailure, suiteFailure, activeBody, lastTransactionRead = 0;
+  const owned = new Map(), pending = new Map();
+  const sourcePaths = ["server/scripts/inventoryPhase005Gate.py", "server/test-support/inventoryPhase005GateNative.mjs.txt"];
+  const sourceHashes = async () => Object.fromEntries(await Promise.all(sourcePaths.map(async name => [name, sha(await fs.readFile(path.join(process.env.HD228_REPO_ROOT, name)))])));
+
+  async function request(action, payload = {}, deadline = performance.now() + TERMINAL_MS) {
+    assert.ok(!childFailure || ["cleanup", "shutdown"].includes(action), "Probe child recorded a prior failure");
+    const requestId = randomUUID();
+    const reply = new Promise((resolve, reject) => { pending.set(requestId, { resolve, reject }); });
+    try {
+      worker.send({ nonce, incarnation, requestId, action, ...payload, remainingMs: Math.max(1, Math.floor(deadline - performance.now())) }, error => {
+        if (error) pending.get(requestId)?.reject(error);
+      });
+      return await bounded(reply, deadline, `Owned worker ${action}`);
+    } finally { pending.delete(requestId); }
+  }
+
+  async function capture(label, schema = config.schema) {
+    const actual = await request("open", { label, schema }); checkIdentity(actual, config, schema);
+    assert.notEqual(actual.threadId, monitorIdentity.threadId);
+    assert.ok(!owned.has(actual.threadId), "A recycled owned connection ID cannot be silently rebound");
+    const [mapping] = await query(monitor, "OWNED_THREAD_MAPPING", "SELECT THREAD_ID,PROCESSLIST_ID,INSTRUMENTED FROM performance_schema.threads WHERE PROCESSLIST_ID=?", [actual.threadId]);
+    assert.equal(mapping.length, 1); assert.equal(mapping[0].INSTRUMENTED, "YES");
+    const performanceThreadId = Number(mapping[0].THREAD_ID); assert.ok(Number.isSafeInteger(performanceThreadId) && performanceThreadId > 0);
+    assert.ok(![...owned.values()].some(row => row.performanceThreadId === performanceThreadId));
+    const entry = { threadId: actual.threadId, performanceThreadId, label, schema, incarnation, nonce,
+      provenance: "SAME_CONNECTION_DRIVER_QUERY", identity: actual, observedTransactionIds: [], observedEngineTokens: [], latest: null };
+    owned.set(actual.threadId, entry); return entry;
+  }
+
+  async function snapshot(entry, deadline = performance.now() + TERMINAL_MS) {
+    const read = (label, sql, values) => query(monitor, label, sql, values, deadline);
+    const [states] = await read("SESSION", "SELECT ID,COMMAND,STATE FROM information_schema.PROCESSLIST WHERE ID=?", [entry.threadId]);
+    const [threads] = await read("THREAD", "SELECT THREAD_ID,PROCESSLIST_ID,INSTRUMENTED FROM performance_schema.threads WHERE THREAD_ID=? OR PROCESSLIST_ID=?", [entry.performanceThreadId, entry.threadId]);
+    for (const row of threads) {
+      assert.equal(Number(row.THREAD_ID), entry.performanceThreadId); assert.equal(Number(row.PROCESSLIST_ID), entry.threadId); assert.equal(row.INSTRUMENTED, "YES");
+    }
+    if (states.length) assert.equal(threads.length, 1, "A live session without its actual P_S mapping is UNKNOWN");
+    // INNODB_TRX's cached view must get >100ms between reads to refresh.
+    const refreshAt = lastTransactionRead + 150;
+    if (refreshAt > performance.now()) await bounded(delay(refreshAt - performance.now()), deadline, "Transaction observer refresh");
+    const known = entry.observedTransactionIds, retainClause = known.length ? ` OR trx_id IN (${known.map(() => "?").join(",")})` : "";
+    const [transactions] = await read("TRANSACTION", `SELECT CAST(trx_id AS CHAR) AS id,trx_mysql_thread_id AS connectionId FROM information_schema.innodb_trx WHERE trx_mysql_thread_id=?${retainClause}`, [entry.threadId, ...known]);
+    lastTransactionRead = performance.now();
+    for (const row of transactions) {
+      assert.equal(Number(row.connectionId), entry.threadId); assert.match(row.id, /^[1-9]\d*$/u);
+      if (!known.includes(row.id)) known.push(row.id);
+    }
+    const tokens = known.length ? ` OR ENGINE_TRANSACTION_ID IN (${known.map(() => "?").join(",")})` : "";
+    const [dataLocks] = await read("DATA_LOCK", `SELECT ENGINE_LOCK_ID AS id,ENGINE,CAST(ENGINE_TRANSACTION_ID AS CHAR) AS transactionId,THREAD_ID,OBJECT_SCHEMA,OBJECT_NAME,LOCK_TYPE,LOCK_STATUS FROM performance_schema.data_locks WHERE THREAD_ID=?${tokens}`, [entry.performanceThreadId, ...known]);
+    for (const row of dataLocks) {
+      assert.equal(Number(row.THREAD_ID), entry.performanceThreadId); assert.equal(row.ENGINE, "INNODB");
+      assert.equal(row.OBJECT_SCHEMA, entry.schema); assert.equal(row.OBJECT_NAME, table);
+      assert.match(row.transactionId, /^[1-9]\d*$/u);
+      if (!known.includes(row.transactionId)) known.push(row.transactionId);
+      if (!entry.observedEngineTokens.some(token => token.token === row.transactionId)) entry.observedEngineTokens.push({ engine: "INNODB", token: row.transactionId });
+    }
+    const [metadataLocks] = await read("METADATA_LOCK", "SELECT CAST(OBJECT_INSTANCE_BEGIN AS CHAR) AS id,OBJECT_TYPE,OBJECT_SCHEMA,OBJECT_NAME,LOCK_STATUS FROM performance_schema.metadata_locks WHERE OWNER_THREAD_ID=?", [entry.performanceThreadId]);
+    const waitTokens = known.length ? ` OR REQUESTING_ENGINE_TRANSACTION_ID IN (${known.map(() => "?").join(",")}) OR BLOCKING_ENGINE_TRANSACTION_ID IN (${known.map(() => "?").join(",")})` : "";
+    const [waits] = await read("WAIT", `SELECT REQUESTING_THREAD_ID,BLOCKING_THREAD_ID,REQUESTING_ENGINE_LOCK_ID,BLOCKING_ENGINE_LOCK_ID FROM performance_schema.data_lock_waits WHERE REQUESTING_THREAD_ID=? OR BLOCKING_THREAD_ID=?${waitTokens}`, [entry.performanceThreadId, entry.performanceThreadId, ...known, ...known]);
+    const [statements] = await read("STATEMENT", "SELECT EVENT_ID,END_EVENT_ID,EVENT_NAME FROM performance_schema.events_statements_current WHERE THREAD_ID=? AND END_EVENT_ID IS NULL", [entry.performanceThreadId]);
+    const value = { mysql: monitorIdentity.mysql, schema: entry.identity.schema, connections: states.map(row => Number(row.ID)),
+      threads: threads.map(row => Number(row.THREAD_ID)), transactions: transactions.map(row => row.id),
+      locks: [...dataLocks.map(row => `DATA:${row.id}`), ...metadataLocks.map(row => `METADATA:${row.id}`)],
+      waits: waits.map(row => `${row.REQUESTING_ENGINE_LOCK_ID}:${row.BLOCKING_ENGINE_LOCK_ID}`), statements: statements.map(row => String(row.EVENT_ID)) };
+    const terminal = [value.connections, value.threads, value.transactions, value.locks, value.waits, value.statements].every(rows => rows.length === 0);
+    return { snapshot: value, states, threads, dataLocks, metadataLocks, observedTransactionIds: [...known],
+      observedEngineTokens: entry.observedEngineTokens.map(token => ({ ...token })), transactions: transactions.length, retainedTransactions: transactions.filter(row => known.includes(row.id)).length,
+      waits: waits.length, relatedWaits: waits.length, locks: value.locks.length, activeStatement: statements.length > 0, statements, terminal, atMs: performance.now() };
+  }
+
+  async function verifySnapshot(value) {
+    // Static Python source + JSON stdin only; this never invokes the full gate.
+    const code = "import importlib.util,json,sys\nfrom pathlib import Path\np=Path(sys.argv[1])/'server/scripts/inventoryPhase005Gate.py'\ns=importlib.util.spec_from_file_location('hd228_native_verifier',p)\nm=importlib.util.module_from_spec(s)\ns.loader.exec_module(m)\nv=json.load(sys.stdin)\nprint(json.dumps(m.resource_snapshot_issues(v['snapshot'],v['expected'])))\n";
+    const python = spawn(process.env.HD228_PYTHON_EXECUTABLE, ["-B", "-c", code, process.env.HD228_REPO_ROOT], { stdio: ["pipe", "pipe", "pipe"], env: process.env });
+    let stdout = "", stderr = "";
+    python.stdout.setEncoding("utf8"); python.stderr.setEncoding("utf8");
+    python.stdout.on("data", chunk => { stdout += chunk; }); python.stderr.on("data", chunk => { stderr += chunk; });
+    const finished = once(python, "close");
+    python.stdin.end(JSON.stringify({ snapshot: value, expected: { schema: config.schema, socket: config.socket, datadir: config.datadir } }));
+    const [codeValue, signal] = await bounded(finished, performance.now() + SQL_MS, "Actual Python resource verifier", () => python.kill("SIGTERM"));
+    assert.deepEqual([codeValue, signal, stderr], [0, null, ""]);
+    const issues = JSON.parse(stdout); assert.ok(Array.isArray(issues)); return issues;
+  }
+
+  async function verifyActualWorkerReport(actual) {
+    const text = JSON.stringify(actual), digest = sha(text);
+    const binding = { reportPath: "actual-in-memory-resource-report.json", sha256: digest, ownedStops: actual.ownedStops };
+    const payload = { native_report: { path: binding.reportPath, original_text: text, sha256: digest, raw: actual } };
+    const code = "import sys,json\nsys.dont_write_bytecode=True\nfrom pathlib import Path\nsys.path.insert(0,str(Path(sys.argv[1])/'server/scripts'))\nimport inventoryPhase005Gate as m\nv=json.load(sys.stdin)\nprint(json.dumps(m._native_worker_issues(v['receipt'],v['observation'])))\n";
+    const child = spawn(process.env.HD228_PYTHON_EXECUTABLE, ["-B", "-c", code, process.env.HD228_REPO_ROOT], { stdio: ["pipe", "pipe", "pipe"], env: process.env });
+    let stdout = "", stderr = ""; child.stdout.setEncoding("utf8"); child.stderr.setEncoding("utf8");
+    child.stdout.on("data", value => { stdout += value; }); child.stderr.on("data", value => { stderr += value; });
+    const closed = once(child, "close"); child.stdin.end(JSON.stringify({ receipt: payload, observation: { nativeOwnership: binding } }));
+    assert.deepEqual(await bounded(closed, performance.now() + SQL_MS, "Actual complete worker-receipt verifier", () => child.kill("SIGTERM")), [0, null]);
+    assert.equal(stderr, ""); return JSON.parse(stdout);
+  }
+
+  async function terminal(entry, deadline, startedAt) {
+    for (;;) {
+      const observed = await snapshot(entry, deadline);
+      if (observed.terminal) {
+        observed.threadId = entry.threadId; observed.performanceThreadId = entry.performanceThreadId;
+        observed.completeMs = performance.now() - startedAt;
+        assert.ok(observed.completeMs <= TERMINAL_MS);
+        entry.latest = observed; return observed;
+      }
+      await bounded(delay(150), deadline, "Owned SQL terminal polling");
+    }
+  }
+
+  async function closeAndObserve(entry) {
+    const start = performance.now(), deadline = start + TERMINAL_MS;
+    const close = await request("close", { label: entry.label }, deadline);
+    assert.equal(close.threadId, entry.threadId); assert.equal(close.socket.closeEvent, true); assert.equal(close.socket.hadError, false);
+    entry.socket = close.socket;
+    const observation = await terminal(entry, deadline, start);
+    assert.deepEqual(await verifySnapshot(observation.snapshot), []); return observation;
+  }
+
+  async function rowCount() {
+    const [[row]] = await query(monitor, "INDEPENDENT_ROW_COUNT", `SELECT COUNT(*) AS n FROM \`${table}\``);
+    return Number(row.n);
+  }
+
+  function native(id, description, body) {
+    test(`${id} ${description}`, { skip: !enabled, concurrency: false, timeout: 60000 }, async context => {
+      if (suiteFailure) { context.skip("NOT_RUN after earlier native probe failure"); return; }
+      const abort = () => {
+        suiteFailure ??= new Error(`${id}: original native case deadline/cancellation`);
+        childFailure ??= failure(suiteFailure);
+      };
+      context.signal.addEventListener("abort", abort, { once: true });
+      const record = { id, kind: "VERIFIER_RESOURCE_PROBE", startedAtMs: performance.now(), outcome: "IN_PROGRESS" };
+      report.cases.push(record);
+      activeBody = Promise.resolve().then(body);
+      try { Object.assign(record, await activeBody); assert.equal(context.signal.aborted, false); record.outcome = "PASS"; }
+      catch (error) { suiteFailure = error; record.outcome = "FAIL"; record.error = failure(error); throw error; }
+      finally { context.signal.removeEventListener("abort", abort); record.settledAtMs = performance.now(); activeBody = undefined; }
+    });
+  }
+
+  if (enabled) before(async () => {
+    config = configuration();
+    assert.equal(await fs.realpath(process.env.HD228_REPO_ROOT), process.env.HD228_REPO_ROOT);
+    assert.equal(await fs.realpath(config.root), config.root);
+    report.sourceBefore = await sourceHashes();
+    assert.equal(sha(await fs.readFile(fileURLToPath(import.meta.url))), report.sourceBefore[sourcePaths[1]], "Generated native source must equal the checked-in text exactly");
+    report.node = { version: process.version, executable: process.execPath, sha256: sha(await fs.readFile(process.execPath)) };
+    monitor = await connect(config); monitorIdentity = await identity(monitor); checkIdentity(monitorIdentity, config);
+    report.runtime = { ...config, monitor: monitorIdentity, workspace: process.env.HD228_REPO_ROOT };
+    const [consumers] = await query(monitor, "STATEMENT_INSTRUMENTATION", "SELECT NAME,ENABLED FROM performance_schema.setup_consumers WHERE NAME='events_statements_current'");
+    assert.deepEqual(consumers.map(row => [row.NAME, row.ENABLED]), [["events_statements_current", "YES"]]);
+    await query(monitor, "CREATE_OWN_TABLE", `CREATE TABLE \`${table}\` (id INTEGER PRIMARY KEY,owner_nonce CHAR(32) NOT NULL) ENGINE=InnoDB`);
+    tableOwned = true;
+    const ready = new Promise(resolve => { childReady = resolve; });
+    worker = fork(fileURLToPath(import.meta.url), ["--hd228-resource-probe-child", nonce, incarnation], { execArgv: [], stdio: ["ignore", "pipe", "pipe", "ipc"], env: process.env });
+    report.worker = { pid: worker.pid, nonce, incarnation };
+    let outputBytes = 0;
+    for (const stream of [worker.stdout, worker.stderr]) stream.on("data", chunk => { outputBytes += chunk.length; });
+    workerExit = new Promise((resolve, reject) => {
+      worker.once("error", reject);
+      worker.once("exit", (code, signal) => {
+        exitValue = { code, signal }; report.worker.exit = exitValue; report.worker.outputBytes = outputBytes;
+        for (const value of pending.values()) value.reject(new Error("Probe worker exited before its matching reply"));
+        resolve(exitValue);
+      });
+    });
+    worker.on("message", message => {
+      try {
+        assert.equal(message.nonce, nonce); assert.equal(message.incarnation, incarnation);
+        if (message.event === "ready") { assert.equal(message.pid, worker.pid); childReady(); return; }
+        if (message.event === "transactionExpired") { childFailure = message.error; report.childFailure = childFailure; return; }
+        const waiting = pending.get(message.requestId); assert.ok(waiting, "Unmatched worker reply is UNKNOWN");
+        report.childSqlEvents.push(...(message.sqlEvents ?? []));
+        if (message.error) { childFailure = message.error; report.childFailure = childFailure; waiting.reject(Object.assign(new Error("Owned verifier probe failed"), { observation: message.error })); }
+        else waiting.resolve(message.value);
+      } catch (error) {
+        childFailure = failure(error); report.childFailure = childFailure; for (const value of pending.values()) value.reject(error);
+      }
+    });
+    await bounded(ready, performance.now() + SQL_MS, "Actual probe child ready");
+  }, { timeout: 60000 });
+
+  if (enabled) test.beforeEach(() => {
+    if (report.hd235ShutdownAcknowledgements) return;
+    report.hd235ShutdownAcknowledgements = [];
+    worker.on("message", message => {
+      if (message.nonce === nonce && message.incarnation === incarnation && pending.has(message.requestId)
+          && message.value?.ownConnections === 0 && !message.error) {
+        report.hd235ShutdownAcknowledgements.push({ pid: worker.pid, nonce: message.nonce,
+          incarnation: message.incarnation, requestId: message.requestId, ownConnections: message.value.ownConnections });
+      }
+    });
+  });
+
+  native("GB-N01", "actual private MySQL identity and independently proved owned rollback", async () => {
+    const primary = await capture("primary"), transaction = await request("begin", { label: "primary", table, id: 1 });
+    assert.equal(transaction.ownerRows, 1);
+    const live = await snapshot(primary); assert.ok(live.transactions > 0); assert.ok(live.dataLocks.length > 0);
+    assert.equal(await rowCount(), 0, "Independent connection must not see the uncommitted owned insert");
+    const closed = await closeAndObserve(primary);
+    assert.ok(primary.observedTransactionIds.length > 0); assert.equal(await rowCount(), 0, "Real rollback leaves no committed probe row");
+    return { identity: primary.identity, live, terminal: closed, independentRowsAfterRollback: 0 };
+  });
+
+  native("GB-N02", "reject an actually live additional owned probe then verify its disappearance", async () => {
+    const probe = await capture("additional-probe"), transaction = await request("begin", { label: "additional-probe", table, id: 2 });
+    assert.equal(transaction.ownerRows, 1);
+    const live = await snapshot(probe);
+    assert.deepEqual(live.snapshot.connections, [probe.threadId]); assert.ok(live.transactions > 0); assert.ok(live.dataLocks.length > 0);
+    const liveIssues = await verifySnapshot(live.snapshot);
+    assert.ok(liveIssues.length > 0, "Actual live own connection/transaction/lock must block terminal classification");
+    const closed = await closeAndObserve(probe);
+    assert.ok(probe.observedTransactionIds.length > 0); assert.equal(await rowCount(), 0);
+    return { live, liveIssues, terminal: closed, claims: "OWNED_VERIFIER_PROBE_ONLY" };
+  });
+
+  native("GB-N03", "reject a second actually owned mismatching schema identity and clean only that schema", async () => {
+    mismatchSchema = `erp_inventory_gate_binding_${randomBytes(6).toString("hex")}`;
+    assert.notEqual(mismatchSchema, config.schema);
+    await query(monitor, "CREATE_OWN_MISMATCH_SCHEMA", `CREATE DATABASE \`${mismatchSchema}\``); mismatchOwned = true;
+    const mismatch = await capture("mismatching-schema", mismatchSchema);
+    const terminalObservation = await closeAndObserveMismatch(mismatch);
+    const identityIssues = await verifySnapshot(terminalObservation.snapshot);
+    assert.ok(identityIssues.length > 0, "Actual SELECT DATABASE identity mismatch must fail even with no remaining SQL");
+    assert.equal(mismatch.identity.schema, mismatchSchema);
+    await query(monitor, "DROP_OWN_MISMATCH_SCHEMA", `DROP DATABASE \`${mismatchSchema}\``); mismatchOwned = false;
+    const [remaining] = await query(monitor, "MISMATCH_SCHEMA_ABSENCE", "SELECT SCHEMA_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME=?", [mismatchSchema]);
+    assert.deepEqual(remaining, []); assert.equal((await identity(monitor)).schema, config.schema);
+    return { actualIdentity: mismatch.identity, identityIssues, terminal: terminalObservation, ownSchemaDropped: mismatchSchema };
+  });
+
+  async function closeAndObserveMismatch(entry) {
+    const start = performance.now(), deadline = start + TERMINAL_MS;
+    const close = await request("close", { label: entry.label }, deadline);
+    assert.equal(close.threadId, entry.threadId); assert.equal(close.socket.closeEvent, true); assert.equal(close.socket.hadError, false);
+    entry.socket = close.socket; return terminal(entry, deadline, start);
+  }
+
+  native("GB-N04", "actual loopback close events, all owned SQL terminal, normal probe child exit0", async () => {
+    const started = performance.now(), deadline = started + TERMINAL_MS;
+    const accepted = new Promise((resolve, reject) => {
+      server = net.createServer(socket => {
+        assert.equal(serverSocket, undefined, "Only one own loopback peer is expected"); serverSocket = socket;
+        const observed = { endEvent: false, closeEvent: false, hadError: null, request: "" };
+        socket.setEncoding("utf8"); socket.on("data", chunk => { observed.request += chunk; assert.ok(observed.request.length <= 128); });
+        socket.once("error", reject);
+        socket.once("end", () => {
+          observed.endEvent = true;
+          if (observed.request !== nonce) { reject(new Error("Loopback nonce mismatch")); socket.destroy(); }
+          else socket.end(`ACK:${nonce}`);
+        });
+        socket.once("close", hadError => { observed.closeEvent = true; observed.hadError = hadError; resolve(observed); });
+      });
+      server.once("error", reject);
+    });
+    server.listen({ host: "127.0.0.1", port: 0 }); await bounded(once(server, "listening"), deadline, "Owned loopback listen");
+    const address = server.address(); assert.equal(address.address, "127.0.0.1");
+    const childSocket = await request("loopback", { port: address.port }, deadline);
+    const parentSocket = await bounded(accepted, deadline, "Accepted loopback close event");
+    assert.deepEqual([parentSocket.endEvent, parentSocket.closeEvent, parentSocket.hadError, parentSocket.request], [true, true, false, nonce]);
+    const listenerClosed = once(server, "close"); server.close(); await bounded(listenerClosed, deadline, "Owned loopback listener close event");
+    const latest = [];
+    for (const entry of owned.values()) {
+      const observed = await terminal(entry, deadline, started); latest.push(observed);
+      if (entry.schema === config.schema) assert.deepEqual(await verifySnapshot(observed.snapshot), []);
+      else assert.ok((await verifySnapshot(observed.snapshot)).length > 0);
+    }
+    assert.equal(await rowCount(), 0);
+    await request("shutdown", {}, deadline);
+    assert.deepEqual(await bounded(workerExit, deadline, "Actual normal probe child exit"), { code: 0, signal: null });
+    assert.equal(childFailure, undefined);
+    report.ownedStops = [{ pid: worker.pid, nonce, incarnation, terminal: true, connections: [...owned.keys()], exit: exitValue }];
+    report.ownedSql = { status: "SQL_TERMINAL_CONFIRMED", workers: [{ incarnation, nonce, status: "SQL_TERMINAL_CONFIRMED",
+      connections: [...owned.values()].map(entry => ({ threadId: entry.threadId, performanceThreadId: entry.performanceThreadId,
+        nonce, incarnation, provenance: entry.provenance, schema: entry.schema, label: entry.label, identity: entry.identity,
+        observedTransactionIds: entry.observedTransactionIds, observedEngineTokens: entry.observedEngineTokens, socket: entry.socket })),
+      latest, completeMs: performance.now() - started }] };
+    assert.ok(report.ownedSql.workers[0].completeMs <= TERMINAL_MS);
+    report.cleanup = "CHILD_EXIT_AND_SQL_TERMINAL_CONFIRMED";
+    assert.deepEqual(await verifyActualWorkerReport(report), [], "Actual IPC SQL histories must be accepted by the real recipe validator");
+    const incomplete = structuredClone(report); incomplete.ownedSql.workers[0].latest[0].observedTransactionIds = null;
+    assert.ok((await verifyActualWorkerReport(incomplete)).length > 0, "Missing actual transaction history must be rejected");
+    return { loopback: { parentSocket, childSocket, listenerCloseEvent: true, address }, latest, workerExit: exitValue };
+  });
+
+
+  // HD235 additions consume genuine registered original runs. Their own resource
+  // counterexamples remain verifier-only and cannot attest Inventory or CI work.
+  let hd235Unit;
+
+  async function hd235Process(executable, argv, input, label) {
+    const child = spawn(executable, argv, { cwd: process.env.HD228_REPO_ROOT,
+      stdio: ["pipe", "pipe", "pipe"], env: process.env });
+    let stdout = "", stderr = "";
+    child.stdout.setEncoding("utf8"); child.stderr.setEncoding("utf8");
+    child.stdout.on("data", chunk => { stdout += chunk; }); child.stderr.on("data", chunk => { stderr += chunk; });
+    const closed = once(child, "close"); child.stdin.end(input);
+    let result;
+    try { result = await bounded(closed, performance.now() + SQL_MS, label, () => child.kill("SIGTERM")); }
+    catch (error) {
+      child.kill("SIGTERM");
+      try { await bounded(closed, performance.now() + TERMINAL_MS, `${label} failed-process close`, () => child.kill("SIGKILL")); }
+      catch (cleanupError) { error.cleanupError = cleanupError; }
+      throw error;
+    }
+    assert.deepEqual(result, [0, null], `${label}: ${stderr}`); assert.equal(stderr, "");
+    return stdout;
+  }
+
+  async function hd235Registered(suiteId) {
+    const code = `import sys,json,copy
+from pathlib import Path
+sys.path.insert(0,str(Path(sys.argv[1])/'server/scripts'))
+import inventoryPhase005Gate as m
+repo=Path(sys.argv[1]); module=repo/'docs/inventory_management'
+scripts=Path('/Users/sam/.agents/skills/software-engineering-harness/scripts')
+core,checks=m.load_harness(scripts); ctx=core.Context(module,repo); sid=sys.argv[2]
+source=core.fingerprint(repo,ctx.manifest['docs_path']); plan=ctx.baselines()['plan']
+attempts=m.registered_attempts(ctx,core,[sid])[sid]
+for attempt in attempts:
+ attempt['classification']=m.hd235_attempt(attempt['raw'],ctx.suite_map()[sid],source,plan)['classification']
+latest=m.select_latest(attempts); raw=latest['raw']
+receipt,policy=m.read_hd235_receipt(repo,module,scripts,raw)
+assert raw['result']=='PASS' and raw['source_fingerprint']==source and raw['spec_baseline']==plan
+assert m.hd235_runtime_issues(raw,receipt,policy)==[]
+assert receipt['recipe']['lifecycle']['state']=='COMPLETE'
+live=receipt['observation']['livePreflight']
+doc=m.original_document(module,live['path'],live['sha256']); prior=doc['raw']
+assert prior['status']=='BLOCKED' and prior['issues']
+assert any(row['suite_id']==sid and row['status']!='PASS' for row in prior['applicability'])
+tampered=copy.deepcopy(receipt); tampered['typed_record']['original_text']+=' '
+assert m.hd235_runtime_issues(raw,tampered,policy)
+active=copy.deepcopy(receipt); active['recipe']['lifecycle']['state']='LIVE'
+assert m.hd235_runtime_issues(raw,active,policy)
+print(json.dumps({'suite_id':sid,'raw_path':latest['path'],'raw_sha256':m.file_hash(module/latest['path']),
+ 'source':source,'plan':plan,'counts':raw['counts'],'transport':receipt['recipe']['transport'],
+ 'livePreflight':live,'priorStatus':prior['status'],'tamperedRejected':True,'liveRejected':True}))
+`;
+    const value = JSON.parse(await hd235Process(process.env.HD228_PYTHON_EXECUTABLE,
+      ["-B", "-c", code, process.env.HD228_REPO_ROOT, suiteId], undefined, "Actual registered HD235 receipt"));
+    const stdout = await hd235Process(process.env.HD228_PYTHON_EXECUTABLE,
+      ["-B", path.join(process.env.HD228_REPO_ROOT, "server/scripts/inventoryPhase005Gate.py"),
+        "--receipt-preflight", "--suite", suiteId, "--phase", "PHASE-005", "--module", "docs/inventory_management",
+        "--repo-root", process.env.HD228_REPO_ROOT, "--json"], undefined, "Actual original receipt-preflight CLI");
+    const preflight = JSON.parse(stdout);
+    assert.equal(preflight.status, "RECEIPT_PREFLIGHT_PASS"); assert.deepEqual(preflight.issues, []);
+    assert.equal(preflight.current_source, value.source);
+    assert.equal(preflight.current_baselines.plan, value.plan);
+    assert.equal(preflight.applicability.length, 1);
+    assert.equal(preflight.applicability[0].suite_id, suiteId);
+    assert.equal(preflight.applicability[0].raw_path, value.raw_path);
+    assert.equal(preflight.applicability[0].raw_sha256, value.raw_sha256);
+    return { ...value, preflight };
+  }
+
+  native("GB-N05", "actual current TASK036 receipt blocks while live and passes only after completed registration", async () => {
+    assert.equal(report.hd235ShutdownAcknowledgements.length, 1);
+    const acknowledgement = report.hd235ShutdownAcknowledgements[0];
+    assert.deepEqual({ pid: acknowledgement.pid, nonce: acknowledgement.nonce, incarnation: acknowledgement.incarnation,
+      ownConnections: acknowledgement.ownConnections }, { pid: worker.pid, nonce, incarnation, ownConnections: 0 });
+    assert.match(acknowledgement.requestId, /^[a-f0-9-]{36}$/u);
+    hd235Unit = await hd235Registered("inventory-task036-unit");
+    assert.equal(hd235Unit.transport, "FILES_DIRECT");
+    assert.ok(hd235Unit.counts.total >= 12); assert.equal(hd235Unit.counts.skipped, 0);
+    return { claims: "ORIGINAL_TASK036_RECEIPT_COLLECTION_ONLY", shutdownAcknowledgement: acknowledgement, receipt: hd235Unit };
+  });
+
+  native("GB-N06", "new owned MySQL transaction remains invisible and closes with real SQL terminal proof", async () => {
+    assert.deepEqual(exitValue, { code: 0, signal: null }, "The original IPC worker remains closed");
+    const db = await connect(config), transport = db.connection.stream;
+    let transportClosed = false;
+    const transportClose = new Promise(resolve => transport.once("close", () => { transportClosed = true; resolve(); }));
+    let closed = false, transactionStarted = false, entry, primaryError;
+    const started = performance.now(), deadline = started + TRANSACTION_MS;
+    const watchdog = setTimeout(() => { db.destroy(); transport.destroy(); }, Math.max(1, deadline - performance.now()));
+    try {
+      const actual = await identity(db); checkIdentity(actual, config);
+      assert.notEqual(actual.threadId, monitorIdentity.threadId); assert.equal(owned.has(actual.threadId), false);
+      const [mapping] = await query(monitor, "HD235_OWNED_THREAD_MAPPING",
+        "SELECT THREAD_ID,PROCESSLIST_ID,INSTRUMENTED FROM performance_schema.threads WHERE PROCESSLIST_ID=?", [actual.threadId], deadline);
+      assert.equal(mapping.length, 1); assert.equal(mapping[0].INSTRUMENTED, "YES");
+      entry = { threadId: actual.threadId, performanceThreadId: Number(mapping[0].THREAD_ID), schema: config.schema,
+        identity: actual, observedTransactionIds: [], observedEngineTokens: [] };
+      assert.ok(Number.isSafeInteger(entry.performanceThreadId) && entry.performanceThreadId > 0);
+      owned.set(entry.threadId, entry);
+      await query(db, "HD235_BEGIN", "START TRANSACTION", [], deadline); transactionStarted = true;
+      await query(db, "HD235_OWNED_INSERT", `INSERT INTO \`${table}\` (id,owner_nonce) VALUES (?,?)`, [6, nonce], deadline);
+      const [[owner]] = await query(db, "HD235_OWNER_READ", `SELECT COUNT(*) AS n FROM \`${table}\` WHERE id=? AND owner_nonce=?`, [6, nonce], deadline);
+      assert.equal(Number(owner.n), 1); assert.equal(await rowCount(), 0);
+      const live = await snapshot(entry, deadline);
+      assert.ok(live.transactions > 0); assert.ok(live.dataLocks.length > 0);
+      assert.ok((await verifySnapshot(live.snapshot)).length > 0);
+      await query(db, "HD235_ROLLBACK", "ROLLBACK", [], deadline); transactionStarted = false;
+      const socket = await closeDatabase(db, deadline); closed = true; clearTimeout(watchdog);
+      const terminalObservation = await terminal(entry, deadline, started);
+      assert.deepEqual(await verifySnapshot(terminalObservation.snapshot), []);
+      assert.deepEqual([terminalObservation.snapshot.connections.length, terminalObservation.transactions, terminalObservation.locks], [0, 0, 0]);
+      assert.ok(entry.observedTransactionIds.length > 0); assert.equal(await rowCount(), 0);
+      const foreign = structuredClone(terminalObservation.snapshot); foreign.schema = `${config.schema}_foreign`;
+      const foreignIssues = await verifySnapshot(foreign);
+      assert.ok(foreignIssues.length > 0, "The real Gate rejects a foreign-identity copy of actual terminal evidence");
+      return { claims: "OWNED_VERIFIER_PROBE_ONLY", identity: actual, live, socket, terminal: terminalObservation,
+        independentRowsAfterRollback: 0, foreignIdentityCopyIssues: foreignIssues };
+    } catch (error) { primaryError = error; throw error; }
+    finally {
+      clearTimeout(watchdog);
+      if (!closed) {
+        const recovery = { status: "UNKNOWN", socketClosed: transportClosed, terminal: null, errors: [] };
+        report.hd235DirectSqlCleanup = recovery;
+        try {
+          if (transactionStarted) await query(db, "HD235_FAILURE_ROLLBACK", "ROLLBACK", [], deadline);
+          await closeDatabase(db, deadline);
+        } catch (cleanupError) {
+          recovery.errors.push(failure(cleanupError));
+          try { db.destroy(); } catch (error) { recovery.errors.push(failure(error)); }
+          try { transport.destroy(); } catch (error) { recovery.errors.push(failure(error)); }
+          if (primaryError) primaryError.cleanupError = cleanupError;
+        }
+        try { await bounded(transportClose, deadline, "HD235 failed direct socket close", () => transport.destroy()); }
+        catch (error) { recovery.errors.push(failure(error)); }
+        recovery.socketClosed = transportClosed;
+        if (entry) {
+          try {
+            const observed = await terminal(entry, deadline, started);
+            if (transportClosed && observed.terminal) { recovery.terminal = observed; recovery.status = "SQL_TERMINAL_CONFIRMED"; }
+          } catch (error) { recovery.errors.push(failure(error)); }
+        }
+        if (!primaryError && recovery.errors.length) throw new Error("HD235 direct cleanup failed; inspect persisted recovery evidence");
+      }
+    }
+  });
+
+  native("GB-N07", "tool-only own HTTP403 closes every socket and separately collects original FailureAudit API proof", async () => {
+    const original = await hd235Registered("inventory-task041-export-failure-audit-api");
+    assert.equal(original.transport, "MYSQL_HTTP"); assert.ok(original.counts.total >= 12);
+    const deadline = performance.now() + TERMINAL_MS, peers = new Set();
+    const observed = { request: null, status: null, body: "", clientClose: false, serverClose: false, listenerClose: false };
+    let client, clientSocket, listener;
+    const peerClosed = new Promise((resolve, reject) => {
+      listener = http.createServer((request, response) => {
+        observed.request = { method: request.method, url: request.url, nonce: request.headers["x-hd235-nonce"] };
+        if (request.method !== "GET" || request.url !== `/hd235/${nonce}` || request.headers["x-hd235-nonce"] !== nonce) {
+          response.destroy(new Error("Owned HTTP nonce mismatch")); return;
+        }
+        response.writeHead(403, { "Content-Type": "text/plain", Connection: "close" }); response.end(`DENIED:${nonce}`);
+      });
+      listener.on("connection", socket => {
+        peers.add(socket); socket.once("error", reject);
+        socket.once("close", hadError => { peers.delete(socket); observed.serverClose = true; if (hadError) reject(new Error("Owned HTTP server socket error")); else resolve(); });
+      });
+      listener.once("error", reject);
+    });
+    // Observe an early listen failure immediately; awaiting the original promise still rejects.
+    peerClosed.catch(() => {});
+    try {
+      listener.listen({ host: "127.0.0.1", port: 0 }); await bounded(once(listener, "listening"), deadline, "Own HTTP listen");
+      const address = listener.address(); assert.equal(address.address, "127.0.0.1");
+      const responseDone = new Promise((resolve, reject) => {
+        client = http.request({ host: "127.0.0.1", port: address.port, method: "GET", path: `/hd235/${nonce}`,
+          agent: false, headers: { "X-HD235-Nonce": nonce, Connection: "close" } }, response => {
+          observed.status = response.statusCode; response.setEncoding("utf8");
+          response.on("data", chunk => { observed.body += chunk; }); response.once("error", reject); response.once("end", resolve);
+        });
+        client.once("error", reject);
+      });
+      const clientClosed = new Promise((resolve, reject) => client.once("socket", socket => {
+        clientSocket = socket; socket.once("error", reject);
+        socket.once("close", hadError => { observed.clientClose = true; if (hadError) reject(new Error("Owned HTTP client socket error")); else resolve(); });
+      }));
+      client.end();
+      await bounded(Promise.all([responseDone, clientClosed, peerClosed]), deadline, "Own HTTP response and actual socket closes", () => { client.destroy(); clientSocket?.destroy(); for (const socket of peers) socket.destroy(); });
+      assert.deepEqual(observed.request, { method: "GET", url: `/hd235/${nonce}`, nonce });
+      assert.equal(observed.status, 403); assert.equal(observed.body, `DENIED:${nonce}`);
+      const listenerClosed = once(listener, "close"); listener.close(); await bounded(listenerClosed, deadline, "Own HTTP listener close"); observed.listenerClose = true;
+      assert.equal(peers.size, 0); assert.ok(observed.clientClose && observed.serverClose && observed.listenerClose);
+      return { claims: "TOOL_ONLY_HTTP403_NOT_INVENTORY_AUTH_PASS", originalFailureAuditReceipt: original, observed };
+    } finally {
+      client?.destroy(); clientSocket?.destroy(); for (const socket of peers) socket.destroy();
+      if (listener.listening) { const closed = once(listener, "close"); listener.close(); await bounded(closed, deadline, "Own HTTP failure cleanup listener"); }
+    }
+  });
+
+  native("GB-N08", "synthetic verifier binds actual local LCOV and file bytes through the checked-in CI recorder", async () => {
+    assert.ok(hd235Unit, "Actual original TASK036 receipt supplies the current source and PLAN identities");
+    const directory = await fs.mkdtemp(path.join(runDir, "hd235-coverage-"));
+    try {
+      const recorderPath = path.join(process.env.HD228_REPO_ROOT, "server/scripts/inventoryPhase005CoverageEvidence.mjs");
+      const recorderHash = sha(await fs.readFile(recorderPath));
+      const { buildMergeRecord } = await import(new URL(`file://${recorderPath}`).href);
+      const commit = (await hd235Process("git", ["rev-parse", "HEAD"], undefined, "Actual local commit identity")).trim();
+      const npm = (await hd235Process("npm", ["--version"], undefined, "Actual installed npm identity")).trim();
+      const lcovPath = path.join(directory, "lcov.info"), sourceFile = path.join(directory, "verifier-only.js");
+      await fs.writeFile(sourceFile, "// SYNTHETIC_VERIFIER_ONLY\nexport const value = 1;\n", { flag: "wx", mode: 0o600 });
+      await fs.writeFile(lcovPath, `TN:SYNTHETIC_VERIFIER_ONLY\nSF:${sourceFile}\nDA:2,1\nLF:1\nLH:1\nend_of_record\n`, { flag: "wx", mode: 0o600 });
+      const lcovText = await fs.readFile(lcovPath, "utf8"), lcovSha256 = sha(lcovText), parts = [];
+      assert.ok(lcovText.includes(`SF:${sourceFile}\n`));
+      for (let shard = 1; shard <= 4; shard += 1) {
+        const file = path.join(directory, `synthetic-part-${shard}.json`);
+        await fs.writeFile(file, JSON.stringify({ claim: "SYNTHETIC_VERIFIER_ONLY", shard, nonce }) + "\n", { flag: "wx", mode: 0o600 });
+        parts.push({ shard, sha256: sha(await fs.readFile(file)), run_id: "1", attempt: 1, commit });
+      }
+      const before = { source: hd235Unit.source, plan: hd235Unit.plan, commit, node: process.version, npm,
+        cwd: directory, command: "npm run test:coverage:merge --workspace server", thresholds: { lines: 92, branches: 83, functions: 90 },
+        inputs: { claim: "SYNTHETIC_VERIFIER_ONLY", sourceFile: sha(await fs.readFile(sourceFile)), lcovSha256, recorderHash } };
+      const after = structuredClone(before);
+      const record = buildMergeRecord({ before, after, outcome: { exitCode: 0, signal: null }, lcovSha256, parts });
+      assert.equal(record.lcovSha256, sha(await fs.readFile(lcovPath))); assert.equal(record.parts.length, 4);
+      const changedPath = path.join(directory, "changed-lcov.info");
+      await fs.writeFile(changedPath, lcovText.replace("DA:2,1", "DA:2,0"), { flag: "wx", mode: 0o600 });
+      const changedHash = sha(await fs.readFile(changedPath)); assert.notEqual(changedHash, record.lcovSha256);
+      const changed = structuredClone(after); changed.inputs.lcovSha256 = changedHash;
+      assert.throws(() => buildMergeRecord({ before, after: changed, outcome: { exitCode: 0, signal: null }, lcovSha256: changedHash, parts }), /inputs changed/u);
+      assert.equal(sha(await fs.readFile(recorderPath)), recorderHash);
+      return { claims: "SYNTHETIC_VERIFIER_ONLY_NO_FULL_NATIVE_OR_GLOBAL_CI_PASS", recorderHash, lcovSha256,
+        sourceFileSha256: before.inputs.sourceFile, partHashes: parts.map(part => part.sha256), changedCopyRejected: true };
+    } finally {
+      await fs.rm(directory, { recursive: true });
+      await assert.rejects(fs.stat(directory), { code: "ENOENT" });
+    }
+  });
+
+  if (enabled) after(async () => {
+    async function cleanup(label, body) {
+      try { await body(); } catch (error) { report.workerCleanupErrors.push({ label, error: failure(error) }); }
+    }
+    if (activeBody) await cleanup("CANCELLED_BODY_SETTLEMENT", () => bounded(activeBody,
+      performance.now() + TERMINAL_MS, "Cancelled native body settlement"));
+    if (worker && !exitValue) {
+      await cleanup("OWNED_WORKER_CLOSE", async () => {
+        // Cleanup cannot convert the original failing test into a passing case.
+        await request("cleanup");
+        const start = performance.now(), deadline = start + TERMINAL_MS;
+        for (const entry of owned.values()) await terminal(entry, deadline, start);
+        await request("shutdown", {}, deadline); await bounded(workerExit, deadline, "Cleanup child exit");
+      });
+      if (!exitValue) {
+        worker.kill("SIGTERM");
+        await cleanup("OWNED_WORKER_FALLBACK_EXIT", () => bounded(workerExit, performance.now() + 5000, "Owned child SIGTERM exit"));
+      }
+    }
+    if (serverSocket && !serverSocket.destroyed) serverSocket.destroy();
+    if (server?.listening) await cleanup("OWNED_LISTENER_CLOSE", async () => {
+      const closed = once(server, "close"); server.close(); await bounded(closed, performance.now() + 5000, "Failure cleanup listener close");
+    });
+    if (monitor) {
+      await cleanup("OWNED_SQL_BEFORE_DDL", async () => {
+        const start = performance.now(), deadline = start + TERMINAL_MS;
+        for (const entry of owned.values()) await terminal(entry, deadline, start);
+        if (mismatchOwned) { await query(monitor, "CLEANUP_OWN_MISMATCH_SCHEMA", `DROP DATABASE \`${mismatchSchema}\``); mismatchOwned = false; }
+        if (tableOwned) { await query(monitor, "DROP_OWN_TABLE", `DROP TABLE \`${table}\``); tableOwned = false; }
+      });
+      await cleanup("OWNED_MONITOR_CLOSE", async () => { report.monitorSocket = await closeDatabase(monitor, performance.now() + TERMINAL_MS); });
+    }
+    await cleanup("SOURCE_AFTER", async () => { report.sourceAfter = await sourceHashes(); assert.deepEqual(report.sourceAfter, report.sourceBefore); });
+    report.status = report.cases.length === 8 && report.cases.every(row => row.outcome === "PASS") && !report.workerCleanupErrors.length && report.cleanup === "CHILD_EXIT_AND_SQL_TERMINAL_CONFIRMED" ? "PASS" : "FAIL";
+    report.outerCleanup = "NOT_CLAIMED_REQUIRES_COORDINATOR_RECEIPT";
+    await fs.writeFile(reportPath, JSON.stringify(report, null, 2) + "\n", { flag: "wx", mode: 0o600 });
+    assert.equal(report.status, "PASS", "Original case failures and bounded cleanup errors remain failures");
+  }, { timeout: 120000 });
+}

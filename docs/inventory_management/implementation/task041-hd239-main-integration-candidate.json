@@ -1,0 +1,35 @@
+{
+  "status": "EXACT_MAIN_INTEGRATION_CANDIDATE_NOT_ADOPTED",
+  "candidate": {
+    "design": "0d0460c4f0b8d64ddc5029caf761bd98d024d998c449f173ede6fe5638f62ff0",
+    "plan": "940f0d7d2c849fe7cc3e069e7bd93186ceeb94c56cfe53aa58247051b1a0b744"
+  },
+  "registry_baseline": {
+    "design": "82b1d9c902f417402035290cad1c7aca932d4af3189a0cb0d3657a3667b4f02a",
+    "plan": "28d48f4adeaeeef5680bc59d600b8a27e6aa30e3bec1eef57f5fab1f93f772b7"
+  },
+  "registry_path": "implementation/task041-hd235-completion-manifest.json",
+  "registry_sha256": "3d109418d583092d7f41e9aea0f404666995abbc8e54731d57abcd1e930ce8db",
+  "files": [
+    {
+      "path": "docs/inventory_management/03_design_spec.md",
+      "candidate_sha256": "4b3f2efb4f781f6c2ade5aac41b499fcbe3ce034e34805af0e926e2d9dc5a080"
+    },
+    {
+      "path": "docs/inventory_management/05_development_tasks.md",
+      "candidate_sha256": "a7cfc2b38bc950dd3e75b9978200286692c30e5f0ea1225f8714e85a0ac242e8"
+    },
+    {
+      "path": "docs/inventory_management/00_module_manifest.json",
+      "candidate_sha256": "8d33da5a8a4f964802f282a05a80d311a7e8b893638b199870c3b04c137a914e"
+    },
+    {
+      "path": "docs/inventory_management/00_project_profile.json",
+      "candidate_sha256": "d370ea36a9f21cd9e7e7f8ab0aae0b15e49eb4d73f7ac30caa8461dce84da50d"
+    }
+  ],
+  "source_parent": "ec4f106f",
+  "merge_target": "5febef80f83ba0ff87bc5bf6117aff254cbdcbb7",
+  "scope": "Preserve both P4 and main FulfillmentHD024 contracts; derived provided pin only. Same73 registry/profile/commands/data/deadlines/80+8/coverage39/global92/83/90. Gate adoption metadata only; no oldapproval rewritten, newactualSamDESIGN/PLAN/SCOPE required. Existingnewmaincapacity requirespriorSamapproval.",
+  "no_product_resolution_edits": true
+}
