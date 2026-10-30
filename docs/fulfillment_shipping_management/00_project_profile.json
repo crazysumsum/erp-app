@@ -373,6 +373,162 @@
         "SUPPLIER_BANK_ENCRYPTION_KEYS",
         "SUPPLIER_BANK_LOOKUP_KEYS"
       ]
+    },
+    {
+      "id": "fulfillment-p1-developer",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/fulfillment-p1-developer.xml",
+        "server/test/fulfillment/*.test.js",
+        "server/test/integration/fulfillment*.integration.test.js",
+        "server/test/integration/shipment*.integration.test.js",
+        "server/test/integration/salesFulfillment*.integration.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 3600,
+      "result_adapter": "JUNIT",
+      "result_path": "fulfillment-p1-developer.xml",
+      "min_tests": 230,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v(2[6-9]|[3-9]\\d)\\."
+        },
+        {
+          "argv": [
+            "mysql",
+            "--version"
+          ],
+          "version_pattern": "(?i)mysql"
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_SOCKET_PATH",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_ADMIN_USER",
+        "DB_ADMIN_PASSWORD",
+        "DB_NAME",
+        "DB_INTEGRATION_TESTS",
+        "JWT_SECRET",
+        "NODE_ENV",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "FULFILLMENT_TEST_API_PORT",
+        "FULFILLMENT_TEST_CLIENT_PORT",
+        "HARNESS_RUN_DIR",
+        "DB_HOST",
+        "DB_PORT",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD",
+        "DB_ADMIN_PASSWORD",
+        "JWT_SECRET",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_KEYS"
+      ]
+    },
+    {
+      "id": "fulfillment-p1-browser",
+      "kind": "UI",
+      "argv": [
+        "npx",
+        "playwright",
+        "test",
+        "--config",
+        "client/e2e/fulfillment-shipping-management/p1.playwright.config.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 900,
+      "result_adapter": "JUNIT",
+      "result_path": "fulfillment-p1-browser.xml",
+      "min_tests": 2,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v(2[6-9]|[3-9]\\d)\\."
+        },
+        {
+          "argv": [
+            "mysql",
+            "--version"
+          ],
+          "version_pattern": "(?i)mysql"
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_SOCKET_PATH",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_ADMIN_USER",
+        "DB_ADMIN_PASSWORD",
+        "DB_NAME",
+        "DB_INTEGRATION_TESTS",
+        "JWT_SECRET",
+        "NODE_ENV",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "FULFILLMENT_TEST_API_PORT",
+        "FULFILLMENT_TEST_CLIENT_PORT",
+        "HARNESS_RUN_DIR",
+        "DB_HOST",
+        "DB_PORT",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD",
+        "DB_ADMIN_PASSWORD",
+        "JWT_SECRET",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_KEYS"
+      ]
     }
   ],
   "ci": {
