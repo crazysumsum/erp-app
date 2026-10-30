@@ -36,6 +36,13 @@ Preserve existing cases, assertions, coverage floors, CI and necessary review.
 Do not delete/skip tests, reduce workload or relax thresholds merely to save time.
 Sam has authorized separating existing large capacity cases into impact-scoped
 jobs while retaining routine correctness/transaction/permission regression and
-unchanged gates. Unknown/shared dependency changes must require capacity; long
-load acceptance belongs in separately approved scheduled/pre-release validation.
-This direction does not approve other pending new workloads.
+unchanged gates. Routine PR checks must contain no performance/capacity workload.
+Run existing capacity only when a verified diff changes the case, its fixtures,
+or its actual dependencies; shared runtime changes can select multiple scopes.
+Apply this rule to main pushes too. Scheduled/manual execution is not permission
+for an unconditional sweep: require a related-change baseline, otherwise run only
+routine checks. Unknown paths/history must report unresolved impact, not silently
+run all capacity or claim that a required workload passed.
+Use the single CI capacity catalog for routine exclusions and affected-case
+selection. Keep ordinary cases in mixed files and all coverage floors. This
+direction does not approve other pending new workloads or dormant opt-in suites.

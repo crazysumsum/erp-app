@@ -1,0 +1,19 @@
+{
+  "tests": [
+    {
+      "name": "TC-134 local worker stop-claim, lease expiry, restart takeover and no redo",
+      "id": "TC-134",
+      "status": "PASS"
+    },
+    {
+      "name": "TC-135 local fresh deployment, route and permission inventory, separated-role smoke",
+      "id": "TC-135",
+      "status": "PASS"
+    },
+    {
+      "name": "TC-136 release regression and evidence gate",
+      "id": "TC-136",
+      "status": "NOT_RUN"
+    }
+  ]
+}

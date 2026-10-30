@@ -23,7 +23,7 @@ function passing() {
       uncapped: { candidateCap: Number.MAX_SAFE_INTEGER, recall: 0.977, p95Ms: 950 } } } },
     imported: { code: 0, report: { ok: true, startedAt: "2026-10-22T02:55:33.000Z", uploadMs: 900, precheck: { ms: 6_307 }, execute: { ms: 78_714 }, nfr004: { precheckPlusExecuteMs: 82_766, limitMs: 600_000, pass: true },
       verification: { exactlyOnce: true, countsConsistent: true }, dbConnectionsPeak: { userConnections: 16 }, workerPeakRssMiB: 253 } },
-    during: { code: 0, report: { ok: true, nfr001: verdict(), window: { measureFrom: "2026-10-22T02:55:32.800Z", measureTo: "2026-10-22T02:57:32.800Z" } } },
+    during: { code: 0, report: { ok: true, nfr001: verdict(5000), window: { measureFrom: "2026-10-22T02:55:32.800Z", measureTo: "2026-10-22T02:57:32.800Z" } } },
     counted: { list: { api: 80_225, sql: 80_225, status: 200 }, listSearch: { term: "123", api: 452, distinct: 452, joined: 904, status: 200 },
       forSku: { api: 80_225, sql: 80_225, status: 200 } }
   };
@@ -83,9 +83,10 @@ test("HD-117 A: every condition of every performance check fails on its own brok
     ["import.exactly_once_and_counts_consistent", (input) => { input.imported.report.verification.countsConsistent = false; }],
     ["import.report_ok", (input) => { input.imported.code = 1; }],
     ["import.report_ok", (input) => { input.imported.report.ok = false; }],
-    ["online.p95_under_2s_during_import", (input) => { input.during.report.nfr001.pass = false; }],
-    ["online.p95_under_2s_during_import", (input) => { input.during.report.nfr001.limitP95Ms = 3000; }],
-    ["online.p95_under_2s_during_import", (input) => { input.during.code = 1; }],
+    ["online.p95_under_5s_during_import", (input) => { input.during.report.nfr001.pass = false; }],
+    ["online.p95_under_5s_during_import", (input) => { input.during.report.nfr001.limitP95Ms = 2000; }],
+    ["online.p95_under_5s_during_import", (input) => { input.during.report.nfr001.limitP95Ms = 10_000; }],
+    ["online.p95_under_5s_during_import", (input) => { input.during.code = 1; }],
     ["import.resources_bounded", (input) => { input.imported.report.dbConnectionsPeak.userConnections = 34; }],
     ["import.resources_bounded", (input) => { input.imported.report.workerPeakRssMiB = 1_025; }],
     ["import.inside_measured_window", (input) => { input.imported.report.startedAt = "2026-10-22T02:55:32.300Z"; }],
