@@ -167,9 +167,9 @@
     "provided": [
       {
         "id": "fulfillment-shipment-and-reversal-contract",
-        "version": "P1-HD024-A-readonly-selected-prefix-preview/fourth2MiB-adopted; exact source/runtime/fullP1 gates pending",
+        "version": "P2-HD025-A-optional-exact-weight-KG-G; inherited P1-HD024-preview unchanged",
         "source": "docs/fulfillment_shipping_management/03_design_spec.md",
-        "sha256": "861939c3d799e9e8b76dbbab25e92eb6f04a6727d4d04fb8545e536de3546cf0",
+        "sha256": "7db517206d6f3dd4c0dfacbaecbdacd3f0b210c251a03eb519d342c9a081ecb7",
         "consumers": [
           "sales-order-management",
           "inventory-management",

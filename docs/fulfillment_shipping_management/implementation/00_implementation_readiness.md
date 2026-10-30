@@ -1,6 +1,16 @@
 # Fulfillment implementation readiness
 
-## 當前：P2 開發入口（2026-10-30）
+## 當前：HD025 A已落地，Draft功能驗證通過，首批15個CI案例已批准（2026-10-30）
+
+Sam已實際批准HD025 A：精確decimal string、KG/G，保留全部安全／100/50/5000／20秒。DESIGN a2f36f11…fad9d、PLAN7882d19a…1a7c3已對齊，明確P2授權及獨立review0C/H/M，舊批准／evidence未重標或刪除。TASK024/025 IN_PROGRESS，其餘P2尚待執行，未宣稱完整DoD。
+
+已實作strict重量及Draft命令、Draft create/update/cancel、基本detail與4支HTTP handlers。pure加既有canonical回歸9PASS；小型native6PASS/0FAIL/0SKIP（13.754s）；私有actualHTTP3PASS/0FAIL/0SKIP（6.818s），包含拒絕weight Number coercion及撤權前置於cached/domain replay。Snapshot只Confirm保存；Draft line/header確認快照維持空值。提交成功後讀取失敗保留SUCCEEDED，原事件重試及fresh403均通過。這些不是capacity/P95/20秒最大量級／完整P2 Gate通過。
+
+兩次native fixture timestamp與三次HTTP app-config準備失敗原件全部保留；沒有容量／效能逾時，不繞過schema／config／crypto guard。專用MySQL26.7使用原128MiB/100MiB，native小fixture實際2pool/10s較嚴格，HTTP app保持10pool/20s。
+
+開發途中收到並直接核實Sam在project manager chat的新規則：任何新增常規CI案例須先明確成本說明及實際批准。當前4個新test檔15cases都只在本地，未commit/push/觸發CI。方案73已獨立覆核0C/H/M，CI-P2-DRAFT-001已收到Sam實際A批准，僅此15案可納入既有常規CI；後續新增仍須具體先批。既有case／coverage未刪減，新job/step/100/5000/UI負載或sharedCIrouting均未新增。後續PhaseB/Recovery方向見74，仍須具體security/slice覆核及新案例准入，不因新增method本身重問已有P2授權。
+
+## 歷史：P2 開發入口（2026-10-30）
 
 Sam 已授權按已批准 PHASE-003 計劃開發 TASK-024–033，保留全部安全檢查、100行／每行50／總數5000及20秒限制；任何容量或效能失敗立即停下報告。所有Task、獨立覆核、完整驗證及新候選CI通過後才建立draft PR；本次授權不包含P2合併。
 

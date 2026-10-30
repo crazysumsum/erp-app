@@ -1,6 +1,6 @@
 # HD-025 — Shipment optional weight input contract (proposal)
 
-Status: DECISION_REQUIRED; no product code or public route changed.
+Status: APPROVED A. Actual Sam reply:「A：精確字串，KG／G（建議）」。Proposal SHA at approval a62d1914aff95eaa5f15a7c0ecf79acc1965550993e723a2846b28f13bb59949; independent proposal review0 C/H/M. No test/gate waiver.
 
 ## Observed gap
 
