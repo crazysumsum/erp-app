@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 347,
+  "revision": 349,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-003",
-  "current_task": "TASK-027",
+  "current_task": "TASK-030",
   "baseline": {
     "design": "a2f36f116fbbba29643471dae3665e3c43ed7bd0dae23af32f277fea4c2fad9d",
     "plan": "7882d19ae5c91ca9aba354e29b000150dde46fa61dcd3a9144455f032e41a7c3",
-    "code_commit": "99cf743be926a5c3364cd58041fd06a9c757a4a9",
-    "source_fingerprint": "51c32805ba1c0b1f7105893d521ba1d8eed2a3478fa08f49605e8983cf5e0313",
+    "code_commit": "bf885aed628d8a1ba3473fde1ead47049579db16",
+    "source_fingerprint": "15cf84ac434a93fbd711ae9241e890eb87d95abd08ccc0bd5c7f30c8f7c56c32",
     "worktree": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2",
     "default_commit": "41fb488af133053c95e2b8e878920b2a494349da",
     "mode_entry_commit": "5febef80f83ba0ff87bc5bf6117aff254cbdcbb7"
@@ -60,7 +60,7 @@
     "TASK-027": "IN_PROGRESS",
     "TASK-028": "PENDING",
     "TASK-029": "PENDING",
-    "TASK-030": "PENDING",
+    "TASK-030": "IN_PROGRESS",
     "TASK-031": "PENDING",
     "TASK-032": "PENDING",
     "TASK-033": "PENDING",
@@ -4024,6 +4024,31 @@
         "client/e2e/fulfillment-shipping-management/**",
         "Only proposal75 maximum22 namedfunctional cases/finitebudgets plus minimal existingrealbrowserstep extension and PMcoordination; no newjob/step/router/frequency. No newP2capacity execution."
       ]
+    },
+    {
+      "id": "APR-HD026-RECOVERY-SHARED-OUTCOMES-A",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam actual currentchat HD026 A reply",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam currentchat async reply A：批准安全修補、雙owner唯讀契約及相關chat協調（建議）; exactproposal77 SHAf404a227e53c1e151761d5729ec52933de2b71cb6b6fe8594d844fa7c38df88a. Only boundedsharedrollbackfailure discard/indeterminate/actualTXproof + Inventory/Salesreadonlyoriginaloutcome protocols + genuinefencedlocalfailurebookkeeping and exactlegacyassert correction/ownerPMcoord; originalnormalbusinessauth/isolation/pool/20s/coverage remain; no newB22-externalregularcase or3heldP2capacity execution.",
+      "recorded_at": "2026-10-30T09:53:45.927697Z",
+      "code_commit": "bf885aed628d8a1ba3473fde1ead47049579db16",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "7882d19ae5c91ca9aba354e29b000150dde46fa61dcd3a9144455f032e41a7c3",
+      "scope": [
+        "server/src/services/mysqldatabase/MySqlDatabaseService.js",
+        "server/test/mysqlDatabaseFailureModes.test.js",
+        "server/src/modules/inventory/InventoryLookupService.js",
+        "server/src/modules/inventory/InventoryFulfillmentService.js",
+        "server/src/modules/inventory/inventoryFulfillmentOutcome*.js",
+        "server/src/modules/sales/SalesFulfillmentService.js",
+        "server/src/modules/sales/salesFulfillmentOutcome*.js",
+        "docs/inventory_management/03_design_spec.md",
+        "docs/sales_order_management/03_design_spec.md",
+        "Only exactHD026A readonlyoutcome/fixedpurposeproof/rollbackfailure safety scope; noownerbusinesswriteauthorization relaxation/newload"
+      ]
     }
   ],
   "reviews": [
@@ -6378,6 +6403,66 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-P2-ROLLBACK-OUTCOME-GAP",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/p2_confirmation_review",
+      "reviewed_baseline": "a2f36f116fbbba29643471dae3665e3c43ed7bd0dae23af32f277fea4c2fad9d",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2-runtime/independent-p2-rollback-outcome-contract-gap-readonly-analysis-review.json SHAa815e24537059d137d70df7837df3ae92381514fb4f8e8e961ca1d57dc1886d9; Actualcode/legacytest gap only, notnativepartialcommit; metadata notonly theoreticalsolution, missingcompleteownernegativeproof preventsfailureonly.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P2-HD026-PROPOSAL-DECISION-READINESS",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/p2_confirmation_review",
+      "reviewed_baseline": "a2f36f116fbbba29643471dae3665e3c43ed7bd0dae23af32f277fea4c2fad9d",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2-runtime/independent-p2-hd026-proposal77-final-decision-readiness-review.json SHA3be1a7fcb67dda06382c27313595599cbc6bfdb3f3ed15e05b3075e337fefc49; Exactproposal77 SHA f404a227e53c1e151761d5729ec52933de2b71cb6b6fe8594d844fa7c38df88a readyforSamdecision0CHM only; no sharedimplementation/execution/newload authority.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P2-TASK030-DIRECTION",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/p2_inquiry_review",
+      "reviewed_baseline": "a2f36f116fbbba29643471dae3665e3c43ed7bd0dae23af32f277fea4c2fad9d",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2-runtime/independent-p2-task030-inquiry-document-direction-review.json SHA03a162d28a680d627d369b20f3788f986a5bdd8d08171dc3ae8d9acb804b5835; ApprovedP2/TASK030/75B exact2smallfunctional scope andtwoLinehelper direction0CHM; concrete source/test/runtime admission pending, no capacity.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P2-TASK030-EXACT2-RED-ADMISSION",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/p2_inquiry_review",
+      "reviewed_baseline": "a2f36f116fbbba29643471dae3665e3c43ed7bd0dae23af32f277fea4c2fad9d",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2-runtime/independent-p2-task030-inquiry-exact2-red-admission-review.json SHA4b0903fed50ef56465c9110bad79165438a5c8db7e8206eac30faf84653d84e9; rev2assertcorrection0CHM/exact2approvedfunctionaladmission, no capacity",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P2-TASK030-RED-CAUSALITY",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/p2_inquiry_review",
+      "reviewed_baseline": "a2f36f116fbbba29643471dae3665e3c43ed7bd0dae23af32f277fea4c2fad9d",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2-runtime/independent-p2-task030-inquiry-actual-red-causality-review.json SHA67f9b5c35bebf316065e4cbae834b8a0a6bca90693c0a518976c02ba8f0d3b0d; actual3229292FAIL/0PASS/0SKIP because registeredrouteabsent frameworkexact401UnauthorizedAccess; earlier404hypothesis corrected, noauthweaken/rerun, rawfailedretained",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -8145,6 +8230,18 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Actual Sam currentchat async reply B：只批准22功能案及browser接線，容量情境待另批; exactproposal75 SHAa74c4f5803ac2a00ceb2aab91aa24c283ed5c3c580517a45b3140f4ad97430fa. Authorizes22finitefunctionalcase budgets and minimalexistingbrowserstep/PMcoordination only. Three newlocalcapacityscenarios explicitly NOT approved; noexecution/finalcapacityGatePASS inferred."
+    },
+    {
+      "id": "HD-026-RECOVERY-ROLLBACK-OWNER-OUTCOMES",
+      "impact": "MAJOR",
+      "question": "Exactproposal77 SHAf404a227e53c1e151761d5729ec52933de2b71cb6b6fe8594d844fa7c38df88a reviewed0CHM: A sharedrollbackfailure destroy+INDETERMINATE/actualTX boundreadonly terminalproof, narrowInventory2stage/Sales journal-before-parent triStateoutcome reads, genuinefixedpurpose failure capability/peroperation fence/fullnegativeproof, exactlegacyunsafeassert correction, owner/PMchatcoordination. No normalbusinessauth/20s/pool/schema/newregularcase/newP2capacity waiver. B holdonlyaffectedRecovery/Confirm whileindependentInquiry/client/UI continues. Actualasyncquestionsent, waitactualSamdecision before sharedimplementation.",
+      "affected_ids": [
+        "TASK-027",
+        "TASK-028",
+        "TASK-029"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Actual Sam currentchat async reply A：批准安全修補、雙owner唯讀契約及相關chat協調（建議）; exactproposal77 SHAf404a227e53c1e151761d5729ec52933de2b71cb6b6fe8594d844fa7c38df88a. Only boundedsharedrollbackfailure discard/indeterminate/actualTXproof + Inventory/Salesreadonlyoriginaloutcome protocols + genuinefencedlocalfailurebookkeeping and exactlegacyassert correction/ownerPMcoord; originalnormalbusinessauth/isolation/pool/20s/coverage remain; no newB22-externalregularcase or3heldP2capacity execution."
     }
   ],
   "external_actions": [
@@ -9291,6 +9388,38 @@
       "idempotency_key": "p2-pm-browser-step-b-approval-once",
       "status": "CONFIRMED",
       "source_ref": "ActualSam B approval of proposal75 browserwiring/PMcoordination; actual codex-app send_message_to_thread succeeded to exactPM thread. Message preservesP1exact2+P2exact2/separateownedreports/nojob/step/router/newcapacity and notesestimated6–12minsummedCIwork. No remote Git mutation or CI triggered."
+    },
+    {
+      "id": "P2-HD026-A-AUTHORITY",
+      "kind": "USER_AUTHORIZATION",
+      "target": "Exactproposal77 recommendedA sharedDB/dualowner readonly outcomes/fencedlocalfailure only",
+      "idempotency_key": "p2-hd026-actual-a-once",
+      "status": "CONFIRMED",
+      "source_ref": "Actual Sam currentchat async reply A：批准安全修補、雙owner唯讀契約及相關chat協調（建議）; exactproposal77 SHAf404a227e53c1e151761d5729ec52933de2b71cb6b6fe8594d844fa7c38df88a. Only boundedsharedrollbackfailure discard/indeterminate/actualTXproof + Inventory/Salesreadonlyoriginaloutcome protocols + genuinefencedlocalfailurebookkeeping and exactlegacyassert correction/ownerPMcoord; originalnormalbusinessauth/isolation/pool/20s/coverage remain; no newB22-externalregularcase or3heldP2capacity execution."
+    },
+    {
+      "id": "P2-HD026-INVENTORY-SCOPE-COORDINATION",
+      "kind": "THREAD_COORDINATION",
+      "target": "01a09d61-9996-78b2-95f2-3420778677bb exactHD026A scope/overlap/ownerconstraints",
+      "idempotency_key": "p2-hd026-inventory-coord-once",
+      "status": "CONFIRMED",
+      "source_ref": "ActualSam HD026A explicitlyauthorizesrelatedowner/PMchatcoordination; actualsend_message_to_thread success toexactexistingthread. Sourcebeforeeditingowners; 3newcapacityheld, normalauth/20s/ABI/PMcapacityroutingpreserved. Messageacceptance is not ownerreviewapproval."
+    },
+    {
+      "id": "P2-HD026-SALES-SCOPE-COORDINATION",
+      "kind": "THREAD_COORDINATION",
+      "target": "01a0f0e2-2647-7dc2-a1d4-a7cefa29d0f6 exactHD026A scope/overlap/ownerconstraints",
+      "idempotency_key": "p2-hd026-sales-coord-once",
+      "status": "CONFIRMED",
+      "source_ref": "ActualSam HD026A explicitlyauthorizesrelatedowner/PMchatcoordination; actualsend_message_to_thread success toexactexistingthread. Sourcebeforeeditingowners; 3newcapacityheld, normalauth/20s/ABI/PMcapacityroutingpreserved. Messageacceptance is not ownerreviewapproval."
+    },
+    {
+      "id": "P2-HD026-PM-SCOPE-COORDINATION",
+      "kind": "THREAD_COORDINATION",
+      "target": "01a0e71b-fccb-7c81-b9fe-ed817cc58e1f exactHD026A scope/overlap/ownerconstraints",
+      "idempotency_key": "p2-hd026-pm-coord-once",
+      "status": "CONFIRMED",
+      "source_ref": "ActualSam HD026A explicitlyauthorizesrelatedowner/PMchatcoordination; actualsend_message_to_thread success toexactexistingthread. Sourcebeforeeditingowners; 3newcapacityheld, normalauth/20s/ABI/PMcapacityroutingpreserved. Messageacceptance is not ownerreviewapproval."
     }
   ],
   "evidence_files": [
@@ -9800,7 +9929,23 @@
         "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2-runtime/independent-p2-def028-native-race-closure-phaseb-regression-results-review.json SHA42d6cf8eecaf6ca2d75fb88256cb4918125a3ff73782e0d3d5a8e9629594f7b1 actualnativeRED e53fd7b44917 ER_LOCK_DEADLOCK1213/40001 preserved; earlySalesS minimalfix + actualrace84a8341PASS and a055672PASS0FAIL0SKIP atFP51c328 independentlyverified. No otherRecovery/P2 readiness inferred."
       ],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-029",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "source_ids": [
+        "TASK-027",
+        "TASK-028",
+        "TASK-029",
+        "TC-010"
+      ],
+      "closure_evidence": [
+        "ActualsharedMySqlService529–544/legacyfailurecase205–233 mayreturnoriginalbusinesserrorandreleaserollbackfailedconnection; currentmetadatahasnopostTXproof. CurrentInventoryfindBySource conflatesabsent/unfinished; Salescurrentquantitycannotproveoriginaljournalabsence. No nativepartialcommit observed, no capacity/perfFAIL, no implicitdirtyBEGINclaim because SET TRANSACTIONguardrefusesactiveTX.",
+        "Privateindependent gapreviewa815e24537059d137d70df7837df3ae92381514fb4f8e8e961ca1d57dc1886d9; proposal77 exactf404... readyforactualhumandecision3be1...; no fix implemented or waived."
+      ],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Save independentlyverified internalPhaseB+earlySalesparent Draftfix as localatomic commits (actualrunsHEAD99cf/FP51c328 retained). Continue concrete Recovery/knownrollback/unknownoutcome/security contract investigation before failureonly implementation; Inquiry/client/UI and admitted22functional/browserwiring may proceed. SamB3newlocalcapacity NOTapproved/held; finalcapacityGate awaits separatedecision. PreservePM latestcapacityrouting on nextmainintegration; allTasks/review/fullverification/currentcandidateCI beforedraftPR,20s/allguards/actualperfFAIL STOP."
+  "next_safe_action": "ActualHD026A received/sharedscope+dualowner/PMcoord sent; implement reviewableDBrollbackfailure/actualTXproof thin slice using existingcaseRED then independent source review/regression; preserveDEF029OPENuntil fullproof. TASK030 exact2 accepted missingrouteRED, implement readmodel independently. Latestmainaae9 fetched/impactintegrationpending; preservePR313capacitycatalog/jobs/P1browserexact2. Approved22functional/browserwiring remain, 3newP2capacity NOTapproved/held. Alltasks/reviews/fullverification/exactcandidateCI and separatecapacityadmission beforedraftPR; original20s/safety and actualperfFAIL STOP."
 }
