@@ -1,17 +1,17 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1787,
+  "revision": 1789,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
-  "status": "BLOCKED",
-  "resume_status": "IMPLEMENTING",
+  "status": "IMPLEMENTING",
+  "resume_status": null,
   "current_phase": "PHASE-005",
   "current_task": "TASK-062",
   "baseline": {
     "design": "1fb4cad885249fc86e8a0ae4ecb991c14aa3770ad44a6d46754236dce50ada36",
     "plan": "eea0bb16119bb940ee16f3e20190a0b13ab52684d99b9ec28999efc7bfdce3ce",
-    "code_commit": "ae66d3db5662098a2a48a835a0313847b9bccc8b",
+    "code_commit": "3d20e4347c1146b750f278f663511a36026247c5",
     "source_fingerprint": "f864dad514d40b3196efaa9db9284d0df311ccb22cff2d914d0c379e83508b77",
     "worktree": "/Users/sam/.codex/worktrees/sales-p4-archive/erp-app",
     "default_commit": "e64dfc7452dd4ce598e6e9d1765000d9633dd849",
@@ -11169,6 +11169,29 @@
         "server/package.json"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-P4-DEC047-C-ADOPTION",
+      "kind": "RISK",
+      "authority_kind": "HUMAN",
+      "actor": "Sam",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam userMessage01a18b64-3404-7fc2-8660-569b8f76099e in verified projectmanager thread01a0e71b-fccb-7c81-b9fe-ed817cc58e1f/turn01a18b64-334a-7661-88ff-e7d2f853314f: 按方案C通知 Sales agent 推進. Trustedread_thread exposes directhumanmessage andsame-turn authorizeddispatch. Adopts exactDEC047R2proposal67ce4dd7ec11fc9260499d1ea911d05f18cb865e5306f6ef6fcecd0933e0d25e/closing432174a8/CIpatch1f0ca0ef. C only: onecurrentcandidateCIincludingalloriginal524/4shards/92-83-90/39floors/TC03250burst/TC03550MiBx2/TC0422000orders10users/memory; actualartifact/syntheticSHA/tree provenance andonecandidateC+Iadoption, nofakeLocalPASS/Harnessedit. Localremaining12classes2400+reuse200; quiet2x500Archive1000/10readers/selected18graphhashamountcountmanifest/Inventoryunchanged; Archive3x100x2/invalidranges/Oreadonlyfootprint. No50longmixed/10kE2EImport5Export/300kdrain/fullArchiveonly>=100samples/largeArchivecapacity thismerge: retainNOTRUN/prelaunchandArchiveenableblockers/defaultarchivefalse, originalformalrequirements/tests/SLOskept. UpdatesD/P/profile/trace andminimumentryexplicitlyauthorized withindependentreview. LowCPU/noDR/no seed25mrebuild orretest/allretainedSLOs/trueperformanceFAILtimeoutstop. Samebatchno repeatask; standingpush/DraftPR/currentCI/directmainmergeonlyafterapprovedremainingGates.",
+      "recorded_at": "2026-10-30T06:02:31.609481Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "eea0bb16119bb940ee16f3e20190a0b13ab52684d99b9ec28999efc7bfdce3ce",
+      "code_commit": "3d20e4347c1146b750f278f663511a36026247c5",
+      "scope": [
+        "sales-order-management",
+        "DEC-047",
+        "PHASE-005",
+        "TASK-063",
+        "TASK-066",
+        "TASK-068",
+        ".github/workflows/ci.yml",
+        "server/test-capacity/sales/phase4/**"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -21310,15 +21333,15 @@
     {
       "id": "DEC-047",
       "impact": "MAJOR",
-      "question": "2026-10-30 actual Sam new pre-execution approval boundary for ALL pending performance/capacity/benchmark/retests/dataexpansion including implicitCI. Verified PM thread01a0e71b-fccb-7c81-b9fe-ed817cc58e1f turn01a18a69-c61b-7622-b7ca-0d2fabe770d0 userMessage01a18a69-c69e-7872-a3d9-921a0d6c4684 exactuserquote: 按你的建議再發通知予sales的agent, 另外如果有關於性能容量測試前，需先停下來通知我測試的內容和規模，由我去決定測試規模是否合適推進. Must present one concrete consolidated purpose/scale/sample/user/importexport/job/SLO/resource/time/alternative list in existing160; no implicitreuse of earlier DEC046 as futureloadapproval. Current target200 completedPASS beforepolicy, lint+P4browser26PASS; fullcoverage startedbeforepolicy then owned admissionpaused/currentchildsettledtozombie/SIGTERMtestgroup andnormalauxMySQLshutdown, genericrunFAIL kept honest but USER_POLICY_INTERRUPTION_NOT_SLO_FAILURE. Pending wholecoverage includes embedded250kexports/keyset/501native, CI alsoTC032/035/042 so noDraftPR/push triggerbeforebatchapproval. Safe nonload review/docs/localcommit/PRbody continue. OriginalallGates unchanged until actualspecificscopechoice; no permanentwaiver/scalechange byassistant. Concretechecklist nowpresented viaactualasyncquestionDEC047: existing160 section snapshot /Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/capacity-active-failure-r1/dec047-checklist-presented.txt SHAc365c9e7f09da3d93a8993159491acc2aec64689657b69f85ed8663e193e0224. OptionsC+I+O recommended, alloriginalCIO+A1..A3, or CIO+specifiedpartialA1/A2+1000Archive (fullGate staysunmet). No answer presumed. Actualread-onlywholephasestaticreview4a0ec86f no newproductrequiredfindings, notready; publicrawdiagnostics excluded. LatestactualSamPMdeduprequest verifieduserMessage01a18aeb-19b5-77a1-b7d0-8a7a30076919 supersedesUNANSWEREDfirstchoices; keep firstsnapshotc365 andhistory, noneapproved. R2 exact proposal /Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/capacity-active-failure-r1/dec047-r2-proposal.txt SHA67ce4dd7ec11fc9260499d1ea911d05f18cb865e5306f6ef6fcecd0933e0d25e; independentlyclosedreview432174a8, originalreviewfbca736e retained. CIreporting-onlypatch1f0ca0ef notapplied; artifactsJUnit4+mergedLCOV/log/checker/package retainedtrueprovideridentities/syntheticmerge andtreeequivalence. ProposeONEnewCI supplies C+I coverage/requiredchecks viaexplicitonecandidatehumanintake, genericmissinglocalcommand/runtime/metadata andactualsyntheticSHA mismatch truthfuldisposition, no fake localrun/installedHarnesschanges. RecommendationA preserves50user15m/10kImport5Export andremaining12queryclasses2400+reusesactual200, bounded2x500Archive1000+600queries/Ofootprint only; original300k/fullforeground>=100/largeArchivecapacity movedformal/preenableNOTRUN/defaultarchivefalse. Original6hwhole5case admissionnotproved:600*34.6326s leaves13m40<minmixed16m. Actualreadonlybatch0/archive0/manifests0/eligible300k; after1000rem299000 correct. AlternativesBretainoriginalfullmergeGateblockedbudgetadmission;Cdefer50and300kprelaunchwithexplicitNFRgaps. Noexecutionorpresumedhumananswer; updatecanonicalD/P/profile/trace ONLYafteractualSamchoice.",
+      "question": "2026-10-30 actual Sam new pre-execution approval boundary for ALL pending performance/capacity/benchmark/retests/dataexpansion including implicitCI. Verified PM thread01a0e71b-fccb-7c81-b9fe-ed817cc58e1f turn01a18a69-c61b-7622-b7ca-0d2fabe770d0 userMessage01a18a69-c69e-7872-a3d9-921a0d6c4684 exactuserquote: 按你的建議再發通知予sales的agent, 另外如果有關於性能容量測試前，需先停下來通知我測試的內容和規模，由我去決定測試規模是否合適推進. Must present one concrete consolidated purpose/scale/sample/user/importexport/job/SLO/resource/time/alternative list in existing160; no implicitreuse of earlier DEC046 as futureloadapproval. Current target200 completedPASS beforepolicy, lint+P4browser26PASS; fullcoverage startedbeforepolicy then owned admissionpaused/currentchildsettledtozombie/SIGTERMtestgroup andnormalauxMySQLshutdown, genericrunFAIL kept honest but USER_POLICY_INTERRUPTION_NOT_SLO_FAILURE. Pending wholecoverage includes embedded250kexports/keyset/501native, CI alsoTC032/035/042 so noDraftPR/push triggerbeforebatchapproval. Safe nonload review/docs/localcommit/PRbody continue. OriginalallGates unchanged until actualspecificscopechoice; no permanentwaiver/scalechange byassistant. Concretechecklist nowpresented viaactualasyncquestionDEC047: existing160 section snapshot /Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/capacity-active-failure-r1/dec047-checklist-presented.txt SHAc365c9e7f09da3d93a8993159491acc2aec64689657b69f85ed8663e193e0224. OptionsC+I+O recommended, alloriginalCIO+A1..A3, or CIO+specifiedpartialA1/A2+1000Archive (fullGate staysunmet). No answer presumed. Actualread-onlywholephasestaticreview4a0ec86f no newproductrequiredfindings, notready; publicrawdiagnostics excluded. LatestactualSamPMdeduprequest verifieduserMessage01a18aeb-19b5-77a1-b7d0-8a7a30076919 supersedesUNANSWEREDfirstchoices; keep firstsnapshotc365 andhistory, noneapproved. R2 exact proposal /Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/capacity-active-failure-r1/dec047-r2-proposal.txt SHA67ce4dd7ec11fc9260499d1ea911d05f18cb865e5306f6ef6fcecd0933e0d25e; independentlyclosedreview432174a8, originalreviewfbca736e retained. CIreporting-onlypatch1f0ca0ef notapplied; artifactsJUnit4+mergedLCOV/log/checker/package retainedtrueprovideridentities/syntheticmerge andtreeequivalence. ProposeONEnewCI supplies C+I coverage/requiredchecks viaexplicitonecandidatehumanintake, genericmissinglocalcommand/runtime/metadata andactualsyntheticSHA mismatch truthfuldisposition, no fake localrun/installedHarnesschanges. RecommendationA preserves50user15m/10kImport5Export andremaining12queryclasses2400+reusesactual200, bounded2x500Archive1000+600queries/Ofootprint only; original300k/fullforeground>=100/largeArchivecapacity movedformal/preenableNOTRUN/defaultarchivefalse. Original6hwhole5case admissionnotproved:600*34.6326s leaves13m40<minmixed16m. Actualreadonlybatch0/archive0/manifests0/eligible300k; after1000rem299000 correct. AlternativesBretainoriginalfullmergeGateblockedbudgetadmission;Cdefer50and300kprelaunchwithexplicitNFRgaps. Noexecutionorpresumedhumananswer; updatecanonicalD/P/profile/trace ONLYafteractualSamchoice. R2 consolidatedasyncquestion nowpresented inSaleschat; recommendationA CI-once+12classes2400+reuse200+original50mixed+bounded1000Archive/600queries/O, full300k andoriginal>=100Archiveonlyforeground deferredpreenableNOTRUN. BholdoriginalGate/loadpendingadmission, CCI10-onlymixed with50+300kprelaunchgaps. Exactscope/contracttextandcosts inR2section67ce4dd7. AwaitactualdirectSamreply; previousunansweredCIOchoicesnolongercurrentproposal. No patchedCI/reporterrun/testscope executed.",
       "affected_ids": [
         "PHASE-005",
         "TASK-063",
         "TASK-066",
         "TASK-068"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Actual Sam userMessage01a18b64-3404-7fc2-8660-569b8f76099e in verified projectmanager thread01a0e71b-fccb-7c81-b9fe-ed817cc58e1f/turn01a18b64-334a-7661-88ff-e7d2f853314f: 按方案C通知 Sales agent 推進. Trustedread_thread exposes directhumanmessage andsame-turn authorizeddispatch. Adopts exactDEC047R2proposal67ce4dd7ec11fc9260499d1ea911d05f18cb865e5306f6ef6fcecd0933e0d25e/closing432174a8/CIpatch1f0ca0ef. C only: onecurrentcandidateCIincludingalloriginal524/4shards/92-83-90/39floors/TC03250burst/TC03550MiBx2/TC0422000orders10users/memory; actualartifact/syntheticSHA/tree provenance andonecandidateC+Iadoption, nofakeLocalPASS/Harnessedit. Localremaining12classes2400+reuse200; quiet2x500Archive1000/10readers/selected18graphhashamountcountmanifest/Inventoryunchanged; Archive3x100x2/invalidranges/Oreadonlyfootprint. No50longmixed/10kE2EImport5Export/300kdrain/fullArchiveonly>=100samples/largeArchivecapacity thismerge: retainNOTRUN/prelaunchandArchiveenableblockers/defaultarchivefalse, originalformalrequirements/tests/SLOskept. UpdatesD/P/profile/trace andminimumentryexplicitlyauthorized withindependentreview. LowCPU/noDR/no seed25mrebuild orretest/allretainedSLOs/trueperformanceFAILtimeoutstop. Samebatchno repeatask; standingpush/DraftPR/currentCI/directmainmergeonlyafterapprovedremainingGates."
     },
     {
       "id": "DEC-048",
@@ -25125,6 +25148,14 @@
       "idempotency_key": "p4-local-candidate-ae66d3db",
       "status": "CONFIRMED",
       "source_ref": "Actual gitcommit ofexplicit90 approvedsource/test/canonicaldocs+safe reports under standingSamcommit authority. Sourcef864 unchanged;3608privateuntrackedraw excluded. No hooks/remote/push/PR/CI/load/merge triggered. Scopegate remainsblockedserver/package; rejectedderivedHUMANapproval neverwritten, actualDEC048pending. DEC047 performancebatchpending, currentcoverageinterruptednotPASS."
+    },
+    {
+      "id": "ACT-P4-DOCS-DEC047-R2-3D20E434",
+      "kind": "GIT_COMMIT",
+      "target": "3d20e4347c1146b750f278f663511a36026247c5",
+      "idempotency_key": "p4-docs-r2-3d20e434",
+      "status": "CONFIRMED",
+      "source_ref": "Actual localdocs-only commit updates existing160 andcanonicalstate toactualSamDEC048approval plusOPENDEC047R2proposal. Product/test/CI codeunchangedSourcef864, no load/push/PR/CI/merge. SourceofhumanresumedanalysisPMuserMessage01a18aeb-19b5-77a1-b7d0-8a7a30076919, no testapproval inferred."
     }
   ],
   "evidence_files": [
@@ -26756,5 +26787,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "DEC047 R2 independentproposalreview complete; presentONEconsolidatedSamdecision now. ALL newperformance/capacity/implicitCI/push/PR remainstopped. Existing90/35/26/lint/target200+oldnamed evidence preserved, sourcef864 unchanged; actualDEC048approvedboundaryPASS. ProposedC/I dedup +50retained/1000Archivevs300kformal is NOT yetadopted; noCI/testpatchapplied, no threshold/gate changed. Safe localdocscommit/PRbodyprepared, awaitspecificR2choice."
+  "next_safe_action": "DEC047R2C actualSamapproved. ImplementdeclaredminimumCIreporting+dedicatedCentry/contract/trace updates, independentlyreviewthenfixcandidateandexecuteonlyapproved2400HTTP/quiet1000Archive10reader/600ArchiveHTTP/O+onecurrentCI; preserve200/90/35/26/lint/originalqualifiedevidence. All50sustained/10kE2E5exports/300kfull/long>=100foreground/largeArchivecapacity nowprelaunchNOTRUN notmergeblockers. No tests have rununderCyet; noCIpassed/PRcreated. Anyneworchangedload/actualperformanceFAILtimeoutstopSam."
 }
