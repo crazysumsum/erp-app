@@ -84,7 +84,7 @@
         "id": "supplier-public-provider-contracts",
         "version": "design-1.0",
         "source": "docs/supplier_management/03_design_spec.md",
-        "sha256": "2b81eb9aca94498e2acb16b0da0d35edde2dd43c018ac00f004ca7760af3249f",
+        "sha256": "e49ac37d04859e67fdce171a7844c4658330f9bc553d0350541bcbaca5ba37b0",
         "consumers": [
           "purchasing-receiving",
           "item-management",

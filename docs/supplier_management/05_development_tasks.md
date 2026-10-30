@@ -1789,7 +1789,7 @@ T24/T31/T37/T40/T49 ────────────────────
 **Verification：**
 - [ ] `npm run verify`
 - [ ] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration`及`npm test --workspace client`
-- [ ] 依AGENTS.md用Playwright執行production-like UI smoke，並檢查console／network；另驗證各角色、approval ON／OFF、Bank reveal、for-SKU、Import／Export、backup／restore及rollback rehearsal。
+- [ ] 依AGENTS.md用Playwright執行UI smoke，並檢查console／network；另驗證各角色、approval ON／OFF、Bank reveal、for-SKU、Import／Export、backup／restore及rollback rehearsal。HD-157（2026-10-30）：不另找production-like環境；本機隔離環境的UAT／UI執行結果即為證據。
 
 **Dependencies：** T24、T31、T37、T40、T49、T50
 
@@ -1805,7 +1805,7 @@ T24/T31/T37/T40/T49 ────────────────────
 ## Final Checkpoint：T49–T51
 
 - [ ] SUP-CAP-05容量／安全證據、全模組效能與observability gates全部通過。
-- [ ] Fresh／upgrade migration、backup／restore、rollback rehearsal及production-like smoke通過。
+- [ ] Fresh／upgrade migration、backup／restore、rollback rehearsal及smoke通過（HD-157：本機隔離環境結果為證據，不另做production-like重測）。
 - [ ] 所有需求ID可由task與test evidence追蹤；指定角色完成release簽核。
 
 ## 4. 風險與實作門檻
