@@ -1,13 +1,13 @@
 {
   "schema_version": "2.0",
   "module_id": "purchasing-receiving-management",
-  "revision": 10,
+  "revision": 12,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
   "resume_status": "IMPLEMENTING",
-  "current_phase": "PHASE-001",
-  "current_task": "TASK-008",
+  "current_phase": "PHASE-002",
+  "current_task": null,
   "baseline": {
     "design": "d6103ad183e2b860fd5ae77d50a573b291550cf052d214234ded23c903cbd133",
     "plan": "24a86ab4c6771f87246b46cb7b5b946b0139bde4805b2d29dacdbc5002f82828",
@@ -29,12 +29,12 @@
     "TASK-001": "DONE",
     "TASK-002": "DONE",
     "TASK-003": "DONE",
-    "TASK-004": "IN_PROGRESS",
-    "TASK-005": "IN_PROGRESS",
-    "TASK-006": "BLOCKED",
-    "TASK-007": "BLOCKED",
-    "TASK-008": "PENDING",
-    "TASK-009": "PENDING",
+    "TASK-004": "DONE",
+    "TASK-005": "DONE",
+    "TASK-006": "DONE",
+    "TASK-007": "DONE",
+    "TASK-008": "DONE",
+    "TASK-009": "DONE",
     "TASK-010": "PENDING",
     "TASK-011": "PENDING",
     "TASK-012": "PENDING",
@@ -93,7 +93,7 @@
         "DEC-001 through DEC-013",
         "OPEN-001 through OPEN-005 closed as DECIDED",
         "Re-confirmed on 2026-10-22 after refreshing the five drifted consumed-contract pins (design 5db990ab6967->15e4423b088a, plan 54e2b1cb2fa8->3fd127d19861). The requirement, design and plan documents themselves are byte-identical; only manifest contract pins changed.",
-        "Re-confirmed on 2026-10-30 against main 6d84ee45 (design 15e4423b088a->d6103ad183e2, plan 3fd127d19861->24a86ab4c677). Unlike the 2026-10-22 pass the design document is NOT byte-identical: the Inventory owner rewrote §2.4, §2.6 items 7/9, §3.5 step 3, §4.13, §8.7, §8.8 and §8.9. Those changes are approved separately as APR-005 and reviewed as REV-003."
+        "Re-confirmed on 2026-10-30 against main 6d84ee45 (design 15e4423b088a->d6103ad183e2, plan 3fd127d19861->24a86ab4c677). Unlike the 2026-10-22 pass the design document is NOT byte-identical: the Inventory owner rewrote §2.4, §2.6 items 7 and 9, §3.5 step 3, §4.13, §8.7, §8.8 and §8.9. Those changes are approved separately as APR-005 and reviewed as REV-003."
       ],
       "expires_at": null
     },
@@ -152,12 +152,16 @@
       "code_commit": null,
       "scope": [
         "TASK-003",
-        "server/src/modules/authorization/permissionCatalogue.js (approval_required_path)",
-        "server/database/migrations/0100_seed_purchasing_permissions.js (approval_required_path)",
-        "server/test/permissionCatalogueConventions.test.js (shared, outside module: the three-step process requires registering the seed migration there)",
-        "server/test/integration/{roleManagement,userManagement,passwordChange,migrations}.integration.test.js (shared, outside module: six ungranted catalogue entries made their admin claim denylists stale)",
+        "server/src/modules/authorization/permissionCatalogue.js",
+        "server/database/migrations/0100_seed_purchasing_permissions.js",
+        "server/test/permissionCatalogueConventions.test.js",
+        "server/test/integration/roleManagement.integration.test.js",
+        "server/test/integration/userManagement.integration.test.js",
+        "server/test/integration/passwordChange.integration.test.js",
+        "server/test/integration/migrations.integration.test.js",
+        "Path entries are bare globs because the harness reads every scope entry containing a slash as a path pattern. The per-path reasons formerly written inline are in P0_contract_repin.md and P0_consumer_contract_gate.md",
         "Re-confirmed on 2026-10-22 after refreshing the five drifted consumed-contract pins (design 5db990ab6967->15e4423b088a, plan 54e2b1cb2fa8->3fd127d19861). The requirement, design and plan documents themselves are byte-identical; only manifest contract pins changed.",
-        "Re-confirmed on 2026-10-30 against main 6d84ee45 (design 15e4423b088a->d6103ad183e2, plan 3fd127d19861->24a86ab4c677). Unlike the 2026-10-22 pass the design document is NOT byte-identical: the Inventory owner rewrote §2.4, §2.6 items 7/9, §3.5 step 3, §4.13, §8.7, §8.8 and §8.9. Those changes are approved separately as APR-005 and reviewed as REV-003."
+        "Re-confirmed on 2026-10-30 against main 6d84ee45 (design 15e4423b088a->d6103ad183e2, plan 3fd127d19861->24a86ab4c677). Unlike the 2026-10-22 pass the design document is NOT byte-identical: the Inventory owner rewrote §2.4, §2.6 items 7 and 9, §3.5 step 3, §4.13, §8.7, §8.8 and §8.9. Those changes are approved separately as APR-005 and reviewed as REV-003."
       ],
       "expires_at": null
     },
@@ -386,9 +390,17 @@
       "idempotency_key": "purchasing-p0-repin-pr269-merge-20261022",
       "status": "CONFIRMED",
       "source_ref": "Observed merge commit 5a315640d9f8d3adc41f11e6b8bd919e33b42edc, verified as an ancestor of origin/main; CI run 39735442601 completed success on head e38a54e5d662613083a37512f7967be3493c95b7"
+    },
+    {
+      "id": "EXT-007",
+      "kind": "PR_MERGE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/307 -> main",
+      "idempotency_key": "purchasing-p0-task008-pr307-merge-20261030",
+      "status": "CONFIRMED",
+      "source_ref": "Observed merge commit 68a8d00b6b37a85a1ee666bebcdf1a994be765f5, verified as an ancestor of origin/main; CI run 41011286816 completed success with all 13 checks on head 6011340e612b964ef3a9e36b863adf190e6fb0b3"
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Rebaselined on 2026-10-30 against main 6d84ee45. Three drifted consumed pins refreshed (item-lookup-service, permission-catalogue, supplier-purchasing-contract); all three changes are additive and touch nothing purchasing consumes. HD-008 is answered: the pin now resolves to purchase-provider-contract-v1.md, which names both contracts. APR-005 approves the Inventory-authored design changes and REV-003 records Sam's review of them; APR-001 through APR-004 are re-confirmed at design d6103ad183e2 / plan 24a86ab4c677. TASK-006 and TASK-007 are DELIVERED by the Inventory owner (PR #275 ABI 1.0, PR #278 ABI 1.1), so TASK-008 (consumer contract evidence) is the next startable task and needs no migration. HD-006 (OPEN-006 cutover) remains open and blocks Go-Live and TASK-044 only."
+  "next_safe_action": "TASK-009 is DONE: server/src/modules/purchasing/{moneyMath,quantityMath,purchasingConstants,purchasingErrors}.js with TC-002 tests under server/test/purchasing/ (see implementation/P1_task009_arithmetic.md for the assumptions taken, chiefly that amounts are emitted at the Currency scale, and the missing amount-overflow error code). Next startable task: TASK-010 (purchasing config and input validation), which shares TC-002. PHASE-001's eight tasks are DONE but the phase still needs a fresh checkpoint, DEVELOPER run evidence and MERGE_READY, and HD-006, as an open MAJOR decision, blocks every harness gate until it is answered or re-scoped."
 }
