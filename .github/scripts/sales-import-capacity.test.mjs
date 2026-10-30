@@ -52,10 +52,11 @@ test("known unrelated PR files do not require the mixed-load test", () => {
 });
 
 const successful = required => ({
-  changes: { result: "success", outputs: { required: String(required) } },
+  changes: { result: "success", outputs: { required: String(required), fulfillment_required: String(required) } },
   regression: { result: "success" }, audit: { result: "success" },
   lint: { result: "success" }, build: { result: "success" }, e2e: { result: "success" },
-  "sales-import-capacity": { result: required ? "success" : "skipped" }
+  "sales-import-capacity": { result: required ? "success" : "skipped" },
+  "fulfillment-capacity": { result: required ? "success" : "skipped" }
 });
 
 test("the fixed check accepts capacity PASS or explicitly inapplicable capacity", () => {
@@ -105,13 +106,13 @@ test("real git PR diff includes old renamed paths; unavailable history runs capa
     });
     return { output: readFileSync(output, "utf8"), stdout };
   };
-  assert.equal(run("pull_request", git("rev-parse", "HEAD")).output, "required=false\n");
-  assert.equal(run("push", "unused").output, "required=true\n");
+  assert.equal(run("pull_request", git("rev-parse", "HEAD")).output, "required=false\nfulfillment_required=false\n");
+  assert.equal(run("push", "unused").output, "required=true\nfulfillment_required=true\n");
   mkdirSync(path.join(cwd, "server/src/modules/supplier"), { recursive: true });
   renameSync(path.join(cwd, "server/src/modules/sales/service.js"), path.join(cwd, "server/src/modules/supplier/service.js"));
   git("add", "server"); git("commit", "-qm", "rename dependency");
-  assert.equal(run("pull_request", git("rev-parse", "HEAD")).output, "required=true\n");
+  assert.equal(run("pull_request", git("rev-parse", "HEAD")).output, "required=true\nfulfillment_required=true\n");
   const fallback = run("pull_request", "0".repeat(40));
-  assert.equal(fallback.output, "required=true\n");
+  assert.equal(fallback.output, "required=true\nfulfillment_required=true\n");
   assert.match(fallback.stdout, /Unable to determine/u);
 });

@@ -1,12 +1,12 @@
 {
   "schema_version": "2.0",
   "module_id": "purchasing-receiving-management",
-  "revision": 11,
+  "revision": 12,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
   "resume_status": "IMPLEMENTING",
-  "current_phase": "PHASE-001",
+  "current_phase": "PHASE-002",
   "current_task": null,
   "baseline": {
     "design": "d6103ad183e2b860fd5ae77d50a573b291550cf052d214234ded23c903cbd133",
@@ -34,7 +34,7 @@
     "TASK-006": "DONE",
     "TASK-007": "DONE",
     "TASK-008": "DONE",
-    "TASK-009": "PENDING",
+    "TASK-009": "DONE",
     "TASK-010": "PENDING",
     "TASK-011": "PENDING",
     "TASK-012": "PENDING",
@@ -390,9 +390,17 @@
       "idempotency_key": "purchasing-p0-repin-pr269-merge-20261022",
       "status": "CONFIRMED",
       "source_ref": "Observed merge commit 5a315640d9f8d3adc41f11e6b8bd919e33b42edc, verified as an ancestor of origin/main; CI run 39735442601 completed success on head e38a54e5d662613083a37512f7967be3493c95b7"
+    },
+    {
+      "id": "EXT-007",
+      "kind": "PR_MERGE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/307 -> main",
+      "idempotency_key": "purchasing-p0-task008-pr307-merge-20261030",
+      "status": "CONFIRMED",
+      "source_ref": "Observed merge commit 68a8d00b6b37a85a1ee666bebcdf1a994be765f5, verified as an ancestor of origin/main; CI run 41011286816 completed success with all 13 checks on head 6011340e612b964ef3a9e36b863adf190e6fb0b3"
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "PHASE-001's eight tasks are DONE. TASK-006/007 were delivered by the Inventory owner (PR #275, PR #278); TASK-004/005 close because TASK-008's consumer gate (server/test/purchasing/purchasingProviderContract.test.js) now pins the bullets they were waiting on: bank-free Supplier projection, recordSupply replay and no auto-preferred, the committed-receipt warning vocabulary, and per-currency decimalPlaces (GAP-DES-002). PHASE-001 is not yet closed: it still needs DEVELOPER run evidence and a MERGE_READY gate, and TC-007 (linked to TASK-008) needs real PO/GR tables, so its GR-side halves are observed with TASK-032/033/042. Purchasing owes Supplier a GR source verifier before recordSupply can run in production (it fails closed with SUPPLIER_SUPPLY_SOURCE_UNAVAILABLE until then). Next startable work: PHASE-002 TASK-009 (money/quantity arithmetic, no migration). HD-006 is about Go-Live and TASK-044, but as an open MAJOR decision it blocks every harness gate, so PHASE-001 MERGE_READY cannot pass until it is answered or re-scoped."
+  "next_safe_action": "TASK-009 is DONE: server/src/modules/purchasing/{moneyMath,quantityMath,purchasingConstants,purchasingErrors}.js with TC-002 tests under server/test/purchasing/ (see implementation/P1_task009_arithmetic.md for the assumptions taken, chiefly that amounts are emitted at the Currency scale, and the missing amount-overflow error code). Next startable task: TASK-010 (purchasing config and input validation), which shares TC-002. PHASE-001's eight tasks are DONE but the phase still needs a fresh checkpoint, DEVELOPER run evidence and MERGE_READY, and HD-006, as an open MAJOR decision, blocks every harness gate until it is answered or re-scoped."
 }

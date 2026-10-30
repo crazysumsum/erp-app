@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 1797,
+  "revision": 1798,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -25703,8 +25703,16 @@
       "kind": "GIT_TARGET_INTEGRATION",
       "target": "68a8d00b6b37a85a1ee666bebcdf1a994be765f5",
       "idempotency_key": "p4-main68a8-integration",
+      "status": "CONFIRMED",
+      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/main-68a8-integration-r1/observed-after-merge.json; LATE truthfulreconciliation: intendedbeforeeffectcapture/CASfailedsandbox, orchestrationerroneouslycontinued gitmerge --no-commit. ActualHEAD8f6/MERGE_HEAD68a8/3stagedtargetpaths/0conflicts observed;3608oldraw+6newrunartifactSHAverified unchanged, notclaim preeffectcapture. No replay. Immutablemain9puretests alreadymerged14:22beforeSamnewpolicy14:25:35, no runtime/schema/performance/CIrouting delta; independentreviewconfirms routineinheritance/no fabricatednewownerapproval. Fullcommitstillpending.; actuallocalmergecommit 2176f6ef83ae03fc3d31d1633ed3d7a668bf4c8d secondparent68a8 confirmed. No public sideeffects. No falsepreeffectcapture."
+    },
+    {
+      "id": "ACT-P4-MAIN41FB-INTEGRATION",
+      "kind": "GIT_TARGET_INTEGRATION",
+      "target": "41fb488af133053c95e2b8e878920b2a494349da",
+      "idempotency_key": "p4-main41fb-integration",
       "status": "STARTED",
-      "source_ref": "/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/main-68a8-integration-r1/observed-after-merge.json; LATE truthfulreconciliation: intendedbeforeeffectcapture/CASfailedsandbox, orchestrationerroneouslycontinued gitmerge --no-commit. ActualHEAD8f6/MERGE_HEAD68a8/3stagedtargetpaths/0conflicts observed;3608oldraw+6newrunartifactSHAverified unchanged, notclaim preeffectcapture. No replay. Immutablemain9puretests alreadymerged14:22beforeSamnewpolicy14:25:35, no runtime/schema/performance/CIrouting delta; independentreviewconfirms routineinheritance/no fabricatednewownerapproval. Fullcommitstillpending."
+      "source_ref": "ActualPMdelegationfrom01a0e71b-fccb-7c81-b9fe-ed817cc58e1f saysfollowofficialmergedPR310/main41fb commonCI; rootAGENTS/CLAUDEread. 68a8..41fb containsPurchasingpuremathsource/tests/docs pluscentralCIrouting/script/policy, no Salesruntime/migration changes. Preserve exact PMrouting and existing14scales/SLO, port only actualSamDEC047C previouslyapproved reportingJUnit/mergedLCOV retention; no extra cases/routingtool. No CIrunbeforecurrentcandidate selfcheck/review; originalonebatchR2 authority/stoprule remains."
     }
   ],
   "evidence_files": [
@@ -27353,5 +27361,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Observeduncommittedmain68a8integration exactly3Purchasingpuretest/docsfiles,0conflicts; lateledgerorchestrationerror truthfullyrecorded/fullrawhashintegrityverified,no replay. Awaitclosingimpactreview then authorizedlocalmergecommit includingexistingoneURLassert correction andtrace2IDfix/currentstate; sourceproduct/Centry unchanged, preserveC5PASS originale365/fee source/time viaexplicitimpactbridge notretag. RebaselineactualHEAD/FP andrunonlyaffectedoriginal26browser/lint afterprivateJWTenvfix. OriginalC/Outstanding no rerun; no newtestcases orcapacity. OneactualR2CI+4regular authorized afterselfchecks/review; defaultmainauto2ndCIcostnotapproved."
+  "next_safe_action": "Integrateofficialmain41fb sharedCI as instructedbyPM, preservecurrentowned37/19/C5 raw/private1000Archive manifests+alloriginalhistory andexistingoneURLassertfix. Resolveworkflowonlybycombiningexactnewsharedcapacity_pattern skip/defaultlane+explicitoriginaltestglob+approvedJUnit/reportretention, preserve14dedicatedjob/trigger/gates. Do not addtest/route/scale orrunCagain. Finishimmutabletargetimpactreview before CI; afterlocalcommit rebaselineactualsource andrerunoriginal26browser+lint only; allcurrentCIrequiredchecks/artifacts afterselfchecks. ExistingCsourcee365/fee/time staysoriginalwithqualifiedexactnonruntime bridge."
 }
