@@ -62,3 +62,7 @@ The same reviewer reviewed the merge of main `41fb488a` (PR #310: CI, AGENTS.md,
 | **L2.** The closure was attributed to the Product Owner | Fixed: 04, 06, 07 and HD-160 call it the agent's reading of HD-160, stated to him after his answer and not confirmed. |
 
 The reviewer judged CLOSED the right status for DEF-051 once L1 and L2 were fixed. The requirement it failed was changed by HD-158, the 5 s verdict passed in the developer run, and a RISK record would put words in the Product Owner's mouth.
+
+## REV-144: follow-up on the REV-143 fixes (local `f76e47e9`)
+
+**APPROVED**, open_critical 0, open_high 0. All four REV-143 findings are fixed, nothing else changed, and the validators pass. The push waits for the Product Owner to confirm the corrected CI content. One nit, fixed: the DEF-051 closure bullet now says TC-101 failed only at REGRESSION, and only on the online p95 check against 2 s.
