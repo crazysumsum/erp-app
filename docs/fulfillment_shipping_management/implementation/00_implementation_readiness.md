@@ -1,8 +1,14 @@
 # Fulfillment implementation readiness
 
-## 當前：已授權整合最新 main 並在 Gate 通過後合併（2026-10-30）
+## 當前：最新 main 已整合，本機驗證通過，待新候選 CI（2026-10-30）
 
-Sam 最新明確授權整合最新 main、完成獨立影響覆核及必要驗證，只有新候選 CI／全部必要檢查通過後才將 PR297 轉正式並合併；容量或效能失敗即停報，全部安全檢查與20秒限制保留。此指令取代下方歷史「暫不合併」限制，但不豁免任何 Gate。已保存1705候選的完整結果與私有快照；fresh main 現為 `6d84ee454b72f4b3e43b2aa6eee2436e6e950716`，新增Supplier PR305。整合與新候選驗證尚未完成，舊1705 CI不作新候選通過證據。
+Sam 已明確授權整合最新 main，完成獨立影響覆核及必要驗證；只有新候選 CI 與全部必要檢查通過後，才將 PR297 轉正式並合併。此授權取代下方歷史「暫不合併」，容量／效能失敗即停報、全部安全檢查及20秒限制保留，沒有任何 Gate 豁免。
+
+fresh main `6d84ee454b72f4b3e43b2aa6eee2436e6e950716` 已無衝突整合於 `b9da72ca7ce0909f2e5f7c993dbe3fadaa523e37`；source fingerprint `c2ea4c3193aacdda9acb096827435a51a67d60c4b63a2e360b7d45d270f17ff1`。獨立影響覆核0C/H/M：23個來自Supplier PR305的文件／驗證工具路徑，沒有server/src、client、schema、migrations、dependencies、CI或Fulfillment消費契約改動。Supplier的3秒門檻及HD157豁免不適用於Fulfillment；本模塊DESIGN `ffca0595…`／PLAN `9a651b0b…` 保持不變。
+
+整合後在新UUID專用DB實際執行六項必要suite：lint、build、dependency audit policy PASS；共用P0／P1 developer collection只跑一次，596 PASS／0 FAIL／0 SKIP；真P0／P1 Playwright各2 PASS／0 FAIL／0 SKIP。另執行變更的Supplier判定邏輯pure測試2 PASS／0 FAIL／0 SKIP。原始JUnit、typed結果及artifact hashes保留，source／PLAN／HEAD前後一致；沒有以舊1705報告重標新結果。完整索引保存在private `pr297-main305-six-suite-results.json`；舊失敗／批准／證據完整保留。
+
+本機結果已完成獨立核對；但發布前 fresh remote 顯示 main 又前進至 `a4523e5250aa6212ecbf843338f78d6e1971ed3e`（Purchasing PR306，4份文件）。須先完成這項新差異覆核與整合，再固定最終候選及執行必要驗證／新CI。上述b9/c2實際結果完整保留，不能重標為新來源。舊1705 CI13/13及其量測只屬歷史，不能替代本整合候選的新CI；PR目前仍draft、未合併。只有新候選全部必要CI／review／phase Gate通過，且最後fresh target核對仍包含當時main，才執行已授權的ready／merge。正式Technical Acceptance、UAT、發布並未獲此合併授權取代。
 
 ## 歷史：1705候選 P1 開發及交付前驗證完成（2026-10-30）
 
