@@ -1,27 +1,27 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 489,
+  "revision": 491,
   "mode": "FULL_LIFECYCLE",
-  "active_mode": "TEST_AND_VERIFY",
-  "status": "BLOCKED",
-  "resume_status": "VERIFYING",
+  "active_mode": "IMPLEMENT",
+  "status": "IMPLEMENTING",
+  "resume_status": null,
   "current_phase": "PHASE-004",
   "current_task": "TASK-051",
   "baseline": {
     "design": "2390e6fc44da25124375f4347f2a093db512f8353e01d456780a11073be494a3",
     "plan": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
-    "code_commit": "5bed215bade454f5181d34019701c2621353603d",
+    "code_commit": "e64dfc7452dd4ce598e6e9d1765000d9633dd849",
     "source_fingerprint": "493d144c455c6db5d08c3baeb3b36c961539740c393727739956e060f66c252f",
-    "worktree": "/Users/sam/Documents/workspace/erp-supplier-hd156",
-    "default_commit": "4f101642a284c44d6dd53338ddfeb431582aa5f4",
-    "mode_entry_commit": "4f101642a284c44d6dd53338ddfeb431582aa5f4"
+    "worktree": "/Users/sam/Documents/workspace/erp-supplier-hd157",
+    "default_commit": "e64dfc7452dd4ce598e6e9d1765000d9633dd849",
+    "mode_entry_commit": "e64dfc7452dd4ce598e6e9d1765000d9633dd849"
   },
   "runtime": {
     "instance_id": "supplier-t51-scratch-mysqld-3450",
     "owner": "Primary Harness agent",
     "resources": {
-      "workspace": "/Users/sam/Documents/workspace/erp-supplier-hd156 (claude/supplier-hd156-defer, cut from main 5bed215b)",
+      "workspace": "/Users/sam/Documents/workspace/erp-supplier-hd157 (claude/supplier-hd157-plan-revision, cut from main e64dfc74)",
       "mysql-schema": "erp_t51, and the erp_t51_rh_* scratch schemas the runners create and drop, on a throwaway mysqld at 127.0.0.1:3450 (session scratch datadir, --skip-log-bin); no production data",
       "web-port": "3021 (UAT API) and 5216 (UAT client); the other runners bind free ports"
     },
@@ -6929,6 +6929,17 @@
       "source_ref": "PR #303 merged as 5bed215bade454f5181d34019701c2621353603d at 2026-10-29T07:53:43Z on the Product Owner's word ('CI己通過'), with --match-head-commit 31ab2a28, after a gate that refused unless the latest run of every check was SUCCESS (13 checks, PR run 40830448716), main was an ancestor of HEAD and the local, remote and PR heads were equal. Review REV-137 CHANGES_REQUESTED; every finding fixed before merge (report 140). Docs and evidence only: source fingerprint unchanged from 4f101642.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-29T07:53:43+00:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "HD-156 E record, DEF-050 deferred (PR #304) merged to main",
+      "code_commit": "e64dfc7452dd4ce598e6e9d1765000d9633dd849",
+      "spec_baseline": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "source_fingerprint": "493d144c455c6db5d08c3baeb3b36c961539740c393727739956e060f66c252f",
+      "status": "PASS",
+      "source_ref": "PR #304 merged as e64dfc7452dd4ce598e6e9d1765000d9633dd849 at 2026-10-29T09:25:34Z on the Product Owner's word ('CI己過'), with --match-head-commit ed79bb55, after a gate that refused unless the latest run of every check was SUCCESS (13 checks), main was an ancestor of HEAD and the local, remote and PR heads were equal. Review REV-138 CHANGES_REQUESTED; every finding fixed before merge (report 141). Docs only: source fingerprint unchanged.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-29T09:25:34+00:00"
     }
   ],
   "pending_decisions": [
@@ -8996,7 +9007,28 @@
         "supplierSearchCondition"
       ],
       "status": "ANSWERED",
-      "answer_ref": "Product Owner, 2026-10-29: 'E', after a plain-language explanation of DEF-050 and the five options. Defer: DEF-050 stays OPEN; TC-085 is re-measured in the production-like environment (TASK-051 C, row 'Production-like performance' in 06_task051_completion_boundary.md); the remedy is chosen among A-D with those numbers; the local FAIL goes to the release risk decision. No product change."
+      "answer_ref": "Product Owner, 2026-10-29: 'E', after a plain-language explanation of DEF-050 and the five options. Defer: DEF-050 stays OPEN; TC-085 is re-measured in the production-like environment (TASK-051 C, row 'Production-like performance' in 06_task051_completion_boundary.md); the remedy is chosen among A-D with those numbers; the local FAIL goes to the release risk decision. No product change. Superseded on 2026-10-30 by HD-157: no production-like re-measurement; NFR-005 relaxed to 3 s; no remedy."
+    },
+    {
+      "id": "HD-157",
+      "impact": "MAJOR",
+      "question": "TASK-051 C: the production parts of TC-128, TC-130, TC-132, TC-133, TC-134, TC-135 and TC-006 (and the production-like UI smoke) need a production-like environment and Operations that do not exist; TC-085 fails NFR-005's 2 s at TECHNICAL (DEF-050). Route? Record every C case whose local part passed as passed, with no production-like re-test (a plan revision that waives those production parts; the local result stands; risk: no one verifies performance, restore time, alerting or deployment order in a real environment before production); and for TC-085: fix (HD-156 A-D), or change NFR-005.",
+      "affected_ids": [
+        "TASK-051",
+        "TC-006",
+        "TC-085",
+        "TC-128",
+        "TC-130",
+        "TC-132",
+        "TC-133",
+        "TC-134",
+        "TC-135",
+        "NFR-005",
+        "DEF-050",
+        "HD-156"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-30: 'C組全部本機己通過的案例就紀錄為通過，不用再找production like 環境再測了' (record every C case that passed locally as passed; no production-like re-test), then, after the remaining list and the risk were set out, '確認，開 HD-157 修訂 plan，TC-085不用修，放鬆至3秒' (confirmed; revise the plan; TC-085 is not fixed; relax to 3 seconds). Scope: NFR-005 for-SKU p95 limit 3 s (NFR-001 stays 2 s); production parts of TC-128/130/132/133/134/135/006 and the production-like UI smoke waived, local results stand; TC-136 (release gate), UAT-044/045, business UAT, sign-offs and release decisions unchanged; the plan revision also carries the 07 amendments (HD-145 A, HD-146 A), REV-130 N3/N6 and the profile environment authorization; existing approvals are re-recorded on the new baselines, with no new risk acceptance."
     }
   ],
   "external_actions": [
@@ -9559,6 +9591,14 @@
       "idempotency_key": "customer-import-row-pick-issue-2026-10-29",
       "status": "CONFIRMED",
       "source_ref": "https://github.com/crazysumsum/erp-app/issues/302 opened 2026-10-29T03:47:55Z on the Product Owner's word ('開issues吧'): Customer import's next-row pick (CustomerImportService.js:383-389) has the DEF-049 defect; measured on a scratch schema with the 0053 table (locks 1, 1,010, 5,048, 9,086 at k = 0, 1,000, 5,000, 9,000; 2.25 ms per pick at k = 9,000); the Supplier fix and the per-status FOR UPDATE pitfall described. No Customer code or docs changed; the Customer manifest names the ERP Product Owner as owner."
+    },
+    {
+      "id": "MODE-CHANGE-491",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-491",
+      "status": "CONFIRMED",
+      "source_ref": "Product Owner, 2026-10-30: '確認，開 HD-157 修訂 plan，TC-085不用修，放鬆至3秒' (HD-157). Step 2 of 2: TEST_AND_VERIFY -> IMPLEMENT from main e64dfc74 (PR #304 merge) for the plan revision and runner changes. Step 1 (revision 490) re-entered READY_FOR_TESTING with the same authorization."
     }
   ],
   "evidence_files": [
@@ -10622,5 +10662,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "PR #304 (HD-156 E record): independent review, CI, merge on the Product Owner's word. Then: Technical Acceptance is blocked by TASK-051 groups B and C, and by TC-085's TECHNICAL FAIL (DEF-050, deferred under HD-156 E to the production-like performance measurement). No further Supplier-side work until the production-like environment exists (Supplier's C items: the TC-085 re-measurement, the production-like UI smoke script, the T51 deliverable drafts), unless the Product Owner authorizes more (for example a limited diagnostic UAT). REPORT_ONLY."
+  "next_safe_action": "HD-157 plan revision in IMPLEMENT: NFR-005 3 s; TC-085 3 s; production parts of TC-128/130/132/133/134/135/006 waived (local results stand); 07 amendments, REV-130 N3/N6, profile environment authorization; runners stop emitting the waived NOT_RUN parts (TC-136 stays); verdict for-SKU limit 3,000 ms; approvals re-recorded on the new baselines; independent design review; CI; merge on the Product Owner's word; then TEST_AND_VERIFY with fresh formal runs."
 }
