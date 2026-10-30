@@ -42,3 +42,7 @@ Setup failures were retained: two native fixture missing-timestamp runs and thre
 A (recommended): approve exactly these15 small functional/security/rollback cases for existing regular CI, with no new jobs/steps or capacity/UI samples. Any further P2 cases or expanded load require a separate concrete scope/cost approval under the same policy.
 
 B: retain them as private local evidence and continue authorized engineering preparation; do not publish them into regular CI. The missing CI admission remains an explicit final delivery blocker rather than a waived gate.
+
+## Implementation placement note after admission
+
+Actual older CI logs showed Node auto-discovery also reports an empty helper module as a file-level PASS. To preserve the exact15-case admission, the newly introduced unpublished shipmentDraftFixture helper was folded into the already-existing p1CancellationFixture module; only our new helper file was removed. All15 named cases/assertions and every original P0/P1 case remain. Four new test files remain; no extra file-level helper case is introduced. Prior private probe source copies/hashes are retained before import-only updates. This is a placement correction, not permission to add cases or silently reduce coverage.

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { randomUUID } from "node:crypto";
-import { shipmentDraftFixture } from "../fulfillment/shipmentDraftFixture.js";
+import { shipmentDraftFixture } from "../fulfillment/p1CancellationFixture.js";
 import { startP1Http,ownerQuantities } from "../fulfillment/p1Fixture.js";
 const nativeTest=process.env.DB_INTEGRATION_TESTS==="1"?test:test.skip;
 nativeTest("P2 actual HTTP Draft supports strict create/update/detail/cancel and original event replay",async t=>{

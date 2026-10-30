@@ -3,7 +3,7 @@ import test from "node:test";
 import { randomUUID } from "node:crypto";
 import { ownerQuantities } from "../fulfillment/p1Fixture.js";
 import { fulfillmentError } from "../../src/modules/fulfillment/fulfillmentErrors.js";
-import { shipmentDraftFixture as setup, shipmentDraftFacts as localFacts } from "../fulfillment/shipmentDraftFixture.js";
+import { shipmentDraftFixture as setup, shipmentDraftFacts as localFacts } from "../fulfillment/p1CancellationFixture.js";
 const nativeTest=process.env.DB_INTEGRATION_TESTS==="1"?test:test.skip;
 nativeTest("P2 Draft creates exact picked lines, canonical decimal, active pointer and original replay without owner effects",async t=>{
  const f=await setup(t),before=await ownerQuantities(f),body=f.body(),created=await f.create(body);

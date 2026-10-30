@@ -1,3 +1,4 @@
+import { ShipmentService } from "../../src/modules/fulfillment/ShipmentService.js";
 import { randomUUID } from "node:crypto";
 import { p1Fixture } from "./p1Fixture.js";
 import { FulfillmentAllocationService } from "../../src/modules/fulfillment/FulfillmentAllocationService.js";
@@ -10,3 +11,11 @@ export async function cancellationFixture(t,{picked="3"}={}){
  const body=()=>({eventId:randomUUID(),version:current.outcome.version,reason:"Wrong task for this order",goodsReturnedToOriginalBins:picked!==null});return {...f,created,allocated,current,bin,balance,options,logs,allocator,picking,cancellation,body,cancel:input=>f.execute(()=>cancellation.cancel(created.outcome.id,input))};
 }
 export async function cancellationFacts(f){const result={};for(const table of ["fulfillments","fulfillment_lines","fulfillment_line_reservation_claims","fulfillment_allocations","fulfillment_status_history","fulfillment_audit_logs","fulfillment_operation_requests","inventory_stock_balances","inventory_stock_controls","inventory_reservations","inventory_allocations","inventory_operation_requests","inventory_audit_logs","sales_orders","sales_order_lines","sales_order_line_reservations","shipments"])result[table]=(await f.db.query(`SELECT * FROM ${table} ORDER BY id`))[0];return result;}
+
+export async function shipmentDraftFixture(t){
+ const f=await cancellationFixture(t),service=new ShipmentService(f.options);
+ await f.s.insert("customer_address_purposes",{address_id:f.s.addressId,customer_id:f.s.customerId,purpose_code:"shipping",is_default:1,created_at:f.s.now,updated_at:f.s.now});
+ const body=()=>({eventId:randomUUID(),shippingAddressId:f.s.addressId,shippingAddressVersion:1,totalWeight:"1.250000",weightUom:"KG"});
+ return {...f,service,body,create:input=>f.execute(()=>service.createDraft(String(f.created.outcome.id),input)),update:(id,input)=>f.execute(()=>service.updateDraft(id,input)),cancelDraft:(id,input)=>f.execute(()=>service.cancelDraft(id,input))};
+}
+export async function shipmentDraftFacts(f){const output={};for(const table of ["shipments","shipment_lines","shipment_status_history","fulfillment_operation_requests","fulfillment_audit_logs","fulfillments"])output[table]=(await f.db.query(`SELECT * FROM ${table} ORDER BY id`))[0];return output;}
