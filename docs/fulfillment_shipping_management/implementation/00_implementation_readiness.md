@@ -1,6 +1,10 @@
 # Fulfillment implementation readiness
 
-## 當前：HD025 A已落地，Draft功能驗證通過，首批15個CI案例已批准（2026-10-30）
+## 當前：Draft、lookup及內部Phase A已保存，首批15個CI案例已批准（2026-10-30）
+
+已本地保存Draft `20c1ac97`、精確15案helper機械搬移 `4196f995`、parent-bound lookup `7d3c4259`、內部durable intent及immutable terminal witness `4cc23d38`；未push／觸發P2候選CI或建立PR。Lookup私有真MySQL／HTTP1PASS，PhaseA私有真MySQL3PASS，均0FAIL／0SKIP；實際raw XML及artifact hashes已由獨立reviewer `/root/p2_confirmation_review` 核對0C/H/M，receipt SHA `50a59e04…2af4f`。Lookup原執行FP `5af186e2…246be70`、PhaseA原FP `15145868…bfdeb6a`保持原綁定；helper機械搬移／新PhaseA source的影響bridge不冒稱lookup重跑。這些是小型功能證據，native fixture實際2pool／10秒，不能宣稱5,000容量／20秒最大量級或完整P2 Gate通過。
+
+TASK024／025／026仍IN_PROGRESS，未開放Confirm endpoint，PhaseB／Recovery／查詢／client／UI／文件仍待完成。最新main已fetch至`41fb488a`，包含Purchasing與既有14項Fulfillment容量分流／CI准入規則；整合影響覆核中。方案75只屬其餘新增案例／負載及成本提案，未獲實際批准，不納入常規CI或執行新容量負載。所有安全檢查、原20秒、既有案例／coverage及容量失敗即停報要求保留。
 
 Sam已實際批准HD025 A：精確decimal string、KG/G，保留全部安全／100/50/5000／20秒。DESIGN a2f36f11…fad9d、PLAN7882d19a…1a7c3已對齊，明確P2授權及獨立review0C/H/M，舊批准／evidence未重標或刪除。TASK024/025 IN_PROGRESS，其餘P2尚待執行，未宣稱完整DoD。
 
@@ -8,7 +12,7 @@ Sam已實際批准HD025 A：精確decimal string、KG/G，保留全部安全／1
 
 兩次native fixture timestamp與三次HTTP app-config準備失敗原件全部保留；沒有容量／效能逾時，不繞過schema／config／crypto guard。專用MySQL26.7使用原128MiB/100MiB，native小fixture實際2pool/10s較嚴格，HTTP app保持10pool/20s。
 
-開發途中收到並直接核實Sam在project manager chat的新規則：任何新增常規CI案例須先明確成本說明及實際批准。當前4個新test檔15cases都只在本地，未commit/push/觸發CI。方案73已獨立覆核0C/H/M，CI-P2-DRAFT-001已收到Sam實際A批准，僅此15案可納入既有常規CI；後續新增仍須具體先批。既有case／coverage未刪減，新job/step/100/5000/UI負載或sharedCIrouting均未新增。後續PhaseB/Recovery方向見74，仍須具體security/slice覆核及新案例准入，不因新增method本身重問已有P2授權。
+開發途中收到並直接核實Sam在project manager chat的新規則：任何新增常規CI案例須先明確成本說明及實際批准。方案73已獨立覆核0C/H/M，CI-P2-DRAFT-001已收到Sam實際A批准，僅4個新test檔的15案可納入既有常規CI；後續新增仍須具體先批。既有case／coverage未刪減，新job/step/100/5000/UI負載或sharedCIrouting均未新增。後續PhaseB/Recovery方向見74，仍須具體security/slice覆核及新案例准入，不因新增method本身重問已有P2授權。
 
 ## 歷史：P2 開發入口（2026-10-30）
 
