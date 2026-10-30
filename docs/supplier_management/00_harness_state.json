@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 494,
+  "revision": 496,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "22865f96b0ce3aa7e70b1433533a3a0551d557a6e3dcb12bef28e4546e57a056",
     "plan": "8b31fcdd93bafe8275cb5cd2eded0a50b608a49bb17227beb7339ee099a344bd",
-    "code_commit": "975af8e05ea079b32823d350457a3bf0325a526f",
-    "source_fingerprint": "5ab4388f8f1dd9c594f587153c8cdb651cf1f79ea391719aad3cec61cf21ef49",
+    "code_commit": "041e932f4074a1f5df1bc641e5c06f4afcb1bb3a",
+    "source_fingerprint": "b00c7d69b52834f1cc4b2be0224208cff4ad046afd8eef70b2ee239d13b91394",
     "worktree": "/Users/sam/Documents/workspace/erp-supplier-hd157",
     "default_commit": "e64dfc7452dd4ce598e6e9d1765000d9633dd849",
     "mode_entry_commit": "e64dfc7452dd4ce598e6e9d1765000d9633dd849"
@@ -4266,6 +4266,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-139",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (HD-157 plan revision)",
+      "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-hd157-plan-revision at 0e2267a7 (git diff origin/main..HEAD), as the design review on 22865f96",
+      "reviewed_baseline": "22865f96b0ce3aa7e70b1433533a3a0551d557a6e3dcb12bef28e4546e57a056",
+      "source_ref": "docs/supplier_management/implementation/142_rev_139_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -7469,6 +7481,17 @@
       "source_ref": "Local, throwaway mysqld 3450 (digest settings 16,384, deadlock detection and printing ON), 2026-10-30: lint and the server suite before 01:23:42Z, the runners 01:23:42-01:35:36Z, on the working tree later committed unchanged as 2c32916e: npm run lint exit 0; Supplier server suite 735/735; runSupplierResilienceAcceptance TC-130/131/132 PASS with the TC-130 and TC-132 production parts listed under waived; runSupplierRecoveryAcceptance TC-133 PASS, production drill under waived; runSupplierReleaseAcceptance TC-134/135 PASS, TC-136 NOT_RUN, production parts under waived; runSupplierPerformanceAcceptance TC-085/101/128/129 PASS, deadlocks 0/0, TC-085 for_sku.p95_under_3s with limitP95Ms 3000 (name search p95 1,928 ms), TC-128 production part under waived. supplierPerformanceVerdicts unit test 2/2 (46 cases); a mutant dropping the 3,000 ms limit check made it red (backup, restore, cmp).",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-30T01:35:36+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "HD-157 after REV-139: verdict limit checks, unit test, mutant, lint; developer evidence, not formal",
+      "code_commit": "041e932f4074a1f5df1bc641e5c06f4afcb1bb3a",
+      "spec_baseline": "8b31fcdd93bafe8275cb5cd2eded0a50b608a49bb17227beb7339ee099a344bd",
+      "source_fingerprint": "b00c7d69b52834f1cc4b2be0224208cff4ad046afd8eef70b2ee239d13b91394",
+      "status": "PASS",
+      "source_ref": "supplierPerformanceVerdicts unit test 2/2 with 48 cases (REV-139 L4 added NFR-001 limit cases for load.every_general_operation_within_limits and online.p95_under_2s_during_import); a mutant dropping both NFR-001 limit checks made it red (backup, restore, cmp); npm run lint exit 0. The earlier developer-check observation is bound to plan d6e34580 and commit 2c32916e, which the provided-contract pin commit stranded (REV-139 L2); since then the runner scripts are unchanged; only the verdict module supplierPerformanceVerdicts.js (which the performance runner imports) and its unit test changed, adding a check that NFR-001's limit is 2,000 ms, which the benchmark already reported in that run (limitP95Ms 2000). The formal run after merge re-measures everything on plan 8b31fcdd.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-30T01:52:28+00:00"
     }
   ],
   "pending_decisions": [
@@ -9557,7 +9580,7 @@
         "HD-156"
       ],
       "status": "ANSWERED",
-      "answer_ref": "Product Owner, 2026-10-30: 'C組全部本機己通過的案例就紀錄為通過，不用再找production like 環境再測了' (record every C case that passed locally as passed; no production-like re-test), then, after the remaining list and the risk were set out, '確認，開 HD-157 修訂 plan，TC-085不用修，放鬆至3秒' (confirmed; revise the plan; TC-085 is not fixed; relax to 3 seconds). Scope: NFR-005 for-SKU p95 limit 3 s (NFR-001 stays 2 s); production parts of TC-128/130/132/133/134/135/006 and the production-like UI smoke waived, local results stand; TC-136 (release gate), UAT-044/045, business UAT, sign-offs and release decisions unchanged; the plan revision also carries the 07 amendments (HD-145 A, HD-146 A), REV-130 N3/N6 and the profile environment authorization; existing approvals are re-recorded on the new baselines, with no new risk acceptance."
+      "answer_ref": "Product Owner, 2026-10-30: 'C組全部本機己通過的案例就紀錄為通過，不用再找production like 環境再測了' (record every C case that passed locally as passed; no production-like re-test), then, after the remaining list and the risk were set out, '確認，開 HD-157 修訂 plan，TC-085不用修，放鬆至3秒' (confirmed; revise the plan; TC-085 is not fixed; relax to 3 seconds). Scope: NFR-005 for-SKU p95 limit 3 s (NFR-001 stays 2 s); production parts of TC-128/130/132/133/134/135/006 and the production-like UI smoke waived, local results stand; TC-136 (release gate), UAT-044/045, business UAT, sign-offs and release decisions unchanged; the plan revision also carries the 07 amendments (HD-145 A, HD-146 A), REV-130 N3/N6 and the profile environment authorization; existing approvals are re-recorded on the new baselines, with no new risk acceptance. Shown to the Product Owner before the answer (REV-139 L1): in the reply listing what remains under the principle, that recording it needs a plan revision marking the production parts waived, 'with 14 approvals to be re-recorded', carried together with the 07 amendments, N3 and N6, and the residual risk that no one verifies performance, restore time, alerts and deployment order in a real environment before production; in the earlier TASK-051 C reply, that the plan revision would carry 07, N3, N6 and the environment authorization."
     }
   ],
   "external_actions": [
