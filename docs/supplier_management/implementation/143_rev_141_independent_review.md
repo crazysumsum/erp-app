@@ -49,3 +49,16 @@ The same reviewer re-checked `git diff e39bde67..HEAD -- docs/supplier_managemen
 - `validate_traceability` STRUCTURE_PASS; `verify_gate PLAN_READY` LOCAL_CHECKS_PASS. The boundary check against `68a8d00b` gives only the two covered `server/scripts` files.
 - Main `68a8d00b` is an ancestor of HEAD. Its merge changed no Supplier file, and Purchasing's 03 still hashes to the pinned `366abb1f`.
 - Noted, no action: 820 for 820.5 (and 1,443 for 1,443.5) is rounding half down, while other values are rounded normally. No conclusion depends on it.
+
+## REV-143: review of the HD-160 commits (local `7998c28f`, before the push)
+
+The same reviewer reviewed the merge of main `41fb488a` (PR #310: CI, AGENTS.md, CLAUDE.md) and the HD-160 record: **CHANGES_REQUESTED**, open_critical 0, open_high 0; 2 Medium, 2 Low.
+
+| Finding | Disposition |
+| --- | --- |
+| **M1.** The HD-160 (2) question understated the push's CI. After PR #310 the CI has 14 jobs, and the capacity scope script returns `required=true` and `fulfillment_required=true` for this PR's 95 files, so the push also runs the Fulfillment existing capacity job (14 scenarios), besides TC-042, shard-1 Sales capacity and TC-035 | Verified by running `requiresCapacity` and `requiresFulfillmentCapacity` on the file list: both true. The correction is recorded in the HD-160 question, and the accurate content is put to the Product Owner. The push waits for his confirmation. |
+| **M2.** "Technical Acceptance stays blocked only by TASK-051 group B and TC-136" is false: `verify_gate TECHNICAL_ACCEPTANCE` reports 16 REQUIRED_RUN_MISSING, because runs count only on the current plan baseline | Verified (16 REQUIRED_RUN_MISSING). Fixed in `next_safe_action`, the 07 note and HD-160: Technical Acceptance also needs the formal suites on the then-current baseline, with the Product Owner's prior approval under AGENTS.md. HD-160 declined only the run on the HD-158 baseline. |
+| **L1.** "Every formal TC-101 run since 2026-10-28 under 5 s" is broader than the evidence: the 2026-10-28 first REGRESSION run also failed on a `create` error rate of 2.06% | Fixed: the closure rests on the two HD-157-baseline runs (error rate 0), and that exception is stated in 04 and in `closure_evidence`. |
+| **L2.** The closure was attributed to the Product Owner | Fixed: 04, 06, 07 and HD-160 call it the agent's reading of HD-160, stated to him after his answer and not confirmed. |
+
+The reviewer judged CLOSED the right status for DEF-051 once L1 and L2 were fixed. The requirement it failed was changed by HD-158, the 5 s verdict passed in the developer run, and a RISK record would put words in the Product Owner's mouth.

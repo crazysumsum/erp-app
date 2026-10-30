@@ -724,8 +724,8 @@ Found by the formal run on the HD-157 baseline in TEST_AND_VERIFY, at `309aa9eb`
 
 **Follow-up (REV-141 L1):** 03 §11.5 was left unchanged. Its line "並保持線上query p95" has no number of its own, but next to the bullet before it (general query p95 < 2 s) it can be read as 2 s during an import. The authority is 01 NFR-004 (5 s). Rewording §11.5 to "匯入期間線上一般操作p95<5秒（NFR-004，HD-158）" waits for the next change that has to touch 03 anyway, so that Purchasing re-pins once (its pin e49ac37d stays valid until then).
 
-**Closed by HD-160 (Product Owner, 2026-10-30: "3不用跑了，都己跑了幾次，再跑意義不大").** There is no formal run on the HD-158 baseline. DEF-051 closes on the existing evidence:
-- all eight formal runs measured TC-101's online p95 during the import below 5 s; the worst was 2,286 ms (`update`, `evidence/20261030T034819-b8b65bdb3861`);
+**Closed on the existing evidence** (agent's reading of HD-160, not the Product Owner's words; Product Owner, 2026-10-30: "3不用跑了，都己跑了幾次，再跑意義不大", declining the formal run on the HD-158 baseline):
+- the two formal runs on the HD-157 baseline had error rate 0 and failed TC-101 only on the online p95 check; their worst p95 during the import was 1,443 ms (TECHNICAL) and 2,286 ms (REGRESSION, `update`, `evidence/20261030T034819-b8b65bdb3861`), both under 5 s. All eight formal runs had a p95 under 5 s, but the 2026-10-28 first REGRESSION run also failed on a `create` error rate of 2.06% (DEF-048, since fixed), which the 5 s check would fail too;
 - the HD-158 developer run, on the merged code with the 5 s verdict, passed TC-101 (`online.p95_under_5s_during_import`, worst `list.missingFilter` 1,514 ms). That run is developer evidence, not formal.
 
 The REGRESSION run's recorded result stays FAIL, because it was judged against 2 s; it is re-read against 5 s, not re-run. The step change after PR #301 is unexplained and stays a known limitation for the release decision.

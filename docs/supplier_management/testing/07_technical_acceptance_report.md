@@ -2,7 +2,9 @@
 
 ## Formal run on the HD-157 baseline (2026-10-30, current result)
 
-> **2026-10-30, HD-158 and HD-160:** TC-101's online p95 limit during an import is now 5 s (HD-158). The Product Owner decided not to repeat the formal run on the HD-158 baseline (HD-160: "3不用跑了，都己跑了幾次，再跑意義不大"). So this run stays the current formal result. Read against 5 s, TC-101 passes at both stages by its measured numbers (worst 2,286 ms), and **DEF-051 is closed**. The REGRESSION `run.json` still records FAIL, because it was judged against 2 s at the time; it was re-read, not re-run. The harness gate binds formal evidence to the plan baseline, so it will not count these runs for the HD-158 baseline. That gap is accepted by HD-160, not hidden. What still blocks Technical Acceptance is TASK-051 group B and TC-136 (release gate).
+> **2026-10-30, HD-158 and HD-160:** TC-101's online p95 limit during an import is now 5 s (HD-158). The Product Owner declined the formal run on the HD-158 baseline (HD-160: "3不用跑了，都己跑了幾次，再跑意義不大"). So this run stays the latest formal result. Read against 5 s, TC-101 passes at both stages by its measured numbers (worst 2,286 ms, error rate 0), and DEF-051 is closed on that evidence (agent's reading of HD-160, not the Product Owner's words). The REGRESSION `run.json` still records FAIL, because it was judged against 2 s at the time; it was re-read, not re-run.
+>
+> **Technical Acceptance still needs a formal run.** The harness counts a run for the gate only on the current plan baseline, and these runs are on `8b31fcdd`; `verify_gate TECHNICAL_ACCEPTANCE` reports all 16 required runs missing. So besides TASK-051 group B and TC-136 (release gate), Technical Acceptance needs the required suites at TECHNICAL and REGRESSION on the baseline current at that time. Under AGENTS.md that run needs the Product Owner's prior approval when Technical Acceptance is attempted. HD-160 declined only the run on the HD-158 baseline.
 
 **Result: Technical Acceptance NOT complete.**
 - **DEF-050 is closed.** TC-085 passed against NFR-005's 3 s at both stages. The for-SKU p95 was 1,737 ms at TECHNICAL and 1,818 ms at REGRESSION.
