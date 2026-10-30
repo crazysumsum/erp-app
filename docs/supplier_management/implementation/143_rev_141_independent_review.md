@@ -39,3 +39,13 @@
 | **N3.** DEF-051 `source_ids` listed NFR-001 | Fixed: removed. The governing requirement is NFR-004. |
 
 Main moved again during the review (PR #307, Purchasing harness state, a report and a test). It was merged in at `02dffa59`, with no Supplier file changed and no Purchasing 03 change.
+
+## Follow-up verdict (REV-142, at `f24bec92`)
+
+The same reviewer re-checked `git diff e39bde67..HEAD -- docs/supplier_management`: **APPROVED**, open_critical 0, open_high 0, nothing new.
+
+- All six Lows and three nits are fixed correctly and completely.
+- The 11 `-HD158-R1` approvals equal the observed plan `cfb4af71`. The three DESIGN `-HD158` approvals still equal the design `5003b391`. Nothing older changed.
+- `validate_traceability` STRUCTURE_PASS; `verify_gate PLAN_READY` LOCAL_CHECKS_PASS. The boundary check against `68a8d00b` gives only the two covered `server/scripts` files.
+- Main `68a8d00b` is an ancestor of HEAD. Its merge changed no Supplier file, and Purchasing's 03 still hashes to the pinned `366abb1f`.
+- Noted, no action: 820 for 820.5 (and 1,443 for 1,443.5) is rounding half down, while other values are rounded normally. No conclusion depends on it.
