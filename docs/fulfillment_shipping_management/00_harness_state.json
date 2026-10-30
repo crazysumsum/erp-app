@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 321,
+  "revision": 327,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,24 +11,24 @@
   "baseline": {
     "design": "ffca05957b4ca550ff231f6b9224537735e93615c91345c215f1eb0572be1747",
     "plan": "9a651b0b761d938b06f4083359398de612fa14ad94e1755be8ecafac9dfde030",
-    "code_commit": "b9da72ca7ce0909f2e5f7c993dbe3fadaa523e37",
-    "source_fingerprint": "c2ea4c3193aacdda9acb096827435a51a67d60c4b63a2e360b7d45d270f17ff1",
+    "code_commit": "cc30912513c9a7fcc91e938c9fa782cf6094dd8d",
+    "source_fingerprint": "0819de0ff4fae58c717fc2f8750cc3999e8e97d5e2b67dfdd0069c30b0793ef2",
     "worktree": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1",
-    "default_commit": "6d84ee454b72f4b3e43b2aa6eee2436e6e950716",
+    "default_commit": "a4523e5250aa6212ecbf843338f78d6e1971ed3e",
     "mode_entry_commit": "fd32762f4fa17a5e77aaa7118a9ded2d3ac81e9e"
   },
   "runtime": {
-    "instance_id": "pr297-main305-ffcdcc2b",
+    "instance_id": "pr297-main306-174c3543",
     "owner": "/root; Sam actual P1 development and isolated developer verification authorization",
     "resources": {
       "workspace": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1",
       "mysql-socket": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/erp-fulfillment-p0-mysql-r",
       "runtime-and-private-evidence": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime",
-      "runtime-policy": "CLEANED ownedmain305runtime ffcdcc2b/app96902521/MySQL94921 gracefullystopped; socketpidabsent, allprivateevidence/datadirretained.",
+      "runtime-policy": "CLEANED exact owned main306 base/account; own MySQL shutdown, socket/pid absent; all private raw evidence and data directory retained.",
       "dependencies": "Actualmainlockedoffline npmci--ignore-scripts; body-parser2.4.0/qs6.16.1/PW1.63.0; nocode/dependency invention",
-      "browser-runtime": "Actualmain305P0/P1realPW2PASS each completed, bothserversended.",
-      "mysql-schema": "fulfillment_p0_p1_ffcdcc2b (CLEANED)",
-      "web-port": "No activeownedbrowser servers."
+      "browser-runtime": "Two distinctrealPW suites serialaftersharednative, strictfreeportscheck, noreusedservers.",
+      "mysql-schema": "fulfillment_p0_p1_174c3543",
+      "web-port": "61349/61350 verified free after both real browser suites."
     },
     "lease_ref": null
   },
@@ -5992,6 +5992,30 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-PR297-MAIN306-VERIFICATION-ADMISSION",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_resume_review",
+      "reviewed_baseline": "ffca05957b4ca550ff231f6b9224537735e93615c91345c215f1eb0572be1747",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-pr297-main306-verification-admission-review.json SHA48877ac61c0b1ed947a43b02135ac0fac58e39c3359f2eb5660328d566bd1fd1; actualcc309125/FP0819 exact4docmerge +prefix-onlytools/6unchangedcontracts/PLAN_READY0issues reviewed,0CHM; newownedruntime,6once, trueperfFAILSTOP, noextraSupplierpure/13/44; newCI/finalreview/freshtargetbeforeauthorizedmerge.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-PR297-MAIN306-SIX-SUITE-RESULTS",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_resume_review",
+      "reviewed_baseline": "ffca05957b4ca550ff231f6b9224537735e93615c91345c215f1eb0572be1747",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-pr297-main306-six-suite-results-review.json SHA2d1aea11ee716b4d3da0126933db9b118a00f0cc4d29e4cf413f6e3ca9b98ff8; actual all6 suites, rawJUnit596/2/2 exact IDs/counts, all artifact hashes/evidence_issues=[], unchanged source/PLAN/HEAD and original5000/20s; 0C/H/M. New CI and final exact-head review pending.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -8656,8 +8680,24 @@
       "kind": "LOCAL_GIT_MERGE",
       "target": "Featureworktree integratesfetchedmain a4523e5250aa6212ecbf843338f78d6e1971ed3e afterpreservingb9/c2 localresults",
       "idempotency_key": "pr297-integrate-maina452-once",
-      "status": "STARTED",
-      "source_ref": "LatestSam authority covers latestmain integration, exactindependentimpactreceiptf60aa90c; no product/limits/contractchanges, alloldactualresults retained."
+      "status": "CONFIRMED",
+      "source_ref": "LatestSam authority covers latestmain integration, exactindependentimpactreceiptf60aa90c; no product/limits/contractchanges, alloldactualresults retained.; actualcc309125 parents e1634cd5+a452,4incomingPurchasingdocs,noconflicts; privatepr297-main306-integrated-baseline.json SHA2db5029e44f705bec471f6138c63c163ebe760f90183193f508e49d9b8c8efc0"
+    },
+    {
+      "id": "PR297-MAIN306-RUNTIME",
+      "kind": "ISOLATED_TEST_SETUP",
+      "target": "NewownedUUIDsyntheticbase/account ondedicatedsocket-onlyMySQL only",
+      "idempotency_key": "pr297-main306-runtime-once",
+      "status": "CONFIRMED",
+      "source_ref": "ActualSam integration/verificationauthority and independentreceipt48877ac6 exacttools; no shared/prodDB, original26.7defaults/20s/fullcapacity retained.; /Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/pr297-main306-runtime-public.json SHA32f20ed6457962121c70f2122a41c4730ee17be568fd19e258442dfcd525af16"
+    },
+    {
+      "id": "PR297-MAIN306-RUNTIME-CLEANUP",
+      "kind": "ISOLATED_TEST_CLEANUP",
+      "target": "Exact owned 174c3543/app5c67c048/MySQL3448 only; retain data directory/evidence",
+      "idempotency_key": "pr297-main306-runtime-cleanup-once",
+      "status": "CONFIRMED",
+      "source_ref": "Six actual new-FP canonical suites PASS; original independently reviewed exact cleanup script, same authorized isolated runtime lifecycle.; /Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/pr297-main306-runtime-cleanup.json SHA80977867c5f3cf86fdf7e629abfb2e4f488649b7b2198ef936cbeca12af6cde9; zero active clients/owned children, exact base/account removed, socket/pid absent, both browser ports free."
     }
   ],
   "evidence_files": [
@@ -8704,7 +8744,13 @@
     "evidence/20261030T033946-d1165ce6a439/run.json",
     "evidence/20261030T034045-3fc382490510/run.json",
     "evidence/20261030T035525-6fe1c8b99af5/run.json",
-    "evidence/20261030T035646-4dabd7a99e3f/run.json"
+    "evidence/20261030T035646-4dabd7a99e3f/run.json",
+    "evidence/20261030T040615-caa8e490b4c1/run.json",
+    "evidence/20261030T040613-1568a6e5ee2e/run.json",
+    "evidence/20261030T040616-6a917877ea68/run.json",
+    "evidence/20261030T040700-33cdb4b84144/run.json",
+    "evidence/20261030T041814-aa21078cbafc/run.json",
+    "evidence/20261030T041840-c1a2515661d5/run.json"
   ],
   "defects": [
     {
@@ -9147,5 +9193,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "b9/c2 exact6suitePASS preservedandcleanupCONFIRMED; freshremote mainadvanced toa4523e52 viaPurchasingPR306 (4docs only). Independentlyreviewincomingcontractpins andpreserveoldresults, integratecurrentmain, recomputeFP; requirehonestcurrentFP6suites/newCI/review beforeauthorizedready+merge. No oldCIadoption; noSupplierpure/13/44reruns absentchanges; anycapacityFAILSTOP."
+  "next_safe_action": "All six actual main306 integrated suites PASS; await independent results receipt, docs-only checkpoint commit, freeze/push exact candidate, new mandatory CI/finalreview/fresh target check then authorized ready+merge. Any capacity/performance FAIL STOP; preserve all safety/20s."
 }

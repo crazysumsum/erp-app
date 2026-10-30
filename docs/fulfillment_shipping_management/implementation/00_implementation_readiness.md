@@ -1,6 +1,20 @@
 # Fulfillment implementation readiness
 
-## 當前：最新 main 已整合，本機驗證通過，待新候選 CI（2026-10-30）
+## 當前：main PR306 已整合，完整本機驗證及獨立覆核通過，待新候選 CI（2026-10-30）
+
+Sam 已授權在最新 main 整合、必要驗證、獨立覆核及新候選 CI 全部通過後，將 PR297 轉正式並合併；原「暫不合併」已被此指令取代。全部安全檢查、5,000 筆容量及20秒交易限制不變，任何容量／效能失敗立即停報。
+
+最新 main `a4523e5250aa6212ecbf843338f78d6e1971ed3e` 已無衝突整合於 `cc30912513c9a7fcc91e938c9fa782cf6094dd8d`。本次額外4份Purchasing文件僅更新既有provider契約pin／設計批准；沒有產品程式、schema、依賴、CI或Fulfillment消費契約改動。獨立影響覆核0C/H/M。DESIGN `ffca0595…`、PLAN `9a651b0b…` 不變；global source fingerprint 因外模塊文件變為 `0819de0ff4fae58c717fc2f8750cc3999e8e97d5e2b67dfdd0069c30b0793ef2`，因此實際重新執行全部六套必要本機驗證，未重標舊PASS。
+
+- lint `20261030T040615-caa8e490b4c1`、build `20261030T040613-1568a6e5ee2e`、dependency audit `20261030T040616-6a917877ea68`：PASS；audit仍有既有1 low／4 moderate，不等於零漏洞。
+- 共用P0／P1原生套件 `20261030T040700-33cdb4b84144`：596 PASS／0 FAIL／0 SKIP，只執行一次；原5,000、故障rollback、HTTP及20秒案例均保留。
+- 真P0 Playwright `20261030T041814-aa21078cbafc`、真P1 Playwright `20261030T041840-c1a2515661d5`：各2 PASS／0 FAIL／0 SKIP。
+
+原始JUnit、case IDs、typed run及artifacts hashes完整保留，source／PLAN／HEAD前後一致。獨立reviewer `/root/fulfillment_resume_review` 核對六套結果，0 C/H/M；private receipt `independent-pr297-main306-six-suite-results-review.json` SHA `2d1aea11ee716b4d3da0126933db9b118a00f0cc4d29e4cf413f6e3ca9b98ff8`。本次沒有另重跑Supplier pure／13／44診斷。自有專用DB／帳號已精確清理、MySQL正常停止，socket／pid消失及兩個browser ports釋放；data directory及全部私有證據保留。
+
+PHASE002／TASK012–023仍全部DONE，原失敗／批准／證據保留。現在固定docs-only bookkeeping候選，要求其自己的全部必要CI、exact-head獨立closing及MERGE_READY一致性Gate；舊1705 CI不能替代。合併前再fetch main確認已包含最新target，才執行已授權的ready及normal merge。正式Technical Acceptance、業務UAT、P2及發布仍不在本次授權之內。
+
+## 歷史：main PR305 整合及本機驗證（2026-10-30）
 
 Sam 已明確授權整合最新 main，完成獨立影響覆核及必要驗證；只有新候選 CI 與全部必要檢查通過後，才將 PR297 轉正式並合併。此授權取代下方歷史「暫不合併」，容量／效能失敗即停報、全部安全檢查及20秒限制保留，沒有任何 Gate 豁免。
 
