@@ -7,7 +7,7 @@
 - **A new formal failure:** TC-085 failed at TECHNICAL. The for-SKU name search p95 was 2,113 ms against a 2,000 ms limit.
   - It passed at REGRESSION, at 1,937 ms.
   - It is registered as **DEF-050**. A REPORT_ONLY diagnosis was done under HD-155 A.
-  - The route is **HD-156**, for the Product Owner.
+  - HD-156 was answered E: re-measure TC-085 in the production-like environment, then choose the remedy. DEF-050 stays OPEN.
 - **Otherwise the gate is blocked only by what was known before:** TASK-051 is open, and the production parts are NOT_RUN by design.
 - UAT was not executed. Business acceptance and release approval have not happened.
 
@@ -71,14 +71,14 @@
     - `q`-related statements total 60–62%.
   - **Saturation:** the pool of 10 is full from 25 users, at about 29 requests per second. At 50 users every operation queues.
   - **What does not help:** a pool of 20 reaches only 33/s, and a larger buffer pool changes nothing.
-- The details are in `04_defect_register.md` (DEF-050) and `def050_diagnosis_2026-10-29/`. The route is HD-156.
+- The details are in `04_defect_register.md` (DEF-050) and `def050_diagnosis_2026-10-29/`. HD-156 answered E (defer to the production-like measurement).
 
 **Gate at `558adc22`** (state revision 483): `verify_gate --gate TECHNICAL_ACCEPTANCE` is BLOCKED on:
 - `TASK_INCOMPLETE` TASK-051;
 - the NOT_RUN production parts of TC-128, TC-130, TC-132, TC-133, TC-134, TC-135 and TC-136, at both stages;
 - **TC-085 at TECHNICAL** (DEF-050), which is new.
 
-From state revision 484, which records HD-156 as OPEN, the gate also reports `HUMAN_DECISION_REQUIRED` (REV-137 L2). Committing this evidence moves HEAD, so at later commits the gate also reports `COMMIT_CHANGED` and `EVIDENCE_COMMIT` (REV-131 R2).
+From state revision 484 to 487, while HD-156 was OPEN, the gate also reported `HUMAN_DECISION_REQUIRED` (REV-137 L2). From revision 488, after HD-156 was answered E, it no longer does (REV-138 L1). Committing this evidence moves HEAD, so at later commits the gate also reports `COMMIT_CHANGED` and `EVIDENCE_COMMIT` (REV-131 R2).
 
 **DEF-034** stays OPEN. Both imports applied 10,000 of 10,000.
 

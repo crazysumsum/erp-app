@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 486,
+  "revision": 489,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "TEST_AND_VERIFY",
   "status": "BLOCKED",
@@ -11,9 +11,9 @@
   "baseline": {
     "design": "2390e6fc44da25124375f4347f2a093db512f8353e01d456780a11073be494a3",
     "plan": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
-    "code_commit": "558adc220a8b0fad54317e716e979979128e5693",
+    "code_commit": "5bed215bade454f5181d34019701c2621353603d",
     "source_fingerprint": "493d144c455c6db5d08c3baeb3b36c961539740c393727739956e060f66c252f",
-    "worktree": "/Users/sam/Documents/workspace/erp-supplier-ta3",
+    "worktree": "/Users/sam/Documents/workspace/erp-supplier-hd156",
     "default_commit": "4f101642a284c44d6dd53338ddfeb431582aa5f4",
     "mode_entry_commit": "4f101642a284c44d6dd53338ddfeb431582aa5f4"
   },
@@ -21,7 +21,7 @@
     "instance_id": "supplier-t51-scratch-mysqld-3450",
     "owner": "Primary Harness agent",
     "resources": {
-      "workspace": "/Users/sam/Documents/workspace/erp-supplier-ta3 (claude/supplier-technical-acceptance-3, cut from main 4f101642)",
+      "workspace": "/Users/sam/Documents/workspace/erp-supplier-hd156 (claude/supplier-hd156-defer, cut from main 5bed215b)",
       "mysql-schema": "erp_t51, and the erp_t51_rh_* scratch schemas the runners create and drop, on a throwaway mysqld at 127.0.0.1:3450 (session scratch datadir, --skip-log-bin); no production data",
       "web-port": "3021 (UAT API) and 5216 (UAT client); the other runners bind free ports"
     },
@@ -3736,6 +3736,18 @@
       "open_critical": 0,
       "open_high": 3,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-138",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (HD-156 E record)",
+      "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-hd156-defer at c72acb52 (git diff origin/main..HEAD)",
+      "reviewed_baseline": "2390e6fc44da25124375f4347f2a093db512f8353e01d456780a11073be494a3",
+      "source_ref": "docs/supplier_management/implementation/141_rev_138_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -6906,6 +6918,17 @@
       "source_ref": "docs/supplier_management/testing/def050_diagnosis_2026-10-29/ (README.md, run-restplan.sh, out-restplan.txt) and DEF-050 in 04_defect_register.md. status FAIL: the defect stands; no test case failed. Split across all six formal for-SKU reports and every diagnosis report: q-related statements 60-62%, the rest page without q 21-24%; the formal runs' pool of 10 is 10.0 busy. Correct DB busy (60 s window): E1 0.1, 2.1, 8.9, 10.1; pool of 20 19.9. E5 on scratch schema erp_t51_mig_d50 (migrated, seeded, dropped), quiet DB, 10 runs per point: rest page without q at offset 0 / 10,000 / 40,000 / 69,000: today's plan 2.4 / 97-99 / 109-121 / 122-140 ms; FORCE INDEX (idx_suppliers_name_id) 2.5 / 17-22 / 63-81 / 105-136 ms. No product code changed.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-29T06:34:34+00:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "DEF-049 formal re-test, DEF-049 closed, DEF-050 diagnosis and HD-156 (PR #303) merged to main",
+      "code_commit": "5bed215bade454f5181d34019701c2621353603d",
+      "spec_baseline": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "source_fingerprint": "493d144c455c6db5d08c3baeb3b36c961539740c393727739956e060f66c252f",
+      "status": "PASS",
+      "source_ref": "PR #303 merged as 5bed215bade454f5181d34019701c2621353603d at 2026-10-29T07:53:43Z on the Product Owner's word ('CI己通過'), with --match-head-commit 31ab2a28, after a gate that refused unless the latest run of every check was SUCCESS (13 checks, PR run 40830448716), main was an ancestor of HEAD and the local, remote and PR heads were equal. Review REV-137 CHANGES_REQUESTED; every finding fixed before merge (report 140). Docs and evidence only: source fingerprint unchanged from 4f101642.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-29T07:53:43+00:00"
     }
   ],
   "pending_decisions": [
@@ -8972,8 +8995,8 @@
         "SupplierLookupService.listForSku",
         "supplierSearchCondition"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-29: 'E', after a plain-language explanation of DEF-050 and the five options. Defer: DEF-050 stays OPEN; TC-085 is re-measured in the production-like environment (TASK-051 C, row 'Production-like performance' in 06_task051_completion_boundary.md); the remedy is chosen among A-D with those numbers; the local FAIL goes to the release risk decision. No product change."
     }
   ],
   "external_actions": [
@@ -10599,5 +10622,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "HD-156 (DEF-050 remediation route) awaits the Product Owner. Technical Acceptance is blocked by DEF-050 (TC-085 FAIL at TECHNICAL) and by TASK-051 groups B and C. PR for the re-test evidence and the DEF-050 diagnosis: independent review, CI, merge on the Product Owner's word. REPORT_ONLY."
+  "next_safe_action": "PR #304 (HD-156 E record): independent review, CI, merge on the Product Owner's word. Then: Technical Acceptance is blocked by TASK-051 groups B and C, and by TC-085's TECHNICAL FAIL (DEF-050, deferred under HD-156 E to the production-like performance measurement). No further Supplier-side work until the production-like environment exists (Supplier's C items: the TC-085 re-measurement, the production-like UI smoke script, the T51 deliverable drafts), unless the Product Owner authorizes more (for example a limited diagnostic UAT). REPORT_ONLY."
 }
