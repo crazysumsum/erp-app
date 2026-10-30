@@ -13,6 +13,7 @@
 | Canonical planning status | 所有`TC-*`均為`PLANNED` |
 | Legacy execution status | 詳細來源列保留`NOT RUN`，表示尚未執行；不等同PASS |
 | 目標環境 | 待執行前確認；Migration、constraint、transaction、concurrency、worker、效能及復原案例必須使用隔離的真實 MySQL 測試環境 |
+| 修訂（HD-157，2026-10-30） | SKU-008（TC-085）的for-SKU p95上限改為3秒（NFR-005）。OPS-001（TC-128）、OPS-003（TC-130）、OPS-005（TC-132）、OPS-006（TC-133）、OPS-007（TC-134）、OPS-008（TC-135）及MIG-006（TC-006）中需要正式部署環境的部分不再另測：production-like效能、部署拓撲中的網絡故障、alert送達on-call、正式備份排程下量度RTO／RPO、正式部署時間線及按§14逐步部署、正式環境回滾。各案例在隔離真實MySQL環境的本機結果即為驗收證據。OPS-009（TC-136）、UAT及簽核不變。 |
 | Build / Commit | 待執行前記錄 |
 
 > 本文件只定義測試案例，不代表功能已通過驗證。本輪不執行任何測試。涉及永久刪除、封鎖、銀行明文、金鑰輪替、Migration、故障注入及復原的案例，只可在隔離測試環境使用虛構資料執行。
@@ -255,7 +256,7 @@
 | SKU-005 | P0 | BR-002；Relation唯一性與FK | DB/Concurrency | 真MySQL；兩connection | 同Supplier/SKU、同itemCode、跨SKU UOM | 同步create及直接DB負測 | composite unique/FK阻止duplicate與錯owner；只用IDs關聯，不以Code/Name作FK | constraint errors、schema、final SQL | — | NOT RUN |
 | SKU-006 | P1 | FR-SKU-004、AC-031；Purchasing回寫冪等 | Integration/DB | 已完成一筆向無relation Active Supplier的purchase | 重複callback/command | 回寫一次、重送、更新last supplied | 建立或更新一條relation；不改Supplier/SKU狀態；重送不duplicate | requests、relation/Supplier/SKU/audit SQL | — | NOT RUN |
 | SKU-007 | P0 | FR-SKU-006；不得保存價格 | Security/Data | 建立／更新relation及Purchasing回寫 | price/quote/contractPrice unknown fields | 經API、UI及整合入口提交 | 欄位拒絕或忽略依schema但永不持久化；table/API/audit沒有價格資料 | responses、schema/DB/audit scan | — | NOT RUN |
-| SKU-008 | P1 | NFR-005；100k lookup SLA | Performance | PERF dataset；50 users | exact、preferred、no relation及page workload | warm-up後穩定負載 | p95<2秒；error rate在批准門檻內；count不膨脹；使用預期indexes | workload、p50/p95/p99、error rate、EXPLAIN/resources | — | NOT RUN |
+| SKU-008 | P1 | NFR-005；100k lookup SLA | Performance | PERF dataset；50 users | exact、preferred、no relation及page workload | warm-up後穩定負載 | p95<3秒（HD-157；原為2秒）；error rate在批准門檻內；count不膨脹；使用預期indexes | workload、p50/p95/p99、error rate、EXPLAIN/resources | — | NOT RUN |
 
 ### 6.9 CSV Import與Export
 
@@ -323,7 +324,7 @@
 
 | ID | Priority | Requirement/Risk | Area | Preconditions | Test Data | Steps/Input | Expected Result | Required Evidence | Actual Evidence | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| OPS-001 | P1 | NFR-001～003；100k/50-user一般查詢 | Performance | production-like MySQL；PERF dataset | exact Code、name、status/currency filter、detail混合負載 | warm-up、ramp-up後維持50 users並量測 | list及exact Code p95<2秒；記p50/p95/p99/error rate；CPU/memory/pool無不可恢復飽和 | workload/config、metrics、EXPLAIN/resources | — | NOT RUN |
+| OPS-001 | P1 | NFR-001～003；100k/50-user一般查詢 | Performance | 隔離真實MySQL；PERF dataset（HD-157：不另做production-like重測） | exact Code、name、status/currency filter、detail混合負載 | warm-up、ramp-up後維持50 users並量測 | list及exact Code p95<2秒；記p50/p95/p99/error rate；CPU/memory/pool無不可恢復飽和 | workload/config、metrics、EXPLAIN/resources | — | NOT RUN |
 | OPS-002 | P1 | Duplicate/query bounded與容量 | Performance/DB | PERF dataset | duplicate candidate、children/detail、contains search | 基線/負載/短spike | duplicate只取≤50候選再算分數；常用query使用index；count不因join膨脹 | timings、EXPLAIN、query counters | — | NOT RUN |
 | OPS-003 | P1 | NFR-010；非必要服務失敗隔離 | Resilience/Integration | 可停Bank/nonessential summary服務 | lookup/list/detail/purchase submit | 令依賴timeout/connection reset/503後恢復 | 不洩漏Bank、不錯誤開放非Active；必要一般lookup按設計降級或明確失敗；恢復後正常 | responses、timeouts、logs/metrics、DB | — | NOT RUN |
 | OPS-004 | P0 | Startup/schema/config readiness | Deployment | 缺table/column/permission/setting/key的各DB | 每種缺項 | 啟動新版 | 明確fail closed且health不ready；不自動篡改DB；修復後可啟動 | exit/health/log、DB前後 | — | NOT RUN |
@@ -396,7 +397,7 @@
 | Integration | Migration、unique/FK、locking、HTTP+DB、approval/Bank/import/SKU | 現有Node tests＋隔離真MySQL |
 | Client component | permission rendering、conflict、Bank timer、approval、import | 現有Vue/Quasar test stack |
 | Limited E2E/manual | Create、approval、Bank reveal、status、for-SKU、import/export、keyboard | 支援瀏覽器及network/DB evidence |
-| Performance/operations | 100k/50-user、10k CSV、rotation、backup/restore、alerts | production-like環境及可重現scripts/runbook |
+| Performance/operations | 100k/50-user、10k CSV、rotation、backup/restore、alerts | 隔離真實MySQL環境及可重現scripts/runbook（HD-157：不另找production-like環境） |
 
 ## 9. 執行前待確認事項
 
