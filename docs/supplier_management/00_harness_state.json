@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 510,
+  "revision": 511,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -10188,7 +10188,7 @@
         "PR #309"
       ],
       "status": "ANSWERED",
-      "answer_ref": "Product Owner, 2026-10-30: '1、2批准，3不用跑了，都己跑了幾次，再跑意義不大'. (1) approved: the one new case in supplierPerformanceVerdicts.test.js, for PR #309. (2) approved: one push of PR #309 with main merged in, and the CI it triggers. (3) declined: no formal run on the HD-158 baseline. Agent's reading (not the Product Owner's words), stated to him after his answer and not confirmed by him: the formal run on the HD-157 baseline (309aa9eb) stays the latest formal result; TC-101 is re-read against 5 s (worst 2,286 ms, error rate 0), not re-run; DEF-051 closes on the existing evidence. HD-160 declined only the run on the HD-158 baseline: Technical Acceptance still needs the required suites at TECHNICAL and REGRESSION on the then-current plan baseline (verify_gate TECHNICAL_ACCEPTANCE reports 16 REQUIRED_RUN_MISSING), which needs the Product Owner's prior approval under AGENTS.md when it is attempted (REV-143 M2, L2)."
+      "answer_ref": "Product Owner, 2026-10-30: '1、2批准，3不用跑了，都己跑了幾次，再跑意義不大'. (1) approved: the one new case in supplierPerformanceVerdicts.test.js, for PR #309. (2) approved: one push of PR #309 with main merged in, and the CI it triggers. (3) declined: no formal run on the HD-158 baseline. Agent's reading (not the Product Owner's words), stated to him after his answer and not confirmed by him: the formal run on the HD-157 baseline (309aa9eb) stays the latest formal result; TC-101 is re-read against 5 s (worst 2,286 ms, error rate 0), not re-run; DEF-051 closes on the existing evidence. HD-160 declined only the run on the HD-158 baseline: Technical Acceptance still needs the required suites at TECHNICAL and REGRESSION on the then-current plan baseline (verify_gate TECHNICAL_ACCEPTANCE reports 16 REQUIRED_RUN_MISSING), which needs the Product Owner's prior approval under AGENTS.md when it is attempted (REV-143 M2, L2). (2) re-confirmed on the corrected content (14 CI jobs, including the Fulfillment existing capacity job with 14 scenarios, TC-042, shard-1 Sales capacity, TC-035 and the Fulfillment P1 browser flows): Product Owner, 2026-10-30, '批准，push吧'."
     }
   ],
   "external_actions": [
@@ -11885,5 +11885,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "PR #309 (HD-158 C, HD-159 A, HD-160): before the one approved push, put the corrected CI content to the Product Owner (REV-143 M1: 14 jobs including the Fulfillment 14-scenario capacity job, TC-042, shard-1 Sales capacity and TC-035); push only on his confirmation; CI; merge on his word. After merge: record the merge; no formal run on the HD-158 baseline (HD-160 (3)). Technical Acceptance is blocked by TASK-051 group B, TC-136 (release gate) and the formal suites at TECHNICAL and REGRESSION on the then-current baseline, which need the Product Owner's prior approval (AGENTS.md). Follow-up: reword 03 §11.5 with the next change to 03 (REV-141 L1)."
+  "next_safe_action": "PR #309 (HD-158 C, HD-159 A, HD-160): pushed once on the Product Owner's confirmation ('批准，push吧'); CI; merge on his word. After merge: record the merge; no formal run on the HD-158 baseline (HD-160 (3)). Technical Acceptance is blocked by TASK-051 group B, TC-136 (release gate) and the formal suites at TECHNICAL and REGRESSION on the then-current baseline, which need the Product Owner's prior approval (AGENTS.md). Follow-up: reword 03 §11.5 with the next change to 03 (REV-141 L1)."
 }
