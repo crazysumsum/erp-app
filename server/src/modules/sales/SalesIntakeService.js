@@ -1,3 +1,4 @@
+import {observeSalesChannelSubmission,stageSalesIntake} from "./salesTransactionObservations.js";
 import {SalesOrderService} from "./SalesOrderService.js";
 import {SalesOrderConfirmationService} from "./SalesOrderConfirmationService.js";
 import {SalesOperationService} from "./SalesOperationService.js";
@@ -30,7 +31,8 @@ export class SalesIntakeService {
   // The canonical-only phase has no authenticated transport/status route to publish.
   return {outcome:"ACCEPTED",intakeOrderId:id,statusUrl:null};
  }
- async submit(input,{context,signal}={}){
+ submit(input,options){return observeSalesChannelSubmission(this.database,()=>this.#submit(input,options));}
+ async #submit(input,{context,signal}={}){
   const invalid=normalizeSalesChannelV1(input,{code:"UNVERIFIED"});if(invalid.errors.length)return {outcome:"VALIDATION_FAILED",intakeOrderId:null,errors:invalid.errors};
   try{
    signal?.throwIfAborted();const identity=await this.#channel(context,"SUBMIT"),{group}=normalizeSalesChannelV1(input,identity),hash=sourceOrderPayloadHash(group),keyHash=salesSourceHash(input.idempotencyKey);
@@ -43,6 +45,7 @@ export class SalesIntakeService {
      let status={VALID:"QUEUED",INVALID:"INVALID",DUPLICATE:"DUPLICATE"}[checked.status],payload={...checked.payload,channelIdentity:identity};if(!status)throw salesError("SALES_DEPENDENCY_UNAVAILABLE");const [[size]]=await tx.query("SELECT LENGTH(CAST(CAST(? AS JSON) AS CHAR CHARSET utf8mb4)) AS bytes",[JSON.stringify(payload)]);if(!Number.isSafeInteger(Number(size.bytes))||Number(size.bytes)<1)throw salesError("SALES_DEPENDENCY_UNAVAILABLE");if(Number(size.bytes)>131072){status="INVALID";payload={channelIdentity:identity};checked.errors.push({rowNo:1,field:"payload",code:"SALES_IMPORT_ORDER_INVALID"});}const terminal=status!=="QUEUED",duplicate=checked.duplicate;
      const [inserted]=await tx.execute(`INSERT INTO sales_intake_orders (source_type,source_order_key,source_order_key_hash,channel_code,external_order_id,external_order_id_hash,schema_version,transport_request_id,transport_idempotency_key_hash,payload_hash,safe_payload,first_row_no,last_row_no,line_count,status,processing_event_id,external_order_key_id,sales_order_id,sales_order_number,result_code,created_at,updated_at,completed_at)
       VALUES ('CHANNEL',?,?,?,?,?,'1.0',?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,[input.idempotencyKey,keyHash,identity.code,group.externalOrderId,salesSourceHash(group.externalOrderId),input.requestId,keyHash,hash,JSON.stringify(payload),1,group.lastRowNo,checked.payload?.document?.lines.length??group.payload.lines.length,status,group.processingEventId,duplicate?.externalOrderKeyId??null,duplicate?.salesOrderId||null,duplicate?.salesOrderNumber??"",checked.errors[0]?.code??"",nowMs,nowMs,terminal?nowMs:null]);
+     stageSalesIntake(tx,"CHANNEL","received");stageSalesIntake(tx,"CHANNEL",({QUEUED:"accepted",INVALID:"invalid",DUPLICATE:"duplicate"})[status]);
      const id=Number(inserted.insertId);for(const error of checked.errors)await tx.execute("INSERT INTO sales_intake_errors (intake_order_id,row_no,field_path,error_code,safe_message,created_at) VALUES (?,?,?,?,?,?)",[id,error.rowNo,error.field,error.code,"來源訂單未通過驗證，請檢查指定欄位",nowMs]);result=await this.#channelResult(tx,{id,status,external_order_key_id:duplicate?.externalOrderKeyId});
     }
     const last=await this.#channel(context,"SUBMIT");if(last.code!==identity.code||last.serviceId!==identity.serviceId)throw salesError("SALES_DEPENDENCY_UNAVAILABLE");signal?.throwIfAborted();return result;
@@ -88,6 +91,7 @@ export class SalesIntakeService {
   const [op]=await tx.execute("UPDATE sales_operation_requests SET status='SUCCEEDED',result_type='INTAKE_RESULT',result_id=?,result_summary=?,completed_at=?,updated_at=? WHERE id=? AND status='IN_PROGRESS'",[result.salesOrderId,JSON.stringify(result),nowMs,nowMs,operation.id]);
   const [child]=await tx.execute("UPDATE sales_intake_orders SET status=?,sales_order_id=?,sales_order_number=?,completed_at=?,updated_at=? WHERE id=? AND status IN ('QUEUED','PROCESSING')",[result.status,result.salesOrderId,result.salesOrderNumber,nowMs,nowMs,intake.id]);
   if(op.affectedRows!==1||child.affectedRows!==1)throw salesError("CONCURRENT_OPERATION");
+  stageSalesIntake(tx,intake.source_type,({SUCCEEDED:"succeeded",DUPLICATE:"duplicate"})[result.status]);
  }
  async process(request){
   if(!request||Object.keys(request).some(key=>!["intakeOrderId","jobClaimToken","signal"].includes(key))||!Number.isSafeInteger(request.intakeOrderId)||request.intakeOrderId<1)throw salesError("SALES_INPUT_INVALID");
@@ -118,7 +122,7 @@ export class SalesIntakeService {
     const fence=await this.#fence(tx,signal),actor=await this.#actor(tx,original.intake);if(actor.id!==original.actor.id||actor.id===null&&actor.username!==original.actor.username)throw salesError("SALES_EVENT_CONFLICT");await this.#job(tx,original.intake,jobClaimToken,actor);const [[intake]]=await tx.query("SELECT * FROM sales_intake_orders WHERE id=? FOR UPDATE",[intakeOrderId]);
     if(!intake||intake.processing_event_id!==original.intake.processing_event_id||intake.payload_hash!==original.intake.payload_hash||!["QUEUED","PROCESSING"].includes(intake.status))throw salesError("CONCURRENT_OPERATION");
     await tx.execute("UPDATE sales_intake_orders SET status='FAILED',result_code=?,completed_at=?,updated_at=? WHERE id=?",[error.code,fence.nowMs,fence.nowMs,intakeOrderId]);await tx.execute("INSERT INTO sales_intake_errors (intake_order_id,row_no,field_path,error_code,safe_message,created_at) VALUES (?,?,?,?,?,?)",[intakeOrderId,intake.first_row_no,error.publicDetails?.field??"order",error.code,"來源訂單未能建立，請檢查指定欄位",fence.nowMs]);
-    await this.#endEffect(tx,intake,jobClaimToken,actor,signal,fence);return this.#result({...intake,status:"FAILED"});
+    stageSalesIntake(tx,intake.source_type,"failed");await this.#endEffect(tx,intake,jobClaimToken,actor,signal,fence);return this.#result({...intake,status:"FAILED"});
    },{signal,timeoutMs:this.config.transactionTimeoutMs});
   }
  }

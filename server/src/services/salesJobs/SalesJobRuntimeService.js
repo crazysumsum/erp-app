@@ -1,3 +1,5 @@
+import {SalesOperationalObservationService} from "../../modules/sales/SalesOperationalObservationService.js";
+import {getSalesObservationBaseline} from "../../modules/sales/salesOperationalBaseline.js";
 import {inspectSalesArchiveProtection} from "../../modules/sales/salesArchiveProtectionSchema.js";
 import {SalesArchiveService} from "../../modules/sales/SalesArchiveService.js";
 import {SalesArchiveBatchService} from "../../modules/sales/SalesArchiveBatchService.js";
@@ -63,6 +65,7 @@ export class SalesJobRuntimeService extends BaseService {
     const job=scheduler.jobs.get("sales.backorderAllocate");
     if(job?.serviceName!=="job.salesBackorderAllocation"||job.scope!=="cluster"||job.method!=="run")throw new Error("Sales Backorder job registration invalid");
     this.scheduler=scheduler;this.backorderJob=job;
+    this.observations=new SalesOperationalObservationService({database:this.services.require("mysqldatabase"),baselineHash:getSalesObservationBaseline(this.config),authorizeBackorder:()=>this.backorderPrincipal()});
     this.backorder=new SalesBackorderService({database:this.services.require("mysqldatabase"),time:this.services.require("time"),logger:this.logger,config:this.config?.sales,authorizeSalesBackorder:()=>this.backorderPrincipal()});
   }
   #activeBackorderJob() {
@@ -74,10 +77,22 @@ export class SalesJobRuntimeService extends BaseService {
     return signal?.aborted===false?{leaseOwner:this.scheduler.owner,signal}:null;
   }
   async allocateBackorders(signal) {
-    if(signal!==this.backorderPrincipal()?.signal)throw new Error("Sales Backorder worker unavailable");
-    let result;try{result=await this.backorder.runBatch({signal});}catch{throw new Error("Sales Backorder allocation failed");}
-    await this.logger.info("sales.backorder_allocation_completed","Backorder FIFO allocation batch completed",result);
-    if(result.deferred)throw new Error("Sales Backorder allocation incomplete");
+    const principal=this.backorderPrincipal();if(!principal||signal!==principal.signal)throw new Error("Sales Backorder worker unavailable");
+    // A durable START is an availability prerequisite only for this registered Backorder invocation.
+    const run=await this.observations.beginBackorderRun({signal});
+    let result;
+    try{
+      result=await this.backorder.runBatch({signal});
+      await this.logger.info("sales.backorder_allocation_completed","Backorder FIFO allocation batch completed",result);
+      if(result.deferred)throw new Error("Sales Backorder allocation incomplete");
+    }catch(error){
+      // Cancellation has revoked this worker's authority: preserve its unresolved START as UNKNOWN.
+      if(!signal.aborted)await this.observations.finishBackorderRun(run,"FAILED",{signal});
+      if(error?.message==="Sales Backorder allocation incomplete")throw error;
+      throw new Error("Sales Backorder allocation failed");
+    }
+    // Do not catch/relabel an indeterminate terminal commit as FAILED over a possibly durable SUCCEEDED.
+    await this.observations.finishBackorderRun(run,"SUCCEEDED",{signal});
     return result;
   }
   async wakeBackorders(request) {

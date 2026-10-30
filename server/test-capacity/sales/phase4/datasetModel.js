@@ -1,5 +1,5 @@
 // Test-data planning only. These numbers are not observed database counts or performance results.
-export const PHASE4_CAPACITY_BASELINE=Object.freeze({activeHeaders:7300000,externalKeys:25000000,archiveCandidates:300000,archiveBatchSize:500,interactiveUsers:50});
+export const PHASE4_CAPACITY_BASELINE=Object.freeze({activeHeaders:1000000,externalKeys:25000000,archiveCandidates:300000,archiveBatchSize:500,interactiveUsers:50});
 const distribution=[[1,245],[5,695],[20,59],[100,1]];
 function ordinal(value){if(!Number.isSafeInteger(value)||value<1)throw new TypeError("Positive safe dataset count required");}
 export function lineCountForOrdinal(value){ordinal(value);const offset=(value-1)%1000;return offset<245?1:offset<940?5:offset<999?20:100;}

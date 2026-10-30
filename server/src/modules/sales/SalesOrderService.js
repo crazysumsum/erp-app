@@ -1,3 +1,4 @@
+import {observeSalesDomain} from "./salesDomainObservations.js";
 import { CustomerLookupService } from "../customer/CustomerLookupService.js";
 import { ItemLookupService } from "../item/ItemLookupService.js";
 import { BusinessMasterProvider } from "../businessMaster/BusinessMasterProvider.js";
@@ -59,7 +60,7 @@ export class SalesOrderService {
     this.sequence=new SalesSequenceService({ time });this.operations=new SalesOperationService();this.audit=audit ?? new SalesAuditService();
   }
   authorizeWrite(claims) { return this.database.withTransaction(tx=>requireSalesWriteActor(tx,claims)).then(()=>true); }
-  create(request) { return this.#save(request,false); }
+  create(request) { return observeSalesDomain(this.database,"create_order",()=>this.#save(request,false)); }
   update(request) { return this.#save(request,true); }
   async #save({ claims, input, id, trace = {} }, update) {
     if(update && (!Number.isSafeInteger(id)||id<1))throw salesError("SALES_INPUT_INVALID",{field:"id"});

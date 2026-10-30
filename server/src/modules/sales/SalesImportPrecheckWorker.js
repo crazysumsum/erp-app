@@ -1,3 +1,4 @@
+import {runObservedSalesTransaction,stageSalesIntake} from "./salesTransactionObservations.js";
 import {requireSalesImportWorker} from "./salesAuthorization.js";
 import {constants} from "node:fs";
 import {randomUUID,createHash} from "node:crypto";
@@ -25,7 +26,7 @@ export class SalesImportPrecheckWorker {
   return {id:Number(userId),username:user.username};
  }
  async #transaction(claim,signal,work) {
-  return this.database.withTransaction(async tx=>{
+  return runObservedSalesTransaction(this.database,async tx=>{
    const fence=await this.#lease(tx,signal),[[job]]=await tx.query("SELECT * FROM sales_import_jobs WHERE id=? FOR UPDATE",[claim.id]);
    if(!job||job.status!=="VALIDATING"||job.lease_owner!==claim.token||Number(job.lease_until)<=fence.nowMs)throw salesError("CONCURRENT_OPERATION");
    await this.#actor(tx,job.created_by);const result=await work(tx,job,fence.nowMs);
@@ -35,7 +36,7 @@ export class SalesImportPrecheckWorker {
  }
  async runBatch({signal}={}) {
   const principal=await this.authorize?.();if(!principal||signal!==principal.signal||signal?.aborted!==false)throw salesError("SALES_DEPENDENCY_UNAVAILABLE");
-  const token=randomUUID(),claim=await this.database.withTransaction(async tx=>{
+  const token=randomUUID(),claim=await runObservedSalesTransaction(this.database,async tx=>{
    const {nowMs}=await this.#lease(tx,signal),[[job]]=await tx.query(`SELECT j.* FROM sales_import_jobs j WHERE j.status IN ('UPLOADED','VALIDATING') AND j.source_file_path<>''
     AND EXISTS (SELECT 1 FROM users u WHERE u.id=j.created_by AND u.status='active'
      AND (SELECT COUNT(DISTINCT p.name) FROM user_roles ur JOIN role_permissions rp ON rp.role_id=ur.role_id JOIN permissions p ON p.id=rp.permission_id
@@ -70,6 +71,7 @@ export class SalesImportPrecheckWorker {
     const results=groups.length?await precheckSalesOrders({tx,groups,customers:this.customers,items:this.items,config:this.config,nowMs}):[];
     for(let index=0;index<results.length;index++){
      const result=results[index],row=selected[index];
+     stageSalesIntake(tx,"CSV",({VALID:"accepted",INVALID:"invalid",DUPLICATE:"duplicate"})[result.status]);
      if(result.payloadHash!==row.payload_hash)throw salesError("SALES_SOURCE_HASH_COLLISION");
      await tx.execute("UPDATE sales_intake_orders SET status=?,safe_payload=?,external_order_key_id=?,sales_order_id=?,sales_order_number=?,result_code=?,updated_at=? WHERE id=? AND status='RECEIVED'",[result.status,result.payload?JSON.stringify(result.payload):null,result.duplicate?.externalOrderKeyId??null,result.duplicate?.salesOrderId??null,result.duplicate?.salesOrderNumber??"",result.errors[0]?.code??"",nowMs,row.id]);
      await this.#errors(tx,row.id,result.errors,nowMs);
@@ -87,7 +89,7 @@ export class SalesImportPrecheckWorker {
    throw error;
   }finally{
    // A stopped/lost principal cannot change ownership; its durable claim expires for the next registered worker.
-   if(!signal.aborted)await this.database.withTransaction(async tx=>{
+   if(!signal.aborted)await runObservedSalesTransaction(this.database,async tx=>{
     const {nowMs}=await this.#lease(tx,signal);await tx.execute("UPDATE sales_import_jobs SET lease_owner=NULL,lease_until=NULL,updated_at=? WHERE id=? AND lease_owner=?",[nowMs,claim.id,claim.token]);
    },{signal,timeoutMs:this.config.transactionTimeoutMs});
   }
@@ -111,6 +113,7 @@ export class SalesImportPrecheckWorker {
     if(!missing.length)continue;
     await tx.execute(`INSERT INTO sales_intake_orders (import_job_id,source_type,source_order_key,source_order_key_hash,channel_code,external_order_id,external_order_id_hash,schema_version,payload_hash,safe_payload,
      first_row_no,last_row_no,line_count,status,processing_event_id,created_at,updated_at) VALUES ${missing.map(()=>"(?,'CSV',?,?,?,?,?,'1.0',?,?,?,?,?,?,?,?,?)").join(",")}`,missing.flatMap(({group,hash,sourceHash,errors,eventId})=>[claim.id,group.sourceOrderKey,sourceHash,group.channelCode,group.externalOrderId,salesSourceHash(group.externalOrderId),hash,errors.length?null:JSON.stringify(group.payload),group.firstRowNo,group.lastRowNo,Math.max(1,Math.min(100,group.payload.lines.length)),errors.length?"INVALID":"RECEIVED",eventId,nowMs,nowMs]));
+    stageSalesIntake(tx,"CSV","received",missing.length);stageSalesIntake(tx,"CSV","invalid",missing.filter(member=>member.errors.length>0).length);
     const [inserted]=await tx.query(lookup,args),actual=new Map(inserted.map(row=>[Buffer.from(row.source_order_key_hash).toString("hex"),row]));
     for(const member of missing){const row=actual.get(member.sourceHash.toString("hex"));if(!row||row.source_order_key!==member.group.sourceOrderKey||row.payload_hash!==member.hash||row.processing_event_id!==member.eventId)throw salesError("SALES_SOURCE_HASH_COLLISION");await this.#errors(tx,row.id,member.errors,nowMs);}
    }

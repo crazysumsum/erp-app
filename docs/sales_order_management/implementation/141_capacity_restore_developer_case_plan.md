@@ -54,3 +54,26 @@ A controlled accelerated drain may call the actual registered Scheduler/worker r
 ## Exit rules and provenance
 
 Each result binds actual installed source/spec/runtime/data/checkpoint hashes and the complete sample population. No benchmark PASS from static review, small pilot, fake provider, empty table, cached count, disabled worker or ignored failures. Preparation can proceed while DEC035 shared observation scope is pending; final execution/Task063/Phase completion requires the approved dependency DoD and complete current candidate. The original metrics/pool/engine/history/stock and remaining feature gaps remain visible. Large-seed case authoring does not waive or pre-approve a future implementation direction.
+
+## DATA001 prototype capture before bulk
+
+Existing native producer evidence is retained; a single bounded owned fixture run now additionally captures durable synthetic legal graph templates required by the bulk projection generator. Actual service create/confirm/cancel/close/Quotationissue+conversion, realCSVupload/precheck/confirm/registeredworker and ChannelV1 acceptance+sameprivateworker are exercised for1/5/20/100lines. Zero/partial/fullstock use explicitcontrolledsyntheticopening balances; confirmations/Inventory effects are real. Channelidentity is an ownedcontrolledadapter, not a claim of externalproductionauthentication; owneroriginalgraph remains controlledfixtureprojection, not a claim of fullshippingbusiness. Source/event replays and all36newroot readonlyreconciliations mustPASS. A separatecontrolledhistorical-clockmanualproducer and recoveredpendingArchivebatch use the actualregisteredprivateArchiveworker; verify all18class rowhash/copy/source-removal andbotharchivedroot reconciliation, withoutaltering DB/globalclock/guard/500cap/600sdeadline. No bulk seed or performanceSLO/capacityclaim from this case.
+
+Capture only the freshownednonce schemas syntheticbusiness/master rows withper-table10000/total50000bounds, column/FK metadata andminimalactor identity (no password/token/bankaccount tables). Retain sourcefile copies privately withhashes; closeapp anddeleteonlyexactownedmanagedstorage+existingfixtureownedschema. Bind source/spec/case/runner hashes, ownedruntime/socketUUID, actualonecasezeroFAIL/SKIP and lowCPU nice10/serial. Layout/field-remapping/cardinality/pilotallocation require separateactualtechnicalreview beforebulk, undertheexistingplan; no newobservabilityframework or metadatarefactor.
+
+## DATA001 observed developer result
+
+2026-10-27 UTC, candidate3ef50098/sourcec2fc4515: final r4 one case PASS, zeroFAIL/SKIP (5.395s); independent scoped postexecution review passed. Captured36cohorts (32actualwriter graphs,4controlled complete consumed-reference graphs, explicitly not real shipping/Inventory issue), all36readonlyreconcile CONSISTENT. Actual registered Archive moved2roots; all18classes/27rows passed independent hash recheck;235FKgroups/15586non-null reference tuples and5retained private file hashes verified. No fullcapacity, disk admission, restore, CI or wholeP4Gate claim.
+
+Original r1/r2 functional setup failures remain preserved. r3 rawPASS was not accepted as complete because MySQL metadata uppercase field names made FK closure vacuous; r4 explicit aliases plus nonempty assertions corrected the test. The closed-reference snapshots now include consistent consumed Inventory reservations/mappings, stock balance/control quantities and version evolution before actual closeRemaining; no business rule changed. Evidence remains private under phase4-private/p4-capacity-prototype-native-r1…r4, capacity-prototype-capture-r4 and capacity-prototype-code-retained-r4. Final proof SHA146447e8032ea3a5840a005c2a334066fb53aa2b9931765824c39fc2c30297ca.
+
+## DATA002 observed pilot / fullvolume admission
+
+2026-10-28 UTC, candidate3ef50098/sourcec2fc4515: bounded real-writer pilot1PASS/0FAIL/0SKIP in242.38s;1000Active/5000lines with exact245/695/59/1histogram,3425validkeys,2625Archiveexternal targets,all3625neworders readonlyreconciled. Dedicated socket-only nice10 runtime, InnoDBconcurrency2,actual1.125GiB bufferpool, normaldurablebinlogs andrealworker600sdeadline. Archivepartition built with explicitlycontrolledpendingcutoff solelyforphysicalallocation, notTC054retention/fullmonthlyclaim; alloriginalformalworkloads remain. Actual sourcefile/proof/scripts retained privately in capacity-pilot-code-and-review-retained-r1 and pilot output directories.
+
+Fullvolume storage admission BLOCKED under both conservative extent and used-page sensitivity planning estimates (approximately6.347TiB/4.031TiB inclusivecurrentnormalpolicy), versus378.85GiB available after100GiBreserve. These are pilot extrapolations, not measured minimum/fullvolume results. DEC039 resource proposal154 preserves allthresholds/load andseparates source/backup/independentrestore/files/two-sidedbinlogs/runtime/recoverymargin. No fullseed orrestoreexecution/CI/wholeP4Gate PASS has been claimed.
+
+
+## DEC-040 current execution scope
+
+Sam直接指示「災難還原測試不用做」：本輪P4不執行DEV-P4-REST-001～004／TC-056～059，不作PASS。保留上述歷史case定義與證據；容量DEV-P4-DATA/CAP及所有其他回歸/Archive integrity/CI/review不變。移除DR用完整backup/獨立restore副本/restore-generated binlog與額外files預算，舊6.5TiB建議不再適用；capacity-only正常seedlog保留假設下暫估1.803～2.516TiB（非最低／實測fullvolume需求），見155決策及private容量only重算。

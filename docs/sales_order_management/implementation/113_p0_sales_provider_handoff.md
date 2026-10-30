@@ -117,3 +117,15 @@ R2 review `p0-task004-provider-wire-r2-engineering-review.json` SHA256 `ccc6fc34
 Actual Sam A adoption of proposal b908c56a… is verified directly in owner chat userMessage `01a15c33-caa1-7ac1-a2b7-d7c2eac3052e`, not inferred from the coordinator's report. Canonical Sales DES4.10 now preserves its original refresh sentence and states the explicit narrow exception. The earlier wire notes remain historical; current interpretation distinguishes CLAIM `expectedVersion` = Sales last-sync from the separate Inventory command current CAS. Shipment `expectedVersion` = Inventory current CAS; last-sync is only a lower bound, with real owner CAS/receipt/counter proof and old Sales mapping CAS retained. Neither version number nor the allowed gap proves quantity-neutral drift.
 
 Only unchanged Reservation quantities/status during Allocation/Release/Reallocate may defer Sales version sync. Actual Inventory current-state/scope/counter/version validation and active-claim upper bounds remain mandatory for Create/Update. No new caller flag, permission, sync endpoint, direct other-owner Sales write or Gate exception is introduced. Every quantity-changing event still synchronizes atomically; unexplained quantity drift rejects. Real repeated-flow diagnostics do not replace the reviewed complete P0 caller implementation or full Gate.
+
+## 共用 coverage discovery／namespace 接線交接（2026-10-29）
+
+這是現有 Sales 候選的最小測試入口修正，供 Inventory 採用相同原則；不是新框架或修改 Inventory 工作區的授權。尚未發送額外跨 chat 訊息。
+
+- `server/package.json`：ordinary `test` 與完整 `test:coverage` 使用明確單一引號 glob `'**/*.test.{js,mjs,cjs,ts,mts,cts}'`。Node26原預設548檔會獨立收集24個helper／child；明確集合保留全部524真實test files。fixture／child仍由實際父案例呼叫，沒有刪除真測試。原global92/83/90與原per-file檢查命令保留。
+- `.github/workflows/ci.yml`：四個 native coverage shard收到同一glob；MySQL service只增加100000個digest startup設定，其他原服務參數保留。必須核實當前CI實際啟動與輸出；local500000 owned coverage容量不能冒充CI100000已足夠的證明。
+- namespace修正採用原有guard的合規輸入：Sales owned coverage base `fulfillment_p0_sales_cov`（24字元）、原Fulfillment socket前綴，TCP與socket實際連到同一UUID。沒有放寬共享fixture的長度、namespace、socket或auth guard。其他owner應用自己的受控namespace／socket／實際UUID及資料證明，不能照抄Sales本機固定UUID／port分支。
+- `archiveApplicationChild.js`保留原local guard；僅另認定CI原父fixture生成的精確`erp_dev_sf_<12hex>`＋`GITHUB_ACTIONS=true`＋原127.0.0.1及CI socket組合。22個真實registered Archive父案例已實跑，child不再獨立當測試。
+- 採用前一次核對producer→shard→coverage合併報告的實際路徑、524檔集合與父子調用、原環境allowlist／JWT／fresh actor、namespace/socket/UUID與低CPU傳遞。只在instrumented coverage lane沿用原CI兩個capacity-separate旗標；原native CSV及四組uninstrumented容量Gate不得帶該旗標。
+
+限定實證：`phase4-private/legacy-native-alignment-r1/probes-r2/receipt.json`原139項PASS，`ordinary-entry-r1/glob-enumeration.json`為純檔名枚舉，二者不互相冒充完整coverage或Inventory結果。獨立closing review f356131b…核對全source bridge、524集合、原guard與歷史核准；完整coverage／當前head CI仍必須實際取得。TC060是Sales測試同步的單一修正，無需Inventory複製另一套scheduler工具。

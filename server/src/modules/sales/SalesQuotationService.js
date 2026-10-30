@@ -1,3 +1,4 @@
+import {observeSalesDomain} from "./salesDomainObservations.js";
 import { randomUUID } from "node:crypto";
 import { formatDateForFile } from "../../services/time/timeFormat.js";
 import { salesPayloadHash } from "./salesCanonicalHash.js";
@@ -94,7 +95,7 @@ export class SalesQuotationService {
     this.sequence = new SalesSequenceService({ time }); this.operations = new SalesOperationService(); this.audit = audit ?? new SalesAuditService();
   }
   authorizeWrite(claims) { return this.database.withTransaction(tx => requireSalesWriteActor(tx, claims)).then(() => true); }
-  create(request) { return this.#save(request, false); }
+  create(request) { return observeSalesDomain(this.database,"create_quotation",()=>this.#save(request, false)); }
   update(request) { return this.#save(request, true); }
 
   async get({ claims, id }) {
@@ -226,7 +227,8 @@ export class SalesQuotationService {
     return { salesOrder: { id: Number(order.id), number: order.sales_order_number, status: order.status, version: Number(order.version), isArchived: archived },
       differenceSummary: typeof row.difference_summary === "string" ? JSON.parse(row.difference_summary) : row.difference_summary };
   }
-  async convert({ claims, input, id, trace = {} }) {
+  convert(request){return observeSalesDomain(this.database,"convert_quotation",()=>this.#convert(request));}
+  async #convert({ claims, input, id, trace = {} }) {
     const command = validateQuotationLifecycle(input, "CONVERT");
     if (Object.hasOwn(command.order, "eventId")) throw salesError("SALES_INPUT_INVALID", { field: "order" });
     const { document, warnings } = validateSalesDocument({ ...command.order, eventId: command.eventId });

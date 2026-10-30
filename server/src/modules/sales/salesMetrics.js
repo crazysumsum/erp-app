@@ -20,7 +20,8 @@ export function salesQueueAlerts(metrics){
  if(i.oldestAgeMs!==null&&i.oldestAgeMs>SALES_METRIC_THRESHOLDS.intakeAgeMs)add("intake_overdue","error",{pending:i.pending,oldestAgeMs:i.oldestAgeMs,thresholdMs:SALES_METRIC_THRESHOLDS.intakeAgeMs});
  if(metrics.imports.unobservedStandardBatches)add("import_batch_time_unobserved","warn",{count:metrics.imports.unobservedStandardBatches});
  if(metrics.imports.overdueStandardBatches)add("import_batch_overdue","error",{count:metrics.imports.overdueStandardBatches,thresholdMs:SALES_METRIC_THRESHOLDS.standardImportMs});
- if(b.lastSuccessAgeMs===null||!b.historyComplete&&b.lastSuccessAgeMs>SALES_METRIC_THRESHOLDS.backorderSuccessAgeMs)add("backorder_success_unobserved","warn",{});
+ if(b.historyComplete&&b.noSuccessOver24h===true)add("backorder_job_overdue","error",{lastSuccessAgeMs:b.lastSuccessAgeMs,thresholdMs:SALES_METRIC_THRESHOLDS.backorderSuccessAgeMs,historyComplete:true});
+ else if(b.lastSuccessAgeMs===null||!b.historyComplete&&b.lastSuccessAgeMs>SALES_METRIC_THRESHOLDS.backorderSuccessAgeMs)add("backorder_success_unobserved","warn",{});
  else if(b.lastSuccessAgeMs>SALES_METRIC_THRESHOLDS.backorderSuccessAgeMs)add("backorder_job_overdue","error",{lastSuccessAgeMs:b.lastSuccessAgeMs,thresholdMs:SALES_METRIC_THRESHOLDS.backorderSuccessAgeMs});
  if(a.enabled&&a.windowOverdue===null)add("archive_window_unobserved","warn",{});
  else if(a.enabled&&a.windowOverdue)add("archive_window_overdue","error",{graceMs:DAY});

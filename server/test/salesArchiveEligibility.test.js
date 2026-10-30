@@ -8,7 +8,7 @@ const valid = () => ({ status: "CLOSED", lastBusinessUpdatedAt: cutoffMs - 1, cu
   fulfillment: { status: "CLOSED", reasonCodes: [] } });
 
 for (const status of ["COMPLETED", "CLOSED", "CANCELLED"]) {
-  test(`archive eligibility accepts finalized ${status} only with every observed predicate closed`, () => {
+  test(`TC-047 archive eligibility accepts finalized ${status} only with every observed predicate closed`, () => {
     assert.deepEqual(evaluateSalesArchiveEligibility({ ...valid(), status }), { eligible: true, reasonCodes: [] });
   });
 }

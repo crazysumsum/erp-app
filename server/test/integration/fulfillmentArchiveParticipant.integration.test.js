@@ -35,7 +35,7 @@ nativeTest("DEC029 prepare manifests all12 real owner classes without mutation o
   for(const {table}of FULFILLMENT_ARCHIVE_CONTRACTS){const expected=hashFulfillmentArchiveTable(table,before[table]);assert.equal(manifest.tableCounts[table],expected.count);assert.equal(manifest.hashSummary[table],expected.hash);assert.ok(expected.count>0,table);}
  });assert.deepEqual(await snapshot(f),before);
 });
-nativeTest("DEC029 all12 copy/readback/route/delete and pointer clearing roll back on a late caller failure",async t=>{
+nativeTest("TC-048 DEC029 all12 copy/readback/route/delete and pointer clearing roll back on a late caller failure",async t=>{
  const f=await fixture(t),before=await snapshot(f);await assert.rejects(()=>f.run(async tx=>{
   const expectedManifest=await f.participant.prepareOrderInTransaction(tx,f.scope),result=await f.participant.archiveOrderInTransaction(tx,{...f.scope,archivedAtMs:f.now,expectedManifest});assert.equal(result.outcome,"ARCHIVED");
   for(const {table}of FULFILLMENT_ARCHIVE_CONTRACTS){assert.equal(Number((await tx.query(`SELECT COUNT(*) AS n FROM ${table}`))[0][0].n),0,table);const [rows]=await tx.query(`SELECT * FROM ${table}_archive ORDER BY id`);assert.equal(rows.length,before[table].length);assert.equal(hashFulfillmentArchiveTable(table,rows).hash,expectedManifest.hashSummary[table]);for(const row of rows)assert.equal(row.row_hash,hashFulfillmentArchiveRow(table,row));}
@@ -70,7 +70,7 @@ async function fixtureCopySalesAndManifest(tx,f,owner){
  assert.ok(counts.sales_audit_logs>0,"Native fixture must copy its real lifecycle ORDER audit");assert.equal(Number((await tx.query("SELECT COUNT(*) AS n FROM sales_audit_logs WHERE target_type='ORDER' AND target_id=?",[f.s.orderId]))[0][0].n),0);
  await tx.execute("INSERT INTO sales_archive_order_manifests(archive_batch_id,sales_order_id,sales_order_number,sales_table_counts,sales_hash_summary,fulfillment_table_counts,fulfillment_hash_summary,participant_versions,archived_at) VALUES (?,?,?,?,?,?,?,?,?)",[f.scope.archiveBatchId,f.s.orderId,rowsByTable.sales_orders[0].sales_order_number,JSON.stringify(counts),JSON.stringify(hashes),JSON.stringify(owner.tableCounts),JSON.stringify(owner.hashSummary),JSON.stringify({sales:"1",fulfillment:"1"}),f.now]);
 }
-nativeTest("DEC029 complete owner and Sales persisted facts replay without another write or Inventory effect",async t=>{
+nativeTest("TC-049 DEC029 complete owner and Sales persisted facts replay without another write or Inventory effect",async t=>{
  const f=await fixture(t),inventory=(await f.db.query("SELECT * FROM inventory_reservations ORDER BY id"))[0];let expected;
  await f.run(async tx=>{expected=await f.participant.prepareOrderInTransaction(tx,f.scope);await f.participant.archiveOrderInTransaction(tx,{...f.scope,archivedAtMs:f.now,expectedManifest:expected});await fixtureCopySalesAndManifest(tx,f,expected);});
  const before=await snapshot(f);
@@ -111,7 +111,7 @@ for(const full of [false,true])nativeTest(`DEC029 identical ${full?"full":"parti
  const f=await fixture(t);await seedIdenticalMirrors(f,full);const before=await snapshot(f);
  await assert.rejects(()=>f.run(async tx=>{const expectedManifest=await f.participant.prepareOrderInTransaction(tx,f.scope),result=await f.participant.archiveOrderInTransaction(tx,{...f.scope,archivedAtMs:f.now,expectedManifest});assert.equal(result.outcome,"ARCHIVED");for(const {table}of FULFILLMENT_ARCHIVE_CONTRACTS){const [rows]=await tx.query(`SELECT * FROM ${table}_archive ORDER BY id`);assert.equal(hashFulfillmentArchiveTable(table,rows).hash,expectedManifest.hashSummary[table]);assert.equal(Number((await tx.query(`SELECT COUNT(*) AS n FROM ${table}`))[0][0].n),0);}throw new Error("Synthetic resumed owner rollback");}),error=>error.cause?.message==="Synthetic resumed owner rollback");assert.deepEqual(await snapshot(f),before);
 });
-for(const table of ["fulfillments","shipments"])nativeTest(`DEC029 locked ${table} exact owner retention cutoff is not eligible`,async t=>{
+for(const table of ["fulfillments","shipments"])nativeTest(`TC-047 DEC029 locked ${table} exact owner retention cutoff is not eligible`,async t=>{
  const f=await fixture(t),id=table==="fulfillments"?f.doc.id:f.shipment;await f.db.execute(`UPDATE ${table} SET last_business_updated_at=?,version=version+1 WHERE id=?`,[f.scope.cutoffMs,id]);const before=await snapshot(f);await assert.rejects(()=>f.run(tx=>f.participant.prepareOrderInTransaction(tx,f.scope)),error=>error.cause?.code==="FULFILLMENT_ARCHIVE_NOT_ELIGIBLE");assert.deepEqual(await snapshot(f),before);
 });
 

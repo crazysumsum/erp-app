@@ -32,6 +32,33 @@ integrationTest("TC-044 Outstanding real HTTP excludes Draft and returns committ
  assert.equal((await request(path+"&page=2&pageSize=1")).body.data.items.length,0);
  assert.equal((await request(path+"&sortBy=constructor")).status,400);assert.equal((await request(path,{auth:false})).status,401);
 });
+integrationTest("TC-044 Outstanding scalar lookup preserves former EXISTS results for missing, zero and later qualifying lines",{timeout:45000},async t=>{
+ const f=await exportFixture(t),service=new SalesInquiryService(f),request=await http(f),sku=await f.insert("item_skus",{item_id:f.itemId,sku_code:"p4-outstanding-"+randomUUID(),sku_name:"Later synthetic",status:"active",sellable:1,created_at:f.now,updated_at:f.now});
+ const [[uom]]=await f.db.query("SELECT uom_id FROM item_sku_uoms WHERE id=?",[f.skuUomId]),skuUom=await f.insert("item_sku_uoms",{sku_id:sku,uom_id:uom.uom_id,to_base_factor:1,is_base:1,is_default_sale:1,created_at:f.now,updated_at:f.now});
+ const make=async(twoLines=false)=>(await new SalesOrderService(f).create({claims:f.claims,input:{eventId:randomUUID(),customerId:f.customerId,currencyCode:f.currency,fulfillmentWarehouseId:f.warehouseId,orderDate:f.time.fileDate(),lines:[{skuId:f.skuId,skuUomId:f.skuUomId,quantity:"10.000000",unitSellingPrice:"1.0000"},...(twoLines?[{skuId:sku,skuUomId:skuUom,quantity:"2.000000",unitSellingPrice:"1.0000"}]:[])]}})).salesOrder;
+ const missing=await make(),zero=await make(),multiple=await make(true),later=await make(true);
+ // Deliberately inconsistent read fixtures prove the query does not substitute Header status for Line existence/remaining quantities.
+ await f.db.execute("UPDATE sales_orders SET status='CONFIRMED' WHERE id IN (?,?,?)",[missing.id,zero.id,multiple.id]);
+ await f.db.execute("UPDATE sales_orders SET status='PARTIALLY_FULFILLED' WHERE id=?",[later.id]);
+ await f.db.execute("DELETE FROM sales_order_lines WHERE sales_order_id=?",[missing.id]);
+ await f.db.execute("UPDATE sales_order_lines SET cancelled_base_quantity=ordered_base_quantity WHERE sales_order_id=?",[zero.id]);
+ await f.db.execute("UPDATE sales_order_lines SET fulfilled_base_quantity=ordered_base_quantity WHERE sales_order_id=? AND line_no=1",[later.id]);
+ const oracle="FROM sales_orders WHERE customer_id=? AND status IN ('CONFIRMED','PARTIALLY_FULFILLED') AND EXISTS (SELECT 1 FROM sales_order_lines l WHERE l.sales_order_id=sales_orders.id AND l.ordered_base_quantity>l.fulfilled_base_quantity+l.cancelled_base_quantity)",base={customerId:f.customerId,view:"outstanding"};
+ const [original]=await f.db.query("SELECT id "+oracle,[f.customerId]);assert.deepEqual(original.map(x=>Number(x.id)).sort((a,b)=>a-b),[multiple.id,later.id].sort((a,b)=>a-b));
+ for(const descending of [false,true]){
+  const direction=descending?"DESC":"ASC",[expected]=await f.db.query(`SELECT id,sales_order_number ${oracle} ORDER BY sales_order_number ${direction},id ${direction}`,[f.customerId]);
+  for(const page of [1,2,3]){
+   const input={...base,sortBy:"number",descending,page,pageSize:1},actual=await service.list({claims:f.claims,input}),wire=await request(`/api/v1/outstanding-sales-orders?customerId=${f.customerId}&sortBy=number&descending=${descending}&pageSize=1&page=${page}`);
+   assert.equal(actual.total,2);assert.deepEqual(actual.items.map(x=>x.id),expected.slice(page-1,page).map(x=>Number(x.id)));assert.equal(wire.status,200,JSON.stringify(wire.body));assert.equal(wire.body.data.total,2);assert.deepEqual(wire.body.data.items.map(x=>x.id),actual.items.map(x=>x.id));
+  }
+  const job=await f.exports.create({claims:f.claims,eventId:randomUUID(),input:{scope:"ACTIVE",filters:{...base,sortBy:"number",descending}}}),row=await f.run(job.id);assert.equal(row.status,"COMPLETED");const csv=parse(await readFile(path.join(f.exports.root,row.file_path),"utf8"),{bom:true,columns:true});assert.deepEqual(csv.map(x=>x.number),expected.map(x=>x.sales_order_number));
+  assert.equal(csv.find(x=>x.number===later.number).outstandingBaseQuantity,"2");
+ }
+ for(const filters of [{number:later.number},{status:["PARTIALLY_FULFILLED"]},{sourceType:["CSV"]},{status:["DRAFT"]},{warehouseId:f.warehouseId,sourceType:["MANUAL"],hasBackorder:false}]){
+  const actual=await service.listOutstanding({claims:f.claims,input:{...base,...filters}}),expected=filters.sourceType?.[0]==="CSV"||filters.status?.[0]==="DRAFT"?[]:filters.number||filters.status?[later.id]:[multiple.id,later.id];
+  assert.equal(actual.total,expected.length);assert.deepEqual(actual.items.map(x=>x.id).sort((a,b)=>a-b),expected.sort((a,b)=>a-b));
+ }
+});
 integrationTest("TC-044 common views filter current actor and finalized states with fresh authorization",async t=>{
  const f=await setup(t),service=new SalesInquiryService(f),base={customerId:f.customerId};
  const other=await f.insert("users",{username:"p4-view-"+randomUUID(),password_hash:"synthetic",display_name:"Synthetic",created_at:f.now,updated_at:f.now});await f.db.execute("INSERT INTO user_roles(user_id,role_id) VALUES(?,?)",[other,f.roleId]);f.beforeParents.push(()=>f.db.execute("DELETE FROM user_roles WHERE user_id=?",[other]));
@@ -97,6 +124,12 @@ integrationTest("TC-045 Export keyset spans pages without truncation or duplicat
   const direction=descending?"DESC":"ASC",[expected]=await f.db.query(`SELECT sales_order_number FROM sales_orders WHERE customer_id=? ORDER BY ${column} ${direction},id ${direction}`,[f.customerId]);assert.deepEqual(csv.map(x=>x.number),expected.map(x=>x.sales_order_number),sortBy+direction);
   if(sortBy==="totalAmount")assert.deepEqual(descending?csv.slice(0,3).map(x=>x.totalAmount):csv.slice(-3).map(x=>x.totalAmount),descending?["100.0000","10.0000","2.0000"]:["2.0000","10.0000","100.0000"]);
  }
+ await f.db.execute("UPDATE sales_orders SET status='CONFIRMED' WHERE customer_id=?",[f.customerId]);
+ for(const descending of [false,true]){
+  const created=await f.exports.create({claims:f.claims,eventId:randomUUID(),input:{scope:"ACTIVE",filters:{customerId:f.customerId,view:"outstanding",sortBy:"number",descending}}}),row=await f.run(created.id);assert.equal(row.status,"COMPLETED");assert.equal(Number(row.row_count),5005);
+  const csv=parse(await readFile(path.join(f.exports.root,row.file_path),"utf8"),{bom:true,columns:true}),direction=descending?"DESC":"ASC",[expected]=await f.db.query(`SELECT sales_order_number FROM sales_orders WHERE customer_id=? AND status IN ('CONFIRMED','PARTIALLY_FULFILLED') AND EXISTS (SELECT 1 FROM sales_order_lines l WHERE l.sales_order_id=sales_orders.id AND l.ordered_base_quantity>l.fulfilled_base_quantity+l.cancelled_base_quantity) ORDER BY sales_order_number ${direction},id ${direction}`,[f.customerId]);
+  assert.deepEqual(csv.map(x=>x.number),expected.map(x=>x.sales_order_number));assert.equal(new Set(csv.map(x=>x.number)).size,5005);
+ }
 });
 
 integrationTest("TC-045 Export row cap fails without publishing a truncated CSV",{timeout:45000},async t=>{
@@ -131,14 +164,23 @@ integrationTest("TC-045 Export stale claim cannot publish or overwrite a success
  const row=await f.run(created.id);assert.equal(injected,true);assert.equal(row.status,"PROCESSING");assert.equal(row.lease_owner,successor);assert.equal(row.file_path,"");assert.deepEqual(await readdir(path.join(f.exports.root,String(created.id))),[]);const [[audit]]=await f.db.query("SELECT COUNT(*) AS n FROM sales_audit_logs WHERE actor_user_id=? AND action='sales_export.completed'",[f.userId]);assert.equal(Number(audit.n),0);
 });
 
-integrationTest("TC-050 bounded nonempty Archive Export reads only immutable header and line projections",{timeout:45000},async t=>{
- const {ownedArchiveExportFixture}=await import("../sales/phase4/ownedArchiveExportFixture.js"),f=await ownedArchiveExportFixture(t);await new SalesOrderLifecycleService(f).cancel({claims:f.claims,id:f.request.id,input:{eventId:randomUUID(),version:1,reason:"Synthetic Archive read fixture"}});
- const batch=await f.insert("sales_archive_batches",{batch_number:"TEST-"+randomUUID().slice(0,20),period_key:"209901",cutoff_at:f.now,status:"COMPLETED",started_at:f.now,updated_at:f.now}),[[order]]=await f.db.query("SELECT * FROM sales_orders WHERE id=?",[f.request.id]),[[line]]=await f.db.query("SELECT * FROM sales_order_lines WHERE sales_order_id=?",[f.request.id]),archivedId=Number(order.id)+8000000000;
- // This is a synthetic read-store fixture, without invoking or qualifying Archive movement/providers.
- // Guarded permanent rows are retained until the fixture closes pools and drops only its owned schema.
- await f.db.query("INSERT INTO sales_orders_archive SET ?",{...order,id:archivedId,sales_order_number:"SO-209901-999999",customer_name_snapshot:"Archive-only",archive_batch_id:batch,archived_at:f.now,row_hash:"a".repeat(64)});
- await f.db.query("INSERT INTO sales_order_lines_archive SET ?",{...line,id:Number(line.id)+8000000000,sales_order_id:archivedId,archive_batch_id:batch,archived_at:f.now,row_hash:"b".repeat(64)});
- const created=await f.exports.create({claims:f.claims,eventId:randomUUID(),input:{scope:"ARCHIVE",filters:{customerId:f.customerId}}}),row=await f.run(created.id),csv=parse(await readFile(path.join(f.exports.root,row.file_path),"utf8"),{bom:true,columns:true});assert.equal(row.status,"COMPLETED");assert.equal(csv.length,1);assert.equal(csv[0].number,"SO-209901-999999");assert.equal(csv[0].customerName,"Archive-only");assert.equal(csv[0].cancelledBaseQuantity,"10");assert.equal(csv[0].outstandingBaseQuantity,"0");
+integrationTest("TC-050 bounded nonempty Archive Export reads only complete immutable header and line projections",{timeout:45000},async t=>{
+ const {ownedArchiveExportFixture}=await import("../sales/phase4/ownedArchiveExportFixture.js"),{SALES_ARCHIVE_COLUMNS,hashSalesArchiveRow}=await import("../../src/modules/sales/salesArchiveHash.js"),{SalesArchiveInquiryService}=await import("../../src/modules/sales/SalesArchiveInquiryService.js"),{salesArchiveWindow}=await import("../../src/modules/sales/SalesArchiveBatchService.js"),f=await ownedArchiveExportFixture(t,{archiveEnabled:true});
+ const [[parent]]=await f.db.query("SELECT currency_code,fulfillment_warehouse_id FROM sales_orders WHERE id=?",[f.request.id]),[[sku]]=await f.db.query("SELECT sku_id,sku_uom_id FROM sales_order_lines WHERE sales_order_id=?",[f.request.id]),clock=f.time.clock;let historical;
+ // Real create/cancel producers under an explicitly historical fixture clock; current Scheduler/DB clocks are restored before the measured worker.
+ f.time.clock=()=>new Date("2023-11-15T12:00:00+08:00");
+ try{const created=await new SalesOrderService(f).create({claims:f.claims,input:{eventId:randomUUID(),customerId:f.customerId,currencyCode:parent.currency_code,fulfillmentWarehouseId:Number(parent.fulfillment_warehouse_id),orderDate:f.time.fileDate(),lines:[{skuId:Number(sku.sku_id),skuUomId:Number(sku.sku_uom_id),quantity:"10.000000",unitSellingPrice:"1.0000"}]}});historical=(await new SalesOrderLifecycleService(f).cancel({claims:f.claims,id:created.salesOrder.id,input:{eventId:randomUUID(),version:1,reason:"Synthetic historical export recovery"}})).salesOrder;}finally{f.time.clock=clock;}
+ const window=salesArchiveWindow(f.time.nowMs(),f.app.configuration.sales),batch=await f.insert("sales_archive_batches",{batch_number:"TEST-"+randomUUID().slice(0,20),period_key:window.periodKey,cutoff_at:window.cutoffMs,status:"RUNNING",started_at:f.time.nowMs(),updated_at:f.time.nowMs()}),archivedAt=f.time.nowMs();
+ // Supported interrupted-copy state: matching immutable mirrors coexist with the Active source, without the final durable manifest.
+ for(const table of ["sales_orders","sales_order_lines"]){const columns=SALES_ARCHIVE_COLUMNS[table],where=table==="sales_orders"?"id=?":"sales_order_id=?",projection=columns.map(c=>["order_date","requested_delivery_date"].includes(c)?`DATE_FORMAT(${c},'%Y-%m-%d') AS ${c}`:c).join(","),[rows]=await f.db.query(`SELECT ${projection} FROM ${table} WHERE ${where}`,[historical.id]);for(const row of rows)await f.db.execute(`INSERT INTO ${table}_archive (${columns.join(",")},archive_batch_id,archived_at,row_hash) SELECT ${columns.join(",")},?,?,? FROM ${table} WHERE id=?`,[batch,archivedAt,hashSalesArchiveRow(table,row),row.id]);}
+ const filters={number:historical.number,customerId:f.customerId},inquiry=new SalesArchiveInquiryService(f);
+ assert.equal((await inquiry.list({claims:f.claims,input:filters})).total,0);assert.equal((await new SalesInquiryService(f).get({claims:f.claims,id:historical.id})).status,"CANCELLED");
+ const exportRows=async()=>{const created=await f.exports.create({claims:f.claims,eventId:randomUUID(),input:{scope:"ARCHIVE",filters}}),row=await f.run(created.id);assert.equal(row.status,"COMPLETED");return parse(await readFile(path.join(f.exports.root,row.file_path),"utf8"),{bom:true,columns:true});};
+ assert.equal((await exportRows()).length,0,"Incomplete mirrors must not be published as completed Archive history");
+ const scheduler=f.app.services.require("scheduler");await scheduler.execute(scheduler.jobs.get("sales.archive"));assert.equal(scheduler.stats.get("sales.archive").lastOutcome,"succeeded");assert.equal((await f.db.query("SELECT COUNT(*) AS n FROM sales_archive_order_manifests WHERE sales_order_id=? AND archive_batch_id=?",[historical.id,batch]))[0][0].n,1);assert.equal((await inquiry.list({claims:f.claims,input:filters})).total,1);
+ const csv=await exportRows();assert.equal(csv.length,1);assert.equal(csv[0].number,historical.number);assert.equal(csv[0].customerName,historical.customerName);assert.equal(csv[0].cancelledBaseQuantity,"10");assert.equal(csv[0].outstandingBaseQuantity,"0");
+ const outstandingFilters={...filters,view:"outstanding"};assert.equal((await inquiry.list({claims:f.claims,input:outstandingFilters})).total,0);
+ const emptyJob=await f.exports.create({claims:f.claims,eventId:randomUUID(),input:{scope:"ARCHIVE",filters:outstandingFilters}}),emptyRow=await f.run(emptyJob.id);assert.equal(emptyRow.status,"COMPLETED");assert.equal(Number(emptyRow.row_count),0);assert.deepEqual(parse(await readFile(path.join(f.exports.root,emptyRow.file_path),"utf8"),{bom:true,columns:true}),[]);
 });
 integrationTest("TC-045 Export completes its full 250000-row supported cap within the actual worker and transaction budgets",{timeout:180000},async t=>{
  const f=await exportFixture(t),prefix="EX"+randomUUID().replaceAll("-","").slice(0,8);

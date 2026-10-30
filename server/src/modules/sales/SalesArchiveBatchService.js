@@ -1,3 +1,5 @@
+import {runObservedSalesTransaction} from "./salesTransactionObservations.js";
+import {observeSalesDomain} from "./salesDomainObservations.js";
 import {createHash,randomUUID} from "node:crypto";
 import {SalesArchiveLockService} from "./SalesArchiveLockService.js";
 import {FulfillmentArchiveLockService} from "../fulfillment/FulfillmentArchiveLockService.js";
@@ -22,7 +24,7 @@ export class SalesArchiveBatchService{
  #authorizeJob;#executeLockedArchive;
  constructor({database,time,config,authorizeJob,executeLockedArchive}={}){this.database=database;this.time=time??{nowMs:()=>Date.now()};this.config=config??defaults;this.#authorizeJob=authorizeJob;this.#executeLockedArchive=executeLockedArchive;this.salesLocks=new SalesArchiveLockService({database});this.ownerLocks=new FulfillmentArchiveLockService({database});}
  async #principal(signal){const p=await this.#authorizeJob?.();if(!p||p.signal!==signal||signal?.aborted!==false||typeof p.leaseOwner!=="string"||!p.leaseOwner)fail("SALES_ARCHIVE_FORBIDDEN");return p;}
- #transaction(signal,work){const context=this.database.context;if(!context?.storage?.run)fail("SALES_ARCHIVE_FORBIDDEN");return context.storage.run({databaseTransaction:null,auth:null,signal,startedAt:this.time.nowMs()},()=>this.database.withTransaction(work,{signal,timeoutMs:this.config.transactionTimeoutMs,isolationLevel:"REPEATABLE READ"}));}
+ #transaction(signal,work,{propagatedError}={}){const context=this.database.context;if(!context?.storage?.run)fail("SALES_ARCHIVE_FORBIDDEN");return context.storage.run({databaseTransaction:null,auth:null,signal,startedAt:this.time.nowMs()},()=>runObservedSalesTransaction(this.database,work,{signal,timeoutMs:this.config.transactionTimeoutMs,isolationLevel:"REPEATABLE READ"},{propagatedError}));}
  async #lease(tx,signal){const principal=await this.#principal(signal),[[lease]]=await tx.query("SELECT owner,expires_at FROM fr_job_leases WHERE job_name='sales.archive' FOR UPDATE"),[[clock]]=await tx.query("SELECT UNIX_TIMESTAMP() AS now,CAST(UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3))*1000 AS UNSIGNED) AS now_ms");if(!lease||lease.owner!==principal.leaseOwner||Number(lease.expires_at)<=Number(clock.now))fail("SALES_ARCHIVE_FORBIDDEN");return {principal,nowMs:Number(clock.now_ms)};}
  #summary(row){
   if(row.checksum_summary===null){if(["candidate_count","archived_count","skipped_count","failed_count","last_scanned_order_id"].some(k=>Number(row[k])!==0))fail("ARCHIVE_DATA_CONFLICT");return {version:"1",cursor:null,pending:[],salesTableCounts:{},fulfillmentTableCounts:{},amountTotal:"0",amountHash:emptyHash,manifestHash:emptyHash};}
@@ -68,20 +70,21 @@ export class SalesArchiveBatchService{
    if(codeOf(error)==="DATABASE_TRANSACTION_INDETERMINATE"){if(reconcile)throw error;return this.#order(id,token,candidate,signal,{reconcile:true});}
    signal.throwIfAborted();if(codeOf(error)==="SALES_ARCHIVE_FORBIDDEN")throw error;
    // This metadata transaction follows a settled rollback. Never label a durable manifest as a failed order.
-   return this.#transaction(signal,async tx=>{const batch=await this.#batch(tx,id,token,signal),[[manifest]]=await tx.query("SELECT id FROM sales_archive_order_manifests WHERE sales_order_id=? FOR UPDATE",[candidate.id]);if(manifest)throw error;const raw=codeOf(error),code=raw==="OPEN_MATTER_UNKNOWN"?raw:terminalSkips.has(raw)?raw:raw==="ARCHIVE_DATA_CONFLICT"?raw:"SALES_DEPENDENCY_UNAVAILABLE",outcome=terminalSkips.has(raw)||raw==="OPEN_MATTER_UNKNOWN"?"SKIPPED":"FAILED";await this.#record(tx,batch,candidate,outcome,code);return {outcome,code};});
+   return this.#transaction(signal,async tx=>{const batch=await this.#batch(tx,id,token,signal),[[manifest]]=await tx.query("SELECT id FROM sales_archive_order_manifests WHERE sales_order_id=? FOR UPDATE",[candidate.id]);if(manifest)throw error;const raw=codeOf(error),code=raw==="OPEN_MATTER_UNKNOWN"?raw:terminalSkips.has(raw)?raw:raw==="ARCHIVE_DATA_CONFLICT"?raw:"SALES_DEPENDENCY_UNAVAILABLE",outcome=terminalSkips.has(raw)||raw==="OPEN_MATTER_UNKNOWN"?"SKIPPED":"FAILED";await this.#record(tx,batch,candidate,outcome,code);return {outcome,code};},{propagatedError:error});
   }
  }
+ async #observedOrder(id,token,candidate,signal){return observeSalesDomain(this.database,"archive_order",()=>this.#order(id,token,candidate,signal));}
  async runBatch({signal}={}){
   await this.#principal(signal);if(this.database.context?.get()?.databaseTransaction)fail("SALES_ARCHIVE_FORBIDDEN");const claim=await this.#claim(signal);if(!claim)return {processed:0,archived:0,skipped:0,failed:0};
   const stats={processed:0,archived:0,skipped:0,failed:0},limit=Math.min(500,this.config.archiveBatchSize);let exhausted=false;
   try{
    const initial=await this.#transaction(signal,tx=>this.#batch(tx,claim.id,claim.token,signal));
-   for(const item of initial.summary.pending.slice(0,limit)){signal.throwIfAborted();const result=await this.#order(claim.id,claim.token,item.candidate,signal);stats.processed++;stats[result.outcome.toLowerCase()]++;if(result.code==="ARCHIVE_DATA_CONFLICT")return {...stats,stopped:true};}
+   for(const item of initial.summary.pending.slice(0,limit)){signal.throwIfAborted();const result=await this.#observedOrder(claim.id,claim.token,item.candidate,signal);stats.processed++;stats[result.outcome.toLowerCase()]++;if(result.code==="ARCHIVE_DATA_CONFLICT")return {...stats,stopped:true};}
    while(stats.processed<limit){
     signal.throwIfAborted();const current=await this.#transaction(signal,tx=>this.#batch(tx,claim.id,claim.token,signal));if(current.summary.pending.length>=500)break;const cursor=current.summary.cursor,remaining=Math.min(limit-stats.processed,500-current.summary.pending.length);
     const [rows]=await this.database.query(`SELECT id,status,last_business_updated_at FROM sales_orders FORCE INDEX (idx_sales_orders_archive_eligibility) WHERE status IN ('CANCELLED','CLOSED','COMPLETED') AND last_business_updated_at<?${cursor?" AND (status>? OR (status=? AND (last_business_updated_at>? OR (last_business_updated_at=? AND id>?))))":""} ORDER BY status,last_business_updated_at,id LIMIT ${remaining}`,[Number(current.row.cutoff_at),...(cursor?[cursor.status,cursor.status,cursor.at,cursor.at,cursor.id]:[])]);
     if(!rows.length){exhausted=true;break;}
-    for(const row of rows){const candidate=tuple(row);if(!validTuple(candidate))fail("ARCHIVE_DATA_CONFLICT");const result=await this.#order(claim.id,claim.token,candidate,signal);stats.processed++;stats[result.outcome.toLowerCase()]++;if(result.code==="ARCHIVE_DATA_CONFLICT")return {...stats,stopped:true};}
+    for(const row of rows){const candidate=tuple(row);if(!validTuple(candidate))fail("ARCHIVE_DATA_CONFLICT");const result=await this.#observedOrder(claim.id,claim.token,candidate,signal);stats.processed++;stats[result.outcome.toLowerCase()]++;if(result.code==="ARCHIVE_DATA_CONFLICT")return {...stats,stopped:true};}
    }
    return stats;
   }finally{

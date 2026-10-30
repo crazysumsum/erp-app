@@ -1,3 +1,4 @@
+import {runObservedSalesTransaction,stageSalesIntake} from "./salesTransactionObservations.js";
 import {randomUUID} from "node:crypto";
 import path from "node:path";
 import {constants} from "node:fs";
@@ -15,7 +16,7 @@ export class SalesIntakeWorker {
  }
  #lease(tx,signal,previous){return requireSalesImportWorker(tx,this.authorize,signal,previous);}
  async #transaction(claim,signal,work){
-  return this.database.withTransaction(async tx=>{
+  return runObservedSalesTransaction(this.database,async tx=>{
    const first=await this.#lease(tx,signal);let job,actor,nowMs=first.nowMs;
    if(claim){[[job]]=await tx.query("SELECT * FROM sales_import_jobs WHERE id=? FOR UPDATE",[claim.id]);const fresh=await this.#lease(tx,signal,first);nowMs=fresh.nowMs;if(!job||job.status!=="PROCESSING"||job.lease_owner!==claim.token||Number(job.lease_until)<=fresh.nowMs||Number(job.confirmed_by)!==claim.actorId)throw salesError("CONCURRENT_OPERATION");actor=await requireSalesImportActorById(tx,claim.actorId);}
    const result=await work(tx,job,actor,nowMs),last=await this.#lease(tx,signal,first);if(job&&Number(job.lease_until)<=last.nowMs)throw salesError("CONCURRENT_OPERATION");
@@ -23,7 +24,7 @@ export class SalesIntakeWorker {
   },{signal,timeoutMs:this.config.transactionTimeoutMs});
  }
  async #claimJob(signal){
-  return this.database.withTransaction(async tx=>{
+  return runObservedSalesTransaction(this.database,async tx=>{
    const first=await this.#lease(tx,signal),[[job]]=await tx.query(`SELECT j.* FROM sales_import_jobs j WHERE j.status IN ('QUEUED','PROCESSING') AND j.source_file_path<>'' AND (j.lease_until IS NULL OR j.lease_until<=?)
     AND EXISTS (SELECT 1 FROM users u WHERE u.id=j.confirmed_by AND u.status='active' AND (SELECT COUNT(DISTINCT p.name) FROM user_roles ur JOIN role_permissions rp ON rp.role_id=ur.role_id JOIN permissions p ON p.id=rp.permission_id WHERE ur.user_id=u.id AND p.name IN ('sales.view','sales.import'))=2)
     AND (NOT EXISTS (SELECT 1 FROM sales_intake_orders i WHERE i.import_job_id=j.id AND i.status IN ('QUEUED','PROCESSING')) OR EXISTS (SELECT 1 FROM sales_intake_orders i WHERE i.import_job_id=j.id AND i.status IN ('QUEUED','PROCESSING') AND (i.next_attempt_at IS NULL OR i.next_attempt_at<=?))) ORDER BY j.created_at,j.id LIMIT 1 FOR UPDATE`,[first.nowMs,first.nowMs]);
@@ -34,7 +35,8 @@ export class SalesIntakeWorker {
  async #children(claim,signal,limit){
   if(limit<1)return [];
   return this.#transaction(claim,signal,async(tx,_job,_actor,nowMs)=>{
-   const [rows]=await tx.query(`SELECT id,processing_event_id,attempt_count FROM sales_intake_orders WHERE ${claim?"import_job_id=?":"source_type='CHANNEL'"} AND status IN ('QUEUED','PROCESSING') AND (next_attempt_at IS NULL OR next_attempt_at<=?) ORDER BY id LIMIT ? FOR UPDATE`,[...(claim?[claim.id]:[]),nowMs,limit]);
+   const [rows]=await tx.query(`SELECT id,processing_event_id,attempt_count,source_type FROM sales_intake_orders WHERE ${claim?"import_job_id=?":"source_type='CHANNEL'"} AND status IN ('QUEUED','PROCESSING') AND (next_attempt_at IS NULL OR next_attempt_at<=?) ORDER BY id LIMIT ? FOR UPDATE`,[...(claim?[claim.id]:[]),nowMs,limit]);
+   for(const row of rows)if(Number(row.attempt_count)>=1)stageSalesIntake(tx,row.source_type,"retried");
    for(const row of rows)await tx.execute("UPDATE sales_intake_orders SET status='PROCESSING',attempt_count=attempt_count+1,last_attempt_at=?,next_attempt_at=NULL,updated_at=? WHERE id=? AND processing_event_id=?",[nowMs,nowMs,row.id,row.processing_event_id]);return rows;
   });
  }
@@ -86,6 +88,6 @@ export class SalesIntakeWorker {
     if(owner)await this.#transaction(owner,signal,async()=>{});
    }
    if(claim)await this.#finish(claim,signal);return result;
-  }finally{if(claim&&!signal.aborted)await this.database.withTransaction(async tx=>{const {nowMs}=await this.#lease(tx,signal);await tx.execute("UPDATE sales_import_jobs SET lease_owner=NULL,lease_until=NULL,updated_at=? WHERE id=? AND status='PROCESSING' AND lease_owner=?",[nowMs,claim.id,claim.token]);},{signal,timeoutMs:this.config.transactionTimeoutMs});}
+  }finally{if(claim&&!signal.aborted)await runObservedSalesTransaction(this.database,async tx=>{const {nowMs}=await this.#lease(tx,signal);await tx.execute("UPDATE sales_import_jobs SET lease_owner=NULL,lease_until=NULL,updated_at=? WHERE id=? AND status='PROCESSING' AND lease_owner=?",[nowMs,claim.id,claim.token]);},{signal,timeoutMs:this.config.transactionTimeoutMs});}
  }
 }

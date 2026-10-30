@@ -17,13 +17,13 @@
 
 ## 指標與告警的解讀
 
-`sales.metrics` 每5分鐘由 instance scope 只讀採樣；同一資料庫的全域 queue gauges 跨 instance 用 max／去重，不能相加。`sales.alert.*` 只含固定事件碼與有界數字。Collector 讀不到資料時由 Scheduler 記失敗，不發布全零健康快照。
+`sales.metrics` 每5分鐘由 instance scope 對業務資料只讀採樣，另以獨立交易寫 Sales 自有營運觀測表；同一資料庫的全域 queue gauges 跨 instance 用 max／去重，不能相加。`sales.alert.*` 只含固定事件碼與有界數字。Collector 讀不到資料時由 Scheduler 記失敗，不發布全零健康快照。
 
 CONFIRMING 超過5分鐘、Intake 等待超過10分鐘、10,000張標準 Import 處理超過30分鐘、Archive 窗口結束24小時未完成均須處理。Archive 停用時不報錯過窗口；窗口觀測追蹤最近已到期限的真實月份；當月沒有設定日期時仍查上一個有效窗口，不自動改排程。舊未完成 Batch 不被新月份完成狀態遮掉；無法驗證的歷史窗口另報未知。Hash conflict 與失敗計數立即告警；provider UNKNOWN 單次讀值僅證明目前未知，不能冒稱已持續多久。
 
 Scheduler 最新 instance stats 會清理，不是完整24小時歷史。Recovery 讀值須在實際 statsFlush interval × staleAfterRuns 的更新期限內；過期、未來或缺列均回報未知。Publisher 的 updated_at 是資料庫時鐘秒，不能與 instance completion 的毫秒直接相比；TTL 沿用資料庫秒級過期規則。若只見舊成功或缺列，Backorder 回報 history unknown；只有可驗證完整歷史才能判定24小時完全無成功。近期實際成功可證明該時段曾成功，不能推導所有 instance 或所有 FIFO 項目正常。
 
-實際 pool acquisition 邊界與窗口／累計計數已接入下方的 instance 觀測。尚待補齊的觀測來源包括引擎 ROWS_EXAMINED／lock wait、可驗證24小時 job log window，以及 stock-present-oldest 的正式 provider 證據。查詢操作耗時已接入固定六類、完成樣本時間窗及累計計數；delivery coverage 維持 UNKNOWN，完整 SLO 仍須容量樣本驗證。不能拿 SQL 總時間當 pool wait、回傳筆數當掃描筆數、HTTP202 當確認終態成功。這些缺口未補齊前不宣告 TASK062／完整 Phase Gate 完成。
+DEC-043 的來源與啟用界線見下方：真正 engine facts、Sales 持久化 coverage／run facts、Inventory readonly owner observation，以及確認提交後的固定 attempt/outcome counters。沒有有效來源／完整歷史就保留 UNKNOWN；部署檔案及初始資料存在也不代表實際指標、runbook、容量或 Phase 已通過。不能拿 SQL 總時間當 pool wait、回傳筆數當掃描筆數、HTTP202 當確認終態成功；完整 SLO 與交付仍須最終候選的原生／容量／CI／獨立覆核及全部 Gate。
 
 ## 1. Confirmation Recovery
 
@@ -81,6 +81,8 @@ Scheduler 最新 instance stats 會清理，不是完整24小時歷史。Recover
 
 ## 7. Restore Validation
 
+本輪 P4 IMPLEMENT 依 Sam DEC-040 不執行災難還原，不產生 Restore／RTO／RPO PASS；以下程序保留供未來另行授權的正式流程。
+
 觸發：備份演練、還原需求或版本發布前的 restore Gate。
 
 1. 記錄可信備份時間與 checksum、binlog／事件範圍、schema／app 版本、受保護 config／keys、Active／Archive／permanent keys／Operations／Import／Export files 清單；憑證與原始備份不進 Git。
@@ -104,3 +106,51 @@ queryOperations observes six fixed service operations: active_list, outstanding_
 BASELINE/RESET publishes no latency window; zero completed samples has null mean/P95/threshold result. WINDOW carries actual start/end timestamps, elapsed interval, sample count and success/error totals. Histogram P95 is an upper bound, with null/censored overflow. Threshold alerts use the exact count strictly above the unchanged boundary and nearest-rank95%, including errors:2000ms Active,3000ms Archive exact/detail,5000ms bounded Archive range. The fixed thirteen histogram bins and six labels carry no SQL, identifiers, filters, request payload or error text. Do not use small or idle windows to certify a full-capacity SLO.
 
 Both query and pool samples advance only after all awaited info/alert calls resolve. If an alert fails after info succeeds, later windows overlap: deduplicate by process/operation/window boundaries rather than sum. Real SystemLogger may swallow failed/filter/drop writes, so resolved publication is not durable acknowledgment. deliveryCoverage remains UNKNOWN; lifetime completion/error/above-threshold counts retain evidence of lost intervals but cannot reconstruct every missing time window or histogram. Process resets and externally managed stream identity require monitoring reconciliation. Engine rows examined/lock waits, durable24h FIFO/history/provider evidence, terminal timings and full capacity/restore remain independent required work.
+
+
+## DEC-043：營運歷史啟用與判讀
+
+只新增 `sales_operational_job_runs`、`sales_operational_alert_state`。Backorder 的原 batch 在 durable START 已提交後才開始；寫 START 失敗沿原 Scheduler retry，不執行未觀測的該次補配。這個 availability prerequisite 不套到 Confirmation 等其他業務交易。取消後無法再用原 live principal 記終態時，保留 RUNNING／UNKNOWN；不得直接把它改成成功／失敗或刪除，以便解除告警。
+
+先確認已套用相容 migration，所有 contributing Backorder workers 都部署同一受測 instrumentation baseline，舊 workers 已 drained，沒有有效的 `sales.backorderAllocate` lease。操作人員須保留這些外部部署證明；工具只驗證受控 attestation／本機實際 source+policy hash／DB lease／CAS，不能自動證明每台主機。
+
+1. 在同一完整發行 artifact／實際設定執行 `node server/scripts/activateSalesObservations.js --print-baseline`。只輸出 protocol 與 hash，不啟動 HTTP／Scheduler；需要隨 artifact 保留指定 source 檔案及 activation script。
+2. 準備由目前 OS 使用者持有、mode0600、單一 regular file 的受限 JSON，內容恰為 `protocolVersion`（`1`）、實際 `baselineHash`、`allWorkersInstrumented: true`、`oldWorkersDrained: true`。不使用 symlink／共享權限／超過8192bytes檔案，不在檔案放 credentials 或業務資料。
+3. 只讀核對 COVERAGE 的目前 epoch。初次用 `--expected-epoch none`，後續用確切舊 UUID；執行 `node server/scripts/activateSalesObservations.js --attestation /absolute/private/attestation.json --expected-epoch <none-or-current-uuid>`。建立真實 DB-time 新 boundary；版本衝突／仍有 live lease 時停下重新核對，不能盲重送。若回報 COMMIT outcome unknown，先查持久化 COVERAGE／epoch，不能假定未提交。
+4. 本次開發不授權 production activation。正常部署後也須等完整新24小時窗口；未知／缺失終態、版本不符或不完整啟用證明都不能判定「24小時完全無成功」。過去某次成功只證明那次成功。重新啟用建立新界線，原 facts／舊 epoch 保留。
+
+FIFO／provider persistence 只代表同一 identity/version 的三次合格5分鐘樣本跨至少10分鐘，不證明樣本之間的狀態。270～330秒是 cadence 容差，重複早取樣不能湊10分鐘。缺／未知／負樣本、變更 head、採樣 gap、時鐘倒退或 baseline/epoch 改變會重設或拒絕沿用。先以只讀對帳及 owner 狀態查明無庫存、保質期、Item／Base UOM、warehouse/control／權限或依賴；不使用 reserve probe、不改 FIFO priority，不借 Fulfillment 身分。
+
+### 指標來源與 cohort
+
+| 原設計訊號 | 實際來源／範圍 | 不得推論 |
+|---|---|---|
+| SO／Quotation create、convert outcome/duration | `domainOperations` 固定 service-request cohort，包含 validation、transaction、replay/error | 不是每個既有來源或原始資料集的完整歷史 |
+| 確認終態時間 | fresh manual/recovery：原 intent created_at 至 acknowledged terminal COMMIT；replay不新增 sample，rollback/unknown另列 fault | HTTP202、未解決 retry 或 unknown ACK 不是已完成耗時 |
+| Reservation requested/reserved/backordered | `transactionOperations.reservationAttempts`：CONFIRMATION含manual/recovery/Intake，BACKORDER為fresh每次請求；只在外層 acknowledged COMMIT累加 exact base量 | repeated outstanding attempts 不等於 unique demand／淨 backlog；rollback/replay不增加，unknown不補成功量 |
+| 成功 Backorder allocation latency | positive quantity 的 priority_at 至 acknowledged COMMIT wall-time；invalid/negative clock列unobserved | 不是queue oldest gauge；跨主機須另確認時鐘健康；不認證 latency SLO |
+| Intake received/accepted/invalid/duplicate/succeeded/failed/retried | fixed CSV／CHANNEL acknowledged fresh row／classification／terminal／prior-attempt>0 claim；Channel submission request outcomes另列 | accepted是驗證通過，非已成單；request replay不是新record；deferred不是已發生retry |
+| Queue depth／age、recovery結果 | 真實 queue/state及有freshness的 Scheduler stats；run ledger另供Backorder24h proof | overwrite/purge後的最新stats不證明24h完整歷史 |
+| Query duration／pool waits | 既有六類 query完成窗口、實際borrow boundary；lifetime/reset/delivery皆明列 | 不等同engine rows／rowwait／HTTP terminal latency |
+| Engine rows／locks | instrumentation有效且未overflow的nativePFS，current-schema匹配Sales-table statement digests；table lock ps、instance-wideInnoDB rowlock ms/waits分開 | 累計不是完整window／per-Order attribution；無法驗證reset／truncation時UNKNOWN |
+| Export queue／rows、Archive counts | `sales_export_jobs` queue/row_count、既有完成audit／worker counts；Archive batch及manifest的candidate/archived/skipped/failed、固定candidate duration | Export上傳202不是完成；candidate耗時不保證月度完整drain |
+| transaction unknown／deadlock／provider mismatch | fixed faults來自原Ops.run與Backorder／Archive／precheck／processing實際交易包裝；原始error傳播不重複，新recovery fault另計；既有safecriticalevents保留 | counter不能取代原結果查詢／對帳，與underlyingenginecause／delivery完整性不同 |
+| reconciliation mismatch | `SalesReconciliationService` 的有界具名範圍結果與原existing tests／runbook；全部相關orders/keys需逐一核對 | 單一CONSISTENT不代表全資料集／未知範圍0mismatch |
+
+新增 counters 只涵蓋本 process／executor 自啟動後觀測的 committed attempts，固定labels、exact quantity strings、固定histogram儲存；`coverage=ACKNOWLEDGED_COMMITS_ONLY`、`deliveryCoverage=UNKNOWN`。原初始化資料不被回填成新 counters，跨程序不能把重覆 lifetime 快照相加。Unknown commit 可令成功數量漏樣，本來就不能當作完整總帳；以 durable業務結果與只讀對帳判斷實際結果。
+
+### 保存量與關閉條件
+
+完成 run 的7日清理及過期非coverage signal，每輪各最多500；未完成 run 保留，history保持UNKNOWN。這是有界清理，不是全表資料固定上限。以實際 schema `DATA_LENGTH+INDEX_LENGTH`／filesystem allocated bytes、實際run數、contributing instances及distinctFIFO scope數記錄容量；正常每instance每5分鐘最多288次排程/日，但clusterlease只防重疊，不代表多instance每天合計只有288次。未解決rows會繼續累積；先排除活躍worker／未知業務結果，owner另行處置，不能無證明刪除／改寫舊facts。
+
+Native 開發案例中的控制timestamp投影只驗證邊界／CAS，不宣稱真的過了24小時或10分鐘。Backorder dry-run 須先觀測無庫存／short-life不合格，然後以正式補貨／受控合成庫存fixture及既有manual wake／原worker處理，核對實際positive reservation、remaining quantity、舊head/sample reset及只讀CONSISTENT。Stuck Import 使用原event／真實cooldown／registered retry／terminal result與對帳，不人工修租約／數量。Confirmation與Archive仍按原runbook與全部native原子性／未知commit／18類對帳案例；沒有實際證據不能以這張來源表宣告完成。
+
+### P4 developer execution CPU controls
+
+The Harness runner forwards only each reviewed suite’s declared `env_keys`; invoking its parent with UV/GOMAX settings alone does not forward them. All 48 required P4 developer suite contracts therefore declare `UV_THREADPOOL_SIZE` and `GOMAXPROCS`. The authorized local orchestration supplies both as `2`, invokes the runner at nice `10` (inherited by child processes), retains test concurrency `1` and MySQL InnoDB concurrency `2`, and serializes SQL/browser/build workloads. These are execution limits, not changed SLOs, sample sizes, workload, suite timeout or acceptance criteria. The active source initializer remains on its original frozen controls; this private contract correction is applied only after it finishes.
+
+### DEC-044 Backorder order index migration
+
+Only the approved forward migration adds `idx_sales_backorder_order(sales_order_id,id)` to the active Sales Backorder table. Old migrations and original readers/orphan diagnostics are retained. The migration itself establishes and verifies DDL/read threads1 and metadata-lock wait10 on the same connection, gives the ALTER a600s budget, validates its definition and restores the original session settings. On failure it destroys that session. The deployment operator must inspect the real index and `fr_schema_migrations` before any retry: DDL can commit independently of its acknowledgement/ledger write. A compatible committed index with an absent ledger row is reconciled using the normal idempotent migration path only after that observation; incompatible state is rejected, never auto-dropped or silently replaced. The native drift fixture alone may intentionally alter its owned nonce schema for proof. No global settings, production execution, business-query timeout or capacity-SLO changes are authorized here.
+
+Local developer execution remains nice10 and serial after the original1m/5m initializer has a valid receipt; observe actual index size/build duration and capacity access plans before claiming the defect closed. Neither prior initialization sleep failure nor private metadata prototype PASS is a capacity/native PASS. All48 suites/current CI/whole-phase review still gate main merge.

@@ -1231,7 +1231,7 @@
       "uat": {
         "status": "NOT_APPLICABLE",
         "reason": "Objective disaster-recovery exercise measured by timed restore and reconciliation evidence, not by a business-user observable UAT case (08 matrix row NFR-014/015).",
-        "approval_id": "APR-P4-MAIN6CDC-UATNA-NFR-014"
+        "approval_id": "APR-P4-LEGACY-NATIVE-UATNA-NFR-014"
       }
     },
     {
@@ -1239,7 +1239,7 @@
       "uat": {
         "status": "NOT_APPLICABLE",
         "reason": "Objective disaster-recovery exercise measured by timed restore and reconciliation evidence, not by a business-user observable UAT case (08 matrix row NFR-014/015).",
-        "approval_id": "APR-P4-MAIN6CDC-UATNA-NFR-015"
+        "approval_id": "APR-P4-LEGACY-NATIVE-UATNA-NFR-015"
       }
     },
     {
@@ -3125,14 +3125,16 @@
         "sales-phase005-client",
         "sales-phase005-browser",
         "sales-phase005-performance",
-        "sales-phase005-restore",
         "sales-fulfillment-schema-native",
         "sales-fulfillment-openmatter-unit",
         "sales-fulfillment-openmatter-native",
         "sales-fulfillment-participant-unit",
         "sales-fulfillment-participant-native",
         "sales-archive-joint-native",
-        "sales-fulfillment-pending-provider-native"
+        "sales-fulfillment-pending-provider-native",
+        "sales-phase005-index-capacity",
+        "sales-phase005-observations-unit",
+        "sales-phase005-observations-native"
       ]
     }
   ],

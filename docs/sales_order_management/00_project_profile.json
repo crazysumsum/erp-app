@@ -5,7 +5,7 @@
     "id": "sales-isolated-test",
     "kind": "LOCAL_ISOLATED",
     "data_reference": "Synthetic sales quotation/order/intake/archive fixtures defined in 06_technical_test_cases.md and 07_uat_test_cases.md §2.2; no production data, no real customer address, phone, email or bank data",
-    "authorization_ref": "Sam direct current chat: confirm remaining PR245 CI then start P4; after all Gates pass merge main. Sam subsequently agreed proceed independent P4 tasks while real Fulfillment OpenMatter/ArchiveParticipant absent and archive disabled/failclosed. Existing owned synthetic MySQL26.7, migrations, browser/load/crash/restore and Git authority persists; no production/shared DB, real notifications/adapters, evidence export or new provider fake. Active effects and fullPhase merge remain blocked until actual required provider+sameTX participant ready. Apply only after authenticated PR245 fiveCI SUCCESS.; Actual direct Sam current Codex chat reply: 批准 DEC-029 正式依賴切片及交付順序（建議）. Adopts exact proposal107 SHA83cffc9f27a87f1552f77d373b367e3d13db9708d0f4f37cacb8aa7324dce38c, actual independent proposal review52a6fac3. Dual-owner named shared/provider contribution governed by Sales IMPLEMENT; real owner persistence/OpenMatter/participant, forward migrations/tests/docs; new064-068 and dependencies; complete jointP4PR only. Original39 Sales suites/fullcapacity/formalTC/UAT/owner45task obligations retained plus newmandatoryownersuites; no fullFulfillmentPhase completion/production/deployment/acceptance exception. Derived canonical D/P/SCOPE and unchanged prior UAT_NA bindings from this concrete approval; old approvals preserved, not rewritten or presented as fresh human hash inspection."
+    "authorization_ref": "Sam direct current chat: confirm remaining PR245 CI then start P4; after all Gates pass merge main. Sam subsequently agreed proceed independent P4 tasks while real Fulfillment OpenMatter/ArchiveParticipant absent and archive disabled/failclosed. Existing owned synthetic MySQL26.7, migrations, browser/load/crash/restore and Git authority persists; no production/shared DB, real notifications/adapters, evidence export or new provider fake. Active effects and fullPhase merge remain blocked until actual required provider+sameTX participant ready. Apply only after authenticated PR245 fiveCI SUCCESS.; Actual direct Sam current Codex chat reply: 批准 DEC-029 正式依賴切片及交付順序（建議）. Adopts exact proposal107 SHA83cffc9f27a87f1552f77d373b367e3d13db9708d0f4f37cacb8aa7324dce38c, actual independent proposal review52a6fac3. Dual-owner named shared/provider contribution governed by Sales IMPLEMENT; real owner persistence/OpenMatter/participant, forward migrations/tests/docs; new064-068 and dependencies; complete jointP4PR only. Original39 Sales suites/fullcapacity/formalTC/UAT/owner45task obligations retained plus newmandatoryownersuites; no fullFulfillmentPhase completion/production/deployment/acceptance exception. Derived canonical D/P/SCOPE and unchanged prior UAT_NA bindings from this concrete approval; old approvals preserved, not rewritten or presented as fresh human hash inspection.; Sam direct DEC-043 reply approves exactproposal62c3c59911cd893d3e07ccf9b6c7bba5c19275e771eb8d968aa054cc3e5fb048: 批准 DEC-043 限定營運訊號方案（建議）. Only owned operational2tables/readonly Inventory metrics/guardedactivationentrypoint/BackorderSTART prerequisite; independenttechnical/native/currentCI/fullGate required. No production activation/DR/waiver.; Actual Sam direct reply call_47e3ee32a4af475991d524921879c0e3: 批准 DEC-044 單一訂單查找索引（建議）. Exactproposalbe44c7e0/reviewd1b44a87, single nonunique order+id index/forwardmigration, originalreaders/orphandiagnostics/HD012HD013/business10s/allSLO unchanged, actualsameconnectionDDL1/read1/MDL10/DDL600 budget andunknownoutcomeinspection, original48mandatorysuites retained plus2nativecases andmin+2; no productionDDL/DR/acceptancewaiver."
   },
   "permissions": {
     "product_write": [
@@ -72,7 +72,11 @@
       "side_effects": [
         "FILES"
       ],
-      "env_keys": [],
+      "env_keys": [
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
+      ],
       "redaction_env_keys": [
         "DB_PASSWORD"
       ]
@@ -109,7 +113,11 @@
       "side_effects": [
         "FILES"
       ],
-      "env_keys": [],
+      "env_keys": [
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
+      ],
       "redaction_env_keys": [
         "DB_PASSWORD"
       ]
@@ -144,7 +152,11 @@
       "side_effects": [
         "FILES"
       ],
-      "env_keys": [],
+      "env_keys": [
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
+      ],
       "redaction_env_keys": [
         "DB_PASSWORD"
       ]
@@ -338,7 +350,10 @@
         "CUSTOMER_BANK_ENCRYPTION_KEYS",
         "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
         "CUSTOMER_BANK_LOOKUP_KEYS",
-        "JWT_SECRET"
+        "JWT_SECRET",
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
@@ -418,7 +433,10 @@
         "CUSTOMER_BANK_ENCRYPTION_KEYS",
         "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
         "CUSTOMER_BANK_LOOKUP_KEYS",
-        "JWT_SECRET"
+        "JWT_SECRET",
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
@@ -495,7 +513,10 @@
         "CUSTOMER_BANK_ENCRYPTION_KEYS",
         "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
         "CUSTOMER_BANK_LOOKUP_KEYS",
-        "JWT_SECRET"
+        "JWT_SECRET",
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
@@ -559,7 +580,10 @@
         "CUSTOMER_BANK_ENCRYPTION_KEYS",
         "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
         "CUSTOMER_BANK_LOOKUP_KEYS",
-        "JWT_SECRET"
+        "JWT_SECRET",
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
@@ -635,7 +659,10 @@
         "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
         "CUSTOMER_BANK_LOOKUP_KEYS",
         "JWT_SECRET",
-        "INVENTORY_LOCK_SMOKE_TESTS"
+        "INVENTORY_LOCK_SMOKE_TESTS",
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
@@ -711,7 +738,10 @@
         "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
         "CUSTOMER_BANK_LOOKUP_KEYS",
         "JWT_SECRET",
-        "INVENTORY_MASTER_MIGRATION_TESTS"
+        "INVENTORY_MASTER_MIGRATION_TESTS",
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
@@ -787,7 +817,10 @@
         "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
         "CUSTOMER_BANK_LOOKUP_KEYS",
         "JWT_SECRET",
-        "INVENTORY_MASTER_RACE_TESTS"
+        "INVENTORY_MASTER_RACE_TESTS",
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
@@ -863,7 +896,10 @@
         "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
         "CUSTOMER_BANK_LOOKUP_KEYS",
         "JWT_SECRET",
-        "INVENTORY_STOCK_MIGRATION_TESTS"
+        "INVENTORY_STOCK_MIGRATION_TESTS",
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
@@ -939,7 +975,10 @@
         "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
         "CUSTOMER_BANK_LOOKUP_KEYS",
         "JWT_SECRET",
-        "INVENTORY_POSTING_TESTS"
+        "INVENTORY_POSTING_TESTS",
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
@@ -1015,7 +1054,10 @@
         "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
         "CUSTOMER_BANK_LOOKUP_KEYS",
         "JWT_SECRET",
-        "INVENTORY_RESERVATION_MIGRATION_TESTS"
+        "INVENTORY_RESERVATION_MIGRATION_TESTS",
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
@@ -1091,7 +1133,10 @@
         "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
         "CUSTOMER_BANK_LOOKUP_KEYS",
         "JWT_SECRET",
-        "INVENTORY_RESERVATION_TESTS"
+        "INVENTORY_RESERVATION_TESTS",
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
@@ -1167,7 +1212,10 @@
         "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
         "CUSTOMER_BANK_LOOKUP_KEYS",
         "JWT_SECRET",
-        "INVENTORY_ALLOCATION_TESTS"
+        "INVENTORY_ALLOCATION_TESTS",
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
@@ -1243,7 +1291,10 @@
         "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
         "CUSTOMER_BANK_LOOKUP_KEYS",
         "JWT_SECRET",
-        "INVENTORY_TASK022_TESTS"
+        "INVENTORY_TASK022_TESTS",
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
@@ -1319,7 +1370,10 @@
         "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
         "CUSTOMER_BANK_LOOKUP_KEYS",
         "JWT_SECRET",
-        "INVENTORY_TASK025_API_TESTS"
+        "INVENTORY_TASK025_API_TESTS",
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
@@ -1387,7 +1441,10 @@
         "CUSTOMER_BANK_ENCRYPTION_KEYS",
         "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
         "CUSTOMER_BANK_LOOKUP_KEYS",
-        "JWT_SECRET"
+        "JWT_SECRET",
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
@@ -1480,7 +1537,10 @@
         "CUSTOMER_BANK_LOOKUP_KEYS",
         "JWT_SECRET",
         "DB_ADMIN_USER",
-        "DB_ADMIN_PASSWORD"
+        "DB_ADMIN_PASSWORD",
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
@@ -1511,8 +1571,7 @@
         "--outputFile={run_dir}/tests.xml",
         "test/pages/sales",
         "test/components/sales",
-        "test/services/sales.test.js",
-        "--maxWorkers=2"
+        "test/services/sales.test.js"
       ],
       "cwd": ".",
       "timeout_seconds": 1800,
@@ -1536,7 +1595,11 @@
       "side_effects": [
         "FILES"
       ],
-      "env_keys": [],
+      "env_keys": [
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
+      ],
       "redaction_env_keys": [
         "DB_PASSWORD"
       ]
@@ -1611,7 +1674,10 @@
         "JWT_SECRET",
         "SALES_E2E_BASE_URL",
         "SALES_E2E_API_URL",
-        "SALES_E2E_AUTH_FILE"
+        "SALES_E2E_AUTH_FILE",
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
@@ -1631,6 +1697,9 @@
       "id": "sales-phase002-server-coverage",
       "kind": "BUILD",
       "argv": [
+        "env",
+        "SALES_CAPACITY_SEPARATE_STEP=1",
+        "SALES_IMPORT_CAPACITY_SEPARATE_STEP=1",
         "npm",
         "run",
         "test:coverage",
@@ -1687,7 +1756,10 @@
         "JWT_SECRET",
         "DB_ADMIN_USER",
         "DB_ADMIN_PASSWORD",
-        "MYSQL_BIN"
+        "MYSQL_BIN",
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
@@ -1738,7 +1810,11 @@
       "side_effects": [
         "FILES"
       ],
-      "env_keys": [],
+      "env_keys": [
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
+      ],
       "redaction_env_keys": [
         "DB_PASSWORD"
       ]
@@ -1800,7 +1876,10 @@
         "CUSTOMER_BANK_ENCRYPTION_KEYS",
         "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
         "CUSTOMER_BANK_LOOKUP_KEYS",
-        "JWT_SECRET"
+        "JWT_SECRET",
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
@@ -1894,7 +1973,10 @@
         "CUSTOMER_BANK_LOOKUP_KEYS",
         "JWT_SECRET",
         "DB_ADMIN_USER",
-        "DB_ADMIN_PASSWORD"
+        "DB_ADMIN_PASSWORD",
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
@@ -1926,8 +2008,7 @@
         "test/pages/sales/salesOrderConfirmation.test.js",
         "test/pages/sales/salesOrderLifecycle.test.js",
         "test/components/sales/salesBackorderDialog.test.js",
-        "test/composables/sales",
-        "--maxWorkers=2"
+        "test/composables/sales"
       ],
       "cwd": ".",
       "timeout_seconds": 1800,
@@ -1957,7 +2038,11 @@
       "side_effects": [
         "FILES"
       ],
-      "env_keys": [],
+      "env_keys": [
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
+      ],
       "redaction_env_keys": [
         "DB_PASSWORD"
       ]
@@ -2036,7 +2121,10 @@
         "JWT_SECRET",
         "SALES_E2E_BASE_URL",
         "SALES_E2E_API_URL",
-        "SALES_E2E_AUTH_FILE"
+        "SALES_E2E_AUTH_FILE",
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
@@ -2116,7 +2204,10 @@
         "CUSTOMER_BANK_LOOKUP_KEYS",
         "JWT_SECRET",
         "DB_ADMIN_USER",
-        "DB_ADMIN_PASSWORD"
+        "DB_ADMIN_PASSWORD",
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
@@ -2188,7 +2279,10 @@
         "CUSTOMER_BANK_ENCRYPTION_KEYS",
         "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
         "CUSTOMER_BANK_LOOKUP_KEYS",
-        "JWT_SECRET"
+        "JWT_SECRET",
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
@@ -2224,7 +2318,7 @@
       "timeout_seconds": 2400,
       "result_adapter": "JUNIT",
       "result_path": "tests.xml",
-      "min_tests": 18,
+      "min_tests": 20,
       "max_skipped": 0,
       "stages": [
         "DEVELOPER"
@@ -2236,7 +2330,8 @@
         "TC-038",
         "TC-039",
         "TC-040",
-        "TC-041"
+        "TC-041",
+        "TC-060"
       ],
       "tool_probes": [
         {
@@ -2277,7 +2372,10 @@
         "CUSTOMER_BANK_LOOKUP_KEYS",
         "JWT_SECRET",
         "DB_ADMIN_USER",
-        "DB_ADMIN_PASSWORD"
+        "DB_ADMIN_PASSWORD",
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
@@ -2309,8 +2407,7 @@
         "test/pages/sales/salesImports.test.js",
         "test/components/sales/salesImportComponents.test.js",
         "test/composables/sales",
-        "test/services/sales.test.js",
-        "--maxWorkers=2"
+        "test/services/sales.test.js"
       ],
       "cwd": ".",
       "timeout_seconds": 1800,
@@ -2339,7 +2436,11 @@
       "side_effects": [
         "FILES"
       ],
-      "env_keys": [],
+      "env_keys": [
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
+      ],
       "redaction_env_keys": [
         "DB_PASSWORD"
       ]
@@ -2417,7 +2518,10 @@
         "JWT_SECRET",
         "SALES_E2E_BASE_URL",
         "SALES_E2E_API_URL",
-        "SALES_E2E_AUTH_FILE"
+        "SALES_E2E_AUTH_FILE",
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
@@ -2498,7 +2602,10 @@
         "CUSTOMER_BANK_LOOKUP_KEYS",
         "JWT_SECRET",
         "DB_ADMIN_USER",
-        "DB_ADMIN_PASSWORD"
+        "DB_ADMIN_PASSWORD",
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
@@ -2574,7 +2681,10 @@
         "CUSTOMER_BANK_ENCRYPTION_KEYS",
         "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
         "CUSTOMER_BANK_LOOKUP_KEYS",
-        "JWT_SECRET"
+        "JWT_SECRET",
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
@@ -2605,13 +2715,14 @@
         "server/test/integration/salesPhase4.integration.test.js",
         "server/test/integration/salesPoolWaitMetrics.integration.test.js",
         "server/test/integration/salesMetrics.integration.test.js",
-        "server/test/integration/salesReconciliation.integration.test.js"
+        "server/test/integration/salesReconciliation.integration.test.js",
+        "server/test/integration/salesBackorderOrderIndex.integration.test.js"
       ],
       "cwd": ".",
       "timeout_seconds": 2400,
       "result_adapter": "JUNIT",
       "result_path": "tests.xml",
-      "min_tests": 18,
+      "min_tests": 20,
       "max_skipped": 0,
       "stages": [
         "DEVELOPER",
@@ -2626,7 +2737,9 @@
         "TC-049",
         "TC-050",
         "TC-051",
-        "TC-052"
+        "TC-052",
+        "TC-029",
+        "TC-054"
       ],
       "tool_probes": [
         {
@@ -2667,7 +2780,10 @@
         "CUSTOMER_BANK_LOOKUP_KEYS",
         "JWT_SECRET",
         "DB_ADMIN_USER",
-        "DB_ADMIN_PASSWORD"
+        "DB_ADMIN_PASSWORD",
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
@@ -2727,7 +2843,11 @@
       "side_effects": [
         "FILES"
       ],
-      "env_keys": [],
+      "env_keys": [
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
+      ],
       "redaction_env_keys": [
         "DB_PASSWORD"
       ]
@@ -2805,7 +2925,10 @@
         "JWT_SECRET",
         "SALES_E2E_BASE_URL",
         "SALES_E2E_API_URL",
-        "SALES_E2E_AUTH_FILE"
+        "SALES_E2E_AUTH_FILE",
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
@@ -2832,7 +2955,7 @@
         "./server/test-support/testEnv.js",
         "--test-reporter=junit",
         "--test-reporter-destination={run_dir}/tests.xml",
-        "server/test-capacity/sales/phase4/performance.test.js"
+        "server/test-capacity/sales/phase4/performance.capacity.js"
       ],
       "cwd": ".",
       "timeout_seconds": 21600,
@@ -2887,7 +3010,10 @@
         "CUSTOMER_BANK_LOOKUP_KEYS",
         "JWT_SECRET",
         "DB_ADMIN_USER",
-        "DB_ADMIN_PASSWORD"
+        "DB_ADMIN_PASSWORD",
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
@@ -3006,7 +3132,8 @@
         "server/test/integration/fulfillmentOperationMigrations.integration.test.js",
         "server/test/integration/shipmentMigrations.integration.test.js",
         "server/test/integration/fulfillmentArchiveLocks.integration.test.js",
-        "server/test/integration/salesArchiveLocks.integration.test.js"
+        "server/test/integration/salesArchiveLocks.integration.test.js",
+        "server/test/integration/fulfillmentArchiveParticipant.integration.test.js"
       ],
       "cwd": ".",
       "timeout_seconds": 2400,
@@ -3061,7 +3188,10 @@
         "CUSTOMER_BANK_LOOKUP_KEYS",
         "JWT_SECRET",
         "DB_ADMIN_USER",
-        "DB_ADMIN_PASSWORD"
+        "DB_ADMIN_PASSWORD",
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
@@ -3089,7 +3219,8 @@
         "./server/test-support/testEnv.js",
         "--test-reporter=junit",
         "--test-reporter-destination={run_dir}/tests.xml",
-        "server/test/fulfillmentOpenMatter.test.js"
+        "server/test/fulfillmentOpenMatter.test.js",
+        "server/test/sales/phase4/SalesExport.test.js"
       ],
       "cwd": ".",
       "timeout_seconds": 1800,
@@ -3126,7 +3257,10 @@
         "CUSTOMER_BANK_ENCRYPTION_KEYS",
         "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
         "CUSTOMER_BANK_LOOKUP_KEYS",
-        "JWT_SECRET"
+        "JWT_SECRET",
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
@@ -3153,7 +3287,8 @@
         "--test-reporter=junit",
         "--test-reporter-destination={run_dir}/tests.xml",
         "server/test/integration/fulfillmentOpenMatter.integration.test.js",
-        "server/test/integration/fulfillmentOpenMatterCurrent.integration.test.js"
+        "server/test/integration/fulfillmentOpenMatterCurrent.integration.test.js",
+        "server/test/integration/salesPhase4.integration.test.js"
       ],
       "cwd": ".",
       "timeout_seconds": 2400,
@@ -3208,7 +3343,10 @@
         "CUSTOMER_BANK_LOOKUP_KEYS",
         "JWT_SECRET",
         "DB_ADMIN_USER",
-        "DB_ADMIN_PASSWORD"
+        "DB_ADMIN_PASSWORD",
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
@@ -3236,7 +3374,8 @@
         "./server/test-support/testEnv.js",
         "--test-reporter=junit",
         "--test-reporter-destination={run_dir}/tests.xml",
-        "server/test/fulfillmentArchiveParticipant.test.js"
+        "server/test/fulfillmentArchiveParticipant.test.js",
+        "server/test/salesArchiveEligibility.test.js"
       ],
       "cwd": ".",
       "timeout_seconds": 1800,
@@ -3274,7 +3413,10 @@
         "CUSTOMER_BANK_ENCRYPTION_KEYS",
         "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
         "CUSTOMER_BANK_LOOKUP_KEYS",
-        "JWT_SECRET"
+        "JWT_SECRET",
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
@@ -3356,7 +3498,10 @@
         "CUSTOMER_BANK_LOOKUP_KEYS",
         "JWT_SECRET",
         "DB_ADMIN_USER",
-        "DB_ADMIN_PASSWORD"
+        "DB_ADMIN_PASSWORD",
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
@@ -3384,7 +3529,9 @@
         "./server/test-support/testEnv.js",
         "--test-reporter=junit",
         "--test-reporter-destination={run_dir}/tests.xml",
-        "server/test/integration/salesArchiveJoint.integration.test.js"
+        "server/test/integration/salesArchiveJoint.integration.test.js",
+        "server/test/integration/fulfillmentArchiveParticipant.integration.test.js",
+        "server/test/integration/salesPhase4.integration.test.js"
       ],
       "cwd": ".",
       "timeout_seconds": 2400,
@@ -3441,7 +3588,10 @@
         "CUSTOMER_BANK_LOOKUP_KEYS",
         "JWT_SECRET",
         "DB_ADMIN_USER",
-        "DB_ADMIN_PASSWORD"
+        "DB_ADMIN_PASSWORD",
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
@@ -3525,7 +3675,256 @@
         "CUSTOMER_BANK_LOOKUP_KEYS",
         "JWT_SECRET",
         "DB_ADMIN_USER",
+        "DB_ADMIN_PASSWORD",
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD",
+        "JWT_SECRET",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "DB_ADMIN_USER",
         "DB_ADMIN_PASSWORD"
+      ]
+    },
+    {
+      "id": "sales-phase005-index-capacity",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/tests.xml",
+        "server/test-capacity/sales/phase4/indexCapacityFull.capacity.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 21600,
+      "result_adapter": "JUNIT",
+      "result_path": "tests.xml",
+      "min_tests": 4,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [
+        "TC-053"
+      ],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v(2[6-9]|[3-9]\\d)\\."
+        },
+        {
+          "argv": [
+            "/usr/local/mysql/bin/mysql",
+            "--version"
+          ],
+          "version_pattern": "Ver 26\\.7\\.0 "
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_HOST",
+        "DB_PORT",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_NAME",
+        "DB_SOCKET",
+        "DB_SOCKET_PATH",
+        "DB_INTEGRATION_TESTS",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "JWT_SECRET",
+        "DB_ADMIN_USER",
+        "DB_ADMIN_PASSWORD",
+        "INDEX_CAPACITY_OUTPUT",
+        "INDEX_CAPACITY_ATTEMPT",
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD",
+        "JWT_SECRET",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "DB_ADMIN_USER",
+        "DB_ADMIN_PASSWORD"
+      ]
+    },
+    {
+      "id": "sales-phase005-observations-unit",
+      "kind": "UNIT",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/tests.xml",
+        "server/test/sales/phase4/InventorySalesObservation.test.js",
+        "server/test/sales/phase4/InventorySalesObservationSnapshot.test.js",
+        "server/test/sales/phase4/SalesConfirmationTerminalObservation.test.js",
+        "server/test/sales/phase4/SalesDomainObservations.test.js",
+        "server/test/sales/phase4/SalesDomainWiring.test.js",
+        "server/test/sales/phase4/SalesEngineMetrics.test.js",
+        "server/test/sales/phase4/SalesObservationActivationCommand.test.js",
+        "server/test/sales/phase4/SalesObservationBaseline.test.js",
+        "server/test/sales/phase4/SalesOperationalCoverageBinding.test.js",
+        "server/test/sales/phase4/SalesOperationalMetricsWiring.test.js",
+        "server/test/sales/phase4/SalesOperationalObservations.test.js",
+        "server/test/sales/phase4/SalesOperationalWorkerWiring.test.js",
+        "server/test/sales/phase4/SalesTransactionObservations.test.js",
+        "server/test/sales/phase4/SalesChannelObservationWiring.test.js",
+        "server/test/sales/phase4/SalesIntakeRetryObservation.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "tests.xml",
+      "min_tests": 42,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER",
+        "REGRESSION"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v(2[6-9]|[3-9]\\d)\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "JWT_SECRET",
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD",
+        "JWT_SECRET",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
+      ]
+    },
+    {
+      "id": "sales-phase005-observations-native",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/tests.xml",
+        "server/test/integration/salesOperationalObservations.integration.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 2400,
+      "result_adapter": "JUNIT",
+      "result_path": "tests.xml",
+      "min_tests": 7,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER",
+        "REGRESSION"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v(2[6-9]|[3-9]\\d)\\."
+        },
+        {
+          "argv": [
+            "/usr/local/mysql/bin/mysql",
+            "--version"
+          ],
+          "version_pattern": "Ver 26\\.7\\.0 "
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_HOST",
+        "DB_PORT",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_NAME",
+        "DB_SOCKET",
+        "DB_SOCKET_PATH",
+        "DB_INTEGRATION_TESTS",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "JWT_SECRET",
+        "DB_ADMIN_USER",
+        "DB_ADMIN_PASSWORD",
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",

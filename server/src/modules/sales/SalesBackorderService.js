@@ -1,3 +1,4 @@
+import {runObservedSalesTransaction,stageSalesReservation,stageSalesAllocation} from "./salesTransactionObservations.js";
 import { createHash,randomUUID } from "node:crypto";
 import { InventoryReservationService } from "../inventory/InventoryReservationService.js";
 import { ItemLookupService } from "../item/ItemLookupService.js";
@@ -22,12 +23,12 @@ function scopeFilter(scope){
 }
 export class SalesBackorderService{
  constructor(options={}){
-  this.database=options.database;this.config=options.config??defaults;this.authorize=options.authorizeSalesBackorder;
+  this.database=options.database;this.time=options.time;this.config=options.config??defaults;this.authorize=options.authorizeSalesBackorder;
   this.items=options.itemProvider??new ItemLookupService(options);this.inventory=options.inventory??new InventoryReservationService(options);this.audit=options.audit??new SalesAuditService();
  }
  async wake({claims,input,signal}){
   const scope=validateSalesBackorderScope(input);
-  return this.database.withTransaction(async tx=>{
+  return runObservedSalesTransaction(this.database,async tx=>{
    await requireSalesWriteActor(tx,claims);
    let scopes=[scope];
    if(scope.orderId){const order=await readSalesOrderDetail(tx,scope.orderId);scopes=[...new Set(order.lines.map(line=>line.skuId))].map(skuId=>({warehouseId:order.fulfillmentWarehouseId,skuId}));}
@@ -74,7 +75,7 @@ export class SalesBackorderService{
  }
  async #allocate(candidate,signal){
   const eventId=randomUUID();let completed;
-  try{return await this.database.withTransaction(async tx=>{
+  try{return await runObservedSalesTransaction(this.database,async tx=>{
    const {nowMs,leaseOwner}=await this.#lease(tx),orderId=Number(candidate.sales_order_id);
    const [[header]]=await tx.query("SELECT id,line_count FROM sales_orders WHERE id=? FOR UPDATE",[orderId]);if(!header)return {retry:true};
    // The detail read after the head read is a plain read so it takes no Line gap lock; it is current because the read view starts after these locks.
@@ -100,10 +101,11 @@ export class SalesBackorderService{
     if(life!==null&&(!Number.isSafeInteger(life)||life<0||life>36500))throw salesError("SALES_DEPENDENCY_UNAVAILABLE");
     payload={warehouseId:order.fulfillmentWarehouseId,expectedOrderVersion:order.version,lines:[{sourceLineId:line.id,skuId:line.skuId,orderedBaseQuantity:Number(line.backorderedBaseQuantity),minimumRemainingDays:Math.max(line.minimumSaleLifeDays,life??0)}]};
     const reservation=await this.inventory.reserveAvailableForSalesBackorderInTransaction(tx,{actor:{userId:null,serviceName:name,claimedRoles:[],claimedPermissions:[name]},source:{documentId:String(order.id),eventId},correlationId:eventId,payload});
-    validateConfirmationInventoryResult(reservation,payload,true);const member=reservation.lines[0],quantity=member.reservedBaseQuantity,remaining=member.uncoveredBaseQuantity;
+    validateConfirmationInventoryResult(reservation,payload,true);stageSalesReservation(tx,"BACKORDER",reservation.lines);const member=reservation.lines[0],quantity=member.reservedBaseQuantity,remaining=member.uncoveredBaseQuantity;
     result={quantity,noStock:remaining>0};action=quantity?"backorder_allocated":"backorder_deferred";
     await tx.execute("UPDATE sales_backorder_entries SET outstanding_base_quantity=?,status=?,last_allocation_event_id=?,next_attempt_at=?,last_attempt_at=?,attempt_count=attempt_count+1,last_error_code='',version=version+1,updated_at=? WHERE id=?",[remaining,remaining?"OPEN":"FULFILLED",eventId,nowMs+this.config.backorderNoStockRetryMs,nowMs,nowMs,Number(queue.id)]);
     if(quantity){
+     stageSalesAllocation(tx,queue.priority_at);
      const reserved=Number(line.reservedBaseQuantity)+quantity;
      assertQuantityConservation({orderedBaseQuantity:Number(line.orderedBaseQuantity),reservedOutstandingBaseQuantity:reserved,backorderedBaseQuantity:remaining,fulfilledBaseQuantity:Number(line.fulfilledBaseQuantity),cancelledBaseQuantity:Number(line.cancelledBaseQuantity)});
      await tx.execute("UPDATE sales_order_lines SET reserved_outstanding_base_quantity=?,backordered_base_quantity=?,version=version+1,updated_at=? WHERE id=?",[reserved,remaining,nowMs,line.id]);
@@ -116,11 +118,11 @@ export class SalesBackorderService{
    await this.audit.record(tx,{actor,action:`sales_order.${action}`,targetId:order.id,targetNumber:order.number,eventId,nowMs,details:{fromStatus:order.status,toStatus:order.status,version,commitmentHash:createHash("sha256").update(JSON.stringify({queueId:Number(queue.id),payload:payload??null,result})).digest("hex")}});
    const fresh=await this.authorize?.();if(fresh?.leaseOwner!==leaseOwner||fresh.signal?.aborted!==false)throw salesError("SALES_DEPENDENCY_UNAVAILABLE");
    completed=result;return result;
-  },{signal,timeoutMs:this.config.transactionTimeoutMs});}
+  },{signal,timeoutMs:this.config.transactionTimeoutMs},{clock:()=>this.time.nowMs()});}
   catch(error){
    signal?.throwIfAborted();
    // Acquire the same lease/owner locks before inspecting facts: the old transaction has settled before retry metadata can change.
-   return this.database.withTransaction(async tx=>{
+   return runObservedSalesTransaction(this.database,async tx=>{
     const {nowMs}=await this.#lease(tx);await tx.query("SELECT id FROM sales_orders WHERE id=? FOR UPDATE",[Number(candidate.sales_order_id)]);
     const [[queue]]=await tx.query("SELECT * FROM sales_backorder_entries WHERE id=? AND sales_order_id=? FOR UPDATE",[Number(candidate.id),Number(candidate.sales_order_id)]);
     const [[audit]]=await tx.query("SELECT action FROM sales_audit_logs WHERE event_id=? AND target_id=? LOCK IN SHARE MODE",[eventId,Number(candidate.sales_order_id)]);
@@ -130,7 +132,7 @@ export class SalesBackorderService{
      await tx.execute("UPDATE sales_backorder_entries SET next_attempt_at=?,last_attempt_at=?,attempt_count=attempt_count+1,last_error_code='SALES_DEPENDENCY_UNAVAILABLE',version=version+1,updated_at=? WHERE id=?",[nowMs+delay,nowMs,nowMs,Number(queue.id)]);
     }
     return {deferred:true};
-   },{signal,timeoutMs:this.config.transactionTimeoutMs});
+   },{signal,timeoutMs:this.config.transactionTimeoutMs},{propagatedError:error});
   }
  }
 }

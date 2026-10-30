@@ -21,7 +21,9 @@ const exportStoreKeys=new Set(),exportActors=[];
 const callbacks=[];
 let outstanding,draft;
 test.beforeAll(async()=>{
- if(process.env.DB_INTEGRATION_TESTS!=="1"||process.env.DB_NAME!=="erp_p4_206107_20261026"||process.env.DB_SOCKET_PATH!=="/private/tmp/erp-fulfillment-p0-mysql-sales-p4-37e933d0a9db/mysql.sock")throw new Error("P4 browser tests require the owned synthetic focused schema and socket");
+ const local=process.env.DB_NAME==="erp_p4_206107_20261026"&&process.env.DB_SOCKET_PATH==="/private/tmp/erp-fulfillment-p0-mysql-sales-p4-37e933d0a9db/mysql.sock";
+ const capacity=process.env.DB_NAME==="erp_sales_capacity_r1"&&process.env.DB_SOCKET_PATH==="/private/tmp/sales-p4-cap-67b57bc6f548/mysql.sock";
+ if(process.env.DB_INTEGRATION_TESTS!=="1"||(!local&&!capacity))throw new Error("P4 browser tests require the owned synthetic focused schema and socket");
  f=await migrationFixture({after(fn){callbacks.push(fn);}},[]);
  const source=defaultConfigurationSource(),port=randomInt(32000,59000);origin=`http://127.0.0.1:${port}`;
  app=await createApplication({configurationSource:{...source,application:{...source.application,port:0},sales:{...source.sales,manualConfirmationWaitMs:100},scheduler:{...source.scheduler,jobs:{...source.scheduler.jobs,"sales.confirmationRecovery":{enabled:false},"sales.backorderAllocate":{enabled:false},"sales.importWorker":{enabled:false}}},security:{...source.security,cors:{...source.security.cors,allowedOrigins:origin}}}});

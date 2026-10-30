@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import {randomBytes,randomUUID,createHash} from "node:crypto";
-if(process.env.DB_INTEGRATION_TESTS!=="1"||!/^fulfillment_p0_sales_[a-z_]*[0-9a-f]{12}$/u.test(process.env.DB_NAME??""))throw new Error("Owned isolated Archive fixture required");
+const local=/^fulfillment_p0_sales_[a-z_]*[0-9a-f]{12}$/u.test(process.env.DB_NAME??"");
+const ci=process.env.GITHUB_ACTIONS==="true"&&/^erp_dev_sf_[0-9a-f]{12}$/u.test(process.env.DB_NAME??"")&&process.env.DB_HOST==="127.0.0.1"&&process.env.DB_SOCKET_PATH==="/tmp/erp-ci-mysql-socket/mysqld.sock";
+if(process.env.DB_INTEGRATION_TESTS!=="1"||(!local&&!ci))throw new Error("Owned isolated Archive fixture required");
 process.env.FULFILLMENT_LIFECYCLE_ENABLED="true";
 const id="sales-p4-synthetic",encryption=JSON.stringify({[id]:randomBytes(32).toString("base64")}),lookup=JSON.stringify({[id]:randomBytes(32).toString("base64")});
 for(const owner of ["SUPPLIER","CUSTOMER"]){process.env[`${owner}_BANK_ACTIVE_KEY_ID`]=id;process.env[`${owner}_BANK_ENCRYPTION_KEYS`]=encryption;process.env[`${owner}_BANK_LOOKUP_ACTIVE_KEY_ID`]=id;process.env[`${owner}_BANK_LOOKUP_KEYS`]=lookup;}

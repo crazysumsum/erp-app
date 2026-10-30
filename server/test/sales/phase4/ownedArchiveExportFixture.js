@@ -16,8 +16,9 @@ export async function ownedArchiveExportFixture(t,{archiveEnabled=false,unguarde
  const owned=await archiveFactsFixture(t,{shipmentDate:"2023-11-14"});
  if(unguardedLegacySchema){
   const directory=fileURLToPath(new URL("../../../database/migrations/",import.meta.url)),names=(await readdir(directory)).filter(name=>/^[0-9]{4}_.*\.(?:js|sql)$/u.test(name)&&Number(name.slice(0,4))>88&&name!=="0107_protect_sales_archive_immutability.js").sort();
+  const [[beforeMigrations]]=await owned.db.query("SELECT COUNT(*) AS n FROM fr_schema_migrations");
   for(const name of names){const file=path.join(directory,name);if(name.endsWith(".js"))await (await import(pathToFileURL(file).href)).up(owned.db);else await owned.db.query(await readFile(file,"utf8"));await owned.db.execute("INSERT INTO fr_schema_migrations(name,applied_at) VALUES(?,?)",["migrations/"+name,Date.now()]);}
-  const [[count]]=await owned.db.query("SELECT COUNT(*) AS n FROM fr_schema_migrations");assert.equal(Number(count.n),104);
+  const [[count]]=await owned.db.query("SELECT COUNT(*) AS n FROM fr_schema_migrations");assert.equal(Number(count.n),Number(beforeMigrations.n)+names.length);
  }else await promisify(execFile)(process.execPath,[fileURLToPath(new URL("../../../scripts/migrate.js",import.meta.url))],{env:{...process.env,DB_NAME:owned.f.name,DB_USER:owned.f.connectionOptions.user,DB_PASSWORD:owned.f.connectionOptions.password},timeout:180000,maxBuffer:1024*1024});
  const root=prepareDiskTempDirectory("storage/sales-export-test-"+randomUUID()),previousShutdown=owned.f.cleanup.shutdown,application={current:null};
  owned.f.cleanup.shutdown=async()=>{const errors=[];for(const work of [()=>application.current?.shutdown("guarded_archive_export_complete"),()=>previousShutdown?.(),async()=>{assert.match(path.basename(root),/^sales-export-test-[a-f0-9-]+$/u);await rm(root,{recursive:true});}])try{await work();}catch(error){errors.push(error);}if(errors.length)throw new AggregateError(errors,"Owned Archive Export cleanup failed");};

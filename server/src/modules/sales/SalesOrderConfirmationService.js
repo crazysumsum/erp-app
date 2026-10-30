@@ -1,3 +1,5 @@
+import {stageSalesReservation} from "./salesTransactionObservations.js";
+import {recordSalesDomainDuration} from "./salesDomainObservations.js";
 import { createHash, randomUUID } from "node:crypto";
 import { CustomerLookupService } from "../customer/CustomerLookupService.js";
 import { ItemLookupService } from "../item/ItemLookupService.js";
@@ -125,9 +127,10 @@ export class SalesOrderConfirmationService {
   async completeConfirmation({ eventId, claims, leaseOwner, recovery = false, signal }) {
     salesEventId(eventId);
     if (!recovery && leaseOwner != null) salesEventId(leaseOwner);
+    let terminal=null;
     const outcome = await this.operations.run(this.database, async tx => {
       const [[operation]] = await tx.query(`SELECT id,target_id,command_type,target_type,status,request_hash,recovery_payload,actor_user_id,actor_label,
-        lease_owner,lease_until
+        lease_owner,lease_until,created_at
         FROM sales_operation_requests WHERE event_id=? FOR UPDATE`, [eventId]);
       if (!operation || operation.command_type !== "CONFIRM_ORDER" || operation.target_type !== "SALES_ORDER") throw salesError("SALES_EVENT_CONFLICT");
       const actor = recovery ? await requireSalesRecoveryActor(tx, Number(operation.actor_user_id)) : await requireSalesWriteActor(tx, claims);
@@ -151,12 +154,13 @@ export class SalesOrderConfirmationService {
           salesPayloadHash(payload) !== operation.request_hash) throw salesError("SALES_EVENT_CONFLICT");
       const [[locked]] = await tx.query("SELECT status,version,confirmation_event_id,line_count FROM sales_orders WHERE id=? FOR UPDATE", [Number(operation.target_id)]);
       if (!locked || locked.status !== "CONFIRMING" || locked.confirmation_event_id !== eventId || Number(locked.version) !== payload.version + 1) throw salesError("SALES_EVENT_CONFLICT");
+      terminal={startedAt:Number(operation.created_at),outcome:"error"};
       const order = await readSalesOrderDetail(tx, Number(operation.target_id)), nowMs = this.time.nowMs();
       await tx.query("SAVEPOINT sales_confirmation_business");
       try {
         const result = await this.confirmDraftInTransaction(tx, { order,actor,eventId,nowMs });
         await this.operations.succeed(tx, { operationId: Number(operation.id),result: result.operation,nowMs });
-        return result;
+        terminal.outcome="success";return result;
       } catch (error) {
         if (!["CUSTOMER_NOT_SALEABLE","CUSTOMER_CREDIT_ON_HOLD","SKU_NOT_SALEABLE","SKU_UOM_INVALID","SALES_UOM_CONVERSION_INVALID",
           "SALES_QUANTITY_INVALID","SALES_PRICE_INVALID","SALES_INPUT_INVALID","WAREHOUSE_INVALID","SKU_NOT_INVENTORY_TRACKED","SERIAL_TRACKING_UNSUPPORTED"].includes(error.code)) throw error;
@@ -168,6 +172,8 @@ export class SalesOrderConfirmationService {
         return { errorCode };
       }
     }, { signal,timeoutMs: this.config.transactionTimeoutMs });
+    // A fresh terminal result is observed only after acknowledged commit. Replays do not create completions.
+    if(terminal)recordSalesDomainDuration(this.database,"confirm_order",terminal.outcome,this.time.nowMs()-terminal.startedAt);
     if (outcome.errorCode) throw salesError(outcome.errorCode);
     return outcome;
   }
@@ -234,6 +240,7 @@ export class SalesOrderConfirmationService {
     const changed = salesPayloadHash(before) !== salesPayloadHash(after);
     const reason = changed ? `MASTER_DIFFERENCE ${salesPayloadHash({ before,after })}` : "";
     await this.#transition(tx, { order,actor,eventId,nowMs,status: "CONFIRMED",action: "confirmed",reason });
+    stageSalesReservation(tx,"CONFIRMATION",reserved.lines);
     return { salesOrder,operation: { id: order.id,number: order.number,status: "CONFIRMED",version: order.version + 1 },
       warnings: [...(backorderCount ? [{ code: "PARTIAL_BACKORDER" }] : []),...(credit.creditLimit === null ? [] : [{ code: "CREDIT_LIMIT_ADVISORY" }]),...(changed ? [{ code: "MASTER_DATA_CHANGED" }] : [])] };
   }

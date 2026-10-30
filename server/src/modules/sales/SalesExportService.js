@@ -80,7 +80,8 @@ export class SalesExportService {
  }
  async *#csv(tx,job,actorId,signal,counter){
   const snapshot=validateSalesExportInput({scope:job.scope,filters:parsed(job.filters)});if(salesPayloadHash(snapshot)!==job.filters_hash)throw salesError("SALES_INPUT_INVALID");
-  const archived=snapshot.scope==="ARCHIVE",table=archived?"sales_orders_archive":"sales_orders",lineTable=archived?"sales_order_lines_archive":"sales_order_lines",query=snapshot.filters,{where,values}=salesOrderWhere(query,{actorId,archived}),column=SALES_ORDER_SORT_COLUMNS[query.sortBy],direction=query.descending?"DESC":"ASC",comparison=query.descending?"<":">";let cursor;
+  const archived=snapshot.scope==="ARCHIVE",table=archived?"sales_orders_archive":"sales_orders",lineTable=archived?"sales_order_lines_archive":"sales_order_lines",query=snapshot.filters,{where:filtersWhere,values}=salesOrderWhere(query,{actorId,archived}),column=SALES_ORDER_SORT_COLUMNS[query.sortBy],direction=query.descending?"DESC":"ASC",comparison=query.descending?"<":">";let cursor;
+  const where=filtersWhere+(archived?(filtersWhere?" AND ":" WHERE ")+"EXISTS (SELECT 1 FROM sales_archive_order_manifests m WHERE m.sales_order_id=sales_orders_archive.id AND m.archive_batch_id=sales_orders_archive.archive_batch_id)":"");
   yield SALES_EXPORT_COLUMNS;
   for(;;){
    signal.throwIfAborted();const suffix=cursor?`${where?" AND ":" WHERE "}(${column}${comparison}? OR (${column}=? AND id${comparison}?))`:"",args=cursor?[...values,cursor.value,cursor.value,cursor.id]:[...values];

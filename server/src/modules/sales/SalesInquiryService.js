@@ -43,7 +43,7 @@ export function salesOrderWhere(query,{actorId,outstanding=false,archived=false}
  if(query.view==="mine"){if(!Number.isSafeInteger(actorId)||actorId<1)throw salesError("SALES_INPUT_INVALID");clauses.push("created_by=?");values.push(actorId);}
  if(query.view==="backorder")clauses.push("has_backorder=1");
  if(query.view==="finalized")clauses.push("status IN ('COMPLETED','CLOSED','CANCELLED')");
- if(outstanding||query.view==="outstanding")clauses.push(`status IN ('CONFIRMED','PARTIALLY_FULFILLED') AND EXISTS (SELECT 1 FROM ${archived?"sales_order_lines_archive":"sales_order_lines"} l WHERE l.sales_order_id=${archived?"sales_orders_archive":"sales_orders"}.id AND l.ordered_base_quantity>l.fulfilled_base_quantity+l.cancelled_base_quantity)`);
+ if(outstanding||query.view==="outstanding")clauses.push(`status IN ('CONFIRMED','PARTIALLY_FULFILLED') AND (SELECT 1 FROM ${archived?"sales_order_lines_archive":"sales_order_lines"} l WHERE l.sales_order_id=${archived?"sales_orders_archive":"sales_orders"}.id AND l.ordered_base_quantity>l.fulfilled_base_quantity+l.cancelled_base_quantity LIMIT 1)=1`);
  return {where:clauses.length?` WHERE ${clauses.join(" AND ")}`:"",values};
 }
 const summarySelect=`id,sales_order_number,status,source_type,source_quotation_id,channel_code_snapshot,external_order_id_snapshot,version,customer_id,customer_code_snapshot,customer_name_snapshot,currency_code,

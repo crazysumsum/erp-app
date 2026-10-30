@@ -119,6 +119,7 @@ jobs:
     services: &mysql_services
       mysql:
         image: mysql:26.7.0
+        command: --performance-schema-digests-size=100000
         env:
           # MySQL 官方映像收到這三個變數會自動建庫、建帳號並把該資料庫的
           # 全部權限授予這個帳號——同 server/database/init.sql 手動做的事一樣，
@@ -215,7 +216,7 @@ jobs:
             console.log('Native CI transport verified:',JSON.stringify(identity));
           } finally {await db.end();}
           NODE
-          npm run test:coverage:shard --workspace server -- --test-shard=${{ matrix.shard }}/4
+          npm run test:coverage:shard --workspace server -- --test-shard=${{ matrix.shard }}/4 '**/*.test.{js,mjs,cjs,ts,mts,cts}'
 
       - name: Record candidate and shard identity
         working-directory: server

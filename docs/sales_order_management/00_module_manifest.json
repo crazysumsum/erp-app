@@ -55,7 +55,8 @@
       "server/src/services/fulfillmentArchive/**",
       "server/src/modules/inventory/InventoryLookupService.js",
       "server/src/services/fulfillment/FulfillmentOpenMatterService.js",
-      "server/src/services/mysqldatabase/MySqlDatabaseService.js"
+      "server/src/services/mysqldatabase/MySqlDatabaseService.js",
+      "server/scripts/activateSalesObservations.js"
     ],
     "test_paths": [
       "server/test/sales/**",
@@ -230,7 +231,10 @@
       "server/test/salesFulfillmentService.test.js",
       "server/test/integration/fulfillmentPendingClaims.integration.test.js",
       "server/src/services/fulfillment/FulfillmentOpenMatterService.js",
-      "server/src/services/mysqldatabase/MySqlDatabaseService.js"
+      "server/src/services/mysqldatabase/MySqlDatabaseService.js",
+      "server/database/migrations/*_create_sales_operational_observations.js",
+      "server/scripts/activateSalesObservations.js",
+      "server/database/migrations/*_add_sales_backorder_order_index.js"
     ],
     "approval_required_paths": [
       "server/database/migrations/**",
@@ -313,7 +317,10 @@
       "server/database/migrations/*_create_fulfillment_archive_mirrors.js",
       "server/database/migrations/*_protect_fulfillment_archive_contracts.js",
       "server/src/services/fulfillment/FulfillmentOpenMatterService.js",
-      "server/src/services/mysqldatabase/MySqlDatabaseService.js"
+      "server/src/services/mysqldatabase/MySqlDatabaseService.js",
+      "server/database/migrations/*_create_sales_operational_observations.js",
+      "server/scripts/activateSalesObservations.js",
+      "server/database/migrations/*_add_sales_backorder_order_index.js"
     ],
     "forbidden_paths": [
       ".env",
@@ -347,7 +354,9 @@
       "server/database/migrations/*_create_sales_archive_batches.js",
       "server/database/migrations/*_create_sales_archive_tables.js",
       "server/database/migrations/*_protect_sales_archive_immutability.js",
-      "server/database/migrations/0105_add_fulfillment_archive_routing.js"
+      "server/database/migrations/0105_add_fulfillment_archive_routing.js",
+      "server/database/migrations/*_create_sales_operational_observations.js",
+      "server/database/migrations/*_add_sales_backorder_order_index.js"
     ],
     "shared_resources": [
       "global-migration-sequence",
@@ -368,7 +377,7 @@
         "id": "sales-fulfillment-projection-and-lifecycle-contract",
         "version": "HD011/013/014 plus approved HD016A pending-only provider; original lifecycle/Shipment/replay unchanged; full P4 Gates pending; current-main6cdc observed byte pin; approved TC03210s only, no new consumer contract",
         "source": "docs/sales_order_management/03_design_spec.md",
-        "sha256": "5ba756e39d3493c37c42cb20547de0c19a5b259d899ca2ed62056569bd795e6f",
+        "sha256": "bb5c87012262ee19e3cec2913b0ea54148550b874d4894155367a905661e180d",
         "consumers": [
           "fulfillment-shipping-management",
           "inventory-management",
@@ -452,6 +461,17 @@
           "sales-phase005-unit",
           "sales-phase005-native"
         ]
+      },
+      {
+        "module_id": "inventory-management",
+        "id": "inventory-readonly-sales-observation",
+        "version": "1-DEC043-Sam-approved; actual registered metrics/owned query-only RR/bounded500; no reservation authority",
+        "source": "server/src/modules/inventory/InventoryReservationService.js",
+        "sha256": "d8d22ce092ca571154316349c74308e875130f5e7750f13e1c86570f9bef8bae",
+        "regression_suites": [
+          "sales-phase005-observations-unit",
+          "sales-phase005-observations-native"
+        ]
       }
     ],
     "data_ownership": {
@@ -466,7 +486,9 @@
         "Sales external order keys",
         "Sales export jobs",
         "Sales audit logs",
-        "Sales archive batches and archive mirrors"
+        "Sales archive batches and archive mirrors",
+        "Sales operational job-run evidence (sales_operational_job_runs)",
+        "Sales operational coverage and sampled alert state (sales_operational_alert_state)"
       ],
       "read_only": [
         "Customer master data, default currency, payment term and credit state",
@@ -518,7 +540,9 @@
       "sales-archive-joint-native",
       "sales-fulfillment-pending-provider-native",
       "sales-phase005-unit",
-      "sales-phase005-native"
+      "sales-phase005-native",
+      "sales-phase005-observations-unit",
+      "sales-phase005-observations-native"
     ],
     "uat": []
   },
