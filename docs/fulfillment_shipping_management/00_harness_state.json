@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 301,
+  "revision": 315,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,24 +11,24 @@
   "baseline": {
     "design": "ffca05957b4ca550ff231f6b9224537735e93615c91345c215f1eb0572be1747",
     "plan": "9a651b0b761d938b06f4083359398de612fa14ad94e1755be8ecafac9dfde030",
-    "code_commit": "c4352baa2047a3c666a36b36424c362a3f0789ea",
+    "code_commit": "1705bf55b8f86e75d62b6f99fe83af11cc2376c2",
     "source_fingerprint": "f5722fefc3372188dfe6396d2ea7fad158315aa6abd5778ccffbf5a3ad6852df",
     "worktree": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1",
     "default_commit": "e64dfc7452dd4ce598e6e9d1765000d9633dd849",
     "mode_entry_commit": "fd32762f4fa17a5e77aaa7118a9ded2d3ac81e9e"
   },
   "runtime": {
-    "instance_id": "fulfillment-p1-persistent-recovery",
+    "instance_id": "fulfillment-p1-planqual-7ce01091",
     "owner": "/root; Sam actual P1 development and isolated developer verification authorization",
     "resources": {
       "workspace": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1",
       "mysql-socket": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/erp-fulfillment-p0-mysql-r",
       "runtime-and-private-evidence": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime",
-      "runtime-policy": "CLEANED child-c-resume: exactbasebe6df2eb/appbe5f04e7 removed; ownMySQL66189 gracefullystopped, zeroactiveclients/ownedSFchildren, socket/pidabsent; datadir/allprivateevidence retained.",
+      "runtime-policy": "CLEANED finalPLAN runtime: exactbase7ce01091/appd820f985 removed; ownMySQL80563 gracefulshutdown/socketpidabsent, noactiveclients/ownedSFchildren; datadir/evidence retained.",
       "dependencies": "Actualmainlockedoffline npmci--ignore-scripts; body-parser2.4.0/qs6.16.1/PW1.63.0; nocode/dependency invention",
-      "browser-runtime": "No frontend/browser suite; focusednativeoriginalHTTPpreview usesownedUUIDchild/ephemeralport0 andexistingcleanup; no sharedportreuse.",
-      "mysql-schema": "fulfillment_p0_p1_be6df2eb (CLEANED)",
-      "web-port": "P0/P1 realPW PASS2each; both ownedservers ended; no active browserwork."
+      "browser-runtime": "Both distinct real P0/P1 browser suites actualPASS2each with zero failures/skips; ownedservers ended.",
+      "mysql-schema": "fulfillment_p0_p1_7ce01091 (CLEANED)",
+      "web-port": "61349/61350 notaccepting after completion; no active browser servers."
     },
     "lease_ref": null
   },
@@ -49,12 +49,12 @@
     "TASK-014": "DONE",
     "TASK-015": "DONE",
     "TASK-016": "DONE",
-    "TASK-017": "IN_PROGRESS",
+    "TASK-017": "DONE",
     "TASK-018": "DONE",
     "TASK-019": "DONE",
     "TASK-020": "DONE",
     "TASK-021": "DONE",
-    "TASK-022": "IN_PROGRESS",
+    "TASK-022": "DONE",
     "TASK-023": "DONE",
     "TASK-024": "PENDING",
     "TASK-025": "PENDING",
@@ -5920,6 +5920,54 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-CHILD-C-CURRENTPLAN-REQUALIFICATION-ADMISSION",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_resume_review",
+      "reviewed_baseline": "ffca05957b4ca550ff231f6b9224537735e93615c91345c215f1eb0572be1747",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-child-c-currentplan-requalification-admission-review.json SHAbee88de8434f006f4984e377b9c742f71ae1895ea2249bfd2e6a1162c33f141c; actual6suite admission after exact3tools/contracts review; currentCI all13PASS condition now observed; newPLAN actualexecution, no relabel/waiver.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-CHILD-C-CURRENTCI-CONDITIONAL-CLOSURE",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_resume_review",
+      "reviewed_baseline": "ffca05957b4ca550ff231f6b9224537735e93615c91345c215f1eb0572be1747",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-child-c-current-ci-results-conditional-closure-review.json SHA8cb8ffcb12ea64b2bb266de1874c218ed296841f51114ef8b798fb8b58690f75; actual13/13currentCI,same-tree,capacity,4400tests4193PASS207qualifiedSKIP0fail,coverage95.76/87.64/94.94+39floors,realPW2/Sales2/import3/TC0422; closure conditional on6actualcurrentPLAN results/finalreview.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-CHILD-C-FINAL-CURRENTPLAN-CI-DOD-CLOSURE",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_resume_review",
+      "reviewed_baseline": "ffca05957b4ca550ff231f6b9224537735e93615c91345c215f1eb0572be1747",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-child-c-final-currentplan-ci-dod-closure-review.json SHA8f24cb2b9c7ff638700a43a346432d1d0034ba0e1bc36b3137265f1bf0f2c947; actualexact1705/sourceFPf5722/PLAN9a651; all6currentPLAN raw+typed+artifact checks,CI13/13,same-tree,unchanged5000/20s/rollback/replay/coverage/realPW,cleanup;0C/H/M; DEF022025closure/TASK017022DONE approved, no merge/acceptance.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-PR297-MAIN305-IMPACT",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_resume_review",
+      "reviewed_baseline": "ffca05957b4ca550ff231f6b9224537735e93615c91345c215f1eb0572be1747",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-child-c-main6d84-integration-impact-review.json SHA60fea1b22a4b1d62c7fcb3fd8abbe7d1400ac96f2c762637f70b7fea4efa03ca; actuale64→6d84 23Supplierpaths reviewed, noFulfillment/src/client/schema/deps/CI orconsumedcontracts changes; Supplier3s/waivers notadoptedbyFulfillment; required6currentintegratedsuite+newCI/finalreview,0CHM.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -7055,6 +7103,83 @@
       "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-e54a5398-published-candidate-bridge-review.json SHA17296b87df5411a40fe64c36f06c4cbd84955bc4255ea5d5f0328b693cb66bb6; actualseparateagent0C/H/M,1nonblockingLOW; sourceboundbridge; noGitHubhumanAPPROVE ormergeauthorization",
       "actor": "/root/fulfillment_independent_review actualpublishedsource review",
       "observed_at": "2026-10-28T04:14:50.903361Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "Test (server + client, MySQL integration)",
+      "code_commit": "1705bf55b8f86e75d62b6f99fe83af11cc2376c2",
+      "spec_baseline": "9a651b0b761d938b06f4083359398de612fa14ad94e1755be8ecafac9dfde030",
+      "source_fingerprint": "f5722fefc3372188dfe6396d2ea7fad158315aa6abd5778ccffbf5a3ad6852df",
+      "status": "PENDING",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/40985160345; exact1705 current candidate, actual GitHub jobs running; earlier CI not substituted.",
+      "actor": "/root actual GitHub connector observation",
+      "observed_at": "2026-10-30T01:23:32.291789+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Dependency audit",
+      "code_commit": "1705bf55b8f86e75d62b6f99fe83af11cc2376c2",
+      "spec_baseline": "9a651b0b761d938b06f4083359398de612fa14ad94e1755be8ecafac9dfde030",
+      "source_fingerprint": "f5722fefc3372188dfe6396d2ea7fad158315aa6abd5778ccffbf5a3ad6852df",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/40985160345/job/123834362464; actual13/13jobsSUCCESS, checkout6737868 parents e64+1705, exactsame tree04e890; private rawlogs/identity/finaljobs retained; finalindependent closing remainspending.",
+      "actor": "/root actual GitHub connector run/jobs/logs plus git commit API identity",
+      "observed_at": "2026-10-30T01:42:21.952534+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Lint",
+      "code_commit": "1705bf55b8f86e75d62b6f99fe83af11cc2376c2",
+      "spec_baseline": "9a651b0b761d938b06f4083359398de612fa14ad94e1755be8ecafac9dfde030",
+      "source_fingerprint": "f5722fefc3372188dfe6396d2ea7fad158315aa6abd5778ccffbf5a3ad6852df",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/40985160345/job/123834362471; actual13/13jobsSUCCESS, checkout6737868 parents e64+1705, exactsame tree04e890; private rawlogs/identity/finaljobs retained; finalindependent closing remainspending.",
+      "actor": "/root actual GitHub connector run/jobs/logs plus git commit API identity",
+      "observed_at": "2026-10-30T01:42:21.952534+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Test (server + client, MySQL integration)",
+      "code_commit": "1705bf55b8f86e75d62b6f99fe83af11cc2376c2",
+      "spec_baseline": "9a651b0b761d938b06f4083359398de612fa14ad94e1755be8ecafac9dfde030",
+      "source_fingerprint": "f5722fefc3372188dfe6396d2ea7fad158315aa6abd5778ccffbf5a3ad6852df",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/40985160345/job/123840826690; actual13/13jobsSUCCESS, checkout6737868 parents e64+1705, exactsame tree04e890; private rawlogs/identity/finaljobs retained; finalindependent closing remainspending.",
+      "actor": "/root actual GitHub connector run/jobs/logs plus git commit API identity",
+      "observed_at": "2026-10-30T01:42:21.952534+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Build frontend",
+      "code_commit": "1705bf55b8f86e75d62b6f99fe83af11cc2376c2",
+      "spec_baseline": "9a651b0b761d938b06f4083359398de612fa14ad94e1755be8ecafac9dfde030",
+      "source_fingerprint": "f5722fefc3372188dfe6396d2ea7fad158315aa6abd5778ccffbf5a3ad6852df",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/40985160345/job/123834362346; actual13/13jobsSUCCESS, checkout6737868 parents e64+1705, exactsame tree04e890; private rawlogs/identity/finaljobs retained; finalindependent closing remainspending.",
+      "actor": "/root actual GitHub connector run/jobs/logs plus git commit API identity",
+      "observed_at": "2026-10-30T01:42:21.952534+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Browser tests (Playwright)",
+      "code_commit": "1705bf55b8f86e75d62b6f99fe83af11cc2376c2",
+      "spec_baseline": "9a651b0b761d938b06f4083359398de612fa14ad94e1755be8ecafac9dfde030",
+      "source_fingerprint": "f5722fefc3372188dfe6396d2ea7fad158315aa6abd5778ccffbf5a3ad6852df",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/40985160345/job/123834362159; actual13/13jobsSUCCESS, checkout6737868 parents e64+1705, exactsame tree04e890; private rawlogs/identity/finaljobs retained; finalindependent closing remainspending.",
+      "actor": "/root actual GitHub connector run/jobs/logs plus git commit API identity",
+      "observed_at": "2026-10-30T01:42:21.952534+00:00"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "Independent exact1705 published Fulfillment P1 source, execution evidence, currentCI and DoD closure review",
+      "code_commit": "1705bf55b8f86e75d62b6f99fe83af11cc2376c2",
+      "spec_baseline": "9a651b0b761d938b06f4083359398de612fa14ad94e1755be8ecafac9dfde030",
+      "source_fingerprint": "f5722fefc3372188dfe6396d2ea7fad158315aa6abd5778ccffbf5a3ad6852df",
+      "status": "PASS",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-child-c-final-currentplan-ci-dod-closure-review.json SHA8f24cb2b9c7ff638700a43a346432d1d0034ba0e1bc36b3137265f1bf0f2c947; actualSEPARATE_AGENT0C/H/M; no GitHub humanAPPROVE ormergeauthorization claimed.",
+      "actor": "/root/fulfillment_resume_review actual independent published-candidate review",
+      "observed_at": "2026-10-30T01:59:33.560107+00:00"
     }
   ],
   "pending_decisions": [
@@ -8435,8 +8560,56 @@
       "kind": "GIT_PUSH",
       "target": "crazysumsum/erp-app refs/heads/codex/fulfillment-p1-queue-picking; existingdraftPR297",
       "idempotency_key": "child-c-reviewed-candidate-push",
-      "status": "PLANNED",
-      "source_ref": "ActualSam originalP1/CcurrentCI/draftPRauthority + resumed繼續; reviewedsourceFPf5722/newmetadataPLAN9a651. Commit reviewedmetadata first, record exactcandidateSHA beforepush; noforce/noPRmerge/noevidenceexport."
+      "status": "CONFIRMED",
+      "source_ref": "Exactcandidate 1705bf55b8f86e75d62b6f99fe83af11cc2376c2 sourceFPf5722fefc3372188dfe6396d2ea7fad158315aa6abd5778ccffbf5a3ad6852df targetmaine64 alreadyintegrated; normalpush/noForce toexistingdraftPR297; raw/privateevidence excluded.; GitHub get_pr_info observed exact1705 head, basee64, draft/open/unmerged; receipt child-c-push-observed.json SHAb1ab3200a512c4955c7a468134aded960d7aad6042d8508490d3b0a81bafad7d"
+    },
+    {
+      "id": "CHILD-C-PR297-REFRESH",
+      "kind": "PR_UPDATE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/297 body only",
+      "idempotency_key": "child-c-pr297-current-candidate-body",
+      "status": "CONFIRMED",
+      "source_ref": "Prepared private child-c-pr297-pending-body.md; truthful current1705 CI pending and metadata evidence blocker; keep draft/no merge/no raw evidence export. Connector mutation denied403; authorized gh pr edit succeeded, then GitHub get_pr_info verified exact full body,1705head,draft/open/unmerged."
+    },
+    {
+      "id": "CHILD-C-CURRENTPLAN-RUNTIME",
+      "kind": "ISOLATED_TEST_SETUP",
+      "target": "Owned socket-only MySQL datadir, fresh synthetic UUID base/account only",
+      "idempotency_key": "child-c-planqual-runtime-once",
+      "status": "CONFIRMED",
+      "source_ref": "Actual currentCI40985160345 all13SUCCESS; independently reviewed tools frozen in child-c-planqual-baseline.json; required six currentPLAN developer suites only, fresh namespace, preserve20s/fullcapacity/evidence.; /Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/child-c-planqual-runtime-public.json SHAccc280ffa6e7dc93e5c80b3099e04b23af2b75360d233708b0449fc1c3ef6be5"
+    },
+    {
+      "id": "CHILD-C-CURRENTPLAN-RUNTIME-CLEANUP",
+      "kind": "ISOLATED_TEST_CLEANUP",
+      "target": "Exact owned namespace7ce01091/appd820f985/MySQL80563 only; preserve datadir and evidence",
+      "idempotency_key": "child-c-planqual-runtime-cleanup-once",
+      "status": "CONFIRMED",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/child-c-planqual-runtime-cleanup.json SHAf4092ecb42b76d2ce09a8dec2b362b5436dfbfc5be1b4381f655f6060c4648d1; exact owned base/account absent, noactiveclients/ownedSFchildren, ownserver stopped/socketpid absent; datadir/evidence retained."
+    },
+    {
+      "id": "CHILD-C-PR297-FINAL-RESULTS",
+      "kind": "PR_UPDATE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/297 body only; keepdraft/no merge",
+      "idempotency_key": "child-c-final-reviewed-results-pr297",
+      "status": "CONFIRMED",
+      "source_ref": "Private child-c-pr297-final-body.md SHAedba37698173b6ff6ecc241022e8b4a27bee28486c4815469aceba8bc8a9a86f; exact1705 currentCI13PASS,6actualcurrentPLAN suites, independentfinalreview, observedphasegateLOCAL_CHECKS_PASS. Summary only/no raw evidence export.; ghpr edit succeeded; GitHubconnector verifiedexactbody/head1705/basee64,draft/open/unmerged; /Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/child-c-final-pr-observed.json SHAff03118420604f005cbeab583d7bf887cc3292d9f1062ed4c58f385a7545ca91"
+    },
+    {
+      "id": "PR297-MAIN-INTEGRATION-MERGE-AUTHORITY",
+      "kind": "USER_AUTHORIZATION",
+      "target": "Latest-main integration, reviewed verification, PR297 ready and merge only after newcandidateCI/allrequiredchecksPASS",
+      "idempotency_key": "sam-pr297-main-integration-merge-20261030",
+      "status": "CONFIRMED",
+      "source_ref": "Actual Sam in this chat: 先整合最新 main，完成影響覆核及必要驗證；確認新候選 CI 和所有必要檢查通過後，將 PR #297 轉為正式 PR 並合併。保留全部安全檢查及 20 秒限制，若容量或效能測試失敗便停下報告。 Supersedes prior no-merge hold only with stated gates satisfied; no threshold/waiver/production/UAT authority."
+    },
+    {
+      "id": "PR297-INTEGRATE-MAIN305",
+      "kind": "LOCAL_GIT_MERGE",
+      "target": "codex/fulfillment-p1-queue-picking integrates fetchedmain6d84ee454b72f4b3e43b2aa6eee2436e6e950716 after preservedbookkeepingcommit",
+      "idempotency_key": "pr297-integrate-main6d84-once",
+      "status": "STARTED",
+      "source_ref": "ActualSam latestintegration/mergeauthority; freshfetchmain6d84 observed, separateimpactreceipt60fea1b22a4b; preserveprior1705evidence/docs snapshot beforecommit, no productsemantic conflict, no forcepush."
     }
   ],
   "evidence_files": [
@@ -8471,7 +8644,13 @@
     "evidence/20261029T100154-9fc3feec1915/run.json",
     "evidence/20261030T005654-3cd09dde9859/run.json",
     "evidence/20261030T010843-fca9dac13c72/run.json",
-    "evidence/20261030T010920-3bfd5bbcda06/run.json"
+    "evidence/20261030T010920-3bfd5bbcda06/run.json",
+    "evidence/20261030T014313-773ca9f50ba7/run.json",
+    "evidence/20261030T014311-7ec816698116/run.json",
+    "evidence/20261030T014313-e03e11392622/run.json",
+    "evidence/20261030T014329-d61cd9fd8cc4/run.json",
+    "evidence/20261030T015438-545ec0199e0d/run.json",
+    "evidence/20261030T015528-2efff33cd916/run.json"
   ],
   "defects": [
     {
@@ -8798,7 +8977,7 @@
     {
       "id": "DEF-022",
       "severity": "HIGH",
-      "status": "OPEN",
+      "status": "CLOSED",
       "source_ids": [
         "TASK-016",
         "TASK-019",
@@ -8816,7 +8995,8 @@
         "PASS qualification:5000balances previewALLOCATE_SETUP actualtx19968.595287ms/callback19797.434984/noerror/allsettled; outerphase19994.380481ms. Only31.405ms txheadroom, explicitlydisclosed torootuser/PR; no minimumheadroomcontractinvented, no stableP95/amplemarginclaim orwaiver.",
         "Actualfinalindependentreviewc707e8d0ba317459bd85d8d8db13895504094da9eaed0ff1d22fdc830f2a5cb1 confirms currentCIe54/DoD/closure,0C/H/M; originalfailurespreserved, no waiver.",
         "REOPEN actualPRintegrationCI40632110878 checkout22b1742b8b65f1072f4ad19e5d2e4e1210ca6fdf(head e54/basea98): directREALLOCATE_ROLLBACK tx20053.779930ms/5841queries40257executes DATABASE_TRANSACTION_TIMEOUT; inventoryPost12177.549ms thenownerCurrentProof853.590msfailed; exactsynthetic45000notreached. PriorbranchPASS/closure retained, notsameasoriginal5000Balancepreviewfailure (thatcase shard1PASS). RawSHA3fe42f5eebb25fd9761532e25f3bcaf8042185e6d39129157ae6f268f6ae539c; report64; no rerun/fix.",
-        "Current30d PR CI40801317549 actualcheckoutf074/parents ef5+30d FAIL: REALLOCATE_ROLLBACK ordinal6 tx20001.045634ms,941query40338execute,DATABASE_TRANSACTION_TIMEOUT; case38373.236757ms is not TX. prepare696.828/preclaim4528.262/inventoryPost9073.143/ownerCurrentProof810.222ms each completed; timeout after ownerCurrentProof in caller, exactslowSQL and prior/aftergap attribution not proven. Strict45000 rejectedtimeout; tailfault/facts/recovery not reached. report67/rawSHA7a31b311; userstoprule observed,no retry oroptimization. Original failure/PASS histories preserved."
+        "Current30d PR CI40801317549 actualcheckoutf074/parents ef5+30d FAIL: REALLOCATE_ROLLBACK ordinal6 tx20001.045634ms,941query40338execute,DATABASE_TRANSACTION_TIMEOUT; case38373.236757ms is not TX. prepare696.828/preclaim4528.262/inventoryPost9073.143/ownerCurrentProof810.222ms each completed; timeout after ownerCurrentProof in caller, exactslowSQL and prior/aftergap attribution not proven. Strict45000 rejectedtimeout; tailfault/facts/recovery not reached. report67/rawSHA7a31b311; userstoprule observed,no retry oroptimization. Original failure/PASS histories preserved.",
+        "Current1705 synthetic6737868 exactsame-tree CI40985160345 all13SUCCESS; native4193PASS/207existingqualifiedSKIP/0FAIL, global+39coveragefloorsPASS; originaldirectReallocate strict45000 rollbackTX11623.629329ms andsameeventsuccess11524.622606ms, HTTPReallocateTX16311.613367ms, fullPick/Cancel/preview PASS atsame5000/20s. AuthenticfinalPLAN6suites native596/PW2+2 zeroFAIL/SKIP pluslint/build/auditpolicyPASS. Originalfailurehistories retained. /Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-child-c-final-currentplan-ci-dod-closure-review.json SHA8f24cb2b9c7ff638700a43a346432d1d0034ba0e1bc36b3137265f1bf0f2c947"
       ],
       "risk_approval_id": null
     },
@@ -8862,7 +9042,7 @@
     {
       "id": "DEF-025",
       "severity": "HIGH",
-      "status": "OPEN",
+      "status": "CLOSED",
       "source_ids": [
         "TASK-016",
         "TASK-017",
@@ -8876,7 +9056,8 @@
         "Exacte54CI40628810071 13/13jobsSUCCESS; ActualcurrentHTTP5000Allocate/Reallocate/Pick200,8739.79/12337.97/2599.14ms; tailrollback+3replays/conservationPASS; original79HTTP500cause remainshistoricallyunknown, no falsecauseclaim. Preservedalloriginalfailures; independentfinalCIclosure reviewrequired beforeadoption.",
         "Actualfinalindependentreviewc707e8d0ba317459bd85d8d8db13895504094da9eaed0ff1d22fdc830f2a5cb1 confirms currentCIe54/DoD/closure,0C/H/M; originalfailurespreserved, no waiver.",
         "REOPEN actualPRintegrationCI40632110878 actualcheckout22b1742b: routeboundHTTP_REALLOCATE tx20002.592280ms/5413queries40256executes DATABASE_TRANSACTION_TIMEOUT, HTTP500/20115.181ms. PrecedingHTTPAllocate200/16147.729ms, laterPick/replaynotreached. RawSHA3d3e8976da08949c37491c57f2ba54736a2214d7deed973b32b1ad1d0d72f94a. ThisnewHTTP500causeproven; original79aef500causehistoricallyunknown retained. No inferencefromwholecase47859ms.",
-        "Current30d PR CI40801317549 partial HTTP originalcasePASS:Allocate6345.539/Reallocate10083.355/Pick2587.220ms each200 with tailrollback/replay/conservation. Originalfailurehistory retained; remainsOPEN with joined currentcandidateCI closure blocked by directReallocate20s timeout; no all-gates-pass claim. report67/S2rawSHAea87c2ee452cb5c109d3de913cd64d73502c0955df8fb19e4a1fa1f0050a75f1."
+        "Current30d PR CI40801317549 partial HTTP originalcasePASS:Allocate6345.539/Reallocate10083.355/Pick2587.220ms each200 with tailrollback/replay/conservation. Originalfailurehistory retained; remainsOPEN with joined currentcandidateCI closure blocked by directReallocate20s timeout; no all-gates-pass claim. report67/S2rawSHAea87c2ee452cb5c109d3de913cd64d73502c0955df8fb19e4a1fa1f0050a75f1.",
+        "Current1705 synthetic6737868 exactsame-tree CI40985160345 all13SUCCESS; native4193PASS/207existingqualifiedSKIP/0FAIL, global+39coveragefloorsPASS; originaldirectReallocate strict45000 rollbackTX11623.629329ms andsameeventsuccess11524.622606ms, HTTPReallocateTX16311.613367ms, fullPick/Cancel/preview PASS atsame5000/20s. AuthenticfinalPLAN6suites native596/PW2+2 zeroFAIL/SKIP pluslint/build/auditpolicyPASS. Originalfailurehistories retained. /Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-child-c-final-currentplan-ci-dod-closure-review.json SHA8f24cb2b9c7ff638700a43a346432d1d0034ba0e1bc36b3137265f1bf0f2c947"
       ],
       "risk_approval_id": null
     },
@@ -8912,5 +9093,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Actualnative596/P0PW2/P1PW2 PASS andindependentlocalresults/metadatareview0CHM. SourceFPf5722unchanged; newDESIGNffca/PLAN9a651registry-only, originalPLAN142arunsneverrelabeled. Commit exactreviewedmetadata tofreeze candidate, recordSHA, normalpushauthorizedbranch, inspectactualcurrentCIincludingallshards/floors/P1browser. Stopanygenuinecapacity/perfFAIL. HIGH022/025/TASK017022 andgeneric6missingrun oldPLAN limitation remainOPEN; noPRmerge. Runtimeclean."
+  "next_safe_action": "New actualSam authority: preserve completed1705results; integrate freshlyfetchedmain6d84 aftersave; independentimpactreview and exactintegratedsource required6suite/currentnewCI/review gates; anycapacity/perfFAILSTOPreport. OnlyafterallPASS convertPR297ready andmerge withfreshbase/exacthead checks; no bypass/thresholdchanges."
 }

@@ -1,6 +1,40 @@
 # Fulfillment implementation readiness
 
-## 恢復後驗證及 C 範圍登記（2026-10-30）
+## 當前：已授權整合最新 main 並在 Gate 通過後合併（2026-10-30）
+
+Sam 最新明確授權整合最新 main、完成獨立影響覆核及必要驗證，只有新候選 CI／全部必要檢查通過後才將 PR297 轉正式並合併；容量或效能失敗即停報，全部安全檢查與20秒限制保留。此指令取代下方歷史「暫不合併」限制，但不豁免任何 Gate。已保存1705候選的完整結果與私有快照；fresh main 現為 `6d84ee454b72f4b3e43b2aa6eee2436e6e950716`，新增Supplier PR305。整合與新候選驗證尚未完成，舊1705 CI不作新候選通過證據。
+
+## 歷史：1705候選 P1 開發及交付前驗證完成（2026-10-30）
+
+**PHASE-002／TASK-012–023 全部 DONE；DEF-022／025 已關閉。** 已批准方案 C、所有既有安全檢查、100 行／每行 50／總數 5,000、原 20 秒交易限制及 coverage 門檻均保留。[PR297](https://github.com/crazysumsum/erp-app/pull/297) 保持 OPEN／DRAFT／未合併；Sam 的「暫不合併」仍有效。下方各節及報告67–70保留原批准、失敗、暫停及中間量測歷史，不能代替本節當前狀態。
+
+候選 `1705bf55b8f86e75d62b6f99fe83af11cc2376c2`；source fingerprint `f5722fefc3372188dfe6396d2ea7fad158315aa6abd5778ccffbf5a3ad6852df`；DESIGN `ffca05957b4ca550ff231f6b9224537735e93615c91345c215f1eb0572be1747`；PLAN `9a651b0b761d938b06f4083359398de612fa14ad94e1755be8ecafac9dfde030`。當前CI真正checkout `6737868a445a26122897c840bafd69dd44b2a073`，parents為main `e64dfc7452dd4ce598e6e9d1765000d9633dd849`＋此候選，tree與候選完全相同（`04e890d971883355bb2bf0410de8d5d5ad4abf54`）。
+
+[CI40985160345](https://github.com/crazysumsum/erp-app/actions/runs/40985160345) **13／13 jobs SUCCESS**。四個原生shards共4,400項＝4,193 PASS／0 FAIL／0 CANCEL／207既有條件式或獨立步驟skip；不是全域零skip。獨立覆核確認未以skip隱藏C失敗。Merged server coverage lines95.76%／branches87.64%／functions94.94%及39個per-file floors通過；client coverage、lint、build、audit、真P1 Playwright2項、Sales capacity2項／import3項／TC042兩項與總Test均通過。
+
+| 當前 CI 真正交易 | 耗時 | 證據／限制 |
+| --- | ---: | --- |
+| 原5,000 Reallocate末批故障 rollback | 11,623.629ms | 原strict45000故障、全量facts rollback與50批斷言通過；非watchdog |
+| 同event恢復 Reallocate | 11,524.623ms | 10,000歷史／5,000 released／5,000 live及Reservation版本／數量對帳通過 |
+| 真HTTP Reallocate主交易 | 16,311.613ms | HTTP請求整體16,407.587ms，200；Allocate／Pick與末批rollback、3次replay均通過 |
+| 5,000 Balance preview的Allocation準備交易 | 13,802.220ms | 412 query＋25,362 execute；非整個133秒多輪case耗時 |
+
+Reallocate preclaim兩個phase均為155 query＋152 execute＝307次，較原15,007次少14,700次；所有15,000筆child紀錄保留。以上是本輪觀察，**不是穩定P95，不能把跨候選／環境時間差全歸因於C**。原20秒未變，沒有新增FORCE INDEX或schema。
+
+範圍登記造成PLAN機械變更後，舊PLAN下的真實報告全部原樣保留。因generic Harness沒有跨PLAN adoption，已獨立覆核並在最終PLAN下**實際執行恰好六項必要suite**，沒有改寫／複製舊PASS，也沒有另重跑13／44診斷：
+
+- lint：`20261030T014313-773ca9f50ba7` PASS；
+- client-build：`20261030T014311-7ec816698116` PASS；
+- security-audit：`20261030T014313-e03e11392622` policy PASS；仍有既有1 low／4 moderate，沒有聲稱零漏洞；
+- 共用P0／P1 developer collection只跑一套：`20261030T014329-d61cd9fd8cc4`，596 PASS／0 FAIL／0 SKIP；
+- 真P0 Playwright：`20261030T015438-545ec0199e0d`，2 PASS／0 FAIL／0 SKIP；
+- 真P1 Playwright：`20261030T015528-2efff33cd916`，2 PASS／0 FAIL／0 SKIP。
+
+所有run均在相同候選／來源／最終PLAN實際執行，原始JUnit、typed結果、case IDs、命令契約與artifact hashes已核對。獨立reviewer `/root/fulfillment_resume_review` 最終覆核0 C/H/M，receipt `independent-child-c-final-currentplan-ci-dod-closure-review.json` SHA `8f24cb2b9c7ff638700a43a346432d1d0034ba0e1bc36b3137265f1bf0f2c947`。已按其結論關閉DEF022／025及TASK017／022；全部原失敗和批准保留。更新後實際 `MERGE_READY --phase PHASE-002` 得到 **LOCAL_CHECKS_PASS／0 issues**，原六個missing-run阻擋已以真實新執行解除；這是本地一致性Gate，與外部CI／獨立覆核分別記錄，不等於合併或業務驗收批准。
+
+本輪專用namespace `fulfillment_p0_p1_7ce01091`／帳號已精確清理，專用MySQL正常停止，socket／pid消失、兩個瀏覽器連接埠已釋放；資料目錄及私有原始證據保留。驗證後只有state／本readiness等bookkeeping更新，產品／spec候選沒有再改。下一步由Sam審閱draft PR；任何未來合併仍須fresh target檢查及所需當前CI／review。正式Technical Acceptance、後續NFR／UAT及發布按原計劃分開處理。
+
+## 歷史：恢復後驗證及 C 範圍登記（2026-10-30）
 
 恢復後原共用完整 developer collection：**596 PASS／0 FAIL／0 SKIP**（`20261030T005654-3cd09dde9859`）；真P0／P1 Playwright各 **2 PASS／0 FAIL／0 SKIP**（`20261030T010843-fca9dac13c72`、`20261030T010920-3bfd5bbcda06`）。三份原始報告及artifact hashes已獨立覆核0C/H/M，來源 `f5722fef…6852df`、實際執行PLAN `142a24e5…4b23e` 前後一致。相同來源的lint／build／audit及C新測試16／7保留；原中斷run仍是中斷，不覆寫。專用runtime已精確清理並停止。
 
@@ -20,7 +54,7 @@ Sam：「保存現有工作成果，之後暫停」。已停止新增工作，�
 
 恢復入口：先取得Sam恢復指示並核對本地保存提交／來源與遠端狀態；只補齊受中斷的完整collection、P0／P1真Playwright、獨立結果覆核及當前候選CI。已完成13／44診斷不因報告或名稱再跑；不得把舊CI或本機局部PASS代替新候選Gate。DEF022／025與TASK017／022保留未完成狀態，20秒、所有安全檢查及不合併PR297的限制不變。
 
-## 當前 P1 交付及唯一阻塞表（2026-10-29）
+## 歷史：P1 交付阻塞表（2026-10-29）
 
 下一個交付固定為：**解除原 CI 的 Reallocate 末批 projection rollback 20 秒逾時，完成必要回歸、當前候選必要 CI 與獨立覆核，使 PR297 可審閱**。不合併 PR297；不因其他模塊的歷史失敗全面停止不受影響的工作。此節是唯一持續更新的交付阻塞表；下方 P0 entry 及報告67–70保留各自歷史，不將舊結論改寫成當前狀態。
 
