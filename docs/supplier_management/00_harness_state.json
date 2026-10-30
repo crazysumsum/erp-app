@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 512,
+  "revision": 514,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "TEST_AND_VERIFY",
   "status": "READY_FOR_TESTING",
@@ -11,7 +11,7 @@
   "baseline": {
     "design": "5003b391aa16ac4f14eeae6be912c58be1159a2c905deaa2a7a00fd7fce4fa41",
     "plan": "cfb4af7114fedf9498476d9027530886810a12a9ba959edc19e6ac01f5a79c7e",
-    "code_commit": "3b9ef58dc2adbb20bee2ddbb434a222e0ed041fc",
+    "code_commit": "3780b1ce61b236bd240212a121d0cad0ada292a0",
     "source_fingerprint": "c212876f288c0df6de255085bee36407c8b9f9d4a6db4993eb7d97a7fb37a682",
     "worktree": "/Users/sam/Documents/workspace/erp-supplier-uat",
     "default_commit": "3b9ef58dc2adbb20bee2ddbb434a222e0ed041fc",
@@ -23,7 +23,7 @@
     "resources": {
       "workspace": "/Users/sam/Documents/workspace/erp-supplier-uat (claude/supplier-limited-uat, cut from main 3b9ef58d)",
       "mysql-schema": "erp_t51, and the erp_t51_rh_* scratch schemas the runners create and drop, on a throwaway mysqld at 127.0.0.1:3450 (session scratch datadir, --skip-log-bin); no production data",
-      "web-port": "3021 (UAT API, uatServer.mjs with a fresh erp_t51_rh_uat* scratch database) and 5216 (UAT client), running for the limited business UAT (HD-161)"
+      "web-port": "3021 (UAT API) and 5216 (UAT client), started and stopped by the supplier-uat-browser suite (Playwright webServer)"
     },
     "lease_ref": null
   },
@@ -8073,6 +8073,17 @@
       "source_ref": "PR #309 merged as 3b9ef58dc2adbb20bee2ddbb434a222e0ed041fc at 2026-10-30T08:20:09Z on the Product Owner's word ('CI己通過'), with --match-head-commit a50d29b0, after a gate that refused unless the latest run of every check was SUCCESS (14 checks, including Fulfillment existing capacity and Sales TC-042; run 41023039886), main was an ancestor of HEAD and the local, remote and PR heads were equal. Two earlier attempts were refused by that gate: once because main had moved (PR #308, Purchasing source), once because 6ff4f28b's checks were still running. Reviews REV-141 to REV-144; the last, REV-144, APPROVED.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-30T08:20:09+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Limited business UAT execution (HD-161, HD-162 B): supplier-uat-browser at stage UAT; execution only, not business acceptance",
+      "code_commit": "3780b1ce61b236bd240212a121d0cad0ada292a0",
+      "spec_baseline": "cfb4af7114fedf9498476d9027530886810a12a9ba959edc19e6ac01f5a79c7e",
+      "source_fingerprint": "c212876f288c0df6de255085bee36407c8b9f9d4a6db4993eb7d97a7fb37a682",
+      "status": "BLOCKED",
+      "source_ref": "evidence/20261030T093238-52ea32e0c5b7/run.json run_check --execute, 2026-10-30 09:32:39-09:35:39Z on 3780b1ce (code-identical to the mode entry commit 3b9ef58d), throwaway mysqld 3450, real server and browser via the suite's own webServer and a fresh erp_t51_rh_uat* scratch database: 55 tests, 41 PASS, 0 FAIL, 14 SKIPPED (test.fixme: UAT-005, 016, 024, 029, 032, 033, 034, 035, 036, 050, 051, 053 downstream dependencies; UAT-044, 045 operations and DR), exactly the cases excluded by HD-161. status BLOCKED only because of the 14 skips (max_skipped 0). 99 screenshots attached in the junit, stored outside the repository under /tmp/supplier-management-uat-artifacts/34753d87 (REV-115 L-2). Business acceptance pending with the Product Owner.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-30T09:35:39+00:00"
     }
   ],
   "pending_decisions": [
@@ -10212,6 +10223,18 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-30: '照建議' (1A, 2A, 3A, 4A, 5 as recommended). Checklist page https://claude.ai/artifact/V7NNzGCYYEguXL9Q4ec2Tx (private; collection results). Environment: uatServer.mjs on 3021 with scratch database erp_t51_rh_uat92f7bb0e (role accounts with random passwords in a 0600 fixture file outside the repository), client on 5216, fictional reference data (USD, CNY, inactive JPY; NET30, NET60, inactive NET90-OLD; three SKUs) and sample CSV files in the session scratchpad. Smoke: uat-viewer logged in after the device approval and listed Suppliers (200)."
+    },
+    {
+      "id": "HD-162",
+      "impact": "MAJOR",
+      "question": "The Product Owner asked the agent to do the UAT itself ('你直接幫我做UAT唔可以嗎？'). Agent execution is not business acceptance, and the 41 cases already have real-backend Playwright UAT evidence (two earlier runs, 41 passed). Route? (A) The agent runs each case by hand in the browser, with screenshots, and the Product Owner accepts per case from that evidence (about 2-3 h; duplicates the automated evidence). (B) Re-run the existing automated UAT suite supplier-uat-browser through run_check at stage UAT on the current baseline (about 15-20 min; formal execution evidence with screenshots and logs; the 14 fixme cases make the suite BLOCKED, as expected; not a performance or capacity run and no new CI test, so AGENTS.md approval does not apply); the Product Owner accepts in bulk or per case from the report. (C) B plus the Product Owner doing about six core P0 flows by hand. Recommended C.",
+      "affected_ids": [
+        "HD-161",
+        "UAT-001",
+        "UAT-055"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-30: 'B'. Supersedes HD-161 1A for execution: the agent runs supplier-uat-browser at stage UAT; business acceptance stays with the Product Owner, from the report and evidence. The manual UAT servers (3021, 5216) were stopped first; uatServer.mjs dropped its scratch database erp_t51_rh_uat92f7bb0e and its fixture file."
     }
   ],
   "external_actions": [
@@ -11035,7 +11058,8 @@
     "evidence/20261030T034729-dca35ef45afa/run.json",
     "evidence/20261030T034802-0c3c0f91d809/run.json",
     "evidence/20261030T034810-14d1ccd1c16d/run.json",
-    "evidence/20261030T034819-b8b65bdb3861/run.json"
+    "evidence/20261030T034819-b8b65bdb3861/run.json",
+    "evidence/20261030T093238-52ea32e0c5b7/run.json"
   ],
   "defects": [
     {
