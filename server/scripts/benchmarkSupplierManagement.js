@@ -2,7 +2,7 @@
  * Supplier 管理效能驗收（TASK-050；設計 §11.5；NFR-001、NFR-002、NFR-003；HD-082 A）。
  *
  *   node scripts/benchmarkSupplierManagement.js --database=<DB_NAME> --output <report.json>
- *     [--users=50] [--seconds=120] [--warmup-seconds=20] [--think-ms=1000] [--only=<operation prefix>]
+ *     [--users=50] [--seconds=120] [--warmup-seconds=20] [--think-ms=1000] [--only=<operation prefix>] [--general-limit-ms=2000]
  *
  * 先用 `seedSupplierPerformanceFixtures.js` 準備資料。**只可以對用完即棄嘅資料庫跑**：佢會建 Supplier、改 seed
  * 嘅 Supplier（版本會加），完咗刪走自己建嘅 Supplier、user 同 role。寫入時嘅 idempotency 紀錄（`fr_idempotency_keys`）
@@ -12,6 +12,7 @@
  *   limiter 調高，因為所有虛擬用戶都由 127.0.0.1 發出。背景工作全部關閉，唔影響量度。
  * - `--users` 個虛擬用戶各自循環：揀一個操作（見 MIX）、等回應、再等 0..think-ms 隨機時間。即係「同時在線」，唔係
  *   每秒固定請求數。暖身期嘅結果唔計。`--only=forSku` 只跑名以 forSku 開頭嘅操作（SKU-008 嘅最差情況）。
+ *   `--general-limit-ms` 係一般操作（NFR-001）嘅 p95 上限，預設 2 秒；匯入期間嘅負載用 5 秒（HD-158）。
  * - for-SKU 操作要 seed 嘅 `PERF-SKU-*`（seedSupplierPerformanceFixtures.js）；app 會好似 src/index.js 咁註冊
  *   `supplierCoreProvider`，連線池用設定檔嘅預設（正式環境一樣）。
  * - 每個操作記 p50／p95／p99、錯誤率；另外記 process CPU、RSS、DB 連線數。負載產生器同 app 喺同一個 process，
@@ -42,10 +43,11 @@ const WARMUP_SECONDS = Number(arg("warmup-seconds", 20));
 const THINK_MS = Number(arg("think-ms", 1000));
 const OUTPUT = arg("output", null);
 const ONLY = arg("only", "");
+const GENERAL_LIMIT_MS = Number(arg("general-limit-ms", 2000));
 const WARNING_LINES = 200;
-if (![USERS, SECONDS, WARMUP_SECONDS, THINK_MS].every(Number.isSafeInteger) || USERS < 1 || SECONDS < 1 || WARMUP_SECONDS < 0 ||
-    THINK_MS < 0 || typeof OUTPUT !== "string") {
-  throw new Error("usage: node scripts/benchmarkSupplierManagement.js --database=<DB_NAME> --output <report.json> [--users=50] [--seconds=120] [--warmup-seconds=20] [--think-ms=1000] [--only=<operation prefix>]");
+if (![USERS, SECONDS, WARMUP_SECONDS, THINK_MS, GENERAL_LIMIT_MS].every(Number.isSafeInteger) || USERS < 1 || SECONDS < 1 || WARMUP_SECONDS < 0 ||
+    THINK_MS < 0 || GENERAL_LIMIT_MS < 1 || typeof OUTPUT !== "string") {
+  throw new Error("usage: node scripts/benchmarkSupplierManagement.js --database=<DB_NAME> --output <report.json> [--users=50] [--seconds=120] [--warmup-seconds=20] [--think-ms=1000] [--only=<operation prefix>] [--general-limit-ms=2000]");
 }
 const missing = ["DB_HOST", "DB_PORT", "DB_USER", "DB_PASSWORD", "DB_NAME", "DB_ADMIN_USER", "DB_ADMIN_PASSWORD"]
   .filter((key) => (key.endsWith("PASSWORD") ? process.env[key] === undefined : !process.env[key]));
@@ -300,14 +302,14 @@ try {
       rowsSentPerCall: Math.round(Number(row.rowsSent) / Number(row.count)), noIndexUsed: Number(row.noIndexUsed), plan });
   }
   // NFR-001（一般操作）同 NFR-005（for-SKU 揀選器）各自只計自己嗰類操作；冇跑過就記 null，唔當通過（REV-089 M-1）。
-  // NFR-005 嘅上限係 3 秒（HD-157），NFR-001 仍然係 2 秒。
+  // NFR-005 嘅上限係 3 秒（HD-157），NFR-001 係 2 秒；匯入期間一般操作 5 秒（HD-158，用 --general-limit-ms 傳入）。
   const verdict = (pick, limitP95Ms) => {
     const names = MIX.map(([name]) => name).filter(pick);
     if (names.length === 0) return null;
     const failing = names.filter((name) => { const value = report.operations[name]; return value.p95 === null || value.p95 >= limitP95Ms || value.errorRate > 0.01; });
     return { limitP95Ms, maxErrorRate: 0.01, operations: names.length, failing, pass: failing.length === 0 };
   };
-  report.nfr001 = verdict((name) => !name.startsWith("forSku"), 2000);
+  report.nfr001 = verdict((name) => !name.startsWith("forSku"), GENERAL_LIMIT_MS);
   report.nfr005 = verdict((name) => name.startsWith("forSku"), 3000);
   const verdicts = [report.nfr001, report.nfr005].filter(Boolean);
   report.ok = verdicts.length > 0 && verdicts.every((item) => item.pass);

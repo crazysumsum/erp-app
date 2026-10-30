@@ -1,0 +1,128 @@
+{
+  "database": "erp_t51",
+  "restoreSchema": "erp_t51_rh_5024e400",
+  "metrics": {
+    "backupMs": 332,
+    "backupBytes": 11996453,
+    "restoreMs": 2986
+  },
+  "checks": [
+    {
+      "id": "precondition.no_other_open_jobs",
+      "status": "PASS",
+      "detail": {
+        "open": 0
+      }
+    },
+    {
+      "id": "seed.import_completed",
+      "status": "PASS",
+      "detail": {
+        "jobStatus": "completed",
+        "resultStatus": 200
+      }
+    },
+    {
+      "id": "backup.source_quiet",
+      "status": "PASS",
+      "detail": {
+        "moved": []
+      }
+    },
+    {
+      "id": "reconcile.tables",
+      "status": "PASS",
+      "detail": {
+        "tables": 125,
+        "differing": []
+      }
+    },
+    {
+      "id": "reconcile.schema_objects",
+      "status": "PASS",
+      "detail": {
+        "objects": 196,
+        "differing": []
+      }
+    },
+    {
+      "id": "reconcile.supplier_tables_present",
+      "status": "PASS",
+      "detail": {
+        "supplierTables": 15
+      }
+    },
+    {
+      "id": "reconcile.files",
+      "status": "PASS",
+      "detail": {
+        "files": 1
+      }
+    },
+    {
+      "id": "reconcile.job_files_match_rows",
+      "status": "PASS",
+      "detail": {
+        "jobs": 1,
+        "problems": []
+      }
+    },
+    {
+      "id": "reconcile.transaction_marker",
+      "status": "PASS",
+      "detail": {
+        "markerAt": 1793332085082
+      }
+    },
+    {
+      "id": "smoke.detail",
+      "status": "PASS"
+    },
+    {
+      "id": "smoke.bank_masked",
+      "status": "PASS"
+    },
+    {
+      "id": "smoke.bank_reveal",
+      "status": "PASS",
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "id": "smoke.approval_pending",
+      "status": "PASS"
+    },
+    {
+      "id": "smoke.import_job_and_result",
+      "status": "PASS",
+      "detail": {
+        "jobStatus": "completed"
+      }
+    },
+    {
+      "id": "smoke.audit_readable",
+      "status": "PASS",
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "id": "keyring.missing_key_fails_closed",
+      "status": "PASS",
+      "detail": {
+        "code": "BANK_KEY_UNAVAILABLE"
+      }
+    },
+    {
+      "id": "keyring.wrong_key_fails_closed",
+      "status": "PASS",
+      "detail": {
+        "code": "BANK_ACCOUNT_INTEGRITY_FAILED"
+      }
+    }
+  ],
+  "waived": {
+    "TC-133 production restore drill: RTO within 4 hours and RPO within 15 minutes": "Waived by HD-157 (2026-10-30): no production restore drill; the local backup and isolated restore is the acceptance evidence. A local logical copy cannot show RTO or RPO against the production backup schedule and binlog retention."
+  }
+}
