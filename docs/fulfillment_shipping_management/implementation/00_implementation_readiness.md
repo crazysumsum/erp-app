@@ -1,14 +1,22 @@
 # Fulfillment implementation readiness
 
+## 使用者要求暫停（2026-10-29）
+
+Sam：「保存現有工作成果，之後暫停」。已停止新增工作，並對已確認的本任務 Node process group 發送 SIGINT；原完整 P0／P1 developer run `20261029T100154-9fc3feec1915` 因使用者暫停而中斷。原始52-byte未完成JUnit保留，adapter為BLOCKED，沒有可信完整計數；**不是產品效能失敗，也不是完整套件PASS**。不重跑、不啟動瀏覽器或CI。
+
+已保存：C實作及原生13／完整44 PASS（含原5000／20秒／末批rollback）；最新main已整合；合併後來源`f5722fef…6852df` 的16 pure／7 native與lint／build／dependency audit均PASS。專用DB基礎schema／帳號已清理、MySQL已停止、socket／pid不存在；原件、私有證據與datadir保留。PR297維持draft／未合併，本輪新提交尚未推送。
+
+恢復入口：先取得Sam恢復指示並核對本地保存提交／來源與遠端狀態；只補齊受中斷的完整collection、P0／P1真Playwright、獨立結果覆核及當前候選CI。已完成13／44診斷不因報告或名稱再跑；不得把舊CI或本機局部PASS代替新候選Gate。DEF022／025與TASK017／022保留未完成狀態，20秒、所有安全檢查及不合併PR297的限制不變。
+
 ## 當前 P1 交付及唯一阻塞表（2026-10-29）
 
 下一個交付固定為：**解除原 CI 的 Reallocate 末批 projection rollback 20 秒逾時，完成必要回歸、當前候選必要 CI 與獨立覆核，使 PR297 可審閱**。不合併 PR297；不因其他模塊的歷史失敗全面停止不受影響的工作。此節是唯一持續更新的交付阻塞表；下方 P0 entry 及報告67–70保留各自歷史，不將舊結論改寫成當前狀態。
 
-目前 HEAD `30d442b5082bdcd32b1beffac6219473ebe22a4b`，未提交 C＋既有 IN 候選 source fingerprint `4efcbe29466695a72cd8097cb7c7d9bb5e42473a3f612aaa630c66ffc87430bf`，PLAN `142a24e513c6889dcd6da31cc5c7313f98d1e937a50998ff56c0a45025c4b23e`，DESIGN `f7902ae0f02984b5feeb8cb02d5893c57820e99b1e90c471b6f6044305270584`。本輪 GitHub 唯讀查驗：[PR297](https://github.com/crazysumsum/erp-app/pull/297) OPEN／DRAFT／未合併／remote head 仍30d；該 head 最新 PR [CI40801317549](https://github.com/crazysumsum/erp-app/actions/runs/40801317549) FAILURE，13 jobs＝10 SUCCESS／2 FAILURE／1 SKIPPED。C＋IN WIP 尚未推送，沒有自己的 CI，不借用舊候選結果。
+目前已保存 C／既有 IN／診斷，並整合 fresh main `e64dfc7452dd4ce598e6e9d1765000d9633dd849`；HEAD `a2a29617c6935fd5ba8c65cc7890a6f38dbaa5f5`，source fingerprint `f5722fefc3372188dfe6396d2ea7fad158315aa6abd5778ccffbf5a3ad6852df`，PLAN `142a24e513c6889dcd6da31cc5c7313f98d1e937a50998ff56c0a45025c4b23e`，DESIGN `f7902ae0f02984b5feeb8cb02d5893c57820e99b1e90c471b6f6044305270584`。本輪 GitHub 唯讀查驗：[PR297](https://github.com/crazysumsum/erp-app/pull/297) OPEN／DRAFT／未合併／remote head 仍30d；該 head 最新 PR [CI40801317549](https://github.com/crazysumsum/erp-app/actions/runs/40801317549) FAILURE，13 jobs＝10 SUCCESS／2 FAILURE／1 SKIPPED。C＋IN 候選尚未推送，沒有自己的 CI，不借用舊候選結果。
 
 | 阻塞 | 證據 | 最小下一動作 | 完成標準 | Sam 決定 |
 | --- | --- | --- | --- | --- |
-| **唯一產品交付阻塞：原 full5000 Reallocate 末批 rollback 在20秒被 watchdog 中止**；DEF022／025 OPEN，TASK017／022 IN_PROGRESS。IN trial 功能通過但讀量目標未達，不能關閉阻塞。 | [67：CI 原失敗](67_candidate_ci_reallocate_timeout_stop.md)，交易20,001.046ms、941 query／40,338 execute；[70：IN trial](70_released_projection_id_in_optimization.md)，原完整 file 44 PASS／0 FAIL／0 SKIP，但每個 phase 仍50 UPDATE／260,000 examined／250,000 Handler_read_next。 | 最新建議C：只把Reallocate全新child operation改為每批100的INSERT及完整source鍵ID回讀，先證明完整性／duplicate／rollback等價及SQL數下降，再驗證原5000案例整筆效果。下文A／B保留為先前方案，C的具體範圍與風險見新增段落。 | 必須以整筆交易效果證實具體修法；原嚴格45000末批故障、整筆 facts rollback、同event恢復及數量守恆通過；原5000／20秒與所有安全檢查不變。之後才做必要回歸、固定候選必要 CI／coverage、獨立覆核；任何項未過，PR保持 BLOCKED。局部read-proof或診斷完成均不是解阻。 | **Sam 已實際批准 C**：「批准方案 C：批量 child claim及完整驗證（建議）」，綁定原 readiness SHA `c3005f4afac273fb49f9d11224e0ebe66704bff04776d880ed554ea0280ff0f1`。已進入實作及獨立覆核，尚未 native／容量／CI；A／B未執行。 |
+| **唯一產品交付阻塞：原 full5000 Reallocate 末批 rollback 在20秒被 watchdog 中止**；DEF022／025 OPEN，TASK017／022 IN_PROGRESS。IN trial 功能通過但讀量目標未達，不能關閉阻塞。 | [67：CI 原失敗](67_candidate_ci_reallocate_timeout_stop.md)，交易20,001.046ms、941 query／40,338 execute；[70：IN trial](70_released_projection_id_in_optimization.md)，原完整 file 44 PASS／0 FAIL／0 SKIP，但每個 phase 仍50 UPDATE／260,000 examined／250,000 Handler_read_next。 | C已實作，小型13及原完整44均PASS，實測少14700次client呼叫；整合main後的候選須完成必要完整回歸、目前候選必要CI及獨立覆核。下文A／B及C提案保留為歷史。 | 必須以整筆交易效果證實具體修法；原嚴格45000末批故障、整筆 facts rollback、同event恢復及數量守恆通過；原5000／20秒與所有安全檢查不變。之後才做必要回歸、固定候選必要 CI／coverage、獨立覆核；任何項未過，PR保持 BLOCKED。局部read-proof或診斷完成均不是解阻。 | **Sam 已實際批准 C**：「批准方案 C：批量 child claim及完整驗證（建議）」，綁定原 readiness SHA `c3005f4afac273fb49f9d11224e0ebe66704bff04776d880ed554ea0280ff0f1`。已完成實作及獨立覆核、小型原生及原容量量測；整合後完整回歸／CI待執行；A／B未執行。 |
 
 ### C 已批准後的實作進度
 
@@ -26,7 +34,7 @@
 
 只有本機單輪觀察，不是P95或CI通過。前次IN使用SQL／PFS observer，本輪只有caller計時，因此不能把整筆時間差全歸C、亦不能把呼叫數減少98%稱為時間改善98%。原Inventory逐筆posting成本仍存在；沒有增加hint、index、schema或時限。
 
-證據：private `child-c-measurement-result.json` SHA `74103bee1fdf0d548a5fcdc83c79914b0e82a7b93b3a0948409962ad571fb286`；小型13原始log SHA `f5547c7efa0430a68d4477f4064aaf42121c9bda7ea18b31613963af828ac6a4`；實作與小型／容量准入均由 `/root/fulfillment_independent_review` 實際覆核0C/H/M。最初MySQL啟動SIGSEGV發生於migration／schema／Node測試前，失敗原件以`.failed-sandbox-startup`保留；相同prepare bytes／參數在獲准環境執行後成功，未偽造或刪除失敗。下一步固定最新main整合後候選、必要完整回歸及當前CI；PR297不合併。
+證據：private `child-c-measurement-result.json` SHA `74103bee1fdf0d548a5fcdc83c79914b0e82a7b93b3a0948409962ad571fb286`；小型13原始log SHA `f5547c7efa0430a68d4477f4064aaf42121c9bda7ea18b31613963af828ac6a4`；實作與小型／容量准入均由 `/root/fulfillment_independent_review` 實際覆核0C/H/M。最初MySQL啟動SIGSEGV發生於migration／schema／Node測試前，失敗原件以`.failed-sandbox-startup`保留；相同prepare bytes／參數在獲准環境執行後成功，未偽造或刪除失敗。main已整合；診斷source pin因C改動更新，原pure RED26PASS／2FAIL保留，更新後28PASS／0FAIL，未改AST／hash／拒絕來源變更斷言。下一步對固定整合候選執行必要完整回歸及當前CI；PR297不合併。
 
 ### 同一原失敗情境的完整交易成本
 
