@@ -19,10 +19,11 @@ concurrency:
 
 jobs:
   changes:
-    name: Sales import capacity scope
+    name: Capacity impact scope
     runs-on: ubuntu-latest
     outputs:
       required: ${{ steps.scope.outputs.required }}
+      fulfillment_required: ${{ steps.scope.outputs.fulfillment_required }}
     steps:
       - name: Check out repository and PR history
         uses: actions/checkout@v4
@@ -215,7 +216,8 @@ jobs:
             console.log('Native CI transport verified:',JSON.stringify(identity));
           } finally {await db.end();}
           NODE
-          npm run test:coverage:shard --workspace server -- --test-shard=${{ matrix.shard }}/4
+          capacity_pattern="$(node .github/scripts/fulfillment-capacity.mjs pattern)"
+          npm run test:coverage:shard --workspace server -- --test-shard=${{ matrix.shard }}/4 --test-skip-pattern="$capacity_pattern"
 
       - name: Record candidate and shard identity
         working-directory: server
@@ -367,11 +369,49 @@ jobs:
           grep -qx "# fail 0" mixed-load-capacity.tap
           grep -qx "# skipped 0" mixed-load-capacity.tap
 
+  fulfillment-capacity:
+    name: Fulfillment existing capacity (14 scenarios)
+    needs: changes
+    if: needs.changes.outputs.fulfillment_required == 'true'
+    runs-on: ubuntu-latest
+    services: *mysql_services
+    env: *database_env
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 26
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Verify exact MySQL server version
+        run: test "$(docker exec "${{ job.services.mysql.id }}" mysql -uroot -proot --batch --skip-column-names -e "SELECT VERSION();")" = "26.7.0"
+      - name: Apply database migrations
+        env:
+          DB_USER: root
+          DB_PASSWORD: root
+        run: npm run migrate --workspace server
+      - name: Run all 14 existing capacity scenarios without coverage instrumentation
+        working-directory: server
+        env:
+          FULFILLMENT_LIFECYCLE_ENABLED: "true"
+          DB_SOCKET_PATH: /tmp/erp-ci-mysql-socket/mysqld.sock
+        run: node ../.github/scripts/fulfillment-capacity.mjs run
+      - name: Retain capacity results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fulfillment-capacity-report
+          path: server/fulfillment-capacity.tap
+          if-no-files-found: error
+
   # Keep the original check name stable; required failures/skips cannot turn green.
   test:
     name: Test (server + client, MySQL integration)
     if: always()
-    needs: [changes, regression, sales-import-capacity, audit, lint, build, e2e]
+    needs: [changes, regression, sales-import-capacity, fulfillment-capacity, audit, lint, build, e2e]
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
