@@ -3,7 +3,7 @@
 This is the T50 capacity report. It covers what was measured, on what, with which commands, and what is still open.
 HD-082 A started T50 without the for-SKU lookup (NFR-005). Its for-SKU part and the final rerun were done on 2026-10-14, after TASK-040 and TASK-039; see "for-SKU lookup" below.
 
-**2026-10-30, HD-158:** during a 10,000-row import (TC-101), the online general operations' limit is p95 < 5 s (NFR-004). NFR-001's 2 s under normal mixed load is unchanged. Since the DEF-049 fix, `list.missingFilter` and `update` during the import have run close to 2 s and once exceeded it (DEF-051, `testing/04_defect_register.md`); the cause is not proven.
+**2026-10-30, HD-158:** during a 10,000-row import (TC-101), the online general operations' limit is p95 < 5 s (NFR-004). NFR-001's 2 s under normal mixed load is unchanged. Since the DEF-049 fix, during the import `list.missingFilter` has run at 1.4–2.0 s and `update` at about 0.8 s, and both exceeded 2 s once (REGRESSION, 2026-10-30; DEF-051, `testing/04_defect_register.md`); the cause is not proven.
 
 **2026-10-30, HD-157:** NFR-005's for-SKU limit is now p95 < 3 s; NFR-001 stays at 2 s. The 2 s results below are kept as history. The worst-case name search later sat close to 2 s and failed once (DEF-050, `testing/04_defect_register.md`).
 

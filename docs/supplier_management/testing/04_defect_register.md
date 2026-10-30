@@ -710,7 +710,7 @@ Found by the formal run on the HD-157 baseline in TEST_AND_VERIFY, at `309aa9eb`
 | DEF-048 re-test, REGRESSION | 467 ms | 330 ms | 77.4 s |
 | DEF-049 re-test, TECHNICAL | 1,665 ms | 830 ms | 53.9 s |
 | DEF-049 re-test, REGRESSION | 1,841 ms | 789 ms | 51.2 s |
-| HD-157 baseline, TECHNICAL | 1,443 ms | 821 ms | 50.9 s |
+| HD-157 baseline, TECHNICAL | 1,443 ms | 820 ms | 50.9 s |
 | HD-157 baseline, REGRESSION | **2,011 ms** | **2,286 ms** | 57.0 s |
 
 - The two statements behind `list.missingFilter` are the `COUNT(*)` of active Suppliers with no primary address, and with no primary contact (`NOT EXISTS` over `supplier_address_purposes` and `supplier_contact_purposes`). They read the same rows in every run (about 213,000 and 200,000 per call), but their average times rose from 275–369 and 184–253 ms in the four runs before PR #301 to 960–1,172 and 626–774 ms in the four after it.
@@ -721,6 +721,8 @@ Found by the formal run on the HD-157 baseline in TEST_AND_VERIFY, at `309aa9eb`
 - HD-158 A started a REPORT_ONLY A/B (the runner on `6d84ee45` and on `8c31c94a`, before PR #301, 3 runs each). The Product Owner stopped it during the first run, before the load-during-import step, so it measured nothing.
 
 **HD-158 answered (Product Owner, 2026-10-30: "TC-101 改要求放寬至5秒就好了"):** during a 10,000-row import, the online general operations' p95 limit is 5 s (NFR-004, IMP-016). NFR-001's 2 s under normal mixed load and NFR-005's 3 s are unchanged. No remedy; the step change stays unexplained. Every formal run so far was under 5 s (worst 2,286 ms). DEF-051 closes once TC-101 passes against 5 s in the formal run on the HD-158 baseline.
+
+**Follow-up (REV-141 L1):** 03 §11.5 was left unchanged. Its line "並保持線上query p95" has no number of its own, but next to the bullet before it (general query p95 < 2 s) it can be read as 2 s during an import. The authority is 01 NFR-004 (5 s). Rewording §11.5 to "匯入期間線上一般操作p95<5秒（NFR-004，HD-158）" waits for the next change that has to touch 03 anyway, so that Purchasing re-pins once (its pin e49ac37d stays valid until then).
 
 ## HD-116 A: dispositions (2026-10-21)
 

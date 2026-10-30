@@ -21,7 +21,7 @@
 **Environment:**
 - The same throwaway mysqld 3450 (MySQL 26.7.0). The runner script refused to start unless all five settings were as required, and they were: `innodb_deadlock_detect` ON, `innodb_print_all_deadlocks` ON, and the three 16,384 digest and SQL-text settings.
 - Other agents' mysqld instances were running on the host and were left alone.
-- Load averages recorded by the performance runner: 3.9→11.4 at TECHNICAL, 3.5→13.9 at REGRESSION. The runner's own load accounts for most of the rise in every run (3.3→9.1 to 3.4→11.0 before), so these numbers do not show whether other load was present.
+- Load averages recorded by the performance runner: 3.9→11.4 at TECHNICAL, 3.5→13.9 at REGRESSION. The runner's own load accounts for most of the rise in every run: the six earlier formal runs ended at 8.4–11.9 (3.1→8.4, 4.1→11.9, 5.1→10.5, 3.4→11.0, 3.3→9.4, 3.3→9.1). 13.9 is the highest end value of all eight runs, but these numbers do not show whether other load was present.
 
 **Runs:** the 8 required suites at TECHNICAL, then at REGRESSION (HD-151 A suite set), from 03:24Z to 04:00Z, each a real `run_check --execute`.
 
