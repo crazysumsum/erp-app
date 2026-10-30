@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
+import { spawn } from "node:child_process";
 import { writeFileSync } from "node:fs";
 import process from "node:process";
 import { pathToFileURL } from "node:url";
@@ -42,13 +42,26 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
     assert.equal(process.env.DB_INTEGRATION_TESTS, "1", "Capacity requires the native database");
     assert.ok(!process.env.NODE_V8_COVERAGE, "Timed capacity must run without coverage instrumentation");
     const files = [...new Set(cases.map(([file]) => `test/integration/${file}.integration.test.js`))];
-    const result = spawnSync(process.execPath, ["--test", "--test-concurrency=1", "--import", "./test-support/testEnv.js",
-      "--test-reporter=tap", `--test-name-pattern=${pattern}`, ...files], { encoding: "utf8", maxBuffer: 16 * 1024 * 1024 });
-    const report = result.stdout ?? "";
+    // Stream results and stop the whole runner process group on the first failure.
+    // CI is Linux; detached gives the Node runner and its test children one owned group.
+    const child = spawn(process.execPath, ["--test", "--test-concurrency=1", "--import", "./test-support/testEnv.js",
+      "--test-reporter=tap", `--test-name-pattern=${pattern}`, ...files], { detached: true, stdio: ["ignore", "pipe", "inherit"] });
+    let report = "", stopped = false;
+    child.stdout.setEncoding("utf8");
+    child.stdout.on("data", chunk => {
+      report += chunk;
+      process.stdout.write(chunk);
+      if (!stopped && /^\s*not ok \d+ - /mu.test(report)) {
+        stopped = true;
+        try { process.kill(-child.pid, "SIGTERM"); } catch (error) { if (error.code !== "ESRCH") throw error; }
+      }
+    });
+    const result = await new Promise((resolve, reject) => {
+      child.once("error", reject);
+      child.once("close", (status, signal) => resolve({ status, signal }));
+    });
     writeFileSync("fulfillment-capacity.tap", report);
-    process.stdout.write(report);
-    process.stderr.write(result.stderr ?? "");
-    if (result.error) throw result.error;
+    assert.ok(!stopped, "Capacity batch stopped after its first failure; do not retry without Sam's decision");
     assert.equal(result.status, 0, `Capacity process failed (${result.signal ?? result.status})`);
     checkReport(report);
   }
