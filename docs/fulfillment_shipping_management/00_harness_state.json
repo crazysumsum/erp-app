@@ -1,34 +1,29 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 327,
+  "revision": 329,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
-  "status": "IMPLEMENTING",
-  "resume_status": null,
-  "current_phase": "PHASE-002",
-  "current_task": "TASK-017",
+  "status": "BLOCKED",
+  "resume_status": "IMPLEMENTING",
+  "current_phase": "PHASE-003",
+  "current_task": "TASK-024",
   "baseline": {
     "design": "ffca05957b4ca550ff231f6b9224537735e93615c91345c215f1eb0572be1747",
     "plan": "9a651b0b761d938b06f4083359398de612fa14ad94e1755be8ecafac9dfde030",
-    "code_commit": "cc30912513c9a7fcc91e938c9fa782cf6094dd8d",
+    "code_commit": "5febef80f83ba0ff87bc5bf6117aff254cbdcbb7",
     "source_fingerprint": "0819de0ff4fae58c717fc2f8750cc3999e8e97d5e2b67dfdd0069c30b0793ef2",
-    "worktree": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1",
-    "default_commit": "a4523e5250aa6212ecbf843338f78d6e1971ed3e",
-    "mode_entry_commit": "fd32762f4fa17a5e77aaa7118a9ded2d3ac81e9e"
+    "worktree": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2",
+    "default_commit": "5febef80f83ba0ff87bc5bf6117aff254cbdcbb7",
+    "mode_entry_commit": "5febef80f83ba0ff87bc5bf6117aff254cbdcbb7"
   },
   "runtime": {
-    "instance_id": "pr297-main306-174c3543",
-    "owner": "/root; Sam actual P1 development and isolated developer verification authorization",
+    "instance_id": "fulfillment-p2-entry",
+    "owner": "/root under Sam approved P2 authority",
     "resources": {
-      "workspace": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1",
-      "mysql-socket": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/erp-fulfillment-p0-mysql-r",
-      "runtime-and-private-evidence": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime",
-      "runtime-policy": "CLEANED exact owned main306 base/account; own MySQL shutdown, socket/pid absent; all private raw evidence and data directory retained.",
-      "dependencies": "Actualmainlockedoffline npmci--ignore-scripts; body-parser2.4.0/qs6.16.1/PW1.63.0; nocode/dependency invention",
-      "browser-runtime": "Two distinctrealPW suites serialaftersharednative, strictfreeportscheck, noreusedservers.",
-      "mysql-schema": "fulfillment_p0_p1_174c3543",
-      "web-port": "61349/61350 verified free after both real browser suites."
+      "workspace": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2",
+      "private-evidence": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2-runtime",
+      "runtime-policy": "No DB/account/port allocated yet; only FILES inspection. Future isolated native runtime must use new ownedUUID and reviewed setup. P1 runtime cleaned."
     },
     "lease_ref": null
   },
@@ -6016,6 +6011,42 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-PR297-49E696-CANDIDATE-BRIDGE",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_resume_review",
+      "reviewed_baseline": "ffca05957b4ca550ff231f6b9224537735e93615c91345c215f1eb0572be1747",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-pr297-49e696-candidate-bridge-review.json SHA50223ba73b5045e7ab08a36a42142c10ec4ea124947fd782c6903aa7dfd8ea4b; exact docs-only49e696 bridge, all6 evidence applicable,0C/H/M; no newCI/mergePASS claimed.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-PR297-49E696-CURRENT-CI-FINAL",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_resume_review",
+      "reviewed_baseline": "ffca05957b4ca550ff231f6b9224537735e93615c91345c215f1eb0572be1747",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-pr297-49e696-current-ci-final-closing-review.json SHA02f070a4b4e51a51b06affdf35bc593d20cb6eacdbb5ffb65d800346a538c6e4; actual separate-agent exact49e696 CI/DoD closing0C/H/M; actual13/13SUCCESS, all207skipnames unchanged, full5000/20s/rollback/recovery/39floors/PW verified. No GitHub humanAPPROVE claimed.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-PR297-PRESERVATION-PY310",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/fulfillment_resume_review",
+      "reviewed_baseline": "ffca05957b4ca550ff231f6b9224537735e93615c91345c215f1eb0572be1747",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-pr297-preservation-python310-compatibility-review.json SHA7479e594f0107bde03b4c53a1c6449f07de60d8cfa3def788389eaf07928ab3b; Python3.10 streamingSHA equivalent only, scriptd02e3838, original failed preservation before any archive/deletion retained; failclosed/fullinventory/0600 unchanged,0CHM.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -7228,6 +7259,72 @@
       "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-child-c-final-currentplan-ci-dod-closure-review.json SHA8f24cb2b9c7ff638700a43a346432d1d0034ba0e1bc36b3137265f1bf0f2c947; actualSEPARATE_AGENT0C/H/M; no GitHub humanAPPROVE ormergeauthorization claimed.",
       "actor": "/root/fulfillment_resume_review actual independent published-candidate review",
       "observed_at": "2026-10-30T01:59:33.560107+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Dependency audit",
+      "code_commit": "49e6963538081dfc7ada432df5d59da7a5b9abea",
+      "spec_baseline": "9a651b0b761d938b06f4083359398de612fa14ad94e1755be8ecafac9dfde030",
+      "source_fingerprint": "0819de0ff4fae58c717fc2f8750cc3999e8e97d5e2b67dfdd0069c30b0793ef2",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/41002406686/job/123889600536; actual13/13SUCCESS; checkout b81e95cf parents a452+49e696, same tree a51a5c; raw logs and current result retained; final independent closing pending.",
+      "actor": "/root actual GitHub connector run/jobs/logs plus Git commit REST identity",
+      "observed_at": "2026-10-30T04:44:19.021304+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Lint",
+      "code_commit": "49e6963538081dfc7ada432df5d59da7a5b9abea",
+      "spec_baseline": "9a651b0b761d938b06f4083359398de612fa14ad94e1755be8ecafac9dfde030",
+      "source_fingerprint": "0819de0ff4fae58c717fc2f8750cc3999e8e97d5e2b67dfdd0069c30b0793ef2",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/41002406686/job/123889600449; actual13/13SUCCESS; checkout b81e95cf parents a452+49e696, same tree a51a5c; raw logs and current result retained; final independent closing pending.",
+      "actor": "/root actual GitHub connector run/jobs/logs plus Git commit REST identity",
+      "observed_at": "2026-10-30T04:44:19.021360+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Test (server + client, MySQL integration)",
+      "code_commit": "49e6963538081dfc7ada432df5d59da7a5b9abea",
+      "spec_baseline": "9a651b0b761d938b06f4083359398de612fa14ad94e1755be8ecafac9dfde030",
+      "source_fingerprint": "0819de0ff4fae58c717fc2f8750cc3999e8e97d5e2b67dfdd0069c30b0793ef2",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/41002406686/job/123895910089; actual13/13SUCCESS; checkout b81e95cf parents a452+49e696, same tree a51a5c; raw logs and current result retained; final independent closing pending.",
+      "actor": "/root actual GitHub connector run/jobs/logs plus Git commit REST identity",
+      "observed_at": "2026-10-30T04:44:19.021363+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Build frontend",
+      "code_commit": "49e6963538081dfc7ada432df5d59da7a5b9abea",
+      "spec_baseline": "9a651b0b761d938b06f4083359398de612fa14ad94e1755be8ecafac9dfde030",
+      "source_fingerprint": "0819de0ff4fae58c717fc2f8750cc3999e8e97d5e2b67dfdd0069c30b0793ef2",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/41002406686/job/123889600556; actual13/13SUCCESS; checkout b81e95cf parents a452+49e696, same tree a51a5c; raw logs and current result retained; final independent closing pending.",
+      "actor": "/root actual GitHub connector run/jobs/logs plus Git commit REST identity",
+      "observed_at": "2026-10-30T04:44:19.021364+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Browser tests (Playwright)",
+      "code_commit": "49e6963538081dfc7ada432df5d59da7a5b9abea",
+      "spec_baseline": "9a651b0b761d938b06f4083359398de612fa14ad94e1755be8ecafac9dfde030",
+      "source_fingerprint": "0819de0ff4fae58c717fc2f8750cc3999e8e97d5e2b67dfdd0069c30b0793ef2",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/41002406686/job/123889600476; actual13/13SUCCESS; checkout b81e95cf parents a452+49e696, same tree a51a5c; raw logs and current result retained; final independent closing pending.",
+      "actor": "/root actual GitHub connector run/jobs/logs plus Git commit REST identity",
+      "observed_at": "2026-10-30T04:44:19.021365+00:00"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "Independent exact49e696 source, integrated evidence, current CI and P1 DoD final closing",
+      "code_commit": "49e6963538081dfc7ada432df5d59da7a5b9abea",
+      "spec_baseline": "9a651b0b761d938b06f4083359398de612fa14ad94e1755be8ecafac9dfde030",
+      "source_fingerprint": "0819de0ff4fae58c717fc2f8750cc3999e8e97d5e2b67dfdd0069c30b0793ef2",
+      "status": "PASS",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/independent-pr297-49e696-current-ci-final-closing-review.json SHA02f070a4b4e51a51b06affdf35bc593d20cb6eacdbb5ffb65d800346a538c6e4; actual separate-agent exact49e696 CI/DoD closing0C/H/M; actual13/13SUCCESS, all207skipnames unchanged, full5000/20s/rollback/recovery/39floors/PW verified. No GitHub humanAPPROVE claimed.",
+      "actor": "/root/fulfillment_resume_review actual independent review",
+      "observed_at": "2026-10-30T04:45:32.442826+00:00"
     }
   ],
   "pending_decisions": [
@@ -7672,6 +7769,20 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Actual Sam async reply: 批准方案 C：批量 child claim及完整驗證（建議）; approved readiness SHA c3005f4afac273fb49f9d11224e0ebe66704bff04776d880ed554ea0280ff0f1, preserves20s/5000/guards/stop-on-performance-failure/no merge297."
+    },
+    {
+      "id": "HD-025-SHIPMENT-WEIGHT",
+      "impact": "MAJOR",
+      "question": "Choose exact positive DECIMAL20,6 string with no rounding/conversion, nullable pair, canonical fractional zeros and fixed KG/G (A recommended) or KG/G/LB/OZ (B). Proposal71 SHAa62d1914aff95eaa5f15a7c0ecf79acc1965550993e723a2846b28f13bb59949 reviewed0CHM; affected public/business unit contract not yet chosen.",
+      "affected_ids": [
+        "TASK-024",
+        "TASK-026",
+        "TASK-031",
+        "TASK-032",
+        "TASK-033"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
     }
   ],
   "external_actions": [
@@ -8698,6 +8809,78 @@
       "idempotency_key": "pr297-main306-runtime-cleanup-once",
       "status": "CONFIRMED",
       "source_ref": "Six actual new-FP canonical suites PASS; original independently reviewed exact cleanup script, same authorized isolated runtime lifecycle.; /Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/pr297-main306-runtime-cleanup.json SHA80977867c5f3cf86fdf7e629abfb2e4f488649b7b2198ef936cbeca12af6cde9; zero active clients/owned children, exact base/account removed, socket/pid absent, both browser ports free."
+    },
+    {
+      "id": "PR297-PUSH-MAIN306-CANDIDATE",
+      "kind": "GIT_PUSH",
+      "target": "crazysumsum/erp-app codex/fulfillment-p1-queue-picking exact 49e6963538081dfc7ada432df5d59da7a5b9abea",
+      "idempotency_key": "pr297-push-49e696-once",
+      "status": "CONFIRMED",
+      "source_ref": "Actual Sam latest-main verification/newCI/ready/merge authority; six required integrated suites and independent results PASS; normal push only from observed remote1705 ancestor; new CI required.; Actual git push success 1705bf55..49e69635; git ls-remote and GitHub PR metadata both confirm head49e696, maina452; PR remains OPEN/DRAFT/unmerged."
+    },
+    {
+      "id": "PR297-BODY-MAIN306-PENDING",
+      "kind": "PR_UPDATE",
+      "target": "PR297 body only, current49e696 pending CI",
+      "idempotency_key": "pr297-body-main306-pending",
+      "status": "CONFIRMED",
+      "source_ref": "User-authorized PR preparation; remove stale old-head green/hold language, retain historical failure/limits, clearly mark new CI pending.; gh pr edit succeeded for PR297 using exact reviewed pending-body file; head49e696 remainsdraft/unmerged."
+    },
+    {
+      "id": "PR297-FINAL-BODY-49E696",
+      "kind": "PR_UPDATE",
+      "target": "PR297 final current49e696 verification body",
+      "idempotency_key": "pr297-final-body-49e696",
+      "status": "CONFIRMED",
+      "source_ref": "Actual Sam latest-main/CI/review authorized ready+merge; 13/13currentCI, actual independentclosing02f070a4, genericPHASE002MERGE_READY PASS0issues.; gh pr edit success; final verification body updated."
+    },
+    {
+      "id": "PR297-READY-49E696",
+      "kind": "PR_READY",
+      "target": "PR297 ready for review at49e696",
+      "idempotency_key": "pr297-ready-49e696",
+      "status": "CONFIRMED",
+      "source_ref": "Actual Sam latest-main/CI/review authorized ready+merge; 13/13currentCI, actual independentclosing02f070a4, genericPHASE002MERGE_READY PASS0issues.; gh pr ready success; actual PRview isDraft=false, OPEN, CLEAN, exact49e696/a452; 13checksSUCCESS, native reviews/threads empty."
+    },
+    {
+      "id": "PR297-MERGE-49E696",
+      "kind": "PR_MERGE",
+      "target": "PR297 normal merge exact49e696 into freshmaina452",
+      "idempotency_key": "pr297-merge-49e696-once",
+      "status": "CONFIRMED",
+      "source_ref": "Actual Sam explicit merge authority; 13/13exactcandidateCI, realindependentclosing0C/H/M and actualMERGE_READY0issues; re-fetch target/recheckexacthead/allchecks immediately before normal --match-head-commit merge; noadmin bypass.; /Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/pr297-main306-merge-confirmed.json SHA69798972d784787f0afc46cd61ae6d2b8208b9e457c8b71364bf608189d1ddc8; actual merged5febef80 at2026-10-30T04:46:53Z; parentsa452+49e696 and treea51a5c exactlytested."
+    },
+    {
+      "id": "PR297-MERGED-BODY",
+      "kind": "PR_UPDATE",
+      "target": "PR297 body merge result only",
+      "idempotency_key": "pr297-merged-body-once",
+      "status": "CONFIRMED",
+      "source_ref": "Confirmed actual normalmerge5febef80; update public PR completion result.; gh pr edit succeeded; PR body now records actualmerge5febef80."
+    },
+    {
+      "id": "PR297-MERGED-WORKTREE-CLEANUP",
+      "kind": "GIT_CLEANUP",
+      "target": "Only merged codex/fulfillment-p1-queue-picking branch and own fulfillment-p1 worktree; preserve all evidence in siblingruntime first",
+      "idempotency_key": "pr297-merged-cleanup-once",
+      "status": "CONFIRMED",
+      "source_ref": "User AGENTS requires aftermergecleanup; PR297 actualmerged, no dependent openPRs, reviewed preservation script d41b2490 / receiptd0e04417. Only exact3reproducibledependencydirs and.git excluded from privatearchive; inventory/SHA verified before restore ownbookkeeping and normalworktreeremoval. No force deletion.; actual /Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p1-runtime/pr297-merged-cleanup-confirmed.json verifies archive/worktree/local+remotebranchcleanup."
+    },
+    {
+      "id": "P2-IMPLEMENT-AUTHORITY",
+      "kind": "USER_AUTHORIZATION",
+      "target": "PHASE003 TASK024–033 implementation and draftPR after required currentCI/review; no merge",
+      "idempotency_key": "p2-implement-user-authority",
+      "status": "CONFIRMED",
+      "source_ref": "Sam actual latest chat: 確認合併後 main CI 通過，然後按已批准計劃開始 fulfillment P2 開發；保留所有安全檢查及 20 秒限制，完成所有 TASK、獨立覆核及完整驗證，待當前候選 CI 通過後建立 draft PR。若容量或效能測試失敗便停下報告。"
+    },
+    {
+      "id": "MODE-CHANGE-328",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-328",
+      "status": "CONFIRMED",
+      "source_ref": "Actual Sam P2 instruction in currentchat / P2-IMPLEMENT-AUTHORITY; observed mergedmainCI41004788896 all13SUCCESS"
     }
   ],
   "evidence_files": [
@@ -9193,5 +9376,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "All six actual main306 integrated suites PASS; await independent results receipt, docs-only checkpoint commit, freeze/push exact candidate, new mandatory CI/finalreview/fresh target check then authorized ready+merge. Any capacity/performance FAIL STOP; preserve all safety/20s."
+  "next_safe_action": "Await actual Sam HD025 unit/wire choice for affected contract; independent entry receipt3f8529b9 identifies no second human decision. Complete engineering slice/profile/recovery direction review; then implement2A→2D and full currentcandidate verification/CI beforedraftPR. NoP2tasksDONE/noDBtest/no capacityfailure; preserve5000/20s/guards."
 }

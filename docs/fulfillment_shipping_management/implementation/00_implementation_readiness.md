@@ -1,6 +1,16 @@
 # Fulfillment implementation readiness
 
-## 當前：main PR306 已整合，完整本機驗證及獨立覆核通過，待新候選 CI（2026-10-30）
+## 當前：P2 開發入口（2026-10-30）
+
+Sam 已授權按已批准 PHASE-003 計劃開發 TASK-024–033，保留全部安全檢查、100行／每行50／總數5000及20秒限制；任何容量或效能失敗立即停下報告。所有Task、獨立覆核、完整驗證及新候選CI通過後才建立draft PR；本次授權不包含P2合併。
+
+P1 PR297已實際合併，merge `5febef80f83ba0ff87bc5bf6117aff254cbdcbb7`。合併後main CI41004788896已由GitHub實際確認13/13 jobs SUCCESS，包括四個native shards、merged coverage、client、真P1 browser與Sales容量；沒有拿合併前CI替代。Fresh fetch確認origin/main仍為5feb，專用分支 `codex/fulfillment-p2-shipment`／worktree `.worktrees/fulfillment-p2` 從該基準建立。
+
+P1最終state337、原始typed evidence及全部歷史由已驗證完整archive恢復至此worktree；run內容與執行來源未改、未重標PASS。P1清理已由實際receipt確認。P2入口PLAN_READY為LOCAL_CHECKS_PASS／0 issues；尚無P2 product Task完成，尚未配置DB／帳號／ports或執行容量測試。
+
+獨立入口覆核已完成：唯一未決HD025重量公開契約，1 Medium；其具體方案及72工程準備均0C/H/M，receipt SHA3f8529b9…ff373d。尚未實作P2產品或執行容量測試。Harness要求open重大決策時總state記BLOCKED／resume IMPLEMENTING；僅此受影響契約待決，其餘工程準備仍可進行。待實際決定後按2A Draft／地址、2B durable intent／原子出貨、2C Recovery／查詢、2D client／UI／列印順序交付。既有schema與各provider介面是權威，涉及新重大契約／資料語意須先具體覆核並取得必要決定。P3 Reversal仍受capability gate限制。
+
+## 歷史：P1 main整合驗證（2026-10-30）
 
 Sam 已授權在最新 main 整合、必要驗證、獨立覆核及新候選 CI 全部通過後，將 PR297 轉正式並合併；原「暫不合併」已被此指令取代。全部安全檢查、5,000 筆容量及20秒交易限制不變，任何容量／效能失敗立即停報。
 
