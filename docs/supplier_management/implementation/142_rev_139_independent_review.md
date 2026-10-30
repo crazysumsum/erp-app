@@ -40,3 +40,10 @@
 | Nit: "`min_tests` 3" for the release suite | Corrected to 2. |
 | Nit: the PR body listed UAT-044 as unchanged | The PR body now says it is "not waived". Its SKU-selection limit is 3 s. |
 | Nit: the 06 wording about re-judging old numbers, and "Done:" | Reworded. The next formal run measures TC-085 again, and the formal-evidence row now says the old evidence is stale and the new run is open. |
+
+## Follow-up verdict (same reviewer, HEAD `1227ae60`)
+
+**APPROVED** for the design review on `22865f96` (plan `8b31fcdd`). open_critical 0, open_high 0.
+- **Checked against `git diff 0e2267a7..HEAD`:** every disposition above, and no baseline file touched. Two separate L4 mutants each went red on their own case.
+- **M3 does not block approval.** It is an outward action needing the Product Owner's word, and it is now in `next_safe_action`.
+- **One nit fixed:** a double label in the TC-132 gap.

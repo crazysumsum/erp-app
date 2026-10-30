@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 496,
+  "revision": 497,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -4275,6 +4275,18 @@
       "reviewed_baseline": "22865f96b0ce3aa7e70b1433533a3a0551d557a6e3dcb12bef28e4546e57a056",
       "source_ref": "docs/supplier_management/implementation/142_rev_139_independent_review.md",
       "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-140",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (HD-157 plan revision, REV-139 fixes)",
+      "reviewer": "agent-skills:code-reviewer (the REV-139 reviewer), re-reviewing claude/supplier-hd157-plan-revision at 1227ae60 (git diff 0e2267a7..HEAD); supersedes REV-139's verdict",
+      "reviewed_baseline": "22865f96b0ce3aa7e70b1433533a3a0551d557a6e3dcb12bef28e4546e57a056",
+      "source_ref": "docs/supplier_management/implementation/142_rev_139_independent_review.md (follow-up verdict)",
+      "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
@@ -11214,5 +11226,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "HD-157 plan revision in IMPLEMENT: NFR-005 3 s; TC-085 3 s; production parts of TC-128/130/132/133/134/135/006 waived (local results stand); 07 amendments, REV-130 N3/N6, profile environment authorization; runners stop emitting the waived NOT_RUN parts (TC-136 stays); verdict for-SKU limit 3,000 ms; approvals re-recorded on the new baselines; independent design review; CI; merge on the Product Owner's word; then TEST_AND_VERIFY with fresh formal runs."
+  "next_safe_action": "PR #305 (HD-157): CI, merge on the Product Owner's word. After merge: (1) with the Product Owner's word, comment on issue #294 that Purchasing's pin target for supplier-public-provider-contracts is now e49ac37d and that 03 §11.5's for-SKU p95 is 3 s (HD-157) with no API change (REV-139 M3); (2) TEST_AND_VERIFY on the merged baseline: the 8 required suites at TECHNICAL and REGRESSION; DEF-050 closes if TC-085 passes against 3 s; then the Technical Acceptance report. REPORT_ONLY."
 }
