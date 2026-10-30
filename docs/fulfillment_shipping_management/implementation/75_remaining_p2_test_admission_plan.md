@@ -1,6 +1,6 @@
 # CI-P2-REMAINING-001 — remaining P2 verification proposal
 
-Status: PROPOSED, not approved for new regular CI cases or capacity execution. The first15 Draft cases remain separately APPROVED under CI-P2-DRAFT-001 and are not requested again. No shared CI change is authorized until this proposal receives Sam's actual decision. Product development follows approved TASK025–033; the present request concerns additional verification footprint under Sam's new cost policy.
+Status: APPROVED B for the exact22 functional cases and existing browser-step wiring/PM coordination only; the three new local capacity scenarios are NOT APPROVED and must not execute. The first15 Draft cases remain separately APPROVED under CI-P2-DRAFT-001 and are not requested again. Sam actually replied B：只批准22功能案及browser接線，容量情境待另批. Original proposal SHAa74c4f5803ac2a00ceb2aab91aa24c283ed5c3c580517a45b3140f4ad97430fa is preserved byte-for-byte privately; no later edit expands that authority. Product development follows approved TASK025–033; the present request concerns additional verification footprint under Sam's new cost policy.
 
 ## Additional functional cases:22 maximum
 

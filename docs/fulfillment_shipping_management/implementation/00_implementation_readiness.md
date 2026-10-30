@@ -1,6 +1,12 @@
 # Fulfillment implementation readiness
 
-## 當前：Draft、lookup及內部Phase A已保存，首批15個CI案例已批准（2026-10-30）
+## 當前：內部原子出貨及Create鎖循環已驗證，Recovery／完整P2仍待完成（2026-10-30）
+
+已無衝突整合main41fb於99cf743b。內部PhaseB可同交易完成Issue／Reservation consume／Sales／Claims／Shipment快照及原operation SUCCEEDED；兩項小型native成功／24表rollback＋原事件恢復已通過。另以雙連線先實際重現Create／Confirm的Customer-X／Sales-FK-S deadlock，再提前Create必要Sales父行S鎖；修正後race1PASS及原2項必要回歸PASS，均0FAIL／0SKIP。獨立結果覆核0C/H/M，receipt SHA42d6cf8e…94f7b1，DEF028僅此鎖循環可關閉。原RED、兩輪posting前功能失敗與較早PASS均保留各自實際FP／HEAD／PLAN，不重標。這些仍是2pool／10秒小型功能fixture，不能宣稱5,000容量或完整P2已通過。
+
+Sam已實際選方案75 B：准入精確22個功能案例及既有browser step／PM協調；三項新增本地容量情境仍未批准、不執行。PM已收到browser shared scope協調；後續整合須保留其最新容量分流，不能帶回舊無條件容量steps。TASK024–027仍IN_PROGRESS；未開放Confirm endpoint，永久失敗／未知結果Recovery、查詢、client、UI、文件、完整驗證及當前候選CI仍待完成，尚未push／建立PR。全部安全／coverage／100/50/5000／20秒及真正容量／效能失敗立即停報保留。
+
+### 前一個實作checkpoint
 
 已本地保存Draft `20c1ac97`、精確15案helper機械搬移 `4196f995`、parent-bound lookup `7d3c4259`、內部durable intent及immutable terminal witness `4cc23d38`；未push／觸發P2候選CI或建立PR。Lookup私有真MySQL／HTTP1PASS，PhaseA私有真MySQL3PASS，均0FAIL／0SKIP；實際raw XML及artifact hashes已由獨立reviewer `/root/p2_confirmation_review` 核對0C/H/M，receipt SHA `50a59e04…2af4f`。Lookup原執行FP `5af186e2…246be70`、PhaseA原FP `15145868…bfdeb6a`保持原綁定；helper機械搬移／新PhaseA source的影響bridge不冒稱lookup重跑。這些是小型功能證據，native fixture實際2pool／10秒，不能宣稱5,000容量／20秒最大量級或完整P2 Gate通過。
 

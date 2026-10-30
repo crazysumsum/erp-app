@@ -1,20 +1,20 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 342,
+  "revision": 347,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-003",
-  "current_task": "TASK-024",
+  "current_task": "TASK-027",
   "baseline": {
     "design": "a2f36f116fbbba29643471dae3665e3c43ed7bd0dae23af32f277fea4c2fad9d",
     "plan": "7882d19ae5c91ca9aba354e29b000150dde46fa61dcd3a9144455f032e41a7c3",
-    "code_commit": "4cc23d385cb736329f29be834c61c6f361c3f4eb",
-    "source_fingerprint": "b2ee3591630775f6f1a32e736c6037263e7009d9d69a0ef050af76ca3a9140ef",
+    "code_commit": "99cf743be926a5c3364cd58041fd06a9c757a4a9",
+    "source_fingerprint": "51c32805ba1c0b1f7105893d521ba1d8eed2a3478fa08f49605e8983cf5e0313",
     "worktree": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2",
-    "default_commit": "5febef80f83ba0ff87bc5bf6117aff254cbdcbb7",
+    "default_commit": "41fb488af133053c95e2b8e878920b2a494349da",
     "mode_entry_commit": "5febef80f83ba0ff87bc5bf6117aff254cbdcbb7"
   },
   "runtime": {
@@ -57,7 +57,7 @@
     "TASK-024": "IN_PROGRESS",
     "TASK-025": "IN_PROGRESS",
     "TASK-026": "IN_PROGRESS",
-    "TASK-027": "PENDING",
+    "TASK-027": "IN_PROGRESS",
     "TASK-028": "PENDING",
     "TASK-029": "PENDING",
     "TASK-030": "PENDING",
@@ -4006,6 +4006,24 @@
         "TASK-024–033",
         "HD025 A only optional exactstring KG/G; inherited approved plan and provider/safety rules retained; draftPR only after all checks; no merge"
       ]
+    },
+    {
+      "id": "APR-P2-REMAINING22-BROWSER-B",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam actual currentchat async B reply",
+      "decision": "APPROVED",
+      "source_ref": "Actual Sam currentchat async reply B：只批准22功能案及browser接線，容量情境待另批; exactproposal75 SHAa74c4f5803ac2a00ceb2aab91aa24c283ed5c3c580517a45b3140f4ad97430fa. Authorizes22finitefunctionalcase budgets and minimalexistingbrowserstep/PMcoordination only. Three newlocalcapacityscenarios explicitly NOT approved; noexecution/finalcapacityGatePASS inferred.",
+      "recorded_at": "2026-10-30T08:12:32.848781Z",
+      "code_commit": "99cf743be926a5c3364cd58041fd06a9c757a4a9",
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "7882d19ae5c91ca9aba354e29b000150dde46fa61dcd3a9144455f032e41a7c3",
+      "scope": [
+        ".github/workflows/ci.yml",
+        "client/e2e/fulfillment-shipping-management/**",
+        "Only proposal75 maximum22 namedfunctional cases/finitebudgets plus minimal existingrealbrowserstep extension and PMcoordination; no newjob/step/router/frequency. No newP2capacity execution."
+      ]
     }
   ],
   "reviews": [
@@ -6312,6 +6330,54 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-P2-MAIN41FB-IMPACT",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/p2_confirmation_review",
+      "reviewed_baseline": "a2f36f116fbbba29643471dae3665e3c43ed7bd0dae23af32f277fea4c2fad9d",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2-runtime/independent-p2-incoming-main41fb-integration-impact-review.json SHA5289112cba19555c21b85de3f65f262398ed04d865bca7e4dc2bfbcb7a5fb057; actualincoming16files reviewed0CHM; no Fulfsource/spec/providerchanges, existing14capacity preserved/newP2path requires14job. RawoldFP/HEAD evidence retained, fresh finalcandidate validationrequired.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P2-REMAINING22-LOCAL3-COST-PROPOSAL",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/p2_confirmation_review",
+      "reviewed_baseline": "a2f36f116fbbba29643471dae3665e3c43ed7bd0dae23af32f277fea4c2fad9d",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2-runtime/independent-p2-remaining22-local3-cost-proposal-readiness-review.json SHA84e17ce24d97764730d4dae65583fc6ea58b8a4a9d76d17f6ac4204a75989944; proposal75 SHAa74c4f5803ac2a00ceb2aab91aa24c283ed5c3c580517a45b3140f4ad97430fa readyforactualSamdecision0CHM; noCI/load/implementation admission.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P2-PHASEB-EXACT2-RESULT-CREATE-HIGH-OPEN",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/p2_confirmation_review",
+      "reviewed_baseline": "a2f36f116fbbba29643471dae3665e3c43ed7bd0dae23af32f277fea4c2fad9d",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2-runtime/independent-p2-phaseb-actual-exact2-green-result-limited-review.json SHAacd3d4f3d94b32cdc4bbcb5dd74f056ee62a54dca41cb9c061445f76dd34a35a; actual49bc2PASS0FAIL0SKIP/24tablefacts and allpriorRED/functionalFAIL rawverified. Limitedresultaccepted; separatecurrentsourceHIGH CreateCustomer/SalesFK cycle remainsOPEN, not fullsource/P2/CI/race approval.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P2-DEF028-RACE-CLOSURE-EXACT2-REGRESSION",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/p2_confirmation_review",
+      "reviewed_baseline": "a2f36f116fbbba29643471dae3665e3c43ed7bd0dae23af32f277fea4c2fad9d",
+      "source_ref": "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2-runtime/independent-p2-def028-native-race-closure-phaseb-regression-results-review.json SHA42d6cf8eecaf6ca2d75fb88256cb4918125a3ff73782e0d3d5a8e9629594f7b1; actualsource51c328 nativeRace1PASS and exact2PhaseBregressionPASS/0FAIL0SKIP, completeartifacts/24tablefacts/earlySalesS/currentClaim2 reviewed0CHM. CloseDEF028only; alloriginalnativeRED/functionalFAIL/priorPASS retained exactsource/HEAD/PLAN. No fullP2/Recovery/capacity/CI claim.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -8060,6 +8126,25 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Actual Sam currentchat async reply: A：批准這15個功能案例納入常規CI（建議）; approvedproposal73 SHAdf3e44f8ae07c4937da00c67647d7cd6be1bec6fa6e81ea7b7f1a5a00bd78759; only6pure/6native/3HTTP, no extra100/5000/UI/jobs/steps/routing; fullP2/currentCI/safety/20s retained."
+    },
+    {
+      "id": "CI-P2-REMAINING-001",
+      "impact": "MINOR",
+      "question": "Actual newAGENTS policy requires priorSam approval: maximum22functional cases with finite percase subscenario/fixture/attempt budgets and existingrealbrowserstep extension/PM coordination, estimated6–12minincrementalsummedCIwork; separate3localfinalcapacitydatasets100lines/50Reservations/5000members/100or5000Balances,4Confirm+2outcomereads, each180swholecase and20seachTX, estimated3–8minlocal, stoponactualperfFAIL. Proposal75 SHAa74c4f5803ac2a00ceb2aab91aa24c283ed5c3c580517a45b3140f4ad97430fa reviewed0CHM and actualasyncquestion sent; no newcase/load execution inferred.",
+      "affected_ids": [
+        "PHASE-003",
+        "TASK-025",
+        "TASK-026",
+        "TASK-027",
+        "TASK-028",
+        "TASK-029",
+        "TASK-030",
+        "TASK-031",
+        "TASK-032",
+        "TASK-033"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Actual Sam currentchat async reply B：只批准22功能案及browser接線，容量情境待另批; exactproposal75 SHAa74c4f5803ac2a00ceb2aab91aa24c283ed5c3c580517a45b3140f4ad97430fa. Authorizes22finitefunctionalcase budgets and minimalexistingbrowserstep/PMcoordination only. Three newlocalcapacityscenarios explicitly NOT approved; noexecution/finalcapacityGatePASS inferred."
     }
   ],
   "external_actions": [
@@ -9190,6 +9275,22 @@
       "idempotency_key": "p2-lookup-private-runtime-once",
       "status": "CONFIRMED",
       "source_ref": "Sam approved P2 development/private minimalfunctional probe policy; actual independent admission6d915f53; no capacity sample/no CIcase. Originaldefaults/20s and stricter2pool10sseed retained.; actual /Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2-runtime/lookups/runtime-public.json SHA25dcd66c7709c73fbbe51ad244060026876d5fa24f2eb824cfaab7a50db8a63d"
+    },
+    {
+      "id": "P2-REMAINING22-B-AUTHORITY",
+      "kind": "USER_AUTHORIZATION",
+      "target": "Onlyproposal75 22functional/browserscope; three localcapacity scenarios held",
+      "idempotency_key": "p2-remaining22-user-b-once",
+      "status": "CONFIRMED",
+      "source_ref": "Actual Sam currentchat async reply B：只批准22功能案及browser接線，容量情境待另批; exactproposal75 SHAa74c4f5803ac2a00ceb2aab91aa24c283ed5c3c580517a45b3140f4ad97430fa. Authorizes22finitefunctionalcase budgets and minimalexistingbrowserstep/PMcoordination only. Three newlocalcapacityscenarios explicitly NOT approved; noexecution/finalcapacityGatePASS inferred."
+    },
+    {
+      "id": "P2-PM-BROWSER-STEP-COORDINATION",
+      "kind": "THREAD_COORDINATION",
+      "target": "PM chat01a0e71b-fccb-7c81-b9fe-ed817cc58e1f, existingrealFulfillmentbrowserstep scope only",
+      "idempotency_key": "p2-pm-browser-step-b-approval-once",
+      "status": "CONFIRMED",
+      "source_ref": "ActualSam B approval of proposal75 browserwiring/PMcoordination; actual codex-app send_message_to_thread succeeded to exactPM thread. Message preservesP1exact2+P2exact2/separateownedreports/nojob/step/router/newcapacity and notesestimated6–12minsummedCIwork. No remote Git mutation or CI triggered."
     }
   ],
   "evidence_files": [
@@ -9683,7 +9784,23 @@
         "Nonblocking publishedcommit format discrepancy: e54 uses conventionalperf whereas05§1.1 listsfeat/fix/test/docs/chore; independentpublishedreview17296b87 classifiesLOW. No product/acceptance/CIchange; recordhonestly,no frozenHEADrewrite orstyle-only rerun."
       ],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-028",
+      "severity": "HIGH",
+      "status": "CLOSED",
+      "source_ids": [
+        "TASK-024",
+        "TASK-027",
+        "TC-010"
+      ],
+      "closure_evidence": [
+        "Independent reviewer P2-PHASEB-CREATE-CUSTOMER-FK-CYCLE-004: siblingDraftCreate holdsownFulfillment+Customer/AddressX thenINSERTShipmentneedsSalesFK-S; PhaseB holdsSalesX thenwaitsCustomerX. OwnFulfillment-onlylocking removedfirstcycleedgebutdoesnotcloseCustomeredge. Exact2smallsuccess/rollbackPASS doesnotproveCreate race.",
+        "Minimalexistingpattern earlySalesOrder id FOR SHARE beforeFulfillment/Customer, operation/freshactor first andlockedimmutableparentrecheck; read-onlySalesparent contract and existingPrintpattern independentlyverified asminor authorizedfix. One boundedprivate native RED/race sourceadmission pending, no newcapacity orregularcase.",
+        "/Users/sam/Documents/workspace/erp-app/.worktrees/fulfillment-p2-runtime/independent-p2-def028-native-race-closure-phaseb-regression-results-review.json SHA42d6cf8eecaf6ca2d75fb88256cb4918125a3ff73782e0d3d5a8e9629594f7b1 actualnativeRED e53fd7b44917 ER_LOCK_DEADLOCK1213/40001 preserved; earlySalesS minimalfix + actualrace84a8341PASS and a055672PASS0FAIL0SKIP atFP51c328 independentlyverified. No otherRecovery/P2 readiness inferred."
+      ],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Save independent privatePhaseA3PASS/lookup1PASS exactbaselines and localcommits; integrate fetchedmain41fb after incomingimpact review; proposal75 remainingcases/load still needs actual Sam admission. Continue approved P2 atomicIssue/Recovery/UI with independent reviews; no new routineCIcases beyond admitted15 or unapprovedload. Fullverification/exactcandidateCI before draftPR; actualcapacity/perfFAIL STOP, original20s/safety retained."
+  "next_safe_action": "Save independentlyverified internalPhaseB+earlySalesparent Draftfix as localatomic commits (actualrunsHEAD99cf/FP51c328 retained). Continue concrete Recovery/knownrollback/unknownoutcome/security contract investigation before failureonly implementation; Inquiry/client/UI and admitted22functional/browserwiring may proceed. SamB3newlocalcapacity NOTapproved/held; finalcapacityGate awaits separatedecision. PreservePM latestcapacityrouting on nextmainintegration; allTasks/review/fullverification/currentcandidateCI beforedraftPR,20s/allguards/actualperfFAIL STOP."
 }
