@@ -1,27 +1,27 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 497,
+  "revision": 498,
   "mode": "FULL_LIFECYCLE",
-  "active_mode": "IMPLEMENT",
-  "status": "IMPLEMENTING",
+  "active_mode": "TEST_AND_VERIFY",
+  "status": "READY_FOR_TESTING",
   "resume_status": null,
   "current_phase": "PHASE-004",
   "current_task": "TASK-051",
   "baseline": {
     "design": "22865f96b0ce3aa7e70b1433533a3a0551d557a6e3dcb12bef28e4546e57a056",
     "plan": "8b31fcdd93bafe8275cb5cd2eded0a50b608a49bb17227beb7339ee099a344bd",
-    "code_commit": "041e932f4074a1f5df1bc641e5c06f4afcb1bb3a",
+    "code_commit": "6d84ee454b72f4b3e43b2aa6eee2436e6e950716",
     "source_fingerprint": "b00c7d69b52834f1cc4b2be0224208cff4ad046afd8eef70b2ee239d13b91394",
-    "worktree": "/Users/sam/Documents/workspace/erp-supplier-hd157",
-    "default_commit": "e64dfc7452dd4ce598e6e9d1765000d9633dd849",
-    "mode_entry_commit": "e64dfc7452dd4ce598e6e9d1765000d9633dd849"
+    "worktree": "/Users/sam/Documents/workspace/erp-supplier-ta4",
+    "default_commit": "6d84ee454b72f4b3e43b2aa6eee2436e6e950716",
+    "mode_entry_commit": "6d84ee454b72f4b3e43b2aa6eee2436e6e950716"
   },
   "runtime": {
     "instance_id": "supplier-t51-scratch-mysqld-3450",
     "owner": "Primary Harness agent",
     "resources": {
-      "workspace": "/Users/sam/Documents/workspace/erp-supplier-hd157 (claude/supplier-hd157-plan-revision, cut from main e64dfc74)",
+      "workspace": "/Users/sam/Documents/workspace/erp-supplier-ta4 (claude/supplier-technical-acceptance-4, cut from main 6d84ee45)",
       "mysql-schema": "erp_t51, and the erp_t51_rh_* scratch schemas the runners create and drop, on a throwaway mysqld at 127.0.0.1:3450 (session scratch datadir, --skip-log-bin); no production data",
       "web-port": "3021 (UAT API) and 5216 (UAT client); the other runners bind free ports"
     },
@@ -7504,6 +7504,17 @@
       "source_ref": "supplierPerformanceVerdicts unit test 2/2 with 48 cases (REV-139 L4 added NFR-001 limit cases for load.every_general_operation_within_limits and online.p95_under_2s_during_import); a mutant dropping both NFR-001 limit checks made it red (backup, restore, cmp); npm run lint exit 0. The earlier developer-check observation is bound to plan d6e34580 and commit 2c32916e, which the provided-contract pin commit stranded (REV-139 L2); since then the runner scripts are unchanged; only the verdict module supplierPerformanceVerdicts.js (which the performance runner imports) and its unit test changed, adding a check that NFR-001's limit is 2,000 ms, which the benchmark already reported in that run (limitP95Ms 2000). The formal run after merge re-measures everything on plan 8b31fcdd.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-30T01:52:28+00:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "HD-157 plan revision: NFR-005 for-SKU p95 3 s, production parts waived (PR #305) merged to main",
+      "code_commit": "6d84ee454b72f4b3e43b2aa6eee2436e6e950716",
+      "spec_baseline": "8b31fcdd93bafe8275cb5cd2eded0a50b608a49bb17227beb7339ee099a344bd",
+      "source_fingerprint": "b00c7d69b52834f1cc4b2be0224208cff4ad046afd8eef70b2ee239d13b91394",
+      "status": "PASS",
+      "source_ref": "PR #305 merged as 6d84ee454b72f4b3e43b2aa6eee2436e6e950716 at 2026-10-30T03:21:32Z on the Product Owner's word ('CI己通過'), with --match-head-commit 77d608b4, after a gate that refused unless the latest run of every check was SUCCESS (13 checks, PR run 40988675382), main was an ancestor of HEAD and the local, remote and PR heads were equal. Reviews REV-139 CHANGES_REQUESTED and REV-140 APPROVED; every REV-139 finding fixed before merge (report 142).",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-30T03:21:32+00:00"
     }
   ],
   "pending_decisions": [
@@ -10163,6 +10174,22 @@
       "idempotency_key": "mode-change-491",
       "status": "CONFIRMED",
       "source_ref": "Product Owner, 2026-10-30: '確認，開 HD-157 修訂 plan，TC-085不用修，放鬆至3秒' (HD-157). Step 2 of 2: TEST_AND_VERIFY -> IMPLEMENT from main e64dfc74 (PR #304 merge) for the plan revision and runner changes. Step 1 (revision 490) re-entered READY_FOR_TESTING with the same authorization."
+    },
+    {
+      "id": "COMMENT-294-HD157",
+      "kind": "ISSUE_COMMENT",
+      "target": "crazysumsum/erp-app#294",
+      "idempotency_key": "supplier-purchasing-pin-hd157-comment-2026-10-30",
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/issues/294#issuecomment-6514158767 posted 2026-10-30T03:22:12Z on the Product Owner's word ('#294 留言都做埋'), REV-139 M3: the pin target is now e49ac37d (03 at main 6d84ee45, equal to Supplier's provided pin); the only change since 2b81eb9a is commit 2c32916e, one line in 03 §11.5 (for-SKU p95 < 3 s, NFR-005, HD-157); no API, schema, projection, status or lock-order change; asked Purchasing to refresh or record keeping the old pin, and to say if it needs for-SKU tighter than 3 s."
+    },
+    {
+      "id": "MODE-CHANGE-498",
+      "kind": "MODE_CHANGE",
+      "target": "TEST_AND_VERIFY",
+      "idempotency_key": "mode-change-498",
+      "status": "CONFIRMED",
+      "source_ref": "Product Owner, 2026-10-30: '確認，開 HD-157 修訂 plan，TC-085不用修，放鬆至3秒' (HD-157): after the revision merged (PR #305, 'CI己通過'), back to TEST_AND_VERIFY for the formal run on the HD-157 baseline; entry commit 6d84ee454b72f4b3e43b2aa6eee2436e6e950716"
     }
   ],
   "evidence_files": [
@@ -11226,5 +11253,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "PR #305 (HD-157): CI, merge on the Product Owner's word. After merge: (1) with the Product Owner's word, comment on issue #294 that Purchasing's pin target for supplier-public-provider-contracts is now e49ac37d and that 03 §11.5's for-SKU p95 is 3 s (HD-157) with no API change (REV-139 M3); (2) TEST_AND_VERIFY on the merged baseline: the 8 required suites at TECHNICAL and REGRESSION; DEF-050 closes if TC-085 passes against 3 s; then the Technical Acceptance report. REPORT_ONLY."
+  "next_safe_action": "Formal run on mode entry commit 6d84ee45 (HD-157 baseline): the 8 required suites at TECHNICAL and REGRESSION, as for DEF-048 (HD-151 A); the scratch mysqld with innodb_deadlock_detect and innodb_print_all_deadlocks ON and the three 16,384 digest settings; DEF-050 closes if TC-085 passes against 3 s; then the Technical Acceptance report. REPORT_ONLY."
 }
