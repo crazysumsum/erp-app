@@ -59,7 +59,8 @@ export function performanceVerdicts({ mixed, forSku, recall, imported, during, c
   tc128.check("load.list_and_exact_code_p95_under_2s", ["list.default", "list.codeExact"]
     .every((name) => p95(mixed.report, name) !== null && p95(mixed.report, name) < LIMIT_MS),
   { listDefault: p95(mixed.report, "list.default"), codeExact: p95(mixed.report, "list.codeExact") });
-  tc128.check("load.every_general_operation_within_limits", mixed.report?.nfr001?.pass === true, mixed.report?.nfr001);
+  tc128.check("load.every_general_operation_within_limits", mixed.report?.nfr001?.pass === true
+    && mixed.report.nfr001.limitP95Ms === LIMIT_MS, mixed.report?.nfr001);
   const resources = mixed.report?.resources;
   tc128.check("load.resources_bounded", Number.isFinite(resources?.dbThreadsConnected?.max) && resources.dbThreadsConnected.max <= POOL + 3
     && Number.isFinite(resources?.rssMiB?.max) && resources.rssMiB.max <= RSS_LIMIT_MIB, resources);
@@ -94,7 +95,8 @@ export function performanceVerdicts({ mixed, forSku, recall, imported, during, c
   tc101.check("import.exactly_once_and_counts_consistent", imported.report?.verification?.exactlyOnce === true
     && imported.report?.verification?.countsConsistent === true, imported.report?.verification);
   tc101.check("import.report_ok", imported.code === 0 && imported.report?.ok === true, { code: imported.code, error: imported.report?.error });
-  tc101.check("online.p95_under_2s_during_import", during.code === 0 && during.report?.nfr001?.pass === true, during.report?.nfr001);
+  tc101.check("online.p95_under_2s_during_import", during.code === 0 && during.report?.nfr001?.pass === true
+    && during.report.nfr001.limitP95Ms === LIMIT_MS, during.report?.nfr001);
   // 匯入要喺負載嘅量度窗口入面（REV-111 M-4）：由上載開始，到執行完（上載＋預檢＋執行嘅時間），唔計之後嘅核對同匯出。
   const window = during.report?.window;
   const importStart = Date.parse(imported.report?.startedAt ?? "");

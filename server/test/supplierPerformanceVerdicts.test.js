@@ -45,6 +45,8 @@ test("HD-117 A: every condition of every performance check fails on its own brok
     ["load.list_and_exact_code_p95_under_2s", (input) => { input.mixed.report.operations["list.codeExact"].p95 = 2_000; }],
     ["load.list_and_exact_code_p95_under_2s", (input) => { delete input.mixed.report.operations["list.default"]; }],
     ["load.every_general_operation_within_limits", (input) => { input.mixed.report.nfr001.pass = false; }],
+    // NFR-001 仍然係 2 秒：用 3 秒判斷嘅報告唔算（REV-139 L4）。
+    ["load.every_general_operation_within_limits", (input) => { input.mixed.report.nfr001.limitP95Ms = 3000; }],
     ["load.resources_bounded", (input) => { input.mixed.report.resources.dbThreadsConnected.max = 14; }],
     ["load.resources_bounded", (input) => { input.mixed.report.resources.rssMiB.max = 1_025; }],
     ["load.resources_bounded", (input) => { delete input.mixed.report.resources; }],
@@ -82,6 +84,7 @@ test("HD-117 A: every condition of every performance check fails on its own brok
     ["import.report_ok", (input) => { input.imported.code = 1; }],
     ["import.report_ok", (input) => { input.imported.report.ok = false; }],
     ["online.p95_under_2s_during_import", (input) => { input.during.report.nfr001.pass = false; }],
+    ["online.p95_under_2s_during_import", (input) => { input.during.report.nfr001.limitP95Ms = 3000; }],
     ["online.p95_under_2s_during_import", (input) => { input.during.code = 1; }],
     ["import.resources_bounded", (input) => { input.imported.report.dbConnectionsPeak.userConnections = 34; }],
     ["import.resources_bounded", (input) => { input.imported.report.workerPeakRssMiB = 1_025; }],
