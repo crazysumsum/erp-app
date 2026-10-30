@@ -1305,6 +1305,10 @@ Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：
 
 clear jobs。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
 
+### P4 developer merge evidence timing — DEC047C
+
+Sam approved the bounded developer merge boundary recorded in DES019/TASK063. The developer5-case `merge.capacity.js` does not execute or mark formal TC053/054/055 PASS. Full50-user mixed/10k Import+5Export/300k Archive/longforeground/largeArchive capacity remain NOT RUN and required before Archive activation. All formal mandatory/blocking/applicability flags below remain unchanged; DR is excluded under the earlier direct Sam decision. Actual current CI may satisfy the named fullcoverage developer obligation only with raw/provider provenance and final independent disposition, not a fabricated local run.
+
 ## TC-053 — 1m Active query performance
 
 ### Preconditions and data

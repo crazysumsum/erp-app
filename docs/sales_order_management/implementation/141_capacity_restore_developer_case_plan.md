@@ -1,5 +1,20 @@
 # P4 capacity / restore developer case plan
 
+## Current execution authority — supersedes historical scale/DR/merge timing below
+
+### DEC-047 R2 C — approved P4 developer merge boundary (2026-10-30)
+
+Actual Sam userMessage `01a18b64-3404-7fc2-8660-569b8f76099e` in project-manager chat `01a0e71b-fccb-7c81-b9fe-ed817cc58e1f`, verified from the actual thread: 「按方案C通知 Sales agent 推進」; DEC047 R2 proposal SHA `67ce4dd7ec11fc9260499d1ea911d05f18cb865e5306f6ef6fcecd0933e0d25e`.
+
+For this P4 merge only, execute `sales-phase005-merge-capacity`: original1m Active/5m details shape; remaining12 Active query classes100samples×2 with original2s P95; quiet two real500-order Archive invocations with10 foreground readers; complete selected1000-order18-class counts/canonical hashes/amounts/manifests and unchanged Inventory; Archive3 query classes100×2 with original3s exact/5s range and invalid-range checks; read-only operational-table footprint. Reuse the already measured Outstanding200 with its original source/time and explicit impact assessment, never repeat or retag it. Keep25m independent-index evidence, no data rebuild or DR.
+
+One current-candidate CI supplies both existing required CI and the full server coverage obligation (92/83/90 plus39 per-file floors) through actual four-shard JUnit/raw-V8/merged-LCOV/checker evidence and provider/synthetic-candidate/tree identities. Preserve generic missing-local-command/metadata outputs and explicitly disposition them using this named human decision plus final independent review; no fake local PASS or installed Harness edit. Newly merged main5feb adds64 net server test files, expected588; its additional14 Fulfillment capacity scenarios remain **DEC049 PENDING** until Sam explicitly authorizes that extension. Reporting-only patch does not authorize execution.
+
+Full50-user sustained mixed load,10k end-to-end Import with5Exports/Archive contention, complete300k drain, long Archive-only foreground cohort>=100 and large Archive query capacity are **NOT RUN / PRELAUNCH** for this merge. Original formal requirements, TC053/054/055 definitions, test implementations and SLOs remain mandatory for their formal/prelaunch stage. These deferred checks block enabling Archive, not this approved developer merge boundary. `server/config/scheduler.js` keeps `sales.archive.enabled=false`. Report actual bounded foreground sample count/P95 without claiming the deferred long cohort or full NFR004/005. A newly observed performance FAIL/timeout stops further performance repair/retest for Sam; no automatically enlarged load. Low CPU, original business/permission/transaction rules and all other gates remain.
+
+The actual completed source is1m headers/5m details with histogram245000×1/695000×5/59000×20/1000×100;25m keys are a separate index-only schema. Earlier7.3m/all-history/DR paragraphs below are retained historical planning, superseded by direct DEC041/042 and DEC047C. No historical plan is treated as a fresh workload approval or result.
+
+
 Mode: IMPLEMENT, developer verification/preparation only. Full TC053–059 definitions and thresholds remain authoritative; no formal acceptance/UAT/release sign-off. Initial status of every case below: NOT RUN. No bulk data/backup/restore has been executed under this plan.
 
 ## Fixed acceptance baseline and data fidelity

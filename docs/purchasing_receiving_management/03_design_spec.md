@@ -269,7 +269,7 @@ ItemLookupService.findManyForCommittedReceipt(skuIds, { atMs })
 
 #### Inventory provider
 
-Purchasing的Inventory provider以 [inventory-purchase-provider/1.1候選](../inventory_management/implementation/purchase-provider-contract-v1.md)定義尚未交付的部分反向；已合併Receipt 1.0保持原ABI。Reversal以原GR／原Detail IDs＋反向event為Inventory source，由同transaction鎖定的既有rows發行strict ownerProof；成功回傳真實Inventory IDs後才INSERT正式new reversal header/details，不以尚不存在的新row作前置proof。兩個具名同步batch及來源查詢：
+Purchasing的Inventory provider以 [inventory-purchase-provider/1.1](../inventory_management/implementation/purchase-provider-contract-v1.md)定義部分反向（Reversal ABI、opaque context邊界及link資料模型經APR-005批准）；已合併Receipt 1.0保持原ABI。Reversal以原GR／原Detail IDs＋反向event為Inventory source，由同transaction鎖定的既有rows發行strict ownerProof；成功回傳真實Inventory IDs後才INSERT正式new reversal header/details，不以尚不存在的新row作前置proof。兩個具名同步batch及來源查詢：
 
 ```js
 InventoryPostingService.postPurchaseReceiptBatchInTransaction(transaction, command)
@@ -792,7 +792,7 @@ Draft可更新／刪除details；Parent轉CONFIRMED後trigger拒絕除`reversed_
 
 Composite FK `(goods_receipt_detail_id,goods_receipt_id)`確保owner；`UNIQUE(reversal_id,goods_receipt_detail_id)`避免同一command重複列；indexes為`(goods_receipt_detail_id,id)`及`(purchase_order_line_id,id)`。只准INSERT／SELECT。
 
-Inventory provider v1保留既有`inventory_movements.reversal_of_movement_id` unique，舊generic full reversal語義不變。新purchase partial reversal使用獨立append-only `inventory_purchase_reversal_links`，新Movement的reversal_of_movement_id為NULL；同transaction鎖原Movement後以links current SUM核對累計上限。僅接管v1 purchase來源、不遷移legacy，正式schema／安全重跑／回滾限制以Inventory契約§4為準。此候選明確取代舊「移除unique」要求，採用仍須Sam批准。
+Inventory provider v1保留既有`inventory_movements.reversal_of_movement_id` unique，舊generic full reversal語義不變。新purchase partial reversal使用獨立append-only `inventory_purchase_reversal_links`，新Movement的reversal_of_movement_id為NULL；同transaction鎖原Movement後以links current SUM核對累計上限。僅接管v1 purchase來源、不遷移legacy，正式schema／安全重跑／回滾限制以Inventory契約§4為準。此設計明確取代舊「移除unique」要求，已由APR-005批准採用。
 
 ### 4.14 `purchasing_operation_requests`
 

@@ -5,6 +5,8 @@ import { checklist } from "./supplierAcceptanceRunner.js";
  * 改壞份報告，證明每一項都會唔過。每個 run 係 `{ code, report }`（工具嘅 exit code 同佢寫嘅 JSON）。
  */
 export const LIMIT_MS = 2_000;
+// NFR-005（for-SKU 揀選器）：3 秒（HD-157，2026-10-30）。
+export const FOR_SKU_LIMIT_MS = 3_000;
 export const CANDIDATE_CAP = 3_000;
 // 資源上限（OPS-001、IMP-016「bounded」）：一個 app 嘅連線池（config/database.js 嘅 10）加 benchmark 自己嘅 admin 連線；
 // 匯入期間有三個 app process（負載、上載、worker）。RSS 以 1 GiB 為界。
@@ -57,7 +59,8 @@ export function performanceVerdicts({ mixed, forSku, recall, imported, during, c
   tc128.check("load.list_and_exact_code_p95_under_2s", ["list.default", "list.codeExact"]
     .every((name) => p95(mixed.report, name) !== null && p95(mixed.report, name) < LIMIT_MS),
   { listDefault: p95(mixed.report, "list.default"), codeExact: p95(mixed.report, "list.codeExact") });
-  tc128.check("load.every_general_operation_within_limits", mixed.report?.nfr001?.pass === true, mixed.report?.nfr001);
+  tc128.check("load.every_general_operation_within_limits", mixed.report?.nfr001?.pass === true
+    && mixed.report.nfr001.limitP95Ms === LIMIT_MS, mixed.report?.nfr001);
   const resources = mixed.report?.resources;
   tc128.check("load.resources_bounded", Number.isFinite(resources?.dbThreadsConnected?.max) && resources.dbThreadsConnected.max <= POOL + 3
     && Number.isFinite(resources?.rssMiB?.max) && resources.rssMiB.max <= RSS_LIMIT_MIB, resources);
@@ -65,7 +68,8 @@ export function performanceVerdicts({ mixed, forSku, recall, imported, during, c
 
   const tc085 = checklist();
   tc085.check("for_sku.completed", forSku.code === 0 && forSku.report?.ok === true, { code: forSku.code, error: forSku.report?.error });
-  tc085.check("for_sku.p95_under_2s", forSku.report?.nfr005?.pass === true, forSku.report?.nfr005);
+  tc085.check("for_sku.p95_under_3s", forSku.report?.nfr005?.pass === true && forSku.report.nfr005.limitP95Ms === FOR_SKU_LIMIT_MS,
+    forSku.report?.nfr005);
   tc085.check("for_sku.count_not_inflated", counted.forSku.status === 200 && counted.forSku.api === counted.forSku.sql, counted.forSku);
   tc085.check("for_sku.no_full_scan", forSku.code === 0 && plansClean(forSku.report), planDetail(forSku.report));
   verdicts["TC-085"] = tc085.checks;
@@ -91,7 +95,8 @@ export function performanceVerdicts({ mixed, forSku, recall, imported, during, c
   tc101.check("import.exactly_once_and_counts_consistent", imported.report?.verification?.exactlyOnce === true
     && imported.report?.verification?.countsConsistent === true, imported.report?.verification);
   tc101.check("import.report_ok", imported.code === 0 && imported.report?.ok === true, { code: imported.code, error: imported.report?.error });
-  tc101.check("online.p95_under_2s_during_import", during.code === 0 && during.report?.nfr001?.pass === true, during.report?.nfr001);
+  tc101.check("online.p95_under_2s_during_import", during.code === 0 && during.report?.nfr001?.pass === true
+    && during.report.nfr001.limitP95Ms === LIMIT_MS, during.report?.nfr001);
   // 匯入要喺負載嘅量度窗口入面（REV-111 M-4）：由上載開始，到執行完（上載＋預檢＋執行嘅時間），唔計之後嘅核對同匯出。
   const window = during.report?.window;
   const importStart = Date.parse(imported.report?.startedAt ?? "");

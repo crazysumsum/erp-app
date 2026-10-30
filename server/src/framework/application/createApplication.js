@@ -20,6 +20,7 @@ import {
 } from "../middleware/bodyReceiveTimeout.js";
 import { createErrorHandler } from "../middleware/errorHandler.js";
 import { sendError } from "../http/apiResponse.js";
+import { createJsonBodyParser } from "../http/jsonBodyParser.js";
 import {
   createCorsOptions,
   createHttpsEnforcementMiddleware,
@@ -89,12 +90,16 @@ function bytesFromLimit(limit) {
  * 把四個逾時換算成部署者真正關心的三件事：JSON 請求的最低速率要求、socket 層
  * 逾時的實際生效上界，以及一個請求最多能佔住限流槽位多久。
  */
-function describeRequestBudget(application, jsonBodyLimit) {
+function describeRequestBudget(application, jsonBodyLimit, routeJsonBodyLimits = []) {
   const jsonBodyLimitBytes = bytesFromLimit(jsonBodyLimit);
+  const maximumJsonBodyLimitBytes = Math.max(jsonBodyLimitBytes ?? 0, ...routeJsonBodyLimits.map(route => route.bytes));
   const seconds = application.bodyReceiveTimeoutMs / 1000;
 
   return {
     jsonBodyLimit,
+    routeJsonBodyLimits,
+    maximumJsonBodyLimitBytes,
+    maximumJsonBodyBytesPerSecond: Math.ceil(maximumJsonBodyLimitBytes / seconds),
     bodyReceiveTimeoutMs: application.bodyReceiveTimeoutMs,
     // 低於這個速率的 JSON 請求會被看門狗切斷。
     minimumJsonBodyBytesPerSecond:
@@ -170,7 +175,8 @@ class Application {
     idempotency,
     scheduler,
     time,
-    forceExit
+    forceExit,
+    jsonBodyLimits = []
   }) {
     this.app = app;
     this.configuration = configuration;
@@ -184,6 +190,7 @@ class Application {
     this.scheduler = scheduler;
     this.time = time;
     this.forceExit = forceExit;
+    this.jsonBodyLimits = jsonBodyLimits;
     this.server = null;
     this.state = "created";
     this.shutdownPromise = null;
@@ -249,7 +256,8 @@ class Application {
       // 上限，或某個設定值從此是空話。所以啟動時把換算結果講出來。
       requestBudget: describeRequestBudget(
         application,
-        this.configuration.security.jsonBodyLimit
+        this.configuration.security.jsonBodyLimit,
+        this.jsonBodyLimits
       )
     });
 
@@ -587,14 +595,10 @@ export async function createApplication({
     // 逐字元相同（鍵順序、空白、Unicode escape 都可能不同），那樣簽章會時好
     // 時壞——最難查的那一種。
     //
-    // 保留 Buffer 的記憶體成本有界：jsonBodyLimit（預設 100kb）就是它的上限。
+    // 預設仍為100kb；只有可信註冊route metadata可設定另一個有界上限。
+    // 每個request只選一個parser，rawBody仍保留verify收到的原始Buffer。
     app.use(
-      express.json({
-        limit: security.jsonBodyLimit,
-        verify: (req, _res, buffer) => {
-          req.rawBody = buffer;
-        }
-      })
+      createJsonBodyParser({routes: activeRoutes, defaultLimit: security.jsonBodyLimit})
     );
     // 解析階段結束，看門狗的任務完成。走到這裡 body 還在傳的只可能是 multipart，
     // 由 route 的 timeoutMs 接手——那個逾時是照著上傳大小訂的。
@@ -666,7 +670,8 @@ export async function createApplication({
       idempotency: activeIdempotency,
       scheduler: activeScheduler,
       time,
-      forceExit
+      forceExit,
+      jsonBodyLimits: Object.freeze(activeRoutes.filter(route => Object.hasOwn(route, "jsonBodyLimitBytes")).map(route => Object.freeze({method: route.method, path: route.path, bytes: route.jsonBodyLimitBytes})))
     });
   } catch (error) {
     await services.shutdown({

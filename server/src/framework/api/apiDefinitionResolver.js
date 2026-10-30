@@ -1,4 +1,5 @@
 import { BaseRequestHandler } from "./BaseRequestHandler.js";
+import { normalizeJsonBodyLimit } from "../http/jsonBodyParser.js";
 import {
   cloneData,
   deepFreeze,
@@ -25,7 +26,8 @@ const ALLOWED_API_FIELDS = new Set([
   "upload",
   "download",
   "inputCoercion",
-  "timeoutMs"
+  "timeoutMs",
+  "jsonBodyLimitBytes"
 ]);
 
 function mergeObject(defaultValue, overrideValue, label) {
@@ -78,6 +80,9 @@ export function resolveApiDefinitions(handlers, defaults) {
     }
 
     const override = cloneData(source, `${handler.constructor.name}.static api`);
+    if (Object.hasOwn(source, "jsonBodyLimitBytes")) {
+      normalizeJsonBodyLimit(source.jsonBodyLimitBytes);
+    }
     if (Object.hasOwn(source, "idempotencyPreparation") && source.idempotencyPreparation !== true) {
       throw new TypeError(`${handler.constructor.name}.static api.idempotencyPreparation must be true or omitted`);
     }

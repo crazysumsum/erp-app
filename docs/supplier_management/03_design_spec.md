@@ -1663,7 +1663,7 @@ Bank audit detail只保存 changed field names、masked last four、status及 de
 
 基準資料：100,000 Suppliers；平均5 addresses、10 contacts、2 identifiers、2 masked bank rows；其中20%有SKU relations。以50名同時在線使用者執行代表性混合負載：
 
-- Supplier Code exact、name search、status／currency filter、detail及for-SKU lookup的p95 < 2秒。
+- Supplier Code exact、name search、status／currency filter及detail的p95 < 2秒；for-SKU lookup的p95 < 3秒（NFR-005，HD-157）。
 - 10,000-row CSV precheck＋execution系統處理時間合計≤10分鐘，並保持線上query p95。
 - Duplicate candidate query只讀bounded50 rows；不得掃描全部Supplier後在Node計算。
 - Bank list不讀ciphertext；reveal單筆decrypt不形成bulk decrypt endpoint。

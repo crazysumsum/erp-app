@@ -3940,6 +3940,92 @@
         "DB_ADMIN_USER",
         "DB_ADMIN_PASSWORD"
       ]
+    },
+    {
+      "id": "sales-phase005-merge-capacity",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/tests.xml",
+        "server/test-capacity/sales/phase4/merge.capacity.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 21600,
+      "result_adapter": "JUNIT",
+      "result_path": "tests.xml",
+      "min_tests": 5,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [
+        "TC-053",
+        "TC-054",
+        "TC-060"
+      ],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v(2[6-9]|[3-9]\\d)\\."
+        },
+        {
+          "argv": [
+            "/usr/local/mysql/bin/mysql",
+            "--version"
+          ],
+          "version_pattern": "Ver 26\\.7\\.0 "
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_HOST",
+        "DB_PORT",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_NAME",
+        "DB_SOCKET",
+        "DB_SOCKET_PATH",
+        "DB_INTEGRATION_TESTS",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "JWT_SECRET",
+        "DB_ADMIN_USER",
+        "DB_ADMIN_PASSWORD",
+        "UV_THREADPOOL_SIZE",
+        "GOMAXPROCS",
+        "FULFILLMENT_LIFECYCLE_ENABLED"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD",
+        "JWT_SECRET",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "DB_ADMIN_USER",
+        "DB_ADMIN_PASSWORD"
+      ]
     }
   ],
   "ci": {

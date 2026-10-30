@@ -10,6 +10,7 @@
 | Technical tests | `06_technical_test_cases.md` 1.0 Aligned |
 | 日期 | 2026-09-11 |
 | 狀態 | 所有案例`NOT_RUN`；本次只設計，不執行 |
+| 修訂 | 2026-10-28 HD-149 A：按HD-145 A及HD-146 A修訂UAT-038、UAT-043、UAT-046、UAT-047、UAT-055及CSV-MIXED（偏差詳見`testing/05_tc_test_map.md`）。2026-10-30 HD-157：UAT-044的SKU選擇p95上限改為3秒（NFR-005）；同時更正UAT-046的修訂出處（REV-130 N3、N6）。 |
 
 ## 1. 驗收目標與邊界
 
@@ -112,9 +113,9 @@ UAT只採用使用者可觀察證據：畫面、提示、前後狀態、Audit頁
 
 | ID | Priority | Phase | Role | Requirement / AC | Preconditions | User Steps | Expected Result | Required Evidence | Actual Evidence | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| UAT-044 | P1 | PHASE-004 | 營運代表 | NFR-001～NFR-005 | Technical performance report已通過 | 在代表資料量下執行搜尋、SKU選擇及10k import | 畫面可持續操作；一般及精確查詢p95<2秒；10k import≤10分鐘 | 使用者畫面＋已簽 technical report | — | NOT_RUN |
+| UAT-044 | P1 | PHASE-004 | 營運代表 | NFR-001～NFR-005 | Technical performance report已通過 | 在代表資料量下執行搜尋、SKU選擇及10k import | 畫面可持續操作；一般及精確查詢p95<2秒；SKU選擇p95<3秒（HD-157）；10k import≤10分鐘 | 使用者畫面＋已簽 technical report | — | NOT_RUN |
 | UAT-045 | P0 | PHASE-004 | 營運／DR owner | NFR-009, NFR-011 | 隔離restore完成 | 登入restore環境，抽查Supplier、Bank遮罩、Audit及Import結果 | 資料一致；RTO≤4小時、RPO≤15分鐘；缺key時不得宣稱成功 | timestamp、對賬、redacted smoke | — | NOT_RUN |
-| UAT-046 | P1 | PHASE-004 | 各業務角色 | NFR-006～NFR-010 | 候選build | 重送主要操作、模擬依賴不可用後重試（真backend：停用Supplier所用Currency；並以瀏覽器攔截503，同UAT-054；HD-145 A修訂） | 無重複／矛盾結果；不錯誤開放Supplier；恢復後可繼續 | Correlation IDs、前後狀態、營運提示 | — | NOT_RUN |
+| UAT-046 | P1 | PHASE-004 | 各業務角色 | NFR-006～NFR-010 | 候選build | 重送主要操作、模擬依賴不可用後重試（真backend：停用Supplier所用Currency，為TC map對「模擬依賴不可用」的解讀；瀏覽器攔截503，同UAT-054，為HD-145 A修訂） | 無重複／矛盾結果；不錯誤開放Supplier；恢復後可繼續 | Correlation IDs、前後狀態、營運提示 | — | NOT_RUN |
 | UAT-047 | P1 | PHASE-001～004 | 鍵盤使用者 | NFR-006；frontend-design | 375／768／1440px | 僅鍵盤完成各Phase happy path並檢查loading/empty/error；各步頁面以URL開啟，drawer menu不在鍵盤路徑內（HD-146 A修訂） | Focus可見、label／error可理解、狀態不只靠顏色、無阻擋性console／network錯誤 | Playwright screenshots/trace、console/network | — | NOT_RUN |
 
 ### 4.6 主資料維護、控制與稽核補充

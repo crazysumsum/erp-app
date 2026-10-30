@@ -256,3 +256,7 @@ Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：
 ### Cleanup
 只移除本案例自己建立的合成資料及 runtime 資源（測試 schema 內的 Fulfillment、Claim、Allocation、Shipment、Issue、Reversal、Operation、Export job、Audit 與 Archive 記錄，以及測試 Lot、Bin 結餘與 Reservation）；
 保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+### TC010 — HD024 actual approved P1 preview coverage extension
+
+Retain TC010 mandatory/blocking in every original Phase and unchanged NFR023 UAT-NA rationale. P1 additionally verifies strict preview request/DTO, allsavedClaims/source/actualRC/freshactor, actual-prefix candidate pages and ownerNONE/FIFO/FEFO/UNKNOWN assessments, source/CAS/stock/complete50legs/5000/readiness, noevent/noDML, reason/permission versus stock budget distinction, incompleteprefix failclosed, no future/current depletion, actualwriter comparison including multiLine sameSKU/differentUOM, fresh role/missing schema/corruption and currentreadonly race cases. Verify fourth trusted registered2MiB parser/rawBody/10s/100slots boundary and bounded≤100options+≤100line response with full5000scope and memory, unchangedthreecommand transport/replay/rollback/20s plus full currentCI. Newprivatepreview is not domainwrite or UAT exemption; old recommendation/writer ABI remains regressed.

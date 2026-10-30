@@ -1,0 +1,41 @@
+# HD-018 — Inventory-owned batch advisory for shared stock
+
+Status: PROPOSED, not adopted or implemented. TASK015 batch recommendation is blocked on actual human decision. Existing TASK014 frozen contribution dff54d03 remains under Sales owner review. No public candidate route has been registered.
+
+## Observed evidence
+
+The approved TASK015/Inventory contract requires batch candidate recommendations whose FEFO/FIFO ordering is owned by Inventory. Current InventoryLookupService.listAllocationCandidates normalizes and sorts demands by Reservation ID, then independently starts each requested quantity against the same physical candidate.freeQuantity. It contains neither Fulfillment Line ID nor a shared virtual depletion budget. Actual writer postFulfillmentAllocationBatch sorts by the existing memberOrder (Fulfillment Line ID, then Reservation ID), writes the previous member, and re-reads the owner's recommendation for the next member.
+
+Actual isolated MySQL probe: two Reservations each request4 of the same SKU; FIFO bucket A has5 free and B has3. Current advisory returns A4 for each, recommending8 from A's5. The existing writer legally accepts first A4, second A1+B3 without any sequence override and allocates A5/B3. This is not a failure to reserve at SO confirmation; it is a recommendation inconsistency among separate Claims sharing physical stock.
+
+Executable case: server/test/integration/fulfillmentCandidates.integration.test.js. Qualified RED /private/tmp/fulfillment-p1-candidates-shared-stock-red-r2.log: single-demand1PASS, shared-stock1FAIL (actual second A4 versus A1+B3). Separate writer comparison log /private/tmp/fulfillment-p1-candidates-writer-comparison.log verifies the genuine writer path. An earlier runtime namespace-guard failure is a fixture diagnostic, not behavioral RED; guard was preserved and helper used an approved owned prefix.
+
+Separate reviewer /root/fulfillment_independent_review independently inspected the exact owner sources and confirmed the ABI gap. Its analysis is source review, not a claim to have executed these native cases. Missing Fulfillment Line identity cannot safely be inferred from Reservation order, Sales Line order, insertion order, caller array position or dummy Reservation IDs.
+
+## Option A — explicit new Inventory batch advisory method (recommended)
+
+Preserve the existing listAllocationCandidates query and result behavior. Add a distinct Inventory-owned listFulfillmentBatchAllocationCandidates transaction method with strict real persisted Fulfillment Line/Claim/Reservation membership supplied by the Fulfillment owner. The route accepts parent Fulfillment, expected version and bounded page only; Warehouse/SKU/Claims/Reservation/source IDs and current minimum remaining days are derived or verified by owners, never accepted as user-selected replacements. The Inventory owner uses actual locked Reservation minimum_remaining_days, not a possibly older Fulfillment Line snapshot.
+
+Keep trusted fresh actor/current RC, complete parent/Sales/Fulfillment proof and existing Inventory locking/isolation/eligibility rules. Inventory uses its actual writer memberOrder, authoritative FEFO/FIFO sequence and a single in-memory virtual Balance-ID budget shared across every member, including members with different minimum-days eligibility sets. No Inventory quantity, version, allocation, journal or audit SQL write occurs. Fulfillment must not recalculate ranking or pretend a read is an allocation receipt.
+
+For pagination, reproduce earlier members from their first eligible candidate, including all pages needed to account for their recommended quantity, before deriving the requested member page. Also account for the current member's preceding pages. Never reset a shared budget at page boundaries or consume only visible recommendations. A bucket exhausted by a preceding member disappears from the subsequent virtual sequence and ranks are recomputed exactly as the writer would see them. Returned expectedBalanceVersion is the real initial owner CAS, never incremented virtually; distinguish physical freeQuantity from new batchAvailableQuantity. Summary requested/recommended/quantityComplete/insufficientStock describes quantities only. A fully enumerated, ownership-verified stock shortage may return a valid advisory with quantityComplete:false and insufficientStock:true; it never asserts full allocatability. Missing/duplicate/wrong-owner result members, truncation, unknown results or incomplete prefix enumeration are contract failures that fail closed, never a successful partial advisory. Complete source/result proof is mandatory independently of quantity sufficiency. Allocate remains authoritative and revalidates all current versions, choices, quantities and permissions. No reservation of candidate stock is implied after read transaction ends.
+
+Scope: planned FulfillmentAllocationService/candidate handler/schema/tests; InventoryLookupService and a necessary small Inventory-owned pure advisory helper/tests; existing owner candidate source reused, no change to writer algorithm or old provider ABI. Canonical Fulfillment and Inventory contract documentation/pins must reflect exact adopted scope. All selected-member bounds (100 lines/50 per line/5000 total), 20-second transaction limit, current permissions, locks, FEFO override rules and full P0/P1 quality gates remain. No new schema, migration, async worker, silent retry, timeout increase or threshold waiver.
+
+## Option B — independent candidates only, no complete batch preselection
+
+Keep the old provider unchanged and expose each Reservation's candidates as independent alternatives. Do not advertise the combined quantities as a feasible full recommendation or automatically preselect the batch; user selects quantities and the existing writer may reject oversubscribed stock. This reduces owner code changes but changes the approved batch recommendation UX and makes ordinary valid multi-Claim work require manual reconciliation. It therefore also requires actual human acceptance; it is not an automatic fallback.
+
+## Recommendation and validation
+
+Recommend A: it keeps Inventory as the sole strategy authority and makes advisory results match the existing writer without changing business quantities or allocation authority. Default recommendation is A, but no affected provider implementation will occur before actual approval.
+
+Required RED/GREEN/native matrix: shared SKU2Claims5+3 stock; reverse Reservation vs Fulfillment-Line ordering; different minimum-days eligibility sharing a balance; exhausted-bucket rank changes; beyond100-page shared consumption and complete summary; true initial CAS versions and actual writer acceptance without override; fully proven stock shortage returns explicit insufficientStock without claiming allocatability; incomplete/duplicate/wrong-owner/truncated result or unfinished prefix enumeration fails closed; strict route parent/owner-ID substitution/fresh permission; missing owner schema/unknown result failclosed; concurrent stock change/reload; no quantity/journal/audit writes; existing single-demand/legacy tests unchanged; full selected-member capacity, rollback and original20sec gates. Subsequent Allocate/Reallocate continue exact-set and owner-current validation.
+
+## Authority boundary
+
+This introduces an explicit cross-owner batch advisory interface and semantics absent from the current strict query ABI. The software-engineering-harness rule “Major impact means ask a human before choosing” applies to public owner contracts and data semantics. Existing P1 and HD016/017 authority do not silently authorize an implicit new ordering convention. Actual human decision and separate proposal review must be recorded; unrelated TASK014 owner handoff can continue.
+
+## Actual adoption
+
+Actual Sam reply selected A: approve Inventory owner batch candidate interface (recommended). This adopts the independently reviewed proposal b16f4803c9dd8e2598236c2df1db7b6c0716644733097b25157e0c29b4ff2687, retaining old ABI, trusted owner-derived member order/current policy, shared virtual budget, complete source/result/prefix proof and initial physical CAS versions. Original limits/20sec/full P1 gates/draft-only authority remain. No other alternative is adopted.

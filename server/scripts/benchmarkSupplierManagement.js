@@ -300,14 +300,15 @@ try {
       rowsSentPerCall: Math.round(Number(row.rowsSent) / Number(row.count)), noIndexUsed: Number(row.noIndexUsed), plan });
   }
   // NFR-001（一般操作）同 NFR-005（for-SKU 揀選器）各自只計自己嗰類操作；冇跑過就記 null，唔當通過（REV-089 M-1）。
-  const verdict = (pick) => {
+  // NFR-005 嘅上限係 3 秒（HD-157），NFR-001 仍然係 2 秒。
+  const verdict = (pick, limitP95Ms) => {
     const names = MIX.map(([name]) => name).filter(pick);
     if (names.length === 0) return null;
-    const failing = names.filter((name) => { const value = report.operations[name]; return value.p95 === null || value.p95 >= 2000 || value.errorRate > 0.01; });
-    return { limitP95Ms: 2000, maxErrorRate: 0.01, operations: names.length, failing, pass: failing.length === 0 };
+    const failing = names.filter((name) => { const value = report.operations[name]; return value.p95 === null || value.p95 >= limitP95Ms || value.errorRate > 0.01; });
+    return { limitP95Ms, maxErrorRate: 0.01, operations: names.length, failing, pass: failing.length === 0 };
   };
-  report.nfr001 = verdict((name) => !name.startsWith("forSku"));
-  report.nfr005 = verdict((name) => name.startsWith("forSku"));
+  report.nfr001 = verdict((name) => !name.startsWith("forSku"), 2000);
+  report.nfr005 = verdict((name) => name.startsWith("forSku"), 3000);
   const verdicts = [report.nfr001, report.nfr005].filter(Boolean);
   report.ok = verdicts.length > 0 && verdicts.every((item) => item.pass);
   void db;

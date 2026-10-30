@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import {createHash} from "node:crypto";
 import {setTimeout as delay} from "node:timers/promises";
 import {salesArchiveWindow} from "../../../src/modules/sales/SalesArchiveBatchService.js";
-import {SALES_ARCHIVE_COLUMNS,hashSalesArchiveRow} from "../../../src/modules/sales/salesArchiveHash.js";
-import {FULFILLMENT_ARCHIVE_CONTRACTS,hashFulfillmentArchiveRow} from "../../../src/modules/fulfillment/fulfillmentArchiveSchema.js";
+import {SALES_ARCHIVE_COLUMNS,hashSalesArchiveRow,hashSalesArchiveRows} from "../../../src/modules/sales/salesArchiveHash.js";
+import {FULFILLMENT_ARCHIVE_CONTRACTS,hashFulfillmentArchiveRow,hashFulfillmentArchiveTable} from "../../../src/modules/fulfillment/fulfillmentArchiveSchema.js";
 import {quantiles} from "./http.js";
 
 async function scan(c,table,{where="1=1",values=[],columns="*",verify}={}){
@@ -92,4 +92,62 @@ export async function drainArchive(c,state){
  for(const {table}of definitions){const [[overlap]]=await c.db.query(`SELECT COUNT(*) AS n FROM ${table} a JOIN ${table}_archive b ON a.id=b.id WHERE b.archive_batch_id=?`,[batchId]);assert.equal(Number(overlap.n),0);}
  const [[manifests]]=await c.db.query("SELECT COUNT(*) AS n FROM sales_archive_order_manifests WHERE archive_batch_id=?",[batchId]);assert.equal(Number(manifests.n),300000);assert.deepEqual(await inventoryState(c),inventoryBefore);
  const replay=await c.tick("sales.archive"),replayed=await assertBatch(c,batchId);assert.equal(Number(replayed.archived_count),300000);await c.save("archive-complete.json",{batchId,cutoff,before,after,manifests,foreground:metrics,invocations,replayMs:replay.ms,noDR:true,calendarCompletionClaim:false,firstEvidenceRoot:state.firstEvidenceRoot});
+}
+
+// DEC047C: two real500-order invocations; full300k drain remains a separate prelaunch obligation.
+export async function boundedMergeArchive(c){
+ const window=salesArchiveWindow(Date.now(),c.app.configuration.sales),eligible="status IN ('CANCELLED','CLOSED','COMPLETED') AND last_business_updated_at<?";
+ const [[count]]=await c.db.query(`SELECT COUNT(*) AS n FROM sales_orders WHERE ${eligible}`,[window.cutoffMs]),[[existing]]=await c.db.query("SELECT COUNT(*) AS n FROM sales_archive_batches");
+ assert.equal(Number(count.n),300000);assert.equal(Number(existing.n),0,"Do not resume or overwrite a measured attempt");
+ const [roots]=await c.db.query(`SELECT id,total_amount FROM sales_orders WHERE ${eligible} ORDER BY status,last_business_updated_at,id LIMIT 1000`,[window.cutoffMs]);assert.equal(roots.length,1000);assert.ok(roots.slice(0,500).some(row=>String(row.id)==="1"));
+ const ids=roots.map(row=>String(row.id));assert.ok(ids.every(id=>/^[1-9][0-9]*$/u.test(id)));const selected=ids.join(","),fulfillments=`SELECT id FROM fulfillments WHERE sales_order_id IN (${selected})`,shipments=`SELECT id FROM shipments WHERE sales_order_id IN (${selected})`,reversals=`SELECT id FROM shipment_reversals WHERE shipment_id IN (${shipments})`;
+ const definitions=await contracts(c),before={},source={};assert.equal(definitions.length,18);
+ for(const {table,names,projection,hash}of definitions){
+  let where;
+  if(table==="sales_orders")where=`id IN (${selected})`;
+  else if(table==="sales_order_line_reservations")where=`sales_order_line_id IN (SELECT id FROM sales_order_lines WHERE sales_order_id IN (${selected}))`;
+  else if(table==="sales_audit_logs")where=`target_type='ORDER' AND target_id IN (${selected})`;
+  else if(names.includes("sales_order_id"))where=`sales_order_id IN (${selected})`;
+  else if(names.includes("fulfillment_id"))where=`fulfillment_id IN (${fulfillments})`;
+  else if(names.includes("shipment_id"))where=`shipment_id IN (${shipments})`;
+  else {assert.equal(table,"fulfillment_audit_logs");where=`(target_type='FULFILLMENT' AND target_id IN (${fulfillments})) OR (target_type='SHIPMENT' AND target_id IN (${shipments})) OR (target_type='REVERSAL' AND target_id IN (${reversals}))`;}
+  source[table]=[];before[table]=await scan(c,table,{where,columns:projection,verify:row=>{source[table].push(row);return hash(table,row);}});
+ }
+ assert.equal(before.sales_orders.count,1000);assert.ok(FULFILLMENT_ARCHIVE_CONTRACTS.every(({table})=>before[table].count>0),"All twelve owner classes must occur in the selected graph");
+ const owners=table=>new Map(source[table].map(row=>[String(row.id),String(row.sales_order_id)])),lineOwners=owners("sales_order_lines"),fulfillmentOwners=owners("fulfillments"),shipmentOwners=owners("shipments"),reversalOwners=new Map(source.shipment_reversals.map(row=>[String(row.id),shipmentOwners.get(String(row.shipment_id))]));
+ const grouped=new Map(ids.map(id=>[id,Object.fromEntries(definitions.map(({table})=>[table,[]]))]));
+ for(const {table}of definitions)for(const row of source[table]){
+  let orderId;
+  if(table==="sales_orders")orderId=String(row.id);
+  else if(table==="sales_audit_logs")orderId=String(row.target_id);
+  else if(table==="fulfillment_audit_logs")orderId=({FULFILLMENT:fulfillmentOwners,SHIPMENT:shipmentOwners,REVERSAL:reversalOwners})[row.target_type]?.get(String(row.target_id));
+  else if(row.sales_order_id!==undefined)orderId=String(row.sales_order_id);
+  else if(row.sales_order_line_id!==undefined&&table==="sales_order_line_reservations")orderId=lineOwners.get(String(row.sales_order_line_id));
+  else if(row.fulfillment_id!==undefined)orderId=fulfillmentOwners.get(String(row.fulfillment_id));
+  else orderId=shipmentOwners.get(String(row.shipment_id));
+  assert.ok(grouped.has(orderId),table+" must belong to a selected Order");grouped.get(orderId)[table].push(row);
+ }
+ const expectedManifests={};
+ for(const [id,tables]of grouped){
+  const expected={sales_table_counts:{},sales_hash_summary:{},fulfillment_table_counts:{},fulfillment_hash_summary:{}};
+  for(const {table}of definitions){const sales=Object.hasOwn(SALES_ARCHIVE_COLUMNS,table),digest=sales?await hashSalesArchiveRows(table,tables[table]):hashFulfillmentArchiveTable(table,tables[table]);expected[sales?"sales_table_counts":"fulfillment_table_counts"][table]=digest.count;expected[sales?"sales_hash_summary":"fulfillment_hash_summary"][table]=digest.hash;}
+  expectedManifests[id]=expected;
+ }
+ const inventoryBefore=await inventoryState(c);await c.save("merge-archive-before.json",{window,ids,before,expectedManifests,inventoryBefore,scale:"selected1000 only; full300k/50mixed deferred; no historical graph rebuild"});
+ const now=Date.now(),[inserted]=await c.db.execute("INSERT INTO sales_archive_batches(batch_number,period_key,cutoff_at,status,started_at,updated_at)VALUES(?,?,?,'RUNNING',?,?)",[`SA-${window.periodKey}-000001`,window.periodKey,window.cutoffMs,now,now]),batchId=Number(inserted.insertId),job=c.scheduler.jobs.get("sales.archive");
+ assert.equal(job.timeoutMs,600000);assert.equal(job.intervalMs,900000);assert.equal(c.app.configuration.sales.archiveBatchSize,500);
+ const foreground=readers(c),invocations=[];
+ try{for(let index=0;index<2;index++){
+  await c.reserve();const prior=await assertBatch(c,batchId),tick=await c.tick("sales.archive"),batch=await assertBatch(c,batchId);foreground.check();
+  const record={index,ms:tick.ms,delta:Number(batch.archived_count)-Number(prior.archived_count),total:Number(batch.archived_count),status:batch.status};invocations.push(record);await c.save(`merge-archive-tick-${index}.json`,record);
+  assert.ok(tick.ms<=600000);assert.equal(record.delta,500);assert.equal(record.total,500*(index+1));assert.equal(Number(batch.candidate_count),record.total);assert.equal(batch.status,"RUNNING");assert.deepEqual(await inventoryState(c),inventoryBefore);
+ }}finally{await foreground.close();await c.save("merge-archive-foreground.json",{samples:foreground.samples,failures:foreground.failures,invocations,qualification:"10 real readers; report actual sample count, not the deferred>=100 long-run cohort"});}
+ foreground.check();assert.ok(foreground.samples.length>=10);const after=await mirrorDigests(c,definitions,batchId);assert.deepEqual(after,before);
+ const [manifests]=await c.db.query("SELECT * FROM sales_archive_order_manifests WHERE archive_batch_id=? ORDER BY sales_order_id",[batchId]);assert.deepEqual(manifests.map(row=>String(row.sales_order_id)),[...ids].sort((a,b)=>Number(a)-Number(b)));
+ const json=value=>typeof value==="string"?JSON.parse(value):value,byId=new Map(manifests.map(row=>[String(row.sales_order_id),row]));let amountTotal=0n,amountHash=createHash("sha256").digest("hex"),manifestHash=amountHash;
+ for(const root of roots){const id=String(root.id),actual=byId.get(id),expected=expectedManifests[id];for(const key of Object.keys(expected))assert.deepEqual(json(actual[key]),expected[key]);assert.deepEqual(json(actual.participant_versions),{sales:"1",fulfillment:"1"});amountTotal+=BigInt(String(root.total_amount).replace(".",""));amountHash=createHash("sha256").update(`${amountHash}:${id}:${root.total_amount}\n`).digest("hex");manifestHash=createHash("sha256").update(`${manifestHash}:${id}:${JSON.stringify(expected.sales_hash_summary)}:${JSON.stringify(expected.fulfillment_hash_summary)}\n`).digest("hex");}
+ const batch=await assertBatch(c,batchId),summary=json(batch.checksum_summary);assert.equal(summary.amountTotal,amountTotal.toString());assert.equal(summary.amountHash,amountHash);assert.equal(summary.manifestHash,manifestHash);assert.equal(summary.pending.length,0);
+ for(const {table}of definitions){const [[overlap]]=await c.db.query(`SELECT COUNT(*) AS n FROM ${table} a JOIN ${table}_archive b ON a.id=b.id WHERE b.archive_batch_id=?`,[batchId]);assert.equal(Number(overlap.n),0);assert.equal((Object.hasOwn(SALES_ARCHIVE_COLUMNS,table)?summary.salesTableCounts:summary.fulfillmentTableCounts)[table],before[table].count);}
+ const [[remaining]]=await c.db.query(`SELECT COUNT(*) AS n FROM sales_orders WHERE ${eligible}`,[window.cutoffMs]);assert.equal(Number(remaining.n),299000);
+ await c.save("merge-archive-complete.json",{batchId,before,after,amountTotal:amountTotal.toString(),amountHash,manifestHash,manifestCount:manifests.length,remaining,inventoryUnchanged:true,foreground:quantiles(foreground.samples),invocations,full300kDrain:"NOT_RUN_PRELAUNCH",longForegroundCohort:"NOT_RUN_PRELAUNCH",noDR:true});
 }

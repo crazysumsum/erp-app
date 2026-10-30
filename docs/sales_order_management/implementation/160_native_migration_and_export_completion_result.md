@@ -4,7 +4,7 @@ Status: scoped developer verification completed; full Phase verification remains
 
 ## 固定交付阻塞表（持續更新，2026-10-30）
 
-下一個交付：請Sam一次決定DEC047 R2去重後驗證／合併門檻。產品與候選仍為ae66d3db／Source f864，沒有新負載或CI；DEC048已直接批准，原範圍檢查PASS。新提案只跑一次當前CI支援完整coverage（不重跑本機C），保留原90／35／26／lint／Outstanding200原身份，建議保留50人mixed、本次只Archive1000與必要查詢、完整300k延至正式驗收／啟用前；全部只是待批提案。舊coverage中止／舊容量FAIL照留，不冒稱PASS；本地commit／PR文字已備妥，但尚未push／開PR。以下舊Candidate/Observed/Runtime段落為歷史snapshot，不代表目前仍在執行。
+目前：DEC047R2方案C已由Sam在project-manager chat直接批准，原DEC048 package入口亦已批准；不再等這兩項答覆。正在整合main5feb（FulfillmentP1／Supplier／Purchasing），8個具名衝突已解，保留雙方功能及唯一文件。DEF048三項0104/0106相容性缺口已真重現並作helper-only修復，既有migration bytes不變；37單元及19真MySQL功能回歸PASS/零FAIL／SKIP，獨立closing仍在收束。已備妥C的5case最小入口與report-onlyCI保存接線，尚未執行本機C負載／push／開PR／CI。新增main CI從524增至預計588檔、14個新容量情境屬DEC049待答；不自動啟動擴大CI。以下舊Candidate/Observed/Runtime段落為歷史snapshot，不代表目前在執行或已通過新候選Gate。
 
 | 具體阻塞／證據 | 最小處置 | 完成條件 | 責任人 | 需要 Sam 決定？ |
 | --- | --- | --- | --- | --- |
@@ -15,7 +15,9 @@ Status: scoped developer verification completed; full Phase verification remains
 | 最後容量組真FAIL：shape1m／5m／300k PASS；Active矩陣第803req503，rootlog證明snapshotAge302s→正式revocation closed300s，容量harness誤停30s安全refresh。另Outstanding62／62成功皆>2s，partialP953445ms，完整首100的P95下界3400.510ms；原COUNT/page各materialize約5m明細。 | DEC046已由Sam批准並實作；90／35／26、真安全refresh、兩個100HTTP樣本及實際rows-cost已通過並獨立結案。原FAIL完整保留，新的效能／容量及隱含CI依DEC047 R2待批。具體[DEC046提案](/Users/sam/.codex/worktrees/sales-p4-archive/phase4-private/capacity-active-failure-r1/decision.md) d1999025…／patch8f7bad09…，獨立覆核7d746b82…零待修正。 | DEC046限定修復驗證已完成；DEC047 R2擬改驗證位置與fullArchive合併時點，未批准前不執行新負載。 | Sam決策；Sales執行 | DEC046／048已直接批准；只待DEC047 R2明確選擇，不重問一般開發／merge授權。 |
 | TC032、TC042／匯入及25m索引原三組已PASS；最後mixed／300k Archive／Archive query三案因前案halt未開始。CI／TaskDoD／最終整階段review仍未過。原run20261029T090204-75866e28d87a＝1PASS／4FAIL原樣保留，只有Active是真量測失敗。 | 保留三組PASS與44項具名來源、原fail/raw；不重建有效1m／5m／25m資料，不改來源／PLAN標籤。 | 實際修復及所有剩餘Gate通過才直接merge；任一新容量／效能FAIL或timeout再次停Sam。 | Sales agent | 既有commit／PR／merge授權保留；效能修復依DEC046集中處置。 |
 
-## DEC-047 — 去重後最小驗證與合併門檻提案（R2，待Sam批准）
+## DEC-047 — 去重後最小驗證與合併門檻（R2，Sam已批准C）
+
+Actual adoption: Actual Sam userMessage `01a18b64-3404-7fc2-8660-569b8f76099e` in project-manager chat `01a0e71b-fccb-7c81-b9fe-ed817cc58e1f`, verified from the actual thread: 「按方案C通知 Sales agent 推進」; DEC047 R2 proposal SHA `67ce4dd7ec11fc9260499d1ea911d05f18cb865e5306f6ef6fcecd0933e0d25e`. 原提案文字與其他選項保留如下；本輪實作／執行以已批准C為準，A/B不是現行選擇。新增main負載另待DEC049；未有新CI或merge結果。
 
 本節取代尚未獲答覆的首版C＋I＋O／完整容量選項。依Sam在project manager chat的直接指示（userMessage `01a18aeb-19b5-77a1-b7d0-8a7a30076919`），本輪只讀核對、文件及本地提交；不執行待批測試、不push／開PR觸發CI。原首版完整清單／已呈交文字／原始錯誤計數保留在私有保存點，不改舊結果。DEC-048單一package入口已由Sam直接批准並通過原範圍檢查，不再待決策。
 

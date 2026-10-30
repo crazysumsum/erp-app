@@ -1,0 +1,12 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { assertPreparedFulfillmentAllocation } from "../../src/modules/fulfillment/fulfillmentAllocationScope.js";
+const fixture=()=>{
+ const member={claimId:"7",inventoryReservationId:"8",baseQuantity:"4",allocations:[{inventoryBalanceId:"9",expectedBalanceVersion:2,baseQuantity:"4"}]},line={fulfillmentLineId:"3",salesOrderLineId:"4",skuId:"5",baseQuantity:"4",overrideReason:"Choose alternate bucket",reservations:[member]},query={fulfillmentId:"1",salesOrderId:"2",warehouseId:"6",lines:[line]},prepared={payload:{fulfillmentId:"1",lines:[{fulfillmentLineId:"3",salesOrderLineId:"4",baseQuantity:"4",reservations:[{...structuredClone(member),expectedVersion:3,overrideReason:""}]}]},reservationFacts:[{inventoryReservationId:"8",warehouseId:"6",skuId:"5",salesOrderId:"2",salesOrderLineId:"4",originalSourceEventId:"00000000-0000-4000-8000-000000000001",originalQuantity:"7",consumedQuantity:"1",releasedQuantity:"1",outstandingQuantity:"5",version:3}]};return {query,prepared};
+};
+test("Allocation preparation result preserves all selections and derives only owner CAS and member reasons",()=>{
+ const {prepared,query}=fixture();assert.doesNotThrow(()=>assertPreparedFulfillmentAllocation(prepared,query));prepared.payload.lines[0].reservations[0].overrideReason=query.lines[0].overrideReason;assert.doesNotThrow(()=>assertPreparedFulfillmentAllocation(prepared,query));
+});
+test("Malformed preparation fails closed before any Inventory claim, including silently refreshed selected CAS",()=>{
+ for(const mutate of [p=>{p.extra=true;},p=>{p.payload.lines=[];},p=>{p.payload.lines[0].reservations[0].allocations[0].expectedBalanceVersion++;},p=>{p.payload.lines[0].reservations[0].claimId="10";},p=>{p.payload.lines[0].reservations[0].overrideReason="different reason";},p=>{p.payload.lines[0].reservations[0].expectedVersion=4;},p=>{p.reservationFacts.push(p.reservationFacts[0]);},p=>{p.reservationFacts[0].warehouseId="10";},p=>{p.reservationFacts[0].originalQuantity="8";},p=>{p.reservationFacts[0].outstandingQuantity="3";},p=>{p.reservationFacts[0].version=4294967295;},p=>{p.reservationFacts[0].originalSourceEventId="";},p=>{p.reservationFacts[0].extra=true;},p=>{p.payload.lines[0].reservations[0].allocations[0].baseQuantity="5";}]){const {prepared,query}=fixture();mutate(prepared);assert.throws(()=>assertPreparedFulfillmentAllocation(prepared,query),{code:"FULFILLMENT_DEPENDENCY_UNAVAILABLE"});}
+});

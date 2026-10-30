@@ -67,6 +67,11 @@ async function measureMatrix(c,matrix,{archive=false}={}){
  return report;
 }
 export async function activeQueries(c){return measureMatrix(c,await activeMatrix(c));}
+export async function activeMergeQueries(c){
+ const matrix=(await activeMatrix(c)).filter(item=>item.name!=="outstanding");assert.equal(matrix.length,12);
+ return measureMatrix(c,matrix);
+}
+
 export async function archiveQueries(c){
  const [[row]]=await c.db.query("SELECT sales_order_number,customer_id FROM sales_orders_archive WHERE customer_id=? ORDER BY id LIMIT 1",[c.binding.customers[7]]);assert.ok(row);
  const completed="EXISTS(SELECT 1 FROM sales_archive_order_manifests m WHERE m.sales_order_id=sales_orders_archive.id AND m.archive_batch_id=sales_orders_archive.archive_batch_id)";

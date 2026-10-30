@@ -1,0 +1,71 @@
+<script setup>
+import {computed,nextTick,onBeforeUnmount,reactive,ref,toRaw,watch} from "vue";
+import DataTable from "@/framework/ui/DataTable.vue";
+import {confirm} from "@/framework/ui/confirm.js";
+import {useSessionStore} from "@/stores/session.js";
+import fulfillment,{fulfillmentFailure} from "@/services/fulfillment.js";
+import {loadPickScope} from "./fulfillmentPickModel.js";
+import {recommendedPreviewSelections,buildAllocationPreviewRequest,buildAssessedAllocationIntent,validateAllocationIntent} from "./fulfillmentAllocationModel.js";
+const props=defineProps({document:{type:Object,required:true}}),emit=defineEmits(["saved","reload"]),session=useSessionStore();
+const scope=ref(null),selected=ref(null),page=ref(1),preview=ref(null),optionsSnapshot=ref(null),assessedRequest=ref(null),pending=ref(null),rejected=ref(null),error=ref(""),summary=ref(null),loading=ref(false),checking=ref(false),busy=ref(false),unreadable=ref(false),selections=reactive({}),reasons=reactive({});let controller;
+const operate=computed(()=>["fulfillment.view","fulfillment.operation"].every(permission=>session.permissions.includes(permission))),action=computed(()=>props.document.status==="DRAFT"?"allocate":"reallocate"),allowed=computed(()=>operate.value&&props.document.allowedActions.includes(action.value)),label=computed(()=>action.value==="allocate"?"分配庫存":"重新分配庫存"),key=()=>`fulfillment.allocation:${session.user?.id}:${props.document.id}`,draftKey=()=>`fulfillment.allocationDraft:${session.user?.id}:${props.document.id}`;
+const claims=computed(()=>scope.value?.candidateResult.demands.map(member=>({label:`${props.document.lines.find(line=>line.id===member.fulfillmentLineId)?.skuCode} · 預留 ${member.inventoryReservationId} · ${member.requestedQuantity}`,value:member.claimId}))??[]),member=computed(()=>scope.value?.candidateResult.demands.find(row=>row.claimId===selected.value)),currentLine=computed(()=>props.document.lines.find(line=>line.id===member.value?.fulfillmentLineId)),chosen=computed(()=>selections[selected.value]??[]),locked=computed(()=>busy.value||!!pending.value||unreadable.value),ready=computed(()=>preview.value?.canSubmit===true&&!!assessedRequest.value&&!locked.value&&!checking.value&&allowed.value);
+watch(error,value=>{if(value)nextTick(()=>summary.value?.focus());});
+function invalidate(){if(checking.value)controller?.abort();checking.value=false;preview.value=null;assessedRequest.value=null;}
+watch([selections,reasons],invalidate,{deep:true});
+function journal(value){if(!value||Object.keys(value).sort().join(',')!=="action,body"||!["allocate","reallocate"].includes(value.action))throw Error("原分配操作不完整");validateAllocationIntent(value.body,value.action==="reallocate");return value;}
+function restore(){controller?.abort();invalidate();optionsSnapshot.value=null;scope.value=null;selected.value=null;page.value=1;pending.value=null;rejected.value=null;unreadable.value=false;loading.value=false;busy.value=false;error.value="";for(const record of [selections,reasons])for(const id of Object.keys(record))delete record[id];if(!operate.value)return;try{const raw=sessionStorage.getItem(key()),old=sessionStorage.getItem(draftKey());if(raw)pending.value=journal(JSON.parse(raw));if(old)rejected.value=journal(JSON.parse(old));}catch{unreadable.value=true;error.value="無法讀取原分配操作，請保留此頁並聯絡管理員";}}
+watch([()=>props.document.id,()=>session.user?.id,()=>session.permissions.join('|')],restore,{immediate:true});watch(()=>props.document.version,()=>{controller?.abort();invalidate();optionsSnapshot.value=null;scope.value=null;});onBeforeUnmount(()=>controller?.abort());
+async function load(){
+ controller?.abort();invalidate();optionsSnapshot.value=null;controller=new AbortController();const signal=controller.signal;loading.value=true;error.value="";
+ try{const id=props.document.id,version=props.document.version,mode=action.value,candidateResult=await fulfillment[mode==="allocate"?"getCandidates":"getReallocationCandidates"](id,{version,page:1,signal}),releases=mode==="reallocate"?(await loadPickScope(fulfillment.getFulfillment,id,version,signal)).allocations:[];if(signal.aborted)return;
+  scope.value={document:structuredClone(toRaw(props.document)),candidateResult,action:mode,releases};for(const id of Object.keys(selections))delete selections[id];Object.assign(selections,recommendedPreviewSelections(candidateResult));selected.value=candidateResult.demands[0].claimId;page.value=1;
+ }catch(e){if(!signal.aborted)error.value=fulfillmentFailure(e).message;}finally{if(!signal.aborted)loading.value=false;}
+}
+function request(){return buildAllocationPreviewRequest(scope.value,selections,reasons,selected.value,page.value);}
+async function assess(){
+ if(!scope.value||locked.value||loading.value)return;invalidate();controller=new AbortController();const signal=controller.signal;checking.value=true;error.value="";
+ try{const body=request(),signature=JSON.stringify(body),result=await fulfillment.previewAllocation(props.document.id,body,{signal});if(signal.aborted||signature!==JSON.stringify(request()))return;if(result.fulfillmentId!==props.document.id||result.version!==props.document.version||result.selectedClaim?.claimId!==selected.value||result.selectedClaim.page!==page.value)throw {status:503,code:"FULFILLMENT_DEPENDENCY_UNAVAILABLE"};preview.value=result;optionsSnapshot.value=result.selectedClaim;assessedRequest.value=body;}
+ catch(e){if(!signal.aborted)error.value=e instanceof Error&&!e.code?e.message:fulfillmentFailure(e).message;}finally{if(!signal.aborted)checking.value=false;}
+}
+function chooseClaim(){invalidate();optionsSnapshot.value=null;page.value=1;}
+function setQuantity(option,value){const rows=selections[selected.value]??(selections[selected.value]=[]),old=rows.find(row=>row.inventoryBalanceId===Number(option.inventoryBalanceId));if(old){old.baseQuantity=value;old.expectedBalanceVersion=option.expectedBalanceVersion;}else rows.push({inventoryBalanceId:Number(option.inventoryBalanceId),expectedBalanceVersion:option.expectedBalanceVersion,baseQuantity:value});}
+function amount(option){return chosen.value.find(row=>row.inventoryBalanceId===Number(option.inventoryBalanceId))?.baseQuantity??"";}
+function nextPage(next){page.value=next;return assess();}
+const defaultReference=computed(()=>member.value?.candidates.filter(row=>row.recommendedQuantity!=="0").map(row=>`庫存 ${row.inventoryBalanceId}：${row.recommendedQuantity}`).join("；")??"未載入原推薦");
+async function send(input){
+ if(!operate.value||busy.value||unreadable.value)return;const actor=session.user.id,id=props.document.id,storageKey=key(),oldKey=draftKey(),wasUncertain=!!pending.value,intent=structuredClone(toRaw(pending.value??input));busy.value=true;error.value="";
+ try{try{sessionStorage.setItem(storageKey,JSON.stringify(intent));}catch{error.value="無法保存原分配操作，請允許分頁儲存後再試";return;}pending.value=intent;const result=await fulfillment[intent.action](id,intent.body),outcome=result?.outcome;if(!outcome||outcome.id!==id||outcome.status!=="PICKING"||outcome.version!==intent.body.version+1||result.fulfillment?.id!==id||!Number.isSafeInteger(result.fulfillment.version)||result.fulfillment.version<outcome.version)throw {status:503,code:"FULFILLMENT_DEPENDENCY_UNAVAILABLE"};
+  if(session.user?.id!==actor||props.document.id!==id)return;sessionStorage.removeItem(oldKey);sessionStorage.removeItem(storageKey);pending.value=null;rejected.value=null;emit("saved",result);
+ }catch(e){if(session.user?.id!==actor||props.document.id!==id)return;if(e.status===409&&["VERSION_CONFLICT","FULFILLMENT_STATE_CONFLICT","ALLOCATION_CANDIDATE_CHANGED","PICK_SEQUENCE_REASON_REQUIRED","FEFO_OVERRIDE_REQUIRED"].includes(e.code)||!wasUncertain&&e.status===400&&["FULFILLMENT_INPUT_INVALID","FULFILLMENT_QUANTITY_INVALID"].includes(e.code)){try{sessionStorage.setItem(oldKey,JSON.stringify(intent));rejected.value=intent;sessionStorage.removeItem(storageKey);pending.value=null;invalidate();scope.value=null;}catch{unreadable.value=true;}}error.value=fulfillmentFailure(e).message;}
+ finally{if(session.user?.id===actor&&props.document.id===id)busy.value=false;}
+}
+async function submit(){
+ if(!ready.value)return;const actor=session.user.id,id=props.document.id,body=request(),signature=JSON.stringify(body);if(signature!==JSON.stringify(assessedRequest.value))return;
+ const intent={action:scope.value.action,body:buildAssessedAllocationIntent(scope.value,body,preview.value,crypto.randomUUID())};
+ if(!await confirm({title:label.value,message:"確認所有履約行、庫位數量及偏離原因？提交時會再次檢查庫存及版本。",okLabel:"確認分配"}))return;
+ if(session.user?.id!==actor||props.document.id!==id||!ready.value||signature!==JSON.stringify(request()))return;await send(intent);
+}
+const columns=[{name:"bin",label:"庫位",field:"binCode",align:"left"},{name:"lot",label:"批號",field:row=>row.lotNumber??"無批次",align:"left"},{name:"expiry",label:"到期日／剩餘天數",field:row=>row.expiryDate?`${row.expiryDate}／${row.remainingDays}天`:"無到期日",align:"left"},{name:"receipt",label:"首次入庫日",field:row=>row.firstReceiptDate??"不適用",align:"left"},{name:"default",label:"原批次推薦量（參考）",field:row=>member.value?.candidates.find(candidate=>candidate.inventoryBalanceId===row.inventoryBalanceId)?.recommendedQuantity??"未載入原推薦",align:"right"},{name:"physical",label:"實體可用",field:"physicalFreeQuantity",align:"right"},{name:"credit",label:"自身釋放額度",field:"ownReleaseCredit",align:"right"},{name:"prior",label:"前序已選",field:"priorSelectedQuantity",align:"right"},{name:"available",label:"目前可選",field:"availableQuantity",align:"right"},{name:"rank",label:"推薦順序",field:"rank",align:"right"},{name:"quantity",label:"分配數量（Base）",field:"inventoryBalanceId",align:"right"}],stateLabels={UNKNOWN:"尚未可判定",NONE:"正常順序",FIFO:"偏離 FIFO",FEFO:"偏離 FEFO",READY:"已完整",INCOMPLETE:"未完整",INVALID:"需修正",REQUIRED:"需要原因",UNUSED:"正常順序不可填原因",VALID:"原因有效",NOT_REQUIRED:"不需要",GRANTED:"有權限",DENIED:"沒有權限"};
+const assessments=[{name:"line",label:"履約行",field:"fulfillmentLineId",align:"left"},{name:"state",label:"數量檢查",field:row=>stateLabels[row.selectionStatus],align:"left"},{name:"override",label:"順序判定",field:row=>stateLabels[row.overrideType],align:"left"},{name:"reason",label:"原因",field:row=>stateLabels[row.reasonStatus],align:"left"},{name:"permission",label:"FEFO 權限",field:row=>stateLabels[row.fefoPermission],align:"left"},{name:"issues",label:"需修正項目",field:row=>(row.issues??[]).map(issue=>[issue.claimId?`預留 ${issue.claimId}`:"",issue.inventoryBalanceId?`庫存 ${issue.inventoryBalanceId}`:"",fulfillmentFailure({status:409,code:issue.code}).message].filter(Boolean).join("／")).join("；"),align:"left"}];
+</script>
+<template><section v-if="operate&&(allowed||pending||rejected||unreadable)" aria-label="庫存分配" class="q-mt-lg"><h2 class="text-h6">{{ label }}</h2><p>先載入推薦，可按預留逐項改選庫位。候選及順序判定以 Inventory 檢查為準；每次修改後須重新檢查全部選擇。</p>
+ <q-banner v-if="pending" role="status" class="bg-warning text-dark q-mb-md">原分配結果尚未確認，請沿用原操作確認。<template #action><q-btn flat label="確認原分配操作結果" :loading="busy" @click="send(pending)" /></template></q-banner>
+ <div v-if="error" ref="summary" role="alert" tabindex="-1"><q-banner class="bg-warning text-dark q-mb-md">{{ error }}</q-banner></div>
+ <section v-if="rejected" aria-label="先前被拒絕的分配輸入"><p>原版本 {{ rejected.body.version }} 的分配已被拒絕，以下原輸入保留供核對。重新載入不會把原輸入套用到新的預留或分配。</p><pre class="fulfillment-allocation-original">{{ JSON.stringify(rejected.body,null,2) }}</pre><q-btn flat label="重新載入目前履約資料" @click="emit('reload')" /></section>
+ <q-btn v-if="allowed&&!pending&&!unreadable" flat label="載入完整分配推薦" :loading="loading" :disable="busy" @click="load" /><p v-if="loading" role="status" aria-busy="true">正在讀取完整來源及分配推薦</p>
+ <fieldset v-if="scope" class="fulfillment-allocation-fields" :disabled="locked||loading" :inert="locked||loading"><legend>逐筆選擇庫位及分配數量</legend>
+  <q-select v-model="selected" :options="claims" emit-value map-options label="選擇預留" outlined @update:model-value="chooseClaim" /><p v-if="member">本筆需求 {{ member.requestedQuantity }} Base；履約行 {{ member.fulfillmentLineId }}</p>
+  <p v-if="member">原批次推薦（參考）：{{ defaultReference }}。此參考保留原推薦，與目前實際選擇分開顯示。</p>
+  <q-btn flat label="更新候選並檢查全部選擇" :loading="checking" @click="assess" />
+  <div v-if="optionsSnapshot" role="status"><p v-if="optionsSnapshot.prefixStatus!=='READY'">前序預留尚未完成或需修正，暫未提供本筆候選。</p><DataTable :rows="optionsSnapshot.options" :columns="columns" row-key="inventoryBalanceId" :initial-pagination="{page:1,rowsPerPage:100}"><template #body-cell-quantity="{row}"><q-td><q-input :model-value="amount(row)" :aria-label="`分配數量：庫存 ${row.inventoryBalanceId}`" label="分配數量" inputmode="numeric" maxlength="16" dense outlined @update:model-value="value=>setQuantity(row,value)" /></q-td></template><template #bottom><div class="row q-gutter-sm q-pa-sm"><q-btn flat label="前頁候選" :disable="page<=1||checking" @click="nextPage(page-1)" /><span>第 {{ page }} 頁</span><q-btn flat label="後頁候選" :disable="!optionsSnapshot.hasMore||checking" @click="nextPage(page+1)" /></div></template></DataTable></div>
+  <section v-if="chosen.length" aria-label="本筆已選庫位"><h3 class="text-subtitle1">本筆已選庫位</h3><div v-for="leg in chosen" :key="leg.inventoryBalanceId" class="row items-center q-gutter-sm q-mb-sm"><span>庫存 {{ leg.inventoryBalanceId }}</span><q-input v-model="leg.baseQuantity" :aria-label="`已選數量：庫存 ${leg.inventoryBalanceId}`" label="已選數量" inputmode="numeric" maxlength="16" dense outlined /><q-btn flat label="移除此庫位" @click="selections[selected]=chosen.filter(row=>row!==leg)" /></div></section>
+  <q-input v-if="currentLine" v-model="reasons[currentLine.id]" :label="`偏離原因：${currentLine.skuCode}`" hint="只在 Inventory 判定偏離時填寫5至500字；正常順序須留空" type="textarea" maxlength="1000" outlined />
+ </fieldset>
+ <section v-if="preview" aria-label="全部行分配檢查"><h3 class="text-subtitle1">全部行分配檢查</h3><DataTable :rows="preview.assessments" :columns="assessments" row-key="fulfillmentLineId" :initial-pagination="{page:1,rowsPerPage:100}" /><p role="status">{{ preview.canSubmit?'全部選擇已通過檢查，可確認提交':'尚有數量、順序原因或權限需要修正' }}</p></section>
+ <q-btn v-if="scope" color="primary" :label="`提交${label}`" :loading="busy" :disable="!ready" class="q-mt-md" @click="submit" />
+</section></template>
+<style scoped>
+.fulfillment-allocation-fields { min-width: 0; border: 0; padding: 0; margin: 0; }
+.fulfillment-allocation-original { max-height: 240px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+</style>

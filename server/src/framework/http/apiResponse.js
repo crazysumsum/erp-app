@@ -18,7 +18,10 @@ export function sendSuccess(
 ) {
   // API JSON 回應（包括 login/logout/me）往往帶有存取權限或個人資料，不應被
   // 瀏覽器或中介快取保留，同 fileResponse.js 嘅下載回應同一個理由。
-  res.setHeader("Cache-Control", "no-store");
+  const privateRead = ["GET", "HEAD"].includes(res.req?.method) &&
+    statusCode >= 200 && statusCode < 300 &&
+    res.getHeader?.("Cache-Control") === "private, no-store";
+  res.setHeader("Cache-Control", privateRead ? "private, no-store" : "no-store");
   return res.status(statusCode).json({
     success: true,
     data: data ?? null,

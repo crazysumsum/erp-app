@@ -8,6 +8,7 @@ import {up as factsUp} from "../../database/migrations/0097_create_shipment_issu
 import {up as auditUp} from "../../database/migrations/0098_create_fulfillment_audit_and_exports.js";
 import {up as archiveUp,FULFILLMENT_ARCHIVE_TABLES} from "../../database/migrations/0099_create_fulfillment_archives.js";
 import {up as guardsUp} from "../../database/migrations/0106_protect_fulfillment_archive_contracts.js";
+import {up as cancelHistoryUp,down as cancelHistoryDown} from "../../database/migrations/0104_preserve_cancelled_fulfillment_pick_history.js";
 import {inspectFulfillmentArchiveProtection} from "../../src/modules/fulfillment/fulfillmentArchiveProtectionSchema.js";
 import {hashFulfillmentArchiveRow} from "../../src/modules/fulfillment/fulfillmentArchiveSchema.js";
 const native=process.env.DB_INTEGRATION_TESTS==="1"?test:test.skip;
@@ -106,4 +107,22 @@ native("DEC029 mirror composite owner FKs reject a real other-line and other-roo
 });
 native("DEC029 unknown forward trigger drift fails without replacing the altered definition",async t=>{
  const f=await setup(t);await guardsUp(f.db);await f.db.query("DROP TRIGGER trg_archive_fulfillment_status_history_delete");const weakened="SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Different definition'";await f.db.query("CREATE TRIGGER trg_archive_fulfillment_status_history_delete BEFORE DELETE ON fulfillment_status_history FOR EACH ROW "+weakened);await assert.rejects(guardsUp(f.db),/Incompatible Fulfillment schema/u);const [[saved]]=await f.db.query("SELECT action_statement AS body FROM information_schema.triggers WHERE trigger_schema=DATABASE() AND trigger_name='trg_archive_fulfillment_status_history_delete'");assert.equal(saved.body,weakened);
+});
+
+native("P4 main integration0104 before0106 supports partial Archive installation and exact reentry",async t=>{
+ const f=await setup(t);await cancelHistoryUp(f.db);let interrupted=false;
+ const tx={query(sql,args){if(!interrupted&&sql.startsWith("CREATE TRIGGER trg_archive_fulfillment_allocations_delete ")){interrupted=true;throw new Error("Synthetic Archive guard interruption");}return f.db.query(sql,args);}};
+ await assert.rejects(()=>guardsUp(tx),/Synthetic Archive guard interruption/u);assert.equal(interrupted,true);
+ await guardsUp(f.db);await guardsUp(f.db);await cancelHistoryUp(f.db);assert.equal(await inspectFulfillmentArchiveProtection(f.db),true);
+});
+native("P4 main integration0106 before0104 preserves exact Archive protection through partial history upgrade and guarded down",async t=>{
+ const f=await setup(t);await guardsUp(f.db);let interrupted=false;
+ const tx={query(sql,args){if(!interrupted&&sql.startsWith("CREATE TRIGGER trg_ful_cancel_history_update ")){interrupted=true;throw new Error("Synthetic history guard interruption");}return f.db.query(sql,args);}};
+ await assert.rejects(()=>cancelHistoryUp(tx),/Synthetic history guard interruption/u);assert.equal(interrupted,true);
+ await cancelHistoryUp(f.db);await cancelHistoryUp(f.db);await guardsUp(f.db);assert.equal(await inspectFulfillmentArchiveProtection(f.db),true);
+ await cancelHistoryDown(f.db);assert.equal(await inspectFulfillmentArchiveProtection(f.db),true);await cancelHistoryUp(f.db);
+ await f.db.query("CREATE TRIGGER test_unknown_allocation_delete BEFORE DELETE ON fulfillment_allocations FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Unknown guard'");
+ await assert.rejects(()=>cancelHistoryUp(f.db),/Incompatible/u);await f.db.query("DROP TRIGGER test_unknown_allocation_delete");
+ await f.db.query("DROP TRIGGER trg_archive_fulfillment_allocations_delete");await f.db.query("CREATE TRIGGER trg_archive_fulfillment_allocations_delete BEFORE DELETE ON fulfillment_allocations FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Altered guard'");
+ await assert.rejects(()=>cancelHistoryUp(f.db),/Incompatible/u);
 });

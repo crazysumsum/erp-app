@@ -79,3 +79,24 @@ test("validation rejects accessors without executing payload code", () => {
   assert.throws(() => validateFulfillmentArchivePrepare(value), TypeError);
   assert.equal(reads, 0);
 });
+
+import { FULFILLMENT_ARCHIVE_PROTECTION_ACTIVE } from "../src/modules/fulfillment/fulfillmentArchiveProtectionSchema.js";
+import { cancelledAllocationSchema,recognizeCancelledAllocationSchema } from "../src/modules/fulfillment/fulfillmentCancelledAllocationSchema.js";
+import { normalizeFulfillmentSchemaSql as normalize } from "../src/modules/fulfillment/fulfillmentMigrationSchema.js";
+
+test("HD019 forward schema keeps Archive DELETE ordinal1 while shifting INSERT/UPDATE guards",()=>{
+ const {contract}=FULFILLMENT_ARCHIVE_PROTECTION_ACTIVE.find(row=>row.base.table==="fulfillment_allocations"),next=cancelledAllocationSchema(contract);
+ assert.equal(next.triggers.trg_archive_fulfillment_allocations_delete[2],1);
+ assert.equal(next.triggers.trg_ful_allocation_insert[2],2);assert.equal(next.triggers.trg_ful_allocation_update[2],2);
+ const checks=Object.entries(next.checks).map(([name,clause])=>({name,clause,enforced:"YES"})),triggers=Object.entries(next.triggers).map(([name,[event,statement,ordinal]])=>({name,event,statement,timing:"BEFORE",ordinal:name==="trg_archive_fulfillment_allocations_delete"?1:ordinal}));
+ assert.ok(recognizeCancelledAllocationSchema(contract,checks,triggers,normalize));
+});
+test("HD019 partial Archive installation permits only the pending DELETE guard, never missing current-history guards",()=>{
+ const {contract}=FULFILLMENT_ARCHIVE_PROTECTION_ACTIVE.find(row=>row.base.table==="fulfillment_allocations"),next=cancelledAllocationSchema(contract);
+ const checks=Object.entries(next.checks).map(([name,clause])=>({name,clause,enforced:"YES"})),triggers=Object.entries(next.triggers).map(([name,[event,statement,ordinal]])=>({name,event,statement,timing:"BEFORE",ordinal})).filter(row=>row.name!=="trg_archive_fulfillment_allocations_delete"),options={allowMissingTriggers:true};
+ assert.equal(recognizeCancelledAllocationSchema(contract,checks,triggers,normalize),null);
+ assert.ok(recognizeCancelledAllocationSchema(contract,checks,triggers,normalize,options));
+ for(const name of ["trg_ful_cancel_history_insert","trg_ful_cancel_history_update","trg_ful_allocation_insert","trg_ful_allocation_update"])assert.equal(recognizeCancelledAllocationSchema(contract,checks,triggers.filter(row=>row.name!==name),normalize,options),null);
+ assert.equal(recognizeCancelledAllocationSchema(contract,checks,[...triggers,{...triggers[0],name:"unexpected_guard"}],normalize,options),null);
+ assert.equal(recognizeCancelledAllocationSchema(contract,checks,triggers.map(row=>({...row,statement:row.statement.replace("NOWAIT","")})),normalize,options),null);
+});

@@ -5,7 +5,7 @@
     "id": "supplier-isolated-test",
     "kind": "LOCAL_ISOLATED",
     "data_reference": "Synthetic Supplier fixtures defined in 06_technical_test_cases.md; no production data",
-    "authorization_ref": "User message on 2026-09-15: 批准直接使用現有測試專用的 erp_dev，並在其中執行全部現有及 Supplier Migration。"
+    "authorization_ref": "User message on 2026-09-15: 批准直接使用現有測試專用的 erp_dev，並在其中執行全部現有及 Supplier Migration。 From TASK-051 (2026-10-22) the runs use a throwaway mysqld at 127.0.0.1:3450 with a scratch datadir, under the Product Owner's standing instruction to use only the schemas erp_t51, erp_t51_rh_* and erp_t51_mig_* (never erp_t51p); HD-157 (2026-10-30) makes these local isolated results the acceptance evidence, with no production-like re-test (REV-130 environment note)."
   },
   "permissions": {
     "product_write": [

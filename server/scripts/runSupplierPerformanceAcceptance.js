@@ -19,19 +19,20 @@ import { performanceVerdicts } from "../test/integration/supplierPerformanceVerd
  * 喺一個全新 migrate 嘅 `${DB_NAME}_rh_*` schema 上面 seed 100,000 個 Supplier（T50 嘅 seed，NFR-003 形狀），然後用 T50
  * 嘅工具量度，再對門檻判斷：
  * - TC-128：50 個用戶混合負載（benchmarkSupplierManagement.js），一般操作 p95 < 2 秒、錯誤率 ≤ 1%，之後仲答到。
- * - TC-085：只跑 for-SKU（`--only=forSku`，最差情況），p95 < 2 秒；熱門 SKU 嘅總數同 SQL 數一樣；計劃冇全表掃描。
+ * - TC-085：只跑 for-SKU（`--only=forSku`，最差情況），p95 < 3 秒（NFR-005，HD-157）；熱門 SKU 嘅總數同 SQL 數一樣；計劃冇全表掃描。
  * - TC-129：相似名稱有上限（HD-084／HD-087：最多 3,000 個候選計分，頭 50 個），召回率同冇上限差唔超過 2 點；
  *   常用 query 用 index（文字搜尋嘅全表掃描係 HD-088 決定）；列表總數唔會因為 join 膨脹。
  * - TC-101：10,000 列匯入同 50 個用戶負載同時跑：預檢加執行 ≤ 10 分鐘、每列只寫一次、線上 p95 仍然 < 2 秒。
- * TC-128 嘅 production-like 環境（OPS-001 寫明）係 NOT_RUN。完咗成個 schema 剷走；SIGINT／SIGTERM 一樣。
+ * TC-128 嘅 production-like 重測由 HD-157 豁免，本機結果就係證據；豁免項目照列喺輸出（`waived`），唔當測試案例。
+ * 完咗成個 schema 剷走；SIGINT／SIGTERM 一樣。
  */
 const reportPath = outputPath();
 await exitUnlessAdmin(reportPath, ["TC-085", "TC-101", "TC-128", "TC-129"]);
 const SERVER = fileURLToPath(new URL("../", import.meta.url));
 const SCRIPTS = path.join(SERVER, "scripts");
-const NOT_RUN = [
+const WAIVED = [
   { id: "TC-128", name: "TC-128 production-like MySQL and hardware",
-    reason: "OPS-001 asks for a production-like MySQL. This run uses a local MySQL 26.7.0 on the developer machine with the app's default pool; the figures show the design holds at 100k rows, not production capacity." }
+    reason: "Waived by HD-157 (2026-10-30): no production-like re-test; this local run on MySQL 26.7.0 with the app's default pool is the acceptance evidence. It shows the design holds at 100k rows, not production capacity." }
 ];
 const evidence = {};
 const results = {};
@@ -201,10 +202,9 @@ const tests = [
   { name: "TC-101 local 10,000-row import alongside 50 online users", id: "TC-101", status: results["TC-101"] ?? "FAIL" },
   { name: "TC-128 local 100k Suppliers and 50 users, general operations", id: "TC-128", status: results["TC-128"] ?? "FAIL" },
   { name: "TC-129 local duplicate cap, query plans and counts", id: "TC-129", status: results["TC-129"] ?? "FAIL" },
-  ...NOT_RUN.map(({ id, name }) => ({ name, id, status: "NOT_RUN" }))
 ];
 evidence.loadAverageAtEnd = os.loadavg().map((value) => Math.round(value * 10) / 10);
 console.log(JSON.stringify({ database: process.env.DB_NAME, schema, evidence,
-  notRun: Object.fromEntries(NOT_RUN.map(({ name, reason }) => [name, reason])) }, null, 2));
+  waived: Object.fromEntries(WAIVED.map(({ name, reason }) => [name, reason])) }, null, 2));
 await writeReport(reportPath, tests);
 if (tests.some((test) => test.status === "FAIL") || evidence.cleanup) process.exitCode = 1;

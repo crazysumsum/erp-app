@@ -1,5 +1,7 @@
 # Supplier Management — Technical Acceptance report (2026-10-28, re-tested 2026-10-29)
 
+> **2026-10-30, HD-157:** the HD-156 E path below (re-measure TC-085 in a production-like environment) is superseded. NFR-005 is now 3 s, and the C-group production parts are waived, with the local results standing. This report's results are on the old plan baseline. The next formal run is on the HD-157 baseline, and it will be added here as the current result.
+
 ## Re-test after the DEF-049 fix (2026-10-29, current result)
 
 **Result: Technical Acceptance NOT complete.**

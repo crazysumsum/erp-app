@@ -687,6 +687,8 @@ The hint helps at middle offsets. At deep offsets an `OFFSET` walk reads everyth
 - (C) keyset pagination; a contract change;
 - (D) schema indexes or narrower name search; needs sign-off.
 
+**Superseded by HD-157 (Product Owner, 2026-10-30: "確認，開 HD-157 修訂 plan，TC-085不用修，放鬆至3秒").** C cases that passed locally are recorded as passed, with no production-like re-test, so HD-156 E's re-measurement will not happen. NFR-005's for-SKU limit is now 3 s, and no remedy is made. Every formal run so far was under 3 s (worst 2,113 ms). DEF-050 closes once TC-085 passes against 3 s in the formal run on the HD-157 baseline.
+
 ## HD-116 A: dispositions (2026-10-21)
 
 Fixed in this change:

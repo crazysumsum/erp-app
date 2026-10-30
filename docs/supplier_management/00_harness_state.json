@@ -1,27 +1,27 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 489,
+  "revision": 497,
   "mode": "FULL_LIFECYCLE",
-  "active_mode": "TEST_AND_VERIFY",
-  "status": "BLOCKED",
-  "resume_status": "VERIFYING",
+  "active_mode": "IMPLEMENT",
+  "status": "IMPLEMENTING",
+  "resume_status": null,
   "current_phase": "PHASE-004",
   "current_task": "TASK-051",
   "baseline": {
-    "design": "2390e6fc44da25124375f4347f2a093db512f8353e01d456780a11073be494a3",
-    "plan": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
-    "code_commit": "5bed215bade454f5181d34019701c2621353603d",
-    "source_fingerprint": "493d144c455c6db5d08c3baeb3b36c961539740c393727739956e060f66c252f",
-    "worktree": "/Users/sam/Documents/workspace/erp-supplier-hd156",
-    "default_commit": "4f101642a284c44d6dd53338ddfeb431582aa5f4",
-    "mode_entry_commit": "4f101642a284c44d6dd53338ddfeb431582aa5f4"
+    "design": "22865f96b0ce3aa7e70b1433533a3a0551d557a6e3dcb12bef28e4546e57a056",
+    "plan": "8b31fcdd93bafe8275cb5cd2eded0a50b608a49bb17227beb7339ee099a344bd",
+    "code_commit": "041e932f4074a1f5df1bc641e5c06f4afcb1bb3a",
+    "source_fingerprint": "b00c7d69b52834f1cc4b2be0224208cff4ad046afd8eef70b2ee239d13b91394",
+    "worktree": "/Users/sam/Documents/workspace/erp-supplier-hd157",
+    "default_commit": "e64dfc7452dd4ce598e6e9d1765000d9633dd849",
+    "mode_entry_commit": "e64dfc7452dd4ce598e6e9d1765000d9633dd849"
   },
   "runtime": {
     "instance_id": "supplier-t51-scratch-mysqld-3450",
     "owner": "Primary Harness agent",
     "resources": {
-      "workspace": "/Users/sam/Documents/workspace/erp-supplier-hd156 (claude/supplier-hd156-defer, cut from main 5bed215b)",
+      "workspace": "/Users/sam/Documents/workspace/erp-supplier-hd157 (claude/supplier-hd157-plan-revision, cut from main e64dfc74)",
       "mysql-schema": "erp_t51, and the erp_t51_rh_* scratch schemas the runners create and drop, on a throwaway mysqld at 127.0.0.1:3450 (session scratch datadir, --skip-log-bin); no production data",
       "web-port": "3021 (UAT API) and 5216 (UAT client); the other runners bind free ports"
     },
@@ -2138,6 +2138,524 @@
         "TASK-051"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-129-DESIGN-HD157",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on design baseline f64e59b2 by HD-157 (Product Owner, 2026-10-30: '確認，開 HD-157 修訂 plan，TC-085不用修，放鬆至3秒'; the plan revision re-records existing approvals on the new baselines, with no new risk acceptance). Supersedes APPROVAL-HD-129-DESIGN-HD149 on 2390e6fc, which is kept. Original: Re-affirmed unchanged on design baseline 2390e6fc by HD-149 A ('HD-149 A，開 issue，風險接受留返 release 時', 2026-10-28), because refreshing the consumed Item and Purchasing pins (HD-147 B), adding the supplier-deployment-check/-copy suites to the profile and amending 07 per HD-145 A and HD-146 A (commit 12d52ff3) moved the design baseline 171cf540 -> 2390e6fc and the plan baseline 3c683c4e -> 598f012b. No new acceptance: what was approved does not change. Original APPROVAL-HD-129-DESIGN is kept. Original text: HD-129 A ('DEF-037 A', 2026-10-23) and HD-136 ('批准 migration，照建議做', 2026-10-23). Design §5.5 and §5.6 gain sort_order on supplier_addresses and supplier_contacts (display order, max+1 on create, move up/down swaps adjacent active rows, list order status, sort_order, id); §6 gains POST .../addresses/:addressId/move and .../contacts/:contactId/move. The manifest's provided-contract sha256 follows the design file (a9f64493 -> 2b81eb9a). Design baseline 29a0615a -> 171cf540.",
+      "recorded_at": "2026-10-30T09:36:39+08:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "f64e59b24e3cc7cd8a1ba5980da6f664bb0167d016ebfe992b6d144312b14317",
+      "code_commit": "2c32916e1f280a17a99ec95df7662f3c2da9e53a",
+      "scope": [
+        "supplier-management",
+        "DEF-037 address and contact ordering",
+        "TASK-051"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-129-PLAN-HD157",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline d6e34580 by HD-157 (Product Owner, 2026-10-30: '確認，開 HD-157 修訂 plan，TC-085不用修，放鬆至3秒'; the plan revision re-records existing approvals on the new baselines, with no new risk acceptance). Supersedes APPROVAL-HD-129-PLAN-HD149 on 598f012b, which is kept. Original: Re-affirmed unchanged on plan baseline 598f012b by HD-149 A ('HD-149 A，開 issue，風險接受留返 release 時', 2026-10-28), because refreshing the consumed Item and Purchasing pins (HD-147 B), adding the supplier-deployment-check/-copy suites to the profile and amending 07 per HD-145 A and HD-146 A (commit 12d52ff3) moved the design baseline 171cf540 -> 2390e6fc and the plan baseline 3c683c4e -> 598f012b. No new acceptance: what was approved does not change. Original APPROVAL-HD-129-PLAN is kept. Original text: HD-129 A ('DEF-037 A', 2026-10-23) and HD-136 ('批准 migration，照建議做', 2026-10-23). The plan baseline moves only because the design file and the manifest's contract hash changed (plan bfb0af4f -> 3c683c4e); no task, profile or traceability change.",
+      "recorded_at": "2026-10-30T09:36:39+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "d6e345800923e9c35c6fddecf2e8e76197db33e3a66c33e43e1b7986614f2e8a",
+      "code_commit": "2c32916e1f280a17a99ec95df7662f3c2da9e53a",
+      "scope": [
+        "supplier-management",
+        "DEF-037 address and contact ordering",
+        "TASK-051"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-097-DESIGN-HD157",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "recorded_at": "2026-10-30T09:36:39+08:00",
+      "code_commit": "2c32916e1f280a17a99ec95df7662f3c2da9e53a",
+      "scope": [
+        "supplier-management manifest contracts.consumed item-sku-uom-provider",
+        "TASK-039"
+      ],
+      "expires_at": null,
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "f64e59b24e3cc7cd8a1ba5980da6f664bb0167d016ebfe992b6d144312b14317",
+      "source_ref": "Re-affirmed unchanged on design baseline f64e59b2 by HD-157 (Product Owner, 2026-10-30: '確認，開 HD-157 修訂 plan，TC-085不用修，放鬆至3秒'; the plan revision re-records existing approvals on the new baselines, with no new risk acceptance). Supersedes APPROVAL-HD-097-DESIGN-HD149 on 2390e6fc, which is kept. Original: Re-affirmed unchanged on design baseline 2390e6fc by HD-149 A ('HD-149 A，開 issue，風險接受留返 release 時', 2026-10-28), because refreshing the consumed Item and Purchasing pins (HD-147 B), adding the supplier-deployment-check/-copy suites to the profile and amending 07 per HD-145 A and HD-146 A (commit 12d52ff3) moved the design baseline 171cf540 -> 2390e6fc and the plan baseline 3c683c4e -> 598f012b. No new acceptance: what was approved does not change. Original APPROVAL-HD-097-DESIGN-HD129 is kept. Original text: Re-affirmed unchanged on design baseline 171cf540 by HD-129 A ('DEF-037 A', 2026-10-23) and HD-136 ('批准 migration，照建議做', 2026-10-23), because the DEF-037 design change moved it from 29a0615a. Original APPROVAL-HD-097-DESIGN is kept. Original text: HD-097: refresh of the consumed item-sku-uom-provider pin from 5a44ef30 to 1bbb882f0f1faed296615b5b253f3e6169d79b6289d1a6300e078377400e4a7f (Item §8.3.2 and DES-021, PR #210: additive purchase search and UOM mapping fields). Only the manifest contracts block changed; it moves the design baseline from f2f4a82b to 29a0615a. No requirement, design, phase, task, suite or test flag changed."
+    },
+    {
+      "id": "APPROVAL-HD-104-DESIGN-HD157",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "recorded_at": "2026-10-30T09:36:39+08:00",
+      "code_commit": "2c32916e1f280a17a99ec95df7662f3c2da9e53a",
+      "scope": [
+        "supplier-management",
+        "TASK-051"
+      ],
+      "expires_at": null,
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "f64e59b24e3cc7cd8a1ba5980da6f664bb0167d016ebfe992b6d144312b14317",
+      "source_ref": "Re-affirmed unchanged on design baseline f64e59b2 by HD-157 (Product Owner, 2026-10-30: '確認，開 HD-157 修訂 plan，TC-085不用修，放鬆至3秒'; the plan revision re-records existing approvals on the new baselines, with no new risk acceptance). Supersedes APPROVAL-HD-104-DESIGN-HD149 on 2390e6fc, which is kept. Original: Re-affirmed unchanged on design baseline 2390e6fc by HD-149 A ('HD-149 A，開 issue，風險接受留返 release 時', 2026-10-28), because refreshing the consumed Item and Purchasing pins (HD-147 B), adding the supplier-deployment-check/-copy suites to the profile and amending 07 per HD-145 A and HD-146 A (commit 12d52ff3) moved the design baseline 171cf540 -> 2390e6fc and the plan baseline 3c683c4e -> 598f012b. No new acceptance: what was approved does not change. Original APPROVAL-HD-104-DESIGN-HD129 is kept. Original text: Re-affirmed unchanged on design baseline 171cf540 by HD-129 A ('DEF-037 A', 2026-10-23) and HD-136 ('批准 migration，照建議做', 2026-10-23), because the DEF-037 design change moved it from 29a0615a. Original APPROVAL-HD-104-DESIGN is kept. Original text: HD-104 'A': re-records the HD-097 design approval for design 29a0615a with the module scope. Nothing about the design changes; APPROVAL-HD-097-DESIGN and the revoked APPROVAL-HD-097-DESIGN-REBIND are kept."
+    },
+    {
+      "id": "APPROVAL-HD-124-PLAN-HD157",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline d6e34580 by HD-157 (Product Owner, 2026-10-30: '確認，開 HD-157 修訂 plan，TC-085不用修，放鬆至3秒'; the plan revision re-records existing approvals on the new baselines, with no new risk acceptance). Supersedes APPROVAL-HD-124-PLAN-HD149 on 598f012b, which is kept. Original: Re-affirmed unchanged on plan baseline 598f012b by HD-149 A ('HD-149 A，開 issue，風險接受留返 release 時', 2026-10-28), because refreshing the consumed Item and Purchasing pins (HD-147 B), adding the supplier-deployment-check/-copy suites to the profile and amending 07 per HD-145 A and HD-146 A (commit 12d52ff3) moved the design baseline 171cf540 -> 2390e6fc and the plan baseline 3c683c4e -> 598f012b. No new acceptance: what was approved does not change. Original APPROVAL-HD-124-PLAN-HD129 is kept. Original text: Re-affirmed unchanged on plan baseline 3c683c4e by HD-129 A ('DEF-037 A', 2026-10-23) and HD-136 ('批准 migration，照建議做', 2026-10-23), because the DEF-037 design change moved it from bfb0af4f. Original APPROVAL-HD-124-PLAN is kept. Original text: HD-124 A ('A', 2026-10-22: real-backend Playwright UAT; the first PR also changes the UAT suite's profile with another re-affirmation). Only 00_project_profile.json changed: supplier-uat-browser argv now runs client/e2e/supplier-management/playwright.uat.config.js; env_keys DB_HOST, DB_PORT, DB_NAME, DB_ADMIN_USER, DB_ADMIN_PASSWORD and the Supplier and Customer bank key rings; redaction_env_keys add the Customer bank keys and DB_ADMIN_PASSWORD. Design baseline unchanged; plan baseline 6c885dba -> bfb0af4f.",
+      "recorded_at": "2026-10-30T09:36:39+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "d6e345800923e9c35c6fddecf2e8e76197db33e3a66c33e43e1b7986614f2e8a",
+      "code_commit": "2c32916e1f280a17a99ec95df7662f3c2da9e53a",
+      "scope": [
+        "supplier-management",
+        "supplier-management project profile: supplier-uat-browser argv, env_keys, redaction keys",
+        "TASK-051"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-123-PLAN-HD157",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline d6e34580 by HD-157 (Product Owner, 2026-10-30: '確認，開 HD-157 修訂 plan，TC-085不用修，放鬆至3秒'; the plan revision re-records existing approvals on the new baselines, with no new risk acceptance). Supersedes APPROVAL-HD-123-PLAN-HD149 on 598f012b, which is kept. Original: Re-affirmed unchanged on plan baseline 598f012b by HD-149 A ('HD-149 A，開 issue，風險接受留返 release 時', 2026-10-28), because refreshing the consumed Item and Purchasing pins (HD-147 B), adding the supplier-deployment-check/-copy suites to the profile and amending 07 per HD-145 A and HD-146 A (commit 12d52ff3) moved the design baseline 171cf540 -> 2390e6fc and the plan baseline 3c683c4e -> 598f012b. No new acceptance: what was approved does not change. Original APPROVAL-HD-123-PLAN-HD129 is kept. Original text: Re-affirmed unchanged on plan baseline 3c683c4e by HD-129 A ('DEF-037 A', 2026-10-23) and HD-136 ('批准 migration，照建議做', 2026-10-23), because the DEF-037 design change moved it from bfb0af4f. Original APPROVAL-HD-123-PLAN-HD124 is kept. Original text: Re-affirmed unchanged on plan baseline bfb0af4f by HD-124 A ('A', 2026-10-22), because the UAT profile change moved the plan baseline from 6c885dba. Original APPROVAL-HD-123-PLAN is kept. Original text: HD-123 A ('HD-123 A，review 完 CI 過就 merge', 2026-10-22). Only 00_project_profile.json changed: DB_ADMIN_USER, DB_ADMIN_PASSWORD and MYSQL_BIN added to the env_keys of supplier-recovery, supplier-release-operations, supplier-resilience and supplier-performance, DB_ADMIN_PASSWORD to their redaction_env_keys; a mysqldump --version tool probe on supplier-recovery; supplier-release-operations min_tests 3 -> 2. Design baseline 29a0615a unchanged; plan baseline 6cb156c3 -> 6c885dba.",
+      "recorded_at": "2026-10-30T09:36:39+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "d6e345800923e9c35c6fddecf2e8e76197db33e3a66c33e43e1b7986614f2e8a",
+      "code_commit": "2c32916e1f280a17a99ec95df7662f3c2da9e53a",
+      "scope": [
+        "supplier-management",
+        "supplier-management project profile: runner env_keys, redaction keys, mysqldump probe, release min_tests",
+        "TASK-051"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-105-PLAN-HD157",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "recorded_at": "2026-10-30T09:36:39+08:00",
+      "code_commit": "2c32916e1f280a17a99ec95df7662f3c2da9e53a",
+      "scope": [
+        "supplier-management",
+        "supplier-management project profile env_keys, phase-001-server runner, min_tests",
+        "TASK-051"
+      ],
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "d6e345800923e9c35c6fddecf2e8e76197db33e3a66c33e43e1b7986614f2e8a",
+      "source_ref": "Re-affirmed unchanged on plan baseline d6e34580 by HD-157 (Product Owner, 2026-10-30: '確認，開 HD-157 修訂 plan，TC-085不用修，放鬆至3秒'; the plan revision re-records existing approvals on the new baselines, with no new risk acceptance). Supersedes APPROVAL-HD-105-PLAN-HD149 on 598f012b, which is kept. Original: Re-affirmed unchanged on plan baseline 598f012b by HD-149 A ('HD-149 A，開 issue，風險接受留返 release 時', 2026-10-28), because refreshing the consumed Item and Purchasing pins (HD-147 B), adding the supplier-deployment-check/-copy suites to the profile and amending 07 per HD-145 A and HD-146 A (commit 12d52ff3) moved the design baseline 171cf540 -> 2390e6fc and the plan baseline 3c683c4e -> 598f012b. No new acceptance: what was approved does not change. Original APPROVAL-HD-105-PLAN-HD129 is kept. Original text: Re-affirmed unchanged on plan baseline 3c683c4e by HD-129 A ('DEF-037 A', 2026-10-23) and HD-136 ('批准 migration，照建議做', 2026-10-23), because the DEF-037 design change moved it from bfb0af4f. Original APPROVAL-HD-105-PLAN-HD124 is kept. Original text: Re-affirmed unchanged on plan baseline bfb0af4f by HD-124 A ('A', 2026-10-22), because the UAT profile change moved the plan baseline from 6c885dba. Original APPROVAL-HD-105-PLAN-HD123 is kept. Original text: Re-affirmed unchanged on plan baseline 6c885dba by HD-123 A ('HD-123 A，review 完 CI 過就 merge', 2026-10-22), because the profile change moved the plan baseline from 6cb156c3. Original APPROVAL-HD-105-PLAN is kept. Original text: HD-105 'A': plan 6cb156c3, the REV-091 follow-ups and env additions after HD-103 '1A' (APPROVAL-HD-103-PLAN-1A, 7232d2ec)."
+    },
+    {
+      "id": "APPROVAL-HD-113-SCOPE-HD157",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline d6e34580 by HD-157 (Product Owner, 2026-10-30: '確認，開 HD-157 修訂 plan，TC-085不用修，放鬆至3秒'; the plan revision re-records existing approvals on the new baselines, with no new risk acceptance). Supersedes APPROVAL-HD-113-SCOPE-HD149 on 598f012b, which is kept. Original: Re-affirmed unchanged on plan baseline 598f012b by HD-149 A ('HD-149 A，開 issue，風險接受留返 release 時', 2026-10-28), because refreshing the consumed Item and Purchasing pins (HD-147 B), adding the supplier-deployment-check/-copy suites to the profile and amending 07 per HD-145 A and HD-146 A (commit 12d52ff3) moved the design baseline 171cf540 -> 2390e6fc and the plan baseline 3c683c4e -> 598f012b. No new acceptance: what was approved does not change. Original APPROVAL-HD-113-SCOPE-HD129 is kept. Original text: Re-affirmed unchanged on plan baseline 3c683c4e by HD-129 A ('DEF-037 A', 2026-10-23) and HD-136 ('批准 migration，照建議做', 2026-10-23), because the DEF-037 design change moved it from bfb0af4f. Original APPROVAL-HD-113-SCOPE-HD124 is kept. Original text: Re-affirmed unchanged on plan baseline bfb0af4f by HD-124 A ('A', 2026-10-22), because the UAT profile change moved the plan baseline from 6c885dba. Original APPROVAL-HD-113-SCOPE-HD123 is kept. Original text: Re-affirmed unchanged on plan baseline 6c885dba by HD-123 A ('HD-123 A，review 完 CI 過就 merge', 2026-10-22), because the profile change moved the plan baseline from 6cb156c3. Original APPROVAL-HD-113-SCOPE is kept. Original text: HD-113 A. Authorises TASK-051 to add server/database/migrations/0087_fix_supplier_sku_refs_sku_foreign_key.js with the change proposed in chat on 2026-10-20 (orphan check, drop and re-add fk_supplier_sku_refs_sku and idx_supplier_sku_refs_sku_status_supplied around a new idx_supplier_sku_refs_sku (sku_id)).",
+      "recorded_at": "2026-10-30T09:36:39+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "d6e345800923e9c35c6fddecf2e8e76197db33e3a66c33e43e1b7986614f2e8a",
+      "code_commit": "2c32916e1f280a17a99ec95df7662f3c2da9e53a",
+      "scope": [
+        "supplier-management",
+        "server/database/migrations/0087_fix_supplier_sku_refs_sku_foreign_key.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-VITE-ADVISORY-LOCK-SCOPE-HD157",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline d6e34580 by HD-157 (Product Owner, 2026-10-30: '確認，開 HD-157 修訂 plan，TC-085不用修，放鬆至3秒'; the plan revision re-records existing approvals on the new baselines, with no new risk acceptance). Supersedes APPROVAL-VITE-ADVISORY-LOCK-SCOPE-HD149 on 598f012b, which is kept. Original: Re-affirmed unchanged on plan baseline 598f012b by HD-149 A ('HD-149 A，開 issue，風險接受留返 release 時', 2026-10-28), because refreshing the consumed Item and Purchasing pins (HD-147 B), adding the supplier-deployment-check/-copy suites to the profile and amending 07 per HD-145 A and HD-146 A (commit 12d52ff3) moved the design baseline 171cf540 -> 2390e6fc and the plan baseline 3c683c4e -> 598f012b. No new acceptance: what was approved does not change. Original APPROVAL-VITE-ADVISORY-LOCK-SCOPE-HD129 is kept. Original text: Re-affirmed unchanged on plan baseline 3c683c4e by HD-129 A ('DEF-037 A', 2026-10-23) and HD-136 ('批准 migration，照建議做', 2026-10-23), because the DEF-037 design change moved it from bfb0af4f. Original APPROVAL-VITE-ADVISORY-LOCK-SCOPE-HD124 is kept. Original text: Re-affirmed unchanged on plan baseline bfb0af4f by HD-124 A ('A', 2026-10-22), because the UAT profile change moved the plan baseline from 6c885dba. Original APPROVAL-VITE-ADVISORY-LOCK-SCOPE-HD123 is kept. Original text: Re-affirmed unchanged on plan baseline 6c885dba by HD-123 A ('HD-123 A，review 完 CI 過就 merge', 2026-10-22), because the profile change moved the plan baseline from 6cb156c3. Original APPROVAL-VITE-ADVISORY-LOCK-SCOPE is kept. Original text: Product Owner, 2026-10-21: 'A，批准改 package-lock.json，CI 過就 merge'. Authorises a lockfile-only change resolving vite 8.2.4 (within client/package.json's ^8.2.1) after new launch-editor advisories (GHSA-587h-7wmj-h5pm high; GHSA-698v-4r3x-3vcv, GHSA-r825-w8mm-5pxw moderate) failed the Dependency audit check on every branch, blocking PR #258. Delivered as PR #259.",
+      "recorded_at": "2026-10-30T09:36:39+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "d6e345800923e9c35c6fddecf2e8e76197db33e3a66c33e43e1b7986614f2e8a",
+      "code_commit": "2c32916e1f280a17a99ec95df7662f3c2da9e53a",
+      "scope": [
+        "package-lock.json"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-116-RISK-HD157",
+      "kind": "RISK",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline d6e34580 by HD-157 (Product Owner, 2026-10-30: '確認，開 HD-157 修訂 plan，TC-085不用修，放鬆至3秒'; the plan revision re-records existing approvals on the new baselines, with no new risk acceptance). Supersedes APPROVAL-HD-116-RISK-HD149 on 598f012b, which is kept. Original: Re-affirmed unchanged on plan baseline 598f012b by HD-149 A ('HD-149 A，開 issue，風險接受留返 release 時', 2026-10-28), because refreshing the consumed Item and Purchasing pins (HD-147 B), adding the supplier-deployment-check/-copy suites to the profile and amending 07 per HD-145 A and HD-146 A (commit 12d52ff3) moved the design baseline 171cf540 -> 2390e6fc and the plan baseline 3c683c4e -> 598f012b. No new acceptance: what was approved does not change. Original APPROVAL-HD-116-RISK-HD129 is kept. Original text: Re-affirmed unchanged on plan baseline 3c683c4e by HD-129 A ('DEF-037 A', 2026-10-23) and HD-136 ('批准 migration，照建議做', 2026-10-23), because the DEF-037 design change moved it from bfb0af4f. Original APPROVAL-HD-116-RISK-HD124 is kept. Original text: Re-affirmed unchanged on plan baseline bfb0af4f by HD-124 A ('A', 2026-10-22), because the UAT profile change moved the plan baseline from 6c885dba. Original APPROVAL-HD-116-RISK-HD123 is kept. Original text: Re-affirmed unchanged on plan baseline 6c885dba by HD-123 A ('HD-123 A，review 完 CI 過就 merge', 2026-10-22), because the profile change moved the plan baseline from 6cb156c3. Original APPROVAL-HD-116-RISK is kept. Original text: HD-116 A ('A，review 完 CI 過就 merge', 2026-10-21). Defers DEF-004, DEF-007 and DEF-016 to release as recorded known limitations; records DEF-008, DEF-012, DEF-013, DEF-015, DEF-017, DEF-018, DEF-019 and DEF-023 as handed to their owners (docs/supplier_management/testing/defect_handoffs.md) and DEF-014 as accepted. Supersedes APPROVAL-HD-017-RISK and APPROVAL-HD-017-RISK-DEF012 for these defects.",
+      "recorded_at": "2026-10-30T09:36:39+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "d6e345800923e9c35c6fddecf2e8e76197db33e3a66c33e43e1b7986614f2e8a",
+      "code_commit": "2c32916e1f280a17a99ec95df7662f3c2da9e53a",
+      "scope": [
+        "supplier-management",
+        "DEF-004",
+        "DEF-007",
+        "DEF-016",
+        "DEF-008",
+        "DEF-012",
+        "DEF-013",
+        "DEF-015",
+        "DEF-017",
+        "DEF-018",
+        "DEF-019",
+        "DEF-023",
+        "DEF-014"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-117-SCOPE-HD157",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline d6e34580 by HD-157 (Product Owner, 2026-10-30: '確認，開 HD-157 修訂 plan，TC-085不用修，放鬆至3秒'; the plan revision re-records existing approvals on the new baselines, with no new risk acceptance). Supersedes APPROVAL-HD-117-SCOPE-HD149 on 598f012b, which is kept. Original: Re-affirmed unchanged on plan baseline 598f012b by HD-149 A ('HD-149 A，開 issue，風險接受留返 release 時', 2026-10-28), because refreshing the consumed Item and Purchasing pins (HD-147 B), adding the supplier-deployment-check/-copy suites to the profile and amending 07 per HD-145 A and HD-146 A (commit 12d52ff3) moved the design baseline 171cf540 -> 2390e6fc and the plan baseline 3c683c4e -> 598f012b. No new acceptance: what was approved does not change. Original APPROVAL-HD-117-SCOPE-HD129 is kept. Original text: Re-affirmed unchanged on plan baseline 3c683c4e by HD-129 A ('DEF-037 A', 2026-10-23) and HD-136 ('批准 migration，照建議做', 2026-10-23), because the DEF-037 design change moved it from bfb0af4f. Original APPROVAL-HD-117-SCOPE-HD124 is kept. Original text: Re-affirmed unchanged on plan baseline bfb0af4f by HD-124 A ('A', 2026-10-22), because the UAT profile change moved the plan baseline from 6c885dba. Original APPROVAL-HD-117-SCOPE-HD123 is kept. Original text: Re-affirmed unchanged on plan baseline 6c885dba by HD-123 A ('HD-123 A，review 完 CI 過就 merge', 2026-10-22), because the profile change moved the plan baseline from 6cb156c3. Original APPROVAL-HD-117-SCOPE is kept. Original text: HD-117 A ('A，review 完 CI 過就 merge', 2026-10-21). Authorises the four acceptance runners named by 00_project_profile.json at their profile paths in server/scripts/, following the HD-034/HD-035 convention: server/scripts/ is not declared in approval_required_paths and reports OUTSIDE_MODULE; this approval covers exactly these four files. Parts that need production-like infrastructure must report BLOCKED with the reason, never PASS. The client-ui config lives under client/test/**, already an allowed write path.",
+      "recorded_at": "2026-10-30T09:36:39+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "d6e345800923e9c35c6fddecf2e8e76197db33e3a66c33e43e1b7986614f2e8a",
+      "code_commit": "2c32916e1f280a17a99ec95df7662f3c2da9e53a",
+      "scope": [
+        "supplier-management",
+        "server/scripts/runSupplierPerformanceAcceptance.js",
+        "server/scripts/runSupplierResilienceAcceptance.js",
+        "server/scripts/runSupplierRecoveryAcceptance.js",
+        "server/scripts/runSupplierReleaseAcceptance.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-118-SCOPE-HD157",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline d6e34580 by HD-157 (Product Owner, 2026-10-30: '確認，開 HD-157 修訂 plan，TC-085不用修，放鬆至3秒'; the plan revision re-records existing approvals on the new baselines, with no new risk acceptance). Supersedes APPROVAL-HD-118-SCOPE-HD149 on 598f012b, which is kept. Original: Re-affirmed unchanged on plan baseline 598f012b by HD-149 A ('HD-149 A，開 issue，風險接受留返 release 時', 2026-10-28), because refreshing the consumed Item and Purchasing pins (HD-147 B), adding the supplier-deployment-check/-copy suites to the profile and amending 07 per HD-145 A and HD-146 A (commit 12d52ff3) moved the design baseline 171cf540 -> 2390e6fc and the plan baseline 3c683c4e -> 598f012b. No new acceptance: what was approved does not change. Original APPROVAL-HD-118-SCOPE-HD129 is kept. Original text: Re-affirmed unchanged on plan baseline 3c683c4e by HD-129 A ('DEF-037 A', 2026-10-23) and HD-136 ('批准 migration，照建議做', 2026-10-23), because the DEF-037 design change moved it from bfb0af4f. Original APPROVAL-HD-118-SCOPE-HD124 is kept. Original text: Re-affirmed unchanged on plan baseline bfb0af4f by HD-124 A ('A', 2026-10-22), because the UAT profile change moved the plan baseline from 6c885dba. Original APPROVAL-HD-118-SCOPE-HD123 is kept. Original text: Re-affirmed unchanged on plan baseline 6c885dba by HD-123 A ('HD-123 A，review 完 CI 過就 merge', 2026-10-22), because the profile change moved the plan baseline from 6cb156c3. Original APPROVAL-HD-118-SCOPE is kept. Original text: HD-118 A ('DEF-032 A', 2026-10-21). Authorises a change to the shared client/src/framework/ui/DataTable.vue so that the empty-state text is not shown while loading or on a failed read. The file is not declared in the module manifest and reports OUTSIDE_MODULE; this approval covers exactly that file. Its tests live under client/test/**, already an allowed write path.",
+      "recorded_at": "2026-10-30T09:36:39+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "d6e345800923e9c35c6fddecf2e8e76197db33e3a66c33e43e1b7986614f2e8a",
+      "code_commit": "2c32916e1f280a17a99ec95df7662f3c2da9e53a",
+      "scope": [
+        "supplier-management",
+        "client/src/framework/ui/DataTable.vue"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-122-SCOPE-HD157",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline d6e34580 by HD-157 (Product Owner, 2026-10-30: '確認，開 HD-157 修訂 plan，TC-085不用修，放鬆至3秒'; the plan revision re-records existing approvals on the new baselines, with no new risk acceptance). Supersedes APPROVAL-HD-122-SCOPE-HD149 on 598f012b, which is kept. Original: Re-affirmed unchanged on plan baseline 598f012b by HD-149 A ('HD-149 A，開 issue，風險接受留返 release 時', 2026-10-28), because refreshing the consumed Item and Purchasing pins (HD-147 B), adding the supplier-deployment-check/-copy suites to the profile and amending 07 per HD-145 A and HD-146 A (commit 12d52ff3) moved the design baseline 171cf540 -> 2390e6fc and the plan baseline 3c683c4e -> 598f012b. No new acceptance: what was approved does not change. Original APPROVAL-HD-122-SCOPE-HD129 is kept. Original text: Re-affirmed unchanged on plan baseline 3c683c4e by HD-129 A ('DEF-037 A', 2026-10-23) and HD-136 ('批准 migration，照建議做', 2026-10-23), because the DEF-037 design change moved it from bfb0af4f. Original APPROVAL-HD-122-SCOPE-HD124 is kept. Original text: Re-affirmed unchanged on plan baseline bfb0af4f by HD-124 A ('A', 2026-10-22), because the UAT profile change moved the plan baseline from 6c885dba. Original APPROVAL-HD-122-SCOPE-HD123 is kept. Original text: Re-affirmed unchanged on plan baseline 6c885dba by HD-123 A ('HD-123 A，review 完 CI 過就 merge', 2026-10-22), because the profile change moved the plan baseline from 6cb156c3. Original APPROVAL-HD-122-SCOPE is kept. Original text: HD-122 A (2026-10-22). Authorises small changes to two T50 tools in server/scripts/: benchmarkSupplierManagement.js keeps the full statement digest and reports its measured window; benchmarkSupplierImport.js records up to 20 not-applied rows with their errors before cleanup. server/scripts/ is not declared in approval_required_paths (HD-034) and reports OUTSIDE_MODULE; this approval covers exactly these two files.",
+      "recorded_at": "2026-10-30T09:36:39+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "d6e345800923e9c35c6fddecf2e8e76197db33e3a66c33e43e1b7986614f2e8a",
+      "code_commit": "2c32916e1f280a17a99ec95df7662f3c2da9e53a",
+      "scope": [
+        "supplier-management",
+        "server/scripts/benchmarkSupplierManagement.js",
+        "server/scripts/benchmarkSupplierImport.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-150-SCOPE-HD157",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline d6e34580 by HD-157 (Product Owner, 2026-10-30: '確認，開 HD-157 修訂 plan，TC-085不用修，放鬆至3秒'; the plan revision re-records existing approvals on the new baselines, with no new risk acceptance). Supersedes APPROVAL-HD-150-SCOPE on 598f012b, which is kept. Original: HD-150 A ('HD-150 A，review 完 CI 過就 merge', 2026-10-28). server/scripts/smokeSupplierManagement.js (new, T51 deployment smoke under HD-148 B) and server/package.json (the smoke:supplier script line) are outside allowed_write_paths / in approval_required_paths. PR #293 merged both at c51ddbc8 without a SCOPE approval; that process deviation is recorded in HD-150 and kept. This approval covers those two paths for TASK-051 while plan baseline 598f012b holds, including this PR's change to the script (target from environment variables). It covers the whole of server/package.json, not only the smoke:supplier line, because that is the harness's granularity (REV-130 N5).",
+      "recorded_at": "2026-10-30T09:36:39+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "d6e345800923e9c35c6fddecf2e8e76197db33e3a66c33e43e1b7986614f2e8a",
+      "code_commit": "2c32916e1f280a17a99ec95df7662f3c2da9e53a",
+      "scope": [
+        "supplier-management",
+        "server/scripts/smokeSupplierManagement.js",
+        "server/package.json",
+        "TASK-051"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-129-DESIGN-HD157-PIN",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on design baseline 22865f96 by HD-157 (Product Owner, 2026-10-30: '確認，開 HD-157 修訂 plan，TC-085不用修，放鬆至3秒'; existing approvals re-recorded on the new baselines, no new risk acceptance). Supersedes APPROVAL-HD-129-DESIGN-HD157 on f64e59b2, which the provided-contract pin update (03_design_spec.md for-SKU p95 3 s) stranded within the same revision; both are kept. Original: Re-affirmed unchanged on design baseline 2390e6fc by HD-149 A ('HD-149 A，開 issue，風險接受留返 release 時', 2026-10-28), because refreshing the consumed Item and Purchasing pins (HD-147 B), adding the supplier-deployment-check/-copy suites to the profile and amending 07 per HD-145 A and HD-146 A (commit 12d52ff3) moved the design baseline 171cf540 -> 2390e6fc and the plan baseline 3c683c4e -> 598f012b. No new acceptance: what was approved does not change. Original APPROVAL-HD-129-DESIGN is kept. Original text: HD-129 A ('DEF-037 A', 2026-10-23) and HD-136 ('批准 migration，照建議做', 2026-10-23). Design §5.5 and §5.6 gain sort_order on supplier_addresses and supplier_contacts (display order, max+1 on create, move up/down swaps adjacent active rows, list order status, sort_order, id); §6 gains POST .../addresses/:addressId/move and .../contacts/:contactId/move. The manifest's provided-contract sha256 follows the design file (a9f64493 -> 2b81eb9a). Design baseline 29a0615a -> 171cf540.",
+      "recorded_at": "2026-10-30T09:38:28+08:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "22865f96b0ce3aa7e70b1433533a3a0551d557a6e3dcb12bef28e4546e57a056",
+      "code_commit": "975af8e05ea079b32823d350457a3bf0325a526f",
+      "scope": [
+        "supplier-management",
+        "DEF-037 address and contact ordering",
+        "TASK-051"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-129-PLAN-HD157-PIN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline 8b31fcdd by HD-157 (Product Owner, 2026-10-30: '確認，開 HD-157 修訂 plan，TC-085不用修，放鬆至3秒'; existing approvals re-recorded on the new baselines, no new risk acceptance). Supersedes APPROVAL-HD-129-PLAN-HD157 on d6e34580, which the provided-contract pin update (03_design_spec.md for-SKU p95 3 s) stranded within the same revision; both are kept. Original: Re-affirmed unchanged on plan baseline 598f012b by HD-149 A ('HD-149 A，開 issue，風險接受留返 release 時', 2026-10-28), because refreshing the consumed Item and Purchasing pins (HD-147 B), adding the supplier-deployment-check/-copy suites to the profile and amending 07 per HD-145 A and HD-146 A (commit 12d52ff3) moved the design baseline 171cf540 -> 2390e6fc and the plan baseline 3c683c4e -> 598f012b. No new acceptance: what was approved does not change. Original APPROVAL-HD-129-PLAN is kept. Original text: HD-129 A ('DEF-037 A', 2026-10-23) and HD-136 ('批准 migration，照建議做', 2026-10-23). The plan baseline moves only because the design file and the manifest's contract hash changed (plan bfb0af4f -> 3c683c4e); no task, profile or traceability change.",
+      "recorded_at": "2026-10-30T09:38:28+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "8b31fcdd93bafe8275cb5cd2eded0a50b608a49bb17227beb7339ee099a344bd",
+      "code_commit": "975af8e05ea079b32823d350457a3bf0325a526f",
+      "scope": [
+        "supplier-management",
+        "DEF-037 address and contact ordering",
+        "TASK-051"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-097-DESIGN-HD157-PIN",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "recorded_at": "2026-10-30T09:38:28+08:00",
+      "code_commit": "975af8e05ea079b32823d350457a3bf0325a526f",
+      "scope": [
+        "supplier-management manifest contracts.consumed item-sku-uom-provider",
+        "TASK-039"
+      ],
+      "expires_at": null,
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "22865f96b0ce3aa7e70b1433533a3a0551d557a6e3dcb12bef28e4546e57a056",
+      "source_ref": "Re-affirmed unchanged on design baseline 22865f96 by HD-157 (Product Owner, 2026-10-30: '確認，開 HD-157 修訂 plan，TC-085不用修，放鬆至3秒'; existing approvals re-recorded on the new baselines, no new risk acceptance). Supersedes APPROVAL-HD-097-DESIGN-HD157 on f64e59b2, which the provided-contract pin update (03_design_spec.md for-SKU p95 3 s) stranded within the same revision; both are kept. Original: Re-affirmed unchanged on design baseline 2390e6fc by HD-149 A ('HD-149 A，開 issue，風險接受留返 release 時', 2026-10-28), because refreshing the consumed Item and Purchasing pins (HD-147 B), adding the supplier-deployment-check/-copy suites to the profile and amending 07 per HD-145 A and HD-146 A (commit 12d52ff3) moved the design baseline 171cf540 -> 2390e6fc and the plan baseline 3c683c4e -> 598f012b. No new acceptance: what was approved does not change. Original APPROVAL-HD-097-DESIGN-HD129 is kept. Original text: Re-affirmed unchanged on design baseline 171cf540 by HD-129 A ('DEF-037 A', 2026-10-23) and HD-136 ('批准 migration，照建議做', 2026-10-23), because the DEF-037 design change moved it from 29a0615a. Original APPROVAL-HD-097-DESIGN is kept. Original text: HD-097: refresh of the consumed item-sku-uom-provider pin from 5a44ef30 to 1bbb882f0f1faed296615b5b253f3e6169d79b6289d1a6300e078377400e4a7f (Item §8.3.2 and DES-021, PR #210: additive purchase search and UOM mapping fields). Only the manifest contracts block changed; it moves the design baseline from f2f4a82b to 29a0615a. No requirement, design, phase, task, suite or test flag changed."
+    },
+    {
+      "id": "APPROVAL-HD-104-DESIGN-HD157-PIN",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "recorded_at": "2026-10-30T09:38:28+08:00",
+      "code_commit": "975af8e05ea079b32823d350457a3bf0325a526f",
+      "scope": [
+        "supplier-management",
+        "TASK-051"
+      ],
+      "expires_at": null,
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "22865f96b0ce3aa7e70b1433533a3a0551d557a6e3dcb12bef28e4546e57a056",
+      "source_ref": "Re-affirmed unchanged on design baseline 22865f96 by HD-157 (Product Owner, 2026-10-30: '確認，開 HD-157 修訂 plan，TC-085不用修，放鬆至3秒'; existing approvals re-recorded on the new baselines, no new risk acceptance). Supersedes APPROVAL-HD-104-DESIGN-HD157 on f64e59b2, which the provided-contract pin update (03_design_spec.md for-SKU p95 3 s) stranded within the same revision; both are kept. Original: Re-affirmed unchanged on design baseline 2390e6fc by HD-149 A ('HD-149 A，開 issue，風險接受留返 release 時', 2026-10-28), because refreshing the consumed Item and Purchasing pins (HD-147 B), adding the supplier-deployment-check/-copy suites to the profile and amending 07 per HD-145 A and HD-146 A (commit 12d52ff3) moved the design baseline 171cf540 -> 2390e6fc and the plan baseline 3c683c4e -> 598f012b. No new acceptance: what was approved does not change. Original APPROVAL-HD-104-DESIGN-HD129 is kept. Original text: Re-affirmed unchanged on design baseline 171cf540 by HD-129 A ('DEF-037 A', 2026-10-23) and HD-136 ('批准 migration，照建議做', 2026-10-23), because the DEF-037 design change moved it from 29a0615a. Original APPROVAL-HD-104-DESIGN is kept. Original text: HD-104 'A': re-records the HD-097 design approval for design 29a0615a with the module scope. Nothing about the design changes; APPROVAL-HD-097-DESIGN and the revoked APPROVAL-HD-097-DESIGN-REBIND are kept."
+    },
+    {
+      "id": "APPROVAL-HD-124-PLAN-HD157-PIN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline 8b31fcdd by HD-157 (Product Owner, 2026-10-30: '確認，開 HD-157 修訂 plan，TC-085不用修，放鬆至3秒'; existing approvals re-recorded on the new baselines, no new risk acceptance). Supersedes APPROVAL-HD-124-PLAN-HD157 on d6e34580, which the provided-contract pin update (03_design_spec.md for-SKU p95 3 s) stranded within the same revision; both are kept. Original: Re-affirmed unchanged on plan baseline 598f012b by HD-149 A ('HD-149 A，開 issue，風險接受留返 release 時', 2026-10-28), because refreshing the consumed Item and Purchasing pins (HD-147 B), adding the supplier-deployment-check/-copy suites to the profile and amending 07 per HD-145 A and HD-146 A (commit 12d52ff3) moved the design baseline 171cf540 -> 2390e6fc and the plan baseline 3c683c4e -> 598f012b. No new acceptance: what was approved does not change. Original APPROVAL-HD-124-PLAN-HD129 is kept. Original text: Re-affirmed unchanged on plan baseline 3c683c4e by HD-129 A ('DEF-037 A', 2026-10-23) and HD-136 ('批准 migration，照建議做', 2026-10-23), because the DEF-037 design change moved it from bfb0af4f. Original APPROVAL-HD-124-PLAN is kept. Original text: HD-124 A ('A', 2026-10-22: real-backend Playwright UAT; the first PR also changes the UAT suite's profile with another re-affirmation). Only 00_project_profile.json changed: supplier-uat-browser argv now runs client/e2e/supplier-management/playwright.uat.config.js; env_keys DB_HOST, DB_PORT, DB_NAME, DB_ADMIN_USER, DB_ADMIN_PASSWORD and the Supplier and Customer bank key rings; redaction_env_keys add the Customer bank keys and DB_ADMIN_PASSWORD. Design baseline unchanged; plan baseline 6c885dba -> bfb0af4f.",
+      "recorded_at": "2026-10-30T09:38:28+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "8b31fcdd93bafe8275cb5cd2eded0a50b608a49bb17227beb7339ee099a344bd",
+      "code_commit": "975af8e05ea079b32823d350457a3bf0325a526f",
+      "scope": [
+        "supplier-management",
+        "supplier-management project profile: supplier-uat-browser argv, env_keys, redaction keys",
+        "TASK-051"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-123-PLAN-HD157-PIN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline 8b31fcdd by HD-157 (Product Owner, 2026-10-30: '確認，開 HD-157 修訂 plan，TC-085不用修，放鬆至3秒'; existing approvals re-recorded on the new baselines, no new risk acceptance). Supersedes APPROVAL-HD-123-PLAN-HD157 on d6e34580, which the provided-contract pin update (03_design_spec.md for-SKU p95 3 s) stranded within the same revision; both are kept. Original: Re-affirmed unchanged on plan baseline 598f012b by HD-149 A ('HD-149 A，開 issue，風險接受留返 release 時', 2026-10-28), because refreshing the consumed Item and Purchasing pins (HD-147 B), adding the supplier-deployment-check/-copy suites to the profile and amending 07 per HD-145 A and HD-146 A (commit 12d52ff3) moved the design baseline 171cf540 -> 2390e6fc and the plan baseline 3c683c4e -> 598f012b. No new acceptance: what was approved does not change. Original APPROVAL-HD-123-PLAN-HD129 is kept. Original text: Re-affirmed unchanged on plan baseline 3c683c4e by HD-129 A ('DEF-037 A', 2026-10-23) and HD-136 ('批准 migration，照建議做', 2026-10-23), because the DEF-037 design change moved it from bfb0af4f. Original APPROVAL-HD-123-PLAN-HD124 is kept. Original text: Re-affirmed unchanged on plan baseline bfb0af4f by HD-124 A ('A', 2026-10-22), because the UAT profile change moved the plan baseline from 6c885dba. Original APPROVAL-HD-123-PLAN is kept. Original text: HD-123 A ('HD-123 A，review 完 CI 過就 merge', 2026-10-22). Only 00_project_profile.json changed: DB_ADMIN_USER, DB_ADMIN_PASSWORD and MYSQL_BIN added to the env_keys of supplier-recovery, supplier-release-operations, supplier-resilience and supplier-performance, DB_ADMIN_PASSWORD to their redaction_env_keys; a mysqldump --version tool probe on supplier-recovery; supplier-release-operations min_tests 3 -> 2. Design baseline 29a0615a unchanged; plan baseline 6cb156c3 -> 6c885dba.",
+      "recorded_at": "2026-10-30T09:38:28+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "8b31fcdd93bafe8275cb5cd2eded0a50b608a49bb17227beb7339ee099a344bd",
+      "code_commit": "975af8e05ea079b32823d350457a3bf0325a526f",
+      "scope": [
+        "supplier-management",
+        "supplier-management project profile: runner env_keys, redaction keys, mysqldump probe, release min_tests",
+        "TASK-051"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-105-PLAN-HD157-PIN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "recorded_at": "2026-10-30T09:38:28+08:00",
+      "code_commit": "975af8e05ea079b32823d350457a3bf0325a526f",
+      "scope": [
+        "supplier-management",
+        "supplier-management project profile env_keys, phase-001-server runner, min_tests",
+        "TASK-051"
+      ],
+      "expires_at": null,
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "8b31fcdd93bafe8275cb5cd2eded0a50b608a49bb17227beb7339ee099a344bd",
+      "source_ref": "Re-affirmed unchanged on plan baseline 8b31fcdd by HD-157 (Product Owner, 2026-10-30: '確認，開 HD-157 修訂 plan，TC-085不用修，放鬆至3秒'; existing approvals re-recorded on the new baselines, no new risk acceptance). Supersedes APPROVAL-HD-105-PLAN-HD157 on d6e34580, which the provided-contract pin update (03_design_spec.md for-SKU p95 3 s) stranded within the same revision; both are kept. Original: Re-affirmed unchanged on plan baseline 598f012b by HD-149 A ('HD-149 A，開 issue，風險接受留返 release 時', 2026-10-28), because refreshing the consumed Item and Purchasing pins (HD-147 B), adding the supplier-deployment-check/-copy suites to the profile and amending 07 per HD-145 A and HD-146 A (commit 12d52ff3) moved the design baseline 171cf540 -> 2390e6fc and the plan baseline 3c683c4e -> 598f012b. No new acceptance: what was approved does not change. Original APPROVAL-HD-105-PLAN-HD129 is kept. Original text: Re-affirmed unchanged on plan baseline 3c683c4e by HD-129 A ('DEF-037 A', 2026-10-23) and HD-136 ('批准 migration，照建議做', 2026-10-23), because the DEF-037 design change moved it from bfb0af4f. Original APPROVAL-HD-105-PLAN-HD124 is kept. Original text: Re-affirmed unchanged on plan baseline bfb0af4f by HD-124 A ('A', 2026-10-22), because the UAT profile change moved the plan baseline from 6c885dba. Original APPROVAL-HD-105-PLAN-HD123 is kept. Original text: Re-affirmed unchanged on plan baseline 6c885dba by HD-123 A ('HD-123 A，review 完 CI 過就 merge', 2026-10-22), because the profile change moved the plan baseline from 6cb156c3. Original APPROVAL-HD-105-PLAN is kept. Original text: HD-105 'A': plan 6cb156c3, the REV-091 follow-ups and env additions after HD-103 '1A' (APPROVAL-HD-103-PLAN-1A, 7232d2ec)."
+    },
+    {
+      "id": "APPROVAL-HD-113-SCOPE-HD157-PIN",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline 8b31fcdd by HD-157 (Product Owner, 2026-10-30: '確認，開 HD-157 修訂 plan，TC-085不用修，放鬆至3秒'; existing approvals re-recorded on the new baselines, no new risk acceptance). Supersedes APPROVAL-HD-113-SCOPE-HD157 on d6e34580, which the provided-contract pin update (03_design_spec.md for-SKU p95 3 s) stranded within the same revision; both are kept. Original: Re-affirmed unchanged on plan baseline 598f012b by HD-149 A ('HD-149 A，開 issue，風險接受留返 release 時', 2026-10-28), because refreshing the consumed Item and Purchasing pins (HD-147 B), adding the supplier-deployment-check/-copy suites to the profile and amending 07 per HD-145 A and HD-146 A (commit 12d52ff3) moved the design baseline 171cf540 -> 2390e6fc and the plan baseline 3c683c4e -> 598f012b. No new acceptance: what was approved does not change. Original APPROVAL-HD-113-SCOPE-HD129 is kept. Original text: Re-affirmed unchanged on plan baseline 3c683c4e by HD-129 A ('DEF-037 A', 2026-10-23) and HD-136 ('批准 migration，照建議做', 2026-10-23), because the DEF-037 design change moved it from bfb0af4f. Original APPROVAL-HD-113-SCOPE-HD124 is kept. Original text: Re-affirmed unchanged on plan baseline bfb0af4f by HD-124 A ('A', 2026-10-22), because the UAT profile change moved the plan baseline from 6c885dba. Original APPROVAL-HD-113-SCOPE-HD123 is kept. Original text: Re-affirmed unchanged on plan baseline 6c885dba by HD-123 A ('HD-123 A，review 完 CI 過就 merge', 2026-10-22), because the profile change moved the plan baseline from 6cb156c3. Original APPROVAL-HD-113-SCOPE is kept. Original text: HD-113 A. Authorises TASK-051 to add server/database/migrations/0087_fix_supplier_sku_refs_sku_foreign_key.js with the change proposed in chat on 2026-10-20 (orphan check, drop and re-add fk_supplier_sku_refs_sku and idx_supplier_sku_refs_sku_status_supplied around a new idx_supplier_sku_refs_sku (sku_id)).",
+      "recorded_at": "2026-10-30T09:38:28+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "8b31fcdd93bafe8275cb5cd2eded0a50b608a49bb17227beb7339ee099a344bd",
+      "code_commit": "975af8e05ea079b32823d350457a3bf0325a526f",
+      "scope": [
+        "supplier-management",
+        "server/database/migrations/0087_fix_supplier_sku_refs_sku_foreign_key.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-VITE-ADVISORY-LOCK-SCOPE-HD157-PIN",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline 8b31fcdd by HD-157 (Product Owner, 2026-10-30: '確認，開 HD-157 修訂 plan，TC-085不用修，放鬆至3秒'; existing approvals re-recorded on the new baselines, no new risk acceptance). Supersedes APPROVAL-VITE-ADVISORY-LOCK-SCOPE-HD157 on d6e34580, which the provided-contract pin update (03_design_spec.md for-SKU p95 3 s) stranded within the same revision; both are kept. Original: Re-affirmed unchanged on plan baseline 598f012b by HD-149 A ('HD-149 A，開 issue，風險接受留返 release 時', 2026-10-28), because refreshing the consumed Item and Purchasing pins (HD-147 B), adding the supplier-deployment-check/-copy suites to the profile and amending 07 per HD-145 A and HD-146 A (commit 12d52ff3) moved the design baseline 171cf540 -> 2390e6fc and the plan baseline 3c683c4e -> 598f012b. No new acceptance: what was approved does not change. Original APPROVAL-VITE-ADVISORY-LOCK-SCOPE-HD129 is kept. Original text: Re-affirmed unchanged on plan baseline 3c683c4e by HD-129 A ('DEF-037 A', 2026-10-23) and HD-136 ('批准 migration，照建議做', 2026-10-23), because the DEF-037 design change moved it from bfb0af4f. Original APPROVAL-VITE-ADVISORY-LOCK-SCOPE-HD124 is kept. Original text: Re-affirmed unchanged on plan baseline bfb0af4f by HD-124 A ('A', 2026-10-22), because the UAT profile change moved the plan baseline from 6c885dba. Original APPROVAL-VITE-ADVISORY-LOCK-SCOPE-HD123 is kept. Original text: Re-affirmed unchanged on plan baseline 6c885dba by HD-123 A ('HD-123 A，review 完 CI 過就 merge', 2026-10-22), because the profile change moved the plan baseline from 6cb156c3. Original APPROVAL-VITE-ADVISORY-LOCK-SCOPE is kept. Original text: Product Owner, 2026-10-21: 'A，批准改 package-lock.json，CI 過就 merge'. Authorises a lockfile-only change resolving vite 8.2.4 (within client/package.json's ^8.2.1) after new launch-editor advisories (GHSA-587h-7wmj-h5pm high; GHSA-698v-4r3x-3vcv, GHSA-r825-w8mm-5pxw moderate) failed the Dependency audit check on every branch, blocking PR #258. Delivered as PR #259.",
+      "recorded_at": "2026-10-30T09:38:28+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "8b31fcdd93bafe8275cb5cd2eded0a50b608a49bb17227beb7339ee099a344bd",
+      "code_commit": "975af8e05ea079b32823d350457a3bf0325a526f",
+      "scope": [
+        "package-lock.json"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-116-RISK-HD157-PIN",
+      "kind": "RISK",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline 8b31fcdd by HD-157 (Product Owner, 2026-10-30: '確認，開 HD-157 修訂 plan，TC-085不用修，放鬆至3秒'; existing approvals re-recorded on the new baselines, no new risk acceptance). Supersedes APPROVAL-HD-116-RISK-HD157 on d6e34580, which the provided-contract pin update (03_design_spec.md for-SKU p95 3 s) stranded within the same revision; both are kept. Original: Re-affirmed unchanged on plan baseline 598f012b by HD-149 A ('HD-149 A，開 issue，風險接受留返 release 時', 2026-10-28), because refreshing the consumed Item and Purchasing pins (HD-147 B), adding the supplier-deployment-check/-copy suites to the profile and amending 07 per HD-145 A and HD-146 A (commit 12d52ff3) moved the design baseline 171cf540 -> 2390e6fc and the plan baseline 3c683c4e -> 598f012b. No new acceptance: what was approved does not change. Original APPROVAL-HD-116-RISK-HD129 is kept. Original text: Re-affirmed unchanged on plan baseline 3c683c4e by HD-129 A ('DEF-037 A', 2026-10-23) and HD-136 ('批准 migration，照建議做', 2026-10-23), because the DEF-037 design change moved it from bfb0af4f. Original APPROVAL-HD-116-RISK-HD124 is kept. Original text: Re-affirmed unchanged on plan baseline bfb0af4f by HD-124 A ('A', 2026-10-22), because the UAT profile change moved the plan baseline from 6c885dba. Original APPROVAL-HD-116-RISK-HD123 is kept. Original text: Re-affirmed unchanged on plan baseline 6c885dba by HD-123 A ('HD-123 A，review 完 CI 過就 merge', 2026-10-22), because the profile change moved the plan baseline from 6cb156c3. Original APPROVAL-HD-116-RISK is kept. Original text: HD-116 A ('A，review 完 CI 過就 merge', 2026-10-21). Defers DEF-004, DEF-007 and DEF-016 to release as recorded known limitations; records DEF-008, DEF-012, DEF-013, DEF-015, DEF-017, DEF-018, DEF-019 and DEF-023 as handed to their owners (docs/supplier_management/testing/defect_handoffs.md) and DEF-014 as accepted. Supersedes APPROVAL-HD-017-RISK and APPROVAL-HD-017-RISK-DEF012 for these defects.",
+      "recorded_at": "2026-10-30T09:38:28+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "8b31fcdd93bafe8275cb5cd2eded0a50b608a49bb17227beb7339ee099a344bd",
+      "code_commit": "975af8e05ea079b32823d350457a3bf0325a526f",
+      "scope": [
+        "supplier-management",
+        "DEF-004",
+        "DEF-007",
+        "DEF-016",
+        "DEF-008",
+        "DEF-012",
+        "DEF-013",
+        "DEF-015",
+        "DEF-017",
+        "DEF-018",
+        "DEF-019",
+        "DEF-023",
+        "DEF-014"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-117-SCOPE-HD157-PIN",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline 8b31fcdd by HD-157 (Product Owner, 2026-10-30: '確認，開 HD-157 修訂 plan，TC-085不用修，放鬆至3秒'; existing approvals re-recorded on the new baselines, no new risk acceptance). Supersedes APPROVAL-HD-117-SCOPE-HD157 on d6e34580, which the provided-contract pin update (03_design_spec.md for-SKU p95 3 s) stranded within the same revision; both are kept. Original: Re-affirmed unchanged on plan baseline 598f012b by HD-149 A ('HD-149 A，開 issue，風險接受留返 release 時', 2026-10-28), because refreshing the consumed Item and Purchasing pins (HD-147 B), adding the supplier-deployment-check/-copy suites to the profile and amending 07 per HD-145 A and HD-146 A (commit 12d52ff3) moved the design baseline 171cf540 -> 2390e6fc and the plan baseline 3c683c4e -> 598f012b. No new acceptance: what was approved does not change. Original APPROVAL-HD-117-SCOPE-HD129 is kept. Original text: Re-affirmed unchanged on plan baseline 3c683c4e by HD-129 A ('DEF-037 A', 2026-10-23) and HD-136 ('批准 migration，照建議做', 2026-10-23), because the DEF-037 design change moved it from bfb0af4f. Original APPROVAL-HD-117-SCOPE-HD124 is kept. Original text: Re-affirmed unchanged on plan baseline bfb0af4f by HD-124 A ('A', 2026-10-22), because the UAT profile change moved the plan baseline from 6c885dba. Original APPROVAL-HD-117-SCOPE-HD123 is kept. Original text: Re-affirmed unchanged on plan baseline 6c885dba by HD-123 A ('HD-123 A，review 完 CI 過就 merge', 2026-10-22), because the profile change moved the plan baseline from 6cb156c3. Original APPROVAL-HD-117-SCOPE is kept. Original text: HD-117 A ('A，review 完 CI 過就 merge', 2026-10-21). Authorises the four acceptance runners named by 00_project_profile.json at their profile paths in server/scripts/, following the HD-034/HD-035 convention: server/scripts/ is not declared in approval_required_paths and reports OUTSIDE_MODULE; this approval covers exactly these four files. Parts that need production-like infrastructure must report BLOCKED with the reason, never PASS. The client-ui config lives under client/test/**, already an allowed write path.",
+      "recorded_at": "2026-10-30T09:38:28+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "8b31fcdd93bafe8275cb5cd2eded0a50b608a49bb17227beb7339ee099a344bd",
+      "code_commit": "975af8e05ea079b32823d350457a3bf0325a526f",
+      "scope": [
+        "supplier-management",
+        "server/scripts/runSupplierPerformanceAcceptance.js",
+        "server/scripts/runSupplierResilienceAcceptance.js",
+        "server/scripts/runSupplierRecoveryAcceptance.js",
+        "server/scripts/runSupplierReleaseAcceptance.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-118-SCOPE-HD157-PIN",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline 8b31fcdd by HD-157 (Product Owner, 2026-10-30: '確認，開 HD-157 修訂 plan，TC-085不用修，放鬆至3秒'; existing approvals re-recorded on the new baselines, no new risk acceptance). Supersedes APPROVAL-HD-118-SCOPE-HD157 on d6e34580, which the provided-contract pin update (03_design_spec.md for-SKU p95 3 s) stranded within the same revision; both are kept. Original: Re-affirmed unchanged on plan baseline 598f012b by HD-149 A ('HD-149 A，開 issue，風險接受留返 release 時', 2026-10-28), because refreshing the consumed Item and Purchasing pins (HD-147 B), adding the supplier-deployment-check/-copy suites to the profile and amending 07 per HD-145 A and HD-146 A (commit 12d52ff3) moved the design baseline 171cf540 -> 2390e6fc and the plan baseline 3c683c4e -> 598f012b. No new acceptance: what was approved does not change. Original APPROVAL-HD-118-SCOPE-HD129 is kept. Original text: Re-affirmed unchanged on plan baseline 3c683c4e by HD-129 A ('DEF-037 A', 2026-10-23) and HD-136 ('批准 migration，照建議做', 2026-10-23), because the DEF-037 design change moved it from bfb0af4f. Original APPROVAL-HD-118-SCOPE-HD124 is kept. Original text: Re-affirmed unchanged on plan baseline bfb0af4f by HD-124 A ('A', 2026-10-22), because the UAT profile change moved the plan baseline from 6c885dba. Original APPROVAL-HD-118-SCOPE-HD123 is kept. Original text: Re-affirmed unchanged on plan baseline 6c885dba by HD-123 A ('HD-123 A，review 完 CI 過就 merge', 2026-10-22), because the profile change moved the plan baseline from 6cb156c3. Original APPROVAL-HD-118-SCOPE is kept. Original text: HD-118 A ('DEF-032 A', 2026-10-21). Authorises a change to the shared client/src/framework/ui/DataTable.vue so that the empty-state text is not shown while loading or on a failed read. The file is not declared in the module manifest and reports OUTSIDE_MODULE; this approval covers exactly that file. Its tests live under client/test/**, already an allowed write path.",
+      "recorded_at": "2026-10-30T09:38:28+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "8b31fcdd93bafe8275cb5cd2eded0a50b608a49bb17227beb7339ee099a344bd",
+      "code_commit": "975af8e05ea079b32823d350457a3bf0325a526f",
+      "scope": [
+        "supplier-management",
+        "client/src/framework/ui/DataTable.vue"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-122-SCOPE-HD157-PIN",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline 8b31fcdd by HD-157 (Product Owner, 2026-10-30: '確認，開 HD-157 修訂 plan，TC-085不用修，放鬆至3秒'; existing approvals re-recorded on the new baselines, no new risk acceptance). Supersedes APPROVAL-HD-122-SCOPE-HD157 on d6e34580, which the provided-contract pin update (03_design_spec.md for-SKU p95 3 s) stranded within the same revision; both are kept. Original: Re-affirmed unchanged on plan baseline 598f012b by HD-149 A ('HD-149 A，開 issue，風險接受留返 release 時', 2026-10-28), because refreshing the consumed Item and Purchasing pins (HD-147 B), adding the supplier-deployment-check/-copy suites to the profile and amending 07 per HD-145 A and HD-146 A (commit 12d52ff3) moved the design baseline 171cf540 -> 2390e6fc and the plan baseline 3c683c4e -> 598f012b. No new acceptance: what was approved does not change. Original APPROVAL-HD-122-SCOPE-HD129 is kept. Original text: Re-affirmed unchanged on plan baseline 3c683c4e by HD-129 A ('DEF-037 A', 2026-10-23) and HD-136 ('批准 migration，照建議做', 2026-10-23), because the DEF-037 design change moved it from bfb0af4f. Original APPROVAL-HD-122-SCOPE-HD124 is kept. Original text: Re-affirmed unchanged on plan baseline bfb0af4f by HD-124 A ('A', 2026-10-22), because the UAT profile change moved the plan baseline from 6c885dba. Original APPROVAL-HD-122-SCOPE-HD123 is kept. Original text: Re-affirmed unchanged on plan baseline 6c885dba by HD-123 A ('HD-123 A，review 完 CI 過就 merge', 2026-10-22), because the profile change moved the plan baseline from 6cb156c3. Original APPROVAL-HD-122-SCOPE is kept. Original text: HD-122 A (2026-10-22). Authorises small changes to two T50 tools in server/scripts/: benchmarkSupplierManagement.js keeps the full statement digest and reports its measured window; benchmarkSupplierImport.js records up to 20 not-applied rows with their errors before cleanup. server/scripts/ is not declared in approval_required_paths (HD-034) and reports OUTSIDE_MODULE; this approval covers exactly these two files.",
+      "recorded_at": "2026-10-30T09:38:28+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "8b31fcdd93bafe8275cb5cd2eded0a50b608a49bb17227beb7339ee099a344bd",
+      "code_commit": "975af8e05ea079b32823d350457a3bf0325a526f",
+      "scope": [
+        "supplier-management",
+        "server/scripts/benchmarkSupplierManagement.js",
+        "server/scripts/benchmarkSupplierImport.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-150-SCOPE-HD157-PIN",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-affirmed unchanged on plan baseline 8b31fcdd by HD-157 (Product Owner, 2026-10-30: '確認，開 HD-157 修訂 plan，TC-085不用修，放鬆至3秒'; existing approvals re-recorded on the new baselines, no new risk acceptance). Supersedes APPROVAL-HD-150-SCOPE-HD157 on d6e34580, which the provided-contract pin update (03_design_spec.md for-SKU p95 3 s) stranded within the same revision; both are kept. Original: HD-150 A ('HD-150 A，review 完 CI 過就 merge', 2026-10-28). server/scripts/smokeSupplierManagement.js (new, T51 deployment smoke under HD-148 B) and server/package.json (the smoke:supplier script line) are outside allowed_write_paths / in approval_required_paths. PR #293 merged both at c51ddbc8 without a SCOPE approval; that process deviation is recorded in HD-150 and kept. This approval covers those two paths for TASK-051 while plan baseline 598f012b holds, including this PR's change to the script (target from environment variables). It covers the whole of server/package.json, not only the smoke:supplier line, because that is the harness's granularity (REV-130 N5).",
+      "recorded_at": "2026-10-30T09:38:28+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "8b31fcdd93bafe8275cb5cd2eded0a50b608a49bb17227beb7339ee099a344bd",
+      "code_commit": "975af8e05ea079b32823d350457a3bf0325a526f",
+      "scope": [
+        "supplier-management",
+        "server/scripts/smokeSupplierManagement.js",
+        "server/package.json",
+        "TASK-051"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -3745,6 +4263,30 @@
       "reviewed_baseline": "2390e6fc44da25124375f4347f2a093db512f8353e01d456780a11073be494a3",
       "source_ref": "docs/supplier_management/implementation/141_rev_138_independent_review.md",
       "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-139",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (HD-157 plan revision)",
+      "reviewer": "agent-skills:code-reviewer, reviewing claude/supplier-hd157-plan-revision at 0e2267a7 (git diff origin/main..HEAD), as the design review on 22865f96",
+      "reviewed_baseline": "22865f96b0ce3aa7e70b1433533a3a0551d557a6e3dcb12bef28e4546e57a056",
+      "source_ref": "docs/supplier_management/implementation/142_rev_139_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-140",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (HD-157 plan revision, REV-139 fixes)",
+      "reviewer": "agent-skills:code-reviewer (the REV-139 reviewer), re-reviewing claude/supplier-hd157-plan-revision at 1227ae60 (git diff 0e2267a7..HEAD); supersedes REV-139's verdict",
+      "reviewed_baseline": "22865f96b0ce3aa7e70b1433533a3a0551d557a6e3dcb12bef28e4546e57a056",
+      "source_ref": "docs/supplier_management/implementation/142_rev_139_independent_review.md (follow-up verdict)",
+      "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
@@ -6929,6 +7471,39 @@
       "source_ref": "PR #303 merged as 5bed215bade454f5181d34019701c2621353603d at 2026-10-29T07:53:43Z on the Product Owner's word ('CI己通過'), with --match-head-commit 31ab2a28, after a gate that refused unless the latest run of every check was SUCCESS (13 checks, PR run 40830448716), main was an ancestor of HEAD and the local, remote and PR heads were equal. Review REV-137 CHANGES_REQUESTED; every finding fixed before merge (report 140). Docs and evidence only: source fingerprint unchanged from 4f101642.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-10-29T07:53:43+00:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "HD-156 E record, DEF-050 deferred (PR #304) merged to main",
+      "code_commit": "e64dfc7452dd4ce598e6e9d1765000d9633dd849",
+      "spec_baseline": "598f012bfc308076001b850058cd23ae92214e9f2c9ab8d9dfc1cfd2be889b13",
+      "source_fingerprint": "493d144c455c6db5d08c3baeb3b36c961539740c393727739956e060f66c252f",
+      "status": "PASS",
+      "source_ref": "PR #304 merged as e64dfc7452dd4ce598e6e9d1765000d9633dd849 at 2026-10-29T09:25:34Z on the Product Owner's word ('CI己過'), with --match-head-commit ed79bb55, after a gate that refused unless the latest run of every check was SUCCESS (13 checks), main was an ancestor of HEAD and the local, remote and PR heads were equal. Review REV-138 CHANGES_REQUESTED; every finding fixed before merge (report 141). Docs only: source fingerprint unchanged.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-29T09:25:34+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "HD-157 developer checks (IMPLEMENT): lint, Supplier server suite, the four changed runners; developer evidence, not formal",
+      "code_commit": "2c32916e1f280a17a99ec95df7662f3c2da9e53a",
+      "spec_baseline": "d6e345800923e9c35c6fddecf2e8e76197db33e3a66c33e43e1b7986614f2e8a",
+      "source_fingerprint": "5ab4388f8f1dd9c594f587153c8cdb651cf1f79ea391719aad3cec61cf21ef49",
+      "status": "PASS",
+      "source_ref": "Local, throwaway mysqld 3450 (digest settings 16,384, deadlock detection and printing ON), 2026-10-30: lint and the server suite before 01:23:42Z, the runners 01:23:42-01:35:36Z, on the working tree later committed unchanged as 2c32916e: npm run lint exit 0; Supplier server suite 735/735; runSupplierResilienceAcceptance TC-130/131/132 PASS with the TC-130 and TC-132 production parts listed under waived; runSupplierRecoveryAcceptance TC-133 PASS, production drill under waived; runSupplierReleaseAcceptance TC-134/135 PASS, TC-136 NOT_RUN, production parts under waived; runSupplierPerformanceAcceptance TC-085/101/128/129 PASS, deadlocks 0/0, TC-085 for_sku.p95_under_3s with limitP95Ms 3000 (name search p95 1,928 ms), TC-128 production part under waived. supplierPerformanceVerdicts unit test 2/2 (46 cases); a mutant dropping the 3,000 ms limit check made it red (backup, restore, cmp).",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-30T01:35:36+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "HD-157 after REV-139: verdict limit checks, unit test, mutant, lint; developer evidence, not formal",
+      "code_commit": "041e932f4074a1f5df1bc641e5c06f4afcb1bb3a",
+      "spec_baseline": "8b31fcdd93bafe8275cb5cd2eded0a50b608a49bb17227beb7339ee099a344bd",
+      "source_fingerprint": "b00c7d69b52834f1cc4b2be0224208cff4ad046afd8eef70b2ee239d13b91394",
+      "status": "PASS",
+      "source_ref": "supplierPerformanceVerdicts unit test 2/2 with 48 cases (REV-139 L4 added NFR-001 limit cases for load.every_general_operation_within_limits and online.p95_under_2s_during_import); a mutant dropping both NFR-001 limit checks made it red (backup, restore, cmp); npm run lint exit 0. The earlier developer-check observation is bound to plan d6e34580 and commit 2c32916e, which the provided-contract pin commit stranded (REV-139 L2); since then the runner scripts are unchanged; only the verdict module supplierPerformanceVerdicts.js (which the performance runner imports) and its unit test changed, adding a check that NFR-001's limit is 2,000 ms, which the benchmark already reported in that run (limitP95Ms 2000). The formal run after merge re-measures everything on plan 8b31fcdd.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-10-30T01:52:28+00:00"
     }
   ],
   "pending_decisions": [
@@ -8996,7 +9571,28 @@
         "supplierSearchCondition"
       ],
       "status": "ANSWERED",
-      "answer_ref": "Product Owner, 2026-10-29: 'E', after a plain-language explanation of DEF-050 and the five options. Defer: DEF-050 stays OPEN; TC-085 is re-measured in the production-like environment (TASK-051 C, row 'Production-like performance' in 06_task051_completion_boundary.md); the remedy is chosen among A-D with those numbers; the local FAIL goes to the release risk decision. No product change."
+      "answer_ref": "Product Owner, 2026-10-29: 'E', after a plain-language explanation of DEF-050 and the five options. Defer: DEF-050 stays OPEN; TC-085 is re-measured in the production-like environment (TASK-051 C, row 'Production-like performance' in 06_task051_completion_boundary.md); the remedy is chosen among A-D with those numbers; the local FAIL goes to the release risk decision. No product change. Superseded on 2026-10-30 by HD-157: no production-like re-measurement; NFR-005 relaxed to 3 s; no remedy."
+    },
+    {
+      "id": "HD-157",
+      "impact": "MAJOR",
+      "question": "TASK-051 C: the production parts of TC-128, TC-130, TC-132, TC-133, TC-134, TC-135 and TC-006 (and the production-like UI smoke) need a production-like environment and Operations that do not exist; TC-085 fails NFR-005's 2 s at TECHNICAL (DEF-050). Route? Record every C case whose local part passed as passed, with no production-like re-test (a plan revision that waives those production parts; the local result stands; risk: no one verifies performance, restore time, alerting or deployment order in a real environment before production); and for TC-085: fix (HD-156 A-D), or change NFR-005.",
+      "affected_ids": [
+        "TASK-051",
+        "TC-006",
+        "TC-085",
+        "TC-128",
+        "TC-130",
+        "TC-132",
+        "TC-133",
+        "TC-134",
+        "TC-135",
+        "NFR-005",
+        "DEF-050",
+        "HD-156"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-30: 'C組全部本機己通過的案例就紀錄為通過，不用再找production like 環境再測了' (record every C case that passed locally as passed; no production-like re-test), then, after the remaining list and the risk were set out, '確認，開 HD-157 修訂 plan，TC-085不用修，放鬆至3秒' (confirmed; revise the plan; TC-085 is not fixed; relax to 3 seconds). Scope: NFR-005 for-SKU p95 limit 3 s (NFR-001 stays 2 s); production parts of TC-128/130/132/133/134/135/006 and the production-like UI smoke waived, local results stand; TC-136 (release gate), UAT-044/045, business UAT, sign-offs and release decisions unchanged; the plan revision also carries the 07 amendments (HD-145 A, HD-146 A), REV-130 N3/N6 and the profile environment authorization; existing approvals are re-recorded on the new baselines, with no new risk acceptance. Shown to the Product Owner before the answer (REV-139 L1): in the reply listing what remains under the principle, that recording it needs a plan revision marking the production parts waived, 'with 14 approvals to be re-recorded', carried together with the 07 amendments, N3 and N6, and the residual risk that no one verifies performance, restore time, alerts and deployment order in a real environment before production; in the earlier TASK-051 C reply, that the plan revision would carry 07, N3, N6 and the environment authorization."
     }
   ],
   "external_actions": [
@@ -9559,6 +10155,14 @@
       "idempotency_key": "customer-import-row-pick-issue-2026-10-29",
       "status": "CONFIRMED",
       "source_ref": "https://github.com/crazysumsum/erp-app/issues/302 opened 2026-10-29T03:47:55Z on the Product Owner's word ('開issues吧'): Customer import's next-row pick (CustomerImportService.js:383-389) has the DEF-049 defect; measured on a scratch schema with the 0053 table (locks 1, 1,010, 5,048, 9,086 at k = 0, 1,000, 5,000, 9,000; 2.25 ms per pick at k = 9,000); the Supplier fix and the per-status FOR UPDATE pitfall described. No Customer code or docs changed; the Customer manifest names the ERP Product Owner as owner."
+    },
+    {
+      "id": "MODE-CHANGE-491",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-491",
+      "status": "CONFIRMED",
+      "source_ref": "Product Owner, 2026-10-30: '確認，開 HD-157 修訂 plan，TC-085不用修，放鬆至3秒' (HD-157). Step 2 of 2: TEST_AND_VERIFY -> IMPLEMENT from main e64dfc74 (PR #304 merge) for the plan revision and runner changes. Step 1 (revision 490) re-entered READY_FOR_TESTING with the same authorization."
     }
   ],
   "evidence_files": [
@@ -10622,5 +11226,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "PR #304 (HD-156 E record): independent review, CI, merge on the Product Owner's word. Then: Technical Acceptance is blocked by TASK-051 groups B and C, and by TC-085's TECHNICAL FAIL (DEF-050, deferred under HD-156 E to the production-like performance measurement). No further Supplier-side work until the production-like environment exists (Supplier's C items: the TC-085 re-measurement, the production-like UI smoke script, the T51 deliverable drafts), unless the Product Owner authorizes more (for example a limited diagnostic UAT). REPORT_ONLY."
+  "next_safe_action": "PR #305 (HD-157): CI, merge on the Product Owner's word. After merge: (1) with the Product Owner's word, comment on issue #294 that Purchasing's pin target for supplier-public-provider-contracts is now e49ac37d and that 03 §11.5's for-SKU p95 is 3 s (HD-157) with no API change (REV-139 M3); (2) TEST_AND_VERIFY on the merged baseline: the 8 required suites at TECHNICAL and REGRESSION; DEF-050 closes if TC-085 passes against 3 s; then the Technical Acceptance report. REPORT_ONLY."
 }

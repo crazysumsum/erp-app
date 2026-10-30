@@ -90,9 +90,9 @@
     "provided": [
       {
         "id": "purchasing-receiving-document-contract",
-        "version": "candidate-v3-reversal-source-order; consumer NOT_IMPLEMENTED",
+        "version": "v3-reversal-source-order-APR-005; consumer NOT_IMPLEMENTED",
         "source": "docs/purchasing_receiving_management/03_design_spec.md",
-        "sha256": "5785e0a6cb06fe8c5bedf472349e1b97f0c415ecec7c39c649de32eed9252b32",
+        "sha256": "366abb1fed7ced7fbae79b6d1dfe42836f007f68e643a7839070a193812e45cf",
         "consumers": [
           "accounts-payable",
           "reporting"
@@ -103,9 +103,9 @@
       {
         "module_id": "item-management",
         "id": "item-lookup-service",
-        "version": "observed-main-09281b0a",
+        "version": "observed-main-6d84ee45",
         "source": "server/src/modules/item/ItemLookupService.js",
-        "sha256": "a09d5baf602f44199cd218a2b3139edcdb2abad039a6f08a21b48162900562b5",
+        "sha256": "5ed3f26ff4271cc6bd533a417fd09fcde446f1682d662c3c465216e9ea08d558",
         "regression_suites": [
           "purchasing-technical"
         ]
@@ -113,9 +113,9 @@
       {
         "module_id": "authorization",
         "id": "permission-catalogue",
-        "version": "observed-main-09281b0a",
+        "version": "observed-main-6d84ee45",
         "source": "server/src/modules/authorization/permissionCatalogue.js",
-        "sha256": "32db8366598b206e41d14e66882f3d9ee63d5a825dc149eef4bf715e1e6cf282",
+        "sha256": "6f6e14b642573f9e16ffcb13abe411ead9b5e2c95739100c188c51dd00207743",
         "regression_suites": [
           "purchasing-technical"
         ]
@@ -133,9 +133,9 @@
       {
         "module_id": "supplier-management",
         "id": "supplier-purchasing-contract",
-        "version": "observed-main-09281b0a",
+        "version": "observed-main-6d84ee45",
         "source": "docs/supplier_management/03_design_spec.md",
-        "sha256": "a9f644939616f70c1099c2a9d9b82847394abfcc29de64730ec5247ad46697bc",
+        "sha256": "e49ac37d04859e67fdce171a7844c4658330f9bc553d0350541bcbaca5ba37b0",
         "regression_suites": [
           "purchasing-technical"
         ]

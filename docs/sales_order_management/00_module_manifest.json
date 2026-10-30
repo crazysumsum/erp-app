@@ -375,9 +375,9 @@
     "provided": [
       {
         "id": "sales-fulfillment-projection-and-lifecycle-contract",
-        "version": "HD011/013/014 plus approved HD016A pending-only provider; original lifecycle/Shipment/replay unchanged; full P4 Gates pending; current-main6cdc observed byte pin; approved TC03210s only, no new consumer contract",
+        "version": "HD018-A-scoped-candidate-source-proof-implementation; HD011-A last-sync/current-CAS retained; DEC037 TC032-only10s owner documentation integrated; exact closing review/full P1 gates pending; no Customer2.2 or proposed Purchasing/P4 contract adoption",
         "source": "docs/sales_order_management/03_design_spec.md",
-        "sha256": "bb5c87012262ee19e3cec2913b0ea54148550b874d4894155367a905661e180d",
+        "sha256": "d01749fc2421ac3e524dce38b932301779d762a0df5f7f1a4d1cbbf41563f1b1",
         "consumers": [
           "fulfillment-shipping-management",
           "inventory-management",
@@ -389,9 +389,9 @@
       {
         "module_id": "inventory-management",
         "id": "inventory-batch-reserve-release-contract",
-        "version": "observed-main-78d1e3ee; unchanged Inventory P3 Sales contract; additive Purchasing reversal not adopted; full original33/currentCI and shared consumer regressions required",
+        "version": "observed-main-f7ddcfd-Inventory-P3; compatible Sales consumption, full integrated original33/currentCI required; DEC037 observed-main-d805 byte pin refresh only; existing Sales interfaces unchanged; no Customer2.2/HD016 or proposed Purchasing/P4 contract adoption; additive approved Fulfillment P1 documentation current-byte pin only, no Inventory writer/API policy change",
         "source": "docs/inventory_management/03_design_spec.md",
-        "sha256": "7ee4e5f4b897663e276a966959843417e2e787a8adb30bc47fdd7820d3196193",
+        "sha256": "ba88703fa73d80011688cddd5595b02a947210ab6c579f82238fc1a1940ba19d",
         "regression_suites": [
           "sales-technical"
         ]

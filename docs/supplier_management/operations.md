@@ -5,7 +5,7 @@
 - **Basis:** design §14 (deployment and rollback), T51.
 - **Status:** a **draft for Operations' review**.
   - Every step marked *rehearsed* was run locally on a throwaway MySQL 26.7.0, with the evidence named.
-  - Nothing here has been run on a production-like environment. Those runs are TASK-051 group C, in `testing/06_task051_completion_boundary.md`.
+  - Nothing here has been run on a production-like environment. HD-157 (2026-10-30) waived those runs: the local rehearsals are the evidence, and the residual risk is a release limitation (`release_evidence.md`).
 
 Two detailed runbooks stay where they are and are not repeated here:
 - [`bank_operations.md`](bank_operations.md): key rings, rotation, backup and restore of Bank data.
@@ -102,9 +102,9 @@ Both modes also take their target from `SUPPLIER_SMOKE_URL` or `SUPPLIER_SMOKE_D
 - Fault injection for `check`: the URL was pointed at a closed port, and five faults were put into the copy (`sort_order` dropped, 0103 missing from the ledger, an unknown ledger file, an extra `supplier.*` permission, no active currency). Each failed its own check.
 - TC-135 (`runSupplierReleaseAcceptance.js`) now uses the same check and smoke code; TC-134 and TC-135 pass, with 20 checks.
 
-The production side of TC-135 (staged rollout, break-glass audit) still needs the real environment.
+The production side of TC-135 (staged rollout, break-glass audit) is waived by HD-157; it has not been run on a real environment.
 
 ## 6. Not covered by this draft
 
-- Any run on a production-like environment: deployment timeline, staged capability rollout, break-glass audit, restore drill (RTO ≤ 4 h, RPO ≤ 15 min), alert delivery. These are TASK-051 group C.
+- Any run on a production-like environment: deployment timeline, staged capability rollout, break-glass audit, restore drill (RTO ≤ 4 h, RPO ≤ 15 min), alert delivery. HD-157 waived these; they are a release limitation in `release_evidence.md`, not open work.
 - Process-manager specifics (systemd, containers): the ERP has no deployment manifests in this repository.
