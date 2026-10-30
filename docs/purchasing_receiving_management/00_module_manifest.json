@@ -53,6 +53,8 @@
       "server/database/migrations/**",
       "server/src/modules/authorization/permissionCatalogue.js",
       "server/src/services/idempotency/IdempotencyService.js",
+      "server/src/framework/configuration/applicationConfiguration.js",
+      "server/test/configuration.test.js",
       "server/src/modules/item/ItemLookupService.js",
       "server/src/modules/item/itemConstants.js",
       "client/config/menu.js",

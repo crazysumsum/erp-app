@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "purchasing-receiving-management",
-  "revision": 12,
+  "revision": 14,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -9,8 +9,8 @@
   "current_phase": "PHASE-002",
   "current_task": null,
   "baseline": {
-    "design": "d6103ad183e2b860fd5ae77d50a573b291550cf052d214234ded23c903cbd133",
-    "plan": "24a86ab4c6771f87246b46cb7b5b946b0139bde4805b2d29dacdbc5002f82828",
+    "design": "600d9d58ff1c59b178d2d9115c0edbc5a79f3f44c57c82d6a5329e22f6071f92",
+    "plan": "5b8a282f8244c838331fc92f1f58bb84e770b158459efc70bd53b498176c5946",
     "code_commit": "81a873fc941d54c634772c46641db95b552bf298",
     "source_fingerprint": "95b181c03bbef52334c436979b81b0db448c6020bd63f18eb629bd4369ff39d5",
     "worktree": "/Users/sam/Documents/workspace/erp-purchasing-p0",
@@ -35,7 +35,7 @@
     "TASK-007": "DONE",
     "TASK-008": "DONE",
     "TASK-009": "DONE",
-    "TASK-010": "PENDING",
+    "TASK-010": "DONE",
     "TASK-011": "PENDING",
     "TASK-012": "PENDING",
     "TASK-013": "PENDING",
@@ -79,9 +79,9 @@
       "actor": "Sam (ERP Product Owner and independent reviewer)",
       "decision": "APPROVED",
       "source_ref": "docs/purchasing_receiving_management/implementation/P0_contract_repin.md",
-      "recorded_at": "2026-10-30T11:30:05+08:00",
+      "recorded_at": "2026-10-30T15:25:56+08:00",
       "baseline_kind": "PLAN",
-      "baseline_sha256": "24a86ab4c6771f87246b46cb7b5b946b0139bde4805b2d29dacdbc5002f82828",
+      "baseline_sha256": "5b8a282f8244c838331fc92f1f58bb84e770b158459efc70bd53b498176c5946",
       "code_commit": null,
       "scope": [
         "purchasing-receiving-management requirement baseline, file 01_requirement_spec.md sha256 75ad45897c6b835712a1b9e84faa0e8822a626d9dd8ec55539da9998dbce4f35; recorded under kind SCOPE and bound to the harness composite design baseline because the state schema has no REQUIREMENT approval kind",
@@ -93,7 +93,8 @@
         "DEC-001 through DEC-013",
         "OPEN-001 through OPEN-005 closed as DECIDED",
         "Re-confirmed on 2026-10-22 after refreshing the five drifted consumed-contract pins (design 5db990ab6967->15e4423b088a, plan 54e2b1cb2fa8->3fd127d19861). The requirement, design and plan documents themselves are byte-identical; only manifest contract pins changed.",
-        "Re-confirmed on 2026-10-30 against main 6d84ee45 (design 15e4423b088a->d6103ad183e2, plan 3fd127d19861->24a86ab4c677). Unlike the 2026-10-22 pass the design document is NOT byte-identical: the Inventory owner rewrote §2.4, §2.6 items 7 and 9, §3.5 step 3, §4.13, §8.7, §8.8 and §8.9. Those changes are approved separately as APR-005 and reviewed as REV-003."
+        "Re-confirmed on 2026-10-30 against main 6d84ee45 (design 15e4423b088a->d6103ad183e2, plan 3fd127d19861->24a86ab4c677). Unlike the 2026-10-22 pass the design document is NOT byte-identical: the Inventory owner rewrote §2.4, §2.6 items 7 and 9, §3.5 step 3, §4.13, §8.7, §8.8 and §8.9. Those changes are approved separately as APR-005 and reviewed as REV-003.",
+        "Re-confirmed on 2026-10-30 for TASK-010 (design d6103ad183e2->600d9d58ff1c, plan 24a86ab4c677->5b8a282f8244). The only change is two shared files added to approval_required_paths so the Purchasing config can be validated at startup; requirement, design and plan documents are byte-identical. See APR-006 and REV-004."
       ],
       "expires_at": null
     },
@@ -104,16 +105,17 @@
       "actor": "Sam (ERP Product Owner and independent reviewer)",
       "decision": "APPROVED",
       "source_ref": "docs/purchasing_receiving_management/implementation/P0_contract_repin.md",
-      "recorded_at": "2026-10-30T11:30:05+08:00",
+      "recorded_at": "2026-10-30T15:25:56+08:00",
       "baseline_kind": "DESIGN",
-      "baseline_sha256": "d6103ad183e2b860fd5ae77d50a573b291550cf052d214234ded23c903cbd133",
+      "baseline_sha256": "600d9d58ff1c59b178d2d9115c0edbc5a79f3f44c57c82d6a5329e22f6071f92",
       "code_commit": null,
       "scope": [
         "purchasing-receiving-management",
         "DES-001 through DES-012",
         "MySQL 8.0 compatibility baseline",
         "Re-confirmed on 2026-10-22 after refreshing the five drifted consumed-contract pins (design 5db990ab6967->15e4423b088a, plan 54e2b1cb2fa8->3fd127d19861). The requirement, design and plan documents themselves are byte-identical; only manifest contract pins changed.",
-        "Re-confirmed on 2026-10-30 against main 6d84ee45 (design 15e4423b088a->d6103ad183e2, plan 3fd127d19861->24a86ab4c677). Unlike the 2026-10-22 pass the design document is NOT byte-identical: the Inventory owner rewrote §2.4, §2.6 items 7/9, §3.5 step 3, §4.13, §8.7, §8.8 and §8.9. Those changes are approved separately as APR-005 and reviewed as REV-003."
+        "Re-confirmed on 2026-10-30 against main 6d84ee45 (design 15e4423b088a->d6103ad183e2, plan 3fd127d19861->24a86ab4c677). Unlike the 2026-10-22 pass the design document is NOT byte-identical: the Inventory owner rewrote §2.4, §2.6 items 7/9, §3.5 step 3, §4.13, §8.7, §8.8 and §8.9. Those changes are approved separately as APR-005 and reviewed as REV-003.",
+        "Re-confirmed on 2026-10-30 for TASK-010 (design d6103ad183e2->600d9d58ff1c, plan 24a86ab4c677->5b8a282f8244). The only change is two shared files added to approval_required_paths so the Purchasing config can be validated at startup; requirement, design and plan documents are byte-identical. See APR-006 and REV-004."
       ],
       "expires_at": null
     },
@@ -124,9 +126,9 @@
       "actor": "Sam (ERP Product Owner and independent reviewer)",
       "decision": "APPROVED",
       "source_ref": "docs/purchasing_receiving_management/implementation/P0_contract_repin.md",
-      "recorded_at": "2026-10-30T11:30:05+08:00",
+      "recorded_at": "2026-10-30T15:25:56+08:00",
       "baseline_kind": "PLAN",
-      "baseline_sha256": "24a86ab4c6771f87246b46cb7b5b946b0139bde4805b2d29dacdbc5002f82828",
+      "baseline_sha256": "5b8a282f8244c838331fc92f1f58bb84e770b158459efc70bd53b498176c5946",
       "code_commit": null,
       "scope": [
         "purchasing-receiving-management",
@@ -135,7 +137,8 @@
         "TC-001 through TC-012",
         "UAT-001 through UAT-106",
         "Re-confirmed on 2026-10-22 after refreshing the five drifted consumed-contract pins (design 5db990ab6967->15e4423b088a, plan 54e2b1cb2fa8->3fd127d19861). The requirement, design and plan documents themselves are byte-identical; only manifest contract pins changed.",
-        "Re-confirmed on 2026-10-30 against main 6d84ee45 (design 15e4423b088a->d6103ad183e2, plan 3fd127d19861->24a86ab4c677). Unlike the 2026-10-22 pass the design document is NOT byte-identical: the Inventory owner rewrote §2.4, §2.6 items 7/9, §3.5 step 3, §4.13, §8.7, §8.8 and §8.9. Those changes are approved separately as APR-005 and reviewed as REV-003."
+        "Re-confirmed on 2026-10-30 against main 6d84ee45 (design 15e4423b088a->d6103ad183e2, plan 3fd127d19861->24a86ab4c677). Unlike the 2026-10-22 pass the design document is NOT byte-identical: the Inventory owner rewrote §2.4, §2.6 items 7/9, §3.5 step 3, §4.13, §8.7, §8.8 and §8.9. Those changes are approved separately as APR-005 and reviewed as REV-003.",
+        "Re-confirmed on 2026-10-30 for TASK-010 (design d6103ad183e2->600d9d58ff1c, plan 24a86ab4c677->5b8a282f8244). The only change is two shared files added to approval_required_paths so the Purchasing config can be validated at startup; requirement, design and plan documents are byte-identical. See APR-006 and REV-004."
       ],
       "expires_at": null
     },
@@ -146,9 +149,9 @@
       "actor": "Sam (ERP Product Owner)",
       "decision": "APPROVED",
       "source_ref": "docs/purchasing_receiving_management/implementation/P0_contract_repin.md",
-      "recorded_at": "2026-10-30T11:30:05+08:00",
+      "recorded_at": "2026-10-30T15:25:56+08:00",
       "baseline_kind": "PLAN",
-      "baseline_sha256": "24a86ab4c6771f87246b46cb7b5b946b0139bde4805b2d29dacdbc5002f82828",
+      "baseline_sha256": "5b8a282f8244c838331fc92f1f58bb84e770b158459efc70bd53b498176c5946",
       "code_commit": null,
       "scope": [
         "TASK-003",
@@ -161,7 +164,8 @@
         "server/test/integration/migrations.integration.test.js",
         "Path entries are bare globs because the harness reads every scope entry containing a slash as a path pattern. The per-path reasons formerly written inline are in P0_contract_repin.md and P0_consumer_contract_gate.md",
         "Re-confirmed on 2026-10-22 after refreshing the five drifted consumed-contract pins (design 5db990ab6967->15e4423b088a, plan 54e2b1cb2fa8->3fd127d19861). The requirement, design and plan documents themselves are byte-identical; only manifest contract pins changed.",
-        "Re-confirmed on 2026-10-30 against main 6d84ee45 (design 15e4423b088a->d6103ad183e2, plan 3fd127d19861->24a86ab4c677). Unlike the 2026-10-22 pass the design document is NOT byte-identical: the Inventory owner rewrote §2.4, §2.6 items 7 and 9, §3.5 step 3, §4.13, §8.7, §8.8 and §8.9. Those changes are approved separately as APR-005 and reviewed as REV-003."
+        "Re-confirmed on 2026-10-30 against main 6d84ee45 (design 15e4423b088a->d6103ad183e2, plan 3fd127d19861->24a86ab4c677). Unlike the 2026-10-22 pass the design document is NOT byte-identical: the Inventory owner rewrote §2.4, §2.6 items 7 and 9, §3.5 step 3, §4.13, §8.7, §8.8 and §8.9. Those changes are approved separately as APR-005 and reviewed as REV-003.",
+        "Re-confirmed on 2026-10-30 for TASK-010 (design d6103ad183e2->600d9d58ff1c, plan 24a86ab4c677->5b8a282f8244). The only change is two shared files added to approval_required_paths so the Purchasing config can be validated at startup; requirement, design and plan documents are byte-identical. See APR-006 and REV-004."
       ],
       "expires_at": null
     },
@@ -172,9 +176,9 @@
       "actor": "Sam (ERP Product Owner and named independent reviewer)",
       "decision": "APPROVED",
       "source_ref": "docs/purchasing_receiving_management/implementation/P0_contract_rebaseline.md#apr-005--inventory-authored-design-changes",
-      "recorded_at": "2026-10-30T11:30:05+08:00",
+      "recorded_at": "2026-10-30T15:25:56+08:00",
       "baseline_kind": "DESIGN",
-      "baseline_sha256": "d6103ad183e2b860fd5ae77d50a573b291550cf052d214234ded23c903cbd133",
+      "baseline_sha256": "600d9d58ff1c59b178d2d9115c0edbc5a79f3f44c57c82d6a5329e22f6071f92",
       "code_commit": null,
       "scope": [
         "Inventory-authored changes to this module's 03_design_spec.md, delivered in commits 1e9f8159 and 31324ff1 as part of inventory-purchase-provider/1.1",
@@ -182,7 +186,27 @@
         "§4.13: inventory_movements.reversal_of_movement_id keeps its unique constraint; purchase partial reversal uses the append-only inventory_purchase_reversal_links table (migration 0101, Inventory-owned) with a locked SUM check, superseding the former 'remove the unique constraint' requirement",
         "§2.4 and §8.7: the inline Inventory command example and its caller-supplied authorization.purpose / requiredCallerPermission object are removed; the ABI is inventory-purchase-provider/1.1 §2-3, with a server-issued opaque context, per-line locked commitment, and findOperationsBySource semantics where NOT_FOUND proves nothing and COMPLETED requires full membership verification",
         "§8.9: reversal reconciliation is per-event on (GOODS_RECEIPT_REVERSAL, original GR ID, reversal event_id, original GR Detail ID) rather than on new Reversal Detail PKs",
-        "No purchasing schema change and no purchasing migration follow from this approval"
+        "No purchasing schema change and no purchasing migration follow from this approval",
+        "Re-confirmed on 2026-10-30 for TASK-010 (design d6103ad183e2->600d9d58ff1c, plan 24a86ab4c677->5b8a282f8244). The only change is two shared files added to approval_required_paths so the Purchasing config can be validated at startup; requirement, design and plan documents are byte-identical. See APR-006 and REV-004."
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-006",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "docs/purchasing_receiving_management/implementation/P1_task010_config_validation.md#apr-006--startup-wiring",
+      "recorded_at": "2026-10-30T15:25:56+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "5b8a282f8244c838331fc92f1f58bb84e770b158459efc70bd53b498176c5946",
+      "code_commit": null,
+      "scope": [
+        "TASK-010",
+        "server/src/framework/configuration/applicationConfiguration.js",
+        "server/test/configuration.test.js",
+        "Approved on 2026-10-30 together with option A of the TASK-010 startup wiring question. Adds four lines to the configuration loader and the purchasing section to its section test, following the Fulfillment and Sales precedent"
       ],
       "expires_at": null
     }
@@ -219,6 +243,18 @@
       "reviewer": "Sam (ERP Product Owner and named independent reviewer)",
       "reviewed_baseline": "d6103ad183e2b860fd5ae77d50a573b291550cf052d214234ded23c903cbd133",
       "source_ref": "docs/purchasing_receiving_management/implementation/P0_contract_rebaseline.md#rev-003--review-of-the-changed-design",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-004",
+      "method": "HUMAN",
+      "author": "Implementation agent for TASK-010",
+      "reviewer": "Sam (ERP Product Owner and named independent reviewer)",
+      "reviewed_baseline": "600d9d58ff1c59b178d2d9115c0edbc5a79f3f44c57c82d6a5329e22f6071f92",
+      "source_ref": "docs/purchasing_receiving_management/implementation/P1_task010_config_validation.md#rev-004--review-of-the-scope-change",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -340,6 +376,40 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "docs/purchasing_receiving_management/implementation/P0_contract_rebaseline.md#hd-008--the-consumed-inventory-pin"
+    },
+    {
+      "id": "HD-009",
+      "impact": "MAJOR",
+      "question": "Design 2.8 requires amounts as a fixed-scale decimal string but does not name the scale. Is it the Currency scale (HKD 376.50, JPY 377) or the DECIMAL(25,4) storage scale (376.5000)? Part of the purchasing-receiving-document-contract consumed by accounts-payable and reporting.",
+      "affected_ids": [
+        "TASK-009",
+        "TASK-015",
+        "TASK-039"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "docs/purchasing_receiving_management/implementation/P1_task009_arithmetic.md#owner-decisions"
+    },
+    {
+      "id": "HD-010",
+      "impact": "MINOR",
+      "question": "Design 5.7 has no public code for a Line Amount or PO Total that exceeds DECIMAL(25,4) although quantity and price are each valid. Which code?",
+      "affected_ids": [
+        "TASK-009"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "docs/purchasing_receiving_management/implementation/P1_task009_arithmetic.md#owner-decisions"
+    },
+    {
+      "id": "HD-011",
+      "impact": "MAJOR",
+      "question": "Design 12.1 gives Purchasing transactionTimeoutMs 30000 related to the route timeout, but the framework invariant is database.acquireTimeoutMs + transaction timeout < application.requestTimeoutMs, strictly; 5000 + 30000 > 30000 lets a transaction commit after the route has answered 504. Drop the Purchasing setting and use database.transactionTimeoutMs, or keep it at a lower default with a cross-section check?",
+      "affected_ids": [
+        "TASK-010",
+        "TASK-013",
+        "TASK-032"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "docs/purchasing_receiving_management/implementation/P1_task010_config_validation.md#hd-011--no-purchasing-transaction-timeout"
     }
   ],
   "external_actions": [
@@ -398,9 +468,17 @@
       "idempotency_key": "purchasing-p0-task008-pr307-merge-20261030",
       "status": "CONFIRMED",
       "source_ref": "Observed merge commit 68a8d00b6b37a85a1ee666bebcdf1a994be765f5, verified as an ancestor of origin/main; CI run 41011286816 completed success with all 13 checks on head 6011340e612b964ef3a9e36b863adf190e6fb0b3"
+    },
+    {
+      "id": "EXT-008",
+      "kind": "PR_MERGE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/308 -> main",
+      "idempotency_key": "purchasing-p1-task009-pr308-merge-20261030",
+      "status": "CONFIRMED",
+      "source_ref": "Observed merge commit 1f5ea7217c2bb350e9f3a5a9fd19d7aa54ee8447, verified as an ancestor of origin/main; CI run 41014894116 completed success with all 13 checks on head ad20aa9d8a2540652469ef60f0c648689112d0c5"
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "TASK-009 is DONE: server/src/modules/purchasing/{moneyMath,quantityMath,purchasingConstants,purchasingErrors}.js with TC-002 tests under server/test/purchasing/ (see implementation/P1_task009_arithmetic.md for the assumptions taken, chiefly that amounts are emitted at the Currency scale, and the missing amount-overflow error code). Next startable task: TASK-010 (purchasing config and input validation), which shares TC-002. PHASE-001's eight tasks are DONE but the phase still needs a fresh checkpoint, DEVELOPER run evidence and MERGE_READY, and HD-006, as an open MAJOR decision, blocks every harness gate until it is answered or re-scoped."
+  "next_safe_action": "TASK-010 is DONE and the Purchasing config is validated at server startup. APR-006 approves the two shared files that wiring touches; APR-001 through APR-005 are re-confirmed and REV-004 reviews design 600d9d58ff1c / plan 5b8a282f8244. HD-009, HD-010 and HD-011 (amount scale, amount overflow code, no Purchasing transaction timeout) are answered and pinned by tests; fold them into design sections 2.8, 5.7 and 12.1 at the next design revision. Purchasing HTTP transactions must not pass their own timeoutMs to withTransaction. Next startable task: TASK-011 (settings, sequence and PO core tables), the first migration in this module, which needs schema sign-off before it is written. PHASE-001 still needs a fresh checkpoint, DEVELOPER evidence and MERGE_READY, and HD-006 blocks every harness gate until answered."
 }

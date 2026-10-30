@@ -25,6 +25,7 @@ test("global configuration validation normalizes every configuration section", (
     "item",
     "jwt",
     "logging",
+    "purchasing",
     "request",
     // 限流器是一個 service，所以它的設定自己一個區塊、自己一個檔案。
     "requestLimiter",
