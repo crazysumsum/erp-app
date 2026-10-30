@@ -56,7 +56,10 @@ export class ShipmentService {
   const request={eventId:command.eventId,operationType:"SHIPMENT_CREATE",target:{type:"SHIPMENT",id:null},payload:{fulfillmentId,...command},leaseOwner:randomUUID(),correlationId:randomUUID()};
   const outcome=await this.transactions.withTransaction(async tx=>{
    const operation=await this.operations.claimInTransaction(tx,request);if(operation.replay){if(operation.status==="FAILED")fail(operation.publicErrorCode);return operation.result;}if(!operation.created)fail("CONCURRENT_OPERATION");
-   const actor=await requireFulfillmentActor(this.database,tx,"fulfillment.operation"),root=await this.#root(tx,fulfillmentId);
+   const actor=await requireFulfillmentActor(this.database,tx,"fulfillment.operation"),[[route]]=await tx.query("SELECT sales_order_id FROM fulfillments WHERE id=?",[fulfillmentId]);if(!route)fail("FULFILLMENT_NOT_FOUND");
+   // Take the INSERT's Sales FK parent lock before Fulfillment and Customer locks.
+   const [[salesParent]]=await tx.query("SELECT id FROM sales_orders WHERE id=? FOR SHARE",[route.sales_order_id]);if(!salesParent)fail("FULFILLMENT_DEPENDENCY_UNAVAILABLE");
+   const root=await this.#root(tx,fulfillmentId);if(String(root.sales_order_id)!==String(salesParent.id))fail("FULFILLMENT_SOURCE_CONFLICT");
    const [active]=await tx.query("SELECT id FROM shipments WHERE fulfillment_id=? AND status<>'CANCELLED' ORDER BY id LIMIT 2",[fulfillmentId]);
    if(root.active_shipment_id!==null||active.length)fail("SHIPMENT_ALREADY_EXISTS");
    const [ids]=await tx.query("SELECT id FROM fulfillment_lines WHERE fulfillment_id=? ORDER BY id",[fulfillmentId]);
