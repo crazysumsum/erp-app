@@ -26,14 +26,24 @@ export async function claimFulfillmentInventoryBatch(transaction, input) {
   if (root.replay) return batch;
   const members=payload.lines.flatMap(line=>line.reservations.map(member=>({line,input:member})))
     .sort((a,b)=>compare(a.input.claimId,b.input.claimId));
+  let pending=[];
+  const flush=async()=>{
+    if(!pending.length)return;
+    const claims=await operations.claimReallocationChildren(transaction,pending.map(entry=>entry.input));
+    for(const [index,entry]of pending.entries())entry.accept(claims[index]);
+    pending=[];
+  };
+  const claimChild=async(input,accept)=>{
+    if(action!=="REALLOCATE"){const claim=await operations.claim(transaction,input);if(claim.replay)throw inventoryError("INVENTORY_SOURCE_CONFLICT");accept(claim);return;}
+    pending.push({input,accept});if(pending.length===100)await flush();
+  };
   for (const member of members) {
     const value={rootRequestHash:requestHash,fulfillmentLineId:member.line.fulfillmentLineId,
       salesOrderLineId:member.line.salesOrderLineId,...member.input};
     const childInput=operationInput(contract.member,{...rootSource,lineId:member.input.claimId},value);
-    const child=await operations.claim(transaction,childInput);
-    if (child.replay) throw inventoryError("INVENTORY_SOURCE_CONFLICT");
-    batch.members.push({...member,operationId:child.operationId,requestHash:inventoryOperationHash(childInput),legs:[]});
+    await claimChild(childInput,child=>batch.members.push({...member,operationId:child.operationId,requestHash:inventoryOperationHash(childInput),legs:[]}));
   }
+  await flush();
   for (const member of batch.members) {
     const inputs=[...(member.input.releases??[]).map(leg=>({kind:"RELEASE",input:leg})),
       ...member.input.allocations.map(leg=>({kind:action==="REALLOCATE"?"ALLOCATE":action,input:leg}))];
@@ -41,11 +51,10 @@ export async function claimFulfillmentInventoryBatch(transaction, input) {
       const ordinal=index+1;
       const value={rootRequestHash:requestHash,claimId:member.input.claimId,legOrdinal:ordinal,legKind:leg.kind,input:leg.input};
       const legInput=operationInput("FULFILLMENT_BATCH_LEG",{...rootSource,documentType:contract.documentType+"_LEG",lineId:`${member.input.claimId}:${ordinal}`},value);
-      const claim=await operations.claim(transaction,legInput);
-      if (claim.replay) throw inventoryError("INVENTORY_SOURCE_CONFLICT");
-      member.legs.push({...leg,ordinal,operationId:claim.operationId,requestHash:inventoryOperationHash(legInput)});
+      await claimChild(legInput,claim=>member.legs.push({...leg,ordinal,operationId:claim.operationId,requestHash:inventoryOperationHash(legInput)}));
     }
   }
+  await flush();
   return batch;
 }
 

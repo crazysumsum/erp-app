@@ -156,6 +156,78 @@ export class InventoryOperationService {
     }
   }
 
+  // New Reallocate children only. The caller must roll back the whole transaction on failure.
+  async claimReallocationChildren(connection, inputs) {
+    assertExecutor(connection);
+    assertExecutor(connection, "query");
+    const active = () => getActiveTransactionIsolation(connection) === "READ COMMITTED";
+    if (!active()) throw new TypeError("Reallocation child claims require an active READ COMMITTED transaction");
+    if (!Array.isArray(inputs) || inputs.length < 1 || inputs.length > 100) throw new TypeError("Child claim batch must contain 1..100 entries");
+    const rows = inputs.map(input => {
+      const type = commandType(input.commandType), source = sourceTuple(input.source);
+      const hash = inventoryOperationHash({ commandType: type, payload: input.payload });
+      const values = [type, source.module, source.documentType, source.documentId, source.lineId, source.eventId, hash,
+        positiveId(input.actorUserId, "actor user id", { nullable: true }), boundedString(input.actorLabel, "actor label", 190),
+        boundedString(input.requestId ?? "", "request id", 64, { empty: true, ascii: true }),
+        boundedString(input.correlationId ?? "", "correlation id", 64, { empty: true, ascii: true }), timestamp(input.createdAt, "created at")];
+      if (source.module !== "FULFILLMENT" || !source.lineId ||
+          !(type === "ALLOCATION_REALLOCATE" && source.documentType === "PICK" || type === "FULFILLMENT_BATCH_LEG" && source.documentType === "PICK_LEG")) throw new TypeError("Invalid Reallocation child source");
+      return { type, source, hash, values };
+    });
+    const source = rows[0].source;
+    if (rows.some(row => ["module", "documentType", "documentId", "eventId"].some(key => row.source[key] !== source[key])) ||
+        new Set(rows.map(row => row.source.lineId)).size !== rows.length) throw new TypeError("Child sources must be unique within one scope");
+    const read = async () => {
+      const [found] = await connection.query(`SELECT id, command_type, source_module, source_document_type, source_document_id,
+        source_line_id, source_event_id, request_hash, result_type, result_id, result_summary, completed_at
+        FROM inventory_operation_requests WHERE source_module=? AND source_document_type=? AND source_document_id=?
+        AND source_event_id=? AND source_line_id IN (${rows.map(() => "?").join(",")}) ORDER BY id`,
+      [source.module, source.documentType, source.documentId, source.eventId, ...rows.map(row => row.source.lineId)]);
+      const mapped = new Map(), ids = new Set(), expected = new Set(rows.map(row => row.source.lineId));
+      for (const row of found) {
+        const id = Number(row.id);
+        if (!Number.isSafeInteger(id) || id < 1 || ids.has(id) || mapped.has(row.source_line_id) || !expected.has(row.source_line_id) ||
+            row.source_module !== source.module || row.source_document_type !== source.documentType ||
+            row.source_document_id !== source.documentId || row.source_event_id !== source.eventId) throw inventoryError("INVENTORY_SOURCE_CONFLICT");
+        ids.add(id); mapped.set(row.source_line_id, row);
+      }
+      return mapped;
+    };
+    let inserted;
+    try {
+      [inserted] = await connection.execute(`INSERT INTO inventory_operation_requests
+        (command_type,source_module,source_document_type,source_document_id,source_line_id,source_event_id,request_hash,
+         actor_user_id,actor_label,request_id,correlation_id,created_at) VALUES ${rows.map(() => "(?,?,?,?,?,?,?,?,?,?,?,?)").join(",")}`,
+      rows.flatMap(row => row.values));
+    } catch (error) {
+      if ((error?.cause?.code ?? error?.code) !== "ER_DUP_ENTRY" || !active()) throw error;
+      for (const input of rows) {
+        // Match legacy first-conflict order without waiting on unrelated later children.
+        const [found] = await connection.query(`SELECT id, request_hash, result_type, result_id, result_summary, completed_at
+          FROM inventory_operation_requests WHERE source_module=? AND source_document_type=? AND source_document_id=?
+          AND source_line_id=? AND source_event_id=? FOR UPDATE`,
+        [input.source.module, input.source.documentType, input.source.documentId, input.source.lineId, input.source.eventId]);
+        const row = found[0];
+        if (!row) continue;
+        if (String(row.request_hash) !== input.hash) throw inventoryError("INVENTORY_SOURCE_CONFLICT");
+        if (row.completed_at === null || row.completed_at === undefined) throw inventoryError("CONCURRENT_OPERATION");
+        resultFromRow(row); // Preserve the legacy completed-receipt validation before rejecting child replay.
+        throw inventoryError("INVENTORY_SOURCE_CONFLICT");
+      }
+      throw error;
+    }
+    if (Number(inserted.affectedRows) !== rows.length) throw inventoryError("CONCURRENT_OPERATION");
+    if (!active()) throw inventoryError("CONCURRENT_OPERATION");
+    const found = await read();
+    if (found.size !== rows.length) throw inventoryError("INVENTORY_SOURCE_CONFLICT");
+    return rows.map(input => {
+      const row = found.get(input.source.lineId);
+      if (!row || row.command_type !== input.type || row.request_hash !== input.hash ||
+          ["result_type", "result_id", "result_summary", "completed_at"].some(key => row[key] !== null)) throw inventoryError("INVENTORY_SOURCE_CONFLICT");
+      return { operationId: Number(row.id), replay: null };
+    });
+  }
+
   async complete(connection, { operationId, resultType, resultId, resultSummary = null, completedAt }) {
     assertExecutor(connection);
     const { id, type, resultIdentifier, summary, at } = completion({ operationId, resultType, resultId, resultSummary, completedAt });

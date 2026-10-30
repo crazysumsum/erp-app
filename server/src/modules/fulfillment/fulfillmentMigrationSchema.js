@@ -1,3 +1,4 @@
+import { recognizeCancelledAllocationSchema } from "./fulfillmentCancelledAllocationSchema.js";
 // Shared only by the new Fulfillment migrations: composite ownership and stored generated columns.
 function normalize(sql){return String(sql??"").replace(/\\'/gu,"'").split(/('(?:[^']|'')*')/u).map((part,i,parts)=>i%2?part:part.replace(i<parts.length-1?/_[a-z0-9]+$/u:/$^/u,"").replace(/[`\s]/gu,"").toLowerCase()).join("");}
 const fail=(table,part)=>{throw new Error(`Incompatible Fulfillment schema: ${table} ${part}`);};
@@ -22,9 +23,10 @@ export async function inspectFulfillmentTable(tx,c,{allowMissingTriggers=false}=
   for(const [name,rows]of groups){const e=allowed[name];if(!e||rows.map(r=>r.field).join(",")!==e[0]||rows.some(r=>r.target!==e[1]||r.delete_rule!==e[3]||!r.local_scope||!["RESTRICT","NO ACTION"].includes(r.update_rule))||rows.map(r=>r.target_field).join(",")!==e[2])fail(c.table,`foreign key ${name}`);}
   if(Object.keys(c.foreignKeys).some(name=>!groups.has(name)))fail(c.table,"missing foreign key");
   const [checks]=await tx.query(`SELECT tc.constraint_name AS name,tc.enforced AS enforced,cc.check_clause AS clause FROM information_schema.table_constraints tc JOIN information_schema.check_constraints cc ON cc.constraint_schema=tc.constraint_schema AND cc.constraint_name=tc.constraint_name WHERE tc.constraint_schema=DATABASE() AND tc.table_name=? AND tc.constraint_type='CHECK'`,[c.table]);
+  const [triggers]=await tx.query("SELECT trigger_name AS name,event_manipulation AS event,action_timing AS timing,action_order AS ordinal,action_statement AS statement FROM information_schema.triggers WHERE trigger_schema=DATABASE() AND event_object_table=?",[c.table]);
+  c=recognizeCancelledAllocationSchema(c,checks,triggers,normalize)??c;
   if(checks.length!==Object.keys(c.checks).length||checks.some(r=>!c.checks[r.name]||r.enforced!=="YES"||normalize(r.clause)!==normalize(c.checks[r.name])))fail(c.table,"checks");
-  const [triggers]=await tx.query("SELECT trigger_name AS name,event_manipulation AS event,action_timing AS timing,action_statement AS statement FROM information_schema.triggers WHERE trigger_schema=DATABASE() AND event_object_table=?",[c.table]);
-  for(const r of triggers){const e=c.triggers?.[r.name];if(!e||r.event!==e[0]||r.timing!=="BEFORE"||normalize(r.statement)!==normalize(e[1]))fail(c.table,`trigger ${r.name}`);}
+  for(const r of triggers){const e=c.triggers?.[r.name];if(!e||r.event!==e[0]||r.timing!=="BEFORE"||(e[2]!==undefined&&Number(r.ordinal)!==e[2])||normalize(r.statement)!==normalize(e[1]))fail(c.table,`trigger ${r.name}`);}
   if(!allowMissingTriggers&&Object.keys(c.triggers??{}).some(name=>!triggers.some(r=>r.name===name)))fail(c.table,"missing trigger");
   return true;
 }
@@ -45,3 +47,5 @@ export async function addFulfillmentForeignKey(tx,table,name,definition){
   if(!rows.length){const [fields,target,refs,rule]=definition;await tx.query(`ALTER TABLE ${names(table)} ADD CONSTRAINT ${names(name)} FOREIGN KEY (${names(fields)}) REFERENCES ${names(target)} (${names(refs)}) ON DELETE ${rule}`);}
 }
 export function appendOnlyTriggers(prefix){return Object.fromEntries(["UPDATE","DELETE"].map(event=>[`trg_${prefix}_${event.toLowerCase()}`,[event,"SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Fulfillment fact is append-only'"]]));}
+
+export { normalize as normalizeFulfillmentSchemaSql };

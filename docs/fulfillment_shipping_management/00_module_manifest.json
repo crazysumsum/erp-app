@@ -10,6 +10,7 @@
       "server/config/fulfillment.js",
       "server/src/modules/fulfillment/**",
       "server/src/handlers/fulfillments/**",
+      "server/src/handlers/fulfillment-queue/**",
       "server/src/handlers/shipments/**",
       "server/src/handlers/fulfillment-lookups/**",
       "server/src/handlers/fulfillment-operations/**",
@@ -52,13 +53,16 @@
       "server/test/integration/migrations.integration.test.js",
       "server/test/integration/passwordChange.integration.test.js",
       "server/test/integration/roleManagement.integration.test.js",
-      "server/test/integration/userManagement.integration.test.js"
+      "server/test/integration/userManagement.integration.test.js",
+      "server/test/inventoryReallocationChildClaims.test.js",
+      "server/test/integration/inventoryReallocationChildClaims.integration.test.js"
     ],
     "allowed_write_paths": [
       "docs/fulfillment_shipping_management/**",
       "server/config/fulfillment.js",
       "server/src/modules/fulfillment/**",
       "server/src/handlers/fulfillments/**",
+      "server/src/handlers/fulfillment-queue/**",
       "server/src/handlers/shipments/**",
       "server/src/handlers/fulfillment-lookups/**",
       "server/src/handlers/fulfillment-operations/**",
@@ -125,7 +129,14 @@
       "server/test/integration/migrations.integration.test.js",
       "server/test/integration/passwordChange.integration.test.js",
       "server/test/integration/roleManagement.integration.test.js",
-      "server/test/integration/userManagement.integration.test.js"
+      "server/test/integration/userManagement.integration.test.js",
+      "server/src/framework/http/apiResponse.js",
+      "server/src/framework/api/apiDefinitionResolver.js",
+      "server/src/framework/middleware/apiDispatcher.js",
+      "server/src/framework/application/createApplication.js",
+      "server/src/framework/http/jsonBodyParser.js",
+      "server/test/inventoryReallocationChildClaims.test.js",
+      "server/test/integration/inventoryReallocationChildClaims.integration.test.js"
     ],
     "forbidden_paths": [
       ".env",
@@ -146,16 +157,19 @@
       "sales-archive-job-coordination",
       "inventory-reservation-and-posting-contracts",
       "local-mysql-instance",
-      "local-web-port"
+      "local-web-port",
+      "framework-private-no-store-success-read-policy",
+      "framework-registered-route-json-body-cap",
+      "inventory-owner-actual-selection-preview-and-fourth-route-cap"
     ]
   },
   "contracts": {
     "provided": [
       {
         "id": "fulfillment-shipment-and-reversal-contract",
-        "version": "P0-HD011-ADOPTED-IMPLEMENTATION_IN_PROGRESS",
+        "version": "P1-HD024-A-readonly-selected-prefix-preview/fourth2MiB-adopted; exact source/runtime/fullP1 gates pending",
         "source": "docs/fulfillment_shipping_management/03_design_spec.md",
-        "sha256": "29d1f8f4b602645dcbcf2d2516f32965b8a1a1505429a1229f7f083dc5e7727f",
+        "sha256": "861939c3d799e9e8b76dbbab25e92eb6f04a6727d4d04fb8545e536de3546cf0",
         "consumers": [
           "sales-order-management",
           "inventory-management",
@@ -167,9 +181,9 @@
       {
         "module_id": "sales-order-management",
         "id": "sales-fulfillment-projection-and-lifecycle-contract",
-        "version": "P0-TASK004-HD011-reviewed-owner-contribution-r4-CURRENT_JOINT_PENDING",
+        "version": "HD018-A-scoped-candidate-source-proof-implementation; exact closing owner review and full P1 gates pending",
         "source": "docs/sales_order_management/03_design_spec.md",
-        "sha256": "cd680c79a59b80a61e245edce54cc47e867bff4d1f61a6a6b6244ad36e981a19",
+        "sha256": "4683b49946a9a2e5ae0778231d48ffc7e56bc857f09468ee1095e32f4270801e",
         "regression_suites": [
           "fulfillment-technical"
         ]
@@ -177,9 +191,9 @@
       {
         "module_id": "inventory-management",
         "id": "inventory-allocation-issue-and-dedicated-reversal-contract",
-        "version": "observed-main-35af2ab7-OWNER_SEMANTIC_REVIEW_REQUIRED",
+        "version": "HD024-A-owner-actual-prefix-readonly-preview-adopted; oldrecommendation/writeABI unchanged; source/runtime gates pending",
         "source": "docs/inventory_management/03_design_spec.md",
-        "sha256": "2fb61cce8ee4ff9f32cd9c6d0e2a9fc8f87c08d34823be7fb622908610b1ac53",
+        "sha256": "ba88703fa73d80011688cddd5595b02a947210ab6c579f82238fc1a1940ba19d",
         "regression_suites": [
           "fulfillment-technical"
         ]
@@ -275,7 +289,7 @@
       "lint",
       "client-build",
       "security-audit",
-      "fulfillment-p0-developer"
+      "fulfillment-p1-developer"
     ],
     "technical": [
       "fulfillment-technical"
