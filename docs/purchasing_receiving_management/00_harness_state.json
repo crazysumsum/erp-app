@@ -390,6 +390,14 @@
       "idempotency_key": "purchasing-p0-repin-pr269-merge-20261022",
       "status": "CONFIRMED",
       "source_ref": "Observed merge commit 5a315640d9f8d3adc41f11e6b8bd919e33b42edc, verified as an ancestor of origin/main; CI run 39735442601 completed success on head e38a54e5d662613083a37512f7967be3493c95b7"
+    },
+    {
+      "id": "EXT-007",
+      "kind": "PR_MERGE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/307 -> main",
+      "idempotency_key": "purchasing-p0-task008-pr307-merge-20261030",
+      "status": "CONFIRMED",
+      "source_ref": "Observed merge commit 68a8d00b6b37a85a1ee666bebcdf1a994be765f5, verified as an ancestor of origin/main; CI run 41011286816 completed success with all 13 checks on head 6011340e612b964ef3a9e36b863adf190e6fb0b3"
     }
   ],
   "evidence_files": [],
