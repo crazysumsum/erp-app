@@ -1,10 +1,10 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 501,
+  "revision": 502,
   "mode": "FULL_LIFECYCLE",
-  "active_mode": "TEST_AND_VERIFY",
-  "status": "READY_FOR_TESTING",
+  "active_mode": "IMPLEMENT",
+  "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-004",
   "current_task": "TASK-051",
@@ -10226,6 +10226,14 @@
       "idempotency_key": "mode-change-498",
       "status": "CONFIRMED",
       "source_ref": "Product Owner, 2026-10-30: '確認，開 HD-157 修訂 plan，TC-085不用修，放鬆至3秒' (HD-157): after the revision merged (PR #305, 'CI己通過'), back to TEST_AND_VERIFY for the formal run on the HD-157 baseline; entry commit 6d84ee454b72f4b3e43b2aa6eee2436e6e950716"
+    },
+    {
+      "id": "MODE-CHANGE-502",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-502",
+      "status": "CONFIRMED",
+      "source_ref": "Product Owner, 2026-10-30: 'TC-101 改要求放寬至5秒就好了' (HD-158 C). Step 2 of 2: TEST_AND_VERIFY -> IMPLEMENT from main 6d84ee45 (PR #305 merge) for the plan revision and the TC-101 verdict change. Step 1 (revision 501) re-entered READY_FOR_TESTING with the same authorization."
     }
   ],
   "evidence_files": [
