@@ -1,13 +1,13 @@
 {
   "schema_version": "2.0",
   "module_id": "purchasing-receiving-management",
-  "revision": 10,
+  "revision": 11,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
   "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-001",
-  "current_task": "TASK-008",
+  "current_task": null,
   "baseline": {
     "design": "d6103ad183e2b860fd5ae77d50a573b291550cf052d214234ded23c903cbd133",
     "plan": "24a86ab4c6771f87246b46cb7b5b946b0139bde4805b2d29dacdbc5002f82828",
@@ -29,11 +29,11 @@
     "TASK-001": "DONE",
     "TASK-002": "DONE",
     "TASK-003": "DONE",
-    "TASK-004": "IN_PROGRESS",
-    "TASK-005": "IN_PROGRESS",
-    "TASK-006": "BLOCKED",
-    "TASK-007": "BLOCKED",
-    "TASK-008": "PENDING",
+    "TASK-004": "DONE",
+    "TASK-005": "DONE",
+    "TASK-006": "DONE",
+    "TASK-007": "DONE",
+    "TASK-008": "DONE",
     "TASK-009": "PENDING",
     "TASK-010": "PENDING",
     "TASK-011": "PENDING",
@@ -93,7 +93,7 @@
         "DEC-001 through DEC-013",
         "OPEN-001 through OPEN-005 closed as DECIDED",
         "Re-confirmed on 2026-10-22 after refreshing the five drifted consumed-contract pins (design 5db990ab6967->15e4423b088a, plan 54e2b1cb2fa8->3fd127d19861). The requirement, design and plan documents themselves are byte-identical; only manifest contract pins changed.",
-        "Re-confirmed on 2026-10-30 against main 6d84ee45 (design 15e4423b088a->d6103ad183e2, plan 3fd127d19861->24a86ab4c677). Unlike the 2026-10-22 pass the design document is NOT byte-identical: the Inventory owner rewrote §2.4, §2.6 items 7/9, §3.5 step 3, §4.13, §8.7, §8.8 and §8.9. Those changes are approved separately as APR-005 and reviewed as REV-003."
+        "Re-confirmed on 2026-10-30 against main 6d84ee45 (design 15e4423b088a->d6103ad183e2, plan 3fd127d19861->24a86ab4c677). Unlike the 2026-10-22 pass the design document is NOT byte-identical: the Inventory owner rewrote §2.4, §2.6 items 7 and 9, §3.5 step 3, §4.13, §8.7, §8.8 and §8.9. Those changes are approved separately as APR-005 and reviewed as REV-003."
       ],
       "expires_at": null
     },
@@ -152,12 +152,16 @@
       "code_commit": null,
       "scope": [
         "TASK-003",
-        "server/src/modules/authorization/permissionCatalogue.js (approval_required_path)",
-        "server/database/migrations/0100_seed_purchasing_permissions.js (approval_required_path)",
-        "server/test/permissionCatalogueConventions.test.js (shared, outside module: the three-step process requires registering the seed migration there)",
-        "server/test/integration/{roleManagement,userManagement,passwordChange,migrations}.integration.test.js (shared, outside module: six ungranted catalogue entries made their admin claim denylists stale)",
+        "server/src/modules/authorization/permissionCatalogue.js",
+        "server/database/migrations/0100_seed_purchasing_permissions.js",
+        "server/test/permissionCatalogueConventions.test.js",
+        "server/test/integration/roleManagement.integration.test.js",
+        "server/test/integration/userManagement.integration.test.js",
+        "server/test/integration/passwordChange.integration.test.js",
+        "server/test/integration/migrations.integration.test.js",
+        "Path entries are bare globs because the harness reads every scope entry containing a slash as a path pattern. The per-path reasons formerly written inline are in P0_contract_repin.md and P0_consumer_contract_gate.md",
         "Re-confirmed on 2026-10-22 after refreshing the five drifted consumed-contract pins (design 5db990ab6967->15e4423b088a, plan 54e2b1cb2fa8->3fd127d19861). The requirement, design and plan documents themselves are byte-identical; only manifest contract pins changed.",
-        "Re-confirmed on 2026-10-30 against main 6d84ee45 (design 15e4423b088a->d6103ad183e2, plan 3fd127d19861->24a86ab4c677). Unlike the 2026-10-22 pass the design document is NOT byte-identical: the Inventory owner rewrote §2.4, §2.6 items 7/9, §3.5 step 3, §4.13, §8.7, §8.8 and §8.9. Those changes are approved separately as APR-005 and reviewed as REV-003."
+        "Re-confirmed on 2026-10-30 against main 6d84ee45 (design 15e4423b088a->d6103ad183e2, plan 3fd127d19861->24a86ab4c677). Unlike the 2026-10-22 pass the design document is NOT byte-identical: the Inventory owner rewrote §2.4, §2.6 items 7 and 9, §3.5 step 3, §4.13, §8.7, §8.8 and §8.9. Those changes are approved separately as APR-005 and reviewed as REV-003."
       ],
       "expires_at": null
     },
@@ -390,5 +394,5 @@
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Rebaselined on 2026-10-30 against main 6d84ee45. Three drifted consumed pins refreshed (item-lookup-service, permission-catalogue, supplier-purchasing-contract); all three changes are additive and touch nothing purchasing consumes. HD-008 is answered: the pin now resolves to purchase-provider-contract-v1.md, which names both contracts. APR-005 approves the Inventory-authored design changes and REV-003 records Sam's review of them; APR-001 through APR-004 are re-confirmed at design d6103ad183e2 / plan 24a86ab4c677. TASK-006 and TASK-007 are DELIVERED by the Inventory owner (PR #275 ABI 1.0, PR #278 ABI 1.1), so TASK-008 (consumer contract evidence) is the next startable task and needs no migration. HD-006 (OPEN-006 cutover) remains open and blocks Go-Live and TASK-044 only."
+  "next_safe_action": "PHASE-001's eight tasks are DONE. TASK-006/007 were delivered by the Inventory owner (PR #275, PR #278); TASK-004/005 close because TASK-008's consumer gate (server/test/purchasing/purchasingProviderContract.test.js) now pins the bullets they were waiting on: bank-free Supplier projection, recordSupply replay and no auto-preferred, the committed-receipt warning vocabulary, and per-currency decimalPlaces (GAP-DES-002). PHASE-001 is not yet closed: it still needs DEVELOPER run evidence and a MERGE_READY gate, and TC-007 (linked to TASK-008) needs real PO/GR tables, so its GR-side halves are observed with TASK-032/033/042. Purchasing owes Supplier a GR source verifier before recordSupply can run in production (it fails closed with SUPPLIER_SUPPLY_SOURCE_UNAVAILABLE until then). Next startable work: PHASE-002 TASK-009 (money/quantity arithmetic, no migration). HD-006 is about Go-Live and TASK-044, but as an open MAJOR decision it blocks every harness gate, so PHASE-001 MERGE_READY cannot pass until it is answered or re-scoped."
 }
