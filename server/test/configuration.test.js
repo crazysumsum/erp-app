@@ -25,6 +25,7 @@ test("global configuration validation normalizes every configuration section", (
     "item",
     "jwt",
     "logging",
+    "purchasing",
     "request",
     // 限流器是一個 service，所以它的設定自己一個區塊、自己一個檔案。
     "requestLimiter",
@@ -151,7 +152,8 @@ test("global configuration validation reports errors from multiple sections", ()
       assert.equal(error.code, "CONFIGURATION_INVALID");
       assert.deepEqual(
         error.details.map(({ section }) => section),
-        ["application", "sales", "api", "database", "requestLimiter"]
+        // Sales 同 Purchasing 要用實際 HTTP timeout 驗自己嘅交易時限；application 無效時佢哋驗唔到，所以一齊報。
+        ["application", "sales", "api", "database", "purchasing", "requestLimiter"]
       );
       return true;
     }
