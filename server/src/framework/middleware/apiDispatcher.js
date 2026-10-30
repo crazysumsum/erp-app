@@ -4,6 +4,7 @@ import applicationConfig from "../../../config/application.js";
 import { BaseRequestHandler } from "../api/BaseRequestHandler.js";
 import { AuthorizationError, createAuthorizationPolicyRegistry } from "../authorization/authorizationPolicyRegistry.js";
 import { sendError } from "../http/apiResponse.js";
+import { normalizeJsonBodyLimit } from "../http/jsonBodyParser.js";
 import {
   markRequestProcessingCompleted,
   markRequestProcessingStarted
@@ -148,6 +149,9 @@ export function validateApiConfig(
 
     idempotency?.routeOptions(route.idempotency, routeKey);
     normalizeRouteLogging(route.logging, routeKey);
+    if (Object.hasOwn(route, "jsonBodyLimitBytes")) {
+      normalizeJsonBodyLimit(route.jsonBodyLimitBytes);
+    }
 
     if (!(handlers[route.handler] instanceof BaseRequestHandler)) {
       throw new Error(`Handler not found for ${routeKey}: ${route.handler}`);
@@ -333,6 +337,7 @@ export function createApiDispatcher({
       deprecation: lifecycle,
       idempotency: routeIdempotency,
       logging,
+      ...(Object.hasOwn(route, "jsonBodyLimitBytes") ? {jsonBodyLimitBytes: route.jsonBodyLimitBytes} : {}),
       upload: upload?.enabled
         ? Object.freeze({
             enabled: true,

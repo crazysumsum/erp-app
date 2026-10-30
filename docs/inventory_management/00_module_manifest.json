@@ -113,9 +113,9 @@
     "provided": [
       {
         "id": "inventory-domain-contract",
-        "version": "planning-v48 candidate; consolidated P4 receipts/current CI native provenance; product/provider ABI unchanged",
+        "version": "planning-v49 candidate; P4 Stocktake plus merged Fulfillment HD024 additive read contracts; existing writer ABI unchanged",
         "source": "docs/inventory_management/03_design_spec.md",
-        "sha256": "317a87d440d7de342adc340f50b7c5fa795c9ec1aef974e8991c4f88b5120d80",
+        "sha256": "4b3f2efb4f781f6c2ade5aac41b499fcbe3ce034e34805af0e926e2d9dc5a080",
         "consumers": [
           "purchasing-receiving",
           "sales-order",

@@ -1626,6 +1626,39 @@ try {
             else: registry['sales-foreign' if mutation == 'cross-module' else 'arbitrary'] = registry.pop('lint')
             self.assertTrue(self.gate.hd235_registry_issues(registry, expected), mutation)
 
+
+        # New integrated baseline must still consume the original immutable73 registry.
+        module = Path(__file__).resolve().parents[2] / 'docs/inventory_management'
+        original_manifest = json.loads((module / 'implementation/task041-hd235-completion-manifest.json').read_text())
+        adopted = json.loads((module / 'implementation/task041-hd239-main-integration-candidate.json').read_text())
+        current = adopted['candidate']
+        for mutation in (None, 'old-baseline', 'unapproved', 'registry-parent', 'registry-contract', 'canonical'):
+            with self.subTest(integrated_adoption=mutation):
+                proposal, frozen = copy.deepcopy(adopted), copy.deepcopy(original_manifest)
+                if mutation == 'registry-parent': proposal['registry_baseline'] = {'design': '0' * 64, 'plan': '0' * 64}
+                if mutation == 'registry-contract': frozen['rows'][0]['candidate_suite']['argv'] = ['true']
+                context = SimpleNamespace(repo=Path('/synthetic/merged'), module_dir=Path('/synthetic/module'),
+                    module_id=MODULE, manifest={'docs_path': 'docs/inventory_management', 'required_suites': {'developer': list(expected)}},
+                    trace={'phases': [{'id': 'PHASE-005', 'developer_suites': list(expected)}]},
+                    baselines=lambda: original_manifest['candidate'] if mutation == 'old-baseline' else current,
+                    suite_map=lambda: copy.deepcopy(expected))
+                approved = []
+                def approval(_ctx, identity, *, kind):
+                    approved.append((identity, kind)); return mutation != 'unapproved'
+                core = SimpleNamespace(inside=lambda root, name, required: root / name, approval_valid=approval)
+                hashes = {context.repo / row['path']: row['candidate_sha256'] for row in proposal['files']}
+                if mutation == 'canonical': hashes[next(iter(hashes))] = '0' * 64
+                def document(_root, name, digest):
+                    return {'raw': frozen if name == self.gate.HD235_MANIFEST else proposal}
+                with mock.patch.object(self.gate, 'original_document', side_effect=document), \
+                        mock.patch.object(self.gate, 'file_hash', side_effect=lambda name: hashes[name]):
+                    if mutation:
+                        with self.assertRaises(self.gate.Blocked): self.gate.hd235_adoption(context, core)
+                    else:
+                        adopted_rows = self.gate.hd235_adoption(context, core)
+                        self.assertEqual({sid: row['candidate_suite'] for sid, row in adopted_rows.items()}, expected)
+                        self.assertEqual(approved, [('APR-HD239-ADOPT-' + kind, kind) for kind in ('DESIGN', 'PLAN', 'SCOPE')])
+
     def test_GB_U50_files_accepts_real_process_and_artifact_without_database(self):
         self.hd235_receipt()
         frozen = copy.deepcopy((self.raw, self.receipt, self.hd235_policy))
@@ -2902,7 +2935,7 @@ console.log(JSON.stringify({raceInjected:injected,rejected,foreignPreserved:true
         def digest(value): return hashlib.sha256(value).hexdigest()
         mutations = ('pr-positive', 'pr-parent', 'pr-tree', 'pr-base', 'pr-attempt', 'pr-local-tree', 'pr-base-not-integrated',
                      'positive', 'commit', 'attempt', 'job', 'step', 'artifact', 'expired', 'raw-set', 'raw-bytes',
-                     'lcov', 'source', 'immutable-inputs', 'workflow', 'publisher', 'zip-bytes', 'floor', 'origin')
+                     'lcov', 'source', 'immutable-inputs', 'preexisting-output', 'workflow', 'publisher', 'zip-bytes', 'floor', 'origin')
         for mutation in mutations:
             with self.subTest(synthetic_native_artifact_mechanics=mutation), tempfile.TemporaryDirectory(prefix='hd235-offline-mechanics-') as temporary:
                 repo = Path(temporary); module = repo / 'docs/inventory_management'
@@ -2947,7 +2980,7 @@ console.log(JSON.stringify({raceInjected:injected,rejected,foreignPreserved:true
                 def snapshot(kind):
                     files = dict(file_hashes)
                     files.update({'docs/inventory_management/' + name: digest(b'{}\n') for name in canonical})
-                    return {'generatedOutputs': {}, 'source': source, 'commit': tested_commit, 'plan': plan,
+                    return {'generatedOutputs': {'client/node_modules/.vite/deps/preexisting.js': {'sha256': 'f' * 64}} if mutation == 'preexisting-output' else {}, 'source': source, 'commit': tested_commit, 'plan': plan,
                         'node': 'v26.6.0', 'npm': '11.0.0', 'cwd': '/home/runner/work/erp-app/erp-app/server',
                         'command': 'npm run test:coverage:' + kind + ' --workspace server',
                         'thresholds': {'lines': 92, 'branches': 83, 'functions': 90},
@@ -3135,6 +3168,30 @@ console.log(JSON.stringify({forced:await driverAttempt(true,primary),
         self.assertFalse(forced_close['unknown']['closed'], 'No peer close event may be invented')
         self.assertEqual(forced_close['unknown']['cleanup']['status'], 'UNKNOWN')
         self.assertIs(forced_close['unknown']['cleanup']['observerSocketClosed'], False)
+
+
+        cache = self.hd235_node_probe(r"""
+import assert from 'node:assert/strict';import fs from 'node:fs/promises';import os from 'node:os';import path from 'node:path';
+const repo=await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(),'hd239-ci-cache-')));
+try {
+ const cache='client/node_modules/.vite/deps',pkg='node_modules/vite/runtime.js';
+ await fs.mkdir(path.join(repo,cache),{recursive:true});await fs.mkdir(path.dirname(path.join(repo,pkg)),{recursive:true});await fs.writeFile(path.join(repo,pkg),'trusted installed source');
+ const initialOutputs={},before=await recorder.installedSnapshot(repo,initialOutputs);assert.deepEqual(initialOutputs,{});
+ await fs.writeFile(path.join(repo,cache,'generated.js'),'derived bundle');
+ const outputs={},after=await recorder.installedSnapshot(repo,outputs);assert.deepEqual(after,before);assert.ok(outputs[cache+'/generated.js'].sha256);
+ const preexisting={};await recorder.installedSnapshot(repo,preexisting);assert.notDeepEqual(preexisting,{},'Preexisting generated bytes cannot satisfy fresh CI admission');
+ await fs.writeFile(path.join(repo,pkg),'changed installed source');const changed=await recorder.installedSnapshot(repo,{});assert.notDeepEqual(changed,before);await fs.writeFile(path.join(repo,pkg),'trusted installed source');
+ await fs.writeFile(path.join(repo,'client/node_modules/.vite/unreviewed.js'),'not an approved output');assert.notDeepEqual(await recorder.installedSnapshot(repo,{}),before);await fs.unlink(path.join(repo,'client/node_modules/.vite/unreviewed.js'));
+ await fs.chmod(path.join(repo,cache,'generated.js'),0o755);await assert.rejects(()=>recorder.installedSnapshot(repo,{}));await fs.chmod(path.join(repo,cache,'generated.js'),0o644);
+ await fs.unlink(path.join(repo,cache,'generated.js'));await fs.symlink(path.join(repo,pkg),path.join(repo,cache,'generated.js'));await assert.rejects(()=>recorder.installedSnapshot(repo,{}));
+ await fs.unlink(path.join(repo,cache,'generated.js'));await fs.rename(path.join(repo,'client/node_modules/.vite'),path.join(repo,'client/node_modules/real-vite'));
+ await fs.symlink('real-vite',path.join(repo,'client/node_modules/.vite'));
+ await fs.writeFile(path.join(repo,'client/node_modules/real-vite/deps/preexisting.js'),'must not hide preexisting cache');
+ await assert.rejects(()=>recorder.installedSnapshot(repo,{}),'Ancestor Vite symlink must not hide cache from fresh admission');
+ console.log(JSON.stringify({sameInstalledInputs:true,generatedBytesCaptured:true,preexistingRejectable:true,packageAndUnknownChangesVisible:true,symlinkAndExecutableRejected:true,ancestorLinkRejected:true}));
+} finally {await fs.rm(repo,{recursive:true});}
+""")
+        self.assertTrue(all(cache.values()))
 
     def test_GB_U77_source_dependency_producer_and_executable_drift_are_not_admin(self):
         self.hd235_receipt()

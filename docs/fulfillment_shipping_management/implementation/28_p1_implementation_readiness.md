@@ -1,0 +1,11 @@
+# P1 implementation readiness
+
+Mode IMPLEMENT; PHASE-002 / TASK-012–023. Actual current Sam instruction authorizes completing all P1 tasks, independent review, full developer verification and current candidate CI before a draft PR. No merge, formal Technical Acceptance, UAT or live activation.
+
+Fresh origin/main and isolated worktree `/private/tmp/erp-fulfillment-p1`, branch `codex/fulfillment-p1-queue-picking`, observed head `fd32762f4fa17a5e77aaa7118a9ded2d3ac81e9e`. No source changes at entry. P0 actual final observations imported from preserved revision143, not inferred from committed pre-CI revision137. P0 PR271 merged; actual merge tree equals reviewed P0 head/synthetic tree, current CI13/13, independent final review0C/H/M. Evidence `/private/tmp/fulfillment-p0-merge-final-receipt.json` and `/private/tmp/fulfillment-p0-preserved-fd32762f/`. The dirty old detached capacity runtime is preserved and excluded from P1 use.
+
+Independent entry review `/root/fulfillment_independent_review`: CHANGES_REQUESTED 0C/1H/2M. H: pending-create Claim identity cycle, proposal29/HD016 requires actual human decision. M: detailed DES route `/api/v1/fulfillments/create` is authoritative; mechanically correct Task summaries, no alias. M: append precise P1 developer/browser lanes and PHASE002 applicability while retaining the complete formal object, mandatory TC/NFR flags, P0 regression and all original global/coverage/capacity/CI gates. Current P1 instruction supplies phase-specific routine adapter/menu scope authority; do not claim Sam inspected new hashes.
+
+Queue may use bounded advisory read-only Sales/Inventory/Claim projections within a coherent read snapshot, with fresh view permission, strict filters, stable keyset, no N+1/negative clamping or owner writes. Writes revalidate actual owner locks/current state. No P1 route or runtime validation has yet passed. No P2 Shipment actions exposed. Original full-route P95/3-second-or-traceable202 and provider20-second limits remain distinct and unchanged.
+
+Next: reviewed HD016 decision supplement; unaffected TASK012 implementation/tests. Then checkpoint1A/1B and all remaining P1 tasks, actual native/concurrency/fault/browser validation and independent review. Draft only after complete gates and current candidate CI.

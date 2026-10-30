@@ -198,7 +198,9 @@ jobs:
       - name: Capture Inventory native coverage inputs
         env:
           INVENTORY_CI_MYSQL_CONTAINER: ${{ job.services.mysql.id }}
-        run: env -u NODE_V8_COVERAGE node server/scripts/inventoryPhase005CoverageEvidence.mjs before-shard ${{ matrix.shard }}
+        run: |
+          mkdir -p client/node_modules/.vite/deps
+          env -u NODE_V8_COVERAGE node server/scripts/inventoryPhase005CoverageEvidence.mjs before-shard ${{ matrix.shard }}
 
       - name: Collect native server coverage for this shard
         id: inventory_native_coverage
@@ -254,6 +256,40 @@ jobs:
           grep -qx "# pass 3" import-capacity.tap
           grep -qx "# fail 0" import-capacity.tap
           grep -qx "# skipped 0" import-capacity.tap
+
+      # After all capacity samples, run the promised P1 UI lane on this job's DB.
+      # A failure propagates through server-tests -> regression -> required Test.
+      - name: Install Chromium for real Fulfillment P1 browser flows
+        if: matrix.shard == 1
+        run: npx playwright install --with-deps chromium
+
+      - name: Run real Fulfillment P1 browser flows on an owned UUID database
+        if: matrix.shard == 1
+        env:
+          DB_SOCKET_PATH: /tmp/erp-ci-mysql-socket/mysqld.sock
+          JWT_SECRET: fulfillment-ci-only-synthetic-secret-32-characters
+          NODE_ENV: test
+          FULFILLMENT_LIFECYCLE_ENABLED: "true"
+          FULFILLMENT_TEST_API_PORT: "53001"
+          FULFILLMENT_TEST_CLIENT_PORT: "53002"
+          HARNESS_RUN_DIR: ${{ runner.temp }}/fulfillment-p1-browser
+        run: |
+          npx playwright test --config client/e2e/fulfillment-shipping-management/p1.playwright.config.js
+          python3 - <<'PY'
+          import os, pathlib, xml.etree.ElementTree as ET
+          report=pathlib.Path(os.environ['HARNESS_RUN_DIR'])/'fulfillment-p1-browser.xml'
+          root=ET.parse(report).getroot()
+          assert len(list(root.iter('testcase')))==2, 'Both real P1 flows must execute'
+          assert not any(list(root.iter(tag)) for tag in ['failure','error','skipped']), 'P1 failures/skips block CI'
+          PY
+
+      - name: Retain synthetic Fulfillment P1 browser report
+        if: always() && matrix.shard == 1
+        uses: actions/upload-artifact@v4
+        with:
+          name: fulfillment-p1-browser-report
+          path: ${{ runner.temp }}/fulfillment-p1-browser/fulfillment-p1-browser.xml
+          if-no-files-found: error
 
       - name: Finalize Inventory native coverage ownership proof
         if: always()

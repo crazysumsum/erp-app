@@ -103,24 +103,40 @@ export async function sourceSnapshot(repo) {
   }
   return { source: hash(json(records)), records, outputs };
 }
-async function installedSnapshot(repo) {
+export async function installedSnapshot(repo, generatedOutputs) {
+  const cacheRoot = "client/node_modules/.vite/deps", cachePath = path.join(repo, cacheRoot);
+  let cacheInfo;
+  try { cacheInfo = await fs.lstat(cachePath); }
+  catch (error) { if (error.code !== "ENOENT") throw error; }
+  if (cacheInfo) {
+    assert.ok(cacheInfo.isDirectory() && !cacheInfo.isSymbolicLink() && cacheInfo.uid === process.geteuid(), "Own Vite cache root required");
+    assert.equal(await fs.realpath(cachePath), cachePath, "Vite cache ancestor link refused");
+  }
   const records = {};
   async function visit(relative) {
     const filename = path.join(repo, relative);
     let info;
     try { info = await fs.lstat(filename); }
     catch (error) { if (error.code === "ENOENT") { records[relative] = { absent: true }; return; } throw error; }
+    const cacheOutput = relative.startsWith(cacheRoot + "/");
+    if (relative === cacheRoot || cacheOutput) {
+      assert.ok(!info.isSymbolicLink() && info.uid === process.geteuid(), "Own Vite output required");
+      assert.equal(await fs.realpath(filename), filename, "Vite output parent link refused");
+      if (relative === cacheRoot) assert.ok(info.isDirectory(), "Prepared Vite output root required");
+      else assert.ok(info.isDirectory() || info.isFile() && !(info.mode & 0o111), "Regular non-executable Vite output required");
+    }
+    const destination = cacheOutput ? generatedOutputs : records;
     if (info.isSymbolicLink()) {
       const target = await fs.realpath(filename);
       assert.ok(target.startsWith(repo + path.sep), "Unreviewed external installed dependency");
       const targetInfo = await fs.stat(target);
-      records[relative] = { symlink: await fs.readlink(filename), realpath: target,
+      destination[relative] = { symlink: await fs.readlink(filename), realpath: target,
         targetSha256: targetInfo.isFile() ? await fileHash(target) : null };
     } else if (info.isDirectory()) {
-      records[relative] = { directory: true };
+      destination[relative] = { directory: true };
       for (const name of (await fs.readdir(filename)).sort()) await visit(relative + "/" + name);
     } else {
-      assert.ok(info.isFile()); records[relative] = { sha256: await fileHash(filename), executable: Boolean(info.mode & 0o111) };
+      assert.ok(info.isFile()); destination[relative] = { sha256: await fileHash(filename), executable: Boolean(info.mode & 0o111) };
     }
   }
   for (const base of ["node_modules", "server/node_modules", "client/node_modules"]) await visit(base);
@@ -177,7 +193,7 @@ async function inputs(repo, identity, kind, container) {
     npm: (await command("npm", ["--version"])).stdout.trim(), cwd: path.join(repo, "server"),
     command: kind === "merge" ? "npm run test:coverage:merge --workspace server" : "npm run test:coverage:shard --workspace server",
     inputs: { recipe: "CI_NODE_NATIVE", source: source.records, files, executables,
-      installed: await installedSnapshot(repo), npm: await npmSnapshot(executables.npm), mysql: container,
+      installed: await installedSnapshot(repo, source.outputs), npm: await npmSnapshot(executables.npm), mysql: container,
       platform: { os: process.platform, arch: process.arch, runnerImage: process.env.ImageOS ?? null,
         runnerImageVersion: process.env.ImageVersion ?? null },
       unused: { python: "NOT_USED_BY_REVIEWED_NODE_CI_COMMANDS", harness: "NOT_USED_BY_REVIEWED_NODE_CI_COMMANDS" } },
