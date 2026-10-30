@@ -1,10 +1,20 @@
 # P2 Confirmation/Recovery direction for next slice review
 
-Status: proposed concrete implementation direction under approved TASK026–029; no PhaseA/B/recovery product code or tests added. This is not admission of a new authorization bypass and does not add CI cases/load.
+Status: proposed concrete implementation direction (terminal replay clarification below; initial review93507ead finding preserved) under approved TASK026–029; no PhaseA/B/recovery product code or tests added. This is not admission of a new authorization bypass and does not add CI cases/load.
 
 ## Durable reconstruction
 
 Public Confirm remains exactly eventId/version. PhaseA validates a complete Draft, current actor and operation permission, locks operation→Fulfillment→Shipment, binds exact Shipment/originalversion/address/contact/logistics/confirmation intent to the durable hash, then commits SHIPPING plus original event. No Inventory/Sales effects. SHIPPING fields and original actor identity remain frozen. Do not introduce a payload column by assumption: Recovery must reconstruct the original expected version from the one PhaseA version increment and the unchanged SHIPPING row, canonicalize saved DECIMAL weight exactly as HD025, and prove the recomputed hash against the operation. Lease/backoff attempts must not increment Shipment version or change frozen intent.
+
+## Terminal public intent versus frozen internal intent
+
+Only IN_PROGRESS/SHIPPING may reconstruct the full internal hash from frozen saved fields; version−1 is not a terminal replay rule. Once FAILED returns DRAFT, legitimate later edits can change logistics. Once SUCCEEDED, later P3 transitions can change the document version. Neither case may rehash the current document as the original intent.
+
+Use the existing append-only CONFIRM_START history as the narrow original-public-intent witness, without a schema column: a SHIP-only journal reader loads the real operation under its current lock, proves fresh original actor/view+operation, exact operation type/target/event and exactly one target-owned CONFIRM_START row with matching actor and version_after≥2. The original public version is that immutable version_after−1. Client inputs remain only eventId/version plus the route Shipment selector; wrong original version/target conflicts. Missing/duplicate/malformed target history fails closed. The caller supplies no trusted witness, stored hash or alternative actor. The journal reader loads all proof itself under the actual caller transaction and returns only the validated terminal decoder outcome.
+
+The existing operation payload_hash stays immutable and includes the original canonical saved weight/unit and other frozen fields. It was established atomically with CONFIRM_START in PhaseA and checked in PhaseB before a terminal result. This terminal adapter checks original public intent against durable history, not editable present logistics; it does not rewrite or bypass ordinary claim/#row validation for any command. For IN_PROGRESS, recompute the complete frozen internal intent and compare its real stored hash before any completion/recovery work. Terminal output never exposes the hash or private logistics. No new payload column, public body field or generic journal relaxation is proposed.
+
+Public version validation retains normal positive UINT32 semantics so wrong same-event versions are stable conflicts. A new PhaseA additionally requires original version≤4294967293, reserving both DRAFT→SHIPPING and SHIPPING→SHIPPED/DRAFT increments; lease/backoff does not increment Shipment version. Terminal replay is checked before new-start exhaustion rules.
 
 ## Atomic completion
 
@@ -19,6 +29,14 @@ Actual existing FulfillmentOperationService.takeOver/#complete require fresh ori
 Minimal direction: a separate private failure-bookkeeping purpose available only to the trusted Confirmation coordinator/Recovery runtime. Prove fresh original actor inactivity or missing required permission through the authorization directory; dependency errors are not evidence of revocation. Acquire the original operation current X lock and lease fence, then exact target locks; prove original event/hash/target/actor and frozen intent, IN_PROGRESS plus SHIPPING and matching confirmation event, no committed successful Issue/Shipment/Sales effects and no indeterminate transaction. Only atomic FAILED+DRAFT+safe history/audit is permitted. Original actor remains the recorded intent identity. Ordinary claim/takeover/success and every Inventory/Sales posting retain their current fresh permissions; no serviceName string, caller-supplied proof or replacement actor can authorize business effects.
 
 Concrete trusted-runtime provenance, opaque same-transaction proof construction, fence/lease expiry, original-outcome checks and negative native cases must be independently security-reviewed before this path is implemented. If these proofs cannot be established with existing contracts, or the proposal grows into service identity posting Inventory/Sales, stop and seek the necessary human decision. Do not infer that a public endpoint can call this helper merely because its name says private.
+
+## Remaining concrete completion constraints
+
+Inventory findBySource returning null is not a zero-effect proof: it conflates missing with unfinished operations. Do not use SALES-only member lookup for Shipment sources. Failure bookkeeping must inspect complete original source rows and local Issue/Claim/Sales witnesses through owner-reviewed contracts under exact locks, and refuse any unfinished/unknown/inconsistent state. No generic null→safe shortcut.
+
+Inject the same InventoryFulfillmentService instance into claim/post and Sales apply so its actual same-transaction WeakMap preparation/receipt remains valid. Retain zero-picked Shipment Lines, but omit zero-quantity members from Issue commands while checking full-line conservation and original Reservation identity.
+
+The operation lease remains default60s, longer than the original20s DB PhaseB ceiling. Define exact expiry/fencing and renewal in the trusted coordinator before code; no success after an expired lease. HTTP must return200 when completed or202 within the approved3s response window. Pending work must remain owned by an application lifecycle/Recovery runtime with AbortSignal/shutdown and durable operation, not a bare detached Promise.race. No new request/transaction deadline or hidden background job is implied by this direction. Detailed owned-work selection and necessary source/runtime scope require separate slice review before implementing that boundary.
 
 ## Evidence and current policy
 
