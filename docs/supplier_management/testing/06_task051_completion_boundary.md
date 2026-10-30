@@ -95,7 +95,7 @@ These cases keep their original assertions. They are not re-run while the depend
 - **Fix candidates:** a per-status forced-index `FOR UPDATE` was rejected, because it blocks the next job's staging (REV-135 M1). The candidate that measured best picks the row without locking, then locks it by primary key.
 - **Status:** fixed under HD-154 A (Product Owner, 2026-10-29). The pick now uses a non-locking lookup and then a primary-key lock. Closed after the formal re-test at `4f101642`: TC-101 passed at both stages, the impact regression passed 735/735, and PR #301's CI passed. Details are in `04_defect_register.md`.
 
-## DEF-050 — OPEN (MEDIUM)
+## DEF-050 — CLOSED (MEDIUM)
 
 - **What happened:** TC-085 failed at TECHNICAL in the DEF-049 re-test. The for-SKU name search p95 was 2,113 ms against 2,000 ms. It passed at REGRESSION, at 1,937 ms. Every formal run has been within 10% of the limit.
 - **Cause (HD-155 A diagnosis, corrected after REV-137):** this is a capacity limit. The pool of 10 is full from 25 users, at about 29 requests per second. Above that, every for-SKU operation queues.
@@ -103,3 +103,11 @@ These cases keep their original assertions. They are not re-run while the depend
   - A bigger pool or buffer pool does not help.
 - **Status:** HD-156 answered E (Product Owner, 2026-10-29). DEF-050 stays OPEN, and TC-085 is re-measured in the production-like environment (row in C). The remedy is chosen among HD-156 A–D with those numbers, and the local FAIL goes to the release risk decision. TC-085's TECHNICAL FAIL keeps Technical Acceptance blocked while DEF-050 is OPEN.
 - **Superseded by HD-157 (Product Owner, 2026-10-30):** there is no production-like re-measurement, and no remedy. NFR-005's limit is 3 s. DEF-050 closes once TC-085 passes against 3 s in the formal run on the HD-157 baseline. Details are in `04_defect_register.md`.
+- **Closed (2026-10-30):** TC-085 passed against 3 s at both stages of the formal run on the HD-157 baseline (for-SKU p95 1,737 and 1,818 ms).
+
+## DEF-051 — CLOSED (MEDIUM)
+
+- **What happened:** TC-101 failed at REGRESSION in the formal run on the HD-157 baseline. During the import, `update` p95 was 2,286 ms and `list.missingFilter` 2,011 ms, against 2,000 ms. It passed at TECHNICAL, at 820 and 1,443 ms.
+- **A step change:** since PR #301 (DEF-049 fix), `list.missingFilter` during import has been 1,443–2,011 ms in every formal run, against 392–580 ms before. The cause is not proven; the A/B diagnosis (HD-158 A) was stopped before it measured anything.
+- **Status:** HD-158 answered (Product Owner, 2026-10-30): the during-import online p95 limit is 5 s, with no remedy. DEF-051 closes once TC-101 passes against 5 s in the formal run on the HD-158 baseline. Details are in `04_defect_register.md`.
+- **Closed on the existing evidence** (agent's reading of HD-160; Product Owner, 2026-10-30: "3不用跑了…", declining the formal run on the HD-158 baseline): both formal runs on the HD-157 baseline had p95 under 5 s (worst 2,286 ms) with error rate 0, and the HD-158 developer run passed against 5 s.

@@ -1,0 +1,536 @@
+{
+  "schema_version": "2.0",
+  "module_id": "supplier-management",
+  "run_id": "20261030T032708-7195a5ce235a",
+  "suite_id": "supplier-security",
+  "stage": "TECHNICAL",
+  "result": "PASS",
+  "spec_baseline": "8b31fcdd93bafe8275cb5cd2eded0a50b608a49bb17227beb7339ee099a344bd",
+  "source_fingerprint": "b00c7d69b52834f1cc4b2be0224208cff4ad046afd8eef70b2ee239d13b91394",
+  "code_commit": "309aa9ebdd0c10dfb57b373d08935e9e0a79b05a",
+  "started_at": "2026-10-30T03:27:09.034567Z",
+  "ended_at": "2026-10-30T03:29:36.470153Z",
+  "environment_id": "supplier-isolated-test",
+  "runtime_instance_id": "supplier-t51-scratch-mysqld-3450",
+  "data_reference": "Synthetic Supplier fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "node",
+    "--test",
+    "--test-concurrency=1",
+    "--import",
+    "./test-support/testEnv.js",
+    "--test-reporter=junit",
+    "--test-reporter-destination=/Users/sam/Documents/workspace/erp-supplier-ta4/docs/supplier_management/evidence/20261030T032708-7195a5ce235a/supplier-security.xml",
+    "test/supplier*.test.js",
+    "test/integration/supplier*.integration.test.js"
+  ],
+  "cwd": "server",
+  "command_contract_sha256": "bf703c5c814594a3bc1bf55d64bdd8acb4e10ca9c129167a8f084b6aadd53f7b",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 735,
+    "passed": 735,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [
+    {
+      "id": "TC-001",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-002",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-003",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-004",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-005",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-006",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-007",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-008",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-009",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-010",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-011",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-012",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-014",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-016",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-017",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-018",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-019",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-020",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-021",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-022",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-023",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-024",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-025",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-026",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-027",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-028",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-030",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-031",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-032",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-033",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-034",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-035",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-036",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-037",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-038",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-039",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-040",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-041",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-042",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-043",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-044",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-045",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-046",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-047",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-048",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-049",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-050",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-051",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-052",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-053",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-054",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-055",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-056",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-057",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-058",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-059",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-060",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-061",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-062",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-063",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-064",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-065",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-066",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-067",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-068",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-069",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-070",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-071",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-072",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-073",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-074",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-076",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-077",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-078",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-079",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-080",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-081",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-082",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-083",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-084",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-086",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-087",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-088",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-089",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-090",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-091",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-092",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-093",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-094",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-095",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-096",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-097",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-098",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-099",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-100",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-102",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-103",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-104",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-105",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-106",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-107",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-108",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-109",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-110",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-111",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-112",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-113",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-114",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-115",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-116",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-117",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-118",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-119",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-120",
+      "status": "PASS"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "evidence/20261030T032708-7195a5ce235a/stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/20261030T032708-7195a5ce235a/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/20261030T032708-7195a5ce235a/supplier-security.xml",
+      "sha256": "a682b4b15041e7b0c7b4b5f2e039c2c923866b3fd824186acfde14c9aa72338e",
+      "bytes": 186800
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    },
+    {
+      "argv": [
+        "mysql",
+        "--version"
+      ],
+      "output": "mysql  Ver 26.7.0 for macos15 on arm64 (MySQL Community Server - GPL)\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "Local observation only; external services/config/data and secret redaction completeness require review."
+  ]
+}

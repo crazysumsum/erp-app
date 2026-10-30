@@ -11,7 +11,7 @@ import { createSupplierHarness } from "../test/integration/supplierHttpHarness.j
 import {
   adminConnection, adminCredentials, exitUnlessAdmin, errorText, outputPath, scratchName, writeReport
 } from "../test/integration/supplierAcceptanceRunner.js";
-import { performanceVerdicts } from "../test/integration/supplierPerformanceVerdicts.js";
+import { DURING_IMPORT_LIMIT_MS, performanceVerdicts } from "../test/integration/supplierPerformanceVerdicts.js";
 
 /**
  * TC-085、TC-101、TC-128、TC-129（SKU-008、IMP-016、OPS-001、OPS-002）：Supplier 效能（HD-117 A）。
@@ -22,7 +22,7 @@ import { performanceVerdicts } from "../test/integration/supplierPerformanceVerd
  * - TC-085：只跑 for-SKU（`--only=forSku`，最差情況），p95 < 3 秒（NFR-005，HD-157）；熱門 SKU 嘅總數同 SQL 數一樣；計劃冇全表掃描。
  * - TC-129：相似名稱有上限（HD-084／HD-087：最多 3,000 個候選計分，頭 50 個），召回率同冇上限差唔超過 2 點；
  *   常用 query 用 index（文字搜尋嘅全表掃描係 HD-088 決定）；列表總數唔會因為 join 膨脹。
- * - TC-101：10,000 列匯入同 50 個用戶負載同時跑：預檢加執行 ≤ 10 分鐘、每列只寫一次、線上 p95 仍然 < 2 秒。
+ * - TC-101：10,000 列匯入同 50 個用戶負載同時跑：預檢加執行 ≤ 10 分鐘、每列只寫一次、線上一般操作 p95 < 5 秒（HD-158）。
  * TC-128 嘅 production-like 重測由 HD-157 豁免，本機結果就係證據；豁免項目照列喺輸出（`waived`），唔當測試案例。
  * 完咗成個 schema 剷走；SIGINT／SIGTERM 一樣。
  */
@@ -157,9 +157,12 @@ try {
   const deadlocksBeforeImport = await deadlocks();
   let windowStart;
   const windowSeen = new Promise((resolve) => { windowStart = resolve; });
-  const online = runScript("benchmarkSupplierManagement.js", LOAD_ARGS, { output: path.join(work, "load-during-import.json"), onLine: (line) => {
-    if (line.includes('"supplier.benchmark.window"')) windowStart(JSON.parse(line));
-  } });
+  // 匯入期間一般操作嘅 p95 上限係 5 秒（HD-158）；TC-101 嘅判斷要求份報告真係用咗呢個上限。
+  const online = runScript("benchmarkSupplierManagement.js", [...LOAD_ARGS, `--general-limit-ms=${DURING_IMPORT_LIMIT_MS}`], {
+    output: path.join(work, "load-during-import.json"), onLine: (line) => {
+      if (line.includes('"supplier.benchmark.window"')) windowStart(JSON.parse(line));
+    }
+  });
   const loadWindow = await Promise.race([windowSeen, online.then(() => null)]);
   if (!loadWindow) throw new Error("the load benchmark ended before reporting its measured window");
   await new Promise((resolve) => { setTimeout(resolve, Math.max(0, Date.parse(loadWindow.measureFrom) - Date.now()) + 1_000); });

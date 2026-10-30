@@ -587,7 +587,7 @@ The margins are taken from each run's `supplier-performance-details/`:
 TC-085 failed at TECHNICAL in the same run. That failure is DEF-050: it is unrelated to this fix, and TC-085's load runs no import.
 
 
-## DEF-050 — MEDIUM
+## DEF-050 — MEDIUM (closed 2026-10-30)
 
 Found by the formal DEF-049 re-test in TEST_AND_VERIFY, at `558adc22` (code-identical to the mode entry commit `4f101642`), with evidence `evidence/20261029T034431-5afc891c6c57`.
 
@@ -688,6 +688,47 @@ The hint helps at middle offsets. At deep offsets an `OFFSET` walk reads everyth
 - (D) schema indexes or narrower name search; needs sign-off.
 
 **Superseded by HD-157 (Product Owner, 2026-10-30: "確認，開 HD-157 修訂 plan，TC-085不用修，放鬆至3秒").** C cases that passed locally are recorded as passed, with no production-like re-test, so HD-156 E's re-measurement will not happen. NFR-005's for-SKU limit is now 3 s, and no remedy is made. Every formal run so far was under 3 s (worst 2,113 ms). DEF-050 closes once TC-085 passes against 3 s in the formal run on the HD-157 baseline.
+
+**Closed (2026-10-30).** In the formal run on the HD-157 baseline (`309aa9eb`, code-identical to the PR #305 merge `6d84ee45`), TC-085 passed against 3 s at both stages: the for-SKU p95 over all operations was 1,737 ms at TECHNICAL (`evidence/20261030T033026-b856fe2963d2`) and 1,818 ms at REGRESSION (`evidence/20261030T034819-b8b65bdb3861`). No remedy was made, so the capacity limit diagnosed above still holds; only the target changed. The REGRESSION run fails on TC-101, which is DEF-051.
+
+## DEF-051 — MEDIUM (closed 2026-10-30)
+
+Found by the formal run on the HD-157 baseline in TEST_AND_VERIFY, at `309aa9eb` (code-identical to the mode entry commit `6d84ee45`), with evidence `evidence/20261030T034819-b8b65bdb3861`.
+
+**What failed:** TC-101 (IMP-016, NFR-004) at REGRESSION, on `online.p95_under_2s_during_import` only. During the 10,000-row import, with 50 users online:
+- `update` p95 2,286 ms and `list.missingFilter` p95 2,011 ms, against 2,000 ms.
+- Every other check passed: precheck plus execute 63.5 s, every row applied exactly once, resources bounded, no deadlocks.
+- At TECHNICAL, the same code passed, at 820 ms and 1,443 ms (`evidence/20261030T033026-b856fe2963d2`).
+
+**A step change after PR #301 (DEF-049 fix).** Every formal run's TC-101 numbers, from `supplier-performance-details/`:
+
+| Run | `list.missingFilter` p95 during import | `update` p95 during import | Import execute |
+|---|---|---|---|
+| 2026-10-28 first run, TECHNICAL | 392 ms | 221 ms | 66.3 s |
+| 2026-10-28 first run, REGRESSION | 580 ms | 1,039 ms | 114.6 s |
+| DEF-048 re-test, TECHNICAL | 429 ms | 241 ms | 71.8 s |
+| DEF-048 re-test, REGRESSION | 467 ms | 330 ms | 77.4 s |
+| DEF-049 re-test, TECHNICAL | 1,665 ms | 830 ms | 53.9 s |
+| DEF-049 re-test, REGRESSION | 1,841 ms | 789 ms | 51.2 s |
+| HD-157 baseline, TECHNICAL | 1,443 ms | 820 ms | 50.9 s |
+| HD-157 baseline, REGRESSION | **2,011 ms** | **2,286 ms** | 57.0 s |
+
+- The two statements behind `list.missingFilter` are the `COUNT(*)` of active Suppliers with no primary address, and with no primary contact (`NOT EXISTS` over `supplier_address_purposes` and `supplier_contact_purposes`). They read the same rows in every run (about 213,000 and 200,000 per call), but their average times rose from 275–369 and 184–253 ms in the four runs before PR #301 to 960–1,172 and 626–774 ms in the four after it.
+- After PR #301 the import executes faster, in 51–57 s instead of 66–115 s.
+- In the REGRESSION run each of the top statements was 3–36% slower than at TECHNICAL (most 8–17%), and throughput fell from 76 to 69 requests per second. Whether other load on the host contributed is not known: the runner's own load raises the load average to 9–14 in every run.
+
+**Cause: not proven.** The step change coincides with PR #301, and a faster import competing with the online reads is a plausible reading, but only timing supports it.
+- HD-158 A started a REPORT_ONLY A/B (the runner on `6d84ee45` and on `8c31c94a`, before PR #301, 3 runs each). The Product Owner stopped it during the first run, before the load-during-import step, so it measured nothing.
+
+**HD-158 answered (Product Owner, 2026-10-30: "TC-101 改要求放寬至5秒就好了"):** during a 10,000-row import, the online general operations' p95 limit is 5 s (NFR-004, IMP-016). NFR-001's 2 s under normal mixed load and NFR-005's 3 s are unchanged. No remedy; the step change stays unexplained. Every formal run so far was under 5 s (worst 2,286 ms). DEF-051 closes once TC-101 passes against 5 s in the formal run on the HD-158 baseline.
+
+**Follow-up (REV-141 L1):** 03 §11.5 was left unchanged. Its line "並保持線上query p95" has no number of its own, but next to the bullet before it (general query p95 < 2 s) it can be read as 2 s during an import. The authority is 01 NFR-004 (5 s). Rewording §11.5 to "匯入期間線上一般操作p95<5秒（NFR-004，HD-158）" waits for the next change that has to touch 03 anyway, so that Purchasing re-pins once (its pin e49ac37d stays valid until then).
+
+**Closed on the existing evidence** (agent's reading of HD-160, not the Product Owner's words; Product Owner, 2026-10-30: "3不用跑了，都己跑了幾次，再跑意義不大", declining the formal run on the HD-158 baseline):
+- the two formal runs on the HD-157 baseline had error rate 0; TC-101 failed only at REGRESSION, and only on the online p95 check against 2 s. Their worst p95 during the import was 1,443 ms (TECHNICAL) and 2,286 ms (REGRESSION, `update`, `evidence/20261030T034819-b8b65bdb3861`), both under 5 s. All eight formal runs had a p95 under 5 s, but the 2026-10-28 first REGRESSION run also failed on a `create` error rate of 2.06% (DEF-048, since fixed), which the 5 s check would fail too;
+- the HD-158 developer run, on the merged code with the 5 s verdict, passed TC-101 (`online.p95_under_5s_during_import`, worst `list.missingFilter` 1,514 ms). That run is developer evidence, not formal.
+
+The REGRESSION run's recorded result stays FAIL, because it was judged against 2 s; it is re-read against 5 s, not re-run. The step change after PR #301 is unexplained and stays a known limitation for the release decision.
 
 ## HD-116 A: dispositions (2026-10-21)
 
