@@ -222,7 +222,26 @@ native("FAD05 actual pool1 HTTP abort uses existing primary and closes original 
 native("FAD06 real blocked acquisition deadline cannot admit a second waiter before release", async t => {
   const f = await fixture(t, { pool: 1 }), held = await f.db.pool.getConnection(); let released = false;
   f.beforeClose.push(() => { if (!released) { held.release(); released = true; } });
-  const requestId = randomUUID(), audit = f.audit(), started = performance.now(), pending = ISSUANCE.run(requestId, () => f.cancelled(() => audit.recordFailed(f.input(requestId))));
+  const requestId = randomUUID(), lateAcquisition = { calls: 0, returned: false }, acquire = f.db.pool.getConnection.bind(f.db.pool);
+  // Observe only this Audit waiter; normal scheduler borrowers keep their original behavior.
+  f.db.pool.getConnection = (...args) => {
+    const ownAudit = ISSUANCE.getStore() === requestId, pending = acquire(...args);
+    if (ownAudit) {
+      lateAcquisition.calls++;
+      void pending.then(connection => {
+        lateAcquisition.connectionId = Number(connection.threadId);
+        const release = connection.release;
+        connection.release = (...values) => {
+          connection.release = release;
+          const result = release.apply(connection, values);
+          lateAcquisition.returned = true;
+          return result;
+        };
+      }, error => { lateAcquisition.error = error.code ?? error.name; });
+    }
+    return pending;
+  };
+  const audit = f.audit(), started = performance.now(), pending = ISSUANCE.run(requestId, () => f.cancelled(() => audit.recordFailed(f.input(requestId))));
   await until(() => f.db.pool.pool._connectionQueue.length === 1, "Actual pool waiter not observed"); assert.equal(await pending, false);
   const elapsed = performance.now() - started; assert.ok(elapsed >= 4900 && elapsed < 6500, `Own5s deadline actual elapsed ${elapsed}`);
   const queueBefore = f.db.pool.pool._connectionQueue.length, refusedId = randomUUID();
@@ -230,11 +249,14 @@ native("FAD06 real blocked acquisition deadline cannot admit a second waiter bef
   assert.equal(f.db.pool.pool._connectionQueue.length, queueBefore, "Synchronous refusal must add no waiter despite independent background borrowers"); assert.equal(await refused, false);
   assert.deepEqual(f.acquisitions.filter(value => value.auditRequestId === refusedId), [], "Refused Audit acquired after an await");
   held.release(); released = true; await until(() => f.db.pool.pool._connectionQueue.length === 0, "Late pool waiter not returned"); assert.deepEqual(await f.rows(requestId), []);
-  assert.equal(await f.audit().recordFailed(f.input(randomUUID())), false); assert.equal((await f.pending()).length, 0);
+  await until(() => lateAcquisition.returned, "Timed-out Audit waiter was not returned to its original pool");
+  assert.equal(lateAcquisition.calls, 1); assert.equal(lateAcquisition.connectionId, Number(held.threadId));
+  assert.equal(lateAcquisition.error, undefined);
+  assert.equal(await f.audit().recordFailed(f.input(randomUUID())), false);
   assert.deepEqual(f.acquisitions.filter(value => value.auditRequestId === refusedId), [], "Refused Audit acquired after blocker release");
   assert.deepEqual(f.statements.filter(value => value.auditRequestId === refusedId), []);
   assert.deepEqual(f.statements.filter(statement => statement.auditRequestId === requestId), [], "Cancelled late acquisition issued SQL");
-  f.observation = { deadlineElapsedMs: elapsed, initialOwnWaiter: 1, actualQueueBeforeRelease: queueBefore, queueAfterRelease: 0 };
+  f.observation = { deadlineElapsedMs: elapsed, initialOwnWaiter: 1, actualQueueBeforeRelease: queueBefore, queueAfterRelease: 0, lateAcquisition };
 });
 native("FAD07 real FK lock blocks Audit INSERT; own deadline and SQL terminal are independently checked", async t => {
   const f = await fixture(t);
